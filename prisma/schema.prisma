@@ -1,0 +1,406 @@
+// Swimly — the data layer.
+//
+// Three rules from the design kit are load-bearing here:
+//   * `Role` is the source of truth for permissions. It is mapped onto the
+//     three tiers in `src/lib/authz.ts`, and adding a value there without
+//     adding it to the map is a type error — which is the point.
+//   * `AuditLog` is not optional. Every mutation writes a row, scripts
+//     included. See `src/lib/audit.ts`.
+//   * Curriculum rows are archived, never deleted, and `onDelete: Restrict`
+//     guards the rest — a cascade would silently remove rows the audit log
+//     still claims exist.
+
+generator client {
+  provider = "prisma-client"
+  output   = "../src/generated/prisma"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+// ---------------------------------------------------------------------------
+// Enums
+// ---------------------------------------------------------------------------
+
+/// Three roles, three tiers. Add one here and `TIER_BY_ROLE` in
+/// `src/lib/authz.ts` stops compiling until you say which tier it belongs to.
+enum Role {
+  ADMIN
+  INSTRUCTOR
+  VIEWER
+}
+
+enum DayOfWeek {
+  MONDAY
+  TUESDAY
+  WEDNESDAY
+  THURSDAY
+  FRIDAY
+  SATURDAY
+  SUNDAY
+}
+
+enum StudentStatus {
+  ACTIVE
+  INACTIVE
+}
+
+enum EnrolmentStatus {
+  ACTIVE
+  WAITLISTED
+  COMPLETED
+  WITHDRAWN
+  TRANSFERRED
+}
+
+enum AttendanceStatus {
+  PRESENT
+  ABSENT
+  LATE
+  EXCUSED
+}
+
+/// The absence of a `CompetencyResult` row means "not assessed". There is no
+/// enum value for it, because a row nobody has written is not a judgement.
+enum CompetencyStatus {
+  WORKING_ON
+  ACHIEVED
+}
+
+// ---------------------------------------------------------------------------
+// Staff
+// ---------------------------------------------------------------------------
+
+model User {
+  id           String   @id @default(cuid())
+  email        String   @unique
+  name         String
+  /// Null for accounts that sign in another way, or have not set one yet.
+  passwordHash String?
+  role         Role     @default(VIEWER)
+  /// Deactivation is reversible and keeps the audit trail readable; deletion
+  /// is not. Prefer this.
+  isActive     Boolean  @default(true)
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  auditEntries         AuditLog[]
+  coursesTaught        Course[]
+  attendanceMarked     AttendanceRecord[]
+  assessmentsMade      CompetencyResult[]
+  completionsConfirmed LevelCompletion[]
+  classNotes           ClassNote[]
+
+  @@index([role])
+}
+
+model AuditLog {
+  id          String   @id @default(cuid())
+  /// Nullable so a deleted account does not take its history with it.
+  actorId     String?
+  /// Denormalised on purpose: the log must still read correctly after the
+  /// actor's account is gone.
+  actorName   String
+  /// "create" | "update" | "delete", or a domain verb.
+  action      String
+  /// The model name, e.g. "Student".
+  entity      String
+  entityId    String?
+  /// How the log is filtered, because it is how the app is navigated. A plain
+  /// column rather than a relation, so the log survives the programme.
+  programmeId String?
+  /// Written for a person reading months later: name what changed and to what.
+  summary     String
+  createdAt   DateTime @default(now())
+
+  actor User? @relation(fields: [actorId], references: [id], onDelete: SetNull)
+
+  @@index([createdAt])
+  @@index([entity, entityId])
+  @@index([actorId])
+  @@index([programmeId, createdAt])
+}
+
+// ---------------------------------------------------------------------------
+// Curriculum — the rules. Admin tier.
+// ---------------------------------------------------------------------------
+
+/// `archivedAt` rather than `isActive`, deliberately diverging from `User`:
+/// for a curriculum row, *when* it was retired answers "was this required when
+/// Ava was assessed?". For an account it answers nothing.
+model Programme {
+  id          String    @id @default(cuid())
+  name        String    @unique
+  description String?
+  sortOrder   Int       @default(0)
+  archivedAt  DateTime?
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+
+  levels      Level[]
+  enrolments  Enrolment[]
+  completions LevelCompletion[]
+
+  @@index([sortOrder])
+}
+
+model Level {
+  id          String    @id @default(cuid())
+  programmeId String
+  name        String
+  description String?
+  /// Plain indexed Int, not unique, so reordering is one write per moved row.
+  /// The cost: every ordering must tie-break on name. See LIST_ORDER in
+  /// `src/lib/curriculum/constants.ts`.
+  sortOrder   Int       @default(0)
+  archivedAt  DateTime?
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+
+  programme    Programme         @relation(fields: [programmeId], references: [id], onDelete: Restrict)
+  competencies Competency[]
+  courses      Course[]
+  enrolments   Enrolment[]
+  completions  LevelCompletion[]
+
+  @@unique([programmeId, name])
+  @@index([programmeId, sortOrder])
+}
+
+model Competency {
+  id          String    @id @default(cuid())
+  /// Immutable once results exist — guarded in the action, because moving it
+  /// would retroactively rewrite who had completed the level.
+  levelId     String
+  name        String
+  description String?
+  sortOrder   Int       @default(0)
+  archivedAt  DateTime?
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+
+  level   Level              @relation(fields: [levelId], references: [id], onDelete: Restrict)
+  results CompetencyResult[]
+
+  @@unique([levelId, name])
+  @@index([levelId, sortOrder])
+}
+
+// ---------------------------------------------------------------------------
+// People in the water
+// ---------------------------------------------------------------------------
+
+model Student {
+  id          String        @id @default(cuid())
+  firstName   String
+  lastName    String
+  dateOfBirth DateTime?     @db.Date
+  status      StudentStatus @default(ACTIVE)
+  joinedOn    DateTime      @default(now()) @db.Date
+
+  /// Standalone contacts: no family table, so siblings duplicate a parent's
+  /// phone number. Named "contact" rather than "guardian" because an adult
+  /// swimmer is their own.
+  contactName           String?
+  contactEmail          String?
+  contactPhone          String?
+  emergencyName         String?
+  emergencyPhone        String?
+  emergencyRelationship String?
+
+  /// The most sensitive field in the app. Never rendered in a list; the
+  /// register shows only a derived flag, with the text one tap away.
+  medicalNotes String?
+
+  photoConsent   Boolean   @default(false)
+  photoConsentOn DateTime? @db.Date
+
+  notes     String?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  enrolments  Enrolment[]
+  attendance  AttendanceRecord[]
+  results     CompetencyResult[]
+  completions LevelCompletion[]
+
+  @@index([status, lastName, firstName])
+}
+
+// ---------------------------------------------------------------------------
+// Classes
+// ---------------------------------------------------------------------------
+
+model Course {
+  id              String    @id @default(cuid())
+  levelId         String
+  /// Optional. `courseLabel()` falls back to the level name.
+  name            String?
+  dayOfWeek       DayOfWeek
+  /// Minutes from midnight, 0–1439. A weekly recurring time has no date, so a
+  /// DateTime here would drag a UTC offset into a value that must read as
+  /// "16:30" in every environment.
+  startMinutes    Int
+  durationMinutes Int
+  /// Null means uncapped — squad sessions and adult lane swims do not have
+  /// twelve seats.
+  capacity        Int?
+  /// Nullable so a course can outlive the instructor who taught it.
+  instructorId    String?
+  location        String?
+  archivedAt      DateTime?
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @updatedAt
+
+  level           Level              @relation(fields: [levelId], references: [id], onDelete: Restrict)
+  instructor      User?              @relation(fields: [instructorId], references: [id], onDelete: SetNull)
+  enrolments      Enrolment[]
+  attendance      AttendanceRecord[]
+  notes           ClassNote[]
+  assessedResults CompetencyResult[]
+
+  @@index([dayOfWeek, startMinutes])
+  @@index([levelId])
+  @@index([instructorId])
+}
+
+/// `levelId` and `programmeId` are **pinned** at enrolment. They are not a
+/// cache of the course's level — they are the level the student was *placed*
+/// at, which must not move when a course is re-badged.
+///
+/// There is deliberately no `@@unique([studentId, courseId])`: repeating a
+/// level in the same class is the single most common thing a swim school does.
+/// The course-row `FOR UPDATE` lock in `withCourseSeat` makes the duplicate
+/// check race-free instead.
+model Enrolment {
+  id              String          @id @default(cuid())
+  studentId       String
+  courseId        String
+  levelId         String
+  programmeId     String
+  status          EnrolmentStatus @default(ACTIVE)
+  startedOn       DateTime        @db.Date
+  endedOn         DateTime?       @db.Date
+  /// Required when the student is placed at a level they have not earned.
+  /// Stored on the row, not only in the audit log, because the log is
+  /// admin-only and the instructor on the deck is who needs to know.
+  placementReason String?
+  createdAt       DateTime        @default(now())
+  updatedAt       DateTime        @updatedAt
+
+  student   Student   @relation(fields: [studentId], references: [id], onDelete: Restrict)
+  course    Course    @relation(fields: [courseId], references: [id], onDelete: Restrict)
+  level     Level     @relation(fields: [levelId], references: [id], onDelete: Restrict)
+  programme Programme @relation(fields: [programmeId], references: [id], onDelete: Restrict)
+
+  @@index([courseId, status])
+  @@index([studentId, status])
+  @@index([programmeId, status])
+}
+
+// ---------------------------------------------------------------------------
+// The register
+// ---------------------------------------------------------------------------
+
+model AttendanceRecord {
+  id           String           @id @default(cuid())
+  courseId     String
+  studentId    String
+  date         DateTime         @db.Date
+  status       AttendanceStatus
+  note         String?
+  markedById   String?
+  markedByName String
+  markedAt     DateTime         @default(now())
+
+  course   Course  @relation(fields: [courseId], references: [id], onDelete: Restrict)
+  student  Student @relation(fields: [studentId], references: [id], onDelete: Restrict)
+  markedBy User?   @relation(fields: [markedById], references: [id], onDelete: SetNull)
+
+  /// `studentId` last on purpose: the index then also serves the register's
+  /// `(courseId, date)` lookup as a leftmost prefix. One index, two jobs.
+  @@unique([courseId, date, studentId])
+  @@index([studentId, date])
+}
+
+/// The cheap answer to "pool closed this week" — with everyone marked EXCUSED
+/// it gives cancellation back for one table.
+///
+/// It is also the seam. The moment this grows a `cancelled` boolean, an
+/// `instructorId` or a time override, class sessions have been rebuilt by
+/// accident, and the honest move is to build them deliberately instead.
+model ClassNote {
+  id        String   @id @default(cuid())
+  courseId  String
+  date      DateTime @db.Date
+  note      String
+  byId      String?
+  byName    String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  course Course @relation(fields: [courseId], references: [id], onDelete: Restrict)
+  by     User?  @relation(fields: [byId], references: [id], onDelete: SetNull)
+
+  @@unique([courseId, date])
+}
+
+// ---------------------------------------------------------------------------
+// Assessment and progression
+// ---------------------------------------------------------------------------
+
+model CompetencyResult {
+  id                 String           @id @default(cuid())
+  studentId          String
+  competencyId       String
+  status             CompetencyStatus
+  /// Which class it happened in, when it happened in one.
+  assessedInCourseId String?
+  assessedById       String?
+  assessedByName     String
+  assessedOn         DateTime         @db.Date
+  note               String?
+  createdAt          DateTime         @default(now())
+  updatedAt          DateTime         @updatedAt
+
+  student          Student    @relation(fields: [studentId], references: [id], onDelete: Restrict)
+  competency       Competency @relation(fields: [competencyId], references: [id], onDelete: Restrict)
+  assessedInCourse Course?    @relation(fields: [assessedInCourseId], references: [id], onDelete: SetNull)
+  assessedBy       User?      @relation(fields: [assessedById], references: [id], onDelete: SetNull)
+
+  @@unique([studentId, competencyId])
+  @@index([competencyId, status])
+}
+
+/// The truth for "done". Eligibility is only ever computed for students who
+/// have *not* completed a level — otherwise adding a competency to the
+/// curriculum would retroactively un-complete an entire cohort.
+model LevelCompletion {
+  id          String   @id @default(cuid())
+  studentId   String
+  levelId     String
+  programmeId String
+  completedOn DateTime @db.Date
+
+  /// Frozen at confirmation. Without the snapshot, one curriculum edit later
+  /// nobody can tell whether a completion was earned or waved through.
+  competenciesAchieved Int
+  competencyCount      Int
+
+  /// Non-null means "confirmed with gaps" — admin tier only.
+  overrideReason  String?
+  confirmedById   String?
+  confirmedByName String
+  note            String?
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  student     Student   @relation(fields: [studentId], references: [id], onDelete: Restrict)
+  level       Level     @relation(fields: [levelId], references: [id], onDelete: Restrict)
+  programme   Programme @relation(fields: [programmeId], references: [id], onDelete: Restrict)
+  confirmedBy User?     @relation(fields: [confirmedById], references: [id], onDelete: SetNull)
+
+  @@unique([studentId, levelId])
+  @@index([programmeId, completedOn])
+}

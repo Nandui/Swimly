@@ -1,34 +1,102 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# Swimly
 
-## Getting Started
+A calm, document-like workspace, built in the
+[well-kept page](https://github.com/Nandui/seryn-design-kit-one) style.
 
-First, run the development server:
+Next.js App Router (server components by default) · Prisma 7 + Postgres · Auth.js
+· Tailwind v4 with CSS-variable tokens · shadcn/ui primitives · zod.
+
+The visual system and the conventions underneath it are documented in
+[DESIGN.md](DESIGN.md). Read that before adding a page.
+
+---
+
+## Getting started
+
+You need Node 20+ and a Postgres database.
+
+**1. Environment.** Copy the example and fill in `DATABASE_URL`:
+
+```bash
+cp .env.example .env
+```
+
+`AUTH_SECRET` is already generated in your local `.env`. To make another:
+
+```bash
+node -e "console.log(require('crypto').randomBytes(32).toString('base64'))"
+```
+
+**2. Create the schema.**
+
+```bash
+npm run db:migrate
+```
+
+**3. Create the first admin.** Set `SEED_ADMIN_EMAIL`, `SEED_ADMIN_NAME` and
+`SEED_ADMIN_PASSWORD` in `.env`, then:
+
+```bash
+npm run db:seed
+```
+
+The seed declines to run once an admin exists, so it is safe to leave in a
+pipeline. Clear the three variables afterwards.
+
+**4. Seed a curriculum** (optional, and it declines once one exists):
+
+```bash
+npm run db:seed-curriculum
+```
+
+**5. Run it.**
 
 ```bash
 npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+Sign in at `/sign-in` with the seeded account. During development you can set
+`DEV_AUTH_BYPASS=1` in `.env` instead — it signs you in as the first active
+admin in the database and is ignored in production builds.
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+---
 
-## Learn More
+## Scripts
 
-To learn more about Next.js, take a look at the following resources:
+| Command | Does |
+|---|---|
+| `npm run dev` | Development server |
+| `npm run build` | Checks the environment, generates the client, builds |
+| `npm run typecheck` | `tsc --noEmit` |
+| `npm run lint` | ESLint |
+| `npm run db:migrate` | Create and apply a migration in development |
+| `npm run db:deploy` | Apply pending migrations (deployments) |
+| `npm run db:seed` | Create the first admin, once |
+| `npm run db:seed-curriculum` | Seed a starter curriculum, once |
+| `npm run db:studio` | Prisma Studio |
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+`npm run build` fails if `DATABASE_URL` is missing and warns about a missing
+`AUTH_SECRET` or an unpooled-URL mismatch, naming where to set each.
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+---
 
-## Deploy on Vercel
+## The design system
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+It is vendored as a git submodule at `.claude/skills/design-kit`, which is also
+a Claude Code skill — ask for "the house style" and it loads its own references
+before writing code.
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+After cloning this repo:
+
+```bash
+git submodule update --init --recursive
+```
+
+To pull a later revision of the kit:
+
+```bash
+git submodule update --remote .claude/skills/design-kit
+```
+
+Swimly ships **light mode only**, by decision rather than omission. DESIGN.md
+explains why and how to reverse it.
