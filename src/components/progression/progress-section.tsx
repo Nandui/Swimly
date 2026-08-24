@@ -6,6 +6,7 @@ import {
   RevokeCompletion,
 } from "@/components/progression/assessment";
 import { formatDate } from "@/lib/format";
+import { nextLevel } from "@/lib/progression/rules";
 import { COMPETENCY_STATUS_META } from "@/lib/progression/constants";
 import type { LevelProgress, ProgrammeProgress } from "@/lib/progression/data/progress";
 
@@ -62,6 +63,23 @@ export function ProgressSection({
                   </span>{" "}
                   of them.
                 </>
+              ) : current?.completedOn ? (
+                <>
+                  Finished <span className="font-medium text-foreground">{current.name}</span> on{" "}
+                  {formatDate(current.completedOn)}
+                  {nextUp(programme, current) ? (
+                    <>
+                      {" "}
+                      — ready for{" "}
+                      <span className="font-medium text-foreground">
+                        {nextUp(programme, current)!.name}
+                      </span>
+                      , once they are in a class for it.
+                    </>
+                  ) : (
+                    <>, the last level in the programme.</>
+                  )}
+                </>
               ) : current ? (
                 <>
                   At <span className="font-medium text-foreground">{current.name}</span>, level{" "}
@@ -114,6 +132,11 @@ export function ProgressSection({
       })}
     </div>
   );
+}
+
+/** The rung above the one they have just finished, if there is one. */
+function nextUp(programme: ProgrammeProgress, current: LevelProgress) {
+  return nextLevel(current.id, programme.levels);
 }
 
 function LevelBlock({

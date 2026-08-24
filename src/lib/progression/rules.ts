@@ -73,11 +73,13 @@ export function hasGraduated(
   return orderedLevels.every((level) => completedLevelIds.has(level.id));
 }
 
-/** The next level up, once this one is done — null at the top of the ladder. */
-export function nextLevel(
+/** The next level up, once this one is done — null at the top of the ladder.
+ *  Generic in the level shape, because the list is already in order and only
+ *  the id is read: callers pass whatever they already have in hand. */
+export function nextLevel<T extends { id: string }>(
   levelId: string,
-  orderedLevels: readonly OrderedLevel[]
-): OrderedLevel | null {
+  orderedLevels: readonly T[]
+): T | null {
   const index = orderedLevels.findIndex((level) => level.id === levelId);
   if (index === -1 || index === orderedLevels.length - 1) return null;
   return orderedLevels[index + 1];
