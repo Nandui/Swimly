@@ -2,7 +2,7 @@
 
 import { revalidatePath } from "next/cache";
 import { z } from "zod";
-import { fail, ok, type ActionResult } from "@/lib/action-result";
+import { fail, ok, onUniqueViolation, type ActionResult } from "@/lib/action-result";
 import { logAudit } from "@/lib/audit";
 import { requireManage } from "@/lib/authz";
 import { parseDateOnly } from "@/lib/format";
@@ -22,6 +22,7 @@ const blankOr = (test: RegExp, message: string) =>
     .refine((value) => value === "" || test.test(value), message);
 
 const studentSchema = z.object({
+  memberNumber: z.string().trim().max(40, "Keep the member number under 40 characters."),
   firstName: z.string().trim().min(1, "A first name is needed.").max(60),
   lastName: z.string().trim().min(1, "A last name is needed.").max(60),
   dateOfBirth: blankOr(ISO_DATE, "Give the date of birth as a date."),
@@ -41,6 +42,9 @@ export type StudentInput = z.infer<typeof studentSchema>;
 
 function toData(input: StudentInput) {
   return {
+    // Empty means "no number", not "an empty number" — the column is unique,
+    // and a second empty string would collide with the first.
+    memberNumber: input.memberNumber || null,
     firstName: input.firstName,
     lastName: input.lastName,
     dateOfBirth: input.dateOfBirth ? parseDateOnly(input.dateOfBirth) : null,
@@ -64,10 +68,15 @@ export async function createStudent(input: StudentInput): Promise<ActionResult> 
   if (!parsed.success) return fail(parsed.error.issues[0].message);
   const data = toData(parsed.data);
 
-  const student = await prisma.student.create({
-    data: { ...data, photoConsentOn: data.photoConsent ? new Date() : null },
-    select: { id: true, firstName: true, lastName: true },
-  });
+  const student = await onUniqueViolation(
+    () =>
+      prisma.student.create({
+        data: { ...data, photoConsentOn: data.photoConsent ? new Date() : null },
+        select: { id: true, firstName: true, lastName: true },
+      }),
+    `Member number ${data.memberNumber} already belongs to another swimmer.`
+  );
+  if ("ok" in student) return student;
 
   await logAudit({
     actorId: session.user.id,
@@ -96,6 +105,7 @@ export async function updateStudent(id: string, input: StudentInput): Promise<Ac
   // tells a person reading this in six months nothing at all.
   const changes: string[] = [];
   const named: [keyof typeof data, string][] = [
+    ["memberNumber", "member number"],
     ["firstName", "first name"],
     ["lastName", "last name"],
     ["status", "status"],
@@ -122,21 +132,26 @@ export async function updateStudent(id: string, input: StudentInput): Promise<Ac
     changes.push(`photo consent ${data.photoConsent ? "given" : "withdrawn"}`);
   }
 
-  const student = await prisma.student.update({
-    where: { id },
-    data: {
-      ...data,
-      // The date is the point of the consent record: "yes, on the 3rd" is
-      // answerable, "yes" is not.
-      photoConsentOn:
-        existing.photoConsent === data.photoConsent
-          ? existing.photoConsentOn
-          : data.photoConsent
-            ? new Date()
-            : null,
-    },
-    select: { id: true, firstName: true, lastName: true },
-  });
+  const student = await onUniqueViolation(
+    () =>
+      prisma.student.update({
+        where: { id },
+        data: {
+          ...data,
+          // The date is the point of the consent record: "yes, on the 3rd" is
+          // answerable, "yes" is not.
+          photoConsentOn:
+            existing.photoConsent === data.photoConsent
+              ? existing.photoConsentOn
+              : data.photoConsent
+                ? new Date()
+                : null,
+        },
+        select: { id: true, firstName: true, lastName: true },
+      }),
+    `Member number ${data.memberNumber} already belongs to another swimmer.`
+  );
+  if ("ok" in student) return student;
 
   if (changes.length > 0) {
     await logAudit({

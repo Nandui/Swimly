@@ -2,11 +2,11 @@
 
 import { revalidatePath } from "next/cache";
 import { z } from "zod";
-import type { Prisma } from "@/generated/prisma/client";
 import { fail, ok, type ActionResult } from "@/lib/action-result";
 import { logAudit } from "@/lib/audit";
 import { requireManage } from "@/lib/authz";
 import { capacityLabel, courseLabel } from "@/lib/courses/constants";
+import { withCourseSeat } from "@/lib/enrolment/seat";
 import { parseDateOnly, today } from "@/lib/format";
 import { hasEarnedPlace, previousLevel } from "@/lib/progression/rules";
 import { fullName } from "@/lib/students/constants";
@@ -19,31 +19,6 @@ import { prisma } from "@/lib/prisma";
  *  somebody into faking a completion to get past the guard. Both are worse
  *  than the thing the guard was for. What it costs instead is a reason, and
  *  the reason is stored on the enrolment where an instructor can read it. */
-
-/** Every path that can occupy a place goes through here, and nothing else
- *  creates an ACTIVE enrolment.
- *
- *  The row lock is the whole mechanism. An interactive transaction that merely
- *  re-counts does **not** fix the race: at READ COMMITTED two transactions both
- *  read 11 and both insert. Locking the course row serialises every seat
- *  decision for that one class, which also makes the "already enrolled here?"
- *  check race-free — which is why there is no unique constraint on
- *  (studentId, courseId), and why repeating a level is possible at all.
- *
- *  Keep the body small. It holds a pool connection, so no audit write and no
- *  revalidation happen inside it. */
-async function withCourseSeat<T>(
-  courseId: string,
-  run: (tx: Prisma.TransactionClient) => Promise<T>
-): Promise<T> {
-  return prisma.$transaction(
-    async (tx) => {
-      await tx.$queryRaw`SELECT id FROM "Course" WHERE id = ${courseId} FOR UPDATE`;
-      return run(tx);
-    },
-    { timeout: 10_000 }
-  );
-}
 
 const enrolSchema = z.object({
   studentId: z.string().min(1, "Pick a student."),

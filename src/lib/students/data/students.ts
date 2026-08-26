@@ -4,6 +4,7 @@ import { prisma } from "@/lib/prisma";
 
 const LIST_SELECT = {
   id: true,
+  memberNumber: true,
   firstName: true,
   lastName: true,
   dateOfBirth: true,
@@ -40,6 +41,8 @@ export async function getStudents(filters: StudentFilters = {}) {
             { lastName: { contains: q, mode: "insensitive" } },
             { contactName: { contains: q, mode: "insensitive" } },
             { contactEmail: { contains: q, mode: "insensitive" } },
+            // The club's own identifier is how staff look people up.
+            { memberNumber: { contains: q, mode: "insensitive" } },
           ],
         }
       : {}),
@@ -105,6 +108,7 @@ export async function getStudent(id: string) {
     where: { id },
     select: {
       id: true,
+      memberNumber: true,
       firstName: true,
       lastName: true,
       dateOfBirth: true,

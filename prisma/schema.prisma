@@ -192,12 +192,17 @@ model Competency {
 // ---------------------------------------------------------------------------
 
 model Student {
-  id          String        @id @default(cuid())
-  firstName   String
-  lastName    String
-  dateOfBirth DateTime?     @db.Date
-  status      StudentStatus @default(ACTIVE)
-  joinedOn    DateTime      @default(now()) @db.Date
+  id           String        @id @default(cuid())
+  /// The club's own identifier, carried over from the system this data came
+  /// from. Unique, so a re-import matches rather than duplicating, and so a
+  /// mistyped digit collides loudly instead of quietly creating a second
+  /// child. Nullable: a swimmer added here first has no number yet.
+  memberNumber String?       @unique
+  firstName    String
+  lastName     String
+  dateOfBirth  DateTime?     @db.Date
+  status       StudentStatus @default(ACTIVE)
+  joinedOn     DateTime      @default(now()) @db.Date
 
   /// Standalone contacts: no family table, so siblings duplicate a parent's
   /// phone number. Named "contact" rather than "guardian" because an adult

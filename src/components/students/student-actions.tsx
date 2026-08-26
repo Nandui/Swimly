@@ -30,6 +30,7 @@ import { toDateOnlyString } from "@/lib/format";
 function readInput(formData: FormData): StudentInput {
   const text = (key: string) => String(formData.get(key) ?? "");
   return {
+    memberNumber: text("memberNumber"),
     firstName: text("firstName"),
     lastName: text("lastName"),
     dateOfBirth: text("dateOfBirth"),
@@ -55,9 +56,21 @@ function Legend({ children }: { children: React.ReactNode }) {
 function StudentFields({ student }: { student?: StudentDetail }) {
   return (
     <>
+      <Field
+        label="Member number"
+        htmlFor="memberNumber"
+        hint="The club's own identifier. Leave blank for a swimmer who has not been given one."
+      >
+        <Input
+          id="memberNumber"
+          name="memberNumber"
+          defaultValue={student?.memberNumber ?? ""}
+          placeholder="LWB419700"
+        />
+      </Field>
       <div className="grid gap-3 sm:grid-cols-2">
         <Field label="First name" htmlFor="firstName">
-          <Input id="firstName" name="firstName" required autoFocus defaultValue={student?.firstName} />
+          <Input id="firstName" name="firstName" required defaultValue={student?.firstName} />
         </Field>
         <Field label="Last name" htmlFor="lastName">
           <Input id="lastName" name="lastName" required defaultValue={student?.lastName} />

@@ -110,6 +110,13 @@ export default async function StudentPage(props: PageProps<"/students/[id]">) {
         <h2 className="text-sm font-semibold text-foreground">Details</h2>
         <div className="overflow-hidden rounded-md border">
           <dl>
+            <Row label="Member number">
+              {student.memberNumber ? (
+                <span className="tabular-nums">{student.memberNumber}</span>
+              ) : (
+                <Blank />
+              )}
+            </Row>
             <Row label="Date of birth">
               {student.dateOfBirth ? formatDate(student.dateOfBirth) : <Blank />}
             </Row>
