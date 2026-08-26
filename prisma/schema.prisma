@@ -54,11 +54,14 @@ enum EnrolmentStatus {
   TRANSFERRED
 }
 
+/// Three states, because three is what an instructor can hit accurately on a
+/// wet phone. There is no EXCUSED: a reason for an absence goes in the row's
+/// `note`, where it reads as prose rather than as a fourth button nobody
+/// applies consistently.
 enum AttendanceStatus {
   PRESENT
   ABSENT
   LATE
-  EXCUSED
 }
 
 /// The absence of a `CompetencyResult` row means "not assessed". There is no
@@ -329,8 +332,9 @@ model AttendanceRecord {
   @@index([studentId, date])
 }
 
-/// The cheap answer to "pool closed this week" — with everyone marked EXCUSED
-/// it gives cancellation back for one table.
+/// The cheap answer to "pool closed this week": say so here and leave the
+/// register untaken. No rows is the honest record of a class that never ran,
+/// and it keeps a cancellation out of the absence streaks.
 ///
 /// It is also the seam. The moment this grows a `cancelled` boolean, an
 /// `instructorId` or a time override, class sessions have been rebuilt by

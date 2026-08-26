@@ -9,13 +9,12 @@ export const ATTENDANCE_STATUS_META: Record<
 > = {
   PRESENT: { label: "Present", short: "In", color: "green" },
   LATE: { label: "Late", short: "Late", color: "orange" },
-  EXCUSED: { label: "Excused", short: "Exc", color: "gray" },
   ABSENT: { label: "Absent", short: "Out", color: "red" },
 };
 
 /** The order they appear on the register: the common answer first, then the
  *  exceptions in ascending seriousness. */
-export const ATTENDANCE_ORDER = ["PRESENT", "LATE", "EXCUSED", "ABSENT"] as const;
+export const ATTENDANCE_ORDER = ["PRESENT", "LATE", "ABSENT"] as const;
 
 /** How many consecutive absences before somebody should ring home. */
 export const DROP_OFF_STREAK = 3;

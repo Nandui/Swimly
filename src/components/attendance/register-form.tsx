@@ -28,7 +28,6 @@ import { cn } from "@/lib/utils";
 const SELECTED: Record<AttendanceStatus, string> = {
   PRESENT: "bg-(--tag-green-bg) text-(--tag-green-fg) border-(--tag-green-bg)",
   LATE: "bg-(--tag-orange-bg) text-(--tag-orange-fg) border-(--tag-orange-bg)",
-  EXCUSED: "bg-(--tag-gray-bg) text-(--tag-gray-fg) border-(--tag-gray-bg)",
   ABSENT: "bg-(--tag-red-bg) text-(--tag-red-fg) border-(--tag-red-bg)",
 };
 
@@ -256,7 +255,7 @@ export function RegisterForm({
             setDirty(true);
           }}
           rows={2}
-          placeholder="Pool closed — everyone excused"
+          placeholder="Pool closed — no class this week"
         />
       </div>
 
