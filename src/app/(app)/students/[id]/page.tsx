@@ -127,10 +127,16 @@ export default async function StudentPage(props: PageProps<"/students/[id]">) {
                 <Blank />
               )}
             </Row>
+            {/* Shown when *either* half is present. Gating the number on the
+                name having been filled in hid the most safety-critical field
+                in the app: a record could hold a working emergency number and
+                still render an em dash to whoever went looking for it. */}
             <Row label="In an emergency">
-              {student.emergencyName ? (
+              {student.emergencyName || student.emergencyPhone ? (
                 <>
-                  {student.emergencyName}
+                  {student.emergencyName ?? (
+                    <span className="text-muted-foreground">Name not recorded</span>
+                  )}
                   {student.emergencyRelationship ? ` (${student.emergencyRelationship})` : ""}
                   {student.emergencyPhone ? (
                     <span className="block text-muted-foreground">{student.emergencyPhone}</span>
