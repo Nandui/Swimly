@@ -16,7 +16,11 @@ import {
   MoveLevel,
 } from "@/components/curriculum/level-actions";
 import { competencyCountLabel } from "@/lib/curriculum/constants";
-import { getProgramme, type LevelDetail } from "@/lib/curriculum/data/curriculum";
+import {
+  getProgramme,
+  type CompetencyDetail,
+  type LevelDetail,
+} from "@/lib/curriculum/data/curriculum";
 import { adminPage } from "@/lib/page-guards";
 
 export const metadata: Metadata = { title: "Programme" };
@@ -94,6 +98,34 @@ export default async function ProgrammePage(props: PageProps<"/programmes/[id]">
   );
 }
 
+/** Archived competencies sink to the bottom and take no number, so the live
+ *  list reads as the sequence a swimmer actually works through — the same
+ *  1..n they see on the assessment checklist. Numbering the retired ones in
+ *  place would leave the live curriculum reading 2, 4, 5, 6.
+ *
+ *  `first`/`last` are the ends of the *live* run for the same reason: the
+ *  reorder arrows move a competency past its live neighbours, not past a row
+ *  nobody is assessed on any more. */
+function numberLive(competencies: CompetencyDetail[]) {
+  const live = competencies.filter((competency) => !competency.archivedAt);
+  const archived = competencies.filter((competency) => competency.archivedAt);
+
+  return [
+    ...live.map((competency, index) => ({
+      competency,
+      position: index + 1,
+      first: index === 0,
+      last: index === live.length - 1,
+    })),
+    ...archived.map((competency) => ({
+      competency,
+      position: null,
+      first: false,
+      last: false,
+    })),
+  ];
+}
+
 function LevelSection({
   level,
   first,
@@ -142,13 +174,13 @@ function LevelSection({
         </p>
       ) : (
         <ol>
-          {level.competencies.map((competency, index) => (
+          {numberLive(level.competencies).map(({ competency, position, first, last }) => (
             <li
               key={competency.id}
               className="group flex items-start gap-3 border-b px-3 py-2 transition-colors last:border-0 hover:bg-accent/40"
             >
               <span className="w-4 shrink-0 pt-0.5 text-xs text-muted-foreground tabular-nums">
-                {index + 1}
+                {position ?? ""}
               </span>
               <div className="min-w-0 flex-1">
                 <p className="text-sm text-foreground">
@@ -165,11 +197,7 @@ function LevelSection({
               </div>
               <div className={ROW_ACTIONS}>
                 {competency.archivedAt ? null : (
-                  <MoveCompetency
-                    competency={competency}
-                    first={index === 0}
-                    last={index === level.competencies.length - 1}
-                  />
+                  <MoveCompetency competency={competency} first={first} last={last} />
                 )}
                 <EditCompetency competency={competency} />
                 <ArchiveCompetency
