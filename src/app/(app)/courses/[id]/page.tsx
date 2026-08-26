@@ -87,7 +87,7 @@ export default async function CoursePage(props: PageProps<"/courses/[id]">) {
                 <Button asChild variant="outline" size="sm">
                   <Link href={`/courses/${course.id}/register`}>
                     <ClipboardList className="size-4" />
-                    Take the register
+                    Take Attendance
                   </Link>
                 </Button>
               ) : null}

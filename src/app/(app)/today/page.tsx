@@ -103,11 +103,11 @@ export default async function TodayPage(props: PageProps<"/today">) {
                     </Link>
                     {done ? (
                       <Tag color="green" className="ml-2">
-                        Taken
+                        Attendance taken
                       </Tag>
                     ) : (
                       <Tag color="yellow" className="ml-2">
-                        Not taken
+                        Attendance not taken
                       </Tag>
                     )}
                   </p>
@@ -126,7 +126,7 @@ export default async function TodayPage(props: PageProps<"/today">) {
                 >
                   <Link href={`/courses/${course.id}/register?date=${iso}`}>
                     <ClipboardList className="size-4" />
-                    {mayMark ? (done ? "Amend" : "Take the register") : "Read the register"}
+                    {mayMark ? (done ? "Amend" : "Take Attendance") : "Read attendance"}
                   </Link>
                 </Button>
               </li>

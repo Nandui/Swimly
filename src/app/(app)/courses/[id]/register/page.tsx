@@ -61,7 +61,11 @@ export default async function RegisterPage(props: PageProps<"/courses/[id]/regis
           title={
             <span className="inline-flex flex-wrap items-center gap-2">
               {formatDate(parseDateOnly(iso))}
-              {taken ? <Tag color="green">Taken</Tag> : <Tag color="yellow">Not taken</Tag>}
+              {taken ? (
+                <Tag color="green">Attendance taken</Tag>
+              ) : (
+                <Tag color="yellow">Attendance not taken</Tag>
+              )}
             </span>
           }
           description={`${courseName(course)} · ${formatSlot(course)}${

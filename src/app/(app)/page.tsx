@@ -112,7 +112,7 @@ export default async function OverviewPage() {
                           {courseName(course)}
                         </Link>
                         <Tag color={done ? "green" : "yellow"} className="ml-2">
-                          {done ? "Taken" : "Not taken"}
+                          {done ? "Attendance taken" : "Attendance not taken"}
                         </Tag>
                       </p>
                       <p className="mt-0.5 text-xs text-muted-foreground">
@@ -124,7 +124,7 @@ export default async function OverviewPage() {
                     <Button asChild size="sm" variant={done ? "outline" : "default"}>
                       <Link href={`/courses/${course.id}/register?date=${iso}`}>
                         <ClipboardList className="size-4" />
-                        {done ? "Amend" : "Take the register"}
+                        {done ? "Amend" : "Take Attendance"}
                       </Link>
                     </Button>
                   </li>
