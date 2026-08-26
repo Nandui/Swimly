@@ -1,23 +1,14 @@
-import NextAuth, { type Session } from "next-auth";
+import NextAuth, { type NextAuthConfig, type Session } from "next-auth";
 import Credentials from "next-auth/providers/credentials";
 import bcrypt from "bcryptjs";
+import { devSignInAllowed, getDevAdmin } from "@/lib/dev-sign-in";
 import { prisma } from "@/lib/prisma";
 
-/** Authentication for Swimly.
- *
- *  Credentials against the `User` table is the starting point, not a
- *  commitment: swapping in an email link or an SSO provider is an edit to the
- *  `providers` array and nothing else, because everything downstream asks
- *  `session.user.role` and never how the person signed in. */
-const {
-  handlers,
-  signIn,
-  signOut,
-  auth: nextAuth,
-} = NextAuth({
-  session: { strategy: "jwt" },
-  pages: { signIn: "/sign-in" },
-  providers: [
+/** Built as a function so the dev provider is **absent** from the array in
+ *  production rather than present-and-refusing. There is then no endpoint to
+ *  post to: `/api/auth/callback/dev-admin` simply does not exist. */
+function providers(): NextAuthConfig["providers"] {
+  const list: NextAuthConfig["providers"] = [
     Credentials({
       credentials: {
         email: { label: "Email", type: "email" },
@@ -40,7 +31,44 @@ const {
         return { id: user.id, email: user.email, name: user.name, role: user.role };
       },
     }),
-  ],
+  ];
+
+  if (devSignInAllowed()) {
+    list.push(
+      Credentials({
+        id: "dev-admin",
+        name: "Dev admin",
+        credentials: {},
+        async authorize() {
+          // Asked again at call time, not just at boot: the array is built
+          // once per process, and this is not a thing to be clever about.
+          if (!devSignInAllowed()) return null;
+          const admin = await getDevAdmin();
+          if (!admin) return null;
+          return { id: admin.id, email: admin.email, name: admin.name, role: admin.role };
+        },
+      })
+    );
+  }
+
+  return list;
+}
+
+/** Authentication for Swimly.
+ *
+ *  Credentials against the `User` table is the starting point, not a
+ *  commitment: swapping in an email link or an SSO provider is an edit to the
+ *  `providers` array and nothing else, because everything downstream asks
+ *  `session.user.role` and never how the person signed in. */
+const {
+  handlers,
+  signIn,
+  signOut,
+  auth: nextAuth,
+} = NextAuth({
+  session: { strategy: "jwt" },
+  pages: { signIn: "/sign-in" },
+  providers: providers(),
   callbacks: {
     jwt({ token, user }) {
       if (user) {
