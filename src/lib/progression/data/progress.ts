@@ -209,16 +209,25 @@ export async function getClassProgress(courseId: string) {
   });
   if (!course) return null;
 
-  const enrolments = await prisma.enrolment.findMany({
-    where: { courseId, status: "ACTIVE" },
-    orderBy: [{ student: { lastName: "asc" } }, { student: { firstName: "asc" } }],
-    select: {
-      levelId: true,
-      student: {
-        select: { id: true, firstName: true, lastName: true, dateOfBirth: true },
+  const [enrolments, orderedLevels] = await Promise.all([
+    prisma.enrolment.findMany({
+      where: { courseId, status: "ACTIVE" },
+      orderBy: [{ student: { lastName: "asc" } }, { student: { firstName: "asc" } }],
+      select: {
+        id: true,
+        levelId: true,
+        student: {
+          select: { id: true, firstName: true, lastName: true, dateOfBirth: true },
+        },
       },
-    },
-  });
+    }),
+    // The ladder this course sits on, so the screen knows what "up" means.
+    prisma.level.findMany({
+      where: { programmeId: course.level.programmeId, ...LIVE },
+      orderBy: [...LIST_ORDER],
+      select: { id: true, name: true, sortOrder: true },
+    }),
+  ]);
 
   const studentIds = enrolments.map((row) => row.student.id);
   const competencyIds = course.level.competencies.map((row) => row.id);
@@ -250,6 +259,7 @@ export async function getClassProgress(courseId: string) {
     const marks = byStudent.get(enrolment.student.id) ?? new Map<string, CompetencyStatus>();
     const achieved = competencyIds.filter((id) => marks.get(id) === "ACHIEVED").length;
     return {
+      enrolmentId: enrolment.id,
       student: enrolment.student,
       /** Placed at a different level from the one this class teaches. */
       offLevel: enrolment.levelId !== course.levelId,
@@ -264,7 +274,7 @@ export async function getClassProgress(courseId: string) {
     };
   });
 
-  return { course, swimmers };
+  return { course, swimmers, orderedLevels };
 }
 
 export type ClassProgress = NonNullable<Awaited<ReturnType<typeof getClassProgress>>>;

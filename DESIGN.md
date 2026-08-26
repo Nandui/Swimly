@@ -44,7 +44,7 @@ makes Swimly stop looking like itself.
 - **Every mutation is audited**, scripts included, with a summary naming what
   changed and to what.
 - **Ask the permission tier, not the role.** `canManage(role)`, not
-  `role === "COACH"`.
+  `role === "INSTRUCTOR"`.
 
 ---
 
@@ -196,6 +196,20 @@ completion to get past the guard and the progression data starts lying. So
 `enrolStudent` takes a `placementReason` and stores it **on the enrolment**,
 not only in the audit log, because the log is admin-only and the instructor on
 the deck is exactly who needs to know why this child is in Level 5.
+
+### Moving up is gated on the completion, not on the last tick
+
+All competencies passed makes a swimmer **eligible**; a person still confirms
+they are done. "Move up to <next level>" only appears once that confirmation
+exists, and it appears in both places completion happens — the student profile
+and the class assessment screen.
+
+Offering it a step earlier would walk straight into the placement guard and
+demand a reason for something the swimmer had in fact earned. The move itself
+reuses `transferEnrolment`, so the old place closes and a new one opens rather
+than the enrolment being re-pointed: attendance hangs off
+`(course, student, date)`, and rewriting the enrolment would orphan every
+register they were already on.
 
 ### Batched writes, on purpose
 

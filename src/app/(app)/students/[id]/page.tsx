@@ -47,6 +47,16 @@ export default async function StudentPage(props: PageProps<"/students/[id]">) {
   const open = enrolments.filter(
     (enrolment) => enrolment.status === "ACTIVE" || enrolment.status === "WAITLISTED"
   );
+  // Where their open place sits, by level, so "move up" knows which one to
+  // close. Built from the enrolments the page already loaded.
+  const openPlaceByLevel = Object.fromEntries(
+    enrolments
+      .filter((enrolment) => enrolment.status === "ACTIVE")
+      .map((enrolment) => [
+        enrolment.levelId,
+        { id: enrolment.id, label: courseLabel(enrolment.course) },
+      ])
+  );
   const past = enrolments.filter(
     (enrolment) => enrolment.status !== "ACTIVE" && enrolment.status !== "WAITLISTED"
   );
@@ -184,6 +194,8 @@ export default async function StudentPage(props: PageProps<"/students/[id]">) {
           studentName={fullName(student)}
           manage={manage}
           admin={admin}
+          courses={courses}
+          openPlaceByLevel={openPlaceByLevel}
         />
       </section>
 

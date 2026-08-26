@@ -6,13 +6,15 @@ import { EmptyState } from "@/components/ui-kit/empty-state";
 import { PageHeader } from "@/components/ui-kit/page-header";
 import { Tag } from "@/components/ui-kit/tag";
 import { CompetencyChecklist, ConfirmLevel } from "@/components/progression/assessment";
+import { MoveUpToLevel, type MoveTarget } from "@/components/progression/move-up";
 import { canMarkRegister } from "@/lib/attendance/access";
 import { isAdmin } from "@/lib/authz";
-import { courseName, formatSlot } from "@/lib/courses/constants";
-import { getCourse } from "@/lib/courses/data/courses";
+import { courseLabel, courseName, formatSlot } from "@/lib/courses/constants";
+import { getCourse, getCourses } from "@/lib/courses/data/courses";
 import { formatDate } from "@/lib/format";
 import { managePage } from "@/lib/page-guards";
 import { getClassProgress, type ClassSwimmer } from "@/lib/progression/data/progress";
+import { nextLevel } from "@/lib/progression/rules";
 import { fullName } from "@/lib/students/constants";
 
 export const metadata: Metadata = { title: "Assess" };
@@ -21,8 +23,15 @@ export default async function AssessPage(props: PageProps<"/courses/[id]/assess"
   const session = await managePage();
   const { id } = await props.params;
 
-  const [course, progress] = await Promise.all([getCourse(id), getClassProgress(id)]);
+  const [course, progress, courses] = await Promise.all([
+    getCourse(id),
+    getClassProgress(id),
+    getCourses(),
+  ]);
   if (!course || !progress) notFound();
+
+  // What "up" means from this class, and the classes that teach it.
+  const up = nextLevel(progress.course.levelId, progress.orderedLevels);
 
   const admin = isAdmin(session.user.role);
   const mayAssess =
@@ -93,6 +102,9 @@ export default async function AssessPage(props: PageProps<"/courses/[id]/assess"
               swimmer={swimmer}
               levelId={progress.course.levelId}
               levelName={progress.course.level.name}
+              classLabel={courseLabel(course)}
+              nextUp={up}
+              courses={courses}
               mayAssess={mayAssess}
               admin={admin}
             />
@@ -110,12 +122,18 @@ function SwimmerBlock({
   swimmer,
   levelId,
   levelName,
+  classLabel,
+  nextUp,
+  courses,
   mayAssess,
   admin,
 }: {
   swimmer: ClassSwimmer;
   levelId: string;
   levelName: string;
+  classLabel: string;
+  nextUp: { id: string; name: string } | null;
+  courses: MoveTarget[];
   mayAssess: boolean;
   admin: boolean;
 }) {
@@ -157,18 +175,33 @@ function SwimmerBlock({
           competencies={swimmer.competencies}
           readOnly={!mayAssess}
         />
-        {mayAssess && !done ? (
-          <div className="flex justify-end">
-            <ConfirmLevel
-              studentId={swimmer.student.id}
-              levelId={levelId}
-              studentName={name}
-              levelName={levelName}
-              achieved={swimmer.achieved}
-              total={swimmer.total}
-              eligible={swimmer.eligible}
-              admin={admin}
-            />
+        {mayAssess ? (
+          <div className="flex flex-wrap justify-end gap-2">
+            {done ? null : (
+              <ConfirmLevel
+                studentId={swimmer.student.id}
+                levelId={levelId}
+                studentName={name}
+                levelName={levelName}
+                achieved={swimmer.achieved}
+                total={swimmer.total}
+                eligible={swimmer.eligible}
+                admin={admin}
+              />
+            )}
+            {/* Once the level is signed off and confirmed, the next thing
+                anyone wants is to put them in a class for the rung above. */}
+            {done && nextUp ? (
+              <MoveUpToLevel
+                studentId={swimmer.student.id}
+                studentName={name}
+                fromEnrolmentId={swimmer.enrolmentId}
+                fromClassLabel={classLabel}
+                nextLevelId={nextUp.id}
+                nextLevelName={nextUp.name}
+                courses={courses}
+              />
+            ) : null}
           </div>
         ) : null}
       </div>

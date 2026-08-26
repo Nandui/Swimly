@@ -5,6 +5,7 @@ import {
   ConfirmLevel,
   RevokeCompletion,
 } from "@/components/progression/assessment";
+import { MoveUpToLevel, type MoveTarget } from "@/components/progression/move-up";
 import { formatDate } from "@/lib/format";
 import { nextLevel } from "@/lib/progression/rules";
 import { COMPETENCY_STATUS_META } from "@/lib/progression/constants";
@@ -22,12 +23,18 @@ export function ProgressSection({
   studentName,
   manage,
   admin,
+  courses = [],
+  openPlaceByLevel = {},
 }: {
   programmes: ProgrammeProgress[];
   studentId: string;
   studentName: string;
   manage: boolean;
   admin: boolean;
+  /** Classes they could be moved into. The pages already load this. */
+  courses?: MoveTarget[];
+  /** Their open place at each level, so a move up closes the right one. */
+  openPlaceByLevel?: Record<string, { id: string; label: string }>;
 }) {
   if (programmes.length === 0) {
     return (
@@ -114,6 +121,18 @@ export function ProgressSection({
                 </>
               )}
             </p>
+
+            {manage && !programme.graduated && current?.completedOn && nextUp(programme, current) ? (
+              <MoveUpToLevel
+                studentId={studentId}
+                studentName={studentName}
+                fromEnrolmentId={openPlaceByLevel[current.id]?.id ?? null}
+                fromClassLabel={openPlaceByLevel[current.id]?.label ?? null}
+                nextLevelId={nextUp(programme, current)!.id}
+                nextLevelName={nextUp(programme, current)!.name}
+                courses={courses}
+              />
+            ) : null}
 
             <div className="space-y-3">
               {programme.levels.map((level) => (
