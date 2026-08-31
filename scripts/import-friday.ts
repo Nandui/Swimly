@@ -36,11 +36,12 @@ import { prisma } from "@/lib/prisma";
  *  gives an age in whole years, and a birthday invented to fit would outlive
  *  the guess. The age at import goes in `notes`.
  *
- *  Not included: the 18:05 **LeisureWorld Sharks** class (course 00007913, 31
- *  swimmers). It is a different discipline in their system — its own level
- *  name, €105 rather than €125, a capacity of 36 and swimmers aged 10 to 17.
- *  Filing it under Water Safety & Fun would be inventing a fact about the
- *  club's curriculum. It needs a programme naming before it can be imported. */
+ *  Not included here: the 18:05 **LeisureWorld Sharks** class (course 00007913,
+ *  31 swimmers). Its own level name, €105 rather than €125, a capacity of 36
+ *  and swimmers aged 10 to 17 all said it was a different discipline, and
+ *  filing it under Water Safety & Fun would have been inventing a fact about
+ *  the club's curriculum. The club has since placed it as the third level of
+ *  **Swimming Skills**; `import-leisureworld-sharks.ts` carries it. */
 
 const PROGRAMME = "Water Safety & Fun";
 const DAY = "FRIDAY" as const;
@@ -62,7 +63,6 @@ const ODD_IN_SOURCE = new Map([
   ["LWB419669", "Rachel o'dwyer — lowercase surname in the source"],
   ["LWB96985", "Lylah O sullivan — lowercase surname in the source"],
   ["LWB424027", "Ben O'keeffe — lowercase k in the source"],
-  ["LWB424733", "Alexandra Hales Hales — surname repeated in the source"],
   ["LWB82202", "Christopher Baker Dob — 'Dob' may be a truncated surname"],
   ["LWB423012", "Alastar Glynn — spelled without the second i in the source"],
 ]);
