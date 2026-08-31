@@ -9,7 +9,7 @@ import { getRecentActivity } from "@/lib/activity/data/audit-log";
 import { DROP_OFF_STREAK } from "@/lib/attendance/constants";
 import { weekdayOfIso } from "@/lib/attendance/dates";
 import { getDropOffs, getRegisterStateForDay } from "@/lib/attendance/data/register";
-import { canManage } from "@/lib/authz";
+import { can } from "@/lib/authz";
 import { DAY_META, capacityLabel, courseName, formatTime } from "@/lib/courses/constants";
 import { getCourseCounts, getCoursesOnDay } from "@/lib/courses/data/courses";
 import { formatDate, parseDateOnly, today } from "@/lib/format";
@@ -18,7 +18,7 @@ import { getStudentCounts } from "@/lib/students/data/students";
 
 export default async function OverviewPage() {
   const session = await pageSession();
-  const manage = canManage(session.user.role);
+  const manage = can(session, "attendance.mark");
 
   const iso = today();
   const day = weekdayOfIso(iso);

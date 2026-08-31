@@ -3,13 +3,23 @@
 import { revalidatePath } from "next/cache";
 import bcrypt from "bcryptjs";
 import { z } from "zod";
-import { fail, ok, onUniqueViolation, type ActionResult } from "@/lib/action-result";
+import {
+  fail,
+  isUniqueViolation,
+  ok,
+  onUniqueViolation,
+  type ActionResult,
+} from "@/lib/action-result";
 import { logAudit } from "@/lib/audit";
-import { requireAdmin } from "@/lib/authz";
+import { requirePermission } from "@/lib/authz";
 import { prisma } from "@/lib/prisma";
-import { MIN_PASSWORD_LENGTH, ROLE_META } from "@/lib/staff/constants";
+import { guardKeyholders, withKeyholderLock } from "@/lib/staff/keyholders";
+import { legacyRoleFor } from "@/lib/staff/permissions";
+import { MIN_PASSWORD_LENGTH } from "@/lib/staff/constants";
 
-/** Accounts are the rules, not the data, so every action here is admin tier.
+/** Accounts need `staff.manage`. Note that this is a different power from
+ *  `roles.manage`: someone may be trusted to add a receptionist without being
+ *  trusted to invent what a receptionist may do.
  *
  *  Two things are true of this file and of no other:
  *
@@ -17,11 +27,9 @@ import { MIN_PASSWORD_LENGTH, ROLE_META } from "@/lib/staff/constants";
  *  an error, not in a console line. The summary says a password was set and
  *  who set it, which is the answerable fact; the value is not.
  *
- *  **The last admin cannot be locked out.** Demoting or deactivating the only
- *  active admin would leave an app nobody can administer and no screen to fix
- *  it from — the seed declines to run once an admin exists, so the way back in
- *  would be a database console. `guardLastAdmin` is the whole defence, and it
- *  is a guard rather than a warning on purpose. */
+ *  **Nobody may be locked out.** Moving the last person who can manage
+ *  accounts or roles onto a lesser role, or deactivating them, is refused by
+ *  `guardKeyholders` — see `src/lib/staff/keyholders.ts`. */
 
 const BCRYPT_ROUNDS = 12;
 
@@ -47,46 +55,47 @@ const personSchema = z.object({
         .email("That is not an email address.")
         .max(200, "Keep the email under 200 characters.")
     ),
-  role: z.enum(["ADMIN", "INSTRUCTOR", "VIEWER"]),
+  staffRoleId: z.string().min(1, "Pick a role."),
 });
 
 export type PersonInput = z.infer<typeof personSchema>;
 
-/** Refuses anything that would leave the app with no active admin. Returns a
- *  sentence to hand back, or null when the move is safe. */
-async function guardLastAdmin(userId: string, verb: string): Promise<string | null> {
-  const target = await prisma.user.findUnique({
-    where: { id: userId },
-    select: { role: true, isActive: true, name: true },
+/** The legacy enum is derived rather than chosen, so the column the previous
+ *  release still reads stays truthful. Drop this with the column. */
+async function roleFor(staffRoleId: string) {
+  return prisma.staffRole.findUnique({
+    where: { id: staffRoleId },
+    select: { id: true, name: true, permissions: true },
   });
-  if (!target || target.role !== "ADMIN" || !target.isActive) return null;
-
-  const activeAdmins = await prisma.user.count({
-    where: { role: "ADMIN", isActive: true },
-  });
-  if (activeAdmins > 1) return null;
-
-  return `${target.name} is the only active admin. Make someone else an admin before you ${verb} this account, or there will be no way back in.`;
 }
 
 export async function createPerson(
   input: PersonInput & { password: string }
 ): Promise<ActionResult> {
-  const session = await requireAdmin();
+  const session = await requirePermission("staff.manage");
 
   const parsed = personSchema.safeParse(input);
   if (!parsed.success) return fail(parsed.error.issues[0].message);
   const password = passwordField.safeParse(input.password);
   if (!password.success) return fail(password.error.issues[0].message);
 
-  const { name, email, role } = parsed.data;
+  const { name, email, staffRoleId } = parsed.data;
+  const role = await roleFor(staffRoleId);
+  if (!role) return fail("That role no longer exists.");
+
   const passwordHash = await bcrypt.hash(password.data, BCRYPT_ROUNDS);
 
   const created = await onUniqueViolation(
     () =>
       prisma.user.create({
-        data: { name, email, role, passwordHash },
-        select: { id: true, name: true, email: true, role: true },
+        data: {
+          name,
+          email,
+          staffRoleId: role.id,
+          role: legacyRoleFor(role.permissions),
+          passwordHash,
+        },
+        select: { id: true, name: true, email: true },
       }),
     `${email} already has an account.`
   );
@@ -98,7 +107,7 @@ export async function createPerson(
     action: "create",
     entity: "User",
     entityId: created.id,
-    summary: `Added ${created.name} (${created.email}) as ${ROLE_META[created.role].label}`,
+    summary: `Added ${created.name} (${created.email}) as ${role.name}`,
   });
 
   revalidatePath("/staff");
@@ -106,40 +115,65 @@ export async function createPerson(
 }
 
 export async function updatePerson(id: string, input: PersonInput): Promise<ActionResult> {
-  const session = await requireAdmin();
+  const session = await requirePermission("staff.manage");
 
   const parsed = personSchema.safeParse(input);
   if (!parsed.success) return fail(parsed.error.issues[0].message);
-  const { name, email, role } = parsed.data;
+  const { name, email, staffRoleId } = parsed.data;
 
   const existing = await prisma.user.findUnique({
     where: { id },
-    select: { id: true, name: true, email: true, role: true },
+    select: {
+      id: true,
+      name: true,
+      email: true,
+      staffRoleId: true,
+      staffRole: { select: { name: true } },
+    },
   });
   if (!existing) return fail("That account no longer exists.");
 
-  if (existing.role === "ADMIN" && role !== "ADMIN") {
-    const refusal = await guardLastAdmin(id, "change the role on");
-    if (refusal) return fail(refusal);
-  }
+  const role = await roleFor(staffRoleId);
+  if (!role) return fail("That role no longer exists.");
 
   const changes: string[] = [];
   if (existing.name !== name) changes.push(`name ${existing.name} → ${name}`);
   if (existing.email !== email) changes.push(`email ${existing.email} → ${email}`);
-  if (existing.role !== role) {
-    changes.push(`role ${ROLE_META[existing.role].label} → ${ROLE_META[role].label}`);
+  if (existing.staffRoleId !== role.id) {
+    changes.push(`role ${existing.staffRole?.name ?? "none"} → ${role.name}`);
   }
 
-  const updated = await onUniqueViolation(
-    () =>
-      prisma.user.update({
+  // The guard and the write share a transaction, and the lock serialises them
+  // against any other role change. Checking first and writing after would let
+  // two admins each move the other off the last role that holds the keys.
+  let outcome: { refusal: string } | { updated: { id: string; name: string } };
+  try {
+    outcome = await withKeyholderLock(async (tx) => {
+      if (existing.staffRoleId !== role.id) {
+        const refusal = await guardKeyholders(
+          { kind: "userRole", userId: id, roleId: role.id },
+          tx
+        );
+        if (refusal) return { refusal };
+      }
+      const updated = await tx.user.update({
         where: { id },
-        data: { name, email, role },
+        data: {
+          name,
+          email,
+          staffRoleId: role.id,
+          role: legacyRoleFor(role.permissions),
+        },
         select: { id: true, name: true },
-      }),
-    `${email} already has an account.`
-  );
-  if ("ok" in updated) return updated;
+      });
+      return { updated };
+    });
+  } catch (err) {
+    if (isUniqueViolation(err)) return fail(`${email} already has an account.`);
+    throw err;
+  }
+  if ("refusal" in outcome) return fail(outcome.refusal);
+  const updated = outcome.updated;
 
   if (changes.length > 0) {
     await logAudit({
@@ -160,7 +194,7 @@ export async function updatePerson(id: string, input: PersonInput): Promise<Acti
  *  readable, and `auth()` re-reads the account on every request, so access
  *  stops on the next page load rather than at token expiry. */
 export async function setPersonActive(id: string, active: boolean): Promise<ActionResult> {
-  const session = await requireAdmin();
+  const session = await requirePermission("staff.manage");
 
   const existing = await prisma.user.findUnique({
     where: { id },
@@ -169,15 +203,19 @@ export async function setPersonActive(id: string, active: boolean): Promise<Acti
   if (!existing) return fail("That account no longer exists.");
   if (existing.isActive === active) return ok();
 
-  if (!active) {
-    if (id === session.user.id) {
-      return fail("You cannot deactivate your own account. Ask another admin to do it.");
-    }
-    const refusal = await guardLastAdmin(id, "deactivate");
-    if (refusal) return fail(refusal);
+  if (!active && id === session.user.id) {
+    return fail("You cannot deactivate your own account. Ask someone else to do it.");
   }
 
-  await prisma.user.update({ where: { id }, data: { isActive: active } });
+  const refusal = await withKeyholderLock(async (tx) => {
+    if (!active) {
+      const stop = await guardKeyholders({ kind: "deactivate", userId: id }, tx);
+      if (stop) return stop;
+    }
+    await tx.user.update({ where: { id }, data: { isActive: active } });
+    return null;
+  });
+  if (refusal) return fail(refusal);
 
   await logAudit({
     actorId: session.user.id,
@@ -192,10 +230,11 @@ export async function setPersonActive(id: string, active: boolean): Promise<Acti
   return ok();
 }
 
-/** An admin setting someone else's password, for a new starter or a person
- *  locked out. The value is hashed here and recorded nowhere. */
+/** Someone with `staff.manage` setting another person's password, for a new
+ *  starter or a person locked out. The value is hashed here and recorded
+ *  nowhere. */
 export async function resetPassword(id: string, password: string): Promise<ActionResult> {
-  const session = await requireAdmin();
+  const session = await requirePermission("staff.manage");
 
   const parsed = passwordField.safeParse(password);
   if (!parsed.success) return fail(parsed.error.issues[0].message);

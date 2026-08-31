@@ -7,7 +7,7 @@ import { PageHeader } from "@/components/ui-kit/page-header";
 import { Tag } from "@/components/ui-kit/tag";
 import { Input } from "@/components/ui/input";
 import { AddStudent } from "@/components/students/student-actions";
-import { canManage } from "@/lib/authz";
+import { can } from "@/lib/authz";
 import { pageSession } from "@/lib/page-guards";
 import { getStudentCounts, getStudents, type StudentRow } from "@/lib/students/data/students";
 import { STUDENT_STATUS_META, ageLabel } from "@/lib/students/constants";
@@ -32,7 +32,7 @@ function lensClass(active: boolean) {
 
 export default async function StudentsPage(props: PageProps<"/students">) {
   const session = await pageSession();
-  const manage = canManage(session.user.role);
+  const manage = can(session, "students.manage");
 
   const params = await props.searchParams;
   const q = typeof params.q === "string" ? params.q.trim() : "";

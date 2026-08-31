@@ -28,7 +28,7 @@ function providers(): NextAuthConfig["providers"] {
         if (!user?.passwordHash || !user.isActive) return null;
         if (!(await bcrypt.compare(password, user.passwordHash))) return null;
 
-        return { id: user.id, email: user.email, name: user.name, role: user.role };
+        return { id: user.id, email: user.email, name: user.name };
       },
     }),
   ];
@@ -45,7 +45,7 @@ function providers(): NextAuthConfig["providers"] {
           if (!devSignInAllowed()) return null;
           const admin = await getDevAdmin();
           if (!admin) return null;
-          return { id: admin.id, email: admin.email, name: admin.name, role: admin.role };
+          return { id: admin.id, email: admin.email, name: admin.name };
         },
       })
     );
@@ -71,15 +71,17 @@ const {
   providers: providers(),
   callbacks: {
     jwt({ token, user }) {
-      if (user) {
-        token.sub = user.id;
-        token.role = user.role;
-      }
+      if (user) token.sub = user.id;
       return token;
     },
+    // Placeholders only. The permission list is read from the database in
+    // `auth()` below, which is the only thing the app ever calls — minting one
+    // into the token here would keep granting access after it was taken away.
     session({ session, token }) {
       if (token.sub) session.user.id = token.sub;
-      session.user.role = token.role;
+      session.user.roleId = "";
+      session.user.roleName = "";
+      session.user.permissions = [];
       return session;
     },
   },
@@ -87,14 +89,47 @@ const {
 
 export { handlers, signIn, signOut };
 
+const ACCOUNT_SELECT = {
+  id: true,
+  name: true,
+  email: true,
+  isActive: true,
+  staffRole: { select: { id: true, name: true, permissions: true } },
+} as const;
+
+type Account = {
+  id: string;
+  name: string;
+  email: string;
+  isActive: boolean;
+  staffRole: { id: string; name: string; permissions: string[] } | null;
+};
+
+/** An account with no role has no permissions and no way to be given any
+ *  without an admin, so it reads as signed out rather than as a person who can
+ *  see the shell and do nothing in it. The column is nullable only because it
+ *  had to be added to a table that already had rows. */
+function sessionUserFor(account: Account) {
+  if (!account.staffRole) return null;
+  return {
+    id: account.id,
+    name: account.name,
+    email: account.email,
+    roleId: account.staffRole.id,
+    roleName: account.staffRole.name,
+    permissions: account.staffRole.permissions,
+  };
+}
+
 /** The session, or null.
  *
- *  The role is re-read from the database rather than trusted from the token.
- *  A JWT carries the role it was minted with, so without this a deactivated
- *  instructor keeps working access until the token expires, and a demotion
- *  only bites the next time they sign in. One indexed lookup per session read
- *  buys both taking effect immediately, which is the whole point of having
- *  tiers.
+ *  The role and its permissions are re-read from the database rather than
+ *  trusted from the token. A JWT carries what it was minted with, so without
+ *  this a deactivated instructor keeps working access until the token expires,
+ *  a demotion only bites at the next sign-in, and — now that roles are
+ *  editable — un-ticking a permission would not take effect until everyone
+ *  holding it happened to sign out. One indexed lookup per session read buys
+ *  all three taking effect immediately, which is the whole point.
  *
  *  In development this falls back to a **real** admin out of the database, so
  *  audit rows point at someone who exists and every permission check behaves
@@ -107,21 +142,16 @@ export async function auth(): Promise<Session | null> {
   if (session?.user?.id) {
     const current = await prisma.user.findUnique({
       where: { id: session.user.id },
-      select: { name: true, email: true, role: true, isActive: true },
+      select: ACCOUNT_SELECT,
     });
     // Deleted or deactivated reads as signed out. The cookie survives; the
     // access does not.
     if (!current?.isActive) return null;
 
-    return {
-      ...session,
-      user: {
-        ...session.user,
-        name: current.name,
-        email: current.email,
-        role: current.role,
-      },
-    };
+    const user = sessionUserFor(current);
+    if (!user) return null;
+
+    return { ...session, user: { ...session.user, ...user } };
   }
 
   if (process.env.NODE_ENV === "production" || process.env.DEV_AUTH_BYPASS !== "1") {
@@ -129,13 +159,14 @@ export async function auth(): Promise<Session | null> {
   }
 
   const admin = await prisma.user.findFirst({
-    where: { role: "ADMIN", isActive: true },
+    where: { isActive: true, staffRole: { permissions: { has: "staff.manage" } } },
     orderBy: { createdAt: "asc" },
+    select: ACCOUNT_SELECT,
   });
   if (!admin) return null;
 
-  return {
-    user: { id: admin.id, name: admin.name, email: admin.email, role: admin.role },
-    expires: new Date(Date.now() + 60 * 60 * 1000).toISOString(),
-  };
+  const user = sessionUserFor(admin);
+  if (!user) return null;
+
+  return { user, expires: new Date(Date.now() + 60 * 60 * 1000).toISOString() };
 }

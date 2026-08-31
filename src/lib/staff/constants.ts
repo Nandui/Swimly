@@ -1,27 +1,33 @@
 import type { TagColor } from "@/components/ui-kit/tag";
-import type { Role } from "@/generated/prisma/client";
+import { expandPermissions } from "@/lib/staff/permissions";
 
-/** One map per enum. Call sites read the label and the tint from here and
- *  never write either inline — so adding a role to the schema is a type error
- *  until it has both, which is how the untinted status gets caught by the
- *  compiler instead of by a reviewer. */
-export const ROLE_META: Record<Role, { label: string; color: TagColor }> = {
-  ADMIN: { label: "Admin", color: "purple" },
-  INSTRUCTOR: { label: "Instructor", color: "blue" },
-  VIEWER: { label: "Viewer", color: "gray" },
+/** Roles are rows now, so there is no enum to hang a metadata map on and no
+ *  compiler to catch an untinted one. What replaces it is a map keyed on how
+ *  much a role can do, which is the only thing about an arbitrary role that is
+ *  worth colouring — and it still comes from one place rather than a colour
+ *  chosen at a call site.
+ *
+ *  Three bands, matching the tiers the app used to have. A club can now make
+ *  ten roles, and ten tints would be ten things to learn; three says at a
+ *  glance whether a role holds the keys, does the work, or only looks. */
+const REACH_META: Record<"keys" | "work" | "read", { label: string; color: TagColor }> = {
+  keys: { label: "Holds the keys", color: "purple" },
+  work: { label: "Changes things", color: "blue" },
+  read: { label: "Read only", color: "gray" },
 };
 
-/** What each role may do, in the words the person choosing one needs. The
- *  tiers are the authority (`src/lib/authz.ts`); this is how they read. */
-export const ROLE_BLURB: Record<Role, string> = {
-  ADMIN: "Everything, including the timetable, the curriculum and these accounts.",
-  INSTRUCTOR: "Registers, assessments, students and enrolments. Not the curriculum.",
-  VIEWER: "Can look things up and change nothing. Reception, or a duty manager.",
-};
+export function roleReach(permissions: readonly string[]) {
+  const held = expandPermissions(permissions);
+  if (held.has("staff.manage") || held.has("roles.manage")) return REACH_META.keys;
+  if (held.size > 0) return REACH_META.work;
+  return REACH_META.read;
+}
 
-/** The order roles are offered in: least access first, so the powerful one is
- *  a deliberate reach rather than the thing the cursor lands on. */
-export const ROLE_ORDER: Role[] = ["VIEWER", "INSTRUCTOR", "ADMIN"];
+/** How a role's permission count reads in a sentence. */
+export function permissionCountLabel(count: number): string {
+  if (count === 0) return "No permissions";
+  return `${count} ${count === 1 ? "permission" : "permissions"}`;
+}
 
 /** Long enough to be worth having, short enough to read down a phone. The
  *  same floor applies to an admin setting a temporary one and to a person

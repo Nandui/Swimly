@@ -5,7 +5,7 @@ import { z } from "zod";
 import type { DayOfWeek } from "@/generated/prisma/client";
 import { fail, ok, type ActionResult } from "@/lib/action-result";
 import { logAudit } from "@/lib/audit";
-import { requireAdmin } from "@/lib/authz";
+import { requirePermission } from "@/lib/authz";
 import { courseLabel, formatSlot, parseTime } from "@/lib/courses/constants";
 import { TAKES_A_PLACE } from "@/lib/courses/data/courses";
 import { prisma } from "@/lib/prisma";
@@ -82,7 +82,7 @@ function resolve(input: CourseInput): Resolved {
 }
 
 export async function createCourse(input: CourseInput): Promise<ActionResult> {
-  const session = await requireAdmin();
+  const session = await requirePermission("courses.manage");
 
   const resolved = resolve(input);
   if (!resolved.ok) return fail(resolved.error);
@@ -122,7 +122,7 @@ export async function createCourse(input: CourseInput): Promise<ActionResult> {
 }
 
 export async function updateCourse(id: string, input: CourseInput): Promise<ActionResult> {
-  const session = await requireAdmin();
+  const session = await requirePermission("courses.manage");
 
   const resolved = resolve(input);
   if (!resolved.ok) return fail(resolved.error);
@@ -220,7 +220,7 @@ export async function updateCourse(id: string, input: CourseInput): Promise<Acti
 }
 
 export async function setCourseArchived(id: string, archived: boolean): Promise<ActionResult> {
-  const session = await requireAdmin();
+  const session = await requirePermission("courses.manage");
 
   const existing = await prisma.course.findUnique({
     where: { id },

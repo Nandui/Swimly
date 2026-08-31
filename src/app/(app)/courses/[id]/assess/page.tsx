@@ -8,11 +8,11 @@ import { Tag } from "@/components/ui-kit/tag";
 import { CompetencyChecklist, ConfirmLevel } from "@/components/progression/assessment";
 import { MoveUpToLevel, type MoveTarget } from "@/components/progression/move-up";
 import { canMarkRegister } from "@/lib/attendance/access";
-import { isAdmin } from "@/lib/authz";
+import { can } from "@/lib/authz";
 import { courseLabel, courseName, formatSlot } from "@/lib/courses/constants";
 import { getCourse, getCourses } from "@/lib/courses/data/courses";
 import { formatDate } from "@/lib/format";
-import { managePage } from "@/lib/page-guards";
+import { permissionPage } from "@/lib/page-guards";
 import { getClassProgress, type ClassSwimmer } from "@/lib/progression/data/progress";
 import { nextLevel } from "@/lib/progression/rules";
 import { fullName } from "@/lib/students/constants";
@@ -20,7 +20,7 @@ import { fullName } from "@/lib/students/constants";
 export const metadata: Metadata = { title: "Assess" };
 
 export default async function AssessPage(props: PageProps<"/courses/[id]/assess">) {
-  const session = await managePage();
+  const session = await permissionPage("progression.assess");
   const { id } = await props.params;
 
   const [course, progress, courses] = await Promise.all([
@@ -33,14 +33,10 @@ export default async function AssessPage(props: PageProps<"/courses/[id]/assess"
   // What "up" means from this class, and the classes that teach it.
   const up = nextLevel(progress.course.levelId, progress.orderedLevels);
 
-  const admin = isAdmin(session.user.role);
+  const admin = can(session, "progression.override");
   const mayAssess =
     !course.archivedAt &&
-    canMarkRegister({
-      role: session.user.role,
-      userId: session.user.id,
-      instructorId: course.instructorId,
-    });
+    canMarkRegister({ session, instructorId: course.instructorId });
 
   const ready = progress.swimmers.filter(
     (swimmer) => swimmer.eligible && !swimmer.completedOn

@@ -5,7 +5,7 @@ import { EmptyState } from "@/components/ui-kit/empty-state";
 import { PageHeader } from "@/components/ui-kit/page-header";
 import { Tag } from "@/components/ui-kit/tag";
 import { AddCourse, ArchiveCourse, EditCourse } from "@/components/courses/course-actions";
-import { isAdmin } from "@/lib/authz";
+import { can } from "@/lib/authz";
 import {
   DAY_META,
   DAYS_IN_ORDER,
@@ -27,7 +27,7 @@ export const metadata: Metadata = { title: "Courses" };
 
 export default async function CoursesPage() {
   const session = await pageSession();
-  const admin = isAdmin(session.user.role);
+  const admin = can(session, "courses.manage");
 
   const [courses, counts, levels, instructors] = await Promise.all([
     getCourses(true),

@@ -43,8 +43,9 @@ makes Swimly stop looking like itself.
   picker.
 - **Every mutation is audited**, scripts included, with a summary naming what
   changed and to what.
-- **Ask the permission tier, not the role.** `canManage(role)`, not
-  `role === "INSTRUCTOR"`.
+- **Ask for a permission, not a role.** `can(session, "students.manage")`,
+  never a role's name. Roles are the club's to invent and rename, so nothing in
+  the code may depend on one existing.
 
 ---
 
@@ -74,33 +75,55 @@ blue. If Swimly is ever rebranded, that token is the whole change — and the
 neutrals keep their trace of yellow (hue 95–106), because that warmth is what
 makes the result read as paper rather than as an unstyled admin panel.
 
-### Three roles, three tiers
+### Roles are data, permissions are code
 
-`Role` in `prisma/schema.prisma` is the source of truth, and
-`src/lib/authz.ts` maps it onto the three tiers:
+This started as three fixed tiers — admin, manage, view — mapped from a `Role`
+enum, and that held for exactly as long as the club had three kinds of person.
+It stopped holding when a role was wanted that could edit the timetable but not
+accounts, which is neither "changes the rules" nor "changes the data". The
+honest options were a fourth tier and then a fifth, or roles as data. Roles won.
 
-| Role | Tier | Owns |
-|---|---|---|
-| `ADMIN` | admin | Programmes, levels, competencies, courses, accounts — **the rules** |
-| `INSTRUCTOR` | manage | Students, enrolments, attendance, assessments — **the data** |
-| `VIEWER` | view | Reception or a duty manager: looks things up, changes nothing |
+**The catalogue is code.** `src/lib/staff/permissions.ts` lists every
+permission the app has to give, because a permission exists only when a screen
+or an action asks for one. There is no Permission table: it would be a second
+copy of that list, kept in step by hand, with nothing to catch it drifting.
+`StaffRole.permissions` is a plain string array of keys from it, and a key that
+is no longer in the catalogue is ignored rather than fatal — which is what
+makes deleting a permission a safe edit.
 
-The split matters more than the names. Without it the rename alone would leave
-an instructor able to rewrite the curriculum: the timetable and the ladder are
-rules, and what happened in the water on Tuesday is data.
+**Reads are not permissioned.** Anyone signed in can look at swimmers, classes,
+the curriculum and the registers, exactly as before. Every permission is the
+power to *change* something, or to read the audit log — the one read that names
+what everyone else did. Making reads grantable is a different and larger
+decision: every data function would take a permission and every page would need
+an empty state for "you may not see this".
 
-Adding a role without placing it in a tier is a type error, which is the point.
-If a role's tier is genuinely ambiguous, that role is doing two jobs.
+**Nothing may leave the app without a keyholder.** `staff.manage` and
+`roles.manage` are load-bearing — lose either across every active account and
+the way back in is a database console, because `prisma/seed.ts` declines once
+an admin exists. `src/lib/staff/keyholders.ts` refuses any edit that would do
+it, by computing what the world would look like afterwards rather than by
+counting admins: with arbitrary roles there is no such thing as "an admin".
+It deliberately sits outside a `"use server"` file, because every export from
+one of those is an endpoint the browser can call.
 
-Two things sit on top of the tiers as **scoping rules inside actions**, not as
-a fourth tier:
+**Nothing refers to a role by name.** Not the code, not the nav, not the seed.
+That is what lets a club rename or delete every role the app shipped with.
 
-- **An instructor may only take the register and assess for classes they are
-  assigned to.** Admins may act on any. `canMarkRegister` in
-  `src/lib/attendance/access.ts` is the whole rule; relaxing it for cover staff
-  is one line there.
-- **Completing a level with gaps is admin tier**, and needs a reason. Placing a
-  swimmer at a level they have not earned is *not* — see below.
+Two things stay **scoping rules inside actions** rather than permissions:
+
+- **Whose register.** `attendance.mark` marks the classes you teach;
+  `attendance.markAny` marks anybody's. Which classes are *yours* is a fact
+  about the row, not about you, so it lives in `canMarkRegister` in
+  `src/lib/attendance/access.ts`.
+- **Completing a level with gaps** is `progression.override`, and needs a
+  reason. Placing a swimmer at a level they have not earned is *not* — see
+  below.
+
+Some permissions contain smaller ones (`attendance.markAny` grants
+`attendance.mark`). That closure lives in one map in the catalogue, not at each
+call site, because the call site that forgets is the one that quietly locks
+somebody out.
 
 Guard the same rule in three places, because they answer different questions:
 the **nav** hides what you can't reach (`visibleNavItems`), the **page** hides
@@ -108,8 +131,10 @@ the button (`src/lib/page-guards.ts`, which 404s rather than erroring), and the
 **action** refuses the call. Only the last one is security.
 
 The session is re-read from the database on every `auth()` rather than trusted
-from the token, so deactivating an account or demoting a role takes effect
-immediately instead of at token expiry. It costs one indexed query.
+from the token, so deactivating an account, moving somebody to another role, or
+un-ticking a permission on a role twelve people share all take effect
+immediately instead of at token expiry. It costs one indexed query. Nothing but
+the subject is minted into the JWT, for the same reason.
 
 ### The nav holds only pages that exist
 
@@ -119,7 +144,7 @@ item in `src/lib/nav.ts` in the same change as the page.
 ### Auth is credentials-first, and swappable
 
 Sign-in verifies an email and a bcrypt hash against the `User` table. Nothing
-downstream knows that: every screen and action asks `session.user.role`, so
+downstream knows that: every screen and action asks for a permission, so
 moving to an email link or SSO is an edit to the `providers` array in
 `src/auth.ts` and nothing else.
 
@@ -187,15 +212,16 @@ this week", and it is also the seam: the moment it grows a `cancelled` boolean
 or an instructor override, sessions have been rebuilt by accident and should be
 built deliberately instead.
 
-### Placement is manage tier, with a reason on the row
+### Placement needs `enrolment.manage`, with a reason on the row
 
 Placing a transfer-in or an adult beginner out of sequence is routine and
-weekly. Making it admin-only would produce one of two things — the front desk
-gets made admin and the tiers stop meaning anything, or somebody fakes a
-completion to get past the guard and the progression data starts lying. So
-`enrolStudent` takes a `placementReason` and stores it **on the enrolment**,
-not only in the audit log, because the log is admin-only and the instructor on
-the deck is exactly who needs to know why this child is in Level 5.
+weekly. Putting it behind a rarer permission would produce one of two things —
+the front desk gets given that permission and it stops meaning anything, or
+somebody fakes a completion to get past the guard and the progression data
+starts lying. So `enrolStudent` takes a `placementReason` and stores it **on
+the enrolment**, not only in the audit log, because reading the log needs
+`activity.view` and the instructor on the deck is exactly who needs to know why
+this child is in Level 5.
 
 ### Moving up is gated on the completion, not on the last tick
 
@@ -246,7 +272,9 @@ src/components/                app components composed from both
 src/lib/<domain>/data/         reads  — plain async functions, no "use server"
 src/lib/<domain>/actions/      writes — "use server", one exported action per verb
 src/lib/<domain>/constants.ts  one metadata map per enum, plus domain vocabulary
-src/lib/authz.ts               three tiers and the require* guards
+src/lib/authz.ts               can(), and the require* guards
+src/lib/staff/permissions.ts   the permission catalogue, and what each means
+src/lib/staff/keyholders.ts    the guard that keeps somebody able to get in
 src/lib/page-guards.ts         the page-level versions, which 404 rather than throw
 src/lib/audit.ts               logAudit — pass the tx client when it must be atomic
 src/lib/action-result.ts       the result type and the six-step action shape
@@ -257,15 +285,15 @@ scripts/                       one-off work, run with tsx, held to the app's rul
 The domains, and who may write to each:
 
 ```
-curriculum/    Programme, Level, Competency          admin
-courses/       Course                                admin
-students/      Student                               manage
-enrolment/     Enrolment, waitlist, the seat lock    manage
-attendance/    AttendanceRecord, ClassNote           manage, own classes only
-progression/   CompetencyResult, LevelCompletion     manage; overrides are admin
+curriculum/    Programme, Level, Competency          curriculum.manage
+courses/       Course                                courses.manage
+students/      Student                               students.manage
+enrolment/     Enrolment, waitlist, the seat lock    enrolment.manage
+attendance/    AttendanceRecord, ClassNote           attendance.mark / .markAny
+progression/   CompetencyResult, LevelCompletion     progression.assess / .override
                rules.ts — pure, neither read nor write
-activity/      the audit log                         read-only, admin
-staff/         User                                  admin
+activity/      the audit log                         activity.view
+staff/         User, StaffRole                        staff.manage, roles.manage
 ```
 
 Reads and writes stay in separate files so a read cannot quietly grow a write.

@@ -5,7 +5,7 @@ import { z } from "zod";
 import type { Prisma } from "@/generated/prisma/client";
 import { fail, ok, type ActionResult } from "@/lib/action-result";
 import { logAudit } from "@/lib/audit";
-import { isAdmin, requireAdmin, requireManage } from "@/lib/authz";
+import { can, requirePermission } from "@/lib/authz";
 import { LIST_ORDER, LIVE } from "@/lib/curriculum/constants";
 import { formatDate, parseDateOnly, today } from "@/lib/format";
 import { completionProgress } from "@/lib/progression/rules";
@@ -42,7 +42,7 @@ export type AssessInput = z.infer<typeof assessSchema>;
 /** One action for a whole checklist, for the same reason the register is one
  *  action: Server Actions dispatch one at a time per client. */
 export async function saveAssessment(input: AssessInput): Promise<ActionResult> {
-  const session = await requireManage();
+  const session = await requirePermission("progression.assess");
 
   const parsed = assessSchema.safeParse(input);
   if (!parsed.success) return fail(parsed.error.issues[0].message);
@@ -159,7 +159,7 @@ const confirmSchema = z.object({
 export async function confirmLevelCompletion(
   input: z.infer<typeof confirmSchema>
 ): Promise<ActionResult> {
-  const session = await requireManage();
+  const session = await requirePermission("progression.assess");
 
   const parsed = confirmSchema.safeParse(input);
   if (!parsed.success) return fail(parsed.error.issues[0].message);
@@ -210,9 +210,9 @@ export async function confirmLevelCompletion(
   if (!progress.eligible) {
     // Overriding the curriculum is a different decision from recording what
     // happened, so it needs the tier that owns the curriculum — and a reason.
-    if (!isAdmin(session.user.role)) {
+    if (!can(session, "progression.override")) {
       return fail(
-        `${fullName(student)} has ${progress.achieved} of ${progress.total}. Only an admin can complete a level with gaps.`
+        `${fullName(student)} has ${progress.achieved} of ${progress.total}. Only someone allowed to complete a level with gaps can do that.`
       );
     }
     if (!overrideReason) {
@@ -269,7 +269,7 @@ export async function revokeLevelCompletion(
   id: string,
   input: z.infer<typeof revokeSchema>
 ): Promise<ActionResult> {
-  const session = await requireAdmin();
+  const session = await requirePermission("progression.override");
 
   const parsed = revokeSchema.safeParse(input);
   if (!parsed.success) return fail(parsed.error.issues[0].message);

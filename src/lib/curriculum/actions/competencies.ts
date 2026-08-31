@@ -4,7 +4,7 @@ import { revalidatePath } from "next/cache";
 import { z } from "zod";
 import { fail, ok, onUniqueViolation, type ActionResult } from "@/lib/action-result";
 import { logAudit } from "@/lib/audit";
-import { requireAdmin } from "@/lib/authz";
+import { requirePermission } from "@/lib/authz";
 import { LIST_ORDER } from "@/lib/curriculum/constants";
 import { reorderIds } from "@/lib/curriculum/reorder";
 import { prisma } from "@/lib/prisma";
@@ -30,7 +30,7 @@ export async function createCompetency(
   levelId: string,
   input: CompetencyInput
 ): Promise<ActionResult> {
-  const session = await requireAdmin();
+  const session = await requirePermission("curriculum.manage");
 
   const parsed = competencySchema.safeParse(input);
   if (!parsed.success) return fail(parsed.error.issues[0].message);
@@ -82,7 +82,7 @@ export async function updateCompetency(
   id: string,
   input: CompetencyInput
 ): Promise<ActionResult> {
-  const session = await requireAdmin();
+  const session = await requirePermission("curriculum.manage");
 
   const parsed = competencySchema.safeParse(input);
   if (!parsed.success) return fail(parsed.error.issues[0].message);
@@ -137,7 +137,7 @@ export async function setCompetencyArchived(
   id: string,
   archived: boolean
 ): Promise<ActionResult> {
-  const session = await requireAdmin();
+  const session = await requirePermission("curriculum.manage");
 
   const existing = await prisma.competency.findUnique({
     where: { id },
@@ -180,7 +180,7 @@ export async function moveCompetency(
   id: string,
   direction: "up" | "down"
 ): Promise<ActionResult> {
-  const session = await requireAdmin();
+  const session = await requirePermission("curriculum.manage");
 
   const competency = await prisma.competency.findUnique({
     where: { id },

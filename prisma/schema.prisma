@@ -23,8 +23,18 @@ datasource db {
 // Enums
 // ---------------------------------------------------------------------------
 
-/// Three roles, three tiers. Add one here and `TIER_BY_ROLE` in
-/// `src/lib/authz.ts` stops compiling until you say which tier it belongs to.
+/// **Legacy.** Superseded by the `StaffRole` table, which carries an explicit
+/// list of permissions instead of one of three fixed tiers.
+///
+/// It is still here, and still written on every account, for one reason: the
+/// production deployment and the development database are the same Postgres,
+/// so a deploy that dropped this column would break the running app between
+/// the migration and the next release. `legacyRoleFor()` in
+/// `src/lib/staff/permissions.ts` derives it from the permissions a role
+/// actually holds, so the column stays truthful without being consulted.
+///
+/// Drop it — and `User.role` with it — once production is running the release
+/// that reads `User.staffRoleId`. Nothing in the app reads it any more.
 enum Role {
   ADMIN
   INSTRUCTOR
@@ -75,19 +85,58 @@ enum CompetencyStatus {
 // Staff
 // ---------------------------------------------------------------------------
 
+/// A named set of permissions. Roles are data rather than an enum, so an admin
+/// can make the ones their club actually needs — a Head Coach who may edit the
+/// timetable but not accounts, a receptionist who may enrol but not assess.
+///
+/// `permissions` is a plain string array of keys from
+/// `src/lib/staff/permissions.ts` rather than a join table. The catalogue is
+/// code — it can only change when a screen or an action changes — so a
+/// Permission table would be a second copy of it, kept in step by hand, with
+/// nothing to catch it drifting. Unknown keys are ignored on read, which is
+/// what makes removing a permission from the catalogue safe.
+model StaffRole {
+  id          String   @id @default(cuid())
+  name        String   @unique
+  description String?
+  permissions String[]
+  /// The three roles the app shipped with. They may be renamed and their
+  /// permissions edited, but they cannot be deleted: `seed.ts` and the
+  /// migration both name them, and a fresh database has to land somewhere.
+  isSystem    Boolean  @default(false)
+  sortOrder   Int      @default(0)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  users User[]
+
+  @@index([sortOrder])
+}
+
 model User {
   id           String   @id @default(cuid())
   email        String   @unique
   name         String
   /// Null for accounts that sign in another way, or have not set one yet.
   passwordHash String?
+  /// **Legacy.** Mirrors `staffRole` so the previous release keeps working
+  /// against the same database. See the note on the `Role` enum.
   role         Role     @default(VIEWER)
+  /// Nullable only so the column could be added to a table that already had
+  /// rows. Every account gets one in the same migration, and `auth()` refuses
+  /// a session without one.
+  staffRoleId  String?
   /// Deactivation is reversible and keeps the audit trail readable; deletion
   /// is not. Prefer this.
   isActive     Boolean  @default(true)
   createdAt    DateTime @default(now())
   updatedAt    DateTime @updatedAt
 
+  /// `Restrict`, not `SetNull`: an account with no role has no permissions and
+  /// cannot sign in, so deleting a role out from under one of its holders
+  /// would silently lock them out. The delete is refused and the admin has to
+  /// move people off it first.
+  staffRole            StaffRole?         @relation(fields: [staffRoleId], references: [id], onDelete: Restrict)
   auditEntries         AuditLog[]
   coursesTaught        Course[]
   attendanceMarked     AttendanceRecord[]
@@ -96,6 +145,7 @@ model User {
   classNotes           ClassNote[]
 
   @@index([role])
+  @@index([staffRoleId])
 }
 
 model AuditLog {

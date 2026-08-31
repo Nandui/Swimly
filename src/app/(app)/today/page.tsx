@@ -8,7 +8,7 @@ import { Button } from "@/components/ui/button";
 import { canMarkRegister } from "@/lib/attendance/access";
 import { weekdayOfIso } from "@/lib/attendance/dates";
 import { getRegisterStateForDay } from "@/lib/attendance/data/register";
-import { isAdmin } from "@/lib/authz";
+import { can } from "@/lib/authz";
 import {
   DAY_META,
   capacityLabel,
@@ -17,13 +17,13 @@ import {
 } from "@/lib/courses/constants";
 import { getCoursesOnDay } from "@/lib/courses/data/courses";
 import { formatDate, parseDateOnly, today } from "@/lib/format";
-import { managePage } from "@/lib/page-guards";
+import { permissionPage } from "@/lib/page-guards";
 import { cn } from "@/lib/utils";
 
 export const metadata: Metadata = { title: "Today" };
 
 export default async function TodayPage(props: PageProps<"/today">) {
-  const session = await managePage();
+  const session = await permissionPage("attendance.mark");
   const params = await props.searchParams;
   const showAll = params.show === "all";
 
@@ -36,7 +36,7 @@ export default async function TodayPage(props: PageProps<"/today">) {
   ]);
 
   const outstanding = courses.filter((course) => !marked.has(course.id)).length;
-  const admin = isAdmin(session.user.role);
+  const admin = can(session, "attendance.markAny");
 
   return (
     <div className="space-y-6">
@@ -82,11 +82,7 @@ export default async function TodayPage(props: PageProps<"/today">) {
         <ul className="overflow-hidden rounded-md border">
           {courses.map((course) => {
             const done = marked.has(course.id);
-            const mayMark = canMarkRegister({
-              role: session.user.role,
-              userId: session.user.id,
-              instructorId: course.instructorId,
-            });
+            const mayMark = canMarkRegister({ session, instructorId: course.instructorId });
             return (
               <li
                 key={course.id}

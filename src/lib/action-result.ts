@@ -14,7 +14,7 @@
  *
  *    "use server";
  *    export async function updateThing(id, input): Promise<ActionResult> {
- *      const session = await requireManage();          // 1. authorize first
+ *      const session = await requirePermission("thing.manage"); // 1. authorize first
  *      const parsed = thingSchema.safeParse(input);    // 2. validate
  *      if (!parsed.success) return fail(parsed.error.issues[0].message);
  *      const existing = await prisma.thing.findUnique({ where: { id } });
@@ -59,14 +59,22 @@ export async function onUniqueViolation<T>(
   try {
     return await write();
   } catch (err) {
-    if (
-      typeof err === "object" &&
-      err !== null &&
-      "code" in err &&
-      (err as { code: unknown }).code === "P2002"
-    ) {
-      return { ok: false, error };
-    }
+    if (isUniqueViolation(err)) return { ok: false, error };
     throw err;
   }
+}
+
+/** The predicate on its own, for writes that cannot use the wrapper.
+ *
+ *  Inside a transaction a failed statement aborts the whole thing, so a P2002
+ *  caught and turned into a return value would leave the surrounding
+ *  `$transaction` trying to commit something Postgres has already given up on.
+ *  Let it throw out of the transaction, and catch it here. */
+export function isUniqueViolation(err: unknown): boolean {
+  return (
+    typeof err === "object" &&
+    err !== null &&
+    "code" in err &&
+    (err as { code: unknown }).code === "P2002"
+  );
 }

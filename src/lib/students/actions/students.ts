@@ -4,7 +4,7 @@ import { revalidatePath } from "next/cache";
 import { z } from "zod";
 import { fail, ok, onUniqueViolation, type ActionResult } from "@/lib/action-result";
 import { logAudit } from "@/lib/audit";
-import { requireManage } from "@/lib/authz";
+import { requirePermission } from "@/lib/authz";
 import { parseDateOnly } from "@/lib/format";
 import { fullName } from "@/lib/students/constants";
 import { prisma } from "@/lib/prisma";
@@ -62,7 +62,7 @@ function toData(input: StudentInput) {
 }
 
 export async function createStudent(input: StudentInput): Promise<ActionResult> {
-  const session = await requireManage();
+  const session = await requirePermission("students.manage");
 
   const parsed = studentSchema.safeParse(input);
   if (!parsed.success) return fail(parsed.error.issues[0].message);
@@ -92,7 +92,7 @@ export async function createStudent(input: StudentInput): Promise<ActionResult> 
 }
 
 export async function updateStudent(id: string, input: StudentInput): Promise<ActionResult> {
-  const session = await requireManage();
+  const session = await requirePermission("students.manage");
 
   const parsed = studentSchema.safeParse(input);
   if (!parsed.success) return fail(parsed.error.issues[0].message);
@@ -175,7 +175,7 @@ export async function setStudentStatus(
   id: string,
   status: "ACTIVE" | "INACTIVE"
 ): Promise<ActionResult> {
-  const session = await requireManage();
+  const session = await requirePermission("students.manage");
 
   const existing = await prisma.student.findUnique({
     where: { id },

@@ -13,7 +13,7 @@ import {
 import { ProgressSection } from "@/components/progression/progress-section";
 import { ATTENDANCE_STATUS_META } from "@/lib/attendance/constants";
 import { getAttendanceForStudent, type StudentAttendance } from "@/lib/attendance/data/register";
-import { canManage, isAdmin } from "@/lib/authz";
+import { can } from "@/lib/authz";
 import { getStudentProgress } from "@/lib/progression/data/progress";
 import { courseLabel, courseName, formatSlotShort } from "@/lib/courses/constants";
 import { getCourses } from "@/lib/courses/data/courses";
@@ -31,8 +31,13 @@ export const metadata: Metadata = { title: "Student" };
 
 export default async function StudentPage(props: PageProps<"/students/[id]">) {
   const session = await pageSession();
-  const manage = canManage(session.user.role);
-  const admin = isAdmin(session.user.role);
+  // One flag per permission, because this page hangs three different powers
+  // off what used to be one tier: editing the swimmer, moving them between
+  // classes, and signing a level off.
+  const editStudent = can(session, "students.manage");
+  const manage = can(session, "enrolment.manage");
+  const assess = can(session, "progression.assess");
+  const admin = can(session, "progression.override");
   const { id } = await props.params;
 
   const student = await getStudent(id);
@@ -87,7 +92,7 @@ export default async function StudentPage(props: PageProps<"/students/[id]">) {
               : `${age} years old · joined ${formatDate(student.joinedOn)}`
           }
           actions={
-            manage ? (
+            editStudent ? (
               <>
                 <EditStudent student={student} variant="button" />
                 <ToggleStudentStatus student={student} />
@@ -205,7 +210,7 @@ export default async function StudentPage(props: PageProps<"/students/[id]">) {
           programmes={programmes}
           studentId={student.id}
           studentName={fullName(student)}
-          manage={manage}
+          manage={assess}
           admin={admin}
           courses={courses}
           openPlaceByLevel={openPlaceByLevel}

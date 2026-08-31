@@ -25,16 +25,23 @@ export function devSignInAllowed(): boolean {
   return process.env.NODE_ENV !== "production";
 }
 
-/** The account the button signs you in as: the first active admin, which is
- *  the same one `DEV_AUTH_BYPASS` uses locally. A real row, so audit entries
- *  name somebody who exists and permission checks behave exactly as they will
- *  in production. */
+/** The account the button signs you in as: the first active account that can
+ *  manage other accounts, which is the same one `DEV_AUTH_BYPASS` uses
+ *  locally. A real row, so audit entries name somebody who exists and every
+ *  permission check behaves exactly as it will in production.
+ *
+ *  Selected by permission rather than by role name, because role names are
+ *  now the club's to choose — "Admin" may not exist, and something else may
+ *  hold the keys. */
 export async function getDevAdmin() {
   if (!devSignInAllowed()) return null;
 
   return prisma.user.findFirst({
-    where: { role: "ADMIN", isActive: true },
+    where: {
+      isActive: true,
+      staffRole: { permissions: { has: "staff.manage" } },
+    },
     orderBy: { createdAt: "asc" },
-    select: { id: true, name: true, email: true, role: true },
+    select: { id: true, name: true, email: true },
   });
 }

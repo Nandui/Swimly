@@ -7,7 +7,7 @@ import { fail, ok, type ActionResult } from "@/lib/action-result";
 import { canMarkRegister } from "@/lib/attendance/access";
 import { describeRegister } from "@/lib/attendance/summary";
 import { logAudit } from "@/lib/audit";
-import { requireManage } from "@/lib/authz";
+import { requirePermission } from "@/lib/authz";
 import { DAY_META, courseLabel } from "@/lib/courses/constants";
 import { formatDate, parseDateOnly, today, weekdayOf } from "@/lib/format";
 import { fullName } from "@/lib/students/constants";
@@ -43,7 +43,7 @@ const markSchema = z.object({
 export type MarkRegisterInput = z.infer<typeof markSchema>;
 
 export async function markRegister(input: MarkRegisterInput): Promise<ActionResult> {
-  const session = await requireManage();
+  const session = await requirePermission("attendance.mark");
 
   const parsed = markSchema.safeParse(input);
   if (!parsed.success) return fail(parsed.error.issues[0].message);
@@ -65,13 +65,9 @@ export async function markRegister(input: MarkRegisterInput): Promise<ActionResu
   if (course.archivedAt) return fail("That course is archived.");
 
   if (
-    !canMarkRegister({
-      role: session.user.role,
-      userId: session.user.id,
-      instructorId: course.instructorId,
-    })
+    !canMarkRegister({ session, instructorId: course.instructorId })
   ) {
-    return fail("That is not your class. An admin can reassign it if you are covering.");
+    return fail("That is not your class. Someone who can take any register has to reassign it, or mark it for you.");
   }
 
   // Without session rows, these two lines are the only thing standing between

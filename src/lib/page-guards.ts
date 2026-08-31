@@ -1,6 +1,6 @@
 import { notFound, redirect } from "next/navigation";
 import { auth } from "@/auth";
-import { canManage, isAdmin } from "@/lib/authz";
+import { can, canAny, type PermissionKey } from "@/lib/authz";
 
 /** Page-level guards, kept apart from `authz.ts` because they answer a
  *  different question with a different verb.
@@ -19,14 +19,17 @@ export async function pageSession() {
   return session;
 }
 
-export async function managePage() {
+/** The page exists only for someone holding this permission. */
+export async function permissionPage(permission: PermissionKey) {
   const session = await pageSession();
-  if (!canManage(session.user.role)) notFound();
+  if (!can(session, permission)) notFound();
   return session;
 }
 
-export async function adminPage() {
+/** The page exists for anyone holding at least one of these — for screens that
+ *  serve several permissions at once. */
+export async function anyPermissionPage(...permissions: PermissionKey[]) {
   const session = await pageSession();
-  if (!isAdmin(session.user.role)) notFound();
+  if (!canAny(session, ...permissions)) notFound();
   return session;
 }

@@ -13,13 +13,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import type { Role } from "@/generated/prisma/client";
-import {
-  MIN_PASSWORD_LENGTH,
-  ROLE_BLURB,
-  ROLE_META,
-  ROLE_ORDER,
-} from "@/lib/staff/constants";
+import { MIN_PASSWORD_LENGTH, permissionCountLabel } from "@/lib/staff/constants";
 import {
   createPerson,
   resetPassword,
@@ -27,7 +21,20 @@ import {
   updatePerson,
 } from "@/lib/staff/actions/staff";
 
-type Person = { id: string; name: string; email: string; role: Role; isActive: boolean };
+type RoleOption = {
+  id: string;
+  name: string;
+  description: string | null;
+  permissions: string[];
+};
+
+type Person = {
+  id: string;
+  name: string;
+  email: string;
+  isActive: boolean;
+  staffRole: { id: string; name: string } | null;
+};
 
 const PASSWORD_HINT = `At least ${MIN_PASSWORD_LENGTH} characters. Give it to them directly and ask them to change it from Account once they are in.`;
 
@@ -35,34 +42,39 @@ function readPerson(formData: FormData) {
   return {
     name: String(formData.get("name") ?? ""),
     email: String(formData.get("email") ?? ""),
-    role: String(formData.get("role") ?? "VIEWER") as Role,
+    staffRoleId: String(formData.get("staffRoleId") ?? ""),
   };
 }
 
-/** Controlled rather than defaulted, because the hint has to describe the role
- *  that is *selected*. Left uncontrolled it describes the one the dialog
- *  opened with, so picking Viewer on an admin's account leaves "Everything,
- *  including the timetable" sitting under the word Viewer — the field then
- *  contradicts itself at exactly the moment someone is deciding what access to
- *  hand out. */
-function RoleField({ defaultRole }: { defaultRole?: Role }) {
-  const [role, setRole] = React.useState<Role>(defaultRole ?? "VIEWER");
+/** Controlled rather than defaulted, so the hint describes the role that is
+ *  *selected*. Left uncontrolled it describes the one the dialog opened with,
+ *  which puts one role's powers under another role's name at exactly the
+ *  moment someone is deciding what access to hand out. */
+function RoleField({ roles, defaultRoleId }: { roles: RoleOption[]; defaultRoleId?: string }) {
+  const [roleId, setRoleId] = React.useState(defaultRoleId ?? roles[0]?.id ?? "");
+  const selected = roles.find((role) => role.id === roleId);
+
+  const hint = selected
+    ? [selected.description, permissionCountLabel(selected.permissions.length)]
+        .filter(Boolean)
+        .join(" · ")
+    : "Roles are set up under Roles.";
 
   return (
-    <Field label="Role" htmlFor="role" hint={ROLE_BLURB[role]}>
+    <Field label="Role" htmlFor="staffRoleId" hint={hint}>
       <Select
-        name="role"
-        value={role}
-        onValueChange={(next) => setRole(next as Role)}
+        name="staffRoleId"
+        value={roleId}
+        onValueChange={setRoleId}
         required
       >
-        <SelectTrigger id="role" className="w-full">
+        <SelectTrigger id="staffRoleId" className="w-full">
           <SelectValue placeholder="Pick a role" />
         </SelectTrigger>
         <SelectContent>
-          {ROLE_ORDER.map((option) => (
-            <SelectItem key={option} value={option}>
-              {ROLE_META[option].label}
+          {roles.map((role) => (
+            <SelectItem key={role.id} value={role.id}>
+              {role.name}
             </SelectItem>
           ))}
         </SelectContent>
@@ -71,7 +83,7 @@ function RoleField({ defaultRole }: { defaultRole?: Role }) {
   );
 }
 
-function PersonFields({ person }: { person?: Person }) {
+function PersonFields({ roles, person }: { roles: RoleOption[]; person?: Person }) {
   return (
     <>
       <Field label="Name" htmlFor="name">
@@ -95,12 +107,12 @@ function PersonFields({ person }: { person?: Person }) {
           placeholder="aoife@example.com"
         />
       </Field>
-      <RoleField defaultRole={person?.role} />
+      <RoleField roles={roles} defaultRoleId={person?.staffRole?.id} />
     </>
   );
 }
 
-export function AddPerson() {
+export function AddPerson({ roles }: { roles: RoleOption[] }) {
   return (
     <FormDialog
       trigger={
@@ -120,7 +132,7 @@ export function AddPerson() {
         })
       }
     >
-      <PersonFields />
+      <PersonFields roles={roles} />
       <Field label="Temporary password" htmlFor="password" hint={PASSWORD_HINT}>
         <Input
           id="password"
@@ -136,7 +148,7 @@ export function AddPerson() {
   );
 }
 
-export function EditPerson({ person }: { person: Person }) {
+export function EditPerson({ person, roles }: { person: Person; roles: RoleOption[] }) {
   return (
     <FormDialog
       trigger={
@@ -149,7 +161,7 @@ export function EditPerson({ person }: { person: Person }) {
       successMessage="Account updated"
       submit={(formData) => updatePerson(person.id, readPerson(formData))}
     >
-      <PersonFields person={person} />
+      <PersonFields roles={roles} person={person} />
     </FormDialog>
   );
 }

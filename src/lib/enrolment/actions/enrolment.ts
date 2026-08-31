@@ -4,7 +4,7 @@ import { revalidatePath } from "next/cache";
 import { z } from "zod";
 import { fail, ok, type ActionResult } from "@/lib/action-result";
 import { logAudit } from "@/lib/audit";
-import { requireManage } from "@/lib/authz";
+import { requirePermission } from "@/lib/authz";
 import { capacityLabel, courseLabel } from "@/lib/courses/constants";
 import { withCourseSeat } from "@/lib/enrolment/seat";
 import { parseDateOnly, today } from "@/lib/format";
@@ -30,7 +30,7 @@ const enrolSchema = z.object({
 export type EnrolInput = z.infer<typeof enrolSchema>;
 
 export async function enrolStudent(input: EnrolInput): Promise<ActionResult> {
-  const session = await requireManage();
+  const session = await requirePermission("enrolment.manage");
 
   const parsed = enrolSchema.safeParse(input);
   if (!parsed.success) return fail(parsed.error.issues[0].message);
@@ -167,7 +167,7 @@ export async function endEnrolment(
   id: string,
   input: z.infer<typeof endSchema>
 ): Promise<ActionResult> {
-  const session = await requireManage();
+  const session = await requirePermission("enrolment.manage");
 
   const parsed = endSchema.safeParse(input);
   if (!parsed.success) return fail(parsed.error.issues[0].message);
@@ -219,7 +219,7 @@ export async function endEnrolment(
 
 /** Promotion is a seat decision like any other, so it takes the same lock. */
 export async function promoteFromWaitlist(id: string): Promise<ActionResult> {
-  const session = await requireManage();
+  const session = await requirePermission("enrolment.manage");
 
   const enrolment = await prisma.enrolment.findUnique({
     where: { id },
@@ -286,7 +286,7 @@ export async function transferEnrolment(
   id: string,
   toCourseId: string
 ): Promise<ActionResult> {
-  const session = await requireManage();
+  const session = await requirePermission("enrolment.manage");
 
   const from = await prisma.enrolment.findUnique({
     where: { id },

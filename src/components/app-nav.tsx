@@ -3,7 +3,7 @@
 import { signOut } from "next-auth/react";
 import { MobileNav, Sidebar, type AppShellProps } from "@/components/ui-kit/app-shell";
 import { visibleNavItems } from "@/lib/nav";
-import type { PermissionTier } from "@/lib/authz";
+import type { PermissionKey } from "@/lib/staff/permissions";
 
 /** The shell's two nav surfaces, bound to this app.
  *
@@ -13,16 +13,16 @@ import type { PermissionTier } from "@/lib/authz";
  *  imported here rather than handed down, because a component reference is
  *  not serialisable. */
 type Props = Omit<AppShellProps, "items" | "wordmark" | "onSignOut"> & {
-  tier: PermissionTier;
+  permissions: Set<PermissionKey>;
 };
 
 const WORDMARK = "Swimly";
 
-function shellProps({ tier, ...rest }: Props): AppShellProps {
+function shellProps({ permissions, ...rest }: Props): AppShellProps {
   return {
     ...rest,
     wordmark: WORDMARK,
-    items: visibleNavItems(tier),
+    items: visibleNavItems(permissions),
     onSignOut: () => void signOut({ redirectTo: "/sign-in" }),
   };
 }

@@ -13,12 +13,12 @@ import { getRegister } from "@/lib/attendance/data/register";
 import { DAY_META, courseName, formatSlot } from "@/lib/courses/constants";
 import { getCourse } from "@/lib/courses/data/courses";
 import { formatDate, parseDateOnly, today, weekdayOf } from "@/lib/format";
-import { managePage } from "@/lib/page-guards";
+import { permissionPage } from "@/lib/page-guards";
 
 export const metadata: Metadata = { title: "Register" };
 
 export default async function RegisterPage(props: PageProps<"/courses/[id]/register">) {
-  const session = await managePage();
+  const session = await permissionPage("attendance.mark");
   const { id } = await props.params;
   const params = await props.searchParams;
 
@@ -37,11 +37,7 @@ export default async function RegisterPage(props: PageProps<"/courses/[id]/regis
 
   const mayMark =
     !course.archivedAt &&
-    canMarkRegister({
-      role: session.user.role,
-      userId: session.user.id,
-      instructorId: course.instructorId,
-    });
+    canMarkRegister({ session, instructorId: course.instructorId });
 
   const previous = shiftWeeks(iso, -1);
   const next = shiftWeeks(iso, 1);

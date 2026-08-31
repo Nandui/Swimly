@@ -13,7 +13,7 @@ import {
   PromoteFromWaitlist,
   TransferEnrolment,
 } from "@/components/enrolment/enrolment-actions";
-import { canManage, isAdmin } from "@/lib/authz";
+import { can } from "@/lib/authz";
 import {
   capacityLabel,
   capacityTone,
@@ -39,8 +39,8 @@ export const metadata: Metadata = { title: "Course" };
 
 export default async function CoursePage(props: PageProps<"/courses/[id]">) {
   const session = await pageSession();
-  const manage = canManage(session.user.role);
-  const admin = isAdmin(session.user.role);
+  const manage = can(session, "enrolment.manage");
+  const admin = can(session, "courses.manage");
   const { id } = await props.params;
 
   const course = await getCourse(id);

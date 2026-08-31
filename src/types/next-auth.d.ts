@@ -1,24 +1,42 @@
 import type { DefaultSession } from "next-auth";
-import type { Role } from "@/generated/prisma/client";
 
-/** The session carries the role, because every permission question in the app
- *  is asked against it. Without this augmentation `session.user.role` is
- *  `any` and `authz.ts` silently stops checking anything. */
+/** The session carries the **permissions**, not the role, because every
+ *  authorization question in the app is "may they do this?" and never "what
+ *  are they called?". The role's id and name ride along only so screens can
+ *  say who someone is; nothing branches on them.
+ *
+ *  Without this augmentation `session.user.permissions` is `any` and
+ *  `authz.ts` silently stops checking anything.
+ *
+ *  These are filled in by `auth()` in `src/auth.ts`, which re-reads the role
+ *  from the database on every request. The `session` callback cannot do it —
+ *  it only sees the token — so it sets empty placeholders that `auth()` then
+ *  replaces. Nothing outside `src/auth.ts` calls the raw NextAuth session. */
 declare module "next-auth" {
   interface Session {
-    user: { id: string; role: Role } & DefaultSession["user"];
+    user: {
+      id: string;
+      roleId: string;
+      roleName: string;
+      permissions: string[];
+    } & DefaultSession["user"];
   }
 
   interface User {
-    role: Role;
+    roleId?: string | null;
   }
 }
 
 /** The JWT interface is declared in `@auth/core/jwt`; `next-auth/jwt` only
  *  re-exports it, so augmenting that path would declare a second, unrelated
- *  module and leave `token.role` as `unknown`. */
+ *  module and leave the claim as `unknown`.
+ *
+ *  The token deliberately carries nothing but the subject. A permission list
+ *  minted into a JWT is a permission list that keeps working after it has been
+ *  taken away — the whole point of re-reading is that a change to a role bites
+ *  on the next request rather than at token expiry. */
 declare module "@auth/core/jwt" {
   interface JWT {
-    role: Role;
+    sub?: string;
   }
 }

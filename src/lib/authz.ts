@@ -1,73 +1,81 @@
-/** Three permission tiers, not a permission matrix.
+/** Permissions, asked one question at a time.
  *
- *  Every role in the product maps onto one of three answers: can they change
- *  the shape of the system, can they change the data, or can they only read
- *  it. Screens and actions ask the tier, never the role — so adding a role is
- *  one line here and no edits anywhere else, and no call site can drift into
- *  its own idea of who may do what.
+ *  This used to be three fixed tiers — admin, manage, view — mapped from an
+ *  enum. That was a deliberate decision and it held for as long as the club
+ *  had three kinds of person. It stopped holding the moment a role was needed
+ *  that could edit the timetable but not accounts, which is neither "changes
+ *  the rules" nor "changes the data". Rather than grow a fourth tier and then
+ *  a fifth, roles became data: `StaffRole` rows carrying an explicit list of
+ *  keys from `src/lib/staff/permissions.ts`.
  *
- *  `Role` comes from the Prisma schema, so adding a value there breaks
- *  `TIER_BY_ROLE` until you say which tier it belongs to. That is the point:
- *  the compiler, not a reviewer, catches the unplaced role. */
+ *  What has **not** changed is where the answer is asked. Every screen and
+ *  action asks for one permission by name, never for a role. Nothing in the
+ *  app refers to a role by its name, which is what lets an admin rename or
+ *  delete one without breaking anything.
+ *
+ *  The three guards, still guarding different things:
+ *
+ *    the nav   hides what you cannot reach   `visibleNavItems`
+ *    the page  declines to exist             `src/lib/page-guards.ts`
+ *    the action refuses the call             `requirePermission`, here
+ *
+ *  Only the last is security. The other two are courtesy. */
 
+import type { Session } from "next-auth";
 import { auth } from "@/auth";
-import type { Role } from "@/generated/prisma/client";
+import { expandPermissions, type PermissionKey } from "@/lib/staff/permissions";
 
-export type PermissionTier = "admin" | "manage" | "view";
-
-/** ADMIN changes the rules — programmes, levels, competencies, courses and
- *  accounts. INSTRUCTOR changes the data — students, enrolments, attendance
- *  and assessments. VIEWER reads it: reception, or a duty manager.
- *
- *  If a role's tier is genuinely ambiguous, that is a signal the role is doing
- *  two jobs, not that you need a fourth tier. Scoping rules — an instructor
- *  marking only their own registers — belong in the action, not here. */
-const TIER_BY_ROLE: Record<Role, PermissionTier> = {
-  ADMIN: "admin",
-  INSTRUCTOR: "manage",
-  VIEWER: "view",
-};
-
-/** Roles are never shown as raw enum values — the label and tint live
- *  together in `ROLE_META` in `src/lib/people/constants.ts`, one map per enum,
- *  so there is only ever one place that decides how a role reads. */
-
-export function tierOf(role: Role): PermissionTier {
-  return TIER_BY_ROLE[role];
-}
-
-export function canManage(role: Role): boolean {
-  return tierOf(role) !== "view";
-}
-
-export function isAdmin(role: Role): boolean {
-  return tierOf(role) === "admin";
-}
+export type { PermissionKey };
 
 export class AuthorizationError extends Error {}
 
-/** Returns the session or throws. Use in data modules for read access. */
+/** Returns the session or throws. Use in data modules for read access.
+ *
+ *  Reads are open to anyone signed in, which is the behaviour the app has
+ *  always had. Only writes and the audit log are permissioned. */
 export async function requireSession() {
   const session = await auth();
   if (!session?.user) throw new AuthorizationError("Not signed in");
   return session;
 }
 
-/** Requires the manage tier. Every mutating action starts with one of these. */
-export async function requireManage() {
+/** Expanded on every call rather than cached on the session, because the
+ *  session is rebuilt per request anyway and a stale permission set is exactly
+ *  the bug this whole file exists to avoid. The lists are single digits long. */
+export function permissionsOf(session: Session): Set<PermissionKey> {
+  return expandPermissions(session.user.permissions ?? []);
+}
+
+export function can(session: Session, permission: PermissionKey): boolean {
+  return permissionsOf(session).has(permission);
+}
+
+/** True if the session holds **any** of these. For screens that exist to serve
+ *  several permissions at once — the Today page is reachable by anyone who can
+ *  take a register, however they came by it. */
+export function canAny(session: Session, ...permissions: PermissionKey[]): boolean {
+  const held = permissionsOf(session);
+  return permissions.some((permission) => held.has(permission));
+}
+
+/** Requires one named permission. Every mutating action starts with one of
+ *  these, and it throws rather than returning a result: being called without
+ *  permission is not something a person can fix by typing something else. */
+export async function requirePermission(permission: PermissionKey) {
   const session = await requireSession();
-  if (!canManage(session.user.role)) {
-    throw new AuthorizationError("You don't have permission to make changes");
+  if (!can(session, permission)) {
+    throw new AuthorizationError(`You do not have permission to do that (${permission})`);
   }
   return session;
 }
 
-/** Requires the admin tier: user management, app settings, anything that
- *  changes the rules rather than the data. */
-export async function requireAdmin() {
+/** Requires any one of several. Same contract as `requirePermission`. */
+export async function requireAnyPermission(...permissions: PermissionKey[]) {
   const session = await requireSession();
-  if (!isAdmin(session.user.role)) {
-    throw new AuthorizationError("Admin access required");
+  if (!canAny(session, ...permissions)) {
+    throw new AuthorizationError(
+      `You do not have permission to do that (${permissions.join(" or ")})`
+    );
   }
   return session;
 }
