@@ -45,8 +45,10 @@ import { prisma } from "@/lib/prisma";
 const PROGRAMME = "Water Safety & Fun";
 const DAY = "FRIDAY" as const;
 
-/** Levels this source introduces, appended after the four already there.
- *  Starfish → Penguins → Turtles → Dolphins → Sharks 1 → Sharks 2. */
+/** Levels this source introduces. Created in Water Safety & Fun when this
+ *  first ran; both have since moved to **Swimming Skills**, where the club
+ *  says they belong. The guard below matches by name across every programme,
+ *  so a re-run finds them there rather than making empty duplicates here. */
 const NEW_LEVELS = ["Sharks 1", "Sharks 2"];
 
 /** Transcribed exactly as the source has them, oddities included. Reported at
@@ -625,10 +627,9 @@ async function main() {
   let sortOrder = (lastLevel?.sortOrder ?? -1) + 1;
 
   for (const name of NEW_LEVELS) {
-    const existing = await prisma.level.findUnique({
-      where: { programmeId_name: { programmeId: programme.id, name } },
-      select: { id: true },
-    });
+    // By name alone, across every programme: a level that has since been moved
+    // must not be recreated here as an empty duplicate.
+    const existing = await prisma.level.findFirst({ where: { name }, select: { id: true } });
     if (existing) continue;
 
     const level = await prisma.level.create({
@@ -652,14 +653,19 @@ async function main() {
     });
   }
 
-  const levels = new Map(
-    (
-      await prisma.level.findMany({
-        where: { programmeId: programme.id },
-        select: { id: true, name: true },
-      })
-    ).map((l) => [l.name, l.id])
-  );
+  // Looked up by name across every programme, not inside one. Sharks 1 and
+  // Sharks 2 moved to Swimming Skills after this import first ran, and a script
+  // that records how the data got here has to stay a clean no-op afterwards.
+  // Level names are unique across the curriculum; this asserts it rather than
+  // trusting it.
+  const levelRows = await prisma.level.findMany({ select: { id: true, name: true } });
+  const levels = new Map<string, string>();
+  for (const l of levelRows) {
+    if (levels.has(l.name)) {
+      throw new Error(`Two levels are called "${l.name}". Name the programme explicitly here.`);
+    }
+    levels.set(l.name, l.id);
+  }
 
   // ---- Courses, then rosters. ----
 
@@ -713,7 +719,7 @@ async function main() {
         action: "create",
         entity: "Course",
         entityId: course.id,
-        programmeId: programme.id,
+        programmeId: course.level.programmeId,
         summary: `Added ${courseLabel(course)} from the club's Friday timetable (course ${roster.code}), capacity ${roster.capacity}`,
       });
     }
@@ -803,7 +809,7 @@ async function main() {
         action: "enrol",
         entity: "Course",
         entityId: course.id,
-        programmeId: programme.id,
+        programmeId: course.level.programmeId,
         summary: `Imported the Friday roster for ${courseLabel(course)} — ${added.length} enrolled (${added.slice(0, 6).join(", ")}${added.length > 6 ? ` and ${added.length - 6} others` : ""})`,
       });
     }

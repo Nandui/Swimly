@@ -12,19 +12,17 @@ import { prisma } from "@/lib/prisma";
  *  **Available** count, every enrolment through `withCourseSeat`, idempotent,
  *  audited, and refusing rather than guessing on a member-number clash.
  *
- *  **One judgement call, and it is reversible.** The two 17:30 **Rookies**
- *  classes — Bronze 1-3 and Silver 1-3 — are imported as two more levels of
- *  Water Safety & Fun rather than held back. Five things say they belong:
- *  the "N - " prefix every class in this programme carries and the Friday
- *  LeisureWorld Sharks class did not, the Main Pool, a Swim Instructor, a
- *  50-session block, and a capacity of 12 matching Sharks. The children are 9
- *  to 13, older than Sharks 2, so the ladder reads
- *  Starfish → Penguins → Turtles → Dolphins → Sharks 1 → Sharks 2 →
- *  Rookies Bronze → Rookies Silver. Only the price differs, EUR105 against
- *  EUR125, and price is not modelled here at all.
+ *  **One judgement call, still open.** The two 17:30 **Rookies** classes —
+ *  Bronze 1-3 and Silver 1-3 — went into Water Safety & Fun rather than being
+ *  held back, on the strength of the "N - " prefix, the Main Pool, a Swim
+ *  Instructor, a 50-session block and a capacity of 12. They are still there.
  *
- *  If that is wrong, it is 2 levels and 11 enrolments to move, and no
- *  attendance has been taken against them yet. */
+ *  Sharks 1 and Sharks 2 are **not**: the club has since said they belong to
+ *  **Swimming Skills**, and `move-sharks-to-swimming-skills.ts` moved them.
+ *  That weakens the case for Rookies, which shares Sharks' EUR105 price rather
+ *  than the EUR125 the Water Safety & Fun classes charge — so Rookies may want
+ *  the same move. It is 2 levels and 11 enrolments, and nothing has been
+ *  assessed or attended against them. */
 
 const PROGRAMME = "Water Safety & Fun";
 const DAY = "MONDAY" as const;
@@ -422,10 +420,9 @@ async function main() {
   let sortOrder = (lastLevel?.sortOrder ?? -1) + 1;
 
   for (const name of NEW_LEVELS) {
-    const existing = await prisma.level.findUnique({
-      where: { programmeId_name: { programmeId: programme.id, name } },
-      select: { id: true },
-    });
+    // By name alone, across every programme: a level that has since been moved
+    // must not be recreated here as an empty duplicate.
+    const existing = await prisma.level.findFirst({ where: { name }, select: { id: true } });
     if (existing) continue;
 
     const level = await prisma.level.create({
@@ -449,14 +446,19 @@ async function main() {
     });
   }
 
-  const levels = new Map(
-    (
-      await prisma.level.findMany({
-        where: { programmeId: programme.id },
-        select: { id: true, name: true },
-      })
-    ).map((l) => [l.name, l.id])
-  );
+  // Looked up by name across every programme, not inside one. Sharks 1 and
+  // Sharks 2 moved to Swimming Skills after this import first ran, and a script
+  // that records how the data got here has to stay a clean no-op afterwards.
+  // Level names are unique across the curriculum; this asserts it rather than
+  // trusting it.
+  const levelRows = await prisma.level.findMany({ select: { id: true, name: true } });
+  const levels = new Map<string, string>();
+  for (const l of levelRows) {
+    if (levels.has(l.name)) {
+      throw new Error(`Two levels are called "${l.name}". Name the programme explicitly here.`);
+    }
+    levels.set(l.name, l.id);
+  }
 
   for (const roster of ROSTERS) {
     const levelId = levels.get(roster.level);
@@ -508,7 +510,7 @@ async function main() {
         action: "create",
         entity: "Course",
         entityId: course.id,
-        programmeId: programme.id,
+        programmeId: course.level.programmeId,
         summary: `Added ${courseLabel(course)} from the club's Monday timetable (course ${roster.code}), capacity ${roster.capacity}`,
       });
     }
@@ -605,7 +607,7 @@ async function main() {
         action: "enrol",
         entity: "Course",
         entityId: course.id,
-        programmeId: programme.id,
+        programmeId: course.level.programmeId,
         summary: `Imported the Monday roster for ${courseLabel(course)} — ${added.length} enrolled (${added.slice(0, 6).join(", ")}${added.length > 6 ? ` and ${added.length - 6} others` : ""})`,
       });
     }

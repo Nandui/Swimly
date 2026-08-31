@@ -687,14 +687,19 @@ async function main() {
   const renames: string[] = [];
   const alsoOnAnotherDay: string[] = [];
 
-  const levels = new Map(
-    (
-      await prisma.level.findMany({
-        where: { programmeId: programme.id },
-        select: { id: true, name: true },
-      })
-    ).map((l) => [l.name, l.id])
-  );
+  // Looked up by name across every programme, not inside one. Sharks 1 and
+  // Sharks 2 moved to Swimming Skills after this import first ran, and a script
+  // that records how the data got here has to stay a clean no-op afterwards.
+  // Level names are unique across the curriculum; this asserts it rather than
+  // trusting it.
+  const levelRows = await prisma.level.findMany({ select: { id: true, name: true } });
+  const levels = new Map<string, string>();
+  for (const l of levelRows) {
+    if (levels.has(l.name)) {
+      throw new Error(`Two levels are called "${l.name}". Name the programme explicitly here.`);
+    }
+    levels.set(l.name, l.id);
+  }
 
   for (const roster of ROSTERS) {
     const levelId = levels.get(roster.level);
@@ -746,7 +751,7 @@ async function main() {
         action: "create",
         entity: "Course",
         entityId: course.id,
-        programmeId: programme.id,
+        programmeId: course.level.programmeId,
         summary: `Added ${courseLabel(course)} from the club's Saturday timetable (course ${roster.code}), capacity ${roster.capacity}`,
       });
     }
@@ -838,7 +843,7 @@ async function main() {
         action: "enrol",
         entity: "Course",
         entityId: course.id,
-        programmeId: programme.id,
+        programmeId: course.level.programmeId,
         summary: `Imported the Saturday roster for ${courseLabel(course)} — ${added.length} enrolled (${added.slice(0, 6).join(", ")}${added.length > 6 ? ` and ${added.length - 6} others` : ""})`,
       });
     }
