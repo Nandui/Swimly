@@ -12,17 +12,18 @@ import { prisma } from "@/lib/prisma";
  *  **Available** count, every enrolment through `withCourseSeat`, idempotent,
  *  audited, and refusing rather than guessing on a member-number clash.
  *
- *  **One judgement call, still open.** The two 17:30 **Rookies** classes —
- *  Bronze 1-3 and Silver 1-3 — went into Water Safety & Fun rather than being
- *  held back, on the strength of the "N - " prefix, the Main Pool, a Swim
- *  Instructor, a 50-session block and a capacity of 12. They are still there.
+ *  **One judgement call, since overturned.** The two 17:30 **Rookies** classes —
+ *  Bronze 1-3 and Silver 1-3 — went into Water Safety & Fun on the strength of
+ *  the "N - " prefix, the Main Pool, a Swim Instructor, a 50-session block and
+ *  a capacity of 12. Wrong: the club says they are **RLSS Lifesaving**, and
+ *  Sharks 1 and Sharks 2 are **Swimming Skills**. `move-levels.ts` moved both
+ *  sets, and this script creates the Rookies levels only if they are absent
+ *  from *every* programme, so a re-run will not resurrect them here.
  *
- *  Sharks 1 and Sharks 2 are **not**: the club has since said they belong to
- *  **Swimming Skills**, and `move-sharks-to-swimming-skills.ts` moved them.
- *  That weakens the case for Rookies, which shares Sharks' EUR105 price rather
- *  than the EUR125 the Water Safety & Fun classes charge — so Rookies may want
- *  the same move. It is 2 levels and 11 enrolments, and nothing has been
- *  assessed or attended against them. */
+ *  The tell I had and discounted was the price: EUR105 for Rookies and for the
+ *  LeisureWorld Sharks class, against EUR125 for everything that really is
+ *  Water Safety & Fun. Price is not modelled in this app, which is exactly why
+ *  it was easy to wave away. */
 
 const PROGRAMME = "Water Safety & Fun";
 const DAY = "MONDAY" as const;
