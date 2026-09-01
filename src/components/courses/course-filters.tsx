@@ -15,7 +15,7 @@ import {
 } from "@/components/ui/command";
 import { Input } from "@/components/ui/input";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
-import type { FilterDimension } from "@/lib/courses/filters";
+import { ANY_DAY, type FilterDimension } from "@/lib/courses/filters";
 import { cn } from "@/lib/utils";
 
 /** The timetable's filter bar. Six dimensions, and they combine: a class has to
@@ -55,6 +55,10 @@ export function CourseFilters({
       const next = new URLSearchParams(params.toString());
       for (const [key, value] of Object.entries(changes)) {
         if (value) next.set(key, value);
+        // Clearing Day means the week, and the week is a value rather than an
+        // absence — an absent `day` opens on today. Every other dimension
+        // clears by disappearing.
+        else if (key === "day") next.set(key, ANY_DAY);
         else next.delete(key);
       }
       // A key whose value is empty filters nothing, so it has no business in a
@@ -70,11 +74,15 @@ export function CourseFilters({
     <div className="space-y-2">
       <div className="flex flex-wrap items-center gap-2">
         <Form action="/courses" className="relative">
-          {dimensions
-            .filter((d) => d.selected)
-            .map((d) => (
+          {dimensions.map((d) =>
+            d.selected ? (
               <input key={d.key} type="hidden" name={d.key} value={d.selected} />
-            ))}
+            ) : d.key === "day" ? (
+              // A search submitted from the week view has to stay on the week
+              // view; without this the form would drop `day` and land on today.
+              <input key={d.key} type="hidden" name="day" value={ANY_DAY} />
+            ) : null
+          )}
           <Search
             className="pointer-events-none absolute top-1/2 left-2 size-3.5 -translate-y-1/2 text-muted-foreground"
             aria-hidden
@@ -109,7 +117,7 @@ export function CourseFilters({
             variant="ghost"
             size="sm"
             className="h-8 text-muted-foreground"
-            onClick={() => router.push("/courses")}
+            onClick={() => router.push(`/courses?day=${ANY_DAY}`)}
           >
             Clear {active === 1 ? "filter" : `all ${active}`}
           </Button>

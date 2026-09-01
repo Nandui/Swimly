@@ -108,13 +108,18 @@ export async function getCourseCounts() {
   return { courses, places };
 }
 
-/** Who a class can be assigned to. Viewers are excluded — an account that
- *  cannot take a register has no business being the name on one. */
+/** Who a class can be assigned to: anyone whose role lets them take a
+ *  register. Asked by permission rather than by role name, because roles are
+ *  the club's to invent — and an account that cannot take a register has no
+ *  business being the name on one. */
 export async function getInstructorOptions() {
   await requireSession();
 
   return prisma.user.findMany({
-    where: { isActive: true, role: { in: ["ADMIN", "INSTRUCTOR"] } },
+    where: {
+      isActive: true,
+      staffRole: { permissions: { hasSome: ["attendance.mark", "attendance.markAny"] } },
+    },
     orderBy: { name: "asc" },
     select: { id: true, name: true },
   });

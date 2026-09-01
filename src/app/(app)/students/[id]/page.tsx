@@ -40,15 +40,16 @@ export default async function StudentPage(props: PageProps<"/students/[id]">) {
   const admin = can(session, "progression.override");
   const { id } = await props.params;
 
-  const student = await getStudent(id);
-  if (!student) notFound();
-
-  const [enrolments, courses, programmes, attendance] = await Promise.all([
+  // Fetched alongside the rest rather than first; nothing below needs more
+  // than the id, so the sequential read was a round trip for nothing.
+  const [student, enrolments, courses, programmes, attendance] = await Promise.all([
+    getStudent(id),
     getEnrolmentsForStudent(id),
     manage ? getCourses() : Promise.resolve([]),
     getStudentProgress(id),
     getAttendanceForStudent(id),
   ]);
+  if (!student) notFound();
   const open = enrolments.filter(
     (enrolment) => enrolment.status === "ACTIVE" || enrolment.status === "WAITLISTED"
   );

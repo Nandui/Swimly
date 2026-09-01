@@ -136,6 +136,29 @@ un-ticking a permission on a role twelve people share all take effect
 immediately instead of at token expiry. It costs one indexed query. Nothing but
 the subject is minted into the JWT, for the same reason.
 
+### Anything the size of the club is searched, not sent
+
+The swimmer picker asks the server for the twenty that match what has been
+typed (`src/lib/students/actions/search.ts`), debounced, and never receives the
+roll. Two pages once shipped all 1,156 swimmers so that one could be chosen;
+`/students` once shipped 500 so that they could be scrolled. The rule that
+falls out: **a list that grows with the club goes behind a server search or a
+page, never into props.** Classes are 134 and grow by a handful a term, so they
+still travel as options — the moment that stops being true, they get the same
+treatment.
+
+A read that a client component calls lives in `actions/` with `"use server"`,
+because that is the only door a client component has to the database. It still
+authorizes, and its comment says why it is where it is.
+
+### The timetable opens on today
+
+`/courses` with no `day` in the URL shows today's classes. The whole week is
+`day=any`, and the filter bar writes that value rather than deleting the key
+when the chip is cleared — an absent key means today, so deleting it would snap
+back. Every page has a `loading.tsx` above it (one file, at the `(app)`
+segment) so the shell paints before the data does.
+
 ### The nav holds only pages that exist
 
 A sidebar advertising routes nobody has built reads as a broken app, so add the

@@ -23,6 +23,8 @@ import {
   filterCourses,
   parseCourseFilters,
 } from "@/lib/courses/filters";
+import { weekdayOfIso } from "@/lib/attendance/dates";
+import { today } from "@/lib/format";
 import { pageSession } from "@/lib/page-guards";
 
 export const metadata: Metadata = { title: "Courses" };
@@ -31,7 +33,8 @@ export default async function CoursesPage(props: PageProps<"/courses">) {
   const session = await pageSession();
   const admin = can(session, "courses.manage");
 
-  const filters = parseCourseFilters(await props.searchParams);
+  // Opens on today. See `ANY_DAY` in filters.ts for how the week is reached.
+  const filters = parseCourseFilters(await props.searchParams, weekdayOfIso(today()));
   const active = activeFilterCount(filters);
 
   const [courses, levels, instructors] = await Promise.all([

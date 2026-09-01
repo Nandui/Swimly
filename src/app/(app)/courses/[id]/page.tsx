@@ -33,7 +33,6 @@ import { getTransferTargets, type TransferTarget } from "@/lib/enrolment/data/en
 import { formatDate } from "@/lib/format";
 import { pageSession } from "@/lib/page-guards";
 import { ageLabel, fullName } from "@/lib/students/constants";
-import { getStudentOptions } from "@/lib/students/data/students";
 
 export const metadata: Metadata = { title: "Course" };
 
@@ -43,16 +42,17 @@ export default async function CoursePage(props: PageProps<"/courses/[id]">) {
   const admin = can(session, "courses.manage");
   const { id } = await props.params;
 
-  const course = await getCourse(id);
-  if (!course) notFound();
-
-  const [roster, students, targets, levels, instructors] = await Promise.all([
+  // The course is fetched alongside everything else rather than first: none of
+  // the other reads need anything from it but the id, so waiting on it was one
+  // whole round trip spent for nothing. The 404 check moves to after.
+  const [course, roster, targets, levels, instructors] = await Promise.all([
+    getCourse(id),
     getRoster(id),
-    manage ? getStudentOptions() : Promise.resolve([]),
     manage ? getTransferTargets(id) : Promise.resolve([]),
     admin ? getLevelOptions() : Promise.resolve([]),
     admin ? getInstructorOptions() : Promise.resolve([]),
   ]);
+  if (!course) notFound();
 
   const active = roster.filter((entry) => entry.status === "ACTIVE");
   const waiting = roster.filter((entry) => entry.status === "WAITLISTED");
@@ -100,7 +100,7 @@ export default async function CoursePage(props: PageProps<"/courses/[id]">) {
                 </Button>
               ) : null}
               {manage && !course.archivedAt ? (
-                <EnrolIntoCourse course={course} taken={active.length} students={students} />
+                <EnrolIntoCourse course={course} taken={active.length} />
               ) : null}
               {admin ? (
                 <>
@@ -142,7 +142,7 @@ export default async function CoursePage(props: PageProps<"/courses/[id]">) {
           hint="Enrol a swimmer and they will appear on the roster and on every register from then on."
           action={
             manage && !course.archivedAt ? (
-              <EnrolIntoCourse course={course} taken={0} students={students} />
+              <EnrolIntoCourse course={course} taken={0} />
             ) : null
           }
         />

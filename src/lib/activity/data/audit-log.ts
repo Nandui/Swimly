@@ -26,18 +26,26 @@ export async function getRecentActivity(take = 8): Promise<ActivityEntry[]> {
   });
 }
 
-/** The whole trail. Admin-only: the log names who did what, which is a
- *  different question from what the data currently says. */
-export async function getActivity(take = 200): Promise<ActivityEntry[]> {
-  await requirePermission("activity.view");
-  return prisma.auditLog.findMany({
-    select: SELECT,
-    orderBy: { createdAt: "desc" },
-    take,
-  });
-}
+/** How many entries a page of the trail holds. It used to be the 200 newest in
+ *  one go — 441KB of page for a table nobody reads past the first screen of,
+ *  and growing with every register taken. */
+export const ACTIVITY_PER_PAGE = 50;
 
-export async function countActivity(): Promise<number> {
-  await requireSession();
-  return prisma.auditLog.count();
+/** The whole trail, a page at a time. Needs `activity.view`: the log names who
+ *  did what, which is a different question from what the data currently says. */
+export async function getActivity(page = 1) {
+  await requirePermission("activity.view");
+  const current = Math.max(1, Math.trunc(page));
+
+  const [entries, total] = await Promise.all([
+    prisma.auditLog.findMany({
+      select: SELECT,
+      orderBy: { createdAt: "desc" },
+      skip: (current - 1) * ACTIVITY_PER_PAGE,
+      take: ACTIVITY_PER_PAGE,
+    }),
+    prisma.auditLog.count(),
+  ]);
+
+  return { entries, total, page: current };
 }

@@ -8,7 +8,6 @@ import { AddToGroup } from "@/components/together/add-to-group";
 import { capacityLabel, courseName, formatTime, DAY_META } from "@/lib/courses/constants";
 import { getCourses } from "@/lib/courses/data/courses";
 import { pageSession } from "@/lib/page-guards";
-import { getStudentOptions } from "@/lib/students/data/students";
 import { getGroup, toMembers } from "@/lib/together/data/together";
 import { findTimesTogether, type Placement } from "@/lib/together/match";
 
@@ -24,8 +23,7 @@ export default async function TogetherPage(props: PageProps<"/together">) {
   const raw = typeof params.students === "string" ? params.students : "";
   const ids = [...new Set(raw.split(",").filter(Boolean))].slice(0, GROUP_CAP);
 
-  const [options, group, courses] = await Promise.all([
-    getStudentOptions(),
+  const [group, courses] = await Promise.all([
     getGroup(ids),
     ids.length ? getCourses() : Promise.resolve([]),
   ]);
@@ -72,7 +70,7 @@ export default async function TogetherPage(props: PageProps<"/together">) {
           ))}
 
           {chosen.length < GROUP_CAP ? (
-            <AddToGroup options={options} chosen={ids} full={false} />
+            <AddToGroup chosen={ids} />
           ) : (
             <span className="text-[13px] text-muted-foreground">
               That is as many as this will search for at once.

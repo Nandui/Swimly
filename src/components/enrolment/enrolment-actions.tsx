@@ -4,6 +4,7 @@ import { ArrowRightLeft, ChevronsUp, LogOut, Plus, UserRoundPlus } from "lucide-
 import { ActionButton } from "@/components/confirm-action";
 import { Field, FormDialog } from "@/components/form-dialog";
 import { SearchablePicker, type PickerOption } from "@/components/searchable-picker";
+import { StudentPicker } from "@/components/students/student-search";
 import { Button } from "@/components/ui/button";
 import { Switch } from "@/components/ui/switch";
 import { Textarea } from "@/components/ui/textarea";
@@ -21,8 +22,6 @@ import {
   placesLeft,
 } from "@/lib/courses/constants";
 import { fullName } from "@/lib/students/constants";
-import type { StudentOption } from "@/lib/students/data/students";
-import { ageInYears } from "@/lib/format";
 
 type CourseLike = {
   id: string;
@@ -32,14 +31,6 @@ type CourseLike = {
   capacity: number | null;
   level: { name: string };
 };
-
-function studentOptions(students: StudentOption[]): PickerOption[] {
-  return students.map((student) => ({
-    value: student.id,
-    label: fullName(student),
-    hint: student.dateOfBirth ? `${ageInYears(student.dateOfBirth)} years old` : undefined,
-  }));
-}
 
 function courseOptions(courses: (CourseLike & { _count: { enrolments: number } })[]): PickerOption[] {
   return courses.map((course) => {
@@ -94,16 +85,10 @@ function readEnrol(formData: FormData) {
   };
 }
 
-/** From a course page: the class is fixed, pick the swimmer. */
-export function EnrolIntoCourse({
-  course,
-  taken,
-  students,
-}: {
-  course: CourseLike;
-  taken: number;
-  students: StudentOption[];
-}) {
+/** From a course page: the class is fixed, pick the swimmer. The picker asks
+ *  the server as you type rather than being handed every swimmer, which is
+ *  why this takes no list. */
+export function EnrolIntoCourse({ course, taken }: { course: CourseLike; taken: number }) {
   return (
     <FormDialog
       trigger={
@@ -120,14 +105,7 @@ export function EnrolIntoCourse({
     >
       <input type="hidden" name="courseId" value={course.id} />
       <Field label="Swimmer" htmlFor="studentId">
-        <SearchablePicker
-          id="studentId"
-          name="studentId"
-          options={studentOptions(students)}
-          placeholder="Pick a swimmer"
-          searchPlaceholder="Search by name…"
-          emptyText="Nobody by that name."
-        />
+        <StudentPicker id="studentId" name="studentId" />
       </Field>
       <PlacementFields />
     </FormDialog>

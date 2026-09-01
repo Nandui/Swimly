@@ -155,15 +155,7 @@ export async function getStudent(id: string) {
 
 export type StudentDetail = NonNullable<Awaited<ReturnType<typeof getStudent>>>;
 
-/** For pickers: every active student, cheap. */
-export async function getStudentOptions() {
-  await requireSession();
-
-  return prisma.student.findMany({
-    where: { status: "ACTIVE" },
-    orderBy: [{ lastName: "asc" }, { firstName: "asc" }],
-    select: { id: true, firstName: true, lastName: true, dateOfBirth: true },
-  });
-}
-
-export type StudentOption = Awaited<ReturnType<typeof getStudentOptions>>[number];
+// There is deliberately no "every active student" read for pickers any more.
+// The swimmer picker searches the server as you type — see
+// `src/lib/students/actions/search.ts` — because handing a client component the
+// whole roll was 1,156 rows on every page that had one.

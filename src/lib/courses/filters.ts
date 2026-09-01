@@ -57,12 +57,22 @@ function one(params: RawParams, key: string): string {
   return typeof value === "string" ? value.trim() : "";
 }
 
-export function parseCourseFilters(params: RawParams): CourseFilters {
+/** The value of `day` that means "the whole week".
+ *
+ *  A URL with no `day` at all means today — 134 classes is not a page anybody
+ *  reads top to bottom, and a timetable opened on the deck is opened for today.
+ *  But then clearing the Day chip cannot simply delete the key, or it would
+ *  snap straight back to today and the week would be unreachable. So the week
+ *  has to be a value, and this is it. Absent means today; `any` means all. */
+export const ANY_DAY = "any";
+
+export function parseCourseFilters(params: RawParams, today: DayOfWeek): CourseFilters {
+  const day = params.day === undefined ? today : one(params, "day");
   return {
     q: one(params, "q"),
     programme: one(params, "programme"),
     level: one(params, "level"),
-    day: one(params, "day"),
+    day: day === ANY_DAY ? "" : day,
     time: one(params, "time"),
     instructor: one(params, "instructor"),
     places: one(params, "places"),

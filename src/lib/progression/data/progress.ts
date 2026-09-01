@@ -185,31 +185,32 @@ export async function getStudentProgress(studentId: string): Promise<ProgrammePr
 export async function getClassProgress(courseId: string) {
   await requireSession();
 
-  const course = await prisma.course.findUnique({
-    where: { id: courseId },
-    select: {
-      id: true,
-      name: true,
-      dayOfWeek: true,
-      startMinutes: true,
-      levelId: true,
-      level: {
-        select: {
-          id: true,
-          name: true,
-          programmeId: true,
-          competencies: {
-            where: LIVE,
-            orderBy: [...LIST_ORDER],
-            select: { id: true, name: true, description: true },
+  // Two round trips, not three. The roster needs only the course id, so it is
+  // read alongside the course; everything that needs the course's level or
+  // competencies waits for it in one second batch.
+  const [course, enrolments] = await Promise.all([
+    prisma.course.findUnique({
+      where: { id: courseId },
+      select: {
+        id: true,
+        name: true,
+        dayOfWeek: true,
+        startMinutes: true,
+        levelId: true,
+        level: {
+          select: {
+            id: true,
+            name: true,
+            programmeId: true,
+            competencies: {
+              where: LIVE,
+              orderBy: [...LIST_ORDER],
+              select: { id: true, name: true, description: true },
+            },
           },
         },
       },
-    },
-  });
-  if (!course) return null;
-
-  const [enrolments, orderedLevels] = await Promise.all([
+    }),
     prisma.enrolment.findMany({
       where: { courseId, status: "ACTIVE" },
       orderBy: [{ student: { lastName: "asc" } }, { student: { firstName: "asc" } }],
@@ -221,18 +222,19 @@ export async function getClassProgress(courseId: string) {
         },
       },
     }),
+  ]);
+  if (!course) return null;
+
+  const studentIds = enrolments.map((row) => row.student.id);
+  const competencyIds = course.level.competencies.map((row) => row.id);
+
+  const [orderedLevels, results, completions] = await Promise.all([
     // The ladder this course sits on, so the screen knows what "up" means.
     prisma.level.findMany({
       where: { programmeId: course.level.programmeId, ...LIVE },
       orderBy: [...LIST_ORDER],
       select: { id: true, name: true, sortOrder: true },
     }),
-  ]);
-
-  const studentIds = enrolments.map((row) => row.student.id);
-  const competencyIds = course.level.competencies.map((row) => row.id);
-
-  const [results, completions] = await Promise.all([
     studentIds.length && competencyIds.length
       ? prisma.competencyResult.findMany({
           where: { studentId: { in: studentIds }, competencyId: { in: competencyIds } },
