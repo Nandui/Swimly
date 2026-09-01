@@ -2,6 +2,7 @@ import {
   Activity,
   CalendarCheck,
   CalendarDays,
+  CalendarHeart,
   CircleUser,
   Home,
   KeyRound,
@@ -25,6 +26,9 @@ export const NAV_ITEMS: AppNavItem[] = [
   { href: "/today", label: "Today", icon: CalendarCheck, requires: "attendance.mark" },
   { href: "/students", label: "Students", icon: Users },
   { href: "/courses", label: "Courses", icon: CalendarDays },
+  // No `requires`: it only reads, and the desk staff who field "can all three
+  // come at the same time?" are exactly who needs it.
+  { href: "/together", label: "Together", icon: CalendarHeart },
   { href: "/programmes", label: "Programmes", icon: Layers, requires: "curriculum.manage" },
   { href: "/staff", label: "Staff", icon: UserCog, requires: "staff.manage" },
   { href: "/roles", label: "Roles", icon: KeyRound, requires: "roles.manage" },
