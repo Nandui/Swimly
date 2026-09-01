@@ -1,23 +1,23 @@
 # Swimly — the doctrine
 
-Swimly is built in **the well-kept page** style: a workspace that reads like a
-carefully maintained document, not a dashboard. White content ground, a
-warm-grey sidebar, soft dark-brown ink instead of black, hairline borders
-instead of shadows, and one blue accent spent only on interaction.
+Swimly's visual system is **generated, not hand-picked**. The ui-ux-pro-max
+skill's design-system engine produced it for this product on 1 Sep 2026 and it
+is persisted at [`design-system/swimly/MASTER.md`](design-system/swimly/MASTER.md):
+**Minimalism & Swiss Style** — a slate scale in both modes, one green accent for
+the primary action, Fira Sans to read and Fira Code for headings and figures,
+subtle 200ms motion, sharp shadows if any. That file is the authority on how
+things look; page-level exceptions go in `design-system/swimly/pages/`, and a
+question it does not answer is put to the skill, one intent per query.
 
-The system itself lives in this repo as a git submodule at
-`.claude/skills/design-kit`, which is also a Claude Code skill — ask for "the
-house style" and it loads. Read it before making a visual or architectural
-decision; this file records only what is **specific to Swimly**.
+The previous doctrine — "the well-kept page", a warm-grey document style with
+one blue — is superseded by decision on that date. Its components are still
+vendored at `src/components/ui-kit/` and still used; its visual rules are not.
+The kit remains a submodule at `.claude/skills/design-kit` for its component
+recipes only.
 
-```
-.claude/skills/design-kit/SKILL.md                     rules, setup, judgement calls
-.claude/skills/design-kit/references/design-system.md   colour, type, layout, components
-.claude/skills/design-kit/references/architecture.md    actions, permissions, audit, scripts
-.claude/skills/design-kit/references/recipes.md         page, table row, dialog, filter bar
-```
-
-Update it with `git submodule update --remote .claude/skills/design-kit`.
+This file records what MASTER.md cannot: how the generated system was mapped
+onto shadcn's tokens, where it had to be corrected, and the architectural
+decisions that hold regardless of how the app looks.
 
 ---
 
@@ -26,18 +26,18 @@ Update it with `git submodule update --remote .claude/skills/design-kit`.
 These are the ones that get broken first, and breaking any of them is what
 makes Swimly stop looking like itself.
 
-- **No KPI cards, hero metrics or stat tiles.** Numbers live in prose
-  sentences with bold counts, and in lists. The overview page is the worked
-  example.
-- **One blue, for interaction only.** Buttons, links, active states, focus,
-  caret, selection. Never a decorative fill or a background tint.
-- **Status colour comes only from the nine tint pairs**, always as the pair
-  (soft field + deep same-hue ink), always via a metadata map — never a colour
-  chosen at a call site.
-- **Flat at rest.** Only genuinely floating layers cast a shadow: dropdowns,
-  popovers, dialogs, sheets, toasts.
-- **One H1 per page**, 26px bold, with an optional muted description line.
-  Section headings stay at 14px semibold.
+- **Tokens, never colours.** Every colour a component shows comes from a
+  variable in `globals.css`, which follows MASTER.md. No hex, no Tailwind
+  palette class, in a component.
+- **One green, for the primary action.** `--primary` is the engine's
+  Accent/CTA. It marks the thing you are meant to do next and nothing else.
+- **Status colour comes only from the tag token pairs**, always as the pair
+  (field + same-hue ink, one set per mode), always via a metadata map — never
+  a colour chosen at a call site.
+- **Both modes, always.** Every pair is measured in light and in dark before
+  it ships: text 4.5:1, control edges 3:1. The engine's own checklist.
+- **One H1 per page**, in the heading face, with an optional muted description
+  line. Section headings are H2.
 - **Collapse, don't scroll.** Secondary table columns re-home as a muted second
   line below `md`. Anything that grows without limit goes behind a searchable
   picker.
@@ -51,29 +51,33 @@ makes Swimly stop looking like itself.
 
 ## Decisions taken for Swimly
 
-### Light only, on purpose
+### Two modes, the system decides
 
-The kit ships a `.dark` block it is honest about: the app it was extracted from
-never rendered dark mode, so that block is derived rather than proven. Swimly
-has **deleted it** and ships one mode.
+The engine emitted a dark palette and marked the style "mode: auto", so Swimly
+ships both. `next-themes` sets `class="dark"` on `<html>`, defaults to the
+operating system, and remembers a choice made on the Account page. The light
+palette is the same slate/green scale read from the other end.
 
-The `@custom-variant dark (&:is(.dark *))` line stays in `globals.css` so the
-shadcn primitives' `dark:` utilities still compile — they simply never match,
-because nothing ever sets `.dark`. That is the difference between a decision
-and an oversight: the app the kit came from carried an unmounted dark theme for
-its whole life without anyone looking at it.
+### How MASTER.md maps onto shadcn, and where it was corrected
 
-To take dark mode on later: copy the block back from
-`.claude/skills/design-kit/assets/globals.css`, mount a theme provider, switch
-`<Toaster theme="light" />` in `src/app/layout.tsx` back to `system`, and
-verify it on real pages at more than one width before shipping it.
+The engine speaks in roles (Primary, Accent/CTA, Card…); shadcn speaks in
+tokens. The mapping, and the three places the generated values failed the
+engine's own pre-delivery bar and were corrected rather than shipped:
 
-### The accent stays the kit blue
+| MASTER.md role | Token | Note |
+|---|---|---|
+| Accent/CTA `#22C55E` | `--primary` | The engine's "Primary" `#1E293B` measures **1.22:1** against the dark background — a button that colour vanishes. The CTA is what a primary button is. Ink is near-black in both modes (7.8:1 dark, 8.9:1 light); white on green fails. |
+| Primary `#1E293B` / Secondary `#334155` | `--secondary`, sidebar and surfaces | Slate-800/700 as surfaces, which is what they are good at. |
+| Border `#475569` | `--border` | 2.36:1 — right for a hairline, too faint to bound a control. Inputs use `--input` at slate-500, 3.75:1 dark / 4.8:1 light. |
+| Destructive `#EF4444` | `--destructive` = `#DC2626` | White text on red-500 is 3.8:1; on red-600 it is 4.8:1. |
+| Ring `#FFFFFF` (dark) / slate-900 (light) | `--ring` | Focus ring, visible on both grounds. |
 
-`--primary: oklch(0.6 0.14 250)`. A swim club is not the place to fight the one
-blue. If Swimly is ever rebranded, that token is the whole change — and the
-neutrals keep their trace of yellow (hue 95–106), because that warmth is what
-makes the result read as paper rather than as an unstyled admin panel.
+Radius is `0.25rem` — geometric, per the style. Transitions default to 200ms,
+per "Key Effects". The MASTER shadow scale is exposed as tokens and applied to
+nothing at rest.
+
+The former warm-grey neutrals (hue 95–106) are gone with the doctrine that
+needed them; slate carries no hue on purpose.
 
 ### Roles are data, permissions are code
 
@@ -346,10 +350,12 @@ and writes an audit row for the account it creates.
 
 Before calling a screen done:
 
-- One H1, and the numbers are in a sentence rather than in tiles.
-- Every status is a `<Tag>` fed by a metadata map.
-- Nothing at rest casts a shadow; every border is a 1px hairline.
-- Blue appears only where something is interactive.
+- One H1, in the heading face.
+- Every status is a `<Tag>` fed by a metadata map, and it reads in both modes.
+- Green appears only on the primary action.
+- Every text pair 4.5:1 and every control edge 3:1, checked in light and dark.
+- Keyboard: a visible ring on everything focusable, the skip link first,
+  `prefers-reduced-motion` honoured.
 - Row actions carry `aria-label`s naming the verb and the row, and stay
   reachable on touch (`max-md:opacity-100`).
 - Secondary columns collapse rather than scroll below `md`.

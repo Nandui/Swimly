@@ -78,6 +78,10 @@ function NavList({
                 title={collapsed ? item.label : undefined}
                 className={cn(
                   "flex items-center gap-2.5 rounded-md px-2 py-1.5 text-[13.5px] font-medium transition-colors",
+                  // The same ring every button and input shows, so keyboard
+                  // focus looks like one thing across the app instead of the
+                  // browser default here and the token everywhere else.
+                  "outline-none focus-visible:ring-[3px] focus-visible:ring-sidebar-ring/50",
                   collapsed && "justify-center px-0",
                   active
                     ? "bg-sidebar-accent text-foreground"
@@ -85,7 +89,8 @@ function NavList({
                 )}
               >
                 {/* The active item thickens its icon stroke rather than
-                 *  changing colour — weight carries state, blue is reserved. */}
+                 *  changing colour — weight carries state, the accent is
+                 *  reserved for the primary action. */}
                 <Icon className="size-4 shrink-0" strokeWidth={active ? 2.2 : 1.8} />
                 {!collapsed && <span className="flex-1 truncate">{item.label}</span>}
                 {!collapsed && item.badge ? (
@@ -236,7 +241,9 @@ export function MobileNav(props: AppShellProps) {
  *  phones. Pair with <Sidebar/> and <MobileNav/> in the app layout. */
 export function AppFrame({ children }: { children: React.ReactNode }) {
   return (
-    <main className="min-w-0 flex-1">
+    <main id="main" tabIndex={-1} className="min-w-0 flex-1 outline-none">
+      {/* `id` is the skip link's target; `tabIndex={-1}` lets it take focus
+          without joining the tab order. */}
       <div className="mx-auto max-w-6xl px-8 py-10 max-md:px-4 max-md:py-6">{children}</div>
     </main>
   );

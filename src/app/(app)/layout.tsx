@@ -20,6 +20,14 @@ export default async function AppLayout({ children }: { children: ReactNode }) {
 
   return (
     <div className="flex min-h-svh">
+      {/* Invisible until it has keyboard focus, then the first thing on the
+          page: nine sidebar links stand between Tab and the content otherwise. */}
+      <a
+        href="#main"
+        className="sr-only focus:not-sr-only focus:fixed focus:top-2 focus:left-2 focus:z-50 focus:rounded-md focus:bg-background focus:px-3 focus:py-2 focus:text-sm focus:font-medium focus:text-foreground focus:ring-[3px] focus:ring-ring/50"
+      >
+        Skip to main content
+      </a>
       <AppSidebar {...nav} />
       <div className="flex min-w-0 flex-1 flex-col">
         <AppMobileNav {...nav} />

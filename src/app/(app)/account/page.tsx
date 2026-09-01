@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { PageHeader } from "@/components/ui-kit/page-header";
 import { Tag } from "@/components/ui-kit/tag";
 import { ChangePasswordForm } from "@/components/staff/change-password-form";
+import { ThemeToggle } from "@/components/theme-toggle";
 import { permissionsOf } from "@/lib/authz";
 import { pageSession } from "@/lib/page-guards";
 import { roleReach } from "@/lib/staff/constants";
@@ -49,6 +50,14 @@ export default async function AccountPage() {
             ))}
           </ul>
         )}
+      </section>
+
+      <section className="space-y-3">
+        <h2 className="text-sm font-semibold text-foreground">Appearance</h2>
+        <p className="max-w-prose text-sm text-muted-foreground">
+          Light or dark, or whatever your device is set to. Remembered in this browser only.
+        </p>
+        <ThemeToggle />
       </section>
 
       <section className="space-y-3">

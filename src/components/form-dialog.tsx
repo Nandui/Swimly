@@ -50,6 +50,11 @@ export function FormDialog({
   const [open, setOpen] = React.useState(false);
   const [error, setError] = React.useState<string | null>(null);
   const [pending, startTransition] = React.useTransition();
+  // The error is one sentence about the form rather than a flag on a field,
+  // so the form is what it describes. `role="alert"` announces it when it
+  // appears; `aria-describedby` keeps it attached when focus returns to a
+  // control and the person asks what is wrong.
+  const errorId = React.useId();
 
   function handleSubmit(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -79,7 +84,11 @@ export function FormDialog({
     >
       <DialogTrigger asChild>{trigger}</DialogTrigger>
       <DialogContent className={cn("max-h-[85svh] overflow-y-auto", width)}>
-        <form onSubmit={handleSubmit} className="space-y-4">
+        <form
+          onSubmit={handleSubmit}
+          className="space-y-4"
+          aria-describedby={error ? errorId : undefined}
+        >
           <DialogHeader>
             <DialogTitle>{title}</DialogTitle>
             {description ? <DialogDescription>{description}</DialogDescription> : null}
@@ -89,6 +98,7 @@ export function FormDialog({
 
           {error ? (
             <p
+              id={errorId}
               role="alert"
               className="rounded bg-(--tag-red-bg) px-2.5 py-1.5 text-[13px] text-(--tag-red-fg)"
             >

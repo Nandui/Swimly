@@ -10,15 +10,31 @@ This block is written and re-added by `next dev` — verify at `node_modules/nex
 
 # Swimly
 
-Read [DESIGN.md](DESIGN.md) before adding a page, a table, a form or an action.
-It records the decisions this repo has already taken; the system it applies is
-vendored at `.claude/skills/design-kit` (also a Claude Code skill — ask for
-"the house style") and its references are the authority on anything DESIGN.md
-does not answer.
+The design authority is the **ui-ux-pro-max** skill and the system it
+generated for this project: [design-system/swimly/MASTER.md](design-system/swimly/MASTER.md),
+with page overrides in `design-system/swimly/pages/`. Read MASTER.md before
+adding a page, a table, a form or an action. When it does not answer a visual
+or interaction question, ask the skill — one intent per query:
 
-The four that get broken first: no KPI cards or stat tiles, one blue for
-interaction only, status colour only from the nine tint pairs via a metadata
-map, and every mutation writes an audit row.
+```bash
+python ~/.claude/skills/ui-ux-pro-max/scripts/search.py "<2-5 words>" --domain <ux|style|typography|color|icons|chart>
+python ~/.claude/skills/ui-ux-pro-max/scripts/search.py "<2-5 words>" --stack <nextjs|shadcn|html-tailwind>
+```
+
+[DESIGN.md](DESIGN.md) records how MASTER.md was mapped onto shadcn's tokens
+(and the two places the generated palette failed its own contrast bar), plus
+the architectural decisions that still stand: server actions returning a
+result type, permissions asked by name, audit on every mutation, the seat lock.
+The former visual doctrine — "the well-kept page", vendored at
+`.claude/skills/design-kit` — is superseded; its components in
+`src/components/ui-kit/` remain in use, its rules do not.
+
+The four that get broken first: ask for a **permission**, never a role name;
+every mutation writes an **audit row**; status colour only through the **tag
+tokens** via a metadata map, never a colour at a call site; and run the skill's
+**pre-delivery checklist** before calling a screen done — 4.5:1 text contrast
+in both modes, visible focus, `prefers-reduced-motion` respected, pointer
+cursors, 375px checked.
 
 Prisma here is v7: the client is generated into `src/generated/prisma` and
 needs a driver adapter (`@prisma/adapter-pg`), and the datasource URL lives in

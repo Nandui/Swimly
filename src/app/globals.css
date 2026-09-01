@@ -4,14 +4,27 @@
 
 @custom-variant dark (&:is(.dark *));
 
+/* The visual system is generated, not hand-picked. It comes from the
+   ui-ux-pro-max skill's design-system engine, persisted at
+   design-system/swimly/MASTER.md: Minimalism & Swiss Style, a slate scale with
+   one green accent for the primary action, Fira Sans for reading and Fira Code
+   for headings and figures. Change the tokens here to follow that file, and
+   nothing else — every component reads these variables and none carries a
+   colour of its own.
+
+   The engine emitted the dark palette and marked the style "mode: auto", so
+   both modes ship and the OS decides by default. The light palette is the same
+   slate/green scale read from the other end; every pair below was measured
+   against the engine's own pre-delivery bar (text 4.5:1, control edges 3:1). */
+
 @theme inline {
   --color-background: var(--background);
   --color-foreground: var(--foreground);
-  --font-sans: ui-sans-serif, -apple-system, "Segoe UI", Helvetica, Arial,
-    sans-serif, "Apple Color Emoji", "Segoe UI Emoji";
-  --font-mono: ui-monospace, "Cascadia Code", "Segoe UI Mono", Menlo, Consolas,
-    monospace;
-  --font-heading: var(--font-sans);
+  --font-sans: var(--font-fira-sans), ui-sans-serif, system-ui, -apple-system, "Segoe UI", sans-serif;
+  --font-mono: var(--font-fira-code), ui-monospace, "Cascadia Code", Menlo, Consolas, monospace;
+  /* "Code for data, Sans for labels" — the pairing's own note. Headings and
+     figures take the monospace; everything read as prose takes the sans. */
+  --font-heading: var(--font-fira-code), ui-monospace, "Cascadia Code", Menlo, Consolas, monospace;
   --color-sidebar-ring: var(--sidebar-ring);
   --color-sidebar-border: var(--sidebar-border);
   --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
@@ -48,74 +61,137 @@
   --radius-2xl: calc(var(--radius) * 1.8);
   --radius-3xl: calc(var(--radius) * 2.2);
   --radius-4xl: calc(var(--radius) * 2.6);
+  /* MASTER.md, "Key Effects": subtle hover, 200–250ms. Tailwind's default is
+     150ms; this moves every `transition-*` utility onto the system's rhythm. */
+  --default-transition-duration: 200ms;
+  /* MASTER.md, "Shadow Depths". Swiss style is flat at rest and sharp when it
+     is not, so these are available rather than applied. */
+  --shadow-sm: 0 1px 2px rgb(0 0 0 / 0.05);
+  --shadow-md: 0 4px 6px rgb(0 0 0 / 0.1);
+  --shadow-lg: 0 10px 15px rgb(0 0 0 / 0.1);
+  --shadow-xl: 0 20px 25px rgb(0 0 0 / 0.15);
 }
 
+/* Light: the slate scale on white. Body 17:1, muted 7.2:1, the green button
+   carries near-black ink at 8.9:1 because white on green-600 is 3.3:1 and
+   fails. Hairlines are slate-200; anything that bounds a control is slate-500,
+   which is what clears 3:1 against white. */
 :root {
-  /* The warm-grey world: white content ground, #F7F7F5-style sidebar,
-     #37352F-style ink, hairline borders, one blue accent. Change --primary to
-     rebrand; leave the neutrals alone or you lose the calm. */
-  --background: oklch(1 0 0);
-  --foreground: oklch(0.32 0.006 95);
-  --card: oklch(1 0 0);
-  --card-foreground: oklch(0.32 0.006 95);
-  --popover: oklch(1 0 0);
-  --popover-foreground: oklch(0.32 0.006 95);
-  --primary: oklch(0.6 0.14 250);
-  --primary-foreground: oklch(1 0 0);
-  --secondary: oklch(0.958 0.003 106);
-  --secondary-foreground: oklch(0.32 0.006 95);
-  --muted: oklch(0.958 0.003 106);
-  --muted-foreground: oklch(0.55 0.008 95);
-  --accent: oklch(0.945 0.004 106);
-  --accent-foreground: oklch(0.32 0.006 95);
-  --destructive: oklch(0.577 0.215 27);
-  --border: oklch(0.928 0.004 106);
-  --input: oklch(0.895 0.005 106);
-  --ring: oklch(0.6 0.14 250);
-  --chart-1: oklch(0.6 0.14 250);
-  --chart-2: oklch(0.65 0.15 35);
-  --chart-3: oklch(0.62 0.12 145);
-  --chart-4: oklch(0.75 0.13 85);
-  --chart-5: oklch(0.55 0.008 95);
-  --radius: 0.375rem;
-  --sidebar: oklch(0.976 0.002 106);
-  --sidebar-foreground: oklch(0.42 0.008 95);
-  --sidebar-primary: oklch(0.32 0.006 95);
-  --sidebar-primary-foreground: oklch(1 0 0);
-  --sidebar-accent: oklch(0.93 0.004 106);
-  --sidebar-accent-foreground: oklch(0.32 0.006 95);
-  --sidebar-border: oklch(0.928 0.004 106);
-  --sidebar-ring: oklch(0.6 0.14 250);
+  --background: #ffffff;
+  --foreground: #0f172a;
+  --card: #ffffff;
+  --card-foreground: #0f172a;
+  --popover: #ffffff;
+  --popover-foreground: #0f172a;
+  --primary: #22c55e;
+  --primary-foreground: #020617;
+  --secondary: #f1f5f9;
+  --secondary-foreground: #0f172a;
+  --muted: #f1f5f9;
+  --muted-foreground: #475569;
+  --accent: #f1f5f9;
+  --accent-foreground: #0f172a;
+  --destructive: #dc2626;
+  --border: #e2e8f0;
+  --input: #64748b;
+  --ring: #0f172a;
+  --chart-1: #22c55e;
+  --chart-2: #0f172a;
+  --chart-3: #f59e0b;
+  --chart-4: #ef4444;
+  --chart-5: #3b82f6;
+  /* Geometric, not soft: the Swiss radius. */
+  --radius: 0.25rem;
+  --sidebar: #f1f5f9;
+  --sidebar-foreground: #334155;
+  --sidebar-primary: #0f172a;
+  --sidebar-primary-foreground: #ffffff;
+  --sidebar-accent: #e2e8f0;
+  --sidebar-accent-foreground: #0f172a;
+  --sidebar-border: #e2e8f0;
+  --sidebar-ring: #0f172a;
 
-  /* Notion database-tag tints: soft field, deep readable ink. */
-  --tag-red-bg: #ffe2dd;
-  --tag-red-fg: #93251d;
-  --tag-orange-bg: #fadec9;
-  --tag-orange-fg: #8a4008;
-  --tag-yellow-bg: #fdecc8;
-  --tag-yellow-fg: #6d4d12;
-  --tag-green-bg: #dbeddb;
-  --tag-green-fg: #1f5c37;
-  --tag-blue-bg: #d3e5ef;
-  --tag-blue-fg: #1c4a68;
-  --tag-purple-bg: #e8deee;
-  --tag-purple-fg: #542d84;
-  --tag-pink-bg: #f5e0e9;
-  --tag-pink-fg: #85275e;
-  --tag-brown-bg: #eee0da;
-  --tag-brown-fg: #59362a;
-  --tag-gray-bg: #e9e8e6;
-  --tag-gray-fg: #50484b;
+  /* Status tags: 100 field, 800 ink. Every pair measures 6.3:1 or better. */
+  --tag-red-bg: #fee2e2;
+  --tag-red-fg: #991b1b;
+  --tag-orange-bg: #ffedd5;
+  --tag-orange-fg: #9a3412;
+  --tag-yellow-bg: #fef3c7;
+  --tag-yellow-fg: #92400e;
+  --tag-green-bg: #dcfce7;
+  --tag-green-fg: #166534;
+  --tag-blue-bg: #dbeafe;
+  --tag-blue-fg: #1e40af;
+  --tag-purple-bg: #ede9fe;
+  --tag-purple-fg: #5b21b6;
+  --tag-pink-bg: #fce7f3;
+  --tag-pink-fg: #9d174d;
+  --tag-brown-bg: #f5ede6;
+  --tag-brown-fg: #6b3f2a;
+  --tag-gray-bg: #e2e8f0;
+  --tag-gray-fg: #334155;
 }
 
-/* Swimly is light-only, by decision, not by omission.
-   The kit ships a derived `.dark` block that the source app never rendered.
-   Rather than carry a mode nobody has looked at, it has been removed — the
-   `dark` variant above stays defined so the shadcn primitives' `dark:`
-   utilities still compile, and simply never match, because nothing sets
-   `.dark`. To take dark mode on later: copy the block back from
-   `.claude/skills/design-kit/assets/globals.css`, mount a theme provider, and
-   verify it on real pages before shipping it. See DESIGN.md. */
+/* Dark: the engine's palette as emitted, with two corrections its own
+   checklist required. Its "Primary" #1e293b sits at 1.22:1 against the
+   background — a button that colour disappears — so the Accent/CTA green is
+   the primary action here and slate-800 is a surface. Its border #475569 is
+   2.36:1, fine for a hairline and too faint to bound an input, so inputs use
+   slate-500 at 3.75:1. Destructive is red-600 rather than the emitted red-500
+   so white text on it clears 4.5:1. */
+.dark {
+  --background: #0f172a;
+  --foreground: #f8fafc;
+  --card: #1b2336;
+  --card-foreground: #f8fafc;
+  --popover: #1b2336;
+  --popover-foreground: #f8fafc;
+  --primary: #22c55e;
+  --primary-foreground: #0f172a;
+  --secondary: #334155;
+  --secondary-foreground: #ffffff;
+  --muted: #272f42;
+  --muted-foreground: #94a3b8;
+  --accent: #272f42;
+  --accent-foreground: #f8fafc;
+  --destructive: #dc2626;
+  --border: #475569;
+  --input: #64748b;
+  --ring: #ffffff;
+  --chart-1: #22c55e;
+  --chart-2: #f8fafc;
+  --chart-3: #fbbf24;
+  --chart-4: #f87171;
+  --chart-5: #60a5fa;
+  --sidebar: #1b2336;
+  --sidebar-foreground: #cbd5e1;
+  --sidebar-primary: #f8fafc;
+  --sidebar-primary-foreground: #0f172a;
+  --sidebar-accent: #334155;
+  --sidebar-accent-foreground: #f8fafc;
+  --sidebar-border: #334155;
+  --sidebar-ring: #ffffff;
+
+  /* Status tags: 950 field, 300 ink. Every pair measures 8:1 or better. */
+  --tag-red-bg: #450a0a;
+  --tag-red-fg: #fca5a5;
+  --tag-orange-bg: #431407;
+  --tag-orange-fg: #fdba74;
+  --tag-yellow-bg: #451a03;
+  --tag-yellow-fg: #fcd34d;
+  --tag-green-bg: #052e16;
+  --tag-green-fg: #86efac;
+  --tag-blue-bg: #172554;
+  --tag-blue-fg: #93c5fd;
+  --tag-purple-bg: #2e1065;
+  --tag-purple-fg: #c4b5fd;
+  --tag-pink-bg: #500724;
+  --tag-pink-fg: #f9a8d4;
+  --tag-brown-bg: #2b1810;
+  --tag-brown-fg: #d6b9a5;
+  --tag-gray-bg: #1e293b;
+  --tag-gray-fg: #cbd5e1;
+}
 
 @layer base {
   * {
@@ -129,9 +205,26 @@
     -webkit-font-smoothing: antialiased;
   }
 
+  /* Headings take the pairing's monospace. Done once here so every page and
+     section heading follows the system without each file being touched. */
+  h1,
+  h2,
+  h3,
+  h4 {
+    font-family: var(--font-heading);
+  }
+
+  /* Tailwind v4 stopped giving buttons a pointer cursor, and the skill's
+     checklist wants one on everything clickable. Disabled controls keep the
+     arrow, because they are not clickable. */
+  button:not(:disabled),
+  [role="button"]:not([aria-disabled="true"]) {
+    cursor: pointer;
+  }
+
   /* Browser surfaces carry the design too. */
   ::selection {
-    background: oklch(0.6 0.14 250 / 0.18);
+    background: color-mix(in oklab, var(--primary) 30%, transparent);
   }
   input,
   textarea {
@@ -139,10 +232,24 @@
   }
   * {
     scrollbar-width: thin;
-    scrollbar-color: oklch(0.85 0.004 106) transparent;
+    scrollbar-color: var(--input) transparent;
   }
   tbody,
   td {
     font-variant-numeric: tabular-nums;
+  }
+
+  /* The checklist's last line. Somebody who asked their OS for less motion
+     gets the final state at once: dialogs appear rather than zoom, the loading
+     placeholder holds still, transitions land. */
+  @media (prefers-reduced-motion: reduce) {
+    *,
+    *::before,
+    *::after {
+      animation-duration: 0.01ms !important;
+      animation-iteration-count: 1 !important;
+      transition-duration: 0.01ms !important;
+      scroll-behavior: auto !important;
+    }
   }
 }
