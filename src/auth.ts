@@ -1,3 +1,4 @@
+import { cache } from "react";
 import NextAuth, { type NextAuthConfig, type Session } from "next-auth";
 import Credentials from "next-auth/providers/credentials";
 import bcrypt from "bcryptjs";
@@ -135,8 +136,16 @@ function sessionUserFor(account: Account) {
  *  audit rows point at someone who exists and every permission check behaves
  *  exactly as it will once you are signed in. It is gated on
  *  `NODE_ENV !== "production"` as well as on the flag, so setting the flag on
- *  a deployment cannot disable authentication. */
-export async function auth(): Promise<Session | null> {
+ *  a deployment cannot disable authentication.
+ *
+ *  **Memoised per request**, which is the difference between "one indexed
+ *  lookup per session read" and one per *caller*. The layout asks, the page
+ *  guard asks, and then every data module asks again through `requireSession`
+ *  — `/courses` alone came to six identical queries, and at 32ms to a managed
+ *  Postgres in another country that is a fifth of a second spent asking who is
+ *  signed in six times. `cache` is per-render and never crosses a request, so
+ *  a deactivation still bites on the very next page. */
+export const auth = cache(async function auth(): Promise<Session | null> {
   const session = await nextAuth();
 
   if (session?.user?.id) {
@@ -169,4 +178,4 @@ export async function auth(): Promise<Session | null> {
   if (!user) return null;
 
   return { user, expires: new Date(Date.now() + 60 * 60 * 1000).toISOString() };
-}
+});

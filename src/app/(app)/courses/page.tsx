@@ -14,12 +14,7 @@ import {
   courseName,
   formatTime,
 } from "@/lib/courses/constants";
-import {
-  getCourseCounts,
-  getCourses,
-  getInstructorOptions,
-  type CourseRow,
-} from "@/lib/courses/data/courses";
+import { getCourses, getInstructorOptions, type CourseRow } from "@/lib/courses/data/courses";
 import { getLevelOptions } from "@/lib/curriculum/data/curriculum";
 import { CourseFilters } from "@/components/courses/course-filters";
 import {
@@ -39,14 +34,21 @@ export default async function CoursesPage(props: PageProps<"/courses">) {
   const filters = parseCourseFilters(await props.searchParams);
   const active = activeFilterCount(filters);
 
-  const [courses, counts, levels, instructors] = await Promise.all([
+  const [courses, levels, instructors] = await Promise.all([
     getCourses(true),
-    getCourseCounts(),
     getLevelOptions(),
     getInstructorOptions(),
   ]);
 
   const allLive = courses.filter((course) => !course.archivedAt);
+  // Counted from the rows already in hand rather than asked for again. The
+  // page reads the whole timetable regardless, so `getCourseCounts` was two
+  // more round trips to a database in another country for two numbers already
+  // sitting in memory.
+  const counts = {
+    courses: allLive.length,
+    places: allLive.reduce((total, course) => total + course._count.enrolments, 0),
+  };
   // Options are counted over the live timetable, because that is what the day
   // tables below show and what a count therefore has to predict.
   const dimensions = courseFilterDimensions(allLive, filters);

@@ -9,7 +9,12 @@ import { Input } from "@/components/ui/input";
 import { AddStudent } from "@/components/students/student-actions";
 import { can } from "@/lib/authz";
 import { pageSession } from "@/lib/page-guards";
-import { getStudentCounts, getStudents, type StudentRow } from "@/lib/students/data/students";
+import {
+  STUDENTS_PER_PAGE,
+  getStudentCounts,
+  getStudents,
+  type StudentRow,
+} from "@/lib/students/data/students";
 import { STUDENT_STATUS_META, ageLabel } from "@/lib/students/constants";
 import { cn } from "@/lib/utils";
 
@@ -38,11 +43,22 @@ export default async function StudentsPage(props: PageProps<"/students">) {
   const q = typeof params.q === "string" ? params.q.trim() : "";
   const raw = typeof params.status === "string" ? params.status : "ALL";
   const status = raw === "ACTIVE" || raw === "INACTIVE" ? raw : "ALL";
+  const page = Math.max(1, Number(typeof params.page === "string" ? params.page : 1) || 1);
 
-  const [students, counts] = await Promise.all([
-    getStudents({ q, status }),
+  const [result, counts] = await Promise.all([
+    getStudents({ q, status, page }),
     getStudentCounts(),
   ]);
+
+  const { students, total } = result;
+  const pages = Math.max(1, Math.ceil(total / STUDENTS_PER_PAGE));
+  const first = total === 0 ? 0 : (result.page - 1) * STUDENTS_PER_PAGE + 1;
+  const last = (result.page - 1) * STUDENTS_PER_PAGE + students.length;
+  const pageQuery = (n: number) => ({
+    ...(q ? { q } : {}),
+    ...(status !== "ALL" ? { status } : {}),
+    ...(n > 1 ? { page: String(n) } : {}),
+  });
 
   const countFor = (key: (typeof LENSES)[number]["key"]) =>
     key === "ALL" ? counts.all : key === "ACTIVE" ? counts.active : counts.inactive;
@@ -120,9 +136,69 @@ export default async function StudentsPage(props: PageProps<"/students">) {
           action={!filtered && manage ? <AddStudent /> : null}
         />
       ) : (
-        <StudentTable students={students} />
+        <>
+          <StudentTable students={students} />
+
+          {pages > 1 ? (
+            <nav
+              aria-label="Pages of students"
+              className="flex flex-wrap items-center justify-between gap-3"
+            >
+              <p className="text-xs text-muted-foreground">
+                <span className="font-medium text-foreground tabular-nums">
+                  {first}–{last}
+                </span>{" "}
+                of <span className="tabular-nums">{total}</span>
+              </p>
+              <div className="flex items-center gap-1">
+                <PageLink
+                  to={pageQuery(result.page - 1)}
+                  disabled={result.page <= 1}
+                  label="Previous"
+                />
+                <span className="px-2 text-xs text-muted-foreground tabular-nums">
+                  {result.page} of {pages}
+                </span>
+                <PageLink
+                  to={pageQuery(result.page + 1)}
+                  disabled={result.page >= pages}
+                  label="Next"
+                />
+              </div>
+            </nav>
+          ) : null}
+        </>
       )}
     </div>
+  );
+}
+
+/** A disabled page link is a span, not a dimmed link: there is nowhere for it
+ *  to go, and a link that goes nowhere is a trap for anyone tabbing through. */
+function PageLink({
+  to,
+  disabled,
+  label,
+}: {
+  to: Record<string, string>;
+  disabled: boolean;
+  label: string;
+}) {
+  const className = "rounded-md border px-2.5 py-1 text-[13px] transition-colors";
+  if (disabled) {
+    return (
+      <span aria-disabled className={cn(className, "text-muted-foreground/50")}>
+        {label}
+      </span>
+    );
+  }
+  return (
+    <Link
+      href={{ pathname: "/students", query: to }}
+      className={cn(className, "text-foreground hover:bg-accent")}
+    >
+      {label}
+    </Link>
   );
 }
 
