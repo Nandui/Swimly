@@ -1,134 +1,130 @@
 import type { Metadata } from "next";
 import Link from "next/link";
-import { CalendarHeart, Users } from "lucide-react";
+import { CalendarHeart, Plus, Users, X } from "lucide-react";
 import { EmptyState } from "@/components/ui-kit/empty-state";
 import { PageHeader } from "@/components/ui-kit/page-header";
 import { Tag } from "@/components/ui-kit/tag";
-import { FamilyPicker } from "@/components/together/family-picker";
-import { DAY_META, capacityLabel, courseName, formatTime } from "@/lib/courses/constants";
+import { AddToGroup } from "@/components/together/add-to-group";
+import { capacityLabel, courseName, formatTime, DAY_META } from "@/lib/courses/constants";
 import { getCourses } from "@/lib/courses/data/courses";
 import { pageSession } from "@/lib/page-guards";
 import { getStudentOptions } from "@/lib/students/data/students";
-import { ageLabel } from "@/lib/students/constants";
-import { getFamily, toMembers, type FamilyStudent } from "@/lib/together/data/together";
+import { getGroup, toMembers } from "@/lib/together/data/together";
 import { findTimesTogether, type Placement } from "@/lib/together/match";
 
 export const metadata: Metadata = { title: "Together" };
+
+/** Capped so a mistyped URL cannot ask for a search across the whole club. */
+const GROUP_CAP = 8;
 
 export default async function TogetherPage(props: PageProps<"/together">) {
   await pageSession();
 
   const params = await props.searchParams;
-  const studentId = typeof params.student === "string" ? params.student : "";
-  const dropped = new Set(
-    (typeof params.without === "string" ? params.without : "").split(",").filter(Boolean)
-  );
+  const raw = typeof params.students === "string" ? params.students : "";
+  const ids = [...new Set(raw.split(",").filter(Boolean))].slice(0, GROUP_CAP);
 
-  const [options, found, courses] = await Promise.all([
+  const [options, group, courses] = await Promise.all([
     getStudentOptions(),
-    studentId ? getFamily(studentId) : Promise.resolve(null),
-    studentId ? getCourses() : Promise.resolve([]),
+    getGroup(ids),
+    ids.length ? getCourses() : Promise.resolve([]),
   ]);
 
-  const family = found?.family ?? [];
-  const included = family.filter((member) => !dropped.has(member.id));
-  const result = found ? findTimesTogether(toMembers(included), courses) : null;
+  const { chosen, suggestions } = group;
+  const result = chosen.length > 0 ? findTimesTogether(toMembers(chosen), courses) : null;
 
-  const withoutHref = (member: FamilyStudent) => {
-    const next = dropped.has(member.id)
-      ? [...dropped].filter((id) => id !== member.id)
-      : [...dropped, member.id];
-    return {
-      pathname: "/together",
-      query: { student: studentId, ...(next.length ? { without: next.join(",") } : {}) },
-    };
-  };
+  const hrefFor = (next: string[]) => ({
+    pathname: "/together",
+    query: next.length ? { students: next.join(",") } : {},
+  });
 
   return (
     <div className="space-y-6">
       <PageHeader
         title="Together"
-        description="One family, one trip to the pool: find a day — or a single slot — that suits every child."
+        description="One trip to the pool for more than one child: find a day — or a single slot — that suits all of them."
       />
 
-      <FamilyPicker options={options} selected={studentId} />
+      <div className="space-y-3">
+        <div className="flex flex-wrap items-center gap-2">
+          {chosen.map((student) => (
+            <span
+              key={student.id}
+              className="inline-flex h-8 items-center rounded-md border bg-accent text-[13px]"
+            >
+              <Link
+                href={`/students/${student.id}`}
+                className="px-2.5 font-medium text-foreground underline-offset-2 hover:underline"
+              >
+                {student.name}
+              </Link>
+              <span className="pr-2 pl-1 text-muted-foreground">
+                · {student.levelName ?? "no level"}
+              </span>
+              <Link
+                href={hrefFor(ids.filter((id) => id !== student.id))}
+                aria-label={`Take ${student.name} out of the group`}
+                className="inline-flex h-full items-center rounded-r-md border-l px-1.5 opacity-60 hover:opacity-100"
+              >
+                <X className="size-3.5" aria-hidden />
+              </Link>
+            </span>
+          ))}
 
-      {!found ? (
+          {chosen.length < GROUP_CAP ? (
+            <AddToGroup options={options} chosen={ids} full={false} />
+          ) : (
+            <span className="text-[13px] text-muted-foreground">
+              That is as many as this will search for at once.
+            </span>
+          )}
+
+          {chosen.length > 0 ? (
+            <Link
+              href="/together"
+              className="px-1 text-[13px] text-muted-foreground underline-offset-2 hover:text-foreground hover:underline"
+            >
+              Start again
+            </Link>
+          ) : null}
+        </div>
+
+        {suggestions.length > 0 ? (
+          <div className="flex flex-wrap items-center gap-x-2 gap-y-1 text-[13px] text-muted-foreground">
+            {/* Names whose contact it is rather than which field matched:
+                "a email" needs an article that depends on the field, and the
+                field is not what anybody needs to know. */}
+            <span>Also on {suggestions[0].sharesWith}&rsquo;s contact:</span>
+            {suggestions.map((student) => (
+              <Link
+                key={student.id}
+                href={hrefFor([...ids, student.id])}
+                className="inline-flex h-7 items-center gap-1 rounded-md border px-2 text-foreground transition-colors hover:bg-accent"
+              >
+                <Plus className="size-3 opacity-60" aria-hidden />
+                {student.name}
+              </Link>
+            ))}
+            {suggestions.length > 1 ? (
+              <Link
+                href={hrefFor([...ids, ...suggestions.map((s) => s.id)])}
+                className="underline-offset-2 hover:text-foreground hover:underline"
+              >
+                add all {suggestions.length}
+              </Link>
+            ) : null}
+          </div>
+        ) : null}
+      </div>
+
+      {chosen.length === 0 ? (
         <EmptyState
           icon={Users}
-          title={studentId ? "No such swimmer" : "Pick a child to start"}
-          hint={
-            studentId
-              ? "That student no longer exists. Try another."
-              : "Their brothers and sisters are found by the phone number and email their records share, so you only need one of them."
-          }
+          title="Add the children you want to bring together"
+          hint="Brothers and sisters, or two friends who want to come at the same time — it makes no difference. Add the first and anyone sharing their phone number or email is offered alongside."
         />
       ) : (
         <>
-          <section className="space-y-3">
-            <h2 className="text-sm font-semibold text-foreground">
-              {family.length === 1 ? "One swimmer" : `${family.length} swimmers on this contact`}
-            </h2>
-
-            {family.length === 1 ? (
-              <p className="max-w-prose text-sm text-muted-foreground">
-                Nobody else shares {found.anchor.name.split(" ")[0]}&rsquo;s phone number or email,
-                so there is only one timetable to fit. Anything below is simply where they can
-                swim.
-              </p>
-            ) : null}
-
-            <ul className="overflow-hidden rounded-md border">
-              {family.map((member) => {
-                const out = dropped.has(member.id);
-                return (
-                  <li
-                    key={member.id}
-                    className="flex flex-wrap items-center justify-between gap-x-4 gap-y-1 border-b p-3 last:border-0"
-                  >
-                    <div className="min-w-0">
-                      <p className={out ? "text-sm text-muted-foreground line-through" : "text-sm font-medium"}>
-                        <Link
-                          href={`/students/${member.id}`}
-                          className="underline-offset-2 hover:underline"
-                        >
-                          {member.name}
-                        </Link>
-                        {member.id === found.anchor.id ? (
-                          <Tag color="blue" className="ml-2">
-                            Picked
-                          </Tag>
-                        ) : null}
-                      </p>
-                      <p className="mt-0.5 text-xs text-muted-foreground">
-                        {ageLabel(member.dateOfBirth)} ·{" "}
-                        {member.levelName ?? <span className="text-(--tag-orange-fg)">No level yet</span>}
-                        {member.id !== found.anchor.id && member.linkedBy.length > 0
-                          ? ` · same ${member.linkedBy.join(" and ")}`
-                          : ""}
-                      </p>
-                    </div>
-                    {member.id === found.anchor.id ? null : (
-                      <Link
-                        href={withoutHref(member)}
-                        className="text-[13px] text-muted-foreground underline-offset-2 hover:text-foreground hover:underline"
-                      >
-                        {out ? "Put back" : "Not a sibling"}
-                      </Link>
-                    )}
-                  </li>
-                );
-              })}
-            </ul>
-
-            {found.overflowed ? (
-              <p className="max-w-prose text-xs text-muted-foreground">
-                Stopped at ten. A contact shared by more than that is usually an address rather
-                than a family — a school, or a childminder.
-              </p>
-            ) : null}
-          </section>
-
           {result && result.unplaced.length > 0 ? (
             <p className="max-w-prose rounded-md border border-(--tag-orange-bg) bg-(--tag-orange-bg)/40 px-3 py-2 text-[13px]">
               {result.unplaced.map((m) => m.name).join(", ")}{" "}
@@ -138,7 +134,7 @@ export default async function TogetherPage(props: PageProps<"/together">) {
             </p>
           ) : null}
 
-          <Results result={result} names={included.length} />
+          <Results result={result} count={chosen.length} />
         </>
       )}
     </div>
@@ -147,10 +143,10 @@ export default async function TogetherPage(props: PageProps<"/together">) {
 
 function Results({
   result,
-  names,
+  count,
 }: {
   result: ReturnType<typeof findTimesTogether> | null;
-  names: number;
+  count: number;
 }) {
   if (!result) return null;
 
@@ -161,10 +157,10 @@ function Results({
     return (
       <EmptyState
         icon={CalendarHeart}
-        title="No day fits all of them"
+        title={count > 1 ? "No day suits all of them" : "Nowhere with a place"}
         hint={
-          names > 1
-            ? "There is no day where every child has a place at their own level. Take one out of the group above to see what the rest could do, or free up a place in a full class."
+          count > 1
+            ? "There is no day where every one of them has a place at their own level. Take one out of the group to see what the rest could do, or free up a place in a full class."
             : "There is no class with a place at their level."
         }
       />
@@ -176,9 +172,9 @@ function Results({
       {withTogether.length > 0 ? (
         <section className="space-y-3">
           <h2 className="text-sm font-semibold text-foreground">
-            {names === 1 ? "Where they can swim" : `All ${names} in the water at once`}
+            {count === 1 ? "Where they can swim" : `All ${count} in the water at once`}
           </h2>
-          {names > 1 ? (
+          {count > 1 ? (
             <p className="max-w-prose text-sm text-muted-foreground">
               One drop-off, one wait, one pick-up.
             </p>
