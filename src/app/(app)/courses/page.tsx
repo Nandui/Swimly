@@ -21,13 +21,23 @@ import {
   type CourseRow,
 } from "@/lib/courses/data/courses";
 import { getLevelOptions } from "@/lib/curriculum/data/curriculum";
+import { CourseFilters } from "@/components/courses/course-filters";
+import {
+  activeFilterCount,
+  courseFilterDimensions,
+  filterCourses,
+  parseCourseFilters,
+} from "@/lib/courses/filters";
 import { pageSession } from "@/lib/page-guards";
 
 export const metadata: Metadata = { title: "Courses" };
 
-export default async function CoursesPage() {
+export default async function CoursesPage(props: PageProps<"/courses">) {
   const session = await pageSession();
   const admin = can(session, "courses.manage");
+
+  const filters = parseCourseFilters(await props.searchParams);
+  const active = activeFilterCount(filters);
 
   const [courses, counts, levels, instructors] = await Promise.all([
     getCourses(true),
@@ -36,8 +46,16 @@ export default async function CoursesPage() {
     getInstructorOptions(),
   ]);
 
-  const live = courses.filter((course) => !course.archivedAt);
-  const archived = courses.filter((course) => course.archivedAt);
+  const allLive = courses.filter((course) => !course.archivedAt);
+  // Options are counted over the live timetable, because that is what the day
+  // tables below show and what a count therefore has to predict.
+  const dimensions = courseFilterDimensions(allLive, filters);
+
+  const live = filterCourses(allLive, filters);
+  const archived = filterCourses(
+    courses.filter((course) => course.archivedAt),
+    filters
+  );
   const unassigned = live.filter((course) => !course.instructor).length;
 
   const add = admin ? <AddCourse levels={levels} instructors={instructors} /> : null;
@@ -65,12 +83,24 @@ export default async function CoursesPage() {
         ) : null}
       </p>
 
+      <CourseFilters
+        dimensions={dimensions}
+        q={filters.q}
+        active={active}
+        showing={live.length}
+        total={allLive.length}
+      />
+
       {live.length === 0 ? (
         <EmptyState
           icon={CalendarDays}
-          title="No courses yet"
-          hint="Add the first class — a level, a day, a time and how many fit in the water."
-          action={add}
+          title={active > 0 ? "No classes match" : "No courses yet"}
+          hint={
+            active > 0
+              ? "Loosen one of the filters, or clear them and start again."
+              : "Add the first class — a level, a day, a time and how many fit in the water."
+          }
+          action={active > 0 ? null : add}
         />
       ) : (
         <div className="space-y-6">
