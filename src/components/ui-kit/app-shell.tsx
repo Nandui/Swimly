@@ -15,9 +15,10 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from "@/components/ui/sheet";
 
-/** The workspace shell: a warm-grey sidebar that stays put and a white content
- *  column that scrolls. The two greys are the whole chrome — there is no top
- *  bar on desktop, no breadcrumb, and no card around the page.
+/** The workspace shell: a tinted sidebar that stays put and a content column
+ *  that scrolls. Those two surfaces are the whole chrome — there is no top bar
+ *  on desktop, no breadcrumb, and no card around the page. Colours come from
+ *  the sidebar and background tokens, in whichever mode is on.
  *
  *  Nav items are passed in rather than declared here, because which sections
  *  exist and who may see them is the app's business, not the shell's. Filter
@@ -41,6 +42,11 @@ export type AppShellProps = {
   onSignOut?: () => void;
   /** Optional field pinned above the nav — a tenant/workspace switcher. */
   switcher?: React.ReactNode;
+  /** Small controls that must never be more than one click away — the
+   *  light/dark flip. Rendered above the account menu on desktop (icon-only
+   *  when collapsed) and at the right end of the bar on mobile, where they are
+   *  reachable without opening the sheet. */
+  tools?: React.ReactNode;
 };
 
 function Wordmark({ label }: { label: string }) {
@@ -200,6 +206,16 @@ export function Sidebar(props: AppShellProps) {
         <div className={cn("px-2 pb-2", collapsed && "px-1.5")}>{props.switcher}</div>
       ) : null}
       <NavList items={props.items} collapsed={collapsed} />
+      {props.tools ? (
+        <div
+          className={cn(
+            "flex items-center gap-1 px-2 pb-1",
+            collapsed ? "justify-center px-0" : "justify-end"
+          )}
+        >
+          {props.tools}
+        </div>
+      ) : null}
       <UserMenu {...props} collapsed={collapsed} />
     </aside>
   );
@@ -233,6 +249,7 @@ export function MobileNav(props: AppShellProps) {
         </SheetContent>
       </Sheet>
       <Wordmark label={props.wordmark} />
+      {props.tools ? <div className="ml-auto flex items-center gap-1">{props.tools}</div> : null}
     </div>
   );
 }

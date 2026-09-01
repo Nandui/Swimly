@@ -1,6 +1,7 @@
 "use client";
 
 import { signOut } from "next-auth/react";
+import { ThemeFlip } from "@/components/theme-toggle";
 import { MobileNav, Sidebar, type AppShellProps } from "@/components/ui-kit/app-shell";
 import { visibleNavItems } from "@/lib/nav";
 import type { PermissionKey } from "@/lib/staff/permissions";
@@ -23,6 +24,9 @@ function shellProps({ permissions, ...rest }: Props): AppShellProps {
     ...rest,
     wordmark: WORDMARK,
     items: visibleNavItems(permissions),
+    // The light/dark flip, one click from anywhere. Handed to the shell as a
+    // slot rather than imported by it, so the shell stays ignorant of themes.
+    tools: <ThemeFlip />,
     onSignOut: () => void signOut({ redirectTo: "/sign-in" }),
   };
 }

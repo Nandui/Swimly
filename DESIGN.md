@@ -63,8 +63,11 @@ makes Swimly stop looking like itself.
 ### Two modes, the system decides
 
 The engine emitted a light palette and marked the style "mode: auto", so Swimly
-ships both. `next-themes` sets `class="dark"` on `<html>`, defaults to the
-operating system, and remembers a choice made on the Account page. The dark
+ships both. `next-themes` sets `class="dark"` on `<html>` and defaults to the
+operating system. A one-click sun/moon flip sits above the account menu in the
+sidebar and at the right end of the mobile bar — the deck is bright at noon and
+dim at seven, so the switch is never more than one tap away. The three-way
+control on the Account page is where "follow the system" is restored. The dark
 palette is the same blue/slate scale read from the other end.
 
 ### How MASTER.md maps onto shadcn, and where it was corrected
