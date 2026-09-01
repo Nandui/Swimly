@@ -7,9 +7,9 @@
 ---
 
 **Project:** Swimly
-**Generated:** 2026-09-01 23:21:15
-**Category:** Smart Home/IoT Dashboard
-**Design Dials:** Variance 3/10 (Centered / Minimal) | Motion 2/10 (Subtle) | Density 7/10 (Standard)
+**Generated:** 2026-09-01 23:34:58
+**Category:** General
+**Design Dials:** Variance 4/10 (Balanced / Modern) | Motion 3/10 (Subtle) | Density 6/10 (Standard)
 
 ---
 
@@ -19,40 +19,40 @@
 
 | Role | Hex | CSS Variable |
 |------|-----|--------------|
-| Primary | `#1E293B` | `--color-primary` |
+| Primary | `#2563EB` | `--color-primary` |
 | On Primary | `#FFFFFF` | `--color-on-primary` |
-| Secondary | `#334155` | `--color-secondary` |
-| On Secondary | `#FFFFFF` | `--color-on-secondary` |
-| Accent/CTA | `#22C55E` | `--color-accent` |
-| On Accent/CTA | `#0F172A` | `--color-on-accent` |
-| Background | `#0F172A` | `--color-background` |
-| Foreground | `#F8FAFC` | `--color-foreground` |
-| Card | `#1B2336` | `--color-card` |
-| Card Foreground | `#F8FAFC` | `--color-card-foreground` |
-| Muted | `#272F42` | `--color-muted` |
-| Muted Foreground | `#94A3B8` | `--color-muted-foreground` |
-| Border | `#475569` | `--color-border` |
-| Destructive | `#EF4444` | `--color-destructive` |
-| On Destructive | `#000000` | `--color-on-destructive` |
-| Ring | `#FFFFFF` | `--color-ring` |
+| Secondary | `#3B82F6` | `--color-secondary` |
+| On Secondary | `#000000` | `--color-on-secondary` |
+| Accent/CTA | `#059669` | `--color-accent` |
+| On Accent/CTA | `#000000` | `--color-on-accent` |
+| Background | `#F8FAFC` | `--color-background` |
+| Foreground | `#0F172A` | `--color-foreground` |
+| Card | `#FFFFFF` | `--color-card` |
+| Card Foreground | `#0F172A` | `--color-card-foreground` |
+| Muted | `#F1F5FD` | `--color-muted` |
+| Muted Foreground | `#475569` | `--color-muted-foreground` |
+| Border | `#E4ECFC` | `--color-border` |
+| Destructive | `#DC2626` | `--color-destructive` |
+| On Destructive | `#FFFFFF` | `--color-on-destructive` |
+| Ring | `#2563EB` | `--color-ring` |
 
-**Color Notes:** Dark tech + status green
+**Color Notes:** Professional blue + deal green
 
 ### Typography
 
-- **Heading Font:** Fira Code
-- **Body Font:** Fira Sans
-- **Mood:** dashboard, data, analytics, code, technical, precise
-- **Google Fonts:** [Fira Code + Fira Sans](https://fonts.googleapis.com/css2?family=Fira+Code:wght@400;500;600;700&family=Fira+Sans:wght@300;400;500;600;700&display=swap)
+- **Heading Font:** Outfit
+- **Body Font:** Work Sans
+- **Mood:** geometric, modern, clean, balanced, contemporary, versatile
+- **Google Fonts:** [Outfit + Work Sans](https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&family=Work+Sans:wght@300;400;500;600;700&display=swap)
 
 **CSS Import:**
 ```css
-@import url('https://fonts.googleapis.com/css2?family=Fira+Code:wght@400;500;600;700&family=Fira+Sans:wght@300;400;500;600;700&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&family=Work+Sans:wght@300;400;500;600;700&display=swap');
 ```
 
 ### Spacing Variables
 
-*Density: 7/10 — Standard*
+*Density: 6/10 — Standard*
 
 | Token | Value | Usage |
 |-------|-------|-------|
@@ -82,7 +82,7 @@
 ```css
 /* Primary Button */
 .btn-primary {
-  background: #22C55E;
+  background: #059669;
   color: white;
   padding: 12px 24px;
   border-radius: 8px;
@@ -99,8 +99,8 @@
 /* Secondary Button */
 .btn-secondary {
   background: transparent;
-  color: #1E293B;
-  border: 2px solid #1E293B;
+  color: #2563EB;
+  border: 2px solid #2563EB;
   padding: 12px 24px;
   border-radius: 8px;
   font-weight: 600;
@@ -113,7 +113,7 @@
 
 ```css
 .card {
-  background: #0F172A;
+  background: #F8FAFC;
   border-radius: 12px;
   padding: 24px;
   box-shadow: var(--shadow-md);
@@ -139,9 +139,9 @@
 }
 
 .input:focus {
-  border-color: #1E293B;
+  border-color: #2563EB;
   outline: none;
-  box-shadow: 0 0 0 3px #1E293B20;
+  box-shadow: 0 0 0 3px #2563EB20;
 }
 ```
 
@@ -167,21 +167,17 @@
 
 ## Style Guidelines
 
-**Style:** Minimalism & Swiss Style
+**Style:** Minimalism
 
-**Keywords:** Clean, simple, spacious, functional, white space, high contrast, geometric, sans-serif, grid-based, essential
-
-**Best For:** Enterprise apps, dashboards, documentation sites, SaaS platforms, professional tools
-
-**Key Effects:** Subtle hover (200-250ms), smooth transitions, sharp shadows if any, clear type hierarchy, fast loading
+**Key Effects:** Subtle hover transitions
 
 ### Page Pattern
 
-**Pattern Name:** Real-Time / Operations Landing
+**Pattern Name:** Hero + Features + CTA
 
-- **Conversion Strategy:** Offer a demo or sandbox and show trust signals. Label telemetry as live only when backed by a current source, with update time and stale state. Provide pause/hide or update-frequency controls for tickers and previews, stop offscreen/hidden work, support keyboard controls, and render a static final snapshot under reduced motion.
-- **CTA Placement:** Primary CTA in nav + After metrics
-- **Section Order:** Hero (product + live preview or status) > Key metrics/indicators > How it works > CTA (Start trial / Contact)
+- **Conversion Strategy:** Deep CTA placement. For CTA label text, verify at least 4.5:1 against the button fill; use 7:1 only when the product explicitly targets AAA normal-text contrast. Keep focus and component boundaries independently visible. Disable hero parallax under reduced motion and render its static final state.
+- **CTA Placement:** Hero (sticky) + Bottom
+- **Section Order:** Hero with headline/image > Value prop > Key features (3-5) > CTA section > Footer
 
 ---
 
@@ -203,8 +199,6 @@ gsap.from(el, { opacity: 0, y: 12, duration: 0.35, ease: 'power1.out', scrollTri
 
 ## Anti-Patterns (Do NOT Use)
 
-- ❌ Slow updates
-- ❌ No automation
 
 ### Additional Forbidden Patterns
 

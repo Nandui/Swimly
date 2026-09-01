@@ -5,26 +5,30 @@
 @custom-variant dark (&:is(.dark *));
 
 /* The visual system is generated, not hand-picked. It comes from the
-   ui-ux-pro-max skill's design-system engine, persisted at
-   design-system/swimly/MASTER.md: Minimalism & Swiss Style, a slate scale with
-   one green accent for the primary action, Fira Sans for reading and Fira Code
-   for headings and figures. Change the tokens here to follow that file, and
-   nothing else — every component reads these variables and none carries a
-   colour of its own.
+   ui-ux-pro-max skill's design-system engine, asked about a leisure centre
+   that manages swim lessons and bookings, and persisted at
+   design-system/swimly/MASTER.md. The engine's product logic for a booking
+   tool is "trust blue, available green, booked grey": blue-600 is the one
+   interactive colour, green means a place is free and lives in the status
+   tags, and everything else is a cool slate with a faint blue cast. Outfit for
+   headings, Work Sans to read. Subtle 200ms motion.
 
-   The engine emitted the dark palette and marked the style "mode: auto", so
-   both modes ship and the OS decides by default. The light palette is the same
-   slate/green scale read from the other end; every pair below was measured
-   against the engine's own pre-delivery bar (text 4.5:1, control edges 3:1). */
+   The engine emitted the light palette and marks the style "mode: auto", so
+   both modes ship and the OS decides by default. Dark is the same blue/slate
+   scale read from the other end: a lighter blue with dark ink, because white
+   on blue-500 fails and the dark-mode rule is lighter tonal variants, not
+   inversions. Every pair below was measured against the engine's own bar
+   (text 4.5:1, control edges 3:1). Change tokens here to follow MASTER.md and
+   nothing else — no component carries a colour of its own. */
 
 @theme inline {
   --color-background: var(--background);
   --color-foreground: var(--foreground);
-  --font-sans: var(--font-fira-sans), ui-sans-serif, system-ui, -apple-system, "Segoe UI", sans-serif;
-  --font-mono: var(--font-fira-code), ui-monospace, "Cascadia Code", Menlo, Consolas, monospace;
-  /* "Code for data, Sans for labels" — the pairing's own note. Headings and
-     figures take the monospace; everything read as prose takes the sans. */
-  --font-heading: var(--font-fira-code), ui-monospace, "Cascadia Code", Menlo, Consolas, monospace;
+  --font-sans: var(--font-work-sans), ui-sans-serif, system-ui, -apple-system, "Segoe UI", sans-serif;
+  --font-mono: ui-monospace, "Cascadia Code", "Segoe UI Mono", Menlo, Consolas, monospace;
+  /* "Both geometric, but Outfit more distinctive for headings" — the pairing's
+     own note. Headings take Outfit; everything read as prose takes Work Sans. */
+  --font-heading: var(--font-outfit), var(--font-work-sans), ui-sans-serif, sans-serif;
   --color-sidebar-ring: var(--sidebar-ring);
   --color-sidebar-border: var(--sidebar-border);
   --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
@@ -54,6 +58,11 @@
   --color-popover: var(--popover);
   --color-card-foreground: var(--card-foreground);
   --color-card: var(--card);
+  /* The engine's Accent/CTA, emerald, as a token pair for "available" and
+     "confirmed" — the green tag reads from it. Not the primary button: a
+     booking tool's one interactive colour is its trust blue. */
+  --color-success: var(--success);
+  --color-success-foreground: var(--success-foreground);
   --radius-sm: calc(var(--radius) * 0.6);
   --radius-md: calc(var(--radius) * 0.8);
   --radius-lg: var(--radius);
@@ -61,57 +70,62 @@
   --radius-2xl: calc(var(--radius) * 1.8);
   --radius-3xl: calc(var(--radius) * 2.2);
   --radius-4xl: calc(var(--radius) * 2.6);
-  /* MASTER.md, "Key Effects": subtle hover, 200–250ms. Tailwind's default is
+  /* MASTER.md, "Key Effects": subtle hover transitions. Tailwind's default is
      150ms; this moves every `transition-*` utility onto the system's rhythm. */
   --default-transition-duration: 200ms;
-  /* MASTER.md, "Shadow Depths". Swiss style is flat at rest and sharp when it
-     is not, so these are available rather than applied. */
-  --shadow-sm: 0 1px 2px rgb(0 0 0 / 0.05);
-  --shadow-md: 0 4px 6px rgb(0 0 0 / 0.1);
-  --shadow-lg: 0 10px 15px rgb(0 0 0 / 0.1);
-  --shadow-xl: 0 20px 25px rgb(0 0 0 / 0.15);
+  /* MASTER.md, "Shadow Depths". Available rather than applied: minimal means
+     flat at rest, and only floating layers lift. */
+  --shadow-sm: 0 1px 2px rgb(15 23 42 / 0.05);
+  --shadow-md: 0 4px 6px rgb(15 23 42 / 0.08);
+  --shadow-lg: 0 10px 15px rgb(15 23 42 / 0.1);
+  --shadow-xl: 0 20px 25px rgb(15 23 42 / 0.12);
 }
 
-/* Light: the slate scale on white. Body 17:1, muted 7.2:1, the green button
-   carries near-black ink at 8.9:1 because white on green-600 is 3.3:1 and
-   fails. Hairlines are slate-200; anything that bounds a control is slate-500,
-   which is what clears 3:1 against white. */
+/* Light, as emitted, with two corrections the engine's own checklist
+   required. White on its emerald CTA #059669 is 3.77:1, so the success pair
+   uses emerald-700 (5.5:1). Its border #E4ECFC is a hairline at 1.1:1 — right
+   between table rows, useless as the edge of a text box — so inputs use
+   slate-500, which clears 3:1 against the ground at 4.6:1. Blue-600 carries
+   white text at 5.2:1 and reads as a link at 4.9:1. */
 :root {
-  --background: #ffffff;
+  --background: #f8fafc;
   --foreground: #0f172a;
   --card: #ffffff;
   --card-foreground: #0f172a;
   --popover: #ffffff;
   --popover-foreground: #0f172a;
-  --primary: #22c55e;
-  --primary-foreground: #020617;
-  --secondary: #f1f5f9;
+  --primary: #2563eb;
+  --primary-foreground: #ffffff;
+  --secondary: #e4ecfc;
   --secondary-foreground: #0f172a;
-  --muted: #f1f5f9;
+  --muted: #f1f5fd;
   --muted-foreground: #475569;
-  --accent: #f1f5f9;
+  --accent: #e4ecfc;
   --accent-foreground: #0f172a;
   --destructive: #dc2626;
-  --border: #e2e8f0;
+  --success: #047857;
+  --success-foreground: #ffffff;
+  --border: #e4ecfc;
   --input: #64748b;
-  --ring: #0f172a;
-  --chart-1: #22c55e;
-  --chart-2: #0f172a;
+  --ring: #2563eb;
+  --chart-1: #2563eb;
+  --chart-2: #047857;
   --chart-3: #f59e0b;
-  --chart-4: #ef4444;
-  --chart-5: #3b82f6;
-  /* Geometric, not soft: the Swiss radius. */
-  --radius: 0.25rem;
-  --sidebar: #f1f5f9;
+  --chart-4: #dc2626;
+  --chart-5: #64748b;
+  --radius: 0.375rem;
+  --sidebar: #f1f5fd;
   --sidebar-foreground: #334155;
-  --sidebar-primary: #0f172a;
+  --sidebar-primary: #2563eb;
   --sidebar-primary-foreground: #ffffff;
-  --sidebar-accent: #e2e8f0;
+  --sidebar-accent: #e4ecfc;
   --sidebar-accent-foreground: #0f172a;
-  --sidebar-border: #e2e8f0;
-  --sidebar-ring: #0f172a;
+  --sidebar-border: #e4ecfc;
+  --sidebar-ring: #2563eb;
 
-  /* Status tags: 100 field, 800 ink. Every pair measures 6.3:1 or better. */
+  /* Status tags: 100 field, 800 ink. Green is "a place is available", grey is
+     "booked" — the engine's product logic for a booking tool. Every pair
+     measures 6.3:1 or better. */
   --tag-red-bg: #fee2e2;
   --tag-red-fg: #991b1b;
   --tag-orange-bg: #ffedd5;
@@ -132,45 +146,44 @@
   --tag-gray-fg: #334155;
 }
 
-/* Dark: the engine's palette as emitted, with two corrections its own
-   checklist required. Its "Primary" #1e293b sits at 1.22:1 against the
-   background — a button that colour disappears — so the Accent/CTA green is
-   the primary action here and slate-800 is a surface. Its border #475569 is
-   2.36:1, fine for a hairline and too faint to bound an input, so inputs use
-   slate-500 at 3.75:1. Destructive is red-600 rather than the emitted red-500
-   so white text on it clears 4.5:1. */
+/* Dark: the same scale from the other end. The primary is blue-400 with slate
+   ink (7.0:1) rather than blue-600 with white, because dark mode wants lighter
+   tonal variants, not inverted ones, and blue-400 is also what a link needs to
+   read against slate-900. Inputs stay slate-500 (3.75:1). */
 .dark {
   --background: #0f172a;
   --foreground: #f8fafc;
-  --card: #1b2336;
+  --card: #1e293b;
   --card-foreground: #f8fafc;
-  --popover: #1b2336;
+  --popover: #1e293b;
   --popover-foreground: #f8fafc;
-  --primary: #22c55e;
+  --primary: #60a5fa;
   --primary-foreground: #0f172a;
   --secondary: #334155;
-  --secondary-foreground: #ffffff;
-  --muted: #272f42;
+  --secondary-foreground: #f8fafc;
+  --muted: #1e293b;
   --muted-foreground: #94a3b8;
-  --accent: #272f42;
+  --accent: #273449;
   --accent-foreground: #f8fafc;
   --destructive: #dc2626;
-  --border: #475569;
+  --success: #34d399;
+  --success-foreground: #0f172a;
+  --border: #334155;
   --input: #64748b;
-  --ring: #ffffff;
-  --chart-1: #22c55e;
-  --chart-2: #f8fafc;
+  --ring: #60a5fa;
+  --chart-1: #60a5fa;
+  --chart-2: #34d399;
   --chart-3: #fbbf24;
   --chart-4: #f87171;
-  --chart-5: #60a5fa;
-  --sidebar: #1b2336;
+  --chart-5: #94a3b8;
+  --sidebar: #1e293b;
   --sidebar-foreground: #cbd5e1;
-  --sidebar-primary: #f8fafc;
+  --sidebar-primary: #60a5fa;
   --sidebar-primary-foreground: #0f172a;
   --sidebar-accent: #334155;
   --sidebar-accent-foreground: #f8fafc;
   --sidebar-border: #334155;
-  --sidebar-ring: #ffffff;
+  --sidebar-ring: #60a5fa;
 
   /* Status tags: 950 field, 300 ink. Every pair measures 8:1 or better. */
   --tag-red-bg: #450a0a;
@@ -205,8 +218,8 @@
     -webkit-font-smoothing: antialiased;
   }
 
-  /* Headings take the pairing's monospace. Done once here so every page and
-     section heading follows the system without each file being touched. */
+  /* Headings take the pairing's display face. Done once here so every page
+     and section heading follows the system without each file being touched. */
   h1,
   h2,
   h3,
@@ -224,7 +237,7 @@
 
   /* Browser surfaces carry the design too. */
   ::selection {
-    background: color-mix(in oklab, var(--primary) 30%, transparent);
+    background: color-mix(in oklab, var(--primary) 25%, transparent);
   }
   input,
   textarea {

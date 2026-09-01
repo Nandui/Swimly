@@ -3,11 +3,19 @@
 Swimly's visual system is **generated, not hand-picked**. The ui-ux-pro-max
 skill's design-system engine produced it for this product on 1 Sep 2026 and it
 is persisted at [`design-system/swimly/MASTER.md`](design-system/swimly/MASTER.md):
-**Minimalism & Swiss Style** — a slate scale in both modes, one green accent for
-the primary action, Fira Sans to read and Fira Code for headings and figures,
-subtle 200ms motion, sharp shadows if any. That file is the authority on how
-things look; page-level exceptions go in `design-system/swimly/pages/`, and a
-question it does not answer is put to the skill, one intent per query.
+**Minimalism**, built on the engine's logic for a **booking and appointment
+tool** — trust blue for everything interactive, green for "a place is
+available", grey for "booked", a light ground with a faint blue cast, Outfit
+for headings and Work Sans to read, subtle 200ms motion. That file is the
+authority on how things look; page-level exceptions go in
+`design-system/swimly/pages/`, and a question it does not answer is put to the
+skill, one intent per query.
+
+**Describe the product, not the user, when asking the engine.** The first run
+called Swimly a "staff admin dashboard internal tool" and got back a dark tech
+palette with code fonts, filed under IoT dashboards. Swimly is a leisure
+centre's tool for swim lessons and other bookings; asked that, the engine
+answered as above. The query is recorded at the top of MASTER.md.
 
 The previous doctrine — "the well-kept page", a warm-grey document style with
 one blue — is superseded by decision on that date. Its components are still
@@ -29,8 +37,9 @@ makes Swimly stop looking like itself.
 - **Tokens, never colours.** Every colour a component shows comes from a
   variable in `globals.css`, which follows MASTER.md. No hex, no Tailwind
   palette class, in a component.
-- **One green, for the primary action.** `--primary` is the engine's
-  Accent/CTA. It marks the thing you are meant to do next and nothing else.
+- **One blue, for interaction.** `--primary` is the engine's trust blue:
+  buttons, links, focus, caret, selection. Green means *available* and lives in
+  the tag pairs and `--success`; it is never a button.
 - **Status colour comes only from the tag token pairs**, always as the pair
   (field + same-hue ink, one set per mode), always via a metadata map — never
   a colour chosen at a call site.
@@ -53,31 +62,32 @@ makes Swimly stop looking like itself.
 
 ### Two modes, the system decides
 
-The engine emitted a dark palette and marked the style "mode: auto", so Swimly
+The engine emitted a light palette and marked the style "mode: auto", so Swimly
 ships both. `next-themes` sets `class="dark"` on `<html>`, defaults to the
-operating system, and remembers a choice made on the Account page. The light
-palette is the same slate/green scale read from the other end.
+operating system, and remembers a choice made on the Account page. The dark
+palette is the same blue/slate scale read from the other end.
 
 ### How MASTER.md maps onto shadcn, and where it was corrected
 
 The engine speaks in roles (Primary, Accent/CTA, Card…); shadcn speaks in
-tokens. The mapping, and the three places the generated values failed the
+tokens. The mapping, and the two places the generated values failed the
 engine's own pre-delivery bar and were corrected rather than shipped:
 
 | MASTER.md role | Token | Note |
 |---|---|---|
-| Accent/CTA `#22C55E` | `--primary` | The engine's "Primary" `#1E293B` measures **1.22:1** against the dark background — a button that colour vanishes. The CTA is what a primary button is. Ink is near-black in both modes (7.8:1 dark, 8.9:1 light); white on green fails. |
-| Primary `#1E293B` / Secondary `#334155` | `--secondary`, sidebar and surfaces | Slate-800/700 as surfaces, which is what they are good at. |
-| Border `#475569` | `--border` | 2.36:1 — right for a hairline, too faint to bound a control. Inputs use `--input` at slate-500, 3.75:1 dark / 4.8:1 light. |
-| Destructive `#EF4444` | `--destructive` = `#DC2626` | White text on red-500 is 3.8:1; on red-600 it is 4.8:1. |
-| Ring `#FFFFFF` (dark) / slate-900 (light) | `--ring` | Focus ring, visible on both grounds. |
+| Primary `#2563EB` | `--primary`, `--ring` | Blue-600: white text at 5.2:1, link text at 4.9:1. In dark it becomes blue-400 with slate ink (7.0:1) — lighter tonal variant, not an inversion, and the only blue that reads as a link on slate-900. |
+| Accent/CTA `#059669` | `--success` (and the green tag pair) | White on emerald-600 is **3.77:1** and fails, so the pair is emerald-700 (5.5:1). It marks "available" and "confirmed", never the primary button — a booking tool has one interactive colour. |
+| Secondary `#3B82F6` | `--secondary` = `--accent` = `#E4ECFC` | Blue-500 as a second interactive blue would compete with the first; the blue-cast hairline tint is the hover surface instead. |
+| Border `#E4ECFC` | `--border` | 1.1:1 — a hairline between rows, which is all it is for. Inputs use `--input` at slate-500: 4.6:1 light, 3.75:1 dark. |
+| Muted `#F1F5FD` | `--muted`, `--sidebar` | The faint blue cast that keeps the ground from reading as plain grey. |
+| Destructive `#DC2626` | `--destructive` | Passes as emitted: white at 4.8:1. |
 
-Radius is `0.25rem` — geometric, per the style. Transitions default to 200ms,
-per "Key Effects". The MASTER shadow scale is exposed as tokens and applied to
-nothing at rest.
+Radius stays `0.375rem` — the engine names none, and a family leisure centre is
+not a place for hard corners. Transitions default to 200ms, per "Key Effects".
+The MASTER shadow scale is exposed as tokens and applied to nothing at rest.
 
 The former warm-grey neutrals (hue 95–106) are gone with the doctrine that
-needed them; slate carries no hue on purpose.
+needed them; the slate here leans blue, faintly, on purpose.
 
 ### Roles are data, permissions are code
 
@@ -352,7 +362,8 @@ Before calling a screen done:
 
 - One H1, in the heading face.
 - Every status is a `<Tag>` fed by a metadata map, and it reads in both modes.
-- Green appears only on the primary action.
+- Blue appears only where something is interactive; green only where a place
+  is available or a thing is confirmed.
 - Every text pair 4.5:1 and every control edge 3:1, checked in light and dark.
 - Keyboard: a visible ring on everything focusable, the skip link first,
   `prefers-reduced-motion` honoured.
