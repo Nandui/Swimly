@@ -6,6 +6,12 @@ import { PageHeader } from "@/components/ui-kit/page-header";
 import { Tag } from "@/components/ui-kit/tag";
 import { EditProgramme } from "@/components/curriculum/programme-actions";
 import {
+  AddAssessmentType,
+  ArchiveAssessmentType,
+  EditAssessmentType,
+} from "@/components/assessments/type-actions";
+import { getAssessmentTypes } from "@/lib/assessments/data/assessments";
+import {
   AddCompetency,
   AddLevel,
   ArchiveCompetency,
@@ -32,7 +38,10 @@ export default async function ProgrammePage(props: PageProps<"/programmes/[id]">
   await permissionPage("curriculum.manage");
   const { id } = await props.params;
 
-  const programme = await getProgramme(id, true);
+  const [programme, assessmentTypes] = await Promise.all([
+    getProgramme(id, true),
+    getAssessmentTypes(id),
+  ]);
   if (!programme) notFound();
 
   const liveLevels = programme.levels.filter((level) => !level.archivedAt);
@@ -94,6 +103,52 @@ export default async function ProgrammePage(props: PageProps<"/programmes/[id]">
           ))}
         </div>
       )}
+
+      <section className="space-y-3">
+        <div className="flex flex-wrap items-center justify-between gap-2">
+          <h2 className="text-sm font-semibold text-foreground">Kinds of assessment</h2>
+          {programme.archivedAt ? null : (
+            <AddAssessmentType programmeId={programme.id} programmeName={programme.name} />
+          )}
+        </div>
+        <p className="max-w-prose text-sm text-muted-foreground">
+          What an assessment session for this programme can be — new swimmers, mixed abilities.
+          The desk picks one when adding a session.
+        </p>
+        {assessmentTypes.length === 0 ? (
+          <p className="rounded-md border border-dashed px-6 py-8 text-center text-sm text-muted-foreground">
+            None yet. Add one and it becomes something a session can be.
+          </p>
+        ) : (
+          <ul className="overflow-hidden rounded-md border">
+            {assessmentTypes.map((type) => (
+              <li
+                key={type.id}
+                className="group flex items-start justify-between gap-3 border-b px-3 py-2 transition-colors last:border-0 hover:bg-accent/40"
+              >
+                <div className="min-w-0">
+                  <p className="text-sm text-foreground">
+                    {type.name}
+                    {type.archivedAt ? (
+                      <Tag color="gray" className="ml-2">
+                        Archived
+                      </Tag>
+                    ) : null}
+                  </p>
+                  <p className="mt-0.5 text-xs text-muted-foreground">
+                    {type.description ? `${type.description} · ` : ""}
+                    {type._count.sessions} {type._count.sessions === 1 ? "session" : "sessions"}
+                  </p>
+                </div>
+                <div className={ROW_ACTIONS}>
+                  <EditAssessmentType type={type} />
+                  <ArchiveAssessmentType type={type} sessions={type._count.sessions} />
+                </div>
+              </li>
+            ))}
+          </ul>
+        )}
+      </section>
     </div>
   );
 }

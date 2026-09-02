@@ -17,6 +17,8 @@ const SESSION_SELECT = {
   cancelledAt: true,
   programmeId: true,
   programme: { select: { id: true, name: true } },
+  typeId: true,
+  type: { select: { id: true, name: true } },
   instructorId: true,
   instructor: { select: { id: true, name: true } },
   _count: { select: { bookings: { where: { status: { in: HOLDS_A_PLACE } } } } },
@@ -109,6 +111,7 @@ export async function getStudentAssessments(studentId: string) {
           startMinutes: true,
           cancelledAt: true,
           programme: { select: { id: true, name: true } },
+          type: { select: { name: true } },
         },
       },
     },
@@ -148,3 +151,38 @@ export async function getAssessmentProgrammeOptions() {
 }
 
 export type ProgrammeOption = Awaited<ReturnType<typeof getAssessmentProgrammeOptions>>[number];
+
+/** Every live kind of assessment, across programmes, so the session form can
+ *  narrow the list to whichever programme is picked without another round
+ *  trip. A handful of rows. */
+export async function getAssessmentTypeOptions() {
+  await requireSession();
+
+  return prisma.assessmentType.findMany({
+    where: LIVE,
+    orderBy: [{ programmeId: "asc" }, ...LIST_ORDER],
+    select: { id: true, name: true, description: true, programmeId: true },
+  });
+}
+
+export type AssessmentTypeOption = Awaited<ReturnType<typeof getAssessmentTypeOptions>>[number];
+
+/** For the programme page: its kinds of assessment, archived ones included,
+ *  each with how many sessions have been of it. */
+export async function getAssessmentTypes(programmeId: string) {
+  await requireSession();
+
+  return prisma.assessmentType.findMany({
+    where: { programmeId },
+    orderBy: [...LIST_ORDER],
+    select: {
+      id: true,
+      name: true,
+      description: true,
+      archivedAt: true,
+      _count: { select: { sessions: true } },
+    },
+  });
+}
+
+export type AssessmentTypeRow = Awaited<ReturnType<typeof getAssessmentTypes>>[number];

@@ -16,6 +16,7 @@ import { BOOKING_STATUS_META, HOLDS_A_PLACE, sessionDay, sessionSpan } from "@/l
 import {
   getAssessmentProgrammeOptions,
   getAssessmentSession,
+  getAssessmentTypeOptions,
   type BookingRow,
   type SessionDetail,
 } from "@/lib/assessments/data/assessments";
@@ -34,9 +35,10 @@ export default async function AssessmentSessionPage(props: PageProps<"/assessmen
   const manage = can(auth, "courses.manage");
   const { id } = await props.params;
 
-  const [session, programmes, instructors] = await Promise.all([
+  const [session, programmes, types, instructors] = await Promise.all([
     getAssessmentSession(id),
     manage ? getAssessmentProgrammeOptions() : Promise.resolve([]),
+    manage ? getAssessmentTypeOptions() : Promise.resolve([]),
     manage ? getInstructorOptions() : Promise.resolve([]),
   ]);
   if (!session) notFound();
@@ -67,7 +69,7 @@ export default async function AssessmentSessionPage(props: PageProps<"/assessmen
             </span>
           }
           description={
-            `${sessionSpan(session)} · ${session.programme.name}` +
+            `${sessionSpan(session)} · ${session.programme.name} · ${session.type?.name ?? "kind not set"}` +
             (session.location ? ` · ${session.location}` : "") +
             (session.instructor ? ` · ${session.instructor.name}` : " · assessor not decided")
           }
@@ -79,6 +81,7 @@ export default async function AssessmentSessionPage(props: PageProps<"/assessmen
                   <EditSession
                     session={session}
                     programmes={programmes}
+                    types={types}
                     instructors={instructors}
                     today={today()}
                     variant="button"

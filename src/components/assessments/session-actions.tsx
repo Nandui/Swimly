@@ -1,5 +1,6 @@
 "use client";
 
+import * as React from "react";
 import { CalendarPlus, Pencil, Ban } from "lucide-react";
 import { ConfirmAction } from "@/components/confirm-action";
 import { Field, FormDialog } from "@/components/form-dialog";
@@ -20,7 +21,11 @@ import {
   type SessionInput,
 } from "@/lib/assessments/actions/sessions";
 import { sessionLabel } from "@/lib/assessments/constants";
-import type { ProgrammeOption, SessionRow } from "@/lib/assessments/data/assessments";
+import type {
+  AssessmentTypeOption,
+  ProgrammeOption,
+  SessionRow,
+} from "@/lib/assessments/data/assessments";
 import type { InstructorOption } from "@/lib/courses/data/courses";
 import { formatTime } from "@/lib/courses/constants";
 import { toDateOnlyString } from "@/lib/format";
@@ -32,6 +37,7 @@ function readInput(formData: FormData): SessionInput {
   const instructor = text("instructorId");
   return {
     programmeId: text("programmeId"),
+    typeId: text("typeId"),
     date: text("date"),
     start: text("start"),
     durationMinutes: Number(text("durationMinutes") || 30),
@@ -42,37 +48,71 @@ function readInput(formData: FormData): SessionInput {
   };
 }
 
-function SessionFields({
-  session,
-  programmes,
-  instructors,
-  today,
-}: {
+type FieldProps = {
   session?: SessionRow;
   programmes: ProgrammeOption[];
+  types: AssessmentTypeOption[];
   instructors: InstructorOption[];
   today: string;
-}) {
+};
+
+/** The programme is held in state rather than left to the form, because the
+ *  kinds of assessment on offer are the chosen programme's and nothing else:
+ *  change the programme and the list changes with it. */
+function SessionFields({ session, programmes, types, instructors, today }: FieldProps) {
+  const [programmeId, setProgrammeId] = React.useState(
+    session?.programmeId ?? programmes[0]?.id ?? ""
+  );
+  const kinds = types.filter((type) => type.programmeId === programmeId);
+  const currentKind =
+    session && session.programmeId === programmeId ? (session.typeId ?? undefined) : undefined;
+
   return (
     <>
-      <Field
-        label="Programme"
-        htmlFor="programmeId"
-        hint="What the assessor places children into. The outcome will be one of its levels."
-      >
-        <Select name="programmeId" defaultValue={session?.programmeId ?? programmes[0]?.id}>
-          <SelectTrigger id="programmeId" className="w-full">
-            <SelectValue placeholder="Pick a programme" />
-          </SelectTrigger>
-          <SelectContent>
-            {programmes.map((programme) => (
-              <SelectItem key={programme.id} value={programme.id}>
-                {programme.name}
-              </SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
-      </Field>
+      <div className="grid gap-3 sm:grid-cols-2">
+        <Field
+          label="Programme"
+          htmlFor="programmeId"
+          hint="What the assessor places children into."
+        >
+          <Select name="programmeId" value={programmeId} onValueChange={setProgrammeId}>
+            <SelectTrigger id="programmeId" className="w-full">
+              <SelectValue placeholder="Pick a programme" />
+            </SelectTrigger>
+            <SelectContent>
+              {programmes.map((programme) => (
+                <SelectItem key={programme.id} value={programme.id}>
+                  {programme.name}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </Field>
+        <Field
+          label="Kind"
+          htmlFor="typeId"
+          hint={
+            kinds.length === 0
+              ? "This programme has no kinds of assessment yet. Add them on its page under Programmes."
+              : "Who this session is for."
+          }
+        >
+          {/* Keyed on the programme so the default resets when it changes,
+              rather than pointing at a kind from the previous list. */}
+          <Select key={programmeId} name="typeId" defaultValue={currentKind ?? kinds[0]?.id} disabled={kinds.length === 0}>
+            <SelectTrigger id="typeId" className="w-full">
+              <SelectValue placeholder={kinds.length === 0 ? "None yet" : "Pick a kind"} />
+            </SelectTrigger>
+            <SelectContent>
+              {kinds.map((kind) => (
+                <SelectItem key={kind.id} value={kind.id}>
+                  {kind.name}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </Field>
+      </div>
 
       <div className="grid gap-3 sm:grid-cols-3">
         <Field label="Date" htmlFor="date">
@@ -149,15 +189,7 @@ function SessionFields({
   );
 }
 
-export function AddSession({
-  programmes,
-  instructors,
-  today,
-}: {
-  programmes: ProgrammeOption[];
-  instructors: InstructorOption[];
-  today: string;
-}) {
+export function AddSession(props: Omit<FieldProps, "session">) {
   return (
     <FormDialog
       trigger={
@@ -173,24 +205,16 @@ export function AddSession({
       width="sm:max-w-xl"
       submit={(formData) => createSession(readInput(formData))}
     >
-      <SessionFields programmes={programmes} instructors={instructors} today={today} />
+      <SessionFields {...props} />
     </FormDialog>
   );
 }
 
 export function EditSession({
-  session,
-  programmes,
-  instructors,
-  today,
   variant = "icon",
-}: {
-  session: SessionRow;
-  programmes: ProgrammeOption[];
-  instructors: InstructorOption[];
-  today: string;
-  variant?: "icon" | "button";
-}) {
+  ...props
+}: FieldProps & { session: SessionRow; variant?: "icon" | "button" }) {
+  const { session } = props;
   return (
     <FormDialog
       trigger={
@@ -211,7 +235,7 @@ export function EditSession({
       width="sm:max-w-xl"
       submit={(formData) => updateSession(session.id, readInput(formData))}
     >
-      <SessionFields session={session} programmes={programmes} instructors={instructors} today={today} />
+      <SessionFields {...props} />
     </FormDialog>
   );
 }

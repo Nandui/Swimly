@@ -9,6 +9,8 @@ import { isPast, sessionDay, sessionSpan } from "@/lib/assessments/constants";
 import {
   getAssessmentProgrammeOptions,
   getAssessmentSessions,
+  getAssessmentTypeOptions,
+  type AssessmentTypeOption,
   type ProgrammeOption,
   type SessionRow,
 } from "@/lib/assessments/data/assessments";
@@ -24,9 +26,10 @@ export default async function AssessmentsPage() {
   const manage = can(session, "courses.manage");
   const todayIso = today();
 
-  const [sessions, programmes, instructors] = await Promise.all([
+  const [sessions, programmes, types, instructors] = await Promise.all([
     getAssessmentSessions(),
     manage ? getAssessmentProgrammeOptions() : Promise.resolve([]),
+    manage ? getAssessmentTypeOptions() : Promise.resolve([]),
     manage ? getInstructorOptions() : Promise.resolve([]),
   ]);
 
@@ -42,7 +45,7 @@ export default async function AssessmentsPage() {
   const uncapped = upcoming.some((s) => s.capacity === null);
 
   const add = manage ? (
-    <AddSession programmes={programmes} instructors={instructors} today={todayIso} />
+    <AddSession programmes={programmes} types={types} instructors={instructors} today={todayIso} />
   ) : null;
 
   return (
@@ -92,6 +95,7 @@ export default async function AssessmentsPage() {
                 sessions={upcoming}
                 manage={manage}
                 programmes={programmes}
+                types={types}
                 instructors={instructors}
                 today={todayIso}
               />
@@ -105,6 +109,7 @@ export default async function AssessmentsPage() {
                 sessions={past}
                 manage={manage}
                 programmes={programmes}
+                types={types}
                 instructors={instructors}
                 today={todayIso}
               />
@@ -118,6 +123,7 @@ export default async function AssessmentsPage() {
                 sessions={cancelled}
                 manage={false}
                 programmes={programmes}
+                types={types}
                 instructors={instructors}
                 today={todayIso}
               />
@@ -133,12 +139,14 @@ function SessionTable({
   sessions,
   manage,
   programmes,
+  types,
   instructors,
   today,
 }: {
   sessions: SessionRow[];
   manage: boolean;
   programmes: ProgrammeOption[];
+  types: AssessmentTypeOption[];
   instructors: InstructorOption[];
   today: string;
 }) {
@@ -188,11 +196,16 @@ function SessionTable({
                     {s.location ? ` · ${s.location}` : ""}
                   </span>
                   <span className="mt-0.5 block text-xs font-normal text-muted-foreground md:hidden">
-                    {s.programme.name}
+                    {s.programme.name} · {s.type?.name ?? "kind not set"}
                     {s.instructor ? ` · ${s.instructor.name}` : ""}
                   </span>
                 </td>
-                <td className="px-3 py-2 text-muted-foreground max-md:hidden">{s.programme.name}</td>
+                <td className="px-3 py-2 text-muted-foreground max-md:hidden">
+                  {s.programme.name}
+                  <span className={s.type ? "mt-0.5 block text-xs" : "mt-0.5 block text-xs text-(--tag-orange-fg)"}>
+                    {s.type?.name ?? "Kind not set"}
+                  </span>
+                </td>
                 <td className="px-3 py-2 text-muted-foreground max-lg:hidden">
                   {s.instructor?.name ?? <span className="text-(--tag-orange-fg)">Not decided</span>}
                 </td>
@@ -202,7 +215,7 @@ function SessionTable({
                 <td className="px-3 py-2">
                   {manage && !s.cancelledAt ? (
                     <div className="flex items-center justify-end gap-0.5 opacity-0 transition-opacity group-focus-within:opacity-100 group-hover:opacity-100 max-md:opacity-100">
-                      <EditSession session={s} programmes={programmes} instructors={instructors} today={today} />
+                      <EditSession session={s} programmes={programmes} types={types} instructors={instructors} today={today} />
                       <CancelSession session={s} />
                     </div>
                   ) : null}

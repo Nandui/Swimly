@@ -16,6 +16,7 @@ const ISO_DATE = /^\d{4}-\d{2}-\d{2}$/;
 
 const sessionSchema = z.object({
   programmeId: z.string().min(1, "Pick the programme this session assesses for."),
+  typeId: z.string().min(1, "Pick the kind of assessment."),
   date: z.string().regex(ISO_DATE, "Give the date as a date."),
   start: z
     .string()
@@ -41,6 +42,7 @@ export type SessionInput = z.infer<typeof sessionSchema>;
 function toData(input: SessionInput) {
   return {
     programmeId: input.programmeId,
+    typeId: input.typeId,
     date: parseDateOnly(input.date),
     startMinutes: parseTime(input.start)!,
     durationMinutes: input.durationMinutes,
@@ -49,6 +51,14 @@ function toData(input: SessionInput) {
     instructorId: input.instructorId || null,
     notes: input.notes || null,
   };
+}
+
+/** The kind has to be one of the programme's own, and live. */
+async function kindFor(programmeId: string, typeId: string) {
+  return prisma.assessmentType.findFirst({
+    where: { id: typeId, programmeId, archivedAt: null },
+    select: { id: true, name: true },
+  });
 }
 
 export async function createSession(input: SessionInput): Promise<ActionResult> {
@@ -64,6 +74,9 @@ export async function createSession(input: SessionInput): Promise<ActionResult> 
   });
   if (!programme || programme.archivedAt) return fail("That programme is not available.");
 
+  const kind = await kindFor(programme.id, data.typeId);
+  if (!kind) return fail(`That kind of assessment does not belong to ${programme.name}.`);
+
   const created = await prisma.assessmentSession.create({
     data,
     select: { id: true, date: true, startMinutes: true },
@@ -76,7 +89,7 @@ export async function createSession(input: SessionInput): Promise<ActionResult> 
     entity: "AssessmentSession",
     entityId: created.id,
     programmeId: programme.id,
-    summary: `Added an assessment session for ${programme.name} on ${sessionLabel(created)}${
+    summary: `Added a ${kind.name} assessment session for ${programme.name} on ${sessionLabel(created)}${
       data.capacity ? ` with ${data.capacity} places` : ""
     }`,
   });
@@ -100,6 +113,7 @@ export async function updateSession(id: string, input: SessionInput): Promise<Ac
       startMinutes: true,
       capacity: true,
       programmeId: true,
+      typeId: true,
       cancelledAt: true,
       _count: { select: { bookings: { where: { outcomeLevelId: { not: null } } } } },
     },
@@ -113,6 +127,13 @@ export async function updateSession(id: string, input: SessionInput): Promise<Ac
     return fail(
       "Outcomes have been recorded against this session, so its programme cannot change. Add a new session instead."
     );
+  }
+
+  // An archived kind may stay on a session that already has it; it just
+  // cannot be chosen afresh. So the live check runs only when the kind changes.
+  if (data.typeId !== existing.typeId) {
+    const kind = await kindFor(data.programmeId, data.typeId);
+    if (!kind) return fail("That kind of assessment does not belong to this programme.");
   }
 
   await prisma.assessmentSession.update({ where: { id }, data });

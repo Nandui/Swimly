@@ -206,6 +206,7 @@ model Programme {
   enrolments  Enrolment[]
   completions LevelCompletion[]
   assessmentSessions AssessmentSession[]
+  assessmentTypes    AssessmentType[]
 
   @@index([sortOrder])
 }
@@ -501,17 +502,44 @@ model AssessmentSession {
   /// The programme this session places children into. An outcome is one of
   /// its levels, and nothing else.
   programmeId     String
+  /// What kind of assessment: the programme's own list — new swimmers, mixed
+  /// abilities. Nullable only for sessions made before kinds existed; every
+  /// new session is given one, and the page says so where it is missing.
+  typeId          String?
   notes           String?
   cancelledAt     DateTime?
   createdAt       DateTime  @default(now())
   updatedAt       DateTime  @updatedAt
 
   programme  Programme           @relation(fields: [programmeId], references: [id], onDelete: Restrict)
+  type       AssessmentType?     @relation(fields: [typeId], references: [id], onDelete: Restrict)
   instructor User?               @relation("AssessmentInstructor", fields: [instructorId], references: [id], onDelete: SetNull)
   bookings   AssessmentBooking[]
 
   @@index([date, startMinutes])
   @@index([programmeId, date])
+  @@index([typeId])
+}
+
+/// A kind of assessment a programme runs — "New swimmers", "Mixed abilities".
+/// Managed on the programme, like its levels, so the desk picks from a list
+/// rather than typing a category that fragments into three spellings.
+/// Archived, never deleted: a session keeps saying what kind it was.
+model AssessmentType {
+  id          String    @id @default(cuid())
+  programmeId String
+  name        String
+  description String?
+  sortOrder   Int       @default(0)
+  archivedAt  DateTime?
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+
+  programme Programme           @relation(fields: [programmeId], references: [id], onDelete: Restrict)
+  sessions  AssessmentSession[]
+
+  @@unique([programmeId, name])
+  @@index([programmeId, sortOrder])
 }
 
 /// A child booked onto a session, and — once they have been in the water —

@@ -228,6 +228,7 @@ export default async function StudentPage(props: PageProps<"/students/[id]">) {
                     </Link>
                     <span className="mt-0.5 block text-xs text-muted-foreground">
                       {booking.session.programme.name}
+                      {booking.session.type ? ` · ${booking.session.type.name}` : ""}
                       {booking.outcomeLevel ? (
                         <>
                           {" · placed at "}
