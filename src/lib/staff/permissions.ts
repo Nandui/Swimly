@@ -91,6 +91,13 @@ export const PERMISSIONS = [
       "Create roles and decide what each one may do — including this permission. Give it carefully.",
   },
   {
+    key: "clubs.manage",
+    group: "Administration",
+    label: "Manage clubs",
+    description:
+      "Add a site, rename one, retire one. Which club a person is working in is theirs to switch; this is about which clubs exist.",
+  },
+  {
     key: "activity.view",
     group: "Administration",
     label: "Read the activity log",

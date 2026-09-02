@@ -1,5 +1,6 @@
 import type { DayOfWeek } from "@/generated/prisma/client";
 import { requireSession } from "@/lib/authz";
+import { currentClubId } from "@/lib/clubs/current";
 import { prisma } from "@/lib/prisma";
 
 /** Enrolments that occupy a place. Waitlisted, withdrawn, transferred and
@@ -8,6 +9,8 @@ export const TAKES_A_PLACE = { status: "ACTIVE" } as const;
 
 const COURSE_SELECT = {
   id: true,
+  clubId: true,
+  club: { select: { id: true, name: true } },
   name: true,
   dayOfWeek: true,
   startMinutes: true,
@@ -32,7 +35,7 @@ export async function getCourses(includeArchived = false) {
   await requireSession();
 
   return prisma.course.findMany({
-    where: includeArchived ? {} : { archivedAt: null },
+    where: { clubId: await currentClubId(), ...(includeArchived ? {} : { archivedAt: null }) },
     orderBy: [{ dayOfWeek: "asc" }, { startMinutes: "asc" }],
     select: COURSE_SELECT,
   });
@@ -55,6 +58,7 @@ export async function getCoursesOnDay(dayOfWeek: DayOfWeek, instructorId?: strin
 
   return prisma.course.findMany({
     where: {
+      clubId: await currentClubId(),
       dayOfWeek,
       archivedAt: null,
       ...(instructorId ? { instructorId } : {}),
@@ -99,10 +103,11 @@ export type RosterEntry = Awaited<ReturnType<typeof getRoster>>[number];
 
 export async function getCourseCounts() {
   await requireSession();
+  const clubId = await currentClubId();
 
   const [courses, places] = await Promise.all([
-    prisma.course.count({ where: { archivedAt: null } }),
-    prisma.enrolment.count({ where: { ...TAKES_A_PLACE, course: { archivedAt: null } } }),
+    prisma.course.count({ where: { clubId, archivedAt: null } }),
+    prisma.enrolment.count({ where: { ...TAKES_A_PLACE, course: { clubId, archivedAt: null } } }),
   ]);
 
   return { courses, places };

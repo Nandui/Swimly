@@ -1,4 +1,5 @@
 import "dotenv/config";
+import { FOUNDING_CLUB_ID } from "@/lib/clubs/constants";
 import { logAudit } from "@/lib/audit";
 import { courseLabel, formatSlot } from "@/lib/courses/constants";
 import { prisma } from "@/lib/prisma";
@@ -62,8 +63,8 @@ function toMinutes(hhmm: string): number {
 }
 
 async function main() {
-  const programme = await prisma.programme.findUnique({
-    where: { name: PROGRAMME },
+  const programme = await prisma.programme.findFirst({
+    where: { name: PROGRAMME, clubId: FOUNDING_CLUB_ID },
     select: { id: true, name: true },
   });
   if (!programme) throw new Error(`No programme called "${PROGRAMME}".`);
@@ -105,7 +106,7 @@ async function main() {
     }
 
     const course = await prisma.course.create({
-      data: {
+      data: { clubId: FOUNDING_CLUB_ID,
         levelId,
         name: seed.name,
         dayOfWeek: DAY,

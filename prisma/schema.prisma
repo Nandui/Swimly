@@ -174,6 +174,9 @@ model AuditLog {
   /// How the log is filtered, because it is how the app is navigated. A plain
   /// column rather than a relation, so the log survives the programme.
   programmeId String?
+  /// Which club it happened in, kept the same way and for the same reason: a
+  /// plain nullable column. Null for what the clubs share — accounts, roles.
+  clubId      String?
   /// Written for a person reading months later: name what changed and to what.
   summary     String
   createdAt   DateTime @default(now())
@@ -184,6 +187,36 @@ model AuditLog {
   @@index([entity, entityId])
   @@index([actorId])
   @@index([programmeId, createdAt])
+  @@index([clubId, createdAt])
+}
+
+// ---------------------------------------------------------------------------
+// Clubs — one app, several sites
+// ---------------------------------------------------------------------------
+
+/// A site the app is run for — LeisureWorld Bishopstown, LeisureWorld
+/// Churchfield. Programmes, classes, swimmers and assessment sessions each
+/// belong to one, and every list the app shows is one club's. Staff accounts
+/// and roles are shared: the same people work across sites, and a permission
+/// means the same thing at both.
+///
+/// Swimmers are never moved between clubs; the other site enrols its own. A
+/// programme can be copied across so two sites running the same ladder do not
+/// type it twice — `copyProgramme` copies the curriculum and nothing else.
+model Club {
+  id         String    @id @default(cuid())
+  name       String    @unique
+  sortOrder  Int       @default(0)
+  archivedAt DateTime?
+  createdAt  DateTime  @default(now())
+  updatedAt  DateTime  @updatedAt
+
+  programmes         Programme[]
+  students           Student[]
+  courses            Course[]
+  assessmentSessions AssessmentSession[]
+
+  @@index([sortOrder])
 }
 
 // ---------------------------------------------------------------------------
@@ -195,20 +228,25 @@ model AuditLog {
 /// Ava was assessed?". For an account it answers nothing.
 model Programme {
   id          String    @id @default(cuid())
-  name        String    @unique
+  clubId      String
+  /// Unique within the club, not across them: two sites running the same
+  /// ladder both call it Water Safety & Fun.
+  name        String
   description String?
   sortOrder   Int       @default(0)
   archivedAt  DateTime?
   createdAt   DateTime  @default(now())
   updatedAt   DateTime  @updatedAt
 
+  club        Club              @relation(fields: [clubId], references: [id], onDelete: Restrict)
   levels      Level[]
   enrolments  Enrolment[]
   completions LevelCompletion[]
   assessmentSessions AssessmentSession[]
   assessmentTypes    AssessmentType[]
 
-  @@index([sortOrder])
+  @@unique([clubId, name])
+  @@index([clubId, sortOrder])
 }
 
 model Level {
@@ -260,6 +298,9 @@ model Competency {
 
 model Student {
   id           String        @id @default(cuid())
+  /// The site they swim at. Never changed: a family moving pools is enrolled
+  /// afresh by the other club, with that club's member number.
+  clubId       String
   /// The club's own identifier, carried over from the system this data came
   /// from. Unique, so a re-import matches rather than duplicating, and so a
   /// mistyped digit collides loudly instead of quietly creating a second
@@ -292,13 +333,14 @@ model Student {
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
+  club        Club               @relation(fields: [clubId], references: [id], onDelete: Restrict)
   enrolments  Enrolment[]
   attendance  AttendanceRecord[]
   results     CompetencyResult[]
   completions LevelCompletion[]
   assessmentBookings AssessmentBooking[]
 
-  @@index([status, lastName, firstName])
+  @@index([clubId, status, lastName, firstName])
 }
 
 // ---------------------------------------------------------------------------
@@ -307,6 +349,9 @@ model Student {
 
 model Course {
   id              String    @id @default(cuid())
+  /// Always the club of the level's programme; stored here as well so the
+  /// timetable is one indexed read rather than a join through the curriculum.
+  clubId          String
   levelId         String
   /// Optional. `courseLabel()` falls back to the level name.
   name            String?
@@ -326,6 +371,7 @@ model Course {
   createdAt       DateTime  @default(now())
   updatedAt       DateTime  @updatedAt
 
+  club            Club               @relation(fields: [clubId], references: [id], onDelete: Restrict)
   level           Level              @relation(fields: [levelId], references: [id], onDelete: Restrict)
   instructor      User?              @relation(fields: [instructorId], references: [id], onDelete: SetNull)
   enrolments      Enrolment[]
@@ -333,7 +379,7 @@ model Course {
   notes           ClassNote[]
   assessedResults CompetencyResult[]
 
-  @@index([dayOfWeek, startMinutes])
+  @@index([clubId, dayOfWeek, startMinutes])
   @@index([levelId])
   @@index([instructorId])
 }
@@ -491,6 +537,8 @@ model LevelCompletion {
 /// this purpose.
 model AssessmentSession {
   id              String    @id @default(cuid())
+  /// The programme's club, stored here too so the list is one indexed read.
+  clubId          String
   date            DateTime  @db.Date
   /// Minutes from midnight, as on `Course`, and for the same reason.
   startMinutes    Int
@@ -511,12 +559,13 @@ model AssessmentSession {
   createdAt       DateTime  @default(now())
   updatedAt       DateTime  @updatedAt
 
+  club       Club                @relation(fields: [clubId], references: [id], onDelete: Restrict)
   programme  Programme           @relation(fields: [programmeId], references: [id], onDelete: Restrict)
   type       AssessmentType?     @relation(fields: [typeId], references: [id], onDelete: Restrict)
   instructor User?               @relation("AssessmentInstructor", fields: [instructorId], references: [id], onDelete: SetNull)
   bookings   AssessmentBooking[]
 
-  @@index([date, startMinutes])
+  @@index([clubId, date, startMinutes])
   @@index([programmeId, date])
   @@index([typeId])
 }

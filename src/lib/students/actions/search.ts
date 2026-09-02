@@ -2,6 +2,7 @@
 
 import type { Prisma } from "@/generated/prisma/client";
 import { requireSession } from "@/lib/authz";
+import { currentClubId } from "@/lib/clubs/current";
 import { prisma } from "@/lib/prisma";
 
 /** A read, in the actions folder, on purpose.
@@ -36,6 +37,9 @@ export async function searchStudents(q: string, exclude: string[] = []): Promise
   if (terms.length === 0) return [];
 
   const where: Prisma.StudentWhereInput = {
+    // The picker offers the club being worked in and nobody else's: a
+    // Churchfield child cannot be booked into a Bishopstown class by typing.
+    clubId: await currentClubId(),
     status: "ACTIVE",
     ...(exclude.length ? { id: { notIn: exclude.slice(0, 50) } } : {}),
     AND: terms.map((term) => ({

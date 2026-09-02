@@ -1,4 +1,5 @@
 import { requireSession } from "@/lib/authz";
+import { currentClubId } from "@/lib/clubs/current";
 import { prisma } from "@/lib/prisma";
 
 /** Everything a student is in, or has been in — newest first, open ones on
@@ -42,7 +43,7 @@ export async function getTransferTargets(excludeCourseId: string) {
   await requireSession();
 
   return prisma.course.findMany({
-    where: { archivedAt: null, id: { not: excludeCourseId } },
+    where: { clubId: await currentClubId(), archivedAt: null, id: { not: excludeCourseId } },
     orderBy: [{ dayOfWeek: "asc" }, { startMinutes: "asc" }],
     select: {
       id: true,

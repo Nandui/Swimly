@@ -1,4 +1,5 @@
 import "dotenv/config";
+import { FOUNDING_CLUB_ID } from "@/lib/clubs/constants";
 import { logAudit } from "@/lib/audit";
 import { prisma } from "@/lib/prisma";
 
@@ -149,9 +150,9 @@ async function main() {
 
   for (const [programmeIndex, seed] of CURRICULUM.entries()) {
     const programme = await prisma.programme.upsert({
-      where: { name: seed.name },
+      where: { clubId_name: { clubId: FOUNDING_CLUB_ID, name: seed.name } },
       update: { description: seed.description, sortOrder: programmeIndex },
-      create: { name: seed.name, description: seed.description, sortOrder: programmeIndex },
+      create: { clubId: FOUNDING_CLUB_ID, name: seed.name, description: seed.description, sortOrder: programmeIndex },
       select: { id: true, name: true },
     });
 

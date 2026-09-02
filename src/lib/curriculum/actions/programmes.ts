@@ -5,6 +5,7 @@ import { z } from "zod";
 import { fail, ok, onUniqueViolation, type ActionResult } from "@/lib/action-result";
 import { logAudit } from "@/lib/audit";
 import { requirePermission } from "@/lib/authz";
+import { currentClubId } from "@/lib/clubs/current";
 import { LIST_ORDER } from "@/lib/curriculum/constants";
 import { reorderIds } from "@/lib/curriculum/reorder";
 import { prisma } from "@/lib/prisma";
@@ -28,8 +29,12 @@ export async function createProgramme(input: ProgrammeInput): Promise<ActionResu
   const parsed = programmeSchema.safeParse(input);
   if (!parsed.success) return fail(parsed.error.issues[0].message);
   const { name, description } = parsed.data;
+  // A new programme is the club being worked in's. Which is the point of the
+  // switcher being on screen the whole time.
+  const clubId = await currentClubId();
 
   const last = await prisma.programme.findFirst({
+    where: { clubId },
     orderBy: { sortOrder: "desc" },
     select: { sortOrder: true },
   });
@@ -38,13 +43,14 @@ export async function createProgramme(input: ProgrammeInput): Promise<ActionResu
     () =>
       prisma.programme.create({
         data: {
+          clubId,
           name,
           description: description || null,
           sortOrder: (last?.sortOrder ?? -1) + 1,
         },
         select: { id: true, name: true },
       }),
-    `There is already a programme called ${name}.`
+    `There is already a programme called ${name} in this club.`
   );
   if ("ok" in created) return created;
 
@@ -162,8 +168,12 @@ export async function moveProgramme(
 ): Promise<ActionResult> {
   const session = await requirePermission("curriculum.manage");
 
+  // Its own club's list, whichever club is being worked in.
+  const moving = await prisma.programme.findUnique({ where: { id }, select: { clubId: true } });
+  if (!moving) return fail("That programme no longer exists.");
+
   const siblings = await prisma.programme.findMany({
-    where: { archivedAt: null },
+    where: { archivedAt: null, clubId: moving.clubId },
     orderBy: [...LIST_ORDER],
     select: { id: true, name: true },
   });

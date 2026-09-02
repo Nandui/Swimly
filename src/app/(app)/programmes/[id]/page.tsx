@@ -4,6 +4,8 @@ import { notFound } from "next/navigation";
 import { ChevronLeft } from "lucide-react";
 import { PageHeader } from "@/components/ui-kit/page-header";
 import { Tag } from "@/components/ui-kit/tag";
+import { WrongClub } from "@/components/clubs/wrong-club";
+import { CopyProgramme } from "@/components/curriculum/copy-programme";
 import { EditProgramme } from "@/components/curriculum/programme-actions";
 import {
   AddAssessmentType,
@@ -21,6 +23,7 @@ import {
   MoveCompetency,
   MoveLevel,
 } from "@/components/curriculum/level-actions";
+import { getCurrentClub } from "@/lib/clubs/current";
 import { competencyCountLabel } from "@/lib/curriculum/constants";
 import {
   getProgramme,
@@ -38,17 +41,25 @@ export default async function ProgrammePage(props: PageProps<"/programmes/[id]">
   await permissionPage("curriculum.manage");
   const { id } = await props.params;
 
-  const [programme, assessmentTypes] = await Promise.all([
+  const [programme, assessmentTypes, { club, clubs }] = await Promise.all([
     getProgramme(id, true),
     getAssessmentTypes(id),
+    getCurrentClub(),
   ]);
   if (!programme) notFound();
+  if (programme.clubId !== club.id) {
+    return (
+      <WrongClub what={`The programme ${programme.name}`} owner={programme.club} current={club} />
+    );
+  }
 
   const liveLevels = programme.levels.filter((level) => !level.archivedAt);
   const competencies = programme.levels.reduce(
     (total, level) => total + level.competencies.filter((c) => !c.archivedAt).length,
     0
   );
+  // Where it could be copied to: every other live club.
+  const otherClubs = clubs.filter((other) => other.id !== programme.clubId);
 
   return (
     <div className="space-y-6">
@@ -65,6 +76,14 @@ export default async function ProgrammePage(props: PageProps<"/programmes/[id]">
           description={programme.description ?? undefined}
           actions={
             <>
+              {programme.archivedAt ? null : (
+                <CopyProgramme
+                  programme={programme}
+                  clubs={otherClubs}
+                  levels={liveLevels.length}
+                  competencies={competencies}
+                />
+              )}
               <EditProgramme programme={{ ...programme, archivedAt: programme.archivedAt }} variant="button" />
               <AddLevel programmeId={programme.id} />
             </>

@@ -4,6 +4,7 @@ import { auth } from "@/auth";
 import { AppFrame } from "@/components/ui-kit/app-shell";
 import { AppMobileNav, AppSidebar } from "@/components/app-nav";
 import { permissionsOf } from "@/lib/authz";
+import { getCurrentClub } from "@/lib/clubs/current";
 
 /** The signed-in shell. Two greys and nothing else: a sidebar that stays put
  *  on desktop, a 48px bar that replaces it below `md`, and a centred content
@@ -12,10 +13,15 @@ export default async function AppLayout({ children }: { children: ReactNode }) {
   const session = await auth();
   if (!session?.user) redirect("/sign-in");
 
+  // Memoised per request, so the pages inside asking again cost nothing.
+  const { club, clubs } = await getCurrentClub();
+
   const nav = {
     userName: session.user.name ?? session.user.email ?? "Unknown",
     userSubtitle: session.user.roleName,
     permissions: permissionsOf(session),
+    club,
+    clubs,
   };
 
   return (

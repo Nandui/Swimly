@@ -7,9 +7,11 @@ import { PageHeader } from "@/components/ui-kit/page-header";
 import { Tag } from "@/components/ui-kit/tag";
 import { Button } from "@/components/ui/button";
 import { RegisterForm } from "@/components/attendance/register-form";
+import { WrongClub } from "@/components/clubs/wrong-club";
 import { canMarkRegister } from "@/lib/attendance/access";
 import { isIsoDate, mostRecentOccurrence, shiftWeeks } from "@/lib/attendance/dates";
 import { getRegister } from "@/lib/attendance/data/register";
+import { getCurrentClub } from "@/lib/clubs/current";
 import { DAY_META, courseName, formatSlot } from "@/lib/courses/constants";
 import { getCourse } from "@/lib/courses/data/courses";
 import { formatDate, parseDateOnly, today, weekdayOf } from "@/lib/format";
@@ -22,8 +24,17 @@ export default async function RegisterPage(props: PageProps<"/courses/[id]/regis
   const { id } = await props.params;
   const params = await props.searchParams;
 
-  const course = await getCourse(id);
+  const [course, { club }] = await Promise.all([getCourse(id), getCurrentClub()]);
   if (!course) notFound();
+  if (course.clubId !== club.id) {
+    return (
+      <WrongClub
+        what={`The register for ${courseName(course)}`}
+        owner={course.club}
+        current={club}
+      />
+    );
+  }
 
   const requested = isIsoDate(params.date) ? params.date : null;
   // A date on the wrong weekday would only ever meet the guard that refuses it,

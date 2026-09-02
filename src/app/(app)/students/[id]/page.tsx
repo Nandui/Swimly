@@ -4,6 +4,7 @@ import { notFound } from "next/navigation";
 import { ChevronLeft } from "lucide-react";
 import { PageHeader } from "@/components/ui-kit/page-header";
 import { Tag } from "@/components/ui-kit/tag";
+import { WrongClub } from "@/components/clubs/wrong-club";
 import { EditStudent, ToggleStudentStatus } from "@/components/students/student-actions";
 import {
   EndEnrolment,
@@ -14,6 +15,7 @@ import { ProgressSection } from "@/components/progression/progress-section";
 import { ATTENDANCE_STATUS_META } from "@/lib/attendance/constants";
 import { getAttendanceForStudent, type StudentAttendance } from "@/lib/attendance/data/register";
 import { can } from "@/lib/authz";
+import { getCurrentClub } from "@/lib/clubs/current";
 import { getStudentProgress } from "@/lib/progression/data/progress";
 import { BOOKING_STATUS_META, sessionLabel } from "@/lib/assessments/constants";
 import { getStudentAssessments } from "@/lib/assessments/data/assessments";
@@ -44,15 +46,22 @@ export default async function StudentPage(props: PageProps<"/students/[id]">) {
 
   // Fetched alongside the rest rather than first; nothing below needs more
   // than the id, so the sequential read was a round trip for nothing.
-  const [student, enrolments, courses, programmes, attendance, assessments] = await Promise.all([
-    getStudent(id),
-    getEnrolmentsForStudent(id),
-    manage ? getCourses() : Promise.resolve([]),
-    getStudentProgress(id),
-    getAttendanceForStudent(id),
-    getStudentAssessments(id),
-  ]);
+  const [student, enrolments, courses, programmes, attendance, assessments, { club }] =
+    await Promise.all([
+      getStudent(id),
+      getEnrolmentsForStudent(id),
+      manage ? getCourses() : Promise.resolve([]),
+      getStudentProgress(id),
+      getAttendanceForStudent(id),
+      getStudentAssessments(id),
+      getCurrentClub(),
+    ]);
   if (!student) notFound();
+  // Every picker below is the current club's, so a swimmer from the other
+  // one is shown only as a way to switch.
+  if (student.clubId !== club.id) {
+    return <WrongClub what={fullName(student)} owner={student.club} current={club} />;
+  }
   const open = enrolments.filter(
     (enrolment) => enrolment.status === "ACTIVE" || enrolment.status === "WAITLISTED"
   );

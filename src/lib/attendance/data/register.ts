@@ -1,6 +1,7 @@
 import type { AttendanceStatus, DayOfWeek } from "@/generated/prisma/client";
 import { requireSession } from "@/lib/authz";
 import { DROP_OFF_STREAK } from "@/lib/attendance/constants";
+import { currentClubId } from "@/lib/clubs/current";
 import { parseDateOnly } from "@/lib/format";
 import { prisma } from "@/lib/prisma";
 
@@ -146,7 +147,7 @@ export async function getRegisterStateForDay(dayOfWeek: DayOfWeek, iso: string) 
 
   const marked = await prisma.attendanceRecord.groupBy({
     by: ["courseId"],
-    where: { date, course: { dayOfWeek } },
+    where: { date, course: { dayOfWeek, clubId: await currentClubId() } },
     _count: { _all: true },
   });
 
@@ -161,7 +162,7 @@ export async function getDropOffs(limit = 8) {
   await requireSession();
 
   const recent = await prisma.attendanceRecord.findMany({
-    where: { student: { status: "ACTIVE" } },
+    where: { student: { status: "ACTIVE", clubId: await currentClubId() } },
     orderBy: { date: "desc" },
     take: 1500,
     select: {

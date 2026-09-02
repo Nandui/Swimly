@@ -1,13 +1,18 @@
 import type { Prisma } from "@/generated/prisma/client";
 import { HOLDS_A_PLACE } from "@/lib/assessments/constants";
 import { requireSession } from "@/lib/authz";
+import { currentClubId } from "@/lib/clubs/current";
 import { LIST_ORDER, LIVE } from "@/lib/curriculum/constants";
 import { prisma } from "@/lib/prisma";
 
-/** Reads for assessment sessions and bookings. Writes live in `../actions/`. */
+/** Reads for assessment sessions and bookings. Writes live in `../actions/`.
+ *  The lists are the current club's; a session fetched by id is not filtered,
+ *  and the page checks whose it is. */
 
 const SESSION_SELECT = {
   id: true,
+  clubId: true,
+  club: { select: { id: true, name: true } },
   date: true,
   startMinutes: true,
   durationMinutes: true,
@@ -32,6 +37,7 @@ export async function getAssessmentSessions(): Promise<SessionRow[]> {
   await requireSession();
 
   return prisma.assessmentSession.findMany({
+    where: { clubId: await currentClubId() },
     orderBy: [{ date: "asc" }, { startMinutes: "asc" }],
     select: SESSION_SELECT,
   });
@@ -144,7 +150,7 @@ export async function getAssessmentProgrammeOptions() {
   await requireSession();
 
   return prisma.programme.findMany({
-    where: LIVE,
+    where: { ...LIVE, clubId: await currentClubId() },
     orderBy: [...LIST_ORDER],
     select: { id: true, name: true },
   });
@@ -159,7 +165,7 @@ export async function getAssessmentTypeOptions() {
   await requireSession();
 
   return prisma.assessmentType.findMany({
-    where: LIVE,
+    where: { ...LIVE, programme: { clubId: await currentClubId() } },
     orderBy: [{ programmeId: "asc" }, ...LIST_ORDER],
     select: { id: true, name: true, description: true, programmeId: true },
   });

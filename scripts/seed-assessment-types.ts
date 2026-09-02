@@ -1,4 +1,5 @@
 import "dotenv/config";
+import { FOUNDING_CLUB_ID } from "@/lib/clubs/constants";
 import { logAudit } from "@/lib/audit";
 import { prisma } from "@/lib/prisma";
 
@@ -14,7 +15,7 @@ async function main() {
   const admin = await prisma.user.findFirst({ where: { role: "ADMIN", isActive: true }, orderBy: { createdAt: "asc" }, select: { id: true, name: true } });
   if (!admin) throw new Error("No admin account to attribute this to.");
   for (const [index, t] of TYPES.entries()) {
-    const programme = await prisma.programme.findUnique({ where: { name: t.programme }, select: { id: true, name: true } });
+    const programme = await prisma.programme.findFirst({ where: { name: t.programme, clubId: FOUNDING_CLUB_ID }, select: { id: true, name: true } });
     if (!programme) { console.log(`no programme ${t.programme}`); continue; }
     const existing = await prisma.assessmentType.findUnique({ where: { programmeId_name: { programmeId: programme.id, name: t.name } }, select: { id: true } });
     if (existing) { console.log(`${t.programme} / ${t.name}: already there`); continue; }

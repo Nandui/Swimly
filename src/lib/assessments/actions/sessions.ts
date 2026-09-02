@@ -70,7 +70,7 @@ export async function createSession(input: SessionInput): Promise<ActionResult> 
 
   const programme = await prisma.programme.findUnique({
     where: { id: data.programmeId },
-    select: { id: true, name: true, archivedAt: true },
+    select: { id: true, name: true, archivedAt: true, clubId: true },
   });
   if (!programme || programme.archivedAt) return fail("That programme is not available.");
 
@@ -78,7 +78,8 @@ export async function createSession(input: SessionInput): Promise<ActionResult> 
   if (!kind) return fail(`That kind of assessment does not belong to ${programme.name}.`);
 
   const created = await prisma.assessmentSession.create({
-    data,
+    // The programme's club: a session places children into that ladder.
+    data: { ...data, clubId: programme.clubId },
     select: { id: true, date: true, startMinutes: true },
   });
 
@@ -112,6 +113,7 @@ export async function updateSession(id: string, input: SessionInput): Promise<Ac
       date: true,
       startMinutes: true,
       capacity: true,
+      clubId: true,
       programmeId: true,
       typeId: true,
       cancelledAt: true,
@@ -127,6 +129,19 @@ export async function updateSession(id: string, input: SessionInput): Promise<Ac
     return fail(
       "Outcomes have been recorded against this session, so its programme cannot change. Add a new session instead."
     );
+  }
+
+  // A session stays in its club. The picker only offers that club's
+  // programmes, so this is the action refusing what the page never showed.
+  if (data.programmeId !== existing.programmeId) {
+    const programme = await prisma.programme.findUnique({
+      where: { id: data.programmeId },
+      select: { clubId: true, archivedAt: true },
+    });
+    if (!programme || programme.archivedAt) return fail("That programme is not available.");
+    if (programme.clubId !== existing.clubId) {
+      return fail("That programme belongs to another club.");
+    }
   }
 
   // An archived kind may stay on a session that already has it; it just

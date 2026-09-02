@@ -1,5 +1,6 @@
 import type { Prisma } from "@/generated/prisma/client";
 import { requireSession } from "@/lib/authz";
+import { currentClubId } from "@/lib/clubs/current";
 import { prisma } from "@/lib/prisma";
 import type { FamilyMember } from "@/lib/together/match";
 
@@ -98,6 +99,8 @@ export async function getGroup(ids: string[]): Promise<{
     emails.length || phones.length
       ? await prisma.student.findMany({
           where: {
+            // A sibling at the other site is a different trip to the pool.
+            clubId: await currentClubId(),
             status: "ACTIVE",
             id: { notIn: ids },
             OR: [

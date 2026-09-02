@@ -12,6 +12,7 @@ import {
   RecordOutcome,
 } from "@/components/assessments/booking-actions";
 import { CancelSession, EditSession } from "@/components/assessments/session-actions";
+import { WrongClub } from "@/components/clubs/wrong-club";
 import { BOOKING_STATUS_META, HOLDS_A_PLACE, sessionDay, sessionSpan } from "@/lib/assessments/constants";
 import {
   getAssessmentProgrammeOptions,
@@ -21,6 +22,7 @@ import {
   type SessionDetail,
 } from "@/lib/assessments/data/assessments";
 import { can } from "@/lib/authz";
+import { getCurrentClub } from "@/lib/clubs/current";
 import { getInstructorOptions } from "@/lib/courses/data/courses";
 import { formatDate, today } from "@/lib/format";
 import { pageSession } from "@/lib/page-guards";
@@ -35,13 +37,23 @@ export default async function AssessmentSessionPage(props: PageProps<"/assessmen
   const manage = can(auth, "courses.manage");
   const { id } = await props.params;
 
-  const [session, programmes, types, instructors] = await Promise.all([
+  const [session, programmes, types, instructors, { club }] = await Promise.all([
     getAssessmentSession(id),
     manage ? getAssessmentProgrammeOptions() : Promise.resolve([]),
     manage ? getAssessmentTypeOptions() : Promise.resolve([]),
     manage ? getInstructorOptions() : Promise.resolve([]),
+    getCurrentClub(),
   ]);
   if (!session) notFound();
+  if (session.clubId !== club.id) {
+    return (
+      <WrongClub
+        what={`The assessment session on ${sessionDay(session)}`}
+        owner={session.club}
+        current={club}
+      />
+    );
+  }
 
   const holding = session.bookings.filter((b) => HOLDS_A_PLACE.includes(b.status));
   const gone = session.bookings.filter((b) => !HOLDS_A_PLACE.includes(b.status));

@@ -5,10 +5,12 @@ import { ChevronLeft, Users } from "lucide-react";
 import { EmptyState } from "@/components/ui-kit/empty-state";
 import { PageHeader } from "@/components/ui-kit/page-header";
 import { Tag } from "@/components/ui-kit/tag";
+import { WrongClub } from "@/components/clubs/wrong-club";
 import { CompetencyChecklist, ConfirmLevel } from "@/components/progression/assessment";
 import { MoveUpToLevel, type MoveTarget } from "@/components/progression/move-up";
 import { canMarkRegister } from "@/lib/attendance/access";
 import { can } from "@/lib/authz";
+import { getCurrentClub } from "@/lib/clubs/current";
 import { courseLabel, courseName, formatSlot } from "@/lib/courses/constants";
 import { getCourse, getCourses } from "@/lib/courses/data/courses";
 import { formatDate } from "@/lib/format";
@@ -23,12 +25,18 @@ export default async function AssessPage(props: PageProps<"/courses/[id]/assess"
   const session = await permissionPage("progression.assess");
   const { id } = await props.params;
 
-  const [course, progress, courses] = await Promise.all([
+  const [course, progress, courses, { club }] = await Promise.all([
     getCourse(id),
     getClassProgress(id),
     getCourses(),
+    getCurrentClub(),
   ]);
   if (!course || !progress) notFound();
+  if (course.clubId !== club.id) {
+    return (
+      <WrongClub what={`The class ${courseName(course)}`} owner={course.club} current={club} />
+    );
+  }
 
   // What "up" means from this class, and the classes that teach it.
   const up = nextLevel(progress.course.levelId, progress.orderedLevels);

@@ -1,5 +1,6 @@
 import type { Prisma, StudentStatus } from "@/generated/prisma/client";
 import { requireSession } from "@/lib/authz";
+import { currentClubId } from "@/lib/clubs/current";
 import { prisma } from "@/lib/prisma";
 
 const LIST_SELECT = {
@@ -38,9 +39,11 @@ export const STUDENTS_PER_PAGE = 100;
  *  the placement lookup is the part that would otherwise go N+1. */
 export async function getStudents(filters: StudentFilters = {}) {
   await requireSession();
+  const clubId = await currentClubId();
 
   const q = filters.q?.trim();
   const where: Prisma.StudentWhereInput = {
+    clubId,
     ...(filters.status && filters.status !== "ALL" ? { status: filters.status } : {}),
     ...(q
       ? {
@@ -84,6 +87,7 @@ export async function getStudents(filters: StudentFilters = {}) {
       select: { studentId: true, programmeId: true, levelId: true },
     }),
     prisma.level.findMany({
+      where: { programme: { clubId } },
       select: { id: true, name: true, programme: { select: { id: true, name: true } } },
     }),
   ]);
@@ -116,10 +120,11 @@ export async function getStudents(filters: StudentFilters = {}) {
 
 export async function getStudentCounts() {
   await requireSession();
+  const clubId = await currentClubId();
 
   const [all, active] = await Promise.all([
-    prisma.student.count(),
-    prisma.student.count({ where: { status: "ACTIVE" } }),
+    prisma.student.count({ where: { clubId } }),
+    prisma.student.count({ where: { clubId, status: "ACTIVE" } }),
   ]);
 
   return { all, active, inactive: all - active };
@@ -133,6 +138,8 @@ export async function getStudent(id: string) {
     where: { id },
     select: {
       id: true,
+      clubId: true,
+      club: { select: { id: true, name: true } },
       memberNumber: true,
       firstName: true,
       lastName: true,

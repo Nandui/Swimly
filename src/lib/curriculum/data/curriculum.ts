@@ -1,17 +1,22 @@
 import { requireSession } from "@/lib/authz";
+import { currentClubId } from "@/lib/clubs/current";
 import { prisma } from "@/lib/prisma";
 import { LIST_ORDER, LIVE } from "@/lib/curriculum/constants";
 
 /** Reads are plain async functions called straight from server components, and
  *  they authorize at the session level rather than the admin level: the
  *  *pages* that manage the curriculum are admin-tier, but level and programme
- *  names are needed all over the app by people who may not touch them. */
+ *  names are needed all over the app by people who may not touch them.
+ *
+ *  Every list here is the current club's. A programme fetched by id is not
+ *  filtered — the page checks whose it is and says so. */
 
 export async function getProgrammes(includeArchived = false) {
   await requireSession();
+  const clubId = await currentClubId();
 
   return prisma.programme.findMany({
-    where: includeArchived ? {} : LIVE,
+    where: { clubId, ...(includeArchived ? {} : LIVE) },
     orderBy: [...LIST_ORDER],
     select: {
       id: true,
@@ -39,6 +44,8 @@ export async function getProgramme(id: string, includeArchived = false) {
       name: true,
       description: true,
       archivedAt: true,
+      clubId: true,
+      club: { select: { id: true, name: true } },
       levels: {
         where: includeArchived ? {} : LIVE,
         orderBy: [...LIST_ORDER],
@@ -74,11 +81,12 @@ export type CompetencyDetail = LevelDetail["competencies"][number];
 /** Counts for the overview sentence. */
 export async function getCurriculumSummary() {
   await requireSession();
+  const clubId = await currentClubId();
 
   const [programmes, levels, competencies] = await Promise.all([
-    prisma.programme.count({ where: LIVE }),
-    prisma.level.count({ where: LIVE }),
-    prisma.competency.count({ where: LIVE }),
+    prisma.programme.count({ where: { ...LIVE, clubId } }),
+    prisma.level.count({ where: { ...LIVE, programme: { clubId } } }),
+    prisma.competency.count({ where: { ...LIVE, level: { programme: { clubId } } } }),
   ]);
 
   return { programmes, levels, competencies };
@@ -90,7 +98,7 @@ export async function getLevelOptions() {
   await requireSession();
 
   const levels = await prisma.level.findMany({
-    where: { ...LIVE, programme: LIVE },
+    where: { ...LIVE, programme: { ...LIVE, clubId: await currentClubId() } },
     orderBy: [{ programme: { sortOrder: "asc" } }, ...LIST_ORDER],
     select: {
       id: true,

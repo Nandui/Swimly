@@ -1,5 +1,6 @@
 import type { Prisma } from "@/generated/prisma/client";
 import { requirePermission, requireSession } from "@/lib/authz";
+import { currentClubId } from "@/lib/clubs/current";
 import { prisma } from "@/lib/prisma";
 
 /** `as const satisfies` — both, in that order. `satisfies` alone widens `true`
@@ -16,10 +17,17 @@ const SELECT = {
 
 export type ActivityEntry = Prisma.AuditLogGetPayload<{ select: typeof SELECT }>;
 
+/** The club's own trail, plus what the clubs share — accounts and roles are
+ *  everyone's business, and their entries carry no club. */
+function forClub(clubId: string): Prisma.AuditLogWhereInput {
+  return { OR: [{ clubId }, { clubId: null }] };
+}
+
 /** The tail of the trail, for the overview. */
 export async function getRecentActivity(take = 8): Promise<ActivityEntry[]> {
   await requireSession();
   return prisma.auditLog.findMany({
+    where: forClub(await currentClubId()),
     select: SELECT,
     orderBy: { createdAt: "desc" },
     take,
@@ -36,15 +44,17 @@ export const ACTIVITY_PER_PAGE = 50;
 export async function getActivity(page = 1) {
   await requirePermission("activity.view");
   const current = Math.max(1, Math.trunc(page));
+  const where = forClub(await currentClubId());
 
   const [entries, total] = await Promise.all([
     prisma.auditLog.findMany({
+      where,
       select: SELECT,
       orderBy: { createdAt: "desc" },
       skip: (current - 1) * ACTIVITY_PER_PAGE,
       take: ACTIVITY_PER_PAGE,
     }),
-    prisma.auditLog.count(),
+    prisma.auditLog.count({ where }),
   ]);
 
   return { entries, total, page: current };

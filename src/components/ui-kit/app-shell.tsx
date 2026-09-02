@@ -32,6 +32,10 @@ export type NavItem = {
   badge?: number;
 };
 
+/** How the switcher is being shown, so it can shrink to fit: to the icon
+ *  rail when the desktop sidebar is collapsed, or into the phone bar. */
+export type SwitcherState = { collapsed: boolean; compact: boolean };
+
 export type AppShellProps = {
   /** Product name. Rendered as type plus a blue dot — no logo asset. */
   wordmark: string;
@@ -40,14 +44,21 @@ export type AppShellProps = {
   /** The line under the name in the account menu: role, team, tenant. */
   userSubtitle?: string;
   onSignOut?: () => void;
-  /** Optional field pinned above the nav — a tenant/workspace switcher. */
-  switcher?: React.ReactNode;
+  /** Optional control pinned above the nav — a tenant/workspace switcher. A
+   *  function is told how it is being shown. On a phone it goes in the bar
+   *  beside the wordmark rather than inside the sheet, so it never leaves the
+   *  screen. */
+  switcher?: React.ReactNode | ((state: SwitcherState) => React.ReactNode);
   /** Small controls that must never be more than one click away — the
    *  light/dark flip. Rendered above the account menu on desktop (icon-only
    *  when collapsed) and at the right end of the bar on mobile, where they are
    *  reachable without opening the sheet. */
   tools?: React.ReactNode;
 };
+
+function renderSwitcher(switcher: AppShellProps["switcher"], state: SwitcherState) {
+  return typeof switcher === "function" ? switcher(state) : switcher;
+}
 
 function Wordmark({ label }: { label: string }) {
   return (
@@ -203,7 +214,9 @@ export function Sidebar(props: AppShellProps) {
         </button>
       </div>
       {props.switcher ? (
-        <div className={cn("px-2 pb-2", collapsed && "px-1.5")}>{props.switcher}</div>
+        <div className={cn("px-2 pb-2", collapsed && "flex justify-center px-0")}>
+          {renderSwitcher(props.switcher, { collapsed, compact: false })}
+        </div>
       ) : null}
       <NavList items={props.items} collapsed={collapsed} />
       {props.tools ? (
@@ -243,12 +256,16 @@ export function MobileNav(props: AppShellProps) {
               </div>
             </SheetTitle>
           </SheetHeader>
-          {props.switcher ? <div className="px-2 pb-2">{props.switcher}</div> : null}
           <NavList items={props.items} onNavigate={() => setOpen(false)} />
           <UserMenu {...props} />
         </SheetContent>
       </Sheet>
       <Wordmark label={props.wordmark} />
+      {props.switcher ? (
+        <div className="flex min-w-0 flex-1 items-center">
+          {renderSwitcher(props.switcher, { collapsed: false, compact: true })}
+        </div>
+      ) : null}
       {props.tools ? <div className="ml-auto flex items-center gap-1">{props.tools}</div> : null}
     </div>
   );

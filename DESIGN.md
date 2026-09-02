@@ -206,6 +206,33 @@ denormalised so the log survives it either way.
 
 ---
 
+### One app, several clubs
+
+LeisureWorld runs more than one pool, and the second site wanted the same
+tool without seeing the first site's swimmers. So a `Club` sits above
+everything that is a site's own — programmes, and through them levels,
+competencies and kinds of assessment; classes; swimmers; assessment
+sessions — and every list the app shows is one club's. Staff accounts and
+roles are shared: the same people cover both sites, and "may take a
+register" means the same thing at either.
+
+The club somebody is working in is a cookie, read once per request by
+`getCurrentClub()` and memoised. The data modules scope themselves by it, so
+a page cannot forget to; the actions that make a new programme, swimmer,
+class or session stamp it on the row; and `logAudit` records it without
+being told. The switcher sits above the nav on every screen, and in the bar
+on a phone, because the mistake this guards against is enrolling a
+Churchfield child into a Bishopstown class without noticing. A detail page
+reached by link for something in another club says whose it is and offers
+the switch, rather than quietly showing it surrounded by the wrong club's
+pickers.
+
+Two things are deliberately not built. Swimmers are never moved between
+clubs — the other site enrols its own, with its own member numbers. And
+copying a programme copies the curriculum only: levels, competencies, kinds
+of assessment. Results and completions belong to the swimmer and to the club
+they were earned in.
+
 ## The domain, and the four decisions holding it up
 
 Programmes hold ordered levels; a level is defined by the competencies a

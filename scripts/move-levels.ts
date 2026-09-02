@@ -1,4 +1,5 @@
 import "dotenv/config";
+import { FOUNDING_CLUB_ID } from "@/lib/clubs/constants";
 import type { Prisma } from "@/generated/prisma/client";
 import { logAudit } from "@/lib/audit";
 import { prisma } from "@/lib/prisma";
@@ -142,9 +143,10 @@ async function main() {
   });
 
   const target = await prisma.programme.upsert({
-    where: { name: to },
+    where: { clubId_name: { clubId: FOUNDING_CLUB_ID, name: to } },
     update: {},
     create: {
+      clubId: FOUNDING_CLUB_ID,
       name: to,
       description: description ?? null,
       sortOrder: (lastProgramme?.sortOrder ?? -1) + 1,

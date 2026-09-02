@@ -1,4 +1,5 @@
 import "dotenv/config";
+import { FOUNDING_CLUB_ID } from "@/lib/clubs/constants";
 import { logAudit } from "@/lib/audit";
 import { courseLabel } from "@/lib/courses/constants";
 import { withCourseSeat } from "@/lib/enrolment/seat";
@@ -269,8 +270,8 @@ function noteFor(e: Enrollee): string {
 }
 
 async function main() {
-  const programme = await prisma.programme.findUnique({
-    where: { name: PROGRAMME },
+  const programme = await prisma.programme.findFirst({
+    where: { name: PROGRAMME, clubId: FOUNDING_CLUB_ID },
     select: { id: true, name: true },
   });
   if (!programme) throw new Error(`No programme called "${PROGRAMME}".`);
@@ -322,7 +323,7 @@ async function main() {
       const student = await prisma.student.upsert({
         where: { memberNumber: e.member },
         update: { firstName: e.first, lastName: e.last },
-        create: {
+        create: { clubId: FOUNDING_CLUB_ID,
           memberNumber: e.member,
           firstName: e.first,
           lastName: e.last,

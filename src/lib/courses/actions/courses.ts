@@ -90,13 +90,21 @@ export async function createCourse(input: CourseInput): Promise<ActionResult> {
 
   const level = await prisma.level.findUnique({
     where: { id: data.levelId },
-    select: { id: true, name: true, archivedAt: true, programmeId: true },
+    select: {
+      id: true,
+      name: true,
+      archivedAt: true,
+      programmeId: true,
+      programme: { select: { clubId: true } },
+    },
   });
   if (!level) return fail("That level no longer exists.");
   if (level.archivedAt) return fail(`${level.name} is archived. Restore it first.`);
 
   const course = await prisma.course.create({
-    data,
+    // A class belongs to the club whose curriculum it teaches — the level's,
+    // not the cookie's, so the two can never disagree.
+    data: { ...data, clubId: level.programme.clubId },
     select: {
       id: true,
       name: true,

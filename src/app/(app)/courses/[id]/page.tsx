@@ -6,6 +6,7 @@ import { EmptyState } from "@/components/ui-kit/empty-state";
 import { PageHeader } from "@/components/ui-kit/page-header";
 import { Tag } from "@/components/ui-kit/tag";
 import { Button } from "@/components/ui/button";
+import { WrongClub } from "@/components/clubs/wrong-club";
 import { ArchiveCourse, EditCourse } from "@/components/courses/course-actions";
 import {
   EndEnrolment,
@@ -14,6 +15,7 @@ import {
   TransferEnrolment,
 } from "@/components/enrolment/enrolment-actions";
 import { can } from "@/lib/authz";
+import { getCurrentClub } from "@/lib/clubs/current";
 import {
   capacityLabel,
   capacityTone,
@@ -45,14 +47,24 @@ export default async function CoursePage(props: PageProps<"/courses/[id]">) {
   // The course is fetched alongside everything else rather than first: none of
   // the other reads need anything from it but the id, so waiting on it was one
   // whole round trip spent for nothing. The 404 check moves to after.
-  const [course, roster, targets, levels, instructors] = await Promise.all([
+  const [course, roster, targets, levels, instructors, { club }] = await Promise.all([
     getCourse(id),
     getRoster(id),
     manage ? getTransferTargets(id) : Promise.resolve([]),
     admin ? getLevelOptions() : Promise.resolve([]),
     admin ? getInstructorOptions() : Promise.resolve([]),
+    getCurrentClub(),
   ]);
   if (!course) notFound();
+  if (course.clubId !== club.id) {
+    return (
+      <WrongClub
+        what={`The class ${courseName(course)} (${formatSlot(course)})`}
+        owner={course.club}
+        current={club}
+      />
+    );
+  }
 
   const active = roster.filter((entry) => entry.status === "ACTIVE");
   const waiting = roster.filter((entry) => entry.status === "WAITLISTED");

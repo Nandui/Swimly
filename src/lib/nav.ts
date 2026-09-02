@@ -1,5 +1,6 @@
 import {
   Activity,
+  Building2,
   CalendarCheck,
   CalendarDays,
   CalendarHeart,
@@ -36,6 +37,8 @@ export const NAV_ITEMS: AppNavItem[] = [
   { href: "/programmes", label: "Programmes", icon: Layers, requires: "curriculum.manage" },
   { href: "/staff", label: "Staff", icon: UserCog, requires: "staff.manage" },
   { href: "/roles", label: "Roles", icon: KeyRound, requires: "roles.manage" },
+  // Which clubs exist. Which one you are in is the switcher above the nav.
+  { href: "/clubs", label: "Clubs", icon: Building2, requires: "clubs.manage" },
   { href: "/activity", label: "Activity", icon: Activity, requires: "activity.view" },
   // Last, and open to everyone: it is the one page a read-only account can
   // write from, and the only way an admin-set password stops being one the

@@ -5,6 +5,7 @@ import { z } from "zod";
 import { fail, ok, onUniqueViolation, type ActionResult } from "@/lib/action-result";
 import { logAudit } from "@/lib/audit";
 import { requirePermission } from "@/lib/authz";
+import { currentClubId } from "@/lib/clubs/current";
 import { parseDateOnly } from "@/lib/format";
 import { fullName } from "@/lib/students/constants";
 import { prisma } from "@/lib/prisma";
@@ -67,11 +68,17 @@ export async function createStudent(input: StudentInput): Promise<ActionResult> 
   const parsed = studentSchema.safeParse(input);
   if (!parsed.success) return fail(parsed.error.issues[0].message);
   const data = toData(parsed.data);
+  // The club being worked in. Never changed afterwards.
+  const clubId = await currentClubId();
 
   const student = await onUniqueViolation(
     () =>
       prisma.student.create({
-        data: { ...data, photoConsentOn: data.photoConsent ? new Date() : null },
+        data: {
+          ...data,
+          clubId,
+          photoConsentOn: data.photoConsent ? new Date() : null,
+        },
         select: { id: true, firstName: true, lastName: true },
       }),
     `Member number ${data.memberNumber} already belongs to another swimmer.`

@@ -1,4 +1,5 @@
 import "dotenv/config";
+import { FOUNDING_CLUB_ID } from "@/lib/clubs/constants";
 import { logAudit } from "@/lib/audit";
 import { prisma } from "@/lib/prisma";
 
@@ -57,8 +58,8 @@ const RETIRE: { level: string; competencies: string[] }[] = [
 ];
 
 async function main() {
-  const programme = await prisma.programme.findUnique({
-    where: { name: PROGRAMME },
+  const programme = await prisma.programme.findFirst({
+    where: { name: PROGRAMME, clubId: FOUNDING_CLUB_ID },
     select: { id: true, name: true },
   });
   if (!programme) throw new Error(`No programme called "${PROGRAMME}".`);
