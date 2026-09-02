@@ -16,8 +16,9 @@ import { cn } from "@/lib/utils";
 /** The pool-deck screen.
  *
  *  Touch first: nothing is hidden behind hover, the targets are 40px on a
- *  phone, and the whole class defaults to present so the instructor unticks —
- *  the way a paper register works.
+ *  phone, and an unmarked child starts absent, so the instructor ticks who is
+ *  in the water. A saved register never says a child was here unless someone
+ *  said so; "Everyone in" is the one tap for a full class.
  *
  *  It holds the class in local state behind one Save. That is not a style
  *  choice: Next dispatches Server Actions one at a time per client, so a save
@@ -53,7 +54,7 @@ export function RegisterForm({
   const initial = React.useMemo(() => {
     const map = new Map<string, Mark>();
     for (const line of lines) {
-      map.set(line.studentId, { status: line.status ?? "PRESENT", note: line.note ?? "" });
+      map.set(line.studentId, { status: line.status ?? "ABSENT", note: line.note ?? "" });
     }
     return map;
   }, [lines]);
