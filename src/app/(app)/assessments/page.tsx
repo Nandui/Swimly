@@ -5,7 +5,7 @@ import { EmptyState } from "@/components/ui-kit/empty-state";
 import { PageHeader } from "@/components/ui-kit/page-header";
 import { Tag } from "@/components/ui-kit/tag";
 import { AddSession, CancelSession, EditSession } from "@/components/assessments/session-actions";
-import { isPast, sessionSpan } from "@/lib/assessments/constants";
+import { isPast, sessionDay, sessionSpan } from "@/lib/assessments/constants";
 import {
   getAssessmentProgrammeOptions,
   getAssessmentSessions,
@@ -14,7 +14,7 @@ import {
 } from "@/lib/assessments/data/assessments";
 import { can } from "@/lib/authz";
 import { getInstructorOptions, type InstructorOption } from "@/lib/courses/data/courses";
-import { formatDate, today, weekdayOf } from "@/lib/format";
+import { today } from "@/lib/format";
 import { pageSession } from "@/lib/page-guards";
 
 export const metadata: Metadata = { title: "Assessments" };
@@ -172,7 +172,7 @@ function SessionTable({
               <tr key={s.id} className="group border-b transition-colors last:border-0 hover:bg-accent/40">
                 <td className="px-3 py-2 font-medium text-foreground">
                   <Link href={`/assessments/${s.id}`} className="underline-offset-2 hover:underline">
-                    {weekdayOf(s.date)} {formatDate(s.date)}
+                    {sessionDay(s)}
                   </Link>
                   {s.cancelledAt ? (
                     <Tag color="gray" className="ml-2">

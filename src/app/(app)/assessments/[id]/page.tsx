@@ -12,7 +12,7 @@ import {
   RecordOutcome,
 } from "@/components/assessments/booking-actions";
 import { CancelSession, EditSession } from "@/components/assessments/session-actions";
-import { BOOKING_STATUS_META, HOLDS_A_PLACE, sessionSpan } from "@/lib/assessments/constants";
+import { BOOKING_STATUS_META, HOLDS_A_PLACE, sessionDay, sessionSpan } from "@/lib/assessments/constants";
 import {
   getAssessmentProgrammeOptions,
   getAssessmentSession,
@@ -21,7 +21,7 @@ import {
 } from "@/lib/assessments/data/assessments";
 import { can } from "@/lib/authz";
 import { getInstructorOptions } from "@/lib/courses/data/courses";
-import { formatDate, today, weekdayOf } from "@/lib/format";
+import { formatDate, today } from "@/lib/format";
 import { pageSession } from "@/lib/page-guards";
 import { ageLabel, fullName } from "@/lib/students/constants";
 
@@ -61,7 +61,7 @@ export default async function AssessmentSessionPage(props: PageProps<"/assessmen
         <PageHeader
           title={
             <span className="inline-flex flex-wrap items-center gap-2">
-              {weekdayOf(session.date)} {formatDate(session.date)}
+              {sessionDay(session)}
               {session.cancelledAt ? <Tag color="gray">Cancelled</Tag> : null}
               {open && full ? <Tag color="yellow">Full</Tag> : null}
             </span>
