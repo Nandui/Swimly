@@ -18,13 +18,15 @@ import { completionProgress } from "@/lib/progression/rules";
  *
  *  For each swimmer, every **live competency at every level below their
  *  placement** is marked ACHIEVED, and each of those levels gets a
- *  LevelCompletion with a full snapshot. "Below" follows the club's ladder:
- *  Water Safety & Fun runs into Swimming Skills, so a Sharks child has passed
- *  all four Water Safety & Fun levels. RLSS Lifesaving is a different award
- *  scheme and is not on that ladder — a Rookies child is credited with nothing
- *  outside RLSS, and inside it there are no competencies to credit, so by the
- *  app's own rule (a level with nothing to pass is not completable) RLSS is
- *  untouched by construction.
+ *  LevelCompletion with a full snapshot. "Below" means **within the programme
+ *  they are placed in, and nowhere else.** A Sharks 2 child has earned
+ *  Sharks 1. What they did in Water Safety & Fun, if anything, is not something
+ *  their Sharks placement says — the club was explicit about this, after a
+ *  first run that inferred a ladder from one programme into the next and
+ *  credited every Sharks child with four Water Safety & Fun levels it had no
+ *  business asserting. `undo-cross-programme-credit.ts` took that back.
+ *  RLSS levels carry no competencies, so by the app's own rule (a level with
+ *  nothing to pass is not completable) RLSS is untouched by construction.
  *
  *  Honesty about what these records are:
  *
@@ -43,10 +45,6 @@ import { completionProgress } from "@/lib/progression/rules";
  *
  *  One audit row, not twenty thousand — the same granularity as the other
  *  bulk imports. */
-
-/** Programmes that form one progression, in order. Anything not listed is a
- *  ladder of its own. */
-const LADDER = ["Water Safety & Fun", "Swimming Skills"];
 
 const CHUNK = 1000;
 
@@ -78,9 +76,10 @@ async function main() {
     },
   });
 
-  // Each level's position on its ladder, and the ordered ladder it sits on.
+  // Each level's position within its own programme. One ladder per programme;
+  // nothing chains from one programme into another.
   type Rung = { id: string; name: string; programmeId: string; competencyIds: string[] };
-  const ladders = new Map<string, Rung[]>(); // ladder key -> rungs in order
+  const ladders = new Map<string, Rung[]>(); // programme id -> rungs in order
   const rungOf = new Map<string, { ladder: string; index: number }>();
 
   const toRung = (p: (typeof programmes)[number], l: (typeof p.levels)[number]): Rung => ({
@@ -90,12 +89,7 @@ async function main() {
     competencyIds: l.competencies.map((c) => c.id),
   });
 
-  const main = programmes
-    .filter((p) => LADDER.includes(p.name))
-    .sort((a, b) => LADDER.indexOf(a.name) - LADDER.indexOf(b.name))
-    .flatMap((p) => p.levels.map((l) => toRung(p, l)));
-  ladders.set("main", main);
-  for (const p of programmes.filter((p) => !LADDER.includes(p.name))) {
+  for (const p of programmes) {
     ladders.set(p.id, p.levels.map((l) => toRung(p, l)));
   }
   for (const [key, rungs] of ladders) {
