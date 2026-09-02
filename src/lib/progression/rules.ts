@@ -18,8 +18,15 @@ export function hasEarnedPlace(args: {
   orderedLevels: readonly OrderedLevel[];
   completedLevelIds: ReadonlySet<string>;
   activeLevelIds: ReadonlySet<string>;
+  /** Levels an assessor has placed this swimmer at, in this programme. An
+   *  assessment earns that level and every level below it — a child assessed
+   *  as Turtles may be put in Penguins if that suits the family better, and
+   *  nobody should have to write a reason for placing them lower than they
+   *  were judged. */
+  assessedLevelIds?: ReadonlySet<string>;
 }): boolean {
-  const { targetLevelId, orderedLevels, completedLevelIds, activeLevelIds } = args;
+  const { targetLevelId, orderedLevels, completedLevelIds, activeLevelIds, assessedLevelIds } =
+    args;
 
   // Repeating a level is ordinary, and so is a second class at the level you
   // are already in.
@@ -31,6 +38,13 @@ export function hasEarnedPlace(args: {
   // is not something to block on either — the course form already refuses to
   // teach one.
   if (index <= 0) return true;
+
+  if (assessedLevelIds?.size) {
+    const highestAssessed = Math.max(
+      ...orderedLevels.map((level, i) => (assessedLevelIds.has(level.id) ? i : -1))
+    );
+    if (highestAssessed >= index) return true;
+  }
 
   return completedLevelIds.has(orderedLevels[index - 1].id);
 }

@@ -3,6 +3,7 @@ import {
   CalendarCheck,
   CalendarDays,
   CalendarHeart,
+  ClipboardCheck,
   CircleUser,
   Home,
   KeyRound,
@@ -29,6 +30,9 @@ export const NAV_ITEMS: AppNavItem[] = [
   // No `requires`: it only reads, and the desk staff who field "can all three
   // come at the same time?" are exactly who needs it.
   { href: "/together", label: "Together", icon: CalendarHeart },
+  // Reads are open; booking, running and placing each ask for their own
+  // permission on the page.
+  { href: "/assessments", label: "Assessments", icon: ClipboardCheck },
   { href: "/programmes", label: "Programmes", icon: Layers, requires: "curriculum.manage" },
   { href: "/staff", label: "Staff", icon: UserCog, requires: "staff.manage" },
   { href: "/roles", label: "Roles", icon: KeyRound, requires: "roles.manage" },

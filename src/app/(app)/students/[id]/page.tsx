@@ -15,6 +15,8 @@ import { ATTENDANCE_STATUS_META } from "@/lib/attendance/constants";
 import { getAttendanceForStudent, type StudentAttendance } from "@/lib/attendance/data/register";
 import { can } from "@/lib/authz";
 import { getStudentProgress } from "@/lib/progression/data/progress";
+import { BOOKING_STATUS_META, sessionLabel } from "@/lib/assessments/constants";
+import { getStudentAssessments } from "@/lib/assessments/data/assessments";
 import { courseLabel, courseName, formatSlotShort } from "@/lib/courses/constants";
 import { getCourses } from "@/lib/courses/data/courses";
 import { ENROLMENT_STATUS_META } from "@/lib/enrolment/constants";
@@ -42,12 +44,13 @@ export default async function StudentPage(props: PageProps<"/students/[id]">) {
 
   // Fetched alongside the rest rather than first; nothing below needs more
   // than the id, so the sequential read was a round trip for nothing.
-  const [student, enrolments, courses, programmes, attendance] = await Promise.all([
+  const [student, enrolments, courses, programmes, attendance, assessments] = await Promise.all([
     getStudent(id),
     getEnrolmentsForStudent(id),
     manage ? getCourses() : Promise.resolve([]),
     getStudentProgress(id),
     getAttendanceForStudent(id),
+    getStudentAssessments(id),
   ]);
   if (!student) notFound();
   const open = enrolments.filter(
@@ -204,6 +207,50 @@ export default async function StudentPage(props: PageProps<"/students/[id]">) {
           </details>
         ) : null}
       </section>
+
+      {assessments.length > 0 ? (
+        <section className="space-y-3">
+          <h2 className="text-sm font-semibold text-foreground">Assessments</h2>
+          <ul className="overflow-hidden rounded-md border">
+            {assessments.map((booking) => {
+              const meta = BOOKING_STATUS_META[booking.status];
+              return (
+                <li
+                  key={booking.id}
+                  className="flex flex-wrap items-center justify-between gap-x-4 gap-y-1 border-b p-3 text-sm last:border-0"
+                >
+                  <span className="min-w-0">
+                    <Link
+                      href={`/assessments/${booking.session.id}`}
+                      className="font-medium text-foreground underline-offset-2 hover:underline"
+                    >
+                      {sessionLabel(booking.session)}
+                    </Link>
+                    <span className="mt-0.5 block text-xs text-muted-foreground">
+                      {booking.session.programme.name}
+                      {booking.outcomeLevel ? (
+                        <>
+                          {" · placed at "}
+                          <span className="font-medium text-foreground">{booking.outcomeLevel.name}</span>
+                          {booking.assessedByName ? ` by ${booking.assessedByName}` : ""}
+                          {booking.outcomeNote ? ` — ${booking.outcomeNote}` : ""}
+                        </>
+                      ) : null}
+                    </span>
+                  </span>
+                  <Tag color={meta.color}>{meta.label}</Tag>
+                </li>
+              );
+            })}
+          </ul>
+          {assessments.some((b) => b.outcomeLevel) ? (
+            <p className="max-w-prose text-xs text-muted-foreground">
+              A placement counts as having earned that level and every level below it in the
+              programme, so they can be enrolled there without a reason being asked for.
+            </p>
+          ) : null}
+        </section>
+      ) : null}
 
       <section className="space-y-3">
         <h2 className="text-sm font-semibold text-foreground">Progress</h2>

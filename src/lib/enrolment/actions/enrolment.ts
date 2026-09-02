@@ -6,6 +6,7 @@ import { fail, ok, type ActionResult } from "@/lib/action-result";
 import { logAudit } from "@/lib/audit";
 import { requirePermission } from "@/lib/authz";
 import { capacityLabel, courseLabel } from "@/lib/courses/constants";
+import { getAssessedLevelIds } from "@/lib/assessments/data/assessments";
 import { withCourseSeat } from "@/lib/enrolment/seat";
 import { parseDateOnly, today } from "@/lib/format";
 import { hasEarnedPlace, previousLevel } from "@/lib/progression/rules";
@@ -65,7 +66,7 @@ export async function enrolStudent(input: EnrolInput): Promise<ActionResult> {
 
   // Has the swimmer earned this rung? Read the ladder and their history in the
   // one programme this course belongs to.
-  const [orderedLevels, completions, actives] = await Promise.all([
+  const [orderedLevels, completions, actives, assessed] = await Promise.all([
     prisma.level.findMany({
       where: { programmeId: course.level.programmeId, archivedAt: null },
       orderBy: [{ sortOrder: "asc" }, { name: "asc" }],
@@ -79,6 +80,7 @@ export async function enrolStudent(input: EnrolInput): Promise<ActionResult> {
       where: { studentId, programmeId: course.level.programmeId, status: "ACTIVE" },
       select: { levelId: true },
     }),
+    getAssessedLevelIds(studentId, course.level.programmeId),
   ]);
 
   const earned = hasEarnedPlace({
@@ -86,12 +88,13 @@ export async function enrolStudent(input: EnrolInput): Promise<ActionResult> {
     orderedLevels,
     completedLevelIds: new Set(completions.map((c) => c.levelId)),
     activeLevelIds: new Set(actives.map((a) => a.levelId)),
+    assessedLevelIds: assessed,
   });
 
   if (!earned && !placementReason) {
     const below = previousLevel(course.levelId, orderedLevels);
     return fail(
-      `${fullName(student)} has not completed ${below?.name ?? "the level below"}. Say why they are being placed at ${course.level.name} and it will go on their record.`
+      `${fullName(student)} has not completed ${below?.name ?? "the level below"} and no assessment has placed them at ${course.level.name}. Say why they are being placed there and it will go on their record.`
     );
   }
 

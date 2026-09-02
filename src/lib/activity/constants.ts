@@ -31,6 +31,12 @@ const ACTIONS: Record<string, { label: string; color: TagColor }> = {
   assess: { label: "Assessed", color: "yellow" },
   "complete-level": { label: "Level passed", color: "green" },
   "revoke-level": { label: "Level revoked", color: "orange" },
+
+  // Assessment sessions
+  book: { label: "Booked", color: "green" },
+  "cancel-booking": { label: "Booking cancelled", color: "gray" },
+  "no-show": { label: "Did not come", color: "orange" },
+  placed: { label: "Placed", color: "purple" },
 };
 
 export function actionMeta(action: string): { label: string; color: TagColor } {

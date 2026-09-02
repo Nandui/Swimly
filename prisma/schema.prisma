@@ -81,6 +81,14 @@ enum CompetencyStatus {
   ACHIEVED
 }
 
+/// A place on an assessment session, and what came of it.
+enum AssessmentBookingStatus {
+  BOOKED
+  ATTENDED
+  NO_SHOW
+  CANCELLED
+}
+
 // ---------------------------------------------------------------------------
 // Staff
 // ---------------------------------------------------------------------------
@@ -143,6 +151,9 @@ model User {
   assessmentsMade      CompetencyResult[]
   completionsConfirmed LevelCompletion[]
   classNotes           ClassNote[]
+  assessmentSessionsLed   AssessmentSession[] @relation("AssessmentInstructor")
+  assessmentBookingsMade  AssessmentBooking[] @relation("AssessmentBookedBy")
+  assessmentOutcomesGiven AssessmentBooking[] @relation("AssessmentAssessedBy")
 
   @@index([role])
   @@index([staffRoleId])
@@ -194,6 +205,7 @@ model Programme {
   levels      Level[]
   enrolments  Enrolment[]
   completions LevelCompletion[]
+  assessmentSessions AssessmentSession[]
 
   @@index([sortOrder])
 }
@@ -216,6 +228,7 @@ model Level {
   courses      Course[]
   enrolments   Enrolment[]
   completions  LevelCompletion[]
+  assessmentOutcomes AssessmentBooking[]
 
   @@unique([programmeId, name])
   @@index([programmeId, sortOrder])
@@ -282,6 +295,7 @@ model Student {
   attendance  AttendanceRecord[]
   results     CompetencyResult[]
   completions LevelCompletion[]
+  assessmentBookings AssessmentBooking[]
 
   @@index([status, lastName, firstName])
 }
@@ -462,4 +476,77 @@ model LevelCompletion {
 
   @@unique([studentId, levelId])
   @@index([programmeId, completedOn])
+}
+
+/// A one-off assessment session: a date, a time, a pool and a number of
+/// places, at which children who are not yet placed are watched in the water
+/// and told which level they belong at.
+///
+/// Deliberately **not** a `Course`. A course is weekly and has no date; an
+/// assessment happens once. Modelling it as a course would put a repeating
+/// class in the timetable forever, and bolting dates onto `Course` would
+/// rebuild class sessions by accident — the seam DESIGN.md defers. This is
+/// the one place the app holds a dated event, and it is scoped to exactly
+/// this purpose.
+model AssessmentSession {
+  id              String    @id @default(cuid())
+  date            DateTime  @db.Date
+  /// Minutes from midnight, as on `Course`, and for the same reason.
+  startMinutes    Int
+  durationMinutes Int       @default(30)
+  location        String?
+  /// Null means uncapped.
+  capacity        Int?
+  instructorId    String?
+  /// The programme this session places children into. An outcome is one of
+  /// its levels, and nothing else.
+  programmeId     String
+  notes           String?
+  cancelledAt     DateTime?
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @updatedAt
+
+  programme  Programme           @relation(fields: [programmeId], references: [id], onDelete: Restrict)
+  instructor User?               @relation("AssessmentInstructor", fields: [instructorId], references: [id], onDelete: SetNull)
+  bookings   AssessmentBooking[]
+
+  @@index([date, startMinutes])
+  @@index([programmeId, date])
+}
+
+/// A child booked onto a session, and — once they have been in the water —
+/// the level the assessor placed them at.
+///
+/// The outcome is what grants eligibility: a swimmer assessed as Turtles has
+/// earned a place at Turtles, and at anything below it in that programme,
+/// without a completion having to be invented for levels they were never in.
+/// `hasEarnedPlace` reads these.
+model AssessmentBooking {
+  id             String                  @id @default(cuid())
+  sessionId      String
+  studentId      String
+  status         AssessmentBookingStatus @default(BOOKED)
+  bookedById     String?
+  /// Denormalised, as every "who did this" is, so the record outlives the account.
+  bookedByName   String
+  /// Null until the assessor has decided.
+  outcomeLevelId String?
+  outcomeNote    String?
+  assessedById   String?
+  assessedByName String?
+  assessedOn     DateTime?               @db.Date
+  createdAt      DateTime                @default(now())
+  updatedAt      DateTime                @updatedAt
+
+  session      AssessmentSession @relation(fields: [sessionId], references: [id], onDelete: Restrict)
+  student      Student           @relation(fields: [studentId], references: [id], onDelete: Restrict)
+  outcomeLevel Level?            @relation(fields: [outcomeLevelId], references: [id], onDelete: Restrict)
+  bookedBy     User?             @relation("AssessmentBookedBy", fields: [bookedById], references: [id], onDelete: SetNull)
+  assessedBy   User?             @relation("AssessmentAssessedBy", fields: [assessedById], references: [id], onDelete: SetNull)
+
+  /// One booking per child per session. Re-booking after a cancellation is
+  /// an update of that row, not a second one.
+  @@unique([sessionId, studentId])
+  @@index([studentId, status])
+  @@index([outcomeLevelId])
 }
