@@ -106,7 +106,7 @@ export async function updateStudent(id: string, input: StudentInput): Promise<Ac
   const data = toData(parsed.data);
 
   const existing = await prisma.student.findUnique({ where: { id } });
-  if (!existing) return fail("That student no longer exists.");
+  if (!existing) return fail("That swimmer no longer exists.");
 
   // Diff old against new and name the fields that moved. "Student updated"
   // tells a person reading this in six months nothing at all.
@@ -188,7 +188,7 @@ export async function setStudentStatus(
     where: { id },
     select: { id: true, firstName: true, lastName: true, status: true },
   });
-  if (!existing) return fail("That student no longer exists.");
+  if (!existing) return fail("That swimmer no longer exists.");
   if (existing.status === status) return ok();
 
   if (status === "INACTIVE") {

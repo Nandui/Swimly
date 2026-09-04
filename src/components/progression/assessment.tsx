@@ -102,7 +102,7 @@ export function CompetencyChecklist({
         results: [...marks.entries()].map(([competencyId, status]) => ({ competencyId, status })),
       });
       if (result.ok) {
-        toast.success("Assessment saved");
+        toast.success("Marks saved");
         startTransition(() => setError(null));
       } else {
         startTransition(() => setError(result.error));
@@ -196,7 +196,7 @@ export function CompetencyChecklist({
           <p className="text-xs text-muted-foreground">{dirty ? "Not saved yet" : "Up to date"}</p>
           <Button type="button" size="sm" onClick={save} disabled={pending || !dirty}>
             {pending ? <Loader2 className="size-4 animate-spin" /> : <Check className="size-4" />}
-            Save assessment
+            Save marks
           </Button>
         </div>
       )}

@@ -153,7 +153,7 @@ export async function updateCourse(id: string, input: CourseInput): Promise<Acti
       _count: { select: { enrolments: { where: TAKES_A_PLACE } } },
     },
   });
-  if (!existing) return fail("That course no longer exists.");
+  if (!existing) return fail("That class no longer exists.");
 
   const taken = existing._count.enrolments;
 
@@ -242,7 +242,7 @@ export async function setCourseArchived(id: string, archived: boolean): Promise<
       _count: { select: { enrolments: { where: TAKES_A_PLACE } } },
     },
   });
-  if (!existing) return fail("That course no longer exists.");
+  if (!existing) return fail("That class no longer exists.");
   if (Boolean(existing.archivedAt) === archived) return ok();
 
   if (archived && existing._count.enrolments > 0) {

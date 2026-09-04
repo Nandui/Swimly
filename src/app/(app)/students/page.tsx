@@ -18,7 +18,7 @@ import {
 import { STUDENT_STATUS_META, ageLabel } from "@/lib/students/constants";
 import { cn } from "@/lib/utils";
 
-export const metadata: Metadata = { title: "Students" };
+export const metadata: Metadata = { title: "Swimmers" };
 
 const LENSES = [
   { key: "ALL", label: "All" },
@@ -68,7 +68,7 @@ export default async function StudentsPage(props: PageProps<"/students">) {
   return (
     <div className="space-y-6">
       <PageHeader
-        title="Students"
+        title="Swimmers"
         description="Everyone in the water, and how to reach them."
         actions={manage ? <AddStudent /> : null}
       />
@@ -118,7 +118,7 @@ export default async function StudentsPage(props: PageProps<"/students">) {
             type="search"
             defaultValue={q}
             placeholder="Search name or contact…"
-            aria-label="Search students"
+            aria-label="Search swimmers"
             className="h-8 w-56 pl-7"
           />
         </Form>
@@ -127,7 +127,7 @@ export default async function StudentsPage(props: PageProps<"/students">) {
       {students.length === 0 ? (
         <EmptyState
           icon={Users}
-          title={filtered ? "Nobody matches that" : "No students yet"}
+          title={filtered ? "Nobody matches that" : "No swimmers yet"}
           hint={
             filtered
               ? "Try a shorter search, or clear the filter."
@@ -141,7 +141,7 @@ export default async function StudentsPage(props: PageProps<"/students">) {
 
           {pages > 1 ? (
             <nav
-              aria-label="Pages of students"
+              aria-label="Pages of swimmers"
               className="flex flex-wrap items-center justify-between gap-3"
             >
               <p className="text-xs text-muted-foreground">

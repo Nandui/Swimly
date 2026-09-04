@@ -9,7 +9,7 @@ import { getRecentActivity } from "@/lib/activity/data/audit-log";
 import { DROP_OFF_STREAK } from "@/lib/attendance/constants";
 import { weekdayOfIso } from "@/lib/attendance/dates";
 import { getDropOffs, getRegisterStateForDay } from "@/lib/attendance/data/register";
-import { can } from "@/lib/authz";
+import { can, canSee } from "@/lib/authz";
 import { DAY_META, capacityLabel, courseName, formatTime } from "@/lib/courses/constants";
 import { getCourseCounts, getCoursesOnDay } from "@/lib/courses/data/courses";
 import { formatDate, parseDateOnly, today } from "@/lib/format";
@@ -19,6 +19,8 @@ import { getStudentCounts } from "@/lib/students/data/students";
 export default async function OverviewPage() {
   const session = await screenPage("overview");
   const manage = can(session, "attendance.mark");
+  // A role without the Classes screen gets the class name as text.
+  const linkCourses = canSee(session, "courses");
 
   const iso = today();
   const day = weekdayOfIso(iso);
@@ -54,15 +56,15 @@ export default async function OverviewPage() {
           outstanding > 0 ? (
             <>
               {" "}
+              Attendance is still to take for{" "}
               <span className="font-medium text-(--tag-orange-fg) tabular-nums">
                 {outstanding}
               </span>{" "}
               of today&rsquo;s {todaysClasses.length}{" "}
-              {todaysClasses.length === 1 ? "register" : "registers"}{" "}
-              {outstanding === 1 ? "is" : "are"} still to take.
+              {todaysClasses.length === 1 ? "class" : "classes"}.
             </>
           ) : (
-            <> Every register for today is in.</>
+            <> Attendance is in for every class today.</>
           )
         ) : null}
         {dropOffs.length > 0 ? (
@@ -105,12 +107,16 @@ export default async function OverviewPage() {
                     <div className="min-w-0">
                       <p className="text-sm font-medium text-foreground">
                         <span className="tabular-nums">{formatTime(course.startMinutes)}</span>{" "}
-                        <Link
-                          href={`/courses/${course.id}`}
-                          className="underline-offset-2 hover:underline"
-                        >
-                          {courseName(course)}
-                        </Link>
+                        {linkCourses ? (
+                          <Link
+                            href={`/courses/${course.id}`}
+                            className="underline-offset-2 hover:underline"
+                          >
+                            {courseName(course)}
+                          </Link>
+                        ) : (
+                          courseName(course)
+                        )}
                         <Tag color={done ? "green" : "yellow"} className="ml-2">
                           {done ? "Attendance taken" : "Attendance not taken"}
                         </Tag>
@@ -122,9 +128,11 @@ export default async function OverviewPage() {
                       </p>
                     </div>
                     <Button asChild size="sm" variant={done ? "outline" : "default"}>
-                      <Link href={`/courses/${course.id}/register?date=${iso}`}>
+                      {/* The same class page the deck opens: one destination
+                          for one job, whoever is doing it. */}
+                      <Link href={`/courses/${course.id}/class?date=${iso}`}>
                         <ClipboardList className="size-4" />
-                        {done ? "Amend" : "Take Attendance"}
+                        {done ? "Change attendance" : "Take attendance"}
                       </Link>
                     </Button>
                   </li>

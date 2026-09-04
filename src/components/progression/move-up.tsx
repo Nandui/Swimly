@@ -62,7 +62,7 @@ export function MoveUpToLevel({
         size="sm"
         variant="outline"
         disabled
-        title={`No class teaches ${nextLevelName} yet. Add one on the Courses page first.`}
+        title={`No class teaches ${nextLevelName} yet. Add one on the Classes page first.`}
       >
         <ArrowUpRight className="size-4" />
         Move up to {nextLevelName}
@@ -91,7 +91,7 @@ export function MoveUpToLevel({
       title={`Move ${studentName} up to ${nextLevelName}`}
       description={
         fromEnrolmentId
-          ? `Their place in ${fromClassLabel} closes and a new one opens in the class you pick. Every register they are already on stays exactly as it is.`
+          ? `Their place in ${fromClassLabel} closes and a new one opens in the class you pick. Their attendance so far stays exactly as it is.`
           : `They are not in a class at the moment, so this simply enrols them at ${nextLevelName}.`
       }
       submitLabel="Move up"

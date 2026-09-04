@@ -37,8 +37,8 @@ export default async function AccountPage() {
         <h2 className="text-sm font-semibold text-foreground">What you can do</h2>
         {granted.length === 0 ? (
           <p className="max-w-prose text-sm text-muted-foreground">
-            You can look things up and change nothing. Swimmers, classes, the curriculum and the
-            registers are all readable.
+            You can look things up and change nothing. Swimmers, classes, the curriculum and$
+            attendance are all readable.
           </p>
         ) : (
           <ul className="overflow-hidden rounded-md border">

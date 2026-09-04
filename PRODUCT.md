@@ -147,8 +147,13 @@ mode.
   yet; that question is deferred to the rename.
 - Voice, derived from confirmed user needs rather than a style guide: plain,
   short, concrete sentences; the club's own words; British and Irish spellings
-  (enrol, programme, register); no idioms; an error is one sentence saying
-  what to do.
+  (enrol, programme); no idioms; an error is one sentence saying what to do.
+- **One word per thing, in every screen** (swept 4 Sep 2026). In what people
+  read: *swimmer* (never student), *class* (never course), *attendance*
+  (never register), *competencies* and *marks* for what an instructor ticks,
+  *Assessments* only for the club's Swim School Assessment sessions, *level*,
+  *programme*, *cover*, *placement*. Code identifiers and URLs keep their old
+  names (`Student`, `Course`, `/register`); the words on screen do not.
 
 ## Evidence on Hand
 

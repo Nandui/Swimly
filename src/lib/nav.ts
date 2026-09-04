@@ -27,8 +27,8 @@ export type AppNavItem = NavItem & { screen?: ScreenKey };
 export const NAV_ITEMS: AppNavItem[] = [
   { href: "/", label: "Overview", icon: Home, screen: "overview" },
   { href: "/today", label: "Today", icon: CalendarCheck, screen: "today" },
-  { href: "/students", label: "Students", icon: Users, screen: "students" },
-  { href: "/courses", label: "Courses", icon: CalendarDays, screen: "courses" },
+  { href: "/students", label: "Swimmers", icon: Users, screen: "students" },
+  { href: "/courses", label: "Classes", icon: CalendarDays, screen: "courses" },
   { href: "/together", label: "Together", icon: CalendarHeart, screen: "together" },
   { href: "/assessments", label: "Assessments", icon: ClipboardCheck, screen: "assessments" },
   { href: "/programmes", label: "Programmes", icon: Layers, screen: "programmes" },

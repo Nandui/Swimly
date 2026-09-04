@@ -102,9 +102,9 @@ export function TakeOver({
             <AlertDialogTitle>Taking over {classLabel}?</AlertDialogTitle>
             <AlertDialogDescription>
               {instructorName ? `It is ${instructorName}'s class.` : "Nobody is assigned to it."}{" "}
-              Confirm, and the register for {dateLabel} records that you conducted it
-              {instructorName ? `, not ${instructorName}` : ""}. The competencies you sign off
-              carry your name too.
+              Say yes, and the record for {dateLabel} says you took this class
+              {instructorName ? `, not ${instructorName}` : ""}. Competencies you mark carry your
+              name too.
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>

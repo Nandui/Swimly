@@ -32,7 +32,7 @@ import { getStudentProgress } from "@/lib/progression/data/progress";
 import { STUDENT_STATUS_META, fullName } from "@/lib/students/constants";
 import { getStudent } from "@/lib/students/data/students";
 
-export const metadata: Metadata = { title: "Student" };
+export const metadata: Metadata = { title: "Swimmer" };
 
 /** A swimmer's profile.
  *
@@ -109,7 +109,7 @@ export default async function StudentPage(props: PageProps<"/students/[id]">) {
           className="mb-2 inline-flex items-center gap-1 text-[13px] text-muted-foreground underline-offset-2 hover:text-foreground hover:underline"
         >
           <ChevronLeft className="size-3.5" />
-          Students
+          Swimmers
         </Link>
         <PageHeader
           title={
@@ -313,7 +313,7 @@ export default async function StudentPage(props: PageProps<"/students/[id]">) {
             {attendance.length === 0 ? (
               <EmptyState
                 icon={CalendarCheck}
-                title="No register has been taken with them on it yet"
+                title="No attendance taken with them on it yet"
                 hint="Their marks appear here the first time an instructor takes attendance for their class."
               />
             ) : (

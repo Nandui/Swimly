@@ -19,7 +19,7 @@ import { getCourse } from "@/lib/courses/data/courses";
 import { formatDate, parseDateOnly, today, weekdayOf } from "@/lib/format";
 import { screenPage } from "@/lib/page-guards";
 
-export const metadata: Metadata = { title: "Register" };
+export const metadata: Metadata = { title: "Attendance" };
 
 export default async function RegisterPage(props: PageProps<"/courses/[id]/register">) {
   const session = await screenPage("courses", "attendance.mark");
@@ -111,7 +111,7 @@ export default async function RegisterPage(props: PageProps<"/courses/[id]/regis
 
       {course.archivedAt ? (
         <p className="rounded bg-(--tag-yellow-bg) px-2.5 py-1.5 text-[13px] text-(--tag-yellow-fg)">
-          This course is archived, so its registers are read-only.
+          This class is archived, so its attendance is read-only.
         </p>
       ) : askTakeOver ? (
         <TakeOver
@@ -125,7 +125,7 @@ export default async function RegisterPage(props: PageProps<"/courses/[id]/regis
         />
       ) : !mayMark ? (
         <p className="rounded bg-(--tag-yellow-bg) px-2.5 py-1.5 text-[13px] text-(--tag-yellow-fg)">
-          You can read this register but not change it.
+          You can read this attendance but not change it.
         </p>
       ) : null}
 

@@ -179,13 +179,13 @@ export function AddCourse({
       trigger={
         <Button size="sm">
           <Plus className="size-4" />
-          Add course
+          Add class
         </Button>
       }
-      title="Add a course"
-      description="A course is one class, at one time, every week."
-      submitLabel="Add course"
-      successMessage="Course added"
+      title="Add a class"
+      description="One level, one time, every week."
+      submitLabel="Add class"
+      successMessage="Class added"
       submit={(formData) => createCourse(readInput(formData))}
     >
       <CourseFields levels={levels} instructors={instructors} />
@@ -220,7 +220,7 @@ export function EditCourse({
       }
       title={`Edit ${courseLabel(course)}`}
       submitLabel="Save changes"
-      successMessage="Course updated"
+      successMessage="Class updated"
       submit={(formData) => updateCourse(course.id, readInput(formData))}
     >
       <CourseFields course={course} levels={levels} instructors={instructors} />
@@ -233,7 +233,7 @@ export function ArchiveCourse({ course }: { course: CourseDetail }) {
     return (
       <ActionButton
         ariaLabel={`Restore ${courseLabel(course)}`}
-        successMessage="Course restored"
+        successMessage="Class restored"
         run={() => setCourseArchived(course.id, false)}
       >
         <ArchiveRestore className="size-3.5" />
@@ -251,7 +251,7 @@ export function ArchiveCourse({ course }: { course: CourseDetail }) {
       title={`Archive ${courseLabel(course)}?`}
       description="It comes off the timetable and stops appearing when someone enrols a swimmer. Registers already taken, and everything assessed in it, stay readable. You can restore it later."
       confirmLabel="Archive"
-      successMessage="Course archived"
+      successMessage="Class archived"
       run={() => setCourseArchived(course.id, true)}
     />
   );

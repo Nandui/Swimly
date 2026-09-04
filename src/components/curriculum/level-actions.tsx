@@ -118,7 +118,7 @@ export function ArchiveLevel({ level }: { level: Named }) {
         </Button>
       }
       title={`Archive ${level.name}?`}
-      description="It stops being offered for new courses and enrolments. Students who already completed it keep that completion, and their assessments stay readable. You can restore it later."
+      description="It stops being offered for new classes and enrolments. Swimmers who already completed it keep that completion, and their assessments stay readable. You can restore it later."
       confirmLabel="Archive"
       successMessage="Level archived"
       run={() => setLevelArchived(level.id, true)}

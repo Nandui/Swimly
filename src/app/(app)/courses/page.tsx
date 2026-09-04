@@ -27,7 +27,7 @@ import { weekdayOfIso } from "@/lib/attendance/dates";
 import { today } from "@/lib/format";
 import { screenPage } from "@/lib/page-guards";
 
-export const metadata: Metadata = { title: "Courses" };
+export const metadata: Metadata = { title: "Classes" };
 
 export default async function CoursesPage(props: PageProps<"/courses">) {
   const session = await screenPage("courses");
@@ -68,7 +68,7 @@ export default async function CoursesPage(props: PageProps<"/courses">) {
   return (
     <div className="space-y-6">
       <PageHeader
-        title="Courses"
+        title="Classes"
         description="The timetable: one class, one time, every week."
         actions={add}
       />
@@ -99,7 +99,7 @@ export default async function CoursesPage(props: PageProps<"/courses">) {
       {live.length === 0 ? (
         <EmptyState
           icon={CalendarDays}
-          title={active > 0 ? "No classes match" : "No courses yet"}
+          title={active > 0 ? "No classes match" : "No classes yet"}
           hint={
             active > 0
               ? "Loosen one of the filters, or clear them and start again."

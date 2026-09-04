@@ -61,8 +61,8 @@ export async function markRegister(input: MarkRegisterInput): Promise<ActionResu
       level: { select: { name: true, programmeId: true } },
     },
   });
-  if (!course) return fail("That course no longer exists.");
-  if (course.archivedAt) return fail("That course is archived.");
+  if (!course) return fail("That class no longer exists.");
+  if (course.archivedAt) return fail("That class is archived.");
 
   const date = parseDateOnly(iso);
 
@@ -76,7 +76,7 @@ export async function markRegister(input: MarkRegisterInput): Promise<ActionResu
   if (
     !canMarkRegister({ session, instructorId: course.instructorId, coverById: cover?.coverById })
   ) {
-    return fail("That is not your class. Take it over first, or ask someone who can take any register.");
+    return fail("That is not your class. Take it over first, or ask someone who can take attendance for any class.");
   }
 
   // Without session rows, these two lines are the only thing standing between
@@ -86,7 +86,7 @@ export async function markRegister(input: MarkRegisterInput): Promise<ActionResu
       `${courseLabel(course)} runs on ${DAY_META[course.dayOfWeek].label}s. ${formatDate(date)} is not one.`
     );
   }
-  if (iso > today()) return fail("You cannot take a register for a class that has not happened.");
+  if (iso > today()) return fail("You cannot take attendance for a class that has not happened.");
 
   const [enrolled, existingRows] = await Promise.all([
     prisma.enrolment.findMany({
@@ -112,7 +112,7 @@ export async function markRegister(input: MarkRegisterInput): Promise<ActionResu
   ]);
   const stranger = marks.find((mark) => !allowed.has(mark.studentId));
   if (stranger) {
-    return fail("Somebody on this register is not in the class. Reload the page and try again.");
+    return fail("Somebody on this list is not in the class. Reload the page and try again.");
   }
 
   const students = await prisma.student.findMany({

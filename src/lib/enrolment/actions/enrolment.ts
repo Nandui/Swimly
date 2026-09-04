@@ -59,10 +59,10 @@ export async function enrolStudent(input: EnrolInput): Promise<ActionResult> {
     }),
   ]);
 
-  if (!student) return fail("That student no longer exists.");
+  if (!student) return fail("That swimmer no longer exists.");
   if (student.status !== "ACTIVE") return fail(`${fullName(student)} is marked inactive.`);
-  if (!course) return fail("That course no longer exists.");
-  if (course.archivedAt) return fail("That course is archived.");
+  if (!course) return fail("That class no longer exists.");
+  if (course.archivedAt) return fail("That class is archived.");
 
   // Has the swimmer earned this rung? Read the ladder and their history in the
   // one programme this course belongs to.
@@ -329,8 +329,8 @@ export async function transferEnrolment(
       level: { select: { id: true, name: true, programmeId: true } },
     },
   });
-  if (!to) return fail("That course no longer exists.");
-  if (to.archivedAt) return fail("That course is archived.");
+  if (!to) return fail("That class no longer exists.");
+  if (to.archivedAt) return fail("That class is archived.");
 
   const startedOn = parseDateOnly(today());
 

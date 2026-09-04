@@ -65,7 +65,7 @@ export default async function StaffPage() {
         <EmptyState
           icon={Users}
           title="Nobody can sign in yet"
-          hint="Add the people who take registers and run the desk. Give each of them the role that lets them do their job and no more."
+          hint="Add the people who take attendance and run the desk. Give each of them the role that lets them do their job and no more."
           action={<AddPerson roles={roles} />}
         />
       ) : (

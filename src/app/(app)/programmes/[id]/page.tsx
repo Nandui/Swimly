@@ -230,7 +230,7 @@ function LevelSection({
           <p className="mt-0.5 text-xs text-muted-foreground">
             {competencyCountLabel(live.length)}
             {level._count.courses > 0
-              ? ` · ${level._count.courses} ${level._count.courses === 1 ? "course" : "courses"}`
+              ? ` · ${level._count.courses} ${level._count.courses === 1 ? "class" : "classes"}`
               : ""}
           </p>
         </div>

@@ -63,7 +63,7 @@ export async function saveAssessment(input: AssessInput): Promise<ActionResult> 
       },
     }),
   ]);
-  if (!student) return fail("That student no longer exists.");
+  if (!student) return fail("That swimmer no longer exists.");
   if (!level) return fail("That level no longer exists.");
 
   const nameById = new Map(level.competencies.map((row) => [row.id, row.name]));
@@ -321,7 +321,7 @@ export async function confirmLevelCompletion(
       },
     }),
   ]);
-  if (!student) return fail("That student no longer exists.");
+  if (!student) return fail("That swimmer no longer exists.");
   if (!level) return fail("That level no longer exists.");
 
   const already = await prisma.levelCompletion.findUnique({

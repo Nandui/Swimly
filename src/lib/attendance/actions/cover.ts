@@ -47,8 +47,8 @@ export async function takeOverClass(input: TakeOverInput): Promise<ActionResult>
       level: { select: { name: true, programmeId: true } },
     },
   });
-  if (!course) return fail("That course no longer exists.");
-  if (course.archivedAt) return fail("That course is archived.");
+  if (!course) return fail("That class no longer exists.");
+  if (course.archivedAt) return fail("That class is archived.");
   if (course.instructorId === session.user.id) return fail("It is your class already.");
 
   // The same two guards as the register, for the same reason: a cover on a

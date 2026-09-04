@@ -27,7 +27,7 @@ const ACTIONS: Record<string, { label: string; color: TagColor }> = {
   transfer: { label: "Moved", color: "purple" },
 
   // The pool deck
-  attendance: { label: "Register", color: "blue" },
+  attendance: { label: "Attendance", color: "blue" },
   cover: { label: "Took over", color: "purple" },
   assess: { label: "Assessed", color: "yellow" },
   "complete-level": { label: "Level passed", color: "green" },

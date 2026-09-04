@@ -19,7 +19,7 @@ import { screenPage } from "@/lib/page-guards";
 import { getClassProgress } from "@/lib/progression/data/progress";
 import { nextLevel } from "@/lib/progression/rules";
 
-export const metadata: Metadata = { title: "Assess" };
+export const metadata: Metadata = { title: "Competencies" };
 
 export default async function AssessPage(props: PageProps<"/courses/[id]/assess">) {
   const session = await screenPage("courses", "progression.assess");
@@ -68,7 +68,7 @@ export default async function AssessPage(props: PageProps<"/courses/[id]/assess"
           {courseName(course)}
         </Link>
         <PageHeader
-          title={`Assessing ${progress.course.level.name}`}
+          title={`Competencies for ${progress.course.level.name}`}
           description={
             `${courseName(course)} · ${formatSlot(course)}` +
             (cover ? ` · ${coverLabel(cover)} on ${formatDate(parseDateOnly(iso))}` : "")
@@ -96,7 +96,7 @@ export default async function AssessPage(props: PageProps<"/courses/[id]/assess"
 
       {course.archivedAt ? (
         <p className="rounded bg-(--tag-yellow-bg) px-2.5 py-1.5 text-[13px] text-(--tag-yellow-fg)">
-          This course is archived, so its assessments are read-only.
+          This class is archived, so its competencies are read-only.
         </p>
       ) : askTakeOver ? (
         <TakeOver

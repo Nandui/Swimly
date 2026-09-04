@@ -129,7 +129,7 @@ export default async function ClassPage(props: PageProps<"/courses/[id]/class">)
 
       {course.archivedAt ? (
         <p className="rounded bg-(--tag-yellow-bg) px-2.5 py-1.5 text-[13px] text-(--tag-yellow-fg)">
-          This course is archived, so it is read-only.
+          This class is archived, so it is read-only.
         </p>
       ) : askTakeOver ? (
         <TakeOver

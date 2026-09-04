@@ -179,12 +179,12 @@ export function AddStudent() {
       trigger={
         <Button size="sm">
           <Plus className="size-4" />
-          Add student
+          Add swimmer
         </Button>
       }
-      title="Add a student"
-      submitLabel="Add student"
-      successMessage="Student added"
+      title="Add a swimmer"
+      submitLabel="Add swimmer"
+      successMessage="Swimmer added"
       width="sm:max-w-xl"
       submit={(formData) => createStudent(readInput(formData))}
     >
@@ -216,7 +216,7 @@ export function EditStudent({
       }
       title={`Edit ${fullName(student)}`}
       submitLabel="Save changes"
-      successMessage="Student updated"
+      successMessage="Swimmer updated"
       width="sm:max-w-xl"
       submit={(formData) => updateStudent(student.id, readInput(formData))}
     >
@@ -234,7 +234,7 @@ export function ToggleStudentStatus({
     return (
       <ActionButton
         ariaLabel={`Mark ${fullName(student)} active`}
-        successMessage="Student marked active"
+        successMessage="Swimmer marked active"
         run={() => setStudentStatus(student.id, "ACTIVE")}
       >
         <UserRoundCheck className="size-3.5" />
@@ -252,7 +252,7 @@ export function ToggleStudentStatus({
       title={`Mark ${fullName(student)} inactive?`}
       description="They stop appearing when someone enrols a student, and they cannot be added to a course. Their attendance, assessments and completed levels stay exactly as they are, and you can mark them active again at any time."
       confirmLabel="Mark inactive"
-      successMessage="Student marked inactive"
+      successMessage="Swimmer marked inactive"
       run={() => setStudentStatus(student.id, "INACTIVE")}
     />
   );

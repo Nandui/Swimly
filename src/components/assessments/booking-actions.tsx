@@ -48,7 +48,7 @@ export function BookOntoSession({ session, taken }: { session: SessionDetail; ta
       <Field
         label="Swimmer"
         htmlFor="studentId"
-        hint="Not on the books yet? Add them under Students first, then come back here."
+        hint="Not on the books yet? Add them under Swimmers first, then come back here."
       >
         <StudentPicker id="studentId" name="studentId" />
       </Field>

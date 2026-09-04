@@ -173,7 +173,7 @@ export function EndEnrolment({ enrolment, classLabel }: WithClass) {
         </Button>
       }
       title={`End ${fullName(enrolment.student)}'s place?`}
-      description={`They come off the roster for ${classLabel}. Every register they were on, and everything assessed, stays exactly as it is.`}
+      description={`They come off the roster for ${classLabel}. Their attendance and marks so far stay exactly as they are.`}
       submitLabel="End place"
       successMessage="Place ended"
       submit={(formData) =>
@@ -185,7 +185,7 @@ export function EndEnrolment({ enrolment, classLabel }: WithClass) {
     >
       <div className="flex items-center justify-between gap-3 rounded-md border px-3 py-2">
         <label htmlFor="finished" className="text-[13px] font-medium text-foreground">
-          They finished the course
+          They finished the class
           <span className="block text-xs font-normal text-muted-foreground">
             Off means they left it — the log says which.
           </span>
@@ -231,7 +231,7 @@ export function TransferEnrolment({
         </Button>
       }
       title={`Move ${fullName(enrolment.student)} to another class`}
-      description="The old place closes and a new one opens, so the registers they were already on stay intact."
+      description="The old place closes and a new one opens, so their attendance so far stays intact."
       submitLabel="Move"
       successMessage="Swimmer moved"
       submit={(formData) =>

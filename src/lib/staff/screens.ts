@@ -36,15 +36,15 @@ export const SCREENS = [
   },
   {
     key: "students",
-    label: "Students",
+    label: "Swimmers",
     path: "/students",
     description: "Every swimmer, their profile, contacts and progress.",
   },
   {
     key: "courses",
-    label: "Courses",
+    label: "Classes",
     path: "/courses",
-    description: "The timetable, each class's page, and registers weeks back.",
+    description: "The timetable, each class, and attendance from weeks back.",
   },
   {
     key: "together",

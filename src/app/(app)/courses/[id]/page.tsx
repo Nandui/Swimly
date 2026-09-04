@@ -36,7 +36,7 @@ import { formatDate } from "@/lib/format";
 import { screenPage } from "@/lib/page-guards";
 import { ageLabel, fullName } from "@/lib/students/constants";
 
-export const metadata: Metadata = { title: "Course" };
+export const metadata: Metadata = { title: "Class" };
 
 export default async function CoursePage(props: PageProps<"/courses/[id]">) {
   const session = await screenPage("courses");
@@ -78,7 +78,7 @@ export default async function CoursePage(props: PageProps<"/courses/[id]">) {
           className="mb-2 inline-flex items-center gap-1 text-[13px] text-muted-foreground underline-offset-2 hover:text-foreground hover:underline"
         >
           <ChevronLeft className="size-3.5" />
-          Courses
+          Classes
         </Link>
         <PageHeader
           title={
@@ -99,7 +99,7 @@ export default async function CoursePage(props: PageProps<"/courses/[id]">) {
                 <Button asChild variant="outline" size="sm">
                   <Link href={`/courses/${course.id}/register`}>
                     <ClipboardList className="size-4" />
-                    Take Attendance
+                    Take attendance
                   </Link>
                 </Button>
               ) : null}
@@ -107,7 +107,7 @@ export default async function CoursePage(props: PageProps<"/courses/[id]">) {
                 <Button asChild variant="outline" size="sm">
                   <Link href={`/courses/${course.id}/assess`}>
                     <GraduationCap className="size-4" />
-                    Assess
+                    Competencies
                   </Link>
                 </Button>
               ) : null}
