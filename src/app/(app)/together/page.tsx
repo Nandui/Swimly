@@ -7,7 +7,7 @@ import { Tag } from "@/components/ui-kit/tag";
 import { AddToGroup } from "@/components/together/add-to-group";
 import { capacityLabel, courseName, formatTime, DAY_META } from "@/lib/courses/constants";
 import { getCourses } from "@/lib/courses/data/courses";
-import { pageSession } from "@/lib/page-guards";
+import { screenPage } from "@/lib/page-guards";
 import { getGroup, toMembers } from "@/lib/together/data/together";
 import { findTimesTogether, type Placement } from "@/lib/together/match";
 
@@ -17,7 +17,7 @@ export const metadata: Metadata = { title: "Together" };
 const GROUP_CAP = 8;
 
 export default async function TogetherPage(props: PageProps<"/together">) {
-  await pageSession();
+  await screenPage("together");
 
   const params = await props.searchParams;
   const raw = typeof params.students === "string" ? params.students : "";

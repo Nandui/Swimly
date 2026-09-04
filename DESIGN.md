@@ -127,6 +127,17 @@ one of those is an endpoint the browser can call.
 **Nothing refers to a role by name.** Not the code, not the nav, not the seed.
 That is what lets a club rename or delete every role the app shipped with.
 
+**A role also says which screens exist.** `StaffRole.screens` holds keys
+from the catalogue in `src/lib/staff/screens.ts`, one per top-level page.
+The nav shows only those; every page under the shell opens with
+`screenPage(screen, permission?)` and 404s for anyone whose role does not
+name it; a link that crosses into another screen asks `canSee` before it
+renders. Permissions are still the power to change something — screens are
+what is on the menu at all. That is how an instructor role is given Today
+and nothing else: the deck becomes their whole app. Account is never on the
+list because it is always there. The keyholder guard checks screens too:
+nobody may untick Roles or Staff from the last role that can reach them.
+
 **A role also says where its day starts.** `StaffRole.home` is a key from the
 `ROLE_HOMES` map in the catalogue file — the overview for the desk, Today for
 an instructor. The sign-in form pushes to `/start`, which reads the role and

@@ -27,7 +27,7 @@ import { courseLabel, formatSlotShort } from "@/lib/courses/constants";
 import { getCourses } from "@/lib/courses/data/courses";
 import { getEnrolmentsForStudent } from "@/lib/enrolment/data/enrolments";
 import { ageInYears, formatDate } from "@/lib/format";
-import { pageSession } from "@/lib/page-guards";
+import { screenPage } from "@/lib/page-guards";
 import { getStudentProgress } from "@/lib/progression/data/progress";
 import { STUDENT_STATUS_META, fullName } from "@/lib/students/constants";
 import { getStudent } from "@/lib/students/data/students";
@@ -42,7 +42,7 @@ export const metadata: Metadata = { title: "Student" };
  *  Everything that grows week on week — classes, progress, attendance,
  *  assessments — sits behind a tab, one section on screen at a time. */
 export default async function StudentPage(props: PageProps<"/students/[id]">) {
-  const session = await pageSession();
+  const session = await screenPage("students");
   // One flag per permission, because this page hangs three different powers
   // off what used to be one tier: editing the swimmer, moving them between
   // classes, and signing a level off.

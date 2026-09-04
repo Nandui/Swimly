@@ -5,7 +5,7 @@ import { AppFrame } from "@/components/ui-kit/app-shell";
 import { AppMobileNav, AppSidebar } from "@/components/app-nav";
 import { permissionsOf } from "@/lib/authz";
 import { getCurrentClub } from "@/lib/clubs/current";
-import { homePathFor } from "@/lib/staff/permissions";
+import { homePathFor, visibleScreens } from "@/lib/staff/screens";
 
 /** The signed-in shell. Two greys and nothing else: a sidebar that stays put
  *  on desktop, a 48px bar that replaces it below `md`, and a centred content
@@ -21,8 +21,8 @@ export default async function AppLayout({ children }: { children: ReactNode }) {
     userName: session.user.name ?? session.user.email ?? "Unknown",
     userSubtitle: session.user.roleName,
     // The wordmark goes where the role's day starts, same as the sign-in.
-    homeHref: homePathFor(session.user.home, session.user.permissions),
-    permissions: permissionsOf(session),
+    homeHref: homePathFor(session.user.home, session.user.permissions, session.user.screens),
+    screens: visibleScreens(session.user.screens, permissionsOf(session)),
     club,
     clubs,
   };

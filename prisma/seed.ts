@@ -3,6 +3,7 @@ import bcrypt from "bcryptjs";
 import { logAudit } from "@/lib/audit";
 import { prisma } from "@/lib/prisma";
 import { SYSTEM_ROLES, legacyRoleFor } from "@/lib/staff/permissions";
+import { cleanScreens } from "@/lib/staff/screens";
 
 /** Creates the roles the app ships with, and the first admin, so there is a
  *  way in.
@@ -31,6 +32,7 @@ async function ensureSystemRoles() {
         description: role.description,
         permissions: role.permissions,
         home: role.home,
+        screens: cleanScreens(role.screens),
         isSystem: true,
         sortOrder: index,
       },

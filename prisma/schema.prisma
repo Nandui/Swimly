@@ -112,6 +112,11 @@ model StaffRole {
   /// `src/lib/staff/permissions.ts` ("overview" or "today"). A string rather
   /// than an enum for the same reason `permissions` is: the catalogue is code.
   home        String   @default("overview")
+  /// Which screens the role offers at all: keys from `SCREENS` in
+  /// `src/lib/staff/screens.ts`. Permissions say what may be changed;
+  /// screens say what is on the menu. A role with only "today" is an
+  /// instructor whose whole app is the deck.
+  screens     String[] @default([])
   /// The three roles the app shipped with. They may be renamed and their
   /// permissions edited, but they cannot be deleted: `seed.ts` and the
   /// migration both name them, and a fresh database has to land somewhere.

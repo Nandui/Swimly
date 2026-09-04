@@ -20,6 +20,7 @@ import {
   legacyRoleFor,
   type PermissionKey,
 } from "@/lib/staff/permissions";
+import { cleanScreens, screenMeta } from "@/lib/staff/screens";
 
 /** Roles are the rules about the rules, so every action here needs
  *  `roles.manage` — including the one that hands `roles.manage` out.
@@ -43,6 +44,8 @@ const roleSchema = z.object({
   permissions: z.array(z.string()).max(100),
   /** A `ROLE_HOMES` key. Anything else lands on the overview. */
   home: z.string().transform((value) => (isRoleHome(value) ? value : "overview")),
+  /** `SCREENS` keys. Filtered against the catalogue like the permissions. */
+  screens: z.array(z.string()).max(50),
 });
 
 /** The form's shape, before the schema normalises `home`. */
@@ -62,6 +65,10 @@ export async function createRole(input: RoleInput): Promise<ActionResult> {
   if (!parsed.success) return fail(parsed.error.issues[0].message);
   const { name, description, home } = parsed.data;
   const permissions = cleanPermissions(parsed.data.permissions);
+  const screens = cleanScreens(parsed.data.screens);
+  if (screens.length === 0) {
+    return fail("Tick at least one screen, or nobody on this role has anywhere to go.");
+  }
 
   const last = await prisma.staffRole.findFirst({
     orderBy: { sortOrder: "desc" },
@@ -76,6 +83,7 @@ export async function createRole(input: RoleInput): Promise<ActionResult> {
           description: description || null,
           permissions,
           home,
+          screens,
           sortOrder: (last?.sortOrder ?? -1) + 1,
         },
         select: { id: true, name: true },
@@ -105,10 +113,21 @@ export async function updateRole(id: string, input: RoleInput): Promise<ActionRe
   if (!parsed.success) return fail(parsed.error.issues[0].message);
   const { name, description, home } = parsed.data;
   const permissions = cleanPermissions(parsed.data.permissions);
+  const screens = cleanScreens(parsed.data.screens);
+  if (screens.length === 0) {
+    return fail("Tick at least one screen, or nobody on this role has anywhere to go.");
+  }
 
   const existing = await prisma.staffRole.findUnique({
     where: { id },
-    select: { id: true, name: true, description: true, permissions: true, home: true },
+    select: {
+      id: true,
+      name: true,
+      description: true,
+      permissions: true,
+      home: true,
+      screens: true,
+    },
   });
   if (!existing) return fail("That role no longer exists.");
 
@@ -116,6 +135,15 @@ export async function updateRole(id: string, input: RoleInput): Promise<ActionRe
   if (existing.name !== name) changes.push(`name ${existing.name} → ${name}`);
   if ((existing.description ?? "") !== description) changes.push("description");
   if (existing.home !== home) changes.push(`starts on ${ROLE_HOMES[home].label}`);
+
+  const screensBefore = new Set(existing.screens);
+  const screensAfter = new Set<string>(screens);
+  const shown = screens.filter((key) => !screensBefore.has(key)).map((k) => screenMeta(k).label);
+  const hidden = cleanScreens(existing.screens)
+    .filter((key) => !screensAfter.has(key))
+    .map((k) => screenMeta(k).label);
+  if (shown.length) changes.push(`now sees ${shown.join(", ")}`);
+  if (hidden.length) changes.push(`no longer sees ${hidden.join(", ")}`);
 
   const before = new Set(existing.permissions);
   const after = new Set<string>(permissions);
@@ -132,14 +160,14 @@ export async function updateRole(id: string, input: RoleInput): Promise<ActionRe
   try {
     outcome = await withKeyholderLock(async (tx) => {
       const refusal = await guardKeyholders(
-        { kind: "rolePermissions", roleId: id, permissions },
+        { kind: "rolePermissions", roleId: id, permissions, screens },
         tx
       );
       if (refusal) return { refusal };
 
       const updated = await tx.staffRole.update({
         where: { id },
-        data: { name, description: description || null, permissions, home },
+        data: { name, description: description || null, permissions, home, screens },
         select: { id: true, name: true },
       });
 

@@ -15,6 +15,7 @@ export async function listRoles() {
       description: true,
       permissions: true,
       home: true,
+      screens: true,
       isSystem: true,
       sortOrder: true,
       _count: { select: { users: true } },

@@ -16,12 +16,12 @@ import { canMarkRegister, needsTakeOver } from "@/lib/attendance/access";
 import { isIsoDate, mostRecentOccurrence } from "@/lib/attendance/dates";
 import { coverLabel, getClassCover } from "@/lib/attendance/data/cover";
 import { getRegister } from "@/lib/attendance/data/register";
-import { can } from "@/lib/authz";
+import { can, canSee } from "@/lib/authz";
 import { getCurrentClub } from "@/lib/clubs/current";
 import { DAY_META, courseName, formatSlot } from "@/lib/courses/constants";
 import { getCourse } from "@/lib/courses/data/courses";
 import { formatDate, parseDateOnly, today, weekdayOf } from "@/lib/format";
-import { permissionPage } from "@/lib/page-guards";
+import { screenPage } from "@/lib/page-guards";
 import { getClassProgress } from "@/lib/progression/data/progress";
 import { fullName } from "@/lib/students/constants";
 
@@ -38,7 +38,7 @@ type Step = "attendance" | "competencies";
  *  exist for the desk — for a register weeks back, for one swimmer's whole
  *  checklist, and for moving a swimmer up. */
 export default async function ClassPage(props: PageProps<"/courses/[id]/class">) {
-  const session = await permissionPage("attendance.mark");
+  const session = await screenPage("today", "attendance.mark");
   const { id } = await props.params;
   const params = await props.searchParams;
   const step: Step = params.step === "competencies" ? "competencies" : "attendance";
@@ -211,12 +211,14 @@ export default async function ClassPage(props: PageProps<"/courses/[id]/class">)
               {progress.course.level.competencies.length === 1 ? "competency" : "competencies"}{" "}
               in {progress.course.level.name}.
             </p>
-            <Link
-              href={`/courses/${course.id}/assess`}
-              className="text-[13px] text-muted-foreground underline-offset-2 hover:text-foreground hover:underline"
-            >
-              One swimmer at a time
-            </Link>
+            {canSee(session, "courses") ? (
+              <Link
+                href={`/courses/${course.id}/assess`}
+                className="text-[13px] text-muted-foreground underline-offset-2 hover:text-foreground hover:underline"
+              >
+                One swimmer at a time
+              </Link>
+            ) : null}
           </div>
 
           {readyToComplete.length > 0 ? (

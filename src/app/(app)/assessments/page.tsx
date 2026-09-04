@@ -17,12 +17,12 @@ import {
 import { can } from "@/lib/authz";
 import { getInstructorOptions, type InstructorOption } from "@/lib/courses/data/courses";
 import { today } from "@/lib/format";
-import { pageSession } from "@/lib/page-guards";
+import { screenPage } from "@/lib/page-guards";
 
 export const metadata: Metadata = { title: "Assessments" };
 
 export default async function AssessmentsPage() {
-  const session = await pageSession();
+  const session = await screenPage("assessments");
   const manage = can(session, "courses.manage");
   const todayIso = today();
 

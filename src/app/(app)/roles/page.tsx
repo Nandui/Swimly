@@ -4,15 +4,16 @@ import { EmptyState } from "@/components/ui-kit/empty-state";
 import { PageHeader } from "@/components/ui-kit/page-header";
 import { Tag } from "@/components/ui-kit/tag";
 import { AddRole, DeleteRole, EditRole } from "@/components/staff/role-actions";
-import { permissionPage } from "@/lib/page-guards";
+import { screenPage } from "@/lib/page-guards";
 import { permissionCountLabel, roleReach } from "@/lib/staff/constants";
 import { listRoles, type RoleRow } from "@/lib/staff/data/roles";
 import { PERMISSIONS, ROLE_HOMES, expandPermissions, isRoleHome } from "@/lib/staff/permissions";
+import { cleanScreens, screenMeta } from "@/lib/staff/screens";
 
 export const metadata: Metadata = { title: "Roles" };
 
 export default async function RolesPage() {
-  await permissionPage("roles.manage");
+  await screenPage("roles", "roles.manage");
 
   const roles = await listRoles();
   const assigned = roles.reduce((n, role) => n + role._count.users, 0);
@@ -31,8 +32,8 @@ export default async function RolesPage() {
         <span className="font-medium text-foreground tabular-nums">{assigned}</span>{" "}
         {assigned === 1 ? "account" : "accounts"}, out of{" "}
         <span className="font-medium text-foreground tabular-nums">{PERMISSIONS.length}</span>{" "}
-        permissions the app has to give. Everyone signed in can read swimmers, classes, the
-        curriculum and the registers; everything below is the power to change something.
+        permissions the app has to give. A role names the screens its holders can open, and
+        the permissions are the power to change something on them.
       </p>
 
       {roles.length === 0 ? (
@@ -81,6 +82,14 @@ function RoleCard({ role }: { role: RoleRow }) {
             <span className="tabular-nums">{role._count.users}</span>{" "}
             {role._count.users === 1 ? "account" : "accounts"} · starts on{" "}
             {(isRoleHome(role.home) ? ROLE_HOMES[role.home] : ROLE_HOMES.overview).label}
+          </p>
+          <p className="mt-0.5 text-xs text-muted-foreground">
+            Sees{" "}
+            {cleanScreens(role.screens).length === 0
+              ? "no screens"
+              : cleanScreens(role.screens)
+                  .map((key) => screenMeta(key).label)
+                  .join(", ")}
           </p>
         </div>
         <div className="flex items-center gap-0.5 max-md:gap-2 opacity-0 transition-opacity group-focus-within:opacity-100 group-hover:opacity-100 max-md:opacity-100">

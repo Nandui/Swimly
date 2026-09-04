@@ -33,13 +33,13 @@ import { getLevelOptions } from "@/lib/curriculum/data/curriculum";
 import { ENROLMENT_STATUS_META } from "@/lib/enrolment/constants";
 import { getTransferTargets, type TransferTarget } from "@/lib/enrolment/data/enrolments";
 import { formatDate } from "@/lib/format";
-import { pageSession } from "@/lib/page-guards";
+import { screenPage } from "@/lib/page-guards";
 import { ageLabel, fullName } from "@/lib/students/constants";
 
 export const metadata: Metadata = { title: "Course" };
 
 export default async function CoursePage(props: PageProps<"/courses/[id]">) {
-  const session = await pageSession();
+  const session = await screenPage("courses");
   const manage = can(session, "enrolment.manage");
   const admin = can(session, "courses.manage");
   const { id } = await props.params;

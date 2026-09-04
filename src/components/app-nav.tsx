@@ -5,7 +5,7 @@ import { ClubSwitcher } from "@/components/clubs/club-switcher";
 import { ThemeFlip } from "@/components/theme-toggle";
 import { MobileNav, Sidebar, type AppShellProps } from "@/components/ui-kit/app-shell";
 import { visibleNavItems } from "@/lib/nav";
-import type { PermissionKey } from "@/lib/staff/permissions";
+import type { ScreenKey } from "@/lib/staff/screens";
 
 /** The shell's two nav surfaces, bound to this app.
  *
@@ -17,18 +17,19 @@ import type { PermissionKey } from "@/lib/staff/permissions";
 type Club = { id: string; name: string };
 
 type Props = Omit<AppShellProps, "items" | "wordmark" | "onSignOut" | "switcher"> & {
-  permissions: Set<PermissionKey>;
+  /** The screens this person can open, already resolved against their role. */
+  screens: Set<ScreenKey>;
   club: Club;
   clubs: Club[];
 };
 
 const WORDMARK = "Swimly";
 
-function shellProps({ permissions, club, clubs, ...rest }: Props): AppShellProps {
+function shellProps({ screens, club, clubs, ...rest }: Props): AppShellProps {
   return {
     ...rest,
     wordmark: WORDMARK,
-    items: visibleNavItems(permissions),
+    items: visibleNavItems(screens),
     // Which club every page is showing. Pinned above the nav, and in the bar
     // on a phone, because the mistake it guards against — working in the
     // wrong site without noticing — is one nobody sees coming.

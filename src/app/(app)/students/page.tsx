@@ -8,7 +8,7 @@ import { Tag } from "@/components/ui-kit/tag";
 import { Input } from "@/components/ui/input";
 import { AddStudent } from "@/components/students/student-actions";
 import { can } from "@/lib/authz";
-import { pageSession } from "@/lib/page-guards";
+import { screenPage } from "@/lib/page-guards";
 import {
   STUDENTS_PER_PAGE,
   getStudentCounts,
@@ -36,7 +36,7 @@ function lensClass(active: boolean) {
 }
 
 export default async function StudentsPage(props: PageProps<"/students">) {
-  const session = await pageSession();
+  const session = await screenPage("students");
   const manage = can(session, "students.manage");
 
   const params = await props.searchParams;

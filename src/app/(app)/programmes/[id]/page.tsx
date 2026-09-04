@@ -30,7 +30,7 @@ import {
   type CompetencyDetail,
   type LevelDetail,
 } from "@/lib/curriculum/data/curriculum";
-import { permissionPage } from "@/lib/page-guards";
+import { screenPage } from "@/lib/page-guards";
 
 export const metadata: Metadata = { title: "Programme" };
 
@@ -38,7 +38,7 @@ const ROW_ACTIONS =
   "flex shrink-0 items-center gap-0.5 max-md:gap-2 opacity-0 transition-opacity group-focus-within:opacity-100 group-hover:opacity-100 max-md:opacity-100";
 
 export default async function ProgrammePage(props: PageProps<"/programmes/[id]">) {
-  await permissionPage("curriculum.manage");
+  await screenPage("programmes", "curriculum.manage");
   const { id } = await props.params;
 
   const [programme, assessmentTypes, { club, clubs }] = await Promise.all([

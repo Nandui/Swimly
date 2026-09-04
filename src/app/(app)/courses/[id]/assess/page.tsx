@@ -15,14 +15,14 @@ import { getCurrentClub } from "@/lib/clubs/current";
 import { courseLabel, courseName, formatSlot } from "@/lib/courses/constants";
 import { getCourse, getCourses } from "@/lib/courses/data/courses";
 import { formatDate, parseDateOnly } from "@/lib/format";
-import { permissionPage } from "@/lib/page-guards";
+import { screenPage } from "@/lib/page-guards";
 import { getClassProgress } from "@/lib/progression/data/progress";
 import { nextLevel } from "@/lib/progression/rules";
 
 export const metadata: Metadata = { title: "Assess" };
 
 export default async function AssessPage(props: PageProps<"/courses/[id]/assess">) {
-  const session = await permissionPage("progression.assess");
+  const session = await screenPage("courses", "progression.assess");
   const { id } = await props.params;
 
   const [course, progress, courses, { club }] = await Promise.all([

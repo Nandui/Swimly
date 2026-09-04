@@ -13,11 +13,11 @@ import { can } from "@/lib/authz";
 import { DAY_META, capacityLabel, courseName, formatTime } from "@/lib/courses/constants";
 import { getCourseCounts, getCoursesOnDay } from "@/lib/courses/data/courses";
 import { formatDate, parseDateOnly, today } from "@/lib/format";
-import { pageSession } from "@/lib/page-guards";
+import { screenPage } from "@/lib/page-guards";
 import { getStudentCounts } from "@/lib/students/data/students";
 
 export default async function OverviewPage() {
-  const session = await pageSession();
+  const session = await screenPage("overview");
   const manage = can(session, "attendance.mark");
 
   const iso = today();

@@ -17,12 +17,12 @@ import { getCurrentClub } from "@/lib/clubs/current";
 import { DAY_META, courseName, formatSlot } from "@/lib/courses/constants";
 import { getCourse } from "@/lib/courses/data/courses";
 import { formatDate, parseDateOnly, today, weekdayOf } from "@/lib/format";
-import { permissionPage } from "@/lib/page-guards";
+import { screenPage } from "@/lib/page-guards";
 
 export const metadata: Metadata = { title: "Register" };
 
 export default async function RegisterPage(props: PageProps<"/courses/[id]/register">) {
-  const session = await permissionPage("attendance.mark");
+  const session = await screenPage("courses", "attendance.mark");
   const { id } = await props.params;
   const params = await props.searchParams;
 

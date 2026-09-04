@@ -6,10 +6,12 @@ import { PageHeader } from "@/components/ui-kit/page-header";
 import { Button } from "@/components/ui/button";
 import { ActivityTable } from "@/components/activity-table";
 import { ACTIVITY_PER_PAGE, getActivity } from "@/lib/activity/data/audit-log";
+import { screenPage } from "@/lib/page-guards";
 
 export const metadata: Metadata = { title: "Activity" };
 
 export default async function ActivityPage(props: PageProps<"/activity">) {
+  await screenPage("activity", "activity.view");
   const params = await props.searchParams;
   const requested = Math.max(1, Number(typeof params.page === "string" ? params.page : 1) || 1);
 

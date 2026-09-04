@@ -114,8 +114,10 @@ mode.
 
 - One database serves development and production. Schema changes are
   additive; nothing is dropped while production may read it.
-- Reads are open to anyone signed in. Every permission is the power to change
-  something, or to read the audit log.
+- A role names the screens its holders can open at all, so an instructor
+  role can be the deck and nothing else. Within those screens, reads are
+  open; every permission is the power to change something, or to read the
+  audit log.
 - Every mutation writes an audit row, scripts included.
 - Nothing refers to a role by name; the club may rename or delete any role.
 - Swimmers are never moved between clubs. Copying a programme copies the

@@ -25,13 +25,13 @@ import { can } from "@/lib/authz";
 import { getCurrentClub } from "@/lib/clubs/current";
 import { getInstructorOptions } from "@/lib/courses/data/courses";
 import { formatDate, today } from "@/lib/format";
-import { pageSession } from "@/lib/page-guards";
+import { screenPage } from "@/lib/page-guards";
 import { ageLabel, fullName } from "@/lib/students/constants";
 
 export const metadata: Metadata = { title: "Assessment" };
 
 export default async function AssessmentSessionPage(props: PageProps<"/assessments/[id]">) {
-  const auth = await pageSession();
+  const auth = await screenPage("assessments");
   const book = can(auth, "enrolment.manage");
   const assess = can(auth, "assessments.run");
   const manage = can(auth, "courses.manage");

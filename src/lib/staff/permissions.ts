@@ -197,48 +197,50 @@ export function isRoleHome(value: unknown): value is RoleHome {
   return typeof value === "string" && value in ROLE_HOMES;
 }
 
-/** The path a role starts on. A role set to start on Today that cannot
- *  reach it lands on the overview instead, so nobody signs in to a 404. */
-export function homePathFor(home: string, permissions: readonly string[]): string {
-  if (home === "today" && expandPermissions(permissions).has("attendance.mark")) {
-    return ROLE_HOMES.today.path;
-  }
-  return ROLE_HOMES.overview.path;
-}
-
 /** What the three shipped roles hold, and what a fresh database is seeded
  *  with. These are starting points an admin may edit, not a hierarchy the app
- *  enforces — nothing in the code refers to a role by name. */
+ *  enforces — nothing in the code refers to a role by name. Screen keys are
+ *  strings here rather than `ScreenKey` to keep this file free of a cycle
+ *  with `screens.ts`; the seed cleans them against the catalogue. */
 export const SYSTEM_ROLES: {
   name: string;
   description: string;
   permissions: PermissionKey[];
   home: RoleHome;
+  screens: string[];
 }[] = [
   {
     name: "Admin",
     description: "Everything, including the timetable, the curriculum and these accounts.",
     permissions: [...ALL_PERMISSIONS],
     home: "overview",
+    screens: [
+      "overview",
+      "today",
+      "students",
+      "courses",
+      "together",
+      "assessments",
+      "programmes",
+      "staff",
+      "roles",
+      "clubs",
+      "activity",
+    ],
   },
   {
     name: "Instructor",
-    description: "Their classes on the deck, competencies, swimmers and enrolments. Not the curriculum.",
-    permissions: [
-      "students.manage",
-      "enrolment.manage",
-      "attendance.mark",
-      "attendance.cover",
-      "progression.complete",
-      "assessments.run",
-    ],
+    description: "The deck and nothing else: their classes today, attendance and competencies.",
+    permissions: ["attendance.mark", "attendance.cover", "progression.complete"],
     home: "today",
+    screens: ["today"],
   },
   {
     name: "Viewer",
     description: "Can look things up and change nothing. Reception, or a duty manager.",
     permissions: [],
     home: "overview",
+    screens: ["overview", "students", "courses", "together", "assessments"],
   },
 ];
 

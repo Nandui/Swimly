@@ -12,8 +12,9 @@ import { getCoversForDay } from "@/lib/attendance/data/cover";
 import { getRegisterStateForDay } from "@/lib/attendance/data/register";
 import { DAY_META, capacityLabel, courseName, formatTime } from "@/lib/courses/constants";
 import { getCoursesOnDay, type CourseRow } from "@/lib/courses/data/courses";
+import { canSee } from "@/lib/authz";
 import { formatDate, minutesNow, parseDateOnly, today } from "@/lib/format";
-import { permissionPage } from "@/lib/page-guards";
+import { screenPage } from "@/lib/page-guards";
 import { cn } from "@/lib/utils";
 
 export const metadata: Metadata = { title: "Today" };
@@ -53,9 +54,12 @@ const ATTENDANCE_TAG: Record<"taken" | "missed", { label: string; color: TagColo
  *  line above them, so the next register is at the top of the screen rather
  *  than four thumb-scrolls down. */
 export default async function TodayPage(props: PageProps<"/today">) {
-  const session = await permissionPage("attendance.mark");
+  const session = await screenPage("today", "attendance.mark");
   const params = await props.searchParams;
   const tab: Tab = params.tab === "all" ? "all" : "mine";
+  // A role that sees only the deck gets the class name as text, not as a
+  // link to a course page that does not exist for them.
+  const linkCourses = canSee(session, "courses");
   const group: Grouping = params.group === "level" ? "level" : "time";
 
   const iso = today();
@@ -112,6 +116,7 @@ export default async function TodayPage(props: PageProps<"/today">) {
     iso,
     tab,
     group,
+    linkCourses,
     phase: phaseOf(course, now),
     done: marked.has(course.id),
     cover: covers.get(course.id) ?? null,
@@ -427,6 +432,7 @@ function ClassRow({
   iso,
   tab,
   group,
+  linkCourses,
   phase,
   done,
   cover,
@@ -437,6 +443,7 @@ function ClassRow({
   iso: string;
   tab: Tab;
   group: Grouping;
+  linkCourses: boolean;
   phase: Phase;
   done: boolean;
   cover: Cover | null;
@@ -487,12 +494,16 @@ function ClassRow({
           {group === "level" ? (
             <span className="font-semibold text-foreground tabular-nums">{time}</span>
           ) : null}
-          <Link
-            href={`/courses/${course.id}`}
-            className="font-medium text-foreground underline-offset-2 hover:underline"
-          >
-            {name}
-          </Link>
+          {linkCourses ? (
+            <Link
+              href={`/courses/${course.id}`}
+              className="font-medium text-foreground underline-offset-2 hover:underline"
+            >
+              {name}
+            </Link>
+          ) : (
+            <span className="font-medium text-foreground">{name}</span>
+          )}
           {attendance ? <Tag color={attendance.color}>{attendance.label}</Tag> : null}
           {coverLabel ? <Tag color="purple">{coverLabel}</Tag> : null}
         </div>

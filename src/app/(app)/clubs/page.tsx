@@ -6,12 +6,12 @@ import { Tag } from "@/components/ui-kit/tag";
 import { AddClub, ArchiveClub, EditClub } from "@/components/clubs/club-actions";
 import { getCurrentClub } from "@/lib/clubs/current";
 import { getClubs, type ClubRow } from "@/lib/clubs/data/clubs";
-import { permissionPage } from "@/lib/page-guards";
+import { screenPage } from "@/lib/page-guards";
 
 export const metadata: Metadata = { title: "Clubs" };
 
 export default async function ClubsPage() {
-  await permissionPage("clubs.manage");
+  await screenPage("clubs", "clubs.manage");
 
   const [clubs, { club: current }] = await Promise.all([getClubs(), getCurrentClub()]);
   const live = clubs.filter((club) => !club.archivedAt);

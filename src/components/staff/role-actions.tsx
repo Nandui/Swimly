@@ -13,6 +13,7 @@ import {
   ROLE_HOMES,
   ROLE_HOME_ORDER,
 } from "@/lib/staff/permissions";
+import { SCREENS } from "@/lib/staff/screens";
 
 type Role = {
   id: string;
@@ -20,6 +21,7 @@ type Role = {
   description: string | null;
   permissions: string[];
   home: string;
+  screens: string[];
   isSystem: boolean;
 };
 
@@ -31,8 +33,49 @@ function readRole(formData: FormData) {
     // A switch would need its own state and a hidden input per permission to
     // reach the form at all.
     permissions: formData.getAll("permissions").map(String),
+    screens: formData.getAll("screens").map(String),
     home: String(formData.get("home") ?? "overview"),
   };
+}
+
+/** Which screens the role offers at all. An instructor role ticks Today and
+ *  nothing else, and the deck becomes their whole app. */
+function ScreenPicker({ role }: { role?: Role }) {
+  const held = new Set(role?.screens ?? []);
+  return (
+    <fieldset className="space-y-2">
+      <legend className="mb-1 block text-[13px] font-medium text-foreground">
+        Which screens this role can open
+      </legend>
+      <p className="text-xs text-muted-foreground">
+        Everything else is a page that does not exist for them. Account is always there.
+      </p>
+      <div className="overflow-hidden rounded-md border">
+        {SCREENS.map((screen) => (
+          <label
+            key={screen.key}
+            htmlFor={`screen-${screen.key}`}
+            className="flex cursor-pointer items-start gap-2.5 border-b p-2.5 transition-colors last:border-0 hover:bg-accent/40"
+          >
+            <input
+              id={`screen-${screen.key}`}
+              type="checkbox"
+              name="screens"
+              value={screen.key}
+              defaultChecked={held.has(screen.key)}
+              className="mt-0.5 size-4 shrink-0 accent-primary"
+            />
+            <span className="min-w-0">
+              <span className="block text-[13px] font-medium text-foreground">{screen.label}</span>
+              <span className="mt-0.5 block text-xs text-muted-foreground">
+                {screen.description}
+              </span>
+            </span>
+          </label>
+        ))}
+      </div>
+    </fieldset>
+  );
 }
 
 /** Where this role's day starts. Native radios, for the same reason the
@@ -146,6 +189,7 @@ function RoleFields({ role }: { role?: Role }) {
           defaultValue={role?.description ?? ""}
         />
       </Field>
+      <ScreenPicker role={role} />
       <PermissionPicker role={role} />
       <HomePicker role={role} />
     </>

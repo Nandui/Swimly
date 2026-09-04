@@ -21,6 +21,8 @@ declare module "next-auth" {
       permissions: string[];
       /** A `ROLE_HOMES` key: where this person's day starts. */
       home: string;
+      /** `SCREENS` keys: which pages their role offers at all. */
+      screens: string[];
     } & DefaultSession["user"];
   }
 

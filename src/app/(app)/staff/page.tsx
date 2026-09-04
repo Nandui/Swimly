@@ -12,7 +12,7 @@ import {
   SetPersonActive,
 } from "@/components/staff/person-actions";
 import { can } from "@/lib/authz";
-import { permissionPage } from "@/lib/page-guards";
+import { screenPage } from "@/lib/page-guards";
 import { permissionCountLabel, roleReach } from "@/lib/staff/constants";
 import { expandPermissions } from "@/lib/staff/permissions";
 import { listRolesForPicker, type RoleOption } from "@/lib/staff/data/roles";
@@ -21,7 +21,7 @@ import { listPeopleForDisplay, type Person } from "@/lib/staff/data/staff";
 export const metadata: Metadata = { title: "Staff" };
 
 export default async function StaffPage() {
-  const session = await permissionPage("staff.manage");
+  const session = await screenPage("staff", "staff.manage");
 
   const [people, roles] = await Promise.all([listPeopleForDisplay(), listRolesForPicker()]);
   const active = people.filter((p) => p.isActive);

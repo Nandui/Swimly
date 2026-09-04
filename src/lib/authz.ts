@@ -24,6 +24,7 @@
 import type { Session } from "next-auth";
 import { auth } from "@/auth";
 import { expandPermissions, type PermissionKey } from "@/lib/staff/permissions";
+import { visibleScreens, type ScreenKey } from "@/lib/staff/screens";
 
 export type { PermissionKey };
 
@@ -48,6 +49,13 @@ export function permissionsOf(session: Session): Set<PermissionKey> {
 
 export function can(session: Session, permission: PermissionKey): boolean {
   return permissionsOf(session).has(permission);
+}
+
+/** Whether this person's role offers a screen at all — and they hold what
+ *  the screen requires. Pages ask this before they ask anything else; links
+ *  that cross into another screen ask it before they render. */
+export function canSee(session: Session, screen: ScreenKey): boolean {
+  return visibleScreens(session.user.screens ?? [], permissionsOf(session)).has(screen);
 }
 
 /** True if the session holds **any** of these. For screens that exist to serve

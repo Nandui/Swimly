@@ -12,12 +12,12 @@ import {
 } from "@/components/curriculum/programme-actions";
 import { getCurriculumSummary, getProgrammes } from "@/lib/curriculum/data/curriculum";
 import { levelCountLabel } from "@/lib/curriculum/constants";
-import { permissionPage } from "@/lib/page-guards";
+import { screenPage } from "@/lib/page-guards";
 
 export const metadata: Metadata = { title: "Programmes" };
 
 export default async function ProgrammesPage() {
-  await permissionPage("curriculum.manage");
+  await screenPage("programmes", "curriculum.manage");
 
   const [programmes, summary] = await Promise.all([
     getProgrammes(true),

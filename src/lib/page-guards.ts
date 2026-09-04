@@ -1,6 +1,7 @@
 import { notFound, redirect } from "next/navigation";
 import { auth } from "@/auth";
-import { can, canAny, type PermissionKey } from "@/lib/authz";
+import { can, canAny, canSee, type PermissionKey } from "@/lib/authz";
+import type { ScreenKey } from "@/lib/staff/screens";
 
 /** Page-level guards, kept apart from `authz.ts` because they answer a
  *  different question with a different verb.
@@ -16,6 +17,17 @@ import { can, canAny, type PermissionKey } from "@/lib/authz";
 export async function pageSession() {
   const session = await auth();
   if (!session?.user) redirect("/sign-in");
+  return session;
+}
+
+/** The page exists only for someone whose role offers this screen — and,
+ *  when the page is more than a read, holds the permission as well. Every
+ *  page under the shell except Account asks this first, so a role given one
+ *  screen sees one screen and every other route is a 404. */
+export async function screenPage(screen: ScreenKey, permission?: PermissionKey) {
+  const session = await pageSession();
+  if (!canSee(session, screen)) notFound();
+  if (permission && !can(session, permission)) notFound();
   return session;
 }
 
