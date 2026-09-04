@@ -7,7 +7,7 @@ import { AddRole, DeleteRole, EditRole } from "@/components/staff/role-actions";
 import { permissionPage } from "@/lib/page-guards";
 import { permissionCountLabel, roleReach } from "@/lib/staff/constants";
 import { listRoles, type RoleRow } from "@/lib/staff/data/roles";
-import { PERMISSIONS, expandPermissions } from "@/lib/staff/permissions";
+import { PERMISSIONS, ROLE_HOMES, expandPermissions, isRoleHome } from "@/lib/staff/permissions";
 
 export const metadata: Metadata = { title: "Roles" };
 
@@ -79,7 +79,8 @@ function RoleCard({ role }: { role: RoleRow }) {
           <p className="mt-0.5 text-xs text-muted-foreground">
             {permissionCountLabel(role.permissions.length)} ·{" "}
             <span className="tabular-nums">{role._count.users}</span>{" "}
-            {role._count.users === 1 ? "account" : "accounts"}
+            {role._count.users === 1 ? "account" : "accounts"} · starts on{" "}
+            {(isRoleHome(role.home) ? ROLE_HOMES[role.home] : ROLE_HOMES.overview).label}
           </p>
         </div>
         <div className="flex items-center gap-0.5 max-md:gap-2 opacity-0 transition-opacity group-focus-within:opacity-100 group-hover:opacity-100 max-md:opacity-100">

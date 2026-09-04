@@ -108,6 +108,10 @@ model StaffRole {
   name        String   @unique
   description String?
   permissions String[]
+  /// Where the role starts after signing in: a key from `ROLE_HOMES` in
+  /// `src/lib/staff/permissions.ts` ("overview" or "today"). A string rather
+  /// than an enum for the same reason `permissions` is: the catalogue is code.
+  home        String   @default("overview")
   /// The three roles the app shipped with. They may be renamed and their
   /// permissions edited, but they cannot be deleted: `seed.ts` and the
   /// migration both name them, and a fresh database has to land somewhere.

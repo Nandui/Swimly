@@ -33,7 +33,7 @@ export const metadata: Metadata = { title: "Assessment" };
 export default async function AssessmentSessionPage(props: PageProps<"/assessments/[id]">) {
   const auth = await pageSession();
   const book = can(auth, "enrolment.manage");
-  const assess = can(auth, "progression.assess");
+  const assess = can(auth, "assessments.run");
   const manage = can(auth, "courses.manage");
   const { id } = await props.params;
 

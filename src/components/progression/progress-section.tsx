@@ -23,6 +23,7 @@ export function ProgressSection({
   studentId,
   studentName,
   manage,
+  complete = manage,
   admin,
   courses = [],
   openPlaceByLevel = {},
@@ -31,6 +32,9 @@ export function ProgressSection({
   studentId: string;
   studentName: string;
   manage: boolean;
+  /** May confirm a level as done. Marking and confirming are separate
+   *  permissions; a caller that does not say assumes they go together. */
+  complete?: boolean;
   admin: boolean;
   /** Classes they could be moved into. The pages already load this. */
   courses?: MoveTarget[];
@@ -143,6 +147,7 @@ export function ProgressSection({
                   studentId={studentId}
                   studentName={studentName}
                   manage={manage}
+                  complete={complete}
                   admin={admin}
                 />
               ))}
@@ -164,12 +169,14 @@ function LevelBlock({
   studentId,
   studentName,
   manage,
+  complete,
   admin,
 }: {
   level: LevelProgress;
   studentId: string;
   studentName: string;
   manage: boolean;
+  complete: boolean;
   admin: boolean;
 }) {
   const completed = Boolean(level.completedOn);
@@ -233,7 +240,7 @@ function LevelBlock({
             <p className="mt-0.5 text-xs text-muted-foreground">{level.description}</p>
           ) : null}
         </div>
-        {manage ? (
+        {complete ? (
           <ConfirmLevel
             studentId={studentId}
             levelId={level.id}

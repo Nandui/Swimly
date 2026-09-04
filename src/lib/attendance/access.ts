@@ -8,11 +8,13 @@ import { can } from "@/lib/authz";
  *  person. What the catalogue carries is the two-step: `attendance.mark` marks
  *  the classes you teach, `attendance.markAny` marks anybody's.
  *
- *  Cover is the third way in. Somebody with `attendance.mark` standing at a
+ *  Cover is the third way in. Somebody with `attendance.cover` standing at a
  *  class that is not theirs — another instructor's, or nobody's — takes it
  *  over for the day, and that day's `ClassCover` row makes it theirs to mark.
  *  It used to need an admin to reassign the course; now it needs the person
- *  to say so, and the register to record it. */
+ *  to say so, and the register to record it. Cover is its own permission so
+ *  a club can have instructors who mark their own classes and never take
+ *  over anyone else's. */
 
 type Args = {
   session: Session;
@@ -34,7 +36,7 @@ export function canMarkRegister({ session, instructorId, coverById }: Args): boo
  *  conducted the class, not about permission — and they are offered the
  *  answer "just recording it for the instructor". */
 export function needsTakeOver({ session, instructorId, coverById }: Args): boolean {
-  if (!can(session, "attendance.mark")) return false;
+  if (!can(session, "attendance.cover")) return false;
   const me = session.user.id;
   if (instructorId === me) return false;
   if (coverById != null && coverById === me) return false;

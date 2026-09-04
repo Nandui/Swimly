@@ -83,6 +83,7 @@ const {
       session.user.roleId = "";
       session.user.roleName = "";
       session.user.permissions = [];
+      session.user.home = "overview";
       return session;
     },
   },
@@ -95,7 +96,7 @@ const ACCOUNT_SELECT = {
   name: true,
   email: true,
   isActive: true,
-  staffRole: { select: { id: true, name: true, permissions: true } },
+  staffRole: { select: { id: true, name: true, permissions: true, home: true } },
 } as const;
 
 type Account = {
@@ -103,7 +104,7 @@ type Account = {
   name: string;
   email: string;
   isActive: boolean;
-  staffRole: { id: string; name: string; permissions: string[] } | null;
+  staffRole: { id: string; name: string; permissions: string[]; home: string } | null;
 };
 
 /** An account with no role has no permissions and no way to be given any
@@ -119,6 +120,7 @@ function sessionUserFor(account: Account) {
     roleId: account.staffRole.id,
     roleName: account.staffRole.name,
     permissions: account.staffRole.permissions,
+    home: account.staffRole.home,
   };
 }
 

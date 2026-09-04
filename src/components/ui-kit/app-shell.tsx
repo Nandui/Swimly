@@ -39,6 +39,8 @@ export type SwitcherState = { collapsed: boolean; compact: boolean };
 export type AppShellProps = {
   /** Product name. Rendered as type plus a blue dot — no logo asset. */
   wordmark: string;
+  /** Where the wordmark goes. Defaults to the root. */
+  homeHref?: string;
   items: NavItem[];
   userName: string;
   /** The line under the name in the account menu: role, team, tenant. */
@@ -60,9 +62,9 @@ function renderSwitcher(switcher: AppShellProps["switcher"], state: SwitcherStat
   return typeof switcher === "function" ? switcher(state) : switcher;
 }
 
-function Wordmark({ label }: { label: string }) {
+function Wordmark({ label, href = "/" }: { label: string; href?: string }) {
   return (
-    <Link href="/" className="flex items-baseline gap-0.5 select-none">
+    <Link href={href} className="flex items-baseline gap-0.5 select-none">
       <span className="text-[15px] font-semibold tracking-tight text-foreground">{label}</span>
       <span className="size-1.5 translate-y-px rounded-full bg-primary" aria-hidden />
     </Link>
@@ -200,7 +202,7 @@ export function Sidebar(props: AppShellProps) {
       )}
     >
       <div className={cn("flex h-12 items-center gap-2 px-3", collapsed && "justify-center px-0")}>
-        {!collapsed && <Wordmark label={props.wordmark} />}
+        {!collapsed && <Wordmark label={props.wordmark} href={props.homeHref} />}
         <button
           type="button"
           onClick={() => setCollapsed((v) => !v)}
@@ -253,7 +255,7 @@ export function MobileNav(props: AppShellProps) {
           <SheetHeader className="h-12 justify-center px-3">
             <SheetTitle asChild>
               <div>
-                <Wordmark label={props.wordmark} />
+                <Wordmark label={props.wordmark} href={props.homeHref} />
               </div>
             </SheetTitle>
           </SheetHeader>
@@ -261,7 +263,7 @@ export function MobileNav(props: AppShellProps) {
           <UserMenu {...props} />
         </SheetContent>
       </Sheet>
-      <Wordmark label={props.wordmark} />
+      <Wordmark label={props.wordmark} href={props.homeHref} />
       {props.switcher ? (
         <div className="flex min-w-0 flex-1 items-center">
           {renderSwitcher(props.switcher, { collapsed: false, compact: true })}

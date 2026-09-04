@@ -18,6 +18,7 @@ export function SwimmerBlock({
   nextUp,
   courses,
   mayAssess,
+  mayComplete = mayAssess,
   admin,
 }: {
   swimmer: ClassSwimmer;
@@ -27,6 +28,8 @@ export function SwimmerBlock({
   nextUp: { id: string; name: string } | null;
   courses: MoveTarget[];
   mayAssess: boolean;
+  /** May confirm the level as done — its own permission. */
+  mayComplete?: boolean;
   admin: boolean;
 }) {
   const name = fullName(swimmer.student);
@@ -69,7 +72,7 @@ export function SwimmerBlock({
         />
         {mayAssess ? (
           <div className="flex flex-wrap justify-end gap-2">
-            {done ? null : (
+            {done || !mayComplete ? null : (
               <ConfirmLevel
                 studentId={swimmer.student.id}
                 levelId={levelId}

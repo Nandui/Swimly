@@ -19,6 +19,8 @@ declare module "next-auth" {
       roleId: string;
       roleName: string;
       permissions: string[];
+      /** A `ROLE_HOMES` key: where this person's day starts. */
+      home: string;
     } & DefaultSession["user"];
   }
 

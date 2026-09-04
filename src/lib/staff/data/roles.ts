@@ -14,6 +14,7 @@ export async function listRoles() {
       name: true,
       description: true,
       permissions: true,
+      home: true,
       isSystem: true,
       sortOrder: true,
       _count: { select: { users: true } },

@@ -127,6 +127,20 @@ one of those is an endpoint the browser can call.
 **Nothing refers to a role by name.** Not the code, not the nav, not the seed.
 That is what lets a club rename or delete every role the app shipped with.
 
+**A role also says where its day starts.** `StaffRole.home` is a key from the
+`ROLE_HOMES` map in the catalogue file — the overview for the desk, Today for
+an instructor. The sign-in form pushes to `/start`, which reads the role and
+redirects; the wordmark goes to the same place. A role set to start on Today
+without the permission that opens it lands on the overview instead.
+
+**The deck's permissions are cut fine on purpose** — taking your own
+attendance, taking over a colleague's class, marking competencies, completing
+a level, running an assessment session — because the club wanted to build an
+instructor role that does exactly some of those and not the rest. Each is a
+different act with a different record, so each is its own key, and the
+implication map keeps the broader ones (`attendance.markAny`,
+`progression.override`) granting the narrower.
+
 Two things stay **scoping rules inside actions** rather than permissions:
 
 - **Whose register.** `attendance.mark` marks the classes you teach;

@@ -7,13 +7,19 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { createRole, deleteRole, updateRole } from "@/lib/staff/actions/roles";
-import { PERMISSIONS, PERMISSION_GROUP_ORDER } from "@/lib/staff/permissions";
+import {
+  PERMISSIONS,
+  PERMISSION_GROUP_ORDER,
+  ROLE_HOMES,
+  ROLE_HOME_ORDER,
+} from "@/lib/staff/permissions";
 
 type Role = {
   id: string;
   name: string;
   description: string | null;
   permissions: string[];
+  home: string;
   isSystem: boolean;
 };
 
@@ -25,7 +31,47 @@ function readRole(formData: FormData) {
     // A switch would need its own state and a hidden input per permission to
     // reach the form at all.
     permissions: formData.getAll("permissions").map(String),
+    home: String(formData.get("home") ?? "overview"),
   };
+}
+
+/** Where this role's day starts. Native radios, for the same reason the
+ *  permissions are native checkboxes. */
+function HomePicker({ role }: { role?: Role }) {
+  const current = role?.home ?? "overview";
+  return (
+    <fieldset className="space-y-2">
+      <legend className="mb-1 block text-[13px] font-medium text-foreground">
+        Where they start after signing in
+      </legend>
+      <div className="overflow-hidden rounded-md border">
+        {ROLE_HOME_ORDER.map((key) => (
+          <label
+            key={key}
+            htmlFor={`home-${key}`}
+            className="flex cursor-pointer items-start gap-2.5 border-b p-2.5 transition-colors last:border-0 hover:bg-accent/40"
+          >
+            <input
+              id={`home-${key}`}
+              type="radio"
+              name="home"
+              value={key}
+              defaultChecked={current === key}
+              className="mt-0.5 size-4 shrink-0 accent-primary"
+            />
+            <span className="min-w-0">
+              <span className="block text-[13px] font-medium text-foreground">
+                {ROLE_HOMES[key].label}
+              </span>
+              <span className="mt-0.5 block text-xs text-muted-foreground">
+                {ROLE_HOMES[key].description}
+              </span>
+            </span>
+          </label>
+        ))}
+      </div>
+    </fieldset>
+  );
 }
 
 /** The permission list, grouped, with every entry carrying the sentence that
@@ -101,6 +147,7 @@ function RoleFields({ role }: { role?: Role }) {
         />
       </Field>
       <PermissionPicker role={role} />
+      <HomePicker role={role} />
     </>
   );
 }

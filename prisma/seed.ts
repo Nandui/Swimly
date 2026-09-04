@@ -30,6 +30,7 @@ async function ensureSystemRoles() {
         name: role.name,
         description: role.description,
         permissions: role.permissions,
+        home: role.home,
         isSystem: true,
         sortOrder: index,
       },

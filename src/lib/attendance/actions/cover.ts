@@ -28,7 +28,7 @@ const takeOverSchema = z.object({
 export type TakeOverInput = z.infer<typeof takeOverSchema>;
 
 export async function takeOverClass(input: TakeOverInput): Promise<ActionResult> {
-  const session = await requirePermission("attendance.mark");
+  const session = await requirePermission("attendance.cover");
 
   const parsed = takeOverSchema.safeParse(input);
   if (!parsed.success) return fail(parsed.error.issues[0].message);

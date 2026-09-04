@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 import Link from "next/link";
-import { CalendarCheck, ChevronRight, Play } from "lucide-react";
+import { CalendarCheck, ChevronRight, ClipboardCheck, Play } from "lucide-react";
 import { EmptyState } from "@/components/ui-kit/empty-state";
 import { PageHeader } from "@/components/ui-kit/page-header";
 import { TabStrip } from "@/components/ui-kit/tab-strip";
@@ -511,7 +511,7 @@ function ClassRow({
           href={`/courses/${course.id}/class?date=${iso}`}
           aria-label={`${done ? "Open" : "Start"} class: ${name}, ${time}`}
         >
-          <Play className="size-4" />
+          {done ? <ClipboardCheck className="size-4" /> : <Play className="size-4" />}
           {done ? "Open class" : "Start class"}
         </Link>
       </Button>

@@ -71,6 +71,7 @@ export default async function ClassPage(props: PageProps<"/courses/[id]/class">)
   // Marking competencies is its own permission; being the one at the pool
   // is necessary but not enough.
   const mayAssess = mayMark && can(session, "progression.assess");
+  const mayComplete = mayAssess && can(session, "progression.complete");
   const askTakeOver = !course.archivedAt && needsTakeOver(access);
   const admin = can(session, "progression.override");
 
@@ -239,7 +240,7 @@ export default async function ClassPage(props: PageProps<"/courses/[id]/class">)
                         {swimmer.achieved} of {swimmer.total}
                       </Tag>
                     </span>
-                    {mayAssess ? (
+                    {mayComplete ? (
                       <ConfirmLevel
                         studentId={swimmer.student.id}
                         levelId={progress.course.levelId}

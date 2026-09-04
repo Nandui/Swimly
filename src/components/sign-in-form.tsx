@@ -40,7 +40,8 @@ export function SignInForm({ devAdminName }: { devAdminName: string | null }) {
         return;
       }
       setError(null);
-      router.push("/");
+      // `/start` reads the role and lands them where their day begins.
+      router.push("/start");
       router.refresh();
     });
   }
@@ -58,7 +59,8 @@ export function SignInForm({ devAdminName }: { devAdminName: string | null }) {
         return;
       }
       setError(null);
-      router.push("/");
+      // `/start` reads the role and lands them where their day begins.
+      router.push("/start");
       router.refresh();
     });
   }

@@ -50,6 +50,7 @@ export default async function AssessPage(props: PageProps<"/courses/[id]/assess"
 
   const admin = can(session, "progression.override");
   const mayAssess = !course.archivedAt && canMarkRegister(access);
+  const mayComplete = mayAssess && can(session, "progression.complete");
   const askTakeOver = !course.archivedAt && needsTakeOver(access);
 
   const ready = progress.swimmers.filter(
@@ -131,6 +132,7 @@ export default async function AssessPage(props: PageProps<"/courses/[id]/assess"
               nextUp={up}
               courses={courses}
               mayAssess={mayAssess}
+              mayComplete={mayComplete}
               admin={admin}
             />
           ))}

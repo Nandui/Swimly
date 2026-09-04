@@ -13,7 +13,13 @@ import { logAudit } from "@/lib/audit";
 import { requirePermission } from "@/lib/authz";
 import { prisma } from "@/lib/prisma";
 import { guardKeyholders, withKeyholderLock } from "@/lib/staff/keyholders";
-import { ALL_PERMISSIONS, legacyRoleFor, type PermissionKey } from "@/lib/staff/permissions";
+import {
+  ALL_PERMISSIONS,
+  ROLE_HOMES,
+  isRoleHome,
+  legacyRoleFor,
+  type PermissionKey,
+} from "@/lib/staff/permissions";
 
 /** Roles are the rules about the rules, so every action here needs
  *  `roles.manage` — including the one that hands `roles.manage` out.
@@ -35,9 +41,12 @@ const roleSchema = z.object({
     .max(60, "Keep the name under 60 characters."),
   description: z.string().trim().max(300, "Keep the description under 300 characters."),
   permissions: z.array(z.string()).max(100),
+  /** A `ROLE_HOMES` key. Anything else lands on the overview. */
+  home: z.string().transform((value) => (isRoleHome(value) ? value : "overview")),
 });
 
-export type RoleInput = z.infer<typeof roleSchema>;
+/** The form's shape, before the schema normalises `home`. */
+export type RoleInput = z.input<typeof roleSchema>;
 
 /** Keys are filtered against the catalogue rather than validated as an enum:
  *  a form posting a key that no longer exists should drop it, not fail. */
@@ -51,7 +60,7 @@ export async function createRole(input: RoleInput): Promise<ActionResult> {
 
   const parsed = roleSchema.safeParse(input);
   if (!parsed.success) return fail(parsed.error.issues[0].message);
-  const { name, description } = parsed.data;
+  const { name, description, home } = parsed.data;
   const permissions = cleanPermissions(parsed.data.permissions);
 
   const last = await prisma.staffRole.findFirst({
@@ -66,6 +75,7 @@ export async function createRole(input: RoleInput): Promise<ActionResult> {
           name,
           description: description || null,
           permissions,
+          home,
           sortOrder: (last?.sortOrder ?? -1) + 1,
         },
         select: { id: true, name: true },
@@ -93,18 +103,19 @@ export async function updateRole(id: string, input: RoleInput): Promise<ActionRe
 
   const parsed = roleSchema.safeParse(input);
   if (!parsed.success) return fail(parsed.error.issues[0].message);
-  const { name, description } = parsed.data;
+  const { name, description, home } = parsed.data;
   const permissions = cleanPermissions(parsed.data.permissions);
 
   const existing = await prisma.staffRole.findUnique({
     where: { id },
-    select: { id: true, name: true, description: true, permissions: true },
+    select: { id: true, name: true, description: true, permissions: true, home: true },
   });
   if (!existing) return fail("That role no longer exists.");
 
   const changes: string[] = [];
   if (existing.name !== name) changes.push(`name ${existing.name} → ${name}`);
   if ((existing.description ?? "") !== description) changes.push("description");
+  if (existing.home !== home) changes.push(`starts on ${ROLE_HOMES[home].label}`);
 
   const before = new Set(existing.permissions);
   const after = new Set<string>(permissions);
@@ -128,7 +139,7 @@ export async function updateRole(id: string, input: RoleInput): Promise<ActionRe
 
       const updated = await tx.staffRole.update({
         where: { id },
-        data: { name, description: description || null, permissions },
+        data: { name, description: description || null, permissions, home },
         select: { id: true, name: true },
       });
 

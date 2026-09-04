@@ -49,6 +49,7 @@ export default async function StudentPage(props: PageProps<"/students/[id]">) {
   const editStudent = can(session, "students.manage");
   const manage = can(session, "enrolment.manage");
   const assess = can(session, "progression.assess");
+  const complete = can(session, "progression.complete");
   const admin = can(session, "progression.override");
   const [{ id }, params] = await Promise.all([props.params, props.searchParams]);
   const tab = profileTab(params.tab);
@@ -299,6 +300,7 @@ export default async function StudentPage(props: PageProps<"/students/[id]">) {
               studentId={student.id}
               studentName={fullName(student)}
               manage={assess}
+              complete={complete}
               admin={admin}
               courses={courses}
               openPlaceByLevel={openPlaceByLevel}

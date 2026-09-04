@@ -160,7 +160,7 @@ export async function cancelBooking(id: string): Promise<ActionResult> {
 }
 
 export async function markNoShow(id: string): Promise<ActionResult> {
-  const actor = await requirePermission("progression.assess");
+  const actor = await requirePermission("assessments.run");
 
   const booking = await loadBooking(id);
   if (!booking) return fail("That booking no longer exists.");
@@ -194,7 +194,7 @@ export type OutcomeInput = z.infer<typeof outcomeSchema>;
  *  From then on `hasEarnedPlace` treats that level, and everything below it
  *  in the programme, as earned. */
 export async function recordOutcome(input: OutcomeInput): Promise<ActionResult> {
-  const actor = await requirePermission("progression.assess");
+  const actor = await requirePermission("assessments.run");
 
   const parsed = outcomeSchema.safeParse(input);
   if (!parsed.success) return fail(parsed.error.issues[0].message);

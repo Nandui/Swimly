@@ -300,7 +300,7 @@ const confirmSchema = z.object({
 export async function confirmLevelCompletion(
   input: z.infer<typeof confirmSchema>
 ): Promise<ActionResult> {
-  const session = await requirePermission("progression.assess");
+  const session = await requirePermission("progression.complete");
 
   const parsed = confirmSchema.safeParse(input);
   if (!parsed.success) return fail(parsed.error.issues[0].message);
