@@ -24,7 +24,10 @@ const COURSE_SELECT = {
     select: {
       id: true,
       name: true,
-      programme: { select: { id: true, name: true } },
+      // Curriculum order, so a screen grouping classes by level lists the
+      // ladder top to bottom rather than alphabetically.
+      sortOrder: true,
+      programme: { select: { id: true, name: true, sortOrder: true } },
     },
   },
   instructor: { select: { id: true, name: true } },
