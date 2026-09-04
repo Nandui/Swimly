@@ -304,6 +304,25 @@ than the enrolment being re-pointed: attendance hangs off
 `(course, student, date)`, and rewriting the enrolment would orphan every
 register they were already on.
 
+### Cover is self-declared, and recorded
+
+The register was scoped to the instructor on the course, and cover needed an
+admin to reassign it. That held until the first evening a class went
+unmarked because the one person who could reassign had gone home. Now the
+person standing at the pool says so: opening a class that is not theirs
+asks whether they are taking it, and confirming writes a `ClassCover` row
+for that class and date — who conducted it, and whose it was — which makes
+the register and the checklist theirs to mark for the day. The register's
+audit line names the cover and the instructor covered for; every competency
+saved carries the name of whoever saved it, cover or not.
+
+Self-declared is not the same as unaudited. Nothing about who taught a
+class is inferred; it is stated once, kept on the row, and readable on the
+register, the deck screen and the activity trail. Somebody holding
+`attendance.markAny` is asked the same question, with a third answer for the
+desk copying in a paper sheet: recording it for the instructor, not taking
+it over.
+
 ### Batched writes, on purpose
 
 The register and the assessment checklist each save as **one action carrying

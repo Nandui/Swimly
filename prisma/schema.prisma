@@ -147,6 +147,8 @@ model User {
   staffRole            StaffRole?         @relation(fields: [staffRoleId], references: [id], onDelete: Restrict)
   auditEntries         AuditLog[]
   coursesTaught        Course[]
+  classesCovered       ClassCover[]       @relation("ClassCoverBy")
+  classesCoveredFor    ClassCover[]       @relation("ClassCoverFor")
   attendanceMarked     AttendanceRecord[]
   assessmentsMade      CompetencyResult[]
   completionsConfirmed LevelCompletion[]
@@ -377,6 +379,7 @@ model Course {
   enrolments      Enrolment[]
   attendance      AttendanceRecord[]
   notes           ClassNote[]
+  covers          ClassCover[]
   assessedResults CompetencyResult[]
 
   @@index([clubId, dayOfWeek, startMinutes])
@@ -464,6 +467,34 @@ model ClassNote {
   by     User?  @relation(fields: [byId], references: [id], onDelete: SetNull)
 
   @@unique([courseId, date])
+}
+
+/// A class taught, on one date, by somebody other than its instructor — or by
+/// somebody at all, when nobody was assigned. Written when the cover confirms
+/// they are taking the class, before a mark is made, so the register says who
+/// actually stood at the pool and who it belonged to.
+///
+/// Deliberately not a session row: no time, no cancellation, nothing about the
+/// class beyond who conducted it. `ClassNote` is still the seam.
+model ClassCover {
+  id             String   @id @default(cuid())
+  courseId       String
+  date           DateTime @db.Date
+  /// Who conducted it. Nullable like every "who", so the record outlives the
+  /// account; the name is kept alongside for the same reason.
+  coverById      String?
+  coverByName    String
+  /// Who the class belonged to that day. Null when nobody was assigned.
+  instructorId   String?
+  instructorName String?
+  createdAt      DateTime @default(now())
+
+  course     Course @relation(fields: [courseId], references: [id], onDelete: Restrict)
+  coverBy    User?  @relation("ClassCoverBy", fields: [coverById], references: [id], onDelete: SetNull)
+  instructor User?  @relation("ClassCoverFor", fields: [instructorId], references: [id], onDelete: SetNull)
+
+  @@unique([courseId, date])
+  @@index([coverById, date])
 }
 
 // ---------------------------------------------------------------------------

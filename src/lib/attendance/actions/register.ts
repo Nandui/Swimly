@@ -64,15 +64,23 @@ export async function markRegister(input: MarkRegisterInput): Promise<ActionResu
   if (!course) return fail("That course no longer exists.");
   if (course.archivedAt) return fail("That course is archived.");
 
+  const date = parseDateOnly(iso);
+
+  // Whoever took the class over that day may mark it, and the register says
+  // they did.
+  const cover = await prisma.classCover.findUnique({
+    where: { courseId_date: { courseId, date } },
+    select: { coverById: true, coverByName: true, instructorName: true },
+  });
+
   if (
-    !canMarkRegister({ session, instructorId: course.instructorId })
+    !canMarkRegister({ session, instructorId: course.instructorId, coverById: cover?.coverById })
   ) {
-    return fail("That is not your class. Someone who can take any register has to reassign it, or mark it for you.");
+    return fail("That is not your class. Take it over first, or ask someone who can take any register.");
   }
 
   // Without session rows, these two lines are the only thing standing between
   // the table and attendance on days the class never ran.
-  const date = parseDateOnly(iso);
   if (weekdayOf(date) !== course.dayOfWeek) {
     return fail(
       `${courseLabel(course)} runs on ${DAY_META[course.dayOfWeek].label}s. ${formatDate(date)} is not one.`
@@ -174,6 +182,15 @@ export async function markRegister(input: MarkRegisterInput): Promise<ActionResu
     }
   }
 
+  // The attendance sheet says who conducted the class when it was not its
+  // instructor: the cover's name, and whose class it was.
+  const conducted =
+    cover && cover.coverById === session.user.id
+      ? cover.instructorName
+        ? ` — taken by ${markedByName}, covering for ${cover.instructorName}`
+        : ` — taken by ${markedByName}, nobody having been assigned`
+      : "";
+
   await logAudit({
     actorId: session.user.id,
     actorName: markedByName,
@@ -182,9 +199,9 @@ export async function markRegister(input: MarkRegisterInput): Promise<ActionResu
     entityId: courseId,
     programmeId: course.level.programmeId,
     summary:
-      description?.summary ??
-      `${classNote ? "Noted" : "Cleared the note"} on ${courseLabel(course)} for ${formatDate(date)}` +
-        (classNote ? ` — ${classNote}` : ""),
+      (description?.summary ??
+        `${classNote ? "Noted" : "Cleared the note"} on ${courseLabel(course)} for ${formatDate(date)}` +
+          (classNote ? ` — ${classNote}` : "")) + conducted,
   });
 
   revalidatePath("/courses/[id]/register", "page");

@@ -41,14 +41,14 @@ export const PERMISSIONS = [
     group: "On the deck",
     label: "Take the register for their own classes",
     description:
-      "Mark attendance for classes they are the instructor of. Without this the Today page is not offered.",
+      "Mark attendance and sign off competencies for classes they are the instructor of, or take another instructor's class over for the day — which the register records. Without this the Today page is not offered.",
   },
   {
     key: "attendance.markAny",
     group: "On the deck",
     label: "Take the register for any class",
     description:
-      "Mark attendance for classes they do not teach — cover staff, or whoever is holding the tablet. Includes the previous permission.",
+      "Mark attendance for classes they do not teach without taking them over — the desk copying in a paper sheet, or whoever is holding the tablet. Includes the previous permission.",
   },
   {
     key: "progression.assess",

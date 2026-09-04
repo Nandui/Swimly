@@ -28,6 +28,7 @@ const ACTIONS: Record<string, { label: string; color: TagColor }> = {
 
   // The pool deck
   attendance: { label: "Register", color: "blue" },
+  cover: { label: "Took over", color: "purple" },
   assess: { label: "Assessed", color: "yellow" },
   "complete-level": { label: "Level passed", color: "green" },
   "revoke-level": { label: "Level revoked", color: "orange" },

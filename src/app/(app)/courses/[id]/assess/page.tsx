@@ -5,15 +5,18 @@ import { ChevronLeft, Users } from "lucide-react";
 import { EmptyState } from "@/components/ui-kit/empty-state";
 import { PageHeader } from "@/components/ui-kit/page-header";
 import { Tag } from "@/components/ui-kit/tag";
+import { TakeOver } from "@/components/attendance/take-over";
 import { WrongClub } from "@/components/clubs/wrong-club";
 import { CompetencyChecklist, ConfirmLevel } from "@/components/progression/assessment";
 import { MoveUpToLevel, type MoveTarget } from "@/components/progression/move-up";
-import { canMarkRegister } from "@/lib/attendance/access";
+import { canMarkRegister, needsTakeOver } from "@/lib/attendance/access";
+import { mostRecentOccurrence } from "@/lib/attendance/dates";
+import { coverLabel, getClassCover } from "@/lib/attendance/data/cover";
 import { can } from "@/lib/authz";
 import { getCurrentClub } from "@/lib/clubs/current";
 import { courseLabel, courseName, formatSlot } from "@/lib/courses/constants";
 import { getCourse, getCourses } from "@/lib/courses/data/courses";
-import { formatDate } from "@/lib/format";
+import { formatDate, parseDateOnly } from "@/lib/format";
 import { permissionPage } from "@/lib/page-guards";
 import { getClassProgress, type ClassSwimmer } from "@/lib/progression/data/progress";
 import { nextLevel } from "@/lib/progression/rules";
@@ -41,10 +44,16 @@ export default async function AssessPage(props: PageProps<"/courses/[id]/assess"
   // What "up" means from this class, and the classes that teach it.
   const up = nextLevel(progress.course.levelId, progress.orderedLevels);
 
+  // The checklist belongs to whoever is taking the class today — the day it
+  // last ran, which is today when it runs today. A cover for that day makes
+  // it theirs, the same as the register.
+  const iso = mostRecentOccurrence(course.dayOfWeek);
+  const cover = await getClassCover(course.id, iso);
+  const access = { session, instructorId: course.instructorId, coverById: cover?.coverById };
+
   const admin = can(session, "progression.override");
-  const mayAssess =
-    !course.archivedAt &&
-    canMarkRegister({ session, instructorId: course.instructorId });
+  const mayAssess = !course.archivedAt && canMarkRegister(access);
+  const askTakeOver = !course.archivedAt && needsTakeOver(access);
 
   const ready = progress.swimmers.filter(
     (swimmer) => swimmer.eligible && !swimmer.completedOn
@@ -62,7 +71,10 @@ export default async function AssessPage(props: PageProps<"/courses/[id]/assess"
         </Link>
         <PageHeader
           title={`Assessing ${progress.course.level.name}`}
-          description={`${courseName(course)} · ${formatSlot(course)}`}
+          description={
+            `${courseName(course)} · ${formatSlot(course)}` +
+            (cover ? ` · ${coverLabel(cover)} on ${formatDate(parseDateOnly(iso))}` : "")
+          }
         />
       </div>
 
@@ -84,11 +96,23 @@ export default async function AssessPage(props: PageProps<"/courses/[id]/assess"
         ) : null}
       </p>
 
-      {!mayAssess ? (
+      {course.archivedAt ? (
         <p className="rounded bg-(--tag-yellow-bg) px-2.5 py-1.5 text-[13px] text-(--tag-yellow-fg)">
-          {course.archivedAt
-            ? "This course is archived, so its assessments are read-only."
-            : `This is ${course.instructor?.name ?? "somebody else"}'s class — you can read it but not sign anything off.`}
+          This course is archived, so its assessments are read-only.
+        </p>
+      ) : askTakeOver ? (
+        <TakeOver
+          courseId={course.id}
+          date={iso}
+          classLabel={courseName(course)}
+          dateLabel={formatDate(parseDateOnly(iso))}
+          instructorName={course.instructor?.name ?? null}
+          mayMarkAnyway={mayAssess}
+          autoOpen
+        />
+      ) : !mayAssess ? (
+        <p className="rounded bg-(--tag-yellow-bg) px-2.5 py-1.5 text-[13px] text-(--tag-yellow-fg)">
+          You can read this checklist but not sign anything off.
         </p>
       ) : null}
 

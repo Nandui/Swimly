@@ -7,9 +7,11 @@ import { PageHeader } from "@/components/ui-kit/page-header";
 import { Tag } from "@/components/ui-kit/tag";
 import { Button } from "@/components/ui/button";
 import { RegisterForm } from "@/components/attendance/register-form";
+import { TakeOver } from "@/components/attendance/take-over";
 import { WrongClub } from "@/components/clubs/wrong-club";
-import { canMarkRegister } from "@/lib/attendance/access";
+import { canMarkRegister, needsTakeOver } from "@/lib/attendance/access";
 import { isIsoDate, mostRecentOccurrence, shiftWeeks } from "@/lib/attendance/dates";
+import { coverLabel, getClassCover } from "@/lib/attendance/data/cover";
 import { getRegister } from "@/lib/attendance/data/register";
 import { getCurrentClub } from "@/lib/clubs/current";
 import { DAY_META, courseName, formatSlot } from "@/lib/courses/constants";
@@ -44,11 +46,16 @@ export default async function RegisterPage(props: PageProps<"/courses/[id]/regis
       ? requested
       : mostRecentOccurrence(course.dayOfWeek);
 
-  const { lines, taken, note } = await getRegister(id, iso);
+  const [{ lines, taken, note }, cover] = await Promise.all([
+    getRegister(id, iso),
+    getClassCover(id, iso),
+  ]);
 
-  const mayMark =
-    !course.archivedAt &&
-    canMarkRegister({ session, instructorId: course.instructorId });
+  const access = { session, instructorId: course.instructorId, coverById: cover?.coverById };
+  const mayMark = !course.archivedAt && canMarkRegister(access);
+  // Somebody else's class, or nobody's: they are asked whether they are
+  // taking it, and the register records the answer.
+  const askTakeOver = !course.archivedAt && needsTakeOver(access);
 
   const previous = shiftWeeks(iso, -1);
   const next = shiftWeeks(iso, 1);
@@ -73,11 +80,14 @@ export default async function RegisterPage(props: PageProps<"/courses/[id]/regis
               ) : (
                 <Tag color="yellow">Attendance not taken</Tag>
               )}
+              {cover ? <Tag color="purple">Covered</Tag> : null}
             </span>
           }
-          description={`${courseName(course)} · ${formatSlot(course)}${
-            course.instructor ? ` · ${course.instructor.name}` : ""
-          }`}
+          description={
+            `${courseName(course)} · ${formatSlot(course)}${
+              course.instructor ? ` · ${course.instructor.name}` : ""
+            }` + (cover ? ` · ${coverLabel(cover)}` : "")
+          }
           actions={
             <>
               <Button asChild variant="outline" size="sm">
@@ -99,11 +109,23 @@ export default async function RegisterPage(props: PageProps<"/courses/[id]/regis
         />
       </div>
 
-      {!mayMark ? (
+      {course.archivedAt ? (
         <p className="rounded bg-(--tag-yellow-bg) px-2.5 py-1.5 text-[13px] text-(--tag-yellow-fg)">
-          {course.archivedAt
-            ? "This course is archived, so its registers are read-only."
-            : `This is ${course.instructor?.name ?? "somebody else"}'s class, so you can read the register but not change it. An admin can reassign the course if you are covering.`}
+          This course is archived, so its registers are read-only.
+        </p>
+      ) : askTakeOver ? (
+        <TakeOver
+          courseId={course.id}
+          date={iso}
+          classLabel={courseName(course)}
+          dateLabel={formatDate(parseDateOnly(iso))}
+          instructorName={course.instructor?.name ?? null}
+          mayMarkAnyway={mayMark}
+          autoOpen
+        />
+      ) : !mayMark ? (
+        <p className="rounded bg-(--tag-yellow-bg) px-2.5 py-1.5 text-[13px] text-(--tag-yellow-fg)">
+          You can read this register but not change it.
         </p>
       ) : null}
 

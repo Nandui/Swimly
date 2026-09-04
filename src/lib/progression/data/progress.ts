@@ -238,7 +238,13 @@ export async function getClassProgress(courseId: string) {
     studentIds.length && competencyIds.length
       ? prisma.competencyResult.findMany({
           where: { studentId: { in: studentIds }, competencyId: { in: competencyIds } },
-          select: { studentId: true, competencyId: true, status: true },
+          select: {
+            studentId: true,
+            competencyId: true,
+            status: true,
+            assessedByName: true,
+            assessedOn: true,
+          },
         })
       : Promise.resolve([]),
     studentIds.length
@@ -249,26 +255,34 @@ export async function getClassProgress(courseId: string) {
       : Promise.resolve([]),
   ]);
 
-  const byStudent = new Map<string, Map<string, CompetencyStatus>>();
+  type Mark = { status: CompetencyStatus; assessedByName: string; assessedOn: Date };
+  const byStudent = new Map<string, Map<string, Mark>>();
   for (const result of results) {
-    const map = byStudent.get(result.studentId) ?? new Map<string, CompetencyStatus>();
-    map.set(result.competencyId, result.status);
+    const map = byStudent.get(result.studentId) ?? new Map<string, Mark>();
+    map.set(result.competencyId, result);
     byStudent.set(result.studentId, map);
   }
   const completedBy = new Map(completions.map((row) => [row.studentId, row.completedOn]));
 
   const swimmers = enrolments.map((enrolment) => {
-    const marks = byStudent.get(enrolment.student.id) ?? new Map<string, CompetencyStatus>();
-    const achieved = competencyIds.filter((id) => marks.get(id) === "ACHIEVED").length;
+    const marks = byStudent.get(enrolment.student.id) ?? new Map<string, Mark>();
+    const achieved = competencyIds.filter((id) => marks.get(id)?.status === "ACHIEVED").length;
     return {
       enrolmentId: enrolment.id,
       student: enrolment.student,
       /** Placed at a different level from the one this class teaches. */
       offLevel: enrolment.levelId !== course.levelId,
-      competencies: course.level.competencies.map((competency) => ({
-        ...competency,
-        status: marks.get(competency.id) ?? null,
-      })),
+      // Who set each mark, and when, travels with it: a competency is only
+      // ever signed off by a named instructor.
+      competencies: course.level.competencies.map((competency) => {
+        const mark = marks.get(competency.id);
+        return {
+          ...competency,
+          status: mark?.status ?? null,
+          assessedByName: mark?.assessedByName ?? null,
+          assessedOn: mark?.assessedOn ?? null,
+        };
+      }),
       achieved,
       total: competencyIds.length,
       eligible: competencyIds.length > 0 && achieved === competencyIds.length,

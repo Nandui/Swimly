@@ -8,6 +8,7 @@ import { Tag } from "@/components/ui-kit/tag";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import type { CompetencyStatus } from "@/generated/prisma/client";
+import { formatDate } from "@/lib/format";
 import {
   confirmLevelCompletion,
   revokeLevelCompletion,
@@ -22,7 +23,21 @@ type Competency = {
   name: string;
   description?: string | null;
   status: Choice;
+  /** Who last set the mark, and when — what the record says, whatever is
+   *  being tapped now. Every save stamps the instructor saving it. */
+  assessedByName?: string | null;
+  assessedOn?: Date | null;
 };
+
+/** "Achieved · Ella O'Brien · 2 Sept 2026": the mark as it stands on the
+ *  record, with the instructor who made it. */
+export function assessedLine(competency: Competency): string | null {
+  if (!competency.status || !competency.assessedByName) return null;
+  const label = competency.status === "ACHIEVED" ? "Achieved" : "Working on it";
+  return `${label} · ${competency.assessedByName}${
+    competency.assessedOn ? ` · ${formatDate(competency.assessedOn)}` : ""
+  }`;
+}
 
 const CHOICES: { value: Choice; label: string; className: string }[] = [
   {
@@ -120,6 +135,9 @@ export function CompetencyChecklist({
                   </p>
                   {competency.description ? (
                     <p className="mt-0.5 text-xs text-muted-foreground">{competency.description}</p>
+                  ) : null}
+                  {assessedLine(competency) ? (
+                    <p className="mt-0.5 text-xs text-muted-foreground">{assessedLine(competency)}</p>
                   ) : null}
                 </div>
 
