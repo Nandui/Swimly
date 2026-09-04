@@ -1,4 +1,4 @@
-import type { Metadata } from "next";
+import type { Metadata, Viewport } from "next";
 import { Outfit, Work_Sans } from "next/font/google";
 import { ThemeProvider } from "@/components/theme-provider";
 import { Toaster } from "@/components/ui/sonner";
@@ -26,6 +26,20 @@ const outfit = Outfit({
 export const metadata: Metadata = {
   title: { default: "Swimly", template: "%s · Swimly" },
   description: "The leisure centre's swim lessons and bookings, in one place.",
+};
+
+/** `viewportFit: cover` lets the page run under the notch and the home
+ *  indicator, which is what makes `env(safe-area-inset-*)` non-zero — the
+ *  register's sticky Save bar pads by it. The theme colours tint the browser
+ *  chrome to match the sidebar in each mode. */
+export const viewport: Viewport = {
+  width: "device-width",
+  initialScale: 1,
+  viewportFit: "cover",
+  themeColor: [
+    { media: "(prefers-color-scheme: light)", color: "#f1f5fd" },
+    { media: "(prefers-color-scheme: dark)", color: "#0f172a" },
+  ],
 };
 
 export default function RootLayout({ children }: LayoutProps<"/">) {

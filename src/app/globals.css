@@ -266,3 +266,16 @@
     }
   }
 }
+
+/* Phones: the text links that open a row — a swimmer's name in a list, a
+   class on the deck screen — are one line of 14px text, which is a hard
+   thing to hit with a thumb. Padding in and the same margin out gives each
+   one a 32px tap area without moving a pixel of the layout. Buttons and the
+   tab strips are not text links and keep their own sizes. */
+@media (max-width: 47.9375rem) {
+  main :is(td, p, dd, span) > a[href]:not([data-slot="button"]) {
+    display: inline-block;
+    padding-block: 0.5rem;
+    margin-block: -0.5rem;
+  }
+}

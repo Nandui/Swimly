@@ -82,7 +82,7 @@ function RoleCard({ role }: { role: RoleRow }) {
             {role._count.users === 1 ? "account" : "accounts"}
           </p>
         </div>
-        <div className="flex items-center gap-0.5 opacity-0 transition-opacity group-focus-within:opacity-100 group-hover:opacity-100 max-md:opacity-100">
+        <div className="flex items-center gap-0.5 max-md:gap-2 opacity-0 transition-opacity group-focus-within:opacity-100 group-hover:opacity-100 max-md:opacity-100">
           <EditRole role={role} />
           <DeleteRole role={role} users={role._count.users} />
         </div>

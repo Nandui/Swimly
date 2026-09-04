@@ -209,7 +209,7 @@ function CourseTable({
                     <span className="text-(--tag-orange-fg)">Unassigned</span>
                   )}
                 </td>
-                <td className="px-3 py-2 whitespace-nowrap text-muted-foreground tabular-nums">
+                <td className="px-3 py-2 text-muted-foreground tabular-nums md:whitespace-nowrap">
                   {capacityLabel(taken, course.capacity)}
                   {tone ? (
                     <Tag color={tone.color} className="ml-2">
@@ -219,7 +219,7 @@ function CourseTable({
                 </td>
                 <td className="px-3 py-2">
                   {admin ? (
-                    <div className="flex items-center justify-end gap-0.5 opacity-0 transition-opacity group-focus-within:opacity-100 group-hover:opacity-100 max-md:opacity-100">
+                    <div className="flex items-center justify-end gap-0.5 max-md:gap-2 opacity-0 transition-opacity group-focus-within:opacity-100 group-hover:opacity-100 max-md:opacity-100">
                       <EditCourse course={course} levels={levels} instructors={instructors} />
                       <ArchiveCourse course={course} />
                     </div>

@@ -175,7 +175,7 @@ function BookingTable({
             <th scope="col" className="px-3 py-2 text-left text-xs font-medium text-muted-foreground">
               Status
             </th>
-            <th scope="col" className="px-3 py-2 text-left text-xs font-medium text-muted-foreground">
+            <th scope="col" className="px-3 py-2 text-left text-xs font-medium text-muted-foreground max-md:hidden">
               Placed at
             </th>
             <th scope="col" className="w-28 px-3 py-2">
@@ -201,6 +201,14 @@ function BookingTable({
                     <span className="md:hidden">{ageLabel(b.student.dateOfBirth)} · </span>
                     booked by {b.bookedByName}
                   </span>
+                  {/* The placement column leaves the table on a phone and
+                      re-homes here, so the row stays one screen wide. */}
+                  {b.outcomeLevel ? (
+                    <span className="mt-0.5 block text-xs font-normal text-muted-foreground md:hidden">
+                      Placed at <span className="font-medium text-foreground">{b.outcomeLevel.name}</span>
+                      {b.assessedByName ? ` by ${b.assessedByName}` : ""}
+                    </span>
+                  ) : null}
                 </td>
                 <td className="px-3 py-2 text-muted-foreground tabular-nums max-md:hidden">
                   {ageLabel(b.student.dateOfBirth)}
@@ -208,7 +216,7 @@ function BookingTable({
                 <td className="px-3 py-2">
                   <Tag color={meta.color}>{meta.label}</Tag>
                 </td>
-                <td className="px-3 py-2 text-muted-foreground">
+                <td className="px-3 py-2 text-muted-foreground max-md:hidden">
                   {b.outcomeLevel ? (
                     <>
                       <span className="font-medium text-foreground">{b.outcomeLevel.name}</span>
@@ -227,7 +235,7 @@ function BookingTable({
                   )}
                 </td>
                 <td className="px-3 py-2">
-                  <div className="flex items-center justify-end gap-0.5 opacity-0 transition-opacity group-focus-within:opacity-100 group-hover:opacity-100 max-md:opacity-100">
+                  <div className="flex items-center justify-end gap-0.5 max-md:gap-2 opacity-0 transition-opacity group-focus-within:opacity-100 group-hover:opacity-100 max-md:opacity-100">
                     {assess && open && (b.status === "BOOKED" || b.status === "ATTENDED") ? (
                       <RecordOutcome booking={b} session={session} />
                     ) : null}

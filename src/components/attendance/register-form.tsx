@@ -270,7 +270,9 @@ export function RegisterForm({
       ) : null}
 
       {readOnly ? null : (
-        <div className="sticky bottom-0 -mx-4 flex items-center justify-between gap-3 border-t bg-background px-4 py-3 md:-mx-8 md:px-8">
+        // Clears the home indicator on a phone: the bottom padding grows by
+        // the safe-area inset, which is zero everywhere that has none.
+        <div className="sticky bottom-0 -mx-4 flex items-center justify-between gap-3 border-t bg-background px-4 pt-3 pb-[max(0.75rem,env(safe-area-inset-bottom))] md:-mx-8 md:px-8">
           <p className="text-xs text-muted-foreground">
             {dirty ? "Not saved yet" : "Up to date"}
           </p>

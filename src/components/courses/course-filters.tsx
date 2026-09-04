@@ -73,7 +73,9 @@ export function CourseFilters({
   return (
     <div className="space-y-2">
       <div className="flex flex-wrap items-center gap-2">
-        <Form action="/courses" className="relative">
+        {/* Full width on a phone, where a 208px search box beside six chips
+            wraps into a ragged bar; its own width from the tablet up. */}
+        <Form action="/courses" className="relative max-sm:w-full">
           {dimensions.map((d) =>
             d.selected ? (
               <input key={d.key} type="hidden" name={d.key} value={d.selected} />
@@ -93,7 +95,7 @@ export function CourseFilters({
             defaultValue={q}
             placeholder="Search classes…"
             aria-label="Search classes"
-            className="h-8 w-52 pl-7"
+            className="h-8 w-52 pl-7 max-md:h-10 max-sm:w-full"
           />
           {/* A form with one text field and no button submits on Enter by
               implicit submission, which is a rule with enough edge cases that
@@ -116,7 +118,7 @@ export function CourseFilters({
           <Button
             variant="ghost"
             size="sm"
-            className="h-8 text-muted-foreground"
+            className="h-8 text-muted-foreground max-md:h-10"
             onClick={() => router.push(`/courses?day=${ANY_DAY}`)}
           >
             Clear {active === 1 ? "filter" : `all ${active}`}
@@ -156,7 +158,7 @@ function FilterPicker({
   return (
     <div
       className={cn(
-        "inline-flex h-8 items-center rounded-md border text-[13px] transition-colors",
+        "inline-flex h-8 items-center rounded-md border text-[13px] transition-colors max-md:h-10 max-md:text-sm",
         chosen ? "bg-accent text-foreground" : "text-muted-foreground hover:bg-accent/40"
       )}
     >
@@ -231,7 +233,7 @@ function FilterPicker({
           aria-label={`Clear ${dimension.label} filter`}
           onClick={() => onPick(null)}
           className={cn(
-            "inline-flex h-full items-center rounded-r-md border-l px-1.5 opacity-60",
+            "inline-flex h-full items-center rounded-r-md border-l px-1.5 opacity-60 max-md:px-2.5",
             "transition-opacity hover:opacity-100",
             "outline-none focus-visible:ring-[3px] focus-visible:ring-ring/50"
           )}

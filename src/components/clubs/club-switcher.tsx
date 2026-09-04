@@ -59,7 +59,7 @@ export function ClubSwitcher({
           collapsed
             ? "size-9 justify-center"
             : compact
-              ? "h-8 min-w-0 max-w-[11rem] px-2"
+              ? "h-10 min-w-0 max-w-[11rem] px-2"
               : "w-full px-2.5 py-2"
         )}
       >

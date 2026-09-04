@@ -214,7 +214,7 @@ function SessionTable({
                 </td>
                 <td className="px-3 py-2">
                   {manage && !s.cancelledAt ? (
-                    <div className="flex items-center justify-end gap-0.5 opacity-0 transition-opacity group-focus-within:opacity-100 group-hover:opacity-100 max-md:opacity-100">
+                    <div className="flex items-center justify-end gap-0.5 max-md:gap-2 opacity-0 transition-opacity group-focus-within:opacity-100 group-hover:opacity-100 max-md:opacity-100">
                       <EditSession session={s} programmes={programmes} types={types} instructors={instructors} today={today} />
                       <CancelSession session={s} />
                     </div>

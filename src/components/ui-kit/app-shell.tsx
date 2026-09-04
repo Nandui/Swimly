@@ -242,8 +242,9 @@ export function MobileNav(props: AppShellProps) {
   return (
     <div className="sticky top-0 z-30 flex h-12 items-center gap-2 border-b bg-sidebar px-3 md:hidden">
       <Sheet open={open} onOpenChange={setOpen}>
+        {/* A thumb-sized target: the icon is 20px, the button is 40. */}
         <SheetTrigger
-          className="rounded p-1 text-muted-foreground transition-colors hover:bg-sidebar-accent hover:text-foreground"
+          className="-ml-2 flex size-10 items-center justify-center rounded-md text-muted-foreground transition-colors hover:bg-sidebar-accent hover:text-foreground"
           aria-label="Open menu"
         >
           <Menu className="size-5" />

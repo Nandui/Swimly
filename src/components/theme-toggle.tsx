@@ -54,7 +54,9 @@ export function ThemeFlip({ className }: { className?: string }) {
   const { resolvedTheme, setTheme } = useTheme();
   const hydrated = useHydrated();
 
-  if (!hydrated) return <span className={cn("inline-block size-7", className)} aria-hidden />;
+  if (!hydrated) {
+    return <span className={cn("inline-block size-7 max-md:size-10", className)} aria-hidden />;
+  }
 
   const dark = resolvedTheme === "dark";
   const label = dark ? "Switch to light mode" : "Switch to dark mode";
@@ -66,7 +68,7 @@ export function ThemeFlip({ className }: { className?: string }) {
       aria-label={label}
       title={label}
       className={cn(
-        "inline-flex size-7 items-center justify-center rounded text-muted-foreground/70 transition-colors",
+        "inline-flex size-7 items-center justify-center rounded text-muted-foreground/70 transition-colors max-md:size-10",
         "hover:bg-sidebar-accent hover:text-foreground",
         "outline-none focus-visible:ring-[3px] focus-visible:ring-sidebar-ring/50",
         className

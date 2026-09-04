@@ -27,7 +27,7 @@ export function AddToGroup({ chosen }: { chosen: string[] }) {
         <button
           type="button"
           className={cn(
-            "inline-flex h-8 items-center gap-1.5 rounded-md border border-dashed px-2.5 text-[13px]",
+            "inline-flex h-8 items-center gap-1.5 rounded-md border border-dashed px-2.5 text-[13px] max-md:h-10 max-md:px-3 max-md:text-sm",
             "text-muted-foreground transition-colors hover:bg-accent/40 hover:text-foreground",
             "outline-none focus-visible:ring-[3px] focus-visible:ring-ring/50"
           )}

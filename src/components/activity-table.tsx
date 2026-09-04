@@ -42,7 +42,10 @@ export function ActivityTable({ entries }: { entries: ActivityEntry[] }) {
                 key={entry.id}
                 className="group border-b transition-colors last:border-0 hover:bg-accent/40"
               >
-                <td className="px-3 py-2 font-medium text-foreground">
+                {/* Summaries carry email addresses and member numbers, which
+                    cannot break on their own; without this one of them makes
+                    the table wider than a phone. */}
+                <td className="px-3 py-2 font-medium text-foreground [overflow-wrap:anywhere]">
                   {entry.summary}
                   <span className="mt-0.5 block text-xs font-normal text-muted-foreground md:hidden">
                     {entry.actorName} · {formatDateTime(entry.createdAt)}

@@ -22,7 +22,14 @@ export function PageHeader({
           <p className="mt-1 max-w-prose text-sm text-muted-foreground">{description}</p>
         ) : null}
       </div>
-      {actions ? <div className="flex shrink-0 items-center gap-2 pt-1">{actions}</div> : null}
+      {/* Wraps: a course page carries five actions, which is wider than a
+          phone. Below the tablet breakpoint the row takes the full width and
+          the buttons flow onto a second line rather than off the screen. */}
+      {actions ? (
+        <div className="flex flex-wrap items-center gap-2 pt-1 max-md:w-full md:shrink-0">
+          {actions}
+        </div>
+      ) : null}
     </div>
   );
 }
