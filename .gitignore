@@ -44,3 +44,7 @@ next-env.d.ts
 /src/generated/prisma
 
 .vercel
+
+# impeccable live-mode runtime state (the config is kept)
+.impeccable/live/*
+!.impeccable/live/config.json

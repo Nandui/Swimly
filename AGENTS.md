@@ -10,6 +10,10 @@ This block is written and re-added by `next dev` — verify at `node_modules/nex
 
 # Swimly
 
+Who Swimly is for, what it must get right and what is deliberately undecided
+live in [PRODUCT.md](PRODUCT.md). Read it before changing what a screen does;
+read the design files below before changing how it looks.
+
 The design authority is the **ui-ux-pro-max** skill and the system it
 generated for this project: [design-system/swimly/MASTER.md](design-system/swimly/MASTER.md),
 with page overrides in `design-system/swimly/pages/`. Read MASTER.md before
