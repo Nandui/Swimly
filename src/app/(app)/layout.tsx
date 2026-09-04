@@ -3,8 +3,10 @@ import { redirect } from "next/navigation";
 import { auth } from "@/auth";
 import { AppFrame } from "@/components/ui-kit/app-shell";
 import { AppMobileNav, AppSidebar } from "@/components/app-nav";
+import { RolePreviewBar } from "@/components/staff/role-preview";
 import { permissionsOf } from "@/lib/authz";
 import { getCurrentClub } from "@/lib/clubs/current";
+import { listRolesForPreview, mayPreview } from "@/lib/staff/preview";
 import { homePathFor, visibleScreens } from "@/lib/staff/screens";
 
 /** The signed-in shell. Two greys and nothing else: a sidebar that stays put
@@ -27,6 +29,13 @@ export default async function AppLayout({ children }: { children: ReactNode }) {
     clubs,
   };
 
+  // The dev build's "see the app as" bar: for an account that may manage
+  // roles, or one already wearing a preview and needing the way back. The
+  // gate inside `mayPreview` is shut on production, so this is null there.
+  const preview = session.user.preview ?? null;
+  const showPreview = mayPreview(preview?.actualPermissions ?? session.user.permissions);
+  const previewRoles = showPreview ? await listRolesForPreview() : [];
+
   return (
     <div className="flex min-h-svh">
       {/* Invisible until it has keyboard focus, then the first thing on the
@@ -40,7 +49,19 @@ export default async function AppLayout({ children }: { children: ReactNode }) {
       <AppSidebar {...nav} />
       <div className="flex min-w-0 flex-1 flex-col">
         <AppMobileNav {...nav} />
-        <AppFrame>{children}</AppFrame>
+        <AppFrame
+          banner={
+            showPreview ? (
+              <RolePreviewBar
+                roles={previewRoles}
+                current={preview ? { id: preview.roleId, name: preview.roleName } : null}
+                actualRoleName={preview?.actualRoleName ?? session.user.roleName}
+              />
+            ) : null
+          }
+        >
+          {children}
+        </AppFrame>
       </div>
     </div>
   );

@@ -23,6 +23,14 @@ declare module "next-auth" {
       home: string;
       /** `SCREENS` keys: which pages their role offers at all. */
       screens: string[];
+      /** Set on a dev build while seeing the app as another role: the role
+       *  being worn, and what the real account actually holds. */
+      preview?: {
+        roleId: string;
+        roleName: string;
+        actualRoleName: string;
+        actualPermissions: string[];
+      } | null;
     } & DefaultSession["user"];
   }
 

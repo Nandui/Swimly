@@ -276,11 +276,20 @@ export function MobileNav(props: AppShellProps) {
 
 /** Wrap children in the content column: centred, 32/40 padding, tighter on
  *  phones. Pair with <Sidebar/> and <MobileNav/> in the app layout. */
-export function AppFrame({ children }: { children: React.ReactNode }) {
+export function AppFrame({
+  children,
+  banner,
+}: {
+  children: React.ReactNode;
+  /** A full-width strip above the page — a notice that applies to every
+   *  screen, such as a dev build's "seeing the app as" bar. */
+  banner?: React.ReactNode;
+}) {
   return (
     <main id="main" tabIndex={-1} className="min-w-0 flex-1 outline-none">
       {/* `id` is the skip link's target; `tabIndex={-1}` lets it take focus
           without joining the tab order. */}
+      {banner}
       <div className="mx-auto max-w-6xl px-8 py-10 max-md:px-4 max-md:py-6">{children}</div>
     </main>
   );

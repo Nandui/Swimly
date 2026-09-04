@@ -4,6 +4,7 @@ import Credentials from "next-auth/providers/credentials";
 import bcrypt from "bcryptjs";
 import { devSignInAllowed, getDevAdmin } from "@/lib/dev-sign-in";
 import { prisma } from "@/lib/prisma";
+import { mayPreview, previewedRole } from "@/lib/staff/preview";
 
 /** Built as a function so the dev provider is **absent** from the array in
  *  production rather than present-and-refusing. There is then no endpoint to
@@ -172,7 +173,7 @@ export const auth = cache(async function auth(): Promise<Session | null> {
     const user = sessionUserFor(current);
     if (!user) return null;
 
-    return { ...session, user: { ...session.user, ...user } };
+    return { ...session, user: { ...session.user, ...(await wearPreview(user)) } };
   }
 
   if (process.env.NODE_ENV === "production" || process.env.DEV_AUTH_BYPASS !== "1") {
@@ -189,5 +190,35 @@ export const auth = cache(async function auth(): Promise<Session | null> {
   const user = sessionUserFor(admin);
   if (!user) return null;
 
-  return { user, expires: new Date(Date.now() + 60 * 60 * 1000).toISOString() };
+  return {
+    user: await wearPreview(user),
+    expires: new Date(Date.now() + 60 * 60 * 1000).toISOString(),
+  };
 });
+
+type SessionUser = Omit<Session["user"], "image">;
+
+/** On a dev build, an account that may manage roles can ask to see the app
+ *  as another role. The person stays the same — id, name, email — and the
+ *  role's permissions, screens and home are worn instead of their own.
+ *  `previewedRole` returns null everywhere the gate is shut, so this is a
+ *  no-op on production whatever cookie arrives. */
+async function wearPreview(user: SessionUser): Promise<SessionUser> {
+  if (!mayPreview(user.permissions)) return user;
+  const role = await previewedRole();
+  if (!role) return user;
+  return {
+    ...user,
+    roleId: role.id,
+    roleName: role.name,
+    permissions: role.permissions,
+    home: role.home,
+    screens: role.screens,
+    preview: {
+      roleId: role.id,
+      roleName: role.name,
+      actualRoleName: user.roleName,
+      actualPermissions: user.permissions,
+    },
+  };
+}
