@@ -45,8 +45,10 @@ export function TabStrip({ ariaLabel, items }: { ariaLabel: string; items: TabSt
               {item.count !== undefined && item.count !== null ? (
                 <span
                   className={cn(
+                    // Foreground ink on both tints: primary-blue ink on the
+                    // blue tint measured 4.3:1 in light mode, under the bar.
                     "rounded-full px-1.5 text-[11px] leading-4 tabular-nums max-sm:hidden",
-                    item.active ? "bg-primary/10 text-primary" : "bg-muted text-muted-foreground"
+                    item.active ? "bg-primary/15 text-foreground" : "bg-muted text-muted-foreground"
                   )}
                 >
                   {item.count}

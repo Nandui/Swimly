@@ -4,11 +4,9 @@ import { notFound } from "next/navigation";
 import { ChevronLeft, Users } from "lucide-react";
 import { EmptyState } from "@/components/ui-kit/empty-state";
 import { PageHeader } from "@/components/ui-kit/page-header";
-import { Tag } from "@/components/ui-kit/tag";
 import { TakeOver } from "@/components/attendance/take-over";
 import { WrongClub } from "@/components/clubs/wrong-club";
-import { CompetencyChecklist, ConfirmLevel } from "@/components/progression/assessment";
-import { MoveUpToLevel, type MoveTarget } from "@/components/progression/move-up";
+import { SwimmerBlock } from "@/components/progression/swimmer-block";
 import { canMarkRegister, needsTakeOver } from "@/lib/attendance/access";
 import { mostRecentOccurrence } from "@/lib/attendance/dates";
 import { coverLabel, getClassCover } from "@/lib/attendance/data/cover";
@@ -18,9 +16,8 @@ import { courseLabel, courseName, formatSlot } from "@/lib/courses/constants";
 import { getCourse, getCourses } from "@/lib/courses/data/courses";
 import { formatDate, parseDateOnly } from "@/lib/format";
 import { permissionPage } from "@/lib/page-guards";
-import { getClassProgress, type ClassSwimmer } from "@/lib/progression/data/progress";
+import { getClassProgress } from "@/lib/progression/data/progress";
 import { nextLevel } from "@/lib/progression/rules";
-import { fullName } from "@/lib/students/constants";
 
 export const metadata: Metadata = { title: "Assess" };
 
@@ -140,99 +137,5 @@ export default async function AssessPage(props: PageProps<"/courses/[id]/assess"
         </div>
       )}
     </div>
-  );
-}
-
-/** One swimmer per disclosure. A class of twelve at eight competencies each is
- *  ninety-six rows if everything is open at once, which is not a thing anyone
- *  can work down at the poolside. */
-function SwimmerBlock({
-  swimmer,
-  levelId,
-  levelName,
-  classLabel,
-  nextUp,
-  courses,
-  mayAssess,
-  admin,
-}: {
-  swimmer: ClassSwimmer;
-  levelId: string;
-  levelName: string;
-  classLabel: string;
-  nextUp: { id: string; name: string } | null;
-  courses: MoveTarget[];
-  mayAssess: boolean;
-  admin: boolean;
-}) {
-  const name = fullName(swimmer.student);
-  const done = Boolean(swimmer.completedOn);
-
-  return (
-    <details className="overflow-hidden rounded-md border" open={swimmer.eligible && !done}>
-      <summary className="flex cursor-pointer flex-wrap items-center justify-between gap-x-4 gap-y-1 bg-sidebar px-3 py-2">
-        <span className="text-sm font-medium text-foreground">
-          <Link
-            href={`/students/${swimmer.student.id}`}
-            className="underline-offset-2 hover:underline"
-          >
-            {name}
-          </Link>
-          {swimmer.offLevel ? (
-            <Tag color="purple" className="ml-2">
-              Placed at another level
-            </Tag>
-          ) : null}
-        </span>
-        <span className="flex items-center gap-2">
-          {done ? (
-            <Tag color="blue">Completed {formatDate(swimmer.completedOn!)}</Tag>
-          ) : (
-            <Tag color={swimmer.eligible ? "green" : "yellow"}>
-              {swimmer.achieved} of {swimmer.total}
-            </Tag>
-          )}
-        </span>
-      </summary>
-
-      <div className="space-y-3 p-3">
-        <CompetencyChecklist
-          studentId={swimmer.student.id}
-          levelId={levelId}
-          studentName={name}
-          competencies={swimmer.competencies}
-          readOnly={!mayAssess}
-        />
-        {mayAssess ? (
-          <div className="flex flex-wrap justify-end gap-2">
-            {done ? null : (
-              <ConfirmLevel
-                studentId={swimmer.student.id}
-                levelId={levelId}
-                studentName={name}
-                levelName={levelName}
-                achieved={swimmer.achieved}
-                total={swimmer.total}
-                eligible={swimmer.eligible}
-                admin={admin}
-              />
-            )}
-            {/* Once the level is signed off and confirmed, the next thing
-                anyone wants is to put them in a class for the rung above. */}
-            {done && nextUp ? (
-              <MoveUpToLevel
-                studentId={swimmer.student.id}
-                studentName={name}
-                fromEnrolmentId={swimmer.enrolmentId}
-                fromClassLabel={classLabel}
-                nextLevelId={nextUp.id}
-                nextLevelName={nextUp.name}
-                courses={courses}
-              />
-            ) : null}
-          </div>
-        ) : null}
-      </div>
-    </details>
   );
 }

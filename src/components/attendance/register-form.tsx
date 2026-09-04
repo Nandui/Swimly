@@ -1,8 +1,9 @@
 "use client";
 
 import * as React from "react";
+import { useRouter } from "next/navigation";
 import { toast } from "sonner";
-import { Check, Loader2 } from "lucide-react";
+import { ArrowRight, Check, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { Tag } from "@/components/ui-kit/tag";
@@ -44,13 +45,19 @@ export function RegisterForm({
   lines,
   classNote,
   readOnly,
+  continueHref,
 }: {
   courseId: string;
   date: string;
   lines: RegisterLine[];
   classNote: string | null;
   readOnly: boolean;
+  /** Where a successful save goes next. Set by the deck's class flow, where
+   *  attendance is step one and the competencies are step two; the register
+   *  page on its own leaves it out and stays put. */
+  continueHref?: string;
 }) {
+  const router = useRouter();
   const initial = React.useMemo(() => {
     const map = new Map<string, Mark>();
     for (const line of lines) {
@@ -141,11 +148,12 @@ export function RegisterForm({
 
       if (result.ok) {
         window.localStorage.removeItem(key);
-        toast.success("Register saved");
+        toast.success("Attendance saved");
         startTransition(() => {
           setError(null);
           setDirty(false);
         });
+        if (continueHref) router.push(continueHref);
       } else {
         startTransition(() => setError(result.error));
       }
@@ -282,10 +290,15 @@ export function RegisterForm({
                 <Loader2 className="size-4 animate-spin" />
                 Saving…
               </>
+            ) : continueHref ? (
+              <>
+                Save and continue
+                <ArrowRight className="size-4" />
+              </>
             ) : (
               <>
                 <Check className="size-4" />
-                Save register
+                Save attendance
               </>
             )}
           </Button>

@@ -45,6 +45,21 @@ export function today(now: Date = new Date()): string {
   return ISO_IN_SCHOOL_TIME.format(now);
 }
 
+const CLOCK_IN_SCHOOL_TIME = new Intl.DateTimeFormat("en-GB", {
+  hour: "2-digit",
+  minute: "2-digit",
+  hourCycle: "h23",
+  timeZone: SCHOOL_TIMEZONE,
+});
+
+/** The time at the pool right now, as minutes past midnight — the same unit
+ *  a class's `startMinutes` is kept in, so "is this class on now?" is one
+ *  comparison. Read in the school's zone for the same reason `today()` is. */
+export function minutesNow(now: Date = new Date()): number {
+  const [hours, minutes] = CLOCK_IN_SCHOOL_TIME.format(now).split(":").map(Number);
+  return hours * 60 + minutes;
+}
+
 /** `YYYY-MM-DD` → the `Date` a `@db.Date` column round-trips: UTC midnight.
  *  Nothing else may construct a register date — `new Date(2026, 7, 14)` is
  *  *local* midnight and lands on the wrong day for half the world. */
