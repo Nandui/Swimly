@@ -145,6 +145,147 @@ export async function saveAssessment(input: AssessInput): Promise<ActionResult> 
 
   revalidatePath("/students/[id]", "page");
   revalidatePath("/courses/[id]/assess", "page");
+  revalidatePath("/courses/[id]/class", "page");
+  return ok();
+}
+
+const classAssessSchema = z.object({
+  levelId: z.string().min(1),
+  marks: z
+    .array(
+      z.object({
+        studentId: z.string().min(1),
+        competencyId: z.string().min(1),
+        status: z.enum(["WORKING_ON", "ACHIEVED"]).nullable(),
+      })
+    )
+    .min(1, "Nothing to save.")
+    .max(2000, "That is more marks than one class can hold."),
+});
+
+export type ClassAssessInput = z.infer<typeof classAssessSchema>;
+
+/** The deck's save: every mark changed for the whole class, one competency
+ *  or all of them, in one action. Same rules as `saveAssessment` — only
+ *  what moved is written, every mark carries the instructor saving it, and
+ *  each swimmer touched gets their own audit line — so the record reads the
+ *  same whichever screen made it. */
+export async function saveClassAssessment(input: ClassAssessInput): Promise<ActionResult> {
+  const session = await requirePermission("progression.assess");
+
+  const parsed = classAssessSchema.safeParse(input);
+  if (!parsed.success) return fail(parsed.error.issues[0].message);
+  const { levelId, marks } = parsed.data;
+
+  const studentIds = [...new Set(marks.map((row) => row.studentId))];
+  const [students, level] = await Promise.all([
+    prisma.student.findMany({
+      where: { id: { in: studentIds } },
+      select: { id: true, firstName: true, lastName: true },
+    }),
+    prisma.level.findUnique({
+      where: { id: levelId },
+      select: {
+        id: true,
+        name: true,
+        programmeId: true,
+        competencies: { where: LIVE, select: { id: true, name: true } },
+      },
+    }),
+  ]);
+  if (!level) return fail("That level no longer exists.");
+  if (students.length !== studentIds.length) {
+    return fail("A swimmer on that list no longer exists. Reload and try again.");
+  }
+
+  const nameById = new Map(level.competencies.map((row) => [row.id, row.name]));
+  if (marks.some((row) => !nameById.has(row.competencyId))) {
+    return fail("Something on that checklist is not part of this level. Reload and try again.");
+  }
+
+  const existing = await prisma.competencyResult.findMany({
+    where: { studentId: { in: studentIds }, competencyId: { in: [...nameById.keys()] } },
+    select: { studentId: true, competencyId: true, status: true },
+  });
+  const key = (studentId: string, competencyId: string) => `${studentId}:${competencyId}`;
+  const before = new Map(existing.map((row) => [key(row.studentId, row.competencyId), row.status]));
+
+  const changed = marks.filter(
+    (row) => (before.get(key(row.studentId, row.competencyId)) ?? null) !== row.status
+  );
+  // Nothing moved, nothing written — including no audit row.
+  if (changed.length === 0) return ok();
+
+  const assessedOn = parseDateOnly(today());
+  const assessedByName = session.user.name ?? "Unknown";
+
+  const writes: Prisma.PrismaPromise<unknown>[] = changed
+    .filter((row) => row.status !== null)
+    .map((row) =>
+      prisma.competencyResult.upsert({
+        where: {
+          studentId_competencyId: { studentId: row.studentId, competencyId: row.competencyId },
+        },
+        create: {
+          studentId: row.studentId,
+          competencyId: row.competencyId,
+          status: row.status!,
+          assessedOn,
+          assessedById: session.user.id,
+          assessedByName,
+        },
+        update: {
+          status: row.status!,
+          assessedOn,
+          assessedById: session.user.id,
+          assessedByName,
+        },
+      })
+    );
+  const cleared = changed.filter((row) => row.status === null);
+  for (const studentId of studentIds) {
+    const ids = cleared.filter((row) => row.studentId === studentId).map((row) => row.competencyId);
+    if (ids.length > 0) {
+      writes.push(
+        prisma.competencyResult.deleteMany({ where: { studentId, competencyId: { in: ids } } })
+      );
+    }
+  }
+
+  await prisma.$transaction(writes);
+
+  // One line per swimmer, so the trail reads the same as a save from their
+  // own checklist would.
+  await Promise.all(
+    students.map((student) => {
+      const rows = changed.filter((row) => row.studentId === student.id);
+      if (rows.length === 0) return null;
+      const named = (status: "ACHIEVED" | "WORKING_ON" | null) =>
+        rows
+          .filter((row) => row.status === status)
+          .map((row) => nameById.get(row.competencyId) ?? "a competency");
+      const parts: string[] = [];
+      const achieved = named("ACHIEVED");
+      const working = named("WORKING_ON");
+      const unmarked = named(null);
+      if (achieved.length) parts.push(`passed ${joinNames(achieved)}`);
+      if (working.length) parts.push(`working on ${joinNames(working)}`);
+      if (unmarked.length) parts.push(`unmarked ${joinNames(unmarked)}`);
+      return logAudit({
+        actorId: session.user.id,
+        actorName: assessedByName,
+        action: "assess",
+        entity: "Student",
+        entityId: student.id,
+        programmeId: level.programmeId,
+        summary: `${fullName(student)} in ${level.name} — ${parts.join("; ")}`,
+      });
+    })
+  );
+
+  revalidatePath("/students/[id]", "page");
+  revalidatePath("/courses/[id]/assess", "page");
+  revalidatePath("/courses/[id]/class", "page");
   return ok();
 }
 
