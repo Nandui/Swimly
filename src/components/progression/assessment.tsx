@@ -163,12 +163,12 @@ export function CompetencyChecklist({
                           })
                         }
                         className={cn(
-                          "h-10 flex-1 rounded-md border px-2 text-[13px] font-medium transition-colors sm:h-8 sm:w-28 sm:flex-none",
-                          "focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50 focus-visible:outline-none",
+                          "h-10 flex-1 rounded-md border px-2 text-sm font-medium transition-colors sm:h-8 sm:w-28 sm:flex-none",
+                          "focus-ring",
                           "disabled:pointer-events-none disabled:opacity-60",
                           active
                             ? choice.className
-                            : "border-input text-muted-foreground hover:bg-accent hover:text-foreground"
+                            : "border-input text-muted-foreground hover:bg-muted hover:text-foreground"
                         )}
                       >
                         {choice.label}
@@ -185,7 +185,7 @@ export function CompetencyChecklist({
       {error ? (
         <p
           role="alert"
-          className="rounded bg-(--tag-red-bg) px-2.5 py-1.5 text-[13px] text-(--tag-red-fg)"
+          className="rounded bg-(--tag-red-bg) px-2.5 py-1.5 text-sm text-(--tag-red-fg)"
         >
           {error}
         </p>

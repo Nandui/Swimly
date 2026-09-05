@@ -153,7 +153,7 @@ function SessionTable({
   return (
     <div className="overflow-hidden rounded-md border">
       <table className="w-full text-sm">
-        <thead className="bg-sidebar">
+        <thead className="bg-surface">
           <tr className="border-b">
             <th scope="col" className="px-3 py-2 text-left text-xs font-medium text-muted-foreground">
               When
@@ -177,7 +177,7 @@ function SessionTable({
             const taken = s._count.bookings;
             const full = s.capacity !== null && taken >= s.capacity;
             return (
-              <tr key={s.id} className="group border-b transition-colors last:border-0 hover:bg-accent/40">
+              <tr key={s.id} className="group border-b transition-colors last:border-0 hover:bg-muted">
                 <td className="px-3 py-2 font-medium text-foreground">
                   <Link href={`/assessments/${s.id}`} className="underline-offset-2 hover:underline">
                     {sessionDay(s)}

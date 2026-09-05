@@ -78,7 +78,20 @@ export function Button({
   }
 
   const ariaLabel = (rest as { "aria-label"?: string })["aria-label"];
-  const label = ariaLabel || textOf(content).trim() || title || "Button";
+  const text = textOf(content).trim();
+  const label = ariaLabel || text || title || "Button";
+
+  // `<Button><Icon /> Save</Button>` is how every call site writes an icon
+  // beside its text. Astryx wants the icon in its own slot, so a lone
+  // wordless element among the children moves there and the words become
+  // the label. Anything more elaborate is passed through as it came.
+  let icon: React.ReactNode;
+  const parts = React.Children.toArray(content);
+  const wordless = parts.filter((part) => React.isValidElement(part) && textOf(part).trim() === "");
+  if (!size.startsWith("icon") && wordless.length === 1 && text) {
+    icon = wordless[0];
+    content = undefined;
+  }
 
   if (size.startsWith("icon")) {
     return (
@@ -106,6 +119,7 @@ export function Button({
       isDisabled={disabled}
       onClick={click}
       href={to}
+      icon={icon}
       className={className}
       {...(rest as Record<string, unknown>)}
     >

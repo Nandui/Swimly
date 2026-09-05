@@ -15,19 +15,19 @@ export default function Loading() {
       <span className="sr-only">Loading</span>
 
       <div className="space-y-2">
-        <div className="h-7 w-44 animate-pulse rounded bg-accent" />
-        <div className="h-4 w-80 max-w-full animate-pulse rounded bg-accent/70" />
+        <div className="h-7 w-44 animate-pulse rounded bg-muted" />
+        <div className="h-4 w-80 max-w-full animate-pulse rounded bg-muted" />
       </div>
 
-      <div className="h-4 w-[28rem] max-w-full animate-pulse rounded bg-accent/70" />
+      <div className="h-4 w-[28rem] max-w-full animate-pulse rounded bg-muted" />
 
       <div className="overflow-hidden rounded-md border">
-        <div className="h-9 border-b bg-sidebar" />
+        <div className="h-9 border-b bg-surface" />
         {Array.from({ length: 6 }, (_, i) => (
           <div key={i} className="flex items-center gap-4 border-b px-3 py-3 last:border-0">
-            <div className="h-4 w-40 animate-pulse rounded bg-accent" />
-            <div className="h-3 w-24 animate-pulse rounded bg-accent/60 max-md:hidden" />
-            <div className="ml-auto h-3 w-16 animate-pulse rounded bg-accent/60" />
+            <div className="h-4 w-40 animate-pulse rounded bg-muted" />
+            <div className="h-3 w-24 animate-pulse rounded bg-muted max-md:hidden" />
+            <div className="ml-auto h-3 w-16 animate-pulse rounded bg-muted" />
           </div>
         ))}
       </div>

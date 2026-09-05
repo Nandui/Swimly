@@ -14,31 +14,34 @@ Who Swimly is for, what it must get right and what is deliberately undecided
 live in [PRODUCT.md](PRODUCT.md). Read it before changing what a screen does;
 read the design files below before changing how it looks.
 
-The design authority is the **ui-ux-pro-max** skill and the system it
-generated for this project: [design-system/swimly/MASTER.md](design-system/swimly/MASTER.md),
-with page overrides in `design-system/swimly/pages/`. Read MASTER.md before
-adding a page, a table, a form or an action. When it does not answer a visual
-or interaction question, ask the skill — one intent per query:
+The look is **Astryx** (`@astryxdesign/core`, Meta's open design system),
+**Neutral** theme, light and dark from one set of tokens, following the
+device. It is a component library: use its components — AppShell, Button,
+TextInput, Selector, Typeahead, Dialog, Banner, Badge, Text, Heading — and its
+tokens, and keep Tailwind for layout. Before using a component, read its
+documentation from the installed version, never from memory:
 
 ```bash
-python ~/.claude/skills/ui-ux-pro-max/scripts/search.py "<2-5 words>" --domain <ux|style|typography|color|icons|chart>
-python ~/.claude/skills/ui-ux-pro-max/scripts/search.py "<2-5 words>" --stack <nextjs|shadcn|html-tailwind>
+npx astryx component <Name>        # props, examples, theming surface
+npx astryx search "<thing>"        # find a component, hook or doc
+npx astryx docs <topic>            # layout, tokens, color, typography, motion…
 ```
 
-[DESIGN.md](DESIGN.md) records how MASTER.md was mapped onto shadcn's tokens
-(and the two places the generated palette failed its own contrast bar), plus
-the architectural decisions that still stand: server actions returning a
-result type, permissions asked by name, audit on every mutation, the seat lock.
-The former visual doctrine — "the well-kept page", vendored at
-`.claude/skills/design-kit` — is superseded; its components in
-`src/components/ui-kit/` remain in use, its rules do not.
+[DESIGN.md](DESIGN.md) records how Astryx was wired into this app — the CSS
+layer order, the Tailwind bridge and the app's text sizes, the cookie-backed
+colour mode, the shell, the adapters in `src/components/ui/` that let plain
+`<form>`s keep posting, the toast bridge — plus the architectural decisions
+that hold whatever the app looks like: server actions returning a result type,
+permissions asked by name, audit on every mutation, the seat lock. The
+generated ui-ux-pro-max system in `design-system/swimly/` is superseded for
+everything visual; its UX patterns are restated in DESIGN.md.
 
 The four that get broken first: ask for a **permission**, never a role name;
 every mutation writes an **audit row**; status colour only through the **tag
-tokens** via a metadata map, never a colour at a call site; and run the skill's
-**pre-delivery checklist** before calling a screen done — 4.5:1 text contrast
-in both modes, visible focus, `prefers-reduced-motion` respected, pointer
-cursors, 375px checked.
+tokens** via a metadata map, never a colour at a call site; and run the
+**checklist** at the end of DESIGN.md before calling a screen done — Astryx
+components over hand-drawn ones, no colour outside the tokens, both modes,
+Astryx's focus outline, 44px targets at 375px.
 
 Prisma here is v7: the client is generated into `src/generated/prisma` and
 needs a driver adapter (`@prisma/adapter-pg`), and the datasource URL lives in

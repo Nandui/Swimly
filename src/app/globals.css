@@ -17,7 +17,6 @@
    container radius), `p-4` on the 4px scale. */
 @import "@astryxdesign/core/tailwind-theme.css";
 @import "tailwindcss/utilities.css" layer(utilities);
-@import "tw-animate-css";
 
 @theme inline {
   /* Tailwind's text sizes on the app's terms. The bridge maps `text-sm` to
@@ -57,6 +56,18 @@
   --color-sidebar-ring: var(--color-accent);
   --color-sidebar-primary: var(--color-accent);
   --color-sidebar-primary-foreground: var(--color-on-accent);
+}
+
+/* Astryx's focus ring, for the few controls the app draws itself — a row
+   that is a link, a mark button on the register. Same width, colour and
+   offset as every Astryx component, so keyboard focus looks like one thing
+   across the app. */
+@utility focus-ring {
+  outline: none;
+  &:focus-visible {
+    outline: var(--focus-outline-width) var(--focus-outline-style) var(--focus-outline-color);
+    outline-offset: var(--focus-outline-offset);
+  }
 }
 
 /* Unlayered, so these win over every layer above. */

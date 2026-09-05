@@ -274,7 +274,7 @@ export function DeckChecklist({
   const markedAtAll = [...marks.values()].some((row) => [...row.values()].some(Boolean));
 
   const focusRing =
-    "focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50 focus-visible:outline-none";
+    "focus-ring";
 
   const row = (swimmer: DeckSwimmer, dimmed: boolean) => {
     const value = marks.get(swimmer.studentId)?.get(competency.id) ?? null;
@@ -315,7 +315,7 @@ export function DeckChecklist({
                     "disabled:pointer-events-none disabled:opacity-60",
                     active
                       ? MARK_META[status].active
-                      : "border-input text-muted-foreground hover:bg-accent hover:text-foreground"
+                      : "border-input text-muted-foreground hover:bg-muted hover:text-foreground"
                   )}
                 >
                   {active ? <Check aria-hidden="true" className="size-4" /> : null}
@@ -353,7 +353,7 @@ export function DeckChecklist({
                 "inline-flex h-11 min-w-11 shrink-0 items-center justify-center gap-1 rounded-md border px-3 text-sm font-medium tabular-nums transition-colors",
                 focusRing,
                 active
-                  ? "border-primary bg-primary text-primary-foreground"
+                  ? "border-accent-bg bg-accent-bg text-on-accent"
                   : done
                     ? "border-(--tag-green-fg) bg-(--tag-green-bg) text-(--tag-green-fg)"
                     : "border-input bg-background text-muted-foreground hover:text-foreground"
@@ -368,7 +368,7 @@ export function DeckChecklist({
 
       <section
         aria-labelledby="deck-competency"
-        className="rounded-md border border-input bg-sidebar p-3 sm:p-4"
+        className="rounded-md border border-input bg-surface p-3 sm:p-4"
       >
         <div className="flex items-start justify-between gap-3">
           <div className="min-w-0">
@@ -440,7 +440,7 @@ export function DeckChecklist({
           <summary
             className={cn(
               "flex min-h-11 cursor-pointer list-none items-center gap-2 rounded-md text-base font-semibold text-foreground [&::-webkit-details-marker]:hidden",
-              "outline-none focus-visible:ring-[3px] focus-visible:ring-ring/50"
+              "focus-ring"
             )}
           >
             <ChevronRight

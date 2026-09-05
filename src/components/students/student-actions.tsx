@@ -43,7 +43,7 @@ function readInput(formData: FormData): StudentInput {
 
 function Legend({ children }: { children: React.ReactNode }) {
   return (
-    <p className="border-b pt-1 pb-1.5 text-[13px] font-semibold text-foreground">{children}</p>
+    <p className="border-b pt-1 pb-1.5 text-sm font-semibold text-foreground">{children}</p>
   );
 }
 
@@ -152,7 +152,7 @@ function StudentFields({ student }: { student?: StudentDetail }) {
       </Field>
 
       <div className="flex items-center justify-between gap-3 rounded-md border px-3 py-2">
-        <label htmlFor="photoConsent" className="text-[13px] font-medium text-foreground">
+        <label htmlFor="photoConsent" className="text-sm font-medium text-foreground">
           Photo and video consent
           <span className="block text-xs font-normal text-muted-foreground">
             Recorded with the date it was given.

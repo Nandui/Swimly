@@ -61,7 +61,7 @@ function RoleCard({ role }: { role: RoleRow }) {
 
   return (
     <li className="overflow-hidden rounded-md border">
-      <div className="group flex flex-wrap items-start justify-between gap-x-4 gap-y-2 border-b bg-sidebar p-3">
+      <div className="group flex flex-wrap items-start justify-between gap-x-4 gap-y-2 border-b bg-surface p-3">
         <div className="min-w-0">
           <p className="text-sm font-medium text-foreground">
             {role.name}

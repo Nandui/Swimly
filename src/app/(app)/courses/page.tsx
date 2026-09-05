@@ -174,7 +174,7 @@ function CourseTable({
   return (
     <div className="overflow-hidden rounded-md border">
       <table className="w-full text-sm">
-        <thead className="bg-sidebar">
+        <thead className="bg-surface">
           <tr className="border-b">
             <th scope="col" className="px-3 py-2 text-left text-xs font-medium text-muted-foreground">
               Class
@@ -206,7 +206,7 @@ function CourseTable({
             return (
               <tr
                 key={course.id}
-                className="group border-b transition-colors last:border-0 hover:bg-accent/40"
+                className="group border-b transition-colors last:border-0 hover:bg-muted"
               >
                 <td className="px-3 py-2 font-medium text-foreground">
                   <Link href={`/courses/${course.id}`} className="underline-offset-2 hover:underline">

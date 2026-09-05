@@ -74,7 +74,7 @@ function ProgrammeTable({ programmes, archived }: { programmes: Row[]; archived?
   return (
     <div className="overflow-hidden rounded-md border">
       <table className="w-full text-sm">
-        <thead className="bg-sidebar">
+        <thead className="bg-surface">
           <tr className="border-b">
             <th scope="col" className="px-3 py-2 text-left text-xs font-medium text-muted-foreground">
               Programme
@@ -100,7 +100,7 @@ function ProgrammeTable({ programmes, archived }: { programmes: Row[]; archived?
           {programmes.map((programme, index) => (
             <tr
               key={programme.id}
-              className="group border-b transition-colors last:border-0 hover:bg-accent/40"
+              className="group border-b transition-colors last:border-0 hover:bg-muted"
             >
               <td className="px-3 py-2 font-medium text-foreground">
                 <Link

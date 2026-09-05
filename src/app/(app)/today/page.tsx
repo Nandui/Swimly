@@ -240,7 +240,7 @@ export default async function TodayPage(props: PageProps<"/today">) {
                 <summary
                   className={cn(
                     "flex cursor-pointer list-none flex-wrap items-center gap-x-2 gap-y-1 rounded-md text-base font-semibold text-foreground [&::-webkit-details-marker]:hidden",
-                    "outline-none focus-visible:ring-[3px] focus-visible:ring-ring/50",
+                    "focus-ring",
                     "min-h-11"
                   )}
                 >
@@ -398,7 +398,7 @@ function ClassSection({
           {section.subtitle ? ` · ${section.subtitle}` : ""}
         </span>
       </h2>
-      <ul className={cn("overflow-hidden rounded-md border", strong && "bg-accent/50")}>
+      <ul className={cn("overflow-hidden rounded-md border", strong && "bg-muted")}>
         {children}
       </ul>
     </section>
@@ -432,9 +432,9 @@ function GroupBy({
               scroll={false}
               aria-current={current ? "true" : undefined}
               className={cn(
-                "flex items-center rounded border px-2.5 py-1 text-[13px] font-medium transition-colors",
+                "flex items-center rounded border px-2.5 py-1 text-sm font-medium transition-colors",
                 "max-md:h-11 max-md:px-4 max-md:text-sm",
-                "outline-none focus-visible:ring-[3px] focus-visible:ring-ring/50",
+                "focus-ring",
                 current
                   ? "border-input bg-background text-foreground"
                   : "border-transparent text-muted-foreground hover:text-foreground"
@@ -516,10 +516,10 @@ function HeroCard(props: RowProps & { marker: "now" | "next" }) {
       aria-label={`${verb}: ${name}, ${time}, ${PHASE_TAG[marker].label.toLowerCase()}`}
       className={cn(
         "block rounded-lg border-2 p-4 transition-colors sm:p-5",
-        "outline-none focus-visible:ring-[3px] focus-visible:ring-ring/50",
+        "focus-ring",
         primary
-          ? "border-primary bg-primary text-primary-foreground hover:bg-primary/90"
-          : "border-input bg-background text-foreground hover:bg-accent"
+          ? "border-accent-bg bg-accent-bg text-on-accent"
+          : "border-input bg-background text-foreground hover:bg-muted"
       )}
     >
       <div className="flex items-center justify-between gap-3">
@@ -529,14 +529,14 @@ function HeroCard(props: RowProps & { marker: "now" | "next" }) {
         <span
           className={cn(
             "rounded px-2 py-0.5 text-sm font-semibold uppercase tracking-wide",
-            primary ? "bg-primary-foreground text-primary" : "bg-muted text-muted-foreground"
+            primary ? "bg-on-accent text-accent-bg" : "bg-muted text-muted-foreground"
           )}
         >
           {PHASE_TAG[marker].label}
         </span>
       </div>
       <h2 className="mt-1 text-2xl font-semibold leading-tight">{name}</h2>
-      <p className={cn("mt-1 text-base", primary ? "text-primary-foreground" : "text-muted-foreground")}>
+      <p className={cn("mt-1 text-base", primary ? "text-on-accent" : "text-muted-foreground")}>
         {meta.join(" · ")}
       </p>
       {attendance || coverLabel ? (
@@ -548,7 +548,7 @@ function HeroCard(props: RowProps & { marker: "now" | "next" }) {
       <div
         className={cn(
           "mt-4 flex min-h-11 items-center justify-between border-t pt-3 text-base font-semibold",
-          primary ? "border-primary-foreground/25" : "border-border"
+          primary ? "border-on-accent/25" : "border-border"
         )}
       >
         {verb}
@@ -570,8 +570,8 @@ function ClassRow(props: RowProps) {
         href={`/courses/${course.id}/class?date=${iso}`}
         aria-label={`${verb}: ${name}, ${time}`}
         className={cn(
-          "flex min-h-14 items-center gap-3 p-3 transition-colors hover:bg-accent/60",
-          "outline-none focus-visible:ring-[3px] focus-visible:ring-inset focus-visible:ring-ring/50"
+          "flex min-h-14 items-center gap-3 p-3 transition-colors hover:bg-muted",
+          "focus-ring"
         )}
       >
         <div className="min-w-0 flex-1">
@@ -588,7 +588,7 @@ function ClassRow(props: RowProps) {
         <span
           className={cn(
             "flex shrink-0 items-center gap-1 text-sm font-medium",
-            primary ? "text-primary" : "text-muted-foreground"
+            primary ? "text-accent-bg" : "text-muted-foreground"
           )}
         >
           {props.done ? "Open" : "Start"}

@@ -64,7 +64,7 @@ function PlacementFields() {
         />
       </Field>
       <div className="flex items-center justify-between gap-3 rounded-md border px-3 py-2">
-        <label htmlFor="allowWaitlist" className="text-[13px] font-medium text-foreground">
+        <label htmlFor="allowWaitlist" className="text-sm font-medium text-foreground">
           Waitlist if the class is full
           <span className="block text-xs font-normal text-muted-foreground">
             Otherwise a full class refuses, and says so.
@@ -184,7 +184,7 @@ export function EndEnrolment({ enrolment, classLabel }: WithClass) {
       }
     >
       <div className="flex items-center justify-between gap-3 rounded-md border px-3 py-2">
-        <label htmlFor="finished" className="text-[13px] font-medium text-foreground">
+        <label htmlFor="finished" className="text-sm font-medium text-foreground">
           They finished the class
           <span className="block text-xs font-normal text-muted-foreground">
             Off means they left it — the log says which.

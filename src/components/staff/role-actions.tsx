@@ -44,7 +44,7 @@ function ScreenPicker({ role }: { role?: Role }) {
   const held = new Set(role?.screens ?? []);
   return (
     <fieldset className="space-y-2">
-      <legend className="mb-1 block text-[13px] font-medium text-foreground">
+      <legend className="mb-1 block text-sm font-medium text-foreground">
         Which screens this role can open
       </legend>
       <p className="text-xs text-muted-foreground">
@@ -55,7 +55,7 @@ function ScreenPicker({ role }: { role?: Role }) {
           <label
             key={screen.key}
             htmlFor={`screen-${screen.key}`}
-            className="flex cursor-pointer items-start gap-2.5 border-b p-2.5 transition-colors last:border-0 hover:bg-accent/40"
+            className="flex cursor-pointer items-start gap-2.5 border-b p-2.5 transition-colors last:border-0 hover:bg-muted"
           >
             <input
               id={`screen-${screen.key}`}
@@ -66,7 +66,7 @@ function ScreenPicker({ role }: { role?: Role }) {
               className="mt-0.5 size-4 shrink-0 accent-primary"
             />
             <span className="min-w-0">
-              <span className="block text-[13px] font-medium text-foreground">{screen.label}</span>
+              <span className="block text-sm font-medium text-foreground">{screen.label}</span>
               <span className="mt-0.5 block text-xs text-muted-foreground">
                 {screen.description}
               </span>
@@ -84,7 +84,7 @@ function HomePicker({ role }: { role?: Role }) {
   const current = role?.home ?? "overview";
   return (
     <fieldset className="space-y-2">
-      <legend className="mb-1 block text-[13px] font-medium text-foreground">
+      <legend className="mb-1 block text-sm font-medium text-foreground">
         Where they start after signing in
       </legend>
       <div className="overflow-hidden rounded-md border">
@@ -92,7 +92,7 @@ function HomePicker({ role }: { role?: Role }) {
           <label
             key={key}
             htmlFor={`home-${key}`}
-            className="flex cursor-pointer items-start gap-2.5 border-b p-2.5 transition-colors last:border-0 hover:bg-accent/40"
+            className="flex cursor-pointer items-start gap-2.5 border-b p-2.5 transition-colors last:border-0 hover:bg-muted"
           >
             <input
               id={`home-${key}`}
@@ -103,7 +103,7 @@ function HomePicker({ role }: { role?: Role }) {
               className="mt-0.5 size-4 shrink-0 accent-primary"
             />
             <span className="min-w-0">
-              <span className="block text-[13px] font-medium text-foreground">
+              <span className="block text-sm font-medium text-foreground">
                 {ROLE_HOMES[key].label}
               </span>
               <span className="mt-0.5 block text-xs text-muted-foreground">
@@ -125,7 +125,7 @@ function PermissionPicker({ role }: { role?: Role }) {
 
   return (
     <fieldset className="space-y-4">
-      <legend className="mb-1 block text-[13px] font-medium text-foreground">
+      <legend className="mb-1 block text-sm font-medium text-foreground">
         What this role may do
       </legend>
 
@@ -137,7 +137,7 @@ function PermissionPicker({ role }: { role?: Role }) {
               <label
                 key={permission.key}
                 htmlFor={`permission-${permission.key}`}
-                className="flex cursor-pointer items-start gap-2.5 border-b p-2.5 transition-colors last:border-0 hover:bg-accent/40"
+                className="flex cursor-pointer items-start gap-2.5 border-b p-2.5 transition-colors last:border-0 hover:bg-muted"
               >
                 <input
                   id={`permission-${permission.key}`}
@@ -148,7 +148,7 @@ function PermissionPicker({ role }: { role?: Role }) {
                   className="mt-0.5 size-4 shrink-0 accent-primary"
                 />
                 <span className="min-w-0">
-                  <span className="block text-[13px] font-medium text-foreground">
+                  <span className="block text-sm font-medium text-foreground">
                     {permission.label}
                   </span>
                   <span className="mt-0.5 block text-xs text-muted-foreground">

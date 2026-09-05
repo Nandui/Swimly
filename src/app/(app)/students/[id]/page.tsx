@@ -106,7 +106,7 @@ export default async function StudentPage(props: PageProps<"/students/[id]">) {
       <div>
         <Link
           href="/students"
-          className="mb-2 inline-flex items-center gap-1 text-[13px] text-muted-foreground underline-offset-2 hover:text-foreground hover:underline"
+          className="mb-2 inline-flex items-center gap-1 text-sm text-muted-foreground underline-offset-2 hover:text-foreground hover:underline"
         >
           <ChevronLeft className="size-3.5" />
           Swimmers
@@ -137,7 +137,7 @@ export default async function StudentPage(props: PageProps<"/students/[id]">) {
 
       {student.medicalNotes ? (
         <details className="rounded-md border border-(--tag-red-bg) bg-(--tag-red-bg)/50 px-3 py-2 [&[open]>summary]:mb-1.5">
-          <summary className="cursor-pointer text-[13px] font-medium text-(--tag-red-fg)">
+          <summary className="cursor-pointer text-sm font-medium text-(--tag-red-fg)">
             Medical notes — read before they get in
           </summary>
           <p className="text-sm whitespace-pre-wrap text-foreground">{student.medicalNotes}</p>
@@ -201,7 +201,7 @@ export default async function StudentPage(props: PageProps<"/students/[id]">) {
               {student.contactPhone ? (
                 <a
                   href={`tel:${student.contactPhone.replace(/\s+/g, "")}`}
-                  className="text-primary underline-offset-4 hover:underline"
+                  className="text-accent underline underline-offset-4"
                 >
                   {student.contactPhone}
                 </a>
@@ -213,7 +213,7 @@ export default async function StudentPage(props: PageProps<"/students/[id]">) {
               {student.contactEmail ? (
                 <a
                   href={`mailto:${student.contactEmail}`}
-                  className="break-all text-primary underline-offset-4 hover:underline"
+                  className="break-all text-accent underline underline-offset-4"
                 >
                   {student.contactEmail}
                 </a>
@@ -235,7 +235,7 @@ export default async function StudentPage(props: PageProps<"/students/[id]">) {
                   {student.emergencyPhone ? (
                     <a
                       href={`tel:${student.emergencyPhone.replace(/\s+/g, "")}`}
-                      className="block text-primary underline-offset-4 hover:underline"
+                      className="block text-accent underline underline-offset-4"
                     >
                       {student.emergencyPhone}
                     </a>
@@ -284,7 +284,7 @@ export default async function StudentPage(props: PageProps<"/students/[id]">) {
 
             {past.length > 0 ? (
               <details className="rounded-md border px-3 py-2 [&[open]>summary]:mb-2">
-                <summary className="cursor-pointer text-[13px] text-muted-foreground">
+                <summary className="cursor-pointer text-sm text-muted-foreground">
                   {past.length} past {past.length === 1 ? "place" : "places"}
                 </summary>
                 <EnrolmentTable entries={past} student={student} manage={false} />

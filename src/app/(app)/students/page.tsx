@@ -28,9 +28,9 @@ const LENSES = [
 
 function lensClass(active: boolean) {
   return cn(
-    "flex items-center gap-1.5 border-b-2 px-2.5 py-2 text-[13px] font-medium transition-colors",
+    "flex items-center gap-1.5 border-b-2 px-2.5 py-2 text-sm font-medium transition-colors",
     active
-      ? "border-primary text-foreground"
+      ? "border-accent-bg text-primary"
       : "border-transparent text-muted-foreground hover:text-foreground"
   );
 }
@@ -184,7 +184,7 @@ function PageLink({
   disabled: boolean;
   label: string;
 }) {
-  const className = "rounded-md border px-2.5 py-1 text-[13px] transition-colors";
+  const className = "rounded-md border px-2.5 py-1 text-sm transition-colors";
   if (disabled) {
     return (
       <span aria-disabled className={cn(className, "text-muted-foreground/50")}>
@@ -195,7 +195,7 @@ function PageLink({
   return (
     <Link
       href={{ pathname: "/students", query: to }}
-      className={cn(className, "text-foreground hover:bg-accent")}
+      className={cn(className, "text-foreground hover:bg-muted")}
     >
       {label}
     </Link>
@@ -206,7 +206,7 @@ function StudentTable({ students }: { students: StudentRow[] }) {
   return (
     <div className="overflow-hidden rounded-md border">
       <table className="w-full text-sm">
-        <thead className="bg-sidebar">
+        <thead className="bg-surface">
           <tr className="border-b">
             <th scope="col" className="px-3 py-2 text-left text-xs font-medium text-muted-foreground">
               Name
@@ -241,7 +241,7 @@ function StudentTable({ students }: { students: StudentRow[] }) {
             return (
               <tr
                 key={student.id}
-                className="group border-b transition-colors last:border-0 hover:bg-accent/40"
+                className="group border-b transition-colors last:border-0 hover:bg-muted"
               >
                 <td className="px-3 py-2 font-medium text-foreground">
                   <Link

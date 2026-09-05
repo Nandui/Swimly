@@ -67,7 +67,7 @@ export default async function AssessmentSessionPage(props: PageProps<"/assessmen
       <div>
         <Link
           href="/assessments"
-          className="mb-2 inline-flex items-center gap-1 text-[13px] text-muted-foreground underline-offset-2 hover:text-foreground hover:underline"
+          className="mb-2 inline-flex items-center gap-1 text-sm text-muted-foreground underline-offset-2 hover:text-foreground hover:underline"
         >
           <ChevronLeft className="size-3.5" />
           Assessments
@@ -164,7 +164,7 @@ function BookingTable({
   return (
     <div className="overflow-hidden rounded-md border">
       <table className="w-full text-sm">
-        <thead className="bg-sidebar">
+        <thead className="bg-surface">
           <tr className="border-b">
             <th scope="col" className="px-3 py-2 text-left text-xs font-medium text-muted-foreground">
               Swimmer
@@ -187,7 +187,7 @@ function BookingTable({
           {entries.map((b) => {
             const meta = BOOKING_STATUS_META[b.status];
             return (
-              <tr key={b.id} className="group border-b transition-colors last:border-0 hover:bg-accent/40">
+              <tr key={b.id} className="group border-b transition-colors last:border-0 hover:bg-muted">
                 <td className="px-3 py-2 font-medium text-foreground">
                   <Link href={`/students/${b.student.id}`} className="underline-offset-2 hover:underline">
                     {fullName(b.student)}

@@ -91,7 +91,7 @@ export default async function ClassPage(props: PageProps<"/courses/[id]/class">)
             the class's own page for a desk role without Today. */}
         <Link
           href={canSee(session, "today") ? "/today" : `/courses/${course.id}`}
-          className="mb-2 inline-flex items-center gap-1 text-[13px] text-muted-foreground underline-offset-2 hover:text-foreground hover:underline"
+          className="mb-2 inline-flex items-center gap-1 text-sm text-muted-foreground underline-offset-2 hover:text-foreground hover:underline"
         >
           <ChevronLeft className="size-3.5" />
           {canSee(session, "today") ? "Today" : courseName(course)}
@@ -166,7 +166,7 @@ export default async function ClassPage(props: PageProps<"/courses/[id]/class">)
       />
 
       {course.archivedAt ? (
-        <p className="rounded bg-(--tag-yellow-bg) px-2.5 py-1.5 text-[13px] text-(--tag-yellow-fg)">
+        <p className="rounded bg-(--tag-yellow-bg) px-2.5 py-1.5 text-sm text-(--tag-yellow-fg)">
           This class is archived, so it is read-only.
         </p>
       ) : askTakeOver ? (
@@ -180,11 +180,11 @@ export default async function ClassPage(props: PageProps<"/courses/[id]/class">)
           autoOpen
         />
       ) : !mayMark ? (
-        <p className="rounded bg-(--tag-yellow-bg) px-2.5 py-1.5 text-[13px] text-(--tag-yellow-fg)">
+        <p className="rounded bg-(--tag-yellow-bg) px-2.5 py-1.5 text-sm text-(--tag-yellow-fg)">
           You can read this class but not change it.
         </p>
       ) : step === "competencies" && !mayAssess ? (
-        <p className="rounded bg-(--tag-yellow-bg) px-2.5 py-1.5 text-[13px] text-(--tag-yellow-fg)">
+        <p className="rounded bg-(--tag-yellow-bg) px-2.5 py-1.5 text-sm text-(--tag-yellow-fg)">
           You can read these marks but not change them.
         </p>
       ) : null}

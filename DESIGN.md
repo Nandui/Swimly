@@ -1,31 +1,31 @@
 # Swimly — the doctrine
 
-Swimly's visual system is **generated, not hand-picked**. The ui-ux-pro-max
-skill's design-system engine produced it for this product on 1 Sep 2026 and it
-is persisted at [`design-system/swimly/MASTER.md`](design-system/swimly/MASTER.md):
-**Minimalism**, built on the engine's logic for a **booking and appointment
-tool** — trust blue for everything interactive, green for "a place is
-available", grey for "booked", a light ground with a faint blue cast, Outfit
-for headings and Work Sans to read, subtle 200ms motion. That file is the
-authority on how things look; page-level exceptions go in
-`design-system/swimly/pages/`, and a question it does not answer is put to the
-skill, one intent per query.
+Swimly's look is **Astryx**, Meta's open design system, in its **Neutral**
+theme: quiet greys, a near-black accent, white cards on a pale ground, Figtree
+throughout, and both colour modes drawn from one set of tokens through
+`light-dark()`. The mode follows the device unless the person picks one.
+Adopted on 5 Sep 2026 in place of the generated ui-ux-pro-max system, which
+is superseded for everything visual; its UX patterns (searchable pickers,
+collapse-not-scroll, one H1) still hold and are restated below.
 
-**Describe the product, not the user, when asking the engine.** The first run
-called Swimly a "staff admin dashboard internal tool" and got back a dark tech
-palette with code fonts, filed under IoT dashboards. Swimly is a leisure
-centre's tool for swim lessons and other bookings; asked that, the engine
-answered as above. The query is recorded at the top of MASTER.md.
+Astryx is a component library, not a colour file. The app uses its
+components — AppShell, SideNav, Button, TextInput, Selector, Typeahead,
+Dialog, Banner, Badge, Toast, Text and Heading — and its tokens, through the
+CSS it ships. Nothing here is styled by hand that Astryx already draws.
 
-The previous doctrine — "the well-kept page", a warm-grey document style with
-one blue — is superseded by decision on that date. Its components are still
-vendored at `src/components/ui-kit/` and still used; its visual rules are not.
-The kit remains a submodule at `.claude/skills/design-kit` for its component
-recipes only.
+The authority on how a component behaves and what it takes is Astryx's own
+documentation, read from the CLI so it matches the installed version:
 
-This file records what MASTER.md cannot: how the generated system was mapped
-onto shadcn's tokens, where it had to be corrected, and the architectural
-decisions that hold regardless of how the app looks.
+```bash
+npx astryx component <Name>        # props, examples, theming surface
+npx astryx search "<thing>"        # find a component, hook or doc
+npx astryx docs <topic>            # layout, tokens, color, typography, motion…
+npx astryx template --list         # page and block recipes
+```
+
+This file records how Astryx was wired into a Next.js app that already had
+eighty screens, the decisions taken where Astryx leaves room, and the
+architectural decisions that hold regardless of how the app looks.
 
 ---
 
@@ -34,22 +34,24 @@ decisions that hold regardless of how the app looks.
 These are the ones that get broken first, and breaking any of them is what
 makes Swimly stop looking like itself.
 
-- **Tokens, never colours.** Every colour a component shows comes from a
-  variable in `globals.css`, which follows MASTER.md. No hex, no Tailwind
-  palette class, in a component.
-- **One blue, for interaction.** `--primary` is the engine's trust blue:
-  buttons, links, focus, caret, selection. Green means *available* and lives in
-  the tag pairs and `--success`; it is never a button.
-- **Status colour comes only from the tag token pairs**, always as the pair
-  (field + same-hue ink, one set per mode), always via a metadata map — never
-  a colour chosen at a call site.
-- **Both modes, always.** Every pair is measured in light and in dark before
-  it ships: text 4.5:1, control edges 3:1. The engine's own checklist.
-- **One H1 per page**, in the heading face, with an optional muted description
-  line. Section headings are H2.
+- **Astryx's component before a hand-drawn one.** A button is `Button`, a
+  field is `TextInput`, a choice is `Selector`, a notice is `Banner`, a
+  heading is `Heading`. Tailwind is for layout — flex, grid, gap, width —
+  not for drawing controls.
+- **Tokens, never colours.** Every colour comes from an Astryx token, either
+  as a Tailwind utility the bridge provides (`bg-surface`, `text-primary`,
+  `text-secondary`, `border-border`, `bg-muted`) or as `var(--color-*)`. No
+  hex, no Tailwind palette class, in a component.
+- **Status colour comes only from the tag token pairs**, always via a
+  metadata map — never a colour chosen at a call site. The pairs are Astryx's
+  hue tokens, so a `<Tag>` and a `<Badge>` of the same colour agree.
+- **Both modes, always.** Every token is a `light-dark()` pair measured by the
+  theme; anything added by hand is checked in both.
+- **One H1 per page**, from `Heading level={1}` via `PageHeader`, with an
+  optional secondary description line. Section headings are H2.
 - **Collapse, don't scroll.** Secondary table columns re-home as a muted second
   line below `md`. Anything that grows without limit goes behind a searchable
-  picker.
+  picker (`Selector hasSearch`, or `Typeahead` when the server must search).
 - **Every mutation is audited**, scripts included, with a summary naming what
   changed and to what.
 - **Ask for a permission, not a role.** `can(session, "students.manage")`,
@@ -60,37 +62,102 @@ makes Swimly stop looking like itself.
 
 ## Decisions taken for Swimly
 
-### Two modes, the system decides
+### How Astryx is wired in
 
-The engine emitted a light palette and marked the style "mode: auto", so Swimly
-ships both. `next-themes` sets `class="dark"` on `<html>` and defaults to the
-operating system. A one-click sun/moon flip sits above the account menu in the
-sidebar and at the right end of the mobile bar — the deck is bright at noon and
-dim at seven, so the switch is never more than one tap away. The three-way
-control on the Account page is where "follow the system" is restored. The dark
-palette is the same blue/slate scale read from the other end.
+**CSS layers, declared up front.** Astryx ships its component styles as plain
+CSS in cascade layers, no build plugin. `globals.css` declares every layer in
+one line — `reset, theme, base, astryx-base, astryx-theme, components,
+utilities` — then imports Tailwind's theme and preflight, Astryx's reset, core
+and Neutral theme, the bridge, and Tailwind's utilities, in that order. That
+is what lets a `className` on an Astryx component still win. Unlayered rules
+at the bottom of the file beat everything and are kept few.
 
-### How MASTER.md maps onto shadcn, and where it was corrected
+**The bridge, with the app's text sizes.** `@astryxdesign/core/tailwind-theme.css`
+turns Astryx's tokens into Tailwind utilities, including the 4px spacing
+scale and the radius scale (`rounded-md` is the 10px element radius,
+`rounded-lg` the 12px container radius). It also maps `text-sm` to Astryx's
+12px "sm", which would have shrunk every body line in the app. So the names
+keep their pixel meaning: `text-xs` 12, `text-sm` 14 (Astryx's body size),
+`text-base` 16, `text-lg` 17.
 
-The engine speaks in roles (Primary, Accent/CTA, Card…); shadcn speaks in
-tokens. The mapping, and the two places the generated values failed the
-engine's own pre-delivery bar and were corrected rather than shipped:
+**Legacy aliases, meant to disappear.** A block in `@theme inline` aliases the
+names the screens were written against — `bg-background`, `text-foreground`,
+`text-muted-foreground`, `border-input`, `bg-sidebar` — onto Astryx tokens, so
+every page rendered in the new colours from the first build. Each alias goes
+as its screens are rewritten in Astryx's names; when the block is empty the
+sweep is done. `bg-accent`, `bg-primary` and the focus rings were swept on day
+one because the bridge gives those names other meanings.
 
-| MASTER.md role | Token | Note |
-|---|---|---|
-| Primary `#2563EB` | `--primary`, `--ring` | Blue-600: white text at 5.2:1, link text at 4.9:1. In dark it becomes blue-400 with slate ink (7.0:1) — lighter tonal variant, not an inversion, and the only blue that reads as a link on slate-900. |
-| Accent/CTA `#059669` | `--success` (and the green tag pair) | White on emerald-600 is **3.77:1** and fails, so the pair is emerald-700 (5.5:1). It marks "available" and "confirmed", never the primary button — a booking tool has one interactive colour. |
-| Secondary `#3B82F6` | `--secondary` = `--accent` = `#E4ECFC` | Blue-500 as a second interactive blue would compete with the first; the blue-cast hairline tint is the hover surface instead. |
-| Border `#E4ECFC` | `--border` | 1.1:1 — a hairline between rows, which is all it is for. Inputs use `--input` at slate-500: 4.6:1 light, 3.75:1 dark. |
-| Muted `#F1F5FD` | `--muted`, `--sidebar` | The faint blue cast that keeps the ground from reading as plain grey. |
-| Destructive `#DC2626` | `--destructive` | Passes as emitted: white at 4.8:1. |
+**Figtree through next/font.** Astryx never loads a font. The theme names
+Figtree; the root layout self-hosts it with `next/font/google` and hands the
+variable to the theme's font tokens on `[data-astryx-theme]`, which is where
+the theme sets them.
 
-Radius stays `0.375rem` — the engine names none, and a family leisure centre is
-not a place for hard corners. Transitions default to 200ms, per "Key Effects".
-The MASTER shadow scale is exposed as tokens and applied to nothing at rest.
+**Tag pairs are Astryx hues.** `--tag-<colour>-bg/fg` are aliases of
+`--color-background-<hue>` and `--color-text-<hue>`. Astryx has no brown;
+teal stands in and reads as its own hue.
 
-The former warm-grey neutrals (hue 95–106) are gone with the doctrine that
-needed them; the slate here leans blue, faintly, on purpose.
+**Phone sizes, once.** Astryx sizes controls for a pointer: 28, 32, 36px. A
+thumb on a wet phone needs 44. One unlayered media rule gives every button,
+field, menu row, nav item and tab a 44px minimum below `md`.
+
+**The focus ring is Astryx's.** The few controls the app draws itself — a row
+that is a link, a mark button on the register — use the `focus-ring` utility,
+which is Astryx's own outline tokens, so keyboard focus looks like one thing.
+
+### Two modes, the device decides
+
+The mode is a cookie, `swimly.theme`, read by the root layout on the server.
+It stamps `data-theme` on `<html>` (which reset.css turns into
+`color-scheme`) and seeds Astryx's `<Theme mode>`, so the first paint is
+right and hydration has nothing to disagree about. No cookie means "follow
+the device". The one-tap flip sits in the side nav's footer and the phone
+bar; the three-way control on the Account page is where "system" is
+restored. `next-themes` is gone.
+
+### The shell
+
+Astryx's `AppShell` in `height="auto"` (the page scrolls, the nav sticks) and
+`variant="section"` (a divider between nav and content, no raised surface).
+The `SideNav` holds the product name, the club switcher above the nav, the
+screens the role may open, and in the footer the account row and the mode
+flip; it collapses to an icon rail. Below `md` the AppShell folds the nav
+into a drawer and shows the `TopNav` as a bar — product name, club, flip,
+toggle — which is hidden from 769px up, since there is no top bar on
+desktop in this design. AppShell owns the skip link and the `<main>`
+landmark; pages start at their H1. The dev build's "view as" bar is a
+`Banner status="warning" container="section"` in the shell's banner slot.
+
+### Adapters over Astryx, so forms kept posting
+
+Every form in the app is a plain `<form>` read with `FormData` by a server
+action. Astryx's inputs are controlled. Rather than rewrite fourteen forms,
+`src/components/ui/{button,input,textarea,switch,select}.tsx` keep their
+import paths and props and render Astryx underneath: the adapter holds the
+value, hands Astryx `htmlName`, and the form still posts. `Field` in
+`form-dialog.tsx` hands its label and hint to a control that knows what to
+do with them, and wraps anything else in Astryx's `Field`. A date, time or
+number keeps the native control — the browser's picker is the right one on a
+phone — inside that same `Field`.
+
+The `Button` adapter derives Astryx's required `label` from the words inside
+the button or its `aria-label`, moves a lone icon into Astryx's icon slot,
+and renders the icon-only sizes as `IconButton`.
+
+### Toasts through one bridge
+
+Astryx hands out toasts through a hook, which is useless at the tail of a
+transition that has just awaited a server action. `src/lib/toast.tsx` keeps
+the imperative `toast.success` / `toast.error` every call site uses and one
+mounted `<ToastBridge>` carries each call to Astryx's `useToast`. Errors stay
+until dismissed, which is Astryx's default and the right one on a deck.
+
+### Dialogs keep a rich description
+
+Astryx's `AlertDialog` takes a plain-string description. A consequence here
+often carries a name in bold, so `ConfirmAction` and the take-over question
+are `Dialog purpose="form"` with a `DialogHeader`, a `Text` body and an
+`HStack` of buttons at the end. `FormDialog` is the same shape around a form.
 
 ### Roles are data, permissions are code
 
@@ -434,15 +501,22 @@ and writes an audit row for the account it creates.
 
 Before calling a screen done:
 
-- One H1, in the heading face.
-- Every status is a `<Tag>` fed by a metadata map, and it reads in both modes.
-- Blue appears only where something is interactive; green only where a place
-  is available or a thing is confirmed.
-- Every text pair 4.5:1 and every control edge 3:1, checked in light and dark.
-- Keyboard: a visible ring on everything focusable, the skip link first,
+- It is built from Astryx components; anything drawn by hand has a reason
+  written beside it. `npx astryx component <Name>` was read for each one used.
+- One H1, from `PageHeader`.
+- Every status is a `<Tag>` or `<Badge>` fed by a metadata map, and it reads
+  in both modes.
+- No colour outside the tokens: no hex, no Tailwind palette class, no name
+  from the legacy alias block in new code.
+- Every text pair 4.5:1 and every control edge 3:1, checked in light and dark
+  for anything not drawn by the theme.
+- Keyboard: Astryx's focus outline on everything focusable (the `focus-ring`
+  utility on hand-drawn controls), the skip link first,
   `prefers-reduced-motion` honoured.
+- 375px checked: 44px targets, nothing scrolling sideways, the phone bar's
+  toggle on screen.
 - Row actions carry `aria-label`s naming the verb and the row, and stay
-  reachable on touch (`max-md:opacity-100`).
+  reachable on touch.
 - Secondary columns collapse rather than scroll below `md`.
 - Every mutating action authorizes first, guards before writing, audits after,
   and returns `{ ok: false, error }` for anything a person can fix.

@@ -48,3 +48,6 @@ next-env.d.ts
 # impeccable live-mode runtime state (the config is kept)
 .impeccable/live/*
 !.impeccable/live/config.json
+
+# Impeccable review captures: evidence for a review round, never shipped
+.impeccable/review/

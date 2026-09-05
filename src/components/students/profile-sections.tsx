@@ -26,7 +26,7 @@ export function Panel({
 }) {
   return (
     <section className="overflow-hidden rounded-md border">
-      <div className="flex items-center justify-between gap-3 border-b bg-sidebar px-3 py-2">
+      <div className="flex items-center justify-between gap-3 border-b bg-surface px-3 py-2">
         <h2 className="text-xs font-medium text-muted-foreground">{title}</h2>
         {action}
       </div>
@@ -60,7 +60,7 @@ export function EnrolmentTable({
   return (
     <div className="overflow-hidden rounded-md border">
       <table className="w-full text-sm">
-        <thead className="bg-sidebar">
+        <thead className="bg-surface">
           <tr className="border-b">
             <th scope="col" className="px-3 py-2 text-left text-xs font-medium text-muted-foreground">
               Class
@@ -91,7 +91,7 @@ export function EnrolmentTable({
             return (
               <tr
                 key={entry.id}
-                className="group border-b transition-colors last:border-0 hover:bg-accent/40"
+                className="group border-b transition-colors last:border-0 hover:bg-muted"
               >
                 <td className="px-3 py-2 font-medium text-foreground">
                   <Link
@@ -168,7 +168,7 @@ export function AttendanceTable({ records }: { records: StudentAttendance[] }) {
       </p>
       <div className="overflow-hidden rounded-md border">
         <table className="w-full text-sm">
-          <thead className="bg-sidebar">
+          <thead className="bg-surface">
             <tr className="border-b">
               <th scope="col" className="px-3 py-2 text-left text-xs font-medium text-muted-foreground">
                 Date
@@ -188,7 +188,7 @@ export function AttendanceTable({ records }: { records: StudentAttendance[] }) {
             {records.map((record) => {
               const meta = ATTENDANCE_STATUS_META[record.status];
               return (
-                <tr key={record.id} className="border-b transition-colors last:border-0 hover:bg-accent/40">
+                <tr key={record.id} className="border-b transition-colors last:border-0 hover:bg-muted">
                   <td className="px-3 py-2 whitespace-nowrap text-foreground tabular-nums">
                     {formatDate(record.date)}
                     <span className="mt-0.5 block text-xs text-muted-foreground md:hidden">

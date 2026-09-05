@@ -149,13 +149,19 @@ function FilterPicker({
       variant="ghost"
       size="md"
       hasSearch
-      hasClear
       searchPlaceholder={`Search ${dimension.label.toLowerCase()}…`}
       emptySearchText="Nothing matches."
       placeholder={dimension.label}
       options={dimension.options.map((option) => ({ value: option.value, label: option.label }))}
-      value={dimension.selected ?? null}
-      onChange={(value) => onPick(value)}
+      // The clear × only once something is set; before that the chevron is
+      // the whole affordance.
+      {...(dimension.selected
+        ? {
+            hasClear: true as const,
+            value: dimension.selected,
+            onChange: (value: string | null) => onPick(value),
+          }
+        : { value: undefined, onChange: (value: string) => onPick(value) })}
       renderValue={(option) => (
         <>
           <Text type="inherit" color="secondary">

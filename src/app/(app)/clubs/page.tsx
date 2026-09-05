@@ -70,7 +70,7 @@ function ClubList({
       {clubs.map((club) => (
         <li
           key={club.id}
-          className="group flex flex-wrap items-start justify-between gap-x-4 gap-y-2 border-b px-3 py-2 transition-colors last:border-0 hover:bg-accent/40"
+          className="group flex flex-wrap items-start justify-between gap-x-4 gap-y-2 border-b px-3 py-2 transition-colors last:border-0 hover:bg-muted"
         >
           <div className="min-w-0">
             <p className="text-sm font-medium text-foreground">

@@ -98,7 +98,7 @@ function PeopleTable({
   return (
     <div className="overflow-hidden rounded-md border">
       <table className="w-full text-sm">
-        <thead className="bg-sidebar">
+        <thead className="bg-surface">
           <tr className="border-b">
             <th
               scope="col"
@@ -130,7 +130,7 @@ function PeopleTable({
             return (
               <tr
                 key={person.id}
-                className="group border-b transition-colors last:border-0 hover:bg-accent/40"
+                className="group border-b transition-colors last:border-0 hover:bg-muted"
               >
                 <td className="px-3 py-2 font-medium text-foreground">
                   {person.name}

@@ -66,7 +66,7 @@ export default async function ProgrammePage(props: PageProps<"/programmes/[id]">
       <div>
         <Link
           href="/programmes"
-          className="mb-2 inline-flex items-center gap-1 text-[13px] text-muted-foreground underline-offset-2 hover:text-foreground hover:underline"
+          className="mb-2 inline-flex items-center gap-1 text-sm text-muted-foreground underline-offset-2 hover:text-foreground hover:underline"
         >
           <ChevronLeft className="size-3.5" />
           Programmes
@@ -143,7 +143,7 @@ export default async function ProgrammePage(props: PageProps<"/programmes/[id]">
             {assessmentTypes.map((type) => (
               <li
                 key={type.id}
-                className="group flex items-start justify-between gap-3 border-b px-3 py-2 transition-colors last:border-0 hover:bg-accent/40"
+                className="group flex items-start justify-between gap-3 border-b px-3 py-2 transition-colors last:border-0 hover:bg-muted"
               >
                 <div className="min-w-0">
                   <p className="text-sm text-foreground">
@@ -214,7 +214,7 @@ function LevelSection({
 
   return (
     <section className="overflow-hidden rounded-md border">
-      <div className="group flex items-start gap-3 border-b bg-sidebar px-3 py-2">
+      <div className="group flex items-start gap-3 border-b bg-surface px-3 py-2">
         <div className="min-w-0 flex-1">
           <h2 className="text-sm font-semibold text-foreground">
             {level.name}
@@ -251,7 +251,7 @@ function LevelSection({
           {numberLive(level.competencies).map(({ competency, position, first, last }) => (
             <li
               key={competency.id}
-              className="group flex items-start gap-3 border-b px-3 py-2 transition-colors last:border-0 hover:bg-accent/40"
+              className="group flex items-start gap-3 border-b px-3 py-2 transition-colors last:border-0 hover:bg-muted"
             >
               <span className="w-4 shrink-0 pt-0.5 text-xs text-muted-foreground tabular-nums">
                 {position ?? ""}

@@ -82,7 +82,7 @@ export function ChangePasswordForm() {
       {error ? (
         <p
           role="alert"
-          className="rounded bg-(--tag-red-bg) px-2.5 py-1.5 text-[13px] text-(--tag-red-fg)"
+          className="rounded bg-(--tag-red-bg) px-2.5 py-1.5 text-sm text-(--tag-red-fg)"
         >
           {error}
         </p>

@@ -275,11 +275,11 @@ export function RegisterForm({
                         onClick={() => set(line.studentId, status)}
                         className={cn(
                           "inline-flex h-11 flex-1 items-center justify-center gap-1 rounded-md border text-sm font-medium transition-colors sm:h-9 sm:w-24 sm:flex-none",
-                          "focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50 focus-visible:outline-none",
+                          "focus-ring",
                           "disabled:pointer-events-none disabled:opacity-60",
                           active
                             ? cn(SELECTED[status], "border-2")
-                            : "border-input text-muted-foreground hover:bg-accent hover:text-foreground"
+                            : "border-input text-muted-foreground hover:bg-muted hover:text-foreground"
                         )}
                       >
                         {active ? <Check aria-hidden="true" className="size-4" /> : null}

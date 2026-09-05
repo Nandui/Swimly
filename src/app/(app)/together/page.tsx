@@ -48,7 +48,7 @@ export default async function TogetherPage(props: PageProps<"/together">) {
           {chosen.map((student) => (
             <span
               key={student.id}
-              className="inline-flex h-8 items-center rounded-md border bg-accent text-[13px]"
+              className="inline-flex h-8 items-center rounded-md border bg-muted text-sm"
             >
               <Link
                 href={`/students/${student.id}`}
@@ -72,7 +72,7 @@ export default async function TogetherPage(props: PageProps<"/together">) {
           {chosen.length < GROUP_CAP ? (
             <AddToGroup chosen={ids} />
           ) : (
-            <span className="text-[13px] text-muted-foreground">
+            <span className="text-sm text-muted-foreground">
               That is as many as this will search for at once.
             </span>
           )}
@@ -80,7 +80,7 @@ export default async function TogetherPage(props: PageProps<"/together">) {
           {chosen.length > 0 ? (
             <Link
               href="/together"
-              className="px-1 text-[13px] text-muted-foreground underline-offset-2 hover:text-foreground hover:underline"
+              className="px-1 text-sm text-muted-foreground underline-offset-2 hover:text-foreground hover:underline"
             >
               Start again
             </Link>
@@ -88,7 +88,7 @@ export default async function TogetherPage(props: PageProps<"/together">) {
         </div>
 
         {suggestions.length > 0 ? (
-          <div className="flex flex-wrap items-center gap-x-2 gap-y-1 text-[13px] text-muted-foreground">
+          <div className="flex flex-wrap items-center gap-x-2 gap-y-1 text-sm text-muted-foreground">
             {/* Names whose contact it is rather than which field matched:
                 "a email" needs an article that depends on the field, and the
                 field is not what anybody needs to know. */}
@@ -97,7 +97,7 @@ export default async function TogetherPage(props: PageProps<"/together">) {
               <Link
                 key={student.id}
                 href={hrefFor([...ids, student.id])}
-                className="inline-flex h-7 items-center gap-1 rounded-md border px-2 text-foreground transition-colors hover:bg-accent"
+                className="inline-flex h-7 items-center gap-1 rounded-md border px-2 text-foreground transition-colors hover:bg-muted"
               >
                 <Plus className="size-3 opacity-60" aria-hidden />
                 {student.name}
@@ -124,7 +124,7 @@ export default async function TogetherPage(props: PageProps<"/together">) {
       ) : (
         <>
           {result && result.unplaced.length > 0 ? (
-            <p className="max-w-prose rounded-md border border-(--tag-orange-bg) bg-(--tag-orange-bg)/40 px-3 py-2 text-[13px]">
+            <p className="max-w-prose rounded-md border border-(--tag-orange-bg) bg-(--tag-orange-bg)/40 px-3 py-2 text-sm">
               {result.unplaced.map((m) => m.name).join(", ")}{" "}
               {result.unplaced.length === 1 ? "has" : "have"} no level yet, so there is nothing to
               search on. Enrol {result.unplaced.length === 1 ? "them" : "each of them"} once and
@@ -229,7 +229,7 @@ function SlotCard({
 
   return (
     <div className="overflow-hidden rounded-md border">
-      <p className="border-b bg-sidebar px-3 py-2 text-[13px] font-medium text-foreground">
+      <p className="border-b bg-surface px-3 py-2 text-sm font-medium text-foreground">
         {heading}
       </p>
       <ul>
