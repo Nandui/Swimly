@@ -101,8 +101,18 @@ as "One swimmer at a time".
   "Could not reach the server. Your marks are kept on this phone. Try again
   when the signal is back.", and leaves Save enabled.
 
+## One road to the class (5 Sep 2026)
+
+There is one attendance page and one competencies page: this one. Today,
+Overview and the class's desk page ("Open class") all open it; the old
+`/register` and `/assess` routes redirect here so bookmarks still land.
+Week before / Week after sit in the header on step one, so the desk can
+reach a past week from the same screen. The back link goes to Today for a
+role that has it, otherwise to the class's desk page. The per-swimmer
+checklist is gone from the class; a swimmer's whole ladder lives on their
+profile, and moving up happens there.
+
 ## Not on this page
 
-Week-by-week navigation, the class note read-only view for the desk,
-moving a swimmer up. Those are desk tasks and live on the register and
-assessment pages.
+The class note read-only view for the desk, and moving a swimmer up. Those
+live on the swimmer's profile.

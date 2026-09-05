@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
-import { ChevronLeft, ClipboardList, GraduationCap, Users } from "lucide-react";
+import { ChevronLeft, ClipboardList, Users } from "lucide-react";
 import { EmptyState } from "@/components/ui-kit/empty-state";
 import { PageHeader } from "@/components/ui-kit/page-header";
 import { Tag } from "@/components/ui-kit/tag";
@@ -95,19 +95,14 @@ export default async function CoursePage(props: PageProps<"/courses/[id]">) {
           }
           actions={
             <>
-              {manage && !course.archivedAt ? (
+              {/* The same class page the deck opens: attendance, then
+                  competencies. One road to the class, whichever screen you
+                  came from. */}
+              {!course.archivedAt && can(session, "attendance.mark") ? (
                 <Button asChild variant="outline" size="sm">
-                  <Link href={`/courses/${course.id}/register`}>
+                  <Link href={`/courses/${course.id}/class`}>
                     <ClipboardList className="size-4" />
-                    Take attendance
-                  </Link>
-                </Button>
-              ) : null}
-              {manage ? (
-                <Button asChild variant="outline" size="sm">
-                  <Link href={`/courses/${course.id}/assess`}>
-                    <GraduationCap className="size-4" />
-                    Competencies
+                    Open class
                   </Link>
                 </Button>
               ) : null}

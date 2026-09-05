@@ -24,6 +24,7 @@ import {
   parseCourseFilters,
 } from "@/lib/courses/filters";
 import { weekdayOfIso } from "@/lib/attendance/dates";
+import { getRegisterStateForDay } from "@/lib/attendance/data/register";
 import { today } from "@/lib/format";
 import { screenPage } from "@/lib/page-guards";
 
@@ -34,13 +35,18 @@ export default async function CoursesPage(props: PageProps<"/courses">) {
   const admin = can(session, "courses.manage");
 
   // Opens on today. See `ANY_DAY` in filters.ts for how the week is reached.
-  const filters = parseCourseFilters(await props.searchParams, weekdayOfIso(today()));
+  const iso = today();
+  const todayDay = weekdayOfIso(iso);
+  const filters = parseCourseFilters(await props.searchParams, todayDay);
   const active = activeFilterCount(filters);
 
-  const [courses, levels, instructors] = await Promise.all([
+  // Today's attendance state rides along, so a class that has been marked
+  // today says so here the same way it does on Today.
+  const [courses, levels, instructors, marked] = await Promise.all([
     getCourses(true),
     getLevelOptions(),
     getInstructorOptions(),
+    getRegisterStateForDay(todayDay, iso),
   ]);
 
   const allLive = courses.filter((course) => !course.archivedAt);
@@ -115,7 +121,14 @@ export default async function CoursesPage(props: PageProps<"/courses">) {
             return (
               <section key={day} className="space-y-3">
                 <h2 className="text-sm font-semibold text-foreground">{DAY_META[day].label}</h2>
-                <CourseTable courses={onDay} levels={levels} instructors={instructors} admin={admin} />
+                <CourseTable
+                  courses={onDay}
+                  levels={levels}
+                  instructors={instructors}
+                  admin={admin}
+                  marked={marked}
+                  todayDay={todayDay}
+                />
               </section>
             );
           })}
@@ -125,7 +138,15 @@ export default async function CoursesPage(props: PageProps<"/courses">) {
       {archived.length > 0 ? (
         <section className="space-y-3">
           <h2 className="text-sm font-semibold text-foreground">Archived</h2>
-          <CourseTable courses={archived} levels={levels} instructors={instructors} admin={admin} archived />
+          <CourseTable
+            courses={archived}
+            levels={levels}
+            instructors={instructors}
+            admin={admin}
+            marked={marked}
+            todayDay={todayDay}
+            archived
+          />
         </section>
       ) : null}
     </div>
@@ -138,12 +159,17 @@ function CourseTable({
   instructors,
   admin,
   archived,
+  marked,
+  todayDay,
 }: {
   courses: CourseRow[];
   levels: Awaited<ReturnType<typeof getLevelOptions>>;
   instructors: Awaited<ReturnType<typeof getInstructorOptions>>;
   admin: boolean;
   archived?: boolean;
+  /** Which of today's classes have attendance in, and which day today is. */
+  marked: Map<string, number>;
+  todayDay: CourseRow["dayOfWeek"];
 }) {
   return (
     <div className="overflow-hidden rounded-md border">
@@ -189,6 +215,11 @@ function CourseTable({
                   {archived ? (
                     <Tag color="gray" className="ml-2">
                       Archived
+                    </Tag>
+                  ) : null}
+                  {!archived && course.dayOfWeek === todayDay && marked.has(course.id) ? (
+                    <Tag color="green" className="ml-2">
+                      Attendance taken
                     </Tag>
                   ) : null}
                   <span className="mt-0.5 block text-xs font-normal text-muted-foreground">

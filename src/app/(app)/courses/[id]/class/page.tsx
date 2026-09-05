@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
-import { ArrowRight, ChevronLeft, Users } from "lucide-react";
+import { ArrowRight, ChevronLeft, ChevronRight, Users } from "lucide-react";
 import { EmptyState } from "@/components/ui-kit/empty-state";
 import { PageHeader } from "@/components/ui-kit/page-header";
 import { TabStrip } from "@/components/ui-kit/tab-strip";
@@ -13,7 +13,7 @@ import { WrongClub } from "@/components/clubs/wrong-club";
 import { ConfirmLevel } from "@/components/progression/assessment";
 import { DeckChecklist } from "@/components/progression/deck-checklist";
 import { canMarkRegister, needsTakeOver } from "@/lib/attendance/access";
-import { isIsoDate, mostRecentOccurrence } from "@/lib/attendance/dates";
+import { isIsoDate, mostRecentOccurrence, shiftWeeks } from "@/lib/attendance/dates";
 import { coverLabel, getClassCover } from "@/lib/attendance/data/cover";
 import { getRegister } from "@/lib/attendance/data/register";
 import { can, canSee } from "@/lib/authz";
@@ -21,7 +21,7 @@ import { getCurrentClub } from "@/lib/clubs/current";
 import { DAY_META, courseName, formatSlot } from "@/lib/courses/constants";
 import { getCourse } from "@/lib/courses/data/courses";
 import { formatDate, parseDateOnly, today, weekdayOf } from "@/lib/format";
-import { screenPage } from "@/lib/page-guards";
+import { pageSession } from "@/lib/page-guards";
 import { getClassProgress } from "@/lib/progression/data/progress";
 import { fullName } from "@/lib/students/constants";
 
@@ -38,7 +38,11 @@ type Step = "attendance" | "competencies";
  *  exist for the desk — for a register weeks back, for one swimmer's whole
  *  checklist, and for moving a swimmer up. */
 export default async function ClassPage(props: PageProps<"/courses/[id]/class">) {
-  const session = await screenPage("today", "attendance.mark");
+  // Reached from Today by the deck and from Classes by the desk, so either
+  // screen opens it; taking attendance is still the permission it needs.
+  const session = await pageSession();
+  if (!canSee(session, "today") && !canSee(session, "courses")) notFound();
+  if (!can(session, "attendance.mark")) notFound();
   const { id } = await props.params;
   const params = await props.searchParams;
   const step: Step = params.step === "competencies" ? "competencies" : "attendance";
@@ -83,14 +87,36 @@ export default async function ClassPage(props: PageProps<"/courses/[id]/class">)
   return (
     <div className="space-y-6">
       <div>
+        {/* Back to wherever this person's deck is: Today for an instructor,
+            the class's own page for a desk role without Today. */}
         <Link
-          href="/today"
+          href={canSee(session, "today") ? "/today" : `/courses/${course.id}`}
           className="mb-2 inline-flex items-center gap-1 text-[13px] text-muted-foreground underline-offset-2 hover:text-foreground hover:underline"
         >
           <ChevronLeft className="size-3.5" />
-          Today
+          {canSee(session, "today") ? "Today" : courseName(course)}
         </Link>
         <PageHeader
+          actions={
+            step === "attendance" ? (
+              <>
+                <Button asChild variant="outline" size="sm">
+                  <Link href={`/courses/${course.id}/class?date=${shiftWeeks(iso, -1)}`}>
+                    <ChevronLeft className="size-4" />
+                    Week before
+                  </Link>
+                </Button>
+                {shiftWeeks(iso, 1) <= today() ? (
+                  <Button asChild variant="outline" size="sm">
+                    <Link href={`/courses/${course.id}/class?date=${shiftWeeks(iso, 1)}`}>
+                      Week after
+                      <ChevronRight className="size-4" />
+                    </Link>
+                  </Button>
+                ) : null}
+              </>
+            ) : null
+          }
           title={
             <span className="inline-flex flex-wrap items-center gap-2">
               {/* The desk's page for this class, for roles that have it.
@@ -223,14 +249,6 @@ export default async function ClassPage(props: PageProps<"/courses/[id]/class">)
               {progress.course.level.competencies.length === 1 ? "competency" : "competencies"}{" "}
               in {progress.course.level.name}.
             </p>
-            {canSee(session, "courses") ? (
-              <Link
-                href={`/courses/${course.id}/assess`}
-                className="text-[13px] text-muted-foreground underline-offset-2 hover:text-foreground hover:underline"
-              >
-                One swimmer at a time
-              </Link>
-            ) : null}
           </div>
 
           {readyToComplete.length > 0 ? (
