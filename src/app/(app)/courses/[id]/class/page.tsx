@@ -93,7 +93,19 @@ export default async function ClassPage(props: PageProps<"/courses/[id]/class">)
         <PageHeader
           title={
             <span className="inline-flex flex-wrap items-center gap-2">
-              {courseName(course)}
+              {/* The desk's page for this class, for roles that have it.
+                  Today itself never leads off the deck; this is the one
+                  door. */}
+              {canSee(session, "courses") ? (
+                <Link
+                  href={`/courses/${course.id}`}
+                  className="underline-offset-4 hover:underline"
+                >
+                  {courseName(course)}
+                </Link>
+              ) : (
+                courseName(course)
+              )}
               {taken ? <Tag color="green">Attendance taken</Tag> : null}
               {cover ? <Tag color="purple">Covered</Tag> : null}
             </span>
@@ -272,6 +284,13 @@ export default async function ClassPage(props: PageProps<"/courses/[id]/class">)
               completed: Boolean(swimmer.completedOn),
               marks: Object.fromEntries(swimmer.competencies.map((c) => [c.id, c.status])),
             }))}
+            // Who was in the water, once attendance is taken; before that,
+            // nobody is ruled out.
+            attendance={
+              taken
+                ? Object.fromEntries(lines.map((line) => [line.studentId, line.status]))
+                : null
+            }
             readOnly={!mayAssess}
             doneHref="/today"
           />

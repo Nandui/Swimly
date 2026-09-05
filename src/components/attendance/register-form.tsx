@@ -27,11 +27,36 @@ import { cn } from "@/lib/utils";
  *  connection leaves the marks in the tab, and the `localStorage` mirror means
  *  they survive the tab being closed. */
 
+/** The chosen mark: the tag pair's fill, with its edge in the pair's ink so
+ *  it reads in glare. A fill alone measured 1.1:1 against the page. */
 const SELECTED: Record<AttendanceStatus, string> = {
-  PRESENT: "bg-(--tag-green-bg) text-(--tag-green-fg) border-(--tag-green-bg)",
-  LATE: "bg-(--tag-orange-bg) text-(--tag-orange-fg) border-(--tag-orange-bg)",
-  ABSENT: "bg-(--tag-red-bg) text-(--tag-red-fg) border-(--tag-red-bg)",
+  PRESENT: "bg-(--tag-green-bg) text-(--tag-green-fg) border-(--tag-green-fg)",
+  LATE: "bg-(--tag-orange-bg) text-(--tag-orange-fg) border-(--tag-orange-fg)",
+  ABSENT: "bg-(--tag-red-bg) text-(--tag-red-fg) border-(--tag-red-fg)",
 };
+
+/** How long a save may take before the phone is told to keep the marks
+ *  and try again. Poolside wifi hangs more often than it refuses. */
+const SAVE_TIMEOUT_MS = 15_000;
+
+export const OFFLINE_MESSAGE =
+  "Could not reach the server. Your marks are kept on this phone. Try again when the signal is back.";
+
+export function withTimeout<T>(promise: Promise<T>, ms: number): Promise<T> {
+  return new Promise((resolve, reject) => {
+    const timer = setTimeout(() => reject(new Error("timeout")), ms);
+    promise.then(
+      (value) => {
+        clearTimeout(timer);
+        resolve(value);
+      },
+      (error) => {
+        clearTimeout(timer);
+        reject(error);
+      }
+    );
+  });
+}
 
 type Mark = { status: AttendanceStatus; note: string };
 
@@ -69,6 +94,9 @@ export function RegisterForm({
   const [marks, setMarks] = React.useState(initial);
   const [note, setNote] = React.useState(classNote ?? "");
   const [dirty, setDirty] = React.useState(false);
+  // Marks that came back from the phone's mirror rather than from the
+  // server: worth saying, because the person may not remember making them.
+  const [restored, setRestored] = React.useState(false);
   const [pending, startTransition] = React.useTransition();
   const [error, setError] = React.useState<string | null>(null);
 
@@ -93,6 +121,7 @@ export function RegisterForm({
         return next;
       });
       setDirty(true);
+      setRestored(true);
     } catch {
       window.localStorage.removeItem(key);
     }
@@ -135,16 +164,28 @@ export function RegisterForm({
 
   function save() {
     startTransition(async () => {
-      const result = await markRegister({
-        courseId,
-        date,
-        marks: [...marks.entries()].map(([studentId, mark]) => ({
-          studentId,
-          status: mark.status,
-          note: mark.note || undefined,
-        })),
-        classNote: note.trim() || undefined,
-      });
+      // A save that cannot reach the server throws rather than returning,
+      // and a hung one never returns at all. Both are caught here, because
+      // the marks are safe on the phone and the person has to be told so.
+      let result: Awaited<ReturnType<typeof markRegister>>;
+      try {
+        result = await withTimeout(
+          markRegister({
+            courseId,
+            date,
+            marks: [...marks.entries()].map(([studentId, mark]) => ({
+              studentId,
+              status: mark.status,
+              note: mark.note || undefined,
+            })),
+            classNote: note.trim() || undefined,
+          }),
+          SAVE_TIMEOUT_MS
+        );
+      } catch {
+        startTransition(() => setError(OFFLINE_MESSAGE));
+        return;
+      }
 
       if (result.ok) {
         window.localStorage.removeItem(key);
@@ -152,6 +193,7 @@ export function RegisterForm({
         startTransition(() => {
           setError(null);
           setDirty(false);
+          setRestored(false);
         });
         if (continueHref) router.push(continueHref);
       } else {
@@ -178,7 +220,7 @@ export function RegisterForm({
           ))}
         </p>
         {readOnly ? null : (
-          <Button type="button" variant="ghost" size="sm" onClick={() => setAll("PRESENT")}>
+          <Button type="button" variant="outline" size="lg" onClick={() => setAll("PRESENT")}>
             Everyone in
           </Button>
         )}
@@ -232,14 +274,15 @@ export function RegisterForm({
                         aria-label={`${ATTENDANCE_STATUS_META[status].label} — ${name}`}
                         onClick={() => set(line.studentId, status)}
                         className={cn(
-                          "h-10 flex-1 rounded-md border text-[13px] font-medium transition-colors sm:h-8 sm:w-16 sm:flex-none",
+                          "inline-flex h-11 flex-1 items-center justify-center gap-1 rounded-md border text-sm font-medium transition-colors sm:h-9 sm:w-24 sm:flex-none",
                           "focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50 focus-visible:outline-none",
                           "disabled:pointer-events-none disabled:opacity-60",
                           active
-                            ? SELECTED[status]
+                            ? cn(SELECTED[status], "border-2")
                             : "border-input text-muted-foreground hover:bg-accent hover:text-foreground"
                         )}
                       >
+                        {active ? <Check aria-hidden="true" className="size-4" /> : null}
                         {ATTENDANCE_STATUS_META[status].label}
                       </button>
                     );
@@ -281,8 +324,12 @@ export function RegisterForm({
         // Clears the home indicator on a phone: the bottom padding grows by
         // the safe-area inset, which is zero everywhere that has none.
         <div className="sticky bottom-0 -mx-4 flex items-center justify-between gap-3 border-t bg-background px-4 pt-3 pb-[max(0.75rem,env(safe-area-inset-bottom))] md:-mx-8 md:px-8">
-          <p className="text-xs text-muted-foreground">
-            {dirty ? "Not saved yet" : "Up to date"}
+          <p aria-live="polite" className="text-sm text-muted-foreground">
+            {restored
+              ? "Kept on this phone, not saved yet"
+              : dirty
+                ? "Not saved yet"
+                : "Up to date"}
           </p>
           <Button type="button" onClick={save} disabled={pending}>
             {pending ? (

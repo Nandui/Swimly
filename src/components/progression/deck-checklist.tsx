@@ -4,9 +4,10 @@ import * as React from "react";
 import Link from "next/link";
 import { toast } from "sonner";
 import { Check, ChevronLeft, ChevronRight, Loader2 } from "lucide-react";
+import { OFFLINE_MESSAGE, withTimeout } from "@/components/attendance/register-form";
 import { Tag } from "@/components/ui-kit/tag";
 import { Button } from "@/components/ui/button";
-import type { CompetencyStatus } from "@/generated/prisma/client";
+import type { AttendanceStatus, CompetencyStatus } from "@/generated/prisma/client";
 import { saveClassAssessment } from "@/lib/progression/actions/assess";
 import { cn } from "@/lib/utils";
 
@@ -18,8 +19,13 @@ import { cn } from "@/lib/utils";
  *  are the list. Each swimmer is one row with two big buttons; a second tap
  *  on the same button takes the mark back. Every change across every
  *  competency sits behind one Save, mirrored to `localStorage` so a
- *  dropped connection or a closed tab loses nothing. The per-swimmer
- *  checklist still exists on the class's assessment page for the desk. */
+ *  dropped connection or a closed tab loses nothing.
+ *
+ *  It knows who was in the water. Once attendance is taken, the swimmers
+ *  marked absent fold away under "Not in today": still markable, for a
+ *  correction, but not in the way, and not swept up by "Everyone achieved".
+ *  The per-swimmer checklist still exists on the class's assessment page
+ *  for the desk. */
 
 type Choice = CompetencyStatus | null;
 
@@ -33,17 +39,21 @@ export type DeckSwimmer = {
   marks: Record<string, Choice>;
 };
 
+/** The chosen mark: the tag pair's fill with its edge in the pair's ink, so
+ *  it reads in glare. A fill alone measured 1.1:1 against the page. */
 const MARK_META: Record<CompetencyStatus, { label: string; active: string }> = {
   WORKING_ON: {
     label: "Working on it",
-    active: "border-(--tag-yellow-bg) bg-(--tag-yellow-bg) text-(--tag-yellow-fg)",
+    active: "border-2 border-(--tag-yellow-fg) bg-(--tag-yellow-bg) text-(--tag-yellow-fg)",
   },
   ACHIEVED: {
     label: "Achieved",
-    active: "border-(--tag-green-bg) bg-(--tag-green-bg) text-(--tag-green-fg)",
+    active: "border-2 border-(--tag-green-fg) bg-(--tag-green-bg) text-(--tag-green-fg)",
   },
 };
 const MARK_ORDER: CompetencyStatus[] = ["WORKING_ON", "ACHIEVED"];
+
+const SAVE_TIMEOUT_MS = 15_000;
 
 type Marks = Map<string, Map<string, Choice>>;
 type Stored = Record<string, Record<string, Choice>>;
@@ -58,6 +68,7 @@ export function DeckChecklist({
   levelId,
   competencies,
   swimmers,
+  attendance,
   readOnly,
   doneHref,
 }: {
@@ -66,6 +77,8 @@ export function DeckChecklist({
   levelId: string;
   competencies: DeckCompetency[];
   swimmers: DeckSwimmer[];
+  /** Today's attendance by swimmer, or null when it has not been taken. */
+  attendance: Record<string, AttendanceStatus | null> | null;
   readOnly: boolean;
   /** Where "done" goes once everything is saved. */
   doneHref: string;
@@ -84,11 +97,27 @@ export function DeckChecklist({
   const [marks, setMarks] = React.useState(initial);
   const [pending, startTransition] = React.useTransition();
   const [error, setError] = React.useState<string | null>(null);
+  // Marks that came back from the phone's mirror, and a save made on this
+  // visit: both change what the bar at the bottom should say.
+  const [restored, setRestored] = React.useState(false);
+  const [saved, setSaved] = React.useState(false);
 
-  // Open on the first competency the class has not all got yet.
+  // Who was in the water. Before attendance is taken nobody is ruled out.
+  const inToday = React.useCallback(
+    (studentId: string) => {
+      if (!attendance) return true;
+      const status = attendance[studentId];
+      return status === "PRESENT" || status === "LATE";
+    },
+    [attendance]
+  );
+  const here = swimmers.filter((s) => inToday(s.studentId));
+  const away = swimmers.filter((s) => !inToday(s.studentId));
+
+  // Open on the first competency the swimmers here have not all got yet.
   const [current, setCurrent] = React.useState(() => {
     const index = competencies.findIndex((c) =>
-      swimmers.some((s) => (s.marks[c.id] ?? null) !== "ACHIEVED")
+      here.some((s) => (s.marks[c.id] ?? null) !== "ACHIEVED")
     );
     return index === -1 ? 0 : index;
   });
@@ -120,6 +149,7 @@ export function DeckChecklist({
         }
         return next;
       });
+      setRestored(true);
     } catch {
       window.localStorage.removeItem(key);
     }
@@ -182,15 +212,22 @@ export function DeckChecklist({
     });
   }
 
+  /** Everyone who was in the water today. */
   function everyone(competencyId: string, status: CompetencyStatus) {
     update((next) => {
-      for (const row of next.values()) row.set(competencyId, status);
+      for (const swimmer of here) next.get(swimmer.studentId)?.set(competencyId, status);
     });
   }
 
   function save() {
     startTransition(async () => {
-      const result = await saveClassAssessment({ levelId, marks: changes });
+      let result: Awaited<ReturnType<typeof saveClassAssessment>>;
+      try {
+        result = await withTimeout(saveClassAssessment({ levelId, marks: changes }), SAVE_TIMEOUT_MS);
+      } catch {
+        startTransition(() => setError(OFFLINE_MESSAGE));
+        return;
+      }
       if (result.ok) {
         try {
           window.localStorage.removeItem(key);
@@ -198,7 +235,11 @@ export function DeckChecklist({
           // Nothing to clear.
         }
         toast.success("Marks saved");
-        startTransition(() => setError(null));
+        startTransition(() => {
+          setError(null);
+          setRestored(false);
+          setSaved(true);
+        });
       } else {
         startTransition(() => setError(result.error));
       }
@@ -207,24 +248,86 @@ export function DeckChecklist({
 
   if (competencies.length === 0) {
     return (
-      <p className="text-sm text-muted-foreground">
-        This level has no competencies yet, so there is nothing to mark.
-      </p>
+      <div className="space-y-4">
+        <p className="text-sm text-muted-foreground">
+          This level has no competencies yet, so there is nothing to mark.
+        </p>
+        <Button asChild variant="outline" size="lg">
+          <Link href={doneHref}>
+            <ChevronLeft className="size-4" />
+            Back to Today
+          </Link>
+        </Button>
+      </div>
     );
   }
 
   const competency = competencies[current];
-  const achievedHere = swimmers.filter(
+  const achievedHere = here.filter(
     (s) => marks.get(s.studentId)?.get(competency.id) === "ACHIEVED"
   ).length;
   const allAchieved = (competencyId: string) =>
-    swimmers.length > 0 &&
-    swimmers.every((s) => marks.get(s.studentId)?.get(competencyId) === "ACHIEVED");
+    here.length > 0 &&
+    here.every((s) => marks.get(s.studentId)?.get(competencyId) === "ACHIEVED");
   const achievedFor = (studentId: string) =>
     competencies.filter((c) => marks.get(studentId)?.get(c.id) === "ACHIEVED").length;
+  const markedAtAll = [...marks.values()].some((row) => [...row.values()].some(Boolean));
 
   const focusRing =
     "focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50 focus-visible:outline-none";
+
+  const row = (swimmer: DeckSwimmer, dimmed: boolean) => {
+    const value = marks.get(swimmer.studentId)?.get(competency.id) ?? null;
+    const late = attendance?.[swimmer.studentId] === "LATE";
+    return (
+      <li key={swimmer.studentId} className={cn("border-b p-3 last:border-0", dimmed && "opacity-70")}>
+        <div className="flex flex-wrap items-center justify-between gap-x-4 gap-y-2">
+          <div className="min-w-0 flex-1">
+            <p className="flex flex-wrap items-center gap-x-2 gap-y-1 text-[17px] font-semibold text-foreground">
+              {swimmer.name}
+              {late ? <Tag color="orange">Late</Tag> : null}
+              {swimmer.completed ? <Tag color="blue">Completed</Tag> : null}
+              {swimmer.offLevel ? <Tag color="purple">Placed at another level</Tag> : null}
+            </p>
+            <p className="mt-0.5 text-sm text-muted-foreground tabular-nums">
+              {achievedFor(swimmer.studentId)} of {competencies.length} achieved
+            </p>
+          </div>
+
+          <div
+            role="group"
+            aria-label={`${competency.name} — ${swimmer.name}`}
+            className="flex w-full gap-1.5 sm:w-auto"
+          >
+            {MARK_ORDER.map((status) => {
+              const active = value === status;
+              return (
+                <button
+                  key={status}
+                  type="button"
+                  disabled={readOnly}
+                  aria-pressed={active}
+                  aria-label={`${MARK_META[status].label} — ${swimmer.name}`}
+                  onClick={() => toggle(swimmer.studentId, competency.id, status)}
+                  className={cn(
+                    "inline-flex h-11 flex-1 items-center justify-center gap-1 rounded-md border text-sm font-medium transition-colors sm:h-9 sm:w-32 sm:flex-none",
+                    focusRing,
+                    "disabled:pointer-events-none disabled:opacity-60",
+                    active
+                      ? MARK_META[status].active
+                      : "border-input text-muted-foreground hover:bg-accent hover:text-foreground"
+                  )}
+                >
+                  {active ? <Check aria-hidden="true" className="size-4" /> : null}
+                  {MARK_META[status].label}
+                </button>
+              );
+            })}
+          </div>
+        </div>
+      </li>
+    );
+  };
 
   return (
     <div className="space-y-4">
@@ -247,12 +350,12 @@ export function DeckChecklist({
               aria-current={active ? "true" : undefined}
               onClick={() => setCurrent(index)}
               className={cn(
-                "inline-flex h-10 min-w-10 shrink-0 items-center justify-center gap-1 rounded-md border px-3 text-sm font-medium tabular-nums transition-colors",
+                "inline-flex h-11 min-w-11 shrink-0 items-center justify-center gap-1 rounded-md border px-3 text-sm font-medium tabular-nums transition-colors",
                 focusRing,
                 active
                   ? "border-primary bg-primary text-primary-foreground"
                   : done
-                    ? "border-(--tag-green-bg) bg-(--tag-green-bg) text-(--tag-green-fg)"
+                    ? "border-(--tag-green-fg) bg-(--tag-green-bg) text-(--tag-green-fg)"
                     : "border-input bg-background text-muted-foreground hover:text-foreground"
               )}
             >
@@ -265,11 +368,11 @@ export function DeckChecklist({
 
       <section
         aria-labelledby="deck-competency"
-        className="rounded-md border bg-sidebar p-3 sm:p-4"
+        className="rounded-md border border-input bg-sidebar p-3 sm:p-4"
       >
         <div className="flex items-start justify-between gap-3">
           <div className="min-w-0">
-            <p className="text-xs text-muted-foreground tabular-nums">
+            <p className="text-sm text-muted-foreground tabular-nums">
               Competency {current + 1} of {competencies.length}
             </p>
             <h2 id="deck-competency" className="text-lg font-semibold text-foreground">
@@ -282,7 +385,8 @@ export function DeckChecklist({
             ) : null}
             <p className="mt-1 text-sm text-muted-foreground">
               <span className="font-medium text-foreground tabular-nums">{achievedHere}</span> of{" "}
-              <span className="tabular-nums">{swimmers.length}</span> achieved
+              <span className="tabular-nums">{here.length}</span>
+              {attendance ? " in today" : ""} achieved
             </p>
           </div>
           <div className="flex shrink-0 gap-1.5">
@@ -308,15 +412,16 @@ export function DeckChecklist({
             </Button>
           </div>
         </div>
-        {readOnly || swimmers.length === 0 ? null : (
+        {readOnly || here.length === 0 ? null : (
           <div className="mt-3">
             <Button
               type="button"
-              variant="ghost"
-              size="sm"
+              variant="outline"
+              size="lg"
               onClick={() => everyone(competency.id, "ACHIEVED")}
             >
-              Everyone achieved
+              <Check className="size-4" />
+              {attendance ? "Everyone in today achieved" : "Everyone achieved"}
             </Button>
           </div>
         )}
@@ -324,76 +429,57 @@ export function DeckChecklist({
 
       {swimmers.length === 0 ? (
         <p className="text-sm text-muted-foreground">Nobody in this class yet.</p>
+      ) : here.length === 0 ? (
+        <p className="text-sm text-muted-foreground">Nobody was marked in today.</p>
       ) : (
-        <ul className="overflow-hidden rounded-md border">
-          {swimmers.map((swimmer) => {
-            const value = marks.get(swimmer.studentId)?.get(competency.id) ?? null;
-            return (
-              <li key={swimmer.studentId} className="border-b p-3 last:border-0">
-                <div className="flex flex-wrap items-center justify-between gap-x-4 gap-y-2">
-                  <div className="min-w-0 flex-1">
-                    <p className="flex flex-wrap items-center gap-x-2 gap-y-1 text-sm font-medium text-foreground">
-                      {swimmer.name}
-                      {swimmer.completed ? <Tag color="blue">Completed</Tag> : null}
-                      {swimmer.offLevel ? <Tag color="purple">Placed at another level</Tag> : null}
-                    </p>
-                    <p className="mt-0.5 text-xs text-muted-foreground tabular-nums">
-                      {achievedFor(swimmer.studentId)} of {competencies.length} achieved
-                    </p>
-                  </div>
-
-                  <div
-                    role="group"
-                    aria-label={`${competency.name} — ${swimmer.name}`}
-                    className="flex w-full gap-1.5 sm:w-auto"
-                  >
-                    {MARK_ORDER.map((status) => {
-                      const active = value === status;
-                      return (
-                        <button
-                          key={status}
-                          type="button"
-                          disabled={readOnly}
-                          aria-pressed={active}
-                          aria-label={`${MARK_META[status].label} — ${swimmer.name}`}
-                          onClick={() => toggle(swimmer.studentId, competency.id, status)}
-                          className={cn(
-                            "h-11 flex-1 rounded-md border text-sm font-medium transition-colors sm:h-9 sm:w-32 sm:flex-none",
-                            focusRing,
-                            "disabled:pointer-events-none disabled:opacity-60",
-                            active
-                              ? MARK_META[status].active
-                              : "border-input text-muted-foreground hover:bg-accent hover:text-foreground"
-                          )}
-                        >
-                          {MARK_META[status].label}
-                        </button>
-                      );
-                    })}
-                  </div>
-                </div>
-              </li>
-            );
-          })}
-        </ul>
+        <ul className="overflow-hidden rounded-md border">{here.map((s) => row(s, false))}</ul>
       )}
+
+      {away.length > 0 ? (
+        <details className="group">
+          <summary
+            className={cn(
+              "flex min-h-11 cursor-pointer list-none items-center gap-2 rounded-md text-base font-semibold text-foreground [&::-webkit-details-marker]:hidden",
+              "outline-none focus-visible:ring-[3px] focus-visible:ring-ring/50"
+            )}
+          >
+            <ChevronRight
+              aria-hidden="true"
+              className="size-4 shrink-0 text-muted-foreground transition-transform group-open:rotate-90"
+            />
+            Not in today
+            <span className="sr-only">,</span>
+            <span className="text-sm font-normal text-muted-foreground tabular-nums">
+              {away.length} {away.length === 1 ? "swimmer" : "swimmers"}
+            </span>
+          </summary>
+          <ul className="mt-3 overflow-hidden rounded-md border">{away.map((s) => row(s, true))}</ul>
+        </details>
+      ) : null}
 
       {error ? (
         <p
           role="alert"
-          className="rounded bg-(--tag-red-bg) px-2.5 py-1.5 text-[13px] text-(--tag-red-fg)"
+          className="rounded bg-(--tag-red-bg) px-2.5 py-1.5 text-sm text-(--tag-red-fg)"
         >
           {error}
         </p>
       ) : null}
 
-      {/* One bar, one button: Save while there is something to save, Done
-          once there is not. Clears the home indicator on a phone. */}
+      {/* One bar. Save while there is something to save; Done once a save
+          has landed; and a quiet way back before anything has been marked,
+          so the blue button is never the way out of an empty page. */}
       <div className="sticky bottom-0 -mx-4 flex items-center justify-between gap-3 border-t bg-background px-4 pt-3 pb-[max(0.75rem,env(safe-area-inset-bottom))] md:-mx-8 md:px-8">
-        <p className="text-xs text-muted-foreground tabular-nums">
+        <p aria-live="polite" className="text-sm text-muted-foreground tabular-nums">
           {changes.length > 0
-            ? `${changes.length} ${changes.length === 1 ? "mark" : "marks"} not saved yet`
-            : "Up to date"}
+            ? restored
+              ? "Kept on this phone, not saved yet"
+              : `${changes.length} ${changes.length === 1 ? "mark" : "marks"} not saved yet`
+            : saved
+              ? "Saved"
+              : markedAtAll
+                ? "Up to date"
+                : "Nothing marked yet"}
         </p>
         {!readOnly && changes.length > 0 ? (
           <Button type="button" size="lg" onClick={save} disabled={pending}>
@@ -409,11 +495,18 @@ export function DeckChecklist({
               </>
             )}
           </Button>
-        ) : (
+        ) : saved ? (
           <Button asChild size="lg">
             <Link href={doneHref}>
               <Check className="size-4" />
               Done, back to Today
+            </Link>
+          </Button>
+        ) : (
+          <Button asChild variant="outline" size="lg">
+            <Link href={doneHref}>
+              <ChevronLeft className="size-4" />
+              Back to Today
             </Link>
           </Button>
         )}

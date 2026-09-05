@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 import Link from "next/link";
-import { CalendarCheck, ChevronRight, ClipboardCheck, Play } from "lucide-react";
+import { ArrowRight, CalendarCheck, ChevronRight } from "lucide-react";
 import { EmptyState } from "@/components/ui-kit/empty-state";
 import { PageHeader } from "@/components/ui-kit/page-header";
 import { TabStrip } from "@/components/ui-kit/tab-strip";
@@ -12,7 +12,6 @@ import { getCoversForDay } from "@/lib/attendance/data/cover";
 import { getRegisterStateForDay } from "@/lib/attendance/data/register";
 import { DAY_META, capacityLabel, courseName, formatTime } from "@/lib/courses/constants";
 import { getCoursesOnDay, type CourseRow } from "@/lib/courses/data/courses";
-import { canSee } from "@/lib/authz";
 import { formatDate, minutesNow, parseDateOnly, today } from "@/lib/format";
 import { screenPage } from "@/lib/page-guards";
 import { cn } from "@/lib/utils";
@@ -41,25 +40,19 @@ const ATTENDANCE_TAG: Record<"taken" | "missed", { label: string; color: TagColo
 
 /** The deck screen: what an instructor holds in one hand at the poolside.
  *
- *  Their own classes first — the ones they teach, and the ones they have
- *  taken over today — then every class running, for whoever is covering or
- *  just looking. Either list is grouped by start time, the order the day
- *  actually happens in, or by level, for an instructor who has the same
- *  checklist open across three classes. Each class is one button, "Start
- *  class", which opens it with attendance first and the competencies second.
- *  A class that is not theirs asks, on the way in, whether they are taking it.
- *
- *  The screen knows what time it is. Grouped by time, the class on now and
- *  the next one are marked, and everything already finished folds into one
- *  line above them, so the next register is at the top of the screen rather
- *  than four thumb-scrolls down. */
+ *  The thing to do next is the screen. On My classes, grouped by time, the
+ *  class on now — or the next one when none is running — is one big card
+ *  that is itself the button. What is still to come sits under it as plain
+ *  rows, each row the button. What has finished folds into one line at the
+ *  bottom with the count still to take. All classes is the same list for
+ *  whoever is covering, without the card, because five classes can be on at
+ *  once. A class that is not theirs asks, on the way in, whether they are
+ *  taking it. Nothing on this screen leads off the deck: the class page is
+ *  the only place a row goes. */
 export default async function TodayPage(props: PageProps<"/today">) {
   const session = await screenPage("today", "attendance.mark");
   const params = await props.searchParams;
   const tab: Tab = params.tab === "all" ? "all" : "mine";
-  // A role that sees only the deck gets the class name as text, not as a
-  // link to a course page that does not exist for them.
-  const linkCourses = canSee(session, "courses");
   const group: Grouping = params.group === "level" ? "level" : "time";
 
   const iso = today();
@@ -77,7 +70,6 @@ export default async function TodayPage(props: PageProps<"/today">) {
     (course) => course.instructorId === me || covers.get(course.id)?.coverById === me
   );
   const shown = tab === "all" ? courses : mine;
-  const outstanding = shown.filter((course) => !marked.has(course.id)).length;
 
   // Both choices live in the URL, and each link keeps the other's.
   const href = (next: { tab?: Tab; group?: Grouping }) => {
@@ -104,10 +96,30 @@ export default async function TodayPage(props: PageProps<"/today">) {
   const earlier = group === "time" ? sections.filter((s) => s.phase === "earlier") : [];
   const ahead = group === "time" ? sections.filter((s) => s.phase !== "earlier") : sections;
   const fold = ahead.length > 0 && earlier.length > 0;
-  const visible = fold ? ahead : sections;
 
-  const nowKey = visible.find((s) => s.phase === "now")?.key;
-  const nextKey = visible.find((s) => s.phase === "later")?.key;
+  // The card: on My classes the section on now, or the next one when none
+  // is. It leaves the list, so the list is what comes after it.
+  // Two cards at most: an instructor has one class at a time, two if they
+  // are covering. More than that is the desk looking, and gets the list.
+  const candidate =
+    tab === "mine" && group === "time"
+      ? (ahead.find((s) => s.phase === "now") ?? ahead.find((s) => s.phase === "later") ?? null)
+      : null;
+  const heroSection = candidate && candidate.courses.length <= 2 ? candidate : null;
+  const hero: "now" | "next" | null = heroSection
+    ? heroSection.phase === "now"
+      ? "now"
+      : "next"
+    : null;
+  const listed = (fold ? ahead : sections).filter((s) => s !== heroSection);
+
+  const nowKey = listed.find((s) => s.phase === "now")?.key;
+  // "Next" is the first section still to come after whatever is on now —
+  // or after the card, when the card is the class on now.
+  const nextKey =
+    group === "time" && (hero === "now" || !heroSection)
+      ? listed.find((s) => s.phase === "later")?.key
+      : undefined;
   const markerFor = (section: Section) =>
     group !== "time" ? null : section.key === nowKey ? "now" : section.key === nextKey ? "next" : null;
 
@@ -116,7 +128,6 @@ export default async function TodayPage(props: PageProps<"/today">) {
     iso,
     tab,
     group,
-    linkCourses,
     phase: phaseOf(course, now),
     done: marked.has(course.id),
     cover: covers.get(course.id) ?? null,
@@ -135,26 +146,18 @@ export default async function TodayPage(props: PageProps<"/today">) {
   );
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-5">
+      {/* The date rides on the title line: one line of header, not two. */}
       <PageHeader
-        title="Today"
-        description={`${DAY_META[day].label}, ${formatDate(parseDateOnly(iso))}`}
+        title={
+          <span className="inline-flex flex-wrap items-baseline gap-x-3">
+            Today
+            <span className="text-base font-normal text-muted-foreground">
+              {DAY_META[day].label} {formatDate(parseDateOnly(iso))}
+            </span>
+          </span>
+        }
       />
-
-      <p className="max-w-prose text-sm text-muted-foreground">
-        <span className="font-medium text-foreground tabular-nums">{shown.length}</span>{" "}
-        {shown.length === 1 ? "class" : "classes"}
-        {tab === "all" ? " at the pool" : " of yours"} today
-        {outstanding > 0 ? (
-          <>
-            , and attendance is still to take for{" "}
-            <span className="font-medium text-(--tag-orange-fg) tabular-nums">{outstanding}</span>
-          </>
-        ) : shown.length > 0 ? (
-          <>, and attendance is taken for every class</>
-        ) : null}
-        .
-      </p>
 
       <div className="space-y-4">
         {/* The tabs take the whole line on a phone; the group-by drops
@@ -164,6 +167,7 @@ export default async function TodayPage(props: PageProps<"/today">) {
           <div className="min-w-0 flex-1 max-sm:basis-full">
             <TabStrip
               ariaLabel="Whose classes"
+              countsOnPhone
               items={[
                 {
                   key: "mine",
@@ -209,14 +213,35 @@ export default async function TodayPage(props: PageProps<"/today">) {
             }
           />
         ) : (
-          <div className="space-y-5">
+          <div className="space-y-6">
+            {heroSection && hero ? (
+              <section aria-label={hero === "now" ? "On now" : "Next"} className="space-y-3">
+                {heroSection.courses.map((course) => (
+                  <HeroCard key={course.id} marker={hero} {...rowProps(course)} />
+                ))}
+              </section>
+            ) : null}
+
+            {listed.map((section) => (
+              <ClassSection
+                key={section.key}
+                section={section}
+                marker={markerFor(section)}
+                strong={tab === "all" && section.phase === "now"}
+              >
+                {section.courses.map((course) => (
+                  <ClassRow key={course.id} {...rowProps(course)} />
+                ))}
+              </ClassSection>
+            ))}
+
             {fold ? (
               <details className="group">
                 <summary
                   className={cn(
-                    "flex cursor-pointer list-none flex-wrap items-center gap-x-2 gap-y-1 rounded-md text-sm font-semibold text-foreground [&::-webkit-details-marker]:hidden",
+                    "flex cursor-pointer list-none flex-wrap items-center gap-x-2 gap-y-1 rounded-md text-base font-semibold text-foreground [&::-webkit-details-marker]:hidden",
                     "outline-none focus-visible:ring-[3px] focus-visible:ring-ring/50",
-                    "max-md:min-h-10"
+                    "min-h-11"
                   )}
                 >
                   <ChevronRight
@@ -225,7 +250,7 @@ export default async function TodayPage(props: PageProps<"/today">) {
                   />
                   <span className="whitespace-nowrap">Earlier today</span>
                   <span className="sr-only">,</span>
-                  <span className="text-xs font-normal text-muted-foreground tabular-nums">
+                  <span className="text-sm font-normal text-muted-foreground tabular-nums">
                     {earlierClasses} {earlierClasses === 1 ? "class" : "classes"}
                     {earlierOutstanding > 0 ? (
                       <>
@@ -248,20 +273,12 @@ export default async function TodayPage(props: PageProps<"/today">) {
                 </div>
               </details>
             ) : null}
-
-            {visible.map((section) => (
-              <ClassSection key={section.key} section={section} marker={markerFor(section)}>
-                {section.courses.map((course) => (
-                  <ClassRow key={course.id} {...rowProps(course)} />
-                ))}
-              </ClassSection>
-            ))}
           </div>
         )}
       </div>
 
       {shown.length > 0 ? (
-        <p className="max-w-prose text-xs text-muted-foreground">
+        <p className="max-w-prose text-sm text-muted-foreground">
           Covering for someone? Open their class and say so when asked. The attendance is then
           recorded as taken by you, and every competency you mark carries your name.
         </p>
@@ -355,16 +372,19 @@ function groupClasses(
 function ClassSection({
   section,
   marker,
+  strong = false,
   children,
 }: {
   section: Section;
   marker: "now" | "next" | null;
+  /** The section on now, on the tab with no card: a tint on its rows. */
+  strong?: boolean;
   children: React.ReactNode;
 }) {
   const count = section.courses.length;
   return (
     <section className="space-y-2" aria-label={section.title}>
-      <h2 className="flex flex-wrap items-center gap-x-2 gap-y-1 text-sm font-semibold text-foreground">
+      <h2 className="flex flex-wrap items-center gap-x-2 gap-y-1 text-base font-semibold text-foreground">
         {section.title}
         {marker ? (
           <>
@@ -373,12 +393,14 @@ function ClassSection({
           </>
         ) : null}
         <span className="sr-only">,</span>
-        <span className="text-xs font-normal text-muted-foreground tabular-nums">
+        <span className="text-sm font-normal text-muted-foreground tabular-nums">
           {count} {count === 1 ? "class" : "classes"}
           {section.subtitle ? ` · ${section.subtitle}` : ""}
         </span>
       </h2>
-      <ul className="overflow-hidden rounded-md border">{children}</ul>
+      <ul className={cn("overflow-hidden rounded-md border", strong && "bg-accent/50")}>
+        {children}
+      </ul>
     </section>
   );
 }
@@ -395,7 +417,7 @@ function GroupBy({
 }) {
   return (
     <div className="flex items-center gap-2 pb-1 max-sm:w-full max-sm:justify-between">
-      <span className="text-xs text-muted-foreground">Group by</span>
+      <span className="text-sm text-muted-foreground">Group by</span>
       <div
         role="group"
         aria-label="Group by"
@@ -411,7 +433,7 @@ function GroupBy({
               aria-current={current ? "true" : undefined}
               className={cn(
                 "flex items-center rounded border px-2.5 py-1 text-[13px] font-medium transition-colors",
-                "max-md:h-10 max-md:px-4 max-md:text-sm",
+                "max-md:h-11 max-md:px-4 max-md:text-sm",
                 "outline-none focus-visible:ring-[3px] focus-visible:ring-ring/50",
                 current
                   ? "border-input bg-background text-foreground"
@@ -427,38 +449,29 @@ function GroupBy({
   );
 }
 
-function ClassRow({
-  course,
-  iso,
-  tab,
-  group,
-  linkCourses,
-  phase,
-  done,
-  cover,
-  me,
-  mayMark,
-}: {
+type RowProps = {
   course: CourseRow;
   iso: string;
   tab: Tab;
   group: Grouping;
-  linkCourses: boolean;
   phase: Phase;
   done: boolean;
   cover: Cover | null;
   me: string;
   mayMark: boolean;
-}) {
+};
+
+/** What a row and the card both need to say about a class. */
+function describe({ course, tab, group, phase, done, cover, me, mayMark }: RowProps) {
   const yours = course.instructorId === me;
   const covering = cover?.coverById === me;
   const coveredByAnother = cover !== null && !covering;
   const name = courseName(course);
   const time = formatTime(course.startMinutes);
 
-  // Whatever is already said is left off the row: the time when grouped by
-  // time, the level when grouped by level or when it is the class's name,
-  // and whose class it is on the tab where every class is yours.
+  // Whatever is already said is left off: the time when grouped by time,
+  // the level when grouped by level or when it is the class's name, and
+  // whose class it is on the tab where every class is yours.
   const meta = [
     group === "time" && course.level.name !== name ? course.level.name : null,
     capacityLabel(course._count.enrolments, course.capacity),
@@ -471,7 +484,7 @@ function ClassRow({
   ].filter(Boolean);
 
   // A tag only for what is out of the ordinary: taken, or finished and not
-  // taken. A class still to come carries no warning — the button says what
+  // taken. A class still to come carries no warning — the verb says what
   // to do.
   const attendance = done ? ATTENDANCE_TAG.taken : phase === "earlier" ? ATTENDANCE_TAG.missed : null;
 
@@ -483,49 +496,105 @@ function ClassRow({
         : "You are covering"
       : `Covered by ${cover.coverByName}`;
 
-  // The blue button is for the one person who should press it. Somebody
-  // else covering this class today means that is not you.
+  // Blue is for the one person who should press it. Somebody else covering
+  // this class today means that is not you.
   const primary = !done && mayMark && !coveredByAnother;
+  const verb = done ? "Open class" : "Start class";
+
+  return { name, time, meta, attendance, coverLabel, primary, verb };
+}
+
+/** The class on now, or next: the whole card is the button. Big enough to
+ *  read in glare and hit with a wet thumb. */
+function HeroCard(props: RowProps & { marker: "now" | "next" }) {
+  const { course, iso, marker } = props;
+  const { name, time, meta, attendance, coverLabel, primary, verb } = describe(props);
 
   return (
-    <li className="flex flex-wrap items-center justify-between gap-x-4 gap-y-2 border-b p-3 last:border-0">
-      <div className="min-w-0">
-        <div className="flex flex-wrap items-center gap-x-2 gap-y-1 text-sm">
-          {group === "level" ? (
-            <span className="font-semibold text-foreground tabular-nums">{time}</span>
-          ) : null}
-          {linkCourses ? (
-            <Link
-              href={`/courses/${course.id}`}
-              className="font-medium text-foreground underline-offset-2 hover:underline"
-            >
-              {name}
-            </Link>
-          ) : (
-            <span className="font-medium text-foreground">{name}</span>
+    <Link
+      href={`/courses/${course.id}/class?date=${iso}`}
+      aria-label={`${verb}: ${name}, ${time}, ${PHASE_TAG[marker].label.toLowerCase()}`}
+      className={cn(
+        "block rounded-lg border-2 p-4 transition-colors sm:p-5",
+        "outline-none focus-visible:ring-[3px] focus-visible:ring-ring/50",
+        primary
+          ? "border-primary bg-primary text-primary-foreground hover:bg-primary/90"
+          : "border-input bg-background text-foreground hover:bg-accent"
+      )}
+    >
+      <div className="flex items-center justify-between gap-3">
+        <span className="text-xl font-semibold tabular-nums">{time}</span>
+        {/* On the blue card the mark is a white pill with blue ink, 5.2:1;
+            a tinted pill with white ink measured under the bar. */}
+        <span
+          className={cn(
+            "rounded px-2 py-0.5 text-sm font-semibold uppercase tracking-wide",
+            primary ? "bg-primary-foreground text-primary" : "bg-muted text-muted-foreground"
           )}
+        >
+          {PHASE_TAG[marker].label}
+        </span>
+      </div>
+      <h2 className="mt-1 text-2xl font-semibold leading-tight">{name}</h2>
+      <p className={cn("mt-1 text-base", primary ? "text-primary-foreground" : "text-muted-foreground")}>
+        {meta.join(" · ")}
+      </p>
+      {attendance || coverLabel ? (
+        <div className="mt-2 flex flex-wrap gap-1.5">
           {attendance ? <Tag color={attendance.color}>{attendance.label}</Tag> : null}
           {coverLabel ? <Tag color="purple">{coverLabel}</Tag> : null}
         </div>
-        <p className="mt-0.5 text-xs text-muted-foreground">{meta.join(" · ")}</p>
-      </div>
-
-      {/* One button. It opens the class: attendance first, then the
-          competencies, and back here when done. */}
-      <Button
-        asChild
-        size="lg"
-        variant={primary ? "default" : "outline"}
-        className="max-sm:w-full"
+      ) : null}
+      <div
+        className={cn(
+          "mt-4 flex min-h-11 items-center justify-between border-t pt-3 text-base font-semibold",
+          primary ? "border-primary-foreground/25" : "border-border"
+        )}
       >
-        <Link
-          href={`/courses/${course.id}/class?date=${iso}`}
-          aria-label={`${done ? "Open" : "Start"} class: ${name}, ${time}`}
+        {verb}
+        <ArrowRight aria-hidden="true" className="size-5" />
+      </div>
+    </Link>
+  );
+}
+
+/** One class, one row, the whole row the button. The name is text: nothing
+ *  on the deck leads to the desk's class page. */
+function ClassRow(props: RowProps) {
+  const { course, iso, group } = props;
+  const { name, time, meta, attendance, coverLabel, primary, verb } = describe(props);
+
+  return (
+    <li className="border-b last:border-0">
+      <Link
+        href={`/courses/${course.id}/class?date=${iso}`}
+        aria-label={`${verb}: ${name}, ${time}`}
+        className={cn(
+          "flex min-h-14 items-center gap-3 p-3 transition-colors hover:bg-accent/60",
+          "outline-none focus-visible:ring-[3px] focus-visible:ring-inset focus-visible:ring-ring/50"
+        )}
+      >
+        <div className="min-w-0 flex-1">
+          <div className="flex flex-wrap items-center gap-x-2 gap-y-1">
+            {group === "level" ? (
+              <span className="text-[17px] font-semibold text-foreground tabular-nums">{time}</span>
+            ) : null}
+            <span className="text-[17px] font-semibold text-foreground">{name}</span>
+            {attendance ? <Tag color={attendance.color}>{attendance.label}</Tag> : null}
+            {coverLabel ? <Tag color="purple">{coverLabel}</Tag> : null}
+          </div>
+          <p className="mt-0.5 text-sm text-muted-foreground">{meta.join(" · ")}</p>
+        </div>
+        <span
+          className={cn(
+            "flex shrink-0 items-center gap-1 text-sm font-medium",
+            primary ? "text-primary" : "text-muted-foreground"
+          )}
         >
-          {done ? <ClipboardCheck className="size-4" /> : <Play className="size-4" />}
-          {done ? "Open class" : "Start class"}
-        </Link>
-      </Button>
+          {props.done ? "Open" : "Start"}
+          <ChevronRight aria-hidden="true" className="size-4" />
+        </span>
+      </Link>
     </li>
   );
 }

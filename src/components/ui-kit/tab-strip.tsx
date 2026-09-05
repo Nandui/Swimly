@@ -18,7 +18,17 @@ export type TabStripItem = {
   active: boolean;
 };
 
-export function TabStrip({ ariaLabel, items }: { ariaLabel: string; items: TabStripItem[] }) {
+export function TabStrip({
+  ariaLabel,
+  items,
+  countsOnPhone = false,
+}: {
+  ariaLabel: string;
+  items: TabStripItem[];
+  /** Keep the counts at phone width. Off by default so four tabs still fit
+   *  at 375px; on for a two-tab strip whose counts are the point. */
+  countsOnPhone?: boolean;
+}) {
   return (
     // The hairline under the strip is an inset shadow rather than a border,
     // so the active tab's 2px edge can sit on it without a negative margin —
@@ -47,7 +57,8 @@ export function TabStrip({ ariaLabel, items }: { ariaLabel: string; items: TabSt
                   className={cn(
                     // Foreground ink on both tints: primary-blue ink on the
                     // blue tint measured 4.3:1 in light mode, under the bar.
-                    "rounded-full px-1.5 text-[11px] leading-4 tabular-nums max-sm:hidden",
+                    "rounded-full px-1.5 text-[11px] leading-4 tabular-nums",
+                    !countsOnPhone && "max-sm:hidden",
                     item.active ? "bg-primary/15 text-foreground" : "bg-muted text-muted-foreground"
                   )}
                 >
