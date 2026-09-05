@@ -234,15 +234,15 @@ export function RegisterForm({
             <li key={line.studentId} className="border-b p-3 last:border-0">
               <div className="flex flex-wrap items-center justify-between gap-x-4 gap-y-2">
                 <div className="min-w-0">
-                  <p className="text-sm font-medium text-foreground">
+                  <p className="flex flex-wrap items-center gap-x-2 gap-y-1 text-[17px] font-semibold text-foreground">
                     {name}
                     {line.offRoster ? (
-                      <Tag color="gray" className="ml-2">
+                      <Tag color="gray">
                         No longer in this class
                       </Tag>
                     ) : null}
                   </p>
-                  <p className="mt-0.5 text-xs text-muted-foreground">
+                  <p className="mt-0.5 text-sm text-muted-foreground">
                     {line.dateOfBirth ? `${ageInYears(line.dateOfBirth)} · ` : ""}
                     {line.levelName || "—"}
                   </p>
@@ -251,7 +251,7 @@ export function RegisterForm({
                       <summary className="inline-flex cursor-pointer list-none">
                         <Tag color="red">Medical</Tag>
                       </summary>
-                      <p className="mt-1 max-w-prose text-xs whitespace-pre-wrap text-(--tag-red-fg)">
+                      <p className="mt-1 max-w-prose text-sm whitespace-pre-wrap text-(--tag-red-fg)">
                         {line.medicalNotes}
                       </p>
                     </details>
@@ -295,7 +295,7 @@ export function RegisterForm({
       </ul>
 
       <div className="space-y-1.5">
-        <label htmlFor="classNote" className="block text-[13px] font-medium text-foreground">
+        <label htmlFor="classNote" className="block text-sm font-medium text-foreground">
           Anything about the class itself
         </label>
         <Textarea
@@ -314,7 +314,7 @@ export function RegisterForm({
       {error ? (
         <p
           role="alert"
-          className="rounded bg-(--tag-red-bg) px-2.5 py-1.5 text-[13px] text-(--tag-red-fg)"
+          className="rounded bg-(--tag-red-bg) px-2.5 py-1.5 text-sm text-(--tag-red-fg)"
         >
           {error}
         </p>
