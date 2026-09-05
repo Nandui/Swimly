@@ -6,13 +6,7 @@ import { ActionButton, ConfirmAction } from "@/components/confirm-action";
 import { Field, FormDialog } from "@/components/form-dialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
+import { Select } from "@/components/ui/select";
 import { MIN_PASSWORD_LENGTH, permissionCountLabel } from "@/lib/staff/constants";
 import {
   createPerson,
@@ -63,22 +57,14 @@ function RoleField({ roles, defaultRoleId }: { roles: RoleOption[]; defaultRoleI
   return (
     <Field label="Role" htmlFor="staffRoleId" hint={hint}>
       <Select
+        id="staffRoleId"
         name="staffRoleId"
         value={roleId}
         onValueChange={setRoleId}
         required
-      >
-        <SelectTrigger id="staffRoleId" className="w-full">
-          <SelectValue placeholder="Pick a role" />
-        </SelectTrigger>
-        <SelectContent>
-          {roles.map((role) => (
-            <SelectItem key={role.id} value={role.id}>
-              {role.name}
-            </SelectItem>
-          ))}
-        </SelectContent>
-      </Select>
+        placeholder="Pick a role"
+        options={roles.map((role) => ({ value: role.id, label: role.name }))}
+      />
     </Field>
   );
 }

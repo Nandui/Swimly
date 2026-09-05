@@ -1,19 +1,15 @@
 "use client";
 
 import * as React from "react";
-import { toast } from "sonner";
+import { Banner } from "@astryxdesign/core/Banner";
+import { Button } from "@astryxdesign/core/Button";
+import { Dialog, DialogHeader } from "@astryxdesign/core/Dialog";
+import { IconButton } from "@astryxdesign/core/IconButton";
+import { HStack, VStack } from "@astryxdesign/core/Stack";
+import { Text } from "@astryxdesign/core/Text";
 import type { ActionResult } from "@/lib/action-result";
-import { Button } from "@/components/ui/button";
-import {
-  AlertDialog,
-  AlertDialogCancel,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle,
-  AlertDialogTrigger,
-} from "@/components/ui/alert-dialog";
+import { toast } from "@/lib/toast";
+import { Trigger } from "@/components/form-dialog";
 
 /** Confirmation for anything that takes something away.
  *
@@ -21,7 +17,10 @@ import {
  *  and what survives — because that is what someone is actually choosing
  *  between. The error is rendered in place rather than thrown at a toast,
  *  since a refusal ("three courses still teach this level") is a sentence the
- *  person can act on. */
+ *  person can act on.
+ *
+ *  Astryx's own AlertDialog takes a plain-string description; this one keeps
+ *  a Dialog so a consequence can carry a name in bold. */
 export function ConfirmAction({
   trigger,
   title,
@@ -43,15 +42,17 @@ export function ConfirmAction({
   const [error, setError] = React.useState<string | null>(null);
   const [pending, startTransition] = React.useTransition();
 
+  function close() {
+    setOpen(false);
+    setError(null);
+  }
+
   function handleConfirm() {
     startTransition(async () => {
       const result = await run();
       if (result.ok) {
         toast.success(successMessage);
-        startTransition(() => {
-          setError(null);
-          setOpen(false);
-        });
+        startTransition(() => close());
       } else {
         startTransition(() => setError(result.error));
       }
@@ -59,47 +60,33 @@ export function ConfirmAction({
   }
 
   return (
-    <AlertDialog
-      open={open}
-      onOpenChange={(next) => {
-        setOpen(next);
-        if (!next) setError(null);
-      }}
-    >
-      <AlertDialogTrigger asChild>{trigger}</AlertDialogTrigger>
-      <AlertDialogContent>
-        <AlertDialogHeader>
-          <AlertDialogTitle>{title}</AlertDialogTitle>
-          <AlertDialogDescription>{description}</AlertDialogDescription>
-        </AlertDialogHeader>
-
-        {error ? (
-          <p
-            role="alert"
-            className="rounded bg-(--tag-red-bg) px-2.5 py-1.5 text-[13px] text-(--tag-red-fg)"
-          >
-            {error}
-          </p>
-        ) : null}
-
-        <AlertDialogFooter>
-          <AlertDialogCancel asChild>
-            <Button type="button" variant="outline" size="sm">
-              Cancel
-            </Button>
-          </AlertDialogCancel>
-          <Button
-            type="button"
-            size="sm"
-            variant={destructive ? "destructive" : "default"}
-            onClick={handleConfirm}
-            disabled={pending}
-          >
-            {pending ? "Working…" : confirmLabel}
-          </Button>
-        </AlertDialogFooter>
-      </AlertDialogContent>
-    </AlertDialog>
+    <>
+      <Trigger onOpen={() => setOpen(true)}>{trigger}</Trigger>
+      <Dialog
+        isOpen={open}
+        onOpenChange={(next) => (next ? setOpen(true) : close())}
+        purpose="form"
+        width={448}
+      >
+        <VStack gap={4}>
+          <DialogHeader title={title} onOpenChange={() => close()} />
+          <Text as="p" display="block">
+            {description}
+          </Text>
+          {error ? <Banner status="error" title={error} collapsible={false} /> : null}
+          <HStack gap={2} hAlign="end">
+            <Button type="button" label="Cancel" variant="secondary" onClick={close} />
+            <Button
+              type="button"
+              label={pending ? "Working…" : confirmLabel}
+              variant={destructive ? "destructive" : "primary"}
+              onClick={handleConfirm}
+              isLoading={pending}
+            />
+          </HStack>
+        </VStack>
+      </Dialog>
+    </>
   );
 }
 
@@ -124,14 +111,14 @@ export function ActionButton({
   const [pending, startTransition] = React.useTransition();
 
   return (
-    <Button
-      type="button"
+    <IconButton
+      label={ariaLabel}
+      tooltip={title ?? ariaLabel}
       variant="ghost"
-      size="icon-sm"
-      aria-label={ariaLabel}
-      title={title ?? ariaLabel}
+      size="sm"
+      icon={children}
       className={className}
-      disabled={pending}
+      isLoading={pending}
       onClick={() =>
         startTransition(async () => {
           const result = await run();
@@ -142,8 +129,6 @@ export function ActionButton({
           }
         })
       }
-    >
-      {children}
-    </Button>
+    />
   );
 }

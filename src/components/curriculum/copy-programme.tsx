@@ -3,13 +3,7 @@
 import { Copy } from "lucide-react";
 import { Field, FormDialog } from "@/components/form-dialog";
 import { Button } from "@/components/ui/button";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
+import { Select } from "@/components/ui/select";
 import { copyProgramme } from "@/lib/curriculum/actions/copy";
 
 type Club = { id: string; name: string };
@@ -49,18 +43,12 @@ export function CopyProgramme({
         htmlFor="clubId"
         hint="It has to be a club without a programme of this name already."
       >
-        <Select name="clubId" defaultValue={clubs[0].id}>
-          <SelectTrigger id="clubId" className="w-full">
-            <SelectValue />
-          </SelectTrigger>
-          <SelectContent>
-            {clubs.map((club) => (
-              <SelectItem key={club.id} value={club.id}>
-                {club.name}
-              </SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
+        <Select
+          id="clubId"
+          name="clubId"
+          defaultValue={clubs[0].id}
+          options={clubs.map((club) => ({ value: club.id, label: club.name }))}
+        />
       </Field>
     </FormDialog>
   );

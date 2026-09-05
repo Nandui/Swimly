@@ -1,25 +1,19 @@
 import type { Metadata, Viewport } from "next";
-import { Outfit, Work_Sans } from "next/font/google";
+import { cookies } from "next/headers";
+import { Figtree } from "next/font/google";
 import { ThemeProvider } from "@/components/theme-provider";
-import { Toaster } from "@/components/ui/sonner";
+import { ToastBridge } from "@/lib/toast";
+import { THEME_COOKIE, parseThemeMode } from "@/lib/theme-mode";
 import "./globals.css";
 
-/** The pairing MASTER.md prescribes — "Geometric Modern": Work Sans to read,
- *  Outfit for headings. Loaded through next/font rather than the stylesheet
- *  import the system suggests, because that self-hosts the files at build
- *  time, sets font-display: swap, and reserves the metrics so nothing shifts
- *  when they arrive — the skill's own Next.js guidance. */
-const workSans = Work_Sans({
-  subsets: ["latin"],
-  weight: ["300", "400", "500", "600", "700"],
-  variable: "--font-work-sans",
-  display: "swap",
-});
-
-const outfit = Outfit({
+/** Figtree is the Neutral theme's own face. Astryx never loads a font, so it
+ *  comes through next/font: self-hosted at build time, `font-display: swap`,
+ *  metrics reserved so nothing shifts when it arrives. The variable is what
+ *  globals.css hands to the theme's font tokens. */
+const figtree = Figtree({
   subsets: ["latin"],
   weight: ["400", "500", "600", "700"],
-  variable: "--font-outfit",
+  variable: "--font-figtree",
   display: "swap",
 });
 
@@ -31,28 +25,38 @@ export const metadata: Metadata = {
 /** `viewportFit: cover` lets the page run under the notch and the home
  *  indicator, which is what makes `env(safe-area-inset-*)` non-zero — the
  *  register's sticky Save bar pads by it. The theme colours tint the browser
- *  chrome to match the sidebar in each mode. */
+ *  chrome to match the page ground in each mode. */
 export const viewport: Viewport = {
   width: "device-width",
   initialScale: 1,
   viewportFit: "cover",
   themeColor: [
-    { media: "(prefers-color-scheme: light)", color: "#f1f5fd" },
-    { media: "(prefers-color-scheme: dark)", color: "#0f172a" },
+    { media: "(prefers-color-scheme: light)", color: "#f1f1f1" },
+    { media: "(prefers-color-scheme: dark)", color: "#1b1b1b" },
   ],
 };
 
-export default function RootLayout({ children }: LayoutProps<"/">) {
+export default async function RootLayout({ children }: LayoutProps<"/">) {
+  // The mode is a cookie so it is known here, on the server: `data-theme` on
+  // <html> sets `color-scheme` before any CSS runs, and the provider starts
+  // from the same value, so the first paint is already right and hydration
+  // has nothing to disagree about. No cookie means "follow the device".
+  const jar = await cookies();
+  const mode = parseThemeMode(jar.get(THEME_COOKIE)?.value);
+
   return (
-    // suppressHydrationWarning: next-themes writes the `dark` class onto <html>
-    // before React hydrates, and React would otherwise report the mismatch.
-    <html lang="en" suppressHydrationWarning className={`${workSans.variable} ${outfit.variable}`}>
+    // suppressHydrationWarning: Astryx's <Theme> keeps `data-theme` and
+    // `data-astryx-theme` on <html> in step after mount.
+    <html
+      lang="en"
+      suppressHydrationWarning
+      className={figtree.variable}
+      data-theme={mode === "system" ? undefined : mode}
+    >
       <body>
-        {/* Both modes, and the operating system chooses by default. The Toaster
-            reads the same theme, so it is no longer pinned to one. */}
-        <ThemeProvider attribute="class" defaultTheme="system" enableSystem disableTransitionOnChange>
+        <ThemeProvider initialMode={mode}>
+          <ToastBridge />
           {children}
-          <Toaster position="bottom-right" />
         </ThemeProvider>
       </body>
     </html>

@@ -3,20 +3,12 @@
 import * as React from "react";
 import Form from "next/form";
 import { useRouter, useSearchParams } from "next/navigation";
-import { Check, ChevronDown, Search, X } from "lucide-react";
-import { Button } from "@/components/ui/button";
-import {
-  Command,
-  CommandEmpty,
-  CommandGroup,
-  CommandInput,
-  CommandItem,
-  CommandList,
-} from "@/components/ui/command";
-import { Input } from "@/components/ui/input";
-import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { Search } from "lucide-react";
+import { Button } from "@astryxdesign/core/Button";
+import { Selector } from "@astryxdesign/core/Selector";
+import { Text } from "@astryxdesign/core/Text";
+import { TextInput } from "@astryxdesign/core/TextInput";
 import { ANY_DAY, type FilterDimension } from "@/lib/courses/filters";
-import { cn } from "@/lib/utils";
 
 /** The timetable's filter bar. Six dimensions, and they combine: a class has to
  *  satisfy every one that is set.
@@ -49,6 +41,7 @@ export function CourseFilters({
 }) {
   const router = useRouter();
   const params = useSearchParams();
+  const [query, setQuery] = React.useState(q);
 
   const href = React.useCallback(
     (changes: Record<string, string | null>) => {
@@ -73,9 +66,9 @@ export function CourseFilters({
   return (
     <div className="space-y-2">
       <div className="flex flex-wrap items-center gap-2">
-        {/* Full width on a phone, where a 208px search box beside six chips
-            wraps into a ragged bar; its own width from the tablet up. */}
-        <Form action="/courses" className="relative max-sm:w-full">
+        {/* Full width on a phone, where a search box beside six pickers wraps
+            into a ragged bar; its own width from the tablet up. */}
+        <Form action="/courses" className="max-sm:w-full">
           {dimensions.map((d) =>
             d.selected ? (
               <input key={d.key} type="hidden" name={d.key} value={d.selected} />
@@ -85,17 +78,17 @@ export function CourseFilters({
               <input key={d.key} type="hidden" name="day" value={ANY_DAY} />
             ) : null
           )}
-          <Search
-            className="pointer-events-none absolute top-1/2 left-2 size-3.5 -translate-y-1/2 text-muted-foreground"
-            aria-hidden
-          />
-          <Input
-            name="q"
-            type="search"
-            defaultValue={q}
+          <TextInput
+            label="Search classes"
+            isLabelHidden
+            htmlName="q"
+            value={query}
+            onChange={setQuery}
             placeholder="Search classes…"
-            aria-label="Search classes"
-            className="h-8 w-52 pl-7 max-md:h-10 max-sm:w-full"
+            startIcon={Search}
+            hasClear
+            size="md"
+            className="max-sm:w-full sm:w-56"
           />
           {/* A form with one text field and no button submits on Enter by
               implicit submission, which is a rule with enough edge cases that
@@ -116,26 +109,29 @@ export function CourseFilters({
 
         {active > 0 ? (
           <Button
+            label={`Clear ${active === 1 ? "filter" : `all ${active}`}`}
             variant="ghost"
-            size="sm"
-            className="h-8 text-muted-foreground max-md:h-10"
+            size="md"
             onClick={() => router.push(`/courses?day=${ANY_DAY}`)}
-          >
-            Clear {active === 1 ? "filter" : `all ${active}`}
-          </Button>
+          />
         ) : null}
       </div>
 
       {active > 0 ? (
-        <p className="text-xs text-muted-foreground" role="status">
-          <span className="font-medium text-foreground tabular-nums">{showing}</span> of{" "}
-          <span className="tabular-nums">{total}</span> classes match.
-        </p>
+        <Text as="p" type="supporting" display="block" role="status">
+          <Text type="supporting" weight="medium" color="primary" hasTabularNumbers>
+            {showing}
+          </Text>{" "}
+          of <Text type="supporting" hasTabularNumbers>{total}</Text> classes match.
+        </Text>
       ) : null}
     </div>
   );
 }
 
+/** One dimension: a ghost selector reading "Day" until something is picked,
+ *  then "Day: Monday" with a clear ×. The list is searchable and each option
+ *  carries its count. */
 function FilterPicker({
   dimension,
   onPick,
@@ -143,104 +139,41 @@ function FilterPicker({
   dimension: FilterDimension;
   onPick: (value: string | null) => void;
 }) {
-  const [open, setOpen] = React.useState(false);
-  const chosen = Boolean(dimension.selected);
-  const label = dimension.selectedLabel ?? dimension.selected;
+  const labelOf = new Map(dimension.options.map((option) => [option.value, option.label]));
+  const countOf = new Map(dimension.options.map((option) => [option.value, option.count]));
 
-  // A set filter reads as filled rather than blue: blue is for the one thing
-  // you click next, and six chips all claiming that would say nothing. The
-  // label carries the state instead — "Day" becomes "Day: Monday".
-  //
-  // The clear × is a sibling of the trigger, not a child of it. Nested inside,
-  // it has to fight the trigger for the same pointer event and loses: the
-  // filter clears and the popover opens anyway. A border joins the two so they
-  // still read as one chip.
   return (
-    <div
-      className={cn(
-        "inline-flex h-8 items-center rounded-md border text-[13px] transition-colors max-md:h-10 max-md:text-sm",
-        chosen ? "bg-accent text-foreground" : "text-muted-foreground hover:bg-accent/40"
+    <Selector
+      label={`Filter by ${dimension.label}`}
+      isLabelHidden
+      variant="ghost"
+      size="md"
+      hasSearch
+      hasClear
+      searchPlaceholder={`Search ${dimension.label.toLowerCase()}…`}
+      emptySearchText="Nothing matches."
+      placeholder={dimension.label}
+      options={dimension.options.map((option) => ({ value: option.value, label: option.label }))}
+      value={dimension.selected ?? null}
+      onChange={(value) => onPick(value)}
+      renderValue={(option) => (
+        <>
+          <Text type="inherit" color="secondary">
+            {dimension.label}:{" "}
+          </Text>
+          <Text type="inherit" weight="medium">
+            {labelOf.get(option.value) ?? option.label ?? option.value}
+          </Text>
+        </>
       )}
-    >
-      <Popover open={open} onOpenChange={setOpen}>
-        <PopoverTrigger asChild>
-          <button
-            type="button"
-            // No explicit role: PopoverTrigger supplies aria-expanded,
-            // aria-controls and aria-haspopup itself, and a hand-written
-            // role="combobox" here would claim them without providing them.
-            aria-label={chosen ? `${dimension.label}: ${label}` : `Filter by ${dimension.label}`}
-            title={chosen ? `${dimension.label}: ${label}` : undefined}
-            className={cn(
-              "inline-flex h-full max-w-56 items-center gap-1.5 rounded-md px-2.5",
-              "outline-none focus-visible:ring-[3px] focus-visible:ring-ring/50",
-              chosen && "rounded-r-none pr-1.5"
-            )}
-          >
-            <span className="truncate">
-              {chosen ? (
-                <>
-                  <span className="text-muted-foreground">{dimension.label}: </span>
-                  <span className="font-medium">{label}</span>
-                </>
-              ) : (
-                dimension.label
-              )}
-            </span>
-            {chosen ? null : <ChevronDown className="size-3.5 shrink-0 opacity-60" aria-hidden />}
-          </button>
-        </PopoverTrigger>
-
-        <PopoverContent align="start" className="w-64 p-0">
-          <Command>
-            <CommandInput placeholder={`Search ${dimension.label.toLowerCase()}…`} />
-            <CommandList>
-              <CommandEmpty>Nothing matches.</CommandEmpty>
-              <CommandGroup>
-                {dimension.options.map((option) => (
-                  <CommandItem
-                    key={option.value}
-                    value={option.label}
-                    // CommandItem appends its own tick with ml-auto; without
-                    // this the two auto margins split the free space and the
-                    // counts stagger.
-                    className="[&>svg]:ml-0"
-                    onSelect={() => {
-                      onPick(option.value === dimension.selected ? null : option.value);
-                      setOpen(false);
-                    }}
-                  >
-                    {option.value === dimension.selected ? (
-                      <Check className="size-3.5 shrink-0" aria-hidden />
-                    ) : (
-                      <span className="size-3.5 shrink-0" aria-hidden />
-                    )}
-                    <span className="truncate">{option.label}</span>
-                    <span className="ml-auto text-xs text-muted-foreground tabular-nums">
-                      {option.count}
-                    </span>
-                  </CommandItem>
-                ))}
-              </CommandGroup>
-            </CommandList>
-          </Command>
-        </PopoverContent>
-      </Popover>
-
-      {chosen ? (
-        <button
-          type="button"
-          aria-label={`Clear ${dimension.label} filter`}
-          onClick={() => onPick(null)}
-          className={cn(
-            "inline-flex h-full items-center rounded-r-md border-l px-1.5 opacity-60 max-md:px-2.5",
-            "transition-opacity hover:opacity-100",
-            "outline-none focus-visible:ring-[3px] focus-visible:ring-ring/50"
-          )}
-        >
-          <X className="size-3.5" aria-hidden />
-        </button>
-      ) : null}
-    </div>
+      renderOption={(option) => (
+        <span className="flex w-full items-center gap-3">
+          <span className="min-w-0 flex-1 truncate">{option.label ?? option.value}</span>
+          <Text type="supporting" hasTabularNumbers>
+            {countOf.get(option.value) ?? ""}
+          </Text>
+        </span>
+      )}
+    />
   );
 }

@@ -1,73 +1,115 @@
-import * as React from "react"
-import { cva, type VariantProps } from "class-variance-authority"
-import { Slot } from "radix-ui"
+"use client";
 
-import { cn } from "@/lib/utils"
+import * as React from "react";
+import { Button as AstryxButton, type ButtonVariant } from "@astryxdesign/core/Button";
+import { IconButton } from "@astryxdesign/core/IconButton";
 
-const buttonVariants = cva(
-  "group/button inline-flex shrink-0 items-center justify-center rounded-lg border border-transparent bg-clip-padding text-sm font-medium whitespace-nowrap transition-all outline-none select-none focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50 active:not-aria-[haspopup]:translate-y-px disabled:pointer-events-none disabled:opacity-50 aria-invalid:border-destructive aria-invalid:ring-3 aria-invalid:ring-destructive/20 dark:aria-invalid:border-destructive/50 dark:aria-invalid:ring-destructive/40 [&_svg]:pointer-events-none [&_svg]:shrink-0 [&_svg:not([class*='size-'])]:size-4",
-  {
-    variants: {
-      variant: {
-        default: "bg-primary text-primary-foreground hover:bg-primary/80",
-        outline:
-          // `--input`, not `--border`: the hairline is 1.1:1 against the page
-          // and a control edge has to reach 3:1 (DESIGN.md). Same token the
-          // dark side already used.
-          "border-input bg-background hover:bg-muted hover:text-foreground aria-expanded:bg-muted aria-expanded:text-foreground dark:bg-input/30 dark:hover:bg-input/50",
-        secondary:
-          "bg-secondary text-secondary-foreground hover:bg-[color-mix(in_oklch,var(--secondary),var(--foreground)_5%)] aria-expanded:bg-secondary aria-expanded:text-secondary-foreground",
-        ghost:
-          "hover:bg-muted hover:text-foreground aria-expanded:bg-muted aria-expanded:text-foreground dark:hover:bg-muted/50",
-        destructive:
-          "bg-destructive/10 text-destructive hover:bg-destructive/20 focus-visible:border-destructive/40 focus-visible:ring-destructive/20 dark:bg-destructive/20 dark:hover:bg-destructive/30 dark:focus-visible:ring-destructive/40",
-        link: "text-primary underline-offset-4 hover:underline",
-      },
-      // Every size grows below the tablet breakpoint: the desktop heights are
-      // for a pointer, and a thumb on a wet phone needs 40px or so. Written
-      // here once rather than at each call site, so nothing is missed.
-      size: {
-        default:
-          "h-8 gap-1.5 px-2.5 max-md:h-10 max-md:px-3 has-data-[icon=inline-end]:pr-2 has-data-[icon=inline-start]:pl-2",
-        xs: "h-6 gap-1 rounded-[min(var(--radius-md),10px)] px-2 text-xs max-md:h-8 in-data-[slot=button-group]:rounded-lg has-data-[icon=inline-end]:pr-1.5 has-data-[icon=inline-start]:pl-1.5 [&_svg:not([class*='size-'])]:size-3",
-        sm: "h-7 gap-1 rounded-[min(var(--radius-md),12px)] px-2.5 text-[0.8rem] max-md:h-10 max-md:px-3 max-md:text-sm in-data-[slot=button-group]:rounded-lg has-data-[icon=inline-end]:pr-1.5 has-data-[icon=inline-start]:pl-1.5 [&_svg:not([class*='size-'])]:size-3.5 max-md:[&_svg:not([class*='size-'])]:size-4",
-        lg: "h-9 gap-1.5 px-2.5 max-md:h-11 max-md:px-3.5 has-data-[icon=inline-end]:pr-2 has-data-[icon=inline-start]:pl-2",
-        icon: "size-8 max-md:size-10",
-        "icon-xs":
-          "size-6 rounded-[min(var(--radius-md),10px)] max-md:size-9 in-data-[slot=button-group]:rounded-lg [&_svg:not([class*='size-'])]:size-3",
-        "icon-sm":
-          "size-7 rounded-[min(var(--radius-md),12px)] max-md:size-9 in-data-[slot=button-group]:rounded-lg max-md:[&_svg:not([class*='size-'])]:size-4",
-        "icon-lg": "size-9 max-md:size-11",
-      },
-    },
-    defaultVariants: {
-      variant: "default",
-      size: "default",
-    },
-  }
-)
+/** The app's button, on Astryx's. It keeps the shape every screen was
+ *  written against — `variant`, `size`, children, `asChild` for a link — and
+ *  turns it into what Astryx wants: a `label` for the accessible name, a
+ *  variant from its four, and IconButton for the icon-only sizes.
+ *
+ *  The accessible name is the text inside the button, or `aria-label` when
+ *  there is none. Astryx requires one, and so does everybody using a screen
+ *  reader on the deck. */
 
-function Button({
-  className,
+type Variant = "default" | "outline" | "secondary" | "ghost" | "destructive" | "link";
+type Size = "default" | "xs" | "sm" | "lg" | "icon" | "icon-xs" | "icon-sm" | "icon-lg";
+
+const VARIANT: Record<Variant, ButtonVariant> = {
+  default: "primary",
+  outline: "secondary",
+  secondary: "secondary",
+  ghost: "ghost",
+  destructive: "destructive",
+  link: "ghost",
+};
+
+const SIZE: Record<Size, "sm" | "md" | "lg"> = {
+  default: "md",
+  xs: "sm",
+  sm: "sm",
+  lg: "lg",
+  icon: "md",
+  "icon-xs": "sm",
+  "icon-sm": "sm",
+  "icon-lg": "lg",
+};
+
+export type ButtonProps = Omit<React.ComponentProps<"button">, "color"> & {
+  variant?: Variant;
+  size?: Size;
+  /** Render the child element's destination: `<Button asChild><Link href/></Button>`
+   *  becomes an Astryx button that navigates. */
+  asChild?: boolean;
+  href?: string;
+};
+
+/** The words in a node, for the accessible name. */
+function textOf(node: React.ReactNode): string {
+  if (node == null || typeof node === "boolean") return "";
+  if (typeof node === "string" || typeof node === "number") return String(node);
+  if (Array.isArray(node)) return node.map(textOf).join("");
+  if (React.isValidElement<{ children?: React.ReactNode }>(node)) return textOf(node.props.children);
+  return "";
+}
+
+export function Button({
   variant = "default",
   size = "default",
   asChild = false,
-  ...props
-}: React.ComponentProps<"button"> &
-  VariantProps<typeof buttonVariants> & {
-    asChild?: boolean
-  }) {
-  const Comp = asChild ? Slot.Root : "button"
+  children,
+  className,
+  disabled,
+  type = "button",
+  title,
+  onClick,
+  href,
+  ...rest
+}: ButtonProps) {
+  let content = children;
+  let to = href;
+  let click = onClick as React.MouseEventHandler<HTMLButtonElement> | undefined;
+
+  if (asChild && React.isValidElement<{ href?: string; children?: React.ReactNode; onClick?: React.MouseEventHandler }>(children)) {
+    to = children.props.href ?? to;
+    content = children.props.children;
+    click = (children.props.onClick as React.MouseEventHandler<HTMLButtonElement> | undefined) ?? click;
+  }
+
+  const ariaLabel = (rest as { "aria-label"?: string })["aria-label"];
+  const label = ariaLabel || textOf(content).trim() || title || "Button";
+
+  if (size.startsWith("icon")) {
+    return (
+      <IconButton
+        label={label}
+        tooltip={title}
+        icon={content}
+        variant={VARIANT[variant]}
+        size={SIZE[size]}
+        isDisabled={disabled}
+        onClick={click}
+        className={className}
+        {...(rest as Record<string, unknown>)}
+      />
+    );
+  }
 
   return (
-    <Comp
-      data-slot="button"
-      data-variant={variant}
-      data-size={size}
-      className={cn(buttonVariants({ variant, size, className }))}
-      {...props}
-    />
-  )
+    <AstryxButton
+      label={label}
+      tooltip={title}
+      variant={VARIANT[variant]}
+      size={SIZE[size]}
+      type={type}
+      isDisabled={disabled}
+      onClick={click}
+      href={to}
+      className={className}
+      {...(rest as Record<string, unknown>)}
+    >
+      {content}
+    </AstryxButton>
+  );
 }
-
-export { Button, buttonVariants }

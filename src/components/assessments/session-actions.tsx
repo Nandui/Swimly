@@ -6,13 +6,7 @@ import { ConfirmAction } from "@/components/confirm-action";
 import { Field, FormDialog } from "@/components/form-dialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
+import { Select } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
 import {
   cancelSession,
@@ -75,18 +69,14 @@ function SessionFields({ session, programmes, types, instructors, today }: Field
           htmlFor="programmeId"
           hint="What the assessor places children into."
         >
-          <Select name="programmeId" value={programmeId} onValueChange={setProgrammeId}>
-            <SelectTrigger id="programmeId" className="w-full">
-              <SelectValue placeholder="Pick a programme" />
-            </SelectTrigger>
-            <SelectContent>
-              {programmes.map((programme) => (
-                <SelectItem key={programme.id} value={programme.id}>
-                  {programme.name}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
+          <Select
+            id="programmeId"
+            name="programmeId"
+            value={programmeId}
+            onValueChange={setProgrammeId}
+            placeholder="Pick a programme"
+            options={programmes.map((programme) => ({ value: programme.id, label: programme.name }))}
+          />
         </Field>
         <Field
           label="Kind"
@@ -99,18 +89,15 @@ function SessionFields({ session, programmes, types, instructors, today }: Field
         >
           {/* Keyed on the programme so the default resets when it changes,
               rather than pointing at a kind from the previous list. */}
-          <Select key={programmeId} name="typeId" defaultValue={currentKind ?? kinds[0]?.id} disabled={kinds.length === 0}>
-            <SelectTrigger id="typeId" className="w-full">
-              <SelectValue placeholder={kinds.length === 0 ? "None yet" : "Pick a kind"} />
-            </SelectTrigger>
-            <SelectContent>
-              {kinds.map((kind) => (
-                <SelectItem key={kind.id} value={kind.id}>
-                  {kind.name}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
+          <Select
+            key={programmeId}
+            id="typeId"
+            name="typeId"
+            defaultValue={currentKind ?? kinds[0]?.id}
+            disabled={kinds.length === 0}
+            placeholder={kinds.length === 0 ? "None yet" : "Pick a kind"}
+            options={kinds.map((kind) => ({ value: kind.id, label: kind.name }))}
+          />
         </Field>
       </div>
 
@@ -167,19 +154,15 @@ function SessionFields({ session, programmes, types, instructors, today }: Field
       </div>
 
       <Field label="Assessor" htmlFor="instructorId">
-        <Select name="instructorId" defaultValue={session?.instructorId ?? NONE}>
-          <SelectTrigger id="instructorId" className="w-full">
-            <SelectValue />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value={NONE}>Not decided yet</SelectItem>
-            {instructors.map((person) => (
-              <SelectItem key={person.id} value={person.id}>
-                {person.name}
-              </SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
+        <Select
+          id="instructorId"
+          name="instructorId"
+          defaultValue={session?.instructorId ?? NONE}
+          options={[
+            { value: NONE, label: "Not decided yet" },
+            ...instructors.map((person) => ({ value: person.id, label: person.name })),
+          ]}
+        />
       </Field>
 
       <Field label="Notes" htmlFor="notes" hint="Anything the desk should tell parents when booking.">

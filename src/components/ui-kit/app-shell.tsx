@@ -1,24 +1,22 @@
 "use client";
 
 import * as React from "react";
-import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { LucideIcon, LogOut, Menu, PanelLeft, PanelLeftClose } from "lucide-react";
-import { cn } from "@/lib/utils";
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuLabel,
-  DropdownMenuSeparator,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
-import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from "@/components/ui/sheet";
+import { LogOut, MoreHorizontal, Waves, type LucideIcon } from "lucide-react";
+import { AppShell as AstryxAppShell } from "@astryxdesign/core/AppShell";
+import { Avatar } from "@astryxdesign/core/Avatar";
+import { Badge } from "@astryxdesign/core/Badge";
+import { DropdownMenu } from "@astryxdesign/core/DropdownMenu";
+import { NavIcon } from "@astryxdesign/core/NavIcon";
+import { SideNav, SideNavHeading, SideNavItem, SideNavSection } from "@astryxdesign/core/SideNav";
+import { HStack, StackItem, VStack } from "@astryxdesign/core/Stack";
+import { Text } from "@astryxdesign/core/Text";
+import { TopNav, TopNavHeading } from "@astryxdesign/core/TopNav";
 
-/** The workspace shell: a tinted sidebar that stays put and a content column
- *  that scrolls. Those two surfaces are the whole chrome — there is no top bar
- *  on desktop, no breadcrumb, and no card around the page. Colours come from
- *  the sidebar and background tokens, in whichever mode is on.
+/** The workspace shell, on Astryx's AppShell: a collapsible side nav that
+ *  stays put on desktop, a bar with the same nav in a drawer below `md`, and
+ *  the content column. The shell owns the skip link and the main landmark;
+ *  pages start at their own H1.
  *
  *  Nav items are passed in rather than declared here, because which sections
  *  exist and who may see them is the app's business, not the shell's. Filter
@@ -28,7 +26,7 @@ export type NavItem = {
   href: string;
   label: string;
   icon: LucideIcon;
-  /** A count worth interrupting someone for. Renders as a red tint pill. */
+  /** A count worth interrupting someone for. Renders as a red badge. */
   badge?: number;
 };
 
@@ -37,260 +35,186 @@ export type NavItem = {
 export type SwitcherState = { collapsed: boolean; compact: boolean };
 
 export type AppShellProps = {
-  /** Product name. Rendered as type plus a blue dot — no logo asset. */
+  /** Product name. Rendered as type beside a small mark — no logo asset. */
   wordmark: string;
   /** Where the wordmark goes. Defaults to the root. */
   homeHref?: string;
   items: NavItem[];
   userName: string;
-  /** The line under the name in the account menu: role, team, tenant. */
+  /** The line under the name: role, team, tenant. */
   userSubtitle?: string;
   onSignOut?: () => void;
   /** Optional control pinned above the nav — a tenant/workspace switcher. A
    *  function is told how it is being shown. On a phone it goes in the bar
-   *  beside the wordmark rather than inside the sheet, so it never leaves the
-   *  screen. */
+   *  beside the wordmark rather than inside the drawer, so it never leaves
+   *  the screen. */
   switcher?: React.ReactNode | ((state: SwitcherState) => React.ReactNode);
   /** Small controls that must never be more than one click away — the
-   *  light/dark flip. Rendered above the account menu on desktop (icon-only
-   *  when collapsed) and at the right end of the bar on mobile, where they are
-   *  reachable without opening the sheet. */
+   *  light/dark flip. In the side nav's icon row on desktop and at the right
+   *  end of the phone bar, reachable without opening the drawer. */
   tools?: React.ReactNode;
+  /** A full-width strip above the page — a notice that applies to every
+   *  screen, such as a dev build's "seeing the app as" bar. */
+  banner?: React.ReactNode;
+  children: React.ReactNode;
 };
 
 function renderSwitcher(switcher: AppShellProps["switcher"], state: SwitcherState) {
   return typeof switcher === "function" ? switcher(state) : switcher;
 }
 
-function Wordmark({ label, href = "/" }: { label: string; href?: string }) {
-  return (
-    <Link href={href} className="flex items-baseline gap-0.5 select-none">
-      <span className="text-[15px] font-semibold tracking-tight text-foreground">{label}</span>
-      <span className="size-1.5 translate-y-px rounded-full bg-primary" aria-hidden />
-    </Link>
-  );
+/** The mark beside the name: a small wave. There is no logo asset, and the
+ *  name is a working one, so this is deliberately nothing to remember. */
+function Mark() {
+  return <Waves className="size-4" aria-hidden />;
 }
 
-function NavList({
-  items,
-  collapsed,
-  onNavigate,
-}: {
-  items: NavItem[];
-  collapsed?: boolean;
-  onNavigate?: () => void;
-}) {
+export function AppShell(props: AppShellProps) {
   const pathname = usePathname();
-  return (
-    <nav className="flex-1 overflow-y-auto px-2 py-1" aria-label="Main">
-      <ul className="space-y-px">
-        {items.map((item) => {
-          const Icon = item.icon;
+  const [collapsed, setCollapsed] = React.useState(false);
+
+  const nav = (
+    <SideNav
+      collapsible={{ isCollapsed: collapsed, onCollapsedChange: setCollapsed }}
+      header={
+        <SideNavHeading
+          icon={<NavIcon icon={<Mark />} />}
+          heading={props.wordmark}
+          headingHref={props.homeHref ?? "/"}
+        />
+      }
+      topContent={
+        props.switcher
+          ? renderSwitcher(props.switcher, { collapsed, compact: false })
+          : undefined
+      }
+      footer={<UserRow {...props} collapsed={collapsed} />}
+      footerIcons={props.tools}
+    >
+      <SideNavSection title="Main" isHeaderHidden>
+        {props.items.map((item) => {
           // "/" would prefix-match everything, so it alone is matched exactly.
           const active = item.href === "/" ? pathname === "/" : pathname.startsWith(item.href);
           return (
-            <li key={item.href}>
-              <Link
-                href={item.href}
-                onClick={onNavigate}
-                aria-current={active ? "page" : undefined}
-                title={collapsed ? item.label : undefined}
-                className={cn(
-                  "flex items-center gap-2.5 rounded-md px-2 py-1.5 text-[13.5px] font-medium transition-colors",
-                  // The same ring every button and input shows, so keyboard
-                  // focus looks like one thing across the app instead of the
-                  // browser default here and the token everywhere else.
-                  "outline-none focus-visible:ring-[3px] focus-visible:ring-sidebar-ring/50",
-                  collapsed && "justify-center px-0",
-                  active
-                    ? "bg-sidebar-accent text-foreground"
-                    : "text-sidebar-foreground hover:bg-sidebar-accent/60 hover:text-foreground"
-                )}
-              >
-                {/* The active item thickens its icon stroke rather than
-                 *  changing colour — weight carries state, the accent is
-                 *  reserved for the primary action. */}
-                <Icon className="size-4 shrink-0" strokeWidth={active ? 2.2 : 1.8} />
-                {!collapsed && <span className="flex-1 truncate">{item.label}</span>}
-                {!collapsed && item.badge ? (
-                  <span className="rounded-full bg-(--tag-red-bg) px-1.5 text-[11px] font-semibold leading-4 text-(--tag-red-fg)">
-                    {item.badge}
-                  </span>
-                ) : null}
-                {collapsed && item.badge ? (
-                  <span
-                    className="absolute mt-[-10px] ml-5 size-1.5 rounded-full bg-(--tag-red-fg)"
-                    aria-hidden
-                  />
-                ) : null}
-              </Link>
-            </li>
+            <SideNavItem
+              key={item.href}
+              label={item.label}
+              href={item.href}
+              icon={item.icon}
+              isSelected={active}
+              endContent={item.badge ? <Badge variant="red" label={item.badge} /> : undefined}
+            />
           );
         })}
-      </ul>
-    </nav>
+      </SideNavSection>
+    </SideNav>
+  );
+
+  // Below the breakpoint the AppShell folds the top nav into a bar: heading,
+  // end content, and the drawer toggle. On desktop there is no top bar in
+  // this design, so it is hidden from one pixel above Astryx's breakpoint.
+  const phoneBar = (
+    <TopNav
+      label="Page bar"
+      className="min-[769px]:hidden"
+      heading={<TopNavHeading heading={props.wordmark} headingHref={props.homeHref ?? "/"} />}
+      endContent={
+        <HStack gap={1} vAlign="center">
+          {props.switcher ? renderSwitcher(props.switcher, { collapsed: false, compact: true }) : null}
+          {props.tools}
+        </HStack>
+      }
+    />
+  );
+
+  return (
+    <AstryxAppShell
+      height="auto"
+      variant="section"
+      contentPadding={0}
+      banner={props.banner}
+      topNav={phoneBar}
+      sideNav={nav}
+      mobileNav={{ breakpoint: "md" }}
+    >
+      {/* Centred, 32/40 padding, tighter on phones. */}
+      <div className="mx-auto max-w-6xl px-8 py-10 max-md:px-4 max-md:py-6">{props.children}</div>
+    </AstryxAppShell>
   );
 }
 
-function UserMenu({
+/** Who is signed in, and the way out. Name and role on two lines beside an
+ *  initials avatar; the menu behind the dots holds sign-out. In the icon rail
+ *  only the avatar remains, and it opens the same menu. */
+function UserRow({
   userName,
   userSubtitle,
   onSignOut,
   collapsed,
-}: Pick<AppShellProps, "userName" | "userSubtitle" | "onSignOut"> & { collapsed?: boolean }) {
-  const initials = userName
-    .split(" ")
-    .map((p) => p[0])
-    .slice(0, 2)
-    .join("");
+}: Pick<AppShellProps, "userName" | "userSubtitle" | "onSignOut"> & { collapsed: boolean }) {
+  const items = [
+    {
+      type: "section" as const,
+      title: userSubtitle ? `${userName} · ${userSubtitle}` : userName,
+      items: [
+        {
+          id: "sign-out",
+          label: "Sign out",
+          icon: LogOut,
+          onClick: onSignOut,
+          isDisabled: !onSignOut,
+        },
+      ],
+    },
+  ];
+
+  if (collapsed) {
+    return (
+      <HStack hAlign="center" paddingBlock={1}>
+        <DropdownMenu
+          hasChevron={false}
+          placement="end"
+          button={{
+            label: "Account menu",
+            isIconOnly: true,
+            variant: "ghost",
+            size: "sm",
+            icon: <Avatar name={userName} size="xsm" />,
+          }}
+          items={items}
+        />
+      </HStack>
+    );
+  }
 
   return (
-    <div className="border-t border-sidebar-border p-2">
-      <DropdownMenu>
-        <DropdownMenuTrigger
-          className={cn(
-            "flex w-full items-center gap-2 rounded-md px-2 py-1.5 text-left transition-colors hover:bg-sidebar-accent",
-            collapsed && "justify-center px-0"
-          )}
-          aria-label="Account menu"
-        >
-          <span className="flex size-6 shrink-0 items-center justify-center rounded-full bg-(--tag-blue-bg) text-[11px] font-semibold text-(--tag-blue-fg)">
-            {initials}
-          </span>
-          {!collapsed && (
-            <span className="min-w-0">
-              <span className="block truncate text-[13px] font-medium text-foreground">
-                {userName}
-              </span>
-              {userSubtitle ? (
-                <span className="block truncate text-xs text-muted-foreground">{userSubtitle}</span>
-              ) : null}
-            </span>
-          )}
-        </DropdownMenuTrigger>
-        <DropdownMenuContent align="start" className="w-52">
-          <DropdownMenuLabel className="font-normal">
-            <span className="block text-[13px] font-medium">{userName}</span>
-            {userSubtitle ? (
-              <span className="block text-xs text-muted-foreground">{userSubtitle}</span>
-            ) : null}
-          </DropdownMenuLabel>
-          {onSignOut ? (
-            <>
-              <DropdownMenuSeparator />
-              <DropdownMenuItem onClick={onSignOut}>
-                <LogOut className="size-4" />
-                Sign out
-              </DropdownMenuItem>
-            </>
+    <HStack gap={2} vAlign="center" paddingInline={2} paddingBlock={1}>
+      <Avatar name={userName} size="sm" />
+      <StackItem size="fill">
+        <VStack gap={0}>
+          <Text weight="medium" maxLines={1} hasTruncateTooltip={false}>
+            {userName}
+          </Text>
+          {userSubtitle ? (
+            <Text type="supporting" maxLines={1} hasTruncateTooltip={false}>
+              {userSubtitle}
+            </Text>
           ) : null}
-        </DropdownMenuContent>
-      </DropdownMenu>
-    </div>
-  );
-}
-
-/** Desktop sidebar. Hidden below md, where MobileNav takes over. */
-export function Sidebar(props: AppShellProps) {
-  const [collapsed, setCollapsed] = React.useState(false);
-
-  return (
-    <aside
-      className={cn(
-        "sticky top-0 flex h-svh shrink-0 flex-col border-r border-sidebar-border bg-sidebar transition-[width] duration-200 max-md:hidden",
-        collapsed ? "w-13" : "w-60"
-      )}
-    >
-      <div className={cn("flex h-12 items-center gap-2 px-3", collapsed && "justify-center px-0")}>
-        {!collapsed && <Wordmark label={props.wordmark} href={props.homeHref} />}
-        <button
-          type="button"
-          onClick={() => setCollapsed((v) => !v)}
-          aria-label={collapsed ? "Expand sidebar" : "Collapse sidebar"}
-          className={cn(
-            "rounded p-1 text-muted-foreground/70 transition-colors hover:bg-sidebar-accent hover:text-foreground",
-            !collapsed && "ml-auto"
-          )}
-        >
-          {collapsed ? <PanelLeft className="size-4" /> : <PanelLeftClose className="size-4" />}
-        </button>
-      </div>
-      {props.switcher ? (
-        <div className={cn("px-2 pb-2", collapsed && "flex justify-center px-0")}>
-          {renderSwitcher(props.switcher, { collapsed, compact: false })}
-        </div>
-      ) : null}
-      <NavList items={props.items} collapsed={collapsed} />
-      {props.tools ? (
-        <div
-          className={cn(
-            "flex items-center gap-1 px-2 pb-1",
-            collapsed ? "justify-center px-0" : "justify-end"
-          )}
-        >
-          {props.tools}
-        </div>
-      ) : null}
-      <UserMenu {...props} collapsed={collapsed} />
-    </aside>
-  );
-}
-
-/** Below md the sidebar is replaced outright, never squeezed: a 48px bar and
- *  the same nav inside a sheet. */
-export function MobileNav(props: AppShellProps) {
-  const [open, setOpen] = React.useState(false);
-
-  return (
-    <div className="sticky top-0 z-30 flex h-12 items-center gap-2 border-b bg-sidebar px-3 md:hidden">
-      <Sheet open={open} onOpenChange={setOpen}>
-        {/* A thumb-sized target: the icon is 20px, the button is 40. */}
-        <SheetTrigger
-          className="-ml-2 flex size-10 items-center justify-center rounded-md text-muted-foreground transition-colors hover:bg-sidebar-accent hover:text-foreground"
-          aria-label="Open menu"
-        >
-          <Menu className="size-5" />
-        </SheetTrigger>
-        <SheetContent side="left" className="w-72 bg-sidebar p-0">
-          <SheetHeader className="h-12 justify-center px-3">
-            <SheetTitle asChild>
-              <div>
-                <Wordmark label={props.wordmark} href={props.homeHref} />
-              </div>
-            </SheetTitle>
-          </SheetHeader>
-          <NavList items={props.items} onNavigate={() => setOpen(false)} />
-          <UserMenu {...props} />
-        </SheetContent>
-      </Sheet>
-      <Wordmark label={props.wordmark} href={props.homeHref} />
-      {props.switcher ? (
-        <div className="flex min-w-0 flex-1 items-center">
-          {renderSwitcher(props.switcher, { collapsed: false, compact: true })}
-        </div>
-      ) : null}
-      {props.tools ? <div className="ml-auto flex items-center gap-1">{props.tools}</div> : null}
-    </div>
-  );
-}
-
-/** Wrap children in the content column: centred, 32/40 padding, tighter on
- *  phones. Pair with <Sidebar/> and <MobileNav/> in the app layout. */
-export function AppFrame({
-  children,
-  banner,
-}: {
-  children: React.ReactNode;
-  /** A full-width strip above the page — a notice that applies to every
-   *  screen, such as a dev build's "seeing the app as" bar. */
-  banner?: React.ReactNode;
-}) {
-  return (
-    <main id="main" tabIndex={-1} className="min-w-0 flex-1 outline-none">
-      {/* `id` is the skip link's target; `tabIndex={-1}` lets it take focus
-          without joining the tab order. */}
-      {banner}
-      <div className="mx-auto max-w-6xl px-8 py-10 max-md:px-4 max-md:py-6">{children}</div>
-    </main>
+        </VStack>
+      </StackItem>
+      <DropdownMenu
+        hasChevron={false}
+        placement="above"
+        alignment="end"
+        button={{
+          label: "Account menu",
+          isIconOnly: true,
+          variant: "ghost",
+          size: "sm",
+          icon: <MoreHorizontal className="size-4" aria-hidden />,
+        }}
+        items={items}
+      />
+    </HStack>
   );
 }

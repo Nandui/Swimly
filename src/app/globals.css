@@ -1,281 +1,159 @@
-@import "tailwindcss";
+/* The look is Astryx (Meta's open design system), Neutral theme, light and
+   dark from the same tokens. Astryx ships its component styles as plain CSS
+   in cascade layers; Tailwind stays for layout. The two coexist only if every
+   layer is declared up front, in this order, so Astryx's component rules sit
+   below Tailwind's utilities and a `className` on an Astryx component still
+   wins. Unlayered rules — the few at the bottom of this file — beat all of
+   them. */
+@layer reset, theme, base, astryx-base, astryx-theme, components, utilities;
+
+@import "tailwindcss/theme.css" layer(theme);
+@import "tailwindcss/preflight.css" layer(base);
+@import "@astryxdesign/core/reset.css";
+@import "@astryxdesign/core/astryx.css";
+@import "@astryxdesign/theme-neutral/theme.css";
+/* The bridge: Astryx tokens become Tailwind utilities — `bg-surface`,
+   `text-primary`, `text-secondary`, `border-border`, `rounded-lg` (the
+   container radius), `p-4` on the 4px scale. */
+@import "@astryxdesign/core/tailwind-theme.css";
+@import "tailwindcss/utilities.css" layer(utilities);
 @import "tw-animate-css";
-@import "shadcn/tailwind.css";
-
-@custom-variant dark (&:is(.dark *));
-
-/* The visual system is generated, not hand-picked. It comes from the
-   ui-ux-pro-max skill's design-system engine, asked about a leisure centre
-   that manages swim lessons and bookings, and persisted at
-   design-system/swimly/MASTER.md. The engine's product logic for a booking
-   tool is "trust blue, available green, booked grey": blue-600 is the one
-   interactive colour, green means a place is free and lives in the status
-   tags, and everything else is a cool slate with a faint blue cast. Outfit for
-   headings, Work Sans to read. Subtle 200ms motion.
-
-   The engine emitted the light palette and marks the style "mode: auto", so
-   both modes ship and the OS decides by default. Dark is the same blue/slate
-   scale read from the other end: a lighter blue with dark ink, because white
-   on blue-500 fails and the dark-mode rule is lighter tonal variants, not
-   inversions. Every pair below was measured against the engine's own bar
-   (text 4.5:1, control edges 3:1). Change tokens here to follow MASTER.md and
-   nothing else — no component carries a colour of its own. */
 
 @theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --font-sans: var(--font-work-sans), ui-sans-serif, system-ui, -apple-system, "Segoe UI", sans-serif;
-  --font-mono: ui-monospace, "Cascadia Code", "Segoe UI Mono", Menlo, Consolas, monospace;
-  /* "Both geometric, but Outfit more distinctive for headings" — the pairing's
-     own note. Headings take Outfit; everything read as prose takes Work Sans. */
-  --font-heading: var(--font-outfit), var(--font-work-sans), ui-sans-serif, sans-serif;
-  --color-sidebar-ring: var(--sidebar-ring);
-  --color-sidebar-border: var(--sidebar-border);
-  --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
-  --color-sidebar-accent: var(--sidebar-accent);
-  --color-sidebar-primary-foreground: var(--sidebar-primary-foreground);
-  --color-sidebar-primary: var(--sidebar-primary);
-  --color-sidebar-foreground: var(--sidebar-foreground);
-  --color-sidebar: var(--sidebar);
-  --color-chart-5: var(--chart-5);
-  --color-chart-4: var(--chart-4);
-  --color-chart-3: var(--chart-3);
-  --color-chart-2: var(--chart-2);
-  --color-chart-1: var(--chart-1);
-  --color-ring: var(--ring);
-  --color-input: var(--input);
-  --color-border: var(--border);
-  --color-destructive: var(--destructive);
-  --color-accent-foreground: var(--accent-foreground);
-  --color-accent: var(--accent);
-  --color-muted-foreground: var(--muted-foreground);
-  --color-muted: var(--muted);
-  --color-secondary-foreground: var(--secondary-foreground);
-  --color-secondary: var(--secondary);
-  --color-primary-foreground: var(--primary-foreground);
-  --color-primary: var(--primary);
-  --color-popover-foreground: var(--popover-foreground);
-  --color-popover: var(--popover);
-  --color-card-foreground: var(--card-foreground);
-  --color-card: var(--card);
-  /* The engine's Accent/CTA, emerald, as a token pair for "available" and
-     "confirmed" — the green tag reads from it. Not the primary button: a
-     booking tool's one interactive colour is its trust blue. */
-  --color-success: var(--success);
-  --color-success-foreground: var(--success-foreground);
-  --radius-sm: calc(var(--radius) * 0.6);
-  --radius-md: calc(var(--radius) * 0.8);
-  --radius-lg: var(--radius);
-  --radius-xl: calc(var(--radius) * 1.4);
-  --radius-2xl: calc(var(--radius) * 1.8);
-  --radius-3xl: calc(var(--radius) * 2.2);
-  --radius-4xl: calc(var(--radius) * 2.6);
-  /* MASTER.md, "Key Effects": subtle hover transitions. Tailwind's default is
-     150ms; this moves every `transition-*` utility onto the system's rhythm. */
-  --default-transition-duration: 200ms;
-  /* MASTER.md, "Shadow Depths". Available rather than applied: minimal means
-     flat at rest, and only floating layers lift. */
-  --shadow-sm: 0 1px 2px rgb(15 23 42 / 0.05);
-  --shadow-md: 0 4px 6px rgb(15 23 42 / 0.08);
-  --shadow-lg: 0 10px 15px rgb(15 23 42 / 0.1);
-  --shadow-xl: 0 20px 25px rgb(15 23 42 / 0.12);
+  /* Tailwind's text sizes on the app's terms. The bridge maps `text-sm` to
+     Astryx's 12px "sm", but every screen here was written with `text-sm` as
+     the 14px body line — the size Astryx itself calls "base" — and poolside
+     legibility is not a place to lose two pixels. So the names keep their
+     pixel meaning and the values come from the theme. */
+  --text-xs: var(--font-size-sm);
+  --text-sm: var(--font-size-base);
+  --text-base: 1rem;
+  --text-lg: var(--font-size-lg);
+  --text-xl: var(--font-size-xl);
+  --text-2xl: var(--font-size-2xl);
+  --text-3xl: var(--font-size-3xl);
+
+  /* Names the screens were written against before the move, aliased onto
+     Astryx's tokens so every page renders in the new colours from the first
+     build. Each one goes as its screens are rewritten in Astryx's own names;
+     when this block is empty the sweep is done. */
+  --color-background: var(--color-background-body);
+  --color-foreground: var(--color-text-primary);
+  --color-muted-foreground: var(--color-text-secondary);
+  --color-card-foreground: var(--color-text-primary);
+  --color-popover-foreground: var(--color-text-primary);
+  --color-primary-foreground: var(--color-on-accent);
+  --color-secondary-foreground: var(--color-text-primary);
+  --color-accent-foreground: var(--color-text-primary);
+  --color-destructive: var(--color-error);
+  --color-input: var(--color-border-emphasized);
+  --color-ring: var(--color-accent);
+  --color-success-foreground: var(--color-on-success);
+  --color-sidebar: var(--color-background-surface);
+  --color-sidebar-foreground: var(--color-text-secondary);
+  --color-sidebar-accent: var(--color-background-muted);
+  --color-sidebar-accent-foreground: var(--color-text-primary);
+  --color-sidebar-border: var(--color-border);
+  --color-sidebar-ring: var(--color-accent);
+  --color-sidebar-primary: var(--color-accent);
+  --color-sidebar-primary-foreground: var(--color-on-accent);
 }
 
-/* Light, as emitted, with two corrections the engine's own checklist
-   required. White on its emerald CTA #059669 is 3.77:1, so the success pair
-   uses emerald-700 (5.5:1). Its border #E4ECFC is a hairline at 1.1:1 — right
-   between table rows, useless as the edge of a text box — so inputs use
-   slate-500, which clears 3:1 against the ground at 4.6:1. Blue-600 carries
-   white text at 5.2:1 and reads as a link at 4.9:1. */
+/* Unlayered, so these win over every layer above. */
+
+/* The type: Figtree, the theme's own face, self-hosted through next/font so
+   the files arrive with the page and nothing shifts when they do. The theme
+   sets the family on its own wrapper, so the override has to reach that
+   element rather than :root. */
+[data-astryx-theme] {
+  --font-family-body: var(--font-figtree), -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+  --font-family-heading: var(--font-family-body);
+}
+
+/* Status tags. Every status colour in the app comes through these nine pairs
+   and a metadata map, never from a colour chosen at a call site. The pairs
+   are Astryx's own hue tokens — tinted field, same-hue ink, measured for both
+   modes by the theme — so a tag and a Badge of the same colour agree. There
+   is no brown in the palette; teal stands in, and reads as its own hue. */
 :root {
-  --background: #f8fafc;
-  --foreground: #0f172a;
-  --card: #ffffff;
-  --card-foreground: #0f172a;
-  --popover: #ffffff;
-  --popover-foreground: #0f172a;
-  --primary: #2563eb;
-  --primary-foreground: #ffffff;
-  --secondary: #e4ecfc;
-  --secondary-foreground: #0f172a;
-  --muted: #f1f5fd;
-  --muted-foreground: #475569;
-  --accent: #e4ecfc;
-  --accent-foreground: #0f172a;
-  --destructive: #dc2626;
-  --success: #047857;
-  --success-foreground: #ffffff;
-  --border: #e4ecfc;
-  --input: #64748b;
-  --ring: #2563eb;
-  --chart-1: #2563eb;
-  --chart-2: #047857;
-  --chart-3: #f59e0b;
-  --chart-4: #dc2626;
-  --chart-5: #64748b;
-  --radius: 0.375rem;
-  --sidebar: #f1f5fd;
-  --sidebar-foreground: #334155;
-  --sidebar-primary: #2563eb;
-  --sidebar-primary-foreground: #ffffff;
-  --sidebar-accent: #e4ecfc;
-  --sidebar-accent-foreground: #0f172a;
-  --sidebar-border: #e4ecfc;
-  --sidebar-ring: #2563eb;
-
-  /* Status tags: 100 field, 800 ink. Green is "a place is available", grey is
-     "booked" — the engine's product logic for a booking tool. Every pair
-     measures 6.3:1 or better. */
-  --tag-red-bg: #fee2e2;
-  --tag-red-fg: #991b1b;
-  --tag-orange-bg: #ffedd5;
-  --tag-orange-fg: #9a3412;
-  --tag-yellow-bg: #fef3c7;
-  --tag-yellow-fg: #92400e;
-  --tag-green-bg: #dcfce7;
-  --tag-green-fg: #166534;
-  --tag-blue-bg: #dbeafe;
-  --tag-blue-fg: #1e40af;
-  --tag-purple-bg: #ede9fe;
-  --tag-purple-fg: #5b21b6;
-  --tag-pink-bg: #fce7f3;
-  --tag-pink-fg: #9d174d;
-  --tag-brown-bg: #f5ede6;
-  --tag-brown-fg: #6b3f2a;
-  --tag-gray-bg: #e2e8f0;
-  --tag-gray-fg: #334155;
+  --tag-red-bg: var(--color-background-red);
+  --tag-red-fg: var(--color-text-red);
+  --tag-orange-bg: var(--color-background-orange);
+  --tag-orange-fg: var(--color-text-orange);
+  --tag-yellow-bg: var(--color-background-yellow);
+  --tag-yellow-fg: var(--color-text-yellow);
+  --tag-green-bg: var(--color-background-green);
+  --tag-green-fg: var(--color-text-green);
+  --tag-blue-bg: var(--color-background-blue);
+  --tag-blue-fg: var(--color-text-blue);
+  --tag-purple-bg: var(--color-background-purple);
+  --tag-purple-fg: var(--color-text-purple);
+  --tag-pink-bg: var(--color-background-pink);
+  --tag-pink-fg: var(--color-text-pink);
+  --tag-brown-bg: var(--color-background-teal);
+  --tag-brown-fg: var(--color-text-teal);
+  --tag-gray-bg: var(--color-background-gray);
+  --tag-gray-fg: var(--color-text-gray);
 }
 
-/* Dark: the same scale from the other end. The primary is blue-400 with slate
-   ink (7.0:1) rather than blue-600 with white, because dark mode wants lighter
-   tonal variants, not inverted ones, and blue-400 is also what a link needs to
-   read against slate-900. Inputs stay slate-500 (3.75:1). */
-.dark {
-  --background: #0f172a;
-  --foreground: #f8fafc;
-  --card: #1e293b;
-  --card-foreground: #f8fafc;
-  --popover: #1e293b;
-  --popover-foreground: #f8fafc;
-  --primary: #60a5fa;
-  --primary-foreground: #0f172a;
-  --secondary: #334155;
-  --secondary-foreground: #f8fafc;
-  --muted: #1e293b;
-  --muted-foreground: #94a3b8;
-  --accent: #273449;
-  --accent-foreground: #f8fafc;
-  --destructive: #dc2626;
-  --success: #34d399;
-  --success-foreground: #0f172a;
-  --border: #334155;
-  --input: #64748b;
-  --ring: #60a5fa;
-  --chart-1: #60a5fa;
-  --chart-2: #34d399;
-  --chart-3: #fbbf24;
-  --chart-4: #f87171;
-  --chart-5: #94a3b8;
-  --sidebar: #1e293b;
-  --sidebar-foreground: #cbd5e1;
-  --sidebar-primary: #60a5fa;
-  --sidebar-primary-foreground: #0f172a;
-  --sidebar-accent: #334155;
-  --sidebar-accent-foreground: #f8fafc;
-  --sidebar-border: #334155;
-  --sidebar-ring: #60a5fa;
-
-  /* Status tags: 950 field, 300 ink. Every pair measures 8:1 or better. */
-  --tag-red-bg: #450a0a;
-  --tag-red-fg: #fca5a5;
-  --tag-orange-bg: #431407;
-  --tag-orange-fg: #fdba74;
-  --tag-yellow-bg: #451a03;
-  --tag-yellow-fg: #fcd34d;
-  --tag-green-bg: #052e16;
-  --tag-green-fg: #86efac;
-  --tag-blue-bg: #172554;
-  --tag-blue-fg: #93c5fd;
-  --tag-purple-bg: #2e1065;
-  --tag-purple-fg: #c4b5fd;
-  --tag-pink-bg: #500724;
-  --tag-pink-fg: #f9a8d4;
-  --tag-brown-bg: #2b1810;
-  --tag-brown-fg: #d6b9a5;
-  --tag-gray-bg: #1e293b;
-  --tag-gray-fg: #cbd5e1;
+body {
+  background: var(--color-background-body);
+  color: var(--color-text-primary);
+  font-family: var(--font-family-body);
+  -webkit-font-smoothing: antialiased;
 }
 
-@layer base {
-  * {
-    @apply border-border outline-ring/50;
-  }
-  body {
-    @apply bg-background text-foreground;
-  }
-  html {
-    @apply font-sans;
-    -webkit-font-smoothing: antialiased;
-  }
+/* Tailwind v4 stopped giving buttons a pointer cursor. Everything clickable
+   gets one; disabled controls keep the arrow, because they are not
+   clickable. */
+button:not(:disabled),
+[role="button"]:not([aria-disabled="true"]) {
+  cursor: pointer;
+}
 
-  /* Headings take the pairing's display face. Done once here so every page
-     and section heading follows the system without each file being touched. */
-  h1,
-  h2,
-  h3,
-  h4 {
-    font-family: var(--font-heading);
-  }
+tbody,
+td {
+  font-variant-numeric: tabular-nums;
+}
 
-  /* Tailwind v4 stopped giving buttons a pointer cursor, and the skill's
-     checklist wants one on everything clickable. Disabled controls keep the
-     arrow, because they are not clickable. */
-  button:not(:disabled),
-  [role="button"]:not([aria-disabled="true"]) {
-    cursor: pointer;
-  }
-
-  /* Browser surfaces carry the design too. */
-  ::selection {
-    background: color-mix(in oklab, var(--primary) 25%, transparent);
-  }
-  input,
-  textarea {
-    caret-color: var(--primary);
-  }
-  * {
-    scrollbar-width: thin;
-    scrollbar-color: var(--input) transparent;
-  }
-  tbody,
-  td {
-    font-variant-numeric: tabular-nums;
-  }
-
-  /* The checklist's last line. Somebody who asked their OS for less motion
-     gets the final state at once: dialogs appear rather than zoom, the loading
-     placeholder holds still, transitions land. */
-  @media (prefers-reduced-motion: reduce) {
-    *,
-    *::before,
-    *::after {
-      animation-duration: 0.01ms !important;
-      animation-iteration-count: 1 !important;
-      transition-duration: 0.01ms !important;
-      scroll-behavior: auto !important;
-    }
+/* Phones: Astryx sizes its controls for a pointer — 28, 32 and 36px. A thumb
+   on a wet phone needs 44. Every button, field, menu row and nav item grows
+   below the tablet breakpoint, here once rather than at each call site. */
+@media (max-width: 47.9375rem) {
+  .astryx-button,
+  .astryx-text-input,
+  .astryx-text-area-control,
+  .astryx-selector,
+  .astryx-typeahead,
+  .astryx-dropdown-menu-item,
+  .astryx-selector-option-row,
+  .astryx-side-nav-item,
+  .astryx-tab {
+    min-height: 44px;
   }
 }
 
 /* Phones: the text links that open a row — a swimmer's name in a list, a
    class on the deck screen — are one line of 14px text, which is a hard
    thing to hit with a thumb. Padding in and the same margin out gives each
-   one a 32px tap area without moving a pixel of the layout. Buttons and the
-   tab strips are not text links and keep their own sizes. */
+   one a 32px tap area without moving a pixel of the layout. */
 @media (max-width: 47.9375rem) {
   main :is(td, p, dd, span) > a[href]:not([data-slot="button"]) {
     display: inline-block;
     padding-block: 0.5rem;
     margin-block: -0.5rem;
+  }
+}
+
+/* Somebody who asked their OS for less motion gets the final state at once:
+   dialogs appear rather than zoom, transitions land. */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
   }
 }

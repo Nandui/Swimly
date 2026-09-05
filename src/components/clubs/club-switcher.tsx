@@ -1,18 +1,10 @@
 "use client";
 
 import * as React from "react";
-import { toast } from "sonner";
-import { Building2, Check, ChevronsUpDown } from "lucide-react";
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuLabel,
-  DropdownMenuSeparator,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
+import { Building2, Check } from "lucide-react";
+import { DropdownMenu } from "@astryxdesign/core/DropdownMenu";
 import { switchClub } from "@/lib/clubs/actions/clubs";
-import { cn } from "@/lib/utils";
+import { toast } from "@/lib/toast";
 
 type Club = { id: string; name: string };
 
@@ -48,66 +40,46 @@ export function ClubSwitcher({
   }
 
   return (
-    <DropdownMenu>
-      <DropdownMenuTrigger
-        disabled={pending}
-        aria-label={`Club: ${club.name}. ${several ? "Switch club" : "The only club"}`}
-        title={collapsed ? club.name : undefined}
-        className={cn(
-          "flex items-center gap-2 rounded-md border border-sidebar-border bg-background text-left transition-colors hover:bg-sidebar-accent disabled:opacity-60",
-          "outline-none focus-visible:ring-[3px] focus-visible:ring-sidebar-ring/50",
-          collapsed
-            ? "size-9 justify-center"
-            : compact
-              ? "h-10 min-w-0 max-w-[11rem] px-2"
-              : "w-full px-2.5 py-2"
-        )}
-      >
-        <Building2 className="size-4 shrink-0 text-primary" strokeWidth={2} />
-        {collapsed ? null : compact ? (
-          <>
-            <span className="min-w-0 flex-1 truncate text-[13px] font-semibold text-foreground">
-              {pending ? "Switching…" : club.name}
-            </span>
-            {several ? (
-              <ChevronsUpDown className="size-3.5 shrink-0 text-muted-foreground" />
-            ) : null}
-          </>
-        ) : (
-          <>
-            <span className="min-w-0 flex-1">
-              <span className="block text-[10px] font-semibold tracking-wide text-muted-foreground uppercase">
-                Working in
-              </span>
-              <span className="block truncate text-[13px] font-semibold text-foreground">
-                {pending ? "Switching…" : club.name}
-              </span>
-            </span>
-            {several ? (
-              <ChevronsUpDown className="size-4 shrink-0 text-muted-foreground" />
-            ) : null}
-          </>
-        )}
-      </DropdownMenuTrigger>
-      <DropdownMenuContent align="start" className="w-64">
-        <DropdownMenuLabel className="text-xs font-normal text-muted-foreground">
-          {several ? "Switch club" : "The only club"}
-        </DropdownMenuLabel>
-        <DropdownMenuSeparator />
-        {clubs.map((option) => {
-          const current = option.id === club.id;
-          return (
-            <DropdownMenuItem
-              key={option.id}
-              onSelect={() => choose(option.id)}
-              className={cn(current && "font-medium")}
-            >
-              <span className="min-w-0 flex-1 truncate">{option.name}</span>
-              {current ? <Check className="size-4 text-primary" aria-label="Current" /> : null}
-            </DropdownMenuItem>
-          );
-        })}
-      </DropdownMenuContent>
-    </DropdownMenu>
+    <DropdownMenu
+      hasChevron={several && !collapsed}
+      placement="below"
+      alignment="start"
+      menuWidth={256}
+      button={{
+        // The accessible name says what the control is; the visible text is
+        // the club, which is the thing that must always be readable.
+        label: `Club: ${club.name}. ${several ? "Switch club" : "The only club"}`,
+        // A long club name in the phone bar must not push the drawer toggle
+        // off the screen, so the visible text is cut with an ellipsis there;
+        // the full name is in the accessible label and the menu.
+        children: (
+          <span className={compact ? "block max-w-[40vw] truncate" : undefined}>
+            {pending ? "Switching…" : club.name}
+          </span>
+        ),
+        icon: <Building2 className="size-4" aria-hidden />,
+        isIconOnly: collapsed,
+        tooltip: collapsed ? club.name : undefined,
+        variant: "secondary",
+        size: compact ? "sm" : "md",
+        width: collapsed || compact ? undefined : "100%",
+        isDisabled: pending,
+      }}
+      items={[
+        {
+          type: "section",
+          title: several ? "Switch club" : "The only club",
+          items: clubs.map((option) => ({
+            id: option.id,
+            label: option.name,
+            onClick: () => choose(option.id),
+            endContent:
+              option.id === club.id ? (
+                <Check className="size-4" aria-label="Current" />
+              ) : undefined,
+          })),
+        },
+      ]}
+    />
   );
 }

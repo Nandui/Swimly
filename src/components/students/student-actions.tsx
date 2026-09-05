@@ -5,13 +5,7 @@ import { ActionButton, ConfirmAction } from "@/components/confirm-action";
 import { Field, FormDialog } from "@/components/form-dialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
+import { Select } from "@/components/ui/select";
 import { Switch } from "@/components/ui/switch";
 import { Textarea } from "@/components/ui/textarea";
 // Enum *values* come from `enums`, never from `client` — that entry point
@@ -84,18 +78,15 @@ function StudentFields({ student }: { student?: StudentDetail }) {
           />
         </Field>
         <Field label="Status" htmlFor="status">
-          <Select name="status" defaultValue={student?.status ?? "ACTIVE"}>
-            <SelectTrigger id="status" className="w-full">
-              <SelectValue />
-            </SelectTrigger>
-            <SelectContent>
-              {Object.values(StudentStatus).map((value) => (
-                <SelectItem key={value} value={value}>
-                  {STUDENT_STATUS_META[value].label}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
+          <Select
+            id="status"
+            name="status"
+            defaultValue={student?.status ?? "ACTIVE"}
+            options={Object.values(StudentStatus).map((value) => ({
+              value,
+              label: STUDENT_STATUS_META[value].label,
+            }))}
+          />
         </Field>
       </div>
 

@@ -1,6 +1,8 @@
 import type { LucideIcon } from "lucide-react";
+import { EmptyState as AstryxEmptyState } from "@astryxdesign/core/EmptyState";
 
-/** Friendly Notion-style empty state: one line + a primary action. */
+/** A place with nothing in it yet: one line saying what, one saying what to
+ *  do, and the action that does it. */
 export function EmptyState({
   icon: Icon,
   title,
@@ -13,11 +15,11 @@ export function EmptyState({
   action?: React.ReactNode;
 }) {
   return (
-    <div className="flex flex-col items-center justify-center rounded-md border border-dashed px-6 py-14 text-center">
-      {Icon ? <Icon className="mb-3 size-6 text-muted-foreground/60" strokeWidth={1.5} /> : null}
-      <p className="text-sm font-medium text-foreground">{title}</p>
-      {hint ? <p className="mt-1 max-w-sm text-sm text-muted-foreground">{hint}</p> : null}
-      {action ? <div className="mt-4">{action}</div> : null}
-    </div>
+    <AstryxEmptyState
+      icon={Icon ? <Icon className="size-6" strokeWidth={1.5} aria-hidden /> : undefined}
+      title={title}
+      description={hint}
+      actions={action}
+    />
   );
 }

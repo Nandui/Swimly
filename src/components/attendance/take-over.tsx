@@ -2,19 +2,14 @@
 
 import * as React from "react";
 import { useRouter } from "next/navigation";
-import { toast } from "sonner";
 import { UserRoundCheck } from "lucide-react";
-import {
-  AlertDialog,
-  AlertDialogCancel,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle,
-} from "@/components/ui/alert-dialog";
-import { Button } from "@/components/ui/button";
+import { Banner } from "@astryxdesign/core/Banner";
+import { Button } from "@astryxdesign/core/Button";
+import { Dialog, DialogHeader } from "@astryxdesign/core/Dialog";
+import { HStack, VStack } from "@astryxdesign/core/Stack";
+import { Text } from "@astryxdesign/core/Text";
 import { takeOverClass } from "@/lib/attendance/actions/cover";
+import { toast } from "@/lib/toast";
 
 /** The question asked when somebody opens a class that is not theirs: are
  *  you taking it? Asked once, up front, because the answer changes what the
@@ -87,51 +82,61 @@ export function TakeOver({
   return (
     <>
       {mayMarkAnyway ? null : (
-        <div className="flex flex-wrap items-center justify-between gap-x-4 gap-y-2 rounded bg-(--tag-yellow-bg) px-2.5 py-1.5 text-[13px] text-(--tag-yellow-fg)">
-          <p>This is {whose}. You can read it, and mark it once you have taken it over.</p>
-          <Button type="button" size="sm" variant="outline" onClick={() => setOpen(true)}>
-            <UserRoundCheck className="size-4" />
-            Take over this class
-          </Button>
-        </div>
+        <Banner
+          status="warning"
+          title={`This is ${whose}.`}
+          description="You can read it, and mark it once you have taken it over."
+          collapsible={false}
+          endContent={
+            <Button
+              type="button"
+              label="Take over this class"
+              variant="secondary"
+              size="sm"
+              icon={<UserRoundCheck className="size-4" aria-hidden />}
+              onClick={() => setOpen(true)}
+            />
+          }
+        />
       )}
 
-      <AlertDialog open={open} onOpenChange={setOpen}>
-        <AlertDialogContent>
-          <AlertDialogHeader>
-            <AlertDialogTitle>Taking over {classLabel}?</AlertDialogTitle>
-            <AlertDialogDescription>
-              {instructorName ? `It is ${instructorName}'s class.` : "Nobody is assigned to it."}{" "}
-              Say yes, and the record for {dateLabel} says you took this class
-              {instructorName ? `, not ${instructorName}` : ""}. Competencies you mark carry your
-              name too.
-            </AlertDialogDescription>
-          </AlertDialogHeader>
-          <AlertDialogFooter>
-            <AlertDialogCancel asChild>
-              <Button type="button" variant="outline" size="sm">
-                {mayMarkAnyway ? "Cancel" : "No, just looking"}
-              </Button>
-            </AlertDialogCancel>
+      <Dialog isOpen={open} onOpenChange={setOpen} purpose="form" width={448}>
+        <VStack gap={4}>
+          <DialogHeader title={`Taking over ${classLabel}?`} onOpenChange={setOpen} />
+          <Text as="p" display="block">
+            {instructorName ? `It is ${instructorName}'s class.` : "Nobody is assigned to it."}{" "}
+            Say yes, and the record for {dateLabel} says you took this class
+            {instructorName ? `, not ${instructorName}` : ""}. Competencies you mark carry your
+            name too.
+          </Text>
+          <HStack gap={2} hAlign="end" wrap="wrap">
+            <Button
+              type="button"
+              label={mayMarkAnyway ? "Cancel" : "No, just looking"}
+              variant="secondary"
+              onClick={() => setOpen(false)}
+            />
             {mayMarkAnyway && instructorName ? (
               <Button
                 type="button"
-                variant="outline"
-                size="sm"
+                label={`Just recording it for ${instructorName}`}
+                variant="secondary"
                 onClick={() => {
                   remember();
                   setOpen(false);
                 }}
-              >
-                Just recording it for {instructorName}
-              </Button>
+              />
             ) : null}
-            <Button type="button" size="sm" onClick={confirm} disabled={pending}>
-              {pending ? "Working…" : "Yes, I am taking it"}
-            </Button>
-          </AlertDialogFooter>
-        </AlertDialogContent>
-      </AlertDialog>
+            <Button
+              type="button"
+              label={pending ? "Working…" : "Yes, I am taking it"}
+              variant="primary"
+              onClick={confirm}
+              isLoading={pending}
+            />
+          </HStack>
+        </VStack>
+      </Dialog>
     </>
   );
 }

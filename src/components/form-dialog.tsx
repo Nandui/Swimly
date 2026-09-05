@@ -1,20 +1,19 @@
 "use client";
 
 import * as React from "react";
-import { toast } from "sonner";
+import { Banner } from "@astryxdesign/core/Banner";
+import { Button } from "@astryxdesign/core/Button";
+import { Dialog, DialogHeader } from "@astryxdesign/core/Dialog";
+import { Field as AstryxField } from "@astryxdesign/core/Field";
+import { HStack, VStack } from "@astryxdesign/core/Stack";
 import type { ActionResult } from "@/lib/action-result";
-import { cn } from "@/lib/utils";
-import { Button } from "@/components/ui/button";
-import {
-  Dialog,
-  DialogClose,
-  DialogContent,
-  DialogDescription,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-  DialogTrigger,
-} from "@/components/ui/dialog";
+import { toast } from "@/lib/toast";
+import { Input } from "@/components/ui/input";
+import { Select } from "@/components/ui/select";
+import { Switch } from "@/components/ui/switch";
+import { Textarea } from "@/components/ui/textarea";
+import { SearchablePicker } from "@/components/searchable-picker";
+import { StudentPicker } from "@/components/students/student-search";
 
 /** Every form dialog in the app, so the failure behaviour is written once.
  *
@@ -27,6 +26,17 @@ import {
  *  React 19.2 a state update made *after* an `await` inside a transition is no
  *  longer part of it, so without the wrapper the dialog closes outside the
  *  pending state and flashes. The toast needs no such wrapper. */
+
+/** The old Tailwind widths, kept as the prop's vocabulary so no call site
+ *  had to change; Astryx takes pixels. */
+const WIDTHS: Record<string, number> = {
+  "sm:max-w-sm": 384,
+  "sm:max-w-md": 448,
+  "sm:max-w-lg": 512,
+  "sm:max-w-xl": 576,
+  "sm:max-w-2xl": 672,
+};
+
 export function FormDialog({
   trigger,
   title,
@@ -50,11 +60,11 @@ export function FormDialog({
   const [open, setOpen] = React.useState(false);
   const [error, setError] = React.useState<string | null>(null);
   const [pending, startTransition] = React.useTransition();
-  // The error is one sentence about the form rather than a flag on a field,
-  // so the form is what it describes. `role="alert"` announces it when it
-  // appears; `aria-describedby` keeps it attached when focus returns to a
-  // control and the person asks what is wrong.
-  const errorId = React.useId();
+
+  function close() {
+    setOpen(false);
+    setError(null);
+  }
 
   function handleSubmit(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -64,10 +74,7 @@ export function FormDialog({
       const result = await submit(formData);
       if (result.ok) {
         toast.success(successMessage);
-        startTransition(() => {
-          setError(null);
-          setOpen(false);
-        });
+        startTransition(() => close());
       } else {
         startTransition(() => setError(result.error));
       }
@@ -75,54 +82,77 @@ export function FormDialog({
   }
 
   return (
-    <Dialog
-      open={open}
-      onOpenChange={(next) => {
-        setOpen(next);
-        if (!next) setError(null);
-      }}
-    >
-      <DialogTrigger asChild>{trigger}</DialogTrigger>
-      <DialogContent className={cn("max-h-[85svh] overflow-y-auto", width)}>
-        <form
-          onSubmit={handleSubmit}
-          className="space-y-4"
-          aria-describedby={error ? errorId : undefined}
-        >
-          <DialogHeader>
-            <DialogTitle>{title}</DialogTitle>
-            {description ? <DialogDescription>{description}</DialogDescription> : null}
-          </DialogHeader>
+    <>
+      <Trigger onOpen={() => setOpen(true)}>{trigger}</Trigger>
+      <Dialog
+        isOpen={open}
+        onOpenChange={(next) => (next ? setOpen(true) : close())}
+        purpose="form"
+        width={WIDTHS[width] ?? 448}
+      >
+        <form onSubmit={handleSubmit}>
+          <VStack gap={4}>
+            <DialogHeader title={title} subtitle={description} onOpenChange={() => close()} />
 
-          <div className="space-y-3">{children}</div>
+            <VStack gap={3}>{children}</VStack>
 
-          {error ? (
-            <p
-              id={errorId}
-              role="alert"
-              className="rounded bg-(--tag-red-bg) px-2.5 py-1.5 text-[13px] text-(--tag-red-fg)"
-            >
-              {error}
-            </p>
-          ) : null}
+            {error ? <Banner status="error" title={error} collapsible={false} /> : null}
 
-          <DialogFooter>
-            <DialogClose asChild>
-              <Button type="button" variant="outline" size="sm">
-                Cancel
-              </Button>
-            </DialogClose>
-            <Button type="submit" size="sm" disabled={pending}>
-              {pending ? "Saving…" : submitLabel}
-            </Button>
-          </DialogFooter>
+            <HStack gap={2} hAlign="end">
+              <Button type="button" label="Cancel" variant="secondary" onClick={close} />
+              <Button
+                type="submit"
+                label={pending ? "Saving…" : submitLabel}
+                variant="primary"
+                isLoading={pending}
+              />
+            </HStack>
+          </VStack>
         </form>
-      </DialogContent>
-    </Dialog>
+      </Dialog>
+    </>
   );
 }
 
-/** A labelled field. 13px medium label over the control, per the type scale. */
+/** Opens the dialog from whatever element the caller passed as the trigger:
+ *  its own click handler still runs, then the dialog opens. */
+export function Trigger({
+  children,
+  onOpen,
+}: {
+  children: React.ReactNode;
+  onOpen: () => void;
+}) {
+  if (React.isValidElement<{ onClick?: React.MouseEventHandler }>(children)) {
+    const inner = children.props.onClick;
+    return React.cloneElement(children, {
+      onClick: (event: React.MouseEvent) => {
+        inner?.(event);
+        if (!event.defaultPrevented) onOpen();
+      },
+    });
+  }
+  return (
+    <span onClick={onOpen} className="contents">
+      {children}
+    </span>
+  );
+}
+
+/** The controls that draw their own label when handed one. Everything else
+ *  is wrapped in Astryx's Field, which draws the label for it. */
+const LABELLED = new Set<React.ElementType>([
+  Input,
+  Textarea,
+  Select,
+  Switch,
+  SearchablePicker,
+  StudentPicker,
+]);
+
+/** A labelled field. The label is handed to the control when it knows what
+ *  to do with one, so the label, the hint and the control are one Astryx
+ *  field with the right spacing and association. */
 export function Field({
   label,
   htmlFor,
@@ -134,13 +164,20 @@ export function Field({
   hint?: string;
   children: React.ReactNode;
 }) {
+  if (
+    React.isValidElement<{ label?: string; description?: string; id?: string }>(children) &&
+    LABELLED.has(children.type as React.ElementType)
+  ) {
+    return React.cloneElement(children, {
+      label,
+      description: hint,
+      id: children.props.id ?? htmlFor,
+    });
+  }
+
   return (
-    <div className="space-y-1.5">
-      <label htmlFor={htmlFor} className="block text-[13px] font-medium text-foreground">
-        {label}
-      </label>
+    <AstryxField label={label} inputID={htmlFor} description={hint} width="100%">
       {children}
-      {hint ? <p className="text-xs text-muted-foreground">{hint}</p> : null}
-    </div>
+    </AstryxField>
   );
 }

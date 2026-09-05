@@ -2,7 +2,7 @@
 
 import * as React from "react";
 import Link from "next/link";
-import { toast } from "sonner";
+import { toast } from "@/lib/toast";
 import { Check, ChevronLeft, ChevronRight, Loader2 } from "lucide-react";
 import { OFFLINE_MESSAGE, withTimeout } from "@/components/attendance/register-form";
 import { Tag } from "@/components/ui-kit/tag";

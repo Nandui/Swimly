@@ -5,13 +5,7 @@ import { ConfirmAction } from "@/components/confirm-action";
 import { Field, FormDialog } from "@/components/form-dialog";
 import { StudentPicker } from "@/components/students/student-search";
 import { Button } from "@/components/ui/button";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
+import { Select } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
 import {
   bookStudent,
@@ -143,18 +137,13 @@ export function RecordOutcome({
         htmlFor="levelId"
         hint="From now on they can be enrolled at this level, or any below it, without a reason being asked for."
       >
-        <Select name="levelId" defaultValue={booking.outcomeLevel?.id}>
-          <SelectTrigger id="levelId" className="w-full">
-            <SelectValue placeholder="Pick a level" />
-          </SelectTrigger>
-          <SelectContent>
-            {session.programme.levels.map((level) => (
-              <SelectItem key={level.id} value={level.id}>
-                {level.name}
-              </SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
+        <Select
+          id="levelId"
+          name="levelId"
+          defaultValue={booking.outcomeLevel?.id}
+          placeholder="Pick a level"
+          options={session.programme.levels.map((level) => ({ value: level.id, label: level.name }))}
+        />
       </Field>
       <Field label="Note" htmlFor="note" hint="What you saw. It goes on their record.">
         <Textarea

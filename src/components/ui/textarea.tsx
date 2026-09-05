@@ -1,18 +1,61 @@
-import * as React from "react"
+"use client";
 
-import { cn } from "@/lib/utils"
+import * as React from "react";
+import { TextArea } from "@astryxdesign/core/TextArea";
 
-function Textarea({ className, ...props }: React.ComponentProps<"textarea">) {
+/** A multi-line field on Astryx's TextArea, posting through FormData like the
+ *  native one it replaces. See `Input` for the shape. */
+export type TextareaProps = Omit<React.ComponentProps<"textarea">, "value" | "defaultValue"> & {
+  label?: string;
+  description?: string;
+  value?: string;
+  defaultValue?: string | null;
+};
+
+export function Textarea({
+  id,
+  name,
+  label,
+  description,
+  value,
+  defaultValue,
+  onChange,
+  placeholder,
+  required,
+  disabled,
+  readOnly,
+  rows = 3,
+  maxLength,
+  autoFocus,
+  className,
+  ...rest
+}: TextareaProps) {
+  const [inner, setInner] = React.useState(defaultValue ?? "");
+  const controlled = value !== undefined;
+  const ariaLabel = (rest as { "aria-label"?: string })["aria-label"];
+  const text = label ?? ariaLabel ?? placeholder ?? name ?? "Field";
+
   return (
-    <textarea
-      data-slot="textarea"
-      className={cn(
-        "flex field-sizing-content min-h-16 w-full rounded-lg border border-input bg-transparent px-2.5 py-2 text-base transition-colors outline-none placeholder:text-muted-foreground focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50 disabled:cursor-not-allowed disabled:bg-input/50 disabled:opacity-50 aria-invalid:border-destructive aria-invalid:ring-3 aria-invalid:ring-destructive/20 md:text-sm dark:bg-input/30 dark:disabled:bg-input/80 dark:aria-invalid:border-destructive/50 dark:aria-invalid:ring-destructive/40",
-        className
-      )}
-      {...props}
+    <TextArea
+      label={text}
+      isLabelHidden={label === undefined}
+      description={description}
+      value={controlled ? value : inner}
+      onChange={(next, event) => {
+        if (!controlled) setInner(next);
+        onChange?.(event);
+      }}
+      htmlName={name}
+      placeholder={placeholder}
+      rows={rows}
+      maxLength={maxLength}
+      isRequired={required}
+      isDisabled={disabled}
+      isReadOnly={readOnly}
+      hasAutoFocus={autoFocus}
+      width="100%"
+      className={className}
+      id={id}
     />
-  )
+  );
 }
-
-export { Textarea }

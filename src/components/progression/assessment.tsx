@@ -1,7 +1,7 @@
 "use client";
 
 import * as React from "react";
-import { toast } from "sonner";
+import { toast } from "@/lib/toast";
 import { Check, GraduationCap, Loader2, Undo2 } from "lucide-react";
 import { Field, FormDialog } from "@/components/form-dialog";
 import { Tag } from "@/components/ui-kit/tag";

@@ -1,6 +1,7 @@
+import { Heading, Text } from "@astryxdesign/core/Text";
 import { cn } from "@/lib/utils";
 
-/** Notion-style page opening: plain H1, quiet description, actions right. */
+/** The page's opening: one H1, a quiet description line, actions right. */
 export function PageHeader({
   title,
   description,
@@ -15,11 +16,11 @@ export function PageHeader({
   return (
     <div className={cn("flex flex-wrap items-start justify-between gap-x-6 gap-y-3", className)}>
       <div className="min-w-0">
-        <h1 className="text-[26px] font-bold leading-tight tracking-tight text-foreground">
-          {title}
-        </h1>
+        <Heading level={1}>{title}</Heading>
         {description ? (
-          <p className="mt-1 max-w-prose text-sm text-muted-foreground">{description}</p>
+          <Text as="p" type="body" color="secondary" display="block" className="mt-1 max-w-prose">
+            {description}
+          </Text>
         ) : null}
       </div>
       {/* Wraps: a course page carries five actions, which is wider than a
