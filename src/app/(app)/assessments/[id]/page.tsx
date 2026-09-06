@@ -249,7 +249,7 @@ function BookingTable({
               </TableCell>
               {actions ? (
                 <TableCell>
-                  <HStack gap={1} vAlign="center" hAlign="end">
+                  <HStack gap={1} vAlign="center" hAlign="end" wrap="wrap">
                     {assess && (b.status === "BOOKED" || b.status === "ATTENDED") ? (
                       <RecordOutcome booking={b} session={session} />
                     ) : null}

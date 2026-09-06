@@ -213,7 +213,7 @@ function SessionTable({
               {manage ? (
                 <TableCell>
                   {s.cancelledAt ? null : (
-                    <HStack gap={1} vAlign="center" hAlign="end">
+                    <HStack gap={1} vAlign="center" hAlign="end" wrap="wrap">
                       <EditSession
                         session={s}
                         programmes={programmes}

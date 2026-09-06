@@ -152,7 +152,7 @@ function PeopleTable({
                 </Text>
               </TableCell>
               <TableCell>
-                <HStack gap={1} vAlign="center" hAlign="end">
+                <HStack gap={1} vAlign="center" hAlign="end" wrap="wrap">
                   <ResetPersonPassword person={person} />
                   <EditPerson person={person} roles={roles} />
                   <SetPersonActive person={person} />

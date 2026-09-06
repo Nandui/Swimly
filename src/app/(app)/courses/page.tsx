@@ -248,7 +248,7 @@ function CourseTable({
               </TableCell>
               {admin ? (
                 <TableCell>
-                  <HStack gap={1} vAlign="center" hAlign="end">
+                  <HStack gap={1} vAlign="center" hAlign="end" wrap="wrap">
                     <EditCourse course={course} levels={levels} instructors={instructors} />
                     <ArchiveCourse course={course} />
                   </HStack>

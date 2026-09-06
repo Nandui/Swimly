@@ -166,7 +166,14 @@ Astryx's own collapse button, so it is there when the nav is a rail too. The
 shell owns the collapsed state and drops the two-line account row while the
 nav is a rail, since Astryx collapses its items but not our row. There is
 no second `Layout` inside the shell — Astryx says one per shell — so the
-page is capped at 1152px with a `Center` and a stack. AppShell owns the
+page is capped at 1152px with a `Center` and a stack. Astryx's tables,
+dividers and sections bleed to the nearest container's padding edge, which
+would be the shell's, outside that column; the column zeroes the two
+container-padding variables the bleed reads, so a table's edges line up with
+the cards and headings beside it (its cell text is then inset by the cell
+padding, as a card's text is by the card's). Row actions in a table cell are
+an `HStack` that wraps, because four 44px buttons do not fit a phone-width
+cell and a cell clips. AppShell owns the
 skip link and the `<main>` landmark; pages start at their H1. The dev
 build's "view as" bar is a `Banner status="warning" container="section"`
 in the shell's banner slot.

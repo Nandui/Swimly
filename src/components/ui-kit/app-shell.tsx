@@ -150,7 +150,17 @@ export function AppShell(props: AppShellProps) {
           never nested — so the page is capped and centred with Center and a
           stack rather than a second Layout. */}
       <Center axis="horizontal">
-        <VStack width="100%" maxWidth={1152}>
+        {/* Astryx's tables, dividers and sections bleed to the nearest
+            container's padding edge — the shell's, 16px outside this column —
+            so a table ran wider than the cards beside it. The column zeroes
+            the two container-padding variables that bleed reads, which is
+            the same thing a padded Card or Section does for its own
+            children: it says "the edge is here". */}
+        <VStack
+          width="100%"
+          maxWidth={1152}
+          className="[--container-padding-inline-start:0px] [--container-padding-inline-end:0px]"
+        >
           {props.children}
         </VStack>
       </Center>

@@ -262,7 +262,7 @@ function RosterTable({
               </TableCell>
               {manage ? (
                 <TableCell>
-                  <HStack gap={1} vAlign="center" hAlign="end">
+                  <HStack gap={1} vAlign="center" hAlign="end" wrap="wrap">
                     {entry.status === "WAITLISTED" ? (
                       <PromoteFromWaitlist enrolment={entry} />
                     ) : null}

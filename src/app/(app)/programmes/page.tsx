@@ -124,7 +124,7 @@ function ProgrammeTable({ programmes, archived }: { programmes: Row[]; archived?
               </Text>
             </TableCell>
             <TableCell>
-              <HStack gap={1} vAlign="center" hAlign="end">
+              <HStack gap={1} vAlign="center" hAlign="end" wrap="wrap">
                 {archived ? null : (
                   <MoveProgramme
                     programme={programme}
