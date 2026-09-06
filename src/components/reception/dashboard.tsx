@@ -146,7 +146,7 @@ export function ReceptionDashboard({ clubName, dateLabel, now, courses, student,
         <section aria-labelledby="reception-shortcuts" className="min-w-0 xl:col-span-5">
           <Card height="100%" padding={5}>
             <VStack gap={2}>
-              <Heading level={2} id="reception-shortcuts">Plan a booking</Heading>
+              <Heading level={2} id="reception-shortcuts">Quick Links</Heading>
               {bookingLinks.map(link => (
                 <Button key={link.href} href={link.href} label={link.label}
                   variant="secondary" width="100%" className="min-h-11"

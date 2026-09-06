@@ -5,7 +5,6 @@ import {
   CalendarDays,
   CalendarHeart,
   ClipboardCheck,
-  CircleUser,
   Home,
   Headset,
   KeyRound,
@@ -39,10 +38,6 @@ export const NAV_ITEMS: AppNavItem[] = [
   // Which clubs exist. Which one you are in is the switcher above the nav.
   { href: "/clubs", label: "Clubs", icon: Building2, screen: "clubs" },
   { href: "/activity", label: "Activity", icon: Activity, screen: "activity" },
-  // Last, and open to everyone: it is the one page a read-only account can
-  // write from, and the only way an admin-set password stops being one the
-  // admin knows.
-  { href: "/account", label: "Account", icon: CircleUser },
 ];
 
 /** Takes the already-resolved set of screens this person can open, so the

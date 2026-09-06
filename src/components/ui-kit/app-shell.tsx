@@ -2,11 +2,12 @@
 
 import * as React from "react";
 import { usePathname, useSearchParams } from "next/navigation";
-import { LogOut, MoreHorizontal, Waves, type LucideIcon } from "lucide-react";
+import { ChevronUp, CircleUser, LogOut, Waves, type LucideIcon } from "lucide-react";
 import { AppShell as AstryxAppShell } from "@astryxdesign/core/AppShell";
 import { Avatar } from "@astryxdesign/core/Avatar";
 import { Badge } from "@astryxdesign/core/Badge";
-import { DropdownMenu } from "@astryxdesign/core/DropdownMenu";
+import { Button } from "@astryxdesign/core/Button";
+import { Popover } from "@astryxdesign/core/Popover";
 import { Icon } from "@astryxdesign/core/Icon";
 import { Center } from "@astryxdesign/core/Center";
 import { NavIcon } from "@astryxdesign/core/NavIcon";
@@ -15,7 +16,7 @@ import {
   SideNavItem,
   SideNavSection,
 } from "@astryxdesign/core/SideNav";
-import { HStack, StackItem, VStack } from "@astryxdesign/core/Stack";
+import { HStack, VStack } from "@astryxdesign/core/Stack";
 import { Text } from "@astryxdesign/core/Text";
 import { TopNav, TopNavHeading } from "@astryxdesign/core/TopNav";
 
@@ -72,10 +73,8 @@ export type AppShellProps = {
 
 export function AppShell(props: AppShellProps) {
   const pathname = usePathname();
-  // The rail: Astryx collapses its items to icons by itself, but the account
-  // row is ours, so the shell holds the state and hides the row when the
-  // nav is a rail. The account menu lives in the footer icon bar, which
-  // Astryx keeps in both states beside its own collapse button.
+  // The account menu uses the name row when expanded and a footer icon
+  // when collapsed, so it remains reachable in the rail.
   const [collapsed, setCollapsed] = React.useState(false);
   useScrollToTopOnNavigate();
 
@@ -117,8 +116,8 @@ export function AppShell(props: AppShellProps) {
             isCollapsed: collapsed,
             onCollapsedChange: setCollapsed,
           }}
-          footer={collapsed ? undefined : <UserRow {...props} />}
-          footerIcons={<AccountMenu {...props} />}
+          footer={collapsed ? undefined : <AccountMenu {...props} />}
+          footerIcons={collapsed ? <AccountMenu {...props} compact /> : undefined}
         >
           <SideNavSection title="Screens" isHeaderHidden>
             {props.items.map((item) => {
@@ -180,64 +179,47 @@ function useScrollToTopOnNavigate() {
   }, [pathname, search]);
 }
 
-/** Who is signed in. Name and role on two lines beside an initials avatar;
- *  shown only while the nav is wide enough to hold two lines of text. */
-function UserRow({
-  userName,
-  userSubtitle,
-}: Pick<AppShellProps, "userName" | "userSubtitle">) {
-  return (
-    <HStack gap={2} vAlign="center" paddingInline={2} paddingBlock={1}>
-      <Avatar name={userName} size="sm" />
-      <StackItem size="fill">
-        <VStack gap={0}>
-          <Text weight="medium" maxLines={1} hasTruncateTooltip={false}>
-            {userName}
-          </Text>
-          {userSubtitle ? (
-            <Text type="supporting" maxLines={1} hasTruncateTooltip={false}>
-              {userSubtitle}
-            </Text>
-          ) : null}
-        </VStack>
-      </StackItem>
-    </HStack>
-  );
-}
-
-/** The way out. An icon-only menu in the SideNav's footer icon bar, so it is
- *  there whether the nav is wide or a rail. */
+/** Personal navigation and sign-out share a popover anchored to the name. */
 function AccountMenu({
   userName,
   userSubtitle,
   onSignOut,
-}: Pick<AppShellProps, "userName" | "userSubtitle" | "onSignOut">) {
+  compact = false,
+}: Pick<AppShellProps, "userName" | "userSubtitle" | "onSignOut"> & { compact?: boolean }) {
+  const [open, setOpen] = React.useState(false);
   return (
-    <DropdownMenu
-      hasChevron={false}
+    <Popover
+      label="Account menu"
+      isOpen={open}
+      onOpenChange={setOpen}
       placement="above"
       alignment="start"
-      button={{
-        label: `Account menu: ${userName}`,
-        isIconOnly: true,
-        variant: "ghost",
-        icon: <Icon icon={MoreHorizontal} size="sm" />,
-      }}
-      items={[
-        {
-          type: "section",
-          title: userSubtitle ? `${userName} · ${userSubtitle}` : userName,
-          items: [
-            {
-              id: "sign-out",
-              label: "Sign out",
-              icon: LogOut,
-              onClick: onSignOut,
-              isDisabled: !onSignOut,
-            },
-          ],
-        },
-      ]}
-    />
+      width={240}
+      className={compact ? undefined : "w-full"}
+      content={
+        <VStack gap={2}>
+          <Text weight="medium">{userName}</Text>
+          {userSubtitle ? <Text type="supporting">{userSubtitle}</Text> : null}
+          <Button label="Account" href="/account" variant="ghost" width="100%"
+            icon={<Icon icon={CircleUser} size="sm" />} onClick={() => setOpen(false)} />
+          <Button label="Sign out" variant="ghost" width="100%"
+            icon={<Icon icon={LogOut} size="sm" />} isDisabled={!onSignOut}
+            onClick={() => { setOpen(false); onSignOut?.(); }} />
+        </VStack>
+      }
+    >
+      <Button label={`Account menu: ${userName}`} aria-label={`Account menu: ${userName}`}
+        variant="ghost" width={compact ? undefined : "100%"} isIconOnly={compact}
+        className="min-h-11"
+        icon={compact ? <Icon icon={CircleUser} size="sm" /> : <Avatar name={userName} size="sm" />}
+        endContent={compact ? undefined : <Icon icon={ChevronUp} size="sm" />}>
+        {compact ? undefined : (
+          <VStack as="span" gap={0} className="min-w-0 text-left">
+            <Text weight="medium" maxLines={1} hasTruncateTooltip={false}>{userName}</Text>
+            {userSubtitle ? <Text type="supporting" maxLines={1} hasTruncateTooltip={false}>{userSubtitle}</Text> : null}
+          </VStack>
+        )}
+      </Button>
+    </Popover>
   );
 }
