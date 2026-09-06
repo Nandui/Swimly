@@ -138,7 +138,9 @@ export function AppShell(props: AppShellProps) {
       mobileNav={{ breakpoint: "md" }}
     >
       {/* Centred, 32/40 padding, tighter on phones. */}
-      <div className="mx-auto max-w-6xl px-8 py-10 max-md:px-4 max-md:py-6">{props.children}</div>
+      <VStack maxWidth={1152} paddingInline={8} paddingBlock={10} className="mx-auto max-md:px-4 max-md:py-6">
+        {props.children}
+      </VStack>
     </AstryxAppShell>
   );
 }

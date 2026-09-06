@@ -3,7 +3,7 @@
 import { ArrowUpRight } from "lucide-react";
 import { Field, FormDialog } from "@/components/form-dialog";
 import { SearchablePicker, type PickerOption } from "@/components/searchable-picker";
-import { Button } from "@/components/ui/button";
+import { Button } from "@astryxdesign/core/Button";
 import type { DayOfWeek } from "@/generated/prisma/client";
 import { courseLabel, placesLeft } from "@/lib/courses/constants";
 import { enrolStudent, transferEnrolment } from "@/lib/enrolment/actions/enrolment";
@@ -58,15 +58,7 @@ export function MoveUpToLevel({
   // say why, rather than letting the click through to an error.
   if (targets.length === 0) {
     return (
-      <Button
-        size="sm"
-        variant="outline"
-        disabled
-        title={`No class teaches ${nextLevelName} yet. Add one on the Classes page first.`}
-      >
-        <ArrowUpRight className="size-4" />
-        Move up to {nextLevelName}
-      </Button>
+      <Button label={`Move up to ${nextLevelName}`} variant="secondary" size="sm" isDisabled={true} tooltip={`No class teaches ${nextLevelName} yet. Add one on the Classes page first.`} icon={<ArrowUpRight className="size-4" aria-hidden />} />
     );
   }
 
@@ -83,10 +75,7 @@ export function MoveUpToLevel({
   return (
     <FormDialog
       trigger={
-        <Button size="sm">
-          <ArrowUpRight className="size-4" />
-          Move up to {nextLevelName}
-        </Button>
+        <Button label={`Move up to ${nextLevelName}`} variant="primary" size="sm" icon={<ArrowUpRight className="size-4" aria-hidden />} />
       }
       title={`Move ${studentName} up to ${nextLevelName}`}
       description={

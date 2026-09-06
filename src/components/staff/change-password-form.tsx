@@ -3,7 +3,9 @@
 import * as React from "react";
 import { toast } from "@/lib/toast";
 import { Field } from "@/components/form-dialog";
-import { Button } from "@/components/ui/button";
+import { Banner } from "@astryxdesign/core/Banner";
+import { Button } from "@astryxdesign/core/Button";
+import { HStack } from "@astryxdesign/core/Stack";
 import { Input } from "@/components/ui/input";
 import { changeOwnPassword } from "@/lib/staff/actions/account";
 import { MIN_PASSWORD_LENGTH } from "@/lib/staff/constants";
@@ -79,18 +81,16 @@ export function ChangePasswordForm() {
         />
       </Field>
 
-      {error ? (
-        <p
-          role="alert"
-          className="rounded bg-(--tag-red-bg) px-2.5 py-1.5 text-sm text-(--tag-red-fg)"
-        >
-          {error}
-        </p>
-      ) : null}
+      {error ? <Banner status="error" title={error} collapsible={false} /> : null}
 
-      <Button type="submit" size="sm" disabled={pending}>
-        {pending ? "Saving…" : "Change password"}
-      </Button>
+      <HStack>
+        <Button
+          label={pending ? "Saving…" : "Change password"}
+          variant="primary"
+          type="submit"
+          isLoading={pending}
+        />
+      </HStack>
     </form>
   );
 }

@@ -203,7 +203,7 @@ function BookingTable({
                   {b.student.medicalNotes ? <Tag color="red">Medical</Tag> : null}
                 </HStack>
                 <Text type="supporting" display="block">
-                  <span className="md:hidden">{ageLabel(b.student.dateOfBirth)} · </span>
+                  <Text type="supporting" className="md:hidden">{ageLabel(b.student.dateOfBirth)} · </Text>
                   booked by {b.bookedByName}
                 </Text>
                 {/* The placement column leaves the table on a phone and

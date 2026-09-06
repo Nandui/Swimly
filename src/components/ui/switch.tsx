@@ -16,8 +16,12 @@ export function Switch({
   onCheckedChange,
   disabled,
   className,
+  labelSpacing,
   ...rest
 }: {
+  /** "spread" pushes the switch to the far end of the row, the setting-row
+   *  shape; "hug" keeps it beside the label. */
+  labelSpacing?: "hug" | "spread";
   id?: string;
   name?: string;
   /** Usually injected by the form's Field wrapper, or the row's own label. */
@@ -48,6 +52,8 @@ export function Switch({
       }}
       htmlName={name}
       isDisabled={disabled}
+      labelSpacing={labelSpacing}
+      width={labelSpacing === "spread" ? "100%" : undefined}
       className={className}
       aria-labelledby={rest["aria-labelledby"]}
     />

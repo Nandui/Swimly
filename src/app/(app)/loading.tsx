@@ -1,5 +1,5 @@
 import { Skeleton } from "@astryxdesign/core/Skeleton";
-import { HStack, VStack } from "@astryxdesign/core/Stack";
+import { HStack, StackItem, VStack } from "@astryxdesign/core/Stack";
 import { VisuallyHidden } from "@astryxdesign/core/VisuallyHidden";
 
 /** What every page shows for the moment between a click and its data.
@@ -30,9 +30,9 @@ export default function Loading() {
           <HStack key={i} gap={4} vAlign="center">
             <Skeleton width={160} height={16} index={3 + i} />
             <Skeleton width={96} height={12} index={3 + i} className="max-md:hidden" />
-            <span className="ml-auto">
+            <StackItem className="ml-auto">
               <Skeleton width={64} height={12} index={3 + i} />
-            </span>
+            </StackItem>
           </HStack>
         ))}
       </VStack>

@@ -133,9 +133,9 @@ export function Trigger({
     });
   }
   return (
-    <span onClick={onOpen} className="contents">
+    <HStack as="span" onClick={onOpen}>
       {children}
-    </span>
+    </HStack>
   );
 }
 

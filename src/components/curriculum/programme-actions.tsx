@@ -3,7 +3,8 @@
 import { Archive, ArchiveRestore, ChevronDown, ChevronUp, Pencil, Plus } from "lucide-react";
 import { ActionButton, ConfirmAction } from "@/components/confirm-action";
 import { Field, FormDialog } from "@/components/form-dialog";
-import { Button } from "@/components/ui/button";
+import { Button } from "@astryxdesign/core/Button";
+import { IconButton } from "@astryxdesign/core/IconButton";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import {
@@ -51,10 +52,7 @@ export function AddProgramme() {
   return (
     <FormDialog
       trigger={
-        <Button size="sm">
-          <Plus className="size-4" />
-          Add programme
-        </Button>
+        <Button label="Add programme" variant="primary" size="sm" icon={<Plus className="size-4" aria-hidden />} />
       }
       title="Add a programme"
       description="A programme holds the ordered levels a swimmer works through."
@@ -78,14 +76,9 @@ export function EditProgramme({
     <FormDialog
       trigger={
         variant === "icon" ? (
-          <Button variant="ghost" size="icon-sm" aria-label={`Edit ${programme.name}`}>
-            <Pencil className="size-3.5" />
-          </Button>
+          <IconButton label={`Edit ${programme.name}`} variant="ghost" size="sm" icon={<Pencil className="size-4" aria-hidden />} />
         ) : (
-          <Button variant="outline" size="sm">
-            <Pencil className="size-4" />
-            Edit
-          </Button>
+          <Button label="Edit" variant="secondary" size="sm" icon={<Pencil className="size-4" aria-hidden />} />
         )
       }
       title={`Edit ${programme.name}`}
@@ -116,9 +109,7 @@ export function ArchiveProgramme({ programme }: { programme: Programme }) {
   return (
     <ConfirmAction
       trigger={
-        <Button variant="ghost" size="icon-sm" aria-label={`Archive ${programme.name}`}>
-          <Archive className="size-3.5" />
-        </Button>
+        <IconButton label={`Archive ${programme.name}`} variant="ghost" size="sm" icon={<Archive className="size-4" aria-hidden />} />
       }
       title={`Archive ${programme.name}?`}
       description="It stops appearing when someone picks a programme, and its levels stop being offered. Everything already recorded against it — enrolments, completions, the audit trail — stays exactly as it is, and you can restore it later."

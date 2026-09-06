@@ -1,9 +1,14 @@
 "use client";
 
+import * as React from "react";
 import { Pencil, Plus, Trash2 } from "lucide-react";
+import { Button } from "@astryxdesign/core/Button";
+import { CheckboxList, CheckboxListItem } from "@astryxdesign/core/CheckboxList";
+import { IconButton } from "@astryxdesign/core/IconButton";
+import { RadioList, RadioListItem } from "@astryxdesign/core/RadioList";
+import { VStack } from "@astryxdesign/core/Stack";
 import { ConfirmAction } from "@/components/confirm-action";
 import { Field, FormDialog } from "@/components/form-dialog";
-import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { createRole, deleteRole, updateRole } from "@/lib/staff/actions/roles";
@@ -29,138 +34,118 @@ function readRole(formData: FormData) {
   return {
     name: String(formData.get("name") ?? ""),
     description: String(formData.get("description") ?? ""),
-    // Native checkboxes, not a Radix control: `getAll` is the whole reason.
-    // A switch would need its own state and a hidden input per permission to
-    // reach the form at all.
+    // The pickers hold their choice in state and post it through hidden
+    // inputs, one per tick, so `getAll` reads the set like a native form.
     permissions: formData.getAll("permissions").map(String),
     screens: formData.getAll("screens").map(String),
     home: String(formData.get("home") ?? "overview"),
   };
 }
 
-/** Which screens the role offers at all. An instructor role ticks Today and
- *  nothing else, and the deck becomes their whole app. */
-function ScreenPicker({ role }: { role?: Role }) {
-  const held = new Set(role?.screens ?? []);
+/** A set of ticks that still posts through the form around it: the list is
+ *  Astryx's, the chosen values ride along as hidden inputs. */
+function Ticked({ name, values }: { name: string; values: string[] }) {
   return (
-    <fieldset className="space-y-2">
-      <legend className="mb-1 block text-sm font-medium text-foreground">
-        Which screens this role can open
-      </legend>
-      <p className="text-xs text-muted-foreground">
-        Everything else is a page that does not exist for them. Account is always there.
-      </p>
-      <div className="overflow-hidden rounded-md border">
-        {SCREENS.map((screen) => (
-          <label
-            key={screen.key}
-            htmlFor={`screen-${screen.key}`}
-            className="flex cursor-pointer items-start gap-2.5 border-b p-2.5 transition-colors last:border-0 hover:bg-muted"
-          >
-            <input
-              id={`screen-${screen.key}`}
-              type="checkbox"
-              name="screens"
-              value={screen.key}
-              defaultChecked={held.has(screen.key)}
-              className="mt-0.5 size-4 shrink-0 accent-primary"
-            />
-            <span className="min-w-0">
-              <span className="block text-sm font-medium text-foreground">{screen.label}</span>
-              <span className="mt-0.5 block text-xs text-muted-foreground">
-                {screen.description}
-              </span>
-            </span>
-          </label>
-        ))}
-      </div>
-    </fieldset>
+    <>
+      {values.map((value) => (
+        <input key={value} type="hidden" name={name} value={value} />
+      ))}
+    </>
   );
 }
 
-/** Where this role's day starts. Native radios, for the same reason the
- *  permissions are native checkboxes. */
-function HomePicker({ role }: { role?: Role }) {
-  const current = role?.home ?? "overview";
+/** Which screens the role offers at all. An instructor role ticks Today and
+ *  nothing else, and the deck becomes their whole app. */
+function ScreenPicker({ role }: { role?: Role }) {
+  const [screens, setScreens] = React.useState<string[]>(role?.screens ?? []);
   return (
-    <fieldset className="space-y-2">
-      <legend className="mb-1 block text-sm font-medium text-foreground">
-        Where they start after signing in
-      </legend>
-      <div className="overflow-hidden rounded-md border">
-        {ROLE_HOME_ORDER.map((key) => (
-          <label
-            key={key}
-            htmlFor={`home-${key}`}
-            className="flex cursor-pointer items-start gap-2.5 border-b p-2.5 transition-colors last:border-0 hover:bg-muted"
-          >
-            <input
-              id={`home-${key}`}
-              type="radio"
-              name="home"
-              value={key}
-              defaultChecked={current === key}
-              className="mt-0.5 size-4 shrink-0 accent-primary"
-            />
-            <span className="min-w-0">
-              <span className="block text-sm font-medium text-foreground">
-                {ROLE_HOMES[key].label}
-              </span>
-              <span className="mt-0.5 block text-xs text-muted-foreground">
-                {ROLE_HOMES[key].description}
-              </span>
-            </span>
-          </label>
+    <>
+      <Ticked name="screens" values={screens} />
+      <CheckboxList
+        label="Which screens this role can open"
+        description="Everything else is a page that does not exist for them. Account is always there."
+        value={screens}
+        onChange={setScreens}
+        hasDividers
+        width="100%"
+      >
+        {SCREENS.map((screen) => (
+          <CheckboxListItem
+            key={screen.key}
+            value={screen.key}
+            label={screen.label}
+            description={screen.description}
+          />
         ))}
-      </div>
-    </fieldset>
+      </CheckboxList>
+    </>
+  );
+}
+
+/** Where this role's day starts. */
+function HomePicker({ role }: { role?: Role }) {
+  const [home, setHome] = React.useState(role?.home ?? "overview");
+  return (
+    <RadioList
+      label="Where they start after signing in"
+      value={home}
+      onChange={setHome}
+      htmlName="home"
+      width="100%"
+    >
+      {ROLE_HOME_ORDER.map((key) => (
+        <RadioListItem
+          key={key}
+          value={key}
+          label={ROLE_HOMES[key].label}
+          description={ROLE_HOMES[key].description}
+        />
+      ))}
+    </RadioList>
   );
 }
 
 /** The permission list, grouped, with every entry carrying the sentence that
  *  says what it actually lets someone do. The descriptions are the point — a
- *  bare list of keys is a list nobody can grant safely. */
+ *  bare list of keys is a list nobody can grant safely. One set of ticks
+ *  across the groups. */
 function PermissionPicker({ role }: { role?: Role }) {
-  const held = new Set(role?.permissions ?? []);
+  const [held, setHeld] = React.useState<string[]>(role?.permissions ?? []);
+
+  function setGroup(group: string, values: string[]) {
+    const keys = new Set<string>(
+      PERMISSIONS.filter((permission) => permission.group === group).map((p) => p.key)
+    );
+    setHeld((previous) => [...previous.filter((key) => !keys.has(key)), ...values]);
+  }
 
   return (
-    <fieldset className="space-y-4">
-      <legend className="mb-1 block text-sm font-medium text-foreground">
-        What this role may do
-      </legend>
-
-      {PERMISSION_GROUP_ORDER.map((group) => (
-        <div key={group} className="space-y-2">
-          <p className="text-xs font-medium text-muted-foreground">{group}</p>
-          <div className="overflow-hidden rounded-md border">
-            {PERMISSIONS.filter((permission) => permission.group === group).map((permission) => (
-              <label
+    <VStack gap={4}>
+      <Ticked name="permissions" values={held} />
+      {PERMISSION_GROUP_ORDER.map((group, index) => {
+        const inGroup = PERMISSIONS.filter((permission) => permission.group === group);
+        const chosen = held.filter((key) => inGroup.some((permission) => permission.key === key));
+        return (
+          <CheckboxList
+            key={group}
+            label={index === 0 ? `What this role may do · ${group}` : group}
+            value={chosen}
+            onChange={(values) => setGroup(group, values)}
+            hasDividers
+            width="100%"
+          >
+            {inGroup.map((permission) => (
+              <CheckboxListItem
                 key={permission.key}
-                htmlFor={`permission-${permission.key}`}
-                className="flex cursor-pointer items-start gap-2.5 border-b p-2.5 transition-colors last:border-0 hover:bg-muted"
-              >
-                <input
-                  id={`permission-${permission.key}`}
-                  type="checkbox"
-                  name="permissions"
-                  value={permission.key}
-                  defaultChecked={held.has(permission.key)}
-                  className="mt-0.5 size-4 shrink-0 accent-primary"
-                />
-                <span className="min-w-0">
-                  <span className="block text-sm font-medium text-foreground">
-                    {permission.label}
-                  </span>
-                  <span className="mt-0.5 block text-xs text-muted-foreground">
-                    {permission.description}
-                  </span>
-                </span>
-              </label>
+                value={permission.key}
+                label={permission.label}
+                description={permission.description}
+              />
             ))}
-          </div>
-        </div>
-      ))}
-    </fieldset>
+          </CheckboxList>
+        );
+      })}
+    </VStack>
   );
 }
 
@@ -200,10 +185,12 @@ export function AddRole() {
   return (
     <FormDialog
       trigger={
-        <Button size="sm">
-          <Plus className="size-4" />
-          Add role
-        </Button>
+        <Button
+          label="Add role"
+          variant="primary"
+          size="sm"
+          icon={<Plus className="size-4" aria-hidden />}
+        />
       }
       title="Add a role"
       description="A role is a named set of permissions. Give it the smallest set that lets the job get done."
@@ -221,9 +208,12 @@ export function EditRole({ role }: { role: Role }) {
   return (
     <FormDialog
       trigger={
-        <Button variant="ghost" size="icon-sm" aria-label={`Edit ${role.name}`}>
-          <Pencil className="size-3.5" />
-        </Button>
+        <IconButton
+          label={`Edit ${role.name}`}
+          variant="ghost"
+          size="sm"
+          icon={<Pencil className="size-4" aria-hidden />}
+        />
       }
       title={`Edit ${role.name}`}
       description="Changes take effect on everyone holding this role at their next page load."
@@ -238,17 +228,17 @@ export function EditRole({ role }: { role: Role }) {
 }
 
 export function DeleteRole({ role, users }: { role: Role; users: number }) {
+  // A built-in role cannot go, so there is no button to press.
+  if (role.isSystem) return null;
   return (
     <ConfirmAction
       trigger={
-        <Button
+        <IconButton
+          label={`Delete ${role.name}`}
           variant="ghost"
-          size="icon-sm"
-          aria-label={`Delete ${role.name}`}
-          className={role.isSystem ? "invisible" : undefined}
-        >
-          <Trash2 className="size-3.5" />
-        </Button>
+          size="sm"
+          icon={<Trash2 className="size-4" aria-hidden />}
+        />
       }
       title={`Delete ${role.name}?`}
       description={

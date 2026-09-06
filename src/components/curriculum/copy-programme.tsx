@@ -2,7 +2,7 @@
 
 import { Copy } from "lucide-react";
 import { Field, FormDialog } from "@/components/form-dialog";
-import { Button } from "@/components/ui/button";
+import { Button } from "@astryxdesign/core/Button";
 import { Select } from "@/components/ui/select";
 import { copyProgramme } from "@/lib/curriculum/actions/copy";
 
@@ -25,10 +25,7 @@ export function CopyProgramme({
   return (
     <FormDialog
       trigger={
-        <Button variant="outline" size="sm">
-          <Copy className="size-4" />
-          Copy to another club
-        </Button>
+        <Button label="Copy to another club" variant="secondary" size="sm" icon={<Copy className="size-4" aria-hidden />} />
       }
       title={`Copy ${programme.name} to another club`}
       description={`Its ${levels} ${levels === 1 ? "level" : "levels"} and ${competencies} ${

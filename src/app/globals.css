@@ -31,43 +31,6 @@
   --text-xl: var(--font-size-xl);
   --text-2xl: var(--font-size-2xl);
   --text-3xl: var(--font-size-3xl);
-
-  /* Names the screens were written against before the move, aliased onto
-     Astryx's tokens so every page renders in the new colours from the first
-     build. Each one goes as its screens are rewritten in Astryx's own names;
-     when this block is empty the sweep is done. */
-  --color-background: var(--color-background-body);
-  --color-foreground: var(--color-text-primary);
-  --color-muted-foreground: var(--color-text-secondary);
-  --color-card-foreground: var(--color-text-primary);
-  --color-popover-foreground: var(--color-text-primary);
-  --color-primary-foreground: var(--color-on-accent);
-  --color-secondary-foreground: var(--color-text-primary);
-  --color-accent-foreground: var(--color-text-primary);
-  --color-destructive: var(--color-error);
-  --color-input: var(--color-border-emphasized);
-  --color-ring: var(--color-accent);
-  --color-success-foreground: var(--color-on-success);
-  --color-sidebar: var(--color-background-surface);
-  --color-sidebar-foreground: var(--color-text-secondary);
-  --color-sidebar-accent: var(--color-background-muted);
-  --color-sidebar-accent-foreground: var(--color-text-primary);
-  --color-sidebar-border: var(--color-border);
-  --color-sidebar-ring: var(--color-accent);
-  --color-sidebar-primary: var(--color-accent);
-  --color-sidebar-primary-foreground: var(--color-on-accent);
-}
-
-/* Astryx's focus ring, for the few controls the app draws itself — a row
-   that is a link, a mark button on the register. Same width, colour and
-   offset as every Astryx component, so keyboard focus looks like one thing
-   across the app. */
-@utility focus-ring {
-  outline: none;
-  &:focus-visible {
-    outline: var(--focus-outline-width) var(--focus-outline-style) var(--focus-outline-color);
-    outline-offset: var(--focus-outline-offset);
-  }
 }
 
 /* Unlayered, so these win over every layer above. */
@@ -122,11 +85,6 @@ button:not(:disabled),
   cursor: pointer;
 }
 
-tbody,
-td {
-  font-variant-numeric: tabular-nums;
-}
-
 /* Phones: Astryx sizes its controls for a pointer — 28, 32 and 36px. A thumb
    on a wet phone needs 44. Every button, field, menu row and nav item grows
    below the tablet breakpoint, here once rather than at each call site. */
@@ -141,18 +99,6 @@ td {
   .astryx-side-nav-item,
   .astryx-tab {
     min-height: 44px;
-  }
-}
-
-/* Phones: the text links that open a row — a swimmer's name in a list, a
-   class on the deck screen — are one line of 14px text, which is a hard
-   thing to hit with a thumb. Padding in and the same margin out gives each
-   one a 32px tap area without moving a pixel of the layout. */
-@media (max-width: 47.9375rem) {
-  main :is(td, p, dd, span) > a[href]:not([data-slot="button"]) {
-    display: inline-block;
-    padding-block: 0.5rem;
-    margin-block: -0.5rem;
   }
 }
 

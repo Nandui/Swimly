@@ -3,6 +3,7 @@
 import * as React from "react";
 import { Building2, Check } from "lucide-react";
 import { DropdownMenu } from "@astryxdesign/core/DropdownMenu";
+import { Text } from "@astryxdesign/core/Text";
 import { switchClub } from "@/lib/clubs/actions/clubs";
 import { toast } from "@/lib/toast";
 
@@ -53,9 +54,9 @@ export function ClubSwitcher({
         // off the screen, so the visible text is cut with an ellipsis there;
         // the full name is in the accessible label and the menu.
         children: (
-          <span className={compact ? "block max-w-[40vw] truncate" : undefined}>
+          <Text type="inherit" maxLines={1} hasTruncateTooltip={false} className={compact ? "max-w-[40vw]" : undefined}>
             {pending ? "Switching…" : club.name}
-          </span>
+          </Text>
         ),
         icon: <Building2 className="size-4" aria-hidden />,
         isIconOnly: collapsed,

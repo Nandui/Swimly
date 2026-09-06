@@ -3,7 +3,8 @@
 import { Archive, ArchiveRestore, Pencil, Plus } from "lucide-react";
 import { ActionButton, ConfirmAction } from "@/components/confirm-action";
 import { Field, FormDialog } from "@/components/form-dialog";
-import { Button } from "@/components/ui/button";
+import { Button } from "@astryxdesign/core/Button";
+import { IconButton } from "@astryxdesign/core/IconButton";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import {
@@ -61,10 +62,7 @@ export function AddAssessmentType({
   return (
     <FormDialog
       trigger={
-        <Button variant="outline" size="sm">
-          <Plus className="size-4" />
-          Add a kind of assessment
-        </Button>
+        <Button label="Add a kind of assessment" variant="secondary" size="sm" icon={<Plus className="size-4" aria-hidden />} />
       }
       title={`Add a kind of assessment to ${programmeName}`}
       description="New swimmers, mixed abilities, returning after a break — whatever the desk needs to tell apart when booking."
@@ -81,9 +79,7 @@ export function EditAssessmentType({ type }: { type: Named }) {
   return (
     <FormDialog
       trigger={
-        <Button variant="ghost" size="icon-sm" aria-label={`Edit ${type.name}`}>
-          <Pencil className="size-3.5" />
-        </Button>
+        <IconButton label={`Edit ${type.name}`} variant="ghost" size="sm" icon={<Pencil className="size-4" aria-hidden />} />
       }
       title={`Edit ${type.name}`}
       submitLabel="Save changes"
@@ -110,9 +106,7 @@ export function ArchiveAssessmentType({ type, sessions }: { type: Named; session
   return (
     <ConfirmAction
       trigger={
-        <Button variant="ghost" size="icon-sm" aria-label={`Archive ${type.name}`}>
-          <Archive className="size-3.5" />
-        </Button>
+        <IconButton label={`Archive ${type.name}`} variant="ghost" size="sm" icon={<Archive className="size-4" aria-hidden />} />
       }
       title={`Archive ${type.name}?`}
       description={

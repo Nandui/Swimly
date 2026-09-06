@@ -3,7 +3,8 @@
 import { Archive, ArchiveRestore, Pencil, Plus } from "lucide-react";
 import { ActionButton, ConfirmAction } from "@/components/confirm-action";
 import { Field, FormDialog } from "@/components/form-dialog";
-import { Button } from "@/components/ui/button";
+import { Button } from "@astryxdesign/core/Button";
+import { IconButton } from "@astryxdesign/core/IconButton";
 import { Input } from "@/components/ui/input";
 import { Select } from "@/components/ui/select";
 import { DayOfWeek } from "@/generated/prisma/enums";
@@ -17,6 +18,7 @@ import { DAY_META, DAYS_IN_ORDER, courseLabel, formatTime } from "@/lib/courses/
 import type { CourseDetail } from "@/lib/courses/data/courses";
 import type { InstructorOption } from "@/lib/courses/data/courses";
 import type { LevelOption } from "@/lib/curriculum/data/curriculum";
+import { Grid } from "@astryxdesign/core/Grid";
 
 /** Radix will not take an empty string as an item value, so "nobody yet" needs
  *  a sentinel that never reaches the action. */
@@ -76,7 +78,7 @@ function CourseFields({
         <Input id="name" name="name" defaultValue={course?.name ?? ""} placeholder="Dolphins" />
       </Field>
 
-      <div className="grid gap-3 sm:grid-cols-2">
+      <Grid columns={{ minWidth: 200, max: 2 }} gap={3}>
         <Field label="Day" htmlFor="dayOfWeek">
           <Select
             id="dayOfWeek"
@@ -117,7 +119,7 @@ function CourseFields({
             placeholder="12"
           />
         </Field>
-      </div>
+      </Grid>
 
       <Field label="Instructor" htmlFor="instructorId">
         <Select
@@ -153,10 +155,7 @@ export function AddCourse({
   return (
     <FormDialog
       trigger={
-        <Button size="sm">
-          <Plus className="size-4" />
-          Add class
-        </Button>
+        <Button label="Add class" variant="primary" size="sm" icon={<Plus className="size-4" aria-hidden />} />
       }
       title="Add a class"
       description="One level, one time, every week."
@@ -184,14 +183,9 @@ export function EditCourse({
     <FormDialog
       trigger={
         variant === "icon" ? (
-          <Button variant="ghost" size="icon-sm" aria-label={`Edit ${courseLabel(course)}`}>
-            <Pencil className="size-3.5" />
-          </Button>
+          <IconButton label={`Edit ${courseLabel(course)}`} variant="ghost" size="sm" icon={<Pencil className="size-4" aria-hidden />} />
         ) : (
-          <Button variant="outline" size="sm">
-            <Pencil className="size-4" />
-            Edit
-          </Button>
+          <Button label="Edit" variant="secondary" size="sm" icon={<Pencil className="size-4" aria-hidden />} />
         )
       }
       title={`Edit ${courseLabel(course)}`}
@@ -220,9 +214,7 @@ export function ArchiveCourse({ course }: { course: CourseDetail }) {
   return (
     <ConfirmAction
       trigger={
-        <Button variant="ghost" size="icon-sm" aria-label={`Archive ${courseLabel(course)}`}>
-          <Archive className="size-3.5" />
-        </Button>
+        <IconButton label={`Archive ${courseLabel(course)}`} variant="ghost" size="sm" icon={<Archive className="size-4" aria-hidden />} />
       }
       title={`Archive ${courseLabel(course)}?`}
       description="It comes off the timetable and stops appearing when someone enrols a swimmer. Registers already taken, and everything assessed in it, stay readable. You can restore it later."

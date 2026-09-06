@@ -3,11 +3,11 @@
 import * as React from "react";
 import Form from "next/form";
 import { useRouter, useSearchParams } from "next/navigation";
-import { Search } from "lucide-react";
 import { Button } from "@astryxdesign/core/Button";
+import { HStack, StackItem, VStack } from "@astryxdesign/core/Stack";
 import { Selector } from "@astryxdesign/core/Selector";
 import { Text } from "@astryxdesign/core/Text";
-import { TextInput } from "@astryxdesign/core/TextInput";
+import { SearchField } from "@/components/ui-kit/search-field";
 import { ANY_DAY, type FilterDimension } from "@/lib/courses/filters";
 
 /** The timetable's filter bar. Six dimensions, and they combine: a class has to
@@ -41,7 +41,6 @@ export function CourseFilters({
 }) {
   const router = useRouter();
   const params = useSearchParams();
-  const [query, setQuery] = React.useState(q);
 
   const href = React.useCallback(
     (changes: Record<string, string | null>) => {
@@ -64,8 +63,8 @@ export function CourseFilters({
   );
 
   return (
-    <div className="space-y-2">
-      <div className="flex flex-wrap items-center gap-2">
+    <VStack gap={2}>
+      <HStack gap={2} vAlign="center" wrap="wrap">
         {/* Full width on a phone, where a search box beside six pickers wraps
             into a ragged bar; its own width from the tablet up. */}
         <Form action="/courses" className="max-sm:w-full">
@@ -78,25 +77,12 @@ export function CourseFilters({
               <input key={d.key} type="hidden" name="day" value={ANY_DAY} />
             ) : null
           )}
-          <TextInput
+          <SearchField
             label="Search classes"
-            isLabelHidden
-            htmlName="q"
-            value={query}
-            onChange={setQuery}
             placeholder="Search classes…"
-            startIcon={Search}
-            hasClear
-            size="md"
-            className="max-sm:w-full sm:w-56"
+            defaultValue={q}
+            width={224}
           />
-          {/* A form with one text field and no button submits on Enter by
-              implicit submission, which is a rule with enough edge cases that
-              a search box should not be the thing betting on it. This costs
-              nothing and gives keyboard users something to tab to. */}
-          <button type="submit" className="sr-only">
-            Search
-          </button>
         </Form>
 
         {dimensions.map((d) => (
@@ -115,7 +101,7 @@ export function CourseFilters({
             onClick={() => router.push(`/courses?day=${ANY_DAY}`)}
           />
         ) : null}
-      </div>
+      </HStack>
 
       {active > 0 ? (
         <Text as="p" type="supporting" display="block" role="status">
@@ -125,7 +111,7 @@ export function CourseFilters({
           of <Text type="supporting" hasTabularNumbers>{total}</Text> classes match.
         </Text>
       ) : null}
-    </div>
+    </VStack>
   );
 }
 
@@ -173,12 +159,16 @@ function FilterPicker({
         </>
       )}
       renderOption={(option) => (
-        <span className="flex w-full items-center gap-3">
-          <span className="min-w-0 flex-1 truncate">{option.label ?? option.value}</span>
+        <HStack gap={3} vAlign="center" width="100%">
+          <StackItem size="fill">
+            <Text maxLines={1} hasTruncateTooltip={false}>
+              {option.label ?? option.value}
+            </Text>
+          </StackItem>
           <Text type="supporting" hasTabularNumbers>
             {countOf.get(option.value) ?? ""}
           </Text>
-        </span>
+        </HStack>
       )}
     />
   );

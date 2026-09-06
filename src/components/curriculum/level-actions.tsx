@@ -3,7 +3,8 @@
 import { Archive, ArchiveRestore, ChevronDown, ChevronUp, Pencil, Plus } from "lucide-react";
 import { ActionButton, ConfirmAction } from "@/components/confirm-action";
 import { Field, FormDialog } from "@/components/form-dialog";
-import { Button } from "@/components/ui/button";
+import { Button } from "@astryxdesign/core/Button";
+import { IconButton } from "@astryxdesign/core/IconButton";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import {
@@ -63,10 +64,7 @@ export function AddLevel({ programmeId }: { programmeId: string }) {
   return (
     <FormDialog
       trigger={
-        <Button size="sm">
-          <Plus className="size-4" />
-          Add level
-        </Button>
+        <Button label="Add level" variant="primary" size="sm" icon={<Plus className="size-4" aria-hidden />} />
       }
       title="Add a level"
       description="Levels are worked through in order. This one goes at the end; move it afterwards."
@@ -83,9 +81,7 @@ export function EditLevel({ level }: { level: Named }) {
   return (
     <FormDialog
       trigger={
-        <Button variant="ghost" size="icon-sm" aria-label={`Edit ${level.name}`}>
-          <Pencil className="size-3.5" />
-        </Button>
+        <IconButton label={`Edit ${level.name}`} variant="ghost" size="sm" icon={<Pencil className="size-4" aria-hidden />} />
       }
       title={`Edit ${level.name}`}
       submitLabel="Save changes"
@@ -113,9 +109,7 @@ export function ArchiveLevel({ level }: { level: Named }) {
   return (
     <ConfirmAction
       trigger={
-        <Button variant="ghost" size="icon-sm" aria-label={`Archive ${level.name}`}>
-          <Archive className="size-3.5" />
-        </Button>
+        <IconButton label={`Archive ${level.name}`} variant="ghost" size="sm" icon={<Archive className="size-4" aria-hidden />} />
       }
       title={`Archive ${level.name}?`}
       description="It stops being offered for new classes and enrolments. Swimmers who already completed it keep that completion, and their assessments stay readable. You can restore it later."
@@ -182,10 +176,7 @@ export function AddCompetency({ levelId, levelName }: { levelId: string; levelNa
   return (
     <FormDialog
       trigger={
-        <Button variant="outline" size="sm">
-          <Plus className="size-4" />
-          Add competency
-        </Button>
+        <Button label="Add competency" variant="secondary" size="sm" icon={<Plus className="size-4" aria-hidden />} />
       }
       title={`Add a competency to ${levelName}`}
       description="Every competency here has to be signed off before a swimmer can complete the level."
@@ -202,9 +193,7 @@ export function EditCompetency({ competency }: { competency: Named }) {
   return (
     <FormDialog
       trigger={
-        <Button variant="ghost" size="icon-sm" aria-label={`Edit ${competency.name}`}>
-          <Pencil className="size-3.5" />
-        </Button>
+        <IconButton label={`Edit ${competency.name}`} variant="ghost" size="sm" icon={<Pencil className="size-4" aria-hidden />} />
       }
       title="Edit competency"
       submitLabel="Save changes"
@@ -238,9 +227,7 @@ export function ArchiveCompetency({
   return (
     <ConfirmAction
       trigger={
-        <Button variant="ghost" size="icon-sm" aria-label={`Archive ${competency.name}`}>
-          <Archive className="size-3.5" />
-        </Button>
+        <IconButton label={`Archive ${competency.name}`} variant="ghost" size="sm" icon={<Archive className="size-4" aria-hidden />} />
       }
       title="Archive this competency?"
       description={

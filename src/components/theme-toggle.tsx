@@ -4,6 +4,7 @@ import * as React from "react";
 import { Monitor, Moon, Sun } from "lucide-react";
 import { Button } from "@astryxdesign/core/Button";
 import { IconButton } from "@astryxdesign/core/IconButton";
+import { HStack } from "@astryxdesign/core/Stack";
 import { useResolvedThemeMode, useThemeMode } from "@/components/theme-provider";
 import type { ThemeMode } from "@/lib/theme-mode";
 
@@ -22,7 +23,7 @@ export function ThemeToggle() {
   const { mode, setMode } = useThemeMode();
 
   return (
-    <div role="group" aria-label="Appearance" className="flex flex-wrap gap-2">
+    <HStack role="group" aria-label="Appearance" gap={2} wrap="wrap">
       {OPTIONS.map((option) => {
         const active = mode === option.value;
         const Icon = option.icon;
@@ -38,7 +39,7 @@ export function ThemeToggle() {
           />
         );
       })}
-    </div>
+    </HStack>
   );
 }
 

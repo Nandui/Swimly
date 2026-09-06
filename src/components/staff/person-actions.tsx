@@ -4,7 +4,8 @@ import * as React from "react";
 import { KeyRound, Pencil, Plus, UserCheck, UserMinus } from "lucide-react";
 import { ActionButton, ConfirmAction } from "@/components/confirm-action";
 import { Field, FormDialog } from "@/components/form-dialog";
-import { Button } from "@/components/ui/button";
+import { Button } from "@astryxdesign/core/Button";
+import { IconButton } from "@astryxdesign/core/IconButton";
 import { Input } from "@/components/ui/input";
 import { Select } from "@/components/ui/select";
 import { MIN_PASSWORD_LENGTH, permissionCountLabel } from "@/lib/staff/constants";
@@ -102,10 +103,7 @@ export function AddPerson({ roles }: { roles: RoleOption[] }) {
   return (
     <FormDialog
       trigger={
-        <Button size="sm">
-          <Plus className="size-4" />
-          Add person
-        </Button>
+        <Button label="Add person" variant="primary" size="sm" icon={<Plus className="size-4" aria-hidden />} />
       }
       title="Add a person"
       description="They can sign in as soon as you save this, with the email and password you set here."
@@ -138,9 +136,7 @@ export function EditPerson({ person, roles }: { person: Person; roles: RoleOptio
   return (
     <FormDialog
       trigger={
-        <Button variant="ghost" size="icon-sm" aria-label={`Edit ${person.name}`}>
-          <Pencil className="size-3.5" />
-        </Button>
+        <IconButton label={`Edit ${person.name}`} variant="ghost" size="sm" icon={<Pencil className="size-4" aria-hidden />} />
       }
       title={`Edit ${person.name}`}
       submitLabel="Save changes"
@@ -156,9 +152,7 @@ export function ResetPersonPassword({ person }: { person: Person }) {
   return (
     <FormDialog
       trigger={
-        <Button variant="ghost" size="icon-sm" aria-label={`Set a new password for ${person.name}`}>
-          <KeyRound className="size-3.5" />
-        </Button>
+        <IconButton label={`Set a new password for ${person.name}`} variant="ghost" size="sm" icon={<KeyRound className="size-4" aria-hidden />} />
       }
       title={`Set a new password for ${person.name}`}
       description="Their old password stops working immediately. Nobody is emailed — tell them yourself."
@@ -197,9 +191,7 @@ export function SetPersonActive({ person }: { person: Person }) {
   return (
     <ConfirmAction
       trigger={
-        <Button variant="ghost" size="icon-sm" aria-label={`Deactivate ${person.name}`}>
-          <UserMinus className="size-3.5" />
-        </Button>
+        <IconButton label={`Deactivate ${person.name}`} variant="ghost" size="sm" icon={<UserMinus className="size-4" aria-hidden />} />
       }
       title={`Deactivate ${person.name}?`}
       description="They stop being able to sign in, from their next page load rather than whenever their session would have expired. Everything they recorded — registers, assessments, the audit trail — stays exactly as it is, and you can reactivate them later. Classes they teach keep their name on them."

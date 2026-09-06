@@ -3,7 +3,8 @@
 import { Pencil, Plus, UserRoundCheck, UserRoundX } from "lucide-react";
 import { ActionButton, ConfirmAction } from "@/components/confirm-action";
 import { Field, FormDialog } from "@/components/form-dialog";
-import { Button } from "@/components/ui/button";
+import { Button } from "@astryxdesign/core/Button";
+import { IconButton } from "@astryxdesign/core/IconButton";
 import { Input } from "@/components/ui/input";
 import { Select } from "@/components/ui/select";
 import { Switch } from "@/components/ui/switch";
@@ -20,6 +21,8 @@ import {
 import { STUDENT_STATUS_META, fullName } from "@/lib/students/constants";
 import type { StudentDetail } from "@/lib/students/data/students";
 import { toDateOnlyString } from "@/lib/format";
+import { Grid, GridSpan } from "@astryxdesign/core/Grid";
+import { Heading } from "@astryxdesign/core/Text";
 
 function readInput(formData: FormData): StudentInput {
   const text = (key: string) => String(formData.get(key) ?? "");
@@ -42,9 +45,7 @@ function readInput(formData: FormData): StudentInput {
 }
 
 function Legend({ children }: { children: React.ReactNode }) {
-  return (
-    <p className="border-b pt-1 pb-1.5 text-sm font-semibold text-foreground">{children}</p>
-  );
+  return <Heading level={3}>{children}</Heading>;
 }
 
 function StudentFields({ student }: { student?: StudentDetail }) {
@@ -62,7 +63,7 @@ function StudentFields({ student }: { student?: StudentDetail }) {
           placeholder="LWB419700"
         />
       </Field>
-      <div className="grid gap-3 sm:grid-cols-2">
+      <Grid columns={{ minWidth: 200, max: 2 }} gap={3}>
         <Field label="First name" htmlFor="firstName">
           <Input id="firstName" name="firstName" required defaultValue={student?.firstName} />
         </Field>
@@ -88,17 +89,17 @@ function StudentFields({ student }: { student?: StudentDetail }) {
             }))}
           />
         </Field>
-      </div>
+      </Grid>
 
       <Legend>Contact</Legend>
-      <div className="grid gap-3 sm:grid-cols-2">
+      <Grid columns={{ minWidth: 200, max: 2 }} gap={3}>
         <Field label="Name" htmlFor="contactName" hint="The adult to ring. Themselves, if they are one.">
           <Input id="contactName" name="contactName" defaultValue={student?.contactName ?? ""} />
         </Field>
         <Field label="Phone" htmlFor="contactPhone">
           <Input id="contactPhone" name="contactPhone" defaultValue={student?.contactPhone ?? ""} />
         </Field>
-        <div className="sm:col-span-2">
+        <GridSpan columns="full">
           <Field label="Email" htmlFor="contactEmail">
             <Input
               id="contactEmail"
@@ -107,11 +108,11 @@ function StudentFields({ student }: { student?: StudentDetail }) {
               defaultValue={student?.contactEmail ?? ""}
             />
           </Field>
-        </div>
-      </div>
+        </GridSpan>
+      </Grid>
 
       <Legend>In an emergency</Legend>
-      <div className="grid gap-3 sm:grid-cols-2">
+      <Grid columns={{ minWidth: 200, max: 2 }} gap={3}>
         <Field label="Name" htmlFor="emergencyName">
           <Input id="emergencyName" name="emergencyName" defaultValue={student?.emergencyName ?? ""} />
         </Field>
@@ -122,7 +123,7 @@ function StudentFields({ student }: { student?: StudentDetail }) {
             defaultValue={student?.emergencyPhone ?? ""}
           />
         </Field>
-        <div className="sm:col-span-2">
+        <GridSpan columns="full">
           <Field label="Relationship" htmlFor="emergencyRelationship">
             <Input
               id="emergencyRelationship"
@@ -131,8 +132,8 @@ function StudentFields({ student }: { student?: StudentDetail }) {
               defaultValue={student?.emergencyRelationship ?? ""}
             />
           </Field>
-        </div>
-      </div>
+        </GridSpan>
+      </Grid>
 
       <Legend>Anything the pool deck needs to know</Legend>
       <Field
@@ -151,15 +152,14 @@ function StudentFields({ student }: { student?: StudentDetail }) {
         <Textarea id="notes" name="notes" rows={2} defaultValue={student?.notes ?? ""} />
       </Field>
 
-      <div className="flex items-center justify-between gap-3 rounded-md border px-3 py-2">
-        <label htmlFor="photoConsent" className="text-sm font-medium text-foreground">
-          Photo and video consent
-          <span className="block text-xs font-normal text-muted-foreground">
-            Recorded with the date it was given.
-          </span>
-        </label>
-        <Switch id="photoConsent" name="photoConsent" defaultChecked={student?.photoConsent} />
-      </div>
+      <Switch
+        id="photoConsent"
+        name="photoConsent"
+        label="Photo and video consent"
+        description="Recorded with the date it was given."
+        labelSpacing="spread"
+        defaultChecked={student?.photoConsent}
+      />
     </>
   );
 }
@@ -168,10 +168,7 @@ export function AddStudent() {
   return (
     <FormDialog
       trigger={
-        <Button size="sm">
-          <Plus className="size-4" />
-          Add swimmer
-        </Button>
+        <Button label="Add swimmer" variant="primary" size="sm" icon={<Plus className="size-4" aria-hidden />} />
       }
       title="Add a swimmer"
       submitLabel="Add swimmer"
@@ -195,14 +192,9 @@ export function EditStudent({
     <FormDialog
       trigger={
         variant === "icon" ? (
-          <Button variant="ghost" size="icon-sm" aria-label={`Edit ${fullName(student)}`}>
-            <Pencil className="size-3.5" />
-          </Button>
+          <IconButton label={`Edit ${fullName(student)}`} variant="ghost" size="sm" icon={<Pencil className="size-4" aria-hidden />} />
         ) : (
-          <Button variant="outline" size="sm">
-            <Pencil className="size-4" />
-            Edit
-          </Button>
+          <Button label="Edit" variant="secondary" size="sm" icon={<Pencil className="size-4" aria-hidden />} />
         )
       }
       title={`Edit ${fullName(student)}`}
@@ -236,9 +228,7 @@ export function ToggleStudentStatus({
   return (
     <ConfirmAction
       trigger={
-        <Button variant="ghost" size="icon-sm" aria-label={`Mark ${fullName(student)} inactive`}>
-          <UserRoundX className="size-3.5" />
-        </Button>
+        <IconButton label={`Mark ${fullName(student)} inactive`} variant="ghost" size="sm" icon={<UserRoundX className="size-4" aria-hidden />} />
       }
       title={`Mark ${fullName(student)} inactive?`}
       description="They stop appearing when someone enrols a student, and they cannot be added to a course. Their attendance, assessments and completed levels stay exactly as they are, and you can mark them active again at any time."

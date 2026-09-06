@@ -1,6 +1,7 @@
 "use client";
 
 import { useRouter } from "next/navigation";
+import { VStack } from "@astryxdesign/core/Stack";
 import { StudentSearch } from "@/components/students/student-search";
 
 /** Adds one more swimmer to the group.
@@ -16,7 +17,7 @@ export function AddToGroup({ chosen }: { chosen: string[] }) {
   const router = useRouter();
 
   return (
-    <div className="max-w-sm">
+    <VStack maxWidth={384}>
       <StudentSearch
         exclude={chosen}
         label={chosen.length === 0 ? "Add a child" : "Add another"}
@@ -26,6 +27,6 @@ export function AddToGroup({ chosen }: { chosen: string[] }) {
           if (hit) router.push(`/together?students=${[...chosen, hit.id].join(",")}`);
         }}
       />
-    </div>
+    </VStack>
   );
 }

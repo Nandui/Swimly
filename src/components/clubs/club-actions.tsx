@@ -3,7 +3,8 @@
 import { Archive, ArchiveRestore, Pencil, Plus } from "lucide-react";
 import { ActionButton, ConfirmAction } from "@/components/confirm-action";
 import { Field, FormDialog } from "@/components/form-dialog";
-import { Button } from "@/components/ui/button";
+import { Button } from "@astryxdesign/core/Button";
+import { IconButton } from "@astryxdesign/core/IconButton";
 import { Input } from "@/components/ui/input";
 import { createClub, setClubArchived, updateClub } from "@/lib/clubs/actions/clubs";
 
@@ -32,10 +33,7 @@ export function AddClub() {
   return (
     <FormDialog
       trigger={
-        <Button size="sm">
-          <Plus className="size-4" />
-          Add a club
-        </Button>
+        <Button label="Add a club" variant="primary" size="sm" icon={<Plus className="size-4" aria-hidden />} />
       }
       title="Add a club"
       description="A new site starts empty: its own programmes, classes and swimmers. Copy a programme across from another club's page if it runs the same one."
@@ -52,9 +50,7 @@ export function EditClub({ club }: { club: Club }) {
   return (
     <FormDialog
       trigger={
-        <Button variant="ghost" size="icon-sm" aria-label={`Rename ${club.name}`}>
-          <Pencil className="size-3.5" />
-        </Button>
+        <IconButton label={`Rename ${club.name}`} variant="ghost" size="sm" icon={<Pencil className="size-4" aria-hidden />} />
       }
       title={`Rename ${club.name}`}
       submitLabel="Save changes"
@@ -81,9 +77,7 @@ export function ArchiveClub({ club }: { club: Club }) {
   return (
     <ConfirmAction
       trigger={
-        <Button variant="ghost" size="icon-sm" aria-label={`Archive ${club.name}`}>
-          <Archive className="size-3.5" />
-        </Button>
+        <IconButton label={`Archive ${club.name}`} variant="ghost" size="sm" icon={<Archive className="size-4" aria-hidden />} />
       }
       title={`Archive ${club.name}?`}
       description="It leaves the switcher, and anyone working in it lands on the first club still open. Its programmes, classes, swimmers and history stay exactly as they are, readable again the moment it is restored."

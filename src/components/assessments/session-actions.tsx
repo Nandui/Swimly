@@ -4,7 +4,8 @@ import * as React from "react";
 import { CalendarPlus, Pencil, Ban } from "lucide-react";
 import { ConfirmAction } from "@/components/confirm-action";
 import { Field, FormDialog } from "@/components/form-dialog";
-import { Button } from "@/components/ui/button";
+import { Button } from "@astryxdesign/core/Button";
+import { IconButton } from "@astryxdesign/core/IconButton";
 import { Input } from "@/components/ui/input";
 import { Select } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
@@ -23,6 +24,7 @@ import type {
 import type { InstructorOption } from "@/lib/courses/data/courses";
 import { formatTime } from "@/lib/courses/constants";
 import { toDateOnlyString } from "@/lib/format";
+import { Grid } from "@astryxdesign/core/Grid";
 
 const NONE = "__none__";
 
@@ -63,7 +65,7 @@ function SessionFields({ session, programmes, types, instructors, today }: Field
 
   return (
     <>
-      <div className="grid gap-3 sm:grid-cols-2">
+      <Grid columns={{ minWidth: 200, max: 2 }} gap={3}>
         <Field
           label="Programme"
           htmlFor="programmeId"
@@ -99,9 +101,9 @@ function SessionFields({ session, programmes, types, instructors, today }: Field
             options={kinds.map((kind) => ({ value: kind.id, label: kind.name }))}
           />
         </Field>
-      </div>
+      </Grid>
 
-      <div className="grid gap-3 sm:grid-cols-3">
+      <Grid columns={{ minWidth: 140, max: 3 }} gap={3}>
         <Field label="Date" htmlFor="date">
           <Input
             id="date"
@@ -131,9 +133,9 @@ function SessionFields({ session, programmes, types, instructors, today }: Field
             defaultValue={session?.durationMinutes ?? 30}
           />
         </Field>
-      </div>
+      </Grid>
 
-      <div className="grid gap-3 sm:grid-cols-2">
+      <Grid columns={{ minWidth: 200, max: 2 }} gap={3}>
         <Field label="Places" htmlFor="capacity" hint="Leave blank for no limit.">
           <Input
             id="capacity"
@@ -151,7 +153,7 @@ function SessionFields({ session, programmes, types, instructors, today }: Field
             defaultValue={session?.location ?? ""}
           />
         </Field>
-      </div>
+      </Grid>
 
       <Field label="Assessor" htmlFor="instructorId">
         <Select
@@ -176,10 +178,7 @@ export function AddSession(props: Omit<FieldProps, "session">) {
   return (
     <FormDialog
       trigger={
-        <Button size="sm">
-          <CalendarPlus className="size-4" />
-          Add a session
-        </Button>
+        <Button label="Add a session" variant="primary" size="sm" icon={<CalendarPlus className="size-4" aria-hidden />} />
       }
       title="Add an assessment session"
       description="A date, a time and a number of places. Children are booked onto it from the session's own page."
@@ -202,14 +201,9 @@ export function EditSession({
     <FormDialog
       trigger={
         variant === "icon" ? (
-          <Button variant="ghost" size="icon-sm" aria-label={`Edit the session on ${sessionLabel(session)}`}>
-            <Pencil className="size-3.5" />
-          </Button>
+          <IconButton label={`Edit the session on ${sessionLabel(session)}`} variant="ghost" size="sm" icon={<Pencil className="size-4" aria-hidden />} />
         ) : (
-          <Button variant="outline" size="sm">
-            <Pencil className="size-4" />
-            Edit
-          </Button>
+          <Button label="Edit" variant="secondary" size="sm" icon={<Pencil className="size-4" aria-hidden />} />
         )
       }
       title={`Edit the session on ${sessionLabel(session)}`}
@@ -228,9 +222,7 @@ export function CancelSession({ session }: { session: SessionRow }) {
   return (
     <ConfirmAction
       trigger={
-        <Button variant="ghost" size="icon-sm" aria-label={`Cancel the session on ${sessionLabel(session)}`}>
-          <Ban className="size-3.5" />
-        </Button>
+        <IconButton label={`Cancel the session on ${sessionLabel(session)}`} variant="ghost" size="sm" icon={<Ban className="size-4" aria-hidden />} />
       }
       title={`Cancel the session on ${sessionLabel(session)}?`}
       description={

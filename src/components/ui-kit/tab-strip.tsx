@@ -44,9 +44,7 @@ export function TabStrip({
           href={item.href}
           endContent={
             item.count !== undefined && item.count !== null ? (
-              <span className={countsOnPhone ? undefined : "max-sm:hidden"}>
-                <Badge variant="neutral" label={item.count} />
-              </span>
+              <Badge variant="neutral" label={item.count} className={countsOnPhone ? undefined : "max-sm:hidden"} />
             ) : undefined
           }
         />

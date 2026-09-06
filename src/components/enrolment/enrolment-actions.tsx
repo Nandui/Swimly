@@ -5,7 +5,8 @@ import { ActionButton } from "@/components/confirm-action";
 import { Field, FormDialog } from "@/components/form-dialog";
 import { SearchablePicker, type PickerOption } from "@/components/searchable-picker";
 import { StudentPicker } from "@/components/students/student-search";
-import { Button } from "@/components/ui/button";
+import { Button } from "@astryxdesign/core/Button";
+import { IconButton } from "@astryxdesign/core/IconButton";
 import { Switch } from "@/components/ui/switch";
 import { Textarea } from "@/components/ui/textarea";
 import {
@@ -63,15 +64,13 @@ function PlacementFields() {
           placeholder="Assessed at trial on 12 Sep — comfortable at this level"
         />
       </Field>
-      <div className="flex items-center justify-between gap-3 rounded-md border px-3 py-2">
-        <label htmlFor="allowWaitlist" className="text-sm font-medium text-foreground">
-          Waitlist if the class is full
-          <span className="block text-xs font-normal text-muted-foreground">
-            Otherwise a full class refuses, and says so.
-          </span>
-        </label>
-        <Switch id="allowWaitlist" name="allowWaitlist" />
-      </div>
+      <Switch
+        id="allowWaitlist"
+        name="allowWaitlist"
+        label="Waitlist if the class is full"
+        description="Otherwise a full class refuses, and says so."
+        labelSpacing="spread"
+      />
     </>
   );
 }
@@ -92,10 +91,7 @@ export function EnrolIntoCourse({ course, taken }: { course: CourseLike; taken: 
   return (
     <FormDialog
       trigger={
-        <Button size="sm">
-          <UserRoundPlus className="size-4" />
-          Enrol a swimmer
-        </Button>
+        <Button label="Enrol a swimmer" variant="primary" size="sm" icon={<UserRoundPlus className="size-4" aria-hidden />} />
       }
       title={`Enrol into ${courseLabel(course)}`}
       description={`${course.level.name} · ${formatSlotShort(course)} · ${capacityLabel(taken, course.capacity)}`}
@@ -123,10 +119,7 @@ export function EnrolInCourseForStudent({
   return (
     <FormDialog
       trigger={
-        <Button variant="outline" size="sm">
-          <Plus className="size-4" />
-          Enrol in a class
-        </Button>
+        <Button label="Enrol in a class" variant="secondary" size="sm" icon={<Plus className="size-4" aria-hidden />} />
       }
       title={`Enrol ${fullName(student)}`}
       submitLabel="Enrol"
@@ -164,13 +157,7 @@ export function EndEnrolment({ enrolment, classLabel }: WithClass) {
   return (
     <FormDialog
       trigger={
-        <Button
-          variant="ghost"
-          size="icon-sm"
-          aria-label={`End ${fullName(enrolment.student)}'s place in ${classLabel}`}
-        >
-          <LogOut className="size-3.5" />
-        </Button>
+        <IconButton label={`End ${fullName(enrolment.student)}'s place in ${classLabel}`} variant="ghost" size="sm" icon={<LogOut className="size-4" aria-hidden />} />
       }
       title={`End ${fullName(enrolment.student)}'s place?`}
       description={`They come off the roster for ${classLabel}. Their attendance and marks so far stay exactly as they are.`}
@@ -183,15 +170,13 @@ export function EndEnrolment({ enrolment, classLabel }: WithClass) {
         })
       }
     >
-      <div className="flex items-center justify-between gap-3 rounded-md border px-3 py-2">
-        <label htmlFor="finished" className="text-sm font-medium text-foreground">
-          They finished the class
-          <span className="block text-xs font-normal text-muted-foreground">
-            Off means they left it — the log says which.
-          </span>
-        </label>
-        <Switch id="finished" name="finished" />
-      </div>
+      <Switch
+        id="finished"
+        name="finished"
+        label="They finished the class"
+        description="Off means they left it — the log says which."
+        labelSpacing="spread"
+      />
       <Field label="Anything worth recording" htmlFor="note">
         <Textarea id="note" name="note" rows={2} placeholder="Moving to the Tuesday class" />
       </Field>
@@ -222,13 +207,7 @@ export function TransferEnrolment({
   return (
     <FormDialog
       trigger={
-        <Button
-          variant="ghost"
-          size="icon-sm"
-          aria-label={`Move ${fullName(enrolment.student)} to another class`}
-        >
-          <ArrowRightLeft className="size-3.5" />
-        </Button>
+        <IconButton label={`Move ${fullName(enrolment.student)} to another class`} variant="ghost" size="sm" icon={<ArrowRightLeft className="size-4" aria-hidden />} />
       }
       title={`Move ${fullName(enrolment.student)} to another class`}
       description="The old place closes and a new one opens, so their attendance so far stays intact."
