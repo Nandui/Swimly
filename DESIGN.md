@@ -165,9 +165,10 @@ carries the app's identity — `TopNavHeading` with the wordmark and, in its
 subheading slot (Astryx's "account context"), the club being shown — and at
 its end the club switcher (a `DropdownMenu`) and the mode flip. The
 `SideNav` holds only the screens the role may open; its footer is the
-account button: clicking the name opens an Astryx Popover with Account and
-Sign out. Account lives here rather than in the screen list. The shell owns
-the collapsed state and replaces the two-line name button with an account
+account button: a single name row aligned with the screen items, without a
+chevron. Clicking it opens an Astryx DropdownMenu with Account and Sign out.
+Account lives here rather than in the screen list. The shell owns
+the collapsed state and replaces the name button with an account
 icon in the footer icon bar while the nav is a rail. There is
 no second `Layout` inside the shell — Astryx says one per shell — so the
 page is capped at 1152px with a `Center` and a stack. Astryx's tables,

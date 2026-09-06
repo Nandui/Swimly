@@ -1,13 +1,11 @@
 "use client";
 
 import * as React from "react";
-import { usePathname, useSearchParams } from "next/navigation";
-import { ChevronUp, CircleUser, LogOut, Waves, type LucideIcon } from "lucide-react";
+import { usePathname, useRouter, useSearchParams } from "next/navigation";
+import { CircleUser, LogOut, Waves, type LucideIcon } from "lucide-react";
 import { AppShell as AstryxAppShell } from "@astryxdesign/core/AppShell";
-import { Avatar } from "@astryxdesign/core/Avatar";
 import { Badge } from "@astryxdesign/core/Badge";
-import { Button } from "@astryxdesign/core/Button";
-import { Popover } from "@astryxdesign/core/Popover";
+import { DropdownMenu } from "@astryxdesign/core/DropdownMenu";
 import { Icon } from "@astryxdesign/core/Icon";
 import { Center } from "@astryxdesign/core/Center";
 import { NavIcon } from "@astryxdesign/core/NavIcon";
@@ -17,7 +15,6 @@ import {
   SideNavSection,
 } from "@astryxdesign/core/SideNav";
 import { HStack, VStack } from "@astryxdesign/core/Stack";
-import { Text } from "@astryxdesign/core/Text";
 import { TopNav, TopNavHeading } from "@astryxdesign/core/TopNav";
 
 /** The workspace shell, on Astryx's AppShell in its most common shape: a
@@ -186,40 +183,33 @@ function AccountMenu({
   onSignOut,
   compact = false,
 }: Pick<AppShellProps, "userName" | "userSubtitle" | "onSignOut"> & { compact?: boolean }) {
-  const [open, setOpen] = React.useState(false);
+  const router = useRouter();
   return (
-    <Popover
-      label="Account menu"
-      isOpen={open}
-      onOpenChange={setOpen}
+    <DropdownMenu
+      hasChevron={false}
       placement="above"
       alignment="start"
-      width={240}
-      className={compact ? undefined : "w-full"}
-      content={
-        <VStack gap={2}>
-          <Text weight="medium">{userName}</Text>
-          {userSubtitle ? <Text type="supporting">{userSubtitle}</Text> : null}
-          <Button label="Account" href="/account" variant="ghost" width="100%"
-            icon={<Icon icon={CircleUser} size="sm" />} onClick={() => setOpen(false)} />
-          <Button label="Sign out" variant="ghost" width="100%"
-            icon={<Icon icon={LogOut} size="sm" />} isDisabled={!onSignOut}
-            onClick={() => { setOpen(false); onSignOut?.(); }} />
-        </VStack>
-      }
-    >
-      <Button label={`Account menu: ${userName}`} aria-label={`Account menu: ${userName}`}
-        variant="ghost" width={compact ? undefined : "100%"} isIconOnly={compact}
-        className="min-h-11"
-        icon={compact ? <Icon icon={CircleUser} size="sm" /> : <Avatar name={userName} size="sm" />}
-        endContent={compact ? undefined : <Icon icon={ChevronUp} size="sm" />}>
-        {compact ? undefined : (
-          <VStack as="span" gap={0} className="min-w-0 text-left">
-            <Text weight="medium" maxLines={1} hasTruncateTooltip={false}>{userName}</Text>
-            {userSubtitle ? <Text type="supporting" maxLines={1} hasTruncateTooltip={false}>{userSubtitle}</Text> : null}
-          </VStack>
-        )}
-      </Button>
-    </Popover>
+      menuWidth={240}
+      button={{
+        label: `Account menu: ${userName}`,
+        children: compact ? undefined : userName,
+        "aria-label": `Account menu: ${userName}`,
+        variant: "ghost",
+        width: compact ? undefined : "100%",
+        isIconOnly: compact,
+        className: compact ? undefined : "justify-start px-2",
+        icon: <Icon icon={CircleUser} size="sm" />,
+      }}
+      items={[
+        {
+          type: "section",
+          title: userSubtitle ? `${userName} · ${userSubtitle}` : userName,
+          items: [
+            { id: "account", label: "Account", icon: CircleUser, onClick: () => router.push("/account") },
+            { id: "sign-out", label: "Sign out", icon: LogOut, onClick: onSignOut, isDisabled: !onSignOut },
+          ],
+        },
+      ]}
+    />
   );
 }
