@@ -110,6 +110,10 @@ deleted); staff accounts, admin-defined roles from a permission catalogue;
 clubs and the switcher; the audit log; account settings with light and dark
 mode.
 
+Reception has its own desk page: swimmer search, current places with move and
+unenrol actions, today's timetable by time or level, and booking shortcuts in a
+bento grid. Roles can offer Reception as a screen and choose it as a landing page.
+
 **Constraints that hold:**
 
 - One database serves development and production. Schema changes are

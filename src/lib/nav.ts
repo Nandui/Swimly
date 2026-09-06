@@ -7,6 +7,7 @@ import {
   ClipboardCheck,
   CircleUser,
   Home,
+  Headset,
   KeyRound,
   Layers,
   UserCog,
@@ -26,6 +27,7 @@ export type AppNavItem = NavItem & { screen?: ScreenKey };
 
 export const NAV_ITEMS: AppNavItem[] = [
   { href: "/", label: "Overview", icon: Home, screen: "overview" },
+  { href: "/reception", label: "Reception", icon: Headset, screen: "reception" },
   { href: "/today", label: "Today", icon: CalendarCheck, screen: "today" },
   { href: "/students", label: "Swimmers", icon: Users, screen: "students" },
   { href: "/courses", label: "Classes", icon: CalendarDays, screen: "courses" },

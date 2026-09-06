@@ -27,6 +27,12 @@ export const SCREENS = [
     description: "The numbers, today's classes and recent activity.",
   },
   {
+    key: "reception",
+    label: "Reception",
+    path: "/reception",
+    description: "The desk: swimmer lookup, today's timetable and quick enrolment actions.",
+  },
+  {
     key: "today",
     label: "Today",
     path: "/today",
@@ -136,8 +142,8 @@ export function visibleScreens(
   return out;
 }
 
-/** The path a role starts on: Today if that is the choice and they can open
- *  it, otherwise the overview, otherwise the first screen they can open, so
+/** The selected landing page when accessible, otherwise the overview,
+ *  otherwise the first screen they can open, so
  *  nobody signs in to a 404. Account is the floor — everyone has that. */
 export function homePathFor(
   home: string,
@@ -145,6 +151,7 @@ export function homePathFor(
   screens: readonly string[]
 ): string {
   const visible = visibleScreens(screens, expandPermissions(permissions));
+  if (home === "reception" && visible.has("reception")) return ROLE_HOMES.reception.path;
   if (home === "today" && visible.has("today")) return ROLE_HOMES.today.path;
   if (visible.has("overview")) return ROLE_HOMES.overview.path;
   const first = SCREENS.find((screen) => visible.has(screen.key));

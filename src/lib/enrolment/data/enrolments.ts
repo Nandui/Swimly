@@ -39,11 +39,11 @@ export async function getEnrolmentsForStudent(studentId: string) {
 export type StudentEnrolment = Awaited<ReturnType<typeof getEnrolmentsForStudent>>[number];
 
 /** Courses a student could be moved into: live, and not the one they are in. */
-export async function getTransferTargets(excludeCourseId: string) {
+export async function getTransferTargets(excludeCourseId?: string) {
   await requireSession();
 
   return prisma.course.findMany({
-    where: { clubId: await currentClubId(), archivedAt: null, id: { not: excludeCourseId } },
+    where: { clubId: await currentClubId(), archivedAt: null, ...(excludeCourseId ? { id: { not: excludeCourseId } } : {}) },
     orderBy: [{ dayOfWeek: "asc" }, { startMinutes: "asc" }],
     select: {
       id: true,

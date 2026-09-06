@@ -57,6 +57,15 @@ certificate and hostname verification unless libpq compatibility is requested.
 
 `npm run build` does not apply migrations or seed records.
 
+## Reception
+
+`/reception` brings swimmer lookup, current class details, move/unenrol actions,
+today's classes grouped by time or level, and booking shortcuts into a responsive
+bento grid. Each role can be given the Reception screen and can choose it as its
+landing page. Enrolment actions still require `enrolment.manage`.
+
+See [Reception implementation and verification](docs/reception.md).
+
 ## Astryx
 
 [Astryx](https://astryx.atmeta.com/) is the visual authority. The app uses

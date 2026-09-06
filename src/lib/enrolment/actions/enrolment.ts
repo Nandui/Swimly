@@ -69,6 +69,7 @@ async function placementFor(
 }
 
 function revalidate() {
+  revalidatePath("/reception");
   revalidatePath("/courses");
   revalidatePath("/courses/[id]", "page");
   revalidatePath("/students/[id]", "page");

@@ -49,14 +49,23 @@ export function StudentSearch({
   emptyText?: string;
   id?: string;
 }) {
+  const [searchError, setSearchError] = React.useState<string | null>(null);
+  const searchGeneration = React.useRef(0);
   const excludeKey = exclude.join(",");
   const source = React.useMemo<SearchSource<Item>>(
     () => ({
       async search(query) {
+        const generation = ++searchGeneration.current;
         const term = query.trim();
         if (!term) return [];
-        const found = await searchStudents(term, excludeKey ? excludeKey.split(",") : []);
-        return found.map(toItem);
+        try {
+          const found = await searchStudents(term, excludeKey ? excludeKey.split(",") : []);
+          if (generation === searchGeneration.current) setSearchError(null);
+          return found.map(toItem);
+        } catch {
+          if (generation === searchGeneration.current) setSearchError("Could not search swimmers. Check your connection and try again.");
+          return [];
+        }
       },
       bootstrap: () => [],
     }),
@@ -72,6 +81,9 @@ export function StudentSearch({
       searchSource={source}
       value={selected ? toItem(selected) : null}
       onChange={(item) => onSelect(item?.auxiliaryData ?? null)}
+      onChangeQuery={() => { searchGeneration.current++; setSearchError(null); }}
+      status={searchError ? { type: "error", message: searchError } : undefined}
+      statusVariant="detached"
       placeholder={placeholder}
       emptySearchResultsText={emptyText}
       debounceMs={DEBOUNCE_MS}

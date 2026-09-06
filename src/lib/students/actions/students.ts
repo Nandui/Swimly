@@ -97,6 +97,7 @@ export async function createStudent(input: StudentInput): Promise<ActionResult> 
   );
   if (!result.ok) return result;
 
+  revalidatePath("/reception");
   revalidatePath("/students");
   return ok();
 }
@@ -182,6 +183,7 @@ export async function updateStudent(id: string, input: StudentInput): Promise<Ac
   }), `Member number ${data.memberNumber} already belongs to another swimmer.`);
   if (!result.ok) return result;
 
+  revalidatePath("/reception");
   revalidatePath("/students");
   revalidatePath("/students/[id]", "page");
   return ok();
@@ -231,6 +233,7 @@ export async function setStudentStatus(
   });
   if (!result.ok) return result;
 
+  revalidatePath("/reception");
   revalidatePath("/students");
   revalidatePath("/students/[id]", "page");
   return ok();

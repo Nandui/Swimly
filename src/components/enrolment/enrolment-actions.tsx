@@ -158,13 +158,15 @@ type EnrolmentLike = {
 /** The dialogs only ever use the class to name it in a sentence, so they take
  *  the label the caller already computed rather than a course shape they would
  *  have to reassemble. */
-type WithClass = { enrolment: EnrolmentLike; classLabel: string };
+type WithClass = { enrolment: EnrolmentLike; classLabel: string; variant?: "icon" | "button" };
 
-export function EndEnrolment({ enrolment, classLabel }: WithClass) {
+export function EndEnrolment({ enrolment, classLabel, variant = "icon" }: WithClass) {
   return (
     <FormDialog
       trigger={
-        <IconButton label={`End ${fullName(enrolment.student)}'s place in ${classLabel}`} variant="ghost" size="sm" icon={<Icon icon={LogOut} size="sm" />} />
+        variant === "button"
+          ? <Button label="Unenrol" aria-label={`Unenrol ${fullName(enrolment.student)} from ${classLabel}`} variant="secondary" icon={<Icon icon={LogOut} size="sm" />} />
+          : <IconButton label={`End ${fullName(enrolment.student)}'s place in ${classLabel}`} variant="ghost" size="sm" icon={<Icon icon={LogOut} size="sm" />} />
       }
       title={`End ${fullName(enrolment.student)}'s place?`}
       description={`They come off the roster for ${classLabel}. Their attendance and marks so far stay exactly as they are.`}
@@ -207,17 +209,23 @@ export function PromoteFromWaitlist({ enrolment }: { enrolment: EnrolmentLike })
 export function TransferEnrolment({
   enrolment,
   targets,
+  variant = "icon",
+  classLabel,
 }: {
   enrolment: EnrolmentLike;
   targets: TransferTarget[];
+  variant?: "icon" | "button";
+  classLabel?: string;
 }) {
   return (
     <FormDialog
       trigger={
-        <IconButton label={`Move ${fullName(enrolment.student)} to another class`} variant="ghost" size="sm" icon={<Icon icon={ArrowRightLeft} size="sm" />} />
+        variant === "button"
+          ? <Button label="Move swimmer" aria-label={`Move ${fullName(enrolment.student)}${classLabel ? ` from ${classLabel}` : ""} to another class`} variant="secondary" icon={<Icon icon={ArrowRightLeft} size="sm" />} />
+          : <IconButton label={`Move ${fullName(enrolment.student)} to another class`} variant="ghost" size="sm" icon={<Icon icon={ArrowRightLeft} size="sm" />} />
       }
       title={`Move ${fullName(enrolment.student)} to another class`}
-      description="The old place closes and a new one opens, so their attendance so far stays intact."
+      description={`${classLabel ? `From ${classLabel}. ` : ""}The old place closes and a new one opens, so their attendance so far stays intact.`}
       submitLabel="Move"
       successMessage="Swimmer moved"
       submit={(formData) =>

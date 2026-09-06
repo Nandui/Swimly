@@ -134,6 +134,7 @@ export async function createCourse(input: CourseInput): Promise<ActionResult> {
     }, tx);
   });
 
+  revalidatePath("/reception");
   revalidatePath("/courses");
   return ok();
 }
@@ -243,6 +244,7 @@ export async function updateCourse(id: string, input: CourseInput): Promise<Acti
   });
   if (!result.ok) return result;
 
+  revalidatePath("/reception");
   revalidatePath("/courses");
   revalidatePath("/courses/[id]", "page");
   return ok();
@@ -294,6 +296,7 @@ export async function setCourseArchived(id: string, archived: boolean): Promise<
   });
   if (!result.ok) return result;
 
+  revalidatePath("/reception");
   revalidatePath("/courses");
   revalidatePath("/courses/[id]", "page");
   return ok();
