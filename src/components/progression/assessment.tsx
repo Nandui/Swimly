@@ -10,7 +10,10 @@ import { List } from "@astryxdesign/core/List";
 import { HStack, VStack } from "@astryxdesign/core/Stack";
 import { StatusDot } from "@astryxdesign/core/StatusDot";
 import { Text } from "@astryxdesign/core/Text";
-import { ToggleButton, ToggleButtonGroup } from "@astryxdesign/core/ToggleButton";
+import {
+  SegmentedControl,
+  SegmentedControlItem,
+} from "@astryxdesign/core/SegmentedControl";
 import { Field, FormDialog } from "@/components/form-dialog";
 import { Tag } from "@/components/ui-kit/tag";
 import { Textarea } from "@/components/ui/textarea";
@@ -77,8 +80,11 @@ export function CompetencyChecklist({
   readOnly: boolean;
 }) {
   const initial = React.useMemo(
-    () => new Map(competencies.map((competency) => [competency.id, competency.status])),
-    [competencies]
+    () =>
+      new Map(
+        competencies.map((competency) => [competency.id, competency.status]),
+      ),
+    [competencies],
   );
   const [marks, setMarks] = React.useState(initial);
   const [pending, startTransition] = React.useTransition();
@@ -93,7 +99,7 @@ export function CompetencyChecklist({
   }
 
   const dirty = competencies.some(
-    (competency) => marks.get(competency.id) !== competency.status
+    (competency) => marks.get(competency.id) !== competency.status,
   );
 
   function save() {
@@ -101,7 +107,10 @@ export function CompetencyChecklist({
       const result = await saveAssessment({
         studentId,
         levelId,
-        results: [...marks.entries()].map(([competencyId, status]) => ({ competencyId, status })),
+        results: [...marks.entries()].map(([competencyId, status]) => ({
+          competencyId,
+          status,
+        })),
       });
       if (result.ok) {
         toast.success("Marks saved");
@@ -156,34 +165,29 @@ export function CompetencyChecklist({
                       {assessedLine(competency)}
                     </Text>
                   ) : null}
-                  <ToggleButtonGroup
-                    label={`${competency.name} — ${studentName}`}
-                    type="single"
-                    size="md"
-                    value={value}
-                    isDisabled={readOnly}
-                    onChange={(next) =>
-                      setMarks((previous) => {
-                        const map = new Map(previous);
-                        map.set(
-                          competency.id,
-                          typeof next === "string" ? (next as CompetencyStatus) : null
-                        );
-                        return map;
-                      })
-                    }
-                  >
-                    {MARK_ORDER.map((status) => (
-                      <ToggleButton
-                        key={status}
-                        value={status}
-                        label={MARK_LABEL[status]}
-                        pressedIcon={<Icon icon={Check} size="sm" />}
-                      >
-                        {MARK_LABEL[status]}
-                      </ToggleButton>
-                    ))}
-                  </ToggleButtonGroup>
+                  <HStack>
+                    <SegmentedControl
+                      label={`${competency.name} — ${studentName}`}
+                      size="md"
+                      value={value ?? ""}
+                      isDisabled={readOnly}
+                      onChange={(next) =>
+                        setMarks((previous) => {
+                          const map = new Map(previous);
+                          map.set(competency.id, next as CompetencyStatus);
+                          return map;
+                        })
+                      }
+                    >
+                      {MARK_ORDER.map((status) => (
+                        <SegmentedControlItem
+                          key={status}
+                          value={status}
+                          label={MARK_LABEL[status]}
+                        />
+                      ))}
+                    </SegmentedControl>
+                  </HStack>
                 </VStack>
               }
             />
@@ -191,7 +195,9 @@ export function CompetencyChecklist({
         })}
       </List>
 
-      {error ? <Banner status="error" title={error} collapsible={false} /> : null}
+      {error ? (
+        <Banner status="error" title={error} collapsible={false} />
+      ) : null}
 
       {readOnly ? null : (
         <HStack gap={3} vAlign="center" hAlign="end">
@@ -332,11 +338,19 @@ export function RevokeCompletion({
       submitLabel="Take it back"
       successMessage="Completion taken back"
       submit={(formData) =>
-        revokeLevelCompletion(completionId, { reason: String(formData.get("reason") ?? "") })
+        revokeLevelCompletion(completionId, {
+          reason: String(formData.get("reason") ?? ""),
+        })
       }
     >
       <Field label="Why" htmlFor="reason">
-        <Textarea id="reason" name="reason" rows={2} required placeholder="Signed off in error" />
+        <Textarea
+          id="reason"
+          name="reason"
+          rows={2}
+          required
+          placeholder="Signed off in error"
+        />
       </Field>
     </FormDialog>
   );

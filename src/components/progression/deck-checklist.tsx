@@ -13,12 +13,22 @@ import { HStack, StackItem, VStack } from "@astryxdesign/core/Stack";
 import { StatusDot } from "@astryxdesign/core/StatusDot";
 import { Tab, TabList } from "@astryxdesign/core/TabList";
 import { Heading, Text } from "@astryxdesign/core/Text";
-import { ToggleButton, ToggleButtonGroup } from "@astryxdesign/core/ToggleButton";
+import {
+  SegmentedControl,
+  SegmentedControlItem,
+} from "@astryxdesign/core/SegmentedControl";
 import { VisuallyHidden } from "@astryxdesign/core/VisuallyHidden";
-import { OFFLINE_MESSAGE, SaveBar, withTimeout } from "@/components/attendance/register-form";
+import {
+  OFFLINE_MESSAGE,
+  SaveBar,
+  withTimeout,
+} from "@/components/attendance/register-form";
 import { Num } from "@/components/ui-kit/prose";
 import { Tag } from "@/components/ui-kit/tag";
-import type { AttendanceStatus, CompetencyStatus } from "@/generated/prisma/client";
+import type {
+  AttendanceStatus,
+  CompetencyStatus,
+} from "@/generated/prisma/client";
 import { saveClassAssessment } from "@/lib/progression/actions/assess";
 import { toast } from "@/lib/toast";
 import { Icon } from "@astryxdesign/core/Icon";
@@ -41,7 +51,11 @@ import { Icon } from "@astryxdesign/core/Icon";
 
 type Choice = CompetencyStatus | null;
 
-export type DeckCompetency = { id: string; name: string; description: string | null };
+export type DeckCompetency = {
+  id: string;
+  name: string;
+  description: string | null;
+};
 
 export type DeckSwimmer = {
   studentId: string;
@@ -99,9 +113,9 @@ export function DeckChecklist({
         swimmers.map((swimmer) => [
           swimmer.studentId,
           new Map(competencies.map((c) => [c.id, swimmer.marks[c.id] ?? null])),
-        ])
+        ]),
       ),
-    [swimmers, competencies]
+    [swimmers, competencies],
   );
 
   const [marks, setMarks] = React.useState(initial);
@@ -119,7 +133,7 @@ export function DeckChecklist({
       const status = attendance[studentId];
       return status === "PRESENT" || status === "LATE";
     },
-    [attendance]
+    [attendance],
   );
   const here = swimmers.filter((s) => inToday(s.studentId));
   const away = swimmers.filter((s) => !inToday(s.studentId));
@@ -127,7 +141,7 @@ export function DeckChecklist({
   // Open on the first competency the swimmers here have not all got yet.
   const [current, setCurrent] = React.useState(() => {
     const index = competencies.findIndex((c) =>
-      here.some((s) => (s.marks[c.id] ?? null) !== "ACHIEVED")
+      here.some((s) => (s.marks[c.id] ?? null) !== "ACHIEVED"),
     );
     return index === -1 ? 0 : index;
   });
@@ -173,7 +187,8 @@ export function DeckChecklist({
   }
 
   const changes = React.useMemo(() => {
-    const list: { studentId: string; competencyId: string; status: Choice }[] = [];
+    const list: { studentId: string; competencyId: string; status: Choice }[] =
+      [];
     for (const [studentId, row] of marks) {
       const was = initial.get(studentId);
       for (const [competencyId, status] of row) {
@@ -206,7 +221,8 @@ export function DeckChecklist({
   function update(mutate: (next: Marks) => void) {
     setMarks((previous) => {
       const next: Marks = new Map();
-      for (const [studentId, row] of previous) next.set(studentId, new Map(row));
+      for (const [studentId, row] of previous)
+        next.set(studentId, new Map(row));
       mutate(next);
       remember(next);
       return next;
@@ -224,7 +240,8 @@ export function DeckChecklist({
   /** Everyone who was in the water today. */
   function everyone(competencyId: string, status: CompetencyStatus) {
     update((next) => {
-      for (const swimmer of here) next.get(swimmer.studentId)?.set(competencyId, status);
+      for (const swimmer of here)
+        next.get(swimmer.studentId)?.set(competencyId, status);
     });
   }
 
@@ -232,7 +249,10 @@ export function DeckChecklist({
     startTransition(async () => {
       let result: Awaited<ReturnType<typeof saveClassAssessment>>;
       try {
-        result = await withTimeout(saveClassAssessment({ levelId, marks: changes }), SAVE_TIMEOUT_MS);
+        result = await withTimeout(
+          saveClassAssessment({ levelId, marks: changes }),
+          SAVE_TIMEOUT_MS,
+        );
       } catch {
         startTransition(() => setError(OFFLINE_MESSAGE));
         return;
@@ -274,14 +294,17 @@ export function DeckChecklist({
 
   const competency = competencies[current];
   const achievedHere = here.filter(
-    (s) => marks.get(s.studentId)?.get(competency.id) === "ACHIEVED"
+    (s) => marks.get(s.studentId)?.get(competency.id) === "ACHIEVED",
   ).length;
   const allAchieved = (competencyId: string) =>
     here.length > 0 &&
     here.every((s) => marks.get(s.studentId)?.get(competencyId) === "ACHIEVED");
   const achievedFor = (studentId: string) =>
-    competencies.filter((c) => marks.get(studentId)?.get(c.id) === "ACHIEVED").length;
-  const markedAtAll = [...marks.values()].some((row) => [...row.values()].some(Boolean));
+    competencies.filter((c) => marks.get(studentId)?.get(c.id) === "ACHIEVED")
+      .length;
+  const markedAtAll = [...marks.values()].some((row) =>
+    [...row.values()].some(Boolean),
+  );
 
   const row = (swimmer: DeckSwimmer, dimmed: boolean) => {
     const value = marks.get(swimmer.studentId)?.get(competency.id) ?? null;
@@ -298,12 +321,18 @@ export function DeckChecklist({
               variant={value ? DOT[value] : "neutral"}
               label={value ? MARK_LABEL[value] : "Not marked"}
             />
-            <Text type="large" weight="semibold" color={dimmed ? "secondary" : "primary"}>
+            <Text
+              type="large"
+              weight="semibold"
+              color={dimmed ? "secondary" : "primary"}
+            >
               {swimmer.name}
             </Text>
             {late ? <Tag color="orange">Late</Tag> : null}
             {swimmer.completed ? <Tag color="blue">Completed</Tag> : null}
-            {swimmer.offLevel ? <Tag color="purple">Placed at another level</Tag> : null}
+            {swimmer.offLevel ? (
+              <Tag color="purple">Placed at another level</Tag>
+            ) : null}
           </HStack>
         }
         description={
@@ -311,31 +340,29 @@ export function DeckChecklist({
             <Text color="secondary" hasTabularNumbers>
               {achievedFor(swimmer.studentId)} of {competencies.length} achieved
             </Text>
-            <ToggleButtonGroup
-              label={`${competency.name} — ${swimmer.name}`}
-              type="single"
-              size="lg"
-              value={value}
-              isDisabled={readOnly}
-              onChange={(next) =>
-                choose(
-                  swimmer.studentId,
-                  competency.id,
-                  typeof next === "string" ? (next as CompetencyStatus) : null
-                )
-              }
-            >
-              {MARK_ORDER.map((status) => (
-                <ToggleButton
-                  key={status}
-                  value={status}
-                  label={MARK_LABEL[status]}
-                  pressedIcon={<Icon icon={Check} size="sm" />}
-                >
-                  {MARK_LABEL[status]}
-                </ToggleButton>
-              ))}
-            </ToggleButtonGroup>
+            <HStack>
+              <SegmentedControl
+                label={`${competency.name} — ${swimmer.name}`}
+                size="lg"
+                value={value ?? ""}
+                isDisabled={readOnly}
+                onChange={(next) =>
+                  choose(
+                    swimmer.studentId,
+                    competency.id,
+                    next as CompetencyStatus,
+                  )
+                }
+              >
+                {MARK_ORDER.map((status) => (
+                  <SegmentedControlItem
+                    key={status}
+                    value={status}
+                    label={MARK_LABEL[status]}
+                  />
+                ))}
+              </SegmentedControl>
+            </HStack>
           </VStack>
         }
       />
@@ -360,7 +387,9 @@ export function DeckChecklist({
             label={`${index + 1}`}
             aria-label={`${index + 1}. ${c.name}`}
             endContent={
-              allAchieved(c.id) ? <Icon icon={Check} size="sm" label="Everyone achieved" /> : undefined
+              allAchieved(c.id) ? (
+                <Icon icon={Check} size="sm" label="Everyone achieved" />
+              ) : undefined
             }
           />
         ))}
@@ -378,7 +407,12 @@ export function DeckChecklist({
                   {competency.name}
                 </Heading>
                 {competency.description ? (
-                  <Text as="p" display="block" color="secondary" className="max-w-prose">
+                  <Text
+                    as="p"
+                    display="block"
+                    color="secondary"
+                    className="max-w-prose"
+                  >
                     {competency.description}
                   </Text>
                 ) : null}
@@ -403,14 +437,20 @@ export function DeckChecklist({
                 size="lg"
                 icon={<Icon icon={ChevronRight} size="md" />}
                 isDisabled={current === competencies.length - 1}
-                onClick={() => setCurrent((i) => Math.min(competencies.length - 1, i + 1))}
+                onClick={() =>
+                  setCurrent((i) => Math.min(competencies.length - 1, i + 1))
+                }
               />
             </HStack>
           </HStack>
           {readOnly || here.length === 0 ? null : (
             <HStack>
               <Button
-                label={attendance ? "Everyone in today achieved" : "Everyone achieved"}
+                label={
+                  attendance
+                    ? "Everyone in today achieved"
+                    : "Everyone achieved"
+                }
                 variant="secondary"
                 size="lg"
                 icon={<Icon icon={Check} size="sm" />}
@@ -452,7 +492,9 @@ export function DeckChecklist({
         </Collapsible>
       ) : null}
 
-      {error ? <Banner status="error" title={error} collapsible={false} /> : null}
+      {error ? (
+        <Banner status="error" title={error} collapsible={false} />
+      ) : null}
 
       {/* One bar. Save while there is something to save; Done once a save
           has landed; and a quiet way back before anything has been marked,

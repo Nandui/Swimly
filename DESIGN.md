@@ -123,8 +123,11 @@ each behind the `Input` adapter so the plain `<form>` still posts them.
 is `Text`, every list of records is `Table` (children mode, which is
 server-safe) or `List` with `Item`, every region is a stack or a `Section`,
 a discrete thing is a `Card`, a fold is a `Collapsible`, a notice is a
-`Banner`, a count that needs noticing is a `Badge`, a mark is a
-`ToggleButtonGroup` with a `StatusDot` beside the name, a way back up
+`Banner`, a count that needs noticing is a `Badge`, a mark (present, late,
+absent; working on it, achieved) is a `SegmentedControl` — Astryx's
+control for one choice out of a few with every option visible; before anyone
+marks, its value matches no segment and nothing is lit — with a
+`StatusDot` beside the name, a way back up
 is `Breadcrumbs`, a page centred on nothing else (sign-in) is a `Center`.
 Records are rows — `List` with `Item`, or `Table` — never a card each:
 the roles page and a swimmer's level ladder are lists with dividers, and only

@@ -13,11 +13,17 @@ import { HStack, VStack } from "@astryxdesign/core/Stack";
 import { StatusDot } from "@astryxdesign/core/StatusDot";
 import { Text } from "@astryxdesign/core/Text";
 import { TextArea } from "@astryxdesign/core/TextArea";
-import { ToggleButton, ToggleButtonGroup } from "@astryxdesign/core/ToggleButton";
+import {
+  SegmentedControl,
+  SegmentedControlItem,
+} from "@astryxdesign/core/SegmentedControl";
 import { Tag } from "@/components/ui-kit/tag";
 import type { AttendanceStatus } from "@/generated/prisma/client";
 import { markRegister } from "@/lib/attendance/actions/register";
-import { ATTENDANCE_ORDER, ATTENDANCE_STATUS_META } from "@/lib/attendance/constants";
+import {
+  ATTENDANCE_ORDER,
+  ATTENDANCE_STATUS_META,
+} from "@/lib/attendance/constants";
 import type { RegisterLine } from "@/lib/attendance/data/register";
 import { ageInYears } from "@/lib/format";
 import { toast } from "@/lib/toast";
@@ -62,7 +68,7 @@ export function withTimeout<T>(promise: Promise<T>, ms: number): Promise<T> {
       (error) => {
         clearTimeout(timer);
         reject(error);
-      }
+      },
     );
   });
 }
@@ -74,7 +80,13 @@ export function withTimeout<T>(promise: Promise<T>, ms: number): Promise<T> {
  *  sticky edge, so it sits flush with the bottom of the screen. Clears the
  *  home indicator on a phone: the bottom padding grows by the safe-area
  *  inset, which is zero everywhere that has none. */
-export function SaveBar({ status, children }: { status: string; children: React.ReactNode }) {
+export function SaveBar({
+  status,
+  children,
+}: {
+  status: string;
+  children: React.ReactNode;
+}) {
   return (
     <Section
       dividers={["top"]}
@@ -119,7 +131,10 @@ export function RegisterForm({
   const initial = React.useMemo(() => {
     const map = new Map<string, Mark>();
     for (const line of lines) {
-      map.set(line.studentId, { status: line.status ?? "ABSENT", note: line.note ?? "" });
+      map.set(line.studentId, {
+        status: line.status ?? "ABSENT",
+        note: line.note ?? "",
+      });
     }
     return map;
   }, [lines]);
@@ -188,7 +203,8 @@ export function RegisterForm({
   function setAll(status: AttendanceStatus) {
     setMarks((previous) => {
       const next = new Map<string, Mark>();
-      for (const [studentId, mark] of previous) next.set(studentId, { ...mark, status });
+      for (const [studentId, mark] of previous)
+        next.set(studentId, { ...mark, status });
       remember(next);
       return next;
     });
@@ -213,7 +229,7 @@ export function RegisterForm({
             })),
             classNote: note.trim() || undefined,
           }),
-          SAVE_TIMEOUT_MS
+          SAVE_TIMEOUT_MS,
         );
       } catch {
         startTransition(() => setError(OFFLINE_MESSAGE));
@@ -255,7 +271,12 @@ export function RegisterForm({
           ))}
         </Text>
         {readOnly ? null : (
-          <Button label="Everyone in" variant="secondary" size="lg" onClick={() => setAll("PRESENT")} />
+          <Button
+            label="Everyone in"
+            variant="secondary"
+            size="lg"
+            onClick={() => setAll("PRESENT")}
+          />
         )}
       </HStack>
 
@@ -279,43 +300,55 @@ export function RegisterForm({
                   <Text type="large" weight="semibold">
                     {name}
                   </Text>
-                  {line.offRoster ? <Tag color="gray">No longer in this class</Tag> : null}
+                  {line.offRoster ? (
+                    <Tag color="gray">No longer in this class</Tag>
+                  ) : null}
                 </HStack>
               }
               description={
                 <VStack gap={2}>
                   <Text color="secondary">
-                    {line.dateOfBirth ? `${ageInYears(line.dateOfBirth)} · ` : ""}
+                    {line.dateOfBirth
+                      ? `${ageInYears(line.dateOfBirth)} · `
+                      : ""}
                     {line.levelName || "—"}
                   </Text>
                   {line.medicalNotes ? (
-                    <Collapsible defaultIsOpen={false} trigger={<Tag color="red">Medical</Tag>}>
-                      <Text as="p" display="block" className="max-w-prose whitespace-pre-wrap">
+                    <Collapsible
+                      defaultIsOpen={false}
+                      trigger={<Tag color="red">Medical</Tag>}
+                    >
+                      <Text
+                        as="p"
+                        display="block"
+                        className="max-w-prose whitespace-pre-wrap"
+                      >
                         {line.medicalNotes}
                       </Text>
                     </Collapsible>
                   ) : null}
-                  <ToggleButtonGroup
-                    label={`Attendance for ${name}`}
-                    type="single"
-                    size="lg"
-                    value={mark?.status ?? null}
-                    isDisabled={readOnly}
-                    onChange={(value) => {
-                      if (typeof value === "string") set(line.studentId, value as AttendanceStatus);
-                    }}
-                  >
-                    {ATTENDANCE_ORDER.map((status) => (
-                      <ToggleButton
-                        key={status}
-                        value={status}
-                        label={ATTENDANCE_STATUS_META[status].label}
-                        pressedIcon={<Icon icon={Check} size="sm" />}
-                      >
-                        {ATTENDANCE_STATUS_META[status].label}
-                      </ToggleButton>
-                    ))}
-                  </ToggleButtonGroup>
+                  {/* One of three, all visible: Astryx's SegmentedControl.
+                      Before anyone marks them the value matches no segment,
+                      which the control allows — nothing is lit. */}
+                  <HStack>
+                    <SegmentedControl
+                      label={`Attendance for ${name}`}
+                      size="lg"
+                      value={mark?.status ?? ""}
+                      isDisabled={readOnly}
+                      onChange={(value) =>
+                        set(line.studentId, value as AttendanceStatus)
+                      }
+                    >
+                      {ATTENDANCE_ORDER.map((status) => (
+                        <SegmentedControlItem
+                          key={status}
+                          value={status}
+                          label={ATTENDANCE_STATUS_META[status].label}
+                        />
+                      ))}
+                    </SegmentedControl>
+                  </HStack>
                 </VStack>
               }
             />
@@ -336,22 +369,36 @@ export function RegisterForm({
         width="100%"
       />
 
-      {error ? <Banner status="error" title={error} collapsible={false} /> : null}
+      {error ? (
+        <Banner status="error" title={error} collapsible={false} />
+      ) : null}
 
       {readOnly ? null : (
         <SaveBar
           status={
-            restored ? "Kept on this phone, not saved yet" : dirty ? "Not saved yet" : "Up to date"
+            restored
+              ? "Kept on this phone, not saved yet"
+              : dirty
+                ? "Not saved yet"
+                : "Up to date"
           }
         >
           <Button
-            label={pending ? "Saving…" : continueHref ? "Save and continue" : "Save attendance"}
+            label={
+              pending
+                ? "Saving…"
+                : continueHref
+                  ? "Save and continue"
+                  : "Save attendance"
+            }
             variant="primary"
             size="lg"
             onClick={save}
             isLoading={pending}
             icon={continueHref ? undefined : <Icon icon={Check} size="sm" />}
-            endContent={continueHref ? <Icon icon={ArrowRight} size="sm" /> : undefined}
+            endContent={
+              continueHref ? <Icon icon={ArrowRight} size="sm" /> : undefined
+            }
           />
         </SaveBar>
       )}
