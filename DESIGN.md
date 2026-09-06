@@ -80,13 +80,12 @@ scale and the radius scale (`rounded-md` is the 10px element radius,
 keep their pixel meaning: `text-xs` 12, `text-sm` 14 (Astryx's body size),
 `text-base` 16, `text-lg` 17.
 
-**Legacy aliases, meant to disappear.** A block in `@theme inline` aliases the
-names the screens were written against — `bg-background`, `text-foreground`,
-`text-muted-foreground`, `border-input`, `bg-sidebar` — onto Astryx tokens, so
-every page rendered in the new colours from the first build. Each alias goes
-as its screens are rewritten in Astryx's names; when the block is empty the
-sweep is done. `bg-accent`, `bg-primary` and the focus rings were swept on day
-one because the bridge gives those names other meanings.
+**No legacy names.** The move went in two passes: first a block of aliases
+in `@theme inline` kept the old shadcn names (`text-foreground`,
+`bg-muted`…) rendering while the shell and the controls were swapped, then
+every page body was rewritten in Astryx's own components and the block was
+deleted. Nothing in `src` names a colour, a size or a radius that is not
+Astryx's, and `globals.css` is short enough to read in one go.
 
 **Figtree through next/font.** Astryx never loads a font. The theme names
 Figtree; the root layout self-hosts it with `next/font/google` and hands the
@@ -101,9 +100,16 @@ teal stands in and reads as its own hue.
 thumb on a wet phone needs 44. One unlayered media rule gives every button,
 field, menu row, nav item and tab a 44px minimum below `md`.
 
-**The focus ring is Astryx's.** The few controls the app draws itself — a row
-that is a link, a mark button on the register — use the `focus-ring` utility,
-which is Astryx's own outline tokens, so keyboard focus looks like one thing.
+**Nothing is drawn by hand.** Every heading is `Heading`, every run of words
+is `Text`, every list of records is `Table` (children mode, which is
+server-safe) or `List` with `Item`, every region is a stack or a `Section`,
+a discrete thing is a `Card`, a fold is a `Collapsible`, a notice is a
+`Banner`, a count that needs noticing is a `Badge`, a mark is a
+`ToggleButtonGroup` with a `StatusDot` beside the name. Tailwind classes
+appear only for layout Astryx's props cannot express — a responsive column
+that hides below `md`, a centred page column — never for a colour, a
+size or a radius. The one CSS rule the app adds to Astryx's controls is the
+44px phone minimum.
 
 ### Two modes, the device decides
 
@@ -128,21 +134,19 @@ desktop in this design. AppShell owns the skip link and the `<main>`
 landmark; pages start at their H1. The dev build's "view as" bar is a
 `Banner status="warning" container="section"` in the shell's banner slot.
 
-### Adapters over Astryx, so forms kept posting
+### Fields that post: Astryx's inputs inside plain forms
 
 Every form in the app is a plain `<form>` read with `FormData` by a server
-action. Astryx's inputs are controlled. Rather than rewrite fourteen forms,
-`src/components/ui/{button,input,textarea,switch,select}.tsx` keep their
-import paths and props and render Astryx underneath: the adapter holds the
-value, hands Astryx `htmlName`, and the form still posts. `Field` in
-`form-dialog.tsx` hands its label and hint to a control that knows what to
-do with them, and wraps anything else in Astryx's `Field`. A date, time or
-number keeps the native control — the browser's picker is the right one on a
-phone — inside that same `Field`.
-
-The `Button` adapter derives Astryx's required `label` from the words inside
-the button or its `aria-label`, moves a lone icon into Astryx's icon slot,
-and renders the icon-only sizes as `IconButton`.
+action, and Astryx's inputs are controlled. `src/components/ui/{input,
+textarea,switch,select}.tsx` are the join: each holds the value in state,
+renders Astryx's `TextInput`, `TextArea`, `Switch` or `Selector` with
+`htmlName`, and the form posts as before. `Field` in `form-dialog.tsx` hands
+its label and hint to one of those, and wraps anything else in Astryx's
+`Field`. A date, time or number keeps the native control — the browser's
+picker is the right one on a phone — inside that same `Field`. A set of
+ticks (`CheckboxList`, `RadioList`) posts through one hidden input per
+tick. Buttons need no join: every call site is Astryx's `Button` or
+`IconButton` with its own `label`.
 
 ### Toasts through one bridge
 
@@ -510,9 +514,8 @@ Before calling a screen done:
   from the legacy alias block in new code.
 - Every text pair 4.5:1 and every control edge 3:1, checked in light and dark
   for anything not drawn by the theme.
-- Keyboard: Astryx's focus outline on everything focusable (the `focus-ring`
-  utility on hand-drawn controls), the skip link first,
-  `prefers-reduced-motion` honoured.
+- Keyboard: Astryx's focus outline on everything focusable, the skip link
+  first, `prefers-reduced-motion` honoured.
 - 375px checked: 44px targets, nothing scrolling sideways, the phone bar's
   toggle on screen.
 - Row actions carry `aria-label`s naming the verb and the row, and stay
