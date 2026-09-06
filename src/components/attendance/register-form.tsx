@@ -68,15 +68,18 @@ export function withTimeout<T>(promise: Promise<T>, ms: number): Promise<T> {
 }
 
 /** The bar pinned to the foot of a deck form: what state the marks are in,
- *  and the one button that saves them. Clears the home indicator on a
- *  phone: the bottom padding grows by the safe-area inset, which is zero
- *  everywhere that has none. */
+ *  and the one button that saves them. The page scrolls inside the shell's
+ *  main region, which has 16px of padding on every side; the bar bleeds
+ *  through that padding on three sides and pins 16px past the region's
+ *  sticky edge, so it sits flush with the bottom of the screen. Clears the
+ *  home indicator on a phone: the bottom padding grows by the safe-area
+ *  inset, which is zero everywhere that has none. */
 export function SaveBar({ status, children }: { status: string; children: React.ReactNode }) {
   return (
     <Section
       dividers={["top"]}
       paddingBlock={3}
-      className="sticky bottom-0 -mx-4 pb-[max(0.75rem,env(safe-area-inset-bottom))]"
+      className="sticky -mx-4 -mb-4 bottom-[-1rem] pb-[max(0.75rem,env(safe-area-inset-bottom))]"
     >
       <HStack gap={3} vAlign="center" hAlign="between">
         <Text color="secondary" hasTabularNumbers aria-live="polite">

@@ -146,11 +146,17 @@ page is where "system" is restored. `next-themes` is gone.
 
 ### The shell
 
-Astryx's most common layout, "Top Nav with Side Nav". `AppShell` in
-`height="auto"` (the page scrolls, the nav sticks), `variant="elevated"`
-(Astryx's default: wash-coloured nav areas, the content a raised surface —
-and the only variant that paints the sticky header, so the page cannot show
-through it as it scrolls), `contentPadding={4}`. The `TopNav`
+Astryx's most common layout, "Top Nav with Side Nav", on Astryx's defaults:
+`height="fill"` (the shell fills the viewport and the page scrolls inside
+the main region, so the nav and the raised content card never move) and
+`variant="elevated"` (wash-coloured nav areas, the content a raised surface
+with a rounded corner), with `contentPadding={4}`. Because the window never
+scrolls, the shell scrolls the main region back to the top on every
+navigation, which is what the browser would have done. Anything that pins to
+the bottom of the screen (the deck's save bar) is `sticky` inside that
+region, bleeding through its 16px padding. `height="auto"` was tried and
+dropped: the whole document scrolled, so the card's corner scrolled away and,
+with the "section" variant, the sticky header was unpainted. The `TopNav`
 carries the app's identity — `TopNavHeading` with the wordmark and, in its
 subheading slot (Astryx's "account context"), the club being shown — and at
 its end the club switcher (a `DropdownMenu`) and the mode flip. The

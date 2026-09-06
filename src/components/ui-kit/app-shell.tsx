@@ -1,7 +1,7 @@
 "use client";
 
 import * as React from "react";
-import { usePathname } from "next/navigation";
+import { usePathname, useSearchParams } from "next/navigation";
 import { LogOut, MoreHorizontal, Waves, type LucideIcon } from "lucide-react";
 import { AppShell as AstryxAppShell } from "@astryxdesign/core/AppShell";
 import { Avatar } from "@astryxdesign/core/Avatar";
@@ -28,6 +28,7 @@ import { TopNav, TopNavHeading } from "@astryxdesign/core/TopNav";
  *  landmark; pages start at their own H1.
  *
  *  Responsive contract:
+ *    any    the shell fills the viewport; the page scrolls in the main region
  *    >768   TopNav | SideNav 256, collapsible to a rail | content capped at 1152
  *    <=768  TopNav as a bar, switcher icon-only; SideNav in the drawer (mobileNav "md")
  *    any    16px of content padding from the shell; touch targets grow to 44px
@@ -76,13 +77,16 @@ export function AppShell(props: AppShellProps) {
   // nav is a rail. The account menu lives in the footer icon bar, which
   // Astryx keeps in both states beside its own collapse button.
   const [collapsed, setCollapsed] = React.useState(false);
+  useScrollToTopOnNavigate();
 
   return (
     <AstryxAppShell
-      height="auto"
-      // "elevated" is Astryx's default and the one variant that paints the
-      // nav areas; in height="auto" the header is sticky, and an unpainted
-      // header lets the page show through it as it scrolls.
+      // Astryx's defaults, on purpose: the shell fills the viewport and the
+      // page scrolls inside its own region, so the nav and the raised content
+      // card stay where they are and only the page moves. (In height="auto"
+      // the whole document scrolled, the card's rounded corner scrolled away
+      // with it, and the "section" variant left the sticky header unpainted.)
+      height="fill"
       variant="elevated"
       banner={props.banner}
       contentPadding={4}
@@ -152,6 +156,17 @@ export function AppShell(props: AppShellProps) {
       </Center>
     </AstryxAppShell>
   );
+}
+
+/** The page scrolls inside the shell's main region, not the window, so the
+ *  browser's own scroll-to-top on navigation never fires. This does what the
+ *  browser would have: every new URL starts at the top. */
+function useScrollToTopOnNavigate() {
+  const pathname = usePathname();
+  const search = useSearchParams().toString();
+  React.useEffect(() => {
+    document.getElementById("astryx-app-shell-main")?.scrollTo({ top: 0 });
+  }, [pathname, search]);
 }
 
 /** Who is signed in. Name and role on two lines beside an initials avatar;
