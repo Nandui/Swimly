@@ -6,6 +6,7 @@ import { Banner } from "@astryxdesign/core/Banner";
 import { Button } from "@astryxdesign/core/Button";
 import { Card } from "@astryxdesign/core/Card";
 import { Divider } from "@astryxdesign/core/Divider";
+import { Icon } from "@astryxdesign/core/Icon";
 import { Link } from "@astryxdesign/core/Link";
 import { HStack, VStack } from "@astryxdesign/core/Stack";
 import { Heading, Text } from "@astryxdesign/core/Text";
@@ -44,6 +45,11 @@ export function ReceptionDashboard({ clubName, dateLabel, now, courses, student,
     (first, course) => first === null ? course.startMinutes : Math.min(first, course.startMinutes), null
   );
   const mayEnrol = access.manage && student?.status === "ACTIVE";
+  const bookingLinks = [
+    { visible: access.courses, href: "/courses?day=any", label: "Find a class on any day" },
+    { visible: access.together, href: "/together", label: "Find a time for siblings" },
+    { visible: access.assessments, href: "/assessments", label: "Open assessment bookings" },
+  ].filter(link => link.visible);
 
   return (
     <VStack gap={5}>
@@ -141,9 +147,13 @@ export function ReceptionDashboard({ clubName, dateLabel, now, courses, student,
           <Card height="100%" padding={5}>
             <VStack gap={2}>
               <Heading level={2} id="reception-shortcuts">Plan a booking</Heading>
-              {access.courses ? <Link className="inline-flex min-h-11 items-center" href="/courses?day=any" isStandalone>Find a class on any day</Link> : null}
-              {access.together ? <Link className="inline-flex min-h-11 items-center" href="/together" isStandalone>Find a time for siblings</Link> : null}
-              {access.assessments ? <Link className="inline-flex min-h-11 items-center" href="/assessments" isStandalone>Open assessment bookings</Link> : null}
+              {bookingLinks.map(link => (
+                <Link key={link.href} href={link.href} isStandalone hasUnderline weight="medium"
+                  className="flex min-h-11 w-full items-center justify-between gap-3">
+                  <Text type="inherit">{link.label}</Text>
+                  <Icon icon="chevronRight" size="sm" />
+                </Link>
+              ))}
               {!access.courses && !access.together && !access.assessments ? <Text as="p" color="secondary">Use swimmer lookup to see current places. More booking screens can be enabled for your role.</Text> : null}
             </VStack>
           </Card>
