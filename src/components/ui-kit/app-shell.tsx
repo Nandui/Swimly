@@ -10,7 +10,11 @@ import { DropdownMenu } from "@astryxdesign/core/DropdownMenu";
 import { Icon } from "@astryxdesign/core/Icon";
 import { Center } from "@astryxdesign/core/Center";
 import { NavIcon } from "@astryxdesign/core/NavIcon";
-import { SideNav, SideNavItem, SideNavSection } from "@astryxdesign/core/SideNav";
+import {
+  SideNav,
+  SideNavItem,
+  SideNavSection,
+} from "@astryxdesign/core/SideNav";
 import { HStack, StackItem, VStack } from "@astryxdesign/core/Stack";
 import { Text } from "@astryxdesign/core/Text";
 import { TopNav, TopNavHeading } from "@astryxdesign/core/TopNav";
@@ -67,11 +71,19 @@ export type AppShellProps = {
 
 export function AppShell(props: AppShellProps) {
   const pathname = usePathname();
+  // The rail: Astryx collapses its items to icons by itself, but the account
+  // row is ours, so the shell holds the state and hides the row when the
+  // nav is a rail. The account menu lives in the footer icon bar, which
+  // Astryx keeps in both states beside its own collapse button.
+  const [collapsed, setCollapsed] = React.useState(false);
 
   return (
     <AstryxAppShell
       height="auto"
-      variant="section"
+      // "elevated" is Astryx's default and the one variant that paints the
+      // nav areas; in height="auto" the header is sticky, and an unpainted
+      // header lets the page show through it as it scrolls.
+      variant="elevated"
       banner={props.banner}
       contentPadding={4}
       mobileNav={{ breakpoint: "md" }}
@@ -96,14 +108,20 @@ export function AppShell(props: AppShellProps) {
       }
       sideNav={
         <SideNav
-          collapsible
-          footer={<UserRow {...props} />}
+          collapsible={{
+            isCollapsed: collapsed,
+            onCollapsedChange: setCollapsed,
+          }}
+          footer={collapsed ? undefined : <UserRow {...props} />}
+          footerIcons={<AccountMenu {...props} />}
         >
           <SideNavSection title="Screens" isHeaderHidden>
             {props.items.map((item) => {
               // "/" would prefix-match everything, so it alone is matched exactly.
               const active =
-                item.href === "/" ? pathname === "/" : pathname.startsWith(item.href);
+                item.href === "/"
+                  ? pathname === "/"
+                  : pathname.startsWith(item.href);
               return (
                 <SideNavItem
                   key={item.href}
@@ -111,7 +129,11 @@ export function AppShell(props: AppShellProps) {
                   href={item.href}
                   icon={item.icon}
                   isSelected={active}
-                  endContent={item.badge ? <Badge variant="red" label={item.badge} /> : undefined}
+                  endContent={
+                    item.badge ? (
+                      <Badge variant="red" label={item.badge} />
+                    ) : undefined
+                  }
                 />
               );
             })}
@@ -132,13 +154,12 @@ export function AppShell(props: AppShellProps) {
   );
 }
 
-/** Who is signed in, and the way out. Name and role on two lines beside an
- *  initials avatar; the menu behind the dots holds sign-out. */
+/** Who is signed in. Name and role on two lines beside an initials avatar;
+ *  shown only while the nav is wide enough to hold two lines of text. */
 function UserRow({
   userName,
   userSubtitle,
-  onSignOut,
-}: Pick<AppShellProps, "userName" | "userSubtitle" | "onSignOut">) {
+}: Pick<AppShellProps, "userName" | "userSubtitle">) {
   return (
     <HStack gap={2} vAlign="center" paddingInline={2} paddingBlock={1}>
       <Avatar name={userName} size="sm" />
@@ -154,33 +175,43 @@ function UserRow({
           ) : null}
         </VStack>
       </StackItem>
-      <DropdownMenu
-        hasChevron={false}
-        placement="above"
-        alignment="end"
-        button={{
-          label: "Account menu",
-          isIconOnly: true,
-          variant: "ghost",
-          size: "sm",
-          icon: <Icon icon={MoreHorizontal} size="sm" />,
-        }}
-        items={[
-          {
-            type: "section",
-            title: userSubtitle ? `${userName} · ${userSubtitle}` : userName,
-            items: [
-              {
-                id: "sign-out",
-                label: "Sign out",
-                icon: LogOut,
-                onClick: onSignOut,
-                isDisabled: !onSignOut,
-              },
-            ],
-          },
-        ]}
-      />
     </HStack>
+  );
+}
+
+/** The way out. An icon-only menu in the SideNav's footer icon bar, so it is
+ *  there whether the nav is wide or a rail. */
+function AccountMenu({
+  userName,
+  userSubtitle,
+  onSignOut,
+}: Pick<AppShellProps, "userName" | "userSubtitle" | "onSignOut">) {
+  return (
+    <DropdownMenu
+      hasChevron={false}
+      placement="above"
+      alignment="start"
+      button={{
+        label: `Account menu: ${userName}`,
+        isIconOnly: true,
+        variant: "ghost",
+        icon: <Icon icon={MoreHorizontal} size="sm" />,
+      }}
+      items={[
+        {
+          type: "section",
+          title: userSubtitle ? `${userName} · ${userSubtitle}` : userName,
+          items: [
+            {
+              id: "sign-out",
+              label: "Sign out",
+              icon: LogOut,
+              onClick: onSignOut,
+              isDisabled: !onSignOut,
+            },
+          ],
+        },
+      ]}
+    />
   );
 }

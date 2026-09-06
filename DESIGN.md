@@ -147,13 +147,18 @@ page is where "system" is restored. `next-themes` is gone.
 ### The shell
 
 Astryx's most common layout, "Top Nav with Side Nav". `AppShell` in
-`height="auto"` (the page scrolls, the nav sticks), `variant="section"`
-(a divider between nav and content), `contentPadding={4}`. The `TopNav`
+`height="auto"` (the page scrolls, the nav sticks), `variant="elevated"`
+(Astryx's default: wash-coloured nav areas, the content a raised surface —
+and the only variant that paints the sticky header, so the page cannot show
+through it as it scrolls), `contentPadding={4}`. The `TopNav`
 carries the app's identity — `TopNavHeading` with the wordmark and, in its
 subheading slot (Astryx's "account context"), the club being shown — and at
 its end the club switcher (a `DropdownMenu`) and the mode flip. The
-`SideNav` holds only the screens the role may open, and in its footer the
-account row with a sign-out menu; it collapses to an icon rail. There is
+`SideNav` holds only the screens the role may open; its footer is the
+account row, and the sign-out menu is an icon in the footer icon bar beside
+Astryx's own collapse button, so it is there when the nav is a rail too. The
+shell owns the collapsed state and drops the two-line account row while the
+nav is a rail, since Astryx collapses its items but not our row. There is
 no second `Layout` inside the shell — Astryx says one per shell — so the
 page is capped at 1152px with a `Center` and a stack. AppShell owns the
 skip link and the `<main>` landmark; pages start at their H1. The dev
