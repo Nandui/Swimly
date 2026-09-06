@@ -7,8 +7,8 @@ import { prisma } from "@/lib/prisma";
  *  both reading "19 of 20" and both inserting. Locking the session row
  *  serialises every seat decision for that one session.
  *
- *  Keep the body small: it holds a pool connection, so audit and
- *  revalidation happen after it returns. */
+ *  Read status and capacity after the lock. Audit through this transaction
+ *  so it commits with the booking; revalidate after it returns. */
 export async function withAssessmentSeat<T>(
   sessionId: string,
   run: (tx: Prisma.TransactionClient) => Promise<T>

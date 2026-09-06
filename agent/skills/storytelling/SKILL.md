@@ -1,6 +1,25 @@
 ---
-description: "Discipline for giving design work narrative structure that makes people care. Provides four canonical patterns — protagonist-arc, choreography, situation/complication/resolution, what-is/what-could-be — each with a goal, shape, and named pathology. Use when design work needs narrative structure, when stakeholders need to see the user's experience as a story, when presenting design rationale to non-design audiences, or when a journey, blueprint, brief, or deck feels lifeless. Trigger phrases: \"what's the story here?\", \"tell the story\", \"story mode\", \"narrative mode\". Restated inline in journey, blueprint, strategize, evaluate (and presentation when that skill ships). Refuses to smooth user data into clean arcs, manufacture strategic tension, substitute emotional appeal for evidence, assume conflict arcs are universal, or engineer stakeholder assent by shortcut.\n"
+name: storytelling
+description: >
+  Discipline for giving design work narrative structure that makes people
+  care. Provides four canonical patterns — protagonist-arc, choreography,
+  situation/complication/resolution, what-is/what-could-be — each with a goal,
+  shape, and named pathology. Use when design work needs narrative structure,
+  when stakeholders need to see the user's experience as a story, when presenting
+  design rationale to non-design audiences, or when a journey, blueprint, brief,
+  or deck feels lifeless. Trigger phrases: "what's the story here?", "tell the
+  story", "story mode", "narrative mode". Restated inline in journey, blueprint,
+  strategize, evaluate (and presentation when that skill ships). Refuses to smooth user data into clean
+  arcs, manufacture strategic tension, substitute emotional appeal for evidence,
+  assume conflict arcs are universal, or engineer stakeholder assent by shortcut.
+metadata:
+  upstream-version: "1.6.0"
 ---
+
+Read [Swimly skill operating guidance](../../../SKILLS.md) once before using
+this skill. It scopes the workflow, output templates and tool examples below;
+load only the sections and references relevant to the requested deliverable.
+
 # Storytelling
 
 ## Overview

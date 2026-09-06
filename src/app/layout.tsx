@@ -3,6 +3,7 @@ import { cookies } from "next/headers";
 import { ThemeProvider } from "@/components/theme-provider";
 import { ToastBridge } from "@/lib/toast";
 import { THEME_COOKIE, parseThemeMode } from "@/lib/theme-mode";
+import { APP_NAME } from "@/lib/app";
 // Figtree is the Neutral theme's own face, named as plain "Figtree" in its
 // font tokens. Astryx never loads a font, so the files come from the
 // fontsource package, self-hosted and registered under that exact name; the
@@ -14,7 +15,7 @@ import "@fontsource/figtree/700.css";
 import "./globals.css";
 
 export const metadata: Metadata = {
-  title: { default: "Swimly", template: "%s · Swimly" },
+  title: { default: APP_NAME, template: `%s · ${APP_NAME}` },
   description: "The leisure centre's swim lessons and bookings, in one place.",
 };
 

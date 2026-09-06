@@ -9,6 +9,7 @@ import { FormLayout } from "@astryxdesign/core/FormLayout";
 import { HStack, VStack } from "@astryxdesign/core/Stack";
 import type { ActionResult } from "@/lib/action-result";
 import { toast } from "@/lib/toast";
+import { withTimeout } from "@/lib/save-feedback";
 import { Input } from "@/components/ui/input";
 import { Select } from "@/components/ui/select";
 import { Switch } from "@/components/ui/switch";
@@ -61,23 +62,39 @@ export function FormDialog({
   const [open, setOpen] = React.useState(false);
   const [error, setError] = React.useState<string | null>(null);
   const [pending, startTransition] = React.useTransition();
+  const submitting = React.useRef(false);
 
   function close() {
+    if (submitting.current) return;
     setOpen(false);
     setError(null);
   }
 
   function handleSubmit(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault();
+    if (submitting.current) return;
     const formData = new FormData(event.currentTarget);
+    submitting.current = true;
+    setError(null);
 
     startTransition(async () => {
-      const result = await submit(formData);
-      if (result.ok) {
-        toast.success(successMessage);
-        startTransition(() => close());
-      } else {
-        startTransition(() => setError(result.error));
+      try {
+        const result = await withTimeout(submit(formData));
+        if (result.ok) {
+          toast.success(successMessage);
+          startTransition(() => {
+            setOpen(false);
+            setError(null);
+          });
+        } else {
+          startTransition(() => setError(result.error));
+        }
+      } catch {
+        startTransition(() =>
+          setError("We could not confirm the save. Check the record before trying again.")
+        );
+      } finally {
+        submitting.current = false;
       }
     });
   }
@@ -88,19 +105,19 @@ export function FormDialog({
       <Dialog
         isOpen={open}
         onOpenChange={(next) => (next ? setOpen(true) : close())}
-        purpose="form"
+        purpose={pending ? "required" : "form"}
         width={WIDTHS[width] ?? 448}
       >
-        <form onSubmit={handleSubmit}>
+        <form onSubmit={handleSubmit} aria-busy={pending}>
           <VStack gap={4}>
-            <DialogHeader title={title} subtitle={description} onOpenChange={() => close()} />
+            <DialogHeader title={title} subtitle={description} onOpenChange={pending ? undefined : close} />
 
             <FormLayout defaultOptionality="optional">{children}</FormLayout>
 
             {error ? <Banner status="error" title={error} collapsible={false} /> : null}
 
-            <HStack gap={2} hAlign="end">
-              <Button type="button" label="Cancel" variant="secondary" onClick={close} />
+            <HStack gap={2} hAlign="end" wrap="wrap">
+              <Button type="button" label="Cancel" variant="secondary" onClick={close} isDisabled={pending} />
               <Button
                 type="submit"
                 label={pending ? "Saving…" : submitLabel}
@@ -127,6 +144,7 @@ export function Trigger({
   if (React.isValidElement<{ onClick?: React.MouseEventHandler }>(children)) {
     const inner = children.props.onClick;
     return React.cloneElement(children, {
+      ...{ "aria-haspopup": "dialog" as const },
       onClick: (event: React.MouseEvent) => {
         inner?.(event);
         if (!event.defaultPrevented) onOpen();
@@ -134,9 +152,9 @@ export function Trigger({
     });
   }
   return (
-    <HStack as="span" onClick={onOpen}>
+    <Button type="button" label={typeof children === "string" ? children : "Open dialog"} onClick={onOpen} aria-haspopup="dialog">
       {children}
-    </HStack>
+    </Button>
   );
 }
 

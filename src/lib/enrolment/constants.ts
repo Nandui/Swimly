@@ -1,5 +1,12 @@
 import type { TagColor } from "@/components/ui-kit/tag";
 import type { EnrolmentStatus } from "@/generated/prisma/client";
+import type { StatusMeta } from "@/lib/status";
+
+export const PLACEMENT_META = {
+  otherLevel: { label: "Placed at another level", color: "purple" },
+  alreadyEnrolled: { label: "Already in it", color: "green" },
+  hasPlace: { label: "Has a place", color: "gray" },
+} as const satisfies Record<string, StatusMeta>;
 
 /** Green is current, gray is inert, blue is finished well, purple moved on.
  *  No red: leaving a class is not an emergency. */

@@ -1,22 +1,13 @@
 ---
 name: philosopher
-description: >
-  A cross-cutting cognitive mode for sitting with design problems before
-  rushing to solve them. Part of the Intent design strategy system.
-  Activates expansive brainstorming: hyperassociativity, beginner's mind,
-  cross-domain pattern recognition, and suppression of premature
-  idea-dismissal. Works alongside every Intent skill — strategize uses it
-  to reframe briefs, blueprint to question structural assumptions, journey
-  to rethink interaction models, and specify to stress-test specs. Trigger
-  when the user invokes "expansive mode", "philosopher mode", "sit with
-  this", "brainstorm", "explore this problem", or says things like "go
-  weird with it", "don't filter yourself", "what connections are you not
-  making", "think about this differently", or "I'm stuck". This is a
-  reasoning protocol, not a persona — Claude's voice stays grounded but
-  the cognitive process changes significantly.
-version: 1.6.0
-user-invocable: true
+description: "Explore and reframe a design problem when the user requests brainstorming or a concrete unresolved assumption warrants exploration. Return to the requested deliverable when useful options are clear."
+metadata:
+  upstream-version: "1.6.0"
 ---
+
+Read [Swimly skill operating guidance](../../../SKILLS.md) once before using
+this skill. It scopes the workflow, output templates and tool examples below;
+load only the sections and references relevant to the requested deliverable.
 
 # The Philosopher — Sit With the Problem
 
@@ -24,7 +15,7 @@ user-invocable: true
 
 A cross-cutting cognitive mode that shifts how you reason — not how you sound. The philosopher activates broader associative thinking, suppresses premature idea-dismissal, enables cross-domain connection-making, and forces genuine re-examination of assumptions. It works alongside every Intent skill at any stage of the design process, turning shallow problem statements into genuinely complex, interesting ones.
 
-**When to activate:** when a designer says "I'm stuck," "sit with this," "brainstorm," "explore this problem," "go deeper," "what am I missing," "philosopher mode," or "expansive mode." Also activate when a problem is being solved too quickly, when the framing feels shallow, when research findings seem too clean, or when any Intent skill needs to question its own assumptions before moving forward.
+**When to activate:** when a designer says "I'm stuck," "sit with this," "brainstorm," "explore this problem," "go deeper," "what am I missing," "philosopher mode," or "expansive mode." Use exploration when a concrete unresolved assumption warrants it; a routine implementation request does not need an exploratory detour.
 
 ---
 
@@ -296,68 +287,11 @@ Default to **medium** unless told otherwise.
 
 ## Check-ins and Exiting the Mode
 
-Philosopher mode uses structured check-ins to prevent runaway exploration.
-The user can also exit at any time by asking for a deliverable or saying
-"land it", "back to the [brief / journey / spec]", or similar.
-
-### Check-in rhythm
-
-After every 3 exchanges in philosopher mode, pause and offer a check-in.
-A check-in is brief — one or two sentences — and gives the user three
-clear options:
-
-1. **Keep exploring.** There's more to uncover. Stay in philosopher mode.
-2. **Synthesize.** Enough raw material — pull out what's useful and
-   translate it back into the active design skill.
-3. **Redirect.** The exploration went somewhere unexpected — refocus on
-   a specific thread before continuing.
-
-Format the check-in naturally, not as a numbered menu. For example:
-
-*"We've opened up a few threads here — the org incentive question and the
-physical-space analogy both feel alive. Want to keep pulling on those,
-or should I start landing what's useful for the brief?"*
-
-*"Three things surfaced: the onboarding flow might be solving the wrong
-problem, there's a parallel to library wayfinding worth following, and
-the edge case around permissions is more structural than it looked. Keep
-going, synthesize, or zoom into one of these?"*
-
-### Check-in at intensity levels
-
-| Level | Check-in frequency |
-|-------|-------------------|
-| **Low / light** | After 2 exchanges. Light mode is a quick reframe, not an extended session. |
-| **Medium** | After 3 exchanges. The default rhythm. |
-| **High / deep** | After 4-5 exchanges. Deep exploration needs more room before interruption, but still needs a checkpoint. |
-
-### Immediate exit triggers
-
-Skip the check-in rhythm and offer to exit immediately if:
-- The user asks for a decision, recommendation, or concrete deliverable
-- The user seems frustrated, confused, or is repeating themselves
-- The user explicitly asks to return to the brief, blueprint, journey, or spec
-
-### Exiting cleanly
-
-When exiting — whether from a check-in or an immediate trigger — follow
-this sequence:
-
-1. **Summarize what surfaced.** 3-5 bullet points of the most significant
-   insights, reframes, or open questions that emerged. No filler.
-2. **Flag what changed.** If the exploration reframed the original problem,
-   say so explicitly. "We started with X, but the real question might be Y."
-3. **Translate back to the active skill.** Frame the insights in the
-   language of whichever Intent skill is active — reframed hypotheses for
-   `/strategize`, alternative structural models for `/blueprint`, new
-   reference directions for `/articulate`, revised interaction assumptions
-   for `/journey`, newly surfaced edge cases for `/specify`, reframed
-   assessment criteria for `/evaluate`, expanded inclusion frames for
-   `/include`, structural failure insights for `/fortify`.
-4. **Hand back control.** *"Here's what that opens up. Want to bring this
-   back into the [brief / blueprint / journey / structure / spec]?"*
-
----
+Use a brief check-in when new findings materially change the direction or the
+user asks for collaborative exploration. Do not pause on a fixed exchange count.
+When the user asks for a decision, deliverable or return to implementation,
+synthesize the relevant findings and continue that work immediately. Explain
+consequential changes to assumptions without reopening settled decisions.
 
 ## Thinking Style Variants (Future)
 

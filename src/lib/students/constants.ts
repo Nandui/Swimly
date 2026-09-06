@@ -1,6 +1,11 @@
 import type { TagColor } from "@/components/ui-kit/tag";
 import type { StudentStatus } from "@/generated/prisma/client";
 import { ageInYears } from "@/lib/format";
+import type { StatusMeta } from "@/lib/status";
+
+export const MEDICAL_STATUS_META = {
+  notes: { label: "Medical", color: "red" },
+} as const satisfies Record<string, StatusMeta>;
 
 /** One map per enum. Adding a status to the schema is a type error here until
  *  it has a label and a tint, which is how the untinted status gets caught by

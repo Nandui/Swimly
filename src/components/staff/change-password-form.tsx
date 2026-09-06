@@ -5,6 +5,7 @@ import { toast } from "@/lib/toast";
 import { Field } from "@/components/form-dialog";
 import { Banner } from "@astryxdesign/core/Banner";
 import { Button } from "@astryxdesign/core/Button";
+import { FormLayout } from "@astryxdesign/core/FormLayout";
 import { HStack } from "@astryxdesign/core/Stack";
 import { Input } from "@/components/ui/input";
 import { changeOwnPassword } from "@/lib/staff/actions/account";
@@ -21,76 +22,90 @@ export function ChangePasswordForm() {
   const formRef = React.useRef<HTMLFormElement>(null);
   const [error, setError] = React.useState<string | null>(null);
   const [pending, startTransition] = React.useTransition();
+  const submitting = React.useRef(false);
 
   function handleSubmit(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault();
+    if (submitting.current) return;
+    submitting.current = true;
+    setError(null);
     const formData = new FormData(event.currentTarget);
 
     startTransition(async () => {
-      const result = await changeOwnPassword({
-        current: String(formData.get("current") ?? ""),
-        next: String(formData.get("next") ?? ""),
-        confirm: String(formData.get("confirm") ?? ""),
-      });
+      try {
+        const result = await changeOwnPassword({
+          current: String(formData.get("current") ?? ""),
+          next: String(formData.get("next") ?? ""),
+          confirm: String(formData.get("confirm") ?? ""),
+        });
 
-      if (result.ok) {
-        toast.success("Password changed");
-        formRef.current?.reset();
-        startTransition(() => setError(null));
-      } else {
-        startTransition(() => setError(result.error));
+        if (result.ok) {
+          toast.success("Password changed");
+          formRef.current?.reset();
+          startTransition(() => setError(null));
+        } else {
+          startTransition(() => setError(result.error));
+        }
+      } catch {
+        setError(
+          "We could not confirm the password change. Try signing in with the new password before changing it again."
+        );
+      } finally {
+        submitting.current = false;
       }
     });
   }
 
   return (
-    <form ref={formRef} onSubmit={handleSubmit} className="max-w-sm space-y-4">
-      <Field label="Current password" htmlFor="current">
-        <Input
-          id="current"
-          name="current"
-          type="password"
-          required
-          autoComplete="current-password"
-        />
-      </Field>
+    <form ref={formRef} onSubmit={handleSubmit} className="max-w-sm">
+      <FormLayout>
+        <Field label="Current password" htmlFor="current">
+          <Input
+            id="current"
+            name="current"
+            type="password"
+            required
+            autoComplete="current-password"
+          />
+        </Field>
 
-      <Field
-        label="New password"
-        htmlFor="next"
-        hint={`At least ${MIN_PASSWORD_LENGTH} characters.`}
-      >
-        <Input
-          id="next"
-          name="next"
-          type="password"
-          required
-          minLength={MIN_PASSWORD_LENGTH}
-          autoComplete="new-password"
-        />
-      </Field>
+        <Field
+          label="New password"
+          htmlFor="next"
+          hint={`At least ${MIN_PASSWORD_LENGTH} characters.`}
+        >
+          <Input
+            id="next"
+            name="next"
+            type="password"
+            required
+            minLength={MIN_PASSWORD_LENGTH}
+            autoComplete="new-password"
+          />
+        </Field>
 
-      <Field label="New password again" htmlFor="confirm">
-        <Input
-          id="confirm"
-          name="confirm"
-          type="password"
-          required
-          minLength={MIN_PASSWORD_LENGTH}
-          autoComplete="new-password"
-        />
-      </Field>
+        <Field label="New password again" htmlFor="confirm">
+          <Input
+            id="confirm"
+            name="confirm"
+            type="password"
+            required
+            minLength={MIN_PASSWORD_LENGTH}
+            autoComplete="new-password"
+          />
+        </Field>
 
-      {error ? <Banner status="error" title={error} collapsible={false} /> : null}
+        {error ? <Banner status="error" title={error} collapsible={false} /> : null}
 
-      <HStack>
-        <Button
-          label={pending ? "Saving…" : "Change password"}
-          variant="primary"
-          type="submit"
-          isLoading={pending}
-        />
-      </HStack>
+        <HStack>
+          <Button
+            label={pending ? "Saving…" : "Change password"}
+            variant="primary"
+            type="submit"
+            isLoading={pending}
+          />
+        </HStack>
+      </FormLayout>
     </form>
   );
 }

@@ -5,6 +5,7 @@ import { fail, ok, onUniqueViolation, type ActionResult } from "@/lib/action-res
 import { logAudit } from "@/lib/audit";
 import { requirePermission } from "@/lib/authz";
 import { LIST_ORDER, LIVE } from "@/lib/curriculum/constants";
+import { currentClubId } from "@/lib/clubs/current";
 import { prisma } from "@/lib/prisma";
 
 /** Copies a programme into another club: its live levels, their live
@@ -24,7 +25,7 @@ export async function copyProgramme(
 
   const [source, target] = await Promise.all([
     prisma.programme.findUnique({
-      where: { id: programmeId },
+      where: { id: programmeId, clubId: await currentClubId() },
       select: {
         id: true,
         name: true,
@@ -68,8 +69,8 @@ export async function copyProgramme(
   });
 
   const created = await onUniqueViolation(
-    () =>
-      prisma.programme.create({
+    () => prisma.$transaction(async (tx) => {
+      const created = await tx.programme.create({
         data: {
           clubId: target.id,
           name: source.name,
@@ -98,29 +99,29 @@ export async function copyProgramme(
           },
         },
         select: { id: true, name: true },
-      }),
+      });
+      const competencies = source.levels.reduce((n, level) => n + level.competencies.length, 0);
+      const kinds = source.assessmentTypes.length;
+      await logAudit({
+        actorId: session.user.id,
+        actorName: session.user.name ?? "Unknown",
+        action: "create",
+        entity: "Programme",
+        entityId: created.id,
+        programmeId: created.id,
+        // The row was made in the target club, whichever one is being worked in.
+        clubId: target.id,
+        summary:
+          `Copied programme ${source.name} from ${source.club.name} to ${target.name}: ` +
+          `${source.levels.length} ${source.levels.length === 1 ? "level" : "levels"}, ` +
+          `${competencies} ${competencies === 1 ? "competency" : "competencies"}` +
+          (kinds ? `, ${kinds} ${kinds === 1 ? "kind" : "kinds"} of assessment` : ""),
+      }, tx);
+      return created;
+    }),
     `${target.name} already has a programme called ${source.name}.`
   );
   if ("ok" in created) return created;
-
-  const competencies = source.levels.reduce((n, level) => n + level.competencies.length, 0);
-  const kinds = source.assessmentTypes.length;
-
-  await logAudit({
-    actorId: session.user.id,
-    actorName: session.user.name ?? "Unknown",
-    action: "create",
-    entity: "Programme",
-    entityId: created.id,
-    programmeId: created.id,
-    // The row was made in the target club, whichever one is being worked in.
-    clubId: target.id,
-    summary:
-      `Copied programme ${source.name} from ${source.club.name} to ${target.name}: ` +
-      `${source.levels.length} ${source.levels.length === 1 ? "level" : "levels"}, ` +
-      `${competencies} ${competencies === 1 ? "competency" : "competencies"}` +
-      (kinds ? `, ${kinds} ${kinds === 1 ? "kind" : "kinds"} of assessment` : ""),
-  });
 
   revalidatePath("/programmes");
   return ok();

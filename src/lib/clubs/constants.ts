@@ -1,3 +1,9 @@
+import type { StatusMeta } from "@/lib/status";
+
+export const CLUB_STATUS_META = {
+  current: { label: "Working in", color: "blue" },
+} as const satisfies Record<string, StatusMeta>;
+
 /** The cookie that remembers which club somebody is working in. Per browser,
  *  not per account: the same person on the desk at one site and the deck at
  *  the other wants each device to stay where it was left. */

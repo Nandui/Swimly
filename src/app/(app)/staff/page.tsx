@@ -23,7 +23,7 @@ import {
 } from "@/components/staff/person-actions";
 import { can } from "@/lib/authz";
 import { screenPage } from "@/lib/page-guards";
-import { permissionCountLabel, roleReach } from "@/lib/staff/constants";
+import { STAFF_STATUS_META, permissionCountLabel, roleReach } from "@/lib/staff/constants";
 import { expandPermissions } from "@/lib/staff/permissions";
 import { listRolesForPicker, type RoleOption } from "@/lib/staff/data/roles";
 import { listPeopleForDisplay, type Person } from "@/lib/staff/data/staff";
@@ -130,7 +130,7 @@ function PeopleTable({
                 <HStack gap={2} vAlign="center" wrap="wrap">
                   <Text weight="medium">{person.name}</Text>
                   {person.id === currentUserId ? <Text type="supporting">(you)</Text> : null}
-                  {!person.hasPassword ? <Tag color="yellow">No password set</Tag> : null}
+                  {!person.hasPassword ? <Tag color={STAFF_STATUS_META.noPassword.color}>{STAFF_STATUS_META.noPassword.label}</Tag> : null}
                 </HStack>
                 <Text type="supporting" display="block">
                   {person.email}

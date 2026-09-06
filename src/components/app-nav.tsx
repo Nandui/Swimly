@@ -5,6 +5,7 @@ import { ClubSwitcher } from "@/components/clubs/club-switcher";
 import { ThemeFlip } from "@/components/theme-toggle";
 import { AppShell, type AppShellProps } from "@/components/ui-kit/app-shell";
 import { visibleNavItems } from "@/lib/nav";
+import { APP_NAME } from "@/lib/app";
 import type { ScreenKey } from "@/lib/staff/screens";
 
 /** The shell, bound to this app.
@@ -23,14 +24,11 @@ type Props = Omit<AppShellProps, "items" | "wordmark" | "onSignOut" | "switcher"
   clubs: Club[];
 };
 
-/** The product's working name, in one place. It will change. */
-const WORDMARK = "Swimly";
-
 export function AppChrome({ screens, club, clubs, ...rest }: Props) {
   return (
     <AppShell
       {...rest}
-      wordmark={WORDMARK}
+      wordmark={APP_NAME}
       context={club.name}
       items={visibleNavItems(screens)}
       // Which club every page is showing: named under the wordmark, and the

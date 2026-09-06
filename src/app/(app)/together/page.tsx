@@ -1,3 +1,4 @@
+import { PLACEMENT_META } from "@/lib/enrolment/constants";
 import type { Metadata } from "next";
 import { Banner } from "@astryxdesign/core/Banner";
 import { Button } from "@astryxdesign/core/Button";
@@ -6,12 +7,12 @@ import { Link } from "@astryxdesign/core/Link";
 import { List } from "@astryxdesign/core/List";
 import { HStack, VStack } from "@astryxdesign/core/Stack";
 import { Heading, Text } from "@astryxdesign/core/Text";
-import { Token } from "@astryxdesign/core/Token";
 import { EmptyState } from "@/components/ui-kit/empty-state";
 import { PageHeader } from "@/components/ui-kit/page-header";
 import { Lead } from "@/components/ui-kit/prose";
 import { Tag } from "@/components/ui-kit/tag";
 import { AddToGroup } from "@/components/together/add-to-group";
+import { SelectedSwimmer } from "@/components/together/selected-swimmer";
 import { capacityLabel, courseName, formatTime, DAY_META } from "@/lib/courses/constants";
 import { getCourses } from "@/lib/courses/data/courses";
 import { screenPage } from "@/lib/page-guards";
@@ -36,7 +37,9 @@ export default async function TogetherPage(props: PageProps<"/together">) {
     ids.length ? getCourses() : Promise.resolve([]),
   ]);
 
-  const { chosen, suggestions } = group;
+  const { chosen } = group;
+  const chosenIds = chosen.map((student) => student.id);
+  const suggestions = group.suggestions.slice(0, GROUP_CAP - chosen.length);
   const result = chosen.length > 0 ? findTimesTogether(toMembers(chosen), courses) : null;
 
   const hrefFor = (next: string[]) =>
@@ -50,29 +53,20 @@ export default async function TogetherPage(props: PageProps<"/together">) {
       />
 
       <VStack gap={3}>
-        {/* The group so far: one token per child, each a link to their
-            profile, with its own way out of the group. */}
+        {/* The group so far: removable selections with profile shortcuts. */}
         <HStack gap={2} vAlign="center" wrap="wrap">
           {chosen.map((student) => (
-            <Token
+            <SelectedSwimmer
               key={student.id}
-              size="lg"
-              label={`${student.name} · ${student.levelName ?? "no level"}`}
-              href={`/students/${student.id}`}
-              endContent={
-                <Link
-                  href={hrefFor(ids.filter((id) => id !== student.id))}
-                  label={`Take ${student.name} out of the group`}
-                  color="secondary"
-                >
-                  ×
-                </Link>
-              }
+              id={student.id}
+              name={student.name}
+              levelName={student.levelName}
+              removeHref={hrefFor(chosenIds.filter((id) => id !== student.id))}
             />
           ))}
 
           {chosen.length < GROUP_CAP ? (
-            <AddToGroup chosen={ids} />
+            <AddToGroup chosen={chosenIds} />
           ) : (
             <Text color="secondary">That is as many as this will search for at once.</Text>
           )}
@@ -96,12 +90,12 @@ export default async function TogetherPage(props: PageProps<"/together">) {
                 label={student.name}
                 variant="secondary"
                 size="sm"
-                href={hrefFor([...ids, student.id])}
+                href={hrefFor([...chosenIds, student.id])}
                 icon={<AppIcon name="plus" size="sm" />}
               />
             ))}
             {suggestions.length > 1 ? (
-              <Link href={hrefFor([...ids, ...suggestions.map((s) => s.id)])} isStandalone>
+              <Link href={hrefFor([...chosenIds, ...suggestions.map((s) => s.id)])} isStandalone>
                 add all {suggestions.length}
               </Link>
             ) : null}
@@ -236,9 +230,9 @@ function SlotList({
           }
           endContent={
             placement.alreadyIn ? (
-              <Tag color="green">Already in it</Tag>
+              <Tag color={PLACEMENT_META.alreadyEnrolled.color}>{PLACEMENT_META.alreadyEnrolled.label}</Tag>
             ) : (
-              <Tag color="gray">Has a place</Tag>
+              <Tag color={PLACEMENT_META.hasPlace.color}>{PLACEMENT_META.hasPlace.label}</Tag>
             )
           }
         />

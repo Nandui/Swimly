@@ -4,6 +4,7 @@ import { DROP_OFF_STREAK } from "@/lib/attendance/constants";
 import { currentClubId } from "@/lib/clubs/current";
 import { parseDateOnly } from "@/lib/format";
 import { prisma } from "@/lib/prisma";
+import { savedRegister } from "@/lib/attendance/revision";
 
 export type RegisterLine = {
   studentId: string;
@@ -33,6 +34,8 @@ export async function getRegister(courseId: string, iso: string) {
     prisma.enrolment.findMany({
       where: {
         courseId,
+        // Historical terminal statuses do not preserve whether the place
+        // started on a waitlist. Saved attendance is the reliable history.
         status: "ACTIVE",
         startedOn: { lte: date },
         OR: [{ endedOn: null }, { endedOn: { gte: date } }],
@@ -106,7 +109,10 @@ export async function getRegister(courseId: string, iso: string) {
     (a, b) => a.lastName.localeCompare(b.lastName) || a.firstName.localeCompare(b.firstName)
   );
 
-  return { lines: ordered, taken: existing.length > 0, note };
+  const saved = savedRegister(courseId, iso, existing.map(row => ({
+    studentId: row.student.id, status: row.status, note: row.note,
+  })), note?.note);
+  return { lines: ordered, taken: existing.length > 0, note, revision: saved.revision };
 }
 
 export type Register = Awaited<ReturnType<typeof getRegister>>;

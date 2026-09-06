@@ -1,3 +1,4 @@
+import type { Metadata } from "next";
 import { Button } from "@astryxdesign/core/Button";
 import { Item } from "@astryxdesign/core/Item";
 import { Link } from "@astryxdesign/core/Link";
@@ -10,7 +11,7 @@ import { PageHeader } from "@/components/ui-kit/page-header";
 import { Alert, Lead, Num } from "@/components/ui-kit/prose";
 import { Tag } from "@/components/ui-kit/tag";
 import { getRecentActivity } from "@/lib/activity/data/audit-log";
-import { DROP_OFF_STREAK } from "@/lib/attendance/constants";
+import { ATTENDANCE_RECORD_META, DROP_OFF_STREAK } from "@/lib/attendance/constants";
 import { weekdayOfIso } from "@/lib/attendance/dates";
 import { getDropOffs, getRegisterStateForDay } from "@/lib/attendance/data/register";
 import { can, canSee } from "@/lib/authz";
@@ -20,6 +21,8 @@ import { formatDate, parseDateOnly, today } from "@/lib/format";
 import { screenPage } from "@/lib/page-guards";
 import { getStudentCounts } from "@/lib/students/data/students";
 import { AppIcon } from "@/components/ui-kit/app-icon";
+
+export const metadata: Metadata = { title: "Overview" };
 
 export default async function OverviewPage() {
   const session = await screenPage("overview");
@@ -98,6 +101,7 @@ export default async function OverviewPage() {
             <List hasDividers>
               {todaysClasses.map((course) => {
                 const done = marked.has(course.id);
+                const attendance = ATTENDANCE_RECORD_META[done ? "taken" : "notTaken"];
                 return (
                   <Item
                     key={course.id}
@@ -115,9 +119,7 @@ export default async function OverviewPage() {
                         ) : (
                           <Text weight="medium">{courseName(course)}</Text>
                         )}
-                        <Tag color={done ? "green" : "yellow"}>
-                          {done ? "Attendance taken" : "Attendance not taken"}
-                        </Tag>
+                        <Tag color={attendance.color}>{attendance.label}</Tag>
                       </HStack>
                     }
                     description={`${course.level.name} · ${capacityLabel(course._count.enrolments, course.capacity)}${course.instructor ? ` · ${course.instructor.name}` : ""}`}
@@ -163,7 +165,8 @@ export default async function OverviewPage() {
                 }
                 endContent={
                   <HStack gap={1.5} vAlign="center">
-                    <Alert tone="error">{drop.missed} missed</Alert>
+                    <Alert tone="error">{drop.missed}</Alert>
+                    <Text type="supporting">missed</Text>
                     <Text type="supporting">last in {formatDate(drop.lastSeen)}</Text>
                   </HStack>
                 }
@@ -179,7 +182,7 @@ export default async function OverviewPage() {
           <EmptyState
             icon="waves"
             title="Nothing has happened yet"
-            hint="Every mutation writes an audit row, so the first thing anyone changes shows up here."
+            hint="Changes made by staff will appear here."
           />
         ) : (
           <ActivityTable entries={recent} />

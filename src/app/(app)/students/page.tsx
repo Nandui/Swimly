@@ -176,6 +176,17 @@ function StudentTable({ students }: { students: StudentRow[] }) {
                   {student.dateOfBirth ? `${ageLabel(student.dateOfBirth)} · ` : ""}
                   {levels || "Not placed"}
                 </Text>
+                {student.contactName || student.contactPhone ? (
+                  <Text type="supporting" display="block" className="lg:hidden">
+                    {student.contactName}
+                    {student.contactName && student.contactPhone ? " · " : ""}
+                    {student.contactPhone ? (
+                      <Link href={`tel:${student.contactPhone.replace(/\s+/g, "")}`}>
+                        {student.contactPhone}
+                      </Link>
+                    ) : null}
+                  </Text>
+                ) : null}
               </TableCell>
               <TableCell className="max-md:hidden">
                 <Text color="secondary" hasTabularNumbers>
@@ -186,7 +197,7 @@ function StudentTable({ students }: { students: StudentRow[] }) {
                 {levels ? (
                   <Text color="secondary">{levels}</Text>
                 ) : (
-                  <Text color="disabled">Not placed</Text>
+                  <Text color="secondary">Not placed</Text>
                 )}
               </TableCell>
               <TableCell className="max-lg:hidden">
@@ -204,7 +215,7 @@ function StudentTable({ students }: { students: StudentRow[] }) {
                     {student.contactPhone}
                   </Text>
                 ) : (
-                  <Text color="disabled">—</Text>
+                  <Text color="secondary">—</Text>
                 )}
               </TableCell>
               <TableCell>

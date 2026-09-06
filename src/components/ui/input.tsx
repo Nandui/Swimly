@@ -51,12 +51,14 @@ export function Input({
   max,
   step,
   className,
+  ref,
   ...rest
 }: InputProps) {
   const [inner, setInner] = React.useState(defaultValue == null ? "" : String(defaultValue));
+  const inputRef = React.useRef<HTMLInputElement>(null);
   const controlled = value !== undefined;
   const current = controlled ? value : inner;
-  const ariaLabel = (rest as { "aria-label"?: string })["aria-label"];
+  const ariaLabel = rest["aria-label"];
   const text = label ?? ariaLabel ?? placeholder ?? name ?? "Field";
   const shared = {
     id,
@@ -73,12 +75,24 @@ export function Input({
     onChange?.(next);
   };
 
+  React.useImperativeHandle(ref, () => inputRef.current!);
+  // A native form.reset() must also clear this controlled adapter's state;
+  // otherwise the password form's cleared values reappear on the next render.
+  React.useEffect(() => {
+    const form = inputRef.current?.form;
+    if (controlled || !form) return;
+    const reset = () => setInner(defaultValue == null ? "" : String(defaultValue));
+    form.addEventListener("reset", reset);
+    return () => form.removeEventListener("reset", reset);
+  }, [controlled, defaultValue, rest.form, type]);
+
   if (type === "date") {
     return (
       <>
-        <input type="hidden" name={name} value={current} />
+        <input type="hidden" name={name} value={current} disabled={disabled} form={rest.form} />
         <DateInput
           {...shared}
+          ref={inputRef}
           value={(current || undefined) as IsoDate}
           onChange={(next) => set(next ?? "")}
           min={(typeof min === "string" ? min : undefined) as IsoDate}
@@ -92,11 +106,15 @@ export function Input({
   if (type === "time") {
     return (
       <>
-        <input type="hidden" name={name} value={current} />
+        <input type="hidden" name={name} value={current} disabled={disabled} form={rest.form} />
         <TimeInput
           {...shared}
+          ref={inputRef}
           value={(current || undefined) as IsoTime}
           onChange={(next) => set(next ?? "")}
+          min={(typeof min === "string" ? min : undefined) as IsoTime}
+          max={(typeof max === "string" ? max : undefined) as IsoTime}
+          hasAutoFocus={autoFocus}
           hourFormat="24h"
           hasClear={!required}
         />
@@ -107,7 +125,10 @@ export function Input({
   if (type === "number") {
     return (
       <NumberInput
+        {...rest}
         {...shared}
+        {...{ required }}
+        ref={inputRef}
         htmlName={name}
         value={current === "" ? null : Number(current)}
         onChange={(next) => set(next === null || Number.isNaN(next) ? "" : String(next))}
@@ -116,13 +137,18 @@ export function Input({
         step={step === undefined ? undefined : Number(step)}
         placeholder={placeholder}
         isReadOnly={readOnly}
+        hasAutoFocus={autoFocus}
+        isWheelEnabled={false}
       />
     );
   }
 
   return (
     <TextInput
+      {...rest}
       {...shared}
+      {...{ required }}
+      ref={inputRef}
       type={type}
       value={current}
       onChange={set}

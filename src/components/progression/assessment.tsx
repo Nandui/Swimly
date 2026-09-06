@@ -26,6 +26,8 @@ import {
 } from "@/lib/progression/actions/assess";
 import { toast } from "@/lib/toast";
 import { Icon } from "@astryxdesign/core/Icon";
+import { SAVE_UNCONFIRMED_MESSAGE, withTimeout } from "@/lib/save-feedback";
+import { COMPLETION_META } from "@/lib/progression/constants";
 
 type Choice = CompetencyStatus | null;
 
@@ -45,9 +47,8 @@ type Competency = {
 export function assessedLine(competency: Competency): string | null {
   if (!competency.status || !competency.assessedByName) return null;
   const label = competency.status === "ACHIEVED" ? "Achieved" : "Working on it";
-  return `${label} · ${competency.assessedByName}${
-    competency.assessedOn ? ` · ${formatDate(competency.assessedOn)}` : ""
-  }`;
+  return `${label} · ${competency.assessedByName}${competency.assessedOn ? ` · ${formatDate(competency.assessedOn)}` : ""
+    }`;
 }
 
 const MARK_LABEL: Record<CompetencyStatus, string> = {
@@ -64,9 +65,12 @@ const DOT: Record<CompetencyStatus, "success" | "warning"> = {
  *
  *  Batched behind one Save, like the register and for the same reason: Server
  *  Actions dispatch one at a time per client, so a save per tap would queue.
- *  A mark is a toggle: tap it again and the competency goes back to "not
- *  yet". */
-export function CompetencyChecklist({
+ *  The clear action takes a competency back to "not yet". */
+export function CompetencyChecklist(props: React.ComponentProps<typeof CompetencyChecklistState>) {
+  return <CompetencyChecklistState key={`${props.studentId}:${props.levelId}`} {...props} />;
+}
+
+function CompetencyChecklistState({
   studentId,
   levelId,
   studentName,
@@ -89,13 +93,14 @@ export function CompetencyChecklist({
   const [marks, setMarks] = React.useState(initial);
   const [pending, startTransition] = React.useTransition();
   const [error, setError] = React.useState<string | null>(null);
+  const [edited, setEdited] = React.useState(false);
 
   // Adopt fresh server state after a save revalidates, compared during render
   // rather than resynced in an effect.
   const [syncedTo, setSyncedTo] = React.useState(initial);
   if (syncedTo !== initial) {
     setSyncedTo(initial);
-    setMarks(initial);
+    if (!edited) setMarks(initial);
   }
 
   const dirty = competencies.some(
@@ -104,17 +109,26 @@ export function CompetencyChecklist({
 
   function save() {
     startTransition(async () => {
-      const result = await saveAssessment({
-        studentId,
-        levelId,
-        results: [...marks.entries()].map(([competencyId, status]) => ({
-          competencyId,
-          status,
-        })),
-      });
+      let result: Awaited<ReturnType<typeof saveAssessment>>;
+      try {
+        result = await withTimeout(saveAssessment({
+          studentId,
+          levelId,
+          results: [...marks.entries()].map(([competencyId, status]) => ({
+            competencyId,
+            status,
+          })),
+        }));
+      } catch {
+        startTransition(() => setError(SAVE_UNCONFIRMED_MESSAGE));
+        return;
+      }
       if (result.ok) {
         toast.success("Marks saved");
-        startTransition(() => setError(null));
+        startTransition(() => {
+          setError(null);
+          setEdited(false);
+        });
       } else {
         startTransition(() => setError(result.error));
       }
@@ -170,14 +184,15 @@ export function CompetencyChecklist({
                       label={`${competency.name} — ${studentName}`}
                       size="md"
                       value={value ?? ""}
-                      isDisabled={readOnly}
-                      onChange={(next) =>
+                      isDisabled={readOnly || pending}
+                      onChange={(next) => {
+                        setEdited(true);
                         setMarks((previous) => {
                           const map = new Map(previous);
                           map.set(competency.id, next as CompetencyStatus);
                           return map;
-                        })
-                      }
+                        });
+                      }}
                     >
                       {MARK_ORDER.map((status) => (
                         <SegmentedControlItem
@@ -187,6 +202,7 @@ export function CompetencyChecklist({
                         />
                       ))}
                     </SegmentedControl>
+                    {value !== null && !readOnly ? <IconButton label={`Clear ${competency.name} for ${studentName}`} tooltip="Clear mark" icon={<Icon icon={Undo2} size="sm" />} variant="ghost" isDisabled={pending} onClick={() => { setEdited(true); setMarks(previous => new Map(previous).set(competency.id, null)); }} /> : null}
                   </HStack>
                 </VStack>
               }
@@ -307,7 +323,7 @@ export function CompletionTag({
   override: string | null;
 }) {
   return (
-    <Tag color={override ? "orange" : "green"}>
+    <Tag color={COMPLETION_META[override ? "override" : "earned"].color}>
       {override ? `Completed with gaps · ${achieved}/${total}` : "Completed"}
     </Tag>
   );

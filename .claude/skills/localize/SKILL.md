@@ -12,9 +12,13 @@ description: >
   test plans, or when someone says "we need to launch in [country]" and
   the plan is "just translate it." Also trigger for compliance reviews
   across markets (GDPR, PIPL, accessibility laws).
-version: 1.6.0
-user-invocable: true
+metadata:
+  upstream-version: "1.6.0"
 ---
+
+Read [Swimly skill operating guidance](../../../SKILLS.md) once before using
+this skill. It scopes the workflow, output templates and tool examples below;
+load only the sections and references relevant to the requested deliverable.
 
 # Localize — Design Across Cultures
 

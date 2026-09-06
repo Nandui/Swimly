@@ -1,3 +1,4 @@
+import { ARCHIVAL_STATUS_META } from "@/lib/status";
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { Item } from "@astryxdesign/core/Item";
@@ -139,7 +140,7 @@ export default async function ProgrammePage(props: PageProps<"/programmes/[id]">
                 label={
                   <HStack gap={2} vAlign="center" wrap="wrap">
                     {type.name}
-                    {type.archivedAt ? <Tag color="gray">Archived</Tag> : null}
+                    {type.archivedAt ? <Tag color={ARCHIVAL_STATUS_META.archived.color}>{ARCHIVAL_STATUS_META.archived.label}</Tag> : null}
                   </HStack>
                 }
                 description={`${type.description ? `${type.description} · ` : ""}${type._count.sessions} ${type._count.sessions === 1 ? "session" : "sessions"}`}
@@ -210,7 +211,7 @@ function LevelSection({
               <Heading level={2}>
                 <HStack gap={2} vAlign="center" wrap="wrap">
                   {level.name}
-                  {archived ? <Tag color="gray">Archived</Tag> : null}
+                  {archived ? <Tag color={ARCHIVAL_STATUS_META.archived.color}>{ARCHIVAL_STATUS_META.archived.label}</Tag> : null}
                 </HStack>
               </Heading>
               {level.description ? (
@@ -253,7 +254,7 @@ function LevelSection({
                 label={
                   <HStack gap={2} vAlign="center" wrap="wrap">
                     {competency.name}
-                    {competency.archivedAt ? <Tag color="gray">Archived</Tag> : null}
+                    {competency.archivedAt ? <Tag color={ARCHIVAL_STATUS_META.archived.color}>{ARCHIVAL_STATUS_META.archived.label}</Tag> : null}
                   </HStack>
                 }
                 description={competency.description ?? undefined}

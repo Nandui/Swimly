@@ -1,3 +1,4 @@
+import { ATTENDANCE_RECORD_META } from "@/lib/attendance/constants";
 import type { Metadata } from "next";
 import { Button } from "@astryxdesign/core/Button";
 import { ClickableCard } from "@astryxdesign/core/ClickableCard";
@@ -13,12 +14,12 @@ import { LinkSegments } from "@/components/ui-kit/link-segments";
 import { PageHeader } from "@/components/ui-kit/page-header";
 import { Alert, Lead } from "@/components/ui-kit/prose";
 import { TabStrip } from "@/components/ui-kit/tab-strip";
-import { Tag, type TagColor } from "@/components/ui-kit/tag";
+import { Tag } from "@/components/ui-kit/tag";
 import { canMarkRegister } from "@/lib/attendance/access";
 import { weekdayOfIso } from "@/lib/attendance/dates";
 import { getCoversForDay } from "@/lib/attendance/data/cover";
 import { getRegisterStateForDay } from "@/lib/attendance/data/register";
-import { DAY_META, capacityLabel, courseName, formatTime } from "@/lib/courses/constants";
+import { COURSE_PHASE_META, DAY_META, capacityLabel, courseName, formatTime } from "@/lib/courses/constants";
 import { getCoursesOnDay, type CourseRow } from "@/lib/courses/data/courses";
 import { formatDate, minutesNow, parseDateOnly, today } from "@/lib/format";
 import { screenPage } from "@/lib/page-guards";
@@ -33,18 +34,6 @@ type Tab = "mine" | "all";
 type Phase = "earlier" | "now" | "later";
 
 type Cover = { coverById: string | null; coverByName: string; instructorName: string | null };
-
-/** The two marks a section can carry, and the one an attendance can. Status
- *  colour comes from here and nowhere else on the page. */
-const PHASE_TAG: Record<"now" | "next", { label: string; color: TagColor }> = {
-  now: { label: "Now", color: "blue" },
-  next: { label: "Next", color: "gray" },
-};
-
-const ATTENDANCE_TAG: Record<"taken" | "missed", { label: string; color: TagColor }> = {
-  taken: { label: "Attendance taken", color: "green" },
-  missed: { label: "Attendance not taken", color: "yellow" },
-};
 
 /** The deck screen: what an instructor holds in one hand at the poolside.
  *
@@ -389,7 +378,7 @@ function ClassSection({
           {marker ? (
             <>
               <VisuallyHidden>,</VisuallyHidden>
-              <Tag color={PHASE_TAG[marker].color}>{PHASE_TAG[marker].label}</Tag>
+              <Tag color={COURSE_PHASE_META[marker].color}>{COURSE_PHASE_META[marker].label}</Tag>
             </>
           ) : null}
           <VisuallyHidden>,</VisuallyHidden>
@@ -443,7 +432,11 @@ function describe({ course, tab, group, phase, done, cover, me, mayMark }: RowPr
   // A tag only for what is out of the ordinary: taken, or finished and not
   // taken. A class still to come carries no warning — the verb says what
   // to do.
-  const attendance = done ? ATTENDANCE_TAG.taken : phase === "earlier" ? ATTENDANCE_TAG.missed : null;
+  const attendance = done
+    ? ATTENDANCE_RECORD_META.taken
+    : phase === "earlier"
+      ? ATTENDANCE_RECORD_META.notTaken
+      : null;
 
   const coverLabel = !cover
     ? null
@@ -471,7 +464,7 @@ function HeroCard(props: RowProps & { marker: "now" | "next" }) {
   return (
     <ClickableCard
       href={`/courses/${course.id}/class?date=${iso}`}
-      label={`${verb}: ${name}, ${time}, ${PHASE_TAG[marker].label.toLowerCase()}`}
+      label={`${verb}: ${name}, ${time}, ${COURSE_PHASE_META[marker].label.toLowerCase()}`}
       variant={primary ? "blue" : "default"}
       elevation={primary ? "low" : "none"}
       padding={5}
@@ -481,7 +474,7 @@ function HeroCard(props: RowProps & { marker: "now" | "next" }) {
           <Text type="large" weight="semibold" hasTabularNumbers>
             {time}
           </Text>
-          <Tag color={PHASE_TAG[marker].color}>{PHASE_TAG[marker].label}</Tag>
+          <Tag color={COURSE_PHASE_META[marker].color}>{COURSE_PHASE_META[marker].label}</Tag>
         </HStack>
         <Heading level={2}>{name}</Heading>
         <Text as="p" display="block" color="secondary">
@@ -490,7 +483,7 @@ function HeroCard(props: RowProps & { marker: "now" | "next" }) {
         {attendance || coverLabel ? (
           <HStack gap={1.5} wrap="wrap">
             {attendance ? <Tag color={attendance.color}>{attendance.label}</Tag> : null}
-            {coverLabel ? <Tag color="purple">{coverLabel}</Tag> : null}
+            {coverLabel ? <Tag color={ATTENDANCE_RECORD_META.covered.color}>{coverLabel}</Tag> : null}
           </HStack>
         ) : null}
         <Divider />
@@ -527,7 +520,7 @@ function ClassRow(props: RowProps) {
             {name}
           </Text>
           {attendance ? <Tag color={attendance.color}>{attendance.label}</Tag> : null}
-          {coverLabel ? <Tag color="purple">{coverLabel}</Tag> : null}
+          {coverLabel ? <Tag color={ATTENDANCE_RECORD_META.covered.color}>{coverLabel}</Tag> : null}
         </HStack>
       }
       description={meta.join(" · ")}

@@ -22,12 +22,18 @@ import type { AttendanceStatus } from "@/generated/prisma/client";
 import { markRegister } from "@/lib/attendance/actions/register";
 import {
   ATTENDANCE_ORDER,
+  ATTENDANCE_RECORD_META,
   ATTENDANCE_STATUS_META,
 } from "@/lib/attendance/constants";
 import type { RegisterLine } from "@/lib/attendance/data/register";
 import { ageInYears } from "@/lib/format";
+import { parseAttendanceDraft } from "@/lib/attendance/draft";
+import { MEDICAL_STATUS_META } from "@/lib/students/constants";
+import { SAVE_TIMEOUT_MS, SAVE_UNCONFIRMED_MESSAGE, withTimeout } from "@/lib/save-feedback";
 import { toast } from "@/lib/toast";
 import { Icon } from "@astryxdesign/core/Icon";
+import { RegisterConflict } from "@/components/attendance/register-conflict";
+import type { SavedRegister } from "@/lib/attendance/revision";
 
 /** The pool-deck screen.
  *
@@ -50,29 +56,6 @@ const DOT: Record<AttendanceStatus, "success" | "warning" | "error"> = {
   ABSENT: "error",
 };
 
-/** How long a save may take before the phone is told to keep the marks
- *  and try again. Poolside wifi hangs more often than it refuses. */
-const SAVE_TIMEOUT_MS = 15_000;
-
-export const OFFLINE_MESSAGE =
-  "Could not reach the server. Your marks are kept on this phone. Try again when the signal is back.";
-
-export function withTimeout<T>(promise: Promise<T>, ms: number): Promise<T> {
-  return new Promise((resolve, reject) => {
-    const timer = setTimeout(() => reject(new Error("timeout")), ms);
-    promise.then(
-      (value) => {
-        clearTimeout(timer);
-        resolve(value);
-      },
-      (error) => {
-        clearTimeout(timer);
-        reject(error);
-      },
-    );
-  });
-}
-
 /** The bar pinned to the foot of a deck form: what state the marks are in,
  *  and the one button that saves them. The page scrolls inside the shell's
  *  main region, which has 16px of padding on every side; the bar bleeds
@@ -94,10 +77,10 @@ export function SaveBar({
       className="sticky -mx-4 -mb-4 bottom-[-1rem] pb-[max(0.75rem,env(safe-area-inset-bottom))]"
     >
       <HStack gap={3} vAlign="center" hAlign="between">
-        <Text color="secondary" hasTabularNumbers aria-live="polite">
+        <Text color="secondary" hasTabularNumbers aria-live="polite" className="min-w-0 flex-1">
           {status}
         </Text>
-        {children}
+        <HStack className="shrink-0">{children}</HStack>
       </HStack>
     </Section>
   );
@@ -109,9 +92,14 @@ function storageKey(courseId: string, date: string) {
   return `swimly:register:${courseId}:${date}`;
 }
 
-export function RegisterForm({
+export function RegisterForm(props: React.ComponentProps<typeof RegisterFormState>) {
+  return <RegisterFormState key={`${props.courseId}:${props.date}:${props.readOnly}`} {...props} />;
+}
+
+function RegisterFormState({
   courseId,
   date,
+  revision,
   lines,
   classNote,
   readOnly,
@@ -119,6 +107,7 @@ export function RegisterForm({
 }: {
   courseId: string;
   date: string;
+  revision: string;
   lines: RegisterLine[];
   classNote: string | null;
   readOnly: boolean;
@@ -147,6 +136,9 @@ export function RegisterForm({
   const [restored, setRestored] = React.useState(false);
   const [pending, startTransition] = React.useTransition();
   const [error, setError] = React.useState<string | null>(null);
+  const [storageUnavailable, setStorageUnavailable] = React.useState(false);
+  const [baseRevision, setBaseRevision] = React.useState<string | null>(revision);
+  const [conflict, setConflict] = React.useState<SavedRegister | null>(null);
 
   const key = storageKey(courseId, date);
 
@@ -156,24 +148,31 @@ export function RegisterForm({
   // is the thing it is actually warning about; that one is handled below,
   // during render, the way React recommends.
   React.useEffect(() => {
-    const raw = window.localStorage.getItem(key);
-    if (!raw) return;
     try {
-      const stored = JSON.parse(raw) as Record<string, Mark>;
+      const raw = window.localStorage.getItem(key);
+      if (!raw || readOnly) return;
+      const stored = parseAttendanceDraft(raw);
+      if (!stored) {
+        window.localStorage.removeItem(key);
+        return;
+      }
       // eslint-disable-next-line react-hooks/set-state-in-effect
       setMarks((previous) => {
         const next = new Map(previous);
-        for (const [studentId, mark] of Object.entries(stored)) {
+        for (const [studentId, mark] of Object.entries(stored.marks)) {
           if (next.has(studentId)) next.set(studentId, mark);
         }
         return next;
       });
+      if (stored.note !== undefined) setNote(stored.note);
+      // Older drafts have no baseline and must be reviewed before overwriting.
+      setBaseRevision(stored.revision ?? null);
       setDirty(true);
       setRestored(true);
     } catch {
-      window.localStorage.removeItem(key);
+      setStorageUnavailable(true);
     }
-  }, [key]);
+  }, [key, readOnly]);
 
   // When a save revalidates and the server sends fresh lines, adopt them.
   // Compared during render rather than resynced in an effect, so it costs no
@@ -181,47 +180,53 @@ export function RegisterForm({
   const [syncedTo, setSyncedTo] = React.useState(initial);
   if (syncedTo !== initial) {
     setSyncedTo(initial);
-    setMarks(initial);
-    setNote(classNote ?? "");
-    setDirty(false);
+    if (!dirty) {
+      setMarks(initial);
+      setNote(classNote ?? "");
+      setBaseRevision(revision);
+    }
   }
 
-  function remember(next: Map<string, Mark>) {
-    window.localStorage.setItem(key, JSON.stringify(Object.fromEntries(next)));
+  function remember(next: Map<string, Mark>, nextNote = note, nextRevision = baseRevision) {
+    try {
+      window.localStorage.setItem(key, JSON.stringify({ version: 2, marks: Object.fromEntries(next), note: nextNote, revision: nextRevision }));
+      setStorageUnavailable(false);
+    } catch {
+      setStorageUnavailable(true);
+    }
   }
 
   function set(studentId: string, status: AttendanceStatus) {
-    setMarks((previous) => {
-      const next = new Map(previous);
-      next.set(studentId, { ...(next.get(studentId) ?? { note: "" }), status });
-      remember(next);
-      return next;
-    });
+    const next = new Map(marks);
+    next.set(studentId, { ...(next.get(studentId) ?? { note: "" }), status });
+    remember(next);
+    setMarks(next);
     setDirty(true);
   }
 
   function setAll(status: AttendanceStatus) {
-    setMarks((previous) => {
-      const next = new Map<string, Mark>();
-      for (const [studentId, mark] of previous)
-        next.set(studentId, { ...mark, status });
-      remember(next);
-      return next;
-    });
+    const next = new Map<string, Mark>();
+    for (const [studentId, mark] of marks) next.set(studentId, { ...mark, status });
+    remember(next);
+    setMarks(next);
     setDirty(true);
   }
 
-  function save() {
+  function save(expectedRevision = baseRevision) {
+    setBaseRevision(expectedRevision);
+    setConflict(null);
+    remember(marks, note, expectedRevision);
     startTransition(async () => {
       // A save that cannot reach the server throws rather than returning,
       // and a hung one never returns at all. Both are caught here, because
-      // the marks are safe on the phone and the person has to be told so.
+      // the marks remain in this tab and the person needs a retry path.
       let result: Awaited<ReturnType<typeof markRegister>>;
       try {
         result = await withTimeout(
           markRegister({
             courseId,
             date,
+            revision: expectedRevision,
             marks: [...marks.entries()].map(([studentId, mark]) => ({
               studentId,
               status: mark.status,
@@ -232,23 +237,46 @@ export function RegisterForm({
           SAVE_TIMEOUT_MS,
         );
       } catch {
-        startTransition(() => setError(OFFLINE_MESSAGE));
+        startTransition(() => setError(SAVE_UNCONFIRMED_MESSAGE));
         return;
       }
 
       if (result.ok) {
-        window.localStorage.removeItem(key);
+        try {
+          window.localStorage.removeItem(key);
+        } catch {
+          setStorageUnavailable(true);
+        }
         toast.success("Attendance saved");
         startTransition(() => {
           setError(null);
           setDirty(false);
           setRestored(false);
+          setBaseRevision(result.revision);
         });
         if (continueHref) router.push(continueHref);
       } else {
-        startTransition(() => setError(result.error));
+        startTransition(() => {
+          setError(result.error);
+          setConflict(result.conflict ?? null);
+        });
       }
     });
+  }
+
+  function useSavedRegister() {
+    if (!conflict) return;
+    setMarks(new Map(lines.map(line => [line.studentId,
+    conflict.marks[line.studentId] ?? { status: "ABSENT", note: "" },
+    ])));
+    setNote(conflict.note);
+    setBaseRevision(conflict.revision);
+    setDirty(false);
+    setRestored(false);
+    setConflict(null);
+    setError(null);
+    try { window.localStorage.removeItem(key); } catch { setStorageUnavailable(true); }
+    router.refresh();
   }
 
   const counts = ATTENDANCE_ORDER.map((status) => ({
@@ -276,6 +304,7 @@ export function RegisterForm({
             variant="secondary"
             size="lg"
             onClick={() => setAll("PRESENT")}
+            isDisabled={pending}
           />
         )}
       </HStack>
@@ -301,7 +330,7 @@ export function RegisterForm({
                     {name}
                   </Text>
                   {line.offRoster ? (
-                    <Tag color="gray">No longer in this class</Tag>
+                    <Tag color={ATTENDANCE_RECORD_META.leftClass.color}>{ATTENDANCE_RECORD_META.leftClass.label}</Tag>
                   ) : null}
                 </HStack>
               }
@@ -316,7 +345,7 @@ export function RegisterForm({
                   {line.medicalNotes ? (
                     <Collapsible
                       defaultIsOpen={false}
-                      trigger={<Tag color="red">Medical</Tag>}
+                      trigger={<Tag color={MEDICAL_STATUS_META.notes.color}>{MEDICAL_STATUS_META.notes.label}</Tag>}
                     >
                       <Text
                         as="p"
@@ -327,15 +356,14 @@ export function RegisterForm({
                       </Text>
                     </Collapsible>
                   ) : null}
-                  {/* One of three, all visible: Astryx's SegmentedControl.
-                      Before anyone marks them the value matches no segment,
-                      which the control allows — nothing is lit. */}
+                  {/* One of three, all visible: unmarked swimmers default
+                      to absent until the instructor records otherwise. */}
                   <HStack>
                     <SegmentedControl
                       label={`Attendance for ${name}`}
                       size="lg"
                       value={mark?.status ?? ""}
-                      isDisabled={readOnly}
+                      isDisabled={readOnly || pending}
                       onChange={(value) =>
                         set(line.studentId, value as AttendanceStatus)
                       }
@@ -359,9 +387,10 @@ export function RegisterForm({
       <TextArea
         label="Anything about the class itself"
         value={note}
-        isDisabled={readOnly}
+        isDisabled={readOnly || pending}
         onChange={(next) => {
           setNote(next);
+          remember(marks, next);
           setDirty(true);
         }}
         rows={2}
@@ -369,8 +398,15 @@ export function RegisterForm({
         width="100%"
       />
 
-      {error ? (
+      {conflict ? <RegisterConflict saved={conflict} marks={marks} note={note} lines={lines} pending={pending}
+        onUseSaved={useSavedRegister} onReplace={() => save(conflict.revision)} /> : null}
+
+      {error && !conflict ? (
         <Banner status="error" title={error} collapsible={false} />
+      ) : null}
+
+      {storageUnavailable && !readOnly ? (
+        <Banner status="warning" title="This browser cannot keep a backup. Keep this tab open until attendance is saved." collapsible={false} />
       ) : null}
 
       {readOnly ? null : (
@@ -393,8 +429,9 @@ export function RegisterForm({
             }
             variant="primary"
             size="lg"
-            onClick={save}
+            onClick={() => save()}
             isLoading={pending}
+            isDisabled={!!conflict}
             icon={continueHref ? undefined : <Icon icon={Check} size="sm" />}
             endContent={
               continueHref ? <Icon icon={ArrowRight} size="sm" /> : undefined

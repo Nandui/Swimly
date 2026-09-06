@@ -11,9 +11,13 @@ description: >
   says "how do we know if this worked," "what should we measure,"
   "let's run a test," or "the numbers look good but something feels off."
   Also trigger for ethical measurement reviews and counter-metric definition.
-version: 1.6.0
-user-invocable: true
+metadata:
+  upstream-version: "1.6.0"
 ---
+
+Read [Swimly skill operating guidance](../../../SKILLS.md) once before using
+this skill. It scopes the workflow, output templates and tool examples below;
+load only the sections and references relevant to the requested deliverable.
 
 # Measure — Define and Track Success
 
@@ -214,7 +218,7 @@ Measure user satisfaction, task completion, and effort alongside every business 
 
 ## When measurement points back to strategy
 
-Measurement is not only downstream of strategy. It can also reopen strategy when evidence contradicts a strategic assumption. The triggers below are specific to measurement; the general loop-back rules — human checkpoint, loop budget, written exit condition — live in `/intent` under "Loop-backs and exit conditions."
+Measurement is not only downstream of strategy. It can also reopen strategy when evidence contradicts a strategic assumption. The triggers below are specific to measurement; the general loop-back rules — evidence, scope and an exit condition — live in `/intent` under "Loop-backs and exit conditions."
 
 ### Triggers for reopening `/strategize` from metrics
 
@@ -234,11 +238,11 @@ Measurement is not only downstream of strategy. It can also reopen strategy when
 
 1. **Name the strategic assumption the metric contradicts.** Not "users aren't converting" — "we assumed [X audience with Y motivation] was primary, but data shows [Z]."
 2. **Bring evidence, not conclusions.** Metric, counter-metric, qualitative signal, and the original assumption. Let `/strategize` reframe — don't pre-frame it.
-3. **Ask the user to authorize the reopen.** Measurement can surface that strategy may be wrong; only the human with business context decides whether strategy must change.
+3. **Check scope.** Continue analysis already requested. Ask before adopting a changed business strategy that the user has not authorized.
 
 ### Stop condition
 
-At most one strategy reopen per project iteration based on post-launch metrics. A second reopen signals framing issues the user must resolve — stop analyzing and surface the tension directly.
+If analysis repeats without new evidence, report the unresolved assumption and the evidence needed to resolve it. Complete other requested analysis rather than stopping at an arbitrary count.
 
 ---
 

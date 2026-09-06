@@ -108,7 +108,7 @@ of the two — never a bare lucide element.
 
 **Touch sizes, once.** Astryx sizes controls for a pointer: 28, 32, 36px. A
 thumb on a wet phone or a poolside tablet needs 44. One unlayered media rule
-in `globals.css`, for widths below `md` and for any coarse pointer,
+in `globals.css`, for widths up to 768px and for any coarse pointer,
 gives every button, field, menu row, tab, segment, toggle, switch row,
 collapsible trigger and nav item a 44px minimum, and stretches the inner
 control of the date, time and number fields to fill the box. The class
@@ -125,9 +125,10 @@ server-safe) or `List` with `Item`, every region is a stack or a `Section`,
 a discrete thing is a `Card`, a fold is a `Collapsible`, a notice is a
 `Banner`, a count that needs noticing is a `Badge`, a mark (present, late,
 absent; working on it, achieved) is a `SegmentedControl` — Astryx's
-control for one choice out of a few with every option visible; before anyone
-marks, its value matches no segment and nothing is lit — with a
-`StatusDot` beside the name, a way back up
+control for one choice out of a few with every option visible. Unmarked
+competencies have no selected segment and an explicit clear action removes a
+mark. Attendance defaults to absent until the instructor records otherwise. A
+`StatusDot` sits beside the name; a way back up
 is `Breadcrumbs`, a page centred on nothing else (sign-in) is a `Center`.
 Records are rows — `List` with `Item`, or `Table` — never a card each:
 the roles page and a swimmer's level ladder are lists with dividers, and only
@@ -412,7 +413,7 @@ whole cohort. Each completion also freezes `competenciesAchieved` /
 **3. Capacity is held by a row lock, not a re-count.** An interactive
 transaction that merely counts again does not fix the race — at READ COMMITTED
 two transactions both read 11 and both insert. `withCourseSeat` in
-`src/lib/enrolment/actions/enrolment.ts` takes `SELECT … FOR UPDATE` on the
+`src/lib/enrolment/seat.ts` takes `SELECT … FOR UPDATE` on the
 course row first, which also makes the "already enrolled here?" check
 race-free. That is why there is no unique constraint on
 `(studentId, courseId)` — and why repeating a level, the most ordinary thing a
@@ -480,9 +481,29 @@ The register and the assessment checklist each save as **one action carrying
 the whole class**. Next dispatches Server Actions one at a time per client, so
 a save per tap would queue on poolside wifi. Batching also means a dropped
 connection leaves the marks in the tab and retryable, and the register mirrors
-itself into `localStorage` so they survive a closed tab. Neither writes an
+itself, including its class note, into `localStorage` so drafts survive a closed
+tab when browser storage is available. A warning explains when it is not.
+Register drafts are scoped to class and date; deck checklists remount when the
+class, date or level changes, while refreshes of the same record preserve edits.
+Hung saves restore a retry path after 15 seconds; a timeout does not cancel a
+server action, so the UI says the save is unconfirmed. Neither writes an
 audit row when nothing changed — the existing rows have to be read to build the
 diff anyway, so a "did that save?" re-submit costs nothing.
+
+Attendance saves also carry the revision the instructor opened. That revision
+is derived from the class/date, saved marks and class note; it needs no schema
+column. The action reads and checks it under the same course lock used for
+enrolment and cover, then writes the register and audit together. If another
+person saved a different version, the action returns the saved values without
+writing. A focused Astryx Banner compares the saved register with the draft;
+the instructor can use the saved register or explicitly save their version.
+A second intervening save is checked again. An identical retry succeeds without
+rewriting records or adding audit rows.
+
+Version 2 browser drafts keep that original revision through refreshes and
+reloads. Older drafts remain readable, but need the comparison step before they
+can replace a saved register. Discarding a draft explicitly loads the saved
+version and refreshes the roster.
 
 ---
 
@@ -502,10 +523,10 @@ diff anyway, so a "did that save?" re-submit costs nothing.
 ```
 src/app/(app)/                 the signed-in shell and its pages
 src/app/sign-in/               the front door, outside the shell
-src/components/ui-kit/         the kit's own components — tag, page-header,
-                               empty-state, app-shell. Treat as vendored.
-src/components/ui/             shadcn primitives. They pick up the tokens.
-src/components/                app components composed from both
+src/components/ui-kit/         shared Astryx compositions — tag, page-header,
+                               empty-state, app-shell
+src/components/ui/             Astryx adapters for native form submission
+src/components/                feature components composed from Astryx
 src/lib/<domain>/data/         reads  — plain async functions, no "use server"
 src/lib/<domain>/actions/      writes — "use server", one exported action per verb
 src/lib/<domain>/constants.ts  one metadata map per enum, plus domain vocabulary
@@ -542,7 +563,9 @@ so the app has one answer rather than one per page.
 Authorize, validate, guard, write, audit, revalidate — in that order. A guard
 that runs after the write has already lost, and an audit entry written before
 the write can describe something that never happened. The full worked shape is
-in the comment at the top of `src/lib/action-result.ts`.
+in the comment at the top of `src/lib/action-result.ts`. Persist the mutation
+and its audit entry through the same transaction. Capacity and keyholder guards
+must also run under their shared locks, after reading the current rows.
 
 Errors a person can fix are return values (`{ ok: false, error }`), rendered
 next to the field. Throwing is for "this should not have been possible".

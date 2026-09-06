@@ -112,6 +112,7 @@ export function AppShell(props: AppShellProps) {
       }
       sideNav={
         <SideNav
+          aria-label="Main navigation"
           collapsible={{
             isCollapsed: collapsed,
             onCollapsedChange: setCollapsed,

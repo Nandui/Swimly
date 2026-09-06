@@ -98,7 +98,7 @@ function StudentFields({ student }: { student?: StudentDetail }) {
           <Input id="contactName" name="contactName" defaultValue={student?.contactName ?? ""} />
         </Field>
         <Field label="Phone" htmlFor="contactPhone">
-          <Input id="contactPhone" name="contactPhone" defaultValue={student?.contactPhone ?? ""} />
+          <Input id="contactPhone" name="contactPhone" inputMode="tel" defaultValue={student?.contactPhone ?? ""} />
         </Field>
       </FormLayout>
           <Field label="Email" htmlFor="contactEmail">
@@ -119,6 +119,7 @@ function StudentFields({ student }: { student?: StudentDetail }) {
           <Input
             id="emergencyPhone"
             name="emergencyPhone"
+            inputMode="tel"
             defaultValue={student?.emergencyPhone ?? ""}
           />
         </Field>
@@ -136,7 +137,7 @@ function StudentFields({ student }: { student?: StudentDetail }) {
       <Field
         label="Medical notes"
         htmlFor="medicalNotes"
-        hint="Shown as a flag on the register, with the detail one tap away. Never in a list."
+        hint="Shown as a flag on attendance, with the detail one tap away."
       >
         <Textarea
           id="medicalNotes"
@@ -228,7 +229,7 @@ export function ToggleStudentStatus({
         <IconButton label={`Mark ${fullName(student)} inactive`} variant="ghost" size="sm" icon={<Icon icon={UserRoundX} size="sm" />} />
       }
       title={`Mark ${fullName(student)} inactive?`}
-      description="They stop appearing when someone enrols a student, and they cannot be added to a course. Their attendance, assessments and completed levels stay exactly as they are, and you can mark them active again at any time."
+      description="They stop appearing when someone enrols a swimmer, and they cannot be added to a class. Their attendance, assessments and completed levels stay exactly as they are, and you can mark them active again at any time."
       confirmLabel="Mark inactive"
       successMessage="Swimmer marked inactive"
       run={() => setStudentStatus(student.id, "INACTIVE")}

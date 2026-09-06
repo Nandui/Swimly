@@ -7,6 +7,7 @@ import { logAudit } from "@/lib/audit";
 import { requirePermission } from "@/lib/authz";
 import { LIST_ORDER } from "@/lib/curriculum/constants";
 import { reorderIds } from "@/lib/curriculum/reorder";
+import { currentClubId } from "@/lib/clubs/current";
 import { prisma } from "@/lib/prisma";
 
 const levelSchema = z.object({
@@ -31,7 +32,7 @@ export async function createLevel(
   const { name, description } = parsed.data;
 
   const programme = await prisma.programme.findUnique({
-    where: { id: programmeId },
+    where: { id: programmeId, clubId: await currentClubId() },
     select: { id: true, name: true, archivedAt: true },
   });
   if (!programme) return fail("That programme no longer exists.");
@@ -44,8 +45,8 @@ export async function createLevel(
   });
 
   const created = await onUniqueViolation(
-    () =>
-      prisma.level.create({
+    () => prisma.$transaction(async (tx) => {
+      const created = await tx.level.create({
         data: {
           programmeId,
           name,
@@ -53,20 +54,22 @@ export async function createLevel(
           sortOrder: (last?.sortOrder ?? -1) + 1,
         },
         select: { id: true, name: true },
-      }),
+      });
+
+      await logAudit({
+        actorId: session.user.id,
+        actorName: session.user.name ?? "Unknown",
+        action: "create",
+        entity: "Level",
+        entityId: created.id,
+        programmeId,
+        summary: `Added level ${created.name} to ${programme.name}`,
+      }, tx);
+      return created;
+    }),
     `${programme.name} already has a level called ${name}.`
   );
   if ("ok" in created) return created;
-
-  await logAudit({
-    actorId: session.user.id,
-    actorName: session.user.name ?? "Unknown",
-    action: "create",
-    entity: "Level",
-    entityId: created.id,
-    programmeId,
-    summary: `Added level ${created.name} to ${programme.name}`,
-  });
 
   revalidatePath("/programmes/[id]", "page");
   revalidatePath("/programmes");
@@ -81,7 +84,7 @@ export async function updateLevel(id: string, input: LevelInput): Promise<Action
   const { name, description } = parsed.data;
 
   const existing = await prisma.level.findUnique({
-    where: { id },
+    where: { id, programme: { clubId: await currentClubId() } },
     select: {
       id: true,
       name: true,
@@ -95,29 +98,32 @@ export async function updateLevel(id: string, input: LevelInput): Promise<Action
   const changes: string[] = [];
   if (existing.name !== name) changes.push(`name ${existing.name} → ${name}`);
   if ((existing.description ?? "") !== description) changes.push("description");
+  if (changes.length === 0) return ok();
 
   const updated = await onUniqueViolation(
-    () =>
-      prisma.level.update({
-        where: { id },
+    () => prisma.$transaction(async (tx) => {
+      const updated = await tx.level.update({
+        where: { id, programme: { clubId: await currentClubId() } },
         data: { name, description: description || null },
         select: { id: true, name: true },
-      }),
+      });
+
+      if (changes.length > 0) {
+        await logAudit({
+          actorId: session.user.id,
+          actorName: session.user.name ?? "Unknown",
+          action: "update",
+          entity: "Level",
+          entityId: id,
+          programmeId: existing.programmeId,
+          summary: `Updated level ${updated.name} in ${existing.programme.name} (${changes.join(", ")})`,
+        }, tx);
+      }
+      return updated;
+    }),
     `${existing.programme.name} already has a level called ${name}.`
   );
   if ("ok" in updated) return updated;
-
-  if (changes.length > 0) {
-    await logAudit({
-      actorId: session.user.id,
-      actorName: session.user.name ?? "Unknown",
-      action: "update",
-      entity: "Level",
-      entityId: id,
-      programmeId: existing.programmeId,
-      summary: `Updated level ${updated.name} in ${existing.programme.name} (${changes.join(", ")})`,
-    });
-  }
 
   revalidatePath("/programmes/[id]", "page");
   return ok();
@@ -130,7 +136,7 @@ export async function setLevelArchived(
   const session = await requirePermission("curriculum.manage");
 
   const existing = await prisma.level.findUnique({
-    where: { id },
+    where: { id, programme: { clubId: await currentClubId() } },
     select: {
       id: true,
       name: true,
@@ -148,24 +154,26 @@ export async function setLevelArchived(
     });
     if (courses > 0) {
       return fail(
-        `${courses} ${courses === 1 ? "course still teaches" : "courses still teach"} ${existing.name}. Archive ${courses === 1 ? "it" : "them"} first.`
+        `${courses} ${courses === 1 ? "class still teaches" : "classes still teach"} ${existing.name}. Archive ${courses === 1 ? "it" : "them"} first.`
       );
     }
   }
 
-  await prisma.level.update({
-    where: { id },
-    data: { archivedAt: archived ? new Date() : null },
-  });
+  await prisma.$transaction(async (tx) => {
+    await tx.level.update({
+      where: { id, programme: { clubId: await currentClubId() } },
+      data: { archivedAt: archived ? new Date() : null },
+    });
 
-  await logAudit({
-    actorId: session.user.id,
-    actorName: session.user.name ?? "Unknown",
-    action: archived ? "archive" : "restore",
-    entity: "Level",
-    entityId: id,
-    programmeId: existing.programmeId,
-    summary: `${archived ? "Archived" : "Restored"} level ${existing.name} in ${existing.programme.name}`,
+    await logAudit({
+      actorId: session.user.id,
+      actorName: session.user.name ?? "Unknown",
+      action: archived ? "archive" : "restore",
+      entity: "Level",
+      entityId: id,
+      programmeId: existing.programmeId,
+      summary: `${archived ? "Archived" : "Restored"} level ${existing.name} in ${existing.programme.name}`,
+    }, tx);
   });
 
   revalidatePath("/programmes/[id]", "page");
@@ -179,7 +187,7 @@ export async function moveLevel(
   const session = await requirePermission("curriculum.manage");
 
   const level = await prisma.level.findUnique({
-    where: { id },
+    where: { id, programme: { clubId: await currentClubId() } },
     select: { programmeId: true, name: true },
   });
   if (!level) return fail("That level no longer exists.");
@@ -198,22 +206,24 @@ export async function moveLevel(
   if (!order) return ok();
 
   const byId = new Map(siblings.map((s) => [s.id, s.name]));
-  await prisma.$transaction(
-    order.map((levelId, index) =>
-      prisma.level.update({ where: { id: levelId }, data: { sortOrder: index } })
-    )
-  );
+  await prisma.$transaction(async (tx) => {
+    await Promise.all(
+      order.map((levelId, index) =>
+        tx.level.update({ where: { id: levelId }, data: { sortOrder: index } })
+      )
+    );
 
-  const movedTo = order.indexOf(id);
-  const neighbour = order[direction === "up" ? movedTo + 1 : movedTo - 1];
-  await logAudit({
-    actorId: session.user.id,
-    actorName: session.user.name ?? "Unknown",
-    action: "reorder",
-    entity: "Level",
-    entityId: id,
-    programmeId: level.programmeId,
-    summary: `Moved level ${level.name} ${direction === "up" ? "above" : "below"} ${byId.get(neighbour)}`,
+    const movedTo = order.indexOf(id);
+    const neighbour = order[direction === "up" ? movedTo + 1 : movedTo - 1];
+    await logAudit({
+      actorId: session.user.id,
+      actorName: session.user.name ?? "Unknown",
+      action: "reorder",
+      entity: "Level",
+      entityId: id,
+      programmeId: level.programmeId,
+      summary: `Moved level ${level.name} ${direction === "up" ? "above" : "below"} ${byId.get(neighbour)}`,
+    }, tx);
   });
 
   revalidatePath("/programmes/[id]", "page");

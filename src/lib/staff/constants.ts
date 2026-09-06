@@ -1,5 +1,11 @@
 import type { TagColor } from "@/components/ui-kit/tag";
 import { expandPermissions } from "@/lib/staff/permissions";
+import type { StatusMeta } from "@/lib/status";
+
+export const STAFF_STATUS_META = {
+  noPassword: { label: "No password set", color: "yellow" },
+  builtInRole: { label: "Built in", color: "gray" },
+} as const satisfies Record<string, StatusMeta>;
 
 /** Roles are rows now, so there is no enum to hang a metadata map on and no
  *  compiler to catch an untinted one. What replaces it is a map keyed on how
@@ -19,7 +25,8 @@ const REACH_META: Record<"keys" | "work" | "read", { label: string; color: TagCo
 export function roleReach(permissions: readonly string[]) {
   const held = expandPermissions(permissions);
   if (held.has("staff.manage") || held.has("roles.manage")) return REACH_META.keys;
-  if (held.size > 0) return REACH_META.work;
+  // The audit log is a read permission; by itself it cannot change records.
+  if ([...held].some((permission) => permission !== "activity.view")) return REACH_META.work;
   return REACH_META.read;
 }
 

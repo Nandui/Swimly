@@ -4,43 +4,48 @@ import * as React from "react";
 import { Search } from "lucide-react";
 import { Button } from "@astryxdesign/core/Button";
 import { TextInput } from "@astryxdesign/core/TextInput";
-import { VisuallyHidden } from "@astryxdesign/core/VisuallyHidden";
+import { HStack, StackItem } from "@astryxdesign/core/Stack";
 
-/** A search box that posts through the `<Form>` around it. Enter submits;
- *  the hidden submit button is there because implicit submission has enough
- *  edge cases that a search box should not be the thing betting on it, and
- *  it gives keyboard users something to tab to. */
-export function SearchField({
-  name = "q",
-  label,
-  placeholder,
-  defaultValue = "",
-  width,
-}: {
+type SearchFieldProps = {
   name?: string;
   label: string;
   placeholder: string;
   defaultValue?: string;
   /** Its own width from the tablet up; full width on a phone regardless. */
   width?: number;
-}) {
+};
+
+/** A search box that posts through the `<Form>` around it. A visible submit
+ *  action works for touch, keyboard and assistive technology alike. The URL
+ *  seeds a fresh field when a search is cleared or browser history changes. */
+export function SearchField(props: SearchFieldProps) {
+  return <SearchFieldControl key={props.defaultValue ?? ""} {...props} />;
+}
+
+function SearchFieldControl({
+  name = "q",
+  label,
+  placeholder,
+  defaultValue = "",
+  width,
+}: SearchFieldProps) {
   const [value, setValue] = React.useState(defaultValue);
   return (
-    <>
-      <TextInput
-        label={label}
-        isLabelHidden
-        htmlName={name}
-        value={value}
-        onChange={setValue}
-        placeholder={placeholder}
-        startIcon={Search}
-        hasClear
-        width={width ? `min(100%, ${width}px)` : "100%"}
-      />
-      <VisuallyHidden>
-        <Button type="submit" label="Search" variant="ghost" size="sm" />
-      </VisuallyHidden>
-    </>
+    <HStack gap={2} vAlign="center" width={width ? `min(100%, ${width + 96}px)` : "100%"} className="max-sm:w-full">
+      <StackItem size="fill">
+        <TextInput
+          label={label}
+          isLabelHidden
+          htmlName={name}
+          value={value}
+          onChange={setValue}
+          placeholder={placeholder}
+          startIcon={Search}
+          hasClear
+          width="100%"
+        />
+      </StackItem>
+      <Button type="submit" label="Search" variant="secondary" />
+    </HStack>
   );
 }

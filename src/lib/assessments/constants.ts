@@ -2,6 +2,14 @@ import type { TagColor } from "@/components/ui-kit/tag";
 import type { AssessmentBookingStatus, DayOfWeek } from "@/generated/prisma/client";
 import { DAY_META, formatTime } from "@/lib/courses/constants";
 import { formatDate, weekdayOf } from "@/lib/format";
+import type { StatusMeta } from "@/lib/status";
+
+export const SESSION_STATUS_META = {
+  cancelled: { label: "Cancelled", color: "gray" },
+  full: { label: "Full", color: "yellow" },
+  missingKind: { label: "Kind not set", color: "orange" },
+  unassigned: { label: "Not decided", color: "orange" },
+} as const satisfies Record<string, StatusMeta>;
 
 /** Domain vocabulary for assessments. Status colour comes from here and
  *  nowhere else — one metadata map, tints from the nine. */

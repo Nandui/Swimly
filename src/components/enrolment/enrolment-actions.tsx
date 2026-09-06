@@ -50,21 +50,27 @@ function courseOptions(courses: (CourseLike & { _count: { enrolments: number } }
  *  cannot know whether a placement is out of sequence until the server has
  *  read the ladder — and a field that appears after a failed submit is a field
  *  people re-type into. */
+function PlacementReason() {
+  return (
+    <Field
+      label="Why this level, if they haven't earned it"
+      htmlFor="placementReason"
+      hint="Only needed when they have not earned this level. Record what supports the placement so their instructor can read it."
+    >
+      <Textarea
+        id="placementReason"
+        name="placementReason"
+        rows={2}
+        placeholder="Assessed at trial on 12 Sep — comfortable at this level"
+      />
+    </Field>
+  );
+}
+
 function PlacementFields() {
   return (
     <>
-      <Field
-        label="Why this level, if they haven't earned it"
-        htmlFor="placementReason"
-        hint="Only needed for an out-of-sequence placement — a transfer in, an assessment day, an adult beginner. It goes on their record where an instructor can read it."
-      >
-        <Textarea
-          id="placementReason"
-          name="placementReason"
-          rows={2}
-          placeholder="Assessed at trial on 12 Sep — comfortable at this level"
-        />
-      </Field>
+      <PlacementReason />
       <Switch
         id="allowWaitlist"
         name="allowWaitlist"
@@ -215,7 +221,11 @@ export function TransferEnrolment({
       submitLabel="Move"
       successMessage="Swimmer moved"
       submit={(formData) =>
-        transferEnrolment(enrolment.id, String(formData.get("toCourseId") ?? ""))
+        transferEnrolment(
+          enrolment.id,
+          String(formData.get("toCourseId") ?? ""),
+          String(formData.get("placementReason") ?? "")
+        )
       }
     >
       <Field label="New class" htmlFor="toCourseId">
@@ -236,6 +246,7 @@ export function TransferEnrolment({
           emptyText="No other class matches."
         />
       </Field>
+      <PlacementReason />
     </FormDialog>
   );
 }

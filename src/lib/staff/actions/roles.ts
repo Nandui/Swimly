@@ -4,7 +4,6 @@ import { revalidatePath } from "next/cache";
 import { z } from "zod";
 import {
   fail,
-  isUniqueViolation,
   ok,
   onUniqueViolation,
   type ActionResult,
@@ -76,8 +75,8 @@ export async function createRole(input: RoleInput): Promise<ActionResult> {
   });
 
   const created = await onUniqueViolation(
-    () =>
-      prisma.staffRole.create({
+    () => prisma.$transaction(async (tx) => {
+      const created = await tx.staffRole.create({
         data: {
           name,
           description: description || null,
@@ -87,19 +86,20 @@ export async function createRole(input: RoleInput): Promise<ActionResult> {
           sortOrder: (last?.sortOrder ?? -1) + 1,
         },
         select: { id: true, name: true },
-      }),
+      });
+      await logAudit({
+        actorId: session.user.id,
+        actorName: session.user.name ?? "Unknown",
+        action: "create",
+        entity: "StaffRole",
+        entityId: created.id,
+        summary: `Created role ${created.name} with ${permissions.length} ${permissions.length === 1 ? "permission" : "permissions"}${permissions.length ? ` (${permissions.join(", ")})` : ""}`,
+      }, tx);
+      return created;
+    }),
     `There is already a role called ${name}.`
   );
   if ("ok" in created) return created;
-
-  await logAudit({
-    actorId: session.user.id,
-    actorName: session.user.name ?? "Unknown",
-    action: "create",
-    entity: "StaffRole",
-    entityId: created.id,
-    summary: `Created role ${created.name} with ${permissions.length} ${permissions.length === 1 ? "permission" : "permissions"}${permissions.length ? ` (${permissions.join(", ")})` : ""}`,
-  });
 
   revalidatePath("/roles");
   revalidatePath("/staff");
@@ -118,85 +118,75 @@ export async function updateRole(id: string, input: RoleInput): Promise<ActionRe
     return fail("Tick at least one screen, or nobody on this role has anywhere to go.");
   }
 
-  const existing = await prisma.staffRole.findUnique({
-    where: { id },
-    select: {
-      id: true,
-      name: true,
-      description: true,
-      permissions: true,
-      home: true,
-      screens: true,
-    },
-  });
-  if (!existing) return fail("That role no longer exists.");
-
-  const changes: string[] = [];
-  if (existing.name !== name) changes.push(`name ${existing.name} → ${name}`);
-  if ((existing.description ?? "") !== description) changes.push("description");
-  if (existing.home !== home) changes.push(`starts on ${ROLE_HOMES[home].label}`);
-
-  const screensBefore = new Set(existing.screens);
-  const screensAfter = new Set<string>(screens);
-  const shown = screens.filter((key) => !screensBefore.has(key)).map((k) => screenMeta(k).label);
-  const hidden = cleanScreens(existing.screens)
-    .filter((key) => !screensAfter.has(key))
-    .map((k) => screenMeta(k).label);
-  if (shown.length) changes.push(`now sees ${shown.join(", ")}`);
-  if (hidden.length) changes.push(`no longer sees ${hidden.join(", ")}`);
-
-  const before = new Set(existing.permissions);
-  const after = new Set<string>(permissions);
-  const granted = [...after].filter((key) => !before.has(key));
-  const revoked = [...before].filter((key) => !after.has(key));
-  if (granted.length) changes.push(`granted ${granted.join(", ")}`);
-  if (revoked.length) changes.push(`revoked ${revoked.join(", ")}`);
-
-  // The guard, the write and the legacy mirror share one transaction, and the
-  // lock serialises them against any other role change. Checking first and
-  // writing after would let two admins each strip the keys off the other's
-  // role and both be told it was fine.
-  let outcome: { refusal: string } | { updated: { id: string; name: string } };
-  try {
-    outcome = await withKeyholderLock(async (tx) => {
-      const refusal = await guardKeyholders(
-        { kind: "rolePermissions", roleId: id, permissions, screens },
-        tx
-      );
-      if (refusal) return { refusal };
-
-      const updated = await tx.staffRole.update({
-        where: { id },
-        data: { name, description: description || null, permissions, home, screens },
-        select: { id: true, name: true },
-      });
-
-      // The legacy enum on every holder is derived from the role, so it has to
-      // move with it. Drop this with the column.
-      await tx.user.updateMany({
-        where: { staffRoleId: id },
-        data: { role: legacyRoleFor(permissions) },
-      });
-
-      return { updated };
+  const result = await onUniqueViolation(() => withKeyholderLock(async (tx) => {
+    const existing = await tx.staffRole.findUnique({
+      where: { id },
+      select: {
+        id: true,
+        name: true,
+        description: true,
+        permissions: true,
+        home: true,
+        screens: true,
+      },
     });
-  } catch (err) {
-    if (isUniqueViolation(err)) return fail(`There is already a role called ${name}.`);
-    throw err;
-  }
-  if ("refusal" in outcome) return fail(outcome.refusal);
-  const updated = outcome.updated;
+    if (!existing) return fail("That role no longer exists.");
 
-  if (changes.length > 0) {
-    await logAudit({
-      actorId: session.user.id,
-      actorName: session.user.name ?? "Unknown",
-      action: "update",
-      entity: "StaffRole",
-      entityId: id,
-      summary: `Updated role ${updated.name} (${changes.join("; ")})`,
+    const changes: string[] = [];
+    if (existing.name !== name) changes.push(`name ${existing.name} → ${name}`);
+    if ((existing.description ?? "") !== description) changes.push("description");
+    if (existing.home !== home) changes.push(`starts on ${ROLE_HOMES[home].label}`);
+
+    const screensBefore = new Set(existing.screens);
+    const screensAfter = new Set<string>(screens);
+    const shown = screens.filter((key) => !screensBefore.has(key)).map((k) => screenMeta(k).label);
+    const hidden = cleanScreens(existing.screens)
+      .filter((key) => !screensAfter.has(key))
+      .map((k) => screenMeta(k).label);
+    if (shown.length) changes.push(`now sees ${shown.join(", ")}`);
+    if (hidden.length) changes.push(`no longer sees ${hidden.join(", ")}`);
+
+    const before = new Set(existing.permissions);
+    const after = new Set<string>(permissions);
+    const granted = [...after].filter((key) => !before.has(key));
+    const revoked = [...before].filter((key) => !after.has(key));
+    if (granted.length) changes.push(`granted ${granted.join(", ")}`);
+    if (revoked.length) changes.push(`revoked ${revoked.join(", ")}`);
+
+    if (changes.length === 0) return ok();
+    const refusal = await guardKeyholders(
+      { kind: "rolePermissions", roleId: id, permissions, screens },
+      tx
+    );
+    if (refusal) return fail(refusal);
+
+    const updated = await tx.staffRole.update({
+      where: { id },
+      data: { name, description: description || null, permissions, home, screens },
+      select: { id: true, name: true },
     });
-  }
+
+    // The legacy enum on every holder is derived from the role, so it has to
+    // move with it. Drop this with the column.
+    await tx.user.updateMany({
+      where: { staffRoleId: id },
+      data: { role: legacyRoleFor(permissions) },
+    });
+
+    if (changes.length > 0) {
+      await logAudit({
+        actorId: session.user.id,
+        actorName: session.user.name ?? "Unknown",
+        action: "update",
+        entity: "StaffRole",
+        entityId: id,
+        summary: `Updated role ${updated.name} (${changes.join("; ")})`,
+      }, tx);
+    }
+
+    return ok();
+  }), `There is already a role called ${name}.`);
+  if (!result.ok) return result;
 
   revalidatePath("/roles");
   revalidatePath("/staff");
@@ -209,34 +199,39 @@ export async function updateRole(id: string, input: RoleInput): Promise<ActionRe
 export async function deleteRole(id: string): Promise<ActionResult> {
   const session = await requirePermission("roles.manage");
 
-  const existing = await prisma.staffRole.findUnique({
-    where: { id },
-    select: { id: true, name: true, isSystem: true, _count: { select: { users: true } } },
+  const result = await withKeyholderLock(async (tx) => {
+    const existing = await tx.staffRole.findUnique({
+      where: { id },
+      select: { id: true, name: true, isSystem: true, _count: { select: { users: true } } },
+    });
+    if (!existing) return fail("That role no longer exists.");
+
+    if (existing.isSystem) {
+      return fail(
+        `${existing.name} is one of the roles the app shipped with. You can rename it and change what it may do, but not delete it.`
+      );
+    }
+    if (existing._count.users > 0) {
+      const n = existing._count.users;
+      return fail(
+        `${n} ${n === 1 ? "account is" : "accounts are"} on ${existing.name}. Move them to another role first.`
+      );
+    }
+
+    await tx.staffRole.delete({ where: { id } });
+
+    await logAudit({
+      actorId: session.user.id,
+      actorName: session.user.name ?? "Unknown",
+      action: "delete",
+      entity: "StaffRole",
+      entityId: id,
+      summary: `Deleted role ${existing.name}`,
+    }, tx);
+
+    return ok();
   });
-  if (!existing) return fail("That role no longer exists.");
-
-  if (existing.isSystem) {
-    return fail(
-      `${existing.name} is one of the roles the app shipped with. You can rename it and change what it may do, but not delete it.`
-    );
-  }
-  if (existing._count.users > 0) {
-    const n = existing._count.users;
-    return fail(
-      `${n} ${n === 1 ? "account is" : "accounts are"} on ${existing.name}. Move ${n === 1 ? "them" : "them"} to another role first.`
-    );
-  }
-
-  await prisma.staffRole.delete({ where: { id } });
-
-  await logAudit({
-    actorId: session.user.id,
-    actorName: session.user.name ?? "Unknown",
-    action: "delete",
-    entity: "StaffRole",
-    entityId: id,
-    summary: `Deleted role ${existing.name}`,
-  });
+  if (!result.ok) return result;
 
   revalidatePath("/roles");
   revalidatePath("/staff");

@@ -2,6 +2,7 @@ import { cache } from "react";
 import NextAuth, { type NextAuthConfig, type Session } from "next-auth";
 import Credentials from "next-auth/providers/credentials";
 import bcrypt from "bcryptjs";
+import { authCookies } from "@/lib/auth-cookies";
 import { devSignInAllowed, getDevAdmin } from "@/lib/dev-sign-in";
 import { prisma } from "@/lib/prisma";
 import { mayPreview, previewedRole } from "@/lib/staff/preview";
@@ -69,6 +70,7 @@ const {
   auth: nextAuth,
 } = NextAuth({
   session: { strategy: "jwt" },
+  cookies: authCookies(),
   pages: { signIn: "/sign-in" },
   providers: providers(),
   callbacks: {

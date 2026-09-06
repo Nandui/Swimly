@@ -1,3 +1,5 @@
+import { COMPETENCY_STATUS_META } from "@/lib/progression/constants";
+import { ATTENDANCE_RECORD_META } from "@/lib/attendance/constants";
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { Banner } from "@astryxdesign/core/Banner";
@@ -71,7 +73,7 @@ export default async function ClassPage(props: PageProps<"/courses/[id]/class">)
       ? requested
       : mostRecentOccurrence(course.dayOfWeek);
 
-  const [{ lines, taken, note }, cover, progress] = await Promise.all([
+  const [{ lines, taken, note, revision }, cover, progress] = await Promise.all([
     getRegister(id, iso),
     getClassCover(id, iso),
     getClassProgress(id),
@@ -137,8 +139,8 @@ export default async function ClassPage(props: PageProps<"/courses/[id]/class">)
               ) : (
                 courseName(course)
               )}
-              {taken ? <Tag color="green">Attendance taken</Tag> : null}
-              {cover ? <Tag color="purple">Covered</Tag> : null}
+              {taken ? <Tag color={ATTENDANCE_RECORD_META.taken.color}>{ATTENDANCE_RECORD_META.taken.label}</Tag> : null}
+              {cover ? <Tag color={ATTENDANCE_RECORD_META.covered.color}>{ATTENDANCE_RECORD_META.covered.label}</Tag> : null}
             </HStack>
           }
           description={
@@ -215,6 +217,7 @@ export default async function ClassPage(props: PageProps<"/courses/[id]/class">)
             />
           ) : (
             <RegisterForm
+              revision={revision}
               courseId={course.id}
               date={iso}
               lines={lines}
@@ -265,7 +268,7 @@ export default async function ClassPage(props: PageProps<"/courses/[id]/class">)
                     label={
                       <HStack gap={2} vAlign="center" wrap="wrap">
                         <Text weight="medium">{fullName(swimmer.student)}</Text>
-                        <Tag color="green">
+                        <Tag color={COMPETENCY_STATUS_META.ACHIEVED.color}>
                           {swimmer.achieved} of {swimmer.total}
                         </Tag>
                       </HStack>

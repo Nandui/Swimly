@@ -41,8 +41,7 @@ export default async function AccountPage() {
         <Heading level={2}>What you can do</Heading>
         {granted.length === 0 ? (
           <Lead>
-            You can look things up and change nothing. Swimmers, classes, the curriculum and
-            attendance are all readable.
+            You can read the screens available to your role. You cannot change their records.
           </Lead>
         ) : (
           <List hasDividers>

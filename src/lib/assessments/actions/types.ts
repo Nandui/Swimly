@@ -5,6 +5,7 @@ import { z } from "zod";
 import { fail, ok, onUniqueViolation, type ActionResult } from "@/lib/action-result";
 import { logAudit } from "@/lib/audit";
 import { requirePermission } from "@/lib/authz";
+import { currentClubId } from "@/lib/clubs/current";
 import { prisma } from "@/lib/prisma";
 
 /** Kinds of assessment are part of a programme's shape, so they share the
@@ -34,7 +35,7 @@ export async function createAssessmentType(
   const { name, description } = parsed.data;
 
   const programme = await prisma.programme.findUnique({
-    where: { id: programmeId },
+    where: { id: programmeId, clubId: await currentClubId() },
     select: { id: true, name: true, archivedAt: true },
   });
   if (!programme) return fail("That programme no longer exists.");
@@ -47,8 +48,8 @@ export async function createAssessmentType(
   });
 
   const created = await onUniqueViolation(
-    () =>
-      prisma.assessmentType.create({
+    () => prisma.$transaction(async (tx) => {
+      const created = await tx.assessmentType.create({
         data: {
           programmeId,
           name,
@@ -56,20 +57,22 @@ export async function createAssessmentType(
           sortOrder: (last?.sortOrder ?? -1) + 1,
         },
         select: { id: true, name: true },
-      }),
+      });
+
+      await logAudit({
+        actorId: session.user.id,
+        actorName: session.user.name ?? "Unknown",
+        action: "create",
+        entity: "AssessmentType",
+        entityId: created.id,
+        programmeId,
+        summary: `Added assessment type ${created.name} to ${programme.name}`,
+      }, tx);
+      return created;
+    }),
     `${programme.name} already has an assessment type called ${name}.`
   );
   if ("ok" in created) return created;
-
-  await logAudit({
-    actorId: session.user.id,
-    actorName: session.user.name ?? "Unknown",
-    action: "create",
-    entity: "AssessmentType",
-    entityId: created.id,
-    programmeId,
-    summary: `Added assessment type ${created.name} to ${programme.name}`,
-  });
 
   revalidate();
   return ok();
@@ -86,7 +89,7 @@ export async function updateAssessmentType(
   const { name, description } = parsed.data;
 
   const existing = await prisma.assessmentType.findUnique({
-    where: { id },
+    where: { id, programme: { clubId: await currentClubId() } },
     select: {
       id: true,
       name: true,
@@ -100,29 +103,32 @@ export async function updateAssessmentType(
   const changes: string[] = [];
   if (existing.name !== name) changes.push(`name ${existing.name} → ${name}`);
   if ((existing.description ?? "") !== description) changes.push("description");
+  if (changes.length === 0) return ok();
 
   const updated = await onUniqueViolation(
-    () =>
-      prisma.assessmentType.update({
-        where: { id },
+    () => prisma.$transaction(async (tx) => {
+      const updated = await tx.assessmentType.update({
+        where: { id, programme: { clubId: await currentClubId() } },
         data: { name, description: description || null },
         select: { id: true, name: true },
-      }),
+      });
+
+      if (changes.length > 0) {
+        await logAudit({
+          actorId: session.user.id,
+          actorName: session.user.name ?? "Unknown",
+          action: "update",
+          entity: "AssessmentType",
+          entityId: id,
+          programmeId: existing.programmeId,
+          summary: `Updated assessment type ${updated.name} in ${existing.programme.name} (${changes.join(", ")})`,
+        }, tx);
+      }
+      return updated;
+    }),
     `${existing.programme.name} already has an assessment type called ${name}.`
   );
   if ("ok" in updated) return updated;
-
-  if (changes.length > 0) {
-    await logAudit({
-      actorId: session.user.id,
-      actorName: session.user.name ?? "Unknown",
-      action: "update",
-      entity: "AssessmentType",
-      entityId: id,
-      programmeId: existing.programmeId,
-      summary: `Updated assessment type ${updated.name} in ${existing.programme.name} (${changes.join(", ")})`,
-    });
-  }
 
   revalidate();
   return ok();
@@ -134,7 +140,7 @@ export async function setAssessmentTypeArchived(id: string, archived: boolean): 
   const session = await requirePermission("curriculum.manage");
 
   const existing = await prisma.assessmentType.findUnique({
-    where: { id },
+    where: { id, programme: { clubId: await currentClubId() } },
     select: {
       id: true,
       name: true,
@@ -146,19 +152,21 @@ export async function setAssessmentTypeArchived(id: string, archived: boolean): 
   if (!existing) return fail("That assessment type no longer exists.");
   if (Boolean(existing.archivedAt) === archived) return ok();
 
-  await prisma.assessmentType.update({
-    where: { id },
-    data: { archivedAt: archived ? new Date() : null },
-  });
+  await prisma.$transaction(async (tx) => {
+    await tx.assessmentType.update({
+      where: { id, programme: { clubId: await currentClubId() } },
+      data: { archivedAt: archived ? new Date() : null },
+    });
 
-  await logAudit({
-    actorId: session.user.id,
-    actorName: session.user.name ?? "Unknown",
-    action: archived ? "archive" : "restore",
-    entity: "AssessmentType",
-    entityId: id,
-    programmeId: existing.programmeId,
-    summary: `${archived ? "Archived" : "Restored"} assessment type ${existing.name} in ${existing.programme.name}`,
+    await logAudit({
+      actorId: session.user.id,
+      actorName: session.user.name ?? "Unknown",
+      action: archived ? "archive" : "restore",
+      entity: "AssessmentType",
+      entityId: id,
+      programmeId: existing.programmeId,
+      summary: `${archived ? "Archived" : "Restored"} assessment type ${existing.name} in ${existing.programme.name}`,
+    }, tx);
   });
 
   revalidate();

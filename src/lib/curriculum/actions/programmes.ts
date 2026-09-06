@@ -10,7 +10,7 @@ import { LIST_ORDER } from "@/lib/curriculum/constants";
 import { reorderIds } from "@/lib/curriculum/reorder";
 import { prisma } from "@/lib/prisma";
 
-/** Programmes are the rules, so every action here is admin tier. */
+/** Programme changes require curriculum.manage. */
 
 const programmeSchema = z.object({
   name: z
@@ -40,8 +40,8 @@ export async function createProgramme(input: ProgrammeInput): Promise<ActionResu
   });
 
   const created = await onUniqueViolation(
-    () =>
-      prisma.programme.create({
+    () => prisma.$transaction(async (tx) => {
+      const created = await tx.programme.create({
         data: {
           clubId,
           name,
@@ -49,20 +49,22 @@ export async function createProgramme(input: ProgrammeInput): Promise<ActionResu
           sortOrder: (last?.sortOrder ?? -1) + 1,
         },
         select: { id: true, name: true },
-      }),
+      });
+
+      await logAudit({
+        actorId: session.user.id,
+        actorName: session.user.name ?? "Unknown",
+        action: "create",
+        entity: "Programme",
+        entityId: created.id,
+        programmeId: created.id,
+        summary: `Created programme ${created.name}`,
+      }, tx);
+      return created;
+    }),
     `There is already a programme called ${name} in this club.`
   );
   if ("ok" in created) return created;
-
-  await logAudit({
-    actorId: session.user.id,
-    actorName: session.user.name ?? "Unknown",
-    action: "create",
-    entity: "Programme",
-    entityId: created.id,
-    programmeId: created.id,
-    summary: `Created programme ${created.name}`,
-  });
 
   revalidatePath("/programmes");
   return ok();
@@ -79,7 +81,7 @@ export async function updateProgramme(
   const { name, description } = parsed.data;
 
   const existing = await prisma.programme.findUnique({
-    where: { id },
+    where: { id, clubId: await currentClubId() },
     select: { id: true, name: true, description: true },
   });
   if (!existing) return fail("That programme no longer exists.");
@@ -87,29 +89,32 @@ export async function updateProgramme(
   const changes: string[] = [];
   if (existing.name !== name) changes.push(`name ${existing.name} → ${name}`);
   if ((existing.description ?? "") !== description) changes.push("description");
+  if (changes.length === 0) return ok();
 
   const updated = await onUniqueViolation(
-    () =>
-      prisma.programme.update({
-        where: { id },
+    () => prisma.$transaction(async (tx) => {
+      const updated = await tx.programme.update({
+        where: { id, clubId: await currentClubId() },
         data: { name, description: description || null },
         select: { id: true, name: true },
-      }),
+      });
+
+      if (changes.length > 0) {
+        await logAudit({
+          actorId: session.user.id,
+          actorName: session.user.name ?? "Unknown",
+          action: "update",
+          entity: "Programme",
+          entityId: id,
+          programmeId: id,
+          summary: `Updated programme ${updated.name} (${changes.join(", ")})`,
+        }, tx);
+      }
+      return updated;
+    }),
     `There is already a programme called ${name}.`
   );
   if ("ok" in updated) return updated;
-
-  if (changes.length > 0) {
-    await logAudit({
-      actorId: session.user.id,
-      actorName: session.user.name ?? "Unknown",
-      action: "update",
-      entity: "Programme",
-      entityId: id,
-      programmeId: id,
-      summary: `Updated programme ${updated.name} (${changes.join(", ")})`,
-    });
-  }
 
   revalidatePath("/programmes");
   revalidatePath("/programmes/[id]", "page");
@@ -125,7 +130,7 @@ export async function setProgrammeArchived(
   const session = await requirePermission("curriculum.manage");
 
   const existing = await prisma.programme.findUnique({
-    where: { id },
+    where: { id, clubId: await currentClubId() },
     select: { id: true, name: true, archivedAt: true },
   });
   if (!existing) return fail("That programme no longer exists.");
@@ -137,24 +142,26 @@ export async function setProgrammeArchived(
     });
     if (active > 0) {
       return fail(
-        `${active} ${active === 1 ? "student is" : "students are"} still enrolled in ${existing.name}. End those enrolments first.`
+        `${active} ${active === 1 ? "swimmer is" : "swimmers are"} still enrolled in ${existing.name}. End those enrolments first.`
       );
     }
   }
 
-  await prisma.programme.update({
-    where: { id },
-    data: { archivedAt: archived ? new Date() : null },
-  });
+  await prisma.$transaction(async (tx) => {
+    await tx.programme.update({
+      where: { id, clubId: await currentClubId() },
+      data: { archivedAt: archived ? new Date() : null },
+    });
 
-  await logAudit({
-    actorId: session.user.id,
-    actorName: session.user.name ?? "Unknown",
-    action: archived ? "archive" : "restore",
-    entity: "Programme",
-    entityId: id,
-    programmeId: id,
-    summary: `${archived ? "Archived" : "Restored"} programme ${existing.name}`,
+    await logAudit({
+      actorId: session.user.id,
+      actorName: session.user.name ?? "Unknown",
+      action: archived ? "archive" : "restore",
+      entity: "Programme",
+      entityId: id,
+      programmeId: id,
+      summary: `${archived ? "Archived" : "Restored"} programme ${existing.name}`,
+    }, tx);
   });
 
   revalidatePath("/programmes");
@@ -169,7 +176,7 @@ export async function moveProgramme(
   const session = await requirePermission("curriculum.manage");
 
   // Its own club's list, whichever club is being worked in.
-  const moving = await prisma.programme.findUnique({ where: { id }, select: { clubId: true } });
+  const moving = await prisma.programme.findUnique({ where: { id, clubId: await currentClubId() }, select: { clubId: true } });
   if (!moving) return fail("That programme no longer exists.");
 
   const siblings = await prisma.programme.findMany({
@@ -186,22 +193,24 @@ export async function moveProgramme(
   if (!order) return ok(); // already at the end it was asked to move toward
 
   const byId = new Map(siblings.map((s) => [s.id, s.name]));
-  await prisma.$transaction(
-    order.map((programmeId, index) =>
-      prisma.programme.update({ where: { id: programmeId }, data: { sortOrder: index } })
-    )
-  );
+  await prisma.$transaction(async (tx) => {
+    await Promise.all(
+      order.map((programmeId, index) =>
+        tx.programme.update({ where: { id: programmeId }, data: { sortOrder: index } })
+      )
+    );
 
-  const movedTo = order.indexOf(id);
-  const neighbour = order[direction === "up" ? movedTo + 1 : movedTo - 1];
-  await logAudit({
-    actorId: session.user.id,
-    actorName: session.user.name ?? "Unknown",
-    action: "reorder",
-    entity: "Programme",
-    entityId: id,
-    programmeId: id,
-    summary: `Moved programme ${byId.get(id)} ${direction === "up" ? "above" : "below"} ${byId.get(neighbour)}`,
+    const movedTo = order.indexOf(id);
+    const neighbour = order[direction === "up" ? movedTo + 1 : movedTo - 1];
+    await logAudit({
+      actorId: session.user.id,
+      actorName: session.user.name ?? "Unknown",
+      action: "reorder",
+      entity: "Programme",
+      entityId: id,
+      programmeId: id,
+      summary: `Moved programme ${byId.get(id)} ${direction === "up" ? "above" : "below"} ${byId.get(neighbour)}`,
+    }, tx);
   });
 
   revalidatePath("/programmes");

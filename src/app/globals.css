@@ -55,7 +55,7 @@ button:not(:disabled),
    row, tab, segment and nav item grows below the tablet breakpoint and on any
    coarse pointer, here once rather than at each call site. The class names
    are Astryx's own, from each component's theming table. */
-@media (max-width: 47.9375rem), (pointer: coarse) {
+@media (max-width: 48rem), (pointer: coarse) {
   .astryx-button,
   .astryx-text-input,
   .astryx-text-area-control,
@@ -63,27 +63,60 @@ button:not(:disabled),
   .astryx-time-input,
   .astryx-number-input,
   .astryx-selector,
+  .astryx-selector > button,
   .astryx-typeahead,
   .astryx-switch-field,
   .astryx-dropdown-menu-item,
   .astryx-selector-option-row,
   .astryx-side-nav-item,
   .astryx-tab,
+  .astryx-tab-scroll-button,
+  .astryx-token > button,
   .astryx-segmented-control-item,
   .astryx-collapsible-trigger {
     min-height: 44px;
   }
-  /* The date, time and number fields put a short control inside the bordered
+  .astryx-button,
+  .astryx-selector > button,
+  .astryx-tab-scroll-button,
+  .astryx-token > button,
+  .astryx-segmented-control-item {
+    min-width: 44px;
+  }
+  .astryx-text-input,
+  .astryx-typeahead,
+  .astryx-date-input,
+  .astryx-time-input,
+  .astryx-number-input {
+    height: auto;
+  }
+  .astryx-token:has(> button) {
+    height: auto;
+    min-height: 44px;
+  }
+  /* The fields put a short control inside the bordered
      box and do not forward a tap on the box to it, so the control and the
      calendar toggle stretch to the box's full height instead. */
+  .astryx-text-input input,
+  .astryx-typeahead input,
   .astryx-date-input > input,
   .astryx-date-input > button,
   .astryx-time-input > input,
   .astryx-number-input > input {
+    min-height: 44px;
     align-self: stretch;
   }
   .astryx-date-input > button {
     min-width: 44px;
+  }
+}
+
+/* Astryx's horizontal FormLayout keeps equal columns at every width. On a
+   phone, paired dates and longer field labels need their own row. */
+@media (max-width: 30rem) {
+  .astryx-form-layout[data-direction="horizontal"] {
+    grid-auto-flow: row;
+    grid-auto-columns: minmax(0, 1fr);
   }
 }
 

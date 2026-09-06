@@ -1,6 +1,27 @@
 ---
-description: "Design for everyone by treating accessibility as a first-class design discipline, not a compliance checklist. Part of the Intent design strategy system. Covers WCAG 2.2 for designers, screen reader experience design, keyboard navigation, cognitive accessibility, motor accessibility, inclusive design beyond compliance, and accessibility testing methodology. Trigger on: accessibility, a11y, WCAG, screen reader, keyboard navigation, color contrast, alt text, focus management, touch targets, inclusive design, assistive technology, \"is this accessible\", \"check accessibility\", \"design for everyone\", \"who are we excluding\", ADA compliance, Section 508, EAA, reduced motion, or any question about whether all users can perceive, operate, understand, and benefit from the experience. One billion people worldwide have a disability. Everyone experiences situational impairment. Designing inclusively makes the experience better for everyone.\n"
+name: include
+description: >
+  Design for everyone by treating accessibility as a first-class design
+  discipline, not a compliance checklist. Part of the Intent design strategy
+  system. Covers WCAG 2.2 for designers, screen reader experience design,
+  keyboard navigation, cognitive accessibility, motor accessibility, inclusive
+  design beyond compliance, and accessibility testing methodology. Trigger on:
+  accessibility, a11y, WCAG, screen reader, keyboard navigation, color
+  contrast, alt text, focus management, touch targets, inclusive design,
+  assistive technology, "is this accessible", "check accessibility", "design
+  for everyone", "who are we excluding", ADA compliance, Section 508, EAA,
+  reduced motion, or any question about whether all users can perceive,
+  operate, understand, and benefit from the experience. One billion people
+  worldwide have a disability. Everyone experiences situational impairment.
+  Designing inclusively makes the experience better for everyone.
+metadata:
+  upstream-version: "1.6.0"
 ---
+
+Read [Swimly skill operating guidance](../../../SKILLS.md) once before using
+this skill. It scopes the workflow, output templates and tool examples below;
+load only the sections and references relevant to the requested deliverable.
+
 # Include — Design for Everyone
 
 ## Overview

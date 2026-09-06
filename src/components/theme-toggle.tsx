@@ -1,16 +1,16 @@
 "use client";
 
-import { Monitor, Moon, Sun } from "lucide-react";
+import { Moon, Sun } from "lucide-react";
 import { Icon } from "@astryxdesign/core/Icon";
 import { IconButton } from "@astryxdesign/core/IconButton";
 import { SegmentedControl, SegmentedControlItem } from "@astryxdesign/core/SegmentedControl";
 import { useResolvedThemeMode, useThemeMode } from "@/components/theme-provider";
 import type { ThemeMode } from "@/lib/theme-mode";
 
-const OPTIONS: Array<{ value: ThemeMode; label: string; icon: typeof Sun }> = [
-  { value: "system", label: "System", icon: Monitor },
-  { value: "light", label: "Light", icon: Sun },
-  { value: "dark", label: "Dark", icon: Moon },
+const OPTIONS: Array<{ value: ThemeMode; label: string }> = [
+  { value: "system", label: "System" },
+  { value: "light", label: "Light" },
+  { value: "dark", label: "Dark" },
 ];
 
 /** Which mode this person wants, remembered in this browser: exactly one of
@@ -26,13 +26,14 @@ export function ThemeToggle() {
       value={mode}
       onChange={(next) => setMode(next as ThemeMode)}
       size="lg"
+      layout="fill"
+      className="max-w-sm"
     >
       {OPTIONS.map((option) => (
         <SegmentedControlItem
           key={option.value}
           value={option.value}
           label={option.label}
-          icon={<Icon icon={option.icon} size="sm" />}
         />
       ))}
     </SegmentedControl>

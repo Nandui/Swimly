@@ -1,31 +1,15 @@
 ---
-description: "The entry point for Intent, a UX and design strategy system. Sets project context, routes to specialized skills, and loads foundational UX knowledge. Activate when starting any UX or product design work, setting project context, routing to other skills, evaluating an existing product's UX, or when the user asks about design intent, user experience strategy, ethical design, dark patterns, or design systems thinking.\n"
+name: intent
+description: "Frame UX or product design work and select a relevant Intent skill when the design problem or workflow is unclear. Reuse established project context; routine implementation and focused copy fixes do not need a design kickoff."
+metadata:
+  upstream-version: "1.6.0"
 ---
+
+Read [Swimly skill operating guidance](../../../SKILLS.md) once before using
+this skill. It scopes the workflow, output templates and tool examples below;
+load only the sections and references relevant to the requested deliverable.
+
 # Intent
-
-## Invocation banner
-
-When `/intent` is invoked, the very first content in your response must be the invocation banner. Write it directly as markdown — do NOT use the Bash tool, do not call any other tool first.
-
-Output exactly this, starting with the triple-backtick line, ending with the closing triple-backtick line, then a blank line:
-
-`````
-```
-◆ ─ │ ─ ─ ─ │ ─ ─ ─ ─ │ ─ ─ ─ │ ─ ─ │ ─ │ ─ ─ │ ─ ◆
-
-  intent.
-
-  Make the reason behind every decision visible.
-
-  What are you designing, and for whom?
-
-◆ ─ │ ─ ─ ─ │ ─ ─ ─ ─ │ ─ ─ ─ │ ─ ─ │ ─ │ ─ ─ │ ─ ◆
-```
-`````
-
-The triple-backtick code fence is essential — it preserves frame alignment in monospace. Do not modify the content, do not paraphrase, do not skip the banner.
-
-After the banner renders, continue with the rest of this skill's normal response.
 
 ## Overview
 
@@ -71,7 +55,7 @@ Intent operates in three modes. Each establishes a different relationship to the
 
 ### `context` — Set project context
 
-Use this mode at the start of any design engagement. Before any skill can do meaningful work, it needs to understand:
+Use this mode when the requested design decision needs context that is not already established. Consult PRODUCT.md and the conversation first:
 
 1. **Who are the users?** Not demographics — behaviors, contexts, motivations, constraints. A "25-34 year old professional" tells you nothing. "Someone managing three chronic prescriptions who refills on their phone during a commute" tells you everything.
 2. **What is the product and business context?** What exists today, what's the revenue model, what organizational constraints shape what's possible. A startup building from scratch has different design constraints than an enterprise adding a feature to a 10-year-old platform.
@@ -349,9 +333,9 @@ These patterns are not just bad design — many are illegal or becoming illegal 
 
 ## Context-Gathering Protocol
 
-Before any design work begins — before routing to a sub-skill, before assessing quality, before proposing solutions — establish context. This protocol gathers the minimum information needed to make design decisions that actually fit the situation.
+Use existing project context first. Consult the questions below only where a missing fact would materially affect the requested design decision. Continue independent work while a necessary answer is pending.
 
-### Required context (gather before proceeding)
+### Context to consult when relevant
 
 **Users**
 - Who are the primary users? Describe them by behavior and context, not demographics.
@@ -465,7 +449,7 @@ Use when: Writing design specs, preparing handoffs, documenting component behavi
 
 ### Assessment-to-action pipeline
 
-When a user brings an existing design for improvement, follow this pipeline:
+For a broad UX audit, this pipeline can help. For a focused fix, use only the relevant steps:
 
 1. **Evaluate** (`/evaluate`) — Run a quality assessment. Identify what's working, what's failing, and what's missing.
 2. **Prioritize** — Rank findings by severity and impact. Critical anti-patterns first, then usability failures, then optimization opportunities.
@@ -512,11 +496,11 @@ Design is iterative. Findings from one skill routinely invalidate assumptions in
 
 **Guardrails:**
 
-1. **Loop-backs require a named triggering condition, not a feeling.** "Results are worse than hoped" is not a trigger. "Metrics contradict a documented strategic assumption" is. Name what changed before reopening a previous skill.
-2. **Explicit human checkpoint before re-triggering.** No skill automatically bounces back to another. Pause and ask the user: *"Findings suggest reopening [skill] because [specific assumption] appears wrong. Reopen, park, or continue?"*
-3. **Loop budget: 2 backward transitions per engagement.** Going back once is reflection. Twice is genuine reframing. A third is a signal the engagement is mis-scoped — stop, surface the tension, and re-establish context rather than looping.
-4. **Every loop has a written exit condition.** "Reopen `/strategize` until the audience is validated by 5+ interviews." "Re-measure for 14 days post-deploy, then commit or roll back." If you can't state the exit, you're not looping — you're spinning.
-5. **When in doubt, park the loop.** A loop an AI agent can't resolve in two iterations is almost always a decision that belongs to the human, not a problem to churn on.
+Revisit a decision when new evidence identifies a concrete problem. Continue within
+the authorized scope; ask when resolving it requires a material product decision
+or authorization not already given. Name the evidence and the exit condition.
+If an approach repeats without new evidence, change approach or report the blocker
+and complete unaffected work. Skill transitions have no arbitrary count limit.
 
 ---
 

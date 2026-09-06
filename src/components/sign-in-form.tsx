@@ -13,7 +13,8 @@ import { FormLayout } from "@astryxdesign/core/FormLayout";
 import { Icon } from "@astryxdesign/core/Icon";
 import { HStack, VStack } from "@astryxdesign/core/Stack";
 import { Heading, Text } from "@astryxdesign/core/Text";
-import { TextInput } from "@astryxdesign/core/TextInput";
+import { Input } from "@/components/ui/input";
+import { APP_NAME } from "@/lib/app";
 
 /** The front door, in the shape of Astryx's login page: one card, centred
  *  on the page ground.
@@ -78,28 +79,32 @@ export function SignInForm({ devAdminName }: { devAdminName: string | null }) {
           <VStack gap={1}>
             <HStack gap={1} vAlign="center">
               <Icon icon={Waves} size="sm" />
-              <Text weight="semibold">Swimly</Text>
+              <Text weight="semibold">{APP_NAME}</Text>
             </HStack>
             <Heading level={1}>Sign in</Heading>
           </VStack>
 
           <form onSubmit={handleSubmit}>
             <FormLayout defaultOptionality="required">
-              <TextInput
+              <Input
                 label="Email"
                 type="email"
                 value={email}
                 onChange={setEmail}
-                htmlName="email"
-                size="lg"
+                name="email"
+                required
+                autoComplete="username"
+                autoCapitalize="none"
+                spellCheck={false}
               />
-              <TextInput
+              <Input
                 label="Password"
                 type="password"
                 value={password}
                 onChange={setPassword}
-                htmlName="password"
-                size="lg"
+                name="password"
+                required
+                autoComplete="current-password"
               />
 
               {error ? <Banner status="error" title={error} collapsible={false} /> : null}

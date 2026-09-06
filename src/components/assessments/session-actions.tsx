@@ -118,9 +118,8 @@ function SessionFields({ session, programmes, types, instructors, today }: Field
           <Input
             id="start"
             name="start"
+            type="time"
             required
-            inputMode="numeric"
-            placeholder="13:30"
             defaultValue={session ? formatTime(session.startMinutes) : ""}
           />
         </Field>

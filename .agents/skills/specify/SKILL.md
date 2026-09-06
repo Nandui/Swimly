@@ -9,9 +9,13 @@ description: >
   addressing edge cases, aligning stakeholders, packaging designs
   "for engineering," or saying "write the spec," "prepare the handoff,"
   "document this," or "what do we need for design review?"
-version: 1.6.0
-user-invocable: true
+metadata:
+  upstream-version: "1.6.0"
 ---
+
+Read [Swimly skill operating guidance](../../../SKILLS.md) once before using
+this skill. It scopes the workflow, output templates and tool examples below;
+load only the sections and references relevant to the requested deliverable.
 
 # Specify — Bridge Design to Engineering
 

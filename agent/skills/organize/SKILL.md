@@ -1,6 +1,22 @@
 ---
-description: "Structure information so people can find what they need, understand where they are, and navigate confidently. Covers navigation pattern design, taxonomy, labeling systems, search and browse strategy, wayfinding, and IA research methods. Trigger when designing navigation structures, categorization schemes, site maps, taxonomies, labeling systems, search experiences, or asking \"how should we organize this?\" Also trigger for card sorting, tree testing, information findability problems, or when users report they can't find things. Use this skill any time the structural organization of information is the problem — not the flow through it, not the words in it, not the visual presentation of it.\n"
+name: organize
+description: >
+  Structure information so people can find what they need, understand where they are,
+  and navigate confidently. Covers navigation pattern design, taxonomy, labeling systems,
+  search and browse strategy, wayfinding, and IA research methods. Trigger when designing
+  navigation structures, categorization schemes, site maps, taxonomies, labeling systems,
+  search experiences, or asking "how should we organize this?" Also trigger for card sorting,
+  tree testing, information findability problems, or when users report they can't find things.
+  Use this skill any time the structural organization of information is the problem — not the
+  flow through it, not the words in it, not the visual presentation of it.
+metadata:
+  upstream-version: "1.6.0"
 ---
+
+Read [Swimly skill operating guidance](../../../SKILLS.md) once before using
+this skill. It scopes the workflow, output templates and tool examples below;
+load only the sections and references relevant to the requested deliverable.
+
 # Organize
 
 ## Overview
@@ -38,24 +54,9 @@ Collaborate explicitly with each when their domain matters. Call out what you're
 
 ## Visualization
 
-When the user invokes `/organize`, decide whether the deliverable should
-include a site map / IA diagram, and if so, in what format. Ask the user
-up front — before producing the markdown deliverable.
-
-### Ask first
-
-Open the response with this question, with HTML as the default:
-
-> Would you like a visualization of this IA?
->
-> - **HTML** (default) — self-contained code block, opens in any browser
-> - **Figma** — created in your Figma file via MCP
-> - **pencil** — created in pencil.dev via MCP
-> - **No** — markdown only
-
-Skip the question if the request already states a preference — "with a
-diagram", "with figma", "in pencil", "no diagram", "html only" all preempt
-the prompt. Default to HTML if the user says yes without naming a format.
+Use a diagram when it helps explain the requested flow or structure. Honour the
+user's format preference; otherwise choose a suitable local format and proceed.
+Use HTML for an interactive artifact. A diagram is optional for a focused edit.
 
 ### HTML output
 

@@ -1,6 +1,25 @@
 ---
-description: "Adapts experiences across cultures and languages — not just translation, but cultural reconception. Part of the Intent design strategy system. When a product enters a new market, everything is in play: information density, navigation patterns, color meaning, icon comprehension, date formats, trust signals, payment flows, and the fundamental assumptions about how people make decisions. Trigger when: planning international expansion, auditing i18n readiness, adapting designs for RTL languages, reviewing cultural assumptions in a design, preparing localization test plans, or when someone says \"we need to launch in [country]\" and the plan is \"just translate it.\" Also trigger for compliance reviews across markets (GDPR, PIPL, accessibility laws).\n"
+name: localize
+description: >
+  Adapts experiences across cultures and languages — not just translation,
+  but cultural reconception. Part of the Intent design strategy system.
+  When a product enters a new market, everything is in play: information
+  density, navigation patterns, color meaning, icon comprehension, date
+  formats, trust signals, payment flows, and the fundamental assumptions
+  about how people make decisions. Trigger when: planning international
+  expansion, auditing i18n readiness, adapting designs for RTL languages,
+  reviewing cultural assumptions in a design, preparing localization
+  test plans, or when someone says "we need to launch in [country]" and
+  the plan is "just translate it." Also trigger for compliance reviews
+  across markets (GDPR, PIPL, accessibility laws).
+metadata:
+  upstream-version: "1.6.0"
 ---
+
+Read [Swimly skill operating guidance](../../../SKILLS.md) once before using
+this skill. It scopes the workflow, output templates and tool examples below;
+load only the sections and references relevant to the requested deliverable.
+
 # Localize — Design Across Cultures
 
 ## Overview

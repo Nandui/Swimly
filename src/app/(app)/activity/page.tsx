@@ -24,7 +24,7 @@ export default async function ActivityPage(props: PageProps<"/activity">) {
     <VStack gap={6}>
       <PageHeader
         title="Activity"
-        description="Who changed what, and when. Every mutation writes a row here — scripts included."
+        description="Who changed what, and when."
       />
 
       {total === 0 ? (

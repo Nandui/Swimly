@@ -25,7 +25,7 @@ import {
 } from "@/components/assessments/booking-actions";
 import { CancelSession, EditSession } from "@/components/assessments/session-actions";
 import { WrongClub } from "@/components/clubs/wrong-club";
-import { BOOKING_STATUS_META, HOLDS_A_PLACE, sessionDay, sessionSpan } from "@/lib/assessments/constants";
+import { SESSION_STATUS_META, BOOKING_STATUS_META, HOLDS_A_PLACE, sessionDay, sessionSpan } from "@/lib/assessments/constants";
 import {
   getAssessmentProgrammeOptions,
   getAssessmentSession,
@@ -38,7 +38,7 @@ import { getCurrentClub } from "@/lib/clubs/current";
 import { getInstructorOptions } from "@/lib/courses/data/courses";
 import { formatDate, today } from "@/lib/format";
 import { screenPage } from "@/lib/page-guards";
-import { ageLabel, fullName } from "@/lib/students/constants";
+import { MEDICAL_STATUS_META, ageLabel, fullName } from "@/lib/students/constants";
 
 export const metadata: Metadata = { title: "Assessment" };
 
@@ -84,8 +84,8 @@ export default async function AssessmentSessionPage(props: PageProps<"/assessmen
           title={
             <HStack gap={2} vAlign="center" wrap="wrap">
               {sessionDay(session)}
-              {session.cancelledAt ? <Tag color="gray">Cancelled</Tag> : null}
-              {open && full ? <Tag color="yellow">Full</Tag> : null}
+              {session.cancelledAt ? <Tag color={SESSION_STATUS_META.cancelled.color}>{SESSION_STATUS_META.cancelled.label}</Tag> : null}
+              {open && full ? <Tag color={SESSION_STATUS_META.full.color}>{SESSION_STATUS_META.full.label}</Tag> : null}
             </HStack>
           }
           description={
@@ -201,7 +201,7 @@ function BookingTable({
                   <Link href={`/students/${b.student.id}`} weight="medium">
                     {fullName(b.student)}
                   </Link>
-                  {b.student.medicalNotes ? <Tag color="red">Medical</Tag> : null}
+                  {b.student.medicalNotes ? <Tag color={MEDICAL_STATUS_META.notes.color}>{MEDICAL_STATUS_META.notes.label}</Tag> : null}
                 </HStack>
                 <Text type="supporting" display="block">
                   <Text type="supporting" className="md:hidden">{ageLabel(b.student.dateOfBirth)} · </Text>
@@ -244,7 +244,7 @@ function BookingTable({
                 ) : b.status === "BOOKED" ? (
                   <Text type="supporting">Not yet</Text>
                 ) : (
-                  <Text color="disabled">—</Text>
+                  <Text color="secondary">—</Text>
                 )}
               </TableCell>
               {actions ? (

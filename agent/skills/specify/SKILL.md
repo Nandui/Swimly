@@ -1,6 +1,22 @@
 ---
-description: "Bridges design and engineering by producing detailed specs, organized handoff packages, asset inventories, and cross-functional documentation. Part of the Intent design strategy system. Trigger when: writing design specs, preparing engineering handoffs, documenting for development, creating design reviews, writing test plans, building copy matrices, addressing edge cases, aligning stakeholders, packaging designs \"for engineering,\" or saying \"write the spec,\" \"prepare the handoff,\" \"document this,\" or \"what do we need for design review?\"\n"
+name: specify
+description: >
+  Bridges design and engineering by producing detailed specs, organized
+  handoff packages, asset inventories, and cross-functional documentation.
+  Part of the Intent design strategy system. Trigger when: writing design
+  specs, preparing engineering handoffs, documenting for development,
+  creating design reviews, writing test plans, building copy matrices,
+  addressing edge cases, aligning stakeholders, packaging designs
+  "for engineering," or saying "write the spec," "prepare the handoff,"
+  "document this," or "what do we need for design review?"
+metadata:
+  upstream-version: "1.6.0"
 ---
+
+Read [Swimly skill operating guidance](../../../SKILLS.md) once before using
+this skill. It scopes the workflow, output templates and tool examples below;
+load only the sections and references relevant to the requested deliverable.
+
 # Specify — Bridge Design to Engineering
 
 ## Overview

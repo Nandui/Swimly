@@ -1,6 +1,26 @@
 ---
-description: "Map, analyze, and redesign the systems behind product experiences. Part of the Intent design strategy system. Creates service blueprints, ecosystem maps, process architecture, and dependency diagrams. Understands how services, teams, tools, and data flows connect to produce (or fail to produce) user outcomes. Proposes structural changes to how products and services are organized. Trigger on: service blueprints, system maps, process architecture, actor/role mapping, dependency analysis, cross-functional workflows, operational design, \"how does this system work?\", \"what breaks when X happens?\", \"map out the service\", \"where are the dependencies?\", or any question about the structural machinery behind a product experience. Use this skill broadly — whenever someone needs to understand or redesign how a system works, not just what a user sees.\n"
+name: blueprint
+description: >
+  Map, analyze, and redesign the systems behind product experiences. Part of
+  the Intent design strategy system. Creates service blueprints, ecosystem
+  maps, process architecture, and dependency diagrams. Understands how
+  services, teams, tools, and data flows connect to produce (or fail to
+  produce) user outcomes. Proposes structural changes to how products and
+  services are organized. Trigger on: service blueprints, system maps,
+  process architecture, actor/role mapping, dependency analysis,
+  cross-functional workflows, operational design, "how does this system work?",
+  "what breaks when X happens?", "map out the service", "where are the
+  dependencies?", or any question about the structural machinery behind a
+  product experience. Use this skill broadly — whenever someone needs to
+  understand or redesign how a system works, not just what a user sees.
+metadata:
+  upstream-version: "1.6.0"
 ---
+
+Read [Swimly skill operating guidance](../../../SKILLS.md) once before using
+this skill. It scopes the workflow, output templates and tool examples below;
+load only the sections and references relevant to the requested deliverable.
+
 # Blueprint — Map the System
 
 ## Overview

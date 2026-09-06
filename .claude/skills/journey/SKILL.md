@@ -1,18 +1,13 @@
 ---
 name: journey
-description: >
-  Design any user-facing experience end-to-end: task flows, multi-step workflows,
-  navigation structures, onboarding, settings, search, content creation, collaboration,
-  signup, checkout, dashboards, notifications, error recovery, and more. Handles
-  cross-platform adaptation (mobile/web/TV/embedded), device-aware design, accessibility,
-  interaction specifications, and multi-channel journey mapping. Trigger when designing
-  user flows of any kind, mapping screen sequences, optimizing task completion, specifying
-  interactions, designing navigation, or asking "how should the user experience X?"
-  Use this skill broadly — any time someone is working through how a user moves through
-  a product experience, this skill applies.
-version: 1.6.0
-user-invocable: true
+description: "Design or improve user task flows, screen sequences and interaction behaviour. Use for flow design or a demonstrated usability problem, not for every code change that touches navigation."
+metadata:
+  upstream-version: "1.6.0"
 ---
+
+Read [Swimly skill operating guidance](../../../SKILLS.md) once before using
+this skill. It scopes the workflow, output templates and tool examples below;
+load only the sections and references relevant to the requested deliverable.
 
 # Journey
 
@@ -54,25 +49,9 @@ Collaborate explicitly with each when their domain matters. Call out what you're
 
 ## Visualization
 
-When the user invokes `/journey`, decide whether the deliverable should
-include a visual diagram of the flow, and if so, in what format. Ask the
-user up front — before producing the markdown deliverable.
-
-### Ask first
-
-Open the response with this question, with HTML as the default:
-
-> Would you like a visualization of this journey?
->
-> - **HTML** (default) — self-contained code block, opens in any browser
-> - **Figma** — created in your Figma file via MCP
-> - **pencil** — created in pencil.dev via MCP
-> - **No** — markdown only
-
-Skip the question if the user's request already states a preference —
-phrases like "with a diagram", "with figma", "in pencil", "no diagram",
-or "html only" preempt the prompt. If the user says yes without naming
-a format, default to HTML.
+Use a diagram when it helps explain the requested flow or structure. Honour the
+user's format preference; otherwise choose a suitable local format and proceed.
+Use HTML for an interactive artifact. A diagram is optional for a focused edit.
 
 ### HTML output
 

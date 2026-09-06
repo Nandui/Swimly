@@ -1,6 +1,26 @@
 ---
-description: "Design the structural anatomy of screens at wireframe fidelity — what goes where and why, before anyone argues about how it looks. Part of the Intent design strategy system. Produces lo-fi idea boards for divergent exploration, complete interactive grayscale wireframes with real labels and real hierarchy, and click-through prototypes that materialize flow logic from /journey. Trigger on: wireframe, wireframes, wireframing, thumbnails, \"sketch the screen\", \"lay out this page\", \"what goes where on this screen\", screen layout, page structure, lo-fi, mid-fi, click-through prototype, wireflow, \"wireframe the dashboard\", or any request to design the structure of a screen before its visual design. The flow through screens belongs to /journey; the information structure belongs to /organize; the words belong to /articulate — this skill owns the screen itself.\n"
+name: wireframe
+description: >
+  Design the structural anatomy of screens at wireframe fidelity — what goes
+  where and why, before anyone argues about how it looks. Part of the Intent
+  design strategy system. Produces lo-fi idea boards for divergent
+  exploration, complete interactive grayscale wireframes with real labels and
+  real hierarchy, and click-through prototypes that materialize flow logic
+  from /journey. Trigger on: wireframe, wireframes, wireframing, thumbnails,
+  "sketch the screen", "lay out this page", "what goes where on this screen",
+  screen layout, page structure, lo-fi, mid-fi, click-through prototype, wireflow,
+  "wireframe the dashboard", or any request to design the structure of a
+  screen before its visual design. The flow through screens belongs to
+  /journey; the information structure belongs to /organize; the words belong
+  to /articulate — this skill owns the screen itself.
+metadata:
+  upstream-version: "1.6.0"
 ---
+
+Read [Swimly skill operating guidance](../../../SKILLS.md) once before using
+this skill. It scopes the workflow, output templates and tool examples below;
+load only the sections and references relevant to the requested deliverable.
+
 # Wireframe
 
 ## Overview
@@ -30,7 +50,7 @@ You work alongside complementary skills that handle interconnected concerns:
 - **`/include`** — Audits for accessibility. Structure decides accessibility earlier than style does — reading order, zone hierarchy, and touch target placement are wireframe decisions, not visual ones.
 - **`/philosopher`** — A cross-cutting cognitive mode. Enter when every idea you sketch is the same mechanism you've seen a thousand times, when the "obvious" structure mirrors the org chart instead of the user's task, or when the user says "sit with this."
 
-Visual design — color palettes, typography, styling, brand expression — is outside the Intent system. You stop where it starts, and you say so explicitly when you stop.
+Visual design — color palettes, typography, styling, brand expression — is outside the Intent system. If implementation is also requested, continue using the project design system after resolving structure.
 
 ## Fidelity doctrine
 
@@ -158,20 +178,12 @@ Annotation uses **one accent: Intent indigo by default (`--note`), overridable b
 
 For this skill the artifact is the deliverable. After the structural thinking is done — never before — produce wireframes in the format the user chooses.
 
-### Ask first
+### Output choice
 
-Open with this question, with HTML as the default:
-
-> Where should these wireframes live?
->
-> - **HTML** (default) — self-contained file per fidelity stage: grid/slideshow viewer, optional click-through prototype
-> - **Figma** — frames and sections in your Figma file via MCP
-> - **pencil** — frames in pencil.dev via MCP
-> - **No** — markdown structure spec only
-
-Skip the question if the request already states a preference — "in figma", "in pencil", "html", "just describe it", "no wireframes" preempt the prompt. If the user says yes without naming a format, default to HTML. Ask for section names if sets aren't already implied by the flow ("Should I group these as Onboarding / Checkout, or differently?").
-
-If the user picks **Figma or pencil**, also ask: **light or dark wireframes?** Those canvases are single-theme — use the chosen column of the palette throughout. HTML needs no theme question; it ships both ramps with an in-page toggle.
+Honour the requested format. Otherwise use a local HTML artifact for wireframes;
+infer section names from the flow. Use the project theme or light mode for a
+single-theme canvas unless the user specified one. Discover available tools before
+using the external-tool recipes below; they are examples, not guaranteed tool IDs.
 
 ### HTML output
 
@@ -291,7 +303,7 @@ Write **one self-contained file per rung** — `wireframes-<topic>-thumbnails.ht
 
 ### Figma output
 
-When the user picks Figma, confirm light or dark (per Ask first), load the `/figma-use` skill first (mandatory), then call `mcp__claude_ai_Figma__use_figma`. Translate the language using the chosen theme's column of the palette throughout:
+When the user picks Figma, use the selected theme and discover an available Figma skill or tool before operating on the requested file. Translate the language using the chosen theme's column of the palette throughout:
 
 - Container sections → Figma sections named per user-defined groups; title plates → small mono text labels above each mid-fi frame (uppercase, chrome ink `#65657a` light / `#8888a8` dark).
 - Each screen → a frame at real viewport width, fill = the chosen theme's canvas, 1px stroke = the chrome border (`#d8d8e4` light / `#2a2a44` dark). Lo-fi vignettes → a surface-filled panel with the fragment centered and the idea caption below.
@@ -301,7 +313,7 @@ When the user picks Figma, confirm light or dark (per Ask first), load the `/fig
 
 ### pencil output
 
-When the user picks pencil, confirm light or dark (per Ask first), call `mcp__pencil__get_editor_state` then create a new document, set the chosen theme's palette + annotation accent as variables via `mcp__pencil__set_variables`, then `mcp__pencil__batch_design`: one frame per screen at real viewport width (vignette panels for lo-fi), grouped per section, components per the kit's conventions (4px grid, control heights, accent on primary/selection only, media blocks surface-filled with no crossed lines), annotation markers in the accent, connectors between frames for wireflows.
+When the user picks pencil, use the selected theme and discover an available pencil editor-state tool then create a new document, set the chosen theme's palette + annotation accent as variables via `mcp__pencil__set_variables`, then `mcp__pencil__batch_design`: one frame per screen at real viewport width (vignette panels for lo-fi), grouped per section, components per the kit's conventions (4px grid, control heights, accent on primary/selection only, media blocks surface-filled with no crossed lines), annotation markers in the accent, connectors between frames for wireflows.
 
 ### Fidelity enforcement
 

@@ -9,6 +9,7 @@ import { HStack, VStack } from "@astryxdesign/core/Stack";
 import { Text } from "@astryxdesign/core/Text";
 import type { ActionResult } from "@/lib/action-result";
 import { toast } from "@/lib/toast";
+import { withTimeout } from "@/lib/save-feedback";
 import { Trigger } from "@/components/form-dialog";
 
 /** Confirmation for anything that takes something away.
@@ -41,20 +42,36 @@ export function ConfirmAction({
   const [open, setOpen] = React.useState(false);
   const [error, setError] = React.useState<string | null>(null);
   const [pending, startTransition] = React.useTransition();
+  const submitting = React.useRef(false);
 
   function close() {
+    if (submitting.current) return;
     setOpen(false);
     setError(null);
   }
 
   function handleConfirm() {
+    if (submitting.current) return;
+    submitting.current = true;
+    setError(null);
     startTransition(async () => {
-      const result = await run();
-      if (result.ok) {
-        toast.success(successMessage);
-        startTransition(() => close());
-      } else {
-        startTransition(() => setError(result.error));
+      try {
+        const result = await withTimeout(run());
+        if (result.ok) {
+          toast.success(successMessage);
+          startTransition(() => {
+            setOpen(false);
+            setError(null);
+          });
+        } else {
+          startTransition(() => setError(result.error));
+        }
+      } catch {
+        startTransition(() =>
+          setError("We could not confirm the change. Check the record before trying again.")
+        );
+      } finally {
+        submitting.current = false;
       }
     });
   }
@@ -65,17 +82,17 @@ export function ConfirmAction({
       <Dialog
         isOpen={open}
         onOpenChange={(next) => (next ? setOpen(true) : close())}
-        purpose="form"
+        purpose={pending ? "required" : "form"}
         width={448}
       >
         <VStack gap={4}>
-          <DialogHeader title={title} onOpenChange={() => close()} />
+          <DialogHeader title={title} onOpenChange={pending ? undefined : close} />
           <Text as="p" display="block">
             {description}
           </Text>
           {error ? <Banner status="error" title={error} collapsible={false} /> : null}
-          <HStack gap={2} hAlign="end">
-            <Button type="button" label="Cancel" variant="secondary" onClick={close} />
+          <HStack gap={2} hAlign="end" wrap="wrap">
+            <Button type="button" label="Cancel" variant="secondary" onClick={close} isDisabled={pending} />
             <Button
               type="button"
               label={pending ? "Working…" : confirmLabel}
@@ -108,8 +125,6 @@ export function ActionButton({
   ariaLabel: string;
   title?: string;
 }) {
-  const [pending, startTransition] = React.useTransition();
-
   return (
     <IconButton
       label={ariaLabel}
@@ -118,17 +133,18 @@ export function ActionButton({
       size="sm"
       icon={children}
       className={className}
-      isLoading={pending}
-      onClick={() =>
-        startTransition(async () => {
-          const result = await run();
+      clickAction={async () => {
+        try {
+          const result = await withTimeout(run());
           if (result.ok) {
             if (successMessage) toast.success(successMessage);
           } else {
             toast.error(result.error);
           }
-        })
-      }
+        } catch {
+          toast.error("We could not confirm the change. Check the record before trying again.");
+        }
+      }}
     />
   );
 }

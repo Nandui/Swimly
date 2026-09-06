@@ -1,3 +1,4 @@
+import { ARCHIVAL_STATUS_META } from "@/lib/status";
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { Button } from "@astryxdesign/core/Button";
@@ -42,11 +43,11 @@ import {
   type RosterEntry,
 } from "@/lib/courses/data/courses";
 import { getLevelOptions } from "@/lib/curriculum/data/curriculum";
-import { ENROLMENT_STATUS_META } from "@/lib/enrolment/constants";
+import { PLACEMENT_META, ENROLMENT_STATUS_META } from "@/lib/enrolment/constants";
 import { getTransferTargets, type TransferTarget } from "@/lib/enrolment/data/enrolments";
 import { formatDate } from "@/lib/format";
 import { screenPage } from "@/lib/page-guards";
-import { ageLabel, fullName } from "@/lib/students/constants";
+import { MEDICAL_STATUS_META, ageLabel, fullName } from "@/lib/students/constants";
 import { AppIcon } from "@/components/ui-kit/app-icon";
 
 export const metadata: Metadata = { title: "Class" };
@@ -93,7 +94,7 @@ export default async function CoursePage(props: PageProps<"/courses/[id]">) {
           title={
             <HStack gap={2} vAlign="center" wrap="wrap">
               {courseName(course)}
-              {course.archivedAt ? <Tag color="gray">Archived</Tag> : null}
+              {course.archivedAt ? <Tag color={ARCHIVAL_STATUS_META.archived.color}>{ARCHIVAL_STATUS_META.archived.label}</Tag> : null}
               {tone ? <Tag color={tone.color}>{tone.label}</Tag> : null}
             </HStack>
           }
@@ -235,8 +236,8 @@ function RosterTable({
                   <Link href={`/students/${entry.student.id}`} weight="medium">
                     {fullName(entry.student)}
                   </Link>
-                  {entry.student.medicalNotes ? <Tag color="red">Medical</Tag> : null}
-                  {outOfSequence ? <Tag color="purple">{entry.level.name}</Tag> : null}
+                  {entry.student.medicalNotes ? <Tag color={MEDICAL_STATUS_META.notes.color}>{MEDICAL_STATUS_META.notes.label}</Tag> : null}
+                  {outOfSequence ? <Tag color={PLACEMENT_META.otherLevel.color}>{entry.level.name}</Tag> : null}
                 </HStack>
                 {entry.placementReason ? (
                   <Text type="supporting" display="block">

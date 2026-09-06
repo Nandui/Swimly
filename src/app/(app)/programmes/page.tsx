@@ -1,3 +1,4 @@
+import { ARCHIVAL_STATUS_META } from "@/lib/status";
 import type { Metadata } from "next";
 import { Link } from "@astryxdesign/core/Link";
 import { HStack, VStack } from "@astryxdesign/core/Stack";
@@ -102,7 +103,7 @@ function ProgrammeTable({ programmes, archived }: { programmes: Row[]; archived?
                 <Link href={`/programmes/${programme.id}`} weight="medium">
                   {programme.name}
                 </Link>
-                {archived ? <Tag color="gray">Archived</Tag> : null}
+                {archived ? <Tag color={ARCHIVAL_STATUS_META.archived.color}>{ARCHIVAL_STATUS_META.archived.label}</Tag> : null}
               </HStack>
               {programme.description ? (
                 <Text type="supporting" display="block">

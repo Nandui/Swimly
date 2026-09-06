@@ -26,7 +26,7 @@ export function ActivityTable({ entries }: { entries: ActivityEntry[] }) {
           <TableHeaderCell scope="col" className="max-md:hidden">
             Who
           </TableHeaderCell>
-          <TableHeaderCell scope="col">Action</TableHeaderCell>
+          <TableHeaderCell scope="col" className="max-md:hidden">Action</TableHeaderCell>
           <TableHeaderCell scope="col" className="max-md:hidden">
             When
           </TableHeaderCell>
@@ -45,11 +45,12 @@ export function ActivityTable({ entries }: { entries: ActivityEntry[] }) {
                 <Text type="supporting" display="block" className="md:hidden">
                   {entry.actorName} · {formatDateTime(entry.createdAt)}
                 </Text>
+                <Tag color={meta.color} className="md:hidden">{meta.label}</Tag>
               </TableCell>
               <TableCell className="max-md:hidden">
                 <Text color="secondary">{entry.actorName}</Text>
               </TableCell>
-              <TableCell>
+              <TableCell className="max-md:hidden">
                 <Tag color={meta.color}>{meta.label}</Tag>
               </TableCell>
               <TableCell className="max-md:hidden">

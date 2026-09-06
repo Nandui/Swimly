@@ -12,9 +12,13 @@ description: >
   modes", zero states, timeout handling, or any question about how a design
   behaves outside ideal conditions. The happy path is a fantasy — this skill
   designs for the world your users actually live in.
-version: 1.6.0
-user-invocable: true
+metadata:
+  upstream-version: "1.6.0"
 ---
+
+Read [Swimly skill operating guidance](../../../SKILLS.md) once before using
+this skill. It scopes the workflow, output templates and tool examples below;
+load only the sections and references relevant to the requested deliverable.
 
 # Fortify — Harden for Real-World Use
 

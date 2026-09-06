@@ -12,6 +12,12 @@ const eslintConfig = defineConfig([
     "out/**",
     "build/**",
     "next-env.d.ts",
+    // Vendored skill assets and disposable browser audit bundles are not app code.
+    ".agents/**",
+    ".claude/**",
+    "agent/skills/**",
+    ".impeccable/review/**",
+    "src/generated/**",
   ]),
 ]);
 

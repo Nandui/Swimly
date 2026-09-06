@@ -60,7 +60,7 @@ export function Row({ label, children }: { label: string; children: React.ReactN
 }
 
 export function Blank() {
-  return <Text color="disabled">—</Text>;
+  return <Text color="secondary">—</Text>;
 }
 
 export function EnrolmentTable({
@@ -106,6 +106,7 @@ export function EnrolmentTable({
                 </Text>
                 <Text type="supporting" display="block" className="md:hidden">
                   {entry.programme.name} · {entry.level.name} · since {formatDate(entry.startedOn)}
+                  {entry.endedOn ? ` to ${formatDate(entry.endedOn)}` : ""}
                 </Text>
                 {entry.placementReason ? (
                   <Text type="supporting" display="block">
@@ -187,7 +188,7 @@ export function AttendanceTable({ records }: { records: StudentAttendance[] }) {
                     {formatDate(record.date)}
                   </Text>
                   <Text type="supporting" display="block" className="md:hidden">
-                    {courseName(record.course)}
+                    {courseName(record.course)} · {formatSlotShort(record.course)}
                   </Text>
                 </TableCell>
                 <TableCell className="max-md:hidden">

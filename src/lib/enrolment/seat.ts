@@ -12,20 +12,24 @@ import { prisma } from "@/lib/prisma";
  *  check race-free — which is why there is no unique constraint on
  *  (studentId, courseId), and why repeating a level is possible at all.
  *
- *  Keep the body small. It holds a pool connection, so no audit write and no
- *  revalidation happen inside it.
+ *  Keep the body small. Write the audit through the transaction so it commits
+ *  with the enrolment; revalidation happens after the transaction returns.
  *
  *  It lives here rather than in the actions file because that file is
  *  `"use server"`, where every export becomes a POST endpoint — and a helper
  *  taking a callback could not be one. Importing it from both the actions and
  *  the import scripts is what keeps a single locking path. */
 export async function withCourseSeat<T>(
-  courseId: string,
+  courseId: string | readonly string[],
   run: (tx: Prisma.TransactionClient) => Promise<T>
 ): Promise<T> {
   return prisma.$transaction(
     async (tx) => {
-      await tx.$queryRaw`SELECT id FROM "Course" WHERE id = ${courseId} FOR UPDATE`;
+      // Transfers lock both classes in a stable order to avoid deadlocks.
+      const courseIds = [...new Set(typeof courseId === "string" ? [courseId] : courseId)].sort();
+      for (const id of courseIds) {
+        await tx.$queryRaw`SELECT id FROM "Course" WHERE id = ${id} FOR UPDATE`;
+      }
       return run(tx);
     },
     { timeout: 10_000 }

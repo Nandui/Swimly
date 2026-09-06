@@ -16,7 +16,7 @@ import { PageHeader } from "@/components/ui-kit/page-header";
 import { Lead, Num } from "@/components/ui-kit/prose";
 import { Tag } from "@/components/ui-kit/tag";
 import { AddSession, CancelSession, EditSession } from "@/components/assessments/session-actions";
-import { isPast, sessionDay, sessionSpan } from "@/lib/assessments/constants";
+import { SESSION_STATUS_META, isPast, sessionDay, sessionSpan } from "@/lib/assessments/constants";
 import {
   getAssessmentProgrammeOptions,
   getAssessmentSessions,
@@ -154,7 +154,7 @@ function SessionTable({
           <TableHeaderCell scope="col" className="max-lg:hidden">
             Assessor
           </TableHeaderCell>
-          <TableHeaderCell scope="col">Places</TableHeaderCell>
+          <TableHeaderCell scope="col" className="max-md:hidden">Places</TableHeaderCell>
           {manage ? (
             <TableHeaderCell scope="col">
               <VisuallyHidden>Actions</VisuallyHidden>
@@ -174,9 +174,9 @@ function SessionTable({
                     {sessionDay(s)}
                   </Link>
                   {s.cancelledAt ? (
-                    <Tag color="gray">Cancelled</Tag>
+                    <Tag color={SESSION_STATUS_META.cancelled.color}>{SESSION_STATUS_META.cancelled.label}</Tag>
                   ) : full ? (
-                    <Tag color="yellow">Full</Tag>
+                    <Tag color={SESSION_STATUS_META.full.color}>{SESSION_STATUS_META.full.label}</Tag>
                   ) : null}
                 </HStack>
                 <Text type="supporting" display="block" hasTabularNumbers>
@@ -185,7 +185,12 @@ function SessionTable({
                 </Text>
                 <Text type="supporting" display="block" className="md:hidden">
                   {s.programme.name} · {s.type?.name ?? "kind not set"}
-                  {s.instructor ? ` · ${s.instructor.name}` : ""}
+                </Text>
+                <Text type="supporting" display="block" className="lg:hidden">
+                  Assessor: {s.instructor?.name ?? SESSION_STATUS_META.unassigned.label}
+                </Text>
+                <Text type="supporting" display="block" hasTabularNumbers className="md:hidden">
+                  {s.capacity === null ? `${taken} booked` : `${taken} of ${s.capacity} places booked`}
                 </Text>
               </TableCell>
               <TableCell className="max-md:hidden">
@@ -195,17 +200,17 @@ function SessionTable({
                     {s.type.name}
                   </Text>
                 ) : (
-                  <Tag color="orange">Kind not set</Tag>
+                  <Tag color={SESSION_STATUS_META.missingKind.color}>{SESSION_STATUS_META.missingKind.label}</Tag>
                 )}
               </TableCell>
               <TableCell className="max-lg:hidden">
                 {s.instructor ? (
                   <Text color="secondary">{s.instructor.name}</Text>
                 ) : (
-                  <Tag color="orange">Not decided</Tag>
+                  <Tag color={SESSION_STATUS_META.unassigned.color}>{SESSION_STATUS_META.unassigned.label}</Tag>
                 )}
               </TableCell>
-              <TableCell>
+              <TableCell className="max-md:hidden">
                 <Text color="secondary" hasTabularNumbers textWrap="nowrap">
                   {s.capacity === null ? `${taken} booked` : `${taken} of ${s.capacity}`}
                 </Text>

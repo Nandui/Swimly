@@ -1,4 +1,14 @@
 import type { DayOfWeek } from "@/generated/prisma/client";
+import type { StatusMeta } from "@/lib/status";
+
+export const COURSE_STATUS_META = {
+  unassigned: { label: "Unassigned", color: "orange" },
+} as const satisfies Record<string, StatusMeta>;
+
+export const COURSE_PHASE_META = {
+  now: { label: "Now", color: "blue" },
+  next: { label: "Next", color: "gray" },
+} as const satisfies Record<string, StatusMeta>;
 
 /** Domain vocabulary for a class in the timetable. No call site composes a
  *  time string — "16:30" is one function, and so is "Mondays, 16:30–17:00". */

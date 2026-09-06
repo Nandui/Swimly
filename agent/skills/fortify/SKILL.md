@@ -1,6 +1,25 @@
 ---
-description: "Harden designs for real-world use by systematically identifying and designing for every condition outside the happy path. Part of the Intent design strategy system. Covers state inventories, error recovery, empty states, loading patterns, first-run experiences, stress testing, internationalization readiness, and latency handling. Trigger on: edge cases, error states, empty states, loading states, first-run experience, onboarding, offline mode, \"what happens when\", \"what if the user\", \"stress test this\", \"what could go wrong\", \"harden this design\", \"edge case review\", \"what are the failure modes\", zero states, timeout handling, or any question about how a design behaves outside ideal conditions. The happy path is a fantasy — this skill designs for the world your users actually live in.\n"
+name: fortify
+description: >
+  Harden designs for real-world use by systematically identifying and designing
+  for every condition outside the happy path. Part of the Intent design strategy
+  system. Covers state inventories, error recovery, empty states, loading
+  patterns, first-run experiences, stress testing, internationalization
+  readiness, and latency handling. Trigger on: edge cases, error states, empty
+  states, loading states, first-run experience, onboarding, offline mode,
+  "what happens when", "what if the user", "stress test this", "what could go
+  wrong", "harden this design", "edge case review", "what are the failure
+  modes", zero states, timeout handling, or any question about how a design
+  behaves outside ideal conditions. The happy path is a fantasy — this skill
+  designs for the world your users actually live in.
+metadata:
+  upstream-version: "1.6.0"
 ---
+
+Read [Swimly skill operating guidance](../../../SKILLS.md) once before using
+this skill. It scopes the workflow, output templates and tool examples below;
+load only the sections and references relevant to the requested deliverable.
+
 # Fortify — Harden for Real-World Use
 
 ## Overview

@@ -37,7 +37,7 @@ export async function switchClub(
   });
 
   revalidatePath("/", "layout");
-  if (!options.stay) redirect("/");
+  if (!options.stay) redirect("/start");
   return ok();
 }
 
@@ -64,24 +64,26 @@ export async function createClub(input: ClubInput): Promise<ActionResult> {
   });
 
   const created = await onUniqueViolation(
-    () =>
-      prisma.club.create({
+    () => prisma.$transaction(async (tx) => {
+      const created = await tx.club.create({
         data: { name, sortOrder: (last?.sortOrder ?? -1) + 1 },
         select: { id: true, name: true },
-      }),
+      });
+
+      await logAudit({
+        actorId: session.user.id,
+        actorName: session.user.name ?? "Unknown",
+        action: "create",
+        entity: "Club",
+        entityId: created.id,
+        clubId: created.id,
+        summary: `Created club ${created.name}`,
+      }, tx);
+      return created;
+    }),
     `There is already a club called ${name}.`
   );
   if ("ok" in created) return created;
-
-  await logAudit({
-    actorId: session.user.id,
-    actorName: session.user.name ?? "Unknown",
-    action: "create",
-    entity: "Club",
-    entityId: created.id,
-    clubId: created.id,
-    summary: `Created club ${created.name}`,
-  });
 
   revalidatePath("/clubs");
   revalidatePath("/", "layout");
@@ -103,25 +105,27 @@ export async function updateClub(id: string, input: ClubInput): Promise<ActionRe
   if (existing.name === name) return ok();
 
   const updated = await onUniqueViolation(
-    () =>
-      prisma.club.update({
+    () => prisma.$transaction(async (tx) => {
+      const updated = await tx.club.update({
         where: { id },
         data: { name },
         select: { id: true, name: true },
-      }),
+      });
+
+      await logAudit({
+        actorId: session.user.id,
+        actorName: session.user.name ?? "Unknown",
+        action: "update",
+        entity: "Club",
+        entityId: id,
+        clubId: id,
+        summary: `Renamed club ${existing.name} → ${updated.name}`,
+      }, tx);
+      return updated;
+    }),
     `There is already a club called ${name}.`
   );
   if ("ok" in updated) return updated;
-
-  await logAudit({
-    actorId: session.user.id,
-    actorName: session.user.name ?? "Unknown",
-    action: "update",
-    entity: "Club",
-    entityId: id,
-    clubId: id,
-    summary: `Renamed club ${existing.name} → ${updated.name}`,
-  });
 
   revalidatePath("/clubs");
   revalidatePath("/", "layout");
@@ -134,32 +138,38 @@ export async function updateClub(id: string, input: ClubInput): Promise<ActionRe
 export async function setClubArchived(id: string, archived: boolean): Promise<ActionResult> {
   const session = await requirePermission("clubs.manage");
 
-  const existing = await prisma.club.findUnique({
-    where: { id },
-    select: { id: true, name: true, archivedAt: true },
-  });
-  if (!existing) return fail("That club no longer exists.");
-  if (Boolean(existing.archivedAt) === archived) return ok();
+  const result = await prisma.$transaction(async (tx) => {
+    // Two administrators cannot each archive the other's last live club.
+    await tx.$queryRaw`SELECT id FROM "Club" ORDER BY id FOR UPDATE`;
+    const existing = await tx.club.findUnique({
+      where: { id },
+      select: { id: true, name: true, archivedAt: true },
+    });
+    if (!existing) return fail("That club no longer exists.");
+    if (Boolean(existing.archivedAt) === archived) return ok();
 
-  if (archived) {
-    const others = await prisma.club.count({ where: { archivedAt: null, id: { not: id } } });
-    if (others === 0) return fail("Swimly needs at least one club. Add another before archiving this one.");
-  }
+    if (archived) {
+      const others = await tx.club.count({ where: { archivedAt: null, id: { not: id } } });
+      if (others === 0) return fail("Keep at least one active club. Add another before archiving this one.");
+    }
 
-  await prisma.club.update({
-    where: { id },
-    data: { archivedAt: archived ? new Date() : null },
-  });
+    await tx.club.update({
+      where: { id },
+      data: { archivedAt: archived ? new Date() : null },
+    });
 
-  await logAudit({
-    actorId: session.user.id,
-    actorName: session.user.name ?? "Unknown",
-    action: archived ? "archive" : "restore",
-    entity: "Club",
-    entityId: id,
-    clubId: id,
-    summary: `${archived ? "Archived" : "Restored"} club ${existing.name}`,
+    await logAudit({
+      actorId: session.user.id,
+      actorName: session.user.name ?? "Unknown",
+      action: archived ? "archive" : "restore",
+      entity: "Club",
+      entityId: id,
+      clubId: id,
+      summary: `${archived ? "Archived" : "Restored"} club ${existing.name}`,
+    }, tx);
+    return ok();
   });
+  if (!result.ok) return result;
 
   revalidatePath("/clubs");
   revalidatePath("/", "layout");

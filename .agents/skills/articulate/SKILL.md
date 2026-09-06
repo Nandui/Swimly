@@ -9,9 +9,13 @@ description: >
   microcopy patterns, inclusive language guidance, or asking "what should this say?" and
   "how should we sound?" Use this skill any time the words in an interface are the problem —
   not the flow they live in, not the structure they navigate, not the visual presentation.
-version: 1.6.0
-user-invocable: true
+metadata:
+  upstream-version: "1.6.0"
 ---
+
+Read [Swimly skill operating guidance](../../../SKILLS.md) once before using
+this skill. It scopes the workflow, output templates and tool examples below;
+load only the sections and references relevant to the requested deliverable.
 
 # Articulate
 

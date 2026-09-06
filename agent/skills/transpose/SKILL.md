@@ -1,6 +1,24 @@
 ---
-description: "Rethinks experiences for different platforms and contexts — not just resizing, but reconceiving. Part of the Intent design strategy system. When an experience moves from desktop to mobile, web to TV, consumer app to kiosk, or visual interface to voice, the interaction model, information priority, and user context all change. Trigger when: adapting a design for a new platform, planning multi-device experiences, auditing cross-platform consistency, designing for TV/kiosk/voice/embedded, or when someone says \"make it work on mobile\" and you need to push back on \"just shrink it.\" Also trigger for cross-device journey continuity, platform convention audits, or context-specific priority mapping.\n"
+name: transpose
+description: >
+  Rethinks experiences for different platforms and contexts — not just
+  resizing, but reconceiving. Part of the Intent design strategy system.
+  When an experience moves from desktop to mobile, web to TV, consumer app
+  to kiosk, or visual interface to voice, the interaction model, information
+  priority, and user context all change. Trigger when: adapting a design
+  for a new platform, planning multi-device experiences, auditing
+  cross-platform consistency, designing for TV/kiosk/voice/embedded,
+  or when someone says "make it work on mobile" and you need to push back
+  on "just shrink it." Also trigger for cross-device journey continuity,
+  platform convention audits, or context-specific priority mapping.
+metadata:
+  upstream-version: "1.6.0"
 ---
+
+Read [Swimly skill operating guidance](../../../SKILLS.md) once before using
+this skill. It scopes the workflow, output templates and tool examples below;
+load only the sections and references relevant to the requested deliverable.
+
 # Transpose — Adapt Across Contexts
 
 ## Overview

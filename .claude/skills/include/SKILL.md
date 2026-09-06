@@ -14,9 +14,13 @@ description: >
   operate, understand, and benefit from the experience. One billion people
   worldwide have a disability. Everyone experiences situational impairment.
   Designing inclusively makes the experience better for everyone.
-version: 1.6.0
-user-invocable: true
+metadata:
+  upstream-version: "1.6.0"
 ---
+
+Read [Swimly skill operating guidance](../../../SKILLS.md) once before using
+this skill. It scopes the workflow, output templates and tool examples below;
+load only the sections and references relevant to the requested deliverable.
 
 # Include — Design for Everyone
 

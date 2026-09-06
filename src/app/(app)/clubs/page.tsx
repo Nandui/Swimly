@@ -1,3 +1,5 @@
+import { CLUB_STATUS_META } from "@/lib/clubs/constants";
+import { ARCHIVAL_STATUS_META } from "@/lib/status";
 import type { Metadata } from "next";
 import { Item } from "@astryxdesign/core/Item";
 import { List } from "@astryxdesign/core/List";
@@ -76,8 +78,8 @@ function ClubList({
           label={
             <HStack gap={2} vAlign="center" wrap="wrap">
               <Text weight="medium">{club.name}</Text>
-              {club.id === currentId ? <Tag color="blue">Working in</Tag> : null}
-              {archived ? <Tag color="gray">Archived</Tag> : null}
+              {club.id === currentId ? <Tag color={CLUB_STATUS_META.current.color}>{CLUB_STATUS_META.current.label}</Tag> : null}
+              {archived ? <Tag color={ARCHIVAL_STATUS_META.archived.color}>{ARCHIVAL_STATUS_META.archived.label}</Tag> : null}
             </HStack>
           }
           description={`${club._count.programmes} ${club._count.programmes === 1 ? "programme" : "programmes"} · ${club._count.students} active ${club._count.students === 1 ? "swimmer" : "swimmers"} · ${club._count.courses} ${club._count.courses === 1 ? "class" : "classes"}`}

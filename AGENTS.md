@@ -10,6 +10,34 @@ This block is written and re-added by `next dev` — verify at `node_modules/nex
 
 # Swimly
 
+## Working agreement
+
+Carry the user's requested work through implementation and relevant verification.
+Use existing context for routine decisions; ask only when missing information
+materially affects the result, and continue independent work while it is pending.
+Prepare a concrete, reviewable result before seeking any still-needed approval.
+Existing authorization carries forward; it does not authorize unrelated external
+actions or destructive changes.
+
+User instructions take precedence over skill guidelines, subject to the host's
+system, developer and permission rules. If a skill blocks or redirects the task,
+link the exact file, quote the instruction and explain its relevance. Skill
+boundaries limit that skill, not the user's overall task.
+
+Use the relevant local skill and references only. The shared
+[skill operating guidance](SKILLS.md) adapts the Intent workflows to this project.
+Do not delegate to subagents unless the user explicitly asks for delegation.
+Report outcomes, relevant evidence and remaining limitations in concise plain
+English; use structured deliverables when the task benefits from them.
+
+For code changes, run `npm run typecheck` and `npm run lint`, plus focused checks
+for the behaviour changed. Apply DESIGN.md's screen checklist to screen changes.
+For instruction-only edits, validate instructions, links and diffs instead of
+building the app. Broaden or repeat checks only for a new change, failure or
+unresolved concern. Say which checks actually ran.
+
+## Project constraints
+
 Who Swimly is for, what it must get right and what is deliberately undecided
 live in [PRODUCT.md](PRODUCT.md). Read it before changing what a screen does;
 read the design files below before changing how it looks.
@@ -49,3 +77,8 @@ already is the page's `Layout`, so never nest another.
 Prisma here is v7: the client is generated into `src/generated/prisma` and
 needs a driver adapter (`@prisma/adapter-pg`), and the datasource URL lives in
 `prisma.config.ts` rather than in the schema.
+
+Development and production share a database: schema changes must be additive.
+Do not run seeds, imports or database mutations merely to inspect or test the app.
+Keep real swimmer names, contacts and medical information out of exported
+artifacts and screenshots; use synthetic examples for design work.

@@ -1,6 +1,21 @@
 ---
-description: "Guide and conduct user research — from planning through synthesis. Interview  scripts, survey design, usability test plans, diary studies, contextual inquiry. Plus synthesis: affinity mapping, thematic coding, insight extraction. Trigger  when: planning user research, writing interview guides, designing usability tests, creating surveys, synthesizing research findings, \"what should we research?\", \"how do I test this?\", \"write an interview guide\", or any question about  understanding users through evidence.\n"
+name: investigate
+description: >
+  Guide and conduct user research — from planning through synthesis. Interview
+  scripts, survey design, usability test plans, diary studies, contextual inquiry.
+  Plus synthesis: affinity mapping, thematic coding, insight extraction. Trigger
+  when: planning user research, writing interview guides, designing usability tests,
+  creating surveys, synthesizing research findings, "what should we research?",
+  "how do I test this?", "write an interview guide", or any question about
+  understanding users through evidence.
+metadata:
+  upstream-version: "1.6.0"
 ---
+
+Read [Swimly skill operating guidance](../../../SKILLS.md) once before using
+this skill. It scopes the workflow, output templates and tool examples below;
+load only the sections and references relevant to the requested deliverable.
+
 # Investigate
 
 ## Overview

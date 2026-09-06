@@ -6,6 +6,7 @@ import type { Prisma } from "@/generated/prisma/client";
 import { fail, ok, type ActionResult } from "@/lib/action-result";
 import { logAudit } from "@/lib/audit";
 import { can, requirePermission } from "@/lib/authz";
+import { currentClubId } from "@/lib/clubs/current";
 import { LIST_ORDER, LIVE } from "@/lib/curriculum/constants";
 import { formatDate, parseDateOnly, today } from "@/lib/format";
 import { completionProgress } from "@/lib/progression/rules";
@@ -47,14 +48,16 @@ export async function saveAssessment(input: AssessInput): Promise<ActionResult> 
   const parsed = assessSchema.safeParse(input);
   if (!parsed.success) return fail(parsed.error.issues[0].message);
   const { studentId, levelId, results } = parsed.data;
+  const clubId = await currentClubId();
+  if (new Set(results.map((row) => row.competencyId)).size !== results.length) return fail("A competency appears twice. Reload and try again.");
 
   const [student, level] = await Promise.all([
     prisma.student.findUnique({
-      where: { id: studentId },
+      where: { id: studentId, clubId },
       select: { id: true, firstName: true, lastName: true },
     }),
     prisma.level.findUnique({
-      where: { id: levelId },
+      where: { id: levelId, ...LIVE, programme: { clubId, ...LIVE } },
       select: {
         id: true,
         name: true,
@@ -87,61 +90,64 @@ export async function saveAssessment(input: AssessInput): Promise<ActionResult> 
 
   // Typed as the base promise so the delete can join the same transaction —
   // an array inferred from the upserts alone will not take it.
-  const writes: Prisma.PrismaPromise<unknown>[] = changed
-    .filter((row) => row.status !== null)
-    .map((row) =>
-      prisma.competencyResult.upsert({
-        where: { studentId_competencyId: { studentId, competencyId: row.competencyId } },
-        create: {
-          studentId,
-          competencyId: row.competencyId,
-          status: row.status!,
-          assessedOn,
-          assessedById: session.user.id,
-          assessedByName,
-        },
-        update: {
-          status: row.status!,
-          assessedOn,
-          assessedById: session.user.id,
-          assessedByName,
-        },
-      })
-    );
+  await prisma.$transaction(async (tx) => {
+    const writes: Prisma.PrismaPromise<unknown>[] = changed
+      .filter((row) => row.status !== null)
+      .map((row) =>
+        tx.competencyResult.upsert({
+          where: { studentId_competencyId: { studentId, competencyId: row.competencyId } },
+          create: {
+            studentId,
+            competencyId: row.competencyId,
+            status: row.status!,
+            assessedOn,
+            assessedById: session.user.id,
+            assessedByName,
+          },
+          update: {
+            status: row.status!,
+            assessedOn,
+            assessedById: session.user.id,
+            assessedByName,
+          },
+        })
+      );
 
-  const cleared = changed.filter((row) => row.status === null).map((row) => row.competencyId);
-  if (cleared.length > 0) {
-    writes.push(
-      prisma.competencyResult.deleteMany({
-        where: { studentId, competencyId: { in: cleared } },
-      })
-    );
-  }
+    const cleared = changed.filter((row) => row.status === null).map((row) => row.competencyId);
+    if (cleared.length > 0) {
+      writes.push(
+        tx.competencyResult.deleteMany({
+          where: { studentId, competencyId: { in: cleared } },
+        })
+      );
+    }
 
-  await prisma.$transaction(writes);
+    await Promise.all(writes);
 
-  const nowAchieved = changed
-    .filter((row) => row.status === "ACHIEVED")
-    .map((row) => nameById.get(row.competencyId) ?? "a competency");
-  const nowWorking = changed
-    .filter((row) => row.status === "WORKING_ON")
-    .map((row) => nameById.get(row.competencyId) ?? "a competency");
-  const nowCleared = cleared.map((id) => nameById.get(id) ?? "a competency");
+    const nowAchieved = changed
+      .filter((row) => row.status === "ACHIEVED")
+      .map((row) => nameById.get(row.competencyId) ?? "a competency");
+    const nowWorking = changed
+      .filter((row) => row.status === "WORKING_ON")
+      .map((row) => nameById.get(row.competencyId) ?? "a competency");
+    const nowCleared = cleared.map((id) => nameById.get(id) ?? "a competency");
 
-  const parts: string[] = [];
-  if (nowAchieved.length) parts.push(`passed ${joinNames(nowAchieved)}`);
-  if (nowWorking.length) parts.push(`working on ${joinNames(nowWorking)}`);
-  if (nowCleared.length) parts.push(`unmarked ${joinNames(nowCleared)}`);
+    const parts: string[] = [];
+    if (nowAchieved.length) parts.push(`passed ${joinNames(nowAchieved)}`);
+    if (nowWorking.length) parts.push(`working on ${joinNames(nowWorking)}`);
+    if (nowCleared.length) parts.push(`unmarked ${joinNames(nowCleared)}`);
 
-  await logAudit({
-    actorId: session.user.id,
-    actorName: assessedByName,
-    action: "assess",
-    entity: "Student",
-    entityId: studentId,
-    programmeId: level.programmeId,
-    summary: `${fullName(student)} in ${level.name} — ${parts.join("; ")}`,
-  });
+    await logAudit({
+      actorId: session.user.id,
+      actorName: assessedByName,
+      action: "assess",
+      entity: "Student",
+      entityId: studentId,
+      programmeId: level.programmeId,
+      clubId,
+      summary: `${fullName(student)} in ${level.name} — ${parts.join("; ")}`,
+    }, tx);
+  }, { timeout: 15_000 });
 
   revalidatePath("/students/[id]", "page");
   revalidatePath("/courses/[id]/assess", "page");
@@ -176,15 +182,17 @@ export async function saveClassAssessment(input: ClassAssessInput): Promise<Acti
   const parsed = classAssessSchema.safeParse(input);
   if (!parsed.success) return fail(parsed.error.issues[0].message);
   const { levelId, marks } = parsed.data;
+  const clubId = await currentClubId();
+  if (new Set(marks.map((row) => `${row.studentId}:${row.competencyId}`)).size !== marks.length) return fail("A mark appears twice. Reload and try again.");
 
   const studentIds = [...new Set(marks.map((row) => row.studentId))];
   const [students, level] = await Promise.all([
     prisma.student.findMany({
-      where: { id: { in: studentIds } },
+      where: { id: { in: studentIds }, clubId },
       select: { id: true, firstName: true, lastName: true },
     }),
     prisma.level.findUnique({
-      where: { id: levelId },
+      where: { id: levelId, ...LIVE, programme: { clubId, ...LIVE } },
       select: {
         id: true,
         name: true,
@@ -219,69 +227,73 @@ export async function saveClassAssessment(input: ClassAssessInput): Promise<Acti
   const assessedOn = parseDateOnly(today());
   const assessedByName = session.user.name ?? "Unknown";
 
-  const writes: Prisma.PrismaPromise<unknown>[] = changed
-    .filter((row) => row.status !== null)
-    .map((row) =>
-      prisma.competencyResult.upsert({
-        where: {
-          studentId_competencyId: { studentId: row.studentId, competencyId: row.competencyId },
-        },
-        create: {
-          studentId: row.studentId,
-          competencyId: row.competencyId,
-          status: row.status!,
-          assessedOn,
-          assessedById: session.user.id,
-          assessedByName,
-        },
-        update: {
-          status: row.status!,
-          assessedOn,
-          assessedById: session.user.id,
-          assessedByName,
-        },
+  await prisma.$transaction(async (tx) => {
+    const writes: Prisma.PrismaPromise<unknown>[] = changed
+      .filter((row) => row.status !== null)
+      .map((row) =>
+        tx.competencyResult.upsert({
+          where: {
+            studentId_competencyId: { studentId: row.studentId, competencyId: row.competencyId },
+          },
+          create: {
+            studentId: row.studentId,
+            competencyId: row.competencyId,
+            status: row.status!,
+            assessedOn,
+            assessedById: session.user.id,
+            assessedByName,
+          },
+          update: {
+            status: row.status!,
+            assessedOn,
+            assessedById: session.user.id,
+            assessedByName,
+          },
+        })
+      );
+    const cleared = changed.filter((row) => row.status === null);
+    for (const studentId of studentIds) {
+      const ids = cleared.filter((row) => row.studentId === studentId).map((row) => row.competencyId);
+      if (ids.length > 0) {
+        writes.push(
+          tx.competencyResult.deleteMany({ where: { studentId, competencyId: { in: ids } } })
+        );
+      }
+    }
+
+    await Promise.all(writes);
+
+    // One line per swimmer, so the trail reads the same as a save from their
+    // own checklist would.
+    await Promise.all(
+      students.map((student) => {
+        const rows = changed.filter((row) => row.studentId === student.id);
+        if (rows.length === 0) return null;
+        const named = (status: "ACHIEVED" | "WORKING_ON" | null) =>
+          rows
+            .filter((row) => row.status === status)
+            .map((row) => nameById.get(row.competencyId) ?? "a competency");
+        const parts: string[] = [];
+        const achieved = named("ACHIEVED");
+        const working = named("WORKING_ON");
+        const unmarked = named(null);
+        if (achieved.length) parts.push(`passed ${joinNames(achieved)}`);
+        if (working.length) parts.push(`working on ${joinNames(working)}`);
+        if (unmarked.length) parts.push(`unmarked ${joinNames(unmarked)}`);
+        return logAudit({
+          actorId: session.user.id,
+          actorName: assessedByName,
+          action: "assess",
+          entity: "Student",
+          entityId: student.id,
+          programmeId: level.programmeId,
+          clubId,
+          summary: `${fullName(student)} in ${level.name} — ${parts.join("; ")}`,
+        }, tx);
       })
     );
-  const cleared = changed.filter((row) => row.status === null);
-  for (const studentId of studentIds) {
-    const ids = cleared.filter((row) => row.studentId === studentId).map((row) => row.competencyId);
-    if (ids.length > 0) {
-      writes.push(
-        prisma.competencyResult.deleteMany({ where: { studentId, competencyId: { in: ids } } })
-      );
-    }
-  }
 
-  await prisma.$transaction(writes);
-
-  // One line per swimmer, so the trail reads the same as a save from their
-  // own checklist would.
-  await Promise.all(
-    students.map((student) => {
-      const rows = changed.filter((row) => row.studentId === student.id);
-      if (rows.length === 0) return null;
-      const named = (status: "ACHIEVED" | "WORKING_ON" | null) =>
-        rows
-          .filter((row) => row.status === status)
-          .map((row) => nameById.get(row.competencyId) ?? "a competency");
-      const parts: string[] = [];
-      const achieved = named("ACHIEVED");
-      const working = named("WORKING_ON");
-      const unmarked = named(null);
-      if (achieved.length) parts.push(`passed ${joinNames(achieved)}`);
-      if (working.length) parts.push(`working on ${joinNames(working)}`);
-      if (unmarked.length) parts.push(`unmarked ${joinNames(unmarked)}`);
-      return logAudit({
-        actorId: session.user.id,
-        actorName: assessedByName,
-        action: "assess",
-        entity: "Student",
-        entityId: student.id,
-        programmeId: level.programmeId,
-        summary: `${fullName(student)} in ${level.name} — ${parts.join("; ")}`,
-      });
-    })
-  );
+  }, { timeout: 15_000 });
 
   revalidatePath("/students/[id]", "page");
   revalidatePath("/courses/[id]/assess", "page");
@@ -305,14 +317,15 @@ export async function confirmLevelCompletion(
   const parsed = confirmSchema.safeParse(input);
   if (!parsed.success) return fail(parsed.error.issues[0].message);
   const { studentId, levelId, note, overrideReason } = parsed.data;
+  const clubId = await currentClubId();
 
   const [student, level] = await Promise.all([
     prisma.student.findUnique({
-      where: { id: studentId },
+      where: { id: studentId, clubId },
       select: { id: true, firstName: true, lastName: true },
     }),
     prisma.level.findUnique({
-      where: { id: levelId },
+      where: { id: levelId, ...LIVE, programme: { clubId, ...LIVE } },
       select: {
         id: true,
         name: true,
@@ -366,33 +379,36 @@ export async function confirmLevelCompletion(
   const completedOn = parseDateOnly(today());
   const confirmedByName = session.user.name ?? "Unknown";
 
-  await prisma.levelCompletion.create({
-    data: {
-      studentId,
-      levelId,
-      programmeId: level.programmeId,
-      completedOn,
-      // Frozen here. Without the snapshot, one curriculum edit later nobody
-      // can tell whether this was earned or waved through.
-      competenciesAchieved: progress.achieved,
-      competencyCount: progress.total,
-      overrideReason: progress.eligible ? null : overrideReason,
-      confirmedById: session.user.id,
-      confirmedByName,
-      note: note || null,
-    },
-  });
+  await prisma.$transaction(async (tx) => {
+    await tx.levelCompletion.create({
+      data: {
+        studentId,
+        levelId,
+        programmeId: level.programmeId,
+        completedOn,
+        // Frozen here. Without the snapshot, one curriculum edit later nobody
+        // can tell whether this was earned or waved through.
+        competenciesAchieved: progress.achieved,
+        competencyCount: progress.total,
+        overrideReason: progress.eligible ? null : overrideReason,
+        confirmedById: session.user.id,
+        confirmedByName,
+        note: note || null,
+      },
+    });
 
-  await logAudit({
-    actorId: session.user.id,
-    actorName: confirmedByName,
-    action: "complete-level",
-    entity: "Student",
-    entityId: studentId,
-    programmeId: level.programmeId,
-    summary:
-      `${fullName(student)} completed ${level.name} on ${formatDate(completedOn)} (${progress.achieved} of ${progress.total})` +
-      (progress.eligible ? "" : ` — confirmed with gaps: ${overrideReason}`),
+    await logAudit({
+      actorId: session.user.id,
+      actorName: confirmedByName,
+      action: "complete-level",
+      entity: "Student",
+      entityId: studentId,
+      programmeId: level.programmeId,
+      clubId,
+      summary:
+        `${fullName(student)} completed ${level.name} on ${formatDate(completedOn)} (${progress.achieved} of ${progress.total})` +
+        (progress.eligible ? "" : ` — confirmed with gaps: ${overrideReason}`),
+    }, tx);
   });
 
   revalidatePath("/students/[id]", "page");
@@ -416,9 +432,10 @@ export async function revokeLevelCompletion(
   if (!parsed.success) return fail(parsed.error.issues[0].message);
 
   const completion = await prisma.levelCompletion.findUnique({
-    where: { id },
+    where: { id, student: { clubId: await currentClubId() } },
     select: {
       id: true,
+      studentId: true,
       programmeId: true,
       completedOn: true,
       level: { select: { name: true } },
@@ -427,16 +444,18 @@ export async function revokeLevelCompletion(
   });
   if (!completion) return fail("That completion no longer exists.");
 
-  await prisma.levelCompletion.delete({ where: { id } });
+  await prisma.$transaction(async (tx) => {
+    await tx.levelCompletion.delete({ where: { id } });
 
-  await logAudit({
-    actorId: session.user.id,
-    actorName: session.user.name ?? "Unknown",
-    action: "revoke-level",
-    entity: "Student",
-    entityId: id,
-    programmeId: completion.programmeId,
-    summary: `Took back ${fullName(completion.student)}'s completion of ${completion.level.name} from ${formatDate(completion.completedOn)} — ${parsed.data.reason}`,
+    await logAudit({
+      actorId: session.user.id,
+      actorName: session.user.name ?? "Unknown",
+      action: "revoke-level",
+      entity: "Student",
+      entityId: completion.studentId,
+      programmeId: completion.programmeId,
+      summary: `Took back ${fullName(completion.student)}'s completion of ${completion.level.name} from ${formatDate(completion.completedOn)} — ${parsed.data.reason}`,
+    }, tx);
   });
 
   revalidatePath("/students/[id]", "page");

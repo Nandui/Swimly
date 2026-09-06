@@ -13,9 +13,13 @@ description: >
   request to systematically assess the quality of a user experience. This is
   the diagnostic entry point of the Intent system — the UX doctor that
   diagnoses issues and refers to specialists.
-version: 1.6.0
-user-invocable: true
+metadata:
+  upstream-version: "1.6.0"
 ---
+
+Read [Swimly skill operating guidance](../../../SKILLS.md) once before using
+this skill. It scopes the workflow, output templates and tool examples below;
+load only the sections and references relevant to the requested deliverable.
 
 # Evaluate — Assess UX Quality
 

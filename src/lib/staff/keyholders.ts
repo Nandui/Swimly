@@ -42,12 +42,8 @@ export type Simulation =
   | { kind: "userRole"; userId: string; roleId: string }
   | { kind: "deactivate"; userId: string };
 
-/** Active accounts that would hold the permission *and* see its screen. */
-export async function activeHoldersOf(
-  key: { permission: PermissionKey; screen: ScreenKey },
-  sim: Simulation,
-  db: Db = prisma
-): Promise<number> {
+/** Load once for all key checks, and expand each shared role once. */
+async function simulatedHolders(sim: Simulation, db: Db) {
   const [users, roles] = await Promise.all([
     db.user.findMany({ where: { isActive: true }, select: { id: true, staffRoleId: true } }),
     db.staffRole.findMany({ select: { id: true, permissions: true, screens: true } }),
@@ -64,16 +60,28 @@ export async function activeHoldersOf(
     });
   }
 
-  return users.filter((user) => {
-    if (sim.kind === "deactivate" && user.id === sim.userId) return false;
+  const accessByRole = new Map([...byRole].map(([id, role]) => {
+    const permissions = expandPermissions(role.permissions);
+    return [id, { permissions, screens: visibleScreens(role.screens, permissions) }] as const;
+  }));
+  return users.flatMap((user) => {
+    if (sim.kind === "deactivate" && user.id === sim.userId) return [];
     const roleId =
       sim.kind === "userRole" && user.id === sim.userId ? sim.roleId : user.staffRoleId;
-    if (!roleId) return false;
-    const role = byRole.get(roleId);
-    if (!role) return false;
-    const held = expandPermissions(role.permissions);
-    return held.has(key.permission) && visibleScreens(role.screens, held).has(key.screen);
-  }).length;
+    const access = roleId ? accessByRole.get(roleId) : undefined;
+    return access ? [access] : [];
+  });
+}
+
+/** Active accounts that would hold the permission *and* see its screen. */
+export async function activeHoldersOf(
+  key: { permission: PermissionKey; screen: ScreenKey },
+  sim: Simulation,
+  db: Db = prisma
+): Promise<number> {
+  return (await simulatedHolders(sim, db)).filter((holder) =>
+    holder.permissions.has(key.permission) && holder.screens.has(key.screen)
+  ).length;
 }
 
 /** Returns a sentence to hand back, or null when the change is safe.
@@ -82,8 +90,9 @@ export async function activeHoldersOf(
  *  otherwise it reads committed state and cannot see the change the same
  *  transaction has already made. */
 export async function guardKeyholders(sim: Simulation, db: Db = prisma): Promise<string | null> {
+  const holders = await simulatedHolders(sim, db);
   for (const key of KEYS) {
-    if ((await activeHoldersOf(key, sim, db)) === 0) {
+    if (!holders.some((holder) => holder.permissions.has(key.permission) && holder.screens.has(key.screen))) {
       return `That would leave nobody able to ${permissionMeta(key.permission).label.toLowerCase()} — someone has to hold that and see the ${screenMeta(key.screen).label} screen. Give that to someone else first, or there will be no way back in.`;
     }
   }
@@ -100,7 +109,7 @@ export async function withKeyholderLock<T>(
   run: (tx: Prisma.TransactionClient) => Promise<T>
 ): Promise<T> {
   return prisma.$transaction(async (tx) => {
-    await tx.$queryRaw`SELECT "id" FROM "User" WHERE "isActive" = true FOR UPDATE`;
+    await tx.$queryRaw`SELECT "id" FROM "User" WHERE "isActive" = true ORDER BY "id" FOR UPDATE`;
     return run(tx);
   });
 }

@@ -15,7 +15,7 @@ import {
 import { MoveUpToLevel, type MoveTarget } from "@/components/progression/move-up";
 import { formatDate } from "@/lib/format";
 import { nextLevel } from "@/lib/progression/rules";
-import { COMPETENCY_STATUS_META } from "@/lib/progression/constants";
+import { COMPETENCY_STATUS_META, LEVEL_PROGRESS_META } from "@/lib/progression/constants";
 import type { LevelProgress, ProgrammeProgress } from "@/lib/progression/data/progress";
 
 /** A swimmer's standing, one section per programme.
@@ -69,7 +69,7 @@ export function ProgressSection({
               <Heading level={2}>
                 <HStack gap={2} vAlign="center" wrap="wrap">
                   {programme.programmeName}
-                  {programme.graduated ? <Tag color="blue">Graduated</Tag> : null}
+                  {programme.graduated ? <Tag color={LEVEL_PROGRESS_META.graduated.color}>{LEVEL_PROGRESS_META.graduated.label}</Tag> : null}
                 </HStack>
               </Heading>
 
@@ -249,7 +249,7 @@ function CurrentLevel({
             <Heading level={3}>
               <HStack gap={2} vAlign="center" wrap="wrap">
                 {level.name}
-                <Tag color={level.eligible ? "green" : "yellow"}>
+                <Tag color={LEVEL_PROGRESS_META[level.eligible ? "eligible" : "inProgress"].color}>
                   {level.achieved} of {level.total}
                 </Tag>
               </HStack>

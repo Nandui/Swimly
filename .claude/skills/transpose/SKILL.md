@@ -11,9 +11,13 @@ description: >
   or when someone says "make it work on mobile" and you need to push back
   on "just shrink it." Also trigger for cross-device journey continuity,
   platform convention audits, or context-specific priority mapping.
-version: 1.6.0
-user-invocable: true
+metadata:
+  upstream-version: "1.6.0"
 ---
+
+Read [Swimly skill operating guidance](../../../SKILLS.md) once before using
+this skill. It scopes the workflow, output templates and tool examples below;
+load only the sections and references relevant to the requested deliverable.
 
 # Transpose — Adapt Across Contexts
 

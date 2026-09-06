@@ -7,6 +7,7 @@ import { logAudit } from "@/lib/audit";
 import { requirePermission } from "@/lib/authz";
 import { LIST_ORDER } from "@/lib/curriculum/constants";
 import { reorderIds } from "@/lib/curriculum/reorder";
+import { currentClubId } from "@/lib/clubs/current";
 import { prisma } from "@/lib/prisma";
 
 /** A competency's `levelId` is deliberately not editable anywhere in this
@@ -37,7 +38,7 @@ export async function createCompetency(
   const { name, description } = parsed.data;
 
   const level = await prisma.level.findUnique({
-    where: { id: levelId },
+    where: { id: levelId, programme: { clubId: await currentClubId() } },
     select: { id: true, name: true, archivedAt: true, programmeId: true },
   });
   if (!level) return fail("That level no longer exists.");
@@ -50,8 +51,8 @@ export async function createCompetency(
   });
 
   const created = await onUniqueViolation(
-    () =>
-      prisma.competency.create({
+    () => prisma.$transaction(async (tx) => {
+      const created = await tx.competency.create({
         data: {
           levelId,
           name,
@@ -59,20 +60,22 @@ export async function createCompetency(
           sortOrder: (last?.sortOrder ?? -1) + 1,
         },
         select: { id: true, name: true },
-      }),
+      });
+
+      await logAudit({
+        actorId: session.user.id,
+        actorName: session.user.name ?? "Unknown",
+        action: "create",
+        entity: "Competency",
+        entityId: created.id,
+        programmeId: level.programmeId,
+        summary: `Added competency "${created.name}" to ${level.name}`,
+      }, tx);
+      return created;
+    }),
     `${level.name} already has a competency called ${name}.`
   );
   if ("ok" in created) return created;
-
-  await logAudit({
-    actorId: session.user.id,
-    actorName: session.user.name ?? "Unknown",
-    action: "create",
-    entity: "Competency",
-    entityId: created.id,
-    programmeId: level.programmeId,
-    summary: `Added competency "${created.name}" to ${level.name}`,
-  });
 
   revalidatePath("/programmes/[id]", "page");
   return ok();
@@ -89,7 +92,7 @@ export async function updateCompetency(
   const { name, description } = parsed.data;
 
   const existing = await prisma.competency.findUnique({
-    where: { id },
+    where: { id, level: { programme: { clubId: await currentClubId() } } },
     select: {
       id: true,
       name: true,
@@ -102,29 +105,32 @@ export async function updateCompetency(
   const changes: string[] = [];
   if (existing.name !== name) changes.push(`name "${existing.name}" → "${name}"`);
   if ((existing.description ?? "") !== description) changes.push("description");
+  if (changes.length === 0) return ok();
 
   const updated = await onUniqueViolation(
-    () =>
-      prisma.competency.update({
-        where: { id },
+    () => prisma.$transaction(async (tx) => {
+      const updated = await tx.competency.update({
+        where: { id, level: { programme: { clubId: await currentClubId() } } },
         data: { name, description: description || null },
         select: { id: true, name: true },
-      }),
+      });
+
+      if (changes.length > 0) {
+        await logAudit({
+          actorId: session.user.id,
+          actorName: session.user.name ?? "Unknown",
+          action: "update",
+          entity: "Competency",
+          entityId: id,
+          programmeId: existing.level.programmeId,
+          summary: `Updated competency in ${existing.level.name} (${changes.join(", ")})`,
+        }, tx);
+      }
+      return updated;
+    }),
     `${existing.level.name} already has a competency called ${name}.`
   );
   if ("ok" in updated) return updated;
-
-  if (changes.length > 0) {
-    await logAudit({
-      actorId: session.user.id,
-      actorName: session.user.name ?? "Unknown",
-      action: "update",
-      entity: "Competency",
-      entityId: id,
-      programmeId: existing.level.programmeId,
-      summary: `Updated competency in ${existing.level.name} (${changes.join(", ")})`,
-    });
-  }
 
   revalidatePath("/programmes/[id]", "page");
   return ok();
@@ -140,7 +146,7 @@ export async function setCompetencyArchived(
   const session = await requirePermission("curriculum.manage");
 
   const existing = await prisma.competency.findUnique({
-    where: { id },
+    where: { id, level: { programme: { clubId: await currentClubId() } } },
     select: {
       id: true,
       name: true,
@@ -152,24 +158,26 @@ export async function setCompetencyArchived(
   if (!existing) return fail("That competency no longer exists.");
   if (Boolean(existing.archivedAt) === archived) return ok();
 
-  await prisma.competency.update({
-    where: { id },
-    data: { archivedAt: archived ? new Date() : null },
-  });
+  await prisma.$transaction(async (tx) => {
+    await tx.competency.update({
+      where: { id, level: { programme: { clubId: await currentClubId() } } },
+      data: { archivedAt: archived ? new Date() : null },
+    });
 
-  const assessed = existing._count.results;
-  await logAudit({
-    actorId: session.user.id,
-    actorName: session.user.name ?? "Unknown",
-    action: archived ? "archive" : "restore",
-    entity: "Competency",
-    entityId: id,
-    programmeId: existing.level.programmeId,
-    summary:
-      `${archived ? "Archived" : "Restored"} competency "${existing.name}" in ${existing.level.name}` +
-      (assessed > 0
-        ? ` (${assessed} ${assessed === 1 ? "assessment kept" : "assessments kept"})`
-        : ""),
+    const assessed = existing._count.results;
+    await logAudit({
+      actorId: session.user.id,
+      actorName: session.user.name ?? "Unknown",
+      action: archived ? "archive" : "restore",
+      entity: "Competency",
+      entityId: id,
+      programmeId: existing.level.programmeId,
+      summary:
+        `${archived ? "Archived" : "Restored"} competency "${existing.name}" in ${existing.level.name}` +
+        (assessed > 0
+          ? ` (${assessed} ${assessed === 1 ? "assessment kept" : "assessments kept"})`
+          : ""),
+    }, tx);
   });
 
   revalidatePath("/programmes/[id]", "page");
@@ -183,7 +191,7 @@ export async function moveCompetency(
   const session = await requirePermission("curriculum.manage");
 
   const competency = await prisma.competency.findUnique({
-    where: { id },
+    where: { id, level: { programme: { clubId: await currentClubId() } } },
     select: { levelId: true, name: true, level: { select: { programmeId: true } } },
   });
   if (!competency) return fail("That competency no longer exists.");
@@ -202,22 +210,24 @@ export async function moveCompetency(
   if (!order) return ok();
 
   const byId = new Map(siblings.map((s) => [s.id, s.name]));
-  await prisma.$transaction(
-    order.map((competencyId, index) =>
-      prisma.competency.update({ where: { id: competencyId }, data: { sortOrder: index } })
-    )
-  );
+  await prisma.$transaction(async (tx) => {
+    await Promise.all(
+      order.map((competencyId, index) =>
+        tx.competency.update({ where: { id: competencyId }, data: { sortOrder: index } })
+      )
+    );
 
-  const movedTo = order.indexOf(id);
-  const neighbour = order[direction === "up" ? movedTo + 1 : movedTo - 1];
-  await logAudit({
-    actorId: session.user.id,
-    actorName: session.user.name ?? "Unknown",
-    action: "reorder",
-    entity: "Competency",
-    entityId: id,
-    programmeId: competency.level.programmeId,
-    summary: `Moved "${competency.name}" ${direction === "up" ? "above" : "below"} "${byId.get(neighbour)}"`,
+    const movedTo = order.indexOf(id);
+    const neighbour = order[direction === "up" ? movedTo + 1 : movedTo - 1];
+    await logAudit({
+      actorId: session.user.id,
+      actorName: session.user.name ?? "Unknown",
+      action: "reorder",
+      entity: "Competency",
+      entityId: id,
+      programmeId: competency.level.programmeId,
+      summary: `Moved "${competency.name}" ${direction === "up" ? "above" : "below"} "${byId.get(neighbour)}"`,
+    }, tx);
   });
 
   revalidatePath("/programmes/[id]", "page");

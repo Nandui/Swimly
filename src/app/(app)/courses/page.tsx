@@ -1,3 +1,5 @@
+import { ATTENDANCE_RECORD_META } from "@/lib/attendance/constants";
+import { ARCHIVAL_STATUS_META } from "@/lib/status";
 import type { Metadata } from "next";
 import { Link } from "@astryxdesign/core/Link";
 import { HStack, VStack } from "@astryxdesign/core/Stack";
@@ -18,7 +20,7 @@ import { Tag } from "@/components/ui-kit/tag";
 import { AddCourse, ArchiveCourse, EditCourse } from "@/components/courses/course-actions";
 import { CourseFilters } from "@/components/courses/course-filters";
 import { can } from "@/lib/authz";
-import {
+import { COURSE_STATUS_META,
   DAY_META,
   DAYS_IN_ORDER,
   capacityLabel,
@@ -55,8 +57,8 @@ export default async function CoursesPage(props: PageProps<"/courses">) {
   // today says so here the same way it does on Today.
   const [courses, levels, instructors, marked] = await Promise.all([
     getCourses(true),
-    getLevelOptions(),
-    getInstructorOptions(),
+    admin ? getLevelOptions() : Promise.resolve([]),
+    admin ? getInstructorOptions() : Promise.resolve([]),
     getRegisterStateForDay(todayDay, iso),
   ]);
 
@@ -192,7 +194,7 @@ function CourseTable({
           <TableHeaderCell scope="col" className="max-lg:hidden">
             Instructor
           </TableHeaderCell>
-          <TableHeaderCell scope="col">Places</TableHeaderCell>
+          <TableHeaderCell scope="col" className="max-md:hidden">Places</TableHeaderCell>
           {admin ? (
             <TableHeaderCell scope="col">
               <VisuallyHidden>Actions</VisuallyHidden>
@@ -211,9 +213,9 @@ function CourseTable({
                   <Link href={`/courses/${course.id}`} weight="medium">
                     {courseName(course)}
                   </Link>
-                  {archived ? <Tag color="gray">Archived</Tag> : null}
+                  {archived ? <Tag color={ARCHIVAL_STATUS_META.archived.color}>{ARCHIVAL_STATUS_META.archived.label}</Tag> : null}
                   {!archived && course.dayOfWeek === todayDay && marked.has(course.id) ? (
-                    <Tag color="green">Attendance taken</Tag>
+                    <Tag color={ATTENDANCE_RECORD_META.taken.color}>{ATTENDANCE_RECORD_META.taken.label}</Tag>
                   ) : null}
                 </HStack>
                 <Text type="supporting" display="block">
@@ -221,9 +223,18 @@ function CourseTable({
                   {course.location ? ` · ${course.location}` : ""}
                 </Text>
                 <Text type="supporting" display="block" className="md:hidden">
-                  {DAY_META[course.dayOfWeek].short} {formatTime(course.startMinutes)}
-                  {course.instructor ? ` · ${course.instructor.name}` : ""}
+                  {DAY_META[course.dayOfWeek].short} {formatTime(course.startMinutes)}–
+                  {formatTime(course.startMinutes + course.durationMinutes)}
                 </Text>
+                <Text type="supporting" display="block" className="lg:hidden">
+                  {course.instructor?.name ?? COURSE_STATUS_META.unassigned.label}
+                </Text>
+                <HStack gap={2} vAlign="center" wrap="wrap" className="md:hidden">
+                  <Text type="supporting" hasTabularNumbers>
+                    {capacityLabel(taken, course.capacity)}
+                  </Text>
+                  {tone ? <Tag color={tone.color}>{tone.label}</Tag> : null}
+                </HStack>
               </TableCell>
               <TableCell className="max-md:hidden">
                 <Text color="secondary" hasTabularNumbers textWrap="nowrap">
@@ -235,10 +246,10 @@ function CourseTable({
                 {course.instructor ? (
                   <Text color="secondary">{course.instructor.name}</Text>
                 ) : (
-                  <Tag color="orange">Unassigned</Tag>
+                  <Tag color={COURSE_STATUS_META.unassigned.color}>{COURSE_STATUS_META.unassigned.label}</Tag>
                 )}
               </TableCell>
-              <TableCell>
+              <TableCell className="max-md:hidden">
                 <HStack gap={2} vAlign="center" wrap="wrap">
                   <Text color="secondary" hasTabularNumbers textWrap="nowrap">
                     {capacityLabel(taken, course.capacity)}

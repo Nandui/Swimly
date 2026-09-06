@@ -1,3 +1,6 @@
+/** Where the pool is. Calendar decisions use this zone, not the server's. */
+export const SCHOOL_TIMEZONE = "Europe/Dublin";
+
 /** One formatter, one locale, so the same instant reads the same way on every
  *  screen. Pinned rather than taken from the request, because a date that
  *  changes shape between two tables is a date nobody can scan down a column. */
@@ -7,15 +10,12 @@ const DATE_TIME = new Intl.DateTimeFormat("en-GB", {
   year: "numeric",
   hour: "2-digit",
   minute: "2-digit",
+  timeZone: SCHOOL_TIMEZONE,
 });
 
 export function formatDateTime(value: Date): string {
   return DATE_TIME.format(value);
 }
-
-/** Where the pool is. Everything that asks "what day is it?" asks it here, not
- *  of the server, which may well be in another country. */
-export const SCHOOL_TIMEZONE = "Europe/Dublin";
 
 /** Date-only columns (`@db.Date`) come back as a `Date` at **UTC midnight**.
  *  Formatting one in local time shows the previous day anywhere west of
@@ -65,6 +65,13 @@ export function minutesNow(now: Date = new Date()): number {
  *  *local* midnight and lands on the wrong day for half the world. */
 export function parseDateOnly(iso: string): Date {
   return new Date(`${iso}T00:00:00.000Z`);
+}
+
+/** Validate the calendar day as well as its shape; Date normalises 31 February. */
+export function isDateOnly(value: unknown): value is string {
+  if (typeof value !== "string" || !/^\d{4}-\d{2}-\d{2}$/.test(value)) return false;
+  const date = parseDateOnly(value);
+  return Number.isFinite(date.getTime()) && toDateOnlyString(date) === value;
 }
 
 /** A `@db.Date` value back to `YYYY-MM-DD`, for round-tripping through a URL

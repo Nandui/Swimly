@@ -10,7 +10,7 @@ import { Lead, Num } from "@/components/ui-kit/prose";
 import { Tag } from "@/components/ui-kit/tag";
 import { AddRole, DeleteRole, EditRole } from "@/components/staff/role-actions";
 import { screenPage } from "@/lib/page-guards";
-import { permissionCountLabel, roleReach } from "@/lib/staff/constants";
+import { STAFF_STATUS_META, permissionCountLabel, roleReach } from "@/lib/staff/constants";
 import { listRoles, type RoleRow } from "@/lib/staff/data/roles";
 import { PERMISSIONS, ROLE_HOMES, expandPermissions, isRoleHome } from "@/lib/staff/permissions";
 import { cleanScreens, screenMeta } from "@/lib/staff/screens";
@@ -68,13 +68,14 @@ function RoleRowItem({ role }: { role: RoleRow }) {
     <Item
       as="li"
       align="start"
+      className="max-sm:flex-col max-sm:items-stretch"
       label={
         <HStack gap={2} vAlign="center" wrap="wrap">
           <Text type="large" weight="semibold">
             {role.name}
           </Text>
           <Tag color={reach.color}>{reach.label}</Tag>
-          {role.isSystem ? <Tag color="gray">Built in</Tag> : null}
+          {role.isSystem ? <Tag color={STAFF_STATUS_META.builtInRole.color}>{STAFF_STATUS_META.builtInRole.label}</Tag> : null}
         </HStack>
       }
       description={
@@ -95,7 +96,7 @@ function RoleRowItem({ role }: { role: RoleRow }) {
               : screens.map((key) => screenMeta(key).label).join(", ")}
           </Text>
           {granted.length === 0 ? (
-            <Text type="supporting">Reads everything, changes nothing.</Text>
+            <Text type="supporting">Reads the screens above, changes nothing.</Text>
           ) : (
             <Collapsible
               defaultIsOpen={false}

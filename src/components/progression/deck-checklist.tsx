@@ -1,7 +1,7 @@
 "use client";
 
 import * as React from "react";
-import { Check, ChevronLeft, ChevronRight } from "lucide-react";
+import { Check, ChevronLeft, ChevronRight, Undo2 } from "lucide-react";
 import { Banner } from "@astryxdesign/core/Banner";
 import { Button } from "@astryxdesign/core/Button";
 import { Card } from "@astryxdesign/core/Card";
@@ -18,11 +18,8 @@ import {
   SegmentedControlItem,
 } from "@astryxdesign/core/SegmentedControl";
 import { VisuallyHidden } from "@astryxdesign/core/VisuallyHidden";
-import {
-  OFFLINE_MESSAGE,
-  SaveBar,
-  withTimeout,
-} from "@/components/attendance/register-form";
+import { SaveBar } from "@/components/attendance/register-form";
+import { SAVE_TIMEOUT_MS, SAVE_UNCONFIRMED_MESSAGE, withTimeout } from "@/lib/save-feedback";
 import { Num } from "@/components/ui-kit/prose";
 import { Tag } from "@/components/ui-kit/tag";
 import type {
@@ -32,14 +29,16 @@ import type {
 import { saveClassAssessment } from "@/lib/progression/actions/assess";
 import { toast } from "@/lib/toast";
 import { Icon } from "@astryxdesign/core/Icon";
+import { ATTENDANCE_STATUS_META } from "@/lib/attendance/constants";
+import { ENROLMENT_STATUS_META, PLACEMENT_META } from "@/lib/enrolment/constants";
 
 /** The checklist as the deck uses it: one competency at a time, across the
  *  whole class.
  *
  *  A lesson works like that — the instructor runs a drill, then marks who
  *  got it — so the competency is the unit of the moment and the swimmers
- *  are the list. Each swimmer is one row with two big buttons; a second tap
- *  on the same button takes the mark back. Every change across every
+ *  are the list. Each swimmer is one row with two big buttons and an explicit
+ *  clear action. Every change across every
  *  competency sits behind one Save, mirrored to `localStorage` so a
  *  dropped connection or a closed tab loses nothing.
  *
@@ -77,7 +76,6 @@ const DOT: Record<CompetencyStatus, "success" | "warning"> = {
   ACHIEVED: "success",
 };
 
-const SAVE_TIMEOUT_MS = 15_000;
 
 type Marks = Map<string, Map<string, Choice>>;
 type Stored = Record<string, Record<string, Choice>>;
@@ -86,7 +84,11 @@ function storageKey(courseId: string, date: string) {
   return `swimly:assess:${courseId}:${date}`;
 }
 
-export function DeckChecklist({
+export function DeckChecklist(props: React.ComponentProps<typeof DeckChecklistState>) {
+  return <DeckChecklistState key={`${props.courseId}:${props.date}:${props.levelId}`} {...props} />;
+}
+
+function DeckChecklistState({
   courseId,
   date,
   levelId,
@@ -125,6 +127,8 @@ export function DeckChecklist({
   // visit: both change what the bar at the bottom should say.
   const [restored, setRestored] = React.useState(false);
   const [saved, setSaved] = React.useState(false);
+  const [storageUnavailable, setStorageUnavailable] = React.useState(false);
+  const [dirty, setDirty] = React.useState(false);
 
   // Who was in the water. Before attendance is taken nobody is ruled out.
   const inToday = React.useCallback(
@@ -154,36 +158,40 @@ export function DeckChecklist({
     try {
       raw = window.localStorage.getItem(key);
     } catch {
+      // localStorage is an external store unavailable during server rendering.
+      // eslint-disable-next-line react-hooks/set-state-in-effect
+      setStorageUnavailable(true);
       return;
     }
-    if (!raw) return;
+    if (!raw || readOnly) return;
     try {
       const stored = JSON.parse(raw) as Stored;
-      // eslint-disable-next-line react-hooks/set-state-in-effect
       setMarks((previous) => {
         const next: Marks = new Map(previous);
         for (const [studentId, byCompetency] of Object.entries(stored)) {
           const row = next.get(studentId);
           if (!row) continue;
           const copy = new Map(row);
+          if (!byCompetency || typeof byCompetency !== "object") continue;
           for (const [competencyId, status] of Object.entries(byCompetency)) {
-            if (copy.has(competencyId)) copy.set(competencyId, status);
+            if (copy.has(competencyId) && (status === null || status === "WORKING_ON" || status === "ACHIEVED")) copy.set(competencyId, status);
           }
           next.set(studentId, copy);
         }
         return next;
       });
       setRestored(true);
+      setDirty(true);
     } catch {
-      window.localStorage.removeItem(key);
+      try { window.localStorage.removeItem(key); } catch { setStorageUnavailable(true); }
     }
-  }, [key]);
+  }, [key, readOnly]);
 
   // After a save revalidates, adopt what the server now says.
   const [syncedTo, setSyncedTo] = React.useState(initial);
   if (syncedTo !== initial) {
     setSyncedTo(initial);
-    setMarks(initial);
+    if (!dirty) setMarks(initial);
   }
 
   const changes = React.useMemo(() => {
@@ -214,23 +222,21 @@ export function DeckChecklist({
       if (Object.keys(diff).length === 0) window.localStorage.removeItem(key);
       else window.localStorage.setItem(key, JSON.stringify(diff));
     } catch {
-      // Storage blocked: the marks still live in the tab until saved.
+      setStorageUnavailable(true);
     }
   }
 
   function update(mutate: (next: Marks) => void) {
-    setMarks((previous) => {
-      const next: Marks = new Map();
-      for (const [studentId, row] of previous)
-        next.set(studentId, new Map(row));
-      mutate(next);
-      remember(next);
-      return next;
-    });
+    const next: Marks = new Map();
+    for (const [studentId, row] of marks) next.set(studentId, new Map(row));
+    mutate(next);
+    remember(next);
+    setMarks(next);
+    setDirty(true);
+    setSaved(false);
   }
 
-  /** The group reports the next selection: a status, or null when the
-   *  pressed button was tapped again and the mark is taken back. */
+  /** The segmented control selects a status; the clear action passes null. */
   function choose(studentId: string, competencyId: string, status: Choice) {
     update((next) => {
       next.get(studentId)?.set(competencyId, status);
@@ -254,7 +260,7 @@ export function DeckChecklist({
           SAVE_TIMEOUT_MS,
         );
       } catch {
-        startTransition(() => setError(OFFLINE_MESSAGE));
+        startTransition(() => setError(SAVE_UNCONFIRMED_MESSAGE));
         return;
       }
       if (result.ok) {
@@ -268,6 +274,7 @@ export function DeckChecklist({
           setError(null);
           setRestored(false);
           setSaved(true);
+          setDirty(false);
         });
       } else {
         startTransition(() => setError(result.error));
@@ -292,7 +299,8 @@ export function DeckChecklist({
     );
   }
 
-  const competency = competencies[current];
+  const currentIndex = Math.min(current, competencies.length - 1);
+  const competency = competencies[currentIndex];
   const achievedHere = here.filter(
     (s) => marks.get(s.studentId)?.get(competency.id) === "ACHIEVED",
   ).length;
@@ -328,10 +336,10 @@ export function DeckChecklist({
             >
               {swimmer.name}
             </Text>
-            {late ? <Tag color="orange">Late</Tag> : null}
-            {swimmer.completed ? <Tag color="blue">Completed</Tag> : null}
+            {late ? <Tag color={ATTENDANCE_STATUS_META.LATE.color}>{ATTENDANCE_STATUS_META.LATE.label}</Tag> : null}
+            {swimmer.completed ? <Tag color={ENROLMENT_STATUS_META.COMPLETED.color}>{ENROLMENT_STATUS_META.COMPLETED.label}</Tag> : null}
             {swimmer.offLevel ? (
-              <Tag color="purple">Placed at another level</Tag>
+              <Tag color={PLACEMENT_META.otherLevel.color}>{PLACEMENT_META.otherLevel.label}</Tag>
             ) : null}
           </HStack>
         }
@@ -345,7 +353,7 @@ export function DeckChecklist({
                 label={`${competency.name} — ${swimmer.name}`}
                 size="lg"
                 value={value ?? ""}
-                isDisabled={readOnly}
+                isDisabled={readOnly || pending}
                 onChange={(next) =>
                   choose(
                     swimmer.studentId,
@@ -362,6 +370,9 @@ export function DeckChecklist({
                   />
                 ))}
               </SegmentedControl>
+              {value !== null && !readOnly ? (
+                <IconButton label={`Clear ${competency.name} for ${swimmer.name}`} tooltip="Clear mark" icon={<Icon icon={Undo2} size="sm" />} variant="ghost" isDisabled={pending} onClick={() => choose(swimmer.studentId, competency.id, null)} />
+              ) : null}
             </HStack>
           </VStack>
         }
@@ -375,7 +386,7 @@ export function DeckChecklist({
           already done. The strip scrolls under the thumb on a phone. */}
       <TabList
         aria-label="Competencies"
-        value={String(current)}
+        value={String(currentIndex)}
         onChange={(next) => setCurrent(Number(next))}
         overflow="scroll"
         size="lg"
@@ -401,7 +412,7 @@ export function DeckChecklist({
             <StackItem size="fill">
               <VStack gap={1}>
                 <Text type="supporting" hasTabularNumbers>
-                  Competency {current + 1} of {competencies.length}
+                  Competency {currentIndex + 1} of {competencies.length}
                 </Text>
                 <Heading level={2} id="deck-competency">
                   {competency.name}
@@ -428,17 +439,17 @@ export function DeckChecklist({
                 variant="secondary"
                 size="lg"
                 icon={<Icon icon={ChevronLeft} size="md" />}
-                isDisabled={current === 0}
-                onClick={() => setCurrent((i) => Math.max(0, i - 1))}
+                isDisabled={currentIndex === 0}
+                onClick={() => setCurrent(Math.max(0, currentIndex - 1))}
               />
               <IconButton
                 label="Next competency"
                 variant="secondary"
                 size="lg"
                 icon={<Icon icon={ChevronRight} size="md" />}
-                isDisabled={current === competencies.length - 1}
+                isDisabled={currentIndex === competencies.length - 1}
                 onClick={() =>
-                  setCurrent((i) => Math.min(competencies.length - 1, i + 1))
+                  setCurrent(Math.min(competencies.length - 1, currentIndex + 1))
                 }
               />
             </HStack>
@@ -455,6 +466,7 @@ export function DeckChecklist({
                 size="lg"
                 icon={<Icon icon={Check} size="sm" />}
                 onClick={() => everyone(competency.id, "ACHIEVED")}
+                isDisabled={pending}
               />
             </HStack>
           )}
@@ -495,6 +507,7 @@ export function DeckChecklist({
       {error ? (
         <Banner status="error" title={error} collapsible={false} />
       ) : null}
+      {storageUnavailable && !readOnly ? <Banner status="warning" title="This browser cannot keep a backup. Keep this tab open until marks are saved." collapsible={false} /> : null}
 
       {/* One bar. Save while there is something to save; Done once a save
           has landed; and a quiet way back before anything has been marked,

@@ -1,11 +1,10 @@
 import type { DayOfWeek } from "@/generated/prisma/client";
-import { parseDateOnly, toDateOnlyString, today, weekdayOf } from "@/lib/format";
+import { isDateOnly, parseDateOnly, toDateOnlyString, today, weekdayOf } from "@/lib/format";
 
-const ISO_DATE = /^\d{4}-\d{2}-\d{2}$/;
 const DAY_MS = 24 * 60 * 60 * 1000;
 
 export function isIsoDate(value: unknown): value is string {
-  return typeof value === "string" && ISO_DATE.test(value);
+  return isDateOnly(value);
 }
 
 /** The last time this class actually ran, on or before `from`.

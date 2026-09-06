@@ -17,11 +17,15 @@
  *      const session = await requirePermission("thing.manage"); // 1. authorize first
  *      const parsed = thingSchema.safeParse(input);    // 2. validate
  *      if (!parsed.success) return fail(parsed.error.issues[0].message);
- *      const existing = await prisma.thing.findUnique({ where: { id } });
- *      if (!existing) return fail("That no longer exists.");
- *                                                      // 3. business guards
- *      const thing = await prisma.thing.update(...);   // 4. write
- *      await logAudit({ ... });                        // 5. audit the change
+ *      const result = await prisma.$transaction(async (tx) => {
+ *        const existing = await tx.thing.findUnique({ where: { id, clubId } });
+ *        if (!existing) return fail("That no longer exists.");
+ *                                                     // 3. business guards
+ *        await tx.thing.update(...);                  // 4. write
+ *        await logAudit({ ... }, tx);                  // 5. audit atomically
+ *        return ok();
+ *      });
+ *      if (!result.ok) return result;
  *      revalidatePath("/things");                      // 6. refresh
  *      return ok();
  *    }
@@ -37,7 +41,7 @@ export function ok(): ActionResult {
 }
 
 /** @param error One sentence, addressed to the person, ending in a full stop. */
-export function fail(error: string): ActionResult {
+export function fail(error: string): Extract<ActionResult, { ok: false }> {
   return { ok: false, error };
 }
 

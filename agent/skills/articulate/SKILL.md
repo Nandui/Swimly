@@ -1,6 +1,22 @@
 ---
-description: "Design the words in a product — labels, instructions, errors, confirmations, empty states, onboarding copy, tooltips, voice and tone frameworks, and content models. UX writing and content strategy as a deep discipline. Trigger when writing or reviewing UI copy, error messages, empty states, onboarding text, CTAs, tooltips, confirmation dialogs, or any user-facing text in a product. Also trigger for voice and tone frameworks, content models, microcopy patterns, inclusive language guidance, or asking \"what should this say?\" and \"how should we sound?\" Use this skill any time the words in an interface are the problem — not the flow they live in, not the structure they navigate, not the visual presentation.\n"
+name: articulate
+description: >
+  Design the words in a product — labels, instructions, errors, confirmations, empty states,
+  onboarding copy, tooltips, voice and tone frameworks, and content models. UX writing and
+  content strategy as a deep discipline. Trigger when writing or reviewing UI copy, error
+  messages, empty states, onboarding text, CTAs, tooltips, confirmation dialogs, or any
+  user-facing text in a product. Also trigger for voice and tone frameworks, content models,
+  microcopy patterns, inclusive language guidance, or asking "what should this say?" and
+  "how should we sound?" Use this skill any time the words in an interface are the problem —
+  not the flow they live in, not the structure they navigate, not the visual presentation.
+metadata:
+  upstream-version: "1.6.0"
 ---
+
+Read [Swimly skill operating guidance](../../../SKILLS.md) once before using
+this skill. It scopes the workflow, output templates and tool examples below;
+load only the sections and references relevant to the requested deliverable.
+
 # Articulate
 
 ## Overview

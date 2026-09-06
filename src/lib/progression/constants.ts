@@ -14,6 +14,17 @@ export const COMPETENCY_STATUS_META: Record<
 
 export const NOT_ASSESSED = "Not assessed";
 
+export const LEVEL_PROGRESS_META = {
+  graduated: { label: "Graduated", color: "blue" },
+  eligible: { label: "Ready to complete", color: "green" },
+  inProgress: { label: "In progress", color: "yellow" },
+} as const satisfies Record<string, { label: string; color: TagColor }>;
+
+export const COMPLETION_META = {
+  earned: { color: "green" },
+  override: { color: "orange" },
+} as const satisfies Record<string, { color: TagColor }>;
+
 /** The order the three choices appear on the assessment control. */
 export const ASSESSMENT_CHOICES = ["NONE", "WORKING_ON", "ACHIEVED"] as const;
 export type AssessmentChoice = (typeof ASSESSMENT_CHOICES)[number];

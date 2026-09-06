@@ -7,9 +7,13 @@ description: >
   translating research into briefs, strategic framing sessions, opportunity
   assessments, project scoping, stakeholder alignment, and competitive
   analysis—even if the user doesn't explicitly say "strategize."
-version: 1.6.0
-user-invocable: true
+metadata:
+  upstream-version: "1.6.0"
 ---
+
+Read [Swimly skill operating guidance](../../../SKILLS.md) once before using
+this skill. It scopes the workflow, output templates and tool examples below;
+load only the sections and references relevant to the requested deliverable.
 
 # Strategize — Frame the Problem
 

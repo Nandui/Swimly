@@ -1,6 +1,26 @@
 ---
-description: "Structured UX evaluation that produces quantitative assessments, identifies specific issues, and routes to the right Intent skill for resolution. Part of the Intent design strategy system. Runs heuristic evaluations, cognitive walkthroughs, anti-pattern detection, and task success analysis. Scores, categorizes, and prioritizes findings — then maps every issue to the skill that fixes it. Trigger on: UX review, design audit, heuristic evaluation, usability assessment, \"review this design\", \"what's wrong with this\", \"evaluate the experience\", \"is this accessible\", \"check for dark patterns\", \"how good is this UX\", \"rate this design\", \"find the problems\", or any request to systematically assess the quality of a user experience. This is the diagnostic entry point of the Intent system — the UX doctor that diagnoses issues and refers to specialists.\n"
+name: evaluate
+description: >
+  Structured UX evaluation that produces quantitative assessments, identifies
+  specific issues, and routes to the right Intent skill for resolution. Part of
+  the Intent design strategy system. Runs heuristic evaluations, cognitive
+  walkthroughs, anti-pattern detection, and task success analysis. Scores,
+  categorizes, and prioritizes findings — then maps every issue to the skill
+  that fixes it. Trigger on: UX review, design audit, heuristic evaluation,
+  usability assessment, "review this design", "what's wrong with this",
+  "evaluate the experience", "is this accessible", "check for dark patterns",
+  "how good is this UX", "rate this design", "find the problems", or any
+  request to systematically assess the quality of a user experience. This is
+  the diagnostic entry point of the Intent system — the UX doctor that
+  diagnoses issues and refers to specialists.
+metadata:
+  upstream-version: "1.6.0"
 ---
+
+Read [Swimly skill operating guidance](../../../SKILLS.md) once before using
+this skill. It scopes the workflow, output templates and tool examples below;
+load only the sections and references relevant to the requested deliverable.
+
 # Evaluate — Assess UX Quality
 
 ## Overview

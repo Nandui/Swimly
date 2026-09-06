@@ -61,6 +61,7 @@ export function SearchablePicker({
       placeholder={placeholder}
       hasSearch
       searchPlaceholder={searchPlaceholder}
+      emptyText={emptyText}
       emptySearchText={emptyText}
       width="100%"
     />

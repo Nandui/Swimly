@@ -32,11 +32,13 @@ export function Textarea({
 }: TextareaProps) {
   const [inner, setInner] = React.useState(defaultValue ?? "");
   const controlled = value !== undefined;
-  const ariaLabel = (rest as { "aria-label"?: string })["aria-label"];
+  const ariaLabel = rest["aria-label"];
   const text = label ?? ariaLabel ?? placeholder ?? name ?? "Field";
 
   return (
     <TextArea
+      {...rest}
+      {...{ required }}
       label={text}
       isLabelHidden={label === undefined}
       description={description}
