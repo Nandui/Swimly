@@ -2,21 +2,29 @@
 
 import * as React from "react";
 import { useRouter } from "next/navigation";
-import { toast } from "@/lib/toast";
-import { ArrowRight, Check, Loader2 } from "lucide-react";
-import { Button } from "@/components/ui/button";
-import { Textarea } from "@/components/ui/textarea";
+import { ArrowRight, Check } from "lucide-react";
+import { Banner } from "@astryxdesign/core/Banner";
+import { Button } from "@astryxdesign/core/Button";
+import { Collapsible } from "@astryxdesign/core/Collapsible";
+import { Item } from "@astryxdesign/core/Item";
+import { List } from "@astryxdesign/core/List";
+import { Section } from "@astryxdesign/core/Section";
+import { HStack, VStack } from "@astryxdesign/core/Stack";
+import { StatusDot } from "@astryxdesign/core/StatusDot";
+import { Text } from "@astryxdesign/core/Text";
+import { TextArea } from "@astryxdesign/core/TextArea";
+import { ToggleButton, ToggleButtonGroup } from "@astryxdesign/core/ToggleButton";
 import { Tag } from "@/components/ui-kit/tag";
 import type { AttendanceStatus } from "@/generated/prisma/client";
 import { markRegister } from "@/lib/attendance/actions/register";
 import { ATTENDANCE_ORDER, ATTENDANCE_STATUS_META } from "@/lib/attendance/constants";
 import type { RegisterLine } from "@/lib/attendance/data/register";
 import { ageInYears } from "@/lib/format";
-import { cn } from "@/lib/utils";
+import { toast } from "@/lib/toast";
 
 /** The pool-deck screen.
  *
- *  Touch first: nothing is hidden behind hover, the targets are 40px on a
+ *  Touch first: nothing is hidden behind hover, the targets are 44px on a
  *  phone, and an unmarked child starts absent, so the instructor ticks who is
  *  in the water. A saved register never says a child was here unless someone
  *  said so; "Everyone in" is the one tap for a full class.
@@ -27,12 +35,12 @@ import { cn } from "@/lib/utils";
  *  connection leaves the marks in the tab, and the `localStorage` mirror means
  *  they survive the tab being closed. */
 
-/** The chosen mark: the tag pair's fill, with its edge in the pair's ink so
- *  it reads in glare. A fill alone measured 1.1:1 against the page. */
-const SELECTED: Record<AttendanceStatus, string> = {
-  PRESENT: "bg-(--tag-green-bg) text-(--tag-green-fg) border-(--tag-green-fg)",
-  LATE: "bg-(--tag-orange-bg) text-(--tag-orange-fg) border-(--tag-orange-fg)",
-  ABSENT: "bg-(--tag-red-bg) text-(--tag-red-fg) border-(--tag-red-fg)",
+/** The mark as a status dot beside the name, so the row reads at a glance
+ *  in glare without the buttons having to carry colour. */
+const DOT: Record<AttendanceStatus, "success" | "warning" | "error"> = {
+  PRESENT: "success",
+  LATE: "warning",
+  ABSENT: "error",
 };
 
 /** How long a save may take before the phone is told to keep the marks
@@ -56,6 +64,27 @@ export function withTimeout<T>(promise: Promise<T>, ms: number): Promise<T> {
       }
     );
   });
+}
+
+/** The bar pinned to the foot of a deck form: what state the marks are in,
+ *  and the one button that saves them. Clears the home indicator on a
+ *  phone: the bottom padding grows by the safe-area inset, which is zero
+ *  everywhere that has none. */
+export function SaveBar({ status, children }: { status: string; children: React.ReactNode }) {
+  return (
+    <Section
+      dividers={["top"]}
+      paddingBlock={3}
+      className="sticky bottom-0 -mx-4 pb-[max(0.75rem,env(safe-area-inset-bottom))] md:-mx-8"
+    >
+      <HStack gap={3} vAlign="center" hAlign="between">
+        <Text color="secondary" hasTabularNumbers aria-live="polite">
+          {status}
+        </Text>
+        {children}
+      </HStack>
+    </Section>
+  );
 }
 
 type Mark = { status: AttendanceStatus; note: string };
@@ -208,149 +237,120 @@ export function RegisterForm({
   })).filter((entry) => entry.count > 0);
 
   return (
-    <div className="space-y-4">
-      <div className="flex flex-wrap items-center justify-between gap-x-6 gap-y-2">
-        <p className="text-sm text-muted-foreground">
+    <VStack gap={4}>
+      <HStack gap={4} wrap="wrap" vAlign="center" hAlign="between">
+        <Text as="p" display="block" color="secondary">
           {counts.map((entry, index) => (
-            <span key={entry.status}>
+            <React.Fragment key={entry.status}>
               {index > 0 ? ", " : ""}
-              <span className="font-medium text-foreground tabular-nums">{entry.count}</span>{" "}
+              <Text weight="medium" color="primary" hasTabularNumbers>
+                {entry.count}
+              </Text>{" "}
               {ATTENDANCE_STATUS_META[entry.status].label.toLowerCase()}
-            </span>
+            </React.Fragment>
           ))}
-        </p>
+        </Text>
         {readOnly ? null : (
-          <Button type="button" variant="outline" size="lg" onClick={() => setAll("PRESENT")}>
-            Everyone in
-          </Button>
+          <Button label="Everyone in" variant="secondary" size="lg" onClick={() => setAll("PRESENT")} />
         )}
-      </div>
+      </HStack>
 
-      <ul className="overflow-hidden rounded-md border">
+      <List hasDividers>
         {lines.map((line) => {
           const mark = marks.get(line.studentId);
           const name = `${line.firstName} ${line.lastName}`;
           return (
-            <li key={line.studentId} className="border-b p-3 last:border-0">
-              <div className="flex flex-wrap items-center justify-between gap-x-4 gap-y-2">
-                <div className="min-w-0">
-                  <p className="flex flex-wrap items-center gap-x-2 gap-y-1 text-[17px] font-semibold text-foreground">
+            <Item
+              key={line.studentId}
+              as="li"
+              align="start"
+              label={
+                <HStack gap={2} vAlign="center" wrap="wrap">
+                  {mark ? (
+                    <StatusDot
+                      variant={DOT[mark.status]}
+                      label={ATTENDANCE_STATUS_META[mark.status].label}
+                    />
+                  ) : null}
+                  <Text type="large" weight="semibold">
                     {name}
-                    {line.offRoster ? (
-                      <Tag color="gray">
-                        No longer in this class
-                      </Tag>
-                    ) : null}
-                  </p>
-                  <p className="mt-0.5 text-sm text-muted-foreground">
+                  </Text>
+                  {line.offRoster ? <Tag color="gray">No longer in this class</Tag> : null}
+                </HStack>
+              }
+              description={
+                <VStack gap={2}>
+                  <Text color="secondary">
                     {line.dateOfBirth ? `${ageInYears(line.dateOfBirth)} · ` : ""}
                     {line.levelName || "—"}
-                  </p>
+                  </Text>
                   {line.medicalNotes ? (
-                    <details className="mt-1">
-                      <summary className="inline-flex cursor-pointer list-none">
-                        <Tag color="red">Medical</Tag>
-                      </summary>
-                      <p className="mt-1 max-w-prose text-sm whitespace-pre-wrap text-(--tag-red-fg)">
+                    <Collapsible defaultIsOpen={false} trigger={<Tag color="red">Medical</Tag>}>
+                      <Text as="p" display="block" className="max-w-prose whitespace-pre-wrap">
                         {line.medicalNotes}
-                      </p>
-                    </details>
+                      </Text>
+                    </Collapsible>
                   ) : null}
-                </div>
-
-                <div
-                  role="group"
-                  aria-label={`Attendance for ${name}`}
-                  className="flex w-full gap-1 sm:w-auto"
-                >
-                  {ATTENDANCE_ORDER.map((status) => {
-                    const active = mark?.status === status;
-                    return (
-                      <button
+                  <ToggleButtonGroup
+                    label={`Attendance for ${name}`}
+                    type="single"
+                    size="lg"
+                    value={mark?.status ?? null}
+                    isDisabled={readOnly}
+                    onChange={(value) => {
+                      if (typeof value === "string") set(line.studentId, value as AttendanceStatus);
+                    }}
+                  >
+                    {ATTENDANCE_ORDER.map((status) => (
+                      <ToggleButton
                         key={status}
-                        type="button"
-                        disabled={readOnly}
-                        aria-pressed={active}
-                        aria-label={`${ATTENDANCE_STATUS_META[status].label} — ${name}`}
-                        onClick={() => set(line.studentId, status)}
-                        className={cn(
-                          "inline-flex h-11 flex-1 items-center justify-center gap-1 rounded-md border text-sm font-medium transition-colors sm:h-9 sm:w-24 sm:flex-none",
-                          "focus-ring",
-                          "disabled:pointer-events-none disabled:opacity-60",
-                          active
-                            ? cn(SELECTED[status], "border-2")
-                            : "border-input text-muted-foreground hover:bg-muted hover:text-foreground"
-                        )}
+                        value={status}
+                        label={ATTENDANCE_STATUS_META[status].label}
+                        pressedIcon={<Check className="size-4" aria-hidden />}
                       >
-                        {active ? <Check aria-hidden="true" className="size-4" /> : null}
                         {ATTENDANCE_STATUS_META[status].label}
-                      </button>
-                    );
-                  })}
-                </div>
-              </div>
-            </li>
+                      </ToggleButton>
+                    ))}
+                  </ToggleButtonGroup>
+                </VStack>
+              }
+            />
           );
         })}
-      </ul>
+      </List>
 
-      <div className="space-y-1.5">
-        <label htmlFor="classNote" className="block text-sm font-medium text-foreground">
-          Anything about the class itself
-        </label>
-        <Textarea
-          id="classNote"
-          value={note}
-          disabled={readOnly}
-          onChange={(event) => {
-            setNote(event.target.value);
-            setDirty(true);
-          }}
-          rows={2}
-          placeholder="Pool closed — no class this week"
-        />
-      </div>
+      <TextArea
+        label="Anything about the class itself"
+        value={note}
+        isDisabled={readOnly}
+        onChange={(next) => {
+          setNote(next);
+          setDirty(true);
+        }}
+        rows={2}
+        placeholder="Pool closed — no class this week"
+        width="100%"
+      />
 
-      {error ? (
-        <p
-          role="alert"
-          className="rounded bg-(--tag-red-bg) px-2.5 py-1.5 text-sm text-(--tag-red-fg)"
-        >
-          {error}
-        </p>
-      ) : null}
+      {error ? <Banner status="error" title={error} collapsible={false} /> : null}
 
       {readOnly ? null : (
-        // Clears the home indicator on a phone: the bottom padding grows by
-        // the safe-area inset, which is zero everywhere that has none.
-        <div className="sticky bottom-0 -mx-4 flex items-center justify-between gap-3 border-t bg-background px-4 pt-3 pb-[max(0.75rem,env(safe-area-inset-bottom))] md:-mx-8 md:px-8">
-          <p aria-live="polite" className="text-sm text-muted-foreground">
-            {restored
-              ? "Kept on this phone, not saved yet"
-              : dirty
-                ? "Not saved yet"
-                : "Up to date"}
-          </p>
-          <Button type="button" onClick={save} disabled={pending}>
-            {pending ? (
-              <>
-                <Loader2 className="size-4 animate-spin" />
-                Saving…
-              </>
-            ) : continueHref ? (
-              <>
-                Save and continue
-                <ArrowRight className="size-4" />
-              </>
-            ) : (
-              <>
-                <Check className="size-4" />
-                Save attendance
-              </>
-            )}
-          </Button>
-        </div>
+        <SaveBar
+          status={
+            restored ? "Kept on this phone, not saved yet" : dirty ? "Not saved yet" : "Up to date"
+          }
+        >
+          <Button
+            label={pending ? "Saving…" : continueHref ? "Save and continue" : "Save attendance"}
+            variant="primary"
+            size="lg"
+            onClick={save}
+            isLoading={pending}
+            icon={continueHref ? undefined : <Check className="size-4" aria-hidden />}
+            endContent={continueHref ? <ArrowRight className="size-4" aria-hidden /> : undefined}
+          />
+        </SaveBar>
       )}
-    </div>
+    </VStack>
   );
 }

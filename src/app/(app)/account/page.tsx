@@ -1,5 +1,10 @@
 import type { Metadata } from "next";
+import { Item } from "@astryxdesign/core/Item";
+import { List } from "@astryxdesign/core/List";
+import { VStack } from "@astryxdesign/core/Stack";
+import { Heading } from "@astryxdesign/core/Text";
 import { PageHeader } from "@/components/ui-kit/page-header";
+import { Lead, Num } from "@/components/ui-kit/prose";
 import { Tag } from "@/components/ui-kit/tag";
 import { ChangePasswordForm } from "@/components/staff/change-password-form";
 import { ThemeToggle } from "@/components/theme-toggle";
@@ -23,51 +28,50 @@ export default async function AccountPage() {
   const granted = PERMISSIONS.filter((permission) => held.has(permission.key));
 
   return (
-    <div className="space-y-6">
+    <VStack gap={6}>
       <PageHeader title="Account" description="Your sign-in details, and what you may do." />
 
-      <p className="max-w-prose text-sm text-muted-foreground">
-        Signed in as <span className="font-medium text-foreground">{session.user.name}</span> (
-        {session.user.email}), on the{" "}
+      <Lead>
+        Signed in as <Num>{session.user.name}</Num> ({session.user.email}), on the{" "}
         <Tag color={reach.color}>{session.user.roleName}</Tag> role. Only someone who can manage
         accounts can change your role or your email.
-      </p>
+      </Lead>
 
-      <section className="space-y-3">
-        <h2 className="text-sm font-semibold text-foreground">What you can do</h2>
+      <VStack gap={3} as="section">
+        <Heading level={2}>What you can do</Heading>
         {granted.length === 0 ? (
-          <p className="max-w-prose text-sm text-muted-foreground">
-            You can look things up and change nothing. Swimmers, classes, the curriculum and$
+          <Lead>
+            You can look things up and change nothing. Swimmers, classes, the curriculum and
             attendance are all readable.
-          </p>
+          </Lead>
         ) : (
-          <ul className="overflow-hidden rounded-md border">
+          <List hasDividers>
             {granted.map((permission) => (
-              <li key={permission.key} className="border-b p-3 last:border-0">
-                <p className="text-sm font-medium text-foreground">{permission.label}</p>
-                <p className="mt-0.5 text-xs text-muted-foreground">{permission.description}</p>
-              </li>
+              <Item
+                key={permission.key}
+                as="li"
+                label={permission.label}
+                description={permission.description}
+              />
             ))}
-          </ul>
+          </List>
         )}
-      </section>
+      </VStack>
 
-      <section className="space-y-3">
-        <h2 className="text-sm font-semibold text-foreground">Appearance</h2>
-        <p className="max-w-prose text-sm text-muted-foreground">
-          Light or dark, or whatever your device is set to. Remembered in this browser only.
-        </p>
+      <VStack gap={3} as="section">
+        <Heading level={2}>Appearance</Heading>
+        <Lead>Light or dark, or whatever your device is set to. Remembered in this browser only.</Lead>
         <ThemeToggle />
-      </section>
+      </VStack>
 
-      <section className="space-y-3">
-        <h2 className="text-sm font-semibold text-foreground">Change your password</h2>
-        <p className="max-w-prose text-sm text-muted-foreground">
+      <VStack gap={3} as="section">
+        <Heading level={2}>Change your password</Heading>
+        <Lead>
           If someone set the one you are using, change it here — they chose it and it was never
           private. You stay signed in.
-        </p>
+        </Lead>
         <ChangePasswordForm />
-      </section>
-    </div>
+      </VStack>
+    </VStack>
   );
 }

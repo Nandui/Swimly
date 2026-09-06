@@ -1,10 +1,15 @@
-import Link from "next/link";
 import { CalendarCheck, ClipboardList, Waves } from "lucide-react";
+import { Button } from "@astryxdesign/core/Button";
+import { Item } from "@astryxdesign/core/Item";
+import { Link } from "@astryxdesign/core/Link";
+import { List } from "@astryxdesign/core/List";
+import { HStack, VStack } from "@astryxdesign/core/Stack";
+import { Heading, Text } from "@astryxdesign/core/Text";
+import { ActivityTable } from "@/components/activity-table";
 import { EmptyState } from "@/components/ui-kit/empty-state";
 import { PageHeader } from "@/components/ui-kit/page-header";
+import { Alert, Lead, Num } from "@/components/ui-kit/prose";
 import { Tag } from "@/components/ui-kit/tag";
-import { Button } from "@/components/ui/button";
-import { ActivityTable } from "@/components/activity-table";
 import { getRecentActivity } from "@/lib/activity/data/audit-log";
 import { DROP_OFF_STREAK } from "@/lib/attendance/constants";
 import { weekdayOfIso } from "@/lib/attendance/dates";
@@ -37,31 +42,24 @@ export default async function OverviewPage() {
   const outstanding = todaysClasses.filter((course) => !marked.has(course.id)).length;
 
   return (
-    <div className="space-y-8">
+    <VStack gap={8}>
       <PageHeader
         title="Overview"
         description={`${DAY_META[day].label}, ${formatDate(parseDateOnly(iso))}`}
       />
 
       {/* The stat sentence, not a row of tiles: counts read as prose, and only
-          genuine urgency gets semantic ink. */}
-      <p className="max-w-prose text-sm text-muted-foreground">
-        <span className="font-medium text-foreground tabular-nums">{students.active}</span> active{" "}
-        {students.active === 1 ? "swimmer" : "swimmers"} across{" "}
-        <span className="font-medium text-foreground tabular-nums">{courses.courses}</span>{" "}
-        {courses.courses === 1 ? "class" : "classes"}, holding{" "}
-        <span className="font-medium text-foreground tabular-nums">{courses.places}</span>{" "}
-        {courses.places === 1 ? "place" : "places"}.
+          genuine urgency gets a badge. */}
+      <Lead>
+        <Num>{students.active}</Num> active {students.active === 1 ? "swimmer" : "swimmers"} across{" "}
+        <Num>{courses.courses}</Num> {courses.courses === 1 ? "class" : "classes"}, holding{" "}
+        <Num>{courses.places}</Num> {courses.places === 1 ? "place" : "places"}.
         {manage && todaysClasses.length > 0 ? (
           outstanding > 0 ? (
             <>
               {" "}
-              Attendance is still to take for{" "}
-              <span className="font-medium text-(--tag-orange-fg) tabular-nums">
-                {outstanding}
-              </span>{" "}
-              of today&rsquo;s {todaysClasses.length}{" "}
-              {todaysClasses.length === 1 ? "class" : "classes"}.
+              Attendance is still to take for <Alert>{outstanding}</Alert> of today&rsquo;s{" "}
+              {todaysClasses.length} {todaysClasses.length === 1 ? "class" : "classes"}.
             </>
           ) : (
             <> Attendance is in for every class today.</>
@@ -70,118 +68,113 @@ export default async function OverviewPage() {
         {dropOffs.length > 0 ? (
           <>
             {" "}
-            <span className="font-medium text-(--tag-red-fg) tabular-nums">
-              {dropOffs.length}
-            </span>{" "}
+            <Alert tone="error">{dropOffs.length}</Alert>{" "}
             {dropOffs.length === 1 ? "swimmer has" : "swimmers have"} missed the last{" "}
             {DROP_OFF_STREAK} or more.
           </>
         ) : null}
-      </p>
+      </Lead>
 
       {manage ? (
-        <section className="space-y-3">
-          <div className="flex flex-wrap items-center justify-between gap-3">
-            <h2 className="text-sm font-semibold text-foreground">Today</h2>
+        <VStack gap={3} as="section">
+          <HStack gap={3} vAlign="center" hAlign="between" wrap="wrap">
+            <Heading level={2}>Today</Heading>
             {todaysClasses.length > 0 ? (
-              <Button asChild variant="outline" size="sm">
-                <Link href="/today">
-                  <CalendarCheck className="size-4" />
-                  All of today
-                </Link>
-              </Button>
+              <Button
+                label="All of today"
+                variant="secondary"
+                size="sm"
+                href="/today"
+                icon={<CalendarCheck className="size-4" aria-hidden />}
+              />
             ) : null}
-          </div>
+          </HStack>
 
           {todaysClasses.length === 0 ? (
-            <p className="text-sm text-muted-foreground">Nothing is timetabled for today.</p>
+            <Text as="p" display="block" color="secondary">
+              Nothing is timetabled for today.
+            </Text>
           ) : (
-            <ul className="overflow-hidden rounded-md border">
+            <List hasDividers>
               {todaysClasses.map((course) => {
                 const done = marked.has(course.id);
                 return (
-                  <li
+                  <Item
                     key={course.id}
-                    className="flex flex-wrap items-center justify-between gap-x-4 gap-y-1 border-b p-3 transition-colors last:border-0 hover:bg-muted"
-                  >
-                    <div className="min-w-0">
-                      <p className="text-sm font-medium text-foreground">
-                        <span className="tabular-nums">{formatTime(course.startMinutes)}</span>{" "}
+                    as="li"
+                    align="center"
+                    label={
+                      <HStack gap={2} vAlign="center" wrap="wrap">
+                        <Text weight="medium" hasTabularNumbers>
+                          {formatTime(course.startMinutes)}
+                        </Text>
                         {linkCourses ? (
-                          <Link
-                            href={`/courses/${course.id}`}
-                            className="underline-offset-2 hover:underline"
-                          >
+                          <Link href={`/courses/${course.id}`} weight="medium">
                             {courseName(course)}
                           </Link>
                         ) : (
-                          courseName(course)
+                          <Text weight="medium">{courseName(course)}</Text>
                         )}
-                        <Tag color={done ? "green" : "yellow"} className="ml-2">
+                        <Tag color={done ? "green" : "yellow"}>
                           {done ? "Attendance taken" : "Attendance not taken"}
                         </Tag>
-                      </p>
-                      <p className="mt-0.5 text-xs text-muted-foreground">
-                        {course.level.name} ·{" "}
-                        {capacityLabel(course._count.enrolments, course.capacity)}
-                        {course.instructor ? ` · ${course.instructor.name}` : ""}
-                      </p>
-                    </div>
-                    <Button asChild size="sm" variant={done ? "outline" : "default"}>
-                      {/* The same class page the deck opens: one destination
-                          for one job, whoever is doing it. */}
-                      <Link href={`/courses/${course.id}/class?date=${iso}`}>
-                        <ClipboardList className="size-4" />
-                        {done ? "Change attendance" : "Take attendance"}
-                      </Link>
-                    </Button>
-                  </li>
+                      </HStack>
+                    }
+                    description={`${course.level.name} · ${capacityLabel(course._count.enrolments, course.capacity)}${course.instructor ? ` · ${course.instructor.name}` : ""}`}
+                    endContent={
+                      // The same class page the deck opens: one destination
+                      // for one job, whoever is doing it.
+                      <Button
+                        label={done ? "Change attendance" : "Take attendance"}
+                        variant={done ? "secondary" : "primary"}
+                        size="sm"
+                        href={`/courses/${course.id}/class?date=${iso}`}
+                        icon={<ClipboardList className="size-4" aria-hidden />}
+                      />
+                    }
+                  />
                 );
               })}
-            </ul>
+            </List>
           )}
-        </section>
+        </VStack>
       ) : null}
 
       {/* The question a swim school actually asks, and the reason the register
           is worth taking at all. */}
       {dropOffs.length > 0 ? (
-        <section className="space-y-3">
-          <h2 className="text-sm font-semibold text-foreground">Stopped coming</h2>
-          <p className="max-w-prose text-sm text-muted-foreground">
+        <VStack gap={3} as="section">
+          <Heading level={2}>Stopped coming</Heading>
+          <Lead>
             Missed {DROP_OFF_STREAK} or more in a row. Worth a phone call before they are gone.
-          </p>
-          <ul className="overflow-hidden rounded-md border">
+          </Lead>
+          <List hasDividers>
             {dropOffs.map((drop) => (
-              <li
+              <Item
                 key={drop.studentId}
-                className="flex flex-wrap items-center justify-between gap-x-4 gap-y-1 border-b px-3 py-2 transition-colors last:border-0 hover:bg-muted"
-              >
-                <p className="text-sm font-medium text-foreground">
-                  <Link
-                    href={`/students/${drop.studentId}`}
-                    className="underline-offset-2 hover:underline"
-                  >
-                    {drop.name}
-                  </Link>
-                  <span className="ml-2 text-xs font-normal text-muted-foreground">
-                    {drop.courseName}
-                  </span>
-                </p>
-                <p className="text-xs text-muted-foreground">
-                  <span className="font-medium text-(--tag-red-fg) tabular-nums">
-                    {drop.missed}
-                  </span>{" "}
-                  missed · last in {formatDate(drop.lastSeen)}
-                </p>
-              </li>
+                as="li"
+                label={
+                  <HStack gap={2} vAlign="center" wrap="wrap">
+                    <Link href={`/students/${drop.studentId}`} weight="medium">
+                      {drop.name}
+                    </Link>
+                    <Text type="supporting">{drop.courseName}</Text>
+                  </HStack>
+                }
+                endContent={
+                  <HStack gap={1.5} vAlign="center">
+                    <Alert tone="error">{drop.missed} missed</Alert>
+                    <Text type="supporting">last in {formatDate(drop.lastSeen)}</Text>
+                  </HStack>
+                }
+              />
             ))}
-          </ul>
-        </section>
+          </List>
+        </VStack>
       ) : null}
 
-      <section className="space-y-3">
-        <h2 className="text-sm font-semibold text-foreground">Recent activity</h2>
+      <VStack gap={3} as="section">
+        <Heading level={2}>Recent activity</Heading>
         {recent.length === 0 ? (
           <EmptyState
             icon={Waves}
@@ -191,7 +184,7 @@ export default async function OverviewPage() {
         ) : (
           <ActivityTable entries={recent} />
         )}
-      </section>
-    </div>
+      </VStack>
+    </VStack>
   );
 }

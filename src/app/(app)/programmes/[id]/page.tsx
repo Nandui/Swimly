@@ -1,8 +1,14 @@
 import type { Metadata } from "next";
-import Link from "next/link";
 import { notFound } from "next/navigation";
-import { ChevronLeft } from "lucide-react";
+import { Item } from "@astryxdesign/core/Item";
+import { List } from "@astryxdesign/core/List";
+import { Section } from "@astryxdesign/core/Section";
+import { HStack, StackItem, VStack } from "@astryxdesign/core/Stack";
+import { Heading, Text } from "@astryxdesign/core/Text";
+import { BackLink } from "@/components/ui-kit/back-link";
+import { EmptyState } from "@/components/ui-kit/empty-state";
 import { PageHeader } from "@/components/ui-kit/page-header";
+import { Lead, Num } from "@/components/ui-kit/prose";
 import { Tag } from "@/components/ui-kit/tag";
 import { WrongClub } from "@/components/clubs/wrong-club";
 import { CopyProgramme } from "@/components/curriculum/copy-programme";
@@ -34,9 +40,6 @@ import { screenPage } from "@/lib/page-guards";
 
 export const metadata: Metadata = { title: "Programme" };
 
-const ROW_ACTIONS =
-  "flex shrink-0 items-center gap-0.5 max-md:gap-2 opacity-0 transition-opacity group-focus-within:opacity-100 group-hover:opacity-100 max-md:opacity-100";
-
 export default async function ProgrammePage(props: PageProps<"/programmes/[id]">) {
   await screenPage("programmes", "curriculum.manage");
   const { id } = await props.params;
@@ -62,15 +65,9 @@ export default async function ProgrammePage(props: PageProps<"/programmes/[id]">
   const otherClubs = clubs.filter((other) => other.id !== programme.clubId);
 
   return (
-    <div className="space-y-6">
-      <div>
-        <Link
-          href="/programmes"
-          className="mb-2 inline-flex items-center gap-1 text-sm text-muted-foreground underline-offset-2 hover:text-foreground hover:underline"
-        >
-          <ChevronLeft className="size-3.5" />
-          Programmes
-        </Link>
+    <VStack gap={6}>
+      <VStack gap={2}>
+        <BackLink href="/programmes">Programmes</BackLink>
         <PageHeader
           title={programme.name}
           description={programme.description ?? undefined}
@@ -89,29 +86,23 @@ export default async function ProgrammePage(props: PageProps<"/programmes/[id]">
             </>
           }
         />
-      </div>
+      </VStack>
 
-      <p className="max-w-prose text-sm text-muted-foreground">
-        <span className="font-medium text-foreground tabular-nums">{liveLevels.length}</span>{" "}
-        {liveLevels.length === 1 ? "level" : "levels"}, worked through in this order, with{" "}
-        <span className="font-medium text-foreground tabular-nums">{competencies}</span>{" "}
+      <Lead>
+        <Num>{liveLevels.length}</Num> {liveLevels.length === 1 ? "level" : "levels"}, worked
+        through in this order, with <Num>{competencies}</Num>{" "}
         {competencies === 1 ? "competency" : "competencies"} between them. Every competency in a
         level has to be signed off before a swimmer can complete it.
-      </p>
+      </Lead>
 
       {programme.levels.length === 0 ? (
-        <div className="rounded-md border border-dashed px-6 py-14 text-center">
-          <p className="text-sm font-medium text-foreground">No levels yet</p>
-          <p className="mx-auto mt-1 max-w-sm text-sm text-muted-foreground">
-            Levels are the rungs of the ladder. Add the first one and give it the competencies a
-            swimmer has to pass.
-          </p>
-          <div className="mt-4 flex justify-center">
-            <AddLevel programmeId={programme.id} />
-          </div>
-        </div>
+        <EmptyState
+          title="No levels yet"
+          hint="Levels are the rungs of the ladder. Add the first one and give it the competencies a swimmer has to pass."
+          action={<AddLevel programmeId={programme.id} />}
+        />
       ) : (
-        <div className="space-y-4">
+        <VStack gap={4}>
           {programme.levels.map((level, index) => (
             <LevelSection
               key={level.id}
@@ -120,55 +111,48 @@ export default async function ProgrammePage(props: PageProps<"/programmes/[id]">
               last={index === programme.levels.length - 1}
             />
           ))}
-        </div>
+        </VStack>
       )}
 
-      <section className="space-y-3">
-        <div className="flex flex-wrap items-center justify-between gap-2">
-          <h2 className="text-sm font-semibold text-foreground">Kinds of assessment</h2>
+      <VStack gap={3} as="section">
+        <HStack gap={2} vAlign="center" hAlign="between" wrap="wrap">
+          <Heading level={2}>Kinds of assessment</Heading>
           {programme.archivedAt ? null : (
             <AddAssessmentType programmeId={programme.id} programmeName={programme.name} />
           )}
-        </div>
-        <p className="max-w-prose text-sm text-muted-foreground">
+        </HStack>
+        <Lead>
           What an assessment session for this programme can be — new swimmers, mixed abilities.
           The desk picks one when adding a session.
-        </p>
+        </Lead>
         {assessmentTypes.length === 0 ? (
-          <p className="rounded-md border border-dashed px-6 py-8 text-center text-sm text-muted-foreground">
-            None yet. Add one and it becomes something a session can be.
-          </p>
+          <EmptyState compact title="None yet" hint="Add one and it becomes something a session can be." />
         ) : (
-          <ul className="overflow-hidden rounded-md border">
+          <List hasDividers>
             {assessmentTypes.map((type) => (
-              <li
+              <Item
                 key={type.id}
-                className="group flex items-start justify-between gap-3 border-b px-3 py-2 transition-colors last:border-0 hover:bg-muted"
-              >
-                <div className="min-w-0">
-                  <p className="text-sm text-foreground">
+                as="li"
+                align="start"
+                label={
+                  <HStack gap={2} vAlign="center" wrap="wrap">
                     {type.name}
-                    {type.archivedAt ? (
-                      <Tag color="gray" className="ml-2">
-                        Archived
-                      </Tag>
-                    ) : null}
-                  </p>
-                  <p className="mt-0.5 text-xs text-muted-foreground">
-                    {type.description ? `${type.description} · ` : ""}
-                    {type._count.sessions} {type._count.sessions === 1 ? "session" : "sessions"}
-                  </p>
-                </div>
-                <div className={ROW_ACTIONS}>
-                  <EditAssessmentType type={type} />
-                  <ArchiveAssessmentType type={type} sessions={type._count.sessions} />
-                </div>
-              </li>
+                    {type.archivedAt ? <Tag color="gray">Archived</Tag> : null}
+                  </HStack>
+                }
+                description={`${type.description ? `${type.description} · ` : ""}${type._count.sessions} ${type._count.sessions === 1 ? "session" : "sessions"}`}
+                endContent={
+                  <HStack gap={1} vAlign="center">
+                    <EditAssessmentType type={type} />
+                    <ArchiveAssessmentType type={type} sessions={type._count.sessions} />
+                  </HStack>
+                }
+              />
             ))}
-          </ul>
+          </List>
         )}
-      </section>
-    </div>
+      </VStack>
+    </VStack>
   );
 }
 
@@ -200,6 +184,9 @@ function numberLive(competencies: CompetencyDetail[]) {
   ];
 }
 
+/** One rung of the ladder: its head, then its competencies as rows, then
+ *  the way to add one. A Section rather than a Card: it is a region of the
+ *  page, not a thing to reorder on its own. */
 function LevelSection({
   level,
   first,
@@ -213,82 +200,84 @@ function LevelSection({
   const live = level.competencies.filter((c) => !c.archivedAt);
 
   return (
-    <section className="overflow-hidden rounded-md border">
-      <div className="group flex items-start gap-3 border-b bg-surface px-3 py-2">
-        <div className="min-w-0 flex-1">
-          <h2 className="text-sm font-semibold text-foreground">
-            {level.name}
-            {archived ? (
-              <Tag color="gray" className="ml-2">
-                Archived
-              </Tag>
-            ) : null}
-          </h2>
-          {level.description ? (
-            <p className="mt-0.5 text-xs text-muted-foreground">{level.description}</p>
-          ) : null}
-          <p className="mt-0.5 text-xs text-muted-foreground">
-            {competencyCountLabel(live.length)}
-            {level._count.courses > 0
-              ? ` · ${level._count.courses} ${level._count.courses === 1 ? "class" : "classes"}`
-              : ""}
-          </p>
-        </div>
-        <div className={ROW_ACTIONS}>
-          {archived ? null : <MoveLevel level={level} first={first} last={last} />}
-          <EditLevel level={level} />
-          <ArchiveLevel level={level} />
-        </div>
-      </div>
+    <Section padding={0} dividers={["top", "bottom"]}>
+      <VStack gap={0}>
+        <HStack gap={3} vAlign="start" paddingInline={3} paddingBlock={2}>
+          <StackItem size="fill">
+            <VStack gap={0.5}>
+              <Heading level={2}>
+                <HStack gap={2} vAlign="center" wrap="wrap">
+                  {level.name}
+                  {archived ? <Tag color="gray">Archived</Tag> : null}
+                </HStack>
+              </Heading>
+              {level.description ? (
+                <Text type="supporting" display="block">
+                  {level.description}
+                </Text>
+              ) : null}
+              <Text type="supporting" display="block">
+                {competencyCountLabel(live.length)}
+                {level._count.courses > 0
+                  ? ` · ${level._count.courses} ${level._count.courses === 1 ? "class" : "classes"}`
+                  : ""}
+              </Text>
+            </VStack>
+          </StackItem>
+          <HStack gap={1} vAlign="center">
+            {archived ? null : <MoveLevel level={level} first={first} last={last} />}
+            <EditLevel level={level} />
+            <ArchiveLevel level={level} />
+          </HStack>
+        </HStack>
 
-      {level.competencies.length === 0 ? (
-        <p className="px-3 py-6 text-center text-sm text-muted-foreground">
-          Nothing to pass yet. Add the first competency and it becomes what completing{" "}
-          {level.name} means.
-        </p>
-      ) : (
-        <ol>
-          {numberLive(level.competencies).map(({ competency, position, first, last }) => (
-            <li
-              key={competency.id}
-              className="group flex items-start gap-3 border-b px-3 py-2 transition-colors last:border-0 hover:bg-muted"
-            >
-              <span className="w-4 shrink-0 pt-0.5 text-xs text-muted-foreground tabular-nums">
-                {position ?? ""}
-              </span>
-              <div className="min-w-0 flex-1">
-                <p className="text-sm text-foreground">
-                  {competency.name}
-                  {competency.archivedAt ? (
-                    <Tag color="gray" className="ml-2">
-                      Archived
-                    </Tag>
-                  ) : null}
-                </p>
-                {competency.description ? (
-                  <p className="mt-0.5 text-xs text-muted-foreground">{competency.description}</p>
-                ) : null}
-              </div>
-              <div className={ROW_ACTIONS}>
-                {competency.archivedAt ? null : (
-                  <MoveCompetency competency={competency} first={first} last={last} />
-                )}
-                <EditCompetency competency={competency} />
-                <ArchiveCompetency
-                  competency={competency}
-                  assessed={competency._count.results}
-                />
-              </div>
-            </li>
-          ))}
-        </ol>
-      )}
+        {level.competencies.length === 0 ? (
+          <Text as="p" display="block" color="secondary" justify="center" className="px-3 py-6">
+            Nothing to pass yet. Add the first competency and it becomes what completing{" "}
+            {level.name} means.
+          </Text>
+        ) : (
+          <List hasDividers listStyle="none">
+            {numberLive(level.competencies).map(({ competency, position, first, last }) => (
+              <Item
+                key={competency.id}
+                as="li"
+                align="start"
+                marker={
+                  <Text type="supporting" hasTabularNumbers className="inline-block w-4">
+                    {position ?? ""}
+                  </Text>
+                }
+                label={
+                  <HStack gap={2} vAlign="center" wrap="wrap">
+                    {competency.name}
+                    {competency.archivedAt ? <Tag color="gray">Archived</Tag> : null}
+                  </HStack>
+                }
+                description={competency.description ?? undefined}
+                endContent={
+                  <HStack gap={1} vAlign="center">
+                    {competency.archivedAt ? null : (
+                      <MoveCompetency competency={competency} first={first} last={last} />
+                    )}
+                    <EditCompetency competency={competency} />
+                    <ArchiveCompetency
+                      competency={competency}
+                      assessed={competency._count.results}
+                    />
+                  </HStack>
+                }
+              />
+            ))}
+          </List>
+        )}
 
-      {archived ? null : (
-        <div className="border-t px-3 py-2">
-          <AddCompetency levelId={level.id} levelName={level.name} />
-        </div>
-      )}
-    </section>
+        {archived ? null : (
+          <HStack paddingInline={3} paddingBlock={2}>
+            <AddCompetency levelId={level.id} levelName={level.name} />
+          </HStack>
+        )}
+      </VStack>
+    </Section>
   );
 }

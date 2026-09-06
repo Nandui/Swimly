@@ -1,10 +1,21 @@
 import type { Metadata } from "next";
-import Link from "next/link";
 import { KeyRound, Users } from "lucide-react";
+import { Button } from "@astryxdesign/core/Button";
+import { HStack, VStack } from "@astryxdesign/core/Stack";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHeader,
+  TableHeaderCell,
+  TableRow,
+} from "@astryxdesign/core/Table";
+import { Heading, Text } from "@astryxdesign/core/Text";
+import { VisuallyHidden } from "@astryxdesign/core/VisuallyHidden";
 import { EmptyState } from "@/components/ui-kit/empty-state";
 import { PageHeader } from "@/components/ui-kit/page-header";
+import { Lead, Num } from "@/components/ui-kit/prose";
 import { Tag } from "@/components/ui-kit/tag";
-import { Button } from "@/components/ui/button";
 import {
   AddPerson,
   EditPerson,
@@ -31,35 +42,32 @@ export default async function StaffPage() {
   ).length;
 
   return (
-    <div className="space-y-6">
+    <VStack gap={6}>
       <PageHeader
         title="Staff"
         description="Who can sign in, and what each of them is allowed to change."
         actions={
-          <div className="flex items-center gap-2">
+          <>
             {can(session, "roles.manage") ? (
-              <Button asChild variant="outline" size="sm">
-                <Link href="/roles">
-                  <KeyRound className="size-4" />
-                  Roles
-                </Link>
-              </Button>
+              <Button
+                label="Roles"
+                variant="secondary"
+                href="/roles"
+                icon={<KeyRound className="size-4" aria-hidden />}
+              />
             ) : null}
             <AddPerson roles={roles} />
-          </div>
+          </>
         }
       />
 
-      <p className="max-w-prose text-sm text-muted-foreground">
-        <span className="font-medium text-foreground tabular-nums">{active.length}</span>{" "}
-        {active.length === 1 ? "person can" : "people can"} sign in, across{" "}
-        <span className="font-medium text-foreground tabular-nums">{roles.length}</span>{" "}
-        {roles.length === 1 ? "role" : "roles"}.{" "}
-        <span className="font-medium text-foreground tabular-nums">{keyholders}</span> of{" "}
-        {keyholders === 1 ? "them can" : "them can"} manage accounts. There is no sign-up and no
-        invitation email: you create the account with a password, hand it over, and they change it
-        from Account once they are in.
-      </p>
+      <Lead>
+        <Num>{active.length}</Num> {active.length === 1 ? "person can" : "people can"} sign in,
+        across <Num>{roles.length}</Num> {roles.length === 1 ? "role" : "roles"}.{" "}
+        <Num>{keyholders}</Num> of them can manage accounts. There is no sign-up and no invitation
+        email: you create the account with a password, hand it over, and they change it from
+        Account once they are in.
+      </Lead>
 
       {active.length === 0 ? (
         <EmptyState
@@ -73,16 +81,16 @@ export default async function StaffPage() {
       )}
 
       {inactive.length > 0 ? (
-        <section className="space-y-3">
-          <h2 className="text-sm font-semibold text-foreground">Deactivated</h2>
-          <p className="max-w-prose text-sm text-muted-foreground">
+        <VStack gap={3} as="section">
+          <Heading level={2}>Deactivated</Heading>
+          <Lead>
             They cannot sign in. Everything they recorded is still readable, and reactivating them
             gives the same account back.
-          </p>
+          </Lead>
           <PeopleTable people={inactive} roles={roles} currentUserId={session.user.id} />
-        </section>
+        </VStack>
       ) : null}
-    </div>
+    </VStack>
   );
 }
 
@@ -96,81 +104,64 @@ function PeopleTable({
   currentUserId?: string;
 }) {
   return (
-    <div className="overflow-hidden rounded-md border">
-      <table className="w-full text-sm">
-        <thead className="bg-surface">
-          <tr className="border-b">
-            <th
-              scope="col"
-              className="px-3 py-2 text-left text-xs font-medium text-muted-foreground"
-            >
-              Person
-            </th>
-            <th
-              scope="col"
-              className="px-3 py-2 text-left text-xs font-medium text-muted-foreground max-md:hidden"
-            >
-              Role
-            </th>
-            <th
-              scope="col"
-              className="px-3 py-2 text-left text-xs font-medium text-muted-foreground max-md:hidden"
-            >
-              Classes
-            </th>
-            <th scope="col" className="w-32 px-3 py-2">
-              <span className="sr-only">Actions</span>
-            </th>
-          </tr>
-        </thead>
-        <tbody>
-          {people.map((person) => {
-            const permissions = person.staffRole?.permissions ?? [];
-            const reach = roleReach(permissions);
-            return (
-              <tr
-                key={person.id}
-                className="group border-b transition-colors last:border-0 hover:bg-muted"
-              >
-                <td className="px-3 py-2 font-medium text-foreground">
-                  {person.name}
-                  {person.id === currentUserId ? (
-                    <span className="ml-1.5 text-xs font-normal text-muted-foreground">(you)</span>
-                  ) : null}
-                  {!person.hasPassword ? (
-                    <Tag color="yellow" className="ml-2">
-                      No password set
-                    </Tag>
-                  ) : null}
-                  <span className="mt-0.5 block text-xs font-normal text-muted-foreground">
-                    {person.email}
-                  </span>
-                  <span className="mt-0.5 block text-xs font-normal text-muted-foreground md:hidden">
-                    {person.staffRole?.name ?? "No role"} · {person._count.coursesTaught}{" "}
-                    {person._count.coursesTaught === 1 ? "class" : "classes"}
-                  </span>
-                </td>
-                <td className="px-3 py-2 max-md:hidden">
-                  <Tag color={reach.color}>{person.staffRole?.name ?? "No role"}</Tag>
-                  <span className="mt-0.5 block text-xs text-muted-foreground">
-                    {permissionCountLabel(permissions.length)}
-                  </span>
-                </td>
-                <td className="px-3 py-2 text-muted-foreground tabular-nums max-md:hidden">
-                  {person._count.coursesTaught}
-                </td>
-                <td className="px-3 py-2">
-                  <div className="flex items-center justify-end gap-0.5 max-md:gap-2 opacity-0 transition-opacity group-focus-within:opacity-100 group-hover:opacity-100 max-md:opacity-100">
-                    <ResetPersonPassword person={person} />
-                    <EditPerson person={person} roles={roles} />
-                    <SetPersonActive person={person} />
-                  </div>
-                </td>
-              </tr>
-            );
-          })}
-        </tbody>
-      </table>
-    </div>
+    <Table hasHover textOverflow="wrap">
+      <TableHeader>
+        <TableRow isHeaderRow>
+          <TableHeaderCell scope="col">Person</TableHeaderCell>
+          <TableHeaderCell scope="col" className="max-md:hidden">
+            Role
+          </TableHeaderCell>
+          <TableHeaderCell scope="col" className="max-md:hidden">
+            Classes
+          </TableHeaderCell>
+          <TableHeaderCell scope="col">
+            <VisuallyHidden>Actions</VisuallyHidden>
+          </TableHeaderCell>
+        </TableRow>
+      </TableHeader>
+      <TableBody>
+        {people.map((person) => {
+          const permissions = person.staffRole?.permissions ?? [];
+          const reach = roleReach(permissions);
+          const classes = person._count.coursesTaught;
+          return (
+            <TableRow key={person.id}>
+              <TableCell>
+                <HStack gap={2} vAlign="center" wrap="wrap">
+                  <Text weight="medium">{person.name}</Text>
+                  {person.id === currentUserId ? <Text type="supporting">(you)</Text> : null}
+                  {!person.hasPassword ? <Tag color="yellow">No password set</Tag> : null}
+                </HStack>
+                <Text type="supporting" display="block">
+                  {person.email}
+                </Text>
+                <Text type="supporting" display="block" className="md:hidden">
+                  {person.staffRole?.name ?? "No role"} · {classes}{" "}
+                  {classes === 1 ? "class" : "classes"}
+                </Text>
+              </TableCell>
+              <TableCell className="max-md:hidden">
+                <Tag color={reach.color}>{person.staffRole?.name ?? "No role"}</Tag>
+                <Text type="supporting" display="block">
+                  {permissionCountLabel(permissions.length)}
+                </Text>
+              </TableCell>
+              <TableCell className="max-md:hidden">
+                <Text color="secondary" hasTabularNumbers>
+                  {classes}
+                </Text>
+              </TableCell>
+              <TableCell>
+                <HStack gap={1} vAlign="center" hAlign="end">
+                  <ResetPersonPassword person={person} />
+                  <EditPerson person={person} roles={roles} />
+                  <SetPersonActive person={person} />
+                </HStack>
+              </TableCell>
+            </TableRow>
+          );
+        })}
+      </TableBody>
+    </Table>
   );
 }

@@ -1,7 +1,12 @@
 import type { Metadata } from "next";
 import { Building2 } from "lucide-react";
+import { Item } from "@astryxdesign/core/Item";
+import { List } from "@astryxdesign/core/List";
+import { HStack, VStack } from "@astryxdesign/core/Stack";
+import { Heading, Text } from "@astryxdesign/core/Text";
 import { EmptyState } from "@/components/ui-kit/empty-state";
 import { PageHeader } from "@/components/ui-kit/page-header";
+import { Lead, Num } from "@/components/ui-kit/prose";
 import { Tag } from "@/components/ui-kit/tag";
 import { AddClub, ArchiveClub, EditClub } from "@/components/clubs/club-actions";
 import { getCurrentClub } from "@/lib/clubs/current";
@@ -18,19 +23,18 @@ export default async function ClubsPage() {
   const archived = clubs.filter((club) => club.archivedAt);
 
   return (
-    <div className="space-y-6">
+    <VStack gap={6}>
       <PageHeader
         title="Clubs"
         description="Each site keeps its own programmes, classes and swimmers. Staff accounts and roles are shared between them."
         actions={<AddClub />}
       />
 
-      <p className="max-w-prose text-sm text-muted-foreground">
-        <span className="font-medium text-foreground tabular-nums">{live.length}</span>{" "}
-        {live.length === 1 ? "club" : "clubs"}. You are working in{" "}
-        <span className="font-medium text-foreground">{current.name}</span>; the switcher at the
-        top of the sidebar changes that, and every page follows it.
-      </p>
+      <Lead>
+        <Num>{live.length}</Num> {live.length === 1 ? "club" : "clubs"}. You are working in{" "}
+        <Num>{current.name}</Num>; the switcher at the top of the sidebar changes that, and every
+        page follows it.
+      </Lead>
 
       {live.length === 0 ? (
         <EmptyState
@@ -44,15 +48,13 @@ export default async function ClubsPage() {
       )}
 
       {archived.length > 0 ? (
-        <section className="space-y-3">
-          <h2 className="text-sm font-semibold text-foreground">Archived</h2>
-          <p className="max-w-prose text-sm text-muted-foreground">
-            Not in the switcher. Everything recorded under them is still there.
-          </p>
+        <VStack gap={3} as="section">
+          <Heading level={2}>Archived</Heading>
+          <Lead>Not in the switcher. Everything recorded under them is still there.</Lead>
           <ClubList clubs={archived} currentId={current.id} archived />
-        </section>
+        </VStack>
       ) : null}
-    </div>
+    </VStack>
   );
 }
 
@@ -66,41 +68,28 @@ function ClubList({
   archived?: boolean;
 }) {
   return (
-    <ul className="overflow-hidden rounded-md border">
+    <List hasDividers>
       {clubs.map((club) => (
-        <li
+        <Item
           key={club.id}
-          className="group flex flex-wrap items-start justify-between gap-x-4 gap-y-2 border-b px-3 py-2 transition-colors last:border-0 hover:bg-muted"
-        >
-          <div className="min-w-0">
-            <p className="text-sm font-medium text-foreground">
-              {club.name}
-              {club.id === currentId ? (
-                <Tag color="blue" className="ml-2">
-                  Working in
-                </Tag>
-              ) : null}
-              {archived ? (
-                <Tag color="gray" className="ml-2">
-                  Archived
-                </Tag>
-              ) : null}
-            </p>
-            <p className="mt-0.5 text-xs text-muted-foreground">
-              <span className="tabular-nums">{club._count.programmes}</span>{" "}
-              {club._count.programmes === 1 ? "programme" : "programmes"} ·{" "}
-              <span className="tabular-nums">{club._count.students}</span> active{" "}
-              {club._count.students === 1 ? "swimmer" : "swimmers"} ·{" "}
-              <span className="tabular-nums">{club._count.courses}</span>{" "}
-              {club._count.courses === 1 ? "class" : "classes"}
-            </p>
-          </div>
-          <div className="flex items-center gap-0.5 max-md:gap-2 opacity-0 transition-opacity group-focus-within:opacity-100 group-hover:opacity-100 max-md:opacity-100">
-            <EditClub club={club} />
-            <ArchiveClub club={club} />
-          </div>
-        </li>
+          as="li"
+          align="start"
+          label={
+            <HStack gap={2} vAlign="center" wrap="wrap">
+              <Text weight="medium">{club.name}</Text>
+              {club.id === currentId ? <Tag color="blue">Working in</Tag> : null}
+              {archived ? <Tag color="gray">Archived</Tag> : null}
+            </HStack>
+          }
+          description={`${club._count.programmes} ${club._count.programmes === 1 ? "programme" : "programmes"} · ${club._count.students} active ${club._count.students === 1 ? "swimmer" : "swimmers"} · ${club._count.courses} ${club._count.courses === 1 ? "class" : "classes"}`}
+          endContent={
+            <HStack gap={1} vAlign="center">
+              <EditClub club={club} />
+              <ArchiveClub club={club} />
+            </HStack>
+          }
+        />
       ))}
-    </ul>
+    </List>
   );
 }

@@ -1,15 +1,26 @@
 "use client";
 
 import * as React from "react";
-import Link from "next/link";
-import { toast } from "@/lib/toast";
-import { Check, ChevronLeft, ChevronRight, Loader2 } from "lucide-react";
-import { OFFLINE_MESSAGE, withTimeout } from "@/components/attendance/register-form";
+import { Check, ChevronLeft, ChevronRight } from "lucide-react";
+import { Banner } from "@astryxdesign/core/Banner";
+import { Button } from "@astryxdesign/core/Button";
+import { Card } from "@astryxdesign/core/Card";
+import { Collapsible } from "@astryxdesign/core/Collapsible";
+import { IconButton } from "@astryxdesign/core/IconButton";
+import { Item } from "@astryxdesign/core/Item";
+import { List } from "@astryxdesign/core/List";
+import { HStack, StackItem, VStack } from "@astryxdesign/core/Stack";
+import { StatusDot } from "@astryxdesign/core/StatusDot";
+import { Tab, TabList } from "@astryxdesign/core/TabList";
+import { Heading, Text } from "@astryxdesign/core/Text";
+import { ToggleButton, ToggleButtonGroup } from "@astryxdesign/core/ToggleButton";
+import { VisuallyHidden } from "@astryxdesign/core/VisuallyHidden";
+import { OFFLINE_MESSAGE, SaveBar, withTimeout } from "@/components/attendance/register-form";
+import { Num } from "@/components/ui-kit/prose";
 import { Tag } from "@/components/ui-kit/tag";
-import { Button } from "@/components/ui/button";
 import type { AttendanceStatus, CompetencyStatus } from "@/generated/prisma/client";
 import { saveClassAssessment } from "@/lib/progression/actions/assess";
-import { cn } from "@/lib/utils";
+import { toast } from "@/lib/toast";
 
 /** The checklist as the deck uses it: one competency at a time, across the
  *  whole class.
@@ -39,19 +50,17 @@ export type DeckSwimmer = {
   marks: Record<string, Choice>;
 };
 
-/** The chosen mark: the tag pair's fill with its edge in the pair's ink, so
- *  it reads in glare. A fill alone measured 1.1:1 against the page. */
-const MARK_META: Record<CompetencyStatus, { label: string; active: string }> = {
-  WORKING_ON: {
-    label: "Working on it",
-    active: "border-2 border-(--tag-yellow-fg) bg-(--tag-yellow-bg) text-(--tag-yellow-fg)",
-  },
-  ACHIEVED: {
-    label: "Achieved",
-    active: "border-2 border-(--tag-green-fg) bg-(--tag-green-bg) text-(--tag-green-fg)",
-  },
+const MARK_LABEL: Record<CompetencyStatus, string> = {
+  WORKING_ON: "Working on it",
+  ACHIEVED: "Achieved",
 };
 const MARK_ORDER: CompetencyStatus[] = ["WORKING_ON", "ACHIEVED"];
+
+/** The mark as a status dot beside the name. */
+const DOT: Record<CompetencyStatus, "success" | "warning"> = {
+  WORKING_ON: "warning",
+  ACHIEVED: "success",
+};
 
 const SAVE_TIMEOUT_MS = 15_000;
 
@@ -203,12 +212,11 @@ export function DeckChecklist({
     });
   }
 
-  /** Tap to set; tap the same one again to take it back. */
-  function toggle(studentId: string, competencyId: string, status: CompetencyStatus) {
+  /** The group reports the next selection: a status, or null when the
+   *  pressed button was tapped again and the mark is taken back. */
+  function choose(studentId: string, competencyId: string, status: Choice) {
     update((next) => {
-      const row = next.get(studentId);
-      if (!row) return;
-      row.set(competencyId, row.get(competencyId) === status ? null : status);
+      next.get(studentId)?.set(competencyId, status);
     });
   }
 
@@ -248,17 +256,18 @@ export function DeckChecklist({
 
   if (competencies.length === 0) {
     return (
-      <div className="space-y-4">
-        <p className="text-sm text-muted-foreground">
+      <VStack gap={4} vAlign="start">
+        <Text as="p" display="block" color="secondary">
           This level has no competencies yet, so there is nothing to mark.
-        </p>
-        <Button asChild variant="outline" size="lg">
-          <Link href={doneHref}>
-            <ChevronLeft className="size-4" />
-            Back to Today
-          </Link>
-        </Button>
-      </div>
+        </Text>
+        <Button
+          label="Back to Today"
+          variant="secondary"
+          size="lg"
+          href={doneHref}
+          icon={<ChevronLeft className="size-4" aria-hidden />}
+        />
+      </VStack>
     );
   }
 
@@ -273,205 +282,183 @@ export function DeckChecklist({
     competencies.filter((c) => marks.get(studentId)?.get(c.id) === "ACHIEVED").length;
   const markedAtAll = [...marks.values()].some((row) => [...row.values()].some(Boolean));
 
-  const focusRing =
-    "focus-ring";
-
   const row = (swimmer: DeckSwimmer, dimmed: boolean) => {
     const value = marks.get(swimmer.studentId)?.get(competency.id) ?? null;
     const late = attendance?.[swimmer.studentId] === "LATE";
     return (
-      <li key={swimmer.studentId} className={cn("border-b p-3 last:border-0", dimmed && "opacity-70")}>
-        <div className="flex flex-wrap items-center justify-between gap-x-4 gap-y-2">
-          <div className="min-w-0 flex-1">
-            <p className="flex flex-wrap items-center gap-x-2 gap-y-1 text-[17px] font-semibold text-foreground">
+      <Item
+        key={swimmer.studentId}
+        as="li"
+        align="start"
+        isDisabled={dimmed && readOnly}
+        label={
+          <HStack gap={2} vAlign="center" wrap="wrap">
+            <StatusDot
+              variant={value ? DOT[value] : "neutral"}
+              label={value ? MARK_LABEL[value] : "Not marked"}
+            />
+            <Text type="large" weight="semibold" color={dimmed ? "secondary" : "primary"}>
               {swimmer.name}
-              {late ? <Tag color="orange">Late</Tag> : null}
-              {swimmer.completed ? <Tag color="blue">Completed</Tag> : null}
-              {swimmer.offLevel ? <Tag color="purple">Placed at another level</Tag> : null}
-            </p>
-            <p className="mt-0.5 text-sm text-muted-foreground tabular-nums">
+            </Text>
+            {late ? <Tag color="orange">Late</Tag> : null}
+            {swimmer.completed ? <Tag color="blue">Completed</Tag> : null}
+            {swimmer.offLevel ? <Tag color="purple">Placed at another level</Tag> : null}
+          </HStack>
+        }
+        description={
+          <VStack gap={2}>
+            <Text color="secondary" hasTabularNumbers>
               {achievedFor(swimmer.studentId)} of {competencies.length} achieved
-            </p>
-          </div>
-
-          <div
-            role="group"
-            aria-label={`${competency.name} — ${swimmer.name}`}
-            className="flex w-full gap-1.5 sm:w-auto"
-          >
-            {MARK_ORDER.map((status) => {
-              const active = value === status;
-              return (
-                <button
+            </Text>
+            <ToggleButtonGroup
+              label={`${competency.name} — ${swimmer.name}`}
+              type="single"
+              size="lg"
+              value={value}
+              isDisabled={readOnly}
+              onChange={(next) =>
+                choose(
+                  swimmer.studentId,
+                  competency.id,
+                  typeof next === "string" ? (next as CompetencyStatus) : null
+                )
+              }
+            >
+              {MARK_ORDER.map((status) => (
+                <ToggleButton
                   key={status}
-                  type="button"
-                  disabled={readOnly}
-                  aria-pressed={active}
-                  aria-label={`${MARK_META[status].label} — ${swimmer.name}`}
-                  onClick={() => toggle(swimmer.studentId, competency.id, status)}
-                  className={cn(
-                    "inline-flex h-11 flex-1 items-center justify-center gap-1 rounded-md border text-sm font-medium transition-colors sm:h-9 sm:w-32 sm:flex-none",
-                    focusRing,
-                    "disabled:pointer-events-none disabled:opacity-60",
-                    active
-                      ? MARK_META[status].active
-                      : "border-input text-muted-foreground hover:bg-muted hover:text-foreground"
-                  )}
+                  value={status}
+                  label={MARK_LABEL[status]}
+                  pressedIcon={<Check className="size-4" aria-hidden />}
                 >
-                  {active ? <Check aria-hidden="true" className="size-4" /> : null}
-                  {MARK_META[status].label}
-                </button>
-              );
-            })}
-          </div>
-        </div>
-      </li>
+                  {MARK_LABEL[status]}
+                </ToggleButton>
+              ))}
+            </ToggleButtonGroup>
+          </VStack>
+        }
+      />
     );
   };
 
   return (
-    <div className="space-y-4">
+    <VStack gap={4}>
       {/* Every competency, one number each: where you are and what is
-          already done. Bleeds to the screen edge on a phone so the row
-          scrolls under the thumb instead of clipping. */}
-      <div
-        role="group"
+          already done. The strip scrolls under the thumb on a phone. */}
+      <TabList
         aria-label="Competencies"
-        className="-mx-4 flex gap-1.5 overflow-x-auto px-4 pb-1 md:mx-0 md:px-0"
+        value={String(current)}
+        onChange={(next) => setCurrent(Number(next))}
+        overflow="scroll"
+        size="lg"
       >
-        {competencies.map((c, index) => {
-          const active = index === current;
-          const done = allAchieved(c.id);
-          return (
-            <button
-              key={c.id}
-              type="button"
-              aria-label={`${index + 1}. ${c.name}`}
-              aria-current={active ? "true" : undefined}
-              onClick={() => setCurrent(index)}
-              className={cn(
-                "inline-flex h-11 min-w-11 shrink-0 items-center justify-center gap-1 rounded-md border px-3 text-sm font-medium tabular-nums transition-colors",
-                focusRing,
-                active
-                  ? "border-accent-bg bg-accent-bg text-on-accent"
-                  : done
-                    ? "border-(--tag-green-fg) bg-(--tag-green-bg) text-(--tag-green-fg)"
-                    : "border-input bg-background text-muted-foreground hover:text-foreground"
-              )}
-            >
-              {index + 1}
-              {done && !active ? <Check aria-hidden="true" className="size-3.5" /> : null}
-            </button>
-          );
-        })}
-      </div>
+        {competencies.map((c, index) => (
+          <Tab
+            key={c.id}
+            value={String(index)}
+            label={`${index + 1}`}
+            aria-label={`${index + 1}. ${c.name}`}
+            endContent={
+              allAchieved(c.id) ? <Check className="size-4" aria-label="Everyone achieved" /> : undefined
+            }
+          />
+        ))}
+      </TabList>
 
-      <section
-        aria-labelledby="deck-competency"
-        className="rounded-md border border-input bg-surface p-3 sm:p-4"
-      >
-        <div className="flex items-start justify-between gap-3">
-          <div className="min-w-0">
-            <p className="text-sm text-muted-foreground tabular-nums">
-              Competency {current + 1} of {competencies.length}
-            </p>
-            <h2 id="deck-competency" className="text-lg font-semibold text-foreground">
-              {competency.name}
-            </h2>
-            {competency.description ? (
-              <p className="mt-0.5 max-w-prose text-sm text-muted-foreground">
-                {competency.description}
-              </p>
-            ) : null}
-            <p className="mt-1 text-sm text-muted-foreground">
-              <span className="font-medium text-foreground tabular-nums">{achievedHere}</span> of{" "}
-              <span className="tabular-nums">{here.length}</span>
-              {attendance ? " in today" : ""} achieved
-            </p>
-          </div>
-          <div className="flex shrink-0 gap-1.5">
-            <Button
-              type="button"
-              variant="outline"
-              size="icon-lg"
-              aria-label="Previous competency"
-              disabled={current === 0}
-              onClick={() => setCurrent((i) => Math.max(0, i - 1))}
-            >
-              <ChevronLeft />
-            </Button>
-            <Button
-              type="button"
-              variant="outline"
-              size="icon-lg"
-              aria-label="Next competency"
-              disabled={current === competencies.length - 1}
-              onClick={() => setCurrent((i) => Math.min(competencies.length - 1, i + 1))}
-            >
-              <ChevronRight />
-            </Button>
-          </div>
-        </div>
-        {readOnly || here.length === 0 ? null : (
-          <div className="mt-3">
-            <Button
-              type="button"
-              variant="outline"
-              size="lg"
-              onClick={() => everyone(competency.id, "ACHIEVED")}
-            >
-              <Check className="size-4" />
-              {attendance ? "Everyone in today achieved" : "Everyone achieved"}
-            </Button>
-          </div>
-        )}
-      </section>
+      <Card>
+        <VStack gap={3}>
+          <HStack gap={3} vAlign="start" hAlign="between">
+            <StackItem size="fill">
+              <VStack gap={1}>
+                <Text type="supporting" hasTabularNumbers>
+                  Competency {current + 1} of {competencies.length}
+                </Text>
+                <Heading level={2} id="deck-competency">
+                  {competency.name}
+                </Heading>
+                {competency.description ? (
+                  <Text as="p" display="block" color="secondary" className="max-w-prose">
+                    {competency.description}
+                  </Text>
+                ) : null}
+                <Text as="p" display="block" color="secondary">
+                  <Num>{achievedHere}</Num> of <Num>{here.length}</Num>
+                  {attendance ? " in today" : ""} achieved
+                </Text>
+              </VStack>
+            </StackItem>
+            <HStack gap={1.5}>
+              <IconButton
+                label="Previous competency"
+                variant="secondary"
+                size="lg"
+                icon={<ChevronLeft className="size-5" aria-hidden />}
+                isDisabled={current === 0}
+                onClick={() => setCurrent((i) => Math.max(0, i - 1))}
+              />
+              <IconButton
+                label="Next competency"
+                variant="secondary"
+                size="lg"
+                icon={<ChevronRight className="size-5" aria-hidden />}
+                isDisabled={current === competencies.length - 1}
+                onClick={() => setCurrent((i) => Math.min(competencies.length - 1, i + 1))}
+              />
+            </HStack>
+          </HStack>
+          {readOnly || here.length === 0 ? null : (
+            <HStack>
+              <Button
+                label={attendance ? "Everyone in today achieved" : "Everyone achieved"}
+                variant="secondary"
+                size="lg"
+                icon={<Check className="size-4" aria-hidden />}
+                onClick={() => everyone(competency.id, "ACHIEVED")}
+              />
+            </HStack>
+          )}
+        </VStack>
+      </Card>
 
       {swimmers.length === 0 ? (
-        <p className="text-sm text-muted-foreground">Nobody in this class yet.</p>
+        <Text as="p" display="block" color="secondary">
+          Nobody in this class yet.
+        </Text>
       ) : here.length === 0 ? (
-        <p className="text-sm text-muted-foreground">Nobody was marked in today.</p>
+        <Text as="p" display="block" color="secondary">
+          Nobody was marked in today.
+        </Text>
       ) : (
-        <ul className="overflow-hidden rounded-md border">{here.map((s) => row(s, false))}</ul>
+        <List hasDividers>{here.map((s) => row(s, false))}</List>
       )}
 
       {away.length > 0 ? (
-        <details className="group">
-          <summary
-            className={cn(
-              "flex min-h-11 cursor-pointer list-none items-center gap-2 rounded-md text-base font-semibold text-foreground [&::-webkit-details-marker]:hidden",
-              "focus-ring"
-            )}
-          >
-            <ChevronRight
-              aria-hidden="true"
-              className="size-4 shrink-0 text-muted-foreground transition-transform group-open:rotate-90"
-            />
-            Not in today
-            <span className="sr-only">,</span>
-            <span className="text-sm font-normal text-muted-foreground tabular-nums">
-              {away.length} {away.length === 1 ? "swimmer" : "swimmers"}
-            </span>
-          </summary>
-          <ul className="mt-3 overflow-hidden rounded-md border">{away.map((s) => row(s, true))}</ul>
-        </details>
+        <Collapsible
+          defaultIsOpen={false}
+          trigger={
+            <HStack gap={2} vAlign="center" wrap="wrap">
+              <Text weight="semibold">Not in today</Text>
+              <VisuallyHidden>,</VisuallyHidden>
+              <Text color="secondary" hasTabularNumbers>
+                {away.length} {away.length === 1 ? "swimmer" : "swimmers"}
+              </Text>
+            </HStack>
+          }
+        >
+          <VStack paddingBlockStart={3}>
+            <List hasDividers>{away.map((s) => row(s, true))}</List>
+          </VStack>
+        </Collapsible>
       ) : null}
 
-      {error ? (
-        <p
-          role="alert"
-          className="rounded bg-(--tag-red-bg) px-2.5 py-1.5 text-sm text-(--tag-red-fg)"
-        >
-          {error}
-        </p>
-      ) : null}
+      {error ? <Banner status="error" title={error} collapsible={false} /> : null}
 
       {/* One bar. Save while there is something to save; Done once a save
           has landed; and a quiet way back before anything has been marked,
-          so the blue button is never the way out of an empty page. */}
-      <div className="sticky bottom-0 -mx-4 flex items-center justify-between gap-3 border-t bg-background px-4 pt-3 pb-[max(0.75rem,env(safe-area-inset-bottom))] md:-mx-8 md:px-8">
-        <p aria-live="polite" className="text-sm text-muted-foreground tabular-nums">
-          {changes.length > 0
+          so the primary button is never the way out of an empty page. */}
+      <SaveBar
+        status={
+          changes.length > 0
             ? restored
               ? "Kept on this phone, not saved yet"
               : `${changes.length} ${changes.length === 1 ? "mark" : "marks"} not saved yet`
@@ -479,38 +466,36 @@ export function DeckChecklist({
               ? "Saved"
               : markedAtAll
                 ? "Up to date"
-                : "Nothing marked yet"}
-        </p>
+                : "Nothing marked yet"
+        }
+      >
         {!readOnly && changes.length > 0 ? (
-          <Button type="button" size="lg" onClick={save} disabled={pending}>
-            {pending ? (
-              <>
-                <Loader2 className="size-4 animate-spin" />
-                Saving…
-              </>
-            ) : (
-              <>
-                <Check className="size-4" />
-                Save marks
-              </>
-            )}
-          </Button>
+          <Button
+            label={pending ? "Saving…" : "Save marks"}
+            variant="primary"
+            size="lg"
+            onClick={save}
+            isLoading={pending}
+            icon={<Check className="size-4" aria-hidden />}
+          />
         ) : saved ? (
-          <Button asChild size="lg">
-            <Link href={doneHref}>
-              <Check className="size-4" />
-              Done, back to Today
-            </Link>
-          </Button>
+          <Button
+            label="Done, back to Today"
+            variant="primary"
+            size="lg"
+            href={doneHref}
+            icon={<Check className="size-4" aria-hidden />}
+          />
         ) : (
-          <Button asChild variant="outline" size="lg">
-            <Link href={doneHref}>
-              <ChevronLeft className="size-4" />
-              Back to Today
-            </Link>
-          </Button>
+          <Button
+            label="Back to Today"
+            variant="secondary"
+            size="lg"
+            href={doneHref}
+            icon={<ChevronLeft className="size-4" aria-hidden />}
+          />
         )}
-      </div>
-    </div>
+      </SaveBar>
+    </VStack>
   );
 }

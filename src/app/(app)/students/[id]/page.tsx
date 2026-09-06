@@ -1,11 +1,17 @@
 import type { Metadata } from "next";
-import Link from "next/link";
 import { notFound } from "next/navigation";
-import { CalendarCheck, ChevronLeft, ClipboardCheck, Waves } from "lucide-react";
+import { CalendarCheck, ClipboardCheck, Waves } from "lucide-react";
+import { Banner } from "@astryxdesign/core/Banner";
+import { Button } from "@astryxdesign/core/Button";
+import { Collapsible } from "@astryxdesign/core/Collapsible";
+import { Grid } from "@astryxdesign/core/Grid";
+import { Link } from "@astryxdesign/core/Link";
+import { HStack, VStack } from "@astryxdesign/core/Stack";
+import { Text } from "@astryxdesign/core/Text";
+import { BackLink } from "@/components/ui-kit/back-link";
 import { EmptyState } from "@/components/ui-kit/empty-state";
 import { PageHeader } from "@/components/ui-kit/page-header";
 import { Tag } from "@/components/ui-kit/tag";
-import { Button } from "@/components/ui/button";
 import { WrongClub } from "@/components/clubs/wrong-club";
 import { EnrolInCourseForStudent } from "@/components/enrolment/enrolment-actions";
 import { ProgressSection } from "@/components/progression/progress-section";
@@ -100,23 +106,18 @@ export default async function StudentPage(props: PageProps<"/students/[id]">) {
   ].filter(Boolean);
 
   const canEnrol = manage && student.status === "ACTIVE";
+  const tel = (phone: string) => `tel:${phone.replace(/\s+/g, "")}`;
 
   return (
-    <div className="space-y-6">
-      <div>
-        <Link
-          href="/students"
-          className="mb-2 inline-flex items-center gap-1 text-sm text-muted-foreground underline-offset-2 hover:text-foreground hover:underline"
-        >
-          <ChevronLeft className="size-3.5" />
-          Swimmers
-        </Link>
+    <VStack gap={6}>
+      <VStack gap={2}>
+        <BackLink href="/students">Swimmers</BackLink>
         <PageHeader
           title={
-            <span className="inline-flex flex-wrap items-center gap-2">
+            <HStack gap={2} vAlign="center" wrap="wrap">
               {fullName(student)}
               <Tag color={meta.color}>{meta.label}</Tag>
-            </span>
+            </HStack>
           }
           description={facts.length > 0 ? facts.join(" · ") : "Not in a class at the moment"}
           actions={
@@ -133,123 +134,106 @@ export default async function StudentPage(props: PageProps<"/students/[id]">) {
             ) : null
           }
         />
-      </div>
+      </VStack>
 
       {student.medicalNotes ? (
-        <details className="rounded-md border border-(--tag-red-bg) bg-(--tag-red-bg)/50 px-3 py-2 [&[open]>summary]:mb-1.5">
-          <summary className="cursor-pointer text-sm font-medium text-(--tag-red-fg)">
-            Medical notes — read before they get in
-          </summary>
-          <p className="text-sm whitespace-pre-wrap text-foreground">{student.medicalNotes}</p>
-        </details>
+        <Banner
+          status="error"
+          title="Medical notes — read before they get in"
+          collapsible={{ defaultIsOpen: true }}
+        >
+          <Text as="p" display="block" className="whitespace-pre-wrap">
+            {student.medicalNotes}
+          </Text>
+        </Banner>
       ) : null}
 
       {/* At a glance: the two panels the desk reads while a parent waits.
           Side by side where there is room, stacked on a phone. */}
-      <div className="grid gap-4 md:grid-cols-2">
+      <Grid columns={{ minWidth: 320, max: 2 }} gap={4}>
         <Panel title="Personal details">
-          <dl>
-            <Row label="Member number">
-              {student.memberNumber ? (
-                <span className="tabular-nums">{student.memberNumber}</span>
-              ) : (
-                <Blank />
-              )}
-            </Row>
-            <Row label="Date of birth">
-              {student.dateOfBirth ? (
-                <>
-                  {formatDate(student.dateOfBirth)}
-                  {age !== null ? (
-                    <span className="text-muted-foreground"> · {age} years old</span>
-                  ) : null}
-                </>
-              ) : (
-                <Blank />
-              )}
-            </Row>
-            <Row label="Joined">{formatDate(student.joinedOn)}</Row>
-            <Row label="Photo consent">
-              {student.photoConsent ? (
-                <>
-                  Given
-                  {student.photoConsentOn ? (
-                    <span className="text-muted-foreground">
-                      {" "}
-                      on {formatDate(student.photoConsentOn)}
-                    </span>
-                  ) : null}
-                </>
-              ) : (
-                <span className="text-muted-foreground">Not given</span>
-              )}
-            </Row>
-            <Row label="Notes">
-              {student.notes ? (
-                <span className="whitespace-pre-wrap">{student.notes}</span>
-              ) : (
-                <Blank />
-              )}
-            </Row>
-          </dl>
+          <Row label="Member number">
+            {student.memberNumber ? (
+              <Text hasTabularNumbers>{student.memberNumber}</Text>
+            ) : (
+              <Blank />
+            )}
+          </Row>
+          <Row label="Date of birth">
+            {student.dateOfBirth ? (
+              <>
+                {formatDate(student.dateOfBirth)}
+                {age !== null ? <Text color="secondary"> · {age} years old</Text> : null}
+              </>
+            ) : (
+              <Blank />
+            )}
+          </Row>
+          <Row label="Joined">{formatDate(student.joinedOn)}</Row>
+          <Row label="Photo consent">
+            {student.photoConsent ? (
+              <>
+                Given
+                {student.photoConsentOn ? (
+                  <Text color="secondary"> on {formatDate(student.photoConsentOn)}</Text>
+                ) : null}
+              </>
+            ) : (
+              <Text color="secondary">Not given</Text>
+            )}
+          </Row>
+          <Row label="Notes">
+            {student.notes ? (
+              <Text className="whitespace-pre-wrap">{student.notes}</Text>
+            ) : (
+              <Blank />
+            )}
+          </Row>
         </Panel>
 
         <Panel title="Contacts">
-          <dl>
-            <Row label="Contact">{student.contactName ?? <Blank />}</Row>
-            <Row label="Phone">
-              {student.contactPhone ? (
-                <a
-                  href={`tel:${student.contactPhone.replace(/\s+/g, "")}`}
-                  className="text-accent underline underline-offset-4"
-                >
-                  {student.contactPhone}
-                </a>
-              ) : (
-                <Blank />
-              )}
-            </Row>
-            <Row label="Email">
-              {student.contactEmail ? (
-                <a
-                  href={`mailto:${student.contactEmail}`}
-                  className="break-all text-accent underline underline-offset-4"
-                >
-                  {student.contactEmail}
-                </a>
-              ) : (
-                <Blank />
-              )}
-            </Row>
-            {/* Shown when *either* half is present. Gating the number on the
-                name having been filled in hid the most safety-critical field
-                in the app: a record could hold a working emergency number and
-                still render an em dash to whoever went looking for it. */}
-            <Row label="In an emergency">
-              {student.emergencyName || student.emergencyPhone ? (
-                <>
-                  {student.emergencyName ?? (
-                    <span className="text-muted-foreground">Name not recorded</span>
-                  )}
-                  {student.emergencyRelationship ? ` (${student.emergencyRelationship})` : ""}
-                  {student.emergencyPhone ? (
-                    <a
-                      href={`tel:${student.emergencyPhone.replace(/\s+/g, "")}`}
-                      className="block text-accent underline underline-offset-4"
-                    >
-                      {student.emergencyPhone}
-                    </a>
-                  ) : null}
-                </>
-              ) : (
-                <Blank />
-              )}
-            </Row>
-          </dl>
+          <Row label="Contact">{student.contactName ?? <Blank />}</Row>
+          <Row label="Phone">
+            {student.contactPhone ? (
+              <Link href={tel(student.contactPhone)} hasUnderline>
+                {student.contactPhone}
+              </Link>
+            ) : (
+              <Blank />
+            )}
+          </Row>
+          <Row label="Email">
+            {student.contactEmail ? (
+              <Link href={`mailto:${student.contactEmail}`} hasUnderline className="break-all">
+                {student.contactEmail}
+              </Link>
+            ) : (
+              <Blank />
+            )}
+          </Row>
+          {/* Shown when *either* half is present. Gating the number on the
+              name having been filled in hid the most safety-critical field
+              in the app: a record could hold a working emergency number and
+              still render an em dash to whoever went looking for it. */}
+          <Row label="In an emergency">
+            {student.emergencyName || student.emergencyPhone ? (
+              <>
+                {student.emergencyName ?? <Text color="secondary">Name not recorded</Text>}
+                {student.emergencyRelationship ? ` (${student.emergencyRelationship})` : ""}
+                {student.emergencyPhone ? (
+                  <Link href={tel(student.emergencyPhone)} hasUnderline display="block">
+                    {student.emergencyPhone}
+                  </Link>
+                ) : null}
+              </>
+            ) : (
+              <Blank />
+            )}
+          </Row>
         </Panel>
-      </div>
+      </Grid>
 
-      <div className="space-y-4">
+      <VStack gap={4}>
         <ProfileTabs
           studentId={student.id}
           active={tab}
@@ -262,7 +246,7 @@ export default async function StudentPage(props: PageProps<"/students/[id]">) {
         />
 
         {tab === "classes" ? (
-          <section className="space-y-3" aria-label="Classes">
+          <VStack gap={3} as="section" aria-label="Classes">
             {open.length === 0 ? (
               <EmptyState
                 icon={Waves}
@@ -283,18 +267,24 @@ export default async function StudentPage(props: PageProps<"/students/[id]">) {
             )}
 
             {past.length > 0 ? (
-              <details className="rounded-md border px-3 py-2 [&[open]>summary]:mb-2">
-                <summary className="cursor-pointer text-sm text-muted-foreground">
-                  {past.length} past {past.length === 1 ? "place" : "places"}
-                </summary>
-                <EnrolmentTable entries={past} student={student} manage={false} />
-              </details>
+              <Collapsible
+                defaultIsOpen={false}
+                trigger={
+                  <Text color="secondary">
+                    {past.length} past {past.length === 1 ? "place" : "places"}
+                  </Text>
+                }
+              >
+                <VStack paddingBlockStart={2}>
+                  <EnrolmentTable entries={past} student={student} manage={false} />
+                </VStack>
+              </Collapsible>
             ) : null}
-          </section>
+          </VStack>
         ) : null}
 
         {tab === "progress" ? (
-          <section aria-label="Progress">
+          <VStack as="section" aria-label="Progress">
             <ProgressSection
               programmes={programmes}
               studentId={student.id}
@@ -305,11 +295,11 @@ export default async function StudentPage(props: PageProps<"/students/[id]">) {
               courses={courses}
               openPlaceByLevel={openPlaceByLevel}
             />
-          </section>
+          </VStack>
         ) : null}
 
         {tab === "attendance" ? (
-          <section aria-label="Attendance">
+          <VStack as="section" aria-label="Attendance">
             {attendance.length === 0 ? (
               <EmptyState
                 icon={CalendarCheck}
@@ -319,31 +309,31 @@ export default async function StudentPage(props: PageProps<"/students/[id]">) {
             ) : (
               <AttendanceTable records={attendance} />
             )}
-          </section>
+          </VStack>
         ) : null}
 
         {tab === "assessments" ? (
-          <section aria-label="Assessments">
+          <VStack as="section" aria-label="Assessments">
             {assessments.length === 0 ? (
               <EmptyState
                 icon={ClipboardCheck}
                 title="No assessments"
                 hint="Book them onto a session from the Assessments page. A placement there earns the level for enrolment."
                 action={
-                  <Button asChild variant="outline" size="sm">
-                    <Link href="/assessments">
-                      <ClipboardCheck className="size-4" />
-                      Assessment sessions
-                    </Link>
-                  </Button>
+                  <Button
+                    label="Assessment sessions"
+                    variant="secondary"
+                    href="/assessments"
+                    icon={<ClipboardCheck className="size-4" aria-hidden />}
+                  />
                 }
               />
             ) : (
               <AssessmentList bookings={assessments} />
             )}
-          </section>
+          </VStack>
         ) : null}
-      </div>
-    </div>
+      </VStack>
+    </VStack>
   );
 }

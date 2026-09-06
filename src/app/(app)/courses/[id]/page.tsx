@@ -1,11 +1,24 @@
 import type { Metadata } from "next";
-import Link from "next/link";
 import { notFound } from "next/navigation";
-import { ChevronLeft, ClipboardList, Users } from "lucide-react";
+import { ClipboardList, Users } from "lucide-react";
+import { Button } from "@astryxdesign/core/Button";
+import { Link } from "@astryxdesign/core/Link";
+import { HStack, VStack } from "@astryxdesign/core/Stack";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHeader,
+  TableHeaderCell,
+  TableRow,
+} from "@astryxdesign/core/Table";
+import { Heading, Text } from "@astryxdesign/core/Text";
+import { VisuallyHidden } from "@astryxdesign/core/VisuallyHidden";
+import { BackLink } from "@/components/ui-kit/back-link";
 import { EmptyState } from "@/components/ui-kit/empty-state";
 import { PageHeader } from "@/components/ui-kit/page-header";
+import { Alert, Lead, Num } from "@/components/ui-kit/prose";
 import { Tag } from "@/components/ui-kit/tag";
-import { Button } from "@/components/ui/button";
 import { WrongClub } from "@/components/clubs/wrong-club";
 import { ArchiveCourse, EditCourse } from "@/components/courses/course-actions";
 import {
@@ -71,22 +84,16 @@ export default async function CoursePage(props: PageProps<"/courses/[id]">) {
   const tone = capacityTone(active.length, course.capacity);
 
   return (
-    <div className="space-y-6">
-      <div>
-        <Link
-          href="/courses"
-          className="mb-2 inline-flex items-center gap-1 text-sm text-muted-foreground underline-offset-2 hover:text-foreground hover:underline"
-        >
-          <ChevronLeft className="size-3.5" />
-          Classes
-        </Link>
+    <VStack gap={6}>
+      <VStack gap={2}>
+        <BackLink href="/courses">Classes</BackLink>
         <PageHeader
           title={
-            <span className="inline-flex flex-wrap items-center gap-2">
+            <HStack gap={2} vAlign="center" wrap="wrap">
               {courseName(course)}
               {course.archivedAt ? <Tag color="gray">Archived</Tag> : null}
               {tone ? <Tag color={tone.color}>{tone.label}</Tag> : null}
-            </span>
+            </HStack>
           }
           description={
             `${formatSlot(course)} · ${course.level.programme.name} · ${course.level.name}` +
@@ -99,12 +106,12 @@ export default async function CoursePage(props: PageProps<"/courses/[id]">) {
                   competencies. One road to the class, whichever screen you
                   came from. */}
               {!course.archivedAt && can(session, "attendance.mark") ? (
-                <Button asChild variant="outline" size="sm">
-                  <Link href={`/courses/${course.id}/class`}>
-                    <ClipboardList className="size-4" />
-                    Open class
-                  </Link>
-                </Button>
+                <Button
+                  label="Open class"
+                  variant="secondary"
+                  href={`/courses/${course.id}/class`}
+                  icon={<ClipboardList className="size-4" aria-hidden />}
+                />
               ) : null}
               {manage && !course.archivedAt ? (
                 <EnrolIntoCourse course={course} taken={active.length} />
@@ -123,24 +130,17 @@ export default async function CoursePage(props: PageProps<"/courses/[id]">) {
             </>
           }
         />
-      </div>
+      </VStack>
 
-      <p className="max-w-prose text-sm text-muted-foreground">
-        <span className="font-medium text-foreground tabular-nums">
-          {capacityLabel(active.length, course.capacity)}
-        </span>{" "}
-        places taken
+      <Lead>
+        <Num>{capacityLabel(active.length, course.capacity)}</Num> places taken
         {waiting.length > 0 ? (
           <>
-            , with{" "}
-            <span className="font-medium text-(--tag-yellow-fg) tabular-nums">
-              {waiting.length}
-            </span>{" "}
-            waiting
+            , with <Alert>{waiting.length}</Alert> waiting
           </>
         ) : null}
         .
-      </p>
+      </Lead>
 
       {roster.length === 0 ? (
         <EmptyState
@@ -154,13 +154,13 @@ export default async function CoursePage(props: PageProps<"/courses/[id]">) {
           }
         />
       ) : (
-        <div className="space-y-6">
-          <section className="space-y-3">
-            <h2 className="text-sm font-semibold text-foreground">Roster</h2>
+        <VStack gap={6}>
+          <VStack gap={3} as="section">
+            <Heading level={2}>Roster</Heading>
             {active.length === 0 ? (
-              <p className="text-sm text-muted-foreground">
+              <Text as="p" display="block" color="secondary">
                 Nobody has a place yet — everyone below is waiting.
-              </p>
+              </Text>
             ) : (
               <RosterTable
                 entries={active}
@@ -170,11 +170,11 @@ export default async function CoursePage(props: PageProps<"/courses/[id]">) {
                 targets={targets}
               />
             )}
-          </section>
+          </VStack>
 
           {waiting.length > 0 ? (
-            <section className="space-y-3">
-              <h2 className="text-sm font-semibold text-foreground">Waiting</h2>
+            <VStack gap={3} as="section">
+              <Heading level={2}>Waiting</Heading>
               <RosterTable
                 entries={waiting}
                 courseLevelId={course.levelId}
@@ -182,11 +182,11 @@ export default async function CoursePage(props: PageProps<"/courses/[id]">) {
                 manage={manage}
                 targets={targets}
               />
-            </section>
+            </VStack>
           ) : null}
-        </div>
+        </VStack>
       )}
-    </div>
+    </VStack>
   );
 }
 
@@ -204,95 +204,75 @@ function RosterTable({
   targets: TransferTarget[];
 }) {
   return (
-    <div className="overflow-hidden rounded-md border">
-      <table className="w-full text-sm">
-        <thead className="bg-surface">
-          <tr className="border-b">
-            <th scope="col" className="px-3 py-2 text-left text-xs font-medium text-muted-foreground">
-              Swimmer
-            </th>
-            <th
-              scope="col"
-              className="w-12 px-3 py-2 text-left text-xs font-medium text-muted-foreground max-md:hidden"
-            >
-              Age
-            </th>
-            <th
-              scope="col"
-              className="px-3 py-2 text-left text-xs font-medium text-muted-foreground max-md:hidden"
-            >
-              Since
-            </th>
-            <th scope="col" className="px-3 py-2 text-left text-xs font-medium text-muted-foreground">
-              Status
-            </th>
-            <th scope="col" className="w-24 px-3 py-2">
-              <span className="sr-only">Actions</span>
-            </th>
-          </tr>
-        </thead>
-        <tbody>
-          {entries.map((entry) => {
-            const meta = ENROLMENT_STATUS_META[entry.status];
-            const outOfSequence = entry.level.id !== courseLevelId;
-            return (
-              <tr
-                key={entry.id}
-                className="group border-b transition-colors last:border-0 hover:bg-muted"
-              >
-                <td className="px-3 py-2 font-medium text-foreground">
-                  <Link
-                    href={`/students/${entry.student.id}`}
-                    className="underline-offset-2 hover:underline"
-                  >
+    <Table hasHover textOverflow="wrap">
+      <TableHeader>
+        <TableRow isHeaderRow>
+          <TableHeaderCell scope="col">Swimmer</TableHeaderCell>
+          <TableHeaderCell scope="col" className="max-md:hidden">
+            Age
+          </TableHeaderCell>
+          <TableHeaderCell scope="col" className="max-md:hidden">
+            Since
+          </TableHeaderCell>
+          <TableHeaderCell scope="col">Status</TableHeaderCell>
+          {manage ? (
+            <TableHeaderCell scope="col">
+              <VisuallyHidden>Actions</VisuallyHidden>
+            </TableHeaderCell>
+          ) : null}
+        </TableRow>
+      </TableHeader>
+      <TableBody>
+        {entries.map((entry) => {
+          const meta = ENROLMENT_STATUS_META[entry.status];
+          const outOfSequence = entry.level.id !== courseLevelId;
+          return (
+            <TableRow key={entry.id}>
+              <TableCell>
+                <HStack gap={2} vAlign="center" wrap="wrap">
+                  <Link href={`/students/${entry.student.id}`} weight="medium">
                     {fullName(entry.student)}
                   </Link>
-                  {entry.student.medicalNotes ? (
-                    <Tag color="red" className="ml-2">
-                      Medical
-                    </Tag>
-                  ) : null}
-                  {outOfSequence ? (
-                    <Tag color="purple" className="ml-2">
-                      {entry.level.name}
-                    </Tag>
-                  ) : null}
-                  {entry.placementReason ? (
-                    <span className="mt-0.5 block text-xs font-normal text-muted-foreground">
-                      Placed here: {entry.placementReason}
-                    </span>
-                  ) : null}
-                  <span className="mt-0.5 block text-xs font-normal text-muted-foreground md:hidden">
-                    {ageLabel(entry.student.dateOfBirth)} · since{" "}
-                    {formatDate(entry.startedOn)}
-                  </span>
-                </td>
-                <td className="px-3 py-2 text-muted-foreground tabular-nums max-md:hidden">
+                  {entry.student.medicalNotes ? <Tag color="red">Medical</Tag> : null}
+                  {outOfSequence ? <Tag color="purple">{entry.level.name}</Tag> : null}
+                </HStack>
+                {entry.placementReason ? (
+                  <Text type="supporting" display="block">
+                    Placed here: {entry.placementReason}
+                  </Text>
+                ) : null}
+                <Text type="supporting" display="block" className="md:hidden">
+                  {ageLabel(entry.student.dateOfBirth)} · since {formatDate(entry.startedOn)}
+                </Text>
+              </TableCell>
+              <TableCell className="max-md:hidden">
+                <Text color="secondary" hasTabularNumbers>
                   {ageLabel(entry.student.dateOfBirth)}
-                </td>
-                <td className="px-3 py-2 whitespace-nowrap text-muted-foreground max-md:hidden">
+                </Text>
+              </TableCell>
+              <TableCell className="max-md:hidden">
+                <Text color="secondary" textWrap="nowrap">
                   {formatDate(entry.startedOn)}
-                </td>
-                <td className="px-3 py-2">
-                  <Tag color={meta.color}>{meta.label}</Tag>
-                </td>
-                <td className="px-3 py-2">
-                  {manage ? (
-                    <div className="flex items-center justify-end gap-0.5 max-md:gap-2 opacity-0 transition-opacity group-focus-within:opacity-100 group-hover:opacity-100 max-md:opacity-100">
-                      {entry.status === "WAITLISTED" ? (
-                        <PromoteFromWaitlist enrolment={entry} />
-                      ) : null}
-                      <TransferEnrolment enrolment={entry} targets={targets} />
-                      <EndEnrolment enrolment={entry} classLabel={classLabel} />
-                    </div>
-                  ) : null}
-                </td>
-              </tr>
-            );
-          })}
-        </tbody>
-      </table>
-    </div>
+                </Text>
+              </TableCell>
+              <TableCell>
+                <Tag color={meta.color}>{meta.label}</Tag>
+              </TableCell>
+              {manage ? (
+                <TableCell>
+                  <HStack gap={1} vAlign="center" hAlign="end">
+                    {entry.status === "WAITLISTED" ? (
+                      <PromoteFromWaitlist enrolment={entry} />
+                    ) : null}
+                    <TransferEnrolment enrolment={entry} targets={targets} />
+                    <EndEnrolment enrolment={entry} classLabel={classLabel} />
+                  </HStack>
+                </TableCell>
+              ) : null}
+            </TableRow>
+          );
+        })}
+      </TableBody>
+    </Table>
   );
 }
-

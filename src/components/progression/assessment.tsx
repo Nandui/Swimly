@@ -1,11 +1,18 @@
 "use client";
 
 import * as React from "react";
-import { toast } from "@/lib/toast";
-import { Check, GraduationCap, Loader2, Undo2 } from "lucide-react";
+import { Check, GraduationCap, Undo2 } from "lucide-react";
+import { Banner } from "@astryxdesign/core/Banner";
+import { Button } from "@astryxdesign/core/Button";
+import { IconButton } from "@astryxdesign/core/IconButton";
+import { Item } from "@astryxdesign/core/Item";
+import { List } from "@astryxdesign/core/List";
+import { HStack, VStack } from "@astryxdesign/core/Stack";
+import { StatusDot } from "@astryxdesign/core/StatusDot";
+import { Text } from "@astryxdesign/core/Text";
+import { ToggleButton, ToggleButtonGroup } from "@astryxdesign/core/ToggleButton";
 import { Field, FormDialog } from "@/components/form-dialog";
 import { Tag } from "@/components/ui-kit/tag";
-import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import type { CompetencyStatus } from "@/generated/prisma/client";
 import { formatDate } from "@/lib/format";
@@ -14,7 +21,7 @@ import {
   revokeLevelCompletion,
   saveAssessment,
 } from "@/lib/progression/actions/assess";
-import { cn } from "@/lib/utils";
+import { toast } from "@/lib/toast";
 
 type Choice = CompetencyStatus | null;
 
@@ -39,28 +46,22 @@ export function assessedLine(competency: Competency): string | null {
   }`;
 }
 
-const CHOICES: { value: Choice; label: string; className: string }[] = [
-  {
-    value: null,
-    label: "Not yet",
-    className: "bg-secondary text-muted-foreground border-secondary",
-  },
-  {
-    value: "WORKING_ON",
-    label: "Working on it",
-    className: "bg-(--tag-yellow-bg) text-(--tag-yellow-fg) border-(--tag-yellow-bg)",
-  },
-  {
-    value: "ACHIEVED",
-    label: "Achieved",
-    className: "bg-(--tag-green-bg) text-(--tag-green-fg) border-(--tag-green-bg)",
-  },
-];
+const MARK_LABEL: Record<CompetencyStatus, string> = {
+  WORKING_ON: "Working on it",
+  ACHIEVED: "Achieved",
+};
+const MARK_ORDER: CompetencyStatus[] = ["WORKING_ON", "ACHIEVED"];
+const DOT: Record<CompetencyStatus, "success" | "warning"> = {
+  WORKING_ON: "warning",
+  ACHIEVED: "success",
+};
 
 /** The checklist for one swimmer at one level.
  *
  *  Batched behind one Save, like the register and for the same reason: Server
- *  Actions dispatch one at a time per client, so a save per tap would queue. */
+ *  Actions dispatch one at a time per client, so a save per tap would queue.
+ *  A mark is a toggle: tap it again and the competency goes back to "not
+ *  yet". */
 export function CompetencyChecklist({
   studentId,
   levelId,
@@ -112,95 +113,102 @@ export function CompetencyChecklist({
 
   if (competencies.length === 0) {
     return (
-      <p className="text-sm text-muted-foreground">
+      <Text as="p" display="block" color="secondary">
         This level has no competencies yet, so there is nothing to sign off.
-      </p>
+      </Text>
     );
   }
 
   return (
-    <div className="space-y-3">
-      <ul className="overflow-hidden rounded-md border">
+    <VStack gap={3}>
+      <List hasDividers>
         {competencies.map((competency, index) => {
           const value = marks.get(competency.id) ?? null;
           return (
-            <li key={competency.id} className="border-b p-3 last:border-0">
-              <div className="flex flex-wrap items-start justify-between gap-x-4 gap-y-2">
-                <div className="min-w-0 flex-1">
-                  <p className="text-sm text-foreground">
-                    <span className="mr-2 text-xs text-muted-foreground tabular-nums">
-                      {index + 1}
-                    </span>
-                    {competency.name}
-                  </p>
+            <Item
+              key={competency.id}
+              as="li"
+              align="start"
+              marker={
+                <Text type="supporting" hasTabularNumbers>
+                  {index + 1}
+                </Text>
+              }
+              label={
+                <HStack gap={2} vAlign="center" wrap="wrap">
+                  <StatusDot
+                    variant={value ? DOT[value] : "neutral"}
+                    label={value ? MARK_LABEL[value] : "Not yet"}
+                  />
+                  <Text>{competency.name}</Text>
+                </HStack>
+              }
+              description={
+                <VStack gap={2}>
                   {competency.description ? (
-                    <p className="mt-0.5 text-xs text-muted-foreground">{competency.description}</p>
+                    <Text type="supporting" display="block">
+                      {competency.description}
+                    </Text>
                   ) : null}
                   {assessedLine(competency) ? (
-                    <p className="mt-0.5 text-xs text-muted-foreground">{assessedLine(competency)}</p>
+                    <Text type="supporting" display="block">
+                      {assessedLine(competency)}
+                    </Text>
                   ) : null}
-                </div>
-
-                <div
-                  role="group"
-                  aria-label={`${competency.name} — ${studentName}`}
-                  className="flex w-full gap-1 sm:w-auto"
-                >
-                  {CHOICES.map((choice) => {
-                    const active = value === choice.value;
-                    return (
-                      <button
-                        key={choice.label}
-                        type="button"
-                        disabled={readOnly}
-                        aria-pressed={active}
-                        aria-label={`${choice.label} — ${competency.name}`}
-                        onClick={() =>
-                          setMarks((previous) => {
-                            const next = new Map(previous);
-                            next.set(competency.id, choice.value);
-                            return next;
-                          })
-                        }
-                        className={cn(
-                          "h-10 flex-1 rounded-md border px-2 text-sm font-medium transition-colors sm:h-8 sm:w-28 sm:flex-none",
-                          "focus-ring",
-                          "disabled:pointer-events-none disabled:opacity-60",
-                          active
-                            ? choice.className
-                            : "border-input text-muted-foreground hover:bg-muted hover:text-foreground"
-                        )}
+                  <ToggleButtonGroup
+                    label={`${competency.name} — ${studentName}`}
+                    type="single"
+                    size="md"
+                    value={value}
+                    isDisabled={readOnly}
+                    onChange={(next) =>
+                      setMarks((previous) => {
+                        const map = new Map(previous);
+                        map.set(
+                          competency.id,
+                          typeof next === "string" ? (next as CompetencyStatus) : null
+                        );
+                        return map;
+                      })
+                    }
+                  >
+                    {MARK_ORDER.map((status) => (
+                      <ToggleButton
+                        key={status}
+                        value={status}
+                        label={MARK_LABEL[status]}
+                        pressedIcon={<Check className="size-4" aria-hidden />}
                       >
-                        {choice.label}
-                      </button>
-                    );
-                  })}
-                </div>
-              </div>
-            </li>
+                        {MARK_LABEL[status]}
+                      </ToggleButton>
+                    ))}
+                  </ToggleButtonGroup>
+                </VStack>
+              }
+            />
           );
         })}
-      </ul>
+      </List>
 
-      {error ? (
-        <p
-          role="alert"
-          className="rounded bg-(--tag-red-bg) px-2.5 py-1.5 text-sm text-(--tag-red-fg)"
-        >
-          {error}
-        </p>
-      ) : null}
+      {error ? <Banner status="error" title={error} collapsible={false} /> : null}
 
       {readOnly ? null : (
-        <div className="flex items-center justify-end gap-3">
-          <p className="text-xs text-muted-foreground">{dirty ? "Not saved yet" : "Up to date"}</p>
-          <Button type="button" size="sm" onClick={save} disabled={pending || !dirty}>
-            {pending ? <Loader2 className="size-4 animate-spin" /> : <Check className="size-4" />}
-            Save marks
-          </Button>
-        </div>
+        <HStack gap={3} vAlign="center" hAlign="end">
+          <Text type="supporting" aria-live="polite">
+            {dirty ? "Not saved yet" : "Up to date"}
+          </Text>
+          <Button
+            label="Save marks"
+            variant="primary"
+            size="sm"
+            onClick={save}
+            isLoading={pending}
+            isDisabled={!dirty}
+            icon={<Check className="size-4" aria-hidden />}
+          />
+        </HStack>
       )}
-    </div>
+    </VStack>
   );
 }
 
@@ -231,18 +239,17 @@ export function ConfirmLevel({
     <FormDialog
       trigger={
         <Button
+          label={`Complete ${levelName}`}
           size="sm"
-          variant={eligible ? "default" : "outline"}
-          disabled={blocked}
-          title={
+          variant={eligible ? "primary" : "secondary"}
+          isDisabled={blocked}
+          tooltip={
             blocked
               ? `${studentName} has ${achieved} of ${total}. Only an admin can complete a level with gaps.`
               : undefined
           }
-        >
-          <GraduationCap className="size-4" />
-          Complete {levelName}
-        </Button>
+          icon={<GraduationCap className="size-4" aria-hidden />}
+        />
       }
       title={`Complete ${levelName} for ${studentName}?`}
       description={
@@ -311,13 +318,13 @@ export function RevokeCompletion({
   return (
     <FormDialog
       trigger={
-        <Button
+        <IconButton
+          label={`Take back ${studentName}'s completion of ${levelName}`}
+          tooltip="Take back"
           variant="ghost"
-          size="icon-sm"
-          aria-label={`Take back ${studentName}'s completion of ${levelName}`}
-        >
-          <Undo2 className="size-3.5" />
-        </Button>
+          size="sm"
+          icon={<Undo2 className="size-4" aria-hidden />}
+        />
       }
       title={`Take back ${levelName}?`}
       description={`${studentName} stops counting as having completed it, which may make the level above out of sequence for them. Their assessments are untouched.`}

@@ -8,11 +8,14 @@ export function EmptyState({
   title,
   hint,
   action,
+  compact = false,
 }: {
   icon?: LucideIcon;
   title: string;
   hint?: string;
   action?: React.ReactNode;
+  /** Inside a section rather than as the whole page. */
+  compact?: boolean;
 }) {
   return (
     <AstryxEmptyState
@@ -20,6 +23,7 @@ export function EmptyState({
       title={title}
       description={hint}
       actions={action}
+      isCompact={compact}
     />
   );
 }

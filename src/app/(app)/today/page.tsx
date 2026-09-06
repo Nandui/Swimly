@@ -1,11 +1,20 @@
 import type { Metadata } from "next";
-import Link from "next/link";
 import { ArrowRight, CalendarCheck, ChevronRight } from "lucide-react";
+import { Button } from "@astryxdesign/core/Button";
+import { ClickableCard } from "@astryxdesign/core/ClickableCard";
+import { Collapsible } from "@astryxdesign/core/Collapsible";
+import { Divider } from "@astryxdesign/core/Divider";
+import { Item } from "@astryxdesign/core/Item";
+import { List } from "@astryxdesign/core/List";
+import { HStack, StackItem, VStack } from "@astryxdesign/core/Stack";
+import { Heading, Text } from "@astryxdesign/core/Text";
+import { VisuallyHidden } from "@astryxdesign/core/VisuallyHidden";
 import { EmptyState } from "@/components/ui-kit/empty-state";
+import { LinkSegments } from "@/components/ui-kit/link-segments";
 import { PageHeader } from "@/components/ui-kit/page-header";
+import { Alert, Lead } from "@/components/ui-kit/prose";
 import { TabStrip } from "@/components/ui-kit/tab-strip";
 import { Tag, type TagColor } from "@/components/ui-kit/tag";
-import { Button } from "@/components/ui/button";
 import { canMarkRegister } from "@/lib/attendance/access";
 import { weekdayOfIso } from "@/lib/attendance/dates";
 import { getCoversForDay } from "@/lib/attendance/data/cover";
@@ -14,7 +23,6 @@ import { DAY_META, capacityLabel, courseName, formatTime } from "@/lib/courses/c
 import { getCoursesOnDay, type CourseRow } from "@/lib/courses/data/courses";
 import { formatDate, minutesNow, parseDateOnly, today } from "@/lib/format";
 import { screenPage } from "@/lib/page-guards";
-import { cn } from "@/lib/utils";
 
 export const metadata: Metadata = { title: "Today" };
 
@@ -146,25 +154,25 @@ export default async function TodayPage(props: PageProps<"/today">) {
   );
 
   return (
-    <div className="space-y-5">
+    <VStack gap={5}>
       {/* The date rides on the title line: one line of header, not two. */}
       <PageHeader
         title={
-          <span className="inline-flex flex-wrap items-baseline gap-x-3">
+          <HStack gap={3} vAlign="center" wrap="wrap">
             Today
-            <span className="text-base font-normal text-muted-foreground">
+            <Text type="large" color="secondary">
               {DAY_META[day].label} {formatDate(parseDateOnly(iso))}
-            </span>
-          </span>
+            </Text>
+          </HStack>
         }
       />
 
-      <div className="space-y-4">
+      <VStack gap={4}>
         {/* The tabs take the whole line on a phone; the group-by drops
             beneath them. Side by side, the second tab was cut to "All class"
             at 375px — and that is the tab a cover instructor needs. */}
-        <div className="flex flex-wrap items-end justify-between gap-x-6 gap-y-3">
-          <div className="min-w-0 flex-1 max-sm:basis-full">
+        <HStack gap={4} wrap="wrap" vAlign="end" hAlign="between">
+          <StackItem size="fill" className="max-sm:basis-full">
             <TabStrip
               ariaLabel="Whose classes"
               countsOnPhone
@@ -185,15 +193,19 @@ export default async function TodayPage(props: PageProps<"/today">) {
                 },
               ]}
             />
-          </div>
-          <GroupBy
-            active={group}
-            options={[
-              { key: "time", label: "Time", href: href({ group: "time" }) },
-              { key: "level", label: "Level", href: href({ group: "level" }) },
-            ]}
-          />
-        </div>
+          </StackItem>
+          <HStack gap={2} vAlign="center" className="max-sm:w-full max-sm:justify-between">
+            <Text color="secondary">Group by</Text>
+            <LinkSegments
+              label="Group by"
+              value={group}
+              options={[
+                { value: "time", label: "Time", href: href({ group: "time" }) },
+                { value: "level", label: "Level", href: href({ group: "level" }) },
+              ]}
+            />
+          </HStack>
+        </HStack>
 
         {shown.length === 0 ? (
           <EmptyState
@@ -206,20 +218,18 @@ export default async function TodayPage(props: PageProps<"/today">) {
             }
             action={
               tab === "all" || courses.length === 0 ? undefined : (
-                <Button asChild variant="outline" size="sm">
-                  <Link href={href({ tab: "all" })}>All classes</Link>
-                </Button>
+                <Button label="All classes" variant="secondary" href={href({ tab: "all" })} />
               )
             }
           />
         ) : (
-          <div className="space-y-6">
+          <VStack gap={6}>
             {heroSection && hero ? (
-              <section aria-label={hero === "now" ? "On now" : "Next"} className="space-y-3">
+              <VStack gap={3} as="section" aria-label={hero === "now" ? "On now" : "Next"}>
                 {heroSection.courses.map((course) => (
                   <HeroCard key={course.id} marker={hero} {...rowProps(course)} />
                 ))}
-              </section>
+              </VStack>
             ) : null}
 
             {listed.map((section) => (
@@ -236,33 +246,22 @@ export default async function TodayPage(props: PageProps<"/today">) {
             ))}
 
             {fold ? (
-              <details className="group">
-                <summary
-                  className={cn(
-                    "flex cursor-pointer list-none flex-wrap items-center gap-x-2 gap-y-1 rounded-md text-base font-semibold text-foreground [&::-webkit-details-marker]:hidden",
-                    "focus-ring",
-                    "min-h-11"
-                  )}
-                >
-                  <ChevronRight
-                    aria-hidden="true"
-                    className="size-4 shrink-0 text-muted-foreground transition-transform group-open:rotate-90"
-                  />
-                  <span className="whitespace-nowrap">Earlier today</span>
-                  <span className="sr-only">,</span>
-                  <span className="text-sm font-normal text-muted-foreground tabular-nums">
-                    {earlierClasses} {earlierClasses === 1 ? "class" : "classes"}
+              <Collapsible
+                defaultIsOpen={false}
+                trigger={
+                  <HStack gap={2} vAlign="center" wrap="wrap">
+                    <Text weight="semibold">Earlier today</Text>
+                    <VisuallyHidden>,</VisuallyHidden>
+                    <Text color="secondary" hasTabularNumbers>
+                      {earlierClasses} {earlierClasses === 1 ? "class" : "classes"}
+                    </Text>
                     {earlierOutstanding > 0 ? (
-                      <>
-                        {" · "}
-                        <span className="font-medium text-(--tag-orange-fg)">
-                          attendance still to take for {earlierOutstanding}
-                        </span>
-                      </>
+                      <Alert>attendance still to take for {earlierOutstanding}</Alert>
                     ) : null}
-                  </span>
-                </summary>
-                <div className="mt-3 space-y-5 pl-6">
+                  </HStack>
+                }
+              >
+                <VStack gap={5} paddingBlockStart={3}>
                   {earlier.map((section) => (
                     <ClassSection key={section.key} section={section} marker={null}>
                       {section.courses.map((course) => (
@@ -270,20 +269,20 @@ export default async function TodayPage(props: PageProps<"/today">) {
                       ))}
                     </ClassSection>
                   ))}
-                </div>
-              </details>
+                </VStack>
+              </Collapsible>
             ) : null}
-          </div>
+          </VStack>
         )}
-      </div>
+      </VStack>
 
       {shown.length > 0 ? (
-        <p className="max-w-prose text-sm text-muted-foreground">
+        <Lead>
           Covering for someone? Open their class and say so when asked. The attendance is then
           recorded as taken by you, and every competency you mark carries your name.
-        </p>
+        </Lead>
       ) : null}
-    </div>
+    </VStack>
   );
 }
 
@@ -377,75 +376,33 @@ function ClassSection({
 }: {
   section: Section;
   marker: "now" | "next" | null;
-  /** The section on now, on the tab with no card: a tint on its rows. */
+  /** The section on now, on the tab with no card. */
   strong?: boolean;
   children: React.ReactNode;
 }) {
   const count = section.courses.length;
   return (
-    <section className="space-y-2" aria-label={section.title}>
-      <h2 className="flex flex-wrap items-center gap-x-2 gap-y-1 text-base font-semibold text-foreground">
-        {section.title}
-        {marker ? (
-          <>
-            <span className="sr-only">,</span>
-            <Tag color={PHASE_TAG[marker].color}>{PHASE_TAG[marker].label}</Tag>
-          </>
-        ) : null}
-        <span className="sr-only">,</span>
-        <span className="text-sm font-normal text-muted-foreground tabular-nums">
-          {count} {count === 1 ? "class" : "classes"}
-          {section.subtitle ? ` · ${section.subtitle}` : ""}
-        </span>
-      </h2>
-      <ul className={cn("overflow-hidden rounded-md border", strong && "bg-muted")}>
+    <VStack gap={2} as="section" aria-label={section.title}>
+      <Heading level={2}>
+        <HStack gap={2} vAlign="center" wrap="wrap">
+          {section.title}
+          {marker ? (
+            <>
+              <VisuallyHidden>,</VisuallyHidden>
+              <Tag color={PHASE_TAG[marker].color}>{PHASE_TAG[marker].label}</Tag>
+            </>
+          ) : null}
+          <VisuallyHidden>,</VisuallyHidden>
+          <Text color="secondary" weight="normal" hasTabularNumbers>
+            {count} {count === 1 ? "class" : "classes"}
+            {section.subtitle ? ` · ${section.subtitle}` : ""}
+          </Text>
+        </HStack>
+      </Heading>
+      <List hasDividers density={strong ? "spacious" : "balanced"}>
         {children}
-      </ul>
-    </section>
-  );
-}
-
-/** A segmented pair of links, because the choice is in the URL like the
- *  tabs are, and for the same reasons. The chosen segment is drawn with an
- *  edge, not only a tint: a tint on this ground measures 1.1:1. */
-function GroupBy({
-  active,
-  options,
-}: {
-  active: Grouping;
-  options: { key: Grouping; label: string; href: string }[];
-}) {
-  return (
-    <div className="flex items-center gap-2 pb-1 max-sm:w-full max-sm:justify-between">
-      <span className="text-sm text-muted-foreground">Group by</span>
-      <div
-        role="group"
-        aria-label="Group by"
-        className="flex rounded-md border border-input bg-muted p-0.5"
-      >
-        {options.map((option) => {
-          const current = option.key === active;
-          return (
-            <Link
-              key={option.key}
-              href={option.href}
-              scroll={false}
-              aria-current={current ? "true" : undefined}
-              className={cn(
-                "flex items-center rounded border px-2.5 py-1 text-sm font-medium transition-colors",
-                "max-md:h-11 max-md:px-4 max-md:text-sm",
-                "focus-ring",
-                current
-                  ? "border-input bg-background text-foreground"
-                  : "border-transparent text-muted-foreground hover:text-foreground"
-              )}
-            >
-              {option.label}
-            </Link>
-          );
-        })}
-      </div>
-    </div>
+      </List>
+    </VStack>
   );
 }
 
@@ -496,8 +453,8 @@ function describe({ course, tab, group, phase, done, cover, me, mayMark }: RowPr
         : "You are covering"
       : `Covered by ${cover.coverByName}`;
 
-  // Blue is for the one person who should press it. Somebody else covering
-  // this class today means that is not you.
+  // The emphasis is for the one person who should press it. Somebody else
+  // covering this class today means that is not you.
   const primary = !done && mayMark && !coveredByAnother;
   const verb = done ? "Open class" : "Start class";
 
@@ -505,56 +462,46 @@ function describe({ course, tab, group, phase, done, cover, me, mayMark }: RowPr
 }
 
 /** The class on now, or next: the whole card is the button. Big enough to
- *  read in glare and hit with a wet thumb. */
+ *  read in glare and hit with a wet thumb. When it is yours to take the card
+ *  carries the blue tint and lifts; otherwise it is a plain card. */
 function HeroCard(props: RowProps & { marker: "now" | "next" }) {
   const { course, iso, marker } = props;
   const { name, time, meta, attendance, coverLabel, primary, verb } = describe(props);
 
   return (
-    <Link
+    <ClickableCard
       href={`/courses/${course.id}/class?date=${iso}`}
-      aria-label={`${verb}: ${name}, ${time}, ${PHASE_TAG[marker].label.toLowerCase()}`}
-      className={cn(
-        "block rounded-lg border-2 p-4 transition-colors sm:p-5",
-        "focus-ring",
-        primary
-          ? "border-accent-bg bg-accent-bg text-on-accent"
-          : "border-input bg-background text-foreground hover:bg-muted"
-      )}
+      label={`${verb}: ${name}, ${time}, ${PHASE_TAG[marker].label.toLowerCase()}`}
+      variant={primary ? "blue" : "default"}
+      elevation={primary ? "low" : "none"}
+      padding={5}
     >
-      <div className="flex items-center justify-between gap-3">
-        <span className="text-xl font-semibold tabular-nums">{time}</span>
-        {/* On the blue card the mark is a white pill with blue ink, 5.2:1;
-            a tinted pill with white ink measured under the bar. */}
-        <span
-          className={cn(
-            "rounded px-2 py-0.5 text-sm font-semibold uppercase tracking-wide",
-            primary ? "bg-on-accent text-accent-bg" : "bg-muted text-muted-foreground"
-          )}
-        >
-          {PHASE_TAG[marker].label}
-        </span>
-      </div>
-      <h2 className="mt-1 text-2xl font-semibold leading-tight">{name}</h2>
-      <p className={cn("mt-1 text-base", primary ? "text-on-accent" : "text-muted-foreground")}>
-        {meta.join(" · ")}
-      </p>
-      {attendance || coverLabel ? (
-        <div className="mt-2 flex flex-wrap gap-1.5">
-          {attendance ? <Tag color={attendance.color}>{attendance.label}</Tag> : null}
-          {coverLabel ? <Tag color="purple">{coverLabel}</Tag> : null}
-        </div>
-      ) : null}
-      <div
-        className={cn(
-          "mt-4 flex min-h-11 items-center justify-between border-t pt-3 text-base font-semibold",
-          primary ? "border-on-accent/25" : "border-border"
-        )}
-      >
-        {verb}
-        <ArrowRight aria-hidden="true" className="size-5" />
-      </div>
-    </Link>
+      <VStack gap={2}>
+        <HStack gap={3} vAlign="center" hAlign="between">
+          <Text type="large" weight="semibold" hasTabularNumbers>
+            {time}
+          </Text>
+          <Tag color={PHASE_TAG[marker].color}>{PHASE_TAG[marker].label}</Tag>
+        </HStack>
+        <Heading level={2}>{name}</Heading>
+        <Text as="p" display="block" color="secondary">
+          {meta.join(" · ")}
+        </Text>
+        {attendance || coverLabel ? (
+          <HStack gap={1.5} wrap="wrap">
+            {attendance ? <Tag color={attendance.color}>{attendance.label}</Tag> : null}
+            {coverLabel ? <Tag color="purple">{coverLabel}</Tag> : null}
+          </HStack>
+        ) : null}
+        <Divider />
+        <HStack gap={2} vAlign="center" hAlign="between">
+          <Text type="large" weight="semibold">
+            {verb}
+          </Text>
+          <ArrowRight aria-hidden="true" className="size-5" />
+        </HStack>
+      </VStack>
+    </ClickableCard>
   );
 }
 
@@ -565,36 +512,33 @@ function ClassRow(props: RowProps) {
   const { name, time, meta, attendance, coverLabel, primary, verb } = describe(props);
 
   return (
-    <li className="border-b last:border-0">
-      <Link
-        href={`/courses/${course.id}/class?date=${iso}`}
-        aria-label={`${verb}: ${name}, ${time}`}
-        className={cn(
-          "flex min-h-14 items-center gap-3 p-3 transition-colors hover:bg-muted",
-          "focus-ring"
-        )}
-      >
-        <div className="min-w-0 flex-1">
-          <div className="flex flex-wrap items-center gap-x-2 gap-y-1">
-            {group === "level" ? (
-              <span className="text-[17px] font-semibold text-foreground tabular-nums">{time}</span>
-            ) : null}
-            <span className="text-[17px] font-semibold text-foreground">{name}</span>
-            {attendance ? <Tag color={attendance.color}>{attendance.label}</Tag> : null}
-            {coverLabel ? <Tag color="purple">{coverLabel}</Tag> : null}
-          </div>
-          <p className="mt-0.5 text-sm text-muted-foreground">{meta.join(" · ")}</p>
-        </div>
-        <span
-          className={cn(
-            "flex shrink-0 items-center gap-1 text-sm font-medium",
-            primary ? "text-accent-bg" : "text-muted-foreground"
-          )}
-        >
-          {props.done ? "Open" : "Start"}
+    <Item
+      as="li"
+      href={`/courses/${course.id}/class?date=${iso}`}
+      aria-label={`${verb}: ${name}, ${time}`}
+      label={
+        <HStack gap={2} vAlign="center" wrap="wrap">
+          {group === "level" ? (
+            <Text type="large" weight="semibold" hasTabularNumbers>
+              {time}
+            </Text>
+          ) : null}
+          <Text type="large" weight="semibold">
+            {name}
+          </Text>
+          {attendance ? <Tag color={attendance.color}>{attendance.label}</Tag> : null}
+          {coverLabel ? <Tag color="purple">{coverLabel}</Tag> : null}
+        </HStack>
+      }
+      description={meta.join(" · ")}
+      endContent={
+        <HStack gap={1} vAlign="center">
+          <Text weight={primary ? "semibold" : "medium"} color={primary ? "primary" : "secondary"}>
+            {props.done ? "Open" : "Start"}
+          </Text>
           <ChevronRight aria-hidden="true" className="size-4" />
-        </span>
-      </Link>
-    </li>
+        </HStack>
+      }
+    />
   );
 }

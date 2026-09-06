@@ -1,8 +1,20 @@
 import type { Metadata } from "next";
-import Link from "next/link";
 import { ClipboardCheck } from "lucide-react";
+import { Link } from "@astryxdesign/core/Link";
+import { HStack, VStack } from "@astryxdesign/core/Stack";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHeader,
+  TableHeaderCell,
+  TableRow,
+} from "@astryxdesign/core/Table";
+import { Heading, Text } from "@astryxdesign/core/Text";
+import { VisuallyHidden } from "@astryxdesign/core/VisuallyHidden";
 import { EmptyState } from "@/components/ui-kit/empty-state";
 import { PageHeader } from "@/components/ui-kit/page-header";
+import { Lead, Num } from "@/components/ui-kit/prose";
 import { Tag } from "@/components/ui-kit/tag";
 import { AddSession, CancelSession, EditSession } from "@/components/assessments/session-actions";
 import { isPast, sessionDay, sessionSpan } from "@/lib/assessments/constants";
@@ -48,34 +60,35 @@ export default async function AssessmentsPage() {
     <AddSession programmes={programmes} types={types} instructors={instructors} today={todayIso} />
   ) : null;
 
+  const tableProps = { manage, programmes, types, instructors, today: todayIso };
+
   return (
-    <div className="space-y-6">
+    <VStack gap={6}>
       <PageHeader
         title="Assessments"
         description="Book a child onto a session; once they have been in the water, place them at the level they belong at."
         actions={add}
       />
 
-      <p className="max-w-prose text-sm text-muted-foreground">
+      <Lead>
         {upcoming.length === 0 ? (
           "No sessions coming up."
         ) : (
           <>
-            <span className="font-medium text-foreground tabular-nums">{upcoming.length}</span>{" "}
-            {upcoming.length === 1 ? "session" : "sessions"} coming up
+            <Num>{upcoming.length}</Num> {upcoming.length === 1 ? "session" : "sessions"} coming
+            up
             {uncapped ? (
               ", with no limit on places"
             ) : (
               <>
-                , with{" "}
-                <span className="font-medium text-foreground tabular-nums">{placesLeft}</span>{" "}
-                {placesLeft === 1 ? "place" : "places"} left between them
+                , with <Num>{placesLeft}</Num> {placesLeft === 1 ? "place" : "places"} left between
+                them
               </>
             )}
             .
           </>
         )}
-      </p>
+      </Lead>
 
       {sessions.length === 0 ? (
         <EmptyState
@@ -85,53 +98,34 @@ export default async function AssessmentsPage() {
           action={add}
         />
       ) : (
-        <div className="space-y-6">
-          <section className="space-y-3">
-            <h2 className="text-sm font-semibold text-foreground">Coming up</h2>
+        <VStack gap={6}>
+          <VStack gap={3} as="section">
+            <Heading level={2}>Coming up</Heading>
             {upcoming.length === 0 ? (
-              <p className="text-sm text-muted-foreground">Nothing scheduled.</p>
+              <Text as="p" display="block" color="secondary">
+                Nothing scheduled.
+              </Text>
             ) : (
-              <SessionTable
-                sessions={upcoming}
-                manage={manage}
-                programmes={programmes}
-                types={types}
-                instructors={instructors}
-                today={todayIso}
-              />
+              <SessionTable sessions={upcoming} {...tableProps} />
             )}
-          </section>
+          </VStack>
 
           {past.length > 0 ? (
-            <section className="space-y-3">
-              <h2 className="text-sm font-semibold text-foreground">Already run</h2>
-              <SessionTable
-                sessions={past}
-                manage={manage}
-                programmes={programmes}
-                types={types}
-                instructors={instructors}
-                today={todayIso}
-              />
-            </section>
+            <VStack gap={3} as="section">
+              <Heading level={2}>Already run</Heading>
+              <SessionTable sessions={past} {...tableProps} />
+            </VStack>
           ) : null}
 
           {cancelled.length > 0 ? (
-            <section className="space-y-3">
-              <h2 className="text-sm font-semibold text-foreground">Cancelled</h2>
-              <SessionTable
-                sessions={cancelled}
-                manage={false}
-                programmes={programmes}
-                types={types}
-                instructors={instructors}
-                today={todayIso}
-              />
-            </section>
+            <VStack gap={3} as="section">
+              <Heading level={2}>Cancelled</Heading>
+              <SessionTable sessions={cancelled} {...tableProps} manage={false} />
+            </VStack>
           ) : null}
-        </div>
+        </VStack>
       )}
-    </div>
+    </VStack>
   );
 }
 
@@ -151,80 +145,92 @@ function SessionTable({
   today: string;
 }) {
   return (
-    <div className="overflow-hidden rounded-md border">
-      <table className="w-full text-sm">
-        <thead className="bg-surface">
-          <tr className="border-b">
-            <th scope="col" className="px-3 py-2 text-left text-xs font-medium text-muted-foreground">
-              When
-            </th>
-            <th scope="col" className="px-3 py-2 text-left text-xs font-medium text-muted-foreground max-md:hidden">
-              Programme
-            </th>
-            <th scope="col" className="px-3 py-2 text-left text-xs font-medium text-muted-foreground max-lg:hidden">
-              Assessor
-            </th>
-            <th scope="col" className="px-3 py-2 text-left text-xs font-medium text-muted-foreground">
-              Places
-            </th>
-            <th scope="col" className="w-20 px-3 py-2">
-              <span className="sr-only">Actions</span>
-            </th>
-          </tr>
-        </thead>
-        <tbody>
-          {sessions.map((s) => {
-            const taken = s._count.bookings;
-            const full = s.capacity !== null && taken >= s.capacity;
-            return (
-              <tr key={s.id} className="group border-b transition-colors last:border-0 hover:bg-muted">
-                <td className="px-3 py-2 font-medium text-foreground">
-                  <Link href={`/assessments/${s.id}`} className="underline-offset-2 hover:underline">
+    <Table hasHover textOverflow="wrap">
+      <TableHeader>
+        <TableRow isHeaderRow>
+          <TableHeaderCell scope="col">When</TableHeaderCell>
+          <TableHeaderCell scope="col" className="max-md:hidden">
+            Programme
+          </TableHeaderCell>
+          <TableHeaderCell scope="col" className="max-lg:hidden">
+            Assessor
+          </TableHeaderCell>
+          <TableHeaderCell scope="col">Places</TableHeaderCell>
+          {manage ? (
+            <TableHeaderCell scope="col">
+              <VisuallyHidden>Actions</VisuallyHidden>
+            </TableHeaderCell>
+          ) : null}
+        </TableRow>
+      </TableHeader>
+      <TableBody>
+        {sessions.map((s) => {
+          const taken = s._count.bookings;
+          const full = s.capacity !== null && taken >= s.capacity;
+          return (
+            <TableRow key={s.id}>
+              <TableCell>
+                <HStack gap={2} vAlign="center" wrap="wrap">
+                  <Link href={`/assessments/${s.id}`} weight="medium">
                     {sessionDay(s)}
                   </Link>
                   {s.cancelledAt ? (
-                    <Tag color="gray" className="ml-2">
-                      Cancelled
-                    </Tag>
+                    <Tag color="gray">Cancelled</Tag>
                   ) : full ? (
-                    <Tag color="yellow" className="ml-2">
-                      Full
-                    </Tag>
+                    <Tag color="yellow">Full</Tag>
                   ) : null}
-                  <span className="mt-0.5 block text-xs font-normal text-muted-foreground tabular-nums">
-                    {sessionSpan(s)}
-                    {s.location ? ` · ${s.location}` : ""}
-                  </span>
-                  <span className="mt-0.5 block text-xs font-normal text-muted-foreground md:hidden">
-                    {s.programme.name} · {s.type?.name ?? "kind not set"}
-                    {s.instructor ? ` · ${s.instructor.name}` : ""}
-                  </span>
-                </td>
-                <td className="px-3 py-2 text-muted-foreground max-md:hidden">
-                  {s.programme.name}
-                  <span className={s.type ? "mt-0.5 block text-xs" : "mt-0.5 block text-xs text-(--tag-orange-fg)"}>
-                    {s.type?.name ?? "Kind not set"}
-                  </span>
-                </td>
-                <td className="px-3 py-2 text-muted-foreground max-lg:hidden">
-                  {s.instructor?.name ?? <span className="text-(--tag-orange-fg)">Not decided</span>}
-                </td>
-                <td className="px-3 py-2 whitespace-nowrap text-muted-foreground tabular-nums">
+                </HStack>
+                <Text type="supporting" display="block" hasTabularNumbers>
+                  {sessionSpan(s)}
+                  {s.location ? ` · ${s.location}` : ""}
+                </Text>
+                <Text type="supporting" display="block" className="md:hidden">
+                  {s.programme.name} · {s.type?.name ?? "kind not set"}
+                  {s.instructor ? ` · ${s.instructor.name}` : ""}
+                </Text>
+              </TableCell>
+              <TableCell className="max-md:hidden">
+                <Text color="secondary">{s.programme.name}</Text>
+                {s.type ? (
+                  <Text type="supporting" display="block">
+                    {s.type.name}
+                  </Text>
+                ) : (
+                  <Tag color="orange">Kind not set</Tag>
+                )}
+              </TableCell>
+              <TableCell className="max-lg:hidden">
+                {s.instructor ? (
+                  <Text color="secondary">{s.instructor.name}</Text>
+                ) : (
+                  <Tag color="orange">Not decided</Tag>
+                )}
+              </TableCell>
+              <TableCell>
+                <Text color="secondary" hasTabularNumbers textWrap="nowrap">
                   {s.capacity === null ? `${taken} booked` : `${taken} of ${s.capacity}`}
-                </td>
-                <td className="px-3 py-2">
-                  {manage && !s.cancelledAt ? (
-                    <div className="flex items-center justify-end gap-0.5 max-md:gap-2 opacity-0 transition-opacity group-focus-within:opacity-100 group-hover:opacity-100 max-md:opacity-100">
-                      <EditSession session={s} programmes={programmes} types={types} instructors={instructors} today={today} />
+                </Text>
+              </TableCell>
+              {manage ? (
+                <TableCell>
+                  {s.cancelledAt ? null : (
+                    <HStack gap={1} vAlign="center" hAlign="end">
+                      <EditSession
+                        session={s}
+                        programmes={programmes}
+                        types={types}
+                        instructors={instructors}
+                        today={today}
+                      />
                       <CancelSession session={s} />
-                    </div>
-                  ) : null}
-                </td>
-              </tr>
-            );
-          })}
-        </tbody>
-      </table>
-    </div>
+                    </HStack>
+                  )}
+                </TableCell>
+              ) : null}
+            </TableRow>
+          );
+        })}
+      </TableBody>
+    </Table>
   );
 }

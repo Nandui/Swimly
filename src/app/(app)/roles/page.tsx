@@ -1,7 +1,14 @@
 import type { Metadata } from "next";
 import { KeyRound } from "lucide-react";
+import { Card } from "@astryxdesign/core/Card";
+import { Divider } from "@astryxdesign/core/Divider";
+import { List } from "@astryxdesign/core/List";
+import { Item } from "@astryxdesign/core/Item";
+import { HStack, StackItem, VStack } from "@astryxdesign/core/Stack";
+import { Heading, Text } from "@astryxdesign/core/Text";
 import { EmptyState } from "@/components/ui-kit/empty-state";
 import { PageHeader } from "@/components/ui-kit/page-header";
+import { Lead, Num } from "@/components/ui-kit/prose";
 import { Tag } from "@/components/ui-kit/tag";
 import { AddRole, DeleteRole, EditRole } from "@/components/staff/role-actions";
 import { screenPage } from "@/lib/page-guards";
@@ -19,22 +26,19 @@ export default async function RolesPage() {
   const assigned = roles.reduce((n, role) => n + role._count.users, 0);
 
   return (
-    <div className="space-y-6">
+    <VStack gap={6}>
       <PageHeader
         title="Roles"
         description="A role is a named set of permissions. People hold one."
         actions={<AddRole />}
       />
 
-      <p className="max-w-prose text-sm text-muted-foreground">
-        <span className="font-medium text-foreground tabular-nums">{roles.length}</span>{" "}
-        {roles.length === 1 ? "role" : "roles"}, held between them by{" "}
-        <span className="font-medium text-foreground tabular-nums">{assigned}</span>{" "}
-        {assigned === 1 ? "account" : "accounts"}, out of{" "}
-        <span className="font-medium text-foreground tabular-nums">{PERMISSIONS.length}</span>{" "}
-        permissions the app has to give. A role names the screens its holders can open, and
-        the permissions are the power to change something on them.
-      </p>
+      <Lead>
+        <Num>{roles.length}</Num> {roles.length === 1 ? "role" : "roles"}, held between them by{" "}
+        <Num>{assigned}</Num> {assigned === 1 ? "account" : "accounts"}, out of{" "}
+        <Num>{PERMISSIONS.length}</Num> permissions the app has to give. A role names the screens
+        its holders can open, and the permissions are the power to change something on them.
+      </Lead>
 
       {roles.length === 0 ? (
         <EmptyState
@@ -44,76 +48,80 @@ export default async function RolesPage() {
           action={<AddRole />}
         />
       ) : (
-        <ul className="space-y-3">
+        <VStack gap={3} as="ul">
           {roles.map((role) => (
             <RoleCard key={role.id} role={role} />
           ))}
-        </ul>
+        </VStack>
       )}
-    </div>
+    </VStack>
   );
 }
 
+/** One role: a card, because each is a thing on its own — edited, deleted,
+ *  held by people — rather than a row in a set. */
 function RoleCard({ role }: { role: RoleRow }) {
   const reach = roleReach(role.permissions);
   const held = expandPermissions(role.permissions);
   const granted = PERMISSIONS.filter((permission) => held.has(permission.key));
+  const screens = cleanScreens(role.screens);
 
   return (
-    <li className="overflow-hidden rounded-md border">
-      <div className="group flex flex-wrap items-start justify-between gap-x-4 gap-y-2 border-b bg-surface p-3">
-        <div className="min-w-0">
-          <p className="text-sm font-medium text-foreground">
-            {role.name}
-            <Tag color={reach.color} className="ml-2">
-              {reach.label}
-            </Tag>
-            {role.isSystem ? (
-              <Tag color="gray" className="ml-1.5">
-                Built in
-              </Tag>
-            ) : null}
-          </p>
-          {role.description ? (
-            <p className="mt-0.5 text-xs text-muted-foreground">{role.description}</p>
-          ) : null}
-          <p className="mt-0.5 text-xs text-muted-foreground">
-            {permissionCountLabel(role.permissions.length)} ·{" "}
-            <span className="tabular-nums">{role._count.users}</span>{" "}
-            {role._count.users === 1 ? "account" : "accounts"} · starts on{" "}
-            {(isRoleHome(role.home) ? ROLE_HOMES[role.home] : ROLE_HOMES.overview).label}
-          </p>
-          <p className="mt-0.5 text-xs text-muted-foreground">
-            Sees{" "}
-            {cleanScreens(role.screens).length === 0
-              ? "no screens"
-              : cleanScreens(role.screens)
-                  .map((key) => screenMeta(key).label)
-                  .join(", ")}
-          </p>
-        </div>
-        <div className="flex items-center gap-0.5 max-md:gap-2 opacity-0 transition-opacity group-focus-within:opacity-100 group-hover:opacity-100 max-md:opacity-100">
-          <EditRole role={role} />
-          <DeleteRole role={role} users={role._count.users} />
-        </div>
-      </div>
+    <li className="list-none">
+      <Card>
+        <VStack gap={3}>
+          <HStack gap={4} vAlign="start" hAlign="between" wrap="wrap">
+            <StackItem size="fill">
+              <VStack gap={1}>
+                <Heading level={2}>
+                  <HStack gap={2} vAlign="center" wrap="wrap">
+                    {role.name}
+                    <Tag color={reach.color}>{reach.label}</Tag>
+                    {role.isSystem ? <Tag color="gray">Built in</Tag> : null}
+                  </HStack>
+                </Heading>
+                {role.description ? (
+                  <Text as="p" display="block" color="secondary">
+                    {role.description}
+                  </Text>
+                ) : null}
+                <Text type="supporting" display="block">
+                  {permissionCountLabel(role.permissions.length)} ·{" "}
+                  <Text type="supporting" hasTabularNumbers>
+                    {role._count.users}
+                  </Text>{" "}
+                  {role._count.users === 1 ? "account" : "accounts"} · starts on{" "}
+                  {(isRoleHome(role.home) ? ROLE_HOMES[role.home] : ROLE_HOMES.overview).label}
+                </Text>
+                <Text type="supporting" display="block">
+                  Sees{" "}
+                  {screens.length === 0
+                    ? "no screens"
+                    : screens.map((key) => screenMeta(key).label).join(", ")}
+                </Text>
+              </VStack>
+            </StackItem>
+            <HStack gap={1} vAlign="center">
+              <EditRole role={role} />
+              <DeleteRole role={role} users={role._count.users} />
+            </HStack>
+          </HStack>
 
-      {granted.length === 0 ? (
-        <p className="p-3 text-sm text-muted-foreground">
-          Reads everything, changes nothing.
-        </p>
-      ) : (
-        <ul className="p-3 text-sm">
-          {granted.map((permission) => (
-            <li key={permission.key} className="flex gap-2 py-0.5 text-muted-foreground">
-              <span aria-hidden className="select-none">
-                ·
-              </span>
-              <span>{permission.label}</span>
-            </li>
-          ))}
-        </ul>
-      )}
+          <Divider />
+
+          {granted.length === 0 ? (
+            <Text as="p" display="block" color="secondary">
+              Reads everything, changes nothing.
+            </Text>
+          ) : (
+            <List density="compact" listStyle="disc">
+              {granted.map((permission) => (
+                <Item key={permission.key} as="li" density="compact" label={permission.label} />
+              ))}
+            </List>
+          )}
+        </VStack>
+      </Card>
     </li>
   );
 }

@@ -1,12 +1,20 @@
 import type { Metadata } from "next";
-import Link from "next/link";
 import { notFound } from "next/navigation";
 import { ArrowRight, ChevronLeft, ChevronRight, Users } from "lucide-react";
+import { Banner } from "@astryxdesign/core/Banner";
+import { Button } from "@astryxdesign/core/Button";
+import { Item } from "@astryxdesign/core/Item";
+import { Link } from "@astryxdesign/core/Link";
+import { List } from "@astryxdesign/core/List";
+import { HStack, VStack } from "@astryxdesign/core/Stack";
+import { Heading, Text } from "@astryxdesign/core/Text";
+import { VisuallyHidden } from "@astryxdesign/core/VisuallyHidden";
+import { BackLink } from "@/components/ui-kit/back-link";
 import { EmptyState } from "@/components/ui-kit/empty-state";
 import { PageHeader } from "@/components/ui-kit/page-header";
+import { Lead, Num } from "@/components/ui-kit/prose";
 import { TabStrip } from "@/components/ui-kit/tab-strip";
 import { Tag } from "@/components/ui-kit/tag";
-import { Button } from "@/components/ui/button";
 import { RegisterForm } from "@/components/attendance/register-form";
 import { TakeOver } from "@/components/attendance/take-over";
 import { WrongClub } from "@/components/clubs/wrong-club";
@@ -83,50 +91,44 @@ export default async function ClassPage(props: PageProps<"/courses/[id]/class">)
     `/courses/${course.id}/class?date=${iso}${next === "competencies" ? "&step=competencies" : ""}`;
 
   const readyToComplete = progress.swimmers.filter((s) => s.eligible && !s.completedOn);
+  const competencies = progress.course.level.competencies.length;
 
   return (
-    <div className="space-y-6">
-      <div>
+    <VStack gap={6}>
+      <VStack gap={2}>
         {/* Back to wherever this person's deck is: Today for an instructor,
             the class's own page for a desk role without Today. */}
-        <Link
-          href={canSee(session, "today") ? "/today" : `/courses/${course.id}`}
-          className="mb-2 inline-flex items-center gap-1 text-sm text-muted-foreground underline-offset-2 hover:text-foreground hover:underline"
-        >
-          <ChevronLeft className="size-3.5" />
+        <BackLink href={canSee(session, "today") ? "/today" : `/courses/${course.id}`}>
           {canSee(session, "today") ? "Today" : courseName(course)}
-        </Link>
+        </BackLink>
         <PageHeader
           actions={
             step === "attendance" ? (
               <>
-                <Button asChild variant="outline" size="sm">
-                  <Link href={`/courses/${course.id}/class?date=${shiftWeeks(iso, -1)}`}>
-                    <ChevronLeft className="size-4" />
-                    Week before
-                  </Link>
-                </Button>
+                <Button
+                  label="Week before"
+                  variant="secondary"
+                  href={`/courses/${course.id}/class?date=${shiftWeeks(iso, -1)}`}
+                  icon={<ChevronLeft className="size-4" aria-hidden />}
+                />
                 {shiftWeeks(iso, 1) <= today() ? (
-                  <Button asChild variant="outline" size="sm">
-                    <Link href={`/courses/${course.id}/class?date=${shiftWeeks(iso, 1)}`}>
-                      Week after
-                      <ChevronRight className="size-4" />
-                    </Link>
-                  </Button>
+                  <Button
+                    label="Week after"
+                    variant="secondary"
+                    href={`/courses/${course.id}/class?date=${shiftWeeks(iso, 1)}`}
+                    endContent={<ChevronRight className="size-4" aria-hidden />}
+                  />
                 ) : null}
               </>
             ) : null
           }
           title={
-            <span className="inline-flex flex-wrap items-center gap-2">
+            <HStack gap={2} vAlign="center" wrap="wrap">
               {/* The desk's page for this class, for roles that have it.
                   Today itself never leads off the deck; this is the one
                   door. */}
               {canSee(session, "courses") ? (
-                <Link
-                  href={`/courses/${course.id}`}
-                  className="underline-offset-4 hover:underline"
-                >
+                <Link href={`/courses/${course.id}`} color="primary">
                   {courseName(course)}
                 </Link>
               ) : (
@@ -134,7 +136,7 @@ export default async function ClassPage(props: PageProps<"/courses/[id]/class">)
               )}
               {taken ? <Tag color="green">Attendance taken</Tag> : null}
               {cover ? <Tag color="purple">Covered</Tag> : null}
-            </span>
+            </HStack>
           }
           description={
             `${formatSlot(course)} · ${formatDate(parseDateOnly(iso))}` +
@@ -145,7 +147,7 @@ export default async function ClassPage(props: PageProps<"/courses/[id]/class">)
                 : "")
           }
         />
-      </div>
+      </VStack>
 
       <TabStrip
         ariaLabel="Steps"
@@ -166,9 +168,7 @@ export default async function ClassPage(props: PageProps<"/courses/[id]/class">)
       />
 
       {course.archivedAt ? (
-        <p className="rounded bg-(--tag-yellow-bg) px-2.5 py-1.5 text-sm text-(--tag-yellow-fg)">
-          This class is archived, so it is read-only.
-        </p>
+        <Banner status="info" title="This class is archived, so it is read-only." collapsible={false} />
       ) : askTakeOver ? (
         <TakeOver
           courseId={course.id}
@@ -180,22 +180,20 @@ export default async function ClassPage(props: PageProps<"/courses/[id]/class">)
           autoOpen
         />
       ) : !mayMark ? (
-        <p className="rounded bg-(--tag-yellow-bg) px-2.5 py-1.5 text-sm text-(--tag-yellow-fg)">
-          You can read this class but not change it.
-        </p>
+        <Banner status="info" title="You can read this class but not change it." collapsible={false} />
       ) : step === "competencies" && !mayAssess ? (
-        <p className="rounded bg-(--tag-yellow-bg) px-2.5 py-1.5 text-sm text-(--tag-yellow-fg)">
-          You can read these marks but not change them.
-        </p>
+        <Banner status="info" title="You can read these marks but not change them." collapsible={false} />
       ) : null}
 
       {step === "attendance" ? (
         <>
           {note ? (
-            <p className="max-w-prose text-sm text-muted-foreground">
-              <span className="font-medium text-foreground">Note:</span> {note.note}{" "}
-              <span className="text-xs">— {note.byName}</span>
-            </p>
+            <Lead>
+              <Text weight="medium" color="primary">
+                Note:
+              </Text>{" "}
+              {note.note} <Text type="supporting">— {note.byName}</Text>
+            </Lead>
           ) : null}
 
           {lines.length === 0 ? (
@@ -204,12 +202,12 @@ export default async function ClassPage(props: PageProps<"/courses/[id]/class">)
               title="Nobody was in this class on that day"
               hint={`Enrolments starting after ${formatDate(parseDateOnly(iso))} do not appear on it — try a later ${DAY_META[course.dayOfWeek].label}.`}
               action={
-                <Button asChild variant="outline" size="sm">
-                  <Link href={stepHref("competencies")}>
-                    Competencies
-                    <ArrowRight className="size-4" />
-                  </Link>
-                </Button>
+                <Button
+                  label="Competencies"
+                  variant="secondary"
+                  href={stepHref("competencies")}
+                  endContent={<ArrowRight className="size-4" aria-hidden />}
+                />
               }
             />
           ) : (
@@ -225,69 +223,68 @@ export default async function ClassPage(props: PageProps<"/courses/[id]/class">)
 
           {/* Somebody who may only read still needs the way to step two. */}
           {!mayMark && lines.length > 0 ? (
-            <div className="flex justify-end">
-              <Button asChild variant="outline" size="lg">
-                <Link href={stepHref("competencies")}>
-                  Competencies
-                  <ArrowRight className="size-4" />
-                </Link>
-              </Button>
-            </div>
+            <HStack hAlign="end">
+              <Button
+                label="Competencies"
+                variant="secondary"
+                size="lg"
+                href={stepHref("competencies")}
+                endContent={<ArrowRight className="size-4" aria-hidden />}
+              />
+            </HStack>
           ) : null}
         </>
       ) : (
         <>
-          <div className="flex flex-wrap items-center justify-between gap-x-6 gap-y-2">
-            <p className="max-w-prose text-sm text-muted-foreground">
-              <span className="font-medium text-foreground tabular-nums">
-                {progress.swimmers.length}
-              </span>{" "}
-              {progress.swimmers.length === 1 ? "swimmer" : "swimmers"} working through{" "}
-              <span className="font-medium text-foreground tabular-nums">
-                {progress.course.level.competencies.length}
-              </span>{" "}
-              {progress.course.level.competencies.length === 1 ? "competency" : "competencies"}{" "}
-              in {progress.course.level.name}.
-            </p>
-          </div>
+          <Lead>
+            <Num>{progress.swimmers.length}</Num>{" "}
+            {progress.swimmers.length === 1 ? "swimmer" : "swimmers"} working through{" "}
+            <Num>{competencies}</Num> {competencies === 1 ? "competency" : "competencies"} in{" "}
+            {progress.course.level.name}.
+          </Lead>
 
           {readyToComplete.length > 0 ? (
-            <section className="space-y-2" aria-label="Ready to complete">
-              <h2 className="text-sm font-semibold text-foreground">
-                Ready to complete {progress.course.level.name}
-                <span className="sr-only">,</span>{" "}
-                <span className="text-xs font-normal text-muted-foreground tabular-nums">
-                  {readyToComplete.length}
-                </span>
-              </h2>
-              <ul className="overflow-hidden rounded-md border">
+            <VStack gap={2} as="section" aria-label="Ready to complete">
+              <Heading level={2}>
+                <HStack gap={2} vAlign="center" wrap="wrap">
+                  Ready to complete {progress.course.level.name}
+                  <VisuallyHidden>,</VisuallyHidden>
+                  <Text color="secondary" weight="normal" hasTabularNumbers>
+                    {readyToComplete.length}
+                  </Text>
+                </HStack>
+              </Heading>
+              <List hasDividers>
                 {readyToComplete.map((swimmer) => (
-                  <li
+                  <Item
                     key={swimmer.student.id}
-                    className="flex flex-wrap items-center justify-between gap-x-4 gap-y-2 border-b p-3 last:border-0"
-                  >
-                    <span className="flex flex-wrap items-center gap-2 text-sm font-medium text-foreground">
-                      {fullName(swimmer.student)}
-                      <Tag color="green">
-                        {swimmer.achieved} of {swimmer.total}
-                      </Tag>
-                    </span>
-                    {mayComplete ? (
-                      <ConfirmLevel
-                        studentId={swimmer.student.id}
-                        levelId={progress.course.levelId}
-                        studentName={fullName(swimmer.student)}
-                        levelName={progress.course.level.name}
-                        achieved={swimmer.achieved}
-                        total={swimmer.total}
-                        eligible={swimmer.eligible}
-                        admin={admin}
-                      />
-                    ) : null}
-                  </li>
+                    as="li"
+                    label={
+                      <HStack gap={2} vAlign="center" wrap="wrap">
+                        <Text weight="medium">{fullName(swimmer.student)}</Text>
+                        <Tag color="green">
+                          {swimmer.achieved} of {swimmer.total}
+                        </Tag>
+                      </HStack>
+                    }
+                    endContent={
+                      mayComplete ? (
+                        <ConfirmLevel
+                          studentId={swimmer.student.id}
+                          levelId={progress.course.levelId}
+                          studentName={fullName(swimmer.student)}
+                          levelName={progress.course.level.name}
+                          achieved={swimmer.achieved}
+                          total={swimmer.total}
+                          eligible={swimmer.eligible}
+                          admin={admin}
+                        />
+                      ) : undefined
+                    }
+                  />
                 ))}
-              </ul>
-            </section>
+              </List>
+            </VStack>
           ) : null}
 
           <DeckChecklist
@@ -314,6 +311,6 @@ export default async function ClassPage(props: PageProps<"/courses/[id]/class">)
           />
         </>
       )}
-    </div>
+    </VStack>
   );
 }

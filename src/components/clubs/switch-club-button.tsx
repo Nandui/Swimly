@@ -2,10 +2,10 @@
 
 import * as React from "react";
 import { useRouter } from "next/navigation";
-import { toast } from "@/lib/toast";
 import { ArrowLeftRight } from "lucide-react";
-import { Button } from "@/components/ui/button";
+import { Button } from "@astryxdesign/core/Button";
 import { switchClub } from "@/lib/clubs/actions/clubs";
+import { toast } from "@/lib/toast";
 
 /** The way through from a page that belongs to another club: switch, and
  *  stay on the page, which then renders as it does there. */
@@ -15,9 +15,10 @@ export function SwitchClubButton({ club }: { club: { id: string; name: string } 
 
   return (
     <Button
-      type="button"
-      size="sm"
-      disabled={pending}
+      label={pending ? "Switching…" : `Switch to ${club.name}`}
+      variant="primary"
+      isLoading={pending}
+      icon={<ArrowLeftRight className="size-4" aria-hidden />}
       onClick={() =>
         startTransition(async () => {
           const result = await switchClub(club.id, { stay: true });
@@ -25,9 +26,6 @@ export function SwitchClubButton({ club }: { club: { id: string; name: string } 
           else toast.error(result.error);
         })
       }
-    >
-      <ArrowLeftRight className="size-4" />
-      {pending ? "Switching…" : `Switch to ${club.name}`}
-    </Button>
+    />
   );
 }

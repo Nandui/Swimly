@@ -1,9 +1,22 @@
 import type { Metadata } from "next";
-import Link from "next/link";
 import { notFound } from "next/navigation";
-import { ChevronLeft, Users } from "lucide-react";
+import { Users } from "lucide-react";
+import { Link } from "@astryxdesign/core/Link";
+import { HStack, VStack } from "@astryxdesign/core/Stack";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHeader,
+  TableHeaderCell,
+  TableRow,
+} from "@astryxdesign/core/Table";
+import { Heading, Text } from "@astryxdesign/core/Text";
+import { VisuallyHidden } from "@astryxdesign/core/VisuallyHidden";
+import { BackLink } from "@/components/ui-kit/back-link";
 import { EmptyState } from "@/components/ui-kit/empty-state";
 import { PageHeader } from "@/components/ui-kit/page-header";
+import { Lead, Num } from "@/components/ui-kit/prose";
 import { Tag } from "@/components/ui-kit/tag";
 import {
   BookOntoSession,
@@ -63,22 +76,16 @@ export default async function AssessmentSessionPage(props: PageProps<"/assessmen
   const open = !session.cancelledAt;
 
   return (
-    <div className="space-y-6">
-      <div>
-        <Link
-          href="/assessments"
-          className="mb-2 inline-flex items-center gap-1 text-sm text-muted-foreground underline-offset-2 hover:text-foreground hover:underline"
-        >
-          <ChevronLeft className="size-3.5" />
-          Assessments
-        </Link>
+    <VStack gap={6}>
+      <VStack gap={2}>
+        <BackLink href="/assessments">Assessments</BackLink>
         <PageHeader
           title={
-            <span className="inline-flex flex-wrap items-center gap-2">
+            <HStack gap={2} vAlign="center" wrap="wrap">
               {sessionDay(session)}
               {session.cancelledAt ? <Tag color="gray">Cancelled</Tag> : null}
               {open && full ? <Tag color="yellow">Full</Tag> : null}
-            </span>
+            </HStack>
           }
           description={
             `${sessionSpan(session)} · ${session.programme.name} · ${session.type?.name ?? "kind not set"}` +
@@ -104,20 +111,20 @@ export default async function AssessmentSessionPage(props: PageProps<"/assessmen
             </>
           }
         />
-      </div>
+      </VStack>
 
-      <p className="max-w-prose text-sm text-muted-foreground">
-        <span className="font-medium text-foreground tabular-nums">
+      <Lead>
+        <Num>
           {session.capacity === null ? `${taken} booked` : `${taken} of ${session.capacity}`}
-        </span>{" "}
+        </Num>{" "}
         {session.capacity === null ? "" : "places taken"}
         {taken > 0 ? (
           <>
-            , <span className="font-medium text-foreground tabular-nums">{placed}</span> placed so far
+            , <Num>{placed}</Num> placed so far
           </>
         ) : null}
         .{session.notes ? ` ${session.notes}` : ""}
-      </p>
+      </Lead>
 
       {session.bookings.length === 0 ? (
         <EmptyState
@@ -127,25 +134,27 @@ export default async function AssessmentSessionPage(props: PageProps<"/assessmen
           action={book && open ? <BookOntoSession session={session} taken={0} /> : null}
         />
       ) : (
-        <div className="space-y-6">
-          <section className="space-y-3">
-            <h2 className="text-sm font-semibold text-foreground">Booked</h2>
+        <VStack gap={6}>
+          <VStack gap={3} as="section">
+            <Heading level={2}>Booked</Heading>
             {holding.length === 0 ? (
-              <p className="text-sm text-muted-foreground">Nobody is holding a place.</p>
+              <Text as="p" display="block" color="secondary">
+                Nobody is holding a place.
+              </Text>
             ) : (
               <BookingTable entries={holding} session={session} book={book} assess={assess} />
             )}
-          </section>
+          </VStack>
 
           {gone.length > 0 ? (
-            <section className="space-y-3">
-              <h2 className="text-sm font-semibold text-foreground">Not coming</h2>
+            <VStack gap={3} as="section">
+              <Heading level={2}>Not coming</Heading>
               <BookingTable entries={gone} session={session} book={book} assess={assess} />
-            </section>
+            </VStack>
           ) : null}
-        </div>
+        </VStack>
       )}
-    </div>
+    </VStack>
   );
 }
 
@@ -161,95 +170,99 @@ function BookingTable({
   assess: boolean;
 }) {
   const open = !session.cancelledAt;
+  const actions = open && (book || assess);
   return (
-    <div className="overflow-hidden rounded-md border">
-      <table className="w-full text-sm">
-        <thead className="bg-surface">
-          <tr className="border-b">
-            <th scope="col" className="px-3 py-2 text-left text-xs font-medium text-muted-foreground">
-              Swimmer
-            </th>
-            <th scope="col" className="w-12 px-3 py-2 text-left text-xs font-medium text-muted-foreground max-md:hidden">
-              Age
-            </th>
-            <th scope="col" className="px-3 py-2 text-left text-xs font-medium text-muted-foreground">
-              Status
-            </th>
-            <th scope="col" className="px-3 py-2 text-left text-xs font-medium text-muted-foreground max-md:hidden">
-              Placed at
-            </th>
-            <th scope="col" className="w-28 px-3 py-2">
-              <span className="sr-only">Actions</span>
-            </th>
-          </tr>
-        </thead>
-        <tbody>
-          {entries.map((b) => {
-            const meta = BOOKING_STATUS_META[b.status];
-            return (
-              <tr key={b.id} className="group border-b transition-colors last:border-0 hover:bg-muted">
-                <td className="px-3 py-2 font-medium text-foreground">
-                  <Link href={`/students/${b.student.id}`} className="underline-offset-2 hover:underline">
+    <Table hasHover textOverflow="wrap">
+      <TableHeader>
+        <TableRow isHeaderRow>
+          <TableHeaderCell scope="col">Swimmer</TableHeaderCell>
+          <TableHeaderCell scope="col" className="max-md:hidden">
+            Age
+          </TableHeaderCell>
+          <TableHeaderCell scope="col">Status</TableHeaderCell>
+          <TableHeaderCell scope="col" className="max-md:hidden">
+            Placed at
+          </TableHeaderCell>
+          {actions ? (
+            <TableHeaderCell scope="col">
+              <VisuallyHidden>Actions</VisuallyHidden>
+            </TableHeaderCell>
+          ) : null}
+        </TableRow>
+      </TableHeader>
+      <TableBody>
+        {entries.map((b) => {
+          const meta = BOOKING_STATUS_META[b.status];
+          return (
+            <TableRow key={b.id}>
+              <TableCell>
+                <HStack gap={2} vAlign="center" wrap="wrap">
+                  <Link href={`/students/${b.student.id}`} weight="medium">
                     {fullName(b.student)}
                   </Link>
-                  {b.student.medicalNotes ? (
-                    <Tag color="red" className="ml-2">
-                      Medical
-                    </Tag>
-                  ) : null}
-                  <span className="mt-0.5 block text-xs font-normal text-muted-foreground">
-                    <span className="md:hidden">{ageLabel(b.student.dateOfBirth)} · </span>
-                    booked by {b.bookedByName}
-                  </span>
-                  {/* The placement column leaves the table on a phone and
-                      re-homes here, so the row stays one screen wide. */}
-                  {b.outcomeLevel ? (
-                    <span className="mt-0.5 block text-xs font-normal text-muted-foreground md:hidden">
-                      Placed at <span className="font-medium text-foreground">{b.outcomeLevel.name}</span>
-                      {b.assessedByName ? ` by ${b.assessedByName}` : ""}
-                    </span>
-                  ) : null}
-                </td>
-                <td className="px-3 py-2 text-muted-foreground tabular-nums max-md:hidden">
+                  {b.student.medicalNotes ? <Tag color="red">Medical</Tag> : null}
+                </HStack>
+                <Text type="supporting" display="block">
+                  <span className="md:hidden">{ageLabel(b.student.dateOfBirth)} · </span>
+                  booked by {b.bookedByName}
+                </Text>
+                {/* The placement column leaves the table on a phone and
+                    re-homes here, so the row stays one screen wide. */}
+                {b.outcomeLevel ? (
+                  <Text type="supporting" display="block" className="md:hidden">
+                    Placed at{" "}
+                    <Text type="supporting" weight="medium" color="primary">
+                      {b.outcomeLevel.name}
+                    </Text>
+                    {b.assessedByName ? ` by ${b.assessedByName}` : ""}
+                  </Text>
+                ) : null}
+              </TableCell>
+              <TableCell className="max-md:hidden">
+                <Text color="secondary" hasTabularNumbers>
                   {ageLabel(b.student.dateOfBirth)}
-                </td>
-                <td className="px-3 py-2">
-                  <Tag color={meta.color}>{meta.label}</Tag>
-                </td>
-                <td className="px-3 py-2 text-muted-foreground max-md:hidden">
-                  {b.outcomeLevel ? (
-                    <>
-                      <span className="font-medium text-foreground">{b.outcomeLevel.name}</span>
-                      {b.outcomeNote ? (
-                        <span className="mt-0.5 block text-xs">{b.outcomeNote}</span>
-                      ) : null}
-                      <span className="mt-0.5 block text-xs">
-                        {b.assessedByName}
-                        {b.assessedOn ? `, ${formatDate(b.assessedOn)}` : ""}
-                      </span>
-                    </>
-                  ) : b.status === "BOOKED" ? (
-                    <span className="text-xs">Not yet</span>
-                  ) : (
-                    "—"
-                  )}
-                </td>
-                <td className="px-3 py-2">
-                  <div className="flex items-center justify-end gap-0.5 max-md:gap-2 opacity-0 transition-opacity group-focus-within:opacity-100 group-hover:opacity-100 max-md:opacity-100">
-                    {assess && open && (b.status === "BOOKED" || b.status === "ATTENDED") ? (
+                </Text>
+              </TableCell>
+              <TableCell>
+                <Tag color={meta.color}>{meta.label}</Tag>
+              </TableCell>
+              <TableCell className="max-md:hidden">
+                {b.outcomeLevel ? (
+                  <>
+                    <Text weight="medium">{b.outcomeLevel.name}</Text>
+                    {b.outcomeNote ? (
+                      <Text type="supporting" display="block">
+                        {b.outcomeNote}
+                      </Text>
+                    ) : null}
+                    <Text type="supporting" display="block">
+                      {b.assessedByName}
+                      {b.assessedOn ? `, ${formatDate(b.assessedOn)}` : ""}
+                    </Text>
+                  </>
+                ) : b.status === "BOOKED" ? (
+                  <Text type="supporting">Not yet</Text>
+                ) : (
+                  <Text color="disabled">—</Text>
+                )}
+              </TableCell>
+              {actions ? (
+                <TableCell>
+                  <HStack gap={1} vAlign="center" hAlign="end">
+                    {assess && (b.status === "BOOKED" || b.status === "ATTENDED") ? (
                       <RecordOutcome booking={b} session={session} />
                     ) : null}
-                    {assess && open && b.status === "BOOKED" ? <MarkNoShow booking={b} /> : null}
-                    {book && open && b.status === "BOOKED" ? (
+                    {assess && b.status === "BOOKED" ? <MarkNoShow booking={b} /> : null}
+                    {book && b.status === "BOOKED" ? (
                       <CancelBooking booking={b} session={session} />
                     ) : null}
-                  </div>
-                </td>
-              </tr>
-            );
-          })}
-        </tbody>
-      </table>
-    </div>
+                  </HStack>
+                </TableCell>
+              ) : null}
+            </TableRow>
+          );
+        })}
+      </TableBody>
+    </Table>
   );
 }
