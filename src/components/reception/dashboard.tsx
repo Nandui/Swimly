@@ -148,11 +148,9 @@ export function ReceptionDashboard({ clubName, dateLabel, now, courses, student,
             <VStack gap={2}>
               <Heading level={2} id="reception-shortcuts">Plan a booking</Heading>
               {bookingLinks.map(link => (
-                <Link key={link.href} href={link.href} isStandalone hasUnderline weight="medium"
-                  className="flex min-h-11 w-full items-center justify-between gap-3">
-                  <Text type="inherit">{link.label}</Text>
-                  <Icon icon="chevronRight" size="sm" />
-                </Link>
+                <Button key={link.href} href={link.href} label={link.label}
+                  variant="secondary" width="100%" className="min-h-11"
+                  endContent={<Icon icon="chevronRight" size="sm" />} />
               ))}
               {!access.courses && !access.together && !access.assessments ? <Text as="p" color="secondary">Use swimmer lookup to see current places. More booking screens can be enabled for your role.</Text> : null}
             </VStack>
