@@ -31,11 +31,12 @@ export function AppChrome({ screens, club, clubs, ...rest }: Props) {
     <AppShell
       {...rest}
       wordmark={WORDMARK}
+      context={club.name}
       items={visibleNavItems(screens)}
-      // Which club every page is showing. Pinned above the nav, and in the bar
-      // on a phone, because the mistake it guards against — working in the
-      // wrong site without noticing — is one nobody sees coming.
-      switcher={(state) => <ClubSwitcher club={club} clubs={clubs} {...state} />}
+      // Which club every page is showing: named under the wordmark, and the
+      // switcher beside it, because the mistake it guards against — working
+      // in the wrong site without noticing — is one nobody sees coming.
+      switcher={<ClubSwitcher club={club} clubs={clubs} />}
       // The light/dark flip, one tap from anywhere. Handed to the shell as a
       // slot rather than imported by it, so the shell stays ignorant of themes.
       tools={<ThemeFlip />}

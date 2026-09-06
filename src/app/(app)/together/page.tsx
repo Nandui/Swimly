@@ -1,5 +1,4 @@
 import type { Metadata } from "next";
-import { CalendarHeart, Plus, Users } from "lucide-react";
 import { Banner } from "@astryxdesign/core/Banner";
 import { Button } from "@astryxdesign/core/Button";
 import { Item } from "@astryxdesign/core/Item";
@@ -18,6 +17,7 @@ import { getCourses } from "@/lib/courses/data/courses";
 import { screenPage } from "@/lib/page-guards";
 import { getGroup, toMembers } from "@/lib/together/data/together";
 import { findTimesTogether, type Placement } from "@/lib/together/match";
+import { AppIcon } from "@/components/ui-kit/app-icon";
 
 export const metadata: Metadata = { title: "Together" };
 
@@ -97,7 +97,7 @@ export default async function TogetherPage(props: PageProps<"/together">) {
                 variant="secondary"
                 size="sm"
                 href={hrefFor([...ids, student.id])}
-                icon={<Plus className="size-3.5" aria-hidden />}
+                icon={<AppIcon name="plus" size="sm" />}
               />
             ))}
             {suggestions.length > 1 ? (
@@ -111,7 +111,7 @@ export default async function TogetherPage(props: PageProps<"/together">) {
 
       {chosen.length === 0 ? (
         <EmptyState
-          icon={Users}
+          icon="users"
           title="Add the children you want to bring together"
           hint="Brothers and sisters, or two friends who want to come at the same time — it makes no difference. Add the first and anyone sharing their phone number or email is offered alongside."
         />
@@ -148,7 +148,7 @@ function Results({
   if (result.days.length === 0) {
     return (
       <EmptyState
-        icon={CalendarHeart}
+        icon="calendarHeart"
         title={count > 1 ? "No day suits all of them" : "Nowhere with a place"}
         hint={
           count > 1

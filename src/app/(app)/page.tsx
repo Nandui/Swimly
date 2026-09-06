@@ -1,4 +1,3 @@
-import { CalendarCheck, ClipboardList, Waves } from "lucide-react";
 import { Button } from "@astryxdesign/core/Button";
 import { Item } from "@astryxdesign/core/Item";
 import { Link } from "@astryxdesign/core/Link";
@@ -20,6 +19,7 @@ import { getCourseCounts, getCoursesOnDay } from "@/lib/courses/data/courses";
 import { formatDate, parseDateOnly, today } from "@/lib/format";
 import { screenPage } from "@/lib/page-guards";
 import { getStudentCounts } from "@/lib/students/data/students";
+import { AppIcon } from "@/components/ui-kit/app-icon";
 
 export default async function OverviewPage() {
   const session = await screenPage("overview");
@@ -85,7 +85,7 @@ export default async function OverviewPage() {
                 variant="secondary"
                 size="sm"
                 href="/today"
-                icon={<CalendarCheck className="size-4" aria-hidden />}
+                icon={<AppIcon name="calendarCheck" size="sm" />}
               />
             ) : null}
           </HStack>
@@ -129,7 +129,7 @@ export default async function OverviewPage() {
                         variant={done ? "secondary" : "primary"}
                         size="sm"
                         href={`/courses/${course.id}/class?date=${iso}`}
-                        icon={<ClipboardList className="size-4" aria-hidden />}
+                        icon={<AppIcon name="clipboardList" size="sm" />}
                       />
                     }
                   />
@@ -177,7 +177,7 @@ export default async function OverviewPage() {
         <Heading level={2}>Recent activity</Heading>
         {recent.length === 0 ? (
           <EmptyState
-            icon={Waves}
+            icon="waves"
             title="Nothing has happened yet"
             hint="Every mutation writes an audit row, so the first thing anyone changes shows up here."
           />

@@ -41,7 +41,10 @@ every mutation writes an **audit row**; status colour only through the **tag
 tokens** via a metadata map, never a colour at a call site; and run the
 **checklist** at the end of DESIGN.md before calling a screen done — Astryx
 components over hand-drawn ones, no colour outside the tokens, both modes,
-Astryx's focus outline, 44px targets at 375px.
+Astryx's focus outline, 44px targets on touch, checked at 375, 768, 1024 and
+1280. Two traps particular to this app: Astryx's `Icon` is a client
+component, so a server page names its icon through `AppIcon`; and the shell
+already is the page's `Layout`, so never nest another.
 
 Prisma here is v7: the client is generated into `src/generated/prisma` and
 needs a driver adapter (`@prisma/adapter-pg`), and the datasource URL lives in

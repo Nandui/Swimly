@@ -12,6 +12,7 @@ import {
   setAssessmentTypeArchived,
   updateAssessmentType,
 } from "@/lib/assessments/actions/types";
+import { Icon } from "@astryxdesign/core/Icon";
 
 type Named = { id: string; name: string; description: string | null; archivedAt: Date | null };
 
@@ -62,7 +63,7 @@ export function AddAssessmentType({
   return (
     <FormDialog
       trigger={
-        <Button label="Add a kind of assessment" variant="secondary" size="sm" icon={<Plus className="size-4" aria-hidden />} />
+        <Button label="Add a kind of assessment" variant="secondary" size="sm" icon={<Icon icon={Plus} size="sm" />} />
       }
       title={`Add a kind of assessment to ${programmeName}`}
       description="New swimmers, mixed abilities, returning after a break — whatever the desk needs to tell apart when booking."
@@ -79,7 +80,7 @@ export function EditAssessmentType({ type }: { type: Named }) {
   return (
     <FormDialog
       trigger={
-        <IconButton label={`Edit ${type.name}`} variant="ghost" size="sm" icon={<Pencil className="size-4" aria-hidden />} />
+        <IconButton label={`Edit ${type.name}`} variant="ghost" size="sm" icon={<Icon icon={Pencil} size="sm" />} />
       }
       title={`Edit ${type.name}`}
       submitLabel="Save changes"
@@ -99,14 +100,14 @@ export function ArchiveAssessmentType({ type, sessions }: { type: Named; session
         successMessage="Assessment type restored"
         run={() => setAssessmentTypeArchived(type.id, false)}
       >
-        <ArchiveRestore className="size-3.5" />
+        <Icon icon={ArchiveRestore} size="sm" />
       </ActionButton>
     );
   }
   return (
     <ConfirmAction
       trigger={
-        <IconButton label={`Archive ${type.name}`} variant="ghost" size="sm" icon={<Archive className="size-4" aria-hidden />} />
+        <IconButton label={`Archive ${type.name}`} variant="ghost" size="sm" icon={<Icon icon={Archive} size="sm" />} />
       }
       title={`Archive ${type.name}?`}
       description={

@@ -18,7 +18,8 @@ import { DAY_META, DAYS_IN_ORDER, courseLabel, formatTime } from "@/lib/courses/
 import type { CourseDetail } from "@/lib/courses/data/courses";
 import type { InstructorOption } from "@/lib/courses/data/courses";
 import type { LevelOption } from "@/lib/curriculum/data/curriculum";
-import { Grid } from "@astryxdesign/core/Grid";
+import { FormLayout } from "@astryxdesign/core/FormLayout";
+import { Icon } from "@astryxdesign/core/Icon";
 
 /** Radix will not take an empty string as an item value, so "nobody yet" needs
  *  a sentinel that never reaches the action. */
@@ -78,7 +79,7 @@ function CourseFields({
         <Input id="name" name="name" defaultValue={course?.name ?? ""} placeholder="Dolphins" />
       </Field>
 
-      <Grid columns={{ minWidth: 200, max: 2 }} gap={3}>
+      <FormLayout direction="horizontal">
         <Field label="Day" htmlFor="dayOfWeek">
           <Select
             id="dayOfWeek"
@@ -119,7 +120,7 @@ function CourseFields({
             placeholder="12"
           />
         </Field>
-      </Grid>
+      </FormLayout>
 
       <Field label="Instructor" htmlFor="instructorId">
         <Select
@@ -155,7 +156,7 @@ export function AddCourse({
   return (
     <FormDialog
       trigger={
-        <Button label="Add class" variant="primary" size="sm" icon={<Plus className="size-4" aria-hidden />} />
+        <Button label="Add class" variant="primary" size="sm" icon={<Icon icon={Plus} size="sm" />} />
       }
       title="Add a class"
       description="One level, one time, every week."
@@ -183,9 +184,9 @@ export function EditCourse({
     <FormDialog
       trigger={
         variant === "icon" ? (
-          <IconButton label={`Edit ${courseLabel(course)}`} variant="ghost" size="sm" icon={<Pencil className="size-4" aria-hidden />} />
+          <IconButton label={`Edit ${courseLabel(course)}`} variant="ghost" size="sm" icon={<Icon icon={Pencil} size="sm" />} />
         ) : (
-          <Button label="Edit" variant="secondary" size="sm" icon={<Pencil className="size-4" aria-hidden />} />
+          <Button label="Edit" variant="secondary" size="sm" icon={<Icon icon={Pencil} size="sm" />} />
         )
       }
       title={`Edit ${courseLabel(course)}`}
@@ -206,7 +207,7 @@ export function ArchiveCourse({ course }: { course: CourseDetail }) {
         successMessage="Class restored"
         run={() => setCourseArchived(course.id, false)}
       >
-        <ArchiveRestore className="size-3.5" />
+        <Icon icon={ArchiveRestore} size="sm" />
       </ActionButton>
     );
   }
@@ -214,7 +215,7 @@ export function ArchiveCourse({ course }: { course: CourseDetail }) {
   return (
     <ConfirmAction
       trigger={
-        <IconButton label={`Archive ${courseLabel(course)}`} variant="ghost" size="sm" icon={<Archive className="size-4" aria-hidden />} />
+        <IconButton label={`Archive ${courseLabel(course)}`} variant="ghost" size="sm" icon={<Icon icon={Archive} size="sm" />} />
       }
       title={`Archive ${courseLabel(course)}?`}
       description="It comes off the timetable and stops appearing when someone enrols a swimmer. Registers already taken, and everything assessed in it, stay readable. You can restore it later."

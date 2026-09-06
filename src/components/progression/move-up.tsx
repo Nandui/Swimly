@@ -7,6 +7,7 @@ import { Button } from "@astryxdesign/core/Button";
 import type { DayOfWeek } from "@/generated/prisma/client";
 import { courseLabel, placesLeft } from "@/lib/courses/constants";
 import { enrolStudent, transferEnrolment } from "@/lib/enrolment/actions/enrolment";
+import { Icon } from "@astryxdesign/core/Icon";
 
 /** A class a swimmer could be moved into. Structurally what `getCourses`
  *  already returns, so the pages hand over the list they had loaded anyway. */
@@ -58,7 +59,7 @@ export function MoveUpToLevel({
   // say why, rather than letting the click through to an error.
   if (targets.length === 0) {
     return (
-      <Button label={`Move up to ${nextLevelName}`} variant="secondary" size="sm" isDisabled={true} tooltip={`No class teaches ${nextLevelName} yet. Add one on the Classes page first.`} icon={<ArrowUpRight className="size-4" aria-hidden />} />
+      <Button label={`Move up to ${nextLevelName}`} variant="secondary" size="sm" isDisabled={true} tooltip={`No class teaches ${nextLevelName} yet. Add one on the Classes page first.`} icon={<Icon icon={ArrowUpRight} size="sm" />} />
     );
   }
 
@@ -75,7 +76,7 @@ export function MoveUpToLevel({
   return (
     <FormDialog
       trigger={
-        <Button label={`Move up to ${nextLevelName}`} variant="primary" size="sm" icon={<ArrowUpRight className="size-4" aria-hidden />} />
+        <Button label={`Move up to ${nextLevelName}`} variant="primary" size="sm" icon={<Icon icon={ArrowUpRight} size="sm" />} />
       }
       title={`Move ${studentName} up to ${nextLevelName}`}
       description={

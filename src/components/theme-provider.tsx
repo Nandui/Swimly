@@ -2,13 +2,15 @@
 
 import * as React from "react";
 import NextLink from "next/link";
-import { Theme } from "@astryxdesign/core/theme";
+import { LayerProvider } from "@astryxdesign/core/Layer";
 import { LinkProvider } from "@astryxdesign/core/Link";
+import { Theme } from "@astryxdesign/core/theme";
 import { neutralTheme } from "@astryxdesign/theme-neutral/built";
 import { THEME_COOKIE, THEME_COOKIE_MAX_AGE, type ThemeMode } from "@/lib/theme-mode";
 
-/** The design system's root: the Neutral theme, the colour mode, and Next's
- *  Link handed to every Astryx component that navigates.
+/** The design system's root: the Neutral theme, the colour mode, the layer
+ *  provider that positions toasts and overlays, and Next's Link handed to
+ *  every Astryx component that navigates.
  *
  *  The mode starts as whatever the root layout read from the cookie, so the
  *  server and the client agree on the first render. Changing it writes the
@@ -42,7 +44,11 @@ export function ThemeProvider({
   return (
     <ThemeModeContext value={value}>
       <Theme theme={neutralTheme} mode={mode}>
-        <LinkProvider component={NextLink}>{children}</LinkProvider>
+        <LinkProvider component={NextLink}>
+          {/* Toasts sit bottom-end, clear of the deck's save bar's left half
+              and of the phone's home indicator. */}
+          <LayerProvider toast={{ position: "bottomEnd" }}>{children}</LayerProvider>
+        </LinkProvider>
       </Theme>
     </ThemeModeContext>
   );

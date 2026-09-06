@@ -1,6 +1,5 @@
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
-import { CalendarCheck, ClipboardCheck, Waves } from "lucide-react";
 import { Banner } from "@astryxdesign/core/Banner";
 import { Button } from "@astryxdesign/core/Button";
 import { Collapsible } from "@astryxdesign/core/Collapsible";
@@ -37,6 +36,7 @@ import { screenPage } from "@/lib/page-guards";
 import { getStudentProgress } from "@/lib/progression/data/progress";
 import { STUDENT_STATUS_META, fullName } from "@/lib/students/constants";
 import { getStudent } from "@/lib/students/data/students";
+import { AppIcon } from "@/components/ui-kit/app-icon";
 
 export const metadata: Metadata = { title: "Swimmer" };
 
@@ -111,7 +111,9 @@ export default async function StudentPage(props: PageProps<"/students/[id]">) {
   return (
     <VStack gap={6}>
       <VStack gap={2}>
-        <BackLink href="/students">Swimmers</BackLink>
+        <BackLink href="/students" current={fullName(student)}>
+          Swimmers
+        </BackLink>
         <PageHeader
           title={
             <HStack gap={2} vAlign="center" wrap="wrap">
@@ -249,7 +251,7 @@ export default async function StudentPage(props: PageProps<"/students/[id]">) {
           <VStack gap={3} as="section" aria-label="Classes">
             {open.length === 0 ? (
               <EmptyState
-                icon={Waves}
+                icon="waves"
                 title="Not in any class at the moment"
                 hint={
                   past.length > 0
@@ -302,7 +304,7 @@ export default async function StudentPage(props: PageProps<"/students/[id]">) {
           <VStack as="section" aria-label="Attendance">
             {attendance.length === 0 ? (
               <EmptyState
-                icon={CalendarCheck}
+                icon="calendarCheck"
                 title="No attendance taken with them on it yet"
                 hint="Their marks appear here the first time an instructor takes attendance for their class."
               />
@@ -316,7 +318,7 @@ export default async function StudentPage(props: PageProps<"/students/[id]">) {
           <VStack as="section" aria-label="Assessments">
             {assessments.length === 0 ? (
               <EmptyState
-                icon={ClipboardCheck}
+                icon="clipboardCheck"
                 title="No assessments"
                 hint="Book them onto a session from the Assessments page. A placement there earns the level for enrolment."
                 action={
@@ -324,7 +326,7 @@ export default async function StudentPage(props: PageProps<"/students/[id]">) {
                     label="Assessment sessions"
                     variant="secondary"
                     href="/assessments"
-                    icon={<ClipboardCheck className="size-4" aria-hidden />}
+                    icon={<AppIcon name="clipboardCheck" size="sm" />}
                   />
                 }
               />

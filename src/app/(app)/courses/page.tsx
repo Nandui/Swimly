@@ -1,5 +1,4 @@
 import type { Metadata } from "next";
-import { CalendarDays } from "lucide-react";
 import { Link } from "@astryxdesign/core/Link";
 import { HStack, VStack } from "@astryxdesign/core/Stack";
 import {
@@ -113,7 +112,7 @@ export default async function CoursesPage(props: PageProps<"/courses">) {
 
       {live.length === 0 ? (
         <EmptyState
-          icon={CalendarDays}
+          icon="calendarDays"
           title={active > 0 ? "No classes match" : "No classes yet"}
           hint={
             active > 0

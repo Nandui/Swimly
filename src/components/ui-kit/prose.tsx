@@ -1,13 +1,17 @@
 import { Badge } from "@astryxdesign/core/Badge";
+import { VStack } from "@astryxdesign/core/Stack";
 import { Text } from "@astryxdesign/core/Text";
 
 /** The stat sentence, not a row of tiles: counts read as prose, in Astryx's
- *  secondary text, with the numbers in primary ink. */
+ *  secondary text, with the numbers in primary ink. Capped at a readable
+ *  line, the way Astryx caps prose. */
 export function Lead({ children }: { children: React.ReactNode }) {
   return (
-    <Text as="p" display="block" color="secondary" className="max-w-prose">
-      {children}
-    </Text>
+    <VStack maxWidth="65ch">
+      <Text as="p" display="block" color="secondary">
+        {children}
+      </Text>
+    </VStack>
   );
 }
 
@@ -20,9 +24,8 @@ export function Num({ children }: { children: React.ReactNode }) {
   );
 }
 
-/** A number that wants noticing — attendance still to take, swimmers gone
- *  quiet. A badge rather than coloured text, which is what Astryx has for a
- *  count that carries a status. */
+/** A count that wants noticing — attendance still to take, swimmers gone
+ *  quiet. A Badge is what Astryx has for a count that carries a status. */
 export function Alert({
   children,
   tone = "warning",

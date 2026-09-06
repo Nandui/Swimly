@@ -1,11 +1,9 @@
 import type { Metadata } from "next";
-import { KeyRound } from "lucide-react";
-import { Card } from "@astryxdesign/core/Card";
-import { Divider } from "@astryxdesign/core/Divider";
-import { List } from "@astryxdesign/core/List";
+import { Collapsible } from "@astryxdesign/core/Collapsible";
 import { Item } from "@astryxdesign/core/Item";
-import { HStack, StackItem, VStack } from "@astryxdesign/core/Stack";
-import { Heading, Text } from "@astryxdesign/core/Text";
+import { List } from "@astryxdesign/core/List";
+import { HStack, VStack } from "@astryxdesign/core/Stack";
+import { Text } from "@astryxdesign/core/Text";
 import { EmptyState } from "@/components/ui-kit/empty-state";
 import { PageHeader } from "@/components/ui-kit/page-header";
 import { Lead, Num } from "@/components/ui-kit/prose";
@@ -42,86 +40,91 @@ export default async function RolesPage() {
 
       {roles.length === 0 ? (
         <EmptyState
-          icon={KeyRound}
+          icon="keyRound"
           title="No roles yet"
           hint="Without a role nobody can sign in, because an account with no permissions has nowhere to go."
           action={<AddRole />}
         />
       ) : (
-        <VStack gap={3} as="ul">
+        // Records as rows, not a card each: one list, a divider between
+        // roles, the permissions folded under each.
+        <List hasDividers density="spacious">
           {roles.map((role) => (
-            <RoleCard key={role.id} role={role} />
+            <RoleRowItem key={role.id} role={role} />
           ))}
-        </VStack>
+        </List>
       )}
     </VStack>
   );
 }
 
-/** One role: a card, because each is a thing on its own — edited, deleted,
- *  held by people — rather than a row in a set. */
-function RoleCard({ role }: { role: RoleRow }) {
+function RoleRowItem({ role }: { role: RoleRow }) {
   const reach = roleReach(role.permissions);
   const held = expandPermissions(role.permissions);
   const granted = PERMISSIONS.filter((permission) => held.has(permission.key));
   const screens = cleanScreens(role.screens);
 
   return (
-    <li className="list-none">
-      <Card>
-        <VStack gap={3}>
-          <HStack gap={4} vAlign="start" hAlign="between" wrap="wrap">
-            <StackItem size="fill">
-              <VStack gap={1}>
-                <Heading level={2}>
-                  <HStack gap={2} vAlign="center" wrap="wrap">
-                    {role.name}
-                    <Tag color={reach.color}>{reach.label}</Tag>
-                    {role.isSystem ? <Tag color="gray">Built in</Tag> : null}
-                  </HStack>
-                </Heading>
-                {role.description ? (
-                  <Text as="p" display="block" color="secondary">
-                    {role.description}
-                  </Text>
-                ) : null}
-                <Text type="supporting" display="block">
-                  {permissionCountLabel(role.permissions.length)} ·{" "}
-                  <Text type="supporting" hasTabularNumbers>
-                    {role._count.users}
-                  </Text>{" "}
-                  {role._count.users === 1 ? "account" : "accounts"} · starts on{" "}
-                  {(isRoleHome(role.home) ? ROLE_HOMES[role.home] : ROLE_HOMES.overview).label}
-                </Text>
-                <Text type="supporting" display="block">
-                  Sees{" "}
-                  {screens.length === 0
-                    ? "no screens"
-                    : screens.map((key) => screenMeta(key).label).join(", ")}
-                </Text>
-              </VStack>
-            </StackItem>
-            <HStack gap={1} vAlign="center">
-              <EditRole role={role} />
-              <DeleteRole role={role} users={role._count.users} />
-            </HStack>
-          </HStack>
-
-          <Divider />
-
+    <Item
+      as="li"
+      align="start"
+      label={
+        <HStack gap={2} vAlign="center" wrap="wrap">
+          <Text type="large" weight="semibold">
+            {role.name}
+          </Text>
+          <Tag color={reach.color}>{reach.label}</Tag>
+          {role.isSystem ? <Tag color="gray">Built in</Tag> : null}
+        </HStack>
+      }
+      description={
+        <VStack gap={1}>
+          {role.description ? <Text color="secondary">{role.description}</Text> : null}
+          <Text type="supporting">
+            {permissionCountLabel(role.permissions.length)} ·{" "}
+            <Text type="supporting" hasTabularNumbers>
+              {role._count.users}
+            </Text>{" "}
+            {role._count.users === 1 ? "account" : "accounts"} · starts on{" "}
+            {(isRoleHome(role.home) ? ROLE_HOMES[role.home] : ROLE_HOMES.overview).label}
+          </Text>
+          <Text type="supporting">
+            Sees{" "}
+            {screens.length === 0
+              ? "no screens"
+              : screens.map((key) => screenMeta(key).label).join(", ")}
+          </Text>
           {granted.length === 0 ? (
-            <Text as="p" display="block" color="secondary">
-              Reads everything, changes nothing.
-            </Text>
+            <Text type="supporting">Reads everything, changes nothing.</Text>
           ) : (
-            <List density="compact" listStyle="disc">
-              {granted.map((permission) => (
-                <Item key={permission.key} as="li" density="compact" label={permission.label} />
-              ))}
-            </List>
+            <Collapsible
+              defaultIsOpen={false}
+              trigger={
+                <Text type="supporting" weight="medium" color="primary">
+                  What it may do
+                </Text>
+              }
+            >
+              <List density="compact" listStyle="disc">
+                {granted.map((permission) => (
+                  <Item
+                    key={permission.key}
+                    as="li"
+                    density="compact"
+                    label={<Text type="supporting">{permission.label}</Text>}
+                  />
+                ))}
+              </List>
+            </Collapsible>
           )}
         </VStack>
-      </Card>
-    </li>
+      }
+      endContent={
+        <HStack gap={1} vAlign="center">
+          <EditRole role={role} />
+          <DeleteRole role={role} users={role._count.users} />
+        </HStack>
+      }
+    />
   );
 }

@@ -5,6 +5,7 @@ import { Banner } from "@astryxdesign/core/Banner";
 import { Button } from "@astryxdesign/core/Button";
 import { Dialog, DialogHeader } from "@astryxdesign/core/Dialog";
 import { Field as AstryxField } from "@astryxdesign/core/Field";
+import { FormLayout } from "@astryxdesign/core/FormLayout";
 import { HStack, VStack } from "@astryxdesign/core/Stack";
 import type { ActionResult } from "@/lib/action-result";
 import { toast } from "@/lib/toast";
@@ -94,7 +95,7 @@ export function FormDialog({
           <VStack gap={4}>
             <DialogHeader title={title} subtitle={description} onOpenChange={() => close()} />
 
-            <VStack gap={3}>{children}</VStack>
+            <FormLayout defaultOptionality="optional">{children}</FormLayout>
 
             {error ? <Banner status="error" title={error} collapsible={false} /> : null}
 

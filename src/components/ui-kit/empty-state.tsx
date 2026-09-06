@@ -1,16 +1,16 @@
-import type { LucideIcon } from "lucide-react";
 import { EmptyState as AstryxEmptyState } from "@astryxdesign/core/EmptyState";
+import { AppIcon, type AppIconName } from "@/components/ui-kit/app-icon";
 
 /** A place with nothing in it yet: one line saying what, one saying what to
  *  do, and the action that does it. */
 export function EmptyState({
-  icon: Icon,
+  icon,
   title,
   hint,
   action,
   compact = false,
 }: {
-  icon?: LucideIcon;
+  icon?: AppIconName;
   title: string;
   hint?: string;
   action?: React.ReactNode;
@@ -19,7 +19,7 @@ export function EmptyState({
 }) {
   return (
     <AstryxEmptyState
-      icon={Icon ? <Icon className="size-6" strokeWidth={1.5} aria-hidden /> : undefined}
+      icon={icon ? <AppIcon name={icon} size="lg" color="secondary" /> : undefined}
       title={title}
       description={hint}
       actions={action}

@@ -19,6 +19,7 @@ import {
   ROLE_HOME_ORDER,
 } from "@/lib/staff/permissions";
 import { SCREENS } from "@/lib/staff/screens";
+import { Icon } from "@astryxdesign/core/Icon";
 
 type Role = {
   id: string;
@@ -189,7 +190,7 @@ export function AddRole() {
           label="Add role"
           variant="primary"
           size="sm"
-          icon={<Plus className="size-4" aria-hidden />}
+          icon={<Icon icon={Plus} size="sm" />}
         />
       }
       title="Add a role"
@@ -212,7 +213,7 @@ export function EditRole({ role }: { role: Role }) {
           label={`Edit ${role.name}`}
           variant="ghost"
           size="sm"
-          icon={<Pencil className="size-4" aria-hidden />}
+          icon={<Icon icon={Pencil} size="sm" />}
         />
       }
       title={`Edit ${role.name}`}
@@ -237,7 +238,7 @@ export function DeleteRole({ role, users }: { role: Role; users: number }) {
           label={`Delete ${role.name}`}
           variant="ghost"
           size="sm"
-          icon={<Trash2 className="size-4" aria-hidden />}
+          icon={<Icon icon={Trash2} size="sm" />}
         />
       }
       title={`Delete ${role.name}?`}

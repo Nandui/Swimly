@@ -3,6 +3,7 @@
 import * as React from "react";
 import { Building2, Check } from "lucide-react";
 import { DropdownMenu } from "@astryxdesign/core/DropdownMenu";
+import { Icon } from "@astryxdesign/core/Icon";
 import { Text } from "@astryxdesign/core/Text";
 import { switchClub } from "@/lib/clubs/actions/clubs";
 import { toast } from "@/lib/toast";
@@ -11,23 +12,16 @@ type Club = { id: string; name: string };
 
 /** Which club the app is showing, and the way to change it.
  *
- *  It is on screen the whole time — above the nav on desktop, in the bar on a
- *  phone — because the mistake it exists to prevent is a quiet one: enrolling
- *  a child into the other site's class, or adding a class to the wrong
- *  timetable, and not finding out until the family turns up at the wrong
- *  pool. So the name is always readable, and switching lands on the overview
- *  rather than leaving somebody on a page that belonged to the old club. */
-export function ClubSwitcher({
-  club,
-  clubs,
-  collapsed = false,
-  compact = false,
-}: {
-  club: Club;
-  clubs: Club[];
-  collapsed?: boolean;
-  compact?: boolean;
-}) {
+ *  It is in the TopNav the whole time, because the mistake it exists to
+ *  prevent is a quiet one: enrolling a child into the other site's class, or
+ *  adding a class to the wrong timetable, and not finding out until the
+ *  family turns up at the wrong pool. The club's name is the heading's
+ *  subheading, so it reads on every device; this is the control that changes
+ *  it. Below the tablet breakpoint the button drops its text and keeps its
+ *  icon, chevron and accessible name, so the phone bar still fits the drawer
+ *  toggle. Switching lands on the overview rather than leaving somebody on a
+ *  page that belonged to the old club. */
+export function ClubSwitcher({ club, clubs }: { club: Club; clubs: Club[] }) {
   const [pending, startTransition] = React.useTransition();
   const several = clubs.length > 1;
 
@@ -42,7 +36,7 @@ export function ClubSwitcher({
 
   return (
     <DropdownMenu
-      hasChevron={several && !collapsed}
+      hasChevron={several}
       placement="below"
       alignment="start"
       menuWidth={256}
@@ -50,20 +44,17 @@ export function ClubSwitcher({
         // The accessible name says what the control is; the visible text is
         // the club, which is the thing that must always be readable.
         label: `Club: ${club.name}. ${several ? "Switch club" : "The only club"}`,
-        // A long club name in the phone bar must not push the drawer toggle
-        // off the screen, so the visible text is cut with an ellipsis there;
-        // the full name is in the accessible label and the menu.
+        // Responsive contract (see app-shell): text from md up, icon only
+        // below. The bridge's breakpoint is the same "md" the shell's drawer
+        // uses, so both change together.
         children: (
-          <Text type="inherit" maxLines={1} hasTruncateTooltip={false} className={compact ? "max-w-[40vw]" : undefined}>
+          <Text type="inherit" maxLines={1} hasTruncateTooltip={false} className="max-md:hidden">
             {pending ? "Switching…" : club.name}
           </Text>
         ),
-        icon: <Building2 className="size-4" aria-hidden />,
-        isIconOnly: collapsed,
-        tooltip: collapsed ? club.name : undefined,
+        icon: <Icon icon={Building2} size="sm" />,
         variant: "secondary",
-        size: compact ? "sm" : "md",
-        width: collapsed || compact ? undefined : "100%",
+        size: "md",
         isDisabled: pending,
       }}
       items={[
@@ -76,7 +67,7 @@ export function ClubSwitcher({
             onClick: () => choose(option.id),
             endContent:
               option.id === club.id ? (
-                <Check className="size-4" aria-label="Current" />
+                <Icon icon={Check} size="sm" label="Current" />
               ) : undefined,
           })),
         },

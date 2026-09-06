@@ -7,6 +7,7 @@ import { Button } from "@astryxdesign/core/Button";
 import { IconButton } from "@astryxdesign/core/IconButton";
 import { Input } from "@/components/ui/input";
 import { createClub, setClubArchived, updateClub } from "@/lib/clubs/actions/clubs";
+import { Icon } from "@astryxdesign/core/Icon";
 
 type Club = { id: string; name: string; archivedAt: Date | null };
 
@@ -33,7 +34,7 @@ export function AddClub() {
   return (
     <FormDialog
       trigger={
-        <Button label="Add a club" variant="primary" size="sm" icon={<Plus className="size-4" aria-hidden />} />
+        <Button label="Add a club" variant="primary" size="sm" icon={<Icon icon={Plus} size="sm" />} />
       }
       title="Add a club"
       description="A new site starts empty: its own programmes, classes and swimmers. Copy a programme across from another club's page if it runs the same one."
@@ -50,7 +51,7 @@ export function EditClub({ club }: { club: Club }) {
   return (
     <FormDialog
       trigger={
-        <IconButton label={`Rename ${club.name}`} variant="ghost" size="sm" icon={<Pencil className="size-4" aria-hidden />} />
+        <IconButton label={`Rename ${club.name}`} variant="ghost" size="sm" icon={<Icon icon={Pencil} size="sm" />} />
       }
       title={`Rename ${club.name}`}
       submitLabel="Save changes"
@@ -70,14 +71,14 @@ export function ArchiveClub({ club }: { club: Club }) {
         successMessage="Club restored"
         run={() => setClubArchived(club.id, false)}
       >
-        <ArchiveRestore className="size-3.5" />
+        <Icon icon={ArchiveRestore} size="sm" />
       </ActionButton>
     );
   }
   return (
     <ConfirmAction
       trigger={
-        <IconButton label={`Archive ${club.name}`} variant="ghost" size="sm" icon={<Archive className="size-4" aria-hidden />} />
+        <IconButton label={`Archive ${club.name}`} variant="ghost" size="sm" icon={<Icon icon={Archive} size="sm" />} />
       }
       title={`Archive ${club.name}?`}
       description="It leaves the switcher, and anyone working in it lands on the first club still open. Its programmes, classes, swimmers and history stay exactly as they are, readable again the moment it is restored."

@@ -1,21 +1,17 @@
 import type { Metadata, Viewport } from "next";
 import { cookies } from "next/headers";
-import { Figtree } from "next/font/google";
 import { ThemeProvider } from "@/components/theme-provider";
 import { ToastBridge } from "@/lib/toast";
 import { THEME_COOKIE, parseThemeMode } from "@/lib/theme-mode";
+// Figtree is the Neutral theme's own face, named as plain "Figtree" in its
+// font tokens. Astryx never loads a font, so the files come from the
+// fontsource package, self-hosted and registered under that exact name; the
+// theme then resolves to them with no override anywhere.
+import "@fontsource/figtree/400.css";
+import "@fontsource/figtree/500.css";
+import "@fontsource/figtree/600.css";
+import "@fontsource/figtree/700.css";
 import "./globals.css";
-
-/** Figtree is the Neutral theme's own face. Astryx never loads a font, so it
- *  comes through next/font: self-hosted at build time, `font-display: swap`,
- *  metrics reserved so nothing shifts when it arrives. The variable is what
- *  globals.css hands to the theme's font tokens. */
-const figtree = Figtree({
-  subsets: ["latin"],
-  weight: ["400", "500", "600", "700"],
-  variable: "--font-figtree",
-  display: "swap",
-});
 
 export const metadata: Metadata = {
   title: { default: "Swimly", template: "%s · Swimly" },
@@ -24,8 +20,8 @@ export const metadata: Metadata = {
 
 /** `viewportFit: cover` lets the page run under the notch and the home
  *  indicator, which is what makes `env(safe-area-inset-*)` non-zero — the
- *  register's sticky Save bar pads by it. The theme colours tint the browser
- *  chrome to match the page ground in each mode. */
+ *  deck's save bar pads by it. The theme colours tint the browser chrome to
+ *  match the page ground in each mode. */
 export const viewport: Viewport = {
   width: "device-width",
   initialScale: 1,
@@ -47,12 +43,7 @@ export default async function RootLayout({ children }: LayoutProps<"/">) {
   return (
     // suppressHydrationWarning: Astryx's <Theme> keeps `data-theme` and
     // `data-astryx-theme` on <html> in step after mount.
-    <html
-      lang="en"
-      suppressHydrationWarning
-      className={figtree.variable}
-      data-theme={mode === "system" ? undefined : mode}
-    >
+    <html lang="en" suppressHydrationWarning data-theme={mode === "system" ? undefined : mode}>
       <body>
         <ThemeProvider initialMode={mode}>
           <ToastBridge />

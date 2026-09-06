@@ -15,6 +15,7 @@ import {
   setPersonActive,
   updatePerson,
 } from "@/lib/staff/actions/staff";
+import { Icon } from "@astryxdesign/core/Icon";
 
 type RoleOption = {
   id: string;
@@ -103,7 +104,7 @@ export function AddPerson({ roles }: { roles: RoleOption[] }) {
   return (
     <FormDialog
       trigger={
-        <Button label="Add person" variant="primary" size="sm" icon={<Plus className="size-4" aria-hidden />} />
+        <Button label="Add person" variant="primary" size="sm" icon={<Icon icon={Plus} size="sm" />} />
       }
       title="Add a person"
       description="They can sign in as soon as you save this, with the email and password you set here."
@@ -136,7 +137,7 @@ export function EditPerson({ person, roles }: { person: Person; roles: RoleOptio
   return (
     <FormDialog
       trigger={
-        <IconButton label={`Edit ${person.name}`} variant="ghost" size="sm" icon={<Pencil className="size-4" aria-hidden />} />
+        <IconButton label={`Edit ${person.name}`} variant="ghost" size="sm" icon={<Icon icon={Pencil} size="sm" />} />
       }
       title={`Edit ${person.name}`}
       submitLabel="Save changes"
@@ -152,7 +153,7 @@ export function ResetPersonPassword({ person }: { person: Person }) {
   return (
     <FormDialog
       trigger={
-        <IconButton label={`Set a new password for ${person.name}`} variant="ghost" size="sm" icon={<KeyRound className="size-4" aria-hidden />} />
+        <IconButton label={`Set a new password for ${person.name}`} variant="ghost" size="sm" icon={<Icon icon={KeyRound} size="sm" />} />
       }
       title={`Set a new password for ${person.name}`}
       description="Their old password stops working immediately. Nobody is emailed — tell them yourself."
@@ -183,7 +184,7 @@ export function SetPersonActive({ person }: { person: Person }) {
         successMessage="Account reactivated"
         run={() => setPersonActive(person.id, true)}
       >
-        <UserCheck className="size-3.5" />
+        <Icon icon={UserCheck} size="sm" />
       </ActionButton>
     );
   }
@@ -191,7 +192,7 @@ export function SetPersonActive({ person }: { person: Person }) {
   return (
     <ConfirmAction
       trigger={
-        <IconButton label={`Deactivate ${person.name}`} variant="ghost" size="sm" icon={<UserMinus className="size-4" aria-hidden />} />
+        <IconButton label={`Deactivate ${person.name}`} variant="ghost" size="sm" icon={<Icon icon={UserMinus} size="sm" />} />
       }
       title={`Deactivate ${person.name}?`}
       description="They stop being able to sign in, from their next page load rather than whenever their session would have expired. Everything they recorded — registers, assessments, the audit trail — stays exactly as it is, and you can reactivate them later. Classes they teach keep their name on them."

@@ -1,16 +1,23 @@
-import { ChevronLeft } from "lucide-react";
-import { Link } from "@astryxdesign/core/Link";
-import { HStack } from "@astryxdesign/core/Stack";
+import { BreadcrumbItem, Breadcrumbs } from "@astryxdesign/core/Breadcrumbs";
 
-/** The way back up, above a page's title: one quiet link naming where it
- *  goes. */
-export function BackLink({ href, children }: { href: string; children: React.ReactNode }) {
+/** Where a detail page sits: the list it came from, then the page itself.
+ *  Astryx's breadcrumb, above the title, in its quiet variant. Two levels is
+ *  the whole depth this app has. */
+export function BackLink({
+  href,
+  children,
+  current,
+}: {
+  href: string;
+  /** The parent's name, as its page is titled. */
+  children: React.ReactNode;
+  /** This page's name. */
+  current: React.ReactNode;
+}) {
   return (
-    <Link href={href} color="secondary" isStandalone>
-      <HStack gap={1} vAlign="center" as="span">
-        <ChevronLeft className="size-4" aria-hidden />
-        {children}
-      </HStack>
-    </Link>
+    <Breadcrumbs variant="supporting">
+      <BreadcrumbItem href={href}>{children}</BreadcrumbItem>
+      <BreadcrumbItem isCurrent>{current}</BreadcrumbItem>
+    </Breadcrumbs>
   );
 }

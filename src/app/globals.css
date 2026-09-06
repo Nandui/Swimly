@@ -35,41 +35,6 @@
 
 /* Unlayered, so these win over every layer above. */
 
-/* The type: Figtree, the theme's own face, self-hosted through next/font so
-   the files arrive with the page and nothing shifts when they do. The theme
-   sets the family on its own wrapper, so the override has to reach that
-   element rather than :root. */
-[data-astryx-theme] {
-  --font-family-body: var(--font-figtree), -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
-  --font-family-heading: var(--font-family-body);
-}
-
-/* Status tags. Every status colour in the app comes through these nine pairs
-   and a metadata map, never from a colour chosen at a call site. The pairs
-   are Astryx's own hue tokens — tinted field, same-hue ink, measured for both
-   modes by the theme — so a tag and a Badge of the same colour agree. There
-   is no brown in the palette; teal stands in, and reads as its own hue. */
-:root {
-  --tag-red-bg: var(--color-background-red);
-  --tag-red-fg: var(--color-text-red);
-  --tag-orange-bg: var(--color-background-orange);
-  --tag-orange-fg: var(--color-text-orange);
-  --tag-yellow-bg: var(--color-background-yellow);
-  --tag-yellow-fg: var(--color-text-yellow);
-  --tag-green-bg: var(--color-background-green);
-  --tag-green-fg: var(--color-text-green);
-  --tag-blue-bg: var(--color-background-blue);
-  --tag-blue-fg: var(--color-text-blue);
-  --tag-purple-bg: var(--color-background-purple);
-  --tag-purple-fg: var(--color-text-purple);
-  --tag-pink-bg: var(--color-background-pink);
-  --tag-pink-fg: var(--color-text-pink);
-  --tag-brown-bg: var(--color-background-teal);
-  --tag-brown-fg: var(--color-text-teal);
-  --tag-gray-bg: var(--color-background-gray);
-  --tag-gray-fg: var(--color-text-gray);
-}
-
 body {
   background: var(--color-background-body);
   color: var(--color-text-primary);
@@ -85,20 +50,41 @@ button:not(:disabled),
   cursor: pointer;
 }
 
-/* Phones: Astryx sizes its controls for a pointer — 28, 32 and 36px. A thumb
-   on a wet phone needs 44. Every button, field, menu row and nav item grows
-   below the tablet breakpoint, here once rather than at each call site. */
-@media (max-width: 47.9375rem) {
+/* Touch: Astryx sizes its controls for a pointer — 28, 32 and 36px. A thumb
+   on a wet phone or a poolside tablet needs 44. Every button, field, menu
+   row, tab, segment and nav item grows below the tablet breakpoint and on any
+   coarse pointer, here once rather than at each call site. The class names
+   are Astryx's own, from each component's theming table. */
+@media (max-width: 47.9375rem), (pointer: coarse) {
   .astryx-button,
   .astryx-text-input,
   .astryx-text-area-control,
+  .astryx-date-input,
+  .astryx-time-input,
+  .astryx-number-input,
   .astryx-selector,
   .astryx-typeahead,
+  .astryx-switch-field,
   .astryx-dropdown-menu-item,
   .astryx-selector-option-row,
   .astryx-side-nav-item,
-  .astryx-tab {
+  .astryx-tab,
+  .astryx-segmented-control-item,
+  .astryx-toggle-button,
+  .astryx-collapsible-trigger {
     min-height: 44px;
+  }
+  /* The date, time and number fields put a short control inside the bordered
+     box and do not forward a tap on the box to it, so the control and the
+     calendar toggle stretch to the box's full height instead. */
+  .astryx-date-input > input,
+  .astryx-date-input > button,
+  .astryx-time-input > input,
+  .astryx-number-input > input {
+    align-self: stretch;
+  }
+  .astryx-date-input > button {
+    min-width: 44px;
   }
 }
 

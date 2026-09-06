@@ -17,6 +17,7 @@ import {
 import { sessionLabel } from "@/lib/assessments/constants";
 import type { BookingRow, SessionDetail } from "@/lib/assessments/data/assessments";
 import { fullName } from "@/lib/students/constants";
+import { Icon } from "@astryxdesign/core/Icon";
 
 export function BookOntoSession({ session, taken }: { session: SessionDetail; taken: number }) {
   const places =
@@ -24,7 +25,7 @@ export function BookOntoSession({ session, taken }: { session: SessionDetail; ta
   return (
     <FormDialog
       trigger={
-        <Button label="Book a swimmer" variant="primary" size="sm" icon={<UserRoundPlus className="size-4" aria-hidden />} />
+        <Button label="Book a swimmer" variant="primary" size="sm" icon={<Icon icon={UserRoundPlus} size="sm" />} />
       }
       title={`Book onto the assessment on ${sessionLabel(session)}`}
       description={`${session.programme.name} · ${places}`}
@@ -52,7 +53,7 @@ export function CancelBooking({ booking, session }: { booking: BookingRow; sessi
   return (
     <ConfirmAction
       trigger={
-        <IconButton label={`Cancel ${fullName(booking.student)}'s booking`} variant="ghost" size="sm" icon={<X className="size-4" aria-hidden />} />
+        <IconButton label={`Cancel ${fullName(booking.student)}'s booking`} variant="ghost" size="sm" icon={<Icon icon={X} size="sm" />} />
       }
       title={`Cancel ${fullName(booking.student)}'s booking?`}
       description={`They lose their place on ${sessionLabel(session)}. They can be booked again while there is room.`}
@@ -67,7 +68,7 @@ export function MarkNoShow({ booking }: { booking: BookingRow }) {
   return (
     <ConfirmAction
       trigger={
-        <IconButton label={`${fullName(booking.student)} did not come`} variant="ghost" size="sm" icon={<UserRoundX className="size-4" aria-hidden />} tooltip="Did not come" />
+        <IconButton label={`${fullName(booking.student)} did not come`} variant="ghost" size="sm" icon={<Icon icon={UserRoundX} size="sm" />} tooltip="Did not come" />
       }
       title={`${fullName(booking.student)} did not come?`}
       description="Their place is given back. The desk can book them onto another session."
@@ -95,9 +96,9 @@ export function RecordOutcome({
     <FormDialog
       trigger={
         variant === "icon" ? (
-          <IconButton label={again ? `Change where ${name} was placed` : `Place ${name}`} variant="ghost" size="sm" icon={<GraduationCap className="size-4" aria-hidden />} />
+          <IconButton label={again ? `Change where ${name} was placed` : `Place ${name}`} variant="ghost" size="sm" icon={<Icon icon={GraduationCap} size="sm" />} />
         ) : (
-          <Button label={`${again ? "Change placement" : "Place"}`} variant={again ? "secondary" : "primary"} size="sm" icon={<GraduationCap className="size-4" aria-hidden />} />
+          <Button label={`${again ? "Change placement" : "Place"}`} variant={again ? "secondary" : "primary"} size="sm" icon={<Icon icon={GraduationCap} size="sm" />} />
         )
       }
       title={again ? `Change where ${name} belongs` : `Where does ${name} belong?`}

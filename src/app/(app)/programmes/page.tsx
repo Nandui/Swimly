@@ -1,5 +1,4 @@
 import type { Metadata } from "next";
-import { Layers } from "lucide-react";
 import { Link } from "@astryxdesign/core/Link";
 import { HStack, VStack } from "@astryxdesign/core/Stack";
 import {
@@ -56,7 +55,7 @@ export default async function ProgrammesPage() {
 
       {live.length === 0 ? (
         <EmptyState
-          icon={Layers}
+          icon="layers"
           title="No programmes yet"
           hint="A programme is a ladder — Learn to Swim, Squad, Adult Lessons. Add one and give it levels."
           action={<AddProgramme />}

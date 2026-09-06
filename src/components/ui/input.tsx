@@ -1,28 +1,37 @@
 "use client";
 
 import * as React from "react";
-import { Field } from "@astryxdesign/core/Field";
+import { DateInput } from "@astryxdesign/core/DateInput";
+import { NumberInput } from "@astryxdesign/core/NumberInput";
 import { TextInput } from "@astryxdesign/core/TextInput";
-import { cn } from "@/lib/utils";
+import { TimeInput } from "@astryxdesign/core/TimeInput";
 
-/** A text field, on Astryx's TextInput, that still works inside a plain
- *  `<form>`: give it a `name` and a `defaultValue` and it posts through
- *  FormData like the native input it replaces. Astryx's input is controlled,
- *  so the value lives here.
+/** Astryx types its date and time values as branded strings. A form field
+ *  holds whatever was posted or typed, so it is handed over as-is. */
+type IsoDate = React.ComponentProps<typeof DateInput>["value"];
+type IsoTime = React.ComponentProps<typeof TimeInput>["value"];
+
+/** A field that still works inside a plain `<form>`: give it a `name` and a
+ *  `defaultValue` and it posts through FormData like the native input it
+ *  replaces. Astryx's inputs are controlled, so the value lives here.
  *
- *  Astryx draws text, email and password. A date, a time or a number keeps
- *  the native control — the browser's picker is the right one on a phone —
- *  inside Astryx's Field so the label and spacing match. */
+ *  Text, email and password are Astryx's TextInput; a date, a time and a
+ *  number are its DateInput, TimeInput and NumberInput. The date and time
+ *  inputs carry no form name of their own, so a hidden input posts what
+ *  they hold. */
 
-export type InputProps = Omit<React.ComponentProps<"input">, "size" | "value" | "defaultValue"> & {
+export type InputProps = Omit<
+  React.ComponentProps<"input">,
+  "size" | "value" | "defaultValue" | "onChange" | "type"
+> & {
+  type?: "text" | "email" | "password" | "date" | "time" | "number";
   /** The field's label. Usually injected by the form's Field wrapper. */
   label?: string;
   description?: string;
   value?: string;
   defaultValue?: string | number | null;
+  onChange?: (value: string) => void;
 };
-
-const ASTRYX_TYPES = new Set(["text", "email", "password"]);
 
 export function Input({
   type = "text",
@@ -38,72 +47,89 @@ export function Input({
   disabled,
   readOnly,
   autoFocus,
+  min,
+  max,
+  step,
   className,
   ...rest
 }: InputProps) {
   const [inner, setInner] = React.useState(defaultValue == null ? "" : String(defaultValue));
-  const generatedId = React.useId();
   const controlled = value !== undefined;
   const current = controlled ? value : inner;
   const ariaLabel = (rest as { "aria-label"?: string })["aria-label"];
   const text = label ?? ariaLabel ?? placeholder ?? name ?? "Field";
+  const shared = {
+    id,
+    label: text,
+    isLabelHidden: label === undefined,
+    description,
+    isRequired: required,
+    isDisabled: disabled,
+    width: "100%" as const,
+    className,
+  };
+  const set = (next: string) => {
+    if (!controlled) setInner(next);
+    onChange?.(next);
+  };
 
-  if (ASTRYX_TYPES.has(type)) {
+  if (type === "date") {
     return (
-      <TextInput
-        type={type as "text" | "email" | "password"}
-        label={text}
-        isLabelHidden={label === undefined}
-        description={description}
-        value={current}
-        onChange={(next, event) => {
-          if (!controlled) setInner(next);
-          onChange?.(event);
-        }}
+      <>
+        <input type="hidden" name={name} value={current} />
+        <DateInput
+          {...shared}
+          value={(current || undefined) as IsoDate}
+          onChange={(next) => set(next ?? "")}
+          min={(typeof min === "string" ? min : undefined) as IsoDate}
+          max={(typeof max === "string" ? max : undefined) as IsoDate}
+          hasClear={!required}
+        />
+      </>
+    );
+  }
+
+  if (type === "time") {
+    return (
+      <>
+        <input type="hidden" name={name} value={current} />
+        <TimeInput
+          {...shared}
+          value={(current || undefined) as IsoTime}
+          onChange={(next) => set(next ?? "")}
+          hourFormat="24h"
+          hasClear={!required}
+        />
+      </>
+    );
+  }
+
+  if (type === "number") {
+    return (
+      <NumberInput
+        {...shared}
         htmlName={name}
+        value={current === "" ? null : Number(current)}
+        onChange={(next) => set(next === null || Number.isNaN(next) ? "" : String(next))}
+        min={min === undefined ? undefined : Number(min)}
+        max={max === undefined ? undefined : Number(max)}
+        step={step === undefined ? undefined : Number(step)}
         placeholder={placeholder}
-        isRequired={required}
-        isDisabled={disabled}
         isReadOnly={readOnly}
-        hasAutoFocus={autoFocus}
-        width="100%"
-        className={className}
-        id={id}
       />
     );
   }
 
-  const inputId = id ?? name ?? generatedId;
   return (
-    <Field
-      label={text}
-      inputID={inputId}
-      isLabelHidden={label === undefined}
-      description={description}
-      isRequired={required}
-      isDisabled={disabled}
-      width="100%"
-    >
-      <input
-        {...rest}
-        id={inputId}
-        name={name}
-        type={type}
-        value={controlled ? value : undefined}
-        defaultValue={controlled ? undefined : (defaultValue ?? undefined)}
-        onChange={onChange}
-        placeholder={placeholder}
-        required={required}
-        disabled={disabled}
-        readOnly={readOnly}
-        autoFocus={autoFocus}
-        className={cn(
-          "h-(--size-element-md) w-full min-w-0 rounded-md border border-border-strong bg-surface px-2.5 text-sm text-primary",
-          "placeholder:text-disabled disabled:opacity-60",
-          "outline-none focus-visible:outline-2 focus-visible:outline-offset-1 focus-visible:outline-accent-bg",
-          className
-        )}
-      />
-    </Field>
+    <TextInput
+      {...shared}
+      type={type}
+      value={current}
+      onChange={set}
+      htmlName={name}
+      placeholder={placeholder}
+      isReadOnly={readOnly}
+      hasAutoFocus={autoFocus}
+    />
   );
 }

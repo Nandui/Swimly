@@ -1,6 +1,5 @@
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
-import { ArrowRight, ChevronLeft, ChevronRight, Users } from "lucide-react";
 import { Banner } from "@astryxdesign/core/Banner";
 import { Button } from "@astryxdesign/core/Button";
 import { Item } from "@astryxdesign/core/Item";
@@ -32,6 +31,7 @@ import { formatDate, parseDateOnly, today, weekdayOf } from "@/lib/format";
 import { pageSession } from "@/lib/page-guards";
 import { getClassProgress } from "@/lib/progression/data/progress";
 import { fullName } from "@/lib/students/constants";
+import { AppIcon } from "@/components/ui-kit/app-icon";
 
 export const metadata: Metadata = { title: "Class" };
 
@@ -98,7 +98,10 @@ export default async function ClassPage(props: PageProps<"/courses/[id]/class">)
       <VStack gap={2}>
         {/* Back to wherever this person's deck is: Today for an instructor,
             the class's own page for a desk role without Today. */}
-        <BackLink href={canSee(session, "today") ? "/today" : `/courses/${course.id}`}>
+        <BackLink
+          href={canSee(session, "today") ? "/today" : `/courses/${course.id}`}
+          current={canSee(session, "today") ? courseName(course) : "Class"}
+        >
           {canSee(session, "today") ? "Today" : courseName(course)}
         </BackLink>
         <PageHeader
@@ -109,14 +112,14 @@ export default async function ClassPage(props: PageProps<"/courses/[id]/class">)
                   label="Week before"
                   variant="secondary"
                   href={`/courses/${course.id}/class?date=${shiftWeeks(iso, -1)}`}
-                  icon={<ChevronLeft className="size-4" aria-hidden />}
+                  icon={<AppIcon name="chevronLeft" size="sm" />}
                 />
                 {shiftWeeks(iso, 1) <= today() ? (
                   <Button
                     label="Week after"
                     variant="secondary"
                     href={`/courses/${course.id}/class?date=${shiftWeeks(iso, 1)}`}
-                    endContent={<ChevronRight className="size-4" aria-hidden />}
+                    endContent={<AppIcon name="chevronRight" size="sm" />}
                   />
                 ) : null}
               </>
@@ -198,7 +201,7 @@ export default async function ClassPage(props: PageProps<"/courses/[id]/class">)
 
           {lines.length === 0 ? (
             <EmptyState
-              icon={Users}
+              icon="users"
               title="Nobody was in this class on that day"
               hint={`Enrolments starting after ${formatDate(parseDateOnly(iso))} do not appear on it — try a later ${DAY_META[course.dayOfWeek].label}.`}
               action={
@@ -206,7 +209,7 @@ export default async function ClassPage(props: PageProps<"/courses/[id]/class">)
                   label="Competencies"
                   variant="secondary"
                   href={stepHref("competencies")}
-                  endContent={<ArrowRight className="size-4" aria-hidden />}
+                  endContent={<AppIcon name="arrowRight" size="sm" />}
                 />
               }
             />
@@ -229,7 +232,7 @@ export default async function ClassPage(props: PageProps<"/courses/[id]/class">)
                 variant="secondary"
                 size="lg"
                 href={stepHref("competencies")}
-                endContent={<ArrowRight className="size-4" aria-hidden />}
+                endContent={<AppIcon name="arrowRight" size="sm" />}
               />
             </HStack>
           ) : null}

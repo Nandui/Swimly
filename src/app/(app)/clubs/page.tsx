@@ -1,5 +1,4 @@
 import type { Metadata } from "next";
-import { Building2 } from "lucide-react";
 import { Item } from "@astryxdesign/core/Item";
 import { List } from "@astryxdesign/core/List";
 import { HStack, VStack } from "@astryxdesign/core/Stack";
@@ -38,7 +37,7 @@ export default async function ClubsPage() {
 
       {live.length === 0 ? (
         <EmptyState
-          icon={Building2}
+          icon="building"
           title="No clubs"
           hint="Everything belongs to a club, so there has to be one."
           action={<AddClub />}

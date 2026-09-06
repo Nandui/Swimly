@@ -13,6 +13,7 @@ import {
   setProgrammeArchived,
   updateProgramme,
 } from "@/lib/curriculum/actions/programmes";
+import { Icon } from "@astryxdesign/core/Icon";
 
 type Programme = { id: string; name: string; description: string | null; archivedAt: Date | null };
 
@@ -52,7 +53,7 @@ export function AddProgramme() {
   return (
     <FormDialog
       trigger={
-        <Button label="Add programme" variant="primary" size="sm" icon={<Plus className="size-4" aria-hidden />} />
+        <Button label="Add programme" variant="primary" size="sm" icon={<Icon icon={Plus} size="sm" />} />
       }
       title="Add a programme"
       description="A programme holds the ordered levels a swimmer works through."
@@ -76,9 +77,9 @@ export function EditProgramme({
     <FormDialog
       trigger={
         variant === "icon" ? (
-          <IconButton label={`Edit ${programme.name}`} variant="ghost" size="sm" icon={<Pencil className="size-4" aria-hidden />} />
+          <IconButton label={`Edit ${programme.name}`} variant="ghost" size="sm" icon={<Icon icon={Pencil} size="sm" />} />
         ) : (
-          <Button label="Edit" variant="secondary" size="sm" icon={<Pencil className="size-4" aria-hidden />} />
+          <Button label="Edit" variant="secondary" size="sm" icon={<Icon icon={Pencil} size="sm" />} />
         )
       }
       title={`Edit ${programme.name}`}
@@ -101,7 +102,7 @@ export function ArchiveProgramme({ programme }: { programme: Programme }) {
         successMessage="Programme restored"
         run={() => setProgrammeArchived(programme.id, false)}
       >
-        <ArchiveRestore className="size-3.5" />
+        <Icon icon={ArchiveRestore} size="sm" />
       </ActionButton>
     );
   }
@@ -109,7 +110,7 @@ export function ArchiveProgramme({ programme }: { programme: Programme }) {
   return (
     <ConfirmAction
       trigger={
-        <IconButton label={`Archive ${programme.name}`} variant="ghost" size="sm" icon={<Archive className="size-4" aria-hidden />} />
+        <IconButton label={`Archive ${programme.name}`} variant="ghost" size="sm" icon={<Icon icon={Archive} size="sm" />} />
       }
       title={`Archive ${programme.name}?`}
       description="It stops appearing when someone picks a programme, and its levels stop being offered. Everything already recorded against it — enrolments, completions, the audit trail — stays exactly as it is, and you can restore it later."
@@ -136,14 +137,14 @@ export function MoveProgramme({
         className={first ? "invisible" : undefined}
         run={() => moveProgramme(programme.id, "up")}
       >
-        <ChevronUp className="size-3.5" />
+        <Icon icon={ChevronUp} size="sm" />
       </ActionButton>
       <ActionButton
         ariaLabel={`Move ${programme.name} down`}
         className={last ? "invisible" : undefined}
         run={() => moveProgramme(programme.id, "down")}
       >
-        <ChevronDown className="size-3.5" />
+        <Icon icon={ChevronDown} size="sm" />
       </ActionButton>
     </>
   );

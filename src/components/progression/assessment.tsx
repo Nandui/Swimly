@@ -22,6 +22,7 @@ import {
   saveAssessment,
 } from "@/lib/progression/actions/assess";
 import { toast } from "@/lib/toast";
+import { Icon } from "@astryxdesign/core/Icon";
 
 type Choice = CompetencyStatus | null;
 
@@ -177,7 +178,7 @@ export function CompetencyChecklist({
                         key={status}
                         value={status}
                         label={MARK_LABEL[status]}
-                        pressedIcon={<Check className="size-4" aria-hidden />}
+                        pressedIcon={<Icon icon={Check} size="sm" />}
                       >
                         {MARK_LABEL[status]}
                       </ToggleButton>
@@ -204,7 +205,7 @@ export function CompetencyChecklist({
             onClick={save}
             isLoading={pending}
             isDisabled={!dirty}
-            icon={<Check className="size-4" aria-hidden />}
+            icon={<Icon icon={Check} size="sm" />}
           />
         </HStack>
       )}
@@ -248,7 +249,7 @@ export function ConfirmLevel({
               ? `${studentName} has ${achieved} of ${total}. Only an admin can complete a level with gaps.`
               : undefined
           }
-          icon={<GraduationCap className="size-4" aria-hidden />}
+          icon={<Icon icon={GraduationCap} size="sm" />}
         />
       }
       title={`Complete ${levelName} for ${studentName}?`}
@@ -323,7 +324,7 @@ export function RevokeCompletion({
           tooltip="Take back"
           variant="ghost"
           size="sm"
-          icon={<Undo2 className="size-4" aria-hidden />}
+          icon={<Icon icon={Undo2} size="sm" />}
         />
       }
       title={`Take back ${levelName}?`}

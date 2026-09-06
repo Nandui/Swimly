@@ -10,6 +10,7 @@ import { HStack, VStack } from "@astryxdesign/core/Stack";
 import { Text } from "@astryxdesign/core/Text";
 import { takeOverClass } from "@/lib/attendance/actions/cover";
 import { toast } from "@/lib/toast";
+import { Icon } from "@astryxdesign/core/Icon";
 
 /** The question asked when somebody opens a class that is not theirs: are
  *  you taking it? Asked once, up front, because the answer changes what the
@@ -93,7 +94,7 @@ export function TakeOver({
               label="Take over this class"
               variant="secondary"
               size="sm"
-              icon={<UserRoundCheck className="size-4" aria-hidden />}
+              icon={<Icon icon={UserRoundCheck} size="sm" />}
               onClick={() => setOpen(true)}
             />
           }

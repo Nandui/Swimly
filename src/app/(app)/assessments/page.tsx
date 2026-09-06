@@ -1,5 +1,4 @@
 import type { Metadata } from "next";
-import { ClipboardCheck } from "lucide-react";
 import { Link } from "@astryxdesign/core/Link";
 import { HStack, VStack } from "@astryxdesign/core/Stack";
 import {
@@ -92,7 +91,7 @@ export default async function AssessmentsPage() {
 
       {sessions.length === 0 ? (
         <EmptyState
-          icon={ClipboardCheck}
+          icon="clipboardCheck"
           title="No assessment sessions yet"
           hint="Add the first — a date, a time and how many children can be watched at once. The desk books children onto it from there."
           action={add}

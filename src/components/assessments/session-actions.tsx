@@ -24,7 +24,8 @@ import type {
 import type { InstructorOption } from "@/lib/courses/data/courses";
 import { formatTime } from "@/lib/courses/constants";
 import { toDateOnlyString } from "@/lib/format";
-import { Grid } from "@astryxdesign/core/Grid";
+import { FormLayout } from "@astryxdesign/core/FormLayout";
+import { Icon } from "@astryxdesign/core/Icon";
 
 const NONE = "__none__";
 
@@ -65,7 +66,7 @@ function SessionFields({ session, programmes, types, instructors, today }: Field
 
   return (
     <>
-      <Grid columns={{ minWidth: 200, max: 2 }} gap={3}>
+      <FormLayout direction="horizontal">
         <Field
           label="Programme"
           htmlFor="programmeId"
@@ -101,9 +102,9 @@ function SessionFields({ session, programmes, types, instructors, today }: Field
             options={kinds.map((kind) => ({ value: kind.id, label: kind.name }))}
           />
         </Field>
-      </Grid>
+      </FormLayout>
 
-      <Grid columns={{ minWidth: 140, max: 3 }} gap={3}>
+      <FormLayout direction="horizontal">
         <Field label="Date" htmlFor="date">
           <Input
             id="date"
@@ -133,9 +134,9 @@ function SessionFields({ session, programmes, types, instructors, today }: Field
             defaultValue={session?.durationMinutes ?? 30}
           />
         </Field>
-      </Grid>
+      </FormLayout>
 
-      <Grid columns={{ minWidth: 200, max: 2 }} gap={3}>
+      <FormLayout direction="horizontal">
         <Field label="Places" htmlFor="capacity" hint="Leave blank for no limit.">
           <Input
             id="capacity"
@@ -153,7 +154,7 @@ function SessionFields({ session, programmes, types, instructors, today }: Field
             defaultValue={session?.location ?? ""}
           />
         </Field>
-      </Grid>
+      </FormLayout>
 
       <Field label="Assessor" htmlFor="instructorId">
         <Select
@@ -178,7 +179,7 @@ export function AddSession(props: Omit<FieldProps, "session">) {
   return (
     <FormDialog
       trigger={
-        <Button label="Add a session" variant="primary" size="sm" icon={<CalendarPlus className="size-4" aria-hidden />} />
+        <Button label="Add a session" variant="primary" size="sm" icon={<Icon icon={CalendarPlus} size="sm" />} />
       }
       title="Add an assessment session"
       description="A date, a time and a number of places. Children are booked onto it from the session's own page."
@@ -201,9 +202,9 @@ export function EditSession({
     <FormDialog
       trigger={
         variant === "icon" ? (
-          <IconButton label={`Edit the session on ${sessionLabel(session)}`} variant="ghost" size="sm" icon={<Pencil className="size-4" aria-hidden />} />
+          <IconButton label={`Edit the session on ${sessionLabel(session)}`} variant="ghost" size="sm" icon={<Icon icon={Pencil} size="sm" />} />
         ) : (
-          <Button label="Edit" variant="secondary" size="sm" icon={<Pencil className="size-4" aria-hidden />} />
+          <Button label="Edit" variant="secondary" size="sm" icon={<Icon icon={Pencil} size="sm" />} />
         )
       }
       title={`Edit the session on ${sessionLabel(session)}`}
@@ -222,7 +223,7 @@ export function CancelSession({ session }: { session: SessionRow }) {
   return (
     <ConfirmAction
       trigger={
-        <IconButton label={`Cancel the session on ${sessionLabel(session)}`} variant="ghost" size="sm" icon={<Ban className="size-4" aria-hidden />} />
+        <IconButton label={`Cancel the session on ${sessionLabel(session)}`} variant="ghost" size="sm" icon={<Icon icon={Ban} size="sm" />} />
       }
       title={`Cancel the session on ${sessionLabel(session)}?`}
       description={

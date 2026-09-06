@@ -1,6 +1,6 @@
-import { Card } from "@astryxdesign/core/Card";
 import { Item } from "@astryxdesign/core/Item";
 import { List } from "@astryxdesign/core/List";
+import { Section } from "@astryxdesign/core/Section";
 import { HStack, StackItem, VStack } from "@astryxdesign/core/Stack";
 import { Heading, Text } from "@astryxdesign/core/Text";
 import { Alert, Lead, Num } from "@/components/ui-kit/prose";
@@ -20,10 +20,11 @@ import type { LevelProgress, ProgrammeProgress } from "@/lib/progression/data/pr
 
 /** A swimmer's standing, one section per programme.
  *
- *  The current level opens as a working checklist; the levels behind it
- *  collapse to a line each, and the ones ahead sit muted. That is the
- *  Collapse-Not-Scroll rule applied down the page rather than across it — a
- *  full curriculum is sixty-odd rows, and only one rung is live at a time. */
+ *  The ladder is rows: the levels behind them and ahead of them are one
+ *  line each in a list, and the rung they are on opens between them as a
+ *  section holding the working checklist. That is the Collapse-Not-Scroll
+ *  rule applied down the page rather than across it — a full curriculum is
+ *  sixty-odd rows, and only one rung is live at a time. */
 export function ProgressSection({
   programmes,
   studentId,
@@ -123,19 +124,14 @@ export function ProgressSection({
               />
             ) : null}
 
-            <VStack gap={4}>
-              {programme.levels.map((level) => (
-                <LevelBlock
-                  key={level.id}
-                  level={level}
-                  studentId={studentId}
-                  studentName={studentName}
-                  manage={manage}
-                  complete={complete}
-                  admin={admin}
-                />
-              ))}
-            </VStack>
+            <Ladder
+              levels={programme.levels}
+              studentId={studentId}
+              studentName={studentName}
+              manage={manage}
+              complete={complete}
+              admin={admin}
+            />
           </VStack>
         );
       })}
@@ -148,38 +144,66 @@ function nextUp(programme: ProgrammeProgress, current: LevelProgress) {
   return nextLevel(current.id, programme.levels);
 }
 
-/** One rung of the ladder. Behind them: a card, one line. Where they are: a
- *  card holding the working checklist. Ahead: a muted card with nothing to
- *  open. */
-function LevelBlock({
-  level,
-  studentId,
-  studentName,
-  manage,
-  complete,
-  admin,
-}: {
-  level: LevelProgress;
+type LadderProps = {
   studentId: string;
   studentName: string;
   manage: boolean;
   complete: boolean;
   admin: boolean;
-}) {
-  const completed = Boolean(level.completedOn);
+};
 
-  // Behind them: one line each.
-  if (completed) {
+/** The levels in order: runs of one-line rows, with the current rung opened
+ *  as a section wherever it falls. */
+function Ladder({ levels, ...rest }: LadderProps & { levels: LevelProgress[] }) {
+  const runs: Array<{ key: string; rows: LevelProgress[] } | { key: string; current: LevelProgress }> = [];
+  for (const level of levels) {
+    if (level.isCurrent && !level.completedOn) {
+      runs.push({ key: level.id, current: level });
+      continue;
+    }
+    const last = runs[runs.length - 1];
+    if (last && "rows" in last) last.rows.push(level);
+    else runs.push({ key: level.id, rows: [level] });
+  }
+
+  return (
+    <VStack gap={4}>
+      {runs.map((run) =>
+        "current" in run ? (
+          <CurrentLevel key={run.key} level={run.current} {...rest} />
+        ) : (
+          <List key={run.key} hasDividers>
+            {run.rows.map((level) => (
+              <LevelRow key={level.id} level={level} {...rest} />
+            ))}
+          </List>
+        )
+      )}
+    </VStack>
+  );
+}
+
+/** A rung behind them or ahead of them: one line. */
+function LevelRow({ level, studentName, admin }: LadderProps & { level: LevelProgress }) {
+  if (level.completedOn) {
     return (
-      <Card padding={4}>
-        <HStack gap={4} vAlign="center" hAlign="between" wrap="wrap">
+      <Item
+        as="li"
+        label={
           <HStack gap={2} vAlign="center" wrap="wrap">
             <Text weight="semibold">{level.name}</Text>
             <CompletionTagWrapper level={level} />
           </HStack>
+        }
+        description={
+          level.overrideReason
+            ? `Completed with gaps: ${level.overrideReason}`
+            : undefined
+        }
+        endContent={
           <HStack gap={3} vAlign="center">
-            <Text color="secondary">
-              {formatDate(level.completedOn!)}
+            <Text color="secondary" textWrap="nowrap">
+              {formatDate(level.completedOn)}
               {level.confirmedByName ? ` · ${level.confirmedByName}` : ""}
             </Text>
             {admin && level.completionId ? (
@@ -190,33 +214,35 @@ function LevelBlock({
               />
             ) : null}
           </HStack>
-          {level.overrideReason ? (
-            <Text as="p" display="block" color="secondary" className="basis-full">
-              Completed with gaps: {level.overrideReason}
-            </Text>
-          ) : null}
-        </HStack>
-      </Card>
+        }
+      />
     );
   }
 
-  // Ahead of them: muted, and not worth opening.
-  if (!level.isCurrent) {
-    return (
-      <Card variant="muted" padding={4}>
-        <HStack gap={4} vAlign="center" hAlign="between" wrap="wrap">
-          <Text color="secondary">{level.name}</Text>
-          <Text color="secondary">
-            {level.total === 0 ? "No competencies yet" : `${level.total} to pass`}
-          </Text>
-        </HStack>
-      </Card>
-    );
-  }
-
-  // Where they are: the working surface.
   return (
-    <Card>
+    <Item
+      as="li"
+      label={<Text color="secondary">{level.name}</Text>}
+      endContent={
+        <Text color="secondary" textWrap="nowrap">
+          {level.total === 0 ? "No competencies yet" : `${level.total} to pass`}
+        </Text>
+      }
+    />
+  );
+}
+
+/** Where they are: the working surface. */
+function CurrentLevel({
+  level,
+  studentId,
+  studentName,
+  manage,
+  complete,
+  admin,
+}: LadderProps & { level: LevelProgress }) {
+  return (
+    <Section variant="muted" padding={4}>
       <VStack gap={4}>
         <HStack gap={4} vAlign="start" hAlign="between" wrap="wrap">
           <StackItem size="fill">
@@ -260,7 +286,7 @@ function LevelBlock({
           <ReadOnlyList level={level} />
         )}
       </VStack>
-    </Card>
+    </Section>
   );
 }
 
@@ -275,8 +301,7 @@ function CompletionTagWrapper({ level }: { level: LevelProgress }) {
   );
 }
 
-/** Inside the level's card already, so rows with hairlines and no second
- *  card: a card in a card is the one thing Astryx will not have. */
+/** Rows with hairlines inside the level's section. */
 function ReadOnlyList({ level }: { level: LevelProgress }) {
   if (level.competencies.length === 0) {
     return (

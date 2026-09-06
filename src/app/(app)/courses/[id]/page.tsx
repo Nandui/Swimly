@@ -1,6 +1,5 @@
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
-import { ClipboardList, Users } from "lucide-react";
 import { Button } from "@astryxdesign/core/Button";
 import { Link } from "@astryxdesign/core/Link";
 import { HStack, VStack } from "@astryxdesign/core/Stack";
@@ -48,6 +47,7 @@ import { getTransferTargets, type TransferTarget } from "@/lib/enrolment/data/en
 import { formatDate } from "@/lib/format";
 import { screenPage } from "@/lib/page-guards";
 import { ageLabel, fullName } from "@/lib/students/constants";
+import { AppIcon } from "@/components/ui-kit/app-icon";
 
 export const metadata: Metadata = { title: "Class" };
 
@@ -86,7 +86,9 @@ export default async function CoursePage(props: PageProps<"/courses/[id]">) {
   return (
     <VStack gap={6}>
       <VStack gap={2}>
-        <BackLink href="/courses">Classes</BackLink>
+        <BackLink href="/courses" current={courseName(course)}>
+          Classes
+        </BackLink>
         <PageHeader
           title={
             <HStack gap={2} vAlign="center" wrap="wrap">
@@ -110,7 +112,7 @@ export default async function CoursePage(props: PageProps<"/courses/[id]">) {
                   label="Open class"
                   variant="secondary"
                   href={`/courses/${course.id}/class`}
-                  icon={<ClipboardList className="size-4" aria-hidden />}
+                  icon={<AppIcon name="clipboardList" size="sm" />}
                 />
               ) : null}
               {manage && !course.archivedAt ? (
@@ -144,7 +146,7 @@ export default async function CoursePage(props: PageProps<"/courses/[id]">) {
 
       {roster.length === 0 ? (
         <EmptyState
-          icon={Users}
+          icon="users"
           title="Nobody in this class yet"
           hint="Enrol a swimmer and they will appear on the roster and on every register from then on."
           action={

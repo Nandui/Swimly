@@ -1,5 +1,4 @@
 import type { Metadata } from "next";
-import { ScrollText } from "lucide-react";
 import { VStack } from "@astryxdesign/core/Stack";
 import { ActivityTable } from "@/components/activity-table";
 import { EmptyState } from "@/components/ui-kit/empty-state";
@@ -30,7 +29,7 @@ export default async function ActivityPage(props: PageProps<"/activity">) {
 
       {total === 0 ? (
         <EmptyState
-          icon={ScrollText}
+          icon="scrollText"
           title="The trail is empty"
           hint="Nothing has been created, updated or deleted yet."
         />

@@ -21,6 +21,7 @@ import { ATTENDANCE_ORDER, ATTENDANCE_STATUS_META } from "@/lib/attendance/const
 import type { RegisterLine } from "@/lib/attendance/data/register";
 import { ageInYears } from "@/lib/format";
 import { toast } from "@/lib/toast";
+import { Icon } from "@astryxdesign/core/Icon";
 
 /** The pool-deck screen.
  *
@@ -75,7 +76,7 @@ export function SaveBar({ status, children }: { status: string; children: React.
     <Section
       dividers={["top"]}
       paddingBlock={3}
-      className="sticky bottom-0 -mx-4 pb-[max(0.75rem,env(safe-area-inset-bottom))] md:-mx-8"
+      className="sticky bottom-0 -mx-4 pb-[max(0.75rem,env(safe-area-inset-bottom))]"
     >
       <HStack gap={3} vAlign="center" hAlign="between">
         <Text color="secondary" hasTabularNumbers aria-live="polite">
@@ -306,7 +307,7 @@ export function RegisterForm({
                         key={status}
                         value={status}
                         label={ATTENDANCE_STATUS_META[status].label}
-                        pressedIcon={<Check className="size-4" aria-hidden />}
+                        pressedIcon={<Icon icon={Check} size="sm" />}
                       >
                         {ATTENDANCE_STATUS_META[status].label}
                       </ToggleButton>
@@ -346,8 +347,8 @@ export function RegisterForm({
             size="lg"
             onClick={save}
             isLoading={pending}
-            icon={continueHref ? undefined : <Check className="size-4" aria-hidden />}
-            endContent={continueHref ? <ArrowRight className="size-4" aria-hidden /> : undefined}
+            icon={continueHref ? undefined : <Icon icon={Check} size="sm" />}
+            endContent={continueHref ? <Icon icon={ArrowRight} size="sm" /> : undefined}
           />
         </SaveBar>
       )}

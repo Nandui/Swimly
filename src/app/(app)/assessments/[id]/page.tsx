@@ -1,6 +1,5 @@
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
-import { Users } from "lucide-react";
 import { Link } from "@astryxdesign/core/Link";
 import { HStack, VStack } from "@astryxdesign/core/Stack";
 import {
@@ -78,7 +77,9 @@ export default async function AssessmentSessionPage(props: PageProps<"/assessmen
   return (
     <VStack gap={6}>
       <VStack gap={2}>
-        <BackLink href="/assessments">Assessments</BackLink>
+        <BackLink href="/assessments" current={sessionDay(session)}>
+          Assessments
+        </BackLink>
         <PageHeader
           title={
             <HStack gap={2} vAlign="center" wrap="wrap">
@@ -128,7 +129,7 @@ export default async function AssessmentSessionPage(props: PageProps<"/assessmen
 
       {session.bookings.length === 0 ? (
         <EmptyState
-          icon={Users}
+          icon="users"
           title="Nobody booked yet"
           hint="Book a swimmer and they appear here. Once they have been in the water, place them at the level they belong at."
           action={book && open ? <BookOntoSession session={session} taken={0} /> : null}

@@ -23,6 +23,7 @@ import {
   placesLeft,
 } from "@/lib/courses/constants";
 import { fullName } from "@/lib/students/constants";
+import { Icon } from "@astryxdesign/core/Icon";
 
 type CourseLike = {
   id: string;
@@ -91,7 +92,7 @@ export function EnrolIntoCourse({ course, taken }: { course: CourseLike; taken: 
   return (
     <FormDialog
       trigger={
-        <Button label="Enrol a swimmer" variant="primary" size="sm" icon={<UserRoundPlus className="size-4" aria-hidden />} />
+        <Button label="Enrol a swimmer" variant="primary" size="sm" icon={<Icon icon={UserRoundPlus} size="sm" />} />
       }
       title={`Enrol into ${courseLabel(course)}`}
       description={`${course.level.name} · ${formatSlotShort(course)} · ${capacityLabel(taken, course.capacity)}`}
@@ -119,7 +120,7 @@ export function EnrolInCourseForStudent({
   return (
     <FormDialog
       trigger={
-        <Button label="Enrol in a class" variant="secondary" size="sm" icon={<Plus className="size-4" aria-hidden />} />
+        <Button label="Enrol in a class" variant="secondary" size="sm" icon={<Icon icon={Plus} size="sm" />} />
       }
       title={`Enrol ${fullName(student)}`}
       submitLabel="Enrol"
@@ -157,7 +158,7 @@ export function EndEnrolment({ enrolment, classLabel }: WithClass) {
   return (
     <FormDialog
       trigger={
-        <IconButton label={`End ${fullName(enrolment.student)}'s place in ${classLabel}`} variant="ghost" size="sm" icon={<LogOut className="size-4" aria-hidden />} />
+        <IconButton label={`End ${fullName(enrolment.student)}'s place in ${classLabel}`} variant="ghost" size="sm" icon={<Icon icon={LogOut} size="sm" />} />
       }
       title={`End ${fullName(enrolment.student)}'s place?`}
       description={`They come off the roster for ${classLabel}. Their attendance and marks so far stay exactly as they are.`}
@@ -192,7 +193,7 @@ export function PromoteFromWaitlist({ enrolment }: { enrolment: EnrolmentLike })
       successMessage="Moved off the waitlist"
       run={() => promoteFromWaitlist(enrolment.id)}
     >
-      <ChevronsUp className="size-3.5" />
+      <Icon icon={ChevronsUp} size="sm" />
     </ActionButton>
   );
 }
@@ -207,7 +208,7 @@ export function TransferEnrolment({
   return (
     <FormDialog
       trigger={
-        <IconButton label={`Move ${fullName(enrolment.student)} to another class`} variant="ghost" size="sm" icon={<ArrowRightLeft className="size-4" aria-hidden />} />
+        <IconButton label={`Move ${fullName(enrolment.student)} to another class`} variant="ghost" size="sm" icon={<Icon icon={ArrowRightLeft} size="sm" />} />
       }
       title={`Move ${fullName(enrolment.student)} to another class`}
       description="The old place closes and a new one opens, so their attendance so far stays intact."

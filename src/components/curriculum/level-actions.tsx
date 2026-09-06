@@ -19,6 +19,7 @@ import {
   setLevelArchived,
   updateLevel,
 } from "@/lib/curriculum/actions/levels";
+import { Icon } from "@astryxdesign/core/Icon";
 
 type Named = { id: string; name: string; description: string | null; archivedAt: Date | null };
 
@@ -64,7 +65,7 @@ export function AddLevel({ programmeId }: { programmeId: string }) {
   return (
     <FormDialog
       trigger={
-        <Button label="Add level" variant="primary" size="sm" icon={<Plus className="size-4" aria-hidden />} />
+        <Button label="Add level" variant="primary" size="sm" icon={<Icon icon={Plus} size="sm" />} />
       }
       title="Add a level"
       description="Levels are worked through in order. This one goes at the end; move it afterwards."
@@ -81,7 +82,7 @@ export function EditLevel({ level }: { level: Named }) {
   return (
     <FormDialog
       trigger={
-        <IconButton label={`Edit ${level.name}`} variant="ghost" size="sm" icon={<Pencil className="size-4" aria-hidden />} />
+        <IconButton label={`Edit ${level.name}`} variant="ghost" size="sm" icon={<Icon icon={Pencil} size="sm" />} />
       }
       title={`Edit ${level.name}`}
       submitLabel="Save changes"
@@ -101,7 +102,7 @@ export function ArchiveLevel({ level }: { level: Named }) {
         successMessage="Level restored"
         run={() => setLevelArchived(level.id, false)}
       >
-        <ArchiveRestore className="size-3.5" />
+        <Icon icon={ArchiveRestore} size="sm" />
       </ActionButton>
     );
   }
@@ -109,7 +110,7 @@ export function ArchiveLevel({ level }: { level: Named }) {
   return (
     <ConfirmAction
       trigger={
-        <IconButton label={`Archive ${level.name}`} variant="ghost" size="sm" icon={<Archive className="size-4" aria-hidden />} />
+        <IconButton label={`Archive ${level.name}`} variant="ghost" size="sm" icon={<Icon icon={Archive} size="sm" />} />
       }
       title={`Archive ${level.name}?`}
       description="It stops being offered for new classes and enrolments. Swimmers who already completed it keep that completion, and their assessments stay readable. You can restore it later."
@@ -128,14 +129,14 @@ export function MoveLevel({ level, first, last }: { level: Named; first: boolean
         className={first ? "invisible" : undefined}
         run={() => moveLevel(level.id, "up")}
       >
-        <ChevronUp className="size-3.5" />
+        <Icon icon={ChevronUp} size="sm" />
       </ActionButton>
       <ActionButton
         ariaLabel={`Move ${level.name} down`}
         className={last ? "invisible" : undefined}
         run={() => moveLevel(level.id, "down")}
       >
-        <ChevronDown className="size-3.5" />
+        <Icon icon={ChevronDown} size="sm" />
       </ActionButton>
     </>
   );
@@ -176,7 +177,7 @@ export function AddCompetency({ levelId, levelName }: { levelId: string; levelNa
   return (
     <FormDialog
       trigger={
-        <Button label="Add competency" variant="secondary" size="sm" icon={<Plus className="size-4" aria-hidden />} />
+        <Button label="Add competency" variant="secondary" size="sm" icon={<Icon icon={Plus} size="sm" />} />
       }
       title={`Add a competency to ${levelName}`}
       description="Every competency here has to be signed off before a swimmer can complete the level."
@@ -193,7 +194,7 @@ export function EditCompetency({ competency }: { competency: Named }) {
   return (
     <FormDialog
       trigger={
-        <IconButton label={`Edit ${competency.name}`} variant="ghost" size="sm" icon={<Pencil className="size-4" aria-hidden />} />
+        <IconButton label={`Edit ${competency.name}`} variant="ghost" size="sm" icon={<Icon icon={Pencil} size="sm" />} />
       }
       title="Edit competency"
       submitLabel="Save changes"
@@ -219,7 +220,7 @@ export function ArchiveCompetency({
         successMessage="Competency restored"
         run={() => setCompetencyArchived(competency.id, false)}
       >
-        <ArchiveRestore className="size-3.5" />
+        <Icon icon={ArchiveRestore} size="sm" />
       </ActionButton>
     );
   }
@@ -227,7 +228,7 @@ export function ArchiveCompetency({
   return (
     <ConfirmAction
       trigger={
-        <IconButton label={`Archive ${competency.name}`} variant="ghost" size="sm" icon={<Archive className="size-4" aria-hidden />} />
+        <IconButton label={`Archive ${competency.name}`} variant="ghost" size="sm" icon={<Icon icon={Archive} size="sm" />} />
       }
       title="Archive this competency?"
       description={
@@ -263,14 +264,14 @@ export function MoveCompetency({
         className={first ? "invisible" : undefined}
         run={() => moveCompetency(competency.id, "up")}
       >
-        <ChevronUp className="size-3.5" />
+        <Icon icon={ChevronUp} size="sm" />
       </ActionButton>
       <ActionButton
         ariaLabel={`Move ${competency.name} down`}
         className={last ? "invisible" : undefined}
         run={() => moveCompetency(competency.id, "down")}
       >
-        <ChevronDown className="size-3.5" />
+        <Icon icon={ChevronDown} size="sm" />
       </ActionButton>
     </>
   );

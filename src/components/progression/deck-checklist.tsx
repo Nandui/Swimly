@@ -21,6 +21,7 @@ import { Tag } from "@/components/ui-kit/tag";
 import type { AttendanceStatus, CompetencyStatus } from "@/generated/prisma/client";
 import { saveClassAssessment } from "@/lib/progression/actions/assess";
 import { toast } from "@/lib/toast";
+import { Icon } from "@astryxdesign/core/Icon";
 
 /** The checklist as the deck uses it: one competency at a time, across the
  *  whole class.
@@ -265,7 +266,7 @@ export function DeckChecklist({
           variant="secondary"
           size="lg"
           href={doneHref}
-          icon={<ChevronLeft className="size-4" aria-hidden />}
+          icon={<Icon icon={ChevronLeft} size="sm" />}
         />
       </VStack>
     );
@@ -329,7 +330,7 @@ export function DeckChecklist({
                   key={status}
                   value={status}
                   label={MARK_LABEL[status]}
-                  pressedIcon={<Check className="size-4" aria-hidden />}
+                  pressedIcon={<Icon icon={Check} size="sm" />}
                 >
                   {MARK_LABEL[status]}
                 </ToggleButton>
@@ -359,7 +360,7 @@ export function DeckChecklist({
             label={`${index + 1}`}
             aria-label={`${index + 1}. ${c.name}`}
             endContent={
-              allAchieved(c.id) ? <Check className="size-4" aria-label="Everyone achieved" /> : undefined
+              allAchieved(c.id) ? <Icon icon={Check} size="sm" label="Everyone achieved" /> : undefined
             }
           />
         ))}
@@ -392,7 +393,7 @@ export function DeckChecklist({
                 label="Previous competency"
                 variant="secondary"
                 size="lg"
-                icon={<ChevronLeft className="size-5" aria-hidden />}
+                icon={<Icon icon={ChevronLeft} size="md" />}
                 isDisabled={current === 0}
                 onClick={() => setCurrent((i) => Math.max(0, i - 1))}
               />
@@ -400,7 +401,7 @@ export function DeckChecklist({
                 label="Next competency"
                 variant="secondary"
                 size="lg"
-                icon={<ChevronRight className="size-5" aria-hidden />}
+                icon={<Icon icon={ChevronRight} size="md" />}
                 isDisabled={current === competencies.length - 1}
                 onClick={() => setCurrent((i) => Math.min(competencies.length - 1, i + 1))}
               />
@@ -412,7 +413,7 @@ export function DeckChecklist({
                 label={attendance ? "Everyone in today achieved" : "Everyone achieved"}
                 variant="secondary"
                 size="lg"
-                icon={<Check className="size-4" aria-hidden />}
+                icon={<Icon icon={Check} size="sm" />}
                 onClick={() => everyone(competency.id, "ACHIEVED")}
               />
             </HStack>
@@ -476,7 +477,7 @@ export function DeckChecklist({
             size="lg"
             onClick={save}
             isLoading={pending}
-            icon={<Check className="size-4" aria-hidden />}
+            icon={<Icon icon={Check} size="sm" />}
           />
         ) : saved ? (
           <Button
@@ -484,7 +485,7 @@ export function DeckChecklist({
             variant="primary"
             size="lg"
             href={doneHref}
-            icon={<Check className="size-4" aria-hidden />}
+            icon={<Icon icon={Check} size="sm" />}
           />
         ) : (
           <Button
@@ -492,7 +493,7 @@ export function DeckChecklist({
             variant="secondary"
             size="lg"
             href={doneHref}
-            icon={<ChevronLeft className="size-4" aria-hidden />}
+            icon={<Icon icon={ChevronLeft} size="sm" />}
           />
         )}
       </SaveBar>

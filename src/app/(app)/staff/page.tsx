@@ -1,5 +1,4 @@
 import type { Metadata } from "next";
-import { KeyRound, Users } from "lucide-react";
 import { Button } from "@astryxdesign/core/Button";
 import { HStack, VStack } from "@astryxdesign/core/Stack";
 import {
@@ -28,6 +27,7 @@ import { permissionCountLabel, roleReach } from "@/lib/staff/constants";
 import { expandPermissions } from "@/lib/staff/permissions";
 import { listRolesForPicker, type RoleOption } from "@/lib/staff/data/roles";
 import { listPeopleForDisplay, type Person } from "@/lib/staff/data/staff";
+import { AppIcon } from "@/components/ui-kit/app-icon";
 
 export const metadata: Metadata = { title: "Staff" };
 
@@ -53,7 +53,7 @@ export default async function StaffPage() {
                 label="Roles"
                 variant="secondary"
                 href="/roles"
-                icon={<KeyRound className="size-4" aria-hidden />}
+                icon={<AppIcon name="keyRound" size="sm" />}
               />
             ) : null}
             <AddPerson roles={roles} />
@@ -71,7 +71,7 @@ export default async function StaffPage() {
 
       {active.length === 0 ? (
         <EmptyState
-          icon={Users}
+          icon="users"
           title="Nobody can sign in yet"
           hint="Add the people who take attendance and run the desk. Give each of them the role that lets them do their job and no more."
           action={<AddPerson roles={roles} />}

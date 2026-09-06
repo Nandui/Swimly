@@ -9,9 +9,9 @@ is superseded for everything visual; its UX patterns (searchable pickers,
 collapse-not-scroll, one H1) still hold and are restated below.
 
 Astryx is a component library, not a colour file. The app uses its
-components — AppShell, SideNav, Button, TextInput, Selector, Typeahead,
-Dialog, Banner, Badge, Toast, Text and Heading — and its tokens, through the
-CSS it ships. Nothing here is styled by hand that Astryx already draws.
+components — AppShell, TopNav, SideNav, Button, TextInput, DateInput,
+Selector, Typeahead, FormLayout, Dialog, Banner, Token, Badge, Toast, Text and
+Heading — and its tokens, through the CSS it ships. Nothing here is styled by hand that Astryx already draws.
 
 The authority on how a component behaves and what it takes is Astryx's own
 documentation, read from the CLI so it matches the installed version:
@@ -43,8 +43,8 @@ makes Swimly stop looking like itself.
   `text-secondary`, `border-border`, `bg-muted`) or as `var(--color-*)`. No
   hex, no Tailwind palette class, in a component.
 - **Status colour comes only from the tag token pairs**, always via a
-  metadata map — never a colour chosen at a call site. The pairs are Astryx's
-  hue tokens, so a `<Tag>` and a `<Badge>` of the same colour agree.
+  metadata map — never a colour chosen at a call site. `<Tag>` is Astryx's
+  `Token` in one of its hues; a `Badge` is only ever a count.
 - **Both modes, always.** Every token is a `light-dark()` pair measured by the
   theme; anything added by hand is checked in both.
 - **One H1 per page**, from `Heading level={1}` via `PageHeader`, with an
@@ -87,29 +87,52 @@ every page body was rewritten in Astryx's own components and the block was
 deleted. Nothing in `src` names a colour, a size or a radius that is not
 Astryx's, and `globals.css` is short enough to read in one go.
 
-**Figtree through next/font.** Astryx never loads a font. The theme names
-Figtree; the root layout self-hosts it with `next/font/google` and hands the
-variable to the theme's font tokens on `[data-astryx-theme]`, which is where
-the theme sets them.
+**Figtree from fontsource.** Astryx never loads a font, and the Neutral
+theme's font token names Figtree. The root layout imports the four weights
+from `@fontsource/figtree`, so the family the token asks for is simply
+present; no variable is handed anywhere and the theme's tokens stay
+untouched.
 
-**Tag pairs are Astryx hues.** `--tag-<colour>-bg/fg` are aliases of
-`--color-background-<hue>` and `--color-text-<hue>`. Astryx has no brown;
-teal stands in and reads as its own hue.
+**Status is a Token; a count is a Badge.** `<Tag>` renders Astryx's
+`Token` in one of its hues, and every status colour still comes through a
+metadata map. Astryx's guidance is that a Badge is for counts, so tab counts
+and the nav's red numbers are Badges and nothing else is. Astryx has no
+brown; teal stands in.
 
-**Phone sizes, once.** Astryx sizes controls for a pointer: 28, 32, 36px. A
-thumb on a wet phone needs 44. One unlayered media rule gives every button,
-field, menu row, nav item and tab a 44px minimum below `md`.
+**Icons: the client draws them.** Astryx's `Icon` is a client component,
+so a server page cannot hand it a lucide component (React refuses to send a
+function across). Server pages use `AppIcon name="…"` from
+`ui-kit/app-icon.tsx`, which looks the name up on the client; client
+components use `Icon icon={Lucide}` directly. Every SVG goes through one
+of the two — never a bare lucide element.
+
+**Touch sizes, once.** Astryx sizes controls for a pointer: 28, 32, 36px. A
+thumb on a wet phone or a poolside tablet needs 44. One unlayered media rule
+in `globals.css`, for widths below `md` and for any coarse pointer,
+gives every button, field, menu row, tab, segment, toggle, switch row,
+collapsible trigger and nav item a 44px minimum, and stretches the inner
+control of the date, time and number fields to fill the box. The class
+names are Astryx's own, from each component's theming table.
+
+**Forms are FormLayouts.** Every dialog body is a `FormLayout`; a pair of
+fields that share a row is a nested `FormLayout direction="horizontal"`.
+A date is `DateInput`, a time `TimeInput`, a number `NumberInput`,
+each behind the `Input` adapter so the plain `<form>` still posts them.
 
 **Nothing is drawn by hand.** Every heading is `Heading`, every run of words
 is `Text`, every list of records is `Table` (children mode, which is
 server-safe) or `List` with `Item`, every region is a stack or a `Section`,
 a discrete thing is a `Card`, a fold is a `Collapsible`, a notice is a
 `Banner`, a count that needs noticing is a `Badge`, a mark is a
-`ToggleButtonGroup` with a `StatusDot` beside the name. Tailwind classes
-appear only for layout Astryx's props cannot express — a responsive column
-that hides below `md`, a centred page column — never for a colour, a
-size or a radius. The one CSS rule the app adds to Astryx's controls is the
-44px phone minimum.
+`ToggleButtonGroup` with a `StatusDot` beside the name, a way back up
+is `Breadcrumbs`, a page centred on nothing else (sign-in) is a `Center`.
+Records are rows — `List` with `Item`, or `Table` — never a card each:
+the roles page and a swimmer's level ladder are lists with dividers, and only
+the rung they are on opens as a `Section`. Tailwind classes appear only for
+layout Astryx's props cannot express — a responsive column that hides below
+`md`, the switcher's text that hides in the phone bar — never for a
+colour, a size or a radius. The one CSS rule the app adds to Astryx's
+controls is the 44px touch minimum.
 
 ### Two modes, the device decides
 
@@ -117,22 +140,33 @@ The mode is a cookie, `swimly.theme`, read by the root layout on the server.
 It stamps `data-theme` on `<html>` (which reset.css turns into
 `color-scheme`) and seeds Astryx's `<Theme mode>`, so the first paint is
 right and hydration has nothing to disagree about. No cookie means "follow
-the device". The one-tap flip sits in the side nav's footer and the phone
-bar; the three-way control on the Account page is where "system" is
-restored. `next-themes` is gone.
+the device". The one-tap flip is an `IconButton` at the end of the
+`TopNav` on every device; the three-way `SegmentedControl` on the Account
+page is where "system" is restored. `next-themes` is gone.
 
 ### The shell
 
-Astryx's `AppShell` in `height="auto"` (the page scrolls, the nav sticks) and
-`variant="section"` (a divider between nav and content, no raised surface).
-The `SideNav` holds the product name, the club switcher above the nav, the
-screens the role may open, and in the footer the account row and the mode
-flip; it collapses to an icon rail. Below `md` the AppShell folds the nav
-into a drawer and shows the `TopNav` as a bar — product name, club, flip,
-toggle — which is hidden from 769px up, since there is no top bar on
-desktop in this design. AppShell owns the skip link and the `<main>`
-landmark; pages start at their H1. The dev build's "view as" bar is a
-`Banner status="warning" container="section"` in the shell's banner slot.
+Astryx's most common layout, "Top Nav with Side Nav". `AppShell` in
+`height="auto"` (the page scrolls, the nav sticks), `variant="section"`
+(a divider between nav and content), `contentPadding={4}`. The `TopNav`
+carries the app's identity — `TopNavHeading` with the wordmark and, in its
+subheading slot (Astryx's "account context"), the club being shown — and at
+its end the club switcher (a `DropdownMenu`) and the mode flip. The
+`SideNav` holds only the screens the role may open, and in its footer the
+account row with a sign-out menu; it collapses to an icon rail. There is
+no second `Layout` inside the shell — Astryx says one per shell — so the
+page is capped at 1152px with a `Center` and a stack. AppShell owns the
+skip link and the `<main>` landmark; pages start at their H1. The dev
+build's "view as" bar is a `Banner status="warning" container="section"`
+in the shell's banner slot.
+
+The responsive contract, written in `app-shell.tsx`: above 768px the
+TopNav, a 256px SideNav and content; at 768px and below the SideNav becomes a
+drawer behind a toggle in the bar, and the switcher drops its text and keeps
+its icon, chevron and accessible name so the bar fits a 375px phone with
+every target 44px. Tables hide their secondary columns below `md` and
+re-home the values as a supporting line, because server components cannot
+ask `useMediaQuery` without a flash.
 
 ### Fields that post: Astryx's inputs inside plain forms
 
@@ -508,16 +542,19 @@ Before calling a screen done:
 - It is built from Astryx components; anything drawn by hand has a reason
   written beside it. `npx astryx component <Name>` was read for each one used.
 - One H1, from `PageHeader`.
-- Every status is a `<Tag>` or `<Badge>` fed by a metadata map, and it reads
-  in both modes.
+- Every status is a `<Tag>` (Astryx's Token) fed by a metadata map, and it
+  reads in both modes; a `Badge` is only ever a count.
+- Every icon is `Icon` in a client component or `AppIcon name` in a server
+  one; the page loads with no console error in either.
 - No colour outside the tokens: no hex, no Tailwind palette class, no name
   from the legacy alias block in new code.
 - Every text pair 4.5:1 and every control edge 3:1, checked in light and dark
   for anything not drawn by the theme.
 - Keyboard: Astryx's focus outline on everything focusable, the skip link
   first, `prefers-reduced-motion` honoured.
-- 375px checked: 44px targets, nothing scrolling sideways, the phone bar's
-  toggle on screen.
+- Checked at 375, 768, 1024 and 1280, light and dark: 44px targets on touch,
+  nothing scrolling sideways, the phone bar's toggle on screen, 16px of
+  padding around the page.
 - Row actions carry `aria-label`s naming the verb and the row, and stay
   reachable on touch.
 - Secondary columns collapse rather than scroll below `md`.

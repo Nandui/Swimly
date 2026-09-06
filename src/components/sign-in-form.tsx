@@ -7,13 +7,16 @@ import { Waves } from "lucide-react";
 import { Banner } from "@astryxdesign/core/Banner";
 import { Button } from "@astryxdesign/core/Button";
 import { Card } from "@astryxdesign/core/Card";
+import { Center } from "@astryxdesign/core/Center";
 import { Divider } from "@astryxdesign/core/Divider";
+import { FormLayout } from "@astryxdesign/core/FormLayout";
+import { Icon } from "@astryxdesign/core/Icon";
 import { HStack, VStack } from "@astryxdesign/core/Stack";
 import { Heading, Text } from "@astryxdesign/core/Text";
 import { TextInput } from "@astryxdesign/core/TextInput";
 
-/** The front door. One card, centred, the same grammar as every other
- *  surface.
+/** The front door, in the shape of Astryx's login page: one card, centred
+ *  on the page ground.
  *
  *  `devAdminName` arrives already decided by the server: the page only passes
  *  a name when the deployment is allowed a passwordless sign-in, so the client
@@ -69,27 +72,26 @@ export function SignInForm({ devAdminName }: { devAdminName: string | null }) {
   }
 
   return (
-    <main className="flex min-h-svh items-center justify-center px-4 py-10">
+    <Center axis="both" minHeight="100svh" padding={4}>
       <Card width="100%" maxWidth={400} padding={6}>
         <VStack gap={5}>
           <VStack gap={1}>
             <HStack gap={1} vAlign="center">
-              <Waves className="size-4" aria-hidden />
+              <Icon icon={Waves} size="sm" />
               <Text weight="semibold">Swimly</Text>
             </HStack>
             <Heading level={1}>Sign in</Heading>
           </VStack>
 
           <form onSubmit={handleSubmit}>
-            <VStack gap={3}>
+            <FormLayout defaultOptionality="required">
               <TextInput
                 label="Email"
                 type="email"
                 value={email}
                 onChange={setEmail}
                 htmlName="email"
-                isRequired
-                width="100%"
+                size="lg"
               />
               <TextInput
                 label="Password"
@@ -97,13 +99,10 @@ export function SignInForm({ devAdminName }: { devAdminName: string | null }) {
                 value={password}
                 onChange={setPassword}
                 htmlName="password"
-                isRequired
-                width="100%"
+                size="lg"
               />
 
-              {error ? (
-                <Banner status="error" title={error} collapsible={false} />
-              ) : null}
+              {error ? <Banner status="error" title={error} collapsible={false} /> : null}
 
               <Button
                 type="submit"
@@ -113,7 +112,7 @@ export function SignInForm({ devAdminName }: { devAdminName: string | null }) {
                 width="100%"
                 isLoading={pending}
               />
-            </VStack>
+            </FormLayout>
           </form>
 
           {devAdminName ? (
@@ -140,6 +139,6 @@ export function SignInForm({ devAdminName }: { devAdminName: string | null }) {
           ) : null}
         </VStack>
       </Card>
-    </main>
+    </Center>
   );
 }

@@ -6,6 +6,7 @@ import { Banner } from "@astryxdesign/core/Banner";
 import { DropdownMenu } from "@astryxdesign/core/DropdownMenu";
 import { previewRole } from "@/lib/staff/actions/preview";
 import { toast } from "@/lib/toast";
+import { Icon } from "@astryxdesign/core/Icon";
 
 type RoleOption = { id: string; name: string; description: string | null };
 
@@ -40,7 +41,7 @@ export function RolePreviewBar({
     description: role.description ?? undefined,
     onClick: () => choose(role.id),
     endContent:
-      role.id === current?.id ? <Check className="size-4" aria-label="Current" /> : undefined,
+      role.id === current?.id ? <Icon icon={Check} size="sm" label="Current" /> : undefined,
   }));
 
   return (
@@ -61,7 +62,7 @@ export function RolePreviewBar({
           button={{
             label: current ? `Viewing as ${current.name}. Change role` : "View as a role",
             children: pending ? "Switching…" : (current?.name ?? "View as"),
-            icon: <Eye className="size-4" aria-hidden />,
+            icon: <Icon icon={Eye} size="sm" />,
             variant: "secondary",
             size: "sm",
             isDisabled: pending,

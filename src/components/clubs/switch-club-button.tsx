@@ -6,6 +6,7 @@ import { ArrowLeftRight } from "lucide-react";
 import { Button } from "@astryxdesign/core/Button";
 import { switchClub } from "@/lib/clubs/actions/clubs";
 import { toast } from "@/lib/toast";
+import { Icon } from "@astryxdesign/core/Icon";
 
 /** The way through from a page that belongs to another club: switch, and
  *  stay on the page, which then renders as it does there. */
@@ -18,7 +19,7 @@ export function SwitchClubButton({ club }: { club: { id: string; name: string } 
       label={pending ? "Switching…" : `Switch to ${club.name}`}
       variant="primary"
       isLoading={pending}
-      icon={<ArrowLeftRight className="size-4" aria-hidden />}
+      icon={<Icon icon={ArrowLeftRight} size="sm" />}
       onClick={() =>
         startTransition(async () => {
           const result = await switchClub(club.id, { stay: true });

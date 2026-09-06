@@ -2,6 +2,7 @@
 
 import * as React from "react";
 import { Search } from "lucide-react";
+import { Button } from "@astryxdesign/core/Button";
 import { TextInput } from "@astryxdesign/core/TextInput";
 import { VisuallyHidden } from "@astryxdesign/core/VisuallyHidden";
 
@@ -38,7 +39,7 @@ export function SearchField({
         width={width ? `min(100%, ${width}px)` : "100%"}
       />
       <VisuallyHidden>
-        <button type="submit">Search</button>
+        <Button type="submit" label="Search" variant="ghost" size="sm" />
       </VisuallyHidden>
     </>
   );

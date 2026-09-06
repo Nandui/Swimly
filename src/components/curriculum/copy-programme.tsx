@@ -5,6 +5,7 @@ import { Field, FormDialog } from "@/components/form-dialog";
 import { Button } from "@astryxdesign/core/Button";
 import { Select } from "@/components/ui/select";
 import { copyProgramme } from "@/lib/curriculum/actions/copy";
+import { Icon } from "@astryxdesign/core/Icon";
 
 type Club = { id: string; name: string };
 
@@ -25,7 +26,7 @@ export function CopyProgramme({
   return (
     <FormDialog
       trigger={
-        <Button label="Copy to another club" variant="secondary" size="sm" icon={<Copy className="size-4" aria-hidden />} />
+        <Button label="Copy to another club" variant="secondary" size="sm" icon={<Icon icon={Copy} size="sm" />} />
       }
       title={`Copy ${programme.name} to another club`}
       description={`Its ${levels} ${levels === 1 ? "level" : "levels"} and ${competencies} ${

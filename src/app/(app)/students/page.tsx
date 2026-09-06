@@ -1,6 +1,5 @@
 import type { Metadata } from "next";
 import Form from "next/form";
-import { Users } from "lucide-react";
 import { Link } from "@astryxdesign/core/Link";
 import { HStack, StackItem, VStack } from "@astryxdesign/core/Stack";
 import {
@@ -115,7 +114,7 @@ export default async function StudentsPage(props: PageProps<"/students">) {
 
       {students.length === 0 ? (
         <EmptyState
-          icon={Users}
+          icon="users"
           title={filtered ? "Nobody matches that" : "No swimmers yet"}
           hint={
             filtered

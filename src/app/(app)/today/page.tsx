@@ -1,5 +1,4 @@
 import type { Metadata } from "next";
-import { ArrowRight, CalendarCheck, ChevronRight } from "lucide-react";
 import { Button } from "@astryxdesign/core/Button";
 import { ClickableCard } from "@astryxdesign/core/ClickableCard";
 import { Collapsible } from "@astryxdesign/core/Collapsible";
@@ -23,6 +22,7 @@ import { DAY_META, capacityLabel, courseName, formatTime } from "@/lib/courses/c
 import { getCoursesOnDay, type CourseRow } from "@/lib/courses/data/courses";
 import { formatDate, minutesNow, parseDateOnly, today } from "@/lib/format";
 import { screenPage } from "@/lib/page-guards";
+import { AppIcon } from "@/components/ui-kit/app-icon";
 
 export const metadata: Metadata = { title: "Today" };
 
@@ -209,7 +209,7 @@ export default async function TodayPage(props: PageProps<"/today">) {
 
         {shown.length === 0 ? (
           <EmptyState
-            icon={CalendarCheck}
+            icon="calendarCheck"
             title={tab === "all" ? "Nothing runs today" : "No classes of yours today"}
             hint={
               tab === "all"
@@ -498,7 +498,7 @@ function HeroCard(props: RowProps & { marker: "now" | "next" }) {
           <Text type="large" weight="semibold">
             {verb}
           </Text>
-          <ArrowRight aria-hidden="true" className="size-5" />
+          <AppIcon name="arrowRight" size="sm" />
         </HStack>
       </VStack>
     </ClickableCard>
@@ -536,7 +536,7 @@ function ClassRow(props: RowProps) {
           <Text weight={primary ? "semibold" : "medium"} color={primary ? "primary" : "secondary"}>
             {props.done ? "Open" : "Start"}
           </Text>
-          <ChevronRight aria-hidden="true" className="size-4" />
+          <AppIcon name="chevronRight" size="sm" />
         </HStack>
       }
     />

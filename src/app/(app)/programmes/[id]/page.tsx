@@ -67,7 +67,9 @@ export default async function ProgrammePage(props: PageProps<"/programmes/[id]">
   return (
     <VStack gap={6}>
       <VStack gap={2}>
-        <BackLink href="/programmes">Programmes</BackLink>
+        <BackLink href="/programmes" current={programme.name}>
+          Programmes
+        </BackLink>
         <PageHeader
           title={programme.name}
           description={programme.description ?? undefined}
