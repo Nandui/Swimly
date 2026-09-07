@@ -46,7 +46,7 @@ export type TogetherStudent = {
   id: string;
   name: string;
   dateOfBirth: Date | null;
-  levelId: string | null;
+  levelIds: string[];
   levelName: string | null;
   currentCourseIds: string[];
 };
@@ -62,15 +62,14 @@ export type Suggestion = TogetherStudent & {
 const SUGGESTION_CAP = 10;
 
 function shape(row: Row): TogetherStudent {
-  // A swimmer in two programmes has two levels. The first by curriculum order
-  // is the one to search on.
-  const placement = [...row.enrolments].sort((a, b) => a.level.sortOrder - b.level.sortOrder)[0];
+  const levels = [...new Map(row.enrolments.map((e) => [e.levelId, e.level])).values()]
+    .sort((a, b) => a.sortOrder - b.sortOrder || a.id.localeCompare(b.id));
   return {
     id: row.id,
     name: `${row.firstName} ${row.lastName}`,
     dateOfBirth: row.dateOfBirth,
-    levelId: placement?.levelId ?? null,
-    levelName: placement?.level.name ?? null,
+    levelIds: levels.map((level) => level.id),
+    levelName: levels.map((level) => level.name).join(", ") || null,
     currentCourseIds: row.enrolments.map((e) => e.courseId),
   };
 }
@@ -83,7 +82,7 @@ export async function getGroup(ids: string[]): Promise<{
   if (ids.length === 0) return { chosen: [], suggestions: [] };
 
   const rows = await prisma.student.findMany({
-    where: { id: { in: ids } },
+    where: { id: { in: ids }, clubId: await currentClubId() },
     select: STUDENT_SELECT,
   });
 
@@ -141,8 +140,7 @@ export function toMembers(students: TogetherStudent[]): FamilyMember[] {
   return students.map((student) => ({
     studentId: student.id,
     name: student.name,
-    levelId: student.levelId,
-    levelName: student.levelName,
+    levelIds: student.levelIds,
     currentCourseIds: student.currentCourseIds,
   }));
 }
