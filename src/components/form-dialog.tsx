@@ -6,7 +6,8 @@ import { Button } from "@astryxdesign/core/Button";
 import { Dialog, DialogHeader } from "@astryxdesign/core/Dialog";
 import { Field as AstryxField } from "@astryxdesign/core/Field";
 import { FormLayout } from "@astryxdesign/core/FormLayout";
-import { HStack, VStack } from "@astryxdesign/core/Stack";
+import { HStack } from "@astryxdesign/core/Stack";
+import styles from "./form-dialog.module.css";
 import type { ActionResult, ActionConfirmation, ConfirmationReply } from "@/lib/action-result";
 import { toast } from "@/lib/toast";
 import { withTimeout } from "@/lib/save-feedback";
@@ -133,31 +134,31 @@ export function FormDialog({
         purpose={pending ? "required" : "form"}
         width={WIDTHS[width] ?? 448}
       >
-        <form key={formVersion} onSubmit={handleSubmit} aria-busy={pending}>
-          <VStack gap={4}>
-            <div ref={confirmationHeading} tabIndex={-1}>
-              <DialogHeader title={confirmation?.prompt.title ?? title} subtitle={confirmation?.prompt.description ?? description} onOpenChange={pending ? undefined : close} />
-            </div>
+        <form key={formVersion} onSubmit={handleSubmit} aria-busy={pending} className={styles.form}>
+          <div ref={confirmationHeading} tabIndex={-1} className={styles.header}>
+            <DialogHeader title={confirmation?.prompt.title ?? title} subtitle={confirmation?.prompt.description ?? description} onOpenChange={pending ? undefined : close} />
+          </div>
 
+          <div className={styles.body}>
             <div hidden={!!confirmation}>
               <FormLayout defaultOptionality="optional">{children}</FormLayout>
             </div>
 
             {error ? <Banner status="error" title={error} collapsible={false} /> : null}
+          </div>
 
-            <HStack gap={2} hAlign="end" wrap="wrap">
-              <Button type="button" label="Cancel" variant="secondary" onClick={close} isDisabled={pending} />
-              {confirmation ? confirmation.prompt.choices.map((choice) => (
-                <Button key={choice.value} type="button" label={choice.label} variant="secondary"
-                  isDisabled={pending} onClick={() => save(confirmation.data, { choice: choice.value, ids: confirmation.prompt.ids })} />
-              )) : <Button
-                type="submit"
-                label={pending ? "Saving…" : submitLabel}
-                variant="primary"
-                isLoading={pending}
-              />}
-            </HStack>
-          </VStack>
+          <HStack gap={2} hAlign="end" wrap="wrap" className={styles.footer}>
+            <Button type="button" label="Cancel" variant="secondary" onClick={close} isDisabled={pending} />
+            {confirmation ? confirmation.prompt.choices.map((choice) => (
+              <Button key={choice.value} type="button" label={choice.label} variant="secondary"
+                isDisabled={pending} onClick={() => save(confirmation.data, { choice: choice.value, ids: confirmation.prompt.ids })} />
+            )) : <Button
+              type="submit"
+              label={pending ? "Saving…" : submitLabel}
+              variant="primary"
+              isLoading={pending}
+            />}
+          </HStack>
         </form>
       </Dialog>
     </>
