@@ -15,7 +15,10 @@ import {
 } from "@/lib/curriculum/actions/programmes";
 import { Icon } from "@astryxdesign/core/Icon";
 
-type Programme = { id: string; name: string; description: string | null; archivedAt: Date | null };
+import { ImageField } from "./image-field";
+import { curriculumImageUrl } from "@/lib/curriculum/image";
+
+type Programme = { id: string; name: string; description: string | null; archivedAt: Date | null; imageVersion?: string | null };
 
 function readInput(formData: FormData) {
   return {
@@ -45,6 +48,7 @@ function ProgrammeFields({ programme }: { programme?: Programme }) {
           defaultValue={programme?.description ?? ""}
         />
       </Field>
+      <ImageField name={programme?.name} currentSrc={programme ? curriculumImageUrl("programme", programme.id, programme.imageVersion) : undefined} />
     </>
   );
 }
@@ -59,7 +63,7 @@ export function AddProgramme() {
       description="A programme holds the ordered levels a swimmer works through."
       submitLabel="Add programme"
       successMessage="Programme added"
-      submit={(formData) => createProgramme(readInput(formData))}
+      submit={(formData) => createProgramme(readInput(formData), formData)}
     >
       <ProgrammeFields />
     </FormDialog>
@@ -85,7 +89,7 @@ export function EditProgramme({
       title={`Edit ${programme.name}`}
       submitLabel="Save changes"
       successMessage="Programme updated"
-      submit={(formData) => updateProgramme(programme.id, readInput(formData))}
+      submit={(formData) => updateProgramme(programme.id, readInput(formData), formData)}
     >
       <ProgrammeFields programme={programme} />
     </FormDialog>

@@ -1,3 +1,4 @@
+import { CurriculumImage } from "@/components/curriculum/curriculum-image";
 import { ATTENDANCE_RECORD_META } from "@/lib/attendance/constants";
 import { ARCHIVAL_STATUS_META } from "@/lib/status";
 import type { Metadata } from "next";
@@ -210,6 +211,7 @@ function CourseTable({
             <TableRow key={course.id}>
               <TableCell>
                 <HStack gap={2} vAlign="center" wrap="wrap">
+                  <CurriculumImage kind="level" id={course.levelId} name={course.level.name} />
                   <Link href={`/courses/${course.id}`} weight="medium">
                     {courseName(course)}
                   </Link>

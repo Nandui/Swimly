@@ -244,6 +244,9 @@ model Programme {
   /// ladder both call it Water Safety & Fun.
   name        String
   description String?
+  /// Resized WebP artwork; bytes are read only by the authenticated image route.
+  imageData   Bytes?
+  imageVersion String?
   sortOrder   Int       @default(0)
   archivedAt  DateTime?
   createdAt   DateTime  @default(now())
@@ -265,6 +268,8 @@ model Level {
   programmeId String
   name        String
   description String?
+  imageData   Bytes?
+  imageVersion String?
   /// Plain indexed Int, not unique, so reordering is one write per moved row.
   /// The cost: every ordering must tie-break on name. See LIST_ORDER in
   /// `src/lib/curriculum/constants.ts`.

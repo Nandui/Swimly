@@ -1,3 +1,4 @@
+import { CurriculumImage } from "@/components/curriculum/curriculum-image";
 import { ARCHIVAL_STATUS_META } from "@/lib/status";
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
@@ -93,6 +94,7 @@ export default async function CoursePage(props: PageProps<"/courses/[id]">) {
         <PageHeader
           title={
             <HStack gap={2} vAlign="center" wrap="wrap">
+              <CurriculumImage kind="level" id={course.levelId} name={course.level.name} />
               {courseName(course)}
               {course.archivedAt ? <Tag color={ARCHIVAL_STATUS_META.archived.color}>{ARCHIVAL_STATUS_META.archived.label}</Tag> : null}
               {tone ? <Tag color={tone.color}>{tone.label}</Tag> : null}

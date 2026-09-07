@@ -1,3 +1,4 @@
+import { CurriculumImage } from "@/components/curriculum/curriculum-image";
 import { ARCHIVAL_STATUS_META } from "@/lib/status";
 import type { Metadata } from "next";
 import { Link } from "@astryxdesign/core/Link";
@@ -100,6 +101,7 @@ function ProgrammeTable({ programmes, archived }: { programmes: Row[]; archived?
           <TableRow key={programme.id}>
             <TableCell>
               <HStack gap={2} vAlign="center" wrap="wrap">
+                <CurriculumImage kind="programme" id={programme.id} name={programme.name} />
                 <Link href={`/programmes/${programme.id}`} weight="medium">
                   {programme.name}
                 </Link>

@@ -21,7 +21,10 @@ import {
 } from "@/lib/curriculum/actions/levels";
 import { Icon } from "@astryxdesign/core/Icon";
 
-type Named = { id: string; name: string; description: string | null; archivedAt: Date | null };
+import { ImageField } from "./image-field";
+import { curriculumImageUrl } from "@/lib/curriculum/image";
+
+type Named = { id: string; name: string; description: string | null; archivedAt: Date | null; imageVersion?: string | null };
 
 function readInput(formData: FormData) {
   return {
@@ -57,6 +60,7 @@ function LevelFields({ level }: { level?: Named }) {
           defaultValue={level?.description ?? ""}
         />
       </Field>
+      <ImageField name={level?.name} currentSrc={level ? curriculumImageUrl("level", level.id, level.imageVersion) : undefined} />
     </>
   );
 }
@@ -71,7 +75,7 @@ export function AddLevel({ programmeId }: { programmeId: string }) {
       description="Levels are worked through in order. This one goes at the end; move it afterwards."
       submitLabel="Add level"
       successMessage="Level added"
-      submit={(formData) => createLevel(programmeId, readInput(formData))}
+      submit={(formData) => createLevel(programmeId, readInput(formData), formData)}
     >
       <LevelFields />
     </FormDialog>
@@ -87,7 +91,7 @@ export function EditLevel({ level }: { level: Named }) {
       title={`Edit ${level.name}`}
       submitLabel="Save changes"
       successMessage="Level updated"
-      submit={(formData) => updateLevel(level.id, readInput(formData))}
+      submit={(formData) => updateLevel(level.id, readInput(formData), formData)}
     >
       <LevelFields level={level} />
     </FormDialog>

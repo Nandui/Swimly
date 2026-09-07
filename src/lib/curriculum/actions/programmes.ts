@@ -8,6 +8,7 @@ import { requirePermission } from "@/lib/authz";
 import { currentClubId } from "@/lib/clubs/current";
 import { LIST_ORDER } from "@/lib/curriculum/constants";
 import { reorderIds } from "@/lib/curriculum/reorder";
+import { prepareImage } from "@/lib/curriculum/image-upload";
 import { prisma } from "@/lib/prisma";
 
 /** Programme changes require curriculum.manage. */
@@ -23,7 +24,7 @@ const programmeSchema = z.object({
 
 export type ProgrammeInput = z.infer<typeof programmeSchema>;
 
-export async function createProgramme(input: ProgrammeInput): Promise<ActionResult> {
+export async function createProgramme(input: ProgrammeInput, imageForm?: FormData): Promise<ActionResult> {
   const session = await requirePermission("curriculum.manage");
 
   const parsed = programmeSchema.safeParse(input);
@@ -32,6 +33,8 @@ export async function createProgramme(input: ProgrammeInput): Promise<ActionResu
   // A new programme is the club being worked in's. Which is the point of the
   // switcher being on screen the whole time.
   const clubId = await currentClubId();
+  const image = await prepareImage(imageForm);
+  if (!image.ok) return fail(image.error);
 
   const last = await prisma.programme.findFirst({
     where: { clubId },
@@ -46,6 +49,7 @@ export async function createProgramme(input: ProgrammeInput): Promise<ActionResu
           clubId,
           name,
           description: description || null,
+          ...image.data,
           sortOrder: (last?.sortOrder ?? -1) + 1,
         },
         select: { id: true, name: true },
@@ -58,13 +62,14 @@ export async function createProgramme(input: ProgrammeInput): Promise<ActionResu
         entity: "Programme",
         entityId: created.id,
         programmeId: created.id,
-        summary: `Created programme ${created.name}`,
+        summary: `Created programme ${created.name}${image.data.imageVersion ? " with an image" : ""}`,
       }, tx);
       return created;
     }),
     `There is already a programme called ${name} in this club.`
   );
   if ("ok" in created) return created;
+  if (image.data.imageVersion !== undefined) revalidatePath("/", "layout");
 
   revalidatePath("/programmes");
   return ok();
@@ -72,7 +77,8 @@ export async function createProgramme(input: ProgrammeInput): Promise<ActionResu
 
 export async function updateProgramme(
   id: string,
-  input: ProgrammeInput
+  input: ProgrammeInput,
+  imageForm?: FormData
 ): Promise<ActionResult> {
   const session = await requirePermission("curriculum.manage");
 
@@ -82,11 +88,14 @@ export async function updateProgramme(
 
   const existing = await prisma.programme.findUnique({
     where: { id, clubId: await currentClubId() },
-    select: { id: true, name: true, description: true },
+    select: { id: true, name: true, description: true, imageVersion: true },
   });
   if (!existing) return fail("That programme no longer exists.");
 
+  const image = await prepareImage(imageForm);
+  if (!image.ok) return fail(image.error);
   const changes: string[] = [];
+  if (image.data.imageVersion !== undefined && image.data.imageVersion !== existing.imageVersion) changes.push(image.data.imageVersion ? "image added or replaced" : "image removed");
   if (existing.name !== name) changes.push(`name ${existing.name} → ${name}`);
   if ((existing.description ?? "") !== description) changes.push("description");
   if (changes.length === 0) return ok();
@@ -95,7 +104,7 @@ export async function updateProgramme(
     () => prisma.$transaction(async (tx) => {
       const updated = await tx.programme.update({
         where: { id, clubId: await currentClubId() },
-        data: { name, description: description || null },
+        data: { name, description: description || null, ...image.data },
         select: { id: true, name: true },
       });
 
@@ -115,6 +124,7 @@ export async function updateProgramme(
     `There is already a programme called ${name}.`
   );
   if ("ok" in updated) return updated;
+  if (image.data.imageVersion !== undefined) revalidatePath("/", "layout");
 
   revalidatePath("/programmes");
   revalidatePath("/programmes/[id]", "page");

@@ -30,6 +30,8 @@ export async function copyProgramme(
         id: true,
         name: true,
         description: true,
+        imageData: true,
+        imageVersion: true,
         clubId: true,
         club: { select: { name: true } },
         levels: {
@@ -38,6 +40,8 @@ export async function copyProgramme(
           select: {
             name: true,
             description: true,
+            imageData: true,
+            imageVersion: true,
             sortOrder: true,
             competencies: {
               where: LIVE,
@@ -75,11 +79,15 @@ export async function copyProgramme(
           clubId: target.id,
           name: source.name,
           description: source.description,
+          imageData: source.imageData,
+          imageVersion: source.imageVersion,
           sortOrder: (last?.sortOrder ?? -1) + 1,
           levels: {
             create: source.levels.map((level) => ({
               name: level.name,
               description: level.description,
+              imageData: level.imageData,
+              imageVersion: level.imageVersion,
               sortOrder: level.sortOrder,
               competencies: {
                 create: level.competencies.map((competency) => ({

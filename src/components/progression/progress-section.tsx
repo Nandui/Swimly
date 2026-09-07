@@ -1,3 +1,4 @@
+import { CurriculumImage } from "@/components/curriculum/curriculum-image";
 import { Item } from "@astryxdesign/core/Item";
 import { List } from "@astryxdesign/core/List";
 import { Section } from "@astryxdesign/core/Section";
@@ -68,6 +69,7 @@ export function ProgressSection({
             <VStack gap={1}>
               <Heading level={2}>
                 <HStack gap={2} vAlign="center" wrap="wrap">
+                  <CurriculumImage kind="programme" id={programme.programmeId} name={programme.programmeName} />
                   {programme.programmeName}
                   {programme.graduated ? <Tag color={LEVEL_PROGRESS_META.graduated.color}>{LEVEL_PROGRESS_META.graduated.label}</Tag> : null}
                 </HStack>
@@ -191,7 +193,7 @@ function LevelRow({ level, studentName, admin }: LadderProps & { level: LevelPro
         as="li"
         label={
           <HStack gap={2} vAlign="center" wrap="wrap">
-            <Text weight="semibold">{level.name}</Text>
+            <HStack gap={2} vAlign="center"><CurriculumImage kind="level" id={level.id} name={level.name} /><Text weight="semibold">{level.name}</Text></HStack>
             <CompletionTagWrapper level={level} />
           </HStack>
         }
@@ -222,7 +224,7 @@ function LevelRow({ level, studentName, admin }: LadderProps & { level: LevelPro
   return (
     <Item
       as="li"
-      label={<Text color="secondary">{level.name}</Text>}
+      label={<HStack gap={2} vAlign="center"><CurriculumImage kind="level" id={level.id} name={level.name} /><Text color="secondary">{level.name}</Text></HStack>}
       endContent={
         <Text color="secondary" textWrap="nowrap">
           {level.total === 0 ? "No competencies yet" : `${level.total} to pass`}
@@ -248,6 +250,7 @@ function CurrentLevel({
           <StackItem size="fill">
             <Heading level={3}>
               <HStack gap={2} vAlign="center" wrap="wrap">
+                <CurriculumImage kind="level" id={level.id} name={level.name} />
                 {level.name}
                 <Tag color={LEVEL_PROGRESS_META[level.eligible ? "eligible" : "inProgress"].color}>
                   {level.achieved} of {level.total}

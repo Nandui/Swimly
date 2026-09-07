@@ -1,3 +1,4 @@
+import { CurriculumImage } from "@/components/curriculum/curriculum-image";
 import { ARCHIVAL_STATUS_META } from "@/lib/status";
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
@@ -72,7 +73,7 @@ export default async function ProgrammePage(props: PageProps<"/programmes/[id]">
           Programmes
         </BackLink>
         <PageHeader
-          title={programme.name}
+          title={<HStack gap={2} vAlign="center"><CurriculumImage kind="programme" id={programme.id} name={programme.name} />{programme.name}</HStack>}
           description={programme.description ?? undefined}
           actions={
             <>
@@ -210,6 +211,7 @@ function LevelSection({
             <VStack gap={0.5}>
               <Heading level={2}>
                 <HStack gap={2} vAlign="center" wrap="wrap">
+                  <CurriculumImage kind="level" id={level.id} name={level.name} />
                   {level.name}
                   {archived ? <Tag color={ARCHIVAL_STATUS_META.archived.color}>{ARCHIVAL_STATUS_META.archived.label}</Tag> : null}
                 </HStack>

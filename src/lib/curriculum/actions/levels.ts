@@ -8,6 +8,7 @@ import { requirePermission } from "@/lib/authz";
 import { LIST_ORDER } from "@/lib/curriculum/constants";
 import { reorderIds } from "@/lib/curriculum/reorder";
 import { currentClubId } from "@/lib/clubs/current";
+import { prepareImage } from "@/lib/curriculum/image-upload";
 import { prisma } from "@/lib/prisma";
 
 const levelSchema = z.object({
@@ -23,7 +24,8 @@ export type LevelInput = z.infer<typeof levelSchema>;
 
 export async function createLevel(
   programmeId: string,
-  input: LevelInput
+  input: LevelInput,
+  imageForm?: FormData
 ): Promise<ActionResult> {
   const session = await requirePermission("curriculum.manage");
 
@@ -38,6 +40,9 @@ export async function createLevel(
   if (!programme) return fail("That programme no longer exists.");
   if (programme.archivedAt) return fail(`${programme.name} is archived. Restore it first.`);
 
+  const image = await prepareImage(imageForm);
+  if (!image.ok) return fail(image.error);
+
   const last = await prisma.level.findFirst({
     where: { programmeId },
     orderBy: { sortOrder: "desc" },
@@ -51,6 +56,7 @@ export async function createLevel(
           programmeId,
           name,
           description: description || null,
+          ...image.data,
           sortOrder: (last?.sortOrder ?? -1) + 1,
         },
         select: { id: true, name: true },
@@ -63,20 +69,21 @@ export async function createLevel(
         entity: "Level",
         entityId: created.id,
         programmeId,
-        summary: `Added level ${created.name} to ${programme.name}`,
+        summary: `Added level ${created.name} to ${programme.name}${image.data.imageVersion ? " with an image" : ""}`,
       }, tx);
       return created;
     }),
     `${programme.name} already has a level called ${name}.`
   );
   if ("ok" in created) return created;
+  if (image.data.imageVersion !== undefined) revalidatePath("/", "layout");
 
   revalidatePath("/programmes/[id]", "page");
   revalidatePath("/programmes");
   return ok();
 }
 
-export async function updateLevel(id: string, input: LevelInput): Promise<ActionResult> {
+export async function updateLevel(id: string, input: LevelInput, imageForm?: FormData): Promise<ActionResult> {
   const session = await requirePermission("curriculum.manage");
 
   const parsed = levelSchema.safeParse(input);
@@ -89,13 +96,17 @@ export async function updateLevel(id: string, input: LevelInput): Promise<Action
       id: true,
       name: true,
       description: true,
+      imageVersion: true,
       programmeId: true,
       programme: { select: { name: true } },
     },
   });
   if (!existing) return fail("That level no longer exists.");
 
+  const image = await prepareImage(imageForm);
+  if (!image.ok) return fail(image.error);
   const changes: string[] = [];
+  if (image.data.imageVersion !== undefined && image.data.imageVersion !== existing.imageVersion) changes.push(image.data.imageVersion ? "image added or replaced" : "image removed");
   if (existing.name !== name) changes.push(`name ${existing.name} → ${name}`);
   if ((existing.description ?? "") !== description) changes.push("description");
   if (changes.length === 0) return ok();
@@ -104,7 +115,7 @@ export async function updateLevel(id: string, input: LevelInput): Promise<Action
     () => prisma.$transaction(async (tx) => {
       const updated = await tx.level.update({
         where: { id, programme: { clubId: await currentClubId() } },
-        data: { name, description: description || null },
+        data: { name, description: description || null, ...image.data },
         select: { id: true, name: true },
       });
 
@@ -124,6 +135,7 @@ export async function updateLevel(id: string, input: LevelInput): Promise<Action
     `${existing.programme.name} already has a level called ${name}.`
   );
   if ("ok" in updated) return updated;
+  if (image.data.imageVersion !== undefined) revalidatePath("/", "layout");
 
   revalidatePath("/programmes/[id]", "page");
   return ok();
