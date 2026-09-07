@@ -22,7 +22,8 @@ import { STUDENT_STATUS_META, fullName } from "@/lib/students/constants";
 import type { StudentDetail } from "@/lib/students/data/students";
 import { toDateOnlyString } from "@/lib/format";
 import { FormLayout } from "@astryxdesign/core/FormLayout";
-import { Heading } from "@astryxdesign/core/Text";
+import { Heading, Text } from "@astryxdesign/core/Text";
+import { VStack } from "@astryxdesign/core/Stack";
 import { Icon } from "@astryxdesign/core/Icon";
 
 function readInput(formData: FormData): StudentInput {
@@ -45,110 +46,129 @@ function readInput(formData: FormData): StudentInput {
   };
 }
 
-function Legend({ children }: { children: React.ReactNode }) {
-  return <Heading level={3}>{children}</Heading>;
+function StudentSection({ title, description, children }: {
+  title: string;
+  description?: string;
+  children: React.ReactNode;
+}) {
+  return (
+    <VStack as="section" aria-label={title} gap={3}>
+      <VStack gap={1}>
+        <Heading level={3}>{title}</Heading>
+        {description ? <Text as="p" color="secondary">{description}</Text> : null}
+      </VStack>
+      <FormLayout>{children}</FormLayout>
+    </VStack>
+  );
 }
 
 function StudentFields({ student }: { student?: StudentDetail }) {
   return (
-    <>
-      <Field
-        label="Member number"
-        htmlFor="memberNumber"
-        hint="The club's own identifier. Leave blank for a swimmer who has not been given one."
-      >
-        <Input
-          id="memberNumber"
-          name="memberNumber"
-          defaultValue={student?.memberNumber ?? ""}
-          placeholder="LWB419700"
-        />
-      </Field>
-      <FormLayout direction="horizontal">
-        <Field label="First name" htmlFor="firstName">
-          <Input id="firstName" name="firstName" required defaultValue={student?.firstName} />
-        </Field>
-        <Field label="Last name" htmlFor="lastName">
-          <Input id="lastName" name="lastName" required defaultValue={student?.lastName} />
-        </Field>
-        <Field label="Date of birth" htmlFor="dateOfBirth">
-          <Input
-            id="dateOfBirth"
-            name="dateOfBirth"
-            type="date"
-            defaultValue={student?.dateOfBirth ? toDateOnlyString(student.dateOfBirth) : ""}
-          />
-        </Field>
-        <Field label="Status" htmlFor="status">
-          <Select
-            id="status"
-            name="status"
-            defaultValue={student?.status ?? "ACTIVE"}
-            options={Object.values(StudentStatus).map((value) => ({
-              value,
-              label: STUDENT_STATUS_META[value].label,
-            }))}
-          />
-        </Field>
-      </FormLayout>
-
-      <Legend>Contact</Legend>
-      <FormLayout direction="horizontal">
-        <Field label="Name" htmlFor="contactName" hint="The adult to ring. Themselves, if they are one.">
-          <Input id="contactName" name="contactName" defaultValue={student?.contactName ?? ""} />
-        </Field>
-        <Field label="Phone" htmlFor="contactPhone">
-          <Input id="contactPhone" name="contactPhone" inputMode="tel" defaultValue={student?.contactPhone ?? ""} />
-        </Field>
-      </FormLayout>
-          <Field label="Email" htmlFor="contactEmail">
+    <VStack gap={6}>
+      <FormLayout>
+        <FormLayout direction="horizontal">
+          <Field label="First name" htmlFor="firstName">
+            <Input id="firstName" name="firstName" required defaultValue={student?.firstName} />
+          </Field>
+          <Field label="Last name" htmlFor="lastName">
+            <Input id="lastName" name="lastName" required defaultValue={student?.lastName} />
+          </Field>
+        </FormLayout>
+        <FormLayout direction="horizontal">
+          <Field label="Date of birth" htmlFor="dateOfBirth">
             <Input
-              id="contactEmail"
-              name="contactEmail"
-              type="email"
-              defaultValue={student?.contactEmail ?? ""}
+              id="dateOfBirth"
+              name="dateOfBirth"
+              type="date"
+              defaultValue={student?.dateOfBirth ? toDateOnlyString(student.dateOfBirth) : ""}
             />
           </Field>
-
-      <Legend>In an emergency</Legend>
-      <FormLayout direction="horizontal">
-        <Field label="Name" htmlFor="emergencyName">
-          <Input id="emergencyName" name="emergencyName" defaultValue={student?.emergencyName ?? ""} />
-        </Field>
-        <Field label="Phone" htmlFor="emergencyPhone">
+          <Field label="Status" htmlFor="status">
+            <Select
+              id="status"
+              name="status"
+              defaultValue={student?.status ?? "ACTIVE"}
+              options={Object.values(StudentStatus).map((value) => ({
+                value,
+                label: STUDENT_STATUS_META[value].label,
+              }))}
+            />
+          </Field>
+        </FormLayout>
+        <Field
+          label="Member number"
+          htmlFor="memberNumber"
+          hint="The club's own identifier. Leave blank for a swimmer who has not been given one."
+        >
           <Input
-            id="emergencyPhone"
-            name="emergencyPhone"
-            inputMode="tel"
-            defaultValue={student?.emergencyPhone ?? ""}
+            id="memberNumber"
+            name="memberNumber"
+            defaultValue={student?.memberNumber ?? ""}
+            placeholder="LWB419700"
           />
         </Field>
       </FormLayout>
-          <Field label="Relationship" htmlFor="emergencyRelationship">
+
+      <StudentSection title="Contact" description="The adult to ring. Themselves, if they are one.">
+        <FormLayout direction="horizontal">
+          <Field label="Name" htmlFor="contactName">
+            <Input id="contactName" name="contactName" defaultValue={student?.contactName ?? ""} />
+          </Field>
+          <Field label="Phone" htmlFor="contactPhone">
+            <Input id="contactPhone" name="contactPhone" inputMode="tel" defaultValue={student?.contactPhone ?? ""} />
+          </Field>
+        </FormLayout>
+        <Field label="Email" htmlFor="contactEmail">
+          <Input
+            id="contactEmail"
+            name="contactEmail"
+            type="email"
+            defaultValue={student?.contactEmail ?? ""}
+          />
+        </Field>
+      </StudentSection>
+
+      <StudentSection title="In an emergency">
+        <FormLayout direction="horizontal">
+          <Field label="Name" htmlFor="emergencyName">
+            <Input id="emergencyName" name="emergencyName" defaultValue={student?.emergencyName ?? ""} />
+          </Field>
+          <Field label="Phone" htmlFor="emergencyPhone">
             <Input
-              id="emergencyRelationship"
-              name="emergencyRelationship"
-              placeholder="Mother, neighbour, coach"
-              defaultValue={student?.emergencyRelationship ?? ""}
+              id="emergencyPhone"
+              name="emergencyPhone"
+              inputMode="tel"
+              defaultValue={student?.emergencyPhone ?? ""}
             />
           </Field>
+        </FormLayout>
+        <Field label="Relationship" htmlFor="emergencyRelationship">
+          <Input
+            id="emergencyRelationship"
+            name="emergencyRelationship"
+            placeholder="Mother, neighbour, coach"
+            defaultValue={student?.emergencyRelationship ?? ""}
+          />
+        </Field>
+      </StudentSection>
 
-      <Legend>Anything the pool deck needs to know</Legend>
-      <Field
-        label="Medical notes"
-        htmlFor="medicalNotes"
-        hint="Shown as a flag on attendance, with the detail one tap away."
-      >
-        <Textarea
-          id="medicalNotes"
-          name="medicalNotes"
-          rows={3}
-          defaultValue={student?.medicalNotes ?? ""}
-        />
-      </Field>
-      <Field label="Other notes" htmlFor="notes">
-        <Textarea id="notes" name="notes" rows={2} defaultValue={student?.notes ?? ""} />
-      </Field>
+      <StudentSection title="Anything the pool deck needs to know">
+        <Field
+          label="Medical notes"
+          htmlFor="medicalNotes"
+          hint="Shown as a flag on attendance, with the detail one tap away."
+        >
+          <Textarea
+            id="medicalNotes"
+            name="medicalNotes"
+            rows={3}
+            defaultValue={student?.medicalNotes ?? ""}
+          />
+        </Field>
+        <Field label="Other notes" htmlFor="notes">
+          <Textarea id="notes" name="notes" rows={2} defaultValue={student?.notes ?? ""} />
+        </Field>
+      </StudentSection>
 
       <Switch
         id="photoConsent"
@@ -158,20 +178,20 @@ function StudentFields({ student }: { student?: StudentDetail }) {
         labelSpacing="spread"
         defaultChecked={student?.photoConsent}
       />
-    </>
+    </VStack>
   );
 }
 
-export function AddStudent() {
+export function AddStudent({ trigger }: { trigger?: React.ReactNode } = {}) {
   return (
     <FormDialog
-      trigger={
+      trigger={trigger ?? (
         <Button label="Add swimmer" variant="primary" size="sm" icon={<Icon icon={Plus} size="sm" />} />
-      }
+      )}
       title="Add a swimmer"
       submitLabel="Add swimmer"
       successMessage="Swimmer added"
-      width="sm:max-w-xl"
+      width="sm:max-w-2xl"
       submit={(formData) => createStudent(readInput(formData))}
     >
       <StudentFields />
@@ -198,7 +218,7 @@ export function EditStudent({
       title={`Edit ${fullName(student)}`}
       submitLabel="Save changes"
       successMessage="Swimmer updated"
-      width="sm:max-w-xl"
+      width="sm:max-w-2xl"
       submit={(formData) => updateStudent(student.id, readInput(formData))}
     >
       <StudentFields student={student} />

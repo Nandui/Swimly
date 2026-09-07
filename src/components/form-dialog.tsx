@@ -49,6 +49,7 @@ export function FormDialog({
   submit,
   width = "sm:max-w-md",
   children,
+  onOpen,
 }: {
   trigger: React.ReactNode;
   title: string;
@@ -59,9 +60,10 @@ export function FormDialog({
   /** Widen for a form with two columns of fields. */
   width?: string;
   children: React.ReactNode;
+  onOpen?: () => void;
 }) {
   const [open, setOpen] = React.useState(false);
-  const [formVersion, setFormVersion] = React.useState(0);
+  const rememberTrigger = useDialogTriggerFocus(open);
   const [error, setError] = React.useState<string | null>(null);
   const [pending, startTransition] = React.useTransition();
   const submitting = React.useRef(false);
@@ -71,11 +73,13 @@ export function FormDialog({
     if (confirmation) confirmationHeading.current?.focus();
   }, [confirmation]);
 
-  function openForm() {
-    // Astryx retains dialog content while closed. Remount the controlled
-    // adapters for a fresh edit, using the latest record's default values.
-    // Failed saves keep this version so they preserve the user's input.
-    if (!open) setFormVersion((version) => version + 1);
+  function openForm(triggerElement?: HTMLElement) {
+    // Mount fresh controls when opened. Failed saves leave the dialog mounted
+    // so input survives; closed dialogs do not retain duplicate field IDs.
+    if (!open) {
+      rememberTrigger(triggerElement);
+      onOpen?.();
+    }
     setOpen(true);
   }
 
@@ -128,13 +132,13 @@ export function FormDialog({
   return (
     <>
       <Trigger onOpen={openForm}>{trigger}</Trigger>
-      <Dialog
+      {open ? <Dialog
         isOpen={open}
         onOpenChange={(next) => (next ? openForm() : close())}
         purpose={pending ? "required" : "form"}
         width={WIDTHS[width] ?? 448}
       >
-        <form key={formVersion} onSubmit={handleSubmit} aria-busy={pending} className={styles.form}>
+        <form onSubmit={handleSubmit} aria-busy={pending} className={styles.form}>
           <div ref={confirmationHeading} tabIndex={-1} className={styles.header}>
             <DialogHeader title={confirmation?.prompt.title ?? title} subtitle={confirmation?.prompt.description ?? description} onOpenChange={pending ? undefined : close} />
           </div>
@@ -160,9 +164,25 @@ export function FormDialog({
             />}
           </HStack>
         </form>
-      </Dialog>
+      </Dialog> : null}
     </>
   );
+}
+
+/** Capture the actual trigger before the dialog header takes focus. Restore
+ * after unmount, when the native modal no longer makes the page inert. */
+export function useDialogTriggerFocus(open: boolean) {
+  const trigger = React.useRef<HTMLElement | null>(null);
+  React.useEffect(() => {
+    if (open || !trigger.current) return;
+    const frame = requestAnimationFrame(() => {
+      if (trigger.current?.isConnected) trigger.current.focus({ preventScroll: true });
+    });
+    return () => cancelAnimationFrame(frame);
+  }, [open]);
+  return (element?: HTMLElement) => {
+    trigger.current = element ?? (document.activeElement instanceof HTMLElement ? document.activeElement : null);
+  };
 }
 
 /** Opens the dialog from whatever element the caller passed as the trigger:
@@ -172,7 +192,7 @@ export function Trigger({
   onOpen,
 }: {
   children: React.ReactNode;
-  onOpen: () => void;
+  onOpen: (element?: HTMLElement) => void;
 }) {
   if (React.isValidElement<{ onClick?: React.MouseEventHandler }>(children)) {
     const inner = children.props.onClick;
@@ -180,12 +200,12 @@ export function Trigger({
       ...{ "aria-haspopup": "dialog" as const },
       onClick: (event: React.MouseEvent) => {
         inner?.(event);
-        if (!event.defaultPrevented) onOpen();
+        if (!event.defaultPrevented) onOpen(event.currentTarget as HTMLElement);
       },
     });
   }
   return (
-    <Button type="button" label={typeof children === "string" ? children : "Open dialog"} onClick={onOpen} aria-haspopup="dialog">
+    <Button type="button" label={typeof children === "string" ? children : "Open dialog"} onClick={(event) => onOpen(event.currentTarget)} aria-haspopup="dialog">
       {children}
     </Button>
   );

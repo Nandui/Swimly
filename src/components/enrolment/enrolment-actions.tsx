@@ -1,10 +1,13 @@
 "use client";
 
-import { ArrowRightLeft, CalendarClock, ChevronsUp, LogOut, Plus, UserRoundPlus, X } from "lucide-react";
+import { useId, useState } from "react";
+import { SegmentedControl, SegmentedControlItem } from "@astryxdesign/core/SegmentedControl";
+import { ArrowRightLeft, ChevronsUp, LogOut, Plus, UserRoundPlus } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { scheduleUnenrolment } from "@/lib/enrolment/actions/schedule";
-import { toDateOnlyString, today } from "@/lib/format";
-import { ActionButton } from "@/components/confirm-action";
+import { toDateOnlyString, today, parseDateOnly } from "@/lib/format";
+import { Text } from "@astryxdesign/core/Text";
+import { ActionButton, ConfirmAction } from "@/components/confirm-action";
 import { Field, FormDialog } from "@/components/form-dialog";
 import { SearchablePicker, type PickerOption } from "@/components/searchable-picker";
 import { StudentPicker } from "@/components/students/student-search";
@@ -54,14 +57,15 @@ function courseOptions(courses: (CourseLike & { _count: { enrolments: number } }
  *  read the ladder — and a field that appears after a failed submit is a field
  *  people re-type into. */
 function PlacementReason() {
+  const id = useId();
   return (
     <Field
       label="Why this level, if they haven't earned it"
-      htmlFor="placementReason"
+      htmlFor={id}
       hint="Only needed when they have not earned this level. Record what supports the placement so their instructor can read it."
     >
       <Textarea
-        id="placementReason"
+        id={id}
         name="placementReason"
         rows={2}
         placeholder="Assessed at trial on 12 Sep — comfortable at this level"
@@ -71,11 +75,12 @@ function PlacementReason() {
 }
 
 function PlacementFields() {
+  const id = useId();
   return (
     <>
       <PlacementReason />
       <Switch
-        id="allowWaitlist"
+        id={id}
         name="allowWaitlist"
         label="Waitlist if the class is full"
         description="Otherwise a full class refuses, and says so."
@@ -98,6 +103,7 @@ function readEnrol(formData: FormData) {
  *  the server as you type rather than being handed every swimmer, which is
  *  why this takes no list. */
 export function EnrolIntoCourse({ course, taken }: { course: CourseLike; taken: number }) {
+  const id = useId();
   return (
     <FormDialog
       trigger={
@@ -110,8 +116,8 @@ export function EnrolIntoCourse({ course, taken }: { course: CourseLike; taken: 
       submit={(formData, confirmation) => enrolStudent(readEnrol(formData), confirmation)}
     >
       <input type="hidden" name="courseId" value={course.id} />
-      <Field label="Swimmer" htmlFor="studentId">
-        <StudentPicker id="studentId" name="studentId" />
+      <Field label="Swimmer" htmlFor={id}>
+        <StudentPicker id={id} name="studentId" />
       </Field>
       <PlacementFields />
     </FormDialog>
@@ -126,10 +132,11 @@ export function EnrolInCourseForStudent({
   student: { id: string; firstName: string; lastName: string };
   courses: (CourseLike & { _count: { enrolments: number } })[];
 }) {
+  const id = useId();
   return (
     <FormDialog
       trigger={
-        <Button label="Enrol in a class" variant="secondary" size="sm" icon={<Icon icon={Plus} size="sm" />} />
+        <Button label="Enrol in a class" variant="secondary" size="md" icon={<Icon icon={Plus} size="sm" />} />
       }
       title={`Enrol ${fullName(student)}`}
       submitLabel="Enrol"
@@ -137,9 +144,9 @@ export function EnrolInCourseForStudent({
       submit={(formData, confirmation) => enrolStudent(readEnrol(formData), confirmation)}
     >
       <input type="hidden" name="studentId" value={student.id} />
-      <Field label="Class" htmlFor="courseId">
+      <Field label="Class" htmlFor={id}>
         <SearchablePicker
-          id="courseId"
+          id={id}
           name="courseId"
           options={courseOptions(courses)}
           placeholder="Pick a class"
@@ -165,69 +172,51 @@ type EnrolmentLike = {
 type WithClass = { enrolment: EnrolmentLike; classLabel: string; variant?: "icon" | "button" };
 
 export function EndEnrolment({ enrolment, classLabel, variant = "icon" }: WithClass) {
-  return (
-    <>
-    <FormDialog
-      trigger={
-        variant === "button"
-          ? <Button label="Unenrol" aria-label={`Unenrol ${fullName(enrolment.student)} from ${classLabel}`} variant="secondary" icon={<Icon icon={LogOut} size="sm" />} />
-          : <IconButton label={`End ${fullName(enrolment.student)}'s place in ${classLabel}`} variant="ghost" size="sm" icon={<Icon icon={LogOut} size="sm" />} />
-      }
-      title={`End ${fullName(enrolment.student)}'s place?`}
-      description={`They come off the roster for ${classLabel}. Their attendance and marks so far stay exactly as they are.`}
-      submitLabel="End place"
-      successMessage="Place ended"
-      submit={(formData) =>
-        endEnrolment(enrolment.id, {
-          status: formData.get("finished") === "on" ? "COMPLETED" : "WITHDRAWN",
-          note: String(formData.get("note") ?? ""),
-        })
-      }
-    >
-      <Switch
-        id="finished"
-        name="finished"
-        label="They finished the class"
-        description="Off means they left it — the log says which."
-        labelSpacing="spread"
-      />
-      <Field label="Anything worth recording" htmlFor="note">
-        <Textarea id="note" name="note" rows={2} placeholder="Moving to the Tuesday class" />
-      </Field>
-    </FormDialog>
-    {enrolment.status === "ACTIVE" ? <ScheduleUnenrolment enrolment={enrolment} classLabel={classLabel} variant={variant} /> : null}
-    </>
-  );
-}
-
-function ScheduleUnenrolment({ enrolment, classLabel, variant }: WithClass) {
-  const scheduled = enrolment.scheduledEndOn;
+  const id = useId();
+  const [when, setWhen] = useState(enrolment.scheduledEndOn ? "date" : "now");
   const name = fullName(enrolment.student);
-  return <>
-    <FormDialog
-      trigger={variant === "button"
-        ? <Button label={scheduled ? "Change end date" : "Schedule unenrolment"} variant="secondary" icon={<Icon icon={CalendarClock} size="sm" />} />
-        : <IconButton label={`${scheduled ? "Change" : "Schedule"} unenrolment date for ${name} in ${classLabel}`} variant="ghost" size="sm" icon={<Icon icon={CalendarClock} size="sm" />} />}
-      title={`Schedule ${name}'s unenrolment`}
-      description={`They keep their place in ${classLabel} until the chosen date. On that date they will be unenrolled automatically when the app is next used. Attendance and marks stay on record.`}
-      submitLabel="Save end date"
-      successMessage="Unenrolment scheduled"
-      submit={(data) => scheduleUnenrolment(enrolment.id, String(data.get("endDate") ?? ""))}
-    >
-      <Field label="Unenrol on" htmlFor="endDate" hint="Choose a future date. They will no longer be enrolled on this day.">
-        <Input id="endDate" name="endDate" type="date" required min={today()} defaultValue={scheduled ? toDateOnlyString(scheduled) : ""} />
+  return <FormDialog
+    onOpen={() => setWhen(enrolment.scheduledEndOn ? "date" : "now")}
+    trigger={variant === "button"
+      ? <Button label={enrolment.scheduledEndOn ? "Change unenrolment" : "Unenrol"} aria-label={`Unenrolment for ${name} in ${classLabel}`} variant="secondary" icon={<Icon icon={LogOut} size="sm" />} />
+      : <IconButton label={`Unenrol ${name} from ${classLabel}`} variant="ghost" size="sm" icon={<Icon icon={LogOut} size="sm" />} />}
+    title={`Unenrol ${name}`}
+    description={`${classLabel}. Attendance and marks stay on record. Choose when their place should end.`}
+    submitLabel={when === "date" ? "Save end date" : when === "keep" ? "Keep place" : "Unenrol now"}
+    successMessage={when === "date" ? `Unenrolment scheduled for ${classLabel}` : when === "keep" ? `Place kept in ${classLabel}` : `Unenrolled from ${classLabel}`}
+    submit={(data) => when === "date"
+      ? scheduleUnenrolment(enrolment.id, String(data.get("endDate") ?? ""))
+      : when === "keep" ? scheduleUnenrolment(enrolment.id, null)
+      : endEnrolment(enrolment.id, {
+        status: data.get("finished") === "on" ? "COMPLETED" : "WITHDRAWN",
+        note: String(data.get("note") ?? ""),
+      })}
+  >
+    {enrolment.status === "ACTIVE" ? <SegmentedControl label="When to unenrol" value={when} onChange={setWhen} layout="fill">
+      <SegmentedControlItem value="now" label="Now" />
+      <SegmentedControlItem value="date" label="On a date" />
+      {enrolment.scheduledEndOn ? <SegmentedControlItem value="keep" label="Keep place" /> : null}
+    </SegmentedControl> : null}
+    {when === "date" ? <Field label="Unenrol on" htmlFor={`${id}-date`} hint="They keep their place until this date. Unenrolment takes effect when the app is next used on or after that day.">
+      <Input id={`${id}-date`} name="endDate" type="date" required min={toDateOnlyString(new Date(parseDateOnly(today()).getTime() + 86_400_000))} defaultValue={enrolment.scheduledEndOn ? toDateOnlyString(enrolment.scheduledEndOn) : undefined} />
+    </Field> : when === "keep" ? <Text as="p">This cancels the scheduled unenrolment. They stay in this class.</Text> : <>
+      <Switch id={`${id}-finished`} name="finished" label="They finished the class" description="Leave off if they are withdrawing before completion." labelSpacing="spread" />
+      <Field label="Anything worth recording" htmlFor={`${id}-note`}>
+        <Textarea id={`${id}-note`} name="note" rows={2} placeholder="Reason for leaving this class" />
       </Field>
-    </FormDialog>
-    {scheduled ? <ActionButton
-      ariaLabel={`Cancel scheduled unenrolment for ${name} from ${classLabel}`}
-      title="Cancel scheduled unenrolment"
-      successMessage="Scheduled unenrolment cancelled"
-      run={() => scheduleUnenrolment(enrolment.id, null)}
-    ><Icon icon={X} size="sm" /></ActionButton> : null}
-  </>;
+    </>}
+  </FormDialog>;
 }
 
-export function PromoteFromWaitlist({ enrolment }: { enrolment: EnrolmentLike }) {
+export function PromoteFromWaitlist({ enrolment, variant = "icon", classLabel }: { enrolment: EnrolmentLike; variant?: "icon" | "button"; classLabel?: string }) {
+  if (variant === "button") return <ConfirmAction
+    trigger={<Button label="Enrol from waitlist" aria-label={`Enrol ${fullName(enrolment.student)} from the waitlist${classLabel ? ` for ${classLabel}` : ""}`} variant="secondary" />}
+    title={`Enrol ${fullName(enrolment.student)} from the waitlist?`}
+    description={`Their place in ${classLabel ?? "this class"} becomes active if a seat is available.`}
+    confirmLabel="Enrol from waitlist"
+    successMessage={`Enrolled in ${classLabel ?? "the class"}`}
+    run={() => promoteFromWaitlist(enrolment.id)}
+  />;
   return (
     <ActionButton
       ariaLabel={`Move ${fullName(enrolment.student)} off the waitlist`}
@@ -251,6 +240,7 @@ export function TransferEnrolment({
   variant?: "icon" | "button";
   classLabel?: string;
 }) {
+  const id = useId();
   return (
     <FormDialog
       trigger={
@@ -271,9 +261,9 @@ export function TransferEnrolment({
         )
       }
     >
-      <Field label="New class" htmlFor="toCourseId">
+      <Field label="New class" htmlFor={id}>
         <SearchablePicker
-          id="toCourseId"
+          id={id}
           name="toCourseId"
           options={targets.map((target) => {
             const left = placesLeft(target._count.enrolments, target.capacity);

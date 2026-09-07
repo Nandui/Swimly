@@ -110,7 +110,8 @@ deleted); staff accounts, admin-defined roles from a permission catalogue;
 clubs and the switcher; the audit log; account settings with light and dark
 mode.
 
-Reception has its own desk page: swimmer search, current places with move and
+Reception is the desk team's base working dashboard: active and inactive swimmer
+search, contact details, profile access, enrolment, current places with move and
 unenrol actions, today's timetable by time or level, and booking shortcuts in a
 bento grid. Roles can offer Reception as a screen and choose it as a landing page.
 

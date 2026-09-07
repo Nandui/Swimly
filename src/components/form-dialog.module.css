@@ -20,7 +20,12 @@
   overflow-y: auto;
   overscroll-behavior: contain;
   /* Leave room for Astryx focus outlines inside the scroll boundary. */
-  padding: var(--spacing-1);
+  padding: var(--spacing-1) var(--spacing-4);
+}
+
+/* Match DialogHeader's inline inset so titles, fields and actions share edges. */
+.footer {
+  padding-inline: var(--spacing-4);
 }
 
 /* Horizontal FormLayout uses implicit columns and does not wrap itself.

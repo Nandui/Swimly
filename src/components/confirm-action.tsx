@@ -10,7 +10,7 @@ import { Text } from "@astryxdesign/core/Text";
 import type { ActionResult } from "@/lib/action-result";
 import { toast } from "@/lib/toast";
 import { withTimeout } from "@/lib/save-feedback";
-import { Trigger } from "@/components/form-dialog";
+import { Trigger, useDialogTriggerFocus } from "@/components/form-dialog";
 
 /** Confirmation for anything that takes something away.
  *
@@ -40,6 +40,7 @@ export function ConfirmAction({
   run: () => Promise<ActionResult>;
 }) {
   const [open, setOpen] = React.useState(false);
+  const rememberTrigger = useDialogTriggerFocus(open);
   const [error, setError] = React.useState<string | null>(null);
   const [pending, startTransition] = React.useTransition();
   const submitting = React.useRef(false);
@@ -78,8 +79,8 @@ export function ConfirmAction({
 
   return (
     <>
-      <Trigger onOpen={() => setOpen(true)}>{trigger}</Trigger>
-      <Dialog
+      <Trigger onOpen={(element) => { rememberTrigger(element); setOpen(true); }}>{trigger}</Trigger>
+      {open ? <Dialog
         isOpen={open}
         onOpenChange={(next) => (next ? setOpen(true) : close())}
         purpose={pending ? "required" : "form"}
@@ -102,7 +103,7 @@ export function ConfirmAction({
             />
           </HStack>
         </VStack>
-      </Dialog>
+      </Dialog> : null}
     </>
   );
 }

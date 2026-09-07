@@ -24,11 +24,12 @@ export type StudentHit = {
   lastName: string;
   dateOfBirth: Date | null;
   memberNumber: string | null;
+  status?: "ACTIVE" | "INACTIVE";
 };
 
 const LIMIT = 20;
 
-export async function searchStudents(q: string, exclude: string[] = []): Promise<StudentHit[]> {
+export async function searchStudents(q: string, exclude: string[] = [], includeInactive = false): Promise<StudentHit[]> {
   await requireSession();
 
   // Each word has to land somewhere, so "ava by" finds Ava Byrne and neither
@@ -40,7 +41,7 @@ export async function searchStudents(q: string, exclude: string[] = []): Promise
     // The picker offers the club being worked in and nobody else's: a
     // Churchfield child cannot be booked into a Bishopstown class by typing.
     clubId: await currentClubId(),
-    status: "ACTIVE",
+    ...(includeInactive === true ? {} : { status: "ACTIVE" as const }),
     ...(exclude.length ? { id: { notIn: exclude.slice(0, 50) } } : {}),
     AND: terms.map((term) => ({
       OR: [
@@ -57,7 +58,7 @@ export async function searchStudents(q: string, exclude: string[] = []): Promise
     // Over-fetch so there is something to rank. The database can say who
     // matches; it cannot say who matches *best*.
     take: LIMIT * 3,
-    select: { id: true, firstName: true, lastName: true, dateOfBirth: true, memberNumber: true },
+    select: { id: true, firstName: true, lastName: true, dateOfBirth: true, memberNumber: true, status: true },
   });
 
   // Names the typing *starts* come first. Sorted by surname alone, "ava" put

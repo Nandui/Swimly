@@ -12,6 +12,7 @@ export async function getReceptionSwimmer(id: string) {
     select: {
       id: true, firstName: true, lastName: true, memberNumber: true,
       dateOfBirth: true, status: true,
+      contactName: true, contactPhone: true, contactEmail: true,
       enrolments: {
         where: { status: { in: ["ACTIVE", "WAITLISTED"] }, course: { clubId } },
         orderBy: [{ status: "asc" }, { course: { startMinutes: "asc" } }],

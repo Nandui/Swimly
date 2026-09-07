@@ -1,0 +1,59 @@
+/* Layout only: Astryx owns the list, controls, selection and focus treatment. */
+.directory {
+  display: grid;
+  min-width: 0;
+}
+
+.roster,
+.preview {
+  min-width: 0;
+}
+
+.scroll {
+  padding: var(--spacing-1);
+}
+
+.preview {
+  display: none;
+  padding-block: var(--spacing-6);
+}
+
+.facts {
+  display: grid;
+  gap: var(--spacing-5);
+  margin: 0;
+}
+
+.facts > :nth-child(n + 3) {
+  border-top: var(--border-width) solid var(--color-border);
+  padding-top: var(--spacing-5);
+}
+
+@media (max-width: 1023px) {
+  .directory[data-preview="true"] .roster { display: none; }
+  .directory[data-preview="true"] .preview { display: block; }
+}
+
+@media (min-width: 1024px) {
+  .directory {
+    grid-template-columns: minmax(0, 1.35fr) minmax(0, 1fr);
+  }
+
+  .roster {
+    padding-block: var(--spacing-4);
+    padding-inline-end: var(--spacing-6);
+  }
+
+  .scroll {
+    max-height: max(24rem, calc(100dvh - 23rem));
+    overflow-y: auto;
+    overscroll-behavior: contain;
+    scrollbar-gutter: stable;
+  }
+
+  .preview {
+    display: block;
+    padding: var(--spacing-6);
+    border-inline-start: var(--border-width) solid var(--color-border);
+  }
+}

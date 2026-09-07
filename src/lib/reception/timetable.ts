@@ -1,5 +1,25 @@
 import type { CourseRow } from "@/lib/courses/data/courses";
 import { formatTime } from "@/lib/courses/constants";
+import type { TagColor } from "@/components/ui-kit/tag";
+
+export const RECEPTION_TIME_META = {
+  running: { label: "Running now", color: "green" },
+  next: { label: "Next start", color: "blue" },
+  finished: { label: "Finished", color: "gray" },
+  upcoming: { label: "Later today", color: "gray" },
+} satisfies Record<string, { label: string; color: TagColor }>;
+
+export function receptionTimeStatus(course: { startMinutes: number; durationMinutes: number }, now: number, nextTime: number | null) {
+  if (course.startMinutes + course.durationMinutes <= now) return "finished";
+  if (course.startMinutes <= now) return "running";
+  return course.startMinutes === nextTime ? "next" : "upcoming";
+}
+
+export function receptionAvailability(enrolled: number, capacity: number | null) {
+  if (capacity === null) return `${enrolled} enrolled · No capacity limit`;
+  const free = Math.max(0, capacity - enrolled);
+  return `${enrolled} enrolled · ${free === 0 ? "Full" : `${free} ${free === 1 ? "place" : "places"} free`}`;
+}
 
 export type ReceptionGrouping = "time" | "level";
 export type ReceptionClass = Pick<CourseRow,

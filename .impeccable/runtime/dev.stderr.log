@@ -1,0 +1,248 @@
+[browser] ./src/components/enrolment/enrolment-actions.tsx:8:1
+Error: Export addDays doesn't exist in target module
+   6 | import { Input } from "@/components/ui/input";
+   7 | import { scheduleUnenrolment } from "@/lib/enrolment/actions/schedule";
+>  8 | import { toDateOnlyString, today, addDays, parseDateOnly } from "@/lib/format";
+     | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+   9 | import { ActionButton, ConfirmAction } from "@/components/confirm-action";
+  10 | import { Field, FormDialog } from "@/components/form-dialog";
+  11 | import { SearchablePicker, type PickerOption } from "@/components/searchable-picker";
+
+The export addDays was not found in module [project]/src/lib/format.ts [app-client] (ecmascript).
+Did you mean to import today?
+All exports of the module are statically known (It doesn't have dynamic exports). So it's known statically that the requested export doesn't exist.
+
+Import trace:
+  Server Component:
+    ./src/components/enrolment/enrolment-actions.tsx
+    ./src/app/(app)/students/[id]/page.tsx 
+[browser] ./src/components/enrolment/enrolment-actions.tsx:8:1
+Error: Export addDays doesn't exist in target module
+   6 | import { Input } from "@/components/ui/input";
+   7 | import { scheduleUnenrolment } from "@/lib/enrolment/actions/schedule";
+>  8 | import { toDateOnlyString, today, addDays, parseDateOnly } from "@/lib/format";
+     | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+   9 | import { ActionButton, ConfirmAction } from "@/components/confirm-action";
+  10 | import { Field, FormDialog } from "@/components/form-dialog";
+  11 | import { SearchablePicker, type PickerOption } from "@/components/searchable-picker";
+
+The export addDays was not found in module [project]/src/lib/format.ts [app-ssr] (ecmascript).
+Did you mean to import today?
+All exports of the module are statically known (It doesn't have dynamic exports). So it's known statically that the requested export doesn't exist.
+
+Import trace:
+  Server Component:
+    ./src/components/enrolment/enrolment-actions.tsx
+    ./src/app/(app)/students/[id]/page.tsx 
+[browser] ./src/components/enrolment/enrolment-actions.tsx:8:1
+Error: Export addDays doesn't exist in target module
+   6 | import { Input } from "@/components/ui/input";
+   7 | import { scheduleUnenrolment } from "@/lib/enrolment/actions/schedule";
+>  8 | import { toDateOnlyString, today, addDays, parseDateOnly } from "@/lib/format";
+     | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+   9 | import { ActionButton, ConfirmAction } from "@/components/confirm-action";
+  10 | import { Field, FormDialog } from "@/components/form-dialog";
+  11 | import { SearchablePicker, type PickerOption } from "@/components/searchable-picker";
+
+The export addDays was not found in module [project]/src/lib/format.ts [app-client] (ecmascript).
+Did you mean to import today?
+All exports of the module are statically known (It doesn't have dynamic exports). So it's known statically that the requested export doesn't exist.
+
+Import trace:
+  Server Component:
+    ./src/components/enrolment/enrolment-actions.tsx
+    ./src/app/(app)/students/[id]/page.tsx 
+[browser] ./src/components/enrolment/enrolment-actions.tsx:8:1
+Error: Export addDays doesn't exist in target module
+   6 | import { Input } from "@/components/ui/input";
+   7 | import { scheduleUnenrolment } from "@/lib/enrolment/actions/schedule";
+>  8 | import { toDateOnlyString, today, addDays, parseDateOnly } from "@/lib/format";
+     | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+   9 | import { ActionButton, ConfirmAction } from "@/components/confirm-action";
+  10 | import { Field, FormDialog } from "@/components/form-dialog";
+  11 | import { SearchablePicker, type PickerOption } from "@/components/searchable-picker";
+
+The export addDays was not found in module [project]/src/lib/format.ts [app-ssr] (ecmascript).
+Did you mean to import today?
+All exports of the module are statically known (It doesn't have dynamic exports). So it's known statically that the requested export doesn't exist.
+
+Import trace:
+  Server Component:
+    ./src/components/enrolment/enrolment-actions.tsx
+    ./src/app/(app)/students/[id]/page.tsx 
+[browser] ./src/components/enrolment/enrolment-actions.tsx:8:1
+Error: Export addDays doesn't exist in target module
+   6 | import { Input } from "@/components/ui/input";
+   7 | import { scheduleUnenrolment } from "@/lib/enrolment/actions/schedule";
+>  8 | import { toDateOnlyString, today, addDays, parseDateOnly } from "@/lib/format";
+     | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+   9 | import { ActionButton, ConfirmAction } from "@/components/confirm-action";
+  10 | import { Field, FormDialog } from "@/components/form-dialog";
+  11 | import { SearchablePicker, type PickerOption } from "@/components/searchable-picker";
+
+The export addDays was not found in module [project]/src/lib/format.ts [app-client] (ecmascript).
+Did you mean to import today?
+All exports of the module are statically known (It doesn't have dynamic exports). So it's known statically that the requested export doesn't exist.
+
+Import trace:
+  Server Component:
+    ./src/components/enrolment/enrolment-actions.tsx
+    ./src/app/(app)/students/[id]/page.tsx 
+[browser] ./src/components/enrolment/enrolment-actions.tsx:8:1
+Error: Export addDays doesn't exist in target module
+   6 | import { Input } from "@/components/ui/input";
+   7 | import { scheduleUnenrolment } from "@/lib/enrolment/actions/schedule";
+>  8 | import { toDateOnlyString, today, addDays, parseDateOnly } from "@/lib/format";
+     | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+   9 | import { ActionButton, ConfirmAction } from "@/components/confirm-action";
+  10 | import { Field, FormDialog } from "@/components/form-dialog";
+  11 | import { SearchablePicker, type PickerOption } from "@/components/searchable-picker";
+
+The export addDays was not found in module [project]/src/lib/format.ts [app-ssr] (ecmascript).
+Did you mean to import today?
+All exports of the module are statically known (It doesn't have dynamic exports). So it's known statically that the requested export doesn't exist.
+
+Import trace:
+  Server Component:
+    ./src/components/enrolment/enrolment-actions.tsx
+    ./src/app/(app)/students/[id]/page.tsx 
+[browser] ./src/components/enrolment/enrolment-actions.tsx:8:1
+Error: Export addDays doesn't exist in target module
+   6 | import { Input } from "@/components/ui/input";
+   7 | import { scheduleUnenrolment } from "@/lib/enrolment/actions/schedule";
+>  8 | import { toDateOnlyString, today, addDays, parseDateOnly } from "@/lib/format";
+     | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+   9 | import { ActionButton, ConfirmAction } from "@/components/confirm-action";
+  10 | import { Field, FormDialog } from "@/components/form-dialog";
+  11 | import { SearchablePicker, type PickerOption } from "@/components/searchable-picker";
+
+The export addDays was not found in module [project]/src/lib/format.ts [app-client] (ecmascript).
+Did you mean to import today?
+All exports of the module are statically known (It doesn't have dynamic exports). So it's known statically that the requested export doesn't exist.
+
+Import trace:
+  Server Component:
+    ./src/components/enrolment/enrolment-actions.tsx
+    ./src/app/(app)/students/[id]/page.tsx 
+[browser] ./src/components/enrolment/enrolment-actions.tsx:8:1
+Error: Export addDays doesn't exist in target module
+   6 | import { Input } from "@/components/ui/input";
+   7 | import { scheduleUnenrolment } from "@/lib/enrolment/actions/schedule";
+>  8 | import { toDateOnlyString, today, addDays, parseDateOnly } from "@/lib/format";
+     | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+   9 | import { ActionButton, ConfirmAction } from "@/components/confirm-action";
+  10 | import { Field, FormDialog } from "@/components/form-dialog";
+  11 | import { SearchablePicker, type PickerOption } from "@/components/searchable-picker";
+
+The export addDays was not found in module [project]/src/lib/format.ts [app-ssr] (ecmascript).
+Did you mean to import today?
+All exports of the module are statically known (It doesn't have dynamic exports). So it's known statically that the requested export doesn't exist.
+
+Import trace:
+  Server Component:
+    ./src/components/enrolment/enrolment-actions.tsx
+    ./src/app/(app)/students/[id]/page.tsx 
+⨯ Error: The destination stream closed early.
+    at ignore-listed frames {
+  digest: '599216636'
+}
+[browser] ./src/components/reception/dashboard.tsx:214:14
+Error: Unterminated regexp literal
+  212 |                 {!access.manageStudents && !bookingLinks.length ? <Text as="p" color="sec...
+  213 |               </VStack>
+> 214 |             </Card>
+      |              ^^^^^^
+  215 |           </VStack>
+  216 |
+  217 |         </VStack>
+
+Parsing ecmascript source code failed
+
+Import trace:
+  Server Component:
+    ./src/components/reception/dashboard.tsx
+    ./src/app/(app)/reception/page.tsx 
+[browser] ./src/components/reception/dashboard.tsx:214:14
+Error: Unterminated regexp literal
+  212 |                 {!access.manageStudents && !bookingLinks.length ? <Text as="p" color="sec...
+  213 |               </VStack>
+> 214 |             </Card>
+      |              ^^^^^^
+  215 |           </VStack>
+  216 |
+  217 |         </VStack>
+
+Parsing ecmascript source code failed
+
+Import trace:
+  Server Component:
+    ./src/components/reception/dashboard.tsx
+    ./src/app/(app)/reception/page.tsx 
+[browser] ./src/components/reception/dashboard.tsx:214:14
+Error: Unterminated regexp literal
+  212 |                 {!access.manageStudents && !bookingLinks.length ? <Text as="p" color="sec...
+  213 |               </VStack>
+> 214 |             </Card>
+      |              ^^^^^^
+  215 |           </VStack>
+  216 |
+  217 |         </VStack>
+
+Parsing ecmascript source code failed
+
+Import trace:
+  Server Component:
+    ./src/components/reception/dashboard.tsx
+    ./src/app/(app)/reception/page.tsx 
+[browser] ./src/components/reception/dashboard.tsx:214:14
+Error: Unterminated regexp literal
+  212 |                 {!access.manageStudents && !bookingLinks.length ? <Text as="p" color="sec...
+  213 |               </VStack>
+> 214 |             </Card>
+      |              ^^^^^^
+  215 |           </VStack>
+  216 |
+  217 |         </VStack>
+
+Parsing ecmascript source code failed
+
+Import trace:
+  Server Component:
+    ./src/components/reception/dashboard.tsx
+    ./src/app/(app)/reception/page.tsx 
+[browser] ./src/components/reception/dashboard.tsx:214:14
+Error: Unterminated regexp literal
+  212 |                 {!access.manageStudents && !bookingLinks.length ? <Text as="p" color="sec...
+  213 |               </VStack>
+> 214 |             </Card>
+      |              ^^^^^^
+  215 |           </VStack>
+  216 |
+  217 |         </VStack>
+
+Parsing ecmascript source code failed
+
+Import trace:
+  Server Component:
+    ./src/components/reception/dashboard.tsx
+    ./src/app/(app)/reception/page.tsx 
+[browser] ./src/components/reception/dashboard.tsx:214:14
+Error: Unterminated regexp literal
+  212 |                 {!access.manageStudents && !bookingLinks.length ? <Text as="p" color="sec...
+  213 |               </VStack>
+> 214 |             </Card>
+      |              ^^^^^^
+  215 |           </VStack>
+  216 |
+  217 |         </VStack>
+
+Parsing ecmascript source code failed
+
+Import trace:
+  Server Component:
+    ./src/components/reception/dashboard.tsx
+    ./src/app/(app)/reception/page.tsx 
+⨯ Error: The destination stream closed early.
+    at ignore-listed frames {
+  digest: '599216636'
+}

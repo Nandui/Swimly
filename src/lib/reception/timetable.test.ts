@@ -1,6 +1,6 @@
 import assert from "node:assert/strict";
 import { test } from "node:test";
-import { groupReceptionClasses, receptionHref, type ReceptionClass } from "./timetable";
+import { groupReceptionClasses, receptionAvailability, receptionTimeStatus, receptionHref, type ReceptionClass } from "./timetable";
 
 function course(id: string, time: number, level: string, order: number, programme = "swimming"): ReceptionClass {
   return {
@@ -35,4 +35,20 @@ test("swimmer selection and grouping survive navigation without adding arbitrary
   assert.equal(url.searchParams.get("group"), "level");
   assert.equal(url.searchParams.has("other"), false);
   assert.equal(receptionHref(null), "/reception");
+});
+
+test("class status includes the starting minute and excludes the ending minute", () => {
+  const row = course("lesson", 960, "Stage 1", 0);
+  assert.equal(receptionTimeStatus(row, 959, 960), "next");
+  assert.equal(receptionTimeStatus(row, 960, 1020), "running");
+  assert.equal(receptionTimeStatus(row, 989, 1020), "running");
+  assert.equal(receptionTimeStatus(row, 990, 1020), "finished");
+  assert.equal(receptionTimeStatus(course("later", 1050, "Stage 2", 1), 960, 1020), "upcoming");
+});
+
+test("availability makes full and unlimited classes explicit without negative free places", () => {
+  assert.equal(receptionAvailability(9, 10), "9 enrolled · 1 place free");
+  assert.equal(receptionAvailability(5, 10), "5 enrolled · 5 places free");
+  assert.equal(receptionAvailability(12, 10), "12 enrolled · Full");
+  assert.equal(receptionAvailability(4, null), "4 enrolled · No capacity limit");
 });

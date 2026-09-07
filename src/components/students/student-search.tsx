@@ -35,6 +35,7 @@ export function StudentSearch({
   description,
   placeholder = "Search by name or member number…",
   emptyText = "Nobody by that name.",
+  includeInactive = false,
   id,
 }: {
   onSelect: (hit: StudentHit | null) => void;
@@ -47,6 +48,8 @@ export function StudentSearch({
   description?: string;
   placeholder?: string;
   emptyText?: string;
+  /** Desk lookup can include former swimmers; enrolment pickers stay active-only. */
+  includeInactive?: boolean;
   id?: string;
 }) {
   const [searchError, setSearchError] = React.useState<string | null>(null);
@@ -59,7 +62,7 @@ export function StudentSearch({
         const term = query.trim();
         if (!term) return [];
         try {
-          const found = await searchStudents(term, excludeKey ? excludeKey.split(",") : []);
+          const found = await searchStudents(term, excludeKey ? excludeKey.split(",") : [], includeInactive);
           if (generation === searchGeneration.current) setSearchError(null);
           return found.map(toItem);
         } catch {
@@ -69,7 +72,7 @@ export function StudentSearch({
       },
       bootstrap: () => [],
     }),
-    [excludeKey]
+    [excludeKey, includeInactive]
   );
 
   return (
@@ -95,7 +98,7 @@ export function StudentSearch({
             item.auxiliaryData
               ? `${ageLabel(item.auxiliaryData.dateOfBirth)}${
                   item.auxiliaryData.memberNumber ? ` · ${item.auxiliaryData.memberNumber}` : ""
-                }`
+                }${item.auxiliaryData.status === "INACTIVE" ? " · Inactive" : ""}`
               : undefined
           }
         />
