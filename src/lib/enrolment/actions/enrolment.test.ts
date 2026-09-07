@@ -105,9 +105,45 @@ test("enrolment sees capacity changed before it obtains the lock", async () => {
   assert.equal(result.ok, false); assert.equal(f.rows.length, 1);
 });
 
+test("moving requires confirmation naming both classes before any writes", async () => {
+  const f = fixture();
+  const result = await f.actions.transferEnrolment("source", "b");
+  assert.equal(result.ok, false);
+  if (result.ok) return;
+  assert.match(result.confirmation!.description, /Class a.*Class b/);
+  assert.deepEqual(result.confirmation!.choices, [{ label: "Confirm move", value: "move" }]);
+  assert.equal(f.rows.length, 1);
+  assert.equal(f.rows[0].status, "ACTIVE");
+  assert.equal(f.audits.length, 0);
+  const confirmed = await f.actions.transferEnrolment("source", "b", "", { choice: "move", ids: result.confirmation!.ids });
+  assert.equal(confirmed.ok, true);
+  assert.deepEqual(f.rows.map((row) => row.status), ["TRANSFERRED", "ACTIVE"]);
+});
+
+test("confirmation for a different destination asks again without moving", async () => {
+  const f = fixture();
+  const result = await f.actions.transferEnrolment("source", "c", "", { choice: "move", ids: ["source", "b"] });
+  assert.equal(result.ok, false);
+  if (result.ok) return;
+  assert.deepEqual(result.confirmation?.ids, ["source", "c"]);
+  assert.equal(f.rows.length, 1); assert.equal(f.audits.length, 0);
+});
+
+test("confirmed moves recheck capacity before ending the current place", async () => {
+  const f = fixture();
+  const result = await f.actions.transferEnrolment("source", "b");
+  assert.equal(result.ok, false);
+  if (result.ok) return;
+  f.courses[1].capacity = 0;
+  const confirmed = await f.actions.transferEnrolment("source", "b", "", { choice: "move", ids: result.confirmation!.ids });
+  assert.equal(confirmed.ok, false);
+  assert.equal(f.rows[0].status, "ACTIVE");
+  assert.equal(f.rows.length, 1); assert.equal(f.audits.length, 0);
+});
+
 test("two simultaneous transfers only move the original enrolment once", async () => {
   const f = fixture();
-  const results = await Promise.all([f.actions.transferEnrolment("source", "b"), f.actions.transferEnrolment("source", "c")]);
+  const results = await Promise.all([f.actions.transferEnrolment("source", "b", "", { choice: "move", ids: ["source", "b"] }), f.actions.transferEnrolment("source", "c", "", { choice: "move", ids: ["source", "c"] })]);
   assert.equal(results.filter((result) => result.ok).length, 1);
   assert.equal(f.rows.length, 2); assert.equal(f.audits.length, 1);
   assert.deepEqual(f.locks, [["a", "b"], ["a", "c"]]);
@@ -115,9 +151,9 @@ test("two simultaneous transfers only move the original enrolment once", async (
 
 test("a transfer needs and stores a reason for an unearned level", async () => {
   const f = fixture(); f.courses[1].levelId = "next"; f.courses[1].level = { ...f.courses[1].level, id: "next", name: "Next" };
-  assert.equal((await f.actions.transferEnrolment("source", "b")).ok, false);
+  assert.equal((await f.actions.transferEnrolment("source", "b", "", { choice: "move", ids: ["source", "b"] })).ok, false);
   assert.equal(f.rows.length, 1);
-  assert.equal((await f.actions.transferEnrolment("source", "b", "Placement agreed with instructor")).ok, true);
+  assert.equal((await f.actions.transferEnrolment("source", "b", "Placement agreed with instructor", { choice: "move", ids: ["source", "b"] })).ok, true);
   assert.equal(f.rows[1].placementReason, "Placement agreed with instructor");
 });
 
@@ -130,13 +166,13 @@ test("promotion cannot reopen a waitlist entry withdrawn while it waited", async
 
 test("audit failure rolls back the transfer and its new place", async () => {
   const f = fixture(); f.failAudit();
-  await assert.rejects(f.actions.transferEnrolment("source", "b"), /Audit unavailable/);
+  await assert.rejects(f.actions.transferEnrolment("source", "b", "", { choice: "move", ids: ["source", "b"] }), /Audit unavailable/);
   assert.equal(f.rows.length, 1); assert.equal(f.rows[0].status, "ACTIVE");
 });
 
 test("moving a waitlisted swimmer closes the waiting booking without implying attendance", async () => {
   const f = fixture(); f.rows[0].status = "WAITLISTED";
-  assert.equal((await f.actions.transferEnrolment("source", "b")).ok, true);
+  assert.equal((await f.actions.transferEnrolment("source", "b", "", { choice: "move", ids: ["source", "b"] })).ok, true);
   assert.equal(f.rows[0].status, "WITHDRAWN");
   assert.equal(f.rows[1].status, "ACTIVE");
   assert.match((f.audits[0] as { summary: string }).summary, /from the waitlist for/);

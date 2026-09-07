@@ -228,11 +228,12 @@ export function TransferEnrolment({
       description={`${classLabel ? `From ${classLabel}. ` : ""}The old place closes and a new one opens, so their attendance so far stays intact.`}
       submitLabel="Move"
       successMessage="Swimmer moved"
-      submit={(formData) =>
+      submit={(formData, confirmation) =>
         transferEnrolment(
           enrolment.id,
           String(formData.get("toCourseId") ?? ""),
-          String(formData.get("placementReason") ?? "")
+          String(formData.get("placementReason") ?? ""),
+          confirmation
         )
       }
     >

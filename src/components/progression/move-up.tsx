@@ -89,7 +89,7 @@ export function MoveUpToLevel({
       submit={(formData, confirmation) => {
         const toCourseId = String(formData.get("toCourseId") ?? "");
         return fromEnrolmentId
-          ? transferEnrolment(fromEnrolmentId, toCourseId)
+          ? transferEnrolment(fromEnrolmentId, toCourseId, "", confirmation)
           : enrolStudent({
               studentId,
               courseId: toCourseId,

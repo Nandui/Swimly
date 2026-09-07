@@ -40,4 +40,4 @@ export function permissionCountLabel(count: number): string {
  *  same floor applies to an admin setting a temporary one and to a person
  *  choosing their own, because the temporary one is a real key until it is
  *  changed. */
-export const MIN_PASSWORD_LENGTH = 12;
+export const MIN_PASSWORD_LENGTH = 8;

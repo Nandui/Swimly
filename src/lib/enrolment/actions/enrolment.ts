@@ -235,19 +235,21 @@ export async function promoteFromWaitlist(id: string): Promise<ActionResult> {
 
 /** Close the original place and create a new history row. Both class locks
  *  prevent concurrent transfers from moving one enrolment twice. */
-export async function transferEnrolment(id: string, toCourseId: string, placementReason = ""): Promise<ActionResult> {
+export async function transferEnrolment(id: string, toCourseId: string, placementReason = "", confirmation?: ConfirmationReply): Promise<ActionResult> {
   const session = await requirePermission("enrolment.manage");
   const parsed = z.object({
     toCourseId: z.string().min(1, "Pick a class."), placementReason: placementReasonSchema,
   }).safeParse({ toCourseId, placementReason });
   if (!parsed.success) return fail(parsed.error.issues[0].message);
+  const reply = z.object({ choice: z.literal("move"), ids: z.tuple([z.string(), z.string()]) }).optional().safeParse(confirmation);
+  if (!reply.success) return fail("Confirm the move before continuing.");
   const clubId = await currentClubId();
   const source = await prisma.enrolment.findUnique({
     where: { id, course: { clubId }, student: { clubId } }, select: { courseId: true, studentId: true },
   });
   if (!source) return fail("That enrolment is not available in this club.");
   if (source.courseId === toCourseId) return fail("That is the same class.");
-  const result = await withCourseSeat([source.courseId, toCourseId], async (tx) => {
+  const result = await withCourseSeat([source.courseId, toCourseId], async (tx): Promise<ActionResult> => {
     await tx.$queryRaw`SELECT id FROM "Student" WHERE id = ${source.studentId} FOR UPDATE`;
     const from = await tx.enrolment.findUnique({ where: { id }, select: ENROLMENT_SELECT });
     if (!from) return fail("That enrolment no longer exists.");
@@ -268,6 +270,18 @@ export async function transferEnrolment(id: string, toCourseId: string, placemen
     if (!earned && !reason) return fail(`Say why ${fullName(from.student)} is being placed at ${to.level.name}; they have not earned that level yet.`);
     const taken = await tx.enrolment.count({ where: { courseId: toCourseId, status: "ACTIVE" } });
     if (to.capacity !== null && taken >= to.capacity) return fail(`${courseLabel(to)} is full (${capacityLabel(taken, to.capacity)}).`);
+    if (reply.data?.ids[0] !== id || reply.data.ids[1] !== toCourseId) {
+      return {
+        ok: false,
+        error: "Confirm the move before continuing.",
+        confirmation: {
+          title: `Continue with moving ${fullName(from.student)}?`,
+          description: `From ${from.status === "WAITLISTED" ? "the waitlist for " : ""}${courseLabel(from.course)} to ${courseLabel(to)}. Their current place will end and the new place will open. Attendance and marks stay on record.`,
+          ids: [id, toCourseId],
+          choices: [{ label: "Confirm move", value: "move" }],
+        },
+      };
+    }
     const startedOn = parseDateOnly(today());
     // Leaving a waitlist is a withdrawn booking, not evidence that the swimmer
     // occupied the original class. Keep that distinction in future history.
