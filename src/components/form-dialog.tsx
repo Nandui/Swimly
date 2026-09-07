@@ -60,6 +60,7 @@ export function FormDialog({
   children: React.ReactNode;
 }) {
   const [open, setOpen] = React.useState(false);
+  const [formVersion, setFormVersion] = React.useState(0);
   const [error, setError] = React.useState<string | null>(null);
   const [pending, startTransition] = React.useTransition();
   const submitting = React.useRef(false);
@@ -68,6 +69,14 @@ export function FormDialog({
   React.useEffect(() => {
     if (confirmation) confirmationHeading.current?.focus();
   }, [confirmation]);
+
+  function openForm() {
+    // Astryx retains dialog content while closed. Remount the controlled
+    // adapters for a fresh edit, using the latest record's default values.
+    // Failed saves keep this version so they preserve the user's input.
+    if (!open) setFormVersion((version) => version + 1);
+    setOpen(true);
+  }
 
   function close() {
     if (submitting.current) return;
@@ -117,14 +126,14 @@ export function FormDialog({
 
   return (
     <>
-      <Trigger onOpen={() => setOpen(true)}>{trigger}</Trigger>
+      <Trigger onOpen={openForm}>{trigger}</Trigger>
       <Dialog
         isOpen={open}
-        onOpenChange={(next) => (next ? setOpen(true) : close())}
+        onOpenChange={(next) => (next ? openForm() : close())}
         purpose={pending ? "required" : "form"}
         width={WIDTHS[width] ?? 448}
       >
-        <form onSubmit={handleSubmit} aria-busy={pending}>
+        <form key={formVersion} onSubmit={handleSubmit} aria-busy={pending}>
           <VStack gap={4}>
             <div ref={confirmationHeading} tabIndex={-1}>
               <DialogHeader title={confirmation?.prompt.title ?? title} subtitle={confirmation?.prompt.description ?? description} onOpenChange={pending ? undefined : close} />

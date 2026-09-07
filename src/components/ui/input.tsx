@@ -131,7 +131,7 @@ export function Input({
         ref={inputRef}
         htmlName={name}
         value={current === "" ? null : Number(current)}
-        onChange={(next) => set(next === null || Number.isNaN(next) ? "" : String(next))}
+        onChange={(next: number | null) => set(next === null || Number.isNaN(next) ? "" : String(next))}
         min={min === undefined ? undefined : Number(min)}
         max={max === undefined ? undefined : Number(max)}
         step={step === undefined ? undefined : Number(step)}
@@ -139,6 +139,7 @@ export function Input({
         isReadOnly={readOnly}
         hasAutoFocus={autoFocus}
         isWheelEnabled={false}
+        hasClear={!required}
       />
     );
   }

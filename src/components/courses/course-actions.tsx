@@ -18,11 +18,9 @@ import { DAY_META, DAYS_IN_ORDER, courseLabel, formatTime } from "@/lib/courses/
 import type { CourseDetail } from "@/lib/courses/data/courses";
 import type { InstructorOption } from "@/lib/courses/data/courses";
 import type { LevelOption } from "@/lib/curriculum/data/curriculum";
-import { FormLayout } from "@astryxdesign/core/FormLayout";
 import { Icon } from "@astryxdesign/core/Icon";
 
-/** Radix will not take an empty string as an item value, so "nobody yet" needs
- *  a sentinel that never reaches the action. */
+/** Keep the unassigned choice distinct from a picker without a selection. */
 const UNASSIGNED = "__unassigned__";
 
 function readInput(formData: FormData): CourseInput {
@@ -79,7 +77,7 @@ function CourseFields({
         <Input id="name" name="name" defaultValue={course?.name ?? ""} placeholder="Dolphins" />
       </Field>
 
-      <FormLayout direction="horizontal">
+      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
         <Field label="Day" htmlFor="dayOfWeek">
           <Select
             id="dayOfWeek"
@@ -120,7 +118,7 @@ function CourseFields({
             placeholder="12"
           />
         </Field>
-      </FormLayout>
+      </div>
 
       <Field label="Instructor" htmlFor="instructorId">
         <Select
@@ -159,6 +157,7 @@ export function AddCourse({
         <Button label="Add class" variant="primary" size="sm" icon={<Icon icon={Plus} size="sm" />} />
       }
       title="Add a class"
+      width="sm:max-w-xl"
       description="One level, one time, every week."
       submitLabel="Add class"
       successMessage="Class added"
@@ -190,6 +189,7 @@ export function EditCourse({
         )
       }
       title={`Edit ${courseLabel(course)}`}
+      width="sm:max-w-xl"
       submitLabel="Save changes"
       successMessage="Class updated"
       submit={(formData) => updateCourse(course.id, readInput(formData))}
