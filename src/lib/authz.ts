@@ -22,6 +22,8 @@
  *  Only the last is security. The other two are courtesy. */
 
 import type { Session } from "next-auth";
+import { cache } from "react";
+import { processScheduledUnenrolments } from "@/lib/enrolment/scheduled";
 import { auth } from "@/auth";
 import { expandPermissions, type PermissionKey } from "@/lib/staff/permissions";
 import { visibleScreens, type ScreenKey } from "@/lib/staff/screens";
@@ -30,6 +32,10 @@ export type { PermissionKey };
 
 export class AuthorizationError extends Error {}
 
+// One pass per request, before any authenticated reads or capacity checks.
+// This applies previously authorized schedules; it needs no external timer.
+const applyScheduledUnenrolments = cache(processScheduledUnenrolments);
+
 /** Returns the session or throws. Use in data modules for read access.
  *
  *  Reads are open to anyone signed in, which is the behaviour the app has
@@ -37,6 +43,7 @@ export class AuthorizationError extends Error {}
 export async function requireSession() {
   const session = await auth();
   if (!session?.user) throw new AuthorizationError("Not signed in");
+  await applyScheduledUnenrolments();
   return session;
 }
 

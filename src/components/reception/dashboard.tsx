@@ -21,6 +21,7 @@ import { ENROLMENT_STATUS_META } from "@/lib/enrolment/constants";
 import type { ReceptionSwimmer } from "@/lib/reception/data";
 import { groupReceptionClasses, receptionHref, type ReceptionClass, type ReceptionGrouping } from "@/lib/reception/timetable";
 import { fullName, STUDENT_STATUS_META } from "@/lib/students/constants";
+import { formatDate } from "@/lib/format";
 
 export type ReceptionDashboardProps = {
   clubName: string;
@@ -99,6 +100,7 @@ export function ReceptionDashboard({ clubName, dateLabel, now, courses, student,
                               {[enrolment.level.name, enrolment.course.location ?? "Location not recorded", coverName ? `${coverName} (cover today)` : enrolment.course.instructor?.name ?? "Instructor not assigned"].join(" · ")}
                             </Text>
                             {enrolment.course.archivedAt ? <Text as="p" color="secondary">This class is archived.</Text> : null}
+                            {enrolment.scheduledEndOn ? <Text as="p" color="secondary">Unenrols {formatDate(enrolment.scheduledEndOn)}</Text> : null}
                             <HStack gap={2} wrap="wrap" vAlign="center">
                               {mayEnrol ? <TransferEnrolment variant="button" classLabel={label} enrolment={{ ...enrolment, student }} targets={targets.filter(target => target.id !== enrolment.course.id)} /> : null}
                               {access.manage ? <EndEnrolment variant="button" enrolment={{ ...enrolment, student }} classLabel={label} /> : null}

@@ -86,6 +86,7 @@ export async function getRoster(courseId: string) {
       id: true,
       status: true,
       startedOn: true,
+      scheduledEndOn: true,
       placementReason: true,
       level: { select: { id: true, name: true } },
       student: {

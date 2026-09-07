@@ -108,6 +108,7 @@ export function EnrolmentTable({
                   {entry.programme.name} · {entry.level.name} · since {formatDate(entry.startedOn)}
                   {entry.endedOn ? ` to ${formatDate(entry.endedOn)}` : ""}
                 </Text>
+                {entry.scheduledEndOn ? <Text type="supporting" display="block">Unenrols {formatDate(entry.scheduledEndOn)}</Text> : null}
                 {entry.placementReason ? (
                   <Text type="supporting" display="block">
                     Placed here: {entry.placementReason}

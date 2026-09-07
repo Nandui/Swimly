@@ -247,6 +247,7 @@ function RosterTable({
                 <Text type="supporting" display="block" className="md:hidden">
                   {ageLabel(entry.student.dateOfBirth)} · since {formatDate(entry.startedOn)}
                 </Text>
+                {entry.scheduledEndOn ? <Text type="supporting" display="block">Unenrols {formatDate(entry.scheduledEndOn)}</Text> : null}
               </TableCell>
               <TableCell className="max-md:hidden">
                 <Text color="secondary" hasTabularNumbers>

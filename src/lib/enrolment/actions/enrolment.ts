@@ -141,7 +141,7 @@ export async function enrolStudent(input: EnrolInput, confirmation?: Confirmatio
     }
     if (!full && decision?.choice === "withdraw") {
       for (const previous of existing) {
-        await tx.enrolment.update({ where: { id: previous.id }, data: { status: "WITHDRAWN", endedOn: parseDateOnly(today()) } });
+        await tx.enrolment.update({ where: { id: previous.id }, data: { status: "WITHDRAWN", endedOn: parseDateOnly(today()), scheduledEndOn: null } });
         await logAudit({
           actorId: session.user.id, actorName: session.user.name ?? "Unknown",
           action: "withdraw", entity: "Enrolment", entityId: previous.id, programmeId: previous.programmeId, clubId,
@@ -188,7 +188,7 @@ export async function endEnrolment(id: string, input: z.infer<typeof endSchema>)
     if (!enrolment) return fail("That enrolment no longer exists.");
     if (enrolment.status !== "ACTIVE" && enrolment.status !== "WAITLISTED") return fail("That enrolment has already ended.");
     if (enrolment.status === "WAITLISTED" && parsed.data.status === "COMPLETED") return fail("A waitlisted swimmer has not taken this class. Withdraw the booking instead.");
-    await tx.enrolment.update({ where: { id }, data: { status: parsed.data.status, endedOn: parseDateOnly(today()) } });
+    await tx.enrolment.update({ where: { id }, data: { status: parsed.data.status, endedOn: parseDateOnly(today()), scheduledEndOn: null } });
     await logAudit({
       actorId: session.user.id, actorName: session.user.name ?? "Unknown",
       action: parsed.data.status === "COMPLETED" ? "complete" : "withdraw",
@@ -286,7 +286,7 @@ export async function transferEnrolment(id: string, toCourseId: string, placemen
     // Leaving a waitlist is a withdrawn booking, not evidence that the swimmer
     // occupied the original class. Keep that distinction in future history.
     const sourceStatus = from.status === "WAITLISTED" ? "WITHDRAWN" : "TRANSFERRED";
-    await tx.enrolment.update({ where: { id }, data: { status: sourceStatus, endedOn: startedOn } });
+    await tx.enrolment.update({ where: { id }, data: { status: sourceStatus, endedOn: startedOn, scheduledEndOn: null } });
     const created = await tx.enrolment.create({
       data: {
         studentId: from.studentId, courseId: toCourseId, levelId: to.levelId,

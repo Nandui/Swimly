@@ -413,6 +413,8 @@ model Enrolment {
   status          EnrolmentStatus @default(ACTIVE)
   startedOn       DateTime        @db.Date
   endedOn         DateTime?       @db.Date
+  /// Remains ACTIVE until the app applies this date on its next authenticated request.
+  scheduledEndOn  DateTime?       @db.Date
   /// Required when the student is placed at a level they have not earned.
   /// Stored on the row, not only in the audit log, because the log is
   /// admin-only and the instructor on the deck is who needs to know.
@@ -427,6 +429,7 @@ model Enrolment {
 
   @@index([courseId, status])
   @@index([studentId, status])
+  @@index([status, scheduledEndOn])
   @@index([programmeId, status])
 }
 

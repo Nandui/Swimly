@@ -1,6 +1,9 @@
 "use client";
 
-import { ArrowRightLeft, ChevronsUp, LogOut, Plus, UserRoundPlus } from "lucide-react";
+import { ArrowRightLeft, CalendarClock, ChevronsUp, LogOut, Plus, UserRoundPlus, X } from "lucide-react";
+import { Input } from "@/components/ui/input";
+import { scheduleUnenrolment } from "@/lib/enrolment/actions/schedule";
+import { toDateOnlyString, today } from "@/lib/format";
 import { ActionButton } from "@/components/confirm-action";
 import { Field, FormDialog } from "@/components/form-dialog";
 import { SearchablePicker, type PickerOption } from "@/components/searchable-picker";
@@ -152,6 +155,7 @@ export function EnrolInCourseForStudent({
 type EnrolmentLike = {
   id: string;
   status: string;
+  scheduledEndOn?: Date | null;
   student: { firstName: string; lastName: string };
 };
 
@@ -162,6 +166,7 @@ type WithClass = { enrolment: EnrolmentLike; classLabel: string; variant?: "icon
 
 export function EndEnrolment({ enrolment, classLabel, variant = "icon" }: WithClass) {
   return (
+    <>
     <FormDialog
       trigger={
         variant === "button"
@@ -190,7 +195,36 @@ export function EndEnrolment({ enrolment, classLabel, variant = "icon" }: WithCl
         <Textarea id="note" name="note" rows={2} placeholder="Moving to the Tuesday class" />
       </Field>
     </FormDialog>
+    {enrolment.status === "ACTIVE" ? <ScheduleUnenrolment enrolment={enrolment} classLabel={classLabel} variant={variant} /> : null}
+    </>
   );
+}
+
+function ScheduleUnenrolment({ enrolment, classLabel, variant }: WithClass) {
+  const scheduled = enrolment.scheduledEndOn;
+  const name = fullName(enrolment.student);
+  return <>
+    <FormDialog
+      trigger={variant === "button"
+        ? <Button label={scheduled ? "Change end date" : "Schedule unenrolment"} variant="secondary" icon={<Icon icon={CalendarClock} size="sm" />} />
+        : <IconButton label={`${scheduled ? "Change" : "Schedule"} unenrolment date for ${name} in ${classLabel}`} variant="ghost" size="sm" icon={<Icon icon={CalendarClock} size="sm" />} />}
+      title={`Schedule ${name}'s unenrolment`}
+      description={`They keep their place in ${classLabel} until the chosen date. On that date they will be unenrolled automatically when the app is next used. Attendance and marks stay on record.`}
+      submitLabel="Save end date"
+      successMessage="Unenrolment scheduled"
+      submit={(data) => scheduleUnenrolment(enrolment.id, String(data.get("endDate") ?? ""))}
+    >
+      <Field label="Unenrol on" htmlFor="endDate" hint="Choose a future date. They will no longer be enrolled on this day.">
+        <Input id="endDate" name="endDate" type="date" required min={today()} defaultValue={scheduled ? toDateOnlyString(scheduled) : ""} />
+      </Field>
+    </FormDialog>
+    {scheduled ? <ActionButton
+      ariaLabel={`Cancel scheduled unenrolment for ${name} from ${classLabel}`}
+      title="Cancel scheduled unenrolment"
+      successMessage="Scheduled unenrolment cancelled"
+      run={() => scheduleUnenrolment(enrolment.id, null)}
+    ><Icon icon={X} size="sm" /></ActionButton> : null}
+  </>;
 }
 
 export function PromoteFromWaitlist({ enrolment }: { enrolment: EnrolmentLike }) {
