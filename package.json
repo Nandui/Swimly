@@ -4,7 +4,7 @@
   "private": true,
   "scripts": {
     "dev": "next dev",
-    "build": "tsx scripts/check-env.ts && prisma generate && next build",
+    "build": "tsx scripts/check-env.ts && tsx scripts/migrate-production.ts && prisma generate && next build",
     "start": "next start",
     "lint": "eslint",
     "typecheck": "tsc --noEmit",

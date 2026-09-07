@@ -55,7 +55,9 @@ certificate and hostname verification unless libpq compatibility is requested.
 | `npm run db:seed-curriculum` | Optional starter curriculum for a new database |
 | `npm run db:studio` | Open Prisma Studio against the configured database |
 
-`npm run build` does not apply migrations or seed records.
+On Vercel production, `npm run build` applies committed migrations before
+compiling the application. A failed migration stops deployment. Local and
+preview builds do not apply migrations. Builds never seed records.
 
 ## Reception
 

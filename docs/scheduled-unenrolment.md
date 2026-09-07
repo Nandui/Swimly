@@ -18,6 +18,9 @@ are preserved.
 
 ## Deployment
 
-Apply the additive migration with `npm run db:deploy` before deploying the new
-application code. It adds a nullable `scheduledEndOn` date and an index to
-Enrolment. No data backfill, seed, cron configuration or new secret is required.
+Vercel production builds apply committed migrations before compiling the new
+application code. This migration adds a nullable `scheduledEndOn` date and an
+index to Enrolment. A failed migration stops deployment. Local and preview
+builds skip migrations; other production hosts must run `npm run db:deploy`
+before deploying. No data backfill, seed, cron configuration or new secret is
+required.
