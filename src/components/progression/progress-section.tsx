@@ -319,13 +319,9 @@ function ReadOnlyList({ level }: { level: LevelProgress }) {
           label={competency.name}
           description={assessedLine(competency) ?? undefined}
           endContent={
-            competency.status ? (
-              <Tag color={COMPETENCY_STATUS_META[competency.status].color}>
-                {COMPETENCY_STATUS_META[competency.status].label}
+              <Tag color={COMPETENCY_STATUS_META[competency.status ?? "WORKING_ON"].color}>
+                {COMPETENCY_STATUS_META[competency.status ?? "WORKING_ON"].label}
               </Tag>
-            ) : (
-              <Text color="disabled">—</Text>
-            )
           }
         />
       ))}

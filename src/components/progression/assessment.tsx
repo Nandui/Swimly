@@ -46,13 +46,13 @@ type Competency = {
  *  record, with the instructor who made it. */
 export function assessedLine(competency: Competency): string | null {
   if (!competency.status || !competency.assessedByName) return null;
-  const label = competency.status === "ACHIEVED" ? "Achieved" : "Working on it";
+  const label = competency.status === "ACHIEVED" ? "Achieved" : "Not Achieved";
   return `${label} · ${competency.assessedByName}${competency.assessedOn ? ` · ${formatDate(competency.assessedOn)}` : ""
     }`;
 }
 
 const MARK_LABEL: Record<CompetencyStatus, string> = {
-  WORKING_ON: "Working on it",
+  WORKING_ON: "Not Achieved",
   ACHIEVED: "Achieved",
 };
 const MARK_ORDER: CompetencyStatus[] = ["WORKING_ON", "ACHIEVED"];
@@ -65,7 +65,7 @@ const DOT: Record<CompetencyStatus, "success" | "warning"> = {
  *
  *  Batched behind one Save, like the register and for the same reason: Server
  *  Actions dispatch one at a time per client, so a save per tap would queue.
- *  The clear action takes a competency back to "not yet". */
+ *  Missing marks display as Not Achieved without inventing an assessment. */
 export function CompetencyChecklist(props: React.ComponentProps<typeof CompetencyChecklistState>) {
   return <CompetencyChecklistState key={`${props.studentId}:${props.levelId}`} {...props} />;
 }
@@ -147,7 +147,7 @@ function CompetencyChecklistState({
     <VStack gap={3}>
       <List hasDividers>
         {competencies.map((competency, index) => {
-          const value = marks.get(competency.id) ?? null;
+          const value = marks.get(competency.id) ?? "WORKING_ON";
           return (
             <Item
               key={competency.id}
@@ -161,8 +161,8 @@ function CompetencyChecklistState({
               label={
                 <HStack gap={2} vAlign="center" wrap="wrap">
                   <StatusDot
-                    variant={value ? DOT[value] : "neutral"}
-                    label={value ? MARK_LABEL[value] : "Not yet"}
+                    variant={DOT[value]}
+                    label={MARK_LABEL[value]}
                   />
                   <Text>{competency.name}</Text>
                 </HStack>
@@ -183,7 +183,7 @@ function CompetencyChecklistState({
                     <SegmentedControl
                       label={`${competency.name} — ${studentName}`}
                       size="md"
-                      value={value ?? ""}
+                      value={value}
                       isDisabled={readOnly || pending}
                       onChange={(next) => {
                         setEdited(true);
@@ -202,7 +202,6 @@ function CompetencyChecklistState({
                         />
                       ))}
                     </SegmentedControl>
-                    {value !== null && !readOnly ? <IconButton label={`Clear ${competency.name} for ${studentName}`} tooltip="Clear mark" icon={<Icon icon={Undo2} size="sm" />} variant="ghost" isDisabled={pending} onClick={() => { setEdited(true); setMarks(previous => new Map(previous).set(competency.id, null)); }} /> : null}
                   </HStack>
                 </VStack>
               }

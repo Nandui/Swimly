@@ -134,7 +134,7 @@ export async function saveAssessment(input: AssessInput): Promise<ActionResult> 
 
     const parts: string[] = [];
     if (nowAchieved.length) parts.push(`passed ${joinNames(nowAchieved)}`);
-    if (nowWorking.length) parts.push(`working on ${joinNames(nowWorking)}`);
+    if (nowWorking.length) parts.push(`not achieved ${joinNames(nowWorking)}`);
     if (nowCleared.length) parts.push(`unmarked ${joinNames(nowCleared)}`);
 
     await logAudit({
@@ -278,7 +278,7 @@ export async function saveClassAssessment(input: ClassAssessInput): Promise<Acti
         const working = named("WORKING_ON");
         const unmarked = named(null);
         if (achieved.length) parts.push(`passed ${joinNames(achieved)}`);
-        if (working.length) parts.push(`working on ${joinNames(working)}`);
+        if (working.length) parts.push(`not achieved ${joinNames(working)}`);
         if (unmarked.length) parts.push(`unmarked ${joinNames(unmarked)}`);
         return logAudit({
           actorId: session.user.id,

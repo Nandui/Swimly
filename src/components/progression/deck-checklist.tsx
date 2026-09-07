@@ -1,7 +1,7 @@
 "use client";
 
 import * as React from "react";
-import { Check, ChevronLeft, ChevronRight, Undo2 } from "lucide-react";
+import { Check, ChevronLeft, ChevronRight } from "lucide-react";
 import { Banner } from "@astryxdesign/core/Banner";
 import { Button } from "@astryxdesign/core/Button";
 import { Card } from "@astryxdesign/core/Card";
@@ -37,8 +37,8 @@ import { ENROLMENT_STATUS_META, PLACEMENT_META } from "@/lib/enrolment/constants
  *
  *  A lesson works like that — the instructor runs a drill, then marks who
  *  got it — so the competency is the unit of the moment and the swimmers
- *  are the list. Each swimmer is one row with two big buttons and an explicit
- *  clear action. Every change across every
+ *  are the list. Each swimmer is one row with Not Achieved and Achieved.
+ *  Missing marks default to Not Achieved. Every change across every
  *  competency sits behind one Save, mirrored to `localStorage` so a
  *  dropped connection or a closed tab loses nothing.
  *
@@ -65,7 +65,7 @@ export type DeckSwimmer = {
 };
 
 const MARK_LABEL: Record<CompetencyStatus, string> = {
-  WORKING_ON: "Working on it",
+  WORKING_ON: "Not Achieved",
   ACHIEVED: "Achieved",
 };
 const MARK_ORDER: CompetencyStatus[] = ["WORKING_ON", "ACHIEVED"];
@@ -236,7 +236,7 @@ function DeckChecklistState({
     setSaved(false);
   }
 
-  /** The segmented control selects a status; the clear action passes null. */
+  /** The segmented control selects one of the two competency statuses. */
   function choose(studentId: string, competencyId: string, status: Choice) {
     update((next) => {
       next.get(studentId)?.set(competencyId, status);
@@ -315,7 +315,7 @@ function DeckChecklistState({
   );
 
   const row = (swimmer: DeckSwimmer, dimmed: boolean) => {
-    const value = marks.get(swimmer.studentId)?.get(competency.id) ?? null;
+    const value = marks.get(swimmer.studentId)?.get(competency.id) ?? "WORKING_ON";
     const late = attendance?.[swimmer.studentId] === "LATE";
     return (
       <Item
@@ -326,8 +326,8 @@ function DeckChecklistState({
         label={
           <HStack gap={2} vAlign="center" wrap="wrap">
             <StatusDot
-              variant={value ? DOT[value] : "neutral"}
-              label={value ? MARK_LABEL[value] : "Not marked"}
+              variant={DOT[value]}
+              label={MARK_LABEL[value]}
             />
             <Text
               type="large"
@@ -352,7 +352,7 @@ function DeckChecklistState({
               <SegmentedControl
                 label={`${competency.name} — ${swimmer.name}`}
                 size="lg"
-                value={value ?? ""}
+                value={value}
                 isDisabled={readOnly || pending}
                 onChange={(next) =>
                   choose(
@@ -370,9 +370,6 @@ function DeckChecklistState({
                   />
                 ))}
               </SegmentedControl>
-              {value !== null && !readOnly ? (
-                <IconButton label={`Clear ${competency.name} for ${swimmer.name}`} tooltip="Clear mark" icon={<Icon icon={Undo2} size="sm" />} variant="ghost" isDisabled={pending} onClick={() => choose(swimmer.studentId, competency.id, null)} />
-              ) : null}
             </HStack>
           </VStack>
         }

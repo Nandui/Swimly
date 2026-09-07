@@ -46,7 +46,13 @@ function fixture() {
         return { ...row, course, student };
       },
       findFirst: async ({ where }: { where: { courseId: string } }) => rows.find((row) => row.courseId === where.courseId && ["ACTIVE", "WAITLISTED"].includes(row.status)) ?? null,
-      findMany: async () => rows.filter((row) => row.status === "ACTIVE"),
+      findMany: async ({ where }: { where: { studentId?: string; programmeId?: string; courseId?: { not: string }; course?: { clubId: string }; student?: { clubId: string } } }) => rows.filter((row) =>
+        row.status === "ACTIVE" && (!where.studentId || row.studentId === where.studentId) &&
+        (!where.programmeId || row.programmeId === where.programmeId) &&
+        (!where.courseId || row.courseId !== where.courseId.not) &&
+        (!where.student || student.clubId === where.student.clubId) &&
+        (!where.course || courses.find((course) => course.id === row.courseId)?.clubId === where.course.clubId)
+      ).map((row) => ({ ...row, course: courses.find((course) => course.id === row.courseId)! })),
       count: async ({ where }: { where: { courseId: string } }) => rows.filter((row) => row.courseId === where.courseId && row.status === "ACTIVE").length,
       update: async ({ where, data }: { where: { id: string }; data: object }) => Object.assign(rows.find((row) => row.id === where.id)!, data),
       create: async ({ data }: { data: Omit<(typeof rows)[number], "id"> }) => {
@@ -134,4 +140,71 @@ test("moving a waitlisted swimmer closes the waiting booking without implying at
   assert.equal(f.rows[0].status, "WITHDRAWN");
   assert.equal(f.rows[1].status, "ACTIVE");
   assert.match((f.audits[0] as { summary: string }).summary, /from the waitlist for/);
+});
+
+const enrolInput = { studentId: "swimmer", courseId: "b", placementReason: "", allowWaitlist: false };
+
+test("an existing place requires a choice before any writes", async () => {
+  const f = fixture();
+  const result = await f.actions.enrolStudent(enrolInput);
+  assert.equal(result.ok, false);
+  if (result.ok) return;
+  assert.deepEqual(result.confirmation?.ids, ["source"]);
+  assert.match(result.confirmation!.description, /Class a/);
+  assert.equal(f.rows.length, 1); assert.equal(f.audits.length, 0);
+});
+
+test("keeping the previous class adds the new place without ending it", async () => {
+  const f = fixture();
+  assert.equal((await f.actions.enrolStudent(enrolInput, { choice: "keep", ids: ["source"] })).ok, true);
+  assert.deepEqual(f.rows.map((row) => row.status), ["ACTIVE", "ACTIVE"]);
+  assert.equal(f.audits.length, 1);
+});
+
+test("unenrol and enrol ends previous places under their locks and audits each change", async () => {
+  const f = fixture();
+  f.rows.push({ ...f.rows[0], id: "second", courseId: "c" });
+  assert.equal((await f.actions.enrolStudent(enrolInput, { choice: "withdraw", ids: ["source", "second"] })).ok, true);
+  assert.deepEqual(f.rows.map((row) => row.status), ["WITHDRAWN", "WITHDRAWN", "ACTIVE"]);
+  assert.deepEqual(f.locks, [["a", "b", "c"]]);
+  assert.equal(f.audits.length, 3);
+  assert.ok((f.rows[0] as unknown as { endedOn: Date }).endedOn instanceof Date);
+});
+
+test("a changed set of places asks again instead of withdrawing an unseen place", async () => {
+  const f = fixture();
+  f.beforeTransaction(() => f.rows.push({ ...f.rows[0], id: "second", courseId: "c" }));
+  const result = await f.actions.enrolStudent(enrolInput, { choice: "withdraw", ids: ["source"] });
+  assert.equal(result.ok, false);
+  if (result.ok) return;
+  assert.deepEqual(result.confirmation?.ids, ["source", "second"]);
+  assert.equal(f.audits.length, 0);
+  assert.ok(f.rows.every((row) => row.status === "ACTIVE"));
+});
+
+test("a full destination never withdraws the current place, including waitlisting", async () => {
+  const f = fixture(); f.courses[1].capacity = 0;
+  const reply = { choice: "withdraw", ids: ["source"] };
+  assert.equal((await f.actions.enrolStudent(enrolInput, reply)).ok, false);
+  const result = await f.actions.enrolStudent({ ...enrolInput, allowWaitlist: true }, reply);
+  assert.equal(result.ok, false);
+  if (result.ok) return;
+  assert.deepEqual(result.confirmation?.choices.map((choice) => choice.value), ["keep"]);
+  assert.equal(f.rows[0].status, "ACTIVE"); assert.equal(f.audits.length, 0);
+  assert.equal((await f.actions.enrolStudent({ ...enrolInput, allowWaitlist: true }, { ...reply, choice: "keep" })).ok, true);
+  assert.deepEqual(f.rows.map((row) => row.status), ["ACTIVE", "WAITLISTED"]);
+});
+
+test("audit failure rolls back unenrol and enrol", async () => {
+  const f = fixture(); f.failAudit();
+  await assert.rejects(f.actions.enrolStudent(enrolInput, { choice: "withdraw", ids: ["source"] }), /Audit unavailable/);
+  assert.equal(f.rows.length, 1); assert.equal(f.rows[0].status, "ACTIVE");
+});
+
+test("past enrolments and waitlists do not trigger the existing-class prompt", async () => {
+  for (const status of ["WITHDRAWN", "COMPLETED", "TRANSFERRED", "WAITLISTED"]) {
+    const f = fixture(); f.rows[0].status = status;
+    assert.equal((await f.actions.enrolStudent(enrolInput)).ok, true);
+    assert.equal(f.rows[0].status, status);
+  }
 });

@@ -104,7 +104,7 @@ export function EnrolIntoCourse({ course, taken }: { course: CourseLike; taken: 
       description={`${course.level.name} · ${formatSlotShort(course)} · ${capacityLabel(taken, course.capacity)}`}
       submitLabel="Enrol"
       successMessage="Swimmer enrolled"
-      submit={(formData) => enrolStudent(readEnrol(formData))}
+      submit={(formData, confirmation) => enrolStudent(readEnrol(formData), confirmation)}
     >
       <input type="hidden" name="courseId" value={course.id} />
       <Field label="Swimmer" htmlFor="studentId">
@@ -131,7 +131,7 @@ export function EnrolInCourseForStudent({
       title={`Enrol ${fullName(student)}`}
       submitLabel="Enrol"
       successMessage="Enrolled"
-      submit={(formData) => enrolStudent(readEnrol(formData))}
+      submit={(formData, confirmation) => enrolStudent(readEnrol(formData), confirmation)}
     >
       <input type="hidden" name="studentId" value={student.id} />
       <Field label="Class" htmlFor="courseId">

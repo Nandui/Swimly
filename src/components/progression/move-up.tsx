@@ -86,7 +86,7 @@ export function MoveUpToLevel({
       }
       submitLabel="Move up"
       successMessage={`Moved up to ${nextLevelName}`}
-      submit={(formData) => {
+      submit={(formData, confirmation) => {
         const toCourseId = String(formData.get("toCourseId") ?? "");
         return fromEnrolmentId
           ? transferEnrolment(fromEnrolmentId, toCourseId)
@@ -98,7 +98,7 @@ export function MoveUpToLevel({
               // they might get is not a move up.
               placementReason: "",
               allowWaitlist: false,
-            });
+            }, confirmation);
       }}
     >
       <Field label={`Which ${nextLevelName} class`} htmlFor="toCourseId">

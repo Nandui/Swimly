@@ -7,7 +7,7 @@ import { Dialog, DialogHeader } from "@astryxdesign/core/Dialog";
 import { Field as AstryxField } from "@astryxdesign/core/Field";
 import { FormLayout } from "@astryxdesign/core/FormLayout";
 import { HStack, VStack } from "@astryxdesign/core/Stack";
-import type { ActionResult } from "@/lib/action-result";
+import type { ActionResult, ActionConfirmation, ConfirmationReply } from "@/lib/action-result";
 import { toast } from "@/lib/toast";
 import { withTimeout } from "@/lib/save-feedback";
 import { Input } from "@/components/ui/input";
@@ -54,7 +54,7 @@ export function FormDialog({
   description?: string;
   submitLabel?: string;
   successMessage: string;
-  submit: (formData: FormData) => Promise<ActionResult>;
+  submit: (formData: FormData, confirmation?: ConfirmationReply) => Promise<ActionResult>;
   /** Widen for a form with two columns of fields. */
   width?: string;
   children: React.ReactNode;
@@ -63,31 +63,47 @@ export function FormDialog({
   const [error, setError] = React.useState<string | null>(null);
   const [pending, startTransition] = React.useTransition();
   const submitting = React.useRef(false);
+  const [confirmation, setConfirmation] = React.useState<{ prompt: ActionConfirmation; data: FormData } | null>(null);
+  const confirmationHeading = React.useRef<HTMLDivElement>(null);
+  React.useEffect(() => {
+    if (confirmation) confirmationHeading.current?.focus();
+  }, [confirmation]);
 
   function close() {
     if (submitting.current) return;
     setOpen(false);
     setError(null);
+    setConfirmation(null);
   }
 
   function handleSubmit(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault();
     if (submitting.current) return;
     const formData = new FormData(event.currentTarget);
+    if (confirmation) return;
+    save(formData);
+  }
+
+  function save(formData: FormData, reply?: ConfirmationReply) {
+    if (submitting.current) return;
     submitting.current = true;
     setError(null);
 
     startTransition(async () => {
       try {
-        const result = await withTimeout(submit(formData));
+        const result = await withTimeout(submit(formData, reply));
         if (result.ok) {
           toast.success(successMessage);
           startTransition(() => {
             setOpen(false);
             setError(null);
+            setConfirmation(null);
           });
         } else {
-          startTransition(() => setError(result.error));
+          startTransition(() => {
+            setConfirmation(result.confirmation ? { prompt: result.confirmation, data: formData } : null);
+            setError(result.confirmation ? null : result.error);
+          });
         }
       } catch {
         startTransition(() =>
@@ -110,20 +126,27 @@ export function FormDialog({
       >
         <form onSubmit={handleSubmit} aria-busy={pending}>
           <VStack gap={4}>
-            <DialogHeader title={title} subtitle={description} onOpenChange={pending ? undefined : close} />
+            <div ref={confirmationHeading} tabIndex={-1}>
+              <DialogHeader title={confirmation?.prompt.title ?? title} subtitle={confirmation?.prompt.description ?? description} onOpenChange={pending ? undefined : close} />
+            </div>
 
-            <FormLayout defaultOptionality="optional">{children}</FormLayout>
+            <div hidden={!!confirmation}>
+              <FormLayout defaultOptionality="optional">{children}</FormLayout>
+            </div>
 
             {error ? <Banner status="error" title={error} collapsible={false} /> : null}
 
             <HStack gap={2} hAlign="end" wrap="wrap">
               <Button type="button" label="Cancel" variant="secondary" onClick={close} isDisabled={pending} />
-              <Button
+              {confirmation ? confirmation.prompt.choices.map((choice) => (
+                <Button key={choice.value} type="button" label={choice.label} variant="secondary"
+                  isDisabled={pending} onClick={() => save(confirmation.data, { choice: choice.value, ids: confirmation.prompt.ids })} />
+              )) : <Button
                 type="submit"
                 label={pending ? "Saving…" : submitLabel}
                 variant="primary"
                 isLoading={pending}
-              />
+              />}
             </HStack>
           </VStack>
         </form>

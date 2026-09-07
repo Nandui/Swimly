@@ -34,7 +34,14 @@
  *  already lost, and an audit entry written before it can describe a change
  *  that never happened. */
 
-export type ActionResult = { ok: true } | { ok: false; error: string };
+export type ConfirmationReply = { choice: string; ids: string[] };
+export type ActionConfirmation = {
+  title: string;
+  description: string;
+  ids: string[];
+  choices: { label: string; value: string }[];
+};
+export type ActionResult = { ok: true } | { ok: false; error: string; confirmation?: ActionConfirmation };
 
 export function ok(): ActionResult {
   return { ok: true };

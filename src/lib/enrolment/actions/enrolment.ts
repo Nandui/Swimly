@@ -3,7 +3,7 @@
 import { revalidatePath } from "next/cache";
 import { z } from "zod";
 import type { Prisma } from "@/generated/prisma/client";
-import { fail, ok, type ActionResult } from "@/lib/action-result";
+import { fail, ok, type ActionResult, type ConfirmationReply } from "@/lib/action-result";
 import { logAudit } from "@/lib/audit";
 import { requirePermission } from "@/lib/authz";
 import { currentClubId } from "@/lib/clubs/current";
@@ -76,14 +76,19 @@ function revalidate() {
   revalidatePath("/today");
 }
 
-export async function enrolStudent(input: EnrolInput): Promise<ActionResult> {
+export async function enrolStudent(input: EnrolInput, confirmation?: ConfirmationReply): Promise<ActionResult> {
   const session = await requirePermission("enrolment.manage");
   const parsed = enrolSchema.safeParse(input);
   if (!parsed.success) return fail(parsed.error.issues[0].message);
   const { studentId, courseId, placementReason, allowWaitlist } = parsed.data;
   const clubId = await currentClubId();
+  const reply = z.object({ choice: z.enum(["keep", "withdraw"]), ids: z.array(z.string().min(1)).max(100) }).optional().safeParse(confirmation);
+  if (!reply.success) return fail("Choose whether to keep the existing places or unenrol.");
+  const existingWhere = { studentId, courseId: { not: courseId }, status: "ACTIVE" as const, course: { clubId }, student: { clubId } };
+  // Lock the source classes in the same order as transfers, before the swimmer.
+  const sources = await prisma.enrolment.findMany({ where: existingWhere, select: { courseId: true } });
 
-  const result = await withCourseSeat(courseId, async (tx) => {
+  const result = await withCourseSeat([courseId, ...sources.map((row) => row.courseId)], async (tx): Promise<ActionResult> => {
     await tx.$queryRaw`SELECT id FROM "Student" WHERE id = ${studentId} FOR UPDATE`;
     const [student, course] = await Promise.all([
       tx.student.findUnique({
@@ -113,6 +118,37 @@ export async function enrolStudent(input: EnrolInput): Promise<ActionResult> {
     if (full && !allowWaitlist) return fail(
       `${courseLabel(course)} is full (${capacityLabel(taken, course.capacity)}). Tick the waitlist box to put them on it.`
     );
+    const existing = await tx.enrolment.findMany({
+      where: existingWhere, select: { id: true, courseId: true, programmeId: true, course: { select: COURSE_SELECT } },
+      orderBy: { id: "asc" },
+    });
+    const decision = reply.data;
+    const matches = decision && decision.ids.length === existing.length && existing.every((row) => decision.ids.includes(row.id));
+    if (existing.length && (!matches || (full && decision?.choice === "withdraw") || existing.some((row) => !sources.some((source) => source.courseId === row.courseId)))) {
+      return {
+        ok: false, error: "Choose what to do with the existing places.",
+        confirmation: {
+          title: "Unenrol from the previous class?",
+          description: `${fullName(student)} is already enrolled in: ${existing.map((row) => `${courseLabel(row.course)} (${row.course.level.name})`).join("; ")}. ` +
+            (full ? "The new class is full. Joining its waitlist keeps these places." : "Keep these places, or end them when enrolling in the new class. Attendance and marks stay on record."),
+          ids: existing.map((row) => row.id),
+          choices: full ? [{ label: "Keep places and join waitlist", value: "keep" }] : [
+            { label: "Keep existing places", value: "keep" },
+            { label: "Unenrol and enrol", value: "withdraw" },
+          ],
+        },
+      };
+    }
+    if (!full && decision?.choice === "withdraw") {
+      for (const previous of existing) {
+        await tx.enrolment.update({ where: { id: previous.id }, data: { status: "WITHDRAWN", endedOn: parseDateOnly(today()) } });
+        await logAudit({
+          actorId: session.user.id, actorName: session.user.name ?? "Unknown",
+          action: "withdraw", entity: "Enrolment", entityId: previous.id, programmeId: previous.programmeId, clubId,
+          summary: `Withdrew ${fullName(student)} from ${courseLabel(previous.course)} when enrolling in ${courseLabel(course)}`,
+        }, tx);
+      }
+    }
     const enrolment = await tx.enrolment.create({
       data: {
         studentId, courseId, levelId: course.levelId, programmeId: course.level.programmeId,
