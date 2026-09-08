@@ -2,6 +2,7 @@ import { cache } from "react";
 import { cookies } from "next/headers";
 import { CLUB_COOKIE } from "@/lib/clubs/constants";
 import { prisma } from "@/lib/prisma";
+import { operationContext } from "@/lib/operations/context";
 
 export type CurrentClub = { id: string; name: string };
 
@@ -20,7 +21,7 @@ export const getCurrentClub = cache(
     });
     if (clubs.length === 0) throw new Error("No club is set up. Run the migrations.");
 
-    const wanted = (await cookies()).get(CLUB_COOKIE)?.value;
+    const wanted = operationContext.getStore()?.clubId ?? (await cookies()).get(CLUB_COOKIE)?.value;
     return { club: clubs.find((club) => club.id === wanted) ?? clubs[0], clubs };
   }
 );

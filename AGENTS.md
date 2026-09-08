@@ -79,6 +79,11 @@ needs a driver adapter (`@prisma/adapter-pg`), and the datasource URL lives in
 `prisma.config.ts` rather than in the schema.
 
 Development and production share a database: schema changes must be additive.
+For user-authorized record management, use `npm run db:check` and the secured
+command-line workflow in [docs/database-operations.md](docs/database-operations.md).
+The local credential is in ignored `.vercel/swimly-operations.json`. Never print
+it, use Computer Use for this workflow, or request a Postgres password when this
+connection is available. Existing actions retain permissions and audit logging.
 Do not run seeds, imports or database mutations merely to inspect or test the app.
 Keep real swimmer names, contacts and medical information out of exported
 artifacts and screenshots; use synthetic examples for design work.

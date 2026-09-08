@@ -25,6 +25,7 @@ import type { Session } from "next-auth";
 import { cache } from "react";
 import { processScheduledUnenrolments } from "@/lib/enrolment/scheduled";
 import { auth } from "@/auth";
+import { operationContext } from "@/lib/operations/context";
 import { expandPermissions, type PermissionKey } from "@/lib/staff/permissions";
 import { visibleScreens, type ScreenKey } from "@/lib/staff/screens";
 
@@ -41,7 +42,7 @@ const applyScheduledUnenrolments = cache(processScheduledUnenrolments);
  *  Reads are open to anyone signed in, which is the behaviour the app has
  *  always had. Only writes and the audit log are permissioned. */
 export async function requireSession() {
-  const session = await auth();
+  const session = operationContext.getStore()?.session ?? await auth();
   if (!session?.user) throw new AuthorizationError("Not signed in");
   await applyScheduledUnenrolments();
   return session;
