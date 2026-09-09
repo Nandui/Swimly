@@ -135,7 +135,7 @@ Records are rows — `List` with `Item`, or `Table` — never a card each:
 the roles page and a swimmer's level ladder are lists with dividers, and only
 the rung they are on opens as a `Section`. Tailwind classes appear only for
 layout Astryx's props cannot express — a responsive column that hides below
-`md`, the switcher's text that hides in the phone bar — never for a
+`md`, for example — never for a
 colour, a size or a radius. The one CSS rule the app adds to Astryx's
 controls is the 44px touch minimum.
 
@@ -146,51 +146,55 @@ It stamps `data-theme` on `<html>` (which reset.css turns into
 `color-scheme`) and seeds Astryx's `<Theme mode>`, so the first paint is
 right and hydration has nothing to disagree about. No cookie means "follow
 the device". The one-tap flip is an `IconButton` at the end of the
-`TopNav` on every device; the three-way `SegmentedControl` on the Account
+utility header (the mobile navigation bar on phones); the three-way `SegmentedControl` on the Account
 page is where "system" is restored. `next-themes` is gone.
 
 ### The shell
 
-Astryx's most common layout, "Top Nav with Side Nav", on Astryx's defaults:
-`height="fill"` (the shell fills the viewport and the page scrolls inside
-the main region, so the nav and the raised content card never move) and
-`variant="elevated"` (wash-coloured nav areas, the content a raised surface
-with a rounded corner), with `contentPadding={4}`. Because the window never
-scrolls, the shell scrolls the main region back to the top on every
-navigation, which is what the browser would have done. Anything that pins to
-the bottom of the screen (the deck's save bar) is `sticky` inside that
-region, bleeding through its 16px padding. `height="auto"` was tried and
-dropped: the whole document scrolled, so the card's corner scrolled away and,
-with the "section" variant, the sticky header was unpainted. The `TopNav`
-carries the app's identity — `TopNavHeading` with the wordmark and, in its
-subheading slot (Astryx's "account context"), the club being shown — and at
-its end the club switcher (a `DropdownMenu`) and the mode flip. The
-`SideNav` holds only the screens the role may open; its footer is the
-account button: a single name row aligned with the screen items, without a
-chevron. Clicking it opens an Astryx DropdownMenu with Account and Sign out.
-Account lives here rather than in the screen list. The shell owns
-the collapsed state and replaces the name button with an account
-icon in the footer icon bar while the nav is a rail. There is
-no second `Layout` inside the shell — Astryx says one per shell — so the
-page is capped at 1152px with a `Center` and a stack. Astryx's tables,
-dividers and sections bleed to the nearest container's padding edge, which
-would be the shell's, outside that column; the column zeroes the two
-container-padding variables the bleed reads, so a table's edges line up with
-the cards and headings beside it (its cell text is then inset by the cell
-padding, as a card's text is by the card's). Row actions in a table cell are
-an `HStack` that wraps, because four 44px buttons do not fit a phone-width
-cell and a cell clips. AppShell owns the
-skip link and the `<main>` landmark; pages start at their H1. The dev
-build's "view as" bar is a `Banner status="warning" container="section"`
-in the shell's banner slot.
+The approved foundation is **A — Grouped workspace**. Astryx's `AppShell`
+uses `height="fill"`, `variant="section"` and `contentPadding={0}`: a
+full-height muted sidebar and one flat working surface, with dividers. It
+owns the single main landmark, skip link and mobile drawer. Pages start at
+their H1; never nest another `Layout`.
 
-The responsive contract, written in `app-shell.tsx`: above 768px the
-TopNav, a 256px SideNav and content; at 768px and below the SideNav becomes a
-drawer behind a toggle in the bar, and the switcher drops its text and keeps
-its icon, chevron and accessible name so the bar fits a 375px phone with
-every target 44px. Tables hide their secondary columns below `md` and
-re-home the values as a supporting line, because server components cannot
-ask `useMediaQuery` without a flash.
+The desktop `SideNav` is Astryx's 260px default. `SideNavHeading` holds the
+wordmark, with a named club `DropdownMenu` below. Screen access is resolved
+before grouping: Daily work (Reception, Today, Swimmers, Classes,
+Assessments, Together), Monitoring (Overview, Activity), and a collapsible
+Setup (Programmes, Staff, Roles, Clubs). Empty groups disappear. Setup opens
+when one of its destinations is active; nested URLs select the parent
+destination using a path boundary, not an arbitrary prefix.
+
+The footer holds one account menu with Account and Sign out. Collapsing
+uses Astryx's 48px rail, a Setup flyout and an account icon. The display
+preference is stored in `swimly.nav-collapsed` and read by the server for a
+stable first paint. The named club selector moves into the utility header
+while the rail is collapsed.
+
+The utility header contains the existing async `StudentSearch` and the
+appearance control. Lookup appears only for people who can open Swimmers or
+Reception; it opens a full profile when Swimmers is available, otherwise
+the existing Reception lookup. Searches remain authenticated and scoped to
+the current club, and include inactive swimmers. Changing the club or path
+remounts the lookup so results from the previous context do not linger.
+
+Below the utility header, `StackItem size="fill" isScrollable` owns the
+page scroll (`swimly-page-scroll`), with 16px padding around the content.
+Navigation resets that region to the top. Sticky page controls stay inside
+it; the sidebar and utility header remain fixed. Data workspaces use the
+available width. Account caps at 768px, Together at 960px, and swimmer and
+programme details at 1152px; these are structural budgets, not style tokens.
+The inner stack zeroes Astryx's two container-padding variables so table
+edges line up with headings and other content. Existing page contents and
+record navigation continue inside this shared frame.
+
+At 768px and below, Astryx supplies the mobile bar, drawer, focus trap and
+Escape behaviour. The bar keeps the club name, appearance control and
+navigation toggle visible; desktop collapse is ignored while mobile. Lookup
+gets a separate full-width utility row when permitted. All touch controls
+keep the app's 44px minimum. Tables hide secondary columns below `md` and
+re-home values as supporting lines. The development role-preview banner
+remains in AppShell's banner slot.
 
 ### Fields that post: Astryx's inputs inside plain forms
 

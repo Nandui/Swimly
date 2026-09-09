@@ -1,10 +1,12 @@
 "use client";
 
 import { signOut } from "next-auth/react";
+import { usePathname, useRouter } from "next/navigation";
 import { ClubSwitcher } from "@/components/clubs/club-switcher";
 import { ThemeFlip } from "@/components/theme-toggle";
 import { AppShell, type AppShellProps } from "@/components/ui-kit/app-shell";
-import { visibleNavItems } from "@/lib/nav";
+import { StudentSearch } from "@/components/students/student-search";
+import { pageWidthFor, swimmerLookupHref, visibleNavGroups } from "@/lib/nav";
 import { APP_NAME } from "@/lib/app";
 import type { ScreenKey } from "@/lib/staff/screens";
 
@@ -17,7 +19,7 @@ import type { ScreenKey } from "@/lib/staff/screens";
  *  not serialisable. */
 type Club = { id: string; name: string };
 
-type Props = Omit<AppShellProps, "items" | "wordmark" | "onSignOut" | "switcher" | "tools"> & {
+type Props = Omit<AppShellProps, "groups" | "wordmark" | "onSignOut" | "switcher" | "tools" | "search" | "contentMaxWidth"> & {
   /** The screens this person can open, already resolved against their role. */
   screens: Set<ScreenKey>;
   club: Club;
@@ -25,16 +27,32 @@ type Props = Omit<AppShellProps, "items" | "wordmark" | "onSignOut" | "switcher"
 };
 
 export function AppChrome({ screens, club, clubs, ...rest }: Props) {
+  const router = useRouter();
+  const pathname = usePathname();
+  const canFindSwimmer = screens.has("students") || screens.has("reception");
+
   return (
     <AppShell
       {...rest}
       wordmark={APP_NAME}
-      context={club.name}
-      items={visibleNavItems(screens)}
-      // Which club every page is showing: named under the wordmark, and the
-      // switcher beside it, because the mistake it guards against — working
-      // in the wrong site without noticing — is one nobody sees coming.
+      groups={visibleNavGroups(screens)}
+      contentMaxWidth={pageWidthFor(pathname)}
       switcher={<ClubSwitcher club={club} clubs={clubs} />}
+      search={canFindSwimmer ? (
+        <StudentSearch
+          key={`${club.id}:${pathname}`}
+          label="Find swimmer"
+          labelHidden
+          hasSearchIcon
+          placeholder="Find swimmer by name or member number…"
+          includeInactive
+          onSelect={hit => {
+            if (!hit) return;
+            const href = swimmerLookupHref(screens, hit.id);
+            if (href) router.push(href);
+          }}
+        />
+      ) : undefined}
       // The light/dark flip, one tap from anywhere. Handed to the shell as a
       // slot rather than imported by it, so the shell stays ignorant of themes.
       tools={<ThemeFlip />}

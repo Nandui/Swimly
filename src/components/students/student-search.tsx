@@ -1,6 +1,7 @@
 "use client";
 
 import * as React from "react";
+import { Search } from "lucide-react";
 import { Typeahead, TypeaheadItem } from "@astryxdesign/core/Typeahead";
 import type { SearchSource, SearchableItem } from "@astryxdesign/core/Typeahead";
 import { searchStudents, type StudentHit } from "@/lib/students/actions/search";
@@ -36,6 +37,7 @@ export function StudentSearch({
   placeholder = "Search by name or member number…",
   emptyText = "Nobody by that name.",
   includeInactive = false,
+  hasSearchIcon = false,
   id,
 }: {
   onSelect: (hit: StudentHit | null) => void;
@@ -50,6 +52,7 @@ export function StudentSearch({
   emptyText?: string;
   /** Desk lookup can include former swimmers; enrolment pickers stay active-only. */
   includeInactive?: boolean;
+  hasSearchIcon?: boolean;
   id?: string;
 }) {
   const [searchError, setSearchError] = React.useState<string | null>(null);
@@ -88,6 +91,7 @@ export function StudentSearch({
       status={searchError ? { type: "error", message: searchError } : undefined}
       statusVariant="detached"
       placeholder={placeholder}
+      startIcon={hasSearchIcon ? Search : undefined}
       emptySearchResultsText={emptyText}
       debounceMs={DEBOUNCE_MS}
       maxMenuItems={20}

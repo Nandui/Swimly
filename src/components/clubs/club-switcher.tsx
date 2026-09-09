@@ -10,17 +10,8 @@ import { toast } from "@/lib/toast";
 
 type Club = { id: string; name: string };
 
-/** Which club the app is showing, and the way to change it.
- *
- *  It is in the TopNav the whole time, because the mistake it exists to
- *  prevent is a quiet one: enrolling a child into the other site's class, or
- *  adding a class to the wrong timetable, and not finding out until the
- *  family turns up at the wrong pool. The club's name is the heading's
- *  subheading, so it reads on every device; this is the control that changes
- *  it. Below the tablet breakpoint the button drops its text and keeps its
- *  icon, chevron and accessible name, so the phone bar still fits the drawer
- *  toggle. Switching lands on the overview rather than leaving somebody on a
- *  page that belonged to the old club. */
+/** Always named, including in the mobile bar and collapsed-rail toolbar.
+ *  Switching returns through /start to the person's permitted home screen. */
 export function ClubSwitcher({ club, clubs }: { club: Club; clubs: Club[] }) {
   const [pending, startTransition] = React.useTransition();
   const several = clubs.length > 1;
@@ -44,17 +35,16 @@ export function ClubSwitcher({ club, clubs }: { club: Club; clubs: Club[] }) {
         // The accessible name says what the control is; the visible text is
         // the club, which is the thing that must always be readable.
         label: `Club: ${club.name}. ${several ? "Switch club" : "The only club"}`,
-        // Responsive contract (see app-shell): text from md up, icon only
-        // below. The bridge's breakpoint is the same "md" the shell's drawer
-        // uses, so both change together.
         children: (
-          <Text type="inherit" maxLines={1} hasTruncateTooltip={false} className="max-md:hidden">
+          <Text type="inherit" maxLines={1} hasTruncateTooltip={false}>
             {pending ? "Switching…" : club.name}
           </Text>
         ),
         icon: <Icon icon={Building2} size="sm" />,
         variant: "secondary",
         size: "md",
+        width: "100%",
+        className: "justify-start min-w-0",
         isDisabled: pending,
       }}
       items={[

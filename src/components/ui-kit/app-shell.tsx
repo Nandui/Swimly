@@ -3,186 +3,194 @@
 import * as React from "react";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { CircleUser, LogOut, Waves, type LucideIcon } from "lucide-react";
-import { AppShell as AstryxAppShell } from "@astryxdesign/core/AppShell";
+import { AppShell as AstryxAppShell, useAppShellMobile } from "@astryxdesign/core/AppShell";
 import { Badge } from "@astryxdesign/core/Badge";
 import { DropdownMenu } from "@astryxdesign/core/DropdownMenu";
 import { Icon } from "@astryxdesign/core/Icon";
-import { Center } from "@astryxdesign/core/Center";
-import { NavIcon } from "@astryxdesign/core/NavIcon";
-import {
-  SideNav,
-  SideNavItem,
-  SideNavSection,
-} from "@astryxdesign/core/SideNav";
-import { HStack, VStack } from "@astryxdesign/core/Stack";
-import { TopNav, TopNavHeading } from "@astryxdesign/core/TopNav";
-
-/** The workspace shell, on Astryx's AppShell in its most common shape: a
- *  TopNav carrying the app's identity and the concerns that span the whole
- *  app — which club is being worked in, the colour mode — and a SideNav
- *  carrying the screens. Below `md` the AppShell folds the SideNav into a
- *  drawer and the TopNav into a bar with the toggle, so the club switcher
- *  never leaves the screen. The shell owns the skip link and the main
- *  landmark; pages start at their own H1.
- *
- *  Responsive contract:
- *    any    the shell fills the viewport; the page scrolls in the main region
- *    >768   TopNav | SideNav 256, collapsible to a rail | content capped at 1152
- *    <=768  TopNav as a bar, switcher icon-only; SideNav in the drawer (mobileNav "md")
- *    any    16px of content padding from the shell; touch targets grow to 44px
- *           below the tablet breakpoint and on coarse pointers (globals.css)
- *
- *  Nav items are passed in rather than declared here, because which sections
- *  exist and who may see them is the app's business, not the shell's. */
+import { SideNav, SideNavHeading, SideNavItem, SideNavSection } from "@astryxdesign/core/SideNav";
+import { HStack, StackItem, VStack } from "@astryxdesign/core/Stack";
+import { isNavItemActive } from "@/lib/nav";
+import { NAV_COLLAPSED_COOKIE, SHELL_PAGE_ID } from "@/lib/shell-preferences";
 
 export type NavItem = {
   href: string;
   label: string;
   icon: LucideIcon;
-  /** A count worth interrupting someone for. Renders as a red badge. */
+  /** A count worth interrupting someone for. */
   badge?: number;
 };
 
-export type AppShellProps = {
-  /** Product name. Rendered as type beside a small mark — no logo asset. */
-  wordmark: string;
-  /** Where the wordmark goes. Defaults to the root. */
-  homeHref?: string;
-  /** What the app is showing right now — the tenant — as the heading's
-   *  subheading, Astryx's slot for "account context". It reads on every
-   *  device, however the switcher beside it is drawn. */
-  context?: string;
+export type NavGroup = {
+  id: string;
+  label: string;
+  icon?: LucideIcon;
+  collapsible?: boolean;
   items: NavItem[];
+};
+
+export type AppShellProps = {
+  wordmark: string;
+  homeHref?: string;
+  groups: NavGroup[];
   userName: string;
-  /** The line under the name: role, team, tenant. */
   userSubtitle?: string;
   onSignOut?: () => void;
-  /** The tenant/workspace switcher, in the TopNav on every device. */
+  /** A named club control: sidebar on desktop, utility bar on mobile/rail. */
   switcher?: React.ReactNode;
-  /** Small controls that must never be more than one tap away — the
-   *  light/dark flip. At the end of the TopNav. */
+  search?: React.ReactNode;
   tools?: React.ReactNode;
-  /** A full-width strip above the page — a notice that applies to every
-   *  screen, such as a dev build's "seeing the app as" bar. */
   banner?: React.ReactNode;
+  initialCollapsed?: boolean;
+  /** Leave undefined for data workspaces; cap forms and detail pages. */
+  contentMaxWidth?: number;
   children: React.ReactNode;
 };
 
+/** One full-height navigation region and one flat page surface. Astryx owns
+ *  the main landmark, skip link, mobile drawer, focus trap and Escape key.
+ *  The utility header stays above the page's independent scroll region. */
 export function AppShell(props: AppShellProps) {
-  const pathname = usePathname();
-  // The account menu uses the name row when expanded and a footer icon
-  // when collapsed, so it remains reachable in the rail.
-  const [collapsed, setCollapsed] = React.useState(false);
+  const [collapsed, setCollapsed] = React.useState(props.initialCollapsed ?? false);
   useScrollToTopOnNavigate();
+
+  function changeCollapsed(value: boolean) {
+    setCollapsed(value);
+    document.cookie = `${NAV_COLLAPSED_COOKIE}=${value ? "1" : "0"}; Path=/; Max-Age=31536000; SameSite=Lax`;
+  }
 
   return (
     <AstryxAppShell
-      // Astryx's defaults, on purpose: the shell fills the viewport and the
-      // page scrolls inside its own region, so the nav and the raised content
-      // card stay where they are and only the page moves. (In height="auto"
-      // the whole document scrolled, the card's rounded corner scrolled away
-      // with it, and the "section" variant left the sticky header unpainted.)
       height="fill"
-      variant="elevated"
+      variant="section"
+      contentPadding={0}
       banner={props.banner}
-      contentPadding={4}
       mobileNav={{ breakpoint: "md" }}
-      topNav={
-        <TopNav
-          label="Top navigation"
-          heading={
-            <TopNavHeading
-              heading={props.wordmark}
-              headingHref={props.homeHref ?? "/"}
-              subheading={props.context}
-              logo={<NavIcon icon={<Icon icon={Waves} size="sm" />} />}
-            />
-          }
-          endContent={
-            <HStack gap={2} vAlign="center">
-              {props.switcher}
-              {props.tools}
-            </HStack>
-          }
-        />
-      }
-      sideNav={
-        <SideNav
-          aria-label="Main navigation"
-          collapsible={{
-            isCollapsed: collapsed,
-            onCollapsedChange: setCollapsed,
-          }}
-          footer={collapsed ? undefined : <AccountMenu {...props} />}
-          footerIcons={collapsed ? <AccountMenu {...props} compact /> : undefined}
-        >
-          <SideNavSection title="Screens" isHeaderHidden>
-            {props.items.map((item) => {
-              // "/" would prefix-match everything, so it alone is matched exactly.
-              const active =
-                item.href === "/"
-                  ? pathname === "/"
-                  : pathname.startsWith(item.href);
-              return (
-                <SideNavItem
-                  key={item.href}
-                  label={item.label}
-                  href={item.href}
-                  icon={item.icon}
-                  isSelected={active}
-                  endContent={
-                    item.badge ? (
-                      <Badge variant="red" label={item.badge} />
-                    ) : undefined
-                  }
-                />
-              );
-            })}
-          </SideNavSection>
-        </SideNav>
-      }
+      sideNav={<WorkspaceNavigation {...props} collapsed={collapsed} onCollapsedChange={changeCollapsed} />}
     >
-      {/* Prose, forms and lists cap at a readable width; tables fill it. */}
-      {/* The shell already is the page's Layout — Astryx says one per shell,
-          never nested — so the page is capped and centred with Center and a
-          stack rather than a second Layout. */}
-      <Center axis="horizontal">
-        {/* Astryx's tables, dividers and sections bleed to the nearest
-            container's padding edge — the shell's, 16px outside this column —
-            so a table ran wider than the cards beside it. The column zeroes
-            the two container-padding variables that bleed reads, which is
-            the same thing a padded Card or Section does for its own
-            children: it says "the edge is here". */}
-        <VStack
-          width="100%"
-          maxWidth={1152}
-          className="[--container-padding-inline-start:0px] [--container-padding-inline-end:0px]"
-        >
-          {props.children}
-        </VStack>
-      </Center>
+      <VStack height="100%" gap={0} minHeight={0}>
+        <WorkspaceToolbar {...props} collapsed={collapsed} />
+        <StackItem id={SHELL_PAGE_ID} size="fill" isScrollable>
+          <VStack padding={4} hAlign="center">
+            {/* Tables bleed to a container edge. This column is that edge,
+                keeping tables aligned with the page heading and filters. */}
+            <VStack
+              width="100%"
+              maxWidth={props.contentMaxWidth}
+              className="[--container-padding-inline-start:0px] [--container-padding-inline-end:0px]"
+            >
+              {props.children}
+            </VStack>
+          </VStack>
+        </StackItem>
+      </VStack>
     </AstryxAppShell>
   );
 }
 
-/** The page scrolls inside the shell's main region, not the window, so the
- *  browser's own scroll-to-top on navigation never fires. This does what the
- *  browser would have: every new URL starts at the top. */
+function WorkspaceNavigation(props: AppShellProps & {
+  collapsed: boolean;
+  onCollapsedChange: (value: boolean) => void;
+}) {
+  const { isMobile } = useAppShellMobile();
+  const pathname = usePathname();
+  const collapsed = !isMobile && props.collapsed;
+
+  return (
+    <SideNav
+      aria-label="Main navigation"
+      className="bg-body"
+      collapsible={isMobile ? false : {
+        isCollapsed: collapsed,
+        onCollapsedChange: props.onCollapsedChange,
+      }}
+      header={isMobile ? (
+        <HStack gap={2} vAlign="center" width="100%" className="min-w-0">
+          <StackItem size="fill">{props.switcher}</StackItem>
+          <StackItem>{props.tools}</StackItem>
+        </HStack>
+      ) : (
+        <SideNavHeading
+          heading={props.wordmark}
+          headingHref={props.homeHref ?? "/"}
+          icon={collapsed ? <Icon icon={Waves} size="sm" /> : undefined}
+        />
+      )}
+      topContent={!isMobile && !collapsed ? props.switcher : undefined}
+      footer={collapsed ? undefined : <AccountMenu {...props} />}
+      footerIcons={collapsed ? <AccountMenu {...props} compact /> : undefined}
+    >
+      {props.groups.map(group => (
+        <NavigationGroup
+          key={`${group.id}:${group.items.some(item => isNavItemActive(pathname, item.href))}`}
+          group={group}
+          pathname={pathname}
+          isRail={collapsed}
+        />
+      ))}
+    </SideNav>
+  );
+}
+
+function NavigationGroup({ group, pathname, isRail }: { group: NavGroup; pathname: string; isRail: boolean }) {
+  const hasActiveItem = group.items.some(item => isNavItemActive(pathname, item.href));
+  const items = group.items.map(item => (
+    <SideNavItem
+      key={item.href}
+      label={item.label}
+      href={item.href}
+      icon={item.icon}
+      isSelected={isNavItemActive(pathname, item.href)}
+      endContent={item.badge ? <Badge variant="red" label={item.badge} /> : undefined}
+    />
+  ));
+
+  return (
+    <SideNavSection title={group.label} isHeaderHidden={group.collapsible}>
+      {group.collapsible ? (
+        <SideNavItem
+          label={group.label}
+          icon={group.icon}
+          isSelected={isRail && hasActiveItem}
+          aria-current={isRail && hasActiveItem ? "location" : undefined}
+          collapsible={{ defaultIsCollapsed: !hasActiveItem }}
+        >
+          {items}
+        </SideNavItem>
+      ) : items}
+    </SideNavSection>
+  );
+}
+
+function WorkspaceToolbar(props: Pick<AppShellProps, "switcher" | "search" | "tools"> & { collapsed: boolean }) {
+  const { isMobile } = useAppShellMobile();
+  if (isMobile && !props.search) return null;
+
+  return (
+    <StackItem>
+      <HStack role="group" aria-label="Workspace tools" gap={4} padding={2} vAlign="center" className="border-b border-border px-4">
+        {!isMobile && props.collapsed && (
+          <VStack maxWidth={260}>{props.switcher}</VStack>
+        )}
+        <StackItem size="fill">
+          <VStack maxWidth={480}>{props.search}</VStack>
+        </StackItem>
+        {!isMobile && <StackItem>{props.tools}</StackItem>}
+      </HStack>
+    </StackItem>
+  );
+}
+
+/** Next scrolls the window; this shell scrolls its page region. */
 function useScrollToTopOnNavigate() {
   const pathname = usePathname();
   const search = useSearchParams().toString();
   React.useEffect(() => {
-    document.getElementById("astryx-app-shell-main")?.scrollTo({ top: 0 });
+    document.getElementById(SHELL_PAGE_ID)?.scrollTo({ top: 0 });
   }, [pathname, search]);
 }
 
-/** Personal navigation and sign-out share a popover anchored to the name. */
-function AccountMenu({
-  userName,
-  userSubtitle,
-  onSignOut,
-  compact = false,
-}: Pick<AppShellProps, "userName" | "userSubtitle" | "onSignOut"> & { compact?: boolean }) {
+function AccountMenu({ userName, userSubtitle, onSignOut, compact = false }:
+  Pick<AppShellProps, "userName" | "userSubtitle" | "onSignOut"> & { compact?: boolean }) {
   const router = useRouter();
   return (
     <DropdownMenu
@@ -200,16 +208,14 @@ function AccountMenu({
         className: compact ? undefined : "justify-start px-2",
         icon: <Icon icon={CircleUser} size="sm" />,
       }}
-      items={[
-        {
-          type: "section",
-          title: userSubtitle ? `${userName} · ${userSubtitle}` : userName,
-          items: [
-            { id: "account", label: "Account", icon: CircleUser, onClick: () => router.push("/account") },
-            { id: "sign-out", label: "Sign out", icon: LogOut, onClick: onSignOut, isDisabled: !onSignOut },
-          ],
-        },
-      ]}
+      items={[{
+        type: "section",
+        title: userSubtitle ? `${userName} · ${userSubtitle}` : userName,
+        items: [
+          { id: "account", label: "Account", icon: CircleUser, onClick: () => router.push("/account") },
+          { id: "sign-out", label: "Sign out", icon: LogOut, onClick: onSignOut, isDisabled: !onSignOut },
+        ],
+      }]}
     />
   );
 }
