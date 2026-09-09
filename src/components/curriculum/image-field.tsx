@@ -1,10 +1,10 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
-import { FileInput } from "@astryxdesign/core/FileInput";
-import { Button } from "@astryxdesign/core/Button";
-import { HStack, VStack } from "@astryxdesign/core/Stack";
-import { Text } from "@astryxdesign/core/Text";
+import { FileInput } from "@/components/workspace/fields";
+import { Button } from "@/components/workspace/actions";
+import { HStack, VStack } from "@/components/workspace/layout";
+import { Text } from "@/components/workspace/typography";
 import { ImageThumbnail } from "./image-thumbnail";
 import { IMAGE_ACCEPT, IMAGE_MAX_BYTES } from "@/lib/curriculum/image";
 
@@ -24,7 +24,6 @@ export function ImageField({ currentSrc, name = "Programme or level" }: { curren
   useEffect(() => {
     const form = root.current?.closest("form");
     if (!form) return;
-    // Astryx FileInput is controlled and has no htmlName. The native formdata
     // event also fires for FormDialog's new FormData(form), so the chosen file
     // stays in this form and is uploaded only when the person presses Save.
     const append = (event: FormDataEvent) => {

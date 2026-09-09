@@ -24,7 +24,8 @@ defined in [AGENTS.md](AGENTS.md).
 - Use concise, outcome-first prose. Explain decisions with observable evidence;
   label hypotheses and estimates. Do not invent research, metrics or user quotes.
   Do not print invocation banners or narrate a reasoning protocol.
-- For Swimly screens, Astryx and DESIGN.md remain the visual authority. Wireframe
+- For Swimly screens, the app-owned shadcn/Base UI components and DESIGN.md
+  are the visual authority. Wireframe
   CSS and viewer assets apply only to separately requested exploratory artifacts;
   never import them into the app. Use synthetic data in those artifacts.
 - Use the user's requested artifact format. Otherwise select a suitable local

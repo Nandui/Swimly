@@ -1,12 +1,12 @@
 "use client";
 
 import { useMemo, useState } from "react";
-import { Button } from "@astryxdesign/core/Button";
-import { Item } from "@astryxdesign/core/Item";
-import { Link } from "@astryxdesign/core/Link";
-import { List } from "@astryxdesign/core/List";
-import { HStack, VStack } from "@astryxdesign/core/Stack";
-import { Heading, Text } from "@astryxdesign/core/Text";
+import { Button } from "@/components/workspace/actions";
+import { Item } from "@/components/workspace/layout";
+import { Link } from "@/components/workspace/typography";
+import { List } from "@/components/workspace/layout";
+import { HStack, VStack } from "@/components/workspace/layout";
+import { Heading, Text } from "@/components/workspace/typography";
 import { Tag } from "@/components/ui-kit/tag";
 import { PLACEMENT_META } from "@/lib/enrolment/constants";
 import { capacityLabel, courseName, formatTime } from "@/lib/courses/constants";

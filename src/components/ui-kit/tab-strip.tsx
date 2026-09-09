@@ -1,15 +1,9 @@
 "use client";
 
-import { Badge } from "@astryxdesign/core/Badge";
-import { Tab, TabList } from "@astryxdesign/core/TabList";
+import { Badge } from "@/components/workspace/feedback";
+import { Tab, TabList } from "@/components/workspace/choices";
 
-/** A row of sections, one on screen at a time, each a link.
- *
- *  Links rather than a client-side tab widget, on purpose: the tab is in the
- *  URL, so a bookmark or a message can point at one section, the back button
- *  works, and each section is rendered by the server with only what it
- *  needs. Astryx's TabList with `href` on each tab is exactly that: a nav
- *  landmark marking the current tab with `aria-current`. */
+
 
 export type TabStripItem = {
   key: string;

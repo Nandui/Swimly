@@ -3,10 +3,10 @@
 import * as React from "react";
 import { useRouter } from "next/navigation";
 import { ArrowLeftRight } from "lucide-react";
-import { Button } from "@astryxdesign/core/Button";
+import { Button } from "@/components/workspace/actions";
 import { switchClub } from "@/lib/clubs/actions/clubs";
 import { toast } from "@/lib/toast";
-import { Icon } from "@astryxdesign/core/Icon";
+import { Icon } from "@/components/workspace/misc";
 
 /** The way through from a page that belongs to another club: switch, and
  *  stay on the page, which then renders as it does there. */

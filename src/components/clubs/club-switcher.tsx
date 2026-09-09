@@ -2,9 +2,9 @@
 
 import * as React from "react";
 import { Building2, Check } from "lucide-react";
-import { DropdownMenu } from "@astryxdesign/core/DropdownMenu";
-import { Icon } from "@astryxdesign/core/Icon";
-import { Text } from "@astryxdesign/core/Text";
+import { DropdownMenu } from "@/components/workspace/overlays";
+import { Icon } from "@/components/workspace/misc";
+import { Text } from "@/components/workspace/typography";
 import { switchClub } from "@/lib/clubs/actions/clubs";
 import { toast } from "@/lib/toast";
 
@@ -48,7 +48,7 @@ export function ClubSwitcher({ club, clubs }: { club: Club; clubs: Club[] }) {
         // below. The bridge's breakpoint is the same "md" the shell's drawer
         // uses, so both change together.
         children: (
-          <Text type="inherit" maxLines={1} hasTruncateTooltip={false} className="max-md:hidden">
+          <Text type="inherit" maxLines={1} hasTruncateTooltip={false} className="truncate">
             {pending ? "Switching…" : club.name}
           </Text>
         ),

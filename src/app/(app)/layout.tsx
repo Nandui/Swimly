@@ -1,5 +1,6 @@
 import type { ReactNode } from "react";
 import { redirect } from "next/navigation";
+import { isStaging } from "@/lib/deployment";
 import { auth } from "@/auth";
 import { AppChrome } from "@/components/app-nav";
 import { RolePreviewBar } from "@/components/staff/role-preview";
@@ -36,7 +37,7 @@ export default async function AppLayout({ children }: { children: ReactNode }) {
       club={club}
       clubs={clubs}
       banner={
-        showPreview ? (
+        isStaging() ? <p className="workspace-staging-notice">Staging · Changes here update live records.</p> : showPreview ? (
           <RolePreviewBar
             roles={previewRoles}
             current={preview ? { id: preview.roleId, name: preview.roleName } : null}

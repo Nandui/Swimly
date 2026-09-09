@@ -1,8 +1,8 @@
 import type { Metadata } from "next";
-import { Item } from "@astryxdesign/core/Item";
-import { List } from "@astryxdesign/core/List";
-import { VStack } from "@astryxdesign/core/Stack";
-import { Heading } from "@astryxdesign/core/Text";
+import { Item } from "@/components/workspace/layout";
+import { List } from "@/components/workspace/layout";
+import { VStack } from "@/components/workspace/layout";
+import { Heading } from "@/components/workspace/typography";
 import { PageHeader } from "@/components/ui-kit/page-header";
 import { Lead, Num } from "@/components/ui-kit/prose";
 import { Tag } from "@/components/ui-kit/tag";

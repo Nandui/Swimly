@@ -1,7 +1,7 @@
 "use client";
 
 import { useRouter } from "next/navigation";
-import { VStack } from "@astryxdesign/core/Stack";
+import { VStack } from "@/components/workspace/layout";
 import { StudentSearch } from "@/components/students/student-search";
 
 /** Adds one more swimmer to the group.

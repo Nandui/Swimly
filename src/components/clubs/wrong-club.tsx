@@ -1,6 +1,6 @@
 import { EmptyState } from "@/components/ui-kit/empty-state";
 import { PageHeader } from "@/components/ui-kit/page-header";
-import { VStack } from "@astryxdesign/core/Stack";
+import { VStack } from "@/components/workspace/layout";
 import { SwitchClubButton } from "@/components/clubs/switch-club-button";
 
 type Club = { id: string; name: string };

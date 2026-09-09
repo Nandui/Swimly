@@ -17,13 +17,9 @@ import {
   Users,
   Waves,
 } from "lucide-react";
-import { Icon } from "@astryxdesign/core/Icon";
+import { Icon } from "@/components/workspace/misc";
 
-/** Astryx's Icon is a client component, so a server-rendered page cannot hand
- *  it an icon *component* — React refuses to send a function across. Server
- *  pages name the icon instead, and the lookup happens here, on the client.
- *  Client components keep using Astryx's Icon with the lucide component
- *  directly. */
+
 const ICONS = {
   arrowRight: ArrowRight,
   building: Building2,

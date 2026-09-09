@@ -1,4 +1,4 @@
-import { EmptyState as AstryxEmptyState } from "@astryxdesign/core/EmptyState";
+import { EmptyState as WorkspaceEmptyState } from "@/components/workspace/feedback";
 import { AppIcon, type AppIconName } from "@/components/ui-kit/app-icon";
 
 /** A place with nothing in it yet: one line saying what, one saying what to
@@ -18,7 +18,7 @@ export function EmptyState({
   compact?: boolean;
 }) {
   return (
-    <AstryxEmptyState
+    <WorkspaceEmptyState
       icon={icon ? <AppIcon name={icon} size="lg" color="secondary" /> : undefined}
       title={title}
       description={hint}

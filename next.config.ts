@@ -1,6 +1,7 @@
 import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
+  allowedDevOrigins: ["127.0.0.1"],
   experimental: {
     // A 2 MB curriculum image plus multipart form overhead.
     serverActions: { bodySizeLimit: "3mb" },

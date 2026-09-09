@@ -3,8 +3,8 @@ import type { AttendanceStatus } from "@/generated/prisma/client";
 import type { StatusMeta } from "@/lib/status";
 
 export const ATTENDANCE_RECORD_META = {
-  taken: { label: "Attendance taken", color: "green" },
-  notTaken: { label: "Attendance not taken", color: "yellow" },
+  taken: { label: "Attendance complete", color: "green" },
+  notTaken: { label: "Attendance to finish", color: "yellow" },
   covered: { label: "Covered", color: "purple" },
   leftClass: { label: "No longer in this class", color: "gray" },
 } as const satisfies Record<string, StatusMeta>;

@@ -1,8 +1,6 @@
-import { BreadcrumbItem, Breadcrumbs } from "@astryxdesign/core/Breadcrumbs";
+import { BreadcrumbItem, Breadcrumbs } from "@/components/workspace/typography";
 
-/** Where a detail page sits: the list it came from, then the page itself.
- *  Astryx's breadcrumb, above the title, in its quiet variant. Two levels is
- *  the whole depth this app has. */
+
 export function BackLink({
   href,
   children,

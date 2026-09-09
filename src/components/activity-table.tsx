@@ -5,8 +5,8 @@ import {
   TableHeader,
   TableHeaderCell,
   TableRow,
-} from "@astryxdesign/core/Table";
-import { Text } from "@astryxdesign/core/Text";
+} from "@/components/workspace/layout";
+import { Text } from "@/components/workspace/typography";
 import { Tag } from "@/components/ui-kit/tag";
 import { actionMeta } from "@/lib/activity/constants";
 import type { ActivityEntry } from "@/lib/activity/data/audit-log";

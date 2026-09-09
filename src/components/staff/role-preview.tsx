@@ -2,11 +2,11 @@
 
 import * as React from "react";
 import { Check, Eye, EyeOff } from "lucide-react";
-import { Banner } from "@astryxdesign/core/Banner";
-import { DropdownMenu } from "@astryxdesign/core/DropdownMenu";
+import { Banner } from "@/components/workspace/feedback";
+import { DropdownMenu } from "@/components/workspace/overlays";
 import { previewRole } from "@/lib/staff/actions/preview";
 import { toast } from "@/lib/toast";
-import { Icon } from "@astryxdesign/core/Icon";
+import { Icon } from "@/components/workspace/misc";
 
 type RoleOption = { id: string; name: string; description: string | null };
 

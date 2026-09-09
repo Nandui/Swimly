@@ -1,9 +1,9 @@
 "use client";
 
 import { Moon, Sun } from "lucide-react";
-import { Icon } from "@astryxdesign/core/Icon";
-import { IconButton } from "@astryxdesign/core/IconButton";
-import { SegmentedControl, SegmentedControlItem } from "@astryxdesign/core/SegmentedControl";
+import { Icon } from "@/components/workspace/misc";
+import { IconButton } from "@/components/workspace/actions";
+import { SegmentedControl, SegmentedControlItem } from "@/components/workspace/choices";
 import { useResolvedThemeMode, useThemeMode } from "@/components/theme-provider";
 import type { ThemeMode } from "@/lib/theme-mode";
 

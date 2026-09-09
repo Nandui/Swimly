@@ -8,7 +8,7 @@ import { getCoursesOnDay } from "@/lib/courses/data/courses";
 import { getTransferTargets } from "@/lib/enrolment/data/enrolments";
 import { formatDate, minutesNow, parseDateOnly, today } from "@/lib/format";
 import { screenPage } from "@/lib/page-guards";
-import { getReceptionSwimmer } from "@/lib/reception/data";
+import { getReceptionSwimmer, getReceptionAssessments } from "@/lib/reception/data";
 
 export const metadata: Metadata = { title: "Reception" };
 
@@ -21,10 +21,10 @@ export default async function ReceptionPage({ searchParams }: {
   const group = params.group === "level" ? "level" : "time";
   const manage = can(session, "enrolment.manage");
   const iso = today();
-  const [courses, covers, student, targets, { club }] = await Promise.all([
+  const [courses, covers, student, targets, { club }, assessments] = await Promise.all([
     getCoursesOnDay(weekdayOfIso(iso)), getCoversForDay(iso),
     swimmerId ? getReceptionSwimmer(swimmerId) : null,
-    swimmerId && manage ? getTransferTargets() : [], getCurrentClub(),
+    swimmerId && manage ? getTransferTargets() : [], getCurrentClub(), manage ? getReceptionAssessments() : [],
   ]);
 
   return <ReceptionDashboard
@@ -36,7 +36,7 @@ export default async function ReceptionPage({ searchParams }: {
       id, name, dayOfWeek, startMinutes, durationMinutes, capacity, location, level, instructor, _count,
       coverName: covers.get(id)?.coverByName ?? null,
     }))}
-    student={student} targets={targets} group={group}
+    student={student} assessments={assessments} targets={targets} group={group}
     unavailable={Boolean(params.swimmer) && !student}
     access={{ manage, manageStudents: can(session, "students.manage"), students: canSee(session, "students"), courses: canSee(session, "courses"),
       together: canSee(session, "together"), assessments: canSee(session, "assessments") }}

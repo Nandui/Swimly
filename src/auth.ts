@@ -178,7 +178,7 @@ export const auth = cache(async function auth(): Promise<Session | null> {
     return { ...session, user: { ...session.user, ...(await wearPreview(user)) } };
   }
 
-  if (process.env.NODE_ENV === "production" || process.env.DEV_AUTH_BYPASS !== "1") {
+  if (!devSignInAllowed() || process.env.NODE_ENV === "production" || process.env.DEV_AUTH_BYPASS !== "1") {
     return null;
   }
 

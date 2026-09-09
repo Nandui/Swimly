@@ -1,12 +1,9 @@
 "use client";
 
 import * as React from "react";
-import { Selector } from "@astryxdesign/core/Selector";
+import { Selector } from "@/components/workspace/search";
 
-/** A bounded choice, on Astryx's Selector. Options are data rather than
- *  children, because that is what Astryx takes and because a list that has
- *  to be searched belongs in `SearchablePicker`, not here. With a `name` it
- *  posts the chosen value through FormData. */
+
 
 export type SelectOption = { value: string; label: string; description?: string; disabled?: boolean };
 export type SelectGroup = { title: string; options: SelectOption[] };

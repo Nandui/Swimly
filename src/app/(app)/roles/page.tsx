@@ -1,9 +1,9 @@
 import type { Metadata } from "next";
-import { Collapsible } from "@astryxdesign/core/Collapsible";
-import { Item } from "@astryxdesign/core/Item";
-import { List } from "@astryxdesign/core/List";
-import { HStack, VStack } from "@astryxdesign/core/Stack";
-import { Text } from "@astryxdesign/core/Text";
+import { Collapsible } from "@/components/workspace/overlays";
+import { Item } from "@/components/workspace/layout";
+import { List } from "@/components/workspace/layout";
+import { HStack, VStack } from "@/components/workspace/layout";
+import { Text } from "@/components/workspace/typography";
 import { EmptyState } from "@/components/ui-kit/empty-state";
 import { PageHeader } from "@/components/ui-kit/page-header";
 import { Lead, Num } from "@/components/ui-kit/prose";

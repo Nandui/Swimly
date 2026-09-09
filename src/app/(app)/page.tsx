@@ -1,10 +1,10 @@
 import type { Metadata } from "next";
-import { Button } from "@astryxdesign/core/Button";
-import { Item } from "@astryxdesign/core/Item";
-import { Link } from "@astryxdesign/core/Link";
-import { List } from "@astryxdesign/core/List";
-import { HStack, VStack } from "@astryxdesign/core/Stack";
-import { Heading, Text } from "@astryxdesign/core/Text";
+import { Button } from "@/components/workspace/actions";
+import { Item } from "@/components/workspace/layout";
+import { Link } from "@/components/workspace/typography";
+import { List } from "@/components/workspace/layout";
+import { HStack, VStack } from "@/components/workspace/layout";
+import { Heading, Text } from "@/components/workspace/typography";
 import { ActivityTable } from "@/components/activity-table";
 import { EmptyState } from "@/components/ui-kit/empty-state";
 import { PageHeader } from "@/components/ui-kit/page-header";

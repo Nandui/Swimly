@@ -3,8 +3,8 @@
 import { Archive, ArchiveRestore, Pencil, Plus } from "lucide-react";
 import { ActionButton, ConfirmAction } from "@/components/confirm-action";
 import { Field, FormDialog } from "@/components/form-dialog";
-import { Button } from "@astryxdesign/core/Button";
-import { IconButton } from "@astryxdesign/core/IconButton";
+import { Button } from "@/components/workspace/actions";
+import { IconButton } from "@/components/workspace/actions";
 import { Input } from "@/components/ui/input";
 import { Select } from "@/components/ui/select";
 import { DayOfWeek } from "@/generated/prisma/enums";
@@ -18,7 +18,7 @@ import { DAY_META, DAYS_IN_ORDER, courseLabel, formatTime } from "@/lib/courses/
 import type { CourseDetail } from "@/lib/courses/data/courses";
 import type { InstructorOption } from "@/lib/courses/data/courses";
 import type { LevelOption } from "@/lib/curriculum/data/curriculum";
-import { Icon } from "@astryxdesign/core/Icon";
+import { Icon } from "@/components/workspace/misc";
 
 /** Keep the unassigned choice distinct from a picker without a selection. */
 const UNASSIGNED = "__unassigned__";

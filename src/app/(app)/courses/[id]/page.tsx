@@ -2,9 +2,9 @@ import { CurriculumImage } from "@/components/curriculum/curriculum-image";
 import { ARCHIVAL_STATUS_META } from "@/lib/status";
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
-import { Button } from "@astryxdesign/core/Button";
-import { Link } from "@astryxdesign/core/Link";
-import { HStack, VStack } from "@astryxdesign/core/Stack";
+import { Button } from "@/components/workspace/actions";
+import { Link } from "@/components/workspace/typography";
+import { HStack, VStack } from "@/components/workspace/layout";
 import {
   Table,
   TableBody,
@@ -12,9 +12,9 @@ import {
   TableHeader,
   TableHeaderCell,
   TableRow,
-} from "@astryxdesign/core/Table";
-import { Heading, Text } from "@astryxdesign/core/Text";
-import { VisuallyHidden } from "@astryxdesign/core/VisuallyHidden";
+} from "@/components/workspace/layout";
+import { Heading, Text } from "@/components/workspace/typography";
+import { VisuallyHidden } from "@/components/workspace/layout";
 import { BackLink } from "@/components/ui-kit/back-link";
 import { EmptyState } from "@/components/ui-kit/empty-state";
 import { PageHeader } from "@/components/ui-kit/page-header";

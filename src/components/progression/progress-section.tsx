@@ -1,9 +1,9 @@
 import { CurriculumImage } from "@/components/curriculum/curriculum-image";
-import { Item } from "@astryxdesign/core/Item";
-import { List } from "@astryxdesign/core/List";
-import { Section } from "@astryxdesign/core/Section";
-import { HStack, StackItem, VStack } from "@astryxdesign/core/Stack";
-import { Heading, Text } from "@astryxdesign/core/Text";
+import { Item } from "@/components/workspace/layout";
+import { List } from "@/components/workspace/layout";
+import { Section } from "@/components/workspace/layout";
+import { HStack, StackItem, VStack } from "@/components/workspace/layout";
+import { Heading, Text } from "@/components/workspace/typography";
 import { Alert, Lead, Num } from "@/components/ui-kit/prose";
 import { Tag } from "@/components/ui-kit/tag";
 import {

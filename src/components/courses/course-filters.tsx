@@ -3,10 +3,10 @@
 import * as React from "react";
 import Form from "next/form";
 import { useRouter, useSearchParams } from "next/navigation";
-import { Button } from "@astryxdesign/core/Button";
-import { HStack, StackItem, VStack } from "@astryxdesign/core/Stack";
-import { Selector } from "@astryxdesign/core/Selector";
-import { Text } from "@astryxdesign/core/Text";
+import { Button } from "@/components/workspace/actions";
+import { HStack, StackItem, VStack } from "@/components/workspace/layout";
+import { Selector } from "@/components/workspace/search";
+import { Text } from "@/components/workspace/typography";
 import { SearchField } from "@/components/ui-kit/search-field";
 import { ANY_DAY, type FilterDimension } from "@/lib/courses/filters";
 

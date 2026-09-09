@@ -11,6 +11,7 @@ function fixture() {
     { studentId: "two", status: "ABSENT", note: null as string | null, markedById: "original" },
   ];
   let note = "Original class note";
+  let complete = true;
   let failAudit = false;
   const audits: { summary: string }[] = [];
   const updated: string[] = [];
@@ -46,6 +47,7 @@ function fixture() {
       upsert: async ({ update }: { update: { note: string } }) => { note = update.note; },
       deleteMany: async () => { note = ""; },
     },
+    attendanceCompletion: { deleteMany: async () => { complete = false; } },
     auditLog: {
       create: async ({ data }: { data: { summary: string } }) => {
         if (failAudit) throw new Error("Audit unavailable");
@@ -61,9 +63,9 @@ function fixture() {
       await previous;
       locked = false;
       beforeTransaction?.(); beforeTransaction = undefined;
-      const before = structuredClone(rows); const originalNote = note;
+      const before = structuredClone(rows); const originalNote = note; const originalComplete = complete;
       try { return await run(tx); }
-      catch (error) { rows.splice(0, rows.length, ...before); note = originalNote; throw error; }
+      catch (error) { rows.splice(0, rows.length, ...before); note = originalNote; complete = originalComplete; throw error; }
       finally { locked = false; release(); }
     },
   };
@@ -75,13 +77,14 @@ function fixture() {
     "next/cache": { revalidatePath: () => { } },
   });
   const input = () => ({ courseId: "class", date: "2026-08-31", marks: rows.map(row => ({ studentId: row.studentId, status: row.status, note: row.note ?? undefined })), classNote: note, revision: savedRegister("class", "2026-08-31", rows, note).revision });
-  return { markRegister, input, rows, audits, updated, beforeTransaction: (fn: () => void) => { beforeTransaction = fn; }, archive: () => { archived = true; }, note: () => note, failAudit: () => { failAudit = true; } };
+  return { markRegister, input, rows, audits, updated, complete: () => complete, beforeTransaction: (fn: () => void) => { beforeTransaction = fn; }, archive: () => { archived = true; }, note: () => note, failAudit: () => { failAudit = true; } };
 }
 
 test("unchanged attendance produces no writes or audit entries", async () => {
   const f = fixture();
   assert.equal((await f.markRegister(f.input())).ok, true);
   assert.equal(f.updated.length, 0); assert.equal(f.audits.length, 0);
+  assert.equal(f.complete(), true);
 });
 
 test("editing one mark preserves the other swimmer's original recorder", async () => {
@@ -90,6 +93,7 @@ test("editing one mark preserves the other swimmer's original recorder", async (
   assert.deepEqual(f.updated, ["two"]);
   assert.equal(f.rows[0].markedById, "original");
   assert.equal(f.rows[1].markedById, "instructor");
+  assert.equal(f.complete(), false);
 });
 
 test("note-only changes are saved and all changes roll back if auditing fails", async () => {

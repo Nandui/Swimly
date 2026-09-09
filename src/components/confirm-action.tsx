@@ -1,27 +1,18 @@
 "use client";
 
 import * as React from "react";
-import { Banner } from "@astryxdesign/core/Banner";
-import { Button } from "@astryxdesign/core/Button";
-import { Dialog, DialogHeader } from "@astryxdesign/core/Dialog";
-import { IconButton } from "@astryxdesign/core/IconButton";
-import { HStack, VStack } from "@astryxdesign/core/Stack";
-import { Text } from "@astryxdesign/core/Text";
+import { Banner } from "@/components/workspace/feedback";
+import { Button } from "@/components/workspace/actions";
+import { Dialog, DialogHeader } from "@/components/workspace/overlays";
+import { IconButton } from "@/components/workspace/actions";
+import { HStack, VStack } from "@/components/workspace/layout";
+import { Text } from "@/components/workspace/typography";
 import type { ActionResult } from "@/lib/action-result";
 import { toast } from "@/lib/toast";
 import { withTimeout } from "@/lib/save-feedback";
 import { Trigger, useDialogTriggerFocus } from "@/components/form-dialog";
 
-/** Confirmation for anything that takes something away.
- *
- *  The description is where you are honest about consequences — what is lost
- *  and what survives — because that is what someone is actually choosing
- *  between. The error is rendered in place rather than thrown at a toast,
- *  since a refusal ("three courses still teach this level") is a sentence the
- *  person can act on.
- *
- *  Astryx's own AlertDialog takes a plain-string description; this one keeps
- *  a Dialog so a consequence can carry a name in bold. */
+
 export function ConfirmAction({
   trigger,
   title,

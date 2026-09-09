@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import { VStack } from "@astryxdesign/core/Stack";
+import { VStack } from "@/components/workspace/layout";
 import { ActivityTable } from "@/components/activity-table";
 import { EmptyState } from "@/components/ui-kit/empty-state";
 import { LinkPagination } from "@/components/ui-kit/link-pagination";

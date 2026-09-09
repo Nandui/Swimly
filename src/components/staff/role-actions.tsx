@@ -2,11 +2,11 @@
 
 import * as React from "react";
 import { Pencil, Plus, Trash2 } from "lucide-react";
-import { Button } from "@astryxdesign/core/Button";
-import { CheckboxList, CheckboxListItem } from "@astryxdesign/core/CheckboxList";
-import { IconButton } from "@astryxdesign/core/IconButton";
-import { RadioList, RadioListItem } from "@astryxdesign/core/RadioList";
-import { VStack } from "@astryxdesign/core/Stack";
+import { Button } from "@/components/workspace/actions";
+import { CheckboxList, CheckboxListItem } from "@/components/workspace/choices";
+import { IconButton } from "@/components/workspace/actions";
+import { RadioList, RadioListItem } from "@/components/workspace/choices";
+import { VStack } from "@/components/workspace/layout";
 import { ConfirmAction } from "@/components/confirm-action";
 import { Field, FormDialog } from "@/components/form-dialog";
 import { Input } from "@/components/ui/input";
@@ -19,7 +19,7 @@ import {
   ROLE_HOME_ORDER,
 } from "@/lib/staff/permissions";
 import { SCREENS } from "@/lib/staff/screens";
-import { Icon } from "@astryxdesign/core/Icon";
+import { Icon } from "@/components/workspace/misc";
 
 type Role = {
   id: string;
@@ -43,8 +43,7 @@ function readRole(formData: FormData) {
   };
 }
 
-/** A set of ticks that still posts through the form around it: the list is
- *  Astryx's, the chosen values ride along as hidden inputs. */
+
 function Ticked({ name, values }: { name: string; values: string[] }) {
   return (
     <>

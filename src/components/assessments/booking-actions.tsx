@@ -4,8 +4,8 @@ import { GraduationCap, UserRoundPlus, UserRoundX, X } from "lucide-react";
 import { ConfirmAction } from "@/components/confirm-action";
 import { Field, FormDialog } from "@/components/form-dialog";
 import { StudentPicker } from "@/components/students/student-search";
-import { Button } from "@astryxdesign/core/Button";
-import { IconButton } from "@astryxdesign/core/IconButton";
+import { Button } from "@/components/workspace/actions";
+import { IconButton } from "@/components/workspace/actions";
 import { Select } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
 import {
@@ -17,7 +17,7 @@ import {
 import { sessionLabel } from "@/lib/assessments/constants";
 import type { BookingRow, SessionDetail } from "@/lib/assessments/data/assessments";
 import { fullName } from "@/lib/students/constants";
-import { Icon } from "@astryxdesign/core/Icon";
+import { Icon } from "@/components/workspace/misc";
 
 export function BookOntoSession({ session, taken }: { session: SessionDetail; taken: number }) {
   const places =

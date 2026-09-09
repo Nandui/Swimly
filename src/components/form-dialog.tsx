@@ -1,12 +1,12 @@
 "use client";
 
 import * as React from "react";
-import { Banner } from "@astryxdesign/core/Banner";
-import { Button } from "@astryxdesign/core/Button";
-import { Dialog, DialogHeader } from "@astryxdesign/core/Dialog";
-import { Field as AstryxField } from "@astryxdesign/core/Field";
-import { FormLayout } from "@astryxdesign/core/FormLayout";
-import { HStack } from "@astryxdesign/core/Stack";
+import { Banner } from "@/components/workspace/feedback";
+import { Button } from "@/components/workspace/actions";
+import { Dialog, DialogHeader } from "@/components/workspace/overlays";
+import { Field as WorkspaceField } from "@/components/workspace/fields";
+import { FormLayout } from "@/components/workspace/layout";
+import { HStack } from "@/components/workspace/layout";
 import styles from "./form-dialog.module.css";
 import type { ActionResult, ActionConfirmation, ConfirmationReply } from "@/lib/action-result";
 import { toast } from "@/lib/toast";
@@ -30,8 +30,7 @@ import { StudentPicker } from "@/components/students/student-search";
  *  longer part of it, so without the wrapper the dialog closes outside the
  *  pending state and flashes. The toast needs no such wrapper. */
 
-/** The old Tailwind widths, kept as the prop's vocabulary so no call site
- *  had to change; Astryx takes pixels. */
+
 const WIDTHS: Record<string, number> = {
   "sm:max-w-sm": 384,
   "sm:max-w-md": 448,
@@ -211,8 +210,7 @@ export function Trigger({
   );
 }
 
-/** The controls that draw their own label when handed one. Everything else
- *  is wrapped in Astryx's Field, which draws the label for it. */
+
 const LABELLED = new Set<React.ElementType>([
   Input,
   Textarea,
@@ -222,9 +220,7 @@ const LABELLED = new Set<React.ElementType>([
   StudentPicker,
 ]);
 
-/** A labelled field. The label is handed to the control when it knows what
- *  to do with one, so the label, the hint and the control are one Astryx
- *  field with the right spacing and association. */
+
 export function Field({
   label,
   htmlFor,
@@ -248,8 +244,8 @@ export function Field({
   }
 
   return (
-    <AstryxField label={label} inputID={htmlFor} description={hint} width="100%">
+    <WorkspaceField label={label} inputID={htmlFor} description={hint} width="100%">
       {children}
-    </AstryxField>
+    </WorkspaceField>
   );
 }

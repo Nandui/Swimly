@@ -3,8 +3,8 @@
 import { Archive, ArchiveRestore, ChevronDown, ChevronUp, Pencil, Plus } from "lucide-react";
 import { ActionButton, ConfirmAction } from "@/components/confirm-action";
 import { Field, FormDialog } from "@/components/form-dialog";
-import { Button } from "@astryxdesign/core/Button";
-import { IconButton } from "@astryxdesign/core/IconButton";
+import { Button } from "@/components/workspace/actions";
+import { IconButton } from "@/components/workspace/actions";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import {
@@ -13,7 +13,7 @@ import {
   setProgrammeArchived,
   updateProgramme,
 } from "@/lib/curriculum/actions/programmes";
-import { Icon } from "@astryxdesign/core/Icon";
+import { Icon } from "@/components/workspace/misc";
 
 import { ImageField } from "./image-field";
 import { curriculumImageUrl } from "@/lib/curriculum/image";

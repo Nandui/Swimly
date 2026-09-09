@@ -3,11 +3,11 @@
 import { Archive, ArchiveRestore, Pencil, Plus } from "lucide-react";
 import { ActionButton, ConfirmAction } from "@/components/confirm-action";
 import { Field, FormDialog } from "@/components/form-dialog";
-import { Button } from "@astryxdesign/core/Button";
-import { IconButton } from "@astryxdesign/core/IconButton";
+import { Button } from "@/components/workspace/actions";
+import { IconButton } from "@/components/workspace/actions";
 import { Input } from "@/components/ui/input";
 import { createClub, setClubArchived, updateClub } from "@/lib/clubs/actions/clubs";
-import { Icon } from "@astryxdesign/core/Icon";
+import { Icon } from "@/components/workspace/misc";
 
 type Club = { id: string; name: string; archivedAt: Date | null };
 

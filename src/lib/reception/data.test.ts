@@ -14,10 +14,11 @@ test("Reception authorizes before querying and scopes swimmer and places to the 
   });
   assert.equal(await data.getReceptionSwimmer("other-club-swimmer"), null);
   assert.deepEqual(query?.where, { id: "other-club-swimmer", clubId: "club-a" });
-  const select = query?.select as { enrolments: { where: unknown }; medicalNotes?: unknown; contacts?: unknown };
+  const select = query?.select as { enrolments: { where: unknown }; medicalNotes?: unknown; notes?: unknown; assessmentBookings: { take: number } };
   assert.deepEqual(select.enrolments.where, { status: { in: ["ACTIVE", "WAITLISTED"] }, course: { clubId: "club-a" } });
-  assert.equal(select.medicalNotes, undefined);
-  assert.equal(select.contacts, undefined);
+  assert.equal(select.medicalNotes, true);
+  assert.equal(select.notes, true);
+  assert.equal(select.assessmentBookings.take, 5);
 });
 
 test("an unauthenticated Reception read never reaches the database", async () => {

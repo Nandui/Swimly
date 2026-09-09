@@ -1,18 +1,18 @@
 "use client";
 
 import { useId, useState } from "react";
-import { SegmentedControl, SegmentedControlItem } from "@astryxdesign/core/SegmentedControl";
+import { SegmentedControl, SegmentedControlItem } from "@/components/workspace/choices";
 import { ArrowRightLeft, ChevronsUp, LogOut, Plus, UserRoundPlus } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { scheduleUnenrolment } from "@/lib/enrolment/actions/schedule";
 import { toDateOnlyString, today, parseDateOnly } from "@/lib/format";
-import { Text } from "@astryxdesign/core/Text";
+import { Text } from "@/components/workspace/typography";
 import { ActionButton, ConfirmAction } from "@/components/confirm-action";
 import { Field, FormDialog } from "@/components/form-dialog";
 import { SearchablePicker, type PickerOption } from "@/components/searchable-picker";
 import { StudentPicker } from "@/components/students/student-search";
-import { Button } from "@astryxdesign/core/Button";
-import { IconButton } from "@astryxdesign/core/IconButton";
+import { Button } from "@/components/workspace/actions";
+import { IconButton } from "@/components/workspace/actions";
 import { Switch } from "@/components/ui/switch";
 import { Textarea } from "@/components/ui/textarea";
 import {
@@ -29,7 +29,7 @@ import {
   placesLeft,
 } from "@/lib/courses/constants";
 import { fullName } from "@/lib/students/constants";
-import { Icon } from "@astryxdesign/core/Icon";
+import { Icon } from "@/components/workspace/misc";
 
 type CourseLike = {
   id: string;

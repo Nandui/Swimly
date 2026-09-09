@@ -3,8 +3,8 @@
 import { Pencil, Plus, UserRoundCheck, UserRoundX } from "lucide-react";
 import { ActionButton, ConfirmAction } from "@/components/confirm-action";
 import { Field, FormDialog } from "@/components/form-dialog";
-import { Button } from "@astryxdesign/core/Button";
-import { IconButton } from "@astryxdesign/core/IconButton";
+import { Button } from "@/components/workspace/actions";
+import { IconButton } from "@/components/workspace/actions";
 import { Input } from "@/components/ui/input";
 import { Select } from "@/components/ui/select";
 import { Switch } from "@/components/ui/switch";
@@ -21,10 +21,10 @@ import {
 import { STUDENT_STATUS_META, fullName } from "@/lib/students/constants";
 import type { StudentDetail } from "@/lib/students/data/students";
 import { toDateOnlyString } from "@/lib/format";
-import { FormLayout } from "@astryxdesign/core/FormLayout";
-import { Heading, Text } from "@astryxdesign/core/Text";
-import { VStack } from "@astryxdesign/core/Stack";
-import { Icon } from "@astryxdesign/core/Icon";
+import { FormLayout } from "@/components/workspace/layout";
+import { Heading, Text } from "@/components/workspace/typography";
+import { VStack } from "@/components/workspace/layout";
+import { Icon } from "@/components/workspace/misc";
 
 function readInput(formData: FormData): StudentInput {
   const text = (key: string) => String(formData.get(key) ?? "");

@@ -4,8 +4,8 @@ import * as React from "react";
 import { CalendarPlus, Pencil, Ban } from "lucide-react";
 import { ConfirmAction } from "@/components/confirm-action";
 import { Field, FormDialog } from "@/components/form-dialog";
-import { Button } from "@astryxdesign/core/Button";
-import { IconButton } from "@astryxdesign/core/IconButton";
+import { Button } from "@/components/workspace/actions";
+import { IconButton } from "@/components/workspace/actions";
 import { Input } from "@/components/ui/input";
 import { Select } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
@@ -24,8 +24,8 @@ import type {
 import type { InstructorOption } from "@/lib/courses/data/courses";
 import { formatTime } from "@/lib/courses/constants";
 import { toDateOnlyString } from "@/lib/format";
-import { FormLayout } from "@astryxdesign/core/FormLayout";
-import { Icon } from "@astryxdesign/core/Icon";
+import { FormLayout } from "@/components/workspace/layout";
+import { Icon } from "@/components/workspace/misc";
 
 const NONE = "__none__";
 

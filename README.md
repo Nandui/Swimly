@@ -4,7 +4,7 @@ The staff workspace for LeisureWorld's swim school at Bishopstown and
 Churchfield: weekly classes, enrolment, attendance, progression and assessment
 sessions. Staff and roles are shared; each club has its own records.
 
-Next.js App Router · React · Astryx Neutral · Tailwind CSS for layout ·
+Next.js App Router · React · shadcn/Base UI · Tailwind CSS ·
 Prisma 7 with the PostgreSQL driver adapter · Auth.js · Zod.
 
 Read [PRODUCT.md](PRODUCT.md) for product scope, [DESIGN.md](DESIGN.md) for
@@ -63,31 +63,33 @@ preview builds do not apply migrations. Builds never seed records.
 
 `/reception` brings swimmer lookup, current class details, move/unenrol actions,
 today's classes grouped by time or level, and booking shortcuts into a responsive
-bento grid. Each role can be given the Reception screen and can choose it as its
+connected workspace. Each role can be given the Reception screen and can choose it as its
 landing page. Enrolment actions still require `enrolment.manage`.
 
 See [Reception implementation and verification](docs/reception.md).
 
-## Astryx
+## Interface and staging
 
-[Astryx](https://astryx.atmeta.com/) is the visual authority. The app uses
-`@astryxdesign/core` and `@astryxdesign/theme-neutral`, with Figtree and a
-cookie-backed light/dark mode that follows the device by default.
+The reviewed redesign uses owned shadcn components with Base UI behaviours,
+Figtree, warm neutral surfaces, blue actions and cookie-backed light/dark themes.
+Components live in `src/components/primitives` and `src/components/workspace`;
+native form adapters live in `src/components/ui`. Domain metadata supplies
+status colours. [DESIGN.md](DESIGN.md) defines the system and screen checklist.
 
-Read installed component documentation before changing a control:
+The main app on `codex/staging-redesign` is published at
+[swimly-staging.vercel.app](https://swimly-staging.vercel.app).
+It uses the existing database: staging edits affect live records. It requires
+normal credentials, disables development sign-in, and uses its own session
+cookie. The existing main and dev branch deployments retain their domains.
 
-```bash
-npx --no-install astryx component Button
-npx --no-install astryx search "form"
-npx --no-install astryx docs tokens
-```
+Poolside Attendance and Competencies share a locally persisted, version-checked
+autosave draft. Done taking attendance is explicit and available after saves
+succeed. An additive `AttendanceCompletion` table retains that confirmation;
+later roster or attendance changes reopen it. All writes retain permissions,
+club scoping, audit records and capacity locks.
 
-`src/components/ui/` adapts Astryx controls to native form submission.
-`src/components/ui-kit/` contains shared app compositions, such as the shell,
-page header and status tags. Status colours come from domain metadata maps.
-Legacy generated design assets and design-kit skills are historical references;
-they do not override Astryx or DESIGN.md.
-
-UI changes must work at 375, 768, 1024 and 1280 pixels in both modes, with
-44px touch targets, keyboard access and no page overflow. See the completed
-[code and UI audit](docs/audit-2026-09-06.md) for evidence and remaining limits.
+The fictional prototype remains isolated under `prototypes/redesign` and is
+not imported by the main app. Validate the main app with `npm run typecheck`,
+`npm run lint`, `npm test` and `npx next build` (without migration side effects).
+Review both themes at 375, 768, 1024 and 1280px, keyboard access, reduced motion,
+44px touch targets, save recovery and conflicts.

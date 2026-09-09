@@ -18,6 +18,8 @@ const eslintConfig = defineConfig([
     "agent/skills/**",
     ".impeccable/review/**",
     "src/generated/**",
+    // The redesign is an independent app with its own lint and type checks.
+    "prototypes/**",
   ]),
 ]);
 

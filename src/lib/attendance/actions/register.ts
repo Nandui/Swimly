@@ -167,6 +167,8 @@ export async function markRegister(input: MarkRegisterInput): Promise<RegisterSa
       };
     }
 
+    await tx.attendanceCompletion.deleteMany({ where: { courseId, date } });
+
     const markedByName = session.user.name ?? "Unknown";
 
     if (changed.length > 0) {

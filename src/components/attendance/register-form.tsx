@@ -3,20 +3,20 @@
 import * as React from "react";
 import { useRouter } from "next/navigation";
 import { ArrowRight, Check } from "lucide-react";
-import { Banner } from "@astryxdesign/core/Banner";
-import { Button } from "@astryxdesign/core/Button";
-import { Collapsible } from "@astryxdesign/core/Collapsible";
-import { Item } from "@astryxdesign/core/Item";
-import { List } from "@astryxdesign/core/List";
-import { Section } from "@astryxdesign/core/Section";
-import { HStack, VStack } from "@astryxdesign/core/Stack";
-import { StatusDot } from "@astryxdesign/core/StatusDot";
-import { Text } from "@astryxdesign/core/Text";
-import { TextArea } from "@astryxdesign/core/TextArea";
+import { Banner } from "@/components/workspace/feedback";
+import { Button } from "@/components/workspace/actions";
+import { Collapsible } from "@/components/workspace/overlays";
+import { Item } from "@/components/workspace/layout";
+import { List } from "@/components/workspace/layout";
+import { Section } from "@/components/workspace/layout";
+import { HStack, VStack } from "@/components/workspace/layout";
+import { StatusDot } from "@/components/workspace/feedback";
+import { Text } from "@/components/workspace/typography";
+import { TextArea } from "@/components/workspace/fields";
 import {
   SegmentedControl,
   SegmentedControlItem,
-} from "@astryxdesign/core/SegmentedControl";
+} from "@/components/workspace/choices";
 import { Tag } from "@/components/ui-kit/tag";
 import type { AttendanceStatus } from "@/generated/prisma/client";
 import { markRegister } from "@/lib/attendance/actions/register";
@@ -31,7 +31,7 @@ import { parseAttendanceDraft } from "@/lib/attendance/draft";
 import { MEDICAL_STATUS_META } from "@/lib/students/constants";
 import { SAVE_TIMEOUT_MS, SAVE_UNCONFIRMED_MESSAGE, withTimeout } from "@/lib/save-feedback";
 import { toast } from "@/lib/toast";
-import { Icon } from "@astryxdesign/core/Icon";
+import { Icon } from "@/components/workspace/misc";
 import { RegisterConflict } from "@/components/attendance/register-conflict";
 import type { SavedRegister } from "@/lib/attendance/revision";
 

@@ -2,9 +2,9 @@
 
 import * as React from "react";
 import { Search } from "lucide-react";
-import { Button } from "@astryxdesign/core/Button";
-import { TextInput } from "@astryxdesign/core/TextInput";
-import { HStack, StackItem } from "@astryxdesign/core/Stack";
+import { Button } from "@/components/workspace/actions";
+import { TextInput } from "@/components/workspace/fields";
+import { HStack, StackItem } from "@/components/workspace/layout";
 
 type SearchFieldProps = {
   name?: string;

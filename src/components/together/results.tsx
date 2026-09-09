@@ -1,5 +1,5 @@
-import { Heading } from "@astryxdesign/core/Text";
-import { VStack } from "@astryxdesign/core/Stack";
+import { Heading } from "@/components/workspace/typography";
+import { VStack } from "@/components/workspace/layout";
 import { EmptyState } from "@/components/ui-kit/empty-state";
 import { Lead } from "@/components/ui-kit/prose";
 import { CombinationList } from "@/components/together/combination-list";

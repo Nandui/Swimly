@@ -1,9 +1,9 @@
-import { Card } from "@astryxdesign/core/Card";
-import { Item } from "@astryxdesign/core/Item";
-import { Link } from "@astryxdesign/core/Link";
-import { List } from "@astryxdesign/core/List";
-import { MetadataList, MetadataListItem } from "@astryxdesign/core/MetadataList";
-import { HStack, VStack } from "@astryxdesign/core/Stack";
+import { Card } from "@/components/workspace/layout";
+import { Item } from "@/components/workspace/layout";
+import { Link } from "@/components/workspace/typography";
+import { List } from "@/components/workspace/layout";
+import { MetadataList, MetadataListItem } from "@/components/workspace/layout";
+import { HStack, VStack } from "@/components/workspace/layout";
 import {
   Table,
   TableBody,
@@ -11,9 +11,9 @@ import {
   TableHeader,
   TableHeaderCell,
   TableRow,
-} from "@astryxdesign/core/Table";
-import { Heading, Text } from "@astryxdesign/core/Text";
-import { VisuallyHidden } from "@astryxdesign/core/VisuallyHidden";
+} from "@/components/workspace/layout";
+import { Heading, Text } from "@/components/workspace/typography";
+import { VisuallyHidden } from "@/components/workspace/layout";
 import { Alert, Lead, Num } from "@/components/ui-kit/prose";
 import { Tag } from "@/components/ui-kit/tag";
 import { EndEnrolment, PromoteFromWaitlist } from "@/components/enrolment/enrolment-actions";

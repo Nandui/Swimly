@@ -1,8 +1,8 @@
 "use client";
 
 import * as React from "react";
-import { Typeahead, TypeaheadItem } from "@astryxdesign/core/Typeahead";
-import type { SearchSource, SearchableItem } from "@astryxdesign/core/Typeahead";
+import { Typeahead, TypeaheadItem } from "@/components/workspace/search";
+import type { SearchSource, SearchableItem } from "@/components/workspace/search";
 import { searchStudents, type StudentHit } from "@/lib/students/actions/search";
 import { ageLabel, fullName } from "@/lib/students/constants";
 
@@ -17,15 +17,7 @@ function toItem(hit: StudentHit): Item {
   return { id: hit.id, label: fullName(hit), auxiliaryData: hit };
 }
 
-/** Finding one swimmer among a thousand, without being sent the thousand.
- *
- *  The searchable pickers elsewhere take their options as props and filter
- *  them in the browser. That is right for classes — there are 134 — and
- *  wrong for swimmers, where it meant every page with the picker on it carried
- *  the whole roll. This one asks the server for the twenty that match what has
- *  been typed so far, and nothing else ever crosses the wire. Astryx's
- *  Typeahead does the debouncing and drops a stale answer that lands after a
- *  newer question. */
+
 export function StudentSearch({
   onSelect,
   selected = null,

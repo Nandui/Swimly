@@ -15,6 +15,7 @@ import { fullName } from "@/lib/students/constants";
 import { prisma } from "@/lib/prisma";
 
 function revalidate() {
+  revalidatePath("/reception");
   revalidatePath("/assessments");
   revalidatePath("/assessments/[id]", "page");
   revalidatePath("/students/[id]", "page");

@@ -1,5 +1,5 @@
-import { HStack, StackItem, VStack } from "@astryxdesign/core/Stack";
-import { Heading, Text } from "@astryxdesign/core/Text";
+import { HStack, StackItem, VStack } from "@/components/workspace/layout";
+import { Heading, Text } from "@/components/workspace/typography";
 
 /** The page's opening: one H1, a quiet description line, actions at the end.
  *  The actions wrap under the title on a phone rather than off the screen. */

@@ -1,225 +1,76 @@
-# Swimly — the doctrine
+# Swimly design and engineering
 
-Swimly's look is **Astryx**, Meta's open design system, in its **Neutral**
-theme: quiet greys, a near-black accent, white cards on a pale ground, Figtree
-throughout, and both colour modes drawn from one set of tokens through
-`light-dark()`. The mode follows the device unless the person picks one.
-Adopted on 5 Sep 2026 in place of the generated ui-ux-pro-max system, which
-is superseded for everything visual; its UX patterns (searchable pickers,
-collapse-not-scroll, one H1) still hold and are restated below.
+The main app adopts the reviewed redesign on the staging branch: warm neutral
+surfaces, blue primary actions, amber highlights, Figtree, and restrained motion.
+The earlier visual system and generated design-system guidance are superseded.
 
-Astryx is a component library, not a colour file. The app uses its
-components — AppShell, TopNav, SideNav, Button, TextInput, DateInput,
-Selector, Typeahead, FormLayout, Dialog, Banner, Token, Badge, Toast, Text and
-Heading — and its tokens, through the CSS it ships. Nothing here is styled by hand that Astryx already draws.
+## Components and tokens
 
-The authority on how a component behaves and what it takes is Astryx's own
-documentation, read from the CLI so it matches the installed version:
+Owned shadcn source lives in `src/components/primitives`, using Base UI for
+accessible behaviour. `components.json` records its base-vega configuration.
+`src/components/workspace` contains reusable layout, fields, choices, overlays,
+feedback and typography. `src/components/ui` provides form-friendly controls;
+`src/components/ui-kit` contains app-specific compositions. Feature components
+compose these with semantic HTML. There is no production dependency on the
+fictional prototype.
 
-```bash
-npx astryx component <Name>        # props, examples, theming surface
-npx astryx search "<thing>"        # find a component, hook or doc
-npx astryx docs <topic>            # layout, tokens, color, typography, motion…
-npx astryx template --list         # page and block recipes
-```
+Colour and shape are semantic CSS tokens in `src/app/globals.css`. Both light
+and dark use the same token names through light-dark(). Primary actions use
+blue with an explicit contrast-safe hover token. Warnings, errors and success
+have separate foreground/background pairs. Status meanings come from domain
+metadata maps. Figtree is self-hosted in four weights. Body text is 14px; touch
+inputs and poolside marks remain readable, and targets are at least 44px.
 
-This file records how Astryx was wired into a Next.js app that already had
-eighty screens, the decisions taken where Astryx leaves room, and the
-architectural decisions that hold regardless of how the app looks.
+Spacing follows a four-point scale. Desktop pages use 32px insets, tablets 24px,
+phones 16px; panels use 24px/20px/16px as appropriate. Data is shown in readable
+rows, with secondary metadata below names. The app shell owns the main landmark,
+page width and skip link. Desktop navigation has Workspace and Manage groups;
+mobile has reachable primary destinations and a More dialog. The club stays
+visible. Account owns personal preferences and sign-out.
 
----
+The theme preference is stored in the existing cookie and stamped by the server
+before first paint. Device mode is CSS-first, then synchronised by the provider.
+Base UI manages dialog, menu, combobox and tab keyboard interaction. Dialogs
+retain field values and context on failure, restore trigger focus after closing,
+and keep errors beside the fields. Native form values still post through FormData.
 
-## The rules, non-negotiable
+## Reception and poolside
 
-These are the ones that get broken first, and breaking any of them is what
-makes Swimly stop looking like itself.
+Reception puts swimmer lookup above the connected swimmer/timetable workspace.
+Places, contact, notes and progress retain selection. Enrolment, transfer and
+assessment booking use the existing audited, permission-checked actions. Phone
+Swimmer and Today views retain their filters and selection when switching.
 
-- **Astryx's component before a hand-drawn one.** A button is `Button`, a
-  field is `TextInput`, a choice is `Selector`, a notice is `Banner`, a
-  heading is `Heading`. Tailwind is for layout — flex, grid, gap, width —
-  not for drawing controls.
-- **Tokens, never colours.** Every colour comes from an Astryx token, either
-  as a Tailwind utility the bridge provides (`bg-surface`, `text-primary`,
-  `text-secondary`, `border-border`, `bg-muted`) or as `var(--color-*)`. No
-  hex, no Tailwind palette class, in a component.
-- **Status colour comes only from the tag token pairs**, always via a
-  metadata map — never a colour chosen at a call site. `<Tag>` is Astryx's
-  `Token` in one of its hues; a `Badge` is only ever a count.
-- **Both modes, always.** Every token is a `light-dark()` pair measured by the
-  theme; anything added by hand is checked in both.
-- **One H1 per page**, from `Heading level={1}` via `PageHeader`, with an
-  optional secondary description line. Section headings are H2.
-- **Collapse, don't scroll.** Secondary table columns re-home as a muted second
-  line below `md`. Anything that grows without limit goes behind a searchable
-  picker (`Selector hasSearch`, or `Typeahead` when the server must search).
-- **Every mutation is audited**, scripts included, with a summary naming what
-  changed and to what.
-- **Ask for a permission, not a role.** `can(session, "students.manage")`,
-  never a role's name. Roles are the club's to invent and rename, so nothing in
-  the code may depend on one existing.
+Today foregrounds the current/next class and keeps unfinished attendance visible.
+Opening a class exposes Attendance and Competencies freely. Across-class and
+single-swimmer views edit one LessonDraft. Opening a class never writes defaults.
+Marks start unmarked; selecting Mark remaining present is an explicit bulk edit.
 
----
+LessonDraft stores only identifiers, edited marks and notes on this device under
+a user/club/class/date key. It batches after a pause, permits one in-flight save,
+and acknowledges immutable edit generations. Network failures retry with backoff;
+validation/permission failures pause. Version conflicts retain the draft and
+require review. Keeping local changes rebases only edited fields over the saved
+record, preserving unrelated changes and added roster entries.
 
-## Decisions taken for Swimly
+`saveLesson` validates versions and permissions, locks the course and existing
+competency results, writes changes and audit records in one transaction, and
+retains the seat lock. Confirming attendance is a separate explicit request after
+all saves succeed. `AttendanceCompletion` stores a dated roster fingerprint;
+roster, mark timestamp or note changes invalidate it, including edits from the
+older live app. Level completion, cover and enrolment remain explicit actions.
 
-### How Astryx is wired in
+## Deployment
 
-**CSS layers, declared up front.** Astryx ships its component styles as plain
-CSS in cascade layers, no build plugin. `globals.css` declares every layer in
-one line — `reset, theme, base, astryx-base, astryx-theme, components,
-utilities` — then imports Tailwind's theme and preflight, Astryx's reset, core
-and Neutral theme, the bridge, and Tailwind's utilities, in that order. That
-is what lets a `className` on an Astryx component still win. Unlayered rules
-at the bottom of the file beat everything and are kept few.
+`codex/staging-redesign` is the staging branch. Its permanent hostname is
+`swimly-staging.vercel.app`. It uses the existing database at the user's request.
+Hosted staging requires credentials, has a separate session cookie, and labels
+that changes affect live records. Main's production deployment is unchanged.
+Schema changes must be additive. Verify builds with `npx next build`; the
+repository production build command also runs migrations. Never seed live data
+or create test records merely to verify the interface.
 
-**The bridge, with the app's text sizes.** `@astryxdesign/core/tailwind-theme.css`
-turns Astryx's tokens into Tailwind utilities, including the 4px spacing
-scale and the radius scale (`rounded-md` is the 10px element radius,
-`rounded-lg` the 12px container radius). It also maps `text-sm` to Astryx's
-12px "sm", which would have shrunk every body line in the app. So the names
-keep their pixel meaning: `text-xs` 12, `text-sm` 14 (Astryx's body size),
-`text-base` 16, `text-lg` 17.
-
-**No legacy names.** The move went in two passes: first a block of aliases
-in `@theme inline` kept the old shadcn names (`text-foreground`,
-`bg-muted`…) rendering while the shell and the controls were swapped, then
-every page body was rewritten in Astryx's own components and the block was
-deleted. Nothing in `src` names a colour, a size or a radius that is not
-Astryx's, and `globals.css` is short enough to read in one go.
-
-**Figtree from fontsource.** Astryx never loads a font, and the Neutral
-theme's font token names Figtree. The root layout imports the four weights
-from `@fontsource/figtree`, so the family the token asks for is simply
-present; no variable is handed anywhere and the theme's tokens stay
-untouched.
-
-**Status is a Token; a count is a Badge.** `<Tag>` renders Astryx's
-`Token` in one of its hues, and every status colour still comes through a
-metadata map. Astryx's guidance is that a Badge is for counts, so tab counts
-and the nav's red numbers are Badges and nothing else is. Astryx has no
-brown; teal stands in.
-
-**Icons: the client draws them.** Astryx's `Icon` is a client component,
-so a server page cannot hand it a lucide component (React refuses to send a
-function across). Server pages use `AppIcon name="…"` from
-`ui-kit/app-icon.tsx`, which looks the name up on the client; client
-components use `Icon icon={Lucide}` directly. Every SVG goes through one
-of the two — never a bare lucide element.
-
-**Touch sizes, once.** Astryx sizes controls for a pointer: 28, 32, 36px. A
-thumb on a wet phone or a poolside tablet needs 44. One unlayered media rule
-in `globals.css`, for widths up to 768px and for any coarse pointer,
-gives every button, field, menu row, tab, segment, toggle, switch row,
-collapsible trigger and nav item a 44px minimum, and stretches the inner
-control of the date, time and number fields to fill the box. The class
-names are Astryx's own, from each component's theming table.
-
-**Forms are FormLayouts.** Every dialog body is a `FormLayout`; a pair of
-fields that share a row is a nested `FormLayout direction="horizontal"`.
-A date is `DateInput`, a time `TimeInput`, a number `NumberInput`,
-each behind the `Input` adapter so the plain `<form>` still posts them.
-
-**Nothing is drawn by hand.** Every heading is `Heading`, every run of words
-is `Text`, every list of records is `Table` (children mode, which is
-server-safe) or `List` with `Item`, every region is a stack or a `Section`,
-a discrete thing is a `Card`, a fold is a `Collapsible`, a notice is a
-`Banner`, a count that needs noticing is a `Badge`, a mark (present, late,
-absent; Not Achieved, Achieved) is a `SegmentedControl` — Astryx's
-control for one choice out of a few with every option visible. Competencies
-default to Not Achieved, with no third or clear option. Missing result rows
-display that default without inventing an assessor or date. Attendance defaults
-to absent until the instructor records otherwise. A
-`StatusDot` sits beside the name; a way back up
-is `Breadcrumbs`, a page centred on nothing else (sign-in) is a `Center`.
-Records are rows — `List` with `Item`, or `Table` — never a card each:
-the roles page and a swimmer's level ladder are lists with dividers, and only
-the rung they are on opens as a `Section`. Tailwind classes appear only for
-layout Astryx's props cannot express — a responsive column that hides below
-`md`, the switcher's text that hides in the phone bar — never for a
-colour, a size or a radius. The one CSS rule the app adds to Astryx's
-controls is the 44px touch minimum.
-
-### Two modes, the device decides
-
-The mode is a cookie, `swimly.theme`, read by the root layout on the server.
-It stamps `data-theme` on `<html>` (which reset.css turns into
-`color-scheme`) and seeds Astryx's `<Theme mode>`, so the first paint is
-right and hydration has nothing to disagree about. No cookie means "follow
-the device". The one-tap flip is an `IconButton` at the end of the
-`TopNav` on every device; the three-way `SegmentedControl` on the Account
-page is where "system" is restored. `next-themes` is gone.
-
-### The shell
-
-Astryx's most common layout, "Top Nav with Side Nav", on Astryx's defaults:
-`height="fill"` (the shell fills the viewport and the page scrolls inside
-the main region, so the nav and the raised content card never move) and
-`variant="elevated"` (wash-coloured nav areas, the content a raised surface
-with a rounded corner), with `contentPadding={4}`. Because the window never
-scrolls, the shell scrolls the main region back to the top on every
-navigation, which is what the browser would have done. Anything that pins to
-the bottom of the screen (the deck's save bar) is `sticky` inside that
-region, bleeding through its 16px padding. `height="auto"` was tried and
-dropped: the whole document scrolled, so the card's corner scrolled away and,
-with the "section" variant, the sticky header was unpainted. The `TopNav`
-carries the app's identity — `TopNavHeading` with the wordmark and, in its
-subheading slot (Astryx's "account context"), the club being shown — and at
-its end the club switcher (a `DropdownMenu`) and the mode flip. The
-`SideNav` holds only the screens the role may open; its footer is the
-account button: a single name row aligned with the screen items, without a
-chevron. Clicking it opens an Astryx DropdownMenu with Account and Sign out.
-Account lives here rather than in the screen list. The shell owns
-the collapsed state and replaces the name button with an account
-icon in the footer icon bar while the nav is a rail. There is
-no second `Layout` inside the shell — Astryx says one per shell — so the
-page is capped at 1152px with a `Center` and a stack. Astryx's tables,
-dividers and sections bleed to the nearest container's padding edge, which
-would be the shell's, outside that column; the column zeroes the two
-container-padding variables the bleed reads, so a table's edges line up with
-the cards and headings beside it (its cell text is then inset by the cell
-padding, as a card's text is by the card's). Row actions in a table cell are
-an `HStack` that wraps, because four 44px buttons do not fit a phone-width
-cell and a cell clips. AppShell owns the
-skip link and the `<main>` landmark; pages start at their H1. The dev
-build's "view as" bar is a `Banner status="warning" container="section"`
-in the shell's banner slot.
-
-The responsive contract, written in `app-shell.tsx`: above 768px the
-TopNav, a 256px SideNav and content; at 768px and below the SideNav becomes a
-drawer behind a toggle in the bar, and the switcher drops its text and keeps
-its icon, chevron and accessible name so the bar fits a 375px phone with
-every target 44px. Tables hide their secondary columns below `md` and
-re-home the values as a supporting line, because server components cannot
-ask `useMediaQuery` without a flash.
-
-### Fields that post: Astryx's inputs inside plain forms
-
-Every form in the app is a plain `<form>` read with `FormData` by a server
-action, and Astryx's inputs are controlled. `src/components/ui/{input,
-textarea,switch,select}.tsx` are the join: each holds the value in state,
-renders Astryx's `TextInput`, `TextArea`, `Switch` or `Selector` with
-`htmlName`, and the form posts as before. `Field` in `form-dialog.tsx` hands
-its label and hint to one of those, and wraps anything else in Astryx's
-`Field`. A date, time or number keeps the native control — the browser's
-picker is the right one on a phone — inside that same `Field`. A set of
-ticks (`CheckboxList`, `RadioList`) posts through one hidden input per
-tick. Buttons need no join: every call site is Astryx's `Button` or
-`IconButton` with its own `label`.
-
-### Toasts through one bridge
-
-Astryx hands out toasts through a hook, which is useless at the tail of a
-transition that has just awaited a server action. `src/lib/toast.tsx` keeps
-the imperative `toast.success` / `toast.error` every call site uses and one
-mounted `<ToastBridge>` carries each call to Astryx's `useToast`. Errors stay
-until dismissed, which is Astryx's default and the right one on a deck.
-
-### Dialogs keep a rich description
-
-Astryx's `AlertDialog` takes a plain-string description. A consequence here
-often carries a name in bold, so `ConfirmAction` and the take-over question
-are `Dialog purpose="form"` with a `DialogHeader`, a `Text` body and an
-`HStack` of buttons at the end. `FormDialog` is the same shape around a form.
+## Operational architecture retained
 
 ### Roles are data, permissions are code
 
@@ -463,8 +314,8 @@ register they were already on.
 The register was scoped to the instructor on the course, and cover needed an
 admin to reassign it. That held until the first evening a class went
 unmarked because the one person who could reassign had gone home. Now the
-person standing at the pool says so: opening a class that is not theirs
-asks whether they are taking it, and confirming writes a `ClassCover` row
+person standing at the pool says so: a class that is not theirs offers an
+explicit Take over action, and confirming writes a `ClassCover` row
 for that class and date — who conducted it, and whose it was — which makes
 the register and the checklist theirs to mark for the day. The register's
 audit line names the cover and the instructor covered for; every competency
@@ -477,132 +328,15 @@ register, the deck screen and the activity trail. Somebody holding
 desk copying in a paper sheet: recording it for the instructor, not taking
 it over.
 
-### Batched writes, on purpose
 
-The register and the assessment checklist each save as **one action carrying
-the whole class**. Next dispatches Server Actions one at a time per client, so
-a save per tap would queue on poolside wifi. Batching also means a dropped
-connection leaves the marks in the tab and retryable, and the register mirrors
-itself, including its class note, into `localStorage` so drafts survive a closed
-tab when browser storage is available. A warning explains when it is not.
-Register drafts are scoped to class and date; deck checklists remount when the
-class, date or level changes, while refreshes of the same record preserve edits.
-Hung saves restore a retry path after 15 seconds; a timeout does not cancel a
-server action, so the UI says the save is unconfirmed. Neither writes an
-audit row when nothing changed — the existing rows have to be read to build the
-diff anyway, so a "did that save?" re-submit costs nothing.
+## Verification checklist
 
-Attendance saves also carry the revision the instructor opened. That revision
-is derived from the class/date, saved marks and class note; it needs no schema
-column. The action reads and checks it under the same course lock used for
-enrolment and cover, then writes the register and audit together. If another
-person saved a different version, the action returns the saved values without
-writing. A focused Astryx Banner compares the saved register with the draft;
-the instructor can use the saved register or explicitly save their version.
-A second intervening save is checked again. An identical retry succeeds without
-rewriting records or adding audit rows.
-
-Version 2 browser drafts keep that original revision through refreshes and
-reloads. Older drafts remain readable, but need the comparison step before they
-can replace a saved register. Discarding a draft explicitly loads the saved
-version and refreshes the roster.
-
----
-
-## Placeholders to replace
-
-- **The metadata description** in `src/app/layout.tsx` is a placeholder
-  sentence. Replace it when the product has its own.
-- **`SCHOOL_TIMEZONE`** in `src/lib/format.ts` is `Europe/Dublin`. Everything
-  that asks "what day is it?" asks it there, not the server.
-- **The seeded curriculum** in `scripts/seed-curriculum.ts` is a plausible
-  starting point, not a recommendation. Rename it to what the club teaches.
-
----
-
-## Where things live
-
-```
-src/app/(app)/                 the signed-in shell and its pages
-src/app/sign-in/               the front door, outside the shell
-src/components/ui-kit/         shared Astryx compositions — tag, page-header,
-                               empty-state, app-shell
-src/components/ui/             Astryx adapters for native form submission
-src/components/                feature components composed from Astryx
-src/lib/<domain>/data/         reads  — plain async functions, no "use server"
-src/lib/<domain>/actions/      writes — "use server", one exported action per verb
-src/lib/<domain>/constants.ts  one metadata map per enum, plus domain vocabulary
-src/lib/authz.ts               can(), and the require* guards
-src/lib/staff/permissions.ts   the permission catalogue, and what each means
-src/lib/staff/keyholders.ts    the guard that keeps somebody able to get in
-src/lib/page-guards.ts         the page-level versions, which 404 rather than throw
-src/lib/audit.ts               logAudit — pass the tx client when it must be atomic
-src/lib/action-result.ts       the result type and the six-step action shape
-src/lib/format.ts              the pinned formatters; the only place a date is built
-scripts/                       one-off work, run with tsx, held to the app's rules
-```
-
-The domains, and who may write to each:
-
-```
-curriculum/    Programme, Level, Competency          curriculum.manage
-courses/       Course                                courses.manage
-students/      Student                               students.manage
-enrolment/     Enrolment, waitlist, the seat lock    enrolment.manage
-attendance/    AttendanceRecord, ClassNote           attendance.mark / .markAny
-progression/   CompetencyResult, LevelCompletion     progression.assess / .override
-               rules.ts — pure, neither read nor write
-activity/      the audit log                         activity.view
-staff/         User, StaffRole                        staff.manage, roles.manage
-```
-
-Reads and writes stay in separate files so a read cannot quietly grow a write.
-`rules.ts` is neither: every screen that asks "can she move up?" asks it there,
-so the app has one answer rather than one per page.
-
-### The shape of a mutating action
-
-Authorize, validate, guard, write, audit, revalidate — in that order. A guard
-that runs after the write has already lost, and an audit entry written before
-the write can describe something that never happened. The full worked shape is
-in the comment at the top of `src/lib/action-result.ts`. Persist the mutation
-and its audit entry through the same transaction. Capacity and keyholder guards
-must also run under their shared locks, after reading the current rows.
-
-Errors a person can fix are return values (`{ ok: false, error }`), rendered
-next to the field. Throwing is for "this should not have been possible".
-
-### Scripts are part of the product
-
-Idempotent, self-disabling, audited, and deliberate when destructive.
-`prisma/seed.ts` is the reference implementation: it declines once an admin
-exists, matches on the email so a second run updates rather than duplicates,
-and writes an audit row for the account it creates.
-
----
-
-## Checking your work
-
-Before calling a screen done:
-
-- It is built from Astryx components; anything drawn by hand has a reason
-  written beside it. `npx astryx component <Name>` was read for each one used.
-- One H1, from `PageHeader`.
-- Every status is a `<Tag>` (Astryx's Token) fed by a metadata map, and it
-  reads in both modes; a `Badge` is only ever a count.
-- Every icon is `Icon` in a client component or `AppIcon name` in a server
-  one; the page loads with no console error in either.
-- No colour outside the tokens: no hex, no Tailwind palette class, no name
-  from the legacy alias block in new code.
-- Every text pair 4.5:1 and every control edge 3:1, checked in light and dark
-  for anything not drawn by the theme.
-- Keyboard: Astryx's focus outline on everything focusable, the skip link
-  first, `prefers-reduced-motion` honoured.
-- Checked at 375, 768, 1024 and 1280, light and dark: 44px targets on touch,
-  nothing scrolling sideways, the phone bar's toggle on screen, 16px of
-  padding around the page.
-- Row actions carry `aria-label`s naming the verb and the row, and stay
-  reachable on touch.
-- Secondary columns collapse rather than scroll below `md`.
-- Every mutating action authorizes first, guards before writing, audits after,
-  and returns `{ ok: false, error }` for anything a person can fix.
+- One H1, clear section headings, actionable empty and failure states.
+- Shared controls, semantic tokens and consistent spacing; no library overrides.
+- Both themes at 375, 768, 1024 and 1280px; no page overflow or clipped actions.
+- Keyboard, visible focus, dialog focus restoration, 44px touch targets, reduced motion.
+- Text contrast 4.5:1 and meaningful control edges 3:1.
+- Named permissions, club scoping, atomic audit records and capacity locks retained.
+- Test rapid edits, retries, reload recovery, conflict review and explicit completion.
+- Run `npm run typecheck`, `npm run lint`, focused tests and an isolated Next build.
+- Use fictional records for screenshots. Keep real personal/medical data out of artifacts.

@@ -2,22 +2,22 @@
 
 import * as React from "react";
 import { Check, ChevronLeft, ChevronRight } from "lucide-react";
-import { Banner } from "@astryxdesign/core/Banner";
-import { Button } from "@astryxdesign/core/Button";
-import { Card } from "@astryxdesign/core/Card";
-import { Collapsible } from "@astryxdesign/core/Collapsible";
-import { IconButton } from "@astryxdesign/core/IconButton";
-import { Item } from "@astryxdesign/core/Item";
-import { List } from "@astryxdesign/core/List";
-import { HStack, StackItem, VStack } from "@astryxdesign/core/Stack";
-import { StatusDot } from "@astryxdesign/core/StatusDot";
-import { Tab, TabList } from "@astryxdesign/core/TabList";
-import { Heading, Text } from "@astryxdesign/core/Text";
+import { Banner } from "@/components/workspace/feedback";
+import { Button } from "@/components/workspace/actions";
+import { Card } from "@/components/workspace/layout";
+import { Collapsible } from "@/components/workspace/overlays";
+import { IconButton } from "@/components/workspace/actions";
+import { Item } from "@/components/workspace/layout";
+import { List } from "@/components/workspace/layout";
+import { HStack, StackItem, VStack } from "@/components/workspace/layout";
+import { StatusDot } from "@/components/workspace/feedback";
+import { Tab, TabList } from "@/components/workspace/choices";
+import { Heading, Text } from "@/components/workspace/typography";
 import {
   SegmentedControl,
   SegmentedControlItem,
-} from "@astryxdesign/core/SegmentedControl";
-import { VisuallyHidden } from "@astryxdesign/core/VisuallyHidden";
+} from "@/components/workspace/choices";
+import { VisuallyHidden } from "@/components/workspace/layout";
 import { SaveBar } from "@/components/attendance/register-form";
 import { SAVE_TIMEOUT_MS, SAVE_UNCONFIRMED_MESSAGE, withTimeout } from "@/lib/save-feedback";
 import { Num } from "@/components/ui-kit/prose";
@@ -28,7 +28,7 @@ import type {
 } from "@/generated/prisma/client";
 import { saveClassAssessment } from "@/lib/progression/actions/assess";
 import { toast } from "@/lib/toast";
-import { Icon } from "@astryxdesign/core/Icon";
+import { Icon } from "@/components/workspace/misc";
 import { ATTENDANCE_STATUS_META } from "@/lib/attendance/constants";
 import { ENROLMENT_STATUS_META, PLACEMENT_META } from "@/lib/enrolment/constants";
 

@@ -3,11 +3,11 @@
 import { ArrowUpRight } from "lucide-react";
 import { Field, FormDialog } from "@/components/form-dialog";
 import { SearchablePicker, type PickerOption } from "@/components/searchable-picker";
-import { Button } from "@astryxdesign/core/Button";
+import { Button } from "@/components/workspace/actions";
 import type { DayOfWeek } from "@/generated/prisma/client";
 import { courseLabel, placesLeft } from "@/lib/courses/constants";
 import { enrolStudent, transferEnrolment } from "@/lib/enrolment/actions/enrolment";
-import { Icon } from "@astryxdesign/core/Icon";
+import { Icon } from "@/components/workspace/misc";
 
 /** A class a swimmer could be moved into. Structurally what `getCourses`
  *  already returns, so the pages hand over the list they had loaded anyway. */

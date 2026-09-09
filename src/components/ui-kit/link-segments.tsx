@@ -1,7 +1,7 @@
 "use client";
 
 import { useRouter } from "next/navigation";
-import { SegmentedControl, SegmentedControlItem } from "@astryxdesign/core/SegmentedControl";
+import { SegmentedControl, SegmentedControlItem } from "@/components/workspace/choices";
 
 /** A segmented control whose choice lives in the URL, like the tabs do and
  *  for the same reasons: a link somebody sends carries it, and the back

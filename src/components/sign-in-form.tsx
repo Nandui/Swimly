@@ -4,24 +4,19 @@ import { useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import { signIn } from "next-auth/react";
 import { Waves } from "lucide-react";
-import { Banner } from "@astryxdesign/core/Banner";
-import { Button } from "@astryxdesign/core/Button";
-import { Card } from "@astryxdesign/core/Card";
-import { Center } from "@astryxdesign/core/Center";
-import { Divider } from "@astryxdesign/core/Divider";
-import { FormLayout } from "@astryxdesign/core/FormLayout";
-import { Icon } from "@astryxdesign/core/Icon";
-import { HStack, VStack } from "@astryxdesign/core/Stack";
-import { Heading, Text } from "@astryxdesign/core/Text";
+import { Banner } from "@/components/workspace/feedback";
+import { Button } from "@/components/workspace/actions";
+import { Card } from "@/components/workspace/layout";
+import { Center } from "@/components/workspace/layout";
+import { Divider } from "@/components/workspace/layout";
+import { FormLayout } from "@/components/workspace/layout";
+import { Icon } from "@/components/workspace/misc";
+import { HStack, VStack } from "@/components/workspace/layout";
+import { Heading, Text } from "@/components/workspace/typography";
 import { Input } from "@/components/ui/input";
 import { APP_NAME } from "@/lib/app";
 
-/** The front door, in the shape of Astryx's login page: one card, centred
- *  on the page ground.
- *
- *  `devAdminName` arrives already decided by the server: the page only passes
- *  a name when the deployment is allowed a passwordless sign-in, so the client
- *  never carries the rule and cannot be talked into showing the button. */
+
 export function SignInForm({ devAdminName }: { devAdminName: string | null }) {
   const router = useRouter();
   const [email, setEmail] = useState("");

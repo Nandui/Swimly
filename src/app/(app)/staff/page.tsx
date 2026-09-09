@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
-import { Button } from "@astryxdesign/core/Button";
-import { HStack, VStack } from "@astryxdesign/core/Stack";
+import { Button } from "@/components/workspace/actions";
+import { HStack, VStack } from "@/components/workspace/layout";
 import {
   Table,
   TableBody,
@@ -8,9 +8,9 @@ import {
   TableHeader,
   TableHeaderCell,
   TableRow,
-} from "@astryxdesign/core/Table";
-import { Heading, Text } from "@astryxdesign/core/Text";
-import { VisuallyHidden } from "@astryxdesign/core/VisuallyHidden";
+} from "@/components/workspace/layout";
+import { Heading, Text } from "@/components/workspace/typography";
+import { VisuallyHidden } from "@/components/workspace/layout";
 import { EmptyState } from "@/components/ui-kit/empty-state";
 import { PageHeader } from "@/components/ui-kit/page-header";
 import { Lead, Num } from "@/components/ui-kit/prose";

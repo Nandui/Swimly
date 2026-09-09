@@ -1,12 +1,12 @@
 "use client";
 
 import { useEffect, useRef } from "react";
-import { Banner } from "@astryxdesign/core/Banner";
-import { Button } from "@astryxdesign/core/Button";
-import { Item } from "@astryxdesign/core/Item";
-import { List } from "@astryxdesign/core/List";
-import { HStack, VStack } from "@astryxdesign/core/Stack";
-import { Text } from "@astryxdesign/core/Text";
+import { Banner } from "@/components/workspace/feedback";
+import { Button } from "@/components/workspace/actions";
+import { Item } from "@/components/workspace/layout";
+import { List } from "@/components/workspace/layout";
+import { HStack, VStack } from "@/components/workspace/layout";
+import { Text } from "@/components/workspace/typography";
 import { ATTENDANCE_STATUS_META } from "@/lib/attendance/constants";
 import type { DraftMark } from "@/lib/attendance/draft";
 import type { RegisterLine } from "@/lib/attendance/data/register";

@@ -4,6 +4,7 @@ import { DROP_OFF_STREAK } from "@/lib/attendance/constants";
 import { currentClubId } from "@/lib/clubs/current";
 import { parseDateOnly } from "@/lib/format";
 import { prisma } from "@/lib/prisma";
+import { attendanceFingerprint } from "@/lib/lesson/revision";
 import { savedRegister } from "@/lib/attendance/revision";
 
 export type RegisterLine = {
@@ -151,13 +152,21 @@ export async function getRegisterStateForDay(dayOfWeek: DayOfWeek, iso: string) 
   await requireSession();
   const date = parseDateOnly(iso);
 
-  const marked = await prisma.attendanceRecord.groupBy({
-    by: ["courseId"],
-    where: { date, course: { dayOfWeek, clubId: await currentClubId() } },
-    _count: { _all: true },
+  const courses = await prisma.course.findMany({
+    where: { dayOfWeek, clubId: await currentClubId() },
+    select: {
+      id: true,
+      attendance: { where: { date }, select: { studentId: true, status: true, note: true, markedAt: true } },
+      notes: { where: { date }, select: { note: true } },
+      attendanceCompletions: { where: { date }, select: { fingerprint: true } },
+      enrolments: { where: { status: "ACTIVE", startedOn: { lte: date }, OR: [{ endedOn: null }, { endedOn: { gte: date } }] }, select: { studentId: true } },
+    },
   });
-
-  return new Map(marked.map((row) => [row.courseId, row._count._all]));
+  const completed = courses.filter(course => {
+    const ids = [...new Set([...course.enrolments.map(row => row.studentId), ...course.attendance.map(row => row.studentId)])];
+    return course.attendanceCompletions[0]?.fingerprint === attendanceFingerprint(ids, course.attendance, course.notes[0]?.note ?? "");
+  });
+  return new Map(completed.map(course => [course.id, course.attendance.length]));
 }
 
 /** The question a swim school actually asks: who has stopped coming?

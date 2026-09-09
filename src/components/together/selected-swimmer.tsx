@@ -1,10 +1,9 @@
 "use client";
 
 import { useRouter } from "next/navigation";
-import { Token } from "@astryxdesign/core/Token";
+import { Token } from "@/components/workspace/misc";
 
-/** Astryx's linked, removable Token renders the profile link and remove
- * button as siblings, so removing a swimmer never opens their profile. */
+
 export function SelectedSwimmer({
   id,
   name,

@@ -3,14 +3,14 @@
 import * as React from "react";
 import { useRouter } from "next/navigation";
 import { UserRoundCheck } from "lucide-react";
-import { Banner } from "@astryxdesign/core/Banner";
-import { Button } from "@astryxdesign/core/Button";
-import { Dialog, DialogHeader } from "@astryxdesign/core/Dialog";
-import { HStack, VStack } from "@astryxdesign/core/Stack";
-import { Text } from "@astryxdesign/core/Text";
+import { Banner } from "@/components/workspace/feedback";
+import { Button } from "@/components/workspace/actions";
+import { Dialog, DialogHeader } from "@/components/workspace/overlays";
+import { HStack, VStack } from "@/components/workspace/layout";
+import { Text } from "@/components/workspace/typography";
 import { takeOverClass } from "@/lib/attendance/actions/cover";
 import { toast } from "@/lib/toast";
-import { Icon } from "@astryxdesign/core/Icon";
+import { Icon } from "@/components/workspace/misc";
 
 /** The question asked when somebody opens a class that is not theirs: are
  *  you taking it? Asked once, up front, because the answer changes what the

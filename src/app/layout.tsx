@@ -4,10 +4,7 @@ import { ThemeProvider } from "@/components/theme-provider";
 import { ToastBridge } from "@/lib/toast";
 import { THEME_COOKIE, parseThemeMode } from "@/lib/theme-mode";
 import { APP_NAME } from "@/lib/app";
-// Figtree is the Neutral theme's own face, named as plain "Figtree" in its
-// font tokens. Astryx never loads a font, so the files come from the
-// fontsource package, self-hosted and registered under that exact name; the
-// theme then resolves to them with no override anywhere.
+// Figtree is self-hosted; theme tokens and form controls use the same family.
 import "@fontsource/figtree/400.css";
 import "@fontsource/figtree/500.css";
 import "@fontsource/figtree/600.css";
@@ -42,8 +39,6 @@ export default async function RootLayout({ children }: LayoutProps<"/">) {
   const mode = parseThemeMode(jar.get(THEME_COOKIE)?.value);
 
   return (
-    // suppressHydrationWarning: Astryx's <Theme> keeps `data-theme` and
-    // `data-astryx-theme` on <html> in step after mount.
     <html lang="en" suppressHydrationWarning data-theme={mode === "system" ? undefined : mode}>
       <body>
         <ThemeProvider initialMode={mode}>

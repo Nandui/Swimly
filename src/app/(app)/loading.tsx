@@ -1,6 +1,6 @@
-import { Skeleton } from "@astryxdesign/core/Skeleton";
-import { HStack, StackItem, VStack } from "@astryxdesign/core/Stack";
-import { VisuallyHidden } from "@astryxdesign/core/VisuallyHidden";
+import { Skeleton } from "@/components/workspace/layout";
+import { HStack, StackItem, VStack } from "@/components/workspace/layout";
+import { VisuallyHidden } from "@/components/workspace/layout";
 
 /** What every page shows for the moment between a click and its data.
  *

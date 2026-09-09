@@ -1,14 +1,14 @@
 "use client";
 
 import { useRef, useState, type ReactNode } from "react";
-import { Avatar } from "@astryxdesign/core/Avatar";
-import { Button } from "@astryxdesign/core/Button";
-import { Heading } from "@astryxdesign/core/Heading";
-import { Icon } from "@astryxdesign/core/Icon";
-import { Link } from "@astryxdesign/core/Link";
-import { List, ListItem } from "@astryxdesign/core/List";
-import { HStack, VStack } from "@astryxdesign/core/Stack";
-import { Text } from "@astryxdesign/core/Text";
+import { Avatar } from "@/components/workspace/feedback";
+import { Button } from "@/components/workspace/actions";
+import { Heading } from "@/components/workspace/typography";
+import { Icon } from "@/components/workspace/misc";
+import { Link } from "@/components/workspace/typography";
+import { List, ListItem } from "@/components/workspace/layout";
+import { HStack, VStack } from "@/components/workspace/layout";
+import { Text } from "@/components/workspace/typography";
 import { ArrowLeft, ChevronRight } from "lucide-react";
 import { Tag } from "@/components/ui-kit/tag";
 import { STUDENT_STATUS_META, ageLabel, fullName } from "@/lib/students/constants";

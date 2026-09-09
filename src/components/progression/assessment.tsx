@@ -2,18 +2,18 @@
 
 import * as React from "react";
 import { Check, GraduationCap, Undo2 } from "lucide-react";
-import { Banner } from "@astryxdesign/core/Banner";
-import { Button } from "@astryxdesign/core/Button";
-import { IconButton } from "@astryxdesign/core/IconButton";
-import { Item } from "@astryxdesign/core/Item";
-import { List } from "@astryxdesign/core/List";
-import { HStack, VStack } from "@astryxdesign/core/Stack";
-import { StatusDot } from "@astryxdesign/core/StatusDot";
-import { Text } from "@astryxdesign/core/Text";
+import { Banner } from "@/components/workspace/feedback";
+import { Button } from "@/components/workspace/actions";
+import { IconButton } from "@/components/workspace/actions";
+import { Item } from "@/components/workspace/layout";
+import { List } from "@/components/workspace/layout";
+import { HStack, VStack } from "@/components/workspace/layout";
+import { StatusDot } from "@/components/workspace/feedback";
+import { Text } from "@/components/workspace/typography";
 import {
   SegmentedControl,
   SegmentedControlItem,
-} from "@astryxdesign/core/SegmentedControl";
+} from "@/components/workspace/choices";
 import { Field, FormDialog } from "@/components/form-dialog";
 import { Tag } from "@/components/ui-kit/tag";
 import { Textarea } from "@/components/ui/textarea";
@@ -25,7 +25,7 @@ import {
   saveAssessment,
 } from "@/lib/progression/actions/assess";
 import { toast } from "@/lib/toast";
-import { Icon } from "@astryxdesign/core/Icon";
+import { Icon } from "@/components/workspace/misc";
 import { SAVE_UNCONFIRMED_MESSAGE, withTimeout } from "@/lib/save-feedback";
 import { COMPLETION_META } from "@/lib/progression/constants";
 

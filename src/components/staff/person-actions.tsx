@@ -4,8 +4,8 @@ import * as React from "react";
 import { KeyRound, Pencil, Plus, UserCheck, UserMinus } from "lucide-react";
 import { ActionButton, ConfirmAction } from "@/components/confirm-action";
 import { Field, FormDialog } from "@/components/form-dialog";
-import { Button } from "@astryxdesign/core/Button";
-import { IconButton } from "@astryxdesign/core/IconButton";
+import { Button } from "@/components/workspace/actions";
+import { IconButton } from "@/components/workspace/actions";
 import { Input } from "@/components/ui/input";
 import { Select } from "@/components/ui/select";
 import { MIN_PASSWORD_LENGTH, permissionCountLabel } from "@/lib/staff/constants";
@@ -15,7 +15,7 @@ import {
   setPersonActive,
   updatePerson,
 } from "@/lib/staff/actions/staff";
-import { Icon } from "@astryxdesign/core/Icon";
+import { Icon } from "@/components/workspace/misc";
 
 type RoleOption = {
   id: string;

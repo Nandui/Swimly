@@ -1,10 +1,8 @@
-import { Badge } from "@astryxdesign/core/Badge";
-import { VStack } from "@astryxdesign/core/Stack";
-import { Text } from "@astryxdesign/core/Text";
+import { Badge } from "@/components/workspace/feedback";
+import { VStack } from "@/components/workspace/layout";
+import { Text } from "@/components/workspace/typography";
 
-/** The stat sentence, not a row of tiles: counts read as prose, in Astryx's
- *  secondary text, with the numbers in primary ink. Capped at a readable
- *  line, the way Astryx caps prose. */
+
 export function Lead({ children }: { children: React.ReactNode }) {
   return (
     <VStack maxWidth="65ch">
@@ -24,8 +22,7 @@ export function Num({ children }: { children: React.ReactNode }) {
   );
 }
 
-/** A count that wants noticing — attendance still to take, swimmers gone
- *  quiet. A Badge is what Astryx has for a count that carries a status. */
+
 export function Alert({
   children,
   tone = "warning",

@@ -1,40 +1,4 @@
-/* Astryx constrains the dialog and clips its inner container. Every flex
-   child between that constraint and the scrolling fields must be shrinkable. */
-.form {
-  display: flex;
-  flex-direction: column;
-  flex: 1 1 auto;
-  min-height: 0;
-  min-width: 0;
-  gap: var(--spacing-4);
-}
-
-.header,
-.footer {
-  flex-shrink: 0;
-}
-
-.body {
-  min-height: 0;
-  min-width: 0;
-  overflow-y: auto;
-  overscroll-behavior: contain;
-  /* Leave room for Astryx focus outlines inside the scroll boundary. */
-  padding: var(--spacing-1) var(--spacing-4);
-}
-
-/* Match DialogHeader's inline inset so titles, fields and actions share edges. */
-.footer {
-  padding-inline: var(--spacing-4);
-}
-
-/* Horizontal FormLayout uses implicit columns and does not wrap itself.
-   Size columns against the modal body, not the desktop viewport. */
-.body :global(.astryx-form-layout[data-direction="horizontal"]) {
-  grid-auto-flow: row;
-  grid-template-columns: repeat(auto-fit, minmax(min(100%, 14rem), 1fr));
-}
-
-.body :global(.astryx-form-layout) > * {
-  min-width: 0;
-}
+.form { display: flex; flex-direction: column; flex: 1 1 auto; min-height: 0; min-width: 0; gap: 24px; }
+.header,.footer { flex-shrink: 0; }
+.body { min-height: 0; min-width: 0; overflow-y: auto; overscroll-behavior: contain; padding: 4px; margin: -4px; }
+.body :global(.workspace-form-layout) > * { min-width: 0; }

@@ -1,10 +1,6 @@
-import { Token } from "@astryxdesign/core/Token";
+import { Token } from "@/components/workspace/misc";
 
-/** The nine colours a status may wear. Every status in the app maps onto one
- *  of these through a metadata map in the `constants.ts` of its domain under
- *  `src/lib`; no call site picks a colour. The names are the app's; the
- *  drawing is Astryx's Token, which is what Astryx has for a status or a
- *  category — a Badge is for counts. */
+
 export type TagColor =
   | "red"
   | "orange"
@@ -16,7 +12,7 @@ export type TagColor =
   | "brown"
   | "gray";
 
-/** Astryx has no brown; teal stands in and reads as its own hue. */
+
 const COLOR: Record<TagColor, "red" | "orange" | "yellow" | "green" | "blue" | "purple" | "pink" | "teal" | "gray"> = {
   red: "red",
   orange: "orange",

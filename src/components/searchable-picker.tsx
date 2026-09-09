@@ -1,7 +1,7 @@
 "use client";
 
 import * as React from "react";
-import { Selector } from "@astryxdesign/core/Selector";
+import { Selector } from "@/components/workspace/search";
 
 export type PickerOption = {
   value: string;
@@ -13,12 +13,7 @@ export type PickerOption = {
   disabled?: boolean;
 };
 
-/** The Collapse-Not-Scroll rule applied to a field: anything that grows without
- *  limit — every class, every level — goes behind a search rather than into a
- *  select that gets longer every term. Astryx's Selector with search is that.
- *
- *  It posts through a hidden input, so it works inside the same plain `<form>`
- *  as every other field. */
+
 export function SearchablePicker({
   name,
   options,

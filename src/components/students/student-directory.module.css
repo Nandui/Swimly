@@ -1,4 +1,4 @@
-/* Layout only: Astryx owns the list, controls, selection and focus treatment. */
+
 .directory {
   display: grid;
   min-width: 0;

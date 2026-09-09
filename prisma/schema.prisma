@@ -394,6 +394,7 @@ model Course {
   attendance      AttendanceRecord[]
   notes           ClassNote[]
   covers          ClassCover[]
+  attendanceCompletions AttendanceCompletion[]
   assessedResults CompetencyResult[]
 
   @@index([clubId, dayOfWeek, startMinutes])
@@ -674,4 +675,18 @@ model AssessmentBooking {
   @@unique([sessionId, studentId])
   @@index([studentId, status])
   @@index([outcomeLevelId])
+}
+
+/// Explicit confirmation that the dated roster was checked. The fingerprint
+/// includes roster membership and mark timestamps, so legacy edits also reopen it.
+model AttendanceCompletion {
+  id              String   @id @default(cuid())
+  courseId        String
+  date            DateTime @db.Date
+  fingerprint     String
+  completedAt     DateTime @default(now())
+  completedById   String?
+  completedByName String
+  course          Course   @relation(fields: [courseId], references: [id], onDelete: Restrict)
+  @@unique([courseId, date])
 }

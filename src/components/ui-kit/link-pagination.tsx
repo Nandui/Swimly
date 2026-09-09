@@ -1,7 +1,7 @@
 "use client";
 
 import { useRouter } from "next/navigation";
-import { Pagination } from "@astryxdesign/core/Pagination";
+import { Pagination } from "@/components/workspace/misc";
 
 /** Pages that live in the URL: the page number is a query parameter, so a
  *  page can be bookmarked or sent on, and the back button steps back through

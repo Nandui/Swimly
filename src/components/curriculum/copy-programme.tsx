@@ -2,10 +2,10 @@
 
 import { Copy } from "lucide-react";
 import { Field, FormDialog } from "@/components/form-dialog";
-import { Button } from "@astryxdesign/core/Button";
+import { Button } from "@/components/workspace/actions";
 import { Select } from "@/components/ui/select";
 import { copyProgramme } from "@/lib/curriculum/actions/copy";
-import { Icon } from "@astryxdesign/core/Icon";
+import { Icon } from "@/components/workspace/misc";
 
 type Club = { id: string; name: string };
 

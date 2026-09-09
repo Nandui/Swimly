@@ -1,3 +1,4 @@
+import { permitsDevSignIn } from "@/lib/deployment";
 import { prisma } from "@/lib/prisma";
 
 /** The passwordless "sign in as the admin" button, and the single question
@@ -7,7 +8,7 @@ import { prisma } from "@/lib/prisma";
  *  admin with no password — so the gate is written to fail closed. It is asked
  *  in three places: the provider is not registered without it, `authorize`
  *  re-asks before handing out an account, and the page does not render the
- *  button. Production never passes it.
+ *  button. Production and the staging redesign branch never pass it.
  *
  *  `NODE_ENV` alone is not enough here. Vercel builds **previews with
  *  `NODE_ENV=production`** too, so the check that guards the local
@@ -15,14 +16,7 @@ import { prisma } from "@/lib/prisma";
  *  is the one that distinguishes a preview from production, and it is a system
  *  variable nobody can set by hand on a deployment. */
 export function devSignInAllowed(): boolean {
-  // On Vercel, production is never eligible whatever else is configured.
-  if (process.env.VERCEL_ENV === "production") return false;
-
-  // Any other Vercel deployment — preview, or the development environment.
-  if (process.env.VERCEL_ENV) return true;
-
-  // Not on Vercel at all: a local `next dev` may, a production build may not.
-  return process.env.NODE_ENV !== "production";
+  return permitsDevSignIn();
 }
 
 /** The account the button signs you in as: the first active account that can

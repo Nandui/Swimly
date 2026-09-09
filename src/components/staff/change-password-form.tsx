@@ -3,10 +3,10 @@
 import * as React from "react";
 import { toast } from "@/lib/toast";
 import { Field } from "@/components/form-dialog";
-import { Banner } from "@astryxdesign/core/Banner";
-import { Button } from "@astryxdesign/core/Button";
-import { FormLayout } from "@astryxdesign/core/FormLayout";
-import { HStack } from "@astryxdesign/core/Stack";
+import { Banner } from "@/components/workspace/feedback";
+import { Button } from "@/components/workspace/actions";
+import { FormLayout } from "@/components/workspace/layout";
+import { HStack } from "@/components/workspace/layout";
 import { Input } from "@/components/ui/input";
 import { changeOwnPassword } from "@/lib/staff/actions/account";
 import { MIN_PASSWORD_LENGTH } from "@/lib/staff/constants";
