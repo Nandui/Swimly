@@ -1,64 +1,50 @@
-# Swimmers: option 2 implementation review
+# Today: level-led booking sheet
 
-Date: 7 September 2026
+Date: 10 September 2026
 
 final result: passed
 
-Scope: visual and component interaction review of the roster with profile preview, implemented in the existing application. Live read-only interaction checks were completed during the recovery follow-up below.
+Implemented selected option 2 in the existing Today page. No actionable P0/P1/P2 findings remain in the reviewed component.
 
-## Reference and evidence
+## Comparison evidence
 
-- Selected visual truth: `C:/Users/ferna/.codex/generated_images/01a076a0-c900-7332-87f3-32397ff77560/exec-e965c74a-a280-4adf-8f4f-12c17c21648b.png`.
-- Browser-rendered implementation: `D:/swimly/.impeccable/review/students/desktop.png`.
-- Source and capture: 1487 × 1058 pixels; implementation viewport 1487 × 1058 CSS pixels, effective screenshot density 1. No density resizing was required.
-- State: light theme, first swimmer selected, six synthetic records. The fixture renders the real directory and shared controls. Existing shell chrome is omitted from this fixture to keep real staff and swimmer information out of captures.
-- The reference and implementation were opened together in one comparison input. Roster rows, status, member number, levels, contact and profile action were readable at that size, so no separate magnified crop was needed.
-- Additional captures: `.impeccable/review/students/{light,dark}-{375,768,1024,1280}.png`, each at the named CSS width and 900px height. `mobile.png` covers a long name and multiple programme levels in the phone preview.
+- Source visual truth: D:/swimly/.impeccable/review/today-booking-sheet/selected-concept.png (the second displayed generated design).
+- Browser-rendered implementation: D:/swimly/.impeccable/review/today-booking-sheet/concept-implementation.png.
+- Both images: 1487 × 1058 pixels. Browser viewport: 1487 × 1058 CSS pixels, effective screenshot density 1. No resizing or cropping was required.
+- State: Today, expanded navigation, light theme, all filters, 16:10 on 10 September 2026, ten synthetic classes corresponding to the selected mock. The fixture renders the real TodayCalendar and AppShell, with mocked data and navigation refresh.
+- The source and implementation were opened together in the same comparison input. Level rows, class details, capacity, status and controls were readable at this size; no separate magnified crop was necessary.
+- Responsive evidence: {light,dark}-{375,768,1024,1280}.png in the same directory, at the named CSS width and 1000px height. long-1280.png and long-375.png cover long level, programme, location, class and instructor names.
 
-## Findings and comparison history
+## Comparison history
 
-No actionable P0/P1/P2 visual findings remain in the reviewed component.
+1. Initial browser inspection found the level stub collapsed to 16.4px in Astryx's children-mode table, forcing names into single-letter lines. A native colgroup now supplies structural widths; the corrected stub measured 144px. Table cells and controls still use Astryx.
+2. The first complete sheet had taller entries than the selected design and clipped the last level below the viewport. Compacting description spacing and using balanced Item density moved the last row's bottom to 947px. The final capture shows all six levels and time columns in one viewport.
+3. Long-name inspection confirmed wrapping in the row header and class entries. Four-width checks in both modes retained all 17 classes in the larger fixture, without horizontal overflow, duplicated IDs or invalid cell-header references.
 
-1. Initial review: a gap separated the filter divider from the vertical preview divider, and detail groups needed clearer separation. Fixed by grouping the filters and directory with zero gap and adding token-based detail dividers. The final desktop capture confirms connected layout boundaries and distinct detail groups.
-2. The first fixture used the body background across the content area, obscuring the selected-row treatment. Corrected the fixture to the existing shell's surface token. This was a fixture discrepancy, not an application style change.
+## Fidelity surfaces
 
-## Required fidelity surfaces
-
-- **Typography:** existing Astryx/Figtree hierarchy retained: page heading, smaller preview heading, medium-weight names and supporting metadata. The generated mock enlarges some text; retaining the established app type scale is intentional. Long names wrap, rather than clipping the action or status.
-- **Spacing/layout:** approximately 57/43 desktop columns, search aligned with the roster, avatars and statuses aligned within rows, and a single vertical divider. The list scrolls independently on desktop to handle the existing 100-record page size. Below 1024px selection replaces the list with a preview and a Back to swimmers action.
-- **Colors/tokens:** Astryx Neutral light/dark, component-provided selection and focus styles, status tags from `STUDENT_STATUS_META`, and borders from Astryx tokens. No custom palette or contrast-dependent decoration introduced.
-- **Assets/icons:** real Astryx initial avatars and Lucide icons through Astryx Icon. No raster imagery is required for the selected direction. Existing application branding remains unchanged.
-- **Copy/content:** member number follows the product's vocabulary. Search mentions member numbers; the visible Search submit action is preserved. Missing birth dates, placements and contact information are explicit. All programme placements remain visible, and a recorded phone number remains a callable link.
+- Typography: installed Figtree, Astryx headings and 14px body text; 17px level labels. Established shell and type scale retained rather than reproducing generated typography variations.
+- Spacing/layout: levels down the left, exact starts across the top, shared grid dividers, muted programme bands, compact filters alongside the date. Wider schedules continue below in chronological bands; under 640px of content width they become a time-ordered schedule. No separate class cards.
+- Colours/tokens: Astryx Neutral in both modes. Shared status metadata feeds Token colours. Muted backgrounds use the existing theme token. No custom palette, CSS file or global style changes.
+- Assets/icons: no new raster asset is needed. Existing wordmark, shell and Astryx Icon/Lucide controls remain in use.
+- Copy/content: entries retain actual time range, pool area, instructor or cover, places and attendance state. Empty cells say “No class”. Mock header counts were corrected to actual fixture counts. “Finished” labels and permission-sensitive navigation are preserved.
 
 ## Verification
 
-- `npm run typecheck`: passed.
-- `npm run lint`: passed.
-- `git diff --check`: passed after removing an extra EOF blank line.
-- Browser measurements at 375, 768, 1024 and 1280 in both themes: no document horizontal overflow. All eight captures saved; representative desktop/tablet/phone captures visually inspected.
-- Synthetic component checks: selecting another swimmer; keyboard Enter selection; missing details; long name; multiple levels; mobile preview and return focus; opening and cancelling Add swimmer without submission; selecting record 98 from a 100-row result set, with the profile link updating to that record.
-- Phone controls use the existing 44px touch styles. List rows are at least 88px high and use Astryx's enlarged clickable-row behavior.
-- Synthetic browser error log: empty at the responsive-check pass.
-- Live `/students?q=CODEX-NO-MATCH-EXAMPLE`: HTTP 200, correct title and empty-search message, no Next.js overlay observed.
+- npm run typecheck: passed.
+- npm run lint: passed.
+- npm test: all 127 tests passed, including three new booking-sheet tests.
+- git diff --check: passed.
+- Browser: 375, 768, 1024 and 1280 in light and dark; one H1 and main landmark, all classes retained, no horizontal overflow, no nested controls, valid table-header references and no duplicate IDs. Visible touch controls and class links meet the existing 44px minimum.
+- Combined filters, My classes with declared cover, refresh preserving filters, clearing filters, no-match recovery and missing details passed.
+- Jump to now focuses 16:00; keyboard Escape returns focus to Instructor. Astryx's selector retains its focus treatment.
+- Calendar-only users have no inaccessible links; desk-only users get class-detail destinations. Two classes sharing one cell remain individually reachable.
+- Empty day, empty refresh, mixed durations and Dublin midnight were checked. Sidebar collapse recalculates the available columns.
+- Browser console: no errors or warnings during completed checks.
+- Evidence details: layout-results.json, touch-results.json, functional-results.json and scenario-results.json in the review directory.
 
 ## Limits and accepted differences
 
-- Initial live interaction tests were interrupted by browser timeouts. The recovery follow-up below completed search submission, filter persistence, clearing, pagination and full-profile navigation.
-- Database-backed mutations were deliberately not tested: development and production share data. No database schema, authorization, mutation or read-query logic was changed.
-- Existing pagination remains at 100 records per page; the mock's six-row pagination was illustrative. The full-list scroll and last-record selection were checked in the fixture. Live next-page navigation was verified during recovery.
-- The existing shell and development banner remain unchanged. Screenshot comparisons assess the changed page content, not replacement app chrome.
+The preview uses synthetic data; live database rendering, production build and deployment were not run. Actual attendance writes were not exercised. No database queries, schema, permissions, mutations or Instructor screen code changed. Full-application navigation targets remain the existing routes; the synthetic fixture verifies their destinations rather than rendering the attendance workflow.
 
-## Implementation checklist
-
-- [x] Implement option 2 with existing components and data.
-- [x] Preserve named permissions and search/filter URLs.
-- [x] Verify responsive layout and preview interactions with synthetic records.
-- [x] Compare the selected image and browser capture together.
-- [x] Run type checking, lint and diff validation.
-- [x] Repeat live search/filter/profile navigation when the browser connection is available.
-
-## Runtime recovery follow-up
-
-The local Next.js process had stopped. A replacement launched inside the restricted environment returned database `EACCES` errors. Restarting it as a hidden background process with the required network access restored HTTP 200 responses. No source or database change was required for this runtime failure.
-
-Verified in the live app: 100-row directory loads; selecting a swimmer opens the preview; search submits and shows the empty state; Active preserves the search; clearing search preserves Active; next page reaches page 2 with 100 rows; Open full profile loads successfully. Returned the deliverable tab to `/students` with no test search. The final browser error log was empty and no Next.js error overlay was observed.
+The prior Swimmers review was preserved at .impeccable/review/today-booking-sheet/previous-design-qa.md before updating this latest-review file.

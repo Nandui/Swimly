@@ -99,7 +99,7 @@ each level; two sites in one app with shared staff.
 ## Capabilities and Constraints
 
 **Built and in use:** Instructor deck screen (own/all classes, time or level
-grouping, attendance and declared cover); Today calendar (all classes in start-time columns, with
+grouping, attendance and declared cover); Today calendar (a booking sheet with level rows and start-time columns, with
 pool and instructor filters, including own classes and declared cover); registers that start
 everyone absent; per-class competency checklist; eligibility, confirmed level
 completion and move-up; enrolment with a capacity lock and a reason for
@@ -120,10 +120,12 @@ change is confirmed. Today's classes open from the header; quick add, sibling
 times and assessment shortcuts remain nearby. Roles can offer Reception as a
 screen and choose it as a landing page.
 
-Today has one purpose: check the current club’s full day of classes. Time slots
-are the columns, as confirmed by the owner; classes show their end time,
-pool area, instructor or cover, places and attendance status. Earlier classes
-stay visible. The columns wrap into a chronological schedule on small screens.
+Today has one purpose: check the current club’s full day of classes. The owner
+selected a booking sheet with levels down the left, grouped by programme, and
+exact start times across the top. Classes show their end time, pool area,
+instructor or cover, places and attendance status. Multiple classes at the same
+level and time share a divided cell. Earlier classes stay visible; extra time
+columns continue below, and narrow screens use a chronological schedule.
 Opening attendance remains a separate, permission-gated action. Roles can
 offer the calendar without granting attendance permission.
 

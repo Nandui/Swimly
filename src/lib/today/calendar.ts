@@ -55,6 +55,44 @@ export function calendarSlots(courses: CalendarClass[], now: number) {
   }));
 }
 
+/** Keep the curriculum as rows, including every class sharing a level/start.
+ * IDs, rather than display names, distinguish levels in different programmes. */
+export function calendarProgrammes(courses: CalendarClass[]) {
+  type LevelRow = { level: CalendarClass["level"]; starts: Map<number, CalendarClass[]> };
+  const programmes = new Map<string, {
+    programme: CalendarClass["level"]["programme"]; levels: Map<string, LevelRow>;
+  }>();
+  for (const course of courses) {
+    const { level } = course;
+    let group = programmes.get(level.programme.id);
+    if (!group) {
+      group = { programme: level.programme, levels: new Map() };
+      programmes.set(level.programme.id, group);
+    }
+    let row = group.levels.get(level.id);
+    if (!row) {
+      row = { level, starts: new Map() };
+      group.levels.set(level.id, row);
+    }
+    const classes = row.starts.get(course.startMinutes) ?? [];
+    classes.push(course);
+    row.starts.set(course.startMinutes, classes);
+  }
+  const curriculumOrder = (a: { sortOrder: number; name: string; id: string }, b: { sortOrder: number; name: string; id: string }) =>
+    a.sortOrder - b.sortOrder || a.name.localeCompare(b.name) || a.id.localeCompare(b.id);
+  return [...programmes.values()]
+    .sort((a, b) => curriculumOrder(a.programme, b.programme))
+    .map(({ programme, levels }) => ({
+      programme,
+      levels: [...levels.values()].sort((a, b) => curriculumOrder(a.level, b.level)).map(row => {
+        for (const classes of row.starts.values()) {
+          classes.sort((a, b) => (a.location ?? "").localeCompare(b.location ?? "", "en", { numeric: true }) || a.id.localeCompare(b.id));
+        }
+        return row;
+      }),
+    }));
+}
+
 export function calendarClassHref(id: string, iso: string, access: { attendance: boolean; courses: boolean }) {
   if (access.attendance) return `/courses/${id}/class?date=${iso}&from=today`;
   return access.courses ? `/courses/${id}` : undefined;

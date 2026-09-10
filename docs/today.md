@@ -1,9 +1,17 @@
 # Today’s classes
 
 Today has one purpose: check all of the current club’s classes for today.
-The owner chose time slots as the columns. Each exact start time owns a
-column, with its classes in curriculum order. Columns wrap in chronological
-reading order as the available width decreases; all classes remain visible.
+The owner selected the level-led booking sheet (design option 2). Exact start
+times run across the top; levels run down the left, grouped by programme in
+curriculum order. A cell shows every class at that level and start, ordered by
+pool area. Empty cells say “No class”. Level and programme IDs distinguish
+records with the same name. Filters remove rows without matching classes.
+
+The sheet measures the space available inside the shell: a 144px level column
+and at least 160px per time column. Extra starts continue in another labelled
+sheet below, repeating only relevant levels. Below 640px of working space,
+classes become a chronological schedule. Sidebar resizing updates the sheet;
+all classes remain visible, and longer labels wrap rather than truncate.
 There is no horizontal scrolling, pagination, or fold hiding earlier classes.
 
 Each class shows its level/name, start and end, pool area, instructor or
@@ -48,41 +56,42 @@ screen. Attendance and enrolment actions revalidate both destinations.
 
 ## Direction contract
 
-THESIS: one complete day, organised by class start time.
+THESIS: compare one complete day by level and class start time.
 
 OWN-WORLD: the installed Astryx Neutral components, Figtree and existing shell.
-Time headers and divided class rows carry the hierarchy in both colour modes.
+Astryx Table, programme headings, level headers and divided class entries carry
+the hierarchy in both colour modes. A native colgroup supplies the structural
+column widths in Table's children mode; controls and styles remain Astryx.
 
-STORY: find a time, check its classes and availability, then open the class
+STORY: find a level and time, check its classes and availability, then open the class
 when attendance or further detail is needed.
 
-FIRST VIEWPORT: date and club, a compact filter row, then time-slot columns.
+FIRST VIEWPORT: date and club alongside compact filters, then the booking sheet.
 Running and next starts are labelled. Refresh and Jump to now sit in the header.
 
-FORM: code-led extension of Today. The owner specified time-slot columns;
-no concept roll or replacement visual identity is needed.
+FORM: the selected level-led design implemented in the existing Today page,
+using the current shell, type scale and Neutral theme.
 
 FINISH: verify filtering, timing, access and the responsive calendar using
 synthetic examples, then record the checks and preserve DESIGN.md.
 
 ## Verification
 
-- Typecheck and lint pass. All 124 tests pass, including exact time grouping,
-  mixed durations, cover filtering, legacy role compatibility, independent
-  screen access and safe return destinations.
+- Typecheck and lint pass. All 127 tests pass, including three new booking-sheet tests.
+- The booking-sheet checks cover curriculum ordering, same-name levels in
+  different programmes, simultaneous classes, exact times, mixed durations,
+  filtering, declared cover and permission-sensitive destinations.
 - The real calendar and AppShell were rendered with synthetic data. Browser
   checks cover filtering, refresh, no-match recovery, keyboard focus, class
   destinations, missing details and Dublin midnight. No database writes ran.
-- The restored Instructor page passed browser checks for My classes / All
-  classes, earlier classes, level grouping and attendance links. Its layout
-  was also checked at all four widths in both colour modes.
+- Instructor, attendance actions and database queries were not changed.
 - Checked at 375, 768, 1024 and 1280 in both light and dark: one H1 and main,
   no horizontal overflow or nested controls, and 44px touch targets. Long
   class, location and instructor names were also checked.
 - Review captures and the runnable fixture are in the ignored directory
-  `.impeccable/review/today/`. These show synthetic examples, not live records.
-- Review was performed in this task, following the project's instruction not
-  to delegate. The one Impeccable detector pass reported no findings. The
-  installed component imports, typography, spacing and status tokens were
-  checked against DESIGN.md and globals.css; neither system file changed.
+  `.impeccable/review/today-booking-sheet/`. These show synthetic examples,
+  not live records. `design-qa.md` records the selected-image comparison.
+- Review was performed without delegation. Component APIs, typography, spacing
+  and status tokens were checked against the installed Astryx documentation
+  and DESIGN.md. Neither DESIGN.md nor the global stylesheet changed.
 - Live database rendering, production build and deployment were not run.

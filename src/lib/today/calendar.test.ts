@@ -1,6 +1,6 @@
 import assert from "node:assert/strict";
 import { test } from "node:test";
-import { calendarClassHref, calendarSlots, classPhase, filterCalendarClasses, type CalendarClass } from "./calendar";
+import { calendarClassHref, calendarProgrammes, calendarSlots, classPhase, filterCalendarClasses, type CalendarClass } from "./calendar";
 
 function course(id: string, startMinutes: number, overrides: Partial<CalendarClass> = {}): CalendarClass {
   return {
@@ -50,4 +50,44 @@ test("calendar links respect the separate attendance and class-screen permission
   assert.equal(calendarClassHref("c", "2026-09-10", { attendance: true, courses: false }), "/courses/c/class?date=2026-09-10&from=today");
   assert.equal(calendarClassHref("c", "2026-09-10", { attendance: false, courses: true }), "/courses/c");
   assert.equal(calendarClassHref("c", "2026-09-10", { attendance: false, courses: false }), undefined);
+});
+
+test("the booking sheet keeps curriculum order and distinct level IDs, not arrival order or names", () => {
+  const penguins = course("penguins", 1020);
+  const starfish = course("starfish", 1080, {
+    level: { ...penguins.level, id: "starfish", name: "Starfish", sortOrder: 0 },
+  });
+  const other = course("other-programme", 900, {
+    level: { ...penguins.level, id: "other-penguins", programme: { id: "other", name: "Other programme", sortOrder: 1 } },
+  });
+  const groups = calendarProgrammes([other, penguins, starfish]);
+  assert.deepEqual(groups.map(group => group.programme.id), ["water", "other"]);
+  assert.deepEqual(groups[0].levels.map(row => row.level.id), ["starfish", "penguins"]);
+  assert.equal(groups[1].levels[0].level.id, "other-penguins");
+  assert.deepEqual(calendarProgrammes([]), []);
+});
+
+test("parallel classes share a cell without being overwritten and keep exact times and durations", () => {
+  const courses = [course("lane10", 915, { location: "Lane 10", durationMinutes: 60 }),
+    course("lane2", 915, { location: "Lane 2" }), course("later", 945)];
+  const rows = calendarProgrammes(courses)[0].levels;
+  assert.equal(rows.length, 1);
+  assert.deepEqual([...rows[0].starts.keys()], [915, 945]);
+  assert.deepEqual(rows[0].starts.get(915)?.map(c => [c.id, c.durationMinutes]), [["lane2", 30], ["lane10", 60]]);
+  assert.equal([...rows[0].starts.values()].flat().length, courses.length);
+  assert.deepEqual(courses.map(c => c.id), ["lane10", "lane2", "later"], "source order stays untouched");
+});
+
+test("filtered booking sheets show only relevant levels and retain cover classes", () => {
+  const own = course("own", 900);
+  const cover = course("cover", 930, { instructorId: "other", location: "Lane 2",
+    cover: { coverById: "teacher", coverByName: "Alex Example", instructorName: "Sam Example" },
+    level: { ...own.level, id: "starfish", name: "Starfish", sortOrder: 0 },
+  });
+  const unrelated = course("unrelated", 960, { instructorId: "other",
+    level: { ...own.level, id: "turtles", name: "Turtles", sortOrder: 2 },
+  });
+  const groups = calendarProgrammes(filterCalendarClasses([own, cover, unrelated], "all", "mine", "teacher"));
+  assert.deepEqual(groups[0].levels.map(row => row.level.id), ["starfish", "penguins"]);
+  assert.equal(groups[0].levels[0].starts.get(930)?.[0].id, "cover");
 });
