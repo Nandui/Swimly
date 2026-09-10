@@ -1,40 +1,39 @@
 "use client";
 
-import { useEffect, useRef, useState, useTransition } from "react";
+import { useEffect, useRef, useState, useTransition, type ComponentProps } from "react";
 import { useRouter } from "next/navigation";
-import { RefreshCw } from "lucide-react";
+import { CheckCircle2, CircleX, List, Table2, Users, RefreshCw } from "lucide-react";
 import { Button } from "@astryxdesign/core/Button";
 import { Icon } from "@astryxdesign/core/Icon";
-import { Item } from "@astryxdesign/core/Item";
-import { List } from "@astryxdesign/core/List";
-import { Section } from "@astryxdesign/core/Section";
 import { Selector } from "@astryxdesign/core/Selector";
 import { HStack, VStack } from "@astryxdesign/core/Stack";
-import { Table, TableBody, TableCell, TableHeader, TableHeaderCell, TableRow } from "@astryxdesign/core/Table";
-import { Heading, Text } from "@astryxdesign/core/Text";
-import { VisuallyHidden } from "@astryxdesign/core/VisuallyHidden";
+import { Text } from "@astryxdesign/core/Text";
 import { EmptyState } from "@/components/ui-kit/empty-state";
 import { PageHeader } from "@/components/ui-kit/page-header";
 import { Tag } from "@/components/ui-kit/tag";
-import { ATTENDANCE_RECORD_META } from "@/lib/attendance/constants";
 import { capacityLabel, capacityTone, courseName, formatTime, placesLeft } from "@/lib/courses/constants";
 import { formatDate, minutesNow, parseDateOnly, today } from "@/lib/format";
 import { CALENDAR_PHASE_META, calendarClassHref, calendarProgrammes, calendarSlots, classPhase, filterCalendarClasses, type CalendarClass } from "@/lib/today/calendar";
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "./table";
+import styles from "./calendar.module.css";
+
+// The owner approved this shadcn-based sheet for Today, including booking
+// blocks and scrolling within the sheet. Other screens retain Astryx.
 
 type Access = { attendance: boolean; courses: boolean };
-
 type Slot = ReturnType<typeof calendarSlots>[number];
 
-/** The booking sheet has a level stub and readable time columns. Measure the
- * working surface (including sidebar changes), not the viewport. Structural
- * budgets: 144px for levels, at least 160px per time. Below 640px use a schedule.
- * Extra starts continue in another sheet below; nothing is paginated or hidden. */
+function ViewButton(props: ComponentProps<'button'>) {
+  return <button type="button" data-slot="button" className={styles["sheet-button"]} {...props} />;
+}
+
 export function TodayCalendar({ courses, iso, initialNow, clubName, me, access }: {
   courses: CalendarClass[]; iso: string; initialNow: number; clubName: string; me: string; access: Access;
 }) {
   const router = useRouter();
   const [location, setLocation] = useState("all");
   const [instructor, setInstructor] = useState("all");
+  const [view, setView] = useState<'sheet' | 'agenda'>('sheet');
   const [now, setNow] = useState(initialNow);
   const [dateChanged, setDateChanged] = useState(false);
   const [refreshing, startRefresh] = useTransition();
@@ -48,14 +47,13 @@ export function TodayCalendar({ courses, iso, initialNow, clubName, me, access }
     observer.observe(element);
     return () => observer.disconnect();
   }, []);
-
   useEffect(() => {
     const update = () => {
       if (document.visibilityState !== "visible") return;
       const instant = new Date();
       setNow(minutesNow(instant));
       setDateChanged(today(instant) !== iso);
-      // Do not replace an open picker while staff are choosing a filter.
+      // Preserve an open filter picker while the clock continues to update.
       if (!document.querySelector('[role="listbox"]')) router.refresh();
     };
     const timer = window.setInterval(update, 60_000);
@@ -71,8 +69,6 @@ export function TodayCalendar({ courses, iso, initialNow, clubName, me, access }
   const shown = filterCalendarClasses(courses, location, instructor, me);
   const slots = calendarSlots(shown, now);
   const programmes = calendarProgrammes(shown);
-  const columns = Math.max(1, Math.floor((width - 144) / 160));
-  const bands = Array.from({ length: Math.ceil(slots.length / columns) }, (_, index) => slots.slice(index * columns, (index + 1) * columns));
   const running = shown.filter(course => classPhase(course, now) === "running").length;
   const later = shown.filter(course => classPhase(course, now) === "later").length;
   const target = slots.find(slot => slot.phase === "running") ?? slots.find(slot => slot.phase === "next");
@@ -94,135 +90,119 @@ export function TodayCalendar({ courses, iso, initialNow, clubName, me, access }
     if (!target) return;
     const heading = document.getElementById(`time-${target.start}`);
     heading?.focus({ preventScroll: true });
-    heading?.scrollIntoView({ block: "start", behavior: "instant" });
+    heading?.scrollIntoView({ block: "nearest", inline: "center", behavior: "instant" });
   };
+  const agenda = width < 600 || view === 'agenda';
 
-  return <VStack ref={surface} gap={4} className="min-w-0">
+  return <VStack ref={surface} className={styles.calendar} data-today-calendar gap={4}>
     <PageHeader title="Today’s classes"
       description={`${new Intl.DateTimeFormat("en-GB", { weekday: "long", timeZone: "UTC" }).format(parseDateOnly(iso))}, ${formatDate(parseDateOnly(iso))} · ${clubName}`}
-      actions={<HStack gap={3} wrap="wrap" vAlign="end">
-        <Selector label="Pool area" value={location} onChange={setLocation} hasSearch={locations.length > 8}
-          className="w-48 max-sm:w-full" options={[{ value: "all", label: "All pool areas" },
-            ...locations.map(value => ({ value, label: value || "Location not set" }))]} />
-        <Selector label="Instructor" value={instructor} onChange={setInstructor} hasSearch
-          className="w-56 max-sm:w-full" options={[{ value: "all", label: "All instructors" }, { value: "mine", label: "My classes" },
-            ...[...people].sort((a, b) => a[1].localeCompare(b[1])).map(([value, label]) => ({ value, label }))]} />
-        {filtered ? <Button label="Clear filters" variant="ghost" onClick={reset} /> : null}
-        {target && !dateChanged ? <Button label={running ? "Jump to now" : "Jump to next"} variant="secondary" onClick={jump} /> : null}
+      actions={<HStack gap={2} vAlign="center">
         <Button label="Refresh" variant="ghost" icon={<Icon icon={RefreshCw} size="sm" />} onClick={refresh} isLoading={refreshing} />
+        {target && !dateChanged ? <Button label={running ? "Jump to now" : "Jump to next"} onClick={jump} /> : null}
       </HStack>} />
 
-    <VisuallyHidden role="status" aria-live="polite">
-        {filtered ? `${shown.length} of ${courses.length} classes` : `${courses.length} ${courses.length === 1 ? "class" : "classes"}`}
-        {running > 0 ? ` · ${running} running now` : ""}{later > 0 ? ` · ${later} later` : ""}
-    </VisuallyHidden>
+    <section className={styles["sheet-toolbar"]} aria-label="Calendar controls">
+      <div className={styles["sheet-filters"]}>
+        <Selector label="Pool area" value={location} onChange={setLocation} hasSearch={locations.length > 8}
+          className="w-48" options={[{ value: "all", label: "All pool areas" }, ...locations.map(value => ({ value, label: value || "Location not set" }))]} />
+        <Selector label="Instructor" value={instructor} onChange={setInstructor} hasSearch className="w-56"
+          options={[{ value: "all", label: "All instructors" }, { value: "mine", label: "My classes" }, ...[...people].sort((a, b) => a[1].localeCompare(b[1])).map(([value, label]) => ({ value, label }))]} />
+        {filtered ? <Button label="Clear filters" variant="ghost" onClick={reset} /> : null}
+      </div>
+      {width >= 600 ? <div className={styles["sheet-switch"]} role="group" aria-label="Calendar display">
+        <ViewButton aria-pressed={!agenda} onClick={() => setView('sheet')}><Table2 aria-hidden="true" />Booking sheet</ViewButton>
+        <ViewButton aria-pressed={agenda} onClick={() => setView('agenda')}><List aria-hidden="true" />Agenda</ViewButton>
+      </div> : null}
+    </section>
+
+    {!dateChanged && shown.length > 0 ? <div className={styles["sheet-meta"]}>
+      <div className={styles["sheet-summary"]} role="status" aria-live="polite">
+        <strong>{filtered ? `${shown.length} of ${courses.length}` : courses.length} {courses.length === 1 ? "class" : "classes"}</strong>
+        {running > 0 ? <Tag color={CALENDAR_PHASE_META.running.color}>{`${running} running now`}</Tag> : null}
+        {later > 0 ? <span>{later} upcoming</span> : null}
+      </div>
+      <div className={styles["sheet-legend"]} aria-label="Class availability">
+        <span><CheckCircle2 aria-hidden="true" />Spaces available</span>
+        <span><CircleX aria-hidden="true" />Full</span>
+      </div>
+    </div> : null}
 
     {dateChanged ? <EmptyState icon="calendarCheck" title="A new day has started" hint="Refresh to load today’s classes." action={<Button label="Load today" onClick={refresh} isLoading={refreshing} />} />
       : shown.length === 0 ? <EmptyState icon="calendarCheck" title={courses.length ? "No classes match these filters" : "No classes today"}
         hint={courses.length ? "Clear the filters to see the full day." : "There are no weekly classes scheduled at this pool today."}
         action={filtered ? <Button label="Show all classes" onClick={reset} /> : undefined} />
-        : width < 640 ? <VStack gap={4} aria-label="Today’s class schedule">
-          {slots.map(slot => <VStack key={slot.start} gap={0} as="section" aria-labelledby={`time-${slot.start}`}>
-            <Section variant="muted" padding={3} dividers={["bottom"]}>
-              <TimeHeading slot={slot} />
-            </Section>
-            <List hasDividers aria-label={`Classes starting at ${formatTime(slot.start)}`}>
-              {slot.classes.map(course => <CalendarEntry key={course.id} course={course} now={now} iso={iso} access={access} />)}
-            </List>
-          </VStack>)}
-        </VStack> : <VStack gap={6} aria-label="Today’s class calendar">
-          {bands.map(band => <VStack key={band[0].start} gap={2}>
-            {bands.length > 1 ? <Text color="secondary" hasTabularNumbers>
-              {`Start times ${formatTime(band[0].start)}${band.length > 1 ? `–${formatTime(band[band.length - 1].start)}` : ""}`}
-            </Text> : null}
-            <Table density="compact" dividers="grid" verticalAlign="top" className="w-full table-fixed"
-              aria-label={`Today’s booking sheet, start times ${formatTime(band[0].start)} to ${formatTime(band[band.length - 1].start)}`}>
-              {/* Astryx's children mode has no column component. Native colgroup
-                  sets the structural stub width without restyling its cells. */}
-              <colgroup><col className="w-36" />{band.map(slot => <col key={slot.start} />)}</colgroup>
-              <TableHeader className="bg-muted">
-                <TableRow>
-                  <TableHeaderCell scope="col" className="align-top"><Text weight="semibold">Level</Text></TableHeaderCell>
-                  {band.map(slot => <TableHeaderCell key={slot.start} scope="col" id={`column-${slot.start}`} className="align-top">
-                    <TimeHeading slot={slot} />
-                  </TableHeaderCell>)}
-                </TableRow>
-              </TableHeader>
-              {programmes.map(({ programme, levels }) => {
-                const rows = levels.filter(row => band.some(slot => row.starts.has(slot.start)));
-                if (!rows.length) return null;
-                const groupId = `programme-${programme.id}-${band[0].start}`;
-                return <TableBody key={programme.id} aria-labelledby={groupId}>
-                  <TableRow>
-                    <TableCell colSpan={band.length + 1} className="p-0">
-                      <Section variant="muted" padding={2} paddingInline={3}>
-                        <Heading level={4} accessibilityLevel={2} color="secondary" id={groupId}>{programme.name}</Heading>
-                      </Section>
-                    </TableCell>
-                  </TableRow>
-                  {rows.map(({ level, starts }) => {
-                    const rowId = `level-${level.id}-${band[0].start}`;
-                    return <TableRow key={level.id}>
-                      <TableHeaderCell scope="row" id={rowId} className="whitespace-normal bg-muted">
-                        <Text size="lg" weight="semibold" textWrap="wrap" className="break-words">{level.name}</Text>
-                      </TableHeaderCell>
-                      {band.map(slot => {
-                        const classes = starts.get(slot.start);
-                        return <TableCell key={slot.start} headers={`${rowId} column-${slot.start}`} className="p-0">
-                          {classes ? <List hasDividers aria-label={`${level.name}, ${formatTime(slot.start)}`}>
-                            {classes.map(course => <CalendarEntry key={course.id} course={course} now={now} iso={iso} access={access} sheet />)}
-                          </List> : <VStack padding={3}><Text color="secondary">No class</Text></VStack>}
-                        </TableCell>;
-                      })}
-                    </TableRow>;
-                  })}
-                </TableBody>;
-              })}
-            </Table>
-          </VStack>)}
-        </VStack>}
+        : agenda ? <section className={styles["agenda"]} aria-label="Today’s class schedule">
+          {slots.map(slot => <section key={slot.start} aria-labelledby={`time-${slot.start}`}>
+            <header className={styles["agenda-time"]}><TimeHeading slot={slot} /><Text color="secondary">{slot.classes.length} {slot.classes.length === 1 ? 'class' : 'classes'}</Text></header>
+            <ul className={styles["agenda-list"]}>{slot.classes.map(course => <li key={course.id}><Booking course={course} now={now} iso={iso} access={access} agenda /></li>)}</ul>
+          </section>)}
+        </section> : <section className={styles["sheet-scroll"]} aria-label="Today’s booking sheet. Scroll for more times and levels." tabIndex={0}>
+          <Table aria-label="Today’s booking sheet" style={{ minWidth: 136 + slots.length * 144 }}>
+            <colgroup><col />{slots.map(slot => <col key={slot.start} />)}</colgroup>
+            <TableHeader><TableRow>
+              <TableHead scope="col">Level / time</TableHead>
+              {slots.map(slot => <TableHead key={slot.start} scope="col" id={`column-${slot.start}`} data-phase={slot.phase}>
+                <TimeHeading slot={slot} /><span className={styles["sheet-time-count"]}>{slot.classes.length} {slot.classes.length === 1 ? 'class' : 'classes'}</span>
+              </TableHead>)}
+            </TableRow></TableHeader>
+            {programmes.map(({ programme, levels }) => <TableBody key={programme.id} aria-labelledby={`programme-${programme.id}`}>
+              <TableRow className={styles["programme"]}><TableHead colSpan={slots.length + 1} scope="rowgroup">
+                <div className={styles["programme-title"]}><h2 id={`programme-${programme.id}`}>{programme.name}</h2><small>{levels.length} {levels.length === 1 ? 'level' : 'levels'}</small></div>
+              </TableHead></TableRow>
+              {levels.map(({ level, starts }) => <TableRow key={level.id}>
+                <TableHead scope="row" id={`level-${level.id}`}>
+                  <span className={styles["level-name"]}>{level.name}</span>
+                  <span className={styles["level-count"]}>{[...starts.values()].flat().length} {[...starts.values()].flat().length === 1 ? 'class' : 'classes'}</span>
+                </TableHead>
+                {slots.map(slot => {
+                  const classes = starts.get(slot.start);
+                  return <TableCell key={slot.start} headers={`level-${level.id} column-${slot.start}`} data-empty={!classes}>
+                    {classes ? <ul className={styles["booking-list"]} aria-label={`${level.name}, ${formatTime(slot.start)}`}>
+                      {classes.map(course => <li key={course.id}><Booking course={course} now={now} iso={iso} access={access} /></li>)}
+                    </ul> : <><span aria-hidden="true">—</span><span className={styles["sr-only"]}>No class</span></>}
+                  </TableCell>;
+                })}
+              </TableRow>)}
+            </TableBody>)}
+          </Table>
+        </section>}
   </VStack>;
 }
 
 function TimeHeading({ slot }: { slot: Slot }) {
-  const phase = CALENDAR_PHASE_META[slot.phase];
-  return <VStack gap={1} paddingBlock={1} hAlign="start">
-    <Heading level={3} accessibilityLevel={2} id={`time-${slot.start}`} tabIndex={-1} className="scroll-mt-4">{formatTime(slot.start)}</Heading>
-    <Text color="secondary" hasTabularNumbers>{slot.classes.length} {slot.classes.length === 1 ? "class" : "classes"}</Text>
-    {slot.phase !== "later" ? <Tag color={phase.color}>{phase.label}</Tag> : null}
-  </VStack>;
+  return <div className={styles["sheet-time"]}>
+    <h2 id={`time-${slot.start}`} tabIndex={-1}>{formatTime(slot.start)}</h2>
+    {slot.phase === 'running' ? <Tag color={CALENDAR_PHASE_META.running.color}>Now</Tag> : slot.phase === 'next' ? <Tag color={CALENDAR_PHASE_META.next.color}>Next</Tag> : null}
+  </div>;
 }
 
-function CalendarEntry({ course, now, iso, access, sheet = false }: { course: CalendarClass; now: number; iso: string; access: Access; sheet?: boolean }) {
+function Booking({ course, now, iso, access, agenda = false }: { course: CalendarClass; now: number; iso: string; access: Access; agenda?: boolean }) {
   const phase = classPhase(course, now);
   const name = courseName(course);
   const href = calendarClassHref(course.id, iso, access);
   const tone = capacityTone(course.enrolled, course.capacity);
   const free = placesLeft(course.enrolled, course.capacity);
-  const location = course.location || "Location not set";
-  const customName = name !== course.level.name;
-  const attendance = course.attendanceTaken ? ATTENDANCE_RECORD_META.taken : phase === "finished" ? ATTENDANCE_RECORD_META.notTaken : null;
-  return <Item as="li" density={sheet ? "balanced" : "spacious"} href={href} className="min-w-0"
-    aria-label={href ? `${access.attendance ? "Open attendance" : "Open class"}: ${name}, ${formatTime(course.startMinutes)}, ${course.location || "location not set"}` : undefined}
-    label={<HStack gap={2} hAlign="between" vAlign="start">
-      <Text weight="semibold" className="break-words">
-        {href ? <VisuallyHidden>{`${access.attendance ? "Open attendance" : "Open class"}: ${sheet ? `${name}, ${formatTime(course.startMinutes)}, ` : ""}`}</VisuallyHidden> : null}
-        {sheet ? location : name}
-      </Text>
-      {href && !sheet ? <Icon icon="chevronRight" size="sm" /> : null}
-    </HStack>}
-    description={<VStack gap={sheet ? 0 : 1} paddingBlockStart={sheet ? 0 : 1}>
-      {customName ? <Text color="secondary" className="break-words">{sheet ? name : course.level.name}</Text> : null}
-      {!sheet ? <Text>{location}</Text> : null}
-      <Text color="secondary" className="break-words">{course.cover ? `${course.cover.coverByName} · Cover` : course.instructor?.name || "No instructor assigned"}</Text>
-      <Text color="secondary" hasTabularNumbers>{formatTime(course.startMinutes)}–{formatTime(course.startMinutes + course.durationMinutes)}</Text>
-      <HStack gap={1} wrap="wrap" vAlign="center">
-        <Text color="secondary" hasTabularNumbers>{capacityLabel(course.enrolled, course.capacity)}</Text>
-        {tone ? <Tag color={tone.color}>{tone.label}</Tag> : free !== null ? <Text color="secondary">· {free} free</Text> : null}
-      </HStack>
-      <HStack gap={1} wrap="wrap">
-        {phase === "running" ? <Tag color={CALENDAR_PHASE_META.running.color}>{CALENDAR_PHASE_META.running.label}</Tag> : null}
-        {attendance ? <Tag color={attendance.color}>{attendance.label}</Tag> : null}
-      </HStack>
-    </VStack>} />;
+  // Null is uncapped in Swimly; full and over-capacity classes have no places.
+  const available = free === null || free > 0;
+  const availability = available
+    ? free === null ? 'Spaces available · uncapped' : `${free} ${free === 1 ? 'space' : 'spaces'} available`
+    : tone && course.capacity !== null && course.enrolled > course.capacity ? `Full · ${tone.label} capacity` : 'Full · no spaces available';
+  const AvailabilityIcon = available ? CheckCircle2 : CircleX;
+  const location = course.location || 'Location not set';
+  const content = <>
+    <span className={styles["booking-title"]}><span>{agenda ? name : location}</span>
+      <span className={styles["booking-availability"]} data-available={available} role="img" aria-label={availability} title={availability}><AvailabilityIcon aria-hidden="true" /></span>
+    </span>
+    {agenda ? <span className={styles["booking-subtitle"]}>{location}</span> : name !== course.level.name ? <span className={styles["booking-subtitle"]}>{name}</span> : null}
+    <span className={styles["booking-subtitle"]}>{course.cover ? `${course.cover.coverByName} · Cover` : course.instructor?.name || 'No instructor assigned'}</span>
+    <span className={styles["booking-time"]}>{formatTime(course.startMinutes)}–{formatTime(course.startMinutes + course.durationMinutes)}</span>
+    <span className={styles["booking-capacity"]}>
+      <span className={styles["booking-places"]} title={`${capacityLabel(course.enrolled, course.capacity)} swimmers`}><Users aria-hidden="true" /><span aria-hidden="true">{course.capacity === null ? course.enrolled : `${course.enrolled}/${course.capacity}`}</span><span className={styles["sr-only"]}>{capacityLabel(course.enrolled, course.capacity)} swimmers</span></span>
+      <span className={styles["booking-free"]}>{course.capacity !== null && course.enrolled > course.capacity ? `${course.enrolled - course.capacity} over capacity` : free !== null ? `${free} free` : 'Uncapped'}</span>
+    </span>
+    {agenda && phase === 'running' ? <span className={styles["booking-status"]}><Tag color={CALENDAR_PHASE_META.running.color}>Running now</Tag></span> : null}
+  </>;
+  return href ? <a className={styles.booking} data-slot="booking" data-phase={phase} href={href} aria-label={`${access.attendance ? 'Open attendance' : 'Open class'}: ${name}, ${formatTime(course.startMinutes)}, ${location}, ${availability}${phase === 'running' ? ', running now' : ''}`}>{content}</a>
+    : <article className={styles.booking} data-slot="booking" data-phase={phase} aria-label={`${name}, ${formatTime(course.startMinutes)}, ${location}, ${availability}`}>{content}</article>;
 }

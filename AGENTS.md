@@ -46,8 +46,14 @@ The look is **Astryx** (`@astryxdesign/core`, Meta's open design system),
 **Neutral** theme, light and dark from one set of tokens, following the
 device. It is a component library: use its components — AppShell, Button,
 TextInput, Selector, Typeahead, Dialog, Banner, Badge, Text, Heading — and its
-tokens, and keep Tailwind for layout. Before using a component, read its
-documentation from the installed version, never from memory:
+tokens, and keep Tailwind for layout.
+
+Today has an owner-approved shadcn booking-sheet exception, documented in
+DESIGN.md: its table, booking blocks, view controls and scoped CSS keep the
+shared Neutral tokens. Preserve that approved design when editing Today.
+
+Before using an Astryx component, read its documentation from the installed
+version, never from memory:
 
 ```bash
 npx astryx component <Name>        # props, examples, theming surface

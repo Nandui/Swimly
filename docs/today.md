@@ -4,20 +4,24 @@ Today has one purpose: check all of the current club’s classes for today.
 The owner selected the level-led booking sheet (design option 2). Exact start
 times run across the top; levels run down the left, grouped by programme in
 curriculum order. A cell shows every class at that level and start, ordered by
-pool area. Empty cells say “No class”. Level and programme IDs distinguish
+pool area. Empty cells show a quiet dash with accessible “No class” text. Level and programme IDs distinguish
 records with the same name. Filters remove rows without matching classes.
 
-The sheet measures the space available inside the shell: a 144px level column
-and at least 160px per time column. Extra starts continue in another labelled
-sheet below, repeating only relevant levels. Below 640px of working space,
-classes become a chronological schedule. Sidebar resizing updates the sheet;
-all classes remain visible, and longer labels wrap rather than truncate.
-There is no horizontal scrolling, pagination, or fold hiding earlier classes.
+The sheet measures the space available inside the shell: a 136px level column
+and at least 144px per time column. One continuous sheet scrolls within its
+bounded region, keeping time headers and level labels visible. Staff can
+switch between Booking sheet and Agenda. Below 600px of working space,
+classes use Agenda automatically. Sidebar resizing updates the layout;
+all classes remain reachable, and longer labels wrap rather than truncate.
+There is no pagination or fold hiding earlier classes.
 
 Each class shows its level/name, start and end, pool area, instructor or
-declared cover, occupied and available places, and recorded attendance status.
-Longer classes keep their actual end time. Only a saved attendance record
-counts as attendance taken. Weekly classes are the scope; dated assessment
+declared cover, occupied and available places. A circled check means spaces
+are available; a circled X means full, replacing the Full pill. Both icons
+have accessible descriptions and a visible legend. Null capacity means
+uncapped and therefore available. Over-capacity classes use the full icon
+with an explicit over-capacity count. Attendance-completion markers are not
+shown. Longer classes keep their actual end time. Weekly classes are the scope; dated assessment
 sessions stay on Assessments.
 
 All instructors and pool areas are selected initially. Filters include My
@@ -58,26 +62,26 @@ screen. Attendance and enrolment actions revalidate both destinations.
 
 THESIS: compare one complete day by level and class start time.
 
-OWN-WORLD: the installed Astryx Neutral components, Figtree and existing shell.
-Astryx Table, programme headings, level headers and divided class entries carry
-the hierarchy in both colour modes. A native colgroup supplies the structural
-column widths in Table's children mode; controls and styles remain Astryx.
+OWN-WORLD: a shadcn-derived table and booking blocks within the existing
+Astryx Neutral shell and Figtree typography. A CSS Module scopes the approved
+calendar styles; the filters and shared controls retain Astryx. DESIGN.md
+records this screen-specific exception, including scrolling and capacity icons.
 
 STORY: find a level and time, check its classes and availability, then open the class
 when attendance or further detail is needed.
 
-FIRST VIEWPORT: date and club alongside compact filters, then the booking sheet.
+FIRST VIEWPORT: date and club above the filter toolbar, then the booking sheet.
 Running and next starts are labelled. Refresh and Jump to now sit in the header.
 
 FORM: the selected level-led design implemented in the existing Today page,
 using the current shell, type scale and Neutral theme.
 
 FINISH: verify filtering, timing, access and the responsive calendar using
-synthetic examples, then record the checks and preserve DESIGN.md.
+synthetic examples, then record the checks against DESIGN.md's approved exception.
 
 ## Verification
 
-- Typecheck and lint pass. All 127 tests pass, including three new booking-sheet tests.
+- Typecheck and lint pass. All 127 tests pass, including the seven calendar checks.
 - The booking-sheet checks cover curriculum ordering, same-name levels in
   different programmes, simultaneous classes, exact times, mixed durations,
   filtering, declared cover and permission-sensitive destinations.
@@ -86,12 +90,13 @@ synthetic examples, then record the checks and preserve DESIGN.md.
   destinations, missing details and Dublin midnight. No database writes ran.
 - Instructor, attendance actions and database queries were not changed.
 - Checked at 375, 768, 1024 and 1280 in both light and dark: one H1 and main,
-  no horizontal overflow or nested controls, and 44px touch targets. Long
+  no overflow outside the sheet or nested controls, and 44px touch targets. Long
   class, location and instructor names were also checked.
 - Review captures and the runnable fixture are in the ignored directory
-  `.impeccable/review/today-booking-sheet/`. These show synthetic examples,
-  not live records. `design-qa.md` records the selected-image comparison.
+  `.impeccable/review/today-refined/`. These show synthetic examples,
+  not live records. `design-qa.md` records the approved-preview comparison.
 - Review was performed without delegation. Component APIs, typography, spacing
-  and status tokens were checked against the installed Astryx documentation
-  and DESIGN.md. Neither DESIGN.md nor the global stylesheet changed.
-- Live database rendering, production build and deployment were not run.
+  and status tokens follow the shared Neutral theme. DESIGN.md records the
+  approved shadcn exception; the global stylesheet did not change.
+- `npx next build` passes. Live database rendering and register writes were
+  not exercised. The application's migration-running build script was not used.

@@ -1,50 +1,65 @@
-# Today: level-led booking sheet
+# Today: approved shadcn booking sheet
 
-Date: 10 September 2026
+Date: 11 September 2026
 
-final result: passed
+Result: passed. The owner approved the revised preview, including availability
+icons, and requested a push to dev.
 
-Implemented selected option 2 in the existing Today page. No actionable P0/P1/P2 findings remain in the reviewed component.
+## Implementation
 
-## Comparison evidence
+Today uses the approved programme/level rows and exact start-time columns,
+with distinct booking blocks, quiet empty cells, sticky headers and level
+labels. Scrolling stays within the sheet. Agenda is selectable on larger
+screens and automatic when the working surface is narrower than 600px.
 
-- Source visual truth: D:/swimly/.impeccable/review/today-booking-sheet/selected-concept.png (the second displayed generated design).
-- Browser-rendered implementation: D:/swimly/.impeccable/review/today-booking-sheet/concept-implementation.png.
-- Both images: 1487 × 1058 pixels. Browser viewport: 1487 × 1058 CSS pixels, effective screenshot density 1. No resizing or cropping was required.
-- State: Today, expanded navigation, light theme, all filters, 16:10 on 10 September 2026, ten synthetic classes corresponding to the selected mock. The fixture renders the real TodayCalendar and AppShell, with mocked data and navigation refresh.
-- The source and implementation were opened together in the same comparison input. Level rows, class details, capacity, status and controls were readable at this size; no separate magnified crop was necessary.
-- Responsive evidence: {light,dark}-{375,768,1024,1280}.png in the same directory, at the named CSS width and 1000px height. long-1280.png and long-375.png cover long level, programme, location, class and instructor names.
+A circled check means spaces available; a circled X means full. Both have
+accessible labels and a visible legend, including on phones. Uncapped classes
+are available; over-capacity classes remain full and show the excess count.
+Attendance completion does not drive icons and is not shown in the calendar.
+Counts, cover, actual end times and existing class destinations are retained.
 
-## Comparison history
+The table is derived from shadcn/ui. A CSS Module isolates the approved
+calendar styles. Shared Neutral tokens, Figtree, the shell, Astryx filters
+and shared buttons remain. DESIGN.md and AGENTS.md record this scoped
+exception. No global stylesheet, dependency, database query, permission,
+mutation or Instructor workflow changed.
 
-1. Initial browser inspection found the level stub collapsed to 16.4px in Astryx's children-mode table, forcing names into single-letter lines. A native colgroup now supplies structural widths; the corrected stub measured 144px. Table cells and controls still use Astryx.
-2. The first complete sheet had taller entries than the selected design and clipped the last level below the viewport. Compacting description spacing and using balanced Item density moved the last row's bottom to 947px. The final capture shows all six levels and time columns in one viewport.
-3. Long-name inspection confirmed wrapping in the row header and class entries. Four-width checks in both modes retained all 17 classes in the larger fixture, without horizontal overflow, duplicated IDs or invalid cell-header references.
+## Evidence
 
-## Fidelity surfaces
+- Approved visual: `.impeccable/review/today-refined/availability-preview.png`.
+- Integrated component: `.impeccable/review/today-refined/integrated.png`.
+- Both captures use a 1487 × 1058 CSS viewport and synthetic classes. The
+  fixture now imports `src/components/today/calendar.tsx` and includes its
+  compiled CSS Module, rather than rendering the disposable prototype.
+- Responsive captures: `integrated-{light,dark}-{375,768,1024,1280}.png` in
+  the same ignored review directory. JSON results are in `integrated-results.json`.
+- The previous Astryx review is preserved as `previous-astryx-design-qa.md`
+  in that directory.
 
-- Typography: installed Figtree, Astryx headings and 14px body text; 17px level labels. Established shell and type scale retained rather than reproducing generated typography variations.
-- Spacing/layout: levels down the left, exact starts across the top, shared grid dividers, muted programme bands, compact filters alongside the date. Wider schedules continue below in chronological bands; under 640px of content width they become a time-ordered schedule. No separate class cards.
-- Colours/tokens: Astryx Neutral in both modes. Shared status metadata feeds Token colours. Muted backgrounds use the existing theme token. No custom palette, CSS file or global style changes.
-- Assets/icons: no new raster asset is needed. Existing wordmark, shell and Astryx Icon/Lucide controls remain in use.
-- Copy/content: entries retain actual time range, pool area, instructor or cover, places and attendance state. Empty cells say “No class”. Mock header counts were corrected to actual fixture counts. “Finished” labels and permission-sensitive navigation are preserved.
+## Checks
 
-## Verification
+- `npm run typecheck`: passed.
+- `npm run lint`: passed.
+- `npm test`: all 127 passed.
+- `npx next build`: passed, including compilation, TypeScript, and page generation.
+- `git diff --check`: passed.
+- At 375, 768, 1024 and 1280 in both modes: all 10 concept classes retained,
+  7 available icons and 3 full icons, one H1 and main, valid table-header
+  references, no overflow outside the sheet, and 44px touch targets.
+- Agenda retains the classes. Lane 3 filters to 4; refresh retains 4;
+  combining My classes gives 1; clearing returns all 10. Jump focuses 16:00.
+  Keyboard focus on the scroll region has a visible outline.
+- Empty data shows the empty state. Calendar-only access has no booking
+  links; Classes access has class-detail links. Long/missing labels, parallel
+  classes, uncapped capacity and over-capacity retain the correct records
+  and availability signals.
+- Availability icons use the primary theme foreground. Secondary text and
+  icons were checked against their surfaces in both colour modes.
+- Browser errors and warnings: none during the completed checks.
 
-- npm run typecheck: passed.
-- npm run lint: passed.
-- npm test: all 127 tests passed, including three new booking-sheet tests.
-- git diff --check: passed.
-- Browser: 375, 768, 1024 and 1280 in light and dark; one H1 and main landmark, all classes retained, no horizontal overflow, no nested controls, valid table-header references and no duplicate IDs. Visible touch controls and class links meet the existing 44px minimum.
-- Combined filters, My classes with declared cover, refresh preserving filters, clearing filters, no-match recovery and missing details passed.
-- Jump to now focuses 16:00; keyboard Escape returns focus to Instructor. Astryx's selector retains its focus treatment.
-- Calendar-only users have no inaccessible links; desk-only users get class-detail destinations. Two classes sharing one cell remain individually reachable.
-- Empty day, empty refresh, mixed durations and Dublin midnight were checked. Sidebar collapse recalculates the available columns.
-- Browser console: no errors or warnings during completed checks.
-- Evidence details: layout-results.json, touch-results.json, functional-results.json and scenario-results.json in the review directory.
+## Limits
 
-## Limits and accepted differences
-
-The preview uses synthetic data; live database rendering, production build and deployment were not run. Actual attendance writes were not exercised. No database queries, schema, permissions, mutations or Instructor screen code changed. Full-application navigation targets remain the existing routes; the synthetic fixture verifies their destinations rather than rendering the attendance workflow.
-
-The prior Swimmers review was preserved at .impeccable/review/today-booking-sheet/previous-design-qa.md before updating this latest-review file.
+Browser checks use synthetic data and mocked navigation refresh. Real class
+destinations are verified as links; live database rendering and attendance
+writes were not exercised. The migration-running `npm run build` wrapper
+was not invoked; the optimized Next.js build ran directly.

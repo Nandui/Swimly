@@ -62,6 +62,27 @@ makes Swimly stop looking like itself.
 
 ## Decisions taken for Swimly
 
+### Today booking sheet: approved shadcn exception
+
+On 11 September 2026 the owner approved the revised Today preview and asked
+for it to be pushed to dev. Today uses a shadcn-derived semantic Table,
+booking blocks and sheet/agenda view controls. Its CSS Module scopes those
+styles to Today and retains Neutral colours, Figtree, spacing and radii.
+The shell, filters, shared buttons and other screens keep Astryx.
+
+The sheet retains one continuous day with sticky time headers and level
+labels, allowing scrolling inside its bounded region. Phones use Agenda.
+This is the approved exception to collapse-without-scrolling and record-row
+styling. Availability uses monochrome Lucide circled-check/circled-X icons
+with accessible labels and a visible legend: check means spaces available,
+X means full. Attendance completion does not determine these icons and is
+not shown in the calendar. Uncapped classes are available; over-capacity
+classes remain full with an explicit count. Other status tokens are unchanged.
+
+The view controls, booking links and scroll region use a visible focus
+outline; touch targets retain the 44px minimum, including coarse pointers.
+This exception does not change permissions, mutations or other pages.
+
 ### How Astryx is wired in
 
 **CSS layers, declared up front.** Astryx ships its component styles as plain

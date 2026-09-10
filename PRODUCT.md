@@ -123,9 +123,11 @@ screen and choose it as a landing page.
 Today has one purpose: check the current club’s full day of classes. The owner
 selected a booking sheet with levels down the left, grouped by programme, and
 exact start times across the top. Classes show their end time, pool area,
-instructor or cover, places and attendance status. Multiple classes at the same
-level and time share a divided cell. Earlier classes stay visible; extra time
-columns continue below, and narrow screens use a chronological schedule.
+instructor or cover and places. A circled check means spaces are available;
+a circled X means full. Attendance completion does not drive this signal.
+Multiple classes at the same level and time share a cell. Earlier classes
+remain in one scrollable sheet with sticky time and level headers. Staff can
+switch to Agenda; phones use that chronological view automatically.
 Opening attendance remains a separate, permission-gated action. Roles can
 offer the calendar without granting attendance permission.
 
