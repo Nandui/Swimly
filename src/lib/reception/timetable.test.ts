@@ -1,6 +1,6 @@
 import assert from "node:assert/strict";
 import { test } from "node:test";
-import { groupReceptionClasses, receptionAvailability, receptionTimeStatus, receptionHref, type ReceptionClass } from "./timetable";
+import { groupReceptionClasses, partitionReceptionClasses, receptionAvailability, receptionTimeStatus, receptionHref, type ReceptionClass } from "./timetable";
 
 function course(id: string, time: number, level: string, order: number, programme = "swimming"): ReceptionClass {
   return {
@@ -51,4 +51,21 @@ test("availability makes full and unlimited classes explicit without negative fr
   assert.equal(receptionAvailability(5, 10), "5 enrolled · 5 places free");
   assert.equal(receptionAvailability(12, 10), "12 enrolled · Full");
   assert.equal(receptionAvailability(4, null), "4 enrolled · No capacity limit");
+});
+
+test("running classes include their start and exclude their end, even with mixed durations", () => {
+  const rows = [course("next", 990, "Stage 2", 1), course("ended", 930, "Stage 1", 0),
+    { ...course("long", 930, "Stage 1", 0), durationMinutes: 60 }, course("starting", 960, "Stage 1", 0)];
+  const split = partitionReceptionClasses(rows, 960);
+  assert.deepEqual(split.running.map(row => row.id), ["long", "starting"]);
+  assert.deepEqual(split.earlier.map(row => row.id), ["ended"]);
+  assert.deepEqual(split.upcoming.map(row => row.id), ["next"]);
+  assert.equal(split.running.length + split.earlier.length + split.upcoming.length, rows.length);
+});
+
+test("the desk can show the whole day before opening and after the last class finishes", () => {
+  const rows = [course("first", 900, "Stage 1", 0), course("last", 960, "Stage 2", 1)];
+  assert.deepEqual(partitionReceptionClasses(rows, 899), { running: [], upcoming: rows, earlier: [] });
+  assert.deepEqual(partitionReceptionClasses(rows, 990), { running: [], upcoming: [], earlier: rows });
+  assert.deepEqual(partitionReceptionClasses([], 960), { running: [], upcoming: [], earlier: [] });
 });

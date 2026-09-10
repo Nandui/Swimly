@@ -1,46 +1,34 @@
 # Reception
 
-Reception is a dedicated desk page at `/reception`, with four independent cards:
+Reception is a dedicated desk page at `/reception`, with classes leading the view:
 
-- Active and inactive swimmer lookup by name or member number.
-- Selected swimmer details with contacts and current class and waitlist places.
-  Profile and enrolment buttons
-  appear directly below the swimmer's identity.
-  Each place shows its time, level, location and instructor, with today's cover
-  where applicable. Move, unenrol, enrol and profile actions stay beside the record.
-- Today's timetable grouped by time or curriculum level, with parallel classes,
-  cover instructors and occupied places. Its header holds the class count,
-  classes running now, next start and explicit refresh.
-- Quick links to add a new swimmer, browse all swimmers, the full timetable, sibling matching and
-  assessment bookings.
-
-When two 440px regions fit, search and Quick links share the top row; swimmer
-details and today's timetable share the row below. Top-row cards align in height;
-the detailed cards fit their content. Every card uses Astryx `elevation="low"`
-to separate it from the page, with the same spacing-token padding and gaps.
-Elevation comes from the Neutral theme, including its dark-mode values. Class
-collections remain compact rows inside their widget, without nested cards.
-On narrower screens, the order is search, Quick links, swimmer details, timetable.
-Sticky section buttons keep the workspace reachable without scrolling through
-the selected swimmer. Swimmer jumps to the details when selected, otherwise to
-search. Buttons move focus to the chosen section heading. The DOM
-follows the same task order. Timetable rows place availability and actions beside the class details
-when their container has room, and stack them below on narrow screens.
-
-Timetable rows identify running, next, later and finished classes using status
-tokens and state available places explicitly. All day / Now and next filters
-combine with time/level grouping. The snapshot refreshes every minute and on
-return to the page, except while a dialog or text input is in use.
+- Today's timetable takes the main column. Time grouping shows running and
+  upcoming classes first, with earlier classes expandable. After the last class,
+  the earlier section starts open. Level grouping shows the whole day's ladder.
+  Class end times determine which section each row belongs to, including when
+  parallel classes have different durations. Each accessible class links to its
+  existing detail page and roster.
+- Active and inactive swimmer search and Add swimmer stay at the top. Quick add
+  uses the existing form and selects the created swimmer after the audited save.
+- The desktop desk panel holds sibling-time, assessment and class-finder
+  shortcuts, followed by the selected swimmer's current class and waitlist places.
+  Each place keeps its time, level, location, instructor and explicit cover, plus
+  the existing move, scheduled unenrolment, waitlist promotion, enrol and profile
+  actions.
+- On phones, booking shortcuts form a compact row above the timetable. Secondary
+  class columns fold beneath the class name. Counts, the snapshot time and an
+  explicit refresh replace the separate statistics tile.
 
 The selected swimmer and grouping stay in the URL. Changing clubs remounts the
 view; a swimmer outside the current club returns an unavailable message without
 revealing their details. Search is bounded and server-backed. Search failures
 show a retry message, and outdated search failures cannot replace a newer result.
-Only the selected swimmer's open places and basic contact details are fetched;
-medical information stays in the profile. Transfer options load only when needed.
-Reception opts into inactive search; enrolment pickers still search active swimmers
-by default. Inactive records are labelled, and cannot be enrolled or moved until
-they are active again.
+Only the selected swimmer's open places are fetched, with basic contact details;
+Medical information stays in the profile. Transfer options load when a swimmer
+is selected and the staff member holds the enrolment permission.
+
+Reception refreshes every minute and on return to the page, except while a
+dialog or text input is in use. Inactive swimmers cannot be enrolled or moved.
 
 ## Actions and access
 
@@ -64,7 +52,49 @@ other screens appear only when the role can open those screens.
 Adding a swimmer opens the existing swimmer form directly from Reception and
 requires `students.manage`, including the server-side permission check and audit.
 
-## Verification — 7 September 2026
+
+## Verification
+
+### Integration with the latest dev branch — 10 September 2026
+
+The layout was rebased onto the grouped workspace shell. Inactive swimmer
+lookup, contacts, waitlist promotion, scheduled unenrolment and idle refresh from
+the newer branch remain available. The wider swimmer form and custom triggers
+are preserved, with the new post-create selection callback added alongside them.
+
+Typecheck, lint, all 110 regression tests and the production build passed.
+The build used temporary placeholder credentials and skipped database migrations.
+Browser checks with synthetic data passed at 375, 768, 1024 and 1280px in both
+themes, including long swimmer names and the add-swimmer dialog. Search, quick
+add, selection and grouping, contacts, confirmed waitlist promotion, cancellation
+of scheduled unenrolment, inactive restrictions and refresh deferral during
+forms or searches passed without browser errors. No live records were changed.
+
+### Layout implementation — 10 September 2026
+
+The new layout uses the real Reception dashboard, shared shell, swimmer search,
+swimmer form and enrolment dialogs in an isolated browser fixture. Its data and
+server-action responses are synthetic; no database records were changed.
+
+- `npm run typecheck`, `npm run lint` and all 59 regression tests passed.
+  Stale generated Next.js route validators were regenerated before typechecking.
+- Eight viewport/theme checks at 375, 768, 1024 and 1280px passed: one H1 and main
+  landmark, no horizontal overflow or nested controls, and 44px touch controls.
+  The add-swimmer dialog also fitted each viewport in both themes.
+- Keyboard skip-link and swimmer selection, URL retention through grouping and
+  refresh, new-swimmer selection, save-error recovery, enrol dialog access, empty
+  and failed searches, read-only/create-only permissions, unavailable swimmers,
+  empty days and finished days passed. Destination links were verified.
+- No browser console errors or uncaught runtime errors were recorded. Synthetic
+  phone, desktop and selected-swimmer screenshots were inspected.
+
+The local checkout has no database or authentication credentials, and the
+Vercel CLI is unauthenticated. Live-data verification therefore remains pending.
+Production compilation is checked with temporary placeholder environment values;
+this does not verify a database connection. Browser evidence is kept locally in
+`.impeccable/review/reception-implementation/` and is ignored by Git.
+
+### Previous layout — 7 September 2026
 
 Typecheck, lint and 26 focused regression tests passed. The isolated tests cover
 club-scoped Reception reads, authentication before queries, active-only defaults,

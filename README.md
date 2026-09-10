@@ -61,10 +61,12 @@ preview builds do not apply migrations. Builds never seed records.
 
 ## Reception
 
-`/reception` brings swimmer lookup, current class details, move/unenrol actions,
-today's classes grouped by time or level, and booking shortcuts into a responsive
-bento grid. Each role can be given the Reception screen and can choose it as its
-landing page. Enrolment actions still require `enrolment.manage`.
+`/reception` leads with today's running and upcoming classes, grouped by time or
+level, with earlier classes expandable. Swimmer search and quick add sit above
+the timetable; booking shortcuts and the selected swimmer's places sit beside it
+on desktop. Each role can offer Reception and choose it as its landing page.
+Adding a swimmer requires `students.manage`; enrolment actions require
+`enrolment.manage`. A newly added swimmer is selected for the next desk action.
 
 See [Reception implementation and verification](docs/reception.md).
 

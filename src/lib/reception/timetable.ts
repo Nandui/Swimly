@@ -27,6 +27,20 @@ export type ReceptionClass = Pick<CourseRow,
   "location" | "level" | "instructor" | "_count"
 > & { coverName: string | null };
 
+/** Use each class's end time: parallel classes can have different durations.
+ *  An ending class is earlier as soon as the next class can start. */
+export function partitionReceptionClasses(courses: ReceptionClass[], now: number) {
+  const running: ReceptionClass[] = [];
+  const upcoming: ReceptionClass[] = [];
+  const earlier: ReceptionClass[] = [];
+  for (const course of courses) {
+    if (course.startMinutes > now) upcoming.push(course);
+    else if (course.startMinutes + course.durationMinutes > now) running.push(course);
+    else earlier.push(course);
+  }
+  return { running, upcoming, earlier };
+}
+
 export function groupReceptionClasses(courses: ReceptionClass[], grouping: ReceptionGrouping) {
   const byLevel = (a: ReceptionClass, b: ReceptionClass) =>
     a.level.programme.sortOrder - b.level.programme.sortOrder ||

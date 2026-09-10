@@ -52,3 +52,35 @@ test("invalid and future dates of birth return validation errors", async () => {
   }
   assert.equal(f.writes(), 0);
 });
+
+test("adding a swimmer returns their ID only after the club-scoped create and audit commit", async () => {
+  const events: string[] = [];
+  const paths: string[] = [];
+  let rejectAudit = false;
+  const tx = { student: { create: async ({ data }: { data: { clubId: string } }) => {
+    assert.equal(data.clubId, "club"); events.push("create");
+    return { id: "new-swimmer", firstName: "Test", lastName: "Swimmer" };
+  } } };
+  const actions = serverModule<Actions>("src/lib/students/actions/students.ts", {
+    "@/lib/prisma": { prisma: { $transaction: async (run: (db: typeof tx) => Promise<unknown>) => {
+      const result = await run(tx); events.push("commit"); return result;
+    } } },
+    "@/lib/authz": { requirePermission: async (permission: string) => {
+      assert.equal(permission, "students.manage"); events.push("authorize");
+      return { user: { id: "staff", name: "Test Staff" } };
+    } },
+    "@/lib/clubs/current": { currentClubId: async () => "club" },
+    "@/lib/audit": { logAudit: async (entry: { entityId: string }, db: unknown) => {
+      assert.equal(entry.entityId, "new-swimmer"); assert.equal(db, tx); events.push("audit");
+      if (rejectAudit) throw new Error("Audit unavailable");
+    } },
+    "next/cache": { revalidatePath: (path: string) => paths.push(path) },
+  });
+  assert.deepEqual(await actions.createStudent(input), { ok: true, studentId: "new-swimmer" });
+  assert.deepEqual(events, ["authorize", "create", "audit", "commit"]);
+  assert.deepEqual(paths, ["/reception", "/students"]);
+  events.length = 0; paths.length = 0; rejectAudit = true;
+  await assert.rejects(actions.createStudent(input), /Audit unavailable/);
+  assert.equal(events.includes("commit"), false);
+  assert.deepEqual(paths, []);
+});

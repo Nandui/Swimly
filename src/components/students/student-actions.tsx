@@ -182,7 +182,7 @@ function StudentFields({ student }: { student?: StudentDetail }) {
   );
 }
 
-export function AddStudent({ trigger }: { trigger?: React.ReactNode } = {}) {
+export function AddStudent({ trigger, onCreated }: { trigger?: React.ReactNode; onCreated?: (studentId: string) => void } = {}) {
   return (
     <FormDialog
       trigger={trigger ?? (
@@ -192,7 +192,11 @@ export function AddStudent({ trigger }: { trigger?: React.ReactNode } = {}) {
       submitLabel="Add swimmer"
       successMessage="Swimmer added"
       width="sm:max-w-2xl"
-      submit={(formData) => createStudent(readInput(formData))}
+      submit={async (formData) => {
+        const result = await createStudent(readInput(formData));
+        if (result.ok) onCreated?.(result.studentId);
+        return result;
+      }}
     >
       <StudentFields />
     </FormDialog>

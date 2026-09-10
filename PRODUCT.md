@@ -110,10 +110,11 @@ deleted); staff accounts, admin-defined roles from a permission catalogue;
 clubs and the switcher; the audit log; account settings with light and dark
 mode.
 
-Reception is the desk team's base working dashboard: active and inactive swimmer
-search, contact details, profile access, enrolment, current places with move and
-unenrol actions, today's timetable by time or level, and booking shortcuts in a
-bento grid. Roles can offer Reception as a screen and choose it as a landing page.
+Reception is the desk team's base: today's classes lead, with running and upcoming
+classes first and earlier classes expandable. Active and inactive swimmer search
+and quick add stay at the top; sibling times, assessment bookings, contact details
+and the selected swimmer's places sit alongside the timetable. Roles can offer
+Reception as a screen and choose it as a landing page.
 
 **Constraints that hold:**
 

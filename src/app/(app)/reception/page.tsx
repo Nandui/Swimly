@@ -38,7 +38,7 @@ export default async function ReceptionPage({ searchParams }: {
     }))}
     student={student} targets={targets} group={group}
     unavailable={Boolean(params.swimmer) && !student}
-    access={{ manage, manageStudents: can(session, "students.manage"), students: canSee(session, "students"), courses: canSee(session, "courses"),
+    access={{ manage, addSwimmers: can(session, "students.manage"), students: canSee(session, "students"), courses: canSee(session, "courses"),
       together: canSee(session, "together"), assessments: canSee(session, "assessments") }}
   />;
 }

@@ -62,7 +62,9 @@ function toData(input: StudentInput) {
   };
 }
 
-export async function createStudent(input: StudentInput): Promise<ActionResult> {
+export type CreateStudentResult = { ok: true; studentId: string } | Extract<ActionResult, { ok: false }>;
+
+export async function createStudent(input: StudentInput): Promise<CreateStudentResult> {
   const session = await requirePermission("students.manage");
 
   const parsed = studentSchema.safeParse(input);
@@ -91,7 +93,7 @@ export async function createStudent(input: StudentInput): Promise<ActionResult> 
         clubId,
         summary: `Added ${fullName(student)}`,
       }, tx);
-      return ok();
+      return { ok: true as const, studentId: student.id };
     }),
     `Member number ${data.memberNumber} already belongs to another swimmer.`
   );
@@ -99,7 +101,7 @@ export async function createStudent(input: StudentInput): Promise<ActionResult> 
 
   revalidatePath("/reception");
   revalidatePath("/students");
-  return ok();
+  return result;
 }
 
 export async function updateStudent(id: string, input: StudentInput): Promise<ActionResult> {
