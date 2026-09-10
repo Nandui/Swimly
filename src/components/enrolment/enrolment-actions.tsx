@@ -128,15 +128,17 @@ export function EnrolIntoCourse({ course, taken }: { course: CourseLike; taken: 
 export function EnrolInCourseForStudent({
   student,
   courses,
+  variant = "secondary",
 }: {
   student: { id: string; firstName: string; lastName: string };
   courses: (CourseLike & { _count: { enrolments: number } })[];
+  variant?: "primary" | "secondary";
 }) {
   const id = useId();
   return (
     <FormDialog
       trigger={
-        <Button label="Enrol in a class" variant="secondary" size="md" icon={<Icon icon={Plus} size="sm" />} />
+        <Button label="Enrol in a class" variant={variant} size="md" icon={<Icon icon={Plus} size="sm" />} />
       }
       title={`Enrol ${fullName(student)}`}
       submitLabel="Enrol"

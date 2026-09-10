@@ -2,17 +2,19 @@
 
 import { useEffect, useTransition } from "react";
 import { useRouter } from "next/navigation";
-import { CalendarCheck, CalendarDays, Users } from "lucide-react";
+import { CalendarCheck, CalendarDays, Plus, Users } from "lucide-react";
 import { Banner } from "@astryxdesign/core/Banner";
 import { Button } from "@astryxdesign/core/Button";
-import { Card } from "@astryxdesign/core/Card";
 import { Collapsible } from "@astryxdesign/core/Collapsible";
 import { Divider } from "@astryxdesign/core/Divider";
+import { EmptyState } from "@astryxdesign/core/EmptyState";
+import { Grid } from "@astryxdesign/core/Grid";
 import { Icon } from "@astryxdesign/core/Icon";
 import { IconButton } from "@astryxdesign/core/IconButton";
 import { Link } from "@astryxdesign/core/Link";
+import { List, ListItem } from "@astryxdesign/core/List";
+import { Section } from "@astryxdesign/core/Section";
 import { HStack, VStack } from "@astryxdesign/core/Stack";
-import { Table, TableBody, TableCell, TableHeader, TableHeaderCell, TableRow } from "@astryxdesign/core/Table";
 import { Heading, Text } from "@astryxdesign/core/Text";
 import { EndEnrolment, EnrolInCourseForStudent, PromoteFromWaitlist, TransferEnrolment } from "@/components/enrolment/enrolment-actions";
 import { AddStudent } from "@/components/students/student-actions";
@@ -21,14 +23,13 @@ import { PageHeader } from "@/components/ui-kit/page-header";
 import { LinkSegments } from "@/components/ui-kit/link-segments";
 import { Tag } from "@/components/ui-kit/tag";
 import { ATTENDANCE_RECORD_META } from "@/lib/attendance/constants";
-import { capacityLabel, capacityTone, courseLabel, courseName, formatSlotShort, formatTime, placesLeft } from "@/lib/courses/constants";
+import { capacityTone, courseLabel, courseName, formatSlotShort, formatTime } from "@/lib/courses/constants";
 import type { TransferTarget } from "@/lib/enrolment/data/enrolments";
 import { ENROLMENT_STATUS_META } from "@/lib/enrolment/constants";
-import type { ReceptionSwimmer } from "@/lib/reception/data";
-import { groupReceptionClasses, partitionReceptionClasses, receptionHref, RECEPTION_TIME_META, type ReceptionClass, type ReceptionGrouping } from "@/lib/reception/timetable";
-import { ageLabel, fullName, STUDENT_STATUS_META } from "@/lib/students/constants";
-
 import { formatDate } from "@/lib/format";
+import type { ReceptionSwimmer } from "@/lib/reception/data";
+import { groupReceptionClasses, partitionReceptionClasses, receptionAvailability, receptionHref, RECEPTION_TIME_META, type ReceptionClass, type ReceptionGrouping } from "@/lib/reception/timetable";
+import { ageLabel, fullName, STUDENT_STATUS_META } from "@/lib/students/constants";
 
 export type ReceptionDashboardProps = {
   clubName: string;
@@ -42,8 +43,10 @@ export type ReceptionDashboardProps = {
   access: { manage: boolean; addSwimmers: boolean; students: boolean; courses: boolean; together: boolean; assessments: boolean };
 };
 
-/** Classes lead; the desk keeps the selected swimmer beside them. Selection
- *  and grouping live in the URL, including the swimmer just added at the desk. */
+/** Swimmer lookup, details and enrolment lead in DOM and visual order.
+ *  At xl the workspace takes two grid tracks and today's classes one; below
+ *  xl the timetable follows the complete swimmer workspace. The shell owns
+ *  the page frame and scrolling. Selection and grouping stay in the URL. */
 export function ReceptionDashboard(props: ReceptionDashboardProps) {
   const { clubName, dateLabel, now, courses, student, targets, group, unavailable, access } = props;
   const router = useRouter();
@@ -65,78 +68,74 @@ export function ReceptionDashboard(props: ReceptionDashboardProps) {
     };
   }, [router]);
   const { running } = partitionReceptionClasses(courses, now);
-  const hasDeskTools = Boolean(student) || access.courses || access.together || access.assessments;
   const selectSwimmer = (id?: string | null) => startSelection(() => router.push(receptionHref(id, group), { scroll: false }));
 
   return (
     <VStack gap={6}>
       <PageHeader title="Reception" description={dateLabel}
-        actions={access.addSwimmers ? <AddStudent onCreated={selectSwimmer} /> : undefined} />
+        actions={access.addSwimmers ? <AddStudent onCreated={selectSwimmer} trigger={
+          <Button label="Add swimmer" variant={student ? "secondary" : "primary"} icon={<Icon icon={Plus} size="sm" />} />
+        } /> : undefined} />
 
-      <VStack gap={2}>
-        <StudentSearch key={student?.id ?? "search"} label="Find a swimmer" labelHidden
-          placeholder="Find swimmer by name or member number" selected={student} includeInactive
-          onSelect={hit => selectSwimmer(hit?.id)}
-          emptyText="No swimmers match in this club. Try their member number." />
-        {selecting ? <Text as="p" role="status">Loading swimmer…</Text> : null}
-        {unavailable && !selecting ? <Banner status="warning" title="Swimmer unavailable in this club. Search again or check the selected club." collapsible={false} /> : null}
-      </VStack>
-
-      <div className={`grid min-w-0 grid-cols-1 items-start gap-8 ${hasDeskTools ? "min-[1100px]:grid-cols-[minmax(0,1fr)_288px]" : ""}`}>
-        <section aria-labelledby="reception-timetable" className="order-2 min-w-0 min-[1100px]:order-1">
-          <VStack gap={6}>
-            <VStack gap={3}>
-              <HStack gap={3} wrap="wrap" hAlign="between" vAlign="center">
-                <Heading level={2} id="reception-timetable">Today’s classes</Heading>
-                <LinkSegments label="Group today's classes" value={group} options={[
-                  { value: "time", label: "By time", href: receptionHref(student?.id, "time") },
-                  { value: "level", label: "By level", href: receptionHref(student?.id, "level") },
-                ]} />
-              </HStack>
-              <HStack gap={2} wrap="wrap" hAlign="between" vAlign="center">
-                <Text color="secondary">{courses.length} {courses.length === 1 ? "class" : "classes"} today · {running.length} running now · As of {formatTime(now)}</Text>
-                <Button label="Refresh" variant="ghost" size="sm" isLoading={refreshing} onClick={() => startRefresh(() => router.refresh())} />
-              </HStack>
-            </VStack>
-
-            {courses.length === 0 ? (
-              <VStack gap={3} paddingBlock={5}>
-                <Heading level={3}>No classes timetabled today</Heading>
-                <Text as="p" color="secondary">Nothing is timetabled at {clubName} today. You can still find swimmers and plan a booking.</Text>
-                {access.courses ? <div><Button href="/courses?day=any" label="Find a class on another day" /></div> : null}
-              </VStack>
-            ) : <ReceptionTimetable courses={courses} group={group} now={now} canOpen={access.courses} />}
+      <Grid gap={8} align="start" className="grid-cols-1 xl:grid-cols-3">
+        <VStack as="section" aria-labelledby="reception-lookup" gap={6} className="min-w-0 xl:col-span-2">
+          <VStack gap={3}>
+            <Heading level={2} id="reception-lookup">Find a swimmer</Heading>
+            <StudentSearch key={student?.id ?? "search"} label="Find a swimmer" labelHidden hasSearchIcon
+              placeholder="Swimmer name or member number" selected={student} includeInactive
+              onSelect={hit => selectSwimmer(hit?.id)}
+              emptyText="No swimmers match in this club. Try their member number." />
           </VStack>
-        </section>
+          {selecting ? <Text as="p" role="status">Loading swimmer…</Text> : unavailable ? (
+            <Banner status="warning" title="Swimmer unavailable in this club. Search again or check the selected club." collapsible={false} />
+          ) : student ? (
+            <SwimmerWorkspace student={student} targets={targets} courses={courses} access={access} onClear={() => selectSwimmer(null)} />
+          ) : (
+            <Section variant="muted" padding={6}>
+              <EmptyState title="Find a swimmer to get started" headingLevel={2}
+                description={`Search above to see their contact details, current places and enrolment options.${access.addSwimmers ? " For a new swimmer, choose Add swimmer." : ""}`}
+              />
+            </Section>
+          )}
+          <QuickBooking access={access} />
+        </VStack>
 
-        {hasDeskTools ? <aside aria-label="Desk tools" className="order-1 min-w-0 min-[1100px]:order-2">
-          <VStack gap={6}>
-            <QuickBooking access={access} />
-            {student && !selecting ? <SwimmerPlaces student={student} targets={targets} courses={courses} access={access} onClear={() => selectSwimmer(null)} /> : null}
+        <VStack as="aside" aria-labelledby="reception-timetable" gap={5} className="min-w-0">
+          <VStack gap={3}>
+            <HStack gap={2} wrap="wrap" hAlign="between" vAlign="center">
+              <Heading level={2} id="reception-timetable">Today’s classes</Heading>
+              <Button label="Refresh" variant="ghost" size="sm" isLoading={refreshing} onClick={() => startRefresh(() => router.refresh())} />
+            </HStack>
+            <Text color="secondary">{courses.length} {courses.length === 1 ? "class" : "classes"} · {running.length} running now · As of {formatTime(now)}</Text>
+            <LinkSegments label="Group today's classes" value={group} options={[
+              { value: "time", label: "By time", href: receptionHref(student?.id, "time") },
+              { value: "level", label: "By level", href: receptionHref(student?.id, "level") },
+            ]} />
           </VStack>
-        </aside> : null}
-      </div>
+          {courses.length === 0 ? (
+            <EmptyState isCompact title="No classes timetabled today"
+              description={`Nothing is timetabled at ${clubName} today. You can still manage swimmers and their places.`}
+              actions={access.courses ? <Button href="/courses?day=any" label="Find a class on another day" /> : undefined} />
+          ) : <ReceptionTimetable courses={courses} group={group} now={now} canOpen={access.courses} />}
+        </VStack>
+      </Grid>
     </VStack>
   );
 }
 
 function QuickBooking({ access }: Pick<ReceptionDashboardProps, "access">) {
   const links = [
-    { visible: access.together, href: "/together", label: "Find sibling times", short: "Sibling times", icon: Users },
-    { visible: access.assessments, href: "/assessments", label: "Book an assessment", short: "Assessments", icon: CalendarCheck },
-    { visible: access.courses, href: "/courses?day=any", label: "Find a class", short: "Find a class", icon: CalendarDays },
+    { visible: access.together, href: "/together", label: "Find sibling times", icon: Users },
+    { visible: access.assessments, href: "/assessments", label: "Book an assessment", icon: CalendarCheck },
+    { visible: access.courses, href: "/courses?day=any", label: "Find a class", icon: CalendarDays },
   ].filter(link => link.visible);
   if (!links.length) return null;
-  return <VStack gap={4} as="section" aria-labelledby="reception-booking">
+  return <VStack gap={3} as="section" aria-labelledby="reception-booking">
     <Heading level={2} id="reception-booking">Quick booking</Heading>
-    <div className="grid grid-cols-[repeat(auto-fit,minmax(0,1fr))] gap-2 sm:hidden">
-      {links.map(link => <Button key={link.href} href={link.href} label={link.short} aria-label={link.label} width="100%" />)}
-    </div>
-    <div className="hidden grid-cols-[repeat(auto-fit,minmax(0,1fr))] gap-2 sm:grid min-[1100px]:grid-cols-1">
-      {links.map(link => <Button key={link.href} href={link.href} label={link.label} width="100%"
-        icon={<Icon icon={link.icon} size="sm" />} endContent={<Icon icon="chevronRight" size="sm" />} />)}
-    </div>
-    <Text as="p" color="secondary" className="hidden min-[1100px]:block">For another day or a new place.</Text>
+    <HStack gap={2} wrap="wrap">
+      {links.map(link => <Button key={link.href} href={link.href} label={link.label}
+        icon={<Icon icon={link.icon} size="sm" />} />)}
+    </HStack>
   </VStack>;
 }
 
@@ -172,45 +171,29 @@ function ReceptionTimetable({ courses, group, now, canOpen }: Pick<ReceptionDash
 }
 
 function ClassRows({ courses, canOpen, showTime }: { courses: ReceptionClass[]; canOpen: boolean; showTime: boolean }) {
-  return <Table hasHover textOverflow="wrap" aria-label="Classes in this group">
-    <TableHeader className="sr-only"><TableRow isHeaderRow>
-      <TableHeaderCell scope="col">Class and location</TableHeaderCell>
-      <TableHeaderCell scope="col" className="max-md:hidden">Instructor</TableHeaderCell>
-      <TableHeaderCell scope="col" className="max-sm:hidden">Places</TableHeaderCell>
-      {canOpen ? <TableHeaderCell scope="col">Actions</TableHeaderCell> : null}
-    </TableRow></TableHeader>
-    <TableBody>{courses.map(course => {
-      const left = placesLeft(course._count.enrolments, course.capacity);
+  return <List hasDividers density="compact" aria-label="Classes in this group">
+    {courses.map(course => {
       const tone = capacityTone(course._count.enrolments, course.capacity);
-      const places = capacityLabel(course._count.enrolments, course.capacity);
       const teacher = course.coverName ?? course.instructor?.name ?? "Instructor not assigned";
-      return <TableRow key={course.id}>
-        <TableCell>
-          <VStack gap={1}>
-            <Text weight="semibold">{courseName(course)}</Text>
-            {course.name && course.name !== course.level.name ? <Text color="secondary">{course.level.name}</Text> : null}
-            {showTime ? <Text color="secondary" hasTabularNumbers>{formatTime(course.startMinutes)}–{formatTime(course.startMinutes + course.durationMinutes)}</Text> : null}
-            <Text color="secondary">{course.location ?? "Location not recorded"}</Text>
-            <Text color="secondary" className="md:hidden">{teacher}{course.coverName ? " (cover)" : ""}</Text>
-            <HStack gap={2} wrap="wrap" vAlign="center" className="sm:hidden"><Text color="secondary" hasTabularNumbers>{places}</Text>{tone ? <Tag color={tone.color}>{tone.label}</Tag> : null}</HStack>
-          </VStack>
-        </TableCell>
-        <TableCell className="max-md:hidden"><VStack gap={1}>
-          <Text>{teacher}</Text>
-          {course.coverName ? <div><Tag color={ATTENDANCE_RECORD_META.covered.color}>{ATTENDANCE_RECORD_META.covered.label}</Tag></div> : null}
-        </VStack></TableCell>
-        <TableCell className="max-sm:hidden"><VStack gap={1}>
-          <Text hasTabularNumbers>{places}</Text>
-          {tone ? <div><Tag color={tone.color}>{tone.label}</Tag></div> : left !== null ? <Text color="secondary">{left} available</Text> : null}
-        </VStack></TableCell>
-        {canOpen ? <TableCell><HStack hAlign="end"><Button label="Open class" href={`/courses/${course.id}`}
-          aria-label={`Open ${courseLabel(course)}`} endContent={<Icon icon="chevronRight" size="sm" />} /></HStack></TableCell> : null}
-      </TableRow>;
-    })}</TableBody>
-  </Table>;
+      return <ListItem key={course.id} label={<Text weight="semibold">{courseName(course)}</Text>} description={
+        <VStack gap={2} className="min-w-0 break-words">
+          {course.name && course.name !== course.level.name ? <Text color="secondary">{course.level.name}</Text> : null}
+          {showTime ? <Text hasTabularNumbers>{formatTime(course.startMinutes)}–{formatTime(course.startMinutes + course.durationMinutes)}</Text> : null}
+          <Text color="secondary">{course.location ?? "Location not recorded"} · {teacher}</Text>
+          <HStack gap={2} wrap="wrap" vAlign="center">
+            <Text color="secondary">{receptionAvailability(course._count.enrolments, course.capacity)}</Text>
+            {tone ? <Tag color={tone.color}>{tone.label}</Tag> : null}
+            {course.coverName ? <Tag color={ATTENDANCE_RECORD_META.covered.color}>{ATTENDANCE_RECORD_META.covered.label}</Tag> : null}
+          </HStack>
+          {canOpen ? <HStack><Button label="Open class" href={`/courses/${course.id}`} variant="ghost" size="sm"
+            aria-label={`Open ${courseLabel(course)}`} endContent={<Icon icon="chevronRight" size="sm" />} /></HStack> : null}
+        </VStack>
+      } />;
+    })}
+  </List>;
 }
 
-function SwimmerPlaces({ student, targets, courses, access, onClear }: {
+function SwimmerWorkspace({ student, targets, courses, access, onClear }: {
   student: ReceptionSwimmer;
   targets: TransferTarget[];
   courses: ReceptionClass[];
@@ -218,46 +201,68 @@ function SwimmerPlaces({ student, targets, courses, access, onClear }: {
   onClear: () => void;
 }) {
   const mayEnrol = access.manage && student.status === "ACTIVE";
-  return <Card padding={5}>
-    <VStack gap={4}>
-      <HStack gap={2} hAlign="between" vAlign="start">
-        <VStack gap={1} className="min-w-0"><Text color="secondary">Selected swimmer</Text><Heading level={2}>{fullName(student)}</Heading><Text color="secondary">{student.memberNumber ?? "No member number recorded"}</Text><Text color="secondary">{student.dateOfBirth ? `Age ${ageLabel(student.dateOfBirth)}` : "Date of birth not recorded"}</Text></VStack>
+  return <VStack gap={5} as="section" aria-label={`Details and enrolment for ${fullName(student)}`}>
+    <Divider />
+    <VStack gap={3}>
+      <HStack gap={3} hAlign="between" vAlign="start">
+        <VStack gap={2} className="min-w-0">
+          <HStack gap={2} wrap="wrap" vAlign="center">
+            <Heading level={2}>{fullName(student)}</Heading>
+            <Tag color={STUDENT_STATUS_META[student.status].color}>{STUDENT_STATUS_META[student.status].label}</Tag>
+          </HStack>
+          <Text color="secondary">{student.memberNumber ?? "No member number recorded"} · {student.dateOfBirth ? `Age ${ageLabel(student.dateOfBirth)}` : "Date of birth not recorded"}</Text>
+        </VStack>
         <IconButton label={`Clear ${fullName(student)}`} variant="ghost" icon={<Icon icon="close" size="sm" />} onClick={onClear} />
       </HStack>
-      {student.status !== "ACTIVE" ? <div><Tag color={STUDENT_STATUS_META[student.status].color}>{STUDENT_STATUS_META[student.status].label}</Tag></div> : null}
-      {student.status === "INACTIVE" ? <Banner status="info" title="This swimmer is inactive. They must be made active before enrolling or moving them." collapsible={false} /> : null}
-      <VStack gap={1} as="section" aria-label="Contact details">
-        <Text weight="semibold">Contact</Text>
-        <Text>{student.contactName || "No contact name recorded"}</Text>
-        {student.contactPhone ? <Link href={`tel:${student.contactPhone.replace(/\s+/g, "")}`} className="min-h-11 inline-flex items-center break-all">{student.contactPhone}</Link> : <Text color="secondary">No phone number recorded</Text>}
-        {student.contactEmail ? <Link href={`mailto:${student.contactEmail}`} className="min-h-11 inline-flex items-center break-all">{student.contactEmail}</Link> : null}
-      </VStack>
-      <Divider />
-      {student.enrolments.length === 0 ? <Text as="p" color="secondary">No current class or waitlist place.</Text> : student.enrolments.map((enrolment, index) => {
-        const label = courseLabel(enrolment.course);
-        const status = ENROLMENT_STATUS_META[enrolment.status];
-        const coverName = courses.find(course => course.id === enrolment.course.id)?.coverName;
-        return <VStack key={enrolment.id} gap={2} as="section" aria-label={`${label}, ${status.label}`}>
-          {index > 0 ? <Divider /> : null}
-          <HStack gap={2} wrap="wrap" vAlign="center"><Heading level={3}>{courseName(enrolment.course)}</Heading><Tag color={status.color}>{status.label}</Tag></HStack>
-          <Text hasTabularNumbers>{formatSlotShort(enrolment.course)}–{formatTime(enrolment.course.startMinutes + enrolment.course.durationMinutes)}</Text>
-          <Text as="p" color="secondary">{enrolment.level.name} · {enrolment.course.location ?? "Location not recorded"}</Text>
-          <Text as="p" color="secondary">{coverName ? `${coverName} (cover today)` : enrolment.course.instructor?.name ?? "Instructor not assigned"}</Text>
-          {enrolment.course.archivedAt ? <Text as="p" color="secondary">This class is archived.</Text> : null}
-          {enrolment.scheduledEndOn ? <Text as="p" color="secondary">Unenrols {formatDate(enrolment.scheduledEndOn)}</Text> : null}
-          <HStack gap={2} wrap="wrap" vAlign="center">
-            {mayEnrol && enrolment.status === "WAITLISTED" && !enrolment.course.archivedAt ? <PromoteFromWaitlist variant="button" classLabel={label} enrolment={{ ...enrolment, student }} /> : null}
-            {mayEnrol ? <TransferEnrolment variant="button" classLabel={label} enrolment={{ ...enrolment, student }} targets={targets.filter(target => target.id !== enrolment.course.id)} /> : null}
-            {access.manage ? <EndEnrolment variant="button" enrolment={{ ...enrolment, student }} classLabel={label} /> : null}
-            {access.courses ? <Link className="inline-flex min-h-11 items-center" href={`/courses/${enrolment.course.id}`} isStandalone>Class details</Link> : null}
-          </HStack>
-        </VStack>;
-      })}
+      <HStack gap={2} wrap="wrap" vAlign="center">
+        {mayEnrol ? <EnrolInCourseForStudent student={student} courses={targets} variant="primary" /> : null}
+        {access.students ? <Button href={`/students/${student.id}`} label="Full swimmer profile" variant="secondary" /> : null}
+      </HStack>
+    </VStack>
+    {student.status === "INACTIVE" ? <Banner status="info" title="This swimmer is inactive. They must be made active before enrolling or moving them." collapsible={false} /> : null}
+
+    <Section variant="muted" padding={4} aria-label="Contact details">
       <VStack gap={2}>
-        {mayEnrol ? <EnrolInCourseForStudent student={student} courses={targets} /> : null}
-        {access.students ? <Link className="inline-flex min-h-11 items-center" href={`/students/${student.id}`} isStandalone>Full swimmer profile</Link> : null}
+        <Heading level={3}>Contact details</Heading>
+        <Text>{student.contactName || "No contact name recorded"}</Text>
+        <HStack gap={4} wrap="wrap" vAlign="center">
+          {student.contactPhone ? <Link href={`tel:${student.contactPhone.replace(/\s+/g, "")}`} className="min-h-11 inline-flex items-center break-all">{student.contactPhone}</Link> : <Text color="secondary">No phone number recorded</Text>}
+          {student.contactEmail ? <Link href={`mailto:${student.contactEmail}`} className="min-h-11 inline-flex items-center break-all">{student.contactEmail}</Link> : null}
+        </HStack>
       </VStack>
+    </Section>
+
+    <VStack gap={3} as="section" aria-labelledby="reception-enrolments">
+      <HStack gap={2} wrap="wrap" hAlign="between" vAlign="center">
+        <Heading level={3} id="reception-enrolments">Enrolments</Heading>
+        <Text color="secondary">{student.enrolments.length} current {student.enrolments.length === 1 ? "place" : "places"}</Text>
+      </HStack>
+      {student.enrolments.length === 0 ? <Text as="p" color="secondary">No current class or waitlist place.{mayEnrol ? " Choose Enrol in a class to find a place." : ""}</Text> : (
+        <List hasDividers aria-labelledby="reception-enrolments">
+          {student.enrolments.map(enrolment => {
+            const label = courseLabel(enrolment.course);
+            const status = ENROLMENT_STATUS_META[enrolment.status];
+            const coverName = courses.find(course => course.id === enrolment.course.id)?.coverName;
+            return <ListItem key={enrolment.id} label={
+              <HStack gap={2} wrap="wrap" vAlign="center"><Text weight="semibold">{courseName(enrolment.course)}</Text><Tag color={status.color}>{status.label}</Tag></HStack>
+            } description={
+              <VStack gap={2} className="min-w-0 break-words">
+                <Text hasTabularNumbers>{formatSlotShort(enrolment.course)}–{formatTime(enrolment.course.startMinutes + enrolment.course.durationMinutes)}</Text>
+                <Text color="secondary">{enrolment.level.name} · {enrolment.course.location ?? "Location not recorded"} · {coverName ? `${coverName} (cover today)` : enrolment.course.instructor?.name ?? "Instructor not assigned"}</Text>
+                {enrolment.course.archivedAt ? <Text color="secondary">This class is archived.</Text> : null}
+                {enrolment.scheduledEndOn ? <Text color="secondary">Unenrols {formatDate(enrolment.scheduledEndOn)}</Text> : null}
+                <HStack gap={2} wrap="wrap" vAlign="center">
+                  {mayEnrol && enrolment.status === "WAITLISTED" && !enrolment.course.archivedAt ? <PromoteFromWaitlist variant="button" classLabel={label} enrolment={{ ...enrolment, student }} /> : null}
+                  {mayEnrol ? <TransferEnrolment variant="button" classLabel={label} enrolment={{ ...enrolment, student }} targets={targets.filter(target => target.id !== enrolment.course.id)} /> : null}
+                  {access.manage ? <EndEnrolment variant="button" enrolment={{ ...enrolment, student }} classLabel={label} /> : null}
+                  {access.courses ? <Button href={`/courses/${enrolment.course.id}`} label="Class details" aria-label={`Class details for ${label}`} variant="ghost" /> : null}
+                </HStack>
+              </VStack>
+            } />;
+          })}
+        </List>
+      )}
       {!access.manage ? <Text as="p" color="secondary">You can look up classes here. Moving or unenrolling a swimmer needs the enrolment permission.</Text> : null}
     </VStack>
-  </Card>;
+  </VStack>;
 }

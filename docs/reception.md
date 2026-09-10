@@ -1,23 +1,23 @@
 # Reception
 
-Reception is a dedicated desk page at `/reception`, with classes leading the view:
+Reception is a dedicated desk page at `/reception`, centred on the swimmer:
 
-- Today's timetable takes the main column. Time grouping shows running and
-  upcoming classes first, with earlier classes expandable. After the last class,
-  the earlier section starts open. Level grouping shows the whole day's ladder.
-  Class end times determine which section each row belongs to, including when
-  parallel classes have different durations. Each accessible class links to its
-  existing detail page and roster.
-- Active and inactive swimmer search and Add swimmer stay at the top. Quick add
-  uses the existing form and selects the created swimmer after the audited save.
-- The desktop desk panel holds sibling-time, assessment and class-finder
-  shortcuts, followed by the selected swimmer's current class and waitlist places.
-  Each place keeps its time, level, location, instructor and explicit cover, plus
-  the existing move, scheduled unenrolment, waitlist promotion, enrol and profile
-  actions.
-- On phones, booking shortcuts form a compact row above the timetable. Secondary
-  class columns fold beneath the class name. Counts, the snapshot time and an
-  explicit refresh replace the separate statistics tile.
+- The main workspace starts with active and inactive swimmer search. The selected
+  swimmer's identity, status and prominent enrol action lead into their contact
+  details and current class and waitlist places. Each place keeps its time, level,
+  location, instructor, cover and existing move, scheduled unenrolment and waitlist
+  promotion actions. Profile access sits beside the enrol action.
+- Add swimmer stays in the page header and selects the created swimmer after the
+  audited save. Sibling-time, assessment and class-finder shortcuts follow the
+  swimmer workspace. Before selection, an empty state explains where to start.
+- At the standard `xl` breakpoint, the swimmer workspace takes two of three grid
+  tracks; today's timetable takes the third. Below `xl`, the timetable follows
+  swimmer details and booking tools in both DOM and visual order.
+- Today's classes use compact list rows. Time grouping shows running and upcoming
+  classes first, with earlier classes expandable and initially open after the last
+  class. Level grouping shows the whole day's ladder. Each class uses its own end
+  time, and accessible classes link to the existing detail page and roster.
+  Counts, snapshot time, grouping and refresh remain within this supporting panel.
 
 The selected swimmer and grouping stay in the URL. Changing clubs remounts the
 view; a swimmer outside the current club returns an unavailable message without
@@ -54,6 +54,18 @@ requires `students.manage`, including the server-side permission check and audit
 
 
 ## Verification
+
+### Swimmer-first layout — 10 September 2026
+
+Typecheck and lint passed. The synthetic browser fixture exercises the real
+dashboard and shared dialogs. Search, quick add and failed-save recovery,
+selection/grouping retention, enrol access, contact links, waitlist promotion,
+scheduled unenrolment cancellation, inactive and read-only restrictions, and idle
+refresh passed. All eight viewport/theme combinations at 375, 768, 1024 and
+1280px passed, including long names and add-swimmer dialogs: one H1 and main
+landmark, no horizontal overflow or nested controls, and 44px touch targets.
+Desktop and phone screenshots were inspected. The layout detector reported no
+findings. Browser actions use synthetic responses and do not change live records.
 
 ### Integration with the latest dev branch — 10 September 2026
 

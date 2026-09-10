@@ -61,10 +61,11 @@ preview builds do not apply migrations. Builds never seed records.
 
 ## Reception
 
-`/reception` leads with today's running and upcoming classes, grouped by time or
-level, with earlier classes expandable. Swimmer search and quick add sit above
-the timetable; booking shortcuts and the selected swimmer's places sit beside it
-on desktop. Each role can offer Reception and choose it as its landing page.
+`/reception` leads with swimmer search, contact details and enrolment. The selected
+swimmer's places and actions fill the main workspace; today's classes sit in a
+compact side panel on desktop and below the workspace on smaller screens.
+Quick add and booking shortcuts stay close to the swimmer's details.
+Each role can offer Reception and choose it as its landing page.
 Adding a swimmer requires `students.manage`; enrolment actions require
 `enrolment.manage`. A newly added swimmer is selected for the next desk action.
 
