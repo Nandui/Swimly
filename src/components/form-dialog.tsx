@@ -50,6 +50,7 @@ export function FormDialog({
   width = "sm:max-w-md",
   children,
   onOpen,
+  onSuccess,
 }: {
   trigger: React.ReactNode;
   title: string;
@@ -61,6 +62,8 @@ export function FormDialog({
   width?: string;
   children: React.ReactNode;
   onOpen?: () => void;
+  /** Complete an inline workflow after its dialog has saved successfully. */
+  onSuccess?: () => void;
 }) {
   const [open, setOpen] = React.useState(false);
   const rememberTrigger = useDialogTriggerFocus(open);
@@ -112,6 +115,7 @@ export function FormDialog({
             setOpen(false);
             setError(null);
             setConfirmation(null);
+            onSuccess?.();
           });
         } else {
           startTransition(() => {

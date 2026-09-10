@@ -2,17 +2,23 @@
 
 Reception is a dedicated desk page at `/reception`, centred on the swimmer:
 
-- The main workspace starts with active and inactive swimmer search. The selected
-  swimmer's identity, status and prominent enrol action lead into their contact
-  details and current class and waitlist places. Each place keeps its time, level,
-  location, instructor, cover and existing move, scheduled unenrolment and waitlist
-  promotion actions. Profile access sits beside the enrol action.
+- The swimmer sheet starts with active and inactive swimmer search, identity,
+  status and pinned placement levels. Contacts open in a dialog beside the full
+  profile link. Current places use compact rows with day/time, class, pinned level
+  and programme, pool, instructor and today's cover. On phones, time and secondary
+  details move into the class cell, keeping actions readable.
+- Move opens the weekly finder below the current places, defaulting to the source
+  placement level. Find a place uses the same finder for enrolment. It filters by
+  exact level identity, day and inclusive start-time bounds. Available only hides
+  full classes; existing active and waitlist places are excluded. Full classes
+  cannot receive a move. Turning off Available only permits an explicit waitlist
+  request when finding an additional place. Selection reveals a current/new
+  comparison and review dialog, with the existing server confirmation where needed.
 - Add swimmer stays in the page header and selects the created swimmer after the
   audited save. Sibling-time, assessment and class-finder shortcuts follow the
   swimmer workspace. Before selection, an empty state explains where to start.
-- At the standard `xl` breakpoint, the swimmer workspace takes two of three grid
-  tracks; today's timetable takes the third. Below `xl`, the timetable follows
-  swimmer details and booking tools in both DOM and visual order.
+- Today's classes open from the header, leaving the full page width for the
+  swimmer and class comparison. There is no permanent timetable side panel.
 - Today's classes use compact list rows. Time grouping shows running and upcoming
   classes first, with earlier classes expandable and initially open after the last
   class. Level grouping shows the whole day's ladder. Each class uses its own end
@@ -28,7 +34,10 @@ Medical information stays in the profile. Transfer options load when a swimmer
 is selected and the staff member holds the enrolment permission.
 
 Reception refreshes every minute and on return to the page, except while a
-dialog or text input is in use. Inactive swimmers cannot be enrolled or moved.
+dialog, text input or inline finder is in use. Refresh places explicitly updates
+availability while retaining the filters and clearing the proposed selection.
+The server rechecks seats at confirmation. Inactive swimmers cannot be enrolled
+or moved. No live data is written by simply opening the finder.
 
 ## Actions and access
 
@@ -54,6 +63,30 @@ requires `students.manage`, including the server-side permission check and audit
 
 
 ## Verification
+
+### A — Swimmer sheet — 10 September 2026
+
+Implemented on `codex/reception-swimmer-sheet` from dev `e7b2bd7d`, following the
+owner's selection of concept A. The grouped shell, Astryx Neutral tokens and
+Figtree remain unchanged. Native Select buttons replace the comp's drawn radio
+circles; the time filter has explicit start bounds. The comp's full row under
+Available only is corrected, and existing permission-gated actions are retained.
+
+The real components run in an isolated fixture with synthetic swimmers and
+mocked server boundaries. Browser checks cover contacts and focus return, weekly
+filters, full-class restrictions, review without a write, failed-save recovery,
+confirmed moves, explicit waitlisting, scheduled unenrolment, read-only and
+inactive access, and keyboard search. All eight 375/768/1024/1280 light/dark
+combinations and the review dialogs passed, including long names, one H1/main
+landmark, 44px touch controls, no sideways overflow and no nested controls.
+No browser errors were recorded. The Impeccable detector reported no findings.
+
+Typecheck and all 115 tests passed, including scoped reads, pinned programme
+selection, chronological filtering, inclusive times, capacity and duplicate
+place exclusions. `npm run lint -- --ignore-pattern 'prototypes/**'` passed.
+Unrestricted `npm run lint` encounters existing prototype and generated-build
+errors outside this change. No database migrations or live booking writes ran.
+Visual artifacts and the runnable fixture stay in the ignored review directory.
 
 ### Swimmer-first layout — 10 September 2026
 

@@ -111,11 +111,13 @@ clubs and the switcher; the audit log; account settings with light and dark
 mode.
 
 Reception is the desk team's base: swimmer search, details and enrolment lead.
-The selected swimmer's identity, contacts, current places and enrolment actions
-share the main workspace, with quick add and sibling-time and assessment
-shortcuts nearby. Today's classes support the desk in a narrower side panel,
-or below the swimmer workspace on smaller screens. Roles can offer Reception
-as a screen and choose it as a landing page.
+The selected swimmer's identity, pinned placement levels and current places lead
+a single sheet. Contacts open on demand. Move or Find a place opens a class
+finder directly below the current places, comparing availability across the week
+by level, day and preferred start times. A selected class is reviewed before a
+change is confirmed. Today's classes open from the header; quick add, sibling
+times and assessment shortcuts remain nearby. Roles can offer Reception as a
+screen and choose it as a landing page.
 
 **Constraints that hold:**
 

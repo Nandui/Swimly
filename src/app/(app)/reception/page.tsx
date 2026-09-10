@@ -5,10 +5,9 @@ import { weekdayOfIso } from "@/lib/attendance/dates";
 import { getCoversForDay } from "@/lib/attendance/data/cover";
 import { getCurrentClub } from "@/lib/clubs/current";
 import { getCoursesOnDay } from "@/lib/courses/data/courses";
-import { getTransferTargets } from "@/lib/enrolment/data/enrolments";
 import { formatDate, minutesNow, parseDateOnly, today } from "@/lib/format";
 import { screenPage } from "@/lib/page-guards";
-import { getReceptionSwimmer } from "@/lib/reception/data";
+import { getReceptionClassOptions, getReceptionSwimmer } from "@/lib/reception/data";
 
 export const metadata: Metadata = { title: "Reception" };
 
@@ -24,7 +23,7 @@ export default async function ReceptionPage({ searchParams }: {
   const [courses, covers, student, targets, { club }] = await Promise.all([
     getCoursesOnDay(weekdayOfIso(iso)), getCoversForDay(iso),
     swimmerId ? getReceptionSwimmer(swimmerId) : null,
-    swimmerId && manage ? getTransferTargets() : [], getCurrentClub(),
+    swimmerId && manage ? getReceptionClassOptions() : [], getCurrentClub(),
   ]);
 
   return <ReceptionDashboard
