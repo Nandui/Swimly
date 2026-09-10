@@ -6,7 +6,7 @@ import { ROLE_HOMES, expandPermissions } from "@/lib/staff/permissions";
  *  A role names the screens its holders may open, the way it names the
  *  permissions they hold. Permissions are the power to change something;
  *  screens are what is on offer at all. An instructor role can be given
- *  Today and nothing else, and then the deck is the whole app for them:
+ *  Instructor and nothing else, and then the deck is the whole app for them:
  *  the nav shows one item, and every other page declines to exist.
  *
  *  Like the permission catalogue this is code, not data: a screen exists
@@ -14,10 +14,9 @@ import { ROLE_HOMES, expandPermissions } from "@/lib/staff/permissions";
  *  The Account page is not in here — it is always reachable, because it is
  *  the one page where a person changes their own password.
  *
- *  `requires` is the permission the screen is pointless without. Today is
- *  the deck, so it needs the power to take attendance; Programmes is the
- *  curriculum editor, so it needs the power to edit it. Both the screen
- *  and the permission have to be held. */
+ *  `requires` is the permission the screen is pointless without. Programmes
+ *  needs curriculum editing. Today is a read-only calendar; opening attendance
+ *  from it still requires the separate attendance permission. */
 
 export const SCREENS = [
   {
@@ -33,11 +32,17 @@ export const SCREENS = [
     description: "The desk: swimmer lookup, today's timetable and quick enrolment actions.",
   },
   {
-    key: "today",
+    key: "calendar",
     label: "Today",
     path: "/today",
     description:
-      "The deck: their classes today, attendance and competencies. Needs the permission to take attendance.",
+      "All of today’s classes in time-slot columns, with instructors, places and attendance status.",
+  },
+  {
+    key: "instructor",
+    label: "Instructor",
+    path: "/instructor",
+    description: "The deck: own classes, attendance, competencies and taking cover.",
     requires: "attendance.mark",
   },
   {
@@ -123,7 +128,10 @@ export function screenMeta(key: ScreenKey) {
 
 /** Keys filtered against the catalogue, in catalogue order, no duplicates. */
 export function cleanScreens(input: readonly string[]): ScreenKey[] {
-  const held = new Set(input.filter(isScreenKey));
+  // Existing roles stored "today" for the deck. Resolve that retired key
+  // without changing the database; edited roles save the two explicit keys,
+  // so either destination can subsequently be granted or removed separately.
+  const held = new Set(input.flatMap(key => key === "today" ? ["calendar", "instructor"] : [key]).filter(isScreenKey));
   return ALL_SCREENS.filter((key) => held.has(key));
 }
 
@@ -134,8 +142,9 @@ export function visibleScreens(
   permissions: Set<PermissionKey>
 ): Set<ScreenKey> {
   const out = new Set<ScreenKey>();
+  const held = new Set(cleanScreens(screens));
   for (const screen of SCREENS) {
-    if (!screens.includes(screen.key)) continue;
+    if (!held.has(screen.key)) continue;
     if ("requires" in screen && screen.requires && !permissions.has(screen.requires)) continue;
     out.add(screen.key);
   }
@@ -152,7 +161,8 @@ export function homePathFor(
 ): string {
   const visible = visibleScreens(screens, expandPermissions(permissions));
   if (home === "reception" && visible.has("reception")) return ROLE_HOMES.reception.path;
-  if (home === "today" && visible.has("today")) return ROLE_HOMES.today.path;
+  if ((home === "today" || home === "instructor") && visible.has("instructor")) return ROLE_HOMES.instructor.path;
+  if (home === "calendar" && visible.has("calendar")) return ROLE_HOMES.calendar.path;
   if (visible.has("overview")) return ROLE_HOMES.overview.path;
   const first = SCREENS.find((screen) => visible.has(screen.key));
   return first ? first.path : "/account";

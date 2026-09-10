@@ -74,6 +74,7 @@ function revalidate() {
   revalidatePath("/courses/[id]", "page");
   revalidatePath("/students/[id]", "page");
   revalidatePath("/today");
+  revalidatePath("/instructor");
 }
 
 export async function enrolStudent(input: EnrolInput, confirmation?: ConfirmationReply): Promise<ActionResult> {

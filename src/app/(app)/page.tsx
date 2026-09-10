@@ -82,7 +82,7 @@ export default async function OverviewPage() {
         <VStack gap={3} as="section">
           <HStack gap={3} vAlign="center" hAlign="between" wrap="wrap">
             <Heading level={2}>Today</Heading>
-            {todaysClasses.length > 0 ? (
+            {todaysClasses.length > 0 && canSee(session, "calendar") ? (
               <Button
                 label="All of today"
                 variant="secondary"

@@ -188,15 +188,31 @@ export const ROLE_HOMES = {
     description: "The numbers, today's classes and recent activity. For the desk.",
   },
   today: {
+    // Compatibility for existing roles and sessions. Not offered by new forms.
+    label: "Instructor",
+    path: "/instructor",
+    description: "Own classes, attendance and competencies on the deck.",
+  },
+  instructor: {
+    label: "Instructor",
+    path: "/instructor",
+    description: "Own classes, attendance and competencies. Needs the Instructor screen and attendance permission.",
+  },
+  calendar: {
     label: "Today",
     path: "/today",
-    description: "Straight to their classes on the deck. For instructors. Needs the first permission above.",
+    description: "All of today’s classes in a calendar. Needs the Today screen; attendance keeps its own permission.",
   },
 } as const;
 
 export type RoleHome = keyof typeof ROLE_HOMES;
 
-export const ROLE_HOME_ORDER: RoleHome[] = ["overview", "reception", "today"];
+export const ROLE_HOME_ORDER: RoleHome[] = ["overview", "reception", "calendar", "instructor"];
+
+export function normaliseRoleHome(value: unknown): RoleHome {
+  if (value === "today") return "instructor";
+  return isRoleHome(value) ? value : "overview";
+}
 
 export function isRoleHome(value: unknown): value is RoleHome {
   return typeof value === "string" && value in ROLE_HOMES;
@@ -222,7 +238,8 @@ export const SYSTEM_ROLES: {
     screens: [
       "overview",
       "reception",
-      "today",
+      "calendar",
+      "instructor",
       "students",
       "courses",
       "together",
@@ -238,15 +255,15 @@ export const SYSTEM_ROLES: {
     name: "Instructor",
     description: "The deck and nothing else: their classes today, attendance and competencies.",
     permissions: ["attendance.mark", "attendance.cover", "progression.complete"],
-    home: "today",
-    screens: ["today"],
+    home: "instructor",
+    screens: ["instructor"],
   },
   {
     name: "Viewer",
     description: "Can look things up and change nothing. Reception, or a duty manager.",
     permissions: [],
     home: "overview",
-    screens: ["overview", "reception", "students", "courses", "together", "assessments"],
+    screens: ["overview", "reception", "calendar", "students", "courses", "together", "assessments"],
   },
 ];
 

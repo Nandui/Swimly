@@ -8,7 +8,7 @@ test("grouping preserves screen and permission restrictions without empty headin
   const screens = visibleScreens(["today", "roles", "activity"], expandPermissions(["attendance.mark"]));
   const groups = visibleNavGroups(screens);
   assert.deepEqual(groups.map(group => group.label), ["Daily work"]);
-  assert.deepEqual(groups.flatMap(group => group.items.map(item => item.href)), ["/today"]);
+  assert.deepEqual(groups.flatMap(group => group.items.map(item => item.href)), ["/today", "/instructor"]);
   assert.deepEqual(visibleNavGroups(new Set()), []);
 });
 
@@ -30,7 +30,7 @@ test("nested pages select their destination without prefix collisions", () => {
 test("swimmer lookup never directs a desk-only user to the profile screen", () => {
   assert.equal(swimmerLookupHref(new Set(["reception"]), "demo"), "/reception?swimmer=demo");
   assert.equal(swimmerLookupHref(new Set(["students", "reception"]), "demo"), "/students/demo");
-  assert.equal(swimmerLookupHref(new Set(["today"]), "demo"), null);
+  assert.equal(swimmerLookupHref(new Set(["instructor"]), "demo"), null);
   assert.equal(swimmerLookupHref(new Set(), "demo"), null);
   assert.equal(swimmerLookupHref(new Set(["reception"]), "a&b"), "/reception?swimmer=a%26b");
 });

@@ -97,6 +97,7 @@ function DeckChecklistState({
   attendance,
   readOnly,
   doneHref,
+  doneLabel = "Today",
 }: {
   courseId: string;
   date: string;
@@ -108,6 +109,7 @@ function DeckChecklistState({
   readOnly: boolean;
   /** Where "done" goes once everything is saved. */
   doneHref: string;
+  doneLabel?: string;
 }) {
   const initial = React.useMemo<Marks>(
     () =>
@@ -289,7 +291,7 @@ function DeckChecklistState({
           This level has no competencies yet, so there is nothing to mark.
         </Text>
         <Button
-          label="Back to Today"
+          label={`Back to ${doneLabel}`}
           variant="secondary"
           size="lg"
           href={doneHref}
@@ -533,7 +535,7 @@ function DeckChecklistState({
           />
         ) : saved ? (
           <Button
-            label="Done, back to Today"
+            label={`Done, back to ${doneLabel}`}
             variant="primary"
             size="lg"
             href={doneHref}
@@ -541,7 +543,7 @@ function DeckChecklistState({
           />
         ) : (
           <Button
-            label="Back to Today"
+            label={`Back to ${doneLabel}`}
             variant="secondary"
             size="lg"
             href={doneHref}

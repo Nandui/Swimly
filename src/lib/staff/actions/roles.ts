@@ -15,7 +15,7 @@ import { guardKeyholders, withKeyholderLock } from "@/lib/staff/keyholders";
 import {
   ALL_PERMISSIONS,
   ROLE_HOMES,
-  isRoleHome,
+  normaliseRoleHome,
   legacyRoleFor,
   type PermissionKey,
 } from "@/lib/staff/permissions";
@@ -42,7 +42,7 @@ const roleSchema = z.object({
   description: z.string().trim().max(300, "Keep the description under 300 characters."),
   permissions: z.array(z.string()).max(100),
   /** A `ROLE_HOMES` key. Anything else lands on the overview. */
-  home: z.string().transform((value) => (isRoleHome(value) ? value : "overview")),
+  home: z.string().transform(normaliseRoleHome),
   /** `SCREENS` keys. Filtered against the catalogue like the permissions. */
   screens: z.array(z.string()).max(50),
 });
@@ -137,7 +137,7 @@ export async function updateRole(id: string, input: RoleInput): Promise<ActionRe
     if ((existing.description ?? "") !== description) changes.push("description");
     if (existing.home !== home) changes.push(`starts on ${ROLE_HOMES[home].label}`);
 
-    const screensBefore = new Set(existing.screens);
+    const screensBefore = new Set(cleanScreens(existing.screens));
     const screensAfter = new Set<string>(screens);
     const shown = screens.filter((key) => !screensBefore.has(key)).map((k) => screenMeta(k).label);
     const hidden = cleanScreens(existing.screens)

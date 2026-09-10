@@ -54,7 +54,7 @@ without opening the old system.
 
 **Registers and cover on the deck** is the thing the old system could not do
 and Swimly must get right (confirmed as the one edge that matters). A class is
-marked on a phone, two taps from Today, and the record says who actually
+marked on a phone, two taps from Instructor, and the record says who actually
 taught it: cover is declared by the person at the pool and written as a fact
 on the row, not arranged by an administrator who has gone home.
 
@@ -98,8 +98,9 @@ each level; two sites in one app with shared staff.
 
 ## Capabilities and Constraints
 
-**Built and in use:** Today deck screen (own classes and every class running,
-grouped by time or level) with self-declared cover; registers that start
+**Built and in use:** Instructor deck screen (own/all classes, time or level
+grouping, attendance and declared cover); Today calendar (all classes in start-time columns, with
+pool and instructor filters, including own classes and declared cover); registers that start
 everyone absent; per-class competency checklist; eligibility, confirmed level
 completion and move-up; enrolment with a capacity lock and a reason for
 out-of-sequence placement; waitlist and transfers; Together (a time that suits
@@ -118,6 +119,18 @@ by level, day and preferred start times. A selected class is reviewed before a
 change is confirmed. Today's classes open from the header; quick add, sibling
 times and assessment shortcuts remain nearby. Roles can offer Reception as a
 screen and choose it as a landing page.
+
+Today has one purpose: check the current club’s full day of classes. Time slots
+are the columns, as confirmed by the owner; classes show their end time,
+pool area, instructor or cover, places and attendance status. Earlier classes
+stay visible. The columns wrap into a chronological schedule on small screens.
+Opening attendance remains a separate, permission-gated action. Roles can
+offer the calendar without granting attendance permission.
+
+Instructor retains the original Today deck workflow at `/instructor`. Today
+is the new calendar at `/today`. They are separate screens and landing-page
+choices. Existing instructor roles keep their deck access and starting page;
+attendance and competencies return to the destination that opened the class.
 
 **Constraints that hold:**
 
@@ -181,7 +194,7 @@ screen and choose it as a landing page.
 ## Product Principles
 
 1. **The deck comes first.** Anything an instructor does poolside works
-   one-handed on a phone, two taps from Today, with wet hands, in glare and
+   one-handed on a phone, two taps from Instructor, with wet hands, in glare and
    in the dark, and survives a dropped connection.
 2. **Say who did what.** Every mark, register and cover carries a name and a
    time. Nothing about who taught a class is inferred.

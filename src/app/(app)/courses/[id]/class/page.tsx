@@ -34,24 +34,25 @@ import { pageSession } from "@/lib/page-guards";
 import { getClassProgress } from "@/lib/progression/data/progress";
 import { fullName } from "@/lib/students/constants";
 import { AppIcon } from "@/components/ui-kit/app-icon";
+import { classReturnDestination } from "@/lib/attendance/navigation";
 
 export const metadata: Metadata = { title: "Class" };
 
 type Step = "attendance" | "competencies";
 
-/** The class, run from the deck: one button on Today opens it, attendance
+/** The class, run from the deck: one button on Instructor opens it, attendance
  *  is step one and the competencies are step two. Saving the attendance
- *  moves on; finishing the checklist goes back to Today.
+ *  moves on; finishing the checklist returns to the page that opened it.
  *
  *  Step two marks one competency at a time across the whole class, the
  *  way a lesson happens. The register page and the assessment page still
  *  exist for the desk — for a register weeks back, for one swimmer's whole
  *  checklist, and for moving a swimmer up. */
 export default async function ClassPage(props: PageProps<"/courses/[id]/class">) {
-  // Reached from Today by the deck and from Classes by the desk, so either
-  // screen opens it; taking attendance is still the permission it needs.
+  // The deck, calendar and Classes can each open attendance. Screen access
+  // never grants the separate permission to take it.
   const session = await pageSession();
-  if (!canSee(session, "today") && !canSee(session, "courses")) notFound();
+  if (!canSee(session, "instructor") && !canSee(session, "calendar") && !canSee(session, "courses")) notFound();
   if (!can(session, "attendance.mark")) notFound();
   const { id } = await props.params;
   const params = await props.searchParams;
@@ -59,6 +60,11 @@ export default async function ClassPage(props: PageProps<"/courses/[id]/class">)
 
   const [course, { club }] = await Promise.all([getCourse(id), getCurrentClub()]);
   if (!course) notFound();
+  const returnTo = classReturnDestination({
+    instructor: canSee(session, "instructor"), calendar: canSee(session, "calendar"), courses: canSee(session, "courses"),
+  }, params.from, course.id);
+  if (!returnTo) notFound();
+  const sourceQuery = returnTo.source ? `&from=${returnTo.source}` : "";
   if (course.clubId !== club.id) {
     return (
       <WrongClub what={`The class ${courseName(course)}`} owner={course.club} current={club} />
@@ -90,7 +96,7 @@ export default async function ClassPage(props: PageProps<"/courses/[id]/class">)
   const admin = can(session, "progression.override");
 
   const stepHref = (next: Step) =>
-    `/courses/${course.id}/class?date=${iso}${next === "competencies" ? "&step=competencies" : ""}`;
+    `/courses/${course.id}/class?date=${iso}${sourceQuery}${next === "competencies" ? "&step=competencies" : ""}`;
 
   const readyToComplete = progress.swimmers.filter((s) => s.eligible && !s.completedOn);
   const competencies = progress.course.level.competencies.length;
@@ -98,13 +104,11 @@ export default async function ClassPage(props: PageProps<"/courses/[id]/class">)
   return (
     <VStack gap={6}>
       <VStack gap={2}>
-        {/* Back to wherever this person's deck is: Today for an instructor,
-            the class's own page for a desk role without Today. */}
         <BackLink
-          href={canSee(session, "today") ? "/today" : `/courses/${course.id}`}
-          current={canSee(session, "today") ? courseName(course) : "Class"}
+          href={returnTo.href}
+          current={returnTo.source ? courseName(course) : "Class"}
         >
-          {canSee(session, "today") ? "Today" : courseName(course)}
+          {returnTo.source ? returnTo.label : courseName(course)}
         </BackLink>
         <PageHeader
           actions={
@@ -113,14 +117,14 @@ export default async function ClassPage(props: PageProps<"/courses/[id]/class">)
                 <Button
                   label="Week before"
                   variant="secondary"
-                  href={`/courses/${course.id}/class?date=${shiftWeeks(iso, -1)}`}
+                  href={`/courses/${course.id}/class?date=${shiftWeeks(iso, -1)}${sourceQuery}`}
                   icon={<AppIcon name="chevronLeft" size="sm" />}
                 />
                 {shiftWeeks(iso, 1) <= today() ? (
                   <Button
                     label="Week after"
                     variant="secondary"
-                    href={`/courses/${course.id}/class?date=${shiftWeeks(iso, 1)}`}
+                    href={`/courses/${course.id}/class?date=${shiftWeeks(iso, 1)}${sourceQuery}`}
                     endContent={<AppIcon name="chevronRight" size="sm" />}
                   />
                 ) : null}
@@ -130,7 +134,7 @@ export default async function ClassPage(props: PageProps<"/courses/[id]/class">)
           title={
             <HStack gap={2} vAlign="center" wrap="wrap">
               {/* The desk's page for this class, for roles that have it.
-                  Today itself never leads off the deck; this is the one
+                  Instructor itself never leads off the deck; this is the one
                   door. */}
               {canSee(session, "courses") ? (
                 <Link href={`/courses/${course.id}`} color="primary">
@@ -313,7 +317,8 @@ export default async function ClassPage(props: PageProps<"/courses/[id]/class">)
                 : null
             }
             readOnly={!mayAssess}
-            doneHref="/today"
+            doneHref={returnTo.href}
+            doneLabel={returnTo.label}
           />
         </>
       )}

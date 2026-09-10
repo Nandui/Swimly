@@ -17,8 +17,9 @@ import {
   PERMISSION_GROUP_ORDER,
   ROLE_HOMES,
   ROLE_HOME_ORDER,
+  normaliseRoleHome,
 } from "@/lib/staff/permissions";
-import { SCREENS } from "@/lib/staff/screens";
+import { SCREENS, cleanScreens } from "@/lib/staff/screens";
 import { Icon } from "@astryxdesign/core/Icon";
 
 type Role = {
@@ -55,10 +56,10 @@ function Ticked({ name, values }: { name: string; values: string[] }) {
   );
 }
 
-/** Which screens the role offers at all. An instructor role ticks Today and
+/** Which screens the role offers at all. An instructor role ticks Instructor and
  *  nothing else, and the deck becomes their whole app. */
 function ScreenPicker({ role }: { role?: Role }) {
-  const [screens, setScreens] = React.useState<string[]>(role?.screens ?? []);
+  const [screens, setScreens] = React.useState<string[]>(() => cleanScreens(role?.screens ?? []));
   return (
     <>
       <Ticked name="screens" values={screens} />
@@ -85,7 +86,7 @@ function ScreenPicker({ role }: { role?: Role }) {
 
 /** Where this role's day starts. */
 function HomePicker({ role }: { role?: Role }) {
-  const [home, setHome] = React.useState(role?.home ?? "overview");
+  const [home, setHome] = React.useState<string>(() => normaliseRoleHome(role?.home));
   return (
     <RadioList
       label="Where they start after signing in"

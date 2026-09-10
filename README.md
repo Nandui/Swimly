@@ -72,6 +72,19 @@ Adding a swimmer requires `students.manage`; enrolment actions require
 
 See [Reception implementation and verification](docs/reception.md).
 
+## Today’s classes
+
+`/today` shows the whole day in time-slot columns. Each class carries its time,
+pool area, instructor or cover, places and attendance status. Filter by pool or
+instructor, or jump to the running classes. Columns wrap into a phone schedule.
+Viewing the calendar needs the Today screen; attendance remains separately
+permission-gated. See [Today’s calendar](docs/today.md).
+
+`/instructor` retains the original deck page: My classes, All classes,
+time/level grouping, attendance and cover. Instructor and Today are separate
+sidebar destinations and role choices. Existing instructor landing pages stay
+on the deck. Attendance and competencies return to the page that opened them.
+
 ## Astryx
 
 [Astryx](https://astryx.atmeta.com/) is the visual authority. The app uses

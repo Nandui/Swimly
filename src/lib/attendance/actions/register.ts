@@ -242,6 +242,7 @@ export async function markRegister(input: MarkRegisterInput): Promise<RegisterSa
   revalidatePath("/courses/[id]/class", "page");
   revalidatePath("/courses/[id]", "page");
   revalidatePath("/today");
+  revalidatePath("/instructor");
   revalidatePath("/");
   return result;
 }

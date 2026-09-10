@@ -7,6 +7,7 @@ import {
   ClipboardCheck,
   Home,
   Headset,
+  GraduationCap,
   KeyRound,
   Layers,
   Settings,
@@ -30,7 +31,8 @@ export type AppNavItem = NavItem & {
 
 export const NAV_ITEMS: AppNavItem[] = [
   { href: "/reception", label: "Reception", icon: Headset, screen: "reception", group: "daily" },
-  { href: "/today", label: "Today", icon: CalendarCheck, screen: "today", group: "daily" },
+  { href: "/today", label: "Today", icon: CalendarCheck, screen: "calendar", group: "daily" },
+  { href: "/instructor", label: "Instructor", icon: GraduationCap, screen: "instructor", group: "daily" },
   { href: "/students", label: "Swimmers", icon: Users, screen: "students", group: "daily" },
   { href: "/courses", label: "Classes", icon: CalendarDays, screen: "courses", group: "daily" },
   { href: "/assessments", label: "Assessments", icon: ClipboardCheck, screen: "assessments", group: "daily" },

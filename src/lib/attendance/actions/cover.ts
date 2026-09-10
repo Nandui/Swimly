@@ -104,6 +104,7 @@ export async function takeOverClass(input: TakeOverInput): Promise<ActionResult>
   revalidatePath("/courses/[id]/assess", "page");
   revalidatePath("/courses/[id]/class", "page");
   revalidatePath("/today");
+  revalidatePath("/instructor");
   revalidatePath("/reception");
   revalidatePath("/");
   return ok();
