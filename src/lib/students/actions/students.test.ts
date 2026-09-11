@@ -79,7 +79,7 @@ test("adding a swimmer returns their ID only after the create with registration-
   });
   assert.deepEqual(await actions.createStudent(input), { ok: true, studentId: "new-swimmer" });
   assert.deepEqual(events, ["authorize", "create", "audit", "commit"]);
-  assert.deepEqual(paths, ["/reception", "/students"]);
+  assert.deepEqual(paths, ["/students"]);
   events.length = 0; paths.length = 0; rejectAudit = true;
   await assert.rejects(actions.createStudent(input), /Audit unavailable/);
   assert.equal(events.includes("commit"), false);

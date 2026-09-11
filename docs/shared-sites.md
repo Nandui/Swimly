@@ -45,5 +45,5 @@ rechecks and rollback when audit writes fail. `npm run typecheck` and
 
 After release, inspect the shared catalogue and existing records through the
 normal authenticated app. Confirm both sites' class lists, the global swimmer
-search and the site selector in Reception's class finder. Use synthetic records
+search and the site selector in swimmer enrolment and move dialogs. Use synthetic records
 only in isolated tests; do not create live bookings as a verification shortcut.

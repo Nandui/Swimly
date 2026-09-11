@@ -26,12 +26,6 @@ export const SCREENS = [
     description: "The numbers, today's classes and recent activity.",
   },
   {
-    key: "reception",
-    label: "Reception",
-    path: "/reception",
-    description: "The desk: swimmer lookup, today's timetable and quick enrolment actions.",
-  },
-  {
     key: "calendar",
     label: "Today",
     path: "/today",
@@ -160,7 +154,6 @@ export function homePathFor(
   screens: readonly string[]
 ): string {
   const visible = visibleScreens(screens, expandPermissions(permissions));
-  if (home === "reception" && visible.has("reception")) return ROLE_HOMES.reception.path;
   if ((home === "today" || home === "instructor") && visible.has("instructor")) return ROLE_HOMES.instructor.path;
   if (home === "calendar" && visible.has("calendar")) return ROLE_HOMES.calendar.path;
   if (visible.has("overview")) return ROLE_HOMES.overview.path;

@@ -25,7 +25,6 @@ function revalidate() {
   revalidatePath("/students/[id]", "page");
   revalidatePath("/courses/[id]/assess", "page");
   revalidatePath("/courses/[id]/class", "page");
-  revalidatePath("/reception");
 }
 
 /** All progress writes take the swimmer lock, so simultaneous saves and

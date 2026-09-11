@@ -180,7 +180,7 @@ their H1; never nest another `Layout`.
 
 The desktop `SideNav` is Astryx's 260px default. `SideNavHeading` holds the
 wordmark, with a named club `DropdownMenu` below. Screen access is resolved
-before grouping: Daily work (Reception, Today, Swimmers, Classes,
+before grouping: Daily work (Today, Instructor, Swimmers, Classes,
 Assessments, Together), Monitoring (Overview, Activity), and a collapsible
 Setup (Programmes, Staff, Roles, Clubs). Empty groups disappear. Setup opens
 when one of its destinations is active; nested URLs select the parent
@@ -193,9 +193,9 @@ stable first paint. The named club selector moves into the utility header
 while the rail is collapsed.
 
 The utility header contains the existing async `StudentSearch` and the
-appearance control. Lookup appears only for people who can open Swimmers or
-Reception; it opens a full profile when Swimmers is available, otherwise
-the existing Reception lookup. Searches remain authenticated, cover both sites, and include inactive swimmers. Changing the club or path
+appearance control. Lookup appears only for people who can open Swimmers and
+opens the full profile. Searches remain authenticated, cover both sites, and
+include inactive swimmers. Changing the club or path
 remounts the lookup so results from the previous context do not linger.
 
 Below the utility header, `StackItem size="fill" isScrollable` owns the
@@ -392,12 +392,16 @@ cookie-backed working area filters the timetable; it does not restrict swimmer
 search or profile access. Switching sites keeps the current page and selected
 swimmer. Staff permissions continue to apply by name.
 
-Reception defaults its class finder to the working area, with explicit site
-and All sites options. Enrol, transfer and move-up pickers list both sites and
+Enrol, transfer and move-up pickers offer a site filter, list both sites and
 name the destination. A transfer locks both classes and the swimmer, rechecks
 capacity, ends the old enrolment and creates a new history row. Cross-site
 transfers write activity at both the source and destination. Attendance stays
 with the class and date where it happened.
+
+Reception is retired. Its former screen key is ignored and its former home
+uses the normal accessible-screen fallback. The old route redirects to the
+selected swimmer or Swimmers list only with existing Swimmers access;
+otherwise it uses that same home fallback. No role gains another screen.
 
 Original Student.clubId and Programme.clubId values remain as registration
 provenance. Additive sharedWithId links on Programme, Level, Competency and

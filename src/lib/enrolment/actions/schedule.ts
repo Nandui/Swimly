@@ -37,7 +37,6 @@ export async function scheduleUnenrolment(id: string, date: string | null): Prom
     return ok();
   });
   if (result.ok) {
-    revalidatePath("/reception");
     revalidatePath("/courses/[id]", "page");
     revalidatePath("/students/[id]", "page");
   }

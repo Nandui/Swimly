@@ -27,10 +27,14 @@ test("nested pages select their destination without prefix collisions", () => {
   assert.equal(isNavItemActive("/", "/"), true);
 });
 
-test("swimmer lookup never directs a desk-only user to the profile screen", () => {
-  assert.equal(swimmerLookupHref(new Set(["reception"]), "demo"), "/reception?swimmer=demo");
-  assert.equal(swimmerLookupHref(new Set(["students", "reception"]), "demo"), "/students/demo");
+test("swimmer lookup requires the Swimmers screen and never links to retired Reception", () => {
+  const retired = visibleScreens(["reception"], expandPermissions([]));
+  assert.equal(swimmerLookupHref(retired, "demo"), null);
+  assert.deepEqual(visibleNavGroups(retired), []);
+  const screens = visibleScreens(["students", "reception", "calendar"], expandPermissions([]));
+  assert.deepEqual(visibleNavGroups(screens).flatMap(group => group.items.map(item => item.href)), ["/today", "/students"]);
+  assert.equal(swimmerLookupHref(screens, "demo"), "/students/demo");
   assert.equal(swimmerLookupHref(new Set(["instructor"]), "demo"), null);
   assert.equal(swimmerLookupHref(new Set(), "demo"), null);
-  assert.equal(swimmerLookupHref(new Set(["reception"]), "a&b"), "/reception?swimmer=a%26b");
+  assert.equal(swimmerLookupHref(new Set(["students"]), "a&b"), "/students/a%26b");
 });

@@ -177,11 +177,6 @@ export const ALL_PERMISSIONS: PermissionKey[] = PERMISSIONS.map((p) => p.key);
  *  reads the path from here. An instructor's day starts on the deck; the
  *  desk's starts on the overview. */
 export const ROLE_HOMES = {
-  reception: {
-    label: "Reception",
-    path: "/reception",
-    description: "Swimmer lookup, today's timetable and enrolment actions. Needs the Reception screen.",
-  },
   overview: {
     label: "Overview",
     path: "/",
@@ -207,7 +202,7 @@ export const ROLE_HOMES = {
 
 export type RoleHome = keyof typeof ROLE_HOMES;
 
-export const ROLE_HOME_ORDER: RoleHome[] = ["overview", "reception", "calendar", "instructor"];
+export const ROLE_HOME_ORDER: RoleHome[] = ["overview", "calendar", "instructor"];
 
 export function normaliseRoleHome(value: unknown): RoleHome {
   if (value === "today") return "instructor";
@@ -237,7 +232,6 @@ export const SYSTEM_ROLES: {
     home: "overview",
     screens: [
       "overview",
-      "reception",
       "calendar",
       "instructor",
       "students",
@@ -263,7 +257,7 @@ export const SYSTEM_ROLES: {
     description: "Can look things up and change nothing. Reception, or a duty manager.",
     permissions: [],
     home: "overview",
-    screens: ["overview", "reception", "calendar", "students", "courses", "together", "assessments"],
+    screens: ["overview", "calendar", "students", "courses", "together", "assessments"],
   },
 ];
 

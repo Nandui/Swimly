@@ -29,7 +29,7 @@ type Props = Omit<AppShellProps, "groups" | "wordmark" | "onSignOut" | "switcher
 export function AppChrome({ screens, club, clubs, ...rest }: Props) {
   const router = useRouter();
   const pathname = usePathname();
-  const canFindSwimmer = screens.has("students") || screens.has("reception");
+  const canFindSwimmer = screens.has("students");
 
   return (
     <AppShell

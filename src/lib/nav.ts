@@ -6,7 +6,6 @@ import {
   CalendarHeart,
   ClipboardCheck,
   Home,
-  Headset,
   GraduationCap,
   KeyRound,
   Layers,
@@ -30,7 +29,6 @@ export type AppNavItem = NavItem & {
 };
 
 export const NAV_ITEMS: AppNavItem[] = [
-  { href: "/reception", label: "Reception", icon: Headset, screen: "reception", group: "daily" },
   { href: "/today", label: "Today", icon: CalendarCheck, screen: "calendar", group: "daily" },
   { href: "/instructor", label: "Instructor", icon: GraduationCap, screen: "instructor", group: "daily" },
   { href: "/students", label: "Swimmers", icon: Users, screen: "students", group: "daily" },
@@ -70,7 +68,6 @@ export function isNavItemActive(pathname: string, href: string): boolean {
 /** Search must land on a screen the person can actually open. */
 export function swimmerLookupHref(screens: Set<ScreenKey>, id: string): string | null {
   if (screens.has("students")) return `/students/${encodeURIComponent(id)}`;
-  if (screens.has("reception")) return `/reception?swimmer=${encodeURIComponent(id)}`;
   return null;
 }
 

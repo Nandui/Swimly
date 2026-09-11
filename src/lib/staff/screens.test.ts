@@ -1,17 +1,22 @@
 import assert from "node:assert/strict";
 import { test } from "node:test";
-import { cleanScreens, homePathFor, visibleScreens } from "./screens";
-import { expandPermissions, normaliseRoleHome } from "./permissions";
+import { ALL_SCREENS, cleanScreens, homePathFor, visibleScreens } from "./screens";
+import { expandPermissions, normaliseRoleHome, ROLE_HOME_ORDER, ROLE_HOMES } from "./permissions";
 
-test("Reception is a selectable landing page only when the role offers it", () => {
-  assert.equal(homePathFor("reception", [], ["reception"]), "/reception");
+test("retired Reception homes fall back to an accessible screen without granting new access", () => {
+  assert.equal(homePathFor("reception", [], ["reception"]), "/account");
   assert.equal(homePathFor("reception", [], ["overview"]), "/");
+  assert.equal(homePathFor("reception", [], ["reception", "students"]), "/students");
+  assert.equal(homePathFor("reception", [], ["reception", "calendar"]), "/today");
   assert.equal(homePathFor("reception", [], []), "/account");
+  assert.equal(normaliseRoleHome("reception"), "overview");
 });
 
-test("Reception screen access does not require or grant enrolment or deck permissions", () => {
-  assert.deepEqual([...visibleScreens(["reception", "calendar"], expandPermissions([]))], ["reception", "calendar"]);
-  assert.equal(visibleScreens(["students", "courses"], expandPermissions(["enrolment.manage"])).has("reception"), false);
+test("Reception is absent from screen and home choices, including old stored role keys", () => {
+  assert.deepEqual([...visibleScreens(["reception", "calendar"], expandPermissions([]))], ["calendar"]);
+  assert.deepEqual(cleanScreens(["reception", "unknown"]), []);
+  assert.ok(!ALL_SCREENS.some(key => String(key) === "reception"));
+  assert.ok(ROLE_HOME_ORDER.every(key => String(ROLE_HOMES[key].path) !== "/reception"));
 });
 
 test("Today can be read without attendance permission, but still needs screen access", () => {
