@@ -23,6 +23,7 @@ export type CourseFilters = {
   time: string;
   /** A user id, or "none" for the classes nobody is assigned to. */
   instructor: string;
+  location: string;
   /** "open" — a place left. "full" — none. */
   places: string;
 };
@@ -34,11 +35,12 @@ export const EMPTY_FILTERS: CourseFilters = {
   day: "",
   time: "",
   instructor: "",
+  location: "",
   places: "",
 };
 
 /** Every key except `q`, which is a text box rather than a picker. */
-export const PICKER_KEYS = ["programme", "level", "day", "time", "instructor", "places"] as const;
+export const PICKER_KEYS = ["programme", "level", "day", "time", "instructor", "location", "places"] as const;
 export type PickerKey = (typeof PICKER_KEYS)[number];
 
 export const PICKER_LABELS: Record<PickerKey, string> = {
@@ -47,6 +49,7 @@ export const PICKER_LABELS: Record<PickerKey, string> = {
   day: "Day",
   time: "Time",
   instructor: "Instructor",
+  location: "Pool area",
   places: "Places",
 };
 
@@ -57,17 +60,11 @@ function one(params: RawParams, key: string): string {
   return typeof value === "string" ? value.trim() : "";
 }
 
-/** The value of `day` that means "the whole week".
- *
- *  A URL with no `day` at all means today — 134 classes is not a page anybody
- *  reads top to bottom, and a timetable opened on the deck is opened for today.
- *  But then clearing the Day chip cannot simply delete the key, or it would
- *  snap straight back to today and the week would be unreachable. So the week
- *  has to be a value, and this is it. Absent means today; `any` means all. */
+/** The browser opens across the week; keep existing `day=any` links working. */
 export const ANY_DAY = "any";
 
-export function parseCourseFilters(params: RawParams, today: DayOfWeek): CourseFilters {
-  const day = params.day === undefined ? today : one(params, "day");
+export function parseCourseFilters(params: RawParams): CourseFilters {
+  const day = one(params, "day");
   return {
     q: one(params, "q"),
     programme: one(params, "programme"),
@@ -75,6 +72,7 @@ export function parseCourseFilters(params: RawParams, today: DayOfWeek): CourseF
     day: day === ANY_DAY ? "" : day,
     time: one(params, "time"),
     instructor: one(params, "instructor"),
+    location: one(params, "location"),
     places: one(params, "places"),
   };
 }
@@ -120,6 +118,7 @@ export function matchesFilters(
   if (except !== "level" && filters.level && course.levelId !== filters.level) return false;
   if (except !== "day" && filters.day && course.dayOfWeek !== filters.day) return false;
   if (except !== "time" && filters.time && String(course.startMinutes) !== filters.time) return false;
+  if (except !== "location" && filters.location && (course.location ?? "") !== filters.location) return false;
   if (except !== "instructor" && filters.instructor) {
     const matches =
       filters.instructor === "none"
@@ -224,6 +223,14 @@ export function courseFilterDimensions(
       filters,
       "instructor",
       (c) => ({ value: c.instructorId ?? "none", label: c.instructor?.name ?? "Nobody assigned" }),
+      byLabel
+    ),
+
+    dimension(
+      courses,
+      filters,
+      "location",
+      (c) => c.location ? { value: c.location, label: c.location } : null,
       byLabel
     ),
 

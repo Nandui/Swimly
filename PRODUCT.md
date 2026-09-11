@@ -106,7 +106,7 @@ completion and move-up; enrolment with a capacity lock and a reason for
 out-of-sequence placement; waitlist and transfers; Together (a time that suits
 every child in one family); assessment sessions, bookings and placements;
 swimmer profiles (header, medical strip, contacts, tabs); timetable with
-filters, opening on today; programmes, levels and competencies (archived, never
+filters across the week and full class inspection; programmes, levels and competencies (archived, never
 deleted); staff accounts, admin-defined roles from a permission catalogue;
 clubs and the switcher; the audit log; account settings with light and dark
 mode.
@@ -135,6 +135,13 @@ Instructor retains the original Today deck workflow at `/instructor`. Today
 is the new calendar at `/today`. They are separate screens and landing-page
 choices. Existing instructor roles keep their deck access and starting page;
 attendance and competencies return to the destination that opened the class.
+
+Classes is the weekly class browser: search and combine programme, level, day,
+time, instructor, pool area and availability filters. Active and archived classes
+have separate results. Opening a class leads to a full page with its enrolled
+swimmers, pinned placement levels, waitlist, schedule, instructor and capacity.
+Returning to Classes restores the search, filters and page. Enrolment and class
+management use the existing permissions and confirmation flows.
 
 **Constraints that hold:**
 

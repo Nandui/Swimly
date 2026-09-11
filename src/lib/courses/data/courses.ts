@@ -74,9 +74,10 @@ export async function getCoursesOnDay(dayOfWeek: DayOfWeek, instructorId?: strin
 /** The roster: who is in this class, and on what footing. */
 export async function getRoster(courseId: string) {
   await requireSession();
+  const clubId = await currentClubId();
 
   return prisma.enrolment.findMany({
-    where: { courseId, status: { in: ["ACTIVE", "WAITLISTED"] } },
+    where: { courseId, course: { clubId }, student: { clubId }, status: { in: ["ACTIVE", "WAITLISTED"] } },
     orderBy: [
       { status: "asc" },
       { student: { lastName: "asc" } },
@@ -89,11 +90,13 @@ export async function getRoster(courseId: string) {
       scheduledEndOn: true,
       placementReason: true,
       level: { select: { id: true, name: true } },
+      programme: { select: { id: true, name: true } },
       student: {
         select: {
           id: true,
           firstName: true,
           lastName: true,
+          memberNumber: true,
           dateOfBirth: true,
           medicalNotes: true,
           status: true,

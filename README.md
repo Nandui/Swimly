@@ -72,6 +72,16 @@ Adding a swimmer requires `students.manage`; enrolment actions require
 
 See [Reception implementation and verification](docs/reception.md).
 
+## Find and inspect classes
+
+`/courses` opens across the week with search, combined filters, active/archived
+results and pagination. Each result opens a full class page showing enrolled
+swimmers, their placement levels, the waitlist and class details. The Classes
+breadcrumb restores the search and filters. Existing enrolment, attendance and
+class management actions remain permission-gated.
+
+See [Class browser implementation and verification](docs/classes.md).
+
 ## Today’s classes
 
 `/today` shows the whole day in time-slot columns. Each class carries its time,
