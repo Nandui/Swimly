@@ -125,11 +125,11 @@ export async function markRegister(input: MarkRegisterInput): Promise<RegisterSa
     }
 
     const students = await tx.student.findMany({
-      where: { id: { in: marks.map((mark) => mark.studentId) }, clubId },
+      where: { id: { in: marks.map((mark) => mark.studentId) } },
       select: { id: true, firstName: true, lastName: true },
     });
     const nameById = new Map(students.map((student) => [student.id, fullName(student)]));
-    if (students.length !== marks.length) return fail("A swimmer is not in this club. Reload and try again.");
+    if (students.length !== marks.length) return fail("A swimmer no longer exists. Reload and try again.");
     const previous = new Map(existingRows.map((row) => [row.studentId, row]));
     const changed = marks.filter((mark) => {
       const was = previous.get(mark.studentId);

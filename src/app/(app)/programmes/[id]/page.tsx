@@ -12,8 +12,6 @@ import { EmptyState } from "@/components/ui-kit/empty-state";
 import { PageHeader } from "@/components/ui-kit/page-header";
 import { Lead, Num } from "@/components/ui-kit/prose";
 import { Tag } from "@/components/ui-kit/tag";
-import { WrongClub } from "@/components/clubs/wrong-club";
-import { CopyProgramme } from "@/components/curriculum/copy-programme";
 import { EditProgramme } from "@/components/curriculum/programme-actions";
 import {
   AddAssessmentType,
@@ -31,7 +29,6 @@ import {
   MoveCompetency,
   MoveLevel,
 } from "@/components/curriculum/level-actions";
-import { getCurrentClub } from "@/lib/clubs/current";
 import { competencyCountLabel } from "@/lib/curriculum/constants";
 import {
   getProgramme,
@@ -46,25 +43,17 @@ export default async function ProgrammePage(props: PageProps<"/programmes/[id]">
   await screenPage("programmes", "curriculum.manage");
   const { id } = await props.params;
 
-  const [programme, assessmentTypes, { club, clubs }] = await Promise.all([
+  const [programme, assessmentTypes] = await Promise.all([
     getProgramme(id, true),
     getAssessmentTypes(id),
-    getCurrentClub(),
   ]);
   if (!programme) notFound();
-  if (programme.clubId !== club.id) {
-    return (
-      <WrongClub what={`The programme ${programme.name}`} owner={programme.club} current={club} />
-    );
-  }
 
   const liveLevels = programme.levels.filter((level) => !level.archivedAt);
   const competencies = programme.levels.reduce(
     (total, level) => total + level.competencies.filter((c) => !c.archivedAt).length,
     0
   );
-  // Where it could be copied to: every other live club.
-  const otherClubs = clubs.filter((other) => other.id !== programme.clubId);
 
   return (
     <VStack gap={6}>
@@ -77,14 +66,6 @@ export default async function ProgrammePage(props: PageProps<"/programmes/[id]">
           description={programme.description ?? undefined}
           actions={
             <>
-              {programme.archivedAt ? null : (
-                <CopyProgramme
-                  programme={programme}
-                  clubs={otherClubs}
-                  levels={liveLevels.length}
-                  competencies={competencies}
-                />
-              )}
               <EditProgramme programme={{ ...programme, archivedAt: programme.archivedAt }} variant="button" />
               <AddLevel programmeId={programme.id} />
             </>
@@ -96,7 +77,7 @@ export default async function ProgrammePage(props: PageProps<"/programmes/[id]">
         <Num>{liveLevels.length}</Num> {liveLevels.length === 1 ? "level" : "levels"}, worked
         through in this order, with <Num>{competencies}</Num>{" "}
         {competencies === 1 ? "competency" : "competencies"} between them. Every competency in a
-        level has to be signed off before a swimmer can complete it.
+        level has to be signed off before a swimmer can complete it. Curriculum and progress are shared across all sites.
       </Lead>
 
       {programme.levels.length === 0 ? (

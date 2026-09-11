@@ -20,7 +20,7 @@ complete input: read existing values first. Enrolment confirmations are
 returned unchanged; send `confirmation` only after user authorization.
 
 Mutations call the existing application actions, retaining validation,
-club scoping, live named permissions, seat locks, audit and revalidation.
+timetable site filtering, shared swimmer identity, live named permissions, seat locks, audit and revalidation.
 The server loads a unique active staff account matching the configured actor
 name on every request. Zero or multiple matches refuse access. Permission
 changes or deactivation take effect immediately. Audits label command-line use.
@@ -28,7 +28,8 @@ The credential exposes course, swimmer and enrolment operations, not arbitrary
 SQL, account administration or destructive bulk commands.
 
 Before importing, inspect existing classes and match swimmers by member number.
-Flag conflicting identities and cross-club matches. Do not invent dates of birth
+Flag conflicting identities. A member found at another registration site is the
+same shared record, not a reason to create a duplicate. Do not invent dates of birth
 from ages or overwrite existing contacts. Keep source rosters in ignored local
 files. Re-read after writes. A lost response is not permission to retry blindly.
 No automatic write retries are performed.

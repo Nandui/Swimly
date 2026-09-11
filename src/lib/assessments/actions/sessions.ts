@@ -10,6 +10,7 @@ import { currentClubId } from "@/lib/clubs/current";
 import { withAssessmentSeat } from "@/lib/assessments/seat";
 import { parseTime } from "@/lib/courses/constants";
 import { isDateOnly, parseDateOnly } from "@/lib/format";
+import { readSharedCurriculum } from "@/lib/curriculum/data/shared";
 import { prisma } from "@/lib/prisma";
 
 /** Sessions are timetable, so they share the timetable's permission. */
@@ -54,14 +55,6 @@ function toData(input: SessionInput) {
   };
 }
 
-/** The kind has to be one of the programme's own, and live. */
-async function kindFor(programmeId: string, typeId: string) {
-  return prisma.assessmentType.findFirst({
-    where: { id: typeId, programmeId, archivedAt: null },
-    select: { id: true, name: true },
-  });
-}
-
 export async function createSession(input: SessionInput): Promise<ActionResult> {
   const session = await requirePermission("courses.manage");
 
@@ -70,13 +63,11 @@ export async function createSession(input: SessionInput): Promise<ActionResult> 
   const data = toData(parsed.data);
   const clubId = await currentClubId();
 
-  const programme = await prisma.programme.findUnique({
-    where: { id: data.programmeId, clubId },
-    select: { id: true, name: true, archivedAt: true, clubId: true },
-  });
+  const curriculum = await readSharedCurriculum();
+  const programme = curriculum.programme(data.programmeId);
   if (!programme || programme.archivedAt) return fail("That programme is not available.");
 
-  const kind = await kindFor(programme.id, data.typeId);
+  const kind = curriculum.types.find(t => t.id === curriculum.typeIds.resolve(data.typeId) && t.programmeId === programme.id && !t.archivedAt);
   if (!kind) return fail(`That kind of assessment does not belong to ${programme.name}.`);
   if (data.instructorId && !await prisma.user.findUnique({ where: { id: data.instructorId, isActive: true }, select: { id: true } })) {
     return fail("That instructor is not available. Pick an active staff member.");
@@ -84,8 +75,8 @@ export async function createSession(input: SessionInput): Promise<ActionResult> 
 
   await prisma.$transaction(async (tx) => {
     const created = await tx.assessmentSession.create({
-      // The programme's club: a session places children into that ladder.
-      data: { ...data, clubId: programme.clubId },
+      // Assessments happen at the working site against the shared ladder.
+      data: { ...data, programmeId: programme.id, typeId: kind.id, clubId },
       select: { id: true, date: true, startMinutes: true },
     });
 
@@ -136,6 +127,12 @@ export async function updateSession(id: string, input: SessionInput): Promise<Ac
     if (!existing) return fail("That session no longer exists.");
     if (existing.cancelledAt) return fail("That session was cancelled.");
 
+    const curriculum = await readSharedCurriculum(tx);
+    data.programmeId = curriculum.programmeIds.resolve(data.programmeId);
+    data.typeId = curriculum.typeIds.resolve(data.typeId);
+    existing.programmeId = curriculum.programmeIds.resolve(existing.programmeId);
+    existing.typeId = existing.typeId ? curriculum.typeIds.resolve(existing.typeId) : existing.typeId;
+
     // An outcome names a level of the session's programme. Once one exists the
     // programme is load-bearing, and changing it would orphan the placement.
     if (existing._count.bookings > 0 && data.programmeId !== existing.programmeId) {
@@ -144,25 +141,12 @@ export async function updateSession(id: string, input: SessionInput): Promise<Ac
       );
     }
 
-    // A session stays in its club. The picker only offers that club's
-    // programmes, so this is the action refusing what the page never showed.
     if (data.programmeId !== existing.programmeId) {
-      const programme = await tx.programme.findUnique({
-        where: { id: data.programmeId },
-        select: { clubId: true, archivedAt: true },
-      });
+      const programme = curriculum.programme(data.programmeId);
       if (!programme || programme.archivedAt) return fail("That programme is not available.");
-      if (programme.clubId !== existing.clubId) {
-        return fail("That programme belongs to another club.");
-      }
     }
-
-    // An archived kind may stay on a session that already has it; it just
-    // cannot be chosen afresh. So the live check runs only when the kind changes.
     if (data.typeId !== existing.typeId || data.programmeId !== existing.programmeId) {
-      const kind = await tx.assessmentType.findFirst({
-        where: { id: data.typeId, programmeId: data.programmeId, archivedAt: null }, select: { id: true },
-      });
+      const kind = curriculum.types.find(t => t.id === data.typeId && t.programmeId === data.programmeId && !t.archivedAt);
       if (!kind) return fail("That kind of assessment does not belong to this programme.");
     }
     if (data.instructorId && data.instructorId !== existing.instructorId && !await tx.user.findUnique({ where: { id: data.instructorId, isActive: true }, select: { id: true } })) {

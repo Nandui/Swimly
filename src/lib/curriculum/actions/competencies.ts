@@ -7,7 +7,8 @@ import { logAudit } from "@/lib/audit";
 import { requirePermission } from "@/lib/authz";
 import { LIST_ORDER } from "@/lib/curriculum/constants";
 import { reorderIds } from "@/lib/curriculum/reorder";
-import { currentClubId } from "@/lib/clubs/current";
+import { readSharedCurriculum } from "@/lib/curriculum/data/shared";
+import { sharedNameTaken } from "@/lib/curriculum/shared-name";
 import { prisma } from "@/lib/prisma";
 
 /** A competency's `levelId` is deliberately not editable anywhere in this
@@ -32,26 +33,29 @@ export async function createCompetency(
   input: CompetencyInput
 ): Promise<ActionResult> {
   const session = await requirePermission("curriculum.manage");
+  const curriculum = await readSharedCurriculum();
+  levelId = curriculum.levelIds.resolve(levelId);
 
   const parsed = competencySchema.safeParse(input);
   if (!parsed.success) return fail(parsed.error.issues[0].message);
   const { name, description } = parsed.data;
 
   const level = await prisma.level.findUnique({
-    where: { id: levelId, programme: { clubId: await currentClubId() } },
+    where: { id: levelId },
     select: { id: true, name: true, archivedAt: true, programmeId: true },
   });
   if (!level) return fail("That level no longer exists.");
   if (level.archivedAt) return fail(`${level.name} is archived. Restore it first.`);
 
   const last = await prisma.competency.findFirst({
-    where: { levelId },
+    where: { levelId: { in: curriculum.levelIds.variants(levelId) }, sharedWithId: null },
     orderBy: { sortOrder: "desc" },
     select: { sortOrder: true },
   });
 
   const created = await onUniqueViolation(
     () => prisma.$transaction(async (tx) => {
+      if (await sharedNameTaken(tx, "competency", name, levelId)) return fail(`There is already a competency called ${name}.`);
       const created = await tx.competency.create({
         data: {
           levelId,
@@ -86,13 +90,15 @@ export async function updateCompetency(
   input: CompetencyInput
 ): Promise<ActionResult> {
   const session = await requirePermission("curriculum.manage");
+  const curriculum = await readSharedCurriculum();
+  id = curriculum.competencyIds.resolve(id);
 
   const parsed = competencySchema.safeParse(input);
   if (!parsed.success) return fail(parsed.error.issues[0].message);
   const { name, description } = parsed.data;
 
   const existing = await prisma.competency.findUnique({
-    where: { id, level: { programme: { clubId: await currentClubId() } } },
+    where: { id },
     select: {
       id: true,
       name: true,
@@ -109,8 +115,9 @@ export async function updateCompetency(
 
   const updated = await onUniqueViolation(
     () => prisma.$transaction(async (tx) => {
+      if (await sharedNameTaken(tx, "competency", name, existing.level.id, id)) return fail(`There is already a competency called ${name}.`);
       const updated = await tx.competency.update({
-        where: { id, level: { programme: { clubId: await currentClubId() } } },
+        where: { id },
         data: { name, description: description || null },
         select: { id: true, name: true },
       });
@@ -144,9 +151,11 @@ export async function setCompetencyArchived(
   archived: boolean
 ): Promise<ActionResult> {
   const session = await requirePermission("curriculum.manage");
+  const curriculum = await readSharedCurriculum();
+  id = curriculum.competencyIds.resolve(id);
 
   const existing = await prisma.competency.findUnique({
-    where: { id, level: { programme: { clubId: await currentClubId() } } },
+    where: { id },
     select: {
       id: true,
       name: true,
@@ -160,11 +169,11 @@ export async function setCompetencyArchived(
 
   await prisma.$transaction(async (tx) => {
     await tx.competency.update({
-      where: { id, level: { programme: { clubId: await currentClubId() } } },
+      where: { id },
       data: { archivedAt: archived ? new Date() : null },
     });
 
-    const assessed = existing._count.results;
+    const assessed = curriculum.competencies.find(c => c.id === id)?._count.results ?? existing._count.results;
     await logAudit({
       actorId: session.user.id,
       actorName: session.user.name ?? "Unknown",
@@ -189,15 +198,17 @@ export async function moveCompetency(
   direction: "up" | "down"
 ): Promise<ActionResult> {
   const session = await requirePermission("curriculum.manage");
+  const curriculum = await readSharedCurriculum();
+  id = curriculum.competencyIds.resolve(id);
 
   const competency = await prisma.competency.findUnique({
-    where: { id, level: { programme: { clubId: await currentClubId() } } },
+    where: { id },
     select: { levelId: true, name: true, level: { select: { programmeId: true } } },
   });
   if (!competency) return fail("That competency no longer exists.");
 
   const siblings = await prisma.competency.findMany({
-    where: { levelId: competency.levelId, archivedAt: null },
+    where: { levelId: { in: curriculum.levelIds.variants(competency.levelId) }, archivedAt: null, sharedWithId: null },
     orderBy: [...LIST_ORDER],
     select: { id: true, name: true },
   });

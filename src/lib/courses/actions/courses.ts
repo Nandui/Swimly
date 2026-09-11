@@ -10,6 +10,7 @@ import { currentClubId } from "@/lib/clubs/current";
 import { courseLabel, formatSlot, parseTime } from "@/lib/courses/constants";
 import { TAKES_A_PLACE } from "@/lib/courses/data/courses";
 import { withCourseSeat } from "@/lib/enrolment/seat";
+import { readSharedCurriculum, sharedCourse } from "@/lib/curriculum/data/shared";
 import { prisma } from "@/lib/prisma";
 
 /** Timetable changes require courses.manage; enrolment has its own permission. */
@@ -90,16 +91,8 @@ export async function createCourse(input: CourseInput): Promise<ActionResult> {
   const data = resolved.data;
   const clubId = await currentClubId();
 
-  const level = await prisma.level.findUnique({
-    where: { id: data.levelId, programme: { clubId } },
-    select: {
-      id: true,
-      name: true,
-      archivedAt: true,
-      programmeId: true,
-      programme: { select: { clubId: true, archivedAt: true } },
-    },
-  });
+  const curriculum = await readSharedCurriculum();
+  const level = curriculum.level(data.levelId);
   if (!level) return fail("That level no longer exists.");
   if (level.archivedAt) return fail(`${level.name} is archived. Restore it first.`);
   if (level.programme.archivedAt) return fail("That programme is archived. Restore it first.");
@@ -109,9 +102,8 @@ export async function createCourse(input: CourseInput): Promise<ActionResult> {
 
   await prisma.$transaction(async (tx) => {
     const course = await tx.course.create({
-      // A class belongs to the club whose curriculum it teaches — the level's,
-      // not the cookie's, so the two can never disagree.
-      data: { ...data, clubId: level.programme.clubId },
+      // The working site owns the timetable; the curriculum is shared.
+      data: { ...data, levelId: level.id, clubId },
       select: {
         id: true,
         name: true,
@@ -145,13 +137,12 @@ export async function updateCourse(id: string, input: CourseInput): Promise<Acti
   const resolved = resolve(input);
   if (!resolved.ok) return fail(resolved.error);
   const data = resolved.data;
-  const clubId = await currentClubId();
 
   const result = await withCourseSeat(id, async (tx) => {
-    const existing = await tx.course.findUnique({
-      where: { id, clubId },
+    const rawExisting = await tx.course.findUnique({
+      where: { id },
       select: {
-        id: true,
+        id: true, clubId: true,
         name: true,
         levelId: true,
         dayOfWeek: true,
@@ -165,8 +156,12 @@ export async function updateCourse(id: string, input: CourseInput): Promise<Acti
         _count: { select: { enrolments: { where: TAKES_A_PLACE } } },
       },
     });
-    if (!existing) return fail("That class no longer exists.");
+    if (!rawExisting) return fail("That class no longer exists.");
+    const curriculum = await readSharedCurriculum(tx);
+    const existing = sharedCourse(rawExisting, curriculum);
+    const clubId = existing.clubId;
 
+    data.levelId = curriculum.levelIds.resolve(data.levelId);
     const taken = existing._count.enrolments;
 
     // An enrolment pins the level the student was placed at. Re-badging a course
@@ -179,10 +174,7 @@ export async function updateCourse(id: string, input: CourseInput): Promise<Acti
       );
     }
 
-    const level = await tx.level.findUnique({
-      where: { id: data.levelId, programme: { clubId } },
-      select: { id: true, name: true, archivedAt: true, programmeId: true, programme: { select: { archivedAt: true } } },
-    });
+    const level = curriculum.level(data.levelId);
     if (!level) return fail("That level no longer exists.");
     if (level.archivedAt && level.id !== existing.levelId) {
       return fail(`${level.name} is archived. Restore it first.`);
@@ -218,7 +210,7 @@ export async function updateCourse(id: string, input: CourseInput): Promise<Acti
       where: { id },
       data,
       select: {
-        id: true,
+        id: true, clubId: true,
         name: true,
         dayOfWeek: true,
         startMinutes: true,
@@ -252,22 +244,24 @@ export async function updateCourse(id: string, input: CourseInput): Promise<Acti
 
 export async function setCourseArchived(id: string, archived: boolean): Promise<ActionResult> {
   const session = await requirePermission("courses.manage");
-  const clubId = await currentClubId();
 
   const result = await withCourseSeat(id, async (tx) => {
-    const existing = await tx.course.findUnique({
-      where: { id, clubId },
+    const rawExisting = await tx.course.findUnique({
+      where: { id },
       select: {
-        id: true,
+        id: true, clubId: true,
         name: true,
-        archivedAt: true,
+        archivedAt: true, levelId: true,
         dayOfWeek: true,
         startMinutes: true,
         level: { select: { name: true, programmeId: true } },
         _count: { select: { enrolments: { where: { status: { in: ["ACTIVE", "WAITLISTED"] } } } } },
       },
     });
-    if (!existing) return fail("That class no longer exists.");
+    if (!rawExisting) return fail("That class no longer exists.");
+    const curriculum = await readSharedCurriculum(tx);
+    const existing = sharedCourse(rawExisting, curriculum);
+    const clubId = existing.clubId;
     if (Boolean(existing.archivedAt) === archived) return ok();
 
     if (archived && existing._count.enrolments > 0) {

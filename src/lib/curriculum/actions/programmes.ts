@@ -9,6 +9,8 @@ import { currentClubId } from "@/lib/clubs/current";
 import { LIST_ORDER } from "@/lib/curriculum/constants";
 import { reorderIds } from "@/lib/curriculum/reorder";
 import { prepareImage } from "@/lib/curriculum/image-upload";
+import { readSharedCurriculum } from "@/lib/curriculum/data/shared";
+import { sharedNameTaken } from "@/lib/curriculum/shared-name";
 import { prisma } from "@/lib/prisma";
 
 /** Programme changes require curriculum.manage. */
@@ -30,20 +32,20 @@ export async function createProgramme(input: ProgrammeInput, imageForm?: FormDat
   const parsed = programmeSchema.safeParse(input);
   if (!parsed.success) return fail(parsed.error.issues[0].message);
   const { name, description } = parsed.data;
-  // A new programme is the club being worked in's. Which is the point of the
-  // switcher being on screen the whole time.
+  // Retain the registration site as provenance; this definition is shared.
   const clubId = await currentClubId();
   const image = await prepareImage(imageForm);
   if (!image.ok) return fail(image.error);
 
   const last = await prisma.programme.findFirst({
-    where: { clubId },
+    where: { sharedWithId: null },
     orderBy: { sortOrder: "desc" },
     select: { sortOrder: true },
   });
 
   const created = await onUniqueViolation(
     () => prisma.$transaction(async (tx) => {
+      if (await sharedNameTaken(tx, "programme", name, undefined)) return fail(`There is already a programme called ${name}.`);
       const created = await tx.programme.create({
         data: {
           clubId,
@@ -66,7 +68,7 @@ export async function createProgramme(input: ProgrammeInput, imageForm?: FormDat
       }, tx);
       return created;
     }),
-    `There is already a programme called ${name} in this club.`
+    `There is already a programme called ${name} across the sites.`
   );
   if ("ok" in created) return created;
   if (image.data.imageVersion !== undefined) revalidatePath("/", "layout");
@@ -81,13 +83,15 @@ export async function updateProgramme(
   imageForm?: FormData
 ): Promise<ActionResult> {
   const session = await requirePermission("curriculum.manage");
+  const curriculum = await readSharedCurriculum();
+  id = curriculum.programmeIds.resolve(id);
 
   const parsed = programmeSchema.safeParse(input);
   if (!parsed.success) return fail(parsed.error.issues[0].message);
   const { name, description } = parsed.data;
 
   const existing = await prisma.programme.findUnique({
-    where: { id, clubId: await currentClubId() },
+    where: { id },
     select: { id: true, name: true, description: true, imageVersion: true },
   });
   if (!existing) return fail("That programme no longer exists.");
@@ -102,8 +106,9 @@ export async function updateProgramme(
 
   const updated = await onUniqueViolation(
     () => prisma.$transaction(async (tx) => {
+      if (await sharedNameTaken(tx, "programme", name, undefined, id)) return fail(`There is already a programme called ${name}.`);
       const updated = await tx.programme.update({
-        where: { id, clubId: await currentClubId() },
+        where: { id },
         data: { name, description: description || null, ...image.data },
         select: { id: true, name: true },
       });
@@ -138,9 +143,11 @@ export async function setProgrammeArchived(
   archived: boolean
 ): Promise<ActionResult> {
   const session = await requirePermission("curriculum.manage");
+  const curriculum = await readSharedCurriculum();
+  id = curriculum.programmeIds.resolve(id);
 
   const existing = await prisma.programme.findUnique({
-    where: { id, clubId: await currentClubId() },
+    where: { id },
     select: { id: true, name: true, archivedAt: true },
   });
   if (!existing) return fail("That programme no longer exists.");
@@ -148,7 +155,7 @@ export async function setProgrammeArchived(
 
   if (archived) {
     const active = await prisma.enrolment.count({
-      where: { programmeId: id, status: "ACTIVE" },
+      where: { programmeId: { in: curriculum.programmeIds.variants(id) }, status: { in: ["ACTIVE", "WAITLISTED"] } },
     });
     if (active > 0) {
       return fail(
@@ -159,7 +166,7 @@ export async function setProgrammeArchived(
 
   await prisma.$transaction(async (tx) => {
     await tx.programme.update({
-      where: { id, clubId: await currentClubId() },
+      where: { id },
       data: { archivedAt: archived ? new Date() : null },
     });
 
@@ -184,13 +191,15 @@ export async function moveProgramme(
   direction: "up" | "down"
 ): Promise<ActionResult> {
   const session = await requirePermission("curriculum.manage");
+  const curriculum = await readSharedCurriculum();
+  id = curriculum.programmeIds.resolve(id);
 
-  // Its own club's list, whichever club is being worked in.
-  const moving = await prisma.programme.findUnique({ where: { id, clubId: await currentClubId() }, select: { clubId: true } });
+  // One shared programme order for both sites.
+  const moving = await prisma.programme.findUnique({ where: { id }, select: { clubId: true } });
   if (!moving) return fail("That programme no longer exists.");
 
   const siblings = await prisma.programme.findMany({
-    where: { archivedAt: null, clubId: moving.clubId },
+    where: { archivedAt: null, sharedWithId: null },
     orderBy: [...LIST_ORDER],
     select: { id: true, name: true },
   });

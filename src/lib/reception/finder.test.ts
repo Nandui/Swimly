@@ -4,7 +4,7 @@ import type { ReceptionClassOption } from "./data";
 import { emptyClassFilters, findReceptionClasses, invalidTimeRange } from "./finder";
 
 function course(id: string, values: Partial<ReceptionClassOption> = {}): ReceptionClassOption {
-  return { id, name: null, dayOfWeek: "MONDAY", startMinutes: 990, durationMinutes: 30,
+  return { id, clubId: "site-a", club: { id: "site-a", name: "Site A" }, name: null, dayOfWeek: "MONDAY", startMinutes: 990, durationMinutes: 30,
     location: "Learner Pool", capacity: 8, instructor: null,
     level: { id: "penguins", name: "Penguins", sortOrder: 1, programme: { id: "water", name: "Water Safety", sortOrder: 0 } },
     _count: { enrolments: 5 }, ...values };
@@ -32,4 +32,10 @@ test("an inverted time range cannot silently return booking targets", () => {
   const filters = { ...emptyClassFilters(), from: "1050", until: "990" };
   assert.equal(invalidTimeRange(filters), true);
   assert.deepEqual(findReceptionClasses([course("a")], filters, []), []);
+});
+
+test("the working-site filter can expand to both sites without changing the swimmer's occupied places", () => {
+  const options = [course("local"), course("other", { clubId: "site-b", club: { id: "site-b", name: "Site B" } }), course("occupied")];
+  assert.deepEqual(findReceptionClasses(options, emptyClassFilters("any", "site-a"), ["occupied"]).map(c => c.id), ["local"]);
+  assert.deepEqual(findReceptionClasses(options, emptyClassFilters(), ["occupied"]).map(c => c.id), ["local", "other"]);
 });

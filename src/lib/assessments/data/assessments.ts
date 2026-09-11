@@ -3,6 +3,8 @@ import { HOLDS_A_PLACE } from "@/lib/assessments/constants";
 import { requireSession } from "@/lib/authz";
 import { currentClubId } from "@/lib/clubs/current";
 import { LIST_ORDER, LIVE } from "@/lib/curriculum/constants";
+import { getSharedCurriculum } from "@/lib/curriculum/data/shared";
+import { getProgrammes } from "@/lib/curriculum/data/curriculum";
 import { prisma } from "@/lib/prisma";
 
 /** Reads for assessment sessions and bookings. Writes live in `../actions/`.
@@ -36,11 +38,13 @@ export type SessionRow = Prisma.AssessmentSessionGetPayload<{ select: typeof SES
 export async function getAssessmentSessions(): Promise<SessionRow[]> {
   await requireSession();
 
-  return prisma.assessmentSession.findMany({
+  const rows = await prisma.assessmentSession.findMany({
     where: { clubId: await currentClubId() },
     orderBy: [{ date: "asc" }, { startMinutes: "asc" }],
     select: SESSION_SELECT,
   });
+  const curriculum = await getSharedCurriculum();
+  return rows.map(row => ({ ...row, programmeId: curriculum.programmeIds.resolve(row.programmeId), programme: { id: curriculum.programmeIds.resolve(row.programmeId), name: curriculum.programme(row.programmeId)?.name ?? row.programme.name }, typeId: row.typeId ? curriculum.typeIds.resolve(row.typeId) : null, type: row.type ? { id: curriculum.typeIds.resolve(row.type.id), name: curriculum.types.find(t => t.id === curriculum.typeIds.resolve(row.type!.id))?.name ?? row.type.name } : null }));
 }
 
 const BOOKING_SELECT = {
@@ -71,7 +75,7 @@ export type BookingRow = Prisma.AssessmentBookingGetPayload<{ select: typeof BOO
 export async function getAssessmentSession(id: string) {
   await requireSession();
 
-  return prisma.assessmentSession.findUnique({
+  const row = await prisma.assessmentSession.findUnique({
     where: { id },
     select: {
       ...SESSION_SELECT,
@@ -92,6 +96,17 @@ export async function getAssessmentSession(id: string) {
       },
     },
   });
+  if (!row) return null;
+  const curriculum = await getSharedCurriculum();
+  const programme = curriculum.programme(row.programmeId);
+  return { ...row, programmeId: programme?.id ?? row.programmeId,
+    programme: { ...row.programme, id: programme?.id ?? row.programme.id, name: programme?.name ?? row.programme.name,
+      levels: programme?.levels.filter(l => !l.archivedAt).map(l => ({ id: l.id, name: l.name, sortOrder: l.sortOrder })) ?? [] },
+    typeId: row.typeId ? curriculum.typeIds.resolve(row.typeId) : null,
+    type: row.type ? { id: curriculum.typeIds.resolve(row.type.id), name: curriculum.types.find(t => t.id === curriculum.typeIds.resolve(row.type!.id))?.name ?? row.type.name } : null,
+    bookings: row.bookings.map(b => ({ ...b, outcomeLevelId: b.outcomeLevelId ? curriculum.levelIds.resolve(b.outcomeLevelId) : null,
+      outcomeLevel: b.outcomeLevel ? { id: curriculum.levelIds.resolve(b.outcomeLevel.id), name: curriculum.level(b.outcomeLevel.id)?.name ?? b.outcomeLevel.name } : null })),
+  };
 }
 
 export type SessionDetail = NonNullable<Awaited<ReturnType<typeof getAssessmentSession>>>;
@@ -100,7 +115,7 @@ export type SessionDetail = NonNullable<Awaited<ReturnType<typeof getAssessmentS
 export async function getStudentAssessments(studentId: string) {
   await requireSession();
 
-  return prisma.assessmentBooking.findMany({
+  const rows = await prisma.assessmentBooking.findMany({
     where: { studentId },
     orderBy: [{ session: { date: "desc" } }, { session: { startMinutes: "desc" } }],
     select: {
@@ -115,12 +130,26 @@ export async function getStudentAssessments(studentId: string) {
           id: true,
           date: true,
           startMinutes: true,
-          cancelledAt: true,
+          cancelledAt: true, club: { select: { id: true, name: true } },
           programme: { select: { id: true, name: true } },
-          type: { select: { name: true } },
+          type: { select: { id: true, name: true } },
         },
       },
     },
+  });
+  const curriculum = await getSharedCurriculum();
+  return rows.map(row => {
+    const programme = curriculum.programme(row.session.programme.id);
+    const type = row.session.type
+      ? curriculum.types.find(t => t.id === curriculum.typeIds.resolve(row.session.type!.id)) : null;
+    const outcome = row.outcomeLevel ? curriculum.level(row.outcomeLevel.id) : null;
+    return { ...row,
+      outcomeLevel: outcome ? { id: outcome.id, name: outcome.name } : row.outcomeLevel,
+      session: { ...row.session,
+        programme: programme ? { id: programme.id, name: programme.name } : row.session.programme,
+        type: type ? { id: type.id, name: type.name } : row.session.type,
+      },
+    };
   });
 }
 
@@ -133,27 +162,25 @@ export async function getAssessedLevelIds(
   studentId: string,
   programmeId: string
 ): Promise<Set<string>> {
+  await requireSession();
+  const curriculum = await getSharedCurriculum();
   const rows = await prisma.assessmentBooking.findMany({
     where: {
       studentId,
       status: "ATTENDED",
       outcomeLevelId: { not: null },
-      session: { programmeId },
+      session: { programmeId: { in: curriculum.programmeIds.variants(programmeId) } },
     },
     select: { outcomeLevelId: true },
   });
-  return new Set(rows.map((row) => row.outcomeLevelId!));
+  return new Set(rows.map(row => curriculum.levelIds.resolve(row.outcomeLevelId!)));
 }
 
 /** For the session form: which programme a session assesses for. */
 export async function getAssessmentProgrammeOptions() {
   await requireSession();
 
-  return prisma.programme.findMany({
-    where: { ...LIVE, clubId: await currentClubId() },
-    orderBy: [...LIST_ORDER],
-    select: { id: true, name: true },
-  });
+  return (await getProgrammes()).map(p => ({ id: p.id, name: p.name }));
 }
 
 export type ProgrammeOption = Awaited<ReturnType<typeof getAssessmentProgrammeOptions>>[number];
@@ -164,11 +191,8 @@ export type ProgrammeOption = Awaited<ReturnType<typeof getAssessmentProgrammeOp
 export async function getAssessmentTypeOptions() {
   await requireSession();
 
-  return prisma.assessmentType.findMany({
-    where: { ...LIVE, programme: { clubId: await currentClubId() } },
-    orderBy: [{ programmeId: "asc" }, ...LIST_ORDER],
-    select: { id: true, name: true, description: true, programmeId: true },
-  });
+  const curriculum = await getSharedCurriculum();
+  return curriculum.types.filter(t => !t.archivedAt && !curriculum.programme(t.programmeId)?.archivedAt).map(t => ({ id: t.id, name: t.name, description: t.description, programmeId: t.programmeId }));
 }
 
 export type AssessmentTypeOption = Awaited<ReturnType<typeof getAssessmentTypeOptions>>[number];
@@ -178,17 +202,8 @@ export type AssessmentTypeOption = Awaited<ReturnType<typeof getAssessmentTypeOp
 export async function getAssessmentTypes(programmeId: string) {
   await requireSession();
 
-  return prisma.assessmentType.findMany({
-    where: { programmeId },
-    orderBy: [...LIST_ORDER],
-    select: {
-      id: true,
-      name: true,
-      description: true,
-      archivedAt: true,
-      _count: { select: { sessions: true } },
-    },
-  });
+  const curriculum = await getSharedCurriculum();
+  return curriculum.types.filter(t => t.programmeId === curriculum.programmeIds.resolve(programmeId));
 }
 
 export type AssessmentTypeRow = Awaited<ReturnType<typeof getAssessmentTypes>>[number];

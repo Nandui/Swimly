@@ -1,11 +1,11 @@
 "use client";
 
 import { ArrowUpRight } from "lucide-react";
-import { Field, FormDialog } from "@/components/form-dialog";
-import { SearchablePicker, type PickerOption } from "@/components/searchable-picker";
+import { useId } from "react";
+import { SiteClassPicker } from "@/components/enrolment/enrolment-actions";
+import { FormDialog } from "@/components/form-dialog";
 import { Button } from "@astryxdesign/core/Button";
 import type { DayOfWeek } from "@/generated/prisma/client";
-import { courseLabel, placesLeft } from "@/lib/courses/constants";
 import { enrolStudent, transferEnrolment } from "@/lib/enrolment/actions/enrolment";
 import { Icon } from "@astryxdesign/core/Icon";
 
@@ -14,6 +14,7 @@ import { Icon } from "@astryxdesign/core/Icon";
 export type MoveTarget = {
   id: string;
   name: string | null;
+  club?: { id: string; name: string };
   dayOfWeek: DayOfWeek;
   startMinutes: number;
   capacity: number | null;
@@ -51,6 +52,7 @@ export function MoveUpToLevel({
   nextLevelName: string;
   courses: MoveTarget[];
 }) {
+  const id = useId();
   const targets = courses.filter(
     (course) => course.level.id === nextLevelId && !course.archivedAt
   );
@@ -62,16 +64,6 @@ export function MoveUpToLevel({
       <Button label={`Move up to ${nextLevelName}`} variant="secondary" size="sm" isDisabled={true} tooltip={`No class teaches ${nextLevelName} yet. Add one on the Classes page first.`} icon={<Icon icon={ArrowUpRight} size="sm" />} />
     );
   }
-
-  const options: PickerOption[] = targets.map((course) => {
-    const left = placesLeft(course._count.enrolments, course.capacity);
-    return {
-      value: course.id,
-      label: courseLabel(course),
-      hint: course.level.name,
-      meta: left === null ? "—" : left > 0 ? `${left} free` : "Full",
-    };
-  });
 
   return (
     <FormDialog
@@ -101,16 +93,7 @@ export function MoveUpToLevel({
             }, confirmation);
       }}
     >
-      <Field label={`Which ${nextLevelName} class`} htmlFor="toCourseId">
-        <SearchablePicker
-          id="toCourseId"
-          name="toCourseId"
-          options={options}
-          placeholder="Pick a class"
-          searchPlaceholder="Search by class or day…"
-          emptyText={`No ${nextLevelName} class matches that.`}
-        />
-      </Field>
+      <SiteClassPicker id={id} name="toCourseId" courses={targets} label={`Which ${nextLevelName} class`} />
     </FormDialog>
   );
 }

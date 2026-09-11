@@ -73,6 +73,11 @@ export function courseName(course: { name: string | null; level: { name: string 
   return course.name ?? course.level.name;
 }
 
+/** Enrolment and history can name classes at either site. */
+export function courseLabelWithSite(course: Parameters<typeof courseLabel>[0] & { club?: { name: string } }): string {
+  return `${courseLabel(course)}${course.club ? ` · ${course.club.name}` : ""}`;
+}
+
 /** "12 of 16", or just the headcount when the class is uncapped. */
 export function capacityLabel(taken: number, capacity: number | null): string {
   return capacity === null ? `${taken} enrolled` : `${taken} of ${capacity}`;

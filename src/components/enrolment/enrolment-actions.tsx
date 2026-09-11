@@ -3,6 +3,7 @@
 import { useId, useState } from "react";
 import { SegmentedControl, SegmentedControlItem } from "@astryxdesign/core/SegmentedControl";
 import { ArrowRightLeft, ChevronsUp, LogOut, Plus, UserRoundPlus } from "lucide-react";
+import { Selector } from "@astryxdesign/core/Selector";
 import { Input } from "@/components/ui/input";
 import { scheduleUnenrolment } from "@/lib/enrolment/actions/schedule";
 import { toDateOnlyString, today, parseDateOnly } from "@/lib/format";
@@ -24,7 +25,7 @@ import {
 import type { TransferTarget } from "@/lib/enrolment/data/enrolments";
 import {
   capacityLabel,
-  courseLabel,
+  courseLabelWithSite as courseLabel,
   formatSlotShort,
   placesLeft,
 } from "@/lib/courses/constants";
@@ -34,6 +35,7 @@ import { Icon } from "@astryxdesign/core/Icon";
 type CourseLike = {
   id: string;
   name: string | null;
+  club?: { id: string; name: string };
   dayOfWeek: TransferTarget["dayOfWeek"];
   startMinutes: number;
   capacity: number | null;
@@ -50,6 +52,20 @@ function courseOptions(courses: (CourseLike & { _count: { enrolments: number } }
       meta: left === null ? "—" : left > 0 ? `${left} free` : "Full",
     };
   });
+}
+
+/** A local filter: selecting a destination never changes the working site.
+ * Remount the picker when the site changes so a hidden old selection cannot submit. */
+export function SiteClassPicker({ id, name, courses, label = "Class" }: { id: string; name: string; courses: (CourseLike & { _count: { enrolments: number } })[]; label?: string }) {
+  const [site, setSite] = useState("any");
+  const sites = [...new Map(courses.flatMap(c => c.club ? [[c.club.id, c.club] as const] : [])).values()];
+  const filtered = courses.filter(c => site === "any" || c.club?.id === site);
+  return <>
+    <Selector label="Site" value={site} onChange={setSite} width="100%" options={[{ value: "any", label: "All sites" }, ...sites.map(s => ({ value: s.id, label: s.name }))]} />
+    <Field label={label} htmlFor={id}>
+      <SearchablePicker key={site} id={id} name={name} options={courseOptions(filtered)} placeholder="Pick a class" searchPlaceholder="Search by class, level, site or day…" emptyText="No class matches at this site." />
+    </Field>
+  </>;
 }
 
 /** The reason field is always present rather than revealed, because the client
@@ -146,16 +162,7 @@ export function EnrolInCourseForStudent({
       submit={(formData, confirmation) => enrolStudent(readEnrol(formData), confirmation)}
     >
       <input type="hidden" name="studentId" value={student.id} />
-      <Field label="Class" htmlFor={id}>
-        <SearchablePicker
-          id={id}
-          name="courseId"
-          options={courseOptions(courses)}
-          placeholder="Pick a class"
-          searchPlaceholder="Search by class, level or day…"
-          emptyText="No class matches that."
-        />
-      </Field>
+      <SiteClassPicker id={id} name="courseId" courses={courses} />
       <PlacementFields />
     </FormDialog>
   );
@@ -263,24 +270,7 @@ export function TransferEnrolment({
         )
       }
     >
-      <Field label="New class" htmlFor={id}>
-        <SearchablePicker
-          id={id}
-          name="toCourseId"
-          options={targets.map((target) => {
-            const left = placesLeft(target._count.enrolments, target.capacity);
-            return {
-              value: target.id,
-              label: courseLabel(target),
-              hint: `${target.level.name} · ${formatSlotShort(target)}`,
-              meta: left === null ? "—" : left > 0 ? `${left} free` : "Full",
-            };
-          })}
-          placeholder="Pick a class"
-          searchPlaceholder="Search by class, level or day…"
-          emptyText="No other class matches."
-        />
-      </Field>
+      <SiteClassPicker id={id} name="toCourseId" courses={targets} label="New class" />
       <PlacementReason />
     </FormDialog>
   );

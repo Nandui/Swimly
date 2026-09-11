@@ -2,6 +2,8 @@ import type { CompetencyStatus } from "@/generated/prisma/client";
 import { requireSession } from "@/lib/authz";
 import { LIST_ORDER, LIVE } from "@/lib/curriculum/constants";
 import { completionProgress, hasGraduated } from "@/lib/progression/rules";
+import { getSharedCurriculum, sharedCourse } from "@/lib/curriculum/data/shared";
+import { latestSharedMarks } from "@/lib/curriculum/shared";
 import { prisma } from "@/lib/prisma";
 
 export type CompetencyProgress = {
@@ -46,7 +48,7 @@ export type ProgrammeProgress = {
 export async function getStudentProgress(studentId: string): Promise<ProgrammeProgress[]> {
   await requireSession();
 
-  const [enrolments, completions, results] = await Promise.all([
+  const [rawEnrolments, rawCompletions, rawResults] = await Promise.all([
     prisma.enrolment.findMany({
       where: { studentId, status: "ACTIVE" },
       select: { levelId: true, programmeId: true, level: { select: { sortOrder: true } } },
@@ -69,44 +71,22 @@ export async function getStudentProgress(studentId: string): Promise<ProgrammePr
       select: {
         competencyId: true,
         status: true,
-        assessedOn: true,
+        assessedOn: true, updatedAt: true,
         assessedByName: true,
         note: true,
       },
     }),
   ]);
 
-  const programmeIds = [
-    ...new Set([
-      ...enrolments.map((row) => row.programmeId),
-      ...completions.map((row) => row.programmeId),
-    ]),
-  ];
-  if (programmeIds.length === 0) return [];
-
-  const programmes = await prisma.programme.findMany({
-    where: { id: { in: programmeIds } },
-    orderBy: [...LIST_ORDER],
-    select: {
-      id: true,
-      name: true,
-      levels: {
-        where: LIVE,
-        orderBy: [...LIST_ORDER],
-        select: {
-          id: true,
-          name: true,
-          description: true,
-          sortOrder: true,
-          competencies: {
-            where: LIVE,
-            orderBy: [...LIST_ORDER],
-            select: { id: true, name: true, description: true },
-          },
-        },
-      },
-    },
-  });
+  const curriculum = await getSharedCurriculum();
+  const enrolments = rawEnrolments.map(row => ({ ...row, levelId: curriculum.levelIds.resolve(row.levelId), programmeId: curriculum.programmeIds.resolve(row.programmeId), level: curriculum.level(row.levelId) ?? row.level }));
+  const completions = rawCompletions.map(row => ({ ...row, levelId: curriculum.levelIds.resolve(row.levelId), programmeId: curriculum.programmeIds.resolve(row.programmeId) }))
+    .sort((a, b) => a.completedOn.getTime() - b.completedOn.getTime() || a.id.localeCompare(b.id));
+  const results = latestSharedMarks(rawResults, curriculum.competencyIds.resolve);
+  const programmeIds = new Set([...enrolments, ...completions].map(row => row.programmeId));
+  const programmes = curriculum.programmes.filter(p => programmeIds.has(p.id)).map(p => ({ ...p,
+    levels: p.levels.filter(l => !l.archivedAt).map(l => ({ ...l, competencies: l.competencies.filter(c => !c.archivedAt) })),
+  }));
 
   const resultByCompetency = new Map(results.map((row) => [row.competencyId, row]));
   const completionByLevel = new Map(completions.map((row) => [row.levelId, row]));
@@ -188,7 +168,7 @@ export async function getClassProgress(courseId: string) {
   // Two round trips, not three. The roster needs only the course id, so it is
   // read alongside the course; everything that needs the course's level or
   // competencies waits for it in one second batch.
-  const [course, enrolments] = await Promise.all([
+  const [rawCourse, enrolments] = await Promise.all([
     prisma.course.findUnique({
       where: { id: courseId },
       select: {
@@ -223,33 +203,32 @@ export async function getClassProgress(courseId: string) {
       },
     }),
   ]);
-  if (!course) return null;
+  if (!rawCourse) return null;
+  const curriculum = await getSharedCurriculum();
+  const sharedLevel = curriculum.level(rawCourse.levelId);
+  const normalized = sharedCourse(rawCourse, curriculum);
+  const course = { ...normalized, level: { ...normalized.level, competencies: sharedLevel?.competencies.filter(c => !c.archivedAt).map(c => ({ id: c.id, name: c.name, description: c.description })) ?? [] } };
 
   const studentIds = enrolments.map((row) => row.student.id);
   const competencyIds = course.level.competencies.map((row) => row.id);
 
-  const [orderedLevels, results, completions] = await Promise.all([
-    // The ladder this course sits on, so the screen knows what "up" means.
-    prisma.level.findMany({
-      where: { programmeId: course.level.programmeId, ...LIVE },
-      orderBy: [...LIST_ORDER],
-      select: { id: true, name: true, sortOrder: true },
-    }),
+  const orderedLevels = curriculum.levels.filter(l => l.programmeId === course.level.programmeId && !l.archivedAt);
+  const [results, completions] = await Promise.all([
     studentIds.length && competencyIds.length
       ? prisma.competencyResult.findMany({
-          where: { studentId: { in: studentIds }, competencyId: { in: competencyIds } },
+          where: { studentId: { in: studentIds }, competencyId: { in: competencyIds.flatMap(curriculum.competencyIds.variants) } },
           select: {
             studentId: true,
             competencyId: true,
             status: true,
             assessedByName: true,
-            assessedOn: true,
+            assessedOn: true, updatedAt: true,
           },
         })
       : Promise.resolve([]),
     studentIds.length
       ? prisma.levelCompletion.findMany({
-          where: { studentId: { in: studentIds }, levelId: course.levelId },
+          where: { studentId: { in: studentIds }, levelId: { in: curriculum.levelIds.variants(course.levelId) } },
           select: { studentId: true, completedOn: true },
         })
       : Promise.resolve([]),
@@ -257,7 +236,8 @@ export async function getClassProgress(courseId: string) {
 
   type Mark = { status: CompetencyStatus; assessedByName: string; assessedOn: Date };
   const byStudent = new Map<string, Map<string, Mark>>();
-  for (const result of results) {
+  const sharedResults = studentIds.flatMap(id => latestSharedMarks(results.filter(r => r.studentId === id), curriculum.competencyIds.resolve));
+  for (const result of sharedResults) {
     const map = byStudent.get(result.studentId) ?? new Map<string, Mark>();
     map.set(result.competencyId, result);
     byStudent.set(result.studentId, map);
@@ -271,7 +251,7 @@ export async function getClassProgress(courseId: string) {
       enrolmentId: enrolment.id,
       student: enrolment.student,
       /** Placed at a different level from the one this class teaches. */
-      offLevel: enrolment.levelId !== course.levelId,
+      offLevel: curriculum.levelIds.resolve(enrolment.levelId) !== course.levelId,
       // Who set each mark, and when, travels with it: a competency is only
       // ever signed off by a named instructor.
       competencies: course.level.competencies.map((competency) => {

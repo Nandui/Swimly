@@ -72,14 +72,15 @@ test("changing or cancelling a schedule retains the current place", async () => 
   assert.equal(f.row.status, "ACTIVE");
 });
 
-test("past, today, invalid dates, ended places and another club are refused", async () => {
+test("past, today, invalid dates and ended places are refused; another site is supported", async () => {
   const f = fixture();
   for (const date of ["2026-09-06", "2026-09-07", "2026-02-30", "bad"]) assert.equal((await f.actions.scheduleUnenrolment("place", date)).ok, false);
   f.row.status = "WITHDRAWN";
   assert.equal((await f.actions.scheduleUnenrolment("place", "2026-09-10")).ok, false);
-  f.row.status = "ACTIVE"; f.row.course.clubId = "other";
-  assert.equal((await f.actions.scheduleUnenrolment("place", "2026-09-10")).ok, false);
   assert.equal(f.audits.length, 0);
+  f.row.status = "ACTIVE"; f.row.course.clubId = "other";
+  assert.equal((await f.actions.scheduleUnenrolment("place", "2026-09-10")).ok, true);
+  assert.equal(f.audits.length, 1);
 });
 
 test("overdue processing preserves the intended date, not the visit date", async () => {

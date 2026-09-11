@@ -2,6 +2,7 @@ import { DAY_META, placesLeft } from "@/lib/courses/constants";
 import type { ReceptionClassOption } from "./data";
 
 export type ClassFilters = {
+  site: string;
   level: string;
   day: string;
   from: string;
@@ -9,8 +10,8 @@ export type ClassFilters = {
   availableOnly: boolean;
 };
 
-export function emptyClassFilters(level = "any"): ClassFilters {
-  return { level, day: "any", from: "any", until: "any", availableOnly: true };
+export function emptyClassFilters(level = "any", site = "any"): ClassFilters {
+  return { site, level, day: "any", from: "any", until: "any", availableOnly: true };
 }
 
 export function invalidTimeRange(filters: ClassFilters) {
@@ -24,6 +25,7 @@ export function findReceptionClasses(courses: ReceptionClassOption[], filters: C
   if (invalidTimeRange(filters)) return [];
   const occupied = new Set(occupiedIds);
   return courses.filter(course => !occupied.has(course.id)
+    && (filters.site === "any" || course.clubId === filters.site)
     && (filters.level === "any" || course.level.id === filters.level)
     && (filters.day === "any" || course.dayOfWeek === filters.day)
     && (filters.from === "any" || course.startMinutes >= Number(filters.from))

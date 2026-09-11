@@ -1,6 +1,6 @@
 import type { Prisma, StudentStatus } from "@/generated/prisma/client";
 import { requireSession } from "@/lib/authz";
-import { currentClubId } from "@/lib/clubs/current";
+import { getSharedCurriculum } from "@/lib/curriculum/data/shared";
 import { prisma } from "@/lib/prisma";
 
 const LIST_SELECT = {
@@ -39,11 +39,10 @@ export const STUDENTS_PER_PAGE = 100;
  *  the placement lookup is the part that would otherwise go N+1. */
 export async function getStudents(filters: StudentFilters = {}) {
   await requireSession();
-  const clubId = await currentClubId();
 
+  const curriculum = await getSharedCurriculum();
   const q = filters.q?.trim();
   const where: Prisma.StudentWhereInput = {
-    clubId,
     ...(filters.status && filters.status !== "ALL" ? { status: filters.status } : {}),
     ...(q
       ? {
@@ -58,7 +57,7 @@ export async function getStudents(filters: StudentFilters = {}) {
         }
       : {}),
     ...(filters.levelId
-      ? { enrolments: { some: { levelId: filters.levelId, status: "ACTIVE" } } }
+      ? { enrolments: { some: { levelId: { in: curriculum.levelIds.variants(filters.levelId) }, status: "ACTIVE" } } }
       : {}),
   };
 
@@ -81,28 +80,21 @@ export async function getStudents(filters: StudentFilters = {}) {
   // enrolment asks the database to repeat a handful of names once per row; the
   // whole curriculum is ten levels, so it is fetched once alongside and joined
   // in memory. Cold, that was the difference between 130ms and 490ms.
-  const [placements, levels] = await Promise.all([
-    prisma.enrolment.findMany({
-      where: { studentId: { in: students.map((s) => s.id) }, status: "ACTIVE" },
-      select: { studentId: true, programmeId: true, levelId: true },
-    }),
-    prisma.level.findMany({
-      where: { programme: { clubId } },
-      select: { id: true, name: true, programme: { select: { id: true, name: true } } },
-    }),
-  ]);
-
-  const levelById = new Map(levels.map((level) => [level.id, level]));
+  const placements = await prisma.enrolment.findMany({
+    where: { studentId: { in: students.map(s => s.id) }, status: "ACTIVE" },
+    select: { studentId: true, programmeId: true, levelId: true },
+  });
 
   const byStudent = new Map<string, StudentRow["placements"]>();
   for (const placement of placements) {
-    const level = levelById.get(placement.levelId);
+    const level = curriculum.level(placement.levelId);
     if (!level) continue;
     const list = byStudent.get(placement.studentId) ?? [];
+    if (list.some(p => p.levelId === level.id)) continue;
     list.push({
-      programmeId: placement.programmeId,
+      programmeId: level.programme.id,
       programmeName: level.programme.name,
-      levelId: placement.levelId,
+      levelId: level.id,
       levelName: level.name,
     });
     byStudent.set(placement.studentId, list);
@@ -120,11 +112,10 @@ export async function getStudents(filters: StudentFilters = {}) {
 
 export async function getStudentCounts() {
   await requireSession();
-  const clubId = await currentClubId();
 
   const [all, active] = await Promise.all([
-    prisma.student.count({ where: { clubId } }),
-    prisma.student.count({ where: { clubId, status: "ACTIVE" } }),
+    prisma.student.count(),
+    prisma.student.count({ where: { status: "ACTIVE" } }),
   ]);
 
   return { all, active, inactive: all - active };

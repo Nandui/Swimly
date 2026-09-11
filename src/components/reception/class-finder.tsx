@@ -15,7 +15,7 @@ import { Heading, Text } from "@astryxdesign/core/Text";
 import { Field, FormDialog } from "@/components/form-dialog";
 import { Textarea } from "@/components/ui/textarea";
 import { Tag } from "@/components/ui-kit/tag";
-import { capacityTone, courseLabel, courseName, DAY_META, DAYS_IN_ORDER, formatSlotShort, formatTime, placesLeft } from "@/lib/courses/constants";
+import { capacityTone, courseLabelWithSite as courseLabel, courseName, DAY_META, DAYS_IN_ORDER, formatSlotShort, formatTime, placesLeft } from "@/lib/courses/constants";
 import { enrolStudent, transferEnrolment } from "@/lib/enrolment/actions/enrolment";
 import type { ReceptionClassOption, ReceptionSwimmer } from "@/lib/reception/data";
 import { emptyClassFilters, findReceptionClasses, invalidTimeRange, type ClassFilters } from "@/lib/reception/finder";
@@ -24,14 +24,16 @@ import { fullName } from "@/lib/students/constants";
 type Place = ReceptionSwimmer["enrolments"][number];
 const TIME_OPTIONS = Array.from({ length: 48 }, (_, i) => ({ value: String(i * 30), label: formatTime(i * 30) }));
 
-export function ClassFinder({ student, courses, source, onClose }: {
+export function ClassFinder({ student, courses, source, workingSiteId = "any", sites, onClose }: {
   student: ReceptionSwimmer;
   courses: ReceptionClassOption[];
   source?: Place;
+  workingSiteId?: string;
+  sites: { id: string; name: string }[];
   onClose: () => void;
 }) {
   const initialLevel = source?.level.id ?? (new Set(student.enrolments.map(place => place.level.id)).size === 1 ? student.enrolments[0].level.id : "any");
-  const [filters, setFilters] = useState(() => emptyClassFilters(initialLevel));
+  const [filters, setFilters] = useState(() => emptyClassFilters(initialLevel, workingSiteId));
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [limit, setLimit] = useState(6);
   const [refreshing, startRefresh] = useTransition();
@@ -63,13 +65,14 @@ export function ClassFinder({ student, courses, source, onClose }: {
       <HStack gap={3} hAlign="between" vAlign="start">
         <VStack gap={1} className="min-w-0 flex-1">
           <Heading level={3} id={`${id}-heading`} ref={heading} tabIndex={-1}>{source ? `Move ${student.firstName} to another class` : `Find a place for ${student.firstName}`}</Heading>
-          <Text color="secondary">Compare classes across the week. {source ? "Their current place stays until you confirm the move." : "Their existing places stay unless you choose to move one."}</Text>
+          <Text color="secondary">Compare classes at either site across the week. {source ? "Their current place stays until you confirm the move." : "Their existing places stay unless you choose to move one."}</Text>
         </VStack>
         <Button label="Close" aria-label="Close finder" variant="ghost" onClick={onClose} className="shrink-0" />
       </HStack>
 
-      <Grid gap={3} align="end" className="grid-cols-2 lg:grid-cols-6">
-        <VStack className="col-span-2 min-w-0">
+      <Grid gap={3} align="end" className="grid-cols-2 lg:grid-cols-4">
+        <Selector label="Site" value={filters.site} options={[{ value: "any", label: "All sites" }, ...sites.map(site => ({ value: site.id, label: site.name }))]} onChange={value => change("site", value)} width="100%" />
+        <VStack className="min-w-0">
           <Selector label="Level" value={filters.level} options={levelOptions} onChange={value => change("level", value)} hasSearch width="100%" />
         </VStack>
         <Selector label="Day" value={filters.day} options={[{ value: "any", label: "Any day" }, ...DAYS_IN_ORDER.map(day => ({ value: day, label: DAY_META[day].label }))]} onChange={value => change("day", value)} width="100%" />
@@ -82,7 +85,7 @@ export function ClassFinder({ student, courses, source, onClose }: {
         <Text color="secondary" role="status">{matches.length} {matches.length === 1 ? "matching class" : "matching classes"}{matches.length > limit ? ` · Showing ${limit}` : ""} · Places rechecked at confirmation</Text>
         <HStack gap={2} wrap="wrap">
           <Button label="Refresh places" variant="ghost" size="sm" isLoading={refreshing} onClick={() => { setSelectedId(null); startRefresh(() => router.refresh()); }} />
-          <Button label="Reset filters" variant="ghost" size="sm" onClick={() => { setFilters(emptyClassFilters()); setSelectedId(null); setLimit(6); }} />
+          <Button label="Reset filters" variant="ghost" size="sm" onClick={() => { setFilters(emptyClassFilters("any", workingSiteId)); setSelectedId(null); setLimit(6); }} />
         </HStack>
       </HStack>
       {matches.length ? <Table density="compact" textOverflow="wrap" className="table-fixed bg-surface" aria-label="Matching classes across the week">
@@ -105,7 +108,7 @@ export function ClassFinder({ student, courses, source, onClose }: {
               <Text weight="semibold">{courseName(course)}</Text>
               <Text hasTabularNumbers className="md:hidden">{formatSlotShort(course)}–{formatTime(course.startMinutes + course.durationMinutes)}</Text>
               {course.name && course.name !== course.level.name ? <Text color="secondary">{course.level.name}</Text> : null}
-              <Text color="secondary">{course.location ?? "Location not recorded"}</Text>
+              <Text color="secondary">{course.club.name} · {course.location ?? "Location not recorded"}</Text>
               {filters.level === "any" ? <Text color="secondary">{course.level.programme.name}</Text> : null}
               <Text color="secondary" className="lg:hidden">{course.instructor?.name ?? "Instructor not assigned"}</Text>
               <Text className="md:hidden">{availability}</Text>
@@ -126,9 +129,9 @@ export function ClassFinder({ student, courses, source, onClose }: {
         <Grid gap={4} className="grid-cols-1 md:grid-cols-2" aria-label="Review selected place">
           <VStack gap={1}>
             <Text color="secondary">{source ? "Current place" : "Existing places"}</Text>
-            {source ? <><Text weight="semibold">{formatSlotShort(source.course)} · {courseName(source.course)}</Text><Text color="secondary">{source.level.name} · {source.status === "WAITLISTED" ? "Waitlisted" : "Enrolled"}</Text></> : <Text>{student.enrolments.length ? "Kept unless you choose a move during review" : "No current places"}</Text>}
+            {source ? <><Text weight="semibold">{formatSlotShort(source.course)} · {courseName(source.course)}</Text><Text color="secondary">{source.course.club.name} · {source.level.name} · {source.status === "WAITLISTED" ? "Waitlisted" : "Enrolled"}</Text></> : <Text>{student.enrolments.length ? "Kept unless you choose a move during review" : "No current places"}</Text>}
           </VStack>
-          <VStack gap={1}><Text color="secondary">{waitlist ? "New waitlist place" : "New place"}</Text><Text weight="semibold">{formatSlotShort(selected)} · {courseName(selected)}</Text><Text color="secondary">{selected.level.name} · {selected.location ?? "Location not recorded"}</Text></VStack>
+          <VStack gap={1}><Text color="secondary">{waitlist ? "New waitlist place" : "New place"}</Text><Text weight="semibold">{formatSlotShort(selected)} · {courseName(selected)}</Text><Text color="secondary">{selected.club.name} · {selected.level.name} · {selected.location ?? "Location not recorded"}</Text></VStack>
         </Grid>
         <HStack hAlign="end">
           <FormDialog key={`${source?.id ?? "enrol"}-${selected.id}-${waitlist}`} width="sm:max-w-xl"

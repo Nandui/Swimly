@@ -12,6 +12,7 @@ import { requirePermission } from "@/lib/authz";
 import { currentClubId } from "@/lib/clubs/current";
 import { parseDateOnly, today } from "@/lib/format";
 import { fullName } from "@/lib/students/constants";
+import { readSharedCurriculum, liveSharedLevel } from "@/lib/curriculum/data/shared";
 import { prisma } from "@/lib/prisma";
 
 function revalidate() {
@@ -38,7 +39,7 @@ export async function bookStudent(input: BookInput): Promise<ActionResult> {
   const result = await withAssessmentSeat(sessionId, async (tx) => {
     const [student, session] = await Promise.all([
       tx.student.findUnique({
-        where: { id: studentId, clubId },
+        where: { id: studentId },
         select: { id: true, firstName: true, lastName: true, status: true },
       }),
       tx.assessmentSession.findUnique({
@@ -46,7 +47,7 @@ export async function bookStudent(input: BookInput): Promise<ActionResult> {
         select: { id: true, date: true, startMinutes: true, capacity: true, cancelledAt: true, programmeId: true },
       }),
     ]);
-    if (!student) return fail("That swimmer is not available in this club.");
+    if (!student) return fail("That swimmer no longer exists.");
     if (student.status !== "ACTIVE") return fail(`${fullName(student)} is marked inactive.`);
     if (!session) return fail("That session is not available in this club.");
     if (session.cancelledAt) return fail("That session was cancelled.");
@@ -92,7 +93,7 @@ async function withBooking(
 ): Promise<ActionResult> {
   const clubId = await currentClubId();
   const source = await prisma.assessmentBooking.findUnique({
-    where: { id, session: { clubId }, student: { clubId } }, select: { sessionId: true },
+    where: { id, session: { clubId } }, select: { sessionId: true },
   });
   if (!source) return fail("That booking is not available in this club.");
   const result = await withAssessmentSeat(source.sessionId, async (tx) => {
@@ -149,12 +150,11 @@ export async function recordOutcome(input: OutcomeInput): Promise<ActionResult> 
     if (booking.session.cancelledAt) return fail("That session was cancelled.");
     if (booking.session.date > parseDateOnly(today())) return fail("That assessment has not happened yet.");
     // The outcome names a rung of this session's own programme.
-    const level = await tx.level.findFirst({
-      where: { id: levelId, programmeId: booking.session.programmeId, archivedAt: null },
-      select: { id: true, name: true },
-    });
+    const curriculum = await readSharedCurriculum(tx);
+    const level = liveSharedLevel(curriculum, levelId);
+    if (level && level.programmeId !== curriculum.programmeIds.resolve(booking.session.programmeId)) return fail("That level does not belong to this assessment's programme.");
     if (!level) return fail("That level is not part of the programme this session assesses for.");
-    if (booking.status === "ATTENDED" && booking.outcomeLevelId === levelId && (booking.outcomeNote ?? "") === note) return ok();
+    if (booking.status === "ATTENDED" && booking.outcomeLevelId && curriculum.levelIds.resolve(booking.outcomeLevelId) === level.id && (booking.outcomeNote ?? "") === note) return ok();
     await tx.assessmentBooking.update({
       where: { id: bookingId },
       data: {

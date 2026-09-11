@@ -153,15 +153,15 @@ model User {
   /// cannot sign in, so deleting a role out from under one of its holders
   /// would silently lock them out. The delete is refused and the admin has to
   /// move people off it first.
-  staffRole            StaffRole?         @relation(fields: [staffRoleId], references: [id], onDelete: Restrict)
-  auditEntries         AuditLog[]
-  coursesTaught        Course[]
-  classesCovered       ClassCover[]       @relation("ClassCoverBy")
-  classesCoveredFor    ClassCover[]       @relation("ClassCoverFor")
-  attendanceMarked     AttendanceRecord[]
-  assessmentsMade      CompetencyResult[]
-  completionsConfirmed LevelCompletion[]
-  classNotes           ClassNote[]
+  staffRole               StaffRole?          @relation(fields: [staffRoleId], references: [id], onDelete: Restrict)
+  auditEntries            AuditLog[]
+  coursesTaught           Course[]
+  classesCovered          ClassCover[]        @relation("ClassCoverBy")
+  classesCoveredFor       ClassCover[]        @relation("ClassCoverFor")
+  attendanceMarked        AttendanceRecord[]
+  assessmentsMade         CompetencyResult[]
+  completionsConfirmed    LevelCompletion[]
+  classNotes              ClassNote[]
   assessmentSessionsLed   AssessmentSession[] @relation("AssessmentInstructor")
   assessmentBookingsMade  AssessmentBooking[] @relation("AssessmentBookedBy")
   assessmentOutcomesGiven AssessmentBooking[] @relation("AssessmentAssessedBy")
@@ -205,15 +205,9 @@ model AuditLog {
 // Clubs — one app, several sites
 // ---------------------------------------------------------------------------
 
-/// A site the app is run for — LeisureWorld Bishopstown, LeisureWorld
-/// Churchfield. Programmes, classes, swimmers and assessment sessions each
-/// belong to one, and every list the app shows is one club's. Staff accounts
-/// and roles are shared: the same people work across sites, and a permission
-/// means the same thing at both.
-///
-/// Swimmers are never moved between clubs; the other site enrols its own. A
-/// programme can be copied across so two sites running the same ladder do not
-/// type it twice — `copyProgramme` copies the curriculum and nothing else.
+/// A physical site and timetable working area. Classes and assessment sessions
+/// belong to a site; swimmers, curriculum, progress, staff and roles are shared.
+/// Student and Programme clubId retain registration provenance for old records.
 model Club {
   id         String    @id @default(cuid())
   name       String    @unique
@@ -238,74 +232,89 @@ model Club {
 /// for a curriculum row, *when* it was retired answers "was this required when
 /// Ava was assessed?". For an account it answers nothing.
 model Programme {
-  id          String    @id @default(cuid())
-  clubId      String
-  /// Unique within the club, not across them: two sites running the same
-  /// ladder both call it Water Safety & Fun.
-  name        String
-  description String?
+  id           String      @id @default(cuid())
+  /// An original site copy linked to the shared definition. Historical IDs remain valid.
+  sharedWithId String?
+  sharedWith   Programme?  @relation("SharedProgramme", fields: [sharedWithId], references: [id], onDelete: Restrict)
+  siteCopies   Programme[] @relation("SharedProgramme")
+  clubId       String
+  /// Legacy site/name key remains for compatibility. Actions enforce unique
+  /// shared programme names; original site copies point at sharedWithId.
+  name         String
+  description  String?
   /// Resized WebP artwork; bytes are read only by the authenticated image route.
-  imageData   Bytes?
+  imageData    Bytes?
   imageVersion String?
-  sortOrder   Int       @default(0)
-  archivedAt  DateTime?
-  createdAt   DateTime  @default(now())
-  updatedAt   DateTime  @updatedAt
+  sortOrder    Int         @default(0)
+  archivedAt   DateTime?
+  createdAt    DateTime    @default(now())
+  updatedAt    DateTime    @updatedAt
 
-  club        Club              @relation(fields: [clubId], references: [id], onDelete: Restrict)
-  levels      Level[]
-  enrolments  Enrolment[]
-  completions LevelCompletion[]
+  club               Club                @relation(fields: [clubId], references: [id], onDelete: Restrict)
+  levels             Level[]
+  enrolments         Enrolment[]
+  completions        LevelCompletion[]
   assessmentSessions AssessmentSession[]
   assessmentTypes    AssessmentType[]
 
   @@unique([clubId, name])
   @@index([clubId, sortOrder])
+  @@index([sharedWithId])
 }
 
 model Level {
-  id          String    @id @default(cuid())
-  programmeId String
-  name        String
-  description String?
-  imageData   Bytes?
+  id           String    @id @default(cuid())
+  /// An original site copy linked to the shared definition. Historical IDs remain valid.
+  sharedWithId String?
+  sharedWith   Level?    @relation("SharedLevel", fields: [sharedWithId], references: [id], onDelete: Restrict)
+  siteCopies   Level[]   @relation("SharedLevel")
+  programmeId  String
+  name         String
+  description  String?
+  imageData    Bytes?
   imageVersion String?
   /// Plain indexed Int, not unique, so reordering is one write per moved row.
   /// The cost: every ordering must tie-break on name. See LIST_ORDER in
   /// `src/lib/curriculum/constants.ts`.
-  sortOrder   Int       @default(0)
-  archivedAt  DateTime?
-  createdAt   DateTime  @default(now())
-  updatedAt   DateTime  @updatedAt
+  sortOrder    Int       @default(0)
+  archivedAt   DateTime?
+  createdAt    DateTime  @default(now())
+  updatedAt    DateTime  @updatedAt
 
-  programme    Programme         @relation(fields: [programmeId], references: [id], onDelete: Restrict)
-  competencies Competency[]
-  courses      Course[]
-  enrolments   Enrolment[]
-  completions  LevelCompletion[]
+  programme          Programme           @relation(fields: [programmeId], references: [id], onDelete: Restrict)
+  competencies       Competency[]
+  courses            Course[]
+  enrolments         Enrolment[]
+  completions        LevelCompletion[]
   assessmentOutcomes AssessmentBooking[]
 
   @@unique([programmeId, name])
   @@index([programmeId, sortOrder])
+  @@index([sharedWithId])
 }
 
 model Competency {
-  id          String    @id @default(cuid())
+  id           String       @id @default(cuid())
+  /// An original site copy linked to the shared definition. Historical IDs remain valid.
+  sharedWithId String?
+  sharedWith   Competency?  @relation("SharedCompetency", fields: [sharedWithId], references: [id], onDelete: Restrict)
+  siteCopies   Competency[] @relation("SharedCompetency")
   /// Immutable once results exist — guarded in the action, because moving it
   /// would retroactively rewrite who had completed the level.
-  levelId     String
-  name        String
-  description String?
-  sortOrder   Int       @default(0)
-  archivedAt  DateTime?
-  createdAt   DateTime  @default(now())
-  updatedAt   DateTime  @updatedAt
+  levelId      String
+  name         String
+  description  String?
+  sortOrder    Int          @default(0)
+  archivedAt   DateTime?
+  createdAt    DateTime     @default(now())
+  updatedAt    DateTime     @updatedAt
 
   level   Level              @relation(fields: [levelId], references: [id], onDelete: Restrict)
   results CompetencyResult[]
 
   @@unique([levelId, name])
   @@index([levelId, sortOrder])
+  @@index([sharedWithId])
 }
 
 // ---------------------------------------------------------------------------
@@ -314,8 +323,7 @@ model Competency {
 
 model Student {
   id           String        @id @default(cuid())
-  /// The site they swim at. Never changed: a family moving pools is enrolled
-  /// afresh by the other club, with that club's member number.
+  /// Original registration site. Swimmer identity, contacts and progress are shared.
   clubId       String
   /// The club's own identifier, carried over from the system this data came
   /// from. Unique, so a re-import matches rather than duplicating, and so a
@@ -349,14 +357,15 @@ model Student {
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
-  club        Club               @relation(fields: [clubId], references: [id], onDelete: Restrict)
-  enrolments  Enrolment[]
-  attendance  AttendanceRecord[]
-  results     CompetencyResult[]
-  completions LevelCompletion[]
+  club               Club                @relation(fields: [clubId], references: [id], onDelete: Restrict)
+  enrolments         Enrolment[]
+  attendance         AttendanceRecord[]
+  results            CompetencyResult[]
+  completions        LevelCompletion[]
   assessmentBookings AssessmentBooking[]
 
   @@index([clubId, status, lastName, firstName])
+  @@index([status, lastName, firstName])
 }
 
 // ---------------------------------------------------------------------------
@@ -623,20 +632,25 @@ model AssessmentSession {
 /// rather than typing a category that fragments into three spellings.
 /// Archived, never deleted: a session keeps saying what kind it was.
 model AssessmentType {
-  id          String    @id @default(cuid())
-  programmeId String
-  name        String
-  description String?
-  sortOrder   Int       @default(0)
-  archivedAt  DateTime?
-  createdAt   DateTime  @default(now())
-  updatedAt   DateTime  @updatedAt
+  id           String           @id @default(cuid())
+  /// An original site copy linked to the shared definition. Historical IDs remain valid.
+  sharedWithId String?
+  sharedWith   AssessmentType?  @relation("SharedAssessmentType", fields: [sharedWithId], references: [id], onDelete: Restrict)
+  siteCopies   AssessmentType[] @relation("SharedAssessmentType")
+  programmeId  String
+  name         String
+  description  String?
+  sortOrder    Int              @default(0)
+  archivedAt   DateTime?
+  createdAt    DateTime         @default(now())
+  updatedAt    DateTime         @updatedAt
 
   programme Programme           @relation(fields: [programmeId], references: [id], onDelete: Restrict)
   sessions  AssessmentSession[]
 
   @@unique([programmeId, name])
   @@index([programmeId, sortOrder])
+  @@index([sharedWithId])
 }
 
 /// A child booked onto a session, and — once they have been in the water —

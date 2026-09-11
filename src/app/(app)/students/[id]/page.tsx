@@ -11,7 +11,6 @@ import { BackLink } from "@/components/ui-kit/back-link";
 import { EmptyState } from "@/components/ui-kit/empty-state";
 import { PageHeader } from "@/components/ui-kit/page-header";
 import { Tag } from "@/components/ui-kit/tag";
-import { WrongClub } from "@/components/clubs/wrong-club";
 import { EnrolInCourseForStudent } from "@/components/enrolment/enrolment-actions";
 import { ProgressSection } from "@/components/progression/progress-section";
 import {
@@ -27,8 +26,7 @@ import { EditStudent, ToggleStudentStatus } from "@/components/students/student-
 import { getStudentAssessments } from "@/lib/assessments/data/assessments";
 import { getAttendanceForStudent } from "@/lib/attendance/data/register";
 import { can } from "@/lib/authz";
-import { getCurrentClub } from "@/lib/clubs/current";
-import { courseLabel, formatSlotShort } from "@/lib/courses/constants";
+import { courseLabelWithSite as courseLabel, formatSlotShort } from "@/lib/courses/constants";
 import { getCourses } from "@/lib/courses/data/courses";
 import { getEnrolmentsForStudent } from "@/lib/enrolment/data/enrolments";
 import { ageInYears, formatDate } from "@/lib/format";
@@ -62,23 +60,16 @@ export default async function StudentPage(props: PageProps<"/students/[id]">) {
 
   // Fetched alongside the rest rather than first; nothing below needs more
   // than the id, so the sequential read was a round trip for nothing.
-  const [student, enrolments, courses, programmes, attendance, assessments, { club }] =
+  const [student, enrolments, courses, programmes, attendance, assessments] =
     await Promise.all([
       getStudent(id),
       getEnrolmentsForStudent(id),
-      manage ? getCourses() : Promise.resolve([]),
+      manage ? getCourses(false, true) : Promise.resolve([]),
       getStudentProgress(id),
       getAttendanceForStudent(id),
       getStudentAssessments(id),
-      getCurrentClub(),
     ]);
   if (!student) notFound();
-  // Every picker below is the current club's, so a swimmer from the other
-  // one is shown only as a way to switch.
-  if (student.clubId !== club.id) {
-    return <WrongClub what={fullName(student)} owner={student.club} current={club} />;
-  }
-
   const open = enrolments.filter(
     (enrolment) => enrolment.status === "ACTIVE" || enrolment.status === "WAITLISTED"
   );
@@ -102,7 +93,7 @@ export default async function StudentPage(props: PageProps<"/students/[id]">) {
   // has two places, and both are worth a glance.
   const facts = [
     age === null ? null : `${age} years old`,
-    ...active.map((enrolment) => `${enrolment.level.name}, ${formatSlotShort(enrolment.course)}`),
+    ...active.map((enrolment) => `${enrolment.level.name}, ${formatSlotShort(enrolment.course)} · ${enrolment.course.club.name}`),
   ].filter(Boolean);
 
   const canEnrol = manage && student.status === "ACTIVE";

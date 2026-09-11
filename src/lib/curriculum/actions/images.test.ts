@@ -19,6 +19,8 @@ for (const kind of ["programme", "level"] as const) {
     const actions = serverModule<Record<string, (...args: unknown[]) => Promise<{ ok: boolean }>>>(`src/lib/curriculum/actions/${kind}s.ts`, {
       "@/lib/authz": { requirePermission: async (permission: string) => { assert.equal(permission, "curriculum.manage"); if (!state.allowed) throw Error("denied"); return { user: { id: "staff", name: "Staff" } }; } },
       "@/lib/clubs/current": { currentClubId: async () => "club" },
+      "@/lib/curriculum/data/shared": { readSharedCurriculum: async () => ({ programmeIds: { resolve: (id: string) => id, variants: (id: string) => [id] }, levelIds: { resolve: (id: string) => id } }) },
+      "@/lib/curriculum/shared-name": { sharedNameTaken: async () => false },
       "@/lib/prisma": { prisma: db },
       "@/lib/audit": { logAudit: async (entry: { summary: string }, client: unknown) => { assert.equal(client, tx); if (state.auditFails) throw Error("audit failed"); state.audits.push(entry.summary); } },
       "next/cache": { revalidatePath: (path: string) => state.invalidated.push(path) },
@@ -47,7 +49,7 @@ for (const kind of ["programme", "level"] as const) {
     assert.equal(f.state.row.imageData, null);
     assert.match(f.state.audits.at(-1)!, /image removed/);
     assert.ok(f.state.invalidated.includes("/"));
-    assert.ok(f.state.scopes.every((scope) => JSON.stringify(scope).includes('"club"')));
+    assert.ok(f.state.scopes.every((scope) => !JSON.stringify(scope).includes('"club"')));
   });
 
   test(`${kind} refuses missing records and unauthorized uploads before decoding or writing`, async () => {

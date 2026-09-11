@@ -1,6 +1,6 @@
 import type { Prisma } from "@/generated/prisma/client";
 import { requireSession } from "@/lib/authz";
-import { currentClubId } from "@/lib/clubs/current";
+import { getSharedCurriculum, type SharedCurriculum } from "@/lib/curriculum/data/shared";
 import { prisma } from "@/lib/prisma";
 import type { FamilyMember } from "@/lib/together/match";
 
@@ -61,8 +61,8 @@ export type Suggestion = TogetherStudent & {
  *  handful is an address rather than a household — a school, a childminder. */
 const SUGGESTION_CAP = 10;
 
-function shape(row: Row): TogetherStudent {
-  const levels = [...new Map(row.enrolments.map((e) => [e.levelId, e.level])).values()]
+function shape(row: Row, curriculum: SharedCurriculum): TogetherStudent {
+  const levels = [...new Map(row.enrolments.map((e) => [curriculum.levelIds.resolve(e.levelId), curriculum.level(e.levelId) ?? e.level])).values()]
     .sort((a, b) => a.sortOrder - b.sortOrder || a.id.localeCompare(b.id));
   return {
     id: row.id,
@@ -81,8 +81,9 @@ export async function getGroup(ids: string[]): Promise<{
   await requireSession();
   if (ids.length === 0) return { chosen: [], suggestions: [] };
 
+  const curriculum = await getSharedCurriculum();
   const rows = await prisma.student.findMany({
-    where: { id: { in: ids }, clubId: await currentClubId() },
+    where: { id: { in: ids } },
     select: STUDENT_SELECT,
   });
 
@@ -98,8 +99,6 @@ export async function getGroup(ids: string[]): Promise<{
     emails.length || phones.length
       ? await prisma.student.findMany({
           where: {
-            // A sibling at the other site is a different trip to the pool.
-            clubId: await currentClubId(),
             status: "ACTIVE",
             id: { notIn: ids },
             OR: [
@@ -127,13 +126,13 @@ export async function getGroup(ids: string[]): Promise<{
       by.push("phone");
     }
     return {
-      ...shape(row),
+      ...shape(row, curriculum),
       sharesWith: match ? `${match.firstName} ${match.lastName}` : "",
       by,
     };
   });
 
-  return { chosen: ordered.map(shape), suggestions };
+  return { chosen: ordered.map(row => shape(row, curriculum)), suggestions };
 }
 
 export function toMembers(students: TogetherStudent[]): FamilyMember[] {

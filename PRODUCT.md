@@ -36,7 +36,7 @@ is planned; "parents can book" means the desk books on their behalf.
 Swimly is the tool the swim school runs on: the weekly timetable, who is in
 which class, the register taken on the deck, each child's progress through the
 club's own levels and competencies, assessment sessions for new swimmers, and
-the same for both sites without one seeing the other's swimmers.
+one shared swimmer record and curriculum across both sites.
 
 It replaces the club's legacy booking system, whose data reached us only as
 printed timetables. That system knew who had paid for which class and nothing
@@ -70,8 +70,8 @@ each level; two sites in one app with shared staff.
 
 ## Operating Context
 
-- **Two sites**, each with its own timetable, curriculum, swimmers and
-  assessment sessions. Staff and roles are shared. The club being worked in is
+- **Two sites**, each with its own timetable and assessment sessions. Swimmers,
+  curriculum, progress, staff and roles are shared. The club being worked in is
   chosen per device and shown on every screen.
 - **Weekly classes** of 30 minutes, Monday to Saturday, in the Learner Pool
   and numbered lanes of the main pool. Bishopstown runs afternoons; Churchfield
@@ -153,8 +153,9 @@ management use the existing permissions and confirmation flows.
   audit log.
 - Every mutation writes an audit row, scripts included.
 - Nothing refers to a role by name; the club may rename or delete any role.
-- Swimmers are never moved between clubs. Copying a programme copies the
-  curriculum only.
+- Swimmers can enrol, waitlist and move between classes at either site. Their
+  identity, contacts and progress stay on one shared record. Site selection
+  filters the working timetable; it is not a swimmer ownership boundary.
 - Prices, payments and blocks are not modelled.
 - Imported swimmers have no date of birth, only an age as at the import date,
   and no contacts; both arrive as the desk fills them in.
@@ -215,8 +216,8 @@ management use the existing permissions and confirmation flows.
 4. **Plain words, few steps.** Written for staff with mixed comfort with
    technology and mixed first languages: common words, one idea per sentence,
    errors that say what to do, and nothing that can be broken by a wrong tap.
-5. **Sites stay separate, people are shared.** Every list is one club's; staff
-   and what they may do span both.
+5. **Timetables have sites; swimmer records are shared.** The working area
+   filters classes. Swimmer search, curriculum and earned progress span both.
 
 ## Accessibility & Inclusion
 

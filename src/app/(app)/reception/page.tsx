@@ -20,7 +20,7 @@ export default async function ReceptionPage({ searchParams }: {
   const group = params.group === "level" ? "level" : "time";
   const manage = can(session, "enrolment.manage");
   const iso = today();
-  const [courses, covers, student, targets, { club }] = await Promise.all([
+  const [courses, covers, student, targets, { club, clubs }] = await Promise.all([
     getCoursesOnDay(weekdayOfIso(iso)), getCoversForDay(iso),
     swimmerId ? getReceptionSwimmer(swimmerId) : null,
     swimmerId && manage ? getReceptionClassOptions() : [], getCurrentClub(),
@@ -28,7 +28,7 @@ export default async function ReceptionPage({ searchParams }: {
 
   return <ReceptionDashboard
     key={club.id}
-    clubName={club.name}
+    sites={clubs} clubId={club.id} clubName={club.name}
     dateLabel={formatDate(parseDateOnly(iso))}
     now={minutesNow()}
     courses={courses.map(({ id, name, dayOfWeek, startMinutes, durationMinutes, capacity, location, level, instructor, _count }) => ({

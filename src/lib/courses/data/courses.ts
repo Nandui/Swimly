@@ -1,6 +1,7 @@
 import type { DayOfWeek } from "@/generated/prisma/client";
 import { requireSession } from "@/lib/authz";
 import { currentClubId } from "@/lib/clubs/current";
+import { getSharedCurriculum, sharedCourse, sharedPlacement, liveSharedLevel } from "@/lib/curriculum/data/shared";
 import { prisma } from "@/lib/prisma";
 
 /** Enrolments that occupy a place. Waitlisted, withdrawn, transferred and
@@ -34,14 +35,16 @@ const COURSE_SELECT = {
   _count: { select: { enrolments: { where: TAKES_A_PLACE } } },
 } as const;
 
-export async function getCourses(includeArchived = false) {
+export async function getCourses(includeArchived = false, allSites = false) {
   await requireSession();
 
-  return prisma.course.findMany({
-    where: { clubId: await currentClubId(), ...(includeArchived ? {} : { archivedAt: null }) },
+  const curriculum = await getSharedCurriculum();
+  const rows = await prisma.course.findMany({
+    where: { ...(allSites ? { club: { archivedAt: null } } : { clubId: await currentClubId() }), ...(includeArchived ? {} : { archivedAt: null }) },
     orderBy: [{ dayOfWeek: "asc" }, { startMinutes: "asc" }],
     select: COURSE_SELECT,
   });
+  return rows.filter(row => !allSites || liveSharedLevel(curriculum, row.levelId)).map(row => sharedCourse(row, curriculum));
 }
 
 export type CourseRow = Awaited<ReturnType<typeof getCourses>>[number];
@@ -49,7 +52,8 @@ export type CourseRow = Awaited<ReturnType<typeof getCourses>>[number];
 export async function getCourse(id: string) {
   await requireSession();
 
-  return prisma.course.findUnique({ where: { id }, select: COURSE_SELECT });
+  const row = await prisma.course.findUnique({ where: { id }, select: COURSE_SELECT });
+  return row ? sharedCourse(row, await getSharedCurriculum()) : null;
 }
 
 export type CourseDetail = NonNullable<Awaited<ReturnType<typeof getCourse>>>;
@@ -59,7 +63,8 @@ export type CourseDetail = NonNullable<Awaited<ReturnType<typeof getCourse>>>;
 export async function getCoursesOnDay(dayOfWeek: DayOfWeek, instructorId?: string) {
   await requireSession();
 
-  return prisma.course.findMany({
+  const curriculum = await getSharedCurriculum();
+  const rows = await prisma.course.findMany({
     where: {
       clubId: await currentClubId(),
       dayOfWeek,
@@ -69,15 +74,16 @@ export async function getCoursesOnDay(dayOfWeek: DayOfWeek, instructorId?: strin
     orderBy: [{ startMinutes: "asc" }],
     select: COURSE_SELECT,
   });
+  return rows.map(row => sharedCourse(row, curriculum));
 }
 
 /** The roster: who is in this class, and on what footing. */
 export async function getRoster(courseId: string) {
   await requireSession();
-  const clubId = await currentClubId();
+  const curriculum = await getSharedCurriculum();
 
-  return prisma.enrolment.findMany({
-    where: { courseId, course: { clubId }, student: { clubId }, status: { in: ["ACTIVE", "WAITLISTED"] } },
+  const rows = await prisma.enrolment.findMany({
+    where: { courseId, status: { in: ["ACTIVE", "WAITLISTED"] } },
     orderBy: [
       { status: "asc" },
       { student: { lastName: "asc" } },
@@ -104,6 +110,7 @@ export async function getRoster(courseId: string) {
       },
     },
   });
+  return rows.map(row => sharedPlacement(row, curriculum));
 }
 
 export type RosterEntry = Awaited<ReturnType<typeof getRoster>>[number];

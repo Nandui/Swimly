@@ -195,8 +195,7 @@ while the rail is collapsed.
 The utility header contains the existing async `StudentSearch` and the
 appearance control. Lookup appears only for people who can open Swimmers or
 Reception; it opens a full profile when Swimmers is available, otherwise
-the existing Reception lookup. Searches remain authenticated and scoped to
-the current club, and include inactive swimmers. Changing the club or path
+the existing Reception lookup. Searches remain authenticated, cover both sites, and include inactive swimmers. Changing the club or path
 remounts the lookup so results from the previous context do not linger.
 
 Below the utility header, `StackItem size="fill" isScrollable` owns the
@@ -387,30 +386,35 @@ denormalised so the log survives it either way.
 
 ### One app, several clubs
 
-LeisureWorld runs more than one pool, and the second site wanted the same
-tool without seeing the first site's swimmers. So a `Club` sits above
-everything that is a site's own — programmes, and through them levels,
-competencies and kinds of assessment; classes; swimmers; assessment
-sessions — and every list the app shows is one club's. Staff accounts and
-roles are shared: the same people cover both sites, and "may take a
-register" means the same thing at either.
+LeisureWorld shares swimmer identity, contacts, curriculum and earned progress
+across its sites. A Club owns classes and dated assessment sessions. The
+cookie-backed working area filters the timetable; it does not restrict swimmer
+search or profile access. Switching sites keeps the current page and selected
+swimmer. Staff permissions continue to apply by name.
 
-The club somebody is working in is a cookie, read once per request by
-`getCurrentClub()` and memoised. The data modules scope themselves by it, so
-a page cannot forget to; the actions that make a new programme, swimmer,
-class or session stamp it on the row; and `logAudit` records it without
-being told. The switcher sits above the nav on every screen, and in the bar
-on a phone, because the mistake this guards against is enrolling a
-Churchfield child into a Bishopstown class without noticing. A detail page
-reached by link for something in another club says whose it is and offers
-the switch, rather than quietly showing it surrounded by the wrong club's
-pickers.
+Reception defaults its class finder to the working area, with explicit site
+and All sites options. Enrol, transfer and move-up pickers list both sites and
+name the destination. A transfer locks both classes and the swimmer, rechecks
+capacity, ends the old enrolment and creates a new history row. Cross-site
+transfers write activity at both the source and destination. Attendance stays
+with the class and date where it happened.
 
-Two things are deliberately not built. Swimmers are never moved between
-clubs — the other site enrols its own, with its own member numbers. And
-copying a programme copies the curriculum only: levels, competencies, kinds
-of assessment. Results and completions belong to the swimmer and to the club
-they were earned in.
+Original Student.clubId and Programme.clubId values remain as registration
+provenance. Additive sharedWithId links on Programme, Level, Competency and
+AssessmentType retain historical IDs while providing one shared catalogue.
+The migration links only exact normalized names within the same shared parent;
+unique definitions remain available. Names do not determine equivalence at
+runtime, so renames preserve progress. Catalogue writes resolve old IDs and
+check shared name uniqueness under one transaction lock.
+
+Marks recorded against original copies resolve to the latest updated judgement,
+retaining the assessor, assessment date and note. Completion snapshots remain
+unchanged and count across equivalent levels. All progress mutations lock the
+swimmer; clearing a mark or revoking completion handles every original copy
+and is audited. No swimmer records are merged by name. Programme copying is
+retired because every site uses the shared catalogue.
+
+[docs/shared-sites.md](docs/shared-sites.md) records the upgrade and verification procedure.
 
 ## The domain, and the four decisions holding it up
 

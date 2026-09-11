@@ -1,27 +1,27 @@
 import { requireSession } from "@/lib/authz";
-import { currentClubId } from "@/lib/clubs/current";
+import { getSharedCurriculum, sharedCourse, sharedPlacement, liveSharedLevel } from "@/lib/curriculum/data/shared";
 import { prisma } from "@/lib/prisma";
 
 /** Only the selected swimmer and their open places cross into the desk view.
- *  Scope both sides of the relationship before reading any personal details. */
+ *  Swimmer identity and open places are shared across sites. */
 export async function getReceptionSwimmer(id: string) {
   await requireSession();
-  const clubId = await currentClubId();
-  return prisma.student.findFirst({
-    where: { id, clubId },
+  const curriculum = await getSharedCurriculum();
+  const row = await prisma.student.findFirst({
+    where: { id },
     select: {
       id: true, firstName: true, lastName: true, memberNumber: true,
       dateOfBirth: true, status: true,
       contactName: true, contactPhone: true, contactEmail: true,
       enrolments: {
-        where: { status: { in: ["ACTIVE", "WAITLISTED"] }, course: { clubId } },
+        where: { status: { in: ["ACTIVE", "WAITLISTED"] } },
         orderBy: [{ status: "asc" }, { course: { startMinutes: "asc" } }],
         select: {
           id: true, status: true, scheduledEndOn: true,
           level: { select: { id: true, name: true } },
           programme: { select: { id: true, name: true } },
           course: { select: {
-            id: true, name: true, dayOfWeek: true, startMinutes: true,
+            id: true, name: true, clubId: true, club: { select: { id: true, name: true } }, dayOfWeek: true, startMinutes: true,
             durationMinutes: true, location: true, archivedAt: true,
             level: { select: { id: true, name: true, programme: { select: { id: true, name: true } } } },
             instructor: { select: { name: true } },
@@ -30,6 +30,7 @@ export async function getReceptionSwimmer(id: string) {
       },
     },
   });
+  return row ? { ...row, enrolments: row.enrolments.map(e => ({ ...sharedPlacement(e, curriculum), course: sharedCourse(e.course, curriculum) })) } : null;
 }
 
 export type ReceptionSwimmer = NonNullable<Awaited<ReturnType<typeof getReceptionSwimmer>>>;
@@ -39,11 +40,11 @@ export type ReceptionSwimmer = NonNullable<Awaited<ReturnType<typeof getReceptio
  *  a new placement; existing places remain visible on the swimmer sheet. */
 export async function getReceptionClassOptions() {
   await requireSession();
-  const clubId = await currentClubId();
-  return prisma.course.findMany({
-    where: { clubId, archivedAt: null, level: { archivedAt: null, programme: { archivedAt: null } } },
+  const curriculum = await getSharedCurriculum();
+  const rows = await prisma.course.findMany({
+    where: { club: { archivedAt: null }, archivedAt: null },
     select: {
-      id: true, name: true, dayOfWeek: true, startMinutes: true,
+      id: true, name: true, clubId: true, club: { select: { id: true, name: true } }, dayOfWeek: true, startMinutes: true,
       durationMinutes: true, location: true, capacity: true,
       instructor: { select: { name: true } },
       level: { select: { id: true, name: true, sortOrder: true,
@@ -51,6 +52,7 @@ export async function getReceptionClassOptions() {
       _count: { select: { enrolments: { where: { status: "ACTIVE" } } } },
     },
   });
+  return rows.filter(row => liveSharedLevel(curriculum, row.level.id)).map(row => sharedCourse(row, curriculum));
 }
 
 export type ReceptionClassOption = Awaited<ReturnType<typeof getReceptionClassOptions>>[number];

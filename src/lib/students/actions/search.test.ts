@@ -2,9 +2,9 @@ import assert from "node:assert/strict";
 import { test } from "node:test";
 import { serverModule } from "@/test/server-module";
 
-test("desk search can include inactive swimmers without widening the current club", async () => {
+test("desk search can include inactive swimmers across all sites", async () => {
   let authorized = false;
-  const queries: { where: { clubId: string; status?: string }; take: number }[] = [];
+  const queries: { where: { clubId?: string; status?: string }; take: number }[] = [];
   const search = serverModule<typeof import("./search")>("src/lib/students/actions/search.ts", {
     "@/lib/authz": { requireSession: async () => { authorized = true; } },
     "@/lib/clubs/current": { currentClubId: async () => "club-a" },
@@ -19,7 +19,7 @@ test("desk search can include inactive swimmers without widening the current clu
   await search.searchStudents("Example", [], true);
   assert.equal(queries[0].where.status, "ACTIVE", "enrolment pickers must keep excluding inactive swimmers");
   assert.equal(queries[1].where.status, undefined);
-  assert.ok(queries.every((query) => query.where.clubId === "club-a" && query.take <= 60));
+  assert.ok(queries.every((query) => query.where.clubId === undefined && query.take <= 60));
 });
 
 test("inactive search still requires authentication before reading any data", async () => {

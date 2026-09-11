@@ -1,5 +1,6 @@
 import assert from "node:assert/strict";
 import { test } from "node:test";
+import { curriculumProgramme } from "@/test/curriculum";
 import { serverModule } from "@/test/server-module";
 
 type Actions = typeof import("./courses");
@@ -18,17 +19,24 @@ function fixture() {
   let open = 0;
   let writes = 0;
   let locked = false;
+  const audits: Record<string, unknown>[] = [];
+  const created: Record<string, unknown>[] = [];
+  const curriculum = curriculumProgramme("programme", ["entry", "next"]);
   const tx = {
+    programme: { findMany: async () => [curriculum] },
     $queryRaw: async () => { locked = true; return []; },
     course: {
-      findUnique: async ({ where }: { where: { clubId: string } }) => {
-        assert.ok(locked); return where.clubId === course.clubId ? course : null;
+      create: async ({ data }: { data: Record<string, unknown> }) => {
+        writes++; created.push(data); return { ...course, ...data };
+      },
+      findUnique: async ({ where }: { where: { id: string; clubId?: string } }) => {
+        assert.ok(locked); return where.id === course.id && (!where.clubId || where.clubId === course.clubId) ? course : null;
       },
       update: async ({ data }: { data: object }) => { writes++; return { ...course, ...data }; },
     },
     level: { findUnique: async ({ where }: { where: { programme: { clubId: string } } }) => where.programme.clubId === level.programme.clubId ? level : null },
     enrolment: { count: async () => open },
-    auditLog: { create: async () => {} },
+    auditLog: { create: async ({ data }: { data: Record<string, unknown> }) => { audits.push(data); } },
   };
   const prisma = { ...tx, $transaction: async (run: (db: typeof tx) => Promise<unknown>) => run(tx) };
   const actions = serverModule<Actions>("src/lib/courses/actions/courses.ts", {
@@ -37,10 +45,20 @@ function fixture() {
     "@/lib/clubs/current": { currentClubId: async () => "club", currentClubIdIfAny: async () => "club" },
     "next/cache": { revalidatePath: () => {} },
   });
-  return { actions, course, level, writes: () => writes, waitlist: () => { open = 1; } };
+  return { actions, course, level, curriculum, audits, created, writes: () => writes, waitlist: () => { open = 1; } };
 }
 
-test("changing a class level refuses another club's curriculum", async () => {
+test("new classes belong to the working site even when their shared curriculum originated elsewhere", async () => {
+  const f = fixture();
+  f.curriculum.clubId = "other";
+  assert.equal((await f.actions.createCourse(input)).ok, true);
+  assert.equal(f.created[0].clubId, "club");
+  assert.equal(f.created[0].levelId, "entry");
+  assert.equal(f.audits[0].clubId, "club");
+  assert.equal(f.audits[0].programmeId, "programme");
+});
+
+test("changing a class level refuses a missing curriculum definition", async () => {
   const f = fixture(); f.level.programme.clubId = "other";
   assert.equal((await f.actions.updateCourse("class", { ...input, levelId: "other-level" })).ok, false);
   assert.equal(f.writes(), 0);

@@ -11,7 +11,7 @@ import { toast } from "@/lib/toast";
 type Club = { id: string; name: string };
 
 /** Always named, including in the mobile bar and collapsed-rail toolbar.
- *  Switching returns through /start to the person's permitted home screen. */
+ *  Switching filters the working area and preserves the current swimmer. */
 export function ClubSwitcher({ club, clubs }: { club: Club; clubs: Club[] }) {
   const [pending, startTransition] = React.useTransition();
   const several = clubs.length > 1;
@@ -19,8 +19,8 @@ export function ClubSwitcher({ club, clubs }: { club: Club; clubs: Club[] }) {
   function choose(id: string) {
     if (id === club.id) return;
     startTransition(async () => {
-      const result = await switchClub(id);
-      // A successful switch redirects, so only a refusal ever comes back.
+      const result = await switchClub(id, { stay: true });
+      // Revalidation refreshes the timetable without losing this page.
       if (result && !result.ok) toast.error(result.error);
     });
   }
@@ -34,7 +34,7 @@ export function ClubSwitcher({ club, clubs }: { club: Club; clubs: Club[] }) {
       button={{
         // The accessible name says what the control is; the visible text is
         // the club, which is the thing that must always be readable.
-        label: `Club: ${club.name}. ${several ? "Switch club" : "The only club"}`,
+        label: `Working area: ${club.name}. ${several ? "Switch site" : "The only site"}`,
         children: (
           <Text type="inherit" maxLines={1} hasTruncateTooltip={false}>
             {pending ? "Switching…" : club.name}
@@ -50,7 +50,7 @@ export function ClubSwitcher({ club, clubs }: { club: Club; clubs: Club[] }) {
       items={[
         {
           type: "section",
-          title: several ? "Switch club" : "The only club",
+          title: "Working area",
           items: clubs.map((option) => ({
             id: option.id,
             label: option.name,

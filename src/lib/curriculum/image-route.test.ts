@@ -2,7 +2,7 @@ import assert from "node:assert/strict";
 import { test } from "node:test";
 import { serverModule } from "@/test/server-module";
 
-test("image responses require sign-in, current-club ownership and the matching version", async () => {
+test("image responses require sign-in, the matching version across sites", async () => {
   let signedIn = false;
   let row: { imageData: Uint8Array; imageVersion: string } | null = { imageData: new Uint8Array([1, 2]), imageVersion: "version" };
   const scopes: unknown[] = [];
@@ -24,8 +24,8 @@ test("image responses require sign-in, current-club ownership and the matching v
     assert.equal((await request(kind, "version", '"version"')).status, 304);
     assert.equal((await request(kind, "old")).status, 404);
   }
-  assert.deepEqual(scopes[0], { id: "id", clubId: "club" });
-  assert.ok(scopes.some((scope) => JSON.stringify(scope) === JSON.stringify({ id: "id", programme: { clubId: "club" } })));
+  assert.deepEqual(scopes[0], { id: "id" });
+  assert.ok(scopes.some((scope) => JSON.stringify(scope) === JSON.stringify({ id: "id" })));
   row = null;
   assert.equal((await request("level")).status, 404);
   assert.equal((await request("unknown")).status, 404);

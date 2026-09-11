@@ -10,7 +10,7 @@ import { isDateOnly, parseDateOnly, today } from "@/lib/format";
 import { fullName } from "@/lib/students/constants";
 import { prisma } from "@/lib/prisma";
 
-/** Swimmer changes require students.manage. Club ownership never changes. */
+/** One shared swimmer record. The registration site remains provenance. */
 
 const EMAIL = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
@@ -70,7 +70,7 @@ export async function createStudent(input: StudentInput): Promise<CreateStudentR
   const parsed = studentSchema.safeParse(input);
   if (!parsed.success) return fail(parsed.error.issues[0].message);
   const data = toData(parsed.data);
-  // The club being worked in. Never changed afterwards.
+  // Remember where the swimmer was first registered; it does not limit access.
   const clubId = await currentClubId();
 
   const result = await onUniqueViolation(
@@ -90,7 +90,7 @@ export async function createStudent(input: StudentInput): Promise<CreateStudentR
         action: "create",
         entity: "Student",
         entityId: student.id,
-        clubId,
+        clubId: null,
         summary: `Added ${fullName(student)}`,
       }, tx);
       return { ok: true as const, studentId: student.id };
@@ -110,12 +110,11 @@ export async function updateStudent(id: string, input: StudentInput): Promise<Ac
   const parsed = studentSchema.safeParse(input);
   if (!parsed.success) return fail(parsed.error.issues[0].message);
   const data = toData(parsed.data);
-  const clubId = await currentClubId();
 
   const result = await onUniqueViolation(() => prisma.$transaction(async (tx) => {
     // Enrolment takes this row lock too, so deactivation cannot race a new place.
     await tx.$queryRaw`SELECT id FROM "Student" WHERE id = ${id} FOR UPDATE`;
-    const existing = await tx.student.findUnique({ where: { id, clubId } });
+    const existing = await tx.student.findUnique({ where: { id } });
     if (!existing) return fail("That swimmer no longer exists.");
     if (data.status === "INACTIVE" && existing.status !== "INACTIVE") {
       const active = await tx.enrolment.count({ where: { studentId: id, status: "ACTIVE" } });
@@ -177,7 +176,7 @@ export async function updateStudent(id: string, input: StudentInput): Promise<Ac
         action: "update",
         entity: "Student",
         entityId: id,
-        clubId,
+        clubId: null,
         summary: `Updated ${fullName(student)} (${changes.join(", ")})`,
       }, tx);
     }
@@ -200,12 +199,11 @@ export async function setStudentStatus(
   const session = await requirePermission("students.manage");
   const parsed = z.enum(["ACTIVE", "INACTIVE"]).safeParse(status);
   if (!parsed.success) return fail("Pick an active or inactive status.");
-  const clubId = await currentClubId();
 
   const result = await prisma.$transaction(async (tx) => {
     await tx.$queryRaw`SELECT id FROM "Student" WHERE id = ${id} FOR UPDATE`;
     const existing = await tx.student.findUnique({
-      where: { id, clubId },
+      where: { id },
       select: { id: true, firstName: true, lastName: true, status: true },
     });
     if (!existing) return fail("That swimmer no longer exists.");
@@ -228,7 +226,7 @@ export async function setStudentStatus(
       action: "update",
       entity: "Student",
       entityId: id,
-      clubId,
+      clubId: null,
       summary: `Marked ${fullName(existing)} ${status === "ACTIVE" ? "active" : "inactive"}`,
     }, tx);
     return ok();

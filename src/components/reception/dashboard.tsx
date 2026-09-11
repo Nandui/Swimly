@@ -22,7 +22,7 @@ import { StudentSearch } from "@/components/students/student-search";
 import { PageHeader } from "@/components/ui-kit/page-header";
 import { LinkSegments } from "@/components/ui-kit/link-segments";
 import { Tag } from "@/components/ui-kit/tag";
-import { courseLabel, courseName, DAY_META, formatSlotShort, formatTime } from "@/lib/courses/constants";
+import { courseLabelWithSite as courseLabel, courseName, DAY_META, formatSlotShort, formatTime } from "@/lib/courses/constants";
 import { ENROLMENT_STATUS_META } from "@/lib/enrolment/constants";
 import { formatDate } from "@/lib/format";
 import type { ReceptionClassOption, ReceptionSwimmer } from "@/lib/reception/data";
@@ -32,7 +32,8 @@ import { ClassFinder } from "./class-finder";
 import { ReceptionTimetable } from "./timetable";
 
 export type ReceptionDashboardProps = {
-  clubName: string; dateLabel: string; now: number;
+  sites: { id: string; name: string }[];
+  clubId: string; clubName: string; dateLabel: string; now: number;
   courses: ReceptionClass[]; student: ReceptionSwimmer | null; targets: ReceptionClassOption[];
   group: ReceptionGrouping; unavailable: boolean;
   access: { manage: boolean; addSwimmers: boolean; students: boolean; courses: boolean; together: boolean; assessments: boolean };
@@ -40,7 +41,7 @@ export type ReceptionDashboardProps = {
 
 /** One swimmer sheet; the shell owns the frame. An open finder survives a
  *  refresh, but resets when the swimmer or club changes. */
-export function ReceptionDashboard({ clubName, dateLabel, now, courses, student, targets, group, unavailable, access }: ReceptionDashboardProps) {
+export function ReceptionDashboard({ sites, clubId, clubName, dateLabel, now, courses, student, targets, group, unavailable, access }: ReceptionDashboardProps) {
   const router = useRouter();
   const [selecting, startSelection] = useTransition();
   const [refreshing, startRefresh] = useTransition();
@@ -83,9 +84,9 @@ export function ReceptionDashboard({ clubName, dateLabel, now, courses, student,
     </Section> : null}
     <VStack gap={4} as="section" aria-label="Find a swimmer">
       <StudentSearch key={`search-${student?.id ?? "empty"}`} label="Find a swimmer" labelHidden hasSearchIcon placeholder="Swimmer name or member number"
-        selected={student} includeInactive onSelect={hit => selectSwimmer(hit?.id)} emptyText="No swimmers match in this club. Try their member number." />
-      {selecting ? <Text as="p" role="status">Loading swimmer…</Text> : unavailable ? <Banner status="warning" title="Swimmer unavailable in this club. Search again or check the selected club." collapsible={false} /> : student ? (
-        <SwimmerSheet key={student.id} student={student} targets={targets} courses={courses} access={access} />
+        selected={student} includeInactive onSelect={hit => selectSwimmer(hit?.id)} emptyText="No swimmers match. Try their member number." />
+      {selecting ? <Text as="p" role="status">Loading swimmer…</Text> : unavailable ? <Banner status="warning" title="This swimmer is no longer available. Search again." collapsible={false} /> : student ? (
+        <SwimmerSheet sites={sites} workingSiteId={clubId} key={student.id} student={student} targets={targets} courses={courses} access={access} />
       ) : <Section variant="muted" padding={6}><EmptyState headingLevel={2} title="Find a swimmer to get started" description={`See their level and current places, then compare classes across the week.${access.addSwimmers ? " For a new swimmer, choose Add swimmer." : ""}`} /></Section>}
     </VStack>
     <QuickBooking access={access} />
@@ -104,8 +105,8 @@ function QuickBooking({ access }: Pick<ReceptionDashboardProps, "access">) {
   </HStack>;
 }
 
-function SwimmerSheet({ student, targets, courses, access }: {
-  student: ReceptionSwimmer; targets: ReceptionClassOption[]; courses: ReceptionClass[]; access: ReceptionDashboardProps["access"];
+function SwimmerSheet({ sites, workingSiteId, student, targets, courses, access }: {
+  sites: { id: string; name: string }[]; workingSiteId: string; student: ReceptionSwimmer; targets: ReceptionClassOption[]; courses: ReceptionClass[]; access: ReceptionDashboardProps["access"];
 }) {
   const [finder, setFinder] = useState<string | null>(null);
   const [contactsOpen, setContactsOpen] = useState(false);
@@ -169,6 +170,7 @@ function SwimmerSheet({ student, targets, courses, access }: {
             <TableCell className="hidden md:table-cell"><VStack gap={1}><Text weight="semibold">{DAY_META[enrolment.course.dayOfWeek].short}</Text><Text hasTabularNumbers>{formatTime(enrolment.course.startMinutes)}–{formatTime(enrolment.course.startMinutes + enrolment.course.durationMinutes)}</Text></VStack></TableCell>
             <TableCell><VStack gap={1} className="break-words">
               <Text weight="semibold">{courseName(enrolment.course)}</Text>
+              <Text color="secondary">{enrolment.course.club.name}</Text>
               <Text hasTabularNumbers className="md:hidden">{formatSlotShort(enrolment.course)}–{formatTime(enrolment.course.startMinutes + enrolment.course.durationMinutes)}</Text>
               <HStack gap={2} wrap="wrap" vAlign="center">{courseName(enrolment.course) !== enrolment.level.name ? <Text>{enrolment.level.name}</Text> : null}<Tag color={status.color}>{status.label}</Tag></HStack>
               {enrolment.level.id !== enrolment.course.level.id || enrolment.programme.id !== enrolment.course.level.programme.id ? <Text color="secondary">Class now teaches {enrolment.course.level.name} · {enrolment.course.level.programme.name}</Text> : null}
@@ -195,6 +197,6 @@ function SwimmerSheet({ student, targets, courses, access }: {
       </Table> : <Text as="p" color="secondary">No current class or waitlist place.{mayEnrol ? " Choose Find a place to compare classes." : ""}</Text>}
       {!access.manage ? <Text as="p" color="secondary">Changing places requires the enrolment permission.</Text> : null}
     </VStack>
-    {finder && mayEnrol ? source || finder === "new" ? <ClassFinder key={finder} student={student} courses={targets} source={source} onClose={closeFinder} /> : <VStack gap={2}><Banner status="info" title="That place has changed. Check the current places above before making another change." collapsible={false} /><HStack><Button label="Close finder" onClick={closeFinder} /></HStack></VStack> : null}
+    {finder && mayEnrol ? source || finder === "new" ? <ClassFinder sites={sites} workingSiteId={workingSiteId} key={finder} student={student} courses={targets} source={source} onClose={closeFinder} /> : <VStack gap={2}><Banner status="info" title="That place has changed. Check the current places above before making another change." collapsible={false} /><HStack><Button label="Close finder" onClick={closeFinder} /></HStack></VStack> : null}
   </VStack>;
 }

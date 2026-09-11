@@ -6,12 +6,12 @@ import type { Prisma } from "@/generated/prisma/client";
 import { fail, ok, type ActionResult, type ConfirmationReply } from "@/lib/action-result";
 import { logAudit } from "@/lib/audit";
 import { requirePermission } from "@/lib/authz";
-import { currentClubId } from "@/lib/clubs/current";
-import { capacityLabel, courseLabel } from "@/lib/courses/constants";
+import { capacityLabel, courseLabelWithSite as courseLabel } from "@/lib/courses/constants";
 import { withCourseSeat } from "@/lib/enrolment/seat";
 import { parseDateOnly, today } from "@/lib/format";
 import { hasEarnedPlace, previousLevel } from "@/lib/progression/rules";
 import { fullName } from "@/lib/students/constants";
+import { readSharedCurriculum, sharedCourse } from "@/lib/curriculum/data/shared";
 import { prisma } from "@/lib/prisma";
 
 const placementReasonSchema = z.string().trim().max(300, "Keep the reason under 300 characters.");
@@ -24,7 +24,7 @@ const enrolSchema = z.object({
 export type EnrolInput = z.infer<typeof enrolSchema>;
 
 const COURSE_SELECT = {
-  id: true, clubId: true, name: true, dayOfWeek: true, startMinutes: true,
+  id: true, clubId: true, club: { select: { id: true, name: true, archivedAt: true } }, name: true, dayOfWeek: true, startMinutes: true,
   capacity: true, archivedAt: true, levelId: true,
   level: { select: { id: true, name: true, archivedAt: true, programmeId: true, programme: { select: { archivedAt: true } } } },
 } as const satisfies Prisma.CourseSelect;
@@ -43,13 +43,11 @@ async function placementFor(
   studentId: string,
   course: Prisma.CourseGetPayload<{ select: typeof COURSE_SELECT }>
 ) {
-  const programmeId = course.level.programmeId;
-  const [orderedLevels, completions, actives, assessments] = await Promise.all([
-    tx.level.findMany({
-      where: { programmeId, archivedAt: null },
-      orderBy: [{ sortOrder: "asc" }, { name: "asc" }],
-      select: { id: true, name: true, sortOrder: true },
-    }),
+  const curriculum = await readSharedCurriculum(tx);
+  const target = sharedCourse(course, curriculum);
+  const programmeId = { in: curriculum.programmeIds.variants(target.level.programmeId) };
+  const orderedLevels = curriculum.levels.filter(l => l.programmeId === target.level.programmeId && !l.archivedAt);
+  const [completions, actives, assessments] = await Promise.all([
     tx.levelCompletion.findMany({ where: { studentId, programmeId }, select: { levelId: true } }),
     tx.enrolment.findMany({ where: { studentId, programmeId, status: "ACTIVE" }, select: { levelId: true } }),
     tx.assessmentBooking.findMany({
@@ -57,14 +55,15 @@ async function placementFor(
       select: { outcomeLevelId: true },
     }),
   ]);
+  const resolve = curriculum.levelIds.resolve;
   return {
     earned: hasEarnedPlace({
-      targetLevelId: course.levelId, orderedLevels,
-      completedLevelIds: new Set(completions.map((row) => row.levelId)),
-      activeLevelIds: new Set(actives.map((row) => row.levelId)),
-      assessedLevelIds: new Set(assessments.flatMap((row) => row.outcomeLevelId ? [row.outcomeLevelId] : [])),
+      targetLevelId: target.levelId, orderedLevels,
+      completedLevelIds: new Set(completions.map(row => resolve(row.levelId))),
+      activeLevelIds: new Set(actives.map(row => resolve(row.levelId))),
+      assessedLevelIds: new Set(assessments.flatMap(row => row.outcomeLevelId ? [resolve(row.outcomeLevelId)] : [])),
     }),
-    below: previousLevel(course.levelId, orderedLevels),
+    below: previousLevel(target.levelId, orderedLevels),
   };
 }
 
@@ -82,26 +81,26 @@ export async function enrolStudent(input: EnrolInput, confirmation?: Confirmatio
   const parsed = enrolSchema.safeParse(input);
   if (!parsed.success) return fail(parsed.error.issues[0].message);
   const { studentId, courseId, placementReason, allowWaitlist } = parsed.data;
-  const clubId = await currentClubId();
   const reply = z.object({ choice: z.enum(["keep", "withdraw"]), ids: z.array(z.string().min(1)).max(100) }).optional().safeParse(confirmation);
   if (!reply.success) return fail("Choose whether to keep the existing places or unenrol.");
-  const existingWhere = { studentId, courseId: { not: courseId }, status: "ACTIVE" as const, course: { clubId }, student: { clubId } };
+  const existingWhere = { studentId, courseId: { not: courseId }, status: "ACTIVE" as const };
   // Lock the source classes in the same order as transfers, before the swimmer.
   const sources = await prisma.enrolment.findMany({ where: existingWhere, select: { courseId: true } });
 
   const result = await withCourseSeat([courseId, ...sources.map((row) => row.courseId)], async (tx): Promise<ActionResult> => {
     await tx.$queryRaw`SELECT id FROM "Student" WHERE id = ${studentId} FOR UPDATE`;
-    const [student, course] = await Promise.all([
+    const [student, rawCourse] = await Promise.all([
       tx.student.findUnique({
-        where: { id: studentId, clubId },
+        where: { id: studentId },
         select: { id: true, firstName: true, lastName: true, status: true },
       }),
-      tx.course.findUnique({ where: { id: courseId, clubId }, select: COURSE_SELECT }),
+      tx.course.findUnique({ where: { id: courseId }, select: COURSE_SELECT }),
     ]);
-    if (!student) return fail("That swimmer is not available in this club.");
+    if (!student) return fail("That swimmer no longer exists.");
     if (student.status !== "ACTIVE") return fail(`${fullName(student)} is marked inactive.`);
-    if (!course) return fail("That class is not available in this club.");
-    if (course.archivedAt) return fail("That class is archived.");
+    if (!rawCourse) return fail("That class no longer exists.");
+    const course = sharedCourse(rawCourse, await readSharedCurriculum(tx));
+    if (course.archivedAt || course.club.archivedAt) return fail("That class or its site is archived.");
     if (course.level.archivedAt || course.level.programme.archivedAt) return fail("That class's level or programme is archived. Restore it first.");
     const open = await tx.enrolment.findFirst({
       where: { studentId, courseId, status: { in: ["ACTIVE", "WAITLISTED"] } }, select: { status: true },
@@ -145,7 +144,7 @@ export async function enrolStudent(input: EnrolInput, confirmation?: Confirmatio
         await tx.enrolment.update({ where: { id: previous.id }, data: { status: "WITHDRAWN", endedOn: parseDateOnly(today()), scheduledEndOn: null } });
         await logAudit({
           actorId: session.user.id, actorName: session.user.name ?? "Unknown",
-          action: "withdraw", entity: "Enrolment", entityId: previous.id, programmeId: previous.programmeId, clubId,
+          action: "withdraw", entity: "Enrolment", entityId: previous.id, programmeId: previous.programmeId, clubId: previous.course.clubId,
           summary: `Withdrew ${fullName(student)} from ${courseLabel(previous.course)} when enrolling in ${courseLabel(course)}`,
         }, tx);
       }
@@ -160,7 +159,7 @@ export async function enrolStudent(input: EnrolInput, confirmation?: Confirmatio
     await logAudit({
       actorId: session.user.id, actorName: session.user.name ?? "Unknown",
       action: full ? "waitlist" : "enrol", entity: "Enrolment", entityId: enrolment.id,
-      programmeId: course.level.programmeId, clubId,
+      programmeId: course.level.programmeId, clubId: course.clubId,
       summary: `${full ? "Waitlisted" : "Enrolled"} ${fullName(student)} in ${courseLabel(course)} at ${course.level.name}` +
         (earned ? "" : ` — placed out of sequence: ${placementReason}`),
     }, tx);
@@ -179,11 +178,10 @@ export async function endEnrolment(id: string, input: z.infer<typeof endSchema>)
   const session = await requirePermission("enrolment.manage");
   const parsed = endSchema.safeParse(input);
   if (!parsed.success) return fail(parsed.error.issues[0].message);
-  const clubId = await currentClubId();
   const source = await prisma.enrolment.findUnique({
-    where: { id, course: { clubId }, student: { clubId } }, select: { courseId: true },
+    where: { id }, select: { courseId: true },
   });
-  if (!source) return fail("That enrolment is not available in this club.");
+  if (!source) return fail("That enrolment no longer exists.");
   const result = await withCourseSeat(source.courseId, async (tx) => {
     const enrolment = await tx.enrolment.findUnique({ where: { id }, select: ENROLMENT_SELECT });
     if (!enrolment) return fail("That enrolment no longer exists.");
@@ -193,7 +191,7 @@ export async function endEnrolment(id: string, input: z.infer<typeof endSchema>)
     await logAudit({
       actorId: session.user.id, actorName: session.user.name ?? "Unknown",
       action: parsed.data.status === "COMPLETED" ? "complete" : "withdraw",
-      entity: "Enrolment", entityId: id, programmeId: enrolment.programmeId, clubId,
+      entity: "Enrolment", entityId: id, programmeId: enrolment.programmeId, clubId: enrolment.course.clubId,
       summary: `${parsed.data.status === "COMPLETED" ? "Finished" : "Withdrew"} ${fullName(enrolment.student)} from ${courseLabel(enrolment.course)}` +
         (parsed.data.note ? ` — ${parsed.data.note}` : ""),
     }, tx);
@@ -205,19 +203,19 @@ export async function endEnrolment(id: string, input: z.infer<typeof endSchema>)
 
 export async function promoteFromWaitlist(id: string): Promise<ActionResult> {
   const session = await requirePermission("enrolment.manage");
-  const clubId = await currentClubId();
   const source = await prisma.enrolment.findUnique({
-    where: { id, course: { clubId }, student: { clubId } }, select: { courseId: true, studentId: true },
+    where: { id }, select: { courseId: true, studentId: true },
   });
-  if (!source) return fail("That enrolment is not available in this club.");
+  if (!source) return fail("That enrolment no longer exists.");
   const result = await withCourseSeat(source.courseId, async (tx) => {
     await tx.$queryRaw`SELECT id FROM "Student" WHERE id = ${source.studentId} FOR UPDATE`;
     const enrolment = await tx.enrolment.findUnique({ where: { id }, select: ENROLMENT_SELECT });
     if (!enrolment) return fail("That enrolment no longer exists.");
     if (enrolment.status !== "WAITLISTED") return fail("They are not on the waitlist.");
     if (enrolment.student.status !== "ACTIVE") return fail(`${fullName(enrolment.student)} is marked inactive.`);
-    if (enrolment.course.archivedAt) return fail("That class is archived.");
-    if (enrolment.course.level.archivedAt || enrolment.course.level.programme.archivedAt) return fail("That class's level or programme is archived. Restore it first.");
+    if (enrolment.course.archivedAt || enrolment.course.club.archivedAt) return fail("That class or its site is archived.");
+    const shared = sharedCourse(enrolment.course, await readSharedCurriculum(tx));
+    if (shared.level.archivedAt || shared.level.programme.archivedAt) return fail("That class's level or programme is archived. Restore it first.");
     const taken = await tx.enrolment.count({ where: { courseId: enrolment.courseId, status: "ACTIVE" } });
     if (enrolment.course.capacity !== null && taken >= enrolment.course.capacity) return fail(
       `${courseLabel(enrolment.course)} is still full (${capacityLabel(taken, enrolment.course.capacity)}).`
@@ -225,7 +223,7 @@ export async function promoteFromWaitlist(id: string): Promise<ActionResult> {
     await tx.enrolment.update({ where: { id }, data: { status: "ACTIVE", startedOn: parseDateOnly(today()) } });
     await logAudit({
       actorId: session.user.id, actorName: session.user.name ?? "Unknown", action: "enrol",
-      entity: "Enrolment", entityId: id, programmeId: enrolment.programmeId, clubId,
+      entity: "Enrolment", entityId: id, programmeId: enrolment.programmeId, clubId: enrolment.course.clubId,
       summary: `Moved ${fullName(enrolment.student)} off the waitlist into ${courseLabel(enrolment.course)}`,
     }, tx);
     return ok();
@@ -244,11 +242,10 @@ export async function transferEnrolment(id: string, toCourseId: string, placemen
   if (!parsed.success) return fail(parsed.error.issues[0].message);
   const reply = z.object({ choice: z.literal("move"), ids: z.tuple([z.string(), z.string()]) }).optional().safeParse(confirmation);
   if (!reply.success) return fail("Confirm the move before continuing.");
-  const clubId = await currentClubId();
   const source = await prisma.enrolment.findUnique({
-    where: { id, course: { clubId }, student: { clubId } }, select: { courseId: true, studentId: true },
+    where: { id }, select: { courseId: true, studentId: true },
   });
-  if (!source) return fail("That enrolment is not available in this club.");
+  if (!source) return fail("That enrolment no longer exists.");
   if (source.courseId === toCourseId) return fail("That is the same class.");
   const result = await withCourseSeat([source.courseId, toCourseId], async (tx): Promise<ActionResult> => {
     await tx.$queryRaw`SELECT id FROM "Student" WHERE id = ${source.studentId} FOR UPDATE`;
@@ -256,9 +253,11 @@ export async function transferEnrolment(id: string, toCourseId: string, placemen
     if (!from) return fail("That enrolment no longer exists.");
     if (from.status !== "ACTIVE" && from.status !== "WAITLISTED") return fail("That enrolment has already ended.");
     if (from.student.status !== "ACTIVE") return fail(`${fullName(from.student)} is marked inactive.`);
-    const to = await tx.course.findUnique({ where: { id: toCourseId, clubId }, select: COURSE_SELECT });
-    if (!to) return fail("That class is not available in this club.");
-    if (to.archivedAt) return fail("That class is archived.");
+    const rawTo = await tx.course.findUnique({ where: { id: toCourseId }, select: COURSE_SELECT });
+    if (!rawTo) return fail("That class no longer exists.");
+    const curriculum = await readSharedCurriculum(tx);
+    const to = sharedCourse(rawTo, curriculum);
+    if (to.archivedAt || to.club.archivedAt) return fail("That class or its site is archived.");
     if (to.level.archivedAt || to.level.programme.archivedAt) return fail("That class's level or programme is archived. Restore it first.");
     const open = await tx.enrolment.findFirst({
       where: { studentId: from.studentId, courseId: toCourseId, status: { in: ["ACTIVE", "WAITLISTED"] } },
@@ -267,7 +266,7 @@ export async function transferEnrolment(id: string, toCourseId: string, placemen
     if (open) return fail(`${fullName(from.student)} is already in that class or on its waitlist.`);
     const { earned } = await placementFor(tx, from.studentId, to);
     // A waitlisted swimmer moving sideways keeps the original placement reason.
-    const reason = parsed.data.placementReason || (from.course.levelId === to.levelId ? from.placementReason : null);
+    const reason = parsed.data.placementReason || (curriculum.levelIds.resolve(from.course.levelId) === to.levelId ? from.placementReason : null);
     if (!earned && !reason) return fail(`Say why ${fullName(from.student)} is being placed at ${to.level.name}; they have not earned that level yet.`);
     const taken = await tx.enrolment.count({ where: { courseId: toCourseId, status: "ACTIVE" } });
     if (to.capacity !== null && taken >= to.capacity) return fail(`${courseLabel(to)} is full (${capacityLabel(taken, to.capacity)}).`);
@@ -297,10 +296,17 @@ export async function transferEnrolment(id: string, toCourseId: string, placemen
     });
     await logAudit({
       actorId: session.user.id, actorName: session.user.name ?? "Unknown", action: "transfer",
-      entity: "Enrolment", entityId: created.id, programmeId: to.level.programmeId, clubId,
+      entity: "Enrolment", entityId: created.id, programmeId: to.level.programmeId, clubId: to.clubId,
       summary: `Moved ${fullName(from.student)} from ${from.status === "WAITLISTED" ? "the waitlist for " : ""}${courseLabel(from.course)} to ${courseLabel(to)}` +
         (earned ? "" : ` — placed out of sequence: ${reason}`),
     }, tx);
+    if (from.course.clubId !== to.clubId) {
+      await logAudit({
+        actorId: session.user.id, actorName: session.user.name ?? "Unknown", action: "transfer-out",
+        entity: "Enrolment", entityId: id, programmeId: from.programmeId, clubId: from.course.clubId,
+        summary: `Moved ${fullName(from.student)} from ${courseLabel(from.course)} to ${courseLabel(to)}`,
+      }, tx);
+    }
     return ok();
   });
   if (result.ok) revalidate();

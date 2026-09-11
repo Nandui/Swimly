@@ -37,6 +37,7 @@
   },
   "devDependencies": {
     "@astryxdesign/cli": "^0.5.4",
+    "@electric-sql/pglite": "^0.4.3",
     "@tailwindcss/postcss": "^4",
     "@types/bcryptjs": "^2.4.6",
     "@types/node": "^20",

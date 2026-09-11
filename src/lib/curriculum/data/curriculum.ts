@@ -1,117 +1,36 @@
 import { requireSession } from "@/lib/authz";
-import { currentClubId } from "@/lib/clubs/current";
-import { prisma } from "@/lib/prisma";
-import { LIST_ORDER, LIVE } from "@/lib/curriculum/constants";
+import { getSharedCurriculum } from "@/lib/curriculum/data/shared";
 
-/** Reads are plain async functions called straight from server components, and
- *  they authorize at the session level rather than the admin level: the
- *  *pages* that manage the curriculum are admin-tier, but level and programme
- *  names are needed all over the app by people who may not touch them.
- *
- *  Every list here is the current club's. A programme fetched by id is not
- *  filtered — the page checks whose it is and says so. */
-
+/** One shared catalogue; original site copies remain addressable by ID. */
 export async function getProgrammes(includeArchived = false) {
   await requireSession();
-  const clubId = await currentClubId();
-
-  return prisma.programme.findMany({
-    where: { clubId, ...(includeArchived ? {} : LIVE) },
-    orderBy: [...LIST_ORDER],
-    select: {
-      id: true,
-      name: true,
-      description: true,
-      imageVersion: true,
-      sortOrder: true,
-      archivedAt: true,
-      _count: { select: { levels: true, enrolments: true } },
-    },
-  });
+  return (await getSharedCurriculum()).programmes.filter(p => includeArchived || !p.archivedAt);
 }
-
 export type ProgrammeRow = Awaited<ReturnType<typeof getProgrammes>>[number];
 
-/** A whole programme as one document: its levels in order, each with its
- *  competencies. This is what `/programmes/[id]` renders, and it is one query
- *  rather than one per level. */
 export async function getProgramme(id: string, includeArchived = false) {
   await requireSession();
-
-  return prisma.programme.findUnique({
-    where: { id },
-    select: {
-      id: true,
-      name: true,
-      description: true,
-      imageVersion: true,
-      archivedAt: true,
-      clubId: true,
-      club: { select: { id: true, name: true } },
-      levels: {
-        where: includeArchived ? {} : LIVE,
-        orderBy: [...LIST_ORDER],
-        select: {
-          id: true,
-          name: true,
-          description: true,
-          imageVersion: true,
-          sortOrder: true,
-          archivedAt: true,
-          _count: { select: { courses: true, enrolments: true } },
-          competencies: {
-            where: includeArchived ? {} : LIVE,
-            orderBy: [...LIST_ORDER],
-            select: {
-              id: true,
-              name: true,
-              description: true,
-              sortOrder: true,
-              archivedAt: true,
-              _count: { select: { results: true } },
-            },
-          },
-        },
-      },
-    },
-  });
+  const programme = (await getSharedCurriculum()).programme(id);
+  return programme ? { ...programme, levels: programme.levels.filter(l => includeArchived || !l.archivedAt).map(l => ({
+    ...l, competencies: l.competencies.filter(c => includeArchived || !c.archivedAt),
+  })) } : null;
 }
-
 export type ProgrammeDetail = NonNullable<Awaited<ReturnType<typeof getProgramme>>>;
 export type LevelDetail = ProgrammeDetail["levels"][number];
 export type CompetencyDetail = LevelDetail["competencies"][number];
 
-/** Counts for the overview sentence. */
 export async function getCurriculumSummary() {
   await requireSession();
-  const clubId = await currentClubId();
-
-  const [programmes, levels, competencies] = await Promise.all([
-    prisma.programme.count({ where: { ...LIVE, clubId } }),
-    prisma.level.count({ where: { ...LIVE, programme: { clubId } } }),
-    prisma.competency.count({ where: { ...LIVE, level: { programme: { clubId } } } }),
-  ]);
-
-  return { programmes, levels, competencies };
+  const curriculum = await getSharedCurriculum();
+  const levels = curriculum.levels.filter(l => !l.archivedAt && !l.programme.archivedAt);
+  return { programmes: curriculum.programmes.filter(p => !p.archivedAt).length,
+    levels: levels.length, competencies: levels.reduce((n, l) => n + l.competencies.filter(c => !c.archivedAt).length, 0) };
 }
 
-/** Every live level, flattened and labelled by programme — what a course form
- *  or an enrolment picker needs. */
 export async function getLevelOptions() {
   await requireSession();
-
-  const levels = await prisma.level.findMany({
-    where: { ...LIVE, programme: { ...LIVE, clubId: await currentClubId() } },
-    orderBy: [{ programme: { sortOrder: "asc" } }, ...LIST_ORDER],
-    select: {
-      id: true,
-      name: true,
-      sortOrder: true,
-      programme: { select: { id: true, name: true, sortOrder: true } },
-    },
-  });
-
-  return levels;
+  return (await getSharedCurriculum()).levels.filter(l => !l.archivedAt && !l.programme.archivedAt)
+    .sort((a, b) => a.programme.sortOrder - b.programme.sortOrder || a.sortOrder - b.sortOrder || a.name.localeCompare(b.name))
+    .map(l => ({ id: l.id, name: l.name, sortOrder: l.sortOrder, programme: { id: l.programme.id, name: l.programme.name, sortOrder: l.programme.sortOrder } }));
 }
-
 export type LevelOption = Awaited<ReturnType<typeof getLevelOptions>>[number];

@@ -1,13 +1,14 @@
 import assert from "node:assert/strict";
 import { test } from "node:test";
+import { curriculumProgramme, sharedCurriculumRows } from "@/test/curriculum";
 import { serverModule } from "@/test/server-module";
 
 type Actions = typeof import("./enrolment");
-type Course = { id: string; clubId: string; levelId: string; capacity: number; archivedAt: Date | null; name: string; dayOfWeek: "MONDAY"; startMinutes: number; level: { id: string; name: string; programmeId: string; archivedAt: Date | null; programme: { archivedAt: Date | null } } };
+type Course = { club: { id: string; name: string; archivedAt: Date | null }; id: string; clubId: string; levelId: string; capacity: number; archivedAt: Date | null; name: string; dayOfWeek: "MONDAY"; startMinutes: number; level: { id: string; name: string; programmeId: string; archivedAt: Date | null; programme: { archivedAt: Date | null } } };
 
 function fixture() {
   const courses: Course[] = ["a", "b", "c"].map((id) => ({
-    id, clubId: "club", levelId: "entry", capacity: 2, archivedAt: null,
+    id, club: { id: "club", name: "Site A", archivedAt: null }, clubId: "club", levelId: "entry", capacity: 2, archivedAt: null,
     name: `Class ${id}`, dayOfWeek: "MONDAY", startMinutes: 900,
     level: { id: "entry", name: "Entry", programmeId: "programme", archivedAt: null, programme: { archivedAt: null } },
   }));
@@ -16,24 +17,28 @@ function fixture() {
   const audits: object[] = [];
   const locks: string[][] = [];
   let activeLocks: string[] = [];
-  let failAudit = false;
+  let auditFailureAfter: number | null = null;
   let beforeTransaction: (() => void) | undefined;
   let queue = Promise.resolve();
+  const curriculum = curriculumProgramme("programme", ["entry", "next"]);
+  const catalogue = [curriculum];
+  const completions: { levelId: string; programmeId: string }[] = [];
   const tx = {
+    programme: { findMany: async () => catalogue },
     $queryRaw: async (parts: TemplateStringsArray, id: string) => {
       if (parts.join("").includes('"Course"')) activeLocks.push(id);
       return [];
     },
     student: {
-      findUnique: async ({ where }: { where: { id: string; clubId: string } }) => {
+      findUnique: async ({ where }: { where: { id: string; clubId?: string } }) => {
         assert.ok(activeLocks.length > 0, "student read follows the seat lock");
-        return where.id === student.id && where.clubId === student.clubId ? student : null;
+        return where.id === student.id && (!where.clubId || where.clubId === student.clubId) ? student : null;
       }
     },
     course: {
       findUnique: async ({ where }: { where: { id: string; clubId: string } }) => {
         assert.ok(activeLocks.includes(where.id), "capacity read follows that class's lock");
-        return courses.find((row) => row.id === where.id && row.clubId === where.clubId) ?? null;
+        return courses.find((row) => row.id === where.id && (!where.clubId || row.clubId === where.clubId)) ?? null;
       }
     },
     enrolment: {
@@ -46,9 +51,9 @@ function fixture() {
         return { ...row, course, student };
       },
       findFirst: async ({ where }: { where: { courseId: string } }) => rows.find((row) => row.courseId === where.courseId && ["ACTIVE", "WAITLISTED"].includes(row.status)) ?? null,
-      findMany: async ({ where }: { where: { studentId?: string; programmeId?: string; courseId?: { not: string }; course?: { clubId: string }; student?: { clubId: string } } }) => rows.filter((row) =>
+      findMany: async ({ where }: { where: { studentId?: string; programmeId?: string | { in: string[] }; courseId?: { not: string }; course?: { clubId: string }; student?: { clubId: string } } }) => rows.filter((row) =>
         row.status === "ACTIVE" && (!where.studentId || row.studentId === where.studentId) &&
-        (!where.programmeId || row.programmeId === where.programmeId) &&
+        (!where.programmeId || (typeof where.programmeId === "string" ? row.programmeId === where.programmeId : where.programmeId.in.includes(row.programmeId))) &&
         (!where.courseId || row.courseId !== where.courseId.not) &&
         (!where.student || student.clubId === where.student.clubId) &&
         (!where.course || courses.find((course) => course.id === row.courseId)?.clubId === where.course.clubId)
@@ -60,9 +65,9 @@ function fixture() {
       },
     },
     level: { findMany: async () => [{ id: "entry", name: "Entry", sortOrder: 0 }, { id: "next", name: "Next", sortOrder: 1 }] },
-    levelCompletion: { findMany: async () => [] },
+    levelCompletion: { findMany: async () => completions },
     assessmentBooking: { findMany: async () => [] },
-    auditLog: { create: async ({ data }: { data: object }) => { if (failAudit) throw new Error("Audit unavailable"); audits.push(data); } },
+    auditLog: { create: async ({ data }: { data: object }) => { if (auditFailureAfter !== null && audits.length >= auditFailureAfter) throw new Error("Audit unavailable"); audits.push(data); } },
   };
   const prisma = {
     ...tx,
@@ -75,8 +80,9 @@ function fixture() {
       beforeTransaction?.();
       beforeTransaction = undefined;
       const snapshot = structuredClone(rows);
+      const auditCount = audits.length;
       try { return await run(tx); }
-      catch (error) { rows.splice(0, rows.length, ...snapshot); throw error; }
+      catch (error) { rows.splice(0, rows.length, ...snapshot); audits.splice(auditCount); throw error; }
       finally { locks.push([...activeLocks]); release(); }
     },
   };
@@ -87,16 +93,16 @@ function fixture() {
     "next/cache": { revalidatePath: () => { } },
   });
   return {
-    actions, rows, courses, student, audits, locks,
-    failAudit: () => { failAudit = true; },
+    actions, rows, courses, student, audits, locks, curriculum, catalogue, completions,
+    failAudit: (after = 0) => { auditFailureAfter = after; },
     beforeTransaction: (run: () => void) => { beforeTransaction = run; },
   };
 }
 
-test("enrolment refuses another club's swimmer without writing", async () => {
+test("enrolment accepts another site's swimmer with the same existing-place confirmation", async () => {
   const f = fixture(); f.student.clubId = "other";
-  const result = await f.actions.enrolStudent({ studentId: "swimmer", courseId: "b", placementReason: "", allowWaitlist: false });
-  assert.equal(result.ok, false); assert.equal(f.rows.length, 1); assert.equal(f.audits.length, 0);
+  const result = await f.actions.enrolStudent({ studentId: "swimmer", courseId: "b", placementReason: "", allowWaitlist: false }, { choice: "keep", ids: ["source"] });
+  assert.equal(result.ok, true); assert.equal(f.rows.length, 2); assert.equal(f.audits.length, 1);
 });
 
 test("enrolment sees capacity changed before it obtains the lock", async () => {
@@ -243,4 +249,34 @@ test("past enrolments and waitlists do not trigger the existing-class prompt", a
     assert.equal((await f.actions.enrolStudent(enrolInput)).ok, true);
     assert.equal(f.rows[0].status, status);
   }
+});
+
+
+test("cross-site transfers use earned progress from the old site and audit both destinations", async () => {
+  const f = fixture(); f.catalogue.splice(0, f.catalogue.length, ...sharedCurriculumRows());
+  f.courses[1].clubId = "other"; f.courses[1].club = { id: "other", name: "Site B", archivedAt: null };
+  f.courses[1].levelId = "next-b"; f.courses[1].level = { ...f.courses[1].level, id: "next-b", programmeId: "programme-b" };
+  f.completions.push({ levelId: "entry-b", programmeId: "programme-b" });
+  const review = await f.actions.transferEnrolment("source", "b");
+  assert.equal(review.ok, false);
+  if (review.ok) return;
+  assert.match(review.confirmation!.description, /Site A.*Site B/);
+  assert.equal((await f.actions.transferEnrolment("source", "b", "", { choice: "move", ids: review.confirmation!.ids })).ok, true);
+  assert.equal(f.rows[1].levelId, "next"); assert.equal(f.rows[1].programmeId, "programme");
+  assert.equal(f.rows[1].placementReason, null);
+  assert.deepEqual(f.audits.map(a => (a as { clubId: string }).clubId), ["other", "club"]);
+});
+
+test("failure to audit the source site rolls back the whole cross-site transfer", async () => {
+  const f = fixture(); f.courses[1].clubId = "other"; f.courses[1].club = { id: "other", name: "Site B", archivedAt: null };
+  f.failAudit(1);
+  await assert.rejects(f.actions.transferEnrolment("source", "b", "", { choice: "move", ids: ["source", "b"] }), /Audit unavailable/);
+  assert.equal(f.rows.length, 1); assert.equal(f.rows[0].status, "ACTIVE"); assert.equal(f.audits.length, 0);
+});
+
+test("an archived destination site cannot receive an enrolment or transfer", async () => {
+  const f = fixture(); f.courses[1].club.archivedAt = new Date();
+  assert.equal((await f.actions.enrolStudent(enrolInput, { choice: "keep", ids: ["source"] })).ok, false);
+  assert.equal((await f.actions.transferEnrolment("source", "b", "", { choice: "move", ids: ["source", "b"] })).ok, false);
+  assert.equal(f.rows.length, 1); assert.equal(f.rows[0].status, "ACTIVE");
 });

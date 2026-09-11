@@ -13,7 +13,7 @@ import { BackLink } from "@/components/ui-kit/back-link";
 import { EmptyState } from "@/components/ui-kit/empty-state";
 import { PageHeader } from "@/components/ui-kit/page-header";
 import { Tag } from "@/components/ui-kit/tag";
-import { capacityLabel, capacityTone, courseLabel, courseName, formatSlot, placesLeft } from "@/lib/courses/constants";
+import { capacityLabel, capacityTone, courseLabelWithSite as courseLabel, courseName, formatSlot, placesLeft } from "@/lib/courses/constants";
 import type { CourseDetail, InstructorOption, RosterEntry } from "@/lib/courses/data/courses";
 import type { LevelOption } from "@/lib/curriculum/data/curriculum";
 import type { TransferTarget } from "@/lib/enrolment/data/enrolments";
@@ -45,7 +45,7 @@ export function ClassDetailView({ course, roster, targets, levels, instructors, 
     <VStack gap={3} className="[&_a]:min-h-11">
       <BackLink href={backHref} current={courseName(course)}>Classes</BackLink>
       <PageHeader title={<HStack gap={2} vAlign="center" wrap="wrap">{levelImage}{courseName(course)}</HStack>}
-        description={`${course.level.programme.name} · ${course.level.name}`}
+        description={`${course.club.name} · ${course.level.programme.name} · ${course.level.name}`}
         actions={access.manage && !course.archivedAt ? <EnrolIntoCourse course={course} taken={active.length} /> : undefined} />
       {course.archivedAt || tone ? <HStack gap={2} wrap="wrap">
         {course.archivedAt ? <Tag color={ARCHIVAL_STATUS_META.archived.color}>{ARCHIVAL_STATUS_META.archived.label}</Tag> : null}

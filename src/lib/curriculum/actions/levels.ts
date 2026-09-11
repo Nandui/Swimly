@@ -7,8 +7,9 @@ import { logAudit } from "@/lib/audit";
 import { requirePermission } from "@/lib/authz";
 import { LIST_ORDER } from "@/lib/curriculum/constants";
 import { reorderIds } from "@/lib/curriculum/reorder";
-import { currentClubId } from "@/lib/clubs/current";
 import { prepareImage } from "@/lib/curriculum/image-upload";
+import { readSharedCurriculum } from "@/lib/curriculum/data/shared";
+import { sharedNameTaken } from "@/lib/curriculum/shared-name";
 import { prisma } from "@/lib/prisma";
 
 const levelSchema = z.object({
@@ -28,13 +29,15 @@ export async function createLevel(
   imageForm?: FormData
 ): Promise<ActionResult> {
   const session = await requirePermission("curriculum.manage");
+  const curriculum = await readSharedCurriculum();
+  programmeId = curriculum.programmeIds.resolve(programmeId);
 
   const parsed = levelSchema.safeParse(input);
   if (!parsed.success) return fail(parsed.error.issues[0].message);
   const { name, description } = parsed.data;
 
   const programme = await prisma.programme.findUnique({
-    where: { id: programmeId, clubId: await currentClubId() },
+    where: { id: programmeId },
     select: { id: true, name: true, archivedAt: true },
   });
   if (!programme) return fail("That programme no longer exists.");
@@ -44,13 +47,14 @@ export async function createLevel(
   if (!image.ok) return fail(image.error);
 
   const last = await prisma.level.findFirst({
-    where: { programmeId },
+    where: { programmeId: { in: curriculum.programmeIds.variants(programmeId) }, sharedWithId: null },
     orderBy: { sortOrder: "desc" },
     select: { sortOrder: true },
   });
 
   const created = await onUniqueViolation(
     () => prisma.$transaction(async (tx) => {
+      if (await sharedNameTaken(tx, "level", name, programmeId)) return fail(`There is already a level called ${name}.`);
       const created = await tx.level.create({
         data: {
           programmeId,
@@ -85,13 +89,15 @@ export async function createLevel(
 
 export async function updateLevel(id: string, input: LevelInput, imageForm?: FormData): Promise<ActionResult> {
   const session = await requirePermission("curriculum.manage");
+  const curriculum = await readSharedCurriculum();
+  id = curriculum.levelIds.resolve(id);
 
   const parsed = levelSchema.safeParse(input);
   if (!parsed.success) return fail(parsed.error.issues[0].message);
   const { name, description } = parsed.data;
 
   const existing = await prisma.level.findUnique({
-    where: { id, programme: { clubId: await currentClubId() } },
+    where: { id },
     select: {
       id: true,
       name: true,
@@ -113,8 +119,9 @@ export async function updateLevel(id: string, input: LevelInput, imageForm?: For
 
   const updated = await onUniqueViolation(
     () => prisma.$transaction(async (tx) => {
+      if (await sharedNameTaken(tx, "level", name, existing.programmeId, id)) return fail(`There is already a level called ${name}.`);
       const updated = await tx.level.update({
-        where: { id, programme: { clubId: await currentClubId() } },
+        where: { id },
         data: { name, description: description || null, ...image.data },
         select: { id: true, name: true },
       });
@@ -146,9 +153,11 @@ export async function setLevelArchived(
   archived: boolean
 ): Promise<ActionResult> {
   const session = await requirePermission("curriculum.manage");
+  const curriculum = await readSharedCurriculum();
+  id = curriculum.levelIds.resolve(id);
 
   const existing = await prisma.level.findUnique({
-    where: { id, programme: { clubId: await currentClubId() } },
+    where: { id },
     select: {
       id: true,
       name: true,
@@ -162,7 +171,7 @@ export async function setLevelArchived(
 
   if (archived) {
     const courses = await prisma.course.count({
-      where: { levelId: id, archivedAt: null },
+      where: { levelId: { in: curriculum.levelIds.variants(id) }, archivedAt: null },
     });
     if (courses > 0) {
       return fail(
@@ -173,7 +182,7 @@ export async function setLevelArchived(
 
   await prisma.$transaction(async (tx) => {
     await tx.level.update({
-      where: { id, programme: { clubId: await currentClubId() } },
+      where: { id },
       data: { archivedAt: archived ? new Date() : null },
     });
 
@@ -197,15 +206,17 @@ export async function moveLevel(
   direction: "up" | "down"
 ): Promise<ActionResult> {
   const session = await requirePermission("curriculum.manage");
+  const curriculum = await readSharedCurriculum();
+  id = curriculum.levelIds.resolve(id);
 
   const level = await prisma.level.findUnique({
-    where: { id, programme: { clubId: await currentClubId() } },
+    where: { id },
     select: { programmeId: true, name: true },
   });
   if (!level) return fail("That level no longer exists.");
 
   const siblings = await prisma.level.findMany({
-    where: { programmeId: level.programmeId, archivedAt: null },
+    where: { programmeId: { in: curriculum.programmeIds.variants(level.programmeId) }, archivedAt: null, sharedWithId: null },
     orderBy: [...LIST_ORDER],
     select: { id: true, name: true },
   });

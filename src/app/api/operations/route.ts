@@ -5,6 +5,7 @@ import { validOperationToken } from "@/lib/operations/token";
 import { expandPermissions } from "@/lib/staff/permissions";
 import { AuthorizationError } from "@/lib/authz";
 import { createCourse, updateCourse, type CourseInput } from "@/lib/courses/actions/courses";
+import { getLevelOptions } from "@/lib/curriculum/data/curriculum";
 import { createStudent, updateStudent, type StudentInput } from "@/lib/students/actions/students";
 import { enrolStudent, type EnrolInput } from "@/lib/enrolment/actions/enrolment";
 import type { ConfirmationReply } from "@/lib/action-result";
@@ -56,17 +57,20 @@ export async function POST(request: Request) {
     return await operationContext.run({ session, clubId }, async () => {
       const page = { take: 50, ...(data.cursor ? { cursor: { id: data.cursor }, skip: 1 } : {}), orderBy: { id: "asc" as const } };
       switch (data.operation) {
-        case "levels.list": return json(await prisma.level.findMany({ where: { programme: { clubId }, archivedAt: null },
-          select: { id: true, name: true, programmeId: true, programme: { select: { name: true } } }, ...page }));
+        case "levels.list": {
+          const levels = (await getLevelOptions()).sort((a, b) => a.id.localeCompare(b.id));
+          const start = data.cursor ? levels.findIndex(level => level.id === data.cursor) + 1 : 0;
+          return json(levels.slice(start, start + page.take));
+        }
         case "courses.list": return json(await prisma.course.findMany({ where: { clubId, ...(data.query ? { name: { contains: data.query, mode: "insensitive" } } : {}) },
           select: { id: true, name: true, levelId: true, dayOfWeek: true, startMinutes: true, durationMinutes: true, capacity: true, instructorId: true, location: true, archivedAt: true,
             enrolments: { where: { status: { in: ["ACTIVE", "WAITLISTED"] } }, select: { studentId: true, status: true } } }, ...page }));
-        case "students.list": return json(await prisma.student.findMany({ where: { clubId, ...(data.query ? { OR: [
+        case "students.list": return json(await prisma.student.findMany({ where: { ...(data.query ? { OR: [
           { memberNumber: { equals: data.query } }, { firstName: { contains: data.query, mode: "insensitive" } }, { lastName: { contains: data.query, mode: "insensitive" } }] } : {}) },
           select: { id: true, memberNumber: true, firstName: true, lastName: true, status: true }, ...page }));
         case "students.get": {
           if (!data.id) return json({ error: "id required" }, 400);
-          const student = await prisma.student.findUnique({ where: { id: data.id, clubId },
+          const student = await prisma.student.findUnique({ where: { id: data.id },
             include: { enrolments: { where: { status: { in: ["ACTIVE", "WAITLISTED"] } } } } });
           return student ? json(student) : json({ error: "Not found" }, 404);
         }

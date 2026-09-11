@@ -21,7 +21,7 @@ import { BOOKING_STATUS_META, sessionLabel } from "@/lib/assessments/constants";
 import type { StudentAssessment } from "@/lib/assessments/data/assessments";
 import { ATTENDANCE_STATUS_META } from "@/lib/attendance/constants";
 import type { StudentAttendance } from "@/lib/attendance/data/register";
-import { courseLabel, courseName, formatSlotShort } from "@/lib/courses/constants";
+import { courseLabelWithSite as courseLabel, courseName, formatSlotShort } from "@/lib/courses/constants";
 import { ENROLMENT_STATUS_META } from "@/lib/enrolment/constants";
 import type { StudentEnrolment } from "@/lib/enrolment/data/enrolments";
 import { formatDate } from "@/lib/format";
@@ -101,7 +101,7 @@ export function EnrolmentTable({
                   {courseName(entry.course)}
                 </Link>
                 <Text type="supporting" display="block">
-                  {formatSlotShort(entry.course)}
+                  {entry.course.club.name} · {formatSlotShort(entry.course)}
                   {entry.course.instructor ? ` · ${entry.course.instructor.name}` : ""}
                 </Text>
                 <Text type="supporting" display="block" className="md:hidden">
@@ -189,7 +189,7 @@ export function AttendanceTable({ records }: { records: StudentAttendance[] }) {
                     {formatDate(record.date)}
                   </Text>
                   <Text type="supporting" display="block" className="md:hidden">
-                    {courseName(record.course)} · {formatSlotShort(record.course)}
+                    {courseName(record.course)} · {record.course.club.name} · {formatSlotShort(record.course)}
                   </Text>
                 </TableCell>
                 <TableCell className="max-md:hidden">
@@ -232,7 +232,7 @@ export function AssessmentList({ bookings }: { bookings: StudentAssessment[] }) 
               }
               description={
                 <Text type="supporting">
-                  {booking.session.programme.name}
+                  {booking.session.club.name} · {booking.session.programme.name}
                   {booking.session.type ? ` · ${booking.session.type.name}` : ""}
                   {booking.outcomeLevel ? (
                     <>

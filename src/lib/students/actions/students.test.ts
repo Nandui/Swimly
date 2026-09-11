@@ -10,18 +10,19 @@ const input: import("./students").StudentInput = {
 };
 
 function fixture() {
-  const student = { ...input, id: "swimmer", status: "ACTIVE", clubId: "club" };
+  const student = { ...input, id: "swimmer", status: "ACTIVE", clubId: "club", dateOfBirth: null, photoConsentOn: null };
   let writes = 0;
   let locked = false;
   const tx = {
     $queryRaw: async () => { locked = true; return []; },
     student: {
-      findUnique: async ({ where }: { where: { clubId: string } }) => {
-        assert.ok(locked); return where.clubId === student.clubId ? student : null;
+      findUnique: async ({ where }: { where: { id: string; clubId?: string } }) => {
+        assert.ok(locked); return where.id === student.id && (!where.clubId || where.clubId === student.clubId) ? student : null;
       },
       update: async () => { writes++; return student; },
     },
     enrolment: { count: async () => 1 },
+    auditLog: { create: async () => ({}) },
   };
   const prisma = { ...tx, $transaction: async (run: (db: typeof tx) => Promise<unknown>) => run(tx) };
   const actions = serverModule<Actions>("src/lib/students/actions/students.ts", {
@@ -39,10 +40,10 @@ test("editing a full swimmer form cannot bypass the active-enrolment guard", asy
   assert.equal(f.writes(), 0);
 });
 
-test("swimmer edits refuse another club's record", async () => {
+test("swimmer edits allow another site's record and retain the active-place guard", async () => {
   const f = fixture(); f.student.clubId = "other";
-  assert.equal((await f.actions.updateStudent("swimmer", input)).ok, false);
-  assert.equal(f.writes(), 0);
+  assert.equal((await f.actions.updateStudent("swimmer", { ...input, status: "ACTIVE", contactName: "Updated contact" })).ok, true);
+  assert.equal(f.writes(), 1);
 });
 
 test("invalid and future dates of birth return validation errors", async () => {
@@ -53,7 +54,7 @@ test("invalid and future dates of birth return validation errors", async () => {
   assert.equal(f.writes(), 0);
 });
 
-test("adding a swimmer returns their ID only after the club-scoped create and audit commit", async () => {
+test("adding a swimmer returns their ID only after the create with registration-site provenance and audit commit", async () => {
   const events: string[] = [];
   const paths: string[] = [];
   let rejectAudit = false;

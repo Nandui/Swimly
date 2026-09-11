@@ -5,6 +5,7 @@ import { currentClubId } from "@/lib/clubs/current";
 import { parseDateOnly } from "@/lib/format";
 import { prisma } from "@/lib/prisma";
 import { savedRegister } from "@/lib/attendance/revision";
+import { getSharedCurriculum, sharedCourse } from "@/lib/curriculum/data/shared";
 
 export type RegisterLine = {
   studentId: string;
@@ -30,7 +31,7 @@ export async function getRegister(courseId: string, iso: string) {
   await requireSession();
   const date = parseDateOnly(iso);
 
-  const [enrolments, existing, note] = await Promise.all([
+  const [enrolments, existing, note, curriculum] = await Promise.all([
     prisma.enrolment.findMany({
       where: {
         courseId,
@@ -41,7 +42,7 @@ export async function getRegister(courseId: string, iso: string) {
         OR: [{ endedOn: null }, { endedOn: { gte: date } }],
       },
       select: {
-        level: { select: { name: true } },
+        level: { select: { id: true, name: true } },
         student: {
           select: {
             id: true,
@@ -73,6 +74,7 @@ export async function getRegister(courseId: string, iso: string) {
       where: { courseId_date: { courseId, date } },
       select: { note: true, byName: true },
     }),
+    getSharedCurriculum(),
   ]);
 
   const lines = new Map<string, RegisterLine>();
@@ -81,7 +83,7 @@ export async function getRegister(courseId: string, iso: string) {
     lines.set(enrolment.student.id, {
       studentId: enrolment.student.id,
       ...enrolment.student,
-      levelName: enrolment.level.name,
+      levelName: curriculum.level(enrolment.level.id)?.name ?? enrolment.level.name,
       status: null,
       note: null,
       offRoster: false,
@@ -121,7 +123,7 @@ export type Register = Awaited<ReturnType<typeof getRegister>>;
 export async function getAttendanceForStudent(studentId: string, take = 30) {
   await requireSession();
 
-  return prisma.attendanceRecord.findMany({
+  const rows = await prisma.attendanceRecord.findMany({
     where: { studentId },
     orderBy: { date: "desc" },
     take,
@@ -135,12 +137,14 @@ export async function getAttendanceForStudent(studentId: string, take = 30) {
           id: true,
           name: true,
           dayOfWeek: true,
-          startMinutes: true,
-          level: { select: { name: true } },
+          startMinutes: true, club: { select: { id: true, name: true } },
+          level: { select: { id: true, name: true } },
         },
       },
     },
   });
+  const curriculum = await getSharedCurriculum();
+  return rows.map(row => ({ ...row, course: sharedCourse(row.course, curriculum) }));
 }
 
 export type StudentAttendance = Awaited<ReturnType<typeof getAttendanceForStudent>>[number];
@@ -168,7 +172,7 @@ export async function getDropOffs(limit = 8) {
   await requireSession();
 
   const recent = await prisma.attendanceRecord.findMany({
-    where: { student: { status: "ACTIVE", clubId: await currentClubId() } },
+    where: { student: { status: "ACTIVE" }, course: { clubId: await currentClubId() } },
     orderBy: { date: "desc" },
     take: 1500,
     select: {
@@ -176,9 +180,11 @@ export async function getDropOffs(limit = 8) {
       status: true,
       studentId: true,
       student: { select: { id: true, firstName: true, lastName: true } },
-      course: { select: { id: true, name: true, level: { select: { name: true } } } },
+      course: { select: { id: true, name: true, level: { select: { id: true, name: true } } } },
     },
   });
+
+  const curriculum = await getSharedCurriculum();
 
   const byStudent = new Map<string, typeof recent>();
   for (const row of recent) {
@@ -209,7 +215,7 @@ export async function getDropOffs(limit = 8) {
       name: `${first.student.firstName} ${first.student.lastName}`,
       missed: streak,
       lastSeen: rows[streak - 1].date,
-      courseName: first.course.name ?? first.course.level.name,
+      courseName: first.course.name ?? curriculum.level(first.course.level.id)?.name ?? first.course.level.name,
     });
   }
 

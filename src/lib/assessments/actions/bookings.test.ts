@@ -1,5 +1,6 @@
 import assert from "node:assert/strict";
 import { test } from "node:test";
+import { curriculumProgramme } from "@/test/curriculum";
 import { serverModule } from "@/test/server-module";
 
 type Actions = typeof import("./bookings");
@@ -16,9 +17,11 @@ function fixture() {
   const audits: object[] = [];
   let locked = false;
   let beforeTransaction: (() => void) | undefined;
+  const curriculum = curriculumProgramme("programme", ["level"]);
   const tx = {
+    programme: { findMany: async () => [curriculum] },
     $queryRaw: async () => { locked = true; return []; },
-    student: { findUnique: async ({ where }: { where: { clubId: string } }) => where.clubId === student.clubId ? student : null },
+    student: { findUnique: async ({ where }: { where: { id: string; clubId?: string } }) => where.id === student.id && (!where.clubId || where.clubId === student.clubId) ? student : null },
     assessmentSession: { findUnique: async ({ where }: { where: { clubId: string } }) => {
       assert.ok(locked, "session status and capacity follow its lock");
       return where.clubId === session.clubId ? session : null;
@@ -27,7 +30,7 @@ function fixture() {
       findUnique: async ({ where }: { where: { id?: string; session?: { clubId: string }; student?: { clubId: string } } }) => {
         if (where.session && where.session.clubId !== session.clubId) return null;
         if (where.student && where.student.clubId !== student.clubId) return null;
-        return booking;
+        return where.id ? booking : null;
       },
       count: async () => 0,
       update: async ({ data }: { data: object }) => { writes.push(data); Object.assign(booking, data); return booking; },
@@ -51,10 +54,10 @@ function fixture() {
   };
 }
 
-test("assessment booking refuses a swimmer from another club", async () => {
+test("assessment booking accepts a swimmer registered at another site", async () => {
   const f = fixture(); f.student.clubId = "other";
-  assert.equal((await f.actions.bookStudent({ sessionId: "session", studentId: "swimmer" })).ok, false);
-  assert.equal(f.writes.length, 0);
+  assert.equal((await f.actions.bookStudent({ sessionId: "session", studentId: "swimmer" })).ok, true);
+  assert.equal(f.writes.length, 1);
 });
 
 test("a session cancelled before the lock cannot receive a new booking", async () => {

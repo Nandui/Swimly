@@ -5,7 +5,8 @@ import { z } from "zod";
 import { fail, ok, onUniqueViolation, type ActionResult } from "@/lib/action-result";
 import { logAudit } from "@/lib/audit";
 import { requirePermission } from "@/lib/authz";
-import { currentClubId } from "@/lib/clubs/current";
+import { readSharedCurriculum } from "@/lib/curriculum/data/shared";
+import { sharedNameTaken } from "@/lib/curriculum/shared-name";
 import { prisma } from "@/lib/prisma";
 
 /** Kinds of assessment are part of a programme's shape, so they share the
@@ -29,26 +30,29 @@ export async function createAssessmentType(
   input: AssessmentTypeInput
 ): Promise<ActionResult> {
   const session = await requirePermission("curriculum.manage");
+  const curriculum = await readSharedCurriculum();
+  programmeId = curriculum.programmeIds.resolve(programmeId);
 
   const parsed = typeSchema.safeParse(input);
   if (!parsed.success) return fail(parsed.error.issues[0].message);
   const { name, description } = parsed.data;
 
   const programme = await prisma.programme.findUnique({
-    where: { id: programmeId, clubId: await currentClubId() },
+    where: { id: programmeId },
     select: { id: true, name: true, archivedAt: true },
   });
   if (!programme) return fail("That programme no longer exists.");
   if (programme.archivedAt) return fail(`${programme.name} is archived. Restore it first.`);
 
   const last = await prisma.assessmentType.findFirst({
-    where: { programmeId },
+    where: { programmeId: { in: curriculum.programmeIds.variants(programmeId) }, sharedWithId: null },
     orderBy: { sortOrder: "desc" },
     select: { sortOrder: true },
   });
 
   const created = await onUniqueViolation(
     () => prisma.$transaction(async (tx) => {
+      if (await sharedNameTaken(tx, "type", name, programmeId)) return fail(`There is already a kind of assessment called ${name}.`);
       const created = await tx.assessmentType.create({
         data: {
           programmeId,
@@ -83,13 +87,15 @@ export async function updateAssessmentType(
   input: AssessmentTypeInput
 ): Promise<ActionResult> {
   const session = await requirePermission("curriculum.manage");
+  const curriculum = await readSharedCurriculum();
+  id = curriculum.typeIds.resolve(id);
 
   const parsed = typeSchema.safeParse(input);
   if (!parsed.success) return fail(parsed.error.issues[0].message);
   const { name, description } = parsed.data;
 
   const existing = await prisma.assessmentType.findUnique({
-    where: { id, programme: { clubId: await currentClubId() } },
+    where: { id },
     select: {
       id: true,
       name: true,
@@ -107,8 +113,9 @@ export async function updateAssessmentType(
 
   const updated = await onUniqueViolation(
     () => prisma.$transaction(async (tx) => {
+      if (await sharedNameTaken(tx, "type", name, existing.programmeId, id)) return fail(`There is already a kind of assessment called ${name}.`);
       const updated = await tx.assessmentType.update({
-        where: { id, programme: { clubId: await currentClubId() } },
+        where: { id },
         data: { name, description: description || null },
         select: { id: true, name: true },
       });
@@ -138,9 +145,11 @@ export async function updateAssessmentType(
  *  archived type stops being offered for new sessions and nothing else. */
 export async function setAssessmentTypeArchived(id: string, archived: boolean): Promise<ActionResult> {
   const session = await requirePermission("curriculum.manage");
+  const curriculum = await readSharedCurriculum();
+  id = curriculum.typeIds.resolve(id);
 
   const existing = await prisma.assessmentType.findUnique({
-    where: { id, programme: { clubId: await currentClubId() } },
+    where: { id },
     select: {
       id: true,
       name: true,
@@ -154,7 +163,7 @@ export async function setAssessmentTypeArchived(id: string, archived: boolean): 
 
   await prisma.$transaction(async (tx) => {
     await tx.assessmentType.update({
-      where: { id, programme: { clubId: await currentClubId() } },
+      where: { id },
       data: { archivedAt: archived ? new Date() : null },
     });
 

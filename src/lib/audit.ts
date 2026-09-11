@@ -25,18 +25,16 @@ type AuditInput = {
    *  nullable String rather than a foreign key, for the same reason
    *  `actorName` is denormalised: the log must survive the programme. */
   programmeId?: string | null;
-  /** Which club it happened in. Leave it out and the club being worked in is
-   *  used — which is right for everything a page does, because a page only
-   *  ever shows one club's rows. Pass it when the row's club is not the
-   *  current one (copying a programme *to* another club), or null for the
-   *  things clubs share. */
+  /** Which site it happened in. Timetable and enrolment actions pass the
+   *  actual class/session site, which may differ from the working area.
+   *  Shared record edits use null so they appear at every site. */
   clubId?: string | null;
   summary: string;
 };
 
 /** Rows that belong to no club, so their audit entries belong to none either
  *  and show up in every club's activity. */
-const SHARED_ENTITIES = new Set(["User", "StaffRole"]);
+const SHARED_ENTITIES = new Set(["User", "StaffRole", "Student", "Programme", "Level", "Competency", "AssessmentType"]);
 
 /** @param db Pass the transaction client when the audit row must live or die
  *  with the write it describes. The default writes on its own connection,
