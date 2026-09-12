@@ -104,6 +104,9 @@ The current-state rail stays beside the journey on wide screens and stacks on
 smaller screens. Nullable structured audit evidence preserves new attendance
 and competency changes; older summaries and snapshots remain clearly labelled.
 The migration keeps the named permissions and atomic audit/seat checks.
+The profile fills the workspace like the Swimmers and Classes directories,
+using the shell's single 16px inset. Header groups use 16px gaps and body sections
+use 24px gaps; the loading state shares the same geometry and heading scale.
 
 The owner-approved Classes directory follows the same shadcn approach: one Item
 link per weekly class, with schedule, site/pool, instructor and availability
@@ -276,8 +279,9 @@ Below the utility header, `StackItem size="fill" isScrollable` owns the
 page scroll (`swimly-page-scroll`), with 16px padding around the content.
 Navigation resets that region to the top. Sticky page controls stay inside
 it; the sidebar and utility header remain fixed. Data workspaces use the
-available width. Account caps at 768px, Together at 960px, and swimmer and
-programme details at 1152px; these are structural budgets, not style tokens.
+available width, including the swimmer profile. Account caps at 768px,
+Together at 960px, and programme details at 1152px; these are structural
+budgets, not style tokens.
 The inner stack zeroes Astryx's two container-padding variables so table
 edges line up with headings and other content. Existing page contents and
 record navigation continue inside this shared frame.

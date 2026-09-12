@@ -113,3 +113,21 @@ preserved in `.impeccable/review/swimmer-profile/previous-today-design-qa.md`.
 - [x] Relevant validation passed; dev preview available.
 
 final result: passed
+
+## Swimmer profile workspace alignment — 12 September 2026
+
+- Removed the profile-only 1152px centred width limit. The page now fills the
+  workspace with the same 16px shell inset as Swimmers and Classes.
+- Matched the directory's 24px H1, reduced the avatar, and used consistent
+  16px header gaps and 24px body gaps. The return link uses shadcn Button.
+- Aligned the tab divider and reused the profile layout in its loading state,
+  removing the skeleton's extra padding and different column breakpoint.
+- Browser checks: real dev directory and profile both have a 16px left inset
+  and a 24px heading; the profile has no max-width, overflow or console errors.
+- Synthetic checks at 375, 768, 1024 and 1280 in light and dark: 16px side
+  insets, no horizontal overflow, one H1, and 44px profile tabs. Also inspected
+  the full-width layout at 1600, long names and medical notes on phones, and
+  keyboard navigation between tabs. No real records were changed or exported.
+- Passed: `npm run typecheck`, `npm run lint`, the four existing navigation
+  tests, `npx next build`, and the final whitespace diff check.
+- Verification completed locally on `dev` before promotion to `main`.

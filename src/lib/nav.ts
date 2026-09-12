@@ -73,6 +73,6 @@ export function swimmerLookupHref(screens: Set<ScreenKey>, id: string): string |
 export function pageWidthFor(pathname: string): number | undefined {
   if (pathname === "/account") return 768;
   if (pathname === "/together") return 960;
-  if (pathname.startsWith("/students/") || pathname.startsWith("/programmes/")) return 1152;
+  if (pathname.startsWith("/programmes/")) return 1152;
   return undefined;
 }
