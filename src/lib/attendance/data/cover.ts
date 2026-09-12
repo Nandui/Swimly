@@ -3,7 +3,7 @@ import { currentClubId } from "@/lib/clubs/current";
 import { parseDateOnly } from "@/lib/format";
 import { prisma } from "@/lib/prisma";
 
-/** Who took a class on a date, when it was not its own instructor. */
+/** Who confirmed they are teaching a class on a date, including its scheduled instructor. */
 
 export async function getClassCover(courseId: string, iso: string) {
   await requireSession();
@@ -29,7 +29,7 @@ export async function getCoversForDay(iso: string) {
 
   const rows = await prisma.classCover.findMany({
     where: { date: parseDateOnly(iso), course: { clubId: await currentClubId() } },
-    select: { courseId: true, coverById: true, coverByName: true, instructorName: true },
+    select: { courseId: true, coverById: true, coverByName: true, instructorId: true, instructorName: true },
   });
 
   return new Map(rows.map((row) => [row.courseId, row]));
@@ -37,9 +37,12 @@ export async function getCoversForDay(iso: string) {
 
 /** What a cover says on a register: who took it, and for whom. */
 export function coverLabel(cover: {
+  coverById?: string | null;
   coverByName: string;
+  instructorId?: string | null;
   instructorName: string | null;
 }): string {
+  if (cover.coverById && cover.coverById === cover.instructorId) return `Taught by ${cover.coverByName}`;
   return cover.instructorName
     ? `Taken by ${cover.coverByName}, covering for ${cover.instructorName}`
     : `Taken by ${cover.coverByName} — nobody was assigned`;

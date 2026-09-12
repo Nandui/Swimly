@@ -1,52 +1,47 @@
 "use client";
-
 import * as React from "react";
-import { Check, ChevronLeft, ChevronRight } from "lucide-react";
-import { Banner } from "@astryxdesign/core/Banner";
-import { Button } from "@astryxdesign/core/Button";
-import { Card } from "@astryxdesign/core/Card";
-import { Collapsible } from "@astryxdesign/core/Collapsible";
-import { IconButton } from "@astryxdesign/core/IconButton";
-import { Item } from "@astryxdesign/core/Item";
-import { List } from "@astryxdesign/core/List";
-import { HStack, StackItem, VStack } from "@astryxdesign/core/Stack";
-import { StatusDot } from "@astryxdesign/core/StatusDot";
-import { Tab, TabList } from "@astryxdesign/core/TabList";
-import { Heading, Text } from "@astryxdesign/core/Text";
+import Link from "next/link";
 import {
-  SegmentedControl,
-  SegmentedControlItem,
-} from "@astryxdesign/core/SegmentedControl";
-import { VisuallyHidden } from "@astryxdesign/core/VisuallyHidden";
+  Check,
+  ChevronLeft,
+  ChevronRight,
+  ChevronDown,
+  Loader2,
+} from "lucide-react";
+import { Button } from "@/components/shadcn/button";
+import { Item, ItemContent, ItemGroup } from "@/components/shadcn/item";
+import {
+  Collapsible,
+  CollapsibleContent,
+  CollapsibleTrigger,
+} from "@/components/shadcn/collapsible";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/shadcn/select";
+import { Label } from "@/components/shadcn/label";
+import {
+  MarkChoices,
+  TeachingNotice,
+} from "@/components/instructor/teaching-ui";
 import { SaveBar } from "@/components/attendance/register-form";
-import { SAVE_TIMEOUT_MS, SAVE_UNCONFIRMED_MESSAGE, withTimeout } from "@/lib/save-feedback";
-import { Num } from "@/components/ui-kit/prose";
-import { Tag } from "@/components/ui-kit/tag";
+import {
+  SAVE_TIMEOUT_MS,
+  SAVE_UNCONFIRMED_MESSAGE,
+  withTimeout,
+} from "@/lib/save-feedback";
 import type {
   AttendanceStatus,
   CompetencyStatus,
 } from "@/generated/prisma/client";
-import { saveClassAssessment } from "@/lib/progression/actions/assess";
+import {
+  saveClassAssessment,
+  saveInstructorAssessment,
+} from "@/lib/progression/actions/assess";
 import { toast } from "@/lib/toast";
-import { Icon } from "@astryxdesign/core/Icon";
-import { ATTENDANCE_STATUS_META } from "@/lib/attendance/constants";
-import { ENROLMENT_STATUS_META, PLACEMENT_META } from "@/lib/enrolment/constants";
-
-/** The checklist as the deck uses it: one competency at a time, across the
- *  whole class.
- *
- *  A lesson works like that — the instructor runs a drill, then marks who
- *  got it — so the competency is the unit of the moment and the swimmers
- *  are the list. Each swimmer is one row with Not Achieved and Achieved.
- *  Missing marks default to Not Achieved. Every change across every
- *  competency sits behind one Save, mirrored to `localStorage` so a
- *  dropped connection or a closed tab loses nothing.
- *
- *  It knows who was in the water. Once attendance is taken, the swimmers
- *  marked absent fold away under "Not in today": still markable, for a
- *  correction, but not in the way, and not swept up by "Everyone achieved".
- *  The per-swimmer checklist still exists on the class's assessment page
- *  for the desk. */
 
 type Choice = CompetencyStatus | null;
 
@@ -68,15 +63,6 @@ const MARK_LABEL: Record<CompetencyStatus, string> = {
   WORKING_ON: "Not Achieved",
   ACHIEVED: "Achieved",
 };
-const MARK_ORDER: CompetencyStatus[] = ["WORKING_ON", "ACHIEVED"];
-
-/** The mark as a status dot beside the name. */
-const DOT: Record<CompetencyStatus, "success" | "warning"> = {
-  WORKING_ON: "warning",
-  ACHIEVED: "success",
-};
-
-
 type Marks = Map<string, Map<string, Choice>>;
 type Stored = Record<string, Record<string, Choice>>;
 
@@ -84,8 +70,15 @@ function storageKey(courseId: string, date: string) {
   return `swimly:assess:${courseId}:${date}`;
 }
 
-export function DeckChecklist(props: React.ComponentProps<typeof DeckChecklistState>) {
-  return <DeckChecklistState key={`${props.courseId}:${props.date}:${props.levelId}`} {...props} />;
+export function DeckChecklist(
+  props: React.ComponentProps<typeof DeckChecklistState>,
+) {
+  return (
+    <DeckChecklistState
+      key={`${props.courseId}:${props.date}:${props.levelId}`}
+      {...props}
+    />
+  );
 }
 
 function DeckChecklistState({
@@ -98,6 +91,7 @@ function DeckChecklistState({
   readOnly,
   doneHref,
   doneLabel = "Today",
+  teaching = false,
 }: {
   courseId: string;
   date: string;
@@ -110,6 +104,7 @@ function DeckChecklistState({
   /** Where "done" goes once everything is saved. */
   doneHref: string;
   doneLabel?: string;
+  teaching?: boolean;
 }) {
   const initial = React.useMemo<Marks>(
     () =>
@@ -176,7 +171,13 @@ function DeckChecklistState({
           const copy = new Map(row);
           if (!byCompetency || typeof byCompetency !== "object") continue;
           for (const [competencyId, status] of Object.entries(byCompetency)) {
-            if (copy.has(competencyId) && (status === null || status === "WORKING_ON" || status === "ACHIEVED")) copy.set(competencyId, status);
+            if (
+              copy.has(competencyId) &&
+              (status === null ||
+                status === "WORKING_ON" ||
+                status === "ACHIEVED")
+            )
+              copy.set(competencyId, status);
           }
           next.set(studentId, copy);
         }
@@ -185,7 +186,11 @@ function DeckChecklistState({
       setRestored(true);
       setDirty(true);
     } catch {
-      try { window.localStorage.removeItem(key); } catch { setStorageUnavailable(true); }
+      try {
+        window.localStorage.removeItem(key);
+      } catch {
+        setStorageUnavailable(true);
+      }
     }
   }, [key, readOnly]);
 
@@ -258,7 +263,14 @@ function DeckChecklistState({
       let result: Awaited<ReturnType<typeof saveClassAssessment>>;
       try {
         result = await withTimeout(
-          saveClassAssessment({ levelId, marks: changes }),
+          teaching
+            ? saveInstructorAssessment({
+                courseId,
+                date,
+                levelId,
+                marks: changes,
+              })
+            : saveClassAssessment({ levelId, marks: changes }),
           SAVE_TIMEOUT_MS,
         );
       } catch {
@@ -284,239 +296,177 @@ function DeckChecklistState({
     });
   }
 
-  if (competencies.length === 0) {
+  if (competencies.length === 0)
     return (
-      <VStack gap={4} vAlign="start">
-        <Text as="p" display="block" color="secondary">
-          This level has no competencies yet, so there is nothing to mark.
-        </Text>
-        <Button
-          label={`Back to ${doneLabel}`}
-          variant="secondary"
-          size="lg"
-          href={doneHref}
-          icon={<Icon icon={ChevronLeft} size="sm" />}
-        />
-      </VStack>
+      <div className="flex flex-col items-start gap-4">
+        <p className="text-ui-muted-foreground">
+          This level has no competencies yet.
+        </p>
+        <Button asChild variant="outline">
+          <Link href={doneHref}>Back to {doneLabel}</Link>
+        </Button>
+      </div>
     );
-  }
-
-  const currentIndex = Math.min(current, competencies.length - 1);
-  const competency = competencies[currentIndex];
+  const currentIndex = Math.min(current, competencies.length - 1),
+    competency = competencies[currentIndex];
   const achievedHere = here.filter(
     (s) => marks.get(s.studentId)?.get(competency.id) === "ACHIEVED",
   ).length;
-  const allAchieved = (competencyId: string) =>
-    here.length > 0 &&
-    here.every((s) => marks.get(s.studentId)?.get(competencyId) === "ACHIEVED");
-  const achievedFor = (studentId: string) =>
-    competencies.filter((c) => marks.get(studentId)?.get(c.id) === "ACHIEVED")
-      .length;
+  const achievedFor = (id: string) =>
+    competencies.filter((c) => marks.get(id)?.get(c.id) === "ACHIEVED").length;
   const markedAtAll = [...marks.values()].some((row) =>
     [...row.values()].some(Boolean),
   );
-
-  const row = (swimmer: DeckSwimmer, dimmed: boolean) => {
-    const value = marks.get(swimmer.studentId)?.get(competency.id) ?? "WORKING_ON";
-    const late = attendance?.[swimmer.studentId] === "LATE";
-    return (
-      <Item
-        key={swimmer.studentId}
-        as="li"
-        align="start"
-        isDisabled={dimmed && readOnly}
-        label={
-          <HStack gap={2} vAlign="center" wrap="wrap">
-            <StatusDot
-              variant={DOT[value]}
-              label={MARK_LABEL[value]}
-            />
-            <Text
-              type="large"
-              weight="semibold"
-              color={dimmed ? "secondary" : "primary"}
-            >
-              {swimmer.name}
-            </Text>
-            {late ? <Tag color={ATTENDANCE_STATUS_META.LATE.color}>{ATTENDANCE_STATUS_META.LATE.label}</Tag> : null}
-            {swimmer.completed ? <Tag color={ENROLMENT_STATUS_META.COMPLETED.color}>{ENROLMENT_STATUS_META.COMPLETED.label}</Tag> : null}
-            {swimmer.offLevel ? (
-              <Tag color={PLACEMENT_META.otherLevel.color}>{PLACEMENT_META.otherLevel.label}</Tag>
-            ) : null}
-          </HStack>
-        }
-        description={
-          <VStack gap={2}>
-            <Text color="secondary" hasTabularNumbers>
-              {achievedFor(swimmer.studentId)} of {competencies.length} achieved
-            </Text>
-            <HStack>
-              <SegmentedControl
-                label={`${competency.name} — ${swimmer.name}`}
-                size="lg"
-                value={value}
-                isDisabled={readOnly || pending}
-                onChange={(next) =>
-                  choose(
-                    swimmer.studentId,
-                    competency.id,
-                    next as CompetencyStatus,
-                  )
-                }
-              >
-                {MARK_ORDER.map((status) => (
-                  <SegmentedControlItem
-                    key={status}
-                    value={status}
-                    label={MARK_LABEL[status]}
-                  />
-                ))}
-              </SegmentedControl>
-            </HStack>
-          </VStack>
+  const row = (swimmer: DeckSwimmer, dimmed: boolean) => (
+    <Item
+      key={swimmer.studentId}
+      role="listitem"
+      className={
+        "items-center rounded-none px-0 py-4" +
+        (dimmed ? " text-ui-muted-foreground" : "")
+      }
+    >
+      <ItemContent className="min-w-0 basis-48">
+        <p className="text-base font-semibold">{swimmer.name}</p>
+        <p className="text-sm text-ui-muted-foreground">
+          {achievedFor(swimmer.studentId)} of {competencies.length} achieved
+          {swimmer.completed ? " · Level complete" : ""}
+          {swimmer.offLevel ? " · Placed at another level" : ""}
+          {attendance?.[swimmer.studentId] === "LATE" ? " · Late" : ""}
+        </p>
+      </ItemContent>
+      <MarkChoices
+        label={competency.name + " — " + swimmer.name}
+        value={marks.get(swimmer.studentId)?.get(competency.id) ?? "WORKING_ON"}
+        options={[
+          { value: "WORKING_ON", label: MARK_LABEL.WORKING_ON },
+          { value: "ACHIEVED", label: MARK_LABEL.ACHIEVED },
+        ]}
+        disabled={readOnly || pending}
+        onChange={(next) =>
+          choose(swimmer.studentId, competency.id, next as CompetencyStatus)
         }
       />
-    );
-  };
-
+    </Item>
+  );
   return (
-    <VStack gap={4}>
-      {/* Every competency, one number each: where you are and what is
-          already done. The strip scrolls under the thumb on a phone. */}
-      <TabList
-        aria-label="Competencies"
-        value={String(currentIndex)}
-        onChange={(next) => setCurrent(Number(next))}
-        overflow="scroll"
-        size="lg"
-      >
-        {competencies.map((c, index) => (
-          <Tab
-            key={c.id}
-            value={String(index)}
-            label={`${index + 1}`}
-            aria-label={`${index + 1}. ${c.name}`}
-            endContent={
-              allAchieved(c.id) ? (
-                <Icon icon={Check} size="sm" label="Everyone achieved" />
-              ) : undefined
-            }
-          />
-        ))}
-      </TabList>
-
-      <Card>
-        <VStack gap={3}>
-          <HStack gap={3} vAlign="start" hAlign="between">
-            <StackItem size="fill">
-              <VStack gap={1}>
-                <Text type="supporting" hasTabularNumbers>
-                  Competency {currentIndex + 1} of {competencies.length}
-                </Text>
-                <Heading level={2} id="deck-competency">
-                  {competency.name}
-                </Heading>
-                {competency.description ? (
-                  <Text
-                    as="p"
-                    display="block"
-                    color="secondary"
-                    className="max-w-prose"
-                  >
-                    {competency.description}
-                  </Text>
-                ) : null}
-                <Text as="p" display="block" color="secondary">
-                  <Num>{achievedHere}</Num> of <Num>{here.length}</Num>
-                  {attendance ? " in today" : ""} achieved
-                </Text>
-              </VStack>
-            </StackItem>
-            <HStack gap={1.5}>
-              <IconButton
-                label="Previous competency"
-                variant="secondary"
-                size="lg"
-                icon={<Icon icon={ChevronLeft} size="md" />}
-                isDisabled={currentIndex === 0}
-                onClick={() => setCurrent(Math.max(0, currentIndex - 1))}
-              />
-              <IconButton
-                label="Next competency"
-                variant="secondary"
-                size="lg"
-                icon={<Icon icon={ChevronRight} size="md" />}
-                isDisabled={currentIndex === competencies.length - 1}
-                onClick={() =>
-                  setCurrent(Math.min(competencies.length - 1, currentIndex + 1))
-                }
-              />
-            </HStack>
-          </HStack>
-          {readOnly || here.length === 0 ? null : (
-            <HStack>
-              <Button
-                label={
-                  attendance
-                    ? "Everyone in today achieved"
-                    : "Everyone achieved"
-                }
-                variant="secondary"
-                size="lg"
-                icon={<Icon icon={Check} size="sm" />}
-                onClick={() => everyone(competency.id, "ACHIEVED")}
-                isDisabled={pending}
-              />
-            </HStack>
-          )}
-        </VStack>
-      </Card>
-
-      {swimmers.length === 0 ? (
-        <Text as="p" display="block" color="secondary">
-          Nobody in this class yet.
-        </Text>
-      ) : here.length === 0 ? (
-        <Text as="p" display="block" color="secondary">
-          Nobody was marked in today.
-        </Text>
-      ) : (
-        <List hasDividers>{here.map((s) => row(s, false))}</List>
-      )}
-
-      {away.length > 0 ? (
-        <Collapsible
-          defaultIsOpen={false}
-          trigger={
-            <HStack gap={2} vAlign="center" wrap="wrap">
-              <Text weight="semibold">Not in today</Text>
-              <VisuallyHidden>,</VisuallyHidden>
-              <Text color="secondary" hasTabularNumbers>
-                {away.length} {away.length === 1 ? "swimmer" : "swimmers"}
-              </Text>
-            </HStack>
-          }
+    <div className="flex flex-col gap-5">
+      <div className="flex flex-col gap-2">
+        <Label htmlFor="competency-picker">Competency</Label>
+        <Select
+          value={String(currentIndex)}
+          onValueChange={(next) => setCurrent(Number(next))}
         >
-          <VStack paddingBlockStart={3}>
-            <List hasDividers>{away.map((s) => row(s, true))}</List>
-          </VStack>
+          <SelectTrigger
+            id="competency-picker"
+            className="min-h-11 w-full max-w-xl"
+          >
+            <SelectValue />
+          </SelectTrigger>
+          <SelectContent>
+            {competencies.map((c, index) => (
+              <SelectItem className="min-h-11" key={c.id} value={String(index)}>
+                {index + 1}. {c.name}
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
+      </div>
+      <section
+        aria-labelledby="deck-competency"
+        className="flex flex-col gap-4 rounded-ui-lg border border-ui-border bg-ui-muted/40 p-4"
+      >
+        <div className="flex items-start justify-between gap-3">
+          <div className="min-w-0 space-y-2">
+            <p className="text-xs text-ui-muted-foreground">
+              Competency {currentIndex + 1} of {competencies.length}
+            </p>
+            <h2 id="deck-competency" className="text-xl font-semibold">
+              {competency.name}
+            </h2>
+            {competency.description ? (
+              <p className="max-w-prose text-sm text-ui-muted-foreground">
+                {competency.description}
+              </p>
+            ) : null}
+            <p className="text-sm text-ui-muted-foreground" aria-live="polite">
+              {achievedHere} of {here.length}
+              {attendance ? " in today" : ""} achieved
+            </p>
+          </div>
+          <div className="flex shrink-0 gap-1">
+            <Button
+              variant="outline"
+              size="icon"
+              aria-label="Previous competency"
+              disabled={currentIndex === 0}
+              onClick={() => setCurrent(Math.max(0, currentIndex - 1))}
+            >
+              <ChevronLeft aria-hidden="true" />
+            </Button>
+            <Button
+              variant="outline"
+              size="icon"
+              aria-label="Next competency"
+              disabled={currentIndex === competencies.length - 1}
+              onClick={() =>
+                setCurrent(Math.min(competencies.length - 1, currentIndex + 1))
+              }
+            >
+              <ChevronRight aria-hidden="true" />
+            </Button>
+          </div>
+        </div>
+        {!readOnly && here.length ? (
+          <Button
+            variant="outline"
+            className="self-start whitespace-normal"
+            disabled={pending}
+            onClick={() => everyone(competency.id, "ACHIEVED")}
+          >
+            <Check aria-hidden="true" />
+            {attendance ? "Everyone in today achieved" : "Everyone achieved"}
+          </Button>
+        ) : null}
+      </section>
+      {here.length ? (
+        <ItemGroup className="divide-y divide-ui-border">
+          {here.map((s) => row(s, false))}
+        </ItemGroup>
+      ) : (
+        <p className="text-ui-muted-foreground">
+          {swimmers.length
+            ? "Nobody was marked in today."
+            : "Nobody in this class yet."}
+        </p>
+      )}
+      {away.length ? (
+        <Collapsible>
+          <CollapsibleTrigger asChild>
+            <Button variant="ghost" className="w-full justify-between">
+              Not in today ({away.length})<ChevronDown aria-hidden="true" />
+            </Button>
+          </CollapsibleTrigger>
+          <CollapsibleContent>
+            <ItemGroup className="divide-y divide-ui-border">
+              {away.map((s) => row(s, true))}
+            </ItemGroup>
+          </CollapsibleContent>
         </Collapsible>
       ) : null}
-
-      {error ? (
-        <Banner status="error" title={error} collapsible={false} />
+      {error ? <TeachingNotice title={error} error /> : null}
+      {storageUnavailable && !readOnly ? (
+        <TeachingNotice title="This browser cannot keep a backup. Keep this tab open until marks are saved." />
       ) : null}
-      {storageUnavailable && !readOnly ? <Banner status="warning" title="This browser cannot keep a backup. Keep this tab open until marks are saved." collapsible={false} /> : null}
-
-      {/* One bar. Save while there is something to save; Done once a save
-          has landed; and a quiet way back before anything has been marked,
-          so the primary button is never the way out of an empty page. */}
       <SaveBar
         status={
-          changes.length > 0
+          changes.length
             ? restored
-              ? "Kept on this phone, not saved yet"
-              : `${changes.length} ${changes.length === 1 ? "mark" : "marks"} not saved yet`
+              ? "Restored on this device · not saved"
+              : changes.length +
+                " " +
+                (changes.length === 1 ? "mark" : "marks") +
+                " not saved yet"
             : saved
               ? "Saved"
               : markedAtAll
@@ -524,33 +474,29 @@ function DeckChecklistState({
                 : "Nothing marked yet"
         }
       >
-        {!readOnly && changes.length > 0 ? (
-          <Button
-            label={pending ? "Saving…" : "Save marks"}
-            variant="primary"
-            size="lg"
-            onClick={save}
-            isLoading={pending}
-            icon={<Icon icon={Check} size="sm" />}
-          />
-        ) : saved ? (
-          <Button
-            label={`Done, back to ${doneLabel}`}
-            variant="primary"
-            size="lg"
-            href={doneHref}
-            icon={<Icon icon={Check} size="sm" />}
-          />
+        {!readOnly && changes.length ? (
+          <Button disabled={pending} onClick={save}>
+            {pending ? (
+              <Loader2 className="animate-spin" aria-hidden="true" />
+            ) : (
+              <Check aria-hidden="true" />
+            )}
+            {pending ? "Saving…" : "Save marks"}
+          </Button>
         ) : (
-          <Button
-            label={`Back to ${doneLabel}`}
-            variant="secondary"
-            size="lg"
-            href={doneHref}
-            icon={<Icon icon={ChevronLeft} size="sm" />}
-          />
+          <Button asChild variant={saved ? "default" : "outline"}>
+            <Link href={doneHref}>
+              {saved ? (
+                <Check aria-hidden="true" />
+              ) : (
+                <ChevronLeft aria-hidden="true" />
+              )}
+              {saved ? "Done, back to " : "Back to "}
+              {doneLabel}
+            </Link>
+          </Button>
         )}
       </SaveBar>
-    </VStack>
+    </div>
   );
 }

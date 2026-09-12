@@ -3,7 +3,7 @@ import { notFound } from "next/navigation";
 import { ClassDetailView } from "@/components/courses/class-detail";
 import { CurriculumImage } from "@/components/curriculum/curriculum-image";
 import { can, canSee } from "@/lib/authz";
-import { getCoversForDay } from "@/lib/attendance/data/cover";
+import { getClassCover } from "@/lib/attendance/data/cover";
 import { weekdayOfIso } from "@/lib/attendance/dates";
 import { classReturnHref } from "@/lib/courses/browse";
 import { getCourse, getInstructorOptions, getRoster } from "@/lib/courses/data/courses";
@@ -25,17 +25,17 @@ export default async function CoursePage(props: PageProps<"/courses/[id]">) {
   const { id } = await props.params;
   const params = await props.searchParams;
   const iso = today();
-  const [course, roster, targets, levels, instructors, covers] = await Promise.all([
+  const [course, roster, targets, levels, instructors, cover] = await Promise.all([
     getCourse(id),
     getRoster(id),
     access.manage ? getTransferTargets(id) : Promise.resolve([]),
     access.admin ? getLevelOptions() : Promise.resolve([]),
     access.admin ? getInstructorOptions() : Promise.resolve([]),
-    getCoversForDay(iso),
+    getClassCover(id, iso),
   ]);
   if (!course) notFound();
   return <ClassDetailView course={course} roster={roster} targets={targets} levels={levels} instructors={instructors}
     access={access} backHref={classReturnHref(params.returnTo)}
-    coverName={!course.archivedAt && course.dayOfWeek === weekdayOfIso(iso) ? covers.get(id)?.coverByName : undefined}
+    coverName={!course.archivedAt && course.dayOfWeek === weekdayOfIso(iso) && cover?.coverById !== cover?.instructorId ? cover?.coverByName : undefined}
     levelImage={<CurriculumImage kind="level" id={course.levelId} name={course.level.name} />} />;
 }

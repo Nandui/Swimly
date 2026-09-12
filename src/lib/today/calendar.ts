@@ -6,8 +6,46 @@ export type CalendarClass = Pick<CourseRow,
 > & {
   enrolled: number;
   attendanceTaken: boolean;
-  cover: { coverById: string | null; coverByName: string; instructorName: string | null } | null;
+  cover: { coverById: string | null; coverByName: string; instructorId?: string | null; instructorName: string | null } | null;
 };
+
+export type CalendarAssessment = {
+  id: string; startMinutes: number; durationMinutes: number; capacity: number | null;
+  location: string | null; booked: number; programmeName: string; typeName: string | null;
+  instructorId: string | null; instructor: { id: string; name: string } | null;
+};
+
+type AgendaEntry = { kind: "class"; value: CalendarClass } | { kind: "assessment"; value: CalendarAssessment };
+
+export function filterCalendarAssessments(sessions: CalendarAssessment[], location: string, instructor: string, me: string) {
+  return sessions.filter(session => (location === "all" || (session.location ?? "") === location)
+    && (instructor === "all" || session.instructorId === (instructor === "mine" ? me : instructor)));
+}
+
+/** A mixed agenda retains parallel classes and assessments, even with matching IDs. */
+export function calendarAgendaSlots(courses: CalendarClass[], assessments: CalendarAssessment[], now: number) {
+  const entries: AgendaEntry[] = [
+    ...calendarSlots(courses, now).flatMap(slot => slot.classes.map(value => ({ kind: "class" as const, value }))),
+    ...assessments.map(value => ({ kind: "assessment" as const, value })),
+  ];
+  entries.sort((a, b) => a.value.startMinutes - b.value.startMinutes || a.kind.localeCompare(b.kind));
+  const groups = new Map<number, AgendaEntry[]>();
+  for (const entry of entries) {
+    const start = entry.value.startMinutes;
+    const group = groups.get(start) ?? [];
+    group.push(entry); groups.set(start, group);
+  }
+  const next = entries.find(entry => entry.value.startMinutes > now)?.value.startMinutes;
+  return [...groups].map(([start, entries]) => ({ start, entries,
+    phase: entries.some(entry => classPhase(entry.value, now) === "running") ? "running" as const
+      : start === next ? "next" as const
+        : entries.every(entry => classPhase(entry.value, now) === "finished") ? "finished" as const : "later" as const,
+  }));
+}
+
+export function calendarAssessmentHref(id: string, allowed: boolean) {
+  return allowed ? `/assessments/${encodeURIComponent(id)}` : undefined;
+}
 
 export const CALENDAR_PHASE_META = {
   running: { label: "Running now", color: "green" },

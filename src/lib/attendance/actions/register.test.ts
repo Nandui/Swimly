@@ -11,13 +11,15 @@ function fixture() {
     { studentId: "two", status: "ABSENT", note: null as string | null, markedById: "original" },
   ];
   let note = "Original class note";
-  let failAudit = false;
-  const audits: { summary: string }[] = [];
+  let failAudit = false, failStudentAudit = false;
+  const audits: { summary: string; entity?: string; entityId?: string; details?: Record<string, unknown> }[] = [];
   const updated: string[] = [];
   let archived = false;
   let beforeTransaction: (() => void) | undefined;
   let queue = Promise.resolve();
   let locked = false;
+  let owner: string | null | undefined;
+  let desk = true;
   const readGuard = () => assert.equal(locked, true, "register reads follow the course lock");
   const tx = {
     $queryRaw: async () => { locked = true; return []; },
@@ -29,7 +31,7 @@ function fixture() {
         } : null;
       }
     },
-    classCover: { findUnique: async () => { readGuard(); return null; } },
+    classCover: { findUnique: async () => { readGuard(); return owner === undefined ? null : { coverById: owner, instructorId: "instructor", instructorName: "Test Instructor" }; } },
     enrolment: { findMany: async () => { readGuard(); return [{ studentId: "one" }, { studentId: "two" }]; } },
     student: { findMany: async () => ["one", "two"].map(id => ({ id, firstName: "Test", lastName: id })) },
     attendanceRecord: {
@@ -47,8 +49,8 @@ function fixture() {
       deleteMany: async () => { note = ""; },
     },
     auditLog: {
-      create: async ({ data }: { data: { summary: string } }) => {
-        if (failAudit) throw new Error("Audit unavailable");
+      create: async ({ data }: { data: typeof audits[number] }) => {
+        if (failAudit || (failStudentAudit && data.entity === "Student")) throw new Error("Audit unavailable");
         audits.push(data);
       }
     },
@@ -61,27 +63,43 @@ function fixture() {
       await previous;
       locked = false;
       beforeTransaction?.(); beforeTransaction = undefined;
-      const before = structuredClone(rows); const originalNote = note;
+      const before = structuredClone(rows); const originalNote = note, auditCount = audits.length;
       try { return await run(tx); }
-      catch (error) { rows.splice(0, rows.length, ...before); note = originalNote; throw error; }
+      catch (error) { rows.splice(0, rows.length, ...before); note = originalNote; audits.splice(auditCount); throw error; }
       finally { locked = false; release(); }
     },
   };
   const { markRegister } = serverModule<typeof import("./register")>("src/lib/attendance/actions/register.ts", {
     "@/lib/prisma": { prisma },
-    "@/lib/authz": { requirePermission: async () => ({ user: { id: "instructor", name: "Test Instructor" } }) },
+    "@/lib/authz": { canSee: (_s: unknown, screen: string) => screen === "instructor" || desk, can: () => true, requirePermission: async () => ({ user: { id: "instructor", name: "Test Instructor" } }) },
     "@/lib/clubs/current": { currentClubId: async () => "club" },
     "@/lib/attendance/access": { canMarkRegister: () => true },
     "next/cache": { revalidatePath: () => { } },
   });
   const input = () => ({ courseId: "class", date: "2026-08-31", marks: rows.map(row => ({ studentId: row.studentId, status: row.status, note: row.note ?? undefined })), classNote: note, revision: savedRegister("class", "2026-08-31", rows, note).revision });
-  return { markRegister, input, rows, audits, updated, beforeTransaction: (fn: () => void) => { beforeTransaction = fn; }, archive: () => { archived = true; }, note: () => note, failAudit: () => { failAudit = true; } };
+  return { markRegister, input, rows, audits, updated, setClaim: (id: string | null | undefined) => { owner = id; }, deckOnly: () => { desk = false; }, beforeTransaction: (fn: () => void) => { beforeTransaction = fn; }, archive: () => { archived = true; }, note: () => note, failAudit: () => { failAudit = true; }, failStudentAudit: () => { failStudentAudit = true; } };
 }
 
 test("unchanged attendance produces no writes or audit entries", async () => {
   const f = fixture();
   assert.equal((await f.markRegister(f.input())).ok, true);
   assert.equal(f.updated.length, 0); assert.equal(f.audits.length, 0);
+});
+
+test("Instructor attendance checks the confirmed owner under lock, including omitted teaching flags", async () => {
+  const f = fixture(); f.deckOnly();
+  const input = { ...f.input(), classNote: "Deck note" };
+  for (const owner of [undefined, null, "another-instructor"]) {
+    f.setClaim(owner);
+    assert.equal((await f.markRegister({ ...input, teaching: true })).ok, false);
+    assert.equal((await f.markRegister(input)).ok, false);
+    assert.equal(f.updated.length, 0); assert.equal(f.audits.length, 0);
+  }
+  f.setClaim("instructor");
+  assert.equal((await f.markRegister({ ...input, teaching: true })).ok, true);
+  assert.equal(f.note(), "Deck note"); assert.equal(f.audits.length, 1);
+  assert.match(f.audits[0].summary, /taught by Test Instructor, the scheduled instructor/);
+  assert.doesNotMatch(f.audits[0].summary, /covering for/);
 });
 
 test("editing one mark preserves the other swimmer's original recorder", async () => {
@@ -113,7 +131,7 @@ test("two staff saving one revision cannot overwrite each other", async () => {
   first.marks[1].status = "PRESENT"; second.marks[1].status = "LATE";
   const [saved, blocked] = await Promise.all([f.markRegister(first), f.markRegister(second)]);
   assert.equal(saved.ok, true); assert.equal(blocked.ok, false);
-  assert.equal(f.rows[1].status, "PRESENT"); assert.equal(f.audits.length, 1);
+  assert.equal(f.rows[1].status, "PRESENT"); assert.equal(f.audits.length, 2);
   if (blocked.ok) return;
   assert.equal(blocked.conflict?.marks.two.status, "PRESENT");
   assert.equal((await f.markRegister({ ...second, revision: blocked.conflict!.revision })).ok, true);
@@ -148,4 +166,17 @@ test("the first register saves against an empty revision and returns its new rev
   const result = await f.markRegister(input);
   assert.equal(result.ok, true); assert.equal(f.rows.length, 2);
   if (result.ok) assert.equal(result.revision, f.input().revision);
+});
+
+
+test("each changed swimmer gets structured evidence; failure rolls back records and both audit rows", async () => {
+  const f = fixture(), input = f.input(); input.marks[1].status = "PRESENT"; input.marks[1].note = "Arrived with guardian";
+  assert.equal((await f.markRegister(input)).ok,true);
+  const row = f.audits.find(a=>a.entity==='Student')!;
+  assert.equal(row.entityId,'two'); assert.equal(row.details?.before,'ABSENT'); assert.equal(row.details?.after,'PRESENT');
+  assert.equal(row.details?.date,'2026-08-31'); assert.equal(row.details?.note,'Arrived with guardian');
+  assert.equal((await f.markRegister(input)).ok,true); assert.equal(f.audits.length,2);
+  const failed = fixture(), change = failed.input(); change.marks[0].note = "Note only"; failed.failStudentAudit();
+  await assert.rejects(failed.markRegister(change), /Audit unavailable/);
+  assert.equal(failed.rows[0].note,null); assert.equal(failed.audits.length,0);
 });

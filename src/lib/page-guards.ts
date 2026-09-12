@@ -2,6 +2,7 @@ import { notFound, redirect } from "next/navigation";
 import { auth } from "@/auth";
 import { can, canAny, canSee, type PermissionKey } from "@/lib/authz";
 import type { ScreenKey } from "@/lib/staff/screens";
+import type { ClassWorkspace } from "@/lib/attendance/navigation";
 
 /** Page-level guards, kept apart from `authz.ts` because they answer a
  *  different question with a different verb.
@@ -28,6 +29,16 @@ export async function screenPage(screen: ScreenKey, permission?: PermissionKey) 
   const session = await pageSession();
   if (!canSee(session, screen)) notFound();
   if (permission && !can(session, permission)) notFound();
+  return session;
+}
+
+/** Sharing attendance forms does not grant access to the other workspace. */
+export async function classPage(workspace: ClassWorkspace) {
+  const session = await pageSession();
+  const offered = workspace === "instructor"
+    ? canSee(session, "instructor")
+    : canSee(session, "calendar") || canSee(session, "courses");
+  if (!offered || !can(session, "attendance.mark")) notFound();
   return session;
 }
 

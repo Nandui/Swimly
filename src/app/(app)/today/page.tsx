@@ -8,21 +8,24 @@ import { getCurrentClub } from "@/lib/clubs/current";
 import { getCoursesOnDay } from "@/lib/courses/data/courses";
 import { minutesNow, today } from "@/lib/format";
 import { screenPage } from "@/lib/page-guards";
+import { getTodayAssessments } from "@/lib/today/assessments";
 
-export const metadata: Metadata = { title: "Today’s classes" };
+export const metadata: Metadata = { title: "Today’s schedule" };
 
 export default async function TodayPage() {
   const session = await screenPage("calendar");
   const instant = new Date();
   const iso = today(instant);
   const day = weekdayOfIso(iso);
-  const [courses, marked, covers, { club }] = await Promise.all([
+  const [courses, marked, covers, { club }, assessments] = await Promise.all([
     getCoursesOnDay(day), getRegisterStateForDay(day, iso), getCoversForDay(iso), getCurrentClub(),
+    getTodayAssessments(iso),
   ]);
 
   return <TodayCalendar key={`${club.id}-${iso}`} iso={iso} initialNow={minutesNow(instant)}
     clubName={club.name} me={session.user.id}
-    access={{ attendance: can(session, "attendance.mark"), courses: canSee(session, "courses") }}
+    assessments={assessments}
+    access={{ attendance: can(session, "attendance.mark"), courses: canSee(session, "courses"), assessments: canSee(session, "assessments") }}
     courses={courses.map(({ id, name, startMinutes, durationMinutes, capacity, location, level, instructor, instructorId, _count }) => ({
       id, name, startMinutes, durationMinutes, capacity, location, level, instructor, instructorId,
       enrolled: _count.enrolments, cover: covers.get(id) ?? null, attendanceTaken: marked.has(id),

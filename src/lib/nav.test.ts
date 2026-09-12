@@ -5,10 +5,11 @@ import { visibleScreens } from "./staff/screens";
 import { expandPermissions } from "./staff/permissions";
 
 test("grouping preserves screen and permission restrictions without empty headings", () => {
-  const screens = visibleScreens(["today", "roles", "activity"], expandPermissions(["attendance.mark"]));
+  const screens = visibleScreens(["calendar", "instructor", "roles", "activity"], expandPermissions(["attendance.mark"]));
   const groups = visibleNavGroups(screens);
   assert.deepEqual(groups.map(group => group.label), ["Daily work"]);
-  assert.deepEqual(groups.flatMap(group => group.items.map(item => item.href)), ["/today", "/instructor"]);
+  assert.deepEqual(groups.flatMap(group => group.items.map(item => item.href)), ["/today"]);
+  assert.deepEqual(visibleNavGroups(new Set(["instructor"])), []);
   assert.deepEqual(visibleNavGroups(new Set()), []);
 });
 

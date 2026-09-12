@@ -16,6 +16,8 @@
    `text-primary`, `text-secondary`, `border-border`, `rounded-lg` (the
    container radius), `p-4` on the 4px scale. */
 @import "@astryxdesign/core/tailwind-theme.css";
+@import "tw-animate-css";
+@import "./shadcn.css";
 @import "tailwindcss/utilities.css" layer(utilities);
 
 @theme inline {

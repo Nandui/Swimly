@@ -60,3 +60,22 @@ test("return links stay on the class browser and accept only known query keys", 
   }
   assert.equal(classReturnHref("/courses?state=archived&page=2&returnTo=https://evil.test&unknown=1"), "/courses?state=archived&page=2");
 });
+
+test("multiword search finds a level, weekday, site and instructor in any order", () => {
+  const rows = [course("one"), course("two", { clubId: "north", club: { id: "north", name: "North Pool" }, dayOfWeek: "TUESDAY" })];
+  for (const q of ["starfish monday", "MONDAY  starfish", "Alex demo", "starfish 16:00"]) {
+    assert.deepEqual(classBrowserModel(rows, { q }).rows.map(c => c.id), q === "starfish 16:00" ? ["one", "two"] : ["one"]);
+  }
+  assert.deepEqual(classBrowserModel(rows, { q: "North Tuesday" }).rows.map(c => c.id), ["two"]);
+  assert.equal(classBrowserModel(rows, { q: "North Monday" }).matches.length, 0);
+});
+
+test("site filters combine with availability and survive opening a class", () => {
+  const rows = [course("here"), course("there", { clubId: "north", club: { id: "north", name: "North Pool" } }), course("full", { clubId: "north", club: { id: "north", name: "North Pool" }, capacity: 8 })];
+  const model = classBrowserModel(rows, { site: "north", places: "open" });
+  assert.deepEqual(model.rows.map(c => c.id), ["there"]);
+  assert.deepEqual(courseFilterDimensions(rows, model.filters).find(d => d.key === "site")?.options.map(o => [o.value, o.count]), [["club", 1], ["north", 1]]);
+  const url = new URL(classDetailsHref("there", model.returnTo), "https://example.test");
+  assert.equal(classReturnHref(url.searchParams.get("returnTo")!), "/courses?site=north&places=open");
+  assert.deepEqual(classBrowserModel(rows, { site: "north", places: "full" }).rows.map(c => c.id), ["full"]);
+});

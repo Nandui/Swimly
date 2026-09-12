@@ -1,6 +1,6 @@
 import assert from "node:assert/strict";
 import { test } from "node:test";
-import { calendarClassHref, calendarProgrammes, calendarSlots, classPhase, filterCalendarClasses, type CalendarClass } from "./calendar";
+import { calendarAgendaSlots, calendarAssessmentHref, calendarClassHref, calendarProgrammes, calendarSlots, classPhase, filterCalendarAssessments, filterCalendarClasses, type CalendarAssessment, type CalendarClass } from "./calendar";
 
 function course(id: string, startMinutes: number, overrides: Partial<CalendarClass> = {}): CalendarClass {
   return {
@@ -12,6 +12,39 @@ function course(id: string, startMinutes: number, overrides: Partial<CalendarCla
     ...overrides,
   };
 }
+
+function assessment(id: string, startMinutes: number, overrides: Partial<CalendarAssessment> = {}): CalendarAssessment {
+  return { id, startMinutes, durationMinutes: 45, capacity: 6, booked: 2,
+    location: "Assessment Pool", programmeName: "Water Safety & Fun", typeName: "Initial assessment",
+    instructorId: "assessor", instructor: { id: "assessor", name: "Taylor Example" }, ...overrides };
+}
+
+test("the agenda merges assessments and classes at exact times without losing simultaneous sessions", () => {
+  const courses = [course("shared-id", 900), course("late", 1080)];
+  const assessments = [assessment("next", 945), assessment("shared-id", 900), assessment("early", 840)];
+  const slots = calendarAgendaSlots(courses, assessments, 930);
+  assert.deepEqual(slots.map(slot => slot.start), [840, 900, 945, 1080]);
+  assert.deepEqual(slots.map(slot => slot.phase), ["finished", "running", "next", "later"]);
+  assert.deepEqual(slots[1].entries.map(entry => `${entry.kind}-${entry.value.id}`), ["assessment-shared-id", "class-shared-id"]);
+  assert.equal(slots.flatMap(slot => slot.entries).length, 5);
+  assert.deepEqual(assessments.map(session => session.id), ["next", "shared-id", "early"], "source order is untouched");
+});
+
+test("assessment-only days retain finished, running, empty-booking and upcoming sessions", () => {
+  const sessions = [assessment("finished", 840), assessment("running", 900, { booked: 0 }), assessment("next", 960)];
+  assert.deepEqual(calendarAgendaSlots([], sessions, 930).map(slot => slot.phase), ["finished", "running", "next"]);
+  assert.deepEqual(calendarAgendaSlots([], [], 930), []);
+});
+
+test("assessment pool and instructor filters use the assigned assessor, including My schedule", () => {
+  const sessions = [assessment("mine", 900), assessment("unknown", 930, { location: null, instructorId: null, instructor: null })];
+  assert.deepEqual(filterCalendarAssessments(sessions, "all", "mine", "assessor").map(s => s.id), ["mine"]);
+  assert.deepEqual(filterCalendarAssessments(sessions, "Assessment Pool", "assessor", "other").map(s => s.id), ["mine"]);
+  assert.deepEqual(filterCalendarAssessments(sessions, "", "all", "assessor").map(s => s.id), ["unknown"]);
+  assert.deepEqual(filterCalendarAssessments(sessions, "Assessment Pool", "other", "assessor"), []);
+  assert.equal(calendarAssessmentHref("session", true), "/assessments/session");
+  assert.equal(calendarAssessmentHref("session", false), undefined);
+});
 
 test("the full day stays chronological, with exact start times and each class once", () => {
   const courses = [course("late", 1080), course("early", 900), course("quarter", 915), course("parallel", 900)];

@@ -62,13 +62,70 @@ makes Swimly stop looking like itself.
 
 ## Decisions taken for Swimly
 
-### Today booking sheet: approved shadcn exception
+### Today, Swimmers, Classes and workspace: approved shadcn migration
 
-On 11 September 2026 the owner approved the revised Today preview and asked
-for it to be pushed to dev. Today uses a shadcn-derived semantic Table,
-booking blocks and sheet/agenda view controls. Its CSS Module scopes those
-styles to Today and retains Neutral colours, Figtree, spacing and radii.
-The shell, filters, shared buttons and other screens keep Astryx.
+On 11 September 2026 the owner approved the booking sheet, then explicitly
+asked to bring everything on Today to shadcn. The entire Today surface now
+uses the installed shadcn components: Table, Item booking blocks, Tabs,
+Select, Command/Popover instructor picker, Button, Badge, Empty and Skeleton.
+Headings and text use semantic HTML; icons remain Lucide.
+
+The shared workspace also uses shadcn Sidebar/Sheet, Collapsible, DropdownMenu,
+Button, Alert and Command/Dialog swimmer search. Site switching, account menus,
+the theme flip, development role preview and Sonner notifications are included.
+This changes the common chrome on other routes; their screen bodies and native
+form adapters retain Astryx until separately migrated. The Astryx wiring below
+documents those remaining surfaces, not the implementation of Today, the Swimmers and Classes directories or chrome.
+
+The owner also approved a shadcn redesign of `/students` as a directory for
+finding anyone across all sites. It uses a full-width shadcn Item list with one
+profile link per record, visible member number and age for disambiguation,
+current levels, contact details on wide screens, and metadata-fed status Badges.
+The previous selection/preview pane is removed. A labelled search and linked
+All/Active/Inactive filters keep query state in the URL; search matches words
+across names, member number, contact name, email and phone. Records remain
+paginated in surname order, with a stable ID tie-breaker and bounded offsets.
+Empty results offer a clear route back to all swimmers. Profile return links
+and tabs retain only validated directory parameters. The workspace quick search
+is hidden on the directory itself to avoid two competing search controls.
+
+The directory's Add swimmer dialog uses shadcn Dialog, Input, Label, Select,
+Collapsible, Checkbox, Textarea, Alert and Button. Optional emergency details,
+notes and consent can be expanded without losing their values. Its scrolling
+form keeps the actions visible, retains entries on failure, and opens the new
+profile after the existing permission-checked, audited action succeeds. Add/Edit adapters on other screens retain their current design.
+Directory layout, verification and boundaries are recorded in `docs/swimmers.md`.
+
+On 12 September the owner selected the “Journey through the school” profile
+layout. The full `/students/[id]` profile and its editing, enrolment, competency
+and history dialogs now use shadcn as well. Enrolments form expandable chapters;
+all activity and individual competency logs show who changed what and when.
+The current-state rail stays beside the journey on wide screens and stacks on
+smaller screens. Nullable structured audit evidence preserves new attendance
+and competency changes; older summaries and snapshots remain clearly labelled.
+The migration keeps the named permissions and atomic audit/seat checks.
+
+The owner-approved Classes directory follows the same shadcn approach: one Item
+link per weekly class, with schedule, site/pool, instructor and availability
+aligned in columns and stacked on phones. All live sites are searchable together;
+Site, Level and Day pickers are prominent, with Programme, Time, Instructor and
+Pool area in a Collapsible section. Command/Popover pickers retain facet counts.
+All classes, Spaces available, Full and Archived links keep the current search.
+Circled check/X icons and explicit remaining places describe capacity, not
+attendance completion. Archived rows show their archive state instead of open
+places. Search matches words across class, curriculum, site, instructor and
+schedule. Class return links preserve the site filter alongside the other filters.
+The Add class dialog uses shadcn fields and names the working site that owns the
+new class, retaining the existing audited action. Details and enrolment forms
+retain their existing components. See `docs/classes.md` for scope and checks.
+
+`components.json` installs to `src/components/shadcn`, separate from legacy
+`src/components/ui`. The local README records component adaptations. The
+independent Neutral palette in `src/app/shadcn.css` uses `--ui-*` tokens and
+namespaced Tailwind colours/radii to avoid collisions with Astryx utilities.
+Figtree and the cookie-backed light/dark/system preference are preserved.
+The existing theme provider still supports legacy screens; Today draws no
+Astryx elements. CSS Modules express the sheet's time/level geometry.
 
 The sheet retains one continuous day with sticky time headers and level
 labels, allowing scrolling inside its bounded region. Phones use Agenda.
@@ -77,11 +134,28 @@ styling. Availability uses monochrome Lucide circled-check/circled-X icons
 with accessible labels and a visible legend: check means spaces available,
 X means full. Attendance completion does not determine these icons and is
 not shown in the calendar. Uncapped classes are available; over-capacity
-classes remain full with an explicit count. Other status tokens are unchanged.
+classes remain full with an explicit count. Now/Next labels use shadcn Badge
+with colours selected by the existing status metadata map.
+
+Today’s Agenda mixes classes and dated, non-cancelled assessment sessions in
+exact start-time order. Assessment Items have a neutral Assessment label and
+the same capacity icons, times, pool and instructor details as classes. The
+class booking sheet offers a visible route to assessments in Agenda; days with
+only assessments use Agenda automatically. Pool and instructor filters cover
+both types. Session links require the Assessments screen; no assessment booking
+identities or notes are loaded for the calendar.
 
 The view controls, booking links and scroll region use a visible focus
 outline; touch targets retain the 44px minimum, including coarse pointers.
-This exception does not change permissions, mutations or other pages.
+Permissions, mutation guards, audit logging and all server actions are unchanged.
+Swimmer search still queries the server after a 200ms debounce, includes inactive
+swimmers, drops stale results, and routes only to an allowed swimmer screen.
+The existing navigation collapse cookie and content-scroll reset are retained.
+Toasts retain their imperative API; errors persist until dismissed.
+
+For these migrated surfaces, the screen checklist below uses shadcn primitives,
+semantic headings, direct Lucide icons and shadcn focus styles. Its contrast,
+touch size, responsive, permission and mutation requirements still apply.
 
 ### How Astryx is wired in
 
@@ -491,24 +565,21 @@ than the enrolment being re-pointed: attendance hangs off
 `(course, student, date)`, and rewriting the enrolment would orphan every
 register they were already on.
 
-### Cover is self-declared, and recorded
+### Teaching is confirmed, exclusive and recorded
 
-The register was scoped to the instructor on the course, and cover needed an
-admin to reassign it. That held until the first evening a class went
-unmarked because the one person who could reassign had gone home. Now the
-person standing at the pool says so: opening a class that is not theirs
-asks whether they are taking it, and confirming writes a `ClassCover` row
-for that class and date — who conducted it, and whose it was — which makes
-the register and the checklist theirs to mark for the day. The register's
-audit line names the cover and the instructor covered for; every competency
-saved carries the name of whoever saved it, cover or not.
+Every instructor confirms Start class before opening a class on the deck,
+including their own scheduled classes. Confirmation creates a ClassCover row
+for that class and date and an audit entry in the same course-locked
+transaction. The existing unique course/date key guarantees one owner. A retry
+by that owner is idempotent; another instructor cannot replace the claim. A
+claim remains locked if its owner's account is deleted.
 
-Self-declared is not the same as unaudited. Nothing about who taught a
-class is inferred; it is stated once, kept on the row, and readable on the
-register, the deck screen and the activity trail. Somebody holding
-`attendance.markAny` is asked the same question, with a third answer for the
-desk copying in a paper sheet: recording it for the instructor, not taking
-it over.
+The deck shows Start class, Open class, or In progress. Attendance saved/to-take
+is a plain operational indicator for the owner. Cover attribution stays in the
+audit trail and desk records. Attendance, competencies and completion recheck
+ownership in their save transaction, while the class page checks it before
+loading swimmer data. Desk transcription retains attendance.markAny; it does
+not grant teaching access in Instructor.
 
 ### Batched writes, on purpose
 
@@ -613,6 +684,30 @@ exists, matches on the email so a second run updates rather than duplicates,
 and writes an audit row for the account it creates.
 
 ---
+
+### Instructor workspace boundary (11 September 2026)
+
+The owner specified Instructor as a dedicated tablet experience on the pool
+deck, isolated in both directions from desk work. Its route group is
+`src/app/(instructor)/instructor/`, outside the desk `(app)` layout. Its shadcn
+frame contains classes, site switching, appearance and sign-out. The entire
+Instructor surface now uses shadcn Button, Item, Dialog, RadioGroup, Select,
+Collapsible, Alert, Label and Textarea. The shared teaching forms retain drafts,
+retry handling, audit and concurrent-save comparisons. Scoped CSS makes every
+pool-deck control at least 44px, including browsers reporting a mouse. The
+independent Neutral ui-* tokens follow the shared theme provider.
+
+The Instructor class page has its own server loader. It checks site, active
+class and the confirmed class/date claim before reading attendance or swimmer
+competencies. It never offers desk class or swimmer profiles, even to accounts
+granted both screen sets. Start confirmation is required for scheduled and
+cover instructors alike. Only the confirmed teacher can open or save the class
+in this workspace. Legacy desk actions also reject deck-only callers without
+the teaching context. Desk transcription remains available in its own
+workspace. Old deck bookmarks redirect to the isolated route, preserving date
+and step. Development-only role preview remains a testing tool.
+
+See [docs/instructor.md](docs/instructor.md) for the flow and verification.
 
 ## Checking your work
 

@@ -44,7 +44,9 @@ export async function getCourses(includeArchived = false, allSites = false) {
     orderBy: [{ dayOfWeek: "asc" }, { startMinutes: "asc" }],
     select: COURSE_SELECT,
   });
-  return rows.filter(row => !allSites || liveSharedLevel(curriculum, row.levelId)).map(row => sharedCourse(row, curriculum));
+  // The directory includes historical curriculum; enrolment pickers still
+  // exclude retired levels when requesting active classes across sites.
+  return rows.filter(row => !allSites || includeArchived || liveSharedLevel(curriculum, row.levelId)).map(row => sharedCourse(row, curriculum));
 }
 
 export type CourseRow = Awaited<ReturnType<typeof getCourses>>[number];

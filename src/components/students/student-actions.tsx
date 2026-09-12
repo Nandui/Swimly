@@ -16,7 +16,6 @@ import {
   createStudent,
   setStudentStatus,
   updateStudent,
-  type StudentInput,
 } from "@/lib/students/actions/students";
 import { STUDENT_STATUS_META, fullName } from "@/lib/students/constants";
 import type { StudentDetail } from "@/lib/students/data/students";
@@ -26,25 +25,7 @@ import { Heading, Text } from "@astryxdesign/core/Text";
 import { VStack } from "@astryxdesign/core/Stack";
 import { Icon } from "@astryxdesign/core/Icon";
 
-function readInput(formData: FormData): StudentInput {
-  const text = (key: string) => String(formData.get(key) ?? "");
-  return {
-    memberNumber: text("memberNumber"),
-    firstName: text("firstName"),
-    lastName: text("lastName"),
-    dateOfBirth: text("dateOfBirth"),
-    status: (text("status") || "ACTIVE") as StudentInput["status"],
-    contactName: text("contactName"),
-    contactEmail: text("contactEmail"),
-    contactPhone: text("contactPhone"),
-    emergencyName: text("emergencyName"),
-    emergencyPhone: text("emergencyPhone"),
-    emergencyRelationship: text("emergencyRelationship"),
-    medicalNotes: text("medicalNotes"),
-    notes: text("notes"),
-    photoConsent: formData.get("photoConsent") === "on",
-  };
-}
+import { readStudentInput as readInput } from "@/lib/students/form-input";
 
 function StudentSection({ title, description, children }: {
   title: string;

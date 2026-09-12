@@ -12,7 +12,6 @@ import {
   createCourse,
   setCourseArchived,
   updateCourse,
-  type CourseInput,
 } from "@/lib/courses/actions/courses";
 import { DAY_META, DAYS_IN_ORDER, courseLabel, formatTime } from "@/lib/courses/constants";
 import type { CourseDetail } from "@/lib/courses/data/courses";
@@ -20,23 +19,7 @@ import type { InstructorOption } from "@/lib/courses/data/courses";
 import type { LevelOption } from "@/lib/curriculum/data/curriculum";
 import { Icon } from "@astryxdesign/core/Icon";
 
-/** Keep the unassigned choice distinct from a picker without a selection. */
-const UNASSIGNED = "__unassigned__";
-
-function readInput(formData: FormData): CourseInput {
-  const text = (key: string) => String(formData.get(key) ?? "");
-  const instructorId = text("instructorId");
-  return {
-    levelId: text("levelId"),
-    name: text("name"),
-    dayOfWeek: text("dayOfWeek") as CourseInput["dayOfWeek"],
-    startTime: text("startTime"),
-    durationMinutes: text("durationMinutes"),
-    capacity: text("capacity"),
-    instructorId: instructorId === UNASSIGNED ? "" : instructorId,
-    location: text("location"),
-  };
-}
+import { readCourseInput as readInput, UNASSIGNED_INSTRUCTOR as UNASSIGNED } from "@/lib/courses/form-input";
 
 function CourseFields({
   course,

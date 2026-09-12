@@ -1,0 +1,35 @@
+.profile { container-type: inline-size; overflow-wrap: anywhere; color: var(--ui-foreground); }
+.header { display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 1.5rem; padding-block: .75rem; }
+.identity { display: flex; align-items: center; gap: 1.25rem; min-width: 0; }
+.avatar { display: grid; place-items: center; width: 4.5rem; height: 4.5rem; border-radius: 50%; flex-shrink: 0; background: var(--ui-muted); color: var(--ui-foreground); font-size: 1.5rem; font-weight: 600; }
+.avatar [data-slot=avatar-fallback] { font-size: inherit; }
+.tabs { width: 100%; height: auto; justify-content: start; flex-wrap: wrap; gap: .5rem; border-bottom: 1px solid var(--ui-border); padding-bottom: .5rem; }
+.tabs [role=tab] { flex: 0 1 auto; min-height: 2.75rem; }
+.body { display: grid; gap: 2rem; padding-top: 1.5rem; }
+.chapters { display: flex; flex-direction: column; gap: .75rem; }
+.chapterRow { position: relative; display: grid; grid-template-columns: 4.5rem minmax(0, 1fr); gap: .75rem; }
+.chapterRow::before { content: ""; position: absolute; top: 1.25rem; bottom: -2rem; left: 3.75rem; border-left: 1px solid var(--ui-border); }
+.chapterRow:last-child::before { display: none; }
+.year::after { content: ""; position: absolute; top: 1.25rem; left: 3.5rem; width: .5rem; height: .5rem; border-radius: 50%; background: var(--ui-muted-foreground); outline: .25rem solid var(--ui-muted); }
+.chapterRow:has([data-current=true]) .year::after { background: var(--ui-status-green); outline-color: var(--ui-status-green-bg); }
+.year { color: var(--ui-muted-foreground); font-size: .75rem; padding-top: 1rem; }
+.chapter { min-width: 0; border: 1px solid var(--ui-border); border-radius: var(--ui-radius); overflow: hidden; }
+.chapterTrigger { display: flex; align-items: start; justify-content: space-between; gap: 1rem; width: 100%; min-height: 2.75rem; padding: 1rem 1.25rem; background: var(--ui-muted); text-align: left; cursor: pointer; }
+.chapter[data-current=true] .chapterTrigger { background: var(--ui-status-green-bg); }
+.chapterTrigger[data-state=open] > svg { transform: rotate(180deg); }
+.chapterTrigger:focus-visible { outline: 2px solid var(--ui-ring); outline-offset: -3px; }
+.chapterContent { padding: 1rem 1.25rem; }
+.progress { display: block; width: 100%; max-width: 25rem; height: .4rem; margin-top: .75rem; border: 0; border-radius: var(--ui-radius); overflow: hidden; background: var(--ui-muted); }
+.progress [data-slot=progress-indicator] { background: var(--ui-status-green); border-radius: var(--ui-radius); }
+.aside { min-width: 0; display: flex; flex-direction: column; gap: 1.5rem; font-size: .875rem; color: var(--ui-muted-foreground); }
+.aside section { padding-bottom: 1.5rem; border-bottom: 1px solid var(--ui-border); }
+.aside h2 { color: var(--ui-foreground); font-weight: 600; margin-bottom: .75rem; }
+.aside svg { width: 1rem; height: 1rem; flex-shrink: 0; margin-top: .125rem; }
+.briefEvent { display: grid; grid-template-columns: 6.5rem 1.25rem minmax(0, 1fr) auto; gap: .75rem; align-items: center; padding-block: .75rem; min-height: 4rem; }
+.briefEvent time { font-size: .75rem; color: var(--ui-muted-foreground); }
+.briefEvent > svg { color: var(--ui-muted-foreground); }
+@container (max-width: 700px) { .briefEvent { grid-template-columns: 1.25rem minmax(0, 1fr) auto; } .briefEvent time { grid-column: 2 / -1; } }
+@container (min-width: 850px) { .body { grid-template-columns: minmax(0, 1fr) 17rem; } .aside { border-left: 1px solid var(--ui-border); padding-left: 1.5rem; } }
+@container (max-width: 500px) { .avatar { width: 3rem; height: 3rem; font-size: 1.125rem; } .identity { gap: .75rem; } .chapterRow { grid-template-columns: minmax(0, 1fr); } .chapterRow::before, .year::after { display: none; } .year { padding-top: .5rem; } .chapterTrigger, .chapterContent { padding: 1rem; } }
+
+@container (max-width: 500px) { .chapterContent > div:first-child > div:first-child { flex-basis: 100%; } }

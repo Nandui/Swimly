@@ -25,10 +25,16 @@ test("Today can be read without attendance permission, but still needs screen ac
 });
 
 test("existing Today roles retain deck access and their instructor landing page", () => {
-  assert.deepEqual(cleanScreens(["today", "unknown", "today"]), ["calendar", "instructor"]);
-  assert.deepEqual([...visibleScreens(["today"], expandPermissions(["attendance.mark"]))], ["calendar", "instructor"]);
+  assert.deepEqual(cleanScreens(["today", "unknown", "today"]), ["instructor"]);
+  assert.deepEqual([...visibleScreens(["today"], expandPermissions(["attendance.mark"]))], ["instructor"]);
   assert.equal(homePathFor("today", ["attendance.mark"], ["today"]), "/instructor");
   assert.equal(normaliseRoleHome("today"), "instructor");
+});
+
+test("legacy desk roles keep Today while deck-only roles gain no desk screens", () => {
+  assert.deepEqual(cleanScreens(["overview", "today", "courses"]), ["overview", "calendar", "instructor", "courses"]);
+  assert.equal(visibleScreens(["today", "courses"], expandPermissions(["attendance.markAny"])).has("calendar"), true);
+  assert.equal(visibleScreens(["today"], expandPermissions(["attendance.markAny"])).has("calendar"), false);
 });
 
 test("the two explicit screen grants stay independent and Instructor requires attendance", () => {

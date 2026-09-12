@@ -5,7 +5,7 @@ import { usePathname, useRouter } from "next/navigation";
 import { ClubSwitcher } from "@/components/clubs/club-switcher";
 import { ThemeFlip } from "@/components/theme-toggle";
 import { AppShell, type AppShellProps } from "@/components/ui-kit/app-shell";
-import { StudentSearch } from "@/components/students/student-search";
+import { WorkspaceSearch } from "@/components/students/workspace-search";
 import { pageWidthFor, swimmerLookupHref, visibleNavGroups } from "@/lib/nav";
 import { APP_NAME } from "@/lib/app";
 import type { ScreenKey } from "@/lib/staff/screens";
@@ -38,14 +38,9 @@ export function AppChrome({ screens, club, clubs, ...rest }: Props) {
       groups={visibleNavGroups(screens)}
       contentMaxWidth={pageWidthFor(pathname)}
       switcher={<ClubSwitcher club={club} clubs={clubs} />}
-      search={canFindSwimmer ? (
-        <StudentSearch
+      search={canFindSwimmer && pathname !== "/students" ? (
+        <WorkspaceSearch
           key={`${club.id}:${pathname}`}
-          label="Find swimmer"
-          labelHidden
-          hasSearchIcon
-          placeholder="Find swimmer by name or member number…"
-          includeInactive
           onSelect={hit => {
             if (!hit) return;
             const href = swimmerLookupHref(screens, hit.id);

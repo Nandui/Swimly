@@ -1,0 +1,6 @@
+/* Pool-deck controls stay thumb-sized at tablet widths too, including when
+   the browser reports a mouse. Shared desktop components keep their density. */
+.workspace :where(button, a[href]:not(.sr-only), [role="radio"], [role="tab"]) {
+  min-height: calc(var(--spacing) * 11);
+  min-width: calc(var(--spacing) * 11);
+}

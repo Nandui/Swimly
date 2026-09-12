@@ -1,67 +1,29 @@
 "use client";
 
-import * as React from "react";
-import { Building2, Check } from "lucide-react";
-import { DropdownMenu } from "@astryxdesign/core/DropdownMenu";
-import { Icon } from "@astryxdesign/core/Icon";
-import { Text } from "@astryxdesign/core/Text";
+import { useTransition } from "react";
+import { Building2, ChevronsUpDown, Loader2 } from "lucide-react";
+import { Button } from "@/components/shadcn/button";
+import { DropdownMenu, DropdownMenuContent, DropdownMenuLabel, DropdownMenuRadioGroup, DropdownMenuRadioItem, DropdownMenuTrigger } from "@/components/shadcn/dropdown-menu";
 import { switchClub } from "@/lib/clubs/actions/clubs";
 import { toast } from "@/lib/toast";
 
 type Club = { id: string; name: string };
-
-/** Always named, including in the mobile bar and collapsed-rail toolbar.
- *  Switching filters the working area and preserves the current swimmer. */
-export function ClubSwitcher({ club, clubs }: { club: Club; clubs: Club[] }) {
-  const [pending, startTransition] = React.useTransition();
-  const several = clubs.length > 1;
-
+export function ClubSwitcher({ club, clubs, touchTargets = false }: { club: Club; clubs: Club[]; touchTargets?: boolean }) {
+  const [pending, startTransition] = useTransition();
   function choose(id: string) {
     if (id === club.id) return;
     startTransition(async () => {
       const result = await switchClub(id, { stay: true });
-      // Revalidation refreshes the timetable without losing this page.
       if (result && !result.ok) toast.error(result.error);
     });
   }
-
-  return (
-    <DropdownMenu
-      hasChevron={several}
-      placement="below"
-      alignment="start"
-      menuWidth={256}
-      button={{
-        // The accessible name says what the control is; the visible text is
-        // the club, which is the thing that must always be readable.
-        label: `Working area: ${club.name}. ${several ? "Switch site" : "The only site"}`,
-        children: (
-          <Text type="inherit" maxLines={1} hasTruncateTooltip={false}>
-            {pending ? "Switching…" : club.name}
-          </Text>
-        ),
-        icon: <Icon icon={Building2} size="sm" />,
-        variant: "secondary",
-        size: "md",
-        width: "100%",
-        className: "justify-start min-w-0",
-        isDisabled: pending,
-      }}
-      items={[
-        {
-          type: "section",
-          title: "Working area",
-          items: clubs.map((option) => ({
-            id: option.id,
-            label: option.name,
-            onClick: () => choose(option.id),
-            endContent:
-              option.id === club.id ? (
-                <Icon icon={Check} size="sm" label="Current" />
-              ) : undefined,
-          })),
-        },
-      ]}
-    />
-  );
+  return <DropdownMenu><DropdownMenuTrigger asChild>
+    <Button variant="outline" className="w-full min-w-0 justify-start" disabled={pending || clubs.length < 2} aria-label={`Working area: ${club.name}. Switch site`}>
+      {pending ? <Loader2 className="animate-spin" aria-hidden="true" /> : <Building2 aria-hidden="true" />}<span className="min-w-0 truncate">{pending ? "Switching…" : club.name}</span><ChevronsUpDown className="ml-auto" aria-hidden="true" />
+    </Button>
+  </DropdownMenuTrigger><DropdownMenuContent align="start" className="w-72 max-w-[calc(100vw-2rem)]">
+    <DropdownMenuLabel>Working area</DropdownMenuLabel><DropdownMenuRadioGroup value={club.id} onValueChange={choose}>
+      {clubs.map(option => <DropdownMenuRadioItem key={option.id} value={option.id} className={touchTargets ? "min-h-11" : undefined}>{option.name}</DropdownMenuRadioItem>)}
+    </DropdownMenuRadioGroup>
+  </DropdownMenuContent></DropdownMenu>;
 }

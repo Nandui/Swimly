@@ -1,59 +1,41 @@
-/* Layout only: Astryx owns the list, controls, selection and focus treatment. */
-.directory {
+/* shadcn Item provides the interaction; this grid keeps each record aligned. */
+.directory { border: 1px solid var(--ui-border); border-radius: var(--ui-radius); min-width: 0; }
+.columns, .row {
   display: grid;
-  min-width: 0;
+  grid-template-columns: minmax(0, 1.35fr) minmax(0, 1fr) calc(var(--spacing) * 20) var(--spacing-5);
+  column-gap: var(--spacing-5);
+  align-items: center;
+  padding: var(--spacing-4) var(--spacing-5);
 }
-
-.roster,
-.preview {
-  min-width: 0;
+.columns {
+  background: var(--ui-muted);
+  border-radius: var(--ui-radius) var(--ui-radius) 0 0;
+  color: var(--ui-muted-foreground);
+  font-size: var(--text-sm);
+  padding-block: var(--spacing-3);
 }
-
-.scroll {
-  padding: var(--spacing-1);
+.listItem + .listItem { border-top: 1px solid var(--ui-border); }
+.row { min-height: calc(var(--spacing) * 22); text-decoration: none; border-radius: 0; color: var(--ui-foreground); }
+.row:hover { background: var(--ui-muted); }
+.listItem:last-child .row { border-radius: 0 0 var(--ui-radius) var(--ui-radius); }
+.person, .level, .contact { min-width: 0; overflow-wrap: anywhere; }
+.name { font-size: var(--text-base); font-weight: 600; width: auto; }
+.secondary { display: flex; gap: var(--spacing-2); flex-wrap: wrap; font-size: var(--text-sm); color: var(--ui-muted-foreground); }
+.placement + .placement { margin-top: var(--spacing-2); }
+.programme { display: block; color: var(--ui-muted-foreground); font-size: var(--text-sm); }
+.contact { display: none; }
+.arrow { width: var(--spacing-4); height: var(--spacing-4); color: var(--ui-muted-foreground); }
+@media (min-width: 80rem) {
+  .columns, .row { grid-template-columns: minmax(0, 1.3fr) minmax(0, 1fr) minmax(0, 1fr) calc(var(--spacing) * 20) var(--spacing-4); }
+  .contact { display: block; }
 }
-
-.preview {
-  display: none;
-  padding-block: var(--spacing-6);
-}
-
-.facts {
-  display: grid;
-  gap: var(--spacing-5);
-  margin: 0;
-}
-
-.facts > :nth-child(n + 3) {
-  border-top: var(--border-width) solid var(--color-border);
-  padding-top: var(--spacing-5);
-}
-
-@media (max-width: 1023px) {
-  .directory[data-preview="true"] .roster { display: none; }
-  .directory[data-preview="true"] .preview { display: block; }
-}
-
-@media (min-width: 1024px) {
-  .directory {
-    grid-template-columns: minmax(0, 1.35fr) minmax(0, 1fr);
-  }
-
-  .roster {
-    padding-block: var(--spacing-4);
-    padding-inline-end: var(--spacing-6);
-  }
-
-  .scroll {
-    max-height: max(24rem, calc(100dvh - 23rem));
-    overflow-y: auto;
-    overscroll-behavior: contain;
-    scrollbar-gutter: stable;
-  }
-
-  .preview {
-    display: block;
-    padding: var(--spacing-6);
-    border-inline-start: var(--border-width) solid var(--color-border);
-  }
+@media (max-width: 47.99rem) {
+  .columns { display: none; }
+  .row { grid-template-columns: minmax(0, 1fr) auto; padding: var(--spacing-4); gap: var(--spacing-2) var(--spacing-3); }
+  .person { grid-column: 1; grid-row: 1; }
+  .status { grid-column: 2; grid-row: 1; align-self: start; }
+  .level { grid-column: 1; grid-row: 2; }
+  .arrow { grid-column: 2; grid-row: 2; justify-self: end; }
+  .programme { display: none; }
+  .listItem:first-child .row { border-radius: var(--ui-radius) var(--ui-radius) 0 0; }
 }

@@ -1,8 +1,7 @@
 "use client";
 
 import { Moon, Sun } from "lucide-react";
-import { Icon } from "@astryxdesign/core/Icon";
-import { IconButton } from "@astryxdesign/core/IconButton";
+import { Button } from "@/components/shadcn/button";
 import { SegmentedControl, SegmentedControlItem } from "@astryxdesign/core/SegmentedControl";
 import { useResolvedThemeMode, useThemeMode } from "@/components/theme-provider";
 import type { ThemeMode } from "@/lib/theme-mode";
@@ -56,13 +55,8 @@ export function ThemeFlip({ size = "md" }: { size?: "sm" | "md" | "lg" }) {
   const label = dark ? "Switch to light mode" : "Switch to dark mode";
 
   return (
-    <IconButton
-      label={label}
-      tooltip={label}
-      variant="ghost"
-      size={size}
-      icon={<Icon icon={dark ? Sun : Moon} size="sm" />}
-      onClick={() => setMode(dark ? "light" : "dark")}
-    />
+    <Button aria-label={label} title={label} variant="ghost" size={size === "sm" ? "icon-sm" : size === "lg" ? "icon-lg" : "icon"} onClick={() => setMode(dark ? "light" : "dark")}>
+      {dark ? <Sun aria-hidden="true" /> : <Moon aria-hidden="true" />}
+    </Button>
   );
 }

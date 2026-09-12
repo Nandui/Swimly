@@ -1,4 +1,5 @@
 import { TabStrip } from "@/components/ui-kit/tab-strip";
+import { swimmerProfileHref } from "@/lib/students/directory";
 
 /** The sections of a swimmer's profile. The strip itself is the shared one;
  *  this knows the names and where they point. */
@@ -25,17 +26,19 @@ export function ProfileTabs({
   studentId,
   active,
   items,
+  returnTo,
 }: {
   studentId: string;
   active: ProfileTab;
   items: ProfileTabItem[];
+  returnTo?: string;
 }) {
   return (
     <TabStrip
       ariaLabel="Sections of this profile"
       items={items.map((item) => ({
         key: item.key,
-        href: `/students/${studentId}?tab=${item.key}`,
+        href: swimmerProfileHref(studentId, returnTo, item.key),
         label: item.label,
         count: item.count,
         active: item.key === active,

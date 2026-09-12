@@ -8,12 +8,17 @@ type Completion = { id: string; studentId: string; levelId: string; programmeId:
 function fixture() {
   const marks: Mark[] = [{ studentId: "swimmer", competencyId: "entry-b-skill", status: "ACHIEVED", assessedOn: new Date("2026-09-01"), updatedAt: new Date("2026-09-01"), assessedByName: "Original Assessor" }];
   const completions: Completion[] = [];
-  const audits: { action: string; clubId?: string; entityId: string }[] = [];
+  const audits: { action: string; clubId?: string; entityId: string; details?: { changes?: { competencyId: string; before: string | null; after: string | null }[] } }[] = [];
+  let courseLocked = false, desk = true, enrolled = true, owner: string | null | undefined;
+  let courseLevel = "entry-b";
   let locked = false, allowed = true, auditFails = false, overrides = false;
   const curriculum = sharedCurriculumRows();
   const student = { id: "swimmer", firstName: "Synthetic", lastName: "Swimmer", clubId: "other" };
   const tx = {
-    $queryRaw: async () => { locked = true; return []; },
+    $queryRaw: async (strings: TemplateStringsArray) => { if(strings.join('').includes('"Course"'))courseLocked=true; locked = true; return []; },
+    course: { findUnique: async () => { assert.ok(courseLocked); return { levelId: courseLevel, archivedAt: null, dayOfWeek: 'MONDAY' }; } },
+    classCover: { findUnique: async () => { assert.ok(courseLocked); return owner === undefined ? null : {coverById: owner}; } },
+    enrolment: { findMany: async () => enrolled ? [{studentId:'swimmer'}] : [] },
     programme: { findMany: async () => { assert.ok(locked); return curriculum; } },
     student: {
       findMany: async () => [student],
@@ -39,17 +44,59 @@ function fixture() {
     const before = structuredClone({ marks, completions, audits });
     try { return await run(tx); }
     catch (e) { marks.splice(0, marks.length, ...before.marks); completions.splice(0, completions.length, ...before.completions); audits.splice(0, audits.length, ...before.audits); throw e; }
-    finally { locked = false; release(); }
+    finally { locked = false; courseLocked = false; release(); }
   } };
   const actions = serverModule<typeof import("./assess")>("src/lib/progression/actions/assess.ts", {
     "@/lib/prisma": { prisma },
-    "@/lib/authz": { requirePermission: async () => { if (!allowed) throw Error("denied"); return { user: { id: "staff", name: "New Assessor" } }; }, can: () => overrides },
+    "@/lib/authz": { requirePermission: async () => { if (!allowed) throw Error("denied"); return { user: { id: "staff", name: "New Assessor" } }; }, canSee: (_s: unknown, screen: string) => screen === "instructor" || desk, can: (_s: unknown, permission: string) => permission === "attendance.mark" || overrides },
     "@/lib/clubs/current": { currentClubId: async () => "club", currentClubIdIfAny: async () => "club" },
     "next/cache": { revalidatePath: () => {} },
   });
-  return { actions, marks, completions, audits, curriculum, deny: () => { allowed = false; }, failAudit: () => { auditFails = true; }, override: () => { overrides = true; } };
+  return { actions, marks, completions, audits, curriculum, setClaim: (id: string | null | undefined) => { owner = id; }, deckOnly: () => { desk = false; }, unenrol: () => { enrolled = false; }, changeLevel: () => { courseLevel = "other"; }, deny: () => { allowed = false; }, failAudit: () => { auditFails = true; }, override: () => { overrides = true; } };
 }
 const completion = { studentId: "swimmer", levelId: "entry", note: "", overrideReason: "" };
+
+const teaching = { courseId: "class", date: "2026-08-31" };
+const deckMarks = { ...teaching, levelId: "entry", marks: [{ studentId: "swimmer", competencyId: "entry-skill", status: "WORKING_ON" as const }] };
+
+test("Instructor marks and completion require the confirmed owner and current enrolment under the course lock", async () => {
+  const f = fixture(); f.deckOnly();
+  for (const owner of [undefined, null, "another-instructor"]) {
+    f.setClaim(owner);
+    assert.equal((await f.actions.saveInstructorAssessment(deckMarks)).ok, false);
+    assert.equal((await f.actions.confirmLevelCompletion({ ...completion, teaching })).ok, false);
+    assert.equal(f.audits.length, 0); assert.equal(f.completions.length, 0);
+  }
+  f.setClaim("staff");
+  assert.equal((await f.actions.saveInstructorAssessment(deckMarks)).ok, true);
+  assert.equal(f.marks.at(-1)?.assessedOn.toISOString().slice(0, 10), teaching.date);
+  assert.equal((f.marks.at(-1) as unknown as { assessedInCourseId: string }).assessedInCourseId, "class");
+  f.unenrol();
+  assert.equal((await f.actions.saveInstructorAssessment({ ...deckMarks, marks: [{ ...deckMarks.marks[0], status: "ACHIEVED" }] })).ok, false);
+  assert.equal((await f.actions.confirmLevelCompletion({ ...completion, teaching })).ok, false);
+  assert.equal(f.audits.length, 1);
+});
+
+test("Instructor accounts cannot bypass the claim via desk actions or a fabricated level", async () => {
+  const f = fixture(); f.deckOnly(); f.setClaim("staff");
+  assert.equal((await f.actions.saveAssessment({ studentId: "swimmer", levelId: "entry", results: deckMarks.marks })).ok, false);
+  assert.equal((await f.actions.saveClassAssessment(deckMarks)).ok, false);
+  assert.equal((await f.actions.confirmLevelCompletion(completion)).ok, false);
+  assert.equal((await f.actions.revokeLevelCompletion("any", { reason: "Test" })).ok, false);
+  f.changeLevel();
+  assert.equal((await f.actions.saveInstructorAssessment(deckMarks)).ok, false);
+  assert.equal((await f.actions.confirmLevelCompletion({ ...completion, teaching })).ok, false);
+  assert.equal(f.audits.length, 0); assert.equal(f.completions.length, 0);
+});
+
+test("the confirmed teacher can complete an eligible swimmer's level and audit failure rolls it back", async () => {
+  const f = fixture(); f.deckOnly(); f.setClaim("staff");
+  assert.equal((await f.actions.confirmLevelCompletion({ ...completion, teaching })).ok, true);
+  assert.equal(f.completions.length, 1); assert.equal(f.audits[0].action, "complete-level");
+  const failed = fixture(); failed.deckOnly(); failed.setClaim("staff"); failed.failAudit();
+  await assert.rejects(failed.actions.confirmLevelCompletion({ ...completion, teaching }), /audit failed/);
+  assert.equal(failed.completions.length, 0);
+});
 
 test("an unchanged judgement from another site retains its original assessor; clearing it removes all copies", async () => {
   const f = fixture();
@@ -58,6 +105,7 @@ test("an unchanged judgement from another site retains its original assessor; cl
   assert.equal(f.marks.length, 1); assert.equal(f.marks[0].assessedByName, "Original Assessor"); assert.equal(f.audits.length, 0);
   assert.equal((await f.actions.saveAssessment({ ...input, results: [{ competencyId: "entry-b-skill", status: null }] })).ok, true);
   assert.equal(f.marks.length, 0); assert.equal(f.audits.length, 1);
+  assert.deepEqual(f.audits[0].details?.changes?.map(({competencyId,before,after})=>({competencyId,before,after})),[{competencyId:"entry-skill",before:"ACHIEVED",after:null}]);
 });
 
 test("shared marks permit completion and concurrent confirmations create just one record", async () => {

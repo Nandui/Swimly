@@ -17,6 +17,7 @@ import type { CourseRow } from "@/lib/courses/data/courses";
 
 export type CourseFilters = {
   q: string;
+  site: string;
   programme: string;
   level: string;
   day: string;
@@ -30,6 +31,7 @@ export type CourseFilters = {
 
 export const EMPTY_FILTERS: CourseFilters = {
   q: "",
+  site: "",
   programme: "",
   level: "",
   day: "",
@@ -40,10 +42,11 @@ export const EMPTY_FILTERS: CourseFilters = {
 };
 
 /** Every key except `q`, which is a text box rather than a picker. */
-export const PICKER_KEYS = ["programme", "level", "day", "time", "instructor", "location", "places"] as const;
+export const PICKER_KEYS = ["site", "programme", "level", "day", "time", "instructor", "location", "places"] as const;
 export type PickerKey = (typeof PICKER_KEYS)[number];
 
 export const PICKER_LABELS: Record<PickerKey, string> = {
+  site: "Site",
   programme: "Programme",
   level: "Level",
   day: "Day",
@@ -67,6 +70,7 @@ export function parseCourseFilters(params: RawParams): CourseFilters {
   const day = one(params, "day");
   return {
     q: one(params, "q"),
+    site: one(params, "site"),
     programme: one(params, "programme"),
     level: one(params, "level"),
     day: day === ANY_DAY ? "" : day,
@@ -81,7 +85,7 @@ export function activeFilterCount(filters: CourseFilters): number {
   return Object.values(filters).filter(Boolean).length;
 }
 
-function hasPlace(course: CourseRow): boolean {
+export function hasPlace(course: CourseRow): boolean {
   return course.capacity === null || course._count.enrolments < course.capacity;
 }
 
@@ -93,6 +97,7 @@ function haystack(course: CourseRow): string {
     course.level.name,
     course.level.programme.name,
     course.location ?? "",
+    course.club.name,
     course.instructor?.name ?? "",
     formatTime(course.startMinutes),
     DAY_META[course.dayOfWeek].label,
@@ -109,9 +114,10 @@ export function matchesFilters(
   filters: CourseFilters,
   except?: PickerKey | "q"
 ): boolean {
-  if (except !== "q" && filters.q && !haystack(course).includes(filters.q.toLowerCase())) {
+  if (except !== "q" && filters.q && !filters.q.toLowerCase().split(/\s+/).filter(Boolean).every(word => haystack(course).includes(word))) {
     return false;
   }
+  if (except !== "site" && filters.site && course.clubId !== filters.site) return false;
   if (except !== "programme" && filters.programme && course.level.programme.id !== filters.programme) {
     return false;
   }
@@ -195,6 +201,7 @@ export function courseFilterDimensions(
   const dayOrder = new Map(DAYS_IN_ORDER.map((d, i) => [d as string, i]));
 
   return [
+    dimension(courses, filters, "site", (c) => ({ value: c.clubId, label: c.club.name }), byLabel),
     dimension(courses, filters, "programme", (c) => ({
       value: c.level.programme.id,
       label: c.level.programme.name,

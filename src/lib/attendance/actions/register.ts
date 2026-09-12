@@ -7,13 +7,14 @@ import { fail } from "@/lib/action-result";
 import { canMarkRegister } from "@/lib/attendance/access";
 import { describeRegister } from "@/lib/attendance/summary";
 import { logAudit } from "@/lib/audit";
-import { requirePermission } from "@/lib/authz";
+import { canSee, requirePermission } from "@/lib/authz";
 import { currentClubId } from "@/lib/clubs/current";
 import { DAY_META, courseLabel } from "@/lib/courses/constants";
 import { formatDate, isDateOnly, parseDateOnly, today, weekdayOf } from "@/lib/format";
 import { fullName } from "@/lib/students/constants";
 import { withCourseSeat } from "@/lib/enrolment/seat";
 import { savedRegister, type SavedRegister } from "@/lib/attendance/revision";
+import { teachingError } from "@/lib/attendance/teaching";
 
 /** The register is written by one action carrying the whole class.
  *
@@ -24,6 +25,7 @@ import { savedRegister, type SavedRegister } from "@/lib/attendance/revision";
 
 const markSchema = z.object({
   courseId: z.string().min(1),
+  teaching: z.boolean().optional(),
   // A string, not a Date: unambiguous across the action boundary and checkable
   // with a regex.
   date: z.string().refine(isDateOnly, "That is not a date."),
@@ -72,12 +74,17 @@ export async function markRegister(input: MarkRegisterInput): Promise<RegisterSa
     if (course.archivedAt) return fail("That class is archived.");
 
     const date = parseDateOnly(iso);
+    // Deck-only accounts cannot opt out by omitting the teaching flag.
+    if (parsed.data.teaching || (!canSee(session, "courses") && !canSee(session, "calendar"))) {
+      const error = await teachingError(tx, session, { courseId, date: iso }, clubId);
+      if (error) return fail(error);
+    }
 
     // Whoever took the class over that day may mark it, and the register says
     // they did.
     const cover = await tx.classCover.findUnique({
       where: { courseId_date: { courseId, date } },
-      select: { coverById: true, coverByName: true, instructorName: true },
+      select: { coverById: true, coverByName: true, instructorId: true, instructorName: true },
     });
 
     if (
@@ -213,7 +220,9 @@ export async function markRegister(input: MarkRegisterInput): Promise<RegisterSa
     // instructor: the cover's name, and whose class it was.
     const conducted =
       cover && cover.coverById === session.user.id
-        ? cover.instructorName
+        ? cover.instructorId === session.user.id
+          ? ` — taught by ${markedByName}, the scheduled instructor`
+          : cover.instructorName
           ? ` — taken by ${markedByName}, covering for ${cover.instructorName}`
           : ` — taken by ${markedByName}, nobody having been assigned`
         : "";
@@ -232,6 +241,18 @@ export async function markRegister(input: MarkRegisterInput): Promise<RegisterSa
         noteChanged ? `${classNote ? "Noted" : "Cleared the note"} on ${courseLabel(course)} for ${formatDate(date)}${classNote ? ` — ${classNote}` : ""}` : null,
       ].filter(Boolean).join("; ") + conducted,
     }, tx);
+    // One immutable entry per changed swimmer, in the same seat-locked transaction.
+    // The class summary remains useful, but cannot reconstruct every child's corrections.
+    for (const mark of changed) {
+      const was = previous.get(mark.studentId);
+      await logAudit({ actorId: session.user.id, actorName: markedByName, action: was ? "attendance-corrected" : "attendance",
+        entity: "Student", entityId: mark.studentId, clubId, programmeId: course.level.programmeId,
+        summary: `${nameById.get(mark.studentId)} — ${was ? "updated" : "recorded"} attendance for ${courseLabel(course)} on ${formatDate(date)}`,
+        details: { version: 1, kind: "attendance", date: iso, courseId, className: courseLabel(course),
+          before: was?.status ?? null, after: mark.status, previousNote: was?.note ?? null, note: mark.note || null,
+          taughtBy: cover?.coverByName ?? null },
+      }, tx);
+    }
     const after = new Map(existingRows.map(row => [row.studentId, row]));
     for (const mark of changed) after.set(mark.studentId, { ...mark, note: mark.note ?? null });
     return { ok: true, revision: savedRegister(courseId, iso, [...after.values()], classNote).revision };
@@ -241,8 +262,10 @@ export async function markRegister(input: MarkRegisterInput): Promise<RegisterSa
   revalidatePath("/courses/[id]/register", "page");
   revalidatePath("/courses/[id]/class", "page");
   revalidatePath("/courses/[id]", "page");
+  revalidatePath("/students/[id]", "page");
   revalidatePath("/today");
   revalidatePath("/instructor");
+  revalidatePath("/instructor/classes/[id]", "page");
   revalidatePath("/");
   return result;
 }

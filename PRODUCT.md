@@ -112,12 +112,12 @@ clubs and the switcher; the audit log; account settings with light and dark
 mode.
 
 The desk uses Swimmers for customer details, progress and enrolment, Classes
-for the weekly timetable and class inspection, and Today for the day's classes.
+for the weekly timetable and class inspection, and Today for the day's classes and assessments.
 The dedicated Reception view is retired. Old links open the selected swimmer
 when the role offers Swimmers, otherwise an accessible landing page. Reception
 is no longer offered as a screen or landing-page choice.
 
-Today has one purpose: check the current club’s full day of classes. The owner
+Today has one purpose: check the current club’s full day of classes and assessments. The owner
 selected a booking sheet with levels down the left, grouped by programme, and
 exact start times across the top. Classes show their end time, pool area,
 instructor or cover and places. A circled check means spaces are available;
@@ -125,16 +125,38 @@ a circled X means full. Attendance completion does not drive this signal.
 Multiple classes at the same level and time share a cell. Earlier classes
 remain in one scrollable sheet with sticky time and level headers. Staff can
 switch to Agenda; phones use that chronological view automatically.
+The agenda includes non-cancelled assessment sessions dated today, alongside
+classes in time order, with pool, instructor and available places. The booking
+sheet points to these assessments in Agenda; assessment-only days open Agenda.
+Both session types share pool and instructor filters. Assessment links require
+the Assessments screen, and Today loads no assessment participant details.
 Opening attendance remains a separate, permission-gated action. Roles can
 offer the calendar without granting attendance permission.
 
-Instructor retains the original Today deck workflow at `/instructor`. Today
-is the new calendar at `/today`. They are separate screens and landing-page
-choices. Existing instructor roles keep their deck access and starting page;
-attendance and competencies return to the destination that opened the class.
+Instructor is a separate pool-deck workspace for instructors using tablets.
+`/instructor` shows today's own classes, current and upcoming classes, and all
+classes for taking cover. The list refreshes each minute while visible.
+Every unclaimed class offers Start class. Confirming presence claims that class
+for the date, including when it is the instructor's scheduled class. The owner
+then sees Open class and a simple attendance saved/to-take indication. Other
+instructors see In progress and cannot open its attendance or competencies.
+Ownership cannot be overwritten by a second confirmation. Cover and audit facts
+remain recorded without becoming task-status pills on the deck.
+Starting a class, recording attendance and marking each swimmer's
+competencies all stay under `/instructor/classes/[id]`. The selected list and
+grouping survive the return trip. Its frame offers classes, site, appearance
+and sign-out, with no desk sidebar, swimmer directory or profile links.
 
-Classes is the weekly class browser: search and combine programme, level, day,
-time, instructor, pool area and availability filters. Active and archived classes
+Today remains the desk calendar at `/today`. Instructor is absent from desk
+navigation; desk attendance returns within the desk workspace. Instructor
+access needs its screen grant and attendance permission, independently of desk
+permissions. Accounts explicitly granted both can open either workspace, but
+neither workspace's normal navigation leads into the other. Legacy deck-only
+roles keep Instructor without gaining Today; existing desk roles keep Today.
+
+Classes is the weekly class browser across all live sites: search and combine
+site, programme, level, day, time, instructor, pool area and availability filters.
+Active and archived classes
 have separate results. Opening a class leads to a full page with its enrolled
 swimmers, pinned placement levels, waitlist, schedule, instructor and capacity.
 Returning to Classes restores the search, filters and page. Enrolment and class

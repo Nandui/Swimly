@@ -30,13 +30,13 @@ export const SCREENS = [
     label: "Today",
     path: "/today",
     description:
-      "All of today’s classes in time-slot columns, with instructors, places and attendance status.",
+      "All of today’s classes in a booking sheet, with instructors and available places.",
   },
   {
     key: "instructor",
     label: "Instructor",
     path: "/instructor",
-    description: "The deck: own classes, attendance, competencies and taking cover.",
+    description: "A separate tablet workspace for instructors: own classes, cover, attendance and competencies. Not shown in the desk navigation.",
     requires: "attendance.mark",
   },
   {
@@ -123,9 +123,13 @@ export function screenMeta(key: ScreenKey) {
 /** Keys filtered against the catalogue, in catalogue order, no duplicates. */
 export function cleanScreens(input: readonly string[]): ScreenKey[] {
   // Existing roles stored "today" for the deck. Resolve that retired key
-  // without changing the database; edited roles save the two explicit keys,
-  // so either destination can subsequently be granted or removed separately.
-  const held = new Set(input.flatMap(key => key === "today" ? ["calendar", "instructor"] : [key]).filter(isScreenKey));
+  // without giving deck-only roles the desk calendar. Legacy roles that
+  // already offered desk screens retain their existing Today calendar.
+  // New roles use the two independent explicit keys.
+  const hadDeskScreens = input.some(key => isScreenKey(key) && key !== "instructor");
+  const held = new Set(input.flatMap(key => key === "today"
+    ? hadDeskScreens ? ["calendar", "instructor"] : ["instructor"]
+    : [key]).filter(isScreenKey));
   return ALL_SCREENS.filter((key) => held.has(key));
 }
 

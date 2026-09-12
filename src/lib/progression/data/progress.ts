@@ -10,6 +10,7 @@ export type CompetencyProgress = {
   id: string;
   name: string;
   description: string | null;
+  archived?: boolean;
   status: CompetencyStatus | null;
   assessedOn: Date | null;
   assessedByName: string | null;
@@ -20,6 +21,7 @@ export type LevelProgress = {
   id: string;
   name: string;
   description: string | null;
+  archived?: boolean;
   competencies: CompetencyProgress[];
   achieved: number;
   total: number;
@@ -50,8 +52,8 @@ export async function getStudentProgress(studentId: string): Promise<ProgrammePr
 
   const [rawEnrolments, rawCompletions, rawResults] = await Promise.all([
     prisma.enrolment.findMany({
-      where: { studentId, status: "ACTIVE" },
-      select: { levelId: true, programmeId: true, level: { select: { sortOrder: true } } },
+      where: { studentId },
+      select: { status: true, levelId: true, programmeId: true, level: { select: { sortOrder: true } } },
     }),
     prisma.levelCompletion.findMany({
       where: { studentId },
@@ -84,8 +86,14 @@ export async function getStudentProgress(studentId: string): Promise<ProgrammePr
     .sort((a, b) => a.completedOn.getTime() - b.completedOn.getTime() || a.id.localeCompare(b.id));
   const results = latestSharedMarks(rawResults, curriculum.competencyIds.resolve);
   const programmeIds = new Set([...enrolments, ...completions].map(row => row.programmeId));
+  const recordedCompetencies = new Set(results.map(r => r.competencyId));
+  const recordedLevels = new Set([...enrolments, ...completions].map(row => row.levelId));
+  for (const competency of curriculum.competencies) if (recordedCompetencies.has(competency.id)) {
+    recordedLevels.add(competency.levelId);
+    programmeIds.add(curriculum.programmeForLevel(competency.levelId));
+  }
   const programmes = curriculum.programmes.filter(p => programmeIds.has(p.id)).map(p => ({ ...p,
-    levels: p.levels.filter(l => !l.archivedAt).map(l => ({ ...l, competencies: l.competencies.filter(c => !c.archivedAt) })),
+    levels: p.levels.filter(l => !l.archivedAt || recordedLevels.has(l.id)).map(l => ({ ...l, competencies: l.competencies.filter(c => !c.archivedAt || recordedCompetencies.has(c.id)) })),
   }));
 
   const resultByCompetency = new Map(results.map((row) => [row.competencyId, row]));
@@ -98,7 +106,7 @@ export async function getStudentProgress(studentId: string): Promise<ProgrammePr
     // The highest live level they hold an active place at; failing that, the
     // highest one they have finished.
     const active = enrolments
-      .filter((row) => row.programmeId === programme.id)
+      .filter((row) => row.status === "ACTIVE" && row.programmeId === programme.id)
       .sort((a, b) => b.level.sortOrder - a.level.sortOrder);
 
     const completedIds = new Set(
@@ -117,6 +125,7 @@ export async function getStudentProgress(studentId: string): Promise<ProgrammePr
           id: competency.id,
           name: competency.name,
           description: competency.description,
+          archived: !!competency.archivedAt,
           status: result?.status ?? null,
           assessedOn: result?.assessedOn ?? null,
           assessedByName: result?.assessedByName ?? null,
@@ -125,7 +134,7 @@ export async function getStudentProgress(studentId: string): Promise<ProgrammePr
       });
 
       const progress = completionProgress(
-        level.competencies.map((competency) => competency.id),
+        level.competencies.filter(c => !c.archivedAt).map((competency) => competency.id),
         achievedIds
       );
       const completion = completionByLevel.get(level.id) ?? null;
@@ -134,6 +143,7 @@ export async function getStudentProgress(studentId: string): Promise<ProgrammePr
         id: level.id,
         name: level.name,
         description: level.description,
+        archived: !!level.archivedAt,
         competencies,
         achieved: progress.achieved,
         total: progress.total,

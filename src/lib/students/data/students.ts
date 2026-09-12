@@ -46,14 +46,16 @@ export async function getStudents(filters: StudentFilters = {}) {
     ...(filters.status && filters.status !== "ALL" ? { status: filters.status } : {}),
     ...(q
       ? {
-          OR: [
-            { firstName: { contains: q, mode: "insensitive" } },
-            { lastName: { contains: q, mode: "insensitive" } },
-            { contactName: { contains: q, mode: "insensitive" } },
-            { contactEmail: { contains: q, mode: "insensitive" } },
-            // The club's own identifier is how staff look people up.
-            { memberNumber: { contains: q, mode: "insensitive" } },
-          ],
+          AND: q.split(/\s+/).map((word) => ({
+            OR: [
+              { firstName: { contains: word, mode: "insensitive" as const } },
+              { lastName: { contains: word, mode: "insensitive" as const } },
+              { contactName: { contains: word, mode: "insensitive" as const } },
+              { contactEmail: { contains: word, mode: "insensitive" as const } },
+              { contactPhone: { contains: word } },
+              { memberNumber: { contains: word, mode: "insensitive" as const } },
+            ],
+          })),
         }
       : {}),
     ...(filters.levelId
@@ -61,18 +63,19 @@ export async function getStudents(filters: StudentFilters = {}) {
       : {}),
   };
 
-  const page = Math.max(1, Math.trunc(filters.page ?? 1));
-
-  const [total, students] = await Promise.all([
-    prisma.student.count({ where }),
-    prisma.student.findMany({
+  // Bound the page before computing an offset, including stale URLs after
+  // a filter change or a swimmer being removed from the result set.
+  const total = await prisma.student.count({ where });
+  const requested = filters.page ?? 1;
+  const page = Number.isSafeInteger(requested) && requested > 0
+    ? Math.min(requested, Math.max(1, Math.ceil(total / STUDENTS_PER_PAGE))) : 1;
+  const students = total ? await prisma.student.findMany({
       where,
-      orderBy: [{ lastName: "asc" }, { firstName: "asc" }],
+      orderBy: [{ lastName: "asc" }, { firstName: "asc" }, { id: "asc" }],
       select: LIST_SELECT,
       skip: (page - 1) * STUDENTS_PER_PAGE,
       take: STUDENTS_PER_PAGE,
-    }),
-  ]);
+    }) : [];
 
   if (students.length === 0) return { students: [] as StudentRow[], total, page };
 

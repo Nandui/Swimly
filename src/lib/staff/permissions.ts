@@ -41,7 +41,7 @@ export const PERMISSIONS = [
     group: "On the deck",
     label: "Take attendance for their own classes",
     description:
-      "Mark attendance for the classes they are the instructor of. This is what opens the Today page; without it the deck is not offered.",
+      "Mark attendance for the classes they teach. The separate Instructor workspace also requires the Instructor screen grant.",
   },
   {
     key: "attendance.cover",

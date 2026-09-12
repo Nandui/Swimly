@@ -1,0 +1,30 @@
+.directory { min-width: 0; border: 1px solid var(--ui-border); border-radius: var(--ui-radius); }
+.columns, .row { display: grid; grid-template-columns: minmax(0, 1.3fr) minmax(0, .9fr) minmax(0, 1fr) var(--spacing-4); align-items: center; gap: var(--spacing-4); padding: var(--spacing-4); }
+.columns { padding-block: var(--spacing-3); background: var(--ui-muted); color: var(--ui-muted-foreground); font-size: var(--text-sm); border-radius: var(--ui-radius) var(--ui-radius) 0 0; }
+.row { min-height: calc(var(--spacing) * 24); border-radius: 0; color: var(--ui-foreground); text-decoration: none; }
+.row:hover { background: var(--ui-muted); }
+.listItem + .listItem { border-top: 1px solid var(--ui-border); }
+.listItem:last-child .row { border-radius: 0 0 var(--ui-radius) var(--ui-radius); }
+.identity, .site, .instructor, .schedule, .availability { min-width: 0; overflow-wrap: anywhere; }
+.name { width: auto; font-size: var(--text-base); font-weight: 600; }
+.secondary, .mobileSite { color: var(--ui-muted-foreground); font-size: var(--text-sm); }
+.site, .instructor { display: none; }
+.arrow { width: var(--spacing-4); height: var(--spacing-4); color: var(--ui-muted-foreground); }
+@media (min-width: 64rem) {
+  .columns, .row { grid-template-columns: minmax(0, 1.3fr) minmax(0, .85fr) minmax(0, 1fr) minmax(0, 1fr) var(--spacing-4); }
+  .site { display: block; }
+  .mobileSite { display: none; }
+}
+@media (min-width: 80rem) {
+  .columns, .row { grid-template-columns: minmax(0, 1.25fr) minmax(0, .85fr) minmax(0, 1fr) minmax(0, .8fr) minmax(0, 1fr) var(--spacing-4); }
+  .instructor { display: block; }
+}
+@media (max-width: 47.99rem) {
+  .columns { display: none; }
+  .row { grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: var(--spacing-4) var(--spacing-3); }
+  .identity { grid-column: 1 / -1; grid-row: 1; padding-right: var(--spacing-6); }
+  .schedule { grid-column: 1; grid-row: 2; }
+  .availability { grid-column: 2; grid-row: 2; }
+  .arrow { grid-column: 2; grid-row: 1; justify-self: end; align-self: start; }
+  .listItem:first-child .row { border-radius: var(--ui-radius) var(--ui-radius) 0 0; }
+}

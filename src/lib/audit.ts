@@ -30,6 +30,7 @@ type AuditInput = {
    *  Shared record edits use null so they appear at every site. */
   clubId?: string | null;
   summary: string;
+  details?: Prisma.InputJsonValue;
 };
 
 /** Rows that belong to no club, so their audit entries belong to none either

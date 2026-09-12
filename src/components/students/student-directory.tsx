@@ -1,149 +1,57 @@
-"use client";
-
-import { useRef, useState, type ReactNode } from "react";
-import { Avatar } from "@astryxdesign/core/Avatar";
-import { Button } from "@astryxdesign/core/Button";
-import { Heading } from "@astryxdesign/core/Heading";
-import { Icon } from "@astryxdesign/core/Icon";
-import { Link } from "@astryxdesign/core/Link";
-import { List, ListItem } from "@astryxdesign/core/List";
-import { HStack, VStack } from "@astryxdesign/core/Stack";
-import { Text } from "@astryxdesign/core/Text";
-import { ArrowLeft, ChevronRight } from "lucide-react";
-import { Tag } from "@/components/ui-kit/tag";
+import Link from "next/link";
+import { ChevronRight } from "lucide-react";
+import { Badge } from "@/components/shadcn/badge";
+import { Item, ItemContent, ItemGroup, ItemTitle } from "@/components/shadcn/item";
 import { STUDENT_STATUS_META, ageLabel, fullName } from "@/lib/students/constants";
 import type { StudentRow } from "@/lib/students/data/students";
+import { swimmerProfileHref } from "@/lib/students/directory";
 import styles from "./student-directory.module.css";
 
-/** Selection uses the already-authorized list data; opening a preview needs no
- * extra request and never fetches the profile's medical or private notes. */
-export function StudentDirectory({
-  students,
-  pagination,
-}: {
-  students: StudentRow[];
-  pagination?: ReactNode;
-}) {
-  const [selectedId, setSelectedId] = useState(students[0]?.id);
-  const [showPreview, setShowPreview] = useState(false);
-  const preview = useRef<HTMLElement>(null);
-  const selectedRow = useRef<HTMLElement | null>(null);
-  const student = students.find((row) => row.id === selectedId) ?? students[0];
-  if (!student) return null;
-
-  const meta = STUDENT_STATUS_META[student.status];
-
-  function select(id: string, target: HTMLElement) {
-    selectedRow.current = target.closest("li")?.querySelector("button") ?? target;
-    setSelectedId(id);
-    setShowPreview(true);
-    // On narrow screens the list is replaced by the preview. Move focus with
-    // it; on desktop keep focus in the list for quick keyboard scanning.
-    if (window.matchMedia("(max-width: 1023px)").matches) {
-      requestAnimationFrame(() => preview.current?.focus());
-    }
-  }
-
-  function backToList() {
-    setShowPreview(false);
-    requestAnimationFrame(() => selectedRow.current?.focus());
-  }
-
+/** One link per swimmer, using only the authorized directory projection. */
+export function StudentDirectory({ students, returnTo = "/students" }: { students: StudentRow[]; returnTo?: string }) {
   return (
-    <div className={styles.directory} data-preview={showPreview}>
-      <div className={styles.roster}>
-        <div className={styles.scroll}>
-          <List
-            header={<span className="sr-only">Swimmers — select a swimmer to preview their profile</span>}
-            density="spacious"
-            hasDividers
-          >
-            {students.map((row) => {
-              const status = STUDENT_STATUS_META[row.status];
-              const levels = row.placements.map((placement) => placement.levelName).join(", ");
-              return (
-                <ListItem
-                  key={row.id}
-                  className="min-h-22"
-                  label={<Text weight="medium"><span className="sr-only">Preview </span>{fullName(row)}</Text>}
-                  description={
-                    <Text type="supporting" className="break-words">
-                      {row.dateOfBirth ? `Age ${ageLabel(row.dateOfBirth)} · ` : ""}
-                      {levels || "Not placed"}
-                      {row.memberNumber ? <span className="sr-only"> · {row.memberNumber}</span> : null}
-                    </Text>
-                  }
-                  startContent={<Avatar name={fullName(row)} size="lg" tooltip={false} />}
-                  endContent={
-                    <HStack gap={2} vAlign="center">
-                      <Tag color={status.color}>{status.label}</Tag>
-                      <Icon icon={ChevronRight} size="sm" />
-                    </HStack>
-                  }
-                  isSelected={row.id === student.id}
-                  onClick={(event) => select(row.id, event.currentTarget as HTMLElement)}
-                />
-              );
-            })}
-          </List>
-        </div>
-        {pagination ? <div className="pt-4">{pagination}</div> : null}
+    <div className={styles.directory}>
+      <div className={styles.columns} aria-hidden="true">
+        <span>Swimmer</span><span>Current level</span><span className={styles.contact}>Contact</span><span>Status</span><span />
       </div>
-
-      <section
-        ref={preview}
-        tabIndex={-1}
-        aria-label={`${fullName(student)} — profile preview`}
-        className={styles.preview}
-      >
-        <VStack gap={6}>
-          <div className="lg:hidden">
-            <Button label="Back to swimmers" variant="ghost" icon={<Icon icon={ArrowLeft} />} onClick={backToList} />
-          </div>
-          <VStack gap={2}>
-            <Heading level={2} className="break-words">{fullName(student)}</Heading>
-            <div><Tag color={meta.color}>{meta.label}</Tag></div>
-          </VStack>
-          <dl className={styles.facts}>
-            <Detail label="Member number">{student.memberNumber || "Not assigned"}</Detail>
-            <Detail label="Age">{student.dateOfBirth ? `${ageLabel(student.dateOfBirth)} years` : "Date of birth not recorded"}</Detail>
-            <Detail label={student.placements.length > 1 ? "Current levels" : "Current level"}>
-              {student.placements.length ? (
-                <VStack gap={2}>
-                  {student.placements.map((placement) => (
-                    <VStack key={placement.programmeId} gap={1}>
-                      <Text>{placement.levelName}</Text>
-                      <Text type="supporting">{placement.programmeName}</Text>
-                    </VStack>
-                  ))}
-                </VStack>
-              ) : "Not placed"}
-            </Detail>
-            <Detail label="Contact">
-              <VStack gap={1}>
-                <Text>{student.contactName || "No contact name recorded"}</Text>
-                {student.contactPhone ? (
-                  <Link href={`tel:${student.contactPhone.replace(/\s+/g, "")}`} className="inline-flex min-h-11 items-center">
-                    {student.contactPhone}
-                  </Link>
-                ) : <Text type="supporting">No phone number recorded</Text>}
-              </VStack>
-            </Detail>
-          </dl>
-          <div className="border-t border-border pt-5">
-            <Button href={`/students/${student.id}`} label="Open full profile" variant="secondary" />
-          </div>
-        </VStack>
-      </section>
-    </div>
-  );
-}
-
-function Detail({ label, children }: { label: string; children: ReactNode }) {
-  return (
-    <div>
-      <dt><Text type="supporting">{label}</Text></dt>
-      <dd className="mt-1 break-words">{typeof children === "string" ? <Text>{children}</Text> : children}</dd>
+      <ItemGroup aria-label="Swimmers">
+        {students.map((student) => {
+          const status = STUDENT_STATUS_META[student.status];
+          return (
+            <div key={student.id} role="listitem" className={styles.listItem}>
+              <Item asChild className={styles.row}>
+                <Link href={swimmerProfileHref(student.id, returnTo)} prefetch={false}>
+                  <ItemContent className={styles.person}>
+                    <ItemTitle className={styles.name}>{fullName(student)}</ItemTitle>
+                    <p className={styles.secondary}>
+                      {student.memberNumber ? <span>#{student.memberNumber}</span> : <span>No member number</span>}
+                      <span aria-hidden="true">·</span>
+                      <span>{student.dateOfBirth ? `Age ${ageLabel(student.dateOfBirth)}` : "Age not recorded"}</span>
+                    </p>
+                  </ItemContent>
+                  <div className={styles.level}>
+                    <span className="sr-only">Current level: </span>
+                    {student.placements.length ? student.placements.map((placement) => (
+                      <div key={placement.levelId} className={styles.placement}>
+                        <span>{placement.levelName}</span>
+                        <span className={styles.programme}>{placement.programmeName}</span>
+                      </div>
+                    )) : <span className="text-ui-muted-foreground">Not enrolled</span>}
+                  </div>
+                  <div className={styles.contact}>
+                    <span className="sr-only">Contact: </span>
+                    <p>{student.contactName || "No contact recorded"}</p>
+                    {student.contactPhone ? <p className="text-ui-muted-foreground tabular-nums">{student.contactPhone}</p> : null}
+                  </div>
+                  <div className={styles.status}><Badge variant="secondary" data-tone={status.color}>{status.label}</Badge></div>
+                  <ChevronRight className={styles.arrow} aria-hidden="true" />
+                  <span className="sr-only">Open profile</span>
+                </Link>
+              </Item>
+            </div>
+          );
+        })}
+      </ItemGroup>
     </div>
   );
 }

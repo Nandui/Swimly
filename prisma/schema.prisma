@@ -190,6 +190,8 @@ model AuditLog {
   clubId      String?
   /// Written for a person reading months later: name what changed and to what.
   summary     String
+  /// Optional structured evidence for swimmer history. Older summaries remain readable.
+  details     Json?
   createdAt   DateTime @default(now())
 
   actor User? @relation(fields: [actorId], references: [id], onDelete: SetNull)
@@ -495,10 +497,9 @@ model ClassNote {
   @@unique([courseId, date])
 }
 
-/// A class taught, on one date, by somebody other than its instructor — or by
-/// somebody at all, when nobody was assigned. Written when the cover confirms
-/// they are taking the class, before a mark is made, so the register says who
-/// actually stood at the pool and who it belonged to.
+/// The instructor who confirmed they are teaching this class on this date.
+/// Includes the scheduled instructor and substitutes. Created under the course
+/// lock before opening the register; an existing claim is never overwritten.
 ///
 /// Deliberately not a session row: no time, no cancellation, nothing about the
 /// class beyond who conducted it. `ClassNote` is still the seam.

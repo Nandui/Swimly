@@ -48,9 +48,26 @@ device. It is a component library: use its components — AppShell, Button,
 TextInput, Selector, Typeahead, Dialog, Banner, Badge, Text, Heading — and its
 tokens, and keep Tailwind for layout.
 
-Today has an owner-approved shadcn booking-sheet exception, documented in
-DESIGN.md: its table, booking blocks, view controls and scoped CSS keep the
-shared Neutral tokens. Preserve that approved design when editing Today.
+Today, the Swimmers and Classes directories, and the shared workspace chrome
+have an owner-approved shadcn migration, documented in DESIGN.md. The full
+swimmer profile and all of its dialogs are also migrated to shadcn. Use actual
+shadcn components from `src/components/shadcn` for these directories and their
+Add dialogs, Today, navigation, site/account menus, workspace search, theme flip,
+role preview and notifications. Their independent Neutral
+tokens and `ui-` utility namespace live in `src/app/shadcn.css`; preserve the
+booking-sheet design and availability icons. Astryx guidance below applies
+to screen bodies and form adapters that have not yet migrated. This explicit
+exception takes precedence over the generated Astryx rules for these surfaces.
+
+Instructor is an isolated pool-deck workspace under `(instructor)/instructor`,
+fully migrated to shadcn, including its class list, start confirmation,
+attendance, competencies and completion dialogs. Its controls are tablet-sized.
+Every class requires a confirmed start for that date; only the claiming
+instructor may open it or save teaching records. Preserve the server checks
+and atomic claim. Do not add desk navigation,
+global swimmer search or profile links to it, or Instructor links to desk
+navigation. Shared teaching components must preserve the route-selected
+workspace boundary. See [docs/instructor.md](docs/instructor.md).
 
 Before using an Astryx component, read its documentation from the installed
 version, never from memory:
