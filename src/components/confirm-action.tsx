@@ -1,7 +1,9 @@
 "use client";
 
 import * as React from "react";
-import { Button } from "@/components/shadcn/button";
+import { LoadingButton } from "@/components/ui/loading-button";
+import { IconButton } from "@/components/ui/icon-button";
+import { Loader2 } from "lucide-react";
 import {
   AlertDialog,
   AlertDialogCancel,
@@ -98,14 +100,15 @@ export function ConfirmAction({
           {error ? <Notice tone="error" title={error} /> : null}
           <AlertDialogFooter>
             <AlertDialogCancel disabled={pending}>Cancel</AlertDialogCancel>
-            <Button
+            <LoadingButton
               type="button"
               variant={destructive ? "destructive" : "default"}
-              disabled={pending}
+              pending={pending}
+              pendingLabel="Working…"
               onClick={confirm}
             >
-              {pending ? "Working…" : confirmLabel}
-            </Button>
+              {confirmLabel}
+            </LoadingButton>
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
@@ -132,10 +135,10 @@ export function ActionButton({
   const [pending, startTransition] = React.useTransition();
   const submitting = React.useRef(false);
   return (
-    <Button
+    <IconButton
       type="button"
-      aria-label={ariaLabel}
-      title={title ?? ariaLabel}
+      label={ariaLabel}
+      description={title}
       variant="ghost"
       size="icon-sm"
       className={className}
@@ -160,7 +163,7 @@ export function ActionButton({
         });
       }}
     >
-      {children}
-    </Button>
+      {pending ? <Loader2 className="size-4 animate-spin" aria-hidden="true" /> : children}
+    </IconButton>
   );
 }

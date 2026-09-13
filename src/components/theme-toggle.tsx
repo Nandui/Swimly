@@ -4,7 +4,7 @@ import { RadioGroupItem, RadioGroup } from "@/components/shadcn/radio-group";
 import { cn } from "@/lib/utils";
 
 import { Moon, Sun } from "lucide-react";
-import { Button } from "@/components/shadcn/button";
+import { IconButton } from "@/components/ui/icon-button";
 
 import {
   useResolvedThemeMode,
@@ -50,7 +50,7 @@ export function ThemeToggle() {
   );
 }
 
-/** One tap, the other mode. Lives at the end of the top bar, so the flip is
+/** One tap, the other mode. Lives in the desk sidebar and mobile/deck toolbar, so the flip is
  *  never more than a tap away — the deck is bright at noon and dim at seven,
  *  and nobody should have to find a settings page for that.
  *
@@ -66,14 +66,16 @@ export function ThemeFlip({ size = "md" }: { size?: "sm" | "md" | "lg" }) {
   const label = dark ? "Switch to light mode" : "Switch to dark mode";
 
   return (
-    <Button
-      aria-label={label}
-      title={label}
+    <IconButton
+      label={label}
       variant="ghost"
       size={size === "sm" ? "icon-sm" : size === "lg" ? "icon-lg" : "icon"}
       onClick={() => setMode(dark ? "light" : "dark")}
     >
-      {dark ? <Sun aria-hidden="true" /> : <Moon aria-hidden="true" />}
-    </Button>
+      <span className="grid size-4" aria-hidden="true">
+        <span className="col-start-1 row-start-1" data-motion="theme-icon" data-active={dark}><Sun className="size-full" /></span>
+        <span className="col-start-1 row-start-1" data-motion="theme-icon" data-active={!dark}><Moon className="size-full" /></span>
+      </span>
+    </IconButton>
   );
 }

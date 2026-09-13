@@ -1,0 +1,128 @@
+/* Interaction timing is shared; components still choose what actually moves. */
+:root {
+  --ui-motion-feedback: 120ms;
+  --ui-motion-component: 180ms;
+  --ui-motion-surface: 240ms;
+  --ui-motion-spatial: 280ms;
+  --ui-ease: cubic-bezier(0.2, 0, 0, 1);
+  --ui-motion-press-distance: calc(var(--spacing) * 0.25);
+  --ui-motion-nudge-distance: calc(var(--spacing) * 0.5);
+  --ui-motion-selection-scale: 0.65;
+  --ui-motion-icon-angle: 45deg;
+}
+
+/* Press response keeps the control's layout and dimensions unchanged. */
+@utility ui-motion-press {
+  &:not(:disabled):not([aria-disabled="true"]):not([data-variant="link"]):active {
+    translate: 0 var(--ui-motion-press-distance);
+  }
+}
+
+@utility ui-motion-feedback {
+  --tw-duration: var(--ui-motion-feedback);
+  --tw-ease: var(--ui-ease);
+  transition-duration: var(--ui-motion-feedback);
+  transition-timing-function: var(--ui-ease);
+}
+@utility ui-motion-component {
+  --tw-duration: var(--ui-motion-component);
+  --tw-animation-duration: var(--ui-motion-component);
+  --tw-ease: var(--ui-ease);
+  transition-duration: var(--ui-motion-component);
+  transition-timing-function: var(--ui-ease);
+  animation-duration: var(--ui-motion-component);
+  animation-timing-function: var(--ui-ease);
+}
+@utility ui-motion-surface {
+  --tw-duration: var(--ui-motion-surface);
+  --tw-animation-duration: var(--ui-motion-surface);
+  --tw-ease: var(--ui-ease);
+  transition-duration: var(--ui-motion-surface);
+  transition-timing-function: var(--ui-ease);
+  animation-duration: var(--ui-motion-surface);
+  animation-timing-function: var(--ui-ease);
+}
+
+/* Only focusable descendants make a data row interactive. */
+[data-slot="table-row"]:has(a, button, input):focus-within {
+  background-color: var(--ui-muted);
+}
+
+[data-slot="collapsible-trigger"] .lucide-chevron-down {
+  transition: rotate var(--ui-motion-component) var(--ui-ease);
+}
+[data-slot="collapsible-trigger"][data-state="open"] .lucide-chevron-down {
+  rotate: 180deg;
+}
+
+[data-motion="sidebar-icon"] {
+  transition: translate var(--ui-motion-component) var(--ui-ease);
+}
+[data-sidebar="menu-button"]:not(:disabled):not([aria-disabled="true"]):is(:focus-visible, :active) > [data-motion="sidebar-icon"] {
+  translate: var(--ui-motion-nudge-distance) 0;
+}
+@media (hover: hover) and (pointer: fine) {
+  [data-sidebar="menu-button"]:not(:disabled):not([aria-disabled="true"]):hover > [data-motion="sidebar-icon"] {
+    translate: var(--ui-motion-nudge-distance) 0;
+  }
+}
+
+/* A small cue belongs to the destination icon, never to the whole data row. */
+[data-motion="direction"] {
+  transition: translate var(--ui-motion-component) var(--ui-ease),
+    color var(--ui-motion-feedback) var(--ui-ease);
+}
+[data-motion="link"]:is(:focus-visible, :active) [data-motion="direction"] {
+  translate: var(--ui-motion-nudge-distance) 0;
+  color: var(--ui-foreground);
+}
+@media (hover: hover) and (pointer: fine) {
+  [data-motion="link"]:hover [data-motion="direction"] {
+    translate: var(--ui-motion-nudge-distance) 0;
+    color: var(--ui-foreground);
+  }
+}
+
+/* Mounted marks transition only when selection changes, not on page entry. */
+[data-motion="selection"] {
+  transition: opacity var(--ui-motion-feedback) var(--ui-ease),
+    scale var(--ui-motion-component) var(--ui-ease);
+}
+[data-motion="selection"][data-state="unchecked"] {
+  opacity: 0;
+  scale: var(--ui-motion-selection-scale);
+}
+[data-motion="selection"]:not([data-state="unchecked"]) {
+  opacity: 1;
+  scale: 1;
+}
+
+/* Both layers stay in the same grid cell; the accessible label changes once. */
+[data-motion="action-label"] {
+  pointer-events: none;
+  transition: opacity var(--ui-motion-feedback) var(--ui-ease),
+    translate var(--ui-motion-feedback) var(--ui-ease);
+}
+[data-motion="action-label"][aria-hidden="true"] {
+  opacity: 0;
+  translate: 0 calc(-1 * var(--ui-motion-nudge-distance));
+}
+[data-motion="action-label"][aria-hidden="false"] {
+  opacity: 1;
+  translate: 0 0;
+}
+[data-motion="theme-icon"] {
+  transition: opacity var(--ui-motion-component) var(--ui-ease),
+    rotate var(--ui-motion-surface) var(--ui-ease),
+    scale var(--ui-motion-surface) var(--ui-ease);
+}
+[data-motion="theme-icon"][data-active="false"] {
+  opacity: 0;
+  rotate: calc(-1 * var(--ui-motion-icon-angle));
+  scale: var(--ui-motion-selection-scale);
+}
+[data-motion="theme-icon"][data-active="true"] {
+  opacity: 1;
+  rotate: 0deg;
+  scale: 1;
+}

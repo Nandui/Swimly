@@ -2,6 +2,7 @@ import type { Metadata, Viewport } from "next";
 import { cookies } from "next/headers";
 import { ThemeProvider } from "@/components/theme-provider";
 import { ToastBridge } from "@/lib/toast";
+import { TooltipProvider } from "@/components/shadcn/tooltip";
 import { THEME_COOKIE, parseThemeMode } from "@/lib/theme-mode";
 import { APP_NAME } from "@/lib/app";
 // Keep the app's established typeface self-hosted in every environment.
@@ -14,6 +15,10 @@ import "./globals.css";
 export const metadata: Metadata = {
   title: { default: APP_NAME, template: `%s · ${APP_NAME}` },
   description: "The leisure centre's swim lessons and bookings, in one place.",
+  icons: {
+    icon: { url: "/brand/app-logo.png", type: "image/png" },
+    apple: { url: "/brand/app-logo.png", type: "image/png" },
+  },
 };
 
 /** `viewportFit: cover` lets the page run under the notch and the home
@@ -47,8 +52,10 @@ export default async function RootLayout({ children }: LayoutProps<"/">) {
     >
       <body>
         <ThemeProvider initialMode={mode}>
-          <ToastBridge />
-          {children}
+          <TooltipProvider>
+            <ToastBridge />
+            {children}
+          </TooltipProvider>
         </ThemeProvider>
       </body>
     </html>

@@ -2,7 +2,7 @@
 
 import bcrypt from "bcryptjs";
 import { z } from "zod";
-import { fail, ok, type ActionResult } from "@/lib/action-result";
+import { fail, ok, validationFailure, type ActionResult } from "@/lib/action-result";
 import { logAudit } from "@/lib/audit";
 import { requireSession } from "@/lib/authz";
 import { prisma } from "@/lib/prisma";
@@ -36,7 +36,7 @@ export async function changeOwnPassword(input: {
   const session = await requireSession();
 
   const parsed = schema.safeParse(input);
-  if (!parsed.success) return fail(parsed.error.issues[0].message);
+  if (!parsed.success) return validationFailure(parsed.error.issues);
   const { current, next } = parsed.data;
 
   const user = await prisma.user.findUnique({
@@ -52,10 +52,10 @@ export async function changeOwnPassword(input: {
     return fail("This account has no password yet. Ask an admin to set one for you.");
   }
   if (!(await bcrypt.compare(current, user.passwordHash))) {
-    return fail("That is not your current password.");
+    return fail("That is not your current password.", { current: "Enter your current password again." });
   }
   if (await bcrypt.compare(next, user.passwordHash)) {
-    return fail("That is the password you already have. Choose a different one.");
+    return fail("That is the password you already have. Choose a different one.", { next: "Choose a different password." });
   }
 
   const passwordHash = await bcrypt.hash(next, BCRYPT_ROUNDS);

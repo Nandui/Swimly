@@ -2,34 +2,38 @@
 
 import { useId, useState, useTransition, type ComponentProps } from "react";
 import { useRouter } from "next/navigation";
-import { ChevronDown, LoaderCircle, Plus } from "lucide-react";
+import { ChevronDown, Plus } from "lucide-react";
 import { Button } from "@/components/shadcn/button";
 import { Checkbox } from "@/components/shadcn/checkbox";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/shadcn/collapsible";
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from "@/components/shadcn/dialog";
 import { Alert, AlertDescription } from "@/components/shadcn/alert";
-import { Input } from "@/components/shadcn/input";
+import { Input } from "@/components/ui/input";
+import { LoadingButton } from "@/components/ui/loading-button";
+import { FormFeedbackProvider, useFormFeedback } from "@/components/ui/form-feedback";
 import { Label } from "@/components/shadcn/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/shadcn/select";
-import { Textarea } from "@/components/shadcn/textarea";
+import { Textarea } from "@/components/ui/textarea";
 import { createStudent, updateStudent } from "@/lib/students/actions/students";
 import type { StudentDetail } from "@/lib/students/data/students";
 import { toDateOnlyString } from "@/lib/format";
 import { readStudentInput } from "@/lib/students/form-input";
 import { swimmerProfileHref } from "@/lib/students/directory";
 import { toast } from "@/lib/toast";
+import { withTimeout } from "@/lib/save-feedback";
 
 export function AddSwimmer({ student }: { student?: StudentDetail } = {}) {
   const [open, setOpen] = useState(false);
   const [expanded, setExpanded] = useState(false);
-  const [error, setError] = useState("");
+  const { formRef, summaryRef, ...feedback } = useFormFeedback();
+  const error = feedback.message;
   const [pending, startTransition] = useTransition();
   const id = useId();
   const router = useRouter();
   function changeOpen(next: boolean) {
     if (pending) return;
     setOpen(next);
-    if (!next) { setError(""); setExpanded(false); }
+    if (!next) { feedback.reset(); setExpanded(false); }
   }
   return <Dialog open={open} onOpenChange={changeOpen}>
     <DialogTrigger asChild><Button variant={student ? "outline" : "default"}>{student ? "Edit details" : <><Plus aria-hidden="true" />Add swimmer</>}</Button></DialogTrigger>
@@ -38,20 +42,20 @@ export function AddSwimmer({ student }: { student?: StudentDetail } = {}) {
         <DialogTitle>{student ? "Edit swimmer details" : "Add a swimmer"}</DialogTitle>
         <DialogDescription>{student ? "Update their shared profile and contact details." : "Start with their name. You can complete the rest now or in their profile."}</DialogDescription>
       </DialogHeader>
-      <form className="flex min-h-0 flex-1 flex-col" onSubmit={(event) => {
+      <FormFeedbackProvider feedback={feedback}><form ref={formRef} aria-busy={pending} className="flex min-h-0 flex-1 flex-col" onSubmit={(event) => {
         event.preventDefault();
         if (pending) return;
         const input = readStudentInput(new FormData(event.currentTarget));
-        setError("");
+        feedback.reset();
         startTransition(async () => {
           try {
-            const result = student ? await updateStudent(student.id, input) : await createStudent(input);
-            if (!result.ok) { setError(result.error); return; }
+            const result = await withTimeout(student ? updateStudent(student.id, input) : createStudent(input));
+            if (!result.ok) { feedback.report(result); if (Object.keys(result.fieldErrors ?? {}).some(name => ["emergencyName", "emergencyPhone", "emergencyRelationship", "medicalNotes", "notes"].includes(name))) setExpanded(true); return; }
             setOpen(false); setExpanded(false);
             toast.success(student ? "Details saved" : "Swimmer added");
             if ("studentId" in result && typeof result.studentId === "string") router.push(swimmerProfileHref(result.studentId));
             router.refresh();
-          } catch { setError("Could not save the swimmer. Your details are still here — please try again."); }
+          } catch { feedback.report("Could not confirm the save. Check the swimmer directory before trying again. Your entries are still here."); }
         });
       }}>
         <div className="min-h-0 overflow-y-auto"><fieldset disabled={pending} className="min-w-0 space-y-6 p-6">
@@ -79,23 +83,22 @@ export function AddSwimmer({ student }: { student?: StudentDetail } = {}) {
                 <Entry label="Emergency phone" name="emergencyPhone" type="tel" maxLength={40} defaultValue={student?.emergencyPhone ?? ""} />
               </div>
               <Entry label="Relationship" name="emergencyRelationship" maxLength={60} defaultValue={student?.emergencyRelationship ?? ""} />
-              <div className="space-y-2"><Label htmlFor={`${id}-medical`}>Medical notes</Label><Textarea id={`${id}-medical`} name="medicalNotes" maxLength={2000} rows={3} defaultValue={student?.medicalNotes ?? ""} aria-describedby={`${id}-medical-hint`} /><p id={`${id}-medical-hint`} className="text-xs text-ui-muted-foreground">Shown as a flag on attendance, with details available to staff.</p></div>
-              <div className="space-y-2"><Label htmlFor={`${id}-notes`}>Other notes</Label><Textarea id={`${id}-notes`} name="notes" maxLength={2000} rows={2} defaultValue={student?.notes ?? ""} /></div>
+              <Textarea id={`${id}-medical`} label="Medical notes" name="medicalNotes" maxLength={2000} rows={3} defaultValue={student?.medicalNotes ?? ""} description="Shown as a flag on attendance, with details available to staff." />
+              <Textarea id={`${id}-notes`} label="Other notes" name="notes" maxLength={2000} rows={2} defaultValue={student?.notes ?? ""} />
               <Label className="min-h-11 gap-3" htmlFor={`${id}-consent`}><Checkbox id={`${id}-consent`} name="photoConsent" defaultChecked={student?.photoConsent} />Photo and video consent</Label>
             </CollapsibleContent>
           </Collapsible>
           <div className="space-y-2"><Label htmlFor={`${id}-status`}>Status</Label><Select name="status" defaultValue={student?.status ?? "ACTIVE"} disabled={pending}><SelectTrigger id={`${id}-status`} className="w-full"><SelectValue /></SelectTrigger><SelectContent><SelectItem value="ACTIVE">Active</SelectItem><SelectItem value="INACTIVE">Inactive</SelectItem></SelectContent></Select></div>
         </fieldset></div>
         <div className="shrink-0 space-y-3 border-t border-ui-border p-4 sm:px-6">
-          {error ? <Alert variant="destructive" role="alert"><AlertDescription>{error}</AlertDescription></Alert> : null}
-          <DialogFooter><Button type="button" variant="outline" onClick={() => changeOpen(false)} disabled={pending}>Cancel</Button><Button type="submit" disabled={pending}>{pending ? <LoaderCircle className="animate-spin" aria-hidden="true" /> : null}{pending ? "Saving…" : student ? "Save details" : "Add and open profile"}</Button></DialogFooter>
+          {error ? <Alert ref={summaryRef} tabIndex={-1} variant="destructive" role="alert"><AlertDescription>{error}</AlertDescription></Alert> : null}
+          <DialogFooter><Button type="button" variant="outline" onClick={() => changeOpen(false)} disabled={pending}>Cancel</Button><LoadingButton type="submit" pending={pending}>{student ? "Save details" : "Add and open profile"}</LoadingButton></DialogFooter>
         </div>
-      </form>
+      </form></FormFeedbackProvider>
     </DialogContent>
   </Dialog>;
 }
 
 function Entry({ label, ...props }: ComponentProps<typeof Input> & { label: string }) {
-  const id = useId();
-  return <div className="min-w-0 space-y-2"><Label htmlFor={id}>{label}{props.required ? <span className="text-ui-muted-foreground">(required)</span> : null}</Label><Input {...props} id={id} /></div>;
+  return <Input {...props} label={label} />;
 }

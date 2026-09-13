@@ -1,6 +1,7 @@
 "use client";
 import { Notice } from "@/components/ui-kit/notice";
-import { Button } from "@/components/shadcn/button";
+import { LoadingButton } from "@/components/ui/loading-button";
+import { FormFeedbackProvider, useFormFeedback } from "@/components/ui/form-feedback";
 
 import * as React from "react";
 import { toast } from "@/lib/toast";
@@ -18,8 +19,8 @@ import { MIN_PASSWORD_LENGTH } from "@/lib/staff/constants";
  *  password that is now the live one, and there is no reason for it to sit in
  *  the DOM afterwards. */
 export function ChangePasswordForm() {
-  const formRef = React.useRef<HTMLFormElement>(null);
-  const [error, setError] = React.useState<string | null>(null);
+  const { formRef, summaryRef, ...feedback } = useFormFeedback();
+  const error = feedback.message;
   const [pending, startTransition] = React.useTransition();
   const submitting = React.useRef(false);
 
@@ -27,7 +28,7 @@ export function ChangePasswordForm() {
     event.preventDefault();
     if (submitting.current) return;
     submitting.current = true;
-    setError(null);
+    feedback.reset();
     const formData = new FormData(event.currentTarget);
 
     startTransition(async () => {
@@ -41,12 +42,12 @@ export function ChangePasswordForm() {
         if (result.ok) {
           toast.success("Password changed");
           formRef.current?.reset();
-          startTransition(() => setError(null));
+          startTransition(() => feedback.reset());
         } else {
-          startTransition(() => setError(result.error));
+          startTransition(() => feedback.report(result));
         }
       } catch {
-        setError(
+        feedback.report(
           "We could not confirm the password change. Try signing in with the new password before changing it again.",
         );
       } finally {
@@ -56,7 +57,7 @@ export function ChangePasswordForm() {
   }
 
   return (
-    <form ref={formRef} onSubmit={handleSubmit} className="max-w-sm">
+    <FormFeedbackProvider feedback={feedback}><form ref={formRef} aria-busy={pending} onSubmit={handleSubmit} className="max-w-sm">
       <div className="min-w-0 flex flex-col gap-4">
         <Field label="Current password" htmlFor="current">
           <Input
@@ -94,19 +95,19 @@ export function ChangePasswordForm() {
           />
         </Field>
 
-        {error ? <Notice title={error} tone="error"></Notice> : null}
+        {error ? <div ref={summaryRef} tabIndex={-1}><Notice title={error} tone="error" /></div> : null}
 
         <div className="min-w-0 flex gap-2 items-center">
-          <Button
+          <LoadingButton
             type="submit"
             variant="default"
-            disabled={pending}
+            pending={pending}
             aria-busy={pending}
           >
-            {pending ? "Saving…" : "Change password"}
-          </Button>
+            Change password
+          </LoadingButton>
         </div>
       </div>
-    </form>
+    </form></FormFeedbackProvider>
   );
 }

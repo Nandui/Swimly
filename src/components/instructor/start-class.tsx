@@ -2,8 +2,9 @@
 
 import { useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
-import { Loader2, Play } from "lucide-react";
+import { Play } from "lucide-react";
 import { Button } from "@/components/shadcn/button";
+import { LoadingButton } from "@/components/ui/loading-button";
 import {
   Dialog,
   DialogContent,
@@ -101,14 +102,9 @@ export function StartClass({
           >
             Cancel
           </Button>
-          <Button className="min-h-11" disabled={pending} onClick={confirm}>
-            {pending ? (
-              <Loader2 className="animate-spin" aria-hidden="true" />
-            ) : (
-              <Play aria-hidden="true" />
-            )}
-            {pending ? "Starting…" : "Confirm and start"}
-          </Button>
+          <LoadingButton className="min-h-11" pending={pending} pendingLabel="Starting…" onClick={confirm}>
+            <Play aria-hidden="true" />Confirm and start
+          </LoadingButton>
         </DialogFooter>
       </DialogContent>
     </Dialog>

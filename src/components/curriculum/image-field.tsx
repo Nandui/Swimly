@@ -44,7 +44,7 @@ export function ImageField({
         name="image"
         type="file"
         accept={IMAGE_ACCEPT}
-        aria-describedby={`${id}-hint`}
+        aria-describedby={[`${id}-hint`, error ? `${id}-error` : null].filter(Boolean).join(" ")}
         aria-invalid={!!error}
         onChange={(event) => {
           const file = event.target.files?.[0];
@@ -67,7 +67,7 @@ export function ImageField({
         JPG, PNG or WebP, up to 2 MB. Saved with the programme or level.
       </p>
       {error ? (
-        <p role="alert" className="text-sm text-ui-destructive">
+        <p id={`${id}-error`} role="alert" className="text-sm text-ui-destructive">
           {error}
         </p>
       ) : null}

@@ -30,7 +30,8 @@
   border-radius: 0;
   color: var(--ui-foreground);
 }
-.row:hover {
+.row:hover,
+.row:focus-visible {
   background: var(--ui-muted);
 }
 .listItem:last-child .row {

@@ -3,7 +3,7 @@
 import { useEffect, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import { RefreshCw } from "lucide-react";
-import { Button } from "@/components/shadcn/button";
+import { LoadingButton } from "@/components/ui/loading-button";
 
 /** Only mounted on the list: keep Now/Next and cover current without
  * refreshing attendance or competency forms that hold unsaved work. */
@@ -22,16 +22,16 @@ export function RefreshClasses() {
     };
   }, [router]);
   return (
-    <Button
+    <LoadingButton
       variant="outline"
-      disabled={pending}
+      pending={pending}
+      pendingLabel="Refreshing…"
       onClick={() => startTransition(() => router.refresh())}
     >
       <RefreshCw
         aria-hidden="true"
-        className={pending ? "animate-spin" : undefined}
       />
-      {pending ? "Refreshing…" : "Refresh classes"}
-    </Button>
+      Refresh classes
+    </LoadingButton>
   );
 }

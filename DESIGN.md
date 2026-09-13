@@ -19,7 +19,9 @@ light/dark/system appearance preference. Components live in
 - One H1 per page, 24px and semibold. Body text is 14px, supporting metadata
   12px, and section headings 20px. Preserve the existing Figtree weights.
 - Default gaps are 16px within groups and 24px between major sections.
-  The shell owns a single 16px content inset. Do not add another page frame.
+  The shell owns a single content inset: 16px, increasing to 24px at viewport
+  widths of 1024px and above in the desk workspace. Instructor keeps 16px.
+  Do not add another page frame.
 - Preserve labelled controls, visible focus, 44px touch targets, readable
   contrast, keyboard operation, reduced motion and wrapping at narrow widths.
 - Every mutation authorizes by a named permission, validates and guards before
@@ -32,14 +34,53 @@ tokens. Its font and type scale have no external theme dependency. CSS Modules
 use Tailwind's 4px `--spacing` scale for geometry. Each status tone has explicit
 light/dark foreground and background tokens.
 
+Inputs and textareas retain their shadcn focus ring without a second global
+outline. Command searches mark focus with a two-pixel Neutral line along the
+whole search row, keeping the inner input inside the row's bounds. Forced-colour
+mode uses a system-colour outline so focus remains visible without shadows.
+
 The root layout reads `swimly.theme` and sets `data-theme` before first paint.
 The appearance provider updates that attribute and cookie. With no explicit
 mode, CSS `color-scheme: light dark` follows the device. The account RadioGroup
-offers System, Light and Dark; the toolbar button flips the resolved mode.
+offers System, Light and Dark; the appearance button flips the resolved mode.
 Sonner notifications share these tokens; errors remain until dismissed.
 
+The [interaction system](docs/interaction-system.md) records the screen audit
+and shared feedback contract. `motion.css` defines 120ms feedback, 180ms
+component and 240ms surface timings with explicit transition properties.
+`LoadingButton` reserves both labels to prevent layout shifts; `IconButton`
+adds keyboard-accessible guidance. Form feedback associates server errors with
+fields, focuses the first failed field after submission and preserves typing
+focus during correction. Keep essential instructions visible and operational
+pages, rows and static cards stationary.
+Microinteractions move only control contents: selection marks settle, loading
+labels crossfade, destination chevrons nudge and appearance icons transition.
+Buttons have a small press response. Reduced motion removes those movements
+while preserving immediate state feedback; do not introduce page-entry motion.
+
+The supplied app logo lives at `public/brand/app-logo.png`. `AppLogo` renders it
+through Next Image in the desk navigation, sign-in and pool-deck home control;
+the same asset supplies browser and touch icons. Preserve its transparency and
+colours in both themes, with accessible names supplied by adjacent text or links.
+
 The desk workspace uses shadcn Sidebar, Sheet, DropdownMenu and Command/Dialog.
-It owns the main landmark, skip link, fixed toolbar, scroll reset, collapse
+Its inset Sidebar places navigation on the Neutral workspace canvas and wraps
+the page in one rounded, subtly elevated surface, with an 8px outer gutter on
+tablet and desktop. Desktop pages start directly with their content: collapse,
+site switching and swimmer search live in the sidebar header; appearance and
+account controls live in its footer. The collapsed rail keeps icon controls
+with accessible names. Sidebar controls and links share aligned 12px side
+insets and 44px rows; site/search controls are grouped with an 8px gap above a
+separator. Navigation sections have 24px separation, Setup children are
+indented, and the navigation region scrolls independently even in the icon rail.
+Sidebar hover/focus uses its own Neutral token so it remains visible against
+the inset canvas. Navigation icons nudge without moving labels; the current
+page retains a distinct surface and border in expanded and collapsed modes.
+Content uses a 16px inset, increasing to 24px from 1024px.
+Phones use a full-width surface, a compact navigation/site/appearance strip,
+and Sheet navigation containing swimmer search. Canvas and surface tokens adapt
+to both themes; this framing is scoped to the desk workspace.
+It owns the main landmark, skip link, mobile navigation strip, scroll reset, collapse
 preference and mobile navigation. Data pages, including swimmer profiles, fill
 the available width. Account caps at 768px, Together at 960px, and programme
 details at 1152px. Instructor remains a separate workspace, described below.
@@ -55,7 +96,10 @@ and instructor filtering. Assessment links require the Assessments screen.
 Swimmers is a shared directory across sites, with surname sorting, stable
 pagination, member number and age for disambiguation. Search matches names,
 member numbers and contacts. All/Active/Inactive filters and profile return
-links retain validated URL state. Global search is hidden on this directory.
+links retain validated URL state. Sidebar swimmer search stays available here
+as on every desk page for users with access to Swimmers.
+Its header is separated from search by 24px; search, filters and results use
+16px gaps. Classes also uses 24px between its major page sections.
 
 The swimmer profile shows enrolment chapters, attendance, assessments and
 individual competency history. The current-state rail stacks on narrow screens.
@@ -485,8 +529,9 @@ See [docs/instructor.md](docs/instructor.md) for the flow and verification.
 - No undefined theme variables or colours outside the app tokens.
 - Text contrast at least 4.5:1 and control edges at least 3:1.
 - Visible keyboard focus, working skip link, reduced motion, labelled controls.
-- 375, 768, 1024 and 1280 in light and dark: no page overflow, 16px page insets,
-  reachable navigation and 44px touch targets. Secondary columns wrap or collapse.
+- 375, 768, 1024 and 1280 in light and dark: no page overflow, 16px page insets
+  increasing to 24px from 1024px for desk pages, reachable navigation and 44px
+  touch targets. Secondary columns wrap or collapse.
 - Dialogs trap/restore focus, preserve values on failure and prevent duplicate
   submissions. Native FormData, required fields and reset still work.
 - Instructor stays isolated; permissions, audit, claims and capacity guards hold.

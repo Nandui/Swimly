@@ -1,7 +1,8 @@
 "use client";
 import { useState, useTransition } from "react";
-import { Check, Loader2 } from "lucide-react";
+import { Check } from "lucide-react";
 import { Button } from "@/components/shadcn/button";
+import { LoadingButton } from "@/components/ui/loading-button";
 import {
   Dialog,
   DialogContent,
@@ -82,9 +83,9 @@ export function CompleteLevel({
           >
             Cancel
           </Button>
-          <Button
+          <LoadingButton
             className="min-h-11"
-            disabled={pending}
+            pending={pending}
             onClick={() =>
               startTransition(async () => {
                 try {
@@ -110,13 +111,9 @@ export function CompleteLevel({
               })
             }
           >
-            {pending ? (
-              <Loader2 className="animate-spin" aria-hidden="true" />
-            ) : (
-              <Check aria-hidden="true" />
-            )}
+            <Check aria-hidden="true" />
             Confirm completion
-          </Button>
+          </LoadingButton>
         </DialogFooter>
       </DialogContent>
     </Dialog>

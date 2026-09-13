@@ -11,6 +11,7 @@ import {
   SelectValue,
 } from "@/components/shadcn/select";
 import { FieldFrame } from "./field-frame";
+import { useFieldFeedback } from "./form-feedback";
 
 export type SelectOption = {
   value: string;
@@ -53,6 +54,7 @@ export function Select({
     id = suppliedId ?? generatedId;
   const [inner, setInner] = React.useState(defaultValue ?? "");
   const [invalid, setInvalid] = React.useState(false);
+  const feedback = useFieldFeedback(name);
   const trigger = React.useRef<HTMLButtonElement>(null);
   const controlled = value !== undefined,
     current = controlled ? value : inner;
@@ -92,6 +94,8 @@ export function Select({
       label={label}
       description={description}
       className={className}
+      error={feedback.error}
+      required={required}
     >
       <input
         ref={input}
@@ -115,6 +119,7 @@ export function Select({
             const selected = next === EMPTY ? "" : next;
             if (!controlled) setInner(selected);
             setInvalid(false);
+            feedback.clear();
             onValueChange?.(selected);
           }}
         >
@@ -123,11 +128,11 @@ export function Select({
             id={id}
             className="w-full"
             aria-label={label ?? placeholder ?? name ?? "Choice"}
-            aria-invalid={invalid || undefined}
+            aria-invalid={invalid || !!feedback.error || undefined}
             aria-describedby={
               [
                 description ? `${id}-hint` : null,
-                invalid ? `${id}-error` : null,
+                invalid || feedback.error ? `${id}-error` : null,
               ]
                 .filter(Boolean)
                 .join(" ") || undefined
@@ -148,7 +153,7 @@ export function Select({
             )}
           </SelectContent>
         </ShadcnSelect>
-        {invalid ? (
+        {invalid && !feedback.error ? (
           <p
             id={`${id}-error`}
             role="alert"

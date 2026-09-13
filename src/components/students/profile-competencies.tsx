@@ -2,13 +2,14 @@
 
 import { useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
-import { ChevronDown, LoaderCircle } from "lucide-react";
+import { ChevronDown } from "lucide-react";
+import { LoadingButton } from "@/components/ui/loading-button";
 import { Button } from "@/components/shadcn/button";
 import { Badge } from "@/components/shadcn/badge";
 import { Alert, AlertDescription } from "@/components/shadcn/alert";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/shadcn/collapsible";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/shadcn/select";
-import { Textarea } from "@/components/shadcn/textarea";
+import { Textarea } from "@/components/ui/textarea";
 import { confirmLevelCompletion, revokeLevelCompletion, saveAssessment } from "@/lib/progression/actions/assess";
 import type { LevelProgress, ProgrammeProgress } from "@/lib/progression/data/progress";
 import { COMPETENCY_STATUS_META } from "@/lib/progression/constants";
@@ -55,6 +56,6 @@ function ProfileMarks({ studentId, level, editable }: { studentId: string; level
     <div className="flex flex-wrap items-center gap-2">{editable && !c.archived ? <Select value={marks[c.id] ?? "unmarked"} disabled={pending} onValueChange={value => setEdits(old => ({ ...old, [c.id]: value === "unmarked" ? null : value as "ACHIEVED" | "WORKING_ON" }))}><SelectTrigger aria-label={`Mark for ${c.name}`} className="min-w-40"><SelectValue /></SelectTrigger><SelectContent><SelectItem value="unmarked">Not marked</SelectItem><SelectItem value="WORKING_ON">Not Achieved</SelectItem><SelectItem value="ACHIEVED">Achieved</SelectItem></SelectContent></Select> : <Badge variant="secondary" data-tone={c.status ? COMPETENCY_STATUS_META[c.status].color : HISTORY_META.profile.color}>{c.status ? COMPETENCY_STATUS_META[c.status].label : "Not marked"}</Badge>}<CompetencyHistory studentId={studentId} id={c.id} name={c.name} /></div>
   </li>)}</ul>
     {error ? <Alert variant="destructive"><AlertDescription>{error}</AlertDescription></Alert> : null}
-    {editable ? <div className="flex items-center gap-3"><Button disabled={pending || !dirty} onClick={() => startTransition(async () => { setError(""); try { const result = await saveAssessment({ studentId, levelId: level.id, results: level.competencies.filter(c => c.status !== marks[c.id]).map(c => ({ competencyId: c.id, status: marks[c.id] })) }); if (!result.ok) { setError(result.error); return; } setEdits({}); toast.success("Competency marks saved"); router.refresh(); } catch { setError("Could not confirm the save. Your marks are still here; please try again."); } })}>{pending ? <LoaderCircle className="animate-spin" aria-hidden="true" /> : null}Save marks</Button>{dirty ? <span className="text-sm text-ui-muted-foreground">Unsaved changes</span> : null}</div> : null}
+    {editable ? <div className="flex items-center gap-3"><LoadingButton pending={pending} disabled={!dirty} aria-describedby={`marks-hint-${level.id}`} onClick={() => startTransition(async () => { setError(""); try { const result = await saveAssessment({ studentId, levelId: level.id, results: level.competencies.filter(c => c.status !== marks[c.id]).map(c => ({ competencyId: c.id, status: marks[c.id] })) }); if (!result.ok) { setError(result.error); return; } setEdits({}); toast.success("Competency marks saved"); router.refresh(); } catch { setError("Could not confirm the save. Check the swimmer’s history before trying again. Your marks are still here."); } })}>Save marks</LoadingButton><span id={`marks-hint-${level.id}`} className="text-sm text-ui-muted-foreground" role="status">{pending ? "Saving your marks…" : dirty ? "Unsaved changes" : "Change a mark to enable saving."}</span></div> : null}
   </div>;
 }

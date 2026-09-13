@@ -72,14 +72,16 @@ function CombinationPages({
           <Button
             onClick={() => setCursors((previous) => previous.slice(0, -1))}
             disabled={cursors.length === 1}
+            aria-label={`Previous combinations for ${heading}`}
           >
-            {`Previous combinations for ${heading}`}Previous
+            Previous
           </Button>
           <Button
             onClick={() => setCursors((previous) => [...previous, page.next])}
             disabled={!page.next}
+            aria-label={`Next combinations for ${heading}`}
           >
-            {`Next combinations for ${heading}`}Next combinations
+            Next combinations
           </Button>
         </div>
       ) : null}

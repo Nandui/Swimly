@@ -29,8 +29,8 @@ export function SwimmerBrowser({ students, total, page, pageSize, counts, q, sta
   const returnTo = swimmerDirectoryHref({ q, status, page });
   const countFor = (key: SwimmerStatusFilter) => key === "ALL" ? counts.all : key === "ACTIVE" ? counts.active : counts.inactive;
   return (
-    <section className="min-w-0 space-y-6 text-ui-foreground" aria-labelledby="swimmers-heading" data-swimmer-browser>
-      <header className="space-y-2">
+    <section className="flex min-w-0 flex-col gap-4 text-ui-foreground" aria-labelledby="swimmers-heading" data-swimmer-browser>
+      <header className="mb-2 space-y-2">
         <div className="flex items-center justify-between gap-3">
           <h1 id="swimmers-heading" className="text-2xl font-semibold tracking-tight">Swimmers</h1>
           {addAction}

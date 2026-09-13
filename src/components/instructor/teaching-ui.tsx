@@ -34,10 +34,11 @@ export function MarkChoices({
           value={option.value}
           className="flex aspect-auto h-11 w-auto min-w-0 flex-1 items-center justify-center gap-1.5 rounded-ui-md border-transparent px-3 text-sm text-ui-muted-foreground shadow-none data-[state=checked]:border-ui-input data-[state=checked]:bg-ui-background data-[state=checked]:font-semibold data-[state=checked]:text-ui-foreground sm:flex-none"
         >
-          {value === option.value ? (
-            <Check className="size-4 shrink-0" aria-hidden="true" />
-          ) : null}
-          {option.label}
+          <span className="size-4 shrink-0" data-motion="selection" data-state={value === option.value ? "checked" : "unchecked"} aria-hidden="true"><Check className="size-full" /></span>
+          <span className="grid">
+            <span className="invisible col-start-1 row-start-1 font-semibold" aria-hidden="true">{option.label}</span>
+            <span className="col-start-1 row-start-1">{option.label}</span>
+          </span>
         </RadioGroupItem>
       ))}
     </RadioGroup>

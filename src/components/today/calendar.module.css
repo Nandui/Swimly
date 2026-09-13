@@ -33,8 +33,8 @@
 .calendar tbody td[data-empty=true] { vertical-align:middle; text-align:center; color:var(--ui-muted-foreground); }
 .calendar tbody td[data-empty=true] span { user-select:none; }
 .calendar .booking-list { display:flex; flex-direction:column; gap:.375rem; list-style:none; margin:0; padding:0; }
-.calendar .booking { align-items:stretch; flex-wrap:nowrap; position:relative; display:flex; flex-direction:column; gap:0; min-width:0; padding:.5rem .625rem; background:var(--ui-card); border:1px solid var(--ui-border); border-radius:var(--radius-ui-md); text-decoration:none; color:var(--ui-foreground); line-height:1.3; transition:border-color .15s,box-shadow .15s; }
-.calendar a.booking:hover { border-color:var(--ui-input); box-shadow:0 2px 6px color-mix(in srgb,var(--ui-foreground) 9%,transparent); }
+.calendar .booking { align-items:stretch; flex-wrap:nowrap; position:relative; display:flex; flex-direction:column; gap:0; min-width:0; padding:.5rem .625rem; background:var(--ui-card); border:1px solid var(--ui-border); border-radius:var(--radius-ui-md); text-decoration:none; color:var(--ui-foreground); line-height:1.3; transition:border-color var(--ui-motion-feedback) var(--ui-ease),box-shadow var(--ui-motion-feedback) var(--ui-ease); }
+.calendar a.booking:hover, .calendar a.booking:focus-visible { border-color:var(--ui-input); box-shadow:0 2px 6px color-mix(in srgb,var(--ui-foreground) 9%,transparent); }
 .calendar .booking[data-phase=running] { border-inline-start:3px solid var(--ui-foreground); padding-inline-start:calc(.625rem - 2px); }
 .calendar .booking-title { display:flex; align-items:start; justify-content:space-between; gap:.25rem; font-weight:600; min-width:0; }
 .calendar .booking-title > span:first-child { overflow-wrap:anywhere; }

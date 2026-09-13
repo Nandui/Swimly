@@ -37,8 +37,8 @@ export function AppChrome({ screens, club, clubs, ...rest }: Props) {
       wordmark={APP_NAME}
       groups={visibleNavGroups(screens)}
       contentMaxWidth={pageWidthFor(pathname)}
-      switcher={<ClubSwitcher club={club} clubs={clubs} />}
-      search={canFindSwimmer && pathname !== "/students" ? (
+      switcher={<ClubSwitcher club={club} clubs={clubs} sidebar />}
+      search={canFindSwimmer ? (
         <WorkspaceSearch
           key={`${club.id}:${pathname}`}
           onSelect={hit => {

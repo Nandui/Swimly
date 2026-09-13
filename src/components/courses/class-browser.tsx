@@ -37,7 +37,7 @@ export function ClassBrowser({ courses, params, todayDay, levels, instructors, c
   const selected = state === "archived" ? "archived" : filters.places === "open" || filters.places === "full" ? filters.places : "all";
   const pages = Math.max(1, Math.ceil(matches.length / CLASS_PAGE_SIZE));
   const resetHref = state === "archived" ? "/courses?state=archived" : "/courses";
-  return <section className="min-w-0 space-y-5 text-ui-foreground" aria-labelledby="classes-heading" data-class-browser>
+  return <section className="min-w-0 space-y-6 text-ui-foreground" aria-labelledby="classes-heading" data-class-browser>
     <header className="space-y-2">
       <div className="flex items-center justify-between gap-3"><h1 id="classes-heading" className="text-2xl font-semibold tracking-tight">Classes</h1>{canManage ? <AddClass levels={levels} instructors={instructors} workingSite={workingSite} /> : null}</div>
       <p className="text-sm text-ui-muted-foreground">Find a weekly class across all sites and see where there’s room.</p>
@@ -49,7 +49,7 @@ export function ClassBrowser({ courses, params, todayDay, levels, instructors, c
       {rows.length ? <div className={styles.directory}>
         <div className={styles.columns} aria-hidden="true"><span>Class</span><span>Weekly schedule</span><span className={styles.site}>Site &amp; pool</span><span className={styles.instructor}>Instructor</span><span>Availability</span><span /></div>
         <ItemGroup aria-label="Weekly classes">{rows.map(course => <div key={course.id} role="listitem" className={styles.listItem}>
-          <Item asChild className={styles.row}><Link href={classDetailsHref(course.id, returnTo)} prefetch={false}>
+          <Item asChild className={styles.row}><Link href={classDetailsHref(course.id, returnTo)} prefetch={false} data-motion="link">
             <ItemContent className={styles.identity}>
               <ItemTitle className={styles.name}>{courseName(course)}</ItemTitle>
               <p className={styles.secondary}>{course.level.programme.name}{course.name && course.name !== course.level.name ? ` · ${course.level.name}` : ""}</p>
@@ -59,7 +59,7 @@ export function ClassBrowser({ courses, params, todayDay, levels, instructors, c
             <div className={styles.site}><p>{course.club.name}</p><p className={styles.secondary}>{course.location || "Pool area not recorded"}</p></div>
             <div className={styles.instructor}>{course.instructor?.name ?? "Not assigned"}</div>
             <div className={styles.availability}><ClassAvailability course={course} /></div>
-            <ChevronRight className={styles.arrow} aria-hidden="true" /><span className="sr-only">View class</span>
+            <span className={styles.arrow} data-motion="direction" aria-hidden="true"><ChevronRight className="size-full" /></span><span className="sr-only">View class</span>
           </Link></Item>
         </div>)}</ItemGroup>
       </div> : <Empty className="border border-ui-border bg-ui-muted/30 py-12">

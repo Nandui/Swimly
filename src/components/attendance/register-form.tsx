@@ -7,9 +7,9 @@ import {
   Check,
   ChevronDown,
   HeartPulse,
-  Loader2,
 } from "lucide-react";
 import { Button } from "@/components/shadcn/button";
+import { LoadingButton } from "@/components/ui/loading-button";
 import { Item, ItemGroup, ItemContent } from "@/components/shadcn/item";
 import {
   Collapsible,
@@ -408,25 +408,20 @@ function RegisterFormState({
                   : "Ready to save"
           }
         >
-          <Button
+          <LoadingButton
             className="min-h-11"
-            disabled={pending || !!conflict}
+            pending={pending}
+            disabled={!!conflict}
             onClick={() => save()}
           >
-            {pending ? (
-              <Loader2 className="animate-spin" aria-hidden="true" />
-            ) : (
-              <Check aria-hidden="true" />
-            )}
-            {pending
-              ? "Saving…"
-              : continueHref
+            <Check aria-hidden="true" />
+            {continueHref
                 ? "Save and continue"
                 : "Save attendance"}
-            {continueHref && !pending ? (
+            {continueHref ? (
               <ArrowRight aria-hidden="true" />
             ) : null}
-          </Button>
+          </LoadingButton>
         </SaveBar>
       ) : null}
     </div>

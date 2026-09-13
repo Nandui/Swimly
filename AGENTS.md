@@ -63,7 +63,8 @@ The core rules: ask for a named permission, never a role; every mutation
 writes an audit row; status tones come through metadata maps; and run the
 screen checklist in DESIGN.md before finishing. Preserve one H1, visible
 focus, 44px touch targets, both modes and layouts at 375, 768, 1024 and 1280.
-The shell owns the main landmark and 16px inset; do not nest a page frame.
+The shell owns the main landmark and page inset: 16px, increasing to 24px at
+1024px in the desk workspace. Instructor keeps 16px. Do not nest a page frame.
 
 Prisma here is v7: the client is generated into `src/generated/prisma` and
 needs a driver adapter (`@prisma/adapter-pg`), and the datasource URL lives in

@@ -2,7 +2,7 @@
 
 import { revalidatePath } from "next/cache";
 import { z } from "zod";
-import { fail, ok, onUniqueViolation, type ActionResult } from "@/lib/action-result";
+import { fail, ok, onUniqueViolation, validationFailure, type ActionResult } from "@/lib/action-result";
 import { logAudit } from "@/lib/audit";
 import { requirePermission } from "@/lib/authz";
 import { currentClubId } from "@/lib/clubs/current";
@@ -68,7 +68,7 @@ export async function createStudent(input: StudentInput): Promise<CreateStudentR
   const session = await requirePermission("students.manage");
 
   const parsed = studentSchema.safeParse(input);
-  if (!parsed.success) return fail(parsed.error.issues[0].message);
+  if (!parsed.success) return validationFailure(parsed.error.issues);
   const data = toData(parsed.data);
   // Remember where the swimmer was first registered; it does not limit access.
   const clubId = await currentClubId();
@@ -95,7 +95,8 @@ export async function createStudent(input: StudentInput): Promise<CreateStudentR
       }, tx);
       return { ok: true as const, studentId: student.id };
     }),
-    `Member number ${data.memberNumber} already belongs to another swimmer.`
+    `Member number ${data.memberNumber} already belongs to another swimmer.`,
+    "memberNumber",
   );
   if (!result.ok) return result;
   revalidatePath("/students");
@@ -106,7 +107,7 @@ export async function updateStudent(id: string, input: StudentInput): Promise<Ac
   const session = await requirePermission("students.manage");
 
   const parsed = studentSchema.safeParse(input);
-  if (!parsed.success) return fail(parsed.error.issues[0].message);
+  if (!parsed.success) return validationFailure(parsed.error.issues);
   const data = toData(parsed.data);
 
   const result = await onUniqueViolation(() => prisma.$transaction(async (tx) => {
@@ -179,7 +180,7 @@ export async function updateStudent(id: string, input: StudentInput): Promise<Ac
       }, tx);
     }
     return ok();
-  }), `Member number ${data.memberNumber} already belongs to another swimmer.`);
+  }), `Member number ${data.memberNumber} already belongs to another swimmer.`, "memberNumber");
   if (!result.ok) return result;
   revalidatePath("/students");
   revalidatePath("/students/[id]", "page");

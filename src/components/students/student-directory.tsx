@@ -20,7 +20,7 @@ export function StudentDirectory({ students, returnTo = "/students" }: { student
           return (
             <div key={student.id} role="listitem" className={styles.listItem}>
               <Item asChild className={styles.row}>
-                <Link href={swimmerProfileHref(student.id, returnTo)} prefetch={false}>
+                <Link href={swimmerProfileHref(student.id, returnTo)} prefetch={false} data-motion="link">
                   <ItemContent className={styles.person}>
                     <ItemTitle className={styles.name}>{fullName(student)}</ItemTitle>
                     <p className={styles.secondary}>
@@ -44,7 +44,7 @@ export function StudentDirectory({ students, returnTo = "/students" }: { student
                     {student.contactPhone ? <p className="text-ui-muted-foreground tabular-nums">{student.contactPhone}</p> : null}
                   </div>
                   <div className={styles.status}><Badge variant="secondary" data-tone={status.color}>{status.label}</Badge></div>
-                  <ChevronRight className={styles.arrow} aria-hidden="true" />
+                  <span className={styles.arrow} data-motion="direction" aria-hidden="true"><ChevronRight className="size-full" /></span>
                   <span className="sr-only">Open profile</span>
                 </Link>
               </Item>

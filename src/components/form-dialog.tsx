@@ -2,6 +2,8 @@
 
 import * as React from "react";
 import { Button } from "@/components/shadcn/button";
+import { LoadingButton } from "@/components/ui/loading-button";
+import { FormFeedbackProvider, useFormFeedback } from "@/components/ui/form-feedback";
 import {
   Dialog,
   DialogContent,
@@ -25,6 +27,7 @@ import { Select } from "@/components/ui/select";
 import { Switch } from "@/components/ui/switch";
 import { Textarea } from "@/components/ui/textarea";
 import { SearchablePicker } from "@/components/searchable-picker";
+import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/shadcn/tooltip";
 import { StudentPicker } from "@/components/students/student-search";
 
 /** Every form dialog in the app, so the failure behaviour is written once.
@@ -69,8 +72,9 @@ export function FormDialog({
 }) {
   const [open, setOpen] = React.useState(false);
   const rememberTrigger = useDialogTriggerFocus(open);
-  const [error, setError] = React.useState<string | null>(null);
-  const errorMessage = React.useRef<HTMLDivElement>(null);
+  const { formRef, summaryRef, ...feedback } = useFormFeedback();
+  const error = feedback.message;
+  const setError = (message: string | null) => message ? feedback.report(message) : feedback.reset();
   const [pending, startTransition] = React.useTransition();
   const submitting = React.useRef(false);
   const [confirmation, setConfirmation] = React.useState<{
@@ -81,9 +85,6 @@ export function FormDialog({
   React.useEffect(() => {
     if (confirmation) confirmationHeading.current?.focus();
   }, [confirmation]);
-  React.useEffect(() => {
-    if (error) errorMessage.current?.focus();
-  }, [error]);
 
   function openForm(triggerElement?: HTMLElement) {
     // Mount fresh controls when opened. Failed saves leave the dialog mounted
@@ -133,7 +134,8 @@ export function FormDialog({
                 ? { prompt: result.confirmation, data: formData }
                 : null,
             );
-            setError(result.confirmation ? null : result.error);
+            if (result.confirmation) feedback.reset();
+            else feedback.report(result);
           });
         }
       } catch {
@@ -163,7 +165,8 @@ export function FormDialog({
             )}
             showCloseButton={!pending}
           >
-            <form
+            <FormFeedbackProvider feedback={feedback}><form
+              ref={formRef}
               onSubmit={handleSubmit}
               aria-busy={pending}
               className={styles.form}
@@ -192,12 +195,12 @@ export function FormDialog({
               </div>
 
               <div className={styles.body}>
-                <div hidden={!!confirmation}>
+                <fieldset hidden={!!confirmation} disabled={pending || !!confirmation} className="min-w-0">
                   <div className="flex flex-col gap-4">{children}</div>
-                </div>
+                </fieldset>
 
                 {error ? (
-                  <div ref={errorMessage} tabIndex={-1}>
+                  <div ref={summaryRef} tabIndex={-1}>
                     <Notice tone="error" title={error} />
                   </div>
                 ) : null}
@@ -230,12 +233,11 @@ export function FormDialog({
                     </Button>
                   ))
                 ) : (
-                  <Button type="submit" disabled={pending}>
-                    {pending ? "Saving…" : submitLabel}
-                  </Button>
+                  <LoadingButton type="submit" pending={pending}>{submitLabel}</LoadingButton>
                 )}
+                {confirmation && pending ? <span role="status" className="text-sm text-ui-muted-foreground">Saving change…</span> : null}
               </div>
-            </form>
+            </form></FormFeedbackProvider>
           </DialogContent>
         </Dialog>
       ) : null}
@@ -273,9 +275,9 @@ export function Trigger({
   children: React.ReactNode;
   onOpen: (element?: HTMLElement) => void;
 }) {
-  if (React.isValidElement<{ onClick?: React.MouseEventHandler }>(children)) {
+  if (React.isValidElement<{ onClick?: React.MouseEventHandler; "aria-label"?: string; size?: string }>(children)) {
     const inner = children.props.onClick;
-    return React.cloneElement(children, {
+    const trigger = React.cloneElement(children, {
       ...{ "aria-haspopup": "dialog" as const },
       onClick: (event: React.MouseEvent) => {
         inner?.(event);
@@ -285,6 +287,9 @@ export function Trigger({
         }
       },
     });
+    return children.props.size?.startsWith("icon") && children.props["aria-label"]
+      ? <Tooltip><TooltipTrigger asChild>{trigger}</TooltipTrigger><TooltipContent>{children.props["aria-label"]}</TooltipContent></Tooltip>
+      : trigger;
   }
   return (
     <Button

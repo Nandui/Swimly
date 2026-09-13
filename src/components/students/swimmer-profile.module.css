@@ -1,4 +1,4 @@
-/* The workspace owns the page's 16px inset, matching Swimmers and Classes. */
+/* The workspace owns the responsive page inset, matching Swimmers and Classes. */
 .profile {
   container-type: inline-size;
   display: flex;

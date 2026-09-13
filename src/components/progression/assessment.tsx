@@ -10,6 +10,7 @@ import {
 
 import { Notice } from "@/components/ui-kit/notice";
 import { Button } from "@/components/shadcn/button";
+import { LoadingButton } from "@/components/ui/loading-button";
 
 import * as React from "react";
 import { Check, GraduationCap, Undo2 } from "lucide-react";
@@ -242,16 +243,16 @@ function CompetencyChecklistState({
           <span aria-live="polite" className="text-sm text-ui-muted-foreground">
             {dirty ? "Not saved yet" : "Up to date"}
           </span>
-          <Button
+          <LoadingButton
             onClick={save}
             variant="default"
             size="sm"
-            disabled={!dirty || pending}
-            aria-busy={pending}
+            disabled={!dirty}
+            pending={pending}
           >
             {<Check aria-hidden={true} className="size-4 shrink-0" />}
             {"Save marks"}
-          </Button>
+          </LoadingButton>
         </div>
       )}
     </div>

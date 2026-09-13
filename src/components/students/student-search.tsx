@@ -3,6 +3,7 @@
 import * as React from "react";
 import { ChevronsUpDown, Loader2, Search, X } from "lucide-react";
 import { Button } from "@/components/shadcn/button";
+import { IconButton } from "@/components/ui/icon-button";
 import {
   Command,
   CommandEmpty,
@@ -186,15 +187,15 @@ export function StudentSearch({
           </PopoverContent>
         </Popover>
         {selected ? (
-          <Button
+          <IconButton
             type="button"
             size="icon"
             variant="ghost"
-            aria-label="Clear selected swimmer"
+            label="Clear selected swimmer"
             onClick={() => onSelect(null)}
           >
             <X aria-hidden="true" />
-          </Button>
+          </IconButton>
         ) : null}
       </div>
     </FieldFrame>

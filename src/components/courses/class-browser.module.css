@@ -26,7 +26,8 @@
   color: var(--ui-foreground);
   text-decoration: none;
 }
-.row:hover {
+.row:hover,
+.row:focus-visible {
   background: var(--ui-muted);
 }
 .listItem + .listItem {

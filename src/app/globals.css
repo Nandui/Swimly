@@ -1,6 +1,7 @@
 @import "tailwindcss";
 @import "tw-animate-css";
 @import "./shadcn.css";
+@import "./motion.css";
 
 @theme {
   --font-sans: "Figtree", ui-sans-serif, system-ui, sans-serif;
@@ -40,12 +41,25 @@
 }
 
 @media (prefers-reduced-motion: reduce) {
+  .ui-motion-press,
+  [data-motion="sidebar-icon"],
+  [data-motion="direction"],
+  [data-motion="action-label"] {
+    translate: none !important;
+  }
+  [data-motion="selection"],
+  [data-motion="theme-icon"] {
+    scale: none !important;
+    rotate: none !important;
+  }
   *,
   *::before,
   *::after {
     animation-duration: 0.01ms !important;
+    animation-delay: 0ms !important;
     animation-iteration-count: 1 !important;
     transition-duration: 0.01ms !important;
+    transition-delay: 0ms !important;
     scroll-behavior: auto !important;
   }
 }

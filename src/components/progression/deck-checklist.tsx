@@ -6,9 +6,9 @@ import {
   ChevronLeft,
   ChevronRight,
   ChevronDown,
-  Loader2,
 } from "lucide-react";
 import { Button } from "@/components/shadcn/button";
+import { LoadingButton } from "@/components/ui/loading-button";
 import { Item, ItemContent, ItemGroup } from "@/components/shadcn/item";
 import {
   Collapsible,
@@ -475,14 +475,9 @@ function DeckChecklistState({
         }
       >
         {!readOnly && changes.length ? (
-          <Button disabled={pending} onClick={save}>
-            {pending ? (
-              <Loader2 className="animate-spin" aria-hidden="true" />
-            ) : (
-              <Check aria-hidden="true" />
-            )}
-            {pending ? "Saving…" : "Save marks"}
-          </Button>
+          <LoadingButton pending={pending} onClick={save}>
+            <Check aria-hidden="true" />Save marks
+          </LoadingButton>
         ) : (
           <Button asChild variant={saved ? "default" : "outline"}>
             <Link href={doneHref}>

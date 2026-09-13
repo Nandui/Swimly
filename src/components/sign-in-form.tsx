@@ -1,13 +1,14 @@
 "use client";
 import { Notice } from "@/components/ui-kit/notice";
 import { Button } from "@/components/shadcn/button";
+import { LoadingButton } from "@/components/ui/loading-button";
 import { Separator } from "@/components/shadcn/separator";
 import { Card } from "@/components/shadcn/card";
 
 import { useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import { signIn } from "next-auth/react";
-import { Waves } from "lucide-react";
+import { AppLogo } from "@/components/app-logo";
 
 import { Input } from "@/components/ui/input";
 import { APP_NAME } from "@/lib/app";
@@ -77,8 +78,8 @@ export function SignInForm({ devAdminName }: { devAdminName: string | null }) {
       <Card className="w-full max-w-sm p-6">
         <div className="min-w-0 flex flex-col gap-5">
           <div className="min-w-0 flex flex-col gap-1">
-            <div className="min-w-0 flex gap-1 items-center">
-              <Waves aria-hidden={true} className="size-4 shrink-0" />
+            <div className="min-w-0 flex gap-2 items-center">
+              <AppLogo />
               <span className="text-sm text-ui-foreground font-semibold">
                 {APP_NAME}
               </span>
@@ -111,16 +112,16 @@ export function SignInForm({ devAdminName }: { devAdminName: string | null }) {
 
               {error ? <Notice title={error} tone="error"></Notice> : null}
 
-              <Button
+              <LoadingButton
                 type="submit"
                 variant="default"
                 size="lg"
-                disabled={pending}
-                aria-busy={pending}
+                pending={pending}
+                pendingLabel="Signing in…"
                 className="w-full"
               >
-                {pending ? "Signing in…" : "Sign in"}
-              </Button>
+                Sign in
+              </LoadingButton>
             </div>
           </form>
 

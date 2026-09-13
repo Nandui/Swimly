@@ -41,15 +41,25 @@ export type ActionConfirmation = {
   ids: string[];
   choices: { label: string; value: string }[];
 };
-export type ActionResult = { ok: true } | { ok: false; error: string; confirmation?: ActionConfirmation };
+export type ActionResult = { ok: true } | { ok: false; error: string; fieldErrors?: Record<string, string>; confirmation?: ActionConfirmation };
 
 export function ok(): ActionResult {
   return { ok: true };
 }
 
 /** @param error One sentence, addressed to the person, ending in a full stop. */
-export function fail(error: string): Extract<ActionResult, { ok: false }> {
-  return { ok: false, error };
+export function fail(error: string, fieldErrors?: Record<string, string>): Extract<ActionResult, { ok: false }> {
+  return { ok: false, error, ...(fieldErrors ? { fieldErrors } : {}) };
+}
+
+/** Preserve field paths instead of turning every schema error into a toast. */
+export function validationFailure(issues: readonly { path: readonly PropertyKey[]; message: string }[]): Extract<ActionResult, { ok: false }> {
+  const fieldErrors: Record<string, string> = {};
+  for (const issue of issues) {
+    const name = issue.path[0];
+    if (typeof name === "string" && !Object.hasOwn(fieldErrors, name)) fieldErrors[name] = issue.message;
+  }
+  return fail(issues[0]?.message ?? "Check the highlighted fields.", fieldErrors);
 }
 
 /** Uniqueness checked in application code can always lose to a concurrent
@@ -65,12 +75,13 @@ export function fail(error: string): Extract<ActionResult, { ok: false }> {
  */
 export async function onUniqueViolation<T>(
   write: () => Promise<T>,
-  error: string
-): Promise<T | { ok: false; error: string }> {
+  error: string,
+  field?: string,
+): Promise<T | Extract<ActionResult, { ok: false }>> {
   try {
     return await write();
   } catch (err) {
-    if (isUniqueViolation(err)) return { ok: false, error };
+    if (isUniqueViolation(err)) return fail(error, field ? { [field]: error } : undefined);
     throw err;
   }
 }

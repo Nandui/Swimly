@@ -4,7 +4,8 @@ import { useEffect, type ReactNode } from "react";
 import Link from "next/link";
 import { usePathname, useSearchParams } from "next/navigation";
 import { signOut } from "next-auth/react";
-import { ArrowLeft, LogOut, UserRound, Waves } from "lucide-react";
+import { ArrowLeft, LogOut, UserRound } from "lucide-react";
+import { AppLogo } from "@/components/app-logo";
 import { Button } from "@/components/shadcn/button";
 import {
   DropdownMenu,
@@ -71,7 +72,7 @@ export function InstructorShell({
           >
             <Link href={home}>
               {pathname === "/instructor" ? (
-                <Waves aria-hidden="true" />
+                <AppLogo className="size-8" />
               ) : (
                 <ArrowLeft aria-hidden="true" />
               )}

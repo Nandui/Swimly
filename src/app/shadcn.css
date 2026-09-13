@@ -12,6 +12,7 @@
 
 :root {
   --ui-background: light-dark(oklch(1 0 0), oklch(0.145 0 0));
+  --ui-workspace: light-dark(oklch(0.97 0 0), oklch(0.145 0 0));
   --ui-foreground: light-dark(oklch(0.145 0 0), oklch(0.985 0 0));
   --ui-card: light-dark(oklch(1 0 0), oklch(0.205 0 0));
   --ui-popover: light-dark(oklch(1 0 0), oklch(0.205 0 0));
@@ -24,6 +25,7 @@
   --ui-ring: var(--ui-foreground);
   --ui-destructive: light-dark(oklch(0.48 0.18 27), oklch(0.75 0.14 27));
   --ui-sidebar: light-dark(oklch(0.985 0 0), oklch(0.18 0 0));
+  --ui-sidebar-hover: light-dark(oklch(0.925 0 0), oklch(0.28 0 0));
   --ui-status-green: light-dark(oklch(0.37 0.08 155), oklch(0.84 0.1 155));
   --ui-status-green-bg: light-dark(oklch(0.95 0.03 155), oklch(0.28 0.04 155));
   --ui-status-blue: light-dark(oklch(0.38 0.1 255), oklch(0.85 0.08 255));
@@ -45,6 +47,7 @@
 
 @theme inline {
   --color-ui-background: var(--ui-background);
+  --color-ui-workspace: var(--ui-workspace);
   --color-ui-foreground: var(--ui-foreground);
   --color-ui-card: var(--ui-card);
   --color-ui-card-foreground: var(--ui-foreground);
@@ -90,13 +93,25 @@
 [data-slot][aria-invalid="true"] {
   border-color: var(--ui-destructive);
 }
-[data-slot]:focus-visible,
+/* Fields own their focus treatment; don't add a second outline over it. */
+[data-slot]:not([data-slot="input"], [data-slot="textarea"], [data-slot="sidebar-input"], [data-slot="command-input"]):focus-visible,
 .shadcn-workspace a:focus-visible {
   outline: 2px solid var(--ui-ring);
   outline-offset: 2px;
 }
-[data-slot="command-input"]:focus-visible {
-  outline-offset: -2px;
+/* Command searches share one row with an icon, inside a clipped popover/dialog. */
+[data-slot="command-input-wrapper"]:has(> [data-slot="command-input"]:focus-visible) {
+  border-bottom-color: var(--ui-input);
+  box-shadow: inset 0 -1px 0 var(--ui-input);
+}
+@media (forced-colors: active) {
+  [data-slot="command-input-wrapper"]:has(> [data-slot="command-input"]:focus-visible),
+  [data-slot="input"]:focus-visible,
+  [data-slot="textarea"]:focus-visible,
+  [data-slot="sidebar-input"]:focus-visible {
+    outline: 2px solid Highlight;
+    outline-offset: -2px;
+  }
 }
 [data-slot="badge"][data-tone="green"] {
   color: var(--ui-status-green);
@@ -132,6 +147,33 @@
 }
 
 /* Bounded workspace, including the development role bar. */
+.workspace-inset {
+  --ui-sidebar: var(--ui-workspace);
+}
+.workspace-inset [data-slot="sidebar-menu-button"][data-active="true"] {
+  background-color: var(--ui-card);
+}
+/* The inset canvas and muted token coincide in light mode. Hover needs its
+   own surface, including inside the portalled mobile navigation. */
+[data-sidebar="sidebar"] :is([data-slot="sidebar-menu-button"], [data-slot="button"], [data-slot="sidebar-trigger"]):not(:disabled):not([aria-disabled="true"]):is(:focus-visible, :active, [data-state="open"]) {
+  background-color: var(--ui-sidebar-hover);
+  color: var(--ui-foreground);
+}
+@media (hover: hover) and (pointer: fine) {
+  [data-sidebar="sidebar"] :is([data-slot="sidebar-menu-button"], [data-slot="button"], [data-slot="sidebar-trigger"]):not(:disabled):not([aria-disabled="true"]):hover {
+    background-color: var(--ui-sidebar-hover);
+    color: var(--ui-foreground);
+  }
+}
+/* Current-page selection remains distinct from a temporary hover. */
+[data-sidebar="sidebar"] [data-slot="sidebar-menu-button"][data-active="true"] {
+  background-color: var(--ui-card);
+  box-shadow: inset 0 0 0 1px var(--ui-border);
+}
+[data-sidebar="sidebar"] [data-slot="sidebar-menu-button"][data-active="true"]:is(:hover, :focus-visible, :active) {
+  background-color: var(--ui-card);
+  box-shadow: inset 0 0 0 1px var(--ui-input);
+}
 .shadcn-workspace [data-slot="sidebar-container"] {
   position: absolute;
   height: 100%;
@@ -186,6 +228,10 @@
   [data-slot="textarea"] {
     min-height: 2.75rem;
     font-size: 1rem;
+  }
+  [data-slot="command-input-wrapper"] {
+    /* Keep the 44px input inside the row, including its bottom divider. */
+    min-height: calc(2.75rem + 1px);
   }
   [data-slot="tabs-list"] {
     height: auto;

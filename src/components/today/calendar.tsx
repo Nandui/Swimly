@@ -124,6 +124,8 @@ export function TodayCalendar({ courses, assessments, iso, initialNow, clubName,
       </TabsList>
     </section>
 
+    {shown.length === 0 && shownAssessments.length > 0 && width >= 600 ? <p className="text-sm text-ui-muted-foreground">Assessment sessions appear in Agenda. The booking sheet shows weekly classes.</p> : null}
+
     {!dateChanged && (shown.length > 0 || shownAssessments.length > 0) ? <div className={styles["sheet-meta"]}>
       <div className={styles["sheet-summary"]} role="status" aria-live="polite">
         <strong>{filtered ? `${shown.length} of ${courses.length}` : courses.length} {courses.length === 1 ? "class" : "classes"}</strong>

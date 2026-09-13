@@ -3,7 +3,7 @@
 import { revalidatePath } from "next/cache";
 import { z } from "zod";
 import type { DayOfWeek } from "@/generated/prisma/client";
-import { fail, ok, type ActionResult } from "@/lib/action-result";
+import { fail, ok, validationFailure, type ActionResult } from "@/lib/action-result";
 import { logAudit } from "@/lib/audit";
 import { requirePermission } from "@/lib/authz";
 import { currentClubId } from "@/lib/clubs/current";
@@ -57,15 +57,15 @@ type CourseData = {
 /** A discriminated result rather than two differently-shaped objects: without
  *  the `ok` flag, TypeScript merges the branches into one type with both
  *  properties optional and `resolved.error` comes out `string | undefined`. */
-type Resolved = { ok: false; error: string } | { ok: true; data: CourseData };
+type Resolved = Extract<ActionResult, { ok: false }> | { ok: true; data: CourseData };
 
 function resolve(input: CourseInput): Resolved {
   const parsed = courseSchema.safeParse(input);
-  if (!parsed.success) return { ok: false, error: parsed.error.issues[0].message };
+  if (!parsed.success) return validationFailure(parsed.error.issues);
 
   const startMinutes = parseTime(parsed.data.startTime);
   if (startMinutes === null) {
-    return { ok: false, error: "Give the start time as a 24-hour clock time." };
+    return fail("Give the start time as a 24-hour clock time.", { startTime: "Enter a valid start time." });
   }
 
   return {
@@ -87,7 +87,7 @@ export async function createCourse(input: CourseInput): Promise<ActionResult> {
   const session = await requirePermission("courses.manage");
 
   const resolved = resolve(input);
-  if (!resolved.ok) return fail(resolved.error);
+  if (!resolved.ok) return resolved;
   const data = resolved.data;
   const clubId = await currentClubId();
 
@@ -133,7 +133,7 @@ export async function updateCourse(id: string, input: CourseInput): Promise<Acti
   const session = await requirePermission("courses.manage");
 
   const resolved = resolve(input);
-  if (!resolved.ok) return fail(resolved.error);
+  if (!resolved.ok) return resolved;
   const data = resolved.data;
 
   const result = await withCourseSeat(id, async (tx) => {
