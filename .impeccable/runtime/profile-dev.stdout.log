@@ -1,0 +1,55 @@
+▲ Next.js 16.3.2 (Turbopack)
+- Local:         http://127.0.0.1:3000
+- Network:       http://127.0.0.1:3000
+- Environments: .env.local, .env
+✓ Ready in 2.8s
+✓ Running next.config.ts took 150ms
+- Experiments (use with caution):
+  · serverActions
+  · staleTimes
+
+ GET /students 200 in 4.3s (next.js: 1903ms, application-code: 2.4s)
+ GET /students/cmtkjnzqq000bukluf85snzjh 200 in 1658ms (next.js: 477ms, application-code: 1181ms)
+ POST /students/cmtkjnzqq000bukluf85snzjh 200 in 313ms (next.js: 10ms, application-code: 302ms)
+  └─ ƒ loadSwimmerHistory("cmtkjnzqq000bukluf85snzjh", {"courseId":"cmtkjnzl40009ukluupbepr84","from":"2026-09-02"}) in 284ms src/lib/students/actions/history.ts
+ POST /students/cmtkjnzqq000bukluf85snzjh 200 in 283ms (next.js: 4ms, application-code: 279ms)
+  └─ ƒ loadSwimmerHistory("cmtkjnzqq000bukluf85snzjh", {"courseId":"cmtkjnzl40009ukluupbepr84","from":"2026-09-02"}) in 271ms src/lib/students/actions/history.ts
+ GET /students/cmtkjnzqq000bukluf85snzjh?tab=competencies 200 in 970ms (next.js: 9ms, application-code: 961ms)
+ GET /students/cmtkjnzqq000bukluf85snzjh?tab=attendance 200 in 362ms (next.js: 9ms, application-code: 353ms)
+ POST /students/cmtkjnzqq000bukluf85snzjh?tab=attendance 200 in 475ms (next.js: 3ms, application-code: 471ms)
+  └─ ƒ loadSwimmerHistory("cmtkjnzqq000bukluf85snzjh", {"kind":"attendance"}) in 465ms src/lib/students/actions/history.ts
+ POST /students/cmtkjnzqq000bukluf85snzjh?tab=attendance 200 in 283ms (next.js: 8ms, application-code: 276ms)
+  └─ ƒ loadSwimmerHistory("cmtkjnzqq000bukluf85snzjh", {"kind":"attendance"}) in 269ms src/lib/students/actions/history.ts
+ POST /students/cmtkjnzqq000bukluf85snzjh?tab=assessments 200 in 283ms (next.js: 3ms, application-code: 280ms)
+  └─ ƒ loadSwimmerHistory("cmtkjnzqq000bukluf85snzjh", {"kind":"assessment"}) in 274ms src/lib/students/actions/history.ts
+ GET /students/cmtkjnzqq000bukluf85snzjh?tab=assessments 200 in 365ms (next.js: 4ms, application-code: 361ms)
+ POST /students/cmtkjnzqq000bukluf85snzjh?tab=assessments 200 in 286ms (next.js: 8ms, application-code: 278ms)
+  └─ ƒ loadSwimmerHistory("cmtkjnzqq000bukluf85snzjh", {"kind":"assessment"}) in 273ms src/lib/students/actions/history.ts
+ GET /students/cmtkjnzqq000bukluf85snzjh?tab=details 200 in 364ms (next.js: 3ms, application-code: 361ms)
+ POST /students/cmtkjnzqq000bukluf85snzjh?tab=journey 200 in 289ms (next.js: 3ms, application-code: 286ms)
+  └─ ƒ loadSwimmerHistory("cmtkjnzqq000bukluf85snzjh", {"courseId":"cmtkjnzl40009ukluupbepr84","from":"2026-09-02"}) in 281ms src/lib/students/actions/history.ts
+ GET /students/cmtkjnzqq000bukluf85snzjh?tab=journey 200 in 371ms (next.js: 8ms, application-code: 362ms)
+ POST /students/cmtkjnzqq000bukluf85snzjh?tab=journey 200 in 246ms (next.js: 4ms, application-code: 242ms)
+  └─ ƒ loadSwimmerHistory("cmtkjnzqq000bukluf85snzjh", {"courseId":"cmtkjnzl40009ukluupbepr84","from":"2026-09-02"}) in 238ms src/lib/students/actions/history.ts
+ POST /students/cmtkjnzqq000bukluf85snzjh?tab=journey 200 in 288ms (next.js: 7ms, application-code: 280ms)
+  └─ ƒ loadSwimmerHistory("cmtkjnzqq000bukluf85snzjh", {"courseId":"cmtkjnzl40009ukluupbepr84","from":"2026-09-02"}) in 275ms src/lib/students/actions/history.ts
+ POST /students/cmtkjnzqq000bukluf85snzjh?tab=journey 200 in 279ms (next.js: 3ms, application-code: 275ms)
+  └─ ƒ loadSwimmerHistory("cmtkjnzqq000bukluf85snzjh", {"courseId":"cmtkjnzl40009ukluupbepr84","from":"2026-09-02"}) in 270ms src/lib/students/actions/history.ts
+ POST /students/cmtkjnzqq000bukluf85snzjh?tab=journey 200 in 285ms (next.js: 8ms, application-code: 276ms)
+  └─ ƒ loadSwimmerHistory("cmtkjnzqq000bukluf85snzjh", {"courseId":"cmtkjnzl40009ukluupbepr84","from":"2026-09-02"}) in 270ms src/lib/students/actions/history.ts
+ POST /students/cmtkjnzqq000bukluf85snzjh?tab=journey 200 in 277ms (next.js: 3ms, application-code: 274ms)
+  └─ ƒ loadSwimmerHistory("cmtkjnzqq000bukluf85snzjh", {"courseId":"cmtkjnzl40009ukluupbepr84","from":"2026-09-02"}) in 269ms src/lib/students/actions/history.ts
+ GET /students/cmtkjnzqq000bukluf85snzjh?tab=competencies 200 in 692ms (next.js: 11ms, application-code: 681ms)
+ POST /students/cmtkjnzqq000bukluf85snzjh?tab=competencies 200 in 286ms (next.js: 8ms, application-code: 278ms)
+  └─ ƒ loadSwimmerHistory("cmtkjnzqq000bukluf85snzjh", {"competencyId":"cmt9yvh4z0003v4f559g0m513","kind":"competencies"}) in 272ms src/lib/students/actions/history.ts
+ POST /students/cmtkjnzqq000bukluf85snzjh?tab=competencies 200 in 280ms (next.js: 3ms, application-code: 277ms)
+  └─ ƒ loadSwimmerHistory("cmtkjnzqq000bukluf85snzjh", {"competencyId":"cmt9yvh4z0003v4f559g0m513","kind":"competencies"}) in 272ms src/lib/students/actions/history.ts
+ POST /students/cmtkjnzqq000bukluf85snzjh?tab=competencies 200 in 287ms (next.js: 8ms, application-code: 279ms)
+  └─ ƒ loadSwimmerHistory("cmtkjnzqq000bukluf85snzjh", {"competencyId":"cmt9yvh1z0000v4f5cg1qojad","kind":"competencies"}) in 273ms src/lib/students/actions/history.ts
+ POST /students/cmtkjnzqq000bukluf85snzjh?tab=competencies 200 in 277ms (next.js: 3ms, application-code: 274ms)
+  └─ ƒ loadSwimmerHistory("cmtkjnzqq000bukluf85snzjh", {"competencyId":"cmt9yvh1z0000v4f5cg1qojad","kind":"competencies"}) in 269ms src/lib/students/actions/history.ts
+ POST /students/cmtkjnzqq000bukluf85snzjh?tab=attendance 200 in 480ms (next.js: 3ms, application-code: 477ms)
+  └─ ƒ loadSwimmerHistory("cmtkjnzqq000bukluf85snzjh", {"kind":"attendance"}) in 471ms src/lib/students/actions/history.ts
+ GET /students/cmtkjnzqq000bukluf85snzjh?tab=attendance 200 in 565ms (next.js: 8ms, application-code: 557ms)
+ POST /students/cmtkjnzqq000bukluf85snzjh?tab=attendance 200 in 281ms (next.js: 6ms, application-code: 275ms)
+  └─ ƒ loadSwimmerHistory("cmtkjnzqq000bukluf85snzjh", {"kind":"attendance"}) in 268ms src/lib/students/actions/history.ts

@@ -1,22 +1,32 @@
-import type { Metadata } from "next";
-import { Link } from "@astryxdesign/core/Link";
-import { HStack, VStack } from "@astryxdesign/core/Stack";
 import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHeader,
-  TableHeaderCell,
+  TableHead,
   TableRow,
-} from "@astryxdesign/core/Table";
-import { Heading, Text } from "@astryxdesign/core/Text";
-import { VisuallyHidden } from "@astryxdesign/core/VisuallyHidden";
+  TableHeader,
+  TableCell,
+  TableBody,
+  Table,
+} from "@/components/shadcn/table";
+import { cn } from "@/lib/utils";
+
+import UiLink from "next/link";
+
+import type { Metadata } from "next";
+
 import { EmptyState } from "@/components/ui-kit/empty-state";
 import { PageHeader } from "@/components/ui-kit/page-header";
 import { Lead, Num } from "@/components/ui-kit/prose";
 import { Tag } from "@/components/ui-kit/tag";
-import { AddSession, CancelSession, EditSession } from "@/components/assessments/session-actions";
-import { SESSION_STATUS_META, isPast, sessionDay, sessionSpan } from "@/lib/assessments/constants";
+import {
+  AddSession,
+  CancelSession,
+  EditSession,
+} from "@/components/assessments/session-actions";
+import {
+  SESSION_STATUS_META,
+  isPast,
+  sessionDay,
+  sessionSpan,
+} from "@/lib/assessments/constants";
 import {
   getAssessmentProgrammeOptions,
   getAssessmentSessions,
@@ -26,7 +36,10 @@ import {
   type SessionRow,
 } from "@/lib/assessments/data/assessments";
 import { can } from "@/lib/authz";
-import { getInstructorOptions, type InstructorOption } from "@/lib/courses/data/courses";
+import {
+  getInstructorOptions,
+  type InstructorOption,
+} from "@/lib/courses/data/courses";
 import { today } from "@/lib/format";
 import { screenPage } from "@/lib/page-guards";
 
@@ -50,19 +63,32 @@ export default async function AssessmentsPage() {
   const cancelled = sessions.filter((s) => s.cancelledAt).reverse();
 
   const placesLeft = upcoming.reduce(
-    (n, s) => n + (s.capacity === null ? 0 : Math.max(0, s.capacity - s._count.bookings)),
-    0
+    (n, s) =>
+      n +
+      (s.capacity === null ? 0 : Math.max(0, s.capacity - s._count.bookings)),
+    0,
   );
   const uncapped = upcoming.some((s) => s.capacity === null);
 
   const add = manage ? (
-    <AddSession programmes={programmes} types={types} instructors={instructors} today={todayIso} />
+    <AddSession
+      programmes={programmes}
+      types={types}
+      instructors={instructors}
+      today={todayIso}
+    />
   ) : null;
 
-  const tableProps = { manage, programmes, types, instructors, today: todayIso };
+  const tableProps = {
+    manage,
+    programmes,
+    types,
+    instructors,
+    today: todayIso,
+  };
 
   return (
-    <VStack gap={6}>
+    <div className="min-w-0 flex flex-col gap-6">
       <PageHeader
         title="Assessments"
         description="Book a child onto a session; once they have been in the water, place them at the level they belong at."
@@ -74,14 +100,14 @@ export default async function AssessmentsPage() {
           "No sessions coming up."
         ) : (
           <>
-            <Num>{upcoming.length}</Num> {upcoming.length === 1 ? "session" : "sessions"} coming
-            up
+            <Num>{upcoming.length}</Num>{" "}
+            {upcoming.length === 1 ? "session" : "sessions"} coming up
             {uncapped ? (
               ", with no limit on places"
             ) : (
               <>
-                , with <Num>{placesLeft}</Num> {placesLeft === 1 ? "place" : "places"} left between
-                them
+                , with <Num>{placesLeft}</Num>{" "}
+                {placesLeft === 1 ? "place" : "places"} left between them
               </>
             )}
             .
@@ -97,34 +123,42 @@ export default async function AssessmentsPage() {
           action={add}
         />
       ) : (
-        <VStack gap={6}>
-          <VStack gap={3} as="section">
-            <Heading level={2}>Coming up</Heading>
+        <div className="min-w-0 flex flex-col gap-6">
+          <section className="min-w-0 flex flex-col gap-3">
+            <h2 className="text-xl font-semibold tracking-tight">Coming up</h2>
             {upcoming.length === 0 ? (
-              <Text as="p" display="block" color="secondary">
+              <p className="text-sm text-ui-muted-foreground block">
                 Nothing scheduled.
-              </Text>
+              </p>
             ) : (
               <SessionTable sessions={upcoming} {...tableProps} />
             )}
-          </VStack>
+          </section>
 
           {past.length > 0 ? (
-            <VStack gap={3} as="section">
-              <Heading level={2}>Already run</Heading>
+            <section className="min-w-0 flex flex-col gap-3">
+              <h2 className="text-xl font-semibold tracking-tight">
+                Already run
+              </h2>
               <SessionTable sessions={past} {...tableProps} />
-            </VStack>
+            </section>
           ) : null}
 
           {cancelled.length > 0 ? (
-            <VStack gap={3} as="section">
-              <Heading level={2}>Cancelled</Heading>
-              <SessionTable sessions={cancelled} {...tableProps} manage={false} />
-            </VStack>
+            <section className="min-w-0 flex flex-col gap-3">
+              <h2 className="text-xl font-semibold tracking-tight">
+                Cancelled
+              </h2>
+              <SessionTable
+                sessions={cancelled}
+                {...tableProps}
+                manage={false}
+              />
+            </section>
           ) : null}
-        </VStack>
+        </div>
       )}
-    </VStack>
+    </div>
   );
 }
 
@@ -144,21 +178,23 @@ function SessionTable({
   today: string;
 }) {
   return (
-    <Table hasHover textOverflow="wrap">
+    <Table className="w-full [&_td]:whitespace-normal [&_th]:whitespace-normal">
       <TableHeader>
-        <TableRow isHeaderRow>
-          <TableHeaderCell scope="col">When</TableHeaderCell>
-          <TableHeaderCell scope="col" className="max-md:hidden">
+        <TableRow>
+          <TableHead scope="col">When</TableHead>
+          <TableHead scope="col" className={"max-md:hidden"}>
             Programme
-          </TableHeaderCell>
-          <TableHeaderCell scope="col" className="max-lg:hidden">
+          </TableHead>
+          <TableHead scope="col" className={"max-lg:hidden"}>
             Assessor
-          </TableHeaderCell>
-          <TableHeaderCell scope="col" className="max-md:hidden">Places</TableHeaderCell>
+          </TableHead>
+          <TableHead scope="col" className={"max-md:hidden"}>
+            Places
+          </TableHead>
           {manage ? (
-            <TableHeaderCell scope="col">
-              <VisuallyHidden>Actions</VisuallyHidden>
-            </TableHeaderCell>
+            <TableHead scope="col">
+              <span className="sr-only">Actions</span>
+            </TableHead>
           ) : null}
         </TableRow>
       </TableHeader>
@@ -169,56 +205,105 @@ function SessionTable({
           return (
             <TableRow key={s.id}>
               <TableCell>
-                <HStack gap={2} vAlign="center" wrap="wrap">
-                  <Link href={`/assessments/${s.id}`} weight="medium">
+                <div className="min-w-0 flex gap-2 items-center flex-wrap">
+                  <UiLink
+                    href={`/assessments/${s.id}`}
+                    className={
+                      "text-ui-foreground underline-offset-4 hover:underline font-medium"
+                    }
+                  >
                     {sessionDay(s)}
-                  </Link>
+                  </UiLink>
                   {s.cancelledAt ? (
-                    <Tag color={SESSION_STATUS_META.cancelled.color}>{SESSION_STATUS_META.cancelled.label}</Tag>
+                    <Tag color={SESSION_STATUS_META.cancelled.color}>
+                      {SESSION_STATUS_META.cancelled.label}
+                    </Tag>
                   ) : full ? (
-                    <Tag color={SESSION_STATUS_META.full.color}>{SESSION_STATUS_META.full.label}</Tag>
+                    <Tag color={SESSION_STATUS_META.full.color}>
+                      {SESSION_STATUS_META.full.label}
+                    </Tag>
                   ) : null}
-                </HStack>
-                <Text type="supporting" display="block" hasTabularNumbers>
+                </div>
+                <span
+                  className={
+                    "text-sm text-ui-muted-foreground block tabular-nums"
+                  }
+                >
                   {sessionSpan(s)}
                   {s.location ? ` · ${s.location}` : ""}
-                </Text>
-                <Text type="supporting" display="block" className="md:hidden">
+                </span>
+                <span
+                  className={cn(
+                    "text-sm text-ui-muted-foreground block",
+                    "md:hidden",
+                  )}
+                >
                   {s.programme.name} · {s.type?.name ?? "kind not set"}
-                </Text>
-                <Text type="supporting" display="block" className="lg:hidden">
-                  Assessor: {s.instructor?.name ?? SESSION_STATUS_META.unassigned.label}
-                </Text>
-                <Text type="supporting" display="block" hasTabularNumbers className="md:hidden">
-                  {s.capacity === null ? `${taken} booked` : `${taken} of ${s.capacity} places booked`}
-                </Text>
+                </span>
+                <span
+                  className={cn(
+                    "text-sm text-ui-muted-foreground block",
+                    "lg:hidden",
+                  )}
+                >
+                  Assessor:{" "}
+                  {s.instructor?.name ?? SESSION_STATUS_META.unassigned.label}
+                </span>
+                <span
+                  className={cn(
+                    "text-sm text-ui-muted-foreground block tabular-nums",
+                    "md:hidden",
+                  )}
+                >
+                  {s.capacity === null
+                    ? `${taken} booked`
+                    : `${taken} of ${s.capacity} places booked`}
+                </span>
               </TableCell>
-              <TableCell className="max-md:hidden">
-                <Text color="secondary">{s.programme.name}</Text>
+              <TableCell className={"max-md:hidden"}>
+                <span className="text-sm text-ui-muted-foreground">
+                  {s.programme.name}
+                </span>
                 {s.type ? (
-                  <Text type="supporting" display="block">
+                  <span className="text-sm text-ui-muted-foreground block">
                     {s.type.name}
-                  </Text>
+                  </span>
                 ) : (
-                  <Tag color={SESSION_STATUS_META.missingKind.color}>{SESSION_STATUS_META.missingKind.label}</Tag>
+                  <Tag color={SESSION_STATUS_META.missingKind.color}>
+                    {SESSION_STATUS_META.missingKind.label}
+                  </Tag>
                 )}
               </TableCell>
-              <TableCell className="max-lg:hidden">
+              <TableCell className={"max-lg:hidden"}>
                 {s.instructor ? (
-                  <Text color="secondary">{s.instructor.name}</Text>
+                  <span className="text-sm text-ui-muted-foreground">
+                    {s.instructor.name}
+                  </span>
                 ) : (
-                  <Tag color={SESSION_STATUS_META.unassigned.color}>{SESSION_STATUS_META.unassigned.label}</Tag>
+                  <Tag color={SESSION_STATUS_META.unassigned.color}>
+                    {SESSION_STATUS_META.unassigned.label}
+                  </Tag>
                 )}
               </TableCell>
-              <TableCell className="max-md:hidden">
-                <Text color="secondary" hasTabularNumbers textWrap="nowrap">
-                  {s.capacity === null ? `${taken} booked` : `${taken} of ${s.capacity}`}
-                </Text>
+              <TableCell className={"max-md:hidden"}>
+                <span
+                  className={
+                    "text-sm text-ui-muted-foreground whitespace-nowrap tabular-nums"
+                  }
+                >
+                  {s.capacity === null
+                    ? `${taken} booked`
+                    : `${taken} of ${s.capacity}`}
+                </span>
               </TableCell>
               {manage ? (
                 <TableCell>
                   {s.cancelledAt ? null : (
-                    <HStack gap={1} vAlign="center" hAlign="end" wrap="wrap">
+                    <div
+                      className={
+                        "min-w-0 flex gap-1 items-center justify-end flex-wrap"
+                      }
+                    >
                       <EditSession
                         session={s}
                         programmes={programmes}
@@ -227,7 +312,7 @@ function SessionTable({
                         today={today}
                       />
                       <CancelSession session={s} />
-                    </HStack>
+                    </div>
                   )}
                 </TableCell>
               ) : null}

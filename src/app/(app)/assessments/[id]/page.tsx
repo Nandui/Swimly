@@ -1,17 +1,18 @@
+import {
+  TableHead,
+  TableRow,
+  TableHeader,
+  TableCell,
+  TableBody,
+  Table,
+} from "@/components/shadcn/table";
+import { cn } from "@/lib/utils";
+
+import UiLink from "next/link";
+
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
-import { Link } from "@astryxdesign/core/Link";
-import { HStack, VStack } from "@astryxdesign/core/Stack";
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHeader,
-  TableHeaderCell,
-  TableRow,
-} from "@astryxdesign/core/Table";
-import { Heading, Text } from "@astryxdesign/core/Text";
-import { VisuallyHidden } from "@astryxdesign/core/VisuallyHidden";
+
 import { BackLink } from "@/components/ui-kit/back-link";
 import { EmptyState } from "@/components/ui-kit/empty-state";
 import { PageHeader } from "@/components/ui-kit/page-header";
@@ -23,9 +24,18 @@ import {
   MarkNoShow,
   RecordOutcome,
 } from "@/components/assessments/booking-actions";
-import { CancelSession, EditSession } from "@/components/assessments/session-actions";
+import {
+  CancelSession,
+  EditSession,
+} from "@/components/assessments/session-actions";
 import { WrongClub } from "@/components/clubs/wrong-club";
-import { SESSION_STATUS_META, BOOKING_STATUS_META, HOLDS_A_PLACE, sessionDay, sessionSpan } from "@/lib/assessments/constants";
+import {
+  SESSION_STATUS_META,
+  BOOKING_STATUS_META,
+  HOLDS_A_PLACE,
+  sessionDay,
+  sessionSpan,
+} from "@/lib/assessments/constants";
 import {
   getAssessmentProgrammeOptions,
   getAssessmentSession,
@@ -38,24 +48,32 @@ import { getCurrentClub } from "@/lib/clubs/current";
 import { getInstructorOptions } from "@/lib/courses/data/courses";
 import { formatDate, today } from "@/lib/format";
 import { screenPage } from "@/lib/page-guards";
-import { MEDICAL_STATUS_META, ageLabel, fullName } from "@/lib/students/constants";
+import {
+  MEDICAL_STATUS_META,
+  ageLabel,
+  fullName,
+} from "@/lib/students/constants";
 
 export const metadata: Metadata = { title: "Assessment" };
 
-export default async function AssessmentSessionPage(props: PageProps<"/assessments/[id]">) {
+export default async function AssessmentSessionPage(
+  props: PageProps<"/assessments/[id]">,
+) {
   const auth = await screenPage("assessments");
   const book = can(auth, "enrolment.manage");
   const assess = can(auth, "assessments.run");
   const manage = can(auth, "courses.manage");
   const { id } = await props.params;
 
-  const [session, programmes, types, instructors, { club }] = await Promise.all([
-    getAssessmentSession(id),
-    manage ? getAssessmentProgrammeOptions() : Promise.resolve([]),
-    manage ? getAssessmentTypeOptions() : Promise.resolve([]),
-    manage ? getInstructorOptions() : Promise.resolve([]),
-    getCurrentClub(),
-  ]);
+  const [session, programmes, types, instructors, { club }] = await Promise.all(
+    [
+      getAssessmentSession(id),
+      manage ? getAssessmentProgrammeOptions() : Promise.resolve([]),
+      manage ? getAssessmentTypeOptions() : Promise.resolve([]),
+      manage ? getInstructorOptions() : Promise.resolve([]),
+      getCurrentClub(),
+    ],
+  );
   if (!session) notFound();
   if (session.clubId !== club.id) {
     return (
@@ -67,35 +85,51 @@ export default async function AssessmentSessionPage(props: PageProps<"/assessmen
     );
   }
 
-  const holding = session.bookings.filter((b) => HOLDS_A_PLACE.includes(b.status));
-  const gone = session.bookings.filter((b) => !HOLDS_A_PLACE.includes(b.status));
+  const holding = session.bookings.filter((b) =>
+    HOLDS_A_PLACE.includes(b.status),
+  );
+  const gone = session.bookings.filter(
+    (b) => !HOLDS_A_PLACE.includes(b.status),
+  );
   const taken = holding.length;
   const full = session.capacity !== null && taken >= session.capacity;
   const placed = holding.filter((b) => b.outcomeLevel).length;
   const open = !session.cancelledAt;
 
   return (
-    <VStack gap={6}>
-      <VStack gap={2}>
+    <div className="min-w-0 flex flex-col gap-6">
+      <div className="min-w-0 flex flex-col gap-2">
         <BackLink href="/assessments" current={sessionDay(session)}>
           Assessments
         </BackLink>
         <PageHeader
           title={
-            <HStack gap={2} vAlign="center" wrap="wrap">
+            <div className="min-w-0 flex gap-2 items-center flex-wrap">
               {sessionDay(session)}
-              {session.cancelledAt ? <Tag color={SESSION_STATUS_META.cancelled.color}>{SESSION_STATUS_META.cancelled.label}</Tag> : null}
-              {open && full ? <Tag color={SESSION_STATUS_META.full.color}>{SESSION_STATUS_META.full.label}</Tag> : null}
-            </HStack>
+              {session.cancelledAt ? (
+                <Tag color={SESSION_STATUS_META.cancelled.color}>
+                  {SESSION_STATUS_META.cancelled.label}
+                </Tag>
+              ) : null}
+              {open && full ? (
+                <Tag color={SESSION_STATUS_META.full.color}>
+                  {SESSION_STATUS_META.full.label}
+                </Tag>
+              ) : null}
+            </div>
           }
           description={
             `${sessionSpan(session)} · ${session.programme.name} · ${session.type?.name ?? "kind not set"}` +
             (session.location ? ` · ${session.location}` : "") +
-            (session.instructor ? ` · ${session.instructor.name}` : " · assessor not decided")
+            (session.instructor
+              ? ` · ${session.instructor.name}`
+              : " · assessor not decided")
           }
           actions={
             <>
-              {book && open ? <BookOntoSession session={session} taken={taken} /> : null}
+              {book && open ? (
+                <BookOntoSession session={session} taken={taken} />
+              ) : null}
               {manage && open ? (
                 <>
                   <EditSession
@@ -112,11 +146,13 @@ export default async function AssessmentSessionPage(props: PageProps<"/assessmen
             </>
           }
         />
-      </VStack>
+      </div>
 
       <Lead>
         <Num>
-          {session.capacity === null ? `${taken} booked` : `${taken} of ${session.capacity}`}
+          {session.capacity === null
+            ? `${taken} booked`
+            : `${taken} of ${session.capacity}`}
         </Num>{" "}
         {session.capacity === null ? "" : "places taken"}
         {taken > 0 ? (
@@ -132,30 +168,46 @@ export default async function AssessmentSessionPage(props: PageProps<"/assessmen
           icon="users"
           title="Nobody booked yet"
           hint="Book a swimmer and they appear here. Once they have been in the water, place them at the level they belong at."
-          action={book && open ? <BookOntoSession session={session} taken={0} /> : null}
+          action={
+            book && open ? (
+              <BookOntoSession session={session} taken={0} />
+            ) : null
+          }
         />
       ) : (
-        <VStack gap={6}>
-          <VStack gap={3} as="section">
-            <Heading level={2}>Booked</Heading>
+        <div className="min-w-0 flex flex-col gap-6">
+          <section className="min-w-0 flex flex-col gap-3">
+            <h2 className="text-xl font-semibold tracking-tight">Booked</h2>
             {holding.length === 0 ? (
-              <Text as="p" display="block" color="secondary">
+              <p className="text-sm text-ui-muted-foreground block">
                 Nobody is holding a place.
-              </Text>
+              </p>
             ) : (
-              <BookingTable entries={holding} session={session} book={book} assess={assess} />
+              <BookingTable
+                entries={holding}
+                session={session}
+                book={book}
+                assess={assess}
+              />
             )}
-          </VStack>
+          </section>
 
           {gone.length > 0 ? (
-            <VStack gap={3} as="section">
-              <Heading level={2}>Not coming</Heading>
-              <BookingTable entries={gone} session={session} book={book} assess={assess} />
-            </VStack>
+            <section className="min-w-0 flex flex-col gap-3">
+              <h2 className="text-xl font-semibold tracking-tight">
+                Not coming
+              </h2>
+              <BookingTable
+                entries={gone}
+                session={session}
+                book={book}
+                assess={assess}
+              />
+            </section>
           ) : null}
-        </VStack>
+        </div>
       )}
-    </VStack>
+    </div>
   );
 }
 
@@ -173,21 +225,21 @@ function BookingTable({
   const open = !session.cancelledAt;
   const actions = open && (book || assess);
   return (
-    <Table hasHover textOverflow="wrap">
+    <Table className="w-full [&_td]:whitespace-normal [&_th]:whitespace-normal">
       <TableHeader>
-        <TableRow isHeaderRow>
-          <TableHeaderCell scope="col">Swimmer</TableHeaderCell>
-          <TableHeaderCell scope="col" className="max-md:hidden">
+        <TableRow>
+          <TableHead scope="col">Swimmer</TableHead>
+          <TableHead scope="col" className={"max-md:hidden"}>
             Age
-          </TableHeaderCell>
-          <TableHeaderCell scope="col">Status</TableHeaderCell>
-          <TableHeaderCell scope="col" className="max-md:hidden">
+          </TableHead>
+          <TableHead scope="col">Status</TableHead>
+          <TableHead scope="col" className={"max-md:hidden"}>
             Placed at
-          </TableHeaderCell>
+          </TableHead>
           {actions ? (
-            <TableHeaderCell scope="col">
-              <VisuallyHidden>Actions</VisuallyHidden>
-            </TableHeaderCell>
+            <TableHead scope="col">
+              <span className="sr-only">Actions</span>
+            </TableHead>
           ) : null}
         </TableRow>
       </TableHeader>
@@ -197,67 +249,99 @@ function BookingTable({
           return (
             <TableRow key={b.id}>
               <TableCell>
-                <HStack gap={2} vAlign="center" wrap="wrap">
-                  <Link href={`/students/${b.student.id}`} weight="medium">
+                <div className="min-w-0 flex gap-2 items-center flex-wrap">
+                  <UiLink
+                    href={`/students/${b.student.id}`}
+                    className={
+                      "text-ui-foreground underline-offset-4 hover:underline font-medium"
+                    }
+                  >
                     {fullName(b.student)}
-                  </Link>
-                  {b.student.medicalNotes ? <Tag color={MEDICAL_STATUS_META.notes.color}>{MEDICAL_STATUS_META.notes.label}</Tag> : null}
-                </HStack>
-                <Text type="supporting" display="block">
-                  <Text type="supporting" className="md:hidden">{ageLabel(b.student.dateOfBirth)} · </Text>
+                  </UiLink>
+                  {b.student.medicalNotes ? (
+                    <Tag color={MEDICAL_STATUS_META.notes.color}>
+                      {MEDICAL_STATUS_META.notes.label}
+                    </Tag>
+                  ) : null}
+                </div>
+                <span className="text-sm text-ui-muted-foreground block">
+                  <span
+                    className={cn(
+                      "text-sm text-ui-muted-foreground",
+                      "md:hidden",
+                    )}
+                  >
+                    {ageLabel(b.student.dateOfBirth)} ·{" "}
+                  </span>
                   booked by {b.bookedByName}
-                </Text>
+                </span>
                 {/* The placement column leaves the table on a phone and
                     re-homes here, so the row stays one screen wide. */}
                 {b.outcomeLevel ? (
-                  <Text type="supporting" display="block" className="md:hidden">
+                  <span
+                    className={cn(
+                      "text-sm text-ui-muted-foreground block",
+                      "md:hidden",
+                    )}
+                  >
                     Placed at{" "}
-                    <Text type="supporting" weight="medium" color="primary">
+                    <span className="text-sm text-ui-foreground font-medium">
                       {b.outcomeLevel.name}
-                    </Text>
+                    </span>
                     {b.assessedByName ? ` by ${b.assessedByName}` : ""}
-                  </Text>
+                  </span>
                 ) : null}
               </TableCell>
-              <TableCell className="max-md:hidden">
-                <Text color="secondary" hasTabularNumbers>
+              <TableCell className={"max-md:hidden"}>
+                <span className="text-sm text-ui-muted-foreground tabular-nums">
                   {ageLabel(b.student.dateOfBirth)}
-                </Text>
+                </span>
               </TableCell>
               <TableCell>
                 <Tag color={meta.color}>{meta.label}</Tag>
               </TableCell>
-              <TableCell className="max-md:hidden">
+              <TableCell className={"max-md:hidden"}>
                 {b.outcomeLevel ? (
                   <>
-                    <Text weight="medium">{b.outcomeLevel.name}</Text>
+                    <span className="text-sm text-ui-foreground font-medium">
+                      {b.outcomeLevel.name}
+                    </span>
                     {b.outcomeNote ? (
-                      <Text type="supporting" display="block">
+                      <span className="text-sm text-ui-muted-foreground block">
                         {b.outcomeNote}
-                      </Text>
+                      </span>
                     ) : null}
-                    <Text type="supporting" display="block">
+                    <span className="text-sm text-ui-muted-foreground block">
                       {b.assessedByName}
                       {b.assessedOn ? `, ${formatDate(b.assessedOn)}` : ""}
-                    </Text>
+                    </span>
                   </>
                 ) : b.status === "BOOKED" ? (
-                  <Text type="supporting">Not yet</Text>
+                  <span className="text-sm text-ui-muted-foreground">
+                    Not yet
+                  </span>
                 ) : (
-                  <Text color="secondary">—</Text>
+                  <span className="text-sm text-ui-muted-foreground">—</span>
                 )}
               </TableCell>
               {actions ? (
                 <TableCell>
-                  <HStack gap={1} vAlign="center" hAlign="end" wrap="wrap">
-                    {assess && (b.status === "BOOKED" || b.status === "ATTENDED") ? (
+                  <div
+                    className={
+                      "min-w-0 flex gap-1 items-center justify-end flex-wrap"
+                    }
+                  >
+                    {assess &&
+                    (b.status === "BOOKED" || b.status === "ATTENDED") ? (
                       <RecordOutcome booking={b} session={session} />
                     ) : null}
-                    {assess && b.status === "BOOKED" ? <MarkNoShow booking={b} /> : null}
+                    {assess && b.status === "BOOKED" ? (
+                      <MarkNoShow booking={b} />
+                    ) : null}
                     {book && b.status === "BOOKED" ? (
                       <CancelBooking booking={b} session={session} />
                     ) : null}
-                  </HStack>
+                  </div>
                 </TableCell>
               ) : null}
             </TableRow>

@@ -19,8 +19,6 @@
     "db:seed-curriculum": "tsx scripts/seed-curriculum.ts"
   },
   "dependencies": {
-    "@astryxdesign/core": "^0.5.2",
-    "@astryxdesign/theme-neutral": "^0.5.2",
     "@fontsource/figtree": "^5.3.0",
     "@prisma/adapter-pg": "^7.9.1",
     "@prisma/client": "^7.9.1",
@@ -41,7 +39,6 @@
     "zod": "^4.4.3"
   },
   "devDependencies": {
-    "@astryxdesign/cli": "^0.5.4",
     "@electric-sql/pglite": "^0.4.3",
     "@tailwindcss/postcss": "^4",
     "@types/bcryptjs": "^2.4.6",

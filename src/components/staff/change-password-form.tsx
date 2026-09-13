@@ -1,12 +1,11 @@
 "use client";
+import { Notice } from "@/components/ui-kit/notice";
+import { Button } from "@/components/shadcn/button";
 
 import * as React from "react";
 import { toast } from "@/lib/toast";
 import { Field } from "@/components/form-dialog";
-import { Banner } from "@astryxdesign/core/Banner";
-import { Button } from "@astryxdesign/core/Button";
-import { FormLayout } from "@astryxdesign/core/FormLayout";
-import { HStack } from "@astryxdesign/core/Stack";
+
 import { Input } from "@/components/ui/input";
 import { changeOwnPassword } from "@/lib/staff/actions/account";
 import { MIN_PASSWORD_LENGTH } from "@/lib/staff/constants";
@@ -48,7 +47,7 @@ export function ChangePasswordForm() {
         }
       } catch {
         setError(
-          "We could not confirm the password change. Try signing in with the new password before changing it again."
+          "We could not confirm the password change. Try signing in with the new password before changing it again.",
         );
       } finally {
         submitting.current = false;
@@ -58,7 +57,7 @@ export function ChangePasswordForm() {
 
   return (
     <form ref={formRef} onSubmit={handleSubmit} className="max-w-sm">
-      <FormLayout>
+      <div className="min-w-0 flex flex-col gap-4">
         <Field label="Current password" htmlFor="current">
           <Input
             id="current"
@@ -95,17 +94,19 @@ export function ChangePasswordForm() {
           />
         </Field>
 
-        {error ? <Banner status="error" title={error} collapsible={false} /> : null}
+        {error ? <Notice title={error} tone="error"></Notice> : null}
 
-        <HStack>
+        <div className="min-w-0 flex gap-2 items-center">
           <Button
-            label={pending ? "Saving…" : "Change password"}
-            variant="primary"
             type="submit"
-            isLoading={pending}
-          />
-        </HStack>
-      </FormLayout>
+            variant="default"
+            disabled={pending}
+            aria-busy={pending}
+          >
+            {pending ? "Saving…" : "Change password"}
+          </Button>
+        </div>
+      </div>
     </form>
   );
 }

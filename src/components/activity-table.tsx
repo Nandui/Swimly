@@ -1,12 +1,13 @@
 import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHeader,
-  TableHeaderCell,
+  TableHead,
   TableRow,
-} from "@astryxdesign/core/Table";
-import { Text } from "@astryxdesign/core/Text";
+  TableHeader,
+  TableCell,
+  TableBody,
+  Table,
+} from "@/components/shadcn/table";
+import { cn } from "@/lib/utils";
+
 import { Tag } from "@/components/ui-kit/tag";
 import { actionMeta } from "@/lib/activity/constants";
 import type { ActivityEntry } from "@/lib/activity/data/audit-log";
@@ -14,22 +15,24 @@ import { formatDateTime } from "@/lib/format";
 
 /** The audit trail as rows.
  *
- *  Below `md` the actor and the timestamp leave their columns and re-home as a
+ *  Below `lg` the actor and the timestamp leave their columns and re-home as a
  *  supporting line under the summary, rather than pushing the table into a
  *  sideways scroll that hides them. */
 export function ActivityTable({ entries }: { entries: ActivityEntry[] }) {
   return (
-    <Table hasHover textOverflow="wrap">
+    <Table className="w-full [&_td]:whitespace-normal [&_th]:whitespace-normal">
       <TableHeader>
-        <TableRow isHeaderRow>
-          <TableHeaderCell scope="col">What happened</TableHeaderCell>
-          <TableHeaderCell scope="col" className="max-md:hidden">
+        <TableRow>
+          <TableHead scope="col">What happened</TableHead>
+          <TableHead scope="col" className={"max-lg:hidden"}>
             Who
-          </TableHeaderCell>
-          <TableHeaderCell scope="col" className="max-md:hidden">Action</TableHeaderCell>
-          <TableHeaderCell scope="col" className="max-md:hidden">
+          </TableHead>
+          <TableHead scope="col" className={"max-lg:hidden"}>
+            Action
+          </TableHead>
+          <TableHead scope="col" className={"max-lg:hidden"}>
             When
-          </TableHeaderCell>
+          </TableHead>
         </TableRow>
       </TableHeader>
       <TableBody>
@@ -40,23 +43,38 @@ export function ActivityTable({ entries }: { entries: ActivityEntry[] }) {
               {/* Summaries carry email addresses and member numbers, which
                   cannot break on their own; without this one of them makes
                   the table wider than a phone. */}
-              <TableCell className="[overflow-wrap:anywhere]">
-                <Text weight="medium">{entry.summary}</Text>
-                <Text type="supporting" display="block" className="md:hidden">
+              <TableCell className={"[overflow-wrap:anywhere]"}>
+                <span className="text-sm text-ui-foreground font-medium">
+                  {entry.summary}
+                </span>
+                <span
+                  className={cn(
+                    "text-sm text-ui-muted-foreground block",
+                    "lg:hidden",
+                  )}
+                >
                   {entry.actorName} · {formatDateTime(entry.createdAt)}
-                </Text>
-                <Tag color={meta.color} className="md:hidden">{meta.label}</Tag>
+                </span>
+                <Tag color={meta.color} className="lg:hidden">
+                  {meta.label}
+                </Tag>
               </TableCell>
-              <TableCell className="max-md:hidden">
-                <Text color="secondary">{entry.actorName}</Text>
+              <TableCell className={"max-lg:hidden"}>
+                <span className="text-sm text-ui-muted-foreground">
+                  {entry.actorName}
+                </span>
               </TableCell>
-              <TableCell className="max-md:hidden">
+              <TableCell className={"max-lg:hidden"}>
                 <Tag color={meta.color}>{meta.label}</Tag>
               </TableCell>
-              <TableCell className="max-md:hidden">
-                <Text color="secondary" textWrap="nowrap" hasTabularNumbers>
+              <TableCell className={"max-lg:hidden"}>
+                <span
+                  className={
+                    "text-sm text-ui-muted-foreground whitespace-nowrap tabular-nums"
+                  }
+                >
                   {formatDateTime(entry.createdAt)}
-                </Text>
+                </span>
               </TableCell>
             </TableRow>
           );

@@ -1,11 +1,6 @@
-"use client";
-
-import { useRouter } from "next/navigation";
-import { SegmentedControl, SegmentedControlItem } from "@astryxdesign/core/SegmentedControl";
-
-/** A segmented control whose choice lives in the URL, like the tabs do and
- *  for the same reasons: a link somebody sends carries it, and the back
- *  button undoes it. Picking a segment navigates without scrolling. */
+import Link from "next/link";
+import { Button } from "@/components/shadcn/button";
+import { cn } from "@/lib/utils";
 export function LinkSegments({
   label,
   value,
@@ -17,20 +12,28 @@ export function LinkSegments({
   options: { value: string; label: string; href: string }[];
   size?: "sm" | "md" | "lg";
 }) {
-  const router = useRouter();
   return (
-    <SegmentedControl
-      label={label}
-      value={value}
-      size={size}
-      onChange={(next) => {
-        const option = options.find((o) => o.value === next);
-        if (option) router.push(option.href, { scroll: false });
-      }}
+    <nav
+      aria-label={label}
+      className="inline-flex flex-wrap gap-1 rounded-ui-lg bg-ui-muted p-1"
     >
       {options.map((option) => (
-        <SegmentedControlItem key={option.value} value={option.value} label={option.label} />
+        <Button
+          key={option.value}
+          asChild
+          variant="ghost"
+          size={size === "md" ? "default" : size}
+          className={cn(value === option.value && "bg-ui-background shadow-sm")}
+        >
+          <Link
+            href={option.href}
+            scroll={false}
+            aria-current={option.value === value ? "page" : undefined}
+          >
+            {option.label}
+          </Link>
+        </Button>
       ))}
-    </SegmentedControl>
+    </nav>
   );
 }

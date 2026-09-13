@@ -1,12 +1,18 @@
+import {
+  ItemContent,
+  ItemActions,
+  Item,
+  ItemGroup,
+  ItemMedia,
+} from "@/components/shadcn/item";
+
+import { cn } from "@/lib/utils";
+
 import { CurriculumImage } from "@/components/curriculum/curriculum-image";
 import { ARCHIVAL_STATUS_META } from "@/lib/status";
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
-import { Item } from "@astryxdesign/core/Item";
-import { List } from "@astryxdesign/core/List";
-import { Section } from "@astryxdesign/core/Section";
-import { HStack, StackItem, VStack } from "@astryxdesign/core/Stack";
-import { Heading, Text } from "@astryxdesign/core/Text";
+
 import { BackLink } from "@/components/ui-kit/back-link";
 import { EmptyState } from "@/components/ui-kit/empty-state";
 import { PageHeader } from "@/components/ui-kit/page-header";
@@ -39,7 +45,9 @@ import { screenPage } from "@/lib/page-guards";
 
 export const metadata: Metadata = { title: "Programme" };
 
-export default async function ProgrammePage(props: PageProps<"/programmes/[id]">) {
+export default async function ProgrammePage(
+  props: PageProps<"/programmes/[id]">,
+) {
   await screenPage("programmes", "curriculum.manage");
   const { id } = await props.params;
 
@@ -51,33 +59,48 @@ export default async function ProgrammePage(props: PageProps<"/programmes/[id]">
 
   const liveLevels = programme.levels.filter((level) => !level.archivedAt);
   const competencies = programme.levels.reduce(
-    (total, level) => total + level.competencies.filter((c) => !c.archivedAt).length,
-    0
+    (total, level) =>
+      total + level.competencies.filter((c) => !c.archivedAt).length,
+    0,
   );
 
   return (
-    <VStack gap={6}>
-      <VStack gap={2}>
+    <div className="min-w-0 flex flex-col gap-6">
+      <div className="min-w-0 flex flex-col gap-2">
         <BackLink href="/programmes" current={programme.name}>
           Programmes
         </BackLink>
         <PageHeader
-          title={<HStack gap={2} vAlign="center"><CurriculumImage kind="programme" id={programme.id} name={programme.name} />{programme.name}</HStack>}
+          title={
+            <div className="min-w-0 flex gap-2 items-center">
+              <CurriculumImage
+                kind="programme"
+                id={programme.id}
+                name={programme.name}
+              />
+              {programme.name}
+            </div>
+          }
           description={programme.description ?? undefined}
           actions={
             <>
-              <EditProgramme programme={{ ...programme, archivedAt: programme.archivedAt }} variant="button" />
+              <EditProgramme
+                programme={{ ...programme, archivedAt: programme.archivedAt }}
+                variant="button"
+              />
               <AddLevel programmeId={programme.id} />
             </>
           }
         />
-      </VStack>
+      </div>
 
       <Lead>
-        <Num>{liveLevels.length}</Num> {liveLevels.length === 1 ? "level" : "levels"}, worked
-        through in this order, with <Num>{competencies}</Num>{" "}
-        {competencies === 1 ? "competency" : "competencies"} between them. Every competency in a
-        level has to be signed off before a swimmer can complete it. Curriculum and progress are shared across all sites.
+        <Num>{liveLevels.length}</Num>{" "}
+        {liveLevels.length === 1 ? "level" : "levels"}, worked through in this
+        order, with <Num>{competencies}</Num>{" "}
+        {competencies === 1 ? "competency" : "competencies"} between them. Every
+        competency in a level has to be signed off before a swimmer can complete
+        it. Curriculum and progress are shared across all sites.
       </Lead>
 
       {programme.levels.length === 0 ? (
@@ -87,7 +110,7 @@ export default async function ProgrammePage(props: PageProps<"/programmes/[id]">
           action={<AddLevel programmeId={programme.id} />}
         />
       ) : (
-        <VStack gap={4}>
+        <div className="min-w-0 flex flex-col gap-4">
           {programme.levels.map((level, index) => (
             <LevelSection
               key={level.id}
@@ -96,48 +119,75 @@ export default async function ProgrammePage(props: PageProps<"/programmes/[id]">
               last={index === programme.levels.length - 1}
             />
           ))}
-        </VStack>
+        </div>
       )}
 
-      <VStack gap={3} as="section">
-        <HStack gap={2} vAlign="center" hAlign="between" wrap="wrap">
-          <Heading level={2}>Kinds of assessment</Heading>
+      <section className="min-w-0 flex flex-col gap-3">
+        <div
+          className={
+            "min-w-0 flex gap-2 items-center justify-between flex-wrap"
+          }
+        >
+          <h2 className="text-xl font-semibold tracking-tight">
+            Kinds of assessment
+          </h2>
           {programme.archivedAt ? null : (
-            <AddAssessmentType programmeId={programme.id} programmeName={programme.name} />
+            <AddAssessmentType
+              programmeId={programme.id}
+              programmeName={programme.name}
+            />
           )}
-        </HStack>
+        </div>
         <Lead>
-          What an assessment session for this programme can be — new swimmers, mixed abilities.
-          The desk picks one when adding a session.
+          What an assessment session for this programme can be — new swimmers,
+          mixed abilities. The desk picks one when adding a session.
         </Lead>
         {assessmentTypes.length === 0 ? (
-          <EmptyState compact title="None yet" hint="Add one and it becomes something a session can be." />
+          <EmptyState
+            compact
+            title="None yet"
+            hint="Add one and it becomes something a session can be."
+          />
         ) : (
-          <List hasDividers>
+          <ItemGroup className="divide-y divide-ui-border">
             {assessmentTypes.map((type) => (
               <Item
                 key={type.id}
-                as="li"
-                align="start"
-                label={
-                  <HStack gap={2} vAlign="center" wrap="wrap">
-                    {type.name}
-                    {type.archivedAt ? <Tag color={ARCHIVAL_STATUS_META.archived.color}>{ARCHIVAL_STATUS_META.archived.label}</Tag> : null}
-                  </HStack>
-                }
-                description={`${type.description ? `${type.description} · ` : ""}${type._count.sessions} ${type._count.sessions === 1 ? "session" : "sessions"}`}
-                endContent={
-                  <HStack gap={1} vAlign="center">
-                    <EditAssessmentType type={type} />
-                    <ArchiveAssessmentType type={type} sessions={type._count.sessions} />
-                  </HStack>
-                }
-              />
+                role="listitem"
+                className="items-start [overflow-wrap:anywhere]"
+              >
+                <ItemContent className="min-w-0">
+                  <div className="text-sm font-medium">
+                    {
+                      <div className="min-w-0 flex gap-2 items-center flex-wrap">
+                        {type.name}
+                        {type.archivedAt ? (
+                          <Tag color={ARCHIVAL_STATUS_META.archived.color}>
+                            {ARCHIVAL_STATUS_META.archived.label}
+                          </Tag>
+                        ) : null}
+                      </div>
+                    }
+                  </div>
+                  <div className="text-sm text-ui-muted-foreground">{`${type.description ? `${type.description} · ` : ""}${type._count.sessions} ${type._count.sessions === 1 ? "session" : "sessions"}`}</div>
+                </ItemContent>
+                <ItemActions className="flex-wrap">
+                  {
+                    <div className="min-w-0 flex gap-1 items-center">
+                      <EditAssessmentType type={type} />
+                      <ArchiveAssessmentType
+                        type={type}
+                        sessions={type._count.sessions}
+                      />
+                    </div>
+                  }
+                </ItemActions>
+              </Item>
             ))}
-          </List>
+          </ItemGroup>
         )}
-      </VStack>
-    </VStack>
+      </section>
+    </div>
   );
 }
 
@@ -185,85 +235,134 @@ function LevelSection({
   const live = level.competencies.filter((c) => !c.archivedAt);
 
   return (
-    <Section padding={0} dividers={["top", "bottom"]}>
-      <VStack gap={0}>
-        <HStack gap={3} vAlign="start" paddingInline={3} paddingBlock={2}>
-          <StackItem size="fill">
-            <VStack gap={0.5}>
-              <Heading level={2}>
-                <HStack gap={2} vAlign="center" wrap="wrap">
-                  <CurriculumImage kind="level" id={level.id} name={level.name} />
+    <section
+      className={
+        "min-w-0 space-y-4 border-t border-ui-border border-b border-ui-border p-0"
+      }
+    >
+      <div className="min-w-0 flex flex-col gap-0">
+        <div className="min-w-0 flex gap-3 items-start px-3 py-2">
+          <div className="min-w-0 flex-1">
+            <div className="min-w-0 flex flex-col gap-0.5">
+              <h2 className="text-xl font-semibold tracking-tight">
+                <div className="min-w-0 flex gap-2 items-center flex-wrap">
+                  <CurriculumImage
+                    kind="level"
+                    id={level.id}
+                    name={level.name}
+                  />
                   {level.name}
-                  {archived ? <Tag color={ARCHIVAL_STATUS_META.archived.color}>{ARCHIVAL_STATUS_META.archived.label}</Tag> : null}
-                </HStack>
-              </Heading>
+                  {archived ? (
+                    <Tag color={ARCHIVAL_STATUS_META.archived.color}>
+                      {ARCHIVAL_STATUS_META.archived.label}
+                    </Tag>
+                  ) : null}
+                </div>
+              </h2>
               {level.description ? (
-                <Text type="supporting" display="block">
+                <span className="text-sm text-ui-muted-foreground block">
                   {level.description}
-                </Text>
+                </span>
               ) : null}
-              <Text type="supporting" display="block">
+              <span className="text-sm text-ui-muted-foreground block">
                 {competencyCountLabel(live.length)}
                 {level._count.courses > 0
                   ? ` · ${level._count.courses} ${level._count.courses === 1 ? "class" : "classes"}`
                   : ""}
-              </Text>
-            </VStack>
-          </StackItem>
-          <HStack gap={1} vAlign="center">
-            {archived ? null : <MoveLevel level={level} first={first} last={last} />}
+              </span>
+            </div>
+          </div>
+          <div className="min-w-0 flex gap-1 items-center">
+            {archived ? null : (
+              <MoveLevel level={level} first={first} last={last} />
+            )}
             <EditLevel level={level} />
             <ArchiveLevel level={level} />
-          </HStack>
-        </HStack>
+          </div>
+        </div>
 
         {level.competencies.length === 0 ? (
-          <Text as="p" display="block" color="secondary" justify="center" className="px-3 py-6">
-            Nothing to pass yet. Add the first competency and it becomes what completing{" "}
-            {level.name} means.
-          </Text>
+          <p
+            className={cn(
+              "text-sm text-ui-muted-foreground block text-center",
+              "px-3 py-6",
+            )}
+          >
+            Nothing to pass yet. Add the first competency and it becomes what
+            completing {level.name} means.
+          </p>
         ) : (
-          <List hasDividers listStyle="none">
-            {numberLive(level.competencies).map(({ competency, position, first, last }) => (
-              <Item
-                key={competency.id}
-                as="li"
-                align="start"
-                marker={
-                  <Text type="supporting" hasTabularNumbers className="inline-block w-4">
-                    {position ?? ""}
-                  </Text>
-                }
-                label={
-                  <HStack gap={2} vAlign="center" wrap="wrap">
-                    {competency.name}
-                    {competency.archivedAt ? <Tag color={ARCHIVAL_STATUS_META.archived.color}>{ARCHIVAL_STATUS_META.archived.label}</Tag> : null}
-                  </HStack>
-                }
-                description={competency.description ?? undefined}
-                endContent={
-                  <HStack gap={1} vAlign="center">
-                    {competency.archivedAt ? null : (
-                      <MoveCompetency competency={competency} first={first} last={last} />
-                    )}
-                    <EditCompetency competency={competency} />
-                    <ArchiveCompetency
-                      competency={competency}
-                      assessed={competency._count.results}
-                    />
-                  </HStack>
-                }
-              />
-            ))}
-          </List>
+          <ItemGroup className="divide-y divide-ui-border">
+            {numberLive(level.competencies).map(
+              ({ competency, position, first, last }) => (
+                <Item
+                  key={competency.id}
+                  role="listitem"
+                  className="items-start [overflow-wrap:anywhere]"
+                >
+                  <ItemMedia>
+                    {
+                      <span
+                        className={cn(
+                          "text-sm text-ui-muted-foreground tabular-nums",
+                          "inline-block w-4",
+                        )}
+                      >
+                        {position ?? ""}
+                      </span>
+                    }
+                  </ItemMedia>
+                  <ItemContent className="min-w-0">
+                    <div className="text-sm font-medium">
+                      {
+                        <div
+                          className={
+                            "min-w-0 flex gap-2 items-center flex-wrap"
+                          }
+                        >
+                          {competency.name}
+                          {competency.archivedAt ? (
+                            <Tag color={ARCHIVAL_STATUS_META.archived.color}>
+                              {ARCHIVAL_STATUS_META.archived.label}
+                            </Tag>
+                          ) : null}
+                        </div>
+                      }
+                    </div>
+                    <div className="text-sm text-ui-muted-foreground">
+                      {competency.description ?? undefined}
+                    </div>
+                  </ItemContent>
+                  <ItemActions className="flex-wrap">
+                    {
+                      <div className="min-w-0 flex gap-1 items-center">
+                        {competency.archivedAt ? null : (
+                          <MoveCompetency
+                            competency={competency}
+                            first={first}
+                            last={last}
+                          />
+                        )}
+                        <EditCompetency competency={competency} />
+                        <ArchiveCompetency
+                          competency={competency}
+                          assessed={competency._count.results}
+                        />
+                      </div>
+                    }
+                  </ItemActions>
+                </Item>
+              ),
+            )}
+          </ItemGroup>
         )}
 
         {archived ? null : (
-          <HStack paddingInline={3} paddingBlock={2}>
+          <div className="min-w-0 flex gap-2 items-center px-3 py-2">
             <AddCompetency levelId={level.id} levelName={level.name} />
-          </HStack>
+          </div>
         )}
-      </VStack>
-    </Section>
+      </div>
+    </section>
   );
 }

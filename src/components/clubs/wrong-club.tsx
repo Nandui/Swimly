@@ -1,6 +1,6 @@
 import { EmptyState } from "@/components/ui-kit/empty-state";
 import { PageHeader } from "@/components/ui-kit/page-header";
-import { VStack } from "@astryxdesign/core/Stack";
+
 import { SwitchClubButton } from "@/components/clubs/switch-club-button";
 
 type Club = { id: string; name: string };
@@ -13,9 +13,17 @@ type Club = { id: string; name: string };
  *  prevent: every list and picker around it would be the current club's, and
  *  an enrolment made from it would cross sites. So the page says whose it is
  *  and offers the switch, and nothing else. */
-export function WrongClub({ what, owner, current }: { what: string; owner: Club; current: Club }) {
+export function WrongClub({
+  what,
+  owner,
+  current,
+}: {
+  what: string;
+  owner: Club;
+  current: Club;
+}) {
   return (
-    <VStack gap={6}>
+    <div className="min-w-0 flex flex-col gap-6">
       <PageHeader title="Switch club to continue" />
       <EmptyState
         icon="building"
@@ -23,6 +31,6 @@ export function WrongClub({ what, owner, current }: { what: string; owner: Club;
         hint={`You are working in ${current.name}. Nothing from one club can be changed while working in another; switch, and this page comes back as it is there.`}
         action={<SwitchClubButton club={owner} />}
       />
-    </VStack>
+    </div>
   );
 }

@@ -1,11 +1,11 @@
 "use client";
+import { Button } from "@/components/shadcn/button";
 
 import { GraduationCap, UserRoundPlus, UserRoundX, X } from "lucide-react";
 import { ConfirmAction } from "@/components/confirm-action";
 import { Field, FormDialog } from "@/components/form-dialog";
 import { StudentPicker } from "@/components/students/student-search";
-import { Button } from "@astryxdesign/core/Button";
-import { IconButton } from "@astryxdesign/core/IconButton";
+
 import { Select } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
 import {
@@ -15,17 +15,30 @@ import {
   recordOutcome,
 } from "@/lib/assessments/actions/bookings";
 import { sessionLabel } from "@/lib/assessments/constants";
-import type { BookingRow, SessionDetail } from "@/lib/assessments/data/assessments";
+import type {
+  BookingRow,
+  SessionDetail,
+} from "@/lib/assessments/data/assessments";
 import { fullName } from "@/lib/students/constants";
-import { Icon } from "@astryxdesign/core/Icon";
 
-export function BookOntoSession({ session, taken }: { session: SessionDetail; taken: number }) {
+export function BookOntoSession({
+  session,
+  taken,
+}: {
+  session: SessionDetail;
+  taken: number;
+}) {
   const places =
-    session.capacity === null ? "no limit on places" : `${taken} of ${session.capacity} places taken`;
+    session.capacity === null
+      ? "no limit on places"
+      : `${taken} of ${session.capacity} places taken`;
   return (
     <FormDialog
       trigger={
-        <Button label="Book a swimmer" variant="primary" size="sm" icon={<Icon icon={UserRoundPlus} size="sm" />} />
+        <Button variant="default" size="sm">
+          {<UserRoundPlus aria-hidden={true} className="size-4 shrink-0" />}
+          {"Book a swimmer"}
+        </Button>
       }
       title={`Book onto the assessment on ${sessionLabel(session)}`}
       description={`${session.programme.name} · ${places}`}
@@ -49,11 +62,23 @@ export function BookOntoSession({ session, taken }: { session: SessionDetail; ta
   );
 }
 
-export function CancelBooking({ booking, session }: { booking: BookingRow; session: SessionDetail }) {
+export function CancelBooking({
+  booking,
+  session,
+}: {
+  booking: BookingRow;
+  session: SessionDetail;
+}) {
   return (
     <ConfirmAction
       trigger={
-        <IconButton label={`Cancel ${fullName(booking.student)}'s booking`} variant="ghost" size="sm" icon={<Icon icon={X} size="sm" />} />
+        <Button
+          variant="ghost"
+          aria-label={`Cancel ${fullName(booking.student)}'s booking`}
+          size="icon-sm"
+        >
+          {<X aria-hidden={true} className="size-4 shrink-0" />}
+        </Button>
       }
       title={`Cancel ${fullName(booking.student)}'s booking?`}
       description={`They lose their place on ${sessionLabel(session)}. They can be booked again while there is room.`}
@@ -68,7 +93,14 @@ export function MarkNoShow({ booking }: { booking: BookingRow }) {
   return (
     <ConfirmAction
       trigger={
-        <IconButton label={`${fullName(booking.student)} did not come`} variant="ghost" size="sm" icon={<Icon icon={UserRoundX} size="sm" />} tooltip="Did not come" />
+        <Button
+          variant="ghost"
+          aria-label={`${fullName(booking.student)} did not come`}
+          size="icon-sm"
+          title="Did not come"
+        >
+          {<UserRoundX aria-hidden={true} className="size-4 shrink-0" />}
+        </Button>
       }
       title={`${fullName(booking.student)} did not come?`}
       description="Their place is given back. The desk can book them onto another session."
@@ -96,12 +128,25 @@ export function RecordOutcome({
     <FormDialog
       trigger={
         variant === "icon" ? (
-          <IconButton label={again ? `Change where ${name} was placed` : `Place ${name}`} variant="ghost" size="sm" icon={<Icon icon={GraduationCap} size="sm" />} />
+          <Button
+            variant="ghost"
+            aria-label={
+              again ? `Change where ${name} was placed` : `Place ${name}`
+            }
+            size="icon-sm"
+          >
+            {<GraduationCap aria-hidden={true} className="size-4 shrink-0" />}
+          </Button>
         ) : (
-          <Button label={`${again ? "Change placement" : "Place"}`} variant={again ? "secondary" : "primary"} size="sm" icon={<Icon icon={GraduationCap} size="sm" />} />
+          <Button variant={again ? "outline" : "default"} size="sm">
+            {<GraduationCap aria-hidden={true} className="size-4 shrink-0" />}
+            {`${again ? "Change placement" : "Place"}`}
+          </Button>
         )
       }
-      title={again ? `Change where ${name} belongs` : `Where does ${name} belong?`}
+      title={
+        again ? `Change where ${name} belongs` : `Where does ${name} belong?`
+      }
       description={`${session.programme.name} · assessed on ${sessionLabel(session)}`}
       submitLabel={again ? "Save" : "Place"}
       successMessage={`${name} placed`}
@@ -123,10 +168,17 @@ export function RecordOutcome({
           name="levelId"
           defaultValue={booking.outcomeLevel?.id}
           placeholder="Pick a level"
-          options={session.programme.levels.map((level) => ({ value: level.id, label: level.name }))}
+          options={session.programme.levels.map((level) => ({
+            value: level.id,
+            label: level.name,
+          }))}
         />
       </Field>
-      <Field label="Note" htmlFor="note" hint="What you saw. It goes on their record.">
+      <Field
+        label="Note"
+        htmlFor="note"
+        hint="What you saw. It goes on their record."
+      >
         <Textarea
           id="note"
           name="note"

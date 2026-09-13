@@ -68,5 +68,5 @@ The shadcn redesign passed `npm run typecheck`, `npm run lint`, all 145 tests
 and `npx next build`. Synthetic browser checks covered combined site/search/
 availability filters, return links, pagination, archived and empty results,
 required fields, simulated save failure/retry, and all four widths in both
-modes. Live checks confirmed the directory contains no Astryx elements, class
+modes. Live checks confirmed the directory contains no legacy UI elements, class
 links resolve, filtered return links survive, and Refresh retains the filters.

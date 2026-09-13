@@ -1,14 +1,23 @@
 "use client";
 
 import * as React from "react";
-import { Banner } from "@astryxdesign/core/Banner";
-import { Button } from "@astryxdesign/core/Button";
-import { Dialog, DialogHeader } from "@astryxdesign/core/Dialog";
-import { Field as AstryxField } from "@astryxdesign/core/Field";
-import { FormLayout } from "@astryxdesign/core/FormLayout";
-import { HStack } from "@astryxdesign/core/Stack";
+import { Button } from "@/components/shadcn/button";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/shadcn/dialog";
+import { Notice } from "@/components/ui-kit/notice";
+import { FieldFrame } from "@/components/ui/field-frame";
+import { cn } from "@/lib/utils";
 import styles from "./form-dialog.module.css";
-import type { ActionResult, ActionConfirmation, ConfirmationReply } from "@/lib/action-result";
+import type {
+  ActionResult,
+  ActionConfirmation,
+  ConfirmationReply,
+} from "@/lib/action-result";
 import { toast } from "@/lib/toast";
 import { withTimeout } from "@/lib/save-feedback";
 import { Input } from "@/components/ui/input";
@@ -30,16 +39,6 @@ import { StudentPicker } from "@/components/students/student-search";
  *  longer part of it, so without the wrapper the dialog closes outside the
  *  pending state and flashes. The toast needs no such wrapper. */
 
-/** The old Tailwind widths, kept as the prop's vocabulary so no call site
- *  had to change; Astryx takes pixels. */
-const WIDTHS: Record<string, number> = {
-  "sm:max-w-sm": 384,
-  "sm:max-w-md": 448,
-  "sm:max-w-lg": 512,
-  "sm:max-w-xl": 576,
-  "sm:max-w-2xl": 672,
-};
-
 export function FormDialog({
   trigger,
   title,
@@ -57,7 +56,10 @@ export function FormDialog({
   description?: string;
   submitLabel?: string;
   successMessage: string;
-  submit: (formData: FormData, confirmation?: ConfirmationReply) => Promise<ActionResult>;
+  submit: (
+    formData: FormData,
+    confirmation?: ConfirmationReply,
+  ) => Promise<ActionResult>;
   /** Widen for a form with two columns of fields. */
   width?: string;
   children: React.ReactNode;
@@ -68,13 +70,20 @@ export function FormDialog({
   const [open, setOpen] = React.useState(false);
   const rememberTrigger = useDialogTriggerFocus(open);
   const [error, setError] = React.useState<string | null>(null);
+  const errorMessage = React.useRef<HTMLDivElement>(null);
   const [pending, startTransition] = React.useTransition();
   const submitting = React.useRef(false);
-  const [confirmation, setConfirmation] = React.useState<{ prompt: ActionConfirmation; data: FormData } | null>(null);
+  const [confirmation, setConfirmation] = React.useState<{
+    prompt: ActionConfirmation;
+    data: FormData;
+  } | null>(null);
   const confirmationHeading = React.useRef<HTMLDivElement>(null);
   React.useEffect(() => {
     if (confirmation) confirmationHeading.current?.focus();
   }, [confirmation]);
+  React.useEffect(() => {
+    if (error) errorMessage.current?.focus();
+  }, [error]);
 
   function openForm(triggerElement?: HTMLElement) {
     // Mount fresh controls when opened. Failed saves leave the dialog mounted
@@ -119,13 +128,19 @@ export function FormDialog({
           });
         } else {
           startTransition(() => {
-            setConfirmation(result.confirmation ? { prompt: result.confirmation, data: formData } : null);
+            setConfirmation(
+              result.confirmation
+                ? { prompt: result.confirmation, data: formData }
+                : null,
+            );
             setError(result.confirmation ? null : result.error);
           });
         }
       } catch {
         startTransition(() =>
-          setError("We could not confirm the save. Check the record before trying again.")
+          setError(
+            "We could not confirm the save. Check the record before trying again.",
+          ),
         );
       } finally {
         submitting.current = false;
@@ -136,39 +151,94 @@ export function FormDialog({
   return (
     <>
       <Trigger onOpen={openForm}>{trigger}</Trigger>
-      {open ? <Dialog
-        isOpen={open}
-        onOpenChange={(next) => (next ? openForm() : close())}
-        purpose={pending ? "required" : "form"}
-        width={WIDTHS[width] ?? 448}
-      >
-        <form onSubmit={handleSubmit} aria-busy={pending} className={styles.form}>
-          <div ref={confirmationHeading} tabIndex={-1} className={styles.header}>
-            <DialogHeader title={confirmation?.prompt.title ?? title} subtitle={confirmation?.prompt.description ?? description} onOpenChange={pending ? undefined : close} />
-          </div>
+      {open ? (
+        <Dialog
+          open={open}
+          onOpenChange={(next) => (next ? openForm() : close())}
+        >
+          <DialogContent
+            className={cn(
+              "flex max-h-[calc(100dvh-2rem)] flex-col gap-0 p-0",
+              width,
+            )}
+            showCloseButton={!pending}
+          >
+            <form
+              onSubmit={handleSubmit}
+              aria-busy={pending}
+              className={styles.form}
+            >
+              <div
+                ref={confirmationHeading}
+                tabIndex={-1}
+                className={styles.header}
+              >
+                <DialogHeader>
+                  <DialogTitle>
+                    {confirmation?.prompt.title ?? title}
+                  </DialogTitle>
+                  <DialogDescription
+                    className={
+                      confirmation?.prompt.description || description
+                        ? undefined
+                        : "sr-only"
+                    }
+                  >
+                    {confirmation?.prompt.description ??
+                      description ??
+                      `Enter the details for ${title.toLowerCase()}.`}
+                  </DialogDescription>
+                </DialogHeader>
+              </div>
 
-          <div className={styles.body}>
-            <div hidden={!!confirmation}>
-              <FormLayout defaultOptionality="optional">{children}</FormLayout>
-            </div>
+              <div className={styles.body}>
+                <div hidden={!!confirmation}>
+                  <div className="flex flex-col gap-4">{children}</div>
+                </div>
 
-            {error ? <Banner status="error" title={error} collapsible={false} /> : null}
-          </div>
+                {error ? (
+                  <div ref={errorMessage} tabIndex={-1}>
+                    <Notice tone="error" title={error} />
+                  </div>
+                ) : null}
+              </div>
 
-          <HStack gap={2} hAlign="end" wrap="wrap" className={styles.footer}>
-            <Button type="button" label="Cancel" variant="secondary" onClick={close} isDisabled={pending} />
-            {confirmation ? confirmation.prompt.choices.map((choice) => (
-              <Button key={choice.value} type="button" label={choice.label} variant="secondary"
-                isDisabled={pending} onClick={() => save(confirmation.data, { choice: choice.value, ids: confirmation.prompt.ids })} />
-            )) : <Button
-              type="submit"
-              label={pending ? "Saving…" : submitLabel}
-              variant="primary"
-              isLoading={pending}
-            />}
-          </HStack>
-        </form>
-      </Dialog> : null}
+              <div className={styles.footer}>
+                <Button
+                  type="button"
+                  variant="outline"
+                  onClick={close}
+                  disabled={pending}
+                >
+                  Cancel
+                </Button>
+                {confirmation ? (
+                  confirmation.prompt.choices.map((choice) => (
+                    <Button
+                      key={choice.value}
+                      type="button"
+                      variant="outline"
+                      disabled={pending}
+                      onClick={() =>
+                        save(confirmation.data, {
+                          choice: choice.value,
+                          ids: confirmation.prompt.ids,
+                        })
+                      }
+                    >
+                      {choice.label}
+                    </Button>
+                  ))
+                ) : (
+                  <Button type="submit" disabled={pending}>
+                    {pending ? "Saving…" : submitLabel}
+                  </Button>
+                )}
+              </div>
+            </form>
+          </DialogContent>
+        </Dialog>
+      ) : null}
     </>
   );
 }
@@ -180,12 +250,17 @@ export function useDialogTriggerFocus(open: boolean) {
   React.useEffect(() => {
     if (open || !trigger.current) return;
     const frame = requestAnimationFrame(() => {
-      if (trigger.current?.isConnected) trigger.current.focus({ preventScroll: true });
+      if (trigger.current?.isConnected)
+        trigger.current.focus({ preventScroll: true });
     });
     return () => cancelAnimationFrame(frame);
   }, [open]);
   return (element?: HTMLElement) => {
-    trigger.current = element ?? (document.activeElement instanceof HTMLElement ? document.activeElement : null);
+    trigger.current =
+      element ??
+      (document.activeElement instanceof HTMLElement
+        ? document.activeElement
+        : null);
   };
 }
 
@@ -204,19 +279,26 @@ export function Trigger({
       ...{ "aria-haspopup": "dialog" as const },
       onClick: (event: React.MouseEvent) => {
         inner?.(event);
-        if (!event.defaultPrevented) onOpen(event.currentTarget as HTMLElement);
+        if (!event.defaultPrevented) {
+          event.preventDefault();
+          onOpen(event.currentTarget as HTMLElement);
+        }
       },
     });
   }
   return (
-    <Button type="button" label={typeof children === "string" ? children : "Open dialog"} onClick={(event) => onOpen(event.currentTarget)} aria-haspopup="dialog">
+    <Button
+      type="button"
+      onClick={(event) => onOpen(event.currentTarget)}
+      aria-haspopup="dialog"
+    >
       {children}
     </Button>
   );
 }
 
 /** The controls that draw their own label when handed one. Everything else
- *  is wrapped in Astryx's Field, which draws the label for it. */
+ *  receives a shared shadcn label and hint wrapper. */
 const LABELLED = new Set<React.ElementType>([
   Input,
   Textarea,
@@ -227,7 +309,7 @@ const LABELLED = new Set<React.ElementType>([
 ]);
 
 /** A labelled field. The label is handed to the control when it knows what
- *  to do with one, so the label, the hint and the control are one Astryx
+ *  to do with one, so the label, the hint and the control are one accessible
  *  field with the right spacing and association. */
 export function Field({
   label,
@@ -241,7 +323,9 @@ export function Field({
   children: React.ReactNode;
 }) {
   if (
-    React.isValidElement<{ label?: string; description?: string; id?: string }>(children) &&
+    React.isValidElement<{ label?: string; description?: string; id?: string }>(
+      children,
+    ) &&
     LABELLED.has(children.type as React.ElementType)
   ) {
     return React.cloneElement(children, {
@@ -252,8 +336,8 @@ export function Field({
   }
 
   return (
-    <AstryxField label={label} inputID={htmlFor} description={hint} width="100%">
+    <FieldFrame label={label} id={htmlFor} description={hint}>
       {children}
-    </AstryxField>
+    </FieldFrame>
   );
 }

@@ -1,5 +1,3 @@
-"use client";
-
 import {
   ArrowRight,
   Building2,
@@ -16,14 +14,10 @@ import {
   ScrollText,
   Users,
   Waves,
+  type LucideProps,
 } from "lucide-react";
-import { Icon } from "@astryxdesign/core/Icon";
+import { cn } from "@/lib/utils";
 
-/** Astryx's Icon is a client component, so a server-rendered page cannot hand
- *  it an icon *component* — React refuses to send a function across. Server
- *  pages name the icon instead, and the lookup happens here, on the client.
- *  Client components keep using Astryx's Icon with the lucide component
- *  directly. */
 const ICONS = {
   arrowRight: ArrowRight,
   building: Building2,
@@ -40,15 +34,31 @@ const ICONS = {
   scrollText: ScrollText,
   users: Users,
   waves: Waves,
-} as const;
-
+};
 export type AppIconName = keyof typeof ICONS;
-
-type IconProps = React.ComponentProps<typeof Icon>;
-
+const SIZES = { sm: "size-4", md: "size-5", lg: "size-8" };
 export function AppIcon({
   name,
-  ...rest
-}: Omit<IconProps, "icon"> & { name: AppIconName }) {
-  return <Icon icon={ICONS[name]} {...rest} />;
+  size = "md",
+  color,
+  className,
+  ...props
+}: Omit<LucideProps, "size" | "color"> & {
+  name: AppIconName;
+  size?: keyof typeof SIZES;
+  color?: "primary" | "secondary";
+}) {
+  const Icon = ICONS[name];
+  return (
+    <Icon
+      aria-hidden="true"
+      {...props}
+      className={cn(
+        "shrink-0",
+        SIZES[size],
+        color === "secondary" && "text-ui-muted-foreground",
+        className,
+      )}
+    />
+  );
 }

@@ -1,51 +1,42 @@
-"use client";
-
-import * as React from "react";
 import { Search } from "lucide-react";
-import { Button } from "@astryxdesign/core/Button";
-import { TextInput } from "@astryxdesign/core/TextInput";
-import { HStack, StackItem } from "@astryxdesign/core/Stack";
-
-type SearchFieldProps = {
-  name?: string;
-  label: string;
-  placeholder: string;
-  defaultValue?: string;
-  /** Its own width from the tablet up; full width on a phone regardless. */
-  width?: number;
-};
-
-/** A search box that posts through the `<Form>` around it. A visible submit
- *  action works for touch, keyboard and assistive technology alike. The URL
- *  seeds a fresh field when a search is cleared or browser history changes. */
-export function SearchField(props: SearchFieldProps) {
-  return <SearchFieldControl key={props.defaultValue ?? ""} {...props} />;
-}
-
-function SearchFieldControl({
+import { Button } from "@/components/shadcn/button";
+import { Input } from "@/components/shadcn/input";
+export function SearchField({
   name = "q",
   label,
   placeholder,
   defaultValue = "",
   width,
-}: SearchFieldProps) {
-  const [value, setValue] = React.useState(defaultValue);
+}: {
+  name?: string;
+  label: string;
+  placeholder: string;
+  defaultValue?: string;
+  width?: number;
+}) {
   return (
-    <HStack gap={2} vAlign="center" width={width ? `min(100%, ${width + 96}px)` : "100%"} className="max-sm:w-full">
-      <StackItem size="fill">
-        <TextInput
-          label={label}
-          isLabelHidden
-          htmlName={name}
-          value={value}
-          onChange={setValue}
-          placeholder={placeholder}
-          startIcon={Search}
-          hasClear
-          width="100%"
+    <div
+      className="flex w-full items-center gap-2"
+      style={{ maxWidth: width ? width + 96 : undefined }}
+    >
+      <div className="relative min-w-0 flex-1">
+        <Search
+          aria-hidden="true"
+          className="pointer-events-none absolute top-1/2 left-3 size-4 -translate-y-1/2 text-ui-muted-foreground"
         />
-      </StackItem>
-      <Button type="submit" label="Search" variant="secondary" />
-    </HStack>
+        <Input
+          key={defaultValue}
+          type="search"
+          name={name}
+          aria-label={label}
+          placeholder={placeholder}
+          defaultValue={defaultValue}
+          className="pl-10"
+        />
+      </div>
+      <Button type="submit" variant="outline">
+        Search
+      </Button>
+    </div>
   );
 }

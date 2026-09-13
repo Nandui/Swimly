@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import { VStack } from "@astryxdesign/core/Stack";
+
 import { ActivityTable } from "@/components/activity-table";
 import { EmptyState } from "@/components/ui-kit/empty-state";
 import { LinkPagination } from "@/components/ui-kit/link-pagination";
@@ -13,7 +13,10 @@ export const metadata: Metadata = { title: "Activity" };
 export default async function ActivityPage(props: PageProps<"/activity">) {
   await screenPage("activity", "activity.view");
   const params = await props.searchParams;
-  const requested = Math.max(1, Number(typeof params.page === "string" ? params.page : 1) || 1);
+  const requested = Math.max(
+    1,
+    Number(typeof params.page === "string" ? params.page : 1) || 1,
+  );
 
   const { entries, total, page } = await getActivity(requested);
 
@@ -21,11 +24,8 @@ export default async function ActivityPage(props: PageProps<"/activity">) {
   const last = (page - 1) * ACTIVITY_PER_PAGE + entries.length;
 
   return (
-    <VStack gap={6}>
-      <PageHeader
-        title="Activity"
-        description="Who changed what, and when."
-      />
+    <div className="min-w-0 flex flex-col gap-6">
+      <PageHeader title="Activity" description="Who changed what, and when." />
 
       {total === 0 ? (
         <EmptyState
@@ -57,6 +57,6 @@ export default async function ActivityPage(props: PageProps<"/activity">) {
           ) : null}
         </>
       )}
-    </VStack>
+    </div>
   );
 }

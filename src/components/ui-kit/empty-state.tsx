@@ -1,29 +1,37 @@
-import { EmptyState as AstryxEmptyState } from "@astryxdesign/core/EmptyState";
-import { AppIcon, type AppIconName } from "@/components/ui-kit/app-icon";
-
-/** A place with nothing in it yet: one line saying what, one saying what to
- *  do, and the action that does it. */
+import {
+  Empty,
+  EmptyContent,
+  EmptyDescription,
+  EmptyHeader,
+  EmptyMedia,
+  EmptyTitle,
+} from "@/components/shadcn/empty";
+import { AppIcon, type AppIconName } from "./app-icon";
 export function EmptyState({
-  icon,
   title,
   hint,
   action,
+  icon,
   compact = false,
 }: {
-  icon?: AppIconName;
   title: string;
   hint?: string;
   action?: React.ReactNode;
-  /** Inside a section rather than as the whole page. */
+  icon?: AppIconName;
   compact?: boolean;
 }) {
   return (
-    <AstryxEmptyState
-      icon={icon ? <AppIcon name={icon} size="lg" color="secondary" /> : undefined}
-      title={title}
-      description={hint}
-      actions={action}
-      isCompact={compact}
-    />
+    <Empty className={compact ? "py-6" : "py-12"}>
+      <EmptyHeader>
+        {icon ? (
+          <EmptyMedia variant="icon">
+            <AppIcon name={icon} />
+          </EmptyMedia>
+        ) : null}
+        <EmptyTitle>{title}</EmptyTitle>
+        {hint ? <EmptyDescription>{hint}</EmptyDescription> : null}
+      </EmptyHeader>
+      {action ? <EmptyContent>{action}</EmptyContent> : null}
+    </Empty>
   );
 }

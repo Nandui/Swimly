@@ -1,129 +1,44 @@
-/* The look is Astryx (Meta's open design system), Neutral theme, light and
-   dark from the same tokens. Astryx ships its component styles as plain CSS
-   in cascade layers; Tailwind stays for layout. The two coexist only if every
-   layer is declared up front, in this order, so Astryx's component rules sit
-   below Tailwind's utilities and a `className` on an Astryx component still
-   wins. Unlayered rules — the few at the bottom of this file — beat all of
-   them. */
-@layer reset, theme, base, astryx-base, astryx-theme, components, utilities;
-
-@import "tailwindcss/theme.css" layer(theme);
-@import "tailwindcss/preflight.css" layer(base);
-@import "@astryxdesign/core/reset.css";
-@import "@astryxdesign/core/astryx.css";
-@import "@astryxdesign/theme-neutral/theme.css";
-/* The bridge: Astryx tokens become Tailwind utilities — `bg-surface`,
-   `text-primary`, `text-secondary`, `border-border`, `rounded-lg` (the
-   container radius), `p-4` on the 4px scale. */
-@import "@astryxdesign/core/tailwind-theme.css";
+@import "tailwindcss";
 @import "tw-animate-css";
 @import "./shadcn.css";
-@import "tailwindcss/utilities.css" layer(utilities);
 
-@theme inline {
-  /* Tailwind's text sizes on the app's terms. The bridge maps `text-sm` to
-     Astryx's 12px "sm", but every screen here was written with `text-sm` as
-     the 14px body line — the size Astryx itself calls "base" — and poolside
-     legibility is not a place to lose two pixels. So the names keep their
-     pixel meaning and the values come from the theme. */
-  --text-xs: var(--font-size-sm);
-  --text-sm: var(--font-size-base);
+@theme {
+  --font-sans: "Figtree", ui-sans-serif, system-ui, sans-serif;
+  --text-xs: 0.75rem;
+  --text-sm: 0.875rem;
   --text-base: 1rem;
-  --text-lg: var(--font-size-lg);
-  --text-xl: var(--font-size-xl);
-  --text-2xl: var(--font-size-2xl);
-  --text-3xl: var(--font-size-3xl);
+  --text-lg: 1.0625rem;
+  --text-xl: 1.25rem;
+  --text-2xl: 1.5rem;
+  --text-3xl: 1.875rem;
 }
 
-/* Unlayered, so these win over every layer above. */
-
-body {
-  background: var(--color-background-body);
-  color: var(--color-text-primary);
-  font-family: var(--font-family-body);
-  -webkit-font-smoothing: antialiased;
-}
-
-/* Tailwind v4 stopped giving buttons a pointer cursor. Everything clickable
-   gets one; disabled controls keep the arrow, because they are not
-   clickable. */
-button:not(:disabled),
-[role="button"]:not([aria-disabled="true"]) {
-  cursor: pointer;
-}
-
-/* Touch: Astryx sizes its controls for a pointer — 28, 32 and 36px. A thumb
-   on a wet phone or a poolside tablet needs 44. Every button, field, menu
-   row, tab, segment and nav item grows below the tablet breakpoint and on any
-   coarse pointer, here once rather than at each call site. The class names
-   are Astryx's own, from each component's theming table. */
-@media (max-width: 48rem), (pointer: coarse) {
-  .astryx-button,
-  .astryx-text-input,
-  .astryx-text-area-control,
-  .astryx-date-input,
-  .astryx-time-input,
-  .astryx-number-input,
-  .astryx-selector,
-  .astryx-selector > button,
-  .astryx-typeahead,
-  .astryx-switch-field,
-  .astryx-dropdown-menu-item,
-  .astryx-selector-option-row,
-  .astryx-side-nav-item,
-  .astryx-tab,
-  .astryx-tab-scroll-button,
-  .astryx-token > button,
-  .astryx-segmented-control-item,
-  .astryx-collapsible-trigger {
-    min-height: 44px;
+@layer base {
+  :root {
+    color-scheme: light dark;
   }
-  .astryx-button,
-  .astryx-selector > button,
-  .astryx-tab-scroll-button,
-  .astryx-token > button,
-  .astryx-segmented-control-item {
-    min-width: 44px;
+  html[data-theme="light"] {
+    color-scheme: light;
   }
-  .astryx-text-input,
-  .astryx-typeahead,
-  .astryx-date-input,
-  .astryx-time-input,
-  .astryx-number-input {
-    height: auto;
+  html[data-theme="dark"] {
+    color-scheme: dark;
   }
-  .astryx-token:has(> button) {
-    height: auto;
-    min-height: 44px;
+  body {
+    background: var(--ui-background);
+    color: var(--ui-foreground);
+    font-family: var(--font-sans);
+    -webkit-font-smoothing: antialiased;
   }
-  /* The fields put a short control inside the bordered
-     box and do not forward a tap on the box to it, so the control and the
-     calendar toggle stretch to the box's full height instead. */
-  .astryx-text-input input,
-  .astryx-typeahead input,
-  .astryx-date-input > input,
-  .astryx-date-input > button,
-  .astryx-time-input > input,
-  .astryx-number-input > input {
-    min-height: 44px;
-    align-self: stretch;
+  button:not(:disabled),
+  [role="button"]:not([aria-disabled="true"]) {
+    cursor: pointer;
   }
-  .astryx-date-input > button {
-    min-width: 44px;
+  a:focus-visible {
+    outline: 2px solid var(--ui-ring);
+    outline-offset: 2px;
   }
 }
 
-/* Astryx's horizontal FormLayout keeps equal columns at every width. On a
-   phone, paired dates and longer field labels need their own row. */
-@media (max-width: 30rem) {
-  .astryx-form-layout[data-direction="horizontal"] {
-    grid-auto-flow: row;
-    grid-auto-columns: minmax(0, 1fr);
-  }
-}
-
-/* Somebody who asked their OS for less motion gets the final state at once:
-   dialogs appear rather than zoom, transitions land. */
 @media (prefers-reduced-motion: reduce) {
   *,
   *::before,

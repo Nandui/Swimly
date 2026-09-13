@@ -1,27 +1,23 @@
 "use client";
 
 import * as React from "react";
-import { Banner } from "@astryxdesign/core/Banner";
-import { Button } from "@astryxdesign/core/Button";
-import { Dialog, DialogHeader } from "@astryxdesign/core/Dialog";
-import { IconButton } from "@astryxdesign/core/IconButton";
-import { HStack, VStack } from "@astryxdesign/core/Stack";
-import { Text } from "@astryxdesign/core/Text";
+import { Button } from "@/components/shadcn/button";
+import {
+  AlertDialog,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/shadcn/alert-dialog";
+import { Notice } from "@/components/ui-kit/notice";
 import type { ActionResult } from "@/lib/action-result";
 import { toast } from "@/lib/toast";
 import { withTimeout } from "@/lib/save-feedback";
 import { Trigger, useDialogTriggerFocus } from "@/components/form-dialog";
 
-/** Confirmation for anything that takes something away.
- *
- *  The description is where you are honest about consequences — what is lost
- *  and what survives — because that is what someone is actually choosing
- *  between. The error is rendered in place rather than thrown at a toast,
- *  since a refusal ("three courses still teach this level") is a sentence the
- *  person can act on.
- *
- *  Astryx's own AlertDialog takes a plain-string description; this one keeps
- *  a Dialog so a consequence can carry a name in bold. */
+/** Errors keep the confirmation open; only a confirmed successful action closes it. */
 export function ConfirmAction({
   trigger,
   title,
@@ -44,14 +40,13 @@ export function ConfirmAction({
   const [error, setError] = React.useState<string | null>(null);
   const [pending, startTransition] = React.useTransition();
   const submitting = React.useRef(false);
-
   function close() {
-    if (submitting.current) return;
-    setOpen(false);
-    setError(null);
+    if (!submitting.current) {
+      setOpen(false);
+      setError(null);
+    }
   }
-
-  function handleConfirm() {
+  function confirm() {
     if (submitting.current) return;
     submitting.current = true;
     setError(null);
@@ -64,53 +59,61 @@ export function ConfirmAction({
             setOpen(false);
             setError(null);
           });
-        } else {
-          startTransition(() => setError(result.error));
-        }
+        } else startTransition(() => setError(result.error));
       } catch {
         startTransition(() =>
-          setError("We could not confirm the change. Check the record before trying again.")
+          setError(
+            "We could not confirm the change. Check the record before trying again.",
+          ),
         );
       } finally {
         submitting.current = false;
       }
     });
   }
-
   return (
     <>
-      <Trigger onOpen={(element) => { rememberTrigger(element); setOpen(true); }}>{trigger}</Trigger>
-      {open ? <Dialog
-        isOpen={open}
-        onOpenChange={(next) => (next ? setOpen(true) : close())}
-        purpose={pending ? "required" : "form"}
-        width={448}
+      <Trigger
+        onOpen={(element) => {
+          rememberTrigger(element);
+          setOpen(true);
+        }}
       >
-        <VStack gap={4}>
-          <DialogHeader title={title} onOpenChange={pending ? undefined : close} />
-          <Text as="p" display="block">
-            {description}
-          </Text>
-          {error ? <Banner status="error" title={error} collapsible={false} /> : null}
-          <HStack gap={2} hAlign="end" wrap="wrap">
-            <Button type="button" label="Cancel" variant="secondary" onClick={close} isDisabled={pending} />
+        {trigger}
+      </Trigger>
+      <AlertDialog
+        open={open}
+        onOpenChange={(next) => (next ? setOpen(true) : close())}
+      >
+        <AlertDialogContent
+          className="max-h-[calc(100dvh-2rem)] overflow-y-auto"
+          aria-busy={pending}
+        >
+          <AlertDialogHeader>
+            <AlertDialogTitle>{title}</AlertDialogTitle>
+            <AlertDialogDescription asChild>
+              <div>{description}</div>
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          {error ? <Notice tone="error" title={error} /> : null}
+          <AlertDialogFooter>
+            <AlertDialogCancel disabled={pending}>Cancel</AlertDialogCancel>
             <Button
               type="button"
-              label={pending ? "Working…" : confirmLabel}
-              variant={destructive ? "destructive" : "primary"}
-              onClick={handleConfirm}
-              isLoading={pending}
-            />
-          </HStack>
-        </VStack>
-      </Dialog> : null}
+              variant={destructive ? "destructive" : "default"}
+              disabled={pending}
+              onClick={confirm}
+            >
+              {pending ? "Working…" : confirmLabel}
+            </Button>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </>
   );
 }
 
-/** A bare action button that calls a server action and reports the outcome.
- *  For the small, obvious moves — reordering a level, restoring an archived
- *  row — where a confirmation would be ceremony. */
+/** Audited server actions keep their duplicate-submit and timeout protection. */
 export function ActionButton({
   children,
   run,
@@ -126,26 +129,38 @@ export function ActionButton({
   ariaLabel: string;
   title?: string;
 }) {
+  const [pending, startTransition] = React.useTransition();
+  const submitting = React.useRef(false);
   return (
-    <IconButton
-      label={ariaLabel}
-      tooltip={title ?? ariaLabel}
+    <Button
+      type="button"
+      aria-label={ariaLabel}
+      title={title ?? ariaLabel}
       variant="ghost"
-      size="sm"
-      icon={children}
+      size="icon-sm"
       className={className}
-      clickAction={async () => {
-        try {
-          const result = await withTimeout(run());
-          if (result.ok) {
-            if (successMessage) toast.success(successMessage);
-          } else {
-            toast.error(result.error);
+      disabled={pending}
+      aria-busy={pending}
+      onClick={() => {
+        if (submitting.current) return;
+        submitting.current = true;
+        startTransition(async () => {
+          try {
+            const result = await withTimeout(run());
+            if (result.ok) {
+              if (successMessage) toast.success(successMessage);
+            } else toast.error(result.error);
+          } catch {
+            toast.error(
+              "We could not confirm the change. Check the record before trying again.",
+            );
+          } finally {
+            submitting.current = false;
           }
-        } catch {
-          toast.error("We could not confirm the change. Check the record before trying again.");
-        }
+        });
       }}
-    />
+    >
+      {children}
+    </Button>
   );
 }

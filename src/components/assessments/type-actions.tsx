@@ -1,10 +1,10 @@
 "use client";
+import { Button } from "@/components/shadcn/button";
 
 import { Archive, ArchiveRestore, Pencil, Plus } from "lucide-react";
 import { ActionButton, ConfirmAction } from "@/components/confirm-action";
 import { Field, FormDialog } from "@/components/form-dialog";
-import { Button } from "@astryxdesign/core/Button";
-import { IconButton } from "@astryxdesign/core/IconButton";
+
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import {
@@ -12,9 +12,13 @@ import {
   setAssessmentTypeArchived,
   updateAssessmentType,
 } from "@/lib/assessments/actions/types";
-import { Icon } from "@astryxdesign/core/Icon";
 
-type Named = { id: string; name: string; description: string | null; archivedAt: Date | null };
+type Named = {
+  id: string;
+  name: string;
+  description: string | null;
+  archivedAt: Date | null;
+};
 
 function readInput(formData: FormData) {
   return {
@@ -63,13 +67,18 @@ export function AddAssessmentType({
   return (
     <FormDialog
       trigger={
-        <Button label="Add a kind of assessment" variant="secondary" size="sm" icon={<Icon icon={Plus} size="sm" />} />
+        <Button variant="outline" size="sm">
+          {<Plus aria-hidden={true} className="size-4 shrink-0" />}
+          {"Add a kind of assessment"}
+        </Button>
       }
       title={`Add a kind of assessment to ${programmeName}`}
       description="New swimmers, mixed abilities, returning after a break — whatever the desk needs to tell apart when booking."
       submitLabel="Add"
       successMessage="Assessment type added"
-      submit={(formData) => createAssessmentType(programmeId, readInput(formData))}
+      submit={(formData) =>
+        createAssessmentType(programmeId, readInput(formData))
+      }
     >
       <TypeFields />
     </FormDialog>
@@ -80,7 +89,9 @@ export function EditAssessmentType({ type }: { type: Named }) {
   return (
     <FormDialog
       trigger={
-        <IconButton label={`Edit ${type.name}`} variant="ghost" size="sm" icon={<Icon icon={Pencil} size="sm" />} />
+        <Button variant="ghost" aria-label={`Edit ${type.name}`} size="icon-sm">
+          {<Pencil aria-hidden={true} className="size-4 shrink-0" />}
+        </Button>
       }
       title={`Edit ${type.name}`}
       submitLabel="Save changes"
@@ -92,7 +103,13 @@ export function EditAssessmentType({ type }: { type: Named }) {
   );
 }
 
-export function ArchiveAssessmentType({ type, sessions }: { type: Named; sessions: number }) {
+export function ArchiveAssessmentType({
+  type,
+  sessions,
+}: {
+  type: Named;
+  sessions: number;
+}) {
   if (type.archivedAt) {
     return (
       <ActionButton
@@ -100,14 +117,20 @@ export function ArchiveAssessmentType({ type, sessions }: { type: Named; session
         successMessage="Assessment type restored"
         run={() => setAssessmentTypeArchived(type.id, false)}
       >
-        <Icon icon={ArchiveRestore} size="sm" />
+        <ArchiveRestore aria-hidden={true} className="size-4 shrink-0" />
       </ActionButton>
     );
   }
   return (
     <ConfirmAction
       trigger={
-        <IconButton label={`Archive ${type.name}`} variant="ghost" size="sm" icon={<Icon icon={Archive} size="sm" />} />
+        <Button
+          variant="ghost"
+          aria-label={`Archive ${type.name}`}
+          size="icon-sm"
+        >
+          {<Archive aria-hidden={true} className="size-4 shrink-0" />}
+        </Button>
       }
       title={`Archive ${type.name}?`}
       description={

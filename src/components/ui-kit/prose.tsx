@@ -1,31 +1,25 @@
-import { Badge } from "@astryxdesign/core/Badge";
-import { VStack } from "@astryxdesign/core/Stack";
-import { Text } from "@astryxdesign/core/Text";
+import { Badge } from "@/components/shadcn/badge";
 
-/** The stat sentence, not a row of tiles: counts read as prose, in Astryx's
- *  secondary text, with the numbers in primary ink. Capped at a readable
- *  line, the way Astryx caps prose. */
+/** Counts read as prose, with important numbers in foreground ink. */
 export function Lead({ children }: { children: React.ReactNode }) {
   return (
-    <VStack maxWidth="65ch">
-      <Text as="p" display="block" color="secondary">
-        {children}
-      </Text>
-    </VStack>
+    <div className="min-w-0 flex flex-col gap-4 max-w-prose">
+      <p className="text-sm text-ui-muted-foreground block">{children}</p>
+    </div>
   );
 }
 
 /** A number inside a sentence. */
 export function Num({ children }: { children: React.ReactNode }) {
   return (
-    <Text weight="medium" color="primary" hasTabularNumbers>
+    <span className="text-sm text-ui-foreground font-medium tabular-nums">
       {children}
-    </Text>
+    </span>
   );
 }
 
 /** A count that wants noticing — attendance still to take, swimmers gone
- *  quiet. A Badge is what Astryx has for a count that carries a status. */
+ *  quiet. The metadata maps each state to its semantic badge tone. */
 export function Alert({
   children,
   tone = "warning",
@@ -33,5 +27,10 @@ export function Alert({
   children: React.ReactNode;
   tone?: "warning" | "error";
 }) {
-  return <Badge variant={tone} label={children} />;
+  const tones = { warning: "yellow", error: "red" } as const;
+  return (
+    <Badge variant="secondary" data-tone={tones[tone]}>
+      {children}
+    </Badge>
+  );
 }

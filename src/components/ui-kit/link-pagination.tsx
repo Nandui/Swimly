@@ -1,11 +1,6 @@
-"use client";
-
-import { useRouter } from "next/navigation";
-import { Pagination } from "@astryxdesign/core/Pagination";
-
-/** Pages that live in the URL: the page number is a query parameter, so a
- *  page can be bookmarked or sent on, and the back button steps back through
- *  them. */
+import Link from "next/link";
+import { ChevronLeft, ChevronRight } from "lucide-react";
+import { Button } from "@/components/shadcn/button";
 export function LinkPagination({
   label,
   page,
@@ -19,25 +14,49 @@ export function LinkPagination({
   totalItems: number;
   pageSize: number;
   pathname: string;
-  /** The other parameters to carry along — the search, the filter. */
   query: Record<string, string>;
 }) {
-  const router = useRouter();
+  const pages = Math.max(1, Math.ceil(totalItems / pageSize));
+  function href(next: number) {
+    const params = new URLSearchParams(query);
+    if (next > 1) params.set("page", String(next));
+    else params.delete("page");
+    return params.size ? `${pathname}?${params}` : pathname;
+  }
   return (
-    <Pagination
-      label={label}
-      page={page}
-      totalItems={totalItems}
-      pageSize={pageSize}
-      variant="count"
-      size="sm"
-      onChange={(next) => {
-        const params = new URLSearchParams(query);
-        if (next > 1) params.set("page", String(next));
-        else params.delete("page");
-        const search = params.toString();
-        router.push(search ? `${pathname}?${search}` : pathname);
-      }}
-    />
+    <nav
+      aria-label={label}
+      className="flex flex-wrap items-center justify-between gap-3"
+    >
+      {page > 1 ? (
+        <Button variant="outline" asChild>
+          <Link href={href(page - 1)}>
+            <ChevronLeft aria-hidden="true" />
+            Previous
+          </Link>
+        </Button>
+      ) : (
+        <Button variant="outline" disabled>
+          <ChevronLeft aria-hidden="true" />
+          Previous
+        </Button>
+      )}
+      <span className="text-sm text-ui-muted-foreground tabular-nums">
+        {page} / {pages}
+      </span>
+      {page < pages ? (
+        <Button variant="outline" asChild>
+          <Link href={href(page + 1)}>
+            Next
+            <ChevronRight aria-hidden="true" />
+          </Link>
+        </Button>
+      ) : (
+        <Button variant="outline" disabled>
+          Next
+          <ChevronRight aria-hidden="true" />
+        </Button>
+      )}
+    </nav>
   );
 }

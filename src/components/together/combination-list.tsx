@@ -1,17 +1,24 @@
 "use client";
+import { Button } from "@/components/shadcn/button";
+import UiLink from "next/link";
+import {
+  ItemContent,
+  ItemActions,
+  Item,
+  ItemGroup,
+} from "@/components/shadcn/item";
 
 import { useMemo, useState } from "react";
-import { Button } from "@astryxdesign/core/Button";
-import { Item } from "@astryxdesign/core/Item";
-import { Link } from "@astryxdesign/core/Link";
-import { List } from "@astryxdesign/core/List";
-import { HStack, VStack } from "@astryxdesign/core/Stack";
-import { Heading, Text } from "@astryxdesign/core/Text";
+
 import { Tag } from "@/components/ui-kit/tag";
 import { PLACEMENT_META } from "@/lib/enrolment/constants";
 import { capacityLabel, courseName, formatTime } from "@/lib/courses/constants";
 import type { CourseRow } from "@/lib/courses/data/courses";
-import { findCombinations, type FamilyMember, type Placement } from "@/lib/together/match";
+import {
+  findCombinations,
+  type FamilyMember,
+  type Placement,
+} from "@/lib/together/match";
 
 /** Keep every result reachable without rendering an exponential list at once. */
 type CombinationListProps = {
@@ -27,33 +34,56 @@ export function CombinationList(props: CombinationListProps) {
   return <CombinationPages key={snapshot} {...props} />;
 }
 
-function CombinationPages({ heading, members, courses, differentTimes = false }: CombinationListProps) {
+function CombinationPages({
+  heading,
+  members,
+  courses,
+  differentTimes = false,
+}: CombinationListProps) {
   const [cursors, setCursors] = useState<(string[] | null)[]>([null]);
-  const page = useMemo(() => findCombinations(members, courses, {
-    after: cursors.at(-1), limit: 5, differentTimes,
-  }), [members, courses, cursors, differentTimes]);
+  const page = useMemo(
+    () =>
+      findCombinations(members, courses, {
+        after: cursors.at(-1),
+        limit: 5,
+        differentTimes,
+      }),
+    [members, courses, cursors, differentTimes],
+  );
   const offset = (cursors.length - 1) * 5;
   return (
-    <VStack gap={3} as="section">
-      <Heading level={3}>{heading}</Heading>
-      <Text color="secondary" aria-live="polite">
+    <section className="min-w-0 flex flex-col gap-3">
+      <h3 className="text-base font-semibold tracking-tight">{heading}</h3>
+      <span aria-live="polite" className="text-sm text-ui-muted-foreground">
         {page.combinations.length === 1 && !page.next && offset === 0
           ? "1 combination"
           : `Combinations ${offset + 1}–${offset + page.combinations.length}${page.next ? " · more available" : " · last page"}`}
-      </Text>
+      </span>
       {page.combinations.map((placements, index) => (
-        <SlotList key={placements.map((p) => p.course.id).join(",")}
-          heading={`Option ${offset + index + 1}`} placements={placements} showTimes />
+        <SlotList
+          key={placements.map((p) => p.course.id).join(",")}
+          heading={`Option ${offset + index + 1}`}
+          placements={placements}
+          showTimes
+        />
       ))}
       {cursors.length > 1 || page.next ? (
-        <HStack gap={2} wrap="wrap">
-          <Button label={`Previous combinations for ${heading}`} isDisabled={cursors.length === 1}
-            onClick={() => setCursors((previous) => previous.slice(0, -1))}>Previous</Button>
-          <Button label={`Next combinations for ${heading}`} isDisabled={!page.next}
-            onClick={() => setCursors((previous) => [...previous, page.next])}>Next combinations</Button>
-        </HStack>
+        <div className="min-w-0 flex gap-2 items-center flex-wrap">
+          <Button
+            onClick={() => setCursors((previous) => previous.slice(0, -1))}
+            disabled={cursors.length === 1}
+          >
+            {`Previous combinations for ${heading}`}Previous
+          </Button>
+          <Button
+            onClick={() => setCursors((previous) => [...previous, page.next])}
+            disabled={!page.next}
+          >
+            {`Next combinations for ${heading}`}Next combinations
+          </Button>
+        </div>
       ) : null}
-    </VStack>
+    </section>
   );
 }
 function SlotList({
@@ -66,36 +96,66 @@ function SlotList({
   showTimes?: boolean;
 }) {
   const sorted = showTimes
-    ? [...placements].sort((a, b) => a.course.startMinutes - b.course.startMinutes)
+    ? [...placements].sort(
+        (a, b) => a.course.startMinutes - b.course.startMinutes,
+      )
     : placements;
 
   return (
-    <List hasDividers header={<Heading level={4}>{heading}</Heading>}>
-      {sorted.map((placement) => (
-        <Item
-          key={placement.studentId}
-          as="li"
-          label={<Text weight="medium">{placement.name}</Text>}
-          description={
-            <Text type="supporting">
-              <Link href={`/courses/${placement.course.id}`} size="sm">
-                {courseName(placement.course)}
-              </Link>
-              {showTimes ? ` · ${formatTime(placement.course.startMinutes)}–${formatTime(placement.course.startMinutes + placement.course.durationMinutes)}` : ""} ·{" "}
-              {placement.course.level.name} ·{" "}
-              {capacityLabel(placement.course._count.enrolments, placement.course.capacity)}
-            </Text>
-          }
-          endContent={
-            placement.alreadyIn ? (
-              <Tag color={PLACEMENT_META.alreadyEnrolled.color}>{PLACEMENT_META.alreadyEnrolled.label}</Tag>
-            ) : (
-              <Tag color={PLACEMENT_META.hasPlace.color}>{PLACEMENT_META.hasPlace.label}</Tag>
-            )
-          }
-        />
-      ))}
-    </List>
+    <section className="space-y-3">
+      {<h4 className="text-base font-semibold tracking-tight">{heading}</h4>}
+      <ItemGroup className="divide-y divide-ui-border">
+        {sorted.map((placement) => (
+          <Item
+            key={placement.studentId}
+            role="listitem"
+            className="[overflow-wrap:anywhere]"
+          >
+            <ItemContent className="min-w-0">
+              <div className="text-sm font-medium">
+                {
+                  <span className="text-sm text-ui-foreground font-medium">
+                    {placement.name}
+                  </span>
+                }
+              </div>
+              <div className="text-sm text-ui-muted-foreground">
+                {
+                  <span className="text-sm text-ui-muted-foreground">
+                    <UiLink
+                      href={`/courses/${placement.course.id}`}
+                      className={
+                        "text-ui-foreground underline-offset-4 hover:underline text-sm"
+                      }
+                    >
+                      {courseName(placement.course)}
+                    </UiLink>
+                    {showTimes
+                      ? ` · ${formatTime(placement.course.startMinutes)}–${formatTime(placement.course.startMinutes + placement.course.durationMinutes)}`
+                      : ""}{" "}
+                    · {placement.course.level.name} ·{" "}
+                    {capacityLabel(
+                      placement.course._count.enrolments,
+                      placement.course.capacity,
+                    )}
+                  </span>
+                }
+              </div>
+            </ItemContent>
+            <ItemActions className="flex-wrap">
+              {placement.alreadyIn ? (
+                <Tag color={PLACEMENT_META.alreadyEnrolled.color}>
+                  {PLACEMENT_META.alreadyEnrolled.label}
+                </Tag>
+              ) : (
+                <Tag color={PLACEMENT_META.hasPlace.color}>
+                  {PLACEMENT_META.hasPlace.label}
+                </Tag>
+              )}
+            </ItemActions>
+          </Item>
+        ))}
+      </ItemGroup>
+    </section>
   );
 }
-

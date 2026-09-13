@@ -1,19 +1,19 @@
 "use client";
+import { RadioGroupItem, RadioGroup } from "@/components/shadcn/radio-group";
+
+import {
+  ItemMedia,
+  ItemContent,
+  Item,
+  ItemGroup,
+} from "@/components/shadcn/item";
+
+import { Notice } from "@/components/ui-kit/notice";
+import { Button } from "@/components/shadcn/button";
 
 import * as React from "react";
 import { Check, GraduationCap, Undo2 } from "lucide-react";
-import { Banner } from "@astryxdesign/core/Banner";
-import { Button } from "@astryxdesign/core/Button";
-import { IconButton } from "@astryxdesign/core/IconButton";
-import { Item } from "@astryxdesign/core/Item";
-import { List } from "@astryxdesign/core/List";
-import { HStack, VStack } from "@astryxdesign/core/Stack";
-import { StatusDot } from "@astryxdesign/core/StatusDot";
-import { Text } from "@astryxdesign/core/Text";
-import {
-  SegmentedControl,
-  SegmentedControlItem,
-} from "@astryxdesign/core/SegmentedControl";
+
 import { Field, FormDialog } from "@/components/form-dialog";
 import { Tag } from "@/components/ui-kit/tag";
 import { Textarea } from "@/components/ui/textarea";
@@ -25,9 +25,12 @@ import {
   saveAssessment,
 } from "@/lib/progression/actions/assess";
 import { toast } from "@/lib/toast";
-import { Icon } from "@astryxdesign/core/Icon";
+
 import { SAVE_UNCONFIRMED_MESSAGE, withTimeout } from "@/lib/save-feedback";
-import { COMPLETION_META } from "@/lib/progression/constants";
+import {
+  COMPLETION_META,
+  COMPETENCY_STATUS_META,
+} from "@/lib/progression/constants";
 
 type Choice = CompetencyStatus | null;
 
@@ -47,8 +50,9 @@ type Competency = {
 export function assessedLine(competency: Competency): string | null {
   if (!competency.status || !competency.assessedByName) return null;
   const label = competency.status === "ACHIEVED" ? "Achieved" : "Not Achieved";
-  return `${label} · ${competency.assessedByName}${competency.assessedOn ? ` · ${formatDate(competency.assessedOn)}` : ""
-    }`;
+  return `${label} · ${competency.assessedByName}${
+    competency.assessedOn ? ` · ${formatDate(competency.assessedOn)}` : ""
+  }`;
 }
 
 const MARK_LABEL: Record<CompetencyStatus, string> = {
@@ -56,18 +60,21 @@ const MARK_LABEL: Record<CompetencyStatus, string> = {
   ACHIEVED: "Achieved",
 };
 const MARK_ORDER: CompetencyStatus[] = ["WORKING_ON", "ACHIEVED"];
-const DOT: Record<CompetencyStatus, "success" | "warning"> = {
-  WORKING_ON: "warning",
-  ACHIEVED: "success",
-};
 
 /** The checklist for one swimmer at one level.
  *
  *  Batched behind one Save, like the register and for the same reason: Server
  *  Actions dispatch one at a time per client, so a save per tap would queue.
  *  Missing marks display as Not Achieved without inventing an assessment. */
-export function CompetencyChecklist(props: React.ComponentProps<typeof CompetencyChecklistState>) {
-  return <CompetencyChecklistState key={`${props.studentId}:${props.levelId}`} {...props} />;
+export function CompetencyChecklist(
+  props: React.ComponentProps<typeof CompetencyChecklistState>,
+) {
+  return (
+    <CompetencyChecklistState
+      key={`${props.studentId}:${props.levelId}`}
+      {...props}
+    />
+  );
 }
 
 function CompetencyChecklistState({
@@ -111,14 +118,16 @@ function CompetencyChecklistState({
     startTransition(async () => {
       let result: Awaited<ReturnType<typeof saveAssessment>>;
       try {
-        result = await withTimeout(saveAssessment({
-          studentId,
-          levelId,
-          results: [...marks.entries()].map(([competencyId, status]) => ({
-            competencyId,
-            status,
-          })),
-        }));
+        result = await withTimeout(
+          saveAssessment({
+            studentId,
+            levelId,
+            results: [...marks.entries()].map(([competencyId, status]) => ({
+              competencyId,
+              status,
+            })),
+          }),
+        );
       } catch {
         startTransition(() => setError(SAVE_UNCONFIRMED_MESSAGE));
         return;
@@ -137,100 +146,115 @@ function CompetencyChecklistState({
 
   if (competencies.length === 0) {
     return (
-      <Text as="p" display="block" color="secondary">
+      <p className="text-sm text-ui-muted-foreground block">
         This level has no competencies yet, so there is nothing to sign off.
-      </Text>
+      </p>
     );
   }
 
   return (
-    <VStack gap={3}>
-      <List hasDividers>
+    <div className="min-w-0 flex flex-col gap-3">
+      <ItemGroup className="divide-y divide-ui-border">
         {competencies.map((competency, index) => {
           const value = marks.get(competency.id) ?? "WORKING_ON";
           return (
             <Item
               key={competency.id}
-              as="li"
-              align="start"
-              marker={
-                <Text type="supporting" hasTabularNumbers>
-                  {index + 1}
-                </Text>
-              }
-              label={
-                <HStack gap={2} vAlign="center" wrap="wrap">
-                  <StatusDot
-                    variant={DOT[value]}
-                    label={MARK_LABEL[value]}
-                  />
-                  <Text>{competency.name}</Text>
-                </HStack>
-              }
-              description={
-                <VStack gap={2}>
-                  {competency.description ? (
-                    <Text type="supporting" display="block">
-                      {competency.description}
-                    </Text>
-                  ) : null}
-                  {assessedLine(competency) ? (
-                    <Text type="supporting" display="block">
-                      {assessedLine(competency)}
-                    </Text>
-                  ) : null}
-                  <HStack>
-                    <SegmentedControl
-                      label={`${competency.name} — ${studentName}`}
-                      size="md"
-                      value={value}
-                      isDisabled={readOnly || pending}
-                      onChange={(next) => {
-                        setEdited(true);
-                        setMarks((previous) => {
-                          const map = new Map(previous);
-                          map.set(competency.id, next as CompetencyStatus);
-                          return map;
-                        });
-                      }}
-                    >
-                      {MARK_ORDER.map((status) => (
-                        <SegmentedControlItem
-                          key={status}
-                          value={status}
-                          label={MARK_LABEL[status]}
-                        />
-                      ))}
-                    </SegmentedControl>
-                  </HStack>
-                </VStack>
-              }
-            />
+              role="listitem"
+              className="items-start [overflow-wrap:anywhere]"
+            >
+              <ItemMedia>
+                {
+                  <span className="text-sm text-ui-muted-foreground tabular-nums">
+                    {index + 1}
+                  </span>
+                }
+              </ItemMedia>
+              <ItemContent className="min-w-0">
+                <div className="text-sm font-medium">
+                  {
+                    <div className="min-w-0 flex gap-2 items-center flex-wrap">
+                      <Tag color={COMPETENCY_STATUS_META[value].color}>
+                        {MARK_LABEL[value]}
+                      </Tag>
+                      <span className="text-sm text-ui-foreground">
+                        {competency.name}
+                      </span>
+                    </div>
+                  }
+                </div>
+                <div className="text-sm text-ui-muted-foreground">
+                  {
+                    <div className="min-w-0 flex flex-col gap-2">
+                      {competency.description ? (
+                        <span className="text-sm text-ui-muted-foreground block">
+                          {competency.description}
+                        </span>
+                      ) : null}
+                      {assessedLine(competency) ? (
+                        <span className="text-sm text-ui-muted-foreground block">
+                          {assessedLine(competency)}
+                        </span>
+                      ) : null}
+                      <div className="min-w-0 flex gap-2 items-center">
+                        <RadioGroup
+                          value={value}
+                          aria-label={`${competency.name} — ${studentName}`}
+                          onValueChange={(next) => {
+                            setEdited(true);
+                            setMarks((previous) => {
+                              const map = new Map(previous);
+                              map.set(competency.id, next as CompetencyStatus);
+                              return map;
+                            });
+                          }}
+                          disabled={readOnly || pending}
+                          className={
+                            "inline-flex flex-wrap gap-1 rounded-ui-lg bg-ui-muted p-1"
+                          }
+                        >
+                          {MARK_ORDER.map((status) => (
+                            <RadioGroupItem
+                              key={status}
+                              value={status}
+                              className={
+                                "aspect-auto h-auto min-h-11 w-auto flex-1 bg-transparent dark:bg-transparent dark:data-[state=checked]:bg-ui-input/30 rounded-ui-md border-0 px-3 py-2 text-sm font-medium shadow-none data-[state=checked]:bg-ui-background data-[state=checked]:text-ui-foreground data-[state=checked]:shadow-sm"
+                              }
+                            >
+                              {MARK_LABEL[status]}
+                            </RadioGroupItem>
+                          ))}
+                        </RadioGroup>
+                      </div>
+                    </div>
+                  }
+                </div>
+              </ItemContent>
+            </Item>
           );
         })}
-      </List>
+      </ItemGroup>
 
-      {error ? (
-        <Banner status="error" title={error} collapsible={false} />
-      ) : null}
+      {error ? <Notice title={error} tone="error"></Notice> : null}
 
       {readOnly ? null : (
-        <HStack gap={3} vAlign="center" hAlign="end">
-          <Text type="supporting" aria-live="polite">
+        <div className="min-w-0 flex gap-3 items-center justify-end">
+          <span aria-live="polite" className="text-sm text-ui-muted-foreground">
             {dirty ? "Not saved yet" : "Up to date"}
-          </Text>
+          </span>
           <Button
-            label="Save marks"
-            variant="primary"
-            size="sm"
             onClick={save}
-            isLoading={pending}
-            isDisabled={!dirty}
-            icon={<Icon icon={Check} size="sm" />}
-          />
-        </HStack>
+            variant="default"
+            size="sm"
+            disabled={!dirty || pending}
+            aria-busy={pending}
+          >
+            {<Check aria-hidden={true} className="size-4 shrink-0" />}
+            {"Save marks"}
+          </Button>
+        </div>
       )}
-    </VStack>
+    </div>
   );
 }
 
@@ -261,17 +285,18 @@ export function ConfirmLevel({
     <FormDialog
       trigger={
         <Button
-          label={`Complete ${levelName}`}
+          variant={eligible ? "default" : "outline"}
           size="sm"
-          variant={eligible ? "primary" : "secondary"}
-          isDisabled={blocked}
-          tooltip={
+          title={
             blocked
               ? `${studentName} has ${achieved} of ${total}. Only an admin can complete a level with gaps.`
               : undefined
           }
-          icon={<Icon icon={GraduationCap} size="sm" />}
-        />
+          disabled={blocked}
+        >
+          {<GraduationCap aria-hidden={true} className="size-4 shrink-0" />}
+          {`Complete ${levelName}`}
+        </Button>
       }
       title={`Complete ${levelName} for ${studentName}?`}
       description={
@@ -340,13 +365,14 @@ export function RevokeCompletion({
   return (
     <FormDialog
       trigger={
-        <IconButton
-          label={`Take back ${studentName}'s completion of ${levelName}`}
-          tooltip="Take back"
+        <Button
           variant="ghost"
-          size="sm"
-          icon={<Icon icon={Undo2} size="sm" />}
-        />
+          aria-label={`Take back ${studentName}'s completion of ${levelName}`}
+          size="icon-sm"
+          title="Take back"
+        >
+          {<Undo2 aria-hidden={true} className="size-4 shrink-0" />}
+        </Button>
       }
       title={`Take back ${levelName}?`}
       description={`${studentName} stops counting as having completed it, which may make the level above out of sequence for them. Their assessments are untouched.`}

@@ -1,8 +1,7 @@
+import { ItemContent, Item, ItemGroup } from "@/components/shadcn/item";
+
 import type { Metadata } from "next";
-import { Item } from "@astryxdesign/core/Item";
-import { List } from "@astryxdesign/core/List";
-import { VStack } from "@astryxdesign/core/Stack";
-import { Heading } from "@astryxdesign/core/Text";
+
 import { PageHeader } from "@/components/ui-kit/page-header";
 import { Lead, Num } from "@/components/ui-kit/prose";
 import { Tag } from "@/components/ui-kit/tag";
@@ -28,49 +27,66 @@ export default async function AccountPage() {
   const granted = PERMISSIONS.filter((permission) => held.has(permission.key));
 
   return (
-    <VStack gap={6}>
-      <PageHeader title="Account" description="Your sign-in details, and what you may do." />
+    <div className="min-w-0 flex flex-col gap-6">
+      <PageHeader
+        title="Account"
+        description="Your sign-in details, and what you may do."
+      />
 
       <Lead>
-        Signed in as <Num>{session.user.name}</Num> ({session.user.email}), on the{" "}
-        <Tag color={reach.color}>{session.user.roleName}</Tag> role. Only someone who can manage
-        accounts can change your role or your email.
+        Signed in as <Num>{session.user.name}</Num> ({session.user.email}), on
+        the <Tag color={reach.color}>{session.user.roleName}</Tag> role. Only
+        someone who can manage accounts can change your role or your email.
       </Lead>
 
-      <VStack gap={3} as="section">
-        <Heading level={2}>What you can do</Heading>
+      <section className="min-w-0 flex flex-col gap-3">
+        <h2 className="text-xl font-semibold tracking-tight">
+          What you can do
+        </h2>
         {granted.length === 0 ? (
           <Lead>
-            You can read the screens available to your role. You cannot change their records.
+            You can read the screens available to your role. You cannot change
+            their records.
           </Lead>
         ) : (
-          <List hasDividers>
+          <ItemGroup className="divide-y divide-ui-border">
             {granted.map((permission) => (
               <Item
                 key={permission.key}
-                as="li"
-                label={permission.label}
-                description={permission.description}
-              />
+                role="listitem"
+                className="[overflow-wrap:anywhere]"
+              >
+                <ItemContent className="min-w-0">
+                  <div className="text-sm font-medium">{permission.label}</div>
+                  <div className="text-sm text-ui-muted-foreground">
+                    {permission.description}
+                  </div>
+                </ItemContent>
+              </Item>
             ))}
-          </List>
+          </ItemGroup>
         )}
-      </VStack>
+      </section>
 
-      <VStack gap={3} as="section">
-        <Heading level={2}>Appearance</Heading>
-        <Lead>Light or dark, or whatever your device is set to. Remembered in this browser only.</Lead>
-        <ThemeToggle />
-      </VStack>
-
-      <VStack gap={3} as="section">
-        <Heading level={2}>Change your password</Heading>
+      <section className="min-w-0 flex flex-col gap-3">
+        <h2 className="text-xl font-semibold tracking-tight">Appearance</h2>
         <Lead>
-          If someone set the one you are using, change it here — they chose it and it was never
-          private. You stay signed in.
+          Light or dark, or whatever your device is set to. Remembered in this
+          browser only.
+        </Lead>
+        <ThemeToggle />
+      </section>
+
+      <section className="min-w-0 flex flex-col gap-3">
+        <h2 className="text-xl font-semibold tracking-tight">
+          Change your password
+        </h2>
+        <Lead>
+          If someone set the one you are using, change it here — they chose it
+          and it was never private. You stay signed in.
         </Lead>
         <ChangePasswordForm />
-      </VStack>
-    </VStack>
+      </section>
+    </div>
   );
 }

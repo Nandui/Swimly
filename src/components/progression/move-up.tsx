@@ -1,13 +1,16 @@
 "use client";
+import { Button } from "@/components/shadcn/button";
 
 import { ArrowUpRight } from "lucide-react";
 import { useId } from "react";
 import { SiteClassPicker } from "@/components/enrolment/enrolment-actions";
 import { FormDialog } from "@/components/form-dialog";
-import { Button } from "@astryxdesign/core/Button";
+
 import type { DayOfWeek } from "@/generated/prisma/client";
-import { enrolStudent, transferEnrolment } from "@/lib/enrolment/actions/enrolment";
-import { Icon } from "@astryxdesign/core/Icon";
+import {
+  enrolStudent,
+  transferEnrolment,
+} from "@/lib/enrolment/actions/enrolment";
 
 /** A class a swimmer could be moved into. Structurally what `getCourses`
  *  already returns, so the pages hand over the list they had loaded anyway. */
@@ -54,21 +57,32 @@ export function MoveUpToLevel({
 }) {
   const id = useId();
   const targets = courses.filter(
-    (course) => course.level.id === nextLevelId && !course.archivedAt
+    (course) => course.level.id === nextLevelId && !course.archivedAt,
   );
 
   // The kit's rule for a case that is never allowed: disable the trigger and
   // say why, rather than letting the click through to an error.
   if (targets.length === 0) {
     return (
-      <Button label={`Move up to ${nextLevelName}`} variant="secondary" size="sm" isDisabled={true} tooltip={`No class teaches ${nextLevelName} yet. Add one on the Classes page first.`} icon={<Icon icon={ArrowUpRight} size="sm" />} />
+      <Button
+        variant="outline"
+        size="sm"
+        title={`No class teaches ${nextLevelName} yet. Add one on the Classes page first.`}
+        disabled={true}
+      >
+        {<ArrowUpRight aria-hidden={true} className="size-4 shrink-0" />}
+        {`Move up to ${nextLevelName}`}
+      </Button>
     );
   }
 
   return (
     <FormDialog
       trigger={
-        <Button label={`Move up to ${nextLevelName}`} variant="primary" size="sm" icon={<Icon icon={ArrowUpRight} size="sm" />} />
+        <Button variant="default" size="sm">
+          {<ArrowUpRight aria-hidden={true} className="size-4 shrink-0" />}
+          {`Move up to ${nextLevelName}`}
+        </Button>
       }
       title={`Move ${studentName} up to ${nextLevelName}`}
       description={
@@ -82,18 +96,26 @@ export function MoveUpToLevel({
         const toCourseId = String(formData.get("toCourseId") ?? "");
         return fromEnrolmentId
           ? transferEnrolment(fromEnrolmentId, toCourseId, "", confirmation)
-          : enrolStudent({
-              studentId,
-              courseId: toCourseId,
-              // They earned this rung, so there is nothing to explain — and no
-              // waitlisting, because giving up a place they hold for a place
-              // they might get is not a move up.
-              placementReason: "",
-              allowWaitlist: false,
-            }, confirmation);
+          : enrolStudent(
+              {
+                studentId,
+                courseId: toCourseId,
+                // They earned this rung, so there is nothing to explain — and no
+                // waitlisting, because giving up a place they hold for a place
+                // they might get is not a move up.
+                placementReason: "",
+                allowWaitlist: false,
+              },
+              confirmation,
+            );
       }}
     >
-      <SiteClassPicker id={id} name="toCourseId" courses={targets} label={`Which ${nextLevelName} class`} />
+      <SiteClassPicker
+        id={id}
+        name="toCourseId"
+        courses={targets}
+        label={`Which ${nextLevelName} class`}
+      />
     </FormDialog>
   );
 }

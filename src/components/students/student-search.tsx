@@ -1,32 +1,26 @@
 "use client";
 
 import * as React from "react";
-import { Search } from "lucide-react";
-import { Typeahead, TypeaheadItem } from "@astryxdesign/core/Typeahead";
-import type { SearchSource, SearchableItem } from "@astryxdesign/core/Typeahead";
+import { ChevronsUpDown, Loader2, Search, X } from "lucide-react";
+import { Button } from "@/components/shadcn/button";
+import {
+  Command,
+  CommandEmpty,
+  CommandGroup,
+  CommandInput,
+  CommandItem,
+  CommandList,
+} from "@/components/shadcn/command";
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from "@/components/shadcn/popover";
+import { FieldFrame } from "@/components/ui/field-frame";
 import { searchStudents, type StudentHit } from "@/lib/students/actions/search";
 import { ageLabel, fullName } from "@/lib/students/constants";
 
-/** How long to wait after the last keystroke before asking. Long enough that a
- *  typed surname is one request rather than seven, short enough that it never
- *  reads as lag. */
-const DEBOUNCE_MS = 200;
-
-type Item = SearchableItem<StudentHit>;
-
-function toItem(hit: StudentHit): Item {
-  return { id: hit.id, label: fullName(hit), auxiliaryData: hit };
-}
-
-/** Finding one swimmer among a thousand, without being sent the thousand.
- *
- *  The searchable pickers elsewhere take their options as props and filter
- *  them in the browser. That is right for classes — there are 134 — and
- *  wrong for swimmers, where it meant every page with the picker on it carried
- *  the whole roll. This one asks the server for the twenty that match what has
- *  been typed so far, and nothing else ever crosses the wire. Astryx's
- *  Typeahead does the debouncing and drops a stale answer that lands after a
- *  newer question. */
+/** Server search remains debounced, scoped and protected against stale responses. */
 export function StudentSearch({
   onSelect,
   selected = null,
@@ -38,83 +32,175 @@ export function StudentSearch({
   emptyText = "Nobody by that name.",
   includeInactive = false,
   hasSearchIcon = false,
-  id,
+  id: suppliedId,
 }: {
   onSelect: (hit: StudentHit | null) => void;
-  /** The chosen swimmer, if the field holds one. */
   selected?: StudentHit | null;
-  /** Swimmers not to offer — the ones already in the group, say. */
   exclude?: string[];
   label?: string;
   labelHidden?: boolean;
   description?: string;
   placeholder?: string;
   emptyText?: string;
-  /** Desk lookup can include former swimmers; enrolment pickers stay active-only. */
   includeInactive?: boolean;
   hasSearchIcon?: boolean;
   id?: string;
 }) {
-  const [searchError, setSearchError] = React.useState<string | null>(null);
-  const searchGeneration = React.useRef(0);
-  const excludeKey = exclude.join(",");
-  const source = React.useMemo<SearchSource<Item>>(
-    () => ({
-      async search(query) {
-        const generation = ++searchGeneration.current;
-        const term = query.trim();
-        if (!term) return [];
-        try {
-          const found = await searchStudents(term, excludeKey ? excludeKey.split(",") : [], includeInactive);
-          if (generation === searchGeneration.current) setSearchError(null);
-          return found.map(toItem);
-        } catch {
-          if (generation === searchGeneration.current) setSearchError("Could not search swimmers. Check your connection and try again.");
-          return [];
-        }
-      },
-      bootstrap: () => [],
-    }),
-    [excludeKey, includeInactive]
-  );
-
+  const generatedId = React.useId(),
+    id = suppliedId ?? generatedId;
+  const [open, setOpen] = React.useState(false),
+    [query, setQuery] = React.useState("");
+  const [result, setResult] = React.useState<{
+    key: string;
+    hits: StudentHit[];
+    error: string | null;
+  }>({ key: "", hits: [], error: null });
+  const excludeKey = JSON.stringify(exclude),
+    term = query.trim();
+  const key = JSON.stringify([term, excludeKey, includeInactive]);
+  React.useEffect(() => {
+    if (!open || !term) return;
+    let cancelled = false;
+    const timer = window.setTimeout(async () => {
+      try {
+        const hits = await searchStudents(
+          term,
+          JSON.parse(excludeKey),
+          includeInactive,
+        );
+        if (!cancelled) setResult({ key, hits, error: null });
+      } catch {
+        if (!cancelled)
+          setResult({
+            key,
+            hits: [],
+            error:
+              "Could not search swimmers. Check your connection and try again.",
+          });
+      }
+    }, 200);
+    return () => {
+      cancelled = true;
+      window.clearTimeout(timer);
+    };
+  }, [open, term, key, excludeKey, includeInactive]);
+  const pending = Boolean(term) && result.key !== key;
+  const hits = term && result.key === key ? result.hits : [];
+  const error = term && result.key === key ? result.error : null;
+  function changeOpen(next: boolean) {
+    setOpen(next);
+    if (!next) {
+      setQuery("");
+      setResult({ key: "", hits: [], error: null });
+    }
+  }
   return (
-    <Typeahead<Item>
+    <FieldFrame
       id={id}
-      label={label}
-      isLabelHidden={labelHidden}
+      label={labelHidden ? undefined : label}
       description={description}
-      searchSource={source}
-      value={selected ? toItem(selected) : null}
-      onChange={(item) => onSelect(item?.auxiliaryData ?? null)}
-      onChangeQuery={() => { searchGeneration.current++; setSearchError(null); }}
-      status={searchError ? { type: "error", message: searchError } : undefined}
-      statusVariant="detached"
-      placeholder={placeholder}
-      startIcon={hasSearchIcon ? Search : undefined}
-      emptySearchResultsText={emptyText}
-      debounceMs={DEBOUNCE_MS}
-      maxMenuItems={20}
-      renderItem={(item) => (
-        <TypeaheadItem
-          item={item}
-          description={
-            item.auxiliaryData
-              ? `${ageLabel(item.auxiliaryData.dateOfBirth)}${
-                  item.auxiliaryData.memberNumber ? ` · ${item.auxiliaryData.memberNumber}` : ""
-                }${item.auxiliaryData.status === "INACTIVE" ? " · Inactive" : ""}`
-              : undefined
-          }
-        />
-      )}
-      width="100%"
-    />
+    >
+      <div className="flex min-w-0 items-center gap-2">
+        <Popover open={open} onOpenChange={changeOpen}>
+          <PopoverTrigger asChild>
+            <Button
+              id={id}
+              type="button"
+              variant="outline"
+              role="combobox"
+              aria-expanded={open}
+              aria-label={label}
+              aria-describedby={description ? `${id}-hint` : undefined}
+              className="h-auto min-h-11 min-w-0 flex-1 justify-between text-left font-normal whitespace-normal"
+            >
+              {hasSearchIcon ? (
+                <Search className="size-4" aria-hidden="true" />
+              ) : null}
+              <span className="min-w-0 flex-1">
+                {selected ? fullName(selected) : placeholder}
+              </span>
+              <ChevronsUpDown className="size-4" aria-hidden="true" />
+            </Button>
+          </PopoverTrigger>
+          <PopoverContent
+            align="start"
+            className="w-[var(--radix-popover-trigger-width)] p-0"
+          >
+            <Command shouldFilter={false}>
+              <CommandInput
+                value={query}
+                onValueChange={setQuery}
+                aria-label="Search swimmers"
+                placeholder={placeholder}
+              />
+              <CommandList aria-busy={pending}>
+                {!term ? (
+                  <CommandEmpty>
+                    Start typing a name or member number.
+                  </CommandEmpty>
+                ) : pending ? (
+                  <div
+                    role="status"
+                    className="flex items-center gap-2 p-4 text-sm text-ui-muted-foreground"
+                  >
+                    <Loader2
+                      className="size-4 animate-spin"
+                      aria-hidden="true"
+                    />
+                    Searching…
+                  </div>
+                ) : error ? (
+                  <p role="alert" className="p-4 text-sm text-ui-destructive">
+                    {error}
+                  </p>
+                ) : !hits.length ? (
+                  <CommandEmpty>{emptyText}</CommandEmpty>
+                ) : null}
+                {hits.length ? (
+                  <CommandGroup heading="Swimmers">
+                    {hits.map((hit) => (
+                      <CommandItem
+                        key={hit.id}
+                        value={hit.id}
+                        onSelect={() => {
+                          onSelect(hit);
+                          changeOpen(false);
+                        }}
+                      >
+                        <span>
+                          <span className="block font-medium">
+                            {fullName(hit)}
+                          </span>
+                          <span className="block text-xs text-ui-muted-foreground">
+                            {ageLabel(hit.dateOfBirth)}
+                            {hit.memberNumber ? ` · ${hit.memberNumber}` : ""}
+                            {hit.status === "INACTIVE" ? " · Inactive" : ""}
+                          </span>
+                        </span>
+                      </CommandItem>
+                    ))}
+                  </CommandGroup>
+                ) : null}
+              </CommandList>
+            </Command>
+          </PopoverContent>
+        </Popover>
+        {selected ? (
+          <Button
+            type="button"
+            size="icon"
+            variant="ghost"
+            aria-label="Clear selected swimmer"
+            onClick={() => onSelect(null)}
+          >
+            <X aria-hidden="true" />
+          </Button>
+        ) : null}
+      </div>
+    </FieldFrame>
   );
 }
 
-/** The search as a form field. Posts the chosen id through a hidden input, so
- *  it sits inside the same plain `<form>` as every other field, exactly as
- *  `SearchablePicker` does. */
 export function StudentPicker({
   name,
   id,
@@ -124,16 +210,22 @@ export function StudentPicker({
 }: {
   name: string;
   id?: string;
-  /** Usually injected by the form's Field wrapper. */
   label?: string;
   description?: string;
   placeholder?: string;
 }) {
   const [chosen, setChosen] = React.useState<StudentHit | null>(null);
-
+  const input = React.useRef<HTMLInputElement>(null);
+  React.useEffect(() => {
+    const form = input.current?.form;
+    if (!form) return;
+    const reset = () => setChosen(null);
+    form.addEventListener("reset", reset);
+    return () => form.removeEventListener("reset", reset);
+  }, []);
   return (
     <>
-      <input type="hidden" name={name} value={chosen?.id ?? ""} />
+      <input ref={input} type="hidden" name={name} value={chosen?.id ?? ""} />
       <StudentSearch
         id={id}
         label={label ?? "Swimmer"}

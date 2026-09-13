@@ -1,6 +1,5 @@
-import { Skeleton } from "@astryxdesign/core/Skeleton";
-import { HStack, StackItem, VStack } from "@astryxdesign/core/Stack";
-import { VisuallyHidden } from "@astryxdesign/core/VisuallyHidden";
+import { Skeleton } from "@/components/shadcn/skeleton";
+import { cn } from "@/lib/utils";
 
 /** What every page shows for the moment between a click and its data.
  *
@@ -15,27 +14,35 @@ import { VisuallyHidden } from "@astryxdesign/core/VisuallyHidden";
  *  comes". */
 export default function Loading() {
   return (
-    <VStack gap={6} role="status" aria-busy="true" aria-live="polite">
-      <VisuallyHidden>Loading</VisuallyHidden>
+    <div
+      role="status"
+      aria-busy="true"
+      aria-live="polite"
+      className="min-w-0 flex flex-col gap-6"
+    >
+      <span className="sr-only">Loading</span>
 
-      <VStack gap={2}>
-        <Skeleton width={176} height={28} index={0} />
-        <Skeleton width="min(20rem, 100%)" height={16} index={1} />
-      </VStack>
+      <div className="min-w-0 flex flex-col gap-2">
+        <Skeleton style={{ width: 176, height: 28 }} />
+        <Skeleton style={{ width: "min(20rem, 100%)", height: 16 }} />
+      </div>
 
-      <Skeleton width="min(28rem, 100%)" height={16} index={2} />
+      <Skeleton style={{ width: "min(28rem, 100%)", height: 16 }} />
 
-      <VStack gap={3}>
+      <div className="min-w-0 flex flex-col gap-3">
         {Array.from({ length: 6 }, (_, i) => (
-          <HStack key={i} gap={4} vAlign="center">
-            <Skeleton width={160} height={16} index={3 + i} />
-            <Skeleton width={96} height={12} index={3 + i} className="max-md:hidden" />
-            <StackItem className="ml-auto">
-              <Skeleton width={64} height={12} index={3 + i} />
-            </StackItem>
-          </HStack>
+          <div key={i} className="min-w-0 flex gap-4 items-center">
+            <Skeleton style={{ width: 160, height: 16 }} />
+            <Skeleton
+              style={{ width: 96, height: 12 }}
+              className={"max-md:hidden"}
+            />
+            <div className={cn("min-w-0", "ml-auto")}>
+              <Skeleton style={{ width: 64, height: 12 }} />
+            </div>
+          </div>
         ))}
-      </VStack>
-    </VStack>
+      </div>
+    </div>
   );
 }

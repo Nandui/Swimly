@@ -123,7 +123,7 @@ synthetic examples, then record the checks against DESIGN.md's approved exceptio
 - `npm run typecheck`, `npm run lint`, all 136 tests, and `npx next build`
   passed. No migration or live record writes were run.
 - Browser checks on Today at 375, 768, 1024 and 1280, light and dark: all
-  classes retained, one H1, no document overflow, and no Astryx DOM elements.
+  classes retained, one H1, no document overflow, and no legacy UI DOM elements.
   Narrow surfaces use Agenda. Controls and navigation meet 44px touch sizing.
 - Pool/instructor filtering, searchable instructor options, no-match recovery,
   clearing filters and refresh preserving the selected pool passed.
@@ -136,7 +136,7 @@ synthetic examples, then record the checks against DESIGN.md's approved exceptio
   survives reload; its Setup menu and site/account/role menus open correctly.
   Menu inspection did not invoke sign-out, role changes or site changes.
 - Classes renders within the migrated shell in both themes. Its body remains
-  Astryx. The Today/shared UI migration does not remove legacy app dependencies.
+  legacy UI. The Today/shared UI migration does not remove legacy app dependencies.
 - The optimized Turbopack build passed. The local dev server uses Next's
   `--webpack` mode after Turbopack repeatedly reported an HMR graph error.
   The project's default build and dev scripts are unchanged.

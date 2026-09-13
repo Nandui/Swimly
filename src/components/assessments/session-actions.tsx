@@ -1,11 +1,11 @@
 "use client";
+import { Button } from "@/components/shadcn/button";
 
 import * as React from "react";
 import { CalendarPlus, Pencil, Ban } from "lucide-react";
 import { ConfirmAction } from "@/components/confirm-action";
 import { Field, FormDialog } from "@/components/form-dialog";
-import { Button } from "@astryxdesign/core/Button";
-import { IconButton } from "@astryxdesign/core/IconButton";
+
 import { Input } from "@/components/ui/input";
 import { Select } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
@@ -24,8 +24,6 @@ import type {
 import type { InstructorOption } from "@/lib/courses/data/courses";
 import { formatTime } from "@/lib/courses/constants";
 import { toDateOnlyString } from "@/lib/format";
-import { FormLayout } from "@astryxdesign/core/FormLayout";
-import { Icon } from "@astryxdesign/core/Icon";
 
 const NONE = "__none__";
 
@@ -56,17 +54,29 @@ type FieldProps = {
 /** The programme is held in state rather than left to the form, because the
  *  kinds of assessment on offer are the chosen programme's and nothing else:
  *  change the programme and the list changes with it. */
-function SessionFields({ session, programmes, types, instructors, today }: FieldProps) {
+function SessionFields({
+  session,
+  programmes,
+  types,
+  instructors,
+  today,
+}: FieldProps) {
   const [programmeId, setProgrammeId] = React.useState(
-    session?.programmeId ?? programmes[0]?.id ?? ""
+    session?.programmeId ?? programmes[0]?.id ?? "",
   );
   const kinds = types.filter((type) => type.programmeId === programmeId);
   const currentKind =
-    session && session.programmeId === programmeId ? (session.typeId ?? undefined) : undefined;
+    session && session.programmeId === programmeId
+      ? (session.typeId ?? undefined)
+      : undefined;
 
   return (
     <>
-      <FormLayout direction="horizontal">
+      <div
+        className={
+          "min-w-0 grid grid-cols-[repeat(auto-fit,minmax(min(100%,14rem),1fr))] gap-4"
+        }
+      >
         <Field
           label="Programme"
           htmlFor="programmeId"
@@ -78,7 +88,10 @@ function SessionFields({ session, programmes, types, instructors, today }: Field
             value={programmeId}
             onValueChange={setProgrammeId}
             placeholder="Pick a programme"
-            options={programmes.map((programme) => ({ value: programme.id, label: programme.name }))}
+            options={programmes.map((programme) => ({
+              value: programme.id,
+              label: programme.name,
+            }))}
           />
         </Field>
         <Field
@@ -99,12 +112,19 @@ function SessionFields({ session, programmes, types, instructors, today }: Field
             defaultValue={currentKind ?? kinds[0]?.id}
             disabled={kinds.length === 0}
             placeholder={kinds.length === 0 ? "None yet" : "Pick a kind"}
-            options={kinds.map((kind) => ({ value: kind.id, label: kind.name }))}
+            options={kinds.map((kind) => ({
+              value: kind.id,
+              label: kind.name,
+            }))}
           />
         </Field>
-      </FormLayout>
+      </div>
 
-      <FormLayout direction="horizontal">
+      <div
+        className={
+          "min-w-0 grid grid-cols-[repeat(auto-fit,minmax(min(100%,14rem),1fr))] gap-4"
+        }
+      >
         <Field label="Date" htmlFor="date">
           <Input
             id="date"
@@ -133,10 +153,18 @@ function SessionFields({ session, programmes, types, instructors, today }: Field
             defaultValue={session?.durationMinutes ?? 30}
           />
         </Field>
-      </FormLayout>
+      </div>
 
-      <FormLayout direction="horizontal">
-        <Field label="Places" htmlFor="capacity" hint="Leave blank for no limit.">
+      <div
+        className={
+          "min-w-0 grid grid-cols-[repeat(auto-fit,minmax(min(100%,14rem),1fr))] gap-4"
+        }
+      >
+        <Field
+          label="Places"
+          htmlFor="capacity"
+          hint="Leave blank for no limit."
+        >
           <Input
             id="capacity"
             name="capacity"
@@ -153,7 +181,7 @@ function SessionFields({ session, programmes, types, instructors, today }: Field
             defaultValue={session?.location ?? ""}
           />
         </Field>
-      </FormLayout>
+      </div>
 
       <Field label="Assessor" htmlFor="instructorId">
         <Select
@@ -162,13 +190,25 @@ function SessionFields({ session, programmes, types, instructors, today }: Field
           defaultValue={session?.instructorId ?? NONE}
           options={[
             { value: NONE, label: "Not decided yet" },
-            ...instructors.map((person) => ({ value: person.id, label: person.name })),
+            ...instructors.map((person) => ({
+              value: person.id,
+              label: person.name,
+            })),
           ]}
         />
       </Field>
 
-      <Field label="Notes" htmlFor="notes" hint="Anything the desk should tell parents when booking.">
-        <Textarea id="notes" name="notes" rows={2} defaultValue={session?.notes ?? ""} />
+      <Field
+        label="Notes"
+        htmlFor="notes"
+        hint="Anything the desk should tell parents when booking."
+      >
+        <Textarea
+          id="notes"
+          name="notes"
+          rows={2}
+          defaultValue={session?.notes ?? ""}
+        />
       </Field>
     </>
   );
@@ -178,7 +218,10 @@ export function AddSession(props: Omit<FieldProps, "session">) {
   return (
     <FormDialog
       trigger={
-        <Button label="Add a session" variant="primary" size="sm" icon={<Icon icon={CalendarPlus} size="sm" />} />
+        <Button variant="default" size="sm">
+          {<CalendarPlus aria-hidden={true} className="size-4 shrink-0" />}
+          {"Add a session"}
+        </Button>
       }
       title="Add an assessment session"
       description="A date, a time and a number of places. Children are booked onto it from the session's own page."
@@ -201,9 +244,18 @@ export function EditSession({
     <FormDialog
       trigger={
         variant === "icon" ? (
-          <IconButton label={`Edit the session on ${sessionLabel(session)}`} variant="ghost" size="sm" icon={<Icon icon={Pencil} size="sm" />} />
+          <Button
+            variant="ghost"
+            aria-label={`Edit the session on ${sessionLabel(session)}`}
+            size="icon-sm"
+          >
+            {<Pencil aria-hidden={true} className="size-4 shrink-0" />}
+          </Button>
         ) : (
-          <Button label="Edit" variant="secondary" size="sm" icon={<Icon icon={Pencil} size="sm" />} />
+          <Button variant="outline" size="sm">
+            {<Pencil aria-hidden={true} className="size-4 shrink-0" />}
+            {"Edit"}
+          </Button>
         )
       }
       title={`Edit the session on ${sessionLabel(session)}`}
@@ -222,7 +274,13 @@ export function CancelSession({ session }: { session: SessionRow }) {
   return (
     <ConfirmAction
       trigger={
-        <IconButton label={`Cancel the session on ${sessionLabel(session)}`} variant="ghost" size="sm" icon={<Icon icon={Ban} size="sm" />} />
+        <Button
+          variant="ghost"
+          aria-label={`Cancel the session on ${sessionLabel(session)}`}
+          size="icon-sm"
+        >
+          {<Ban aria-hidden={true} className="size-4 shrink-0" />}
+        </Button>
       }
       title={`Cancel the session on ${sessionLabel(session)}?`}
       description={

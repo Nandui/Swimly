@@ -1,21 +1,23 @@
 "use client";
+import { Button } from "@/components/shadcn/button";
 
 import * as React from "react";
 import { KeyRound, Pencil, Plus, UserCheck, UserMinus } from "lucide-react";
 import { ActionButton, ConfirmAction } from "@/components/confirm-action";
 import { Field, FormDialog } from "@/components/form-dialog";
-import { Button } from "@astryxdesign/core/Button";
-import { IconButton } from "@astryxdesign/core/IconButton";
+
 import { Input } from "@/components/ui/input";
 import { Select } from "@/components/ui/select";
-import { MIN_PASSWORD_LENGTH, permissionCountLabel } from "@/lib/staff/constants";
+import {
+  MIN_PASSWORD_LENGTH,
+  permissionCountLabel,
+} from "@/lib/staff/constants";
 import {
   createPerson,
   resetPassword,
   setPersonActive,
   updatePerson,
 } from "@/lib/staff/actions/staff";
-import { Icon } from "@astryxdesign/core/Icon";
 
 type RoleOption = {
   id: string;
@@ -46,8 +48,16 @@ function readPerson(formData: FormData) {
  *  *selected*. Left uncontrolled it describes the one the dialog opened with,
  *  which puts one role's powers under another role's name at exactly the
  *  moment someone is deciding what access to hand out. */
-function RoleField({ roles, defaultRoleId }: { roles: RoleOption[]; defaultRoleId?: string }) {
-  const [roleId, setRoleId] = React.useState(defaultRoleId ?? roles[0]?.id ?? "");
+function RoleField({
+  roles,
+  defaultRoleId,
+}: {
+  roles: RoleOption[];
+  defaultRoleId?: string;
+}) {
+  const [roleId, setRoleId] = React.useState(
+    defaultRoleId ?? roles[0]?.id ?? "",
+  );
   const selected = roles.find((role) => role.id === roleId);
 
   const hint = selected
@@ -71,7 +81,13 @@ function RoleField({ roles, defaultRoleId }: { roles: RoleOption[]; defaultRoleI
   );
 }
 
-function PersonFields({ roles, person }: { roles: RoleOption[]; person?: Person }) {
+function PersonFields({
+  roles,
+  person,
+}: {
+  roles: RoleOption[];
+  person?: Person;
+}) {
   return (
     <>
       <Field label="Name" htmlFor="name">
@@ -84,7 +100,11 @@ function PersonFields({ roles, person }: { roles: RoleOption[]; person?: Person 
           placeholder="Aoife Ryan"
         />
       </Field>
-      <Field label="Email" htmlFor="email" hint="This is what they sign in with.">
+      <Field
+        label="Email"
+        htmlFor="email"
+        hint="This is what they sign in with."
+      >
         <Input
           id="email"
           name="email"
@@ -104,7 +124,10 @@ export function AddPerson({ roles }: { roles: RoleOption[] }) {
   return (
     <FormDialog
       trigger={
-        <Button label="Add person" variant="primary" size="sm" icon={<Icon icon={Plus} size="sm" />} />
+        <Button variant="default" size="sm">
+          {<Plus aria-hidden={true} className="size-4 shrink-0" />}
+          {"Add person"}
+        </Button>
       }
       title="Add a person"
       description="They can sign in as soon as you save this, with the email and password you set here."
@@ -133,11 +156,23 @@ export function AddPerson({ roles }: { roles: RoleOption[] }) {
   );
 }
 
-export function EditPerson({ person, roles }: { person: Person; roles: RoleOption[] }) {
+export function EditPerson({
+  person,
+  roles,
+}: {
+  person: Person;
+  roles: RoleOption[];
+}) {
   return (
     <FormDialog
       trigger={
-        <IconButton label={`Edit ${person.name}`} variant="ghost" size="sm" icon={<Icon icon={Pencil} size="sm" />} />
+        <Button
+          variant="ghost"
+          aria-label={`Edit ${person.name}`}
+          size="icon-sm"
+        >
+          {<Pencil aria-hidden={true} className="size-4 shrink-0" />}
+        </Button>
       }
       title={`Edit ${person.name}`}
       submitLabel="Save changes"
@@ -153,13 +188,21 @@ export function ResetPersonPassword({ person }: { person: Person }) {
   return (
     <FormDialog
       trigger={
-        <IconButton label={`Set a new password for ${person.name}`} variant="ghost" size="sm" icon={<Icon icon={KeyRound} size="sm" />} />
+        <Button
+          variant="ghost"
+          aria-label={`Set a new password for ${person.name}`}
+          size="icon-sm"
+        >
+          {<KeyRound aria-hidden={true} className="size-4 shrink-0" />}
+        </Button>
       }
       title={`Set a new password for ${person.name}`}
       description="Their old password stops working immediately. Nobody is emailed — tell them yourself."
       submitLabel="Set password"
       successMessage="Password set"
-      submit={(formData) => resetPassword(person.id, String(formData.get("password") ?? ""))}
+      submit={(formData) =>
+        resetPassword(person.id, String(formData.get("password") ?? ""))
+      }
     >
       <Field label="New password" htmlFor="password" hint={PASSWORD_HINT}>
         <Input
@@ -184,7 +227,7 @@ export function SetPersonActive({ person }: { person: Person }) {
         successMessage="Account reactivated"
         run={() => setPersonActive(person.id, true)}
       >
-        <Icon icon={UserCheck} size="sm" />
+        <UserCheck aria-hidden={true} className="size-4 shrink-0" />
       </ActionButton>
     );
   }
@@ -192,7 +235,13 @@ export function SetPersonActive({ person }: { person: Person }) {
   return (
     <ConfirmAction
       trigger={
-        <IconButton label={`Deactivate ${person.name}`} variant="ghost" size="sm" icon={<Icon icon={UserMinus} size="sm" />} />
+        <Button
+          variant="ghost"
+          aria-label={`Deactivate ${person.name}`}
+          size="icon-sm"
+        >
+          {<UserMinus aria-hidden={true} className="size-4 shrink-0" />}
+        </Button>
       }
       title={`Deactivate ${person.name}?`}
       description="They stop being able to sign in, from their next page load rather than whenever their session would have expired. Everything they recorded — registers, assessments, the audit trail — stays exactly as it is, and you can reactivate them later. Classes they teach keep their name on them."

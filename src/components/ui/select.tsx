@@ -1,18 +1,29 @@
 "use client";
 
 import * as React from "react";
-import { Selector } from "@astryxdesign/core/Selector";
+import {
+  Select as ShadcnSelect,
+  SelectContent,
+  SelectGroup as Group,
+  SelectItem,
+  SelectLabel,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/shadcn/select";
+import { FieldFrame } from "./field-frame";
 
-/** A bounded choice, on Astryx's Selector. Options are data rather than
- *  children, because that is what Astryx takes and because a list that has
- *  to be searched belongs in `SearchablePicker`, not here. With a `name` it
- *  posts the chosen value through FormData. */
-
-export type SelectOption = { value: string; label: string; description?: string; disabled?: boolean };
+export type SelectOption = {
+  value: string;
+  label: string;
+  description?: string;
+  disabled?: boolean;
+};
 export type SelectGroup = { title: string; options: SelectOption[] };
+// Radix reserves an empty value for the placeholder. Empty options still post "".
+const EMPTY = "__swimly_empty_option__";
 
 export function Select({
-  id,
+  id: suppliedId,
   name,
   label,
   description,
@@ -27,7 +38,6 @@ export function Select({
 }: {
   id?: string;
   name?: string;
-  /** Usually injected by the form's Field wrapper. */
   label?: string;
   description?: string;
   options: SelectOption[] | SelectGroup[];
@@ -39,33 +49,115 @@ export function Select({
   disabled?: boolean;
   className?: string;
 }) {
+  const generatedId = React.useId(),
+    id = suppliedId ?? generatedId;
   const [inner, setInner] = React.useState(defaultValue ?? "");
-  const controlled = value !== undefined;
-
-  const items = options.map((option) =>
+  const [invalid, setInvalid] = React.useState(false);
+  const trigger = React.useRef<HTMLButtonElement>(null);
+  const controlled = value !== undefined,
+    current = controlled ? value : inner;
+  const input = React.useRef<HTMLInputElement>(null);
+  React.useEffect(() => {
+    const form = input.current?.form;
+    if (!form || controlled) return;
+    const reset = () => {
+      setInner(defaultValue ?? "");
+      setInvalid(false);
+    };
+    form.addEventListener("reset", reset);
+    return () => form.removeEventListener("reset", reset);
+  }, [controlled, defaultValue]);
+  const emptyOption = options.some((option) =>
     "options" in option
-      ? { type: "section" as const, title: option.title, options: option.options }
-      : option
+      ? option.options.some((item) => item.value === "")
+      : option.value === "",
   );
-
+  const item = (option: SelectOption) => (
+    <SelectItem
+      key={option.value}
+      value={option.value || EMPTY}
+      disabled={option.disabled}
+    >
+      {option.label}
+      {option.description ? (
+        <span className="block text-xs text-ui-muted-foreground">
+          {option.description}
+        </span>
+      ) : null}
+    </SelectItem>
+  );
   return (
-    <Selector
+    <FieldFrame
       id={id}
-      label={label ?? placeholder ?? name ?? "Choice"}
-      isLabelHidden={label === undefined}
+      label={label}
       description={description}
-      options={items}
-      value={controlled ? value : inner}
-      onChange={(next) => {
-        if (!controlled) setInner(next);
-        onValueChange?.(next);
-      }}
-      htmlName={name}
-      placeholder={placeholder}
-      isRequired={required}
-      isDisabled={disabled}
-      width="100%"
       className={className}
-    />
+    >
+      <input
+        ref={input}
+        type="hidden"
+        name={name}
+        value={current}
+        disabled={disabled}
+      />
+      <div
+        onInvalidCapture={(event) => {
+          event.preventDefault();
+          setInvalid(true);
+          trigger.current?.focus();
+        }}
+      >
+        <ShadcnSelect
+          value={current || (emptyOption && !required ? EMPTY : "")}
+          required={required}
+          disabled={disabled}
+          onValueChange={(next) => {
+            const selected = next === EMPTY ? "" : next;
+            if (!controlled) setInner(selected);
+            setInvalid(false);
+            onValueChange?.(selected);
+          }}
+        >
+          <SelectTrigger
+            ref={trigger}
+            id={id}
+            className="w-full"
+            aria-label={label ?? placeholder ?? name ?? "Choice"}
+            aria-invalid={invalid || undefined}
+            aria-describedby={
+              [
+                description ? `${id}-hint` : null,
+                invalid ? `${id}-error` : null,
+              ]
+                .filter(Boolean)
+                .join(" ") || undefined
+            }
+          >
+            <SelectValue placeholder={placeholder} />
+          </SelectTrigger>
+          <SelectContent>
+            {options.map((option) =>
+              "options" in option ? (
+                <Group key={option.title}>
+                  <SelectLabel>{option.title}</SelectLabel>
+                  {option.options.map(item)}
+                </Group>
+              ) : (
+                item(option)
+              ),
+            )}
+          </SelectContent>
+        </ShadcnSelect>
+        {invalid ? (
+          <p
+            id={`${id}-error`}
+            role="alert"
+            className="mt-2 text-sm text-ui-destructive"
+          >
+            Choose an option.
+          </p>
+        ) : null}
+      </div>
+    </FieldFrame>
   );
 }

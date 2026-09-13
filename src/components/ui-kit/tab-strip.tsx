@@ -1,26 +1,15 @@
-"use client";
-
-import { Badge } from "@astryxdesign/core/Badge";
-import { Tab, TabList } from "@astryxdesign/core/TabList";
-
-/** A row of sections, one on screen at a time, each a link.
- *
- *  Links rather than a client-side tab widget, on purpose: the tab is in the
- *  URL, so a bookmark or a message can point at one section, the back button
- *  works, and each section is rendered by the server with only what it
- *  needs. Astryx's TabList with `href` on each tab is exactly that: a nav
- *  landmark marking the current tab with `aria-current`. */
-
+import Link from "next/link";
+import { Button } from "@/components/shadcn/button";
+import { Badge } from "@/components/shadcn/badge";
+import { cn } from "@/lib/utils";
 export type TabStripItem = {
   key: string;
   href: string;
   label: string;
-  /** A count worth showing beside the label — how many classes, how many
-   *  registers. Leave it out for a section that is not a list. */
   count?: number | null;
   active: boolean;
 };
-
+/** URL sections stay ordinary links, preserving bookmarks and browser history. */
 export function TabStrip({
   ariaLabel,
   items,
@@ -28,27 +17,39 @@ export function TabStrip({
 }: {
   ariaLabel: string;
   items: TabStripItem[];
-  /** Keep the counts at phone width. Off by default so four tabs still fit
-   *  at 375px; on for a two-tab strip whose counts are the point. */
   countsOnPhone?: boolean;
 }) {
-  const active = items.find((item) => item.active)?.key ?? items[0]?.key ?? "";
-
   return (
-    <TabList value={active} onChange={() => {}} hasDivider aria-label={ariaLabel}>
+    <nav
+      aria-label={ariaLabel}
+      className="flex flex-wrap gap-2 border-b border-ui-border"
+    >
       {items.map((item) => (
-        <Tab
+        <Button
           key={item.key}
-          value={item.key}
-          label={item.label}
-          href={item.href}
-          endContent={
-            item.count !== undefined && item.count !== null ? (
-              <Badge variant="neutral" label={item.count} className={countsOnPhone ? undefined : "max-sm:hidden"} />
-            ) : undefined
-          }
-        />
+          asChild
+          variant="ghost"
+          className={cn(
+            "min-h-11 rounded-none border-b-2 border-transparent",
+            item.active && "border-ui-foreground",
+          )}
+        >
+          <Link
+            href={item.href}
+            aria-current={item.active ? "page" : undefined}
+          >
+            {item.label}
+            {item.count != null ? (
+              <Badge
+                variant="secondary"
+                className={countsOnPhone ? undefined : "max-sm:hidden"}
+              >
+                {item.count}
+              </Badge>
+            ) : null}
+          </Link>
+        </Button>
       ))}
-    </TabList>
+    </nav>
   );
 }

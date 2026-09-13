@@ -1,41 +1,117 @@
 /* shadcn Item provides the interaction; this grid keeps each record aligned. */
-.directory { border: 1px solid var(--ui-border); border-radius: var(--ui-radius); min-width: 0; }
-.columns, .row {
+.directory {
+  border: 1px solid var(--ui-border);
+  border-radius: var(--ui-radius);
+  min-width: 0;
+}
+.columns,
+.row {
   display: grid;
-  grid-template-columns: minmax(0, 1.35fr) minmax(0, 1fr) calc(var(--spacing) * 20) var(--spacing-5);
-  column-gap: var(--spacing-5);
+  grid-template-columns:
+    minmax(0, 1.35fr) minmax(0, 1fr) calc(var(--spacing) * 20)
+    calc(var(--spacing) * 5);
+  column-gap: calc(var(--spacing) * 5);
   align-items: center;
-  padding: var(--spacing-4) var(--spacing-5);
+  padding: calc(var(--spacing) * 4) calc(var(--spacing) * 5);
 }
 .columns {
   background: var(--ui-muted);
   border-radius: var(--ui-radius) var(--ui-radius) 0 0;
   color: var(--ui-muted-foreground);
   font-size: var(--text-sm);
-  padding-block: var(--spacing-3);
+  padding-block: calc(var(--spacing) * 3);
 }
-.listItem + .listItem { border-top: 1px solid var(--ui-border); }
-.row { min-height: calc(var(--spacing) * 22); text-decoration: none; border-radius: 0; color: var(--ui-foreground); }
-.row:hover { background: var(--ui-muted); }
-.listItem:last-child .row { border-radius: 0 0 var(--ui-radius) var(--ui-radius); }
-.person, .level, .contact { min-width: 0; overflow-wrap: anywhere; }
-.name { font-size: var(--text-base); font-weight: 600; width: auto; }
-.secondary { display: flex; gap: var(--spacing-2); flex-wrap: wrap; font-size: var(--text-sm); color: var(--ui-muted-foreground); }
-.placement + .placement { margin-top: var(--spacing-2); }
-.programme { display: block; color: var(--ui-muted-foreground); font-size: var(--text-sm); }
-.contact { display: none; }
-.arrow { width: var(--spacing-4); height: var(--spacing-4); color: var(--ui-muted-foreground); }
+.listItem + .listItem {
+  border-top: 1px solid var(--ui-border);
+}
+.row {
+  min-height: calc(var(--spacing) * 22);
+  text-decoration: none;
+  border-radius: 0;
+  color: var(--ui-foreground);
+}
+.row:hover {
+  background: var(--ui-muted);
+}
+.listItem:last-child .row {
+  border-radius: 0 0 var(--ui-radius) var(--ui-radius);
+}
+.person,
+.level,
+.contact {
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+.name {
+  font-size: var(--text-base);
+  font-weight: 600;
+  width: auto;
+}
+.secondary {
+  display: flex;
+  gap: calc(var(--spacing) * 2);
+  flex-wrap: wrap;
+  font-size: var(--text-sm);
+  color: var(--ui-muted-foreground);
+}
+.placement + .placement {
+  margin-top: calc(var(--spacing) * 2);
+}
+.programme {
+  display: block;
+  color: var(--ui-muted-foreground);
+  font-size: var(--text-sm);
+}
+.contact {
+  display: none;
+}
+.arrow {
+  width: calc(var(--spacing) * 4);
+  height: calc(var(--spacing) * 4);
+  color: var(--ui-muted-foreground);
+}
 @media (min-width: 80rem) {
-  .columns, .row { grid-template-columns: minmax(0, 1.3fr) minmax(0, 1fr) minmax(0, 1fr) calc(var(--spacing) * 20) var(--spacing-4); }
-  .contact { display: block; }
+  .columns,
+  .row {
+    grid-template-columns:
+      minmax(0, 1.3fr) minmax(0, 1fr) minmax(0, 1fr) calc(var(--spacing) * 20)
+      calc(var(--spacing) * 4);
+  }
+  .contact {
+    display: block;
+  }
 }
 @media (max-width: 47.99rem) {
-  .columns { display: none; }
-  .row { grid-template-columns: minmax(0, 1fr) auto; padding: var(--spacing-4); gap: var(--spacing-2) var(--spacing-3); }
-  .person { grid-column: 1; grid-row: 1; }
-  .status { grid-column: 2; grid-row: 1; align-self: start; }
-  .level { grid-column: 1; grid-row: 2; }
-  .arrow { grid-column: 2; grid-row: 2; justify-self: end; }
-  .programme { display: none; }
-  .listItem:first-child .row { border-radius: var(--ui-radius) var(--ui-radius) 0 0; }
+  .columns {
+    display: none;
+  }
+  .row {
+    grid-template-columns: minmax(0, 1fr) auto;
+    padding: calc(var(--spacing) * 4);
+    gap: calc(var(--spacing) * 2) calc(var(--spacing) * 3);
+  }
+  .person {
+    grid-column: 1;
+    grid-row: 1;
+  }
+  .status {
+    grid-column: 2;
+    grid-row: 1;
+    align-self: start;
+  }
+  .level {
+    grid-column: 1;
+    grid-row: 2;
+  }
+  .arrow {
+    grid-column: 2;
+    grid-row: 2;
+    justify-self: end;
+  }
+  .programme {
+    display: none;
+  }
+  .listItem:first-child .row {
+    border-radius: var(--ui-radius) var(--ui-radius) 0 0;
+  }
 }

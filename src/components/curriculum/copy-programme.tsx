@@ -1,11 +1,11 @@
 "use client";
+import { Button } from "@/components/shadcn/button";
 
 import { Copy } from "lucide-react";
 import { Field, FormDialog } from "@/components/form-dialog";
-import { Button } from "@astryxdesign/core/Button";
+
 import { Select } from "@/components/ui/select";
 import { copyProgramme } from "@/lib/curriculum/actions/copy";
-import { Icon } from "@astryxdesign/core/Icon";
 
 type Club = { id: string; name: string };
 
@@ -26,7 +26,10 @@ export function CopyProgramme({
   return (
     <FormDialog
       trigger={
-        <Button label="Copy to another club" variant="secondary" size="sm" icon={<Icon icon={Copy} size="sm" />} />
+        <Button variant="outline" size="sm">
+          {<Copy aria-hidden={true} className="size-4 shrink-0" />}
+          {"Copy to another club"}
+        </Button>
       }
       title={`Copy ${programme.name} to another club`}
       description={`Its ${levels} ${levels === 1 ? "level" : "levels"} and ${competencies} ${
@@ -34,7 +37,9 @@ export function CopyProgramme({
       } go with it, and so do its kinds of assessment. Swimmers, classes and results do not — the other club enrols its own.`}
       submitLabel="Copy programme"
       successMessage="Programme copied"
-      submit={(formData) => copyProgramme(programme.id, String(formData.get("clubId") ?? ""))}
+      submit={(formData) =>
+        copyProgramme(programme.id, String(formData.get("clubId") ?? ""))
+      }
     >
       <Field
         label="Copy to"

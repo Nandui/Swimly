@@ -1,9 +1,15 @@
 "use client";
+import { RadioGroupItem, RadioGroup } from "@/components/shadcn/radio-group";
+
+import { cn } from "@/lib/utils";
 
 import { Moon, Sun } from "lucide-react";
 import { Button } from "@/components/shadcn/button";
-import { SegmentedControl, SegmentedControlItem } from "@astryxdesign/core/SegmentedControl";
-import { useResolvedThemeMode, useThemeMode } from "@/components/theme-provider";
+
+import {
+  useResolvedThemeMode,
+  useThemeMode,
+} from "@/components/theme-provider";
 import type { ThemeMode } from "@/lib/theme-mode";
 
 const OPTIONS: Array<{ value: ThemeMode; label: string }> = [
@@ -20,22 +26,27 @@ export function ThemeToggle() {
   const { mode, setMode } = useThemeMode();
 
   return (
-    <SegmentedControl
-      label="Appearance"
+    <RadioGroup
       value={mode}
-      onChange={(next) => setMode(next as ThemeMode)}
-      size="lg"
-      layout="fill"
-      className="max-w-sm"
+      aria-label="Appearance"
+      onValueChange={(next) => setMode(next as ThemeMode)}
+      className={cn(
+        "inline-flex flex-wrap gap-1 rounded-ui-lg bg-ui-muted p-1",
+        "max-w-sm",
+      )}
     >
       {OPTIONS.map((option) => (
-        <SegmentedControlItem
+        <RadioGroupItem
           key={option.value}
           value={option.value}
-          label={option.label}
-        />
+          className={
+            "aspect-auto h-auto min-h-11 w-auto flex-1 bg-transparent dark:bg-transparent dark:data-[state=checked]:bg-ui-input/30 rounded-ui-md border-0 px-3 py-2 text-sm font-medium shadow-none data-[state=checked]:bg-ui-background data-[state=checked]:text-ui-foreground data-[state=checked]:shadow-sm"
+          }
+        >
+          {option.label}
+        </RadioGroupItem>
       ))}
-    </SegmentedControl>
+    </RadioGroup>
   );
 }
 
@@ -55,7 +66,13 @@ export function ThemeFlip({ size = "md" }: { size?: "sm" | "md" | "lg" }) {
   const label = dark ? "Switch to light mode" : "Switch to dark mode";
 
   return (
-    <Button aria-label={label} title={label} variant="ghost" size={size === "sm" ? "icon-sm" : size === "lg" ? "icon-lg" : "icon"} onClick={() => setMode(dark ? "light" : "dark")}>
+    <Button
+      aria-label={label}
+      title={label}
+      variant="ghost"
+      size={size === "sm" ? "icon-sm" : size === "lg" ? "icon-lg" : "icon"}
+      onClick={() => setMode(dark ? "light" : "dark")}
+    >
       {dark ? <Sun aria-hidden="true" /> : <Moon aria-hidden="true" />}
     </Button>
   );

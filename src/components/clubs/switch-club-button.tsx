@@ -1,25 +1,25 @@
 "use client";
+import { Button } from "@/components/shadcn/button";
 
 import * as React from "react";
 import { useRouter } from "next/navigation";
 import { ArrowLeftRight } from "lucide-react";
-import { Button } from "@astryxdesign/core/Button";
+
 import { switchClub } from "@/lib/clubs/actions/clubs";
 import { toast } from "@/lib/toast";
-import { Icon } from "@astryxdesign/core/Icon";
 
 /** The way through from a page that belongs to another club: switch, and
  *  stay on the page, which then renders as it does there. */
-export function SwitchClubButton({ club }: { club: { id: string; name: string } }) {
+export function SwitchClubButton({
+  club,
+}: {
+  club: { id: string; name: string };
+}) {
   const router = useRouter();
   const [pending, startTransition] = React.useTransition();
 
   return (
     <Button
-      label={pending ? "Switching…" : `Switch to ${club.name}`}
-      variant="primary"
-      isLoading={pending}
-      icon={<Icon icon={ArrowLeftRight} size="sm" />}
       onClick={() =>
         startTransition(async () => {
           const result = await switchClub(club.id, { stay: true });
@@ -27,6 +27,12 @@ export function SwitchClubButton({ club }: { club: { id: string; name: string } 
           else toast.error(result.error);
         })
       }
-    />
+      variant="default"
+      disabled={pending}
+      aria-busy={pending}
+    >
+      {<ArrowLeftRight aria-hidden={true} className="size-4 shrink-0" />}
+      {pending ? "Switching…" : `Switch to ${club.name}`}
+    </Button>
   );
 }

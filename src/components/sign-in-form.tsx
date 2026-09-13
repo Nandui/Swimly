@@ -1,22 +1,18 @@
 "use client";
+import { Notice } from "@/components/ui-kit/notice";
+import { Button } from "@/components/shadcn/button";
+import { Separator } from "@/components/shadcn/separator";
+import { Card } from "@/components/shadcn/card";
 
 import { useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import { signIn } from "next-auth/react";
 import { Waves } from "lucide-react";
-import { Banner } from "@astryxdesign/core/Banner";
-import { Button } from "@astryxdesign/core/Button";
-import { Card } from "@astryxdesign/core/Card";
-import { Center } from "@astryxdesign/core/Center";
-import { Divider } from "@astryxdesign/core/Divider";
-import { FormLayout } from "@astryxdesign/core/FormLayout";
-import { Icon } from "@astryxdesign/core/Icon";
-import { HStack, VStack } from "@astryxdesign/core/Stack";
-import { Heading, Text } from "@astryxdesign/core/Text";
+
 import { Input } from "@/components/ui/input";
 import { APP_NAME } from "@/lib/app";
 
-/** The front door, in the shape of Astryx's login page: one card, centred
+/** The front door: one shadcn card, centred
  *  on the page ground.
  *
  *  `devAdminName` arrives already decided by the server: the page only passes
@@ -43,7 +39,11 @@ export function SignInForm({ devAdminName }: { devAdminName: string | null }) {
       // turns the form into a way of finding out who has an account.
       const wrong = "That email and password don't match an active account.";
       try {
-        const result = await signIn("credentials", { email, password, redirect: false });
+        const result = await signIn("credentials", {
+          email,
+          password,
+          redirect: false,
+        });
         if (!result || result.error) {
           setError(wrong);
           return;
@@ -73,19 +73,21 @@ export function SignInForm({ devAdminName }: { devAdminName: string | null }) {
   }
 
   return (
-    <Center axis="both" minHeight="100svh" padding={4}>
-      <Card width="100%" maxWidth={400} padding={6}>
-        <VStack gap={5}>
-          <VStack gap={1}>
-            <HStack gap={1} vAlign="center">
-              <Icon icon={Waves} size="sm" />
-              <Text weight="semibold">{APP_NAME}</Text>
-            </HStack>
-            <Heading level={1}>Sign in</Heading>
-          </VStack>
+    <div className="min-w-0 flex min-h-svh items-center justify-center p-4">
+      <Card className="w-full max-w-sm p-6">
+        <div className="min-w-0 flex flex-col gap-5">
+          <div className="min-w-0 flex flex-col gap-1">
+            <div className="min-w-0 flex gap-1 items-center">
+              <Waves aria-hidden={true} className="size-4 shrink-0" />
+              <span className="text-sm text-ui-foreground font-semibold">
+                {APP_NAME}
+              </span>
+            </div>
+            <h1 className="text-2xl font-semibold tracking-tight">Sign in</h1>
+          </div>
 
           <form onSubmit={handleSubmit}>
-            <FormLayout defaultOptionality="required">
+            <div className="min-w-0 flex flex-col gap-4">
               <Input
                 label="Email"
                 type="email"
@@ -107,43 +109,43 @@ export function SignInForm({ devAdminName }: { devAdminName: string | null }) {
                 autoComplete="current-password"
               />
 
-              {error ? <Banner status="error" title={error} collapsible={false} /> : null}
+              {error ? <Notice title={error} tone="error"></Notice> : null}
 
               <Button
                 type="submit"
-                label={pending ? "Signing in…" : "Sign in"}
-                variant="primary"
+                variant="default"
                 size="lg"
-                width="100%"
-                isLoading={pending}
-              />
-            </FormLayout>
+                disabled={pending}
+                aria-busy={pending}
+                className="w-full"
+              >
+                {pending ? "Signing in…" : "Sign in"}
+              </Button>
+            </div>
           </form>
 
           {devAdminName ? (
             <>
-              <Divider />
-              <VStack gap={2}>
-                <Banner
-                  status="warning"
+              <Separator />
+              <div className="min-w-0 flex flex-col gap-2">
+                <Notice
                   title="Dev deployment"
                   description="This button does not exist in production."
-                  collapsible={false}
-                />
+                  tone="warning"
+                ></Notice>
                 <Button
                   type="button"
-                  label={`Sign in as ${devAdminName}`}
-                  variant="secondary"
-                  size="lg"
-                  width="100%"
-                  isDisabled={pending}
                   onClick={handleDevSignIn}
-                />
-              </VStack>
+                  variant="outline"
+                  size="lg"
+                  disabled={pending}
+                  className="w-full"
+                >{`Sign in as ${devAdminName}`}</Button>
+              </div>
             </>
           ) : null}
-        </VStack>
+        </div>
       </Card>
-    </Center>
+    </div>
   );
 }

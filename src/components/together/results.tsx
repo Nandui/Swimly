@@ -1,5 +1,3 @@
-import { Heading } from "@astryxdesign/core/Text";
-import { VStack } from "@astryxdesign/core/Stack";
 import { EmptyState } from "@/components/ui-kit/empty-state";
 import { Lead } from "@/components/ui-kit/prose";
 import { CombinationList } from "@/components/together/combination-list";
@@ -35,45 +33,57 @@ export function TogetherResults({
   }
 
   return (
-    <VStack gap={6}>
+    <div className="min-w-0 flex flex-col gap-6">
       {withTogether.length > 0 ? (
-        <VStack gap={3} as="section">
-          <Heading level={2}>
-            {count === 1 ? "Where they can swim" : `All ${count} starting at the same time`}
-          </Heading>
-          {count > 1 ? <Lead>Each option has a place for everyone. Check the class times before choosing.</Lead> : null}
-          <VStack gap={3}>
+        <section className="min-w-0 flex flex-col gap-3">
+          <h2 className="text-xl font-semibold tracking-tight">
+            {count === 1
+              ? "Where they can swim"
+              : `All ${count} starting at the same time`}
+          </h2>
+          {count > 1 ? (
+            <Lead>
+              Each option has a place for everyone. Check the class times before
+              choosing.
+            </Lead>
+          ) : null}
+          <div className="min-w-0 flex flex-col gap-3">
             {withTogether.map((day) =>
               day.together.map((slot) => (
                 <CombinationList
                   key={`${day.day}-${slot.startMinutes}`}
                   heading={`${DAY_META[day.day].label} ${formatTime(slot.startMinutes)}`}
-                  members={members} courses={slot.courses}
+                  members={members}
+                  courses={slot.courses}
                 />
-              ))
+              )),
             )}
-          </VStack>
-        </VStack>
+          </div>
+        </section>
       ) : null}
 
       {withSpread.length > 0 ? (
-        <VStack gap={3} as="section">
-          <Heading level={2}>Same day, different times</Heading>
+        <section className="min-w-0 flex flex-col gap-3">
+          <h2 className="text-xl font-semibold tracking-tight">
+            Same day, different times
+          </h2>
           <Lead>
-            Every combination where the swimmers start at different times, including days with a same-time option.
+            Every combination where the swimmers start at different times,
+            including days with a same-time option.
           </Lead>
-          <VStack gap={3}>
+          <div className="min-w-0 flex flex-col gap-3">
             {withSpread.map((day) => (
               <CombinationList
                 key={day.day}
                 heading={DAY_META[day.day].label}
-                members={members} courses={day.spread!}
+                members={members}
+                courses={day.spread!}
                 differentTimes
               />
             ))}
-          </VStack>
-        </VStack>
+          </div>
+        </section>
       ) : null}
-    </VStack>
+    </div>
   );
 }

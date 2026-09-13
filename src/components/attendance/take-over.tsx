@@ -1,16 +1,21 @@
 "use client";
+import { Notice } from "@/components/ui-kit/notice";
+import { Button } from "@/components/shadcn/button";
 
 import * as React from "react";
 import { useRouter } from "next/navigation";
 import { UserRoundCheck } from "lucide-react";
-import { Banner } from "@astryxdesign/core/Banner";
-import { Button } from "@astryxdesign/core/Button";
-import { Dialog, DialogHeader } from "@astryxdesign/core/Dialog";
-import { HStack, VStack } from "@astryxdesign/core/Stack";
-import { Text } from "@astryxdesign/core/Text";
+
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/shadcn/dialog";
+
 import { takeOverClass } from "@/lib/attendance/actions/cover";
 import { toast } from "@/lib/toast";
-import { Icon } from "@astryxdesign/core/Icon";
 
 /** The question asked when somebody opens a class that is not theirs: are
  *  you taking it? Asked once, up front, because the answer changes what the
@@ -78,65 +83,98 @@ export function TakeOver({
     });
   }
 
-  const whose = instructorName ? `${instructorName}'s class` : "nobody's class in particular";
+  const whose = instructorName
+    ? `${instructorName}'s class`
+    : "nobody's class in particular";
 
   return (
     <>
       {mayMarkAnyway ? null : (
-        <Banner
-          status="warning"
+        <Notice
           title={`This is ${whose}.`}
           description="You can read it, and mark it once you have taken it over."
-          collapsible={false}
-          endContent={
+          tone="warning"
+          actions={
             <Button
               type="button"
-              label="Take over this class"
-              variant="secondary"
-              size="sm"
-              icon={<Icon icon={UserRoundCheck} size="sm" />}
               onClick={() => setOpen(true)}
-            />
+              variant="outline"
+              size="sm"
+            >
+              {
+                <UserRoundCheck
+                  aria-hidden={true}
+                  className="size-4 shrink-0"
+                />
+              }
+              {"Take over this class"}
+            </Button>
           }
-        />
+        ></Notice>
       )}
 
-      <Dialog isOpen={open} onOpenChange={setOpen} purpose="form" width={448}>
-        <VStack gap={4}>
-          <DialogHeader title={`Taking over ${classLabel}?`} onOpenChange={setOpen} />
-          <Text as="p" display="block">
-            {instructorName ? `It is ${instructorName}'s class.` : "Nobody is assigned to it."}{" "}
-            Say yes, and the record for {dateLabel} says you took this class
-            {instructorName ? `, not ${instructorName}` : ""}. Competencies you mark carry your
-            name too.
-          </Text>
-          <HStack gap={2} hAlign="end" wrap="wrap">
-            <Button
-              type="button"
-              label={mayMarkAnyway ? "Cancel" : "No, just looking"}
-              variant="secondary"
-              onClick={() => setOpen(false)}
-            />
-            {mayMarkAnyway && instructorName ? (
+      <Dialog
+        open={open}
+        onOpenChange={(next) => {
+          if (!pending) setOpen(next);
+        }}
+      >
+        <DialogContent
+          showCloseButton={!pending}
+          className="max-h-[calc(100dvh-2rem)] overflow-y-auto sm:max-w-md"
+          aria-busy={pending}
+        >
+          <div className="min-w-0 flex flex-col gap-4">
+            <DialogHeader>
+              <DialogTitle>Taking over {classLabel}?</DialogTitle>
+              <DialogDescription>
+                Confirm who is teaching this lesson.
+              </DialogDescription>
+            </DialogHeader>
+            <p className="text-sm text-ui-foreground block">
+              {instructorName
+                ? `It is ${instructorName}'s class.`
+                : "Nobody is assigned to it."}{" "}
+              Say yes, and the record for {dateLabel} says you took this class
+              {instructorName ? `, not ${instructorName}` : ""}. Competencies
+              you mark carry your name too.
+            </p>
+            <div
+              className={
+                "min-w-0 flex gap-2 items-center justify-end flex-wrap"
+              }
+            >
               <Button
                 type="button"
-                label={`Just recording it for ${instructorName}`}
-                variant="secondary"
-                onClick={() => {
-                  remember();
-                  setOpen(false);
-                }}
-              />
-            ) : null}
-            <Button
-              type="button"
-              label={pending ? "Working…" : "Yes, I am taking it"}
-              variant="primary"
-              onClick={confirm}
-              isLoading={pending}
-            />
-          </HStack>
-        </VStack>
+                onClick={() => setOpen(false)}
+                disabled={pending}
+                variant="outline"
+              >
+                {mayMarkAnyway ? "Cancel" : "No, just looking"}
+              </Button>
+              {mayMarkAnyway && instructorName ? (
+                <Button
+                  type="button"
+                  disabled={pending}
+                  onClick={() => {
+                    remember();
+                    setOpen(false);
+                  }}
+                  variant="outline"
+                >{`Just recording it for ${instructorName}`}</Button>
+              ) : null}
+              <Button
+                type="button"
+                onClick={confirm}
+                variant="default"
+                disabled={pending}
+                aria-busy={pending}
+              >
+                {pending ? "Working…" : "Yes, I am taking it"}
+              </Button>
+            </div>
+          </div>
+        </DialogContent>
       </Dialog>
     </>
   );

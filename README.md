@@ -4,7 +4,7 @@ The staff workspace for LeisureWorld's swim school at Bishopstown and
 Churchfield: weekly classes, enrolment, attendance, progression and assessment
 sessions. Staff and roles are shared; each club has its own records.
 
-Next.js App Router · React · Astryx Neutral · Tailwind CSS for layout ·
+Next.js App Router · React · shadcn/ui Neutral · Tailwind CSS for layout ·
 Prisma 7 with the PostgreSQL driver adapter · Auth.js · Zod.
 
 Read [PRODUCT.md](PRODUCT.md) for product scope, [DESIGN.md](DESIGN.md) for
@@ -91,30 +91,20 @@ Viewing the calendar needs the Today screen; attendance remains separately
 permission-gated. See [Today’s calendar](docs/today.md).
 
 `/instructor` retains the original deck page: My classes, All classes,
-time/level grouping, attendance and cover. Instructor and Today are separate
-sidebar destinations and role choices. Existing instructor landing pages stay
+time/level grouping, attendance and cover. Instructor is isolated from desk navigation. Existing instructor landing pages stay
 on the deck. Attendance and competencies return to the page that opened them.
 
-## Astryx
+## UI components
 
-[Astryx](https://astryx.atmeta.com/) is the visual authority. The app uses
-`@astryxdesign/core` and `@astryxdesign/theme-neutral`, with Figtree and a
-cookie-backed light/dark mode that follows the device by default.
+The entire app uses shadcn/ui components from src/components/shadcn, Neutral
+light/dark tokens, Figtree and the existing cookie-backed appearance preference.
+See [DESIGN.md](DESIGN.md) for the layout and interaction contract.
 
-Read installed component documentation before changing a control:
+Read each installed component before changing a control. Use the shadcn CLI to
+add primitives, preserving ui- token utilities and the @/lib/utils cn import.
+Shared form compositions in src/components/ui keep native FormData semantics.
+The shared shell, page headers, notices and metadata-fed badges live in ui-kit.
 
-```bash
-npx --no-install astryx component Button
-npx --no-install astryx search "form"
-npx --no-install astryx docs tokens
-```
-
-`src/components/ui/` adapts Astryx controls to native form submission.
-`src/components/ui-kit/` contains shared app compositions, such as the shell,
-page header and status tags. Status colours come from domain metadata maps.
-Legacy generated design assets and design-kit skills are historical references;
-they do not override Astryx or DESIGN.md.
-
-UI changes must work at 375, 768, 1024 and 1280 pixels in both modes, with
-44px touch targets, keyboard access and no page overflow. See the completed
-[code and UI audit](docs/audit-2026-09-06.md) for evidence and remaining limits.
+UI changes must work at 375, 768, 1024 and 1280 in both modes, with 44px touch
+targets, keyboard access and no page overflow. Instructor is an isolated pool-deck
+workspace with no desk navigation or global swimmer profile links.

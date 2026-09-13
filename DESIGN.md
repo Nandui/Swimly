@@ -1,327 +1,94 @@
-# Swimly — the doctrine
+# Swimly — design and implementation
 
-Swimly's look is **Astryx**, Meta's open design system, in its **Neutral**
-theme: quiet greys, a near-black accent, white cards on a pale ground, Figtree
-throughout, and both colour modes drawn from one set of tokens through
-`light-dark()`. The mode follows the device unless the person picks one.
-Adopted on 5 Sep 2026 in place of the generated ui-ux-pro-max system, which
-is superseded for everything visual; its UX patterns (searchable pickers,
-collapse-not-scroll, one H1) still hold and are restated below.
+The whole app uses **shadcn/ui**, Neutral colours, Figtree, and a cookie-backed
+light/dark/system appearance preference. Components live in
+`src/components/shadcn`. The owner approved the full conversion on 13 September
+2026; no screen, form adapter or shared provider depends on another UI system.
 
-Astryx is a component library, not a colour file. The app uses its
-components — AppShell, TopNav, SideNav, Button, TextInput, DateInput,
-Selector, Typeahead, FormLayout, Dialog, Banner, Token, Badge, Toast, Text and
-Heading — and its tokens, through the CSS it ships. Nothing here is styled by hand that Astryx already draws.
+## Design rules
 
-The authority on how a component behaves and what it takes is Astryx's own
-documentation, read from the CLI so it matches the installed version:
+- Compose actual shadcn controls; inspect their installed source before use.
+  Buttons, dialogs, alerts, tables, items, inputs, selects, checkboxes, switches,
+  radio groups, popovers and command lists already have accessible primitives.
+- Use semantic HTML and Tailwind for structure and typography. Dense records
+  are Item rows or Tables; Card is for a distinct panel, such as sign-in.
+- Colours and radii use `ui-` utilities backed by `src/app/shadcn.css`. New
+  components from the CLI must use this namespace and `@/lib/utils` for `cn`.
+- Status labels use Badge or the shared Tag composition, with `data-tone`
+  selected by a domain metadata map. Do not choose status colours at a call site.
+- One H1 per page, 24px and semibold. Body text is 14px, supporting metadata
+  12px, and section headings 20px. Preserve the existing Figtree weights.
+- Default gaps are 16px within groups and 24px between major sections.
+  The shell owns a single 16px content inset. Do not add another page frame.
+- Preserve labelled controls, visible focus, 44px touch targets, readable
+  contrast, keyboard operation, reduced motion and wrapping at narrow widths.
+- Every mutation authorizes by a named permission, validates and guards before
+  writing, audits the change atomically, then revalidates. Never check role names.
 
-```bash
-npx astryx component <Name>        # props, examples, theming surface
-npx astryx search "<thing>"        # find a component, hook or doc
-npx astryx docs <topic>            # layout, tokens, color, typography, motion…
-npx astryx template --list         # page and block recipes
-```
+## Shared foundation
 
-This file records how Astryx was wired into a Next.js app that already had
-eighty screens, the decisions taken where Astryx leaves room, and the
-architectural decisions that hold regardless of how the app looks.
+`globals.css` imports Tailwind, motion utilities and the independent shadcn
+tokens. Its font and type scale have no external theme dependency. CSS Modules
+use Tailwind's 4px `--spacing` scale for geometry. Each status tone has explicit
+light/dark foreground and background tokens.
 
----
+The root layout reads `swimly.theme` and sets `data-theme` before first paint.
+The appearance provider updates that attribute and cookie. With no explicit
+mode, CSS `color-scheme: light dark` follows the device. The account RadioGroup
+offers System, Light and Dark; the toolbar button flips the resolved mode.
+Sonner notifications share these tokens; errors remain until dismissed.
 
-## The rules, non-negotiable
+The desk workspace uses shadcn Sidebar, Sheet, DropdownMenu and Command/Dialog.
+It owns the main landmark, skip link, fixed toolbar, scroll reset, collapse
+preference and mobile navigation. Data pages, including swimmer profiles, fill
+the available width. Account caps at 768px, Together at 960px, and programme
+details at 1152px. Instructor remains a separate workspace, described below.
 
-These are the ones that get broken first, and breaking any of them is what
-makes Swimly stop looking like itself.
+## Screens
 
-- **Astryx's component before a hand-drawn one.** A button is `Button`, a
-  field is `TextInput`, a choice is `Selector`, a notice is `Banner`, a
-  heading is `Heading`. Tailwind is for layout — flex, grid, gap, width —
-  not for drawing controls.
-- **Tokens, never colours.** Every colour comes from an Astryx token, either
-  as a Tailwind utility the bridge provides (`bg-surface`, `text-primary`,
-  `text-secondary`, `border-border`, `bg-muted`) or as `var(--color-*)`. No
-  hex, no Tailwind palette class, in a component.
-- **Status colour comes only from the tag token pairs**, always via a
-  metadata map — never a colour chosen at a call site. `<Tag>` is Astryx's
-  `Token` in one of its hues; a `Badge` is only ever a count.
-- **Both modes, always.** Every token is a `light-dark()` pair measured by the
-  theme; anything added by hand is checked in both.
-- **One H1 per page**, from `Heading level={1}` via `PageHeader`, with an
-  optional secondary description line. Section headings are H2.
-- **Collapse, don't scroll.** Secondary table columns re-home as a muted second
-  line below `md`. Anything that grows without limit goes behind a searchable
-  picker (`Selector hasSearch`, or `Typeahead` when the server must search).
-- **Every mutation is audited**, scripts included, with a summary naming what
-  changed and to what.
-- **Ask for a permission, not a role.** `can(session, "students.manage")`,
-  never a role's name. Roles are the club's to invent and rename, so nothing in
-  the code may depend on one existing.
+Today keeps its booking sheet with sticky time headers and level labels. Phones
+use Agenda. Circled check means spaces available; circled X means full.
+Attendance completion never determines these icons. Agenda mixes classes and
+dated, non-cancelled assessment sessions chronologically with common site, pool
+and instructor filtering. Assessment links require the Assessments screen.
 
----
+Swimmers is a shared directory across sites, with surname sorting, stable
+pagination, member number and age for disambiguation. Search matches names,
+member numbers and contacts. All/Active/Inactive filters and profile return
+links retain validated URL state. Global search is hidden on this directory.
 
-## Decisions taken for Swimly
+The swimmer profile shows enrolment chapters, attendance, assessments and
+individual competency history. The current-state rail stacks on narrow screens.
+Historical snapshots are distinguished from structured before/after audit
+evidence. Draft competency changes survive tab switching. Editing and enrolment
+dialogs preserve named permissions and atomic seat/audit checks.
 
-### Today, Swimmers, Classes and workspace: approved shadcn migration
+Classes is a searchable weekly directory across live sites. Site, Level and Day
+filters are prominent; advanced filters include Programme, Time, Instructor and
+Pool area. Availability describes capacity. Full class details, enrolment,
+waitlist actions and the desk teaching flow use the same shadcn components.
 
-On 11 September 2026 the owner approved the booking sheet, then explicitly
-asked to bring everything on Today to shadcn. The entire Today surface now
-uses the installed shadcn components: Table, Item booking blocks, Tabs,
-Select, Command/Popover instructor picker, Button, Badge, Empty and Skeleton.
-Headings and text use semantic HTML; icons remain Lucide.
+Assessments, Together, Overview, Activity, Programmes and levels, Staff, Roles,
+Clubs, Account, sign-in and loading states also use this shared foundation.
+Responsive tables re-home secondary columns as supporting lines.
 
-The shared workspace also uses shadcn Sidebar/Sheet, Collapsible, DropdownMenu,
-Button, Alert and Command/Dialog swimmer search. Site switching, account menus,
-the theme flip, development role preview and Sonner notifications are included.
-This changes the common chrome on other routes; their screen bodies and native
-form adapters retain Astryx until separately migrated. The Astryx wiring below
-documents those remaining surfaces, not the implementation of Today, the Swimmers and Classes directories or chrome.
+## Forms, search and confirmation
 
-The owner also approved a shadcn redesign of `/students` as a directory for
-finding anyone across all sites. It uses a full-width shadcn Item list with one
-profile link per record, visible member number and age for disambiguation,
-current levels, contact details on wide screens, and metadata-fed status Badges.
-The previous selection/preview pane is removed. A labelled search and linked
-All/Active/Inactive filters keep query state in the URL; search matches words
-across names, member number, contact name, email and phone. Records remain
-paginated in surname order, with a stable ID tie-breaker and bounded offsets.
-Empty results offer a clear route back to all swimmers. Profile return links
-and tabs retain only validated directory parameters. The workspace quick search
-is hidden on the directory itself to avoid two competing search controls.
+`src/components/ui` composes shadcn inputs with labels, hints and native form
+submission. Dates, times and numbers preserve native validation and bounds;
+uncontrolled inputs and textareas retain native reset behaviour. Named switches
+post `on` only when checked. Selects retain empty choices and grouped options.
 
-The directory's Add swimmer dialog uses shadcn Dialog, Input, Label, Select,
-Collapsible, Checkbox, Textarea, Alert and Button. Optional emergency details,
-notes and consent can be expanded without losing their values. Its scrolling
-form keeps the actions visible, retains entries on failure, and opens the new
-profile after the existing permission-checked, audited action succeeds. Add/Edit adapters on other screens retain their current design.
-Directory layout, verification and boundaries are recorded in `docs/swimmers.md`.
+SearchablePicker uses Command/Popover for locally available option sets.
+StudentSearch asks the server after a 200ms debounce, excludes already chosen
+swimmers, respects the active/inactive scope and drops stale results. It sends
+only the selected ID in the parent form. Workspace search uses CommandDialog.
 
-On 12 September the owner selected the “Journey through the school” profile
-layout. The full `/students/[id]` profile and its editing, enrolment, competency
-and history dialogs now use shadcn as well. Enrolments form expandable chapters;
-all activity and individual competency logs show who changed what and when.
-The current-state rail stays beside the journey on wide screens and stacks on
-smaller screens. Nullable structured audit evidence preserves new attendance
-and competency changes; older summaries and snapshots remain clearly labelled.
-The migration keeps the named permissions and atomic audit/seat checks.
-The profile fills the workspace like the Swimmers and Classes directories,
-using the shell's single 16px inset. Header groups use 16px gaps and body sections
-use 24px gaps; the loading state shares the same geometry and heading scale.
-
-The owner-approved Classes directory follows the same shadcn approach: one Item
-link per weekly class, with schedule, site/pool, instructor and availability
-aligned in columns and stacked on phones. All live sites are searchable together;
-Site, Level and Day pickers are prominent, with Programme, Time, Instructor and
-Pool area in a Collapsible section. Command/Popover pickers retain facet counts.
-All classes, Spaces available, Full and Archived links keep the current search.
-Circled check/X icons and explicit remaining places describe capacity, not
-attendance completion. Archived rows show their archive state instead of open
-places. Search matches words across class, curriculum, site, instructor and
-schedule. Class return links preserve the site filter alongside the other filters.
-The Add class dialog uses shadcn fields and names the working site that owns the
-new class, retaining the existing audited action. Details and enrolment forms
-retain their existing components. See `docs/classes.md` for scope and checks.
-
-`components.json` installs to `src/components/shadcn`, separate from legacy
-`src/components/ui`. The local README records component adaptations. The
-independent Neutral palette in `src/app/shadcn.css` uses `--ui-*` tokens and
-namespaced Tailwind colours/radii to avoid collisions with Astryx utilities.
-Figtree and the cookie-backed light/dark/system preference are preserved.
-The existing theme provider still supports legacy screens; Today draws no
-Astryx elements. CSS Modules express the sheet's time/level geometry.
-
-The sheet retains one continuous day with sticky time headers and level
-labels, allowing scrolling inside its bounded region. Phones use Agenda.
-This is the approved exception to collapse-without-scrolling and record-row
-styling. Availability uses monochrome Lucide circled-check/circled-X icons
-with accessible labels and a visible legend: check means spaces available,
-X means full. Attendance completion does not determine these icons and is
-not shown in the calendar. Uncapped classes are available; over-capacity
-classes remain full with an explicit count. Now/Next labels use shadcn Badge
-with colours selected by the existing status metadata map.
-
-Today’s Agenda mixes classes and dated, non-cancelled assessment sessions in
-exact start-time order. Assessment Items have a neutral Assessment label and
-the same capacity icons, times, pool and instructor details as classes. The
-class booking sheet offers a visible route to assessments in Agenda; days with
-only assessments use Agenda automatically. Pool and instructor filters cover
-both types. Session links require the Assessments screen; no assessment booking
-identities or notes are loaded for the calendar.
-
-The view controls, booking links and scroll region use a visible focus
-outline; touch targets retain the 44px minimum, including coarse pointers.
-Permissions, mutation guards, audit logging and all server actions are unchanged.
-Swimmer search still queries the server after a 200ms debounce, includes inactive
-swimmers, drops stale results, and routes only to an allowed swimmer screen.
-The existing navigation collapse cookie and content-scroll reset are retained.
-Toasts retain their imperative API; errors persist until dismissed.
-
-For these migrated surfaces, the screen checklist below uses shadcn primitives,
-semantic headings, direct Lucide icons and shadcn focus styles. Its contrast,
-touch size, responsive, permission and mutation requirements still apply.
-
-### How Astryx is wired in
-
-**CSS layers, declared up front.** Astryx ships its component styles as plain
-CSS in cascade layers, no build plugin. `globals.css` declares every layer in
-one line — `reset, theme, base, astryx-base, astryx-theme, components,
-utilities` — then imports Tailwind's theme and preflight, Astryx's reset, core
-and Neutral theme, the bridge, and Tailwind's utilities, in that order. That
-is what lets a `className` on an Astryx component still win. Unlayered rules
-at the bottom of the file beat everything and are kept few.
-
-**The bridge, with the app's text sizes.** `@astryxdesign/core/tailwind-theme.css`
-turns Astryx's tokens into Tailwind utilities, including the 4px spacing
-scale and the radius scale (`rounded-md` is the 10px element radius,
-`rounded-lg` the 12px container radius). It also maps `text-sm` to Astryx's
-12px "sm", which would have shrunk every body line in the app. So the names
-keep their pixel meaning: `text-xs` 12, `text-sm` 14 (Astryx's body size),
-`text-base` 16, `text-lg` 17.
-
-**No legacy names.** The move went in two passes: first a block of aliases
-in `@theme inline` kept the old shadcn names (`text-foreground`,
-`bg-muted`…) rendering while the shell and the controls were swapped, then
-every page body was rewritten in Astryx's own components and the block was
-deleted. Nothing in `src` names a colour, a size or a radius that is not
-Astryx's, and `globals.css` is short enough to read in one go.
-
-**Figtree from fontsource.** Astryx never loads a font, and the Neutral
-theme's font token names Figtree. The root layout imports the four weights
-from `@fontsource/figtree`, so the family the token asks for is simply
-present; no variable is handed anywhere and the theme's tokens stay
-untouched.
-
-**Status is a Token; a count is a Badge.** `<Tag>` renders Astryx's
-`Token` in one of its hues, and every status colour still comes through a
-metadata map. Astryx's guidance is that a Badge is for counts, so tab counts
-and the nav's red numbers are Badges and nothing else is. Astryx has no
-brown; teal stands in.
-
-**Icons: the client draws them.** Astryx's `Icon` is a client component,
-so a server page cannot hand it a lucide component (React refuses to send a
-function across). Server pages use `AppIcon name="…"` from
-`ui-kit/app-icon.tsx`, which looks the name up on the client; client
-components use `Icon icon={Lucide}` directly. Every SVG goes through one
-of the two — never a bare lucide element.
-
-**Touch sizes, once.** Astryx sizes controls for a pointer: 28, 32, 36px. A
-thumb on a wet phone or a poolside tablet needs 44. One unlayered media rule
-in `globals.css`, for widths up to 768px and for any coarse pointer,
-gives every button, field, menu row, tab, segment, toggle, switch row,
-collapsible trigger and nav item a 44px minimum, and stretches the inner
-control of the date, time and number fields to fill the box. The class
-names are Astryx's own, from each component's theming table.
-
-**Forms are FormLayouts.** Every dialog body is a `FormLayout`; a pair of
-fields that share a row is a nested `FormLayout direction="horizontal"`.
-A date is `DateInput`, a time `TimeInput`, a number `NumberInput`,
-each behind the `Input` adapter so the plain `<form>` still posts them.
-
-**Nothing is drawn by hand.** Every heading is `Heading`, every run of words
-is `Text`, every list of records is `Table` (children mode, which is
-server-safe) or `List` with `Item`, every region is a stack or a `Section`,
-a discrete thing is a `Card`, a fold is a `Collapsible`, a notice is a
-`Banner`, a count that needs noticing is a `Badge`, a mark (present, late,
-absent; Not Achieved, Achieved) is a `SegmentedControl` — Astryx's
-control for one choice out of a few with every option visible. Competencies
-default to Not Achieved, with no third or clear option. Missing result rows
-display that default without inventing an assessor or date. Attendance defaults
-to absent until the instructor records otherwise. A
-`StatusDot` sits beside the name; a way back up
-is `Breadcrumbs`, a page centred on nothing else (sign-in) is a `Center`.
-Records are rows — `List` with `Item`, or `Table` — never a card each:
-the roles page and a swimmer's level ladder are lists with dividers, and only
-the rung they are on opens as a `Section`. Tailwind classes appear only for
-layout Astryx's props cannot express — a responsive column that hides below
-`md`, for example — never for a
-colour, a size or a radius. The one CSS rule the app adds to Astryx's
-controls is the 44px touch minimum.
-
-### Two modes, the device decides
-
-The mode is a cookie, `swimly.theme`, read by the root layout on the server.
-It stamps `data-theme` on `<html>` (which reset.css turns into
-`color-scheme`) and seeds Astryx's `<Theme mode>`, so the first paint is
-right and hydration has nothing to disagree about. No cookie means "follow
-the device". The one-tap flip is an `IconButton` at the end of the
-utility header (the mobile navigation bar on phones); the three-way `SegmentedControl` on the Account
-page is where "system" is restored. `next-themes` is gone.
-
-### The shell
-
-The approved foundation is **A — Grouped workspace**. Astryx's `AppShell`
-uses `height="fill"`, `variant="section"` and `contentPadding={0}`: a
-full-height muted sidebar and one flat working surface, with dividers. It
-owns the single main landmark, skip link and mobile drawer. Pages start at
-their H1; never nest another `Layout`.
-
-The desktop `SideNav` is Astryx's 260px default. `SideNavHeading` holds the
-wordmark, with a named club `DropdownMenu` below. Screen access is resolved
-before grouping: Daily work (Today, Instructor, Swimmers, Classes,
-Assessments, Together), Monitoring (Overview, Activity), and a collapsible
-Setup (Programmes, Staff, Roles, Clubs). Empty groups disappear. Setup opens
-when one of its destinations is active; nested URLs select the parent
-destination using a path boundary, not an arbitrary prefix.
-
-The footer holds one account menu with Account and Sign out. Collapsing
-uses Astryx's 48px rail, a Setup flyout and an account icon. The display
-preference is stored in `swimly.nav-collapsed` and read by the server for a
-stable first paint. The named club selector moves into the utility header
-while the rail is collapsed.
-
-The utility header contains the existing async `StudentSearch` and the
-appearance control. Lookup appears only for people who can open Swimmers and
-opens the full profile. Searches remain authenticated, cover both sites, and
-include inactive swimmers. Changing the club or path
-remounts the lookup so results from the previous context do not linger.
-
-Below the utility header, `StackItem size="fill" isScrollable` owns the
-page scroll (`swimly-page-scroll`), with 16px padding around the content.
-Navigation resets that region to the top. Sticky page controls stay inside
-it; the sidebar and utility header remain fixed. Data workspaces use the
-available width, including the swimmer profile. Account caps at 768px,
-Together at 960px, and programme details at 1152px; these are structural
-budgets, not style tokens.
-The inner stack zeroes Astryx's two container-padding variables so table
-edges line up with headings and other content. Existing page contents and
-record navigation continue inside this shared frame.
-
-At 768px and below, Astryx supplies the mobile bar, drawer, focus trap and
-Escape behaviour. The bar keeps the club name, appearance control and
-navigation toggle visible; desktop collapse is ignored while mobile. Lookup
-gets a separate full-width utility row when permitted. All touch controls
-keep the app's 44px minimum. Tables hide secondary columns below `md` and
-re-home values as supporting lines. The development role-preview banner
-remains in AppShell's banner slot.
-
-### Fields that post: Astryx's inputs inside plain forms
-
-Every form in the app is a plain `<form>` read with `FormData` by a server
-action, and Astryx's inputs are controlled. `src/components/ui/{input,
-textarea,switch,select}.tsx` are the join: each holds the value in state,
-renders Astryx's `TextInput`, `TextArea`, `Switch` or `Selector` with
-`htmlName`, and the form posts as before. `Field` in `form-dialog.tsx` hands
-its label and hint to one of those, and wraps anything else in Astryx's
-`Field`. A date, time or number keeps the native control — the browser's
-picker is the right one on a phone — inside that same `Field`. A set of
-ticks (`CheckboxList`, `RadioList`) posts through one hidden input per
-tick. Buttons need no join: every call site is Astryx's `Button` or
-`IconButton` with its own `label`.
-
-### Toasts through one bridge
-
-Astryx hands out toasts through a hook, which is useless at the tail of a
-transition that has just awaited a server action. `src/lib/toast.tsx` keeps
-the imperative `toast.success` / `toast.error` every call site uses and one
-mounted `<ToastBridge>` carries each call to Astryx's `useToast`. Errors stay
-until dismissed, which is Astryx's default and the right one on a deck.
-
-### Dialogs keep a rich description
-
-Astryx's `AlertDialog` takes a plain-string description. A consequence here
-often carries a name in bold, so `ConfirmAction` and the take-over question
-are `Dialog purpose="form"` with a `DialogHeader`, a `Text` body and an
-`HStack` of buttons at the end. `FormDialog` is the same shape around a form.
+FormDialog keeps fields mounted after failure, scrolls the fields with actions
+visible, blocks duplicate submits and retains server-requested confirmation
+data. Success closes the dialog and restores trigger focus. ConfirmAction uses
+AlertDialog with rich descriptions and closes only after a successful action.
+Image fields preview locally and upload only with the parent form's Save.
 
 ### Roles are data, permissions are code
 
@@ -339,12 +106,10 @@ copy of that list, kept in step by hand, with nothing to catch it drifting.
 is no longer in the catalogue is ignored rather than fatal — which is what
 makes deleting a permission a safe edit.
 
-**Reads are not permissioned.** Anyone signed in can look at swimmers, classes,
-the curriculum and the registers, exactly as before. Every permission is the
-power to *change* something, or to read the audit log — the one read that names
-what everyone else did. Making reads grantable is a different and larger
-decision: every data function would take a permission and every page would need
-an empty state for "you may not see this".
+**Reads respect screen access.** Pages require their screen grant; setup pages
+and the activity log also require their named permissions. Mutations enforce
+their own permissions regardless of which controls are visible. Instructor
+records additionally require the confirmed owner of that dated class.
 
 **Nothing may leave the app without a keyholder.** `staff.manage` and
 `roles.manage` are load-bearing — lose either across every active account and
@@ -364,16 +129,16 @@ The nav shows only those; every page under the shell opens with
 `screenPage(screen, permission?)` and 404s for anyone whose role does not
 name it; a link that crosses into another screen asks `canSee` before it
 renders. Permissions are still the power to change something — screens are
-what is on the menu at all. That is how an instructor role is given Today
+what is on the menu at all. That is how an instructor role is given Instructor
 and nothing else: the deck becomes their whole app. Account is never on the
 list because it is always there. The keyholder guard checks screens too:
 nobody may untick Roles or Staff from the last role that can reach them.
 
 **A role also says where its day starts.** `StaffRole.home` is a key from the
-`ROLE_HOMES` map in the catalogue file — the overview for the desk, Today for
+`ROLE_HOMES` map in the catalogue file — the overview for the desk, Instructor for
 an instructor. The sign-in form pushes to `/start`, which reads the role and
-redirects; the wordmark goes to the same place. A role set to start on Today
-without the permission that opens it lands on the overview instead.
+redirects; the wordmark goes to the same place. A configured home that is not
+accessible falls back to another screen the role may open.
 
 **The deck's permissions are cut fine on purpose** — taking your own
 attendance, taking over a colleague's class, marking competencies, completing
@@ -605,7 +370,7 @@ is derived from the class/date, saved marks and class note; it needs no schema
 column. The action reads and checks it under the same course lock used for
 enrolment and cover, then writes the register and audit together. If another
 person saved a different version, the action returns the saved values without
-writing. A focused Astryx Banner compares the saved register with the draft;
+writing. A focused shadcn Alert compares the saved register with the draft;
 the instructor can use the saved register or explicitly save their version.
 A second intervening save is checked again. An identical retry succeeds without
 rewriting records or adding audit rows.
@@ -633,10 +398,10 @@ version and refreshes the roster.
 ```
 src/app/(app)/                 the signed-in shell and its pages
 src/app/sign-in/               the front door, outside the shell
-src/components/ui-kit/         shared Astryx compositions — tag, page-header,
+src/components/ui-kit/         shared shadcn compositions — tag, page-header,
                                empty-state, app-shell
-src/components/ui/             Astryx adapters for native form submission
-src/components/                feature components composed from Astryx
+src/components/ui/             shadcn compositions for native form submission
+src/components/                feature components composed from shadcn
 src/lib/<domain>/data/         reads  — plain async functions, no "use server"
 src/lib/<domain>/actions/      writes — "use server", one exported action per verb
 src/lib/<domain>/constants.ts  one metadata map per enum, plus domain vocabulary
@@ -715,26 +480,14 @@ See [docs/instructor.md](docs/instructor.md) for the flow and verification.
 
 ## Checking your work
 
-Before calling a screen done:
-
-- It is built from Astryx components; anything drawn by hand has a reason
-  written beside it. `npx astryx component <Name>` was read for each one used.
-- One H1, from `PageHeader`.
-- Every status is a `<Tag>` (Astryx's Token) fed by a metadata map, and it
-  reads in both modes; a `Badge` is only ever a count.
-- Every icon is `Icon` in a client component or `AppIcon name` in a server
-  one; the page loads with no console error in either.
-- No colour outside the tokens: no hex, no Tailwind palette class, no name
-  from the legacy alias block in new code.
-- Every text pair 4.5:1 and every control edge 3:1, checked in light and dark
-  for anything not drawn by the theme.
-- Keyboard: Astryx's focus outline on everything focusable, the skip link
-  first, `prefers-reduced-motion` honoured.
-- Checked at 375, 768, 1024 and 1280, light and dark: 44px targets on touch,
-  nothing scrolling sideways, the phone bar's toggle on screen, 16px of
-  padding around the page.
-- Row actions carry `aria-label`s naming the verb and the row, and stay
-  reachable on touch.
-- Secondary columns collapse rather than scroll below `md`.
-- Every mutating action authorizes first, guards before writing, audits after,
-  and returns `{ ok: false, error }` for anything a person can fix.
+- Actual shadcn controls, semantic headings and Lucide icons; one H1 per page.
+- Every status comes from a domain metadata map and reads in both themes.
+- No undefined theme variables or colours outside the app tokens.
+- Text contrast at least 4.5:1 and control edges at least 3:1.
+- Visible keyboard focus, working skip link, reduced motion, labelled controls.
+- 375, 768, 1024 and 1280 in light and dark: no page overflow, 16px page insets,
+  reachable navigation and 44px touch targets. Secondary columns wrap or collapse.
+- Dialogs trap/restore focus, preserve values on failure and prevent duplicate
+  submissions. Native FormData, required fields and reset still work.
+- Instructor stays isolated; permissions, audit, claims and capacity guards hold.
+- Typecheck, lint, relevant tests, browser checks and an optimized build pass.

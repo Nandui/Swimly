@@ -10,7 +10,7 @@ slug: src-components-reception-dashboard-tsx
 ---
 Method: dual-agent (A: /root/design_review; B: /root/evidence_review).
 
-Reception is a good foundation, but its composition still slows a busy desk. The tools fit swim-school work; the next improvement should prioritise task switching and class management over visual decoration. Astryx Neutral is appropriate.
+Reception is a good foundation, but its composition still slows a busy desk. The tools fit swim-school work; the next improvement should prioritise task switching and class management over visual decoration. The Neutral palette is appropriate.
 
 Heuristic review: 28/40, Good. These are expert judgments, not usability-study results.
 
@@ -19,7 +19,7 @@ Heuristic review: 28/40, Good. These are expert judgments, not usability-study r
 | System status | 3 | Snapshot time is clear; running classes are not marked in rows. |
 | Real-world match | 4 | Swimmers, levels, cover, contacts and sibling bookings match desk work. |
 | User control | 3 | Cancellable dialogs and retained selection; dialog close loses focus. |
-| Consistency | 3 | Astryx is coherent; action sizes and unenrolment wording vary. |
+| Consistency | 3 | the legacy UI is coherent; action sizes and unenrolment wording vary. |
 | Error prevention | 3 | Named confirmations, inactive guards and placement checks. |
 | Recognition | 3 | Useful swimmer summary; staff still compare times to find current classes. |
 | Efficiency | 2 | Search works, but switching dashboard tasks requires scrolling. |
@@ -27,13 +27,13 @@ Heuristic review: 28/40, Good. These are expert judgments, not usability-study r
 | Error recovery | 3 | Failures explain next steps and forms retain input. |
 | Contextual help | 2 | Basic guidance exists; some enrolment choices remain ambiguous. |
 
-Strengths: identity, contacts and places are together; mutations name the swimmer/class and preserve history; restrained Astryx surfaces and status tokens suit sustained desk work.
+Strengths: identity, contacts and places are together; mutations name the swimmer/class and preserve history; restrained the legacy UI surfaces and status tokens suit sustained desk work.
 
 Priority issues:
 
-1. [P1] Today's classes is buried on narrow screens. At 375px the selected swimmer's first enrolment occupies nearly the entire saved frame. Remaining places and Quick Links precede the timetable. At the current 1280x720 fixture size, Quick Links consumes about 348px and pushes Today to y456. Keep a compact route to Swimmer, Today and Quick Links at narrow widths; reduce shortcut height so Today is visible beside lookup on desktop. Preserve selection during switching. Use Astryx tabs/section navigation and its region budgets. Suggested command: impeccable adapt. Evidence: src/components/reception/dashboard.tsx:65,153,173 and synthetic captures.
+1. [P1] Today's classes is buried on narrow screens. At 375px the selected swimmer's first enrolment occupies nearly the entire saved frame. Remaining places and Quick Links precede the timetable. At the current 1280x720 fixture size, Quick Links consumes about 348px and pushes Today to y456. Keep a compact route to Swimmer, Today and Quick Links at narrow widths; reduce shortcut height so Today is visible beside lookup on desktop. Preserve selection during switching. Use the legacy UI tabs/section navigation and its region budgets. Suggested command: impeccable adapt. Evidence: src/components/reception/dashboard.tsx:65,153,173 and synthetic captures.
 
-2. [P2] Enrolment actions have too little hierarchy. Move, Unenrol, Schedule unenrolment and Class details have similar prominence and wrap into several rows. Keep Move and Unenrol as obvious buttons; put Now/On a date inside the unenrol flow, and make class navigation quieter. Keep scheduled dates visible. Align control sizes within each row, as Astryx layout guidance requires. Suggested command: impeccable distill. Evidence: dashboard.tsx:130; src/components/enrolment/enrolment-actions.tsx:167,203.
+2. [P2] Enrolment actions have too little hierarchy. Move, Unenrol, Schedule unenrolment and Class details have similar prominence and wrap into several rows. Keep Move and Unenrol as obvious buttons; put Now/On a date inside the unenrol flow, and make class navigation quieter. Keep scheduled dates visible. Align control sizes within each row, as the legacy UI layout guidance requires. Suggested command: impeccable distill. Evidence: dashboard.tsx:130; src/components/enrolment/enrolment-actions.tsx:167,203.
 
 3. [P2] The timetable does not identify the classes staff need now. A running count does not identify its rows; '5 of 10' also requires interpretation. Label current rows, identify the next group and say '5 places free' where useful. Keep access to the whole day and refresh the snapshot on return to the dashboard. Suggested command: impeccable clarify. Evidence: dashboard.tsx:48,182,202. Snapshot refresh concern is source-based, not a demonstrated stale-data incident.
 

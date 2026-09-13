@@ -1,3 +1,60 @@
+# Full shadcn conversion
+
+Date: 13 September 2026. Branch: dev.
+
+The remaining desk pages, class detail and teaching views, curriculum, assessments,
+Together, staff/roles/sites, account, sign-in, loading states and shared form
+controls now compose the shadcn components in `src/components/shadcn`.
+The previous UI packages, provider layers, reset, theme bridge and instruction
+blocks have been removed. Figtree, Neutral light/dark/system appearance, the
+booking sheet and the isolated Instructor workspace remain the design contract.
+
+## Findings resolved
+
+- Required Select validation focuses the visible control and shows a labelled
+  error instead of focusing the hidden native select.
+- Dialogs retain values after failed saves and move focus to the error. Long
+  messages wrap fully, and the footer stays reachable while the form scrolls.
+- Opening a shared dialog prevents a trigger from submitting its containing form.
+- Page actions stack under headings on phones. Migrated table cells wrap, and
+  Staff/Activity re-home secondary columns below 1024px to fit beside the sidebar.
+- All spacing and typography previously supplied by the removed theme now use
+  the independent shadcn/Tailwind foundation. No remaining source imports or
+  installed dependencies from the previous component system were found.
+
+## Verification performed
+
+- `npm run typecheck` — passed after the final code changes.
+- `npm run lint` — passed after the final code changes.
+- `npm test` — all 179 tests passed. This includes attendance ownership, atomic
+  class claims, permissions, audit rollback, capacity, curriculum images and
+  swimmer-history coverage. The final follow-up edits affected UI only.
+- `npx next build` — production compilation and all 19 build-time pages passed
+  after the final changes. The database deployment wrapper was not invoked.
+- `git diff --check` — passed.
+- Browser checks: Today, Assessments, Together, Overview, Activity, Account,
+  Programmes, Staff, Roles, Clubs, Classes, Swimmers and Instructor loaded without
+  browser errors. Programme, class, swimmer and assessment details also loaded.
+- Synthetic shared forms/dialogs were checked in light and dark at 375, 768,
+  1024 and 1280px. No page or dialog horizontal overflow; relevant controls were
+  at least 44px high at phone/tablet touch breakpoints. Live phone/tablet checks
+  verified the migrated table layouts and page-header changes.
+- Synthetic interactions verified native required fields, date/number values,
+  optional empty selects, searchable levels, selected swimmer IDs, switches,
+  form reset, keyboard search selection, search-error recovery, retained values,
+  role screen/home/permission serialization (including unknown permission keys),
+  confirmation failures, server-requested confirmation, successful completion
+  and trigger-focus restoration. Sign-in validation/error display was checked
+  with a stubbed authentication action.
+- All nine status foreground/background pairs exceeded 8:1 contrast in both
+  modes, calculated from their browser-resolved colours.
+
+Screenshots containing personal swimmer data were not exported. Record-changing
+browser flows used synthetic data and stubbed actions; no live saves, image
+uploads, class claims, seeds or database migrations were run for this review.
+The final dev server is running on port 3000 with Today open.
+
+---
 # Swimmer profile — option 3
 
 Date: 12 September 2026

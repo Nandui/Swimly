@@ -1,10 +1,17 @@
 "use client";
+import { Button } from "@/components/shadcn/button";
 
-import { Archive, ArchiveRestore, ChevronDown, ChevronUp, Pencil, Plus } from "lucide-react";
+import {
+  Archive,
+  ArchiveRestore,
+  ChevronDown,
+  ChevronUp,
+  Pencil,
+  Plus,
+} from "lucide-react";
 import { ActionButton, ConfirmAction } from "@/components/confirm-action";
 import { Field, FormDialog } from "@/components/form-dialog";
-import { Button } from "@astryxdesign/core/Button";
-import { IconButton } from "@astryxdesign/core/IconButton";
+
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import {
@@ -13,12 +20,17 @@ import {
   setProgrammeArchived,
   updateProgramme,
 } from "@/lib/curriculum/actions/programmes";
-import { Icon } from "@astryxdesign/core/Icon";
 
 import { ImageField } from "./image-field";
 import { curriculumImageUrl } from "@/lib/curriculum/image";
 
-type Programme = { id: string; name: string; description: string | null; archivedAt: Date | null; imageVersion?: string | null };
+type Programme = {
+  id: string;
+  name: string;
+  description: string | null;
+  archivedAt: Date | null;
+  imageVersion?: string | null;
+};
 
 function readInput(formData: FormData) {
   return {
@@ -40,7 +52,11 @@ function ProgrammeFields({ programme }: { programme?: Programme }) {
           placeholder="Learn to Swim"
         />
       </Field>
-      <Field label="Description" htmlFor="description" hint="Optional — one line is plenty.">
+      <Field
+        label="Description"
+        htmlFor="description"
+        hint="Optional — one line is plenty."
+      >
         <Textarea
           id="description"
           name="description"
@@ -48,7 +64,18 @@ function ProgrammeFields({ programme }: { programme?: Programme }) {
           defaultValue={programme?.description ?? ""}
         />
       </Field>
-      <ImageField name={programme?.name} currentSrc={programme ? curriculumImageUrl("programme", programme.id, programme.imageVersion) : undefined} />
+      <ImageField
+        name={programme?.name}
+        currentSrc={
+          programme
+            ? curriculumImageUrl(
+                "programme",
+                programme.id,
+                programme.imageVersion,
+              )
+            : undefined
+        }
+      />
     </>
   );
 }
@@ -57,7 +84,10 @@ export function AddProgramme() {
   return (
     <FormDialog
       trigger={
-        <Button label="Add programme" variant="primary" size="sm" icon={<Icon icon={Plus} size="sm" />} />
+        <Button variant="default" size="sm">
+          {<Plus aria-hidden={true} className="size-4 shrink-0" />}
+          {"Add programme"}
+        </Button>
       }
       title="Add a programme"
       description="A programme holds the ordered levels a swimmer works through."
@@ -81,15 +111,26 @@ export function EditProgramme({
     <FormDialog
       trigger={
         variant === "icon" ? (
-          <IconButton label={`Edit ${programme.name}`} variant="ghost" size="sm" icon={<Icon icon={Pencil} size="sm" />} />
+          <Button
+            variant="ghost"
+            aria-label={`Edit ${programme.name}`}
+            size="icon-sm"
+          >
+            {<Pencil aria-hidden={true} className="size-4 shrink-0" />}
+          </Button>
         ) : (
-          <Button label="Edit" variant="secondary" size="sm" icon={<Icon icon={Pencil} size="sm" />} />
+          <Button variant="outline" size="sm">
+            {<Pencil aria-hidden={true} className="size-4 shrink-0" />}
+            {"Edit"}
+          </Button>
         )
       }
       title={`Edit ${programme.name}`}
       submitLabel="Save changes"
       successMessage="Programme updated"
-      submit={(formData) => updateProgramme(programme.id, readInput(formData), formData)}
+      submit={(formData) =>
+        updateProgramme(programme.id, readInput(formData), formData)
+      }
     >
       <ProgrammeFields programme={programme} />
     </FormDialog>
@@ -106,7 +147,7 @@ export function ArchiveProgramme({ programme }: { programme: Programme }) {
         successMessage="Programme restored"
         run={() => setProgrammeArchived(programme.id, false)}
       >
-        <Icon icon={ArchiveRestore} size="sm" />
+        <ArchiveRestore aria-hidden={true} className="size-4 shrink-0" />
       </ActionButton>
     );
   }
@@ -114,7 +155,13 @@ export function ArchiveProgramme({ programme }: { programme: Programme }) {
   return (
     <ConfirmAction
       trigger={
-        <IconButton label={`Archive ${programme.name}`} variant="ghost" size="sm" icon={<Icon icon={Archive} size="sm" />} />
+        <Button
+          variant="ghost"
+          aria-label={`Archive ${programme.name}`}
+          size="icon-sm"
+        >
+          {<Archive aria-hidden={true} className="size-4 shrink-0" />}
+        </Button>
       }
       title={`Archive ${programme.name}?`}
       description="It stops appearing when someone picks a programme, and its levels stop being offered. Everything already recorded against it — enrolments, completions, the audit trail — stays exactly as it is, and you can restore it later."
@@ -141,14 +188,14 @@ export function MoveProgramme({
         className={first ? "invisible" : undefined}
         run={() => moveProgramme(programme.id, "up")}
       >
-        <Icon icon={ChevronUp} size="sm" />
+        <ChevronUp aria-hidden={true} className="size-4 shrink-0" />
       </ActionButton>
       <ActionButton
         ariaLabel={`Move ${programme.name} down`}
         className={last ? "invisible" : undefined}
         run={() => moveProgramme(programme.id, "down")}
       >
-        <Icon icon={ChevronDown} size="sm" />
+        <ChevronDown aria-hidden={true} className="size-4 shrink-0" />
       </ActionButton>
     </>
   );

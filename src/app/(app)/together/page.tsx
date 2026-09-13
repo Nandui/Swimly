@@ -1,9 +1,8 @@
+import UiLink from "next/link";
+import { Button } from "@/components/shadcn/button";
+import { Notice } from "@/components/ui-kit/notice";
 import type { Metadata } from "next";
-import { Banner } from "@astryxdesign/core/Banner";
-import { Button } from "@astryxdesign/core/Button";
-import { Link } from "@astryxdesign/core/Link";
-import { HStack, VStack } from "@astryxdesign/core/Stack";
-import { Text } from "@astryxdesign/core/Text";
+
 import { EmptyState } from "@/components/ui-kit/empty-state";
 import { PageHeader } from "@/components/ui-kit/page-header";
 import { AddToGroup } from "@/components/together/add-to-group";
@@ -35,21 +34,22 @@ export default async function TogetherPage(props: PageProps<"/together">) {
   const { chosen } = group;
   const chosenIds = chosen.map((student) => student.id);
   const suggestions = group.suggestions.slice(0, GROUP_CAP - chosen.length);
-  const result = chosen.length > 0 ? findTimesTogether(toMembers(chosen), courses) : null;
+  const result =
+    chosen.length > 0 ? findTimesTogether(toMembers(chosen), courses) : null;
 
   const hrefFor = (next: string[]) =>
     next.length ? `/together?students=${next.join(",")}` : "/together";
 
   return (
-    <VStack gap={6}>
+    <div className="min-w-0 flex flex-col gap-6">
       <PageHeader
         title="Together"
         description="One trip to the pool for more than one child: find a day — or a single slot — that suits all of them."
       />
 
-      <VStack gap={3}>
+      <div className="min-w-0 flex flex-col gap-3">
         {/* The group so far: removable selections with profile shortcuts. */}
-        <HStack gap={2} vAlign="center" wrap="wrap">
+        <div className="min-w-0 flex gap-2 items-center flex-wrap">
           {chosen.map((student) => (
             <SelectedSwimmer
               key={student.id}
@@ -63,40 +63,57 @@ export default async function TogetherPage(props: PageProps<"/together">) {
           {chosen.length < GROUP_CAP ? (
             <AddToGroup chosen={chosenIds} />
           ) : (
-            <Text color="secondary">That is as many as this will search for at once.</Text>
+            <span className="text-sm text-ui-muted-foreground">
+              That is as many as this will search for at once.
+            </span>
           )}
 
           {chosen.length > 0 ? (
-            <Link href="/together" color="secondary" isStandalone>
+            <UiLink
+              href="/together"
+              className={
+                "text-ui-foreground underline-offset-4 hover:underline"
+              }
+            >
               Start again
-            </Link>
+            </UiLink>
           ) : null}
-        </HStack>
+        </div>
 
         {suggestions.length > 0 ? (
-          <HStack gap={2} vAlign="center" wrap="wrap">
+          <div className="min-w-0 flex gap-2 items-center flex-wrap">
             {/* Names whose contact it is rather than which field matched:
                 "a email" needs an article that depends on the field, and the
                 field is not what anybody needs to know. */}
-            <Text color="secondary">Also on {suggestions[0].sharesWith}&rsquo;s contact:</Text>
+            <span className="text-sm text-ui-muted-foreground">
+              Also on {suggestions[0].sharesWith}&rsquo;s contact:
+            </span>
             {suggestions.map((student) => (
               <Button
                 key={student.id}
-                label={student.name}
-                variant="secondary"
+                variant="outline"
                 size="sm"
-                href={hrefFor([...chosenIds, student.id])}
-                icon={<AppIcon name="plus" size="sm" />}
-              />
+                asChild={true}
+              >
+                <UiLink href={hrefFor([...chosenIds, student.id])}>
+                  {<AppIcon name="plus" size="sm" />}
+                  {student.name}
+                </UiLink>
+              </Button>
             ))}
             {suggestions.length > 1 ? (
-              <Link href={hrefFor([...chosenIds, ...suggestions.map((s) => s.id)])} isStandalone>
+              <UiLink
+                href={hrefFor([...chosenIds, ...suggestions.map((s) => s.id)])}
+                className={
+                  "text-ui-foreground underline-offset-4 hover:underline"
+                }
+              >
                 add all {suggestions.length}
-              </Link>
+              </UiLink>
             ) : null}
-          </HStack>
+          </div>
         ) : null}
-      </VStack>
+      </div>
 
       {chosen.length === 0 ? (
         <EmptyState
@@ -107,17 +124,20 @@ export default async function TogetherPage(props: PageProps<"/together">) {
       ) : (
         <>
           {result && result.unplaced.length > 0 ? (
-            <Banner
-              status="warning"
-              collapsible={false}
+            <Notice
               title={`${result.unplaced.map((m) => m.name).join(", ")} ${result.unplaced.length === 1 ? "has" : "have"} no current class level`}
               description="Together compares current enrolment levels. Add a class enrolment for these swimmers, or remove them from this group to compare the others."
-            />
+              tone="warning"
+            ></Notice>
           ) : null}
 
-          <TogetherResults result={result} count={chosen.length} members={toMembers(chosen)} />
+          <TogetherResults
+            result={result}
+            count={chosen.length}
+            members={toMembers(chosen)}
+          />
         </>
       )}
-    </VStack>
+    </div>
   );
 }

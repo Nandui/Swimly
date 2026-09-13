@@ -1,10 +1,10 @@
 "use client";
+import { Button } from "@/components/shadcn/button";
 
 import { Archive, ArchiveRestore, Pencil, Plus } from "lucide-react";
 import { ActionButton, ConfirmAction } from "@/components/confirm-action";
 import { Field, FormDialog } from "@/components/form-dialog";
-import { Button } from "@astryxdesign/core/Button";
-import { IconButton } from "@astryxdesign/core/IconButton";
+
 import { Input } from "@/components/ui/input";
 import { Select } from "@/components/ui/select";
 import { DayOfWeek } from "@/generated/prisma/enums";
@@ -13,13 +13,20 @@ import {
   setCourseArchived,
   updateCourse,
 } from "@/lib/courses/actions/courses";
-import { DAY_META, DAYS_IN_ORDER, courseLabel, formatTime } from "@/lib/courses/constants";
+import {
+  DAY_META,
+  DAYS_IN_ORDER,
+  courseLabel,
+  formatTime,
+} from "@/lib/courses/constants";
 import type { CourseDetail } from "@/lib/courses/data/courses";
 import type { InstructorOption } from "@/lib/courses/data/courses";
 import type { LevelOption } from "@/lib/curriculum/data/curriculum";
-import { Icon } from "@astryxdesign/core/Icon";
 
-import { readCourseInput as readInput, UNASSIGNED_INSTRUCTOR as UNASSIGNED } from "@/lib/courses/form-input";
+import {
+  readCourseInput as readInput,
+  UNASSIGNED_INSTRUCTOR as UNASSIGNED,
+} from "@/lib/courses/form-input";
 
 function CourseFields({
   course,
@@ -30,7 +37,10 @@ function CourseFields({
   levels: LevelOption[];
   instructors: InstructorOption[];
 }) {
-  const byProgramme = new Map<string, { name: string; levels: LevelOption[] }>();
+  const byProgramme = new Map<
+    string,
+    { name: string; levels: LevelOption[] }
+  >();
   for (const level of levels) {
     const group = byProgramme.get(level.programme.id) ?? {
       name: level.programme.name,
@@ -42,7 +52,11 @@ function CourseFields({
 
   return (
     <>
-      <Field label="Level" htmlFor="levelId" hint="What this class teaches. It cannot change once anyone is enrolled.">
+      <Field
+        label="Level"
+        htmlFor="levelId"
+        hint="What this class teaches. It cannot change once anyone is enrolled."
+      >
         <Select
           id="levelId"
           name="levelId"
@@ -51,13 +65,25 @@ function CourseFields({
           placeholder="Pick a level"
           options={[...byProgramme.values()].map((group) => ({
             title: group.name,
-            options: group.levels.map((level) => ({ value: level.id, label: level.name })),
+            options: group.levels.map((level) => ({
+              value: level.id,
+              label: level.name,
+            })),
           }))}
         />
       </Field>
 
-      <Field label="Name" htmlFor="name" hint="Optional — most schools just call it by the level.">
-        <Input id="name" name="name" defaultValue={course?.name ?? ""} placeholder="Dolphins" />
+      <Field
+        label="Name"
+        htmlFor="name"
+        hint="Optional — most schools just call it by the level."
+      >
+        <Input
+          id="name"
+          name="name"
+          defaultValue={course?.name ?? ""}
+          placeholder="Dolphins"
+        />
       </Field>
 
       <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
@@ -66,7 +92,10 @@ function CourseFields({
             id="dayOfWeek"
             name="dayOfWeek"
             defaultValue={course?.dayOfWeek ?? DayOfWeek.MONDAY}
-            options={DAYS_IN_ORDER.map((day) => ({ value: day, label: DAY_META[day].label }))}
+            options={DAYS_IN_ORDER.map((day) => ({
+              value: day,
+              label: DAY_META[day].label,
+            }))}
           />
         </Field>
         <Field label="Starts" htmlFor="startTime">
@@ -110,12 +139,19 @@ function CourseFields({
           defaultValue={course?.instructor?.id ?? UNASSIGNED}
           options={[
             { value: UNASSIGNED, label: "Nobody yet" },
-            ...instructors.map((instructor) => ({ value: instructor.id, label: instructor.name })),
+            ...instructors.map((instructor) => ({
+              value: instructor.id,
+              label: instructor.name,
+            })),
           ]}
         />
       </Field>
 
-      <Field label="Where" htmlFor="location" hint="Optional — the pool, or the lane.">
+      <Field
+        label="Where"
+        htmlFor="location"
+        hint="Optional — the pool, or the lane."
+      >
         <Input
           id="location"
           name="location"
@@ -137,7 +173,10 @@ export function AddCourse({
   return (
     <FormDialog
       trigger={
-        <Button label="Add class" variant="primary" size="sm" icon={<Icon icon={Plus} size="sm" />} />
+        <Button variant="default" size="sm">
+          {<Plus aria-hidden={true} className="size-4 shrink-0" />}
+          {"Add class"}
+        </Button>
       }
       title="Add a class"
       width="sm:max-w-xl"
@@ -166,9 +205,18 @@ export function EditCourse({
     <FormDialog
       trigger={
         variant === "icon" ? (
-          <IconButton label={`Edit ${courseLabel(course)}`} variant="ghost" size="sm" icon={<Icon icon={Pencil} size="sm" />} />
+          <Button
+            variant="ghost"
+            aria-label={`Edit ${courseLabel(course)}`}
+            size="icon-sm"
+          >
+            {<Pencil aria-hidden={true} className="size-4 shrink-0" />}
+          </Button>
         ) : (
-          <Button label="Edit" variant="secondary" size="sm" icon={<Icon icon={Pencil} size="sm" />} />
+          <Button variant="outline" size="sm">
+            {<Pencil aria-hidden={true} className="size-4 shrink-0" />}
+            {"Edit"}
+          </Button>
         )
       }
       title={`Edit ${courseLabel(course)}`}
@@ -190,7 +238,7 @@ export function ArchiveCourse({ course }: { course: CourseDetail }) {
         successMessage="Class restored"
         run={() => setCourseArchived(course.id, false)}
       >
-        <Icon icon={ArchiveRestore} size="sm" />
+        <ArchiveRestore aria-hidden={true} className="size-4 shrink-0" />
       </ActionButton>
     );
   }
@@ -198,7 +246,13 @@ export function ArchiveCourse({ course }: { course: CourseDetail }) {
   return (
     <ConfirmAction
       trigger={
-        <IconButton label={`Archive ${courseLabel(course)}`} variant="ghost" size="sm" icon={<Icon icon={Archive} size="sm" />} />
+        <Button
+          variant="ghost"
+          aria-label={`Archive ${courseLabel(course)}`}
+          size="icon-sm"
+        >
+          {<Archive aria-hidden={true} className="size-4 shrink-0" />}
+        </Button>
       }
       title={`Archive ${courseLabel(course)}?`}
       description="It comes off the timetable and stops appearing when someone enrols a swimmer. Registers already taken, and everything assessed in it, stay readable. You can restore it later."

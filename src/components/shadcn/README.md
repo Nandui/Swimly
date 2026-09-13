@@ -1,14 +1,14 @@
 # Swimly shadcn components
 
 Installed from shadcn/ui's MIT-licensed `new-york` registry with the CLI.
-`components.json` points to this directory; `components/ui` still contains
-Astryx form adapters used by other screens.
+`components.json` points to this directory. `components/ui` composes these
+controls with labels, hints and native form submission for shared forms.
 
 Local adaptations:
 
 - Semantic colour and radius utilities have a `ui-` namespace, backed by
-  `src/app/shadcn.css`, to avoid changing legacy Astryx utilities. Apply the
-  same namespace to newly installed or updated components.
+  `src/app/shadcn.css`. Apply the same namespace to newly installed or updated
+  components. The CLI's `cn` import must resolve to `@/lib/utils`.
 - `cn` uses the app's existing `@/lib/utils` helper.
 - Table accepts `containerClassName` so Today can own one scroll region.
 - CommandDialog keeps its accessible title inside DialogContent and forwards

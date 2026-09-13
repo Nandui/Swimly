@@ -1,10 +1,17 @@
 "use client";
+import { Button } from "@/components/shadcn/button";
 
-import { Archive, ArchiveRestore, ChevronDown, ChevronUp, Pencil, Plus } from "lucide-react";
+import {
+  Archive,
+  ArchiveRestore,
+  ChevronDown,
+  ChevronUp,
+  Pencil,
+  Plus,
+} from "lucide-react";
 import { ActionButton, ConfirmAction } from "@/components/confirm-action";
 import { Field, FormDialog } from "@/components/form-dialog";
-import { Button } from "@astryxdesign/core/Button";
-import { IconButton } from "@astryxdesign/core/IconButton";
+
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import {
@@ -19,12 +26,17 @@ import {
   setLevelArchived,
   updateLevel,
 } from "@/lib/curriculum/actions/levels";
-import { Icon } from "@astryxdesign/core/Icon";
 
 import { ImageField } from "./image-field";
 import { curriculumImageUrl } from "@/lib/curriculum/image";
 
-type Named = { id: string; name: string; description: string | null; archivedAt: Date | null; imageVersion?: string | null };
+type Named = {
+  id: string;
+  name: string;
+  description: string | null;
+  archivedAt: Date | null;
+  imageVersion?: string | null;
+};
 
 function readInput(formData: FormData) {
   return {
@@ -60,7 +72,14 @@ function LevelFields({ level }: { level?: Named }) {
           defaultValue={level?.description ?? ""}
         />
       </Field>
-      <ImageField name={level?.name} currentSrc={level ? curriculumImageUrl("level", level.id, level.imageVersion) : undefined} />
+      <ImageField
+        name={level?.name}
+        currentSrc={
+          level
+            ? curriculumImageUrl("level", level.id, level.imageVersion)
+            : undefined
+        }
+      />
     </>
   );
 }
@@ -69,13 +88,18 @@ export function AddLevel({ programmeId }: { programmeId: string }) {
   return (
     <FormDialog
       trigger={
-        <Button label="Add level" variant="primary" size="sm" icon={<Icon icon={Plus} size="sm" />} />
+        <Button variant="default" size="sm">
+          {<Plus aria-hidden={true} className="size-4 shrink-0" />}
+          {"Add level"}
+        </Button>
       }
       title="Add a level"
       description="Levels are worked through in order. This one goes at the end; move it afterwards."
       submitLabel="Add level"
       successMessage="Level added"
-      submit={(formData) => createLevel(programmeId, readInput(formData), formData)}
+      submit={(formData) =>
+        createLevel(programmeId, readInput(formData), formData)
+      }
     >
       <LevelFields />
     </FormDialog>
@@ -86,12 +110,20 @@ export function EditLevel({ level }: { level: Named }) {
   return (
     <FormDialog
       trigger={
-        <IconButton label={`Edit ${level.name}`} variant="ghost" size="sm" icon={<Icon icon={Pencil} size="sm" />} />
+        <Button
+          variant="ghost"
+          aria-label={`Edit ${level.name}`}
+          size="icon-sm"
+        >
+          {<Pencil aria-hidden={true} className="size-4 shrink-0" />}
+        </Button>
       }
       title={`Edit ${level.name}`}
       submitLabel="Save changes"
       successMessage="Level updated"
-      submit={(formData) => updateLevel(level.id, readInput(formData), formData)}
+      submit={(formData) =>
+        updateLevel(level.id, readInput(formData), formData)
+      }
     >
       <LevelFields level={level} />
     </FormDialog>
@@ -106,7 +138,7 @@ export function ArchiveLevel({ level }: { level: Named }) {
         successMessage="Level restored"
         run={() => setLevelArchived(level.id, false)}
       >
-        <Icon icon={ArchiveRestore} size="sm" />
+        <ArchiveRestore aria-hidden={true} className="size-4 shrink-0" />
       </ActionButton>
     );
   }
@@ -114,7 +146,13 @@ export function ArchiveLevel({ level }: { level: Named }) {
   return (
     <ConfirmAction
       trigger={
-        <IconButton label={`Archive ${level.name}`} variant="ghost" size="sm" icon={<Icon icon={Archive} size="sm" />} />
+        <Button
+          variant="ghost"
+          aria-label={`Archive ${level.name}`}
+          size="icon-sm"
+        >
+          {<Archive aria-hidden={true} className="size-4 shrink-0" />}
+        </Button>
       }
       title={`Archive ${level.name}?`}
       description="It stops being offered for new classes and enrolments. Swimmers who already completed it keep that completion, and their assessments stay readable. You can restore it later."
@@ -125,7 +163,15 @@ export function ArchiveLevel({ level }: { level: Named }) {
   );
 }
 
-export function MoveLevel({ level, first, last }: { level: Named; first: boolean; last: boolean }) {
+export function MoveLevel({
+  level,
+  first,
+  last,
+}: {
+  level: Named;
+  first: boolean;
+  last: boolean;
+}) {
   return (
     <>
       <ActionButton
@@ -133,14 +179,14 @@ export function MoveLevel({ level, first, last }: { level: Named; first: boolean
         className={first ? "invisible" : undefined}
         run={() => moveLevel(level.id, "up")}
       >
-        <Icon icon={ChevronUp} size="sm" />
+        <ChevronUp aria-hidden={true} className="size-4 shrink-0" />
       </ActionButton>
       <ActionButton
         ariaLabel={`Move ${level.name} down`}
         className={last ? "invisible" : undefined}
         run={() => moveLevel(level.id, "down")}
       >
-        <Icon icon={ChevronDown} size="sm" />
+        <ChevronDown aria-hidden={true} className="size-4 shrink-0" />
       </ActionButton>
     </>
   );
@@ -177,11 +223,20 @@ function CompetencyFields({ competency }: { competency?: Named }) {
   );
 }
 
-export function AddCompetency({ levelId, levelName }: { levelId: string; levelName: string }) {
+export function AddCompetency({
+  levelId,
+  levelName,
+}: {
+  levelId: string;
+  levelName: string;
+}) {
   return (
     <FormDialog
       trigger={
-        <Button label="Add competency" variant="secondary" size="sm" icon={<Icon icon={Plus} size="sm" />} />
+        <Button variant="outline" size="sm">
+          {<Plus aria-hidden={true} className="size-4 shrink-0" />}
+          {"Add competency"}
+        </Button>
       }
       title={`Add a competency to ${levelName}`}
       description="Every competency here has to be signed off before a swimmer can complete the level."
@@ -198,12 +253,20 @@ export function EditCompetency({ competency }: { competency: Named }) {
   return (
     <FormDialog
       trigger={
-        <IconButton label={`Edit ${competency.name}`} variant="ghost" size="sm" icon={<Icon icon={Pencil} size="sm" />} />
+        <Button
+          variant="ghost"
+          aria-label={`Edit ${competency.name}`}
+          size="icon-sm"
+        >
+          {<Pencil aria-hidden={true} className="size-4 shrink-0" />}
+        </Button>
       }
       title="Edit competency"
       submitLabel="Save changes"
       successMessage="Competency updated"
-      submit={(formData) => updateCompetency(competency.id, readInput(formData))}
+      submit={(formData) =>
+        updateCompetency(competency.id, readInput(formData))
+      }
     >
       <CompetencyFields competency={competency} />
     </FormDialog>
@@ -224,7 +287,7 @@ export function ArchiveCompetency({
         successMessage="Competency restored"
         run={() => setCompetencyArchived(competency.id, false)}
       >
-        <Icon icon={ArchiveRestore} size="sm" />
+        <ArchiveRestore aria-hidden={true} className="size-4 shrink-0" />
       </ActionButton>
     );
   }
@@ -232,17 +295,24 @@ export function ArchiveCompetency({
   return (
     <ConfirmAction
       trigger={
-        <IconButton label={`Archive ${competency.name}`} variant="ghost" size="sm" icon={<Icon icon={Archive} size="sm" />} />
+        <Button
+          variant="ghost"
+          aria-label={`Archive ${competency.name}`}
+          size="icon-sm"
+        >
+          {<Archive aria-hidden={true} className="size-4 shrink-0" />}
+        </Button>
       }
       title="Archive this competency?"
       description={
         <>
-          &ldquo;{competency.name}&rdquo; stops counting toward completing the level from now on.{" "}
+          &ldquo;{competency.name}&rdquo; stops counting toward completing the
+          level from now on.{" "}
           {assessed > 0
             ? `The ${assessed} ${assessed === 1 ? "assessment" : "assessments"} already recorded against it stay, and so does every level anyone has already completed.`
             : "Nothing has been assessed against it yet."}{" "}
-          This is how the curriculum changes without rewriting the past — archive it here and add a
-          new one.
+          This is how the curriculum changes without rewriting the past —
+          archive it here and add a new one.
         </>
       }
       confirmLabel="Archive"
@@ -268,14 +338,14 @@ export function MoveCompetency({
         className={first ? "invisible" : undefined}
         run={() => moveCompetency(competency.id, "up")}
       >
-        <Icon icon={ChevronUp} size="sm" />
+        <ChevronUp aria-hidden={true} className="size-4 shrink-0" />
       </ActionButton>
       <ActionButton
         ariaLabel={`Move ${competency.name} down`}
         className={last ? "invisible" : undefined}
         run={() => moveCompetency(competency.id, "down")}
       >
-        <Icon icon={ChevronDown} size="sm" />
+        <ChevronDown aria-hidden={true} className="size-4 shrink-0" />
       </ActionButton>
     </>
   );

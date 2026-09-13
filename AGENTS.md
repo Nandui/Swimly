@@ -42,22 +42,12 @@ Who Swimly is for, what it must get right and what is deliberately undecided
 live in [PRODUCT.md](PRODUCT.md). Read it before changing what a screen does;
 read the design files below before changing how it looks.
 
-The look is **Astryx** (`@astryxdesign/core`, Meta's open design system),
-**Neutral** theme, light and dark from one set of tokens, following the
-device. It is a component library: use its components — AppShell, Button,
-TextInput, Selector, Typeahead, Dialog, Banner, Badge, Text, Heading — and its
-tokens, and keep Tailwind for layout.
-
-Today, the Swimmers and Classes directories, and the shared workspace chrome
-have an owner-approved shadcn migration, documented in DESIGN.md. The full
-swimmer profile and all of its dialogs are also migrated to shadcn. Use actual
-shadcn components from `src/components/shadcn` for these directories and their
-Add dialogs, Today, navigation, site/account menus, workspace search, theme flip,
-role preview and notifications. Their independent Neutral
-tokens and `ui-` utility namespace live in `src/app/shadcn.css`; preserve the
-booking-sheet design and availability icons. Astryx guidance below applies
-to screen bodies and form adapters that have not yet migrated. This explicit
-exception takes precedence over the generated Astryx rules for these surfaces.
+The entire app uses shadcn/ui components from src/components/shadcn, with
+Neutral light/dark tokens and Figtree. The owner approved full conversion.
+Read installed component source before use. Use semantic HTML and Tailwind for
+layout, ui- colour/radius utilities from src/app/shadcn.css, and metadata-fed
+Badge/Tag tones. Shared form compositions in src/components/ui preserve native
+FormData, validation and reset behaviour. See DESIGN.md for the full contract.
 
 Instructor is an isolated pool-deck workspace under `(instructor)/instructor`,
 fully migrated to shadcn, including its class list, start confirmation,
@@ -69,33 +59,11 @@ global swimmer search or profile links to it, or Instructor links to desk
 navigation. Shared teaching components must preserve the route-selected
 workspace boundary. See [docs/instructor.md](docs/instructor.md).
 
-Before using an Astryx component, read its documentation from the installed
-version, never from memory:
-
-```bash
-npx astryx component <Name>        # props, examples, theming surface
-npx astryx search "<thing>"        # find a component, hook or doc
-npx astryx docs <topic>            # layout, tokens, color, typography, motion…
-```
-
-[DESIGN.md](DESIGN.md) records how Astryx was wired into this app — the CSS
-layer order, the Tailwind bridge and the app's text sizes, the cookie-backed
-colour mode, the shell, the adapters in `src/components/ui/` that let plain
-`<form>`s keep posting, the toast bridge — plus the architectural decisions
-that hold whatever the app looks like: server actions returning a result type,
-permissions asked by name, audit on every mutation, the seat lock. The
-generated ui-ux-pro-max system in `design-system/swimly/` is superseded for
-everything visual; its UX patterns are restated in DESIGN.md.
-
-The four that get broken first: ask for a **permission**, never a role name;
-every mutation writes an **audit row**; status colour only through the **tag
-tokens** via a metadata map, never a colour at a call site; and run the
-**checklist** at the end of DESIGN.md before calling a screen done — Astryx
-components over hand-drawn ones, no colour outside the tokens, both modes,
-Astryx's focus outline, 44px targets on touch, checked at 375, 768, 1024 and
-1280. Two traps particular to this app: Astryx's `Icon` is a client
-component, so a server page names its icon through `AppIcon`; and the shell
-already is the page's `Layout`, so never nest another.
+The core rules: ask for a named permission, never a role; every mutation
+writes an audit row; status tones come through metadata maps; and run the
+screen checklist in DESIGN.md before finishing. Preserve one H1, visible
+focus, 44px touch targets, both modes and layouts at 375, 768, 1024 and 1280.
+The shell owns the main landmark and 16px inset; do not nest a page frame.
 
 Prisma here is v7: the client is generated into `src/generated/prisma` and
 needs a driver adapter (`@prisma/adapter-pg`), and the datasource URL lives in
@@ -110,33 +78,3 @@ connection is available. Existing actions retain permissions and audit logging.
 Do not run seeds, imports or database mutations merely to inspect or test the app.
 Keep real swimmer names, contacts and medical information out of exported
 artifacts and screenshots; use synthetic examples for design work.
-
-<!-- ASTRYX:START -->
-Astryx v0.5.2 · 163 components
-CLI: run every command as `npx astryx <cmd>` (shown below as `astryx ...`).
-
-SETUP (once, in your app entry e.g. main.tsx) — without these, components render unstyled:
-  import "@astryxdesign/core/reset.css";
-  import "@astryxdesign/core/astryx.css";
-
-WORKFLOW — discover, don't guess. Before writing UI:
-1. `astryx build "<idea>"` — START HERE: returns a kit (closest [page] + [block]s + [component]s). No args = full playbook.
-2. `astryx template <name> [--skeleton]` — scaffold the [page]/[block]s it named, or study their layout. Templates are reference code.
-3. `astryx component <Name>` — props + examples for every component you use.
-
-RULES:
-- No <div> — components do all layout/spacing, page frame included.
-- Frame first: read `astryx docs layout` before writing any page or screen — page frame, region widths, breakpoint behavior.
-- Dense data = rows (Table, List/Item), never Card-wrapped list items; Card is for standalone widgets. Status = StatusDot/Token; Badge = counts only.
-- Custom styling: component props first; else Tailwind utilities backed by tokens (bg-surface, text-primary, rounded-lg) via tailwind-theme.css. No raw hex/px.
-- Tokens for every value (`astryx docs tokens`). Brand/accent belongs in the theme (`astryx theme list` / `theme add <slug>`, or `astryx theme template` for a custom one) — never override --color-* in :root.
-- SELF-CHECK before you finish: re-read the file and replace any style={{…}}, raw <div>/<span> layout, imported .css/@apply, or hardcoded/arbitrary value (e.g. bg-[#fff], p-[13px]) with the component or a token-backed utility. If unsure a component/prop exists, run `astryx component <Name>` / `astryx search "<thing>"`; don't hand-roll CSS.
-
-MORE CLI:
-  search "<query>"   find any component / hook / doc / template / block
-  component --list   163 components by category
-  template --list    page + block recipes
-  docs <topic>       browser-support, cli-integrations, color, elevation, getting-started, icons, illustrations, internationalization, layout, migration, motion, principles, shape, spacing, styling-libraries, styling, theme, tokens, typography, working-with-ai
-  swizzle <Name>     eject component source for deep customization
-  upgrade --apply    run after any @astryxdesign/core bump
-<!-- ASTRYX:END -->

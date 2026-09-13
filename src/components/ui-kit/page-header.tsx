@@ -1,6 +1,3 @@
-import { HStack, StackItem, VStack } from "@astryxdesign/core/Stack";
-import { Heading, Text } from "@astryxdesign/core/Text";
-
 /** The page's opening: one H1, a quiet description line, actions at the end.
  *  The actions wrap under the title on a phone rather than off the screen. */
 export function PageHeader({
@@ -13,22 +10,22 @@ export function PageHeader({
   actions?: React.ReactNode;
 }) {
   return (
-    <HStack gap={4} wrap="wrap" vAlign="start" hAlign="between">
-      <StackItem size="fill">
-        <VStack gap={1}>
-          <Heading level={1}>{title}</Heading>
+    <div className="min-w-0 flex flex-col gap-4 items-start justify-between sm:flex-row">
+      <div className="min-w-0 flex-1">
+        <div className="min-w-0 flex flex-col gap-1">
+          <h1 className="text-2xl font-semibold tracking-tight">{title}</h1>
           {description ? (
-            <Text as="p" color="secondary" display="block" maxLines={0}>
+            <p className="text-sm text-ui-muted-foreground block">
               {description}
-            </Text>
+            </p>
           ) : null}
-        </VStack>
-      </StackItem>
+        </div>
+      </div>
       {actions ? (
-        <HStack gap={2} wrap="wrap" vAlign="center">
+        <div className="min-w-0 flex gap-2 items-center flex-wrap">
           {actions}
-        </HStack>
+        </div>
       ) : null}
-    </HStack>
+    </div>
   );
 }
