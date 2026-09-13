@@ -1,15 +1,14 @@
 /* shadcn Table and Item composition: the approved continuous booking sheet. */
 .calendar { display:flex; flex-direction:column; color:var(--ui-foreground); --sheet-gap: .5rem; gap: 1rem; min-width:0; }
 .calendar h1 { font-size: var(--text-2xl); letter-spacing: -.025em; }
-.calendar .sheet-toolbar { display:flex; flex-wrap:wrap; align-items:end; justify-content:space-between; gap:1rem; padding:.5rem 0 .75rem; border-bottom:1px solid var(--ui-border); }
-.calendar .sheet-filters { display:flex; align-items:end; gap:.75rem; flex-wrap:wrap; }
+.calendar .sheet-toolbar { display:flex; flex-wrap:wrap; align-items:center; justify-content:space-between; gap:1rem; padding-bottom:.75rem; border-bottom:1px solid var(--ui-border); }
 .calendar .sheet-summary { display:flex; flex-wrap:wrap; gap:.75rem; align-items:center; color:var(--ui-muted-foreground); font-size:var(--text-sm); }
 .calendar .sheet-summary strong { color:var(--ui-foreground); font-weight:600; }
-.calendar .sheet-meta { display:flex; align-items:center; justify-content:space-between; gap:.75rem; flex-wrap:wrap; }
-.calendar .sheet-legend { display:flex; align-items:center; flex-wrap:wrap; gap:1rem; font-size:var(--text-sm); color:var(--ui-muted-foreground); }
+.calendar .sheet-legend { display:flex; align-items:center; justify-content:flex-end; flex-wrap:wrap; gap:1rem; font-size:var(--text-sm); color:var(--ui-muted-foreground); }
 .calendar .sheet-legend > span { display:inline-flex; align-items:center; gap:.5rem; }
 .calendar .sheet-legend svg { width:1rem; height:1rem; }
-.calendar .sheet-scroll { position:relative; border:1px solid var(--ui-border); border-radius:var(--ui-radius); overflow:auto; max-height:calc(100dvh - 16rem); scrollbar-width:thin; background:var(--ui-muted); }
+/* The workspace owns vertical scrolling; this surface only scrolls across times. */
+.calendar .sheet-scroll { position:relative; border:1px solid var(--ui-border); border-radius:var(--ui-radius); overflow-x:auto; scrollbar-width:thin; background:var(--ui-muted); }
 .calendar table { width:100%; min-width:62rem; border-collapse:separate; border-spacing:0; table-layout:fixed; font-size:var(--text-sm); }
 .calendar table col:first-child { width:8.5rem; }
 .calendar thead { position:sticky; top:0; z-index:3; }
@@ -53,7 +52,4 @@
 .calendar .agenda-time h2 { font-size:var(--text-lg); font-weight:600; }
 .calendar .agenda-list { display:grid; grid-template-columns:repeat(auto-fit,minmax(min(100%,18rem),1fr)); gap:.75rem; list-style:none; padding:0; }
 .calendar .agenda .booking { padding:1rem; gap:.25rem; }
-@media(max-width:768px) { .calendar .sheet-scroll { max-height:calc(100dvh - 20rem); } }
-
 .calendar th, .calendar td { white-space:normal; }
-@media(max-width:600px) { .calendar .sheet-toolbar { gap:.75rem; } .calendar .sheet-filters { width:100%; flex-direction:column; align-items:stretch; } .calendar .sheet-filters > * { min-width:0; width:100%; } }

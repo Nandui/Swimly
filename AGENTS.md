@@ -43,7 +43,8 @@ live in [PRODUCT.md](PRODUCT.md). Read it before changing what a screen does;
 read the design files below before changing how it looks.
 
 The entire app uses shadcn/ui components from src/components/shadcn, with
-Neutral light/dark tokens and Figtree. The owner approved full conversion.
+Neutral light/dark surfaces, a logo-blue accent and Figtree. The owner approved
+full conversion and the blue accent for actions, selection and focus.
 Read installed component source before use. Use semantic HTML and Tailwind for
 layout, ui- colour/radius utilities from src/app/shadcn.css, and metadata-fed
 Badge/Tag tones. Shared form compositions in src/components/ui preserve native
@@ -65,6 +66,11 @@ screen checklist in DESIGN.md before finishing. Preserve one H1, visible
 focus, 44px touch targets, both modes and layouts at 375, 768, 1024 and 1280.
 The shell owns the main landmark and page inset: 16px, increasing to 24px at
 1024px in the desk workspace. Instructor keeps 16px. Do not nest a page frame.
+
+Administrators always receive every current and future screen and permission.
+Administrator access means both staff.manage and roles.manage; resolve it through
+expandPermissions and visibleScreens, never a role name or the legacy enum.
+Restricted role grants, role previews and Instructor claim boundaries still hold.
 
 Prisma here is v7: the client is generated into `src/generated/prisma` and
 needs a driver adapter (`@prisma/adapter-pg`), and the datasource URL lives in

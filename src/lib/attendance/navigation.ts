@@ -1,3 +1,5 @@
+import { scheduleHref } from "@/lib/schedule/dates";
+
 type ClassScreenAccess = { calendar: boolean; instructor: boolean; courses: boolean };
 export type ClassWorkspace = "desk" | "instructor";
 export type ClassQuery = Record<string, string | string[] | undefined>;
@@ -29,9 +31,9 @@ export function classReturnDestination(access: ClassScreenAccess, from: unknown,
   if (workspace === "instructor") {
     return access.instructor ? { href: instructorHomeHref(params), label: "Instructor", source: "instructor" } : null;
   }
-  if (from === "today" && access.calendar) return { href: "/today", label: "Today", source: "today" };
+  if ((from === "today" || from === "schedule") && access.calendar) return { href: scheduleHref(params.date), label: "Schedule", source: "schedule" };
   if (access.courses) return { href: `/courses/${encodeURIComponent(courseId)}`, label: "class", source: null };
-  if (access.calendar) return { href: "/today", label: "Today", source: "today" };
+  if (access.calendar) return { href: scheduleHref(params.date), label: "Schedule", source: "schedule" };
   return null;
 }
 
@@ -41,7 +43,7 @@ export function legacyClassHref(id: string, params: ClassQuery, instructor: bool
   const query = new URLSearchParams();
   if (typeof params.date === "string") query.set("date", params.date);
   if (params.step === "competencies") query.set("step", "competencies");
-  if (params.from === "today") query.set("from", "today");
+  if (params.from === "today" || params.from === "schedule") query.set("from", params.from);
   const search = query.toString();
   return `/courses/${encodeURIComponent(id)}/class${search ? `?${search}` : ""}`;
 }

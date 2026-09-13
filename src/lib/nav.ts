@@ -1,11 +1,13 @@
 import {
   Activity,
+  ChartNoAxesCombined,
   Building2,
   CalendarCheck,
   CalendarDays,
+  CalendarX2,
+  ClipboardList,
   CalendarHeart,
   ClipboardCheck,
-  Home,
   KeyRound,
   Layers,
   Settings,
@@ -28,13 +30,15 @@ export type AppNavItem = NavItem & {
 };
 
 export const NAV_ITEMS: AppNavItem[] = [
-  { href: "/today", label: "Today", icon: CalendarCheck, screen: "calendar", group: "daily" },
+  { href: "/duty", label: "Duty manager", icon: ClipboardList, screen: "duty", group: "daily" },
+  { href: "/schedule", label: "Schedule", icon: CalendarCheck, screen: "calendar", group: "daily" },
   { href: "/students", label: "Swimmers", icon: Users, screen: "students", group: "daily" },
   { href: "/courses", label: "Classes", icon: CalendarDays, screen: "courses", group: "daily" },
   { href: "/assessments", label: "Assessments", icon: ClipboardCheck, screen: "assessments", group: "daily" },
   { href: "/together", label: "Together", icon: CalendarHeart, screen: "together", group: "daily" },
-  { href: "/", label: "Overview", icon: Home, screen: "overview", group: "monitoring" },
+  { href: "/analytics", label: "Analytics", icon: ChartNoAxesCombined, screen: "analytics", group: "monitoring" },
   { href: "/activity", label: "Activity", icon: Activity, screen: "activity", group: "monitoring" },
+  { href: "/cancellations", label: "Cancelled classes", icon: CalendarX2, screen: "cancellations", group: "monitoring" },
   { href: "/programmes", label: "Programmes", icon: Layers, screen: "programmes", group: "setup" },
   { href: "/staff", label: "Staff", icon: UserCog, screen: "staff", group: "setup" },
   { href: "/roles", label: "Roles", icon: KeyRound, screen: "roles", group: "setup" },

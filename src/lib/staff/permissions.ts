@@ -14,15 +14,23 @@ import type { Role } from "@/generated/prisma/client";
  *  deleting a permission from this file a safe edit rather than one that
  *  needs a data migration first.
  *
- *  **Reads are not in here.** Any signed-in person can look at swimmers,
- *  classes, the curriculum and the registers, exactly as before. Every entry
- *  below is the power to *change* something, or to read the audit log — the
- *  one read that names what everyone else did. Making reads grantable is a
- *  bigger job than this and a different decision; it would mean every data
- *  function taking a permission and every page having an empty state for
- *  "you may not see this". */
+ *  **Screens have their own catalogue.** Permissions allow actions within
+ *  those screens. Administrator access includes both catalogues automatically;
+ *  other roles keep their explicit grants. */
 
 export const PERMISSIONS = [
+  {
+    key: "classes.cancel",
+    group: "Daily operations",
+    label: "Cancel today’s class sessions",
+    description: "Cancel a dated session from Duty manager and create its billing follow-up record. Does not archive the weekly class.",
+  },
+  {
+    key: "billing.notify",
+    group: "Daily operations",
+    label: "Record billing notifications",
+    description: "Mark a cancelled session as notified to billing, with a handoff note. Does not change bills or send messages.",
+  },
   {
     key: "students.manage",
     group: "Swimmers",
@@ -133,6 +141,7 @@ export type PermissionGroup = (typeof PERMISSIONS)[number]["group"];
 /** The order groups are offered in: the everyday work first, the powerful
  *  things last, so nobody ticks Administration on their way past. */
 export const PERMISSION_GROUP_ORDER: PermissionGroup[] = [
+  "Daily operations",
   "Swimmers",
   "On the deck",
   "The rules",
@@ -140,6 +149,15 @@ export const PERMISSION_GROUP_ORDER: PermissionGroup[] = [
 ];
 
 const ALL_KEYS = new Set<string>(PERMISSIONS.map((p) => p.key));
+
+/** Together these keys grant administrator access. Neither key alone does.
+ *  Resolve from current grants, never the editable role name or legacy enum. */
+export const ADMINISTRATOR_PERMISSIONS: readonly PermissionKey[] = ["staff.manage", "roles.manage"];
+
+export function hasAdministratorAccess(permissions: Iterable<string>): boolean {
+  const held = new Set(permissions);
+  return ADMINISTRATOR_PERMISSIONS.every((key) => held.has(key));
+}
 
 /** Permissions that contain smaller ones. Holding the greater grants the
  *  lesser, so a role given "take any register" and not "take their own" still
@@ -155,6 +173,9 @@ const IMPLIES: Partial<Record<PermissionKey, PermissionKey[]>> = {
 /** Expands stored keys into everything they actually grant, dropping any that
  *  are no longer in the catalogue. */
 export function expandPermissions(stored: readonly string[]): Set<PermissionKey> {
+  // Existing administrators inherit new capabilities without editing a role
+  // whenever the catalogue grows. Demotion takes effect on the next request.
+  if (hasAdministratorAccess(stored)) return new Set(ALL_PERMISSIONS);
   const out = new Set<PermissionKey>();
   for (const key of stored) {
     if (!ALL_KEYS.has(key)) continue;
@@ -175,12 +196,12 @@ export const ALL_PERMISSIONS: PermissionKey[] = PERMISSIONS.map((p) => p.key);
 /** Where a role lands after signing in, and where the wordmark goes. A
  *  metadata map like every other enum: the role stores the key, the app
  *  reads the path from here. An instructor's day starts on the deck; the
- *  desk's starts on the overview. */
+ *  desk's starts on Today. */
 export const ROLE_HOMES = {
-  overview: {
-    label: "Overview",
-    path: "/",
-    description: "The numbers, today's classes and recent activity. For the desk.",
+  duty: {
+    label: "Duty manager",
+    path: "/duty",
+    description: "Today’s classes, quick details and session cancellations.",
   },
   today: {
     // Compatibility for existing roles and sessions. Not offered by new forms.
@@ -194,23 +215,23 @@ export const ROLE_HOMES = {
     description: "Own classes, attendance and competencies. Needs the Instructor screen and attendance permission.",
   },
   calendar: {
-    label: "Today",
-    path: "/today",
-    description: "All of today’s classes in a calendar. Needs the Today screen; attendance keeps its own permission.",
+    label: "Schedule",
+    path: "/schedule",
+    description: "Classes and assessments for a selected day. Needs the Schedule screen; attendance keeps its own permission.",
   },
 } as const;
 
 export type RoleHome = keyof typeof ROLE_HOMES;
 
-export const ROLE_HOME_ORDER: RoleHome[] = ["overview", "calendar", "instructor"];
+export const ROLE_HOME_ORDER: RoleHome[] = ["calendar", "duty", "instructor"];
 
 export function normaliseRoleHome(value: unknown): RoleHome {
   if (value === "today") return "instructor";
-  return isRoleHome(value) ? value : "overview";
+  return isRoleHome(value) ? value : "calendar";
 }
 
 export function isRoleHome(value: unknown): value is RoleHome {
-  return typeof value === "string" && value in ROLE_HOMES;
+  return typeof value === "string" && Object.hasOwn(ROLE_HOMES, value);
 }
 
 /** What the three shipped roles hold, and what a fresh database is seeded
@@ -229,10 +250,12 @@ export const SYSTEM_ROLES: {
     name: "Admin",
     description: "Everything, including the timetable, the curriculum and these accounts.",
     permissions: [...ALL_PERMISSIONS],
-    home: "overview",
+    home: "calendar",
     screens: [
-      "overview",
+      "analytics",
       "calendar",
+      "duty",
+      "cancellations",
       "instructor",
       "students",
       "courses",
@@ -256,8 +279,8 @@ export const SYSTEM_ROLES: {
     name: "Viewer",
     description: "Can look things up and change nothing. Reception, or a duty manager.",
     permissions: [],
-    home: "overview",
-    screens: ["overview", "calendar", "students", "courses", "together", "assessments"],
+    home: "calendar",
+    screens: ["calendar", "students", "courses", "together", "assessments"],
   },
 ];
 

@@ -1,20 +1,19 @@
 "use client";
 
-import { useEffect, useId, useRef, useState, useTransition } from "react";
+import { useEffect, useRef, useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import { CalendarCheck, CheckCircle2, CircleX, List, Loader2, Table2, Users, RefreshCw } from "lucide-react";
 import { Button } from "@/components/shadcn/button";
 import { Badge } from "@/components/shadcn/badge";
-import { Empty, EmptyContent, EmptyDescription, EmptyHeader, EmptyMedia, EmptyTitle } from "@/components/shadcn/empty";
+import { Empty, EmptyDescription, EmptyHeader, EmptyMedia, EmptyTitle } from "@/components/shadcn/empty";
 import { Item } from "@/components/shadcn/item";
-import { Label } from "@/components/shadcn/label";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/shadcn/select";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/shadcn/tabs";
 import { capacityLabel, capacityTone, courseName, formatTime, placesLeft } from "@/lib/courses/constants";
 import { formatDate, minutesNow, parseDateOnly, today } from "@/lib/format";
-import { CALENDAR_PHASE_META, calendarAgendaSlots, calendarAssessmentHref, calendarClassHref, calendarProgrammes, calendarSlots, classPhase, filterCalendarAssessments, filterCalendarClasses, type CalendarAssessment, type CalendarClass } from "@/lib/today/calendar";
+import { CALENDAR_PHASE_META, calendarAgendaSlots, calendarAssessmentHref, calendarClassHref, calendarProgrammes, calendarSlots, classPhase, type CalendarAssessment, type CalendarClass } from "@/lib/today/calendar";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/shadcn/table";
-import { InstructorPicker } from "./instructor-picker";
+import { ScheduleDayNavigation } from "./day-navigation";
+import { scheduleHref, scheduleNow } from "@/lib/schedule/dates";
 import styles from "./calendar.module.css";
 
 // shadcn primitives compose the owner-approved booking sheet.
@@ -22,16 +21,14 @@ import styles from "./calendar.module.css";
 type Access = { attendance: boolean; courses: boolean; assessments: boolean };
 type Slot = ReturnType<typeof calendarSlots>[number];
 
-export function TodayCalendar({ courses, assessments, iso, initialNow, clubName, me, access }: {
-  courses: CalendarClass[]; assessments: CalendarAssessment[]; iso: string; initialNow: number; clubName: string; me: string; access: Access;
+export function ScheduleCalendar({ courses, assessments, iso, todayIso, initialNow, clubName, access }: {
+  courses: CalendarClass[]; assessments: CalendarAssessment[]; iso: string; todayIso: string; initialNow: number; clubName: string; access: Access;
 }) {
   const router = useRouter();
-  const poolId = useId();
-  const [location, setLocation] = useState("all");
-  const [instructor, setInstructor] = useState("all");
   const [view, setView] = useState<'sheet' | 'agenda'>('sheet');
-  const [now, setNow] = useState(initialNow);
-  const [dateChanged, setDateChanged] = useState(false);
+  const [clock, setClock] = useState({ date: todayIso, minutes: initialNow });
+  const now = scheduleNow(iso, clock.date, clock.minutes);
+  const isToday = iso === clock.date;
   const [refreshing, startRefresh] = useTransition();
   const surface = useRef<HTMLElement>(null);
   const agendaTrigger = useRef<HTMLButtonElement>(null);
@@ -48,8 +45,7 @@ export function TodayCalendar({ courses, assessments, iso, initialNow, clubName,
     const update = () => {
       if (document.visibilityState !== "visible") return;
       const instant = new Date();
-      setNow(minutesNow(instant));
-      setDateChanged(today(instant) !== iso);
+      setClock({ date: today(instant), minutes: minutesNow(instant) });
       // Preserve an open filter picker while the clock continues to update.
       if (!document.querySelector('[role="listbox"]')) router.refresh();
     };
@@ -63,32 +59,18 @@ export function TodayCalendar({ courses, assessments, iso, initialNow, clubName,
     };
   }, [iso, router]);
 
-  const shown = filterCalendarClasses(courses, location, instructor, me);
-  const shownAssessments = filterCalendarAssessments(assessments, location, instructor, me);
-  const agenda = width < 600 || view === 'agenda' || (shown.length === 0 && shownAssessments.length > 0);
-  const slots = calendarSlots(shown, now);
-  const agendaSlots = calendarAgendaSlots(shown, shownAssessments, now);
-  const programmes = calendarProgrammes(shown);
-  const visibleSessions = agenda ? [...shown, ...shownAssessments] : shown;
+  const agenda = width < 600 || view === 'agenda' || (courses.length === 0 && assessments.length > 0);
+  const slots = calendarSlots(courses, now);
+  const agendaSlots = calendarAgendaSlots(courses, assessments, now);
+  const programmes = calendarProgrammes(courses);
+  const visibleSessions = agenda ? [...courses, ...assessments] : courses;
   const visibleSlots = agenda ? agendaSlots : slots;
   const running = visibleSessions.filter(session => classPhase(session, now) === "running").length;
   const later = visibleSessions.filter(session => classPhase(session, now) === "later").length;
   const target = visibleSlots.find(slot => slot.phase === "running") ?? visibleSlots.find(slot => slot.phase === "next");
-  const locations = [...new Set([...courses, ...assessments].map(session => session.location ?? ""))].sort((a, b) => a.localeCompare(b, "en", { numeric: true }));
-  const people = new Map<string, string>();
-  for (const course of courses) {
-    if (course.instructor) people.set(course.instructor.id, course.instructor.name);
-    if (course.cover?.coverById) people.set(course.cover.coverById, course.cover.coverByName);
-  }
-  for (const assessment of assessments) {
-    if (assessment.instructor) people.set(assessment.instructor.id, assessment.instructor.name);
-  }
-  const filtered = location !== "all" || instructor !== "all";
-  const reset = () => { setLocation("all"); setInstructor("all"); };
   const refresh = () => {
     const instant = new Date();
-    setNow(minutesNow(instant));
-    setDateChanged(today(instant) !== iso);
+    setClock({ date: today(instant), minutes: minutesNow(instant) });
     startRefresh(() => router.refresh());
   };
   const jump = () => {
@@ -98,66 +80,55 @@ export function TodayCalendar({ courses, assessments, iso, initialNow, clubName,
     heading?.scrollIntoView({ block: "nearest", inline: "center", behavior: "instant" });
   };
 
-  return <section ref={surface} className={styles.calendar} data-today-calendar>
+  return <section ref={surface} className={styles.calendar} data-schedule-calendar aria-busy={refreshing}>
     <header className="flex flex-wrap items-start justify-between gap-4">
-      <div><h1 className="text-2xl font-semibold tracking-tight">Today’s schedule</h1><p className="mt-1 text-sm text-ui-muted-foreground">{`${new Intl.DateTimeFormat("en-GB", { weekday: "long", timeZone: "UTC" }).format(parseDateOnly(iso))}, ${formatDate(parseDateOnly(iso))} · ${clubName}`}</p></div>
+      <div><h1 className="text-2xl font-semibold tracking-tight">Schedule</h1><p className="mt-1 text-sm text-ui-muted-foreground">{`${new Intl.DateTimeFormat("en-GB", { weekday: "long", timeZone: "UTC" }).format(parseDateOnly(iso))}, ${formatDate(parseDateOnly(iso))} · ${clubName}`}</p></div>
       <div className="flex flex-wrap items-center gap-2">
-        <Button variant="ghost" onClick={refresh} disabled={refreshing} aria-busy={refreshing}>{refreshing ? <Loader2 className="animate-spin" aria-hidden="true" /> : <RefreshCw aria-hidden="true" />}Refresh</Button>
-        {target && !dateChanged ? <Button onClick={jump}>{running ? "Jump to now" : "Jump to next"}</Button> : null}
+        <Button variant="ghost" className="min-h-11" onClick={refresh} disabled={refreshing} aria-busy={refreshing}>{refreshing ? <Loader2 className="animate-spin motion-reduce:animate-none" aria-hidden="true" /> : <RefreshCw aria-hidden="true" />}Refresh</Button>
+        {target && isToday ? <Button className="min-h-11" onClick={jump}>{running ? "Jump to now" : "Jump to next"}</Button> : null}
       </div>
     </header>
+    <ScheduleDayNavigation iso={iso} todayIso={clock.date} pending={refreshing} onSelect={date => startRefresh(() => router.push(scheduleHref(date), { scroll: false }))} />
+    <span className="sr-only" role="status">{refreshing ? "Loading schedule" : `Showing ${formatDate(parseDateOnly(iso))}`}</span>
+    <div inert={refreshing || undefined} className={refreshing ? "opacity-60" : undefined}>
     <Tabs value={agenda ? 'agenda' : 'sheet'} onValueChange={next => setView(next as 'sheet' | 'agenda')} className="gap-4">
 
-    <section className={styles["sheet-toolbar"]} aria-label="Calendar controls">
-      <div className={styles["sheet-filters"]}>
-        <div className="flex min-w-0 flex-col gap-2 sm:w-48"><Label htmlFor={poolId}>Pool area</Label>
-          <Select value={location || '__unset__'} onValueChange={value => setLocation(value === '__unset__' ? '' : value)}><SelectTrigger id={poolId} className="w-full"><SelectValue /></SelectTrigger><SelectContent>
-            <SelectItem value="all">All pool areas</SelectItem>{locations.map(value => <SelectItem key={value} value={value || '__unset__'}>{value || 'Location not set'}</SelectItem>)}
-          </SelectContent></Select>
-        </div>
-        <InstructorPicker value={instructor} onChange={setInstructor} options={[{ value: "all", label: "All instructors" }, { value: "mine", label: "My schedule" }, ...[...people].sort((a, b) => a[1].localeCompare(b[1])).map(([value, label]) => ({ value, label }))]} />
-        {filtered ? <Button variant="ghost" onClick={reset}>Clear filters</Button> : null}
+    <section className={styles["sheet-toolbar"]} aria-label="Schedule display">
+      <div className={styles["sheet-summary"]} role="status" aria-live="polite">
+        <strong>{courses.length} {courses.length === 1 ? "class" : "classes"}</strong>
+        {assessments.length > 0 ? <strong>{assessments.length} {assessments.length === 1 ? "assessment" : "assessments"}</strong> : null}
+        {running > 0 ? <Badge variant="secondary" data-tone={CALENDAR_PHASE_META.running.color}>{`${running} running now`}</Badge> : null}
+        {isToday && later > 0 ? <span>{later} upcoming</span> : null}
       </div>
-      <TabsList aria-label="Calendar display" className={width < 600 ? "hidden" : ""}>
-        <TabsTrigger value="sheet" disabled={shown.length === 0 && shownAssessments.length > 0}><Table2 aria-hidden="true" />Booking sheet</TabsTrigger>
-        <TabsTrigger ref={agendaTrigger} value="agenda"><List aria-hidden="true" />Agenda</TabsTrigger>
+      <TabsList aria-label="Calendar display" className={width < 600 ? "hidden" : "group-data-[orientation=horizontal]/tabs:h-auto"}>
+        <TabsTrigger value="sheet" className="min-h-11" disabled={courses.length === 0 && assessments.length > 0}><Table2 aria-hidden="true" />Booking sheet</TabsTrigger>
+        <TabsTrigger ref={agendaTrigger} value="agenda" className="min-h-11"><List aria-hidden="true" />Agenda</TabsTrigger>
       </TabsList>
     </section>
 
-    {shown.length === 0 && shownAssessments.length > 0 && width >= 600 ? <p className="text-sm text-ui-muted-foreground">Assessment sessions appear in Agenda. The booking sheet shows weekly classes.</p> : null}
+    {courses.length === 0 && assessments.length > 0 && width >= 600 ? <p className="text-sm text-ui-muted-foreground">Assessment sessions appear in Agenda. The booking sheet shows weekly classes.</p> : null}
 
-    {!dateChanged && (shown.length > 0 || shownAssessments.length > 0) ? <div className={styles["sheet-meta"]}>
-      <div className={styles["sheet-summary"]} role="status" aria-live="polite">
-        <strong>{filtered ? `${shown.length} of ${courses.length}` : courses.length} {courses.length === 1 ? "class" : "classes"}</strong>
-        {assessments.length > 0 ? <strong>{filtered ? `${shownAssessments.length} of ${assessments.length}` : assessments.length} {assessments.length === 1 ? "assessment" : "assessments"}</strong> : null}
-        {running > 0 ? <Badge variant="secondary" data-tone={CALENDAR_PHASE_META.running.color}>{`${running} running now`}</Badge> : null}
-        {later > 0 ? <span>{later} upcoming</span> : null}
-      </div>
-      <div className={styles["sheet-legend"]} aria-label="Availability">
+    {(courses.length > 0 || assessments.length > 0) ? <div className={styles["sheet-legend"]} aria-label="Availability">
         <span><CheckCircle2 aria-hidden="true" />Spaces available</span>
         <span><CircleX aria-hidden="true" />Full</span>
-      </div>
     </div> : null}
 
-    {!agenda && !dateChanged && shownAssessments.length > 0 ? <div className="flex flex-wrap items-center justify-between gap-2 rounded-ui-lg border border-ui-border bg-ui-muted/40 px-4 py-3">
-      <p className="text-sm">{shownAssessments.length} {shownAssessments.length === 1 ? "assessment is" : "assessments are"} also scheduled today.</p>
-      <Button variant="outline" onClick={() => { setView('agenda'); agendaTrigger.current?.focus(); }}><List aria-hidden="true" />View in agenda</Button>
+    {!agenda && assessments.length > 0 ? <div className="flex flex-wrap items-center justify-between gap-2 rounded-ui-lg border border-ui-border bg-ui-muted/40 px-4 py-3">
+      <p className="text-sm">{assessments.length} {assessments.length === 1 ? "assessment is" : "assessments are"} also scheduled on this day.</p>
+      <Button variant="outline" className="min-h-11" onClick={() => { setView('agenda'); agendaTrigger.current?.focus(); }}><List aria-hidden="true" />View in agenda</Button>
     </div> : null}
 
     <TabsContent value={agenda ? 'agenda' : 'sheet'} className="m-0 min-w-0" tabIndex={-1}>
-    {dateChanged ? <CalendarEmpty title="A new day has started" hint="Refresh to load today’s schedule." action={<Button onClick={refresh} disabled={refreshing}>Load today</Button>} />
-      : shown.length === 0 && shownAssessments.length === 0 ? <CalendarEmpty title={courses.length || assessments.length ? "No sessions match these filters" : "Nothing scheduled today"}
-        hint={courses.length || assessments.length ? "Clear the filters to see the full day." : "There are no classes or assessments scheduled at this pool today."}
-        action={filtered ? <Button onClick={reset}>Show full schedule</Button> : undefined} />
-        : agenda ? <section className={styles["agenda"]} aria-label="Today’s agenda">
+    {courses.length === 0 && assessments.length === 0 ? <CalendarEmpty />
+        : agenda ? <section className={styles["agenda"]} aria-label="Schedule agenda">
           {agendaSlots.map(slot => <section key={slot.start} aria-labelledby={`time-${slot.start}`}>
             <header className={styles["agenda-time"]}><TimeHeading slot={slot} /><span className="text-sm text-ui-muted-foreground">{slot.entries.length} {slot.entries.length === 1 ? 'session' : 'sessions'}</span></header>
             <ul className={styles["agenda-list"]}>{slot.entries.map(entry => <li key={`${entry.kind}-${entry.value.id}`}>{entry.kind === 'class'
-              ? <Booking course={entry.value} now={now} iso={iso} access={access} agenda />
+              ? <Booking course={entry.value} now={now} iso={iso} currentDate={clock.date} access={access} agenda />
               : <AssessmentBooking assessment={entry.value} now={now} allowed={access.assessments} />}</li>)}</ul>
           </section>)}
-        </section> : <section className={styles["sheet-scroll"]} aria-label="Today’s booking sheet. Scroll for more times and levels." tabIndex={0}>
-          <Table aria-label="Today’s booking sheet" containerClassName="overflow-visible" style={{ minWidth: 136 + slots.length * 144 }}>
+        </section> : <section className={styles["sheet-scroll"]} aria-label="Schedule booking sheet. Scroll horizontally for more times." tabIndex={0}>
+          <Table aria-label="Schedule booking sheet" containerClassName="overflow-visible" style={{ minWidth: 136 + slots.length * 144 }}>
             <colgroup><col />{slots.map(slot => <col key={slot.start} />)}</colgroup>
             <TableHeader><TableRow>
               <TableHead scope="col">Level / time</TableHead>
@@ -178,7 +149,7 @@ export function TodayCalendar({ courses, assessments, iso, initialNow, clubName,
                   const classes = starts.get(slot.start);
                   return <TableCell key={slot.start} headers={`level-${level.id} column-${slot.start}`} data-empty={!classes}>
                     {classes ? <ul className={styles["booking-list"]} aria-label={`${level.name}, ${formatTime(slot.start)}`}>
-                      {classes.map(course => <li key={course.id}><Booking course={course} now={now} iso={iso} access={access} /></li>)}
+                      {classes.map(course => <li key={course.id}><Booking course={course} now={now} iso={iso} currentDate={clock.date} access={access} /></li>)}
                     </ul> : <><span aria-hidden="true">—</span><span className={styles["sr-only"]}>No class</span></>}
                   </TableCell>;
                 })}
@@ -186,12 +157,12 @@ export function TodayCalendar({ courses, assessments, iso, initialNow, clubName,
             </TableBody>)}
           </Table>
         </section>}
-    </TabsContent></Tabs>
+    </TabsContent></Tabs></div>
   </section>;
 }
 
-function CalendarEmpty({ title, hint, action }: { title: string; hint: string; action?: React.ReactNode }) {
-  return <Empty className="border border-ui-border"><EmptyHeader><EmptyMedia variant="icon"><CalendarCheck aria-hidden="true" /></EmptyMedia><EmptyTitle>{title}</EmptyTitle><EmptyDescription>{hint}</EmptyDescription></EmptyHeader>{action ? <EmptyContent>{action}</EmptyContent> : null}</Empty>;
+function CalendarEmpty() {
+  return <Empty className="border border-ui-border"><EmptyHeader><EmptyMedia variant="icon"><CalendarCheck aria-hidden="true" /></EmptyMedia><EmptyTitle>Nothing scheduled for this day</EmptyTitle><EmptyDescription>There are no classes or assessments scheduled at this pool on the selected day.</EmptyDescription></EmptyHeader></Empty>;
 }
 
 function TimeHeading({ slot }: { slot: Pick<Slot, "start" | "phase"> }) {
@@ -201,7 +172,7 @@ function TimeHeading({ slot }: { slot: Pick<Slot, "start" | "phase"> }) {
   </div>;
 }
 
-function AssessmentBooking({ assessment, now, allowed }: { assessment: CalendarAssessment; now: number; allowed: boolean }) {
+function AssessmentBooking({ assessment, now, allowed }: { assessment: CalendarAssessment; now: number | null; allowed: boolean }) {
   const phase = classPhase(assessment, now);
   const href = calendarAssessmentHref(assessment.id, allowed);
   const name = assessment.typeName || 'Assessment session';
@@ -229,10 +200,16 @@ function AssessmentBooking({ assessment, now, allowed }: { assessment: CalendarA
   return <Item asChild variant="outline" className={styles.booking} data-phase={phase}>{href ? <a href={href} aria-label={`Open ${label}`}>{content}</a> : <article aria-label={label}>{content}</article>}</Item>;
 }
 
-function Booking({ course, now, iso, access, agenda = false }: { course: CalendarClass; now: number; iso: string; access: Access; agenda?: boolean }) {
+function Booking({ course, now, iso, currentDate, access, agenda = false }: { course: CalendarClass; now: number | null; iso: string; currentDate: string; access: Access; agenda?: boolean }) {
+  if (course.cancellation) return <Item variant="outline" className={styles.booking}>
+    <span className={styles["booking-title"]}>{agenda ? courseName(course) : course.location || "Pool"}</span>
+    <span className={styles["booking-status"]}><Badge variant="secondary" data-tone={CALENDAR_PHASE_META.cancelled.color}>Cancelled</Badge></span>
+    <span className={styles["booking-time"]}>{formatTime(course.startMinutes)}–{formatTime(course.startMinutes + course.durationMinutes)}</span>
+    <span className="break-words text-xs text-ui-muted-foreground">{course.cancellation.reason}</span>
+  </Item>;
   const phase = classPhase(course, now);
   const name = courseName(course);
-  const href = calendarClassHref(course.id, iso, access);
+  const href = calendarClassHref(course.id, iso, access, currentDate);
   const tone = capacityTone(course.enrolled, course.capacity);
   const free = placesLeft(course.enrolled, course.capacity);
   // Null is uncapped in Swimly; full and over-capacity classes have no places.
@@ -255,6 +232,6 @@ function Booking({ course, now, iso, access, agenda = false }: { course: Calenda
     </span>
     {agenda && phase === 'running' ? <span className={styles["booking-status"]}><Badge variant="secondary" data-tone={CALENDAR_PHASE_META.running.color}>Running now</Badge></span> : null}
   </>;
-  return <Item asChild variant="outline" className={styles.booking} data-phase={phase}>{href ? <a href={href} aria-label={`${access.attendance ? 'Open attendance' : 'Open class'}: ${name}, ${formatTime(course.startMinutes)}, ${location}, ${availability}${phase === 'running' ? ', running now' : ''}`}>{content}</a>
+  return <Item asChild variant="outline" className={styles.booking} data-phase={phase}>{href ? <a href={href} aria-label={`${access.attendance && iso <= currentDate ? 'Open attendance' : 'Open class'}: ${name}, ${formatTime(course.startMinutes)}, ${location}, ${availability}${phase === 'running' ? ', running now' : ''}`}>{content}</a>
     : <article aria-label={`${name}, ${formatTime(course.startMinutes)}, ${location}, ${availability}`}>{content}</article>}</Item>;
 }

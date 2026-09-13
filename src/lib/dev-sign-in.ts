@@ -1,4 +1,5 @@
 import { prisma } from "@/lib/prisma";
+import { ADMINISTRATOR_PERMISSIONS } from "@/lib/staff/permissions";
 
 /** The passwordless "sign in as the admin" button, and the single question
  *  that decides whether it exists at all.
@@ -26,7 +27,7 @@ export function devSignInAllowed(): boolean {
 }
 
 /** The account the button signs you in as: the first active account that can
- *  manage other accounts, which is the same one `DEV_AUTH_BYPASS` uses
+ *  manage both accounts and roles, which is the same one `DEV_AUTH_BYPASS` uses
  *  locally. A real row, so audit entries name somebody who exists and every
  *  permission check behaves exactly as it will in production.
  *
@@ -39,7 +40,7 @@ export async function getDevAdmin() {
   return prisma.user.findFirst({
     where: {
       isActive: true,
-      staffRole: { permissions: { has: "staff.manage" } },
+      staffRole: { permissions: { hasEvery: [...ADMINISTRATOR_PERMISSIONS] } },
     },
     orderBy: { createdAt: "asc" },
     select: { id: true, name: true, email: true },

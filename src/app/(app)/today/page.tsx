@@ -1,33 +1,8 @@
-import type { Metadata } from "next";
-import { TodayCalendar } from "@/components/today/calendar";
-import { getCoversForDay } from "@/lib/attendance/data/cover";
-import { getRegisterStateForDay } from "@/lib/attendance/data/register";
-import { weekdayOfIso } from "@/lib/attendance/dates";
-import { can, canSee } from "@/lib/authz";
-import { getCurrentClub } from "@/lib/clubs/current";
-import { getCoursesOnDay } from "@/lib/courses/data/courses";
-import { minutesNow, today } from "@/lib/format";
-import { screenPage } from "@/lib/page-guards";
-import { getTodayAssessments } from "@/lib/today/assessments";
+import { redirect } from "next/navigation";
+import { scheduleHref } from "@/lib/schedule/dates";
 
-export const metadata: Metadata = { title: "Today’s schedule" };
-
-export default async function TodayPage() {
-  const session = await screenPage("calendar");
-  const instant = new Date();
-  const iso = today(instant);
-  const day = weekdayOfIso(iso);
-  const [courses, marked, covers, { club }, assessments] = await Promise.all([
-    getCoursesOnDay(day), getRegisterStateForDay(day, iso), getCoversForDay(iso), getCurrentClub(),
-    getTodayAssessments(iso),
-  ]);
-
-  return <TodayCalendar key={`${club.id}-${iso}`} iso={iso} initialNow={minutesNow(instant)}
-    clubName={club.name} me={session.user.id}
-    assessments={assessments}
-    access={{ attendance: can(session, "attendance.mark"), courses: canSee(session, "courses"), assessments: canSee(session, "assessments") }}
-    courses={courses.map(({ id, name, startMinutes, durationMinutes, capacity, location, level, instructor, instructorId, _count }) => ({
-      id, name, startMinutes, durationMinutes, capacity, location, level, instructor, instructorId,
-      enrolled: _count.enrolments, cover: covers.get(id) ?? null, attendanceTaken: marked.has(id),
-    }))} />;
+/** Keep existing bookmarks while Schedule owns the authenticated calendar. */
+export default async function TodayRedirect({ searchParams }: { searchParams: Promise<{ date?: string | string[] }> }) {
+  const { date } = await searchParams;
+  redirect(scheduleHref(date));
 }

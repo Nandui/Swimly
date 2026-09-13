@@ -19,6 +19,14 @@ function assessment(id: string, startMinutes: number, overrides: Partial<Calenda
     instructorId: "assessor", instructor: { id: "assessor", name: "Taylor Example" }, ...overrides };
 }
 
+test("cancelled sessions remain visible but never count as running or the next start", () => {
+  const cancelled = course("cancelled", 900, { cancellation: { reason: "Pool closure" } });
+  const later = course("later", 960);
+  assert.equal(classPhase(cancelled, 910), "cancelled");
+  assert.deepEqual(calendarSlots([cancelled, later], 890).map(slot => slot.phase), ["finished", "next"]);
+  assert.deepEqual(calendarAgendaSlots([cancelled, later], [], 910).map(slot => slot.phase), ["finished", "next"]);
+});
+
 test("the agenda merges assessments and classes at exact times without losing simultaneous sessions", () => {
   const courses = [course("shared-id", 900), course("late", 1080)];
   const assessments = [assessment("next", 945), assessment("shared-id", 900), assessment("early", 840)];
@@ -80,9 +88,18 @@ test("pool and instructor filters include today's cover and retain unknown locat
 });
 
 test("calendar links respect the separate attendance and class-screen permissions", () => {
-  assert.equal(calendarClassHref("c", "2026-09-10", { attendance: true, courses: false }), "/courses/c/class?date=2026-09-10&from=today");
-  assert.equal(calendarClassHref("c", "2026-09-10", { attendance: false, courses: true }), "/courses/c");
+  assert.equal(calendarClassHref("c", "2026-09-10", { attendance: true, courses: false }, "2026-09-10"), "/courses/c/class?date=2026-09-10&from=schedule");
+  assert.equal(calendarClassHref("c", "2026-09-10", { attendance: false, courses: true }), "/courses/c?from=schedule&date=2026-09-10");
   assert.equal(calendarClassHref("c", "2026-09-10", { attendance: false, courses: false }), undefined);
+});
+
+test("future days have no running or next indicators and never open a past attendance session", () => {
+  const sessions = [course("early", 900), course("late", 960)];
+  assert.deepEqual(calendarSlots(sessions, null).map(slot => slot.phase), ["later", "later"]);
+  assert.deepEqual(calendarAgendaSlots(sessions, [assessment("assessment", 900)], null).map(slot => slot.phase), ["later", "later"]);
+  assert.equal(classPhase(sessions[0], null), "later");
+  assert.equal(calendarClassHref("c", "2026-09-11", { attendance: true, courses: true }, "2026-09-10"), "/courses/c?from=schedule&date=2026-09-11");
+  assert.equal(calendarClassHref("c", "2026-09-11", { attendance: true, courses: false }, "2026-09-10"), undefined);
 });
 
 test("the booking sheet keeps curriculum order and distinct level IDs, not arrival order or names", () => {

@@ -6,6 +6,7 @@ import { authCookies } from "@/lib/auth-cookies";
 import { devSignInAllowed, getDevAdmin } from "@/lib/dev-sign-in";
 import { prisma } from "@/lib/prisma";
 import { mayPreview, previewedRole } from "@/lib/staff/preview";
+import { ADMINISTRATOR_PERMISSIONS } from "@/lib/staff/permissions";
 
 /** Built as a function so the dev provider is **absent** from the array in
  *  production rather than present-and-refusing. There is then no endpoint to
@@ -86,7 +87,7 @@ const {
       session.user.roleId = "";
       session.user.roleName = "";
       session.user.permissions = [];
-      session.user.home = "overview";
+      session.user.home = "calendar";
       session.user.screens = [];
       return session;
     },
@@ -183,7 +184,7 @@ export const auth = cache(async function auth(): Promise<Session | null> {
   }
 
   const admin = await prisma.user.findFirst({
-    where: { isActive: true, staffRole: { permissions: { has: "staff.manage" } } },
+    where: { isActive: true, staffRole: { permissions: { hasEvery: [...ADMINISTRATOR_PERMISSIONS] } } },
     orderBy: { createdAt: "asc" },
     select: ACCOUNT_SELECT,
   });

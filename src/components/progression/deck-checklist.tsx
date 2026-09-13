@@ -270,7 +270,7 @@ function DeckChecklistState({
                 levelId,
                 marks: changes,
               })
-            : saveClassAssessment({ levelId, marks: changes }),
+            : saveClassAssessment({ levelId, marks: changes, classContext: { courseId, date } }),
           SAVE_TIMEOUT_MS,
         );
       } catch {

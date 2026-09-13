@@ -19,7 +19,7 @@ function revalidate() {
   revalidatePath("/assessments");
   revalidatePath("/assessments/[id]", "page");
   revalidatePath("/students/[id]", "page");
-  revalidatePath("/today");
+  revalidatePath("/schedule");
   revalidatePath("/instructor");
 }
 

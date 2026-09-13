@@ -10,11 +10,12 @@ function fixture() {
   const completions: Completion[] = [];
   const audits: { action: string; clubId?: string; entityId: string; details?: { changes?: { competencyId: string; before: string | null; after: string | null }[] } }[] = [];
   let courseLocked = false, desk = true, enrolled = true, owner: string | null | undefined;
-  let courseLevel = "entry-b";
+  let courseLevel = "entry-b", cancelled = false;
   let locked = false, allowed = true, auditFails = false, overrides = false;
   const curriculum = sharedCurriculumRows();
   const student = { id: "swimmer", firstName: "Synthetic", lastName: "Swimmer", clubId: "other" };
   const tx = {
+    classCancellation: { findUnique: async () => cancelled ? { id: "cancellation" } : null },
     $queryRaw: async (strings: TemplateStringsArray) => { if(strings.join('').includes('"Course"'))courseLocked=true; locked = true; return []; },
     course: { findUnique: async () => { assert.ok(courseLocked); return { levelId: courseLevel, archivedAt: null, dayOfWeek: 'MONDAY' }; } },
     classCover: { findUnique: async () => { assert.ok(courseLocked); return owner === undefined ? null : {coverById: owner}; } },
@@ -52,12 +53,24 @@ function fixture() {
     "@/lib/clubs/current": { currentClubId: async () => "club", currentClubIdIfAny: async () => "club" },
     "next/cache": { revalidatePath: () => {} },
   });
-  return { actions, marks, completions, audits, curriculum, setClaim: (id: string | null | undefined) => { owner = id; }, deckOnly: () => { desk = false; }, unenrol: () => { enrolled = false; }, changeLevel: () => { courseLevel = "other"; }, deny: () => { allowed = false; }, failAudit: () => { auditFails = true; }, override: () => { overrides = true; } };
+  return { actions, marks, completions, audits, curriculum, cancel: () => { cancelled = true; }, setClaim: (id: string | null | undefined) => { owner = id; }, deckOnly: () => { desk = false; }, unenrol: () => { enrolled = false; }, changeLevel: () => { courseLevel = "other"; }, deny: () => { allowed = false; }, failAudit: () => { auditFails = true; }, override: () => { overrides = true; } };
 }
 const completion = { studentId: "swimmer", levelId: "entry", note: "", overrideReason: "" };
 
 const teaching = { courseId: "class", date: "2026-08-31" };
 const deckMarks = { ...teaching, levelId: "entry", marks: [{ studentId: "swimmer", competencyId: "entry-skill", status: "WORKING_ON" as const }] };
+
+test("a cancellation blocks instructor and stale desk competencies and level completion", async () => {
+  const f = fixture(); f.setClaim("staff"); f.cancel();
+  const before = structuredClone(f.marks);
+  for (const result of [await f.actions.saveInstructorAssessment(deckMarks),
+    await f.actions.saveClassAssessment({ levelId: "entry", marks: deckMarks.marks, classContext: teaching }),
+    await f.actions.confirmLevelCompletion({ ...completion, teaching }),
+    await f.actions.confirmLevelCompletion({ ...completion, classContext: teaching })]) {
+    assert.equal(result.ok, false); if (!result.ok) assert.match(result.error, /cancelled/);
+  }
+  assert.deepEqual(f.marks, before); assert.deepEqual(f.completions, []); assert.deepEqual(f.audits, []);
+});
 
 test("Instructor marks and completion require the confirmed owner and current enrolment under the course lock", async () => {
   const f = fixture(); f.deckOnly();

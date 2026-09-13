@@ -24,3 +24,11 @@ test("read-only staff cannot teach and cover without permission is not offered",
   assert.equal(access.needsTakeOver({ session: session(["attendance.mark"]), instructorId: "colleague" }), false);
   assert.equal(access.canTeachClass({ session: session(["attendance.mark"]), instructorId: null, coverById: "teacher" }), true);
 });
+
+test("administrator access does not bypass the confirmed instructor claim", () => {
+  const args = { session: session(["staff.manage", "roles.manage"]), instructorId: "teacher" };
+  assert.equal(access.canMarkRegister(args), true);
+  assert.equal(access.canTeachClass(args), false);
+  assert.equal(access.canTeachClass({ ...args, coverById: "colleague" }), false);
+  assert.equal(access.canTeachClass({ ...args, coverById: "teacher" }), true);
+});

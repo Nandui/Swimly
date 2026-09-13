@@ -11,6 +11,7 @@ import { getLevelOptions } from "@/lib/curriculum/data/curriculum";
 import { getTransferTargets } from "@/lib/enrolment/data/enrolments";
 import { today } from "@/lib/format";
 import { screenPage } from "@/lib/page-guards";
+import { scheduleHref } from "@/lib/schedule/dates";
 
 export const metadata: Metadata = { title: "Class" };
 
@@ -24,6 +25,7 @@ export default async function CoursePage(props: PageProps<"/courses/[id]">) {
   };
   const { id } = await props.params;
   const params = await props.searchParams;
+  const fromSchedule = params.from === "schedule" && canSee(session, "calendar");
   const iso = today();
   const [course, roster, targets, levels, instructors, cover] = await Promise.all([
     getCourse(id),
@@ -35,7 +37,7 @@ export default async function CoursePage(props: PageProps<"/courses/[id]">) {
   ]);
   if (!course) notFound();
   return <ClassDetailView course={course} roster={roster} targets={targets} levels={levels} instructors={instructors}
-    access={access} backHref={classReturnHref(params.returnTo)}
+    access={access} backHref={fromSchedule ? scheduleHref(params.date) : classReturnHref(params.returnTo)} backLabel={fromSchedule ? "Schedule" : "Classes"}
     coverName={!course.archivedAt && course.dayOfWeek === weekdayOfIso(iso) && cover?.coverById !== cover?.instructorId ? cover?.coverByName : undefined}
     levelImage={<CurriculumImage kind="level" id={course.levelId} name={course.level.name} />} />;
 }

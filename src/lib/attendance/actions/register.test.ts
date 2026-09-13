@@ -15,6 +15,7 @@ function fixture() {
   const audits: { summary: string; entity?: string; entityId?: string; details?: Record<string, unknown> }[] = [];
   const updated: string[] = [];
   let archived = false;
+  let cancelled = false;
   let beforeTransaction: (() => void) | undefined;
   let queue = Promise.resolve();
   let locked = false;
@@ -22,6 +23,7 @@ function fixture() {
   let desk = true;
   const readGuard = () => assert.equal(locked, true, "register reads follow the course lock");
   const tx = {
+    classCancellation: { findUnique: async () => { readGuard(); return cancelled ? { id: "cancellation" } : null; } },
     $queryRaw: async () => { locked = true; return []; },
     course: {
       findUnique: async ({ where }: { where: { clubId: string } }) => {
@@ -77,8 +79,18 @@ function fixture() {
     "next/cache": { revalidatePath: () => { } },
   });
   const input = () => ({ courseId: "class", date: "2026-08-31", marks: rows.map(row => ({ studentId: row.studentId, status: row.status, note: row.note ?? undefined })), classNote: note, revision: savedRegister("class", "2026-08-31", rows, note).revision });
-  return { markRegister, input, rows, audits, updated, setClaim: (id: string | null | undefined) => { owner = id; }, deckOnly: () => { desk = false; }, beforeTransaction: (fn: () => void) => { beforeTransaction = fn; }, archive: () => { archived = true; }, note: () => note, failAudit: () => { failAudit = true; }, failStudentAudit: () => { failStudentAudit = true; } };
+  return { markRegister, input, rows, audits, updated, cancel: () => { cancelled = true; }, setClaim: (id: string | null | undefined) => { owner = id; }, deckOnly: () => { desk = false; }, beforeTransaction: (fn: () => void) => { beforeTransaction = fn; }, archive: () => { archived = true; }, note: () => note, failAudit: () => { failAudit = true; }, failStudentAudit: () => { failStudentAudit = true; } };
 }
+
+test("cancellation blocks a stale desk register and preserves all prior marks", async () => {
+  const f = fixture(), before = structuredClone(f.rows), input = f.input();
+  input.marks[0].status = "ABSENT";
+  f.cancel();
+  const result = await f.markRegister(input);
+  assert.equal(result.ok, false);
+  if (!result.ok) assert.match(result.error, /cancelled/);
+  assert.deepEqual(f.rows, before); assert.equal(f.audits.length, 0);
+});
 
 test("unchanged attendance produces no writes or audit entries", async () => {
   const f = fixture();

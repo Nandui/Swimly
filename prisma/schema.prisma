@@ -109,8 +109,10 @@ model StaffRole {
   description String?
   permissions String[]
   /// Where the role starts after signing in: a key from `ROLE_HOMES` in
-  /// `src/lib/staff/permissions.ts` ("overview" or "today"). A string rather
+  /// `src/lib/staff/permissions.ts` ("calendar", "duty" or "instructor"). A string rather
   /// than an enum for the same reason `permissions` is: the catalogue is code.
+  /// The legacy database default is normalized to Today by the app; new roles
+  /// explicitly save their chosen home. Existing role rows need no rewrite.
   home        String   @default("overview")
   /// Which screens the role offers at all: keys from `SCREENS` in
   /// `src/lib/staff/screens.ts`. Permissions say what may be changed;
@@ -365,6 +367,7 @@ model Student {
   results            CompetencyResult[]
   completions        LevelCompletion[]
   assessmentBookings AssessmentBooking[]
+  cancelledSessions  CancelledClassSwimmer[]
 
   @@index([clubId, status, lastName, firstName])
   @@index([status, lastName, firstName])
@@ -406,6 +409,7 @@ model Course {
   notes           ClassNote[]
   covers          ClassCover[]
   assessedResults CompetencyResult[]
+  cancellations   ClassCancellation[]
 
   @@index([clubId, dayOfWeek, startMinutes])
   @@index([levelId])
@@ -474,13 +478,8 @@ model AttendanceRecord {
   @@index([studentId, date])
 }
 
-/// The cheap answer to "pool closed this week": say so here and leave the
-/// register untaken. No rows is the honest record of a class that never ran,
-/// and it keeps a cancellation out of the absence streaks.
-///
-/// It is also the seam. The moment this grows a `cancelled` boolean, an
-/// `instructorId` or a time override, class sessions have been rebuilt by
-/// accident, and the honest move is to build them deliberately instead.
+/// Free-text teaching notes. A cancelled occurrence belongs in ClassCancellation,
+/// which preserves the schedule and billing roster without inventing absences.
 model ClassNote {
   id        String   @id @default(cuid())
   courseId  String
@@ -497,12 +496,56 @@ model ClassNote {
   @@unique([courseId, date])
 }
 
+/// A cancelled occurrence of a weekly class. The timetable and enrolments stay
+/// intact. Frozen details and roster are the evidence for billing follow-up.
+model ClassCancellation {
+  id                    String   @id @default(cuid())
+  courseId              String
+  clubId                String
+  date                  DateTime @db.Date
+  className             String
+  levelName             String
+  programmeName         String
+  startMinutes          Int
+  durationMinutes       Int
+  location              String?
+  instructorName        String?
+  reason                String
+  cancelledById         String
+  cancelledByName       String
+  cancelledAt           DateTime @default(now())
+  attendanceRecorded    Int      @default(0)
+  billingNotifiedAt      DateTime?
+  billingNotifiedById    String?
+  billingNotifiedByName  String?
+  billingNote           String?
+
+  course   Course                  @relation(fields: [courseId], references: [id], onDelete: Restrict)
+  swimmers CancelledClassSwimmer[]
+
+  @@unique([courseId, date])
+  @@index([clubId, billingNotifiedAt, date])
+}
+
+model CancelledClassSwimmer {
+  id             String @id @default(cuid())
+  cancellationId String
+  studentId      String
+  swimmerName    String
+  memberNumber   String?
+
+  cancellation ClassCancellation @relation(fields: [cancellationId], references: [id], onDelete: Restrict)
+  student      Student           @relation(fields: [studentId], references: [id], onDelete: Restrict)
+
+  @@unique([cancellationId, studentId])
+  @@index([studentId])
+}
+
 /// The instructor who confirmed they are teaching this class on this date.
 /// Includes the scheduled instructor and substitutes. Created under the course
 /// lock before opening the register; an existing claim is never overwritten.
 ///
-/// Deliberately not a session row: no time, no cancellation, nothing about the
-/// class beyond who conducted it. `ClassNote` is still the seam.
+/// A teaching claim only. Cancellation lives separately in ClassCancellation.
 model ClassCover {
   id             String   @id @default(cuid())
   courseId       String

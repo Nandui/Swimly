@@ -8,11 +8,13 @@ test("teaching saves reject another teacher, unclaimed dates and swimmers outsid
   let owner: string | null = "other",
     exists = true,
     members = ["swimmer"];
+  let cancelled = false;
   const { teachingError } = serverModule<typeof import("./teaching")>(
     "src/lib/attendance/teaching.ts",
     { "@/lib/authz": { can: () => true, canSee: () => true } },
   );
   const tx = {
+    classCancellation: { findUnique: async () => cancelled ? { id: "cancellation" } : null },
     course: {
       findUnique: async () => ({ dayOfWeek: "FRIDAY", archivedAt: null }),
     },
@@ -41,4 +43,6 @@ test("teaching saves reject another teacher, unclaimed dates and swimmers outsid
     (await teachingError(tx, session, context, "site", ["swimmer"]))!,
     /no longer/,
   );
+  cancelled = true;
+  assert.match((await teachingError(tx, session, context, "site"))!, /cancelled/);
 });

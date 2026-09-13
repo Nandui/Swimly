@@ -33,8 +33,9 @@ import {
   ROLE_HOMES,
   expandPermissions,
   isRoleHome,
+  hasAdministratorAccess,
 } from "@/lib/staff/permissions";
-import { cleanScreens, screenMeta } from "@/lib/staff/screens";
+import { visibleScreens, screenMeta } from "@/lib/staff/screens";
 
 export const metadata: Metadata = { title: "Roles" };
 
@@ -85,7 +86,8 @@ function RoleRowItem({ role }: { role: RoleRow }) {
   const reach = roleReach(role.permissions);
   const held = expandPermissions(role.permissions);
   const granted = PERMISSIONS.filter((permission) => held.has(permission.key));
-  const screens = cleanScreens(role.screens);
+  const screens = [...visibleScreens(role.screens, held)];
+  const administrator = hasAdministratorAccess(role.permissions);
 
   return (
     <Item
@@ -120,7 +122,7 @@ function RoleRowItem({ role }: { role: RoleRow }) {
                 </span>
               ) : null}
               <span className="text-sm text-ui-muted-foreground">
-                {permissionCountLabel(role.permissions.length)} ·{" "}
+                {administrator ? "Administrator access" : permissionCountLabel(held.size)} ·{" "}
                 <span className="text-sm text-ui-muted-foreground tabular-nums">
                   {role._count.users}
                 </span>{" "}
@@ -128,15 +130,14 @@ function RoleRowItem({ role }: { role: RoleRow }) {
                 {
                   (isRoleHome(role.home)
                     ? ROLE_HOMES[role.home]
-                    : ROLE_HOMES.overview
+                    : ROLE_HOMES.calendar
                   ).label
                 }
               </span>
               <span className="text-sm text-ui-muted-foreground">
-                Sees{" "}
-                {screens.length === 0
+                {administrator ? "All screens and permissions, including future additions." : screens.length === 0
                   ? "no screens"
-                  : screens.map((key) => screenMeta(key).label).join(", ")}
+                  : `Sees ${screens.map((key) => screenMeta(key).label).join(", ")}`}
               </span>
               {granted.length === 0 ? (
                 <span className="text-sm text-ui-muted-foreground">

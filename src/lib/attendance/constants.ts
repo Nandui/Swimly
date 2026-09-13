@@ -23,6 +23,3 @@ export const ATTENDANCE_STATUS_META: Record<
 /** The order they appear on the register: the common answer first, then the
  *  exceptions in ascending seriousness. */
 export const ATTENDANCE_ORDER = ["PRESENT", "LATE", "ABSENT"] as const;
-
-/** How many consecutive absences before somebody should ring home. */
-export const DROP_OFF_STREAK = 3;

@@ -11,6 +11,7 @@ function fixture() {
     failAudit = false,
     archived = false,
     locked = false;
+  let cancelled = false;
   let stored: {
     coverById: string | null;
     coverByName: string;
@@ -19,6 +20,7 @@ function fixture() {
   const audits: { action: string; summary: string }[] = [];
   let queue = Promise.resolve();
   const tx = {
+    classCancellation: { findUnique: async () => { assert.ok(locked); return cancelled ? { id: "cancellation" } : null; } },
     course: {
       findUnique: async () => {
         assert.ok(locked);
@@ -99,6 +101,7 @@ function fixture() {
   );
   return {
     actions,
+    cancel: () => { cancelled = true; },
     audits,
     claim: () => stored,
     actor: (id: string) => {
@@ -126,6 +129,16 @@ function fixture() {
   };
 }
 const input = { courseId: "class", date: "2026-09-11" };
+
+test("a cancellation blocks new starts and already-claimed instructor retries", async () => {
+  const f = fixture();
+  f.cancel();
+  assert.equal((await f.actions.startClass(input)).ok, false);
+  f.seed("scheduled");
+  assert.equal((await f.actions.startClass(input)).ok, false);
+  assert.equal((await f.actions.takeOverClass(input)).ok, false);
+  assert.equal(f.audits.length, 0);
+});
 
 test("a scheduled instructor confirms a class once and a retry adds no audit", async () => {
   const f = fixture();

@@ -2,6 +2,7 @@ import type { Prisma } from "@/generated/prisma/client";
 import type { Session } from "next-auth";
 import { can, canSee } from "@/lib/authz";
 import { parseDateOnly, weekdayOf, today } from "@/lib/format";
+import { cancellationError } from "@/lib/cancellations/guard";
 
 export type TeachingContext = { courseId: string; date: string };
 
@@ -22,6 +23,8 @@ export async function teachingError(
     select: { archivedAt: true, dayOfWeek: true, levelId: true },
   });
   if (!course || course.archivedAt) return "This class is no longer active.";
+  const cancelled = await cancellationError(tx, context.courseId, date);
+  if (cancelled) return cancelled;
   if (context.date > today() || weekdayOf(date) !== course.dayOfWeek)
     return "This class does not run on that date.";
   const claim = await tx.classCover.findUnique({

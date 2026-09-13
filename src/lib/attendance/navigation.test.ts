@@ -4,7 +4,8 @@ import { classReturnDestination, instructorClassHref, instructorHomeHref, legacy
 
 test("attendance and competencies remain in their workspace even with every screen granted", () => {
   const access = { calendar: true, instructor: true, courses: true };
-  assert.deepEqual(classReturnDestination(access, "today", "demo"), { href: "/today", label: "Today", source: "today" });
+  assert.deepEqual(classReturnDestination(access, "today", "demo"), { href: "/schedule", label: "Schedule", source: "schedule" });
+  assert.deepEqual(classReturnDestination(access, "schedule", "demo", "desk", { date: "2026-09-14" }), { href: "/schedule?date=2026-09-14", label: "Schedule", source: "schedule" });
   assert.deepEqual(classReturnDestination(access, "today", "demo", "instructor"), { href: "/instructor", label: "Instructor", source: "instructor" });
   assert.equal(classReturnDestination(access, "instructor", "demo")?.href, "/courses/demo");
   assert.equal(classReturnDestination(access, undefined, "demo")?.href, "/courses/demo");
@@ -12,8 +13,8 @@ test("attendance and competencies remain in their workspace even with every scre
 
 test("return destinations cannot escape screen permissions or redirect to arbitrary URLs", () => {
   const calendar = { calendar: true, instructor: false, courses: false };
-  assert.equal(classReturnDestination(calendar, "instructor", "demo")?.href, "/today");
-  assert.equal(classReturnDestination(calendar, "https://example.test", "demo")?.href, "/today");
+  assert.equal(classReturnDestination(calendar, "instructor", "demo")?.href, "/schedule");
+  assert.equal(classReturnDestination(calendar, "https://example.test", "demo", "desk", { date: "https://example.test" })?.href, "/schedule");
   assert.equal(classReturnDestination({ calendar: false, instructor: false, courses: true }, "today", "demo")?.href, "/courses/demo");
   assert.equal(classReturnDestination({ calendar: false, instructor: false, courses: false }, "today", "demo"), null);
   assert.equal(classReturnDestination(calendar, undefined, "demo", "instructor"), null);

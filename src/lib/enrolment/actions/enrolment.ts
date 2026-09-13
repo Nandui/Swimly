@@ -71,7 +71,7 @@ function revalidate() {
   revalidatePath("/courses");
   revalidatePath("/courses/[id]", "page");
   revalidatePath("/students/[id]", "page");
-  revalidatePath("/today");
+  revalidatePath("/schedule");
   revalidatePath("/instructor");
 }
 

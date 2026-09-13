@@ -3,6 +3,7 @@ import { requireSession } from "@/lib/authz";
 import { currentClubId } from "@/lib/clubs/current";
 import { getSharedCurriculum, sharedCourse, sharedPlacement, liveSharedLevel } from "@/lib/curriculum/data/shared";
 import { prisma } from "@/lib/prisma";
+import { ADMINISTRATOR_PERMISSIONS } from "@/lib/staff/permissions";
 
 /** Enrolments that occupy a place. Waitlisted, withdrawn, transferred and
  *  completed rows do not. One constant so no read invents its own answer. */
@@ -117,18 +118,6 @@ export async function getRoster(courseId: string) {
 
 export type RosterEntry = Awaited<ReturnType<typeof getRoster>>[number];
 
-export async function getCourseCounts() {
-  await requireSession();
-  const clubId = await currentClubId();
-
-  const [courses, places] = await Promise.all([
-    prisma.course.count({ where: { clubId, archivedAt: null } }),
-    prisma.enrolment.count({ where: { ...TAKES_A_PLACE, course: { clubId, archivedAt: null } } }),
-  ]);
-
-  return { courses, places };
-}
-
 /** Who a class can be assigned to: anyone whose role lets them take a
  *  register. Asked by permission rather than by role name, because roles are
  *  the club's to invent — and an account that cannot take a register has no
@@ -139,7 +128,10 @@ export async function getInstructorOptions() {
   return prisma.user.findMany({
     where: {
       isActive: true,
-      staffRole: { permissions: { hasSome: ["attendance.mark", "attendance.markAny"] } },
+      staffRole: { OR: [
+        { permissions: { hasSome: ["attendance.mark", "attendance.markAny"] } },
+        { permissions: { hasEvery: [...ADMINISTRATOR_PERMISSIONS] } },
+      ] },
     },
     orderBy: { name: "asc" },
     select: { id: true, name: true },

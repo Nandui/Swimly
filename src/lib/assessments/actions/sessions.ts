@@ -94,7 +94,7 @@ export async function createSession(input: SessionInput): Promise<ActionResult> 
   });
 
   revalidatePath("/assessments");
-  revalidatePath("/today");
+  revalidatePath("/schedule");
   return ok();
 }
 
@@ -189,7 +189,7 @@ export async function updateSession(id: string, input: SessionInput): Promise<Ac
   if (!result.ok) return result;
 
   revalidatePath("/assessments");
-  revalidatePath("/today");
+  revalidatePath("/schedule");
   revalidatePath("/assessments/[id]", "page");
   return ok();
 }
@@ -239,7 +239,7 @@ export async function cancelSession(id: string): Promise<ActionResult> {
   if (!result.ok) return result;
 
   revalidatePath("/assessments");
-  revalidatePath("/today");
+  revalidatePath("/schedule");
   revalidatePath("/assessments/[id]", "page");
   return ok();
 }

@@ -270,6 +270,7 @@ export function ConfirmLevel({
   total,
   eligible,
   admin,
+  classContext,
 }: {
   studentId: string;
   levelId: string;
@@ -279,6 +280,7 @@ export function ConfirmLevel({
   total: number;
   eligible: boolean;
   admin: boolean;
+  classContext?: { courseId: string; date: string };
 }) {
   const blocked = !eligible && !admin;
 
@@ -309,6 +311,7 @@ export function ConfirmLevel({
       successMessage="Level completed"
       submit={(formData) =>
         confirmLevelCompletion({
+          classContext,
           studentId,
           levelId,
           note: String(formData.get("note") ?? ""),

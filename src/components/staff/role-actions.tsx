@@ -20,6 +20,8 @@ import {
   ROLE_HOMES,
   ROLE_HOME_ORDER,
   normaliseRoleHome,
+  ADMINISTRATOR_PERMISSIONS,
+  hasAdministratorAccess,
 } from "@/lib/staff/permissions";
 import { SCREENS, cleanScreens } from "@/lib/staff/screens";
 
@@ -41,7 +43,7 @@ function readRole(formData: FormData) {
     // inputs, one per tick, so `getAll` reads the set like a native form.
     permissions: formData.getAll("permissions").map(String),
     screens: formData.getAll("screens").map(String),
-    home: String(formData.get("home") ?? "overview"),
+    home: String(formData.get("home") ?? "calendar"),
   };
 }
 
@@ -58,7 +60,7 @@ function Ticked({ name, values }: { name: string; values: string[] }) {
 
 /** Which screens the role offers at all. An instructor role ticks Instructor and
  *  nothing else, and the deck becomes their whole app. */
-function ScreenPicker({ role }: { role?: Role }) {
+function ScreenPicker({ role, administrator }: { role?: Role; administrator: boolean }) {
   const id = React.useId();
   const [screens, setScreens] = React.useState<string[]>(() =>
     cleanScreens(role?.screens ?? []),
@@ -69,8 +71,9 @@ function ScreenPicker({ role }: { role?: Role }) {
         Which screens this role can open
       </legend>
       <p className="text-sm text-ui-muted-foreground">
-        Everything else is a page that does not exist for them. Account is
-        always there.
+        {administrator
+          ? "Administrators can open every screen, including new screens added later."
+          : "Only the selected screens are available. Account is always there."}
       </p>
       <Ticked name="screens" values={screens} />
       <div className="divide-y divide-ui-border">
@@ -78,7 +81,8 @@ function ScreenPicker({ role }: { role?: Role }) {
           <div key={screen.key} className="flex items-start gap-3 py-2">
             <Checkbox
               id={`${id}-${screen.key}`}
-              checked={screens.includes(screen.key)}
+              checked={administrator || screens.includes(screen.key)}
+              disabled={administrator}
               onCheckedChange={(checked) =>
                 setScreens((previous) =>
                   checked === true
@@ -145,11 +149,18 @@ function HomePicker({ role }: { role?: Role }) {
  *  says what it actually lets someone do. The descriptions are the point — a
  *  bare list of keys is a list nobody can grant safely. One set of ticks
  *  across the groups. */
-function PermissionPicker({ role }: { role?: Role }) {
+function PermissionPicker({ held, setHeld, administrator }: {
+  held: string[];
+  setHeld: React.Dispatch<React.SetStateAction<string[]>>;
+  administrator: boolean;
+}) {
   const id = React.useId();
-  const [held, setHeld] = React.useState<string[]>(role?.permissions ?? []);
   return (
     <div className="min-w-0 space-y-4">
+      <p className="text-sm text-ui-muted-foreground">
+        Manage staff accounts and Manage roles together grant administrator access
+        to every current and future screen and permission.
+      </p>
       <Ticked name="permissions" values={held} />
       {PERMISSION_GROUP_ORDER.map((group, index) => (
         <fieldset key={group} className="min-w-0 space-y-2">
@@ -165,7 +176,8 @@ function PermissionPicker({ role }: { role?: Role }) {
                 >
                   <Checkbox
                     id={`${id}-${permission.key}`}
-                    checked={held.includes(permission.key)}
+                    checked={administrator || held.includes(permission.key)}
+                    disabled={administrator && !ADMINISTRATOR_PERMISSIONS.includes(permission.key)}
                     onCheckedChange={(checked) =>
                       setHeld((previous) =>
                         checked === true
@@ -195,6 +207,8 @@ function PermissionPicker({ role }: { role?: Role }) {
 }
 
 function RoleFields({ role }: { role?: Role }) {
+  const [held, setHeld] = React.useState<string[]>(role?.permissions ?? []);
+  const administrator = hasAdministratorAccess(held);
   return (
     <>
       <Field label="Name" htmlFor="name">
@@ -219,8 +233,13 @@ function RoleFields({ role }: { role?: Role }) {
           defaultValue={role?.description ?? ""}
         />
       </Field>
-      <ScreenPicker role={role} />
-      <PermissionPicker role={role} />
+      <p role="status" className="text-sm font-medium">
+        {administrator
+          ? "Administrator access · All screens and permissions, now and in future."
+          : "Custom access · Choose the screens and permissions for this role."}
+      </p>
+      <ScreenPicker role={role} administrator={administrator} />
+      <PermissionPicker held={held} setHeld={setHeld} administrator={administrator} />
       <HomePicker role={role} />
     </>
   );

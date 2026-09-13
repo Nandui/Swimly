@@ -37,7 +37,7 @@ server action results before making changes. No new animation library is needed.
 - Sidebar navigation uses a dedicated Neutral hover surface, because muted and
   the inset canvas share the same light colour. Keyboard focus receives the
   same highlight and 2px icon response. The current page keeps its distinct
-  card surface and inset border. Search, site, account, Setup and collapse
+  soft blue surface and inset border. Search, site, account, Setup and collapse
   controls receive the same highlight, including in the mobile drawer.
 - Checkbox and radio indicators stay mounted and fade/settle into selection.
   Instructor attendance/competency checks use the same treatment without

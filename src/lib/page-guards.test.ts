@@ -22,7 +22,7 @@ test("instructors can open their teaching pages but not desk screens or desk cla
     const access = guards(screens, ["attendance.mark", "attendance.cover", "progression.assess"]);
     await access.classPage("instructor");
     await assert.rejects(access.classPage("desk"), /404/);
-    for (const screen of ["calendar", "students", "courses", "staff", "overview"] as const) await assert.rejects(access.screenPage(screen), /404/);
+    for (const screen of ["calendar", "students", "courses", "staff", "duty", "cancellations"] as const) await assert.rejects(access.screenPage(screen), /404/);
   }
 });
 

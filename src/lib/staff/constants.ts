@@ -1,5 +1,5 @@
 import type { TagColor } from "@/components/ui-kit/tag";
-import { expandPermissions } from "@/lib/staff/permissions";
+import { expandPermissions, hasAdministratorAccess } from "@/lib/staff/permissions";
 import type { StatusMeta } from "@/lib/status";
 
 export const STAFF_STATUS_META = {
@@ -13,16 +13,17 @@ export const STAFF_STATUS_META = {
  *  worth colouring — and it still comes from one place rather than a colour
  *  chosen at a call site.
  *
- *  Three bands, matching the tiers the app used to have. A club can now make
- *  ten roles, and ten tints would be ten things to learn; three says at a
- *  glance whether a role holds the keys, does the work, or only looks. */
-const REACH_META: Record<"keys" | "work" | "read", { label: string; color: TagColor }> = {
+ *  Full administrator access is distinguished from a role holding only one
+ *  management key, so a restricted manager is never labelled an admin. */
+const REACH_META: Record<"administrator" | "keys" | "work" | "read", { label: string; color: TagColor }> = {
+  administrator: { label: "Administrator", color: "purple" },
   keys: { label: "Holds the keys", color: "purple" },
   work: { label: "Changes things", color: "blue" },
   read: { label: "Read only", color: "gray" },
 };
 
 export function roleReach(permissions: readonly string[]) {
+  if (hasAdministratorAccess(permissions)) return REACH_META.administrator;
   const held = expandPermissions(permissions);
   if (held.has("staff.manage") || held.has("roles.manage")) return REACH_META.keys;
   // The audit log is a read permission; by itself it cannot change records.

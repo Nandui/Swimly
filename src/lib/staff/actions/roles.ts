@@ -17,6 +17,7 @@ import {
   ROLE_HOMES,
   normaliseRoleHome,
   legacyRoleFor,
+  hasAdministratorAccess,
   type PermissionKey,
 } from "@/lib/staff/permissions";
 import { cleanScreens, screenMeta } from "@/lib/staff/screens";
@@ -30,8 +31,8 @@ import { cleanScreens, screenMeta } from "@/lib/staff/screens";
  *  Lose either across every active account and the only way in is a database
  *  console — the seed declines once an admin exists. `guardKeyholders` refuses
  *  any edit that would do it, by working out what the world would look like
- *  afterwards rather than by counting admins, because with arbitrary roles
- *  there is no such thing as "an admin" any more. */
+ *  afterwards, including inherited administrator access and restricted roles
+ *  that hold only one management permission. */
 
 const roleSchema = z.object({
   name: z
@@ -41,7 +42,7 @@ const roleSchema = z.object({
     .max(60, "Keep the name under 60 characters."),
   description: z.string().trim().max(300, "Keep the description under 300 characters."),
   permissions: z.array(z.string()).max(100),
-  /** A `ROLE_HOMES` key. Anything else lands on the overview. */
+  /** A `ROLE_HOMES` key. Retired or unknown homes default to Today. */
   home: z.string().transform(normaliseRoleHome),
   /** `SCREENS` keys. Filtered against the catalogue like the permissions. */
   screens: z.array(z.string()).max(50),
@@ -65,7 +66,7 @@ export async function createRole(input: RoleInput): Promise<ActionResult> {
   const { name, description, home } = parsed.data;
   const permissions = cleanPermissions(parsed.data.permissions);
   const screens = cleanScreens(parsed.data.screens);
-  if (screens.length === 0) {
+  if (screens.length === 0 && !hasAdministratorAccess(permissions)) {
     return fail("Tick at least one screen, or nobody on this role has anywhere to go.");
   }
 
@@ -93,7 +94,7 @@ export async function createRole(input: RoleInput): Promise<ActionResult> {
         action: "create",
         entity: "StaffRole",
         entityId: created.id,
-        summary: `Created role ${created.name} with ${permissions.length} ${permissions.length === 1 ? "permission" : "permissions"}${permissions.length ? ` (${permissions.join(", ")})` : ""}`,
+        summary: `Created role ${created.name} with ${hasAdministratorAccess(permissions) ? "administrator access (all current and future screens and permissions); " : ""}${permissions.length} explicit ${permissions.length === 1 ? "permission" : "permissions"}${permissions.length ? ` (${permissions.join(", ")})` : ""}`,
       }, tx);
       return created;
     }),
@@ -114,7 +115,7 @@ export async function updateRole(id: string, input: RoleInput): Promise<ActionRe
   const { name, description, home } = parsed.data;
   const permissions = cleanPermissions(parsed.data.permissions);
   const screens = cleanScreens(parsed.data.screens);
-  if (screens.length === 0) {
+  if (screens.length === 0 && !hasAdministratorAccess(permissions)) {
     return fail("Tick at least one screen, or nobody on this role has anywhere to go.");
   }
 
@@ -133,6 +134,11 @@ export async function updateRole(id: string, input: RoleInput): Promise<ActionRe
     if (!existing) return fail("That role no longer exists.");
 
     const changes: string[] = [];
+    if (hasAdministratorAccess(existing.permissions) !== hasAdministratorAccess(permissions)) {
+      changes.push(hasAdministratorAccess(permissions)
+        ? "administrator access granted (all current and future screens and permissions)"
+        : "administrator access removed");
+    }
     if (existing.name !== name) changes.push(`name ${existing.name} → ${name}`);
     if ((existing.description ?? "") !== description) changes.push("description");
     if (existing.home !== home) changes.push(`starts on ${ROLE_HOMES[home].label}`);
@@ -143,8 +149,8 @@ export async function updateRole(id: string, input: RoleInput): Promise<ActionRe
     const hidden = cleanScreens(existing.screens)
       .filter((key) => !screensAfter.has(key))
       .map((k) => screenMeta(k).label);
-    if (shown.length) changes.push(`now sees ${shown.join(", ")}`);
-    if (hidden.length) changes.push(`no longer sees ${hidden.join(", ")}`);
+    if (shown.length) changes.push(`screen grants added: ${shown.join(", ")}`);
+    if (hidden.length) changes.push(`screen grants removed: ${hidden.join(", ")}`);
 
     const before = new Set(existing.permissions);
     const after = new Set<string>(permissions);

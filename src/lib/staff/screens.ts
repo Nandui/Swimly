@@ -1,5 +1,5 @@
 import type { PermissionKey } from "@/lib/staff/permissions";
-import { ROLE_HOMES, expandPermissions } from "@/lib/staff/permissions";
+import { ROLE_HOMES, expandPermissions, hasAdministratorAccess } from "@/lib/staff/permissions";
 
 /** Every screen the app has, and nothing else.
  *
@@ -20,17 +20,29 @@ import { ROLE_HOMES, expandPermissions } from "@/lib/staff/permissions";
 
 export const SCREENS = [
   {
-    key: "overview",
-    label: "Overview",
-    path: "/",
-    description: "The numbers, today's classes and recent activity.",
+    key: "analytics",
+    label: "Analytics",
+    path: "/analytics",
+    description: "Enrolled swimmers by level, recent enrolment activity and monthly class cancellations for the selected site.",
+  },
+  {
+    key: "duty",
+    label: "Duty manager",
+    path: "/duty",
+    description: "Today’s classes and quick details. Cancelling a session requires its separate permission.",
+  },
+  {
+    key: "cancellations",
+    label: "Cancelled classes",
+    path: "/cancellations",
+    description: "Cancelled sessions and affected swimmers awaiting billing follow-up, with notification history.",
   },
   {
     key: "calendar",
-    label: "Today",
-    path: "/today",
+    label: "Schedule",
+    path: "/schedule",
     description:
-      "All of today’s classes in a booking sheet, with instructors and available places.",
+      "Classes and assessments one day at a time, with a seven-day week navigator, instructors and available places.",
   },
   {
     key: "instructor",
@@ -126,19 +138,22 @@ export function cleanScreens(input: readonly string[]): ScreenKey[] {
   // without giving deck-only roles the desk calendar. Legacy roles that
   // already offered desk screens retain their existing Today calendar.
   // New roles use the two independent explicit keys.
-  const hadDeskScreens = input.some(key => isScreenKey(key) && key !== "instructor");
+  // The retired Overview key still identifies a legacy desk role when
+  // resolving its old Today grant; it never becomes a screen itself.
+  const hadDeskScreens = input.some(key => key === "overview" || (isScreenKey(key) && key !== "instructor"));
   const held = new Set(input.flatMap(key => key === "today"
     ? hadDeskScreens ? ["calendar", "instructor"] : ["instructor"]
     : [key]).filter(isScreenKey));
   return ALL_SCREENS.filter((key) => held.has(key));
 }
 
-/** The screens a person can actually open: the ones their role names, minus
- *  any whose required permission they do not hold. */
+/** Administrators receive the whole catalogue, including future screens.
+ *  Other roles need an explicit screen grant and its required permission. */
 export function visibleScreens(
   screens: readonly string[],
   permissions: Set<PermissionKey>
 ): Set<ScreenKey> {
+  if (hasAdministratorAccess(permissions)) return new Set(ALL_SCREENS);
   const out = new Set<ScreenKey>();
   const held = new Set(cleanScreens(screens));
   for (const screen of SCREENS) {
@@ -149,18 +164,23 @@ export function visibleScreens(
   return out;
 }
 
-/** The selected landing page when accessible, otherwise the overview,
+/** The selected landing page when accessible, otherwise Today,
  *  otherwise the first screen they can open, so
  *  nobody signs in to a 404. Account is the floor — everyone has that. */
 export function homePathFor(
   home: string,
   permissions: readonly string[],
-  screens: readonly string[]
+  screens: readonly string[],
+  workspace: "all" | "desk" = "all"
 ): string {
   const visible = visibleScreens(screens, expandPermissions(permissions));
+  // Apply the workspace boundary after resolving inherited administrator
+  // access, so the desk wordmark never leads into the pool-deck workspace.
+  if (workspace === "desk") visible.delete("instructor");
   if ((home === "today" || home === "instructor") && visible.has("instructor")) return ROLE_HOMES.instructor.path;
   if (home === "calendar" && visible.has("calendar")) return ROLE_HOMES.calendar.path;
-  if (visible.has("overview")) return ROLE_HOMES.overview.path;
+  if (home === "duty" && visible.has("duty")) return ROLE_HOMES.duty.path;
+  if (visible.has("calendar")) return ROLE_HOMES.calendar.path;
   const first = SCREENS.find((screen) => visible.has(screen.key));
   return first ? first.path : "/account";
 }

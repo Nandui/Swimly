@@ -73,7 +73,7 @@ export async function InstructorClassSession({
     return (
       <div className="flex flex-col gap-6">
         {header}
-        {view.state === "locked" ? (
+        {view.state === "cancelled" ? <TeachingNotice title="This session is cancelled"><p>{view.cancellation.reason}</p><p>Attendance and competencies cannot be saved for this session.</p></TeachingNotice> : view.state === "locked" ? (
           <TeachingNotice title="This class is in progress">
             <p>
               {view.claim?.coverByName} has started this class. Only that

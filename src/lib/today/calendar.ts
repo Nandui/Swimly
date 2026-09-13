@@ -1,11 +1,13 @@
 import type { CourseRow } from "@/lib/courses/data/courses";
 import type { StatusMeta } from "@/lib/status";
+import { today } from "@/lib/format";
 
 export type CalendarClass = Pick<CourseRow,
   "id" | "name" | "startMinutes" | "durationMinutes" | "capacity" | "location" | "level" | "instructor" | "instructorId"
 > & {
   enrolled: number;
   attendanceTaken: boolean;
+  cancellation?: { reason: string } | null;
   cover: { coverById: string | null; coverByName: string; instructorId?: string | null; instructorName: string | null } | null;
 };
 
@@ -23,7 +25,7 @@ export function filterCalendarAssessments(sessions: CalendarAssessment[], locati
 }
 
 /** A mixed agenda retains parallel classes and assessments, even with matching IDs. */
-export function calendarAgendaSlots(courses: CalendarClass[], assessments: CalendarAssessment[], now: number) {
+export function calendarAgendaSlots(courses: CalendarClass[], assessments: CalendarAssessment[], now: number | null) {
   const entries: AgendaEntry[] = [
     ...calendarSlots(courses, now).flatMap(slot => slot.classes.map(value => ({ kind: "class" as const, value }))),
     ...assessments.map(value => ({ kind: "assessment" as const, value })),
@@ -35,11 +37,11 @@ export function calendarAgendaSlots(courses: CalendarClass[], assessments: Calen
     const group = groups.get(start) ?? [];
     group.push(entry); groups.set(start, group);
   }
-  const next = entries.find(entry => entry.value.startMinutes > now)?.value.startMinutes;
+  const next = now === null ? undefined : entries.find(entry => !("cancellation" in entry.value && entry.value.cancellation) && entry.value.startMinutes > now)?.value.startMinutes;
   return [...groups].map(([start, entries]) => ({ start, entries,
     phase: entries.some(entry => classPhase(entry.value, now) === "running") ? "running" as const
       : start === next ? "next" as const
-        : entries.every(entry => classPhase(entry.value, now) === "finished") ? "finished" as const : "later" as const,
+        : entries.every(entry => ["finished", "cancelled"].includes(classPhase(entry.value, now))) ? "finished" as const : "later" as const,
   }));
 }
 
@@ -48,13 +50,16 @@ export function calendarAssessmentHref(id: string, allowed: boolean) {
 }
 
 export const CALENDAR_PHASE_META = {
+  cancelled: { label: "Cancelled", color: "red" },
   running: { label: "Running now", color: "green" },
   next: { label: "Next start", color: "blue" },
   finished: { label: "Finished", color: "gray" },
   later: { label: "Later", color: "gray" },
 } as const satisfies Record<string, StatusMeta>;
 
-export function classPhase(course: Pick<CalendarClass, "startMinutes" | "durationMinutes">, now: number) {
+export function classPhase(course: Pick<CalendarClass, "startMinutes" | "durationMinutes" | "cancellation">, now: number | null) {
+  if (course.cancellation) return "cancelled";
+  if (now === null) return "later";
   if (now >= course.startMinutes + course.durationMinutes) return "finished";
   return now >= course.startMinutes ? "running" : "later";
 }
@@ -70,7 +75,7 @@ export function filterCalendarClasses(courses: CalendarClass[], location: string
 
 /** A column is an exact start time, never a rounded bucket. Every class appears
  * once; explicit end times keep longer and overlapping classes unambiguous. */
-export function calendarSlots(courses: CalendarClass[], now: number) {
+export function calendarSlots(courses: CalendarClass[], now: number | null) {
   const sorted = [...courses].sort((a, b) =>
     a.startMinutes - b.startMinutes ||
     a.level.programme.sortOrder - b.level.programme.sortOrder ||
@@ -84,12 +89,12 @@ export function calendarSlots(courses: CalendarClass[], now: number) {
     group.push(course);
     groups.set(course.startMinutes, group);
   }
-  const nextStart = sorted.find(course => course.startMinutes > now)?.startMinutes;
+  const nextStart = now === null ? undefined : sorted.find(course => !course.cancellation && course.startMinutes > now)?.startMinutes;
   return [...groups].map(([start, classes]) => ({
     start, classes,
     phase: classes.some(course => classPhase(course, now) === "running") ? "running" as const
       : start === nextStart ? "next" as const
-        : classes.every(course => classPhase(course, now) === "finished") ? "finished" as const : "later" as const,
+        : classes.every(course => ["finished", "cancelled"].includes(classPhase(course, now))) ? "finished" as const : "later" as const,
   }));
 }
 
@@ -131,7 +136,7 @@ export function calendarProgrammes(courses: CalendarClass[]) {
     }));
 }
 
-export function calendarClassHref(id: string, iso: string, access: { attendance: boolean; courses: boolean }) {
-  if (access.attendance) return `/courses/${id}/class?date=${iso}&from=today`;
-  return access.courses ? `/courses/${id}` : undefined;
+export function calendarClassHref(id: string, iso: string, access: { attendance: boolean; courses: boolean }, currentDate = today()) {
+  if (access.attendance && iso <= currentDate) return `/courses/${id}/class?date=${iso}&from=schedule`;
+  return access.courses ? `/courses/${id}?from=schedule&date=${iso}` : undefined;
 }

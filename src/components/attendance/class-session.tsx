@@ -35,6 +35,7 @@ import {
 } from "@/lib/attendance/dates";
 import { coverLabel, getClassCover } from "@/lib/attendance/data/cover";
 import { getRegister } from "@/lib/attendance/data/register";
+import { getCancellation } from "@/lib/cancellations/data";
 import { can, canSee } from "@/lib/authz";
 import { getCurrentClub } from "@/lib/clubs/current";
 import { DAY_META, courseName, formatSlot } from "@/lib/courses/constants";
@@ -111,6 +112,9 @@ export async function ClassSession({
     requested <= today()
       ? requested
       : mostRecentOccurrence(course.dayOfWeek);
+
+  const cancellation = await getCancellation(id, iso);
+  if (cancellation) return <div className="space-y-4"><BackLink href={returnTo.href} current={courseName(course)}>{returnTo.label}</BackLink><h1 className="text-2xl font-semibold">{courseName(course)}</h1><Notice title="This session is cancelled"><p>{formatDate(parseDateOnly(iso))} · {cancellation.reason}</p><p>Existing teaching records are kept. Further marks cannot be saved for this session.</p></Notice></div>;
 
   const [{ lines, taken, note, revision }, cover, progress] = await Promise.all(
     [getRegister(id, iso), getClassCover(id, iso), getClassProgress(id)],
@@ -368,6 +372,7 @@ export async function ClassSession({
                     <ItemActions className="flex-wrap">
                       {mayComplete ? (
                         <ConfirmLevel
+                          classContext={{ courseId: course.id, date: iso }}
                           studentId={swimmer.student.id}
                           levelId={progress.course.levelId}
                           studentName={fullName(swimmer.student)}

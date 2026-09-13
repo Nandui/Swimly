@@ -75,8 +75,9 @@ each level; two sites in one app with shared staff.
   chosen per device and shown on every screen.
 - **Weekly classes** of 30 minutes, Monday to Saturday, in the Learner Pool
   and numbered lanes of the main pool. Bishopstown runs afternoons; Churchfield
-  runs afternoons Monday to Friday and Saturday mornings. There are no term or
-  session rows; the register is keyed on class, date and child.
+  runs afternoons Monday to Friday and Saturday mornings. There are no term
+  rows; attendance is keyed on class, date and child. Dated cancellation records
+  preserve the affected session and roster without changing the weekly class.
 - **Assessment sessions** are dated one-offs (the club calls them "Swim School
   Assessments", level "Pre-Assessments"), free, with a fixed number of places.
   A child booked on one is placed at a level afterwards, which earns that level
@@ -99,8 +100,8 @@ each level; two sites in one app with shared staff.
 ## Capabilities and Constraints
 
 **Built and in use:** Instructor deck screen (own/all classes, time or level
-grouping, attendance and declared cover); Today calendar (a booking sheet with level rows and start-time columns, with
-pool and instructor filters, including own classes and declared cover); registers that start
+grouping, attendance and declared cover); Schedule (a booking sheet with level rows and start-time columns,
+showing every pool area and instructor at the selected site, including declared cover); registers that start
 everyone absent; per-class competency checklist; eligibility, confirmed level
 completion and move-up; enrolment with a capacity lock and a reason for
 out-of-sequence placement; waitlist and transfers; Together (a time that suits
@@ -112,26 +113,54 @@ clubs and the switcher; the audit log; account settings with light and dark
 mode.
 
 The desk uses Swimmers for customer details, progress and enrolment, Classes
-for the weekly timetable and class inspection, and Today for the day's classes and assessments.
+for the weekly timetable and class inspection, and Schedule for a selected day's classes and assessments.
+Duty manager adds a compact daily class list with quick details and dated
+cancellation. Cancelled classes is the billing follow-up queue across dates at
+the selected site. Each cancellation keeps the reason, actor, schedule and
+affected swimmers; an explicit handoff note moves it into notification history.
+Administrators receive both screens and actions automatically; other roles
+receive separate grants. These actions do not send messages,
+calculate credits or change bills. See [the flow and access setup](docs/duty-manager.md).
 The dedicated Reception view is retired. Old links open the selected swimmer
 when the role offers Swimmers, otherwise an accessible landing page. Reception
 is no longer offered as a screen or landing-page choice.
 
-Today has one purpose: check the current club’s full day of classes and assessments. The owner
+Overview is also retired. The root address redirects to the role's accessible
+home. Schedule is the default for desk roles with calendar access; Duty manager
+and Instructor retain their chosen landing pages. Overview is absent from
+navigation and role choices. Older stored homes and screen grants need no
+database rewrite and never grant access to another screen by themselves.
+
+Analytics is a separate Monitoring dashboard with a bento layout: distinct
+enrolled swimmers, enrolled places versus total capacity per level, enrolment and unenrolment actions over
+seven days, and this month's cancelled class sessions. It follows the site
+selected in the sidebar. Administrators receive access automatically;
+other roles need the Analytics screen grant. See [metric definitions](docs/analytics.md).
+
+Schedule shows the current club’s classes and assessments one day at a time.
+It opens on today and has a Monday–Sunday strip, previous/next week controls
+that select the destination week's Monday, and a Today shortcut. The URL preserves the selected date. The owner
 selected a booking sheet with levels down the left, grouped by programme, and
 exact start times across the top. Classes show their end time, pool area,
 instructor or cover and places. A circled check means spaces are available;
 a circled X means full. Attendance completion does not drive this signal.
 Multiple classes at the same level and time share a cell. Earlier classes
-remain in one scrollable sheet with sticky time and level headers. Staff can
+remain on the page, with a single workspace vertical scrollbar. The sheet scrolls
+horizontally through time columns with sticky level labels. Staff can
 switch to Agenda; phones use that chronological view automatically.
-The agenda includes non-cancelled assessment sessions dated today, alongside
+The agenda includes non-cancelled assessment sessions on the selected date, alongside
 classes in time order, with pool, instructor and available places. The booking
 sheet points to these assessments in Agenda; assessment-only days open Agenda.
-Both session types share pool and instructor filters. Assessment links require
-the Assessments screen, and Today loads no assessment participant details.
+Both session types follow the sidebar's site selection without pool or instructor filters. Assessment links require
+the Assessments screen, and Schedule loads no assessment participant details.
 Opening attendance remains a separate, permission-gated action. Roles can
 offer the calendar without granting attendance permission.
+Future sessions open class details when permitted, never an older attendance
+register. Running/next indicators only apply to the current day. Availability
+uses enrolments covering the selected date; cancellations and teaching cover
+use that date too. The weekly class configuration is current, not a historical
+snapshot of timetable edits. `/today` bookmarks redirect to `/schedule` and
+preserve a valid date. See [Schedule](docs/schedule.md).
 
 Instructor is a separate pool-deck workspace for instructors using tablets.
 `/instructor` shows today's own classes, current and upcoming classes, and all
@@ -147,12 +176,12 @@ competencies all stay under `/instructor/classes/[id]`. The selected list and
 grouping survive the return trip. Its frame offers classes, site, appearance
 and sign-out, with no desk sidebar, swimmer directory or profile links.
 
-Today remains the desk calendar at `/today`. Instructor is absent from desk
+Schedule is the desk calendar at `/schedule`. Instructor is absent from desk
 navigation; desk attendance returns within the desk workspace. Instructor
 access needs its screen grant and attendance permission, independently of desk
 permissions. Accounts explicitly granted both can open either workspace, but
 neither workspace's normal navigation leads into the other. Legacy deck-only
-roles keep Instructor without gaining Today; existing desk roles keep Today.
+roles keep Instructor without gaining Schedule; existing desk roles keep Schedule.
 
 Classes is the weekly class browser across all live sites: search and combine
 site, programme, level, day, time, instructor, pool area and availability filters.
@@ -172,6 +201,10 @@ management use the existing permissions and confirmation flows.
   audit log.
 - Every mutation writes an audit row, scripts included.
 - Nothing refers to a role by name; the club may rename or delete any role.
+- Administrator access is defined by holding both staff and role management
+  permissions. It always includes every current and future screen and permission.
+  Other roles keep explicit grants. Instructor navigation and confirmed class
+  ownership remain separate rules, including for administrators.
 - Swimmers can enrol, waitlist and move between classes at either site. Their
   identity, contacts and progress stay on one shared record. Site selection
   filters the working timetable; it is not a swimmer ownership boundary.

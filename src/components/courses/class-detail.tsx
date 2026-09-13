@@ -66,6 +66,7 @@ export function ClassDetailView({
   instructors,
   access,
   backHref,
+  backLabel = "Classes",
   levelImage,
   coverName,
 }: {
@@ -76,6 +77,7 @@ export function ClassDetailView({
   instructors: InstructorOption[];
   access: ClassAccess;
   backHref: string;
+  backLabel?: string;
   levelImage?: ReactNode;
   coverName?: string;
 }) {
@@ -87,7 +89,7 @@ export function ClassDetailView({
     <div className="min-w-0 flex flex-col gap-6">
       <div className={cn("min-w-0 flex flex-col gap-3", "[&_a]:min-h-11")}>
         <BackLink href={backHref} current={courseName(course)}>
-          Classes
+          {backLabel}
         </BackLink>
         <PageHeader
           title={

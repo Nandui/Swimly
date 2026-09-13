@@ -1,6 +1,5 @@
 import type { AttendanceStatus, DayOfWeek } from "@/generated/prisma/client";
 import { requireSession } from "@/lib/authz";
-import { DROP_OFF_STREAK } from "@/lib/attendance/constants";
 import { currentClubId } from "@/lib/clubs/current";
 import { parseDateOnly } from "@/lib/format";
 import { prisma } from "@/lib/prisma";
@@ -163,63 +162,3 @@ export async function getRegisterStateForDay(dayOfWeek: DayOfWeek, iso: string) 
 
   return new Map(marked.map((row) => [row.courseId, row._count._all]));
 }
-
-/** The question a swim school actually asks: who has stopped coming?
- *
- *  Three consecutive absences, most recent first. Bounded by reading only the
- *  recent tail of the table rather than all of it. */
-export async function getDropOffs(limit = 8) {
-  await requireSession();
-
-  const recent = await prisma.attendanceRecord.findMany({
-    where: { student: { status: "ACTIVE" }, course: { clubId: await currentClubId() } },
-    orderBy: { date: "desc" },
-    take: 1500,
-    select: {
-      date: true,
-      status: true,
-      studentId: true,
-      student: { select: { id: true, firstName: true, lastName: true } },
-      course: { select: { id: true, name: true, level: { select: { id: true, name: true } } } },
-    },
-  });
-
-  const curriculum = await getSharedCurriculum();
-
-  const byStudent = new Map<string, typeof recent>();
-  for (const row of recent) {
-    const list = byStudent.get(row.studentId) ?? [];
-    list.push(row);
-    byStudent.set(row.studentId, list);
-  }
-
-  const dropped: {
-    studentId: string;
-    name: string;
-    missed: number;
-    lastSeen: Date;
-    courseName: string;
-  }[] = [];
-
-  for (const rows of byStudent.values()) {
-    let streak = 0;
-    for (const row of rows) {
-      if (row.status === "ABSENT") streak += 1;
-      else break;
-    }
-    if (streak < DROP_OFF_STREAK) continue;
-
-    const first = rows[0];
-    dropped.push({
-      studentId: first.studentId,
-      name: `${first.student.firstName} ${first.student.lastName}`,
-      missed: streak,
-      lastSeen: rows[streak - 1].date,
-      courseName: first.course.name ?? curriculum.level(first.course.level.id)?.name ?? first.course.level.name,
-    });
-  }
-
-  return dropped.sort((a, b) => b.missed - a.missed).slice(0, limit);
-}
-
-export type DropOff = Awaited<ReturnType<typeof getDropOffs>>[number];

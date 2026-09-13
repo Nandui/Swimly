@@ -22,7 +22,7 @@ export type AssessmentTypeInput = z.infer<typeof typeSchema>;
 function revalidate() {
   revalidatePath("/programmes/[id]", "page");
   revalidatePath("/assessments");
-  revalidatePath("/today");
+  revalidatePath("/schedule");
   revalidatePath("/assessments/[id]", "page");
 }
 

@@ -13,7 +13,7 @@ import { prisma } from "@/lib/prisma";
 /** Choosing which club to look at. Not audited: it changes what one person
  *  sees on one device, and no data.
  *
- *  By default it lands on the overview, because the page somebody was on
+ *  By default it lands on the role's accessible home, because the page somebody was on
  *  belonged to the other club and would only tell them so. `stay` is for the
  *  page that has already told them and offers the switch as the way through. */
 export async function switchClub(

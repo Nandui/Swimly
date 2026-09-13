@@ -1,4 +1,4 @@
-/* App-wide shadcn Neutral tokens. light-dark() follows the cookie/system mode. */
+/* Neutral surfaces with the logo's blue accent. light-dark() follows the device/theme. */
 @custom-variant dark {
   &:where([data-theme="dark"], [data-theme="dark"] *) {
     @slot;
@@ -16,13 +16,19 @@
   --ui-foreground: light-dark(oklch(0.145 0 0), oklch(0.985 0 0));
   --ui-card: light-dark(oklch(1 0 0), oklch(0.205 0 0));
   --ui-popover: light-dark(oklch(1 0 0), oklch(0.205 0 0));
-  --ui-primary: light-dark(oklch(0.205 0 0), oklch(0.922 0 0));
-  --ui-primary-foreground: light-dark(oklch(0.985 0 0), oklch(0.205 0 0));
+  /* Deeper logo blue for white labels; lighter blue with dark ink at night. */
+  --ui-primary: light-dark(oklch(0.52181 0.21509 260.64375), oklch(0.74923 0.13165 253.85631));
+  --ui-primary-hover: light-dark(oklch(0.49 0.2 260.64375), oklch(0.79 0.11 253.85631));
+  --ui-primary-foreground: light-dark(oklch(1 0 0), oklch(0.2212 0.05334 255.42033));
+  --ui-brand-soft: light-dark(oklch(0.96778 0.01535 257.19609), oklch(0.28924 0.05974 253.64609));
+  --ui-brand-soft-hover: light-dark(oklch(0.94791 0.02515 255.55971), oklch(0.35115 0.07558 253.02485));
+  --ui-brand-ink: light-dark(oklch(0.44542 0.15183 259.50977), oklch(0.84182 0.07957 255.587));
+  --ui-brand-border: light-dark(oklch(0.61512 0.12177 253.91527), oklch(0.67492 0.1137 253.08737));
   --ui-muted: light-dark(oklch(0.97 0 0), oklch(0.269 0 0));
   --ui-muted-foreground: light-dark(oklch(0.45 0 0), oklch(0.75 0 0));
   --ui-border: light-dark(oklch(0.88 0 0), oklch(0.36 0 0));
   --ui-input: light-dark(oklch(0.6 0 0), oklch(0.57 0 0));
-  --ui-ring: var(--ui-foreground);
+  --ui-ring: var(--ui-primary);
   --ui-destructive: light-dark(oklch(0.48 0.18 27), oklch(0.75 0.14 27));
   --ui-sidebar: light-dark(oklch(0.985 0 0), oklch(0.18 0 0));
   --ui-sidebar-hover: light-dark(oklch(0.925 0 0), oklch(0.28 0 0));
@@ -54,7 +60,11 @@
   --color-ui-popover: var(--ui-popover);
   --color-ui-popover-foreground: var(--ui-foreground);
   --color-ui-primary: var(--ui-primary);
+  --color-ui-primary-hover: var(--ui-primary-hover);
   --color-ui-primary-foreground: var(--ui-primary-foreground);
+  --color-ui-brand-soft: var(--ui-brand-soft);
+  --color-ui-brand-ink: var(--ui-brand-ink);
+  --color-ui-brand-border: var(--ui-brand-border);
   --color-ui-secondary: var(--ui-muted);
   --color-ui-secondary-foreground: var(--ui-foreground);
   --color-ui-muted: var(--ui-muted);
@@ -101,8 +111,8 @@
 }
 /* Command searches share one row with an icon, inside a clipped popover/dialog. */
 [data-slot="command-input-wrapper"]:has(> [data-slot="command-input"]:focus-visible) {
-  border-bottom-color: var(--ui-input);
-  box-shadow: inset 0 -1px 0 var(--ui-input);
+  border-bottom-color: var(--ui-ring);
+  box-shadow: inset 0 -1px 0 var(--ui-ring);
 }
 @media (forced-colors: active) {
   [data-slot="command-input-wrapper"]:has(> [data-slot="command-input"]:focus-visible),
@@ -151,7 +161,7 @@
   --ui-sidebar: var(--ui-workspace);
 }
 .workspace-inset [data-slot="sidebar-menu-button"][data-active="true"] {
-  background-color: var(--ui-card);
+  background-color: var(--ui-brand-soft);
 }
 /* The inset canvas and muted token coincide in light mode. Hover needs its
    own surface, including inside the portalled mobile navigation. */
@@ -167,12 +177,29 @@
 }
 /* Current-page selection remains distinct from a temporary hover. */
 [data-sidebar="sidebar"] [data-slot="sidebar-menu-button"][data-active="true"] {
-  background-color: var(--ui-card);
-  box-shadow: inset 0 0 0 1px var(--ui-border);
+  background-color: var(--ui-brand-soft);
+  color: var(--ui-brand-ink);
+  box-shadow: inset 0 0 0 1px var(--ui-brand-border);
 }
 [data-sidebar="sidebar"] [data-slot="sidebar-menu-button"][data-active="true"]:is(:hover, :focus-visible, :active) {
-  background-color: var(--ui-card);
-  box-shadow: inset 0 0 0 1px var(--ui-input);
+  background-color: var(--ui-brand-soft-hover);
+  color: var(--ui-brand-ink);
+  box-shadow: inset 0 0 0 1px var(--ui-primary);
+}
+/* Selection is branded; general hover surfaces and domain status tones stay neutral/semantic. */
+[data-slot="button"][aria-current="page"],
+[data-slot="tabs-list"][data-variant="default"] [data-slot="tabs-trigger"][data-state="active"] {
+  background-color: var(--ui-brand-soft);
+  color: var(--ui-brand-ink);
+}
+[data-slot="button"][aria-current="page"]:hover {
+  background-color: var(--ui-brand-soft-hover);
+}
+[data-slot="tabs-trigger"][data-state="active"] {
+  color: var(--ui-brand-ink);
+}
+[data-slot="tabs-trigger"]::after {
+  background-color: var(--ui-primary);
 }
 .shadcn-workspace [data-slot="sidebar-container"] {
   position: absolute;

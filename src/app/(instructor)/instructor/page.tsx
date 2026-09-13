@@ -34,6 +34,9 @@ import { getCoursesOnDay, type CourseRow } from "@/lib/courses/data/courses";
 import { formatDate, minutesNow, parseDateOnly, today } from "@/lib/format";
 import { screenPage } from "@/lib/page-guards";
 import { can } from "@/lib/authz";
+import { getCancellationsForDay } from "@/lib/cancellations/data";
+import { CANCELLATION_META } from "@/lib/cancellations/constants";
+import { Tag } from "@/components/ui-kit/tag";
 
 export const metadata: Metadata = { title: "Instructor" };
 type Grouping = "time" | "level";
@@ -48,17 +51,18 @@ export default async function InstructorPage(props: PageProps<"/instructor">) {
     day = weekdayOfIso(iso),
     now = minutesNow(),
     me = session.user.id;
-  const [courses, marked, covers] = await Promise.all([
+  const [courses, marked, covers, cancellations] = await Promise.all([
     getCoursesOnDay(day),
     getRegisterStateForDay(day, iso),
     getCoversForDay(iso),
+    getCancellationsForDay(iso),
   ]);
   const mine = courses.filter(
       (c) => c.instructorId === me || covers.get(c.id)?.coverById === me,
     ),
     shown = tab === "all" ? courses : mine;
   const sections = groupClasses(
-    shown,
+    shown.filter(course => !cancellations.has(course.id)),
     group,
     now,
     (c) => claimState(covers.get(c.id), me) === "locked",
@@ -100,7 +104,7 @@ export default async function InstructorPage(props: PageProps<"/instructor">) {
           </p>
         </ItemContent>
         <div className="flex w-full items-center justify-between gap-3 sm:w-auto sm:gap-5">
-          {state === "mine" ? (
+          {cancellations.has(course.id) ? <div className="space-y-1"><Tag color={CANCELLATION_META.cancelled.color}>Cancelled</Tag><p className="max-w-sm break-words text-sm text-ui-muted-foreground">{cancellations.get(course.id)?.reason}</p></div> : state === "mine" ? (
             <>
               <p className="flex items-center gap-2 text-sm text-ui-muted-foreground">
                 {marked.has(course.id) ? (
@@ -246,6 +250,7 @@ export default async function InstructorPage(props: PageProps<"/instructor">) {
       ) : (
         <>
           {listed.map(section)}
+          {shown.some(course => cancellations.has(course.id)) ? <section aria-label="Cancelled sessions" className="space-y-1"><h2 className="border-b border-ui-border pb-3 text-lg font-semibold">Cancelled today</h2><ItemGroup className="divide-y divide-ui-border">{shown.filter(course => cancellations.has(course.id)).map(row)}</ItemGroup></section> : null}
           {fold ? (
             <Collapsible>
               <CollapsibleTrigger asChild>

@@ -15,6 +15,7 @@ import { fullName } from "@/lib/students/constants";
 import { withCourseSeat } from "@/lib/enrolment/seat";
 import { savedRegister, type SavedRegister } from "@/lib/attendance/revision";
 import { teachingError } from "@/lib/attendance/teaching";
+import { cancellationError } from "@/lib/cancellations/guard";
 
 /** The register is written by one action carrying the whole class.
  *
@@ -74,6 +75,8 @@ export async function markRegister(input: MarkRegisterInput): Promise<RegisterSa
     if (course.archivedAt) return fail("That class is archived.");
 
     const date = parseDateOnly(iso);
+    const cancelled = await cancellationError(tx, courseId, date);
+    if (cancelled) return fail(cancelled);
     // Deck-only accounts cannot opt out by omitting the teaching flag.
     if (parsed.data.teaching || (!canSee(session, "courses") && !canSee(session, "calendar"))) {
       const error = await teachingError(tx, session, { courseId, date: iso }, clubId);
@@ -263,7 +266,7 @@ export async function markRegister(input: MarkRegisterInput): Promise<RegisterSa
   revalidatePath("/courses/[id]/class", "page");
   revalidatePath("/courses/[id]", "page");
   revalidatePath("/students/[id]", "page");
-  revalidatePath("/today");
+  revalidatePath("/schedule");
   revalidatePath("/instructor");
   revalidatePath("/instructor/classes/[id]", "page");
   revalidatePath("/");

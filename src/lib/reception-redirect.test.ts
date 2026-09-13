@@ -26,7 +26,7 @@ test("old Reception bookmarks retain their selected swimmer only with profile ac
 });
 
 test("removed Reception access does not grant a new screen or produce a redirect loop", async () => {
-  for (const [screens, expected] of [[[], "/account"], [["reception"], "/account"], [["overview", "reception"], "/"], [["calendar", "reception"], "/today"]] as const) {
+  for (const [screens, expected] of [[[], "/account"], [["reception"], "/account"], [["overview", "reception"], "/account"], [["calendar", "reception"], "/schedule"]] as const) {
     const page = retiredPage({ home: "reception", screens: [...screens], permissions: [] });
     await assert.rejects(page({ searchParams: Promise.resolve({ swimmer: "synthetic" }) }), { message: `Redirect ${expected}` });
   }

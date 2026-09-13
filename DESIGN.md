@@ -1,6 +1,7 @@
 # Swimly — design and implementation
 
-The whole app uses **shadcn/ui**, Neutral colours, Figtree, and a cookie-backed
+The whole app uses **shadcn/ui**, Neutral surfaces with a logo-blue accent,
+Figtree, and a cookie-backed
 light/dark/system appearance preference. Components live in
 `src/components/shadcn`. The owner approved the full conversion on 13 September
 2026; no screen, form adapter or shared provider depends on another UI system.
@@ -34,8 +35,15 @@ tokens. Its font and type scale have no external theme dependency. CSS Modules
 use Tailwind's 4px `--spacing` scale for geometry. Each status tone has explicit
 light/dark foreground and background tokens.
 
+The logo's blue is the accent for primary actions, selected navigation/tabs,
+checked controls, progress and keyboard focus. Use the shared primary and
+brand tokens, not blue values at call sites. Light mode uses a deeper blue
+with white labels; dark mode uses a lighter blue with dark ink. Selection uses
+a soft blue surface and readable blue text. Workspace surfaces, ordinary hover
+states and status colours keep their existing meanings.
+
 Inputs and textareas retain their shadcn focus ring without a second global
-outline. Command searches mark focus with a two-pixel Neutral line along the
+outline. Command searches mark focus with a two-pixel blue line along the
 whole search row, keeping the inner input inside the row's bounds. Forced-colour
 mode uses a system-colour outline so focus remains visible without shadows.
 
@@ -87,11 +95,12 @@ details at 1152px. Instructor remains a separate workspace, described below.
 
 ## Screens
 
-Today keeps its booking sheet with sticky time headers and level labels. Phones
+Schedule keeps its booking sheet with sticky level labels and horizontal time scrolling.
+The sheet expands vertically within the workspace's single page scroll. Phones
 use Agenda. Circled check means spaces available; circled X means full.
 Attendance completion never determines these icons. Agenda mixes classes and
-dated, non-cancelled assessment sessions chronologically with common site, pool
-and instructor filtering. Assessment links require the Assessments screen.
+dated, non-cancelled assessment sessions chronologically for the sidebar's selected
+site, including every pool area and instructor. Assessment links require the Assessments screen.
 
 Swimmers is a shared directory across sites, with surname sorting, stable
 pagination, member number and age for disambiguation. Search matches names,
@@ -112,7 +121,7 @@ filters are prominent; advanced filters include Programme, Time, Instructor and
 Pool area. Availability describes capacity. Full class details, enrolment,
 waitlist actions and the desk teaching flow use the same shadcn components.
 
-Assessments, Together, Overview, Activity, Programmes and levels, Staff, Roles,
+Assessments, Together, Activity, Programmes and levels, Staff, Roles,
 Clubs, Account, sign-in and loading states also use this shared foundation.
 Responsive tables re-home secondary columns as supporting lines.
 
@@ -155,12 +164,23 @@ and the activity log also require their named permissions. Mutations enforce
 their own permissions regardless of which controls are visible. Instructor
 records additionally require the confirmed owner of that dated class.
 
+**Administrators always have full access** (owner confirmed 13 September 2026).
+Holding both `staff.manage` and `roles.manage` defines administrator access;
+neither permission alone does. `expandPermissions` and `visibleScreens` resolve
+the full current catalogues, so existing administrators receive newly added
+capabilities without a data update. Names and the legacy `User.role` enum never
+decide this. Role previews use the previewed grants, and demotion or deactivation
+takes effect on the next request. The role editor shows inherited access and
+keeps the two management grants editable. Their removal returns to the role's
+stored selections. Instructor's separate navigation and class ownership checks
+still apply. Desk landing links filter workspace destinations after expansion.
+
 **Nothing may leave the app without a keyholder.** `staff.manage` and
 `roles.manage` are load-bearing — lose either across every active account and
 the way back in is a database console, because `prisma/seed.ts` declines once
 an admin exists. `src/lib/staff/keyholders.ts` refuses any edit that would do
 it, by computing what the world would look like afterwards rather than by
-counting admins: with arbitrary roles there is no such thing as "an admin".
+counting role names: keyholders can hold administrator access or separate grants.
 It deliberately sits outside a `"use server"` file, because every export from
 one of those is an endpoint the browser can call.
 
@@ -169,20 +189,38 @@ That is what lets a club rename or delete every role the app shipped with.
 
 **A role also says which screens exist.** `StaffRole.screens` holds keys
 from the catalogue in `src/lib/staff/screens.ts`, one per top-level page.
-The nav shows only those; every page under the shell opens with
+Administrators inherit all screens; for other roles the nav shows only those
+granted. Every page under the shell opens with
 `screenPage(screen, permission?)` and 404s for anyone whose role does not
 name it; a link that crosses into another screen asks `canSee` before it
 renders. Permissions are still the power to change something — screens are
 what is on the menu at all. That is how an instructor role is given Instructor
 and nothing else: the deck becomes their whole app. Account is never on the
 list because it is always there. The keyholder guard checks screens too:
-nobody may untick Roles or Staff from the last role that can reach them.
+nobody may remove the last usable grant for Roles or Staff.
 
 **A role also says where its day starts.** `StaffRole.home` is a key from the
-`ROLE_HOMES` map in the catalogue file — the overview for the desk, Instructor for
+`ROLE_HOMES` map in the catalogue file — Schedule for the desk, Instructor for
 an instructor. The sign-in form pushes to `/start`, which reads the role and
 redirects; the wordmark goes to the same place. A configured home that is not
 accessible falls back to another screen the role may open.
+
+Overview is retired. `/` now only redirects to an authenticated, accessible
+home, as `/start` does. Schedule is the preferred fallback, then an accessible
+screen, then Account. Old `overview` screen grants are ignored; old home values
+normalize to `calendar`. The legacy database default remains compatible while
+new role forms and seeds explicitly save the selected home. Instructor-only
+roles retain their isolated destination. Overview's summary queries are removed.
+
+Analytics lives in Monitoring as a separate shadcn dashboard. Its bento grid
+uses three headline totals, a larger programme/level breakdown, and supporting
+monthly cancellation and daily activity cards. Exact labels accompany the
+level bars showing enrolled places divided by that level's total class capacity;
+a table gives seven days of activity without relying on colour.
+Site selection stays in the sidebar; the page offers refresh. Loading, empty
+and error states use shared primitives.
+It inherits the workspace spacing and blue accent. See [metric definitions
+and access](docs/analytics.md).
 
 **The deck's permissions are cut fine on purpose** — taking your own
 attendance, taking over a colleague's class, marking competencies, completing
@@ -343,15 +381,14 @@ swim school does, is possible at all. **Nothing else may create an ACTIVE
 enrolment.** A second write path that forgets the lock silently restores the
 race.
 
-**4. Classes are rolling and weekly — there are no term or session rows.** The
-register is keyed on `(course, date, student)`, which means the *only* thing
-between the table and attendance on days the class never ran is the guard in
-`markRegister`: the weekday must match the course, the date must not be in the
-future, and every swimmer must have been enrolled on it. That guard is
-infrastructure, not a nicety. `ClassNote` is the cheap answer to "pool closed
-this week", and it is also the seam: the moment it grows a `cancelled` boolean
-or an instructor override, sessions have been rebuilt by accident and should be
-built deliberately instead.
+**4. Classes are rolling and weekly.** Attendance is keyed on
+`(course, date, student)`: the weekday must match, the date cannot be in the
+future and the swimmer must belong on the register. Dated cancellations now
+live deliberately in `ClassCancellation`, not in a note or on the recurring
+class. The record freezes the class details and affected roster for billing.
+Cancellation, class starts and teaching saves share the course lock; a
+cancelled occurrence cannot accept later teaching saves. `ClassNote` remains
+free text. See [Duty manager](docs/duty-manager.md).
 
 ### Placement needs `enrolment.manage`, with a reason on the row
 

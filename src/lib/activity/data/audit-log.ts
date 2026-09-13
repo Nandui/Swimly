@@ -1,5 +1,5 @@
 import type { Prisma } from "@/generated/prisma/client";
-import { requirePermission, requireSession } from "@/lib/authz";
+import { requirePermission } from "@/lib/authz";
 import { currentClubId } from "@/lib/clubs/current";
 import { prisma } from "@/lib/prisma";
 
@@ -21,17 +21,6 @@ export type ActivityEntry = Prisma.AuditLogGetPayload<{ select: typeof SELECT }>
  *  everyone's business, and their entries carry no club. */
 function forClub(clubId: string): Prisma.AuditLogWhereInput {
   return { OR: [{ clubId }, { clubId: null }] };
-}
-
-/** The tail of the trail, for the overview. */
-export async function getRecentActivity(take = 8): Promise<ActivityEntry[]> {
-  await requireSession();
-  return prisma.auditLog.findMany({
-    where: forClub(await currentClubId()),
-    select: SELECT,
-    orderBy: { createdAt: "desc" },
-    take,
-  });
 }
 
 /** How many entries a page of the trail holds. It used to be the 200 newest in

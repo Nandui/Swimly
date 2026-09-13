@@ -2,11 +2,12 @@ import assert from "node:assert/strict";
 import { test } from "node:test";
 import { serverModule } from "@/test/server-module";
 
-function fixture(owner: string | null | undefined) {
+function fixture(owner: string | null | undefined, cancelled = false) {
   const reads: string[] = [];
   const data = serverModule<typeof import("./instructor-class")>(
     "src/lib/attendance/data/instructor-class.ts",
     {
+      "@/lib/cancellations/data": { getCancellation: async () => cancelled ? { id: "cancelled", reason: "Pool closed" } : null },
       "@/lib/page-guards": {
         classPage: async () => ({ user: { id: "teacher" } }),
       },
@@ -43,6 +44,12 @@ function fixture(owner: string | null | undefined) {
   );
   return { data, reads };
 }
+
+test("cancelled sessions never load the roster even for their confirmed teacher", async () => {
+  const f = fixture("teacher", true);
+  assert.equal((await f.data.getInstructorClass("class", "2026-09-11"))?.state, "cancelled");
+  assert.deepEqual(f.reads, []);
+});
 test("unstarted or locked classes never load swimmer attendance or competencies", async () => {
   for (const owner of [undefined, null, "other"]) {
     const f = fixture(owner);

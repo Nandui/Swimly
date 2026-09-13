@@ -15,10 +15,12 @@ import { fullName } from "@/lib/students/constants";
 import { prisma } from "@/lib/prisma";
 import { teachingError, type TeachingContext } from "@/lib/attendance/teaching";
 import { isDateOnly } from "@/lib/format";
+import { cancellationError } from "@/lib/cancellations/guard";
 
 const markSchema = z.object({ competencyId: z.string().min(1), status: z.enum(["WORKING_ON", "ACHIEVED"]).nullable() });
 const assessSchema = z.object({ studentId: z.string().min(1), levelId: z.string().min(1), results: z.array(markSchema).max(100) });
-const classAssessSchema = z.object({ levelId: z.string().min(1), marks: z.array(markSchema.extend({ studentId: z.string().min(1) })).min(1, "Nothing to save.").max(2000) });
+const sessionContextSchema = z.object({ courseId: z.string().min(1), date: z.string().refine(isDateOnly, "That is not a date.") });
+const classAssessSchema = z.object({ levelId: z.string().min(1), marks: z.array(markSchema.extend({ studentId: z.string().min(1) })).min(1, "Nothing to save.").max(2000), classContext: sessionContextSchema.optional() });
 export type AssessInput = z.infer<typeof assessSchema>;
 export type ClassAssessInput = z.infer<typeof classAssessSchema>;
 type Assessor = { id: string; name?: string | null };
@@ -100,7 +102,16 @@ export async function saveClassAssessment(input: ClassAssessInput): Promise<Acti
   const parsed = classAssessSchema.safeParse(input);
   if (!parsed.success) return fail(parsed.error.issues[0].message);
   const clubId = await currentClubId();
-  const result = await prisma.$transaction(tx => saveMarks(tx, parsed.data.levelId, parsed.data.marks, session.user, clubId), { timeout: 15_000 });
+  if (!parsed.data.classContext) return fail("Reload the class before saving competencies.");
+  const context = parsed.data.classContext;
+  const result = await prisma.$transaction(async tx => {
+    await tx.$queryRaw`SELECT id FROM "Course" WHERE id = ${context.courseId} FOR UPDATE`;
+    const course = await tx.course.findUnique({ where: { id: context.courseId, clubId }, select: { archivedAt: true, dayOfWeek: true } });
+    if (!course || course.archivedAt) return fail("This class is no longer active at this site.");
+    const cancelled = await cancellationError(tx, context.courseId, parseDateOnly(context.date));
+    if (cancelled) return fail(cancelled);
+    return saveMarks(tx, parsed.data.levelId, parsed.data.marks, session.user, clubId, context);
+  }, { timeout: 15_000 });
   if (result.ok) revalidate();
   return result;
 }
@@ -122,7 +133,7 @@ export async function saveInstructorAssessment(input: z.infer<typeof instructorA
   return result;
 }
 
-const confirmSchema = z.object({ studentId: z.string().min(1), levelId: z.string().min(1), note: z.string().trim().max(300), overrideReason: z.string().trim().max(300), teaching: teachingSchema.optional() });
+const confirmSchema = z.object({ studentId: z.string().min(1), levelId: z.string().min(1), note: z.string().trim().max(300), overrideReason: z.string().trim().max(300), teaching: teachingSchema.optional(), classContext: sessionContextSchema.optional() });
 export async function confirmLevelCompletion(input: z.infer<typeof confirmSchema>): Promise<ActionResult> {
   const session = await requirePermission("progression.complete");
   const parsed = confirmSchema.safeParse(input);
@@ -131,6 +142,14 @@ export async function confirmLevelCompletion(input: z.infer<typeof confirmSchema
   const { studentId, note, overrideReason } = parsed.data;
   const clubId = await currentClubId();
   const result = await prisma.$transaction(async (tx): Promise<ActionResult> => {
+    if (parsed.data.classContext) {
+      const context = parsed.data.classContext;
+      await tx.$queryRaw`SELECT id FROM "Course" WHERE id = ${context.courseId} FOR UPDATE`;
+      const course = await tx.course.findUnique({ where: { id: context.courseId, clubId }, select: { id: true } });
+      if (!course) return fail("This class is not available at this site.");
+      const cancelled = await cancellationError(tx, context.courseId, parseDateOnly(context.date));
+      if (cancelled) return fail(cancelled);
+    }
     if (parsed.data.teaching) {
       const context = parsed.data.teaching;
       await tx.$queryRaw`SELECT id FROM "Course" WHERE id = ${context.courseId} FOR UPDATE`;

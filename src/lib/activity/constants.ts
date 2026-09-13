@@ -28,6 +28,8 @@ const ACTIONS: Record<string, { label: string; color: TagColor }> = {
 
   // The pool deck
   attendance: { label: "Attendance", color: "blue" },
+  "cancel-session": { label: "Session cancelled", color: "red" },
+  "billing-notified": { label: "Billing notified", color: "green" },
   cover: { label: "Took over", color: "purple" },
   assess: { label: "Assessed", color: "yellow" },
   "complete-level": { label: "Level passed", color: "green" },

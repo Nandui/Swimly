@@ -10,6 +10,7 @@ import { currentClubId } from "@/lib/clubs/current";
 import { DAY_META, courseLabel } from "@/lib/courses/constants";
 import { formatDate, isDateOnly, parseDateOnly, today, weekdayOf } from "@/lib/format";
 import { withCourseSeat } from "@/lib/enrolment/seat";
+import { cancellationError } from "@/lib/cancellations/guard";
 
 /** Confirm who is teaching a class on a date. The existing ClassCover record
  * now includes scheduled instructors as well as substitutes. Claims and their
@@ -65,6 +66,8 @@ async function claim(input: TakeOverInput, session: Session, starting: boolean):
     // The same two guards as the register, for the same reason: a cover on a
     // day the class never ran is as wrong as a mark on one.
     const date = parseDateOnly(iso);
+    const cancelled = await cancellationError(tx, courseId, date);
+    if (cancelled) return fail(cancelled);
     if (weekdayOf(date) !== course.dayOfWeek) {
       return fail(
         `${courseLabel(course)} runs on ${DAY_META[course.dayOfWeek].label}s. ${formatDate(date)} is not one.`
@@ -109,7 +112,7 @@ async function claim(input: TakeOverInput, session: Session, starting: boolean):
   revalidatePath("/courses/[id]/register", "page");
   revalidatePath("/courses/[id]/assess", "page");
   revalidatePath("/courses/[id]/class", "page");
-  revalidatePath("/today");
+  revalidatePath("/schedule");
   revalidatePath("/instructor");
   revalidatePath("/instructor/classes/[id]", "page");
   revalidatePath("/");
