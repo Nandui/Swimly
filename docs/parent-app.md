@@ -213,6 +213,14 @@ Errors use `{error:{code,message}}`. Display the safe message and branch on code
 
 ## Activation and operations
 
+Rollout status, 14 September 2026: the additive parent migration has been applied
+to the configured shared database. API code is pushed on Swimly's `dev` branch;
+the separate parent frontend is pushed to `Nandui/swimly-public-app` on `main`.
+Live parent access remains disabled. The owner confirmed Resend is not set up
+yet. Configure and verify the sender before enabling the API, and configure a
+separate frontend deployment. No real guardian links or assessment publications
+were created for testing; all flow verification used the in-memory preview.
+
 1. Deploy additive migration `20260914160000_parent_api` before enabling parent
    traffic. The normal production build deploys committed migrations; local or
    preview builds do not. The migration installs triggers and backfills existing
