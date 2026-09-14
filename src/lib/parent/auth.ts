@@ -6,6 +6,7 @@ import { logAudit } from "@/lib/audit";
 import { digest, lockParent, opaqueToken, rateLimit, requestIp } from "@/lib/parent/security";
 import { ParentApiError, unavailable } from "@/lib/parent/errors";
 import { emailSchema, readBody } from "@/lib/parent/http";
+import { parentEmailConfig, sendParentSignInCode } from "@/lib/parent/email";
 
 export type ParentIdentity = { account: ParentAccount; sessionId: string };
 const unauthenticated = () => new ParentApiError(401, "UNAUTHENTICATED", "Please sign in again.");
@@ -15,22 +16,9 @@ export async function parentAudit(tx: Prisma.TransactionClient, parent: Pick<Par
     details: { ...extra, actorType: "parent", parentId: parent.id } }, tx);
 }
 
-async function sendCode(email: string, code: string) {
-  const key = process.env.RESEND_API_KEY;
-  const from = process.env.PARENT_EMAIL_FROM;
-  if (!key || !from) unavailable();
-  const response = await fetch("https://api.resend.com/emails", {
-    method: "POST", headers: { Authorization: `Bearer ${key}`, "Content-Type": "application/json" },
-    body: JSON.stringify({ from, to: [email], subject: "Your Bookly parent sign-in code",
-      text: `Your Bookly sign-in code is ${code}.\n\nIt expires in 10 minutes. Do not share this code. If you did not request it, you can ignore this email.` }),
-    signal: AbortSignal.timeout(10_000),
-  });
-  if (!response.ok) unavailable();
-}
-
 export async function requestCode(request: Request) {
   const { email } = await readBody(request, z.object({ email: emailSchema }).strict());
-  if (!process.env.RESEND_API_KEY || !process.env.PARENT_EMAIL_FROM) unavailable();
+  const emailConfig = parentEmailConfig();
   await rateLimit(`code-ip:${requestIp(request)}`, 30, 3600);
   await rateLimit(`code-email:${email}`, 5, 3600);
   const id = opaqueToken(), code = String(randomInt(0, 1_000_000)).padStart(6, "0");
@@ -40,7 +28,7 @@ export async function requestCode(request: Request) {
     await logAudit({ actorName: "Parent sign-in", action: "request-code", entity: "ParentSignInChallenge", entityId: id,
       summary: "Requested an email verification code", clubId: null }, tx);
   });
-  try { await sendCode(email, code); }
+  try { await sendParentSignInCode(email, code, emailConfig); }
   catch {
     await prisma.$transaction(async tx => {
       await tx.parentSignInChallenge.update({ where: { id }, data: { usedAt: new Date() } });

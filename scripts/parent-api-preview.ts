@@ -9,12 +9,18 @@ async function main() {
   process.env.PARENT_AUTH_SECRET = "synthetic-preview-secret-never-use-in-production";
   process.env.PARENT_API_ALLOWED_ORIGINS = "http://127.0.0.1:3020";
   process.env.PARENT_EMAIL_FROM = "Bookly preview <parent@example.test>";
-  process.env.RESEND_API_KEY = "synthetic-only";
+  process.env.PARENT_GOOGLE_CLIENT_ID = "synthetic-client";
+  process.env.PARENT_GOOGLE_CLIENT_SECRET = "synthetic-secret";
+  process.env.PARENT_GOOGLE_REFRESH_TOKEN = "synthetic-refresh";
   const codes = new Map<string, string>();
   globalThis.fetch = async (url, init) => {
-    if (url !== "https://api.resend.com/emails") throw new Error("External requests are disabled in this preview.");
+    if (url === "https://oauth2.googleapis.com/token") return Response.json({ access_token: "synthetic-access", token_type: "Bearer" });
+    if (url !== "https://gmail.googleapis.com/gmail/v1/users/me/messages/send") throw new Error("External requests are disabled in this preview.");
     const message = JSON.parse(String(init?.body));
-    codes.set(message.to[0], /code is (\d{6})/.exec(message.text)![1]);
+    const mime = Buffer.from(message.raw, "base64url").toString("utf8");
+    const email = /^To: (.+)$/m.exec(mime)![1].trim();
+    const text = Buffer.from(mime.split("\r\n\r\n")[1], "base64").toString("utf8");
+    codes.set(email, /code is (\d{6})/.exec(text)![1]);
     return Response.json({ id: "synthetic-email" });
   };
   const fixture = await isolatedPrisma(), db = fixture.prisma;

@@ -41,12 +41,18 @@ before(async () => {
   process.env.PARENT_API_ENABLED = "true";
   process.env.PARENT_AUTH_SECRET = "synthetic-test-secret-at-least-thirty-two-characters";
   process.env.PARENT_API_ALLOWED_ORIGINS = origin;
-  process.env.RESEND_API_KEY = "synthetic-only";
+  process.env.PARENT_GOOGLE_CLIENT_ID = "synthetic-client";
+  process.env.PARENT_GOOGLE_CLIENT_SECRET = "synthetic-secret";
+  process.env.PARENT_GOOGLE_REFRESH_TOKEN = "synthetic-refresh";
   process.env.PARENT_EMAIL_FROM = "Bookly <no-reply@example.test>";
-  globalThis.fetch = async (_url, init) => {
+  globalThis.fetch = async (url, init) => {
+    if (url === "https://oauth2.googleapis.com/token") return Response.json({ access_token: "synthetic-access", token_type: "Bearer" });
+    assert.equal(url, "https://gmail.googleapis.com/gmail/v1/users/me/messages/send");
     emailCalls++;
     const message = JSON.parse(String(init?.body));
-    sentCode = /code is (\d{6})/.exec(message.text)![1];
+    const mime = Buffer.from(message.raw, "base64url").toString("utf8");
+    const text = Buffer.from(mime.split("\r\n\r\n")[1], "base64").toString("utf8");
+    sentCode = /code is (\d{6})/.exec(text)![1];
     return Response.json({ id: "synthetic-mail" });
   };
   fixture = await isolatedPrisma();
@@ -102,14 +108,35 @@ test("missing configuration and failed email delivery fail closed without publis
   process.env.PARENT_API_ENABLED = "false";
   assert.equal((await call("sites", "GET", undefined, "")).status, 503);
   process.env.PARENT_API_ENABLED = "true";
+  const refreshToken = process.env.PARENT_GOOGLE_REFRESH_TOKEN;
+  const beforeChallenges = await fixture.prisma.parentSignInChallenge.count();
+  delete process.env.PARENT_GOOGLE_REFRESH_TOKEN;
+  try {
+    assert.equal((await call("auth/request-code", "POST", { email: "no-config@example.test" }, "")).status, 503);
+    assert.equal(await fixture.prisma.parentSignInChallenge.count(), beforeChallenges);
+  } finally { process.env.PARENT_GOOGLE_REFRESH_TOKEN = refreshToken; }
   const workingFetch = globalThis.fetch;
-  globalThis.fetch = async () => new Response(null, { status: 503 });
+  globalThis.fetch = async (url, init) => url === "https://oauth2.googleapis.com/token"
+    ? workingFetch(url, init) : new Response(null, { status: 503 });
   try {
     const failed = await call("auth/request-code", "POST", { email: "delivery-failed@example.test" }, "");
     assert.equal(failed.status, 503);
     const body = await failed.text();
     assert.equal(body.includes("challengeId"), false);
     assert.ok((await fixture.prisma.parentSignInChallenge.findFirstOrThrow({ where: { email: "delivery-failed@example.test" } })).usedAt);
+  } finally { globalThis.fetch = workingFetch; }
+});
+
+test("revoked Google authorization invalidates a challenge without sending mail", async () => {
+  const workingFetch = globalThis.fetch;
+  const calls = emailCalls;
+  globalThis.fetch = async () => Response.json({ error: "invalid_grant" }, { status: 400 });
+  try {
+    const failed = await call("auth/request-code", "POST", { email: "revoked-google@example.test" }, "");
+    assert.equal(failed.status, 503);
+    assert.equal((await failed.text()).includes("invalid_grant"), false);
+    assert.equal(emailCalls, calls);
+    assert.ok((await fixture.prisma.parentSignInChallenge.findFirstOrThrow({ where: { email: "revoked-google@example.test" } })).usedAt);
   } finally { globalThis.fetch = workingFetch; }
 });
 

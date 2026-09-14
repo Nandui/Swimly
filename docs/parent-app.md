@@ -216,10 +216,16 @@ Errors use `{error:{code,message}}`. Display the safe message and branch on code
 Rollout status, 14 September 2026: the additive parent migration has been applied
 to the configured shared database. API code is pushed on Swimly's `dev` branch;
 the separate parent frontend is pushed to `Nandui/swimly-public-app` on `main`.
-Live parent access remains disabled. The owner confirmed Resend is not set up
-yet. Configure and verify the sender before enabling the API, and configure a
-separate frontend deployment. No real guardian links or assessment publications
-were created for testing; all flow verification used the in-memory preview.
+The separate frontend has a ready Vercel production deployment. Its custom
+domain, `swimschool.leisureworldcork.com`, is added to Vercel and awaits the
+Blacknight DNS record. Live parent access remains disabled. The owner selected
+the existing Google Workspace mailbox, `info@leisureworldcork.com`, for email.
+Mailbox authorization and token renewal succeeded with only `gmail.send`.
+The Google email credentials and sender are saved as Production secrets on
+`swimly-crm`. The Google adapter is ready for release; deploy it and
+verify delivery before enabling the API. No real guardian links or assessment
+publications were created for testing; all flow verification used the in-memory
+preview. See [Google email setup status](parent-google-email.md).
 
 1. Deploy additive migration `20260914160000_parent_api` before enabling parent
    traffic. The normal production build deploys committed migrations; local or
@@ -228,9 +234,11 @@ were created for testing; all flow verification used the in-memory preview.
    destructive changes to staff records. Keep the tables and triggers if rolling
    back application code so new publication history remains intact.
 2. Set a separate random `PARENT_AUTH_SECRET` of at least 32 characters.
-3. Configure `RESEND_API_KEY` and `PARENT_EMAIL_FROM` on Swimly using a verified
-   sender domain. The approved sender is `Bookly <info@leisureworldcork.com>`.
-   Email delivery uses the [Resend send API](https://resend.com/docs/api-reference/emails/send-email).
+3. Configure `PARENT_GOOGLE_CLIENT_ID`, `PARENT_GOOGLE_CLIENT_SECRET`,
+   `PARENT_GOOGLE_REFRESH_TOKEN` and `PARENT_EMAIL_FROM` on Swimly. The approved
+   sender is `Bookly <info@leisureworldcork.com>`. Follow the
+   [Google Workspace email setup](parent-google-email.md) using only `gmail.send`.
+   Mailbox passwords and Google domain-wide delegation are not needed.
 4. Set `PARENT_API_ALLOWED_ORIGINS` to exact frontend origins, comma-separated.
    Production requires HTTPS. Development permits HTTP localhost/127.0.0.1.
    Do not put these secrets in the parent frontend repository.
