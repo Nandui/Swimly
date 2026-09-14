@@ -20,6 +20,12 @@ import type { Role } from "@/generated/prisma/client";
 
 export const PERMISSIONS = [
   {
+    key: "parents.manage",
+    group: "Swimmers",
+    label: "Manage parent access",
+    description: "Approve or revoke a parent's access to a swimmer, and suspend parent accounts. Does not grant staff access.",
+  },
+  {
     key: "classes.cancel",
     group: "Daily operations",
     label: "Cancel today’s class sessions",

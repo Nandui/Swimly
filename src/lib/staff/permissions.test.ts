@@ -8,6 +8,7 @@ test("administrator grants always include the whole permission catalogue", () =>
   assert.deepEqual(stored, ["staff.manage", "roles.manage", "retired.permission"]);
   assert.equal(expandPermissions(stored).has("classes.cancel"), true);
   assert.equal(expandPermissions(stored).has("billing.notify"), true);
+  assert.equal(expandPermissions(stored).has("parents.manage"), true);
 });
 
 test("unknown keys and either management permission alone cannot grant administrator access", () => {

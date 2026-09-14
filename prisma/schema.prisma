@@ -368,6 +368,8 @@ model Student {
   completions        LevelCompletion[]
   assessmentBookings AssessmentBooking[]
   cancelledSessions  CancelledClassSwimmer[]
+  parentAccess       ParentChildAccess[]
+  parentProgress     ParentProgressEvent[]
 
   @@index([clubId, status, lastName, firstName])
   @@index([status, lastName, firstName])
@@ -665,6 +667,7 @@ model AssessmentSession {
   type       AssessmentType?     @relation(fields: [typeId], references: [id], onDelete: Restrict)
   instructor User?               @relation("AssessmentInstructor", fields: [instructorId], references: [id], onDelete: SetNull)
   bookings   AssessmentBooking[]
+  parentPublication ParentAssessmentPublication?
 
   @@index([clubId, date, startMinutes])
   @@index([programmeId, date])
@@ -726,10 +729,104 @@ model AssessmentBooking {
   outcomeLevel Level?            @relation(fields: [outcomeLevelId], references: [id], onDelete: Restrict)
   bookedBy     User?             @relation("AssessmentBookedBy", fields: [bookedById], references: [id], onDelete: SetNull)
   assessedBy   User?             @relation("AssessmentAssessedBy", fields: [assessedById], references: [id], onDelete: SetNull)
+  parentRequests ParentBookingRequest[]
 
   /// One booking per child per session. Re-booking after a cancellation is
   /// an update of that row, not a second one.
   @@unique([sessionId, studentId])
   @@index([studentId, status])
   @@index([outcomeLevelId])
+}
+
+// Parent identities never receive a staff User or staff permissions.
+model ParentAccount {
+  id        String   @id @default(cuid())
+  email     String   @unique
+  name      String?
+  phone     String?
+  isActive  Boolean  @default(true)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  sessions ParentSession[]
+  requests ParentBookingRequest[]
+}
+
+model ParentSession {
+  id        String   @id @default(cuid())
+  parentId  String
+  tokenHash String   @unique
+  expiresAt DateTime
+  revokedAt DateTime?
+  createdAt DateTime @default(now())
+  parent ParentAccount @relation(fields: [parentId], references: [id], onDelete: Restrict)
+  @@index([parentId, expiresAt])
+}
+
+model ParentSignInChallenge {
+  id        String   @id
+  email     String
+  codeHash  String
+  attempts  Int      @default(0)
+  expiresAt DateTime
+  usedAt    DateTime?
+  createdAt DateTime @default(now())
+  @@index([email, createdAt])
+}
+
+/// Infrastructure counters; keys are hashed and never contain an email or IP.
+model ParentRateLimit {
+  key         String   @id
+  windowStart DateTime
+  count       Int
+}
+
+/// Staff can approve an email before signup; verified email ownership is required.
+model ParentChildAccess {
+  id          String   @id @default(cuid())
+  parentEmail String
+  studentId   String
+  source      String
+  grantedById String?
+  revokedAt   DateTime?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  student Student @relation(fields: [studentId], references: [id], onDelete: Restrict)
+  @@unique([parentEmail, studentId])
+  @@index([studentId])
+}
+
+model ParentAssessmentPublication {
+  sessionId       String   @id
+  enabled         Boolean  @default(false)
+  bookingClosesAt DateTime?
+  updatedAt       DateTime @updatedAt
+  session AssessmentSession @relation(fields: [sessionId], references: [id], onDelete: Restrict)
+}
+
+/// Durable request IDs protect child creation as well as seat allocation on retries.
+model ParentBookingRequest {
+  id          String   @id @default(cuid())
+  parentId    String
+  key         String
+  requestHash String
+  bookingId   String
+  createdAt   DateTime @default(now())
+  parent ParentAccount @relation(fields: [parentId], references: [id], onDelete: Restrict)
+  booking AssessmentBooking @relation(fields: [bookingId], references: [id], onDelete: Restrict)
+  @@unique([parentId, key])
+  @@index([bookingId])
+}
+
+/// Database triggers preserve released values when staff edit or clear progress.
+/// Payloads contain only parent-safe values; notes and staff audit text stay separate.
+model ParentProgressEvent {
+  id         BigInt   @id @default(autoincrement())
+  studentId  String
+  kind       String
+  subjectId  String
+  value      Json?
+  recordedAt DateTime @default(now())
+  releaseAt  DateTime
+  student Student @relation(fields: [studentId], references: [id], onDelete: Restrict)
+  @@index([studentId, kind, subjectId, releaseAt, id])
 }

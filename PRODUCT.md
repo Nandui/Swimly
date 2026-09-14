@@ -21,8 +21,16 @@ Bishopstown and Churchfield.** Two jobs, confirmed 2 Sep 2026:
 **Managers and administrators** set the building up rather than use it all
 day: staff accounts, roles and permissions, the curriculum, the clubs.
 
-**Not users:** parents and children. There is no parent-facing side and none
-is planned; "parents can book" means the desk books on their behalf.
+**Planned separate audience (owner confirmed 14 September 2026):** parents and
+guardians, in a separate app connected through a dedicated API. They will see
+their linked children's progress and book assessment sessions, including for
+children not yet in Swimly. Competency changes become visible at 00:00 on the
+day after they are saved, using Europe/Dublin time (Monday changes appear on
+Tuesday). Parent-initiated class moves are a later phase, not part of the first
+release. The staff and Instructor workspaces remain separate. See
+[the parent API integration guide](docs/parent-app.md). The backend is implemented
+behind an activation flag; the separate frontend lives in
+[swimly-public-app](https://github.com/Nandui/swimly-public-app).
 
 **Conditions the users work in (confirmed):**
 
