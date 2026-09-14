@@ -43,7 +43,7 @@ export function AddClub() {
         </Button>
       }
       title="Add a club"
-      description="A new site starts empty: its own programmes, classes and swimmers. Copy a programme across from another club's page if it runs the same one."
+      description="A new site starts with an empty timetable. Swimmers, programmes and progress are shared across all sites."
       submitLabel="Add club"
       successMessage="Club added"
       submit={(formData) => createClub(readInput(formData))}
@@ -99,7 +99,7 @@ export function ArchiveClub({ club }: { club: Club }) {
         </Button>
       }
       title={`Archive ${club.name}?`}
-      description="It leaves the switcher, and anyone working in it lands on the first club still open. Its programmes, classes, swimmers and history stay exactly as they are, readable again the moment it is restored."
+      description="It leaves the switcher, and anyone working in it lands on the first club still open. Its timetable and history are retained. Shared swimmers and curriculum remain available at the other sites."
       confirmLabel="Archive"
       successMessage="Club archived"
       run={() => setClubArchived(club.id, true)}

@@ -4,7 +4,7 @@ import { useEffect, type ReactNode } from "react";
 import Link from "next/link";
 import { usePathname, useSearchParams } from "next/navigation";
 import { signOut } from "next-auth/react";
-import { ArrowLeft, LogOut, UserRound } from "lucide-react";
+import { ArrowLeft, CircleHelp, LogOut, UserRound } from "lucide-react";
 import { AppLogo } from "@/components/app-logo";
 import { Button } from "@/components/shadcn/button";
 import {
@@ -85,6 +85,9 @@ export function InstructorShell({
             <ClubSwitcher club={club} clubs={clubs} touchTargets />
           </div>
           <div className="ml-auto flex items-center gap-2">
+            <Button asChild variant="ghost" className="min-h-11 px-2">
+              <Link href="/help/instructor" target="_blank" rel="noopener noreferrer" aria-label="Help (opens in a new tab)"><CircleHelp aria-hidden="true" />Help</Link>
+            </Button>
             <ThemeFlip />
             <DropdownMenu>
               <DropdownMenuTrigger asChild>

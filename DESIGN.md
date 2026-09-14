@@ -135,6 +135,16 @@ Responsive tables re-home secondary columns as supporting lines.
 
 ## Forms, search and confirmation
 
+The authenticated help centre owns a separate document frame at `/help`, using
+the same typography and theme. The desk sidebar and phone toolbar open Help in
+a new tab. Instructor opens `/help/instructor`, with teaching-only guides and a
+return to Classes. Search and topic navigation lead to full guides with numbered
+steps, troubleshooting and related tasks. Captioned screenshots beside the steps
+use synthetic records, fit the available width and open at full size in a new
+tab. Their image URLs require a staff session too. Topic navigation collapses on phones;
+articles have a contents rail on wide screens. Task links respect screen access,
+and the manual reads no operational data. See [help content and access](docs/help-centre.md).
+
 `src/components/ui` composes shadcn inputs with labels, hints and native form
 submission. Dates, times and numbers preserve native validation and bounds;
 uncontrolled inputs and textareas retain native reset behaviour. Named switches

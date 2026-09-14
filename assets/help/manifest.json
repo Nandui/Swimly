@@ -1,0 +1,158 @@
+{
+  "workspace": {
+    "width": 1200,
+    "height": 980
+  },
+  "site-menu": {
+    "width": 1200,
+    "height": 980
+  },
+  "instructor-home": {
+    "width": 768,
+    "height": 85
+  },
+  "instructor-menu": {
+    "width": 768,
+    "height": 171
+  },
+  "instructor-site": {
+    "width": 768,
+    "height": 206
+  },
+  "appearance": {
+    "width": 1152,
+    "height": 184
+  },
+  "password": {
+    "width": 1152,
+    "height": 334
+  },
+  "directory": {
+    "width": 1152,
+    "height": 505
+  },
+  "profile": {
+    "width": 1152,
+    "height": 853
+  },
+  "add-swimmer": {
+    "width": 672,
+    "height": 700
+  },
+  "edit-swimmer": {
+    "width": 672,
+    "height": 700
+  },
+  "enrol": {
+    "width": 1168,
+    "height": 882
+  },
+  "move": {
+    "width": 1168,
+    "height": 882
+  },
+  "waitlist": {
+    "width": 768,
+    "height": 404
+  },
+  "end-enrolment": {
+    "width": 672,
+    "height": 388
+  },
+  "classes": {
+    "width": 1152,
+    "height": 1233
+  },
+  "class-detail": {
+    "width": 1152,
+    "height": 1015
+  },
+  "add-class": {
+    "width": 576,
+    "height": 714
+  },
+  "schedule": {
+    "width": 1152,
+    "height": 580
+  },
+  "together": {
+    "width": 1152,
+    "height": 436
+  },
+  "start-class": {
+    "width": 512,
+    "height": 218
+  },
+  "attendance": {
+    "width": 1152,
+    "height": 691
+  },
+  "save-conflict": {
+    "width": 1152,
+    "height": 400
+  },
+  "competencies": {
+    "width": 1152,
+    "height": 761
+  },
+  "complete-class": {
+    "width": 512,
+    "height": 278
+  },
+  "profile-competencies": {
+    "width": 1152,
+    "height": 450
+  },
+  "complete-level": {
+    "width": 672,
+    "height": 254
+  },
+  "assessment-session": {
+    "width": 576,
+    "height": 776
+  },
+  "assessment-booking": {
+    "width": 448,
+    "height": 318
+  },
+  "assessment-outcome": {
+    "width": 448,
+    "height": 424
+  },
+  "cancel-session": {
+    "width": 512,
+    "height": 342
+  },
+  "billing": {
+    "width": 576,
+    "height": 620
+  },
+  "analytics": {
+    "width": 1152,
+    "height": 1546
+  },
+  "programme": {
+    "width": 448,
+    "height": 526
+  },
+  "curriculum": {
+    "width": 448,
+    "height": 396
+  },
+  "staff": {
+    "width": 448,
+    "height": 612
+  },
+  "roles": {
+    "width": 512,
+    "height": 948
+  },
+  "clubs": {
+    "width": 448,
+    "height": 294
+  },
+  "activity": {
+    "width": 1152,
+    "height": 222
+  }
+}

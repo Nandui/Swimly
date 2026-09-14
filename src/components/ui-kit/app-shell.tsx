@@ -3,7 +3,7 @@
 import * as React from "react";
 import Link from "next/link";
 import { usePathname, useSearchParams } from "next/navigation";
-import { ChevronDown, ChevronsUpDown, CircleUser, LogOut, X, type LucideIcon } from "lucide-react";
+import { ChevronDown, ChevronsUpDown, CircleHelp, CircleUser, LogOut, X, type LucideIcon } from "lucide-react";
 import { AppLogo } from "@/components/app-logo";
 import { Badge } from "@/components/shadcn/badge";
 import { Button } from "@/components/shadcn/button";
@@ -69,6 +69,9 @@ function WorkspaceSidebar(props: AppShellProps) {
       {props.groups.map(group => <NavigationGroup key={`${group.id}:${group.items.some(item => isNavItemActive(pathname, item.href))}`} group={group} pathname={pathname} collapsed={collapsed} />)}
     </nav></SidebarContent>
     <SidebarFooter className="border-t border-ui-border p-3 group-data-[collapsible=icon]:px-0">
+      <SidebarMenu className="group-data-[collapsible=icon]:items-center"><SidebarMenuItem><SidebarMenuButton asChild className="h-11 px-3" tooltip="Help centre (opens in a new tab)">
+        <Link href="/help" target="_blank" rel="noopener noreferrer" aria-label="Help centre (opens in a new tab)"><CircleHelp aria-hidden="true" /><span className="group-data-[collapsible=icon]:hidden">Help centre</span></Link>
+      </SidebarMenuButton></SidebarMenuItem></SidebarMenu>
       <div className="flex min-w-0 items-center gap-2 group-data-[collapsible=icon]:flex-col-reverse">
         <div className="min-w-0 flex-1 group-data-[collapsible=icon]:flex-none"><AccountMenu {...props} /></div>
         {props.tools ? <div className="shrink-0 [&>button]:size-11">{props.tools}</div> : null}
@@ -105,6 +108,7 @@ function MobileWorkspaceToolbar(props: Pick<AppShellProps, "switcher" | "tools">
   return <header className="flex shrink-0 items-center gap-2 border-b border-ui-border px-4 py-2 md:hidden" aria-label="Workspace tools">
     <SidebarTrigger data-mobile-trigger aria-label="Open navigation" aria-expanded={openMobile} className="size-11 shrink-0" />
     <div className="min-w-0 flex-1">{props.switcher}</div>
+    <Button asChild variant="ghost" size="icon" className="size-11"><Link href="/help" target="_blank" rel="noopener noreferrer" aria-label="Help centre (opens in a new tab)"><CircleHelp aria-hidden="true" /></Link></Button>
     {props.tools ? <div className="shrink-0">{props.tools}</div> : null}
   </header>;
 }

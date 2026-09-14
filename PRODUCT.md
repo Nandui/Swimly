@@ -191,7 +191,13 @@ swimmers, pinned placement levels, waitlist, schedule, instructor and capacity.
 Returning to Classes restores the search, filters and page. Enrolment and class
 management use the existing permissions and confirmation flows.
 
+Staff have a signed-in [help centre](docs/help-centre.md) with searchable task
+guides, steps, example screenshots and troubleshooting. Help opens beside the app from both workspace
+frames. Instructor has its own scoped manual and keeps its teaching navigation.
+The help centre does not provide a public support portal or send support requests.
+
 **Constraints that hold:**
+
 
 - One database serves development and production. Schema changes are
   additive; nothing is dropped while production may read it.
