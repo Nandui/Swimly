@@ -43,6 +43,10 @@ export function parseTime(value: string): number | null {
 
 type Slot = { dayOfWeek: DayOfWeek; startMinutes: number; durationMinutes: number };
 
+export function formatTimeRange(slot: Pick<Slot, "startMinutes" | "durationMinutes">): string {
+  return `${formatTime(slot.startMinutes)}–${formatTime(slot.startMinutes + slot.durationMinutes)}`;
+}
+
 /** "Mondays, 16:30–17:00" — how someone plans around it. */
 export function formatSlot(slot: Slot): string {
   return `${DAY_META[slot.dayOfWeek].label}s, ${formatTime(slot.startMinutes)}–${formatTime(

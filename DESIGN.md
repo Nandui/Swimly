@@ -116,6 +116,14 @@ Historical snapshots are distinguished from structured before/after audit
 evidence. Draft competency changes survive tab switching. Editing and enrolment
 dialogs preserve named permissions and atomic seat/audit checks.
 
+Profile enrolment and move dialogs use a wide, responsive class list with site,
+level, day, start-time and availability filters. Moves start at the swimmer's
+pinned level; All sites remains available. Rows show the actual duration, pool,
+instructor and spaces. A fixed footer keeps the selected destination visible,
+including when filters hide it, and identifies a change of site. Full classes
+cannot receive a move; new enrolments retain the explicit waitlist option.
+Placement reasons and server review, capacity and permission checks still apply.
+
 Classes is a searchable weekly directory across live sites. Site, Level and Day
 filters are prominent; advanced filters include Programme, Time, Instructor and
 Pool area. Availability describes capacity. Full class details, enrolment,
