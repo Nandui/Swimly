@@ -213,19 +213,28 @@ Errors use `{error:{code,message}}`. Display the safe message and branch on code
 
 ## Activation and operations
 
-Rollout status, 14 September 2026: the additive parent migration has been applied
-to the configured shared database. API code is pushed on Swimly's `dev` branch;
-the separate parent frontend is pushed to `Nandui/swimly-public-app` on `main`.
-The separate frontend has a ready Vercel production deployment. Its custom
-domain, `swimschool.leisureworldcork.com`, is added to Vercel and awaits the
-Blacknight DNS record. Live parent access remains disabled. The owner selected
-the existing Google Workspace mailbox, `info@leisureworldcork.com`, for email.
-Mailbox authorization and token renewal succeeded with only `gmail.send`.
-The Google email credentials and sender are saved as Production secrets on
-`swimly-crm`. The Google adapter is ready for release; deploy it and
-verify delivery before enabling the API. No real guardian links or assessment
-publications were created for testing; all flow verification used the in-memory
-preview. See [Google email setup status](parent-google-email.md).
+Rollout status, 14 September 2026: the additive parent migration is applied and
+the parent API and Google email adapter are deployed from Swimly's `main` branch.
+The owner approved production activation. Both Vercel projects are connected,
+and signup/sign-in is available at `https://swimly-public-app.vercel.app`.
+The Google sender is `Bookly <info@leisureworldcork.com>` with only `gmail.send`.
+Its credentials are Production secrets on `swimly-crm` only. One approved code
+requested through the live parent app arrived in that mailbox's Inbox; the code
+was not used to create a parent account. Automated flow tests remain isolated.
+See [Google email setup status](parent-google-email.md) for deployment evidence.
+
+The custom domain, `swimschool.leisureworldcork.com`, is assigned in Vercel but
+still needs a Blacknight CNAME: name `swimschool`, value
+`576ddd2673884d9d.vercel-dns-016.com`. Until DNS and HTTPS work, Production's
+`PARENT_APP_ORIGIN` is `https://swimly-public-app.vercel.app`. When switching the
+canonical domain, update that value and redeploy the parent app; the backend
+origin allowlist already includes both addresses. Leave the main website and
+mail DNS records intact.
+
+No guardian links or assessment publications were created during verification.
+Existing families still need staff-approved links, and the live assessment list
+is empty until staff publish sessions. The staff management API is available;
+desk controls for these tasks are a separate outstanding interface task.
 
 1. Deploy additive migration `20260914160000_parent_api` before enabling parent
    traffic. The normal production build deploys committed migrations; local or

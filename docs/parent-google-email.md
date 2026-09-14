@@ -6,9 +6,9 @@ the owner. Delivery goes through the Gmail HTTPS API from the staff application.
 The parent frontend never receives Google credentials. No separate transactional
 email service or mailbox password is used.
 
-The code, mailbox authorization and Google email credentials in Vercel are
-ready. Live sending still needs deployment and delivery verification. The parent
-API remains disabled until the complete launch setup is ready.
+Google Workspace sending and parent sign-in are live in Vercel Production.
+One owner-approved code was sent through the live parent app and its arrival in
+the `info@leisureworldcork.com` inbox was verified on 14 September 2026.
 
 ## Setup status — 14 September 2026
 
@@ -18,12 +18,24 @@ API remains disabled until the complete launch setup is ready.
 - Web OAuth client **Bookly parent sign-in email** created with the Playground
   redirect below. Reuse this client instead of creating a duplicate.
 - The owner completed mailbox authorization. The token exchange and a subsequent
-  refresh both succeeded, with only `gmail.send` granted. No email was sent.
+  refresh both succeeded, with only `gmail.send` granted.
 - After owner confirmation, all four settings below were saved as Secret
   variables in **swimly-crm → Production** and verified in Vercel. They were not
   added to Preview, Development or the parent frontend.
-- The Google email adapter is ready for release. Production deployment and real
-  delivery verification remain pending.
+- Verified activated deployments: **swimly-crm** `dpl_3NF5ZBJ6BonborrSEvjCNffkP9vR`
+  (code `d21755c8`) and **swimly-public-app** `dpl_GEWKT8SCEiTqF5BXB7BWUvzWtqXR`
+  (code `09cf41e`), both READY in Production.
+- With owner approval, `PARENT_API_ENABLED=true`, independent 256-bit signing
+  secrets, the origin allowlist and the frontend connection were configured.
+  Parent connection entries have separate Production and Preview scopes.
+- The live parent app reached its code-entry step and the single test email
+  arrived in the sender mailbox's Inbox. The code was not used to create a
+  parent account. No swimmers, guardian links or assessment bookings were added.
+- Public site and assessment reads succeed. Unauthenticated child reads return
+  401, and an unapproved origin returns 403. No staff runtime errors were found
+  in the release window.
+- Current parent URL: `https://swimly-public-app.vercel.app`. The custom domain
+  still awaits DNS; see the rollout section in [parent-app.md](parent-app.md).
 
 Manage the existing client in the
 [Google Cloud project](https://console.cloud.google.com/auth/clients?project=bookly-parent-email).
@@ -75,9 +87,10 @@ Set these on **swimly-crm**, in the intended deployment environment:
 The sender must match the authorized mailbox or a send-as alias it is already
 authorized to use. Use the confirmed mailbox directly for this rollout.
 
-Redeploy after setting the variables. Keep `PARENT_API_ENABLED=false` until the
-production API, frontend connection and launch checks in [parent-app.md](parent-app.md)
-are complete. No parent frontend code changes are needed for this provider switch.
+Redeploy after changing variables. For a new environment, keep
+`PARENT_API_ENABLED=false` until the API and frontend configuration are ready for
+authorized activation. Production is already enabled and delivery-verified.
+See [parent-app.md](parent-app.md) for the complete connection configuration.
 
 ## Delivery and failure behaviour
 
