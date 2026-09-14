@@ -10,6 +10,9 @@ Prisma 7 with the PostgreSQL driver adapter · Auth.js · Zod.
 Read [PRODUCT.md](PRODUCT.md) for product scope, [DESIGN.md](DESIGN.md) for
 the UI and architecture, and [AGENTS.md](AGENTS.md) for working instructions.
 
+Resuming the parent app rollout on another computer? Start with the
+[parent app handover](docs/parent-app-handover.md), dated 14 September 2026.
+
 ## Local development
 
 Use a supported Node.js version compatible with the installed Next.js and
