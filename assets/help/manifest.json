@@ -166,5 +166,9 @@
   "parent-publication": {
     "width": 448,
     "height": 540
+  },
+  "parent-link-request": {
+    "width": 448,
+    "height": 778
   }
 }

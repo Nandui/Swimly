@@ -13,6 +13,21 @@ beforeEach(() => {
 });
 const reason = "Verified with the guardian at the desk";
 
+test("request approval rolls back with audit failure and cannot approve a suspended parent", async () => {
+  const row = await f.prisma.parentAccessRequest.create({ data: { parentId: "demo-parent", key: "review-rollback", requestHash: "test", childFingerprint: "test", firstName: "Avery", lastName: "Example", dateOfBirth: new Date("2018-04-06"), context: "" } });
+  const body = { decision: "APPROVED", studentId: "demo-swimmer-0", reason, reply: "Your child is now linked." };
+  f.state.failAudit = true;
+  assert.equal((await f.call(`access-requests/${row.id}`, "PATCH", body)).status, 500);
+  assert.equal(await f.prisma.parentChildAccess.count(), 0);
+  assert.equal((await f.prisma.parentAccessRequest.findUniqueOrThrow({ where: { id: row.id } })).status, "PENDING");
+  f.state.failAudit = false;
+  await f.prisma.parentAccount.update({ where: { id: "demo-parent" }, data: { isActive: false } });
+  assert.equal((await f.call(`access-requests/${row.id}`, "PATCH", body)).status, 409);
+  await f.prisma.parentAccount.update({ where: { id: "demo-parent" }, data: { isActive: true } });
+  assert.equal((await f.call(`access-requests/${row.id}`, "PATCH", body, { Origin: "http://outside.example.test" })).status, 403);
+  assert.equal((await f.call(`access-requests/${row.id}`, "PATCH", { decision: "DECLINED", reason, reply: "Please check the supplied details." })).status, 200);
+});
+
 test("requires the named permission and matching desk screen on every management route", async () => {
   const routes = [
     ["children/demo-swimmer-0/access", "PUT", { email: "denied@example.test", reason }, "parents.manage", "students"],

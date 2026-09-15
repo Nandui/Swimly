@@ -369,6 +369,7 @@ model Student {
   assessmentBookings AssessmentBooking[]
   cancelledSessions  CancelledClassSwimmer[]
   parentAccess       ParentChildAccess[]
+  parentAccessRequests ParentAccessRequest[]
   parentProgress     ParentProgressEvent[]
 
   @@index([clubId, status, lastName, firstName])
@@ -749,6 +750,33 @@ model ParentAccount {
   updatedAt DateTime @updatedAt
   sessions ParentSession[]
   requests ParentBookingRequest[]
+  accessRequests ParentAccessRequest[]
+}
+
+/// Parent-supplied details are a request, never proof of access to a swimmer.
+model ParentAccessRequest {
+  id String @id @default(cuid())
+  parentId String
+  key String
+  requestHash String
+  childFingerprint String
+  firstName String
+  lastName String
+  dateOfBirth DateTime @db.Date
+  context String
+  status String @default("PENDING")
+  studentId String?
+  reviewedById String?
+  reviewedByName String?
+  reviewedAt DateTime?
+  reply String?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  parent ParentAccount @relation(fields: [parentId], references: [id], onDelete: Restrict)
+  @@unique([parentId, key])
+  student Student? @relation(fields: [studentId], references: [id], onDelete: Restrict)
+  @@index([parentId, createdAt])
+  @@index([status, createdAt])
 }
 
 model ParentSession {

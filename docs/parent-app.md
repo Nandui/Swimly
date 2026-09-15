@@ -27,6 +27,7 @@ deployed. No parent screens have been added to the staff or Instructor workspace
 | POST | `/auth/verify-code` | Verify email and create/sign into a parent account |
 | POST | `/auth/logout` | Revoke the current token |
 | GET, PATCH | `/me` | Parent identity and contact details |
+| GET, POST | `/access-requests` | Read own linking requests or ask staff to link an existing child |
 | GET | `/children` | Approved children only |
 | GET | `/children/{childId}` | A linked child's basic profile |
 | GET | `/children/{childId}/progress` | Released competencies, completions and assessment placements |
@@ -41,6 +42,14 @@ transfers. Parents cannot edit existing swimmer details, cancel bookings, or
 move children between weekly classes in v1. Those policies need a later phase.
 
 ## Parent sign-in
+
+Existing families with no approved child can submit a link request after email
+verification and adding their own name. Requests contain a child name, date of
+birth and optional lesson context. They never search staff records or approve
+themselves. The API requires an idempotency key, limits creation attempts and
+outstanding requests, and suppresses duplicate pending child requests. Staff
+review all sites in `/students/parents`; the parent reads the decision and reply
+in the app. See [staff controls](parent-staff-controls.md) for approval checks.
 
 1. `POST /auth/request-code` with `{"email":"parent@example.test"}`. The response
    is `202 {"challengeId":"…","expiresAt":"…"}`. Signup and sign-in use the same

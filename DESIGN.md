@@ -133,6 +133,12 @@ Assessments, Together, Activity, Programmes and levels, Staff, Roles,
 Clubs, Account, sign-in and loading states also use this shared foundation.
 Responsive tables re-home secondary columns as supporting lines.
 
+Parent accounts also contains the shared parent-link request queue: pending,
+approved and declined filters; explicit swimmer matching across sites; and a
+parent-visible reply separate from the internal audit reason. Requests do not
+grant access until staff approve. The queue uses paginated reads and the same
+parents.manage permission as the profile controls.
+
 Parent access is a permission-gated swimmer profile tab with email/status rows
 and explicit approve, revoke and restore dialogs. Swimmers links to Parent
 accounts, an exact email search followed by account details and a reasoned

@@ -2,6 +2,24 @@ import type { HelpArticle } from "./types";
 
 export const PARENT_GUIDES: HelpArticle[] = [
   {
+    slug: "parent-link-requests", title: "Review a parent’s request to link their child", category: "swimmers", scopes: ["desk"],
+    summary: "Approve or decline requests sent from LeisureWorld Aquatics, without asking families to email.",
+    keywords: ["parent", "request", "link child", "approval", "guardian", "pending", "decline"],
+    before: ["You need the Swimmers screen and Manage parent access permission.", "A request is not proof of guardianship. Verify the parent against the existing swimmer record before approving."],
+    steps: [
+      { title: "Open the requests queue", text: "Choose Parent accounts from Swimmers. Parent access requests shows families from both sites, starting with Waiting for review. Refresh requests checks for new submissions." },
+      { title: "Check the parent and match their child", text: "Read the parent’s verified sign-in email, name, phone and submitted child details. Choose Review and approve. Search for the existing swimmer, then open their profile in a new tab to check identity and guardianship. Never create another swimmer to resolve a link request." },
+      { title: "Confirm the decision and reply", text: "To approve, check the selected swimmer and enter a reply to the parent plus your internal audit reason. Choose Approve and link swimmer. To decline, choose Decline request and explain what the parent should check or do next. Replies are visible in the parent app; the audit reason stays in Swimly." },
+      { title: "Check the result", text: "Approved and Declined filters show completed requests and the reviewer. The parent sees the decision under Your requests. Approved children appear under My children. No customer email is needed, and signing in still uses an email verification code." },
+    ],
+    result: "Approval links the selected existing swimmer across both sites. The decision and any access change are recorded together in Activity.",
+    troubleshooting: [
+      { question: "The account is suspended.", answer: "Approval is disabled. Check the account using the email search below the queue and resolve the suspension before granting access." },
+      { question: "The request was already reviewed or the save could not be confirmed.", answer: "Refresh the queue and check Approved or Declined before trying again. Another staff member may have completed it." },
+      { question: "The parent cannot see the approved child.", answer: "Check the address used to sign in and the swimmer’s Parent access tab. A later revocation or suspension still blocks access, even when an earlier request was approved." },
+    ], related: ["parent-access", "parent-accounts", "find-swimmer"], action: "students",
+  },
+  {
     slug: "parent-access", title: "Approve or revoke a parent’s access to a swimmer", category: "swimmers", scopes: ["desk"],
     summary: "Choose exactly which guardian emails can see a swimmer in LeisureWorld Aquatics, across both sites.",
     keywords: ["parent", "guardian", "LeisureWorld Aquatics", "approve", "revoke", "restore", "email", "child access"],
@@ -16,7 +34,7 @@ export const PARENT_GUIDES: HelpArticle[] = [
     troubleshooting: [
       { question: "The parent cannot see their child.", answer: "Check the exact address used to sign in against the approved address. If it matches, use Parent accounts to check whether the account is suspended. Do not create another swimmer record." },
       { question: "I entered the wrong email.", answer: "Revoke the incorrect address immediately, then approve the correct one after checking it with the guardian." },
-    ], related: ["parent-accounts", "find-swimmer", "swimmer-history"], action: "students",
+    ], related: ["parent-link-requests", "parent-accounts", "find-swimmer", "swimmer-history"], action: "students",
   },
   {
     slug: "parent-accounts", title: "Find, suspend or reactivate a parent account", category: "swimmers", scopes: ["desk"],

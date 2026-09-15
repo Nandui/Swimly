@@ -2,7 +2,7 @@
   "openapi": "3.1.0",
   "info": {
     "title": "LeisureWorld Aquatics Parent API",
-    "version": "1.0.0",
+    "version": "1.1.0",
     "description": "Parent backend hosted by Swimly. No direct database or staff API access. Monday progress writes are released Tuesday 00:00 Europe/Dublin. All responses use Cache-Control: no-store. Bearer sessions last seven days. Class transfers and parent booking cancellation are outside v1."
   },
   "servers": [
@@ -671,6 +671,131 @@
           }
         }
       }
+    },
+    "/access-requests": {
+      "get": {
+        "operationId": "listParentAccessRequests",
+        "summary": "List only this parent’s linking requests and staff replies",
+        "tags": [
+          "Parents"
+        ],
+        "parameters": [
+          {
+            "name": "page",
+            "in": "query",
+            "schema": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 100000,
+              "default": 1
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Twenty requests per page, newest first. Internal notes, matched swimmer IDs and reviewer identities are excluded.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "required": [
+                    "items",
+                    "page",
+                    "total"
+                  ],
+                  "properties": {
+                    "items": {
+                      "type": "array",
+                      "items": {
+                        "$ref": "#/components/schemas/AccessRequest"
+                      }
+                    },
+                    "page": {
+                      "type": "integer"
+                    },
+                    "total": {
+                      "type": "integer"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "default": {
+            "description": "Authentication, input or service error.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "operationId": "requestChildAccess",
+        "summary": "Ask staff to link an existing child; creates no swimmer or access grant",
+        "tags": [
+          "Parents"
+        ],
+        "description": "Requires a verified active parent and completed parent name. Maximum ten pending requests; thirty creation attempts per hour. Same-key retries retain the original body; duplicate pending child details return the existing request. Staff approve or decline inside Swimly. No request email is sent.",
+        "parameters": [
+          {
+            "name": "Idempotency-Key",
+            "in": "header",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "minLength": 16,
+              "maxLength": 128,
+              "pattern": "^[A-Za-z0-9_-]+$"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/AccessRequestInput"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Existing request returned for an idempotent retry or duplicate pending child.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AccessRequestReceipt"
+                }
+              }
+            }
+          },
+          "201": {
+            "description": "Request created and audited.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AccessRequestReceipt"
+                }
+              }
+            }
+          },
+          "default": {
+            "description": "Errors include PROFILE_REQUIRED, IDEMPOTENCY_CONFLICT, REQUEST_LIMIT and RATE_LIMITED.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        }
+      }
     }
   },
   "components": {
@@ -1310,6 +1435,117 @@
             "additionalProperties": false
           }
         ]
+      },
+      "AccessRequestInput": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "firstName",
+          "lastName",
+          "dateOfBirth"
+        ],
+        "properties": {
+          "firstName": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 80
+          },
+          "lastName": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 80
+          },
+          "dateOfBirth": {
+            "type": "string",
+            "format": "date",
+            "description": "Valid calendar date between 1900-01-01 and today."
+          },
+          "context": {
+            "type": "string",
+            "maxLength": 500,
+            "default": ""
+          }
+        }
+      },
+      "AccessRequest": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "id",
+          "firstName",
+          "lastName",
+          "dateOfBirth",
+          "context",
+          "status",
+          "reply",
+          "createdAt",
+          "reviewedAt"
+        ],
+        "properties": {
+          "firstName": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 80
+          },
+          "lastName": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 80
+          },
+          "dateOfBirth": {
+            "type": "string",
+            "format": "date",
+            "description": "Valid calendar date between 1900-01-01 and today."
+          },
+          "context": {
+            "type": "string",
+            "maxLength": 500,
+            "default": ""
+          },
+          "id": {
+            "type": "string"
+          },
+          "status": {
+            "type": "string",
+            "enum": [
+              "PENDING",
+              "APPROVED",
+              "DECLINED"
+            ]
+          },
+          "reply": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "createdAt": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "reviewedAt": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "format": "date-time"
+          }
+        }
+      },
+      "AccessRequestReceipt": {
+        "type": "object",
+        "required": [
+          "request",
+          "replayed"
+        ],
+        "properties": {
+          "request": {
+            "$ref": "#/components/schemas/AccessRequest"
+          },
+          "replayed": {
+            "type": "boolean"
+          }
+        }
       }
     }
   }

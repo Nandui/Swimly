@@ -303,3 +303,45 @@ test("Dublin midnight publication handles both daylight-saving changes", async (
     assert.equal(new Date(result.rows[0].release.replace(" ", "T") + "Z").toISOString(), expected);
   }
 });
+
+test("existing-family requests remain private until staff approve; retries, declines and revocation are safe", async () => {
+  const token = (await signIn("requester@example.test")).accessToken;
+  await call("me", "PATCH", { name: "Requesting Parent" }, token);
+  const body = { firstName: "Taylor", lastName: "Example", dateOfBirth: "2018-04-06", context: "Churchfield, Tuesday lessons" };
+  const key = { "Idempotency-Key": "synthetic-request-0001" };
+  assert.equal((await call("access-requests", "POST", body, "", key)).status, 401);
+  assert.equal((await call("access-requests", "POST", { ...body, dateOfBirth: "2018-02-30" }, token, key)).status, 400);
+  assert.equal((await call("access-requests", "POST", { ...body, studentId: "guess" }, token, key)).status, 400);
+  const created = await call("access-requests", "POST", body, token, key);
+  assert.equal(created.status, 201);
+  const { request: row } = await created.json();
+  assert.equal(row.status, "PENDING");
+  assert.equal((await call("access-requests", "POST", body, token, key)).status, 200);
+  assert.equal((await (await call("access-requests", "POST", body, token, { "Idempotency-Key": "synthetic-request-0002" })).json()).request.id, row.id);
+  assert.equal((await call("access-requests", "POST", { ...body, firstName: "Different" }, token, key)).status, 409);
+  assert.equal((await (await call("children", "GET", undefined, token)).json()).items.length, 0);
+  const outsider = (await signIn("request-outsider@example.test")).accessToken;
+  assert.equal((await (await call("access-requests", "GET", undefined, outsider)).json()).items.length, 0);
+  assert.equal((await call(`access-requests/${row.id}`, "PATCH", {}, token)).status, 404);
+  const student = await fixture.prisma.student.create({ data: { firstName: "Taylor", lastName: "Example", dateOfBirth: new Date(body.dateOfBirth), clubId: "club_churchfield" } });
+  const decision = { decision: "APPROVED", studentId: student.id, reason: "Verified guardian against the existing record", reply: "Your child is now linked. Open My children to see their progress." };
+  actorPermissions = false;
+  assert.equal((await staff("access-requests")).status, 403);
+  assert.equal((await staff(`access-requests/${row.id}`, "PATCH", decision)).status, 403);
+  actorPermissions = true; actorScreen = false;
+  assert.equal((await staff(`access-requests/${row.id}`, "PATCH", decision)).status, 403);
+  actorScreen = true;
+  assert.equal((await staff(`access-requests/${row.id}`, "PATCH", { ...decision, studentId: "missing" })).status, 404);
+  assert.equal((await staff(`access-requests/${row.id}`, "PATCH", decision)).status, 200);
+  assert.equal((await staff(`access-requests/${row.id}`, "PATCH", decision)).status, 409);
+  assert.equal((await (await call("children", "GET", undefined, token)).json()).items[0].id, student.id);
+  const listed = (await (await call("access-requests", "GET", undefined, token)).json()).items[0];
+  assert.equal(listed.reply, decision.reply);
+  for (const privateField of ["studentId", "reviewedById", "reviewedByName", "parent", "requestHash", "childFingerprint"]) assert.equal(privateField in listed, false);
+  assert.equal((await fixture.prisma.auditLog.count({ where: { entity: "ParentAccessRequest", entityId: row.id } })), 2);
+  await staff(`children/${student.id}/access`, "DELETE", { email: "requester@example.test", reason: "Synthetic access revoked" });
+  assert.equal((await (await call("children", "GET", undefined, token)).json()).items.length, 0);
+  const next = await (await call("access-requests", "POST", { ...body, firstName: "Jordan" }, token, { "Idempotency-Key": "synthetic-request-0003" })).json();
+  assert.equal((await staff(`access-requests/${next.request.id}`, "PATCH", { decision: "DECLINED", reason: "Cannot verify guardian", reply: "Please check the child’s name and date of birth and send a new request." })).status, 200);
+  assert.equal((await (await call("children", "GET", undefined, token)).json()).items.length, 0);
+});

@@ -1,5 +1,14 @@
 # Parent app handover — 14 September 2026
 
+**In-app child-link requests, 15 September (local, not deployed):** existing
+families now request access inside LeisureWorld Aquatics. Staff review all sites
+under Swimmers → Parent accounts, explicitly match the existing swimmer and
+approve or decline with a parent-facing reply and internal audit reason.
+The coordinated parent frontend is in `C:/swimly-public-app`. Deploy this backend
+and additive migration `20260915170000_parent_access_requests` before the parent
+frontend. No new environment variables are needed. See
+[staff controls](parent-staff-controls.md) for the workflow and synthetic checks.
+
 **Staff interface update, 15 September:** the current development work adds
 [parent access, account management and assessment publishing controls](parent-staff-controls.md),
 with illustrated help guides. These code changes still need promotion before

@@ -10,6 +10,7 @@ import { emailSchema, errorResponse, idSchema, json, parseInput, readBody, reaso
 import { dublinInstant } from "@/lib/parent/time";
 import { SESSION_SELECT, sessionAvailability, type PublicSession } from "@/lib/parent/assessments";
 import { readSharedCurriculum, type SharedCurriculum } from "@/lib/curriculum/data/shared";
+import { listAccessReviews, reviewAccessRequest } from "@/lib/parent/access-review";
 
 function publicationDto(session: PublicSession, curriculum: SharedCurriculum) {
   const now = new Date();
@@ -51,12 +52,15 @@ async function dispatch(request: Request, path: string[]) {
   const accessRoute = /^children\/([^/]+)\/access$/.exec(route);
   const publicationRoute = /^assessment-sessions\/([^/]+)\/publication$/.exec(route);
   const accountRoute = /^accounts\/([^/]+)$/.exec(route);
-  const methods = accessRoute ? ["GET", "PUT", "DELETE"] : publicationRoute ? ["GET", "PUT"] : accountRoute ? ["PATCH"] : route === "accounts" ? ["GET"] : null;
+  const reviewRoute = /^access-requests\/([^/]+)$/.exec(route);
+  const methods = accessRoute ? ["GET", "PUT", "DELETE"] : publicationRoute ? ["GET", "PUT"] : accountRoute || reviewRoute ? ["PATCH"] : route === "accounts" || route === "access-requests" ? ["GET"] : null;
   if (!methods) notFound();
   if (!methods.includes(method)) throw new ParentApiError(405, "METHOD_NOT_ALLOWED", "This endpoint does not accept that method.", { Allow: methods.join(", ") });
   const actor = await requirePermission(publicationRoute ? "courses.manage" : "parents.manage");
   if (!canSee(actor, publicationRoute ? "assessments" : "students")) throw new ParentApiError(403, "FORBIDDEN", "This staff workspace cannot manage those records.");
   const attribution = { actorId: actor.user.id, actorName: actor.user.name ?? "Staff", clubId: null };
+  if (route === "access-requests") return json(await listAccessReviews(request));
+  if (reviewRoute) return json(await reviewAccessRequest(request, reviewRoute[1], attribution));
   if (accessRoute) {
     const studentId = parseInput(idSchema, accessRoute[1]);
     if (!await prisma.student.findUnique({ where: { id: studentId }, select: { id: true } })) notFound();

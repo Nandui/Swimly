@@ -18,6 +18,17 @@ export const PARENT_ACCESS_META = {
   approved: { label: "Approved", color: "green" },
   revoked: { label: "Revoked", color: "gray" },
 } as const;
+export const ACCESS_REQUEST_META = {
+  PENDING: { label: "Waiting for review", color: "orange" },
+  APPROVED: { label: "Approved", color: "green" },
+  DECLINED: { label: "Declined", color: "gray" },
+} as const;
+export type AccessReview = {
+  id: string; firstName: string; lastName: string; dateOfBirth: string; context: string;
+  status: keyof typeof ACCESS_REQUEST_META; reply: string | null; createdAt: string; reviewedAt: string | null;
+  reviewedByName: string | null; parent: Pick<ManagedParentAccount, "id" | "email" | "name" | "phone" | "isActive">;
+  student: { id: string; firstName: string; lastName: string } | null;
+};
 export const PARENT_ACCOUNT_META = {
   active: { label: "Active", color: "green" },
   suspended: { label: "Suspended", color: "red" },
