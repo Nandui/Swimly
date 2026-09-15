@@ -124,7 +124,7 @@ export function ScheduleCalendar({ courses, assessments, iso, todayIso, initialN
           {agendaSlots.map(slot => <section key={slot.start} aria-labelledby={`time-${slot.start}`}>
             <header className={styles["agenda-time"]}><TimeHeading slot={slot} /><span className="text-sm text-ui-muted-foreground">{slot.entries.length} {slot.entries.length === 1 ? 'session' : 'sessions'}</span></header>
             <ul className={styles["agenda-list"]}>{slot.entries.map(entry => <li key={`${entry.kind}-${entry.value.id}`}>{entry.kind === 'class'
-              ? <Booking course={entry.value} now={now} iso={iso} currentDate={clock.date} access={access} agenda />
+              ? <Booking course={entry.value} now={now} iso={iso} access={access} agenda />
               : <AssessmentBooking assessment={entry.value} now={now} allowed={access.assessments} />}</li>)}</ul>
           </section>)}
         </section> : <section className={styles["sheet-scroll"]} aria-label="Schedule booking sheet. Scroll horizontally for more times." tabIndex={0}>
@@ -149,7 +149,7 @@ export function ScheduleCalendar({ courses, assessments, iso, todayIso, initialN
                   const classes = starts.get(slot.start);
                   return <TableCell key={slot.start} headers={`level-${level.id} column-${slot.start}`} data-empty={!classes}>
                     {classes ? <ul className={styles["booking-list"]} aria-label={`${level.name}, ${formatTime(slot.start)}`}>
-                      {classes.map(course => <li key={course.id}><Booking course={course} now={now} iso={iso} currentDate={clock.date} access={access} /></li>)}
+                      {classes.map(course => <li key={course.id}><Booking course={course} now={now} iso={iso} access={access} /></li>)}
                     </ul> : <><span aria-hidden="true">—</span><span className={styles["sr-only"]}>No class</span></>}
                   </TableCell>;
                 })}
@@ -200,7 +200,7 @@ function AssessmentBooking({ assessment, now, allowed }: { assessment: CalendarA
   return <Item asChild variant="outline" className={styles.booking} data-phase={phase}>{href ? <a href={href} aria-label={`Open ${label}`}>{content}</a> : <article aria-label={label}>{content}</article>}</Item>;
 }
 
-function Booking({ course, now, iso, currentDate, access, agenda = false }: { course: CalendarClass; now: number | null; iso: string; currentDate: string; access: Access; agenda?: boolean }) {
+function Booking({ course, now, iso, access, agenda = false }: { course: CalendarClass; now: number | null; iso: string; access: Access; agenda?: boolean }) {
   if (course.cancellation) return <Item variant="outline" className={styles.booking}>
     <span className={styles["booking-title"]}>{agenda ? courseName(course) : course.location || "Pool"}</span>
     <span className={styles["booking-status"]}><Badge variant="secondary" data-tone={CALENDAR_PHASE_META.cancelled.color}>Cancelled</Badge></span>
@@ -209,7 +209,7 @@ function Booking({ course, now, iso, currentDate, access, agenda = false }: { co
   </Item>;
   const phase = classPhase(course, now);
   const name = courseName(course);
-  const href = calendarClassHref(course.id, iso, access, currentDate);
+  const href = calendarClassHref(course.id, iso, access);
   const tone = capacityTone(course.enrolled, course.capacity);
   const free = placesLeft(course.enrolled, course.capacity);
   // Null is uncapped in Swimly; full and over-capacity classes have no places.
@@ -232,6 +232,6 @@ function Booking({ course, now, iso, currentDate, access, agenda = false }: { co
     </span>
     {agenda && phase === 'running' ? <span className={styles["booking-status"]}><Badge variant="secondary" data-tone={CALENDAR_PHASE_META.running.color}>Running now</Badge></span> : null}
   </>;
-  return <Item asChild variant="outline" className={styles.booking} data-phase={phase}>{href ? <a href={href} aria-label={`${access.attendance && iso <= currentDate ? 'Open attendance' : 'Open class'}: ${name}, ${formatTime(course.startMinutes)}, ${location}, ${availability}${phase === 'running' ? ', running now' : ''}`}>{content}</a>
+  return <Item asChild variant="outline" className={styles.booking} data-phase={phase}>{href ? <a href={href} aria-label={`Open class: ${name}, ${formatTime(course.startMinutes)}, ${location}, ${availability}${phase === 'running' ? ', running now' : ''}`}>{content}</a>
     : <article aria-label={`${name}, ${formatTime(course.startMinutes)}, ${location}, ${availability}`}>{content}</article>}</Item>;
 }

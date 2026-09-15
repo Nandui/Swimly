@@ -28,9 +28,9 @@ weekly times use the current class configuration; this is not an audit reconstru
 of old timetable edits. Assessment sessions, covers, attendance states and
 cancellations all use the selected date and sidebar site.
 
-Past/current class links can open attendance with the existing permission.
-Future classes open class details only when the Classes screen is granted;
-they never silently open an older attendance register. Return links preserve
+Class cards in both the booking sheet and Agenda open the class overview used
+by Classes, for every selected date. Links require the Classes screen grant;
+attendance permission does not change their destination. Return links preserve
 the selected Schedule day. Existing attendance guards and Instructor isolation
 remain unchanged. Mutations revalidate `/schedule`.
 

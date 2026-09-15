@@ -87,10 +87,13 @@ test("pool and instructor filters include today's cover and retain unknown locat
   assert.deepEqual(calendarSlots([], 900), []);
 });
 
-test("calendar links respect the separate attendance and class-screen permissions", () => {
-  assert.equal(calendarClassHref("c", "2026-09-10", { attendance: true, courses: false }, "2026-09-10"), "/courses/c/class?date=2026-09-10&from=schedule");
-  assert.equal(calendarClassHref("c", "2026-09-10", { attendance: false, courses: true }), "/courses/c?from=schedule&date=2026-09-10");
-  assert.equal(calendarClassHref("c", "2026-09-10", { attendance: false, courses: false }), undefined);
+test("schedule cards always open class overview, preserve the day and require Classes access", () => {
+  for (const iso of ["2000-01-01", "2026-09-15", "2100-01-01"]) {
+    for (const attendance of [false, true]) {
+      assert.equal(calendarClassHref("c", iso, { attendance, courses: true }), `/courses/c?from=schedule&date=${iso}`);
+      assert.equal(calendarClassHref("c", iso, { attendance, courses: false }), undefined);
+    }
+  }
 });
 
 test("future days have no running or next indicators and never open a past attendance session", () => {
@@ -98,8 +101,8 @@ test("future days have no running or next indicators and never open a past atten
   assert.deepEqual(calendarSlots(sessions, null).map(slot => slot.phase), ["later", "later"]);
   assert.deepEqual(calendarAgendaSlots(sessions, [assessment("assessment", 900)], null).map(slot => slot.phase), ["later", "later"]);
   assert.equal(classPhase(sessions[0], null), "later");
-  assert.equal(calendarClassHref("c", "2026-09-11", { attendance: true, courses: true }, "2026-09-10"), "/courses/c?from=schedule&date=2026-09-11");
-  assert.equal(calendarClassHref("c", "2026-09-11", { attendance: true, courses: false }, "2026-09-10"), undefined);
+  assert.equal(calendarClassHref("c", "2026-09-11", { attendance: true, courses: true }), "/courses/c?from=schedule&date=2026-09-11");
+  assert.equal(calendarClassHref("c", "2026-09-11", { attendance: true, courses: false }), undefined);
 });
 
 test("the booking sheet keeps curriculum order and distinct level IDs, not arrival order or names", () => {

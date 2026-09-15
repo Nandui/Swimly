@@ -163,8 +163,8 @@ Both session types follow the sidebar's site selection without pool or instructo
 the Assessments screen, and Schedule loads no assessment participant details.
 Opening attendance remains a separate, permission-gated action. Roles can
 offer the calendar without granting attendance permission.
-Future sessions open class details when permitted, never an older attendance
-register. Running/next indicators only apply to the current day. Availability
+Class cards open the Classes overview when permitted, for past, current and
+future dates. Running/next indicators only apply to the current day. Availability
 uses enrolments covering the selected date; cancellations and teaching cover
 use that date too. The weekly class configuration is current, not a historical
 snapshot of timetable edits. `/today` bookmarks redirect to `/schedule` and

@@ -1,6 +1,5 @@
 import type { CourseRow } from "@/lib/courses/data/courses";
 import type { StatusMeta } from "@/lib/status";
-import { today } from "@/lib/format";
 
 export type CalendarClass = Pick<CourseRow,
   "id" | "name" | "startMinutes" | "durationMinutes" | "capacity" | "location" | "level" | "instructor" | "instructorId"
@@ -136,7 +135,6 @@ export function calendarProgrammes(courses: CalendarClass[]) {
     }));
 }
 
-export function calendarClassHref(id: string, iso: string, access: { attendance: boolean; courses: boolean }, currentDate = today()) {
-  if (access.attendance && iso <= currentDate) return `/courses/${id}/class?date=${iso}&from=schedule`;
+export function calendarClassHref(id: string, iso: string, access: { attendance: boolean; courses: boolean }) {
   return access.courses ? `/courses/${id}?from=schedule&date=${iso}` : undefined;
 }
