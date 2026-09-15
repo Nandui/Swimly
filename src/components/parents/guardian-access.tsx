@@ -19,7 +19,7 @@ export function GuardianAccessPanel({ studentId, swimmerName }: { studentId: str
     <div className="flex flex-wrap items-start justify-between gap-4">
       <div className="max-w-prose space-y-2">
         <h2 id="parent-access-heading" tabIndex={-1} className="text-xl font-semibold">Parent access</h2>
-        <p className="text-sm text-ui-muted-foreground">Approve the email a parent or guardian uses to sign in to Bookly. Access follows {swimmerName} across both sites.</p>
+        <p className="text-sm text-ui-muted-foreground">Approve the email a parent or guardian uses to sign in to LeisureWorld Aquatics. Access follows {swimmerName} across both sites.</p>
       </div>
       {resource.data ? <AccessForm path={path} swimmerName={swimmerName} onSaved={saved} /> : null}
     </div>
@@ -45,7 +45,7 @@ export function GuardianAccessPanel({ studentId, swimmerName }: { studentId: str
       </div>}
       <div className="max-w-prose space-y-2 text-sm text-ui-muted-foreground">
         <p>Parents see released progress and bookings. Competency changes appear the next day at midnight in Ireland. Internal and medical notes stay private.</p>
-        <p>Approval does not send an email. The guardian signs in to Bookly with the approved address.</p>
+        <p>Approval does not send an email. The guardian signs in to LeisureWorld Aquatics with the approved address.</p>
         <Button variant="link" className="min-h-11 px-0" asChild><Link href="/students/parents">Find or manage a parent account</Link></Button>
       </div>
     </> : null}
@@ -59,7 +59,7 @@ function AccessForm({ path, swimmerName, entry, onSaved }: { path: string; swimm
     trigger={<Button variant={entry ? "outline" : "default"} className="min-h-11">{label}</Button>}
     title={label}
     description={revoke ? `Remove ${entry.parentEmail}’s access to ${swimmerName}. Access to other swimmers stays unchanged.`
-      : `Allow this guardian to see ${swimmerName}’s released progress and bookings in Bookly.`}
+      : `Allow this guardian to see ${swimmerName}’s released progress and bookings in LeisureWorld Aquatics.`}
     submitLabel={label} successMessage={revoke ? "Parent access revoked." : "Parent access approved."}
     submit={data => saveParentAdmin(path, revoke ? "DELETE" : "PUT", {
       email: entry?.parentEmail ?? String(data.get("email") ?? "").trim().toLowerCase(), reason: String(data.get("reason") ?? ""),

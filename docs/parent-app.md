@@ -220,7 +220,7 @@ Rollout status, 14 September 2026: the additive parent migration is applied and
 the parent API and Google email adapter are deployed from Swimly's `main` branch.
 The owner approved production activation. Both Vercel projects are connected,
 and signup/sign-in is available at `https://swimly-public-app.vercel.app`.
-The Google sender is `Bookly <info@leisureworldcork.com>` with only `gmail.send`.
+The Google sender is `LeisureWorld Aquatics <info@leisureworldcork.com>` with only `gmail.send`.
 Its credentials are Production secrets on `swimly-crm` only. One approved code
 requested through the live parent app arrived in that mailbox's Inbox; the code
 was not used to create a parent account. Automated flow tests remain isolated.
@@ -248,7 +248,7 @@ desk controls for these tasks are documented in [staff controls](parent-staff-co
 2. Set a separate random `PARENT_AUTH_SECRET` of at least 32 characters.
 3. Configure `PARENT_GOOGLE_CLIENT_ID`, `PARENT_GOOGLE_CLIENT_SECRET`,
    `PARENT_GOOGLE_REFRESH_TOKEN` and `PARENT_EMAIL_FROM` on Swimly. The approved
-   sender is `Bookly <info@leisureworldcork.com>`. Follow the
+   sender is `LeisureWorld Aquatics <info@leisureworldcork.com>`. Follow the
    [Google Workspace email setup](parent-google-email.md) using only `gmail.send`.
    Mailbox passwords and Google domain-wide delegation are not needed.
 4. Set `PARENT_API_ALLOWED_ORIGINS` to exact frontend origins, comma-separated.

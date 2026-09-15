@@ -40,10 +40,14 @@ test("sends one private MIME email through the authorized Google mailbox", async
   assert.match(payload.raw, /^[A-Za-z0-9_-]+$/);
   const mime = Buffer.from(payload.raw, "base64url").toString("utf8");
   const [headers, body] = mime.split("\r\n\r\n");
-  assert.match(headers, /^From: =\?UTF-8\?B\?Qm9va2x5\?= <info@example\.test>\r$/m);
+  const from = /^From: (.+) <info@example\.test>\r$/m.exec(headers);
+  assert.ok(from);
+  const displayName = from[1].split(" ").map(word => Buffer.from(word.slice(10, -2), "base64").toString("utf8")).join("");
+  assert.equal(displayName, "LeisureWorld Aquatics");
+  assert.match(headers, /^Subject: Your LeisureWorld Aquatics parent sign-in code\r$/m);
   assert.match(headers, /^To: parent@example\.test\r$/m);
   assert.equal(/^Bcc:|^Cc:/m.test(headers), false);
-  assert.match(Buffer.from(body, "base64").toString("utf8"), /code is 012345.*\r\n\r\nIt expires in 10 minutes/);
+  assert.match(Buffer.from(body, "base64").toString("utf8"), /Your LeisureWorld Aquatics sign-in code is 012345.*\r\n\r\nIt expires in 10 minutes/);
   assert.ok(body.trim().split("\r\n").every(line => line.length <= 76));
   assert.equal(mime.includes("synthetic-secret"), false);
   assert.equal(mime.includes("synthetic-refresh"), false);

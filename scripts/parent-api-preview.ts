@@ -8,7 +8,7 @@ async function main() {
   process.env.PARENT_API_ENABLED = "true";
   process.env.PARENT_AUTH_SECRET = "synthetic-preview-secret-never-use-in-production";
   process.env.PARENT_API_ALLOWED_ORIGINS = "http://127.0.0.1:3020";
-  process.env.PARENT_EMAIL_FROM = "Bookly preview <parent@example.test>";
+  process.env.PARENT_EMAIL_FROM = "LeisureWorld Aquatics preview <parent@example.test>";
   process.env.PARENT_GOOGLE_CLIENT_ID = "synthetic-client";
   process.env.PARENT_GOOGLE_CLIENT_SECRET = "synthetic-secret";
   process.env.PARENT_GOOGLE_REFRESH_TOKEN = "synthetic-refresh";

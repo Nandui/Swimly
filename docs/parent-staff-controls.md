@@ -1,4 +1,4 @@
-# Managing Bookly from the staff workspace
+# Managing LeisureWorld Aquatics from the staff workspace
 
 The staff interface uses the existing `/api/parent-admin/v1` endpoints with
 staff cookies. It never copies parent credentials into the browser. No database
@@ -12,7 +12,7 @@ migration or new environment setting is required.
 - **Swimmers → Parent accounts** (`/students/parents`): exact email lookup,
   account details and suspend/reactivate. Suspension revokes existing sessions.
   Reactivation permits a fresh sign-in without restoring revoked child access.
-- **Assessments → session → Booking in Bookly:** publish, edit a deadline,
+- **Assessments → session → Booking in LeisureWorld Aquatics:** publish, edit a deadline,
   unpublish and refresh status. The session must belong to the working site.
   Deadlines use Europe/Dublin even on a device set to another timezone. Blank
   means the session start. Unpublishing preserves existing bookings.

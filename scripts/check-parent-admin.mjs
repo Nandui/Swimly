@@ -49,7 +49,7 @@ async function open(screen, width = 1280, theme = 'light') {
   await page.goto(`${preview.url}/?screen=${screen}&theme=${theme}`);
   await page.getByRole('heading', {level:1}).waitFor();
   if (screen === 'profile') await page.getByRole('button', {name:'Approve parent email',exact:true}).waitFor();
-  if (screen === 'publication') await page.getByRole('button', {name:'Publish to Bookly',exact:true}).waitFor();
+  if (screen === 'publication') await page.getByRole('button', {name:'Publish to LeisureWorld Aquatics',exact:true}).waitFor();
   return page;
 }
 async function fillReason(page, value = 'Verified with the guardian at the desk') {
@@ -67,7 +67,7 @@ try {
         }
         await checkLayout(page,`${screen}-${width}-${theme}`);
         if ((width===375||width===1280)&&screen!=='directory') await capture(page,`${screen}-${width}-${theme}`);
-        const trigger = {profile:'Approve parent email',accounts:'Suspend account',publication:'Publish to Bookly'}[screen];
+        const trigger = {profile:'Approve parent email',accounts:'Suspend account',publication:'Publish to LeisureWorld Aquatics'}[screen];
         if (trigger) {
           await page.getByRole('button',{name:trigger,exact:true}).click();
           await page.getByRole('dialog').waitFor();
@@ -135,7 +135,7 @@ try {
   await accounts.close();
 
   const publication = await open('publication');
-  await publication.getByRole('button',{name:'Publish to Bookly',exact:true}).click();
+  await publication.getByRole('button',{name:'Publish to LeisureWorld Aquatics',exact:true}).click();
   const deadline=`${preview.session.date.toISOString().slice(0,10)}T15:00`;
   await publication.getByLabel('Booking deadline (Ireland time)').fill(deadline);await fillReason(publication);
   await publication.getByRole('dialog').getByRole('button',{name:'Publish session',exact:true}).click();

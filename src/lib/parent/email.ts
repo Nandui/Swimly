@@ -17,7 +17,9 @@ export function parentEmailConfig() {
   const named = /^([^<>\r\n]{1,60})\s*<([^<>\r\n]+)>$/.exec(from);
   const sender = address.safeParse(named ? named[2] : from);
   if (!credentials.success || !sender.success || /[\r\n]/.test(from)) unavailable();
-  const name = named?.[1].trim();
+  const configuredName = named?.[1].trim();
+  // Keep the authorised mailbox while upgrading the previous product display name.
+  const name = configuredName === "Bookly" ? "LeisureWorld Aquatics" : configuredName;
   const encodedName = name?.match(/.{1,10}/gu)?.map(part => `=?UTF-8?B?${Buffer.from(part).toString("base64")}?=`).join(" ");
   const fromHeader = encodedName ? `${encodedName} <${sender.data}>` : sender.data;
   return { ...credentials.data, sender: sender.data, fromHeader };
@@ -40,9 +42,9 @@ export async function sendParentSignInCode(email: string, code: string, config =
       scope: z.string().optional() }).safeParse(await tokenResponse.json());
     if (!token.success || (token.data.scope !== undefined && token.data.scope.trim() !== sendScope)) unavailable();
 
-    const text = `Your Bookly sign-in code is ${code}.\r\n\r\nIt expires in 10 minutes. Do not share this code. If you did not request it, you can ignore this email.`;
+    const text = `Your LeisureWorld Aquatics sign-in code is ${code}.\r\n\r\nIt expires in 10 minutes. Do not share this code. If you did not request it, you can ignore this email.`;
     const message = [
-      `From: ${config.fromHeader}`, `To: ${email}`, "Subject: Your Bookly parent sign-in code",
+      `From: ${config.fromHeader}`, `To: ${email}`, "Subject: Your LeisureWorld Aquatics parent sign-in code",
       `Date: ${new Date().toUTCString()}`, `Message-ID: <${randomUUID()}@${config.sender.split("@")[1]}>`,
       "MIME-Version: 1.0", "Content-Type: text/plain; charset=UTF-8", "Content-Transfer-Encoding: base64", "",
       Buffer.from(text).toString("base64").match(/.{1,76}/g)!.join("\r\n"), "",

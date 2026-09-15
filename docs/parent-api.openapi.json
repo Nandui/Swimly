@@ -1,7 +1,7 @@
 {
   "openapi": "3.1.0",
   "info": {
-    "title": "Bookly Parent API",
+    "title": "LeisureWorld Aquatics Parent API",
     "version": "1.0.0",
     "description": "Parent backend hosted by Swimly. No direct database or staff API access. Monday progress writes are released Tuesday 00:00 Europe/Dublin. All responses use Cache-Control: no-store. Bearer sessions last seven days. Class transfers and parent booking cancellation are outside v1."
   },

@@ -18,7 +18,7 @@ export function AssessmentPublicationPanel({ sessionId, sessionLabel, startsAt }
   const meta = PUBLICATION_META[!publication?.enabled ? "unpublished" : publication.visibleToParents ? "published" : "closed"];
   return <section className="space-y-4 rounded-ui-lg border border-ui-border p-4" aria-labelledby="parent-booking-heading">
     <div className="flex flex-wrap items-center justify-between gap-3">
-      <h2 id="parent-booking-heading" tabIndex={-1} className="text-xl font-semibold">Booking in Bookly</h2>
+      <h2 id="parent-booking-heading" tabIndex={-1} className="text-xl font-semibold">Booking in LeisureWorld Aquatics</h2>
       {publication ? <Badge variant="secondary" data-tone={meta.color}>{meta.label}</Badge> : null}
     </div>
     <ParentLoadState {...resource} />
@@ -26,19 +26,19 @@ export function AssessmentPublicationPanel({ sessionId, sessionLabel, startsAt }
       <div className="max-w-prose space-y-2 text-sm text-ui-muted-foreground">
         <p>{publication.visibleToParents ? publication.spacesAvailable === 0
           ? "Visible to parents, but full. No more places can be booked."
-          : "Parents can find this session and book an available place in Bookly."
+          : "Parents can find this session and book an available place in LeisureWorld Aquatics."
           : publication.enabled ? "Parent booking is closed. Existing bookings remain on this session."
-            : "Only staff can book this session until it is published to Bookly."}</p>
+            : "Only staff can book this session until it is published to LeisureWorld Aquatics."}</p>
         {publication.enabled ? <p>Booking deadline: <span className="font-medium text-ui-foreground">{parentDateTime(publication.bookingClosesAt ?? startsAt)}</span> · Ireland time</p> : null}
         {!publication.canPublish ? <p>This session cannot open for parent booking. It must be in the future, not cancelled, and use an active site, programme and assessment type.</p> : null}
       </div>
       <div className="flex flex-wrap gap-2">
         {publication.canPublish ? <ParentFormDialog
-          trigger={<Button variant={publication.enabled ? "outline" : "default"} className="min-h-11">{publication.enabled ? "Edit booking deadline" : "Publish to Bookly"}</Button>}
-          title={publication.enabled ? "Edit parent booking deadline" : "Publish assessment to Bookly"}
+          trigger={<Button variant={publication.enabled ? "outline" : "default"} className="min-h-11">{publication.enabled ? "Edit booking deadline" : "Publish to LeisureWorld Aquatics"}</Button>}
+          title={publication.enabled ? "Edit parent booking deadline" : "Publish assessment to LeisureWorld Aquatics"}
           description="Parents will be able to find this session and book available places."
           submitLabel={publication.enabled ? "Save deadline" : "Publish session"}
-          successMessage={publication.enabled ? "Parent booking deadline updated." : "Assessment published to Bookly."}
+          successMessage={publication.enabled ? "Parent booking deadline updated." : "Assessment published to LeisureWorld Aquatics."}
           submit={data => {
             let deadline: string | null;
             try { deadline = bookingDeadline(String(data.get("bookingClosesAt") ?? "")); }
@@ -56,7 +56,7 @@ export function AssessmentPublicationPanel({ sessionId, sessionLabel, startsAt }
         {publication.enabled ? <ParentFormDialog
           trigger={<Button variant="outline" className="min-h-11">Unpublish</Button>}
           title="Unpublish assessment" description="Hide this session from parent booking. Existing bookings stay in place and staff can still manage them."
-          submitLabel="Unpublish session" successMessage="Assessment unpublished from Bookly."
+          submitLabel="Unpublish session" successMessage="Assessment unpublished from LeisureWorld Aquatics."
           submit={data => saveParentAdmin(path, "PUT", { enabled: false, reason: String(data.get("reason") ?? "") })} onSuccess={saved}>
           <p className="rounded-ui-md bg-ui-muted p-3 text-sm font-medium break-words">{sessionLabel}</p><ParentReason />
         </ParentFormDialog> : null}

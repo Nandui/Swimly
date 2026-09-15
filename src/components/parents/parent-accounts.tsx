@@ -36,7 +36,7 @@ export function ParentAccounts() {
     <form onSubmit={search} className="flex flex-wrap items-end gap-3" aria-label="Find a parent account" aria-busy={pending}>
       <Input type="email" name="email" label="Parent email" value={email} onChange={setEmail} required maxLength={254}
         autoComplete="off" autoCapitalize="none" spellCheck={false} className="min-w-0 flex-[1_1_16rem] [&_input]:min-h-11" disabled={pending}
-        description="Enter the full address used to sign in to Bookly." />
+        description="Enter the full address used to sign in to LeisureWorld Aquatics." />
       <LoadingButton type="submit" className="min-h-11" pending={pending} pendingLabel="Searching…">Find account</LoadingButton>
     </form>
     <div ref={resultRef} tabIndex={-1} className="space-y-4 rounded-ui-lg focus-visible:outline-2 focus-visible:outline-ui-ring" aria-live="polite">
