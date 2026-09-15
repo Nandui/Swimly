@@ -2,6 +2,7 @@
 import { createServer } from "node:http";
 import { isolatedPrisma } from "../src/test/pglite-prisma";
 import { serverModule } from "../src/test/server-module";
+import { mostRecentOccurrence, shiftWeeks } from "../src/lib/attendance/dates";
 
 async function main() {
   if (process.env.PARENT_API_PREVIEW !== "1" || process.env.NODE_ENV === "production") throw new Error("Set PARENT_API_PREVIEW=1 for the isolated preview.");
@@ -30,11 +31,17 @@ async function main() {
   const skills = ["Enter and exit the pool safely", "Blow bubbles underwater", "Float on your back", "Push and glide", "Kick for five metres", "Turn and return to the wall"];
   for (const [index, name] of skills.entries()) await db.competency.create({ data: { id: `demo-skill-${index}`, levelId: level.id, name, sortOrder: index } });
   await db.parentAccount.create({ data: { email: "parent@example.test", name: "Alex Morgan" } });
-  const course = await db.course.create({ data: { clubId: "club_bishopstown", levelId: level.id, dayOfWeek: "MONDAY", startMinutes: 960, durationMinutes: 30 } });
+  const teacher = await db.user.create({ data: { name: "Robin Example", email: "teacher@example.test", passwordHash: "unused" } });
+  const course = await db.course.create({ data: { clubId: "club_bishopstown", levelId: level.id, dayOfWeek: "MONDAY", startMinutes: 960, durationMinutes: 30, instructorId: teacher.id, location: "Learner pool" } });
   for (const [index, name] of ["Ava", "Liam"].entries()) {
     const child = await db.student.create({ data: { id: `demo-child-${index}`, clubId: "club_bishopstown", firstName: name, lastName: "Morgan", dateOfBirth: new Date(`201${7 + index}-04-12`), medicalNotes: "Private synthetic note: must never leave staff API" } });
     await db.parentChildAccess.create({ data: { parentEmail: "parent@example.test", studentId: child.id, source: "STAFF_APPROVAL" } });
     await db.enrolment.create({ data: { studentId: child.id, courseId: course.id, levelId: level.id, programmeId: programme.id, startedOn: new Date("2026-01-01") } });
+    for (let week = 1; week <= 10; week++) await db.attendanceRecord.create({ data: {
+      studentId: child.id, courseId: course.id, date: new Date(shiftWeeks(mostRecentOccurrence("MONDAY"), -week)),
+      status: week === 4 + index ? "ABSENT" : week === 2 ? "LATE" : "PRESENT",
+      markedByName: "Robin Example", note: "Private synthetic attendance note",
+    } });
     for (let n = 0; n < 5; n++) await db.competencyResult.create({ data: { studentId: child.id, competencyId: `demo-skill-${n}`, status: n < 3 - index ? "ACHIEVED" : "WORKING_ON", assessedByName: "Demo teacher", assessedOn: new Date("2026-09-10") } });
   }
   // Only this isolated database advances the initial synthetic marks into the past.

@@ -2,6 +2,7 @@ import { authenticateParent, logout, parentProfile, requestCode, updateProfile, 
 import { bookAssessment, getPublicSession, listBookings, listSessions, listSites } from "@/lib/parent/assessments";
 import { childDto, listChildren, requireChild } from "@/lib/parent/children";
 import { childProgress } from "@/lib/parent/progress";
+import { childLessons } from "@/lib/parent/lessons";
 import { ParentApiError, notFound } from "@/lib/parent/errors";
 import { idSchema, json, parentResponse, parseInput } from "@/lib/parent/http";
 import { rateLimit, requestIp } from "@/lib/parent/security";
@@ -10,7 +11,7 @@ import { createAccessRequest, listAccessRequests } from "@/lib/parent/access-req
 export async function handleParentRequest(request: Request, path: string[]) {
   return parentResponse(request, async () => {
     const route = path.join("/"), method = request.method;
-    const childRoute = /^children\/([A-Za-z0-9_-]+)(\/progress)?$/.exec(route);
+    const childRoute = /^children\/([A-Za-z0-9_-]+)(\/(?:progress|lessons))?$/.exec(route);
     const sessionRoute = /^assessment-sessions\/([A-Za-z0-9_-]+)$/.exec(route);
     const methods = childRoute || sessionRoute ? ["GET"] : ({ "auth/request-code": ["POST"], "auth/verify-code": ["POST"], "auth/logout": ["POST"],
       me: ["GET", "PATCH"], children: ["GET"], sites: ["GET"], "access-requests": ["GET", "POST"], "assessment-sessions": ["GET"], "assessment-bookings": ["GET", "POST"] } as Record<string, string[]>)[route];
@@ -39,7 +40,8 @@ export async function handleParentRequest(request: Request, path: string[]) {
       if (route === "assessment-bookings") return json(await listBookings(request, tx, account));
       if (childRoute) {
         const childId = parseInput(idSchema, childRoute[1]);
-        return json(childRoute[2] ? await childProgress(tx, account, childId) : childDto(await requireChild(tx, account, childId)));
+        return json(childRoute[2] === "/lessons" ? await childLessons(tx, account, childId) :
+          childRoute[2] === "/progress" ? await childProgress(tx, account, childId) : childDto(await requireChild(tx, account, childId)));
       }
       notFound();
     });

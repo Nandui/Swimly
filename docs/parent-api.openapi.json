@@ -2,7 +2,7 @@
   "openapi": "3.1.0",
   "info": {
     "title": "LeisureWorld Aquatics Parent API",
-    "version": "1.1.0",
+    "version": "1.2.0",
     "description": "Parent backend hosted by Swimly. No direct database or staff API access. Monday progress writes are released Tuesday 00:00 Europe/Dublin. All responses use Cache-Control: no-store. Bearer sessions last seven days. Class transfers and parent booking cancellation are outside v1."
   },
   "servers": [
@@ -796,6 +796,48 @@
           }
         }
       }
+    },
+    "/children/{childId}/lessons": {
+      "get": {
+        "operationId": "getChildLessons",
+        "summary": "Read a linked child’s next weekly lesson and 12-week attendance report",
+        "tags": [
+          "Parents"
+        ],
+        "responses": {
+          "200": {
+            "description": "Success",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ChildLessons"
+                }
+              }
+            }
+          },
+          "default": {
+            "description": "Error; see code. Responses are never cacheable.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "childId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "description": "Current guardian approval is required, across all sites. Finds the earliest enrolled, non-cancelled occurrence ending after now within 90 days, including date-specific teaching cover. End dates are exclusive. Attendance uses only this child’s saved records for completed lessons over the last 84 dates inclusive. Late counts as attended; cancellations and missing records do not affect the percentage. No staff notes or other children are exposed. Lesson details use the current timetable; skill publication is unchanged."
+      }
     }
   },
   "components": {
@@ -1546,6 +1588,228 @@
             "type": "boolean"
           }
         }
+      },
+      "Lesson": {
+        "type": "object",
+        "properties": {
+          "courseId": {
+            "type": "string"
+          },
+          "className": {
+            "type": "string"
+          },
+          "level": {
+            "type": "string"
+          },
+          "programme": {
+            "type": "string"
+          },
+          "site": {
+            "$ref": "#/components/schemas/NameAndId"
+          },
+          "location": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "instructorName": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "date": {
+            "type": "string",
+            "format": "date"
+          },
+          "startMinutes": {
+            "type": "integer",
+            "minimum": 0
+          },
+          "durationMinutes": {
+            "type": "integer",
+            "minimum": 0
+          },
+          "startsAt": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "endsAt": {
+            "type": "string",
+            "format": "date-time"
+          }
+        },
+        "required": [
+          "courseId",
+          "className",
+          "level",
+          "programme",
+          "site",
+          "location",
+          "instructorName",
+          "date",
+          "startMinutes",
+          "durationMinutes",
+          "startsAt",
+          "endsAt"
+        ],
+        "additionalProperties": false
+      },
+      "ChildAttendance": {
+        "type": "object",
+        "properties": {
+          "from": {
+            "type": "string",
+            "format": "date"
+          },
+          "to": {
+            "type": "string",
+            "format": "date"
+          },
+          "present": {
+            "type": "integer",
+            "minimum": 0
+          },
+          "late": {
+            "type": "integer",
+            "minimum": 0
+          },
+          "absent": {
+            "type": "integer",
+            "minimum": 0
+          },
+          "attended": {
+            "type": "integer",
+            "minimum": 0
+          },
+          "recorded": {
+            "type": "integer",
+            "minimum": 0
+          },
+          "rate": {
+            "anyOf": [
+              {
+                "type": "integer",
+                "minimum": 0,
+                "maximum": 100
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "cancelled": {
+            "type": "integer",
+            "minimum": 0
+          },
+          "history": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "courseId": {
+                  "type": "string"
+                },
+                "className": {
+                  "type": "string"
+                },
+                "site": {
+                  "$ref": "#/components/schemas/NameAndId"
+                },
+                "date": {
+                  "type": "string",
+                  "format": "date"
+                },
+                "status": {
+                  "enum": [
+                    "PRESENT",
+                    "LATE",
+                    "ABSENT",
+                    "CANCELLED"
+                  ]
+                }
+              },
+              "required": [
+                "courseId",
+                "className",
+                "site",
+                "date",
+                "status"
+              ],
+              "additionalProperties": false
+            }
+          }
+        },
+        "required": [
+          "from",
+          "to",
+          "present",
+          "late",
+          "absent",
+          "attended",
+          "recorded",
+          "rate",
+          "cancelled",
+          "history"
+        ],
+        "additionalProperties": false
+      },
+      "ChildLessons": {
+        "type": "object",
+        "properties": {
+          "childId": {
+            "type": "string"
+          },
+          "timezone": {
+            "const": "Europe/Dublin"
+          },
+          "asOf": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "scheduleThrough": {
+            "type": "string",
+            "format": "date"
+          },
+          "nextLesson": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/Lesson"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "upcomingCancellations": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/Lesson"
+            }
+          },
+          "attendance": {
+            "$ref": "#/components/schemas/ChildAttendance"
+          }
+        },
+        "required": [
+          "childId",
+          "timezone",
+          "asOf",
+          "scheduleThrough",
+          "nextLesson",
+          "upcomingCancellations",
+          "attendance"
+        ],
+        "additionalProperties": false
       }
     }
   }

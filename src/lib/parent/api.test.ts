@@ -185,17 +185,20 @@ test("only published future assessments are listed, and a new family can book wi
 test("families only read linked children; staff revocation immediately removes profiles, progress and bookings", async () => {
   assert.equal((await (await call("children")).json()).items.length, 1);
   assert.equal((await (await call("children", "GET", undefined, otherToken)).json()).items.length, 0);
-  for (const path of [`children/${childId}`, `children/${childId}/progress`, `assessment-bookings?childId=${childId}`]) {
+  for (const path of [`children/${childId}`, `children/${childId}/progress`, `children/${childId}/lessons`, `assessment-bookings?childId=${childId}`]) {
     assert.equal((await call(path, "GET", undefined, otherToken)).status, 404);
   }
   const children = await (await call(`children/${childId}`)).json();
   assert.equal(Object.hasOwn(children, "medicalNotes"), false); assert.equal(Object.hasOwn(children, "contactEmail"), false);
   assert.equal((await staff(`children/${childId}/access`, "DELETE", { email: "parent@example.test", reason: "Synthetic access review" })).status, 200);
   assert.equal((await call(`children/${childId}`)).status, 404);
+  assert.equal((await call(`children/${childId}/lessons`)).status, 404);
   assert.equal((await (await call("assessment-bookings")).json()).items.length, 0);
   assert.equal((await call("assessment-bookings", "POST", { sessionId, newChild: { firstName: "Synthetic", lastName: "Swimmer", dateOfBirth: "2020-01-01" } }, parentToken, { "Idempotency-Key": "new-child-request-001" })).status, 404);
   assert.equal((await staff(`children/${childId}/access`, "PUT", { email: "parent@example.test", reason: "Verified guardian again" })).status, 200);
   assert.equal((await call(`children/${childId}`)).status, 200);
+  assert.equal((await call(`children/${childId}/lessons`)).status, 200);
+  assert.equal((await call(`children/${childId}/lessons`, "GET", undefined, "")).status, 401);
 });
 
 test("closed, cancelled and archived-site sessions reject bookings and do not create children", async () => {

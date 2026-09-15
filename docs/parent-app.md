@@ -31,15 +31,38 @@ deployed. No parent screens have been added to the staff or Instructor workspace
 | GET | `/children` | Approved children only |
 | GET | `/children/{childId}` | A linked child's basic profile |
 | GET | `/children/{childId}/progress` | Released competencies, completions and assessment placements |
+| GET | `/children/{childId}/lessons` | Next weekly lesson, cancellation notices and a 12-week attendance report |
 | GET | `/sites` | Active sites; no login needed |
 | GET | `/assessment-sessions` | Published assessment availability; no login needed |
 | GET | `/assessment-sessions/{sessionId}` | One open, published session; full sessions remain readable |
 | GET, POST | `/assessment-bookings` | Read linked children's bookings or book an assessment |
 
 No v1 endpoint exposes medical notes, staff notes, raw activity logs, contact
-details from a swimmer record, other families, attendance registers or class
+details from a swimmer record, other families, whole-class attendance registers or class
 transfers. Parents cannot edit existing swimmer details, cancel bookings, or
 move children between weekly classes in v1. Those policies need a later phase.
+
+## Weekly lessons and attendance
+
+`GET /children/{childId}/lessons` requires a current guardian link. It selects
+the child's earliest active enrolment occurrence across all sites within 90
+days, including an in-progress lesson until its end. It respects future starts,
+exclusive end dates, inactive swimmers, archived classes/sites, cancellations
+and date-specific teaching cover. Dates and times use Europe/Dublin, including
+daylight-saving changes. Cancelled upcoming occurrences appear separately.
+
+The attendance report covers the last 84 dates, including today, using only
+saved records for lessons that have ended. Present and late count as attended;
+absent counts as absent. Missing records are never inferred as absences.
+Cancelled occurrences do not affect the percentage; cancellations with a
+saved roster for the child appear in history. An empty report has a null rate,
+not zero. Historical class labels and times use the current timetable where
+no cancellation snapshot exists. Attendance is available after the lesson ends;
+competency and completion publication still waits for Dublin midnight.
+
+Only this child's statuses and parent-facing class details leave the API.
+Attendance notes, cancellation reasons, staff attribution, contact details and
+other swimmers are excluded. This addition requires no database migration.
 
 ## Parent sign-in
 
