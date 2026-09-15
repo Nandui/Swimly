@@ -154,5 +154,17 @@
   "activity": {
     "width": 1152,
     "height": 222
+  },
+  "parent-profile": {
+    "width": 448,
+    "height": 472
+  },
+  "parent-accounts": {
+    "width": 448,
+    "height": 410
+  },
+  "parent-publication": {
+    "width": 448,
+    "height": 540
   }
 }

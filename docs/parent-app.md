@@ -167,7 +167,8 @@ subsequent writes and deletions retain publication history.
 
 Base: `/api/parent-admin/v1`. These endpoints use the existing staff session,
 reject parent bearer tokens, and require a same-origin Origin header for writes.
-They are API support for staff tools; no new management screen has been added.
+The [staff controls](parent-staff-controls.md) use these endpoints from swimmer
+profiles, Parent accounts and assessment detail pages.
 
 `parents.manage` plus the Swimmers screen is required for family access:
 
@@ -188,6 +189,8 @@ The session must belong to the currently selected staff site:
 | PUT | `/assessment-sessions/{id}/publication` | `{enabled,bookingClosesAt?,reason}` |
 
 Use an ISO timestamp with offset for bookingClosesAt; null means session start.
+Publication reads and writes also return `canPublish`, `visibleToParents` and
+`spacesAvailable`, calculated with the parent API's session eligibility rules.
 Omitting it preserves the existing value. An enabled publication requires a
 future session and a future deadline no later than its start. Every change
 records the staff actor and reason. Reason must contain 3–500 characters.
@@ -234,7 +237,7 @@ mail DNS records intact.
 No guardian links or assessment publications were created during verification.
 Existing families still need staff-approved links, and the live assessment list
 is empty until staff publish sessions. The staff management API is available;
-desk controls for these tasks are a separate outstanding interface task.
+desk controls for these tasks are documented in [staff controls](parent-staff-controls.md).
 
 1. Deploy additive migration `20260914160000_parent_api` before enabling parent
    traffic. The normal production build deploys committed migrations; local or

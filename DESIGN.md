@@ -133,6 +133,14 @@ Assessments, Together, Activity, Programmes and levels, Staff, Roles,
 Clubs, Account, sign-in and loading states also use this shared foundation.
 Responsive tables re-home secondary columns as supporting lines.
 
+Parent access is a permission-gated swimmer profile tab with email/status rows
+and explicit approve, revoke and restore dialogs. Swimmers links to Parent
+accounts, an exact email search followed by account details and a reasoned
+suspend/reactivate dialog. Assessment details include Booking in Bookly with
+publication status, Ireland-time deadline editing and unpublish. The controls
+use shared form feedback and shadcn status tones; each write records a reason.
+These controls remain in the desk workspace. See [staff parent controls](docs/parent-staff-controls.md).
+
 ## Forms, search and confirmation
 
 The authenticated help centre owns a separate document frame at `/help`, using

@@ -1,4 +1,5 @@
 import { z } from "zod";
+import { revalidatePath } from "next/cache";
 import { prisma } from "@/lib/prisma";
 import { logAudit } from "@/lib/audit";
 import { AuthorizationError, canSee, requirePermission } from "@/lib/authz";
@@ -7,12 +8,30 @@ import { lockParent } from "@/lib/parent/security";
 import { ParentApiError, notFound } from "@/lib/parent/errors";
 import { emailSchema, errorResponse, idSchema, json, parseInput, readBody, reasonSchema } from "@/lib/parent/http";
 import { dublinInstant } from "@/lib/parent/time";
+import { SESSION_SELECT, sessionAvailability, type PublicSession } from "@/lib/parent/assessments";
+import { readSharedCurriculum, type SharedCurriculum } from "@/lib/curriculum/data/shared";
+
+function publicationDto(session: PublicSession, curriculum: SharedCurriculum) {
+  const now = new Date();
+  const availability = sessionAvailability(session, curriculum, now);
+  const eligibility = sessionAvailability({ ...session, parentPublication: { enabled: true, bookingClosesAt: null } }, curriculum, now);
+  return { sessionId: session.id, enabled: session.parentPublication?.enabled ?? false,
+    bookingClosesAt: session.parentPublication?.bookingClosesAt ?? null,
+    canPublish: eligibility.open, visibleToParents: availability.open, spacesAvailable: availability.spaces };
+}
 
 /** This surface accepts existing staff cookies only. Parent bearer tokens,
  * cross-origin requests and Instructor-only screen grants cannot authorize it. */
 export async function handleParentAdminRequest(request: Request, path: string[]) {
   let response: Response;
-  try { response = await dispatch(request, path); }
+  try {
+    response = await dispatch(request, path);
+    if (request.method !== "GET" && response.ok) {
+      revalidatePath("/activity");
+      if (path[0] === "assessment-sessions") { revalidatePath("/assessments"); revalidatePath(`/assessments/${path[1]}`); }
+      else { revalidatePath("/students/parents"); if (path[0] === "children") revalidatePath(`/students/${path[1]}`); }
+    }
+  }
   catch (error) {
     response = errorResponse(error instanceof AuthorizationError
       ? new ParentApiError(403, "FORBIDDEN", "Staff permission is required.") : error);
@@ -64,18 +83,21 @@ async function dispatch(request: Request, path: string[]) {
     const data = safe ? null : await readBody(request, z.object({ enabled: z.boolean(), bookingClosesAt: z.iso.datetime({ offset: true }).nullable().optional(), reason: reasonSchema }).strict());
     return json(await prisma.$transaction(async tx => {
       await tx.$queryRaw`SELECT id FROM "AssessmentSession" WHERE id=${sessionId} FOR UPDATE`;
-      const session = await tx.assessmentSession.findUnique({ where: { id: sessionId, clubId }, select: { date: true, startMinutes: true, cancelledAt: true, parentPublication: true } });
+      const session = await tx.assessmentSession.findUnique({ where: { id: sessionId, clubId }, select: SESSION_SELECT });
       if (!session) notFound();
-      if (!data) return { sessionId, enabled: session.parentPublication?.enabled ?? false, bookingClosesAt: session.parentPublication?.bookingClosesAt ?? null };
+      const curriculum = await readSharedCurriculum(tx);
+      const current = publicationDto(session, curriculum);
+      if (!data) return current;
       const start = dublinInstant(session.date.toISOString().slice(0, 10), session.startMinutes);
       const closesAt = data.bookingClosesAt === undefined ? session.parentPublication?.bookingClosesAt ?? null : data.bookingClosesAt ? new Date(data.bookingClosesAt) : null;
       if (data.enabled && (!start || start <= new Date() || session.cancelledAt || (closesAt && (closesAt > start || closesAt <= new Date())))) {
         throw new ParentApiError(400, "INVALID_REQUEST", "Publish a future assessment with a booking deadline no later than its start time.");
       }
+      if (data.enabled && !current.canPublish) throw new ParentApiError(400, "INVALID_REQUEST", "Choose an active site, programme and assessment type before publishing.");
       const publication = await tx.parentAssessmentPublication.upsert({ where: { sessionId }, create: { sessionId, enabled: data.enabled, bookingClosesAt: closesAt }, update: { enabled: data.enabled, bookingClosesAt: closesAt } });
       await logAudit({ ...attribution, clubId, action: data.enabled ? "publish" : "unpublish", entity: "ParentAssessmentPublication", entityId: sessionId,
         summary: `${data.enabled ? "Opened" : "Closed"} parent assessment booking: ${data.reason}`, details: { enabled: data.enabled, bookingClosesAt: closesAt?.toISOString() ?? null, reason: data.reason } }, tx);
-      return { sessionId, enabled: publication.enabled, bookingClosesAt: publication.bookingClosesAt };
+      return publicationDto({ ...session, parentPublication: publication }, curriculum);
     }));
   }
   if (accountRoute) {

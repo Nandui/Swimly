@@ -14,7 +14,7 @@ import { cn } from "@/lib/utils";
 const LENSES = [{ key: "ALL", label: "All swimmers" }, { key: "ACTIVE", label: "Active" }, { key: "INACTIVE", label: "Inactive" }] as const;
 const number = (value: number) => value.toLocaleString("en-IE");
 
-export function SwimmerBrowser({ students, total, page, pageSize, counts, q, status, addAction }: {
+export function SwimmerBrowser({ students, total, page, pageSize, counts, q, status, addAction, parentAction }: {
   students: StudentRow[];
   total: number;
   page: number;
@@ -23,6 +23,7 @@ export function SwimmerBrowser({ students, total, page, pageSize, counts, q, sta
   q: string;
   status: SwimmerStatusFilter;
   addAction?: ReactNode;
+  parentAction?: ReactNode;
 }) {
   const filtered = Boolean(q) || status !== "ALL";
   const pages = Math.max(1, Math.ceil(total / pageSize));
@@ -31,9 +32,9 @@ export function SwimmerBrowser({ students, total, page, pageSize, counts, q, sta
   return (
     <section className="flex min-w-0 flex-col gap-4 text-ui-foreground" aria-labelledby="swimmers-heading" data-swimmer-browser>
       <header className="mb-2 space-y-2">
-        <div className="flex items-center justify-between gap-3">
+        <div className="flex flex-wrap items-center justify-between gap-3">
           <h1 id="swimmers-heading" className="text-2xl font-semibold tracking-tight">Swimmers</h1>
-          {addAction}
+          <div className="flex flex-wrap gap-2">{parentAction}{addAction}</div>
         </div>
         <p className="text-sm text-ui-muted-foreground">Search across all sites, then open a swimmer’s profile.</p>
       </header>
@@ -53,7 +54,7 @@ export function SwimmerBrowser({ students, total, page, pageSize, counts, q, sta
         <div className="flex flex-wrap items-center justify-between gap-3">
           <nav aria-label="Filter swimmers by status" className="inline-flex max-w-full items-center gap-1 rounded-ui-lg bg-ui-muted p-1">
             {LENSES.map((lens) => (
-              <Button key={lens.key} asChild variant="ghost" size="sm" className={cn("gap-1.5 px-2 text-xs sm:px-3 sm:text-sm", status === lens.key && "bg-ui-background text-ui-foreground shadow-sm hover:bg-ui-background")}>
+              <Button key={lens.key} asChild variant="ghost" size="sm" className={cn("min-h-11 gap-1.5 px-2 text-xs sm:px-3 sm:text-sm", status === lens.key && "bg-ui-background text-ui-foreground shadow-sm hover:bg-ui-background")}>
                 <Link href={swimmerDirectoryHref({ q, status: lens.key })} aria-current={status === lens.key ? "page" : undefined}>
                   {lens.label}<span className="text-xs text-ui-muted-foreground tabular-nums">{number(countFor(lens.key))}</span>
                 </Link>

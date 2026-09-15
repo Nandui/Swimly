@@ -48,6 +48,8 @@ import { getCurrentClub } from "@/lib/clubs/current";
 import { getInstructorOptions } from "@/lib/courses/data/courses";
 import { formatDate, today } from "@/lib/format";
 import { screenPage } from "@/lib/page-guards";
+import { AssessmentPublicationPanel } from "@/components/parents/assessment-publication";
+import { dublinInstant } from "@/lib/parent/time";
 import {
   MEDICAL_STATUS_META,
   ageLabel,
@@ -162,6 +164,10 @@ export default async function AssessmentSessionPage(
         ) : null}
         .{session.notes ? ` ${session.notes}` : ""}
       </Lead>
+
+      {manage ? <AssessmentPublicationPanel key={`${session.id}-${session.date.toISOString()}-${session.startMinutes}-${session.cancelledAt}-${session.programmeId}-${session.typeId}-${session.capacity}-${taken}`} sessionId={session.id}
+        sessionLabel={`${sessionDay(session)} · ${sessionSpan(session)} · ${session.club.name} · ${session.programme.name}`}
+        startsAt={(dublinInstant(session.date.toISOString().slice(0, 10), session.startMinutes) ?? session.date).toISOString()} /> : null}
 
       {session.bookings.length === 0 ? (
         <EmptyState

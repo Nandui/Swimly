@@ -27,18 +27,20 @@ import { AddSwimmer } from "./add-swimmer";
 import { ManageProfileEnrolments } from "./profile-enrolments";
 import { ProfileCompetencies } from "./profile-competencies";
 import { HistoryFeed } from "./profile-history";
+import { GuardianAccessPanel } from "@/components/parents/guardian-access";
 import styles from "./swimmer-profile.module.css";
 
-type Tab = "journey" | "competencies" | "attendance" | "assessments" | "details";
-export type ProfileAccess = { edit: boolean; enrol: boolean; assess: boolean; complete: boolean; override: boolean; courses: boolean; assessments: boolean; audit: boolean };
+type Tab = "journey" | "competencies" | "attendance" | "assessments" | "details" | "parents";
+export type ProfileAccess = { edit: boolean; enrol: boolean; assess: boolean; complete: boolean; override: boolean; courses: boolean; assessments: boolean; audit: boolean; parents?: boolean };
 export type SwimmerProfileProps = { student: StudentDetail; enrolments: StudentEnrolment[]; programmes: ProgrammeProgress[]; assessments: StudentAssessment[]; targets: TransferTarget[]; history: HistoryPage; access: ProfileAccess; initialTab?: string; returnTo: string; instant: string };
-function profileTab(value?: string): Tab {
+function profileTab(value?: string, parents = false): Tab {
   if (value === "progress") return "competencies";
+  if (value === "parents" && parents) return "parents";
   return ["competencies", "attendance", "assessments", "details"].includes(value ?? "") ? value as Tab : "journey";
 }
 
 export function SwimmerProfile({ student, enrolments, programmes, assessments, targets, history, access, initialTab, returnTo, instant }: SwimmerProfileProps) {
-  const [tab, setTab] = useState<Tab>(profileTab(initialTab)), [mode, setMode] = useState("milestones");
+  const [tab, setTab] = useState<Tab>(profileTab(initialTab, access.parents)), [mode, setMode] = useState("milestones");
   const [programme, setProgramme] = useState("all"), [kind, setKind] = useState<HistoryKind>("all"), [query, setQuery] = useState("");
   const [search, setSearch] = useState(""), [level, setLevel] = useState<string | null>(null);
   const router = useRouter(), name = fullName(student);
@@ -56,7 +58,7 @@ export function SwimmerProfile({ student, enrolments, programmes, assessments, t
     </header>
     {student.medicalNotes ? <Alert variant="destructive"><AlertTitle>Medical notes — read before swimming</AlertTitle><AlertDescription className="whitespace-pre-wrap">{student.medicalNotes}</AlertDescription></Alert> : null}
     <Tabs value={tab} onValueChange={value => navigate(value as Tab)} className="gap-0">
-      <TabsList variant="line" className={styles.tabs} aria-label="Swimmer profile sections"><TabsTrigger value="journey">Journey</TabsTrigger><TabsTrigger value="competencies">Competencies</TabsTrigger><TabsTrigger value="attendance">Attendance</TabsTrigger><TabsTrigger value="assessments">Assessments</TabsTrigger><TabsTrigger value="details">Details</TabsTrigger></TabsList>
+      <TabsList variant="line" className={styles.tabs} aria-label="Swimmer profile sections"><TabsTrigger value="journey">Journey</TabsTrigger><TabsTrigger value="competencies">Competencies</TabsTrigger><TabsTrigger value="attendance">Attendance</TabsTrigger><TabsTrigger value="assessments">Assessments</TabsTrigger><TabsTrigger value="details">Details</TabsTrigger>{access.parents ? <TabsTrigger value="parents">Parent access</TabsTrigger> : null}</TabsList>
       <div className={styles.body}>
         <div className="min-w-0">
           <TabsContent value="journey" className="m-0 space-y-5">
@@ -87,11 +89,12 @@ export function SwimmerProfile({ student, enrolments, programmes, assessments, t
           <TabsContent value="attendance" className="m-0 space-y-3"><h2 className="text-xl font-semibold">Attendance history</h2><p className="text-sm text-ui-muted-foreground">Lesson dates, saved marks and corrections across both sites.</p><HistoryFeed studentId={student.id} query={{ kind: "attendance" }} /></TabsContent>
           <TabsContent value="assessments" className="m-0 space-y-3"><h2 className="text-xl font-semibold">Assessments and placements</h2>{assessments.length ? <ul className="divide-y divide-ui-border">{assessments.map(a => <li key={a.id} className="space-y-2 py-4"><div className="flex flex-wrap items-center justify-between gap-2"><h3 className="font-medium">{a.session.type?.name ?? "Assessment session"}</h3><Badge variant="secondary" data-tone={BOOKING_STATUS_META[a.status].color}>{BOOKING_STATUS_META[a.status].label}</Badge></div><p className="text-sm text-ui-muted-foreground">{formatDate(a.session.date)} · {formatTime(a.session.startMinutes)} · {a.session.club.name}</p><p className="text-sm">{a.session.programme.name}{a.outcomeLevel ? ` · Placed at ${a.outcomeLevel.name}` : ""}</p>{a.assessedByName ? <p className="text-xs text-ui-muted-foreground">{a.assessedByName}{a.assessedOn ? ` · ${formatDate(a.assessedOn)}` : ""}</p> : null}{a.outcomeNote ? <p className="text-sm">{a.outcomeNote}</p> : null}{a.session.cancelledAt ? <p className="text-sm">Session cancelled</p> : null}{access.assessments ? <Button variant="ghost" asChild><a href={`/assessments/${a.session.id}`}>Open assessment</a></Button> : null}</li>)}</ul> : <p className="text-sm text-ui-muted-foreground">No assessment bookings recorded.</p>}<HistoryFeed studentId={student.id} query={{ kind: "assessment" }} /></TabsContent>
           <TabsContent value="details" className="m-0"><ProfileDetails student={student} /></TabsContent>
+          {access.parents ? <TabsContent value="parents" className="m-0"><GuardianAccessPanel studentId={student.id} swimmerName={name} /></TabsContent> : null}
         </div>
         <aside className={styles.aside} aria-label="Swimmer at a glance">
           <section><h2>Current enrolment{current.length === 1 ? "" : "s"}</h2>{current.length ? current.map(e => <div key={e.id} className="mt-3 space-y-1"><p className="font-semibold">{e.level.name}</p><p>{formatSlotShort(e.course)}</p>{e.course.instructor ? <p className="flex items-start gap-2"><UserRound aria-hidden="true" />{e.course.instructor.name}</p> : null}<p className="flex items-start gap-2"><MapPin aria-hidden="true" />{e.course.club.name}</p></div>) : <p>Not enrolled in a class.</p>}</section>
           <section><h2>Next lesson</h2>{next ? <><p className="flex items-start gap-2"><CalendarDays aria-hidden="true" />{formatDate(parseDateOnly(next.date))} · {formatTime(next.enrolment.course.startMinutes)}</p><p>{courseName(next.enrolment.course)} · {next.enrolment.course.club.name}</p></> : <p>No upcoming weekly class.</p>}</section>
-          <section><h2>Contact</h2><p>{student.contactName ?? "No contact recorded"}</p>{student.contactPhone ? <a href={`tel:${student.contactPhone.replace(/\s/g, "")}`} className="inline-flex min-h-11 items-center underline underline-offset-4">{student.contactPhone}</a> : null}<Button variant="ghost" className="mt-1" onClick={() => navigate("details")}>View contacts</Button></section>
+          <section><h2>Contact</h2><p>{student.contactName ?? "No contact recorded"}</p>{student.contactPhone ? <a href={`tel:${student.contactPhone.replace(/\s/g, "")}`} className="inline-flex min-h-11 items-center underline underline-offset-4">{student.contactPhone}</a> : null}<Button variant="ghost" className="mt-1 min-h-11" onClick={() => navigate("details")}>View contacts</Button></section>
           <section><h2>Medical notes</h2><p className="whitespace-pre-wrap">{student.medicalNotes || "None recorded"}</p></section>
           <p className="flex gap-2"><Info aria-hidden="true" />History includes both sites.</p>
         </aside>

@@ -4,7 +4,7 @@
 rail) and phone toolbar have a Help centre link. Instructor has a Help link to
 `/help/instructor`. Both open a new tab so an in-progress form stays open.
 
-The manual has 36 authored guides: 34 available in the desk library and 9 in
+The manual has 39 authored guides: 37 available in the desk library and 9 in
 Instructor, including shared guides with workspace-specific steps. Topics cover
 navigation and sites; swimmers and contacts; enrolments, moves, waitlists and
 sibling times; classes and Schedule; teaching and progression; assessments;
@@ -15,8 +15,12 @@ provide.
 
 Every guide includes screenshots of the current app beside the steps they
 illustrate, with descriptive alternative text, captions and a full-size link.
-The 39 screenshots use synthetic people and records and show light appearance.
+The 42 screenshots use synthetic people and records and show light appearance.
 They remain visible when printing a guide.
+
+Parent access, parent accounts and assessment publishing have desk-only guides.
+Their screenshots are captured from the real controls in the isolated parent
+management preview (`scripts/check-parent-admin.mjs`).
 
 ## Access and navigation
 

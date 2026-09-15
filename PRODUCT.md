@@ -204,6 +204,12 @@ guides, steps, example screenshots and troubleshooting. Help opens beside the ap
 frames. Instructor has its own scoped manual and keeps its teaching navigation.
 The help centre does not provide a public support portal or send support requests.
 
+Staff manage Bookly guardian approvals from each swimmer's Parent access tab,
+look up and suspend/reactivate parent accounts from Swimmers, and publish or
+unpublish assessment sessions with optional Ireland-time booking deadlines.
+Approval is explicit for each guardian email and swimmer; it sends no email.
+These controls require the existing named permissions and write audit reasons.
+
 **Constraints that hold:**
 
 

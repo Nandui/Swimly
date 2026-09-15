@@ -16,7 +16,7 @@ export default async function StudentPage(props: PageProps<"/students/[id]">) {
   const session = await screenPage("students");
   const [{ id }, params] = await Promise.all([props.params, props.searchParams]);
   const access = { edit: can(session, "students.manage"), enrol: can(session, "enrolment.manage"), assess: can(session, "progression.assess"),
-    complete: can(session, "progression.complete"), override: can(session, "progression.override"), courses: canSee(session, "courses"), assessments: canSee(session, "assessments"), audit: can(session, "activity.view") };
+    complete: can(session, "progression.complete"), override: can(session, "progression.override"), courses: canSee(session, "courses"), assessments: canSee(session, "assessments"), audit: can(session, "activity.view"), parents: can(session, "parents.manage") };
   const [student, enrolments, programmes, assessments, targets, history] = await Promise.all([
     getStudent(id), getEnrolmentsForStudent(id), getStudentProgress(id), getStudentAssessments(id), access.enrol ? getTransferTargets() : Promise.resolve([]), getSwimmerHistory(id),
   ]);

@@ -1,5 +1,11 @@
 # Parent app handover — 14 September 2026
 
+**Staff interface update, 15 September:** the current development work adds
+[parent access, account management and assessment publishing controls](parent-staff-controls.md),
+with illustrated help guides. These code changes still need promotion before
+they appear in production. The production snapshot below remains historical;
+no live family approvals or bookings were made as part of this implementation.
+
 Both apps are deployed to Vercel Production and connected. Parent sign-in email
 works through Google Workspace. Deployment is complete; preparing family access,
 publishing assessments and connecting the custom domain remain rollout tasks.
@@ -70,10 +76,9 @@ After Vercel validates DNS and HTTPS:
 Until then, use **https://swimly-public-app.vercel.app**. DNS work does not block
 development of the staff controls below.
 
-### 2. Build the staff controls for parent access and assessment publishing
+### 2. Promote and roll out the staff controls
 
-The management API exists; the desk interface for it has **not** been built.
-The next coding task is to add controls in the staff app for:
+The management API and development implementation now include staff controls for:
 
 - Approving/revoking a guardian email's access from a swimmer profile.
 - Looking up and suspending/reactivating a parent account.
