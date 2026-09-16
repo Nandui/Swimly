@@ -170,5 +170,9 @@
   "parent-link-request": {
     "width": 448,
     "height": 778
+  },
+  "instructor-swimmer-competencies": {
+    "width": 1024,
+    "height": 1450
   }
 }

@@ -14,6 +14,12 @@ the pool. Its route group and layout stay separate from the desk workspace.
   open the roster, attendance or competencies, including through a bookmark.
 - /instructor/classes/[id] contains attendance, then competencies and eligible
   level completion. Returning preserves My/All and the grouping choice.
+- Competencies opens directly into the swimmer list. Tap a name to expand that
+  swimmer's class-level competencies; opening another closes the previous row.
+  Mark results individually or use **Mark all achieved** for that swimmer.
+  All swimmers share drafts and one **Save marks** action across the class.
+  Switching swimmers keeps unsaved changes. Absent swimmers remain
+  under **Not in today**; level completion is still a separate confirmation.
 - The frame offers classes, site, appearance and sign-out. It has no desk
   sidebar, global swimmer search, class administration or swimmer-profile links.
   The desk navigation never leads into Instructor.
@@ -56,3 +62,12 @@ Browser checks cover 375, 768, 1024 and 1280px in light and dark with one H1,
 no horizontal overflow and 44px controls. Own-class and substitute starts,
 attendance failure/retry, draft recovery, competency save/return, keyboard
 selection and locked direct URLs were exercised using the local-only fixture.
+
+`scripts/check-instructor-swimmers.mjs` verifies the real teaching components
+with fictional swimmers and mocked save actions, rejecting all outbound requests.
+It covers opening names, shared drafts, swimmer-only bulk marking, recovery,
+failed saves and retries, the save payload, read-only access, absent swimmers,
+empty states, keyboard controls and both themes at the four supported widths.
+Set `INSTRUCTOR_PLAYWRIGHT_MODULE` to a Playwright module path when it is not
+installed locally. Run `node scripts/instructor-swimmer-preview/build.mjs --serve`
+for the isolated interactive preview on port 4190. Neither command uses live data.

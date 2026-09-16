@@ -126,6 +126,8 @@ function DeckChecklistState({
   const [saved, setSaved] = React.useState(false);
   const [storageUnavailable, setStorageUnavailable] = React.useState(false);
   const [dirty, setDirty] = React.useState(false);
+  const [expandedSwimmer, setExpandedSwimmer] = React.useState<string | null>(null);
+  const [showAbsent, setShowAbsent] = React.useState(false);
 
   // Who was in the water. Before attendance is taken nobody is ruled out.
   const inToday = React.useCallback(
@@ -258,6 +260,14 @@ function DeckChecklistState({
     });
   }
 
+  function achieveAllFor(studentId: string) {
+    update((next) => {
+      const swimmerMarks = next.get(studentId);
+      for (const competency of competencies)
+        swimmerMarks?.set(competency.id, "ACHIEVED");
+    });
+  }
+
   function save() {
     startTransition(async () => {
       let result: Awaited<ReturnType<typeof saveClassAssessment>>;
@@ -317,6 +327,80 @@ function DeckChecklistState({
   const markedAtAll = [...marks.values()].some((row) =>
     [...row.values()].some(Boolean),
   );
+  const progressLabel = (swimmer: DeckSwimmer) => (
+    <span className="block text-sm font-normal text-ui-muted-foreground">
+      {achievedFor(swimmer.studentId)} of {competencies.length} achieved
+      {swimmer.completed ? " · Level complete" : ""}
+      {swimmer.offLevel ? " · Placed at another level" : ""}
+      {attendance?.[swimmer.studentId] === "LATE" ? " · Late" : ""}
+    </span>
+  );
+  const swimmerRow = (swimmer: DeckSwimmer, dimmed: boolean) => {
+    const open = expandedSwimmer === swimmer.studentId;
+    return (
+      <Collapsible
+        key={swimmer.studentId}
+        open={open}
+        onOpenChange={(next) => setExpandedSwimmer(next ? swimmer.studentId : null)}
+        className="rounded-ui-lg border border-ui-border data-[state=open]:border-ui-brand-border"
+      >
+        <div className={"flex flex-wrap items-center gap-x-3 " + (open ? "rounded-t-ui-lg bg-ui-brand-soft" : "rounded-ui-lg hover:bg-ui-accent")}>
+          <h3 className="min-w-0 flex-1 basis-full sm:basis-48">
+            <CollapsibleTrigger asChild>
+              <Button
+                variant="ghost"
+                className="h-auto min-h-16 w-full justify-between gap-3 rounded-ui-lg px-4 py-3 text-left whitespace-normal hover:bg-transparent dark:hover:bg-transparent"
+              >
+                <span className="min-w-0 space-y-1">
+                  <span className={"block text-base font-semibold break-words " + (dimmed ? "text-ui-muted-foreground" : "")}>
+                    {swimmer.name}
+                  </span>
+                  {progressLabel(swimmer)}
+                </span>
+                <ChevronDown className={open ? "rotate-180" : ""} aria-hidden="true" />
+              </Button>
+            </CollapsibleTrigger>
+          </h3>
+          {open && !readOnly ? (
+            <Button
+              variant="outline"
+              className="mx-4 mb-3 min-h-11 sm:ml-0 sm:mb-0"
+              disabled={pending || achievedFor(swimmer.studentId) === competencies.length}
+              onClick={() => achieveAllFor(swimmer.studentId)}
+              aria-label={`Mark all achieved for ${swimmer.name}`}
+            >
+              <Check aria-hidden="true" />Mark all achieved
+            </Button>
+          ) : null}
+        </div>
+        <CollapsibleContent>
+          <div role="region" aria-label={`${swimmer.name} competencies`} className="border-t border-ui-border px-4">
+            {dimmed ? <p className="pt-4 text-sm text-ui-muted-foreground">Not in today. These are their recorded competencies.</p> : null}
+            <ol className="divide-y divide-ui-border">
+              {competencies.map((item, index) => (
+                <li key={item.id} className="flex flex-col gap-3 py-4 md:flex-row md:items-center md:justify-between md:gap-6">
+                  <div className="min-w-0 flex-1 space-y-1">
+                    <p className="font-medium break-words">{index + 1}. {item.name}</p>
+                    {item.description ? <p className="max-w-prose text-sm text-ui-muted-foreground">{item.description}</p> : null}
+                  </div>
+                  <MarkChoices
+                    label={item.name + " — " + swimmer.name}
+                    value={marks.get(swimmer.studentId)?.get(item.id) ?? "WORKING_ON"}
+                    options={[
+                      { value: "WORKING_ON", label: MARK_LABEL.WORKING_ON },
+                      { value: "ACHIEVED", label: MARK_LABEL.ACHIEVED },
+                    ]}
+                    disabled={readOnly || pending}
+                    onChange={(next) => choose(swimmer.studentId, item.id, next as CompetencyStatus)}
+                  />
+                </li>
+              ))}
+            </ol>
+          </div>
+        </CollapsibleContent>
+      </Collapsible>
+    );
+  };
   const row = (swimmer: DeckSwimmer, dimmed: boolean) => (
     <Item
       key={swimmer.studentId}
@@ -328,12 +412,7 @@ function DeckChecklistState({
     >
       <ItemContent className="min-w-0 basis-48">
         <p className="text-base font-semibold">{swimmer.name}</p>
-        <p className="text-sm text-ui-muted-foreground">
-          {achievedFor(swimmer.studentId)} of {competencies.length} achieved
-          {swimmer.completed ? " · Level complete" : ""}
-          {swimmer.offLevel ? " · Placed at another level" : ""}
-          {attendance?.[swimmer.studentId] === "LATE" ? " · Late" : ""}
-        </p>
+        {progressLabel(swimmer)}
       </ItemContent>
       <MarkChoices
         label={competency.name + " — " + swimmer.name}
@@ -351,6 +430,7 @@ function DeckChecklistState({
   );
   return (
     <div className="flex flex-col gap-5">
+      {!teaching ? <>
       <div className="flex flex-col gap-2">
         <Label htmlFor="competency-picker">Competency</Label>
         <Select
@@ -429,10 +509,18 @@ function DeckChecklistState({
           </Button>
         ) : null}
       </section>
+      </> : null}
       {here.length ? (
+        teaching ? (
+          <section aria-label="Swimmers in today" className="space-y-3">
+            <h2 className="sr-only">Swimmer competencies</h2>
+            {here.map((s) => swimmerRow(s, false))}
+          </section>
+        ) : (
         <ItemGroup className="divide-y divide-ui-border">
           {here.map((s) => row(s, false))}
         </ItemGroup>
+        )
       ) : (
         <p className="text-ui-muted-foreground">
           {swimmers.length
@@ -441,16 +529,23 @@ function DeckChecklistState({
         </p>
       )}
       {away.length ? (
-        <Collapsible>
+        <Collapsible open={showAbsent} onOpenChange={setShowAbsent}>
           <CollapsibleTrigger asChild>
             <Button variant="ghost" className="w-full justify-between">
               Not in today ({away.length})<ChevronDown aria-hidden="true" />
             </Button>
           </CollapsibleTrigger>
           <CollapsibleContent>
+            {teaching ? (
+              <section aria-label="Swimmers not in today" className="space-y-3 pt-3">
+                <h2 className="sr-only">Competencies for swimmers not in today</h2>
+                {away.map((s) => swimmerRow(s, true))}
+              </section>
+            ) : (
             <ItemGroup className="divide-y divide-ui-border">
               {away.map((s) => row(s, true))}
             </ItemGroup>
+            )}
           </CollapsibleContent>
         </Collapsible>
       ) : null}
@@ -466,7 +561,8 @@ function DeckChecklistState({
               : changes.length +
                 " " +
                 (changes.length === 1 ? "mark" : "marks") +
-                " not saved yet"
+                " not saved yet" +
+                (teaching ? " · Across this class" : "")
             : saved
               ? "Saved"
               : markedAtAll
