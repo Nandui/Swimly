@@ -21,6 +21,7 @@ function revalidate() {
   revalidatePath("/students/[id]", "page");
   revalidatePath("/schedule");
   revalidatePath("/instructor");
+  revalidatePath("/instructor/assessments/[id]", "page");
 }
 
 const bookSchema = z.object({

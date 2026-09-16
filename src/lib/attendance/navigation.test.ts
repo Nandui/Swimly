@@ -1,6 +1,6 @@
 import assert from "node:assert/strict";
 import { test } from "node:test";
-import { classReturnDestination, instructorClassHref, instructorHomeHref, legacyClassHref } from "./navigation";
+import { classReturnDestination, instructorClassHref, instructorAssessmentHref, instructorHomeHref, legacyClassHref } from "./navigation";
 
 test("attendance and competencies remain in their workspace even with every screen granted", () => {
   const access = { calendar: true, instructor: true, courses: true };
@@ -27,6 +27,7 @@ test("the deck keeps allowed list context through opening, changing step and ret
   assert.equal(instructorClassHref("demo", { ...params, step: "competencies" }), "/instructor/classes/demo?tab=all&group=level&date=2026-09-11&step=competencies");
   assert.equal(instructorHomeHref(params), "/instructor?tab=all&group=level");
   assert.equal(instructorHomeHref({ tab: ["all"], group: "anything" }), "/instructor");
+  assert.equal(instructorAssessmentHref("a&b", params), "/instructor/assessments/a%26b?tab=all&group=level");
 });
 
 test("legacy bookmarks keep the requested attendance or competency date in the authorized workspace", () => {

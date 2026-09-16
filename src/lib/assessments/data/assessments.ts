@@ -72,11 +72,11 @@ export type BookingRow = Prisma.AssessmentBookingGetPayload<{ select: typeof BOO
 
 /** One session with everyone on it, and the levels an outcome may name —
  *  the live levels of the session's own programme, and nothing else. */
-export async function getAssessmentSession(id: string) {
+export async function getAssessmentSession(id: string, scope?: { clubId: string; date: Date; cancelledAt: null }) {
   await requireSession();
 
   const row = await prisma.assessmentSession.findUnique({
-    where: { id },
+    where: { id, ...scope },
     select: {
       ...SESSION_SELECT,
       programme: {

@@ -48,7 +48,7 @@ export const SCREENS = [
     key: "instructor",
     label: "Instructor",
     path: "/instructor",
-    description: "A separate tablet workspace for instructors: own classes, cover, attendance and competencies. Not shown in the desk navigation.",
+    description: "A separate tablet workspace for instructors: own classes, cover, attendance, competencies and today's assessments. Not shown in the desk navigation.",
     requires: "attendance.mark",
   },
   {

@@ -6,6 +6,17 @@ the pool. Its route group and layout stay separate from the desk workspace.
 - /instructor shows My classes or All classes at the working site today,
   grouped by time or level. The list refreshes every minute while visible and
   offers manual refresh.
+- **Assessments today** shows all non-cancelled assessment sessions at the working
+  site, including unassigned sessions and days without weekly classes. It sits
+  above the weekly class filters, so My/All classes and Time/Level do not hide it.
+  Each row shows time, pool, programme, assessor and bookings/capacity.
+- **Open assessment** stays under `/instructor/assessments/[id]` and requires
+  `assessments.run`. The loader restricts bookings to today's non-cancelled
+  sessions at the selected site before reading the roster. Instructors can
+  record placements or no-shows using the existing permission-checked, locked,
+  audited assessment actions. Assessments use this existing assessor permission;
+  weekly classes retain their separate exclusive start/claim rules.
+  No swimmer profiles, booking administration or desk navigation appear here.
 - An unclaimed class offers **Start class**. A shadcn dialog asks the instructor
   to confirm they are at the pool and teaching it, including their own class.
 - Confirmation claims that class and date. The owner subsequently sees
@@ -71,3 +82,11 @@ empty states, keyboard controls and both themes at the four supported widths.
 Set `INSTRUCTOR_PLAYWRIGHT_MODULE` to a Playwright module path when it is not
 installed locally. Run `node scripts/instructor-swimmer-preview/build.mjs --serve`
 for the isolated interactive preview on port 4190. Neither command uses live data.
+
+`scripts/check-instructor-assessments.mjs` exercises the actual Instructor home
+and assessment components with fictional sessions and mocked server boundaries.
+It covers visibility across My/All classes and permissions, unassigned sessions,
+assessment-only days, isolated navigation, placement/no-show saves and retries,
+empty states and 16 light/dark layouts. Dialog controls remain at least 44px.
+Run `node scripts/instructor-swimmer-preview/assessment-build.mjs --serve-assessments`
+for the synthetic assessment preview on port 4191. No live records are read or changed.

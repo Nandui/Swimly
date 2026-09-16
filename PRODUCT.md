@@ -173,6 +173,10 @@ preserve a valid date. See [Schedule](docs/schedule.md).
 Instructor is a separate pool-deck workspace for instructors using tablets.
 `/instructor` shows today's own classes, current and upcoming classes, and all
 classes for taking cover. The list refreshes each minute while visible.
+It also shows all of today's non-cancelled assessment sessions at the selected
+site, independently of the weekly-class filters. Staff with `assessments.run`
+open bookings and record placements or no-shows within the Instructor workspace.
+Unassigned assessments remain visible, including on days without weekly classes.
 Every unclaimed class offers Start class. Confirming presence claims that class
 for the date, including when it is the instructor's scheduled class. The owner
 then sees Open class and a simple attendance saved/to-take indication. Other

@@ -1,6 +1,9 @@
 /* Pool-deck controls stay thumb-sized at tablet widths too, including when
    the browser reports a mouse. Shared desktop components keep their density. */
-.workspace :where(button, a[href]:not(.sr-only), [role="radio"], [role="tab"]) {
+.workspace :where(button, a[href]:not(.sr-only), [role="radio"], [role="tab"]),
+:global(body):has(.workspace) :global([data-slot="dialog-content"]) :where(button, [role="combobox"]),
+:global(body):has(.workspace) :global([data-slot="alert-dialog-content"]) button,
+:global(body):has(.workspace) :global([data-slot="select-item"]) {
   min-height: calc(var(--spacing) * 11);
   min-width: calc(var(--spacing) * 11);
 }

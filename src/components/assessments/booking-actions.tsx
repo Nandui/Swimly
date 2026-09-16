@@ -89,17 +89,18 @@ export function CancelBooking({
   );
 }
 
-export function MarkNoShow({ booking }: { booking: BookingRow }) {
+export function MarkNoShow({ booking, variant = "icon" }: { booking: BookingRow; variant?: "icon" | "button" }) {
   return (
     <ConfirmAction
       trigger={
         <Button
-          variant="ghost"
+          variant={variant === "button" ? "outline" : "ghost"}
           aria-label={`${fullName(booking.student)} did not come`}
-          size="icon-sm"
+          size={variant === "button" ? "default" : "icon-sm"}
           title="Did not come"
         >
           {<UserRoundX aria-hidden={true} className="size-4 shrink-0" />}
+          {variant === "button" ? "Did not come" : null}
         </Button>
       }
       title={`${fullName(booking.student)} did not come?`}

@@ -25,6 +25,11 @@ export function instructorClassHref(id: string, params: ClassQuery = {}) {
   return `/instructor/classes/${encodeURIComponent(id)}${search ? `?${search}` : ""}`;
 }
 
+export function instructorAssessmentHref(id: string, params: ClassQuery = {}) {
+  const search = instructorQuery(params).toString();
+  return `/instructor/assessments/${encodeURIComponent(id)}${search ? `?${search}` : ""}`;
+}
+
 /** Each workspace returns within its own boundary, regardless of overlapping
  * screen grants. A request parameter can never select another workspace. */
 export function classReturnDestination(access: ClassScreenAccess, from: unknown, courseId: string, workspace: ClassWorkspace = "desk", params: ClassQuery = {}) {

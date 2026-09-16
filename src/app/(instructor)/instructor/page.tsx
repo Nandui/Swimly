@@ -37,6 +37,8 @@ import { can } from "@/lib/authz";
 import { getCancellationsForDay } from "@/lib/cancellations/data";
 import { CANCELLATION_META } from "@/lib/cancellations/constants";
 import { Tag } from "@/components/ui-kit/tag";
+import { InstructorAssessments } from "@/components/instructor/assessments";
+import { getTodayAssessments } from "@/lib/today/assessments";
 
 export const metadata: Metadata = { title: "Instructor" };
 type Grouping = "time" | "level";
@@ -51,11 +53,12 @@ export default async function InstructorPage(props: PageProps<"/instructor">) {
     day = weekdayOfIso(iso),
     now = minutesNow(),
     me = session.user.id;
-  const [courses, marked, covers, cancellations] = await Promise.all([
+  const [courses, marked, covers, cancellations, assessments] = await Promise.all([
     getCoursesOnDay(day),
     getRegisterStateForDay(day, iso),
     getCoversForDay(iso),
     getCancellationsForDay(iso),
+    getTodayAssessments(iso),
   ]);
   const mine = courses.filter(
       (c) => c.instructorId === me || covers.get(c.id)?.coverById === me,
@@ -186,6 +189,7 @@ export default async function InstructorPage(props: PageProps<"/instructor">) {
         </div>
         <RefreshClasses />
       </header>
+      <InstructorAssessments sessions={assessments} canRun={can(session, "assessments.run")} params={{ tab, group }} />
       <div className="flex flex-wrap items-center justify-between gap-3 border-b border-ui-border pb-4">
         <nav aria-label="Whose classes" className="flex gap-1">
           <Button asChild variant={tab === "mine" ? "secondary" : "ghost"}>

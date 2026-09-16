@@ -153,10 +153,11 @@ export const CLASS_GUIDES: HelpArticle[] = [
     related: ["add-swimmer", "assessment-outcome", "assessment-sessions"], action: "assessments",
   },
   {
-    slug: "assessment-outcome", title: "Record an assessment placement or no-show", category: "assessments", scopes: ["desk"],
+    slug: "assessment-outcome", title: "Record an assessment placement or no-show", category: "assessments", scopes: ["desk", "instructor"],
     summary: "Record where the swimmer belongs in the programme after their assessment.", keywords: ["placement", "outcome", "assessment", "place", "no show", "did not come", "change placement"],
     before: ["You need permission to run assessment sessions. Open the correct session and swimmer booking."],
     steps: [
+      { title: "Open today’s assessment", text: "On Instructor, find Assessments today above the class list and choose Open assessment. This shows today’s non-cancelled sessions at your selected site, including sessions with no assessor assigned. My classes and All classes filter weekly classes only. If Open assessment is unavailable, ask a manager for the Run assessment sessions permission.", scopes: ["instructor"] },
       { title: "Record a swimmer who did not attend", text: "Use Did not come beside their booking and confirm it. The desk can then arrange another session." },
       { title: "Place a swimmer who was assessed", text: "Choose Place beside the swimmer. Select the level in the session’s programme and add a note about what you observed." },
       { title: "Save the outcome", text: "Choose Place and wait for confirmation. The placement allows enrolment at that level or a lower one in the same programme without an out-of-sequence reason." },
