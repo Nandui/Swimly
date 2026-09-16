@@ -93,7 +93,8 @@ export async function createSession(input: SessionInput): Promise<ActionResult> 
     }, tx);
   });
 
-  revalidatePath("/assessments");
+  revalidatePath("/assessments", "layout");
+  revalidatePath("/awaiting-enrolment");
   revalidatePath("/schedule");
   revalidatePath("/instructor");
   return ok();
@@ -189,7 +190,8 @@ export async function updateSession(id: string, input: SessionInput): Promise<Ac
   });
   if (!result.ok) return result;
 
-  revalidatePath("/assessments");
+  revalidatePath("/assessments", "layout");
+  revalidatePath("/awaiting-enrolment");
   revalidatePath("/schedule");
   revalidatePath("/assessments/[id]", "page");
   revalidatePath("/instructor");
@@ -241,7 +243,8 @@ export async function cancelSession(id: string): Promise<ActionResult> {
   });
   if (!result.ok) return result;
 
-  revalidatePath("/assessments");
+  revalidatePath("/assessments", "layout");
+  revalidatePath("/awaiting-enrolment");
   revalidatePath("/schedule");
   revalidatePath("/assessments/[id]", "page");
   revalidatePath("/instructor");

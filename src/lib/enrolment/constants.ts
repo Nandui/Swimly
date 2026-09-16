@@ -23,3 +23,8 @@ export const ENROLMENT_STATUS_META: Record<
 
 /** The statuses that still mean "in this class". */
 export const OPEN_STATUSES = ["ACTIVE", "WAITLISTED"] as const;
+
+export const FOLLOW_UP_META = {
+  awaiting: { label: "Awaiting class", color: "blue" },
+  waitlisted: ENROLMENT_STATUS_META.WAITLISTED,
+} as const satisfies Record<string, StatusMeta>;

@@ -73,7 +73,13 @@ export const SCREENS = [
     key: "assessments",
     label: "Assessments",
     path: "/assessments",
-    description: "Swim School Assessment sessions, bookings and placements.",
+    description: "Upcoming assessment rosters and session setup.",
+  },
+  {
+    key: "awaiting-enrolment",
+    label: "Awaiting enrolment",
+    path: "/awaiting-enrolment",
+    description: "Assessed swimmers awaiting a class and all class waitlists at the selected site. Enrolling requires its separate permission.",
   },
   {
     key: "programmes",

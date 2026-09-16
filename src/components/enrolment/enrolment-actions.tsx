@@ -199,10 +199,12 @@ export function EnrolInCourseForStudent({
   student,
   courses,
   variant = "outline",
+  label = "Enrol in a class",
 }: {
   student: { id: string; firstName: string; lastName: string };
   courses: (CourseLike & { _count: { enrolments: number } })[];
   variant?: "default" | "outline";
+  label?: string;
 }) {
   const id = useId();
   return (
@@ -210,7 +212,7 @@ export function EnrolInCourseForStudent({
       trigger={
         <Button variant={variant} size="default">
           {<Plus aria-hidden={true} className="size-4 shrink-0" />}
-          {"Enrol in a class"}
+          {label}
         </Button>
       }
       title={`Enrol ${fullName(student)}`}

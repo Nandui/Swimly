@@ -29,7 +29,7 @@ export async function handleParentAdminRequest(request: Request, path: string[])
     response = await dispatch(request, path);
     if (request.method !== "GET" && response.ok) {
       revalidatePath("/activity");
-      if (path[0] === "assessment-sessions") { revalidatePath("/assessments"); revalidatePath(`/assessments/${path[1]}`); }
+      if (path[0] === "assessment-sessions") { revalidatePath("/assessments", "layout"); revalidatePath(`/assessments/${path[1]}`); }
       else { revalidatePath("/students/parents"); if (path[0] === "children") revalidatePath(`/students/${path[1]}`); }
     }
   }

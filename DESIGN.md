@@ -129,7 +129,18 @@ filters are prominent; advanced filters include Programme, Time, Instructor and
 Pool area. Availability describes capacity. Full class details, enrolment,
 waitlist actions and the desk teaching flow use the same shadcn components.
 
-Assessments, Together, Activity, Programmes and levels, Staff, Roles,
+Assessments uses two linked pages under its sidebar entry: Upcoming assessments
+and permission-gated Assessment setup. Session
+details focus on bookings and outcomes; dates, capacity and parent publishing
+live on the session's setup page. Awaiting enrolment has its own sidebar entry
+and screen grant. The searchable, paginated list combines pending placements
+and class waitlists, grouping by swimmer and programme with each requested class
+visible. It offers family contacts, matching classes for placements and confirmed
+waitlist promotion when a space is available. Both lists re-home secondary
+columns on phones and retain 44px actions.
+See [assessment workspace](docs/assessments.md) for queue rules and verification.
+
+Together, Activity, Programmes and levels, Staff, Roles,
 Clubs, Account, sign-in and loading states also use this shared foundation.
 Responsive tables re-home secondary columns as supporting lines.
 
@@ -142,7 +153,7 @@ parents.manage permission as the profile controls.
 Parent access is a permission-gated swimmer profile tab with email/status rows
 and explicit approve, revoke and restore dialogs. Swimmers links to Parent
 accounts, an exact email search followed by account details and a reasoned
-suspend/reactivate dialog. Assessment details include Booking in LeisureWorld Aquatics with
+suspend/reactivate dialog. Assessment session setup includes Booking in LeisureWorld Aquatics with
 publication status, Ireland-time deadline editing and unpublish. The controls
 use shared form feedback and shadcn status tones; each write records a reason.
 These controls remain in the desk workspace. See [staff parent controls](docs/parent-staff-controls.md).

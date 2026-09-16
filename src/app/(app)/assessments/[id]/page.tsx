@@ -24,32 +24,26 @@ import {
   MarkNoShow,
   RecordOutcome,
 } from "@/components/assessments/booking-actions";
-import {
-  CancelSession,
-  EditSession,
-} from "@/components/assessments/session-actions";
+import { AssessmentNav } from "@/components/assessments/assessment-nav";
+import { Button } from "@/components/shadcn/button";
 import { WrongClub } from "@/components/clubs/wrong-club";
 import {
   SESSION_STATUS_META,
   BOOKING_STATUS_META,
   HOLDS_A_PLACE,
+  isPast,
   sessionDay,
   sessionSpan,
 } from "@/lib/assessments/constants";
 import {
-  getAssessmentProgrammeOptions,
   getAssessmentSession,
-  getAssessmentTypeOptions,
   type BookingRow,
   type SessionDetail,
 } from "@/lib/assessments/data/assessments";
 import { can } from "@/lib/authz";
 import { getCurrentClub } from "@/lib/clubs/current";
-import { getInstructorOptions } from "@/lib/courses/data/courses";
 import { formatDate, today } from "@/lib/format";
 import { screenPage } from "@/lib/page-guards";
-import { AssessmentPublicationPanel } from "@/components/parents/assessment-publication";
-import { dublinInstant } from "@/lib/parent/time";
 import {
   MEDICAL_STATUS_META,
   ageLabel,
@@ -67,12 +61,9 @@ export default async function AssessmentSessionPage(
   const manage = can(auth, "courses.manage");
   const { id } = await props.params;
 
-  const [session, programmes, types, instructors, { club }] = await Promise.all(
+  const [session, { club }] = await Promise.all(
     [
       getAssessmentSession(id),
-      manage ? getAssessmentProgrammeOptions() : Promise.resolve([]),
-      manage ? getAssessmentTypeOptions() : Promise.resolve([]),
-      manage ? getInstructorOptions() : Promise.resolve([]),
       getCurrentClub(),
     ],
   );
@@ -101,7 +92,7 @@ export default async function AssessmentSessionPage(
   return (
     <div className="min-w-0 flex flex-col gap-6">
       <div className="min-w-0 flex flex-col gap-2">
-        <BackLink href="/assessments" current={sessionDay(session)}>
+        <BackLink href={isPast(session, today()) ? "/assessments?view=past" : "/assessments"} current={sessionDay(session)}>
           Assessments
         </BackLink>
         <PageHeader
@@ -132,23 +123,13 @@ export default async function AssessmentSessionPage(
               {book && open ? (
                 <BookOntoSession session={session} taken={taken} />
               ) : null}
-              {manage && open ? (
-                <>
-                  <EditSession
-                    session={session}
-                    programmes={programmes}
-                    types={types}
-                    instructors={instructors}
-                    today={today()}
-                    variant="button"
-                  />
-                  <CancelSession session={session} />
-                </>
-              ) : null}
+              {manage ? <Button asChild variant="outline" className="min-h-11"><UiLink href={`/assessments/${id}/setup`}>Session setup</UiLink></Button> : null}
             </>
           }
         />
       </div>
+
+      <AssessmentNav active="upcoming" manage={manage} />
 
       <Lead>
         <Num>
@@ -164,10 +145,6 @@ export default async function AssessmentSessionPage(
         ) : null}
         .{session.notes ? ` ${session.notes}` : ""}
       </Lead>
-
-      {manage ? <AssessmentPublicationPanel key={`${session.id}-${session.date.toISOString()}-${session.startMinutes}-${session.cancelledAt}-${session.programmeId}-${session.typeId}-${session.capacity}-${taken}`} sessionId={session.id}
-        sessionLabel={`${sessionDay(session)} · ${sessionSpan(session)} · ${session.club.name} · ${session.programme.name}`}
-        startsAt={(dublinInstant(session.date.toISOString().slice(0, 10), session.startMinutes) ?? session.date).toISOString()} /> : null}
 
       {session.bookings.length === 0 ? (
         <EmptyState

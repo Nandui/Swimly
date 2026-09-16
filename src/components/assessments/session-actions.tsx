@@ -218,7 +218,7 @@ export function AddSession(props: Omit<FieldProps, "session">) {
   return (
     <FormDialog
       trigger={
-        <Button variant="default" size="sm">
+        <Button variant="default" size="sm" className="min-h-11">
           {<CalendarPlus aria-hidden={true} className="size-4 shrink-0" />}
           {"Add a session"}
         </Button>
@@ -248,11 +248,12 @@ export function EditSession({
             variant="ghost"
             aria-label={`Edit the session on ${sessionLabel(session)}`}
             size="icon-sm"
+            className="size-11"
           >
             {<Pencil aria-hidden={true} className="size-4 shrink-0" />}
           </Button>
         ) : (
-          <Button variant="outline" size="sm">
+          <Button variant="outline" size="sm" className="min-h-11">
             {<Pencil aria-hidden={true} className="size-4 shrink-0" />}
             {"Edit"}
           </Button>
@@ -278,6 +279,7 @@ export function CancelSession({ session }: { session: SessionRow }) {
           variant="ghost"
           aria-label={`Cancel the session on ${sessionLabel(session)}`}
           size="icon-sm"
+          className="size-11"
         >
           {<Ban aria-hidden={true} className="size-4 shrink-0" />}
         </Button>

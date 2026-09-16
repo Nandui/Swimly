@@ -6,6 +6,7 @@ type Placement = { image: string; step: string; caption: string; alt: string; sc
 
 // Screenshots are attached by step title so a reordered guide does not silently move an illustration.
 export const GUIDE_SCREENSHOTS: Record<string, Placement[]> = {
+  "assessment-enrolment-follow-up": [{ image: "assessment-awaiting-enrolment", step: "Open Awaiting enrolment", caption: "Open Awaiting enrolment from the sidebar to follow up assessment placements and class waitlists.", alt: "Standalone Awaiting enrolment page with fictional assessment and waitlist records, family contacts and enrolment actions." }],
   "parent-link-requests": [{ image: "parent-link-request", step: "Confirm the decision and reply", caption: "Match the existing swimmer, write the parent’s reply and record an internal reason before approving.", alt: "Staff approval dialog for synthetic parent Pat Example, matching Jamie Example and showing the parent reply and audit reason." }],
   "parent-access": [{ image: "parent-profile", step: "Approve the guardian’s email", caption: "Approval identifies the swimmer, guardian email and the reason for granting access.", alt: "Approve parent email dialog for Avery Example with a synthetic guardian email and an audit reason." }],
   "parent-accounts": [{ image: "parent-accounts", step: "Confirm the account change", caption: "Suspending ends the parent’s current sessions and affects all their linked swimmers.", alt: "Suspend parent account confirmation identifying parent@example.test and a reason field." }],

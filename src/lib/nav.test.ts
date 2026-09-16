@@ -10,6 +10,7 @@ test("administrators see every desk destination, including duty and billing, wit
   assert.deepEqual(new Set(links), new Set(NAV_ITEMS.map(item => item.href)));
   assert.ok(links.includes("/duty"));
   assert.ok(links.includes("/cancellations"));
+  assert.ok(links.includes("/awaiting-enrolment"));
   assert.equal(links.includes("/instructor"), false);
   assert.equal(links.includes("/"), false);
   assert.equal(NAV_ITEMS.some(item => item.label === "Overview"), false);
@@ -29,6 +30,14 @@ test("Setup retains only allowed destinations", () => {
   const setup = groups.find(group => group.id === "setup");
   assert.deepEqual(setup?.items.map(item => item.href), ["/staff", "/clubs"]);
   assert.equal(setup?.collapsible, true);
+});
+
+test("Awaiting enrolment is an independent sidebar destination with its own screen grant", () => {
+  const queueOnly = visibleNavGroups(visibleScreens(["awaiting-enrolment"], expandPermissions([])));
+  assert.deepEqual(queueOnly.flatMap(group => group.items.map(item => item.href)), ["/awaiting-enrolment"]);
+  const assessmentsOnly = visibleNavGroups(visibleScreens(["assessments"], expandPermissions([])));
+  assert.deepEqual(assessmentsOnly.flatMap(group => group.items.map(item => item.href)), ["/assessments"]);
+  assert.equal(isNavItemActive("/awaiting-enrolment", "/assessments"), false);
 });
 
 test("nested pages select their destination without prefix collisions", () => {

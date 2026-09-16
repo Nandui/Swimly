@@ -20,7 +20,7 @@ migration; it needs no new environment variables.
   queue is exact email lookup,
   account details and suspend/reactivate. Suspension revokes existing sessions.
   Reactivation permits a fresh sign-in without restoring revoked child access.
-- **Assessments → session → Booking in LeisureWorld Aquatics:** publish, edit a deadline,
+- **Assessments → Assessment setup → Set up → Booking in LeisureWorld Aquatics:** publish, edit a deadline,
   unpublish and refresh status. The session must belong to the working site.
   Deadlines use Europe/Dublin even on a device set to another timezone. Blank
   means the session start. Unpublishing preserves existing bookings.

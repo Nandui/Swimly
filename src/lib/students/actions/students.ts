@@ -184,6 +184,7 @@ export async function updateStudent(id: string, input: StudentInput): Promise<Ac
   if (!result.ok) return result;
   revalidatePath("/students");
   revalidatePath("/students/[id]", "page");
+  revalidatePath("/awaiting-enrolment");
   return ok();
 }
 
@@ -231,5 +232,6 @@ export async function setStudentStatus(
   if (!result.ok) return result;
   revalidatePath("/students");
   revalidatePath("/students/[id]", "page");
+  revalidatePath("/awaiting-enrolment");
   return ok();
 }

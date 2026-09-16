@@ -120,6 +120,16 @@ deleted); staff accounts, admin-defined roles from a permission catalogue;
 clubs and the switcher; the audit log; account settings with light and dark
 mode.
 
+Assessments separates Upcoming assessments and their swimmer rosters from
+Assessment setup for session creation, editing, cancellation and parent publication.
+Awaiting enrolment is a separate sidebar page and screen grant. It combines
+recorded placements without a class place in that programme with all class
+waitlists, including swimmers who have not been assessed or already have another
+class. Assessment follow-up belongs to the site of the latest assessment and
+counts enrolments at either site; waitlists belong to the requested class's site.
+Rows group by swimmer and shared programme without losing individual waitlist
+requests. Instructor stays separate.
+
 The desk uses Swimmers for customer details, progress and enrolment, Classes
 for the weekly timetable and class inspection, and Schedule for a selected day's classes and assessments.
 Duty manager adds a compact daily class list with quick details and dated

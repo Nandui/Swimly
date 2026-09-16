@@ -131,9 +131,9 @@ export const CLASS_GUIDES: HelpArticle[] = [
     summary: "Set up a dated assessment with a programme, assessor and number of places.", keywords: ["assessment", "session", "add", "create", "edit", "cancel", "assessor", "date"],
     before: ["You need the Assessments screen and permission to edit the timetable. Check the working site before adding a session."],
     steps: [
-      { title: "Add a session from Assessments", text: "Choose the add-session action. Select Programme and Kind, then set Date, Start, Minutes and Places." },
+      { title: "Open Assessment setup", text: "In Assessments, choose Assessment setup, then Add a session. Select Programme and Kind, then set Date, Start, Minutes and Places." },
       { title: "Complete the practical details", text: "Choose the pool and assessor and add any notes. Review the site, date and time before choosing Add session." },
-      { title: "Inspect or edit the session", text: "Open the session from Assessments. Use Edit to change its details, then Save changes." },
+      { title: "Inspect or edit the session", text: "In Assessment setup, choose Set up beside the session. Use Edit to change its details, then Save changes. Parent booking publication is managed on this same setup page. View swimmers opens the separate booking roster." },
       { title: "Cancel only when the whole session will not run", text: "Use the session’s cancellation action and read the confirmation. To remove only one swimmer’s booking, use the booking cancellation instead." },
     ], result: "The assessment is available as a dated session, or its cancellation is recorded after confirmation.",
     troubleshooting: [{ question: "The assessment kind I need is missing.", answer: "Kinds of assessment are maintained under the programme. Ask someone with curriculum permission to check the programme’s assessment setup." }],
@@ -144,7 +144,7 @@ export const CLASS_GUIDES: HelpArticle[] = [
     summary: "Reserve a place on a session, or cancel an individual booking.", keywords: ["assessment", "book", "booking", "new swimmer", "cancel booking", "places"],
     before: ["The swimmer needs an active profile. You need permission to enrol and move swimmers."],
     steps: [
-      { title: "Find the assessment session", text: "Open Assessments and select the session. Check the programme, site, date, time and available places." },
+      { title: "Find the assessment session", text: "Open Assessments → Upcoming assessments and choose View swimmers. Check the programme, site, date, time and available places. Use Past sessions for an earlier assessment." },
       { title: "Choose Book a swimmer", text: "Search for and select the correct swimmer. If they do not yet have a profile, add them under Swimmers first." },
       { title: "Confirm the booking", text: "Choose Book and wait for the result. Check that the swimmer now appears under Booked." },
       { title: "Cancel a booking if the swimmer cannot attend", text: "Use the cancellation action beside that swimmer and confirm Cancel booking. This releases the individual booking, not the whole session." },
@@ -164,6 +164,19 @@ export const CLASS_GUIDES: HelpArticle[] = [
       { title: "Correct the placement if needed", text: "Use Change placement, review the revised level and note, then save. Arrange any class enrolment as a separate step." },
     ], result: "The assessment and its placement are visible on the swimmer’s record. The outcome does not automatically book a weekly class.",
     troubleshooting: [{ question: "Can an assessment place someone in a different programme?", answer: "The outcome level must belong to the session’s programme. Credit in one programme does not automatically count toward another." }],
-    related: ["book-assessment", "enrol-swimmer", "swimmer-history"], action: "assessments",
+    related: ["book-assessment", "assessment-enrolment-follow-up", "enrol-swimmer", "swimmer-history"], action: "assessments",
+  },
+  {
+    slug: "assessment-enrolment-follow-up", title: "Follow up swimmers awaiting enrolment", category: "enrolment", scopes: ["desk"],
+    summary: "Find assessed swimmers and class waitlists, then arrange a class place.", keywords: ["awaiting enrolment", "assessed", "follow up", "placement", "waiting", "waitlist", "class place"],
+    before: ["Your role needs the Awaiting enrolment screen. Check the site in the sidebar. Enrolling also requires enrolment permission."],
+    steps: [
+      { title: "Open Awaiting enrolment", text: "Choose Awaiting enrolment directly from the sidebar. It includes assessed swimmers awaiting a place and class waitlists, even without an assessment. The list groups by swimmer and programme, oldest first. Search by name or member number." },
+      { title: "Review the placement and family contact", text: "Check the swimmer, member number, any assessed level and each waitlisted class. Open an assessment date or swimmer profile when your access permits it. A waitlist can remain while the swimmer attends another class." },
+      { title: "Arrange a class place", text: "For an assessment placement, choose Enrol to find classes at that level across sites. For a waitlisted class with space, choose Enrol from waitlist and confirm. Full or archived classes cannot receive a place here. Capacity is checked again when you confirm." },
+      { title: "Check the follow-up is complete", text: "A class place in the same programme resolves the assessment follow-up, including a future start or a class at the other site. Each outstanding waitlist stays visible until promoted, moved or withdrawn through the usual enrolment controls." },
+    ], result: "The enrolment is recorded through the usual capacity and audit checks. The assessment remains in the swimmer's history.",
+    troubleshooting: [{ question: "Why is an assessed swimmer not in this list?", answer: "Check that they are active and have a recorded placement. Their latest assessment may belong to the other site, or a class enrolment may already have resolved the follow-up." }],
+    related: ["assessment-outcome", "enrol-swimmer", "waitlist", "swimmer-history"], action: "awaiting-enrolment",
   },
 ];

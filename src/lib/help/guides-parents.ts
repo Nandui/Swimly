@@ -56,7 +56,7 @@ export const PARENT_GUIDES: HelpArticle[] = [
     keywords: ["parent", "LeisureWorld Aquatics", "publish", "unpublish", "assessment", "booking deadline", "online booking"],
     before: ["You need the Assessments screen and Edit the timetable permission.", "Select the session’s site as your working area. The session must be in the future, not cancelled, and use an active site, programme and assessment type."],
     steps: [
-      { title: "Open the assessment session", text: "In Assessments, open the session and check its site, date, time and places. Booking in LeisureWorld Aquatics shows its parent publication status." },
+      { title: "Open the assessment session", text: "In Assessments, choose Assessment setup, then Set up beside the session. Check its site, date, time and places. Booking in LeisureWorld Aquatics shows its parent publication status." },
       { title: "Choose Publish to LeisureWorld Aquatics", text: "Check the session named in the dialog. Set an optional future booking deadline in Ireland time, no later than the session starts. Leave it blank to close booking at the start. Add your reason and choose Publish session." },
       { title: "Check the published status", text: "Published means the session is visible to parents. A full session stays visible but cannot accept another booking. Use Edit booking deadline to change the cutoff and Refresh status to check the latest availability." },
       { title: "Unpublish when required", text: "Choose Unpublish, enter a reason and confirm. This hides the session from parent booking without cancelling it or removing existing bookings. Staff can still manage those bookings." },

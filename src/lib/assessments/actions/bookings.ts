@@ -16,7 +16,8 @@ import { readSharedCurriculum, liveSharedLevel } from "@/lib/curriculum/data/sha
 import { prisma } from "@/lib/prisma";
 
 function revalidate() {
-  revalidatePath("/assessments");
+  revalidatePath("/assessments", "layout");
+  revalidatePath("/awaiting-enrolment");
   revalidatePath("/assessments/[id]", "page");
   revalidatePath("/students/[id]", "page");
   revalidatePath("/schedule");
