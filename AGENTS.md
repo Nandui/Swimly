@@ -53,9 +53,10 @@ FormData, validation and reset behaviour. See DESIGN.md for the full contract.
 Instructor is an isolated pool-deck workspace under `(instructor)/instructor`,
 fully migrated to shadcn, including its class list, start confirmation,
 attendance, competencies and completion dialogs. Its controls are tablet-sized.
-Every class requires a confirmed start for that date; only the claiming
-instructor may open it or save teaching records. Preserve the server checks
-and atomic claim. Do not add desk navigation,
+Every class requires a confirmed start for that date. Once started, all staff
+with Instructor access and the relevant teaching permissions can open and help
+with it. Preserve the original atomic start record, audit and save-conflict
+checks; starts do not grant exclusive ownership. Do not add desk navigation,
 global swimmer search or profile links to it, or Instructor links to desk
 navigation. Shared teaching components must preserve the route-selected
 workspace boundary. See [docs/instructor.md](docs/instructor.md).
@@ -70,7 +71,7 @@ The shell owns the main landmark and page inset: 16px, increasing to 24px at
 Administrators always receive every current and future screen and permission.
 Administrator access means both staff.manage and roles.manage; resolve it through
 expandPermissions and visibleScreens, never a role name or the legacy enum.
-Restricted role grants, role previews and Instructor claim boundaries still hold.
+Restricted role grants, role previews and Instructor workspace boundaries still hold.
 
 Prisma here is v7: the client is generated into `src/generated/prisma` and
 needs a driver adapter (`@prisma/adapter-pg`), and the datasource URL lives in

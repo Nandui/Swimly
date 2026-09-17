@@ -49,11 +49,11 @@ export const CLASS_GUIDES: HelpArticle[] = [
     steps: [
       { title: "Check the site and today’s list", text: "Use My classes for your scheduled classes, or All classes when covering another teacher. You can group the list by time or level." },
       { title: "Choose Start class", text: "Read the class and date in the confirmation. Confirm that you are at the pool and teaching this class. Your own scheduled classes require this confirmation too." },
-      { title: "Open the teaching record", text: "Once you have started the class, use Open class. The list shows whether attendance is saved or still needs to be taken." },
+      { title: "Open the teaching record", text: "Once an instructor has started the class, use Open class. Other authorised instructors can also open it and help. The list shows whether attendance is saved or still needs to be taken." },
       { title: "Return to the list when finished", text: "Use the class-return controls. Your My classes or All classes selection and grouping are retained." },
     ], result: "You are recorded as teaching that class on that date and can open the teaching record within your permissions.",
     troubleshooting: [
-      { question: "The class says In progress under someone else’s name.", answer: "Another instructor has already confirmed that they are teaching it. You cannot overwrite that claim or open its teaching records. Ask the responsible staff member to resolve the situation." },
+      { question: "Another instructor has already started the class.", answer: "Choose Open class to help with attendance or competencies within your permissions. The original start stays recorded, and your saves are attributed to you. If an old page still says In progress, refresh it. Use All classes to find a colleague’s class." },
       { question: "Can I start a cancelled class?", answer: "No. A cancelled session cannot receive a new start or teaching saves. Contact the duty manager if the cancellation needs to be discussed." },
     ], related: ["take-attendance", "record-competencies", "saving-and-connection"], action: "instructor",
   },
@@ -89,7 +89,7 @@ export const CLASS_GUIDES: HelpArticle[] = [
   {
     slug: "complete-class-level", title: "Confirm a level completion from a class", category: "teaching", scopes: ["desk", "instructor"],
     summary: "Record a confirmed milestone after the required competencies have been achieved.", keywords: ["complete", "level", "pass", "graduate", "ready", "milestone", "finish"],
-    before: ["You need permission to complete a level. Save competency changes before reviewing who is ready. Instructor class ownership still applies."],
+    before: ["You need permission to complete a level. Save competency changes before reviewing who is ready. An instructor must have started the session before teaching records can be saved."],
     steps: [
       { title: "Open the class’s Competencies step", text: "Check the saved marks for the swimmer and review the Ready to complete area when it is available." },
       { title: "Open the completion action", text: "Check the swimmer and level in the dialog. Review any outstanding competencies rather than relying only on the overall count." },

@@ -4,7 +4,6 @@ import {
   ArrowRight,
   Check,
   ClipboardList,
-  LockKeyhole,
   ChevronDown,
 } from "lucide-react";
 import { Button } from "@/components/shadcn/button";
@@ -68,7 +67,6 @@ export default async function InstructorPage(props: PageProps<"/instructor">) {
     shown.filter(course => !cancellations.has(course.id)),
     group,
     now,
-    (c) => claimState(covers.get(c.id), me) === "locked",
   );
   const earlier =
       group === "time" ? sections.filter((s) => s.phase === "earlier") : [],
@@ -105,9 +103,10 @@ export default async function InstructorPage(props: PageProps<"/instructor">) {
               ? " · " + (course.instructor?.name ?? "No instructor assigned")
               : ""}
           </p>
+          {state === "shared" ? <p className="text-xs text-ui-muted-foreground">Started by {claim?.coverByName}</p> : null}
         </ItemContent>
         <div className="flex w-full items-center justify-between gap-3 sm:w-auto sm:gap-5">
-          {cancellations.has(course.id) ? <div className="space-y-1"><Tag color={CANCELLATION_META.cancelled.color}>Cancelled</Tag><p className="max-w-sm break-words text-sm text-ui-muted-foreground">{cancellations.get(course.id)?.reason}</p></div> : state === "mine" ? (
+          {cancellations.has(course.id) ? <div className="space-y-1"><Tag color={CANCELLATION_META.cancelled.color}>Cancelled</Tag><p className="max-w-sm break-words text-sm text-ui-muted-foreground">{cancellations.get(course.id)?.reason}</p></div> : state !== "available" ? (
             <>
               <p className="flex items-center gap-2 text-sm text-ui-muted-foreground">
                 {marked.has(course.id) ? (
@@ -134,14 +133,6 @@ export default async function InstructorPage(props: PageProps<"/instructor">) {
                 </Link>
               </Button>
             </>
-          ) : state === "locked" ? (
-            <p className="flex items-center gap-2 text-sm text-ui-muted-foreground">
-              <LockKeyhole className="size-4 shrink-0" aria-hidden="true" />
-              <span>
-                In progress
-                <span className="block text-xs">With {claim?.coverByName}</span>
-              </span>
-            </p>
           ) : own || can(session, "attendance.cover") ? (
             <StartClass
               courseId={course.id}
@@ -295,16 +286,12 @@ function phaseOf(
 /** By time: the day in the order it happens, one section per start time,
  *  classes inside in curriculum order. By level: one section per rung of
  *  the ladder, programmes and levels in curriculum order, classes inside by
- *  time — for the instructor who has the same checklist open all afternoon.
- *  Inside a section, a class somebody else has taken over goes last. */
+ *  time — for the instructor who has the same checklist open all afternoon. */
 function groupClasses(
   courses: CourseRow[],
   group: Grouping,
   now: number,
-  demote: (course: CourseRow) => boolean,
 ): Section[] {
-  const byDemotion = (a: CourseRow, b: CourseRow) =>
-    Number(demote(a)) - Number(demote(b));
   const byCurriculum = (a: CourseRow, b: CourseRow) =>
     a.level.programme.sortOrder - b.level.programme.sortOrder ||
     a.level.programme.name.localeCompare(b.level.programme.name) ||
@@ -325,7 +312,7 @@ function groupClasses(
 
   if (group === "time") {
     const sorted = [...courses].sort(
-      (a, b) => byTime(a, b) || byDemotion(a, b) || byCurriculum(a, b),
+      (a, b) => byTime(a, b) || byCurriculum(a, b),
     );
     for (const course of sorted) {
       const key = String(course.startMinutes);
@@ -340,7 +327,7 @@ function groupClasses(
     }
   } else {
     const sorted = [...courses].sort(
-      (a, b) => byCurriculum(a, b) || byDemotion(a, b) || byTime(a, b),
+      (a, b) => byCurriculum(a, b) || byTime(a, b),
     );
     for (const course of sorted) {
       const key = course.level.id;

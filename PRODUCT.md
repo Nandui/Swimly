@@ -187,12 +187,12 @@ It also shows all of today's non-cancelled assessment sessions at the selected
 site, independently of the weekly-class filters. Staff with `assessments.run`
 open bookings and record placements or no-shows within the Instructor workspace.
 Unassigned assessments remain visible, including on days without weekly classes.
-Every unclaimed class offers Start class. Confirming presence claims that class
-for the date, including when it is the instructor's scheduled class. The owner
-then sees Open class and a simple attendance saved/to-take indication. Other
-instructors see In progress and cannot open its attendance or competencies.
-Ownership cannot be overwritten by a second confirmation. Cover and audit facts
-remain recorded without becoming task-status pills on the deck.
+Every unstarted class offers Start class. Confirming presence records the start
+for that date, including for its scheduled instructor. All authorised instructors
+then see Open class and attendance saved/to-take, so colleagues can help with
+attendance, competencies and level completion within their own permissions.
+The original start and cover attribution remain recorded; later opens do not
+overwrite them. Existing starts, including those by deleted accounts, are shared.
 Starting a class, recording attendance and marking each swimmer's
 competencies all stay under `/instructor/classes/[id]`. The selected list and
 grouping survive the return trip. Its frame offers classes, site, appearance
@@ -238,7 +238,7 @@ These controls require the existing named permissions and write audit reasons.
 - Administrator access is defined by holding both staff and role management
   permissions. It always includes every current and future screen and permission.
   Other roles keep explicit grants. Instructor navigation and confirmed class
-  ownership remain separate rules, including for administrators.
+  start confirmation remain separate rules, including for administrators.
 - Swimmers can enrol, waitlist and move between classes at either site. Their
   identity, contacts and progress stay on one shared record. Site selection
   filters the working timetable; it is not a swimmer ownership boundary.

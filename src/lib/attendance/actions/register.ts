@@ -83,8 +83,8 @@ export async function markRegister(input: MarkRegisterInput): Promise<RegisterSa
       if (error) return fail(error);
     }
 
-    // Whoever took the class over that day may mark it, and the register says
-    // they did.
+    // Keep the original teaching attribution; permitted colleagues can also
+    // record attendance, with their own identity on each changed record.
     const cover = await tx.classCover.findUnique({
       where: { courseId_date: { courseId, date } },
       select: { coverById: true, coverByName: true, instructorId: true, instructorName: true },
@@ -93,7 +93,7 @@ export async function markRegister(input: MarkRegisterInput): Promise<RegisterSa
     if (
       !canMarkRegister({ session, instructorId: course.instructorId, coverById: cover?.coverById })
     ) {
-      return fail("That is not your class. Take it over first, or ask someone who can take attendance for any class.");
+      return fail("Start this class first, or ask someone who can take attendance for any class.");
     }
 
     // Without session rows, these two lines are the only thing standing between

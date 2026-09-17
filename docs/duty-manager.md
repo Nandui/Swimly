@@ -37,7 +37,7 @@ Screen access alone allows reading. Neither permission is implied by timetable
 editing. Restricted roles retain their existing grants. Instructor remains
 isolated from desk navigation; instructor-only roles cannot reach either new
 view without an explicit screen grant. Administrator access does not bypass
-confirmed class ownership on the pool deck.
+dated class start confirmation on the pool deck.
 
 ## Data and rollout
 

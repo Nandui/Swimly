@@ -98,10 +98,10 @@ test("unchanged attendance produces no writes or audit entries", async () => {
   assert.equal(f.updated.length, 0); assert.equal(f.audits.length, 0);
 });
 
-test("Instructor attendance checks the confirmed owner under lock, including omitted teaching flags", async () => {
+test("Instructor attendance still requires a start, including omitted teaching flags", async () => {
   const f = fixture(); f.deckOnly();
   const input = { ...f.input(), classNote: "Deck note" };
-  for (const owner of [undefined, null, "another-instructor"]) {
+  for (const owner of [undefined]) {
     f.setClaim(owner);
     assert.equal((await f.markRegister({ ...input, teaching: true })).ok, false);
     assert.equal((await f.markRegister(input)).ok, false);
@@ -112,6 +112,19 @@ test("Instructor attendance checks the confirmed owner under lock, including omi
   assert.equal(f.note(), "Deck note"); assert.equal(f.audits.length, 1);
   assert.match(f.audits[0].summary, /taught by Test Instructor, the scheduled instructor/);
   assert.doesNotMatch(f.audits[0].summary, /covering for/);
+});
+
+test("other instructors can save existing sessions without rewriting the original start", async () => {
+  for (const owner of [null, "another-instructor"]) {
+    const f = fixture(); f.deckOnly(); f.setClaim(owner);
+    const input = { ...f.input(), teaching: true, classNote: "Saved by a colleague" };
+    input.marks[1].status = "PRESENT";
+    assert.equal((await f.markRegister(input)).ok, true);
+    assert.equal(f.rows[1].markedById, "instructor");
+    assert.equal(f.rows[0].markedById, "original");
+    assert.equal(f.note(), "Saved by a colleague");
+    assert.doesNotMatch(f.audits[0].summary, /taught by|taken by/);
+  }
 });
 
 test("editing one mark preserves the other swimmer's original recorder", async () => {

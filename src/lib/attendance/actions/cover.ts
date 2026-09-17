@@ -14,7 +14,8 @@ import { cancellationError } from "@/lib/cancellations/guard";
 
 /** Confirm who is teaching a class on a date. The existing ClassCover record
  * now includes scheduled instructors as well as substitutes. Claims and their
- * audit entries are created together under the course lock and never replaced. */
+ * audit entries are created together under the course lock and never replaced.
+ * A recorded start allows other authorised instructors to open the class. */
 
 
 const takeOverSchema = z.object({
@@ -30,7 +31,7 @@ export async function takeOverClass(input: TakeOverInput): Promise<ActionResult>
 }
 
 /** Confirmation is required for scheduled instructors as well as cover.
- * The course lock makes concurrent confirmations a single-winner operation. */
+ * Concurrent confirmations keep one original start; both callers can open it. */
 export async function startClass(input: TakeOverInput): Promise<ActionResult> {
   const session = await requirePermission("attendance.mark");
   if (!canSee(session, "instructor")) throw new AuthorizationError("Instructor access is required.");
@@ -61,7 +62,6 @@ async function claim(input: TakeOverInput, session: Session, starting: boolean):
     if (!course) return fail("That class no longer exists.");
     if (course.archivedAt) return fail("That class is archived.");
     const own = course.instructorId === session.user.id;
-    if (!own && !can(session, "attendance.cover")) return fail("You do not have permission to start another instructor’s class.");
 
     // The same two guards as the register, for the same reason: a cover on a
     // day the class never ran is as wrong as a mark on one.
@@ -80,8 +80,8 @@ async function claim(input: TakeOverInput, session: Session, starting: boolean):
       where: { courseId_date: { courseId, date } },
       select: { coverById: true, coverByName: true },
     });
-    if (existing?.coverById === session.user.id) return ok();
-    if (existing) return fail(`This class has already been started by ${existing.coverByName}. Only that instructor can open it.`);
+    if (existing) return ok();
+    if (!own && !can(session, "attendance.cover")) return fail("You do not have permission to start another instructor’s class.");
 
     const name = session.user.name ?? "Unknown";
     const record = {

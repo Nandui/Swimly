@@ -15,14 +15,15 @@ the pool. Its route group and layout stay separate from the desk workspace.
   sessions at the selected site before reading the roster. Instructors can
   record placements or no-shows using the existing permission-checked, locked,
   audited assessment actions. Assessments use this existing assessor permission;
-  weekly classes retain their separate exclusive start/claim rules.
+  weekly classes retain their separate dated start confirmation.
   No swimmer profiles, booking administration or desk navigation appear here.
 - An unclaimed class offers **Start class**. A shadcn dialog asks the instructor
   to confirm they are at the pool and teaching it, including their own class.
-- Confirmation claims that class and date. The owner subsequently sees
-  **Open class**, with plain **Attendance saved** or **Attendance to take**.
-- Other instructors see **In progress** and the teacher's name. They cannot
-  open the roster, attendance or competencies, including through a bookmark.
+- Confirmation records the first start for that class and date. All authorised
+  instructors then see **Open class**, with **Attendance saved** or **Attendance
+  to take**. Colleagues can open the roster and help with attendance, competencies
+  and level completion within their own permissions. Shared rows identify who
+  started the session; a later open never replaces the original start record.
 - /instructor/classes/[id] contains attendance, then competencies and eligible
   level completion. Returning preserves My/All and the grouping choice.
 - Competencies opens directly into the swimmer list. Tap a name to expand that
@@ -48,13 +49,13 @@ workspaces can access both; their normal navigation remains separate.
 
 The existing ClassCover table records confirmed starts for scheduled teachers
 as well as substitutes; no database migration is required. A course row lock,
-unique course/date key and insert-only claim make simultaneous starts a
-single-winner operation. An owner's retry succeeds without another audit.
-Another teacher cannot overwrite the claim, including when the original
-teacher's account has been deleted. Claims persist for that date.
+unique course/date key and insert-only start preserve the first confirmation.
+Concurrent starts both succeed but produce only one start record and audit.
+All existing starts allow shared access, including when the original teacher's
+account has been deleted. No migration or live data reset is required.
 
-The Instructor loader checks the claim before reading swimmer data. Attendance,
-competency and completion actions recheck the owner under the course lock.
+The Instructor loader checks the start before reading swimmer data. Attendance,
+competency and completion actions recheck it under the course lock.
 Competency writes also verify current enrolment for the date and the class's
 shared curriculum level. Desk-only actions cannot bypass these checks for an
 instructor-only account. Explicit desk transcription permissions still permit
@@ -66,13 +67,13 @@ redirect to the isolated class route while retaining date and teaching step.
 
 Verification uses synthetic swimmers and mocked server boundaries; no live
 records are created or changed. Typecheck, lint and production compilation pass.
-Automated tests cover single-winner claims, repeat confirmations, rejected
-ownership, deleted owners, direct access before roster reads, stale saves,
+Automated tests cover one-record concurrent starts, repeat confirmations, shared
+access, deleted original instructors, direct access before roster reads, stale saves,
 changed enrolments and levels, desk-action bypasses and audit rollback.
 Browser checks cover 375, 768, 1024 and 1280px in light and dark with one H1,
 no horizontal overflow and 44px controls. Own-class and substitute starts,
 attendance failure/retry, draft recovery, competency save/return, keyboard
-selection and locked direct URLs were exercised using the local-only fixture.
+selection and shared session links are exercised using local-only fixtures.
 
 `scripts/check-instructor-swimmers.mjs` verifies the real teaching components
 with fictional swimmers and mocked save actions, rejecting all outbound requests.

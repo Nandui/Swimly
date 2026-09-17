@@ -4,7 +4,7 @@ import type { Prisma } from "@/generated/prisma/client";
 import type { Session } from "next-auth";
 import { serverModule } from "@/test/server-module";
 
-test("teaching saves reject another teacher, unclaimed dates and swimmers outside the class", async () => {
+test("teaching saves allow colleagues but reject unstarted dates and swimmers outside the class", async () => {
   let owner: string | null = "other",
     exists = true,
     members = ["swimmer"];
@@ -27,9 +27,9 @@ test("teaching saves reject another teacher, unclaimed dates and swimmers outsid
   } as unknown as Prisma.TransactionClient;
   const session = { user: { id: "teacher" } } as Session,
     context = { courseId: "class", date: "2026-09-11" };
-  assert.match((await teachingError(tx, session, context, "site"))!, /locked/);
+  assert.equal(await teachingError(tx, session, context, "site"), null);
   owner = null;
-  assert.ok(await teachingError(tx, session, context, "site"));
+  assert.equal(await teachingError(tx, session, context, "site"), null);
   exists = false;
   assert.ok(await teachingError(tx, session, context, "site"));
   exists = true;

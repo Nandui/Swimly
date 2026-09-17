@@ -89,8 +89,8 @@ export function StartClass({
           </DialogDescription>
         </DialogHeader>
         <p className="text-sm leading-relaxed">
-          Confirm you are at the pool and teaching this class. It will be yours
-          for this session, and other instructors will not be able to open it.
+          Confirm you are at the pool and teaching this class. Your start will
+          be recorded. Other instructors can also open and help with this session.
         </p>
         {error ? <TeachingNotice title={error} error /> : null}
         <DialogFooter>

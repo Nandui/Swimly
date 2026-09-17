@@ -148,25 +148,34 @@ test("a scheduled instructor confirms a class once and a retry adds no audit", a
   assert.equal((await f.actions.startClass(input)).ok, true);
   assert.equal(f.audits.length, 1);
 });
-test("simultaneous starts have one winner and the losing teacher cannot take it over", async () => {
+test("simultaneous starts keep one audit and original teacher while both instructors gain access", async () => {
   const f = fixture();
   const one = f.actions.startClass(input);
   f.actor("cover");
   const two = f.actions.startClass(input);
   const result = await Promise.all([one, two]);
-  assert.equal(result.filter((r) => r.ok).length, 1);
+  assert.equal(result.filter((r) => r.ok).length, 2);
   assert.equal(f.claim()?.coverById, "scheduled");
   assert.equal(f.audits.length, 1);
-  assert.equal((await f.actions.takeOverClass(input)).ok, false);
+  assert.equal((await f.actions.takeOverClass(input)).ok, true);
+  assert.equal(f.claim()?.coverById, "scheduled");
+  assert.equal(f.audits.length, 1);
 });
-test("a claim blocks the scheduled teacher too, including when its owner was deleted", async () => {
+test("existing starts immediately allow colleagues, including when the original teacher was deleted", async () => {
   for (const owner of ["cover", null]) {
     const f = fixture();
     f.seed(owner);
-    assert.equal((await f.actions.startClass(input)).ok, false);
+    assert.equal((await f.actions.startClass(input)).ok, true);
     assert.equal(f.claim()?.coverById, owner);
     assert.equal(f.audits.length, 0);
   }
+});
+
+test("joining an existing session needs no new cover claim", async () => {
+  const f = fixture(); f.seed("scheduled"); f.actor("colleague"); f.noCover();
+  assert.equal((await f.actions.startClass(input)).ok, true);
+  assert.equal(f.claim()?.coverById, "scheduled");
+  assert.equal(f.audits.length, 0);
 });
 test("permission, date and archive checks happen before claiming, and audit failure rolls back", async () => {
   const f = fixture();

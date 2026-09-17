@@ -31,8 +31,7 @@ export async function teachingError(
     where: { courseId_date: { courseId: context.courseId, date } },
     select: { coverById: true },
   });
-  if (!claim || claim.coverById !== session.user.id)
-    return "Start this class before marking it. A class started by another instructor is locked.";
+  if (!claim) return "Start this class before marking it.";
   if (studentIds.length) {
     const enrolled = await tx.enrolment.findMany({
       where: {

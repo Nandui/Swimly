@@ -50,19 +50,15 @@ test("cancelled sessions never load the roster even for their confirmed teacher"
   assert.equal((await f.data.getInstructorClass("class", "2026-09-11"))?.state, "cancelled");
   assert.deepEqual(f.reads, []);
 });
-test("unstarted or locked classes never load swimmer attendance or competencies", async () => {
-  for (const owner of [undefined, null, "other"]) {
-    const f = fixture(owner);
-    const view = await f.data.getInstructorClass("class", "2026-09-11");
-    assert.equal(view?.state, owner === undefined ? "available" : "locked");
-    assert.deepEqual(f.reads, []);
-  }
+test("unstarted classes still require confirmation before loading swimmer records", async () => {
+  const f = fixture(undefined);
+  assert.equal((await f.data.getInstructorClass("class", "2026-09-11"))?.state, "available");
+  assert.deepEqual(f.reads, []);
 });
-test("only the confirmed teacher reaches the class roster and marks", async () => {
-  const f = fixture("teacher");
-  assert.equal(
-    (await f.data.getInstructorClass("class", "2026-09-11"))?.state,
-    "ready",
-  );
-  assert.deepEqual(f.reads.sort(), ["attendance", "competencies"]);
+test("existing starts open the roster for colleagues, including starts by deleted accounts", async () => {
+  for (const owner of ["teacher", "other", null]) {
+    const f = fixture(owner);
+    assert.equal((await f.data.getInstructorClass("class", "2026-09-11"))?.state, "ready");
+    assert.deepEqual(f.reads.sort(), ["attendance", "competencies"]);
+  }
 });

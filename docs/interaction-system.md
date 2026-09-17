@@ -13,7 +13,7 @@ server action results before making changes. No new animation library is needed.
 | Swimmers and profile | Useful filtered empty states and retained failed forms; changing save widths; server validation is only a summary | Stable progress buttons, field errors, focus on errors and confirmation steps |
 | Classes | Good filter recovery and no-level guidance; creation has the same form gaps | Reuse form/progress patterns; preserve filters and layout |
 | Today | Availability icons, a visible legend and place counts; refresh keeps schedule visible | Retain the visible availability guidance; match keyboard/hover feedback; explain assessment-only days |
-| Instructor | Explicit start/ownership, saved attendance, offline drafts and conflict protection | Stable save/start controls; preserve every server guard and workspace boundary |
+| Instructor | Recorded starts, shared teaching access, saved attendance, offline drafts and conflict protection | Stable save/start controls; preserve permission, dated-start and workspace checks |
 | Assessments, Together and setup | Shared form/confirmation actions, mostly helpful empty states | Apply shared feedback; address only specific gaps found in each screen |
 | Account/sign-in | Native validation and local failures | Consistent progress and local field guidance |
 

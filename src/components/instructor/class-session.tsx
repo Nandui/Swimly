@@ -73,14 +73,7 @@ export async function InstructorClassSession({
     return (
       <div className="flex flex-col gap-6">
         {header}
-        {view.state === "cancelled" ? <TeachingNotice title="This session is cancelled"><p>{view.cancellation.reason}</p><p>Attendance and competencies cannot be saved for this session.</p></TeachingNotice> : view.state === "locked" ? (
-          <TeachingNotice title="This class is in progress">
-            <p>
-              {view.claim?.coverByName} has started this class. Only that
-              instructor can open its attendance and competencies.
-            </p>
-          </TeachingNotice>
-        ) : view.state === "wrong-site" ? (
+        {view.state === "cancelled" ? <TeachingNotice title="This session is cancelled"><p>{view.cancellation.reason}</p><p>Attendance and competencies cannot be saved for this session.</p></TeachingNotice> : view.state === "wrong-site" ? (
           <TeachingNotice title={`This class is at ${course.club.name}`}>
             <p>Choose that site in the site switcher to continue.</p>
           </TeachingNotice>

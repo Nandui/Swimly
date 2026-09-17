@@ -205,7 +205,7 @@ makes deleting a permission a safe edit.
 **Reads respect screen access.** Pages require their screen grant; setup pages
 and the activity log also require their named permissions. Mutations enforce
 their own permissions regardless of which controls are visible. Instructor
-records additionally require the confirmed owner of that dated class.
+records additionally require a confirmed start for that dated class.
 
 **Administrators always have full access** (owner confirmed 13 September 2026).
 Holding both `staff.manage` and `roles.manage` defines administrator access;
@@ -215,7 +215,7 @@ capabilities without a data update. Names and the legacy `User.role` enum never
 decide this. Role previews use the previewed grants, and demotion or deactivation
 takes effect on the next request. The role editor shows inherited access and
 keeps the two management grants editable. Their removal returns to the role's
-stored selections. Instructor's separate navigation and class ownership checks
+stored selections. Instructor's separate navigation and dated start checks
 still apply. Desk landing links filter workspace destinations after expansion.
 
 **Nothing may leave the app without a keyholder.** `staff.manage` and
@@ -467,21 +467,23 @@ than the enrolment being re-pointed: attendance hangs off
 `(course, student, date)`, and rewriting the enrolment would orphan every
 register they were already on.
 
-### Teaching is confirmed, exclusive and recorded
+### Teaching is confirmed, shared and recorded
 
 Every instructor confirms Start class before opening a class on the deck,
 including their own scheduled classes. Confirmation creates a ClassCover row
 for that class and date and an audit entry in the same course-locked
-transaction. The existing unique course/date key guarantees one owner. A retry
-by that owner is idempotent; another instructor cannot replace the claim. A
-claim remains locked if its owner's account is deleted.
+transaction. The unique course/date key preserves the original start. Repeated
+and simultaneous confirmations do not overwrite it or duplicate its audit.
+All authorised instructors can open a started class, including an existing
+session whose original instructor's account has been deleted.
 
-The deck shows Start class, Open class, or In progress. Attendance saved/to-take
-is a plain operational indicator for the owner. Cover attribution stays in the
-audit trail and desk records. Attendance, competencies and completion recheck
-ownership in their save transaction, while the class page checks it before
-loading swimmer data. Desk transcription retains attendance.markAny; it does
-not grant teaching access in Instructor.
+The deck shows Start class or Open class. Attendance saved/to-take remains a
+plain operational indicator; shared sessions identify who started them. Each
+save records its actual actor. Attendance, competencies and completion recheck
+the dated start and permissions under the course lock; the class page checks
+the start before loading swimmers. Register revision checks still prevent stale
+overwrites. Desk transcription retains attendance.markAny without granting
+Instructor screen access.
 
 ### Batched writes, on purpose
 

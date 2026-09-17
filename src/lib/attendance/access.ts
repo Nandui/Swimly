@@ -1,7 +1,7 @@
 import type { Session } from "next-auth";
 import { can } from "@/lib/authz";
 
-/** Teaching requires a confirmed claim for this class and date. Scheduled
+/** Teaching requires a confirmed start for this class and date. Scheduled
  * assignment alone is not confirmation. Desk transcription remains a separate
  * attendance.markAny permission. */
 
@@ -17,11 +17,11 @@ export function canMarkRegister({ session, instructorId, coverById }: Args): boo
   return canTeachClass({ session, instructorId, coverById });
 }
 
-/** On the pool deck, say who is teaching even when the account also has
- * desk permission to transcribe anybody's attendance. */
+/** Once started, any permitted instructor can help with the session.
+ * A null actor still represents a start by a subsequently deleted account. */
 export function canTeachClass({ session, coverById }: Args): boolean {
   if (!can(session, "attendance.mark")) return false;
-  return coverById != null && coverById === session.user.id;
+  return coverById !== undefined;
 }
 
 /** Whether this person should be asked if they are taking the class: it is

@@ -72,15 +72,15 @@ test("a cancellation blocks instructor and stale desk competencies and level com
   assert.deepEqual(f.marks, before); assert.deepEqual(f.completions, []); assert.deepEqual(f.audits, []);
 });
 
-test("Instructor marks and completion require the confirmed owner and current enrolment under the course lock", async () => {
+test("Instructor marks and completion require a start and current enrolment under the course lock", async () => {
   const f = fixture(); f.deckOnly();
-  for (const owner of [undefined, null, "another-instructor"]) {
+  for (const owner of [undefined]) {
     f.setClaim(owner);
     assert.equal((await f.actions.saveInstructorAssessment(deckMarks)).ok, false);
     assert.equal((await f.actions.confirmLevelCompletion({ ...completion, teaching })).ok, false);
     assert.equal(f.audits.length, 0); assert.equal(f.completions.length, 0);
   }
-  f.setClaim("staff");
+  f.setClaim("another-instructor");
   assert.equal((await f.actions.saveInstructorAssessment(deckMarks)).ok, true);
   assert.equal(f.marks.at(-1)?.assessedOn.toISOString().slice(0, 10), teaching.date);
   assert.equal((f.marks.at(-1) as unknown as { assessedInCourseId: string }).assessedInCourseId, "class");
@@ -102,10 +102,15 @@ test("Instructor accounts cannot bypass the claim via desk actions or a fabricat
   assert.equal(f.audits.length, 0); assert.equal(f.completions.length, 0);
 });
 
-test("the confirmed teacher can complete an eligible swimmer's level and audit failure rolls it back", async () => {
-  const f = fixture(); f.deckOnly(); f.setClaim("staff");
-  assert.equal((await f.actions.confirmLevelCompletion({ ...completion, teaching })).ok, true);
-  assert.equal(f.completions.length, 1); assert.equal(f.audits[0].action, "complete-level");
+test("colleagues can mark and complete existing sessions, including starts by deleted teachers", async () => {
+  for (const owner of ["staff", "another-instructor", null]) {
+    const f = fixture(); f.deckOnly(); f.setClaim(owner);
+    assert.equal((await f.actions.confirmLevelCompletion({ ...completion, teaching })).ok, true);
+    assert.equal(f.completions.length, 1); assert.equal(f.audits[0].action, "complete-level");
+    const marks = fixture(); marks.deckOnly(); marks.setClaim(owner);
+    assert.equal((await marks.actions.saveInstructorAssessment(deckMarks)).ok, true);
+    assert.equal(marks.audits.length, 1);
+  }
   const failed = fixture(); failed.deckOnly(); failed.setClaim("staff"); failed.failAudit();
   await assert.rejects(failed.actions.confirmLevelCompletion({ ...completion, teaching }), /audit failed/);
   assert.equal(failed.completions.length, 0);

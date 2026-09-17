@@ -9,8 +9,8 @@ import { isIsoDate, mostRecentOccurrence } from "@/lib/attendance/dates";
 import { parseDateOnly, today, weekdayOf } from "@/lib/format";
 import { getCancellation } from "@/lib/cancellations/data";
 
-/** No roster, attendance or competency data is read before the teacher's
- * confirmed claim has been checked. This also guards direct/bookmarked URLs. */
+/** Require Instructor access and a confirmed start before loading the roster.
+ * A colleague's start also opens the class, including existing dated records. */
 export async function getInstructorClass(id: string, requestedDate: unknown) {
   const session = await classPage("instructor");
   const [course, { club }] = await Promise.all([
@@ -33,7 +33,7 @@ export async function getInstructorClass(id: string, requestedDate: unknown) {
   if (cancellation) return { ...base, state: "cancelled" as const, cancellation };
   const claim = await getClassCover(id, iso);
   const state = claimState(claim, session.user.id);
-  if (state !== "mine") return { ...base, state, claim };
+  if (state === "available") return { ...base, state, claim };
   const [register, progress] = await Promise.all([
     getRegister(id, iso),
     getClassProgress(id),
