@@ -3,7 +3,7 @@
 import * as React from "react";
 import Link from "next/link";
 import { usePathname, useSearchParams } from "next/navigation";
-import { ChevronDown, ChevronsUpDown, CircleHelp, CircleUser, LogOut, X, type LucideIcon } from "lucide-react";
+import { ChevronDown, ChevronsUpDown, CircleHelp, CircleUser, LayoutGrid, LogOut, X, type LucideIcon } from "lucide-react";
 import { AppLogo } from "@/components/app-logo";
 import { Badge } from "@/components/shadcn/badge";
 import { Button } from "@/components/shadcn/button";
@@ -20,6 +20,7 @@ export type AppShellProps = {
   userName: string; userSubtitle?: string; onSignOut?: () => void;
   switcher?: React.ReactNode; search?: React.ReactNode; tools?: React.ReactNode;
   banner?: React.ReactNode; initialCollapsed?: boolean; contentMaxWidth?: number;
+  portalHref?: string;
   children: React.ReactNode;
 };
 
@@ -69,6 +70,9 @@ function WorkspaceSidebar(props: AppShellProps) {
       {props.groups.map(group => <NavigationGroup key={`${group.id}:${group.items.some(item => isNavItemActive(pathname, item.href))}`} group={group} pathname={pathname} collapsed={collapsed} />)}
     </nav></SidebarContent>
     <SidebarFooter className="border-t border-ui-border p-3 group-data-[collapsible=icon]:px-0">
+      {props.portalHref ? <SidebarMenu className="group-data-[collapsible=icon]:items-center"><SidebarMenuItem><SidebarMenuButton asChild className="h-11 px-3" tooltip="All modules">
+        <Link href={props.portalHref} onClick={() => setOpenMobile(false)}><LayoutGrid aria-hidden="true" /><span className="group-data-[collapsible=icon]:hidden">All modules</span></Link>
+      </SidebarMenuButton></SidebarMenuItem></SidebarMenu> : null}
       <SidebarMenu className="group-data-[collapsible=icon]:items-center"><SidebarMenuItem><SidebarMenuButton asChild className="h-11 px-3" tooltip="Help centre (opens in a new tab)">
         <Link href="/help" target="_blank" rel="noopener noreferrer" aria-label="Help centre (opens in a new tab)"><CircleHelp aria-hidden="true" /><span className="group-data-[collapsible=icon]:hidden">Help centre</span></Link>
       </SidebarMenuButton></SidebarMenuItem></SidebarMenu>

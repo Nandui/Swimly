@@ -143,8 +143,17 @@ The dedicated Reception view is retired. Old links open the selected swimmer
 when the role offers Swimmers, otherwise an accessible landing page. Reception
 is no longer offered as a screen or landing-page choice.
 
-Overview is also retired. The root address redirects to the role's accessible
-home. Schedule is the default for desk roles with calendar access; Duty manager
+The Turnfin staff portal at `/modules` is the signed-in front door, reached from the
+root address and after sign-in. It offers Swimly now, with Docs and Bookings
+marked Coming soon and no destination until those modules are available.
+Opening Swimly uses `/start` to resolve the role's accessible home. The desk
+sidebar offers All modules; the Instructor workspace keeps its isolated navigation.
+The portal is for staff, separate from the parent app, and grants no new screen
+or action access. Turnfin is the overall portal brand and uses the owner's
+supplied fin logo; Swimly, Docs and Bookings remain separate module names.
+The module catalogue and portal name live in `src/lib/modules.ts`.
+
+Overview is also retired. Schedule is the default for desk roles with calendar access; Duty manager
 and Instructor retain their chosen landing pages. Overview is absent from
 navigation and role choices. Older stored homes and screen grants need no
 database rewrite and never grant access to another screen by themselves.

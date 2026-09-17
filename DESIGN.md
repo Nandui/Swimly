@@ -95,6 +95,19 @@ details at 1152px. Instructor remains a separate workspace, described below.
 
 ## Screens
 
+The staff portal at `/modules` sits outside the desk and Instructor shells.
+It has a small Turnfin header with appearance and sign-out controls, one
+main landmark and a centred module grid capped at 1024px. The grid uses one,
+two and three columns on phone, tablet and desktop, with the existing Figtree,
+Neutral surfaces and blue action. Swimly uses its existing logo and a 44px
+Open action. Docs and Bookings use plain icons and metadata-fed Coming soon
+badges, without inert links or buttons. The desk sidebar's All modules utility
+returns here. Instructor navigation and teaching access remain unchanged.
+The supplied transparent Turnfin fin logo lives at `public/brand/turnfin.png`.
+Its original artwork is framed inside a 48px header slot to account for the
+file's transparent padding. It also supplies the portal's browser/touch icon;
+the Swimly module and workspace keep their existing name and logo.
+
 Schedule keeps its booking sheet with sticky level labels and horizontal time scrolling.
 The sheet expands vertically within the workspace's single page scroll. Phones
 use Agenda. Circled check means spaces available; circled X means full.
@@ -244,12 +257,12 @@ nobody may remove the last usable grant for Roles or Staff.
 
 **A role also says where its day starts.** `StaffRole.home` is a key from the
 `ROLE_HOMES` map in the catalogue file — Schedule for the desk, Instructor for
-an instructor. The sign-in form pushes to `/start`, which reads the role and
-redirects; the wordmark goes to the same place. A configured home that is not
+an instructor. Sign-in opens the staff portal; Open Swimly uses `/start`, which
+reads the role and redirects. The workspace wordmark stays within that workspace. A configured home that is not
 accessible falls back to another screen the role may open.
 
-Overview is retired. `/` now only redirects to an authenticated, accessible
-home, as `/start` does. Schedule is the preferred fallback, then an accessible
+Overview is retired. `/` redirects authenticated staff to `/modules`;
+`/start` resolves their Swimly home. Schedule is the preferred fallback, then an accessible
 screen, then Account. Old `overview` screen grants are ignored; old home values
 normalize to `calendar`. The legacy database default remains compatible while
 new role forms and seeds explicitly save the selected home. Instructor-only
@@ -439,8 +452,12 @@ New enrolments have an unselected, explicit Legend agreement question. Pending
 agreements do not block enrolment. Existing active places read **Needs checking**;
 never imply that missing information means done. The site-scoped Legend agreements
 page shows one row per place, with a named confirmation and timestamp. Moves carry
-the prior state and attribution. Confirming uses `enrolment.manage` and the course
-lock, and writes the audit row atomically. See [the workflow](docs/legend-agreements.md).
+the prior state and attribution. The page follows Swimmers and Classes: full-width
+search, a Neutral segmented status filter, bordered directory with a muted header,
+compact aligned rows and blue confirmation buttons with check icons. On phones,
+the class details and agreement action stack within the swimmer's row. Confirming
+uses `enrolment.manage` and the course lock, and writes the audit row atomically.
+See [the workflow](docs/legend-agreements.md).
 
 ### Placement needs `enrolment.manage`, with a reason on the row
 

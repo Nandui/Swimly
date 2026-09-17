@@ -28,8 +28,8 @@ export function SignInForm({ devAdminName }: { devAdminName: string | null }) {
 
   function land() {
     setError(null);
-    // `/start` reads the role and lands them where their day begins.
-    router.push("/start");
+    // The portal offers modules; opening Swimly resolves the person's role home.
+    router.push("/");
     router.refresh();
   }
 

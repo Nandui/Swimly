@@ -3,17 +3,17 @@ import { test } from "node:test";
 import { serverModule } from "@/test/server-module";
 
 type User = { home: string; screens: string[]; permissions: string[] };
-const routes = ["src/app/(app)/page.tsx", "src/app/(app)/start/page.tsx"];
+const routes = ["src/app/(app)/start/page.tsx"];
 
 function page(file: string, user: User | null) {
-  return serverModule<typeof import("@/app/(app)/page")>(file, {
+  return serverModule<typeof import("@/app/page")>(file, {
     "@/auth": { auth: async () => user ? { user } : null },
     "@/lib/authz": {},
     "next/navigation": { redirect: (href: string) => { throw new Error(`Redirect ${href}`); } },
   }).default;
 }
 
-test("root bookmarks and sign-in use Today for old administrator Overview homes", async () => {
+test("opening Swimly uses Schedule for old administrator Overview homes", async () => {
   for (const route of routes) {
     const home = page(route, { home: "overview", screens: ["overview"], permissions: ["staff.manage", "roles.manage"] });
     await assert.rejects(home(), { message: "Redirect /schedule" });
@@ -34,6 +34,16 @@ test("home redirects retain duty and instructor destinations and honour restrict
   }
 });
 
-test("root and sign-in landing routes still require authentication", async () => {
-  for (const route of routes) await assert.rejects(page(route, null)(), { message: "Redirect /sign-in" });
+test("root and Swimly landing routes still require authentication", async () => {
+  for (const route of ["src/app/page.tsx", ...routes]) await assert.rejects(page(route, null)(), { message: "Redirect /sign-in" });
+});
+
+test("the front door offers modules without changing role-specific Swimly homes", async () => {
+  for (const user of [
+    { home: "overview", screens: [], permissions: ["staff.manage", "roles.manage"] },
+    { home: "instructor", screens: ["instructor"], permissions: ["attendance.mark"] },
+    { home: "duty", screens: ["duty"], permissions: ["classes.cancel"] },
+  ]) {
+    await assert.rejects(page("src/app/page.tsx", user)(), { message: "Redirect /modules" });
+  }
 });
