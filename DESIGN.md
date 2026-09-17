@@ -272,7 +272,14 @@ Analytics lives in Monitoring as a separate shadcn dashboard. Its bento grid
 uses three headline totals, a larger programme/level breakdown, and supporting
 monthly cancellation and daily activity cards. Exact labels accompany the
 level bars showing enrolled places divided by that level's total class capacity;
-a table gives seven days of activity without relying on colour.
+a table gives the current Monday–Sunday week without relying on colour, with
+future days marked as upcoming rather than zero activity. A shared page navigation
+links Overview, Reception activity and Instructor attendance. The two reports
+use compact bordered tables with staff search, plain numeric totals and 44px
+controls. Reception offers daily breakdowns per person. Instructor rows filter
+the dated class detail table; status buttons isolate outstanding, saved or upcoming
+classes. Attendance badges use the report metadata map. Saved-by detail moves
+into the attendance cell on phones.
 Site selection stays in the sidebar; the page offers refresh. Loading, empty
 and error states use shared primitives.
 It inherits the workspace spacing and blue accent. See [metric definitions

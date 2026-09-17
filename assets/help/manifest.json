@@ -128,8 +128,8 @@
     "height": 620
   },
   "analytics": {
-    "width": 1152,
-    "height": 1546
+    "width": 1176,
+    "height": 1784
   },
   "programme": {
     "width": 448,
@@ -186,5 +186,13 @@
   "legend-agreements": {
     "width": 1280,
     "height": 1100
+  },
+  "analytics-reception": {
+    "width": 1176,
+    "height": 1284
+  },
+  "analytics-instructors": {
+    "width": 1176,
+    "height": 2384
   }
 }

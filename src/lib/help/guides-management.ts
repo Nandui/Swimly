@@ -37,13 +37,15 @@ export const MANAGEMENT_GUIDES: HelpArticle[] = [
   },
   {
     slug: "analytics", title: "Understand the Analytics figures", category: "operations", scopes: ["desk"],
-    summary: "Read swimmer totals, class capacity, enrolment activity and cancellations for a site.",
-    keywords: ["reports", "dashboard", "statistics", "numbers", "spaces", "occupancy"],
+    summary: "Read weekly enrolment activity by person, instructor attendance, capacity and cancellations for a site.",
+    keywords: ["reports", "dashboard", "statistics", "numbers", "spaces", "occupancy", "receptionists", "instructors", "missing attendance", "weekly"],
     before: ["Your account needs access to Analytics."],
     steps: [
       { title: "Choose the working site", text: "Open Analytics and check the site selected in the sidebar. The figures describe that site." },
       { title: "Compare swimmers and places", text: "Total swimmers counts distinct currently enrolled swimmers. The level breakdown counts enrolled places against class capacity. A swimmer in two classes can occupy two places while counting as one swimmer." },
-      { title: "Read recent activity", text: "The seven-day figures count enrolment and unenrolment actions. Moves, completions and waitlist withdrawals are not counted as new enrolments or unenrolments." },
+      { title: "Read this week’s activity", text: "The enrolment and unenrolment figures cover the current Monday–Sunday week in Ireland, including today so far. Moves, completions and waitlist withdrawals are excluded. Future days show a dash." },
+      { title: "Compare reception activity", text: "Choose Reception activity to see enrolments and unenrolments by the staff member who recorded them. Search by name and open Daily breakdown for their Monday–Sunday totals. Automatic scheduled withdrawals appear separately when applied." },
+      { title: "Check instructor attendance", text: "Choose Instructor attendance. Saved / due compares fully marked attendance with finished classes that have swimmers. Select an instructor, then Needs attendance to find missing or partial registers. Upcoming, cancelled and empty classes are excluded from missed attendance. Saved by shows when a colleague helped." },
       { title: "Check cancellations", text: "The cancellation total covers sessions dated in this month. Open Cancelled classes for the outstanding billing queue, which can include older dates. Use Refresh to reload the figures." },
     ],
     result: "You can distinguish customer totals, occupied places and recent changes without treating them as the same measure.",

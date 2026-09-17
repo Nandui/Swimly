@@ -37,6 +37,25 @@ export function activityQuery(clubIds: string[], weekStart: string, now: Date) {
     SELECT ((a."createdAt" AT TIME ZONE 'UTC') AT TIME ZONE ${SCHOOL_TIMEZONE})::date::text AS day,
       COUNT(*) FILTER (WHERE a.action = 'enrol')::int AS enrolled,
       COUNT(*) FILTER (WHERE a.action = 'withdraw')::int AS withdrawn
+    ${activitySource(clubIds, weekStart, now)}
+    GROUP BY day ORDER BY day
+  `;
+}
+
+/** Share the exact event definition with the headline and daily totals. */
+export function staffActivityQuery(clubIds: string[], weekStart: string, now: Date) {
+  return Prisma.sql`
+    SELECT a."actorId", a."actorName",
+      ((a."createdAt" AT TIME ZONE 'UTC') AT TIME ZONE ${SCHOOL_TIMEZONE})::date::text AS day,
+      COUNT(*) FILTER (WHERE a.action = 'enrol')::int AS enrolled,
+      COUNT(*) FILTER (WHERE a.action = 'withdraw')::int AS withdrawn
+    ${activitySource(clubIds, weekStart, now)}
+    GROUP BY a."actorId", a."actorName", day ORDER BY day, a."actorName"
+  `;
+}
+
+function activitySource(clubIds: string[], weekStart: string, now: Date) {
+  return Prisma.sql`
     FROM "AuditLog" a
     LEFT JOIN "Enrolment" e ON e.id = a."entityId"
     LEFT JOIN "Course" c ON c.id = e."courseId"
@@ -55,7 +74,6 @@ export function activityQuery(clubIds: string[], weekStart: string, now: Date) {
               AND p."createdAt" <= a."createdAt"
           )
       ))
-    GROUP BY day ORDER BY day
   `;
 }
 

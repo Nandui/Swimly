@@ -1,12 +1,13 @@
 import { sharedIds } from "@/lib/curriculum/shared";
 import { parseDateOnly, today, toDateOnlyString } from "@/lib/format";
+import { scheduleWeek } from "@/lib/schedule/dates";
 
 export function analyticsPeriod(now: Date) {
   const date = today(now);
   const day = parseDateOnly(date);
-  const days = Array.from({ length: 7 }, (_, index) => toDateOnlyString(new Date(day.getTime() - (6 - index) * 86_400_000)));
+  const days = scheduleWeek(date);
   return {
-    date, days, weekStart: days[0], monthStart: `${date.slice(0, 7)}-01`,
+    date, days, weekStart: days[0], weekEnd: days[6], monthStart: `${date.slice(0, 7)}-01`,
     nextMonth: toDateOnlyString(new Date(Date.UTC(day.getUTCFullYear(), day.getUTCMonth() + 1, 1))),
   };
 }

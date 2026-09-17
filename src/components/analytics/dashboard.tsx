@@ -6,6 +6,7 @@ import { Progress } from "@/components/shadcn/progress";
 import { Table, TableBody, TableCaption, TableCell, TableHead, TableHeader, TableRow } from "@/components/shadcn/table";
 import { PageHeader } from "@/components/ui-kit/page-header";
 import { AnalyticsRefresh } from "./refresh";
+import { AnalyticsNav } from "./navigation";
 import type { AnalyticsData } from "@/lib/analytics/data";
 import { formatDateTime, parseDateOnly } from "@/lib/format";
 
@@ -16,21 +17,22 @@ const monthDate = new Intl.DateTimeFormat("en-IE", { month: "long", year: "numer
 const weekday = new Intl.DateTimeFormat("en-IE", { weekday: "short", timeZone: "UTC" });
 
 export function AnalyticsDashboard({ data }: { data: AnalyticsData }) {
-  const period = `${shortDate.format(parseDateOnly(data.period.weekStart))} – ${shortDate.format(parseDateOnly(data.period.date))}`;
+  const period = `${shortDate.format(parseDateOnly(data.period.weekStart))} – ${shortDate.format(parseDateOnly(data.period.weekEnd))}`;
   const month = monthDate.format(parseDateOnly(data.period.monthStart));
   return <div className="flex min-w-0 flex-col gap-6">
     <PageHeader title="Analytics" description={`${data.siteName} · Enrolment and class activity`} actions={<AnalyticsRefresh />} />
+    <AnalyticsNav active="overview" />
     <div className="grid min-w-0 grid-cols-1 items-start gap-4 sm:grid-cols-2 xl:grid-cols-12">
       <Card className="h-full border-ui-brand-border bg-ui-brand-soft sm:col-span-2 xl:col-span-4">
         <CardHeader className="gap-3"><div className="flex items-center justify-between gap-3"><h2 className="text-sm font-medium">Total swimmers enrolled</h2><Users className="size-5 text-ui-brand-ink" aria-hidden /></div><CardDescription>Current enrolments · {shortDate.format(parseDateOnly(data.period.date))}</CardDescription></CardHeader>
         <CardContent className="space-y-3"><p className="text-5xl font-semibold tracking-tight tabular-nums">{number.format(data.swimmers)}</p><p className="text-sm text-ui-muted-foreground">Across {number.format(data.places)} class places. Each swimmer counted once.</p></CardContent>
       </Card>
       <Card className="h-full xl:col-span-4">
-        <CardHeader className="gap-3"><div className="flex items-center justify-between gap-3"><h2 className="text-sm font-medium">Enrolments</h2><ArrowUpRight className="size-5 text-ui-primary" aria-hidden /></div><CardDescription>Last 7 days · {period}</CardDescription></CardHeader>
+        <CardHeader className="gap-3"><div className="flex items-center justify-between gap-3"><h2 className="text-sm font-medium">Enrolments</h2><ArrowUpRight className="size-5 text-ui-primary" aria-hidden /></div><CardDescription>This week · Mon–Sun · {period}</CardDescription></CardHeader>
         <CardContent className="space-y-3"><p className="text-5xl font-semibold tracking-tight tabular-nums">{number.format(data.enrolled)}</p><p className="text-sm text-ui-muted-foreground">New class enrolments and waitlist promotions recorded.</p></CardContent>
       </Card>
       <Card className="h-full xl:col-span-4">
-        <CardHeader className="gap-3"><div className="flex items-center justify-between gap-3"><h2 className="text-sm font-medium">Unenrolments</h2><ArrowDownLeft className="size-5 text-ui-muted-foreground" aria-hidden /></div><CardDescription>Last 7 days · {period}</CardDescription></CardHeader>
+        <CardHeader className="gap-3"><div className="flex items-center justify-between gap-3"><h2 className="text-sm font-medium">Unenrolments</h2><ArrowDownLeft className="size-5 text-ui-muted-foreground" aria-hidden /></div><CardDescription>This week · Mon–Sun · {period}</CardDescription></CardHeader>
         <CardContent className="space-y-3"><p className="text-5xl font-semibold tracking-tight tabular-nums">{number.format(data.withdrawn)}</p><p className="text-sm text-ui-muted-foreground">Class withdrawals recorded, including scheduled unenrolments.</p></CardContent>
       </Card>
       <Card className="min-w-0 sm:col-span-2 xl:col-span-8 xl:row-span-2">
@@ -68,7 +70,7 @@ export function AnalyticsDashboard({ data }: { data: AnalyticsData }) {
         <CardHeader><h2 className="text-lg font-semibold tracking-tight">Daily activity</h2><CardDescription>{period} · Includes today so far</CardDescription></CardHeader>
         <CardContent>
           <Table>
-            <TableCaption className="sr-only">Enrolments and unenrolments recorded each day in the last seven days</TableCaption>
+            <TableCaption className="sr-only">Enrolments and unenrolments recorded this Monday to Sunday. Future days have no activity yet.</TableCaption>
             <TableHeader><TableRow>
               <TableHead scope="col" className="px-0 text-xs text-ui-muted-foreground">Day</TableHead>
               <TableHead scope="col" className="px-0 text-right text-xs text-ui-muted-foreground">Enrolled</TableHead>
@@ -76,13 +78,13 @@ export function AnalyticsDashboard({ data }: { data: AnalyticsData }) {
             </TableRow></TableHeader>
             <TableBody>{data.daily.map(row => <TableRow key={row.day}>
               <TableHead scope="row" className="px-0 py-3 font-normal">{row.day === data.period.date ? "Today" : weekday.format(parseDateOnly(row.day))}<span className="sr-only"> {shortDate.format(parseDateOnly(row.day))}</span></TableHead>
-              <TableCell className="px-0 py-3 text-right font-medium tabular-nums">{number.format(row.enrolled)}</TableCell>
-              <TableCell className="px-0 py-3 text-right tabular-nums">{number.format(row.withdrawn)}</TableCell>
+              <TableCell className="px-0 py-3 text-right font-medium tabular-nums">{row.day > data.period.date ? <span aria-label="Upcoming">—</span> : number.format(row.enrolled)}</TableCell>
+              <TableCell className="px-0 py-3 text-right tabular-nums">{row.day > data.period.date ? <span aria-label="Upcoming">—</span> : number.format(row.withdrawn)}</TableCell>
             </TableRow>)}</TableBody>
           </Table>
         </CardContent>
       </Card>
     </div>
-    <footer className="space-y-1 text-xs leading-relaxed text-ui-muted-foreground"><p>Updated {formatDateTime(new Date(data.updatedAt))} · Europe/Dublin</p><p>Current totals exclude waitlists, future starts, inactive swimmers and archived classes. Seven-day figures count recorded actions, excluding moves, imports and waitlist removals; they are not a net change in swimmers. Cancellation totals use the session date.</p></footer>
+    <footer className="space-y-1 text-xs leading-relaxed text-ui-muted-foreground"><p>Updated {formatDateTime(new Date(data.updatedAt))} · Europe/Dublin</p><p>Current totals exclude waitlists, future starts, inactive swimmers and archived classes. This week runs Monday–Sunday and includes today so far. Weekly figures count recorded actions, excluding moves, imports and waitlist removals; they are not a net change in swimmers. Cancellation totals use the session date.</p></footer>
   </div>;
 }

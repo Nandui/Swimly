@@ -60,7 +60,11 @@ export const GUIDE_SCREENSHOTS: Record<string, Placement[]> = {
   ],
   "cancel-class-session": [{ image: "cancel-session", step: "Record the reason", caption: "This confirmation cancels one session and records why it cannot run.", alt: "Cancel this session dialog with class date and time, a demonstration cancellation reason and Confirm cancellation." }],
   "billing-follow-up": [{ image: "billing", step: "Record the handoff", caption: "After contacting billing, save a handoff note against the affected swimmers.", alt: "Cancellation review with example swimmers, the reason for cancellation, Billing handoff note and Mark billing notified." }],
-  "analytics": [{ image: "analytics", step: "Compare swimmers and places", caption: "Swimmer totals and enrolled places answer different questions.", alt: "Analytics dashboard with synthetic totals, enrolment activity, level capacity and cancellation figures." }],
+  "analytics": [
+    { image: "analytics", step: "Compare swimmers and places", caption: "Current swimmer totals sit alongside this Monday–Sunday week’s recorded activity.", alt: "Analytics overview with synthetic swimmer totals, weekly enrolment activity, level capacity and cancellation figures." },
+    { image: "analytics-reception", step: "Compare reception activity", caption: "Reception activity groups recorded actions by person, with a daily breakdown for each.", alt: "Reception activity report with fictional staff, weekly enrolment and unenrolment totals, and daily breakdown controls." },
+    { image: "analytics-instructors", step: "Check instructor attendance", caption: "Find missing or partial attendance, then inspect the class and the staff who saved marks.", alt: "Instructor attendance report with fictional instructors, saved and missing registers, and dated class details." },
+  ],
   "manage-curriculum": [
     { image: "programme", step: "Open or add a programme", caption: "A programme contains the ordered levels used at both sites.", alt: "Add programme form with a demonstration name, description and optional image." },
     { image: "curriculum", step: "Describe the competencies", caption: "State the skill clearly and add instructor guidance when needed.", alt: "Add competency form with What the swimmer has to do and Notes for the instructor." },

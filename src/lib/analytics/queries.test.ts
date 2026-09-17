@@ -2,7 +2,7 @@ import assert from "node:assert/strict";
 import { test } from "node:test";
 import { PGlite } from "@electric-sql/pglite";
 import type { Prisma } from "@/generated/prisma/client";
-import { currentEnrolmentsQuery, levelCapacityQuery, activityQuery, cancellationsQuery } from "./queries";
+import { currentEnrolmentsQuery, levelCapacityQuery, activityQuery, staffActivityQuery, cancellationsQuery } from "./queries";
 
 test("analytics SQL respects current places, site scope, event history and calendar windows", async t => {
   const db = new PGlite();
@@ -84,6 +84,20 @@ test("analytics SQL respects current places, site scope, event history and calen
       await db.exec(`INSERT INTO "AuditLog" VALUES ('spring','Enrolment','x','enrol','site-a','2026-03-29 23:30:00'),('autumn','Enrolment','y','enrol','site-a','2026-10-25 23:30:00')`);
       assert.deepEqual(await query(activityQuery(["site-a"], "2026-03-30", new Date("2026-03-30T12:00:00Z"))), [{ day: "2026-03-30", enrolled: 1, withdrawn: 0 }]);
       assert.deepEqual(await query(activityQuery(["site-a"], "2026-10-26", new Date("2026-10-26T12:00:00Z"))), []);
+    });
+    await t.test("person breakdown reconciles with daily totals and retains automatic and deleted account names", async () => {
+      await db.exec(`ALTER TABLE "AuditLog" ADD COLUMN "actorId" text, ADD COLUMN "actorName" text;
+        UPDATE "AuditLog" SET "actorId" = 'staff-1', "actorName" = 'Alex Example';
+        UPDATE "AuditLog" SET "actorId" = null, "actorName" = 'Scheduled unenrolment' WHERE id = 'schedule-end';
+        UPDATE "AuditLog" SET "actorId" = null, "actorName" = 'Former Example' WHERE id = 'end';`);
+      const now = new Date("2026-09-13T12:00:00Z");
+      const rows = await query(staffActivityQuery(["site-a"], "2026-09-07", now));
+      assert.equal(rows.reduce((sum, row) => sum + Number(row.enrolled), 0), 2);
+      assert.equal(rows.reduce((sum, row) => sum + Number(row.withdrawn), 0), 3);
+      assert.equal(rows.find(row => row.actorName === 'Scheduled unenrolment')?.withdrawn, 1);
+      assert.equal(rows.find(row => row.actorName === 'Former Example')?.withdrawn, 1);
+      assert.equal((await query(staffActivityQuery(["site-b"], "2026-09-07", now))).length, 1);
+      assert.deepEqual(await query(staffActivityQuery(["site-a' OR true --"], "2026-09-07", now)), []);
     });
   } finally { await db.close(); }
 });

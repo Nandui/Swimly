@@ -2,15 +2,21 @@ import assert from "node:assert/strict";
 import { test } from "node:test";
 import { analyticsPeriod, enrolmentTotals, activityTotals } from "./rules";
 
-test("analytics uses seven Dublin calendar days across midnight, year boundaries and DST", () => {
+test("analytics uses the current Monday–Sunday Dublin week across midnight, year boundaries and DST", () => {
   const midnight = analyticsPeriod(new Date("2026-09-12T23:30:00Z"));
   assert.equal(midnight.date, "2026-09-13");
   assert.equal(midnight.weekStart, "2026-09-07");
   assert.equal(midnight.days.length, 7);
-  assert.equal(analyticsPeriod(new Date("2027-01-01T00:30:00Z")).weekStart, "2026-12-26");
+  assert.equal(analyticsPeriod(new Date("2027-01-01T00:30:00Z")).weekStart, "2026-12-28");
+  const thursday = analyticsPeriod(new Date("2026-09-17T12:00:00Z"));
+  assert.equal(thursday.weekStart, "2026-09-14");
+  assert.equal(thursday.weekEnd, "2026-09-20");
+  assert.equal(analyticsPeriod(new Date("2026-09-13T23:00:00Z")).weekStart, "2026-09-14");
   assert.equal(analyticsPeriod(new Date("2026-12-31T12:00:00Z")).nextMonth, "2027-01-01");
   assert.equal(analyticsPeriod(new Date("2026-03-29T23:30:00Z")).date, "2026-03-30");
+  assert.equal(analyticsPeriod(new Date("2026-03-29T23:30:00Z")).weekStart, "2026-03-30");
   assert.equal(analyticsPeriod(new Date("2026-10-25T23:30:00Z")).date, "2026-10-25");
+  assert.equal(analyticsPeriod(new Date("2026-10-25T23:30:00Z")).weekStart, "2026-10-19");
 });
 
 test("level occupancy counts class places against summed capacity while the swimmer total stays distinct", () => {

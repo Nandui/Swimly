@@ -160,9 +160,16 @@ database rewrite and never grant access to another screen by themselves.
 
 Analytics is a separate Monitoring dashboard with a bento layout: distinct
 enrolled swimmers, enrolled places versus total capacity per level, enrolment and unenrolment actions over
-seven days, and this month's cancelled class sessions. It follows the site
+the current Monday–Sunday week, and this month's cancelled class sessions. It follows the site
 selected in the sidebar. Administrators receive access automatically;
 other roles need the Analytics screen grant. See [metric definitions](docs/analytics.md).
+
+Analytics also offers Reception activity, with weekly enrolments and unenrolments
+by the staff member recorded on each action and an expandable daily breakdown.
+Automatic scheduled withdrawals appear separately. Instructor attendance shows
+this week's saved, partial and missing registers per instructor, with dated
+class details, cover and the people who saved marks. Classes are due after their
+finish time; upcoming, cancelled and empty sessions are not missed registers.
 
 Schedule shows the current club’s classes and assessments one day at a time.
 It opens on today and has a Monday–Sunday strip, previous/next week controls

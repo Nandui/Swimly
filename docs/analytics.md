@@ -29,7 +29,9 @@ Instructor remains a separate workspace. Schedule remains the default desk home.
   remain visible; archived levels/programmes remain while they have current
   enrolments or non-archived classes.
 - **Enrolments and unenrolments:** recorded `Enrolment` audit actions `enrol`
-  and `withdraw` during today and the previous six Dublin calendar days.
+  and `withdraw` during the current Monday–Sunday Dublin calendar week, up to
+  the time of the report. Future days are displayed as upcoming. The week resets
+  at Monday 00:00 in Europe/Dublin, including daylight-saving changes.
   Waitlist promotions count at activation. Waitlist-only removals are excluded,
   as are moves, completions and bulk imports recorded against `Course`.
   Scheduled withdrawals count on the date the withdrawal is applied and
@@ -44,8 +46,9 @@ Instructor remains a separate workspace. Schedule remains the default desk home.
 
 ## Data and presentation
 
-All queries run in one repeatable-read snapshot. Site IDs are parameterized,
-and the returned page data contains aggregate counts and curriculum labels,
+The overview queries run in one repeatable-read snapshot; each detail report
+uses one SQL statement for a consistent snapshot. Site IDs are parameterized,
+and the returned page data contains aggregate counts, class labels and staff names,
 not swimmer identifiers, names, contacts or audit summaries. Analytics does
 not write records. The existing authenticated-session hook continues to apply
 authorized scheduled unenrolments as it does elsewhere in the app.
@@ -55,3 +58,47 @@ numeric labels; daily activity uses a table. Dates, scope and update time are
 visible. Refresh, loading, error and zero-result states are explicit. No new
 chart dependency is needed. Tests cover site scope, access, duplicate swimmers,
 shared levels, calendar boundaries, waitlists, cancellation rosters and DST.
+
+## Reception activity
+
+`/analytics/reception` uses the same Analytics screen grant and sidebar site.
+It counts the same actions as Overview, grouped by recorded actor ID, without
+depending on a role name. Staff with activity appear in the table; search and
+an expandable Monday–Sunday breakdown help inspect individual staff members.
+Different people sharing a name stay separate while their accounts exist.
+When an account has been deleted, its retained audit name groups the records.
+Automatic withdrawals appear under Scheduled unenrolment when applied; the
+audit currently has no scheduler ID on that action, so the report does not
+invent attribution to the person who scheduled it.
+
+## Instructor attendance
+
+`/analytics/instructors` shows each weekly class occurrence in the current week
+at the selected site. It is read-only and does not enter the Instructor workspace.
+Class overview links are offered only with the Classes screen grant.
+
+- The instructor who started a class is responsible for that occurrence; otherwise
+  its current scheduled instructor is shown. Original instructor and cover remain
+  visible, including retained names for deleted accounts.
+- Attendance becomes due after the scheduled finish time in Europe/Dublin.
+  In-progress and upcoming sessions do not count as missing. Dated cancellations
+  and classes with no swimmers are excluded from the due denominator.
+- Saved means every swimmer on the dated roster has a mark. Absent is a valid
+  saved mark. Partial means some marks are saved; Not taken means none. Starting
+  a class without saving attendance does not complete its register.
+- Roster counts use enrolment dates (end dates are exclusive) and exclude waitlists
+  and removed waitlist entries. Swimmers with existing dated attendance remain
+  counted after a move or withdrawal. Duplicate enrolments do not multiply people.
+  Current swimmer status does not erase historical attendance responsibilities.
+- Saved by lists the names on the latest saved marks, with the latest timestamp
+  and present/late/absent counts. A colleague's saves count as completed attendance
+  for the class; this is a completion report, not a claim that the assigned teacher
+  personally made every mark.
+- Occurrences use the current weekly schedule and unstarted instructor assignment;
+  the database has no historic weekly schedule snapshots. Classes created after
+  an occurrence or archived before it are excluded. Started cover attribution
+  remains date-specific. The report does not include assessment sessions.
+
+The summary lists instructors with occurrences that week, including unassigned
+classes. Select an instructor and use the class-status filters to inspect their
+registers. Both report pages inherit the Analytics loading and error boundaries.

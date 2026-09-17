@@ -73,7 +73,7 @@ function Screen() {
     case 'assessment-outcome': return <RecordOutcome booking={{id:'demo-booking',student:swimmers[0],outcomeLevel:null,outcomeNote:null}} session={assessment} variant="button"/>;
     case 'cancel-session': return <CancelSession course={{...courses[0],name:'Turtles',started:false,attendanceRecorded:0}} date={date}/>;
     case 'billing': return <BillingReview row={billing} canNotify/>;
-    case 'analytics': return <AnalyticsDashboard data={{siteName:sites[0].name,period:{date,weekStart:'2026-09-08',monthStart:'2026-09-01'},swimmers:20,places:24,enrolled:5,withdrawn:2,groups:[{id:programme.id,name:programme.name,levels:levels.map(l=>({...l,count:6,capacity:16,classes:2,percentage:37.5,archived:false}))}],cancellations:{sessions:2,affectedPlaces:8,pending:1,notified:1},daily:Array.from({length:7},(_,i)=>({day:`2026-09-${String(8+i).padStart(2,'0')}`,enrolled:i===6?2:i%2,withdrawn:i===0?2:0})),canOpenCancellations:true,updatedAt:date+'T12:00:00Z'}}/>;
+    case 'analytics': return <AnalyticsDashboard data={{siteName:sites[0].name,period:{date,weekStart:'2026-09-14',weekEnd:'2026-09-20',monthStart:'2026-09-01'},swimmers:20,places:24,enrolled:5,withdrawn:2,groups:[{id:programme.id,name:programme.name,levels:levels.map(l=>({...l,count:6,capacity:16,classes:2,percentage:37.5,archived:false}))}],cancellations:{sessions:2,affectedPlaces:8,pending:1,notified:1},daily:Array.from({length:7},(_,i)=>({day:`2026-09-${String(14+i).padStart(2,'0')}`,enrolled:i===0?5:0,withdrawn:i===0?2:0})),canOpenCancellations:true,updatedAt:date+'T12:00:00Z'}}/>;
     case 'programme': return <AddProgramme/>;
     case 'curriculum': return <AddCompetency levelId={levels[2].id} levelName="Turtles"/>;
     case 'staff': return <AddPerson roles={[role]}/>;
