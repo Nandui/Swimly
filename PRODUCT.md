@@ -214,6 +214,19 @@ competencies all stay under `/instructor/classes/[id]`. The selected list and
 grouping survive the return trip. Its frame offers classes, site, appearance
 and sign-out, with no desk sidebar, swimmer directory or profile links.
 
+Instructor competencies defaults to By swimmer, with an expandable competency
+list and Mark all achieved for each swimmer. By competency provides an alternate
+view of one skill across the class, with previous/next controls.
+Both views share the same unsaved marks, draft recovery and Save marks action.
+Per-competency bulk marking applies only to swimmers in today when attendance
+has been taken; absent swimmers remain in the separate Not in today group.
+
+Class overview is a separate page within the started Instructor class. A simple
+grid shows one card per competency, with its name and “Y out of Z achieved”.
+Totals include all enrolled swimmers, including those absent. It is read-only
+and uses current shared progress; teaching drafts must be saved before they
+affect the totals. Individual results remain in Competencies.
+
 Schedule is the desk calendar at `/schedule`. Instructor is absent from desk
 navigation; desk attendance returns within the desk workspace. Instructor
 access needs its screen grant and attendance permission, independently of desk

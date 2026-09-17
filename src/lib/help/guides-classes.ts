@@ -74,16 +74,18 @@ export const CLASS_GUIDES: HelpArticle[] = [
   {
     slug: "record-competencies", title: "Record competencies during a class", category: "teaching", scopes: ["desk", "instructor"],
     summary: "Work through the class checklist, mark achievement and save your changes.", keywords: ["competency", "competencies", "skills", "achieved", "not achieved", "checklist", "marks", "assessment", "by swimmer", "mark all"],
-    before: ["You need permission to mark competencies and access to this class’s teaching record. In Instructor, you must be the person who started the class."],
+    before: ["You need permission to mark competencies and access to this class’s teaching record. In Instructor, a staff member must have confirmed the class start."],
     steps: [
       { title: "Save attendance first", text: "Open the class’s Competencies step after reviewing attendance. The checklist separates swimmers who were in today from those who were not." },
+      { title: "Plan teaching from the class overview", text: "Choose Class overview beside Attendance and Competencies. Each card shows a competency and how many enrolled swimmers have achieved it, for example 3 out of 8 achieved. Totals include absent swimmers and count missing marks as not achieved. Use these totals to see which skills need teaching. Save changes in Competencies before reviewing updated totals here.", scopes: ["instructor"] },
       { title: "Choose the competency", text: "Use the competency selector or Previous competency and Next competency to work through the level’s checklist.", scopes: ["desk"] },
       { title: "Mark what was demonstrated", text: "Set each swimmer’s result using the available mark choices. Use Everyone in today achieved only when that is accurate for every swimmer included.", scopes: ["desk"] },
       { title: "Mark one swimmer’s competencies", text: "Tap a swimmer’s name to expand their class-level competencies beneath the row. Mark each result, or use Mark all achieved only when the swimmer has demonstrated every competency. Opening another swimmer keeps your unsaved changes.", scopes: ["instructor"] },
+      { title: "Work through one competency", text: "Choose By competency to see one skill across the class. Use Previous competency and Next competency, then mark each swimmer. Everyone in today achieved applies only to swimmers marked present or late. Switch back to By swimmer at any time; both views keep the same pending marks.", scopes: ["instructor"] },
       { title: "Review swimmers who were not in today", text: "Expand Not in today if you need to inspect their existing marks. Do not assume the visible present-swimmer list is the whole roster." },
       { title: "Save the marks", text: "Choose Save marks to save all pending changes across the class. Wait for confirmation, then use Done, back to classes or the return action shown." },
     ], result: "Saved competency marks become part of the swimmer’s shared progress record. Completing a level remains a separate confirmed action.",
-    troubleshooting: [{ question: "Why is there no Save marks button?", answer: "You may have no unsaved changes, or the record may be read-only. Check your permissions, whether the class is cancelled or archived, and who started it in Instructor." }],
+    troubleshooting: [{ question: "Why is there no Save marks button?", answer: "You may have no unsaved changes, or the record may be read-only. Class overview only displays saved results; open Competencies to mark them. Check your permissions, whether the class is cancelled or archived, and whether it has been started in Instructor." }],
     related: ["take-attendance", "complete-class-level", "profile-competencies", "saving-and-connection"],
   },
   {

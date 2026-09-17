@@ -18,10 +18,18 @@ const swimmer=name=>page.getByRole('button',{name:new RegExp(`^${name} \\d+ of 6
 const skill=(name,person)=>page.getByRole('radiogroup',{name:`${name} — ${person}`,exact:true});
 async function open(query='') {await page.goto(base+'/?'+query);await page.getByRole('heading',{name:'Turtles',exact:true}).waitFor();}
 async function checked(group,label) {assert.equal(await group.getByRole('radio',{name:label,exact:true}).getAttribute('aria-checked'),'true');}
+async function selectSkill(label) {
+  const target=Number.parseInt(label,10);
+  const counter=await page.getByText(/^Competency \d+ of \d+$/).innerText();
+  let current=Number(counter.match(/^Competency (\d+)/)[1]);
+  while(current>target) {await button('Previous competency').click();current--;}
+  while(current<target) {await button('Next competency').click();current++;}
+}
 
 try {
   await open();
-  assert.equal(await page.getByRole('group',{name:'Competency view'}).count(),0);
+  assert.equal(await page.getByRole('group',{name:'Competency view'}).count(),1);
+  assert.equal(await button('By swimmer').getAttribute('aria-pressed'),'true');
   assert.equal(await page.locator('#competency-picker').count(),0);
   await swimmer('Jamie Example').click();
   assert.equal(await swimmer('Jamie Example').getAttribute('aria-expanded'),'true');
@@ -70,6 +78,46 @@ try {
   await button('Not in today (1)').click();await swimmer('Morgan Example').click();
   assert(await page.getByText('Not in today. These are their recorded competencies.',{exact:true}).isVisible());
   assert.equal(await swimmer('Morgan Example').getAttribute('aria-expanded'),'true');
+  // Both layouts edit one shared draft. Bulk competency marking excludes absent swimmers.
+  await open('course=two-views');
+  await swimmer('Jamie Example').click();
+  await skill('Swim five metres on the front','Jamie Example').getByRole('radio',{name:'Achieved',exact:true}).click();
+  await button('By competency').focus();await page.keyboard.press('Enter');
+  assert.equal(await button('By competency').getAttribute('aria-pressed'),'true');
+  assert.equal(await page.locator('#competency-picker').count(),0);
+  await selectSkill('5. Swim five metres on the front');
+  await checked(skill('Swim five metres on the front','Jamie Example'),'Achieved');
+  await skill('Swim five metres on the front','Avery Example').getByRole('radio',{name:'Achieved',exact:true}).click();
+  await button('Next competency').click();
+  assert(await button('Next competency').isDisabled());
+  await button('Everyone in today achieved').click();
+  await button('Not in today (1)').click();
+  await checked(skill('Exit the water safely','Morgan Example'),'Not Achieved');
+  await checked(skill('Exit the water safely','Casey Example'),'Achieved'); // Late is included.
+  await button('By swimmer').click();
+  assert.equal(await swimmer('Jamie Example').getAttribute('aria-expanded'),'true');
+  await checked(skill('Exit the water safely','Jamie Example'),'Achieved');
+  await swimmer('Avery Example').click();
+  await checked(skill('Swim five metres on the front','Avery Example'),'Achieved');
+  await checked(skill('Exit the water safely','Avery Example'),'Achieved');
+  assert.match(await page.getByRole('status').innerText(),/6 marks not saved yet/);
+  await button('By competency').click();
+  await page.getByRole('heading',{name:'Exit the water safely',exact:true}).waitFor();
+  await button('Previous competency').click();
+  await checked(skill('Swim five metres on the front','Avery Example'),'Achieved');
+  await selectSkill('1. Enter the water safely');assert(await button('Previous competency').isDisabled());
+  await page.reload();
+  assert.equal(await button('By swimmer').getAttribute('aria-pressed'),'true');
+  await button('By competency').click();await selectSkill('6. Exit the water safely');
+  await checked(skill('Exit the water safely','Jamie Example'),'Achieved');
+  await button('Save marks').click();
+  await page.getByRole('status').filter({hasText:/^Saved$/}).waitFor();
+  const viewCalls=await page.evaluate(()=>window.swimmerPreview.calls);
+  assert.equal(viewCalls.length,1);assert.equal(viewCalls[0].action,'saveInstructorAssessment');
+  assert.equal(viewCalls[0].input.marks.length,6);
+  assert(!viewCalls[0].input.marks.some(mark=>mark.studentId==='morgan'));
+  assert.equal(viewCalls[0].input.marks.filter(mark=>mark.competencyId==='skill-6').length,4);
+  assert.equal(await page.locator('a[href^="/students"]').count(),0);
   // Keyboard entry and long content work without nested buttons or clipped controls.
   await open('course=keyboard');
   await swimmer('Jamie Example').focus();await page.keyboard.press('Enter');
@@ -82,6 +130,13 @@ try {
   assert.equal(await button('Mark all achieved for Jamie Example').count(),0);
   for(const control of await page.getByRole('region',{name:'Jamie Example competencies'}).getByRole('radio').all()) assert(await control.isDisabled());
   assert.equal(await button('Save marks').count(),0);
+  await button('By competency').click();
+  for(const control of await page.getByRole('main').getByRole('radio').all()) assert(await control.isDisabled());
+  assert.equal(await button('Everyone in today achieved').count(),0);
+  await open('course=no-attendance&no-attendance');
+  await button('By competency').click();await selectSkill('6. Exit the water safely');
+  await button('Everyone achieved').click();
+  await checked(skill('Exit the water safely','Morgan Example'),'Achieved');
   await open('empty=roster');assert(await page.getByText('Nobody in this class yet.',{exact:true}).isVisible());
   await page.goto(base+'/?empty=competencies');await page.getByText('This level has no competencies yet.',{exact:true}).waitFor();assert.equal(await button('By swimmer').count(),0);
   await page.goto(base+'/?desk');await page.getByRole('combobox').last().waitFor();assert.equal(await button('By swimmer').count(),0);assert.equal(await button('View competencies for Jamie Example').count(),0);
@@ -99,6 +154,13 @@ try {
       const box=await control.boundingBox();assert(box.width>=44&&box.height>=44,`Touch target ${width}: ${await control.innerText()}`);
     }
     await page.screenshot({path:path.join(dest,`swimmers-${width}-${theme}.png`),fullPage:true});layouts++;
+    await button('By competency').click();
+    await selectSkill('5. Swim five metres on the front');
+    assert(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth));
+    for(const control of await page.getByRole('main').locator('button:visible').all()) {
+      const box=await control.boundingBox();assert(box.width>=44&&box.height>=44,`Competency touch target ${width}: ${await control.innerText()}`);
+    }
+    await page.screenshot({path:path.join(dest,`competencies-${width}-${theme}.png`),fullPage:true});layouts++;
   }
   // Keep a full-height synthetic illustration for the signed-in instructor guide.
   await page.setViewportSize({width:1024,height:1450});
@@ -106,6 +168,9 @@ try {
   await skill('Swim five metres on the front','Jamie Example').getByRole('radio',{name:'Achieved',exact:true}).click();
   await page.mouse.move(0,0);
   await page.screenshot({path:path.join(dest,'guide.png')});
+  await button('By competency').click();await selectSkill('5. Swim five metres on the front');
+  await page.mouse.move(0,0);
+  await page.screenshot({path:path.join(dest,'competency-guide.png')});
   assert.equal(errors.length,0);
-  console.log(JSON.stringify({passed:true,sharedDrafts:true,bulkScope:true,draftRecovery:true,saveFailureRetry:true,savePayload:true,absentSwimmers:true,keyboard:true,readOnly:true,emptyStates:true,deskUnchanged:true,layouts,pageErrors:0}));
+  console.log(JSON.stringify({passed:true,viewSwitching:true,sharedDrafts:true,bulkScope:true,draftRecovery:true,saveFailureRetry:true,savePayload:true,absentSwimmers:true,keyboard:true,readOnly:true,emptyStates:true,deskUnchanged:true,layouts,pageErrors:0}));
 } finally {await browser.close();await new Promise(resolve=>server.close(resolve));}

@@ -127,7 +127,9 @@ function DeckChecklistState({
   const [storageUnavailable, setStorageUnavailable] = React.useState(false);
   const [dirty, setDirty] = React.useState(false);
   const [expandedSwimmer, setExpandedSwimmer] = React.useState<string | null>(null);
+  const [view, setView] = React.useState<"swimmer" | "competency">("swimmer");
   const [showAbsent, setShowAbsent] = React.useState(false);
+  const bySwimmer = teaching && view === "swimmer";
 
   // Who was in the water. Before attendance is taken nobody is ruled out.
   const inToday = React.useCallback(
@@ -430,7 +432,23 @@ function DeckChecklistState({
   );
   return (
     <div className="flex flex-col gap-5">
-      {!teaching ? <>
+      {teaching ? (
+        <div role="group" aria-label="Competency view" className="flex w-full gap-1 rounded-ui-lg border border-ui-border bg-ui-muted p-1 sm:w-fit">
+          {([{ value: "swimmer", label: "By swimmer" }, { value: "competency", label: "By competency" }] as const).map(option => (
+            <Button
+              key={option.value}
+              variant="ghost"
+              aria-pressed={view === option.value}
+              className={"min-h-11 flex-1 px-4 sm:flex-none " + (view === option.value ? "bg-ui-brand-soft text-ui-brand-ink hover:bg-ui-brand-soft hover:text-ui-brand-ink" : "")}
+              onClick={() => setView(option.value)}
+            >
+              {option.label}
+            </Button>
+          ))}
+        </div>
+      ) : null}
+      {!bySwimmer ? <>
+      {!teaching ? (
       <div className="flex flex-col gap-2">
         <Label htmlFor="competency-picker">Competency</Label>
         <Select
@@ -452,6 +470,7 @@ function DeckChecklistState({
           </SelectContent>
         </Select>
       </div>
+      ) : null}
       <section
         aria-labelledby="deck-competency"
         className="flex flex-col gap-4 rounded-ui-lg border border-ui-border bg-ui-muted/40 p-4"
@@ -511,7 +530,7 @@ function DeckChecklistState({
       </section>
       </> : null}
       {here.length ? (
-        teaching ? (
+        bySwimmer ? (
           <section aria-label="Swimmers in today" className="space-y-3">
             <h2 className="sr-only">Swimmer competencies</h2>
             {here.map((s) => swimmerRow(s, false))}
@@ -536,7 +555,7 @@ function DeckChecklistState({
             </Button>
           </CollapsibleTrigger>
           <CollapsibleContent>
-            {teaching ? (
+            {bySwimmer ? (
               <section aria-label="Swimmers not in today" className="space-y-3 pt-3">
                 <h2 className="sr-only">Competencies for swimmers not in today</h2>
                 {away.map((s) => swimmerRow(s, true))}

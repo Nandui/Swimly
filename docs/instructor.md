@@ -26,15 +26,30 @@ the pool. Its route group and layout stay separate from the desk workspace.
   started the session; a later open never replaces the original start record.
 - /instructor/classes/[id] contains attendance, then competencies and eligible
   level completion. Returning preserves My/All and the grouping choice.
-- Competencies opens directly into the swimmer list. Tap a name to expand that
+- Competencies opens in **By swimmer**. Tap a name to expand that
   swimmer's class-level competencies; opening another closes the previous row.
   Mark results individually or use **Mark all achieved** for that swimmer.
-  All swimmers share drafts and one **Save marks** action across the class.
-  Switching swimmers keeps unsaved changes. Absent swimmers remain
+- **By competency** offers previous/next controls and a
+  list of swimmers with that competency's mark. **Everyone in today achieved**
+  affects only swimmers marked present or late (all swimmers if attendance has
+  not yet been taken). The swimmer view keeps its per-swimmer bulk action.
+  Both views share drafts and one **Save marks** action across the class.
+  Switching views or swimmers keeps unsaved changes. Absent swimmers remain
   under **Not in today**; level completion is still a separate confirmation.
 - The frame offers classes, site, appearance and sign-out. It has no desk
   sidebar, global swimmer search, class administration or swimmer-profile links.
   The desk navigation never leads into Instructor.
+
+**Class overview** opens `/instructor/classes/[id]/overview` from the class
+navigation. It uses the same guarded loader and requires a confirmed start.
+It shows a card per competency in curriculum order, with the name and “Y out of
+Z achieved”. Totals include all active enrolments, including absent swimmers.
+Missing marks count as not achieved. The grid has two columns from 360px and
+three from 1024px, with no swimmer breakdown or expandable controls. Progress
+is current and shared, not a historical snapshot of the selected session. The overview
+is read-only and keeps date/list context when returning to teaching. Unsaved
+teaching drafts survive navigation but only saved marks appear in the overview.
+Attendance and competency saves invalidate it so returning shows the new records.
 
 The class list, confirmation, teaching forms, notices and completion dialog use
 actual shadcn components from src/components/shadcn, with Neutral ui-* tokens,
@@ -77,12 +92,18 @@ selection and shared session links are exercised using local-only fixtures.
 
 `scripts/check-instructor-swimmers.mjs` verifies the real teaching components
 with fictional swimmers and mocked save actions, rejecting all outbound requests.
-It covers opening names, shared drafts, swimmer-only bulk marking, recovery,
+It covers opening names, switching views, shared drafts, per-swimmer and
+per-competency bulk marking, recovery,
 failed saves and retries, the save payload, read-only access, absent swimmers,
 empty states, keyboard controls and both themes at the four supported widths.
 Set `INSTRUCTOR_PLAYWRIGHT_MODULE` to a Playwright module path when it is not
 installed locally. Run `node scripts/instructor-swimmer-preview/build.mjs --serve`
 for the isolated interactive preview on port 4190. Neither command uses live data.
+
+`scripts/check-instructor-overview.mjs` checks the overview's totals, missing
+marks, absent swimmers, saved versus draft marks, navigation, empty and fully
+achieved states, a larger class, long names, and both themes at the four supported
+widths. It uses the same isolated preview.
 
 `scripts/check-instructor-assessments.mjs` exercises the actual Instructor home
 and assessment components with fictional sessions and mocked server boundaries.

@@ -24,13 +24,17 @@ import { fullName } from "@/lib/students/constants";
 import { TeachingNotice } from "./teaching-ui";
 import { StartClass } from "./start-class";
 import { CompleteLevel } from "./complete-level";
+import { InstructorClassNavigation } from "./class-navigation";
+import { ClassCompetencyOverview } from "./class-competency-overview";
 
 export async function InstructorClassSession({
   id,
   params,
+  overview = false,
 }: {
   id: string;
   params: ClassQuery;
+  overview?: boolean;
 }) {
   const view = await getInstructorClass(id, params.date);
   if (!view) notFound();
@@ -114,31 +118,23 @@ export async function InstructorClassSession({
     mayAssess = can(session, "progression.assess"),
     mayComplete = mayAssess && can(session, "progression.complete");
   const ready = progress.swimmers.filter((s) => s.eligible && !s.completedOn);
+  const swimmers = progress.swimmers.map((s) => ({
+    studentId: s.student.id,
+    name: fullName(s.student),
+    offLevel: s.offLevel,
+    completed: Boolean(s.completedOn),
+    marks: Object.fromEntries(s.competencies.map((c) => [c.id, c.status])),
+  }));
+  const attendance = register.taken
+    ? Object.fromEntries(register.lines.map((l) => [l.studentId, l.status]))
+    : null;
   return (
     <div className="flex flex-col gap-6">
       {header}
-      <nav
-        aria-label="Class steps"
-        className="flex gap-2 border-b border-ui-border pb-3"
-      >
-        <Button asChild variant={competencies ? "ghost" : "secondary"}>
-          <Link
-            href={stepHref("attendance")}
-            aria-current={!competencies ? "step" : undefined}
-          >
-            1. Attendance
-          </Link>
-        </Button>
-        <Button asChild variant={competencies ? "secondary" : "ghost"}>
-          <Link
-            href={stepHref("competencies")}
-            aria-current={competencies ? "step" : undefined}
-          >
-            2. Competencies
-          </Link>
-        </Button>
-      </nav>
-      {!competencies ? (
+      <InstructorClassNavigation id={id} params={{ ...params, date: iso }} active={overview ? "overview" : competencies ? "competencies" : "attendance"} />
+      {overview ? (
+        <ClassCompetencyOverview competencies={progress.course.level.competencies} swimmers={swimmers} />
+      ) : !competencies ? (
         register.lines.length ? (
           <RegisterForm
             courseId={id}
@@ -200,22 +196,8 @@ export async function InstructorClassSession({
             date={iso}
             levelId={progress.course.levelId}
             competencies={progress.course.level.competencies}
-            swimmers={progress.swimmers.map((s) => ({
-              studentId: s.student.id,
-              name: fullName(s.student),
-              offLevel: s.offLevel,
-              completed: Boolean(s.completedOn),
-              marks: Object.fromEntries(
-                s.competencies.map((c) => [c.id, c.status]),
-              ),
-            }))}
-            attendance={
-              register.taken
-                ? Object.fromEntries(
-                    register.lines.map((l) => [l.studentId, l.status]),
-                  )
-                : null
-            }
+            swimmers={swimmers}
+            attendance={attendance}
             readOnly={!mayAssess}
             teaching
             doneHref={home}

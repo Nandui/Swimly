@@ -625,6 +625,21 @@ retry handling, audit and concurrent-save comparisons. Scoped CSS makes every
 pool-deck control at least 44px, including browsers reporting a mouse. The
 independent Neutral ui-* tokens follow the shared theme provider.
 
+The competency step defaults to expandable swimmer rows. A 44px By swimmer /
+By competency control switches the layout while retaining marks, the expanded
+swimmer and the selected competency. By competency uses previous/next controls
+and swimmer mark rows. Both layouts share the attendance
+filter, draft recovery and one Save marks bar. Selected view uses the blue
+selection tokens; the desk's competency layout remains unchanged.
+
+Class overview sits alongside the attendance and competency steps. The owner
+specified a simple bento grid of totals: one shadcn Card for each competency,
+showing its full name and “Y out of Z achieved”. Use two columns from 360px and
+three from 1024px, with one column on narrower screens. Neutral bordered cards
+have no shadow, icon, disclosure or swimmer list; numbers use tabular figures.
+Cards grow to fit long names and require no horizontal scrolling. A brief note
+explains that the totals use saved marks and include absent swimmers.
+
 The Instructor class page has its own server loader. It checks site, active
 class and the confirmed class/date claim before reading attendance or swimmer
 competencies. It never offers desk class or swimmer profiles, even to accounts

@@ -194,5 +194,17 @@
   "analytics-instructors": {
     "width": 1176,
     "height": 2384
+  },
+  "instructor-by-competency": {
+    "width": 1024,
+    "height": 1450
+  },
+  "instructor-class-overview": {
+    "width": 1024,
+    "height": 1000
+  },
+  "instructor-class-overview-mobile": {
+    "width": 375,
+    "height": 1100
   }
 }
