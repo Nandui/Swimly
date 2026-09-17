@@ -5,7 +5,6 @@ import Image from "next/image";
 import { useState, useTransition } from "react";
 import { signOut } from "next-auth/react";
 import { ArrowRight, LogOut } from "lucide-react";
-import { AppLogo } from "@/components/app-logo";
 import { Button } from "@/components/shadcn/button";
 import { Card } from "@/components/shadcn/card";
 import { LoadingButton } from "@/components/ui/loading-button";
@@ -68,7 +67,7 @@ export function StaffPortal({ userName }: { userName: string }) {
               return (
                 <Card key={module.id} className="gap-6 p-6 shadow-none">
                   <div className="flex min-h-12 items-center justify-between gap-3">
-                    {Icon ? <Icon className="size-8 text-ui-muted-foreground" aria-hidden="true" /> : <AppLogo className="size-12" />}
+                    <Icon className="size-8 text-ui-muted-foreground" aria-hidden="true" />
                     <Tag color={status.color}>{status.label}</Tag>
                   </div>
                   <div className="flex-1 space-y-2">

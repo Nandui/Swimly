@@ -1,5 +1,4 @@
-import { CalendarDays, Files, type LucideIcon } from "lucide-react";
-import { APP_NAME } from "@/lib/app";
+import { CalendarDays, Files, WavesLadder, type LucideIcon } from "lucide-react";
 import type { TagColor } from "@/components/ui-kit/tag";
 
 export const PORTAL_BRAND = "Turnfin";
@@ -14,7 +13,7 @@ type StaffModule = {
   id: string;
   name: string;
   description: string;
-  icon?: LucideIcon;
+  icon: LucideIcon;
 } & (
   | { status: "available"; href: string }
   | { status: "planned"; href?: never }
@@ -24,8 +23,9 @@ type StaffModule = {
 export const STAFF_MODULES: readonly StaffModule[] = [
   {
     id: "swimly",
-    name: APP_NAME,
+    name: "Aquatics",
     description: "Run the swim school. Manage classes, swimmers, attendance and progress.",
+    icon: WavesLadder,
     status: "available",
     // Resolve permissions and the preferred workspace again when opened.
     href: "/start",

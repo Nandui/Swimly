@@ -24,7 +24,7 @@ try {
     assert.equal(await page.getByRole('main').count(), 1);
     assert.equal(await page.getByText('Coming soon', {exact: true}).count(), 2);
     assert.equal(await page.getByRole('link', {name: /Docs|Bookings/}).count(), 0);
-    assert.equal(await page.getByRole('link', {name: 'Open Swimly'}).getAttribute('href'), '/start');
+    assert.equal(await page.getByRole('link', {name: 'Open Aquatics'}).getAttribute('href'), '/start');
     assert(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth), `Overflow at ${width}/${theme}`);
     for (const control of await page.locator('button, main a').all()) {
       const bounds = await control.boundingBox();
@@ -41,13 +41,13 @@ try {
   await page.getByRole('button', {name: 'Switch to dark mode'}).click();
   assert.equal(await page.locator('html').getAttribute('data-theme'), 'dark');
   assert((await context.cookies()).some(cookie => cookie.name === 'swimly.theme' && cookie.value === 'dark'));
-  await page.getByRole('link', {name: 'Open Swimly'}).click();
+  await page.getByRole('link', {name: 'Open Aquatics'}).click();
   await page.getByRole('heading', {name: 'Swimly workspace preview'}).waitFor();
   await page.getByRole('link', {name: 'All modules'}).click();
   await page.getByRole('heading', {name: 'Choose your workspace'}).waitFor();
 
   await page.setViewportSize({width: 375, height: 900});
-  await page.getByRole('link', {name: 'Open Swimly'}).click();
+  await page.getByRole('link', {name: 'Open Aquatics'}).click();
   await page.getByRole('button', {name: 'Open navigation'}).click();
   await page.getByRole('link', {name: 'All modules'}).click();
   await page.getByRole('heading', {name: 'Choose your workspace'}).waitFor();
@@ -60,7 +60,7 @@ try {
   await page.evaluate(() => {window.portalPreview.fail = false;});
   await page.getByRole('button', {name: 'Sign out', exact: true}).click();
   await page.getByRole('heading', {name: 'Signed out of preview'}).waitFor();
-  assert.equal(await page.getByRole('link', {name: 'Open Swimly'}).count(), 0);
+  assert.equal(await page.getByRole('link', {name: 'Open Aquatics'}).count(), 0);
   assert.deepEqual(errors, []);
   console.log('Staff portal checks passed: eight layouts, keyboard, module/return navigation, appearance and sign-out feedback. Authentication is mocked in the UI fixture.');
 } finally {

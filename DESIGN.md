@@ -99,14 +99,14 @@ The staff portal at `/modules` sits outside the desk and Instructor shells.
 It has a small Turnfin header with appearance and sign-out controls, one
 main landmark and a centred module grid capped at 1024px. The grid uses one,
 two and three columns on phone, tablet and desktop, with the existing Figtree,
-Neutral surfaces and blue action. Swimly uses its existing logo and a 44px
-Open action. Docs and Bookings use plain icons and metadata-fed Coming soon
+Neutral surfaces and blue action. Aquatics uses a pool-ladder line icon and a 44px
+Open action. All modules use matching Lucide icons; Docs and Bookings have metadata-fed Coming soon
 badges, without inert links or buttons. The desk sidebar's All modules utility
 returns here. Instructor navigation and teaching access remain unchanged.
 The supplied transparent Turnfin fin logo lives at `public/brand/turnfin.png`.
 Its original artwork is framed inside a 48px header slot to account for the
 file's transparent padding. It also supplies the portal's browser/touch icon;
-the Swimly module and workspace keep their existing name and logo.
+the Aquatics module opens the existing Swimly workspace.
 
 Schedule keeps its booking sheet with sticky level labels and horizontal time scrolling.
 The sheet expands vertically within the workspace's single page scroll. Phones

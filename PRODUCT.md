@@ -144,13 +144,13 @@ when the role offers Swimmers, otherwise an accessible landing page. Reception
 is no longer offered as a screen or landing-page choice.
 
 The Turnfin staff portal at `/modules` is the signed-in front door, reached from the
-root address and after sign-in. It offers Swimly now, with Docs and Bookings
+root address and after sign-in. It offers Aquatics now, with Docs and Bookings
 marked Coming soon and no destination until those modules are available.
-Opening Swimly uses `/start` to resolve the role's accessible home. The desk
+Opening Aquatics uses `/start` to resolve the role's accessible home in Swimly. The desk
 sidebar offers All modules; the Instructor workspace keeps its isolated navigation.
 The portal is for staff, separate from the parent app, and grants no new screen
 or action access. Turnfin is the overall portal brand and uses the owner's
-supplied fin logo; Swimly, Docs and Bookings remain separate module names.
+supplied fin logo; Aquatics, Docs and Bookings are the portal's module names.
 The module catalogue and portal name live in `src/lib/modules.ts`.
 
 Overview is also retired. Schedule is the default for desk roles with calendar access; Duty manager
