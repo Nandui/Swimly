@@ -208,22 +208,24 @@ export function StudentPicker({
   label,
   description,
   placeholder = "Search by name or member number…",
+  onValueChange,
 }: {
   name: string;
   id?: string;
   label?: string;
   description?: string;
   placeholder?: string;
+  onValueChange?: (value: string) => void;
 }) {
   const [chosen, setChosen] = React.useState<StudentHit | null>(null);
   const input = React.useRef<HTMLInputElement>(null);
   React.useEffect(() => {
     const form = input.current?.form;
     if (!form) return;
-    const reset = () => setChosen(null);
+    const reset = () => { setChosen(null); onValueChange?.(""); };
     form.addEventListener("reset", reset);
     return () => form.removeEventListener("reset", reset);
-  }, []);
+  }, [onValueChange]);
   return (
     <>
       <input ref={input} type="hidden" name={name} value={chosen?.id ?? ""} />
@@ -233,7 +235,7 @@ export function StudentPicker({
         labelHidden={label === undefined}
         description={description}
         selected={chosen}
-        onSelect={setChosen}
+        onSelect={hit => { setChosen(hit); onValueChange?.(hit?.id ?? ""); }}
         placeholder={placeholder}
       />
     </>

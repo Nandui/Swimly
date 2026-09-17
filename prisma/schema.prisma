@@ -419,6 +419,12 @@ model Course {
   @@index([instructorId])
 }
 
+enum LegendAgreementStatus {
+  NEEDS_CHECK
+  PENDING
+  DONE
+}
+
 /// `levelId` and `programmeId` are **pinned** at enrolment. They are not a
 /// cache of the course's level — they are the level the student was *placed*
 /// at, which must not move when a course is re-badged.
@@ -442,6 +448,12 @@ model Enrolment {
   /// Stored on the row, not only in the audit log, because the log is
   /// admin-only and the instructor on the deck is who needs to know.
   placementReason String?
+  /// Existing enrolments remain unverified until staff check Legend. Transfers
+  /// copy these fields; they do not restart the billing agreement workflow.
+  legendAgreementStatus        LegendAgreementStatus @default(NEEDS_CHECK)
+  legendAgreementUpdatedAt     DateTime?
+  legendAgreementUpdatedById   String?
+  legendAgreementUpdatedByName String?
   createdAt       DateTime        @default(now())
   updatedAt       DateTime        @updatedAt
 
@@ -454,6 +466,7 @@ model Enrolment {
   @@index([studentId, status])
   @@index([status, scheduledEndOn])
   @@index([programmeId, status])
+  @@index([status, legendAgreementStatus, startedOn])
 }
 
 // ---------------------------------------------------------------------------

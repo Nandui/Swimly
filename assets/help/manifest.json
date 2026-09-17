@@ -182,5 +182,9 @@
   "assessment-awaiting-enrolment": {
     "width": 1280,
     "height": 1100
+  },
+  "legend-agreements": {
+    "width": 1280,
+    "height": 1100
   }
 }

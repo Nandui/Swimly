@@ -1,0 +1,168 @@
+// Real components, fictional records, mocked actions; no database or live requests.
+import assert from 'node:assert/strict';
+import fs from 'node:fs/promises';
+import path from 'node:path';
+import {pathToFileURL} from 'node:url';
+import {buildPreview,servePreview} from './instructor-swimmer-preview/build.mjs';
+
+const {chromium}=await import(process.env.PLAYWRIGHT_MODULE?pathToFileURL(process.env.PLAYWRIGHT_MODULE).href:'playwright');
+const root=path.resolve('.impeccable/review/legend-agreements'),output=path.join(root,'site');
+await buildPreview({entryPoint:'scripts/legend-agreements-preview/fixture.jsx',outputDir:output,allowedActions:['confirmLegendAgreement','enrolStudent','promoteFromWaitlist','transferEnrolment','searchStudents'],actionTarget:'window.agreementsPreview.save',pathnameFallback:'/legend-agreements'});
+const {server,base}=await servePreview(0,output),html=await fs.readFile(path.join(output,'index.html'),'utf8');
+const browser=await chromium.launch({channel:'chrome',headless:true});
+const context=await browser.newContext({viewport:{width:1280,height:1100},reducedMotion:'reduce'});
+await context.route('**/*',route=>{
+  const request=route.request();
+  if(!request.url().startsWith(base)||request.method()!=='GET') return route.abort();
+  if(request.isNavigationRequest()) return route.fulfill({status:200,contentType:'text/html',body:html});
+  return route.continue();
+});
+const page=await context.newPage(),errors=[];
+page.on('pageerror',error=>errors.push(error.message));
+page.on('console',message=>{if(message.type()==='error') errors.push(message.text())});
+const settle=()=>page.evaluate(async()=>{await document.fonts.ready;await Promise.allSettled(document.getAnimations().filter(a=>a.effect?.getTiming().iterations!==Infinity).map(a=>a.finished));});
+const agreement=()=>page.getByRole('radiogroup',{name:'Legend billing agreement'});
+const calls=()=>page.evaluate(()=>window.agreementsPreview.calls);
+try {
+  await page.goto(base+'/legend-agreements');
+  await page.getByRole('heading',{level:1,name:'Legend agreements',exact:true}).waitFor();
+  assert.equal(await page.getByText('Needs checking',{exact:true}).count(),4); // desktop and responsive content
+  const confirm=page.getByRole('button',{name:/Confirm Legend agreement for Avery/});
+  await confirm.click();
+  const alert=page.getByRole('alertdialog');
+  await alert.waitFor();
+  await alert.getByRole('button',{name:'Cancel',exact:true}).click();
+  await alert.waitFor({state:'hidden'});
+  assert(await confirm.evaluate(el=>el===document.activeElement));
+  assert.equal((await calls()).length,0);
+  await page.evaluate(()=>window.agreementsPreview.fail=true);
+  await confirm.click();
+  await alert.getByRole('button',{name:'Confirm updated',exact:true}).click();
+  await alert.getByText('Synthetic save failed. Your details have been kept.').waitFor();
+  assert(await alert.isVisible());
+  await page.evaluate(()=>window.agreementsPreview.fail=false);
+  await alert.getByRole('button',{name:'Confirm updated',exact:true}).click();
+  await alert.waitFor({state:'hidden'});
+  await page.getByRole('link',{name:'Outstanding 2',exact:true}).waitFor();
+  assert.equal(await page.getByRole('button',{name:/Confirm Legend agreement for Avery/}).count(),0);
+  await page.goto(base+'/legend-agreements?view=done');
+  await page.getByText('Updated in Legend',{exact:true}).filter({visible:true}).waitFor();
+  assert.equal(await page.getByRole('button',{name:/Confirm Legend agreement/}).count(),0);
+  await page.goto(base+'/legend-agreements');
+  await page.getByRole('searchbox',{name:'Find a swimmer',exact:true}).fill('Jamie');
+  await page.getByRole('button',{name:'Search',exact:true}).click();
+  await page.waitForURL('**/legend-agreements?q=Jamie');
+  assert.equal(await page.locator('tbody tr').count(),1);
+  await page.getByRole('link',{name:'Clear',exact:true}).click();
+  await page.waitForURL('**/legend-agreements');
+  await page.goto(base+'/legend-agreements?restricted');
+  await page.getByRole('heading',{level:1}).waitFor();
+  assert.equal(await page.getByRole('button',{name:/Confirm Legend agreement/}).count(),0);
+  assert.equal(await page.locator('main a[href^="/students/"]').count(),0);
+  for(const suffix of ['?empty','?empty&view=done','?q=Missing']) {
+    await page.goto(base+'/legend-agreements'+suffix);
+    await page.getByText(suffix.includes('q=')?'No matching agreements':suffix.includes('done')?'No agreements confirmed yet':'No outstanding agreements',{exact:true}).waitFor();
+  }
+  await page.goto(base+'/enrol');
+  await page.getByRole('button',{name:/^Enrol Avery Example from the waitlist/}).click();
+  const dialog=page.getByRole('dialog');
+  await agreement().waitFor();
+  assert.equal(await agreement().getByRole('radio',{checked:true}).count(),0);
+  await dialog.getByRole('button',{name:'Enrol from waitlist',exact:true}).click();
+  assert.equal((await calls()).length,0,'No save before the mandatory choice');
+  await agreement().getByRole('radio',{name:/Still to do/}).check();
+  await dialog.getByRole('button',{name:'Enrol from waitlist',exact:true}).click();
+  await dialog.getByText('Synthetic save failed. Your details have been kept.').waitFor();
+  assert.deepEqual((await calls()).at(-1),{action:'promoteFromWaitlist',args:['waiting-place','PENDING']});
+  assert(await agreement().getByRole('radio',{name:/Still to do/}).isChecked());
+  await page.keyboard.press('Escape');
+  await dialog.waitFor({state:'hidden'});
+  await page.getByRole('button',{name:'Manage enrolment',exact:true}).click();
+  await page.getByRole('button',{name:'Enrol in a class',exact:true}).click();
+  const picker=page.getByRole('dialog',{name:'Enrol in a class',exact:true});
+  await picker.getByRole('radiogroup',{name:'Choose a class'}).getByRole('radio').first().check();
+  await agreement().getByRole('radio',{name:'Updated in Legend',exact:true}).check();
+  await picker.getByRole('button',{name:'Review enrolment',exact:true}).click();
+  await picker.getByText('Synthetic save failed. Your details have been kept.').waitFor();
+  assert.equal((await calls()).at(-1).args[0].legendAgreement,'DONE');
+  // Changing class clears the assertion: it belongs to the selected place.
+  await picker.getByRole('radiogroup',{name:'Choose a class'}).getByRole('radio').nth(1).check();
+  assert.equal(await agreement().getByRole('radio',{checked:true}).count(),0);
+  await page.keyboard.press('Escape');
+  await picker.waitFor({state:'hidden'});
+  await page.getByRole('button',{name:'Move class',exact:true}).first().click();
+  const move=page.getByRole('dialog',{name:'Move to another class',exact:true});
+  await move.waitFor();
+  await move.getByRole('radiogroup',{name:'Choose a class'}).getByRole('radio').first().check();
+  assert.equal(await agreement().count(),0,'Moves do not ask about Legend');
+  await page.keyboard.press('Escape');
+  await move.waitFor({state:'hidden'});
+  await page.keyboard.press('Escape');
+  await page.getByRole('button',{name:'Enrol from class list',exact:true}).click();
+  await dialog.getByRole('combobox',{name:'Class',exact:true}).click();
+  await page.getByRole('option').first().click();
+  await agreement().getByRole('radio',{name:'Updated in Legend',exact:true}).check();
+  await dialog.getByRole('combobox',{name:'Class',exact:true}).click();
+  await page.getByRole('option').nth(1).click();
+  assert.equal(await agreement().getByRole('radio',{checked:true}).count(),0,'Class picker resets agreement');
+  await agreement().getByRole('radio',{name:/Still to do/}).check();
+  await dialog.getByRole('button',{name:'Enrol',exact:true}).click();
+  await dialog.getByText('Synthetic save failed. Your details have been kept.').waitFor();
+  assert.equal((await calls()).at(-1).args[0].legendAgreement,'PENDING');
+  await page.keyboard.press('Escape');
+  await dialog.waitFor({state:'hidden'});
+  await page.getByRole('button',{name:'Enrol a swimmer',exact:true}).click();
+  await dialog.getByRole('combobox',{name:'Swimmer',exact:true}).click();
+  await page.getByRole('combobox',{name:'Search swimmers',exact:true}).fill('Example');
+  await page.getByRole('option',{name:/Avery Example/}).click();
+  await agreement().getByRole('radio',{name:'Updated in Legend',exact:true}).check();
+  await dialog.getByRole('combobox',{name:'Swimmer',exact:true}).click();
+  await page.getByRole('combobox',{name:'Search swimmers',exact:true}).fill('Example');
+  await page.getByRole('option',{name:/Jamie Example/}).click();
+  assert.equal(await agreement().getByRole('radio',{checked:true}).count(),0,'Swimmer picker resets agreement');
+  await agreement().getByRole('radio',{name:'Updated in Legend',exact:true}).check();
+  await dialog.getByRole('button',{name:'Enrol',exact:true}).click();
+  await dialog.getByText('Synthetic save failed. Your details have been kept.').waitFor();
+  assert.equal((await calls()).at(-1).args[0].studentId,'swimmer-jamie');
+  assert.equal((await calls()).at(-1).args[0].legendAgreement,'DONE');
+  await page.keyboard.press('Escape');
+  await dialog.waitFor({state:'hidden'});
+  let layouts=0;
+  for(const width of [375,768,1024,1280]) for(const theme of ['light','dark']) {
+    await page.setViewportSize({width,height:1100});
+    await page.goto(`${base}/legend-agreements?theme=${theme}`);
+    await page.getByRole('heading',{level:1}).waitFor();await settle();
+    assert.equal(await page.locator('h1').count(),1);
+    assert.equal(await page.getByRole('main').count(),1);
+    assert.equal(await page.evaluate(()=>[document.documentElement,...document.querySelectorAll('main')].some(el=>el.scrollWidth>el.clientWidth+1)),false,`Overflow: ${width} ${theme}`);
+    for(const control of await page.locator('main a:visible,main button:visible,main input:visible').all()) {
+      const box=await control.boundingBox();
+      assert(box.height>=43&&box.width>=43,`Touch target at ${width}: ${await control.textContent()}`);
+    }
+    await page.screenshot({path:path.join(root,`agreements-${width}-${theme}.png`)});layouts++;
+    await page.getByRole('button',{name:/Confirm Legend agreement for Avery/}).click();
+    await alert.waitFor();await settle();
+    assert.equal(await alert.evaluate(el=>el.scrollWidth>el.clientWidth+1),false);
+    await page.screenshot({path:path.join(root,`confirm-${width}-${theme}.png`)});layouts++;
+    await page.keyboard.press('Escape');
+    await page.goto(`${base}/enrol?theme=${theme}`);
+    await page.getByRole('button',{name:/^Enrol Avery Example from the waitlist/}).click();
+    await agreement().waitFor();await settle();
+    assert.equal(await dialog.evaluate(el=>el.scrollWidth>el.clientWidth+1),false);
+    for(const label of await agreement().locator('label').all()) assert((await label.boundingBox()).height>=43);
+    await page.screenshot({path:path.join(root,`enrol-${width}-${theme}.png`)});layouts++;
+  }
+  await page.goto(base+'/legend-agreements');
+  await page.keyboard.press('Tab');
+  assert.equal(await page.evaluate(()=>document.activeElement?.textContent),'Skip to content');
+  await page.keyboard.press('Enter');
+  assert.equal(await page.evaluate(()=>document.activeElement?.id),'workspace-main');
+  assert.deepEqual(errors,[]);
+  if(process.argv.includes('--write-help-images')) {
+    await fs.copyFile(path.join(root,'agreements-1280-light.png'),path.resolve('assets/help/legend-agreements.png'));
+    const manifest=JSON.parse(await fs.readFile('assets/help/manifest.json','utf8'));
+    manifest['legend-agreements']={width:1280,height:1100};
+    await fs.writeFile('assets/help/manifest.json',JSON.stringify(manifest,null,2)+'\n');
+  }
+  console.log(`Legend agreements passed: confirmation success/failure/cancel, history, search, empty/restricted states, required choices, promotion payload, per-class reset, moves, keyboard, 44px page controls and ${layouts} responsive/theme layouts. Synthetic data only.`);
+} finally {await browser.close();await new Promise(resolve=>server.close(resolve));}

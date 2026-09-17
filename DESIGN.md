@@ -433,6 +433,15 @@ Cancellation, class starts and teaching saves share the course lock; a
 cancelled occurrence cannot accept later teaching saves. `ClassNote` remains
 free text. See [Duty manager](docs/duty-manager.md).
 
+### Legend agreement confirmation belongs to the class place
+
+New enrolments have an unselected, explicit Legend agreement question. Pending
+agreements do not block enrolment. Existing active places read **Needs checking**;
+never imply that missing information means done. The site-scoped Legend agreements
+page shows one row per place, with a named confirmation and timestamp. Moves carry
+the prior state and attribution. Confirming uses `enrolment.manage` and the course
+lock, and writes the audit row atomically. See [the workflow](docs/legend-agreements.md).
+
 ### Placement needs `enrolment.manage`, with a reason on the row
 
 Placing a transfer-in or an adult beginner out of sequence is routine and

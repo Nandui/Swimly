@@ -48,6 +48,14 @@ test("nested pages select their destination without prefix collisions", () => {
   assert.equal(isNavItemActive("/", "/"), true);
 });
 
+test("Legend agreements has its own screen grant and administrators receive it automatically", () => {
+  const own = visibleNavGroups(visibleScreens(["legend-agreements"], expandPermissions([])));
+  assert.deepEqual(own.flatMap(group => group.items.map(item => item.href)), ["/legend-agreements"]);
+  const admin = visibleScreens([], expandPermissions(["staff.manage", "roles.manage"]));
+  assert(admin.has("legend-agreements"));
+  assert.equal(visibleScreens(["instructor"], expandPermissions(["attendance.mark"])).has("legend-agreements"), false);
+});
+
 test("swimmer lookup requires the Swimmers screen and never links to retired Reception", () => {
   const retired = visibleScreens(["reception"], expandPermissions([]));
   assert.equal(swimmerLookupHref(retired, "demo"), null);

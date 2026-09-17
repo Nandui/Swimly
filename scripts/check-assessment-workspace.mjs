@@ -46,9 +46,10 @@ try {
   assert.equal(await unassessed.getByRole('button',{name:/^Enrol .* from the waitlist/}).count(),1);
   const promote=unassessed.getByRole('button',{name:/^Enrol .* from the waitlist/});
   await promote.click();
-  const confirmation=page.getByRole('alertdialog');
+  const confirmation=page.getByRole('dialog');
   await confirmation.waitFor();
-  assert(await confirmation.getByRole('heading',{name:'Enrol Morgan Example from the waitlist?',exact:true}).isVisible());
+  assert(await confirmation.getByRole('heading',{name:'Enrol Morgan Example from the waitlist',exact:true}).isVisible());
+  assert(await confirmation.getByRole('radiogroup',{name:'Legend billing agreement'}).isVisible());
   await page.keyboard.press('Escape');
   await confirmation.waitFor({state:'hidden'});
   assert(await promote.evaluate(el=>el===document.activeElement));

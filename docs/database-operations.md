@@ -19,6 +19,12 @@ Writes take `input` in the existing server action's format. Updates require
 complete input: read existing values first. Enrolment confirmations are
 returned unchanged; send `confirmation` only after user authorization.
 
+For an active `enrolments.create`, include `input.legendAgreement`: `DONE` only
+when staff confirm the billing agreement was updated in Legend, or `PENDING`
+when it still needs doing. Do not infer completion from a roster or payment
+balance. A waitlist does not record a completed agreement. See
+[Legend agreement follow-up](legend-agreements.md).
+
 Mutations call the existing application actions, retaining validation,
 timetable site filtering, shared swimmer identity, live named permissions, seat locks, audit and revalidation.
 The server loads a unique active staff account matching the configured actor

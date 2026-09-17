@@ -15,6 +15,7 @@ import type { StudentEnrolment, TransferTarget } from "@/lib/enrolment/data/enro
 import type { ActionResult, ConfirmationReply } from "@/lib/action-result";
 import { cn } from "@/lib/utils";
 import { ProfileActionDialog } from "./profile-action-dialog";
+import { LegendAgreementField } from "@/components/enrolment/legend-agreement-field";
 
 function ClassFilter({ label, value, onChange, children }: {
   label: string; value: string; onChange: (value: string) => void; children: React.ReactNode;
@@ -174,5 +175,6 @@ export function ClassEnrolmentDialog({ trigger, courses, currentEnrolment, submi
       <Checkbox name="allowWaitlist" id={`${id}-waitlist`} checked={allowWaitlist} onCheckedChange={value => setAllowWaitlist(value === true)} />
       Join the waitlist if full
     </Label> : null}
+    {!moving && selected ? <LegendAgreementField key={selectedId} required={!full} /> : null}
   </ProfileActionDialog>;
 }

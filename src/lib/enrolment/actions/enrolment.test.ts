@@ -13,7 +13,7 @@ function fixture() {
     level: { id: "entry", name: "Entry", programmeId: "programme", archivedAt: null, programme: { archivedAt: null } },
   }));
   const student = { id: "swimmer", clubId: "club", firstName: "Test", lastName: "Swimmer", status: "ACTIVE" };
-  const rows = [{ id: "source", studentId: "swimmer", courseId: "a", programmeId: "programme", levelId: "entry", status: "ACTIVE", placementReason: null as string | null }];
+  const rows = [{ id: "source", studentId: "swimmer", courseId: "a", programmeId: "programme", levelId: "entry", status: "ACTIVE", placementReason: null as string | null, legendAgreementStatus: "NEEDS_CHECK" as "NEEDS_CHECK" | "PENDING" | "DONE", legendAgreementUpdatedAt: null as Date | null, legendAgreementUpdatedById: null as string | null, legendAgreementUpdatedByName: null as string | null }];
   const audits: object[] = [];
   const locks: string[][] = [];
   let activeLocks: string[] = [];
@@ -99,15 +99,63 @@ function fixture() {
   };
 }
 
+test("a new active place requires an explicit Legend decision, including direct action calls", async () => {
+  const f = fixture();
+  const result = await f.actions.enrolStudent({ studentId: "swimmer", courseId: "b", placementReason: "", allowWaitlist: false }, { choice: "keep", ids: ["source"] });
+  assert.equal(result.ok, false);
+  if (!result.ok) assert.match(result.error, /Legend/);
+  assert.equal(f.rows.length, 1); assert.equal(f.audits.length, 0);
+});
+
+test("new agreement decisions persist with the staff attribution and the enrolment audit", async () => {
+  for (const choice of ["PENDING", "DONE"] as const) {
+    const f = fixture();
+    assert.equal((await f.actions.enrolStudent({ studentId: "swimmer", courseId: "b", placementReason: "", allowWaitlist: false, legendAgreement: choice }, { choice: "keep", ids: ["source"] })).ok, true);
+    assert.equal(f.rows[1].legendAgreementStatus, choice);
+    assert.equal(f.rows[1].legendAgreementUpdatedById, "staff");
+    assert.equal(f.rows[1].legendAgreementUpdatedByName, "Test Staff");
+    assert(f.rows[1].legendAgreementUpdatedAt instanceof Date);
+    assert.match(JSON.stringify(f.audits), /Legend agreement/);
+  }
+});
+
+test("transfers preserve completed and outstanding agreement evidence without a new decision", async () => {
+  for (const state of ["NEEDS_CHECK", "PENDING", "DONE"] as const) {
+    const f = fixture(), stamp = new Date("2026-09-01T12:00:00Z");
+    Object.assign(f.rows[0], { legendAgreementStatus: state, legendAgreementUpdatedAt: stamp, legendAgreementUpdatedById: "original", legendAgreementUpdatedByName: "Original Staff" });
+    assert.equal((await f.actions.transferEnrolment("source", "b", "", { choice: "move", ids: ["source", "b"] })).ok, true);
+    assert.equal(f.rows[1].legendAgreementStatus, state);
+    assert.equal(f.rows[1].legendAgreementUpdatedAt, stamp);
+    assert.equal(f.rows[1].legendAgreementUpdatedById, "original");
+  }
+});
+
+test("waitlist promotion requires a fresh Legend answer and records it when activating", async () => {
+  const f = fixture(); f.rows[0].status = "WAITLISTED";
+  assert.equal((await f.actions.promoteFromWaitlist("source")).ok, false);
+  assert.equal(f.rows[0].status, "WAITLISTED");
+  assert.equal((await f.actions.promoteFromWaitlist("source", "PENDING")).ok, true);
+  assert.equal(f.rows[0].status, "ACTIVE");
+  assert.equal(f.rows[0].legendAgreementStatus, "PENDING");
+  assert.equal(f.rows[0].legendAgreementUpdatedById, "staff");
+});
+
+test("joining a full class waitlist does not assert that an agreement is completed", async () => {
+  const f = fixture(); f.courses[1].capacity = 0;
+  assert.equal((await f.actions.enrolStudent({ studentId: "swimmer", courseId: "b", placementReason: "", allowWaitlist: true, legendAgreement: "DONE" }, { choice: "keep", ids: ["source"] })).ok, true);
+  assert.equal(f.rows[1].status, "WAITLISTED");
+  assert.notEqual(f.rows[1].legendAgreementStatus, "DONE");
+});
+
 test("enrolment accepts another site's swimmer with the same existing-place confirmation", async () => {
   const f = fixture(); f.student.clubId = "other";
-  const result = await f.actions.enrolStudent({ studentId: "swimmer", courseId: "b", placementReason: "", allowWaitlist: false }, { choice: "keep", ids: ["source"] });
+  const result = await f.actions.enrolStudent({ studentId: "swimmer", courseId: "b", placementReason: "", allowWaitlist: false, legendAgreement: "PENDING" }, { choice: "keep", ids: ["source"] });
   assert.equal(result.ok, true); assert.equal(f.rows.length, 2); assert.equal(f.audits.length, 1);
 });
 
 test("enrolment sees capacity changed before it obtains the lock", async () => {
   const f = fixture(); f.beforeTransaction(() => { f.courses[1].capacity = 0; });
-  const result = await f.actions.enrolStudent({ studentId: "swimmer", courseId: "b", placementReason: "", allowWaitlist: false });
+  const result = await f.actions.enrolStudent({ studentId: "swimmer", courseId: "b", placementReason: "", allowWaitlist: false, legendAgreement: "PENDING" });
   assert.equal(result.ok, false); assert.equal(f.rows.length, 1);
 });
 
@@ -166,7 +214,7 @@ test("a transfer needs and stores a reason for an unearned level", async () => {
 test("promotion cannot reopen a waitlist entry withdrawn while it waited", async () => {
   const f = fixture(); f.rows[0].status = "WAITLISTED";
   f.beforeTransaction(() => { f.rows[0].status = "WITHDRAWN"; });
-  assert.equal((await f.actions.promoteFromWaitlist("source")).ok, false);
+  assert.equal((await f.actions.promoteFromWaitlist("source", "PENDING")).ok, false);
   assert.equal(f.rows[0].status, "WITHDRAWN"); assert.equal(f.audits.length, 0);
 });
 
@@ -184,7 +232,7 @@ test("moving a waitlisted swimmer closes the waiting booking without implying at
   assert.match((f.audits[0] as { summary: string }).summary, /from the waitlist for/);
 });
 
-const enrolInput = { studentId: "swimmer", courseId: "b", placementReason: "", allowWaitlist: false };
+const enrolInput = { studentId: "swimmer", courseId: "b", placementReason: "", allowWaitlist: false, legendAgreement: "PENDING" as const };
 
 test("an existing place requires a choice before any writes", async () => {
   const f = fixture();
@@ -228,12 +276,12 @@ test("a full destination never withdraws the current place, including waitlistin
   const f = fixture(); f.courses[1].capacity = 0;
   const reply = { choice: "withdraw", ids: ["source"] };
   assert.equal((await f.actions.enrolStudent(enrolInput, reply)).ok, false);
-  const result = await f.actions.enrolStudent({ ...enrolInput, allowWaitlist: true }, reply);
+  const result = await f.actions.enrolStudent({ ...enrolInput, allowWaitlist: true, legendAgreement: "PENDING" }, reply);
   assert.equal(result.ok, false);
   if (result.ok) return;
   assert.deepEqual(result.confirmation?.choices.map((choice) => choice.value), ["keep"]);
   assert.equal(f.rows[0].status, "ACTIVE"); assert.equal(f.audits.length, 0);
-  assert.equal((await f.actions.enrolStudent({ ...enrolInput, allowWaitlist: true }, { ...reply, choice: "keep" })).ok, true);
+  assert.equal((await f.actions.enrolStudent({ ...enrolInput, allowWaitlist: true, legendAgreement: "PENDING" }, { ...reply, choice: "keep" })).ok, true);
   assert.deepEqual(f.rows.map((row) => row.status), ["ACTIVE", "WAITLISTED"]);
 });
 

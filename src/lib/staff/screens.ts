@@ -82,6 +82,12 @@ export const SCREENS = [
     description: "Assessed swimmers awaiting a class and all class waitlists at the selected site. Enrolling requires its separate permission.",
   },
   {
+    key: "legend-agreements",
+    label: "Legend agreements",
+    path: "/legend-agreements",
+    description: "Active class places with outstanding Legend billing agreements, including existing enrolments that need checking. Confirming requires enrolment permission.",
+  },
+  {
     key: "programmes",
     label: "Programmes",
     path: "/programmes",

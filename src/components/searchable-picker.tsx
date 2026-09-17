@@ -37,6 +37,7 @@ export function SearchablePicker({
   id: suppliedId,
   label,
   description,
+  onValueChange,
 }: {
   name: string;
   options: PickerOption[];
@@ -47,6 +48,7 @@ export function SearchablePicker({
   id?: string;
   label?: string;
   description?: string;
+  onValueChange?: (value: string) => void;
 }) {
   const generatedId = React.useId(),
     id = suppliedId ?? generatedId;
@@ -59,11 +61,12 @@ export function SearchablePicker({
     if (!form) return;
     const reset = () => {
       setValue(defaultValue);
+      onValueChange?.(defaultValue);
       setOpen(false);
     };
     form.addEventListener("reset", reset);
     return () => form.removeEventListener("reset", reset);
-  }, [defaultValue]);
+  }, [defaultValue, onValueChange]);
   return (
     <FieldFrame id={id} label={label} description={description}>
       <input ref={input} type="hidden" name={name} value={value} />
@@ -105,6 +108,7 @@ export function SearchablePicker({
                     disabled={option.disabled}
                     onSelect={() => {
                       setValue(option.value);
+                      onValueChange?.(option.value);
                       setOpen(false);
                     }}
                   >

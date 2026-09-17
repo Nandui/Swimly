@@ -2,9 +2,11 @@
 import { Button } from "@/components/shadcn/button";
 
 import { ArrowUpRight } from "lucide-react";
-import { useId } from "react";
+import { useId, useState } from "react";
 import { SiteClassPicker } from "@/components/enrolment/enrolment-actions";
 import { FormDialog } from "@/components/form-dialog";
+import { LegendAgreementField } from "@/components/enrolment/legend-agreement-field";
+import { readLegendAgreement } from "@/lib/enrolment/legend-agreement";
 
 import type { DayOfWeek } from "@/generated/prisma/client";
 import {
@@ -56,6 +58,7 @@ export function MoveUpToLevel({
   courses: MoveTarget[];
 }) {
   const id = useId();
+  const [selectedId, setSelectedId] = useState("");
   const targets = courses.filter(
     (course) => course.level.id === nextLevelId && !course.archivedAt,
   );
@@ -78,6 +81,7 @@ export function MoveUpToLevel({
 
   return (
     <FormDialog
+      onOpen={() => setSelectedId("")}
       trigger={
         <Button variant="default" size="sm">
           {<ArrowUpRight aria-hidden={true} className="size-4 shrink-0" />}
@@ -105,6 +109,7 @@ export function MoveUpToLevel({
                 // they might get is not a move up.
                 placementReason: "",
                 allowWaitlist: false,
+                legendAgreement: readLegendAgreement(formData),
               },
               confirmation,
             );
@@ -114,8 +119,10 @@ export function MoveUpToLevel({
         id={id}
         name="toCourseId"
         courses={targets}
+        onValueChange={setSelectedId}
         label={`Which ${nextLevelName} class`}
       />
+      {!fromEnrolmentId ? <LegendAgreementField key={selectedId} /> : null}
     </FormDialog>
   );
 }

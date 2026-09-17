@@ -17,6 +17,8 @@ import { ENROLMENT_STATUS_META } from "@/lib/enrolment/constants";
 import { formatDate, toDateOnlyString } from "@/lib/format";
 import { ProfileActionDialog } from "./profile-action-dialog";
 import { ClassEnrolmentDialog } from "./class-enrolment-dialog";
+import { LegendAgreementField } from "@/components/enrolment/legend-agreement-field";
+import { readLegendAgreement } from "@/lib/enrolment/legend-agreement";
 
 export function ProfileField({ label, children }: { label: string; children: React.ReactNode }) {
   return <div className="space-y-2"><Label>{label}</Label>{children}</div>;
@@ -40,11 +42,11 @@ export function ManageProfileEnrolments({ studentId, active, enrolments, targets
         <div className="flex flex-wrap gap-2">
           <ClassEnrolmentDialog trigger={<Button variant="outline" size="sm">Move class</Button>} courses={targets.filter(c => c.id !== e.course.id)} currentEnrolment={e}
             submit={(data, confirmation) => transferEnrolment(e.id, String(data.get("toCourseId") ?? ""), String(data.get("placementReason") ?? ""), confirmation)} />
-          {e.status === "WAITLISTED" ? <ProfileActionDialog trigger={<Button variant="outline" size="sm">Enrol from waitlist</Button>} title="Enrol from the waitlist" description={`Activate the place in ${courseLabelWithSite(e.course)} if a space is available.`} submitLabel="Enrol" submit={() => promoteFromWaitlist(e.id)}><p className="text-sm">The class capacity will be checked before saving.</p></ProfileActionDialog> : null}
+          {e.status === "WAITLISTED" ? <ProfileActionDialog trigger={<Button variant="outline" size="sm">Enrol from waitlist</Button>} title="Enrol from the waitlist" description={`Activate the place in ${courseLabelWithSite(e.course)} if a space is available.`} submitLabel="Enrol" submit={data => promoteFromWaitlist(e.id, readLegendAgreement(data))}><LegendAgreementField /></ProfileActionDialog> : null}
           <LeavePlace enrolment={e} />
         </div></li>)}</ul> : <p className="py-4 text-sm text-ui-muted-foreground">No current enrolments or waitlist places.</p>}
       {active ? <ClassEnrolmentDialog trigger={<Button className="justify-self-start">Enrol in a class</Button>} courses={targets}
-        submit={(data, confirmation) => enrolStudent({ studentId, courseId: String(data.get("courseId") ?? ""), placementReason: String(data.get("placementReason") ?? ""), allowWaitlist: data.get("allowWaitlist") === "on" }, confirmation)} /> : <p className="text-sm text-ui-muted-foreground">Reactivate this swimmer before adding a place.</p>}
+        submit={(data, confirmation) => enrolStudent({ studentId, courseId: String(data.get("courseId") ?? ""), placementReason: String(data.get("placementReason") ?? ""), allowWaitlist: data.get("allowWaitlist") === "on", legendAgreement: readLegendAgreement(data) }, confirmation)} /> : <p className="text-sm text-ui-muted-foreground">Reactivate this swimmer before adding a place.</p>}
     </DialogContent>
   </Dialog>;
 }

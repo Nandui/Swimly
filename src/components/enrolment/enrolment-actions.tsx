@@ -16,7 +16,8 @@ import { Select } from "@/components/ui/select";
 import { scheduleUnenrolment } from "@/lib/enrolment/actions/schedule";
 import { toDateOnlyString, today, parseDateOnly } from "@/lib/format";
 
-import { ActionButton, ConfirmAction } from "@/components/confirm-action";
+import { LegendAgreementField } from "@/components/enrolment/legend-agreement-field";
+import { readLegendAgreement } from "@/lib/enrolment/legend-agreement";
 import { Field, FormDialog } from "@/components/form-dialog";
 import {
   SearchablePicker,
@@ -72,11 +73,13 @@ export function SiteClassPicker({
   name,
   courses,
   label = "Class",
+  onValueChange,
 }: {
   id: string;
   name: string;
   courses: (CourseLike & { _count: { enrolments: number } })[];
   label?: string;
+  onValueChange?: (value: string) => void;
 }) {
   const [site, setSite] = useState("any");
   const sites = [
@@ -90,7 +93,7 @@ export function SiteClassPicker({
       <Select
         label="Site"
         value={site}
-        onValueChange={setSite}
+        onValueChange={value => { setSite(value); onValueChange?.(""); }}
         options={[
           { value: "any", label: "All sites" },
           ...sites.map((s) => ({ value: s.id, label: s.name })),
@@ -102,6 +105,7 @@ export function SiteClassPicker({
           id={id}
           name={name}
           options={courseOptions(filtered)}
+          onValueChange={onValueChange}
           placeholder="Pick a class"
           searchPlaceholder="Search by class, level, site or day…"
           emptyText="No class matches at this site."
@@ -133,7 +137,7 @@ function PlacementReason() {
   );
 }
 
-function PlacementFields() {
+function PlacementFields({ full = false, agreementKey }: { full?: boolean; agreementKey?: string }) {
   const id = useId();
   return (
     <>
@@ -145,6 +149,7 @@ function PlacementFields() {
         description="Otherwise a full class refuses, and says so."
         labelSpacing="spread"
       />
+      <LegendAgreementField key={agreementKey} required={!full} />
     </>
   );
 }
@@ -155,6 +160,7 @@ function readEnrol(formData: FormData) {
     courseId: String(formData.get("courseId") ?? ""),
     placementReason: String(formData.get("placementReason") ?? ""),
     allowWaitlist: formData.get("allowWaitlist") === "on",
+    legendAgreement: readLegendAgreement(formData),
   };
 }
 
@@ -169,8 +175,10 @@ export function EnrolIntoCourse({
   taken: number;
 }) {
   const id = useId();
+  const [selectedId, setSelectedId] = useState("");
   return (
     <FormDialog
+      onOpen={() => setSelectedId("")}
       trigger={
         <Button variant="default" size="sm">
           {<UserRoundPlus aria-hidden={true} className="size-4 shrink-0" />}
@@ -187,9 +195,9 @@ export function EnrolIntoCourse({
     >
       <input type="hidden" name="courseId" value={course.id} />
       <Field label="Swimmer" htmlFor={id}>
-        <StudentPicker id={id} name="studentId" />
+        <StudentPicker id={id} name="studentId" onValueChange={setSelectedId} />
       </Field>
-      <PlacementFields />
+      <PlacementFields agreementKey={selectedId} full={placesLeft(taken, course.capacity) === 0} />
     </FormDialog>
   );
 }
@@ -207,8 +215,11 @@ export function EnrolInCourseForStudent({
   label?: string;
 }) {
   const id = useId();
+  const [selectedId, setSelectedId] = useState("");
+  const selected = courses.find(course => course.id === selectedId);
   return (
     <FormDialog
+      onOpen={() => setSelectedId("")}
       trigger={
         <Button variant={variant} size="default">
           {<Plus aria-hidden={true} className="size-4 shrink-0" />}
@@ -223,8 +234,8 @@ export function EnrolInCourseForStudent({
       }
     >
       <input type="hidden" name="studentId" value={student.id} />
-      <SiteClassPicker id={id} name="courseId" courses={courses} />
-      <PlacementFields />
+      <SiteClassPicker id={id} name="courseId" courses={courses} onValueChange={setSelectedId} />
+      <PlacementFields agreementKey={selectedId} full={!!selected && placesLeft(selected._count.enrolments, selected.capacity) === 0} />
     </FormDialog>
   );
 }
@@ -397,34 +408,17 @@ export function PromoteFromWaitlist({
   variant?: "icon" | "button";
   classLabel?: string;
 }) {
-  if (variant === "button")
-    return (
-      <ConfirmAction
-        trigger={
-          <Button
-            aria-label={`Enrol ${fullName(enrolment.student)} from the waitlist${classLabel ? ` for ${classLabel}` : ""}`}
-            variant="outline"
-          >
-            {"Enrol from waitlist"}
-          </Button>
-        }
-        title={`Enrol ${fullName(enrolment.student)} from the waitlist?`}
-        description={`Their place in ${classLabel ?? "this class"} becomes active if a seat is available.`}
-        confirmLabel="Enrol from waitlist"
-        successMessage={`Enrolled in ${classLabel ?? "the class"}`}
-        run={() => promoteFromWaitlist(enrolment.id)}
-      />
-    );
-  return (
-    <ActionButton
-      ariaLabel={`Move ${fullName(enrolment.student)} off the waitlist`}
-      title="Move off the waitlist"
-      successMessage="Moved off the waitlist"
-      run={() => promoteFromWaitlist(enrolment.id)}
-    >
-      <ChevronsUp aria-hidden={true} className="size-4 shrink-0" />
-    </ActionButton>
-  );
+  return <FormDialog
+    trigger={<Button variant={variant === "button" ? "outline" : "ghost"} size={variant === "button" ? "default" : "icon-sm"}
+      aria-label={`Enrol ${fullName(enrolment.student)} from the waitlist${classLabel ? ` for ${classLabel}` : ""}`}>
+      {variant === "button" ? "Enrol from waitlist" : <ChevronsUp aria-hidden="true" />}
+    </Button>}
+    title={`Enrol ${fullName(enrolment.student)} from the waitlist`}
+    description={`Their place in ${classLabel ?? "this class"} becomes active if a seat is available.`}
+    submitLabel="Enrol from waitlist" successMessage={`Enrolled in ${classLabel ?? "the class"}`}
+    submit={data => promoteFromWaitlist(enrolment.id, readLegendAgreement(data))}>
+    <LegendAgreementField />
+  </FormDialog>;
 }
 
 export function TransferEnrolment({

@@ -25,7 +25,7 @@ export async function buildPreview({entryPoint='scripts/instructor-swimmer-previ
         const source=await fs.readFile(path.resolve('src',id.slice(2)+'.ts'),'utf8');
         const names=[...source.matchAll(/export\s+(?:async\s+)?function\s+(\w+)/g)].map(match=>match[1]);
         contents=names.map(name=>allowedActions.includes(name)
-          ? `export async function ${name}(input){return ${actionTarget}('${name}',input)}`
+          ? `export async function ${name}(...args){return ${actionTarget}('${name}',...args)}`
           : `export async function ${name}(){throw Error('Action disabled in synthetic preview: ${name}')}`).join('\n');
       }
       return {contents,loader:'jsx',resolveDir:process.cwd()};
@@ -37,10 +37,10 @@ export async function buildPreview({entryPoint='scripts/instructor-swimmer-previ
   await fs.writeFile(path.join(outputDir,'app.css'),css.css);
   await fs.writeFile(path.join(outputDir,'index.html'),'<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Instructor preview</title><link rel="icon" href="data:,"><link rel="stylesheet" href="/app.css"><link rel="stylesheet" href="/fixture.css"></head><body><div id="root"></div><script src="/fixture.js"></script></body></html>');
 }
-export async function servePreview(port=0, directory=output) {
+export async function servePreview(port=0, directory=output, pageRoutes=[]) {
   const server=http.createServer(async(req,res)=>{
     const route=new URL(req.url,'http://localhost').pathname.slice(1);
-    const name=!route||route==='instructor'||route.startsWith('instructor/')?'index.html':route;
+    const name=!route||route==='instructor'||route.startsWith('instructor/')||pageRoutes.includes(route)?'index.html':route;
     const file=path.resolve(directory,name);
     if(req.method!=='GET'||!file.startsWith(directory+path.sep)){res.writeHead(403).end();return;}
     try {const data=await fs.readFile(file);res.writeHead(200,{'Content-Type':({'.js':'text/javascript','.css':'text/css','.html':'text/html','.png':'image/png','.woff2':'font/woff2','.woff':'font/woff'})[path.extname(file)]||'application/octet-stream'});res.end(data);}catch{res.writeHead(404).end();}

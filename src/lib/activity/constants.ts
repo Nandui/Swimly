@@ -25,6 +25,7 @@ const ACTIONS: Record<string, { label: string; color: TagColor }> = {
   withdraw: { label: "Withdrew", color: "gray" },
   complete: { label: "Finished", color: "blue" },
   transfer: { label: "Moved", color: "purple" },
+  "legend-agreement": { label: "Legend agreement confirmed", color: "green" },
 
   // The pool deck
   attendance: { label: "Attendance", color: "blue" },

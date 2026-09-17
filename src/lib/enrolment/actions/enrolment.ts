@@ -13,6 +13,7 @@ import { hasEarnedPlace, previousLevel } from "@/lib/progression/rules";
 import { fullName } from "@/lib/students/constants";
 import { readSharedCurriculum, sharedCourse } from "@/lib/curriculum/data/shared";
 import { prisma } from "@/lib/prisma";
+import { agreementRecord, LEGEND_AGREEMENT_META, type LegendAgreementChoice } from "@/lib/enrolment/legend-agreement";
 
 const placementReasonSchema = z.string().trim().max(300, "Keep the reason under 300 characters.");
 const enrolSchema = z.object({
@@ -20,6 +21,7 @@ const enrolSchema = z.object({
   courseId: z.string().min(1, "Pick a class."),
   placementReason: placementReasonSchema,
   allowWaitlist: z.boolean(),
+  legendAgreement: z.enum(["PENDING", "DONE"]).optional(),
 });
 export type EnrolInput = z.infer<typeof enrolSchema>;
 
@@ -32,6 +34,8 @@ const COURSE_SELECT = {
 const ENROLMENT_SELECT = {
   id: true, status: true, studentId: true, courseId: true, programmeId: true,
   placementReason: true,
+  legendAgreementStatus: true, legendAgreementUpdatedAt: true,
+  legendAgreementUpdatedById: true, legendAgreementUpdatedByName: true,
   student: { select: { firstName: true, lastName: true, status: true, clubId: true } },
   course: { select: COURSE_SELECT },
 } as const satisfies Prisma.EnrolmentSelect;
@@ -68,6 +72,7 @@ async function placementFor(
 }
 
 function revalidate() {
+  revalidatePath("/legend-agreements");
   revalidatePath("/awaiting-enrolment");
   revalidatePath("/courses");
   revalidatePath("/courses/[id]", "page");
@@ -80,7 +85,7 @@ export async function enrolStudent(input: EnrolInput, confirmation?: Confirmatio
   const session = await requirePermission("enrolment.manage");
   const parsed = enrolSchema.safeParse(input);
   if (!parsed.success) return fail(parsed.error.issues[0].message);
-  const { studentId, courseId, placementReason, allowWaitlist } = parsed.data;
+  const { studentId, courseId, placementReason, allowWaitlist, legendAgreement } = parsed.data;
   const reply = z.object({ choice: z.enum(["keep", "withdraw"]), ids: z.array(z.string().min(1)).max(100) }).optional().safeParse(confirmation);
   if (!reply.success) return fail("Choose whether to keep the existing places or unenrol.");
   const existingWhere = { studentId, courseId: { not: courseId }, status: "ACTIVE" as const };
@@ -118,6 +123,7 @@ export async function enrolStudent(input: EnrolInput, confirmation?: Confirmatio
     if (full && !allowWaitlist) return fail(
       `${courseLabel(course)} is full (${capacityLabel(taken, course.capacity)}). Tick the waitlist box to put them on it.`
     );
+    if (!full && !legendAgreement) return fail("Confirm whether the billing agreement has been updated in Legend.", { legendAgreement: "Choose Updated in Legend or Still to do." });
     const existing = await tx.enrolment.findMany({
       where: existingWhere, select: { id: true, courseId: true, programmeId: true, course: { select: COURSE_SELECT } },
       orderBy: { id: "asc" },
@@ -154,6 +160,7 @@ export async function enrolStudent(input: EnrolInput, confirmation?: Confirmatio
         studentId, courseId, levelId: course.levelId, programmeId: course.level.programmeId,
         status: full ? "WAITLISTED" : "ACTIVE", startedOn: parseDateOnly(today()),
         placementReason: earned ? null : placementReason,
+        ...(!full && legendAgreement ? agreementRecord(legendAgreement, session.user) : {}),
       }, select: { id: true },
     });
     await logAudit({
@@ -161,6 +168,7 @@ export async function enrolStudent(input: EnrolInput, confirmation?: Confirmatio
       action: full ? "waitlist" : "enrol", entity: "Enrolment", entityId: enrolment.id,
       programmeId: course.level.programmeId, clubId: course.clubId,
       summary: `${full ? "Waitlisted" : "Enrolled"} ${fullName(student)} in ${courseLabel(course)} at ${course.level.name}` +
+        (!full && legendAgreement ? ` — Legend agreement: ${LEGEND_AGREEMENT_META[legendAgreement].label}` : "") +
         (earned ? "" : ` — placed out of sequence: ${placementReason}`),
     }, tx);
     return ok();
@@ -201,8 +209,9 @@ export async function endEnrolment(id: string, input: z.infer<typeof endSchema>)
   return result;
 }
 
-export async function promoteFromWaitlist(id: string): Promise<ActionResult> {
+export async function promoteFromWaitlist(id: string, legendAgreement?: LegendAgreementChoice): Promise<ActionResult> {
   const session = await requirePermission("enrolment.manage");
+  if (legendAgreement !== "PENDING" && legendAgreement !== "DONE") return fail("Confirm whether the billing agreement has been updated in Legend.", { legendAgreement: "Choose Updated in Legend or Still to do." });
   const source = await prisma.enrolment.findUnique({
     where: { id }, select: { courseId: true, studentId: true },
   });
@@ -220,11 +229,11 @@ export async function promoteFromWaitlist(id: string): Promise<ActionResult> {
     if (enrolment.course.capacity !== null && taken >= enrolment.course.capacity) return fail(
       `${courseLabel(enrolment.course)} is still full (${capacityLabel(taken, enrolment.course.capacity)}).`
     );
-    await tx.enrolment.update({ where: { id }, data: { status: "ACTIVE", startedOn: parseDateOnly(today()) } });
+    await tx.enrolment.update({ where: { id }, data: { status: "ACTIVE", startedOn: parseDateOnly(today()), ...agreementRecord(legendAgreement, session.user) } });
     await logAudit({
       actorId: session.user.id, actorName: session.user.name ?? "Unknown", action: "enrol",
       entity: "Enrolment", entityId: id, programmeId: enrolment.programmeId, clubId: enrolment.course.clubId,
-      summary: `Moved ${fullName(enrolment.student)} off the waitlist into ${courseLabel(enrolment.course)}`,
+      summary: `Moved ${fullName(enrolment.student)} off the waitlist into ${courseLabel(enrolment.course)} — Legend agreement: ${LEGEND_AGREEMENT_META[legendAgreement].label}`,
     }, tx);
     return ok();
   });
@@ -292,6 +301,10 @@ export async function transferEnrolment(id: string, toCourseId: string, placemen
         studentId: from.studentId, courseId: toCourseId, levelId: to.levelId,
         programmeId: to.level.programmeId, status: "ACTIVE", startedOn,
         placementReason: earned ? null : reason,
+        legendAgreementStatus: from.legendAgreementStatus,
+        legendAgreementUpdatedAt: from.legendAgreementUpdatedAt,
+        legendAgreementUpdatedById: from.legendAgreementUpdatedById,
+        legendAgreementUpdatedByName: from.legendAgreementUpdatedByName,
       }, select: { id: true },
     });
     await logAudit({

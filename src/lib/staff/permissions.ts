@@ -48,7 +48,7 @@ export const PERMISSIONS = [
     group: "Swimmers",
     label: "Enrol and move swimmers",
     description:
-      "Put a swimmer in a class, move them between classes, end an enrolment, book them on an assessment. Includes placing someone out of sequence with a reason.",
+      "Put a swimmer in a class, move them between classes, end an enrolment, book them on an assessment and confirm Legend billing agreements. Includes placing someone out of sequence with a reason.",
   },
   {
     key: "attendance.mark",

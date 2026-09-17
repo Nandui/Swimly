@@ -13,6 +13,7 @@ import {
   Settings,
   UserCog,
   UserRoundCheck,
+  FileCheck2,
   Users,
 } from "lucide-react";
 import type { NavGroup, NavItem } from "@/components/ui-kit/app-shell";
@@ -37,6 +38,7 @@ export const NAV_ITEMS: AppNavItem[] = [
   { href: "/courses", label: "Classes", icon: CalendarDays, screen: "courses", group: "daily" },
   { href: "/assessments", label: "Assessments", icon: ClipboardCheck, screen: "assessments", group: "daily" },
   { href: "/awaiting-enrolment", label: "Awaiting enrolment", icon: UserRoundCheck, screen: "awaiting-enrolment", group: "daily" },
+  { href: "/legend-agreements", label: "Legend agreements", icon: FileCheck2, screen: "legend-agreements", group: "daily" },
   { href: "/together", label: "Together", icon: CalendarHeart, screen: "together", group: "daily" },
   { href: "/analytics", label: "Analytics", icon: ChartNoAxesCombined, screen: "analytics", group: "monitoring" },
   { href: "/activity", label: "Activity", icon: Activity, screen: "activity", group: "monitoring" },

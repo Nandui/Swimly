@@ -275,6 +275,16 @@ These controls require the existing named permissions and write audit reasons.
   *programme*, *cover*, *placement*. Code identifiers and URLs keep their old
   names (`Student`, `Course`, `/register`); the words on screen do not.
 
+## Legend billing agreements
+
+Desk staff must explicitly record whether the Legend agreement has been updated
+when creating an active enrolment, including enrolment from a waitlist. They can
+enrol with the agreement still outstanding. Existing active places need checking.
+The Legend agreements page lists these places at the working site and records who
+confirms each one and when. Moves carry the existing status across sites without
+another question. Swimly tracks manual confirmation; Legend remains the billing
+system. See [Legend agreements](docs/legend-agreements.md).
+
 ## Evidence on Hand
 
 - **Real data, in the live database:** 1,803 swimmers, 232 weekly classes,
