@@ -4734,11 +4734,18 @@
     overscroll-behavior: contain;
     width: 100%;
     max-width: none;
-    padding: 38px clamp(24px, 3.1vw, 56px);
+    padding: 0;
     margin: 0;
     outline: none;
   }
-  :where(.turnfin-docs) .workspace-page > * {
+  /* Keep spacing off the scrollport so sticky controls meet the header. */
+  :where(.turnfin-docs) .workspace-page-content {
+    width: 100%;
+    max-width: none;
+    padding: 38px clamp(24px, 3.1vw, 56px);
+    margin: 0 auto;
+  }
+  :where(.turnfin-docs) .workspace-page-content > * {
     max-width: 1280px;
     margin-left: auto;
     margin-right: auto;
@@ -5644,7 +5651,7 @@
       padding-left: 10px;
       padding-right: 10px;
     }
-    :where(.turnfin-docs) .workspace-page {
+    :where(.turnfin-docs) .workspace-page-content {
       padding: 30px 24px;
     }
     :where(.turnfin-docs) .home-heading {
@@ -5786,7 +5793,7 @@
     :where(.turnfin-docs) .workspace-mobile-sheet .workspace-sidebar-header {
       padding-bottom: 20px;
     }
-    :where(.turnfin-docs) .workspace-page {
+    :where(.turnfin-docs) .workspace-page-content {
       padding: 28px 20px;
     }
     :where(.turnfin-docs) .home-heading {
@@ -6069,7 +6076,8 @@
   @media print {
     :where(.turnfin-docs) .turnfin-workspace,
     :where(.turnfin-docs) .workspace-surface,
-    :where(.turnfin-docs) .workspace-page {
+    :where(.turnfin-docs) .workspace-page,
+    :where(.turnfin-docs) .workspace-page-content {
       display: block;
       width: auto;
       height: auto;

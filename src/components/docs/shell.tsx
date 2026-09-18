@@ -315,12 +315,14 @@ export function Shell({
             </Button>
           )}
         </header>
-        <main id="main" ref={page} tabIndex={-1} className="page-content workspace-page">
-          {children}
-          <footer className="app-footer">
-            <span>Turnfin Docs</span>
-            <span className="brand-values">People. Places. Progress.</span>
-          </footer>
+        <main id="main" ref={page} tabIndex={-1} className="workspace-page">
+          <div className="page-content workspace-page-content">
+            {children}
+            <footer className="app-footer">
+              <span>Turnfin Docs</span>
+              <span className="brand-values">People. Places. Progress.</span>
+            </footer>
+          </div>
         </main>
       </div>
     </SidebarProvider>
