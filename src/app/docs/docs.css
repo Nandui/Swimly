@@ -1781,17 +1781,21 @@
   background: var(--paper);
   border: 1px solid var(--line);
   border-radius: 0 0 10px 10px;
-  overflow: hidden;
+  /* Clip the rounded corners without trapping the sticky controls in a scroller. */
+  overflow: clip;
   --reading-size: 16px;
+}
+:where(.turnfin-docs) .editor-controls {
+  position: sticky;
+  top: 0;
+  z-index: 3;
+  background: var(--surface-subtle);
 }
 :where(.turnfin-docs) .editor-toolbar {
   display: flex;
   gap: 2px;
   align-items: center;
   flex-wrap: wrap;
-  position: sticky;
-  top: 0;
-  z-index: 2;
   padding: 9px 12px;
   background: var(--surface-subtle);
   border-bottom: 1px solid var(--line);
@@ -1852,6 +1856,7 @@
 }
 :where(.turnfin-docs) .editor-table-tools {
   display: flex;
+  flex-wrap: wrap;
   gap: 3px;
   align-items: center;
   padding: 6px 12px;
@@ -2464,6 +2469,9 @@
 }
 :where(.turnfin-docs) .template-name {
   padding: 20px 24px;
+}
+:where(.turnfin-docs) .template-admin {
+  overflow: clip;
 }
 :where(.turnfin-docs) .template-admin .rich-editor {
   border-left: 0;

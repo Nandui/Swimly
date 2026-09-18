@@ -146,205 +146,207 @@ export function RichEditor({
   );
   return (
     <div className={`rich-editor ${disabled ? 'disabled' : ''}`}>
-      <div className="editor-toolbar" role="toolbar" aria-label="Text formatting">
-        <NativeSelect
-          aria-label="Text style"
-          value={state?.heading || 'p'}
-          disabled={disabled || !editor}
-          onChange={(e) =>
-            e.target.value === 'p'
-              ? editor?.chain().focus().setParagraph().run()
-              : editor
-                  ?.chain()
-                  .focus()
-                  .toggleHeading({ level: Number(e.target.value) as 2 | 3 | 4 })
-                  .run()
-          }
-        >
-          <NativeSelectOption value="p">Normal text</NativeSelectOption>
-          <NativeSelectOption value="2">Section heading</NativeSelectOption>
-          <NativeSelectOption value="3">Subheading</NativeSelectOption>
-          <NativeSelectOption value="4">Small heading</NativeSelectOption>
-        </NativeSelect>
-        <Separator orientation="vertical" className="toolbar-divider" />
-        {tool('Bold', Bold, () => editor?.chain().focus().toggleBold().run(), state?.bold)}
-        {tool('Italic', Italic, () => editor?.chain().focus().toggleItalic().run(), state?.italic)}
-        {tool(
-          'Underline',
-          Underline,
-          () => editor?.chain().focus().toggleUnderline().run(),
-          state?.underline,
-        )}
-        <Separator orientation="vertical" className="toolbar-divider" />
-        {tool('Bullet list', List, () => editor?.chain().focus().toggleBulletList().run())}
-        {tool('Numbered list', ListOrdered, () =>
-          editor?.chain().focus().toggleOrderedList().run(),
-        )}
-        {tool('Add link', LinkIcon, () => {
-          setPanel('link');
-          setUrl(editor?.getAttributes('link').href || '');
-          setError('');
-        })}
-        {tool('Insert table', Table2, () =>
-          editor?.chain().focus().insertTable({ rows: 3, cols: 3, withHeaderRow: true }).run(),
-        )}
-        {upload &&
-          tool('Insert image', ImagePlus, () => {
-            setPanel('image');
+      <div className="editor-controls">
+        <div className="editor-toolbar" role="toolbar" aria-label="Text formatting">
+          <NativeSelect
+            aria-label="Text style"
+            value={state?.heading || 'p'}
+            disabled={disabled || !editor}
+            onChange={(e) =>
+              e.target.value === 'p'
+                ? editor?.chain().focus().setParagraph().run()
+                : editor
+                    ?.chain()
+                    .focus()
+                    .toggleHeading({ level: Number(e.target.value) as 2 | 3 | 4 })
+                    .run()
+            }
+          >
+            <NativeSelectOption value="p">Normal text</NativeSelectOption>
+            <NativeSelectOption value="2">Section heading</NativeSelectOption>
+            <NativeSelectOption value="3">Subheading</NativeSelectOption>
+            <NativeSelectOption value="4">Small heading</NativeSelectOption>
+          </NativeSelect>
+          <Separator orientation="vertical" className="toolbar-divider" />
+          {tool('Bold', Bold, () => editor?.chain().focus().toggleBold().run(), state?.bold)}
+          {tool('Italic', Italic, () => editor?.chain().focus().toggleItalic().run(), state?.italic)}
+          {tool(
+            'Underline',
+            Underline,
+            () => editor?.chain().focus().toggleUnderline().run(),
+            state?.underline,
+          )}
+          <Separator orientation="vertical" className="toolbar-divider" />
+          {tool('Bullet list', List, () => editor?.chain().focus().toggleBulletList().run())}
+          {tool('Numbered list', ListOrdered, () =>
+            editor?.chain().focus().toggleOrderedList().run(),
+          )}
+          {tool('Add link', LinkIcon, () => {
+            setPanel('link');
+            setUrl(editor?.getAttributes('link').href || '');
             setError('');
           })}
-        <Separator orientation="vertical" className="toolbar-divider" />
-        {tool('Information block', Info, () =>
-          editor
-            ?.chain()
-            .focus()
-            .insertContent({
-              type: 'callout',
-              attrs: { kind: 'info' },
-              content: [
-                { type: 'paragraph', content: [{ type: 'text', text: 'Important information' }] },
-              ],
-            })
-            .run(),
-        )}
-        {tool('Warning block', AlertTriangle, () =>
-          editor
-            ?.chain()
-            .focus()
-            .insertContent({
-              type: 'callout',
-              attrs: { kind: 'warning' },
-              content: [{ type: 'paragraph', content: [{ type: 'text', text: 'Warning' }] }],
-            })
-            .run(),
-        )}
-        <span className="toolbar-spacer" />
-        {tool('Undo', Undo2, () => editor?.chain().focus().undo().run())}
-        {tool('Redo', Redo2, () => editor?.chain().focus().redo().run())}
-      </div>
-      {state?.table && (
-        <div className="editor-table-tools">
-          {tool('Add table row', Rows3, () => editor?.chain().focus().addRowAfter().run())}
-          {tool('Add table column', Columns3, () => editor?.chain().focus().addColumnAfter().run())}
-          <Button
-            variant="ghost"
-            type="button"
-            className="button ghost compact"
-            onClick={() => editor?.chain().focus().deleteRow().run()}
-            disabled={disabled}
-          >
-            Remove row
-          </Button>
-          <Button
-            variant="ghost"
-            type="button"
-            className="button ghost compact"
-            onClick={() => editor?.chain().focus().deleteColumn().run()}
-            disabled={disabled}
-          >
-            Remove column
-          </Button>
-          {tool('Delete table', Trash2, () => editor?.chain().focus().deleteTable().run())}
-        </div>
-      )}
-      {panel && (
-        <div className="editor-insert-panel">
-          {panel === 'link' ? (
-            <Label>
-              Link URL
-              <Input
-                type="url"
-                value={url}
-                onChange={(e) => setUrl(e.target.value)}
-                placeholder="https://example.com"
-              />
-            </Label>
-          ) : (
-            <>
-              <Label>
-                Image file
-                <Input
-                  type="file"
-                  accept="image/png,image/jpeg,image/webp"
-                  onChange={(e) => setImage(e.target.files?.[0] || null)}
-                />
-              </Label>
-              <Label>
-                Alternative text
-                <Input
-                  value={alt}
-                  onChange={(e) => setAlt(e.target.value)}
-                  placeholder="Describe the image for someone who cannot see it"
-                />
-              </Label>
-            </>
+          {tool('Insert table', Table2, () =>
+            editor?.chain().focus().insertTable({ rows: 3, cols: 3, withHeaderRow: true }).run(),
           )}
-          <Message error={error} />
-          <div className="form-actions">
+          {upload &&
+            tool('Insert image', ImagePlus, () => {
+              setPanel('image');
+              setError('');
+            })}
+          <Separator orientation="vertical" className="toolbar-divider" />
+          {tool('Information block', Info, () =>
+            editor
+              ?.chain()
+              .focus()
+              .insertContent({
+                type: 'callout',
+                attrs: { kind: 'info' },
+                content: [
+                  { type: 'paragraph', content: [{ type: 'text', text: 'Important information' }] },
+                ],
+              })
+              .run(),
+          )}
+          {tool('Warning block', AlertTriangle, () =>
+            editor
+              ?.chain()
+              .focus()
+              .insertContent({
+                type: 'callout',
+                attrs: { kind: 'warning' },
+                content: [{ type: 'paragraph', content: [{ type: 'text', text: 'Warning' }] }],
+              })
+              .run(),
+          )}
+          <span className="toolbar-spacer" />
+          {tool('Undo', Undo2, () => editor?.chain().focus().undo().run())}
+          {tool('Redo', Redo2, () => editor?.chain().focus().redo().run())}
+        </div>
+        {state?.table && (
+          <div className="editor-table-tools">
+            {tool('Add table row', Rows3, () => editor?.chain().focus().addRowAfter().run())}
+            {tool('Add table column', Columns3, () => editor?.chain().focus().addColumnAfter().run())}
             <Button
-              variant="outline"
-              className="button secondary compact"
+              variant="ghost"
               type="button"
-              onClick={() => setPanel(null)}
+              className="button ghost compact"
+              onClick={() => editor?.chain().focus().deleteRow().run()}
+              disabled={disabled}
             >
-              Cancel
+              Remove row
             </Button>
-            {panel === 'link' && (
+            <Button
+              variant="ghost"
+              type="button"
+              className="button ghost compact"
+              onClick={() => editor?.chain().focus().deleteColumn().run()}
+              disabled={disabled}
+            >
+              Remove column
+            </Button>
+            {tool('Delete table', Trash2, () => editor?.chain().focus().deleteTable().run())}
+          </div>
+        )}
+        {panel && (
+          <div className="editor-insert-panel">
+            {panel === 'link' ? (
+              <Label>
+                Link URL
+                <Input
+                  type="url"
+                  value={url}
+                  onChange={(e) => setUrl(e.target.value)}
+                  placeholder="https://example.com"
+                />
+              </Label>
+            ) : (
+              <>
+                <Label>
+                  Image file
+                  <Input
+                    type="file"
+                    accept="image/png,image/jpeg,image/webp"
+                    onChange={(e) => setImage(e.target.files?.[0] || null)}
+                  />
+                </Label>
+                <Label>
+                  Alternative text
+                  <Input
+                    value={alt}
+                    onChange={(e) => setAlt(e.target.value)}
+                    placeholder="Describe the image for someone who cannot see it"
+                  />
+                </Label>
+              </>
+            )}
+            <Message error={error} />
+            <div className="form-actions">
               <Button
                 variant="outline"
                 className="button secondary compact"
                 type="button"
-                onClick={() => {
-                  editor?.chain().focus().unsetLink().run();
-                  setPanel(null);
+                onClick={() => setPanel(null)}
+              >
+                Cancel
+              </Button>
+              {panel === 'link' && (
+                <Button
+                  variant="outline"
+                  className="button secondary compact"
+                  type="button"
+                  onClick={() => {
+                    editor?.chain().focus().unsetLink().run();
+                    setPanel(null);
+                  }}
+                >
+                  Remove link
+                </Button>
+              )}
+              <Button
+                variant="default"
+                className="button primary compact"
+                type="button"
+                disabled={busy}
+                onClick={async () => {
+                  setError('');
+                  if (panel === 'link') {
+                    if (!safeUrl(url)) {
+                      setError('Use an https, http, or email link.');
+                      return;
+                    }
+                    editor?.chain().focus().extendMarkRange('link').setLink({ href: url }).run();
+                    setPanel(null);
+                  } else {
+                    if (!image || !alt.trim()) {
+                      setError('Choose an image and add alternative text.');
+                      return;
+                    }
+                    setBusy(true);
+                    try {
+                      const file = await upload!(image);
+                      editor
+                        ?.chain()
+                        .focus()
+                        .setImage({ src: `/api/docs/files/${file.id}`, alt: alt.trim() })
+                        .run();
+                      setPanel(null);
+                      setAlt('');
+                      setImage(null);
+                    } catch (e) {
+                      setError((e as Error).message);
+                    } finally {
+                      setBusy(false);
+                    }
+                  }
                 }}
               >
-                Remove link
+                {busy ? 'Uploading…' : 'Insert'}
               </Button>
-            )}
-            <Button
-              variant="default"
-              className="button primary compact"
-              type="button"
-              disabled={busy}
-              onClick={async () => {
-                setError('');
-                if (panel === 'link') {
-                  if (!safeUrl(url)) {
-                    setError('Use an https, http, or email link.');
-                    return;
-                  }
-                  editor?.chain().focus().extendMarkRange('link').setLink({ href: url }).run();
-                  setPanel(null);
-                } else {
-                  if (!image || !alt.trim()) {
-                    setError('Choose an image and add alternative text.');
-                    return;
-                  }
-                  setBusy(true);
-                  try {
-                    const file = await upload!(image);
-                    editor
-                      ?.chain()
-                      .focus()
-                      .setImage({ src: `/api/docs/files/${file.id}`, alt: alt.trim() })
-                      .run();
-                    setPanel(null);
-                    setAlt('');
-                    setImage(null);
-                  } catch (e) {
-                    setError((e as Error).message);
-                  } finally {
-                    setBusy(false);
-                  }
-                }
-              }}
-            >
-              {busy ? 'Uploading…' : 'Insert'}
-            </Button>
+            </div>
           </div>
-        </div>
-      )}
+        )}
+      </div>
       <EditorContent editor={editor} />
     </div>
   );
