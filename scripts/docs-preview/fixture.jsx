@@ -6,6 +6,7 @@ import '@fontsource/figtree/latin-600.css';
 import '@/app/docs/docs.css';
 import '@/app/docs/integration.css';
 import '@/app/docs/brand.css';
+import '@/app/docs/editor.css';
 import '@fontsource/inter/400.css';
 import '@fontsource/inter/500.css';
 import '@fontsource/inter/600.css';

@@ -12,6 +12,7 @@ import {
 import { paragraph, matrixSchema, validateBody } from './content';
 import { csvCell } from './reporting';
 import type { DocumentContent, Snapshot, Draft } from './types';
+import { richDocumentExample } from '@/test/docs-rich-content';
 let db: Database;
 let service: DocumentService;
 before(async () => {
@@ -352,6 +353,17 @@ test('unconfigured and incomplete risk assessments cannot be submitted', async (
     false,
   );
 });
+test('rich formatting survives saving, reopening, approval and restoring a draft', async () => {
+  const f = await create();
+  const saved = await service.save('jamie', f.id, f.session, f.d.revision, { ...f.c, body: richDocumentExample });
+  assert.deepEqual((await documentView(db, 'jamie', f.id)).draft?.content.body, richDocumentExample);
+  const submission = await service.submit('jamie', f.id, f.session, saved.revision, 'sam', 'Rich formatting example');
+  const version = await service.review('sam', f.id, submission, 'approved', '');
+  assert.deepEqual((await documentView(db, 'riley', f.id)).selected?.content.body, richDocumentExample);
+  await service.startDraft('jamie', f.id, version!);
+  assert.deepEqual((await documentView(db, 'jamie', f.id)).draft?.content.body, richDocumentExample);
+});
+
 test('restore creates a draft without replacing the publication and requires reapproval', async () => {
   const f = await publish();
   await service.startDraft('jamie', f.id, f.version);

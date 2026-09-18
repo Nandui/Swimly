@@ -1,6 +1,7 @@
 import { z } from 'zod';
 import type { JSONContent } from '@tiptap/react';
 import { documentTypes, type DocumentContent, type RiskMatrix } from './types';
+import { headingLevels, safeAlignment, safeColour, safeFontSize } from './formatting';
 
 const date = z
   .string()
@@ -96,8 +97,11 @@ const allowedNodes = new Set([
   'tableCell',
   'image',
   'callout',
+  'codeBlock',
+  'taskList',
+  'taskItem',
 ]);
-const allowedMarks = new Set(['bold', 'italic', 'underline', 'strike', 'link']);
+const allowedMarks = new Set(['bold', 'italic', 'underline', 'strike', 'link', 'code', 'subscript', 'superscript', 'highlight', 'textStyle']);
 export const safeUrl = (url: string) =>
   /^(https?:\/\/|mailto:|\/api\/docs\/files\/)/i.test(url) && !/[\u0000-\u001f]/.test(url);
 export function validateBody(body: JSONContent): void {
@@ -107,20 +111,29 @@ export function validateBody(body: JSONContent): void {
       throw new Error('This document contains unsupported or overly complex content.');
     if (node.text != null && typeof node.text !== 'string')
       throw new Error('Invalid document text.');
-    for (const mark of node.marks || [])
+    for (const mark of node.marks || []) {
       if (
         !allowedMarks.has(mark.type) ||
         (mark.type === 'link' && !safeUrl(String(mark.attrs?.href || '')))
       )
         throw new Error('Use a valid http, https, or email link.');
+      if ((mark.type === 'textStyle' || mark.type === 'highlight') && mark.attrs?.color != null && !safeColour(mark.attrs.color))
+        throw new Error('Use a valid text or highlight colour.');
+      if (mark.type === 'textStyle' && mark.attrs?.fontSize != null && !safeFontSize(mark.attrs.fontSize))
+        throw new Error('Use a font size between 8 and 96 pixels.');
+    }
+    if (node.attrs?.textAlign != null && !safeAlignment(node.attrs.textAlign))
+      throw new Error('Use left, centre, right or justified alignment.');
+    if (node.type === 'taskItem' && typeof node.attrs?.checked !== 'boolean')
+      throw new Error('Checklist items need a checked or unchecked state.');
     if (
       node.type === 'image' &&
       (!/^\/api\/docs\/files\/[a-zA-Z0-9-]+$/.test(node.attrs?.src || '') ||
         !String(node.attrs?.alt || '').trim())
     )
       throw new Error('Images need an uploaded file and alternative text.');
-    if (node.type === 'heading' && ![2, 3, 4].includes(node.attrs?.level))
-      throw new Error('Use a section or subsection heading.');
+    if (node.type === 'heading' && !headingLevels.includes(node.attrs?.level))
+      throw new Error('Use a heading from H1 to H6.');
     (node.content || []).forEach((child) => walk(child, depth + 1));
   };
   if (body?.type !== 'doc') throw new Error('Invalid document body.');

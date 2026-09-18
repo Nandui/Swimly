@@ -45,6 +45,13 @@ fails closed rather than using cached grants.
   structural templates. New templates contain headings, not operational guidance.
 - Author rich text, tables, callouts and accessible uploaded images. Autosave is
   protected by a per-document editing lease, browser-session token and revision.
+  The sticky toolbar supports H1–H6, font sizes, text colour, highlighting,
+  bold/italic/underline/strikethrough, subscript/superscript, alignment, nested
+  lists and checklists, quotes, code, links, dividers and table editing (including
+  headers and merged cells). Clear formatting and undo/redo are available.
+  Formatting persists in drafts and immutable publications; reader checklists
+  display the saved state without changing the approved document. Toolbar rows
+  scroll horizontally on narrow screens without widening the page.
 - Submit to an independent approver, request changes or publish an immutable
   version. Restore an old version into a new draft without overwriting history.
 - Assign staff or teams to read each published version. A new publication creates

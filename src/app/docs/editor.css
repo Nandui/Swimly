@@ -1,0 +1,56 @@
+/* Shared authoring and published-document formatting, scoped to Docs. */
+.turnfin-docs .editor-toolbar {
+  flex-wrap: nowrap;
+  gap: 2px;
+  overflow-x: auto;
+  scrollbar-width: thin;
+  padding: 8px;
+}
+.turnfin-docs .editor-toolbar > * { flex-shrink: 0; }
+.turnfin-docs .editor-toolbar .toolbar-button { width: 44px; padding: 0; color: var(--ink); }
+.turnfin-docs .editor-toolbar .toolbar-button.active { background: var(--accent-soft); color: var(--primary); }
+.turnfin-docs .editor-style-select { width: 164px; }
+.turnfin-docs .editor-size-select { width: 112px; }
+.turnfin-docs .editor-toolbar select { width: 100%; padding: 8px 32px 8px 10px; font-size: 13px; }
+.turnfin-docs .editor-toolbar-divider { width: 1px; height: 24px; background: var(--line); margin: 0 4px; }
+.turnfin-docs .editor-menu-trigger { gap: 6px; padding: 8px 10px; color: var(--ink); }
+.turnfin-docs .editor-tool-menu { width: 248px; max-height: min(480px, var(--radix-popover-content-available-height)); overflow-y: auto; padding: 8px; }
+.turnfin-docs .editor-menu-item { width: 100%; justify-content: flex-start; white-space: normal; text-align: left; }
+.turnfin-docs .editor-menu-item[aria-pressed='true'] { background: var(--accent-soft); color: var(--primary); }
+.turnfin-docs .editor-menu-label { padding: 8px; font-size: 13px; font-weight: 600; }
+.turnfin-docs .editor-colour-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 6px; margin: 4px 0 8px; }
+.turnfin-docs .editor-colour-grid button { padding: 6px; }
+.turnfin-docs .editor-colour-grid span { width: 24px; height: 24px; border-radius: 4px; border: 1px solid var(--line); }
+.turnfin-docs .editor-colour-grid button[aria-pressed='true'] { outline: 2px solid var(--primary); outline-offset: -2px; }
+.turnfin-docs .editor-status-bar { display: flex; justify-content: space-between; flex-wrap: wrap; gap: 8px; border-top: 1px solid var(--line); padding: 10px 16px; font-size: 12px; color: var(--muted); }
+.turnfin-docs .editor-insert-panel { max-height: 50vh; overflow-y: auto; }
+.turnfin-docs .document-prose :is(h1, h2, h3, h4, h5, h6) { font-weight: 600; line-height: 1.4; margin: 1.4em 0 0.65em; color: inherit; scroll-margin-top: 140px; }
+.turnfin-docs .document-prose h1 { font-size: 1.85em; }
+.turnfin-docs .document-prose h2 { font-size: 1.5em; }
+.turnfin-docs .document-prose h3 { font-size: 1.25em; }
+.turnfin-docs .document-prose h4 { font-size: 1.1em; }
+.turnfin-docs .document-prose h5 { font-size: 1em; }
+.turnfin-docs .document-prose h6 { font-size: 0.875em; }
+.turnfin-docs .document-prose > :first-child { margin-top: 0; }
+.turnfin-docs .document-prose strong { color: inherit; }
+.turnfin-docs .document-prose mark { padding: 0.05em 0.1em; border-radius: 2px; color: #172033 !important; background: #fef08a; box-decoration-break: clone; }
+.turnfin-docs .document-prose mark [data-docs-colour] { color: inherit !important; }
+.turnfin-docs .document-prose code { font-family: ui-monospace, monospace; border-radius: 4px; background: var(--surface-subtle); color: inherit; padding: 0.15em 0.3em; font-size: 0.9em; }
+.turnfin-docs .document-prose pre { white-space: pre-wrap; overflow-wrap: anywhere; background: var(--surface-subtle); border: 1px solid var(--line); border-radius: 8px; padding: 16px; margin: 1em 0; }
+.turnfin-docs .document-prose pre code { padding: 0; background: none; }
+.turnfin-docs .document-prose [data-type='taskList'] { list-style: none; padding-left: 0; }
+.turnfin-docs .document-prose [data-type='taskItem'] { display: flex; align-items: flex-start; gap: 8px; padding: 0; }
+.turnfin-docs .document-prose [data-type='taskItem'] > div { flex: 1; min-width: 0; }
+.turnfin-docs .document-prose [data-type='taskItem'] > label { display: flex; flex: 0 0 44px; align-items: center; justify-content: center; width: 44px; height: 44px; }
+.turnfin-docs .document-prose [data-type='taskItem'] input { width: 18px; height: 18px; accent-color: var(--primary); cursor: pointer; }
+.turnfin-docs .document-task-state { display: inline-flex; align-items: center; justify-content: center; min-width: 28px; font-size: 1.2em; }
+.turnfin-docs .editor-prose [data-type='taskItem'] > div > p { min-height: 44px; display: flow-root; padding-top: 8px; margin: 0; }
+.turnfin-docs .document-prose [data-type='taskItem'] [data-type='taskList'] { margin-left: 12px; }
+@media (max-width: 767px) {
+  .turnfin-docs .editor-toolbar { padding: 6px; }
+  .turnfin-docs .editor-prose { padding: 18px; }
+}
+@media print {
+  .turnfin-docs .editor-controls, .turnfin-docs .editor-status-bar { display: none; }
+  .turnfin-docs .document-prose mark { print-color-adjust: exact; }
+}

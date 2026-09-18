@@ -3,6 +3,7 @@ import type { ReactNode } from 'react';
 import Image from 'next/image';
 import { AlertTriangle, Info } from 'lucide-react';
 import { safeUrl, riskBand } from '@/lib/docs/content';
+import { headingLevels, safeAlignment, safeColour, safeFontSize, readableColour } from '@/lib/docs/formatting';
 import { formatDate, type DocumentContent, type Member } from '@/lib/docs/types';
 import { Badge } from './ui';
 import { Button } from '@/components/shadcn/button';
@@ -30,6 +31,14 @@ function nodeView(node: JSONContent, key: string, topIndex?: number): ReactNode 
       if (mark.type === 'italic') result = <em key={`${key}-i${i}`}>{result}</em>;
       if (mark.type === 'underline') result = <u key={`${key}-u${i}`}>{result}</u>;
       if (mark.type === 'strike') result = <s key={`${key}-s${i}`}>{result}</s>;
+      if (mark.type === 'code') result = <code key={`${key}-c${i}`}>{result}</code>;
+      if (mark.type === 'subscript') result = <sub key={`${key}-sub${i}`}>{result}</sub>;
+      if (mark.type === 'superscript') result = <sup key={`${key}-sup${i}`}>{result}</sup>;
+      if (mark.type === 'highlight') result = <mark key={`${key}-h${i}`} style={{ backgroundColor: safeColour(mark.attrs?.color) ? mark.attrs.color : undefined }}>{result}</mark>;
+      if (mark.type === 'textStyle') result = <span key={`${key}-style${i}`} data-docs-colour={safeColour(mark.attrs?.color) ? mark.attrs.color : undefined} style={{
+        color: safeColour(mark.attrs?.color) ? readableColour(mark.attrs.color) : undefined,
+        fontSize: safeFontSize(mark.attrs?.fontSize) ? mark.attrs.fontSize : undefined,
+      }}>{result}</span>;
       if (mark.type === 'link' && safeUrl(mark.attrs?.href || ''))
         result = (
           <a key={`${key}-l${i}`} href={mark.attrs?.href} rel="noopener noreferrer">
@@ -40,24 +49,15 @@ function nodeView(node: JSONContent, key: string, topIndex?: number): ReactNode 
     return <span key={key}>{result}</span>;
   }
   const children = (node.content || []).map((child, i) => nodeView(child, `${key}-${i}`));
+  const style = { textAlign: safeAlignment(node.attrs?.textAlign) ? node.attrs.textAlign : undefined };
   switch (node.type) {
     case 'paragraph':
-      return <p key={key}>{children.length ? children : <br />}</p>;
+      return <p key={key} style={style}>{children.length ? children : <br />}</p>;
     case 'heading': {
       const id = topIndex != null ? `section-${topIndex}` : undefined;
-      return node.attrs?.level === 3 ? (
-        <h3 id={id} key={key}>
-          {children}
-        </h3>
-      ) : node.attrs?.level === 4 ? (
-        <h4 id={id} key={key}>
-          {children}
-        </h4>
-      ) : (
-        <h2 id={id} key={key}>
-          {children}
-        </h2>
-      );
+      const level = headingLevels.includes(node.attrs?.level) ? node.attrs?.level : 2;
+      const Heading = `h${level}` as 'h1' | 'h2' | 'h3' | 'h4' | 'h5' | 'h6';
+      return <Heading id={id} key={key} style={style}>{children}</Heading>;
     }
     case 'bulletList':
       return <ul key={key}>{children}</ul>;
@@ -69,6 +69,15 @@ function nodeView(node: JSONContent, key: string, topIndex?: number): ReactNode 
       );
     case 'listItem':
       return <li key={key}>{children}</li>;
+    case 'taskList':
+      return <ul key={key} data-type="taskList">{children}</ul>;
+    case 'taskItem':
+      return <li key={key} data-type="taskItem" data-checked={node.attrs?.checked === true}>
+        <span role="img" aria-label={node.attrs?.checked === true ? 'Completed' : 'Not completed'} className="document-task-state">{node.attrs?.checked === true ? '☑' : '☐'}</span>
+        <div>{children}</div>
+      </li>;
+    case 'codeBlock':
+      return <pre key={key}><code>{children}</code></pre>;
     case 'blockquote':
       return <blockquote key={key}>{children}</blockquote>;
     case 'callout':
