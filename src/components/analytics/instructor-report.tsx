@@ -1,5 +1,6 @@
 "use client";
 
+import { EmptyState } from "@/components/ui-kit/empty-state";
 import Link from "next/link";
 import { useState } from "react";
 import { Button } from "@/components/shadcn/button";
@@ -52,7 +53,7 @@ export function InstructorReport({ data }: { data: InstructorAnalyticsData }) {
             <TableCell className="text-right tabular-nums"><span className="font-semibold">{person.missing + person.partial}</span>{person.partial ? <span className="block text-xs text-ui-muted-foreground">{person.partial} partial</span> : null}</TableCell>
           </TableRow>)}</TableBody>
         </Table>
-        {groups.length === 0 ? <p role="status" className="p-6 text-sm text-ui-muted-foreground">{search ? "No instructors match your search." : "No weekly classes are scheduled at this site this week."}</p> : null}
+        {groups.length === 0 ? <EmptyState role="status" compact title={search ? "No instructors match your search." : "No weekly classes are scheduled at this site this week."} /> : null}
       </div>
     </section>
     <section className="min-w-0 space-y-4" aria-labelledby="class-detail">
@@ -84,7 +85,7 @@ export function InstructorReport({ data }: { data: InstructorAnalyticsData }) {
             </TableRow>;
           })}</TableBody>
         </Table>
-        {classes.length === 0 ? <p className="p-6 text-sm text-ui-muted-foreground">No classes match this selection.</p> : null}
+        {classes.length === 0 ? <EmptyState compact title="No classes match this selection." /> : null}
       </div>
     </section>
     <footer className="space-y-2 text-xs leading-relaxed text-ui-muted-foreground">

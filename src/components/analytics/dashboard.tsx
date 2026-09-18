@@ -1,3 +1,4 @@
+import { EmptyState } from "@/components/ui-kit/empty-state";
 import Link from "next/link";
 import { ArrowDownLeft, ArrowUpRight, CalendarX2, Users } from "lucide-react";
 import { Card, CardContent, CardDescription, CardHeader } from "@/components/shadcn/card";
@@ -38,7 +39,7 @@ export function AnalyticsDashboard({ data }: { data: AnalyticsData }) {
       <Card className="min-w-0 sm:col-span-2 xl:col-span-8 xl:row-span-2">
         <CardHeader><h2 className="text-lg font-semibold tracking-tight">Enrolled by level</h2><CardDescription>Current enrolled places / total capacity across each level’s weekly classes. Each bar shows how full that level is.</CardDescription></CardHeader>
         <CardContent className="space-y-7">
-          {data.swimmers === 0 ? <p className="rounded-ui-lg bg-ui-muted p-4 text-sm text-ui-muted-foreground">No swimmers are currently enrolled in this view.</p> : null}
+          {data.swimmers === 0 ? <EmptyState compact title="No swimmers are currently enrolled in this view." /> : null}
           {data.groups.length === 0 ? <p className="text-sm text-ui-muted-foreground">Levels will appear here once the curriculum is set up.</p> : data.groups.map(group => <section key={group.id} aria-labelledby={`programme-${group.id}`} className="space-y-4">
             <h3 id={`programme-${group.id}`} className="text-sm font-semibold">{group.name}</h3>
             <dl className="space-y-4">{group.levels.map(level => <div key={level.id} className="grid min-w-0 grid-cols-[minmax(0,1fr)_auto] gap-x-4 gap-y-2">

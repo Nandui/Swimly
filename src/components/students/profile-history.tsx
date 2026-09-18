@@ -1,5 +1,6 @@
 "use client";
 
+import { EmptyState } from "@/components/ui-kit/empty-state";
 import { useEffect, useRef, useState } from "react";
 import { ArrowRightLeft, CalendarCheck, ClipboardCheck, History, LoaderCircle, Trophy, UserRound } from "lucide-react";
 import { Button } from "@/components/shadcn/button";
@@ -81,7 +82,7 @@ function HistoryFeedPage({ studentId, query, initial, compact, footer }: { stude
   const events = expanded ? page?.events ?? [] : page?.events.slice(0, 3) ?? [];
   return <div aria-busy={pending} className="min-w-0">
     {page && !page.canAudit ? <p className="mb-3 text-sm text-ui-muted-foreground">Showing saved records. Viewing changes requires activity access.</p> : null}
-    {events.length ? <HistoryRows events={events} studentId={studentId} showCompetencyLinks={!query.competencyId} brief={!expanded} /> : !pending && !error ? <p className="py-5 text-sm text-ui-muted-foreground">No recorded activity matches this view.</p> : null}
+    {events.length ? <HistoryRows events={events} studentId={studentId} showCompetencyLinks={!query.competencyId} brief={!expanded} /> : !pending && !error ? <EmptyState compact title="No recorded activity matches this view." /> : null}
     {pending ? <p role="status" className="flex items-center gap-2 py-3 text-sm"><LoaderCircle className="size-4 animate-spin" aria-hidden="true" />Loading history…</p> : null}
     {error ? <Alert variant="destructive"><AlertDescription>{error}<Button variant="outline" disabled={pending} onClick={() => more(!page)}>Try again</Button></AlertDescription></Alert> : null}
     <div className="flex flex-wrap items-center gap-2">{!expanded && page?.events.length ? <Button variant="ghost" onClick={() => setExpanded(true)}>Show all class activity</Button> : expanded && page?.next ? <Button variant="outline" disabled={pending} onClick={() => more()}>Load earlier activity</Button> : null}{footer}</div>

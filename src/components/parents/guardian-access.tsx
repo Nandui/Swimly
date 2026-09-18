@@ -4,6 +4,7 @@ import Link from "next/link";
 import { Button } from "@/components/shadcn/button";
 import { Badge } from "@/components/shadcn/badge";
 import { Input } from "@/components/ui/input";
+import { EmptyState } from "@/components/ui-kit/empty-state";
 import { PARENT_ACCESS_META, parentDateTime, saveParentAdmin, type GuardianAccess } from "@/lib/parent/admin-client";
 import { ParentFormDialog, ParentLoadState, ParentReason } from "./parent-fields";
 import { useParentResource } from "./use-parent-resource";
@@ -39,10 +40,7 @@ export function GuardianAccessPanel({ studentId, swimmerName }: { studentId: str
             <AccessForm path={path} swimmerName={swimmerName} entry={item} onSaved={saved} />
           </li>;
         })}
-      </ul> : <div className="space-y-2 rounded-ui-lg border border-dashed border-ui-border p-6">
-        <h3 className="font-medium">No parent access approved</h3>
-        <p className="text-sm text-ui-muted-foreground">Contact details alone do not grant access. Approve each guardian’s email after checking it belongs to the right person.</p>
-      </div>}
+      </ul> : <EmptyState compact title="No parent access approved" hint="Contact details alone do not grant access. Approve each guardian’s email after checking it belongs to the right person." />}
       <div className="max-w-prose space-y-2 text-sm text-ui-muted-foreground">
         <p>Parents see released progress and bookings. Competency changes appear the next day at midnight in Ireland. Internal and medical notes stay private.</p>
         <p>Approval does not send an email. The guardian signs in to LeisureWorld Aquatics with the approved address.</p>

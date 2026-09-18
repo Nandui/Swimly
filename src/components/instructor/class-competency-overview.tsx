@@ -1,3 +1,4 @@
+import { EmptyState } from "@/components/ui-kit/empty-state";
 import { Card } from "@/components/shadcn/card";
 import type { CompetencyStatus } from "@/generated/prisma/client";
 
@@ -15,8 +16,8 @@ export function ClassCompetencyOverview({ competencies, swimmers }: {
           Save marks in Competencies to update these totals.
         </p>
       </div>
-      {!swimmers.length ? <p className="text-ui-muted-foreground">No swimmers are currently enrolled in this class.</p>
-        : !competencies.length ? <p className="text-ui-muted-foreground">This level has no competencies yet.</p> : (
+      {!swimmers.length ? <EmptyState compact title="No swimmers are currently enrolled in this class." />
+        : !competencies.length ? <EmptyState compact title="This level has no competencies yet." /> : (
           <ul aria-label="Competency totals" className="grid grid-cols-1 gap-3 min-[360px]:grid-cols-2 lg:grid-cols-3">
             {competencies.map(competency => {
               const achieved = swimmers.filter(swimmer => swimmer.marks[competency.id] === "ACHIEVED").length;

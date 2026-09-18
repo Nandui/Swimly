@@ -1,11 +1,14 @@
 "use client";
 
 import { useId, useState } from "react";
-import { MapPin, Search } from "lucide-react";
+import { ChevronDown, MapPin, Search } from "lucide-react";
 import { Button } from "@/components/shadcn/button";
 import { Checkbox } from "@/components/shadcn/checkbox";
 import { Input } from "@/components/shadcn/input";
 import { Label } from "@/components/shadcn/label";
+import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/shadcn/collapsible";
+import { Badge } from "@/components/shadcn/badge";
+import { EmptyState } from "@/components/ui-kit/empty-state";
 import { RadioGroup, RadioGroupItem } from "@/components/shadcn/radio-group";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/shadcn/select";
 import { Textarea } from "@/components/ui/textarea";
@@ -130,11 +133,9 @@ function ClassPicker({ courses, name, selectedId, onSelect, currentEnrolment }: 
             </span>
           </Label>;
         })}
-      </RadioGroup> : <div className="space-y-2 px-4 py-8 text-center">
-        <p className="font-medium">{courses.length ? "No classes match these filters" : "No classes available"}</p>
-        <p className="text-sm text-ui-muted-foreground">{courses.length ? "Try another site, level or time, or show full classes." : "There are no other active classes to choose from."}</p>
-        {courses.length && hasFilters ? <Button type="button" variant="outline" className="min-h-11" onClick={() => setFilters({ ...ALL_CLASSES, availableOnly: false })}>Clear filters</Button> : null}
-      </div>}
+      </RadioGroup> : <EmptyState compact title={courses.length ? "No classes match these filters" : "No classes available"}
+        hint={courses.length ? "Try another site, level or time, or show full classes." : "There are no other active classes to choose from."}
+        action={courses.length && hasFilters ? <Button type="button" variant="outline" className="min-h-11" onClick={() => setFilters({ ...ALL_CLASSES, availableOnly: false })}>Clear filters</Button> : undefined} />}
     </div>
     {/* Keep the selected ID in FormData even when filters hide its radio row. */}
     <input type="hidden" name={name} value={selectedId} />
@@ -148,6 +149,7 @@ export function ClassEnrolmentDialog({ trigger, courses, currentEnrolment, submi
   const id = useId();
   const [selectedId, setSelectedId] = useState("");
   const [allowWaitlist, setAllowWaitlist] = useState(false);
+  const [placementOpen, setPlacementOpen] = useState(false);
   const selected = courses.find(course => course.id === selectedId);
   const full = !!selected && placesLeft(selected._count.enrolments, selected.capacity) === 0;
   const moving = !!currentEnrolment;
@@ -157,20 +159,26 @@ export function ClassEnrolmentDialog({ trigger, courses, currentEnrolment, submi
     description={moving ? "Find a suitable class, then review the move." : "Find a class at either site. Existing places are reviewed before changes."}
     submitLabel={moving ? "Review move" : "Review enrolment"} success={moving ? "Swimmer moved" : "Enrolment saved"}
     submit={submit} submitDisabled={!selected || (full && (moving || !allowWaitlist))}
-    onOpenChange={() => { setSelectedId(""); setAllowWaitlist(false); }}
+    onOpenChange={() => { setSelectedId(""); setAllowWaitlist(false); setPlacementOpen(false); }}
     footer={selected ? <div className="space-y-1" aria-live="polite">
       <p className="text-xs text-ui-muted-foreground">Selected class</p>
       <p className="font-semibold">{courseName(selected)} · {DAY_META[selected.dayOfWeek].label} {formatTimeRange(selected)}</p>
       <p className="flex flex-wrap items-center gap-x-2 gap-y-1"><MapPin className="size-4 shrink-0" aria-hidden="true" />{selected.club.name}
-        {differentSite ? <span className="rounded-ui-sm border border-ui-brand-border bg-ui-brand-soft px-2 py-0.5 text-xs text-ui-brand-ink">Different site</span> : null}</p>
+        {differentSite ? <Badge variant="outline">Different site</Badge> : null}</p>
       {differentSite ? <p className="text-xs text-ui-muted-foreground">Moving from {currentEnrolment.course.club.name}.</p> : null}
       {full ? <p className="text-xs text-ui-muted-foreground">This class is full. Enrolment will join its waitlist.</p> : null}
     </div> : <p className="text-ui-muted-foreground">Select a class to continue.</p>}>
-    <ClassPicker courses={courses} name={moving ? "toCourseId" : "courseId"} selectedId={selectedId} onSelect={value => { setSelectedId(value); setAllowWaitlist(false); }} currentEnrolment={currentEnrolment} />
-    {selected ? <details open={selected.level.id !== currentEnrolment?.course.level.id} className="text-sm">
-      <summary className="min-h-11 cursor-pointer py-3 font-medium">Placement reason, if needed</summary>
-      <Textarea name="placementReason" label="Placement reason" description="Needed only if the swimmer has not earned this level." rows={2} maxLength={300} />
-    </details> : null}
+    <ClassPicker courses={courses} name={moving ? "toCourseId" : "courseId"} selectedId={selectedId} onSelect={value => {
+      setSelectedId(value); setAllowWaitlist(false);
+      setPlacementOpen(courses.find(course => course.id === value)?.level.id !== currentEnrolment?.course.level.id);
+    }} currentEnrolment={currentEnrolment} />
+    {selected ? <Collapsible open={placementOpen} onOpenChange={setPlacementOpen} className="text-sm">
+      <CollapsibleTrigger asChild><Button type="button" variant="ghost" className="group h-auto min-h-11 w-full justify-between px-3 py-3 text-left whitespace-normal">Placement reason, if needed<ChevronDown aria-hidden="true" className="size-4 group-data-[state=open]:rotate-180" /></Button></CollapsibleTrigger>
+      {/* Keep the field mounted so collapsed reasons still submit and survive toggling. */}
+      <CollapsibleContent forceMount className="data-[state=closed]:hidden">
+        <Textarea name="placementReason" label="Placement reason" description="Needed only if the swimmer has not earned this level." rows={2} maxLength={300} />
+      </CollapsibleContent>
+    </Collapsible> : null}
     {!moving && selected ? <Label htmlFor={`${id}-waitlist`} className="min-h-11 cursor-pointer leading-normal">
       <Checkbox name="allowWaitlist" id={`${id}-waitlist`} checked={allowWaitlist} onCheckedChange={value => setAllowWaitlist(value === true)} />
       Join the waitlist if full

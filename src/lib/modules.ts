@@ -33,9 +33,10 @@ export const STAFF_MODULES: readonly StaffModule[] = [
   {
     id: "docs",
     name: "Docs",
-    description: "A home for staff documents and resources.",
+    description: "Read, write and approve staff documents. Track required reading.",
     icon: Files,
-    status: "planned",
+    status: "available",
+    href: "/docs",
   },
   {
     id: "bookings",

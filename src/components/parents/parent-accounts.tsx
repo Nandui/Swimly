@@ -6,6 +6,7 @@ import { Button } from "@/components/shadcn/button";
 import { Input } from "@/components/ui/input";
 import { LoadingButton } from "@/components/ui/loading-button";
 import { Notice } from "@/components/ui-kit/notice";
+import { Empty, EmptyHeader, EmptyTitle, EmptyDescription } from "@/components/shadcn/empty";
 import { parentAdminRequest, parentDateTime, PARENT_ACCOUNT_META, saveParentAdmin, type ManagedParentAccount } from "@/lib/parent/admin-client";
 import { ParentFormDialog, ParentReason } from "./parent-fields";
 
@@ -41,11 +42,11 @@ export function ParentAccounts() {
     </form>
     <div ref={resultRef} tabIndex={-1} className="space-y-4 rounded-ui-lg focus-visible:outline-2 focus-visible:outline-ui-ring" aria-live="polite">
       {error ? <Notice tone="error" title={error} /> : null}
-      {result && !account ? <div className="space-y-2 rounded-ui-lg border border-dashed border-ui-border p-6">
-        <h2 className="text-xl font-semibold">No account found</h2>
+      {result && !account ? <Empty><EmptyHeader>
+        <EmptyTitle><h2>No account found</h2></EmptyTitle>
         <p className="break-all text-sm font-medium">{result.email}</p>
-        <p className="text-sm text-ui-muted-foreground">Check the address. A parent account is created when they first verify a sign-in code. You can approve their email on a swimmer’s profile before they sign in.</p>
-      </div> : null}
+        <EmptyDescription>Check the address. A parent account is created when they first verify a sign-in code. You can approve their email on a swimmer’s profile before they sign in.</EmptyDescription>
+      </EmptyHeader></Empty> : null}
       {account ? <section className="space-y-4 border-y border-ui-border py-6" aria-labelledby="parent-account-heading">
         <div className="flex flex-wrap items-start justify-between gap-4">
           <div className="min-w-0 space-y-2"><h2 id="parent-account-heading" className="break-words text-xl font-semibold">{account.name || "Parent account"}</h2><p className="break-all text-sm">{account.email}</p></div>

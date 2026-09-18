@@ -18,12 +18,14 @@ function PopoverTrigger({
 
 function PopoverContent({
   className,
+  portalClassName,
   align = "center",
   sideOffset = 4,
   ...props
-}: React.ComponentProps<typeof PopoverPrimitive.Content>) {
+}: React.ComponentProps<typeof PopoverPrimitive.Content> & { portalClassName?: string }) {
   return (
     <PopoverPrimitive.Portal>
+      <div className={portalClassName} style={{ display: "contents" }}>
       <PopoverPrimitive.Content
         data-slot="popover-content"
         align={align}
@@ -34,6 +36,7 @@ function PopoverContent({
         )}
         {...props}
       />
+    </div>
     </PopoverPrimitive.Portal>
   )
 }

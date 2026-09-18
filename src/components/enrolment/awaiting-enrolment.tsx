@@ -2,6 +2,7 @@ import Link from "next/link";
 import { Search } from "lucide-react";
 import { Button } from "@/components/shadcn/button";
 import { Input } from "@/components/shadcn/input";
+import { Label } from "@/components/shadcn/label";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/shadcn/table";
 import { EmptyState } from "@/components/ui-kit/empty-state";
 import { PageHeader } from "@/components/ui-kit/page-header";
@@ -25,7 +26,7 @@ export function AwaitingEnrolment({ result, enrol, profiles, assessments, course
     <PageHeader title="Awaiting enrolment" description="Assessed swimmers awaiting a place and class waitlists at this site. Follow up with families and arrange their next class." />
     <form action="/awaiting-enrolment" className="flex flex-wrap items-end gap-3" role="search">
       <div className="min-w-0 flex-1 space-y-2 sm:max-w-md">
-        <label htmlFor="awaiting-swimmer-search" className="text-sm font-medium">Find a swimmer</label>
+        <Label htmlFor="awaiting-swimmer-search">Find a swimmer</Label>
         <div className="relative"><Search aria-hidden="true" className="pointer-events-none absolute top-3.5 left-3 size-4 text-ui-muted-foreground" />
           <Input id="awaiting-swimmer-search" type="search" name="q" defaultValue={q} key={q} placeholder="Name or member number" maxLength={100} className="min-h-11 pl-9" />
         </div>

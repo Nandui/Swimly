@@ -6,6 +6,10 @@ import { useSearchParams } from "next/navigation";
 import { ArrowRight, BookOpen, ChevronDown, Search, X } from "lucide-react";
 import { Button } from "@/components/shadcn/button";
 import { Input } from "@/components/shadcn/input";
+import { Label } from "@/components/shadcn/label";
+import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/shadcn/collapsible";
+import { EmptyState } from "@/components/ui-kit/empty-state";
+import { Item } from "@/components/shadcn/item";
 import { HELP_CATEGORIES, type HelpScope } from "@/lib/help/types";
 import type { HelpSummary } from "@/lib/help/catalogue";
 import { helpFilters, helpHref, searchHelp, type HelpFilters } from "@/lib/help/search";
@@ -49,7 +53,7 @@ export function HelpBrowser({ articles, scope }: { articles: HelpSummary[]; scop
     <section aria-labelledby="help-title" className="space-y-4">
       <div className="space-y-2"><h1 id="help-title" className="text-2xl font-semibold">{scope === "instructor" ? "Help for your teaching day" : "What would you like to do?"}</h1><p className="max-w-2xl leading-relaxed text-ui-muted-foreground">{scope === "instructor" ? "Practical guides for starting a class, taking attendance and recording progress." : "Find a quick answer or follow a guide, from adding a swimmer to running the day’s classes."}</p></div>
       <form role="search" aria-label="Search the help centre" onSubmit={event => { event.preventDefault(); input.current?.focus(); }} className="max-w-2xl">
-        <label htmlFor="help-search" className="sr-only">Search help guides</label>
+        <Label htmlFor="help-search" className="sr-only">Search help guides</Label>
         <div className="relative"><Search aria-hidden="true" className="pointer-events-none absolute left-4 top-4 size-5 text-ui-muted-foreground" /><Input ref={input} id="help-search" name="q" type="search" autoComplete="off" maxLength={160} value={filters.q} onChange={event => change({ q: event.target.value }, true)} placeholder={scope === "instructor" ? "Try ‘attendance’" : "Try ‘move a swimmer’"} className="h-13 pl-12 pr-12 [&::-webkit-search-cancel-button]:appearance-none" />
           {filters.q ? <Button type="button" variant="ghost" size="icon" className="absolute right-1 top-1 size-11" aria-label="Clear search" onClick={() => { change({ q: "" }, true); input.current?.focus(); }}><X aria-hidden="true" /></Button> : null}
         </div>
@@ -59,7 +63,10 @@ export function HelpBrowser({ articles, scope }: { articles: HelpSummary[]; scop
     <div className="flex flex-col gap-6 md:flex-row lg:gap-10">
       <aside className="shrink-0 md:w-56 print:hidden">
         <nav aria-label="Help topics" className="hidden space-y-1 md:block"><h2 className="mb-3 px-4 text-sm font-semibold">Browse by topic</h2>{topicButtons}</nav>
-        <details className="group rounded-ui-lg border border-ui-border md:hidden"><summary className="flex min-h-11 cursor-pointer items-center justify-between gap-3 rounded-ui-lg px-4 py-3 font-medium outline-none focus-visible:ring-2 focus-visible:ring-ui-ring"><span>Browse by topic · {selectedCategory?.title ?? "All topics"}</span><ChevronDown aria-hidden="true" className="size-4 shrink-0 group-open:rotate-180" /></summary><nav aria-label="Help topics" className="space-y-1 border-t border-ui-border p-2">{topicButtons}</nav></details>
+        <Collapsible className="rounded-ui-lg border border-ui-border md:hidden">
+          <CollapsibleTrigger asChild><Button variant="ghost" className="group h-auto min-h-11 w-full justify-between gap-3 rounded-ui-lg px-4 py-3 text-left whitespace-normal"><span>Browse by topic · {selectedCategory?.title ?? "All topics"}</span><ChevronDown aria-hidden="true" className="size-4 shrink-0 group-data-[state=open]:rotate-180" /></Button></CollapsibleTrigger>
+          <CollapsibleContent><nav aria-label="Help topics" className="space-y-1 border-t border-ui-border p-2">{topicButtons}</nav></CollapsibleContent>
+        </Collapsible>
       </aside>
       <div className="min-w-0 flex-1 space-y-8">
         {!searching && filters.topic === "all" ? <section aria-labelledby="common-tasks" className="rounded-ui-lg bg-ui-muted/50 p-4 lg:p-6">
@@ -70,12 +77,14 @@ export function HelpBrowser({ articles, scope }: { articles: HelpSummary[]; scop
           <div className="flex flex-wrap items-baseline justify-between gap-2"><h2 id="results-heading" className="text-xl font-semibold">{searching ? "Search results" : selectedCategory?.title ?? "All guides"}</h2><p role="status" aria-live="polite" aria-atomic="true" className="text-xs text-ui-muted-foreground">{results.length} {results.length === 1 ? "guide" : "guides"}{searching ? " found" : ""}</p></div>
           {selectedCategory ? <p className="text-ui-muted-foreground">{selectedCategory.description}</p> : null}
           {results.length ? <ul className="divide-y divide-ui-border border-y border-ui-border">{results.map(article => <li key={article.slug}>
-            <Link href={helpHref(scope, article.slug, filters)} className="group flex min-h-11 items-start gap-3 rounded-ui-md px-2 py-5 hover:bg-ui-muted/50">
+            <Item asChild className="min-h-11 flex-nowrap items-start gap-3 px-2 py-5"><Link href={helpHref(scope, article.slug, filters)} className="group">
               <BookOpen aria-hidden="true" className="mt-1 hidden size-5 shrink-0 text-ui-muted-foreground sm:block" />
               <div className="min-w-0 flex-1 space-y-1"><h3 className="font-semibold text-ui-foreground group-hover:text-ui-primary">{article.title}</h3><p className="leading-relaxed text-ui-muted-foreground">{article.summary}</p><p className="pt-1 text-xs text-ui-muted-foreground">{HELP_CATEGORIES.find(category => category.id === article.category)?.title} · {article.minutes} min read</p></div>
               <ArrowRight aria-hidden="true" className="mt-1 size-4 shrink-0 text-ui-muted-foreground" />
-            </Link>
-          </li>)}</ul> : <div className="space-y-3 rounded-ui-lg border border-ui-border p-6"><h3 className="font-semibold">No guides match this search</h3><p className="max-w-lg leading-relaxed text-ui-muted-foreground">Try a shorter phrase, such as “enrol”, “attendance” or “password”.{filters.topic !== "all" ? " You can also search across all topics." : ""}</p><div className="flex flex-wrap gap-2">{filters.topic !== "all" ? <Button variant="outline" className="min-h-11" onClick={() => change({ topic: "all" })}>Search all topics</Button> : null}<Button variant="outline" className="min-h-11" onClick={() => { change({ q: "", topic: "all" }); input.current?.focus(); }}>Show all guides</Button></div></div>}
+            </Link></Item>
+          </li>)}</ul> : <EmptyState title="No guides match this search"
+            hint={`Try a shorter phrase, such as “enrol”, “attendance” or “password”.${filters.topic !== "all" ? " You can also search across all topics." : ""}`}
+            action={<div className="flex flex-wrap justify-center gap-2">{filters.topic !== "all" ? <Button variant="outline" className="min-h-11" onClick={() => change({ topic: "all" })}>Search all topics</Button> : null}<Button variant="outline" className="min-h-11" onClick={() => { change({ q: "", topic: "all" }); input.current?.focus(); }}>Show all guides</Button></div>} />}
         </section>
       </div>
     </div>

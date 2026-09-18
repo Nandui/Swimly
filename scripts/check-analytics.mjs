@@ -39,9 +39,9 @@ try {
   await page.getByRole('heading',{name:'Reception activity',exact:true}).waitFor();
   await page.getByRole('textbox',{name:'Find a staff member'}).fill('Alex');
   assert.equal(await page.getByRole('row').count(),2);
-  const summary=page.locator('summary').filter({hasText:'Alex Example'});
+  const summary=page.getByRole('button',{name:'Daily breakdown for Alex Example'});
   await summary.focus(); await page.keyboard.press('Enter');
-  assert.equal(await page.locator('details[open]').count(),1);
+  assert.equal(await summary.getAttribute('aria-expanded'),'true');
   await page.getByRole('textbox',{name:'Find a staff member'}).fill('nobody');
   await page.getByText('No staff match your search.').waitFor();
   await page.getByRole('navigation',{name:'Analytics pages'}).getByRole('link',{name:'Instructor attendance'}).click();

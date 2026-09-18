@@ -1,8 +1,9 @@
 # Swimly — design and implementation
 
-The whole app uses **shadcn/ui**, Neutral surfaces with a logo-blue accent,
-Figtree, and a cookie-backed
-light/dark/system appearance preference. Components live in
+The staff app uses **shadcn/ui** and a cookie-backed light/dark/system appearance
+preference. Aquatics and the portal use Neutral surfaces, a logo-blue accent and
+Figtree. Docs preserves its source repository's Inter and ocean-blue/aqua design,
+scoped to that workspace as described below. Components live in
 `src/components/shadcn`. The owner approved the full conversion on 13 September
 2026; no screen, form adapter or shared provider depends on another UI system.
 
@@ -95,13 +96,22 @@ details at 1152px. Instructor remains a separate workspace, described below.
 
 ## Screens
 
+Docs at `/docs` is an owner-approved exception to the Aquatics visual theme.
+It preserves the integrated Turnfin Docs repository's Inter typeface, ocean-blue
+and aqua palette, navy dark mode, sidebar and document layouts. Its colours,
+layout CSS and dialog portals are scoped to `.turnfin-docs`, while controls use
+the shared shadcn primitives. Aquatics and the portal retain Figtree and their
+existing Neutral theme. See [Docs integration](docs/turnfin-docs.md).
+
 The staff portal at `/modules` sits outside the desk and Instructor shells.
 It has a small Turnfin header with appearance and sign-out controls, one
 main landmark and a centred module grid capped at 1024px. The grid uses one,
 two and three columns on phone, tablet and desktop, with the existing Figtree,
 Neutral surfaces and blue action. Aquatics uses a pool-ladder line icon and a 44px
-Open action. All modules use matching Lucide icons; Docs and Bookings have metadata-fed Coming soon
-badges, without inert links or buttons. The desk sidebar's All modules utility
+Open action. All modules use matching Lucide icons and metadata-fed status
+badges, without inert links or buttons. Docs is available to staff with its
+screen and permission, and opens `/docs` using the shared login; Bookings remains
+Coming soon. The desk sidebar's All modules utility
 returns here. Instructor navigation and teaching access remain unchanged.
 The supplied transparent Turnfin fin logo lives at `public/brand/turnfin.png`.
 Its original artwork is framed inside a 48px header slot to account for the

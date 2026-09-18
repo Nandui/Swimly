@@ -102,6 +102,9 @@
   border-radius: var(--ui-radius);
   overflow: hidden;
 }
+.profile :is([data-slot="button"], [data-slot="select-trigger"], [data-slot="input"], [data-slot="tabs-trigger"]) {
+  min-height: 2.75rem;
+}
 .chapterTrigger {
   display: flex;
   align-items: start;

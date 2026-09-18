@@ -2,6 +2,7 @@
 
 import { Badge } from "@/components/shadcn/badge";
 import { Button } from "@/components/shadcn/button";
+import { Card } from "@/components/shadcn/card";
 import { Input } from "@/components/ui/input";
 import { bookingDeadline, dublinDateTimeInput, parentDateTime, PUBLICATION_META, saveParentAdmin, type AssessmentPublication } from "@/lib/parent/admin-client";
 import { ParentFormDialog, ParentReason, ParentLoadState } from "./parent-fields";
@@ -16,7 +17,7 @@ export function AssessmentPublicationPanel({ sessionId, sessionLabel, startsAt }
     requestAnimationFrame(() => document.getElementById("parent-booking-heading")?.focus());
   }
   const meta = PUBLICATION_META[!publication?.enabled ? "unpublished" : publication.visibleToParents ? "published" : "closed"];
-  return <section className="space-y-4 rounded-ui-lg border border-ui-border p-4" aria-labelledby="parent-booking-heading">
+  return <Card className="gap-4 p-4 shadow-none" role="region" aria-labelledby="parent-booking-heading">
     <div className="flex flex-wrap items-center justify-between gap-3">
       <h2 id="parent-booking-heading" tabIndex={-1} className="text-xl font-semibold">Booking in LeisureWorld Aquatics</h2>
       {publication ? <Badge variant="secondary" data-tone={meta.color}>{meta.label}</Badge> : null}
@@ -63,5 +64,5 @@ export function AssessmentPublicationPanel({ sessionId, sessionLabel, startsAt }
         <Button variant="ghost" className="min-h-11" onClick={resource.reload}>Refresh status</Button>
       </div>
     </> : null}
-  </section>;
+  </Card>;
 }

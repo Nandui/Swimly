@@ -1,3 +1,4 @@
+import { EmptyState } from "@/components/ui-kit/empty-state";
 import Link from "next/link";
 import { ChevronLeft } from "lucide-react";
 import { Button } from "@/components/shadcn/button";
@@ -26,7 +27,7 @@ export function InstructorAssessmentSession({ session, backHref }: { session: Se
       </header>
       <section aria-labelledby="assessment-booked" className="space-y-3">
         <h2 id="assessment-booked" className="text-xl font-semibold">Booked swimmers</h2>
-        {booked.length ? <AssessmentBookings bookings={booked} session={session} /> : <p className="text-sm text-ui-muted-foreground">No swimmers are booked on this assessment.</p>}
+        {booked.length ? <AssessmentBookings bookings={booked} session={session} /> : <EmptyState compact title="No swimmers are booked on this assessment." />}
       </section>
       {notComing.length ? <section aria-labelledby="assessment-not-coming" className="space-y-3">
         <h2 id="assessment-not-coming" className="text-xl font-semibold">Not coming</h2>

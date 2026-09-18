@@ -9,12 +9,13 @@ import { Button } from "@/components/shadcn/button";
 import { Card } from "@/components/shadcn/card";
 import { LoadingButton } from "@/components/ui/loading-button";
 import { Tag } from "@/components/ui-kit/tag";
+import { Notice } from "@/components/ui-kit/notice";
 import { ThemeFlip } from "@/components/theme-toggle";
 import { PORTAL_BRAND, STAFF_MODULES, moduleStatusMeta } from "@/lib/modules";
 
 /** Staff choose a module before entering its workspace. Keep this small,
  *  task-focused and independent of site selection or teaching permissions. */
-export function StaffPortal({ userName }: { userName: string }) {
+export function StaffPortal({ userName, docsAllowed = false, aquaticsAllowed = true }: { userName: string; docsAllowed?: boolean; aquaticsAllowed?: boolean }) {
   const [signingOut, startSignOut] = useTransition();
   const [error, setError] = useState<string | null>(null);
 
@@ -59,9 +60,9 @@ export function StaffPortal({ userName }: { userName: string }) {
             <h1 className="text-2xl font-semibold tracking-tight">Choose your workspace</h1>
             <p className="text-sm text-ui-muted-foreground">Your LeisureWorld apps, in one place.</p>
           </div>
-          {error ? <p role="alert" className="text-sm text-ui-destructive">{error}</p> : null}
+          {error ? <Notice tone="error" title={error} /> : null}
           <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3" aria-label="Staff modules">
-            {STAFF_MODULES.map(module => {
+            {STAFF_MODULES.filter(module => (module.id !== "docs" || docsAllowed) && (module.id !== "swimly" || aquaticsAllowed)).map(module => {
               const status = moduleStatusMeta[module.status];
               const Icon = module.icon;
               return (

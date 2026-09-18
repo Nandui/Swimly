@@ -1,5 +1,6 @@
 "use client";
 
+import { EmptyState } from "@/components/ui-kit/empty-state";
 import { useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import { ChevronDown } from "lucide-react";
@@ -22,7 +23,7 @@ import { ProfileField } from "./profile-enrolments";
 
 type Access = { assess: boolean; complete: boolean; override: boolean };
 export function ProfileCompetencies({ studentId, programmes, access, selectedLevel }: { studentId: string; programmes: ProgrammeProgress[]; access: Access; selectedLevel: string | null }) {
-  if (!programmes.length) return <p className="py-6 text-sm text-ui-muted-foreground">No progress recorded yet. Competencies appear when the swimmer is enrolled or has a recorded placement.</p>;
+  if (!programmes.length) return <EmptyState compact title="No progress recorded yet" hint="Competencies appear when the swimmer is enrolled or has a recorded placement." />;
   return <div className="space-y-8">{programmes.map(programme => <section key={programme.programmeId} className="space-y-3"><h2 className="text-lg font-semibold">{programme.programmeName}</h2>
     {programme.levels.map(level => <LevelChapter key={level.id} level={level} selectedLevel={selectedLevel}>
       <CollapsibleTrigger asChild><Button variant="ghost" className="h-auto min-h-12 w-full justify-between whitespace-normal px-0 py-3 text-left"><span>{level.name}{" "}<span className="ml-3 font-normal text-ui-muted-foreground">{level.completedOn ? `Completed ${formatDate(level.completedOn)}` : `${level.achieved} of ${level.total} achieved`}</span></span><ChevronDown aria-hidden="true" className="shrink-0" /></Button></CollapsibleTrigger>

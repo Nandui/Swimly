@@ -1,6 +1,9 @@
 "use client";
 
+import { EmptyState } from "@/components/ui-kit/empty-state";
 import { useState } from "react";
+import { Button } from "@/components/shadcn/button";
+import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/shadcn/collapsible";
 import { Input } from "@/components/shadcn/input";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/shadcn/table";
 import { PageHeader } from "@/components/ui-kit/page-header";
@@ -36,19 +39,19 @@ export function ReceptionReport({ data }: { data: ReceptionAnalyticsData }) {
             <TableHead scope="row" className="max-w-0 whitespace-normal py-4 font-normal">
               <p className="break-words font-semibold">{person.name}</p>
               {person.retainedName ? <p className="mt-1 text-xs text-ui-muted-foreground">{person.name === "Scheduled unenrolment" ? "Automatic scheduled withdrawals" : "Recorded name · account unavailable"}</p> : null}
-              <details className="mt-1">
-                <summary className="flex min-h-11 cursor-pointer items-center rounded-ui-md text-sm text-ui-primary underline underline-offset-4 focus-visible:outline-2 focus-visible:outline-ui-ring">Daily breakdown<span className="sr-only"> for {person.name}</span></summary>
-                <dl className="space-y-3 pb-2">{person.daily.map(day => <div key={day.day}>
+              <Collapsible className="mt-1">
+                <CollapsibleTrigger asChild><Button variant="link" className="h-auto min-h-11 justify-start px-0 text-left whitespace-normal underline">Daily breakdown<span className="sr-only"> for {person.name}</span></Button></CollapsibleTrigger>
+                <CollapsibleContent><dl className="space-y-3 pb-2">{person.daily.map(day => <div key={day.day}>
                   <dt className="text-xs text-ui-muted-foreground">{weekday.format(parseDateOnly(day.day))} · {formatDate(parseDateOnly(day.day))}</dt>
                   <dd className="mt-1 text-sm">{day.day > data.period.date ? "Upcoming" : `${number.format(day.enrolled)} enrolled · ${number.format(day.withdrawn)} unenrolled`}</dd>
-                </div>)}</dl>
-              </details>
+                </div>)}</dl></CollapsibleContent>
+              </Collapsible>
             </TableHead>
             <TableCell className="align-top py-4 text-right font-semibold tabular-nums">{number.format(person.enrolled)}</TableCell>
             <TableCell className="align-top py-4 text-right tabular-nums">{number.format(person.withdrawn)}</TableCell>
           </TableRow>)}</TableBody>
         </Table>
-        {people.length === 0 ? <p role="status" className="p-6 text-sm text-ui-muted-foreground">{search ? "No staff match your search." : "No enrolments or unenrolments have been recorded at this site this week."}</p> : null}
+        {people.length === 0 ? <EmptyState role="status" compact title={search ? "No staff match your search." : "No enrolments or unenrolments have been recorded at this site this week."} /> : null}
       </div>
     </div>
     <footer className="space-y-2 text-xs leading-relaxed text-ui-muted-foreground">

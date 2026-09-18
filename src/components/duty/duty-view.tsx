@@ -5,6 +5,8 @@ import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { CalendarX2, MapPin, RefreshCw, Search, Users } from "lucide-react";
 import { Button } from "@/components/shadcn/button";
+import { EmptyState } from "@/components/ui-kit/empty-state";
+import { Notice } from "@/components/ui-kit/notice";
 import { Input } from "@/components/shadcn/input";
 import { Label } from "@/components/shadcn/label";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/shadcn/tabs";
@@ -45,7 +47,7 @@ export function DutyView({ courses, iso, clubName, initialNow, canCancel, canBil
     <header className="flex flex-wrap items-start justify-between gap-4"><div className="space-y-1"><h1 className="text-2xl font-semibold tracking-tight">Duty manager</h1><p className="text-sm text-ui-muted-foreground">{formatDate(parseDateOnly(iso))} · {clubName}</p><p className="text-sm text-ui-muted-foreground">Today’s classes, at a glance.</p></div>
       <div className="flex flex-wrap gap-2"><LoadingButton variant="outline" className="min-h-11" pending={refreshing} pendingLabel="Refreshing…" onClick={() => startRefresh(() => router.refresh())}><RefreshCw aria-hidden="true" />Refresh</LoadingButton>{canBilling ? <Button asChild className="min-h-11" variant="outline"><Link href="/cancellations"><CalendarX2 aria-hidden="true" />Billing follow-up{pendingBilling > 0 ? ` (${pendingBilling})` : ""}</Link></Button> : null}</div>
     </header>
-    {staleDate ? <p role="alert" className="rounded-ui-md border border-ui-border p-4">A new day has started. Refresh before cancelling a session.</p> : null}
+    {staleDate ? <Notice tone="warning" title="A new day has started. Refresh before cancelling a session." /> : null}
     <Tabs value={tab} onValueChange={setTab} className="gap-4">
       <div className="flex flex-wrap items-end justify-between gap-4"><TabsList className="grid w-full grid-cols-2 gap-1 group-data-[orientation=horizontal]/tabs:h-auto sm:inline-flex sm:w-auto sm:flex-wrap" aria-label="Filter today’s classes">
         <TabsTrigger value="all" className="min-h-11">All {courses.length}</TabsTrigger><TabsTrigger value="running" className="min-h-11">On now {running}</TabsTrigger><TabsTrigger value="later" className="min-h-11">Upcoming {upcoming}</TabsTrigger><TabsTrigger value="cancelled" className="min-h-11">Cancelled {cancelled}</TabsTrigger>
@@ -57,7 +59,7 @@ export function DutyView({ courses, iso, clubName, initialNow, canCancel, canBil
             <ItemContent className="min-w-0 basis-44"><div className="flex flex-wrap items-center gap-2"><h2 className="text-base font-semibold">{course.name}</h2><Tag color={meta.color}>{meta.label}</Tag></div><p className="text-sm text-ui-muted-foreground">{course.programme}{course.name !== course.level ? ` · ${course.level}` : ""}</p><p className="text-sm">{course.instructor ?? "No instructor assigned"}</p><div className="flex flex-wrap gap-x-4 gap-y-1 text-sm text-ui-muted-foreground"><span className="inline-flex items-center gap-1.5"><MapPin className="size-4" aria-hidden="true" />{course.location || "Pool area not set"}</span><span className="inline-flex items-center gap-1.5"><Users className="size-4" aria-hidden="true" />{course.swimmers.length}{course.capacity === null ? "" : `/${course.capacity}`} swimmers</span></div></ItemContent>
             <div className="flex w-full flex-wrap items-center gap-2 sm:w-auto"><QuickView course={course} iso={iso} />{canCancel && !course.cancellation ? <CancelSession course={course} date={iso} disabled={staleDate} /> : null}</div>
           </Item>;
-        })}</ItemGroup> : <div className="rounded-ui-lg border border-dashed border-ui-border p-8 text-center"><h2 className="font-semibold">{courses.length ? "No classes match" : "No classes scheduled today"}</h2><p className="mt-1 text-sm text-ui-muted-foreground">{courses.length ? "Try another search or show the full day." : "The next day’s classes will appear when the day starts."}</p>{courses.length ? <Button className="mt-4 min-h-11" variant="outline" onClick={() => { setQuery(""); setTab("all"); }}>Show all classes</Button> : null}</div>}
+        })}</ItemGroup> : <EmptyState title={courses.length ? "No classes match" : "No classes scheduled today"} hint={courses.length ? "Try another search or show the full day." : "The next day’s classes will appear when the day starts."} action={courses.length ? <Button className="min-h-11" variant="outline" onClick={() => { setQuery(""); setTab("all"); }}>Show all classes</Button> : undefined} />}
       </TabsContent>
     </Tabs>
   </div>;

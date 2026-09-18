@@ -1,5 +1,6 @@
 "use client";
 
+import { EmptyState } from "@/components/ui-kit/empty-state";
 import { useId, useState } from "react";
 import { Button } from "@/components/shadcn/button";
 import { Badge } from "@/components/shadcn/badge";
@@ -44,7 +45,7 @@ export function ManageProfileEnrolments({ studentId, active, enrolments, targets
             submit={(data, confirmation) => transferEnrolment(e.id, String(data.get("toCourseId") ?? ""), String(data.get("placementReason") ?? ""), confirmation)} />
           {e.status === "WAITLISTED" ? <ProfileActionDialog trigger={<Button variant="outline" size="sm">Enrol from waitlist</Button>} title="Enrol from the waitlist" description={`Activate the place in ${courseLabelWithSite(e.course)} if a space is available.`} submitLabel="Enrol" submit={data => promoteFromWaitlist(e.id, readLegendAgreement(data))}><LegendAgreementField /></ProfileActionDialog> : null}
           <LeavePlace enrolment={e} />
-        </div></li>)}</ul> : <p className="py-4 text-sm text-ui-muted-foreground">No current enrolments or waitlist places.</p>}
+        </div></li>)}</ul> : <EmptyState compact title="No current enrolments or waitlist places." />}
       {active ? <ClassEnrolmentDialog trigger={<Button className="justify-self-start">Enrol in a class</Button>} courses={targets}
         submit={(data, confirmation) => enrolStudent({ studentId, courseId: String(data.get("courseId") ?? ""), placementReason: String(data.get("placementReason") ?? ""), allowWaitlist: data.get("allowWaitlist") === "on", legendAgreement: readLegendAgreement(data) }, confirmation)} /> : <p className="text-sm text-ui-muted-foreground">Reactivate this swimmer before adding a place.</p>}
     </DialogContent>

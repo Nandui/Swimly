@@ -19,6 +19,10 @@ import type { Role } from "@/generated/prisma/client";
  *  other roles keep their explicit grants. */
 
 export const PERMISSIONS = [
+  { key: "docs.read", group: "Docs", label: "Read published documents", description: "Open Docs, read published versions and acknowledge assigned reading. Also needs the Docs screen." },
+  { key: "docs.write", group: "Docs", label: "Author documents", description: "Create and edit drafts, submit for independent approval and view reading reports. Includes reading." },
+  { key: "docs.approve", group: "Docs", label: "Approve documents", description: "Review and publish documents written by other staff. Includes authoring; never permits self-approval." },
+  { key: "docs.manage", group: "Docs", label: "Administer Docs", description: "Manage document teams, templates, risk matrix and reading assignments. Includes authoring, but approval requires its separate permission." },
   {
     key: "parents.manage",
     group: "Swimmers",
@@ -151,6 +155,7 @@ export const PERMISSION_GROUP_ORDER: PermissionGroup[] = [
   "Swimmers",
   "On the deck",
   "The rules",
+  "Docs",
   "Administration",
 ];
 
@@ -171,6 +176,9 @@ export function hasAdministratorAccess(permissions: Iterable<string>): boolean {
  *  rather than solved at each call site, because the call site that forgets is
  *  the one that quietly locks someone out. */
 const IMPLIES: Partial<Record<PermissionKey, PermissionKey[]>> = {
+  "docs.write": ["docs.read"],
+  "docs.approve": ["docs.read", "docs.write"],
+  "docs.manage": ["docs.read", "docs.write"],
   "attendance.markAny": ["attendance.mark", "attendance.cover"],
   "progression.complete": ["progression.assess"],
   "progression.override": ["progression.complete", "progression.assess"],

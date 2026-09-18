@@ -1,0 +1,36 @@
+/* Turnfin Docs repository theme, scoped to this module and its portals. */
+.turnfin-docs {
+  --brand-navy: #0b2842;
+  --brand-ocean: #0077df;
+  --brand-aqua: #00bdcf;
+  --brand-sky: #76d9fa;
+  --brand-sand: #f4f8fc;
+  --brand-slate: #52687f;
+  --ui-background: light-dark(#ffffff, #10263b);
+  --ui-workspace: light-dark(#f4f8fc, #091b2b);
+  --ui-foreground: light-dark(#102c45, #edf7ff);
+  --ui-card: light-dark(#ffffff, #10263b);
+  --ui-popover: light-dark(#ffffff, #16324b);
+  --ui-primary: light-dark(#006bc9, #76d9fa);
+  --ui-primary-hover: light-dark(#0058aa, #a5eaff);
+  --ui-primary-foreground: light-dark(#ffffff, #092238);
+  --ui-brand-soft: light-dark(#e8f3ff, #183c5a);
+  --ui-brand-soft-hover: light-dark(#d7ebff, #215276);
+  --ui-brand-ink: light-dark(#005cab, #a9e4ff);
+  --ui-brand-border: light-dark(#8eb9dd, #477b9f);
+  --ui-muted: light-dark(#eef4fa, #19354c);
+  --ui-muted-foreground: light-dark(#52687f, #adc5d9);
+  --ui-border: light-dark(#d8e5ef, #304f68);
+  --ui-input: light-dark(#7e96ac, #7596b0);
+  --ui-ring: light-dark(#006bc9, #76d9fa);
+  --ui-sidebar: light-dark(#ffffff, #0d2235);
+  --ui-sidebar-hover: light-dark(#eef6ff, #16364f);
+  --ui-aqua-soft: light-dark(#e1f7fa, #103b45);
+  --ui-aqua-ink: light-dark(#006571, #82e4ec);
+  --ui-emergency-bg: var(--ui-aqua-soft);
+  --ui-emergency-ink: var(--ui-aqua-ink);
+  --ui-emergency-border: light-dark(#8ec9d0, #3e7780);
+  --ui-radius: 0.75rem;
+  --font-display: var(--font-sans);
+  --font-sans: Inter, ui-sans-serif, system-ui, sans-serif;
+}

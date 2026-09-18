@@ -122,6 +122,7 @@ export const SCREENS = [
     description: "The log of every change. Needs the permission to read it.",
     requires: "activity.view",
   },
+  { key: "docs", label: "Docs", path: "/docs", description: "A separate workspace for documents, independent approvals and required reading.", requires: "docs.read" },
 ] as const satisfies readonly {
   key: string;
   label: string;
@@ -152,7 +153,7 @@ export function cleanScreens(input: readonly string[]): ScreenKey[] {
   // New roles use the two independent explicit keys.
   // The retired Overview key still identifies a legacy desk role when
   // resolving its old Today grant; it never becomes a screen itself.
-  const hadDeskScreens = input.some(key => key === "overview" || (isScreenKey(key) && key !== "instructor"));
+  const hadDeskScreens = input.some(key => key === "overview" || (isScreenKey(key) && key !== "instructor" && key !== "docs"));
   const held = new Set(input.flatMap(key => key === "today"
     ? hadDeskScreens ? ["calendar", "instructor"] : ["instructor"]
     : [key]).filter(isScreenKey));
@@ -188,7 +189,7 @@ export function homePathFor(
   const visible = visibleScreens(screens, expandPermissions(permissions));
   // Apply the workspace boundary after resolving inherited administrator
   // access, so the desk wordmark never leads into the pool-deck workspace.
-  if (workspace === "desk") visible.delete("instructor");
+  if (workspace === "desk") { visible.delete("instructor"); visible.delete("docs"); }
   if ((home === "today" || home === "instructor") && visible.has("instructor")) return ROLE_HOMES.instructor.path;
   if (home === "calendar" && visible.has("calendar")) return ROLE_HOMES.calendar.path;
   if (home === "duty" && visible.has("duty")) return ROLE_HOMES.duty.path;

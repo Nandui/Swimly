@@ -1,0 +1,56 @@
+/* Adapter for shared primitives. Docs' approved repository theme is in brand.css. */
+.turnfin-docs {
+  --bg: var(--ui-workspace);
+  --paper: var(--ui-card);
+  --ink: var(--ui-foreground);
+  --text: var(--ui-foreground);
+  --muted: var(--ui-muted-foreground);
+  --line: var(--ui-border);
+  --primary: var(--ui-primary);
+  --primary-dark: var(--ui-primary-hover);
+  --accent-soft: var(--ui-brand-soft);
+  --surface-subtle: var(--ui-muted);
+  --surface-tint: var(--ui-muted);
+  --focus: var(--ui-ring);
+  --ocean-blue: var(--brand-ocean);
+  --aqua: var(--brand-aqua);
+  --sky: var(--brand-sky);
+  --slate: var(--brand-slate);
+  --sidebar: 256px;
+  --reading-size: 18px;
+  --radius: var(--ui-radius);
+  font-family: var(--font-sans);
+  color: var(--ui-foreground);
+  font-size: 14px;
+}
+.turnfin-docs button, .turnfin-docs [data-slot='native-select'], .turnfin-docs [data-slot='input'] { min-height: 44px; }
+.turnfin-docs button[data-slot='checkbox'], .turnfin-docs button[data-slot='radio-group-item'] { min-height: 18px; }
+.turnfin-docs label:has([data-slot='checkbox']), .turnfin-docs label:has([data-slot='radio-group-item']) { min-height: 44px; }
+.turnfin-docs [data-slot='dialog-close'] { min-width: 44px; min-height: 44px; }
+.turnfin-docs [data-slot='button'] { border-radius: var(--ui-radius); }
+.turnfin-docs [data-slot='badge'] { font-weight: 500; }
+.turnfin-docs input:focus, .turnfin-docs textarea:focus, .turnfin-docs select:focus { outline: none; }
+.turnfin-docs .workspace-create { color: var(--ui-primary-foreground); }
+.turnfin-docs .button.primary { color: var(--ui-primary-foreground); background: var(--ui-primary); }
+.turnfin-docs .button.primary:hover { background: var(--ui-primary-hover); }
+.turnfin-docs .reader-layout, .turnfin-docs .editor-layout { min-width: 0; }
+.turnfin-docs .workflow-dialog { max-width: min(640px, calc(100vw - 32px)); }
+.turnfin-docs .home-facility { display: flex; flex-direction: row; }
+.turnfin-docs .workspace-search input, .turnfin-docs .home-search input { border: 0; box-shadow: none; background: transparent; min-width: 0; }
+.turnfin-docs .workspace-search { min-width: 0; }
+.turnfin-docs .workspace-search input:focus-visible, .turnfin-docs .home-search input:focus-visible { box-shadow: none; }
+.turnfin-docs .workspace-search:focus-within { outline: 2px solid var(--ui-ring); outline-offset: 2px; }
+.turnfin-docs :is(button, a[data-slot='button']):not([role='checkbox'], [role='radio']) { min-height: 44px !important; min-width: 44px; }
+.turnfin-docs [data-slot='button'][data-variant='default'] { color: var(--ui-primary-foreground); }
+.turnfin-docs [role='menuitemradio'] { min-height: 44px; }
+@media (min-width: 901px) and (max-width: 1100px) {
+  .turnfin-docs .staff-directory > .table-scroll { display: none; }
+  .turnfin-docs .staff-mobile-list { display: grid; list-style: none; margin: 0; padding: 0 20px; }
+  .turnfin-docs .staff-mobile-list li { display: grid; gap: 12px; padding: 20px 0; border-top: 1px solid var(--ui-border); }
+  .turnfin-docs .staff-mobile-heading { display: flex; gap: 12px; align-items: center; }
+  .turnfin-docs .staff-mobile-heading span { display: block; }
+  .turnfin-docs .staff-mobile-badges { display: flex; gap: 8px; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .turnfin-docs *, .turnfin-docs *::before, .turnfin-docs *::after { animation: none !important; transition: none !important; scroll-behavior: auto !important; }
+}

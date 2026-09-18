@@ -4,6 +4,8 @@ import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import { Button } from "@/components/shadcn/button";
 import { Badge } from "@/components/shadcn/badge";
+import { Card } from "@/components/shadcn/card";
+import { EmptyState } from "@/components/ui-kit/empty-state";
 import { Textarea } from "@/components/ui/textarea";
 import { StudentSearch } from "@/components/students/student-search";
 import type { StudentHit } from "@/lib/students/actions/search";
@@ -63,8 +65,8 @@ export function ParentAccessRequests() {
     </div>
     <ParentLoadState {...resource} />
     {resource.data && <div aria-live="polite" className="space-y-4">
-      {!resource.data.items.length && <p className="rounded-ui-lg border border-dashed border-ui-border p-6 text-sm text-ui-muted-foreground">{status === "PENDING" ? "No requests waiting for review." : "No requests in this view."}</p>}
-      {resource.data.items.map(request => <article key={request.id} className="space-y-4 rounded-ui-lg border border-ui-border p-4 sm:p-5">
+      {!resource.data.items.length && <EmptyState compact title={status === "PENDING" ? "No requests waiting for review." : "No requests in this view."} />}
+      {resource.data.items.map(request => <Card key={request.id} className="gap-4 p-4 shadow-none sm:p-5" role="article">
         <div className="flex flex-wrap items-start justify-between gap-3">
           <div className="min-w-0"><h3 className="break-words text-lg font-semibold">{request.firstName} {request.lastName}</h3><p className="text-sm text-ui-muted-foreground">Date of birth: {request.dateOfBirth} · Parent-supplied details</p></div>
           <Badge variant="secondary" data-tone={ACCESS_REQUEST_META[request.status].color}>{ACCESS_REQUEST_META[request.status].label}</Badge>
@@ -80,7 +82,7 @@ export function ParentAccessRequests() {
           <p className="text-xs text-ui-muted-foreground">Sent {parentDateTime(request.createdAt)}{request.reviewedAt && ` · Reviewed by ${request.reviewedByName} on ${parentDateTime(request.reviewedAt)}`}</p>
           {request.status === "PENDING" && <div className="flex flex-wrap gap-2"><Review request={request} approved onSuccess={reviewed} /><Review request={request} approved={false} onSuccess={reviewed} /></div>}
         </div>
-      </article>)}
+      </Card>)}
       {resource.data.total > 20 && <div className="flex items-center gap-3"><Button variant="outline" className="min-h-11" disabled={page === 1} onClick={() => setPage(page - 1)}>Previous</Button><p className="text-sm">Page {page} of {Math.ceil(resource.data.total / 20)}</p><Button variant="outline" className="min-h-11" disabled={page * 20 >= resource.data.total} onClick={() => setPage(page + 1)}>Next</Button></div>}
     </div>}
   </section>;
