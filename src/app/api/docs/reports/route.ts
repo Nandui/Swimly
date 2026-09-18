@@ -1,9 +1,8 @@
 import { NextRequest } from 'next/server';
 import { requireActionMember } from '@/lib/docs/auth';
-import { database, rows } from '@/lib/docs/database';
+import { database, listMembers } from '@/lib/docs/database';
 import { library, requirements, DomainError } from '@/lib/docs/domain';
 import { filterReading, readingCsv } from '@/lib/docs/reporting';
-import type { Member } from '@/lib/docs/types';
 export async function GET(request: NextRequest) {
   try {
     const m = await requireActionMember();
@@ -12,7 +11,7 @@ export async function GET(request: NextRequest) {
       requirements(db, m.id, true),
       library(db, m.id),
       library(db, m.id, { archived: true }),
-      rows<Member>(db, 'SELECT * FROM members'),
+      listMembers(db),
     ]);
     const p = request.nextUrl.searchParams;
     const visible = filterReading(items, [...documents, ...archived], members, {

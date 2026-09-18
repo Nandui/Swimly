@@ -1,7 +1,7 @@
 import { test, before, after } from 'node:test';
 import assert from 'node:assert/strict';
 import { randomUUID } from 'node:crypto';
-import { one, rows, type Database } from './database';
+import { one, rows, findMember, type Database } from './database';
 import { createDocsTestDatabase, demoMatrix } from '@/test/docs-database';
 import {
   DocumentService,
@@ -11,7 +11,7 @@ import {
 } from './domain';
 import { paragraph, matrixSchema, validateBody } from './content';
 import { csvCell } from './reporting';
-import type { DocumentContent, Snapshot, Draft, Member } from './types';
+import type { DocumentContent, Snapshot, Draft } from './types';
 let db: Database;
 let service: DocumentService;
 before(async () => {
@@ -244,7 +244,7 @@ test('publication makes fresh assignments, retains past acknowledgements, and re
 test('team joining and leaving reconciles current reading without deleting history', async () => {
   const f = await publish();
   await service.assign('jamie', f.id, [], ['operations'], null);
-  const riley = (await one<Member>(db, "SELECT * FROM members WHERE id='riley'"))!;
+  const riley = (await findMember(db, 'riley'))!;
   await service.saveMember('alex', { ...riley, teamIds: [...riley.teamIds, 'operations'] });
   assert.equal(
     (await requirements(db, 'riley')).find((r) => r.documentId === f.id)?.status,

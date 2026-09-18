@@ -1,6 +1,6 @@
 import { randomUUID } from 'node:crypto';
 import type { Database, Sql } from './database';
-import { one, rows } from './database';
+import { one, rows, findMember, listMembers } from './database';
 import { expandPermissions } from '@/lib/staff/permissions';
 import { visibleScreens } from '@/lib/staff/screens';
 import {
@@ -40,8 +40,8 @@ function fail(message: string, code = 400): never {
   throw new DomainError(message, code);
 }
 export async function actor(tx: Sql, id: string) {
-  const m = await one<Member>(tx, 'SELECT * FROM members WHERE id=$1 AND active=true', [id]);
-  if (!m) fail('Please sign in with an active staff account.', 401);
+  const m = await findMember(tx, id);
+  if (!m?.active) fail('Please sign in with an active staff account.', 401);
   if (tx.access?.id === id) {
     const effective = expandPermissions(tx.access.permissions);
     const screens = visibleScreens(tx.access.screens, effective);
@@ -151,7 +151,7 @@ export async function reconcile(tx: Sql, documentId?: string) {
       (documentId ? ' WHERE d.id=$1' : ''),
     documentId ? [documentId] : [],
   );
-  const people = (await rows<Member>(tx, 'SELECT * FROM members WHERE active=true')).filter(canRead);
+  const people = (await listMembers(tx)).filter(canRead);
   for (const rule of rules) {
     const targets = rule.archivedAt
       ? []
@@ -320,9 +320,7 @@ export class DocumentService {
             risk.actions.trim() &&
             (!risk.ownerId ||
               !risk.dueDate ||
-              !(await one(tx, 'SELECT id FROM members WHERE id=$1 AND active=true', [
-                risk.ownerId,
-              ])))
+              !(await findMember(tx, risk.ownerId))?.active)
           )
             fail('Additional risk actions need an active owner and due date.');
       } else {

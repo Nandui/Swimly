@@ -79,7 +79,10 @@ Prisma here is v7: the client is generated into `src/generated/prisma` and
 needs a driver adapter (`@prisma/adapter-pg`), and the datasource URL lives in
 `prisma.config.ts` rather than in the schema.
 
-Development and production share a database: schema changes must be additive.
+Development and production share the Aquatics database: schema changes must be
+additive. Docs uses its own `DOCS_DATABASE_URL` / `DOCS_DIRECT_URL` and schema
+migrations in `docs-database`; shared staff login/grants still come from Turnfin.
+Never repoint the main `DATABASE_URL` or fall back to it for Docs content.
 For user-authorized record management, use `npm run db:check` and the secured
 command-line workflow in [docs/database-operations.md](docs/database-operations.md).
 The local credential is in ignored `.vercel/swimly-operations.json`. Never print

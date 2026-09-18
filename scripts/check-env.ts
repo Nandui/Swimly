@@ -1,10 +1,13 @@
 import "dotenv/config";
+import { docsStorageConfig } from '../src/lib/docs/storage-config';
 
 /** Run before every build. A deployment that boots without a database and
  *  discovers it on the first request has already served the error to someone;
  *  failing here costs nothing and names the fix. */
 const errors: string[] = [];
 const warnings: string[] = [];
+try { docsStorageConfig(process.env); }
+catch (error) { errors.push(error instanceof Error && error.name !== 'TypeError' ? error.message : 'Check the Docs database URLs.'); }
 
 if (!process.env.DATABASE_URL) {
   errors.push(

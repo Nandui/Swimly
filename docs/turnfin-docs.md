@@ -32,8 +32,12 @@ Account creation, passwords, permissions and deactivation remain in Turnfin Staf
 and Roles. Docs' staff directory edits only document group membership.
 
 Page guards, server actions, reports and private downloads check the shared
-session. Workflow transactions re-read the current staff grants and intersect them
-with the effective session, preserving restricted role previews and revocation.
+session. Workflow operations re-read current staff grants from Turnfin and intersect
+them with the effective session, preserving restricted role previews and revocation.
+Staff identities and permissions are not replicated into Docs. The two databases
+cannot share a transaction: authorization is checked before Docs writes, and Docs
+changes and their audit records commit together. If Turnfin is unavailable, Docs
+fails closed rather than using cached grants.
 
 ## Workflows
 
@@ -51,12 +55,18 @@ with the effective session, preserving restricted role previews and revocation.
 
 ## Database and files
 
-The additive migration `20260918120000_turnfin_docs` creates the `turnfin_docs`
-PostgreSQL schema. Its `members` view joins existing `public."User"` and
-`public."StaffRole"` records, with document memberships stored separately.
-No second identity provider, password store or Supabase project is introduced.
-All reads/writes use the existing `DATABASE_URL` on the server, with a
-transaction-local search path so pooled connections cannot leak schema state.
+Docs uses a **separate PostgreSQL database**, configured with server-only
+`DOCS_DATABASE_URL` (pooled runtime connection) and `DOCS_DIRECT_URL` (unpooled
+migration connection). Turnfin/Aquatics retains `DATABASE_URL` and `DIRECT_URL`.
+Missing Docs configuration fails closed; there is no fallback to Aquatics storage.
+The build rejects connections pointing both modules at the same database.
+
+`docs-database/migrations/001_documents.sql` owns the dedicated `turnfin_docs`
+schema. Documents reference shared staff IDs as text, validated through the live
+Turnfin directory before mutations. Facilities/team memberships belong to Docs;
+names, emails, account activity and grants are read from Turnfin when needed.
+There is no second identity provider or password store. A transaction-local search
+path prevents schema state leaking between pooled connections.
 
 Files are private and stored atomically with their metadata and audit record in
 `attachment_blobs`. Downloads verify Docs access; readers cannot retrieve files
@@ -71,19 +81,37 @@ changes, records an audit event in the same transaction.
 
 ## Rollout
 
-This integration does not migrate records from a separately deployed Docs service.
 No source-repository demo accounts, demo documents or `.data` directory are copied.
-The first rollout starts with empty document storage and six structural templates.
+The separate-database rollout preserves all Docs content from the original shared
+`turnfin_docs` schema. It does not import an unrelated standalone Docs service.
 
-1. Deploy the staff app through the existing process. The production build runs
-   the additive Prisma migration; do not run a seed.
-2. An administrator opens Docs and configures document facilities/teams, templates
+1. Set both Docs connection secrets in the Vercel staff project. Keep the existing
+   Turnfin connections unchanged. For local development use ignored `.env.local`.
+2. Deploy through the existing process. After the application compiles, the final
+   production build step runs `scripts/migrate-docs.ts`; do not run a seed.
+   It initializes the dedicated schema, prevents further writes to the old Docs
+   tables, then transfers only Docs data and verifies every table's row count and
+   content digest, including attachment bytes.
+   Documents, versions, drafts, membership, reading records, audit history and
+   attachment bytes retain their IDs and timestamps. Credentials and other module
+   data are never copied. During the short cutover, old Docs clients may need to
+   refresh after the deployment becomes ready.
+3. An administrator opens Docs and configures document facilities/teams, templates
    and the risk matrix as needed.
-3. Grant the Docs screen and relevant permissions to other staff roles. Use an
+4. Grant the Docs screen and relevant permissions to other staff roles. Use an
    independent approver for publishing.
 
-The migration has been prepared and verified in isolated PostgreSQL; it is not
-applied to the shared live database by local verification.
+Copy operations and the import marker commit atomically. Retrying a deployment
+does not overwrite newer destination records; mismatched source/destination
+markers or a non-empty unimported destination stop the migration. The old Docs
+schema remains intact and read-only for recovery. Do not roll back to a build
+that writes there or remove the old-write guard; roll forward using the dedicated
+database. If a cutover fails after freezing the old schema, fix the reported issue
+and rerun the same deployment. Do not delete or reset either database.
+
+The original Prisma migration remains unchanged in its applied history. All
+future Docs schema migrations belong in `docs-database`, never in the Aquatics
+Prisma schema. Verification uses two isolated PGlite databases and no live writes.
 
 ## Verification
 

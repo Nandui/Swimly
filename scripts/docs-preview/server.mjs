@@ -5,7 +5,7 @@ import { randomUUID } from 'node:crypto';
 import { buildPreview } from '../instructor-swimmer-preview/build.mjs';
 import { createDocsTestDatabase } from '../../src/test/docs-database.ts';
 import { DocumentService, actor, library, requirements, documentView } from '../../src/lib/docs/domain.ts';
-import { rows, one } from '../../src/lib/docs/database.ts';
+import { rows, one, listMembers } from '../../src/lib/docs/database.ts';
 import { canRead, canWrite } from '../../src/lib/docs/types.ts';
 
 export const output = path.resolve('.impeccable/review/docs/site');
@@ -47,7 +47,7 @@ export async function docsPreview(port = 0) {
       }
       if(url.pathname==='/__docs-data'){
         const who=url.searchParams.get('who')||'alex',p=url.searchParams.get('path')||'/docs';
-        const member=await actor(db,who),groups=await rows(db,'SELECT * FROM groups'),members=await rows(db,'SELECT * FROM members');
+        const member=await actor(db,who),groups=await rows(db,'SELECT * FROM groups'),members=await listMembers(db);
         const workspace={now:new Date().toISOString(),member,members:members.filter(canRead),facilities:groups.filter(g=>g.kind==='facility'),teams:groups.filter(g=>g.kind==='team'),templates:await rows(db,'SELECT * FROM templates ORDER BY name'),matrix:(await one(db,"SELECT value FROM settings WHERE id='matrix'")).value,documents:await library(db,who),requirements:await requirements(db,who),localMode:false};
         const id=p.split('/')[3];
         const view=id&&id!=='new'?await documentView(db,who,id,new URLSearchParams(url.searchParams.get('query')).get('version')||undefined):null;

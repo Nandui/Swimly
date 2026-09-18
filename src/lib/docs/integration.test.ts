@@ -1,31 +1,31 @@
 import { test, before, after } from 'node:test';
 import assert from 'node:assert/strict';
 import { randomUUID } from 'node:crypto';
-import { createDocsTestDatabase } from '@/test/docs-database';
+import { createDocsTestDatabase, type DocsTestDatabase } from '@/test/docs-database';
 import { cleanScreens, homePathFor } from '@/lib/staff/screens';
 import { actor, DocumentService, library } from './domain';
 import { type Database, one, rows } from './database';
 import { canManage, canApprove, type DocumentContent } from './types';
 import { uploadFile, readAttachment, validateFile } from './files';
-let db: Database;
+let db: DocsTestDatabase;
 before(async () => { db = await createDocsTestDatabase(); });
 after(async () => { await db.close(); });
 const content = (): DocumentContent => ({ schemaVersion: 1, title: 'Example procedure', reference: randomUUID(), type: 'SOP', summary: 'Synthetic document for verification.', ownerId: 'jamie', facilityIds: [], teamIds: [], reviewDate: '2027-09-18', body: { type: 'doc', content: [{ type: 'paragraph', content: [{ type: 'text', text: 'Fictional test guidance.' }] }] }, riskRows: [], riskMatrix: null, relatedIds: [], attachments: [] });
 
 test('renaming a role Administrator grants nothing; global administrator receives Docs automatically', async () => {
-  await db.query('UPDATE public."StaffRole" SET name=$1 WHERE id=$2', ['Administrator', 'outsider']);
+  await db.identity.query('UPDATE public."StaffRole" SET name=$1 WHERE id=$2', ['Administrator', 'outsider']);
   await assert.rejects(library(db, 'outsider'), /Docs access/);
   const m = await actor(db, 'alex');
   assert.equal(canManage(m), true);
   assert.equal(canApprove(m), true);
 });
 test('current staff permissions and deactivation are checked on every operation', async () => {
-  await db.query('UPDATE public."User" SET "isActive"=false WHERE id=$1', ['riley']);
+  await db.identity.query('UPDATE public."User" SET "isActive"=false WHERE id=$1', ['riley']);
   await assert.rejects(library(db, 'riley'), /active staff/);
-  await db.query('UPDATE public."User" SET "isActive"=true WHERE id=$1', ['riley']);
-  await db.query('UPDATE public."StaffRole" SET screens=$1 WHERE id=$2', [[], 'riley']);
+  await db.identity.query('UPDATE public."User" SET "isActive"=true WHERE id=$1', ['riley']);
+  await db.identity.query('UPDATE public."StaffRole" SET screens=$1 WHERE id=$2', [[], 'riley']);
   await assert.rejects(library(db, 'riley'), /Docs access/);
-  await db.query('UPDATE public."StaffRole" SET screens=$1 WHERE id=$2', [['docs'], 'riley']);
+  await db.identity.query('UPDATE public."StaffRole" SET screens=$1 WHERE id=$2', [['docs'], 'riley']);
   await library(db, 'riley');
 });
 test('effective role preview cannot use the real administrator grants', async () => {
@@ -37,9 +37,9 @@ test('effective role preview cannot use the real administrator grants', async ()
 test('a stale session does not restore grants removed in the shared staff role', async () => {
   const access = { id: 'jamie', permissions: ['docs.write'], screens: ['docs'] };
   const stale: Database = { ...db, access, transaction: fn => db.transaction(tx => fn({ ...tx, query: tx.query.bind(tx), access })) };
-  await db.query('UPDATE public."StaffRole" SET permissions=$1 WHERE id=$2', [['docs.read'], 'jamie']);
+  await db.identity.query('UPDATE public."StaffRole" SET permissions=$1 WHERE id=$2', [['docs.read'], 'jamie']);
   await assert.rejects(new DocumentService(stale).create('jamie', content()), /authoring permission/);
-  await db.query('UPDATE public."StaffRole" SET permissions=$1 WHERE id=$2', [['docs.write'], 'jamie']);
+  await db.identity.query('UPDATE public."StaffRole" SET permissions=$1 WHERE id=$2', [['docs.write'], 'jamie']);
 });
 test('Docs administration cannot edit shared accounts or escalate their permissions', async () => {
   const m = await actor(db, 'riley');
