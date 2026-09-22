@@ -14,6 +14,7 @@ import type { TransferTarget } from "@/lib/enrolment/data/enrolments";
 import { courseLabel } from "@/lib/courses/constants";
 import { formatDate } from "@/lib/format";
 import { fullName } from "@/lib/students/constants";
+import { AwaitingNavigation } from "./awaiting-navigation";
 
 type QueueItem = AwaitingEnrolmentResult["items"][number];
 
@@ -24,6 +25,7 @@ export function AwaitingEnrolment({ result, enrol, profiles, assessments, course
   const pageHref = (number: number) => `/awaiting-enrolment?${new URLSearchParams({ ...(q ? { q } : {}), page: String(number) })}`;
   return <div className="min-w-0 space-y-6">
     <PageHeader title="Awaiting enrolment" description="Assessed swimmers awaiting a place and class waitlists at this site. Follow up with families and arrange their next class." />
+    <AwaitingNavigation active="enrolment" />
     <form action="/awaiting-enrolment" className="flex flex-wrap items-end gap-3" role="search">
       <div className="min-w-0 flex-1 space-y-2 sm:max-w-md">
         <Label htmlFor="awaiting-swimmer-search">Find a swimmer</Label>

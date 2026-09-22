@@ -161,6 +161,15 @@ and class waitlists, grouping by swimmer and programme with each requested class
 visible. It offers family contacts, matching classes for placements and confirmed
 waitlist promotion when a space is available. Both lists re-home secondary
 columns on phones and retain 44px actions.
+Awaiting enrolment has linked Enrolments & waitlists and Awaiting moves views.
+The moves view shows the current class/site, next curriculum level where one
+exists, instructor confirmation, note and family contacts. It reuses the guarded
+cross-site move dialog. Changed progress is labelled Needs review and withholds
+the queue's move action. Instructor offers Ready to move inside each swimmer's
+expanded competency list, only when every competency at that level is achieved
+and saved for that swimmer. Unsaved marks show a save reminder instead. Awaiting
+move status and Undo readiness stay within that swimmer's list, with
+confirmations and inline save errors.
 See [assessment workspace](docs/assessments.md) for queue rules and verification.
 
 Together, Activity, Programmes and levels, Staff, Roles,

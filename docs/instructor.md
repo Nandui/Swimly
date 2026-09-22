@@ -59,6 +59,17 @@ sit above the teaching area so they cannot cover Save or Done.
 Access requires the Instructor screen and attendance.mark. Starting another
 instructor's class also requires attendance.cover. Competency marking and level
 completion retain progression.assess and progression.complete respectively.
+Expand an individual swimmer in **By swimmer**. After every live competency at
+that level is achieved and saved for them, **Ready to move** appears under their
+list. Unsaved achievements show a save reminder instead; another swimmer's marks
+do not affect their eligibility. Confirmation completes the level and sends an
+explicit handoff to **Awaiting enrolment → Awaiting moves**
+at the current class's site. Already-completed swimmers can also be marked ready.
+An optional note travels to reception; no place changes until reception confirms
+a move. The teaching action requires progression.complete, the dated class start
+and a current active enrolment. Readiness never allows a completion with gaps.
+Instructors can undo readiness without removing competency marks or the level
+completion. Corrections or a changed class level flag the handoff for review.
 Existing screen grants are unchanged. Accounts explicitly granted both
 workspaces can access both; their normal navigation remains separate.
 
@@ -112,3 +123,9 @@ assessment-only days, isolated navigation, placement/no-show saves and retries,
 empty states and 16 light/dark layouts. Dialog controls remain at least 44px.
 Run `node scripts/instructor-swimmer-preview/assessment-build.mjs --serve-assessments`
 for the synthetic assessment preview on port 4191. No live records are read or changed.
+
+`node scripts/move-readiness-preview/build.mjs --serve-moves` opens a synthetic
+teaching and reception preview on port 4197. It uses the real components with
+local-only save doubles; `/awaiting-enrolment?view=moves` shows confirmed examples.
+`src/lib/progression/actions/move-readiness.test.ts` exercises real Prisma queries
+and migrations in isolated PostgreSQL, including the cross-site transfer handoff.

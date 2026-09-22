@@ -42,6 +42,8 @@ import {
   saveInstructorAssessment,
 } from "@/lib/progression/actions/assess";
 import { toast } from "@/lib/toast";
+import { CompleteLevel } from "@/components/instructor/complete-level";
+import { MoveReadinessStatus } from "@/components/instructor/move-readiness-status";
 
 type Choice = CompetencyStatus | null;
 
@@ -57,6 +59,9 @@ export type DeckSwimmer = {
   offLevel: boolean;
   completed: boolean;
   marks: Record<string, Choice>;
+  readyToMoveAt?: Date | null;
+  readyToMoveByName?: string | null;
+  moveReadinessCurrent?: boolean;
 };
 
 const MARK_LABEL: Record<CompetencyStatus, string> = {
@@ -92,6 +97,7 @@ function DeckChecklistState({
   doneHref,
   doneLabel = "Today",
   teaching = false,
+  moveReadiness,
 }: {
   courseId: string;
   date: string;
@@ -105,6 +111,8 @@ function DeckChecklistState({
   doneHref: string;
   doneLabel?: string;
   teaching?: boolean;
+  /** Supplied only when the instructor can confirm this level's completion. */
+  moveReadiness?: { levelName: string };
 }) {
   const initial = React.useMemo<Marks>(
     () =>
@@ -339,6 +347,9 @@ function DeckChecklistState({
   );
   const swimmerRow = (swimmer: DeckSwimmer, dimmed: boolean) => {
     const open = expandedSwimmer === swimmer.studentId;
+    const allAchieved = achievedFor(swimmer.studentId) === competencies.length;
+    const allSaved = competencies.every((item) => swimmer.marks[item.id] === "ACHIEVED");
+    const readinessAvailable = teaching && !readOnly && moveReadiness;
     return (
       <Collapsible
         key={swimmer.studentId}
@@ -398,6 +409,42 @@ function DeckChecklistState({
                 </li>
               ))}
             </ol>
+            {readinessAvailable && (swimmer.readyToMoveAt || allAchieved) ? (
+              <div className="flex flex-col items-start gap-3 border-t border-ui-border py-4">
+                {swimmer.readyToMoveAt ? (
+                  <MoveReadinessStatus
+                    studentId={swimmer.studentId}
+                    studentName={swimmer.name}
+                    courseId={courseId}
+                    date={date}
+                    current={Boolean(swimmer.moveReadinessCurrent)}
+                    confirmedBy={swimmer.readyToMoveByName ?? null}
+                    confirmedAt={swimmer.readyToMoveAt}
+                  />
+                ) : null}
+                {allAchieved && !allSaved ? (
+                  <p className="text-sm text-ui-muted-foreground">
+                    Save marks to confirm {swimmer.name} is ready to move.
+                  </p>
+                ) : allAchieved && allSaved && !swimmer.moveReadinessCurrent ? (
+                  <>
+                    <p className="text-sm text-ui-muted-foreground">
+                      All competencies in {moveReadiness.levelName} are achieved and saved.
+                      Confirm when {swimmer.name} is ready for their next class.
+                    </p>
+                    <CompleteLevel
+                      studentId={swimmer.studentId}
+                      studentName={swimmer.name}
+                      courseId={courseId}
+                      date={date}
+                      levelId={levelId}
+                      levelName={moveReadiness.levelName}
+                      disabled={pending}
+                    />
+                  </>
+                ) : null}
+              </div>
+            ) : null}
           </div>
         </CollapsibleContent>
       </Collapsible>

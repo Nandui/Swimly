@@ -66,6 +66,8 @@ test("a cancellation blocks instructor and stale desk competencies and level com
   for (const result of [await f.actions.saveInstructorAssessment(deckMarks),
     await f.actions.saveClassAssessment({ levelId: "entry", marks: deckMarks.marks, classContext: teaching }),
     await f.actions.confirmLevelCompletion({ ...completion, teaching }),
+    await f.actions.confirmLevelCompletion({ ...completion, teaching, readyToMove: true }),
+    await f.actions.cancelInstructorMoveReadiness({ studentId: "swimmer", teaching }),
     await f.actions.confirmLevelCompletion({ ...completion, classContext: teaching })]) {
     assert.equal(result.ok, false); if (!result.ok) assert.match(result.error, /cancelled/);
   }

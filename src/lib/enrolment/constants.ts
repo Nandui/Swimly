@@ -25,6 +25,8 @@ export const ENROLMENT_STATUS_META: Record<
 export const OPEN_STATUSES = ["ACTIVE", "WAITLISTED"] as const;
 
 export const FOLLOW_UP_META = {
+  readyToMove: { label: "Ready to move", color: "blue" },
+  reviewMove: { label: "Needs review", color: "orange" },
   awaiting: { label: "Awaiting class", color: "blue" },
   waitlisted: ENROLMENT_STATUS_META.WAITLISTED,
 } as const satisfies Record<string, StatusMeta>;

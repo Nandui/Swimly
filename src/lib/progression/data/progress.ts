@@ -207,6 +207,9 @@ export async function getClassProgress(courseId: string) {
       select: {
         id: true,
         levelId: true,
+        readyToMoveAt: true,
+        readyToMoveByName: true,
+        readyToMoveLevelId: true,
         student: {
           select: { id: true, firstName: true, lastName: true, dateOfBirth: true },
         },
@@ -277,6 +280,11 @@ export async function getClassProgress(courseId: string) {
       total: competencyIds.length,
       eligible: competencyIds.length > 0 && achieved === competencyIds.length,
       completedOn: completedBy.get(enrolment.student.id) ?? null,
+      readyToMoveAt: enrolment.readyToMoveAt,
+      readyToMoveByName: enrolment.readyToMoveByName,
+      moveReadinessCurrent: Boolean(enrolment.readyToMoveAt && enrolment.readyToMoveLevelId
+        && curriculum.levelIds.resolve(enrolment.readyToMoveLevelId) === course.levelId
+        && competencyIds.length > 0 && achieved === competencyIds.length && completedBy.has(enrolment.student.id)),
     };
   });
 

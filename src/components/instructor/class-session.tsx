@@ -8,7 +8,6 @@ import {
   LockKeyhole,
 } from "lucide-react";
 import { Button } from "@/components/shadcn/button";
-import { Item, ItemContent, ItemGroup } from "@/components/shadcn/item";
 import { RegisterForm } from "@/components/attendance/register-form";
 import { DeckChecklist } from "@/components/progression/deck-checklist";
 import { getInstructorClass } from "@/lib/attendance/data/instructor-class";
@@ -23,7 +22,6 @@ import { formatDate, parseDateOnly, today } from "@/lib/format";
 import { fullName } from "@/lib/students/constants";
 import { TeachingNotice } from "./teaching-ui";
 import { StartClass } from "./start-class";
-import { CompleteLevel } from "./complete-level";
 import { InstructorClassNavigation } from "./class-navigation";
 import { ClassCompetencyOverview } from "./class-competency-overview";
 
@@ -117,12 +115,14 @@ export async function InstructorClassSession({
   const { register, progress } = view,
     mayAssess = can(session, "progression.assess"),
     mayComplete = mayAssess && can(session, "progression.complete");
-  const ready = progress.swimmers.filter((s) => s.eligible && !s.completedOn);
   const swimmers = progress.swimmers.map((s) => ({
     studentId: s.student.id,
     name: fullName(s.student),
     offLevel: s.offLevel,
     completed: Boolean(s.completedOn),
+    readyToMoveAt: s.readyToMoveAt,
+    readyToMoveByName: s.readyToMoveByName,
+    moveReadinessCurrent: s.moveReadinessCurrent,
     marks: Object.fromEntries(s.competencies.map((c) => [c.id, c.status])),
   }));
   const attendance = register.taken
@@ -164,33 +164,6 @@ export async function InstructorClassSession({
           {!mayAssess ? (
             <TeachingNotice title="You can view competencies but do not have permission to mark them." />
           ) : null}
-          {ready.length && mayComplete ? (
-            <section className="space-y-2" aria-label="Ready to complete">
-              <h2 className="text-lg font-semibold">
-                Ready to complete {progress.course.level.name}
-              </h2>
-              <ItemGroup className="divide-y divide-ui-border">
-                {ready.map((s) => (
-                  <Item key={s.student.id} role="listitem" className="px-0">
-                    <ItemContent>
-                      <p className="font-medium">{fullName(s.student)}</p>
-                      <p className="text-sm text-ui-muted-foreground">
-                        All {s.total} competencies achieved
-                      </p>
-                    </ItemContent>
-                    <CompleteLevel
-                      studentId={s.student.id}
-                      studentName={fullName(s.student)}
-                      levelId={progress.course.levelId}
-                      levelName={progress.course.level.name}
-                      courseId={id}
-                      date={iso}
-                    />
-                  </Item>
-                ))}
-              </ItemGroup>
-            </section>
-          ) : null}
           <DeckChecklist
             courseId={id}
             date={iso}
@@ -200,6 +173,7 @@ export async function InstructorClassSession({
             attendance={attendance}
             readOnly={!mayAssess}
             teaching
+            moveReadiness={mayComplete ? { levelName: progress.course.level.name } : undefined}
             doneHref={home}
             doneLabel="classes"
           />

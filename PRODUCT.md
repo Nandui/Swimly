@@ -130,6 +130,15 @@ counts enrolments at either site; waitlists belong to the requested class's site
 Rows group by swimmer and shared programme without losing individual waitlist
 requests. Instructor stays separate.
 
+Awaiting enrolment also has an **Awaiting moves** view. An instructor explicitly
+confirms Ready to move after all saved competencies at the class's level are
+achieved. This records level completion and queues that active place for the
+current class's site, with the instructor, date and optional reception note.
+Reception can move the swimmer to either site through the existing move flow.
+The current place remains active until moved or ended, which resolves the handoff.
+Undo readiness retains progress; later progress or curriculum changes flag the
+pending handoff for review. Existing completions are not automatically queued.
+
 The desk uses Swimmers for customer details, progress and enrolment, Classes
 for the weekly timetable and class inspection, and Schedule for a selected day's classes and assessments.
 Duty manager adds a compact daily class list with quick details and dated

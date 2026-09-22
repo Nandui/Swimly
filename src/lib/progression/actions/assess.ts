@@ -26,6 +26,7 @@ export type ClassAssessInput = z.infer<typeof classAssessSchema>;
 type Assessor = { id: string; name?: string | null };
 
 function revalidate() {
+  revalidatePath("/awaiting-enrolment");
   revalidatePath("/students/[id]", "page");
   revalidatePath("/courses/[id]/assess", "page");
   revalidatePath("/courses/[id]/class", "page");
@@ -134,11 +135,12 @@ export async function saveInstructorAssessment(input: z.infer<typeof instructorA
   return result;
 }
 
-const confirmSchema = z.object({ studentId: z.string().min(1), levelId: z.string().min(1), note: z.string().trim().max(300), overrideReason: z.string().trim().max(300), teaching: teachingSchema.optional(), classContext: sessionContextSchema.optional() });
+const confirmSchema = z.object({ studentId: z.string().min(1), levelId: z.string().min(1), note: z.string().trim().max(300), overrideReason: z.string().trim().max(300), teaching: teachingSchema.optional(), classContext: sessionContextSchema.optional(), readyToMove: z.boolean().optional() });
 export async function confirmLevelCompletion(input: z.infer<typeof confirmSchema>): Promise<ActionResult> {
   const session = await requirePermission("progression.complete");
   const parsed = confirmSchema.safeParse(input);
   if (!parsed.success) return fail(parsed.error.issues[0].message);
+  if (parsed.data.readyToMove && !parsed.data.teaching) return fail("Open the swimmer’s class in Instructor to mark them ready to move.");
   if (!parsed.data.teaching && !canSee(session, "students") && !canSee(session, "courses")) return fail("Open your class in Instructor to complete this level.");
   const { studentId, note, overrideReason } = parsed.data;
   const clubId = await currentClubId();
@@ -168,22 +170,67 @@ export async function confirmLevelCompletion(input: z.infer<typeof confirmSchema
       if (!course || curriculum.levelIds.resolve(course.levelId) !== level.id) return fail("The class level has changed. Reload before completing it.");
     }
     const already = await tx.levelCompletion.findFirst({ where: { studentId, levelId: { in: curriculum.levelIds.variants(level.id) } }, select: { id: true } });
-    if (already) return fail(`${fullName(student)} has already completed ${level.name}.`);
+    if (already && !parsed.data.readyToMove) return fail(`${fullName(student)} has already completed ${level.name}.`);
     const results = await tx.competencyResult.findMany({ where: { studentId, competencyId: { in: level.competencies.flatMap(c => curriculum.competencyIds.variants(c.id)) } } });
     const achieved = new Set(latestSharedMarks(results, curriculum.competencyIds.resolve).filter(r => r.status === "ACHIEVED").map(r => r.competencyId));
     const progress = completionProgress(level.competencies.map(c => c.id), achieved);
     if (!progress.total) return fail(`${level.name} has no competencies yet, so there is nothing to have passed.`);
+    if (parsed.data.readyToMove && !progress.eligible) return fail("Every competency must be achieved and saved before marking this swimmer ready to move.");
     if (!progress.eligible && !can(session, "progression.override")) return fail(`${fullName(student)} has ${progress.achieved} of ${progress.total}. Only someone allowed to complete a level with gaps can do that.`);
     if (!progress.eligible && !overrideReason) return fail(`${fullName(student)} has ${progress.achieved} of ${progress.total}. Say why the level is being completed anyway.`);
     const completedOn = parseDateOnly(today()), confirmedByName = session.user.name ?? "Unknown";
-    await tx.levelCompletion.create({ data: { studentId, levelId: level.id, programmeId: level.programmeId, completedOn,
-      competenciesAchieved: progress.achieved, competencyCount: progress.total, overrideReason: progress.eligible ? null : overrideReason,
-      confirmedById: session.user.id, confirmedByName, note: note || null } });
-    await logAudit({ actorId: session.user.id, actorName: confirmedByName, action: "complete-level", entity: "Student", entityId: studentId,
-      details: { version: 1, kind: "completion", date: today(), levelId: level.id, courseId: parsed.data.teaching?.courseId ?? null, achieved: progress.achieved, total: progress.total, note, overrideReason: progress.eligible ? null : overrideReason },
-      programmeId: level.programmeId, clubId, summary: `${fullName(student)} completed ${level.name} on ${formatDate(completedOn)} (${progress.achieved} of ${progress.total})` + (progress.eligible ? "" : ` — confirmed with gaps: ${overrideReason}`) }, tx);
+    // Re-read the active place after both locks. Readiness belongs to this
+    // enrolment, so moving or ending it resolves the handoff automatically.
+    const place = parsed.data.readyToMove ? await tx.enrolment.findFirst({ where: {
+      studentId, courseId: parsed.data.teaching!.courseId, status: "ACTIVE",
+      student: { status: "ACTIVE" }, startedOn: { lte: completedOn },
+      AND: [{ OR: [{ endedOn: null }, { endedOn: { gte: completedOn } }] },
+        { OR: [{ scheduledEndOn: null }, { scheduledEndOn: { gt: completedOn } }] }],
+    }, select: { id: true, readyToMoveAt: true, readyToMoveLevelId: true } }) : null;
+    if (parsed.data.readyToMove && !place) return fail("This swimmer no longer has an active place in this class.");
+    if (place?.readyToMoveAt && place.readyToMoveLevelId === level.id && already) return ok();
+    if (!already) {
+      await tx.levelCompletion.create({ data: { studentId, levelId: level.id, programmeId: level.programmeId, completedOn,
+        competenciesAchieved: progress.achieved, competencyCount: progress.total, overrideReason: progress.eligible ? null : overrideReason,
+        confirmedById: session.user.id, confirmedByName, note: note || null } });
+      await logAudit({ actorId: session.user.id, actorName: confirmedByName, action: "complete-level", entity: "Student", entityId: studentId,
+        details: { version: 1, kind: "completion", date: today(), levelId: level.id, courseId: parsed.data.teaching?.courseId ?? null, achieved: progress.achieved, total: progress.total, note, overrideReason: progress.eligible ? null : overrideReason },
+        programmeId: level.programmeId, clubId, summary: `${fullName(student)} completed ${level.name} on ${formatDate(completedOn)} (${progress.achieved} of ${progress.total})` + (progress.eligible ? "" : ` — confirmed with gaps: ${overrideReason}`) }, tx);
+    }
+    if (place) {
+      await tx.enrolment.update({ where: { id: place.id }, data: { readyToMoveAt: new Date(), readyToMoveById: session.user.id,
+        readyToMoveByName: confirmedByName, readyToMoveLevelId: level.id, readyToMoveNote: note || null } });
+      await logAudit({ actorId: session.user.id, actorName: confirmedByName, action: "ready-to-move", entity: "Enrolment", entityId: place.id,
+        programmeId: level.programmeId, clubId, summary: `${fullName(student)} is ready to move from ${level.name}`,
+        details: { version: 1, studentId, courseId: parsed.data.teaching!.courseId, levelId: level.id, note, achieved: progress.achieved, total: progress.total } }, tx);
+    }
     return ok();
   }, { timeout: 15_000 });
+  if (result.ok) revalidate();
+  return result;
+}
+
+const cancelReadinessSchema = z.object({ studentId: z.string().min(1), teaching: teachingSchema });
+export async function cancelInstructorMoveReadiness(input: z.infer<typeof cancelReadinessSchema>): Promise<ActionResult> {
+  const session = await requirePermission("progression.complete");
+  const parsed = cancelReadinessSchema.safeParse(input);
+  if (!parsed.success) return fail(parsed.error.issues[0].message);
+  const { studentId, teaching } = parsed.data, clubId = await currentClubId();
+  const result = await prisma.$transaction(async tx => {
+    await tx.$queryRaw`SELECT id FROM "Course" WHERE id = ${teaching.courseId} FOR UPDATE`;
+    const error = await teachingError(tx, session, teaching, clubId, [studentId]);
+    if (error) return fail(error);
+    await tx.$queryRaw`SELECT id FROM "Student" WHERE id = ${studentId} FOR UPDATE`;
+    const place = await tx.enrolment.findFirst({ where: { studentId, courseId: teaching.courseId, status: "ACTIVE" },
+      select: { id: true, programmeId: true, readyToMoveAt: true, readyToMoveLevelId: true, student: { select: { firstName: true, lastName: true } } } });
+    if (!place) return fail("This swimmer is no longer in this class.");
+    if (!place.readyToMoveAt) return ok();
+    await tx.enrolment.update({ where: { id: place.id }, data: { readyToMoveAt: null, readyToMoveById: null, readyToMoveByName: null, readyToMoveLevelId: null, readyToMoveNote: null } });
+    await logAudit({ actorId: session.user.id, actorName: session.user.name ?? "Unknown", action: "cancel-move-readiness", entity: "Enrolment", entityId: place.id,
+      programmeId: place.programmeId, clubId, summary: `Removed ${fullName(place.student)} from awaiting moves`,
+      details: { version: 1, studentId, courseId: teaching.courseId, levelId: place.readyToMoveLevelId } }, tx);
+    return ok();
+  });
   if (result.ok) revalidate();
   return result;
 }

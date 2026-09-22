@@ -26,6 +26,7 @@ export function CompleteLevel({
   levelName,
   courseId,
   date,
+  disabled = false,
 }: {
   studentId: string;
   studentName: string;
@@ -33,6 +34,7 @@ export function CompleteLevel({
   levelName: string;
   courseId: string;
   date: string;
+  disabled?: boolean;
 }) {
   const [open, setOpen] = useState(false),
     [note, setNote] = useState(""),
@@ -48,22 +50,25 @@ export function CompleteLevel({
       <DialogTrigger asChild>
         <Button
           variant="outline"
-          aria-label={`Complete ${levelName} for ${studentName}`}
+          className="min-h-11"
+          disabled={disabled}
+          aria-label={`Mark ${studentName} ready to move`}
         >
-          Complete level
+          Ready to move
         </Button>
       </DialogTrigger>
       <DialogContent showCloseButton={false}>
         <DialogHeader>
-          <DialogTitle>Complete {levelName}?</DialogTitle>
+          <DialogTitle>Mark {studentName} ready to move?</DialogTitle>
           <DialogDescription>
-            {studentName} has achieved every competency. Confirm they are ready
-            to complete this level.
+            Every competency in {levelName} is achieved. This confirms the level
+            completion and adds {studentName} to Awaiting moves for reception.
+            They stay in this class until staff arrange the move.
           </DialogDescription>
         </DialogHeader>
         <div className="space-y-2">
           <Label htmlFor={`completion-note-${studentId}`}>
-            Note (optional)
+            Note for reception (optional)
           </Label>
           <Textarea
             id={`completion-note-${studentId}`}
@@ -88,6 +93,15 @@ export function CompleteLevel({
             pending={pending}
             onClick={() =>
               startTransition(async () => {
+                // The checklist mirrors unsaved edits on this device. Never
+                // hand off a swimmer while their local marks still differ.
+                try {
+                  const draft = JSON.parse(localStorage.getItem(`swimly:assess:${courseId}:${date}`) ?? "null");
+                  if (draft?.[studentId] && Object.keys(draft[studentId]).length) {
+                    setError("Save this swimmer’s competency changes before confirming readiness.");
+                    return;
+                  }
+                } catch { /* Server eligibility remains authoritative if storage is unavailable. */ }
                 try {
                   const result = await withTimeout(
                     confirmLevelCompletion({
@@ -96,6 +110,7 @@ export function CompleteLevel({
                       note,
                       overrideReason: "",
                       teaching: { courseId, date },
+                      readyToMove: true,
                     }),
                   );
                   if (!result.ok) {
@@ -104,7 +119,7 @@ export function CompleteLevel({
                   }
                   setOpen(false);
                   setError(null);
-                  toast.success("Level completed");
+                  toast.success("Added to awaiting moves");
                 } catch {
                   setError(SAVE_UNCONFIRMED_MESSAGE);
                 }
@@ -112,7 +127,7 @@ export function CompleteLevel({
             }
           >
             <Check aria-hidden="true" />
-            Confirm completion
+            Confirm ready to move
           </LoadingButton>
         </DialogFooter>
       </DialogContent>

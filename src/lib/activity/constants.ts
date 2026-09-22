@@ -26,6 +26,8 @@ const ACTIONS: Record<string, { label: string; color: TagColor }> = {
   complete: { label: "Finished", color: "blue" },
   transfer: { label: "Moved", color: "purple" },
   "legend-agreement": { label: "Legend agreement confirmed", color: "green" },
+  "ready-to-move": { label: "Ready to move", color: "blue" },
+  "cancel-move-readiness": { label: "Move readiness removed", color: "gray" },
 
   // The pool deck
   attendance: { label: "Attendance", color: "blue" },

@@ -86,7 +86,7 @@ export const PERMISSIONS = [
     group: "On the deck",
     label: "Complete a level",
     description:
-      "Confirm a swimmer has finished a level once every competency is signed off. Includes marking competencies.",
+        "Confirm a swimmer has finished a level and is ready to move once every competency is signed off. Includes marking competencies.",
   },
   {
     key: "progression.override",

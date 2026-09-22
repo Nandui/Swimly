@@ -454,6 +454,13 @@ model Enrolment {
   legendAgreementUpdatedAt     DateTime?
   legendAgreementUpdatedById   String?
   legendAgreementUpdatedByName String?
+  /// Explicit teaching handoff for this place, never copied to a new enrolment.
+  /// Level and actor IDs are snapshots; their attribution survives later edits.
+  readyToMoveAt         DateTime?
+  readyToMoveById       String?
+  readyToMoveByName     String?
+  readyToMoveLevelId    String?
+  readyToMoveNote       String?
   createdAt       DateTime        @default(now())
   updatedAt       DateTime        @updatedAt
 
@@ -467,6 +474,7 @@ model Enrolment {
   @@index([status, scheduledEndOn])
   @@index([programmeId, status])
   @@index([status, legendAgreementStatus, startedOn])
+  @@index([status, readyToMoveAt])
 }
 
 // ---------------------------------------------------------------------------
