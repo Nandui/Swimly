@@ -879,3 +879,94 @@ model ParentProgressEvent {
   student Student @relation(fields: [studentId], references: [id], onDelete: Restrict)
   @@index([studentId, kind, subjectId, releaseAt, id])
 }
+
+// Refunds is a separate staff module. Identity/site IDs and names are snapshots;
+// retiring accounts or facilities must not erase a financial handoff's history.
+model RefundRequest {
+  id String @id
+  number Int @unique @default(autoincrement())
+  status String @default("DRAFT")
+  version Int @default(1)
+  creatorId String
+  creatorName String
+  clubId String
+  clubName String
+  customerName String @default("")
+  contactEmail String @default("")
+  contactPhone String @default("")
+  memberNumber String @default("")
+  service String @default("OTHER")
+  description String @default("")
+  requestedCents Int?
+  paymentDate String @default("")
+  paymentReference String @default("")
+  reason String @default("")
+  handlerId String?
+  handlerName String?
+  approvedCents Int?
+  approvedById String?
+  approvedByName String?
+  paidOn String?
+  paidMethod String?
+  paidReference String?
+  paidById String?
+  paidByName String?
+  submittedAt DateTime?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  events RefundEvent[]
+  attachments RefundAttachment[]
+  notifications RefundNotification[]
+  @@index([status, submittedAt])
+  @@index([clubId, status])
+  @@index([creatorId])
+  @@index([handlerId])
+  @@index([paymentReference])
+}
+
+model RefundEvent {
+  id String @id @default(cuid())
+  requestId String
+  operationId String
+  actorId String
+  actorName String
+  action String
+  note String @default("")
+  snapshot Json
+  createdAt DateTime @default(now())
+  request RefundRequest @relation(fields: [requestId], references: [id], onDelete: Restrict)
+  notifications RefundNotification[]
+  @@unique([requestId, operationId])
+  @@index([requestId, createdAt])
+}
+
+model RefundAttachment {
+  id String @id
+  requestId String
+  name String
+  mime String
+  size Int
+  bytes Bytes
+  createdById String
+  createdAt DateTime @default(now())
+  removedAt DateTime?
+  request RefundRequest @relation(fields: [requestId], references: [id], onDelete: Restrict)
+  @@index([requestId])
+}
+
+model RefundNotification {
+  id String @id @default(cuid())
+  requestId String
+  eventId String
+  recipientId String
+  status String @default("PENDING")
+  attempts Int @default(0)
+  attemptedAt DateTime?
+  error String?
+  sentAt DateTime?
+  createdAt DateTime @default(now())
+  request RefundRequest @relation(fields: [requestId], references: [id], onDelete: Restrict)
+  event RefundEvent @relation(fields: [eventId], references: [id], onDelete: Restrict)
+  @@unique([eventId, recipientId])
+  @@index([requestId, status])
+}

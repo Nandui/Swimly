@@ -6,7 +6,8 @@ The parents application is unchanged.
 
 The implementation is adapted from `Nandui/turnfin-docs`, branch
 `codex/initial-release`, commit `e11a1eb020477fb27b660ce373715ac4bf6b7624`.
-The owner explicitly chose to preserve that repository's design for **Docs only**:
+The owner initially chose to preserve that repository's design for Docs, and
+subsequently requested the same design for Refunds:
 Inter, its ocean-blue/aqua palette, navy dark mode, sidebar, reading layouts,
 authoring flow and administration screens. Module CSS and portal wrappers are
 scoped to `.turnfin-docs`; shared controls come from `src/components/shadcn`.

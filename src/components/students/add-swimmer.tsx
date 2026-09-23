@@ -1,6 +1,6 @@
 "use client";
 
-import { useId, useState, useTransition, type ComponentProps } from "react";
+import { useId, useState, useTransition, type ComponentProps, type ReactElement } from "react";
 import { useRouter } from "next/navigation";
 import { ChevronDown, Plus } from "lucide-react";
 import { Button } from "@/components/shadcn/button";
@@ -22,7 +22,7 @@ import { swimmerProfileHref } from "@/lib/students/directory";
 import { toast } from "@/lib/toast";
 import { withTimeout } from "@/lib/save-feedback";
 
-export function AddSwimmer({ student }: { student?: StudentDetail } = {}) {
+export function AddSwimmer({ student, trigger }: { student?: StudentDetail; trigger?: ReactElement } = {}) {
   const [open, setOpen] = useState(false);
   const [expanded, setExpanded] = useState(false);
   const { formRef, summaryRef, ...feedback } = useFormFeedback();
@@ -36,8 +36,8 @@ export function AddSwimmer({ student }: { student?: StudentDetail } = {}) {
     if (!next) { feedback.reset(); setExpanded(false); }
   }
   return <Dialog open={open} onOpenChange={changeOpen}>
-    <DialogTrigger asChild><Button variant={student ? "outline" : "default"}>{student ? "Edit details" : <><Plus aria-hidden="true" />Add swimmer</>}</Button></DialogTrigger>
-    <DialogContent className="flex max-h-[90dvh] flex-col gap-0 overflow-hidden p-0 sm:max-w-2xl" showCloseButton={!pending}>
+    <DialogTrigger asChild>{trigger ?? <Button variant={student ? "outline" : "default"}>{student ? "Edit details" : <><Plus aria-hidden="true" />Add swimmer</>}</Button>}</DialogTrigger>
+    <DialogContent className="flex max-h-[90dvh] flex-col gap-0 overflow-hidden p-0 sm:max-w-2xl [&_button:not([role=checkbox])]:min-h-11 [&_input:not([type=hidden])]:min-h-11 [&>button]:inline-flex [&>button]:min-w-11 [&>button]:items-center [&>button]:justify-center" showCloseButton={!pending}>
       <DialogHeader className="shrink-0 border-b border-ui-border p-6 pr-14 text-left">
         <DialogTitle>{student ? "Edit swimmer details" : "Add a swimmer"}</DialogTitle>
         <DialogDescription>{student ? "Update their shared profile and contact details." : "Start with their name. You can complete the rest now or in their profile."}</DialogDescription>
@@ -88,7 +88,7 @@ export function AddSwimmer({ student }: { student?: StudentDetail } = {}) {
               <Label className="min-h-11 gap-3" htmlFor={`${id}-consent`}><Checkbox id={`${id}-consent`} name="photoConsent" defaultChecked={student?.photoConsent} />Photo and video consent</Label>
             </CollapsibleContent>
           </Collapsible>
-          <div className="space-y-2"><Label htmlFor={`${id}-status`}>Status</Label><Select name="status" defaultValue={student?.status ?? "ACTIVE"} disabled={pending}><SelectTrigger id={`${id}-status`} className="w-full"><SelectValue /></SelectTrigger><SelectContent><SelectItem value="ACTIVE">Active</SelectItem><SelectItem value="INACTIVE">Inactive</SelectItem></SelectContent></Select></div>
+          <div className="space-y-2"><Label htmlFor={`${id}-status`}>Status</Label><Select name="status" defaultValue={student?.status ?? "ACTIVE"} disabled={pending}><SelectTrigger id={`${id}-status`} className="w-full"><SelectValue /></SelectTrigger><SelectContent><SelectItem className="min-h-11" value="ACTIVE">Active</SelectItem><SelectItem className="min-h-11" value="INACTIVE">Inactive</SelectItem></SelectContent></Select></div>
         </fieldset></div>
         <div className="shrink-0 space-y-3 border-t border-ui-border p-4 sm:px-6">
           {error ? <Alert ref={summaryRef} tabIndex={-1} variant="destructive" role="alert"><AlertDescription>{error}</AlertDescription></Alert> : null}

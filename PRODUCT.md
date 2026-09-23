@@ -153,14 +153,29 @@ when the role offers Swimmers, otherwise an accessible landing page. Reception
 is no longer offered as a screen or landing-page choice.
 
 The Turnfin staff portal at `/modules` is the signed-in front door, reached from the
-root address and after sign-in. It offers Aquatics now, with Docs and Bookings
-marked Coming soon and no destination until those modules are available.
+root address and after sign-in. It offers Aquatics and permitted Docs access,
+with Bookings marked Coming soon and no destination until available.
 Opening Aquatics uses `/start` to resolve the role's accessible home in Swimly. The desk
 sidebar offers All modules; the Instructor workspace keeps its isolated navigation.
 The portal is for staff, separate from the parent app, and grants no new screen
 or action access. Turnfin is the overall portal brand and uses the owner's
-supplied fin logo; Aquatics, Docs and Bookings are the portal's module names.
+supplied fin logo; Aquatics, Docs, Refunds and Bookings are the portal's module names.
 The module catalogue and portal name live in `src/lib/modules.ts`.
+
+The Turnfin Reception Portal at `/reception-portal` is the owner-approved default
+for receptionists, configured through the explicit Reception Portal role home.
+It uses a module directory with permission-filtered task and follow-up shortcuts.
+Other staff retain the general portal, and All modules remains available. This
+does not restore the retired Reception workspace or grant additional access.
+See [docs/reception-portal.md](docs/reception-portal.md) for activation and routing.
+
+Turnfin Refunds is a separate staff module for any LeisureWorld service.
+Reception drafts/submits customer refund requests; finance reviews them and
+records payments completed in another system. Both sites share the queue, a
+swimmer record is optional, and no bank/card details are collected. Private
+drafts, receipts, revision history, separate review/payment grants and staff
+alerts support the handoff. Turnfin does not send money or change Legend.
+See [docs/refunds.md](docs/refunds.md) for workflow and deployment.
 
 Overview is also retired. Schedule is the default for desk roles with calendar access; Duty manager
 and Instructor retain their chosen landing pages. Overview is absent from

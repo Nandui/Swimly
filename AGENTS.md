@@ -44,8 +44,9 @@ read the design files below before changing how it looks.
 
 The entire staff app uses shadcn/ui components from src/components/shadcn.
 Aquatics and the portal use Neutral light/dark surfaces, a logo-blue accent and
-Figtree. Docs alone preserves its source repository's Inter and ocean-blue/aqua
-theme, scoped to `.turnfin-docs` (see docs/turnfin-docs.md). The owner approved
+Figtree. Docs and Refunds share the Docs repository's Inter and ocean-blue/aqua
+theme, scoped to `.turnfin-docs`; Refunds adds `.turnfin-refunds` for its own
+layouts (see docs/turnfin-docs.md and docs/refunds.md). The owner approved
 full conversion and the blue accent for actions, selection and focus.
 Read installed component source before use. Use semantic HTML and Tailwind for
 layout, ui- colour/radius utilities from src/app/shadcn.css, and metadata-fed

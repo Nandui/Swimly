@@ -1,0 +1,63 @@
+{
+  "title": "Turnfin Reception Portal",
+  "question": "Choose the layout for receptionists’ default landing page. All three keep Turnfin’s existing look, site switching and permission-based access. The full interactive previews are at http://127.0.0.1:4198/reception-portal.",
+  "options": [
+    {
+      "id": "directory",
+      "label": "1. Module directory",
+      "kicker": "THE ROLL",
+      "thesis": "Keep reception tools organised by the module they belong to.",
+      "palette": ["#ffffff", "#171717", "#0658e7"],
+      "materials": ["Figtree", "Neutral surfaces", "shadcn controls"],
+      "viewport": "A wide Aquatics row with customer shortcuts; Docs and future Bookings underneath.",
+      "risk": "Follow-up tasks are less prominent than module access.",
+      "comp": ".impeccable/review/reception-portal/directory-desktop.png",
+      "wireframe": { "cols": 12, "rows": 10, "regions": [
+        { "label": "Turnfin · Reception Portal · working site", "x": 0, "y": 0, "w": 12, "h": 2 },
+        { "label": "Aquatics", "x": 0, "y": 2, "w": 4, "h": 4, "accent": true },
+        { "label": "Find swimmer · class · assessment · siblings", "x": 4, "y": 2, "w": 8, "h": 4 },
+        { "label": "Enrolment · ready to move · Legend · parents", "x": 0, "y": 6, "w": 12, "h": 1 },
+        { "label": "Docs", "x": 0, "y": 7, "w": 6, "h": 3 },
+        { "label": "Bookings · coming soon", "x": 6, "y": 7, "w": 6, "h": 3 }
+      ] }
+    },
+    {
+      "id": "follow-up",
+      "label": "2. Follow-up queue",
+      "thesis": "Start with outstanding work so handoffs are easy to spot.",
+      "palette": ["#ffffff", "#171717", "#0658e7"],
+      "materials": ["Figtree", "Neutral surfaces", "shadcn controls"],
+      "viewport": "Follow-up lists lead the left column; modules stack on the right and customer tasks sit below.",
+      "risk": "Everyday customer tasks sit lower; accurate live queue counts would be needed.",
+      "comp": ".impeccable/review/reception-portal/follow-up-desktop.png",
+      "wireframe": { "cols": 12, "rows": 10, "regions": [
+        { "label": "Turnfin · Reception Portal · working site", "x": 0, "y": 0, "w": 12, "h": 2 },
+        { "label": "Follow up · enrolment · moves · agreements · access", "x": 0, "y": 2, "w": 8, "h": 5, "accent": true },
+        { "label": "Aquatics", "x": 8, "y": 2, "w": 4, "h": 3 },
+        { "label": "Docs", "x": 8, "y": 5, "w": 4, "h": 3 },
+        { "label": "Help a customer · quick tasks", "x": 0, "y": 7, "w": 8, "h": 3 },
+        { "label": "Bookings · coming soon", "x": 8, "y": 8, "w": 4, "h": 2 }
+      ] }
+    },
+    {
+      "id": "desk",
+      "label": "3. Reception desk",
+      "thesis": "Keep the most common customer tasks within easy reach.",
+      "palette": ["#ffffff", "#171717", "#0658e7"],
+      "materials": ["Figtree", "Neutral surfaces", "shadcn controls"],
+      "viewport": "Aquatics and its shortcuts fill the main panel; Docs and Bookings sit beside it, with follow-up below.",
+      "risk": "Aquatics dominates until the other reception modules grow.",
+      "comp": ".impeccable/review/reception-portal/desk-desktop.png",
+      "wireframe": { "cols": 12, "rows": 10, "regions": [
+        { "label": "Turnfin · Reception Portal · working site", "x": 0, "y": 0, "w": 12, "h": 2 },
+        { "label": "Aquatics · swimmers · classes · assessment · siblings", "x": 0, "y": 2, "w": 8, "h": 5, "accent": true },
+        { "label": "Docs", "x": 8, "y": 2, "w": 4, "h": 3 },
+        { "label": "Bookings · coming soon", "x": 8, "y": 5, "w": 4, "h": 2 },
+        { "label": "Follow up · enrolment · moves · Legend · parent access", "x": 0, "y": 7, "w": 12, "h": 3 }
+      ] }
+    }
+  ],
+  "buildPath": { "value": "code", "toggle": true },
+  "reroll": true,
+  "steer": true
+}

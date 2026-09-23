@@ -19,6 +19,10 @@ import type { Role } from "@/generated/prisma/client";
  *  other roles keep their explicit grants. */
 
 export const PERMISSIONS = [
+  { key: "refunds.read", group: "Refunds", label: "Read refund requests", description: "Open Refunds and follow submitted requests across sites. Drafts remain private to their creator." },
+  { key: "refunds.request", group: "Refunds", label: "Submit refund requests", description: "Create private drafts, submit requests and answer finance queries. Includes reading." },
+  { key: "refunds.review", group: "Refunds", label: "Review refund requests", description: "Take responsibility, request information, approve or decline other staff's requests. Includes reading, not payment recording." },
+  { key: "refunds.process", group: "Refunds", label: "Record refund payments", description: "Record external payment of approved refunds and cancel unpaid approvals. Includes reading, not approval." },
   { key: "docs.read", group: "Docs", label: "Read published documents", description: "Open Docs, read published versions and acknowledge assigned reading. Also needs the Docs screen." },
   { key: "docs.write", group: "Docs", label: "Author documents", description: "Create and edit drafts, submit for independent approval and view reading reports. Includes reading." },
   { key: "docs.approve", group: "Docs", label: "Approve documents", description: "Review and publish documents written by other staff. Includes authoring; never permits self-approval." },
@@ -156,6 +160,7 @@ export const PERMISSION_GROUP_ORDER: PermissionGroup[] = [
   "On the deck",
   "The rules",
   "Docs",
+  "Refunds",
   "Administration",
 ];
 
@@ -176,6 +181,9 @@ export function hasAdministratorAccess(permissions: Iterable<string>): boolean {
  *  rather than solved at each call site, because the call site that forgets is
  *  the one that quietly locks someone out. */
 const IMPLIES: Partial<Record<PermissionKey, PermissionKey[]>> = {
+  "refunds.request": ["refunds.read"],
+  "refunds.review": ["refunds.read"],
+  "refunds.process": ["refunds.read"],
   "docs.write": ["docs.read"],
   "docs.approve": ["docs.read", "docs.write"],
   "docs.manage": ["docs.read", "docs.write"],
@@ -212,6 +220,11 @@ export const ALL_PERMISSIONS: PermissionKey[] = PERMISSIONS.map((p) => p.key);
  *  reads the path from here. An instructor's day starts on the deck; the
  *  desk's starts on Today. */
 export const ROLE_HOMES = {
+  "reception-portal": {
+    label: "Reception Portal",
+    path: "/reception-portal",
+    description: "Start in the Turnfin Reception Portal. Only existing reception and Docs access is offered; Aquatics opens an accessible desk page.",
+  },
   duty: {
     label: "Duty manager",
     path: "/duty",
@@ -237,7 +250,7 @@ export const ROLE_HOMES = {
 
 export type RoleHome = keyof typeof ROLE_HOMES;
 
-export const ROLE_HOME_ORDER: RoleHome[] = ["calendar", "duty", "instructor"];
+export const ROLE_HOME_ORDER: RoleHome[] = ["reception-portal", "calendar", "duty", "instructor"];
 
 export function normaliseRoleHome(value: unknown): RoleHome {
   if (value === "today") return "instructor";

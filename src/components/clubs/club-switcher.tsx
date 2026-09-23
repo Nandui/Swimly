@@ -22,7 +22,7 @@ export function ClubSwitcher({ club, clubs, touchTargets = false, sidebar = fals
     });
   }
   return <DropdownMenu><DropdownMenuTrigger asChild>
-    <Button variant="outline" className={cn("w-full min-w-0 justify-start", sidebar && "h-11 group-data-[collapsible=icon]:size-11 group-data-[collapsible=icon]:justify-center group-data-[collapsible=icon]:p-0")} disabled={pending || clubs.length < 2} aria-label={`Working area: ${club.name}. Switch site`} title={club.name}>
+    <Button variant="outline" className={cn("w-full min-w-0 justify-start", touchTargets && "min-h-11", sidebar && "h-11 group-data-[collapsible=icon]:size-11 group-data-[collapsible=icon]:justify-center group-data-[collapsible=icon]:p-0")} disabled={pending || clubs.length < 2} aria-label={`Working area: ${club.name}. Switch site`} title={club.name}>
       {pending ? <Loader2 className="animate-spin" aria-hidden="true" /> : <Building2 aria-hidden="true" />}<span className={cn("min-w-0 truncate", sidebar && "group-data-[collapsible=icon]:hidden")}>{pending ? "Switching…" : club.name}</span><ChevronsUpDown className={cn("ml-auto", sidebar && "group-data-[collapsible=icon]:hidden")} aria-hidden="true" />
     </Button>
   </DropdownMenuTrigger><DropdownMenuContent align="start" className="w-72 max-w-[calc(100vw-2rem)]">

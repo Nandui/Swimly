@@ -19,6 +19,7 @@ import { ROLE_HOMES, expandPermissions, hasAdministratorAccess } from "@/lib/sta
  *  from it still requires the separate attendance permission. */
 
 export const SCREENS = [
+  { key: "refunds", label: "Refunds", path: "/refunds", description: "A separate workspace for customer refund requests, finance decisions and external payment records.", requires: "refunds.read" },
   {
     key: "analytics",
     label: "Analytics",
@@ -153,7 +154,7 @@ export function cleanScreens(input: readonly string[]): ScreenKey[] {
   // New roles use the two independent explicit keys.
   // The retired Overview key still identifies a legacy desk role when
   // resolving its old Today grant; it never becomes a screen itself.
-  const hadDeskScreens = input.some(key => key === "overview" || (isScreenKey(key) && key !== "instructor" && key !== "docs"));
+  const hadDeskScreens = input.some(key => key === "overview" || (isScreenKey(key) && isAquaticsScreen(key) && key !== "instructor"));
   const held = new Set(input.flatMap(key => key === "today"
     ? hadDeskScreens ? ["calendar", "instructor"] : ["instructor"]
     : [key]).filter(isScreenKey));
@@ -189,11 +190,18 @@ export function homePathFor(
   const visible = visibleScreens(screens, expandPermissions(permissions));
   // Apply the workspace boundary after resolving inherited administrator
   // access, so the desk wordmark never leads into the pool-deck workspace.
-  if (workspace === "desk") { visible.delete("instructor"); visible.delete("docs"); }
+  if (workspace === "desk" || home === "reception-portal") {
+    for (const key of visible) if (!isAquaticsScreen(key) || key === "instructor") visible.delete(key);
+  }
   if ((home === "today" || home === "instructor") && visible.has("instructor")) return ROLE_HOMES.instructor.path;
   if (home === "calendar" && visible.has("calendar")) return ROLE_HOMES.calendar.path;
   if (home === "duty" && visible.has("duty")) return ROLE_HOMES.duty.path;
   if (visible.has("calendar")) return ROLE_HOMES.calendar.path;
   const first = SCREENS.find((screen) => visible.has(screen.key));
   return first ? first.path : "/account";
+}
+
+/** Separate modules never imply access to the swim-school workspace. */
+export function isAquaticsScreen(key: ScreenKey) {
+  return key !== "docs" && key !== "refunds";
 }

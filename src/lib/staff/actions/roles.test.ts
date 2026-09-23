@@ -70,3 +70,13 @@ test("administrator updates preserve the keyholder guard and atomic audit", asyn
   await assert.rejects(g.actions.updateRole("role", administrator), /Audit unavailable/);
   assert.deepEqual(g.role().permissions, ["staff.manage"]);
 });
+
+test("Reception Portal preference saves and audits without changing existing access", async () => {
+  const f = fixture();
+  const input = { name: "Synthetic team", description: "", home: "reception-portal", permissions: ["staff.manage"], screens: ["staff"] };
+  assert.equal((await f.actions.updateRole("role", input)).ok, true);
+  assert.equal(f.role().home, "reception-portal");
+  assert.deepEqual(f.role().permissions, ["staff.manage"]);
+  assert.deepEqual(f.role().screens, ["staff"]);
+  assert.match(f.audits[0], /starts on Reception Portal/);
+});

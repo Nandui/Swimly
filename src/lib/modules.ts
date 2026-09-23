@@ -1,4 +1,4 @@
-import { CalendarDays, Files, WavesLadder, type LucideIcon } from "lucide-react";
+import { CalendarDays, Files, ReceiptText, WavesLadder, type LucideIcon } from "lucide-react";
 import type { TagColor } from "@/components/ui-kit/tag";
 
 export const PORTAL_BRAND = "Turnfin";
@@ -14,6 +14,8 @@ type StaffModule = {
   name: string;
   description: string;
   icon: LucideIcon;
+  /** Opt in only modules relevant to reception staff. */
+  reception?: boolean;
 } & (
   | { status: "available"; href: string }
   | { status: "planned"; href?: never }
@@ -21,8 +23,10 @@ type StaffModule = {
 
 /** Add destinations here when each module is ready. Planned modules have no link. */
 export const STAFF_MODULES: readonly StaffModule[] = [
+  { id: "refunds", reception: true, name: "Refunds", description: "Submit customer refund requests, follow finance decisions and record completed payments.", icon: ReceiptText, status: "available", href: "/refunds" },
   {
     id: "swimly",
+    reception: true,
     name: "Aquatics",
     description: "Run the swim school. Manage classes, swimmers, attendance and progress.",
     icon: WavesLadder,
@@ -32,6 +36,7 @@ export const STAFF_MODULES: readonly StaffModule[] = [
   },
   {
     id: "docs",
+    reception: true,
     name: "Docs",
     description: "Read, write and approve staff documents. Track required reading.",
     icon: Files,
@@ -40,6 +45,7 @@ export const STAFF_MODULES: readonly StaffModule[] = [
   },
   {
     id: "bookings",
+    reception: true,
     name: "Bookings",
     description: "Booking tools for the LeisureWorld team.",
     icon: CalendarDays,

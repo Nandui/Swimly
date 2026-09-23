@@ -118,6 +118,28 @@ Its original artwork is framed inside a 48px header slot to account for the
 file's transparent padding. It also supplies the portal's browser/touch icon;
 the Aquatics module opens the existing Swimly workspace.
 
+The Reception Portal uses the approved module-directory composition: a wide
+Aquatics row with task shortcuts and follow-up links, followed by permitted
+modules. Its content is capped at 1152px; the shared portal frame owns the only
+main landmark and page inset. Working-site and action controls are at least
+44px high. Cards stack on phones, and unavailable modules have no launch action.
+See [docs/reception-portal.md](docs/reception-portal.md).
+
+Refunds at `/refunds` uses the Docs visual language, explicitly selected by the
+owner: Inter, ocean-blue actions, pale blue surfaces and navy dark mode. It reuses
+Docs' scoped theme, brand and appearance controls, with an independent Refunds
+sidebar, mobile sheet, collapse preference and breadcrumb. The shell owns the only
+main landmark, page inset and page scroll. `.turnfin-refunds` scopes its layouts.
+One summary strip, labelled filters and responsive linked rows make up the queue;
+both sites are shown by default. White/navy panels group filters and request
+sections against the tinted workspace. A request separates requested/approved/payment
+totals from customer facts and the next-action panel. On phones all content
+stacks; history uses shadcn Collapsible controls. Finance decisions use shadcn
+Dialogs with 44px controls, focus restoration and preserved values after errors.
+Forms retain native FormData and labelled inputs. Status colours come only from
+Refunds metadata. Draft privacy and permissions change available controls, never
+the workspace boundary. See [docs/refunds.md](docs/refunds.md).
+
 Schedule keeps its booking sheet with sticky level labels and horizontal time scrolling.
 The sheet expands vertically within the workspace's single page scroll. Phones
 use Agenda. Circled check means spaces available; circled X means full.

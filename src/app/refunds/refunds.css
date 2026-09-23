@@ -1,0 +1,60 @@
+/* Refunds shares the approved Docs visual language, with its own workspace. */
+.turnfin-refunds {
+  --ui-accent: var(--ui-brand-soft);
+  --ui-accent-foreground: var(--ui-brand-ink);
+  --ui-secondary: var(--ui-muted);
+  --ui-secondary-foreground: var(--ui-foreground);
+  --ui-card-foreground: var(--ui-foreground);
+  --ui-popover-foreground: var(--ui-foreground);
+}
+.turnfin-refunds .workspace-brand-row .turnfin-brand { gap: 6px; }
+.turnfin-refunds .workspace-brand-row .brand-wordmark { font-size: 22px; }
+.turnfin-refunds .workspace-brand-row .brand-wordmark > span { font-size: 12px; }
+.turnfin-refunds .workspace-mobile-toolbar > a[aria-label='Turnfin Refunds overview'] { flex: 1; min-width: 0; }
+.turnfin-refunds .refund-content { min-width: 0; }
+.turnfin-refunds .workspace-page { position: relative; }
+.turnfin-refunds .refund-heading { display: flex; flex-wrap: wrap; align-items: flex-start; justify-content: space-between; gap: 16px; margin-bottom: 28px; }
+.turnfin-refunds .refund-heading h1 { font-size: clamp(28px, 2.7vw, 36px); font-weight: 600; line-height: 1.2; letter-spacing: -0.035em; }
+.turnfin-refunds .refund-heading p { margin-top: 10px; line-height: 1.65; }
+.turnfin-refunds .refund-summary { margin: 0; padding: 24px; border: 1px solid var(--ui-border); border-radius: var(--ui-radius); background: var(--ui-card); }
+.turnfin-refunds .refund-summary dt { font-size: 12px; }
+.turnfin-refunds .refund-summary dd { margin-top: 8px; }
+.turnfin-refunds .refund-totals-note { margin-top: 10px; }
+.turnfin-refunds .refund-filters { margin-top: 28px; padding: 24px; border: 1px solid var(--ui-border); border-radius: var(--ui-radius); background: var(--ui-card); }
+.turnfin-refunds .refund-results { margin-top: 28px; }
+.turnfin-refunds .refund-results > p { margin-bottom: 12px; }
+.turnfin-refunds .refund-results ul { margin: 0; padding: 0; list-style: none; }
+.turnfin-refunds .refund-row { transition: background-color 120ms ease; }
+.turnfin-refunds .refund-row p + p { margin-top: 6px; }
+.turnfin-refunds .refund-row p.font-semibold { margin-top: 10px; }
+.turnfin-refunds .refund-request-form > fieldset { display: grid; gap: 24px; }
+.turnfin-refunds .refund-panel { padding: 24px; border: 1px solid var(--ui-border); border-radius: var(--ui-radius); background: var(--ui-card); }
+.turnfin-refunds .refund-panel h2 { font-size: 18px; font-weight: 600; letter-spacing: -0.02em; }
+.turnfin-refunds .refund-panel h2 + :is(div, dl, ol, p) { margin-top: 20px; }
+.turnfin-refunds .refund-panel dd { margin-top: 5px; }
+.turnfin-refunds .refund-panel h3 + p { margin-top: 8px; }
+.turnfin-refunds .refund-panel p + p { margin-top: 8px; }
+.turnfin-refunds .refund-detail-columns { display: grid; gap: 24px; margin-top: 24px; }
+.turnfin-refunds .refund-history { margin-top: 28px; }
+.turnfin-refunds .refund-history ol { margin-bottom: 0; padding: 0; list-style: none; }
+.turnfin-refunds .refund-history li:last-child { padding-bottom: 0; }
+.turnfin-refunds .refund-new > .refund-heading { display: block; }
+.turnfin-refunds .refund-new { max-width: 860px; margin-inline: auto; }
+.turnfin-refunds .refund-content label { display: block; font-size: 13px; font-weight: 500; }
+.turnfin-refunds .refund-content [data-slot='input'],
+.turnfin-refunds .refund-content [data-slot='textarea'],
+.turnfin-refunds .refund-content [data-slot='select-trigger'] { background: var(--ui-background); border-color: var(--ui-input); }
+.turnfin-refunds .refund-content :is([data-slot='input'], [data-slot='textarea'], [data-slot='select-trigger']):focus-visible { border-color: var(--ui-ring); }
+.turnfin-refunds [data-slot='select-item'] { font-family: var(--font-sans); }
+@media (min-width: 1280px) {
+  .turnfin-refunds .refund-detail-columns { grid-template-columns: minmax(0, 2fr) minmax(260px, 1fr); }
+}
+@media (max-width: 767px) {
+  .turnfin-refunds .refund-heading { margin-bottom: 24px; }
+  .turnfin-refunds .refund-panel,
+  .turnfin-refunds .refund-summary,
+  .turnfin-refunds .refund-filters { padding: 20px 16px; }
+  .turnfin-refunds .workspace-mobile-toolbar .brand-wordmark { font-size: 20px; }
+  .turnfin-refunds .workspace-mobile-toolbar .brand-wordmark > span { font-size: 12px; }
+  .turnfin-refunds .refund-row { align-items: flex-start; }
+}
