@@ -18,3 +18,9 @@ Browser verification: add an update, reject an empty note, preserve unsaved text
 when reloading history/closing the panel, save and check the row summary, inspect
 read-only history, and verify keyboard focus/Escape and 44px controls at 375,
 768, 1024 and 1280px in both themes.
+
+The queue now shows latest-note previews and an inline contact timeline on row
+expansion. Add contact or note opens the form above the timeline. The profile
+still uses a Sheet. Run node scripts/check-awaiting-follow-up.mjs while this
+preview is running to verify both presentations, saved notes, retries, drafts,
+read-only access and responsive forms.

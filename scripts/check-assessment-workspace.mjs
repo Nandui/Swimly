@@ -40,7 +40,8 @@ try {
   await page.getByRole('heading',{level:1,name:'Awaiting enrolment',exact:true}).waitFor();
   assert.equal(await mainNav().count(),0);
   assert.equal(await page.getByText('Waitlisted',{exact:true}).count(),2);
-  const unassessed=page.getByRole('row').filter({hasText:'Morgan Example'});
+  const unassessed=page.getByRole('listitem',{name:'Morgan Example',exact:true});
+  await unassessed.locator('[data-slot=collapsible-trigger]').click();
   assert.equal(await unassessed.getByText(/Assessed level/).count(),0);
   assert.equal(await unassessed.getByRole('listitem').count(),2);
   assert.equal(await unassessed.getByRole('button',{name:/^Enrol .* from the waitlist/}).count(),1);
@@ -53,7 +54,8 @@ try {
   await page.keyboard.press('Escape');
   await confirmation.waitFor({state:'hidden'});
   assert(await promote.evaluate(el=>el===document.activeElement));
-  await page.getByRole('button',{name:'Enrol',exact:true}).first().click();
+  await page.getByRole('listitem',{name:'Avery Example',exact:true}).locator('[data-slot=collapsible-trigger]').click();
+  await page.getByRole('button',{name:'Find a class',exact:true}).first().click();
   await dialog.waitFor();
   assert(await dialog.getByRole('heading',{name:'Enrol Avery Example',exact:true}).isVisible());
   await page.keyboard.press('Escape');
@@ -70,7 +72,7 @@ try {
   await page.goto(base+'/awaiting-enrolment?restricted');
   await page.getByRole('heading',{level:1,name:'Awaiting enrolment',exact:true}).waitFor();
   assert.equal(await mainNav().getByRole('link',{name:'Assessment setup',exact:true}).count(),0);
-  assert.equal(await page.getByRole('button',{name:'Enrol',exact:true}).count(),0);
+  assert.equal(await page.getByRole('button',{name:'Find a class',exact:true}).count(),0);
   assert.equal(await page.locator('a[href^="/students/"]').count(),0);
   assert.equal(await page.locator('main a[href^="/assessments/"]').count(),0);
   assert.equal(await page.getByRole('button',{name:/^Enrol .* from the waitlist/}).count(),0);

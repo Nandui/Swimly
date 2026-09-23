@@ -107,3 +107,30 @@ review. Unsaved text is held on the current page only, not across a page reload.
   themes. Set `PLAYWRIGHT_MODULE` to the bundled Playwright module if needed.
 - Run typecheck, lint and an optimized build with `VERCEL_ENV=development` to skip
   database migrations. Never seed or mutate live records to test these screens.
+
+### Reception queue layout
+
+Awaiting enrolment and Awaiting moves use compact swimmer rows. Each shows the
+swimmer, programme/level, placement status, next follow-up date and a two-line
+preview of the latest contact or note, including outcome, contact date, method
+and staff member. A shadcn Collapsible opens class placement and family details
+alongside an integrated contact timeline. Full notes, outcomes, authors, original
+contact dates, recorded dates and next follow-up dates stay visible in that row.
+
+Add contact or note opens the existing form inline, above the timeline. Phone,
+email, in-person, text and internal work/notes use the same saved history. Older
+entries load with Load earlier updates. Opening a row loads fresh history;
+collapsed rows do not request histories. Reload is available after errors and
+preserves drafts. Hiding the form or closing the swimmer preserves unsaved text.
+The swimmer profile retains its existing history Sheet with focus restoration.
+Phone and email links use the device's contact applications.
+
+Queue membership, oldest-first ordering, pagination, permission gates and all
+placement actions are unchanged. Follow-up updates still use the original
+permission, concurrency and audit checks. No messages are sent by saving.
+
+Run `node scripts/check-awaiting-follow-up.mjs` against the isolated follow-up
+preview on port 4202 for inline history/save/refresh, draft and keyboard focus,
+read-only access and both queue views at 375/768/1024/1280 in both themes.
+`node scripts/check-assessment-workspace.mjs` also checks placement dialogs,
+waitlist availability, search/pagination, empty results and restricted access.

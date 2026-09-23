@@ -30,3 +30,9 @@ export const FOLLOW_UP_META = {
   awaiting: { label: "Awaiting class", color: "blue" },
   waitlisted: ENROLMENT_STATUS_META.WAITLISTED,
 } as const satisfies Record<string, StatusMeta>;
+
+export const WAITLIST_AVAILABILITY_META = {
+  available: { label: "Space available", color: "green" },
+  full: { label: "Class full", color: "gray" },
+  archived: { label: "Class archived", color: "gray" },
+} as const satisfies Record<string, StatusMeta>;

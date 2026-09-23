@@ -1,6 +1,7 @@
 "use client";
 
-import { useId, useRef, useState, type FormEvent } from "react";
+import { useCallback, useEffect, useId, useRef, useState, type FormEvent } from "react";
+import { useQueueOpened } from "./queue-disclosure";
 import { useRouter } from "next/navigation";
 import { History, Plus, RefreshCw } from "lucide-react";
 import { Button } from "@/components/shadcn/button";
@@ -16,7 +17,7 @@ import { addFollowUp, getFollowUpHistory } from "@/lib/enrolment/actions/follow-
 import { CONTACT_CHANNELS, CONTACT_OUTCOMES, type ContactChannel, type ContactOutcome, type FollowUpHistory as HistoryData, type FollowUpSummary } from "@/lib/enrolment/follow-up";
 import { formatDate, formatDateTime, parseDateOnly, today } from "@/lib/format";
 
-export function FollowUpHistory({ studentId, name, canRecord, summary }: { studentId: string; name: string; canRecord: boolean; summary?: FollowUpSummary }) {
+export function FollowUpHistory({ studentId, name, canRecord, summary, presentation = "default" }: { studentId: string; name: string; canRecord: boolean; summary?: FollowUpSummary; presentation?: "default" | "queue" }) {
   const router = useRouter(), id = useId();
   const [open, setOpen] = useState(false), [data, setData] = useState<HistoryData | null>(null);
   const [loading, setLoading] = useState(false), [saving, setSaving] = useState(false), [adding, setAdding] = useState(false);
@@ -24,11 +25,13 @@ export function FollowUpHistory({ studentId, name, canRecord, summary }: { stude
   const [channel, setChannel] = useState<ContactChannel>('PHONE'), [outcome, setOutcome] = useState<ContactOutcome>('CONTACTED');
   const [note, setNote] = useState(''), [occurredOn, setOccurredOn] = useState(today), [nextContactOn, setNextContactOn] = useState('');
   const dirty = useRef(false), operation = useRef<{ key: string; id: string } | null>(null);
+  const trigger = useRef<HTMLButtonElement | null>(null);
   const latestSummary = (data?.summary.latest?.sequence ?? 0) >= (summary?.latest?.sequence ?? 0) ? data?.summary ?? summary : summary;
   const latest = latestSummary?.latest;
   const due = latest?.nextContactOn;
+  const onQueueOpened = useQueueOpened();
 
-  async function load(before?: number) {
+  const load = useCallback(async (before?: number) => {
     setLoading(true); setError('');
     try {
       const result = await getFollowUpHistory(studentId, before);
@@ -40,7 +43,10 @@ export function FollowUpHistory({ studentId, name, canRecord, summary }: { stude
       }
     } catch { setError('Could not load the follow-up history. Your entries are still here; try reloading.'); }
     finally { setLoading(false); }
-  }
+  }, [studentId]);
+  useEffect(() => {
+    if (presentation === 'queue') return onQueueOpened(() => { void load(); });
+  }, [onQueueOpened, load, presentation]);
   async function save(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
     if (!data || saving) return;
@@ -60,20 +66,9 @@ export function FollowUpHistory({ studentId, name, canRecord, summary }: { stude
     finally { setSaving(false); }
   }
   const change = <T,>(setter: (value: T) => void) => (value: T) => { dirty.current = true; setSaved(''); setter(value); };
-  return <div className="space-y-2">
-    {summary && <div className="space-y-1 text-sm">
-      {latest ? <><Tag color={CONTACT_OUTCOMES[latest.outcome].color}>{CONTACT_OUTCOMES[latest.outcome].label}</Tag>
-        <p className="text-xs text-ui-muted-foreground">Recorded {formatDateTime(new Date(latest.createdAt))} · {latest.actorName}</p>
-        {due ? <p className="text-xs font-medium">{due < today() ? 'Follow-up overdue' : due === today() ? 'Follow up today' : 'Next follow-up'} · {formatDate(parseDateOnly(due))}</p> : <p className="text-xs text-ui-muted-foreground">No follow-up date set</p>}
-      </> : <p className="text-ui-muted-foreground">No follow-up recorded</p>}
-    </div>}
-    <Sheet open={open} onOpenChange={value => { if (saving) return; setOpen(value); if (value) void load(); }}>
-      <SheetTrigger asChild><Button variant="outline" className="min-h-11" aria-label={`Follow-up history for ${name}`}><History className="size-4" aria-hidden="true" />Follow-up history{latestSummary?.count ? ` (${latestSummary.count})` : ''}</Button></SheetTrigger>
-      <SheetContent className="w-full gap-0 sm:max-w-2xl [&>button]:flex [&>button]:size-11 [&>button]:items-center [&>button]:justify-center">
-        <SheetHeader className="shrink-0 border-b border-ui-border p-4 pr-16 sm:p-6 sm:pr-16"><SheetTitle className="text-xl">Follow-up history</SheetTitle><SheetDescription><span className="font-medium text-ui-foreground">{name}</span><br />Shared across both sites, enrolments and moves. These notes are for staff only.</SheetDescription></SheetHeader>
-        <div className="min-h-0 flex-1 space-y-6 overflow-y-auto p-4 sm:p-6">
+  const panel = <div className={presentation === "queue" ? "space-y-4" : "min-h-0 flex-1 space-y-6 overflow-y-auto p-4 sm:p-6"}>
           <div className="flex flex-wrap items-center justify-between gap-2">
-            {canRecord && <Button disabled={loading || saving || !data} className="min-h-11" onClick={() => { setAdding(true); setSaved(''); }}><Plus aria-hidden="true" />Add update</Button>}
+            {canRecord && <Button disabled={loading || saving || !data} className="min-h-11" onClick={() => { setAdding(true); setSaved(''); }}><Plus aria-hidden="true" />Add contact or note</Button>}
             <Button variant="ghost" className="min-h-11" disabled={loading || saving} onClick={() => void load()}><RefreshCw aria-hidden="true" />Reload history</Button>
           </div>
           {error && <Notice tone="error" title={error} />}
@@ -96,10 +91,10 @@ export function FollowUpHistory({ studentId, name, canRecord, summary }: { stude
             </fieldset>
           </form>}
           <section className="space-y-4" aria-label="Recorded follow-ups">
-            <div className="space-y-1"><h3 className="font-semibold">Activity timeline</h3><p className="text-xs text-ui-muted-foreground">Newest recorded first. Earlier work keeps its original contact date.</p></div>
+            <p className="text-xs text-ui-muted-foreground">Newest recorded first · Calls, messages and internal notes</p>
             {loading && <p role="status" className="text-sm text-ui-muted-foreground">Loading history…</p>}
             {!loading && data && !data.entries.length && <p className="text-sm text-ui-muted-foreground">No follow-ups recorded yet.{canRecord ? ' Add the first update so colleagues know what has been done.' : ' Reception updates will appear here.'}</p>}
-            <ol className="divide-y divide-ui-border">{data?.entries.map(entry => <li key={entry.id} className="space-y-3 py-5 first:pt-0">
+            <ol className={presentation === 'queue' ? 'space-y-4' : 'divide-y divide-ui-border'}>{data?.entries.map(entry => <li key={entry.id} className={presentation === 'queue' ? 'space-y-3 rounded-ui-md border border-ui-border bg-ui-muted/30 p-4' : 'space-y-3 py-5 first:pt-0'}>
               <div className="flex flex-wrap items-center justify-between gap-2"><Tag color={CONTACT_OUTCOMES[entry.outcome].color}>{CONTACT_OUTCOMES[entry.outcome].label}</Tag><time className="text-xs text-ui-muted-foreground" dateTime={entry.occurredOn}>{formatDate(parseDateOnly(entry.occurredOn))}</time></div>
               <p className="text-sm font-medium">{CONTACT_CHANNELS[entry.channel]} · {entry.actorName}</p>
               <p className="whitespace-pre-wrap break-words text-sm leading-relaxed">{entry.note}</p>
@@ -107,7 +102,22 @@ export function FollowUpHistory({ studentId, name, canRecord, summary }: { stude
             </li>)}</ol>
             {data?.nextBefore && <Button variant="outline" className="min-h-11" disabled={loading || saving} onClick={() => void load(data.nextBefore!)}>Load earlier updates</Button>}
           </section>
-        </div>
+        </div>;
+  if (presentation === "queue") return <section aria-label={`Contact history for ${name}`} className="min-w-0 space-y-4"><div><h3 className="font-semibold">Contact history & notes{latestSummary?.count ? ` (${latestSummary.count})` : ""}</h3><p className="text-xs text-ui-muted-foreground">Shared with colleagues across both sites. Staff only.</p></div>{panel}</section>;
+  return <div className="space-y-2">
+    {summary && <div className="space-y-1 text-sm">
+      {latest ? <><Tag color={CONTACT_OUTCOMES[latest.outcome].color}>{CONTACT_OUTCOMES[latest.outcome].label}</Tag>
+        {due ? <p className="text-xs font-medium">{due < today() ? 'Follow-up overdue' : due === today() ? 'Follow up today' : 'Next follow-up'} · {formatDate(parseDateOnly(due))}</p> : <p className="text-xs text-ui-muted-foreground">No follow-up date set</p>}
+        <p className="text-xs text-ui-muted-foreground">Recorded {formatDateTime(new Date(latest.createdAt))} · {latest.actorName}</p>
+      </> : <p className="text-ui-muted-foreground">No follow-up recorded</p>}
+    </div>}
+    <Sheet open={open} onOpenChange={value => { if (saving) return; setOpen(value); if (value) void load(); }}>
+      <div className="flex flex-wrap gap-2">
+        <SheetTrigger asChild><Button variant="outline" className="min-h-11" aria-label={`Follow-up history for ${name}`} onClick={event => { trigger.current = event.currentTarget; }}><History className="size-4" aria-hidden="true" />Follow-up history{latestSummary?.count ? ` (${latestSummary.count})` : ''}</Button></SheetTrigger>
+      </div>
+      <SheetContent onCloseAutoFocus={event => { if (trigger.current) { event.preventDefault(); trigger.current.focus(); } }} className="w-full gap-0 sm:max-w-2xl [&>button]:flex [&>button]:size-11 [&>button]:items-center [&>button]:justify-center">
+        <SheetHeader className="shrink-0 border-b border-ui-border p-4 pr-16 sm:p-6 sm:pr-16"><SheetTitle className="text-xl">Follow-up history</SheetTitle><SheetDescription><span className="font-medium text-ui-foreground">{name}</span><br />Shared across both sites, enrolments and moves. These notes are for staff only.</SheetDescription></SheetHeader>
+        {panel}
       </SheetContent>
     </Sheet>
   </div>;
