@@ -25,6 +25,7 @@ import { fullName, STUDENT_STATUS_META } from "@/lib/students/constants";
 import { swimmerProfileHref } from "@/lib/students/directory";
 import { chapterOrder, HISTORY_KINDS, HISTORY_META, nextLesson, type HistoryKind, type HistoryPage } from "@/lib/students/history";
 import { AddSwimmer } from "./add-swimmer";
+import { FollowUpHistory } from "@/components/enrolment/follow-up-history";
 import { ManageProfileEnrolments } from "./profile-enrolments";
 import { ProfileCompetencies } from "./profile-competencies";
 import { HistoryFeed } from "./profile-history";
@@ -55,7 +56,7 @@ export function SwimmerProfile({ student, enrolments, programmes, assessments, t
     <Button asChild variant="link" className="min-h-11 self-start px-0 text-ui-muted-foreground hover:text-ui-foreground has-[>svg]:px-0"><a href={returnTo}><ArrowLeft className="size-4" aria-hidden="true" />Swimmers</a></Button>
     <header className={styles.header}>
       <div className={styles.identity}><Avatar className={styles.avatar} aria-hidden="true"><AvatarFallback className="text-[inherit]">{student.firstName.slice(0, 1)}{student.lastName.slice(0, 1)}</AvatarFallback></Avatar><div className="min-w-0"><h1 className="text-2xl font-semibold tracking-tight [overflow-wrap:anywhere]">{name}</h1><p className="mt-2 text-sm text-ui-muted-foreground">{student.dateOfBirth ? `Age ${ageInYears(student.dateOfBirth, new Date(instant))} · ` : ""}{student.memberNumber ? `Member ${student.memberNumber} · ` : ""}Joined {formatDate(student.joinedOn)}</p>{student.status !== "ACTIVE" ? <Badge variant="secondary" data-tone={STUDENT_STATUS_META[student.status].color}>{STUDENT_STATUS_META[student.status].label}</Badge> : null}</div></div>
-      <div className="flex flex-wrap gap-2">{access.edit ? <AddSwimmer student={student} /> : null}{access.enrol ? <ManageProfileEnrolments studentId={student.id} active={student.status === "ACTIVE"} enrolments={enrolments} targets={targets} /> : null}</div>
+      <div className="flex flex-wrap gap-2"><FollowUpHistory studentId={student.id} name={fullName(student)} canRecord={access.enrol} />{access.edit ? <AddSwimmer student={student} /> : null}{access.enrol ? <ManageProfileEnrolments studentId={student.id} active={student.status === "ACTIVE"} enrolments={enrolments} targets={targets} /> : null}</div>
     </header>
     {student.medicalNotes ? <Alert variant="destructive"><AlertTitle>Medical notes — read before swimming</AlertTitle><AlertDescription className="whitespace-pre-wrap">{student.medicalNotes}</AlertDescription></Alert> : null}
     <Tabs value={tab} onValueChange={value => navigate(value as Tab)} className="gap-0">

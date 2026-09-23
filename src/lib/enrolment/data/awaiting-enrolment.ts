@@ -4,6 +4,8 @@ import { currentClubId } from "@/lib/clubs/current";
 import { getSharedCurriculum } from "@/lib/curriculum/data/shared";
 import { prisma } from "@/lib/prisma";
 
+import { FOLLOW_UP_SELECT, followUpSummary } from "@/lib/enrolment/data/follow-up";
+
 const PAGE_SIZE = 20;
 const CANDIDATE_SELECT = {
   id: true, studentId: true, assessedOn: true, outcomeLevelId: true,
@@ -106,7 +108,7 @@ export async function getAwaitingEnrolment(input: { q?: string; page?: number } 
     }) : [],
     selected.length ? prisma.student.findMany({
       where: { id: { in: selected.map(row => row.studentId) } },
-      select: { id: true, firstName: true, lastName: true, memberNumber: true, contactName: true, contactPhone: true, contactEmail: true },
+      select: { id: true, firstName: true, lastName: true, memberNumber: true, contactName: true, contactPhone: true, contactEmail: true, ...FOLLOW_UP_SELECT },
     }) : [],
   ]);
   const byId = new Map(details.map(row => [row.id, row]));
@@ -123,7 +125,8 @@ export async function getAwaitingEnrolment(input: { q?: string; page?: number } 
         level: { id: curriculum.levelIds.resolve(enrolment.course.level.id), name: curriculum.level(enrolment.course.level.id)?.name ?? enrolment.course.level.name },
       } }];
     });
-    return [{ id: candidate.id, student, queuedOn: candidate.queuedOn,
+    const { enrolmentFollowUps, _count, ...studentDetails } = student;
+    return [{ id: candidate.id, student: studentDetails, followUp: followUpSummary({ enrolmentFollowUps, _count }), queuedOn: candidate.queuedOn,
       assessedOn: row ? row.assessedOn ?? row.session.date : null, session: row?.session ?? null,
       programme: { id: candidate.programmeId, name: curriculum.programme(candidate.programmeId)?.name ?? row?.session.programme.name ?? waitingById.get(candidate.waitlistIds[0])?.programme.name ?? "Programme" },
       outcomeLevel: row?.outcomeLevel ? { id: curriculum.levelIds.resolve(row.outcomeLevel.id), name: curriculum.level(row.outcomeLevel.id)?.name ?? row.outcomeLevel.name } : null,

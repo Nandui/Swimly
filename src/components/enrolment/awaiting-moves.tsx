@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { FollowUpHistory } from "./follow-up-history";
 import { Search } from "lucide-react";
 import { Button } from "@/components/shadcn/button";
 import { Input } from "@/components/shadcn/input";
@@ -60,6 +61,7 @@ export function AwaitingMoves({ result, enrol, profiles, courses }: {
             {row.reviewReason ? <p className="text-sm text-ui-muted-foreground">{row.reviewReason}</p> : enrol ? <div className="[&_button]:min-h-11">
               <TransferEnrolment enrolment={{ id: row.id, status: row.status, student: row.student }} targets={targets} variant="button" classLabel={label} />
             </div> : null}
+            <div className="mt-4"><FollowUpHistory studentId={row.student.id} name={fullName(row.student)} canRecord={enrol} summary={row.followUp} /></div>
             <div className="text-sm lg:hidden"><MoveContact student={row.student} /></div>
             <div className="text-sm md:hidden"><p className="font-medium">Confirmed ready</p>{confirmed}</div>
           </TableCell>

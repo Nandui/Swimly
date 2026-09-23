@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { FollowUpHistory } from "./follow-up-history";
 import { Search } from "lucide-react";
 import { Button } from "@/components/shadcn/button";
 import { Input } from "@/components/shadcn/input";
@@ -78,6 +79,7 @@ export function AwaitingEnrolment({ result, enrol, profiles, assessments, course
               {options.length ? <EnrolInCourseForStudent student={{ id: row.student.id, firstName: row.student.firstName, lastName: row.student.lastName }} courses={options} label={row.waitlists.length ? "Choose another class" : "Enrol"} />
                 : !row.waitlists.length ? <p className="text-sm text-ui-muted-foreground">No classes set up at this level</p> : null}
             </div> : null}
+            <div className="mt-4"><FollowUpHistory studentId={row.student.id} name={fullName(row.student)} canRecord={enrol} summary={row.followUp} /></div>
             <div className="mt-3 text-sm lg:hidden"><Contact student={row.student} /></div>
             <p className="mt-2 text-xs text-ui-muted-foreground md:hidden">Waiting since {formatDate(row.queuedOn)}</p>
           </TableCell>

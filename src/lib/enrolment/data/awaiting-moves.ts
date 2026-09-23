@@ -7,6 +7,8 @@ import { parseDateOnly, today } from "@/lib/format";
 import { prisma } from "@/lib/prisma";
 import { nextLevel as nextCurriculumLevel } from "@/lib/progression/rules";
 
+import { FOLLOW_UP_SELECT, followUpSummary } from "@/lib/enrolment/data/follow-up";
+
 const PAGE_SIZE = 20;
 
 /** A teaching handoff belongs to the original place and its site. A transfer
@@ -30,7 +32,7 @@ export async function getAwaitingMoves(input: { q?: string; page?: number } = {}
   const rows = await prisma.enrolment.findMany({ where, orderBy: [{ readyToMoveAt: "asc" }, { id: "asc" }], skip: (page - 1) * PAGE_SIZE, take: PAGE_SIZE,
     select: {
       id: true, status: true, readyToMoveAt: true, readyToMoveByName: true, readyToMoveLevelId: true, readyToMoveNote: true,
-      student: { select: { id: true, firstName: true, lastName: true, memberNumber: true, contactName: true, contactEmail: true, contactPhone: true } },
+      student: { select: { id: true, firstName: true, lastName: true, memberNumber: true, contactName: true, contactEmail: true, contactPhone: true, ...FOLLOW_UP_SELECT } },
       course: { select: { id: true, name: true, dayOfWeek: true, startMinutes: true, durationMinutes: true, location: true, archivedAt: true,
         club: { select: { id: true, name: true } }, instructor: { select: { name: true } }, level: { select: { id: true, name: true } } } },
     },
@@ -51,7 +53,8 @@ export async function getAwaitingMoves(input: { q?: string; page?: number } = {}
       : !completed || !level.competencies.length || level.competencies.some(c => !achieved.has(c.id)) ? "Progress has changed since confirmation. Ask the instructor to review readiness."
       : null;
     const nextLevel = level ? nextCurriculumLevel(level.id, curriculum.programme(level.programmeId)?.levels.filter(l => !l.archivedAt) ?? []) : null;
-    return { ...row, course: sharedCourse(row.course, curriculum), reviewReason,
+    const { enrolmentFollowUps, _count, ...student } = row.student;
+    return { ...row, student, followUp: followUpSummary({ enrolmentFollowUps, _count }), course: sharedCourse(row.course, curriculum), reviewReason,
       completedLevelName: level?.name ?? (row.readyToMoveLevelId ? curriculum.level(row.readyToMoveLevelId)?.name : null),
       programmeName: level ? curriculum.programme(level.programmeId)?.name ?? "Programme" : "Programme",
       nextLevel: nextLevel ? { id: nextLevel.id, name: nextLevel.name } : null,

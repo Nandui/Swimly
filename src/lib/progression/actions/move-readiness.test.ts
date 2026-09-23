@@ -78,6 +78,12 @@ test("explicit confirmation completes the shared level and queues the original a
   assert.equal((await progress(f.courseId))?.swimmers[0].moveReadinessCurrent, true);
   assert.equal(await fixture.prisma.auditLog.count({ where: { entityId: f.place.id, action: "ready-to-move" } }), 1);
   assert.ok(invalidated.includes("/awaiting-enrolment"));
+  await fixture.prisma.studentFollowUp.create({ data: { studentId: f.id, operationId: "move-follow-up", actorId: "example-reception", actorName: "Example receptionist", clubId: "club_churchfield", clubName: "Example site", channel: "PHONE", outcome: "NO_SUITABLE_CLASS", note: "Checked the next level at both sites.", occurredOn: date } });
+  const contacted = await read({ q: f.id });
+  assert.equal(contacted.items[0].followUp.count, 1);
+  assert.equal(contacted.items[0].followUp.latest?.outcome, "NO_SUITABLE_CLASS");
+  assert.equal(contacted.items[0].id, f.place.id);
+  assert.equal(contacted.items[0].reviewReason, null);
 });
 
 test("every saved competency is required, including for staff allowed to override gaps", async () => {

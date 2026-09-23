@@ -371,6 +371,7 @@ model Student {
   parentAccess       ParentChildAccess[]
   parentAccessRequests ParentAccessRequest[]
   parentProgress     ParentProgressEvent[]
+  enrolmentFollowUps StudentFollowUp[]
 
   @@index([clubId, status, lastName, firstName])
   @@index([status, lastName, firstName])
@@ -475,6 +476,29 @@ model Enrolment {
   @@index([programmeId, status])
   @@index([status, legendAgreementStatus, startedOn])
   @@index([status, readyToMoveAt])
+}
+
+/// Append-only reception contact/work history shared across sites and programmes.
+model StudentFollowUp {
+  id             String   @id @default(cuid())
+  sequence       Int      @unique @default(autoincrement())
+  studentId      String
+  operationId    String
+  actorId        String
+  actorName      String
+  clubId         String
+  clubName       String
+  channel        String
+  outcome        String
+  note           String
+  occurredOn     DateTime @db.Date
+  nextContactOn  DateTime? @db.Date
+  createdAt      DateTime @default(now())
+
+  student Student @relation(fields: [studentId], references: [id], onDelete: Restrict)
+
+  @@unique([studentId, operationId])
+  @@index([studentId, sequence])
 }
 
 // ---------------------------------------------------------------------------

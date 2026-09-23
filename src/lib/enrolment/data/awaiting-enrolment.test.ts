@@ -191,3 +191,26 @@ test("inactive swimmers are excluded while archived class waitlists remain visib
   assert.equal(result.total, 1);
   assert.ok(result.items[0].waitlists[0].course.archivedAt);
 });
+
+test("each swimmer carries their latest shared follow-up without resolving assessments or waitlists", async () => {
+  await swimmer("contact-history");
+  await placement("contact-placement", "contact-history");
+  const waiting = await enrol("contact-history", { status: "WAITLISTED", localCourse: "follow-second" });
+  for (const [operationId, outcome, clubId] of [["first-contact", "NO_REPLY", "club_bishopstown"], ["next-contact", "PARENT_NOT_READY", "club_churchfield"]]) {
+    await fixture.prisma.studentFollowUp.create({ data: {
+      studentId: "contact-history", operationId, actorId: "example-reception", actorName: "Example receptionist",
+      clubId, clubName: "Example site", channel: "PHONE", outcome, note: "A synthetic follow-up note.",
+      occurredOn: date("2026-09-03"), nextContactOn: date("2026-10-01"),
+    } });
+  }
+  const result = await read({ q: "contact-history" });
+  assert.equal(result.total, 1);
+  assert.equal(result.items[0].outcomeLevel?.name, "Turtles");
+  assert.deepEqual(result.items[0].waitlists.map(row => row.id), [waiting.id]);
+  assert.equal(result.items[0].followUp.count, 2);
+  assert.equal(result.items[0].followUp.latest?.outcome, "PARENT_NOT_READY");
+  assert.equal(result.items[0].followUp.latest?.nextContactOn, "2026-10-01");
+  assert.equal(result.items[0].followUp.latest?.actorName, "Example receptionist");
+  assert.equal("operationId" in result.items[0].followUp.latest!, false);
+  assert.equal("enrolmentFollowUps" in result.items[0].student, false);
+});

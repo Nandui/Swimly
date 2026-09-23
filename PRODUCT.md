@@ -130,6 +130,13 @@ counts enrolments at either site; waitlists belong to the requested class's site
 Rows group by swimmer and shared programme without losing individual waitlist
 requests. Instructor stays separate.
 
+Reception records contact and other enrolment work in a shared per-swimmer
+follow-up history, available from both awaiting views and the swimmer profile.
+Each update keeps the staff member, contact method/date, outcome, note and
+optional next follow-up date. Outcomes such as Parent not ready or No suitable
+class do not remove a swimmer from the queue. History survives enrolment and
+site changes; notes are staff-only and recording them sends no message.
+
 Awaiting enrolment also has an **Awaiting moves** view. An instructor explicitly
 confirms Ready to move after all saved competencies at the class's level are
 achieved. This records level completion and queues that active place for the

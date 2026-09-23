@@ -50,10 +50,41 @@ An assessment placement offers classes at the recorded level across sites, exclu
 classes already listed in this row's waitlists. Available waitlisted classes offer
 Enrol from waitlist with confirmation. Existing actions recheck permissions,
 status, capacity and locks, and write audit rows. Each request disappears only
-when its enrolment is promoted, transferred or withdrawn. No new database table,
-migration or manual completion flag is needed.
+when its enrolment is promoted, transferred or withdrawn. Queue membership is
+derived from these records; it has no manual completion flag.
 
 Enrolment, assessment, student and class changes invalidate the new page.
+
+## Reception follow-up history
+
+Enrolments & waitlists and Awaiting moves each show the latest outcome, recorder,
+recording date and optional next follow-up date for the swimmer. Overdue dates
+are labelled explicitly. Follow-up history opens the complete contact/work log;
+it is also available from the swimmer profile after a place is arranged.
+
+Staff can record a phone call, email, in-person conversation, text message or
+internal work. Each update requires a note and contact/work date, with one of:
+Contacted, No reply, Parent not ready, No suitable class, Awaiting parent response,
+or Ready to enrol. An optional next date replaces the previous reminder; leaving
+it blank clears that reminder. An overdue date is not carried into a fresh form.
+This records work already done: it sends no message and does not change any
+assessment, waitlist, readiness or enrolment status. The existing enrolment and
+move actions still determine when a row leaves the queue.
+
+History is per swimmer, shared across all sites/programmes, and remains available
+after enrolment or inactivation. Entries cannot be overwritten/deleted through
+the app; corrections are another update. Newest recorded entries appear first
+while retaining their original contact date. Reads require the Awaiting enrolment
+or Swimmers screen; writes additionally require `enrolment.manage`. Staff with
+read-only access can inspect history. Nothing is exposed through the parent API.
+
+Deploy the additive `20260923170000_enrolment_follow_up` migration before the
+new reads run. `StudentFollowUp` stores staff and site snapshots, an ordered
+sequence and an idempotency key per swimmer. A swimmer row lock plus the expected
+latest sequence prevents stale concurrent saves. The follow-up and its Student
+audit entry commit in one transaction. Retrying an identical save does not create
+a second entry. Reloading after a conflict preserves unsaved form values for
+review. Unsaved text is held on the current page only, not across a page reload.
 
 ## Verification
 
@@ -63,6 +94,13 @@ Enrolment, assessment, student and class changes invalidate the new page.
   deduplication, search, pagination, privacy and authentication.
 - Navigation/screen tests cover the independent grant, administrator access and
   the Instructor boundary. Existing enrolment action tests cover capacity/audit.
+- `src/lib/enrolment/actions/follow-up.test.ts` uses isolated PGlite for access,
+  cross-site history, validation, attribution, atomic audits, concurrent stale
+  updates, idempotent retries, history pagination and retention. Queue tests also
+  check that contact outcomes never remove an assessment/waitlist request.
+- `npx tsx scripts/follow-up-preview/serve.mjs` starts the actual follow-up UI and
+  server actions against an isolated synthetic database on port 4202. See its
+  README for read-only and theme variants; it cannot access live swimmer data.
 - `node scripts/check-assessment-workspace.mjs` exercises real UI components with
   synthetic data and blocked server actions: navigation, dialogs, search/pagination,
   empty/restricted views, keyboard access, touch targets and four widths in both

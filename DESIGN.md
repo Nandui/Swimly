@@ -194,6 +194,15 @@ move status and Undo readiness stay within that swimmer's list, with
 confirmations and inline save errors.
 See [assessment workspace](docs/assessments.md) for queue rules and verification.
 
+Both awaiting views show each swimmer's latest contact outcome, recorder and
+next follow-up date, including overdue wording. Follow-up history opens a
+shadcn Sheet, full width on phones and capped at 42rem on larger screens. It
+contains an append-only activity timeline and a permission-gated Add update
+form. Errors preserve entered notes, reload allows a stale save to be reviewed,
+and successful saves refresh the row. The same history remains available from
+the swimmer profile. Notes are staff-only, shared across sites and unrelated to
+queue membership; history is paginated 20 entries at a time.
+
 Together, Activity, Programmes and levels, Staff, Roles,
 Clubs, Account, sign-in and loading states also use this shared foundation.
 Responsive tables re-home secondary columns as supporting lines.
