@@ -11,7 +11,9 @@ subsequently requested the same design for Refunds:
 Inter, its ocean-blue/aqua palette, navy dark mode, sidebar, reading layouts,
 authoring flow and administration screens. Module CSS and portal wrappers are
 scoped to `.turnfin-docs`; shared controls come from `src/components/shadcn`.
-Aquatics and the staff portal retain their existing design.
+Aquatics and the general staff portal retain their existing design. Reception
+Portal now shares the Docs theme, including its portalled controls, as requested
+by the owner; see docs/reception-portal.md.
 
 ## Staff access
 

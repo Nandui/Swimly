@@ -118,8 +118,9 @@ Its original artwork is framed inside a 48px header slot to account for the
 file's transparent padding. It also supplies the portal's browser/touch icon;
 the Aquatics module opens the existing Swimly workspace.
 
-The Reception Portal uses the approved module-directory composition: a wide
-Aquatics row with task shortcuts and follow-up links, followed by permitted
+The Reception Portal uses the Docs Inter and ocean-blue/aqua theme in a bento
+composition: a wide
+Aquatics task panel beside a distinct follow-up panel, followed by permitted
 modules. Its content is capped at 1152px; the shared portal frame owns the only
 main landmark and page inset. Working-site and action controls are at least
 44px high. Cards stack on phones, and unavailable modules have no launch action.

@@ -1,0 +1,16 @@
+/* Keep Reception and its portalled controls in the existing Docs theme.
+   The body selector stops matching as soon as this route is left. */
+body:has(.reception-portal) {
+  font-family: Inter, ui-sans-serif, system-ui, sans-serif;
+  -webkit-font-smoothing: antialiased;
+}
+.reception-portal {
+  font-family: Inter, ui-sans-serif, system-ui, sans-serif;
+}
+.reception-portal [data-slot='card'] {
+  border-radius: 16px;
+  border-color: var(--ui-border);
+}
+.reception-portal [data-slot='button'] {
+  border-radius: var(--ui-radius);
+}

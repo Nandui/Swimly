@@ -1,5 +1,6 @@
 /* Turnfin Docs repository theme, scoped to this module and its portals. */
-.turnfin-docs {
+.turnfin-docs,
+body:has(.reception-portal) {
   --brand-navy: #0b2842;
   --brand-ocean: #0077df;
   --brand-aqua: #00bdcf;

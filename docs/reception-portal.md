@@ -1,8 +1,8 @@
 # Turnfin Reception Portal
 
-The owner selected the Module directory layout on 23 September 2026. The
+The owner requested the Docs visual design and a bento layout on 23 September 2026. The
 signed-in `/reception-portal` route sits outside the Aquatics desk and Instructor
-shells. It uses the shared portal header, Neutral theme, Figtree and Turnfin logo.
+shells. It uses the shared portal header, Docs Inter typography, ocean-blue/aqua accents, navy dark surfaces and the Turnfin logo.
 
 Aquatics combines module entry with swimmer, class, assessment and sibling-time
 shortcuts. Add a swimmer opens the existing form. Follow-up links lead to awaiting
@@ -63,3 +63,20 @@ publishing; the local preview does not claim to verify them.
   form error recovery and focus restoration, and sign-out/site error messages.
 - The design detector returned no findings. The selected composition and phone
   captures were reviewed locally without delegated agents, per project rules.
+
+## Reception layout and theme
+
+A larger Aquatics task panel sits beside a separate Follow up panel. Permitted
+Docs and Refunds modules occupy the next row; planned Bookings stays a compact,
+non-interactive notice. Panels stack on phones and adapt when permissions hide
+modules or shortcuts. No counts or operational records are invented.
+
+The route imports the existing Docs brand tokens. The theme also applies to
+portalled dialogs and menus while Reception is mounted, then stops matching
+on other routes. All modules and Aquatics retain their own themes. The shared
+portal frame keeps its single main landmark, working site, appearance and sign-out.
+
+Run node scripts/check-reception-portal.mjs with the implementation preview on
+port 4200 for responsive/theme, restricted access, site switch, form recovery,
+keyboard and theme-isolation checks. The live URL requires authentication;
+verification uses fictional staff and mocked actions, with no database writes.

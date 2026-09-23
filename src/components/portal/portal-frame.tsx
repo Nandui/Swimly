@@ -4,7 +4,7 @@ import Image from "next/image";
 import Link from "next/link";
 import { useState, useTransition, type ReactNode } from "react";
 import { signOut } from "next-auth/react";
-import { LogOut } from "lucide-react";
+import { Loader2, LogOut } from "lucide-react";
 import { Button } from "@/components/shadcn/button";
 import { ThemeFlip } from "@/components/theme-toggle";
 import { LoadingButton } from "@/components/ui/loading-button";
@@ -28,7 +28,7 @@ export function PortalFrame({ children, reception = false, userName, moduleName 
     });
   }
   const width = reception ? "max-w-6xl" : "max-w-5xl";
-  return <div className="flex min-h-svh flex-col bg-ui-workspace text-ui-foreground">
+  return <div className={cn("flex min-h-svh flex-col bg-ui-workspace text-ui-foreground", reception && "reception-portal")}>
     <a href="#portal-main" className="sr-only fixed left-4 top-4 z-50 rounded-ui-md bg-ui-primary p-3 text-ui-primary-foreground focus:not-sr-only">Skip to content</a>
     <header className="border-b border-ui-border bg-ui-background px-4 lg:px-6">
       <div className={cn("mx-auto flex min-h-20 flex-wrap items-center justify-between gap-x-4 gap-y-2 py-3", width)}>
@@ -39,9 +39,10 @@ export function PortalFrame({ children, reception = false, userName, moduleName 
           <div><p className="text-xl font-semibold">{PORTAL_BRAND}</p><p className="text-xs text-ui-muted-foreground">{moduleName ?? (reception ? "Reception Portal" : "Staff portal")}</p></div>
         </div>
         <div className="flex min-w-0 items-center gap-2">
-          {reception && <Button asChild variant="ghost" className="hidden min-h-11 max-w-48 sm:inline-flex"><Link href="/account" className="truncate">{userName}</Link></Button>}
+          {reception && <Button asChild variant="ghost" className="hidden min-h-11 max-w-48 sm:inline-flex"><Link href="/account"><span className="truncate">{userName}</span></Link></Button>}
           <div className="[&_button]:size-11"><ThemeFlip /></div>
-          <LoadingButton variant="ghost" className="min-h-11" onClick={leave} pending={signingOut} pendingLabel="Signing out…"><LogOut aria-hidden="true" />Sign out</LoadingButton>
+          {reception ? <Button variant="ghost" className="min-h-11 max-sm:w-11 max-sm:px-0" aria-label={signingOut ? "Signing out…" : "Sign out"} aria-busy={signingOut} disabled={signingOut} onClick={leave}>{signingOut ? <Loader2 className="animate-spin" aria-hidden="true" /> : <LogOut aria-hidden="true" />}<span className="hidden sm:inline">{signingOut ? "Signing out…" : "Sign out"}</span></Button>
+            : <LoadingButton variant="ghost" className="min-h-11" onClick={leave} pending={signingOut} pendingLabel="Signing out…"><LogOut aria-hidden="true" />Sign out</LoadingButton>}
         </div>
       </div>
     </header>
