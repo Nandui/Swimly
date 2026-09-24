@@ -3,6 +3,7 @@ import { createServer } from "node:http";
 import { isolatedPrisma } from "../src/test/pglite-prisma";
 import { serverModule } from "../src/test/server-module";
 import { mostRecentOccurrence, shiftWeeks } from "../src/lib/attendance/dates";
+import { readEmailParts } from "../src/test/email";
 
 async function main() {
   if (process.env.PARENT_API_PREVIEW !== "1" || process.env.NODE_ENV === "production") throw new Error("Set PARENT_API_PREVIEW=1 for the isolated preview.");
@@ -20,7 +21,7 @@ async function main() {
     const message = JSON.parse(String(init?.body));
     const mime = Buffer.from(message.raw, "base64url").toString("utf8");
     const email = /^To: (.+)$/m.exec(mime)![1].trim();
-    const text = Buffer.from(mime.split("\r\n\r\n")[1], "base64").toString("utf8");
+    const text = readEmailParts(mime).find(part => part.type === "text/plain")!.content.toString("utf8");
     codes.set(email, /code is (\d{6})/.exec(text)![1]);
     return Response.json({ id: "synthetic-email" });
   };

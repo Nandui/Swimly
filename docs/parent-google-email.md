@@ -82,7 +82,7 @@ Set these on **swimly-crm**, in the intended deployment environment:
 | `PARENT_GOOGLE_CLIENT_ID` | Company's Google OAuth client ID |
 | `PARENT_GOOGLE_CLIENT_SECRET` | That client's secret |
 | `PARENT_GOOGLE_REFRESH_TOKEN` | Mailbox's offline token with only `gmail.send` |
-| `PARENT_EMAIL_FROM` | `Bookly <info@leisureworldcork.com>` |
+| `PARENT_EMAIL_FROM` | `LeisureWorld Aquatics <info@leisureworldcork.com>` |
 
 The sender must match the authorized mailbox or a send-as alias it is already
 authorized to use. Use the confirmed mailbox directly for this rollout.
@@ -93,6 +93,31 @@ authorized activation. Production is already enabled and delivery-verified.
 See [parent-app.md](parent-app.md) for the complete connection configuration.
 
 ## Delivery and failure behaviour
+
+Parent sign-in messages now include a branded HTML version and an equivalent
+plain-text alternative. The template in `src/lib/parent/sign-in-email.ts` uses
+the parent app's LeisureWorld blue palette, original white logo, readable
+six-digit code and ten-minute expiry. It works for both new and returning
+families and directs parents back to their existing verification page.
+
+The logo is embedded as a CID inline image, with no external image requests,
+tracking pixels, remote fonts or authentication links. Code digits remain one
+selectable text string; neither subject nor preheader exposes the code. A parent
+can still use the email if images or styles are blocked. Manrope is preferred
+where installed, with system/Arial fallbacks for email-client compatibility.
+The template includes a narrow-screen layout, dark-mode overrides and an Outlook
+table-width fallback; exact rendering remains controlled by each email client.
+
+`assets/email/leisureworld-white-no-tagline.png` is an unchanged copy of the
+approved parent-app logo. Its dimensions are 1774 × 887; HTML displays it at
+144 × 72. Next's output tracing explicitly bundles it with the parent API.
+The shared Google transport uses `multipart/related` containing a
+`multipart/alternative` text/HTML part and the inline logo. Existing Refunds
+messages keep their plain-text format and their own display name. The legacy
+`Bookly` sender name still maps to LeisureWorld Aquatics.
+
+Deploy this change in the **staff app**, which sends the email. No parent frontend
+deployment, new credentials, permission grants or database migrations are needed.
 
 - Token refresh and message submission share a ten-second request deadline.
   Both finish before the sign-in endpoint responds; nothing sends in the background.
@@ -112,3 +137,9 @@ See [parent-app.md](parent-app.md) for the complete connection configuration.
 checks the real email adapter and parent router with synthetic Google responses
 and an in-memory database. The local parent preview also captures mail in memory.
 Neither workflow contacts Google or sends real emails.
+
+Run `npx tsx scripts/preview-parent-sign-in-email.ts --serve` for a loopback-only
+browser preview using the fixed synthetic code `012345`. It writes standalone
+light/dark HTML previews under ignored `.impeccable/review/` and prints the local
+URL. The preview substitutes a data URL for the email's CID image; `/dark` forces
+the template's dark styles for inspection. No code or message is actually sent.

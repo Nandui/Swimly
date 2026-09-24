@@ -1,7 +1,10 @@
 import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
-  outputFileTracingIncludes: { "/help/images/*": ["./assets/help/*.png"] },
+  outputFileTracingIncludes: {
+    "/help/images/*": ["./assets/help/*.png"],
+    "/api/parent/v1/**": ["./assets/email/*.png"],
+  },
   experimental: {
     // A 2 MB curriculum image plus multipart form overhead.
     serverActions: { bodySizeLimit: "3mb" },

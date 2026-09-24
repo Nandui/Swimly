@@ -3,6 +3,7 @@ import { after, before, test } from "node:test";
 import { isolatedPrisma } from "../../test/pglite-prisma";
 import { serverModule } from "../../test/server-module";
 import { nextDublinMidnight } from "./time";
+import { readEmailParts } from "../../test/email";
 
 type Router = typeof import("./router");
 type Admin = typeof import("./admin");
@@ -51,7 +52,7 @@ before(async () => {
     emailCalls++;
     const message = JSON.parse(String(init?.body));
     const mime = Buffer.from(message.raw, "base64url").toString("utf8");
-    const text = Buffer.from(mime.split("\r\n\r\n")[1], "base64").toString("utf8");
+    const text = readEmailParts(mime).find(part => part.type === "text/plain")!.content.toString("utf8");
     sentCode = /code is (\d{6})/.exec(text)![1];
     return Response.json({ id: "synthetic-mail" });
   };

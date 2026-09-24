@@ -1,6 +1,9 @@
-import { sendGoogleTextEmail } from "@/lib/email/google";
+import { readFile } from "node:fs/promises";
+import { join } from "node:path";
+import { sendGoogleEmail } from "@/lib/email/google";
 import { z } from "zod";
 import { unavailable } from "@/lib/parent/errors";
+import { parentSignInEmail, PARENT_EMAIL_LOGO_CID } from "@/lib/parent/sign-in-email";
 
 const credential = z.string().trim().min(1).max(8192).regex(/^\S+$/);
 const address = z.string().email().max(254);
@@ -27,8 +30,11 @@ export function parentEmailConfig() {
 export async function sendParentSignInCode(email: string, code: string, config = parentEmailConfig()) {
   if (!address.safeParse(email).success || /[\r\n]/.test(email) || !/^\d{6}$/.test(code)) unavailable();
   try {
-    const text = `Your LeisureWorld Aquatics sign-in code is ${code}.\r\n\r\nIt expires in 10 minutes. Do not share this code. If you did not request it, you can ignore this email.`;
-    await sendGoogleTextEmail(email, "Your LeisureWorld Aquatics parent sign-in code", text, config);
+    const { subject, text, html } = parentSignInEmail(code);
+    const logo = await readFile(join(process.cwd(), "assets/email/leisureworld-white-no-tagline.png"));
+    await sendGoogleEmail(email, subject, { text, html, inlineImages: [{
+      cid: PARENT_EMAIL_LOGO_CID, filename: "leisureworld.png", contentType: "image/png", content: logo,
+    }] }, config);
   } catch {
     // Provider responses can contain credentials. Keep the parent API error safe.
     unavailable();

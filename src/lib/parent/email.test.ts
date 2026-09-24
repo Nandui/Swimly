@@ -1,8 +1,11 @@
 import assert from "node:assert/strict";
 import { afterEach, beforeEach, test } from "node:test";
 import { serverModule } from "../../test/server-module";
+import { readEmailParts } from "../../test/email";
+import { readFile } from "node:fs/promises";
 
 const { parentEmailConfig, sendParentSignInCode } = serverModule<typeof import("./email")>("src/lib/parent/email.ts", {});
+const { sendGoogleEmail, sendGoogleTextEmail } = serverModule<typeof import("../email/google")>("src/lib/email/google.ts", {});
 const originalEnv = { ...process.env }, originalFetch = globalThis.fetch;
 const tokenUrl = "https://oauth2.googleapis.com/token";
 const sendUrl = "https://gmail.googleapis.com/gmail/v1/users/me/messages/send";
@@ -39,7 +42,8 @@ test("sends one private MIME email through the authorized Google mailbox", async
   assert.deepEqual(Object.keys(payload), ["raw"]);
   assert.match(payload.raw, /^[A-Za-z0-9_-]+$/);
   const mime = Buffer.from(payload.raw, "base64url").toString("utf8");
-  const [headers, body] = mime.split("\r\n\r\n");
+  const headers = mime.slice(0, mime.indexOf("\r\n\r\n"));
+  const parts = readEmailParts(mime);
   const from = /^From: (.+) <info@example\.test>\r$/m.exec(headers);
   assert.ok(from);
   const displayName = from[1].split(" ").map(word => Buffer.from(word.slice(10, -2), "base64").toString("utf8")).join("");
@@ -47,8 +51,25 @@ test("sends one private MIME email through the authorized Google mailbox", async
   assert.match(headers, /^Subject: Your LeisureWorld Aquatics parent sign-in code\r$/m);
   assert.match(headers, /^To: parent@example\.test\r$/m);
   assert.equal(/^Bcc:|^Cc:/m.test(headers), false);
-  assert.match(Buffer.from(body, "base64").toString("utf8"), /Your LeisureWorld Aquatics sign-in code is 012345.*\r\n\r\nIt expires in 10 minutes/);
-  assert.ok(body.trim().split("\r\n").every(line => line.length <= 76));
+  assert.match(headers, /Content-Type: multipart\/related;/);
+  assert.match(mime, /Content-Type: multipart\/alternative;/);
+  assert.deepEqual(parts.map(part => part.type), ["text/plain", "text/html", "image/png"]);
+  const [plain, html, logo] = parts;
+  assert.match(plain.content.toString("utf8"), /Your LeisureWorld Aquatics sign-in code is 012345.*\r\n\r\nIt expires in 10 minutes/);
+  const markup = html.content.toString("utf8");
+  assert.match(markup, /<html lang="en">/);
+  assert.match(markup, />012345<\/p>/);
+  assert.match(markup, /10 minutes/);
+  assert.match(markup, /Do not share it with anyone/);
+  assert.match(markup, /src="cid:leisureworld-logo@turnfin"/);
+  assert.match(markup, /alt="LeisureWorld"/);
+  assert.match(markup, /#0B4F8A/);
+  assert.doesNotMatch(markup, /<script|https?:\/\/|parent@example\.test/);
+  assert.doesNotMatch(headers, /012345/);
+  assert.match(logo.headers, /Content-ID: <leisureworld-logo@turnfin>/);
+  assert.match(logo.headers, /Content-Disposition: inline;/);
+  assert.deepEqual(logo.content, await readFile("assets/email/leisureworld-white-no-tagline.png"));
+  assert.ok(mime.split("\r\n").every(line => line.length < 998));
   assert.equal(mime.includes("synthetic-secret"), false);
   assert.equal(mime.includes("synthetic-refresh"), false);
   for (const call of calls) {
@@ -57,6 +78,26 @@ test("sends one private MIME email through the authorized Google mailbox", async
     assert.ok(call.init?.signal instanceof AbortSignal);
   }
   assert.equal(calls[0].init?.signal, calls[1].init?.signal);
+});
+
+test("the existing plain-text transport stays compatible with Refunds emails", async () => {
+  await sendGoogleTextEmail("staff@example.test", "Refund update", "Synthetic request status.\r\nNo customer details.", parentEmailConfig());
+  const payload = JSON.parse(String(calls[1].init?.body));
+  const mime = Buffer.from(payload.raw, "base64url").toString("utf8");
+  assert.doesNotMatch(mime, /multipart\//);
+  const parts = readEmailParts(mime);
+  assert.equal(parts.length, 1);
+  assert.equal(parts[0].type, "text/plain");
+  assert.equal(parts[0].content.toString("utf8"), "Synthetic request status.\r\nNo customer details.");
+});
+
+test("unsafe inline image metadata is rejected before network work", async () => {
+  await assert.rejects(sendGoogleEmail("parent@example.test", "Code", {
+    text: "Synthetic", html: "<p>Synthetic</p>", inlineImages: [{
+      cid: "logo\r\nBcc: attacker@example.test", filename: "logo.png", contentType: "image/png", content: Buffer.from("synthetic"),
+    }],
+  }, parentEmailConfig()));
+  assert.equal(calls.length, 0);
 });
 
 test("requires Google credentials and a single safe sender before doing network work", async () => {
