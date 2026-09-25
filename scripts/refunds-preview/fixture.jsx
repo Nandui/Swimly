@@ -1,8 +1,9 @@
 import React, { useEffect, useState } from 'react';
 import { createRoot } from 'react-dom/client';
-import '@fontsource/inter/400.css';
-import '@fontsource/inter/500.css';
-import '@fontsource/inter/600.css';
+import '@fontsource/plus-jakarta-sans/400.css';
+import '@fontsource/plus-jakarta-sans/500.css';
+import '@fontsource/plus-jakarta-sans/600.css';
+import '@fontsource/plus-jakarta-sans/700.css';
 import { ThemeProvider } from '@/components/theme-provider';
 import { TooltipProvider } from '@/components/shadcn/tooltip';
 import { RefundShell } from '@/components/refunds/shell';

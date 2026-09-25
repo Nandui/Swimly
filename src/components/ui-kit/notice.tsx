@@ -18,7 +18,7 @@ export function Notice({
 }) {
   const Icon = NOTICE[tone];
   return (
-    <Alert variant={tone === "error" ? "destructive" : "default"}>
+    <Alert variant={tone === "error" ? "destructive" : "default"} data-tone={tone}>
       <Icon aria-hidden="true" />
       <AlertTitle className="min-w-0 line-clamp-none break-words">
         {title}

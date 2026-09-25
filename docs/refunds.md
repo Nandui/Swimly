@@ -3,7 +3,7 @@
 Refunds is a separate staff workspace for all LeisureWorld services, reached from
 the general Turnfin portal and Reception Portal. It shares staff identity and the
 main Turnfin database. It never sends money, changes Legend, emails customers or
-requires a swimmer record. Docs retains its separate database; Refunds shares its visual theme.
+requires a swimmer record. Docs retains its separate database; Refunds shares its shell layout but has its own Poolside Clear theme.
 
 ## Reception and finance workflow
 
@@ -163,16 +163,22 @@ production sender configuration is present.
 
 ## Workspace appearance
 
-Refunds uses the owner-selected Docs design: Inter, ocean-blue/aqua accents,
-pale blue workspace surfaces, white panels and navy dark mode. `RefundShell`
-shares Docs theme files and visual primitives but owns its navigation, mobile
-sheet, breadcrumb and `turnfin.refunds.sidebar` collapse cookie. No Docs data or
-permissions are imported. Queue filters, forms, history and finance dialogs keep
-their existing behaviour and shared shadcn controls. Dialogs and select popovers
-carry the same scoped theme. Aquatics and the portals retain their Neutral theme.
+Refunds uses the Poolside Clear design: Plus Jakarta Sans (self-hosted through
+`@fontsource/plus-jakarta-sans`), the fin logo's deep teal for actions and
+selection, an aqua focus halo, a cool canvas with white panels, and a deep
+pool-night dark mode. The tokens are in `src/app/refunds/refunds.css` under
+`.turnfin-refunds` and re-point the shared `--ui-*` tokens, so shadcn controls,
+dialogs, select popovers and the mobile sheet follow them. Every text and control
+pair meets 4.5:1 (text) or 3:1 (edges, focus) in both themes.
 
-The Docs-style adaptation was checked on the queue, request form and details in
-both themes at 375, 768, 1024 and 1280px. Sidebar/mobile navigation, dialog focus
-restoration and form recovery passed; typecheck, lint, 61 focused tests and a
-production build passed. Local evidence is in the ignored
-`.impeccable/review/refunds/docs-style/` directory.
+`RefundShell` still shares the Docs shell layout, brand and appearance controls,
+and owns its navigation, mobile sheet, breadcrumb and `turnfin.refunds.sidebar`
+collapse cookie. No Docs data or permissions are imported. Status badges come from
+`RefundStatusTag` (`src/components/refunds/status.tsx`), which adds a distinct icon
+to each status label. Queue filters, forms, history and finance dialogs keep their
+existing behaviour. Aquatics, Docs and the portals keep their own themes.
+
+The theme was checked in the isolated preview (`scripts/refunds-preview`) on the
+queue, request details and a finance dialog, in light and dark at 1280px and at
+375px. That check covered one H1, no horizontal overflow and 44px controls.
+Typecheck, lint and the Refunds tests passed.

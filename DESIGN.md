@@ -126,14 +126,19 @@ main landmark and page inset. Working-site and action controls are at least
 44px high. Cards stack on phones, and unavailable modules have no launch action.
 See [docs/reception-portal.md](docs/reception-portal.md).
 
-Refunds at `/refunds` uses the Docs visual language, explicitly selected by the
-owner: Inter, ocean-blue actions, pale blue surfaces and navy dark mode. It reuses
-Docs' scoped theme, brand and appearance controls, with an independent Refunds
-sidebar, mobile sheet, collapse preference and breadcrumb. The shell owns the only
+Refunds at `/refunds` uses the **Poolside Clear** design (September 2026): Plus
+Jakarta Sans, the fin logo's deep teal (`--pc-primary`) with an aqua focus halo,
+a cool canvas with white 16px-radius panels, and a deep pool-night dark mode.
+Its tokens live in `src/app/refunds/refunds.css`, scoped to `.turnfin-refunds`
+(including dialogs, select popovers and the mobile sheet), and re-point the shared
+`--ui-*` tokens. It still reuses the Docs shell layout, brand and appearance
+controls, with an independent Refunds sidebar, mobile sheet, collapse preference
+and breadcrumb. Statuses use `RefundStatusTag`, which pairs each label with its own
+icon so colour is never the only signal. The shell owns the only
 main landmark, page inset and page scroll. `.turnfin-refunds` scopes its layouts.
-One summary strip, labelled filters and responsive linked rows make up the queue;
-both sites are shown by default. White/navy panels group filters and request
-sections against the tinted workspace. A request separates requested/approved/payment
+Summary figures sit in separate tiles, followed by labelled filters and responsive
+linked rows; both sites are shown by default. White panels group filters and request
+sections against the canvas, and the next-action panel carries a teal edge. A request separates requested/approved/payment
 totals from customer facts and the next-action panel. On phones all content
 stacks; history uses shadcn Collapsible controls. Finance decisions use shadcn
 Dialogs with 44px controls, focus restoration and preserved values after errors.
