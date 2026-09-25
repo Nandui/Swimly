@@ -27,7 +27,7 @@ function lesson(course: Course, date: Date, instructorName = course.instructor?.
 export async function childLessons(tx: Prisma.TransactionClient, parent: ParentAccount, childId: string, now = new Date()) {
   const child = await requireChild(tx, parent, childId);
   const day = parseDateOnly(today(now)), from = new Date(day.getTime() - 83 * DAY), until = new Date(day.getTime() + 90 * DAY);
-  const [enrolments, records, cancellations] = await Promise.all([
+  const [enrolments, records, cancellations, weeklyEnrolment] = await Promise.all([
     tx.enrolment.findMany({ where: { studentId: childId, status: "ACTIVE", startedOn: { lte: until },
       AND: [{ OR: [{ endedOn: null }, { endedOn: { gt: day } }] }, { OR: [{ scheduledEndOn: null }, { scheduledEndOn: { gt: day } }] }],
       course: { archivedAt: null, club: { archivedAt: null } } },
@@ -42,6 +42,9 @@ export async function childLessons(tx: Prisma.TransactionClient, parent: ParentA
       select: { courseId: true, date: true, className: true, startMinutes: true, durationMinutes: true,
         course: { select: { club: { select: { id: true, name: true } } } },
         swimmers: { where: { studentId: childId }, select: { studentId: true } } } }),
+    // Keep former swimmers' journals even when their last lesson is outside the
+    // attendance window. An assessment or waiting-list place is not a lesson.
+    tx.enrolment.findFirst({ where: { studentId: childId, status: { not: "WAITLISTED" } }, select: { id: true } }),
   ]);
   const upcoming = new Map<string, NonNullable<ReturnType<typeof lesson>>>();
   const cancelledUpcoming = new Map<string, NonNullable<ReturnType<typeof lesson>>>();
@@ -82,7 +85,7 @@ export async function childLessons(tx: Prisma.TransactionClient, parent: ParentA
   }
   history.sort((a, b) => b.date.localeCompare(a.date) || a.courseId.localeCompare(b.courseId));
   const recorded = present + late + absent;
-  return { childId, timezone: PARENT_TIMEZONE, asOf: now.toISOString(), nextLesson,
+  return { childId, timezone: PARENT_TIMEZONE, asOf: now.toISOString(), hasEnrolment: Boolean(weeklyEnrolment), nextLesson,
     scheduleThrough: until.toISOString().slice(0, 10),
     upcomingCancellations: [...cancelledUpcoming.values()].sort(chronological),
     attendance: { from: from.toISOString().slice(0, 10), to: today(now), present, late, absent,

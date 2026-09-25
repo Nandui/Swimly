@@ -52,6 +52,20 @@ async function main() {
     const date = new Date(Date.now() + n * 86400_000); date.setUTCHours(0, 0, 0, 0);
     await db.assessmentSession.create({ data: { id: `demo-session-${n}`, clubId: "club_bishopstown", programmeId: programme.id, date, startMinutes: 900 + n * 30, durationMinutes: 20, capacity: n === 2 ? 0 : 6, location: "Teaching pool", parentPublication: { create: { enabled: true } } } });
   }
+  // Assessment-only family: upcoming, published/unreleased placement and cancellation.
+  await db.parentAccount.create({ data: { email: "assessment-parent@example.test", name: "Sam Example" } });
+  const assessmentDate = new Date(Date.now() - 86400_000); assessmentDate.setUTCHours(0, 0, 0, 0);
+  await db.assessmentSession.create({ data: { id: "demo-past-assessment", clubId: "club_bishopstown", programmeId: programme.id,
+    date: assessmentDate, startMinutes: 930, durationMinutes: 20, location: "Teaching pool" } });
+  for (const [state, name] of [["upcoming", "Casey"], ["placed", "Riley"], ["pending", "Taylor"], ["cancelled", "Jordan"]]) {
+    const studentId = `demo-assessment-${state}`;
+    await db.student.create({ data: { id: studentId, clubId: "club_bishopstown", firstName: name, lastName: "Example" } });
+    await db.parentChildAccess.create({ data: { parentEmail: "assessment-parent@example.test", studentId, source: "PARENT_BOOKING" } });
+    await db.assessmentBooking.create({ data: { id: `demo-booking-${state}`, studentId, sessionId: state === "upcoming" || state === "cancelled" ? "demo-session-1" : "demo-past-assessment",
+      status: state === "upcoming" ? "BOOKED" : state === "cancelled" ? "CANCELLED" : "ATTENDED", bookedByName: "Sam Example",
+      ...(state === "placed" || state === "pending" ? { outcomeLevelId: level.id, assessedOn: assessmentDate } : {}) } });
+    if (state === "placed") await db.parentProgressEvent.updateMany({ where: { studentId }, data: { releaseAt: new Date(Date.now() - 86400_000) } });
+  }
   const router = serverModule<typeof import("../src/lib/parent/router")>("src/lib/parent/router.ts", {
     "@/lib/prisma": { prisma: db }, "next/cache": { revalidatePath() {} },
     "@/lib/clubs/current": { currentClubId: async () => "club_bishopstown" },

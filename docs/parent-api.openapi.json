@@ -1798,6 +1798,10 @@
           },
           "attendance": {
             "$ref": "#/components/schemas/ChildAttendance"
+          },
+          "hasEnrolment": {
+            "type": "boolean",
+            "description": "Whether the child has any current, future or historical weekly enrolment other than a waiting-list place. Assessment bookings do not count. Optional for backwards-compatible rollout."
           }
         },
         "required": [

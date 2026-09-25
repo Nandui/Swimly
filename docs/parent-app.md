@@ -51,6 +51,14 @@ exclusive end dates, inactive swimmers, archived classes/sites, cancellations
 and date-specific teaching cover. Dates and times use Europe/Dublin, including
 daylight-saving changes. Cancelled upcoming occurrences appear separately.
 
+The additive `hasEnrolment` flag includes current, future and historical weekly
+enrolments (including archived classes), excluding waiting-list places. It lets
+the parent frontend distinguish assessment-only children without mistaking a
+former swimmer or a gap in the timetable for a new child. No schema migration
+is needed. Assessment details still come from guardian-scoped
+`assessment-bookings?childId=...`; placement levels come only from released
+`progress.assessmentOutcomes`, never the live assessment record.
+
 The attendance report covers the last 84 dates, including today, using only
 saved records for lessons that have ended. Present and late count as attended;
 absent counts as absent. Missing records are never inferred as absences.

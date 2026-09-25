@@ -106,6 +106,23 @@ test("no marks means no percentage; a saved absence is zero percent, never an in
   assert.equal((await childLessons(f.db, f.parent, f.child.id, now)).attendance.rate, 0);
 });
 
+test("assessment-only and waiting-list children are distinct from current, future and former weekly swimmers", async () => {
+  const f = await family();
+  assert.equal((await childLessons(f.db, f.parent, f.child.id, now)).hasEnrolment, true);
+  await f.db.enrolment.update({ where: { id: f.enrolment.id }, data: { status: "WAITLISTED" } });
+  assert.equal((await childLessons(f.db, f.parent, f.child.id, now)).hasEnrolment, false);
+  await f.db.enrolment.delete({ where: { id: f.enrolment.id } });
+  assert.equal((await childLessons(f.db, f.parent, f.child.id, now)).hasEnrolment, false);
+  await f.db.enrolment.create({ data: { studentId: f.child.id, courseId: f.course.id, levelId: f.level.id,
+    programmeId: f.programme.id, startedOn: new Date("2025-01-01"), endedOn: new Date("2025-02-01"), status: "WITHDRAWN" } });
+  await f.db.student.update({ where: { id: f.child.id }, data: { status: "INACTIVE" } });
+  await f.db.course.update({ where: { id: f.course.id }, data: { archivedAt: now } });
+  const former = await childLessons(f.db, f.parent, f.child.id, now);
+  assert.equal(former.nextLesson, null);
+  assert.equal(former.attendance.recorded, 0);
+  assert.equal(former.hasEnrolment, true, "old or archived lessons must not turn into an assessment-only page");
+});
+
 test("weekly lesson times handle Dublin daylight-saving boundaries", async () => {
   const f = await family();
   await f.db.course.update({ where: { id: f.course.id }, data: { dayOfWeek: "SUNDAY", startMinutes: 90 } });
