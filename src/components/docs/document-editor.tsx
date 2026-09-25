@@ -543,7 +543,7 @@ export function DocumentEditor({
         }}
       >
         <DialogContent className="workflow-dialog" showCloseButton={!busy}>
-          <Badge tone="green">INDEPENDENT REVIEW</Badge>
+          <Badge tone="green">Independent review</Badge>
           <DialogTitle>Send your draft for review</DialogTitle>
           <DialogDescription>
             The draft will be frozen until the reviewer approves it or requests changes.

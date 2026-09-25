@@ -2,8 +2,8 @@
 
 The staff app uses **shadcn/ui** and a cookie-backed light/dark/system appearance
 preference. Aquatics and the portal use Neutral surfaces, a logo-blue accent and
-Figtree. Docs preserves its source repository's Inter and ocean-blue/aqua design,
-scoped to that workspace as described below. Components live in
+Figtree. Docs and Refunds use the Poolside Clear design (Plus Jakarta Sans, the fin's
+teal and aqua), scoped to those workspaces as described below. Components live in
 `src/components/shadcn`. The owner approved the full conversion on 13 September
 2026; no screen, form adapter or shared provider depends on another UI system.
 
@@ -96,11 +96,15 @@ details at 1152px. Instructor remains a separate workspace, described below.
 
 ## Screens
 
-Docs at `/docs` is an owner-approved exception to the Aquatics visual theme.
-It preserves the integrated Turnfin Docs repository's Inter typeface, ocean-blue
-and aqua palette, navy dark mode, sidebar and document layouts. Its colours,
-layout CSS and dialog portals are scoped to `.turnfin-docs`, while controls use
-the shared shadcn primitives. Aquatics and the portal retain Figtree and their
+Docs at `/docs` uses the **Poolside Clear** design (September 2026), shared with
+Refunds: Plus Jakarta Sans, the fin logo's deep teal for actions and selection,
+an aqua focus halo, a cool canvas with white 16px panels, a white sidebar in
+light mode that becomes a deep pool-teal island in dark mode (light text, aqua
+marker and New button), and a pool-night dark mode. The theme lives in `src/app/docs/poolside.css`, scoped to
+`.turnfin-docs` (and `.turnfin-refunds`), and re-points the shared `--ui-*` tokens
+and the Docs layout adapter; the imported Docs sidebar, reading and authoring
+layouts in `docs.css` are unchanged. Labels are sentence case, never capitals.
+Controls use the shared shadcn primitives. Aquatics and the portal retain Figtree and their
 existing Neutral theme. See [Docs integration](docs/turnfin-docs.md).
 
 The staff portal at `/modules` sits outside the desk and Instructor shells.
@@ -129,9 +133,9 @@ See [docs/reception-portal.md](docs/reception-portal.md).
 Refunds at `/refunds` uses the **Poolside Clear** design (September 2026): Plus
 Jakarta Sans, the fin logo's deep teal (`--pc-primary`) with an aqua focus halo,
 a cool canvas with white 16px-radius panels, and a deep pool-night dark mode.
-Its tokens live in `src/app/refunds/refunds.css`, scoped to `.turnfin-refunds`
-(including dialogs, select popovers and the mobile sheet), and re-point the shared
-`--ui-*` tokens. It still reuses the Docs shell layout, brand and appearance
+Its theme is the shared `src/app/docs/poolside.css` (see Docs above), including
+dialogs, select popovers and the mobile sheet; `src/app/refunds/refunds.css` only
+arranges the Refunds screens. It still reuses the Docs shell layout, brand and appearance
 controls, with an independent Refunds sidebar, mobile sheet, collapse preference
 and breadcrumb. Statuses use `RefundStatusTag`, which pairs each label with its own
 icon so colour is never the only signal. The shell owns the only

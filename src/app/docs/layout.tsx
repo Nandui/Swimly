@@ -7,10 +7,11 @@ import './docs.css';
 import './integration.css';
 import './brand.css';
 import './editor.css';
-import '@fontsource/inter/400.css';
-import '@fontsource/inter/500.css';
-import '@fontsource/inter/600.css';
-import '@fontsource/inter/700.css';
+import './poolside.css';
+import '@fontsource/plus-jakarta-sans/400.css';
+import '@fontsource/plus-jakarta-sans/500.css';
+import '@fontsource/plus-jakarta-sans/600.css';
+import '@fontsource/plus-jakarta-sans/700.css';
 export const metadata = { title: { absolute: 'Turnfin Docs' } };
 export const dynamic = 'force-dynamic';
 export default async function AppLayout({ children }: { children: React.ReactNode }) {

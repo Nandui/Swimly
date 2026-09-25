@@ -278,27 +278,27 @@ export function Reader({
               <DocIcon type={c.type} />
               <span>
                 {c.type === 'SOP'
-                  ? 'STANDARD OPERATING PROCEDURE'
+                  ? 'Standard operating procedure'
                   : c.type === 'NOP'
-                    ? 'NORMAL OPERATING PROCEDURE'
+                    ? 'Normal operating procedure'
                     : c.type === 'EAP'
-                      ? 'EMERGENCY ACTION PLAN'
-                      : c.type.toUpperCase()}
+                      ? 'Emergency action plan'
+                      : c.type}
               </span>
             </div>
             <h1>{c.title}</h1>
             <p className="document-summary">{c.summary}</p>
             <div className="document-meta">
               <div>
-                <span>DOCUMENT REF.</span>
+                <span>Document ref.</span>
                 <strong>{c.reference}</strong>
               </div>
               <div>
-                <span>{submitted ? 'SUBMITTED' : 'PUBLISHED'}</span>
+                <span>{submitted ? 'Submitted' : 'Published'}</span>
                 <strong>{formatDate(s?.createdAt)}</strong>
               </div>
               <div>
-                <span>REVIEW DUE</span>
+                <span>Review due</span>
                 <strong className={overdue(c.reviewDate) ? 'overdue-text' : ''}>
                   {formatDate(c.reviewDate)}
                   {overdue(c.reviewDate) && ' · Overdue'}
@@ -392,7 +392,7 @@ export function Reader({
         </article>
         <aside className="reading-sidebar" data-contents-open={contentsOpen}>
           <div className="contents-panel" id="reader-contents">
-            <p className="eyebrow">ON THIS PAGE</p>
+            <p className="eyebrow">On this page</p>
             <nav aria-label="Document contents">
               {toc.map((item) => (
                 <a
@@ -449,7 +449,7 @@ export function Reader({
         <Card asChild>
           <section className="review-decision panel">
             <div>
-              <Badge tone="amber">YOUR REVIEW</Badge>
+              <Badge tone="amber">Your review</Badge>
               <h2>Ready for the team?</h2>
               <p>Change summary: {s.changeSummary}</p>
             </div>

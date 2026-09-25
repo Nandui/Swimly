@@ -73,7 +73,7 @@ export function ReportsView({
   return (
     <div className="report-workspace">
       <PageHeading
-        eyebrow="KEEP EVERYONE UP TO DATE"
+        eyebrow="Keep everyone up to date"
         title="Reading reports"
         description="See who has read each version, and where your team needs a reminder."
         action={

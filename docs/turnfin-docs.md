@@ -6,14 +6,15 @@ The parents application is unchanged.
 
 The implementation is adapted from `Nandui/turnfin-docs`, branch
 `codex/initial-release`, commit `e11a1eb020477fb27b660ce373715ac4bf6b7624`.
-The owner initially chose to preserve that repository's design for Docs, and
-subsequently requested the same design for Refunds:
-Inter, its ocean-blue/aqua palette, navy dark mode, sidebar, reading layouts,
-authoring flow and administration screens. Module CSS and portal wrappers are
-scoped to `.turnfin-docs`; shared controls come from `src/components/shadcn`.
-Aquatics and the general staff portal retain their existing design. Reception
-Portal now shares the Docs theme, including its portalled controls, as requested
-by the owner; see docs/reception-portal.md.
+Docs keeps that repository's sidebar, reading layouts, authoring flow and
+administration screens. Since September 2026 its colours and type follow the
+**Poolside Clear** design shared with Refunds: Plus Jakarta Sans, the fin's teal
+and aqua, a cool canvas with white panels and a pool-night dark mode, defined in
+`src/app/docs/poolside.css`. Module CSS and portal wrappers are scoped to
+`.turnfin-docs`; shared controls come from `src/components/shadcn`.
+Aquatics and the general staff portal retain their existing design. The Reception
+Portal keeps the earlier Docs theme (Inter, ocean blue) through `brand.css`; it does
+not load `poolside.css`. See docs/reception-portal.md.
 
 ## Staff access
 

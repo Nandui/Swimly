@@ -1,0 +1,276 @@
+/* Poolside Clear, the Turnfin staff-module design: the fin's teal and aqua, Plus Jakarta Sans,
+   a calm canvas with white 16px panels and a deep pool-night dark mode. Scoped to .turnfin-docs,
+   which Docs and Refunds use for their shells, dialogs, popovers and sheets. It re-points the
+   shared --ui-* tokens and the Docs layout adapter; brand.css keeps the Reception Portal theme. */
+.turnfin-docs,
+.turnfin-refunds {
+  --pc-canvas: light-dark(#f4f8f9, #0b161a);
+  --pc-surface: light-dark(#ffffff, #12222a);
+  --pc-surface-sunken: light-dark(#eaf1f3, #0e1c22);
+  --pc-surface-raised: light-dark(#ffffff, #182c35);
+  --pc-ink: light-dark(#0f2a33, #e6f0f3);
+  --pc-ink-muted: light-dark(#4c6770, #9cb4bc);
+  --pc-line: light-dark(#dbe6ea, #22363f);
+  --pc-line-strong: light-dark(#728b93, #5f7b85);
+  --pc-primary: light-dark(#0a5d80, #5cc8e4);
+  --pc-primary-hover: light-dark(#084b68, #84d6ec);
+  --pc-on-primary: light-dark(#ffffff, #062430);
+  --pc-primary-soft: light-dark(#e0f1f7, #11394a);
+  --pc-primary-soft-hover: light-dark(#d3eaf3, #154656);
+  --pc-primary-ink: light-dark(#08506f, #9fe0f2);
+  --pc-aqua: light-dark(#12c8c6, #2fe0da);
+  --pc-aqua-soft: light-dark(#dcf6f5, #0f3a3c);
+  --pc-aqua-ink: light-dark(#0b5d5c, #7de8e4);
+  --pc-aqua-line: light-dark(#7fcfcd, #2f7f7d);
+  --pc-hover: light-dark(#e6eef1, #1a2e36);
+  --pc-focus: light-dark(#0a5d80, #6fd6ee);
+  --pc-focus-halo: 0 0 0 4px light-dark(rgb(18 200 198 / 0.28), rgb(47 224 218 / 0.3));
+  --pc-success: light-dark(#16734a, #5fd49a);
+  --pc-success-soft: light-dark(#e2f4ea, #123a2a);
+  --pc-warning: light-dark(#8a5300, #f2bd5a);
+  --pc-warning-soft: light-dark(#fdf1d8, #3b2d0f);
+  --pc-danger: light-dark(#b3261e, #ff9b8f);
+  --pc-danger-soft: light-dark(#fdeae7, #46201c);
+  --pc-cover: light-dark(#6a3fa3, #c9a8f5);
+  --pc-cover-soft: light-dark(#f1eafb, #2e2144);
+  --pc-neutral-soft: light-dark(#e8eef0, #22343b);
+  --pc-shadow-card: 0 1px 2px light-dark(rgb(15 42 51 / 0.06), rgb(0 0 0 / 0)), 0 0 0 1px light-dark(rgb(15 42 51 / 0), rgb(255 255 255 / 0.03));
+  --pc-shadow-overlay: 0 12px 32px -8px light-dark(rgb(15 42 51 / 0.18), rgb(0 0 0 / 0.6)), 0 2px 6px light-dark(rgb(15 42 51 / 0.08), rgb(0 0 0 / 0.3));
+  --pc-ease: cubic-bezier(0.2, 0, 0, 1);
+
+  /* Shared shadcn tokens. */
+  --ui-background: var(--pc-surface);
+  --ui-workspace: var(--pc-canvas);
+  --ui-foreground: var(--pc-ink);
+  --ui-card: var(--pc-surface);
+  --ui-popover: var(--pc-surface-raised);
+  --ui-primary: var(--pc-primary);
+  --ui-primary-hover: var(--pc-primary-hover);
+  --ui-primary-foreground: var(--pc-on-primary);
+  --ui-brand-soft: var(--pc-primary-soft);
+  --ui-brand-soft-hover: var(--pc-primary-soft-hover);
+  --ui-brand-ink: var(--pc-primary-ink);
+  --ui-brand-border: var(--pc-primary);
+  --ui-muted: var(--pc-surface-sunken);
+  --ui-muted-foreground: var(--pc-ink-muted);
+  --ui-border: var(--pc-line);
+  --ui-input: var(--pc-line-strong);
+  --ui-ring: var(--pc-focus);
+  --ui-destructive: var(--pc-danger);
+  --ui-sidebar: var(--pc-canvas);
+  --ui-sidebar-hover: var(--pc-hover);
+  --ui-accent: var(--pc-primary-soft);
+  --ui-accent-foreground: var(--pc-primary-ink);
+  --ui-secondary: var(--pc-surface-sunken);
+  --ui-secondary-foreground: var(--pc-ink);
+  --ui-card-foreground: var(--pc-ink);
+  --ui-popover-foreground: var(--pc-ink);
+  --ui-aqua-soft: var(--pc-aqua-soft);
+  --ui-aqua-ink: var(--pc-aqua-ink);
+  --ui-emergency-bg: var(--pc-aqua-soft);
+  --ui-emergency-ink: var(--pc-aqua-ink);
+  --ui-emergency-border: var(--pc-aqua-line);
+  --ui-status-green: var(--pc-success);
+  --ui-status-green-bg: var(--pc-success-soft);
+  --ui-status-blue: var(--pc-primary-ink);
+  --ui-status-blue-bg: var(--pc-primary-soft);
+  --ui-status-red: var(--pc-danger);
+  --ui-status-red-bg: var(--pc-danger-soft);
+  --ui-status-orange: var(--pc-warning);
+  --ui-status-orange-bg: var(--pc-warning-soft);
+  --ui-status-yellow: var(--pc-warning);
+  --ui-status-yellow-bg: var(--pc-warning-soft);
+  --ui-status-purple: var(--pc-cover);
+  --ui-status-purple-bg: var(--pc-cover-soft);
+  --ui-radius: 0.75rem;
+  --font-sans: "Plus Jakarta Sans", ui-sans-serif, system-ui, sans-serif;
+  --font-display: var(--font-sans);
+
+  /* Docs layout adapter and brand names, recomputed from Poolside Clear. */
+  --brand-navy: var(--pc-ink);
+  --brand-ocean: var(--pc-primary);
+  --brand-aqua: var(--pc-aqua);
+  --brand-sky: light-dark(#84d6ec, #5cc8e4);
+  --brand-sand: var(--pc-canvas);
+  --brand-slate: var(--pc-ink-muted);
+  --bg: var(--pc-canvas);
+  --paper: var(--pc-surface);
+  --ink: var(--pc-ink);
+  --text: var(--pc-ink);
+  --muted: var(--pc-ink-muted);
+  --line: var(--pc-line);
+  --primary: var(--pc-primary);
+  --primary-dark: var(--pc-primary-hover);
+  --accent-soft: var(--pc-primary-soft);
+  --surface-subtle: var(--pc-surface-sunken);
+  --surface-tint: var(--pc-surface-sunken);
+  --focus: var(--pc-focus);
+  --ocean-blue: var(--pc-primary);
+  --aqua: var(--pc-aqua);
+  --sky: light-dark(#84d6ec, #5cc8e4);
+  --slate: var(--pc-ink-muted);
+  --radius: 16px;
+}
+.turnfin-docs {
+  font-family: var(--font-sans);
+  font-size: 15px;
+  line-height: 1.47;
+  color: var(--pc-ink);
+}
+
+/* Type: one bold page title, sentence-case labels (never all capitals). */
+.turnfin-docs :is(h1, h2, h3, h4) { font-family: var(--font-sans); color: var(--pc-ink); }
+.turnfin-docs h1 { font-size: 24px; font-weight: 700; line-height: 32px; letter-spacing: -0.015em; }
+.turnfin-docs :is(.eyebrow, .section-kicker, .workspace-nav-label, .data-table th, .risk-read-card dt, .emergency-shortcut-top > span) { text-transform: none; letter-spacing: 0.02em; }
+.turnfin-docs :is(.eyebrow, .section-kicker) { font-size: 13px; font-weight: 600; color: var(--pc-primary-ink); }
+.turnfin-docs .tabular-nums { font-variant-numeric: tabular-nums; }
+
+/* Shell: sidebar and page share the canvas; content sits on white surfaces. */
+.turnfin-docs .turnfin-workspace { background: var(--pc-canvas); }
+.turnfin-docs .workspace-sidebar { background: var(--pc-canvas); border-right: 1px solid var(--pc-line); padding: 20px 12px 12px; }
+.turnfin-docs .workspace-brand-row .turnfin-brand { gap: 8px; }
+.turnfin-docs .workspace-brand-row .brand-wordmark { font-size: 20px; font-weight: 700; letter-spacing: -0.02em; }
+.turnfin-docs .workspace-brand-row .brand-wordmark > span { font-size: 13px; font-weight: 600; color: var(--pc-primary-ink); letter-spacing: 0; }
+.turnfin-docs .workspace-organisation { background: var(--pc-surface); border-color: var(--pc-line); border-radius: 12px; box-shadow: var(--pc-shadow-card); }
+.turnfin-docs .workspace-organisation strong,
+.turnfin-docs .workspace-organisation span { font-size: 13px; }
+.turnfin-docs .workspace-search { min-height: 44px; border-radius: 12px; border-color: var(--pc-line-strong); background: var(--pc-surface); }
+.turnfin-docs .workspace-search input { font-size: 15px; }
+.turnfin-docs .workspace-search:focus-within { outline: none; border-color: var(--pc-focus); box-shadow: 0 0 0 1px var(--pc-focus), var(--pc-focus-halo); }
+.turnfin-docs .workspace-create { min-height: 44px; border-radius: 12px; }
+.turnfin-docs .workspace-nav-label { margin: 0 12px 8px; font-size: 12px; font-weight: 600; letter-spacing: 0.04em; color: var(--pc-ink-muted); }
+.turnfin-docs .workspace-nav-item + .workspace-nav-label { margin-top: 24px; }
+.turnfin-docs .workspace-nav-item { margin: 2px 0; border-radius: 12px; font-size: 15px; font-weight: 500; color: var(--pc-ink-muted); transition: color 120ms var(--pc-ease), background-color 120ms var(--pc-ease); }
+.turnfin-docs .workspace-nav-item:hover { background: var(--pc-hover); color: var(--pc-ink); }
+.turnfin-docs .workspace-nav-item[aria-current='page'] { background: var(--pc-primary-soft); color: var(--pc-primary-ink); font-weight: 600; }
+.turnfin-docs .workspace-nav-item[aria-current='page']:hover { background: var(--pc-primary-soft-hover); }
+.turnfin-docs .workspace-nav-count { min-width: 22px; height: 22px; padding: 0 6px; border-radius: 999px; background: var(--pc-primary); color: var(--pc-on-primary); font-size: 12px; font-weight: 700; font-variant-numeric: tabular-nums; }
+.turnfin-docs .workspace-sidebar-footer { border-top-color: var(--pc-line); }
+.turnfin-docs .appearance-button { font-size: 15px; }
+.turnfin-docs .appearance-button small { font-size: 13px; }
+.turnfin-docs .workspace-profile strong,
+.turnfin-docs .workspace-profile div > span { font-size: 13px; }
+.turnfin-docs .workspace-topbar { min-height: 60px; border-bottom-color: var(--pc-line); background: var(--pc-canvas); }
+.turnfin-docs .workspace-breadcrumb,
+.turnfin-docs .workspace-private { font-size: 13px; }
+.turnfin-docs .workspace-page { background: var(--pc-canvas); }
+.turnfin-docs .workspace-page-content { padding: 32px clamp(16px, 3vw, 48px); }
+.turnfin-docs .app-footer { border-top-color: var(--pc-line); color: var(--pc-ink-muted); font-size: 13px; }
+.turnfin-docs .workspace-mobile-sheet { background: var(--pc-canvas); color: var(--pc-ink); }
+.turnfin-docs :is(a, button, [role='tab']):focus-visible { outline: 2px solid var(--pc-focus); outline-offset: 2px; }
+
+/* Sidebar: white in light mode, a deep pool-teal island in dark mode. Its tokens are redefined
+   here, so every sidebar rule (brand, organisation, search, navigation, footer, profile) follows
+   without restating colours. Text reads at 4.5:1 or more on every sidebar surface in both themes. */
+.turnfin-docs :is(.workspace-sidebar, .workspace-mobile-sheet) {
+  --pc-canvas: light-dark(#ffffff, #0d2a36);
+  --pc-surface: light-dark(#f4f8f9, rgb(255 255 255 / 0.07));
+  --pc-surface-sunken: light-dark(#eaf1f3, rgb(255 255 255 / 0.05));
+  --pc-surface-raised: light-dark(#ffffff, #0d2a36);
+  --pc-ink: light-dark(#0f2a33, #eef7fa);
+  --pc-ink-muted: light-dark(#4c6770, #a9c9d4);
+  --pc-line: light-dark(#dbe6ea, rgb(255 255 255 / 0.14));
+  --pc-line-strong: light-dark(#728b93, rgb(255 255 255 / 0.3));
+  --pc-hover: light-dark(#eef4f6, #123542);
+  --pc-primary: light-dark(#0a5d80, #3fd9d6);
+  --pc-primary-hover: light-dark(#084b68, #6fe4e1);
+  --pc-on-primary: light-dark(#ffffff, #062430);
+  --pc-primary-soft: light-dark(#e0f1f7, #17445a);
+  --pc-primary-soft-hover: light-dark(#d3eaf3, #1b506a);
+  --pc-primary-ink: light-dark(#08506f, #ffffff);
+  --pc-focus: light-dark(#0a5d80, #7fe3f0);
+  --pc-shadow-card: none;
+  --ui-background: var(--pc-canvas);
+  --ui-foreground: var(--pc-ink);
+  --ui-muted: var(--pc-hover);
+  --ui-muted-foreground: var(--pc-ink-muted);
+  --ui-primary: var(--pc-primary);
+  --ui-primary-hover: var(--pc-primary-hover);
+  --ui-primary-foreground: var(--pc-on-primary);
+  --ui-border: var(--pc-line);
+  --ui-input: var(--pc-line-strong);
+  --ui-ring: var(--pc-focus);
+  --ui-sidebar: var(--pc-canvas);
+  --ui-sidebar-hover: var(--pc-hover);
+  --ui-accent: var(--pc-hover);
+  --ui-accent-foreground: var(--pc-ink);
+  --ink: var(--pc-ink);
+  --text: var(--pc-ink);
+  --muted: var(--pc-ink-muted);
+  --line: var(--pc-line);
+  --paper: var(--pc-surface);
+  --primary: var(--pc-primary);
+  --accent-soft: var(--pc-primary-soft);
+  --focus: var(--pc-focus);
+  background: var(--pc-canvas);
+  color: var(--pc-ink);
+  border-right-color: light-dark(#dbe6ea, transparent);
+}
+.turnfin-docs :is(.workspace-sidebar, .workspace-mobile-sheet) .brand-wordmark { color: var(--pc-ink); }
+.turnfin-docs :is(.workspace-sidebar, .workspace-mobile-sheet) .brand-wordmark > span { color: light-dark(#08506f, #7de8e4); }
+.turnfin-docs :is(.workspace-sidebar, .workspace-mobile-sheet) .avatar { background: light-dark(#e0f1f7, #3fd9d6); color: light-dark(#08506f, #062430); border-color: transparent; }
+.turnfin-docs :is(.workspace-sidebar, .workspace-mobile-sheet) .workspace-search input::placeholder { color: var(--pc-ink-muted); }
+.turnfin-docs :is(.workspace-sidebar, .workspace-mobile-sheet) ::-webkit-scrollbar-thumb { background: light-dark(rgb(15 42 51 / 0.2), rgb(255 255 255 / 0.25)); }
+.turnfin-docs :is(.workspace-sidebar, .workspace-mobile-sheet) .workspace-navigation { scrollbar-color: light-dark(rgb(15 42 51 / 0.2), rgb(255 255 255 / 0.25)) transparent; }
+
+/* Selection is a soft teal fill with bold text, never a coloured edge bar. */
+.turnfin-docs .settings-navigation button { border-radius: 12px; font-size: 15px; }
+.turnfin-docs .settings-navigation button.selected { box-shadow: none; background: var(--pc-primary-soft); color: var(--pc-primary-ink); font-weight: 600; }
+.turnfin-docs .contents-panel a { border-radius: 8px; }
+.turnfin-docs .task-queues a { border-radius: 12px; }
+.turnfin-docs .task-queues a[aria-current='page'] { box-shadow: none; background: var(--pc-primary-soft); color: var(--pc-primary-ink); font-weight: 600; }
+.turnfin-docs .report-stats > button[aria-pressed='true'] { box-shadow: none; border-color: var(--pc-primary); background: var(--pc-primary-soft); }
+.turnfin-docs :is(.template-preview, .auth-story) { border-top-width: 0; }
+
+/* Filter rows wrap instead of squeezing the search field in narrow panels. */
+.turnfin-docs .task-filters { grid-template-columns: repeat(auto-fit, minmax(min(100%, 200px), 1fr)); }
+.turnfin-docs .staff-directory-filters { grid-template-columns: repeat(auto-fit, minmax(min(100%, 180px), 1fr)); }
+.turnfin-docs .staff-directory-filters > span { grid-column: 1 / -1; }
+.turnfin-docs .contents-panel a:hover { border-left: 0; margin-left: 0; background: var(--pc-primary-soft); color: var(--pc-primary-ink); }
+
+/* Controls */
+.turnfin-docs [data-slot='button'] { border-radius: 12px; font-size: 15px; font-weight: 600; transition: background-color 120ms var(--pc-ease), color 120ms var(--pc-ease), border-color 120ms var(--pc-ease), translate 120ms var(--pc-ease); }
+.turnfin-docs [data-slot='button'][data-variant='outline'] { background: var(--pc-surface); border-color: var(--pc-line-strong); box-shadow: none; color: var(--pc-ink); }
+.turnfin-docs [data-slot='button'][data-variant='outline']:hover { background: var(--pc-surface-sunken); }
+.turnfin-docs [data-slot='button'][data-variant='ghost'] { color: var(--pc-primary); }
+.turnfin-docs [data-slot='button'][data-variant='ghost']:hover { background: var(--pc-primary-soft); color: var(--pc-primary-ink); }
+.turnfin-docs :is(.workspace-sidebar, .workspace-mobile-sheet, .workspace-mobile-toolbar) [data-slot='button'][data-variant='ghost'] { color: var(--pc-ink-muted); font-weight: 500; }
+.turnfin-docs :is(.workspace-sidebar, .workspace-mobile-sheet, .workspace-mobile-toolbar) [data-slot='button'][data-variant='ghost']:hover { background: var(--pc-hover); color: var(--pc-ink); }
+.turnfin-docs [data-slot='button'][data-variant='destructive'] { background: var(--pc-danger); color: light-dark(#ffffff, #2a0906); }
+.turnfin-docs .button { border-radius: 12px; font-weight: 600; }
+.turnfin-docs [data-slot='badge'] { gap: 4px; min-height: 26px; padding: 0 10px; border-radius: 999px; font-size: 13px; line-height: 18px; font-weight: 600; }
+.turnfin-docs [data-slot='badge']:has(> svg) { padding-left: 8px; }
+.turnfin-docs [data-slot='badge'] > svg { width: 14px; height: 14px; stroke-width: 2.5; }
+.turnfin-docs [data-slot='badge']:is(:not([data-tone]), [data-tone='gray'])[data-variant='secondary'] { background: var(--pc-neutral-soft); color: var(--pc-ink-muted); }
+.turnfin-docs [data-slot='alert'] { border: 0; border-radius: 12px; background: var(--pc-primary-soft); color: var(--pc-primary-ink); padding: 12px 16px; }
+.turnfin-docs [data-slot='alert'] [data-slot='alert-title'] { font-weight: 600; }
+.turnfin-docs [data-slot='alert'] [data-slot='alert-description'] { color: var(--pc-ink); }
+.turnfin-docs [data-slot='alert'][data-tone='error'] { background: var(--pc-danger-soft); color: var(--pc-danger); }
+.turnfin-docs [data-slot='alert'][data-tone='warning'] { background: var(--pc-warning-soft); color: var(--pc-warning); }
+.turnfin-docs :is([data-slot='dialog-content'], [data-slot='alert-dialog-content'], [data-slot='sheet-content']) { border-color: var(--pc-line); background: var(--pc-surface-raised); font-family: var(--font-sans); }
+.turnfin-docs :is([data-slot='dialog-content'], [data-slot='alert-dialog-content']) { border: 0; border-radius: 16px; box-shadow: var(--pc-shadow-overlay); }
+.turnfin-docs :is([data-slot='dialog-title'], [data-slot='alert-dialog-title'], [data-slot='sheet-title']) { font-size: 18px; line-height: 26px; font-weight: 600; letter-spacing: -0.01em; }
+.turnfin-docs :is([data-slot='select-content'], [data-slot='popover-content'], [data-slot='dropdown-menu-content']) { border-color: var(--pc-line); border-radius: 12px; box-shadow: var(--pc-shadow-overlay); font-family: var(--font-sans); }
+.turnfin-docs :is([data-slot='select-item'], [data-slot='dropdown-menu-item']) { font-family: var(--font-sans); font-size: 15px; border-radius: 8px; }
+
+/* Fields */
+.turnfin-docs :is([data-slot='input'], [data-slot='textarea'], [data-slot='select-trigger'], [data-slot='native-select']):not(.title-input) { min-height: 44px; border-radius: 12px; border-color: var(--pc-line-strong); background: var(--pc-surface); box-shadow: none; font-size: 16px; transition: border-color 120ms var(--pc-ease), box-shadow 120ms var(--pc-ease); }
+.turnfin-docs [data-slot='textarea']:not(.title-input) { min-height: 96px; padding-top: 10px; padding-bottom: 10px; line-height: 22px; }
+.turnfin-docs .editor-title-panel [data-slot='textarea']:not(.title-input) { min-height: 72px; }
+.turnfin-docs :is([data-slot='input'], [data-slot='textarea'], [data-slot='select-trigger'], [data-slot='native-select']):not(.title-input):focus-visible { border-color: var(--pc-focus); box-shadow: 0 0 0 1px var(--pc-focus), var(--pc-focus-halo); }
+.turnfin-docs :is([data-slot='input'], [data-slot='textarea'])[aria-invalid='true'] { border-color: var(--pc-danger); background: var(--pc-danger-soft); }
+.turnfin-docs :is([data-slot='input'], [data-slot='textarea'])::placeholder { color: var(--pc-ink-muted); }
+.turnfin-docs .workspace-search [data-slot='input'],
+.turnfin-docs .workspace-search input { min-height: 0; border: 0; background: transparent; box-shadow: none; }
+/* Field labels stack their control underneath; keep the label text left-aligned. */
+.turnfin-docs label:has(> :is(input:not([type='checkbox'], [type='radio'], [type='file']), textarea)) { align-items: stretch; font-size: 14px; font-weight: 600; }
+@media (min-width: 768px) {
+  .turnfin-docs :is([data-slot='input'], [data-slot='textarea'], [data-slot='select-trigger'], [data-slot='native-select']):not(.title-input) { font-size: 15px; }
+}
+
+@media (max-width: 767px) {
+  .turnfin-docs .workspace-page-content { padding: 20px 16px; }
+  .turnfin-docs .workspace-mobile-toolbar { background: var(--pc-canvas); border-bottom: 1px solid var(--pc-line); }
+  .turnfin-docs .workspace-mobile-toolbar .brand-wordmark { font-size: 18px; font-weight: 700; }
+  .turnfin-docs .workspace-mobile-toolbar .brand-wordmark > span { font-size: 13px; }
+}

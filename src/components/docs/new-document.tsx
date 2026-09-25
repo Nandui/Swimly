@@ -59,7 +59,7 @@ export function NewDocument({ workspace: w }: { workspace: Workspace }) {
         </Link>
       </div>
       <PageHeading
-        eyebrow="GIVE GOOD GUIDANCE A HOME"
+        eyebrow="Give good guidance a home"
         title="Create a document"
         description="Choose a template, add the essentials, then start writing."
       />

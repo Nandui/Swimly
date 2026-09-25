@@ -10,6 +10,7 @@ import { RefundShell } from '@/components/refunds/shell';
 import '@/app/docs/docs.css';
 import '@/app/docs/integration.css';
 import '@/app/docs/brand.css';
+import '@/app/docs/poolside.css';
 import '@/app/refunds/refunds.css';
 import './preview.css';
 import { RefundQueue } from '@/components/refunds/queue';

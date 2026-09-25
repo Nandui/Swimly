@@ -112,7 +112,7 @@ export function AdminView({
   return (
     <>
       <PageHeading
-        eyebrow="YOUR ORGANISATION"
+        eyebrow="Your organisation"
         title="Administration"
         description="Manage document groups, templates and standards. Staff accounts and permissions are shared with Turnfin."
 

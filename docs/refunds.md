@@ -166,9 +166,10 @@ production sender configuration is present.
 Refunds uses the Poolside Clear design: Plus Jakarta Sans (self-hosted through
 `@fontsource/plus-jakarta-sans`), the fin logo's deep teal for actions and
 selection, an aqua focus halo, a cool canvas with white panels, and a deep
-pool-night dark mode. The tokens are in `src/app/refunds/refunds.css` under
-`.turnfin-refunds` and re-point the shared `--ui-*` tokens, so shadcn controls,
-dialogs, select popovers and the mobile sheet follow them. Every text and control
+pool-night dark mode. The theme is shared with Docs in `src/app/docs/poolside.css`
+(scoped to `.turnfin-docs` and `.turnfin-refunds`). It re-points the shared
+`--ui-*` tokens, so shadcn controls, dialogs, select popovers and the mobile sheet
+follow them. `src/app/refunds/refunds.css` holds only the Refunds layouts. Every text and control
 pair meets 4.5:1 (text) or 3:1 (edges, focus) in both themes.
 
 `RefundShell` still shares the Docs shell layout, brand and appearance controls,

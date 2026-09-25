@@ -47,7 +47,7 @@ export function HistoryView({
         <span>History</span>
       </div>
       <PageHeading
-        eyebrow="A CLEAR RECORD OF CHANGE"
+        eyebrow="A clear record of change"
         title="Version history"
         description="Every submission and publication, with the people and decisions behind it."
         action={
