@@ -106,15 +106,12 @@ export function HomeView({ workspace: w }: { workspace: Workspace }) {
             </div>
             {outstanding.length ? (
               <ul className="home-reading-list">
-                {outstanding.slice(0, 3).map((requirement, index) => (
+                {outstanding.slice(0, 3).map((requirement) => (
                   <li key={requirement.id}>
                     <Link
                       href={`/docs/documents/${requirement.documentId}?version=${requirement.versionId}`}
                       className="home-reading-row"
                     >
-                      <span className="reading-index" aria-hidden="true">
-                        {String(index + 1).padStart(2, '0')}
-                      </span>
                       <div className="home-reading-title">
                         <strong>{requirement.title}</strong>
                         <span>

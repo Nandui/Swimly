@@ -4,6 +4,7 @@ import Link from 'next/link';
 import { usePathname, useSearchParams } from 'next/navigation';
 import { useEffect, useRef, useState } from 'react';
 import {
+  ArrowLeft,
   BookOpen,
   Home,
   Library,
@@ -28,6 +29,7 @@ import {
   Breadcrumb,
   BreadcrumbList,
   BreadcrumbItem,
+  BreadcrumbLink,
   BreadcrumbPage,
   BreadcrumbSeparator,
 } from '@/components/shadcn/breadcrumb';
@@ -123,7 +125,7 @@ export function Shell({
                 type="search"
                 name="q"
                 aria-label="Search all documents"
-                placeholder="Search documents…"
+                placeholder="Search docs"
               />
             </form>
           )}
@@ -222,7 +224,7 @@ export function Shell({
           )}
         </nav>
         <div className="workspace-sidebar-footer">
-          <Button asChild variant="ghost"><Link href="/modules" aria-label="All modules">←{!compact && " All modules"}</Link></Button>
+          <Button asChild variant="ghost"><Link href="/modules?view=all" aria-label="All modules"><ArrowLeft size={16} aria-hidden="true" />{!compact && "All modules"}</Link></Button>
           <AppearanceMenu expanded={!compact} />
           <Message error={error} />
           {!compact && w.localMode && <span className="workspace-local">Local workspace</span>}
@@ -272,7 +274,11 @@ export function Shell({
         <header className="workspace-topbar">
           <Breadcrumb className="workspace-breadcrumb">
             <BreadcrumbList>
-              <BreadcrumbItem>LeisureWorld</BreadcrumbItem>
+              <BreadcrumbItem>
+                <BreadcrumbLink asChild>
+                  <Link href="/docs">Docs</Link>
+                </BreadcrumbLink>
+              </BreadcrumbItem>
               <BreadcrumbSeparator />
               <BreadcrumbItem>
                 <BreadcrumbPage>{pageLabel}</BreadcrumbPage>

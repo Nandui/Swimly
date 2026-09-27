@@ -150,6 +150,29 @@ Forms retain native FormData and labelled inputs. Status colours come only from
 Refunds metadata. Draft privacy and permissions change available controls, never
 the workspace boundary. See [docs/refunds.md](docs/refunds.md).
 
+**Poolside Clear system rules (Docs and Refunds).** `poolside.css` defines five
+type sizes as tokens and nothing else is used: `--pc-text-caption` 13px (metadata,
+table headers, badges, breadcrumbs), `--pc-text-body` 15px (body, controls, field
+labels, list and table row titles), `--pc-text-title` 18px (panel and dialog
+titles), `--pc-text-page` 24px (the H1) and `--pc-text-figure` 32px (summary
+figures), each with a matching `--pc-leading-*`. Inside the scope, Tailwind's
+`text-xs`…`text-3xl` resolve to the same tokens, so shadcn internals follow them.
+Every shared Button is 44px high with a 12px radius (`--pc-radius-control`), a 16px
+inset and 15px/600 labels; icon buttons are 44px squares. Rules target
+`.ui-motion-press` as well as `data-slot='button'`, because Radix triggers
+(`asChild`) replace the Button's `data-slot`. Fields are 44px, 15px/400 (16px on
+phones), field labels 15px/600. Panels use 16px (`--pc-radius-panel`); controls
+nested in a control (editor toolbar, segmented tabs) use 8px. Row titles are body
+size and semibold, with reference, dates and owner on a caption line. Side-column
+actions stack full width with the primary action first.
+
+`docs.css` sizes use these tokens only. Its original layouts sit in
+`@layer components.legacy`, below the Docs redesign in `@layer components`, so the
+redesign wins wherever both set a property and utility classes in the markup win
+over the original layouts. `poolside.css` and module CSS stay unlayered on top.
+A module rule that must beat a utility class on a shadcn primitive (for example a
+responsive `display: none` on a Label) belongs in `poolside.css`, not `docs.css`.
+
 Schedule keeps its booking sheet with sticky level labels and horizontal time scrolling.
 The sheet expands vertically within the workspace's single page scroll. Phones
 use Agenda. Circled check means spaces available; circled X means full.

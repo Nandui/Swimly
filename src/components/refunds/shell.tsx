@@ -7,7 +7,7 @@ import { signOut } from 'next-auth/react';
 import { ArrowLeft, Building2, CheckCheck, CircleHelp, Clock3, FilePenLine, Inbox, LogOut, Menu, PanelLeftClose, PanelLeftOpen, Plus, ReceiptText, ShieldCheck, UserRound } from 'lucide-react';
 import { Sidebar, SidebarProvider, SidebarMenuButton } from '@/components/shadcn/sidebar';
 import { Button } from '@/components/shadcn/button';
-import { Breadcrumb, BreadcrumbList, BreadcrumbItem, BreadcrumbPage, BreadcrumbSeparator } from '@/components/shadcn/breadcrumb';
+import { Breadcrumb, BreadcrumbList, BreadcrumbItem, BreadcrumbLink, BreadcrumbPage, BreadcrumbSeparator } from '@/components/shadcn/breadcrumb';
 import { Sheet, SheetContent, SheetDescription, SheetTitle, SheetTrigger } from '@/components/docs/primitives/sheet';
 import { Brand } from '@/components/docs/brand';
 import { AppearanceMenu } from '@/components/docs/appearance-menu';
@@ -66,7 +66,7 @@ export function RefundShell({ who, initialCollapsed = false, children }: {
     <a className="skip-link" href="#refund-main">Skip to content</a>
     <Sidebar collapsible="none" className="workspace-sidebar" data-collapsed={collapsed}>{navigation(false)}</Sidebar>
     <div className="workspace-surface">
-      <header className="workspace-topbar"><Breadcrumb className="workspace-breadcrumb"><BreadcrumbList><BreadcrumbItem>LeisureWorld</BreadcrumbItem><BreadcrumbSeparator /><BreadcrumbItem>Refunds</BreadcrumbItem><BreadcrumbSeparator /><BreadcrumbItem><BreadcrumbPage>{pageLabel}</BreadcrumbPage></BreadcrumbItem></BreadcrumbList></Breadcrumb><span className="workspace-private"><ShieldCheck size={15} aria-hidden="true" />Your team’s space</span></header>
+      <header className="workspace-topbar"><Breadcrumb className="workspace-breadcrumb"><BreadcrumbList><BreadcrumbItem><BreadcrumbLink asChild><Link href="/refunds">Refunds</Link></BreadcrumbLink></BreadcrumbItem><BreadcrumbSeparator /><BreadcrumbItem><BreadcrumbPage>{pageLabel}</BreadcrumbPage></BreadcrumbItem></BreadcrumbList></Breadcrumb><span className="workspace-private"><ShieldCheck size={15} aria-hidden="true" />Your team’s space</span></header>
       <header className="workspace-mobile-toolbar">
         <Sheet open={mobile} onOpenChange={setMobile}><SheetTrigger asChild><Button variant="ghost" size="icon" aria-label="Open navigation"><Menu size={20} /></Button></SheetTrigger><SheetContent side="left" className="workspace-mobile-sheet turnfin-refunds" aria-describedby="refund-nav-description"><SheetTitle className="sr-only">Refunds navigation</SheetTitle><SheetDescription className="sr-only" id="refund-nav-description">Open requests, follow up with finance and return to Turnfin modules.</SheetDescription>{navigation(true)}</SheetContent></Sheet>
         <Link href="/refunds" aria-label="Turnfin Refunds overview"><Brand module="Refunds" /></Link><AppearanceMenu />

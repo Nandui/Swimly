@@ -38,6 +38,42 @@
   --pc-shadow-overlay: 0 12px 32px -8px light-dark(rgb(15 42 51 / 0.18), rgb(0 0 0 / 0.6)), 0 2px 6px light-dark(rgb(15 42 51 / 0.08), rgb(0 0 0 / 0.3));
   --pc-ease: cubic-bezier(0.2, 0, 0, 1);
 
+  /* Type scale: five sizes only. Captions and metadata; body, controls and labels; section
+     titles; page titles; large figures. docs.css and module CSS reference these tokens. */
+  --pc-text-caption: 13px;
+  --pc-leading-caption: 18px;
+  --pc-text-body: 15px;
+  --pc-leading-body: 22px;
+  --pc-text-title: 18px;
+  --pc-leading-title: 26px;
+  --pc-text-page: 24px;
+  --pc-leading-page: 32px;
+  --pc-text-figure: 32px;
+  --pc-leading-figure: 40px;
+
+  /* Control geometry: one height, inset and radius for every button and field. */
+  --pc-control-height: 44px;
+  --pc-control-pad: 16px;
+  --pc-radius-inner: 8px;
+  --pc-radius-control: 12px;
+  --pc-radius-panel: 16px;
+
+  /* Tailwind's text utilities (shadcn internals and module markup) follow the same scale. */
+  --text-xs: var(--pc-text-caption);
+  --text-xs--line-height: var(--pc-leading-caption);
+  --text-sm: var(--pc-text-body);
+  --text-sm--line-height: var(--pc-leading-body);
+  --text-base: var(--pc-text-body);
+  --text-base--line-height: var(--pc-leading-body);
+  --text-lg: var(--pc-text-title);
+  --text-lg--line-height: var(--pc-leading-title);
+  --text-xl: var(--pc-text-title);
+  --text-xl--line-height: var(--pc-leading-title);
+  --text-2xl: var(--pc-text-page);
+  --text-2xl--line-height: var(--pc-leading-page);
+  --text-3xl: var(--pc-text-figure);
+  --text-3xl--line-height: var(--pc-leading-figure);
+
   /* Shared shadcn tokens. */
   --ui-background: var(--pc-surface);
   --ui-workspace: var(--pc-canvas);
@@ -113,17 +149,22 @@
 }
 .turnfin-docs {
   font-family: var(--font-sans);
-  font-size: 15px;
-  line-height: 1.47;
+  font-size: var(--pc-text-body);
+  line-height: var(--pc-leading-body);
   color: var(--pc-ink);
 }
 
-/* Type: one bold page title, sentence-case labels (never all capitals). */
+/* Type: one bold page title, 600-weight section titles, sentence-case labels (never capitals). */
 .turnfin-docs :is(h1, h2, h3, h4) { font-family: var(--font-sans); color: var(--pc-ink); }
-.turnfin-docs h1 { font-size: 24px; font-weight: 700; line-height: 32px; letter-spacing: -0.015em; }
-.turnfin-docs :is(.eyebrow, .section-kicker, .workspace-nav-label, .data-table th, .risk-read-card dt, .emergency-shortcut-top > span) { text-transform: none; letter-spacing: 0.02em; }
-.turnfin-docs :is(.eyebrow, .section-kicker) { font-size: 13px; font-weight: 600; color: var(--pc-primary-ink); }
-.turnfin-docs .tabular-nums { font-variant-numeric: tabular-nums; }
+.turnfin-docs h1 { font-size: var(--pc-text-page); font-weight: 700; line-height: var(--pc-leading-page); letter-spacing: -0.015em; }
+/* Heading defaults sit in the base layer so module rules (e.g. a card title at body size) and
+   Tailwind utilities in the markup can still refine them. */
+@layer base {
+  .turnfin-docs h2 { font-size: var(--pc-text-title); font-weight: 600; line-height: var(--pc-leading-title); letter-spacing: -0.01em; }
+  .turnfin-docs :is(h3, h4) { font-size: var(--pc-text-body); font-weight: 600; line-height: var(--pc-leading-body); letter-spacing: 0; }
+}
+.turnfin-docs :is(.eyebrow, .section-kicker, .workspace-nav-label, .data-table th, .risk-read-card dt, .emergency-shortcut-top > span, .document-kicker) { text-transform: none; letter-spacing: 0; }
+.turnfin-docs :is(.eyebrow, .section-kicker) { font-size: var(--pc-text-caption); line-height: var(--pc-leading-caption); font-weight: 600; color: var(--pc-primary-ink); }.turnfin-docs .tabular-nums { font-variant-numeric: tabular-nums; }
 
 /* Shell: sidebar and page share the canvas; content sits on white surfaces. */
 .turnfin-docs .turnfin-workspace { background: var(--pc-canvas); }
@@ -133,29 +174,31 @@
 .turnfin-docs .workspace-brand-row .brand-wordmark > span { font-size: 13px; font-weight: 600; color: var(--pc-primary-ink); letter-spacing: 0; }
 .turnfin-docs .workspace-organisation { background: var(--pc-surface); border-color: var(--pc-line); border-radius: 12px; box-shadow: var(--pc-shadow-card); }
 .turnfin-docs .workspace-organisation strong,
-.turnfin-docs .workspace-organisation span { font-size: 13px; }
+.turnfin-docs .workspace-organisation span { font-size: var(--pc-text-caption); }
 .turnfin-docs .workspace-search { min-height: 44px; border-radius: 12px; border-color: var(--pc-line-strong); background: var(--pc-surface); }
-.turnfin-docs .workspace-search input { font-size: 15px; }
+.turnfin-docs .workspace-search input { align-self: stretch; height: auto; font-size: var(--pc-text-body); }
 .turnfin-docs .workspace-search:focus-within { outline: none; border-color: var(--pc-focus); box-shadow: 0 0 0 1px var(--pc-focus), var(--pc-focus-halo); }
 .turnfin-docs .workspace-create { min-height: 44px; border-radius: 12px; }
-.turnfin-docs .workspace-nav-label { margin: 0 12px 8px; font-size: 12px; font-weight: 600; letter-spacing: 0.04em; color: var(--pc-ink-muted); }
+.turnfin-docs .workspace-nav-label { margin: 0 12px 8px; font-size: var(--pc-text-caption); font-weight: 600; color: var(--pc-ink-muted); }
 .turnfin-docs .workspace-nav-item + .workspace-nav-label { margin-top: 24px; }
-.turnfin-docs .workspace-nav-item { margin: 2px 0; border-radius: 12px; font-size: 15px; font-weight: 500; color: var(--pc-ink-muted); transition: color 120ms var(--pc-ease), background-color 120ms var(--pc-ease); }
+.turnfin-docs .workspace-nav-item { margin: 2px 0; border-radius: 12px; font-size: var(--pc-text-body); font-weight: 500; color: var(--pc-ink-muted); transition: color 120ms var(--pc-ease), background-color 120ms var(--pc-ease); }
 .turnfin-docs .workspace-nav-item:hover { background: var(--pc-hover); color: var(--pc-ink); }
 .turnfin-docs .workspace-nav-item[aria-current='page'] { background: var(--pc-primary-soft); color: var(--pc-primary-ink); font-weight: 600; }
 .turnfin-docs .workspace-nav-item[aria-current='page']:hover { background: var(--pc-primary-soft-hover); }
-.turnfin-docs .workspace-nav-count { min-width: 22px; height: 22px; padding: 0 6px; border-radius: 999px; background: var(--pc-primary); color: var(--pc-on-primary); font-size: 12px; font-weight: 700; font-variant-numeric: tabular-nums; }
+.turnfin-docs .workspace-nav-count { min-width: 22px; height: 22px; padding: 0 6px; border-radius: 999px; background: var(--pc-primary); color: var(--pc-on-primary); font-size: var(--pc-text-caption); font-weight: 700; font-variant-numeric: tabular-nums; }
 .turnfin-docs .workspace-sidebar-footer { border-top-color: var(--pc-line); }
-.turnfin-docs .appearance-button { font-size: 15px; }
-.turnfin-docs .appearance-button small { font-size: 13px; }
+.turnfin-docs .appearance-button { font-size: var(--pc-text-body); }
+.turnfin-docs .appearance-button small { font-size: var(--pc-text-caption); }
 .turnfin-docs .workspace-profile strong,
-.turnfin-docs .workspace-profile div > span { font-size: 13px; }
+.turnfin-docs .workspace-profile div > span { font-size: var(--pc-text-caption); }
 .turnfin-docs .workspace-topbar { min-height: 60px; border-bottom-color: var(--pc-line); background: var(--pc-canvas); }
-.turnfin-docs .workspace-breadcrumb,
-.turnfin-docs .workspace-private { font-size: 13px; }
+.turnfin-docs :is(.workspace-breadcrumb, .workspace-breadcrumb [data-slot='breadcrumb-list'], .workspace-private) { font-size: var(--pc-text-caption); line-height: var(--pc-leading-caption); }
+.turnfin-docs .workspace-breadcrumb [data-slot='breadcrumb-link'] { color: var(--pc-ink-muted); text-decoration: none; }
+.turnfin-docs .workspace-breadcrumb [data-slot='breadcrumb-link']:hover { color: var(--pc-ink); text-decoration: underline; text-underline-offset: 3px; }
 .turnfin-docs .workspace-page { background: var(--pc-canvas); }
 .turnfin-docs .workspace-page-content { padding: 32px clamp(16px, 3vw, 48px); }
-.turnfin-docs .app-footer { border-top-color: var(--pc-line); color: var(--pc-ink-muted); font-size: 13px; }
+.turnfin-docs .app-footer { border-top-color: var(--pc-line); color: var(--pc-ink-muted); font-size: var(--pc-text-caption); }
+.turnfin-docs .app-footer .brand-values { font-size: var(--pc-text-caption); }
 .turnfin-docs .workspace-mobile-sheet { background: var(--pc-canvas); color: var(--pc-ink); }
 .turnfin-docs :is(a, button, [role='tab']):focus-visible { outline: 2px solid var(--pc-focus); outline-offset: 2px; }
 
@@ -214,13 +257,30 @@
 .turnfin-docs :is(.workspace-sidebar, .workspace-mobile-sheet) .workspace-navigation { scrollbar-color: light-dark(rgb(15 42 51 / 0.2), rgb(255 255 255 / 0.25)) transparent; }
 
 /* Selection is a soft teal fill with bold text, never a coloured edge bar. */
-.turnfin-docs .settings-navigation button { border-radius: 12px; font-size: 15px; }
+.turnfin-docs .settings-navigation button { border-radius: 12px; font-size: var(--pc-text-body); }
 .turnfin-docs .settings-navigation button.selected { box-shadow: none; background: var(--pc-primary-soft); color: var(--pc-primary-ink); font-weight: 600; }
 .turnfin-docs .contents-panel a { border-radius: 8px; }
 .turnfin-docs .task-queues a { border-radius: 12px; }
 .turnfin-docs .task-queues a[aria-current='page'] { box-shadow: none; background: var(--pc-primary-soft); color: var(--pc-primary-ink); font-weight: 600; }
+/* Summary tiles (Docs reports, like Refunds totals): one panel style whether or not the tile
+   filters the records; clickable tiles show a teal edge on hover and a soft fill when active. */
+.turnfin-docs .report-stats > * { border: 1px solid var(--pc-line); border-radius: var(--pc-radius-panel); background: var(--pc-surface); box-shadow: var(--pc-shadow-card); }
+.turnfin-docs .report-stats > button:hover { border-color: var(--pc-primary); background: var(--pc-surface); }
 .turnfin-docs .report-stats > button[aria-pressed='true'] { box-shadow: none; border-color: var(--pc-primary); background: var(--pc-primary-soft); }
 .turnfin-docs :is(.template-preview, .auth-story) { border-top-width: 0; }
+
+/* List and table rows: the item's name is the row's primary line at body size; its reference,
+   dates and owner stay on a caption line beneath. Counts in navigation stay caption-sized. */
+.turnfin-docs :is(.table-document strong, .knowledge-title strong, .reading-title strong, .audit-row strong, .group-row strong, .mail-row strong, .home-reading-title strong, .home-work-links strong, .staff-cell strong, .staff-mobile-heading strong, .task-list strong, .history-version strong) { font-size: var(--pc-text-body); line-height: var(--pc-leading-body); font-weight: 600; color: var(--pc-ink); }
+.turnfin-docs .task-queues a strong { font-size: var(--pc-text-caption); line-height: var(--pc-leading-caption); font-weight: 600; font-variant-numeric: tabular-nums; }
+
+/* Responsive swaps must beat the utility classes on the shadcn Label that wraps them. */
+.turnfin-docs .library-mobile-type { display: none; }
+@media (max-width: 767px) { .turnfin-docs .library-mobile-type { display: block; } }
+
+/* Side-column actions (document reader) stack full width and wrap long labels. */
+.turnfin-docs .owner-actions { display: grid; gap: 8px; }
+.turnfin-docs .owner-actions .ui-motion-press { width: 100%; height: auto; justify-content: flex-start; white-space: normal; text-align: left; }
 
 /* Filter rows wrap instead of squeezing the search field in narrow panels. */
 .turnfin-docs .task-filters { grid-template-columns: repeat(auto-fit, minmax(min(100%, 200px), 1fr)); }
@@ -228,17 +288,25 @@
 .turnfin-docs .staff-directory-filters > span { grid-column: 1 / -1; }
 .turnfin-docs .contents-panel a:hover { border-left: 0; margin-left: 0; background: var(--pc-primary-soft); color: var(--pc-primary-ink); }
 
-/* Controls */
-.turnfin-docs [data-slot='button'] { border-radius: 12px; font-size: 15px; font-weight: 600; transition: background-color 120ms var(--pc-ease), color 120ms var(--pc-ease), border-color 120ms var(--pc-ease), translate 120ms var(--pc-ease); }
-.turnfin-docs [data-slot='button'][data-variant='outline'] { background: var(--pc-surface); border-color: var(--pc-line-strong); box-shadow: none; color: var(--pc-ink); }
-.turnfin-docs [data-slot='button'][data-variant='outline']:hover { background: var(--pc-surface-sunken); }
-.turnfin-docs [data-slot='button'][data-variant='ghost'] { color: var(--pc-primary); }
-.turnfin-docs [data-slot='button'][data-variant='ghost']:hover { background: var(--pc-primary-soft); color: var(--pc-primary-ink); }
-.turnfin-docs :is(.workspace-sidebar, .workspace-mobile-sheet, .workspace-mobile-toolbar) [data-slot='button'][data-variant='ghost'] { color: var(--pc-ink-muted); font-weight: 500; }
-.turnfin-docs :is(.workspace-sidebar, .workspace-mobile-sheet, .workspace-mobile-toolbar) [data-slot='button'][data-variant='ghost']:hover { background: var(--pc-hover); color: var(--pc-ink); }
-.turnfin-docs [data-slot='button'][data-variant='destructive'] { background: var(--pc-danger); color: light-dark(#ffffff, #2a0906); }
-.turnfin-docs .button { border-radius: 12px; font-weight: 600; }
-.turnfin-docs [data-slot='badge'] { gap: 4px; min-height: 26px; padding: 0 10px; border-radius: 999px; font-size: 13px; line-height: 18px; font-weight: 600; }
+/* Controls. Every shared Button has one height, radius, type size, weight and inset. Menu and
+   popover triggers (Radix swaps their data-slot) are caught through .ui-motion-press, a class
+   only the shared Button sets. Icon buttons are square; editor toolbar buttons keep their own
+   compact inset. */
+.turnfin-docs :is([data-slot='button'], .ui-motion-press) { min-height: var(--pc-control-height); border-radius: var(--pc-radius-control); font-size: var(--pc-text-body); line-height: var(--pc-leading-body); font-weight: 600; transition: background-color 120ms var(--pc-ease), color 120ms var(--pc-ease), border-color 120ms var(--pc-ease), translate 120ms var(--pc-ease); }
+.turnfin-docs .ui-motion-press:not([data-size^='icon'], .toolbar-button) { padding-inline: var(--pc-control-pad); }
+.turnfin-docs .ui-motion-press[data-size^='icon'] { width: var(--pc-control-height); min-width: var(--pc-control-height); padding: 0; }
+.turnfin-docs .ui-motion-press > svg { width: 18px; height: 18px; }
+.turnfin-docs .ui-motion-press[data-variant='outline'] { background: var(--pc-surface); border: 1px solid var(--pc-line-strong); box-shadow: none; color: var(--pc-ink); }
+.turnfin-docs .ui-motion-press[data-variant='outline']:hover { background: var(--pc-surface-sunken); }
+.turnfin-docs .ui-motion-press[data-variant='ghost'] { color: var(--pc-primary); }
+.turnfin-docs .ui-motion-press[data-variant='ghost']:hover { background: var(--pc-primary-soft); color: var(--pc-primary-ink); }
+.turnfin-docs :is(.workspace-sidebar, .workspace-mobile-sheet, .workspace-mobile-toolbar) .ui-motion-press[data-variant='ghost'] { color: var(--pc-ink-muted); font-weight: 500; }
+.turnfin-docs :is(.workspace-sidebar, .workspace-mobile-sheet, .workspace-mobile-toolbar) .ui-motion-press[data-variant='ghost']:hover { background: var(--pc-hover); color: var(--pc-ink); }
+.turnfin-docs .ui-motion-press[data-variant='destructive'] { background: var(--pc-danger); color: light-dark(#ffffff, #2a0906); }
+.turnfin-docs .button { border-radius: var(--pc-radius-control); font-weight: 600; }
+/* Editor toolbar and segmented tabs sit inside a control, so they use the inner radius. */
+.turnfin-docs :is(.editor-toolbar .ui-motion-press, .editor-toolbar [data-slot='select-trigger'], .editor-toolbar select, [data-slot='tabs-trigger']) { border-radius: var(--pc-radius-inner); }
+.turnfin-docs [data-slot='badge'] { gap: 4px; min-height: 26px; padding: 0 10px; border-radius: 999px; font-size: var(--pc-text-caption); line-height: var(--pc-leading-caption); font-weight: 600; }
 .turnfin-docs [data-slot='badge']:has(> svg) { padding-left: 8px; }
 .turnfin-docs [data-slot='badge'] > svg { width: 14px; height: 14px; stroke-width: 2.5; }
 .turnfin-docs [data-slot='badge']:is(:not([data-tone]), [data-tone='gray'])[data-variant='secondary'] { background: var(--pc-neutral-soft); color: var(--pc-ink-muted); }
@@ -249,23 +317,50 @@
 .turnfin-docs [data-slot='alert'][data-tone='warning'] { background: var(--pc-warning-soft); color: var(--pc-warning); }
 .turnfin-docs :is([data-slot='dialog-content'], [data-slot='alert-dialog-content'], [data-slot='sheet-content']) { border-color: var(--pc-line); background: var(--pc-surface-raised); font-family: var(--font-sans); }
 .turnfin-docs :is([data-slot='dialog-content'], [data-slot='alert-dialog-content']) { border: 0; border-radius: 16px; box-shadow: var(--pc-shadow-overlay); }
-.turnfin-docs :is([data-slot='dialog-title'], [data-slot='alert-dialog-title'], [data-slot='sheet-title']) { font-size: 18px; line-height: 26px; font-weight: 600; letter-spacing: -0.01em; }
+.turnfin-docs :is([data-slot='dialog-title'], [data-slot='alert-dialog-title'], [data-slot='sheet-title']) { font-size: var(--pc-text-title); line-height: var(--pc-leading-title); font-weight: 600; letter-spacing: -0.01em; }
 .turnfin-docs :is([data-slot='select-content'], [data-slot='popover-content'], [data-slot='dropdown-menu-content']) { border-color: var(--pc-line); border-radius: 12px; box-shadow: var(--pc-shadow-overlay); font-family: var(--font-sans); }
-.turnfin-docs :is([data-slot='select-item'], [data-slot='dropdown-menu-item']) { font-family: var(--font-sans); font-size: 15px; border-radius: 8px; }
+.turnfin-docs :is([data-slot='select-item'], [data-slot='dropdown-menu-item']) { font-family: var(--font-sans); font-size: var(--pc-text-body); border-radius: var(--pc-radius-inner); }
 
 /* Fields */
-.turnfin-docs :is([data-slot='input'], [data-slot='textarea'], [data-slot='select-trigger'], [data-slot='native-select']):not(.title-input) { min-height: 44px; border-radius: 12px; border-color: var(--pc-line-strong); background: var(--pc-surface); box-shadow: none; font-size: 16px; transition: border-color 120ms var(--pc-ease), box-shadow 120ms var(--pc-ease); }
+.turnfin-docs :is([data-slot='input'], [data-slot='textarea'], [data-slot='select-trigger'], [data-slot='native-select']):not(.title-input) { min-height: var(--pc-control-height); border-radius: var(--pc-radius-control); border-color: var(--pc-line-strong); background: var(--pc-surface); box-shadow: none; font-size: 16px; font-weight: 400; color: var(--pc-ink); transition: border-color 120ms var(--pc-ease), box-shadow 120ms var(--pc-ease); }
 .turnfin-docs [data-slot='textarea']:not(.title-input) { min-height: 96px; padding-top: 10px; padding-bottom: 10px; line-height: 22px; }
 .turnfin-docs .editor-title-panel [data-slot='textarea']:not(.title-input) { min-height: 72px; }
 .turnfin-docs :is([data-slot='input'], [data-slot='textarea'], [data-slot='select-trigger'], [data-slot='native-select']):not(.title-input):focus-visible { border-color: var(--pc-focus); box-shadow: 0 0 0 1px var(--pc-focus), var(--pc-focus-halo); }
 .turnfin-docs :is([data-slot='input'], [data-slot='textarea'])[aria-invalid='true'] { border-color: var(--pc-danger); background: var(--pc-danger-soft); }
 .turnfin-docs :is([data-slot='input'], [data-slot='textarea'])::placeholder { color: var(--pc-ink-muted); }
+/* The editor's document title reads as the page title, not as a boxed field. */
+.turnfin-docs .editor-title-panel .title-input { height: auto; min-height: 44px; padding: 0; border: 0; border-radius: 0; background: none; box-shadow: none; font-size: var(--pc-text-page); line-height: var(--pc-leading-page); font-weight: 700; letter-spacing: -0.015em; }
+.turnfin-docs .editor-title-panel .title-input:focus-visible { box-shadow: none; outline: 2px solid var(--pc-focus); outline-offset: 4px; border-radius: 4px; }
+
+/* Tables: caption-size column headers, body-size cells, one cell inset. */
+.turnfin-docs .data-table :is(th, td) { padding: 14px 16px; }
+.turnfin-docs .data-table th { height: auto; font-size: var(--pc-text-caption); line-height: var(--pc-leading-caption); font-weight: 600; color: var(--pc-ink-muted); letter-spacing: 0; text-transform: none; white-space: nowrap; }
+.turnfin-docs .data-table td { font-size: var(--pc-text-body); line-height: var(--pc-leading-body); }
 .turnfin-docs .workspace-search [data-slot='input'],
 .turnfin-docs .workspace-search input { min-height: 0; border: 0; background: transparent; box-shadow: none; }
-/* Field labels stack their control underneath; keep the label text left-aligned. */
-.turnfin-docs label:has(> :is(input:not([type='checkbox'], [type='radio'], [type='file']), textarea)) { align-items: stretch; font-size: 14px; font-weight: 600; }
+/* Field labels: one size and weight in every module, whether the control sits inside the label
+   (Docs filters) or after it (Refunds forms). Choice labels (checkbox, radio, template cards)
+   keep body weight. Field text is 16px on phones so iOS does not zoom, body size from 768px. */
+.turnfin-docs :is(label, legend:not(.sr-only), [data-slot='label']):not(:has([type='checkbox'], [type='radio'], [data-slot='checkbox'], [data-slot='radio-group-item'])) { font-size: var(--pc-text-body); line-height: var(--pc-leading-body); font-weight: 600; color: var(--pc-ink); letter-spacing: 0; text-transform: none; }
+.turnfin-docs label:has(> :is(input:not([type='checkbox'], [type='radio'], [type='file']), textarea, select, [data-slot='native-select-wrapper'], [data-slot='select-trigger'])) { align-items: stretch; gap: 8px; }
+.turnfin-docs label:has([type='checkbox'], [type='radio'], [data-slot='checkbox'], [data-slot='radio-group-item']) { align-items: flex-start; font-size: var(--pc-text-body); line-height: var(--pc-leading-body); }
+.turnfin-docs label:has([type='checkbox'], [data-slot='checkbox']) > :is([type='checkbox'], [data-slot='checkbox']) { margin-top: 3px; flex-shrink: 0; }
+/* Selectable cards (templates) read top-left like every other card, whatever their title length. */
+.turnfin-docs .template-card { align-items: flex-start; text-align: left; }
+.turnfin-docs .create-template-layout .template-grid { display: flex; flex-direction: column; }
+.turnfin-docs .create-template-layout .template-card { display: grid; align-items: start; }
+.turnfin-docs .template-card h2 { font-size: var(--pc-text-body); line-height: var(--pc-leading-body); font-weight: 600; }
+.turnfin-docs .template-card p { font-size: var(--pc-text-caption); line-height: var(--pc-leading-caption); }
+/* Sibling panel headings share the section-title size. */
+.turnfin-docs :is(.report-filter-heading, .report-records-heading) h2 { font-size: var(--pc-text-title); line-height: var(--pc-leading-title); }
+
+/* Sidebar appearance control: label left, current mode right, like the other footer rows. */
+.turnfin-docs .appearance-button { justify-content: flex-start; }
+.turnfin-docs .appearance-button small { margin-left: auto; color: var(--pc-ink-muted); }
+.turnfin-docs .home-facility { align-items: center; }
+.turnfin-docs :is([data-slot='field-description'], .field-hint, .hint) { font-size: var(--pc-text-caption); line-height: var(--pc-leading-caption); font-weight: 400; color: var(--pc-ink-muted); }
 @media (min-width: 768px) {
-  .turnfin-docs :is([data-slot='input'], [data-slot='textarea'], [data-slot='select-trigger'], [data-slot='native-select']):not(.title-input) { font-size: 15px; }
+  .turnfin-docs :is([data-slot='input'], [data-slot='textarea'], [data-slot='select-trigger'], [data-slot='native-select']):not(.title-input) { font-size: var(--pc-text-body); }
 }
 
 @media (max-width: 767px) {
