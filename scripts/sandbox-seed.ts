@@ -11,6 +11,7 @@ type Ctx = { prisma: PrismaClient; docsUrl: string; hrUrl: string | null; roles:
 
 export async function seed(ctx: Ctx) {
   await seedAquatics(ctx.prisma);
+  await seedTraining(ctx.prisma);
 }
 
 /** Two sites' worth of classes so the deck and desk surfaces can be checked:
@@ -56,4 +57,31 @@ async function seedAquatics(db: PrismaClient) {
     parentId: parent.id, studentId: ids.Robin, key: "sandbox-change-0001", proposed, message: "New number and an update from the GP",
     requestHash: createHash("sha256").update(JSON.stringify([ids.Robin, proposed, "sandbox"])).digest("hex"),
   } });
+}
+
+/** Training: Liam leads training for Aquatics (a department-scoped role), so
+ *  he assigns and signs off for Ava and Riley but not for reception. Riley is
+ *  waiting for sign-off on the rescue refresher that renews his expired NPLQ;
+ *  Ava has one course to do and one overdue. */
+async function seedTraining(db: PrismaClient) {
+  const ORG = "org_leisureworld";
+  const lead = await db.staffRole.create({ data: {
+    name: "Training lead", permissions: ["training.assign", "training.signoff"], screens: ["training"], sortOrder: 30,
+    description: "Assigns and signs off training for the people in their scope.",
+  } });
+  await db.roleAssignment.create({ data: { orgId: ORG, userId: "sbx_liam", roleId: lead.id, scopeKind: "department", scopeId: "dept_aquatics", grantedById: "sbx_alex" } });
+  const course = (title: string, summary: string, content: string, requiresSignoff: boolean, grantsTypeId: string | null) =>
+    db.trainingCourse.create({ data: { orgId: ORG, title, summary, content, requiresSignoff, grantsTypeId, createdById: "sbx_alex" } });
+  const rescue = await course("Pool rescue refresher", "Spinal and deep-water rescue, renewed every two years.",
+    "1. Read the rescue procedure in Docs.\n2. Practise the spinal roll and a deep-water tow with a colleague.\n3. Ask for sign-off when you are ready; a trainer watches you do both.", true, "qt_nplq");
+  const safeguarding = await course("Safeguarding e-learning", "Recognising and reporting concerns about a child.",
+    "Read the safeguarding policy and the reporting flowchart, then mark this done.", false, "qt_safeguarding");
+  await course("Chemical handling", "Safe storage and dosing in the plant room.", "Walk through the plant room checklist with the duty manager.", true, null);
+  const day = (offset: number) => { const d = new Date(); d.setUTCHours(0, 0, 0, 0); d.setUTCDate(d.getUTCDate() + offset); return d; };
+  await db.trainingAssignment.createMany({ data: [
+    { orgId: ORG, courseId: rescue.id, userId: "sbx_ava", dueOn: day(14), assignedById: "sbx_liam", assignedByName: "Liam Example" },
+    { orgId: ORG, courseId: safeguarding.id, userId: "sbx_ava", dueOn: day(-3), assignedById: "sbx_liam", assignedByName: "Liam Example" },
+    { orgId: ORG, courseId: rescue.id, userId: "sbx_riley", dueOn: day(7), assignedById: "sbx_liam", assignedByName: "Liam Example", status: "SUBMITTED", submittedAt: new Date(), learnerNote: "On the Saturday morning shift if that suits." },
+    { orgId: ORG, courseId: safeguarding.id, userId: "sbx_noah", assignedById: "sbx_alex", assignedByName: "Alex Example" },
+  ] });
 }

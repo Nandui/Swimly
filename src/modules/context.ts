@@ -6,7 +6,12 @@ import { visibleModules, type ModuleContext } from "./registry";
 /** What the registry needs to know about the signed-in person. */
 export function moduleContext(session: Session): ModuleContext {
   const permissions = permissionsOf(session);
-  return { permissions, screens: visibleScreens(session.user.screens ?? [], permissions), superadmin: session.user.isSuperadmin === true };
+  return {
+    permissions,
+    screens: visibleScreens(session.user.screens ?? [], permissions),
+    scopedScreens: new Set((session.user.grants ?? []).flatMap((grant) => grant.screens)),
+    superadmin: session.user.isSuperadmin === true,
+  };
 }
 
 export function modulesFor(session: Session) {

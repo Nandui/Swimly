@@ -3,7 +3,7 @@ import type { Session } from "next-auth";
 import { myProviders } from "@/modules/my/providers";
 import type { MyItem, MyProvider } from "@/modules/my/types";
 
-export type MySection = { id: string; moduleId: string; title: string; empty: string } & (
+export type MySection = { id: string; moduleId: string; title: string; empty: string; more?: { href: string; label: string } } & (
   | { ok: true; items: MyItem[] }
   | { ok: false }
 );
@@ -26,7 +26,7 @@ export async function loadMyHub(session: Session, providers: readonly MyProvider
   const results = await Promise.allSettled(applicable.map((p) => withTimeout(p.load(ctx), TIME_LIMIT_MS)));
   return applicable.map((p, i) => {
     const result = results[i];
-    const base = { id: p.id, moduleId: p.moduleId, title: p.title, empty: p.empty };
+    const base = { id: p.id, moduleId: p.moduleId, title: p.title, empty: p.empty, more: p.more };
     if (result.status === "fulfilled") return { ...base, ok: true as const, items: result.value };
     console.error(`[my] ${p.id} failed:`, result.reason instanceof Error ? result.reason.message : "unknown");
     return { ...base, ok: false as const };

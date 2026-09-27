@@ -61,6 +61,11 @@ export function MyHub({ userName, sections, modules, receptionAllowed }: {
                 })}
               </ul>
             )}
+            {section.more ? (
+              <Link href={section.more.href} prefetch={false} className="inline-flex min-h-11 items-center gap-1 self-start text-sm font-medium underline-offset-4 hover:underline">
+                {section.more.label}<ArrowRight aria-hidden="true" className="size-4" />
+              </Link>
+            ) : null}
           </Card>
         ))}
       </div>

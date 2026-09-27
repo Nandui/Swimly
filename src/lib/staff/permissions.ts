@@ -147,6 +147,30 @@ export const PERMISSIONS = [
     description: "Record, verify and revoke staff qualifications such as NPLQ and first aid for the people this role covers (everyone, a site, a department or their direct reports).",
   },
   {
+    key: "training.manage",
+    group: "Training",
+    label: "Build the training catalogue",
+    description: "Create, edit and retire training courses, and choose which qualification a course grants. Assigning and signing off are separate.",
+  },
+  {
+    key: "training.assign",
+    group: "Training",
+    label: "Assign training",
+    description: "Assign courses with a due date, and cancel assignments, for the people this role covers. Includes reading their training records.",
+  },
+  {
+    key: "training.records.read",
+    group: "Training",
+    label: "Read training records",
+    description: "See the training and qualifications of the people this role covers (everyone, a site, a department or their direct reports).",
+  },
+  {
+    key: "training.signoff",
+    group: "Training",
+    label: "Sign off practical training",
+    description: "Confirm that someone this role covers has shown the skill in person, which completes the course and records any qualification. Never your own.",
+  },
+  {
     key: "activity.view",
     group: "Administration",
     label: "Read the activity log",
@@ -168,6 +192,7 @@ export const PERMISSION_GROUP_ORDER: PermissionGroup[] = [
   "Docs",
   "Refunds",
   "People",
+  "Training",
   "Administration",
 ];
 
@@ -197,6 +222,9 @@ const IMPLIES: Partial<Record<PermissionKey, PermissionKey[]>> = {
   "attendance.markAny": ["attendance.mark", "attendance.cover"],
   "progression.complete": ["progression.assess"],
   "progression.override": ["progression.complete", "progression.assess"],
+  "training.manage": ["training.records.read"],
+  "training.assign": ["training.records.read"],
+  "training.signoff": ["training.records.read"],
 };
 
 /** Restricted capabilities (HR, performance): never inherited by

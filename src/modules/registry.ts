@@ -1,4 +1,4 @@
-import { Files, ReceiptText, WavesLadder, type LucideIcon } from "lucide-react";
+import { Files, GraduationCap, ReceiptText, WavesLadder, type LucideIcon } from "lucide-react";
 import type { PermissionKey } from "@/lib/staff/permissions";
 import { isAquaticsScreen, type ScreenKey } from "@/lib/staff/screens";
 
@@ -15,6 +15,10 @@ import { isAquaticsScreen, type ScreenKey } from "@/lib/staff/screens";
 
 export type ModuleContext = {
   screens: ReadonlySet<ScreenKey>;
+  /** Screens from additional roles at any scope (a department, their team).
+   *  People-scoped modules such as Training open for these too; the module
+   *  itself decides whose records they reach. */
+  scopedScreens: ReadonlySet<string>;
   permissions: ReadonlySet<PermissionKey>;
   superadmin: boolean;
 };
@@ -80,4 +84,14 @@ registerModule({
   icon: Files,
   href: "/docs",
   visibleTo: ({ screens }) => screens.has("docs"),
+});
+
+registerModule({
+  id: "training",
+  name: "Training",
+  description: "Build courses, assign training, sign off practical skills and follow expiring qualifications.",
+  icon: GraduationCap,
+  href: "/training",
+  // Completing your own training happens in the My hub; this is the Manage surface.
+  visibleTo: ({ screens, scopedScreens }) => screens.has("training") || scopedScreens.has("training"),
 });

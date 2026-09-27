@@ -5,11 +5,12 @@ import { prisma } from "@/lib/prisma";
 import { qualificationState } from "@/lib/people/data";
 import { QUALIFICATION_STATE_META } from "@/lib/people/constants";
 import { refundNumber, refundStatuses } from "@/lib/refunds/types";
+import { trainingMine } from "@/modules/training/my";
 import type { MyItem, MyProvider } from "./types";
 
 /** My providers for the modules that exist today. Each reads only its own
  *  module's data, filtered to the signed-in person. Training, HR and Rota add
- *  theirs in their own module folders and register below. */
+ *  theirs in their own module folders and are listed below. */
 
 const date = (value: Date | string | null | undefined) =>
   value ? formatDate(typeof value === "string" ? new Date(`${value.slice(0, 10)}T00:00:00Z`) : value) : "";
@@ -99,7 +100,7 @@ const qualifications: MyProvider = {
   },
 };
 
-const PROVIDERS: MyProvider[] = [docsReading, refundsMine, qualifications];
+const PROVIDERS: MyProvider[] = [trainingMine, docsReading, refundsMine, qualifications];
 
 export function registerMyProvider(provider: MyProvider) {
   if (PROVIDERS.some((p) => p.id === provider.id)) throw new Error(`My provider ${provider.id} is registered twice.`);

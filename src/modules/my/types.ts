@@ -35,6 +35,8 @@ export type MyProvider = {
   title: string;
   /** Shown when the provider has nothing for this person. */
   empty: string;
+  /** The person's full list in the module's My surface, e.g. finished training. */
+  more?: { href: string; label: string };
   /** Whether this section applies to the person at all (for example, only
    *  people who can use Refunds see their refund requests). */
   appliesTo?(ctx: MyContext): boolean;

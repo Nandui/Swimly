@@ -156,6 +156,17 @@ Parents propose contact, emergency and medical corrections through the parent AP
 reception applies or declines them at `/students/parent-changes`. See
 docs/parent-app.md.
 
+## Training
+
+Training (docs/training.md) is the first module built on the model from the
+start. Its four capabilities (`training.manage`, `training.assign`,
+`training.records.read`, `training.signoff`) reach people through assignments,
+so an Aquatics lead's department-scoped role assigns and signs off for Aquatics
+staff only. Because Training is people-scoped, its workspace opens for a Training
+screen granted at any scope (`ModuleContext.scopedScreens`), unlike the flat
+site-based screens; each page then scopes records with the policy engine.
+Completing your own training needs no capability and lives in the My hub.
+
 ## Rules
 
 - Never check a role name. Ask for a capability, and for records, a resource.
@@ -175,5 +186,6 @@ docs/parent-app.md.
 fictional LeisureWorld (a superadmin, a site manager with a site-limited duty
 role, an aquatics lead who records qualifications for Aquatics, instructors and
 reception), plus synthetic swimmers, classes on today's weekday at two sites and a
-parent's pending correction (`scripts/sandbox-seed.ts`). It never reads real database settings. Accounts and the sandbox
+parent's pending correction, and Training data: Liam leads training for Aquatics, Riley
+waits for sign-off, Ava has overdue and open courses (`scripts/sandbox-seed.ts`). It never reads real database settings. Accounts and the sandbox
 password are listed in `scripts/sandbox.mts`.

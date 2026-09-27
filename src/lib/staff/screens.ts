@@ -123,6 +123,7 @@ export const SCREENS = [
     description: "The log of every change. Needs the permission to read it.",
     requires: "activity.view",
   },
+  { key: "training", label: "Training", path: "/training", description: "A separate workspace for the training catalogue, assigning courses, trainer sign-off and expiring qualifications. Everyone completes their own training from My hub without it.", requires: "training.records.read" },
   { key: "docs", label: "Docs", path: "/docs", description: "A separate workspace for documents, independent approvals and required reading.", requires: "docs.read" },
 ] as const satisfies readonly {
   key: string;
@@ -206,6 +207,9 @@ export function homePathFor(
 }
 
 /** Separate modules never imply access to the swim-school workspace. */
+/** Screens that open their own Turnfin workspace rather than Aquatics. */
+const TURNFIN_WORKSPACES = new Set<string>(["docs", "refunds", "training"]);
+
 export function isAquaticsScreen(key: ScreenKey) {
-  return key !== "docs" && key !== "refunds";
+  return !TURNFIN_WORKSPACES.has(key);
 }
