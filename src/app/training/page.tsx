@@ -1,10 +1,13 @@
 import type { Metadata } from "next";
 import Link from "next/link";
-import { ArrowRight, CheckCheck, ClipboardCheck, GraduationCap, Hourglass, Search, TriangleAlert } from "lucide-react";
+import { ChevronRight, CheckCheck, ClipboardCheck, Hourglass, Search, TriangleAlert } from "lucide-react";
 import { Button } from "@/components/shadcn/button";
 import { Input } from "@/components/shadcn/input";
+import { Item, ItemContent, ItemGroup, ItemTitle } from "@/components/shadcn/item";
 import { Label } from "@/components/shadcn/label";
 import { NativeSelect, NativeSelectOption } from "@/components/shadcn/native-select";
+import { EmptyState } from "@/components/ui-kit/empty-state";
+import { PageHeader } from "@/components/ui-kit/page-header";
 import { AssignTraining } from "@/components/training/manage-actions";
 import { TrainingStatusTag } from "@/components/training/status";
 import { formatDate } from "@/lib/format";
@@ -24,22 +27,25 @@ export default async function TrainingOverviewPage({ searchParams }: { searchPar
     { label: "Completed in 30 days", value: data.counts.completed, icon: CheckCheck, href: "/training?view=completed" },
   ];
   return (
-    <div className="space-y-6">
-      <div className="module-heading">
-        <div className="space-y-2">
-          <h1>Training</h1>
-          <p className="text-sm">Training for the people you cover: what is due, waiting for sign-off and done.</p>
-        </div>
-        {data.who.assign && activeCourses.length > 0 && people.length > 0 ? <AssignTraining courses={activeCourses} people={people} /> : null}
-      </div>
+    <div className="min-w-0 flex flex-col gap-6">
+      <PageHeader
+        title="Training"
+        description="Training for the people you cover: what is due, waiting for sign-off and done."
+        actions={data.who.assign && activeCourses.length > 0 && people.length > 0 ? <AssignTraining courses={activeCourses} people={people} /> : null}
+      />
 
-      <dl className="module-summary grid grid-cols-2 gap-6 sm:grid-cols-4">
+      <dl className="grid grid-cols-2 gap-3 lg:grid-cols-4">
         {tiles.map(({ label, value, icon: Icon, href }) => (
-          <div key={label}><Link href={href}><dt><Icon aria-hidden="true" />{label}</dt><dd>{value}</dd></Link></div>
+          <div key={label} className="min-w-0">
+            <Link href={href} className="flex h-full flex-col gap-2 rounded-ui-lg border border-ui-border p-4 hover:bg-ui-muted/50">
+              <dt className="flex items-center gap-2 text-sm text-ui-muted-foreground"><Icon aria-hidden="true" className="size-4 shrink-0" />{label}</dt>
+              <dd className="mt-auto text-2xl font-semibold tabular-nums">{value}</dd>
+            </Link>
+          </div>
         ))}
       </dl>
 
-      <form method="get" className="module-filters space-y-4" role="search" aria-label="Filter training">
+      <form method="get" className="flex flex-col gap-4 rounded-ui-lg border border-ui-border p-4" role="search" aria-label="Filter training">
         <div className="grid gap-4 sm:grid-cols-3">
           <div className="min-w-0 space-y-2"><Label htmlFor="training-q">Person</Label><Input id="training-q" name="q" defaultValue={input.q ?? ""} placeholder="Name" className="min-h-11" /></div>
           <div className="min-w-0 space-y-2"><Label htmlFor="training-view">Show</Label>
@@ -60,31 +66,31 @@ export default async function TrainingOverviewPage({ searchParams }: { searchPar
         </div>
       </form>
 
-      <div className="module-results space-y-3">
-        <p className="text-sm">{data.total} {data.total === 1 ? "record" : "records"}{data.total > data.rows.length ? `, showing the first ${data.rows.length}` : ""}</p>
+      <section className="min-w-0 flex flex-col gap-3" aria-label="Training records">
+        <p className="text-sm text-ui-muted-foreground">{data.total} {data.total === 1 ? "record" : "records"}{data.total > data.rows.length ? `, showing the first ${data.rows.length}` : ""}</p>
         {data.rows.length === 0 ? (
-          <div className="module-empty"><GraduationCap aria-hidden="true" /><h2 className="font-semibold">Nothing to show</h2><p className="mt-2 text-sm text-ui-muted-foreground">Try another filter{data.who.assign ? ", or assign a course" : ""}.</p></div>
+          <EmptyState icon="graduationCap" title="Nothing to show" hint={`Try another filter${data.who.assign ? ", or assign a course" : ""}.`} />
         ) : (
-          <ul className="module-list">
+          <ItemGroup className="divide-y divide-ui-border rounded-ui-lg border border-ui-border">
             {data.rows.map((row) => (
-              <li key={row.id}>
-                <Link href={`/training/people/${row.user.id}`} className="module-row flex min-h-20 flex-wrap items-center justify-between gap-4 p-4 sm:px-5">
-                  <div className="min-w-0 flex-1 space-y-1">
-                    <div className="flex flex-wrap items-center gap-2"><span className="module-row-title">{row.user.name}</span><TrainingStatusTag state={row.state} /></div>
+              <Item key={row.id} asChild role="listitem" className="rounded-none">
+                <Link href={`/training/people/${row.user.id}`} prefetch={false} className="hover:bg-ui-muted/50">
+                  <ItemContent className="min-w-0 gap-1">
+                    <div className="flex flex-wrap items-center gap-2"><ItemTitle>{row.user.name}</ItemTitle><TrainingStatusTag state={row.state} /></div>
                     <p className="text-sm">{row.course.title}{row.user.jobTitle ? <span className="text-ui-muted-foreground"> · {row.user.jobTitle}</span> : null}</p>
                     <p className="text-xs text-ui-muted-foreground">
                       {row.state === "completed" && row.completedAt
                         ? `Completed ${formatDate(row.completedAt)}${row.signedOffByName ? ` · signed off by ${row.signedOffByName}` : ""}`
                         : `Assigned ${formatDate(row.assignedAt)} · ${row.dueOn ? `due ${formatDate(row.dueOn)}` : "no deadline"}`}
                     </p>
-                  </div>
-                  <ArrowRight className="module-row-arrow size-5" aria-hidden="true" />
+                  </ItemContent>
+                  <ChevronRight aria-hidden="true" className="size-4 shrink-0 text-ui-muted-foreground" />
                 </Link>
-              </li>
+              </Item>
             ))}
-          </ul>
+          </ItemGroup>
         )}
-      </div>
+      </section>
     </div>
   );
 }

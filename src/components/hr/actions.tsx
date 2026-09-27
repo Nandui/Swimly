@@ -14,15 +14,11 @@ import { Notice } from "@/components/ui-kit/notice";
 import { NOTE_VISIBILITY_META, NOTE_VISIBILITIES, REVIEW_OVERALL_LABELS, type ReviewOverall } from "@/lib/hr/constants";
 import { acknowledgeReview, addNote, saveReview, shareReview, withdrawNote } from "@/lib/hr/actions";
 
-/** HR dialogs carry the Poolside Clear scope into their portal. The person's
- *  own acknowledgement lives in the My hub frame, so it takes none. */
-const THEME = "turnfin-docs turnfin-module";
 
 export function AddNote({ subjectUserId, name }: { subjectUserId: string; name: string }) {
   const [visibility, setVisibility] = useState("record");
   return (
     <FormDialog
-      portalClassName={THEME}
       width="sm:max-w-lg"
       trigger={<Button className="min-h-11"><StickyNote aria-hidden="true" />Add note</Button>}
       title={`Add a note for ${name}`}
@@ -56,7 +52,6 @@ export function AddNote({ subjectUserId, name }: { subjectUserId: string; name: 
 export function WithdrawNote({ id }: { id: string }) {
   return (
     <FormDialog
-      portalClassName={THEME}
       trigger={<Button variant="ghost" className="min-h-11"><Undo2 aria-hidden="true" />Withdraw</Button>}
       title="Withdraw this note?"
       description="It stops showing on the record and in the person's hub. A superadmin can still see it in a subject export."
@@ -74,7 +69,6 @@ export function WithdrawNote({ id }: { id: string }) {
 export function StartReview({ subjectUserId, name }: { subjectUserId: string; name: string }) {
   return (
     <FormDialog
-      portalClassName={THEME}
       trigger={<Button variant="outline" className="min-h-11"><FilePlus2 aria-hidden="true" />Start a review</Button>}
       title={`Start a review for ${name}`}
       description="It stays a draft only you can see until you share it with them."
@@ -110,8 +104,8 @@ export function ReviewEditor({ review, name }: { review: Draft; name: string }) 
     });
   }
   return (
-    <form className="module-panel space-y-4" onSubmit={(event) => { event.preventDefault(); save(event.currentTarget); }} aria-labelledby="review-editor">
-      <h2 id="review-editor">Draft</h2>
+    <form className="flex flex-col gap-4 rounded-ui-lg border border-ui-border p-5" onSubmit={(event) => { event.preventDefault(); save(event.currentTarget); }} aria-labelledby="review-editor">
+      <h2 id="review-editor" className="text-lg font-semibold">Draft</h2>
       <div className="space-y-2"><Label htmlFor="rv-period">Review period</Label><Input id="rv-period" name="period" defaultValue={review.period} required minLength={2} maxLength={80} className="min-h-11" /></div>
       <div className="space-y-2"><Label htmlFor="rv-summary">Summary</Label><Textarea id="rv-summary" name="summary" defaultValue={review.summary} rows={5} maxLength={5000} /></div>
       <div className="space-y-2"><Label htmlFor="rv-strengths">Strengths</Label><Textarea id="rv-strengths" name="strengths" defaultValue={review.strengths} rows={4} maxLength={5000} /></div>
@@ -134,7 +128,6 @@ export function ReviewEditor({ review, name }: { review: Draft; name: string }) 
 function ShareReview({ id, name }: { id: string; name: string }) {
   return (
     <FormDialog
-      portalClassName={THEME}
       trigger={<Button type="button" className="min-h-11"><Send aria-hidden="true" />Share with {name.split(" ")[0]}</Button>}
       title={`Share this review with ${name}?`}
       description="Save your latest changes first. Once shared it cannot be edited; they see it in their My hub and can add a comment when they acknowledge it."

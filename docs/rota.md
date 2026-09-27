@@ -6,7 +6,7 @@ access model (docs/platform-access.md).
 
 ## Surfaces
 
-- **Rota workspace** (`/rota`, Poolside Clear on the shared `ModuleShell`). This
+- **Rota workspace** (`/rota`, the app's Neutral design on the shared `ModuleShell`). This
   is a week view, Monday to Sunday, for one site at a time. It opens for anyone
   with the Rota screen and `rota.view` at any scope. It shows only the sites that
   capability covers; any other site is a 404.
