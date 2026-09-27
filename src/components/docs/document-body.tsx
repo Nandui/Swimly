@@ -4,7 +4,7 @@ import Image from 'next/image';
 import { AlertTriangle, Info } from 'lucide-react';
 import { safeUrl, riskBand } from '@/lib/docs/content';
 import { headingLevels, safeAlignment, safeColour, safeFontSize, readableColour } from '@/lib/docs/formatting';
-import { formatDate, type DocumentContent, type Member } from '@/lib/docs/types';
+import { formatDate, type DocumentContent } from '@/lib/docs/types';
 import { Badge } from './ui';
 import { Button } from '@/components/shadcn/button';
 import { Table, TableBody, TableRow, TableHead, TableCell } from '@/components/shadcn/table';
@@ -148,7 +148,7 @@ export function RiskAssessmentView({
   members,
 }: {
   content: DocumentContent;
-  members: Member[];
+  members: { id: string; name: string }[];
 }) {
   if (content.type !== 'Risk assessment') return null;
   return (

@@ -21,12 +21,11 @@ import {
 } from '@/app/docs/actions';
 import {
   type Workspace,
-  type Member,
+  type WorkspaceMember,
   type RiskMatrix,
   type AuditEvent,
   type Template,
   formatDate,
-  canRead,
 } from '@/lib/docs/types';
 import { RichEditor } from './rich-editor';
 import { PageHeading, Avatar, Badge, Message } from './ui';
@@ -69,7 +68,7 @@ export function AdminView({
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
   const [pending, start] = useTransition();
-  const [editing, setEditing] = useState<Member | null>(null);
+  const [editing, setEditing] = useState<WorkspaceMember | null>(null);
   const [groupName, setGroupName] = useState('');
   const [groupId, setGroupId] = useState<string | undefined>();
   const [template, setTemplate] = useState<Template>(w.templates[0]);
@@ -231,8 +230,8 @@ export function AdminView({
                               variant="ghost"
                               className="icon-button"
                               aria-label={`Edit ${m.name}`}
-                              disabled={!canRead(m)}
-                              title={!canRead(m) ? 'Grant Docs access in Turnfin Roles first.' : 'Edit document groups'}
+                              disabled={!m.access.read}
+                              title={!m.access.read ? 'Grant Docs access in Turnfin Roles first.' : 'Edit document groups'}
                               onClick={() => {
                                 setError('');
                                 setEditing(structuredClone(m));
@@ -280,7 +279,7 @@ export function AdminView({
                           setEditing(structuredClone(member));
                         }}
                         aria-label={`Edit ${member.name}`}
-                        disabled={!canRead(member)}
+                        disabled={!member.access.read}
                       >
                         <Pencil size={16} aria-hidden="true" />
                         Edit document groups

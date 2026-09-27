@@ -6,7 +6,7 @@ import { buildPreview } from '../instructor-swimmer-preview/build.mjs';
 import { createDocsTestDatabase } from '../../src/test/docs-database.ts';
 import { DocumentService, actor, library, requirements, documentView } from '../../src/lib/docs/domain.ts';
 import { rows, one, listMembers } from '../../src/lib/docs/database.ts';
-import { canRead, canWrite } from '../../src/lib/docs/types.ts';
+import { canRead, canWrite, canManage, toWorkspaceMember } from '../../src/lib/docs/types.ts';
 
 export const output = path.resolve('.impeccable/review/docs/site');
 export async function docsPreview(port = 0) {
@@ -48,10 +48,10 @@ export async function docsPreview(port = 0) {
       if(url.pathname==='/__docs-data'){
         const who=url.searchParams.get('who')||'alex',p=url.searchParams.get('path')||'/docs';
         const member=await actor(db,who),groups=await rows(db,'SELECT * FROM groups'),members=await listMembers(db);
-        const workspace={now:new Date().toISOString(),member,members:members.filter(canRead),facilities:groups.filter(g=>g.kind==='facility'),teams:groups.filter(g=>g.kind==='team'),templates:await rows(db,'SELECT * FROM templates ORDER BY name'),matrix:(await one(db,"SELECT value FROM settings WHERE id='matrix'")).value,documents:await library(db,who),requirements:await requirements(db,who),localMode:false};
+        const workspace={now:new Date().toISOString(),member,members:members.filter(canRead).map(m=>toWorkspaceMember(m,member)),facilities:groups.filter(g=>g.kind==='facility'),teams:groups.filter(g=>g.kind==='team'),templates:await rows(db,'SELECT * FROM templates ORDER BY name'),matrix:(await one(db,"SELECT value FROM settings WHERE id='matrix'")).value,documents:await library(db,who),requirements:await requirements(db,who),localMode:false};
         const id=p.split('/')[3];
         const view=id&&id!=='new'?await documentView(db,who,id,new URLSearchParams(url.searchParams.get('query')).get('version')||undefined):null;
-        const data={workspace,view,ids,items:canWrite(member)?await requirements(db,who,true):[],drafts:canWrite(member)?await rows(db,'SELECT * FROM drafts'):[],events:await rows(db,'SELECT * FROM audit_events ORDER BY created_at DESC')};
+        const data={workspace,view,ids,items:canManage(member)?await requirements(db,who,true):[],drafts:canWrite(member)?await rows(db,'SELECT * FROM drafts'):[],events:await rows(db,'SELECT * FROM audit_events ORDER BY created_at DESC')};
         res.setHeader('Content-Type','application/json');res.end(JSON.stringify(data));return;
       }
       const name=url.pathname.startsWith('/docs')||url.pathname==='/modules'?'index.html':url.pathname.slice(1)||'index.html';

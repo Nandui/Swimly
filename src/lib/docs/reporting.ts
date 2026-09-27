@@ -1,4 +1,6 @@
-import type { Requirement, LibraryDocument, Member } from './types';
+import type { Requirement, LibraryDocument } from './types';
+/** Reports need only who a row belongs to: name, email for exports, and team membership. */
+type ReportMember = { id: string; name: string; email?: string; teamIds: string[] };
 export type ReportFilters = {
   document?: string;
   version?: string;
@@ -10,7 +12,7 @@ export type ReportFilters = {
 export function filterReading(
   items: Requirement[],
   documents: LibraryDocument[],
-  members: Member[],
+  members: ReportMember[],
   filters: ReportFilters,
 ) {
   return items.filter((r) => {
@@ -32,7 +34,7 @@ export function csvCell(value: unknown) {
   if (/^[\s]*[=+@-]/.test(text) || /^[\t\r]/.test(text)) text = "'" + text;
   return '"' + text.replaceAll('"', '""') + '"';
 }
-export function readingCsv(items: Requirement[], members: Member[]) {
+export function readingCsv(items: Requirement[], members: ReportMember[]) {
   const header = [
     'Document',
     'Reference',

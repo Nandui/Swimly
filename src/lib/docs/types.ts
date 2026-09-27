@@ -124,10 +124,25 @@ export type AuditEvent = {
   createdAt: string;
 };
 export type Template = { id: string; type: DocumentType; name: string; body: JSONContent };
+/**
+ * A colleague as the browser sees them. Raw permission and screen lists never leave the
+ * server: pickers get resolved access flags instead, and contact details (email, role) are
+ * included only for Docs administrators, who manage staff groups.
+ */
+export type WorkspaceMember = {
+  id: string;
+  name: string;
+  active: boolean;
+  facilityIds: string[];
+  teamIds: string[];
+  access: { read: boolean; write: boolean; approve: boolean };
+  email?: string;
+  role?: Role;
+};
 export type Workspace = {
   now: string;
   member: Member;
-  members: Member[];
+  members: WorkspaceMember[];
   facilities: Group[];
   teams: Group[];
   templates: Template[];
@@ -140,6 +155,18 @@ export const canRead = (m: Member) => m.active && visibleScreens(m.screens, expa
 export const canWrite = (m: Member) => canRead(m) && expandPermissions(m.permissions).has('docs.write');
 export const canApprove = (m: Member) => canRead(m) && expandPermissions(m.permissions).has('docs.approve');
 export const canManage = (m: Member) => canRead(m) && expandPermissions(m.permissions).has('docs.manage');
+/** The only way a colleague reaches the browser. `viewer` decides whether contact details are included. */
+export function toWorkspaceMember(m: Member, viewer: Member): WorkspaceMember {
+  return {
+    id: m.id,
+    name: m.name,
+    active: m.active,
+    facilityIds: m.facilityIds,
+    teamIds: m.teamIds,
+    access: { read: canRead(m), write: canWrite(m), approve: canApprove(m) },
+    ...(canManage(viewer) ? { email: m.email, role: m.role } : {}),
+  };
+}
 export const formatDate = (value?: string | null) =>
   value
     ? new Intl.DateTimeFormat('en-GB', {

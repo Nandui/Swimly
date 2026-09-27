@@ -35,8 +35,6 @@ import {
 } from 'lucide-react';
 import { lockAction, saveDraftAction, submitAction } from '@/app/docs/actions';
 import {
-  canApprove,
-  canWrite,
   type Workspace,
   type Draft,
   type DocumentContent,
@@ -225,7 +223,7 @@ export function DocumentEditor({
     }
   }
   const approvers = w.members.filter(
-    (m) => m.active && canApprove(m) && !contributors.includes(m.id) && m.id !== w.member.id,
+    (m) => m.active && m.access.approve && !contributors.includes(m.id) && m.id !== w.member.id,
   );
   return (
     <Tabs
@@ -420,7 +418,7 @@ export function DocumentEditor({
                   onChange={(e) => change({ ownerId: e.target.value })}
                 >
                   {w.members
-                    .filter((m) => canWrite(m))
+                    .filter((m) => m.access.write)
                     .map((m) => (
                       <NativeSelectOption value={m.id} key={m.id}>
                         {m.name}

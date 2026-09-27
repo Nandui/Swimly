@@ -24,9 +24,9 @@ export const PERMISSIONS = [
   { key: "refunds.review", group: "Refunds", label: "Review refund requests", description: "Take responsibility, request information, approve or decline other staff's requests. Includes reading, not payment recording." },
   { key: "refunds.process", group: "Refunds", label: "Record refund payments", description: "Record external payment of approved refunds and cancel unpaid approvals. Includes reading, not approval." },
   { key: "docs.read", group: "Docs", label: "Read published documents", description: "Open Docs, read published versions and acknowledge assigned reading. Also needs the Docs screen." },
-  { key: "docs.write", group: "Docs", label: "Author documents", description: "Create and edit drafts, submit for independent approval and view reading reports. Includes reading." },
+  { key: "docs.write", group: "Docs", label: "Author documents", description: "Create and edit drafts and submit them for independent approval. Includes reading." },
   { key: "docs.approve", group: "Docs", label: "Approve documents", description: "Review and publish documents written by other staff. Includes authoring; never permits self-approval." },
-  { key: "docs.manage", group: "Docs", label: "Administer Docs", description: "Manage document teams, templates, risk matrix and reading assignments. Includes authoring, but approval requires its separate permission." },
+  { key: "docs.manage", group: "Docs", label: "Administer Docs", description: "Manage document teams, templates, risk matrix, reading assignments and reading reports. Includes authoring, but approval requires its separate permission." },
   {
     key: "parents.manage",
     group: "Swimmers",

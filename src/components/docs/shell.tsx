@@ -149,7 +149,7 @@ export function Shell({
         >
           <p className="workspace-nav-label">Workspace</p>
           {nav
-            .filter((item) => item.href !== '/docs/reports' || canWrite(w.member))
+            .filter((item) => item.href !== '/docs/reports' || canManage(w.member))
             .map((item) => {
               const active =
                 item.href === '/docs'

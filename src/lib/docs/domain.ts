@@ -580,7 +580,9 @@ export async function library(
 }
 export async function requirements(db: Sql, who: string, all = false) {
   const m = await actor(db, who);
-  if (all && !canWrite(m)) fail('Reporting access requires an author role.', 403);
+  // Everyone's reading is personal data about colleagues: Docs administrators only.
+  // (Scoped reports for line managers arrive with the platform policy engine.)
+  if (all && !canManage(m)) fail('Reporting access requires Docs administration.', 403);
   return rows<Requirement>(
     db,
     `SELECT r.*,a.created_at AS acknowledged_at,s.content->>'title' AS title,s.content->>'reference' AS reference,s.version,s.content->'facilityIds' AS facility_ids,s.content->'teamIds' AS team_ids FROM requirements r JOIN snapshots s ON s.id=r.version_id LEFT JOIN acknowledgements a ON a.version_id=r.version_id AND a.member_id=r.member_id ${all ? '' : 'WHERE r.member_id=$1'} ORDER BY s.created_at DESC`,

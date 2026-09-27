@@ -25,15 +25,21 @@ permission in Turnfin's existing Roles page:
 | Permission | Allows |
 | --- | --- |
 | `docs.read` | Published documents, version history and own reading acknowledgements |
-| `docs.write` | Draft creation/editing, submission, reading reports; includes reading |
+| `docs.write` | Draft creation/editing and submission; includes reading |
 | `docs.approve` | Independent approval/publication; includes authoring and reading |
-| `docs.manage` | Document groups, templates, risk matrix, assignments and archiving; includes authoring and reading |
+| `docs.manage` | Document groups, templates, risk matrix, assignments, archiving and reading reports (everyone's acknowledgements and the CSV export); includes authoring and reading |
 
 Approving requires its own permission. Docs administration alone does not
 grant approval or permission to change staff accounts. Authors and every
 contributor to a revision are excluded from approving it, including administrators.
 Account creation, passwords, permissions and deactivation remain in Turnfin Staff
 and Roles. Docs' staff directory edits only document group membership.
+
+Reading reports show personal data about colleagues, so they need `docs.manage`; authors see only
+their own reading. The browser never receives colleagues' permissions or screens: the workspace
+sends each colleague as a `WorkspaceMember` (name, groups and resolved read/write/approve flags),
+with email and role added only for Docs administrators (`toWorkspaceMember` in
+`src/lib/docs/types.ts`, tested in `workspace-dto.test.ts`).
 
 Page guards, server actions, reports and private downloads check the shared
 session. Workflow operations re-read current staff grants from Turnfin and intersect

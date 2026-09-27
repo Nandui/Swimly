@@ -1,6 +1,6 @@
 import { database, rows, one, listMembers } from './database';
 import { actor, library, requirements } from './domain';
-import type { Workspace, Group, Template, RiskMatrix } from './types';
+import { toWorkspaceMember, type Workspace, type Group, type Template, type RiskMatrix } from './types';
 export async function workspace(id: string): Promise<Workspace> {
   const db = await database();
   const member = await actor(db, id);
@@ -17,7 +17,8 @@ export async function workspace(id: string): Promise<Workspace> {
     member,
     // Keep bylines and historical report names even after access is revoked.
     // Assignment/owner controls and mutations independently require Docs access.
-    members: members.map(m => m.id === member.id ? member : m),
+    // Colleagues are narrowed to names, groups and resolved access (see toWorkspaceMember).
+    members: members.map(m => toWorkspaceMember(m.id === member.id ? member : m, member)),
     facilities: groups.filter((g) => g.kind === 'facility'),
     teams: groups.filter((g) => g.kind === 'team'),
     templates,

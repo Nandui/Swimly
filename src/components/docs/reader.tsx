@@ -44,7 +44,6 @@ import {
 import {
   canWrite,
   canManage,
-  canRead,
   canApprove,
   formatDate,
   overdue,
@@ -530,7 +529,7 @@ export function Reader({
               <fieldset>
                 <legend>Individual staff</legend>
                 {w.members
-                  .filter(canRead)
+                  .filter((m) => m.access.read)
                   .map((m) => (
                     <Label className="checkbox-label" key={m.id}>
                       <Checkbox
