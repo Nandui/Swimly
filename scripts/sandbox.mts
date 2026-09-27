@@ -125,6 +125,9 @@ const env = {
   ...(hrUrl ? { HR_DATABASE_URL: hrUrl, HR_DIRECT_URL: hrUrl } : {}),
   AUTH_SECRET: "sandbox-only-secret-not-for-deployment-0000", AUTH_TRUST_HOST: "true",
   DEV_AUTH_BYPASS: "", NEXT_TELEMETRY_DISABLED: "1",
+  // Turnfin Me (apps/me, port 3101) against this sandbox. Codes print here.
+  STAFF_API_ENABLED: "true", STAFF_AUTH_SECRET: "sandbox-only-staff-secret-not-for-deployment",
+  STAFF_API_ALLOWED_ORIGINS: "http://localhost:3101", STAFF_ME_URL: "http://localhost:3101", STAFF_EMAIL_DEV_LOG: "true",
 };
 const app = spawn("npx", ["next", "dev", "-p", String(PORTS.app)], { stdio: "inherit", env, shell: true });
 app.on("exit", (code) => process.exit(code ?? 0));

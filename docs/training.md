@@ -8,7 +8,7 @@ assignment says over whom.
 
 ## Two surfaces
 
-- **My training** (`/me/training`, and the "My training" section of the My hub).
+- **My training** in Turnfin Me (the staff app, docs/staff-app.md).
   Everyone's own courses. No permission is needed, and nothing there can reach
   another person's records. The learner reads the material and marks it done.
 - **Training workspace** (`/training`, Poolside Clear, on the shared `ModuleShell`). The Manage
@@ -51,8 +51,8 @@ Statuses and their icons come from `TRAINING_STATUS_META` and
 `/training/expiring` lists qualifications that have expired or expire within 60
 days for the people in scope, with the course that renews each (a course that
 grants that type) and a one-click renewal assignment. A newer certificate of the
-same type takes the person off the list. The My hub's "My qualifications" section
-shows each person their own. Rota (phase 8) warns on expired qualifications but
+same type takes the person off the list. Turnfin Me shows each person their own and lets them upload a new certificate, which
+a qualifications role checks under **Certificates to check**. Rota (phase 8) warns on expired qualifications but
 does not block.
 
 ## Files
@@ -60,6 +60,6 @@ does not block.
 - Schema: `TrainingCourse`, `TrainingAssignment` (`prisma/migrations/20260930120000_training`)
 - Access and reads: `src/lib/training/access.ts`, `data.ts` (Manage), `mine.ts` (self-service)
 - Actions: `src/lib/training/actions.ts` (every change audited in its transaction)
-- My provider: `src/modules/training/my.ts`; registry entry in `src/modules/registry.ts`
-- Pages: `src/app/training/` (workspace), `src/app/me/training/` (learner)
+- Self-service: `src/lib/training/mine.ts`, `self.ts` (staff API only); registry entry in `src/modules/registry.ts`
+- Pages: `src/app/training/` (workspace); the learner side is Turnfin Me (`apps/me`)
 - Tests: `src/lib/training/training.test.ts`

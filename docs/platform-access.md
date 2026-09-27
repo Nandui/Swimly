@@ -13,7 +13,7 @@ document is the model that makes both true. Owner decisions, September 2026.
 ## The model
 
 **Workspaces are presentation, not security.** The portal, the module switcher,
-role homes such as the Reception Portal and the My hub show people what they
+role homes such as the Reception Portal show people what they
 can use. Security comes from four things underneath:
 
 1. **Capabilities.** Named permissions, declared in the catalogue
@@ -64,7 +64,7 @@ One person record and one organisation chart that every module reads
 - `User.managerId` (the reporting line; loops are refused), job title, start
   date and main site.
 - `QualificationType` and `Qualification` (issued, expires, verified by,
-  withdrawn). Training writes them, the Rota reads them, the My hub shows them.
+  withdrawn). Training writes them, the Rota reads them, Turnfin Me shows each person theirs.
 
 Staff › a person shows their profile, roles (main and additional, with where
 each applies) and qualifications. Staff › Organisation holds departments and
@@ -100,19 +100,17 @@ line manager, department lead, site manager, multi-site manager, administrator
 and superadmin, against self, a report, a report's report, another department,
 another site and another organisation.
 
-## The My hub
+## Turnfin Work and Turnfin Me
 
-`/me` is everyone's front door (`/` goes there; a role home such as the Reception
-Portal still opens first, and `/me?view=me` shows the hub anyway). It lists what needs
-the person across every module, then the apps they can open (the module registry).
+*Replaces the My hub (owner decision, 27 September 2026).*
 
-Each module contributes **My providers** (`src/modules/my`): a provider returns only the
-signed-in person's own items from its own module's data, never another person's records
-and never another module's tables. Self-service needs no capability. The hub runs them in
-parallel with a 4-second limit each; one that fails shows "couldn't load" and the rest
-still appear. Today: required reading (Docs), my refund requests (Refunds, for people who
-can use Refunds) and my qualifications (People core). Training, HR and Rota add theirs.
-Only items flagged `needsAction` count towards "things need you".
+Work is for the job on registered work PCs; a person's own records (training,
+required reading, qualifications, shifts, what HR shared, their details) live in
+**Turnfin Me**, a separate phone app (`apps/me`) that only talks to the staff API.
+Work has no personal pages: `/` opens the role's home. Signing in to Work away from a
+registered device needs `work.anywhere` once `WORK_DEVICE_REQUIRED` is on. The
+self-service reads (`*/mine.ts`) and writes (`*/self.ts`) serve the staff API only.
+See docs/staff-app.md.
 
 ## Shared devices
 
@@ -165,14 +163,14 @@ so an Aquatics lead's department-scoped role assigns and signs off for Aquatics
 staff only. Because Training is people-scoped, its workspace opens for a Training
 screen granted at any scope (`ModuleContext.scopedScreens`), unlike the flat
 site-based screens; each page then scopes records with the policy engine.
-Completing your own training needs no capability and lives in the My hub.
+Completing your own training needs no capability and happens in Turnfin Me.
 
 ## Rota
 
 The Rota (docs/rota.md) is site-bound: `rota.view` and `rota.manage` resolve with
 `sitesFor` and `requireCapFor` with a `siteId`, so a duty manager's site-scoped
 role plans their own site only. It warns about expired qualifications and
-double-bookings but never blocks. Everyone sees their own shifts in the My hub.
+double-bookings but never blocks. Everyone sees their own shifts in Turnfin Me.
 
 ## HR and performance
 

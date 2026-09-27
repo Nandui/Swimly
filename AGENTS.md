@@ -92,6 +92,13 @@ when it applies everywhere or at the current site. Code that reads people's reco
 `subjectsFor`, `sitesFor`) with a resource, never the flat check. Workspaces, portal tiles
 and nav hiding are presentation, not security. See docs/platform-access.md.
 
+Work and Me are separate (owner decision, 27 September 2026): Turnfin Work (this app) is the
+job on registered work PCs and must never gain personal pages or endpoints; a person's own
+training, required reading, qualifications, shifts, HR and details belong to Turnfin Me
+(`apps/me`), which only calls `/api/staff/v1` with allowlisted responses. Signing in to Work away
+from a registered device needs `work.anywhere` when `WORK_DEVICE_REQUIRED` is on. See
+docs/staff-app.md.
+
 Prisma here is v7: the client is generated into `src/generated/prisma` and
 needs a driver adapter (`@prisma/adapter-pg`), and the datasource URL lives in
 `prisma.config.ts` rather than in the schema.

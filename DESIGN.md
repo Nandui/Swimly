@@ -6,7 +6,7 @@ preference. **The whole app uses the Poolside Clear design** (owner decision, 27
 pool-night dark mode. Its tokens and system rules (type scale, controls, fields, badges,
 alerts, dialogs, focus) live in `src/app/docs/poolside.css`, scoped to `.turnfin-app`,
 which the root layout puts on `<body>`; the root layout also loads the typeface. Aquatics,
-Instructor, the portal, My hub, the Reception Portal, Docs, Refunds, Training, HR and Rota all
+Instructor, the portal, the Reception Portal, Docs, Refunds, Training, HR and Rota all
 follow it. Rules for the Docs/Refunds shell and their pages stay scoped to `.turnfin-docs`.
 Earlier mentions below of Figtree, "Neutral surfaces" or the Reception Portal's Inter theme
 describe the retired look; the Poolside tokens now drive those same components. Components live in
@@ -163,8 +163,11 @@ sheet, collapse preference and breadcrumb. `src/app/workspace/module-workspace.c
 module reuses it rather than copying a stylesheet. Their form dialogs pass `portalClassName="turnfin-docs turnfin-module"` to `FormDialog`
 so they keep the theme, and selects inside them are shadcn `NativeSelect`. Statuses use
 metadata-fed tags with their own icons (`TrainingStatusTag`, `QualificationStateTag`,
-`NoteVisibilityTag`, `ReviewStatusTag`, `RotaWarningTag`). Each person's own side (`/me/training`,
-`/me/hr`, `/me/shifts`) belongs to the My hub and uses its portal frame. See
+`NoteVisibilityTag`, `ReviewStatusTag`, `RotaWarningTag`). Each person's own side is not on Work at
+all: it is Turnfin Me (`apps/me`), a phone-first app in Poolside Clear with a bottom tab bar,
+44px controls and the same tokens (copied into `apps/me/src/app/globals.css`), built from plain
+semantic elements; status tones come from `apps/me/src/lib/meta.ts`, each with an icon. See
+[docs/staff-app.md](docs/staff-app.md),
 [docs/training.md](docs/training.md), [docs/hr.md](docs/hr.md) and [docs/rota.md](docs/rota.md).
 
 ### Poolside Clear system rules (Docs and Refunds)

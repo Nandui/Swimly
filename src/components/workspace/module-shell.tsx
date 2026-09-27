@@ -20,15 +20,13 @@ export type ModuleLink = { href: string; label: string; icon: LucideIcon; active
  *  (Training, HR, Rota): the Docs shell layout with the module's own sidebar,
  *  mobile sheet, collapse preference and breadcrumb. Links are presentation;
  *  every page enforces access again and scopes its records. */
-export function ModuleShell({ module, id, who, links, yours, scopeNote, pageLabel, initialCollapsed = false, children }: {
+export function ModuleShell({ module, id, who, links, scopeNote, pageLabel, initialCollapsed = false, children }: {
   /** Display name, e.g. "Training". */
   module: string;
   /** Short id for the scope class, cookie and landmarks, e.g. "training". */
   id: string;
   who: { id: string; name: string };
   links: ModuleLink[];
-  /** The person's own view of this module (their My surface). */
-  yours?: Omit<ModuleLink, 'active'>;
   scopeNote: string;
   pageLabel: string;
   initialCollapsed?: boolean;
@@ -52,7 +50,7 @@ export function ModuleShell({ module, id, who, links, yours, scopeNote, pageLabe
         <div className="workspace-brand-row"><Link href={base} aria-label={`Turnfin ${module} overview`} onClick={() => setMobile(false)}><Brand module={module} /></Link>{!inSheet && <Button variant="ghost" size="icon" aria-label={compact ? 'Expand navigation' : 'Collapse navigation'} aria-expanded={!compact} onClick={() => changeCollapsed(!collapsed)}>{compact ? <PanelLeftOpen size={18} /> : <PanelLeftClose size={18} />}</Button>}</div>
         {!compact && <div className="workspace-organisation"><Building2 size={18} aria-hidden="true" /><div><strong>LeisureWorld</strong><span>Your people · {module}</span></div></div>}
       </div>
-      <nav className="workspace-navigation" aria-label={inSheet ? `Mobile ${module} navigation` : `${module} navigation`}><p className="workspace-nav-label">Workspace</p>{links.map(item)}{yours ? <><p className="workspace-nav-label">Yours</p>{item({ ...yours, active: false })}</> : null}</nav>
+      <nav className="workspace-navigation" aria-label={inSheet ? `Mobile ${module} navigation` : `${module} navigation`}><p className="workspace-nav-label">Workspace</p>{links.map(item)}</nav>
       <div className="workspace-sidebar-footer">
         <Button asChild variant="ghost"><Link href="/modules?view=all" aria-label="All modules"><ArrowLeft size={16} aria-hidden="true" />{!compact && 'All modules'}</Link></Button>
         <AppearanceMenu expanded={!compact} />

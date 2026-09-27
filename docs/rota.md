@@ -10,7 +10,7 @@ access model (docs/platform-access.md).
   is a week view, Monday to Sunday, for one site at a time. It opens for anyone
   with the Rota screen and `rota.view` at any scope. It shows only the sites that
   capability covers; any other site is a 404.
-- **My shifts** (`/me/shifts`, and the "My shifts" section of the My hub). Each
+- **My shifts** in Turnfin Me (the staff app). Each
   person sees their own shifts for the coming weeks. No permission is needed.
 
 ## Capabilities
@@ -37,7 +37,7 @@ come from `ROTA_WARNING_META` and `RotaWarningTag`, each with its own icon:
 - **Unfilled**: an open shift with nobody on it.
 
 The rules live in one pure function, `shiftWarnings` (`src/lib/rota/constants.ts`),
-tested on its own. A person's own qualification warning also shows in their My hub,
+tested on its own. A person's own qualification warning also shows in Turnfin Me,
 so they can sort it out before the shift. Renewing is Training's job (the
 expiring-qualifications view, docs/training.md).
 
@@ -45,5 +45,5 @@ expiring-qualifications view, docs/training.md).
 
 - Schema: `RotaShift` (`prisma/migrations/20261001120000_rota`)
 - `src/lib/rota/`: `access.ts`, `data.ts` (the week), `mine.ts` (own shifts), `actions.ts`, `constants.ts`
-- My provider: `src/modules/rota/my.ts`; UI: `src/app/rota/`, `src/app/me/shifts/`, `src/components/rota/`
+- Self-service: `src/lib/rota/mine.ts` (staff API); UI: `src/app/rota/`, `src/components/rota/`; shift-change emails from `src/lib/staff-api/reminders.ts`
 - Tests: `src/lib/rota/rota.test.ts`

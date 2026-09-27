@@ -15,7 +15,7 @@ HR records live in their own Postgres database, like Docs:
   applied in order with checksums by `scripts/migrate-hr.ts` at the end of a
   **production** build, and only when `HR_DATABASE_URL` is set.
 - **Unset means HR is switched off**: the workspace says storage is not set up,
-  the My hub hides its section, and nothing else is affected.
+  Turnfin Me says it is not set up, and nothing else is affected.
 - The HR database stores ids and the names needed to read a record later. It
   never stores permissions: who may see what is decided in the main database by
   the policy engine, and the HR queries filter by the ids it returns.
@@ -48,8 +48,8 @@ switch on a shared device, or a password older than 15 minutes, goes to
 - **Reviews** start as a draft only the reviewer (and superadmins) can see.
   Sharing locks the review and shows it to the person. The person acknowledges
   it, with an optional comment. Nobody else can.
-- **The person** (`/me/hr`, from the My hub) sees only shared reviews and notes
-  marked shared with them. The hub itself says only that something was shared,
+- **The person** (Turnfin Me, after a fresh email code) sees only shared reviews and notes
+  marked shared with them. Its home screen says only that a review is waiting,
   never the content.
 - **Superadmins** see "Who read what", the read and change logs (`/hr/activity`).
   They can also export everything held about a person's employment as one JSON
@@ -61,7 +61,7 @@ switch on a shared device, or a password older than 15 minutes, goes to
 - Storage: `src/lib/hr/storage-config.ts`, `database.ts`, `scripts/lib/hr-storage.ts`, `scripts/migrate-hr.ts`
 - Access and reads: `src/lib/hr/access.ts`, `records.ts` (workspace, logged), `mine.ts` (the person's own)
 - Writes: `src/lib/hr/actions.ts`; export: `src/lib/hr/export.ts`
-- UI: `src/app/hr/`, `src/app/me/hr/`, `src/components/hr/`
+- UI: `src/app/hr/`, `src/components/hr/`; the person's side is Turnfin Me (`apps/me`)
 - Tests: `src/lib/hr/hr.test.ts` (with `src/test/hr-database.ts`)
 
 ## Turning it on

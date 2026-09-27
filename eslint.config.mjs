@@ -40,6 +40,8 @@ const eslintConfig = defineConfig([
     "out/**",
     "build/**",
     "next-env.d.ts",
+    // Turnfin Me is its own app with its own lint (apps/me).
+    "apps/**",
     // Vendored skill assets and disposable browser audit bundles are not app code.
     ".agents/**",
     ".claude/**",
