@@ -61,7 +61,7 @@ export default async function StaffPage() {
             <Button variant="outline" asChild={true}>
               <UiLink href="/staff/devices">
                 {<AppIcon name="monitor" size="sm" />}
-                {"Shared devices"}
+                {"Work devices"}
               </UiLink>
             </Button>
             <Button variant="outline" asChild={true}>

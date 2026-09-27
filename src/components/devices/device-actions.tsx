@@ -11,11 +11,11 @@ import { forgetThisDevice, registerThisDevice, revokeDevice } from "@/lib/device
 export function RegisterThisDevice({ sites }: { sites: { id: string; name: string }[] }) {
   return (
     <FormDialog
-      trigger={<Button variant="default"><MonitorSmartphone aria-hidden="true" className="size-4" />Make this a shared device</Button>}
-      title="Make this browser a shared device"
-      description="For a reception computer or poolside tablet used by whoever is on shift. People switch in with a PIN, and it signs out after a few idle minutes."
+      trigger={<Button variant="default"><MonitorSmartphone aria-hidden="true" className="size-4" />Register this work device</Button>}
+      title="Register this browser as a work device"
+      description="For a reception computer, poolside tablet or office PC where staff work. People switch in with a PIN, and it signs out after a few idle minutes."
       submitLabel="Register device"
-      successMessage="This browser is now a shared device"
+      successMessage="This browser is now a work device"
       submit={(formData) => registerThisDevice({ name: String(formData.get("name") ?? ""), clubId: String(formData.get("clubId") ?? "") })}
     >
       <Field label="Name" htmlFor="name" hint="Where it is, so people recognise it.">

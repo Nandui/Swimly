@@ -10,7 +10,7 @@ function fixture() {
   const account = { id: "staff-1", name: "Synthetic Manager", email: "manager@example.test", isActive: true, staffRole: administrator as typeof administrator | null };
   let preview: typeof administrator | null = null;
   const { auth } = serverModule<typeof import("./auth")>("src/auth.ts", {
-    "next-auth": () => ({ auth: async () => ({ user: { id: account.id }, expires: "2099-01-01" }), handlers: {}, signIn: async () => {}, signOut: async () => {} }),
+    "next-auth": Object.assign(() => ({ auth: async () => ({ user: { id: account.id }, expires: "2099-01-01" }), handlers: {}, signIn: async () => {}, signOut: async () => {} }), { CredentialsSignin: class extends Error {} }),
     "next-auth/providers/credentials": (options: unknown) => options,
     "@/lib/prisma": { prisma: { user: { findUnique: async () => account } } },
     "@/lib/auth-cookies": { authCookies: () => undefined },
@@ -19,6 +19,7 @@ function fixture() {
     "@/lib/clubs/current": { getCurrentClub: async () => ({ club: { id: "club-1", name: "Synthetic site" }, clubs: [] }) },
     "@/lib/devices/shared-device": { currentSharedDevice: async () => null, SHARED_SESSION_MAX_MS: 12 * 60 * 60 * 1000 },
     "@/lib/devices/pin": { authorizePin: async () => null },
+    "@/lib/devices/work-device": { workDeviceRequired: () => false, mayWorkAnywhere: async () => true },
   });
   return { auth, account, preview: (role: typeof preview) => { preview = role; } };
 }

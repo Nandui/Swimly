@@ -204,6 +204,12 @@ export const PERMISSIONS = [
     restricted: true,
   },
   {
+    key: "work.anywhere",
+    group: "Administration",
+    label: "Work from any device",
+    description: "Sign in to Turnfin Work away from a registered work PC, for example on a phone. Without it, staff can only work on the centre's registered PCs (once that rule is switched on).",
+  },
+  {
     key: "activity.view",
     group: "Administration",
     label: "Read the activity log",

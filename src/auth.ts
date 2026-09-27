@@ -1,6 +1,7 @@
 import { cache } from "react";
 import NextAuth, { type NextAuthConfig, type Session } from "next-auth";
 import Credentials from "next-auth/providers/credentials";
+import { CredentialsSignin } from "next-auth";
 import bcrypt from "bcryptjs";
 import { authCookies } from "@/lib/auth-cookies";
 import { devSignInAllowed, getDevAdmin } from "@/lib/dev-sign-in";
@@ -10,6 +11,13 @@ import { ADMINISTRATOR_PERMISSIONS } from "@/lib/staff/permissions";
 import { getCurrentClub } from "@/lib/clubs/current";
 import { currentSharedDevice, SHARED_SESSION_MAX_MS } from "@/lib/devices/shared-device";
 import { authorizePin } from "@/lib/devices/pin";
+import { mayWorkAnywhere, workDeviceRequired } from "@/lib/devices/work-device";
+
+/** A correct password on a device this account may not work from. Raised only
+ *  after the password matched, so it reveals nothing about other accounts. */
+class WorkDeviceRequired extends CredentialsSignin {
+  code = "work_device";
+}
 import { ACCOUNT_SELECT, sessionUserFor } from "@/lib/staff/session-user";
 
 /** Built as a function so the dev provider is **absent** from the array in
@@ -35,12 +43,14 @@ function providers(): NextAuthConfig["providers"] {
         // out which addresses have accounts.
         if (!user?.passwordHash || !user.isActive) return null;
         if (!(await bcrypt.compare(password, user.passwordHash))) return null;
+        const device = await currentSharedDevice();
+        // Work is done on registered work PCs unless the person may work anywhere.
+        if (workDeviceRequired() && !device && !(await mayWorkAnywhere(user.id))) throw new WorkDeviceRequired();
 
         // A password sign-in is fresh for step-up, clears any PIN lock, and on
         // a shared device adds the person to its quick-switch list (if they
         // have a PIN).
         await prisma.user.update({ where: { id: user.id }, data: { passwordAt: new Date(), pinFailures: 0, pinLockedAt: null } });
-        const device = await currentSharedDevice();
         if (device && user.pinHash && user.orgId === device.orgId) {
           await prisma.sharedDeviceUser.upsert({
             where: { deviceId_userId: { deviceId: device.id, userId: user.id } },

@@ -13,7 +13,7 @@ import { screenPage } from "@/lib/page-guards";
 import { prisma } from "@/lib/prisma";
 import { DEVICE_STATUS_META } from "@/lib/devices/meta";
 
-export const metadata: Metadata = { title: "Shared devices" };
+export const metadata: Metadata = { title: "Work devices" };
 
 export default async function DevicesPage() {
   const session = await screenPage("staff", "staff.manage");
@@ -29,19 +29,24 @@ export default async function DevicesPage() {
   const siteName = new Map(sites.map((s) => [s.id, s.name]));
   return (
     <div className="min-w-0 flex flex-col gap-6">
-      <BackLink href="/staff" current="Shared devices">Staff</BackLink>
+      <BackLink href="/staff" current="Work devices">Staff</BackLink>
       <PageHeader
-        title="Shared devices"
-        description="Reception computers and poolside tablets used by whoever is on shift."
+        title="Work devices"
+        description="The centre's computers and tablets where staff do their work."
         actions={here ? <ForgetThisDevice /> : <RegisterThisDevice sites={sites} />}
       />
+      <Lead>
+        Turnfin Work is for work PCs: once the rule is switched on, staff without the “Work from any device”
+        permission can only sign in to Work on a device registered here. Personal records are never on Work;
+        staff use Turnfin Me on their own phone for those. A single person’s office PC can be registered too.
+      </Lead>
       <Lead>
         On a shared device people tap their name and enter their personal PIN instead of a password,
         and it returns to the switch screen after {SHARED_IDLE_MINUTES} idle minutes. HR and other
         restricted records always ask for the password again. {here ? `This browser is ${here.name}.` : "This browser is not shared."}
       </Lead>
       {devices.length === 0 ? (
-        <EmptyState icon="users" title="No shared devices yet" hint="Open Turnfin on the reception computer or tablet, sign in, and register it here." />
+        <EmptyState icon="users" title="No work devices yet" hint="Open Turnfin on the reception computer or tablet, sign in, and register it here." />
       ) : (
         <ItemGroup className="divide-y divide-ui-border">
           {devices.map((device) => {
