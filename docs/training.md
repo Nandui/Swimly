@@ -11,7 +11,7 @@ assignment says over whom.
 - **My training** (`/me/training`, and the "My training" section of the My hub).
   Everyone's own courses. No permission is needed, and nothing there can reach
   another person's records. The learner reads the material and marks it done.
-- **Training workspace** (`/training`, the app's Neutral design on the shared `ModuleShell`). The Manage
+- **Training workspace** (`/training`, Poolside Clear, on the shared `ModuleShell`). The Manage
   surface for people with a Training capability. It opens for anyone with the
   Training screen and a Training capability **at any scope**, so a department
   lead's additional role opens it too. Every page then limits records to the

@@ -13,10 +13,7 @@ import { Sidebar, SidebarContent, SidebarFooter, SidebarGroup, SidebarGroupLabel
 import { isNavItemActive } from "@/lib/nav";
 import { NAV_COLLAPSED_COOKIE, SHELL_PAGE_ID } from "@/lib/shell-preferences";
 
-/** `isActive` overrides the default prefix match, e.g. an overview that should
- *  not stay highlighted on its module's other pages. */
-export type NavItem = { href: string; label: string; icon: LucideIcon; badge?: number; isActive?: (pathname: string) => boolean };
-const itemActive = (pathname: string, item: NavItem) => item.isActive ? item.isActive(pathname) : isNavItemActive(pathname, item.href);
+export type NavItem = { href: string; label: string; icon: LucideIcon; badge?: number };
 export type NavGroup = { id: string; label: string; icon?: LucideIcon; collapsible?: boolean; items: NavItem[] };
 export type AppShellProps = {
   wordmark: string; homeHref?: string; groups: NavGroup[];
@@ -70,7 +67,7 @@ function WorkspaceSidebar(props: AppShellProps) {
     </SidebarHeader>
     <SidebarSeparator className="mx-3 data-[orientation=horizontal]:w-auto group-data-[collapsible=icon]:mx-auto group-data-[collapsible=icon]:data-[orientation=horizontal]:w-6" />
     <SidebarContent className="px-3 py-4 group-data-[collapsible=icon]:overflow-auto group-data-[collapsible=icon]:px-0 group-data-[collapsible=icon]:[scrollbar-width:none]"><nav aria-label="Daily work and setup" className="space-y-6 group-data-[collapsible=icon]:space-y-4">
-      {props.groups.map(group => <NavigationGroup key={`${group.id}:${group.items.some(item => itemActive(pathname, item))}`} group={group} pathname={pathname} collapsed={collapsed} />)}
+      {props.groups.map(group => <NavigationGroup key={`${group.id}:${group.items.some(item => isNavItemActive(pathname, item.href))}`} group={group} pathname={pathname} collapsed={collapsed} />)}
     </nav></SidebarContent>
     <SidebarFooter className="border-t border-ui-border p-3 group-data-[collapsible=icon]:px-0">
       {props.portalHref ? <SidebarMenu className="group-data-[collapsible=icon]:items-center"><SidebarMenuItem><SidebarMenuButton asChild className="h-11 px-3" tooltip="All modules">
@@ -89,11 +86,11 @@ function WorkspaceSidebar(props: AppShellProps) {
 
 function NavigationGroup({ group, pathname, collapsed }: { group: NavGroup; pathname: string; collapsed: boolean }) {
   const { setOpenMobile } = useSidebar();
-  const active = group.items.some(item => itemActive(pathname, item));
+  const active = group.items.some(item => isNavItemActive(pathname, item.href));
   const GroupIcon = group.icon;
   const items = <SidebarMenu className="group-data-[collapsible=icon]:items-center">{group.items.map(item => <SidebarMenuItem key={item.href}>
-    <SidebarMenuButton className="h-11 px-3" asChild isActive={itemActive(pathname, item)} tooltip={item.label}>
-      <Link href={item.href} aria-label={item.label} aria-current={itemActive(pathname, item) ? "page" : undefined} onClick={() => setOpenMobile(false)}>
+    <SidebarMenuButton className="h-11 px-3" asChild isActive={isNavItemActive(pathname, item.href)} tooltip={item.label}>
+      <Link href={item.href} aria-label={item.label} aria-current={isNavItemActive(pathname, item.href) ? "page" : undefined} onClick={() => setOpenMobile(false)}>
         <span data-motion="sidebar-icon" className="size-4 shrink-0" aria-hidden="true"><item.icon className="size-full" /></span><span className="group-data-[collapsible=icon]:hidden">{item.label}</span>{item.badge ? <Badge variant="secondary" className="ml-auto group-data-[collapsible=icon]:hidden">{item.badge}</Badge> : null}
       </Link>
     </SidebarMenuButton>

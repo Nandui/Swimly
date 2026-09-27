@@ -8,6 +8,7 @@ import { Field, FormDialog } from "@/components/form-dialog";
 import { cancelShift, saveShift } from "@/lib/rota/actions";
 import { clock } from "@/lib/rota/constants";
 
+const THEME = "turnfin-docs turnfin-module";
 
 type Option = { id: string; name: string };
 type Shift = { id: string; date: Date; startMinutes: number; endMinutes: number; role: string; note: string; userId: string | null; requiredTypeId: string | null };
@@ -17,6 +18,7 @@ type Shift = { id: string; date: Date; startMinutes: number; endMinutes: number;
 export function ShiftDialog({ siteId, date, shift, people, types }: { siteId: string; date: string; shift?: Shift; people: (Option & { jobTitle: string | null })[]; types: Option[] }) {
   return (
     <FormDialog
+      portalClassName={THEME}
       width="sm:max-w-lg"
       trigger={shift
         ? <Button variant="ghost" size="icon" className="size-11" aria-label={`Change ${shift.role} ${clock(shift.startMinutes)}`}><Pencil aria-hidden="true" /></Button>
@@ -57,6 +59,7 @@ export function ShiftDialog({ siteId, date, shift, people, types }: { siteId: st
 export function CancelShift({ id, label }: { id: string; label: string }) {
   return (
     <FormDialog
+      portalClassName={THEME}
       trigger={<Button variant="ghost" size="icon" className="size-11" aria-label={`Cancel ${label}`}><X aria-hidden="true" /></Button>}
       title={`Cancel ${label}?`}
       description="It disappears from the rota and from the person's My hub. The change is recorded."

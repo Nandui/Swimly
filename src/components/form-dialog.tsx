@@ -50,6 +50,7 @@ export function FormDialog({
   successMessage,
   submit,
   width = "sm:max-w-md",
+  portalClassName,
   children,
   onOpen,
   onSuccess,
@@ -65,6 +66,8 @@ export function FormDialog({
   ) => Promise<ActionResult>;
   /** Widen for a form with two columns of fields. */
   width?: string;
+  /** Theme scope for the portalled dialog, e.g. a Poolside Clear workspace. */
+  portalClassName?: string;
   children: React.ReactNode;
   onOpen?: () => void;
   /** Complete an inline workflow after its dialog has saved successfully. */
@@ -159,6 +162,7 @@ export function FormDialog({
           onOpenChange={(next) => (next ? openForm() : close())}
         >
           <DialogContent
+            portalClassName={portalClassName}
             className={cn(
               "flex max-h-[calc(100dvh-2rem)] flex-col gap-0 p-0",
               width,

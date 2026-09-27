@@ -13,6 +13,8 @@ import { Textarea } from "@/components/ui/textarea";
 import { today } from "@/lib/format";
 import { assignTraining, cancelAssignment, returnForPractice, saveCourse, setCourseArchived, signOffTraining } from "@/lib/training/actions";
 
+/** Training's dialogs. Each carries the Poolside Clear scope into its portal. */
+const THEME = "turnfin-docs turnfin-module";
 
 type Person = { id: string; name: string; jobTitle: string | null };
 type CourseOption = { id: string; title: string };
@@ -32,6 +34,7 @@ export function AssignTraining({ courses, people, courseId, userIds, label = "As
   const fixed = !!userIds?.length && people.length <= (userIds?.length ?? 0);
   return (
     <FormDialog
+      portalClassName={THEME}
       width="sm:max-w-lg"
       trigger={<Button variant={variant} className="min-h-11"><UserPlus aria-hidden="true" />{label}</Button>}
       title={label}
@@ -76,6 +79,7 @@ type CourseDraft = { id: string; title: string; summary: string; content: string
 export function CourseDialog({ course, qualificationTypes }: { course?: CourseDraft; qualificationTypes: QualificationOption[] }) {
   return (
     <FormDialog
+      portalClassName={THEME}
       width="sm:max-w-2xl"
       trigger={course
         ? <Button variant="outline" className="min-h-11"><Pencil aria-hidden="true" />Edit</Button>
@@ -118,6 +122,7 @@ export function CourseDialog({ course, qualificationTypes }: { course?: CourseDr
 export function ArchiveCourse({ id, title, archived }: { id: string; title: string; archived: boolean }) {
   return (
     <FormDialog
+      portalClassName={THEME}
       trigger={<Button variant="ghost" className="min-h-11">{archived ? <ArchiveRestore aria-hidden="true" /> : <Archive aria-hidden="true" />}{archived ? "Restore" : "Retire"}</Button>}
       title={archived ? `Restore ${title}?` : `Retire ${title}?`}
       description={archived ? "It can be assigned again." : "It can no longer be assigned. Open and finished training on it is kept."}
@@ -133,6 +138,7 @@ export function ArchiveCourse({ id, title, archived }: { id: string; title: stri
 export function SignOff({ id, name, title }: { id: string; name: string; title: string }) {
   return (
     <FormDialog
+      portalClassName={THEME}
       trigger={<Button className="min-h-11"><Check aria-hidden="true" />Sign off</Button>}
       title={`Sign off ${title} for ${name}?`}
       description="Confirm you watched them do it. It completes the course and records any qualification it grants, verified by you."
@@ -150,6 +156,7 @@ export function SignOff({ id, name, title }: { id: string; name: string; title: 
 export function ReturnForPractice({ id, name, title }: { id: string; name: string; title: string }) {
   return (
     <FormDialog
+      portalClassName={THEME}
       trigger={<Button variant="outline" className="min-h-11"><RotateCcw aria-hidden="true" />Not yet</Button>}
       title={`Not ready to sign off ${title}?`}
       description={`It goes back to ${name} as to do, with your note.`}
@@ -167,6 +174,7 @@ export function ReturnForPractice({ id, name, title }: { id: string; name: strin
 export function CancelTraining({ id, name, title }: { id: string; name: string; title: string }) {
   return (
     <FormDialog
+      portalClassName={THEME}
       trigger={<Button variant="ghost" className="min-h-11"><X aria-hidden="true" />Cancel</Button>}
       title={`Cancel ${title} for ${name}?`}
       description="It disappears from their My hub. The record stays in their training history."

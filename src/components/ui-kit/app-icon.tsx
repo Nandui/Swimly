@@ -1,6 +1,5 @@
 import {
   ArrowRight,
-  BookOpen,
   Building2,
   CalendarCheck,
   CalendarDays,
@@ -9,8 +8,6 @@ import {
   ChevronRight,
   ClipboardCheck,
   ClipboardList,
-  GraduationCap,
-  Hourglass,
   KeyRound,
   Layers,
   MonitorSmartphone,
@@ -24,7 +21,6 @@ import { cn } from "@/lib/utils";
 
 const ICONS = {
   arrowRight: ArrowRight,
-  bookOpen: BookOpen,
   building: Building2,
   calendarCheck: CalendarCheck,
   calendarDays: CalendarDays,
@@ -33,8 +29,6 @@ const ICONS = {
   chevronRight: ChevronRight,
   clipboardCheck: ClipboardCheck,
   clipboardList: ClipboardList,
-  graduationCap: GraduationCap,
-  hourglass: Hourglass,
   keyRound: KeyRound,
   layers: Layers,
   monitor: MonitorSmartphone,
