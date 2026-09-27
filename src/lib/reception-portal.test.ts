@@ -21,7 +21,8 @@ test("receptionists only receive tasks and handoffs their current grants permit"
   assert.equal(access.available, true);
   assert.equal(access.docs, false);
   assert.deepEqual(access.tasks.map(task => task.id), ["swimmers", "classes", "add", "assessments", "siblings"]);
-  assert.deepEqual(access.followUp.map(task => task.id), ["enrolment", "moves"]);
+  assert.deepEqual(access.followUp.map(task => task.id), ["enrolment", "moves", "parent-changes"]);
+  assert.equal(access.followUp.find(task => task.id === "parent-changes")?.href, "/students/parent-changes");
   assert.equal(access.followUp.find(task => task.id === "moves")?.href, "/awaiting-enrolment?view=moves");
 });
 
@@ -48,7 +49,7 @@ test("administrators inherit reception access without a new grant; a single mana
   assert.equal(access.docs, true);
   assert.equal(access.aquatics, true);
   assert.equal(access.tasks.length, 5);
-  assert.equal(access.followUp.length, 4);
+  assert.equal(access.followUp.length, 5);
   for (const permission of ["staff.manage", "roles.manage"]) {
     assert.equal(receptionPortalAccess([permission], []).available, false);
   }

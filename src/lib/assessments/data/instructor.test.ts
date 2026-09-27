@@ -8,7 +8,7 @@ test("Instructor guards assessment access before reading bookings and constrains
     "@/lib/page-guards": { screenPage: async (...args: unknown[]) => { calls.push(args); } },
     "@/lib/clubs/current": { currentClubId: async () => "selected-site" },
     "@/lib/format": { today: () => "2026-09-16", parseDateOnly: (iso: string) => new Date(`${iso}T00:00:00Z`) },
-    "@/lib/authz": { requireSession: async () => { calls.push("authenticated"); } },
+    "@/lib/authz": { requireSession: async () => { calls.push("authenticated"); return { user: { id: "staff", permissions: ["students.manage", "attendance.mark"], screens: ["students", "courses", "instructor"] } }; } },
     "@/lib/curriculum/data/shared": {},
     "@/lib/curriculum/data/curriculum": {},
     "@/lib/prisma": { prisma: { assessmentSession: { findUnique: async (query: { where: unknown; select: { bookings: unknown } }) => {

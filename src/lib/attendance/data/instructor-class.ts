@@ -35,7 +35,7 @@ export async function getInstructorClass(id: string, requestedDate: unknown) {
   const state = claimState(claim, session.user.id);
   if (state === "available") return { ...base, state, claim };
   const [register, progress] = await Promise.all([
-    getRegister(id, iso),
+    getRegister(id, iso, "deck"),
     getClassProgress(id),
   ]);
   if (!progress) return null;

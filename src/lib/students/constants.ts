@@ -37,3 +37,10 @@ export function ageLabel(dateOfBirth: Date | null): string {
   if (!dateOfBirth) return "—";
   return `${ageInYears(dateOfBirth)}`;
 }
+
+/** Parents' proposed corrections to contact, emergency and medical details. */
+export const PARENT_CHANGE_STATUS_META = {
+  PENDING: { label: "Waiting for review", color: "orange" },
+  APPLIED: { label: "Applied", color: "green" },
+  DECLINED: { label: "Declined", color: "gray" },
+} as const satisfies Record<string, StatusMeta>;

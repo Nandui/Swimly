@@ -558,6 +558,7 @@ model Student {
   cancelledSessions  CancelledClassSwimmer[]
   parentAccess       ParentChildAccess[]
   parentAccessRequests ParentAccessRequest[]
+  parentChangeRequests ParentChangeRequest[]
   parentProgress     ParentProgressEvent[]
   enrolmentFollowUps StudentFollowUp[]
 
@@ -984,6 +985,7 @@ model ParentAccount {
   sessions ParentSession[]
   requests ParentBookingRequest[]
   accessRequests ParentAccessRequest[]
+  changeRequests ParentChangeRequest[]
 }
 
 /// Parent-supplied details are a request, never proof of access to a swimmer.
@@ -1181,4 +1183,33 @@ model RefundNotification {
   event RefundEvent @relation(fields: [eventId], references: [id], onDelete: Restrict)
   @@unique([eventId, recipientId])
   @@index([requestId, status])
+}
+
+/// A parent's proposed correction to their child's contact, emergency or
+/// medical details. Nothing on the swimmer changes until reception reviews it
+/// and applies it (audited); a declined request keeps the reply for the parent.
+/// `proposed` holds only the fields a parent may propose (see
+/// src/lib/parent/change-requests.ts). Parents never receive the current values.
+model ParentChangeRequest {
+  id             String    @id @default(cuid())
+  parentId       String
+  studentId      String
+  key            String
+  requestHash    String
+  status         String    @default("PENDING")
+  proposed       Json
+  message        String    @default("")
+  reply          String    @default("")
+  reviewedById   String?
+  reviewedByName String?
+  reviewedAt     DateTime?
+  createdAt      DateTime  @default(now())
+  updatedAt      DateTime  @updatedAt
+
+  parent  ParentAccount @relation(fields: [parentId], references: [id], onDelete: Cascade)
+  student Student       @relation(fields: [studentId], references: [id], onDelete: Restrict)
+
+  @@unique([parentId, key])
+  @@index([status, createdAt])
+  @@index([studentId])
 }

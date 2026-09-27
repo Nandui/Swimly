@@ -32,6 +32,7 @@ deployed. No parent screens have been added to the staff or Instructor workspace
 | GET | `/children/{childId}` | A linked child's basic profile |
 | GET | `/children/{childId}/progress` | Released competencies, completions and assessment placements |
 | GET | `/children/{childId}/lessons` | Next weekly lesson, cancellation notices and a 12-week attendance report |
+| GET, POST | `/children/{childId}/change-requests` | Read own proposed corrections, or propose contact, emergency or medical corrections for reception to review |
 | GET | `/sites` | Active sites; no login needed |
 | GET | `/assessment-sessions` | Published assessment availability; no login needed |
 | GET | `/assessment-sessions/{sessionId}` | One open, published session; full sessions remain readable |
@@ -39,8 +40,8 @@ deployed. No parent screens have been added to the staff or Instructor workspace
 
 No v1 endpoint exposes medical notes, staff notes, raw activity logs, contact
 details from a swimmer record, other families, whole-class attendance registers or class
-transfers. Parents cannot edit existing swimmer details, cancel bookings, or
-move children between weekly classes in v1. Those policies need a later phase.
+transfers. Parents cannot edit existing swimmer details directly, cancel bookings, or
+move children between weekly classes in v1; they propose corrections instead (below).
 
 ## Weekly lessons and attendance
 
@@ -171,6 +172,31 @@ children, including desk-created bookings. `childId` is optional; maximum page
 size is 50. Follow `nextCursor` for older bookings. A cancelled session remains
 visible on a child's booking with `session.cancelled: true`. Outcomes are read
 from the progress endpoint, never from the live assessor record.
+
+## Contact and medical corrections
+
+`POST /children/{childId}/change-requests` lets a guardian of a linked child
+propose corrections to `contactName`, `contactEmail`, `contactPhone`,
+`emergencyName`, `emergencyPhone`, `emergencyRelationship` and `medicalNotes`,
+with an optional `message` (500 characters). Other fields are rejected. It needs an
+`Idempotency-Key` header (16–128 characters): the same key and body replays the
+original request with 200, a different body returns 409 `IDEMPOTENCY_CONFLICT`.
+A parent can have three requests waiting per child (409 `REQUEST_LIMIT`) and must
+have a name on their account (400 `PROFILE_REQUIRED`).
+
+Nothing on the swimmer changes when a parent sends a request. Reception reviews it
+at **Swimmers → Parent updates** (`/students/parent-changes`, `students.manage`),
+sees each proposed value beside the current one, and applies or declines it with a
+reply. Applying writes exactly the proposed fields; both decisions are audited by
+field name, never by medical text. A request is decided once.
+
+`GET /children/{childId}/change-requests?page=1` returns the parent's own requests
+for that child: `id`, `childId`, `status` (`PENDING`, `APPLIED`, `DECLINED`),
+`proposed`, `message`, `reply`, `createdAt`, `reviewedAt`. It never returns the
+values currently on the swimmer's record, the reviewer, or other families' requests.
+
+The separate parent app needs a form for this under the child's profile (not yet
+built in `swimly-public-app`).
 
 ## Progress publication
 

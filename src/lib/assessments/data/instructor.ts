@@ -10,5 +10,5 @@ export async function getInstructorAssessmentSession(id: string) {
     clubId: await currentClubId(),
     date: parseDateOnly(today()),
     cancelledAt: null,
-  });
+  }, "deck");
 }

@@ -27,6 +27,7 @@ const FOLLOW_UP: readonly ReceptionLink[] = [
   { id: "moves", label: "Ready to move", href: "/awaiting-enrolment?view=moves", screen: "awaiting-enrolment" },
   { id: "agreements", label: "Legend agreements", href: "/legend-agreements", screen: "legend-agreements" },
   { id: "parents", label: "Parent access requests", href: "/students/parents", screen: "students", permission: "parents.manage" },
+  { id: "parent-changes", label: "Parent updates", description: "Contact and medical corrections from parents", href: "/students/parent-changes", screen: "students", permission: "students.manage" },
 ];
 
 const RECEPTION_SCREENS: readonly ScreenKey[] = [

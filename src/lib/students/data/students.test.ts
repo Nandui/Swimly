@@ -15,7 +15,7 @@ function matches(row: typeof records[number], where: Where) {
 test("directory finds full names, reversed names, member numbers and contacts across all statuses and sites", async () => {
   let authorized = false;
   const data = serverModule<typeof import("./students")>("src/lib/students/data/students.ts", {
-    "@/lib/authz": { requireSession: async () => { authorized = true; } },
+    "@/lib/authz": { requireSession: async () => { authorized = true; return { user: { id: "staff", permissions: ["students.manage", "attendance.mark"], screens: ["students", "courses", "instructor"] } }; } },
     "@/lib/curriculum/data/shared": { getSharedCurriculum: async () => ({}) },
     "@/lib/prisma": { prisma: { student: {
       count: async ({ where }: { where: Where }) => { assert.ok(authorized); assert.equal(where.clubId, undefined); return records.filter(r => matches(r, where)).length; },
@@ -33,7 +33,7 @@ test("directory finds full names, reversed names, member numbers and contacts ac
 test("paging is bounded to the available records before a database offset is requested", async () => {
   const offsets: number[] = [];
   const data = serverModule<typeof import("./students")>("src/lib/students/data/students.ts", {
-    "@/lib/authz": { requireSession: async () => undefined },
+    "@/lib/authz": { requireSession: async () => ({ user: { id: "staff", permissions: ["students.manage", "attendance.mark"], screens: ["students", "courses", "instructor"] } }) },
     "@/lib/curriculum/data/shared": { getSharedCurriculum: async () => ({}) },
     "@/lib/prisma": { prisma: { student: {
       count: async () => 205,

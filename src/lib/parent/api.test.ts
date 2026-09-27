@@ -9,6 +9,8 @@ type Router = typeof import("./router");
 type Admin = typeof import("./admin");
 type Auth = typeof import("./auth");
 type Progress = typeof import("./progress");
+type Changes = typeof import("../students/actions/parent-changes");
+let changes: Changes;
 let fixture: Awaited<ReturnType<typeof isolatedPrisma>>;
 let router: Router, admin: Admin, auth: Auth, progress: Progress;
 const originalEnv = { ...process.env };
@@ -66,6 +68,7 @@ before(async () => {
   admin = serverModule<Admin>("src/lib/parent/admin.ts", doubles);
   auth = serverModule<Auth>("src/lib/parent/auth.ts", doubles);
   progress = serverModule<Progress>("src/lib/parent/progress.ts", doubles);
+  changes = serverModule<Changes>("src/lib/students/actions/parent-changes.ts", doubles);
 });
 after(async () => { globalThis.fetch = originalFetch; process.env = originalEnv; await fixture?.close(); });
 
@@ -348,4 +351,58 @@ test("existing-family requests remain private until staff approve; retries, decl
   const next = await (await call("access-requests", "POST", { ...body, firstName: "Jordan" }, token, { "Idempotency-Key": "synthetic-request-0003" })).json();
   assert.equal((await staff(`access-requests/${next.request.id}`, "PATCH", { decision: "DECLINED", reason: "Cannot verify guardian", reply: "Please check the child’s name and date of birth and send a new request." })).status, 200);
   assert.equal((await (await call("children", "GET", undefined, token)).json()).items.length, 0);
+});
+
+test("parent change requests change nothing until reception applies them, never echo the record and are decided once", async () => {
+  // Earlier tests revoked both tokens; sign the linked parent and an outsider in again.
+  parentToken = (await signIn("parent@example.test")).accessToken;
+  otherToken = (await signIn("other@example.test")).accessToken;
+  const before = await fixture.prisma.student.findUniqueOrThrow({ where: { id: childId } });
+  const path = `children/${childId}/change-requests`;
+  const body = { contactPhone: "000 111 2222", medicalNotes: "Synthetic: mild asthma, inhaler in bag", message: "New phone number" };
+  const key = (n: number) => ({ "Idempotency-Key": `synthetic-change-000${n}` });
+  assert.equal((await call(path, "POST", body, parentToken)).status, 400, "an idempotency key is required");
+  assert.equal((await call(path, "POST", { message: "nothing" }, parentToken, key(1))).status, 400);
+  assert.equal((await call(path, "POST", { ...body, firstName: "Renamed" }, parentToken, key(1))).status, 400, "only listed fields");
+  assert.equal((await call(path, "POST", body, otherToken, key(1))).status, 404, "another family's child");
+  const created = await call(path, "POST", body, parentToken, key(1));
+  assert.equal(created.status, 201);
+  const { request: row } = await created.json();
+  assert.equal(row.status, "PENDING");
+  assert.deepEqual(Object.keys(row.proposed).sort(), ["contactPhone", "medicalNotes"]);
+  assert.equal((await call(path, "POST", body, parentToken, key(1))).status, 200, "a retry replays");
+  assert.equal((await call(path, "POST", { ...body, contactPhone: "999" }, parentToken, key(1))).status, 409);
+  const unchanged = await fixture.prisma.student.findUniqueOrThrow({ where: { id: childId } });
+  assert.equal(unchanged.contactPhone, before.contactPhone); assert.equal(unchanged.medicalNotes, before.medicalNotes);
+  const audit = await fixture.prisma.auditLog.findFirstOrThrow({ where: { entity: "ParentChangeRequest", entityId: row.id } });
+  assert.equal(JSON.stringify(audit).includes("asthma"), false, "the audit never stores medical text");
+
+  // Three pending requests per child is the cap.
+  await call(path, "POST", { contactName: "Synthetic Guardian" }, parentToken, key(2));
+  await call(path, "POST", { emergencyName: "Synthetic Neighbour" }, parentToken, key(3));
+  assert.equal((await call(path, "POST", { emergencyPhone: "0" }, parentToken, key(4))).status, 409);
+
+  const listed = await (await call(path)).json();
+  assert.equal(listed.total, 3);
+  for (const item of listed.items) for (const privateField of ["studentId", "parentId", "key", "requestHash", "reviewedById", "reviewedByName", "current"]) assert.equal(privateField in item, false);
+  assert.equal((await call(path, "GET", undefined, otherToken)).status, 404);
+
+  actorPermissions = false;
+  await assert.rejects(changes.applyParentChange(row.id, ""));
+  actorPermissions = true;
+  assert.equal((await changes.applyParentChange(row.id, "Updated, thanks")).ok, true);
+  const applied = await fixture.prisma.student.findUniqueOrThrow({ where: { id: childId } });
+  assert.equal(applied.contactPhone, body.contactPhone); assert.equal(applied.medicalNotes, body.medicalNotes);
+  assert.equal(applied.firstName, before.firstName);
+  assert.equal((await changes.applyParentChange(row.id, "again")).ok, false, "decided once");
+  assert.equal((await changes.declineParentChange(row.id, "Too late to decline")).ok, false);
+
+  const second = listed.items.find((item: { proposed: Record<string, string> }) => item.proposed.contactName);
+  assert.equal((await changes.declineParentChange(second.id, "")).ok, false, "a decline needs a reason");
+  assert.equal((await changes.declineParentChange(second.id, "Please ask at reception with ID")).ok, true);
+  assert.equal((await fixture.prisma.student.findUniqueOrThrow({ where: { id: childId } })).contactName, applied.contactName);
+  const after = (await (await call(path)).json()).items;
+  assert.equal(after.find((item: { id: string }) => item.id === row.id).reply, "Updated, thanks");
+  assert.equal(after.find((item: { id: string }) => item.id === second.id).status, "DECLINED");
+  assert.equal(await fixture.prisma.auditLog.count({ where: { action: { in: ["apply-parent-change", "decline-parent-change"] } } }), 2);
 });

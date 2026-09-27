@@ -1,4 +1,6 @@
 "use client";
+import { Tag } from "@/components/ui-kit/tag";
+import { MEDICAL_STATUS_META } from "@/lib/students/constants";
 
 import * as React from "react";
 import { useRouter } from "next/navigation";
@@ -346,6 +348,8 @@ function RegisterFormState({
                       {line.medicalNotes}
                     </CollapsibleContent>
                   </Collapsible>
+                ) : line.hasMedicalNotes ? (
+                  <Tag color={MEDICAL_STATUS_META.notes.color} className="mt-1">{MEDICAL_STATUS_META.notes.label}</Tag>
                 ) : null}
               </ItemContent>
               <MarkChoices

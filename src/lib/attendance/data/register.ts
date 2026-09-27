@@ -1,5 +1,6 @@
 import type { AttendanceStatus, DayOfWeek } from "@/generated/prisma/client";
 import { requireSession } from "@/lib/authz";
+import { classifyMedical, medicalAllowed, requireAquaticsAccess, type AquaticsSurface } from "@/modules/aquatics/classification";
 import { currentClubId } from "@/lib/clubs/current";
 import { parseDateOnly } from "@/lib/format";
 import { prisma } from "@/lib/prisma";
@@ -11,7 +12,9 @@ export type RegisterLine = {
   firstName: string;
   lastName: string;
   dateOfBirth: Date | null;
+  /** Null unless this surface may see medical notes (see classification). */
   medicalNotes: string | null;
+  hasMedicalNotes: boolean;
   levelName: string;
   /** Null means nobody has marked them yet, which is different from absent. */
   status: AttendanceStatus | null;
@@ -26,8 +29,9 @@ export type RegisterLine = {
  *  The roster is *active enrolments covering that date* ∪ *students who already
  *  have a row for it*. The second half is what keeps a transferred swimmer's
  *  past register saveable instead of silently dropping them off it. */
-export async function getRegister(courseId: string, iso: string) {
-  await requireSession();
+export async function getRegister(courseId: string, iso: string, surface: AquaticsSurface = "desk") {
+  const session = await requireAquaticsAccess();
+  const medical = medicalAllowed(session, surface);
   const date = parseDateOnly(iso);
 
   const [enrolments, existing, note, curriculum] = await Promise.all([
@@ -81,7 +85,7 @@ export async function getRegister(courseId: string, iso: string) {
   for (const enrolment of enrolments) {
     lines.set(enrolment.student.id, {
       studentId: enrolment.student.id,
-      ...enrolment.student,
+      ...classifyMedical(enrolment.student, medical),
       levelName: curriculum.level(enrolment.level.id)?.name ?? enrolment.level.name,
       status: null,
       note: null,
@@ -97,7 +101,7 @@ export async function getRegister(courseId: string, iso: string) {
     } else {
       lines.set(record.student.id, {
         studentId: record.student.id,
-        ...record.student,
+        ...classifyMedical(record.student, medical),
         levelName: "",
         status: record.status,
         note: record.note,

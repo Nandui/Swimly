@@ -4,7 +4,7 @@ import { useEffect, type ReactNode } from "react";
 import Link from "next/link";
 import { usePathname, useSearchParams } from "next/navigation";
 import { signOut } from "next-auth/react";
-import { ArrowLeft, CircleHelp, LogOut, UserRound } from "lucide-react";
+import { ArrowLeft, CircleHelp, LogOut, UserRound, Users } from "lucide-react";
 import { AppLogo } from "@/components/app-logo";
 import { Button } from "@/components/shadcn/button";
 import {
@@ -23,8 +23,10 @@ import styles from "./instructor-shell.module.css";
 
 type Club = { id: string; name: string };
 
-/** The deck has its own frame, without the desk sidebar, global swimmer
- * search or profile links. Reusing teaching forms does not merge navigation. */
+/** The deck has its own frame, without the desk sidebar or desk profile links.
+ * Its swimmer lookup covers only the working site and shows medical notes only
+ * for swimmers the instructor teaches. Reusing teaching forms does not merge
+ * navigation. */
 export function InstructorShell({
   children,
   userName,
@@ -85,6 +87,9 @@ export function InstructorShell({
             <ClubSwitcher club={club} clubs={clubs} touchTargets />
           </div>
           <div className="ml-auto flex items-center gap-2">
+            <Button asChild variant="ghost" className="min-h-11 px-2">
+              <Link href="/instructor/swimmers" aria-current={pathname === "/instructor/swimmers" ? "page" : undefined}><Users aria-hidden="true" />Swimmers</Link>
+            </Button>
             <Button asChild variant="ghost" className="min-h-11 px-2">
               <Link href="/help/instructor" target="_blank" rel="noopener noreferrer" aria-label="Help (opens in a new tab)"><CircleHelp aria-hidden="true" />Help</Link>
             </Button>

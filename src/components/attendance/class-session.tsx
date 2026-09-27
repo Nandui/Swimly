@@ -117,7 +117,7 @@ export async function ClassSession({
   if (cancellation) return <div className="space-y-4"><BackLink href={returnTo.href} current={courseName(course)}>{returnTo.label}</BackLink><h1 className="text-2xl font-semibold">{courseName(course)}</h1><Notice title="This session is cancelled"><p>{formatDate(parseDateOnly(iso))} · {cancellation.reason}</p><p>Existing teaching records are kept. Further marks cannot be saved for this session.</p></Notice></div>;
 
   const [{ lines, taken, note, revision }, cover, progress] = await Promise.all(
-    [getRegister(id, iso), getClassCover(id, iso), getClassProgress(id)],
+    [getRegister(id, iso, workspace === "instructor" ? "deck" : "desk"), getClassCover(id, iso), getClassProgress(id)],
   );
   if (!progress) notFound();
 

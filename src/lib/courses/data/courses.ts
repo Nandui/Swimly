@@ -1,4 +1,5 @@
 import type { DayOfWeek } from "@/generated/prisma/client";
+import { requireAquaticsAccess } from "@/modules/aquatics/classification";
 import { requireSession } from "@/lib/authz";
 import { currentClubId } from "@/lib/clubs/current";
 import { getSharedCurriculum, sharedCourse, sharedPlacement, liveSharedLevel } from "@/lib/curriculum/data/shared";
@@ -80,9 +81,11 @@ export async function getCoursesOnDay(dayOfWeek: DayOfWeek, instructorId?: strin
   return rows.map(row => sharedCourse(row, curriculum));
 }
 
-/** The roster: who is in this class, and on what footing. */
+/** The roster: who is in this class, and on what footing. It flags medical
+ *  notes without carrying them; the register and profile show the text to the
+ *  surfaces allowed to see it. */
 export async function getRoster(courseId: string) {
-  await requireSession();
+  await requireAquaticsAccess();
   const curriculum = await getSharedCurriculum();
 
   const rows = await prisma.enrolment.findMany({
@@ -113,7 +116,10 @@ export async function getRoster(courseId: string) {
       },
     },
   });
-  return rows.map(row => sharedPlacement(row, curriculum));
+  return rows.map(row => {
+    const { medicalNotes, ...student } = row.student;
+    return sharedPlacement({ ...row, student: { ...student, hasMedicalNotes: !!medicalNotes?.trim() } }, curriculum);
+  });
 }
 
 export type RosterEntry = Awaited<ReturnType<typeof getRoster>>[number];

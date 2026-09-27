@@ -1,4 +1,5 @@
 import type { Prisma } from "@/generated/prisma/client";
+import { classifyMedical, medicalAllowed, requireAquaticsAccess, type AquaticsSurface } from "@/modules/aquatics/classification";
 import { HOLDS_A_PLACE } from "@/lib/assessments/constants";
 import { requireSession } from "@/lib/authz";
 import { currentClubId } from "@/lib/clubs/current";
@@ -68,12 +69,16 @@ const BOOKING_SELECT = {
   },
 } as const satisfies Prisma.AssessmentBookingSelect;
 
-export type BookingRow = Prisma.AssessmentBookingGetPayload<{ select: typeof BOOKING_SELECT }>;
+type BookingPayload = Prisma.AssessmentBookingGetPayload<{ select: typeof BOOKING_SELECT }>;
+/** A booking as screens receive it: medical notes classified for the surface
+ *  (text only where allowed, with a flag either way). */
+export type BookingRow = Omit<BookingPayload, "student"> & { student: BookingPayload["student"] & { hasMedicalNotes: boolean } };
 
 /** One session with everyone on it, and the levels an outcome may name —
  *  the live levels of the session's own programme, and nothing else. */
-export async function getAssessmentSession(id: string, scope?: { clubId: string; date: Date; cancelledAt: null }) {
-  await requireSession();
+export async function getAssessmentSession(id: string, scope?: { clubId: string; date: Date; cancelledAt: null }, surface: AquaticsSurface = "desk") {
+  const session = await requireAquaticsAccess();
+  const medical = medicalAllowed(session, surface);
 
   const row = await prisma.assessmentSession.findUnique({
     where: { id, ...scope },
@@ -104,7 +109,7 @@ export async function getAssessmentSession(id: string, scope?: { clubId: string;
       levels: programme?.levels.filter(l => !l.archivedAt).map(l => ({ id: l.id, name: l.name, sortOrder: l.sortOrder })) ?? [] },
     typeId: row.typeId ? curriculum.typeIds.resolve(row.typeId) : null,
     type: row.type ? { id: curriculum.typeIds.resolve(row.type.id), name: curriculum.types.find(t => t.id === curriculum.typeIds.resolve(row.type!.id))?.name ?? row.type.name } : null,
-    bookings: row.bookings.map(b => ({ ...b, outcomeLevelId: b.outcomeLevelId ? curriculum.levelIds.resolve(b.outcomeLevelId) : null,
+    bookings: row.bookings.map(b => ({ ...b, student: classifyMedical(b.student, medical), outcomeLevelId: b.outcomeLevelId ? curriculum.levelIds.resolve(b.outcomeLevelId) : null,
       outcomeLevel: b.outcomeLevel ? { id: curriculum.levelIds.resolve(b.outcomeLevel.id), name: curriculum.level(b.outcomeLevel.id)?.name ?? b.outcomeLevel.name } : null })),
   };
 }

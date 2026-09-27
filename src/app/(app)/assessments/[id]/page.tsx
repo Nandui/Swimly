@@ -241,7 +241,7 @@ function BookingTable({
                   >
                     {fullName(b.student)}
                   </UiLink>
-                  {b.student.medicalNotes ? (
+                  {b.student.hasMedicalNotes ? (
                     <Tag color={MEDICAL_STATUS_META.notes.color}>
                       {MEDICAL_STATUS_META.notes.label}
                     </Tag>

@@ -132,6 +132,30 @@ a signed cookie (`src/lib/devices/shared-device.ts`) and can be revoked centrall
 - The session records how and when the person proved who they are
   (`authMethod`, `authAt`, `sharedDevice`); it never carries permissions.
 
+## Aquatics surfaces
+
+Aquatics is the reference for a module with several audiences over one set of
+records. `src/modules/aquatics/classification.ts` tags swimmer fields by class
+(`medical`, `contact`, `emergency`, `staff-note`) and decides who receives each:
+
+| Surface | Who | Medical notes |
+| --- | --- | --- |
+| Office (courses, programmes, curriculum) | Swim school managers | Yes |
+| Desk (swimmers, enrolment, follow-up) | Reception | Yes |
+| Deck (`/instructor`) | Instructors | Only for swimmers in a class they teach or cover that day |
+| Parents (parent API) | Linked guardians | Never; they propose corrections instead |
+| Anyone else | Docs-only, Refunds-only, read-only roles | Never; roles with no Aquatics screen read no swimmer data |
+
+Withheld notes become a `hasMedicalNotes` flag, shown as a "Medical" tag, so the
+deck still knows to ask. Loaders pass their surface (`getRegister(…, "deck")`);
+the class roster only carries the flag. Instructors can look up any swimmer with
+a current place at their working site at `/instructor/swimmers` — name, age and
+class only, never contacts or staff notes.
+
+Parents propose contact, emergency and medical corrections through the parent API;
+reception applies or declines them at `/students/parent-changes`. See
+docs/parent-app.md.
+
 ## Rules
 
 - Never check a role name. Ask for a capability, and for records, a resource.
@@ -150,5 +174,6 @@ a signed cookie (`src/lib/devices/shared-device.ts`) and can be revoked centrall
 `npm run sandbox` runs the whole app on throwaway in-memory databases with a
 fictional LeisureWorld (a superadmin, a site manager with a site-limited duty
 role, an aquatics lead who records qualifications for Aquatics, instructors and
-reception). It never reads real database settings. Accounts and the sandbox
+reception), plus synthetic swimmers, classes on today's weekday at two sites and a
+parent's pending correction (`scripts/sandbox-seed.ts`). It never reads real database settings. Accounts and the sandbox
 password are listed in `scripts/sandbox.mts`.

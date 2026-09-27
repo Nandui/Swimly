@@ -351,7 +351,7 @@ function ClassRoster({
                         {fullName(student)}
                       </span>
                     )}
-                    {student.medicalNotes ? (
+                    {student.hasMedicalNotes ? (
                       <Tag color={MEDICAL_STATUS_META.notes.color}>
                         {MEDICAL_STATUS_META.notes.label}
                       </Tag>

@@ -5,7 +5,7 @@ import { serverModule } from "@/test/server-module";
 test("class inspection authorizes before reads and reads a class roster regardless of registration site", async () => {
   let authorized = false;
   const data = serverModule<typeof import("./courses")>("src/lib/courses/data/courses.ts", {
-    "@/lib/authz": { requireSession: async () => { authorized = true; } },
+    "@/lib/authz": { requireSession: async () => { authorized = true; return { user: { id: "staff", permissions: ["students.manage", "attendance.mark"], screens: ["students", "courses", "instructor"] } }; } },
     "@/lib/clubs/current": { currentClubId: async () => { assert.ok(authorized); return "club-a"; } },
     "@/lib/prisma": { prisma: { programme: { findMany: async () => [] }, enrolment: { findMany: async (args: { where: unknown; select: Record<string, unknown> }) => {
       assert.ok(authorized);
@@ -36,7 +36,7 @@ test("the all-site directory retains historical levels while enrolment pickers r
   const queries: Record<string, unknown>[] = [];
   const rows = [{ id: "live", levelId: "live", clubId: "club-a" }, { id: "historic", levelId: "retired", clubId: "club-b" }];
   const data = serverModule<typeof import("./courses")>("src/lib/courses/data/courses.ts", {
-    "@/lib/authz": { requireSession: async () => { authorized = true; } },
+    "@/lib/authz": { requireSession: async () => { authorized = true; return { user: { id: "staff", permissions: ["students.manage", "attendance.mark"], screens: ["students", "courses", "instructor"] } }; } },
     "@/lib/clubs/current": { currentClubId: async () => { assert.fail("All-site directory must not narrow to the working site"); } },
     "@/lib/curriculum/data/shared": { getSharedCurriculum: async () => ({}), sharedCourse: (row: unknown) => row, liveSharedLevel: (_: unknown, id: string) => id === "live" },
     "@/lib/prisma": { prisma: { course: { findMany: async ({ where }: { where: Record<string, unknown> }) => { assert.ok(authorized); queries.push(where); return rows; } } } },

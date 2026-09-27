@@ -1,5 +1,6 @@
 import type { Prisma, StudentStatus } from "@/generated/prisma/client";
 import { requireSession } from "@/lib/authz";
+import { classifyMedical, medicalAllowed, requireAquaticsAccess } from "@/modules/aquatics/classification";
 import { getSharedCurriculum } from "@/lib/curriculum/data/shared";
 import { prisma } from "@/lib/prisma";
 
@@ -38,7 +39,7 @@ export const STUDENTS_PER_PAGE = 100;
 /** The list. Set-based queries joined in memory rather than one query per row —
  *  the placement lookup is the part that would otherwise go N+1. */
 export async function getStudents(filters: StudentFilters = {}) {
-  await requireSession();
+  await requireAquaticsAccess();
 
   const curriculum = await getSharedCurriculum();
   const q = filters.q?.trim();
@@ -124,11 +125,13 @@ export async function getStudentCounts() {
   return { all, active, inactive: all - active };
 }
 
-/** The profile. Medical notes come back here and nowhere in a list. */
+/** The profile. Medical notes come back here and nowhere in a list, and only
+ *  to desk and office roles (see Aquatics classification); others learn only
+ *  that notes are on file. */
 export async function getStudent(id: string) {
-  await requireSession();
+  const session = await requireAquaticsAccess();
 
-  return prisma.student.findUnique({
+  const row = await prisma.student.findUnique({
     where: { id },
     select: {
       id: true,
@@ -152,6 +155,7 @@ export async function getStudent(id: string) {
       notes: true,
     },
   });
+  return row ? classifyMedical(row, medicalAllowed(session, "desk")) : null;
 }
 
 export type StudentDetail = NonNullable<Awaited<ReturnType<typeof getStudent>>>;

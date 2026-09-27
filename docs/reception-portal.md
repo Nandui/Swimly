@@ -20,6 +20,10 @@ expansion uses the existing permission helpers; Instructor-only staff cannot ope
 this desk portal. The working-site selector uses the existing device preference
 and does not narrow shared swimmer identity.
 
+Follow-up includes **Parent updates** (`/students/parent-changes`) for staff with the
+Swimmers screen and `students.manage`: contact, emergency and medical corrections parents
+send from the parent app, applied or declined with a reply (see docs/parent-app.md).
+
 Reception Portal is an explicit role home option. `/modules` redirects there
 only for that saved preference and eligible access. Other staff retain the
 general module portal. `/modules?view=all` always opens All modules.
