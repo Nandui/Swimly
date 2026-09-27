@@ -2,11 +2,10 @@ import Link from "next/link";
 import { ArrowRight, ArrowUpRight, CalendarDays, ChevronRight, ClipboardList, HelpCircle, Search, UserPlus, Users, WavesLadder, ListChecks, type LucideIcon } from "lucide-react";
 import { Button } from "@/components/shadcn/button";
 import { Card } from "@/components/shadcn/card";
-import { Tag } from "@/components/ui-kit/tag";
 import { AddSwimmer } from "@/components/students/add-swimmer";
 import { ClubSwitcher } from "@/components/clubs/club-switcher";
 import { PortalFrame } from "@/components/portal/portal-frame";
-import { STAFF_MODULES, moduleStatusMeta } from "@/lib/modules";
+import { STAFF_MODULES } from "@/lib/modules";
 import type { ReceptionPortalAccess } from "@/lib/reception-portal";
 import type { CurrentClub } from "@/lib/clubs/current";
 
@@ -23,7 +22,6 @@ export function ReceptionPortal({ userName, club, clubs, access }: {
 }) {
   const modules = STAFF_MODULES.filter(module => module.reception && module.id !== "swimly" && (module.id !== "docs" || access.docs) && (module.id !== "refunds" || access.refunds));
   const available = modules.filter(module => module.status === "available");
-  const planned = modules.filter(module => module.status === "planned");
   return <PortalFrame reception userName={userName}>
     <div className="flex flex-col justify-between gap-4 sm:flex-row sm:items-center">
       <div className="space-y-2">
@@ -73,7 +71,6 @@ export function ReceptionPortal({ userName, club, clubs, access }: {
           </Card>;
         })}
       </div>}
-      {planned.map(module => <div key={module.id} className="flex flex-wrap items-center gap-x-3 gap-y-2 px-1 py-2 text-sm lg:col-span-3"><span className="font-medium">{module.name}</span><Tag color={moduleStatusMeta[module.status].color}>{moduleStatusMeta[module.status].label}</Tag><span className="text-ui-muted-foreground">{module.description}</span></div>)}
     </section>
     <footer className="flex flex-wrap items-center justify-between gap-3 border-t border-ui-border pt-4">
       <p className="break-words text-xs text-ui-muted-foreground">Signed in as <span className="font-medium text-ui-foreground">{userName}</span></p>

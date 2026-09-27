@@ -3,12 +3,15 @@ import { requireActionMember } from '@/lib/docs/auth';
 import { database, listMembers } from '@/lib/docs/database';
 import { library, requirements, DomainError } from '@/lib/docs/domain';
 import { filterReading, readingCsv } from '@/lib/docs/reporting';
+import { readingReportScope } from '@/lib/docs/report-scope';
 export async function GET(request: NextRequest) {
   try {
     const m = await requireActionMember();
+    const scope = await readingReportScope(m);
+    if (!scope) throw new DomainError('Reporting access requires Docs administration.', 403);
     const db = await database();
     const [items, documents, archived, members] = await Promise.all([
-      requirements(db, m.id, true),
+      requirements(db, m.id, scope),
       library(db, m.id),
       library(db, m.id, { archived: true }),
       listMembers(db),

@@ -4,15 +4,15 @@ import { Button } from "@/components/shadcn/button";
 import { Card } from "@/components/shadcn/card";
 import { Tag } from "@/components/ui-kit/tag";
 import { PortalFrame } from "@/components/portal/portal-frame";
-import { STAFF_MODULES, moduleStatusMeta } from "@/lib/modules";
+import { moduleStatusMeta } from "@/lib/modules";
+import type { ModuleManifest } from "@/modules";
 import { RECEPTION_PORTAL_PATH } from "@/lib/reception-portal";
 
-/** The general portal remains available to every staff role. */
-export function StaffPortal({ userName, docsAllowed = false, refundsAllowed = false, aquaticsAllowed = true, receptionAllowed = false }: {
+/** The general portal remains available to every staff role. It lists the
+ *  modules the registry says this person can open (see `src/modules`). */
+export function StaffPortal({ userName, modules, receptionAllowed = false }: {
   userName: string;
-  docsAllowed?: boolean;
-  refundsAllowed?: boolean;
-  aquaticsAllowed?: boolean;
+  modules: readonly ModuleManifest[];
   receptionAllowed?: boolean;
 }) {
   return <PortalFrame userName={userName}>
@@ -21,8 +21,8 @@ export function StaffPortal({ userName, docsAllowed = false, refundsAllowed = fa
       <p className="text-sm text-ui-muted-foreground">Your LeisureWorld apps, in one place.</p>
     </div>
     <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3" aria-label="Staff modules">
-      {STAFF_MODULES.filter(module => (module.id !== "docs" || docsAllowed) && (module.id !== "refunds" || refundsAllowed) && (module.id !== "swimly" || aquaticsAllowed)).map(module => {
-        const status = moduleStatusMeta[module.status];
+      {modules.map(module => {
+        const status = moduleStatusMeta.available;
         const Icon = module.icon;
         return <Card key={module.id} className="gap-6 p-6 shadow-none">
           <div className="flex min-h-12 items-center justify-between gap-3">
@@ -33,9 +33,9 @@ export function StaffPortal({ userName, docsAllowed = false, refundsAllowed = fa
             <h2 className="text-xl font-semibold">{module.name}</h2>
             <p className="text-sm leading-relaxed text-ui-muted-foreground">{module.description}</p>
           </div>
-          {module.status === "available" && <Button asChild className="min-h-11 w-full justify-between">
+          <Button asChild className="min-h-11 w-full justify-between">
             <Link href={module.href} prefetch={false}>Open {module.name}<ArrowRight aria-hidden="true" /></Link>
-          </Button>}
+          </Button>
         </Card>;
       })}
     </div>

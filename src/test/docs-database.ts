@@ -20,7 +20,7 @@ export async function createDocsTestDatabase(): Promise<DocsTestDatabase> {
   const identity = new PGlite();
   await identity.exec(`CREATE TABLE public."StaffRole" (id text PRIMARY KEY, name text, permissions text[], screens text[]);
     CREATE TABLE public."User" (id text PRIMARY KEY, name text, email text, "isActive" boolean, "staffRoleId" text REFERENCES public."StaffRole");`);
-  await pg.exec(await readFile('docs-database/migrations/001_documents.sql', 'utf8'));
+  for (const file of ['001_documents.sql', '002_platform_groups.sql']) await pg.exec(await readFile('docs-database/migrations/' + file, 'utf8'));
   await pg.exec('SET search_path=turnfin_docs');
   const directorySql = `SELECT u.id,u.name,u.email,r.name AS role,r.permissions,r.screens,
     (u."isActive" AND r.id IS NOT NULL) AS active FROM public."User" u LEFT JOIN public."StaffRole" r ON r.id=u."staffRoleId"`;

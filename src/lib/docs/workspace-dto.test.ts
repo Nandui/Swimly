@@ -47,3 +47,24 @@ test("everyone's reading is for Docs administrators, not every author", async ()
   // Anyone can still read their own requirements.
   assert.ok(Array.isArray(await requirements(db, 'jamie')));
 });
+
+test('a scoped reading report returns only the people it covers; the owner sees totals, never names', async () => {
+  const { randomUUID } = await import('node:crypto');
+  const { DocumentService, documentView } = await import('./domain');
+  const service = new DocumentService(db);
+  const content = { schemaVersion: 1 as const, title: 'Scoped report example', reference: randomUUID().slice(0, 8), type: 'SOP' as const, summary: 'Synthetic.', ownerId: 'jamie', facilityIds: [], teamIds: [], reviewDate: '2027-09-18', body: { type: 'doc', content: [{ type: 'paragraph', content: [{ type: 'text', text: 'Fictional.' }] }] }, riskRows: [], riskMatrix: null, relatedIds: [], attachments: [] };
+  const id = await service.create('jamie', content);
+  const session = randomUUID();
+  const draft = (await service.lock('jamie', id, session))!;
+  const submission = await service.submit('jamie', id, session, draft.revision, 'sam', 'Initial');
+  await service.review('sam', id, submission, 'approved', '');
+  await service.assign('jamie', id, ['riley', 'alex'], [], '2026-01-01');
+  // A scoped report (e.g. Riley's line manager) sees Riley only.
+  const scoped = (await requirements(db, 'alex', new Set(['riley']))).filter((r) => r.documentId === id);
+  assert.deepEqual(scoped.map((r) => r.memberId), ['riley']);
+  // The owner gets totals; a reader gets none.
+  const owner = await documentView(db, 'jamie', id);
+  assert.deepEqual(owner.readingTotals, { assigned: 2, completed: 0, overdue: 2 });
+  assert.equal((await documentView(db, 'riley', id)).readingTotals, null);
+  assert.equal(JSON.stringify(owner.readingTotals).includes('riley'), false);
+});

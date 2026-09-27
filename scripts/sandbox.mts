@@ -63,6 +63,8 @@ const extraRoles = [
   { name: "Duty manager", permissions: ["classes.cancel", "billing.notify", "refunds.review"], screens: ["duty", "cancellations", "calendar", "refunds"], home: "duty" },
   { name: "Swim school manager", permissions: ["courses.manage", "curriculum.manage", "students.manage", "enrolment.manage", "progression.override", "assessments.run", "attendance.markAny"], screens: ["calendar", "courses", "students", "programmes", "assessments", "awaiting-enrolment", "instructor"], home: "calendar" },
   { name: "Qualifications lead", permissions: ["qualifications.manage"], screens: ["staff"], home: "calendar" },
+  { name: "Docs manager", permissions: ["docs.manage"], screens: ["docs"], home: "calendar" },
+  { name: "Staff", permissions: ["docs.read"], screens: ["docs"], home: "calendar" },
 ];
 for (const [i, role] of extraRoles.entries()) roles[role.name] = (await prisma.staffRole.create({ data: { ...role, sortOrder: 10 + i } })).id;
 
@@ -95,6 +97,9 @@ for (const p of people) {
 // Maya runs Churchfield on duty; Liam records qualifications for Aquatics.
 await prisma.roleAssignment.create({ data: { orgId: ORG, userId: "sbx_maya", roleId: roles["Duty manager"], scopeKind: "site", scopeId: "club_churchfield", grantedById: "sbx_alex" } });
 await prisma.roleAssignment.create({ data: { orgId: ORG, userId: "sbx_liam", roleId: roles["Qualifications lead"], scopeKind: "department", scopeId: "dept_aquatics", grantedById: "sbx_alex" } });
+// Liam also runs Docs reading for Aquatics; everyone can read Docs.
+await prisma.roleAssignment.create({ data: { orgId: ORG, userId: "sbx_liam", roleId: roles["Docs manager"], scopeKind: "department", scopeId: "dept_aquatics", grantedById: "sbx_alex" } });
+for (const p of people) if (p.role !== "Admin") await prisma.roleAssignment.create({ data: { orgId: ORG, userId: p.id, roleId: roles["Staff"], scopeKind: "all", grantedById: "sbx_alex" } });
 const soon = new Date(); soon.setUTCDate(soon.getUTCDate() + 30);
 const past = new Date(); past.setUTCDate(past.getUTCDate() - 10);
 await prisma.qualification.createMany({ data: [

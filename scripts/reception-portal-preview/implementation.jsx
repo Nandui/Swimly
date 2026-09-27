@@ -11,6 +11,7 @@ import '@/app/docs/brand.css';
 import '@/app/reception-portal/reception.css';
 import { ReceptionPortal } from '@/components/portal/reception-portal';
 import { StaffPortal } from '@/components/portal/staff-portal';
+import { allModules } from '@/modules';
 import { ThemeProvider } from '@/components/theme-provider';
 import { TooltipProvider } from '@/components/shadcn/tooltip';
 import { Button } from '@/components/shadcn/button';
@@ -60,7 +61,7 @@ function Preview() {
     return () => document.removeEventListener('click', openRefunds);
   }, []);
   const name = params.has('long-name') ? 'Alexandra Example-Longsurname Example-Longsurname' : 'Alex Example';
-  if(location.pathname === '/modules') return <StaffPortal userName={name} refundsAllowed={access.refunds} docsAllowed={access.docs} aquaticsAllowed={access.aquatics} receptionAllowed={access.available} />;
+  if(location.pathname === '/modules') return <StaffPortal userName={name} modules={allModules().filter(m => (m.id !== 'refunds' || access.refunds) && (m.id !== 'docs' || access.docs) && (m.id !== 'swimly' || access.aquatics))} receptionAllowed={access.available} />;
   if(!['/','/reception-portal'].includes(location.pathname)) return <main className="space-y-4 p-6"><h1 className="text-2xl font-semibold">Preview destination</h1><p className="text-sm">{location.pathname}{location.search}</p><p className="text-sm text-ui-muted-foreground">The real app opens this existing workflow. This preview is isolated from customer data.</p><Button asChild className="min-h-11"><a href="/reception-portal">Back to Reception Portal</a></Button></main>;
   return <><p className="border-b border-ui-border bg-ui-background px-4 py-2 text-center text-xs text-ui-muted-foreground">Implementation preview · fictional staff · no live writes</p><ReceptionPortal userName={name} access={access} club={club} clubs={clubs} /></>;
 }

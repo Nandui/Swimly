@@ -160,14 +160,15 @@ when the role offers Swimmers, otherwise an accessible landing page. Reception
 is no longer offered as a screen or landing-page choice.
 
 The Turnfin staff portal at `/modules` is the signed-in front door, reached from the
-root address and after sign-in. It offers Aquatics and permitted Docs access,
-with Bookings marked Coming soon and no destination until available.
+root address and after sign-in. It offers the modules the registry in `src/modules` allows each person
+(Aquatics, Docs, Refunds, and later Training, HR and Rota). Bookings is not planned:
+Legend remains the booking and billing system.
 Opening Aquatics uses `/start` to resolve the role's accessible home in Swimly. The desk
 sidebar offers All modules; the Instructor workspace keeps its isolated navigation.
 The portal is for staff, separate from the parent app, and grants no new screen
 or action access. Turnfin is the overall portal brand and uses the owner's
-supplied fin logo; Aquatics, Docs, Refunds and Bookings are the portal's module names.
-The module catalogue and portal name live in `src/lib/modules.ts`.
+supplied fin logo; each module declares its own manifest in `src/modules`; the portal name lives in
+`src/lib/modules.ts`.
 
 The Turnfin Reception Portal at `/reception-portal` is the owner-approved default
 for receptionists, configured through the explicit Reception Portal role home.
@@ -296,8 +297,10 @@ These controls require the existing named permissions and write audit reasons.
 - Every mutation writes an audit row, scripts included.
 - Nothing refers to a role by name; the club may rename or delete any role.
 - Administrator access is defined by holding both staff and role management
-  permissions. It always includes every current and future screen and permission.
-  Other roles keep explicit grants. Instructor navigation and confirmed class
+  permissions. It includes every current and future screen and permission except
+  restricted ones (HR and performance), which only a superadmin holds or gives out.
+  Other roles keep explicit grants. Extra roles can be limited to a site, a
+  department or the holder's own team (see docs/platform-access.md). Instructor navigation and confirmed class
   start confirmation remain separate rules, including for administrators.
 - Swimmers can enrol, waitlist and move between classes at either site. Their
   identity, contacts and progress stay on one shared record. Site selection

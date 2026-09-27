@@ -49,7 +49,7 @@ export function Shell({
   initialCollapsed = false,
   children,
 }: {
-  workspace: Pick<Workspace, 'member' | 'localMode'> & { outstandingReading: number };
+  workspace: Pick<Workspace, 'member' | 'localMode' | 'canReport'> & { outstandingReading: number };
   initialCollapsed?: boolean;
   children: React.ReactNode;
 }) {
@@ -149,7 +149,7 @@ export function Shell({
         >
           <p className="workspace-nav-label">Workspace</p>
           {nav
-            .filter((item) => item.href !== '/docs/reports' || canManage(w.member))
+            .filter((item) => item.href !== '/docs/reports' || (w.canReport ?? canManage(w.member)))
             .map((item) => {
               const active =
                 item.href === '/docs'

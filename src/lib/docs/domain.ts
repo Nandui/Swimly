@@ -104,6 +104,7 @@ async function checkContent(tx: Sql, documentId: string, input: unknown) {
   }
   const owner = await actor(tx, c.ownerId);
   if (!canWrite(owner)) fail('Choose a document owner with authoring permission.');
+  await syncPlatformGroups(tx);
   for (const [kind, values] of [
     ['facility', c.facilityIds],
     ['team', c.teamIds],
@@ -446,6 +447,7 @@ export class DocumentService {
       if (document.archivedAt) fail('Archived documents cannot be assigned.');
       if (memberIds.length > 500 || teamIds.length > 100) fail('Too many assignment targets.');
       for (const person of memberIds) await actor(tx, person);
+      await syncPlatformGroups(tx);
       for (const team of teamIds)
         if (!(await one(tx, "SELECT id FROM groups WHERE id=$1 AND kind='team'", [team])))
           fail('Unknown team.');
@@ -509,10 +511,17 @@ export class DocumentService {
     return this.db.transaction(async tx => {
       admin(await actor(tx, who));
       const existing = await actor(tx, member.id);
+      await syncPlatformGroups(tx);
+      // Only Docs-only groups are stored here. Platform sites and departments
+      // come from the person's Staff profile and are ignored if sent back.
+      const kept: Record<'facility' | 'team', string[]> = { facility: [], team: [] };
       for (const [kind, values] of [['facility', member.facilityIds], ['team', member.teamIds]] as const)
-        for (const id of values)
-          if (!(await one(tx, 'SELECT id FROM groups WHERE id=$1 AND kind=$2', [id, kind]))) fail('Unknown document group.');
-      await tx.query('INSERT INTO member_profiles(id,facility_ids,team_ids) VALUES($1,$2,$3) ON CONFLICT(id) DO UPDATE SET facility_ids=$2,team_ids=$3', [member.id, [...new Set(member.facilityIds)], [...new Set(member.teamIds)]]);
+        for (const id of new Set(values)) {
+          const group = await one<{ source: string }>(tx, 'SELECT source FROM groups WHERE id=$1 AND kind=$2', [id, kind]);
+          if (!group) fail('Unknown document group.');
+          if (group!.source === 'docs') kept[kind].push(id);
+        }
+      await tx.query('INSERT INTO member_profiles(id,facility_ids,team_ids) VALUES($1,$2,$3) ON CONFLICT(id) DO UPDATE SET facility_ids=$2,team_ids=$3', [member.id, kept.facility, kept.team]);
       await reconcile(tx);
       await audit(tx, who, null, 'membership_updated', 'Updated document groups for ' + existing.name);
     });
@@ -522,6 +531,8 @@ export class DocumentService {
       admin(await actor(tx, who));
       if (!['facility', 'team'].includes(kind) || !name.trim() || name.length > 100)
         fail('Provide a valid group name.');
+      if (id && (await one<{ source: string }>(tx, 'SELECT source FROM groups WHERE id=$1', [id]))?.source === 'platform')
+        fail('Sites and departments are managed in Staff, under Organisation.');
       await tx.query(
         'INSERT INTO groups(id,kind,name) VALUES($1,$2,$3) ON CONFLICT(id) DO UPDATE SET name=excluded.name',
         [id || randomUUID(), kind, name.trim()],
@@ -578,15 +589,38 @@ export async function library(
     values,
   );
 }
-export async function requirements(db: Sql, who: string, all = false) {
+/** One organisation chart: mirror the platform's sites (facility) and
+ *  departments (team) into Docs groups with their platform ids, so documents,
+ *  filters and team assignments use the same structure as the rest of Turnfin.
+ *  A Docs-only group with the same name keeps its id (published versions refer
+ *  to it) and is renamed "… (Docs group)" to tell them apart. Idempotent. */
+export async function syncPlatformGroups(tx: Sql) {
+  const org = await tx.staff.organisation?.();
+  if (!org) return;
+  for (const [kind, list] of [['facility', org.sites], ['team', org.departments]] as const) {
+    for (const group of list) {
+      await tx.query("UPDATE groups SET name=name||' (Docs group)' WHERE kind=$1 AND name=$2 AND source='docs' AND id<>$3", [kind, group.name, group.id]);
+      await tx.query("INSERT INTO groups(id,kind,name,source) VALUES($1,$2,$3,'platform') ON CONFLICT(id) DO UPDATE SET name=excluded.name, source='platform' WHERE groups.name IS DISTINCT FROM excluded.name OR groups.source<>'platform'", [group.id, kind, group.name]);
+    }
+  }
+}
+/** Reading requirements.
+ *  - no scope: the caller's own reading (any Docs reader);
+ *  - `true` / 'all': everyone's reading, for Docs administrators only;
+ *  - a set of member ids: a scoped report (a line manager, department or site
+ *    lead), computed by the platform policy engine from `docs.manage` grants.
+ *  Everyone's reading is personal data about colleagues, so the widest view
+ *  needs organisation-wide Docs administration. */
+export async function requirements(db: Sql, who: string, scope: boolean | 'all' | ReadonlySet<string> = false) {
   const m = await actor(db, who);
-  // Everyone's reading is personal data about colleagues: Docs administrators only.
-  // (Scoped reports for line managers arrive with the platform policy engine.)
+  const all = scope === true || scope === 'all';
   if (all && !canManage(m)) fail('Reporting access requires Docs administration.', 403);
+  const ids = scope instanceof Set ? [...scope] : null;
+  const where = all ? '' : ids ? 'WHERE r.member_id = ANY($1)' : 'WHERE r.member_id=$1';
   return rows<Requirement>(
     db,
-    `SELECT r.*,a.created_at AS acknowledged_at,s.content->>'title' AS title,s.content->>'reference' AS reference,s.version,s.content->'facilityIds' AS facility_ids,s.content->'teamIds' AS team_ids FROM requirements r JOIN snapshots s ON s.id=r.version_id LEFT JOIN acknowledgements a ON a.version_id=r.version_id AND a.member_id=r.member_id ${all ? '' : 'WHERE r.member_id=$1'} ORDER BY s.created_at DESC`,
-    all ? [] : [who],
+    `SELECT r.*,a.created_at AS acknowledged_at,s.content->>'title' AS title,s.content->>'reference' AS reference,s.version,s.content->'facilityIds' AS facility_ids,s.content->'teamIds' AS team_ids FROM requirements r JOIN snapshots s ON s.id=r.version_id LEFT JOIN acknowledgements a ON a.version_id=r.version_id AND a.member_id=r.member_id ${where} ORDER BY s.created_at DESC`,
+    all ? [] : ids ? [ids] : [who],
   );
 }
 export async function documentView(db: Sql, who: string, id: string, versionId?: string) {
@@ -615,6 +649,16 @@ export async function documentView(db: Sql, who: string, id: string, versionId?:
   const assignments = canWrite(m)
     ? await one<AssignmentRule>(db, 'SELECT * FROM assignment_rules WHERE document_id=$1', [id])
     : undefined;
+  // The document's owner (and Docs administrators) see how its current version
+  // is being read: totals only, never who. Named records stay in reading reports.
+  const owner = (selected?.content.ownerId ?? d?.content.ownerId) === who;
+  const readingTotals = document.currentVersionId && canWrite(m) && (owner || canManage(m))
+    ? await one<{ assigned: number; completed: number; overdue: number }>(
+        db,
+        "SELECT count(*)::int AS assigned, count(*) FILTER (WHERE status='completed')::int AS completed, count(*) FILTER (WHERE status='outstanding' AND due_date IS NOT NULL AND due_date < CURRENT_DATE)::int AS overdue FROM requirements WHERE version_id=$1 AND status<>'cancelled'",
+        [document.currentVersionId],
+      )
+    : undefined;
   return {
     document,
     snapshots,
@@ -622,5 +666,6 @@ export async function documentView(db: Sql, who: string, id: string, versionId?:
     draft: d,
     acknowledgedAt: ack?.createdAt || null,
     assignments,
+    readingTotals: readingTotals ?? null,
   };
 }

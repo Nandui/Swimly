@@ -26,6 +26,7 @@ import { Reader } from '@/components/docs/reader';
 import { HistoryView } from '@/components/docs/history';
 import { DocumentBody, RiskAssessmentView, tableOfContents } from '@/components/docs/document-body';
 import { StaffPortal } from '@/components/portal/staff-portal';
+import { allModules } from '@/modules';
 
 async function boot() {
   const params = new URLSearchParams(location.search);
@@ -37,7 +38,7 @@ async function boot() {
   const data = await (await fetch('/__docs-data?'+new URLSearchParams({ who, path: location.pathname, query: location.search }))).json();
   const w = data.workspace, p = location.pathname;
   let screen;
-  if (p === '/modules') screen = <StaffPortal userName={w.member.name} docsAllowed />;
+  if (p === '/modules') screen = <StaffPortal userName={w.member.name} modules={allModules().filter(m => m.id === 'docs')} />;
   else if (p === '/docs/library') screen = <LibraryView workspace={w} archived={false} documents={w.documents}/>;
   else if (p === '/docs/work') screen = <WorkView workspace={w} drafts={data.drafts}/>;
   else if (p === '/docs/reports') screen = <ReportsView workspace={w} items={data.items} documents={w.documents}/>;

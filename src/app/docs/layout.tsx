@@ -1,6 +1,7 @@
 import { requireMember } from '@/lib/docs/auth';
 import { database } from '@/lib/docs/database';
 import { requirements } from '@/lib/docs/domain';
+import { readingReportScope } from '@/lib/docs/report-scope';
 import { Shell } from '@/components/docs/shell';
 import { cookies } from 'next/headers';
 import './docs.css';
@@ -19,6 +20,7 @@ export default async function AppLayout({ children }: { children: React.ReactNod
   const data = {
     member: m,
     localMode: false,
+    canReport: (await readingReportScope(m)) !== null,
     outstandingReading: (await requirements(await database(), m.id)).filter(
       (item) => item.status === 'outstanding',
     ).length,

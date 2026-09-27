@@ -63,6 +63,8 @@ type Props = {
   draft?: Draft;
   acknowledgedAt: string | null;
   assignments?: AssignmentRule;
+  /** Owner-only totals for the current version: never names. */
+  readingTotals?: { assigned: number; completed: number; overdue: number } | null;
   toc: { id: string; label: string; level: number }[];
   children: React.ReactNode;
 };
@@ -74,6 +76,7 @@ export function Reader({
   draft,
   acknowledgedAt,
   assignments,
+  readingTotals,
   toc,
   children,
 }: Props) {
@@ -426,6 +429,15 @@ export function Reader({
                 : 'This content becomes staff guidance only after independent approval.'}
             </p>
           </div>
+          {readingTotals && readingTotals.assigned > 0 && (
+            <div className="reader-note reading-totals" aria-label="Reading of the current version">
+              <strong>Reading this version</strong>
+              <p>
+                {readingTotals.completed} of {readingTotals.assigned} read
+                {readingTotals.overdue > 0 ? ` · ${readingTotals.overdue} overdue` : ''}
+              </p>
+            </div>
+          )}
           {isOwner && !d.archivedAt && (
             <div className="owner-actions">
               <Button

@@ -114,8 +114,8 @@ two and three columns on phone, tablet and desktop, with the existing Figtree,
 Neutral surfaces and blue action. Aquatics uses a pool-ladder line icon and a 44px
 Open action. All modules use matching Lucide icons and metadata-fed status
 badges, without inert links or buttons. Docs is available to staff with its
-screen and permission, and opens `/docs` using the shared login; Bookings remains
-Coming soon. The desk sidebar's All modules utility
+screen and permission, and opens `/docs` using the shared login. Bookings is not a
+module: Legend remains the booking and billing system. The desk sidebar's All modules utility
 returns here. Instructor navigation and teaching access remain unchanged.
 The supplied transparent Turnfin fin logo lives at `public/brand/turnfin.png`.
 Its original artwork is framed inside a 48px header slot to account for the

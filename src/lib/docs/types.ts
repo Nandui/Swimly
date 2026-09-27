@@ -15,7 +15,9 @@ export type Member = {
   facilityIds: string[];
   teamIds: string[];
 };
-export type Group = { id: string; name: string };
+/** A Docs group. `platform` groups mirror Turnfin sites (facility) and
+ *  departments (team) and are managed in Staff; `docs` groups are Docs-only. */
+export type Group = { id: string; name: string; source?: 'docs' | 'platform' };
 export type RiskMatrix = {
   configured: boolean;
   likelihood: { label: string; description: string }[];
@@ -150,6 +152,8 @@ export type Workspace = {
   documents: LibraryDocument[];
   requirements: Requirement[];
   localMode: boolean;
+  /** Whether this person may open reading reports (everyone, or a scoped set). */
+  canReport?: boolean;
 };
 export const canRead = (m: Member) => m.active && visibleScreens(m.screens, expandPermissions(m.permissions)).has('docs');
 export const canWrite = (m: Member) => canRead(m) && expandPermissions(m.permissions).has('docs.write');

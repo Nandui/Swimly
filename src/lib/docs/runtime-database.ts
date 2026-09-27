@@ -7,6 +7,8 @@ import type { Database, Sql } from './database';
 import { staffDirectory } from './staff-directory';
 import { postgresConnectionString } from '@/lib/postgres-connection';
 import { docsStorageConfig } from './storage-config';
+import { ALL_PERMISSIONS } from '@/lib/staff/permissions';
+import { ALL_SCREENS } from '@/lib/staff/screens';
 
 const globalDocs = globalThis as unknown as { docsPool?: Pool };
 function pool() {
@@ -23,7 +25,12 @@ function pool() {
 export const staffDatabase = cache(async (): Promise<Database> => {
   const session = await auth();
   if (!session?.user?.id) throw new DomainError('Please sign in again.', 401);
-  const access = { id: session.user.id, permissions: session.user.permissions, screens: session.user.screens };
+  // The effective session grants (a role preview narrows them). A superadmin
+  // holds everything; the directory record says the same, so the intersection
+  // Docs takes keeps it. Previews drop the flag, so they can only narrow.
+  const access = session.user.isSuperadmin
+    ? { id: session.user.id, permissions: [...ALL_PERMISSIONS], screens: [...ALL_SCREENS] }
+    : { id: session.user.id, permissions: session.user.permissions, screens: session.user.screens };
   function sql(client: PoolClient): Sql {
     return { access, staff: staffDirectory, query: async <T>(statement: string, params?: unknown[]) => {
       const result = await client.query<QueryResultRow>(statement, params);

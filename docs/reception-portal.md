@@ -8,7 +8,7 @@ Aquatics combines module entry with swimmer, class, assessment and sibling-time
 shortcuts. Add a swimmer opens the existing form. Follow-up links lead to awaiting
 enrolment, ready-to-move swimmers, Legend agreements and parent access requests.
 Docs appears only with Docs access; Refunds appears only with its screen and
-read permission. Bookings remains Coming soon. Refunds is a separate workspace
+read permission. Refunds is a separate workspace
 for requests across both sites, independent of the working-site preference.
 See [Refunds](refunds.md) for its reception-to-finance workflow and grants.
 
@@ -67,8 +67,7 @@ publishing; the local preview does not claim to verify them.
 ## Reception layout and theme
 
 A larger Aquatics task panel sits beside a separate Follow up panel. Permitted
-Docs and Refunds modules occupy the next row; planned Bookings stays a compact,
-non-interactive notice. Panels stack on phones and adapt when permissions hide
+Docs and Refunds modules occupy the next row. Panels stack on phones and adapt when permissions hide
 modules or shortcuts. No counts or operational records are invented.
 
 The route imports the existing Docs brand tokens. The theme also applies to

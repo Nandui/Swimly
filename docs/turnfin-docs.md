@@ -35,8 +35,17 @@ contributor to a revision are excluded from approving it, including administrato
 Account creation, passwords, permissions and deactivation remain in Turnfin Staff
 and Roles. Docs' staff directory edits only document group membership.
 
-Reading reports show personal data about colleagues, so they need `docs.manage`; authors see only
-their own reading. The browser never receives colleagues' permissions or screens: the workspace
+Reading reports show personal data about colleagues. Organisation-wide Docs administrators
+(`docs.manage` everywhere, or a superadmin) see everyone; a Docs manager role given for a site,
+a department or the holder's own team sees exactly those people, resolved by the platform policy
+engine (`src/lib/docs/report-scope.ts`). A document's owner sees totals for its current version
+(assigned, read, overdue) beside the document, never names. Everyone sees their own reading.
+
+Docs uses the platform organisation chart: Turnfin sites appear as facilities and departments as
+teams, with the platform's ids, and membership follows each person's Staff profile (Staff ›
+Organisation). They are marked as managed in Staff and cannot be renamed here. Older Docs-only groups
+remain editable (a same-named one is shown as "… (Docs group)") because published versions refer to
+them. Docs migrations are numbered files in `docs-database/migrations`, applied in order once each. The browser never receives colleagues' permissions or screens: the workspace
 sends each colleague as a `WorkspaceMember` (name, groups and resolved read/write/approve flags),
 with email and role added only for Docs administrators (`toWorkspaceMember` in
 `src/lib/docs/types.ts`, tested in `workspace-dto.test.ts`).

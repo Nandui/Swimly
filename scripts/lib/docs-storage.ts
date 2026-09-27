@@ -1,5 +1,5 @@
 import { createHash } from 'node:crypto';
-import { readFile } from 'node:fs/promises';
+import { readFile, readdir } from 'node:fs/promises';
 
 export interface MigrationConnection {
   query(sql: string, params?: unknown[]): Promise<{ rows: Record<string, unknown>[] }>;
@@ -10,20 +10,28 @@ export const docsTables = [
   'drafts', 'reviews', 'assignment_rules', 'requirements', 'acknowledgements',
   'audit_events', 'attachments', 'attachment_blobs',
 ] as const;
+/** Applies every `docs-database/migrations/NNN_name.sql` in order, once each,
+ *  verifying the checksum of those already applied. 001 also refuses to run
+ *  over an unmanaged schema, as it always has. */
 export async function migrateDocsSchema(db: MigrationConnection) {
-  const sql = (await readFile('docs-database/migrations/001_documents.sql', 'utf8')).replace(/\r\n/g, '\n');
-  const checksum = createHash('sha256').update(sql).digest('hex');
+  const files = (await readdir('docs-database/migrations')).filter((name) => /^\d{3}_.+\.sql$/.test(name)).sort();
   await db.query('BEGIN');
   try {
     await db.query('SELECT pg_advisory_xact_lock(20260918, 1201)');
     await db.query('CREATE SCHEMA IF NOT EXISTS turnfin_docs');
     await db.query('CREATE TABLE IF NOT EXISTS turnfin_docs.schema_migrations (id text PRIMARY KEY, checksum text NOT NULL, applied_at timestamptz NOT NULL DEFAULT now())');
-    const applied = (await db.query('SELECT checksum FROM turnfin_docs.schema_migrations WHERE id=$1', ['001_documents'])).rows[0];
-    if (applied && applied.checksum !== checksum) throw new Error('The applied Docs migration checksum differs from this build.');
-    if (!applied) {
-      if ((await db.query("SELECT to_regclass('turnfin_docs.documents') AS existing")).rows[0]?.existing) throw new Error('The destination already has an unmanaged Docs schema; refusing to overwrite it.');
+    for (const file of files) {
+      const id = file.replace(/\.sql$/, '');
+      const sql = (await readFile(`docs-database/migrations/${file}`, 'utf8')).replace(/\r\n/g, '\n');
+      const checksum = createHash('sha256').update(sql).digest('hex');
+      const applied = (await db.query('SELECT checksum FROM turnfin_docs.schema_migrations WHERE id=$1', [id])).rows[0];
+      if (applied && applied.checksum !== checksum) throw new Error(`The applied Docs migration ${id} differs from this build.`);
+      if (applied) continue;
+      if (id === '001_documents' && (await db.query("SELECT to_regclass('turnfin_docs.documents') AS existing")).rows[0]?.existing) {
+        throw new Error('The destination already has an unmanaged Docs schema; refusing to overwrite it.');
+      }
       if (db.exec) await db.exec(sql); else await db.query(sql);
-      await db.query('INSERT INTO turnfin_docs.schema_migrations(id,checksum) VALUES($1,$2)', ['001_documents', checksum]);
+      await db.query('INSERT INTO turnfin_docs.schema_migrations(id,checksum) VALUES($1,$2)', [id, checksum]);
     }
     await db.query('COMMIT');
   } catch (error) { await db.query('ROLLBACK'); throw error; }

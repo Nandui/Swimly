@@ -73,10 +73,20 @@ focus, 44px touch targets, both modes and layouts at 375, 768, 1024 and 1280.
 The shell owns the main landmark and page inset: 16px, increasing to 24px at
 1024px in the desk workspace. Instructor keeps 16px. Do not nest a page frame.
 
-Administrators always receive every current and future screen and permission.
-Administrator access means both staff.manage and roles.manage; resolve it through
-expandPermissions and visibleScreens, never a role name or the legacy enum.
-Restricted role grants, role previews and Instructor workspace boundaries still hold.
+Administrators receive every current and future screen and permission **except
+restricted ones** (HR, performance). Administrator access means both staff.manage and
+roles.manage; resolve it through expandPermissions and visibleScreens, never a role name
+or the legacy enum. A **superadmin** (the `User.isSuperadmin` flag, never a permission)
+holds everything including restricted keys; only a superadmin makes another, and only a
+superadmin creates, edits or assigns a restricted role. Role previews only remove access.
+
+A role says *what*; an assignment says *where or over whom*. Each person has a primary
+role (everywhere) plus optional `RoleAssignment`s scoped to everywhere, a site, a
+department or their own reports. The flat session permissions count an extra role only
+when it applies everywhere or at the current site. Code that reads people's records
+(training, HR, reports) must use the policy engine in `src/lib/policy` (`requireCapFor`,
+`subjectsFor`, `sitesFor`) with a resource, never the flat check. Workspaces, portal tiles
+and nav hiding are presentation, not security. See docs/platform-access.md.
 
 Prisma here is v7: the client is generated into `src/generated/prisma` and
 needs a driver adapter (`@prisma/adapter-pg`), and the datasource URL lives in

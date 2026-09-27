@@ -22,7 +22,7 @@ try {
     await page.evaluate(() => document.fonts.ready);
     assert.equal(await page.locator('h1').count(), 1);
     assert.equal(await page.getByRole('main').count(), 1);
-    assert.equal(await page.getByText('Coming soon', {exact: true}).count(), 2);
+    assert.equal(await page.getByText('Coming soon', {exact: true}).count(), 0);
     assert.equal(await page.getByRole('link', {name: /Docs|Bookings/}).count(), 0);
     assert.equal(await page.getByRole('link', {name: 'Open Aquatics'}).getAttribute('href'), '/start');
     assert(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth), `Overflow at ${width}/${theme}`);

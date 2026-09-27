@@ -305,7 +305,9 @@ export function AdminView({
                       <p>
                         {tab === 'facility'
                           ? 'Organise guidance around the places your staff work.'
-                          : 'Group staff to make required reading easier to assign.'}
+                          : 'Group staff to make required reading easier to assign.'}{' '}
+                        Sites and departments come from Staff, under Organisation, and so
+                        does who belongs to them.
                       </p>
                     </div>
                   </div>
@@ -319,10 +321,10 @@ export function AdminView({
                               (tab === 'facility' ? m.facilityIds : m.teamIds).includes(g.id),
                             ).length
                           }{' '}
-                          staff members
+                          staff members{g.source === 'platform' ? ' · managed in Staff' : ' · Docs-only group'}
                         </small>
                       </div>
-                      <Button
+                      {g.source !== 'platform' && <Button
                         variant="ghost"
                         className="icon-button"
                         aria-label={`Rename ${g.name}`}
@@ -332,7 +334,7 @@ export function AdminView({
                         }}
                       >
                         <Pencil size={17} />
-                      </Button>
+                      </Button>}
                     </div>
                   ))}
                 </section>
@@ -689,7 +691,7 @@ export function AdminView({
             }}
           >
             <DialogTitle>Document groups</DialogTitle>
-            <DialogDescription>Accounts and permissions are managed in Turnfin Staff and Roles. These groups control document assignments.</DialogDescription>
+            <DialogDescription>Accounts, permissions, sites and departments are managed in Turnfin Staff. Here you can add Docs-only groups; site and department membership follows their Staff profile.</DialogDescription>
             <p>{editing?.name} · {editing?.email}</p>
             {editing && (
               <>
@@ -698,6 +700,7 @@ export function AdminView({
                   {w.facilities.map((g) => (
                     <Label className="checkbox-label" key={g.id}>
                       <Checkbox
+                        disabled={g.source === 'platform'}
                         checked={editing.facilityIds.includes(g.id)}
                         onCheckedChange={(checked) =>
                           setEditing({
@@ -709,7 +712,7 @@ export function AdminView({
                           })
                         }
                       />
-                      {g.name}
+                      {g.name}{g.source === 'platform' ? ' (from Staff)' : ''}
                     </Label>
                   ))}
                 </fieldset>
@@ -718,6 +721,7 @@ export function AdminView({
                   {w.teams.map((g) => (
                     <Label className="checkbox-label" key={g.id}>
                       <Checkbox
+                        disabled={g.source === 'platform'}
                         checked={editing.teamIds.includes(g.id)}
                         onCheckedChange={(checked) =>
                           setEditing({
@@ -729,7 +733,7 @@ export function AdminView({
                           })
                         }
                       />
-                      {g.name}
+                      {g.name}{g.source === 'platform' ? ' (from Staff)' : ''}
                     </Label>
                   ))}
                 </fieldset>

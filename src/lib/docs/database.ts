@@ -1,9 +1,15 @@
 import type { Member } from './types';
 
-export type StaffIdentity = Omit<Member, 'facilityIds' | 'teamIds'>;
+/** A person from the Turnfin staff directory. `siteIds`/`departmentIds` are
+ *  their place in the one platform organisation chart (main site, departments
+ *  and the sites those departments belong to). */
+export type StaffIdentity = Omit<Member, 'facilityIds' | 'teamIds'> & { siteIds?: string[]; departmentIds?: string[] };
+export type PlatformGroups = { sites: { id: string; name: string }[]; departments: { id: string; name: string }[] };
 export interface StaffDirectory {
   find(id: string): Promise<StaffIdentity | null>;
   list(): Promise<StaffIdentity[]>;
+  /** The platform's sites and departments, mirrored into Docs groups. */
+  organisation?(): Promise<PlatformGroups>;
 }
 /** Docs SQL is isolated from the authoritative Turnfin staff directory. */
 export interface Sql {
@@ -16,17 +22,23 @@ export async function findMember(db: Sql, id: string): Promise<Member | undefine
   const identity = await db.staff.find(id);
   if (!identity) return undefined;
   const profile = await one<Membership>(db, 'SELECT * FROM member_profiles WHERE id=$1', [id]);
-  return { ...identity, facilityIds: profile?.facilityIds ?? [], teamIds: profile?.teamIds ?? [] };
+  return merge(identity, profile);
 }
 export async function listMembers(db: Sql): Promise<Member[]> {
   const [identities, profiles] = await Promise.all([
     db.staff.list(), rows<Membership>(db, 'SELECT * FROM member_profiles'),
   ]);
   const membership = new Map(profiles.map(profile => [profile.id, profile]));
-  return identities.map(identity => ({ ...identity,
-    facilityIds: membership.get(identity.id)?.facilityIds ?? [],
-    teamIds: membership.get(identity.id)?.teamIds ?? [],
-  })).sort((a, b) => a.name.localeCompare(b.name));
+  return identities.map(identity => merge(identity, membership.get(identity.id))).sort((a, b) => a.name.localeCompare(b.name));
+}
+/** Docs-only group membership (member_profiles) plus the person's platform
+ *  sites and departments, which are managed in Staff, never here. */
+function merge(identity: StaffIdentity, profile?: Membership): Member {
+  const { siteIds = [], departmentIds = [], ...rest } = identity;
+  return { ...rest,
+    facilityIds: [...new Set([...(profile?.facilityIds ?? []), ...siteIds])],
+    teamIds: [...new Set([...(profile?.teamIds ?? []), ...departmentIds])],
+  };
 }
 export interface Database extends Sql {
   transaction<T>(fn: (tx: Sql) => Promise<T>): Promise<T>;
