@@ -7,9 +7,10 @@ import { fail, ok, onUniqueViolation, type ActionResult } from "@/lib/action-res
 import { logAudit } from "@/lib/audit";
 import { requirePermission } from "@/lib/authz";
 import { prisma } from "@/lib/prisma";
-import { guardKeyholders, withKeyholderLock } from "@/lib/staff/keyholders";
+import { guardKeyholders, guardSuperadmins, withKeyholderLock } from "@/lib/staff/keyholders";
 import { legacyRoleFor } from "@/lib/staff/permissions";
 import { BCRYPT_ROUNDS, passwordSchema } from "@/lib/staff/passwords";
+import { RESTRICTED_ROLE_REFUSAL } from "@/lib/staff/restricted";
 
 /** Account changes require staff.manage. Password values never enter an audit
  *  row; role changes and deactivation preserve the last reachable keyholder. */
@@ -30,8 +31,9 @@ export async function createPerson(input: PersonInput & { password: string }): P
   // Hash before holding a pool connection or a lock.
   const passwordHash = await bcrypt.hash(password.data, BCRYPT_ROUNDS);
   const result = await onUniqueViolation(() => withKeyholderLock(async (tx) => {
-    const role = await tx.staffRole.findUnique({ where: { id: staffRoleId }, select: { id: true, name: true, permissions: true } });
+    const role = await tx.staffRole.findUnique({ where: { id: staffRoleId }, select: { id: true, name: true, permissions: true, restricted: true } });
     if (!role) return fail("That role no longer exists.");
+    if (role.restricted && !session.user.isSuperadmin) return fail(RESTRICTED_ROLE_REFUSAL);
     const created = await tx.user.create({
       data: { name, email, staffRoleId: role.id, role: legacyRoleFor(role.permissions), passwordHash },
       select: { id: true, name: true, email: true },
@@ -55,10 +57,11 @@ export async function updatePerson(id: string, input: PersonInput): Promise<Acti
   const result = await onUniqueViolation(() => withKeyholderLock(async (tx) => {
     const [existing, role] = await Promise.all([
       tx.user.findUnique({ where: { id }, select: { id: true, name: true, email: true, staffRoleId: true, staffRole: { select: { name: true } } } }),
-      tx.staffRole.findUnique({ where: { id: staffRoleId }, select: { id: true, name: true, permissions: true } }),
+      tx.staffRole.findUnique({ where: { id: staffRoleId }, select: { id: true, name: true, permissions: true, restricted: true } }),
     ]);
     if (!existing) return fail("That account no longer exists.");
     if (!role) return fail("That role no longer exists.");
+    if (role.restricted && existing.staffRoleId !== role.id && !session.user.isSuperadmin) return fail(RESTRICTED_ROLE_REFUSAL);
     const changes: string[] = [];
     if (existing.name !== name) changes.push(`name ${existing.name} → ${name}`);
     if (existing.email !== email) changes.push(`email ${existing.email} → ${email}`);
@@ -91,7 +94,8 @@ export async function setPersonActive(id: string, active: boolean): Promise<Acti
     if (!existing) return fail("That account no longer exists.");
     if (existing.isActive === active) return ok();
     if (!active) {
-      const refusal = await guardKeyholders({ kind: "deactivate", userId: id }, tx);
+      const refusal = await guardKeyholders({ kind: "deactivate", userId: id }, tx)
+        ?? await guardSuperadmins({ kind: "deactivate", userId: id }, tx);
       if (refusal) return fail(refusal);
     }
     await tx.user.update({ where: { id }, data: { isActive: active } });

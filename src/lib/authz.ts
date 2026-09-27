@@ -51,8 +51,13 @@ export async function requireSession() {
 /** Expanded on every call rather than cached on the session, because the
  *  session is rebuilt per request anyway and a stale permission set is exactly
  *  the bug this whole file exists to avoid. The lists are single digits long. */
+/** The flat view: what this person may do at the site they are working in.
+ *  Superadmins hold everything, restricted capabilities included. Code that
+ *  reads people's records should ask the policy engine instead
+ *  (`src/lib/policy/session.ts`), which also applies department and
+ *  line-manager scopes against the specific person. */
 export function permissionsOf(session: Session): Set<PermissionKey> {
-  return expandPermissions(session.user.permissions ?? []);
+  return expandPermissions(session.user.permissions ?? [], { superadmin: session.user.isSuperadmin === true });
 }
 
 export function can(session: Session, permission: PermissionKey): boolean {

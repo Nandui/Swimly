@@ -16,6 +16,7 @@ function fixture() {
     "@/lib/auth-cookies": { authCookies: () => undefined },
     "@/lib/dev-sign-in": { devSignInAllowed: () => false },
     "@/lib/staff/preview": { mayPreview: (permissions: string[]) => permissions.includes("roles.manage"), previewedRole: async () => preview },
+    "@/lib/clubs/current": { getCurrentClub: async () => ({ club: { id: "club-1", name: "Synthetic site" }, clubs: [] }) },
   });
   return { auth, account, preview: (role: typeof preview) => { preview = role; } };
 }

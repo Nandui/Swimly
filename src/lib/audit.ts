@@ -35,7 +35,8 @@ type AuditInput = {
 
 /** Rows that belong to no club, so their audit entries belong to none either
  *  and show up in every club's activity. */
-const SHARED_ENTITIES = new Set(["User", "StaffRole", "Student", "Programme", "Level", "Competency", "AssessmentType"]);
+// Organisation-level records (People core) belong to no single site either.
+const SHARED_ENTITIES = new Set(["User", "StaffRole", "Student", "Programme", "Level", "Competency", "AssessmentType", "Organisation", "Department", "RoleAssignment", "QualificationType", "Qualification"]);
 
 /** @param db Pass the transaction client when the audit row must live or die
  *  with the write it describes. The default writes on its own connection,

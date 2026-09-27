@@ -161,13 +161,17 @@ export function cleanScreens(input: readonly string[]): ScreenKey[] {
   return ALL_SCREENS.filter((key) => held.has(key));
 }
 
-/** Administrators receive the whole catalogue, including future screens.
+/** Administrators receive the whole catalogue, including future screens —
+ *  except a screen whose required permission is restricted (HR), which follows
+ *  the permission: administrators do not hold it, superadmins do.
  *  Other roles need an explicit screen grant and its required permission. */
 export function visibleScreens(
   screens: readonly string[],
   permissions: Set<PermissionKey>
 ): Set<ScreenKey> {
-  if (hasAdministratorAccess(permissions)) return new Set(ALL_SCREENS);
+  if (hasAdministratorAccess(permissions)) {
+    return new Set(SCREENS.filter((screen) => !("requires" in screen && screen.requires) || permissions.has(screen.requires)).map((screen) => screen.key));
+  }
   const out = new Set<ScreenKey>();
   const held = new Set(cleanScreens(screens));
   for (const screen of SCREENS) {

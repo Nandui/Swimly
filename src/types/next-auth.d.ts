@@ -23,6 +23,23 @@ declare module "next-auth" {
       home: string;
       /** `SCREENS` keys: which pages their role offers at all. */
       screens: string[];
+      /** The operator this person works for (the organisation boundary). */
+      orgId?: string | null;
+      /** Sees everything in the organisation, restricted (HR) data included. */
+      isSuperadmin?: boolean;
+      /** Additional roles and where each applies, for the policy engine.
+       *  `permissions`/`screens` above already include the ones that apply
+       *  everywhere or at the current site. */
+      grants?: { roleName: string; permissions: string[]; screens: string[]; scopeKind: string; scopeId: string }[];
+      /** The primary role's own keys, which apply everywhere. */
+      primaryPermissions?: string[];
+      primaryScreens?: string[];
+      /** How this session proved who it is: a password sign-in, a PIN quick
+       *  switch on a shared device, or the development bypass; and when. */
+      authMethod?: "password" | "pin" | "dev";
+      authAt?: number | null;
+      /** Set on a shared device's quick-switch sessions. */
+      sharedDevice?: boolean;
       /** Set on a dev build while seeing the app as another role: the role
        *  being worn, and what the real account actually holds. */
       preview?: {

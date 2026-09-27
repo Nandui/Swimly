@@ -124,10 +124,14 @@ model StaffRole {
   /// migration both name them, and a fresh database has to land somewhere.
   isSystem    Boolean  @default(false)
   sortOrder   Int      @default(0)
+  /// A role holding a restricted capability (HR, performance). Only a
+  /// superadmin may edit it or assign it; administrators never inherit it.
+  restricted  Boolean  @default(false)
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
 
-  users User[]
+  users       User[]
+  assignments RoleAssignment[]
 
   @@index([sortOrder])
 }
@@ -151,6 +155,29 @@ model User {
   createdAt    DateTime @default(now())
   updatedAt    DateTime @updatedAt
 
+  // --- People core (platform access model). All nullable/defaulted: additive. ---
+  /// The operator this person works for. Backfilled to LeisureWorld.
+  orgId         String?
+  /// Line manager: powers the "direct reports" scope. Cycles are refused on write.
+  managerId     String?
+  jobTitle      String?
+  startedOn     DateTime? @db.Date
+  primaryClubId String?
+  /// Sees everything in the organisation, including restricted (HR) data. A
+  /// flag, not a permission, so no role editor can hand it out.
+  isSuperadmin  Boolean   @default(false)
+  /// Personal PIN for quick switching on shared devices (bcrypt). Never a password.
+  pinHash       String?
+  /// When the password was last changed or verified for step-up.
+  passwordAt    DateTime?
+
+  organisation   Organisation?    @relation(fields: [orgId], references: [id], onDelete: Restrict)
+  manager        User?            @relation("LineManager", fields: [managerId], references: [id], onDelete: SetNull)
+  reports        User[]           @relation("LineManager")
+  departments    UserDepartment[]
+  roleAssignments RoleAssignment[] @relation("AssignedRole")
+  qualifications Qualification[]  @relation("QualificationHolder")
+
   /// `Restrict`, not `SetNull`: an account with no role has no permissions and
   /// cannot sign in, so deleting a role out from under one of its holders
   /// would silently lock them out. The delete is refused and the admin has to
@@ -170,6 +197,127 @@ model User {
 
   @@index([role])
   @@index([staffRoleId])
+  @@index([managerId])
+  @@index([orgId])
+}
+
+// ---------------------------------------------------------------------------
+// People core — one organisation chart and person record for every module
+// ---------------------------------------------------------------------------
+
+/// The operator. LeisureWorld today; the boundary that lets Turnfin be sold
+/// to other operators later without a rewrite. Every new table carries orgId.
+model Organisation {
+  id        String   @id @default(cuid())
+  name      String
+  slug      String   @unique
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  clubs              Club[]
+  users              User[]
+  departments        Department[]
+  roleAssignments    RoleAssignment[]
+  qualificationTypes QualificationType[]
+  qualifications     Qualification[]
+}
+
+/// A team such as Aquatics, Reception or Maintenance. Optionally tied to one
+/// site; archived rather than deleted so assignments and history stay readable.
+model Department {
+  id         String    @id @default(cuid())
+  orgId      String
+  clubId     String?
+  name       String
+  sortOrder  Int       @default(0)
+  archivedAt DateTime?
+  createdAt  DateTime  @default(now())
+  updatedAt  DateTime  @updatedAt
+
+  organisation Organisation     @relation(fields: [orgId], references: [id], onDelete: Restrict)
+  club         Club?            @relation(fields: [clubId], references: [id], onDelete: SetNull)
+  members      UserDepartment[]
+
+  @@unique([orgId, name])
+  @@index([orgId, sortOrder])
+}
+
+model UserDepartment {
+  userId       String
+  departmentId String
+  isPrimary    Boolean  @default(false)
+  createdAt    DateTime @default(now())
+
+  user       User       @relation(fields: [userId], references: [id], onDelete: Cascade)
+  department Department @relation(fields: [departmentId], references: [id], onDelete: Restrict)
+
+  @@id([userId, departmentId])
+  @@index([departmentId])
+}
+
+/// An additional role for a person, with where it applies. The primary role
+/// (`User.staffRoleId`) always applies everywhere; these add access on top.
+/// `scopeKind`: "all" | "site" (scopeId = Club) | "department" (scopeId =
+/// Department) | "reports" (the holder's own direct and indirect reports).
+/// `scopeId` is "" when the kind needs none, so the unique key holds.
+model RoleAssignment {
+  id          String   @id @default(cuid())
+  orgId       String
+  userId      String
+  roleId      String
+  scopeKind   String   @default("all")
+  scopeId     String   @default("")
+  grantedById String?
+  createdAt   DateTime @default(now())
+
+  organisation Organisation @relation(fields: [orgId], references: [id], onDelete: Restrict)
+  user         User         @relation("AssignedRole", fields: [userId], references: [id], onDelete: Cascade)
+  role         StaffRole    @relation(fields: [roleId], references: [id], onDelete: Restrict)
+
+  @@unique([userId, roleId, scopeKind, scopeId])
+  @@index([roleId])
+}
+
+/// A kind of certificate: NPLQ, First Aid, Swim Teacher licence. `validityMonths`
+/// suggests an expiry date when a qualification is recorded.
+model QualificationType {
+  id             String    @id @default(cuid())
+  orgId          String
+  name           String
+  validityMonths Int?
+  archivedAt     DateTime?
+  createdAt      DateTime  @default(now())
+  updatedAt      DateTime  @updatedAt
+
+  organisation   Organisation    @relation(fields: [orgId], references: [id], onDelete: Restrict)
+  qualifications Qualification[]
+
+  @@unique([orgId, name])
+}
+
+/// A person's certificate. Written by Training (courses, trainer sign-off) or
+/// recorded directly; read by Rota (expiry warnings) and the My hub.
+model Qualification {
+  id           String    @id @default(cuid())
+  orgId        String
+  userId       String
+  typeId       String
+  issuedOn     DateTime  @db.Date
+  expiresOn    DateTime? @db.Date
+  reference    String    @default("")
+  note         String    @default("")
+  verifiedById String?
+  verifiedAt   DateTime?
+  revokedAt    DateTime?
+  createdAt    DateTime  @default(now())
+  updatedAt    DateTime  @updatedAt
+
+  organisation Organisation      @relation(fields: [orgId], references: [id], onDelete: Restrict)
+  user         User              @relation("QualificationHolder", fields: [userId], references: [id], onDelete: Cascade)
+  type         QualificationType @relation(fields: [typeId], references: [id], onDelete: Restrict)
+
+  @@index([userId])
+  @@index([orgId, expiresOn])
 }
 
 model AuditLog {
@@ -219,11 +367,15 @@ model Club {
   archivedAt DateTime?
   createdAt  DateTime  @default(now())
   updatedAt  DateTime  @updatedAt
+  /// The operator this site belongs to. Backfilled to LeisureWorld.
+  orgId      String?
 
+  organisation       Organisation?       @relation(fields: [orgId], references: [id], onDelete: Restrict)
   programmes         Programme[]
   students           Student[]
   courses            Course[]
   assessmentSessions AssessmentSession[]
+  departments        Department[]
 
   @@index([sortOrder])
 }

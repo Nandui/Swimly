@@ -32,6 +32,7 @@ import {
 import { expandPermissions } from "@/lib/staff/permissions";
 import { listRolesForPicker, type RoleOption } from "@/lib/staff/data/roles";
 import { listPeopleForDisplay, type Person } from "@/lib/staff/data/staff";
+import { listPeopleOrg } from "@/lib/people/data";
 import { AppIcon } from "@/components/ui-kit/app-icon";
 
 export const metadata: Metadata = { title: "Staff" };
@@ -39,9 +40,10 @@ export const metadata: Metadata = { title: "Staff" };
 export default async function StaffPage() {
   const session = await screenPage("staff", "staff.manage");
 
-  const [people, roles] = await Promise.all([
+  const [people, roles, org] = await Promise.all([
     listPeopleForDisplay(),
     listRolesForPicker(),
+    listPeopleOrg(),
   ]);
   const active = people.filter((p) => p.isActive);
   const inactive = people.filter((p) => !p.isActive);
@@ -56,6 +58,12 @@ export default async function StaffPage() {
         description="Who can sign in, and what each of them is allowed to change."
         actions={
           <>
+            <Button variant="outline" asChild={true}>
+              <UiLink href="/staff/organisation">
+                {<AppIcon name="building" size="sm" />}
+                {"Organisation"}
+              </UiLink>
+            </Button>
             {can(session, "roles.manage") ? (
               <Button variant="outline" asChild={true}>
                 <UiLink href="/roles">
@@ -89,6 +97,7 @@ export default async function StaffPage() {
         <PeopleTable
           people={active}
           roles={roles}
+          org={org}
           currentUserId={session.user.id}
         />
       )}
@@ -103,6 +112,7 @@ export default async function StaffPage() {
           <PeopleTable
             people={inactive}
             roles={roles}
+            org={org}
             currentUserId={session.user.id}
           />
         </section>
@@ -114,10 +124,12 @@ export default async function StaffPage() {
 function PeopleTable({
   people,
   roles,
+  org,
   currentUserId,
 }: {
   people: Person[];
   roles: RoleOption[];
+  org: Awaited<ReturnType<typeof listPeopleOrg>>;
   currentUserId?: string;
 }) {
   return (
@@ -145,9 +157,9 @@ function PeopleTable({
             <TableRow key={person.id}>
               <TableCell>
                 <div className="min-w-0 flex gap-2 items-center flex-wrap">
-                  <span className="text-sm text-ui-foreground font-medium">
+                  <UiLink href={`/staff/${person.id}`} className="text-sm text-ui-foreground font-medium underline-offset-4 hover:underline inline-flex min-h-11 items-center">
                     {person.name}
-                  </span>
+                  </UiLink>
                   {person.id === currentUserId ? (
                     <span className="text-sm text-ui-muted-foreground">
                       (you)
@@ -162,6 +174,11 @@ function PeopleTable({
                 <span className="text-sm text-ui-muted-foreground block [overflow-wrap:anywhere]">
                   {person.email}
                 </span>
+                {(() => {
+                  const o = org.get(person.id);
+                  const line = [o?.jobTitle, o?.departments.join(", "), o?.manager ? `reports to ${o.manager}` : null, o?.extraRoles ? `+${o.extraRoles} ${o.extraRoles === 1 ? "role" : "roles"}` : null].filter(Boolean).join(" · ");
+                  return line ? <span className="text-sm text-ui-muted-foreground block">{line}</span> : null;
+                })()}
                 <span
                   className={cn(
                     "text-sm text-ui-muted-foreground block",

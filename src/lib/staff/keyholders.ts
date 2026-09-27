@@ -40,12 +40,15 @@ type Db = Prisma.TransactionClient | typeof prisma;
 export type Simulation =
   | { kind: "rolePermissions"; roleId: string; permissions: string[]; screens?: string[] }
   | { kind: "userRole"; userId: string; roleId: string }
-  | { kind: "deactivate"; userId: string };
+  | { kind: "deactivate"; userId: string }
+  /** Removing an additional role. Only org-wide assignments can carry keys. */
+  | { kind: "removeAssignment"; assignmentId: string }
+  | { kind: "superadmin"; userId: string; value: boolean };
 
 /** Load once for all key checks, and expand each shared role once. */
 async function simulatedHolders(sim: Simulation, db: Db) {
   const [users, roles] = await Promise.all([
-    db.user.findMany({ where: { isActive: true }, select: { id: true, staffRoleId: true } }),
+    db.user.findMany({ where: { isActive: true }, select: { id: true, staffRoleId: true, roleAssignments: { where: { scopeKind: "all" }, select: { id: true, roleId: true } } } }),
     db.staffRole.findMany({ select: { id: true, permissions: true, screens: true } }),
   ]);
 
@@ -68,8 +71,15 @@ async function simulatedHolders(sim: Simulation, db: Db) {
     if (sim.kind === "deactivate" && user.id === sim.userId) return [];
     const roleId =
       sim.kind === "userRole" && user.id === sim.userId ? sim.roleId : user.staffRoleId;
-    const access = roleId ? accessByRole.get(roleId) : undefined;
-    return access ? [access] : [];
+    // The primary role plus every org-wide additional role, as one holder.
+    const roleIds = [roleId, ...(user.roleAssignments ?? [])
+      .filter((a) => !(sim.kind === "removeAssignment" && a.id === sim.assignmentId))
+      .map((a) => a.roleId)].filter((id): id is string => !!id);
+    const held = roleIds.map((id) => accessByRole.get(id)).filter((a) => !!a);
+    if (held.length === 0) return [];
+    const permissions = expandPermissions(held.flatMap((a) => [...a!.permissions]));
+    const screens = new Set(held.flatMap((a) => [...a!.screens]));
+    return [{ permissions, screens }];
   });
 }
 
@@ -112,4 +122,20 @@ export async function withKeyholderLock<T>(
     await tx.$queryRaw`SELECT "id" FROM "User" WHERE "isActive" = true ORDER BY "id" FOR UPDATE`;
     return run(tx);
   });
+}
+
+/** The last active superadmin cannot be removed or deactivated: restricted
+ *  data (HR) would then be reachable by nobody, and only a superadmin can
+ *  make another. Before the first superadmin exists there is nothing to keep. */
+export async function guardSuperadmins(sim: Simulation, db: Db = prisma): Promise<string | null> {
+  const current = await db.user.findMany({ where: { isActive: true, isSuperadmin: true }, select: { id: true } });
+  if (current.length === 0) return null;
+  const remaining = current.filter((user) => {
+    if (sim.kind === "deactivate" && sim.userId === user.id) return false;
+    if (sim.kind === "superadmin" && sim.userId === user.id && !sim.value) return false;
+    return true;
+  });
+  return remaining.length === 0
+    ? "That would leave no active superadmin, and only a superadmin can make another. Make someone else a superadmin first."
+    : null;
 }

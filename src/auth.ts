@@ -7,6 +7,8 @@ import { devSignInAllowed, getDevAdmin } from "@/lib/dev-sign-in";
 import { prisma } from "@/lib/prisma";
 import { mayPreview, previewedRole } from "@/lib/staff/preview";
 import { ADMINISTRATOR_PERMISSIONS } from "@/lib/staff/permissions";
+import { getCurrentClub } from "@/lib/clubs/current";
+import { ACCOUNT_SELECT, sessionUserFor } from "@/lib/staff/session-user";
 
 /** Built as a function so the dev provider is **absent** from the array in
  *  production rather than present-and-refusing. There is then no endpoint to
@@ -96,46 +98,8 @@ const {
 
 export { handlers, signIn, signOut };
 
-const ACCOUNT_SELECT = {
-  id: true,
-  name: true,
-  email: true,
-  isActive: true,
-  staffRole: {
-    select: { id: true, name: true, permissions: true, home: true, screens: true },
-  },
-} as const;
-
-type Account = {
-  id: string;
-  name: string;
-  email: string;
-  isActive: boolean;
-  staffRole: {
-    id: string;
-    name: string;
-    permissions: string[];
-    home: string;
-    screens: string[];
-  } | null;
-};
-
-/** An account with no role has no permissions and no way to be given any
- *  without an admin, so it reads as signed out rather than as a person who can
- *  see the shell and do nothing in it. The column is nullable only because it
- *  had to be added to a table that already had rows. */
-function sessionUserFor(account: Account) {
-  if (!account.staffRole) return null;
-  return {
-    id: account.id,
-    name: account.name,
-    email: account.email,
-    roleId: account.staffRole.id,
-    roleName: account.staffRole.name,
-    permissions: account.staffRole.permissions,
-    home: account.staffRole.home,
-    screens: account.staffRole.screens,
-  };
+async function currentSiteForSession(): Promise<string | null> {
+  try { return (await getCurrentClub()).club.id; } catch { return null; }
 }
 
 /** The session, or null.
@@ -173,7 +137,7 @@ export const auth = cache(async function auth(): Promise<Session | null> {
     // access does not.
     if (!current?.isActive) return null;
 
-    const user = sessionUserFor(current);
+    const user = sessionUserFor(current, await currentSiteForSession());
     if (!user) return null;
 
     return { ...session, user: { ...session.user, ...(await wearPreview(user)) } };
@@ -190,7 +154,7 @@ export const auth = cache(async function auth(): Promise<Session | null> {
   });
   if (!admin) return null;
 
-  const user = sessionUserFor(admin);
+  const user = sessionUserFor(admin, await currentSiteForSession());
   if (!user) return null;
 
   return {
@@ -210,6 +174,8 @@ async function wearPreview(user: SessionUser): Promise<SessionUser> {
   if (!mayPreview(user.permissions)) return user;
   const role = await previewedRole();
   if (!role) return user;
+  // A preview can only take access away: the worn role replaces the primary
+  // role, and the superadmin flag and every additional assignment are dropped.
   return {
     ...user,
     roleId: role.id,
@@ -217,6 +183,10 @@ async function wearPreview(user: SessionUser): Promise<SessionUser> {
     permissions: role.permissions,
     home: role.home,
     screens: role.screens,
+    isSuperadmin: false,
+    grants: [],
+    primaryPermissions: role.permissions,
+    primaryScreens: role.screens,
     preview: {
       roleId: role.id,
       roleName: role.name,

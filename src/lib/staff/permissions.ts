@@ -141,6 +141,12 @@ export const PERMISSIONS = [
       "Add a site, rename one, retire one. Which club a person is working in is theirs to switch; this is about which clubs exist.",
   },
   {
+    key: "qualifications.manage",
+    group: "People",
+    label: "Record qualifications",
+    description: "Record, verify and revoke staff qualifications such as NPLQ and first aid for the people this role covers (everyone, a site, a department or their direct reports).",
+  },
+  {
     key: "activity.view",
     group: "Administration",
     label: "Read the activity log",
@@ -161,6 +167,7 @@ export const PERMISSION_GROUP_ORDER: PermissionGroup[] = [
   "The rules",
   "Docs",
   "Refunds",
+  "People",
   "Administration",
 ];
 
@@ -192,12 +199,34 @@ const IMPLIES: Partial<Record<PermissionKey, PermissionKey[]>> = {
   "progression.override": ["progression.complete", "progression.assess"],
 };
 
+/** Restricted capabilities (HR, performance): never inherited by
+ *  administrators. They reach a person only through a role a superadmin
+ *  assigned, or through the superadmin flag itself. */
+export function isRestrictedPermission(key: string): boolean {
+  const meta = PERMISSIONS.find((p) => p.key === key);
+  return !!meta && "restricted" in meta && meta.restricted === true;
+}
+
 /** Expands stored keys into everything they actually grant, dropping any that
- *  are no longer in the catalogue. */
-export function expandPermissions(stored: readonly string[]): Set<PermissionKey> {
+ *  are no longer in the catalogue.
+ *
+ *  Three tiers: a **superadmin** holds every key, restricted ones included; an
+ *  **administrator** (staff.manage + roles.manage) holds every key that is not
+ *  restricted, including ones added to the catalogue later; everyone else holds
+ *  exactly what their roles grant, with implications. */
+export function expandPermissions(
+  stored: readonly string[],
+  options: { superadmin?: boolean } = {},
+): Set<PermissionKey> {
+  if (options.superadmin) return new Set(ALL_PERMISSIONS);
   // Existing administrators inherit new capabilities without editing a role
   // whenever the catalogue grows. Demotion takes effect on the next request.
-  if (hasAdministratorAccess(stored)) return new Set(ALL_PERMISSIONS);
+  // Restricted keys are held only if a role explicitly grants them.
+  if (hasAdministratorAccess(stored)) {
+    const out = new Set(ALL_PERMISSIONS.filter((key) => !isRestrictedPermission(key)));
+    for (const key of stored) if (ALL_KEYS.has(key) && isRestrictedPermission(key)) out.add(key as PermissionKey);
+    return out;
+  }
   const out = new Set<PermissionKey>();
   for (const key of stored) {
     if (!ALL_KEYS.has(key)) continue;
@@ -276,7 +305,8 @@ export const SYSTEM_ROLES: {
   {
     name: "Admin",
     description: "Everything, including the timetable, the curriculum and these accounts.",
-    permissions: [...ALL_PERMISSIONS],
+    // Everything except restricted (HR) keys, which only a superadmin gives out.
+    permissions: ALL_PERMISSIONS.filter((key) => !isRestrictedPermission(key)),
     home: "calendar",
     screens: [
       "analytics",

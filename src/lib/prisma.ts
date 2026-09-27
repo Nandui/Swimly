@@ -5,10 +5,10 @@ import { postgresConnectionString } from "@/lib/postgres-connection";
 /** One client per process. Next.js reloads modules on every edit in dev, so
  *  without the global the dev server opens a new pool every time you save. */
 const globalForPrisma = globalThis as unknown as {
-  prisma?: InstanceType<typeof PrismaClient>;
+  prisma?: PrismaClient;
 };
 
-function createPrismaClient() {
+function createPrismaClient(): PrismaClient {
   const connectionString = process.env.DATABASE_URL;
   if (!connectionString) {
     throw new Error(
@@ -33,6 +33,9 @@ function createPrismaClient() {
   return new PrismaClient({ adapter });
 }
 
-export const prisma = globalForPrisma.prisma ?? createPrismaClient();
+// One declared type: a union of the global's and the constructed client's types makes
+// every query compare two versions of each model's generated types, which the
+// compiler cannot finish once the schema is large enough.
+export const prisma: PrismaClient = globalForPrisma.prisma ?? createPrismaClient();
 
 if (process.env.NODE_ENV !== "production") globalForPrisma.prisma = prisma;

@@ -18,9 +18,11 @@ import {
   normaliseRoleHome,
   legacyRoleFor,
   hasAdministratorAccess,
+  isRestrictedPermission,
   type PermissionKey,
 } from "@/lib/staff/permissions";
 import { cleanScreens, screenMeta } from "@/lib/staff/screens";
+import { RESTRICTED_ROLE_REFUSAL } from "@/lib/staff/restricted";
 
 /** Roles are the rules about the rules, so every action here needs
  *  `roles.manage` — including the one that hands `roles.manage` out.
@@ -69,6 +71,8 @@ export async function createRole(input: RoleInput): Promise<ActionResult> {
   if (screens.length === 0 && !hasAdministratorAccess(permissions)) {
     return fail("Tick at least one screen, or nobody on this role has anywhere to go.");
   }
+  const restricted = permissions.some(isRestrictedPermission);
+  if (restricted && !session.user.isSuperadmin) return fail(RESTRICTED_ROLE_REFUSAL);
 
   const last = await prisma.staffRole.findFirst({
     orderBy: { sortOrder: "desc" },
@@ -84,6 +88,7 @@ export async function createRole(input: RoleInput): Promise<ActionResult> {
           permissions,
           home,
           screens,
+          restricted,
           sortOrder: (last?.sortOrder ?? -1) + 1,
         },
         select: { id: true, name: true },
@@ -131,9 +136,12 @@ export async function updateRole(id: string, input: RoleInput): Promise<ActionRe
         permissions: true,
         home: true,
         screens: true,
+        restricted: true,
       },
     });
     if (!existing) return fail("That role no longer exists.");
+    const restricted = permissions.some(isRestrictedPermission);
+    if ((restricted || existing.restricted) && !session.user.isSuperadmin) return fail(RESTRICTED_ROLE_REFUSAL);
 
     const changes: string[] = [];
     if (hasAdministratorAccess(existing.permissions) !== hasAdministratorAccess(permissions)) {
@@ -170,7 +178,7 @@ export async function updateRole(id: string, input: RoleInput): Promise<ActionRe
 
     const updated = await tx.staffRole.update({
       where: { id },
-      data: { name, description: description || null, permissions, home, screens },
+      data: { name, description: description || null, permissions, home, screens, restricted },
       select: { id: true, name: true },
     });
 
