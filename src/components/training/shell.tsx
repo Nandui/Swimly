@@ -2,7 +2,7 @@
 
 import { usePathname } from 'next/navigation';
 import type { ReactNode } from 'react';
-import { BookOpen, ClipboardCheck, Hourglass, LayoutList } from 'lucide-react';
+import { BookOpen, ClipboardCheck, FileBadge, Hourglass, LayoutList } from 'lucide-react';
 import { ModuleShell } from '@/components/workspace/module-shell';
 import type { TrainingActor } from '@/lib/training/access';
 
@@ -16,6 +16,7 @@ export function TrainingShell({ who, initialCollapsed = false, children }: {
     { href: '/training', label: 'Overview', icon: LayoutList, active: pathname === '/training' },
     ...(who.signoff ? [{ href: '/training/sign-off', label: 'Sign-off', icon: ClipboardCheck, active: pathname === '/training/sign-off' }] : []),
     { href: '/training/expiring', label: 'Expiring qualifications', icon: Hourglass, active: pathname === '/training/expiring' },
+    ...(who.qualifications ? [{ href: '/training/certificates', label: 'Certificates to check', icon: FileBadge, active: pathname.startsWith('/training/certificates') }] : []),
     { href: '/training/courses', label: 'Courses', icon: BookOpen, active: pathname.startsWith('/training/courses') },
   ];
   const pageLabel = links.find((link) => link.active)?.label ?? (pathname.startsWith('/training/people/') ? 'Training record' : 'Overview');

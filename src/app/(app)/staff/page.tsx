@@ -59,6 +59,12 @@ export default async function StaffPage() {
         actions={
           <>
             <Button variant="outline" asChild={true}>
+              <UiLink href="/staff/details-requests">
+                {<AppIcon name="clipboardList" size="sm" />}
+                {"Details changes"}
+              </UiLink>
+            </Button>
+            <Button variant="outline" asChild={true}>
               <UiLink href="/staff/devices">
                 {<AppIcon name="monitor" size="sm" />}
                 {"Work devices"}

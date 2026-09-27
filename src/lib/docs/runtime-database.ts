@@ -20,17 +20,10 @@ function pool() {
   return globalDocs.docsPool;
 }
 
-/** Each request carries its effective grants (including role preview). A domain
- * mutation also rechecks the current database grants inside its transaction. */
-export const staffDatabase = cache(async (): Promise<Database> => {
-  const session = await auth();
-  if (!session?.user?.id) throw new DomainError('Please sign in again.', 401);
-  // The effective session grants (a role preview narrows them). A superadmin
-  // holds everything; the directory record says the same, so the intersection
-  // Docs takes keeps it. Previews drop the flag, so they can only narrow.
-  const access = session.user.isSuperadmin
-    ? { id: session.user.id, permissions: [...ALL_PERMISSIONS], screens: [...ALL_SCREENS] }
-    : { id: session.user.id, permissions: session.user.permissions, screens: session.user.screens };
+/** Opens Docs with an optional effective-access override (a role preview
+ *  narrows it). Without one, each person's access is exactly what the Turnfin
+ *  staff directory says. */
+function openDatabase(access?: { id: string; permissions: string[]; screens: string[] }): Database {
   function sql(client: PoolClient): Sql {
     return { access, staff: staffDirectory, query: async <T>(statement: string, params?: unknown[]) => {
       const result = await client.query<QueryResultRow>(statement, params);
@@ -59,4 +52,24 @@ export const staffDatabase = cache(async (): Promise<Database> => {
     // The pool is shared across requests and must not be closed by a page.
     close: async () => {},
   };
+}
+
+/** Each request carries its effective grants (including role preview). A domain
+ * mutation also rechecks the current database grants inside its transaction. */
+export const staffDatabase = cache(async (): Promise<Database> => {
+  const session = await auth();
+  if (!session?.user?.id) throw new DomainError('Please sign in again.', 401);
+  // The effective session grants (a role preview narrows them). A superadmin
+  // holds everything; the directory record says the same, so the intersection
+  // Docs takes keeps it. Previews drop the flag, so they can only narrow.
+  const access = session.user.isSuperadmin
+    ? { id: session.user.id, permissions: [...ALL_PERMISSIONS], screens: [...ALL_SCREENS] }
+    : { id: session.user.id, permissions: session.user.permissions, screens: session.user.screens };
+  return openDatabase(access);
 });
+
+/** For the staff API (Turnfin Me): no Work session exists, so Docs reads the
+ *  person's access straight from the staff directory. */
+export function directoryDatabase(): Database {
+  return openDatabase();
+}
