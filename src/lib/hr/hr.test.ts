@@ -15,6 +15,7 @@ let hr: Awaited<ReturnType<typeof createHrTestDatabase>>;
 let actions: typeof import("./actions");
 let records: typeof import("./records");
 let mine: typeof import("./mine");
+let self: typeof import("./self");
 let exporter: typeof import("./export");
 const ORG = "org_leisureworld";
 type GrantRow = { roleName: string; permissions: string[]; screens: string[]; scopeKind: string; scopeId: string };
@@ -61,6 +62,7 @@ before(async () => {
   actions = serverModule("src/lib/hr/actions.ts", d);
   records = serverModule("src/lib/hr/records.ts", d);
   mine = serverModule("src/lib/hr/mine.ts", d);
+  self = serverModule("src/lib/hr/self.ts", d);
   exporter = serverModule("src/lib/hr/export.ts", d);
 });
 after(async () => { await hr?.close(); await fixture?.close(); });
@@ -126,15 +128,14 @@ test("a shared review is locked; the person sees only what is shared and acknowl
   assert.equal((await actions.saveReview(draft, "ava", { period: "2026 annual review", summary: "Synthetic summary", strengths: "Calm on poolside", goals: "Lead a class", overall: "meets" })).ok, true);
   assert.equal((await actions.shareReview(draft)).ok, true);
   assert.equal((await actions.saveReview(draft, "ava", { period: "Changed", summary: "x", strengths: "", goals: "", overall: "" })).ok, false, "locked once shared");
-  as("riley");
-  assert.equal((await actions.acknowledgeReview(draft, "")).ok, false, "only the person themselves");
-  as("ava", { authMethod: "pin" });
-  assert.equal((await actions.acknowledgeReview(draft, "")).ok, false, "a PIN session must confirm the password");
+  // Acknowledging is the person's own action, from Turnfin Me (the staff API
+  // checks the fresh confirmation); only the subject's own review moves.
+  assert.equal((await self.acknowledgeReviewFor({ id: "riley", name: "riley", orgId: ORG }, draft, "")).ok, false, "only the person themselves");
   as("ava");
   own = await mine.mySharedHr("ava", ORG);
   assert.equal(own.reviews[0].status, "shared");
-  assert.equal((await actions.acknowledgeReview(draft, "Thanks, agreed")).ok, true);
-  assert.equal((await actions.acknowledgeReview(draft, "again")).ok, false);
+  assert.equal((await self.acknowledgeReviewFor({ id: "ava", name: "ava", orgId: ORG }, draft, "Thanks, agreed")).ok, true);
+  assert.equal((await self.acknowledgeReviewFor({ id: "ava", name: "ava", orgId: ORG }, draft, "again")).ok, false);
   assert.equal((await mine.mySharedHr("ava", ORG)).reviews[0].subjectComment, "Thanks, agreed");
 });
 

@@ -38,7 +38,7 @@ export function AssignTraining({ courses, people, courseId, userIds, label = "As
       width="sm:max-w-lg"
       trigger={<Button variant={variant} className="min-h-11"><UserPlus aria-hidden="true" />{label}</Button>}
       title={label}
-      description="Each person sees it in their My hub with the due date. People who already have this course open are skipped."
+      description="Each person sees it in Turnfin Me with the due date. People who already have this course open are skipped."
       submitLabel="Assign"
       successMessage="Training assigned"
       onOpen={() => { setChosen(new Set(userIds ?? [])); setFilter(""); }}
@@ -85,7 +85,7 @@ export function CourseDialog({ course, qualificationTypes }: { course?: CourseDr
         ? <Button variant="outline" className="min-h-11"><Pencil aria-hidden="true" />Edit</Button>
         : <Button className="min-h-11"><Plus aria-hidden="true" />New course</Button>}
       title={course ? `Edit ${course.title}` : "New course"}
-      description="People read the material in their My hub and mark it done. A practical course then waits for a trainer's sign-off."
+      description="People read the material in Turnfin Me and mark it done. A practical course then waits for a trainer's sign-off."
       submitLabel={course ? "Save course" : "Add course"}
       successMessage={course ? "Course saved" : "Course added"}
       submit={(formData) => saveCourse(course?.id ?? null, {
@@ -177,7 +177,7 @@ export function CancelTraining({ id, name, title }: { id: string; name: string; 
       portalClassName={THEME}
       trigger={<Button variant="ghost" className="min-h-11"><X aria-hidden="true" />Cancel</Button>}
       title={`Cancel ${title} for ${name}?`}
-      description="It disappears from their My hub. The record stays in their training history."
+      description="It disappears from their Turnfin Me. The record stays in their training history."
       submitLabel="Cancel training"
       successMessage="Training cancelled"
       submit={(formData) => cancelAssignment(id, String(formData.get("reason") ?? ""))}

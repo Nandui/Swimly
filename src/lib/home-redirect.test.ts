@@ -41,12 +41,13 @@ test("root and Swimly landing routes still require authentication", async () => 
   for (const route of ["src/app/page.tsx", ...routes]) await assert.rejects(page(route, null)(), { message: "Redirect /sign-in" });
 });
 
-test("the front door is the My hub, without changing role-specific Swimly homes", async () => {
-  for (const user of [
-    { home: "overview", screens: [], permissions: ["staff.manage", "roles.manage"] },
-    { home: "instructor", screens: ["instructor"], permissions: ["attendance.mark"] },
-    { home: "duty", screens: ["duty"], permissions: ["classes.cancel"] },
-  ]) {
-    await assert.rejects(page("src/app/page.tsx", user)(), { message: "Redirect /me" });
+test("Work's front door is the role's own home, never a personal page", async () => {
+  for (const [user, href] of [
+    [{ home: "overview", screens: [], permissions: ["staff.manage", "roles.manage"] }, "/schedule"],
+    [{ home: "instructor", screens: ["instructor"], permissions: ["attendance.mark"] }, "/instructor"],
+    [{ home: "duty", screens: ["duty"], permissions: ["classes.cancel"] }, "/duty"],
+    [{ home: "overview", screens: [], permissions: [] }, "/modules?view=all"],
+  ] as const) {
+    await assert.rejects(page("src/app/page.tsx", { ...user, screens: [...user.screens], permissions: [...user.permissions] })(), { message: `Redirect ${href}` });
   }
 });

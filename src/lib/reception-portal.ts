@@ -1,5 +1,5 @@
 import { expandPermissions, type PermissionKey } from "@/lib/staff/permissions";
-import { visibleScreens, type ScreenKey } from "@/lib/staff/screens";
+import { homePathFor, visibleScreens, type ScreenKey } from "@/lib/staff/screens";
 
 export const RECEPTION_PORTAL_HOME = "reception-portal";
 export const RECEPTION_PORTAL_PATH = "/reception-portal";
@@ -55,10 +55,18 @@ export function receptionPortalAccess(permissions: readonly string[], screens: r
 
 export type ReceptionPortalAccess = ReturnType<typeof receptionPortalAccess>;
 
-/** The stored landing preference is explicit. Never infer a job from a role
- * name or from action permissions shared by several different staff jobs. */
+/** Where Work opens after sign-in: the role's own home (Reception Portal,
+ *  Schedule, Pool deck, Duty, or the first module it can open), with the
+ *  module launcher when a role can open nothing yet. Personal records are not
+ *  on Work; they live in Turnfin Me. The stored landing preference is explicit:
+ *  never infer a job from a role name or from shared action permissions. */
 export function staffPortalPath(home: string, permissions: readonly string[], screens: readonly string[]) {
   return home === RECEPTION_PORTAL_HOME && receptionPortalAccess(permissions, screens).available
     ? RECEPTION_PORTAL_PATH
-    : "/me";
+    : roleHome(home, permissions, screens);
+}
+
+function roleHome(home: string, permissions: readonly string[], screens: readonly string[]) {
+  const path = homePathFor(home, permissions, screens);
+  return path === "/account" ? "/modules?view=all" : path;
 }

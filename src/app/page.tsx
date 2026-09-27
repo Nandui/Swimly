@@ -1,8 +1,9 @@
 import { redirect } from "next/navigation";
 import { pageSession } from "@/lib/page-guards";
+import { staffPortalPath } from "@/lib/reception-portal";
 
-/** The staff portal is the front door; /start still opens the role's Swimly home. */
+/** Work's front door: straight into the role's own home. */
 export default async function HomePage() {
-  await pageSession();
-  redirect("/me");
+  const session = await pageSession();
+  redirect(staffPortalPath(session.user.home, session.user.permissions, session.user.screens));
 }

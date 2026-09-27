@@ -5,7 +5,7 @@ import type { StatusMeta } from "@/lib/status";
 export const NOTE_VISIBILITY_META = {
   private: { label: "Only me", color: "gray", hint: "Only you (and a superadmin) can read it." },
   record: { label: "On their record", color: "blue", hint: "Anyone who can read this person's HR record." },
-  subject: { label: "Shared with them", color: "green", hint: "Also shown to the person in their My hub." },
+  subject: { label: "Shared with them", color: "green", hint: "Also shown to the person in Turnfin Me." },
 } as const satisfies Record<string, StatusMeta & { hint: string }>;
 export type NoteVisibility = keyof typeof NOTE_VISIBILITY_META;
 export const NOTE_VISIBILITIES = Object.keys(NOTE_VISIBILITY_META) as NoteVisibility[];

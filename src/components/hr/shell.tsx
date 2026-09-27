@@ -2,7 +2,7 @@
 
 import { usePathname } from 'next/navigation';
 import type { ReactNode } from 'react';
-import { History, UserRound, Users } from 'lucide-react';
+import { History, Users } from 'lucide-react';
 import { ModuleShell } from '@/components/workspace/module-shell';
 import type { HrActor } from '@/lib/hr/access';
 
@@ -15,8 +15,7 @@ export function HrShell({ who, initialCollapsed = false, children }: { who: HrAc
   ];
   const pageLabel = pathname.startsWith('/hr/reviews') ? 'Review' : pathname.startsWith('/hr/people') ? 'HR record' : links.find((l) => l.active)?.label ?? 'People';
   return (
-    <ModuleShell module="HR" id="hr" who={who} links={links} pageLabel={pageLabel} initialCollapsed={initialCollapsed}
-      yours={{ href: '/me/hr', label: 'Shared with me', icon: UserRound }} scopeNote="Restricted · every read is logged">
+    <ModuleShell module="HR" id="hr" who={who} links={links} pageLabel={pageLabel} initialCollapsed={initialCollapsed} scopeNote="Restricted · every read is logged">
       {children}
     </ModuleShell>
   );

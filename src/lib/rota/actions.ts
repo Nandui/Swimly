@@ -79,7 +79,7 @@ export async function saveShift(id: string | null, input: ShiftInput): Promise<A
     }
     return ok();
   });
-  if (result.ok) { revalidatePath("/rota"); revalidatePath("/me/shifts"); revalidatePath("/me"); }
+  if (result.ok) { revalidatePath("/rota"); }
   return result;
 }
 
@@ -95,6 +95,6 @@ export async function cancelShift(id: string): Promise<ActionResult> {
     await logAudit({ actorId: actor.id, actorName: actor.name, action: "cancel", entity: "RotaShift", entityId: id, clubId: site.id, summary: `Cancelled ${shift.role} at ${site.name} on ${shift.date.toISOString().slice(0, 10)}` }, tx);
     return ok();
   });
-  if (result.ok) { revalidatePath("/rota"); revalidatePath("/me/shifts"); revalidatePath("/me"); }
+  if (result.ok) { revalidatePath("/rota"); }
   return result;
 }

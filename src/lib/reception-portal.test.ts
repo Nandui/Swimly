@@ -10,10 +10,12 @@ const receptionPermissions = ["students.manage", "enrolment.manage"];
 test("reception landing is an explicit preference and does not change other staff", () => {
   assert.equal(normaliseRoleHome("reception-portal"), "reception-portal");
   assert.equal(staffPortalPath("reception-portal", receptionPermissions, receptionScreens), "/reception-portal");
+  // Everyone else opens their role's own home; nobody lands on personal pages.
   for (const home of ["calendar", "duty", "instructor", "reception", "unknown"]) {
-    assert.equal(staffPortalPath(home, receptionPermissions, receptionScreens), "/me");
+    assert.equal(staffPortalPath(home, receptionPermissions, receptionScreens), "/students");
   }
-  assert.equal(staffPortalPath("reception-portal", [], []), "/me");
+  assert.equal(staffPortalPath("calendar", [], ["calendar"]), "/schedule");
+  assert.equal(staffPortalPath("reception-portal", [], []), "/modules?view=all", "nothing to open yet: the launcher");
 });
 
 test("receptionists only receive tasks and handoffs their current grants permit", () => {
@@ -57,7 +59,8 @@ test("administrators inherit reception access without a new grant; a single mana
 
 test("Instructor-only users gain no portal or desk access; opening Aquatics never loops back", () => {
   assert.equal(receptionPortalAccess(["attendance.mark"], ["instructor"]).available, false);
-  assert.equal(staffPortalPath("reception-portal", ["attendance.mark"], ["instructor"]), "/me");
+  assert.equal(staffPortalPath("reception-portal", ["attendance.mark"], ["instructor"]), "/modules?view=all");
+  assert.equal(staffPortalPath("instructor", ["attendance.mark"], ["instructor"]), "/instructor");
   assert.equal(homePathFor("reception-portal", receptionPermissions, receptionScreens, "desk"), "/students");
   assert.equal(homePathFor("reception-portal", [...receptionPermissions, "attendance.mark"], [...receptionScreens, "instructor"]), "/students");
   assert.equal(homePathFor("reception-portal", receptionPermissions, [...receptionScreens, "calendar"], "desk"), "/schedule");

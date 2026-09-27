@@ -14,7 +14,7 @@ let fixture: Awaited<ReturnType<typeof isolatedPrisma>>;
 let actions: typeof import("./actions");
 let data: typeof import("./data");
 let self: typeof import("./mine");
-let my: typeof import("@/modules/training/my");
+let own: typeof import("./self");
 const ORG = "org_leisureworld";
 type GrantRow = { roleName: string; permissions: string[]; screens: string[]; scopeKind: string; scopeId: string };
 const state = { id: "maya", permissions: [] as string[], screens: [] as string[], grants: [] as GrantRow[] };
@@ -58,7 +58,7 @@ before(async () => {
   actions = serverModule("src/lib/training/actions.ts", doubles());
   data = serverModule("src/lib/training/data.ts", doubles());
   self = serverModule("src/lib/training/mine.ts", doubles());
-  my = serverModule("src/modules/training/my.ts", doubles());
+  own = serverModule("src/lib/training/self.ts", doubles());
 });
 after(async () => { await fixture?.close(); });
 
@@ -102,11 +102,11 @@ test("records are scoped: the trainer sees the department, someone without a rol
 test("the learner completes their own; an online course records an unverified qualification with its validity", async () => {
   const mine = await fixture.prisma.trainingAssignment.findFirstOrThrow({ where: { userId: "ava", courseId: online } });
   as("riley");
-  assert.equal((await actions.completeMyTraining(mine.id, "")).ok, false, "not riley's");
+  assert.equal((await own.completeTrainingFor({ id: state.id, name: state.id }, mine.id, "")).ok, false, "not riley's");
   await assert.rejects(self.myAssignment(mine.id), NotFound);
   as("ava");
-  assert.equal((await actions.completeMyTraining(mine.id, "Read it")).ok, true);
-  assert.equal((await actions.completeMyTraining(mine.id, "")).ok, false, "already finished");
+  assert.equal((await own.completeTrainingFor({ id: state.id, name: state.id }, mine.id, "Read it")).ok, true);
+  assert.equal((await own.completeTrainingFor({ id: state.id, name: state.id }, mine.id, "")).ok, false, "already finished");
   const row = await fixture.prisma.trainingAssignment.findUniqueOrThrow({ where: { id: mine.id } });
   assert.equal(row.status, "COMPLETED");
   const q = await fixture.prisma.qualification.findUniqueOrThrow({ where: { id: row.qualificationId! } });
@@ -119,7 +119,7 @@ test("a practical waits for someone else's sign-off; it can be sent back, then s
   const ava = await fixture.prisma.trainingAssignment.findFirstOrThrow({ where: { userId: "ava", courseId: practical } });
   const liamOwn = await fixture.prisma.trainingAssignment.create({ data: { orgId: ORG, courseId: practical, userId: "liam", assignedByName: "maya", status: "SUBMITTED", submittedAt: new Date() } });
   as("ava");
-  assert.equal((await actions.completeMyTraining(ava.id, "Free on Tuesday")).ok, true);
+  assert.equal((await own.completeTrainingFor({ id: state.id, name: state.id }, ava.id, "Free on Tuesday")).ok, true);
   assert.equal((await fixture.prisma.trainingAssignment.findUniqueOrThrow({ where: { id: ava.id } })).status, "SUBMITTED");
   as("liam", [], [TRAINER]);
   const queue = await data.signoffQueue();
@@ -129,7 +129,7 @@ test("a practical waits for someone else's sign-off; it can be sent back, then s
   assert.equal((await actions.returnForPractice(ava.id, "Work on the spinal roll")).ok, true);
   assert.equal((await fixture.prisma.trainingAssignment.findUniqueOrThrow({ where: { id: ava.id } })).status, "ASSIGNED");
   as("ava");
-  await actions.completeMyTraining(ava.id, "Practised");
+  await own.completeTrainingFor({ id: state.id, name: state.id }, ava.id, "Practised");
   as("liam", [], [TRAINER]);
   assert.equal((await actions.signOffTraining(ava.id, "Watched at the Tuesday session")).ok, true);
   assert.equal((await actions.signOffTraining(ava.id, "")).ok, false, "decided once");
@@ -153,12 +153,12 @@ test("expiring qualifications list the renewal course, and a newer certificate t
   assert.equal(rows[0].renewal?.assigned, true, "riley already has the practical open");
 });
 
-test("the My provider returns only the person's own open training", async () => {
-  const riley = await my.trainingMine.load({ userId: "riley", orgId: ORG, session: session() as never });
-  assert.deepEqual(riley.map((i) => i.title), ["Pool rescue"]);
-  assert.ok(riley.every((i) => i.href?.startsWith("/me/training/")));
-  const ava = await my.trainingMine.load({ userId: "ava", orgId: ORG, session: session() as never });
-  assert.deepEqual(ava, [], "completed training leaves the hub");
+test("self-service reads return only the person's own training", async () => {
+  const riley = await self.myTraining("riley");
+  assert.deepEqual(riley.map((r) => r.course.title), ["Pool rescue"]);
+  const ava = await self.myTraining("ava");
+  assert.ok(ava.every((r) => r.state === "completed"), "Ava's training is all done");
+  assert.equal(ava.length, 2);
 });
 
 test("cancelling needs assign scope for that person and a reason", async () => {

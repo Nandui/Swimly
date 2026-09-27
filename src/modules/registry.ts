@@ -7,7 +7,7 @@ import { isAquaticsScreen, type ScreenKey } from "@/lib/staff/screens";
  *  A module is one area of the leisure centre's data with several audiences,
  *  and each audience gets its own surface (see DESIGN.md and the platform
  *  access plan). This registry is how the portal, the module switcher and the
- *  My hub find them: a module appears for someone because its manifest says
+ *  staff portal find them: a module appears for someone because its manifest says
  *  so, never because a component remembered to add a boolean.
  *
  *  Visibility here is presentation. Security stays in each module's page
@@ -31,7 +31,7 @@ export type ModuleManifest = {
   /** Offered on the Reception Portal as well as the general portal. */
   reception?: boolean;
   href: string;
-  /** Whether this person has a Manage surface to open. The My hub is separate. */
+  /** Whether this person has a Manage surface to open. Personal records live in Turnfin Me. */
   visibleTo(ctx: ModuleContext): boolean;
 };
 
@@ -92,7 +92,7 @@ registerModule({
   description: "Build courses, assign training, sign off practical skills and follow expiring qualifications.",
   icon: GraduationCap,
   href: "/training",
-  // Completing your own training happens in the My hub; this is the Manage surface.
+  // Completing your own training happens in Turnfin Me; this is the Manage surface.
   visibleTo: ({ screens, scopedScreens }) => screens.has("training") || scopedScreens.has("training"),
 });
 

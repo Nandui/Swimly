@@ -62,7 +62,7 @@ export function CancelShift({ id, label }: { id: string; label: string }) {
       portalClassName={THEME}
       trigger={<Button variant="ghost" size="icon" className="size-11" aria-label={`Cancel ${label}`}><X aria-hidden="true" /></Button>}
       title={`Cancel ${label}?`}
-      description="It disappears from the rota and from the person's My hub. The change is recorded."
+      description="It disappears from the rota and from the person's Turnfin Me. The change is recorded."
       submitLabel="Cancel shift"
       successMessage="Shift cancelled"
       submit={() => cancelShift(id)}

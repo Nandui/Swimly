@@ -8,7 +8,7 @@ import { actorForSession } from "@/lib/policy/session";
  *  jobs they have. Holding a capability anywhere opens the matching page;
  *  every page and action then limits records to the people that capability
  *  covers (`subjectsFor`, `requireCapFor`). Completing your own training needs
- *  none of this: it lives in the My hub (`/me/training`). */
+ *  none of this: it lives in Turnfin Me (the staff app). */
 export type TrainingActor = {
   id: string;
   name: string;

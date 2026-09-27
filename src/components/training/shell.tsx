@@ -2,7 +2,7 @@
 
 import { usePathname } from 'next/navigation';
 import type { ReactNode } from 'react';
-import { BookOpen, ClipboardCheck, Hourglass, LayoutList, UserRound } from 'lucide-react';
+import { BookOpen, ClipboardCheck, Hourglass, LayoutList } from 'lucide-react';
 import { ModuleShell } from '@/components/workspace/module-shell';
 import type { TrainingActor } from '@/lib/training/access';
 
@@ -20,8 +20,7 @@ export function TrainingShell({ who, initialCollapsed = false, children }: {
   ];
   const pageLabel = links.find((link) => link.active)?.label ?? (pathname.startsWith('/training/people/') ? 'Training record' : 'Overview');
   return (
-    <ModuleShell module="Training" id="training" who={who} links={links} pageLabel={pageLabel} initialCollapsed={initialCollapsed}
-      yours={{ href: '/me/training', label: 'My training', icon: UserRound }} scopeNote="Only the people you cover">
+    <ModuleShell module="Training" id="training" who={who} links={links} pageLabel={pageLabel} initialCollapsed={initialCollapsed} scopeNote="Only the people you cover">
       {children}
     </ModuleShell>
   );

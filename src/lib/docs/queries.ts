@@ -1,5 +1,5 @@
 import { database, rows, one, listMembers } from './database';
-import { actor, library, requirements, syncPlatformGroups } from './domain';
+import { actor, library, syncPlatformGroups } from './domain';
 import { readingReportScope } from './report-scope';
 import { toWorkspaceMember, type Workspace, type Group, type Template, type RiskMatrix } from './types';
 export async function workspace(id: string): Promise<Workspace> {
@@ -7,13 +7,12 @@ export async function workspace(id: string): Promise<Workspace> {
   const member = await actor(db, id);
   // Keep Docs' groups in step with the platform's sites and departments.
   await db.transaction(syncPlatformGroups);
-  const [members, groups, templates, matrix, documents, reading, reportScope] = await Promise.all([
+  const [members, groups, templates, matrix, documents, reportScope] = await Promise.all([
     listMembers(db),
     rows<Group & { kind: string }>(db, 'SELECT * FROM groups ORDER BY name'),
     rows<Template>(db, 'SELECT * FROM templates ORDER BY name'),
     one<{ value: RiskMatrix }>(db, "SELECT value FROM settings WHERE id='matrix'"),
     library(db, id),
-    requirements(db, id),
     readingReportScope(member),
   ]);
   return {
@@ -28,7 +27,8 @@ export async function workspace(id: string): Promise<Workspace> {
     templates,
     matrix: matrix?.value || { configured: false, likelihood: [], severity: [], bands: [] },
     documents,
-    requirements: reading,
+    // A person's own required reading lives in Turnfin Me (the staff app), never on Work.
+    requirements: [],
     localMode: false,
     canReport: reportScope !== null,
   };

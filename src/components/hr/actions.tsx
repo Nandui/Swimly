@@ -2,7 +2,7 @@
 
 import { useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
-import { Check, FilePlus2, Save, Send, StickyNote, Undo2 } from "lucide-react";
+import { FilePlus2, Save, Send, StickyNote, Undo2 } from "lucide-react";
 import { Button } from "@/components/shadcn/button";
 import { Input } from "@/components/shadcn/input";
 import { Label } from "@/components/shadcn/label";
@@ -12,10 +12,9 @@ import { RadioGroup, RadioGroupItem } from "@/components/shadcn/radio-group";
 import { Field, FormDialog } from "@/components/form-dialog";
 import { Notice } from "@/components/ui-kit/notice";
 import { NOTE_VISIBILITY_META, NOTE_VISIBILITIES, REVIEW_OVERALL_LABELS, type ReviewOverall } from "@/lib/hr/constants";
-import { acknowledgeReview, addNote, saveReview, shareReview, withdrawNote } from "@/lib/hr/actions";
+import { addNote, saveReview, shareReview, withdrawNote } from "@/lib/hr/actions";
 
-/** HR dialogs carry the Poolside Clear scope into their portal. The person's
- *  own acknowledgement lives in the My hub frame, so it takes none. */
+/** HR dialogs carry the Poolside Clear scope into their portal. */
 const THEME = "turnfin-docs turnfin-module";
 
 export function AddNote({ subjectUserId, name }: { subjectUserId: string; name: string }) {
@@ -137,29 +136,12 @@ function ShareReview({ id, name }: { id: string; name: string }) {
       portalClassName={THEME}
       trigger={<Button type="button" className="min-h-11"><Send aria-hidden="true" />Share with {name.split(" ")[0]}</Button>}
       title={`Share this review with ${name}?`}
-      description="Save your latest changes first. Once shared it cannot be edited; they see it in their My hub and can add a comment when they acknowledge it."
+      description="Save your latest changes first. Once shared it cannot be edited; they see it in Turnfin Me and can add a comment when they acknowledge it."
       submitLabel="Share review"
       successMessage="Review shared"
       submit={() => shareReview(id)}
     >
       <p className="sr-only">Confirm to share.</p>
-    </FormDialog>
-  );
-}
-
-export function AcknowledgeReview({ id, period }: { id: string; period: string }) {
-  return (
-    <FormDialog
-      trigger={<Button className="min-h-11"><Check aria-hidden="true" />Acknowledge</Button>}
-      title={`Acknowledge ${period}?`}
-      description="This says you have read it, not that you agree with every word. Your comment is added to the review."
-      submitLabel="Acknowledge"
-      successMessage="Review acknowledged"
-      submit={(formData) => acknowledgeReview(id, String(formData.get("comment") ?? ""))}
-    >
-      <Field label="Your comment (optional)" htmlFor="hr-ack-comment">
-        <Textarea id="hr-ack-comment" name="comment" rows={4} maxLength={2000} />
-      </Field>
     </FormDialog>
   );
 }

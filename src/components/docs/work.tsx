@@ -7,8 +7,6 @@ import Link from 'next/link';
 import { useRouter, useSearchParams } from 'next/navigation';
 import {
   ArrowRight,
-  BookOpen,
-  CheckCircle2,
   Clock3,
   FilePenLine,
   Search,
@@ -32,13 +30,6 @@ export function WorkView({ workspace: w, drafts }: { workspace: Workspace; draft
   const facility = params.get('facility') || '';
   const search = params.get('q') || '';
   const scope = (ids: string[]) => !facility || !ids.length || ids.includes(facility);
-  const reading = w.requirements.filter((r) => r.status !== 'cancelled' && scope(r.facilityIds));
-  const pending = reading
-    .filter((r) => r.status === 'outstanding')
-    .sort((a, b) => (a.dueDate || '9999').localeCompare(b.dueDate || '9999'));
-  const completed = reading
-    .filter((r) => r.status === 'completed')
-    .sort((a, b) => (b.acknowledgedAt || '').localeCompare(a.acknowledgedAt || ''));
   const review = drafts.filter(
     (d) => scope(d.content.facilityIds) && d.status === 'in_review' && d.approverId === w.member.id,
   );
@@ -56,14 +47,9 @@ export function WorkView({ workspace: w, drafts }: { workspace: Workspace; draft
         new Date(d.content.reviewDate).getTime() < Date.parse(w.now) + 30 * 86400000,
     )
     .sort((a, b) => a.content.reviewDate.localeCompare(b.content.reviewDate));
+  // Required reading and its history are personal: they live in Turnfin Me.
+  // Work keeps the authoring queues.
   const queues = [
-    {
-      id: 'reading',
-      label: 'Required reading',
-      count: pending.length,
-      Icon: BookOpen,
-      description: 'Outstanding documents, with the earliest deadlines first.',
-    },
     ...(canWrite(w.member)
       ? [
           {
@@ -89,15 +75,21 @@ export function WorkView({ workspace: w, drafts }: { workspace: Workspace; draft
           },
         ]
       : []),
-    {
-      id: 'completed',
-      label: 'Completed reading',
-      count: completed.length,
-      Icon: CheckCircle2,
-      description: 'A record of the document versions you have acknowledged.',
-    },
   ];
   const queue = queues.find((q) => q.id === params.get('view')) || queues[0];
+  if (!queue) {
+    return (
+      <div className="task-workspace">
+        <PageHeading eyebrow="Personal workspace" title="My work" description="Authoring, reviews and review dates for people who write documents." />
+        <EmptyState
+          title="Your required reading is in Turnfin Me"
+          description="Open Turnfin Me on your phone to read and acknowledge the documents assigned to you. You can still browse the library here."
+          href="/docs/library"
+          label="Browse library"
+        />
+      </div>
+    );
+  }
   function url(key: string, value: string) {
     const next = new URLSearchParams(params.toString());
     if (value) next.set(key, value);
@@ -116,18 +108,7 @@ export function WorkView({ workspace: w, drafts }: { workspace: Workspace; draft
     feedback?: string;
   };
   let items: Item[];
-  if (queue.id === 'reading' || queue.id === 'completed') {
-    items = (queue.id === 'reading' ? pending : completed).map((r) => ({
-      id: r.id,
-      title: r.title,
-      reference: r.reference,
-      type: w.documents.find((d) => d.id === r.documentId)?.content.type || 'Custom',
-      href: `/docs/documents/${r.documentId}?version=${r.versionId}`,
-      detail: `Version ${r.version} · ${r.status === 'completed' ? `Read ${formatDate(r.acknowledgedAt)}` : r.dueDate ? `Due ${formatDate(r.dueDate)}` : 'No deadline'}`,
-      status: r.status === 'completed' ? 'Read' : overdue(r.dueDate) ? 'Overdue' : 'To read',
-      tone: r.status === 'completed' ? 'green' : overdue(r.dueDate) ? 'red' : 'amber',
-    }));
-  } else if (queue.id === 'due') {
+  if (queue.id === 'due') {
     items = due.map((d) => ({
       id: d.id,
       title: d.content.title,
@@ -270,33 +251,23 @@ export function WorkView({ workspace: w, drafts }: { workspace: Workspace; draft
                 title={
                   search
                     ? 'No matching documents'
-                    : queue.id === 'reading'
-                      ? 'Your reading is up to date'
-                      : queue.id === 'completed'
-                        ? 'Your reading history starts here'
-                        : queue.id === 'drafts'
-                          ? 'No drafts in progress'
-                          : queue.id === 'reviews'
-                            ? 'No reviews waiting'
-                            : 'No reviews due soon'
+                    : queue.id === 'drafts'
+                      ? 'No drafts in progress'
+                      : queue.id === 'reviews'
+                        ? 'No reviews waiting'
+                        : 'No reviews due soon'
                 }
                 description={
                   search
                     ? 'Clear your search to see all documents in this queue.'
-                    : queue.id === 'reading'
-                      ? 'New assignments will appear here. You can still explore the library.'
-                      : queue.id === 'completed'
-                        ? 'Each version you acknowledge will appear here.'
-                        : queue.description
+                    : queue.description
                 }
                 href={
                   search
                     ? url('q', '')
                     : queue.id === 'drafts'
                       ? '/docs/documents/new'
-                      : queue.id === 'reading'
-                        ? '/docs/library'
-                        : undefined
+                      : undefined
                 }
                 label={
                   search

@@ -1,6 +1,4 @@
 import { requireMember } from '@/lib/docs/auth';
-import { database } from '@/lib/docs/database';
-import { requirements } from '@/lib/docs/domain';
 import { readingReportScope } from '@/lib/docs/report-scope';
 import { Shell } from '@/components/docs/shell';
 import { cookies } from 'next/headers';
@@ -21,9 +19,8 @@ export default async function AppLayout({ children }: { children: React.ReactNod
     member: m,
     localMode: false,
     canReport: (await readingReportScope(m)) !== null,
-    outstandingReading: (await requirements(await database(), m.id)).filter(
-      (item) => item.status === 'outstanding',
-    ).length,
+    // Required reading is read and acknowledged in Turnfin Me, not on Work.
+    outstandingReading: 0,
   };
   const collapsed = (await cookies()).get('turnfin.sidebar')?.value === 'collapsed';
   return (

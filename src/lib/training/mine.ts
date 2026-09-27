@@ -8,7 +8,7 @@ import { trainingState, type TrainingState } from "@/lib/training/constants";
 
 /** Self-service reads: the signed-in person's own training. No capability is
  *  needed and nothing here can reach another person's records. Kept apart
- *  from the Manage reads so the My hub loads without the policy engine. */
+ *  from the Manage reads so the staff API loads without the policy engine. */
 
 const MY_SELECT = {
   id: true, status: true, dueOn: true, assignedAt: true, assignedByName: true, submittedAt: true, completedAt: true,

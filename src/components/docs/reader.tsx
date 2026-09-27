@@ -21,7 +21,6 @@ import { useRouter } from 'next/navigation';
 import { useState, useTransition } from 'react';
 import {
   ArrowLeft,
-  Check,
   CheckCircle2,
   FilePenLine,
   History,
@@ -35,7 +34,6 @@ import {
   ArrowRight,
 } from 'lucide-react';
 import {
-  acknowledgeAction,
   startDraftAction,
   reviewAction,
   assignAction,
@@ -367,22 +365,9 @@ export function Reader({
                 <>
                   <CheckCircle2 size={25} />
                   <div>
-                    <h3>All read?</h3>
-                    <p>Confirm that you have read version {s.version} of this document.</p>
+                    <h3>Assigned to you?</h3>
+                    <p>Acknowledge required reading in Turnfin Me on your phone. It records version {s.version} against your name.</p>
                   </div>
-                  <Button
-                    variant="default"
-                    className="button primary"
-                    disabled={pending}
-                    onClick={() =>
-                      action(
-                        () => acknowledgeAction(d.id, s.id),
-                        'Your acknowledgement has been recorded.',
-                      )
-                    }
-                  >
-                    <Check size={17} />I have read this version
-                  </Button>
                 </>
               )}
             </div>

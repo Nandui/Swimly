@@ -12,7 +12,7 @@ import { today } from "@/lib/format";
 let fixture: Awaited<ReturnType<typeof isolatedPrisma>>;
 let actions: typeof import("./actions");
 let data: typeof import("./data");
-let my: typeof import("@/modules/rota/my");
+let mine: typeof import("./mine");
 const ORG = "org_leisureworld";
 type GrantRow = { roleName: string; permissions: string[]; screens: string[]; scopeKind: string; scopeId: string };
 const state = { id: "maya", permissions: [] as string[], screens: [] as string[], grants: [] as GrantRow[] };
@@ -73,7 +73,7 @@ before(async () => {
   const d = doubles();
   actions = serverModule("src/lib/rota/actions.ts", d);
   data = serverModule("src/lib/rota/data.ts", d);
-  my = serverModule("src/modules/rota/my.ts", d);
+  mine = serverModule("src/lib/rota/mine.ts", d);
 });
 after(async () => { await fixture?.close(); });
 
@@ -106,13 +106,13 @@ test("the week shows each shift's warnings, and only the sites the role covers",
 });
 
 test("each person sees only their own shifts, with qualification warnings", async () => {
-  const riley = await my.rotaMine.load({ userId: "riley", orgId: ORG, session: session() as never });
+  const riley = await mine.myShifts("riley", 7);
   assert.equal(riley.length, 1);
-  assert.equal(riley[0].status?.label, "Qualification expired");
-  assert.equal(riley[0].needsAction, true);
-  const ava = await my.rotaMine.load({ userId: "ava", orgId: ORG, session: session() as never });
+  assert.deepEqual(riley[0].warnings, ["expired"]);
+  const ava = await mine.myShifts("ava", 7);
   assert.equal(ava.length, 2);
-  assert.ok(ava.every((i) => !i.needsAction), "double-bookings are the planner's to fix");
+  assert.ok(ava.every((s) => s.warnings.length === 0), "double-bookings are the planner's to fix");
+  assert.ok([...riley, ...ava].every((s) => s.userId === "riley" || s.userId === "ava"));
 });
 
 test("cancelling needs the permission at that site", async () => {

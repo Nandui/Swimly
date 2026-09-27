@@ -7,7 +7,7 @@ import { actorForSession } from "@/lib/policy/session";
 /** Who may open the Rota workspace. Shifts belong to a site, so every page
  *  limits them to the sites the capability covers (`sitesFor`); a duty
  *  manager's site-scoped role opens it for their site only. Seeing your own
- *  shifts needs none of this: it lives in the My hub (`/me/shifts`). */
+ *  shifts needs none of this: it lives in Turnfin Me (the staff app). */
 export type RotaActor = { id: string; name: string; orgId: string | null; manage: boolean };
 
 export function rotaAccess(session: Session): RotaActor | null {

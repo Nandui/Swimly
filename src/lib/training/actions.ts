@@ -2,26 +2,24 @@
 
 import { revalidatePath } from "next/cache";
 import { z } from "zod";
-import type { Prisma } from "@/generated/prisma/client";
 import { fail, ok, onUniqueViolation, type ActionResult } from "@/lib/action-result";
 import { logAudit } from "@/lib/audit";
-import { requireSession } from "@/lib/authz";
 import { isDateOnly, parseDateOnly, today } from "@/lib/format";
 import { prisma } from "@/lib/prisma";
 import { filterAllows } from "@/lib/policy/engine";
 import { requireCapFor, subjectsFor } from "@/lib/policy/session";
 import { requireTrainingActor } from "@/lib/training/access";
-import { addMonthsIso } from "@/lib/training/constants";
+import { grantQualification } from "@/lib/training/self";
 
 /** Training writes. The catalogue needs `training.manage`; assigning and
  *  cancelling need `training.assign` for that person; sign-off needs
  *  `training.signoff` for that person and is never your own. Completing your
- *  own training needs no capability. Every change is audited in the same
+ *  own training is not here: Work has no personal actions (see self.ts, used
+ *  by the staff API for Turnfin Me). Every change is audited in the same
  *  transaction, and each status move only happens from the state it expects,
  *  so two people acting at once cannot both win. */
 
-type Tx = Prisma.TransactionClient;
-const refresh = (...paths: string[]) => { for (const path of ["/training", "/me", "/me/training", ...paths]) revalidatePath(path); };
+const refresh = (...paths: string[]) => { for (const path of ["/training", ...paths]) revalidatePath(path); };
 const text = (value: unknown, max: number) => String(value ?? "").trim().slice(0, max);
 
 // ---------------------------------------------------------------------------
@@ -131,49 +129,6 @@ export async function cancelAssignment(id: string, reason: string): Promise<Acti
 // ---------------------------------------------------------------------------
 // Completing (the learner) and signing off (a trainer)
 // ---------------------------------------------------------------------------
-
-/** Records the qualification a completed course grants, with the expiry from
- *  the qualification type's validity. Verified by the trainer when there was a
- *  sign-off; unverified (online completion) otherwise. */
-async function grantQualification(tx: Tx, assignmentId: string, verifier: { id: string; name: string } | null, actor: { id: string; name: string }) {
-  const row = await tx.trainingAssignment.findUniqueOrThrow({ where: { id: assignmentId }, select: {
-    orgId: true, userId: true, user: { select: { name: true } },
-    course: { select: { title: true, grantsType: { select: { id: true, name: true, validityMonths: true, archivedAt: true } } } },
-  } });
-  const type = row.course.grantsType;
-  if (!type || type.archivedAt) return;
-  const issued = today();
-  const expires = type.validityMonths ? addMonthsIso(issued, type.validityMonths) : null;
-  const qualification = await tx.qualification.create({ data: {
-    orgId: row.orgId, userId: row.userId, typeId: type.id, issuedOn: parseDateOnly(issued), expiresOn: expires ? parseDateOnly(expires) : null,
-    note: `Completed ${row.course.title} in Training`, verifiedById: verifier?.id ?? null, verifiedAt: verifier ? new Date() : null,
-  } });
-  await tx.trainingAssignment.update({ where: { id: assignmentId }, data: { qualificationId: qualification.id } });
-  await logAudit({ actorId: actor.id, actorName: actor.name, action: "record-qualification", entity: "Qualification", entityId: qualification.id, summary: `Recorded ${type.name} for ${row.user.name} from ${row.course.title}${expires ? `, valid until ${expires}` : ""}` }, tx);
-}
-
-export async function completeMyTraining(id: string, note: string): Promise<ActionResult> {
-  const session = await requireSession();
-  const me = { id: session.user.id, name: session.user.name ?? "Staff member" };
-  const learnerNote = text(note, 1000);
-  const result = await prisma.$transaction(async (tx) => {
-    const row = await tx.trainingAssignment.findFirst({ where: { id, userId: me.id }, select: { status: true, course: { select: { title: true, requiresSignoff: true } } } });
-    if (!row) return fail("That training is not assigned to you.");
-    if (row.status !== "ASSIGNED") return fail(row.status === "SUBMITTED" ? "This is already waiting for a trainer to sign it off." : "This training is already finished.");
-    const next = row.course.requiresSignoff ? "SUBMITTED" as const : "COMPLETED" as const;
-    const now = new Date();
-    const moved = await tx.trainingAssignment.updateMany({ where: { id, userId: me.id, status: "ASSIGNED" }, data: next === "SUBMITTED"
-      ? { status: next, submittedAt: now, learnerNote }
-      : { status: next, submittedAt: now, completedAt: now, learnerNote } });
-    if (moved.count !== 1) return fail("This training has changed. Refresh and try again.");
-    await logAudit({ actorId: me.id, actorName: me.name, action: next === "SUBMITTED" ? "submit" : "complete", entity: "TrainingAssignment", entityId: id,
-      summary: next === "SUBMITTED" ? `Asked for sign-off on ${row.course.title}` : `Completed ${row.course.title}` }, tx);
-    if (next === "COMPLETED") await grantQualification(tx, id, null, me);
-    return ok();
-  });
-  if (result.ok) refresh(`/me/training/${id}`);
-  return result;
-}
 
 async function signoffTarget(id: string) {
   const existing = await prisma.trainingAssignment.findUnique({ where: { id }, select: { userId: true, orgId: true } });

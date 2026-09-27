@@ -10,16 +10,14 @@ import {
   ArrowRight,
   ArrowUpRight,
   Check,
-  CheckCircle2,
   LifeBuoy,
   MapPin,
   Search,
   ShieldCheck,
 } from 'lucide-react';
-import { formatDate, overdue, canWrite, type DocumentType, type Workspace } from '@/lib/docs/types';
-import { Badge, DocIcon, EmptyState } from './ui';
+import { canWrite, type DocumentType, type Workspace } from '@/lib/docs/types';
+import { DocIcon, EmptyState } from './ui';
 import { Button } from '@/components/shadcn/button';
-import { Progress } from '@/components/shadcn/progress';
 import { DocumentList } from './document-list';
 
 const collections: { type: DocumentType; label: string; description: string }[] = [
@@ -32,17 +30,9 @@ const collections: { type: DocumentType; label: string; description: string }[] 
 export function HomeView({ workspace: w }: { workspace: Workspace }) {
   const [facility, setFacility] = useState('');
   const matchesFacility = (ids: string[]) => !facility || !ids.length || ids.includes(facility);
-  const reading = w.requirements.filter(
-    (r) => r.status !== 'cancelled' && matchesFacility(r.facilityIds),
-  );
-  const outstanding = reading
-    .filter((r) => r.status === 'outstanding')
-    .sort((a, b) => (a.dueDate || '9999').localeCompare(b.dueDate || '9999'));
   const documents = w.documents.filter(
     (d) => d.currentVersionId && matchesFacility(d.content.facilityIds),
   );
-  const completed = reading.filter((r) => r.status === 'completed').length;
-  const progress = reading.length ? Math.round((completed / reading.length) * 100) : 0;
   const facilityQuery = facility ? `facility=${encodeURIComponent(facility)}` : '';
   const libraryUrl = `/docs/library${facilityQuery ? `?${facilityQuery}` : ''}`;
 
@@ -99,81 +89,26 @@ export function HomeView({ workspace: w }: { workspace: Workspace }) {
           <section className="reading-panel" aria-labelledby="required-reading-title">
             <div className="section-heading">
               <div>
-                <p className="section-kicker">Your next steps</p>
                 <h2 id="required-reading-title">Your required reading</h2>
               </div>
-              <span className="count-tag">{outstanding.length} to read</span>
             </div>
-            {outstanding.length ? (
-              <ul className="home-reading-list">
-                {outstanding.slice(0, 3).map((requirement) => (
-                  <li key={requirement.id}>
-                    <Link
-                      href={`/docs/documents/${requirement.documentId}?version=${requirement.versionId}`}
-                      className="home-reading-row"
-                    >
-                      <div className="home-reading-title">
-                        <strong>{requirement.title}</strong>
-                        <span>
-                          {requirement.reference} · Version {requirement.version}
-                          {requirement.dueDate
-                            ? ` · Due ${formatDate(requirement.dueDate)}`
-                            : ' · No deadline'}
-                        </span>
-                      </div>
-                      {overdue(requirement.dueDate) ? (
-                        <Badge tone="red">Overdue</Badge>
-                      ) : (
-                        <ArrowRight size={18} aria-hidden="true" />
-                      )}
-                    </Link>
-                  </li>
-                ))}
-              </ul>
-            ) : (
-              <EmptyState
-                title={reading.length ? 'You’re all caught up' : 'No reading assigned'}
-                description={
-                  reading.length
-                    ? 'You have read every document assigned to you for this facility.'
-                    : 'When documents are assigned to you, you’ll find them here.'
-                }
-              />
-            )}
+            {/* Personal records live in Turnfin Me, the staff app, never on Work. */}
+            <EmptyState
+              title="Read and acknowledge in Turnfin Me"
+              description="Documents assigned to you, their deadlines and your acknowledgements are in Turnfin Me on your phone. The library here is open for looking things up at work."
+            />
             <div className="reading-panel-footer">
               <span>
                 <ShieldCheck size={15} aria-hidden="true" /> Every acknowledgement is recorded.
               </span>
-              <Link
-                href={`/docs/work?view=reading${facilityQuery ? `&${facilityQuery}` : ''}`}
-                className="text-link"
-              >
-                View reading queue <ArrowRight size={15} aria-hidden="true" />
+              <Link href={libraryUrl} className="text-link">
+                Browse the library <ArrowRight size={15} aria-hidden="true" />
               </Link>
             </div>
           </section>
         </Card>
 
         <aside className="home-side">
-          <Card asChild>
-            <section className="reading-progress" aria-label="Your reading progress">
-              <div>
-                <span>
-                  <CheckCircle2 size={17} aria-hidden="true" /> Your reading progress
-                </span>
-                <strong>{reading.length ? `${progress}%` : '—'}</strong>
-              </div>
-              <Progress
-                value={progress}
-                aria-label={`${completed} of ${reading.length} assigned documents read`}
-              />
-              <p>
-                {reading.length
-                  ? `${completed} of ${reading.length} assigned documents read`
-                  : 'No documents assigned for this facility'}
-              </p>
-            </section>
-          </Card>
           <nav className="home-work-links" aria-label="Workspace actions">
             {canWrite(w.member) && (
               <>
@@ -193,10 +128,10 @@ export function HomeView({ workspace: w }: { workspace: Workspace }) {
                 </Link>
               </>
             )}
-            <Link href={`/docs/work?view=completed${facilityQuery ? `&${facilityQuery}` : ''}`}>
+            <Link href={libraryUrl}>
               <span>
-                <strong>Completed reading</strong>
-                <small>Your acknowledgements by version</small>
+                <strong>Browse the library</strong>
+                <small>Every published document for your facility</small>
               </span>
               <ArrowRight size={17} aria-hidden="true" />
             </Link>

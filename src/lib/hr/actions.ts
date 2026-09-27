@@ -8,15 +8,15 @@ import { AuthorizationError, requireSession } from "@/lib/authz";
 import { hrDatabase, type HrSql } from "@/lib/hr/database";
 import { prisma } from "@/lib/prisma";
 import { NOTE_VISIBILITIES, REVIEW_OVERALL_LABELS, type NoteVisibility } from "@/lib/hr/constants";
-import { recentlyConfirmed } from "@/lib/policy/engine";
-import { actorForSession, requireCapFor } from "@/lib/policy/session";
+import { requireCapFor } from "@/lib/policy/session";
 import type { PermissionKey } from "@/lib/staff/permissions";
 import type { Actor } from "@/lib/policy/types";
 
 /** HR writes. Each needs the restricted capability for that person (which also
  *  needs a recent password), and nobody writes their own record. Every change
- *  writes an HR audit event in the same transaction. The person acknowledges
- *  their own shared review; nobody else can. */
+ *  writes an HR audit event in the same transaction. The person's own
+ *  acknowledgement is not here: Work has no personal actions (see self.ts,
+ *  used by the staff API for Turnfin Me). */
 
 type Allowed = { ok: true; actor: Actor } | { ok: false; error: string };
 async function allowedFor(cap: PermissionKey, subjectUserId: string): Promise<Allowed> {
@@ -40,8 +40,6 @@ async function audit(tx: HrSql, actor: Pick<Actor, "id" | "name" | "orgId">, act
 const refresh = (subjectUserId: string, reviewId?: string) => {
   revalidatePath(`/hr/people/${subjectUserId}`);
   if (reviewId) revalidatePath(`/hr/reviews/${reviewId}`);
-  revalidatePath("/me/hr");
-  revalidatePath("/me");
 };
 
 // ---------------------------------------------------------------------------
@@ -151,24 +149,5 @@ export async function shareReview(id: string): Promise<ActionResult> {
   });
   if (!moved) return fail("That review has already been shared.");
   refresh(row.subjectUserId, id);
-  return ok();
-}
-
-/** The person acknowledges their own shared review, with an optional comment.
- *  Needs a recent password: it is their HR record. */
-export async function acknowledgeReview(id: string, comment: string): Promise<ActionResult> {
-  const session = await requireSession();
-  const me = actorForSession(session);
-  if (!recentlyConfirmed(me)) return fail("Confirm your password to open this.");
-  const text = String(comment ?? "").trim().slice(0, 2000);
-  const moved = await hrDatabase().transaction(async (tx) => {
-    const updated = await tx.query<{ period: string }>(`UPDATE reviews SET status='acknowledged', acknowledged_at=now(), subject_comment=$3, updated_at=now()
-      WHERE id=$1 AND subject_user_id=$2 AND status='shared' RETURNING period`, [id, me.id, text]);
-    if (updated.length !== 1) return false;
-    await audit(tx, me, "acknowledge", "HrReview", id, me.id, `Acknowledged the review ${updated[0].period}`);
-    return true;
-  });
-  if (!moved) return fail("That review is not waiting for your acknowledgement.");
-  refresh(me.id, id);
   return ok();
 }

@@ -107,15 +107,8 @@ export async function reviewAction(
     );
   });
 }
-export async function acknowledgeAction(id: string, versionId: string) {
-  return run(async () =>
-    new DocumentService(await database()).acknowledge(
-      (await requireActionMember()).id,
-      id,
-      versionId,
-    ),
-  );
-}
+// Acknowledging required reading is personal and happens only in Turnfin Me
+// (the staff API); Work has no action for it.
 export async function assignAction(
   id: string,
   people: string[],
