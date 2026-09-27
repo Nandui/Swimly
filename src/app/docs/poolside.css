@@ -355,7 +355,8 @@
 .turnfin-docs :is(.report-filter-heading, .report-records-heading) h2 { font-size: var(--pc-text-title); line-height: var(--pc-leading-title); }
 
 /* Sidebar appearance control: label left, current mode right, like the other footer rows. */
-.turnfin-docs .appearance-button { justify-content: flex-start; }
+.turnfin-docs .appearance-button,
+.turnfin-docs :is(.workspace-sidebar:not([data-collapsed="true"]), .workspace-mobile-sheet) .workspace-sidebar-footer > .ui-motion-press:not([data-size^="icon"]) { justify-content: flex-start; }
 .turnfin-docs .appearance-button small { margin-left: auto; color: var(--pc-ink-muted); }
 .turnfin-docs .home-facility { align-items: center; }
 .turnfin-docs :is([data-slot='field-description'], .field-hint, .hint) { font-size: var(--pc-text-caption); line-height: var(--pc-leading-caption); font-weight: 400; color: var(--pc-ink-muted); }

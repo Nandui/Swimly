@@ -56,7 +56,7 @@ export function RefundRequestForm({ id, row, sites }: { id: string; row?: Refund
         </div>
         <RefundText label="Reason for refund" {...input("reason")} maxLength={4000} />
       </section>
-      <p className="text-sm leading-relaxed text-ui-muted-foreground">You can save an incomplete draft. Before submitting, complete the customer name, site, service description, refund amount, payment date and reference, and reason. Save a draft first to add optional receipts.</p>
+      <p className="text-sm text-ui-muted-foreground">You can save an incomplete draft. Before submitting, complete the customer name, site, service description, refund amount, payment date and reference, and reason. Save a draft first to add optional receipts.</p>
       {message && <Notice tone={message.error ? "error" : "info"} title={message.error || message.warning} />}
       <div className="flex flex-wrap gap-3"><LoadingButton type="submit" value="submit" pending={pending} className="min-h-11">{row?.status === "NEEDS_INFORMATION" ? "Resubmit to finance" : "Submit to finance"}</LoadingButton><Button type="submit" value="save" variant="outline" className="min-h-11">{row?.status === "NEEDS_INFORMATION" ? "Save changes" : "Save draft"}</Button></div>
     </fieldset>

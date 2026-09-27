@@ -6,7 +6,7 @@ import { Textarea } from "@/components/shadcn/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/shadcn/select";
 
 export function RefundInput({ label, hint, ...props }: ComponentProps<typeof Input> & { label: string; hint?: string }) {
-  return <div className="min-w-0 space-y-2"><Label htmlFor={props.id}>{label}{props.required && <span className="text-xs font-normal text-ui-muted-foreground">(required)</span>}</Label><Input {...props} className="min-h-11" aria-describedby={hint ? `${props.id}-hint` : undefined} />{hint && <p id={`${props.id}-hint`} className="text-xs leading-relaxed text-ui-muted-foreground">{hint}</p>}</div>;
+  return <div className="min-w-0 space-y-2"><Label htmlFor={props.id}>{label}{props.required && <span className="text-xs font-normal text-ui-muted-foreground">(required)</span>}</Label><Input {...props} className="min-h-11" aria-describedby={hint ? `${props.id}-hint` : undefined} />{hint && <p id={`${props.id}-hint`} className="text-xs text-ui-muted-foreground">{hint}</p>}</div>;
 }
 export function RefundText({ label, ...props }: ComponentProps<typeof Textarea> & { label: string }) {
   return <div className="space-y-2"><Label htmlFor={props.id}>{label}{props.required && <span className="text-xs font-normal text-ui-muted-foreground">(required)</span>}</Label><Textarea {...props} className="min-h-24" /></div>;

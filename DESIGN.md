@@ -150,28 +150,71 @@ Forms retain native FormData and labelled inputs. Status colours come only from
 Refunds metadata. Draft privacy and permissions change available controls, never
 the workspace boundary. See [docs/refunds.md](docs/refunds.md).
 
-**Poolside Clear system rules (Docs and Refunds).** `poolside.css` defines five
-type sizes as tokens and nothing else is used: `--pc-text-caption` 13px (metadata,
-table headers, badges, breadcrumbs), `--pc-text-body` 15px (body, controls, field
-labels, list and table row titles), `--pc-text-title` 18px (panel and dialog
-titles), `--pc-text-page` 24px (the H1) and `--pc-text-figure` 32px (summary
-figures), each with a matching `--pc-leading-*`. Inside the scope, Tailwind's
-`text-xs`…`text-3xl` resolve to the same tokens, so shadcn internals follow them.
-Every shared Button is 44px high with a 12px radius (`--pc-radius-control`), a 16px
-inset and 15px/600 labels; icon buttons are 44px squares. Rules target
-`.ui-motion-press` as well as `data-slot='button'`, because Radix triggers
-(`asChild`) replace the Button's `data-slot`. Fields are 44px, 15px/400 (16px on
-phones), field labels 15px/600. Panels use 16px (`--pc-radius-panel`); controls
-nested in a control (editor toolbar, segmented tabs) use 8px. Row titles are body
-size and semibold, with reference, dates and owner on a caption line. Side-column
-actions stack full width with the primary action first.
+### Poolside Clear system rules (Docs and Refunds)
 
-`docs.css` sizes use these tokens only. Its original layouts sit in
+These rules came out of the September 2026 audit of every Docs and Refunds screen
+and apply to any module that adopts Poolside Clear. Tokens live in
+`src/app/docs/poolside.css`; never write a literal size, radius or control height.
+
+**Type.** Five sizes, each with a matching `--pc-leading-*` line height:
+
+| Token | Size | Use |
+| --- | --- | --- |
+| `--pc-text-caption` | 13px | Metadata, hints, table headers, badges, breadcrumbs, counts |
+| `--pc-text-body` | 15px | Body, controls, field labels, list and table row titles |
+| `--pc-text-title` | 18px | Panel, section and dialog titles |
+| `--pc-text-page` | 24px | The single H1 |
+| `--pc-text-figure` | 32px | Summary figures (24px on phones) |
+
+- In markup use Tailwind's `text-xs`, `text-sm`, `text-lg` and `text-2xl`; inside the
+  scope they resolve to caption, body, title and page. Never use `text-[…]`.
+- Line height comes from the size token. Do not add `leading-*` utilities.
+- Weights: 400 body; 500 sidebar navigation only; 600 labels, buttons, row titles,
+  subheadings (H3) and section titles; 700 the H1 and figures. Nothing above 700.
+- Sibling panels use the same heading size; a card title is never smaller than its
+  description.
+- Labels are sentence case with no letter-spacing; no numbered 01/02 indices.
+
+**Controls.**
+- Every shared Button is `--pc-control-height` (44px) with `--pc-radius-control`
+  (12px), a `--pc-control-pad` (16px) inset and 15px/600 labels. Icon buttons are
+  44px squares. Menu and popover triggers count: style Buttons through
+  `.ui-motion-press` as well as `data-slot='button'`, because Radix `asChild`
+  triggers replace the Button's `data-slot`.
+- Fields (input, textarea, select, native select) are 44px, 15px/400 (16px below
+  768px so iOS does not zoom), 12px radius. Field labels and fieldset legends are
+  15px/600; hints are caption. Checkbox and radio labels are body weight, aligned to
+  the top of wrapped text, and the whole row is the 44px target.
+- Radii: `--pc-radius-panel` (16px) for panels, tiles and dialogs;
+  `--pc-radius-control` (12px) for controls; `--pc-radius-inner` (8px) for controls
+  nested inside another control (editor toolbar, segmented tabs, menu items).
+
+**Layout.**
+- List and table rows: the item name is the primary line at body/600; reference,
+  dates and owner sit on a caption line beneath. Table cells are body size with a
+  14px × 16px inset; headers are caption/600, muted, never capitals.
+- Summary tiles share one panel style whether or not they filter; clickable tiles
+  show a teal edge on hover and a soft fill when active. Figures sit at the bottom
+  of the tile so a row lines up when a label wraps.
+- Side-column actions stack full width, primary action first, and wrap long labels
+  left-aligned rather than overflowing. In a full-width panel they form an
+  equal-width grid.
+- A ghost button that continues a block of text (for example "View recorded
+  details" in history) is pulled flush so its label aligns with the text.
+- Sidebar footer rows (All modules, Appearance, profile) are left-aligned when the
+  sidebar is expanded and centred icons when collapsed.
+- The topbar breadcrumb starts at the module (`Docs`, `Refunds`) and links back to
+  its overview; the current page is not a link.
+- Check every change at 375, 768, 1024 and 1280px in light and dark: no horizontal
+  scroll, no clipped labels, no control under 44px.
+
+**Cascade.** `docs.css` uses these tokens only. Its original layouts sit in
 `@layer components.legacy`, below the Docs redesign in `@layer components`, so the
 redesign wins wherever both set a property and utility classes in the markup win
-over the original layouts. `poolside.css` and module CSS stay unlayered on top.
-A module rule that must beat a utility class on a shadcn primitive (for example a
-responsive `display: none` on a Label) belongs in `poolside.css`, not `docs.css`.
+over the original layouts. `poolside.css` and module CSS stay unlayered on top. A
+rule that must beat a utility class on a shadcn primitive (for example a responsive
+`display: none` on a Label, or grid layout on a Label used as a card) belongs in
+`poolside.css`, not `docs.css`.
 
 Schedule keeps its booking sheet with sticky level labels and horizontal time scrolling.
 The sheet expands vertically within the workspace's single page scroll. Phones
