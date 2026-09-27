@@ -9,6 +9,7 @@ import { isDateOnly, parseDateOnly } from "@/lib/format";
 import { prisma } from "@/lib/prisma";
 import { requireCapFor } from "@/lib/policy/session";
 import { clock, parseClock } from "@/lib/rota/constants";
+import { notifyShiftChange } from "@/lib/staff-api/reminders";
 
 /** Rota writes. Each needs `rota.manage` at the shift's site (a site-scoped
  *  duty role plans only its own site). Qualification problems and
@@ -62,15 +63,17 @@ export async function saveShift(id: string | null, input: ShiftInput): Promise<A
     requiredTypeId: data.requiredTypeId, userId: data.userId, note: data.note,
   };
   const summary = `${data.role} at ${site.name} on ${data.date}, ${clock(start)}–${clock(end)}`;
+  let previousUserId: string | null = null;
   const result = await prisma.$transaction(async (tx) => {
     if (id) {
-      const existing = await tx.rotaShift.findFirst({ where: { id, cancelledAt: null }, select: { siteId: true } });
+      const existing = await tx.rotaShift.findFirst({ where: { id, cancelledAt: null }, select: { siteId: true, userId: true } });
       if (!existing) return fail("That shift no longer exists.");
       // Moving a shift between sites needs the permission at both.
       if (existing.siteId !== site.id) {
         const from = await allowedAt(existing.siteId);
         if (!from.ok) return fail(from.error);
       }
+      previousUserId = existing.userId;
       await tx.rotaShift.update({ where: { id }, data: values });
       await logAudit({ actorId: actor.id, actorName: actor.name, action: "update", entity: "RotaShift", entityId: id, clubId: site.id, summary: `Changed ${summary}` }, tx);
     } else {
@@ -79,12 +82,17 @@ export async function saveShift(id: string | null, input: ShiftInput): Promise<A
     }
     return ok();
   });
-  if (result.ok) { revalidatePath("/rota"); }
+  if (result.ok) {
+    revalidatePath("/rota");
+    // Tell the people whose shifts changed (Turnfin Me email, if they want it).
+    await notifyShiftChange(data.userId, `${id ? "Your shift changed" : "You have a new shift"}: ${summary}.`);
+    if (previousUserId && previousUserId !== data.userId) await notifyShiftChange(previousUserId, `You are no longer on this shift: ${summary}.`);
+  }
   return result;
 }
 
 export async function cancelShift(id: string): Promise<ActionResult> {
-  const shift = await prisma.rotaShift.findFirst({ where: { id, cancelledAt: null }, select: { siteId: true, role: true, date: true } });
+  const shift = await prisma.rotaShift.findFirst({ where: { id, cancelledAt: null }, select: { siteId: true, role: true, date: true, startMinutes: true, endMinutes: true, userId: true } });
   if (!shift) return fail("That shift no longer exists.");
   const allowed = await allowedAt(shift.siteId);
   if (!allowed.ok) return fail(allowed.error);
@@ -95,6 +103,9 @@ export async function cancelShift(id: string): Promise<ActionResult> {
     await logAudit({ actorId: actor.id, actorName: actor.name, action: "cancel", entity: "RotaShift", entityId: id, clubId: site.id, summary: `Cancelled ${shift.role} at ${site.name} on ${shift.date.toISOString().slice(0, 10)}` }, tx);
     return ok();
   });
-  if (result.ok) { revalidatePath("/rota"); }
+  if (result.ok) {
+    revalidatePath("/rota");
+    await notifyShiftChange(shift.userId, `Your shift was cancelled: ${shift.role} at ${site.name} on ${shift.date.toISOString().slice(0, 10)}, ${clock(shift.startMinutes)}–${clock(shift.endMinutes)}.`);
+  }
   return result;
 }
