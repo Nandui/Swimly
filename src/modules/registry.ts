@@ -1,4 +1,4 @@
-import { Files, GraduationCap, HeartHandshake, ReceiptText, WavesLadder, type LucideIcon } from "lucide-react";
+import { CalendarClock, Files, GraduationCap, HeartHandshake, ReceiptText, WavesLadder, type LucideIcon } from "lucide-react";
 import type { PermissionKey } from "@/lib/staff/permissions";
 import { isAquaticsScreen, type ScreenKey } from "@/lib/staff/screens";
 
@@ -105,4 +105,14 @@ registerModule({
   // The flat HR screen already requires hr.records.read, which administrators
   // never inherit; a department or team HR role brings the screen with it.
   visibleTo: ({ screens, scopedScreens, superadmin }) => superadmin || screens.has("hr") || scopedScreens.has("hr"),
+});
+
+registerModule({
+  id: "rota",
+  name: "Rota",
+  description: "Plan the week's shifts at a site, with warnings for expired qualifications.",
+  icon: CalendarClock,
+  href: "/rota",
+  // A site-scoped duty role brings the screen with it.
+  visibleTo: ({ screens, scopedScreens, superadmin }) => superadmin || screens.has("rota") || scopedScreens.has("rota"),
 });

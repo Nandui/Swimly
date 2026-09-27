@@ -14,6 +14,7 @@ export async function seed(ctx: Ctx) {
   await seedAquatics(ctx.prisma);
   await seedTraining(ctx.prisma);
   if (ctx.hrUrl) await seedHr(ctx.prisma, ctx.hrUrl);
+  await seedRota(ctx.prisma);
 }
 
 /** Two sites' worth of classes so the deck and desk surfaces can be checked:
@@ -117,4 +118,29 @@ async function seedHr(db: PrismaClient, hrUrl: string) {
       "INSERT INTO reviews (id, org_id, subject_user_id, reviewer_id, reviewer_name, period, summary) VALUES ($1,$2,'sbx_liam','sbx_maya','Maya Example','2026 annual review','')",
       [randomUUID(), ORG]);
   } finally { await hr.end(); }
+}
+
+/** Rota: Maya plans Churchfield (a site-scoped role). Today and tomorrow show
+ *  every warning: Riley's lifeguard shift while his NPLQ is expired (until his
+ *  refresher is signed off), an open swim teacher shift, and Riley double-booked
+ *  at Bishopstown. */
+async function seedRota(db: PrismaClient) {
+  const ORG = "org_leisureworld";
+  const planner = await db.staffRole.create({ data: {
+    name: "Rota planner", permissions: ["rota.manage"], screens: ["rota"], sortOrder: 50,
+    description: "Plans shifts at the sites in their scope.",
+  } });
+  await db.roleAssignment.create({ data: { orgId: ORG, userId: "sbx_maya", roleId: planner.id, scopeKind: "site", scopeId: "club_churchfield", grantedById: "sbx_alex" } });
+  const day = (offset: number) => { const d = new Date(); d.setUTCHours(0, 0, 0, 0); d.setUTCDate(d.getUTCDate() + offset); return d; };
+  const shift = (siteId: string, offset: number, start: number, end: number, role: string, userId: string | null, requiredTypeId: string | null = null) =>
+    ({ orgId: ORG, siteId, date: day(offset), startMinutes: start * 60, endMinutes: end * 60, role, userId, requiredTypeId, createdById: "sbx_maya", createdByName: "Maya Example" });
+  await db.rotaShift.createMany({ data: [
+    shift("club_churchfield", 0, 7, 15, "Lifeguard", "sbx_ava", "qt_nplq"),
+    shift("club_churchfield", 0, 15, 22, "Lifeguard", "sbx_riley", "qt_nplq"),
+    shift("club_churchfield", 0, 16, 19, "Swim teacher", null, "qt_swim_teacher"),
+    shift("club_churchfield", 0, 9, 17, "Duty manager", "sbx_liam"),
+    shift("club_bishopstown", 0, 18, 21, "Lifeguard", "sbx_riley", "qt_nplq"),
+    shift("club_churchfield", 1, 7, 15, "Lifeguard", "sbx_riley", "qt_nplq"),
+    shift("club_churchfield", 1, 15, 22, "Lifeguard", "sbx_ava", "qt_nplq"),
+  ] });
 }

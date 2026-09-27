@@ -159,10 +159,12 @@ The dedicated Reception view is retired. Old links open the selected swimmer
 when the role offers Swimmers, otherwise an accessible landing page. Reception
 is no longer offered as a screen or landing-page choice.
 
-The Turnfin staff portal at `/modules` is the signed-in front door, reached from the
-root address and after sign-in. It offers the modules the registry in `src/modules` allows each person
-(Aquatics, Docs, Refunds, and later Training, HR and Rota). Bookings is not planned:
-Legend remains the booking and billing system.
+The signed-in front door is the **My hub** (`/me`): each person's own work from every module
+(training to do, shifts, required reading, refund requests, qualifications, what HR shared
+with them), then the apps they can open. A role home such as the Reception Portal still opens
+first. The staff portal at `/modules?view=all` lists every module the registry in
+`src/modules` allows each person: Aquatics, Docs, Refunds, Training, HR and performance, and
+Rota. Bookings is not planned: Legend remains the booking and billing system.
 Opening Aquatics uses `/start` to resolve the role's accessible home in Swimly. The desk
 sidebar offers All modules; the Instructor workspace keeps its isolated navigation.
 The portal is for staff, separate from the parent app, and grants no new screen

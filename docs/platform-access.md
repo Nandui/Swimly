@@ -167,6 +167,13 @@ screen granted at any scope (`ModuleContext.scopedScreens`), unlike the flat
 site-based screens; each page then scopes records with the policy engine.
 Completing your own training needs no capability and lives in the My hub.
 
+## Rota
+
+The Rota (docs/rota.md) is site-bound: `rota.view` and `rota.manage` resolve with
+`sitesFor` and `requireCapFor` with a `siteId`, so a duty manager's site-scoped
+role plans their own site only. It warns about expired qualifications and
+double-bookings but never blocks. Everyone sees their own shifts in the My hub.
+
 ## HR and performance
 
 HR (docs/hr.md) is the restricted module: its own database (`HR_DATABASE_URL`),
@@ -196,5 +203,6 @@ role, an aquatics lead who records qualifications for Aquatics, instructors and
 reception), plus synthetic swimmers, classes on today's weekday at two sites and a
 parent's pending correction, and Training data: Liam leads training for Aquatics, Riley
 waits for sign-off, Ava has overdue and open courses; and HR: Maya is the restricted HR lead
-for Churchfield, Ava has a shared review and note (`scripts/sandbox-seed.ts`). It never reads real database settings. Accounts and the sandbox
+for Churchfield, Ava has a shared review and note; and a Rota: Maya plans Churchfield, whose shifts show
+an expired qualification, an open shift and a double-booking (`scripts/sandbox-seed.ts`). It never reads real database settings. Accounts and the sandbox
 password are listed in `scripts/sandbox.mts`.

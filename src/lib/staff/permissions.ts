@@ -171,6 +171,18 @@ export const PERMISSIONS = [
     description: "Confirm that someone this role covers has shown the skill in person, which completes the course and records any qualification. Never your own.",
   },
   {
+    key: "rota.view",
+    group: "Rota",
+    label: "See the rota",
+    description: "See who is on shift at the sites this role covers, with qualification warnings.",
+  },
+  {
+    key: "rota.manage",
+    group: "Rota",
+    label: "Plan the rota",
+    description: "Add, change, fill and cancel shifts at the sites this role covers. Includes seeing it.",
+  },
+  {
     key: "hr.records.read",
     group: "HR and performance",
     label: "Read HR records",
@@ -214,6 +226,7 @@ export const PERMISSION_GROUP_ORDER: PermissionGroup[] = [
   "Refunds",
   "People",
   "Training",
+  "Rota",
   "HR and performance",
   "Administration",
 ];
@@ -247,6 +260,7 @@ const IMPLIES: Partial<Record<PermissionKey, PermissionKey[]>> = {
   "training.manage": ["training.records.read"],
   "training.assign": ["training.records.read"],
   "training.signoff": ["training.records.read"],
+  "rota.manage": ["rota.view"],
   "hr.notes.write": ["hr.records.read"],
   "hr.reviews.write": ["hr.records.read"],
 };

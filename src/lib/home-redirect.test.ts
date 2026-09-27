@@ -5,12 +5,15 @@ import { serverModule } from "@/test/server-module";
 type User = { home: string; screens: string[]; permissions: string[] };
 const routes = ["src/app/(app)/start/page.tsx"];
 
+// The Start page reads `?workspace=`, so every page gets (empty) search params.
+const props = { searchParams: Promise.resolve({}) } as never;
 function page(file: string, user: User | null) {
-  return serverModule<typeof import("@/app/page")>(file, {
+  const load = serverModule<{ default: (props: never) => Promise<unknown> }>(file, {
     "@/auth": { auth: async () => user ? { user } : null },
     "@/lib/authz": {},
     "next/navigation": { redirect: (href: string) => { throw new Error(`Redirect ${href}`); } },
   }).default;
+  return () => load(props);
 }
 
 test("opening Swimly uses Schedule for old administrator Overview homes", async () => {

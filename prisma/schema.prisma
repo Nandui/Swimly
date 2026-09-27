@@ -181,6 +181,7 @@ model User {
   roleAssignments RoleAssignment[] @relation("AssignedRole")
   qualifications Qualification[]  @relation("QualificationHolder")
   trainingAssignments TrainingAssignment[] @relation("TrainingLearner")
+  rotaShifts          RotaShift[]          @relation("RotaShiftAssignee")
   sharedDevices  SharedDeviceUser[]
 
   /// `Restrict`, not `SetNull`: an account with no role has no permissions and
@@ -227,6 +228,7 @@ model Organisation {
   qualifications     Qualification[]
   trainingCourses    TrainingCourse[]
   trainingAssignments TrainingAssignment[]
+  rotaShifts         RotaShift[]
 }
 
 /// A team such as Aquatics, Reception or Maintenance. Optionally tied to one
@@ -331,6 +333,7 @@ model QualificationType {
   organisation   Organisation    @relation(fields: [orgId], references: [id], onDelete: Restrict)
   qualifications Qualification[]
   trainingCourses TrainingCourse[]
+  rotaShifts     RotaShift[]
 
   @@unique([orgId, name])
 }
@@ -416,6 +419,7 @@ model Club {
   courses            Course[]
   assessmentSessions AssessmentSession[]
   departments        Department[]
+  rotaShifts         RotaShift[]
 
   @@index([sortOrder])
 }
@@ -1275,4 +1279,33 @@ model TrainingAssignment {
   @@index([userId, status])
   @@index([orgId, status])
   @@index([courseId])
+}
+
+/// Rota (phase 8): one shift at a site on a day. `userId` null is an open
+/// shift. A required qualification only warns when the person does not hold
+/// it on that day; the rota never blocks (owner decision, September 2026).
+model RotaShift {
+  id             String    @id @default(cuid())
+  orgId          String
+  siteId         String
+  date           DateTime  @db.Date
+  startMinutes   Int
+  endMinutes     Int
+  role           String
+  requiredTypeId String?
+  userId         String?
+  note           String    @default("")
+  createdById    String?
+  createdByName  String
+  cancelledAt    DateTime?
+  createdAt      DateTime  @default(now())
+  updatedAt      DateTime  @updatedAt
+
+  organisation Organisation       @relation(fields: [orgId], references: [id], onDelete: Restrict)
+  site         Club               @relation(fields: [siteId], references: [id], onDelete: Restrict)
+  requiredType QualificationType? @relation(fields: [requiredTypeId], references: [id], onDelete: SetNull)
+  user         User?              @relation("RotaShiftAssignee", fields: [userId], references: [id], onDelete: SetNull)
+
+  @@index([siteId, date])
+  @@index([userId, date])
 }

@@ -44,7 +44,7 @@ read the design files below before changing how it looks.
 
 The entire staff app uses shadcn/ui components from src/components/shadcn.
 Aquatics and the portal use Neutral light/dark surfaces, a logo-blue accent and
-Figtree. Docs, Refunds, Training and HR share the Poolside Clear theme (Plus Jakarta Sans, the
+Figtree. Docs, Refunds, Training, HR and Rota share the Poolside Clear theme (Plus Jakarta Sans, the
 fin's teal and aqua) in `src/app/docs/poolside.css`, scoped to `.turnfin-docs`;
 Refunds adds `.turnfin-refunds`; the people-scoped workspaces (Training, HR, Rota) share
 `ModuleShell` and `.turnfin-module` layouts. Use its type and control
