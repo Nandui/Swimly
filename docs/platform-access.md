@@ -167,6 +167,14 @@ screen granted at any scope (`ModuleContext.scopedScreens`), unlike the flat
 site-based screens; each page then scopes records with the policy engine.
 Completing your own training needs no capability and lives in the My hub.
 
+## HR and performance
+
+HR (docs/hr.md) is the restricted module: its own database (`HR_DATABASE_URL`),
+restricted capabilities that administrators never inherit, a recent password for
+every read and write (`requireFreshSession`, `requireRecentPassword`), a read log
+(`access_events`) and a superadmin-only subject export. The HR database holds ids
+only; access is decided in the main database by the policy engine.
+
 ## Rules
 
 - Never check a role name. Ask for a capability, and for records, a resource.
@@ -187,5 +195,6 @@ fictional LeisureWorld (a superadmin, a site manager with a site-limited duty
 role, an aquatics lead who records qualifications for Aquatics, instructors and
 reception), plus synthetic swimmers, classes on today's weekday at two sites and a
 parent's pending correction, and Training data: Liam leads training for Aquatics, Riley
-waits for sign-off, Ava has overdue and open courses (`scripts/sandbox-seed.ts`). It never reads real database settings. Accounts and the sandbox
+waits for sign-off, Ava has overdue and open courses; and HR: Maya is the restricted HR lead
+for Churchfield, Ava has a shared review and note (`scripts/sandbox-seed.ts`). It never reads real database settings. Accounts and the sandbox
 password are listed in `scripts/sandbox.mts`.

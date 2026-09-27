@@ -1,5 +1,5 @@
 import type { PermissionKey } from "@/lib/staff/permissions";
-import { ROLE_HOMES, expandPermissions, hasAdministratorAccess } from "@/lib/staff/permissions";
+import { ROLE_HOMES, expandPermissions, hasAdministratorAccess, isRestrictedPermission } from "@/lib/staff/permissions";
 
 /** Every screen the app has, and nothing else.
  *
@@ -124,6 +124,7 @@ export const SCREENS = [
     requires: "activity.view",
   },
   { key: "training", label: "Training", path: "/training", description: "A separate workspace for the training catalogue, assigning courses, trainer sign-off and expiring qualifications. Everyone completes their own training from My hub without it.", requires: "training.records.read" },
+  { key: "hr", label: "HR and performance", path: "/hr", description: "A separate, restricted workspace for HR notes and performance reviews of the people a role covers. Staff read what is shared with them from My hub.", requires: "hr.records.read" },
   { key: "docs", label: "Docs", path: "/docs", description: "A separate workspace for documents, independent approvals and required reading.", requires: "docs.read" },
 ] as const satisfies readonly {
   key: string;
@@ -208,8 +209,15 @@ export function homePathFor(
 
 /** Separate modules never imply access to the swim-school workspace. */
 /** Screens that open their own Turnfin workspace rather than Aquatics. */
-const TURNFIN_WORKSPACES = new Set<string>(["docs", "refunds", "training"]);
+const TURNFIN_WORKSPACES = new Set<string>(["docs", "refunds", "training", "hr"]);
 
 export function isAquaticsScreen(key: ScreenKey) {
   return !TURNFIN_WORKSPACES.has(key);
 }
+
+/** The screens an administrator sees: every screen except those that need a
+ *  restricted capability. A superadmin sees all of them. */
+export const ADMINISTRATOR_SCREENS: ScreenKey[] = ALL_SCREENS.filter((key) => {
+  const screen = SCREENS.find((s) => s.key === key);
+  return !(screen && "requires" in screen && screen.requires && isRestrictedPermission(screen.requires));
+});

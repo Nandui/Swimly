@@ -171,6 +171,27 @@ export const PERMISSIONS = [
     description: "Confirm that someone this role covers has shown the skill in person, which completes the course and records any qualification. Never your own.",
   },
   {
+    key: "hr.records.read",
+    group: "HR and performance",
+    label: "Read HR records",
+    description: "Open the HR and performance records (notes and reviews) of the people this role covers. Restricted: only a superadmin can give it, and it asks for your password again.",
+    restricted: true,
+  },
+  {
+    key: "hr.notes.write",
+    group: "HR and performance",
+    label: "Write HR notes",
+    description: "Add notes to the HR record of the people this role covers, kept private, on their record or shared with them. Includes reading. Restricted.",
+    restricted: true,
+  },
+  {
+    key: "hr.reviews.write",
+    group: "HR and performance",
+    label: "Write performance reviews",
+    description: "Draft performance reviews for the people this role covers and share them with the person. Includes reading. Restricted.",
+    restricted: true,
+  },
+  {
     key: "activity.view",
     group: "Administration",
     label: "Read the activity log",
@@ -193,6 +214,7 @@ export const PERMISSION_GROUP_ORDER: PermissionGroup[] = [
   "Refunds",
   "People",
   "Training",
+  "HR and performance",
   "Administration",
 ];
 
@@ -225,6 +247,8 @@ const IMPLIES: Partial<Record<PermissionKey, PermissionKey[]>> = {
   "training.manage": ["training.records.read"],
   "training.assign": ["training.records.read"],
   "training.signoff": ["training.records.read"],
+  "hr.notes.write": ["hr.records.read"],
+  "hr.reviews.write": ["hr.records.read"],
 };
 
 /** Restricted capabilities (HR, performance): never inherited by
@@ -271,6 +295,9 @@ export function permissionMeta(key: PermissionKey) {
 
 /** Every key, for the "give this role everything" case. */
 export const ALL_PERMISSIONS: PermissionKey[] = PERMISSIONS.map((p) => p.key);
+
+/** What administrators hold: every key except restricted ones (HR, performance). */
+export const UNRESTRICTED_PERMISSIONS: PermissionKey[] = ALL_PERMISSIONS.filter((key) => !isRestrictedPermission(key));
 
 /** Where a role lands after signing in, and where the wordmark goes. A
  *  metadata map like every other enum: the role stores the key, the app

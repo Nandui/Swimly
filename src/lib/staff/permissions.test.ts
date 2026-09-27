@@ -1,10 +1,13 @@
 import assert from "node:assert/strict";
 import { test } from "node:test";
-import { ALL_PERMISSIONS, expandPermissions, hasAdministratorAccess } from "./permissions";
+import { ALL_PERMISSIONS, UNRESTRICTED_PERMISSIONS, expandPermissions, hasAdministratorAccess, isRestrictedPermission } from "./permissions";
 
-test("administrator grants always include the whole permission catalogue", () => {
+test("administrator grants include the whole catalogue except restricted keys; superadmins hold everything", () => {
   const stored = ["staff.manage", "roles.manage", "retired.permission"];
-  assert.deepEqual([...expandPermissions(stored)], ALL_PERMISSIONS);
+  assert.deepEqual([...expandPermissions(stored)], UNRESTRICTED_PERMISSIONS);
+  assert.ok(ALL_PERMISSIONS.some(isRestrictedPermission), "HR keys are restricted");
+  assert.equal(expandPermissions(stored).has("hr.records.read"), false);
+  assert.deepEqual([...expandPermissions([], { superadmin: true })], ALL_PERMISSIONS);
   assert.deepEqual(stored, ["staff.manage", "roles.manage", "retired.permission"]);
   assert.equal(expandPermissions(stored).has("classes.cancel"), true);
   assert.equal(expandPermissions(stored).has("billing.notify"), true);

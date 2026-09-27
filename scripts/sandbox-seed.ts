@@ -1,4 +1,5 @@
-import { createHash } from "node:crypto";
+import { createHash, randomUUID } from "node:crypto";
+import { Client } from "pg";
 import type { PrismaClient } from "../src/generated/prisma/client";
 
 /** Extra fictional data for `npm run sandbox`, loaded by scripts/sandbox.mts.
@@ -12,6 +13,7 @@ type Ctx = { prisma: PrismaClient; docsUrl: string; hrUrl: string | null; roles:
 export async function seed(ctx: Ctx) {
   await seedAquatics(ctx.prisma);
   await seedTraining(ctx.prisma);
+  if (ctx.hrUrl) await seedHr(ctx.prisma, ctx.hrUrl);
 }
 
 /** Two sites' worth of classes so the deck and desk surfaces can be checked:
@@ -84,4 +86,35 @@ async function seedTraining(db: PrismaClient) {
     { orgId: ORG, courseId: rescue.id, userId: "sbx_riley", dueOn: day(7), assignedById: "sbx_liam", assignedByName: "Liam Example", status: "SUBMITTED", submittedAt: new Date(), learnerNote: "On the Saturday morning shift if that suits." },
     { orgId: ORG, courseId: safeguarding.id, userId: "sbx_noah", assignedById: "sbx_alex", assignedByName: "Alex Example" },
   ] });
+}
+
+/** HR: Maya is the HR lead for Churchfield (a restricted role only a
+ *  superadmin could give), so she reads and writes for Liam and Ava but not
+ *  Bishopstown staff. Ava has a shared review to acknowledge and a note shared
+ *  with her; the private and on-record notes never reach her. */
+async function seedHr(db: PrismaClient, hrUrl: string) {
+  const ORG = "org_leisureworld";
+  const lead = await db.staffRole.create({ data: {
+    name: "HR lead", permissions: ["hr.notes.write", "hr.reviews.write"], screens: ["hr"], restricted: true, sortOrder: 40,
+    description: "HR notes and performance reviews for the people in their scope.",
+  } });
+  await db.roleAssignment.create({ data: { orgId: ORG, userId: "sbx_maya", roleId: lead.id, scopeKind: "site", scopeId: "club_churchfield", grantedById: "sbx_alex" } });
+  const hr = new Client({ connectionString: hrUrl });
+  await hr.connect();
+  try {
+    await hr.query("SET search_path = turnfin_hr");
+    const note = (subject: string, visibility: string, body: string) => hr.query(
+      "INSERT INTO notes (id, org_id, subject_user_id, author_id, author_name, visibility, body) VALUES ($1,$2,$3,'sbx_maya','Maya Example',$4,$5)",
+      [randomUUID(), ORG, subject, visibility, body]);
+    await note("sbx_ava", "private", "Synthetic: check in about shift preferences before the rota changes.");
+    await note("sbx_ava", "record", "Synthetic: agreed to cover Tuesday learners until December.");
+    await note("sbx_ava", "subject", "Synthetic: thank you for the calm handling of the pool evacuation drill.");
+    await hr.query(
+      `INSERT INTO reviews (id, org_id, subject_user_id, reviewer_id, reviewer_name, period, status, summary, strengths, goals, overall, shared_at)
+       VALUES ($1,$2,'sbx_ava','sbx_maya','Maya Example','2026 probation review','shared',$3,$4,$5,'meets',now())`,
+      [randomUUID(), ORG, "Synthetic: a strong first six months on poolside.", "Synthetic: clear instructions, punctual.", "Synthetic: complete the rescue refresher and shadow a senior teacher."]);
+    await hr.query(
+      "INSERT INTO reviews (id, org_id, subject_user_id, reviewer_id, reviewer_name, period, summary) VALUES ($1,$2,'sbx_liam','sbx_maya','Maya Example','2026 annual review','')",
+      [randomUUID(), ORG]);
+  } finally { await hr.end(); }
 }

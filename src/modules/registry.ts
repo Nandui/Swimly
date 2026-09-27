@@ -1,4 +1,4 @@
-import { Files, GraduationCap, ReceiptText, WavesLadder, type LucideIcon } from "lucide-react";
+import { Files, GraduationCap, HeartHandshake, ReceiptText, WavesLadder, type LucideIcon } from "lucide-react";
 import type { PermissionKey } from "@/lib/staff/permissions";
 import { isAquaticsScreen, type ScreenKey } from "@/lib/staff/screens";
 
@@ -94,4 +94,15 @@ registerModule({
   href: "/training",
   // Completing your own training happens in the My hub; this is the Manage surface.
   visibleTo: ({ screens, scopedScreens }) => screens.has("training") || scopedScreens.has("training"),
+});
+
+registerModule({
+  id: "hr",
+  name: "HR and performance",
+  description: "Notes and performance reviews for the people you look after. Restricted.",
+  icon: HeartHandshake,
+  href: "/hr",
+  // The flat HR screen already requires hr.records.read, which administrators
+  // never inherit; a department or team HR role brings the screen with it.
+  visibleTo: ({ screens, scopedScreens, superadmin }) => superadmin || screens.has("hr") || scopedScreens.has("hr"),
 });

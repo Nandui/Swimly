@@ -1,0 +1,36 @@
+import "server-only";
+import type { Session } from "next-auth";
+import { canSee, requireSession, AuthorizationError } from "@/lib/authz";
+import { holdsAnywhere } from "@/lib/policy/engine";
+import { actorForSession } from "@/lib/policy/session";
+
+/** Who may open the HR workspace. Every HR capability is restricted: it
+ *  reaches a person only through a role a superadmin assigned (or the
+ *  superadmin flag), and each read also needs a recent password. Holding a
+ *  capability anywhere opens the workspace; every page then limits records to
+ *  the people it covers. What is shared with you lives in the My hub. */
+export type HrActor = {
+  id: string;
+  name: string;
+  orgId: string;
+  superadmin: boolean;
+  notes: boolean;
+  reviews: boolean;
+};
+
+export function hrAccess(session: Session): HrActor | null {
+  const actor = actorForSession(session);
+  const screen = canSee(session, "hr") || actor.superadmin || actor.grants.some((grant) => grant.screens.includes("hr"));
+  if (!screen || !holdsAnywhere(actor, "hr.records.read")) return null;
+  return {
+    id: actor.id, name: actor.name, orgId: actor.orgId ?? "", superadmin: actor.superadmin,
+    notes: holdsAnywhere(actor, "hr.notes.write"),
+    reviews: holdsAnywhere(actor, "hr.reviews.write"),
+  };
+}
+
+export async function requireHrActor() {
+  const who = hrAccess(await requireSession());
+  if (!who) throw new AuthorizationError("HR access is required.");
+  return who;
+}

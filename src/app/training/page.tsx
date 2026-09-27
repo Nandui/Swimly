@@ -25,7 +25,7 @@ export default async function TrainingOverviewPage({ searchParams }: { searchPar
   ];
   return (
     <div className="space-y-6">
-      <div className="training-heading">
+      <div className="module-heading">
         <div className="space-y-2">
           <h1>Training</h1>
           <p className="text-sm">Training for the people you cover: what is due, waiting for sign-off and done.</p>
@@ -33,13 +33,13 @@ export default async function TrainingOverviewPage({ searchParams }: { searchPar
         {data.who.assign && activeCourses.length > 0 && people.length > 0 ? <AssignTraining courses={activeCourses} people={people} /> : null}
       </div>
 
-      <dl className="training-summary grid grid-cols-2 gap-6 sm:grid-cols-4">
+      <dl className="module-summary grid grid-cols-2 gap-6 sm:grid-cols-4">
         {tiles.map(({ label, value, icon: Icon, href }) => (
           <div key={label}><Link href={href}><dt><Icon aria-hidden="true" />{label}</dt><dd>{value}</dd></Link></div>
         ))}
       </dl>
 
-      <form method="get" className="training-filters space-y-4" role="search" aria-label="Filter training">
+      <form method="get" className="module-filters space-y-4" role="search" aria-label="Filter training">
         <div className="grid gap-4 sm:grid-cols-3">
           <div className="min-w-0 space-y-2"><Label htmlFor="training-q">Person</Label><Input id="training-q" name="q" defaultValue={input.q ?? ""} placeholder="Name" className="min-h-11" /></div>
           <div className="min-w-0 space-y-2"><Label htmlFor="training-view">Show</Label>
@@ -60,17 +60,17 @@ export default async function TrainingOverviewPage({ searchParams }: { searchPar
         </div>
       </form>
 
-      <div className="training-results space-y-3">
+      <div className="module-results space-y-3">
         <p className="text-sm">{data.total} {data.total === 1 ? "record" : "records"}{data.total > data.rows.length ? `, showing the first ${data.rows.length}` : ""}</p>
         {data.rows.length === 0 ? (
-          <div className="training-empty"><GraduationCap aria-hidden="true" /><h2 className="font-semibold">Nothing to show</h2><p className="mt-2 text-sm text-ui-muted-foreground">Try another filter{data.who.assign ? ", or assign a course" : ""}.</p></div>
+          <div className="module-empty"><GraduationCap aria-hidden="true" /><h2 className="font-semibold">Nothing to show</h2><p className="mt-2 text-sm text-ui-muted-foreground">Try another filter{data.who.assign ? ", or assign a course" : ""}.</p></div>
         ) : (
-          <ul className="training-list">
+          <ul className="module-list">
             {data.rows.map((row) => (
               <li key={row.id}>
-                <Link href={`/training/people/${row.user.id}`} className="training-row flex min-h-20 flex-wrap items-center justify-between gap-4 p-4 sm:px-5">
+                <Link href={`/training/people/${row.user.id}`} className="module-row flex min-h-20 flex-wrap items-center justify-between gap-4 p-4 sm:px-5">
                   <div className="min-w-0 flex-1 space-y-1">
-                    <div className="flex flex-wrap items-center gap-2"><span className="training-row-customer">{row.user.name}</span><TrainingStatusTag state={row.state} /></div>
+                    <div className="flex flex-wrap items-center gap-2"><span className="module-row-title">{row.user.name}</span><TrainingStatusTag state={row.state} /></div>
                     <p className="text-sm">{row.course.title}{row.user.jobTitle ? <span className="text-ui-muted-foreground"> · {row.user.jobTitle}</span> : null}</p>
                     <p className="text-xs text-ui-muted-foreground">
                       {row.state === "completed" && row.completedAt
@@ -78,7 +78,7 @@ export default async function TrainingOverviewPage({ searchParams }: { searchPar
                         : `Assigned ${formatDate(row.assignedAt)} · ${row.dueOn ? `due ${formatDate(row.dueOn)}` : "no deadline"}`}
                     </p>
                   </div>
-                  <ArrowRight className="training-row-arrow size-5" aria-hidden="true" />
+                  <ArrowRight className="module-row-arrow size-5" aria-hidden="true" />
                 </Link>
               </li>
             ))}

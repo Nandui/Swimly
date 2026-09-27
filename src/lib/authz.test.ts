@@ -2,8 +2,8 @@ import assert from "node:assert/strict";
 import { test } from "node:test";
 import { serverModule } from "@/test/server-module";
 import type { Session } from "next-auth";
-import { ALL_PERMISSIONS } from "@/lib/staff/permissions";
-import { ALL_SCREENS } from "@/lib/staff/screens";
+import { ALL_PERMISSIONS, isRestrictedPermission } from "@/lib/staff/permissions";
+import { ADMINISTRATOR_SCREENS, ALL_SCREENS } from "@/lib/staff/screens";
 
 test("authenticated access awaits due unenrolments before returning the session", async () => {
   const calls: string[] = [];
@@ -32,10 +32,14 @@ test("named permission and screen guards accept administrators and refuse restri
     "@/lib/enrolment/scheduled": { processScheduledUnenrolments: async () => {} },
   });
   for (const permission of ALL_PERMISSIONS) {
+    if (isRestrictedPermission(permission)) {
+      assert.equal(guards.can(session, permission), false, `administrators never hold restricted ${permission}`);
+      continue;
+    }
     assert.equal(guards.can(session, permission), true);
     await guards.requirePermission(permission);
   }
-  for (const screen of ALL_SCREENS) assert.equal(guards.canSee(session, screen), true);
+  for (const screen of ALL_SCREENS) assert.equal(guards.canSee(session, screen), ADMINISTRATOR_SCREENS.includes(screen));
   session.user.permissions = ["staff.manage"];
   await assert.rejects(guards.requirePermission("classes.cancel"), /do not have permission/);
   await assert.rejects(guards.requirePermission("billing.notify"), /do not have permission/);

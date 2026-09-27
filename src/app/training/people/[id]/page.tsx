@@ -15,15 +15,15 @@ export default async function TrainingPersonPage({ params }: { params: Promise<{
   const person = { id: data.person.id, name: data.person.name, jobTitle: data.person.jobTitle };
   return (
     <div className="space-y-6">
-      <div className="training-heading">
+      <div className="module-heading">
         <div className="space-y-2">
           <h1>{data.person.name}</h1>
           <p className="text-sm">{data.person.jobTitle || "Training record"}</p>
         </div>
         {data.canAssign && courses.length > 0 ? <AssignTraining courses={courses} people={[person]} userIds={[person.id]} /> : null}
       </div>
-      <div className="training-columns">
-        <section className="training-panel" aria-labelledby="training-history">
+      <div className="module-columns">
+        <section className="module-panel" aria-labelledby="training-history">
           <h2 id="training-history">Training</h2>
           {data.assignments.length === 0 ? <p className="text-sm text-ui-muted-foreground">No training assigned yet.</p> : (
             <ul>
@@ -45,7 +45,7 @@ export default async function TrainingPersonPage({ params }: { params: Promise<{
             </ul>
           )}
         </section>
-        <section className="training-panel" aria-labelledby="training-qualifications">
+        <section className="module-panel" aria-labelledby="training-qualifications">
           <h2 id="training-qualifications">Qualifications</h2>
           {data.qualifications.length === 0 ? <p className="text-sm text-ui-muted-foreground">None recorded.</p> : (
             <ul>

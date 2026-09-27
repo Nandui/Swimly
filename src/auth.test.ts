@@ -2,8 +2,8 @@ import assert from "node:assert/strict";
 import { test } from "node:test";
 import type { Session } from "next-auth";
 import { serverModule } from "@/test/server-module";
-import { ALL_PERMISSIONS, expandPermissions } from "@/lib/staff/permissions";
-import { ALL_SCREENS, visibleScreens } from "@/lib/staff/screens";
+import { UNRESTRICTED_PERMISSIONS, expandPermissions } from "@/lib/staff/permissions";
+import { ADMINISTRATOR_SCREENS, visibleScreens } from "@/lib/staff/screens";
 
 function fixture() {
   const administrator = { id: "role-1", name: "Renamed management team", permissions: ["staff.manage", "roles.manage"], home: "overview", screens: ["overview"] };
@@ -31,7 +31,7 @@ function access(session: Session | null) {
 
 test("renamed administrators get full access from current grants without updating stored screen lists", async () => {
   const f = fixture();
-  assert.deepEqual(access(await f.auth()), { permissions: ALL_PERMISSIONS, screens: ALL_SCREENS });
+  assert.deepEqual(access(await f.auth()), { permissions: UNRESTRICTED_PERMISSIONS, screens: ADMINISTRATOR_SCREENS });
 });
 
 test("role previews replace administrator access and restoring the role restores full access", async () => {
@@ -39,7 +39,7 @@ test("role previews replace administrator access and restoring the role restores
   f.preview({ id: "deck-role", name: "Instructor", permissions: ["attendance.mark"], screens: ["instructor"], home: "instructor" });
   assert.deepEqual(access(await f.auth()), { permissions: ["attendance.mark"], screens: ["instructor"] });
   f.preview(null);
-  assert.deepEqual(access(await f.auth()), { permissions: ALL_PERMISSIONS, screens: ALL_SCREENS });
+  assert.deepEqual(access(await f.auth()), { permissions: UNRESTRICTED_PERMISSIONS, screens: ADMINISTRATOR_SCREENS });
 });
 
 test("demotion, deactivation and removing a role revoke administrator access on the next request", async () => {

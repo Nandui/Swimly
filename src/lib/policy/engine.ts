@@ -30,11 +30,16 @@ export function holdsAnywhere(actor: Actor, cap: PermissionKey): boolean {
   return actor.superadmin || grantsFor(actor, cap).length > 0;
 }
 
+/** Whether the session proved itself with a password (not a PIN) recently. */
+export function recentlyConfirmed(actor: Actor, now = Date.now()): boolean {
+  if (actor.authMethod === "dev") return true;
+  return actor.authMethod === "password" && actor.authAt !== null && now - actor.authAt <= STEP_UP_MS;
+}
+
 /** Restricted capabilities also need a fresh password (not a PIN) session. */
 export function needsStepUp(actor: Actor, cap: PermissionKey, now = Date.now()): boolean {
   if (!isRestrictedPermission(cap)) return false;
-  if (actor.authMethod === "dev") return false;
-  return actor.authMethod !== "password" || actor.authAt === null || now - actor.authAt > STEP_UP_MS;
+  return !recentlyConfirmed(actor, now);
 }
 
 async function scopeCovers(scope: Scope, actor: Actor, resource: Resource, dir: Directory): Promise<boolean> {

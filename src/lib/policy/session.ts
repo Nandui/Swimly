@@ -5,7 +5,7 @@ import { requireSession, AuthorizationError } from "@/lib/authz";
 import { logAudit } from "@/lib/audit";
 import { prisma } from "@/lib/prisma";
 import type { PermissionKey } from "@/lib/staff/permissions";
-import { actorFrom, can, needsStepUp, siteFilter, subjectFilter } from "./engine";
+import { actorFrom, can, needsStepUp, recentlyConfirmed, siteFilter, subjectFilter } from "./engine";
 import { scopeFrom, type Actor, type Directory, type Resource } from "./types";
 
 /** The running app's connection to the policy engine. Modules call these;
@@ -116,6 +116,17 @@ export async function logAccess(input: { actor: Actor; cap: PermissionKey; entit
 export async function requireFreshSession(cap: PermissionKey, returnTo: string) {
   const actor = await currentActor();
   if (needsStepUp(actor, cap)) {
+    const { redirect } = await import("next/navigation");
+    redirect(`/confirm-password?next=${encodeURIComponent(returnTo)}`);
+  }
+  return actor;
+}
+
+/** For a person's own restricted records (their shared HR notes and reviews):
+ *  the same recent-password rule as restricted capabilities, without one. */
+export async function requireRecentPassword(returnTo: string) {
+  const actor = await currentActor();
+  if (!recentlyConfirmed(actor)) {
     const { redirect } = await import("next/navigation");
     redirect(`/confirm-password?next=${encodeURIComponent(returnTo)}`);
   }

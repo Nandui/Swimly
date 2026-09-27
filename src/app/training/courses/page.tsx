@@ -17,7 +17,7 @@ export default async function TrainingCoursesPage({ searchParams }: { searchPara
   const people = who.assign && !archived ? await assignablePeople() : [];
   return (
     <div className="space-y-6">
-      <div className="training-heading">
+      <div className="module-heading">
         <div className="space-y-2">
           <h1>{archived ? "Retired courses" : "Courses"}</h1>
           <p className="text-sm">
@@ -28,14 +28,14 @@ export default async function TrainingCoursesPage({ searchParams }: { searchPara
         {who.manage && !archived ? <CourseDialog qualificationTypes={types} /> : null}
       </div>
       {courses.length === 0 ? (
-        <div className="training-empty"><BookOpen aria-hidden="true" /><h2 className="font-semibold">{archived ? "No retired courses" : "No courses yet"}</h2><p className="mt-2 text-sm text-ui-muted-foreground">{who.manage && !archived ? "Add the first course people should complete." : "Ask whoever builds the training catalogue to add one."}</p></div>
+        <div className="module-empty"><BookOpen aria-hidden="true" /><h2 className="font-semibold">{archived ? "No retired courses" : "No courses yet"}</h2><p className="mt-2 text-sm text-ui-muted-foreground">{who.manage && !archived ? "Add the first course people should complete." : "Ask whoever builds the training catalogue to add one."}</p></div>
       ) : (
-        <ul className="training-list">
+        <ul className="module-list">
           {courses.map((course) => (
             <li key={course.id} className="flex flex-wrap items-start justify-between gap-4 p-4 sm:px-5">
               <div className="min-w-0 flex-1 space-y-1">
                 <div className="flex flex-wrap items-center gap-2">
-                  <h2 className="training-row-customer">{course.title}</h2>
+                  <h2 className="module-row-title">{course.title}</h2>
                   {course.archivedAt ? <Tag color={ARCHIVAL_STATUS_META.archived.color}>{ARCHIVAL_STATUS_META.archived.label}</Tag> : null}
                 </div>
                 {course.summary ? <p className="text-sm">{course.summary}</p> : null}

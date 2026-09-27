@@ -1,13 +1,15 @@
 import assert from "node:assert/strict";
 import { test } from "node:test";
-import { ALL_SCREENS, cleanScreens, homePathFor, visibleScreens } from "./screens";
+import { ADMINISTRATOR_SCREENS, ALL_SCREENS, cleanScreens, homePathFor, visibleScreens } from "./screens";
 import { expandPermissions, normaliseRoleHome, ROLE_HOME_ORDER, ROLE_HOMES } from "./permissions";
 
-test("administrators inherit every current screen regardless of old stored screen grants", () => {
+test("administrators inherit every current screen except restricted ones, regardless of old stored screen grants", () => {
   const permissions = expandPermissions(["staff.manage", "roles.manage"]);
   for (const stored of [[], ["overview"], ["reception", "today", "unknown"]]) {
-    assert.deepEqual([...visibleScreens(stored, permissions)], ALL_SCREENS);
+    assert.deepEqual([...visibleScreens(stored, permissions)], ADMINISTRATOR_SCREENS);
   }
+  assert.equal(ADMINISTRATOR_SCREENS.includes("hr"), false);
+  assert.deepEqual([...visibleScreens([], expandPermissions([], { superadmin: true }))], ALL_SCREENS);
   assert.equal(homePathFor("duty", [...permissions], []), "/duty");
   assert.equal(homePathFor("instructor", [...permissions], []), "/instructor");
   assert.equal(homePathFor("instructor", [...permissions], [], "desk"), "/schedule");

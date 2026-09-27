@@ -6,6 +6,7 @@ import { qualificationState } from "@/lib/people/data";
 import { QUALIFICATION_STATE_META } from "@/lib/people/constants";
 import { refundNumber, refundStatuses } from "@/lib/refunds/types";
 import { trainingMine } from "@/modules/training/my";
+import { hrShared } from "@/modules/hr/my";
 import type { MyItem, MyProvider } from "./types";
 
 /** My providers for the modules that exist today. Each reads only its own
@@ -100,7 +101,7 @@ const qualifications: MyProvider = {
   },
 };
 
-const PROVIDERS: MyProvider[] = [trainingMine, docsReading, refundsMine, qualifications];
+const PROVIDERS: MyProvider[] = [trainingMine, docsReading, refundsMine, qualifications, hrShared];
 
 export function registerMyProvider(provider: MyProvider) {
   if (PROVIDERS.some((p) => p.id === provider.id)) throw new Error(`My provider ${provider.id} is registered twice.`);

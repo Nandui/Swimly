@@ -9,7 +9,7 @@ import '../docs/docs.css';
 import '../docs/integration.css';
 import '../docs/brand.css';
 import '../docs/poolside.css';
-import './training.css';
+import '../workspace/module-workspace.css';
 import '@fontsource/plus-jakarta-sans/400.css';
 import '@fontsource/plus-jakarta-sans/500.css';
 import '@fontsource/plus-jakarta-sans/600.css';

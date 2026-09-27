@@ -2,7 +2,7 @@
 
 The staff app uses **shadcn/ui** and a cookie-backed light/dark/system appearance
 preference. Aquatics and the portal use Neutral surfaces, a logo-blue accent and
-Figtree. Docs, Refunds and Training use the Poolside Clear design (Plus Jakarta Sans, the fin's
+Figtree. Docs, Refunds, Training and HR use the Poolside Clear design (Plus Jakarta Sans, the fin's
 teal and aqua), scoped to those workspaces as described below. Components live in
 `src/components/shadcn`. The owner approved the full conversion on 13 September
 2026; no screen, form adapter or shared provider depends on another UI system.
@@ -150,14 +150,17 @@ Forms retain native FormData and labelled inputs. Status colours come only from
 Refunds metadata. Draft privacy and permissions change available controls, never
 the workspace boundary. See [docs/refunds.md](docs/refunds.md).
 
-Training at `/training` follows the Refunds pattern exactly: the shared Poolside Clear
-theme, the Docs shell layout with its own sidebar, mobile sheet, collapse preference and
-breadcrumb, and `src/app/training/training.css` (scoped by `.turnfin-training`) only
-arranging its screens. Its form dialogs pass `portalClassName` to `FormDialog` so they
-keep the theme, and selects inside them are shadcn `NativeSelect`. Statuses use
-`TrainingStatusTag` and `QualificationStateTag`, each with its own icon. The learner's
-side (`/me/training`) belongs to the My hub and uses its portal frame. See
-[docs/training.md](docs/training.md).
+Training (`/training`) and HR (`/hr`), and later Rota, are people-scoped workspaces
+built on one shell, `ModuleShell` (`src/components/workspace/module-shell.tsx`): the
+shared Poolside Clear theme and the Docs shell layout with the module's own sidebar, mobile
+sheet, collapse preference and breadcrumb. `src/app/workspace/module-workspace.css`
+(scoped by `.turnfin-module`, with `module-*` classes) only arranges their screens; a new
+module reuses it rather than copying a stylesheet. Their form dialogs pass `portalClassName="turnfin-docs turnfin-module"` to `FormDialog`
+so they keep the theme, and selects inside them are shadcn `NativeSelect`. Statuses use
+metadata-fed tags with their own icons (`TrainingStatusTag`, `QualificationStateTag`,
+`NoteVisibilityTag`, `ReviewStatusTag`). Each person's own side (`/me/training`,
+`/me/hr`) belongs to the My hub and uses its portal frame. See
+[docs/training.md](docs/training.md) and [docs/hr.md](docs/hr.md).
 
 ### Poolside Clear system rules (Docs and Refunds)
 

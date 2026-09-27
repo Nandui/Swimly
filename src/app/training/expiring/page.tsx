@@ -16,21 +16,21 @@ export default async function TrainingExpiringPage() {
   const { rows } = await expiringQualifications();
   return (
     <div className="space-y-6">
-      <div className="training-heading">
+      <div className="module-heading">
         <div className="space-y-2">
           <h1>Expiring qualifications</h1>
           <p className="text-sm">Expired, or expiring in the next {EXPIRY_WARNING_DAYS} days. Assign the renewal course so it is done in time.</p>
         </div>
       </div>
       {rows.length === 0 ? (
-        <div className="training-empty"><Hourglass aria-hidden="true" /><h2 className="font-semibold">Nothing expiring</h2><p className="mt-2 text-sm text-ui-muted-foreground">Everyone you cover is in date for the next {EXPIRY_WARNING_DAYS} days.</p></div>
+        <div className="module-empty"><Hourglass aria-hidden="true" /><h2 className="font-semibold">Nothing expiring</h2><p className="mt-2 text-sm text-ui-muted-foreground">Everyone you cover is in date for the next {EXPIRY_WARNING_DAYS} days.</p></div>
       ) : (
-        <ul className="training-list">
+        <ul className="module-list">
           {rows.map((row) => (
             <li key={row.id} className="flex flex-wrap items-start justify-between gap-4 p-4 sm:px-5">
               <div className="min-w-0 flex-1 space-y-1">
                 <div className="flex flex-wrap items-center gap-2">
-                  <Link href={`/training/people/${row.userId}`} className="training-row-customer underline-offset-4 hover:underline">{row.name}</Link>
+                  <Link href={`/training/people/${row.userId}`} className="module-row-title underline-offset-4 hover:underline">{row.name}</Link>
                   <QualificationStateTag state={row.state} />
                 </div>
                 <p className="text-sm">{row.qualification}{row.jobTitle ? <span className="text-ui-muted-foreground"> · {row.jobTitle}</span> : null}</p>

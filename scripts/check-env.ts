@@ -1,5 +1,6 @@
 import "dotenv/config";
 import { docsStorageConfig } from '../src/lib/docs/storage-config';
+import { hrStorageConfig } from '../src/lib/hr/storage-config';
 
 /** Run before every build. A deployment that boots without a database and
  *  discovers it on the first request has already served the error to someone;
@@ -8,6 +9,9 @@ const errors: string[] = [];
 const warnings: string[] = [];
 try { docsStorageConfig(process.env); }
 catch (error) { errors.push(error instanceof Error && error.name !== 'TypeError' ? error.message : 'Check the Docs database URLs.'); }
+// HR is optional until its database is provisioned, but never in a shared one.
+try { if (!hrStorageConfig(process.env)) warnings.push('HR_DATABASE_URL is not set, so HR and performance stays switched off.'); }
+catch (error) { errors.push(error instanceof Error && error.name !== 'TypeError' ? error.message : 'Check the HR database URLs.'); }
 
 if (!process.env.DATABASE_URL) {
   errors.push(

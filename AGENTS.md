@@ -44,9 +44,10 @@ read the design files below before changing how it looks.
 
 The entire staff app uses shadcn/ui components from src/components/shadcn.
 Aquatics and the portal use Neutral light/dark surfaces, a logo-blue accent and
-Figtree. Docs, Refunds and Training share the Poolside Clear theme (Plus Jakarta Sans, the
+Figtree. Docs, Refunds, Training and HR share the Poolside Clear theme (Plus Jakarta Sans, the
 fin's teal and aqua) in `src/app/docs/poolside.css`, scoped to `.turnfin-docs`;
-Refunds and Training add `.turnfin-refunds` / `.turnfin-training` for their own layouts. Use its type and control
+Refunds adds `.turnfin-refunds`; the people-scoped workspaces (Training, HR, Rota) share
+`ModuleShell` and `.turnfin-module` layouts. Use its type and control
 tokens (`--pc-text-*`, `--pc-control-height`, `--pc-radius-*`), never literal sizes
 (see DESIGN.md, docs/turnfin-docs.md and docs/refunds.md). The owner approved
 full conversion and the blue accent for actions, selection and focus.
@@ -97,7 +98,9 @@ needs a driver adapter (`@prisma/adapter-pg`), and the datasource URL lives in
 Development and production share the Aquatics database: schema changes must be
 additive. Docs uses its own `DOCS_DATABASE_URL` / `DOCS_DIRECT_URL` and schema
 migrations in `docs-database`; shared staff login/grants still come from Turnfin.
-Never repoint the main `DATABASE_URL` or fall back to it for Docs content.
+Never repoint the main `DATABASE_URL` or fall back to it for Docs content. HR and
+performance likewise use their own `HR_DATABASE_URL` / `HR_DIRECT_URL` and
+`hr-database/migrations` (docs/hr.md); unset, HR stays switched off.
 For user-authorized record management, use `npm run db:check` and the secured
 command-line workflow in [docs/database-operations.md](docs/database-operations.md).
 The local credential is in ignored `.vercel/swimly-operations.json`. Never print
