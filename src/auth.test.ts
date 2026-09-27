@@ -17,6 +17,8 @@ function fixture() {
     "@/lib/dev-sign-in": { devSignInAllowed: () => false },
     "@/lib/staff/preview": { mayPreview: (permissions: string[]) => permissions.includes("roles.manage"), previewedRole: async () => preview },
     "@/lib/clubs/current": { getCurrentClub: async () => ({ club: { id: "club-1", name: "Synthetic site" }, clubs: [] }) },
+    "@/lib/devices/shared-device": { currentSharedDevice: async () => null, SHARED_SESSION_MAX_MS: 12 * 60 * 60 * 1000 },
+    "@/lib/devices/pin": { authorizePin: async () => null },
   });
   return { auth, account, preview: (role: typeof preview) => { preview = role; } };
 }

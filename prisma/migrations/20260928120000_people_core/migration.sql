@@ -1,6 +1,6 @@
 -- People core: organisation, departments, line managers, additional role
--- assignments, qualifications, superadmin flag and shared-device session fields.
--- Additive only: the development and production database are the same Postgres.
+-- assignments, qualifications, superadmin flag, shared devices and PIN
+-- quick-switch fields. Additive only: development and production share Postgres.
 
 ALTER TABLE "StaffRole" ADD COLUMN     "restricted" BOOLEAN NOT NULL DEFAULT false;
 
@@ -9,7 +9,9 @@ ADD COLUMN     "jobTitle" TEXT,
 ADD COLUMN     "managerId" TEXT,
 ADD COLUMN     "orgId" TEXT,
 ADD COLUMN     "passwordAt" TIMESTAMP(3),
+ADD COLUMN     "pinFailures" INTEGER NOT NULL DEFAULT 0,
 ADD COLUMN     "pinHash" TEXT,
+ADD COLUMN     "pinLockedAt" TIMESTAMP(3),
 ADD COLUMN     "primaryClubId" TEXT,
 ADD COLUMN     "startedOn" DATE;
 
@@ -60,6 +62,27 @@ CREATE TABLE "RoleAssignment" (
     CONSTRAINT "RoleAssignment_pkey" PRIMARY KEY ("id")
 );
 
+CREATE TABLE "SharedDevice" (
+    "id" TEXT NOT NULL,
+    "orgId" TEXT NOT NULL,
+    "name" TEXT NOT NULL,
+    "clubId" TEXT,
+    "createdById" TEXT,
+    "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    "revokedAt" TIMESTAMP(3),
+    "lastUsedAt" TIMESTAMP(3),
+
+    CONSTRAINT "SharedDevice_pkey" PRIMARY KEY ("id")
+);
+
+CREATE TABLE "SharedDeviceUser" (
+    "deviceId" TEXT NOT NULL,
+    "userId" TEXT NOT NULL,
+    "lastUsedAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+
+    CONSTRAINT "SharedDeviceUser_pkey" PRIMARY KEY ("deviceId","userId")
+);
+
 CREATE TABLE "QualificationType" (
     "id" TEXT NOT NULL,
     "orgId" TEXT NOT NULL,
@@ -102,6 +125,10 @@ CREATE INDEX "RoleAssignment_roleId_idx" ON "RoleAssignment"("roleId");
 
 CREATE UNIQUE INDEX "RoleAssignment_userId_roleId_scopeKind_scopeId_key" ON "RoleAssignment"("userId", "roleId", "scopeKind", "scopeId");
 
+CREATE INDEX "SharedDevice_orgId_idx" ON "SharedDevice"("orgId");
+
+CREATE INDEX "SharedDeviceUser_userId_idx" ON "SharedDeviceUser"("userId");
+
 CREATE UNIQUE INDEX "QualificationType_orgId_name_key" ON "QualificationType"("orgId", "name");
 
 CREATE INDEX "Qualification_userId_idx" ON "Qualification"("userId");
@@ -115,7 +142,6 @@ CREATE INDEX "User_orgId_idx" ON "User"("orgId");
 ALTER TABLE "User" ADD CONSTRAINT "User_orgId_fkey" FOREIGN KEY ("orgId") REFERENCES "Organisation"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
 
 ALTER TABLE "User" ADD CONSTRAINT "User_managerId_fkey" FOREIGN KEY ("managerId") REFERENCES "User"("id") ON DELETE SET NULL ON UPDATE CASCADE;
-
 
 ALTER TABLE "Department" ADD CONSTRAINT "Department_orgId_fkey" FOREIGN KEY ("orgId") REFERENCES "Organisation"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
 
@@ -131,6 +157,9 @@ ALTER TABLE "RoleAssignment" ADD CONSTRAINT "RoleAssignment_userId_fkey" FOREIGN
 
 ALTER TABLE "RoleAssignment" ADD CONSTRAINT "RoleAssignment_roleId_fkey" FOREIGN KEY ("roleId") REFERENCES "StaffRole"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
 
+ALTER TABLE "SharedDeviceUser" ADD CONSTRAINT "SharedDeviceUser_deviceId_fkey" FOREIGN KEY ("deviceId") REFERENCES "SharedDevice"("id") ON DELETE CASCADE ON UPDATE CASCADE;
+
+ALTER TABLE "SharedDeviceUser" ADD CONSTRAINT "SharedDeviceUser_userId_fkey" FOREIGN KEY ("userId") REFERENCES "User"("id") ON DELETE CASCADE ON UPDATE CASCADE;
 
 ALTER TABLE "QualificationType" ADD CONSTRAINT "QualificationType_orgId_fkey" FOREIGN KEY ("orgId") REFERENCES "Organisation"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
 
@@ -139,7 +168,6 @@ ALTER TABLE "Qualification" ADD CONSTRAINT "Qualification_orgId_fkey" FOREIGN KE
 ALTER TABLE "Qualification" ADD CONSTRAINT "Qualification_userId_fkey" FOREIGN KEY ("userId") REFERENCES "User"("id") ON DELETE CASCADE ON UPDATE CASCADE;
 
 ALTER TABLE "Qualification" ADD CONSTRAINT "Qualification_typeId_fkey" FOREIGN KEY ("typeId") REFERENCES "QualificationType"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
-
 
 ALTER TABLE "Club" ADD CONSTRAINT "Club_orgId_fkey" FOREIGN KEY ("orgId") REFERENCES "Organisation"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
 

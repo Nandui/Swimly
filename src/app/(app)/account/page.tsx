@@ -11,6 +11,8 @@ import { permissionsOf } from "@/lib/authz";
 import { pageSession } from "@/lib/page-guards";
 import { roleReach } from "@/lib/staff/constants";
 import { PERMISSIONS } from "@/lib/staff/permissions";
+import { PinSettings } from "@/components/devices/session-forms";
+import { prisma } from "@/lib/prisma";
 
 export const metadata: Metadata = { title: "Account" };
 
@@ -25,6 +27,7 @@ export default async function AccountPage() {
   const held = permissionsOf(session);
   const reach = roleReach(session.user.permissions ?? []);
   const granted = PERMISSIONS.filter((permission) => held.has(permission.key));
+  const pin = await prisma.user.findUnique({ where: { id: session.user.id }, select: { pinHash: true, pinLockedAt: true } });
 
   return (
     <div className="min-w-0 flex flex-col gap-6">
@@ -86,6 +89,17 @@ export default async function AccountPage() {
           and it was never private. You stay signed in.
         </Lead>
         <ChangePasswordForm />
+      </section>
+
+      <section className="min-w-0 flex flex-col gap-3">
+        <h2 className="text-xl font-semibold tracking-tight">Quick-switch PIN</h2>
+        <Lead>
+          On a shared reception computer or poolside tablet, tap your name and enter this PIN
+          instead of your password. It only works on devices registered as shared, and only after
+          you have signed in there once with your password. HR and other restricted records still
+          ask for your password.
+        </Lead>
+        <PinSettings hasPin={!!pin?.pinHash} locked={!!pin?.pinLockedAt} />
       </section>
     </div>
   );

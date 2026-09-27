@@ -51,6 +51,9 @@ const hrUrl = existsSync("hr-database/migrations")
 const prisma = new PrismaClient({ adapter: new PrismaPg({ connectionString: mainUrl }) });
 const ORG = "org_leisureworld";
 const hash = await bcrypt.hash(SANDBOX_PASSWORD, 10);
+/** Every sandbox account also has this quick-switch PIN for shared devices. */
+export const SANDBOX_PIN = "2580";
+const pinHash = await bcrypt.hash(SANDBOX_PIN, 10);
 const roles: Record<string, string> = {};
 for (const [i, role] of SYSTEM_ROLES.entries()) {
   // Earlier migrations already create the system roles; bring them to the catalogue.
@@ -85,7 +88,7 @@ const people: Seed[] = [
 ];
 for (const p of people) {
   await prisma.user.create({ data: {
-    id: p.id, name: p.name, email: `${p.id.slice(4)}@sandbox.invalid`, passwordHash: hash, passwordAt: new Date(),
+    id: p.id, name: p.name, email: `${p.id.slice(4)}@sandbox.invalid`, passwordHash: hash, passwordAt: new Date(), pinHash,
     staffRoleId: roles[p.role], orgId: ORG, jobTitle: p.title, primaryClubId: p.site, isSuperadmin: !!p.superadmin,
     startedOn: new Date("2023-04-03T00:00:00Z"),
   } });

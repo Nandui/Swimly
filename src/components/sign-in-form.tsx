@@ -7,6 +7,7 @@ import { Card } from "@/components/shadcn/card";
 
 import { useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
+import Link from "next/link";
 import { signIn } from "next-auth/react";
 import { AppLogo } from "@/components/app-logo";
 
@@ -19,7 +20,7 @@ import { APP_NAME } from "@/lib/app";
  *  `devAdminName` arrives already decided by the server: the page only passes
  *  a name when the deployment is allowed a passwordless sign-in, so the client
  *  never carries the rule and cannot be talked into showing the button. */
-export function SignInForm({ devAdminName }: { devAdminName: string | null }) {
+export function SignInForm({ devAdminName, sharedDeviceName = null }: { devAdminName: string | null; sharedDeviceName?: string | null }) {
   const router = useRouter();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -86,6 +87,15 @@ export function SignInForm({ devAdminName }: { devAdminName: string | null }) {
             </div>
             <h1 className="text-2xl font-semibold tracking-tight">Sign in</h1>
           </div>
+
+          {sharedDeviceName ? (
+            <Notice
+              title={`${sharedDeviceName} is a shared device`}
+              description="If you have set a PIN and signed in here before, switch in with it instead."
+              tone="info"
+              actions={<Button asChild variant="outline"><Link href="/switch">Switch user</Link></Button>}
+            ></Notice>
+          ) : null}
 
           <form onSubmit={handleSubmit}>
             <div className="min-w-0 flex flex-col gap-4">

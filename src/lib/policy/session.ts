@@ -109,3 +109,15 @@ export async function logAccess(input: { actor: Actor; cap: PermissionKey; entit
     details: { cap: input.cap, subjectUserIds: [...input.subjectUserIds].slice(0, 200) },
   });
 }
+
+/** For pages that open restricted records: sends the person to confirm their
+ *  password first when the session is a PIN switch or not recently confirmed,
+ *  then back to `returnTo`. */
+export async function requireFreshSession(cap: PermissionKey, returnTo: string) {
+  const actor = await currentActor();
+  if (needsStepUp(actor, cap)) {
+    const { redirect } = await import("next/navigation");
+    redirect(`/confirm-password?next=${encodeURIComponent(returnTo)}`);
+  }
+  return actor;
+}

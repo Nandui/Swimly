@@ -100,6 +100,24 @@ line manager, department lead, site manager, multi-site manager, administrator
 and superadmin, against self, a report, a report's report, another department,
 another site and another organisation.
 
+## Shared devices
+
+Reception computers and poolside tablets are used by whoever is on shift. Someone who
+manages staff registers a browser as a shared device (Staff › Shared devices); it gets
+a signed cookie (`src/lib/devices/shared-device.ts`) and can be revoked centrally.
+
+- **Quick switch** (`/switch`): people tap their name and enter a personal PIN (set on
+  Account with their password). Only people who have signed in on that device with
+  their password and have a PIN are listed. Five wrong PINs lock the PIN until the
+  person signs in with their password.
+- **Idle sign-out**: shared-device sessions return to the switch screen after 5 idle
+  minutes, and never last more than 12 hours.
+- **Step-up**: a PIN session never counts as a fresh password. Restricted records
+  (HR, performance) send the person to confirm their password first
+  (`requireFreshSession`, `/confirm-password`), valid for 15 minutes.
+- The session records how and when the person proved who they are
+  (`authMethod`, `authAt`, `sharedDevice`); it never carries permissions.
+
 ## Rules
 
 - Never check a role name. Ask for a capability, and for records, a resource.

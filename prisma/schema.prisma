@@ -170,6 +170,9 @@ model User {
   pinHash       String?
   /// When the password was last changed or verified for step-up.
   passwordAt    DateTime?
+  /// Wrong PINs since the last success; five lock the PIN until a password sign-in.
+  pinFailures   Int       @default(0)
+  pinLockedAt   DateTime?
 
   organisation   Organisation?    @relation(fields: [orgId], references: [id], onDelete: Restrict)
   manager        User?            @relation("LineManager", fields: [managerId], references: [id], onDelete: SetNull)
@@ -177,6 +180,7 @@ model User {
   departments    UserDepartment[]
   roleAssignments RoleAssignment[] @relation("AssignedRole")
   qualifications Qualification[]  @relation("QualificationHolder")
+  sharedDevices  SharedDeviceUser[]
 
   /// `Restrict`, not `SetNull`: an account with no role has no permissions and
   /// cannot sign in, so deleting a role out from under one of its holders
@@ -276,6 +280,38 @@ model RoleAssignment {
 
   @@unique([userId, roleId, scopeKind, scopeId])
   @@index([roleId])
+}
+
+/// A browser marked as shared (a reception PC, a poolside tablet). Its signed
+/// cookie enables PIN quick-switch and short idle sign-out. Revoking it ends
+/// quick-switch there at once.
+model SharedDevice {
+  id          String    @id @default(cuid())
+  orgId       String
+  name        String
+  clubId      String?
+  createdById String?
+  createdAt   DateTime  @default(now())
+  revokedAt   DateTime?
+  lastUsedAt  DateTime?
+
+  people SharedDeviceUser[]
+
+  @@index([orgId])
+}
+
+/// Who can quick-switch on a shared device: people who signed in there with
+/// their password at least once and have a PIN.
+model SharedDeviceUser {
+  deviceId   String
+  userId     String
+  lastUsedAt DateTime @default(now())
+
+  device SharedDevice @relation(fields: [deviceId], references: [id], onDelete: Cascade)
+  user   User         @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@id([deviceId, userId])
+  @@index([userId])
 }
 
 /// A kind of certificate: NPLQ, First Aid, Swim Teacher licence. `validityMonths`

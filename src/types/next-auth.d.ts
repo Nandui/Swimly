@@ -67,5 +67,9 @@ declare module "next-auth" {
 declare module "@auth/core/jwt" {
   interface JWT {
     sub?: string;
+    /** How the person proved who they are, and when (never what they may do). */
+    authMethod?: "password" | "pin" | "dev";
+    authAt?: number;
+    sharedDevice?: boolean;
   }
 }

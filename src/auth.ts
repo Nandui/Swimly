@@ -8,6 +8,8 @@ import { prisma } from "@/lib/prisma";
 import { mayPreview, previewedRole } from "@/lib/staff/preview";
 import { ADMINISTRATOR_PERMISSIONS } from "@/lib/staff/permissions";
 import { getCurrentClub } from "@/lib/clubs/current";
+import { currentSharedDevice, SHARED_SESSION_MAX_MS } from "@/lib/devices/shared-device";
+import { authorizePin } from "@/lib/devices/pin";
 import { ACCOUNT_SELECT, sessionUserFor } from "@/lib/staff/session-user";
 
 /** Built as a function so the dev provider is **absent** from the array in
@@ -34,7 +36,30 @@ function providers(): NextAuthConfig["providers"] {
         if (!user?.passwordHash || !user.isActive) return null;
         if (!(await bcrypt.compare(password, user.passwordHash))) return null;
 
+        // A password sign-in is fresh for step-up, clears any PIN lock, and on
+        // a shared device adds the person to its quick-switch list (if they
+        // have a PIN).
+        await prisma.user.update({ where: { id: user.id }, data: { passwordAt: new Date(), pinFailures: 0, pinLockedAt: null } });
+        const device = await currentSharedDevice();
+        if (device && user.pinHash && user.orgId === device.orgId) {
+          await prisma.sharedDeviceUser.upsert({
+            where: { deviceId_userId: { deviceId: device.id, userId: user.id } },
+            update: { lastUsedAt: new Date() }, create: { deviceId: device.id, userId: user.id },
+          });
+        }
         return { id: user.id, email: user.email, name: user.name };
+      },
+    }),
+    // Quick switch on a registered shared device: the person taps their name
+    // and enters their PIN. Only people who signed in there with their
+    // password (and set a PIN) can; five wrong PINs lock it until they do so
+    // again. A PIN session never counts as a fresh password for restricted data.
+    Credentials({
+      id: "pin",
+      name: "PIN",
+      credentials: { userId: {}, pin: {} },
+      async authorize(credentials) {
+        return authorizePin(await currentSharedDevice(), String(credentials?.userId ?? ""), String(credentials?.pin ?? ""));
       },
     }),
   ];
@@ -77,8 +102,15 @@ const {
   pages: { signIn: "/sign-in" },
   providers: providers(),
   callbacks: {
-    jwt({ token, user }) {
-      if (user) token.sub = user.id;
+    // The token carries who, and how and when they proved it: never what they
+    // may do. A PIN switch is marked, so restricted data asks for the password.
+    async jwt({ token, user, account }) {
+      if (user) {
+        token.sub = user.id;
+        token.authMethod = account?.provider === "pin" ? "pin" : account?.provider === "dev-admin" ? "dev" : "password";
+        token.authAt = Date.now();
+        token.sharedDevice = account?.provider === "pin" || !!(await currentSharedDevice());
+      }
       return token;
     },
     // Placeholders only. The permission list is read from the database in
@@ -91,6 +123,9 @@ const {
       session.user.permissions = [];
       session.user.home = "calendar";
       session.user.screens = [];
+      session.user.authMethod = token.authMethod ?? "password";
+      session.user.authAt = token.authAt ?? null;
+      session.user.sharedDevice = token.sharedDevice === true;
       return session;
     },
   },
@@ -136,6 +171,9 @@ export const auth = cache(async function auth(): Promise<Session | null> {
     // Deleted or deactivated reads as signed out. The cookie survives; the
     // access does not.
     if (!current?.isActive) return null;
+    // A shared-device session ends after its maximum age whatever the idle
+    // timer did (a tablet left on the deck overnight).
+    if (session.user.sharedDevice && (!session.user.authAt || Date.now() - session.user.authAt > SHARED_SESSION_MAX_MS)) return null;
 
     const user = sessionUserFor(current, await currentSiteForSession());
     if (!user) return null;

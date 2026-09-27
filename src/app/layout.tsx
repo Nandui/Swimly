@@ -5,6 +5,9 @@ import { ToastBridge } from "@/lib/toast";
 import { TooltipProvider } from "@/components/shadcn/tooltip";
 import { THEME_COOKIE, parseThemeMode } from "@/lib/theme-mode";
 import { APP_NAME } from "@/lib/app";
+import { auth } from "@/auth";
+import { SharedDeviceIdle } from "@/components/devices/session-forms";
+import { SHARED_IDLE_MINUTES } from "@/lib/devices/constants";
 // Keep the app's established typeface self-hosted in every environment.
 import "@fontsource/figtree/400.css";
 import "@fontsource/figtree/500.css";
@@ -42,6 +45,9 @@ export default async function RootLayout({ children }: LayoutProps<"/">) {
   // has nothing to disagree about. No cookie means "follow the device".
   const jar = await cookies();
   const mode = parseThemeMode(jar.get(THEME_COOKIE)?.value);
+  // Shared reception computers and poolside tablets return to the switch
+  // screen when left idle, so nobody walks up to someone else's session.
+  const shared = (await auth())?.user?.sharedDevice === true;
 
   return (
     // The appearance provider updates this attribute when the preference changes.
@@ -54,6 +60,7 @@ export default async function RootLayout({ children }: LayoutProps<"/">) {
         <ThemeProvider initialMode={mode}>
           <TooltipProvider>
             <ToastBridge />
+            {shared ? <SharedDeviceIdle minutes={SHARED_IDLE_MINUTES} /> : null}
             {children}
           </TooltipProvider>
         </ThemeProvider>
