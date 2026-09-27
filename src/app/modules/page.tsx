@@ -19,6 +19,7 @@ export default async function ModulesPage({ searchParams }: PageProps<"/modules"
   const session = await pageSession();
   const query = await searchParams;
   const landing = staffPortalPath(session.user.home, session.user.permissions, session.user.screens);
-  if (query.view !== "all" && landing !== "/modules") redirect(landing);
+  // The app list on its own; without ?view=all it sends people to their front door.
+  if (query.view !== "all") redirect(landing);
   return <StaffPortal modules={modulesFor(session)} receptionAllowed={receptionPortalAccess(session.user.permissions, session.user.screens).available} userName={session.user.name ?? "Staff member"} />;
 }

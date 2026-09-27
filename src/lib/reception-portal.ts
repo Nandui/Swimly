@@ -59,5 +59,5 @@ export type ReceptionPortalAccess = ReturnType<typeof receptionPortalAccess>;
 export function staffPortalPath(home: string, permissions: readonly string[], screens: readonly string[]) {
   return home === RECEPTION_PORTAL_HOME && receptionPortalAccess(permissions, screens).available
     ? RECEPTION_PORTAL_PATH
-    : "/modules";
+    : "/me";
 }

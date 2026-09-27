@@ -100,6 +100,20 @@ line manager, department lead, site manager, multi-site manager, administrator
 and superadmin, against self, a report, a report's report, another department,
 another site and another organisation.
 
+## The My hub
+
+`/me` is everyone's front door (`/` goes there; a role home such as the Reception
+Portal still opens first, and `/me?view=me` shows the hub anyway). It lists what needs
+the person across every module, then the apps they can open (the module registry).
+
+Each module contributes **My providers** (`src/modules/my`): a provider returns only the
+signed-in person's own items from its own module's data, never another person's records
+and never another module's tables. Self-service needs no capability. The hub runs them in
+parallel with a 4-second limit each; one that fails shows "couldn't load" and the rest
+still appear. Today: required reading (Docs), my refund requests (Refunds, for people who
+can use Refunds) and my qualifications (People core). Training, HR and Rota add theirs.
+Only items flagged `needsAction` count towards "things need you".
+
 ## Shared devices
 
 Reception computers and poolside tablets are used by whoever is on shift. Someone who

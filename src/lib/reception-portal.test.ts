@@ -11,9 +11,9 @@ test("reception landing is an explicit preference and does not change other staf
   assert.equal(normaliseRoleHome("reception-portal"), "reception-portal");
   assert.equal(staffPortalPath("reception-portal", receptionPermissions, receptionScreens), "/reception-portal");
   for (const home of ["calendar", "duty", "instructor", "reception", "unknown"]) {
-    assert.equal(staffPortalPath(home, receptionPermissions, receptionScreens), "/modules");
+    assert.equal(staffPortalPath(home, receptionPermissions, receptionScreens), "/me");
   }
-  assert.equal(staffPortalPath("reception-portal", [], []), "/modules");
+  assert.equal(staffPortalPath("reception-portal", [], []), "/me");
 });
 
 test("receptionists only receive tasks and handoffs their current grants permit", () => {
@@ -56,7 +56,7 @@ test("administrators inherit reception access without a new grant; a single mana
 
 test("Instructor-only users gain no portal or desk access; opening Aquatics never loops back", () => {
   assert.equal(receptionPortalAccess(["attendance.mark"], ["instructor"]).available, false);
-  assert.equal(staffPortalPath("reception-portal", ["attendance.mark"], ["instructor"]), "/modules");
+  assert.equal(staffPortalPath("reception-portal", ["attendance.mark"], ["instructor"]), "/me");
   assert.equal(homePathFor("reception-portal", receptionPermissions, receptionScreens, "desk"), "/students");
   assert.equal(homePathFor("reception-portal", [...receptionPermissions, "attendance.mark"], [...receptionScreens, "instructor"]), "/students");
   assert.equal(homePathFor("reception-portal", receptionPermissions, [...receptionScreens, "calendar"], "desk"), "/schedule");

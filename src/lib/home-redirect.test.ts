@@ -38,12 +38,12 @@ test("root and Swimly landing routes still require authentication", async () => 
   for (const route of ["src/app/page.tsx", ...routes]) await assert.rejects(page(route, null)(), { message: "Redirect /sign-in" });
 });
 
-test("the front door offers modules without changing role-specific Swimly homes", async () => {
+test("the front door is the My hub, without changing role-specific Swimly homes", async () => {
   for (const user of [
     { home: "overview", screens: [], permissions: ["staff.manage", "roles.manage"] },
     { home: "instructor", screens: ["instructor"], permissions: ["attendance.mark"] },
     { home: "duty", screens: ["duty"], permissions: ["classes.cancel"] },
   ]) {
-    await assert.rejects(page("src/app/page.tsx", user)(), { message: "Redirect /modules" });
+    await assert.rejects(page("src/app/page.tsx", user)(), { message: "Redirect /me" });
   }
 });
