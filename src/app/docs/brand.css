@@ -1,6 +1,6 @@
-/* Turnfin Docs repository theme, scoped to this module and its portals. */
-.turnfin-docs,
-body:has(.reception-portal) {
+/* Turnfin Docs repository theme, scoped to this module and its portals. Poolside Clear
+   (poolside.css, loaded after this) overrides it; the Reception Portal no longer has its own. */
+.turnfin-docs {
   --brand-navy: #0b2842;
   --brand-ocean: #0077df;
   --brand-aqua: #00bdcf;

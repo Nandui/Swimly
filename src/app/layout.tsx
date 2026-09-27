@@ -8,12 +8,14 @@ import { APP_NAME } from "@/lib/app";
 import { auth } from "@/auth";
 import { SharedDeviceIdle } from "@/components/devices/session-forms";
 import { SHARED_IDLE_MINUTES } from "@/lib/devices/constants";
-// Keep the app's established typeface self-hosted in every environment.
-import "@fontsource/figtree/400.css";
-import "@fontsource/figtree/500.css";
-import "@fontsource/figtree/600.css";
-import "@fontsource/figtree/700.css";
+// Poolside Clear across the whole app: its typeface, self-hosted in every
+// environment, and its tokens and system rules (scoped to .turnfin-app on <body>).
+import "@fontsource/plus-jakarta-sans/400.css";
+import "@fontsource/plus-jakarta-sans/500.css";
+import "@fontsource/plus-jakarta-sans/600.css";
+import "@fontsource/plus-jakarta-sans/700.css";
 import "./globals.css";
+import "./docs/poolside.css";
 
 export const metadata: Metadata = {
   title: { default: APP_NAME, template: `%s · ${APP_NAME}` },
@@ -33,8 +35,8 @@ export const viewport: Viewport = {
   initialScale: 1,
   viewportFit: "cover",
   themeColor: [
-    { media: "(prefers-color-scheme: light)", color: "#f1f1f1" },
-    { media: "(prefers-color-scheme: dark)", color: "#1b1b1b" },
+    { media: "(prefers-color-scheme: light)", color: "#f4f8f9" },
+    { media: "(prefers-color-scheme: dark)", color: "#0b161a" },
   ],
 };
 
@@ -56,7 +58,7 @@ export default async function RootLayout({ children }: LayoutProps<"/">) {
       suppressHydrationWarning
       data-theme={mode === "system" ? undefined : mode}
     >
-      <body>
+      <body className="turnfin-app">
         <ThemeProvider initialMode={mode}>
           <TooltipProvider>
             <ToastBridge />

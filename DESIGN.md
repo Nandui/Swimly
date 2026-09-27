@@ -1,9 +1,15 @@
 # Swimly — design and implementation
 
 The staff app uses **shadcn/ui** and a cookie-backed light/dark/system appearance
-preference. Aquatics and the portal use Neutral surfaces, a logo-blue accent and
-Figtree. Docs, Refunds, Training, HR and Rota use the Poolside Clear design (Plus Jakarta Sans, the fin's
-teal and aqua), scoped to those workspaces as described below. Components live in
+preference. **The whole app uses the Poolside Clear design** (owner decision, 27 September
+2026): Plus Jakarta Sans, the fin's teal and aqua, a cool canvas with white panels and a
+pool-night dark mode. Its tokens and system rules (type scale, controls, fields, badges,
+alerts, dialogs, focus) live in `src/app/docs/poolside.css`, scoped to `.turnfin-app`,
+which the root layout puts on `<body>`; the root layout also loads the typeface. Aquatics,
+Instructor, the portal, My hub, the Reception Portal, Docs, Refunds, Training, HR and Rota all
+follow it. Rules for the Docs/Refunds shell and their pages stay scoped to `.turnfin-docs`.
+Earlier mentions below of Figtree, "Neutral surfaces" or the Reception Portal's Inter theme
+describe the retired look; the Poolside tokens now drive those same components. Components live in
 `src/components/shadcn`. The owner approved the full conversion on 13 September
 2026; no screen, form adapter or shared provider depends on another UI system.
 
@@ -19,7 +25,7 @@ teal and aqua), scoped to those workspaces as described below. Components live i
 - Status labels use Badge or the shared Tag composition, with `data-tone`
   selected by a domain metadata map. Do not choose status colours at a call site.
 - One H1 per page, 24px and semibold. Body text is 14px, supporting metadata
-  12px, and section headings 20px. Preserve the existing Figtree weights.
+  12px, and section headings 20px, on the Poolside type scale (`--pc-text-*`).
 - Default gaps are 16px within groups and 24px between major sections.
   The shell owns a single content inset: 16px, increasing to 24px at viewport
   widths of 1024px and above in the desk workspace. Instructor keeps 16px.
@@ -104,14 +110,13 @@ marker and New button), and a pool-night dark mode. The theme lives in `src/app/
 `.turnfin-docs` (and `.turnfin-refunds`), and re-points the shared `--ui-*` tokens
 and the Docs layout adapter; the imported Docs sidebar, reading and authoring
 layouts in `docs.css` are unchanged. Labels are sentence case, never capitals.
-Controls use the shared shadcn primitives. Aquatics and the portal retain Figtree and their
-existing Neutral theme. See [Docs integration](docs/turnfin-docs.md).
+Controls use the shared shadcn primitives, which pick up Poolside Clear everywhere through
+`.turnfin-app`. See [Docs integration](docs/turnfin-docs.md).
 
 The staff portal at `/modules` sits outside the desk and Instructor shells.
 It has a small Turnfin header with appearance and sign-out controls, one
 main landmark and a centred module grid capped at 1024px. The grid uses one,
-two and three columns on phone, tablet and desktop, with the existing Figtree,
-Neutral surfaces and blue action. Aquatics uses a pool-ladder line icon and a 44px
+two and three columns on phone, tablet and desktop, in Poolside Clear. Aquatics uses a pool-ladder line icon and a 44px
 Open action. All modules use matching Lucide icons and metadata-fed status
 badges, without inert links or buttons. Docs is available to staff with its
 screen and permission, and opens `/docs` using the shared login. Bookings is not a
@@ -122,7 +127,7 @@ Its original artwork is framed inside a 48px header slot to account for the
 file's transparent padding. It also supplies the portal's browser/touch icon;
 the Aquatics module opens the existing Swimly workspace.
 
-The Reception Portal uses the Docs Inter and ocean-blue/aqua theme in a bento
+The Reception Portal uses Poolside Clear, like the rest of the app, in a bento
 composition: a wide
 Aquatics task panel beside a distinct follow-up panel, followed by permitted
 modules. Its content is capped at 1152px; the shared portal frame owns the only

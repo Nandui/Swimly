@@ -1,7 +1,11 @@
-/* Poolside Clear, the Turnfin staff-module design: the fin's teal and aqua, Plus Jakarta Sans,
-   a calm canvas with white 16px panels and a deep pool-night dark mode. Scoped to .turnfin-docs,
-   which Docs and Refunds use for their shells, dialogs, popovers and sheets. It re-points the
-   shared --ui-* tokens and the Docs layout adapter; brand.css keeps the Reception Portal theme. */
+/* Poolside Clear, the Turnfin design for the whole staff app (owner decision, September 2026):
+   the fin's teal and aqua, Plus Jakarta Sans, a calm canvas with white 16px panels and a deep
+   pool-night dark mode. Tokens and the system rules (type, controls, fields, badges, alerts,
+   dialogs, focus) are scoped to .turnfin-app, which the root layout puts on <body>, so every
+   page and every portalled dialog gets them. Rules for the Docs/Refunds shell and their pages
+   stay scoped to .turnfin-docs. It re-points the shared --ui-* tokens, so shadcn primitives
+   follow without per-page work. */
+.turnfin-app,
 .turnfin-docs,
 .turnfin-refunds {
   --pc-canvas: light-dark(#f4f8f9, #0b161a);
@@ -147,7 +151,8 @@
   --slate: var(--pc-ink-muted);
   --radius: 16px;
 }
-.turnfin-docs {
+.turnfin-app,
+.turnfin-app {
   font-family: var(--font-sans);
   font-size: var(--pc-text-body);
   line-height: var(--pc-leading-body);
@@ -155,19 +160,19 @@
 }
 
 /* Type: one bold page title, 600-weight section titles, sentence-case labels (never capitals). */
-.turnfin-docs :is(h1, h2, h3, h4) { font-family: var(--font-sans); color: var(--pc-ink); }
-.turnfin-docs h1 { font-size: var(--pc-text-page); font-weight: 700; line-height: var(--pc-leading-page); letter-spacing: -0.015em; }
+.turnfin-app :is(h1, h2, h3, h4) { font-family: var(--font-sans); color: var(--pc-ink); }
+.turnfin-app h1 { font-size: var(--pc-text-page); font-weight: 700; line-height: var(--pc-leading-page); letter-spacing: -0.015em; }
 /* Heading defaults sit in the base layer so module rules (e.g. a card title at body size) and
    Tailwind utilities in the markup can still refine them. */
 @layer base {
-  .turnfin-docs h2 { font-size: var(--pc-text-title); font-weight: 600; line-height: var(--pc-leading-title); letter-spacing: -0.01em; }
-  .turnfin-docs :is(h3, h4) { font-size: var(--pc-text-body); font-weight: 600; line-height: var(--pc-leading-body); letter-spacing: 0; }
+  .turnfin-app h2 { font-size: var(--pc-text-title); font-weight: 600; line-height: var(--pc-leading-title); letter-spacing: -0.01em; }
+  .turnfin-app :is(h3, h4) { font-size: var(--pc-text-body); font-weight: 600; line-height: var(--pc-leading-body); letter-spacing: 0; }
 }
 .turnfin-docs :is(.eyebrow, .section-kicker, .workspace-nav-label, .data-table th, .risk-read-card dt, .emergency-shortcut-top > span, .document-kicker) { text-transform: none; letter-spacing: 0; }
 .turnfin-docs :is(.eyebrow, .section-kicker) { font-size: var(--pc-text-caption); line-height: var(--pc-leading-caption); font-weight: 600; color: var(--pc-primary-ink); }.turnfin-docs .tabular-nums { font-variant-numeric: tabular-nums; }
 
 /* Shell: sidebar and page share the canvas; content sits on white surfaces. */
-.turnfin-docs .turnfin-workspace { background: var(--pc-canvas); }
+.turnfin-app .turnfin-workspace { background: var(--pc-canvas); }
 .turnfin-docs .workspace-sidebar { background: var(--pc-canvas); border-right: 1px solid var(--pc-line); padding: 20px 12px 12px; }
 .turnfin-docs .workspace-brand-row .turnfin-brand { gap: 8px; }
 .turnfin-docs .workspace-brand-row .brand-wordmark { font-size: 20px; font-weight: 700; letter-spacing: -0.02em; }
@@ -197,10 +202,10 @@
 .turnfin-docs .workspace-breadcrumb [data-slot='breadcrumb-link']:hover { color: var(--pc-ink); text-decoration: underline; text-underline-offset: 3px; }
 .turnfin-docs .workspace-page { background: var(--pc-canvas); }
 .turnfin-docs .workspace-page-content { padding: 32px clamp(16px, 3vw, 48px); }
-.turnfin-docs .app-footer { border-top-color: var(--pc-line); color: var(--pc-ink-muted); font-size: var(--pc-text-caption); }
+.turnfin-app .app-footer { border-top-color: var(--pc-line); color: var(--pc-ink-muted); font-size: var(--pc-text-caption); }
 .turnfin-docs .app-footer .brand-values { font-size: var(--pc-text-caption); }
 .turnfin-docs .workspace-mobile-sheet { background: var(--pc-canvas); color: var(--pc-ink); }
-.turnfin-docs :is(a, button, [role='tab']):focus-visible { outline: 2px solid var(--pc-focus); outline-offset: 2px; }
+.turnfin-app :is(a, button, [role='tab']):focus-visible { outline: 2px solid var(--pc-focus); outline-offset: 2px; }
 
 /* Sidebar: white in light mode, a deep pool-teal island in dark mode. Its tokens are redefined
    here, so every sidebar rule (brand, organisation, search, navigation, footer, profile) follows
@@ -292,42 +297,42 @@
    popover triggers (Radix swaps their data-slot) are caught through .ui-motion-press, a class
    only the shared Button sets. Icon buttons are square; editor toolbar buttons keep their own
    compact inset. */
-.turnfin-docs :is([data-slot='button'], .ui-motion-press) { min-height: var(--pc-control-height); border-radius: var(--pc-radius-control); font-size: var(--pc-text-body); line-height: var(--pc-leading-body); font-weight: 600; transition: background-color 120ms var(--pc-ease), color 120ms var(--pc-ease), border-color 120ms var(--pc-ease), translate 120ms var(--pc-ease); }
-.turnfin-docs .ui-motion-press:not([data-size^='icon'], .toolbar-button) { padding-inline: var(--pc-control-pad); }
-.turnfin-docs .ui-motion-press[data-size^='icon'] { width: var(--pc-control-height); min-width: var(--pc-control-height); padding: 0; }
-.turnfin-docs .ui-motion-press > svg { width: 18px; height: 18px; }
-.turnfin-docs .ui-motion-press[data-variant='outline'] { background: var(--pc-surface); border: 1px solid var(--pc-line-strong); box-shadow: none; color: var(--pc-ink); }
-.turnfin-docs .ui-motion-press[data-variant='outline']:hover { background: var(--pc-surface-sunken); }
-.turnfin-docs .ui-motion-press[data-variant='ghost'] { color: var(--pc-primary); }
-.turnfin-docs .ui-motion-press[data-variant='ghost']:hover { background: var(--pc-primary-soft); color: var(--pc-primary-ink); }
+.turnfin-app :is([data-slot='button'], .ui-motion-press) { min-height: var(--pc-control-height); border-radius: var(--pc-radius-control); font-size: var(--pc-text-body); line-height: var(--pc-leading-body); font-weight: 600; transition: background-color 120ms var(--pc-ease), color 120ms var(--pc-ease), border-color 120ms var(--pc-ease), translate 120ms var(--pc-ease); }
+.turnfin-app .ui-motion-press:not([data-size^='icon'], .toolbar-button) { padding-inline: var(--pc-control-pad); }
+.turnfin-app .ui-motion-press[data-size^='icon'] { width: var(--pc-control-height); min-width: var(--pc-control-height); padding: 0; }
+.turnfin-app .ui-motion-press > svg { width: 18px; height: 18px; }
+.turnfin-app .ui-motion-press[data-variant='outline'] { background: var(--pc-surface); border: 1px solid var(--pc-line-strong); box-shadow: none; color: var(--pc-ink); }
+.turnfin-app .ui-motion-press[data-variant='outline']:hover { background: var(--pc-surface-sunken); }
+.turnfin-app .ui-motion-press[data-variant='ghost'] { color: var(--pc-primary); }
+.turnfin-app .ui-motion-press[data-variant='ghost']:hover { background: var(--pc-primary-soft); color: var(--pc-primary-ink); }
 .turnfin-docs :is(.workspace-sidebar, .workspace-mobile-sheet, .workspace-mobile-toolbar) .ui-motion-press[data-variant='ghost'] { color: var(--pc-ink-muted); font-weight: 500; }
 .turnfin-docs :is(.workspace-sidebar, .workspace-mobile-sheet, .workspace-mobile-toolbar) .ui-motion-press[data-variant='ghost']:hover { background: var(--pc-hover); color: var(--pc-ink); }
-.turnfin-docs .ui-motion-press[data-variant='destructive'] { background: var(--pc-danger); color: light-dark(#ffffff, #2a0906); }
+.turnfin-app .ui-motion-press[data-variant='destructive'] { background: var(--pc-danger); color: light-dark(#ffffff, #2a0906); }
 .turnfin-docs .button { border-radius: var(--pc-radius-control); font-weight: 600; }
 /* Editor toolbar and segmented tabs sit inside a control, so they use the inner radius. */
 .turnfin-docs :is(.editor-toolbar .ui-motion-press, .editor-toolbar [data-slot='select-trigger'], .editor-toolbar select, [data-slot='tabs-trigger']) { border-radius: var(--pc-radius-inner); }
-.turnfin-docs [data-slot='badge'] { gap: 4px; min-height: 26px; padding: 0 10px; border-radius: 999px; font-size: var(--pc-text-caption); line-height: var(--pc-leading-caption); font-weight: 600; }
-.turnfin-docs [data-slot='badge']:has(> svg) { padding-left: 8px; }
-.turnfin-docs [data-slot='badge'] > svg { width: 14px; height: 14px; stroke-width: 2.5; }
-.turnfin-docs [data-slot='badge']:is(:not([data-tone]), [data-tone='gray'])[data-variant='secondary'] { background: var(--pc-neutral-soft); color: var(--pc-ink-muted); }
-.turnfin-docs [data-slot='alert'] { border: 0; border-radius: 12px; background: var(--pc-primary-soft); color: var(--pc-primary-ink); padding: 12px 16px; }
-.turnfin-docs [data-slot='alert'] [data-slot='alert-title'] { font-weight: 600; }
-.turnfin-docs [data-slot='alert'] [data-slot='alert-description'] { color: var(--pc-ink); }
-.turnfin-docs [data-slot='alert'][data-tone='error'] { background: var(--pc-danger-soft); color: var(--pc-danger); }
-.turnfin-docs [data-slot='alert'][data-tone='warning'] { background: var(--pc-warning-soft); color: var(--pc-warning); }
-.turnfin-docs :is([data-slot='dialog-content'], [data-slot='alert-dialog-content'], [data-slot='sheet-content']) { border-color: var(--pc-line); background: var(--pc-surface-raised); font-family: var(--font-sans); }
-.turnfin-docs :is([data-slot='dialog-content'], [data-slot='alert-dialog-content']) { border: 0; border-radius: 16px; box-shadow: var(--pc-shadow-overlay); }
-.turnfin-docs :is([data-slot='dialog-title'], [data-slot='alert-dialog-title'], [data-slot='sheet-title']) { font-size: var(--pc-text-title); line-height: var(--pc-leading-title); font-weight: 600; letter-spacing: -0.01em; }
-.turnfin-docs :is([data-slot='select-content'], [data-slot='popover-content'], [data-slot='dropdown-menu-content']) { border-color: var(--pc-line); border-radius: 12px; box-shadow: var(--pc-shadow-overlay); font-family: var(--font-sans); }
-.turnfin-docs :is([data-slot='select-item'], [data-slot='dropdown-menu-item']) { font-family: var(--font-sans); font-size: var(--pc-text-body); border-radius: var(--pc-radius-inner); }
+.turnfin-app [data-slot='badge'] { gap: 4px; min-height: 26px; padding: 0 10px; border-radius: 999px; font-size: var(--pc-text-caption); line-height: var(--pc-leading-caption); font-weight: 600; }
+.turnfin-app [data-slot='badge']:has(> svg) { padding-left: 8px; }
+.turnfin-app [data-slot='badge'] > svg { width: 14px; height: 14px; stroke-width: 2.5; }
+.turnfin-app [data-slot='badge']:is(:not([data-tone]), [data-tone='gray'])[data-variant='secondary'] { background: var(--pc-neutral-soft); color: var(--pc-ink-muted); }
+.turnfin-app [data-slot='alert'] { border: 0; border-radius: 12px; background: var(--pc-primary-soft); color: var(--pc-primary-ink); padding: 12px 16px; }
+.turnfin-app [data-slot='alert'] [data-slot='alert-title'] { font-weight: 600; }
+.turnfin-app [data-slot='alert'] [data-slot='alert-description'] { color: var(--pc-ink); }
+.turnfin-app [data-slot='alert'][data-tone='error'] { background: var(--pc-danger-soft); color: var(--pc-danger); }
+.turnfin-app [data-slot='alert'][data-tone='warning'] { background: var(--pc-warning-soft); color: var(--pc-warning); }
+.turnfin-app :is([data-slot='dialog-content'], [data-slot='alert-dialog-content'], [data-slot='sheet-content']) { border-color: var(--pc-line); background: var(--pc-surface-raised); font-family: var(--font-sans); }
+.turnfin-app :is([data-slot='dialog-content'], [data-slot='alert-dialog-content']) { border: 0; border-radius: 16px; box-shadow: var(--pc-shadow-overlay); }
+.turnfin-app :is([data-slot='dialog-title'], [data-slot='alert-dialog-title'], [data-slot='sheet-title']) { font-size: var(--pc-text-title); line-height: var(--pc-leading-title); font-weight: 600; letter-spacing: -0.01em; }
+.turnfin-app :is([data-slot='select-content'], [data-slot='popover-content'], [data-slot='dropdown-menu-content']) { border-color: var(--pc-line); border-radius: 12px; box-shadow: var(--pc-shadow-overlay); font-family: var(--font-sans); }
+.turnfin-app :is([data-slot='select-item'], [data-slot='dropdown-menu-item']) { font-family: var(--font-sans); font-size: var(--pc-text-body); border-radius: var(--pc-radius-inner); }
 
 /* Fields */
-.turnfin-docs :is([data-slot='input'], [data-slot='textarea'], [data-slot='select-trigger'], [data-slot='native-select']):not(.title-input) { min-height: var(--pc-control-height); border-radius: var(--pc-radius-control); border-color: var(--pc-line-strong); background: var(--pc-surface); box-shadow: none; font-size: 16px; font-weight: 400; color: var(--pc-ink); transition: border-color 120ms var(--pc-ease), box-shadow 120ms var(--pc-ease); }
-.turnfin-docs [data-slot='textarea']:not(.title-input) { min-height: 96px; padding-top: 10px; padding-bottom: 10px; line-height: 22px; }
+.turnfin-app :is([data-slot='input'], [data-slot='textarea'], [data-slot='select-trigger'], [data-slot='native-select']):not(.title-input) { min-height: var(--pc-control-height); border-radius: var(--pc-radius-control); border-color: var(--pc-line-strong); background: var(--pc-surface); box-shadow: none; font-size: 16px; font-weight: 400; color: var(--pc-ink); transition: border-color 120ms var(--pc-ease), box-shadow 120ms var(--pc-ease); }
+.turnfin-app [data-slot='textarea']:not(.title-input) { min-height: 96px; padding-top: 10px; padding-bottom: 10px; line-height: 22px; }
 .turnfin-docs .editor-title-panel [data-slot='textarea']:not(.title-input) { min-height: 72px; }
-.turnfin-docs :is([data-slot='input'], [data-slot='textarea'], [data-slot='select-trigger'], [data-slot='native-select']):not(.title-input):focus-visible { border-color: var(--pc-focus); box-shadow: 0 0 0 1px var(--pc-focus), var(--pc-focus-halo); }
-.turnfin-docs :is([data-slot='input'], [data-slot='textarea'])[aria-invalid='true'] { border-color: var(--pc-danger); background: var(--pc-danger-soft); }
-.turnfin-docs :is([data-slot='input'], [data-slot='textarea'])::placeholder { color: var(--pc-ink-muted); }
+.turnfin-app :is([data-slot='input'], [data-slot='textarea'], [data-slot='select-trigger'], [data-slot='native-select']):not(.title-input):focus-visible { border-color: var(--pc-focus); box-shadow: 0 0 0 1px var(--pc-focus), var(--pc-focus-halo); }
+.turnfin-app :is([data-slot='input'], [data-slot='textarea'])[aria-invalid='true'] { border-color: var(--pc-danger); background: var(--pc-danger-soft); }
+.turnfin-app :is([data-slot='input'], [data-slot='textarea'])::placeholder { color: var(--pc-ink-muted); }
 /* The editor's document title reads as the page title, not as a boxed field. */
 .turnfin-docs .editor-title-panel .title-input { height: auto; min-height: 44px; padding: 0; border: 0; border-radius: 0; background: none; box-shadow: none; font-size: var(--pc-text-page); line-height: var(--pc-leading-page); font-weight: 700; letter-spacing: -0.015em; }
 .turnfin-docs .editor-title-panel .title-input:focus-visible { box-shadow: none; outline: 2px solid var(--pc-focus); outline-offset: 4px; border-radius: 4px; }
@@ -341,10 +346,10 @@
 /* Field labels: one size and weight in every module, whether the control sits inside the label
    (Docs filters) or after it (Refunds forms). Choice labels (checkbox, radio, template cards)
    keep body weight. Field text is 16px on phones so iOS does not zoom, body size from 768px. */
-.turnfin-docs :is(label, legend:not(.sr-only), [data-slot='label']):not(:has([type='checkbox'], [type='radio'], [data-slot='checkbox'], [data-slot='radio-group-item'])) { font-size: var(--pc-text-body); line-height: var(--pc-leading-body); font-weight: 600; color: var(--pc-ink); letter-spacing: 0; text-transform: none; }
-.turnfin-docs label:has(> :is(input:not([type='checkbox'], [type='radio'], [type='file']), textarea, select, [data-slot='native-select-wrapper'], [data-slot='select-trigger'])) { align-items: stretch; gap: 8px; }
-.turnfin-docs label:has([type='checkbox'], [type='radio'], [data-slot='checkbox'], [data-slot='radio-group-item']) { align-items: flex-start; font-size: var(--pc-text-body); line-height: var(--pc-leading-body); }
-.turnfin-docs label:has([type='checkbox'], [data-slot='checkbox']) > :is([type='checkbox'], [data-slot='checkbox']) { margin-top: 3px; flex-shrink: 0; }
+.turnfin-app :is(label, legend:not(.sr-only), [data-slot='label']):not(:has([type='checkbox'], [type='radio'], [data-slot='checkbox'], [data-slot='radio-group-item'])) { font-size: var(--pc-text-body); line-height: var(--pc-leading-body); font-weight: 600; color: var(--pc-ink); letter-spacing: 0; text-transform: none; }
+.turnfin-app label:has(> :is(input:not([type='checkbox'], [type='radio'], [type='file']), textarea, select, [data-slot='native-select-wrapper'], [data-slot='select-trigger'])) { align-items: stretch; gap: 8px; }
+.turnfin-app label:has([type='checkbox'], [type='radio'], [data-slot='checkbox'], [data-slot='radio-group-item']) { align-items: flex-start; font-size: var(--pc-text-body); line-height: var(--pc-leading-body); }
+.turnfin-app label:has([type='checkbox'], [data-slot='checkbox']) > :is([type='checkbox'], [data-slot='checkbox']) { margin-top: 3px; flex-shrink: 0; }
 /* Selectable cards (templates) read top-left like every other card, whatever their title length. */
 .turnfin-docs .template-card { align-items: flex-start; text-align: left; }
 .turnfin-docs .create-template-layout .template-grid { display: flex; flex-direction: column; }
@@ -359,9 +364,9 @@
 .turnfin-docs :is(.workspace-sidebar:not([data-collapsed="true"]), .workspace-mobile-sheet) .workspace-sidebar-footer > .ui-motion-press:not([data-size^="icon"]) { justify-content: flex-start; }
 .turnfin-docs .appearance-button small { margin-left: auto; color: var(--pc-ink-muted); }
 .turnfin-docs .home-facility { align-items: center; }
-.turnfin-docs :is([data-slot='field-description'], .field-hint, .hint) { font-size: var(--pc-text-caption); line-height: var(--pc-leading-caption); font-weight: 400; color: var(--pc-ink-muted); }
+.turnfin-app :is([data-slot='field-description'], .field-hint, .hint) { font-size: var(--pc-text-caption); line-height: var(--pc-leading-caption); font-weight: 400; color: var(--pc-ink-muted); }
 @media (min-width: 768px) {
-  .turnfin-docs :is([data-slot='input'], [data-slot='textarea'], [data-slot='select-trigger'], [data-slot='native-select']):not(.title-input) { font-size: var(--pc-text-body); }
+  .turnfin-app :is([data-slot='input'], [data-slot='textarea'], [data-slot='select-trigger'], [data-slot='native-select']):not(.title-input) { font-size: var(--pc-text-body); }
 }
 
 @media (max-width: 767px) {
