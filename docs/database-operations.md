@@ -59,7 +59,9 @@ only production applies migrations, and `dev` runs new code against old tables.
    Vercel Postgres database. Copy production's schema by applying the committed
    migrations; never copy real swimmer or staff data into it.
 2. On the `dev` deployment (Vercel Preview for the `dev` branch), set:
-   - `DATABASE_URL` and `DIRECT_URL` to the development database;
+   - `DATABASE_URL` and `DIRECT_URL` to the development database (a database
+     attached through Vercel's Neon integration provides `DATABASE_URL` and
+     `DATABASE_URL_UNPOOLED`, which is read in place of `DIRECT_URL`);
    - `DATABASE_ENVIRONMENT=development`;
    - optionally `PRODUCTION_DATABASE_HOST` to production's host name, so a
      development deployment pointed at production is refused;
@@ -74,3 +76,16 @@ On every build, `scripts/check-env.ts` and `scripts/migrate-production.ts` read
   database.
 - **A deployment still sharing production's database** never migrates it and
   warns (or fails with `REQUIRE_DEV_DATABASE=true`).
+
+The databases (Neon, Frankfurt, attached through Vercel's Neon integration):
+
+| Database | Holds | Attached to |
+| --- | --- | --- |
+| `swimly-db` | Production Core and Work (and Activities until it moves) | Work, Production |
+| `turnfin-dev-db` | Development Core and Work, fictional data only | Work and Activities, Preview and Development |
+| `turnfin-activities-db` | Production Activities, as `ACTIVITIES_*` | Activities, Production |
+| `turnfin-activities-dev-db` | Development Activities, as `ACTIVITIES_*` | Activities, Preview and Development |
+
+A new development database starts empty. Its first `dev` deploy creates the
+tables; then give it a way in by running `npm run db:seed` against it with
+`SEED_ADMIN_EMAIL` and `SEED_ADMIN_PASSWORD` set.
