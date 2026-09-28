@@ -11,11 +11,9 @@ import { Input } from "@/components/ui/input";
 import { Select } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
 import {
-  addAssignment, recordQualification, removeAssignment, revokeQualification, saveDepartment,
-  saveQualificationType, setDepartmentArchived, setQualificationTypeArchived, setSuperadmin, updateProfile,
+  recordQualification, removeAssignment, revokeQualification, saveDepartment,
+  saveQualificationType, setDepartmentArchived, setQualificationTypeArchived, setSuperadmin, setWorksAt, updateProfile,
 } from "@/lib/people/actions";
-import { SCOPE_META } from "@/lib/people/constants";
-import { SCOPE_KINDS, type ScopeKind } from "@/lib/policy/types";
 
 type Option = { id: string; name: string };
 const text = (formData: FormData, key: string) => String(formData.get(key) ?? "");
@@ -83,36 +81,37 @@ export function EditProfile({ person, sites, departments, people }: {
 }
 
 // ---------------------------------------------------------------------------
-// Additional roles
+// Where they work
 // ---------------------------------------------------------------------------
 
-export function AddAssignment({ userId, name, roles, sites, departments }: {
-  userId: string; name: string;
-  roles: { id: string; name: string; restricted: boolean }[];
-  sites: Option[]; departments: Option[];
-}) {
-  const [kind, setKind] = React.useState<ScopeKind>("site");
-  const places = kind === "site" ? sites : kind === "department" ? departments : [];
+/** The sites where their role's Swim school, Training and Rota levels apply.
+ *  None ticked means every site. */
+export function WorksAt({ userId, name, sites, current }: { userId: string; name: string; sites: Option[]; current: string[] }) {
+  const id = React.useId();
+  const [chosen, setChosen] = React.useState<string[]>(current);
   return (
     <FormDialog
-      trigger={<Button variant="outline">{icon(Plus)}Add a role</Button>}
-      title={`Give ${name} another role`}
-      description="Their main role applies everywhere. An additional role adds what it allows, only where you say."
-      submitLabel="Add role"
-      successMessage="Role added"
-      submit={(formData) => addAssignment(userId, { roleId: text(formData, "roleId"), scopeKind: kind, scopeId: text(formData, "scopeId") })}
+      trigger={<Button variant="outline">{icon(Building2)}Change sites</Button>}
+      title={`Where ${name} works`}
+      description="Their Swim school, Training and Rota levels apply at these sites. Leave all unticked for every site."
+      submitLabel="Save sites"
+      successMessage="Sites saved"
+      onOpen={() => setChosen(current)}
+      submit={() => setWorksAt(userId, chosen)}
     >
-      <Field label="Role" htmlFor="roleId">
-        <Select id="roleId" name="roleId" required placeholder="Pick a role" options={roles.map((r) => ({ value: r.id, label: r.restricted ? `${r.name} (restricted)` : r.name }))} />
-      </Field>
-      <Field label="Where it applies" htmlFor="scopeKind" hint={SCOPE_META[kind].hint}>
-        <Select id="scopeKind" value={kind} onValueChange={(value) => setKind(value as ScopeKind)} options={SCOPE_KINDS.map((k) => ({ value: k, label: SCOPE_META[k].label }))} />
-      </Field>
-      {kind === "site" || kind === "department" ? (
-        <Field label={kind === "site" ? "Site" : "Department"} htmlFor="scopeId">
-          <Select key={kind} id="scopeId" name="scopeId" required placeholder={kind === "site" ? "Pick a site" : "Pick a department"} options={places.map((p) => ({ value: p.id, label: p.name }))} />
-        </Field>
-      ) : null}
+      <fieldset className="min-w-0">
+        <legend className="sr-only">Sites</legend>
+        {sites.map((site) => (
+          <div key={site.id} className="flex items-center gap-3">
+            <Checkbox
+              id={`${id}-${site.id}`}
+              checked={chosen.includes(site.id)}
+              onCheckedChange={(checked) => setChosen((previous) => checked === true ? [...previous, site.id] : previous.filter((s) => s !== site.id))}
+            />
+            <Label htmlFor={`${id}-${site.id}`} className="min-h-11 flex-1 cursor-pointer">{site.name}</Label>
+          </div>
+        ))}
+      </fieldset>
     </FormDialog>
   );
 }
@@ -122,7 +121,7 @@ export function RemoveAssignment({ id, label }: { id: string; label: string }) {
     <ConfirmAction
       trigger={<Button variant="ghost" size="icon-sm" aria-label={`Remove ${label}`}>{icon(Trash2)}</Button>}
       title={`Remove ${label}?`}
-      description="They lose what this role allowed from their next page. Their main role and everything they recorded stay as they are."
+      description="Extra roles are being retired: people now hold one role. They lose what this one allowed from their next page. Their main role and everything they recorded stay as they are."
       confirmLabel="Remove role"
       successMessage="Role removed"
       run={() => removeAssignment(id)}

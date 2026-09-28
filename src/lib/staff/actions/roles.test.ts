@@ -1,10 +1,13 @@
 import assert from "node:assert/strict";
 import { test } from "node:test";
 import { serverModule } from "@/test/server-module";
+import { UNRESTRICTED_PERMISSIONS } from "@/lib/staff/permissions";
 import type { RoleInput } from "./roles";
 
-function fixture() {
-  let role = { id: "role", name: "Synthetic team", description: null as string | null, home: "overview", permissions: ["staff.manage"], screens: ["staff"] };
+type Row = { id: string; name: string; description: string | null; home: string; homeName: string | null; permissions: string[]; screens: string[]; levels: unknown; extras: string[]; restricted: boolean };
+
+function fixture(options: { superadmin?: boolean } = {}) {
+  let role: Row = { id: "role", name: "Synthetic team", description: null, home: "overview", homeName: null, permissions: ["staff.manage"], screens: ["staff"], levels: null, extras: [], restricted: false };
   const audits: string[] = [];
   let refusal: string | null = null;
   let auditFailure = false;
@@ -13,8 +16,8 @@ function fixture() {
     staffRole: {
       findUnique: async () => role,
       findFirst: async () => null,
-      create: async ({ data }: { data: Omit<typeof role, "id"> }) => { writes++; role = { id: "role", ...data }; return role; },
-      update: async ({ data }: { data: Omit<typeof role, "id"> }) => { writes++; role = { ...role, ...data }; return role; },
+      create: async ({ data }: { data: Omit<Row, "id"> }) => { writes++; role = { id: "role", ...data }; return role; },
+      update: async ({ data }: { data: Partial<Row> }) => { writes++; role = { ...role, ...data }; return role; },
     },
     user: { updateMany: async () => ({ count: 1 }) },
   };
@@ -24,7 +27,7 @@ function fixture() {
   }
   const actions = serverModule<typeof import("./roles")>("src/lib/staff/actions/roles.ts", {
     "@/lib/prisma": { prisma: { ...tx, $transaction: transaction } },
-    "@/lib/authz": { requirePermission: async (permission: string) => { assert.equal(permission, "roles.manage"); return { user: { id: "actor", name: "Synthetic Manager" } }; } },
+    "@/lib/authz": { requirePermission: async (permission: string) => { assert.equal(permission, "roles.manage"); return { user: { id: "actor", name: "Synthetic Manager", isSuperadmin: options.superadmin === true } }; } },
     "@/lib/staff/keyholders": { withKeyholderLock: transaction, guardKeyholders: async () => refusal },
     "@/lib/audit": { logAudit: async ({ summary }: { summary: string }, db: unknown) => { assert.equal(db, tx); if (auditFailure) throw new Error("Audit unavailable"); audits.push(summary); } },
     "next/cache": { revalidatePath: () => {} },
@@ -32,51 +35,60 @@ function fixture() {
   return { actions, role: () => role, audits, writes: () => writes, refuse: () => { refusal = "Keep a keyholder."; }, failAudit: () => { auditFailure = true; } };
 }
 
-const administrator: RoleInput = { name: "Synthetic team", description: "", home: "duty", permissions: ["staff.manage", "roles.manage"], screens: [] };
+const administrator: RoleInput = { name: "Synthetic team", description: "", homeName: "Management", levels: { admin: "manage" }, extras: [] };
+const receptionist: RoleInput = { name: "Synthetic desk", description: "", homeName: "Front of House", levels: { "swim-school": "desk", refunds: "use", docs: "read" }, extras: [] };
 
-test("administrator roles can be created with inherited screens and an explicit full-access audit", async () => {
+test("a role is saved as levels, with their translation in the permission and screen columns", async () => {
   const f = fixture();
-  assert.equal((await f.actions.createRole(administrator)).ok, true);
-  assert.deepEqual(f.role().permissions, administrator.permissions);
-  assert.deepEqual(f.role().screens, []);
-  assert.match(f.audits[0], /administrator access/);
+  assert.equal((await f.actions.createRole(receptionist)).ok, true);
+  assert.deepEqual(f.role().levels, receptionist.levels);
+  assert.equal(f.role().homeName, "Front of House");
+  assert.ok(f.role().permissions.includes("enrolment.manage") && f.role().permissions.includes("refunds.request"));
+  assert.ok(f.role().screens.includes("refunds") && !f.role().screens.includes("staff"));
+  assert.equal(f.role().home, "calendar");
+  assert.equal(f.audits[0], "Created role Synthetic desk: Swim school: Desk · Refunds: Use · Docs: Read");
 });
 
-test("limited roles still require an explicit screen on creation and update", async () => {
+test("Admin Manage stores today's administrator access", async () => {
   const f = fixture();
-  const input = { ...administrator, permissions: ["staff.manage"] };
+  assert.equal((await f.actions.createRole(administrator)).ok, true);
+  assert.deepEqual(f.role().permissions, [...UNRESTRICTED_PERMISSIONS].sort());
+});
+
+test("a role needs at least one module, on creation and update", async () => {
+  const f = fixture();
+  const input = { ...administrator, levels: {} };
   assert.equal((await f.actions.createRole(input)).ok, false);
   assert.equal((await f.actions.updateRole("role", input)).ok, false);
   assert.equal(f.writes(), 0);
 });
 
-test("administrator transitions are audited, while a no-change retry writes nothing", async () => {
+test("switching an old role to levels is audited, and a no-change retry writes nothing", async () => {
   const f = fixture();
   assert.equal((await f.actions.updateRole("role", administrator)).ok, true);
-  assert.match(f.audits[0], /administrator access granted/);
+  assert.match(f.audits[0], /switched to levels/);
+  assert.match(f.audits[0], /Admin: Manage/);
   assert.equal((await f.actions.updateRole("role", administrator)).ok, true);
   assert.equal(f.writes(), 1);
-  assert.equal((await f.actions.updateRole("role", { ...administrator, permissions: ["staff.manage"], screens: ["staff"] })).ok, true);
-  assert.match(f.audits[1], /administrator access removed/);
+  assert.equal((await f.actions.updateRole("role", receptionist)).ok, true);
+  assert.match(f.audits[1], /Admin: Manage → Swim school: Desk · Refunds: Use · Docs: Read/);
 });
 
-test("administrator updates preserve the keyholder guard and atomic audit", async () => {
+test("updates keep the keyholder guard and write the audit with the change", async () => {
   const f = fixture();
   f.refuse();
-  assert.equal((await f.actions.updateRole("role", administrator)).ok, false);
+  assert.equal((await f.actions.updateRole("role", receptionist)).ok, false);
   assert.equal(f.writes(), 0);
   const g = fixture();
   g.failAudit();
-  await assert.rejects(g.actions.updateRole("role", administrator), /Audit unavailable/);
+  await assert.rejects(g.actions.updateRole("role", receptionist), /Audit unavailable/);
   assert.deepEqual(g.role().permissions, ["staff.manage"]);
 });
 
-test("Reception Portal preference saves and audits without changing existing access", async () => {
-  const f = fixture();
-  const input = { name: "Synthetic team", description: "", home: "reception-portal", permissions: ["staff.manage"], screens: ["staff"] };
-  assert.equal((await f.actions.updateRole("role", input)).ok, true);
-  assert.equal(f.role().home, "reception-portal");
-  assert.deepEqual(f.role().permissions, ["staff.manage"]);
-  assert.deepEqual(f.role().screens, ["staff"]);
-  assert.match(f.audits[0], /starts on Reception Portal/);
+test("only a superadmin gives HR", async () => {
+  const hr: RoleInput = { ...receptionist, levels: { hr: "team" } };
+  assert.equal((await fixture().actions.createRole(hr)).ok, false);
+  const s = fixture({ superadmin: true });
+  assert.equal((await s.actions.createRole(hr)).ok, true);
+  assert.equal(s.role().restricted, true);
 });

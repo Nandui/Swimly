@@ -126,6 +126,30 @@ export async function addAssignment(userId: string, input: AssignmentInput): Pro
   return result;
 }
 
+/** The sites a person works at, where their role's Swim school, Training and
+ *  Rota levels apply (docs/how-turnfin-works.md). No sites means every site,
+ *  which is how everyone worked before. */
+export async function setWorksAt(userId: string, siteIds: string[]): Promise<ActionResult> {
+  const session = await requirePermission("staff.manage");
+  const parsed = z.array(z.string().min(1).max(64)).max(50).safeParse(siteIds);
+  if (!parsed.success) return fail("Choose from your sites.");
+  const wanted = [...new Set(parsed.data)];
+  const result = await prisma.$transaction(async (tx) => {
+    const person = await tx.user.findUnique({ where: { id: userId }, select: { name: true, orgId: true, siteIds: true } });
+    if (!person) return fail("That person no longer exists.");
+    const sites = await tx.club.findMany({ where: { id: { in: wanted }, orgId: person.orgId, archivedAt: null }, select: { id: true, name: true } });
+    if (sites.length !== wanted.length) return fail("Choose from your sites.");
+    const ordered = wanted.slice().sort();
+    if (ordered.join() === [...person.siteIds].sort().join()) return ok();
+    await tx.user.update({ where: { id: userId }, data: { siteIds: ordered } });
+    const where = sites.length ? sites.map((s) => s.name).sort().join(", ") : "every site";
+    await logAudit({ actorId: session.user.id, actorName: actorName(session), action: "update", entity: "User", entityId: userId, clubId: null, summary: `${person.name} now works at ${where}` }, tx);
+    return ok();
+  });
+  if (result.ok) revalidate(userId);
+  return result;
+}
+
 export async function removeAssignment(assignmentId: string): Promise<ActionResult> {
   const session = await requirePermission("staff.manage");
   const result = await withKeyholderLock(async (tx) => {

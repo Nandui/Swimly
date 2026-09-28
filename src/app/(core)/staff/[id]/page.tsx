@@ -4,15 +4,15 @@ import UiLink from "next/link";
 import { Item, ItemActions, ItemContent, ItemGroup } from "@/components/shadcn/item";
 import { BackLink } from "@/components/ui-kit/back-link";
 import { PageHeader } from "@/components/ui-kit/page-header";
-import { Lead } from "@/components/ui-kit/prose";
 import { Tag } from "@/components/ui-kit/tag";
 import {
-  AddAssignment, EditProfile, RecordQualification, RemoveAssignment, RevokeQualification, SuperadminToggle,
+  EditProfile, RecordQualification, RemoveAssignment, RevokeQualification, SuperadminToggle, WorksAt,
 } from "@/components/people/people-actions";
 import { formatDate } from "@/lib/format";
 import { screenPage } from "@/lib/page-guards";
 import { PERSON_STATUS_META, QUALIFICATION_STATE_META } from "@/lib/people/constants";
-import { getOrganisation, getPersonDetail, listAssignableRoles, listPeopleOptions } from "@/lib/people/data";
+import { getOrganisation, getPersonDetail, listPeopleOptions } from "@/lib/people/data";
+import { cleanLevels, describeLevels, levelsFromAccess } from "@/lib/staff/levels";
 
 export const metadata: Metadata = { title: "Person" };
 
@@ -22,12 +22,17 @@ export const metadata: Metadata = { title: "Person" };
 export default async function PersonPage({ params }: { params: Promise<{ id: string }> }) {
   const session = await screenPage("staff", "staff.manage");
   const { id } = await params;
-  const [person, organisation, people, roles] = await Promise.all([
-    getPersonDetail(id), getOrganisation(), listPeopleOptions(), listAssignableRoles(),
+  const [person, organisation, people] = await Promise.all([
+    getPersonDetail(id), getOrganisation(), listPeopleOptions(),
   ]);
   if (!person) notFound();
   const departments = organisation.departments.filter((d) => !d.archivedAt);
   const types = organisation.qualificationTypes.filter((t) => !t.archivedAt);
+  const role = person.staffRole;
+  const levels = role
+    ? describeLevels(role.levels !== null ? cleanLevels(role.levels, role.extras) : levelsFromAccess(role.permissions, role.screens).role)
+    : null;
+  const liveSites = organisation.sites;
   const facts: [string, React.ReactNode][] = [
     ["Job title", person.jobTitle || "Not set"],
     ["Started", person.startedOn ? formatDate(new Date(`${person.startedOn}T00:00:00Z`)) : "Not set"],
@@ -73,33 +78,43 @@ export default async function PersonPage({ params }: { params: Promise<{ id: str
 
       <section aria-labelledby="roles-heading" className="min-w-0 flex flex-col gap-3">
         <div className="flex flex-wrap items-center justify-between gap-3">
-          <h2 id="roles-heading" className="text-xl font-semibold tracking-tight">Roles</h2>
-          {person.isActive ? <AddAssignment userId={person.id} name={person.name} roles={roles} sites={organisation.sites} departments={departments} /> : null}
+          <h2 id="roles-heading" className="text-xl font-semibold tracking-tight">Role and sites</h2>
+          {person.isActive ? <WorksAt userId={person.id} name={person.name} sites={liveSites} current={person.worksAt.map((s) => s.id)} /> : null}
         </div>
-        <Lead>
-          Their main role applies everywhere. Additional roles add what they allow only where they are given: at a site, for
-          a department, or for the person&apos;s own team.
-        </Lead>
-        <ItemGroup className="divide-y divide-ui-border">
-          <Item role="listitem">
-            <ItemContent>
-              <span className="text-sm font-medium">{person.staffRole?.name ?? "No role"}</span>
-              <span className="text-sm text-ui-muted-foreground">Main role · Everywhere</span>
-            </ItemContent>
-          </Item>
-          {person.assignments.map((a) => (
-            <Item key={a.id} role="listitem">
-              <ItemContent>
-                <div className="flex flex-wrap items-center gap-2">
-                  <span className="text-sm font-medium">{a.roleName}</span>
-                  {a.restricted ? <Tag color={PERSON_STATUS_META.restricted.color}>{PERSON_STATUS_META.restricted.label}</Tag> : null}
-                </div>
-                <span className="text-sm text-ui-muted-foreground">{a.scopeLabel}</span>
-              </ItemContent>
-              <ItemActions><RemoveAssignment id={a.id} label={`${a.roleName} (${a.scopeLabel})`} /></ItemActions>
-            </Item>
-          ))}
-        </ItemGroup>
+        <dl className="grid gap-4 sm:grid-cols-2">
+          <div className="min-w-0">
+            <dt className="text-sm text-ui-muted-foreground">Role</dt>
+            <dd className="mt-1 text-sm">
+              <span className="font-medium">{role?.name ?? "No role"}</span>
+              {levels ? <span className="block text-ui-muted-foreground">{levels}{role?.levels === null ? " (proposed; the role keeps its old settings until it is saved on Roles)" : ""}</span> : null}
+            </dd>
+          </div>
+          <div className="min-w-0">
+            <dt className="text-sm text-ui-muted-foreground">Works at</dt>
+            <dd className="mt-1 text-sm">{person.worksAt.length ? person.worksAt.map((s) => s.name).join(", ") : "Every site"}</dd>
+          </div>
+        </dl>
+        <p className="text-sm text-ui-muted-foreground">Change their role on the Staff list. Swim school, Training and Rota apply at the sites they work at; everything else applies everywhere.</p>
+        {person.assignments.length ? (
+          <>
+            <h3 className="text-base font-semibold">Extra roles from before</h3>
+            <p className="text-sm text-ui-muted-foreground">People now hold one role. These still apply until you remove them.</p>
+            <ItemGroup className="divide-y divide-ui-border">
+              {person.assignments.map((a) => (
+                <Item key={a.id} role="listitem">
+                  <ItemContent>
+                    <div className="flex flex-wrap items-center gap-2">
+                      <span className="text-sm font-medium">{a.roleName}</span>
+                      {a.restricted ? <Tag color={PERSON_STATUS_META.restricted.color}>{PERSON_STATUS_META.restricted.label}</Tag> : null}
+                    </div>
+                    <span className="text-sm text-ui-muted-foreground">{a.scopeLabel}</span>
+                  </ItemContent>
+                  <ItemActions><RemoveAssignment id={a.id} label={`${a.roleName} (${a.scopeLabel})`} /></ItemActions>
+                </Item>
+              ))}
+            </ItemGroup>
+          </>
+        ) : null}
       </section>
 
       <section aria-labelledby="qualifications-heading" className="min-w-0 flex flex-col gap-3">

@@ -94,7 +94,7 @@ test("a legacy role holding HR everywhere converts to HR Everyone, not Their tea
 
 test("a role is described in the owner's words, and its columns match its levels", () => {
   const role = cleanLevels({ "swim-school": "desk", refunds: "use" }, ["swim-school.cancel-classes"]);
-  assert.equal(describeLevels(role), "Refunds: Use · Swim school: Desk (can cancel classes)");
+  assert.equal(describeLevels(role), "Swim school: Desk (can cancel classes) · Refunds: Use");
   const columns = roleColumns(role);
   assert.equal(columns.restricted, false);
   assert.ok(columns.permissions.includes("classes.cancel") && columns.screens.includes("cancellations"));

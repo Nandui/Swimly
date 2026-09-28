@@ -4,15 +4,31 @@
     {
       "name": "swimly-dev",
       "runtimeExecutable": "npm",
-      "runtimeArgs": ["run", "dev"],
+      "runtimeArgs": [
+        "run",
+        "dev"
+      ],
       "port": 3000,
       "autoPort": true
     },
     {
       "name": "activities-dev",
       "runtimeExecutable": "npm",
-      "runtimeArgs": ["run", "dev:activities"],
+      "runtimeArgs": [
+        "run",
+        "dev:activities"
+      ],
       "port": 3102
+    },
+    {
+      "name": "sandbox",
+      "runtimeExecutable": "npx",
+      "runtimeArgs": [
+        "tsx",
+        "scripts/sandbox.mts"
+      ],
+      "port": 3100,
+      "url": "http://localhost:3100"
     }
   ]
 }

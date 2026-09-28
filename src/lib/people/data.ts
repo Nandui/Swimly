@@ -48,9 +48,9 @@ export async function getPersonDetail(userId: string) {
     where: { id: userId, orgId: session.user.orgId ?? undefined },
     select: {
       id: true, name: true, email: true, isActive: true, jobTitle: true, startedOn: true, isSuperadmin: true,
-      primaryClubId: true, managerId: true,
+      primaryClubId: true, managerId: true, siteIds: true,
       manager: { select: { id: true, name: true } },
-      staffRole: { select: { id: true, name: true } },
+      staffRole: { select: { id: true, name: true, levels: true, extras: true, permissions: true, screens: true, homeName: true } },
       departments: { select: { departmentId: true, isPrimary: true, department: { select: { name: true } } } },
       reports: { where: { isActive: true }, orderBy: { name: "asc" }, select: { id: true, name: true, jobTitle: true } },
       roleAssignments: { orderBy: { createdAt: "asc" }, select: { id: true, scopeKind: true, scopeId: true, role: { select: { id: true, name: true, restricted: true } } } },
@@ -61,11 +61,11 @@ export async function getPersonDetail(userId: string) {
     },
   });
   if (!person) return null;
-  const siteIds = person.roleAssignments.filter((a) => a.scopeKind === "site").map((a) => a.scopeId);
+  const assignmentSiteIds = person.roleAssignments.filter((a) => a.scopeKind === "site").map((a) => a.scopeId);
   const departmentIds = person.roleAssignments.filter((a) => a.scopeKind === "department").map((a) => a.scopeId);
   const verifierIds = person.qualifications.flatMap((q) => (q.verifiedById ? [q.verifiedById] : []));
   const [sites, departments, verifiers] = await Promise.all([
-    prisma.club.findMany({ where: { id: { in: [...siteIds, ...(person.primaryClubId ? [person.primaryClubId] : [])] } }, select: { id: true, name: true } }),
+    prisma.club.findMany({ where: { id: { in: [...assignmentSiteIds, ...person.siteIds, ...(person.primaryClubId ? [person.primaryClubId] : [])] } }, select: { id: true, name: true } }),
     prisma.department.findMany({ where: { id: { in: departmentIds } }, select: { id: true, name: true } }),
     prisma.user.findMany({ where: { id: { in: verifierIds } }, select: { id: true, name: true } }),
   ]);
@@ -74,6 +74,7 @@ export async function getPersonDetail(userId: string) {
   return {
     ...person,
     primaryClub: person.primaryClubId ? { name: names.get(person.primaryClubId) ?? "Removed site" } : null,
+    worksAt: person.siteIds.map((id) => ({ id, name: names.get(id) ?? "Removed site" })),
     startedOn: person.startedOn?.toISOString().slice(0, 10) ?? "",
     assignments: person.roleAssignments.map((a) => ({ id: a.id, roleId: a.role.id, roleName: a.role.name, restricted: a.role.restricted, scopeKind: a.scopeKind, scopeLabel: scopeLabel(a.scopeKind, names.get(a.scopeId) ?? null) })),
     qualifications: person.qualifications.map((q) => ({

@@ -99,47 +99,7 @@ export function visibleModules(ctx: ModuleContext): ModuleManifest[] {
 // imported from `src/modules/index.ts`.
 // ---------------------------------------------------------------------------
 
-// Core is not a module but the organisation every module shares: people,
-// roles, sites and the activity log. It gets a tile for the people who manage it.
-registerModule({
-  id: "admin",
-  name: "Admin",
-  description: "Staff, roles, sites and the activity log, shared by every module.",
-  icon: Building2,
-  href: "/core",
-  logName: "Admin",
-  access: {
-    reach: "everywhere",
-    levels: [
-      {
-        key: "manage",
-        label: "Manage",
-        help: "People, roles and sites, and the activity log. Admins can also use every other module except HR.",
-        permissions: ["staff.manage", "roles.manage", "clubs.manage", "activity.view"],
-        screens: ["staff", "roles", "clubs", "activity"],
-      },
-    ],
-  },
-  visibleTo: ({ screens }) => [...screens].some(isCoreScreen),
-});
-
-registerModule({
-  id: "refunds",
-  reception: true,
-  name: "Refunds",
-  description: "Submit customer refund requests, follow finance decisions and record completed payments.",
-  icon: ReceiptText,
-  href: "/refunds",
-  logName: "Refunds",
-  access: {
-    reach: "everywhere",
-    levels: [
-      { key: "use", label: "Use", help: "Log a customer's refund request and follow it.", permissions: ["refunds.read", "refunds.request"], screens: ["refunds"] },
-      { key: "manage", label: "Manage", help: "Decide refund requests and record payments. Nobody decides their own.", permissions: ["refunds.review", "refunds.process"], screens: [] },
-    ],
-  },
-  visibleTo: ({ screens }) => screens.has("refunds"),
-});
+// In the order people meet them; Admin last.
 
 registerModule({
   id: "swim-school",
@@ -176,6 +136,24 @@ registerModule({
     ],
   },
   visibleTo: ({ screens }) => [...screens].some(isActivitiesScreen),
+});
+
+registerModule({
+  id: "refunds",
+  reception: true,
+  name: "Refunds",
+  description: "Submit customer refund requests, follow finance decisions and record completed payments.",
+  icon: ReceiptText,
+  href: "/refunds",
+  logName: "Refunds",
+  access: {
+    reach: "everywhere",
+    levels: [
+      { key: "use", label: "Use", help: "Log a customer's refund request and follow it.", permissions: ["refunds.read", "refunds.request"], screens: ["refunds"] },
+      { key: "manage", label: "Manage", help: "Decide refund requests and record payments. Nobody decides their own.", permissions: ["refunds.review", "refunds.process"], screens: [] },
+    ],
+  },
+  visibleTo: ({ screens }) => screens.has("refunds"),
 });
 
 registerModule({
@@ -219,6 +197,24 @@ registerModule({
 });
 
 registerModule({
+  id: "rota",
+  name: "Rota",
+  description: "Plan the week's shifts at a site, with warnings for expired qualifications.",
+  icon: CalendarClock,
+  href: "/rota",
+  logName: "Rota",
+  access: {
+    reach: "sites",
+    levels: [
+      { key: "view", label: "View", help: "See the rota at their sites.", permissions: ["rota.view"], screens: ["rota"] },
+      { key: "manage", label: "Manage", help: "Plan and change shifts.", permissions: ["rota.manage"], screens: [] },
+    ],
+  },
+  // A site-scoped duty role brings the screen with it.
+  visibleTo: ({ screens, scopedScreens, superadmin }) => superadmin || screens.has("rota") || scopedScreens.has("rota"),
+});
+
+registerModule({
   id: "hr",
   name: "HR and performance",
   description: "Notes and performance reviews for the people you look after. Restricted.",
@@ -241,20 +237,26 @@ registerModule({
   visibleTo: ({ screens, scopedScreens, superadmin }) => superadmin || screens.has("hr") || scopedScreens.has("hr"),
 });
 
+// Core is not a module but the organisation every module shares: people,
+// roles, sites and the activity log. It gets a tile for the people who manage it.
 registerModule({
-  id: "rota",
-  name: "Rota",
-  description: "Plan the week's shifts at a site, with warnings for expired qualifications.",
-  icon: CalendarClock,
-  href: "/rota",
-  logName: "Rota",
+  id: "admin",
+  name: "Admin",
+  description: "Staff, roles, sites and the activity log, shared by every module.",
+  icon: Building2,
+  href: "/core",
+  logName: "Admin",
   access: {
-    reach: "sites",
+    reach: "everywhere",
     levels: [
-      { key: "view", label: "View", help: "See the rota at their sites.", permissions: ["rota.view"], screens: ["rota"] },
-      { key: "manage", label: "Manage", help: "Plan and change shifts.", permissions: ["rota.manage"], screens: [] },
+      {
+        key: "manage",
+        label: "Manage",
+        help: "People, roles and sites, and the activity log. Admins can also use every other module except HR.",
+        permissions: ["staff.manage", "roles.manage", "clubs.manage", "activity.view"],
+        screens: ["staff", "roles", "clubs", "activity"],
+      },
     ],
   },
-  // A site-scoped duty role brings the screen with it.
-  visibleTo: ({ screens, scopedScreens, superadmin }) => superadmin || screens.has("rota") || scopedScreens.has("rota"),
+  visibleTo: ({ screens }) => [...screens].some(isCoreScreen),
 });

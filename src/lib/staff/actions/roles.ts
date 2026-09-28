@@ -12,16 +12,8 @@ import { logAudit } from "@/lib/audit";
 import { requirePermission } from "@/lib/authz";
 import { prisma } from "@/lib/prisma";
 import { guardKeyholders, withKeyholderLock } from "@/lib/staff/keyholders";
-import {
-  ALL_PERMISSIONS,
-  ROLE_HOMES,
-  normaliseRoleHome,
-  legacyRoleFor,
-  hasAdministratorAccess,
-  isRestrictedPermission,
-  type PermissionKey,
-} from "@/lib/staff/permissions";
-import { cleanScreens, screenMeta } from "@/lib/staff/screens";
+import { cleanLevels, describeLevels, roleColumns, type RoleLevels } from "@/lib/staff/levels";
+import { legacyRoleFor, type RoleHome } from "@/lib/staff/permissions";
 import { RESTRICTED_ROLE_REFUSAL } from "@/lib/staff/restricted";
 
 /** Roles are the rules about the rules, so every action here needs
@@ -36,6 +28,10 @@ import { RESTRICTED_ROLE_REFUSAL } from "@/lib/staff/restricted";
  *  afterwards, including inherited administrator access and restricted roles
  *  that hold only one management permission. */
 
+/** A role is a name, a home page name and one level for each module
+ *  (docs/how-turnfin-works.md). Levels are translated into the permissions
+ *  and screens the app checks by `roleColumns`, so every save writes the
+ *  same translation. Unknown modules, levels and extras are dropped. */
 const roleSchema = z.object({
   name: z
     .string()
@@ -43,36 +39,33 @@ const roleSchema = z.object({
     .min(1, "Give the role a name.")
     .max(60, "Keep the name under 60 characters."),
   description: z.string().trim().max(300, "Keep the description under 300 characters."),
-  permissions: z.array(z.string()).max(100),
-  /** A `ROLE_HOMES` key. Retired or unknown homes default to Today. */
-  home: z.string().transform(normaliseRoleHome),
-  /** `SCREENS` keys. Filtered against the catalogue like the permissions. */
-  screens: z.array(z.string()).max(50),
+  homeName: z.string().trim().max(40, "Keep the home page name under 40 characters."),
+  levels: z.record(z.string(), z.string()),
+  extras: z.array(z.string()).max(20),
 });
 
-/** The form's shape, before the schema normalises `home`. */
 export type RoleInput = z.input<typeof roleSchema>;
 
-/** Keys are filtered against the catalogue rather than validated as an enum:
- *  a form posting a key that no longer exists should drop it, not fail. */
-function cleanPermissions(input: readonly string[]): PermissionKey[] {
-  const known = new Set<string>(ALL_PERMISSIONS);
-  return [...new Set(input.filter((key) => known.has(key)))] as PermissionKey[];
+/** Where a role's session starts until home pages replace role homes. */
+function legacyHome(role: RoleLevels): RoleHome {
+  return role.levels["swim-school"] === "teach" ? "instructor" : "calendar";
+}
+
+function prepare(input: RoleInput) {
+  const parsed = roleSchema.safeParse(input);
+  if (!parsed.success) return { ok: false, error: parsed.error.issues[0]?.message ?? "Check the role and try again." } as const;
+  const role = cleanLevels(parsed.data.levels, parsed.data.extras);
+  if (Object.keys(role.levels).length === 0) return { ok: false, error: "Give the role a level in at least one module, or nobody on it has anywhere to go." } as const;
+  return { ok: true, data: parsed.data, role, columns: roleColumns(role), home: legacyHome(role) } as const;
 }
 
 export async function createRole(input: RoleInput): Promise<ActionResult> {
   const session = await requirePermission("roles.manage");
 
-  const parsed = roleSchema.safeParse(input);
-  if (!parsed.success) return fail(parsed.error.issues[0].message);
-  const { name, description, home } = parsed.data;
-  const permissions = cleanPermissions(parsed.data.permissions);
-  const screens = cleanScreens(parsed.data.screens);
-  if (screens.length === 0 && !hasAdministratorAccess(permissions)) {
-    return fail("Tick at least one screen, or nobody on this role has anywhere to go.");
-  }
-  const restricted = permissions.some(isRestrictedPermission);
-  if (restricted && !session.user.isSuperadmin) return fail(RESTRICTED_ROLE_REFUSAL);
+  const prepared = prepare(input);
+  if (!prepared.ok) return fail(prepared.error);
+  const { data: { name, description, homeName }, role, columns, home } = prepared;
+  if (columns.restricted && !session.user.isSuperadmin) return fail(RESTRICTED_ROLE_REFUSAL);
 
   const last = await prisma.staffRole.findFirst({
     orderBy: { sortOrder: "desc" },
@@ -85,10 +78,9 @@ export async function createRole(input: RoleInput): Promise<ActionResult> {
         data: {
           name,
           description: description || null,
-          permissions,
+          homeName: homeName || null,
           home,
-          screens,
-          restricted,
+          ...columns,
           sortOrder: (last?.sortOrder ?? -1) + 1,
         },
         select: { id: true, name: true },
@@ -99,7 +91,7 @@ export async function createRole(input: RoleInput): Promise<ActionResult> {
         action: "create",
         entity: "StaffRole",
         entityId: created.id,
-        summary: `Created role ${created.name} with ${hasAdministratorAccess(permissions) ? "administrator access (all current and future screens and permissions); " : ""}${permissions.length} explicit ${permissions.length === 1 ? "permission" : "permissions"}${permissions.length ? ` (${permissions.join(", ")})` : ""}`,
+        summary: `Created role ${created.name}: ${describeLevels(role)}`,
       }, tx);
       return created;
     }),
@@ -117,14 +109,9 @@ export async function createRole(input: RoleInput): Promise<ActionResult> {
 export async function updateRole(id: string, input: RoleInput): Promise<ActionResult> {
   const session = await requirePermission("roles.manage");
 
-  const parsed = roleSchema.safeParse(input);
-  if (!parsed.success) return fail(parsed.error.issues[0].message);
-  const { name, description, home } = parsed.data;
-  const permissions = cleanPermissions(parsed.data.permissions);
-  const screens = cleanScreens(parsed.data.screens);
-  if (screens.length === 0 && !hasAdministratorAccess(permissions)) {
-    return fail("Tick at least one screen, or nobody on this role has anywhere to go.");
-  }
+  const prepared = prepare(input);
+  if (!prepared.ok) return fail(prepared.error);
+  const { data: { name, description, homeName }, role, columns, home } = prepared;
 
   const result = await onUniqueViolation(() => withKeyholderLock(async (tx) => {
     const existing = await tx.staffRole.findUnique({
@@ -134,51 +121,39 @@ export async function updateRole(id: string, input: RoleInput): Promise<ActionRe
         name: true,
         description: true,
         permissions: true,
-        home: true,
         screens: true,
+        levels: true,
+        extras: true,
+        homeName: true,
         restricted: true,
       },
     });
     if (!existing) return fail("That role no longer exists.");
-    const restricted = permissions.some(isRestrictedPermission);
-    if ((restricted || existing.restricted) && !session.user.isSuperadmin) return fail(RESTRICTED_ROLE_REFUSAL);
+    if ((columns.restricted || existing.restricted) && !session.user.isSuperadmin) return fail(RESTRICTED_ROLE_REFUSAL);
 
+    // A role still on screens and permissions switches to levels on its first
+    // save; the log then states its levels in full.
     const changes: string[] = [];
-    if (hasAdministratorAccess(existing.permissions) !== hasAdministratorAccess(permissions)) {
-      changes.push(hasAdministratorAccess(permissions)
-        ? "administrator access granted (all current and future screens and permissions)"
-        : "administrator access removed");
+    if (existing.levels === null) {
+      changes.push(`switched to levels: ${describeLevels(role)}`);
+    } else {
+      const before = describeLevels(cleanLevels(existing.levels, existing.extras));
+      if (before !== describeLevels(role)) changes.push(`${before} → ${describeLevels(role)}`);
     }
     if (existing.name !== name) changes.push(`name ${existing.name} → ${name}`);
     if ((existing.description ?? "") !== description) changes.push("description");
-    if (existing.home !== home) changes.push(`starts on ${ROLE_HOMES[home].label}`);
-
-    const screensBefore = new Set(cleanScreens(existing.screens));
-    const screensAfter = new Set<string>(screens);
-    const shown = screens.filter((key) => !screensBefore.has(key)).map((k) => screenMeta(k).label);
-    const hidden = cleanScreens(existing.screens)
-      .filter((key) => !screensAfter.has(key))
-      .map((k) => screenMeta(k).label);
-    if (shown.length) changes.push(`screen grants added: ${shown.join(", ")}`);
-    if (hidden.length) changes.push(`screen grants removed: ${hidden.join(", ")}`);
-
-    const before = new Set(existing.permissions);
-    const after = new Set<string>(permissions);
-    const granted = [...after].filter((key) => !before.has(key));
-    const revoked = [...before].filter((key) => !after.has(key));
-    if (granted.length) changes.push(`granted ${granted.join(", ")}`);
-    if (revoked.length) changes.push(`revoked ${revoked.join(", ")}`);
+    if ((existing.homeName ?? "") !== homeName) changes.push(homeName ? `home page "${homeName}"` : "home page name removed");
 
     if (changes.length === 0) return ok();
     const refusal = await guardKeyholders(
-      { kind: "rolePermissions", roleId: id, permissions, screens },
+      { kind: "rolePermissions", roleId: id, permissions: columns.permissions, screens: columns.screens },
       tx
     );
     if (refusal) return fail(refusal);
 
     const updated = await tx.staffRole.update({
       where: { id },
-      data: { name, description: description || null, permissions, home, screens, restricted },
+      data: { name, description: description || null, homeName: homeName || null, home, ...columns },
       select: { id: true, name: true },
     });
 
@@ -186,7 +161,7 @@ export async function updateRole(id: string, input: RoleInput): Promise<ActionRe
     // move with it. Drop this with the column.
     await tx.user.updateMany({
       where: { staffRoleId: id },
-      data: { role: legacyRoleFor(permissions) },
+      data: { role: legacyRoleFor(columns.permissions) },
     });
 
     if (changes.length > 0) {

@@ -1,17 +1,4 @@
-import {
-  ItemGroup,
-  ItemContent,
-  Item,
-  ItemActions,
-} from "@/components/shadcn/item";
-
-import {
-  Collapsible,
-  CollapsibleTrigger,
-  CollapsibleContent,
-} from "@/components/shadcn/collapsible";
-
-import { Button } from "@/components/shadcn/button";
+import { ItemGroup, ItemContent, Item, ItemActions } from "@/components/shadcn/item";
 
 import { cn } from "@/lib/utils";
 import type { Metadata } from "next";
@@ -22,25 +9,15 @@ import { Lead, Num } from "@/components/ui-kit/prose";
 import { Tag } from "@/components/ui-kit/tag";
 import { AddRole, DeleteRole, EditRole } from "@/components/staff/role-actions";
 import { screenPage } from "@/lib/page-guards";
-import {
-  STAFF_STATUS_META,
-  permissionCountLabel,
-  roleReach,
-} from "@/lib/staff/constants";
+import { STAFF_STATUS_META, roleReach } from "@/lib/staff/constants";
 import { listRoles, type RoleRow } from "@/lib/staff/data/roles";
-import {
-  PERMISSIONS,
-  ROLE_HOMES,
-  expandPermissions,
-  isRoleHome,
-  hasAdministratorAccess,
-} from "@/lib/staff/permissions";
-import { visibleScreens, screenMeta } from "@/lib/staff/screens";
+import { cleanLevels, describeLevels, levelsFromAccess } from "@/lib/staff/levels";
 
 export const metadata: Metadata = { title: "Roles" };
 
 export default async function RolesPage() {
-  await screenPage("roles", "roles.manage");
+  const session = await screenPage("roles", "roles.manage");
+  const canGiveRestricted = session.user.isSuperadmin === true;
 
   const roles = await listRoles();
   const assigned = roles.reduce((n, role) => n + role._count.users, 0);
@@ -49,32 +26,27 @@ export default async function RolesPage() {
     <div className="min-w-0 flex flex-col gap-6">
       <PageHeader
         title="Roles"
-        description="A role is a named set of permissions. People hold one."
-        actions={<AddRole />}
+        description="A role is a job, with one level for each module."
+        actions={<AddRole canGiveRestricted={canGiveRestricted} />}
       />
 
       <Lead>
-        <Num>{roles.length}</Num> {roles.length === 1 ? "role" : "roles"}, held
-        between them by <Num>{assigned}</Num>{" "}
-        {assigned === 1 ? "account" : "accounts"}, out of{" "}
-        <Num>{PERMISSIONS.length}</Num> permissions the app has to give. A role
-        names the screens its holders can open, and the permissions are the
-        power to change something on them.
+        <Num>{roles.length}</Num> {roles.length === 1 ? "role" : "roles"}, held between them by{" "}
+        <Num>{assigned}</Num> {assigned === 1 ? "account" : "accounts"}. Each level includes the ones before it, and
+        people on a role start on its home page.
       </Lead>
 
       {roles.length === 0 ? (
         <EmptyState
           icon="keyRound"
           title="No roles yet"
-          hint="Without a role nobody can sign in, because an account with no permissions has nowhere to go."
-          action={<AddRole />}
+          hint="Without a role nobody can sign in, because an account with no role has nowhere to go."
+          action={<AddRole canGiveRestricted={canGiveRestricted} />}
         />
       ) : (
-        // Records as rows, not a card each: one list, a divider between
-        // roles, the permissions folded under each.
         <ItemGroup className="divide-y divide-ui-border">
           {roles.map((role) => (
-            <RoleRowItem key={role.id} role={role} />
+            <RoleRowItem key={role.id} role={role} canGiveRestricted={canGiveRestricted} />
           ))}
         </ItemGroup>
       )}
@@ -82,113 +54,35 @@ export default async function RolesPage() {
   );
 }
 
-function RoleRowItem({ role }: { role: RoleRow }) {
+function RoleRowItem({ role, canGiveRestricted }: { role: RoleRow; canGiveRestricted: boolean }) {
   const reach = roleReach(role.permissions);
-  const held = expandPermissions(role.permissions);
-  const granted = PERMISSIONS.filter((permission) => held.has(permission.key));
-  const screens = [...visibleScreens(role.screens, held)];
-  const administrator = hasAdministratorAccess(role.permissions);
+  const converted = role.levels !== null;
+  const levels = converted ? cleanLevels(role.levels, role.extras) : levelsFromAccess(role.permissions, role.screens).role;
+  const lines = describeLevels(levels).split(" · ");
 
   return (
-    <Item
-      role="listitem"
-      className={cn(
-        "items-start [overflow-wrap:anywhere]",
-        "max-sm:flex-col max-sm:items-stretch",
-      )}
-    >
-      <ItemContent className="min-w-0">
-        <div className="text-sm font-medium">
-          {
-            <div className="min-w-0 flex gap-2 items-center flex-wrap">
-              <span className="text-base text-ui-foreground font-semibold">
-                {role.name}
-              </span>
-              <Tag color={reach.color}>{reach.label}</Tag>
-              {role.isSystem ? (
-                <Tag color={STAFF_STATUS_META.builtInRole.color}>
-                  {STAFF_STATUS_META.builtInRole.label}
-                </Tag>
-              ) : null}
-            </div>
-          }
+    <Item role="listitem" className={cn("items-start [overflow-wrap:anywhere]", "max-sm:flex-col max-sm:items-stretch")}>
+      <ItemContent className="min-w-0 gap-2">
+        <div className="min-w-0 flex gap-2 items-center flex-wrap">
+          <span className="text-base text-ui-foreground font-semibold">{role.name}</span>
+          <Tag color={reach.color}>{reach.label}</Tag>
+          {role.isSystem ? <Tag color={STAFF_STATUS_META.builtInRole.color}>{STAFF_STATUS_META.builtInRole.label}</Tag> : null}
+          {converted ? null : <Tag color={STAFF_STATUS_META.oldSettings.color}>{STAFF_STATUS_META.oldSettings.label}</Tag>}
         </div>
-        <div className="text-sm text-ui-muted-foreground">
-          {
-            <div className="min-w-0 flex flex-col gap-1">
-              {role.description ? (
-                <span className="text-sm text-ui-muted-foreground">
-                  {role.description}
-                </span>
-              ) : null}
-              <span className="text-sm text-ui-muted-foreground">
-                {administrator ? "Administrator access" : permissionCountLabel(held.size)} ·{" "}
-                <span className="text-sm text-ui-muted-foreground tabular-nums">
-                  {role._count.users}
-                </span>{" "}
-                {role._count.users === 1 ? "account" : "accounts"} · starts on{" "}
-                {
-                  (isRoleHome(role.home)
-                    ? ROLE_HOMES[role.home]
-                    : ROLE_HOMES.calendar
-                  ).label
-                }
-              </span>
-              <span className="text-sm text-ui-muted-foreground">
-                {administrator ? "All screens and permissions, including future additions." : screens.length === 0
-                  ? "no screens"
-                  : `Sees ${screens.map((key) => screenMeta(key).label).join(", ")}`}
-              </span>
-              {granted.length === 0 ? (
-                <span className="text-sm text-ui-muted-foreground">
-                  Reads the screens above, changes nothing.
-                </span>
-              ) : (
-                <Collapsible defaultOpen={false}>
-                  <CollapsibleTrigger asChild>
-                    <Button variant="ghost" className="justify-start">
-                      {
-                        <span className="text-sm text-ui-foreground font-medium">
-                          What it may do
-                        </span>
-                      }
-                    </Button>
-                  </CollapsibleTrigger>
-                  <CollapsibleContent>
-                    <ItemGroup>
-                      {granted.map((permission) => (
-                        <Item
-                          key={permission.key}
-                          role="listitem"
-                          size="sm"
-                          className="[overflow-wrap:anywhere]"
-                        >
-                          <ItemContent className="min-w-0">
-                            <div className="text-sm font-medium">
-                              {
-                                <span className="text-sm text-ui-muted-foreground">
-                                  {permission.label}
-                                </span>
-                              }
-                            </div>
-                          </ItemContent>
-                        </Item>
-                      ))}
-                    </ItemGroup>
-                  </CollapsibleContent>
-                </Collapsible>
-              )}
-            </div>
-          }
-        </div>
+        {role.description ? <p className="text-sm text-ui-muted-foreground">{role.description}</p> : null}
+        <p className="text-sm text-ui-muted-foreground">
+          Home page: {role.homeName || "not named yet"} · <span className="tabular-nums">{role._count.users}</span>{" "}
+          {role._count.users === 1 ? "account" : "accounts"}
+        </p>
+        <ul className="flex flex-wrap gap-x-4 gap-y-1 text-sm text-ui-foreground" aria-label={`What ${role.name} can do`}>
+          {lines.map((line) => <li key={line}>{line}</li>)}
+        </ul>
       </ItemContent>
       <ItemActions className="flex-wrap">
-        {
-          <div className="min-w-0 flex gap-1 items-center">
-            <EditRole role={role} />
-            <DeleteRole role={role} users={role._count.users} />
-          </div>
-        }
+        <div className="min-w-0 flex gap-1 items-center">
+          <EditRole role={role} canGiveRestricted={canGiveRestricted} />
+          <DeleteRole role={role} users={role._count.users} />
+        </div>
       </ItemActions>
     </Item>
   );

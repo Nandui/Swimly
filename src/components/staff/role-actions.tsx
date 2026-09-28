@@ -2,286 +2,246 @@
 import { Button } from "@/components/shadcn/button";
 
 import * as React from "react";
-import { Pencil, Plus, Trash2 } from "lucide-react";
+import { Lock, Pencil, Plus, Trash2 } from "lucide-react";
 
 import { Checkbox } from "@/components/shadcn/checkbox";
 import { Label } from "@/components/shadcn/label";
-
 import { RadioGroup, RadioGroupItem } from "@/components/shadcn/radio-group";
 
 import { ConfirmAction } from "@/components/confirm-action";
 import { Field, FormDialog } from "@/components/form-dialog";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
+import { Notice } from "@/components/ui-kit/notice";
 import { createRole, deleteRole, updateRole } from "@/lib/staff/actions/roles";
-import {
-  PERMISSIONS,
-  PERMISSION_GROUP_ORDER,
-  ROLE_HOMES,
-  ROLE_HOME_ORDER,
-  normaliseRoleHome,
-  ADMINISTRATOR_PERMISSIONS,
-  hasAdministratorAccess,
-} from "@/lib/staff/permissions";
-import { SCREENS, cleanScreens } from "@/lib/staff/screens";
+import { WORK_ANYWHERE, cleanLevels, effectiveLevels, levelsFromAccess, type RoleLevels } from "@/lib/staff/levels";
+import { allModules, type ModuleManifest } from "@/modules/registry";
+import { cn } from "@/lib/utils";
 
 type Role = {
   id: string;
   name: string;
   description: string | null;
   permissions: string[];
-  home: string;
   screens: string[];
+  levels: unknown;
+  extras: string[];
+  homeName: string | null;
   isSystem: boolean;
 };
 
+const NONE = "none";
+
 function readRole(formData: FormData) {
+  const levels: Record<string, string> = {};
+  for (const mod of allModules()) {
+    const level = String(formData.get(`level:${mod.id}`) ?? NONE);
+    if (level !== NONE) levels[mod.id] = level;
+  }
   return {
     name: String(formData.get("name") ?? ""),
     description: String(formData.get("description") ?? ""),
-    // The pickers hold their choice in state and post it through hidden
-    // inputs, one per tick, so `getAll` reads the set like a native form.
-    permissions: formData.getAll("permissions").map(String),
-    screens: formData.getAll("screens").map(String),
-    home: String(formData.get("home") ?? "calendar"),
+    homeName: String(formData.get("homeName") ?? ""),
+    levels,
+    extras: formData.getAll("extras").map(String),
   };
 }
 
-/** The explicit selected set posts once, including permissions outside known groups. */
-function Ticked({ name, values }: { name: string; values: string[] }) {
-  return (
-    <>
-      {values.map((value) => (
-        <input key={value} type="hidden" name={name} value={value} />
-      ))}
-    </>
-  );
+/** The role's levels as the editor starts: its own, or for a role still on
+ *  screens and permissions, the levels the converter would give it. */
+function startingLevels(role?: Role): { start: RoleLevels; gains: string[] } {
+  if (!role) return { start: { levels: {}, extras: [] }, gains: [] };
+  if (role.levels !== null && role.levels !== undefined) return { start: cleanLevels(role.levels, role.extras), gains: [] };
+  const proposed = levelsFromAccess(role.permissions, role.screens);
+  return { start: proposed.role, gains: proposed.gains };
 }
 
-/** Which screens the role offers at all. An instructor role ticks Instructor and
- *  nothing else, and the deck becomes their whole app. */
-function ScreenPicker({ role, administrator }: { role?: Role; administrator: boolean }) {
-  const id = React.useId();
-  const [screens, setScreens] = React.useState<string[]>(() =>
-    cleanScreens(role?.screens ?? []),
-  );
-  return (
-    <fieldset className="min-w-0 space-y-2">
-      <legend className="text-sm font-semibold">
-        Which screens this role can open
-      </legend>
-      <p className="text-sm text-ui-muted-foreground">
-        {administrator
-          ? "Administrators can open every screen, including new screens added later."
-          : "Only the selected screens are available. Account is always there."}
-      </p>
-      <Ticked name="screens" values={screens} />
-      <div className="divide-y divide-ui-border">
-        {SCREENS.map((screen) => (
-          <div key={screen.key} className="flex items-start gap-3 py-2">
-            <Checkbox
-              id={`${id}-${screen.key}`}
-              checked={administrator || screens.includes(screen.key)}
-              disabled={administrator}
-              onCheckedChange={(checked) =>
-                setScreens((previous) =>
-                  checked === true
-                    ? [...previous, screen.key]
-                    : previous.filter((key) => key !== screen.key),
-                )
-              }
-              className="mt-3"
-            />
-            <Label
-              htmlFor={`${id}-${screen.key}`}
-              className="min-h-11 min-w-0 flex-1 cursor-pointer flex-col items-start justify-center gap-1"
-            >
-              <span>{screen.label}</span>
-              <span className="text-sm font-normal text-ui-muted-foreground">
-                {screen.description}
-              </span>
-            </Label>
-          </div>
-        ))}
-      </div>
-    </fieldset>
-  );
-}
-
-/** Where this role's day starts. */
-function HomePicker({ role }: { role?: Role }) {
-  const id = React.useId();
-  const [home, setHome] = React.useState<string>(() =>
-    normaliseRoleHome(role?.home),
-  );
-  return (
-    <fieldset className="min-w-0 space-y-2">
-      <legend className="text-sm font-semibold">
-        Where they start after signing in
-      </legend>
-      <RadioGroup
-        name="home"
-        value={home}
-        onValueChange={setHome}
-        aria-label="Where they start after signing in"
-        className="gap-0 divide-y divide-ui-border"
-      >
-        {ROLE_HOME_ORDER.map((key) => (
-          <div key={key} className="flex items-start gap-3 py-2">
-            <RadioGroupItem id={`${id}-${key}`} value={key} className="mt-3" />
-            <Label
-              htmlFor={`${id}-${key}`}
-              className="min-h-11 min-w-0 flex-1 cursor-pointer flex-col items-start justify-center gap-1"
-            >
-              <span>{ROLE_HOMES[key].label}</span>
-              <span className="text-sm font-normal text-ui-muted-foreground">
-                {ROLE_HOMES[key].description}
-              </span>
-            </Label>
-          </div>
-        ))}
-      </RadioGroup>
-    </fieldset>
-  );
-}
-
-/** The permission list, grouped, with every entry carrying the sentence that
- *  says what it actually lets someone do. The descriptions are the point — a
- *  bare list of keys is a list nobody can grant safely. One set of ticks
- *  across the groups. */
-function PermissionPicker({ held, setHeld, administrator }: {
-  held: string[];
-  setHeld: React.Dispatch<React.SetStateAction<string[]>>;
-  administrator: boolean;
+/** One module's ladder, as a row of buttons: None, then its levels. */
+function LevelRow({ mod, level, posted, locked, onChange }: {
+  mod: ModuleManifest;
+  /** What the row shows: Admin Manage shows Manage everywhere. */
+  level: string;
+  /** What the role itself stores for this module. */
+  posted: string;
+  /** Set by Admin Manage (every module) or, for HR, by not being a superadmin. */
+  locked: string | null;
+  onChange: (level: string) => void;
 }) {
   const id = React.useId();
+  const options = [{ key: NONE, label: "None" }, ...mod.access.levels.map((l) => ({ key: l.key, label: l.label }))];
+  const help = level === NONE ? "No access." : mod.access.levels.find((l) => l.key === level)?.help;
+  const Icon = mod.icon;
   return (
-    <div className="min-w-0 space-y-4">
-      <p className="text-sm text-ui-muted-foreground">
-        Manage staff accounts and Manage roles together grant administrator access
-        to every current and future screen and permission.
-      </p>
-      <Ticked name="permissions" values={held} />
-      {PERMISSION_GROUP_ORDER.map((group, index) => (
-        <fieldset key={group} className="min-w-0 space-y-2">
-          <legend className="text-sm font-semibold">
-            {index === 0 ? `What this role may do · ${group}` : group}
-          </legend>
-          <div className="divide-y divide-ui-border">
-            {PERMISSIONS.filter((permission) => permission.group === group).map(
-              (permission) => (
-                <div
-                  key={permission.key}
-                  className="flex items-start gap-3 py-2"
-                >
-                  <Checkbox
-                    id={`${id}-${permission.key}`}
-                    checked={administrator || held.includes(permission.key)}
-                    disabled={administrator && !ADMINISTRATOR_PERMISSIONS.includes(permission.key)}
-                    onCheckedChange={(checked) =>
-                      setHeld((previous) =>
-                        checked === true
-                          ? [...previous, permission.key]
-                          : previous.filter((key) => key !== permission.key),
-                      )
-                    }
-                    className="mt-3"
-                  />
-                  <Label
-                    htmlFor={`${id}-${permission.key}`}
-                    className="min-h-11 min-w-0 flex-1 cursor-pointer flex-col items-start justify-center gap-1"
-                  >
-                    <span>{permission.label}</span>
-                    <span className="text-sm font-normal text-ui-muted-foreground">
-                      {permission.description}
-                    </span>
-                  </Label>
-                </div>
-              ),
-            )}
-          </div>
-        </fieldset>
-      ))}
+    <div className="flex flex-col gap-2 py-3">
+      <div className="flex flex-wrap items-center justify-between gap-x-4 gap-y-2">
+        <span id={`${id}-name`} className={cn("flex items-center gap-2 font-semibold", level === NONE && "text-ui-muted-foreground")}>
+          <Icon aria-hidden="true" className={cn("size-5 shrink-0", level === NONE ? "text-ui-muted-foreground" : "text-ui-primary")} />
+          {mod.name}
+        </span>
+        <RadioGroup
+          value={level}
+          onValueChange={onChange}
+          disabled={locked !== null}
+          aria-labelledby={`${id}-name`}
+          className="flex flex-wrap gap-1 rounded-xl bg-ui-muted p-1"
+        >
+          {options.map((option) => (
+            <Label
+              key={option.key}
+              htmlFor={`${id}-${option.key}`}
+              className={cn(
+                "relative inline-flex min-h-11 cursor-pointer items-center rounded-lg px-3 text-sm font-medium text-ui-muted-foreground",
+                "has-[[data-state=checked]]:bg-ui-background has-[[data-state=checked]]:text-ui-foreground has-[[data-state=checked]]:font-semibold has-[[data-state=checked]]:shadow-[0_0_0_1px_var(--color-ui-input)]",
+                "has-[:focus-visible]:ring-[3px] has-[:focus-visible]:ring-ui-ring/50",
+                locked !== null && "cursor-not-allowed opacity-70",
+              )}
+            >
+              <RadioGroupItem id={`${id}-${option.key}`} value={option.key} className="sr-only" />
+              {option.label}
+            </Label>
+          ))}
+        </RadioGroup>
+      </div>
+      <p className="text-sm text-ui-muted-foreground">{locked ?? help}</p>
+      <input type="hidden" name={`level:${mod.id}`} value={posted} />
     </div>
   );
 }
 
-function RoleFields({ role }: { role?: Role }) {
-  const [held, setHeld] = React.useState<string[]>(role?.permissions ?? []);
-  const administrator = hasAdministratorAccess(held);
+function Tick({ id, name, value, checked, onChange, label, hint }: {
+  id: string; name: string; value: string; checked: boolean; onChange: (checked: boolean) => void; label: string; hint?: string;
+}) {
+  return (
+    <div className="flex items-start gap-3">
+      <Checkbox id={id} checked={checked} onCheckedChange={(c) => onChange(c === true)} className="mt-3" />
+      <Label htmlFor={id} className="min-h-11 min-w-0 flex-1 cursor-pointer flex-col items-start justify-center gap-1">
+        <span>{label}</span>
+        {hint ? <span className="text-sm font-normal text-ui-muted-foreground">{hint}</span> : null}
+      </Label>
+      {checked ? <input type="hidden" name={name} value={value} /> : null}
+    </div>
+  );
+}
+
+function RoleFields({ role, canGiveRestricted }: { role?: Role; canGiveRestricted: boolean }) {
+  const id = React.useId();
+  const { start, gains } = React.useMemo(() => startingLevels(role), [role]);
+  const [levels, setLevels] = React.useState<Record<string, string>>({ ...start.levels });
+  const [extras, setExtras] = React.useState<string[]>([...start.extras]);
+  const admin = levels.admin === "manage";
+  const shown = effectiveLevels({ levels, extras });
+
+  const setLevel = (mod: ModuleManifest, level: string) => {
+    setLevels((previous) => {
+      const next = { ...previous };
+      if (level === NONE) delete next[mod.id];
+      else next[mod.id] = level;
+      return next;
+    });
+  };
+  const toggle = (key: string, on: boolean) => setExtras((previous) => on ? [...new Set([...previous, key])] : previous.filter((k) => k !== key));
+
   return (
     <>
       <Field label="Name" htmlFor="name">
-        <Input
-          id="name"
-          name="name"
-          required
-          autoFocus
-          defaultValue={role?.name}
-          placeholder="Head Coach"
-        />
+        <Input id="name" name="name" required autoFocus defaultValue={role?.name} placeholder="Receptionist" />
       </Field>
-      <Field
-        label="Description"
-        htmlFor="description"
-        hint="Optional — one line, so whoever assigns it knows who it is for."
-      >
-        <Textarea
-          id="description"
-          name="description"
-          rows={2}
-          defaultValue={role?.description ?? ""}
-        />
+      <Field label="Home page name" htmlFor="homeName" hint="What people on this role see first when they sign in, for example Front of House.">
+        <Input id="homeName" name="homeName" defaultValue={role?.homeName ?? ""} placeholder="Front of House" maxLength={40} />
       </Field>
-      <p role="status" className="text-sm font-medium">
-        {administrator
-          ? "Administrator access · All screens and permissions, now and in future."
-          : "Custom access · Choose the screens and permissions for this role."}
-      </p>
-      <ScreenPicker role={role} administrator={administrator} />
-      <PermissionPicker held={held} setHeld={setHeld} administrator={administrator} />
-      <HomePicker role={role} />
+      <Field label="Description" htmlFor="description" hint="Optional. One line, so whoever gives it out knows who it is for.">
+        <Textarea id="description" name="description" rows={2} defaultValue={role?.description ?? ""} />
+      </Field>
+
+      {role && (role.levels === null || role.levels === undefined) ? (
+        <Notice tone={gains.length ? "warning" : "info"} title="This role still uses the old screens and permissions">
+          {gains.length
+            ? "Saving switches it to the levels below, which give a little more than it has now. Check them before you save."
+            : "Saving switches it to the levels below, which give exactly what it has now."}
+        </Notice>
+      ) : null}
+
+      <fieldset className="min-w-0">
+        <legend className="text-sm font-semibold">What this role can do in each module</legend>
+        <p className="mt-1 text-sm text-ui-muted-foreground">Each level includes the ones before it.</p>
+        <div className="mt-2 divide-y divide-ui-border">
+          {allModules().map((mod) => {
+            const locked = admin && mod.id !== "admin" && !mod.access.restricted
+              ? "Admins can use every module except HR."
+              : mod.access.restricted && !canGiveRestricted
+                ? "Only a superadmin can give HR."
+                : null;
+            const level = shown.levels[mod.id] ?? NONE;
+            return (
+              <div key={mod.id}>
+                <LevelRow mod={mod} level={level} posted={levels[mod.id] ?? NONE} locked={locked} onChange={(value) => setLevel(mod, value)} />
+                {(mod.access.extras ?? []).map((extra) => {
+                  const key = `${mod.id}.${extra.key}`;
+                  const available = level !== NONE && mod.access.levels.findIndex((l) => l.key === level) >= mod.access.levels.findIndex((l) => l.key === extra.from);
+                  if (!available || locked) return null;
+                  return <div key={key} className="pb-3"><Tick id={`${id}-${key}`} name="extras" value={key} checked={extras.includes(key)} onChange={(on) => toggle(key, on)} label={extra.label} hint={extra.help} /></div>;
+                })}
+              </div>
+            );
+          })}
+        </div>
+      </fieldset>
+
+      {admin ? null : (
+        <Tick
+          id={`${id}-anywhere`}
+          name="extras"
+          value={WORK_ANYWHERE}
+          checked={extras.includes(WORK_ANYWHERE)}
+          onChange={(on) => toggle(WORK_ANYWHERE, on)}
+          label="Can work away from the centre's computers"
+          hint="For example on a phone. Everyone else signs in only on the centre's registered computers, once that rule is on."
+        />
+      )}
+      {levels.hr && !canGiveRestricted ? (
+        <p className="flex items-center gap-2 text-sm text-ui-muted-foreground"><Lock aria-hidden="true" className="size-4" />This role holds HR, so only a superadmin can change it.</p>
+      ) : null}
     </>
   );
 }
 
-export function AddRole() {
+export function AddRole({ canGiveRestricted = false }: { canGiveRestricted?: boolean }) {
   return (
     <FormDialog
       trigger={
         <Button variant="default" size="sm">
-          {<Plus aria-hidden={true} className="size-4 shrink-0" />}
-          {"Add role"}
+          <Plus aria-hidden={true} className="size-4 shrink-0" />
+          Add role
         </Button>
       }
       title="Add a role"
-      description="A role is a named set of permissions. Give it the smallest set that lets the job get done."
+      description="A role is a job. Give it the lowest level in each module that lets the job get done."
       submitLabel="Add role"
       successMessage="Role added"
-      width="sm:max-w-lg"
+      width="sm:max-w-2xl"
       submit={(formData) => createRole(readRole(formData))}
     >
-      <RoleFields />
+      <RoleFields canGiveRestricted={canGiveRestricted} />
     </FormDialog>
   );
 }
 
-export function EditRole({ role }: { role: Role }) {
+export function EditRole({ role, canGiveRestricted = false }: { role: Role; canGiveRestricted?: boolean }) {
   return (
     <FormDialog
       trigger={
         <Button variant="ghost" aria-label={`Edit ${role.name}`} size="icon-sm">
-          {<Pencil aria-hidden={true} className="size-4 shrink-0" />}
+          <Pencil aria-hidden={true} className="size-4 shrink-0" />
         </Button>
       }
       title={`Edit ${role.name}`}
-      description="Changes take effect on everyone holding this role at their next page load."
+      description="Changes take effect for everyone on this role at their next page load."
       submitLabel="Save changes"
       successMessage="Role updated"
-      width="sm:max-w-lg"
+      width="sm:max-w-2xl"
       submit={(formData) => updateRole(role.id, readRole(formData))}
     >
-      <RoleFields role={role} />
+      <RoleFields role={role} canGiveRestricted={canGiveRestricted} />
     </FormDialog>
   );
 }
@@ -292,19 +252,15 @@ export function DeleteRole({ role, users }: { role: Role; users: number }) {
   return (
     <ConfirmAction
       trigger={
-        <Button
-          variant="ghost"
-          aria-label={`Delete ${role.name}`}
-          size="icon-sm"
-        >
-          {<Trash2 aria-hidden={true} className="size-4 shrink-0" />}
+        <Button variant="ghost" aria-label={`Delete ${role.name}`} size="icon-sm">
+          <Trash2 aria-hidden={true} className="size-4 shrink-0" />
         </Button>
       }
       title={`Delete ${role.name}?`}
       description={
         users > 0
-          ? `${users} ${users === 1 ? "account is" : "accounts are"} on this role. Move ${users === 1 ? "them" : "them"} to another one first — this will be refused otherwise.`
-          : "Nobody holds it, so nothing changes for anyone. The audit log records what people did, never which role let them, so nothing already recorded becomes harder to read."
+          ? `${users} ${users === 1 ? "account is" : "accounts are"} on this role. Move them to another one first, or this will be refused.`
+          : "Nobody holds it, so nothing changes for anyone. The activity log records what people did, never which role let them."
       }
       confirmLabel="Delete"
       successMessage="Role deleted"

@@ -115,3 +115,17 @@ test("departments cannot be archived while people or roles still depend on them"
   const maintenance = await fixture.prisma.department.findFirstOrThrow({ where: { name: "Maintenance" } });
   assert.deepEqual(await actions.setDepartmentArchived(maintenance.id, true), { ok: true });
 });
+
+test("works at: only the organisation's live sites, audited, and none means every site", async () => {
+  as("admin", ["staff.manage", "roles.manage"]);
+  const club = await fixture.prisma.club.findFirstOrThrow({ where: { orgId: ORG } });
+  assert.equal((await actions.setWorksAt("maya", ["not-a-site"])).ok, false);
+  assert.equal((await actions.setWorksAt("maya", [club.id])).ok, true);
+  assert.deepEqual((await fixture.prisma.user.findUniqueOrThrow({ where: { id: "maya" } })).siteIds, [club.id]);
+  const audit = await fixture.prisma.auditLog.findFirstOrThrow({ where: { entityId: "maya", summary: { contains: "now works at" } } });
+  assert.match(audit.summary, new RegExp(`maya now works at ${club.name}`));
+  assert.equal((await actions.setWorksAt("maya", [])).ok, true);
+  assert.deepEqual((await fixture.prisma.user.findUniqueOrThrow({ where: { id: "maya" } })).siteIds, []);
+  as("maya", ["docs.read"]);
+  await assert.rejects(actions.setWorksAt("maya", [club.id]), /denied staff.manage/);
+});
