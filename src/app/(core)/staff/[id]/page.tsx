@@ -6,7 +6,7 @@ import { BackLink } from "@/components/ui-kit/back-link";
 import { PageHeader } from "@/components/ui-kit/page-header";
 import { Tag } from "@/components/ui-kit/tag";
 import {
-  EditProfile, RecordQualification, RemoveAssignment, RevokeQualification, SuperadminToggle, WorksAt,
+  EditProfile, RecordQualification, RevokeQualification, SuperadminToggle, WorksAt,
 } from "@/components/people/people-actions";
 import { formatDate } from "@/lib/format";
 import { screenPage } from "@/lib/page-guards";
@@ -95,26 +95,6 @@ export default async function PersonPage({ params }: { params: Promise<{ id: str
           </div>
         </dl>
         <p className="text-sm text-ui-muted-foreground">Change their role on the Staff list. Swim school, Training and Rota apply at the sites they work at; everything else applies everywhere.</p>
-        {person.assignments.length ? (
-          <>
-            <h3 className="text-base font-semibold">Extra roles from before</h3>
-            <p className="text-sm text-ui-muted-foreground">People now hold one role. These still apply until you remove them.</p>
-            <ItemGroup className="divide-y divide-ui-border">
-              {person.assignments.map((a) => (
-                <Item key={a.id} role="listitem">
-                  <ItemContent>
-                    <div className="flex flex-wrap items-center gap-2">
-                      <span className="text-sm font-medium">{a.roleName}</span>
-                      {a.restricted ? <Tag color={PERSON_STATUS_META.restricted.color}>{PERSON_STATUS_META.restricted.label}</Tag> : null}
-                    </div>
-                    <span className="text-sm text-ui-muted-foreground">{a.scopeLabel}</span>
-                  </ItemContent>
-                  <ItemActions><RemoveAssignment id={a.id} label={`${a.roleName} (${a.scopeLabel})`} /></ItemActions>
-                </Item>
-              ))}
-            </ItemGroup>
-          </>
-        ) : null}
       </section>
 
       <section aria-labelledby="qualifications-heading" className="min-w-0 flex flex-col gap-3">

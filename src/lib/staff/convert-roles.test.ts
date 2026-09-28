@@ -53,7 +53,6 @@ test("a converted administrator signs in with exactly the access they had", asyn
   const account: Account = {
     id: "alex", name: "Alex", email: "alex@example.invalid", isActive: true, orgId: null, isSuperadmin: false, siteIds: [],
     staffRole: { id: role.id, name: role.name, permissions: role.permissions, home: role.home, screens: role.screens, levels: role.levels, extras: role.extras },
-    roleAssignments: [],
   };
   const user = sessionUserFor(account, null)!;
   assert.deepEqual([...expandPermissions(user.permissions)].sort(), [...expandPermissions(before_.Admin.permissions)].sort());

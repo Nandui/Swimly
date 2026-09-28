@@ -13,16 +13,14 @@ export function workDeviceRequired(env: Record<string, string | undefined> = pro
   return env.WORK_DEVICE_REQUIRED === "true";
 }
 
-/** Every permission the person holds through any of their roles, whatever the
- *  scope: working from any device is about the person, not a site. */
+/** Whether the person's role lets them work away from the centre's PCs:
+ *  about the person, not a site. */
 export async function mayWorkAnywhere(userId: string) {
   const user = await prisma.user.findUnique({
     where: { id: userId },
-    select: { isSuperadmin: true, staffRole: { select: { permissions: true } }, roleAssignments: { select: { role: { select: { permissions: true } } } } },
+    select: { isSuperadmin: true, staffRole: { select: { permissions: true } } },
   });
   if (!user) return false;
   if (user.isSuperadmin) return true;
-  // Each role expands on its own, so an administrator role keeps its inheritance.
-  return [user.staffRole?.permissions ?? [], ...user.roleAssignments.map((a) => a.role.permissions)]
-    .some((permissions) => expandPermissions(permissions).has("work.anywhere"));
+  return expandPermissions(user.staffRole?.permissions ?? []).has("work.anywhere");
 }

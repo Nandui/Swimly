@@ -45,20 +45,6 @@ test("the last active keyholder cannot be deactivated", async () => {
   assert.notEqual(await f.actions.guardKeyholders({ kind: "deactivate", userId: "staff" }), null);
 });
 
-test("an org-wide additional role counts as holding the keys, and removing it is guarded", async () => {
-  const roles = [
-    { id: "basic", permissions: ["docs.read"], screens: ["docs"] },
-    { id: "keyholder", permissions: ["staff.manage", "roles.manage"], screens: ["staff", "roles"] },
-  ];
-  const prisma = {
-    user: { findMany: async () => [{ id: "staff", staffRoleId: "basic", roleAssignments: [{ id: "a1", roleId: "keyholder" }] }] },
-    staffRole: { findMany: async () => roles },
-  };
-  const actions = serverModule<typeof import("./keyholders")>("src/lib/staff/keyholders.ts", { "@/lib/prisma": { prisma } });
-  assert.equal(await actions.guardKeyholders({ kind: "userRole", userId: "staff", roleId: "basic" }), null);
-  assert.notEqual(await actions.guardKeyholders({ kind: "removeAssignment", assignmentId: "a1" }), null);
-});
-
 test("the last active superadmin cannot be removed or deactivated", async () => {
   const supers = [{ id: "owner" }];
   const prisma = { user: { findMany: async () => supers }, staffRole: { findMany: async () => [] } };

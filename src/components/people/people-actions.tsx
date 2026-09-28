@@ -1,7 +1,7 @@
 "use client";
 
 import * as React from "react";
-import { Archive, ArchiveRestore, Award, Ban, Building2, Pencil, Plus, ShieldCheck, ShieldOff, Trash2 } from "lucide-react";
+import { Archive, ArchiveRestore, Award, Ban, Building2, Pencil, Plus, ShieldCheck, ShieldOff } from "lucide-react";
 import { Button } from "@/components/shadcn/button";
 import { Checkbox } from "@/components/shadcn/checkbox";
 import { Label } from "@/components/shadcn/label";
@@ -11,7 +11,7 @@ import { Input } from "@/components/ui/input";
 import { Select } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
 import {
-  recordQualification, removeAssignment, revokeQualification, saveDepartment,
+  recordQualification, revokeQualification, saveDepartment,
   saveQualificationType, setDepartmentArchived, setQualificationTypeArchived, setSuperadmin, setWorksAt, updateProfile,
 } from "@/lib/people/actions";
 
@@ -113,19 +113,6 @@ export function WorksAt({ userId, name, sites, current }: { userId: string; name
         ))}
       </fieldset>
     </FormDialog>
-  );
-}
-
-export function RemoveAssignment({ id, label }: { id: string; label: string }) {
-  return (
-    <ConfirmAction
-      trigger={<Button variant="ghost" size="icon-sm" aria-label={`Remove ${label}`}>{icon(Trash2)}</Button>}
-      title={`Remove ${label}?`}
-      description="Extra roles are being retired: people now hold one role. They lose what this one allowed from their next page. Their main role and everything they recorded stay as they are."
-      confirmLabel="Remove role"
-      successMessage="Role removed"
-      run={() => removeAssignment(id)}
-    />
   );
 }
 

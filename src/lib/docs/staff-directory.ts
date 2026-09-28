@@ -7,22 +7,16 @@ import type { StaffDirectory, StaffIdentity } from './database';
 const select = { id: true, name: true, email: true, isActive: true, isSuperadmin: true, primaryClubId: true,
   departments: { select: { departmentId: true, department: { select: { clubId: true, archivedAt: true } } } },
   staffRole: { select: { id: true, name: true, permissions: true, screens: true } },
-  // Docs works across sites, so only additional roles that apply everywhere
-  // count here; site, department and line-manager scopes are the policy
-  // engine's to apply (for example to scoped reading reports).
-  roleAssignments: { where: { scopeKind: 'all' }, select: { role: { select: { permissions: true, screens: true } } } },
 } as const;
 function identity(user: { id: string; name: string; email: string; isActive: boolean; isSuperadmin: boolean; primaryClubId: string | null;
   departments: { departmentId: string; department: { clubId: string | null; archivedAt: Date | null } }[];
   staffRole: { id: string; name: string; permissions: string[]; screens: string[] } | null;
-  roleAssignments: { role: { permissions: string[]; screens: string[] } }[];
 }): StaffIdentity {
-  const extra = user.roleAssignments ?? [];
   const departments = (user.departments ?? []).filter((d) => !d.department.archivedAt);
   return { id: user.id, name: user.name, email: user.email,
     active: user.isActive && !!user.staffRole, role: user.staffRole?.name ?? '',
-    permissions: user.isSuperadmin ? [...ALL_PERMISSIONS] : [...new Set([...(user.staffRole?.permissions ?? []), ...extra.flatMap((a) => a.role.permissions)])],
-    screens: user.isSuperadmin ? [...ALL_SCREENS] : [...new Set([...(user.staffRole?.screens ?? []), ...extra.flatMap((a) => a.role.screens)])],
+    permissions: user.isSuperadmin ? [...ALL_PERMISSIONS] : [...(user.staffRole?.permissions ?? [])],
+    screens: user.isSuperadmin ? [...ALL_SCREENS] : [...(user.staffRole?.screens ?? [])],
     // One organisation chart: the person's main site, their departments and
     // those departments' sites, as Docs facility and team membership.
     siteIds: [...new Set([user.primaryClubId, ...departments.map((d) => d.department.clubId)].filter((id): id is string => !!id))],

@@ -5,7 +5,7 @@ import { serverModule } from "@/test/server-module";
 import { expandPermissions, type PermissionKey } from "@/lib/staff/permissions";
 
 /** The People core against a real (in-memory) Postgres: org chart rules,
- *  additional roles, the superadmin tier and scoped qualification records. */
+ *  where people work, the superadmin tier and scoped qualification records. */
 let fixture: Awaited<ReturnType<typeof isolatedPrisma>>;
 let actions: typeof import("./actions");
 const ORG = "org_leisureworld";
@@ -72,16 +72,6 @@ test("profiles: departments with a main one, a manager, and no loops", async () 
   assert.ok(await fixture.prisma.auditLog.findFirst({ where: { entityId: "ava", summary: { contains: "profile" } } }));
 });
 
-test("additional roles: scoped, audited, never an administrator role limited to a place", async () => {
-  as("admin", ["staff.manage", "roles.manage"]);
-  assert.deepEqual(await actions.addAssignment("liam", { roleId: "r-lead", scopeKind: "department", scopeId: "d-aquatics" }), { ok: true });
-  assert.equal((await actions.addAssignment("liam", { roleId: "r-lead", scopeKind: "department", scopeId: "d-aquatics" })).ok, false, "duplicate");
-  assert.equal((await actions.addAssignment("noah", { roleId: "r-admin", scopeKind: "department", scopeId: "d-reception" })).ok, false);
-  assert.equal((await actions.addAssignment("noah", { roleId: "r-lead", scopeKind: "site", scopeId: "" })).ok, false, "site scope needs a site");
-  const refused = await actions.addAssignment("noah", { roleId: "r-hr", scopeKind: "all" });
-  assert.equal(refused.ok, false, "a restricted role needs a superadmin");
-});
-
 test("the superadmin tier: only superadmins grant it, and the last one stays", async () => {
   as("admin", ["staff.manage", "roles.manage"]);
   assert.equal((await actions.setSuperadmin("maya", true)).ok, false, "administrators cannot make superadmins");
@@ -91,7 +81,6 @@ test("the superadmin tier: only superadmins grant it, and the last one stays", a
   assert.deepEqual(await actions.setSuperadmin("maya", false), { ok: true });
   assert.equal((await actions.setSuperadmin("admin", false)).ok, false, "last superadmin");
   assert.equal((await actions.setSuperadmin("zoe", true)).ok, false, "another organisation");
-  assert.deepEqual(await actions.addAssignment("noah", { roleId: "r-hr", scopeKind: "all" }), { ok: true }, "a superadmin can give out a restricted role");
 });
 
 test("qualifications: a department lead records for their department only", async () => {

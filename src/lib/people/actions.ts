@@ -6,14 +6,11 @@ import { fail, ok, onUniqueViolation, type ActionResult } from "@/lib/action-res
 import { logAudit } from "@/lib/audit";
 import { requirePermission, requireSession, can } from "@/lib/authz";
 import { prisma } from "@/lib/prisma";
-import { guardKeyholders, guardSuperadmins, withKeyholderLock } from "@/lib/staff/keyholders";
-import { hasAdministratorAccess } from "@/lib/staff/permissions";
-import { RESTRICTED_ROLE_REFUSAL } from "@/lib/staff/restricted";
+import { guardSuperadmins, withKeyholderLock } from "@/lib/staff/keyholders";
 import { requireCapFor } from "@/lib/policy/session";
-import { isScopeKind } from "@/lib/policy/types";
 
 /** The People core: one person record and one organisation chart that every
- *  module reads. Structure (departments, managers, extra roles) is account
+ *  module reads. Structure (departments, managers, where people work) is account
  *  administration, so it needs `staff.manage`. Qualifications are recorded by
  *  whoever holds `qualifications.manage` for that person's scope. Every change
  *  is audited in the same transaction. */
@@ -78,53 +75,8 @@ export async function updateProfile(userId: string, input: ProfileInput): Promis
 }
 
 // ---------------------------------------------------------------------------
-// Additional roles: role × where it applies
+// Where they work
 // ---------------------------------------------------------------------------
-
-const assignmentSchema = z.object({
-  roleId: z.string().min(1, "Pick a role."),
-  scopeKind: z.string().refine(isScopeKind, "Choose where the role applies."),
-  scopeId: z.string().max(64).default(""),
-});
-export type AssignmentInput = z.input<typeof assignmentSchema>;
-
-export async function addAssignment(userId: string, input: AssignmentInput): Promise<ActionResult> {
-  const session = await requirePermission("staff.manage");
-  const parsed = assignmentSchema.safeParse(input);
-  if (!parsed.success) return fail(parsed.error.issues[0].message);
-  const { roleId, scopeKind } = parsed.data;
-  const scopeId = scopeKind === "site" || scopeKind === "department" ? parsed.data.scopeId : "";
-  if ((scopeKind === "site" || scopeKind === "department") && !scopeId) return fail(scopeKind === "site" ? "Choose the site." : "Choose the department.");
-  const result = await onUniqueViolation(() => prisma.$transaction(async (tx) => {
-    const [person, role] = await Promise.all([
-      tx.user.findUnique({ where: { id: userId }, select: { id: true, name: true, orgId: true, staffRoleId: true } }),
-      tx.staffRole.findUnique({ where: { id: roleId }, select: { id: true, name: true, permissions: true, restricted: true } }),
-    ]);
-    if (!person?.orgId) return fail("That account no longer exists.");
-    if (!role) return fail("That role no longer exists.");
-    if (role.restricted && !session.user.isSuperadmin) return fail(RESTRICTED_ROLE_REFUSAL);
-    // Account and role administration is organisation-wide by nature.
-    if (hasAdministratorAccess(role.permissions) && scopeKind !== "all") return fail("An administrator role applies everywhere; it cannot be limited to a site, department or team.");
-    if (role.id === person.staffRoleId && scopeKind === "all") return fail(`${role.name} is already their main role.`);
-    let where = "everywhere";
-    if (scopeKind === "site") {
-      const club = await tx.club.findFirst({ where: { id: scopeId, orgId: person.orgId }, select: { name: true } });
-      if (!club) return fail("That site no longer exists.");
-      where = `at ${club.name}`;
-    }
-    if (scopeKind === "department") {
-      const department = await tx.department.findFirst({ where: { id: scopeId, orgId: person.orgId, archivedAt: null }, select: { name: true } });
-      if (!department) return fail("That department no longer exists.");
-      where = `for ${department.name}`;
-    }
-    if (scopeKind === "reports") where = "for their own team";
-    const created = await tx.roleAssignment.create({ data: { orgId: person.orgId, userId, roleId, scopeKind, scopeId, grantedById: session.user.id } });
-    await logAudit({ actorId: session.user.id, actorName: actorName(session), action: "assign-role", entity: "RoleAssignment", entityId: created.id, summary: `Gave ${person.name} the ${role.name} role ${where}` }, tx);
-    return ok();
-  }), "They already have that role there.");
-  if (result.ok) revalidate(userId);
-  return result;
-}
 
 /** The sites a person works at, where their role's Swim school, Training and
  *  Rota levels apply (docs/how-turnfin-works.md). No sites means every site,
@@ -147,22 +99,6 @@ export async function setWorksAt(userId: string, siteIds: string[]): Promise<Act
     return ok();
   });
   if (result.ok) revalidate(userId);
-  return result;
-}
-
-export async function removeAssignment(assignmentId: string): Promise<ActionResult> {
-  const session = await requirePermission("staff.manage");
-  const result = await withKeyholderLock(async (tx) => {
-    const assignment = await tx.roleAssignment.findUnique({ where: { id: assignmentId }, select: { id: true, userId: true, user: { select: { name: true } }, role: { select: { name: true, restricted: true } } } });
-    if (!assignment) return ok();
-    if (assignment.role.restricted && !session.user.isSuperadmin) return fail(RESTRICTED_ROLE_REFUSAL);
-    const refusal = await guardKeyholders({ kind: "removeAssignment", assignmentId }, tx);
-    if (refusal) return fail(refusal);
-    await tx.roleAssignment.delete({ where: { id: assignmentId } });
-    await logAudit({ actorId: session.user.id, actorName: actorName(session), action: "unassign-role", entity: "RoleAssignment", entityId: assignmentId, summary: `Removed the ${assignment.role.name} role from ${assignment.user.name}` }, tx);
-    return ok();
-  });
-  revalidate();
   return result;
 }
 
@@ -237,7 +173,6 @@ export async function setDepartmentArchived(id: string, archived: boolean): Prom
     if (!existing) return fail("That department no longer exists.");
     if (!!existing.archivedAt === archived) return ok();
     if (archived && existing._count.members > 0) return fail(`Move the ${existing._count.members} people in ${existing.name} first; their access may depend on it.`);
-    if (archived && (await tx.roleAssignment.count({ where: { scopeKind: "department", scopeId: id } })) > 0) return fail(`Some roles are given for ${existing.name}. Remove those first.`);
     await tx.department.update({ where: { id }, data: { archivedAt: archived ? new Date() : null } });
     await logAudit({ actorId: session.user.id, actorName: actorName(session), action: archived ? "archive" : "restore", entity: "Department", entityId: id, summary: `${archived ? "Archived" : "Restored"} department ${existing.name}` }, tx);
     return ok();

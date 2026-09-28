@@ -198,7 +198,7 @@ function PeopleTable({
                 </span>
                 {(() => {
                   const o = org.get(person.id);
-                  const line = [o?.jobTitle, o?.departments.join(", "), o?.manager ? `reports to ${o.manager}` : null, o?.extraRoles ? `+${o.extraRoles} ${o.extraRoles === 1 ? "role" : "roles"}` : null].filter(Boolean).join(" · ");
+                  const line = [o?.jobTitle, o?.departments.join(", "), o?.manager ? `reports to ${o.manager}` : null].filter(Boolean).join(" · ");
                   return line ? <span className="text-sm text-ui-muted-foreground block">{line}</span> : null;
                 })()}
                 <span

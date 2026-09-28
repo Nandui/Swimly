@@ -6,12 +6,6 @@ import { today } from "@/lib/format";
 /** Reads for the People core. Account administration (`staff.manage`) sees
  *  the whole organisation chart; nothing here returns restricted (HR) data. */
 
-export function scopeLabel(kind: string, name: string | null) {
-  if (kind === "all") return "Everywhere";
-  if (kind === "reports") return "Their own team";
-  return name ?? "Removed";
-}
-
 export async function getOrganisation() {
   const session = await requirePermission("staff.manage");
   const orgId = session.user.orgId ?? undefined;
@@ -53,7 +47,6 @@ export async function getPersonDetail(userId: string) {
       staffRole: { select: { id: true, name: true, levels: true, extras: true, permissions: true, screens: true, homeName: true } },
       departments: { select: { departmentId: true, isPrimary: true, department: { select: { name: true } } } },
       reports: { where: { isActive: true }, orderBy: { name: "asc" }, select: { id: true, name: true, jobTitle: true } },
-      roleAssignments: { orderBy: { createdAt: "asc" }, select: { id: true, scopeKind: true, scopeId: true, role: { select: { id: true, name: true, restricted: true } } } },
       qualifications: {
         orderBy: [{ revokedAt: "asc" }, { expiresOn: "asc" }],
         select: { id: true, issuedOn: true, expiresOn: true, reference: true, note: true, revokedAt: true, verifiedAt: true, verifiedById: true, type: { select: { name: true } } },
@@ -61,22 +54,18 @@ export async function getPersonDetail(userId: string) {
     },
   });
   if (!person) return null;
-  const assignmentSiteIds = person.roleAssignments.filter((a) => a.scopeKind === "site").map((a) => a.scopeId);
-  const departmentIds = person.roleAssignments.filter((a) => a.scopeKind === "department").map((a) => a.scopeId);
   const verifierIds = person.qualifications.flatMap((q) => (q.verifiedById ? [q.verifiedById] : []));
-  const [sites, departments, verifiers] = await Promise.all([
-    prisma.club.findMany({ where: { id: { in: [...assignmentSiteIds, ...person.siteIds, ...(person.primaryClubId ? [person.primaryClubId] : [])] } }, select: { id: true, name: true } }),
-    prisma.department.findMany({ where: { id: { in: departmentIds } }, select: { id: true, name: true } }),
+  const [sites, verifiers] = await Promise.all([
+    prisma.club.findMany({ where: { id: { in: [...person.siteIds, ...(person.primaryClubId ? [person.primaryClubId] : [])] } }, select: { id: true, name: true } }),
     prisma.user.findMany({ where: { id: { in: verifierIds } }, select: { id: true, name: true } }),
   ]);
   const verifierNames = new Map(verifiers.map((v) => [v.id, v.name]));
-  const names = new Map([...sites, ...departments].map((row) => [row.id, row.name]));
+  const names = new Map(sites.map((row) => [row.id, row.name]));
   return {
     ...person,
     primaryClub: person.primaryClubId ? { name: names.get(person.primaryClubId) ?? "Removed site" } : null,
     worksAt: person.siteIds.map((id) => ({ id, name: names.get(id) ?? "Removed site" })),
     startedOn: person.startedOn?.toISOString().slice(0, 10) ?? "",
-    assignments: person.roleAssignments.map((a) => ({ id: a.id, roleId: a.role.id, roleName: a.role.name, restricted: a.role.restricted, scopeKind: a.scopeKind, scopeLabel: scopeLabel(a.scopeKind, names.get(a.scopeId) ?? null) })),
     qualifications: person.qualifications.map((q) => ({
       id: q.id, name: q.type.name, reference: q.reference, note: q.note,
       issuedOn: q.issuedOn.toISOString().slice(0, 10), expiresOn: q.expiresOn?.toISOString().slice(0, 10) ?? "",
@@ -92,8 +81,7 @@ export async function listPeopleOptions() {
   return prisma.user.findMany({ where: { orgId: session.user.orgId ?? undefined, isActive: true }, orderBy: { name: "asc" }, select: { id: true, name: true, jobTitle: true } });
 }
 
-/** One summary line per person for the Staff table: departments, manager and
- *  additional roles. */
+/** One summary line per person for the Staff table: departments and manager. */
 export async function listPeopleOrg() {
   const session = await requirePermission("staff.manage");
   const rows = await prisma.user.findMany({
@@ -101,18 +89,10 @@ export async function listPeopleOrg() {
     select: {
       id: true, jobTitle: true, isSuperadmin: true, manager: { select: { name: true } },
       departments: { select: { department: { select: { name: true } } } },
-      _count: { select: { roleAssignments: true } },
     },
   });
   return new Map(rows.map((row) => [row.id, {
     jobTitle: row.jobTitle, isSuperadmin: row.isSuperadmin, manager: row.manager?.name ?? null,
-    departments: row.departments.map((d) => d.department.name), extraRoles: row._count.roleAssignments,
+    departments: row.departments.map((d) => d.department.name),
   }]));
-}
-
-/** Roles that can be given as additional roles, with the restricted flag so
- *  the picker can say which ones need a superadmin. */
-export async function listAssignableRoles() {
-  await requirePermission("staff.manage");
-  return prisma.staffRole.findMany({ orderBy: [{ sortOrder: "asc" }, { name: "asc" }], select: { id: true, name: true, restricted: true } });
 }

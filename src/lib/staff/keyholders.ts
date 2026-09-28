@@ -41,14 +41,12 @@ export type Simulation =
   | { kind: "rolePermissions"; roleId: string; permissions: string[]; screens?: string[] }
   | { kind: "userRole"; userId: string; roleId: string }
   | { kind: "deactivate"; userId: string }
-  /** Removing an additional role. Only org-wide assignments can carry keys. */
-  | { kind: "removeAssignment"; assignmentId: string }
   | { kind: "superadmin"; userId: string; value: boolean };
 
 /** Load once for all key checks, and expand each shared role once. */
 async function simulatedHolders(sim: Simulation, db: Db) {
   const [users, roles] = await Promise.all([
-    db.user.findMany({ where: { isActive: true }, select: { id: true, staffRoleId: true, roleAssignments: { where: { scopeKind: "all" }, select: { id: true, roleId: true } } } }),
+    db.user.findMany({ where: { isActive: true }, select: { id: true, staffRoleId: true } }),
     db.staffRole.findMany({ select: { id: true, permissions: true, screens: true } }),
   ]);
 
@@ -71,15 +69,9 @@ async function simulatedHolders(sim: Simulation, db: Db) {
     if (sim.kind === "deactivate" && user.id === sim.userId) return [];
     const roleId =
       sim.kind === "userRole" && user.id === sim.userId ? sim.roleId : user.staffRoleId;
-    // The primary role plus every org-wide additional role, as one holder.
-    const roleIds = [roleId, ...(user.roleAssignments ?? [])
-      .filter((a) => !(sim.kind === "removeAssignment" && a.id === sim.assignmentId))
-      .map((a) => a.roleId)].filter((id): id is string => !!id);
-    const held = roleIds.map((id) => accessByRole.get(id)).filter((a) => !!a);
-    if (held.length === 0) return [];
-    const permissions = expandPermissions(held.flatMap((a) => [...a!.permissions]));
-    const screens = new Set(held.flatMap((a) => [...a!.screens]));
-    return [{ permissions, screens }];
+    // One role each (docs/how-turnfin-works.md).
+    const held = roleId ? accessByRole.get(roleId) : undefined;
+    return held ? [held] : [];
   });
 }
 
