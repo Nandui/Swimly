@@ -53,3 +53,62 @@ export async function siteSummaryLines(clubIds: string[]): Promise<Map<string, s
   }
   return out;
 }
+
+// ---------------------------------------------------------------------------
+// Home page cards
+// ---------------------------------------------------------------------------
+
+/** Who is looking at the home page: the session user, as far as a card needs. */
+export type HomeViewer = {
+  id: string;
+  name: string;
+  permissions: readonly string[];
+  screens: readonly string[];
+  /** Everything they hold anywhere: at other sites or over their team too. */
+  anywhere: readonly string[];
+  isSuperadmin: boolean;
+};
+
+/** One line on a module's home card: somewhere to go, and how many things
+ *  wait there when the module can count them for this person. */
+export type HomeItem = {
+  label: string;
+  href: string;
+  hint?: string;
+  count?: number;
+  /** Something is waiting that this person should act on. */
+  attention?: boolean;
+};
+
+export type HomeCard = {
+  /** The module's id in `src/modules/registry.ts`. */
+  moduleId: string;
+  /** Only what this viewer may already open; counts stay within their access. */
+  items(viewer: HomeViewer): Promise<HomeItem[]>;
+};
+
+const homeCards: HomeCard[] = [];
+
+/** One card per module; registering again replaces it (a reloaded module in
+ *  development brings its new card). */
+export function registerHomeCard(card: HomeCard) {
+  const at = homeCards.findIndex((c) => c.moduleId === card.moduleId);
+  if (at >= 0) homeCards[at] = card;
+  else homeCards.push(card);
+}
+
+/** The items for each of these modules. A module whose card fails shows its
+ *  plain link instead, so one module can never break the home page. */
+export async function homeCardItems(moduleIds: readonly string[], viewer: HomeViewer): Promise<Map<string, HomeItem[]>> {
+  const out = new Map<string, HomeItem[]>();
+  await Promise.all(moduleIds.map(async (id) => {
+    const card = homeCards.find((c) => c.moduleId === id);
+    if (!card) return;
+    try {
+      out.set(id, await card.items(viewer));
+    } catch (error) {
+      console.error(`Home card for ${id} failed`, error);
+    }
+  }));
+  return out;
+}

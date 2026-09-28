@@ -1,5 +1,7 @@
 # Turnfin Reception Portal
 
+> **Replaced (owner, 28 September 2026).** The Reception Portal is now the Receptionist role's home page, **Front of House**: its tasks are on the Swim school and Refunds cards, built by each module's home card (`src/modules/contributions.ts`). `/reception-portal` redirects to `/`. See [how-turnfin-works.md](how-turnfin-works.md). The rest of this page is history.
+
 The owner requested the Docs visual design and a bento layout on 23 September 2026. The
 signed-in `/reception-portal` route sits outside the Aquatics desk and Instructor
 shells. It uses the shared portal header, Docs Inter typography, ocean-blue/aqua accents, navy dark surfaces and the Turnfin logo.

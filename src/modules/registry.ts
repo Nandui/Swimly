@@ -121,7 +121,7 @@ registerModule({
       {
         key: "desk", label: "Desk", help: "Bookings, moves, waiting lists and assessments.",
         permissions: ["students.manage", "enrolment.manage", "attendance.markAny", "assessments.run", "parents.manage"],
-        screens: ["calendar", "students", "courses", "together", "assessments", "awaiting-enrolment", "legend-agreements", "duty"],
+        screens: ["calendar", "students", "courses", "together", "assessments", "awaiting-enrolment", "legend-agreements"],
       },
       {
         key: "manage", label: "Manage", help: "Programmes, levels, classes and reports.",
@@ -130,8 +130,8 @@ registerModule({
     ],
     extras: [
       {
-        key: "cancel-classes", label: "Can cancel classes", help: "Cancel today's sessions and pass them to billing.", from: "desk",
-        permissions: ["classes.cancel", "billing.notify"], screens: ["cancellations"],
+        key: "cancel-classes", label: "Can cancel classes", help: "The duty manager page: cancel today's sessions and pass them to billing.", from: "desk",
+        permissions: ["classes.cancel", "billing.notify"], screens: ["duty", "cancellations"],
       },
     ],
   },

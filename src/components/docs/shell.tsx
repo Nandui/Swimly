@@ -224,7 +224,7 @@ export function Shell({
           )}
         </nav>
         <div className="workspace-sidebar-footer">
-          <Button asChild variant="ghost"><Link href="/modules?view=all" aria-label="All modules"><ArrowLeft size={16} aria-hidden="true" />{!compact && "All modules"}</Link></Button>
+          <Button asChild variant="ghost"><Link href="/" aria-label="Home"><ArrowLeft size={16} aria-hidden="true" />{!compact && "Home"}</Link></Button>
           <AppearanceMenu expanded={!compact} />
           <Message error={error} />
           {!compact && w.localMode && <span className="workspace-local">Local workspace</span>}

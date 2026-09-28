@@ -62,17 +62,11 @@ async function seedAquatics(db: PrismaClient) {
   } });
 }
 
-/** Training: Liam leads training for Aquatics (a department-scoped role), so
- *  he assigns and signs off for Ava and Riley but not for reception. Riley is
+/** Training: Liam, the swim school manager, runs training (Training: Manage). Riley is
  *  waiting for sign-off on the rescue refresher that renews his expired NPLQ;
  *  Ava has one course to do and one overdue. */
 async function seedTraining(db: PrismaClient) {
   const ORG = "org_leisureworld";
-  const lead = await db.staffRole.create({ data: {
-    name: "Training lead", permissions: ["training.assign", "training.signoff"], screens: ["training"], sortOrder: 30,
-    description: "Assigns and signs off training for the people in their scope.",
-  } });
-  await db.roleAssignment.create({ data: { orgId: ORG, userId: "sbx_liam", roleId: lead.id, scopeKind: "department", scopeId: "dept_aquatics", grantedById: "sbx_alex" } });
   const course = (title: string, summary: string, content: string, requiresSignoff: boolean, grantsTypeId: string | null) =>
     db.trainingCourse.create({ data: { orgId: ORG, title, summary, content, requiresSignoff, grantsTypeId, createdById: "sbx_alex" } });
   const rescue = await course("Pool rescue refresher", "Spinal and deep-water rescue, renewed every two years.",
@@ -89,17 +83,11 @@ async function seedTraining(db: PrismaClient) {
   ] });
 }
 
-/** HR: Maya is the HR lead for Churchfield (a restricted role only a
- *  superadmin could give), so she reads and writes for Liam and Ava but not
- *  Bishopstown staff. Ava has a shared review to acknowledge and a note shared
+/** HR: Maya wrote these as Ava's and Liam's manager at the time; Liam now
+ *  holds HR "Their team" for Ava and Riley. Ava has a shared review to acknowledge and a note shared
  *  with her; the private and on-record notes never reach her. */
 async function seedHr(db: PrismaClient, hrUrl: string) {
   const ORG = "org_leisureworld";
-  const lead = await db.staffRole.create({ data: {
-    name: "HR lead", permissions: ["hr.notes.write", "hr.reviews.write"], screens: ["hr"], restricted: true, sortOrder: 40,
-    description: "HR notes and performance reviews for the people in their scope.",
-  } });
-  await db.roleAssignment.create({ data: { orgId: ORG, userId: "sbx_maya", roleId: lead.id, scopeKind: "site", scopeId: "club_churchfield", grantedById: "sbx_alex" } });
   const hr = new Client({ connectionString: hrUrl });
   await hr.connect();
   try {
@@ -120,17 +108,12 @@ async function seedHr(db: PrismaClient, hrUrl: string) {
   } finally { await hr.end(); }
 }
 
-/** Rota: Maya plans Churchfield (a site-scoped role). Today and tomorrow show
+/** Rota: Maya, duty manager at Churchfield (Rota: Manage at her site), plans it. Today and tomorrow show
  *  every warning: Riley's lifeguard shift while his NPLQ is expired (until his
  *  refresher is signed off), an open swim teacher shift, and Riley double-booked
  *  at Bishopstown. */
 async function seedRota(db: PrismaClient) {
   const ORG = "org_leisureworld";
-  const planner = await db.staffRole.create({ data: {
-    name: "Rota planner", permissions: ["rota.manage"], screens: ["rota"], sortOrder: 50,
-    description: "Plans shifts at the sites in their scope.",
-  } });
-  await db.roleAssignment.create({ data: { orgId: ORG, userId: "sbx_maya", roleId: planner.id, scopeKind: "site", scopeId: "club_churchfield", grantedById: "sbx_alex" } });
   const day = (offset: number) => { const d = new Date(); d.setUTCHours(0, 0, 0, 0); d.setUTCDate(d.getUTCDate() + offset); return d; };
   const shift = (siteId: string, offset: number, start: number, end: number, role: string, userId: string | null, requiredTypeId: string | null = null) =>
     ({ orgId: ORG, siteId, date: day(offset), startMinutes: start * 60, endMinutes: end * 60, role, userId, requiredTypeId, createdById: "sbx_maya", createdByName: "Maya Example" });

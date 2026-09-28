@@ -35,7 +35,7 @@ export function AppChrome({ screens, club, clubs, ...rest }: Props) {
     <AppShell
       {...rest}
       wordmark={APP_NAME}
-      portalHref="/modules"
+      portalHref="/"
       groups={visibleNavGroups(screens)}
       contentMaxWidth={pageWidthFor(pathname)}
       switcher={<ClubSwitcher club={club} clubs={clubs} sidebar />}

@@ -1,6 +1,8 @@
 import "server-only";
 import { prisma } from "@/lib/prisma";
-import { registerSiteSummary, registerStaffColumn } from "@/modules/contributions";
+import { expandPermissions, type PermissionKey } from "@/lib/staff/permissions";
+import { visibleScreens, type ScreenKey } from "@/lib/staff/screens";
+import { registerHomeCard, registerSiteSummary, registerStaffColumn, type HomeItem } from "@/modules/contributions";
 
 const plural = (n: number, one: string, many: string) => `${n.toLocaleString("en-IE")} ${n === 1 ? one : many}`;
 
@@ -32,5 +34,38 @@ registerSiteSummary({
       plural(count(students, id), "active swimmer", "active swimmers"),
       plural(count(courses, id), "class", "classes"),
     ].join(" · ")]));
+  },
+});
+
+/** The Swim school card on the home page: the everyday jobs only (everything
+ *  else is one click away inside the module). The pool deck for teachers, the
+ *  desk's tasks and follow-ups, the duty manager and the office for managers.
+ *  Each line appears only when the viewer can already open it. */
+const SWIM_LINKS: readonly (HomeItem & { screen: ScreenKey; permission?: PermissionKey })[] = [
+  { label: "Your classes today", hint: "Attendance and progress on the pool deck", href: "/instructor", screen: "instructor" },
+  { label: "Find a swimmer", hint: "Details, progress and enrolment", href: "/students", screen: "students" },
+  { label: "Add a swimmer", hint: "Create a new swimmer record", href: "/students", screen: "students", permission: "students.manage" },
+  { label: "Today's classes", hint: "Classes and assessments by day", href: "/schedule", screen: "calendar" },
+  { label: "Book an assessment", hint: "Find a session and book a place", href: "/assessments", screen: "assessments", permission: "enrolment.manage" },
+  { label: "Awaiting enrolment", hint: "Class places and family follow-ups", href: "/awaiting-enrolment", screen: "awaiting-enrolment" },
+  { label: "Parent updates", hint: "Contact and medical corrections from parents", href: "/students/parent-changes", screen: "students", permission: "students.manage" },
+  { label: "Duty manager", hint: "Today's classes and cancelling a session", href: "/duty", screen: "duty" },
+  { label: "Cancelled classes", hint: "Follow up billing", href: "/cancellations", screen: "cancellations" },
+  { label: "Programmes and levels", href: "/programmes", screen: "programmes" },
+  { label: "Reports", href: "/analytics", screen: "analytics" },
+];
+
+registerHomeCard({
+  moduleId: "swim-school",
+  async items(viewer) {
+    const held = expandPermissions(viewer.permissions, { superadmin: viewer.isSuperadmin });
+    const screens = visibleScreens(viewer.screens, held);
+    // Desk includes teaching, but the desk works from the schedule: the pool
+    // deck link is for people whose job is teaching.
+    const deck = !screens.has("calendar");
+    return SWIM_LINKS
+      .filter((link) => screens.has(link.screen) && (!link.permission || held.has(link.permission)))
+      .filter((link) => link.screen !== "instructor" || deck)
+      .map(({ label, hint, href }) => ({ label, hint, href }));
   },
 });

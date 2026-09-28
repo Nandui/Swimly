@@ -101,8 +101,7 @@ export async function createRole(input: RoleInput): Promise<ActionResult> {
 
   revalidatePath("/roles");
   revalidatePath("/staff");
-  revalidatePath("/modules");
-  revalidatePath("/reception-portal");
+  revalidatePath("/");
   return ok();
 }
 
@@ -181,8 +180,7 @@ export async function updateRole(id: string, input: RoleInput): Promise<ActionRe
 
   revalidatePath("/roles");
   revalidatePath("/staff");
-  revalidatePath("/modules");
-  revalidatePath("/reception-portal");
+  revalidatePath("/");
   return ok();
 }
 

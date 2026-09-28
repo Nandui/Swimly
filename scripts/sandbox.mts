@@ -18,6 +18,7 @@ import { PrismaPg } from "@prisma/adapter-pg";
 import bcrypt from "bcryptjs";
 import { PrismaClient } from "../src/generated/prisma/client";
 import { SYSTEM_ROLES } from "../src/lib/staff/permissions";
+import { roleColumns } from "../src/lib/staff/levels";
 
 export const SANDBOX_PASSWORD = "sandbox-turnfin-2026";
 const PORTS = { main: 54391, docs: 54392, hr: 54393, app: Number(process.env.SANDBOX_PORT ?? 3100) };
@@ -61,15 +62,21 @@ for (const [i, role] of SYSTEM_ROLES.entries()) {
   const created = await prisma.staffRole.upsert({ where: { name: role.name }, update: data, create: { name: role.name, ...data } });
   roles[role.name] = created.id;
 }
-const extraRoles = [
-  { name: "Reception", permissions: ["students.manage", "enrolment.manage", "parents.manage", "docs.read", "refunds.request"], screens: ["calendar", "students", "courses", "awaiting-enrolment", "legend-agreements", "docs", "refunds"], home: "reception-portal" },
-  { name: "Duty manager", permissions: ["classes.cancel", "billing.notify", "refunds.review"], screens: ["duty", "cancellations", "calendar", "refunds"], home: "duty" },
-  { name: "Swim school manager", permissions: ["courses.manage", "curriculum.manage", "students.manage", "enrolment.manage", "progression.override", "assessments.run", "attendance.markAny"], screens: ["calendar", "courses", "students", "programmes", "assessments", "awaiting-enrolment", "instructor"], home: "calendar" },
-  { name: "Qualifications lead", permissions: ["qualifications.manage"], screens: ["staff"], home: "calendar" },
-  { name: "Docs manager", permissions: ["docs.manage"], screens: ["docs"], home: "calendar" },
-  { name: "Staff", permissions: ["docs.read"], screens: ["docs"], home: "calendar" },
+// The roles from "How Turnfin works" (docs/how-turnfin-works.md), as levels.
+const levelRoles: { name: string; homeName: string; levels: Record<string, string>; extras?: string[]; system?: boolean }[] = [
+  { name: "Admin", homeName: "Management", levels: { admin: "manage" }, system: true },
+  { name: "Instructor", homeName: "Pool deck", levels: { "swim-school": "teach" }, system: true },
+  { name: "Receptionist", homeName: "Front of House", levels: { "swim-school": "desk", refunds: "use", docs: "read", rota: "view" } },
+  { name: "Lifeguard", homeName: "Poolside", levels: { docs: "read", rota: "view" } },
+  { name: "Duty manager", homeName: "Duty desk", levels: { "swim-school": "desk", refunds: "manage", docs: "read", training: "trainer", rota: "manage" }, extras: ["swim-school.cancel-classes"] },
+  { name: "Swim school manager", homeName: "Swim school office", levels: { "swim-school": "manage", docs: "manage", training: "manage", rota: "manage", hr: "team" }, extras: ["swim-school.cancel-classes", "docs.approve"] },
 ];
-for (const [i, role] of extraRoles.entries()) roles[role.name] = (await prisma.staffRole.create({ data: { ...role, sortOrder: 10 + i } })).id;
+for (const [i, role] of levelRoles.entries()) {
+  const data = { homeName: role.homeName, ...roleColumns({ levels: role.levels, extras: role.extras ?? [] }), home: role.levels["swim-school"] === "teach" ? "instructor" : "calendar" };
+  roles[role.name] = role.system
+    ? (await prisma.staffRole.update({ where: { name: role.name }, data })).id
+    : (await prisma.staffRole.create({ data: { name: role.name, ...data, sortOrder: 10 + i } })).id;
+}
 
 await prisma.department.createMany({ data: [
   { id: "dept_aquatics", orgId: ORG, name: "Aquatics", clubId: "club_churchfield", sortOrder: 0 },
@@ -77,19 +84,19 @@ await prisma.department.createMany({ data: [
   { id: "dept_gym", orgId: ORG, name: "Gym", clubId: "club_bishopstown", sortOrder: 2 },
 ] });
 
-type Seed = { id: string; name: string; role: string; title: string; site: string; departments: string[]; manager?: string; superadmin?: boolean };
+type Seed = { id: string; name: string; role: string; title: string; site: string; departments: string[]; manager?: string; superadmin?: boolean; sites?: string[] };
 const people: Seed[] = [
   { id: "sbx_alex", name: "Alex Example", role: "Admin", title: "General manager", site: "club_bishopstown", departments: [], superadmin: true },
-  { id: "sbx_maya", name: "Maya Example", role: "Viewer", title: "Site manager, Churchfield", site: "club_churchfield", departments: [], manager: "sbx_alex" },
+  { id: "sbx_maya", name: "Maya Example", role: "Duty manager", title: "Duty manager, Churchfield", site: "club_churchfield", departments: [], manager: "sbx_alex", sites: ["club_churchfield"] },
   { id: "sbx_liam", name: "Liam Example", role: "Swim school manager", title: "Aquatics lead", site: "club_churchfield", departments: ["dept_aquatics"], manager: "sbx_maya" },
   { id: "sbx_ava", name: "Ava Example", role: "Instructor", title: "Swim teacher", site: "club_churchfield", departments: ["dept_aquatics"], manager: "sbx_liam" },
-  { id: "sbx_noah", name: "Noah Example", role: "Reception", title: "Receptionist", site: "club_bishopstown", departments: ["dept_reception"], manager: "sbx_alex" },
-  { id: "sbx_riley", name: "Riley Example", role: "Instructor", title: "Lifeguard and swim teacher", site: "club_bishopstown", departments: ["dept_aquatics"], manager: "sbx_liam" },
+  { id: "sbx_noah", name: "Noah Example", role: "Receptionist", title: "Receptionist", site: "club_bishopstown", departments: ["dept_reception"], manager: "sbx_alex" },
+  { id: "sbx_riley", name: "Riley Example", role: "Lifeguard", title: "Lifeguard", site: "club_bishopstown", departments: ["dept_aquatics"], manager: "sbx_liam" },
 ];
 for (const p of people) {
   await prisma.user.create({ data: {
     id: p.id, name: p.name, email: `${p.id.slice(4)}@sandbox.invalid`, passwordHash: hash, passwordAt: new Date(), pinHash,
-    staffRoleId: roles[p.role], orgId: ORG, jobTitle: p.title, primaryClubId: p.site, isSuperadmin: !!p.superadmin,
+    staffRoleId: roles[p.role], orgId: ORG, jobTitle: p.title, primaryClubId: p.site, siteIds: p.sites ?? [], isSuperadmin: !!p.superadmin,
     startedOn: new Date("2023-04-03T00:00:00Z"),
   } });
 }
@@ -97,12 +104,7 @@ for (const p of people) {
   if (p.manager) await prisma.user.update({ where: { id: p.id }, data: { managerId: p.manager } });
   for (const [i, departmentId] of p.departments.entries()) await prisma.userDepartment.create({ data: { userId: p.id, departmentId, isPrimary: i === 0 } });
 }
-// Maya runs Churchfield on duty; Liam records qualifications for Aquatics.
-await prisma.roleAssignment.create({ data: { orgId: ORG, userId: "sbx_maya", roleId: roles["Duty manager"], scopeKind: "site", scopeId: "club_churchfield", grantedById: "sbx_alex" } });
-await prisma.roleAssignment.create({ data: { orgId: ORG, userId: "sbx_liam", roleId: roles["Qualifications lead"], scopeKind: "department", scopeId: "dept_aquatics", grantedById: "sbx_alex" } });
-// Liam also runs Docs reading for Aquatics; everyone can read Docs.
-await prisma.roleAssignment.create({ data: { orgId: ORG, userId: "sbx_liam", roleId: roles["Docs manager"], scopeKind: "department", scopeId: "dept_aquatics", grantedById: "sbx_alex" } });
-for (const p of people) if (p.role !== "Admin") await prisma.roleAssignment.create({ data: { orgId: ORG, userId: p.id, roleId: roles["Staff"], scopeKind: "all", grantedById: "sbx_alex" } });
+// One role each (docs/how-turnfin-works.md): no extra roles.
 const soon = new Date(); soon.setUTCDate(soon.getUTCDate() + 30);
 const past = new Date(); past.setUTCDate(past.getUTCDate() - 10);
 await prisma.qualification.createMany({ data: [

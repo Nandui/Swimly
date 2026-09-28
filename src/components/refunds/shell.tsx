@@ -55,7 +55,7 @@ export function RefundShell({ who, initialCollapsed = false, children }: {
       </div>
       <nav className="workspace-navigation" aria-label={inSheet ? 'Mobile Refunds navigation' : 'Refunds navigation'}><p className="workspace-nav-label">Workspace</p>{links.map(item)}<p className="workspace-nav-label">Follow up</p>{followUp.map(item)}</nav>
       <div className="workspace-sidebar-footer">
-        <Button asChild variant="ghost"><Link href="/modules?view=all" aria-label="All modules"><ArrowLeft size={16} aria-hidden="true" />{!compact && 'All modules'}</Link></Button>
+        <Button asChild variant="ghost"><Link href="/" aria-label="Home"><ArrowLeft size={16} aria-hidden="true" />{!compact && 'Home'}</Link></Button>
         <AppearanceMenu expanded={!compact} />
         {error && <Notice tone="error" title={error} />}
         <div className="workspace-profile">{!compact && <><Avatar member={who} /><div><strong>{who.name}</strong><span>Staff workspace</span></div></>}<Button variant="ghost" size="icon" aria-label="Sign out" title="Sign out" disabled={leaving} onClick={async () => { setLeaving(true); setError(''); try { await signOut({ redirectTo: '/sign-in' }); } catch { setLeaving(false); setError('Could not sign out. Please try again.'); } }}><LogOut size={17} /></Button></div>
