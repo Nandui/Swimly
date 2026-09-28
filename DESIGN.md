@@ -81,7 +81,7 @@ colours in both themes, with accessible names supplied by adjacent text or links
 **The swim school desk uses the shared `ModuleShell`** (28 September 2026), like Refunds,
 Training, HR, Rota and Admin: the Turnfin brand, the working site and
 "Find swimmer" (the `tools` slot), then the desk pages in Daily work, Monitoring and Setup;
-"Back to Hub", Help, Appearance and Account in the footer; a breadcrumb topbar naming the working
+"Back to Hub", Help and Appearance in the footer, and at its foot the signed-in person (`AccountMenu`: Manage account, Sign out); a breadcrumb topbar naming the working
 site; the phone sheet. Pages sit on the cool canvas; `src/app/(activities)/swim-school.css`
 puts tables, bare row lists and empty states on white panels and lets data pages fill the
 width. Together caps at 960px and programme details at 1152px (`pageWidthFor`). The old

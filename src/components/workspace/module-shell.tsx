@@ -3,16 +3,14 @@
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { useEffect, useRef, useState, type ReactNode } from 'react';
-import { signOut } from 'next-auth/react';
-import { LogOut, Menu, PanelLeftClose, PanelLeftOpen, ShieldCheck, type LucideIcon } from 'lucide-react';
+import { Menu, PanelLeftClose, PanelLeftOpen, ShieldCheck, type LucideIcon } from 'lucide-react';
 import { Sidebar, SidebarProvider, SidebarMenuButton } from '@/components/shadcn/sidebar';
 import { Button } from '@/components/shadcn/button';
 import { Breadcrumb, BreadcrumbList, BreadcrumbItem, BreadcrumbLink, BreadcrumbPage, BreadcrumbSeparator } from '@/components/shadcn/breadcrumb';
 import { Sheet, SheetContent, SheetDescription, SheetTitle, SheetTrigger } from '@/components/docs/primitives/sheet';
 import { Brand } from '@/components/workspace/brand';
 import { AppearanceMenu } from '@/components/docs/appearance-menu';
-import { Avatar } from '@/components/docs/ui';
-import { Notice } from '@/components/ui-kit/notice';
+import { AccountMenu } from '@/components/workspace/account-menu';
 import { HelpButton, HomeButton, YourModulesNav } from '@/components/workspace/your-modules';
 
 export type ModuleLink = { href: string; label: string; icon: LucideIcon; active: boolean };
@@ -52,7 +50,6 @@ export function ModuleShell({ module, id, current = id, who, links = [], groups,
 }) {
   const pathname = usePathname();
   const [collapsed, setCollapsed] = useState(initialCollapsed), [mobile, setMobile] = useState(false);
-  const [leaving, setLeaving] = useState(false), [error, setError] = useState('');
   const page = useRef<HTMLElement>(null);
   useEffect(() => { page.current?.scrollTo({ top: 0 }); }, [pathname, scrollKey]);
   // Arriving on another page (a link, or the swimmer search) closes the phone menu.
@@ -80,8 +77,7 @@ export function ModuleShell({ module, id, current = id, who, links = [], groups,
       <div className="workspace-sidebar-footer">
         {!onHome && <HomeButton compact={compact} onNavigate={close} />}
         <div className="workspace-footer-row"><HelpButton compact={compact} /><AppearanceMenu /></div>
-        {error && <Notice tone="error" title={error} />}
-        <div className="workspace-profile">{!compact && <Link href="/account" className="workspace-account" aria-label={`Your account: ${who.name}`} onClick={close}><Avatar member={who} /><div><strong>{who.name}</strong><span>Your account</span></div></Link>}<Button variant="ghost" size="icon" aria-label="Sign out" title="Sign out" disabled={leaving} onClick={async () => { setLeaving(true); setError(''); try { await signOut({ redirectTo: '/sign-in' }); } catch { setLeaving(false); setError('Could not sign out. Please try again.'); } }}><LogOut size={17} /></Button></div>
+        <AccountMenu name={who.name} compact={compact} onNavigate={close} />
       </div>
     </>;
   }

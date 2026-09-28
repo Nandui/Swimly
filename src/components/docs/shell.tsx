@@ -12,7 +12,6 @@ import {
   Settings,
   Search,
   Plus,
-  LogOut,
   Menu,
   PanelLeftClose,
   PanelLeftOpen,
@@ -20,9 +19,9 @@ import {
   ShieldCheck,
 } from 'lucide-react';
 import { canWrite, canManage, type Workspace } from '@/lib/docs/types';
-import { signOut } from 'next-auth/react';
-import { Avatar, Message } from './ui';
+
 import { Sidebar, SidebarProvider, SidebarMenuButton } from '@/components/shadcn/sidebar';
+import { AccountMenu } from '@/components/workspace/account-menu';
 import { HelpButton, HomeButton } from '@/components/workspace/your-modules';
 import {
   Breadcrumb,
@@ -54,10 +53,8 @@ export function Shell({
 }) {
   const pathname = usePathname();
   const query = useSearchParams();
-  const [error, setError] = useState('');
   const [mobile, setMobile] = useState(false);
   const [collapsed, setCollapsed] = useState(initialCollapsed);
-  const [leaving, setLeaving] = useState(false);
   const page = useRef<HTMLElement>(null);
   const search = useRef<HTMLInputElement>(null);
   const pageLabel = pathname.startsWith('/docs/documents')
@@ -202,33 +199,8 @@ export function Shell({
         <div className="workspace-sidebar-footer">
           <HomeButton compact={compact} onNavigate={() => setMobile(false)} />
           <div className="workspace-footer-row"><HelpButton compact={compact} /><AppearanceMenu /></div>
-          <Message error={error} />
           {!compact && w.localMode && <span className="workspace-local">Local workspace</span>}
-          <div className="workspace-profile">
-            {!compact && (
-              <>
-                <Avatar member={w.member} />
-                <div>
-                  <strong>{w.member.name}</strong>
-                  <span>{w.member.role}</span>
-                </div>
-              </>
-            )}
-            <Button
-              variant="ghost"
-              size="icon"
-              aria-label="Sign out"
-              title="Sign out"
-              disabled={leaving}
-              onClick={async () => {
-                setLeaving(true);
-                try { await signOut({ redirectTo: '/sign-in' }); }
-                catch { setLeaving(false); setError('Could not sign out. Please try again.'); }
-              }}
-            >
-              <LogOut size={17} />
-            </Button>
-          </div>
+          <AccountMenu name={w.member.name} subtitle={w.member.role} compact={compact} onNavigate={() => setMobile(false)} />
         </div>
       </>
     );
