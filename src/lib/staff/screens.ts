@@ -159,7 +159,7 @@ export function cleanScreens(input: readonly string[]): ScreenKey[] {
   // resolving its old Today grant; it never becomes a screen itself.
   // Core screens (Staff, Roles, Clubs, Activity) used to live in the desk, so
   // they still count as desk screens for this legacy resolution.
-  const hadDeskScreens = input.some(key => key === "overview" || (isScreenKey(key) && (isAquaticsScreen(key) || isCoreScreen(key)) && key !== "instructor"));
+  const hadDeskScreens = input.some(key => key === "overview" || (isScreenKey(key) && (isActivitiesScreen(key) || isCoreScreen(key)) && key !== "instructor"));
   const held = new Set(input.flatMap(key => key === "today"
     ? hadDeskScreens ? ["calendar", "instructor"] : ["instructor"]
     : [key]).filter(isScreenKey));
@@ -200,7 +200,7 @@ export function homePathFor(
   // Apply the workspace boundary after resolving inherited administrator
   // access, so the desk wordmark never leads into the pool-deck workspace.
   if (workspace === "desk" || home === "reception-portal") {
-    for (const key of visible) if (!isAquaticsScreen(key) || key === "instructor") visible.delete(key);
+    for (const key of visible) if (!isActivitiesScreen(key) || key === "instructor") visible.delete(key);
   }
   if ((home === "today" || home === "instructor") && visible.has("instructor")) return ROLE_HOMES.instructor.path;
   if (home === "calendar" && visible.has("calendar")) return ROLE_HOMES.calendar.path;
@@ -220,20 +220,20 @@ export function homePathFor(
  *  A new screen must be added to exactly one of these; a test checks it.
  *  Separate modules never imply access to the swim-school workspace. */
 export const CORE_SCREENS = ["staff", "roles", "clubs", "activity"] as const satisfies readonly ScreenKey[];
-export const AQUATICS_SCREENS = [
+export const ACTIVITIES_SCREENS = [
   "analytics", "duty", "cancellations", "calendar", "instructor", "students", "courses",
   "together", "assessments", "awaiting-enrolment", "legend-agreements", "programmes",
 ] as const satisfies readonly ScreenKey[];
 export const WORK_MODULE_SCREENS = ["docs", "refunds", "training", "hr", "rota"] as const satisfies readonly ScreenKey[];
 
 const CORE = new Set<string>(CORE_SCREENS);
-const AQUATICS = new Set<string>(AQUATICS_SCREENS);
+const AQUATICS = new Set<string>(ACTIVITIES_SCREENS);
 
 export function isCoreScreen(key: ScreenKey) {
   return CORE.has(key);
 }
 
-export function isAquaticsScreen(key: ScreenKey) {
+export function isActivitiesScreen(key: ScreenKey) {
   return AQUATICS.has(key);
 }
 

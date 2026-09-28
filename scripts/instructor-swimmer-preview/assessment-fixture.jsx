@@ -5,10 +5,10 @@ import '@fontsource/figtree/latin-500.css';
 import '@fontsource/figtree/latin-600.css';
 import {ThemeProvider} from '@/components/theme-provider';
 import {TooltipProvider} from '@/components/shadcn/tooltip';
-import {InstructorShell} from '@/modules/aquatics/components/instructor/instructor-shell';
+import {InstructorShell} from '@/modules/activities/components/instructor/instructor-shell';
 import InstructorPage from '@/app/(instructor)/instructor/page';
-import {InstructorAssessmentSession} from '@/modules/aquatics/components/instructor/assessment-session';
-import {instructorHomeHref} from '@/modules/aquatics/lib/attendance/navigation';
+import {InstructorAssessmentSession} from '@/modules/activities/components/instructor/assessment-session';
+import {instructorHomeHref} from '@/modules/activities/lib/attendance/navigation';
 import {today,parseDateOnly} from '@/lib/format';
 
 const query=new URLSearchParams(location.search);

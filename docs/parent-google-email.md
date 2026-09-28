@@ -95,7 +95,7 @@ See [parent-app.md](parent-app.md) for the complete connection configuration.
 ## Delivery and failure behaviour
 
 Parent sign-in messages now include a branded HTML version and an equivalent
-plain-text alternative. The template in `src/modules/aquatics/lib/parent/sign-in-email.ts` uses
+plain-text alternative. The template in `src/modules/activities/lib/parent/sign-in-email.ts` uses
 the parent app's LeisureWorld blue palette, original white logo, readable
 six-digit code and ten-minute expiry. It works for both new and returning
 families and directs parents back to their existing verification page.
@@ -133,7 +133,7 @@ deployment, new credentials, permission grants or database migrations are needed
 
 ## Isolated verification
 
-`npx tsx --test src/modules/aquatics/lib/parent/email.test.ts src/modules/aquatics/lib/parent/api.test.ts`
+`npx tsx --test src/modules/activities/lib/parent/email.test.ts src/modules/activities/lib/parent/api.test.ts`
 checks the real email adapter and parent router with synthetic Google responses
 and an in-memory database. The local parent preview also captures mail in memory.
 Neither workflow contacts Google or sends real emails.

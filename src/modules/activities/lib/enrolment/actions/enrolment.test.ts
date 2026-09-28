@@ -1,0 +1,330 @@
+import assert from "node:assert/strict";
+import { test } from "node:test";
+import { curriculumProgramme, sharedCurriculumRows } from "@/test/curriculum";
+import { serverModule } from "@/test/server-module";
+
+type Actions = typeof import("./enrolment");
+type Course = { club: { id: string; name: string; archivedAt: Date | null }; id: string; clubId: string; levelId: string; capacity: number; archivedAt: Date | null; name: string; dayOfWeek: "MONDAY"; startMinutes: number; level: { id: string; name: string; programmeId: string; archivedAt: Date | null; programme: { archivedAt: Date | null } } };
+
+function fixture() {
+  const courses: Course[] = ["a", "b", "c"].map((id) => ({
+    id, club: { id: "club", name: "Site A", archivedAt: null }, clubId: "club", levelId: "entry", capacity: 2, archivedAt: null,
+    name: `Class ${id}`, dayOfWeek: "MONDAY", startMinutes: 900,
+    level: { id: "entry", name: "Entry", programmeId: "programme", archivedAt: null, programme: { archivedAt: null } },
+  }));
+  const student = { id: "swimmer", clubId: "club", firstName: "Test", lastName: "Swimmer", status: "ACTIVE" };
+  const rows = [{ id: "source", studentId: "swimmer", courseId: "a", programmeId: "programme", levelId: "entry", status: "ACTIVE", placementReason: null as string | null, legendAgreementStatus: "NEEDS_CHECK" as "NEEDS_CHECK" | "PENDING" | "DONE", legendAgreementUpdatedAt: null as Date | null, legendAgreementUpdatedById: null as string | null, legendAgreementUpdatedByName: null as string | null }];
+  const audits: object[] = [];
+  const locks: string[][] = [];
+  let activeLocks: string[] = [];
+  let auditFailureAfter: number | null = null;
+  let beforeTransaction: (() => void) | undefined;
+  let queue = Promise.resolve();
+  const curriculum = curriculumProgramme("programme", ["entry", "next"]);
+  const catalogue = [curriculum];
+  const completions: { levelId: string; programmeId: string }[] = [];
+  const tx = {
+    programme: { findMany: async () => catalogue },
+    $queryRaw: async (parts: TemplateStringsArray, id: string) => {
+      if (parts.join("").includes('"Course"')) activeLocks.push(id);
+      return [];
+    },
+    student: {
+      findUnique: async ({ where }: { where: { id: string; clubId?: string } }) => {
+        assert.ok(activeLocks.length > 0, "student read follows the seat lock");
+        return where.id === student.id && (!where.clubId || where.clubId === student.clubId) ? student : null;
+      }
+    },
+    course: {
+      findUnique: async ({ where }: { where: { id: string; clubId: string } }) => {
+        assert.ok(activeLocks.includes(where.id), "capacity read follows that class's lock");
+        return courses.find((row) => row.id === where.id && (!where.clubId || row.clubId === where.clubId)) ?? null;
+      }
+    },
+    enrolment: {
+      findUnique: async ({ where }: { where: { id: string; course?: { clubId: string }; student?: { clubId: string } } }) => {
+        const row = rows.find((item) => item.id === where.id);
+        if (!row) return null;
+        const course = courses.find((item) => item.id === row.courseId)!;
+        if (where.course && where.course.clubId !== course.clubId) return null;
+        if (where.student && where.student.clubId !== student.clubId) return null;
+        return { ...row, course, student };
+      },
+      findFirst: async ({ where }: { where: { courseId: string } }) => rows.find((row) => row.courseId === where.courseId && ["ACTIVE", "WAITLISTED"].includes(row.status)) ?? null,
+      findMany: async ({ where }: { where: { studentId?: string; programmeId?: string | { in: string[] }; courseId?: { not: string }; course?: { clubId: string }; student?: { clubId: string } } }) => rows.filter((row) =>
+        row.status === "ACTIVE" && (!where.studentId || row.studentId === where.studentId) &&
+        (!where.programmeId || (typeof where.programmeId === "string" ? row.programmeId === where.programmeId : where.programmeId.in.includes(row.programmeId))) &&
+        (!where.courseId || row.courseId !== where.courseId.not) &&
+        (!where.student || student.clubId === where.student.clubId) &&
+        (!where.course || courses.find((course) => course.id === row.courseId)?.clubId === where.course.clubId)
+      ).map((row) => ({ ...row, course: courses.find((course) => course.id === row.courseId)! })),
+      count: async ({ where }: { where: { courseId: string } }) => rows.filter((row) => row.courseId === where.courseId && row.status === "ACTIVE").length,
+      update: async ({ where, data }: { where: { id: string }; data: object }) => Object.assign(rows.find((row) => row.id === where.id)!, data),
+      create: async ({ data }: { data: Omit<(typeof rows)[number], "id"> }) => {
+        const row = { ...data, id: `created-${rows.length}` }; rows.push(row); return row;
+      },
+    },
+    level: { findMany: async () => [{ id: "entry", name: "Entry", sortOrder: 0 }, { id: "next", name: "Next", sortOrder: 1 }] },
+    levelCompletion: { findMany: async () => completions },
+    assessmentBooking: { findMany: async () => [] },
+    auditLog: { create: async ({ data }: { data: object }) => { if (auditFailureAfter !== null && audits.length >= auditFailureAfter) throw new Error("Audit unavailable"); audits.push(data); } },
+  };
+  const prisma = {
+    ...tx,
+    $transaction: async (run: (db: typeof tx) => Promise<unknown>) => {
+      const previous = queue;
+      let release!: () => void;
+      queue = new Promise<void>((resolve) => { release = resolve; });
+      await previous;
+      activeLocks = [];
+      beforeTransaction?.();
+      beforeTransaction = undefined;
+      const snapshot = structuredClone(rows);
+      const auditCount = audits.length;
+      try { return await run(tx); }
+      catch (error) { rows.splice(0, rows.length, ...snapshot); audits.splice(auditCount); throw error; }
+      finally { locks.push([...activeLocks]); release(); }
+    },
+  };
+  const actions = serverModule<Actions>("src/modules/activities/lib/enrolment/actions/enrolment.ts", {
+    "@/lib/prisma": { prisma },
+    "@/lib/authz": { requirePermission: async () => ({ user: { id: "staff", name: "Test Staff" } }) },
+    "@/lib/clubs/current": { currentClubId: async () => "club", currentClubIdIfAny: async () => "club" },
+    "next/cache": { revalidatePath: () => { } },
+  });
+  return {
+    actions, rows, courses, student, audits, locks, curriculum, catalogue, completions,
+    failAudit: (after = 0) => { auditFailureAfter = after; },
+    beforeTransaction: (run: () => void) => { beforeTransaction = run; },
+  };
+}
+
+test("a new active place requires an explicit Legend decision, including direct action calls", async () => {
+  const f = fixture();
+  const result = await f.actions.enrolStudent({ studentId: "swimmer", courseId: "b", placementReason: "", allowWaitlist: false }, { choice: "keep", ids: ["source"] });
+  assert.equal(result.ok, false);
+  if (!result.ok) assert.match(result.error, /Legend/);
+  assert.equal(f.rows.length, 1); assert.equal(f.audits.length, 0);
+});
+
+test("new agreement decisions persist with the staff attribution and the enrolment audit", async () => {
+  for (const choice of ["PENDING", "DONE"] as const) {
+    const f = fixture();
+    assert.equal((await f.actions.enrolStudent({ studentId: "swimmer", courseId: "b", placementReason: "", allowWaitlist: false, legendAgreement: choice }, { choice: "keep", ids: ["source"] })).ok, true);
+    assert.equal(f.rows[1].legendAgreementStatus, choice);
+    assert.equal(f.rows[1].legendAgreementUpdatedById, "staff");
+    assert.equal(f.rows[1].legendAgreementUpdatedByName, "Test Staff");
+    assert(f.rows[1].legendAgreementUpdatedAt instanceof Date);
+    assert.match(JSON.stringify(f.audits), /Legend agreement/);
+  }
+});
+
+test("transfers preserve completed and outstanding agreement evidence without a new decision", async () => {
+  for (const state of ["NEEDS_CHECK", "PENDING", "DONE"] as const) {
+    const f = fixture(), stamp = new Date("2026-09-01T12:00:00Z");
+    Object.assign(f.rows[0], { legendAgreementStatus: state, legendAgreementUpdatedAt: stamp, legendAgreementUpdatedById: "original", legendAgreementUpdatedByName: "Original Staff" });
+    assert.equal((await f.actions.transferEnrolment("source", "b", "", { choice: "move", ids: ["source", "b"] })).ok, true);
+    assert.equal(f.rows[1].legendAgreementStatus, state);
+    assert.equal(f.rows[1].legendAgreementUpdatedAt, stamp);
+    assert.equal(f.rows[1].legendAgreementUpdatedById, "original");
+  }
+});
+
+test("waitlist promotion requires a fresh Legend answer and records it when activating", async () => {
+  const f = fixture(); f.rows[0].status = "WAITLISTED";
+  assert.equal((await f.actions.promoteFromWaitlist("source")).ok, false);
+  assert.equal(f.rows[0].status, "WAITLISTED");
+  assert.equal((await f.actions.promoteFromWaitlist("source", "PENDING")).ok, true);
+  assert.equal(f.rows[0].status, "ACTIVE");
+  assert.equal(f.rows[0].legendAgreementStatus, "PENDING");
+  assert.equal(f.rows[0].legendAgreementUpdatedById, "staff");
+});
+
+test("joining a full class waitlist does not assert that an agreement is completed", async () => {
+  const f = fixture(); f.courses[1].capacity = 0;
+  assert.equal((await f.actions.enrolStudent({ studentId: "swimmer", courseId: "b", placementReason: "", allowWaitlist: true, legendAgreement: "DONE" }, { choice: "keep", ids: ["source"] })).ok, true);
+  assert.equal(f.rows[1].status, "WAITLISTED");
+  assert.notEqual(f.rows[1].legendAgreementStatus, "DONE");
+});
+
+test("enrolment accepts another site's swimmer with the same existing-place confirmation", async () => {
+  const f = fixture(); f.student.clubId = "other";
+  const result = await f.actions.enrolStudent({ studentId: "swimmer", courseId: "b", placementReason: "", allowWaitlist: false, legendAgreement: "PENDING" }, { choice: "keep", ids: ["source"] });
+  assert.equal(result.ok, true); assert.equal(f.rows.length, 2); assert.equal(f.audits.length, 1);
+});
+
+test("enrolment sees capacity changed before it obtains the lock", async () => {
+  const f = fixture(); f.beforeTransaction(() => { f.courses[1].capacity = 0; });
+  const result = await f.actions.enrolStudent({ studentId: "swimmer", courseId: "b", placementReason: "", allowWaitlist: false, legendAgreement: "PENDING" });
+  assert.equal(result.ok, false); assert.equal(f.rows.length, 1);
+});
+
+test("moving requires confirmation naming both classes before any writes", async () => {
+  const f = fixture();
+  const result = await f.actions.transferEnrolment("source", "b");
+  assert.equal(result.ok, false);
+  if (result.ok) return;
+  assert.match(result.confirmation!.description, /Class a.*Class b/);
+  assert.deepEqual(result.confirmation!.choices, [{ label: "Confirm move", value: "move" }]);
+  assert.equal(f.rows.length, 1);
+  assert.equal(f.rows[0].status, "ACTIVE");
+  assert.equal(f.audits.length, 0);
+  const confirmed = await f.actions.transferEnrolment("source", "b", "", { choice: "move", ids: result.confirmation!.ids });
+  assert.equal(confirmed.ok, true);
+  assert.deepEqual(f.rows.map((row) => row.status), ["TRANSFERRED", "ACTIVE"]);
+});
+
+test("confirmation for a different destination asks again without moving", async () => {
+  const f = fixture();
+  const result = await f.actions.transferEnrolment("source", "c", "", { choice: "move", ids: ["source", "b"] });
+  assert.equal(result.ok, false);
+  if (result.ok) return;
+  assert.deepEqual(result.confirmation?.ids, ["source", "c"]);
+  assert.equal(f.rows.length, 1); assert.equal(f.audits.length, 0);
+});
+
+test("confirmed moves recheck capacity before ending the current place", async () => {
+  const f = fixture();
+  const result = await f.actions.transferEnrolment("source", "b");
+  assert.equal(result.ok, false);
+  if (result.ok) return;
+  f.courses[1].capacity = 0;
+  const confirmed = await f.actions.transferEnrolment("source", "b", "", { choice: "move", ids: result.confirmation!.ids });
+  assert.equal(confirmed.ok, false);
+  assert.equal(f.rows[0].status, "ACTIVE");
+  assert.equal(f.rows.length, 1); assert.equal(f.audits.length, 0);
+});
+
+test("two simultaneous transfers only move the original enrolment once", async () => {
+  const f = fixture();
+  const results = await Promise.all([f.actions.transferEnrolment("source", "b", "", { choice: "move", ids: ["source", "b"] }), f.actions.transferEnrolment("source", "c", "", { choice: "move", ids: ["source", "c"] })]);
+  assert.equal(results.filter((result) => result.ok).length, 1);
+  assert.equal(f.rows.length, 2); assert.equal(f.audits.length, 1);
+  assert.deepEqual(f.locks, [["a", "b"], ["a", "c"]]);
+});
+
+test("a transfer needs and stores a reason for an unearned level", async () => {
+  const f = fixture(); f.courses[1].levelId = "next"; f.courses[1].level = { ...f.courses[1].level, id: "next", name: "Next" };
+  assert.equal((await f.actions.transferEnrolment("source", "b", "", { choice: "move", ids: ["source", "b"] })).ok, false);
+  assert.equal(f.rows.length, 1);
+  assert.equal((await f.actions.transferEnrolment("source", "b", "Placement agreed with instructor", { choice: "move", ids: ["source", "b"] })).ok, true);
+  assert.equal(f.rows[1].placementReason, "Placement agreed with instructor");
+});
+
+test("promotion cannot reopen a waitlist entry withdrawn while it waited", async () => {
+  const f = fixture(); f.rows[0].status = "WAITLISTED";
+  f.beforeTransaction(() => { f.rows[0].status = "WITHDRAWN"; });
+  assert.equal((await f.actions.promoteFromWaitlist("source", "PENDING")).ok, false);
+  assert.equal(f.rows[0].status, "WITHDRAWN"); assert.equal(f.audits.length, 0);
+});
+
+test("audit failure rolls back the transfer and its new place", async () => {
+  const f = fixture(); f.failAudit();
+  await assert.rejects(f.actions.transferEnrolment("source", "b", "", { choice: "move", ids: ["source", "b"] }), /Audit unavailable/);
+  assert.equal(f.rows.length, 1); assert.equal(f.rows[0].status, "ACTIVE");
+});
+
+test("moving a waitlisted swimmer closes the waiting booking without implying attendance", async () => {
+  const f = fixture(); f.rows[0].status = "WAITLISTED";
+  assert.equal((await f.actions.transferEnrolment("source", "b", "", { choice: "move", ids: ["source", "b"] })).ok, true);
+  assert.equal(f.rows[0].status, "WITHDRAWN");
+  assert.equal(f.rows[1].status, "ACTIVE");
+  assert.match((f.audits[0] as { summary: string }).summary, /from the waitlist for/);
+});
+
+const enrolInput = { studentId: "swimmer", courseId: "b", placementReason: "", allowWaitlist: false, legendAgreement: "PENDING" as const };
+
+test("an existing place requires a choice before any writes", async () => {
+  const f = fixture();
+  const result = await f.actions.enrolStudent(enrolInput);
+  assert.equal(result.ok, false);
+  if (result.ok) return;
+  assert.deepEqual(result.confirmation?.ids, ["source"]);
+  assert.match(result.confirmation!.description, /Class a/);
+  assert.equal(f.rows.length, 1); assert.equal(f.audits.length, 0);
+});
+
+test("keeping the previous class adds the new place without ending it", async () => {
+  const f = fixture();
+  assert.equal((await f.actions.enrolStudent(enrolInput, { choice: "keep", ids: ["source"] })).ok, true);
+  assert.deepEqual(f.rows.map((row) => row.status), ["ACTIVE", "ACTIVE"]);
+  assert.equal(f.audits.length, 1);
+});
+
+test("unenrol and enrol ends previous places under their locks and audits each change", async () => {
+  const f = fixture();
+  f.rows.push({ ...f.rows[0], id: "second", courseId: "c" });
+  assert.equal((await f.actions.enrolStudent(enrolInput, { choice: "withdraw", ids: ["source", "second"] })).ok, true);
+  assert.deepEqual(f.rows.map((row) => row.status), ["WITHDRAWN", "WITHDRAWN", "ACTIVE"]);
+  assert.deepEqual(f.locks, [["a", "b", "c"]]);
+  assert.equal(f.audits.length, 3);
+  assert.ok((f.rows[0] as unknown as { endedOn: Date }).endedOn instanceof Date);
+});
+
+test("a changed set of places asks again instead of withdrawing an unseen place", async () => {
+  const f = fixture();
+  f.beforeTransaction(() => f.rows.push({ ...f.rows[0], id: "second", courseId: "c" }));
+  const result = await f.actions.enrolStudent(enrolInput, { choice: "withdraw", ids: ["source"] });
+  assert.equal(result.ok, false);
+  if (result.ok) return;
+  assert.deepEqual(result.confirmation?.ids, ["source", "second"]);
+  assert.equal(f.audits.length, 0);
+  assert.ok(f.rows.every((row) => row.status === "ACTIVE"));
+});
+
+test("a full destination never withdraws the current place, including waitlisting", async () => {
+  const f = fixture(); f.courses[1].capacity = 0;
+  const reply = { choice: "withdraw", ids: ["source"] };
+  assert.equal((await f.actions.enrolStudent(enrolInput, reply)).ok, false);
+  const result = await f.actions.enrolStudent({ ...enrolInput, allowWaitlist: true, legendAgreement: "PENDING" }, reply);
+  assert.equal(result.ok, false);
+  if (result.ok) return;
+  assert.deepEqual(result.confirmation?.choices.map((choice) => choice.value), ["keep"]);
+  assert.equal(f.rows[0].status, "ACTIVE"); assert.equal(f.audits.length, 0);
+  assert.equal((await f.actions.enrolStudent({ ...enrolInput, allowWaitlist: true, legendAgreement: "PENDING" }, { ...reply, choice: "keep" })).ok, true);
+  assert.deepEqual(f.rows.map((row) => row.status), ["ACTIVE", "WAITLISTED"]);
+});
+
+test("audit failure rolls back unenrol and enrol", async () => {
+  const f = fixture(); f.failAudit();
+  await assert.rejects(f.actions.enrolStudent(enrolInput, { choice: "withdraw", ids: ["source"] }), /Audit unavailable/);
+  assert.equal(f.rows.length, 1); assert.equal(f.rows[0].status, "ACTIVE");
+});
+
+test("past enrolments and waitlists do not trigger the existing-class prompt", async () => {
+  for (const status of ["WITHDRAWN", "COMPLETED", "TRANSFERRED", "WAITLISTED"]) {
+    const f = fixture(); f.rows[0].status = status;
+    assert.equal((await f.actions.enrolStudent(enrolInput)).ok, true);
+    assert.equal(f.rows[0].status, status);
+  }
+});
+
+
+test("cross-site transfers use earned progress from the old site and audit both destinations", async () => {
+  const f = fixture(); f.catalogue.splice(0, f.catalogue.length, ...sharedCurriculumRows());
+  f.courses[1].clubId = "other"; f.courses[1].club = { id: "other", name: "Site B", archivedAt: null };
+  f.courses[1].levelId = "next-b"; f.courses[1].level = { ...f.courses[1].level, id: "next-b", programmeId: "programme-b" };
+  f.completions.push({ levelId: "entry-b", programmeId: "programme-b" });
+  const review = await f.actions.transferEnrolment("source", "b");
+  assert.equal(review.ok, false);
+  if (review.ok) return;
+  assert.match(review.confirmation!.description, /Site A.*Site B/);
+  assert.equal((await f.actions.transferEnrolment("source", "b", "", { choice: "move", ids: review.confirmation!.ids })).ok, true);
+  assert.equal(f.rows[1].levelId, "next"); assert.equal(f.rows[1].programmeId, "programme");
+  assert.equal(f.rows[1].placementReason, null);
+  assert.deepEqual(f.audits.map(a => (a as { clubId: string }).clubId), ["other", "club"]);
+});
+
+test("failure to audit the source site rolls back the whole cross-site transfer", async () => {
+  const f = fixture(); f.courses[1].clubId = "other"; f.courses[1].club = { id: "other", name: "Site B", archivedAt: null };
+  f.failAudit(1);
+  await assert.rejects(f.actions.transferEnrolment("source", "b", "", { choice: "move", ids: ["source", "b"] }), /Audit unavailable/);
+  assert.equal(f.rows.length, 1); assert.equal(f.rows[0].status, "ACTIVE"); assert.equal(f.audits.length, 0);
+});
+
+test("an archived destination site cannot receive an enrolment or transfer", async () => {
+  const f = fixture(); f.courses[1].club.archivedAt = new Date();
+  assert.equal((await f.actions.enrolStudent(enrolInput, { choice: "keep", ids: ["source"] })).ok, false);
+  assert.equal((await f.actions.transferEnrolment("source", "b", "", { choice: "move", ids: ["source", "b"] })).ok, false);
+  assert.equal(f.rows.length, 1); assert.equal(f.rows[0].status, "ACTIVE");
+});

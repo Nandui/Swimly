@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import { InstructorClassSession } from "@/modules/aquatics/components/instructor/class-session";
+import { InstructorClassSession } from "@/modules/activities/components/instructor/class-session";
 
 export const metadata: Metadata = { title: "Teach class" };
 

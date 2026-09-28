@@ -5,10 +5,10 @@ import { Input } from "@/components/shadcn/input";
 import { Label } from "@/components/shadcn/label";
 import { Item, ItemContent, ItemGroup } from "@/components/shadcn/item";
 import { Tag } from "@/components/ui-kit/tag";
-import { DAY_META, formatTime } from "@/modules/aquatics/lib/courses/constants";
-import { findSiteSwimmers } from "@/modules/aquatics/lib/instructor/swimmers";
+import { DAY_META, formatTime } from "@/modules/activities/lib/courses/constants";
+import { findSiteSwimmers } from "@/modules/activities/lib/instructor/swimmers";
 import { screenPage } from "@/lib/page-guards";
-import { MEDICAL_STATUS_META, ageLabel } from "@/modules/aquatics/lib/students/constants";
+import { MEDICAL_STATUS_META, ageLabel } from "@/modules/activities/lib/students/constants";
 
 export const metadata: Metadata = { title: "Swimmers" };
 

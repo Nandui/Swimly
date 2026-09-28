@@ -1,7 +1,7 @@
 import "dotenv/config";
 import { FOUNDING_CLUB_ID } from "@/lib/clubs/constants";
 import { logAudit } from "@/lib/audit";
-import { courseLabel, formatSlot } from "@/modules/aquatics/lib/courses/constants";
+import { courseLabel, formatSlot } from "@/modules/activities/lib/courses/constants";
 import { prisma } from "@/lib/prisma";
 
 /** The Wednesday timetable, as it stands in the club's existing system.

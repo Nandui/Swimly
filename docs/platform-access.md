@@ -133,7 +133,7 @@ a signed cookie (`src/lib/devices/shared-device.ts`) and can be revoked centrall
 ## Aquatics surfaces
 
 Aquatics is the reference for a module with several audiences over one set of
-records. `src/modules/aquatics/classification.ts` tags swimmer fields by class
+records. `src/modules/activities/classification.ts` tags swimmer fields by class
 (`medical`, `contact`, `emergency`, `staff-note`) and decides who receives each:
 
 | Surface | Who | Medical notes |

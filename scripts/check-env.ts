@@ -1,6 +1,7 @@
 import "dotenv/config";
 import { docsStorageConfig } from '../src/lib/docs/storage-config';
 import { hrStorageConfig } from '../src/lib/hr/storage-config';
+import { databasePlan } from '../src/lib/database-environment';
 
 /** Run before every build. A deployment that boots without a database and
  *  discovers it on the first request has already served the error to someone;
@@ -12,6 +13,11 @@ catch (error) { errors.push(error instanceof Error && error.name !== 'TypeError'
 // HR is optional until its database is provisioned, but never in a shared one.
 try { if (!hrStorageConfig(process.env)) warnings.push('HR_DATABASE_URL is not set, so HR and performance stays switched off.'); }
 catch (error) { errors.push(error instanceof Error && error.name !== 'TypeError' ? error.message : 'Check the HR database URLs.'); }
+
+// Production and dev must not share a database; see src/lib/database-environment.ts.
+const plan = databasePlan(process.env);
+errors.push(...plan.errors);
+warnings.push(...plan.warnings);
 
 if (!process.env.DATABASE_URL) {
   errors.push(

@@ -5,10 +5,10 @@ import '@fontsource/figtree/latin-500.css';
 import '@fontsource/figtree/latin-600.css';
 import { ThemeProvider } from '@/components/theme-provider';
 import { TooltipProvider } from '@/components/shadcn/tooltip';
-import { InstructorShell } from '@/modules/aquatics/components/instructor/instructor-shell';
-import { DeckChecklist } from '@/modules/aquatics/components/progression/deck-checklist';
-import { InstructorClassNavigation } from '@/modules/aquatics/components/instructor/class-navigation';
-import { ClassCompetencyOverview } from '@/modules/aquatics/components/instructor/class-competency-overview';
+import { InstructorShell } from '@/modules/activities/components/instructor/instructor-shell';
+import { DeckChecklist } from '@/modules/activities/components/progression/deck-checklist';
+import { InstructorClassNavigation } from '@/modules/activities/components/instructor/class-navigation';
+import { ClassCompetencyOverview } from '@/modules/activities/components/instructor/class-competency-overview';
 
 const query = new URLSearchParams(location.search);
 const skills = [

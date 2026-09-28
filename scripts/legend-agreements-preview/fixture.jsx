@@ -7,10 +7,10 @@ import {AppShell} from '@/components/ui-kit/app-shell';
 import {ThemeProvider} from '@/components/theme-provider';
 import {TooltipProvider} from '@/components/shadcn/tooltip';
 import {ToastBridge} from '@/lib/toast';
-import {LegendAgreements} from '@/modules/aquatics/components/enrolment/legend-agreements';
-import {ManageProfileEnrolments} from '@/modules/aquatics/components/students/profile-enrolments';
-import {EnrolIntoCourse, EnrolInCourseForStudent, PromoteFromWaitlist} from '@/modules/aquatics/components/enrolment/enrolment-actions';
-import {NAV_ITEMS} from '@/modules/aquatics/lib/nav';
+import {LegendAgreements} from '@/modules/activities/components/enrolment/legend-agreements';
+import {ManageProfileEnrolments} from '@/modules/activities/components/students/profile-enrolments';
+import {EnrolIntoCourse, EnrolInCourseForStudent, PromoteFromWaitlist} from '@/modules/activities/components/enrolment/enrolment-actions';
+import {NAV_ITEMS} from '@/modules/activities/lib/nav';
 
 const query=new URLSearchParams(location.search), theme=query.get('theme')==='dark'?'dark':'light';
 document.documentElement.dataset.theme=theme;

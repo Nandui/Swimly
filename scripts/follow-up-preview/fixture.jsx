@@ -6,11 +6,11 @@ import '@fontsource/figtree/600.css';
 import {ThemeProvider} from '@/components/theme-provider';
 import {TooltipProvider} from '@/components/shadcn/tooltip';
 import {AppShell} from '@/components/ui-kit/app-shell';
-import {AwaitingEnrolment} from '@/modules/aquatics/components/enrolment/awaiting-enrolment';
-import {AwaitingMoves} from '@/modules/aquatics/components/enrolment/awaiting-moves';
-import {FollowUpHistory} from '@/modules/aquatics/components/enrolment/follow-up-history';
+import {AwaitingEnrolment} from '@/modules/activities/components/enrolment/awaiting-enrolment';
+import {AwaitingMoves} from '@/modules/activities/components/enrolment/awaiting-moves';
+import {FollowUpHistory} from '@/modules/activities/components/enrolment/follow-up-history';
 import {Notice} from '@/components/ui-kit/notice';
-import {NAV_ITEMS} from '@/modules/aquatics/lib/nav';
+import {NAV_ITEMS} from '@/modules/activities/lib/nav';
 
 const params = new URLSearchParams(location.search), theme=params.get('theme')==='dark'?'dark':'light';
 document.documentElement.dataset.theme=theme;

@@ -32,7 +32,7 @@ export default async function ClubsPage() {
     getClubs(),
     getCurrentClub(),
   ]);
-  // What each site runs comes from the modules (Aquatics: programmes, swimmers, classes).
+  // What each site runs comes from the modules (Activities: programmes, swimmers, classes).
   const summaries = await siteSummaryLines(clubs.map((club) => club.id));
   const live = clubs.filter((club) => !club.archivedAt);
   const archived = clubs.filter((club) => club.archivedAt);
@@ -47,8 +47,8 @@ export default async function ClubsPage() {
 
       <Lead>
         <Num>{live.length}</Num> {live.length === 1 ? "club" : "clubs"}. You are
-        working in <Num>{current.name}</Num>; the site switcher in the Aquatics
-        sidebar changes that, and every Aquatics page follows it.
+        working in <Num>{current.name}</Num>; the site switcher in the Activities
+        sidebar changes that, and every Activities page follows it.
       </Lead>
 
       {live.length === 0 ? (

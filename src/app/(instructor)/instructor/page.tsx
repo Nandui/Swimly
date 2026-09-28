@@ -13,31 +13,31 @@ import {
   CollapsibleContent,
   CollapsibleTrigger,
 } from "@/components/shadcn/collapsible";
-import { StartClass } from "@/modules/aquatics/components/instructor/start-class";
-import { RefreshClasses } from "@/modules/aquatics/components/instructor/refresh-classes";
-import { claimState } from "@/modules/aquatics/lib/attendance/claim-state";
+import { StartClass } from "@/modules/activities/components/instructor/start-class";
+import { RefreshClasses } from "@/modules/activities/components/instructor/refresh-classes";
+import { claimState } from "@/modules/activities/lib/attendance/claim-state";
 import {
   instructorClassHref,
   instructorHomeHref,
-} from "@/modules/aquatics/lib/attendance/navigation";
-import { weekdayOfIso } from "@/modules/aquatics/lib/attendance/dates";
-import { getCoversForDay } from "@/modules/aquatics/lib/attendance/data/cover";
-import { getRegisterStateForDay } from "@/modules/aquatics/lib/attendance/data/register";
+} from "@/modules/activities/lib/attendance/navigation";
+import { weekdayOfIso } from "@/modules/activities/lib/attendance/dates";
+import { getCoversForDay } from "@/modules/activities/lib/attendance/data/cover";
+import { getRegisterStateForDay } from "@/modules/activities/lib/attendance/data/register";
 import {
   DAY_META,
   courseName,
   formatTime,
   formatSlot,
-} from "@/modules/aquatics/lib/courses/constants";
-import { getCoursesOnDay, type CourseRow } from "@/modules/aquatics/lib/courses/data/courses";
+} from "@/modules/activities/lib/courses/constants";
+import { getCoursesOnDay, type CourseRow } from "@/modules/activities/lib/courses/data/courses";
 import { formatDate, minutesNow, parseDateOnly, today } from "@/lib/format";
 import { screenPage } from "@/lib/page-guards";
 import { can } from "@/lib/authz";
-import { getCancellationsForDay } from "@/modules/aquatics/lib/cancellations/data";
-import { CANCELLATION_META } from "@/modules/aquatics/lib/cancellations/constants";
+import { getCancellationsForDay } from "@/modules/activities/lib/cancellations/data";
+import { CANCELLATION_META } from "@/modules/activities/lib/cancellations/constants";
 import { Tag } from "@/components/ui-kit/tag";
-import { InstructorAssessments } from "@/modules/aquatics/components/instructor/assessments";
-import { getTodayAssessments } from "@/modules/aquatics/lib/today/assessments";
+import { InstructorAssessments } from "@/modules/activities/components/instructor/assessments";
+import { getTodayAssessments } from "@/modules/activities/lib/today/assessments";
 
 export const metadata: Metadata = { title: "Instructor" };
 type Grouping = "time" | "level";

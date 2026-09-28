@@ -10,9 +10,9 @@ const uiImports = {
 
 // Turnfin is Core (people, roles, sites, audit), Work modules (Docs, Refunds,
 // Training, HR, Rota) and Aquatics. See docs/architecture.md.
-const aquaticsFiles = [
-  "src/modules/aquatics/**",
-  "src/app/(aquatics)/**",
+const activitiesFiles = [
+  "src/modules/activities/**",
+  "src/app/(activities)/**",
   "src/app/(instructor)/**",
   "src/app/api/parent/**",
   "src/app/api/parent-admin/**",
@@ -27,8 +27,8 @@ const compositionRoots = [
   "src/components/portal/reception-portal.tsx",
 ];
 const tests = ["src/**/*.test.ts", "src/**/*.test.tsx", "src/test/**"];
-const notAquatics = {
-  group: ["@/modules/aquatics", "@/modules/aquatics/*", "@/app/(aquatics)/*", "@/app/(instructor)/*", "**/modules/aquatics/**"],
+const notActivities = {
+  group: ["@/modules/activities", "@/modules/activities/*", "@/app/(activities)/*", "@/app/(instructor)/*", "**/modules/activities/**"],
   message: "Core and Work modules must not import Aquatics. Register a contribution (src/modules/contributions.ts) or add to a composition root instead.",
 };
 const notWorkModules = {
@@ -65,15 +65,15 @@ const eslintConfig = defineConfig([
   // rule's options rather than merging them.
   {
     files: ["src/**/*.{ts,tsx}"],
-    ignores: [...aquaticsFiles, ...compositionRoots, ...tests, "src/components/shadcn/**", "src/generated/**"],
-    rules: { "no-restricted-imports": ["error", { ...uiImports, patterns: [...uiImports.patterns, notAquatics] }] },
+    ignores: [...activitiesFiles, ...compositionRoots, ...tests, "src/components/shadcn/**", "src/generated/**"],
+    rules: { "no-restricted-imports": ["error", { ...uiImports, patterns: [...uiImports.patterns, notActivities] }] },
   },
   {
     files: ["src/components/shadcn/**/*.{ts,tsx}"],
-    rules: { "no-restricted-imports": ["error", { patterns: [notAquatics] }] },
+    rules: { "no-restricted-imports": ["error", { patterns: [notActivities] }] },
   },
   {
-    files: aquaticsFiles.map((glob) => `${glob}/*.{ts,tsx}`),
+    files: activitiesFiles.map((glob) => `${glob}/*.{ts,tsx}`),
     ignores: tests,
     rules: { "no-restricted-imports": ["error", { ...uiImports, patterns: [...uiImports.patterns, notWorkModules] }] },
   },

@@ -1,0 +1,184 @@
+import Link from "next/link";
+import { notFound } from "next/navigation";
+import {
+  ArrowLeft,
+  ArrowRight,
+  Check,
+  ClipboardList,
+  LockKeyhole,
+} from "lucide-react";
+import { Button } from "@/components/shadcn/button";
+import { RegisterForm } from "@/modules/activities/components/attendance/register-form";
+import { DeckChecklist } from "@/modules/activities/components/progression/deck-checklist";
+import { getInstructorClass } from "@/modules/activities/lib/attendance/data/instructor-class";
+import {
+  instructorClassHref,
+  instructorHomeHref,
+  type ClassQuery,
+} from "@/modules/activities/lib/attendance/navigation";
+import { can } from "@/lib/authz";
+import { courseName, formatSlot } from "@/modules/activities/lib/courses/constants";
+import { formatDate, parseDateOnly, today } from "@/lib/format";
+import { fullName } from "@/modules/activities/lib/students/constants";
+import { TeachingNotice } from "./teaching-ui";
+import { StartClass } from "./start-class";
+import { InstructorClassNavigation } from "./class-navigation";
+import { ClassCompetencyOverview } from "./class-competency-overview";
+
+export async function InstructorClassSession({
+  id,
+  params,
+  overview = false,
+}: {
+  id: string;
+  params: ClassQuery;
+  overview?: boolean;
+}) {
+  const view = await getInstructorClass(id, params.date);
+  if (!view) notFound();
+  const { course, session, iso } = view,
+    name = courseName(course),
+    home = instructorHomeHref(params);
+  const competencies = params.step === "competencies";
+  const stepHref = (step: string) =>
+    instructorClassHref(id, { ...params, date: iso, step });
+  const header = (
+    <div className="space-y-3">
+      <Button asChild variant="ghost" className="-ml-3">
+        <Link href={home}>
+          <ArrowLeft aria-hidden="true" />
+          Your classes
+        </Link>
+      </Button>
+      <div className="flex flex-wrap items-center justify-between gap-3">
+        <div className="min-w-0 space-y-1">
+          <h1 className="text-2xl font-semibold tracking-tight">{name}</h1>
+          <p className="text-sm text-ui-muted-foreground">
+            {formatSlot(course)} · {formatDate(parseDateOnly(iso))}
+            {course.location ? ` · ${course.location}` : ""}
+          </p>
+        </div>
+        {view.state === "ready" ? (
+          <p className="flex items-center gap-2 text-sm text-ui-muted-foreground">
+            {view.register.taken ? (
+              <Check className="size-4" aria-hidden="true" />
+            ) : (
+              <ClipboardList className="size-4" aria-hidden="true" />
+            )}
+            {view.register.taken ? "Attendance saved" : "Attendance to take"}
+          </p>
+        ) : null}
+      </div>
+    </div>
+  );
+  if (view.state !== "ready")
+    return (
+      <div className="flex flex-col gap-6">
+        {header}
+        {view.state === "cancelled" ? <TeachingNotice title="This session is cancelled"><p>{view.cancellation.reason}</p><p>Attendance and competencies cannot be saved for this session.</p></TeachingNotice> : view.state === "wrong-site" ? (
+          <TeachingNotice title={`This class is at ${course.club.name}`}>
+            <p>Choose that site in the site switcher to continue.</p>
+          </TeachingNotice>
+        ) : view.state === "archived" ? (
+          <TeachingNotice title="This class is archived." />
+        ) : (
+          <section className="flex flex-col items-start gap-4 rounded-ui-lg border border-ui-border p-5">
+            <h2 className="text-lg font-semibold">Ready to teach?</h2>
+            <p className="max-w-prose text-sm text-ui-muted-foreground">
+              Confirm you are taking this class before opening the swimmers’
+              attendance and competencies.
+            </p>
+            {iso === today() &&
+            (course.instructorId === session.user.id ||
+              can(session, "attendance.cover")) ? (
+              <StartClass
+                courseId={id}
+                date={iso}
+                name={name}
+                schedule={formatSlot(course)}
+                own={course.instructorId === session.user.id}
+                instructorName={course.instructor?.name ?? null}
+                href={stepHref("attendance")}
+              />
+            ) : (
+              <p className="flex items-center gap-2 text-sm text-ui-muted-foreground">
+                <LockKeyhole className="size-4" aria-hidden="true" />
+                {iso !== today()
+                  ? "Start a class from today’s list on the day it runs."
+                  : "You can only start your own classes."}
+              </p>
+            )}
+          </section>
+        )}
+      </div>
+    );
+  const { register, progress } = view,
+    mayAssess = can(session, "progression.assess"),
+    mayComplete = mayAssess && can(session, "progression.complete");
+  const swimmers = progress.swimmers.map((s) => ({
+    studentId: s.student.id,
+    name: fullName(s.student),
+    offLevel: s.offLevel,
+    completed: Boolean(s.completedOn),
+    readyToMoveAt: s.readyToMoveAt,
+    readyToMoveByName: s.readyToMoveByName,
+    moveReadinessCurrent: s.moveReadinessCurrent,
+    marks: Object.fromEntries(s.competencies.map((c) => [c.id, c.status])),
+  }));
+  const attendance = register.taken
+    ? Object.fromEntries(register.lines.map((l) => [l.studentId, l.status]))
+    : null;
+  return (
+    <div className="flex flex-col gap-6">
+      {header}
+      <InstructorClassNavigation id={id} params={{ ...params, date: iso }} active={overview ? "overview" : competencies ? "competencies" : "attendance"} />
+      {overview ? (
+        <ClassCompetencyOverview competencies={progress.course.level.competencies} swimmers={swimmers} />
+      ) : !competencies ? (
+        register.lines.length ? (
+          <RegisterForm
+            courseId={id}
+            date={iso}
+            revision={register.revision}
+            lines={register.lines}
+            classNote={register.note?.note ?? null}
+            readOnly={false}
+            teaching
+            continueHref={stepHref("competencies")}
+          />
+        ) : (
+          <div className="space-y-4">
+            <p className="text-ui-muted-foreground">
+              No swimmers were enrolled for this class on that date.
+            </p>
+            <Button asChild variant="outline">
+              <Link href={stepHref("competencies")}>
+                Competencies
+                <ArrowRight aria-hidden="true" />
+              </Link>
+            </Button>
+          </div>
+        )
+      ) : (
+        <>
+          {!mayAssess ? (
+            <TeachingNotice title="You can view competencies but do not have permission to mark them." />
+          ) : null}
+          <DeckChecklist
+            courseId={id}
+            date={iso}
+            levelId={progress.course.levelId}
+            competencies={progress.course.level.competencies}
+            swimmers={swimmers}
+            attendance={attendance}
+            readOnly={!mayAssess}
+            teaching
+            moveReadiness={mayComplete ? { levelName: progress.course.level.name } : undefined}
+            doneHref={home}
+            doneLabel="classes"
+          />
+        </>
+      )}
+    </div>
+  );
+}

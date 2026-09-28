@@ -6,7 +6,7 @@ Owner decision, 28 September 2026: Turnfin is built as a shared **Core** with tw
 | --- | --- | --- |
 | **Core** | The organisation every module shares: sign-in, people, roles and assignments, sites (`Club`), departments and qualifications, the audit log, the module catalogue and the front door. | `src/app/(core)` (Staff, Roles, Clubs, Activity, Account), `src/lib/{staff,policy,people,clubs,devices,email,audit,...}`, `src/modules/{registry,contributions}.ts` |
 | **Work modules** | Running the centre's staff: Docs, Refunds, Training, HR and Rota, plus Turnfin Me (`apps/me`) for each person's own records. Refunds is a desk tool on this side; it can link to a customer but never depends on Aquatics. | `src/app/{docs,refunds,training,hr,rota}`, `src/lib/<module>`, `src/components/<module>` |
-| **Aquatics** | Running what the centre sells: the swim school, with office (curriculum set-up), desk (enrolments, moves, waitlists, assessments) and deck (attendance, competencies), and its parent API. It is the first of a customer-facing family; camps, pool hire and fitness classes would join it. | `src/app/(aquatics)`, `src/app/(instructor)`, `src/app/api/{parent,parent-admin,curriculum-images,operations}`, `src/modules/aquatics/{lib,components}` |
+| **Aquatics** | Running what the centre sells: the swim school, with office (curriculum set-up), desk (enrolments, moves, waitlists, assessments) and deck (attendance, competencies), and its parent API. It is the first of a customer-facing family; camps, pool hire and fitness classes would join it. | `src/app/(activities)`, `src/app/(instructor)`, `src/app/api/{parent,parent-admin,curriculum-images,operations}`, `src/modules/activities/{lib,components}` |
 
 ## The rules
 
@@ -17,7 +17,7 @@ Owner decision, 28 September 2026: Turnfin is built as a shared **Core** with tw
    - **Session hooks** (`src/modules/session-hooks.ts`): per-request work a module needs. Aquatics applies due scheduled unenrolments before any read. `requireSession` loads the hook file lazily.
    - **Self-registration**: shared UI can be extended by a module without knowing it. For example, Aquatics' swimmer picker declares itself with `labelsItself` from `form-dialog`.
 4. **Composition roots are the only files that import every module**: `src/modules/server.ts` and `src/modules/session-hooks.ts`. The Reception Portal (`src/components/portal/reception-portal.tsx`) is the front desk and composes Aquatics' Add swimmer dialog by design.
-5. **Screens belong to exactly one part.** `CORE_SCREENS`, `AQUATICS_SCREENS` and `WORK_MODULE_SCREENS` in `src/lib/staff/screens.ts` are explicit lists, and a test fails if a new screen is not in exactly one of them. Aquatics is no longer "everything that isn't another module".
+5. **Screens belong to exactly one part.** `CORE_SCREENS`, `ACTIVITIES_SCREENS` and `WORK_MODULE_SCREENS` in `src/lib/staff/screens.ts` are explicit lists, and a test fails if a new screen is not in exactly one of them. Aquatics is no longer "everything that isn't another module".
 
 `npm run lint` enforces rules 1, 2 and 4 with `no-restricted-imports` (see `eslint.config.mjs`). Tests and `src/test` are exempt, because they exercise routes end to end.
 

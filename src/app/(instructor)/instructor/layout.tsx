@@ -1,5 +1,5 @@
 import type { ReactNode } from "react";
-import { InstructorShell } from "@/modules/aquatics/components/instructor/instructor-shell";
+import { InstructorShell } from "@/modules/activities/components/instructor/instructor-shell";
 import { DevelopmentRolePreview } from "@/components/staff/development-role-preview";
 import { screenPage } from "@/lib/page-guards";
 import { getCurrentClub } from "@/lib/clubs/current";

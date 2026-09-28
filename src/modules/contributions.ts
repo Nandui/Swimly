@@ -13,7 +13,7 @@ import "server-only";
  *  these return counts and short labels, never records. */
 
 export type StaffColumn = {
-  /** Stable key for React and ordering, e.g. "aquatics.classes". */
+  /** Stable key for React and ordering, e.g. "activities.classes". */
   id: string;
   /** Column header on the Staff page, e.g. "Classes". */
   header: string;

@@ -17,7 +17,7 @@ function guards(screens: string[], permissions: string[]) {
   });
 }
 
-// Class-page guards (desk versus deck) live with Aquatics: src/modules/aquatics/lib/attendance/page-guard.test.ts
+// Class-page guards (desk versus deck) live with Aquatics: src/modules/activities/lib/attendance/page-guard.test.ts
 test("instructors cannot open desk or Core screens", async () => {
   for (const screens of [["instructor"], ["today"]]) {
     const access = guards(screens, ["attendance.mark", "attendance.cover", "progression.assess"]);

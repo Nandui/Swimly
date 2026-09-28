@@ -1,6 +1,6 @@
 import { Building2, CalendarClock, Files, GraduationCap, HeartHandshake, ReceiptText, WavesLadder, type LucideIcon } from "lucide-react";
 import type { PermissionKey } from "@/lib/staff/permissions";
-import { isAquaticsScreen, isCoreScreen, type ScreenKey } from "@/lib/staff/screens";
+import { isActivitiesScreen, isCoreScreen, type ScreenKey } from "@/lib/staff/screens";
 
 /** Every module Turnfin offers, declared in one place.
  *
@@ -79,12 +79,13 @@ registerModule({
 registerModule({
   id: "swimly",
   reception: true,
-  name: "Aquatics",
-  description: "Run the swim school. Manage classes, swimmers, attendance and progress.",
+  name: "Activities",
+  // Swim school is the first activity type (see src/modules/activities/types.ts).
+  description: "Run the swim school: classes, swimmers, attendance and progress. Camps, pool hire and fitness classes will join it.",
   icon: WavesLadder,
   // Resolve permissions and the preferred workspace again when opened.
   href: "/start",
-  visibleTo: ({ screens }) => [...screens].some(isAquaticsScreen),
+  visibleTo: ({ screens }) => [...screens].some(isActivitiesScreen),
 });
 
 registerModule({

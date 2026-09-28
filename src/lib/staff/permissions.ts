@@ -327,7 +327,7 @@ export const ROLE_HOMES = {
   "reception-portal": {
     label: "Reception Portal",
     path: "/reception-portal",
-    description: "Start in the Turnfin Reception Portal. Only existing reception and Docs access is offered; Aquatics opens an accessible desk page.",
+    description: "Start in the Turnfin Reception Portal. Only existing reception and Docs access is offered; Activities opens an accessible desk page.",
   },
   duty: {
     label: "Duty manager",

@@ -49,3 +49,28 @@ bodies are never logged by this route. Responses are not cached.
 
 Use only for user-authorized tasks. Setup does not authorize unrelated changes.
 Do not write test swimmers or classes to production.
+
+## A separate database for `dev`
+
+Production and the `dev` deployment must not share a database. While they do,
+only production applies migrations, and `dev` runs new code against old tables.
+
+1. Create a Postgres database for development, for example a Neon branch or a
+   Vercel Postgres database. Copy production's schema by applying the committed
+   migrations; never copy real swimmer or staff data into it.
+2. On the `dev` deployment (Vercel Preview for the `dev` branch), set:
+   - `DATABASE_URL` and `DIRECT_URL` to the development database;
+   - `DATABASE_ENVIRONMENT=development`;
+   - optionally `PRODUCTION_DATABASE_HOST` to production's host name, so a
+     development deployment pointed at production is refused;
+   - optionally `REQUIRE_DEV_DATABASE=true`, so any preview still sharing
+     production's database fails its build instead of only warning.
+3. Leave production unset, or set `DATABASE_ENVIRONMENT=production`.
+
+On every build, `scripts/check-env.ts` and `scripts/migrate-production.ts` read
+`src/lib/database-environment.ts`:
+- **Production** applies committed migrations to its own database.
+- **The `dev` deployment**, once marked `development`, applies them to its own
+  database.
+- **A deployment still sharing production's database** never migrates it and
+  warns (or fails with `REQUIRE_DEV_DATABASE=true`).

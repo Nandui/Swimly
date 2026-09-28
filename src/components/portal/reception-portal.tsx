@@ -2,7 +2,7 @@ import Link from "next/link";
 import { ArrowRight, ArrowUpRight, CalendarDays, ChevronRight, ClipboardList, HelpCircle, Search, UserPlus, Users, WavesLadder, ListChecks, type LucideIcon } from "lucide-react";
 import { Button } from "@/components/shadcn/button";
 import { Card } from "@/components/shadcn/card";
-import { AddSwimmer } from "@/modules/aquatics/components/students/add-swimmer";
+import { AddSwimmer } from "@/modules/activities/components/students/add-swimmer";
 import { ClubSwitcher } from "@/components/clubs/club-switcher";
 import { PortalFrame } from "@/components/portal/portal-frame";
 import { STAFF_MODULES } from "@/lib/modules";
@@ -36,8 +36,8 @@ export function ReceptionPortal({ userName, club, clubs, access }: {
     <section className="grid min-w-0 gap-4 lg:grid-cols-3" aria-label="Reception modules">
       {access.aquatics && <Card className={`min-w-0 gap-0 overflow-hidden p-0 shadow-none ${access.followUp.length ? 'lg:col-span-2' : 'lg:col-span-3'}`}>
         <div className="flex flex-wrap items-center justify-between gap-4 border-b border-ui-border bg-ui-brand-soft/50 p-5 sm:p-6">
-          <div className="flex min-w-0 items-center gap-3"><WavesLadder className="size-6 shrink-0 text-ui-primary" aria-hidden="true" /><div><h2 className="text-xl font-semibold">Aquatics</h2><p className="mt-1 text-sm text-ui-muted-foreground">Everyday swim-school tasks</p></div></div>
-          <Button asChild variant="outline" className="min-h-11"><Link href="/start?workspace=desk" prefetch={false}>Open Aquatics<ArrowUpRight aria-hidden="true" /></Link></Button>
+          <div className="flex min-w-0 items-center gap-3"><WavesLadder className="size-6 shrink-0 text-ui-primary" aria-hidden="true" /><div><h2 className="text-xl font-semibold">Activities</h2><p className="mt-1 text-sm text-ui-muted-foreground">Everyday swim-school tasks</p></div></div>
+          <Button asChild variant="outline" className="min-h-11"><Link href="/start?workspace=desk" prefetch={false}>Open Activities<ArrowUpRight aria-hidden="true" /></Link></Button>
         </div>
         <div className="grid gap-2 p-3 sm:grid-cols-2 sm:p-4">
           {access.tasks.map(task => {
@@ -48,13 +48,13 @@ export function ReceptionPortal({ userName, club, clubs, access }: {
               ? <AddSwimmer key={task.id} trigger={<Button variant="ghost" className={className}>{content}</Button>} />
               : <Button key={task.id} asChild variant="ghost" className={className}><Link href={task.href} prefetch={false}>{content}</Link></Button>;
           })}
-          {access.tasks.length === 0 && <p className="p-3 text-sm leading-relaxed text-ui-muted-foreground">Open Aquatics to see the pages available to you.</p>}
+          {access.tasks.length === 0 && <p className="p-3 text-sm leading-relaxed text-ui-muted-foreground">Open Activities to see the pages available to you.</p>}
         </div>
       </Card>}
       {access.aquatics && access.followUp.length > 0 && <Card className="min-w-0 gap-4 bg-ui-brand-soft/40 p-5 shadow-none sm:p-6">
         <div className="flex items-center gap-3"><ListChecks aria-hidden="true" className="size-5 text-ui-primary" /><h2 className="text-xl font-semibold">Follow up</h2></div>
         <p className="text-sm text-ui-muted-foreground">Pick up the next step with families.</p>
-        <nav aria-label="Aquatics follow-up" className="divide-y divide-ui-brand-border/40">
+        <nav aria-label="Swim school follow-up" className="divide-y divide-ui-brand-border/40">
           {access.followUp.map(item => <Button key={item.id} asChild variant="ghost" className="h-auto min-h-20 w-full justify-between gap-3 whitespace-normal px-0 py-3 text-left"><Link href={item.href} prefetch={false}><span><span className="block font-medium">{item.label}</span><span className="mt-1 block text-xs font-normal text-ui-muted-foreground">{followUpHints[item.id]}</span></span><ArrowRight aria-hidden="true" /></Link></Button>)}
         </nav>
       </Card>}

@@ -1,10 +1,10 @@
 import "dotenv/config";
 import { FOUNDING_CLUB_ID } from "@/lib/clubs/constants";
 import { logAudit } from "@/lib/audit";
-import { courseLabel } from "@/modules/aquatics/lib/courses/constants";
-import { withCourseSeat } from "@/modules/aquatics/lib/enrolment/seat";
+import { courseLabel } from "@/modules/activities/lib/courses/constants";
+import { withCourseSeat } from "@/modules/activities/lib/enrolment/seat";
 import { parseDateOnly, today } from "@/lib/format";
-import { fullName } from "@/modules/aquatics/lib/students/constants";
+import { fullName } from "@/modules/activities/lib/students/constants";
 import { prisma } from "@/lib/prisma";
 
 /** The Wednesday rosters, transcribed from screenshots of the club's existing

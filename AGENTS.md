@@ -40,11 +40,11 @@ unresolved concern. Say which checks actually ran.
 
 Turnfin is **Core** (people, roles, sites, audit, the module catalogue), **Work
 modules** (Docs, Refunds, Training, HR, Rota, and Turnfin Me) and **Aquatics**
-(`src/modules/aquatics`, `src/app/(aquatics)`, `src/app/(instructor)`; owner decision,
+(`src/modules/activities`, `src/app/(activities)`, `src/app/(instructor)`; owner decision,
 28 September 2026). Core never imports a module, and Aquatics never imports a Work
 module. Cross-module needs go through `src/modules/contributions.ts`, the session hooks
 or a composition root. Every screen is listed in exactly one of `CORE_SCREENS`,
-`AQUATICS_SCREENS` or `WORK_MODULE_SCREENS`. `npm run lint` enforces the imports; see
+`ACTIVITIES_SCREENS` or `WORK_MODULE_SCREENS`. `npm run lint` enforces the imports; see
 [docs/architecture.md](docs/architecture.md).
 
 Who Swimly is for, what it must get right and what is deliberately undecided
@@ -76,7 +76,7 @@ checks; starts do not grant exclusive ownership. Do not add desk navigation,
 desk profile links or a cross-site swimmer search to it, or Instructor links to desk
 navigation. Its only swimmer lookup is `/instructor/swimmers`: swimmers with a current
 place at the working site, medical notes only for swimmers the instructor teaches or
-covers today (owner decision, September 2026; see src/modules/aquatics/classification.ts). Shared teaching components must preserve the route-selected
+covers today (owner decision, September 2026; see src/modules/activities/classification.ts). Shared teaching components must preserve the route-selected
 workspace boundary. See [docs/instructor.md](docs/instructor.md).
 
 The core rules: ask for a named permission, never a role; every mutation
