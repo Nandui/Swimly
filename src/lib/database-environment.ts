@@ -47,7 +47,7 @@ export function databasePlan(env: Env): DatabasePlan {
   // A preview or development deployment, such as `dev`.
   if (role === "development") {
     const production = hostOf(env.PRODUCTION_DATABASE_HOST ? `postgres://${env.PRODUCTION_DATABASE_HOST}` : undefined);
-    const current = hostOf(env.DIRECT_URL ?? env.DATABASE_URL);
+    const current = hostOf(env.DIRECT_URL ?? env.DATABASE_URL_UNPOOLED ?? env.DATABASE_URL);
     if (production && current && production === current) {
       errors.push("DATABASE_ENVIRONMENT=development, but DATABASE_URL points at the production database host. Use the development database.");
       return { migrate: false, errors, warnings };

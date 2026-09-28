@@ -8,7 +8,7 @@ export function docsStorageConfig(env: Record<string, string | undefined>) {
   const runtime = env.DOCS_DATABASE_URL;
   const direct = env.DOCS_DIRECT_URL || runtime;
   if (databaseIdentity(runtime) !== databaseIdentity(direct)) throw new Error('DOCS_DIRECT_URL must point to the same database as DOCS_DATABASE_URL.');
-  for (const shared of [env.DATABASE_URL, env.DIRECT_URL]) {
+  for (const shared of [env.DATABASE_URL, env.DIRECT_URL, env.DATABASE_URL_UNPOOLED]) {
     if (shared && databaseIdentity(shared) === databaseIdentity(runtime)) throw new Error('Docs must use a separate database from Turnfin/Aquatics.');
   }
   return { runtime, direct };

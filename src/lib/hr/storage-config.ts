@@ -9,7 +9,7 @@ export function hrStorageConfig(env: Record<string, string | undefined>) {
   const runtime = env.HR_DATABASE_URL;
   const direct = env.HR_DIRECT_URL || runtime;
   if (databaseIdentity(runtime) !== databaseIdentity(direct)) throw new Error('HR_DIRECT_URL must point to the same database as HR_DATABASE_URL.');
-  for (const shared of [env.DATABASE_URL, env.DIRECT_URL, env.DOCS_DATABASE_URL, env.DOCS_DIRECT_URL]) {
+  for (const shared of [env.DATABASE_URL, env.DIRECT_URL, env.DATABASE_URL_UNPOOLED, env.DOCS_DATABASE_URL, env.DOCS_DIRECT_URL]) {
     if (shared && databaseIdentity(shared) === databaseIdentity(runtime)) throw new Error('HR must use its own database, separate from Turnfin and Docs.');
   }
   return { runtime, direct };

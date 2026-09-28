@@ -38,7 +38,7 @@ if (!process.env.DATABASE_URL) {
   );
 }
 
-if (process.env.DATABASE_URL && !process.env.DIRECT_URL) {
+if (process.env.DATABASE_URL && !process.env.DIRECT_URL && !process.env.DATABASE_URL_UNPOOLED) {
   const url = process.env.DATABASE_URL;
   // Pooled connections cannot run DDL, so migrations need the unpooled host.
   if (/pgbouncer=true|-pooler\./.test(url)) {

@@ -31,6 +31,12 @@ test("a development database pointing at the production host is refused", () => 
   assert.match(plan.errors[0], /production database host/);
 });
 
+test("the guard also reads the unpooled URL a Neon integration provides", () => {
+  const plan = databasePlan({ VERCEL_ENV: "preview", DATABASE_ENVIRONMENT: "development", PRODUCTION_DATABASE_HOST: "prod.example.test", DATABASE_URL: "postgres://u:p@prod-pooler.example.test/db", DATABASE_URL_UNPOOLED: "postgres://u:p@prod.example.test/db" });
+  assert.equal(plan.migrate, false);
+  assert.match(plan.errors[0], /production database host/);
+});
+
 test("local work never migrates, and unknown roles are rejected", () => {
   assert.deepEqual(databasePlan({}), { migrate: false, errors: [], warnings: [] });
   assert.equal(databasePlan({ DATABASE_ENVIRONMENT: "staging" }).errors.length, 1);
