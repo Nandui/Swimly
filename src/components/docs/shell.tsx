@@ -23,7 +23,7 @@ import { canWrite, canManage, type Workspace } from '@/lib/docs/types';
 import { signOut } from 'next-auth/react';
 import { Avatar, Message } from './ui';
 import { Sidebar, SidebarProvider, SidebarMenuButton } from '@/components/shadcn/sidebar';
-import { ModuleSwitcher } from '@/components/workspace/your-modules';
+import { HomeButton } from '@/components/workspace/your-modules';
 import {
   Breadcrumb,
   BreadcrumbList,
@@ -94,7 +94,7 @@ export function Shell({
               </Button>
             )}
           </div>
-          <ModuleSwitcher current="docs" compact={compact} onNavigate={() => setMobile(false)} />
+          <HomeButton compact={compact} onNavigate={() => setMobile(false)} />
           {compact ? (
             <Button
               variant="ghost"

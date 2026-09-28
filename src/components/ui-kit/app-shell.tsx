@@ -12,14 +12,12 @@ import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel,
 import { Sidebar, SidebarContent, SidebarFooter, SidebarGroup, SidebarGroupLabel, SidebarHeader, SidebarInset, SidebarMenu, SidebarMenuButton, SidebarMenuItem, SidebarProvider, SidebarSeparator, SidebarTrigger, useSidebar } from "@/components/shadcn/sidebar";
 import { isNavItemActive } from "@/lib/nav-active";
 import { NAV_COLLAPSED_COOKIE, SHELL_PAGE_ID } from "@/lib/shell-preferences";
-import { ModuleSwitcher } from "@/components/workspace/your-modules";
+import { HomeButton } from "@/components/workspace/your-modules";
 
 export type NavItem = { href: string; label: string; icon: LucideIcon; badge?: number };
 export type NavGroup = { id: string; label: string; icon?: LucideIcon; collapsible?: boolean; items: NavItem[] };
 export type AppShellProps = {
   wordmark: string; homeHref?: string; groups: NavGroup[];
-  /** The module being shown, for the module switcher (docs/how-turnfin-works.md). */
-  module?: string;
   userName: string; userSubtitle?: string; onSignOut?: () => void;
   switcher?: React.ReactNode; search?: React.ReactNode; tools?: React.ReactNode;
   banner?: React.ReactNode; initialCollapsed?: boolean; contentMaxWidth?: number;
@@ -62,11 +60,11 @@ function WorkspaceSidebar(props: AppShellProps) {
         </Link>
         {isMobile ? <Button variant="ghost" size="icon" className="size-11" aria-label="Close navigation" onClick={() => setOpenMobile(false)}><X aria-hidden="true" /></Button> : <SidebarTrigger aria-label={collapsed ? "Expand sidebar" : "Collapse sidebar"} title={collapsed ? "Expand sidebar" : "Collapse sidebar"} aria-expanded={!collapsed} className="size-11 shrink-0" />}
       </div>
-      {props.module || props.switcher || props.search ? <div className="flex w-full min-w-0 flex-col gap-2 group-data-[collapsible=icon]:items-center" aria-label="Workspace controls">
-        {props.module ? <ModuleSwitcher current={props.module} compact={collapsed} onNavigate={() => setOpenMobile(false)} /> : null}
+      <div className="flex w-full min-w-0 flex-col gap-2 group-data-[collapsible=icon]:items-center" aria-label="Workspace controls">
+        <HomeButton compact={collapsed} onNavigate={() => setOpenMobile(false)} />
         {props.switcher}
         {props.search}
-      </div> : null}
+      </div>
     </SidebarHeader>
     <SidebarSeparator className="mx-3 data-[orientation=horizontal]:w-auto group-data-[collapsible=icon]:mx-auto group-data-[collapsible=icon]:data-[orientation=horizontal]:w-6" />
     <SidebarContent className="px-3 py-4 group-data-[collapsible=icon]:overflow-auto group-data-[collapsible=icon]:px-0 group-data-[collapsible=icon]:[scrollbar-width:none]"><nav aria-label="Daily work and setup" className="space-y-6 group-data-[collapsible=icon]:space-y-4">

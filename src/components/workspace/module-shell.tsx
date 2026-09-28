@@ -13,14 +13,14 @@ import { Brand } from '@/components/docs/brand';
 import { AppearanceMenu } from '@/components/docs/appearance-menu';
 import { Avatar } from '@/components/docs/ui';
 import { Notice } from '@/components/ui-kit/notice';
-import { ModuleSwitcher, YourModulesNav } from '@/components/workspace/your-modules';
+import { HomeButton, YourModulesNav } from '@/components/workspace/your-modules';
 
 export type ModuleLink = { href: string; label: string; icon: LucideIcon; active: boolean };
 export type ModuleLinkGroup = { label: string; links: ModuleLink[] };
 
 /** The one frame every module opens in (docs/how-turnfin-works.md). The
  *  sidebar shows one list at a time: on the home page the person's modules;
- *  inside a module the module switcher and that module's own pages. Also a
+ *  inside a module a Home button and that module's own pages. Also a
  *  breadcrumb, the mobile sheet and a remembered collapse preference. Links are presentation; every page checks
  *  its permission again. The pool deck keeps its own tablet frame. */
 export function ModuleShell({ module, id, current = id, who, links = [], groups, action, scopeNote, pageLabel, initialCollapsed = false, base = `/${id}`, contentClass = 'module-content', scrollKey = '', children }: {
@@ -65,7 +65,7 @@ export function ModuleShell({ module, id, current = id, who, links = [], groups,
     return <>
       <div className="workspace-sidebar-header">
         <div className="workspace-brand-row"><Link href={base} aria-label={`Turnfin ${module}`} onClick={close}><Brand module={module} /></Link>{!inSheet && <Button variant="ghost" size="icon" aria-label={compact ? 'Expand navigation' : 'Collapse navigation'} aria-expanded={!compact} onClick={() => changeCollapsed(!collapsed)}>{compact ? <PanelLeftOpen size={18} /> : <PanelLeftClose size={18} />}</Button>}</div>
-        {onHome ? !compact && <div className="workspace-organisation"><Building2 size={18} aria-hidden="true" /><div><strong>LeisureWorld</strong><span>{module}</span></div></div> : <ModuleSwitcher current={current} compact={compact} onNavigate={close} />}
+        {onHome ? !compact && <div className="workspace-organisation"><Building2 size={18} aria-hidden="true" /><div><strong>LeisureWorld</strong><span>{module}</span></div></div> : <HomeButton compact={compact} onNavigate={close} />}
         {action && <Button asChild size={compact ? 'icon' : 'default'} className="workspace-create"><Link href={action.href} aria-label={action.label} title={compact ? action.label : undefined} onClick={close}><action.icon size={18} aria-hidden="true" />{!compact && <span>{action.label}</span>}</Link></Button>}
       </div>
       <nav className="workspace-navigation" aria-label={inSheet ? `Mobile ${module} navigation` : `${module} navigation`}>

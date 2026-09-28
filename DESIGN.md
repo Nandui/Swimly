@@ -389,10 +389,9 @@ always there. The keyholder guard keeps at least one active account holding
 **The home page is the only front door.** `/` is the role's home page; old
 `/start`, `/reception`, `/reception-portal` and `/modules` links redirect to it.
 **The sidebar shows one list at a time.** On the home page it lists the
-role's modules. Inside a module it shows only that module's pages, under a
-module switcher (the button naming the module at the top) that opens Home and
-the person's other modules (`ModuleSwitcher` in
-`src/components/workspace/your-modules.tsx`). Never list the modules and a
+role's modules. Inside a module it shows only that module's pages, under one Home button
+(`HomeButton` in `src/components/workspace/your-modules.tsx`); modules are
+reached from Home. Never list the modules and a
 module's pages together. The pool deck keeps its own tablet frame.
 
 Analytics lives in Monitoring as a separate shadcn dashboard. Its bento grid
