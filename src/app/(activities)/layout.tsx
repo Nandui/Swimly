@@ -3,7 +3,6 @@ import { redirect } from "next/navigation";
 import { cookies } from "next/headers";
 import { auth } from "@/auth";
 import { AppChrome } from "@/modules/activities/components/app-nav";
-import { DevelopmentRolePreview } from "@/components/staff/development-role-preview";
 import { permissionsOf } from "@/lib/authz";
 import { getCurrentClub } from "@/lib/clubs/current";
 import { homePathFor, visibleScreens } from "@/lib/staff/screens";
@@ -31,7 +30,6 @@ export default async function AppLayout({ children }: { children: ReactNode }) {
       club={club}
       clubs={clubs}
       initialCollapsed={collapsed}
-      banner={<DevelopmentRolePreview session={session} />}
     >
       {children}
     </AppChrome>
