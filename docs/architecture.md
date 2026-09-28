@@ -56,6 +56,6 @@ On 28 September 2026 the swim school briefly ran as a second Next.js app (`apps/
 
 ## Known follow-ups
 
-- Refunds, Training, HR and Rota still borrow the Docs shell pieces (`components/docs/{brand,appearance-menu,primitives,ui}` and the Docs stylesheets). They should move to `components/workspace` so Work modules stop depending on Docs.
+- Refunds, Training, HR and Rota still borrow the Docs shell pieces (`components/docs/{appearance-menu,primitives,ui}`; the brand has moved to `components/workspace/brand.tsx` and the Docs stylesheets). They should move to `components/workspace` so Work modules stop depending on Docs.
 - HR reads Docs' storage configuration (`lib/hr/storage-config.ts` imports `lib/docs/storage-config`); a Core storage helper would remove it.
 - `AuditLog.programmeId` is swim-school-shaped; a module-neutral `module` column is planned.

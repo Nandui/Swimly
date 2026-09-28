@@ -7,12 +7,11 @@ import {
   CalendarHeart,
   ClipboardCheck,
   Layers,
-  Settings,
   UserRoundCheck,
   FileCheck2,
   Users,
 } from "lucide-react";
-import type { NavGroup, NavItem } from "@/components/ui-kit/app-shell";
+import type { LucideIcon } from "lucide-react";
 import type { ScreenKey } from "@/lib/staff/screens";
 
 /** What the Activities desk sidebar offers. Staff, Roles, Clubs and Activity
@@ -24,6 +23,9 @@ import type { ScreenKey } from "@/lib/staff/screens";
  *  role that names that screen and holds whatever it requires. That is
  *  courtesy, not security: the page declines to exist and the action
  *  refuses the call, and only the last of those three is load-bearing. */
+export type NavItem = { href: string; label: string; icon: LucideIcon };
+export type NavGroup = { id: string; label: string; items: NavItem[] };
+
 export type AppNavItem = NavItem & {
   screen: ScreenKey;
   group: "daily" | "monitoring" | "setup";
@@ -56,7 +58,7 @@ export function visibleNavGroups(screens: Set<ScreenKey>): NavGroup[] {
   return [
     { id: "daily", label: "Daily work", items: items.filter(item => item.group === "daily") },
     { id: "monitoring", label: "Monitoring", items: items.filter(item => item.group === "monitoring") },
-    { id: "setup", label: "Setup", icon: Settings, collapsible: true, items: items.filter(item => item.group === "setup") },
+    { id: "setup", label: "Setup", items: items.filter(item => item.group === "setup") },
   ].filter(group => group.items.length > 0);
 }
 

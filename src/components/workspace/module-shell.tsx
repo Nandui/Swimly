@@ -4,12 +4,12 @@ import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { useEffect, useRef, useState, type ReactNode } from 'react';
 import { signOut } from 'next-auth/react';
-import { Building2, LogOut, Menu, PanelLeftClose, PanelLeftOpen, ShieldCheck, type LucideIcon } from 'lucide-react';
+import { Building2, CircleHelp, LogOut, Menu, PanelLeftClose, PanelLeftOpen, ShieldCheck, type LucideIcon } from 'lucide-react';
 import { Sidebar, SidebarProvider, SidebarMenuButton } from '@/components/shadcn/sidebar';
 import { Button } from '@/components/shadcn/button';
 import { Breadcrumb, BreadcrumbList, BreadcrumbItem, BreadcrumbLink, BreadcrumbPage, BreadcrumbSeparator } from '@/components/shadcn/breadcrumb';
 import { Sheet, SheetContent, SheetDescription, SheetTitle, SheetTrigger } from '@/components/docs/primitives/sheet';
-import { Brand } from '@/components/docs/brand';
+import { Brand } from '@/components/workspace/brand';
 import { AppearanceMenu } from '@/components/docs/appearance-menu';
 import { Avatar } from '@/components/docs/ui';
 import { Notice } from '@/components/ui-kit/notice';
@@ -23,7 +23,7 @@ export type ModuleLinkGroup = { label: string; links: ModuleLink[] };
  *  inside a module a Home button and that module's own pages. Also a
  *  breadcrumb, the mobile sheet and a remembered collapse preference. Links are presentation; every page checks
  *  its permission again. The pool deck keeps its own tablet frame. */
-export function ModuleShell({ module, id, current = id, who, links = [], groups, action, scopeNote, pageLabel, initialCollapsed = false, base = `/${id}`, contentClass = 'module-content', scrollKey = '', children }: {
+export function ModuleShell({ module, id, current = id, who, links = [], groups, action, tools, scopeNote, pageLabel, initialCollapsed = false, base = `/${id}`, contentClass = 'module-content', maxWidth, scrollKey = '', children }: {
   /** Display name, e.g. "Training". */
   module: string;
   /** Short id for the scope class, cookie and landmarks, e.g. "training". */
@@ -37,12 +37,17 @@ export function ModuleShell({ module, id, current = id, who, links = [], groups,
   groups?: ModuleLinkGroup[];
   /** One main action above the menu, e.g. "New request". */
   action?: { href: string; label: string; icon: LucideIcon };
+  /** Module controls under the Home button, e.g. the swim school's site and
+   *  swimmer search. Shown when the sidebar is expanded and in the phone sheet. */
+  tools?: ReactNode;
   scopeNote: string;
   pageLabel: string;
   initialCollapsed?: boolean;
   /** Where the brand and breadcrumb lead. The home page itself is "/". */
   base?: string;
   contentClass?: string;
+  /** Caps the page's width; without it the module's stylesheet decides. */
+  maxWidth?: number;
   /** Scroll back to the top when this changes as well as the path (filters). */
   scrollKey?: string;
   children: ReactNode;
@@ -52,6 +57,9 @@ export function ModuleShell({ module, id, current = id, who, links = [], groups,
   const [leaving, setLeaving] = useState(false), [error, setError] = useState('');
   const page = useRef<HTMLElement>(null);
   useEffect(() => { page.current?.scrollTo({ top: 0 }); }, [pathname, scrollKey]);
+  // Arriving on another page (a link, or the swimmer search) closes the phone menu.
+  const [shownPath, setShownPath] = useState(pathname);
+  if (shownPath !== pathname) { setShownPath(pathname); setMobile(false); }
   const onHome = current === 'home';
   const sections = groups ?? (links.length ? [{ label: '', links }] : []);
   function changeCollapsed(value: boolean) {
@@ -66,6 +74,7 @@ export function ModuleShell({ module, id, current = id, who, links = [], groups,
       <div className="workspace-sidebar-header">
         <div className="workspace-brand-row"><Link href={base} aria-label={`Turnfin ${module}`} onClick={close}><Brand module={module} /></Link>{!inSheet && <Button variant="ghost" size="icon" aria-label={compact ? 'Expand navigation' : 'Collapse navigation'} aria-expanded={!compact} onClick={() => changeCollapsed(!collapsed)}>{compact ? <PanelLeftOpen size={18} /> : <PanelLeftClose size={18} />}</Button>}</div>
         {onHome ? !compact && <div className="workspace-organisation"><Building2 size={18} aria-hidden="true" /><div><strong>LeisureWorld</strong><span>{module}</span></div></div> : <HomeButton compact={compact} onNavigate={close} />}
+        {!onHome && !compact && tools && <div className="workspace-tools">{tools}</div>}
         {action && <Button asChild size={compact ? 'icon' : 'default'} className="workspace-create"><Link href={action.href} aria-label={action.label} title={compact ? action.label : undefined} onClick={close}><action.icon size={18} aria-hidden="true" />{!compact && <span>{action.label}</span>}</Link></Button>}
       </div>
       <nav className="workspace-navigation" aria-label={inSheet ? `Mobile ${module} navigation` : `${module} navigation`}>
@@ -73,9 +82,10 @@ export function ModuleShell({ module, id, current = id, who, links = [], groups,
         {sections.map((section) => <div key={section.label} className="contents">{section.label && <p className="workspace-nav-label">{section.label}</p>}{section.links.map(item)}</div>)}
       </nav>
       <div className="workspace-sidebar-footer">
+        <Link href="/help" target="_blank" rel="noopener noreferrer" className="workspace-nav-item workspace-help" aria-label="Help centre (opens in a new tab)" title={compact ? 'Help centre' : undefined}><CircleHelp size={18} aria-hidden="true" /><span>Help centre</span></Link>
         <AppearanceMenu expanded={!compact} />
         {error && <Notice tone="error" title={error} />}
-        <div className="workspace-profile">{!compact && <><Avatar member={who} /><div><strong>{who.name}</strong><span>Staff workspace</span></div></>}<Button variant="ghost" size="icon" aria-label="Sign out" title="Sign out" disabled={leaving} onClick={async () => { setLeaving(true); setError(''); try { await signOut({ redirectTo: '/sign-in' }); } catch { setLeaving(false); setError('Could not sign out. Please try again.'); } }}><LogOut size={17} /></Button></div>
+        <div className="workspace-profile">{!compact && <Link href="/account" className="workspace-account" aria-label={`Your account: ${who.name}`} onClick={close}><Avatar member={who} /><div><strong>{who.name}</strong><span>Your account</span></div></Link>}<Button variant="ghost" size="icon" aria-label="Sign out" title="Sign out" disabled={leaving} onClick={async () => { setLeaving(true); setError(''); try { await signOut({ redirectTo: '/sign-in' }); } catch { setLeaving(false); setError('Could not sign out. Please try again.'); } }}><LogOut size={17} /></Button></div>
       </div>
     </>;
   }
@@ -89,7 +99,7 @@ export function ModuleShell({ module, id, current = id, who, links = [], groups,
         <Link href={base} aria-label={`Turnfin ${module}`}><Brand module={module} /></Link><AppearanceMenu />
         {action && <Button asChild size="icon"><Link href={action.href} aria-label={action.label}><action.icon size={18} /></Link></Button>}
       </header>
-      <main id={`${id}-main`} ref={page} tabIndex={-1} className="workspace-page"><div className="page-content workspace-page-content"><div className={contentClass}>{children}</div><footer className="app-footer"><span>Turnfin {module}</span><span className="brand-values">People. Places. Progress.</span></footer></div></main>
+      <main id={`${id}-main`} ref={page} tabIndex={-1} className="workspace-page"><div className="page-content workspace-page-content"><div className={contentClass} style={maxWidth ? { maxWidth } : undefined}>{children}</div><footer className="app-footer"><span>Turnfin {module}</span><span className="brand-values">People. Places. Progress.</span></footer></div></main>
     </div>
   </SidebarProvider></div>;
 }

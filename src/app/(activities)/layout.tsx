@@ -6,10 +6,14 @@ import { AppChrome } from "@/modules/activities/components/app-nav";
 import { permissionsOf } from "@/lib/authz";
 import { getCurrentClub } from "@/lib/clubs/current";
 import { visibleScreens } from "@/lib/staff/screens";
-import { NAV_COLLAPSED_COOKIE } from "@/lib/shell-preferences";
+import "../docs/docs.css";
+import "../docs/integration.css";
+import "../docs/brand.css";
+import "../workspace/module-workspace.css";
+import "./swim-school.css";
 
-/** The signed-in grouped workspace. Authentication and screen access stay
- *  here; the client shell owns navigation, utilities and responsive layout. */
+/** The swim school desk in the shared module frame. Authentication and screen
+ *  access stay here; the frame owns navigation and responsive layout. */
 export default async function AppLayout({ children }: { children: ReactNode }) {
   const session = await auth();
   if (!session?.user) redirect("/sign-in");
@@ -17,13 +21,11 @@ export default async function AppLayout({ children }: { children: ReactNode }) {
   // Memoised per request, so the pages inside asking again cost nothing.
   const { club, clubs } = await getCurrentClub();
 
-  const collapsed = (await cookies()).get(NAV_COLLAPSED_COOKIE)?.value === "1";
+  const collapsed = (await cookies()).get("turnfin.swim-school.sidebar")?.value === "collapsed";
 
   return (
     <AppChrome
-      userName={session.user.name ?? session.user.email ?? "Unknown"}
-      userSubtitle={session.user.roleName}
-      homeHref="/schedule"
+      who={{ id: session.user.id, name: session.user.name ?? session.user.email ?? "Unknown" }}
       screens={visibleScreens(permissionsOf(session))}
       club={club}
       clubs={clubs}

@@ -34,7 +34,7 @@ import {
 } from '@/components/shadcn/breadcrumb';
 import { Button } from '@/components/shadcn/button';
 import { Sheet, SheetContent, SheetDescription, SheetTitle, SheetTrigger } from '@/components/docs/primitives/sheet';
-import { Brand } from './brand';
+import { Brand } from '@/components/workspace/brand';
 import { AppearanceMenu } from './appearance-menu';
 
 const nav = [

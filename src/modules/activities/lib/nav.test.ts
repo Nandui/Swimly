@@ -29,7 +29,6 @@ test("Setup retains only allowed Aquatics destinations; Core screens live in the
   const groups = visibleNavGroups(new Set(["students", "programmes", "staff", "roles", "clubs", "activity"]));
   const setup = groups.find(group => group.id === "setup");
   assert.deepEqual(setup?.items.map(item => item.href), ["/programmes"]);
-  assert.equal(setup?.collapsible, true);
   const hrefs = groups.flatMap(group => group.items.map(item => item.href));
   for (const core of ["/staff", "/roles", "/clubs", "/activity"]) assert.equal(hrefs.includes(core), false);
 });

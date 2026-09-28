@@ -5,7 +5,7 @@ import Link from "next/link";
 import { usePathname, useSearchParams } from "next/navigation";
 import { signOut } from "next-auth/react";
 import { ArrowLeft, CircleHelp, LogOut, UserRound, Users } from "lucide-react";
-import { AppLogo } from "@/components/app-logo";
+import { Brand } from "@/components/workspace/brand";
 import { Button } from "@/components/shadcn/button";
 import {
   DropdownMenu,
@@ -53,7 +53,7 @@ export function InstructorShell({
 
   return (
     <div
-      className={`${styles.workspace} shadcn-workspace flex h-dvh flex-col overflow-hidden bg-ui-background text-ui-foreground`}
+      className={`${styles.workspace} shadcn-workspace flex h-dvh flex-col overflow-hidden text-ui-foreground`}
     >
       <a
         href="#instructor-main"
@@ -63,7 +63,7 @@ export function InstructorShell({
       </a>
       {banner}
       <header
-        className="shrink-0 border-b border-ui-border bg-ui-background px-4 py-3"
+        className={`${styles.topbar} shrink-0 border-b px-4 py-3`}
         aria-label="Pool deck tools"
       >
         <div className="mx-auto flex max-w-6xl flex-wrap items-center gap-3">
@@ -74,12 +74,12 @@ export function InstructorShell({
           >
             <Link href={home}>
               {pathname === "/instructor" ? (
-                <AppLogo className="size-8" />
+                <Brand module="Pool deck" />
               ) : (
                 <ArrowLeft aria-hidden="true" />
               )}
               <span>
-                {pathname === "/instructor" ? "Pool deck" : "Classes"}
+                {pathname === "/instructor" ? <span className="sr-only">Pool deck classes</span> : "Classes"}
               </span>
             </Link>
           </Button>

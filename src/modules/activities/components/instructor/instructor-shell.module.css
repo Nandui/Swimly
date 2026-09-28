@@ -7,3 +7,15 @@
   min-height: calc(var(--spacing) * 11);
   min-width: calc(var(--spacing) * 11);
 }
+
+/* Poolside Clear, as in every module: the cool canvas, a white top bar and white panels. */
+.workspace { background: var(--pc-canvas); }
+.topbar { background: var(--pc-surface); border-color: var(--pc-line); }
+.workspace :global([data-slot='item-group']) {
+  border: 1px solid var(--pc-line);
+  border-radius: var(--pc-radius-panel);
+  background: var(--pc-surface);
+  box-shadow: var(--pc-shadow-card);
+  overflow: hidden;
+}
+.workspace :global([data-slot='item-group'] > [data-slot='item']) { padding-inline: 16px; }

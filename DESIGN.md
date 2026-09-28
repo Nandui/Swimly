@@ -5,9 +5,9 @@ preference. **The whole app uses the Poolside Clear design** (owner decision, 27
 2026): Plus Jakarta Sans, the fin's teal and aqua, a cool canvas with white panels and a
 pool-night dark mode. Its tokens and system rules (type scale, controls, fields, badges,
 alerts, dialogs, focus) live in `src/app/docs/poolside.css`, scoped to `.turnfin-app`,
-which the root layout puts on `<body>`; the root layout also loads the typeface. Aquatics,
-Instructor, the home page, Docs, Refunds, Training, HR and Rota all
-follow it. Rules for the Docs/Refunds shell and their pages stay scoped to `.turnfin-docs`.
+which the root layout puts on `<body>`; the root layout also loads the typeface. The swim school,
+the pool deck, the home page, Docs, Refunds, Training, HR, Rota and Admin all
+follow it, and all but the pool deck share one frame, `ModuleShell`. Rules for the Docs/Refunds shell and their pages stay scoped to `.turnfin-docs`.
 Earlier mentions below of Figtree, "Neutral surfaces" or the Reception Portal's Inter theme
 describe the retired look; the Poolside tokens now drive those same components. Components live in
 `src/components/shadcn`. The owner approved the full conversion on 13 September
@@ -78,27 +78,16 @@ through Next Image in the desk navigation, sign-in and pool-deck home control;
 the same asset supplies browser and touch icons. Preserve its transparency and
 colours in both themes, with accessible names supplied by adjacent text or links.
 
-The desk workspace uses shadcn Sidebar, Sheet, DropdownMenu and Command/Dialog.
-Its inset Sidebar places navigation on the Neutral workspace canvas and wraps
-the page in one rounded, subtly elevated surface, with an 8px outer gutter on
-tablet and desktop. Desktop pages start directly with their content: collapse,
-site switching and swimmer search live in the sidebar header; appearance and
-account controls live in its footer. The collapsed rail keeps icon controls
-with accessible names. Sidebar controls and links share aligned 12px side
-insets and 44px rows; site/search controls are grouped with an 8px gap above a
-separator. Navigation sections have 24px separation, Setup children are
-indented, and the navigation region scrolls independently even in the icon rail.
-Sidebar hover/focus uses its own Neutral token so it remains visible against
-the inset canvas. Navigation icons nudge without moving labels; the current
-page retains a distinct surface and border in expanded and collapsed modes.
-Content uses a 16px inset, increasing to 24px from 1024px.
-Phones use a full-width surface, a compact navigation/site/appearance strip,
-and Sheet navigation containing swimmer search. Canvas and surface tokens adapt
-to both themes; this framing is scoped to the desk workspace.
-It owns the main landmark, skip link, mobile navigation strip, scroll reset, collapse
-preference and mobile navigation. Data pages, including swimmer profiles, fill
-the available width. Account caps at 768px, Together at 960px, and programme
-details at 1152px. Instructor remains a separate workspace, described below.
+**The swim school desk uses the shared `ModuleShell`** (28 September 2026), like Refunds,
+Training, HR, Rota and Admin: the Turnfin brand, the Home button, the working site and
+"Find swimmer" (the `tools` slot), then the desk pages in Daily work, Monitoring and Setup;
+Help centre, Appearance and Account in the footer; a breadcrumb topbar naming the working
+site; the phone sheet. Pages sit on the cool canvas; `src/app/(activities)/swim-school.css`
+puts tables, bare row lists and empty states on white panels and lets data pages fill the
+width. Together caps at 960px and programme details at 1152px (`pageWidthFor`). The old
+desk frame (`src/components/ui-kit/app-shell.tsx`) is used only by the design-preview
+fixtures in `scripts/`. The pool deck keeps its own tablet top bar, in Poolside Clear with
+the Turnfin brand (`src/components/workspace/brand.tsx`), the canvas and white panels.
 
 ## Screens
 

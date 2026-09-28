@@ -185,7 +185,7 @@
 .turnfin-docs .workspace-search:focus-within { outline: none; border-color: var(--pc-focus); box-shadow: 0 0 0 1px var(--pc-focus), var(--pc-focus-halo); }
 .turnfin-docs .workspace-create { min-height: 44px; border-radius: 12px; }
 .turnfin-docs .workspace-nav-label { margin: 0 12px 8px; font-size: var(--pc-text-caption); font-weight: 600; color: var(--pc-ink-muted); }
-.turnfin-docs .workspace-nav-item + .workspace-nav-label { margin-top: 24px; }
+.turnfin-docs :is(.workspace-nav-item + .workspace-nav-label, .workspace-navigation > .contents:not(:first-child) > .workspace-nav-label) { margin-top: 24px; }
 .turnfin-docs .workspace-nav-item { margin: 2px 0; border-radius: 12px; font-size: var(--pc-text-body); font-weight: 500; color: var(--pc-ink-muted); transition: color 120ms var(--pc-ease), background-color 120ms var(--pc-ease); }
 .turnfin-docs .workspace-nav-item:hover { background: var(--pc-hover); color: var(--pc-ink); }
 .turnfin-docs .workspace-nav-item[aria-current='page'] { background: var(--pc-primary-soft); color: var(--pc-primary-ink); font-weight: 600; }
@@ -196,6 +196,12 @@
 .turnfin-docs .appearance-button small { font-size: var(--pc-text-caption); }
 .turnfin-docs .workspace-profile strong,
 .turnfin-docs .workspace-profile div > span { font-size: var(--pc-text-caption); }
+/* Footer: the name opens Account; module tools (site, search) sit under the Home button. */
+.turnfin-docs .workspace-account { display: flex; flex: 1; min-width: 0; min-height: var(--pc-control-height); align-items: center; gap: 10px; padding: 0 4px; border-radius: var(--pc-radius-control); color: inherit; text-decoration: none; }
+.turnfin-docs .workspace-account:hover { background: var(--pc-hover); }
+.turnfin-docs .workspace-account > div { flex: 1; min-width: 0; }
+.turnfin-docs .workspace-tools { display: flex; flex-direction: column; gap: 8px; }
+.turnfin-docs .workspace-sidebar-footer .workspace-help { margin: 0; }
 .turnfin-docs .workspace-topbar { min-height: 60px; border-bottom-color: var(--pc-line); background: var(--pc-canvas); }
 .turnfin-docs :is(.workspace-breadcrumb, .workspace-breadcrumb [data-slot='breadcrumb-list'], .workspace-private) { font-size: var(--pc-text-caption); line-height: var(--pc-leading-caption); }
 .turnfin-docs .workspace-breadcrumb [data-slot='breadcrumb-link'] { color: var(--pc-ink-muted); text-decoration: none; }
@@ -374,4 +380,14 @@
   .turnfin-docs .workspace-mobile-toolbar { background: var(--pc-canvas); border-bottom: 1px solid var(--pc-line); }
   .turnfin-docs .workspace-mobile-toolbar .brand-wordmark { font-size: 18px; font-weight: 700; }
   .turnfin-docs .workspace-mobile-toolbar .brand-wordmark > span { font-size: 13px; }
+}
+
+/* The Turnfin brand (fin and wordmark) anywhere in the app, e.g. the pool deck's top bar.
+   Same low priority as the Docs originals, so frame-specific sizes still win. */
+@layer components {
+  :where(.turnfin-app) .turnfin-brand { display: inline-flex; align-items: center; gap: 8px; color: var(--pc-ink); white-space: nowrap; }
+  :where(.turnfin-app) .turnfin-fin { position: relative; display: block; flex-shrink: 0; width: 38px; height: 40px; overflow: hidden; }
+  :where(.turnfin-app) .turnfin-fin img { position: absolute; top: 50%; left: 50%; width: 76px; height: 76px; max-width: none; transform: translate(-50%, -50%); }
+  :where(.turnfin-app) .brand-wordmark { display: inline-flex; align-items: baseline; gap: 5px; font-size: 20px; font-weight: 700; letter-spacing: -0.02em; }
+  :where(.turnfin-app) .brand-wordmark > span { font-size: var(--pc-text-caption); font-weight: 600; letter-spacing: 0; color: var(--pc-primary-ink); }
 }
