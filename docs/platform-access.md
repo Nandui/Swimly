@@ -12,29 +12,29 @@ document is the model that makes both true. Owner decisions, September 2026.
 
 ## The model
 
-**Workspaces are presentation, not security.** The portal, the module switcher,
-role homes such as the Reception Portal show people what they
-can use. Security comes from four things underneath:
+*Simplified 28 September 2026: see [how-turnfin-works.md](how-turnfin-works.md).*
 
-1. **Capabilities.** Named permissions, declared in the catalogue
-   (`src/lib/staff/permissions.ts`). Some are **restricted** (HR and performance):
-   administrators never inherit them.
-2. **Assignments.** A role says *what* someone may do; the assignment says
-   *where* or *over whom*. Every person has a **primary role**, which applies
-   everywhere, and may have **additional roles** (`RoleAssignment`), each scoped to:
-   - everywhere in the organisation;
-   - one **site** (a `Club`) and the people based there;
-   - one **department** and its members;
-   - the holder's own **reports** (direct and indirect, through `User.managerId`).
-3. **Surfaces.** A module is one area of data with several audiences, and each
-   audience gets its own surface with its own field list. Aquatics has an office
-   (swim school management), a desk (reception), a deck (instructors), a parents
-   surface (external, through the parent app) and My (the staff member's own
-   records). Self-service is never a grant: My surfaces serve a person's own
-   records without any capability.
-4. **Data classification.** Sensitive fields are tagged (`medical`, `contact`,
+1. **Modules.** Swim school, Refunds, Docs, Training, Rota, HR and Admin, each
+   described once in `src/modules/registry.ts`.
+2. **Roles with levels.** A role holds one level for each module (None, then for
+   example Use and Manage) plus at most a couple of extras. Each person holds
+   **one role** and the **sites they work at** (`User.siteIds`; none means every
+   site).
+3. **Levels become permissions.** `src/lib/staff/levels.ts` translates levels
+   into the named permissions (capabilities) and screens that pages and actions
+   check, so code never asks for a level or a role name. Some permissions are
+   **restricted** (HR): administrators never get them, and only a superadmin
+   gives HR.
+4. **Where a level applies.** Swim school, Training and Rota apply at the
+   person's sites; HR "Their team" reaches only the people they manage (through
+   `User.managerId`); everything else applies everywhere. The policy engine
+   receives these as grants.
+5. **Data classification.** Sensitive fields are tagged (`medical`, `contact`,
    `emergency`, `staff-note`, `hr-restricted`) and each surface declares which
    classes it may see.
+
+**Home pages are presentation, not security.** A role's home page shows its
+modules; every page and action checks its permission again.
 
 ### Tiers
 
@@ -44,11 +44,11 @@ can use. Security comes from four things underneath:
 | Administrator | `staff.manage` + `roles.manage` | Every current and future capability except restricted ones |
 | Superadmin | `User.isSuperadmin` (a flag) | Everything in the organisation, restricted included |
 
-Only a superadmin makes another superadmin, and the last active superadmin
-cannot be removed or deactivated. Only a superadmin creates, edits or assigns a
-role holding a restricted capability (`StaffRole.restricted`). Role previews
-(development only) drop the superadmin flag and every additional role, so they
-can only remove access. The first superadmin is designated by an operator:
+Admin: Manage is the administrator: Manage in every module except HR. Only a
+superadmin makes another superadmin, and the last active superadmin cannot be
+removed or deactivated. Only a superadmin creates, edits or gives a role holding
+HR (`StaffRole.restricted`). Role previews (development only) drop the
+superadmin flag, so they can only remove access. The first superadmin is designated by an operator:
 
     npx tsx scripts/grant-superadmin.ts --email owner@example.com --confirm
 
@@ -66,8 +66,8 @@ One person record and one organisation chart that every module reads
 - `QualificationType` and `Qualification` (issued, expires, verified by,
   withdrawn). Training writes them, the Rota reads them, Turnfin Me shows each person theirs.
 
-Staff › a person shows their profile, roles (main and additional, with where
-each applies) and qualifications. Staff › Organisation holds departments and
+Staff › a person shows their profile, their role and the sites they work at,
+and their qualifications. Staff › Organisation holds departments and
 qualification types. Docs uses the same sites and departments: its facility and
 team groups for them are mirrored from the platform (`source='platform'`) and
 membership follows the Staff profile; older Docs-only groups remain.
@@ -76,9 +76,10 @@ membership follows the Staff profile; older Docs-only groups remain.
 
 **Flat checks** (`can`, `canSee`, `requirePermission`, `screenPage` in
 `src/lib/authz.ts` and `src/lib/page-guards.ts`) answer "may this person do
-this here?" for screens and actions. The session's flat permissions are the
-primary role plus additional roles that apply everywhere or at the **current
-site**. Department and line-manager scopes never widen them.
+this here?" for screens and actions. The session's flat permissions are
+what the person's role gives **at the site they are working in**. Their other
+sites and their team (HR "Their team") never widen them; only the policy engine
+reads those.
 
 **The policy engine** (`src/lib/policy`) answers "may this person do this to
 *these* records?". Any code that reads or changes other people's records
@@ -156,20 +157,17 @@ docs/parent-app.md.
 
 ## Training
 
-Training (docs/training.md) is the first module built on the model from the
-start. Its four capabilities (`training.manage`, `training.assign`,
-`training.records.read`, `training.signoff`) reach people through assignments,
-so an Aquatics lead's department-scoped role assigns and signs off for Aquatics
-staff only. Because Training is people-scoped, its workspace opens for a Training
-screen granted at any scope (`ModuleContext.scopedScreens`), unlike the flat
-site-based screens; each page then scopes records with the policy engine.
+Training (docs/training.md) is people-scoped. Its levels (Trainer, Manage)
+apply at the sites a person works at, so a trainer signs off for the people at
+their sites; each page scopes records with the policy engine. A course can be
+given to everyone on a role at once.
 Completing your own training needs no capability and happens in Turnfin Me.
 
 ## Rota
 
 The Rota (docs/rota.md) is site-bound: `rota.view` and `rota.manage` resolve with
-`sitesFor` and `requireCapFor` with a `siteId`, so a duty manager's site-scoped
-role plans their own site only. It warns about expired qualifications and
+`sitesFor` and `requireCapFor` with a `siteId`, so a duty manager who works at
+one site plans that site only. It warns about expired qualifications and
 double-bookings but never blocks. Everyone sees their own shifts in Turnfin Me.
 
 ## HR and performance
@@ -183,7 +181,7 @@ only; access is decided in the main database by the policy engine.
 ## Rules
 
 - Never check a role name. Ask for a capability, and for records, a resource.
-- Never treat navigation, tiles, presets or workspaces as security.
+- Never treat navigation, home pages or cards as security.
 - Never copy permissions into a module's own database; read identity through
   the directory and decide with the engine.
 - Administrators never inherit restricted capabilities.
@@ -196,11 +194,20 @@ only; access is decided in the main database by the policy engine.
 ## Local sandbox
 
 `npm run sandbox` runs the whole app on throwaway in-memory databases with a
-fictional LeisureWorld (a superadmin, a site manager with a site-limited duty
-role, an aquatics lead who records qualifications for Aquatics, instructors and
-reception), plus synthetic swimmers, classes on today's weekday at two sites and a
-parent's pending correction, and Training data: Liam leads training for Aquatics, Riley
-waits for sign-off, Ava has overdue and open courses; and HR: Maya is the restricted HR lead
-for Churchfield, Ava has a shared review and note; and a Rota: Maya plans Churchfield, whose shifts show
-an expired qualification, an open shift and a double-booking (`scripts/sandbox-seed.ts`). It never reads real database settings. Accounts and the sandbox
-password are listed in `scripts/sandbox.mts`.
+fictional LeisureWorld and the six roles from How Turnfin works, one each:
+
+| Person | Role | Home page |
+| --- | --- | --- |
+| Alex (superadmin) | Admin | Management |
+| Maya (works at Churchfield) | Duty manager | Duty desk |
+| Liam | Swim school manager (HR for his team) | Swim school office |
+| Ava | Instructor | Pool deck |
+| Noah | Receptionist | Front of House |
+| Riley | Lifeguard | Poolside |
+
+It also seeds synthetic swimmers, classes on today's weekday at two sites, a
+parent's pending correction, training (Riley waits for sign-off, Ava has overdue
+and open courses), HR notes and a shared review for Ava, and a rota whose shifts
+show an expired qualification, an open shift and a double-booking
+(`scripts/sandbox-seed.ts`). It never reads real database settings. The sandbox
+password and PIN are in `scripts/sandbox.mts`.

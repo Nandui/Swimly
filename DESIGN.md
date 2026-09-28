@@ -6,7 +6,7 @@ preference. **The whole app uses the Poolside Clear design** (owner decision, 27
 pool-night dark mode. Its tokens and system rules (type scale, controls, fields, badges,
 alerts, dialogs, focus) live in `src/app/docs/poolside.css`, scoped to `.turnfin-app`,
 which the root layout puts on `<body>`; the root layout also loads the typeface. Aquatics,
-Instructor, the portal, the Reception Portal, Docs, Refunds, Training, HR and Rota all
+Instructor, the home page, Docs, Refunds, Training, HR and Rota all
 follow it. Rules for the Docs/Refunds shell and their pages stay scoped to `.turnfin-docs`.
 Earlier mentions below of Figtree, "Neutral surfaces" or the Reception Portal's Inter theme
 describe the retired look; the Poolside tokens now drive those same components. Components live in
@@ -113,27 +113,15 @@ layouts in `docs.css` are unchanged. Labels are sentence case, never capitals.
 Controls use the shared shadcn primitives, which pick up Poolside Clear everywhere through
 `.turnfin-app`. See [Docs integration](docs/turnfin-docs.md).
 
-The staff portal at `/modules` sits outside the desk and Instructor shells.
-It has a small Turnfin header with appearance and sign-out controls, one
-main landmark and a centred module grid capped at 1024px. The grid uses one,
-two and three columns on phone, tablet and desktop, in Poolside Clear. Aquatics uses a pool-ladder line icon and a 44px
-Open action. All modules use matching Lucide icons and metadata-fed status
-badges, without inert links or buttons. Docs is available to staff with its
-screen and permission, and opens `/docs` using the shared login. Bookings is not a
-module: Legend remains the booking and billing system. The desk sidebar's All modules utility
-returns here. Instructor navigation and teaching access remain unchanged.
-The supplied transparent Turnfin fin logo lives at `public/brand/turnfin.png`.
-Its original artwork is framed inside a 48px header slot to account for the
-file's transparent padding. It also supplies the portal's browser/touch icon;
-the Aquatics module opens the existing Swimly workspace.
-
-The Reception Portal uses Poolside Clear, like the rest of the app, in a bento
-composition: a wide
-Aquatics task panel beside a distinct follow-up panel, followed by permitted
-modules. Its content is capped at 1152px; the shared portal frame owns the only
-main landmark and page inset. Working-site and action controls are at least
-44px high. Cards stack on phones, and unavailable modules have no launch action.
-See [docs/reception-portal.md](docs/reception-portal.md).
+**The home page** (`/`, owner decision 28 September 2026) is the role's workspace: the role's
+home name as the H1, one card per module the role has, each listing what waits for this person
+there, and a Turnfin Me note. It uses the shared `ModuleShell` frame with the role's modules down
+the side. Cards size to their content in a one-, two- and three-column grid; every card line is a
+44px link, and a line that needs the person carries a "Needs you" tag from `HOME_ITEM_META`. Each
+module supplies its own card (`registerHomeCard`); keep a card to the everyday jobs. The module
+launcher (`/modules`) and the Reception Portal are retired and redirect to `/`; every shell's
+"All modules" link is now "Home". The supplied transparent Turnfin fin logo lives at
+`public/brand/turnfin.png`.
 
 Refunds at `/refunds` uses the **Poolside Clear** design (September 2026): Plus
 Jakarta Sans, the fin logo's deep teal (`--pc-primary`) with an aqua focus halo,
@@ -403,11 +391,11 @@ nobody may remove the last usable grant for Roles or Staff.
 
 **A role also says where its day starts.** `StaffRole.home` is a key from the
 `ROLE_HOMES` map in the catalogue file — Schedule for the desk, Instructor for
-an instructor. Sign-in opens the staff portal; Open Swimly uses `/start`, which
+an instructor. Sign-in opens the home page; Open Swimly uses `/start`, which
 reads the role and redirects. The workspace wordmark stays within that workspace. A configured home that is not
 accessible falls back to another screen the role may open.
 
-Overview is retired. `/` redirects authenticated staff to `/modules`;
+Overview is retired. `/` is the role's home page;
 `/start` resolves their Swimly home. Schedule is the preferred fallback, then an accessible
 screen, then Account. Old `overview` screen grants are ignored; old home values
 normalize to `calendar`. The legacy database default remains compatible while
@@ -711,7 +699,7 @@ src/app/(instructor)/          the Swim school pool-deck workspace
 src/app/sign-in/               the front door, outside the shell
 src/modules/activities/lib/    Activities domains (students, courses, enrolment, ...)
 src/modules/activities/components/ Activities feature components
-src/modules/registry.ts        the module catalogue (portal tiles)
+src/modules/registry.ts        every module's description and levels
 src/modules/contributions.ts   what modules add to Core pages, without imports
 src/components/ui-kit/         shared shadcn compositions — tag, page-header,
                                empty-state, app-shell

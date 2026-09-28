@@ -30,7 +30,8 @@ The split is enforced by what each side can reach, not by devices:
 
 Work PCs are the devices registered under **Staff → Work devices**. When
 `WORK_DEVICE_REQUIRED=true`, a password sign-in to Work on any other browser
-needs the **Work from any device** permission (`work.anywhere`):
+needs a role with **Can work away from the centre's computers** ticked (it
+gives `work.anywhere`):
 
 - give it to roles such as duty managers;
 - administrators inherit it;

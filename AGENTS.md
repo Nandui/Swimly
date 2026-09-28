@@ -91,20 +91,19 @@ focus, 44px touch targets, both modes and layouts at 375, 768, 1024 and 1280.
 The shell owns the main landmark and page inset: 16px, increasing to 24px at
 1024px in the desk workspace. Instructor keeps 16px. Do not nest a page frame.
 
-Administrators receive every current and future screen and permission **except
-restricted ones** (HR, performance). Administrator access means both staff.manage and
-roles.manage; resolve it through expandPermissions and visibleScreens, never a role name
-or the legacy enum. A **superadmin** (the `User.isSuperadmin` flag, never a permission)
-holds everything including restricted keys; only a superadmin makes another, and only a
-superadmin creates, edits or assigns a restricted role. Role previews only remove access.
-
-A role says *what*; an assignment says *where or over whom*. Each person has a primary
-role (everywhere) plus optional `RoleAssignment`s scoped to everywhere, a site, a
-department or their own reports. The flat session permissions count an extra role only
-when it applies everywhere or at the current site. Code that reads people's records
-(training, HR, reports) must use the policy engine in `src/lib/policy` (`requireCapFor`,
-`subjectsFor`, `sitesFor`) with a resource, never the flat check. Workspaces, portal tiles
-and nav hiding are presentation, not security. See docs/platform-access.md.
+A role holds **one level for each module** (`StaffRole.levels`), translated into named
+permissions and screens by `src/lib/staff/levels.ts`; pages and actions ask for a named
+permission, never a level or a role name. Each person holds **one role** plus the sites they
+work at (`User.siteIds`; none means every site). Swim school, Training and Rota apply at
+those sites, HR "Their team" only to the people they manage, the rest everywhere. **Admin:
+Manage** is the administrator: Manage in every module except HR (restricted); resolve it
+through expandPermissions and visibleScreens. A **superadmin** (the `User.isSuperadmin` flag,
+never a permission) holds everything; only a superadmin makes another, and only a superadmin
+gives HR. Role previews only remove access. `RoleAssignment` (extra scoped roles) is retired
+and no longer read. Code that reads people's records (training, HR, reports) must use the
+policy engine in `src/lib/policy` (`requireCapFor`, `subjectsFor`, `sitesFor`) with a
+resource, never the flat check. Home pages, cards and nav hiding are presentation, not
+security. See docs/how-turnfin-works.md and docs/platform-access.md.
 
 Work and Me are separate (owner decision, 27 September 2026): Turnfin Work (this app) is the
 job on registered work PCs and must never gain personal pages or endpoints; a person's own

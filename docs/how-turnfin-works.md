@@ -43,9 +43,17 @@ A role holds one level for each module (`StaffRole.levels`), plus up to two extr
 | Admin | Manage (people, roles, sites, the activity log) | |
 
 **Where a level applies:**
-- Swim school, Training and Rota levels apply at the sites the person works at.
+- Swim school, Training and Rota levels apply at the sites the person works at (Staff › a person › Role and sites). No sites ticked means every site.
 - HR "Their team" applies to the people the person manages.
 - Everything else applies everywhere.
+
+**Admin: Manage** is the administrator: Manage in every module except HR. **Can work away from the centre's computers** is one tick on the role.
+
+**Aimed at roles:** in Docs every role is a team ("Receptionist (role)"), so a document or its required reading can be aimed at a role. In Training, "Everyone on <role>" assigns a course to a whole role.
+
+**The home page** is built from each module's card (`registerHomeCard` in `src/modules/contributions.ts`). A module lists only its everyday jobs there, and only what the person can already open.
+
+**The activity log** names each entry's module and filters by it.
 
 **The superadmin flag** (`User.isSuperadmin`) still holds everything.
 
