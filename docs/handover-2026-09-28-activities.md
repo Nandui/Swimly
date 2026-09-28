@@ -84,6 +84,8 @@ Docs, Refunds.
 
 ## 6. Next code work (not started)
 
+> **Paused (owner, 28 September 2026).** The simplification plan (`docs/how-turnfin-works.md`, pillars: simplicity, easy to manage) folds Activities back into one app and keeps one main database. Do not start the steps below.
+
 **Move the swim-school tables to the Activities database.** The code already
 reads people and sites through one file, so the plan is:
 1. A second Prisma client for Activities (`ACTIVITIES_DATABASE_URL`,

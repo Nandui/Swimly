@@ -71,6 +71,8 @@ Staff, Roles, Clubs, Activity and Account open in the **Core** workspace (the sh
 
 ## Stages
 
+> **Being simplified (owner, 28 September 2026).** Stage 3 (a second app) is being folded back into one app, and the separate Activities database is not being pursued. The module boundaries and lint rules stay. See `docs/how-turnfin-works.md`.
+
 - **Stage 0, a separate `dev` database** (code ready): `src/lib/database-environment.ts` and `DATABASE_ENVIRONMENT`, `PRODUCTION_DATABASE_HOST` and `REQUIRE_DEV_DATABASE` stop a `dev` deployment migrating production. The database itself is provisioned in Vercel; see [database-operations.md](database-operations.md#a-separate-database-for-dev).
 - **Stage 1, split in code**: done (the rules above).
 - **Stage 2, separate the data**: done in code, with no database change. The schema is split by owner and Activities reads people and sites only through the directory. Still to do, as one migration when wanted: move the Activities tables to their own Postgres schema, drop `User.coursesTaught` and `Club.programmes/students/courses`, and give `AuditLog` a module-neutral shape (its `programmeId` is Activities-shaped).
