@@ -44,6 +44,7 @@ export function ActivityTable({ entries }: { entries: ActivityEntry[] }) {
                   cannot break on their own; without this one of them makes
                   the table wider than a phone. */}
               <TableCell className={"[overflow-wrap:anywhere]"}>
+                {entry.module ? <span className="block text-xs text-ui-muted-foreground">{entry.module}</span> : null}
                 <span className="text-sm text-ui-foreground font-medium">
                   {entry.summary}
                 </span>

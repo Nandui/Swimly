@@ -11,6 +11,7 @@ const SELECT = {
   actorName: true,
   action: true,
   entity: true,
+  module: true,
   summary: true,
   createdAt: true,
 } as const satisfies Prisma.AuditLogSelect;
@@ -28,12 +29,13 @@ function forClub(clubId: string): Prisma.AuditLogWhereInput {
  *  and growing with every register taken. */
 export const ACTIVITY_PER_PAGE = 50;
 
-/** The whole trail, a page at a time. Needs `activity.view`: the log names who
- *  did what, which is a different question from what the data currently says. */
-export async function getActivity(page = 1) {
+/** The whole trail, a page at a time, optionally for one module (its log
+ *  name). Needs `activity.view`: the log names who did what, which is a
+ *  different question from what the data currently says. */
+export async function getActivity(page = 1, moduleName?: string) {
   await requirePermission("activity.view");
   const current = Math.max(1, Math.trunc(page));
-  const where = forClub(await currentClubId());
+  const where: Prisma.AuditLogWhereInput = { AND: [forClub(await currentClubId()), ...(moduleName ? [{ module: moduleName }] : [])] };
 
   const [entries, total] = await Promise.all([
     prisma.auditLog.findMany({

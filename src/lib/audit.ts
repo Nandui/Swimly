@@ -29,8 +29,30 @@ type AuditInput = {
    *  actual class/session site, which may differ from the working area.
    *  Shared record edits use null so they appear at every site. */
   clubId?: string | null;
+  /** The module's log name. Normally left out: it follows from `entity`
+   *  (`MODULE_OF_ENTITY`). */
+  module?: string;
   summary: string;
   details?: Prisma.InputJsonValue;
+};
+
+/** Which module each record type belongs to, by the module's log name in
+ *  `src/modules/registry.ts`. One place, so every entry in the shared log
+ *  names its module the same way; a test fails if an audited record type is
+ *  missing here. */
+export const MODULE_OF_ENTITY: Readonly<Record<string, string>> = {
+  // Admin: people, roles, sites and devices.
+  User: "Admin", StaffRole: "Admin", RoleAssignment: "Admin", Club: "Admin", Department: "Admin", Organisation: "Admin", SharedDevice: "Admin",
+  // Swim school.
+  Student: "Swim school", Enrolment: "Swim school", Course: "Swim school", Programme: "Swim school", Level: "Swim school", Competency: "Swim school",
+  AssessmentType: "Swim school", AssessmentSession: "Swim school", AssessmentBooking: "Swim school",
+  ParentAccount: "Swim school", ParentSignInChallenge: "Swim school", ParentChildAccess: "Swim school", ParentAccessRequest: "Swim school",
+  ParentChangeRequest: "Swim school", ParentAssessmentPublication: "Swim school",
+  // Training, including the qualifications it keeps.
+  TrainingCourse: "Training", TrainingAssignment: "Training", Qualification: "Training", QualificationType: "Training", QualificationEvidence: "Training",
+  // Refunds and Rota.
+  RefundRequest: "Refunds", RefundNotification: "Refunds",
+  RotaShift: "Rota",
 };
 
 /** Rows that belong to no club, so their audit entries belong to none either
@@ -54,7 +76,8 @@ export async function logAudit(
         ? null
         : await currentClubIdIfAny();
 
-  await db.auditLog.create({ data: { ...input, clubId } });
+  const moduleName = input.module ?? MODULE_OF_ENTITY[input.entity] ?? null;
+  await db.auditLog.create({ data: { ...input, clubId, module: moduleName } });
 }
 
 /** Which of these audited actions were recorded for these records, e.g. to

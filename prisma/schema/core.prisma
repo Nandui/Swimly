@@ -335,6 +335,9 @@ model AuditLog {
   /// Which club it happened in, kept the same way and for the same reason: a
   /// plain nullable column. Null for what the clubs share — accounts, roles.
   clubId      String?
+  /// Which module the change belongs to, by its log name ("Swim school",
+  /// "Refunds", "Admin", ...). Set by `logAudit` from the record type.
+  module      String?
   /// Written for a person reading months later: name what changed and to what.
   summary     String
   /// Optional structured evidence for swimmer history. Older summaries remain readable.
@@ -348,6 +351,7 @@ model AuditLog {
   @@index([actorId])
   @@index([programmeId, createdAt])
   @@index([clubId, createdAt])
+  @@index([module, createdAt])
 }
 
 // ---------------------------------------------------------------------------
