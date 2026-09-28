@@ -179,3 +179,29 @@ model RotaShift {
   @@index([siteId, date])
   @@index([userId, date])
 }
+
+/// Someone off work (Rota, docs/rota.md): sickness, a family emergency, a
+/// bereavement or another reason, from `firstDay` to `lastDay` (null while
+/// they are still off). Their shifts in that time warn "Absent" on the rota;
+/// the reason is shown only to rota managers. `withdrawnAt` marks one
+/// recorded in error.
+model RotaAbsence {
+  id             String    @id @default(cuid())
+  orgId          String
+  userId         String
+  reason         String
+  firstDay       DateTime  @db.Date
+  lastDay        DateTime? @db.Date
+  note           String    @default("")
+  reportedById   String?
+  reportedByName String
+  withdrawnAt    DateTime?
+  createdAt      DateTime  @default(now())
+  updatedAt      DateTime  @updatedAt
+
+  organisation Organisation @relation(fields: [orgId], references: [id], onDelete: Restrict)
+  user         User         @relation("RotaAbsentPerson", fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([orgId, firstDay])
+  @@index([userId, firstDay])
+}

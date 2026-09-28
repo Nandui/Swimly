@@ -3,7 +3,7 @@ import { after, before, test } from "node:test";
 import { isolatedPrisma } from "@/test/pglite-prisma";
 import { serverModule } from "@/test/server-module";
 import { expandPermissions, type PermissionKey } from "@/lib/staff/permissions";
-import { addDaysIso, mondayOf, parseClock, shiftWarnings } from "./constants";
+import { absentOn, addDaysIso, mondayOf, parseClock, shiftWarnings } from "./constants";
 import { today } from "@/lib/format";
 
 /** The Rota: a site-scoped planner plans only their site, qualification gaps
@@ -57,6 +57,19 @@ test("warnings: open, missing, expired on the day, and overlaps", () => {
   assert.equal(parseClock("07:30"), 450);
   assert.equal(parseClock("25:00"), null);
   assert.equal(mondayOf("2026-10-04"), "2026-09-28", "Sunday belongs to the week before");
+});
+
+test("absence: the person's shifts on their days off warn Absent; an open-ended one runs on", () => {
+  const day = new Date("2026-10-05T00:00:00Z");
+  const shift = { id: "a", userId: "u", date: day, startMinutes: 420, endMinutes: 900, requiredTypeId: null };
+  const off = { userId: "u", firstDay: new Date("2026-10-05T00:00:00Z"), lastDay: new Date("2026-10-06T00:00:00Z") };
+  assert.deepEqual(shiftWarnings(shift, [], [], [off]), ["absent"]);
+  assert.deepEqual(shiftWarnings(shift, [], [], [{ ...off, userId: "someone-else" }]), []);
+  assert.deepEqual(shiftWarnings({ ...shift, userId: null }, [], [], [off]), ["open"], "an open shift has nobody to be off");
+  assert.equal(absentOn([off], "u", "2026-10-06"), true, "the last day counts");
+  assert.equal(absentOn([off], "u", "2026-10-07"), false);
+  assert.equal(absentOn([{ ...off, lastDay: null }], "u", "2027-01-01"), true, "no last day yet");
+  assert.equal(absentOn([off], "u", "2026-10-04"), false);
 });
 
 before(async () => {
@@ -122,4 +135,41 @@ test("cancelling needs the permission at that site", async () => {
   as("maya", [planner()]);
   assert.equal((await actions.cancelShift(shift.id)).ok, true);
   assert.equal((await actions.cancelShift(shift.id)).ok, false);
+});
+
+test("absences: a site planner records them only for people at their site, never logging the reason", async () => {
+  await fixture.prisma.user.update({ where: { id: "ava" }, data: { primaryClubId: churchfield } });
+  await fixture.prisma.user.update({ where: { id: "noah" }, data: { primaryClubId: bishopstown } });
+  as("maya", [planner()]);
+  const input = (userId: string, extra: Record<string, string> = {}) => ({ userId, reason: "sickness" as const, firstDay: tomorrow(), lastDay: "", note: "", ...extra });
+  assert.equal((await actions.reportAbsence(input("noah"))).ok, false, "someone at another site");
+  assert.equal((await actions.reportAbsence(input("ava", { lastDay: today() }))).ok, false, "ends before it starts");
+  assert.equal((await actions.reportAbsence(input("ava"))).ok, true);
+  assert.equal((await actions.reportAbsence(input("ava", { firstDay: addDaysIso(tomorrow(), 3) }))).ok, false, "already off, with no last day");
+
+  const shifts = (await data.rotaWeek(churchfield, tomorrow())).days.flatMap((d) => d.shifts).filter((s) => s.userId === "ava");
+  assert.ok(shifts.length > 0 && shifts.every((s) => s.warnings.includes("absent")), "their shifts need cover");
+  const audit = await fixture.prisma.auditLog.findFirstOrThrow({ where: { entity: "RotaAbsence" } });
+  assert.equal(audit.clubId, null);
+  assert.equal(audit.module, "Rota");
+  assert.doesNotMatch(audit.summary, /sick/i, "the shared log never says why");
+
+  const page = await data.rotaAbsences();
+  assert.deepEqual(page.current.map((a) => [a.userId, a.shiftsToCover]), [["ava", shifts.length]]);
+  assert.ok(!page.people.some((p) => p.id === "noah"), "only people the role covers can be chosen");
+  const id = page.current[0].id;
+
+  assert.equal((await actions.endAbsence(id, today())).ok, false, "back before it started");
+  assert.equal((await actions.endAbsence(id, tomorrow())).ok, true);
+  const later = (await data.rotaWeek(churchfield, tomorrow())).days.flatMap((d) => d.shifts).filter((s) => s.userId === "ava");
+  assert.ok(later.every((s) => s.warnings.includes("absent")), "the last day off still counts");
+
+  as("noah", [{ ...planner(), scopeId: bishopstown }]);
+  assert.equal((await actions.withdrawAbsence(id)).ok, false, "a planner at another site cannot touch it");
+  as("maya", [planner()]);
+  assert.equal((await actions.withdrawAbsence(id)).ok, true);
+  const after = (await data.rotaWeek(churchfield, tomorrow())).days.flatMap((d) => d.shifts).filter((s) => s.userId === "ava");
+  assert.ok(after.every((s) => !s.warnings.includes("absent")), "removed absences no longer count");
+  as("noah", [{ roleName: "Viewer", permissions: ["rota.view"], screens: ["rota"], scopeKind: "site", scopeId: churchfield }]);
+  await assert.rejects(data.rotaAbsences(), /Managing the rota/);
 });

@@ -16,7 +16,7 @@ export async function myShifts(userId: string, days = 14) {
   const held = await prisma.qualification.findMany({ where: { userId }, select: { typeId: true, issuedOn: true, expiresOn: true, revokedAt: true } });
   return shifts.map((s) => ({
     ...s,
-    // Only the qualification warnings matter to the person; overlap is the planner's.
+    // Only the qualification warnings matter to the person; overlap and absence are the planner's.
     warnings: shiftWarnings(s, held, []).filter((w) => w === "expired" || w === "missing"),
   }));
 }

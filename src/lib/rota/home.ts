@@ -8,6 +8,10 @@ registerHomeCard({
   async items(viewer) {
     const held = expandPermissions(viewer.anywhere, { superadmin: viewer.isSuperadmin });
     if (!held.has("rota.view")) return [];
-    return [{ label: held.has("rota.manage") ? "Plan this week's shifts" : "This week's rota", href: "/rota" }];
+    if (!held.has("rota.manage")) return [{ label: "This week's rota", href: "/rota" }];
+    return [
+      { label: "Plan this week's shifts", href: "/rota" },
+      { label: "Absences", hint: "Report someone off sick or away", href: "/rota/absences" },
+    ];
   },
 });

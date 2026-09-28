@@ -17,14 +17,15 @@ export default async function RotaPage({ searchParams }: { searchParams: Promise
   const data = await rotaWeek(input.site, input.week);
   const { site, monday } = data;
   const link = (week: string) => `/rota?${new URLSearchParams({ ...(site ? { site: site.id } : {}), week })}`;
-  const warnings = data.days.reduce((sum, d) => sum + d.shifts.filter((s) => s.warnings.some((w) => w !== "open")).length, 0);
+  const warnings = data.days.reduce((sum, d) => sum + d.shifts.filter((s) => s.warnings.some((w) => w !== "open" && w !== "absent")).length, 0);
+  const absent = data.days.reduce((sum, d) => sum + d.shifts.filter((s) => s.warnings.includes("absent")).length, 0);
   const open = data.days.reduce((sum, d) => sum + d.shifts.filter((s) => !s.userId).length, 0);
   return (
     <div className="space-y-6">
       <div className="module-heading">
         <div className="space-y-2">
           <h1>Rota{site ? `: ${site.name}` : ""}</h1>
-          <p className="text-sm">Week of {formatDate(new Date(`${monday}T00:00:00Z`))}. {warnings === 0 ? "No qualification problems." : `${warnings} ${warnings === 1 ? "shift needs" : "shifts need"} a look.`}{open ? ` ${open} unfilled.` : ""}</p>
+          <p className="text-sm">Week of {formatDate(new Date(`${monday}T00:00:00Z`))}. {warnings === 0 ? "No qualification problems." : `${warnings} ${warnings === 1 ? "shift needs" : "shifts need"} a look.`}{absent ? ` ${absent} ${absent === 1 ? "shift needs" : "shifts need"} cover for someone who is off.` : ""}{open ? ` ${open} unfilled.` : ""}</p>
         </div>
       </div>
       {data.sites.length === 0 ? (
