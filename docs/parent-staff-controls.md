@@ -43,7 +43,7 @@ performed during development. A family pilot remains a separate rollout task.
 
 ## Isolated verification
 
-`src/lib/parent/admin.test.ts` uses the generated Prisma client against PGlite,
+`src/modules/aquatics/lib/parent/admin.test.ts` uses the generated Prisma client against PGlite,
 with synthetic staff authentication and records. It exercises permission and
 site denial, guardian approval/revocation, account suspension, deadlines and
 audit rollback. Existing parent API tests cover parent-side isolation and booking.

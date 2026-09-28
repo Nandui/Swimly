@@ -1,6 +1,6 @@
 import { prisma } from "@/lib/prisma";
 import { logAudit } from "@/lib/audit";
-import { parentEmailConfig } from "@/lib/parent/email";
+import { staffEmailConfig } from "@/lib/staff-api/email";
 import { sendGoogleTextEmail } from "@/lib/email/google";
 import { refundAccess } from "@/lib/refunds/auth";
 import { guardRead, lockRefund } from "@/lib/refunds/service";
@@ -50,7 +50,9 @@ export async function deliverRefundNotifications(requestId: string, who: RefundA
         const access = user?.isActive && user.staffRole && refundAccess({ ...user, permissions: user.staffRole.permissions, screens: user.staffRole.screens });
         if (!user || !access || (job.event.action === "submit" && (!access.review || user.id === request.creatorId))) status = "SKIPPED";
         else {
-          const config = parentEmailConfig();
+          // Staff alerts use the staff sender (STAFF_* settings, falling back to the
+          // parent sender as before); Refunds does not depend on Aquatics.
+          const config = staffEmailConfig();
           const snapshot = job.event.snapshot as { status: string };
           const message = refundEmail(request.number, snapshot.status, request.id, process.env.REFUNDS_APP_URL || "");
           await sendGoogleTextEmail(user.email, message.subject, message.text, { ...config, fromHeader: `Turnfin Refunds <${config.sender}>` });

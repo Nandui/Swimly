@@ -70,7 +70,7 @@ opening a fresh dialog.
 ## Verification
 
 - `npm run typecheck`, `npm run lint`, and an optimized `npm run build`.
-- `npx tsx --test src/lib/help/help.test.ts src/lib/enrolment/class-picker.test.ts`:
+- `npx tsx --test src/lib/help/help.test.ts src/modules/aquatics/lib/enrolment/class-picker.test.ts`:
   16 tests covering help scope/access, content/search and cross-site class filters.
 - `node scripts/check-shadcn-ui.mjs`: 48 layouts covering the changed Help,
   swimmer profile, duty, billing, Instructor error and enrolment surfaces at

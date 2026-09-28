@@ -1,4 +1,4 @@
-import { handleParentAdminRequest } from "@/lib/parent/admin";
+import { handleParentAdminRequest } from "@/modules/aquatics/lib/parent/admin";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";

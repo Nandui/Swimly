@@ -35,7 +35,6 @@ export async function listPeople() {
       createdAt: true,
       passwordHash: true,
       staffRole: { select: { id: true, name: true, permissions: true } },
-      _count: { select: { coursesTaught: true } },
     },
   });
 }

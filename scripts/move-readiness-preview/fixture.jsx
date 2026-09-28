@@ -6,11 +6,11 @@ import '@fontsource/figtree/latin-500.css';
 import '@fontsource/figtree/latin-600.css';
 import { ThemeProvider } from '@/components/theme-provider';
 import { TooltipProvider } from '@/components/shadcn/tooltip';
-import { InstructorShell } from '@/components/instructor/instructor-shell';
+import { InstructorShell } from '@/modules/aquatics/components/instructor/instructor-shell';
 import { AppShell } from '@/components/ui-kit/app-shell';
-import { DeckChecklist } from '@/components/progression/deck-checklist';
-import { AwaitingMoves } from '@/components/enrolment/awaiting-moves';
-import { AwaitingEnrolment } from '@/components/enrolment/awaiting-enrolment';
+import { DeckChecklist } from '@/modules/aquatics/components/progression/deck-checklist';
+import { AwaitingMoves } from '@/modules/aquatics/components/enrolment/awaiting-moves';
+import { AwaitingEnrolment } from '@/modules/aquatics/components/enrolment/awaiting-enrolment';
 
 const query = new URLSearchParams(location.search);
 const skills = ['Enter the water safely', 'Float on the front', 'Float on the back'].map((name, i) => ({ id: `skill-${i}`, name, description: null }));

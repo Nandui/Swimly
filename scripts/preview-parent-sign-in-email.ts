@@ -2,7 +2,7 @@
 import { createServer } from "node:http";
 import { mkdir, readFile, writeFile } from "node:fs/promises";
 import { join } from "node:path";
-import { parentSignInEmail, PARENT_EMAIL_LOGO_CID } from "../src/lib/parent/sign-in-email";
+import { parentSignInEmail, PARENT_EMAIL_LOGO_CID } from "../src/modules/aquatics/lib/parent/sign-in-email";
 
 async function main() {
   const directory = join(process.cwd(), ".impeccable/review");

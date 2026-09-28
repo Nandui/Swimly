@@ -8,11 +8,11 @@ export async function buildAssessmentPreview() {
     allowedActions:['recordOutcome','markNoShow'],actionTarget:'window.assessmentPreview.save',serverMocks:{
       '@/lib/page-guards':'export async function screenPage(){return {user:{id:"example-teacher",name:"Alex Example"}}}',
       '@/lib/authz':'export const can=(_session,permission)=>permission==="assessments.run"&&!new URLSearchParams(location.search).has("no-run");',
-      '@/lib/courses/data/courses':'export async function getCoursesOnDay(){return window.assessmentPreview.courses||[]}',
-      '@/lib/attendance/data/register':'export async function getRegisterStateForDay(){return new Set()}',
-      '@/lib/attendance/data/cover':'export async function getCoversForDay(){return new Map(window.assessmentPreview.covers||[])}',
-      '@/lib/cancellations/data':'export async function getCancellationsForDay(){return new Map()}',
-      '@/lib/today/assessments':'export async function getTodayAssessments(date){window.assessmentPreview.listDates.push(date); return window.assessmentPreview.sessions}',
+      '@/modules/aquatics/lib/courses/data/courses':'export async function getCoursesOnDay(){return window.assessmentPreview.courses||[]}',
+      '@/modules/aquatics/lib/attendance/data/register':'export async function getRegisterStateForDay(){return new Set()}',
+      '@/modules/aquatics/lib/attendance/data/cover':'export async function getCoversForDay(){return new Map(window.assessmentPreview.covers||[])}',
+      '@/modules/aquatics/lib/cancellations/data':'export async function getCancellationsForDay(){return new Map()}',
+      '@/modules/aquatics/lib/today/assessments':'export async function getTodayAssessments(date){window.assessmentPreview.listDates.push(date); return window.assessmentPreview.sessions}',
     }});
 }
 if(process.argv.includes('--serve-assessments')) {

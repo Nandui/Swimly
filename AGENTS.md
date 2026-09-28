@@ -38,6 +38,15 @@ unresolved concern. Say which checks actually ran.
 
 ## Project constraints
 
+Turnfin is **Core** (people, roles, sites, audit, the module catalogue), **Work
+modules** (Docs, Refunds, Training, HR, Rota, and Turnfin Me) and **Aquatics**
+(`src/modules/aquatics`, `src/app/(aquatics)`, `src/app/(instructor)`; owner decision,
+28 September 2026). Core never imports a module, and Aquatics never imports a Work
+module. Cross-module needs go through `src/modules/contributions.ts`, the session hooks
+or a composition root. Every screen is listed in exactly one of `CORE_SCREENS`,
+`AQUATICS_SCREENS` or `WORK_MODULE_SCREENS`. `npm run lint` enforces the imports; see
+[docs/architecture.md](docs/architecture.md).
+
 Who Swimly is for, what it must get right and what is deliberately undecided
 live in [PRODUCT.md](PRODUCT.md). Read it before changing what a screen does;
 read the design files below before changing how it looks.

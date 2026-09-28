@@ -1,0 +1,147 @@
+import type { DayOfWeek } from "@/generated/prisma/client";
+import { requireAquaticsAccess } from "@/modules/aquatics/classification";
+import { requireSession } from "@/lib/authz";
+import { currentClubId } from "@/lib/clubs/current";
+import { getSharedCurriculum, sharedCourse, sharedPlacement, liveSharedLevel } from "@/modules/aquatics/lib/curriculum/data/shared";
+import { prisma } from "@/lib/prisma";
+import { ADMINISTRATOR_PERMISSIONS } from "@/lib/staff/permissions";
+
+/** Enrolments that occupy a place. Waitlisted, withdrawn, transferred and
+ *  completed rows do not. One constant so no read invents its own answer. */
+export const TAKES_A_PLACE = { status: "ACTIVE" } as const;
+
+const COURSE_SELECT = {
+  id: true,
+  clubId: true,
+  club: { select: { id: true, name: true } },
+  name: true,
+  dayOfWeek: true,
+  startMinutes: true,
+  durationMinutes: true,
+  capacity: true,
+  location: true,
+  archivedAt: true,
+  levelId: true,
+  instructorId: true,
+  level: {
+    select: {
+      id: true,
+      name: true,
+      // Curriculum order, so a screen grouping classes by level lists the
+      // ladder top to bottom rather than alphabetically.
+      sortOrder: true,
+      programme: { select: { id: true, name: true, sortOrder: true } },
+    },
+  },
+  instructor: { select: { id: true, name: true } },
+  _count: { select: { enrolments: { where: TAKES_A_PLACE } } },
+} as const;
+
+export async function getCourses(includeArchived = false, allSites = false) {
+  await requireSession();
+
+  const curriculum = await getSharedCurriculum();
+  const rows = await prisma.course.findMany({
+    where: { ...(allSites ? { club: { archivedAt: null } } : { clubId: await currentClubId() }), ...(includeArchived ? {} : { archivedAt: null }) },
+    orderBy: [{ dayOfWeek: "asc" }, { startMinutes: "asc" }],
+    select: COURSE_SELECT,
+  });
+  // The directory includes historical curriculum; enrolment pickers still
+  // exclude retired levels when requesting active classes across sites.
+  return rows.filter(row => !allSites || includeArchived || liveSharedLevel(curriculum, row.levelId)).map(row => sharedCourse(row, curriculum));
+}
+
+export type CourseRow = Awaited<ReturnType<typeof getCourses>>[number];
+
+export async function getCourse(id: string) {
+  await requireSession();
+
+  const row = await prisma.course.findUnique({ where: { id }, select: COURSE_SELECT });
+  return row ? sharedCourse(row, await getSharedCurriculum()) : null;
+}
+
+export type CourseDetail = NonNullable<Awaited<ReturnType<typeof getCourse>>>;
+
+/** The classes that run on a given weekday, in the order they run. The deck
+ *  screen's whole query. */
+export async function getCoursesOnDay(dayOfWeek: DayOfWeek, instructorId?: string) {
+  await requireSession();
+
+  const curriculum = await getSharedCurriculum();
+  const rows = await prisma.course.findMany({
+    where: {
+      clubId: await currentClubId(),
+      dayOfWeek,
+      archivedAt: null,
+      ...(instructorId ? { instructorId } : {}),
+    },
+    orderBy: [{ startMinutes: "asc" }],
+    select: COURSE_SELECT,
+  });
+  return rows.map(row => sharedCourse(row, curriculum));
+}
+
+/** The roster: who is in this class, and on what footing. It flags medical
+ *  notes without carrying them; the register and profile show the text to the
+ *  surfaces allowed to see it. */
+export async function getRoster(courseId: string) {
+  await requireAquaticsAccess();
+  const curriculum = await getSharedCurriculum();
+
+  const rows = await prisma.enrolment.findMany({
+    where: { courseId, status: { in: ["ACTIVE", "WAITLISTED"] } },
+    orderBy: [
+      { status: "asc" },
+      { student: { lastName: "asc" } },
+      { student: { firstName: "asc" } },
+    ],
+    select: {
+      id: true,
+      status: true,
+      startedOn: true,
+      scheduledEndOn: true,
+      placementReason: true,
+      level: { select: { id: true, name: true } },
+      programme: { select: { id: true, name: true } },
+      student: {
+        select: {
+          id: true,
+          firstName: true,
+          lastName: true,
+          memberNumber: true,
+          dateOfBirth: true,
+          medicalNotes: true,
+          status: true,
+        },
+      },
+    },
+  });
+  return rows.map(row => {
+    const { medicalNotes, ...student } = row.student;
+    return sharedPlacement({ ...row, student: { ...student, hasMedicalNotes: !!medicalNotes?.trim() } }, curriculum);
+  });
+}
+
+export type RosterEntry = Awaited<ReturnType<typeof getRoster>>[number];
+
+/** Who a class can be assigned to: anyone whose role lets them take a
+ *  register. Asked by permission rather than by role name, because roles are
+ *  the club's to invent — and an account that cannot take a register has no
+ *  business being the name on one. */
+export async function getInstructorOptions() {
+  await requireSession();
+
+  return prisma.user.findMany({
+    where: {
+      isActive: true,
+      staffRole: { OR: [
+        { permissions: { hasSome: ["attendance.mark", "attendance.markAny"] } },
+        { permissions: { hasEvery: [...ADMINISTRATOR_PERMISSIONS] } },
+      ] },
+    },
+    orderBy: { name: "asc" },
+    select: { id: true, name: true },
+  });
+}
+
+export type InstructorOption = Awaited<ReturnType<typeof getInstructorOptions>>[number];

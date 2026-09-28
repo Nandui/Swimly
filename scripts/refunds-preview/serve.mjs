@@ -33,7 +33,7 @@ const doubles={
   '@/lib/prisma':{prisma:sandbox.prisma},
   '@/auth':{auth:async()=>({user:{...profiles[context.getStore()||'reception'],screens:['refunds']}})},
   '@/lib/clubs/current':{currentClubIdIfAny:async()=>null},
-  '@/lib/parent/email':{parentEmailConfig:()=>({sender:'preview@example.test',fromHeader:'Preview <preview@example.test>'})},
+  '@/lib/staff-api/email':{staffEmailConfig:()=>({sender:'preview@example.test',fromHeader:'Preview <preview@example.test>'})},
   '@/lib/email/google':{sendGoogleTextEmail:async()=>{}},
   'next/cache':{revalidatePath(){}},
 };

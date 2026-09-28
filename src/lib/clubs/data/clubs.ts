@@ -1,8 +1,8 @@
 import { requireSession } from "@/lib/authz";
 import { prisma } from "@/lib/prisma";
 
-/** Every club, archived ones last, each with what it holds — so the page can
- *  say "3 programmes, 1,156 swimmers, 134 classes" without a query per row. */
+/** Every club, archived ones last. What each site runs (programmes, swimmers,
+ *  classes) comes from the modules through `siteSummaryLines`, not from here. */
 export async function getClubs() {
   await requireSession();
 
@@ -12,13 +12,6 @@ export async function getClubs() {
       id: true,
       name: true,
       archivedAt: true,
-      _count: {
-        select: {
-          programmes: { where: { archivedAt: null } },
-          students: { where: { status: "ACTIVE" } },
-          courses: { where: { archivedAt: null } },
-        },
-      },
     },
   });
 }

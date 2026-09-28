@@ -1,6 +1,6 @@
-import { CalendarClock, Files, GraduationCap, HeartHandshake, ReceiptText, WavesLadder, type LucideIcon } from "lucide-react";
+import { Building2, CalendarClock, Files, GraduationCap, HeartHandshake, ReceiptText, WavesLadder, type LucideIcon } from "lucide-react";
 import type { PermissionKey } from "@/lib/staff/permissions";
-import { isAquaticsScreen, type ScreenKey } from "@/lib/staff/screens";
+import { isAquaticsScreen, isCoreScreen, type ScreenKey } from "@/lib/staff/screens";
 
 /** Every module Turnfin offers, declared in one place.
  *
@@ -54,6 +54,17 @@ export function visibleModules(ctx: ModuleContext): ModuleManifest[] {
 // The modules. New modules register in their own manifest file and are
 // imported from `src/modules/index.ts`.
 // ---------------------------------------------------------------------------
+
+// Core is not a module but the organisation every module shares: people,
+// roles, sites and the activity log. It gets a tile for the people who manage it.
+registerModule({
+  id: "core",
+  name: "Core",
+  description: "Staff, roles, sites and the activity log, shared by every module.",
+  icon: Building2,
+  href: "/core",
+  visibleTo: ({ screens }) => [...screens].some(isCoreScreen),
+});
 
 registerModule({
   id: "refunds",

@@ -31,9 +31,9 @@ test("operations enforce token, expiry, actor, explicit club, and use isolated a
       user: { findMany: async () => { reads++; const actor = { id: "actor", name: "Synthetic Operator", staffRole: { id: "role", name: "Custom", permissions: ["students.manage", "staff.manage"], home: "reception", screens: [] } }; return active ? ambiguous ? [actor, actor] : [actor] : []; } },
       club: { findMany: async () => [{ id: "club-a", name: "A" }, { id: "club-b", name: "B" }] },
     } },
-    "@/lib/students/actions/students": { createStudent: action, updateStudent: action },
-    "@/lib/courses/actions/courses": { createCourse: action, updateCourse: action },
-    "@/lib/enrolment/actions/enrolment": { enrolStudent: action },
+    "@/modules/aquatics/lib/students/actions/students": { createStudent: action, updateStudent: action },
+    "@/modules/aquatics/lib/courses/actions/courses": { createCourse: action, updateCourse: action },
+    "@/modules/aquatics/lib/enrolment/actions/enrolment": { enrolStudent: action },
   });
   const request = (body: unknown, token = "synthetic-key", extra = {}) => route.POST(new Request("https://example.test/api/operations", {
     method: "POST", headers: { authorization: `Bearer ${token}`, ...extra }, body: JSON.stringify(body),

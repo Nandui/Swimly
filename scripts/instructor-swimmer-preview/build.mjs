@@ -13,7 +13,7 @@ export async function buildPreview({entryPoint='scripts/instructor-swimmer-previ
   const boundaries={name:'synthetic-instructor-boundaries',setup(build){
     build.onResolve({filter:/.*/},args=>Object.hasOwn(serverMocks,args.path)?{path:args.path,namespace:'fixture-data'}:undefined);
     build.onLoad({filter:/.*/,namespace:'fixture-data'},({path:id})=>({contents:serverMocks[id],loader:'js',resolveDir:process.cwd()}));
-    build.onResolve({filter:/^next\/(navigation|link|image|form)$|^next-auth\/react$|^@\/lib\/.*\/actions(?:\/|$)/}, args=>({path:args.path,namespace:'synthetic'}));
+    build.onResolve({filter:/^next\/(navigation|link|image|form)$|^next-auth\/react$|^@\/(?:lib|modules\/[\w-]+\/lib)\/.*\/actions(?:\/|$)/}, args=>({path:args.path,namespace:'synthetic'}));
     build.onResolve({filter:/^@\/(auth|lib\/(prisma|authz|clubs\/current))$|^server-only$/},args=>{throw Error(`Live module forbidden: ${args.path}`)});
     build.onLoad({filter:/.*/,namespace:'synthetic'},async({path:id})=>{
       let contents;

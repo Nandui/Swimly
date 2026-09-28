@@ -1,11 +1,11 @@
 import "dotenv/config";
-import { HOLDS_A_PLACE, sessionLabel } from "@/lib/assessments/constants";
-import { withAssessmentSeat } from "@/lib/assessments/seat";
+import { HOLDS_A_PLACE, sessionLabel } from "@/modules/aquatics/lib/assessments/constants";
+import { withAssessmentSeat } from "@/modules/aquatics/lib/assessments/seat";
 import { logAudit } from "@/lib/audit";
-import { courseLabel } from "@/lib/courses/constants";
-import { withCourseSeat } from "@/lib/enrolment/seat";
+import { courseLabel } from "@/modules/aquatics/lib/courses/constants";
+import { withCourseSeat } from "@/modules/aquatics/lib/enrolment/seat";
 import { parseDateOnly, today } from "@/lib/format";
-import { fullName } from "@/lib/students/constants";
+import { fullName } from "@/modules/aquatics/lib/students/constants";
 import { prisma } from "@/lib/prisma";
 
 /** The Saturday timetable and rosters for LeisureWorld Churchfield, from the

@@ -29,7 +29,7 @@ export async function parentAdminFixture() {
     },
   };
   const audit = serverModule<typeof import("../lib/audit")>("src/lib/audit.ts", doubles);
-  const admin = serverModule<typeof import("../lib/parent/admin")>("src/lib/parent/admin.ts", {
+  const admin = serverModule<typeof import("../modules/aquatics/lib/parent/admin")>("src/modules/aquatics/lib/parent/admin.ts", {
     ...doubles, "@/lib/audit": { logAudit: async (...args: Parameters<typeof audit.logAudit>) => {
       if (state.failAudit) throw new Error("Synthetic audit failure");
       return audit.logAudit(...args);

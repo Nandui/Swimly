@@ -35,7 +35,7 @@ Three layers, top to bottom. Not one scroll.
 
 ## Panels
 
-`Panel` in `src/components/students/profile-sections.tsx`: `rounded-md
+`Panel` in `src/modules/aquatics/components/students/profile-sections.tsx`: `rounded-md
 border`, a `bg-sidebar` head with the title at 12px muted, the same head the
 tables use, so the pair and the lists below read as one family. Rows are a
 `dl` with a 7rem label column. Empty values are an em dash in

@@ -2,7 +2,7 @@ import Link from "next/link";
 import { ArrowRight, ArrowUpRight, CalendarDays, ChevronRight, ClipboardList, HelpCircle, Search, UserPlus, Users, WavesLadder, ListChecks, type LucideIcon } from "lucide-react";
 import { Button } from "@/components/shadcn/button";
 import { Card } from "@/components/shadcn/card";
-import { AddSwimmer } from "@/components/students/add-swimmer";
+import { AddSwimmer } from "@/modules/aquatics/components/students/add-swimmer";
 import { ClubSwitcher } from "@/components/clubs/club-switcher";
 import { PortalFrame } from "@/components/portal/portal-frame";
 import { STAFF_MODULES } from "@/lib/modules";

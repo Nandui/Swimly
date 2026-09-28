@@ -9,7 +9,7 @@ test("authenticated access awaits due unenrolments before returning the session"
   const calls: string[] = [];
   const guards = serverModule<typeof import("./authz")>("src/lib/authz.ts", {
     "@/auth": { auth: async () => { calls.push("auth"); return { user: { id: "staff" } }; } },
-    "@/lib/enrolment/scheduled": { processScheduledUnenrolments: async () => { await Promise.resolve(); calls.push("due"); } },
+    "@/modules/session-hooks": { runSessionHooks: async () => { await Promise.resolve(); calls.push("due"); } },
   });
   await guards.requireSession(); calls.push("read");
   assert.deepEqual(calls, ["auth", "due", "read"]);
@@ -19,7 +19,7 @@ test("unauthenticated requests do not process scheduled unenrolments", async () 
   let processed = false;
   const guards = serverModule<typeof import("./authz")>("src/lib/authz.ts", {
     "@/auth": { auth: async () => null },
-    "@/lib/enrolment/scheduled": { processScheduledUnenrolments: async () => { processed = true; } },
+    "@/modules/session-hooks": { runSessionHooks: async () => { processed = true; } },
   });
   await assert.rejects(guards.requireSession(), /Not signed in/);
   assert.equal(processed, false);
@@ -29,7 +29,7 @@ test("named permission and screen guards accept administrators and refuse restri
   const session = { user: { id: "staff", roleName: "Custom admin name", permissions: ["staff.manage", "roles.manage"], screens: [] } } as unknown as Session;
   const guards = serverModule<typeof import("./authz")>("src/lib/authz.ts", {
     "@/auth": { auth: async () => session },
-    "@/lib/enrolment/scheduled": { processScheduledUnenrolments: async () => {} },
+    "@/modules/session-hooks": { runSessionHooks: async () => {} },
   });
   for (const permission of ALL_PERMISSIONS) {
     if (isRestrictedPermission(permission)) {

@@ -7,10 +7,10 @@ import {AppShell} from '@/components/ui-kit/app-shell';
 import {ThemeProvider} from '@/components/theme-provider';
 import {TooltipProvider} from '@/components/shadcn/tooltip';
 import {ToastBridge} from '@/lib/toast';
-import {SessionDirectory,sessionView} from '@/components/assessments/session-directory';
-import {AwaitingEnrolment} from '@/components/enrolment/awaiting-enrolment';
-import {AddSession} from '@/components/assessments/session-actions';
-import {NAV_ITEMS} from '@/lib/nav';
+import {SessionDirectory,sessionView} from '@/modules/aquatics/components/assessments/session-directory';
+import {AwaitingEnrolment} from '@/modules/aquatics/components/enrolment/awaiting-enrolment';
+import {AddSession} from '@/modules/aquatics/components/assessments/session-actions';
+import {NAV_ITEMS} from '@/modules/aquatics/lib/nav';
 
 const query=new URLSearchParams(location.search);
 const theme=query.get('theme')==='dark'?'dark':'light';

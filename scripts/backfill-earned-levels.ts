@@ -2,7 +2,7 @@ import "dotenv/config";
 import { logAudit } from "@/lib/audit";
 import { parseDateOnly, today } from "@/lib/format";
 import { prisma } from "@/lib/prisma";
-import { completionProgress } from "@/lib/progression/rules";
+import { completionProgress } from "@/modules/aquatics/lib/progression/rules";
 
 /** Credits every swimmer with the levels below the one they are placed at.
  *

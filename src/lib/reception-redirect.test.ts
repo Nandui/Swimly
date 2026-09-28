@@ -4,11 +4,11 @@ import { serverModule } from "@/test/server-module";
 import { visibleScreens } from "@/lib/staff/screens";
 import { expandPermissions } from "@/lib/staff/permissions";
 
-type Page = typeof import("@/app/(app)/reception/page");
+type Page = typeof import("@/app/(aquatics)/reception/page");
 type User = { home: string; screens: string[]; permissions: string[] };
 
 function retiredPage(user: User | null) {
-  return serverModule<Page>("src/app/(app)/reception/page.tsx", {
+  return serverModule<Page>("src/app/(aquatics)/reception/page.tsx", {
     "@/auth": { auth: async () => user ? { user } : null },
     "@/lib/authz": { canSee: (session: { user: User }, screen: "students") =>
       visibleScreens(session.user.screens, expandPermissions(session.user.permissions)).has(screen) },

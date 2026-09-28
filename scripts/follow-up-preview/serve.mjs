@@ -33,7 +33,7 @@ const doubles={
  '@/lib/clubs/current':{currentClubId:async()=>'club_bishopstown',currentClubIdIfAny:async()=>'club_bishopstown'},
  'next/cache':{revalidatePath(){}},react:{cache:fn=>fn},
 };
-const actions=serverModule('src/lib/enrolment/actions/follow-up.ts',doubles), reads=serverModule('src/lib/enrolment/data/awaiting-enrolment.ts',doubles), moves=serverModule('src/lib/enrolment/data/awaiting-moves.ts',doubles);
+const actions=serverModule('src/modules/aquatics/lib/enrolment/actions/follow-up.ts',doubles), reads=serverModule('src/modules/aquatics/lib/enrolment/data/awaiting-enrolment.ts',doubles), moves=serverModule('src/modules/aquatics/lib/enrolment/data/awaiting-moves.ts',doubles);
 for(const [studentId,outcome,note,date,next] of [['example-avery','NO_REPLY','Called the parent; no answer. Try again in the afternoon.','2026-09-02','2026-09-03'],['example-avery','PARENT_NOT_READY','Parent would like to wait until the school routine settles. Call again next week.','2026-09-03','2026-10-01'],['example-morgan','NO_SUITABLE_CLASS','Checked both sites. Family needs a Saturday morning place; none suitable currently.','2026-09-02','2026-09-03']]){
  const history=await actions.getFollowUpHistory(studentId);
  await actions.addFollowUp({studentId,operationId:randomUUID(),expectedLatest:history.summary.latest?.sequence??null,channel:outcome==='NO_SUITABLE_CLASS'?'INTERNAL':'PHONE',outcome,note,occurredOn:date,nextContactOn:next});

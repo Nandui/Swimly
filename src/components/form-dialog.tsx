@@ -28,7 +28,6 @@ import { Switch } from "@/components/ui/switch";
 import { Textarea } from "@/components/ui/textarea";
 import { SearchablePicker } from "@/components/searchable-picker";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/shadcn/tooltip";
-import { StudentPicker } from "@/components/students/student-search";
 
 /** Every form dialog in the app, so the failure behaviour is written once.
  *
@@ -307,15 +306,23 @@ export function Trigger({
 }
 
 /** The controls that draw their own label when handed one. Everything else
- *  receives a shared shadcn label and hint wrapper. */
+ *  receives a shared shadcn label and hint wrapper. Module controls (such as
+ *  Aquatics' swimmer picker) add themselves with `labelsItself`, so this
+ *  shared file never imports a module. */
 const LABELLED = new Set<React.ElementType>([
   Input,
   Textarea,
   Select,
   Switch,
   SearchablePicker,
-  StudentPicker,
 ]);
+
+/** Declare that a control draws its own label, hint and id when a Field hands
+ *  them over. Call once beside the control's definition. */
+export function labelsItself<T extends React.ElementType>(control: T): T {
+  LABELLED.add(control);
+  return control;
+}
 
 /** A labelled field. The label is handed to the control when it knows what
  *  to do with one, so the label, the hint and the control are one accessible

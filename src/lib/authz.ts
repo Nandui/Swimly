@@ -23,7 +23,6 @@
 
 import type { Session } from "next-auth";
 import { cache } from "react";
-import { processScheduledUnenrolments } from "@/lib/enrolment/scheduled";
 import { auth } from "@/auth";
 import { operationContext } from "@/lib/operations/context";
 import { expandPermissions, type PermissionKey } from "@/lib/staff/permissions";
@@ -34,8 +33,12 @@ export type { PermissionKey };
 export class AuthorizationError extends Error {}
 
 // One pass per request, before any authenticated reads or capacity checks.
-// This applies previously authorized schedules; it needs no external timer.
-const applyScheduledUnenrolments = cache(processScheduledUnenrolments);
+// Modules register this work in the composition root (for Aquatics, due
+// unenrolments); it is loaded lazily so Core never imports a module.
+const applyScheduledUnenrolments = cache(async () => {
+  const { runSessionHooks } = await import("@/modules/session-hooks");
+  await runSessionHooks();
+});
 
 /** Returns the session or throws. Use in data modules for read access.
  *

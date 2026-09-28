@@ -4,10 +4,10 @@ import { operationContext } from "@/lib/operations/context";
 import { validOperationToken } from "@/lib/operations/token";
 import { expandPermissions } from "@/lib/staff/permissions";
 import { AuthorizationError } from "@/lib/authz";
-import { createCourse, updateCourse, type CourseInput } from "@/lib/courses/actions/courses";
-import { getLevelOptions } from "@/lib/curriculum/data/curriculum";
-import { createStudent, updateStudent, type StudentInput } from "@/lib/students/actions/students";
-import { enrolStudent, type EnrolInput } from "@/lib/enrolment/actions/enrolment";
+import { createCourse, updateCourse, type CourseInput } from "@/modules/aquatics/lib/courses/actions/courses";
+import { getLevelOptions } from "@/modules/aquatics/lib/curriculum/data/curriculum";
+import { createStudent, updateStudent, type StudentInput } from "@/modules/aquatics/lib/students/actions/students";
+import { enrolStudent, type EnrolInput } from "@/modules/aquatics/lib/enrolment/actions/enrolment";
 import type { ConfirmationReply } from "@/lib/action-result";
 
 export const runtime = "nodejs";

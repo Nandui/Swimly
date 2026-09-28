@@ -8,7 +8,7 @@ export const output = path.resolve('.impeccable/review/help-screenshots/site');
 export async function buildScreenshots({ entryPoint = 'scripts/help-screenshots/fixture.jsx', outputDirectory = output, title = 'Help screenshot examples' } = {}) {
   const destination = outputDirectory;
   const fixture = {name:'help-screenshot-boundaries',setup(build){
-    build.onResolve({filter:/^next\/(navigation|link|image)$|^next-auth\/react$|^@\/lib\/.*\/actions(?:\/|$)/},args=>({path:args.path,namespace:'demo'}));
+    build.onResolve({filter:/^next\/(navigation|link|image)$|^next-auth\/react$|^@\/(?:lib|modules\/[\w-]+\/lib)\/.*\/actions(?:\/|$)/},args=>({path:args.path,namespace:'demo'}));
     build.onResolve({filter:/^@\/(auth|lib\/(prisma|authz|clubs\/current))$/},args=>{throw Error(`Live module forbidden in screenshots: ${args.path}`)});
     build.onLoad({filter:/.*/,namespace:'demo'},async({path:id})=>{
       let contents;

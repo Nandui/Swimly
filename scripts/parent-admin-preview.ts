@@ -4,7 +4,7 @@ import path from "node:path";
 import { createServer } from "node:http";
 import { pathToFileURL } from "node:url";
 import { parentAdminFixture } from "../src/test/parent-admin-fixture";
-import { dublinInstant } from "../src/lib/parent/time";
+import { dublinInstant } from "../src/modules/aquatics/lib/parent/time";
 import { buildScreenshots } from "./help-screenshots/build.mjs";
 import { createHmac, randomBytes } from "node:crypto";
 import { serverModule } from "../src/test/server-module";
@@ -22,7 +22,7 @@ export async function startParentAdminPreview(port = 0) {
   process.env.PARENT_AUTH_SECRET = secret;
   process.env.PARENT_API_ALLOWED_ORIGINS = "http://127.0.0.1:3020";
   await fixture.prisma.parentSession.updateMany({ data: { tokenHash: createHmac("sha256", secret).update(`session:${parentToken}`).digest("hex") } });
-  const parentRouter = serverModule<typeof import("../src/lib/parent/router")>("src/lib/parent/router.ts", {
+  const parentRouter = serverModule<typeof import("../src/modules/aquatics/lib/parent/router")>("src/modules/aquatics/lib/parent/router.ts", {
     "@/lib/prisma": { prisma: fixture.prisma }, "next/cache": { revalidatePath() {} },
     "@/lib/clubs/current": { currentClubId: async () => "club_bishopstown" },
   });

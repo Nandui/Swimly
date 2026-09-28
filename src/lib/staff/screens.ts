@@ -157,7 +157,9 @@ export function cleanScreens(input: readonly string[]): ScreenKey[] {
   // New roles use the two independent explicit keys.
   // The retired Overview key still identifies a legacy desk role when
   // resolving its old Today grant; it never becomes a screen itself.
-  const hadDeskScreens = input.some(key => key === "overview" || (isScreenKey(key) && isAquaticsScreen(key) && key !== "instructor"));
+  // Core screens (Staff, Roles, Clubs, Activity) used to live in the desk, so
+  // they still count as desk screens for this legacy resolution.
+  const hadDeskScreens = input.some(key => key === "overview" || (isScreenKey(key) && (isAquaticsScreen(key) || isCoreScreen(key)) && key !== "instructor"));
   const held = new Set(input.flatMap(key => key === "today"
     ? hadDeskScreens ? ["calendar", "instructor"] : ["instructor"]
     : [key]).filter(isScreenKey));
@@ -208,12 +210,31 @@ export function homePathFor(
   return first ? first.path : "/account";
 }
 
-/** Separate modules never imply access to the swim-school workspace. */
-/** Screens that open their own Turnfin workspace rather than Aquatics. */
-const TURNFIN_WORKSPACES = new Set<string>(["docs", "refunds", "training", "hr", "rota"]);
+/** Which part of Turnfin each screen belongs to, stated rather than inferred.
+ *
+ *  - Core: the organisation itself (people, roles, sites, the activity log),
+ *    shared by every module and opened in the Core workspace.
+ *  - Aquatics: the swim school (office, desk and deck).
+ *  - Work modules: Docs, Refunds, Training, HR and Rota, each its own workspace.
+ *
+ *  A new screen must be added to exactly one of these; a test checks it.
+ *  Separate modules never imply access to the swim-school workspace. */
+export const CORE_SCREENS = ["staff", "roles", "clubs", "activity"] as const satisfies readonly ScreenKey[];
+export const AQUATICS_SCREENS = [
+  "analytics", "duty", "cancellations", "calendar", "instructor", "students", "courses",
+  "together", "assessments", "awaiting-enrolment", "legend-agreements", "programmes",
+] as const satisfies readonly ScreenKey[];
+export const WORK_MODULE_SCREENS = ["docs", "refunds", "training", "hr", "rota"] as const satisfies readonly ScreenKey[];
+
+const CORE = new Set<string>(CORE_SCREENS);
+const AQUATICS = new Set<string>(AQUATICS_SCREENS);
+
+export function isCoreScreen(key: ScreenKey) {
+  return CORE.has(key);
+}
 
 export function isAquaticsScreen(key: ScreenKey) {
-  return !TURNFIN_WORKSPACES.has(key);
+  return AQUATICS.has(key);
 }
 
 /** The screens an administrator sees: every screen except those that need a

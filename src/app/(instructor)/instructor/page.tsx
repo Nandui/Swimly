@@ -13,31 +13,31 @@ import {
   CollapsibleContent,
   CollapsibleTrigger,
 } from "@/components/shadcn/collapsible";
-import { StartClass } from "@/components/instructor/start-class";
-import { RefreshClasses } from "@/components/instructor/refresh-classes";
-import { claimState } from "@/lib/attendance/claim-state";
+import { StartClass } from "@/modules/aquatics/components/instructor/start-class";
+import { RefreshClasses } from "@/modules/aquatics/components/instructor/refresh-classes";
+import { claimState } from "@/modules/aquatics/lib/attendance/claim-state";
 import {
   instructorClassHref,
   instructorHomeHref,
-} from "@/lib/attendance/navigation";
-import { weekdayOfIso } from "@/lib/attendance/dates";
-import { getCoversForDay } from "@/lib/attendance/data/cover";
-import { getRegisterStateForDay } from "@/lib/attendance/data/register";
+} from "@/modules/aquatics/lib/attendance/navigation";
+import { weekdayOfIso } from "@/modules/aquatics/lib/attendance/dates";
+import { getCoversForDay } from "@/modules/aquatics/lib/attendance/data/cover";
+import { getRegisterStateForDay } from "@/modules/aquatics/lib/attendance/data/register";
 import {
   DAY_META,
   courseName,
   formatTime,
   formatSlot,
-} from "@/lib/courses/constants";
-import { getCoursesOnDay, type CourseRow } from "@/lib/courses/data/courses";
+} from "@/modules/aquatics/lib/courses/constants";
+import { getCoursesOnDay, type CourseRow } from "@/modules/aquatics/lib/courses/data/courses";
 import { formatDate, minutesNow, parseDateOnly, today } from "@/lib/format";
 import { screenPage } from "@/lib/page-guards";
 import { can } from "@/lib/authz";
-import { getCancellationsForDay } from "@/lib/cancellations/data";
-import { CANCELLATION_META } from "@/lib/cancellations/constants";
+import { getCancellationsForDay } from "@/modules/aquatics/lib/cancellations/data";
+import { CANCELLATION_META } from "@/modules/aquatics/lib/cancellations/constants";
 import { Tag } from "@/components/ui-kit/tag";
-import { InstructorAssessments } from "@/components/instructor/assessments";
-import { getTodayAssessments } from "@/lib/today/assessments";
+import { InstructorAssessments } from "@/modules/aquatics/components/instructor/assessments";
+import { getTodayAssessments } from "@/modules/aquatics/lib/today/assessments";
 
 export const metadata: Metadata = { title: "Instructor" };
 type Grouping = "time" | "level";

@@ -17,19 +17,10 @@ function guards(screens: string[], permissions: string[]) {
   });
 }
 
-test("instructors can open their teaching pages but not desk screens or desk class forms", async () => {
+// Class-page guards (desk versus deck) live with Aquatics: src/modules/aquatics/lib/attendance/page-guard.test.ts
+test("instructors cannot open desk or Core screens", async () => {
   for (const screens of [["instructor"], ["today"]]) {
     const access = guards(screens, ["attendance.mark", "attendance.cover", "progression.assess"]);
-    await access.classPage("instructor");
-    await assert.rejects(access.classPage("desk"), /404/);
     for (const screen of ["calendar", "students", "courses", "staff", "duty", "cancellations"] as const) await assert.rejects(access.screenPage(screen), /404/);
   }
-});
-
-test("desk attendance permission alone never opens the instructor workspace", async () => {
-  const desk = guards(["calendar", "courses"], ["attendance.markAny"]);
-  await desk.classPage("desk");
-  await assert.rejects(desk.classPage("instructor"), /404/);
-  await assert.rejects(guards(["instructor"], []).classPage("instructor"), /404/);
-  await assert.rejects(guards(["calendar"], []).classPage("desk"), /404/);
 });

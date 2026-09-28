@@ -1,4 +1,4 @@
-import { handleParentRequest } from "@/lib/parent/router";
+import { handleParentRequest } from "@/modules/aquatics/lib/parent/router";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
