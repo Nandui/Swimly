@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, type ReactNode } from "react";
-import { ZoneLink } from "@/components/zone-link";
+import Link from "next/link";
 import { usePathname, useSearchParams } from "next/navigation";
 import { signOut } from "next-auth/react";
 import { ArrowLeft, CircleHelp, LogOut, UserRound, Users } from "lucide-react";
@@ -72,7 +72,7 @@ export function InstructorShell({
             variant="ghost"
             className="min-h-11 shrink-0 px-2 text-base font-semibold"
           >
-            <ZoneLink href={home}>
+            <Link href={home}>
               {pathname === "/instructor" ? (
                 <AppLogo className="size-8" />
               ) : (
@@ -81,17 +81,17 @@ export function InstructorShell({
               <span>
                 {pathname === "/instructor" ? "Pool deck" : "Classes"}
               </span>
-            </ZoneLink>
+            </Link>
           </Button>
           <div className="order-last w-full min-w-0 sm:order-none sm:w-60">
             <ClubSwitcher club={club} clubs={clubs} touchTargets />
           </div>
           <div className="ml-auto flex items-center gap-2">
             <Button asChild variant="ghost" className="min-h-11 px-2">
-              <ZoneLink href="/instructor/swimmers" aria-current={pathname === "/instructor/swimmers" ? "page" : undefined}><Users aria-hidden="true" />Swimmers</ZoneLink>
+              <Link href="/instructor/swimmers" aria-current={pathname === "/instructor/swimmers" ? "page" : undefined}><Users aria-hidden="true" />Swimmers</Link>
             </Button>
             <Button asChild variant="ghost" className="min-h-11 px-2">
-              <ZoneLink href="/help/instructor" target="_blank" rel="noopener noreferrer" aria-label="Help (opens in a new tab)"><CircleHelp aria-hidden="true" />Help</ZoneLink>
+              <Link href="/help/instructor" target="_blank" rel="noopener noreferrer" aria-label="Help (opens in a new tab)"><CircleHelp aria-hidden="true" />Help</Link>
             </Button>
             <ThemeFlip />
             <DropdownMenu>

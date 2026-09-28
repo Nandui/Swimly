@@ -26,19 +26,25 @@ const uiSyntax = [
 // Training, HR, Rota) and Activities (Swim school first). See docs/architecture.md.
 const activitiesFiles = [
   "src/modules/activities/**",
-  // The Activities app (apps/activities) holds only routes.
-  "apps/activities/src/**",
+  "src/app/(activities)/**",
+  "src/app/(instructor)/**",
+  "src/app/api/parent/**",
+  "src/app/api/parent-admin/**",
+  "src/app/api/curriculum-images/**",
+  "src/app/api/operations/**",
 ];
-// Composition roots may import every module.
+// Composition roots may import every module; the front desk (Reception Portal)
+// composes the Activities Add swimmer dialog by design.
 const compositionRoots = [
   "src/modules/server.ts",
   "src/modules/session-hooks.ts",
+  "src/components/portal/reception-portal.tsx",
 ];
 const tests = ["src/**/*.test.ts", "src/**/*.test.tsx", "src/test/**"];
 
 // Import boundaries.
 const notActivities = {
-  group: ["@/modules/activities", "@/modules/activities/*", "**/modules/activities/**", "**/apps/activities/**"],
+  group: ["@/modules/activities", "@/modules/activities/*", "@/app/(activities)/*", "@/app/(instructor)/*", "**/modules/activities/**"],
   message: "Core and Work modules must not import Activities. Register a contribution (src/modules/contributions.ts) or add to a composition root instead.",
 };
 const notWorkModules = {
@@ -108,9 +114,7 @@ const eslintConfig = defineConfig([
     "build/**",
     "next-env.d.ts",
     // Turnfin Me is its own app with its own lint (apps/me).
-    "apps/me/**",
-    "apps/activities/.next/**",
-    "apps/activities/next-env.d.ts",
+    "apps/**",
     // Vendored skill assets and disposable browser audit bundles are not app code.
     ".agents/**",
     ".claude/**",

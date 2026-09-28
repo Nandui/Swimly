@@ -22,10 +22,8 @@ import { swimmerProfileHref } from "@/modules/activities/lib/students/directory"
 import { toast } from "@/lib/toast";
 import { withTimeout } from "@/lib/save-feedback";
 
-/** `defaultOpen` opens the dialog on arrival, e.g. from the front desk's
- *  "Add a swimmer" (`/students?add=1`). */
-export function AddSwimmer({ student, trigger, defaultOpen = false }: { student?: StudentDetail; trigger?: ReactElement; defaultOpen?: boolean } = {}) {
-  const [open, setOpen] = useState(defaultOpen);
+export function AddSwimmer({ student, trigger }: { student?: StudentDetail; trigger?: ReactElement } = {}) {
+  const [open, setOpen] = useState(false);
   const [expanded, setExpanded] = useState(false);
   const { formRef, summaryRef, ...feedback } = useFormFeedback();
   const error = feedback.message;

@@ -20,7 +20,7 @@ import { PrismaClient } from "../src/generated/prisma/client";
 import { SYSTEM_ROLES } from "../src/lib/staff/permissions";
 
 export const SANDBOX_PASSWORD = "sandbox-turnfin-2026";
-const PORTS = { main: 54391, docs: 54392, hr: 54393, app: Number(process.env.SANDBOX_PORT ?? 3100), activities: Number(process.env.SANDBOX_ACTIVITIES_PORT ?? 3102) };
+const PORTS = { main: 54391, docs: 54392, hr: 54393, app: Number(process.env.SANDBOX_PORT ?? 3100) };
 
 async function serve(name: string, port: number, migrate: (db: PGlite) => Promise<void>) {
   const db = new PGlite();
@@ -128,25 +128,6 @@ const env = {
   // Turnfin Me (apps/me, port 3101) against this sandbox. Codes print here.
   STAFF_API_ENABLED: "true", STAFF_AUTH_SECRET: "sandbox-only-staff-secret-not-for-deployment",
   STAFF_API_ALLOWED_ORIGINS: "http://localhost:3101", STAFF_ME_URL: "http://localhost:3101", STAFF_EMAIL_DEV_LOG: "true",
-  // Work forwards swim-school pages to the Activities app; open everything on Work's port.
-  ACTIVITIES_URL: `http://localhost:${PORTS.activities}`, WORK_ORIGIN: `localhost:${PORTS.app}`, WORK_URL: `http://localhost:${PORTS.app}`,
 };
-// Turnfin Work (Core and the Work modules) and Turnfin Activities (the swim
-// school), sharing these databases and one sign-in. Stop either and both stop.
-// `npm run sandbox -- --production` builds and serves both as deployed, which
-// is the faithful way to check the two apps together: in development, the
-// Activities live-reload connection cannot pass through Work's forwarding.
-const production = process.argv.includes("--production");
-if (production) {
-  for (const target of [[], ["apps/activities"]]) {
-    const build = spawn("npx", ["next", "build", ...target], { stdio: "inherit", env: { ...env, NODE_ENV: "production" }, shell: true });
-    const code = await new Promise<number>((resolve) => build.on("exit", (exit) => resolve(exit ?? 1)));
-    if (code !== 0) process.exit(code);
-  }
-}
-const mode = production ? "start" : "dev";
-const app = spawn("npx", ["next", mode, "-p", String(PORTS.app)], { stdio: "inherit", env, shell: true });
-const activities = spawn("npx", ["next", mode, "apps/activities", "-p", String(PORTS.activities)], { stdio: "inherit", env, shell: true });
-app.on("exit", (code) => { activities.kill(); process.exit(code ?? 0); });
-activities.on("exit", (code) => { app.kill(); process.exit(code ?? 0); });
-console.log(`[sandbox] Open http://localhost:${PORTS.app} (Work). Activities runs on port ${PORTS.activities} behind it.`);
+const app = spawn("npx", ["next", "dev", "-p", String(PORTS.app)], { stdio: "inherit", env, shell: true });
+app.on("exit", (code) => process.exit(code ?? 0));

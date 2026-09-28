@@ -23,7 +23,7 @@ test("operations enforce token, expiry, actor, explicit club, and use isolated a
   const contexts: unknown[] = [];
   const action = async () => { contexts.push(operationContext.getStore()); return { ok: false, error: "Validation preserved" }; };
   class AuthorizationError extends Error {}
-  const route = serverModule<{ POST(request: Request): Promise<Response> }>("apps/activities/src/app/api/operations/route.ts", {
+  const route = serverModule<typeof import("@/app/api/operations/route")>("src/app/api/operations/route.ts", {
     "@/lib/operations/token": { validOperationToken }, "@/lib/operations/context": { operationContext },
     "@/lib/authz": { AuthorizationError },
     "@/lib/staff/permissions": { expandPermissions: (p: string[]) => new Set(p) },

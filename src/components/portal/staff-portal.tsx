@@ -1,5 +1,4 @@
 import Link from "next/link";
-import { ZoneLink } from "@/components/zone-link";
 import { ArrowRight } from "lucide-react";
 import { Button } from "@/components/shadcn/button";
 import { Card } from "@/components/shadcn/card";
@@ -35,7 +34,7 @@ export function StaffPortal({ userName, modules, receptionAllowed = false }: {
             <p className="text-sm leading-relaxed text-ui-muted-foreground">{module.description}</p>
           </div>
           <Button asChild className="min-h-11 w-full justify-between">
-            <ZoneLink href={module.href} prefetch={false}>Open {module.name}<ArrowRight aria-hidden="true" /></ZoneLink>
+            <Link href={module.href} prefetch={false}>Open {module.name}<ArrowRight aria-hidden="true" /></Link>
           </Button>
         </Card>;
       })}

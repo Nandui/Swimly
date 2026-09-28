@@ -27,19 +27,11 @@ export function parentEmailConfig() {
   return { ...credentials.data, sender: sender.data, fromHeader };
 }
 
-/** The logo ships with the repository. The Activities app may run from the
- *  repository root or from apps/activities, so look in both. */
-async function readEmailLogo() {
-  const file = "assets/email/leisureworld-white-no-tagline.png";
-  try { return await readFile(join(process.cwd(), file)); }
-  catch { return await readFile(join(process.cwd(), "../..", file)); }
-}
-
 export async function sendParentSignInCode(email: string, code: string, config = parentEmailConfig()) {
   if (!address.safeParse(email).success || /[\r\n]/.test(email) || !/^\d{6}$/.test(code)) unavailable();
   try {
     const { subject, text, html } = parentSignInEmail(code);
-    const logo = await readEmailLogo();
+    const logo = await readFile(join(process.cwd(), "assets/email/leisureworld-white-no-tagline.png"));
     await sendGoogleEmail(email, subject, { text, html, inlineImages: [{
       cid: PARENT_EMAIL_LOGO_CID, filename: "leisureworld.png", contentType: "image/png", content: logo,
     }] }, config);

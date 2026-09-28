@@ -3,7 +3,7 @@ import { test } from "node:test";
 import { serverModule } from "@/test/server-module";
 
 type User = { home: string; screens: string[]; permissions: string[] };
-const routes = ["apps/activities/src/app/(activities)/start/page.tsx"];
+const routes = ["src/app/(activities)/start/page.tsx"];
 
 // The Start page reads `?workspace=`, so every page gets (empty) search params.
 const props = { searchParams: Promise.resolve({}) } as never;

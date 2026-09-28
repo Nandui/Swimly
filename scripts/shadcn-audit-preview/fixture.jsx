@@ -12,7 +12,7 @@ import { SwimmerProfile } from '@/modules/activities/components/students/swimmer
 import { ClassEnrolmentDialog } from '@/modules/activities/components/students/class-enrolment-dialog';
 import { DutyView } from '@/modules/activities/components/duty/duty-view';
 import { BillingList } from '@/modules/activities/components/duty/billing-list';
-import InstructorError from '../../apps/activities/src/app/(instructor)/instructor/error';
+import InstructorError from '@/app/(instructor)/instructor/error';
 import { articlesForScope, summarizeArticle } from '@/lib/help/catalogue';
 import { courses, enrolments, progress, history, swimmers, date, levels } from '../help-screenshots/data.mjs';
 

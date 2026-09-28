@@ -12,15 +12,6 @@
       "autoPort": true
     },
     {
-      "name": "activities-dev",
-      "runtimeExecutable": "npm",
-      "runtimeArgs": [
-        "run",
-        "dev:activities"
-      ],
-      "port": 3102
-    },
-    {
       "name": "sandbox",
       "runtimeExecutable": "npx",
       "runtimeArgs": [

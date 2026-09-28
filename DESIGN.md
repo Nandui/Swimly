@@ -706,9 +706,8 @@ enforces them.
 
 ```
 src/app/(core)/                Core: Staff, Roles, Clubs, Activity, Account
-apps/activities/src/app/(activities)/  the Activities app: desk shell and pages
-apps/activities/src/app/(instructor)/  the Activities pool-deck workspace
-src/lib/zones.ts               which paths Work forwards to the Activities app
+src/app/(activities)/          the Swim school desk shell and its pages
+src/app/(instructor)/          the Swim school pool-deck workspace
 src/app/sign-in/               the front door, outside the shell
 src/modules/activities/lib/    Activities domains (students, courses, enrolment, ...)
 src/modules/activities/components/ Activities feature components
@@ -774,7 +773,7 @@ and writes an audit row for the account it creates.
 
 The owner specified Instructor as a dedicated tablet experience on the pool
 deck, isolated in both directions from desk work. Its route group is
-`apps/activities/src/app/(instructor)/instructor/`, outside the desk layout. Its shadcn
+`src/app/(instructor)/instructor/`, outside the desk layout. Its shadcn
 frame contains classes, site switching, appearance and sign-out. The entire
 Instructor surface now uses shadcn Button, Item, Dialog, RadioGroup, Select,
 Collapsible, Alert, Label and Textarea. The shared teaching forms retain drafts,
