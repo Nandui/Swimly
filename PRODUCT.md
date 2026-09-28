@@ -162,7 +162,7 @@ is no longer offered as a screen or landing-page choice.
 Turnfin has two front doors (owner decisions, 27 and 28 September 2026). **Turnfin** is the job
 on the centre's registered PCs: after sign-in it opens the role's **home page**, its workspace
 (for example Front of House for a receptionist), with one card for each module the role has:
-Swim school, Refunds, Docs, Training, Rota, HR and Admin. What a role can do is one level for
+Swim school, Pool deck, Refunds, Docs, Training, Rota, HR and Admin. What a role can do is one level for
 each module (docs/how-turnfin-works.md). It holds no personal records. **Turnfin Me**
 (`apps/me`) is each person's own training, required reading, qualifications, shifts, what HR
 shared, their details and reminders, on their own phone, signed in with an email code every

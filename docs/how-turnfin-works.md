@@ -4,7 +4,7 @@
 
 ## In five sentences
 
-1. **Modules.** Turnfin is a set of modules: Swim school, Refunds, Docs, Training, Rota, HR and Admin. Each one keeps its own information to itself.
+1. **Modules.** Turnfin is a set of modules: Swim school, Pool deck, Refunds, Docs, Training, Rota, HR and Admin. Each one keeps its own information to itself.
 2. **Roles.** A role is a job, such as Receptionist or Instructor. For each module the role has a level, like None, Use or Manage. Each level includes the ones before it.
 3. **Home page.** When you sign in you see your role's home page: the modules your role has and what needs you today. The Receptionist's home is Front of House. Modules open inside it.
 4. **Aimed at roles.** Inside a module, things can be aimed at roles: this SOP is for Receptionists and Duty managers, that course is for Instructors.
@@ -34,7 +34,8 @@ A role holds one level for each module (`StaffRole.levels`), plus up to two extr
 
 | Module | Levels | Extra |
 | --- | --- | --- |
-| Swim school | Teach (the pool deck), Desk (bookings, moves, waiting lists, assessments), Manage (programmes, levels, classes and reports) | Can cancel classes |
+| Swim school | Desk (every swimmer, booking, move, waiting list and assessment booking), Manage (programmes, levels, classes and reports) | Can cancel classes (the duty manager page) |
+| Pool deck | Teach (the class instructor view only: own classes, attendance, competencies, assessments, covering), Lead (also any class's attendance) | |
 | Refunds | Use (log and follow requests), Manage (decide requests and record payments) | |
 | Docs | Read, Write, Manage | Can approve, never their own |
 | Training | Trainer (sign off practical training), Manage (courses, assigning, certificates) | |
@@ -43,7 +44,7 @@ A role holds one level for each module (`StaffRole.levels`), plus up to two extr
 | Admin | Manage (people, roles, sites, the activity log) | |
 
 **Where a level applies:**
-- Swim school, Training and Rota levels apply at the sites the person works at (Staff › a person › Role and sites). No sites ticked means every site.
+- Swim school, Pool deck, Training and Rota levels apply at the sites the person works at (Staff › a person › Role and sites). No sites ticked means every site.
 - HR "Their team" applies to the people the person manages.
 - Everything else applies everywhere.
 

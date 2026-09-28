@@ -38,11 +38,10 @@ registerSiteSummary({
 });
 
 /** The Swim school card on the home page: the everyday jobs only (everything
- *  else is one click away inside the module). The pool deck for teachers, the
- *  desk's tasks and follow-ups, the duty manager and the office for managers.
- *  Each line appears only when the viewer can already open it. */
+ *  else is one click away inside the module). The desk's tasks and follow-ups,
+ *  the duty manager and the office for managers. Each line appears only when
+ *  the viewer can already open it. */
 const SWIM_LINKS: readonly (HomeItem & { screen: ScreenKey; permission?: PermissionKey })[] = [
-  { label: "Your classes today", hint: "Attendance and progress on the pool deck", href: "/instructor", screen: "instructor" },
   { label: "Find a swimmer", hint: "Details, progress and enrolment", href: "/students", screen: "students" },
   { label: "Add a swimmer", hint: "Create a new swimmer record", href: "/students", screen: "students", permission: "students.manage" },
   { label: "Today's classes", hint: "Classes and assessments by day", href: "/schedule", screen: "calendar" },
@@ -60,12 +59,21 @@ registerHomeCard({
   async items(viewer) {
     const held = expandPermissions(viewer.permissions, { superadmin: viewer.isSuperadmin });
     const screens = visibleScreens(viewer.screens, held);
-    // Desk includes teaching, but the desk works from the schedule: the pool
-    // deck link is for people whose job is teaching.
-    const deck = !screens.has("calendar");
     return SWIM_LINKS
       .filter((link) => screens.has(link.screen) && (!link.permission || held.has(link.permission)))
-      .filter((link) => link.screen !== "instructor" || deck)
       .map(({ label, hint, href }) => ({ label, hint, href }));
+  },
+});
+
+/** The Pool deck card: a teacher's classes today and the swimmer lookup. */
+registerHomeCard({
+  moduleId: "pool-deck",
+  async items(viewer) {
+    const held = expandPermissions(viewer.permissions, { superadmin: viewer.isSuperadmin });
+    if (!visibleScreens(viewer.screens, held).has("instructor")) return [];
+    return [
+      { label: "Your classes today", hint: "Attendance, competencies and assessments", href: "/instructor" },
+      { label: "Find a swimmer in your classes", href: "/instructor/swimmers" },
+    ];
   },
 });

@@ -65,14 +65,14 @@ for (const [i, role] of SYSTEM_ROLES.entries()) {
 // The roles from "How Turnfin works" (docs/how-turnfin-works.md), as levels.
 const levelRoles: { name: string; homeName: string; levels: Record<string, string>; extras?: string[]; system?: boolean }[] = [
   { name: "Admin", homeName: "Management", levels: { admin: "manage" }, system: true },
-  { name: "Instructor", homeName: "Pool deck", levels: { "swim-school": "teach" }, system: true },
+  { name: "Instructor", homeName: "Pool deck", levels: { "pool-deck": "teach" }, system: true },
   { name: "Receptionist", homeName: "Front of House", levels: { "swim-school": "desk", refunds: "use", docs: "read", rota: "view" } },
   { name: "Lifeguard", homeName: "Poolside", levels: { docs: "read", rota: "view" } },
   { name: "Duty manager", homeName: "Duty desk", levels: { "swim-school": "desk", refunds: "manage", docs: "read", training: "trainer", rota: "manage" }, extras: ["swim-school.cancel-classes"] },
-  { name: "Swim school manager", homeName: "Swim school office", levels: { "swim-school": "manage", docs: "manage", training: "manage", rota: "manage", hr: "team" }, extras: ["swim-school.cancel-classes", "docs.approve"] },
+  { name: "Swim school manager", homeName: "Swim school office", levels: { "swim-school": "manage", "pool-deck": "lead", docs: "manage", training: "manage", rota: "manage", hr: "team" }, extras: ["swim-school.cancel-classes", "docs.approve"] },
 ];
 for (const [i, role] of levelRoles.entries()) {
-  const data = { homeName: role.homeName, ...roleColumns({ levels: role.levels, extras: role.extras ?? [] }), home: role.levels["swim-school"] === "teach" ? "instructor" : "calendar" };
+  const data = { homeName: role.homeName, ...roleColumns({ levels: role.levels, extras: role.extras ?? [] }), home: role.levels["pool-deck"] && !role.levels["swim-school"] ? "instructor" : "calendar" };
   roles[role.name] = role.system
     ? (await prisma.staffRole.update({ where: { name: role.name }, data })).id
     : (await prisma.staffRole.create({ data: { name: role.name, ...data, sortOrder: 10 + i } })).id;

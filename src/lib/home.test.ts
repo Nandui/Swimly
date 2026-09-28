@@ -36,10 +36,10 @@ test("a receptionist's home is Front of House, with exactly their modules", asyn
   assert.deepEqual(h.asked, [h.moduleIds], "cards are asked for the role's modules only");
 });
 
-test("an instructor's home has the swim school only; an unnamed home uses the role's name", async () => {
-  const h = await home({ name: "Instructor", homeName: null, levels: { "swim-school": "teach" } });
+test("a swim teacher's home has the pool deck only; an unnamed home uses the role's name", async () => {
+  const h = await home({ name: "Instructor", homeName: null, levels: { "pool-deck": "teach" } });
   assert.equal(h.homeName, "Instructor");
-  assert.deepEqual(h.moduleIds, ["swim-school"]);
+  assert.deepEqual(h.moduleIds, ["pool-deck"]);
 });
 
 test("the admin module appears only for a role that manages people, roles or sites", async () => {
@@ -55,13 +55,13 @@ function viewer(role: Role): HomeViewer {
 test("the swim school card lists only what the person can open", async () => {
   const contributions = serverModule<typeof import("@/modules/contributions")>("src/modules/contributions.ts", { "server-only": {} });
   serverModule("src/modules/activities/contributions.ts", { "server-only": {}, "@/lib/prisma": { prisma: {} }, "@/modules/contributions": contributions });
-  const labels = async (levels: Record<string, string>, extras: string[] = []) =>
-    ((await contributions.homeCardItems(["swim-school"], viewer({ name: "R", homeName: null, levels, extras }))).get("swim-school") ?? []).map((i) => i.label);
+  const labels = async (levels: Record<string, string>, extras: string[] = [], id = "swim-school") =>
+    ((await contributions.homeCardItems([id], viewer({ name: "R", homeName: null, levels, extras }))).get(id) ?? []).map((i) => i.label);
 
-  assert.deepEqual(await labels({ "swim-school": "teach" }), ["Your classes today"]);
+  assert.deepEqual(await labels({ "pool-deck": "teach" }, [], "pool-deck"), ["Your classes today", "Find a swimmer in your classes"]);
+  assert.deepEqual(await labels({ "swim-school": "desk" }, [], "pool-deck"), [], "the desk never gets the pool deck");
   const desk = await labels({ "swim-school": "desk" });
   assert.ok(desk.includes("Find a swimmer") && desk.includes("Add a swimmer") && desk.includes("Today's classes"));
-  assert.ok(!desk.includes("Your classes today"), "the desk works from the schedule, not the pool deck");
   assert.ok(!desk.includes("Cancelled classes") && !desk.includes("Programmes and levels"));
   assert.ok((await labels({ "swim-school": "desk" }, ["swim-school.cancel-classes"])).includes("Cancelled classes"));
   assert.ok((await labels({ "swim-school": "manage" })).includes("Programmes and levels"));

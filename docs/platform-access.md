@@ -14,7 +14,7 @@ document is the model that makes both true. Owner decisions, September 2026.
 
 *Simplified 28 September 2026: see [how-turnfin-works.md](how-turnfin-works.md).*
 
-1. **Modules.** Swim school, Refunds, Docs, Training, Rota, HR and Admin, each
+1. **Modules.** Swim school, Pool deck, Refunds, Docs, Training, Rota, HR and Admin, each
    described once in `src/modules/registry.ts`.
 2. **Roles with levels.** A role holds one level for each module (None, then for
    example Use and Manage) plus at most a couple of extras. Each person holds
@@ -25,7 +25,7 @@ document is the model that makes both true. Owner decisions, September 2026.
    check, so code never asks for a level or a role name. Some permissions are
    **restricted** (HR): administrators never get them, and only a superadmin
    gives HR.
-4. **Where a level applies.** Swim school, Training and Rota apply at the
+4. **Where a level applies.** Swim school, Pool deck, Training and Rota apply at the
    person's sites; HR "Their team" reaches only the people they manage (through
    `User.managerId`); everything else applies everywhere. The policy engine
    receives these as grants.

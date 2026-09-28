@@ -28,12 +28,14 @@ test("every module describes itself: unique ids, levels and a valid starting lev
 });
 
 test("levels are cumulative: a higher level gives everything below it", () => {
-  const at = (level: string) => storedAccess(cleanLevels({ "swim-school": level }));
-  const teach = at("teach"), desk = at("desk"), manage = at("manage");
-  for (const key of teach.permissions) assert.ok(desk.permissions.includes(key), key);
+  const at = (level: string, id = "swim-school") => storedAccess(cleanLevels({ [id]: level }));
+  const teach = at("teach", "pool-deck"), lead = at("lead", "pool-deck"), desk = at("desk"), manage = at("manage");
+  for (const key of teach.permissions) assert.ok(lead.permissions.includes(key), key);
   for (const key of desk.permissions) assert.ok(manage.permissions.includes(key), key);
   assert.deepEqual(teach.screens, ["instructor"]);
-  assert.ok(!teach.permissions.includes("students.manage"), "teaching never opens the desk");
+  assert.deepEqual(lead.screens, ["instructor"], "a lead teacher still sees only the instructor view");
+  assert.ok(!lead.permissions.includes("students.manage"), "teaching never opens the desk");
+  assert.ok(!desk.screens.includes("instructor") && !desk.permissions.includes("attendance.mark"), "the desk never opens the pool deck");
 });
 
 test("Admin Manage is today's administrator: every module except HR", () => {
@@ -62,7 +64,7 @@ test("Swim school, Training and Rota apply at the person's sites; the rest every
 test("extras need their starting level, and unknown modules or levels are dropped", () => {
   assert.deepEqual(cleanLevels({ docs: "read", nope: "manage", refunds: "boss" }, ["docs.approve", "swim-school.cancel-classes", "x.y"]),
     { levels: { docs: "read" }, extras: ["docs.approve"] });
-  assert.deepEqual(cleanLevels({ "swim-school": "teach" }, ["swim-school.cancel-classes"]).extras, [], "cancelling classes starts at Desk");
+  assert.deepEqual(cleanLevels({ "pool-deck": "teach" }, ["swim-school.cancel-classes"]).extras, [], "cancelling classes needs the Swim school desk");
   assert.ok(storedAccess(cleanLevels({}, [WORK_ANYWHERE])).permissions.includes("work.anywhere"));
 });
 
@@ -73,13 +75,13 @@ test("the receptionist from the mockup gets the desk, refunds to log, reading an
   assert.ok(receptionist.screens.includes("refunds") && receptionist.screens.includes("docs") && !receptionist.screens.includes("staff"));
 });
 
-test("the shipped roles convert without losing anything; only Viewer gains, and it is reported", () => {
+test("the shipped roles convert without losing anything, and every gain is reported", () => {
   const byName = Object.fromEntries(SYSTEM_ROLES.map((r) => [r.name, levelsFromAccess(r.permissions, r.screens)]));
   for (const [name, conversion] of Object.entries(byName)) assert.deepEqual(conversion.losses, [], `${name} would lose access`);
   assert.deepEqual(byName.Admin.role.levels, { admin: "manage" });
   assert.deepEqual(byName.Admin.gains, []);
-  assert.deepEqual(byName.Instructor.role.levels, { "swim-school": "teach" });
-  assert.deepEqual(byName.Instructor.gains, []);
+  assert.deepEqual(byName.Instructor.role.levels, { "pool-deck": "teach" });
+  assert.deepEqual(byName.Instructor.gains, ["assessments.run"], "assessments are run from the instructor view");
   assert.equal(byName.Viewer.role.levels["swim-school"], "desk");
   assert.ok(byName.Viewer.gains.includes("students.manage"), "Viewer has no read-only level, so its gains are listed for review");
 });

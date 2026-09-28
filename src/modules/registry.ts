@@ -1,4 +1,4 @@
-import { Building2, CalendarClock, Files, GraduationCap, HeartHandshake, ReceiptText, WavesLadder, type LucideIcon } from "lucide-react";
+import { Building2, CalendarClock, Files, GraduationCap, HeartHandshake, ReceiptText, Waves, WavesLadder, type LucideIcon } from "lucide-react";
 import type { PermissionKey } from "@/lib/staff/permissions";
 import { isActivitiesScreen, isCoreScreen, type ScreenKey } from "@/lib/staff/screens";
 
@@ -106,7 +106,7 @@ registerModule({
   reception: true,
   name: "Swim school",
   // Swim school is the first activity type (see src/modules/activities/types.ts).
-  description: "Run the swim school: classes, swimmers, attendance and progress. Camps, pool hire and fitness classes will join it.",
+  description: "Swimmers, bookings, classes and assessments at the desk, and the swim school's set-up. Camps, pool hire and fitness classes will join it.",
   icon: WavesLadder,
   // Resolve permissions and the preferred workspace again when opened.
   href: "/start",
@@ -115,12 +115,8 @@ registerModule({
     reach: "sites",
     levels: [
       {
-        key: "teach", label: "Teach", help: "Their classes on the pool deck: attendance and progress.",
-        permissions: ["attendance.mark", "attendance.cover", "progression.assess", "progression.complete"], screens: ["instructor"],
-      },
-      {
-        key: "desk", label: "Desk", help: "Bookings, moves, waiting lists and assessments.",
-        permissions: ["students.manage", "enrolment.manage", "attendance.markAny", "assessments.run", "parents.manage"],
+        key: "desk", label: "Desk", help: "Every swimmer, booking, move, waiting list and assessment booking.",
+        permissions: ["students.manage", "enrolment.manage", "parents.manage"],
         screens: ["calendar", "students", "courses", "together", "assessments", "awaiting-enrolment", "legend-agreements"],
       },
       {
@@ -135,7 +131,33 @@ registerModule({
       },
     ],
   },
-  visibleTo: ({ screens }) => [...screens].some(isActivitiesScreen),
+  visibleTo: ({ screens }) => [...screens].some((key) => isActivitiesScreen(key) && key !== "instructor"),
+});
+
+// The pool deck is its own module: teaching is a different job from the desk
+// (owner decision, 28 September 2026). Swim teachers see the class instructor
+// view and nothing else; receptionists never see it unless given it too.
+registerModule({
+  id: "pool-deck",
+  name: "Pool deck",
+  description: "The class instructor view: today's classes, attendance, competencies and assessments.",
+  icon: Waves,
+  href: "/instructor",
+  logName: "Swim school",
+  access: {
+    reach: "sites",
+    levels: [
+      {
+        key: "teach", label: "Teach", help: "Their own classes: attendance, competencies, assessments, and covering a colleague's class.",
+        permissions: ["attendance.mark", "attendance.cover", "progression.assess", "progression.complete", "assessments.run"], screens: ["instructor"],
+      },
+      {
+        key: "lead", label: "Lead", help: "Also take attendance for any class, for example copying in a paper register.",
+        permissions: ["attendance.markAny"], screens: [],
+      },
+    ],
+  },
+  visibleTo: ({ screens }) => screens.has("instructor"),
 });
 
 registerModule({

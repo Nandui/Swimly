@@ -48,7 +48,7 @@ export type RoleInput = z.input<typeof roleSchema>;
 
 /** Where a role's session starts until home pages replace role homes. */
 function legacyHome(role: RoleLevels): RoleHome {
-  return role.levels["swim-school"] === "teach" ? "instructor" : "calendar";
+  return role.levels["pool-deck"] && !role.levels["swim-school"] ? "instructor" : "calendar";
 }
 
 function prepare(input: RoleInput) {
