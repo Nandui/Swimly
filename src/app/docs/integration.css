@@ -30,7 +30,6 @@
 .turnfin-docs [data-slot='button'] { border-radius: var(--ui-radius); }
 .turnfin-docs [data-slot='badge'] { font-weight: 500; }
 .turnfin-docs input:focus, .turnfin-docs textarea:focus, .turnfin-docs select:focus { outline: none; }
-.turnfin-docs .workspace-create { color: var(--ui-primary-foreground); }
 .turnfin-docs .button.primary { color: var(--ui-primary-foreground); background: var(--ui-primary); }
 .turnfin-docs .button.primary:hover { background: var(--ui-primary-hover); }
 .turnfin-docs .reader-layout, .turnfin-docs .editor-layout { min-width: 0; }

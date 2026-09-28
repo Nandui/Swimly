@@ -119,19 +119,6 @@ export function Shell({
               />
             </form>
           )}
-          {canWrite(w.member) && (
-            <Button asChild size={compact ? 'icon' : 'default'} className="workspace-create">
-              <Link
-                href="/docs/documents/new"
-                aria-label="New document"
-                title={compact ? 'New document' : undefined}
-                onClick={() => setMobile(false)}
-              >
-                <Plus size={18} />
-                {!compact && <span>New document</span>}
-              </Link>
-            </Button>
-          )}
         </div>
         <nav
           className="workspace-navigation"

@@ -2,7 +2,7 @@
 
 import { usePathname, useSearchParams } from 'next/navigation';
 import type { ReactNode } from 'react';
-import { CheckCheck, CircleHelp, Clock3, FilePenLine, Inbox, Plus, ReceiptText, UserRound } from 'lucide-react';
+import { CheckCheck, CircleHelp, Clock3, FilePenLine, Inbox, ReceiptText, UserRound } from 'lucide-react';
 import { ModuleShell } from '@/components/workspace/module-shell';
 import type { RefundActor } from '@/lib/refunds/types';
 
@@ -30,7 +30,6 @@ export function RefundShell({ who, initialCollapsed = false, children }: {
   return (
     <ModuleShell module="Refunds" id="refunds" who={who} pageLabel={pageLabel} initialCollapsed={initialCollapsed} scopeNote="Your team's space"
       groups={[{ label: 'Requests', links: requests }, { label: 'Follow up', links: followUp }]}
-      action={who.request ? { href: '/refunds/new', label: 'New request', icon: Plus } : undefined}
       contentClass="refund-content" scrollKey={query.toString()}>
       {children}
     </ModuleShell>

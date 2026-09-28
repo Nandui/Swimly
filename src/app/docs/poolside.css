@@ -182,7 +182,6 @@
 .turnfin-docs .workspace-search { min-height: 44px; border-radius: 12px; border-color: var(--pc-line-strong); background: var(--pc-surface); }
 .turnfin-docs .workspace-search input { align-self: stretch; height: auto; font-size: var(--pc-text-body); }
 .turnfin-docs .workspace-search:focus-within { outline: none; border-color: var(--pc-focus); box-shadow: 0 0 0 1px var(--pc-focus), var(--pc-focus-halo); }
-.turnfin-docs .workspace-create { min-height: 44px; border-radius: 12px; }
 .turnfin-docs .workspace-nav-label { margin: 0 12px 8px; font-size: var(--pc-text-caption); font-weight: 600; color: var(--pc-ink-muted); }
 .turnfin-docs :is(.workspace-nav-item + .workspace-nav-label, .workspace-navigation > .contents:not(:first-child) > .workspace-nav-label) { margin-top: 24px; }
 .turnfin-docs .workspace-nav-item { margin: 2px 0; border-radius: 12px; font-size: var(--pc-text-body); font-weight: 500; color: var(--pc-ink-muted); transition: color 120ms var(--pc-ease), background-color 120ms var(--pc-ease); }

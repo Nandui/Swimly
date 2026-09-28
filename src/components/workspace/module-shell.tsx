@@ -23,7 +23,7 @@ export type ModuleLinkGroup = { label: string; links: ModuleLink[] };
  *  inside a module that module's own pages, with "Back to Hub" in the footer. Also a
  *  breadcrumb, the mobile sheet and a remembered collapse preference. Links are presentation; every page checks
  *  its permission again. The pool deck keeps its own tablet frame. */
-export function ModuleShell({ module, id, current = id, who, links = [], groups, action, tools, scopeNote, pageLabel, initialCollapsed = false, base = `/${id}`, contentClass = 'module-content', maxWidth, scrollKey = '', children }: {
+export function ModuleShell({ module, id, current = id, who, links = [], groups, tools, scopeNote, pageLabel, initialCollapsed = false, base = `/${id}`, contentClass = 'module-content', maxWidth, scrollKey = '', children }: {
   /** Display name, e.g. "Training". */
   module: string;
   /** Short id for the scope class, cookie and landmarks, e.g. "training". */
@@ -35,8 +35,6 @@ export function ModuleShell({ module, id, current = id, who, links = [], groups,
   links?: ModuleLink[];
   /** …or as several named groups. */
   groups?: ModuleLinkGroup[];
-  /** One main action above the menu, e.g. "New request". */
-  action?: { href: string; label: string; icon: LucideIcon };
   /** Module controls under the brand, e.g. the swim school's site and
    *  swimmer search. Shown when the sidebar is expanded and in the phone sheet. */
   tools?: ReactNode;
@@ -74,7 +72,6 @@ export function ModuleShell({ module, id, current = id, who, links = [], groups,
       <div className="workspace-sidebar-header">
         <div className="workspace-brand-row"><Link href={base} aria-label={`Turnfin ${module}`} onClick={close}><Brand module={module} /></Link>{!inSheet && <Button variant="ghost" size="icon" aria-label={compact ? 'Expand navigation' : 'Collapse navigation'} aria-expanded={!compact} onClick={() => changeCollapsed(!collapsed)}>{compact ? <PanelLeftOpen size={18} /> : <PanelLeftClose size={18} />}</Button>}</div>
         {!onHome && !compact && tools && <div className="workspace-tools">{tools}</div>}
-        {action && <Button asChild size={compact ? 'icon' : 'default'} className="workspace-create"><Link href={action.href} aria-label={action.label} title={compact ? action.label : undefined} onClick={close}><action.icon size={18} aria-hidden="true" />{!compact && <span>{action.label}</span>}</Link></Button>}
       </div>
       <nav className="workspace-navigation" aria-label={inSheet ? `Mobile ${module} navigation` : `${module} navigation`}>
         {onHome && <YourModulesNav compact={compact} onNavigate={close} />}
@@ -96,7 +93,6 @@ export function ModuleShell({ module, id, current = id, who, links = [], groups,
       <header className="workspace-mobile-toolbar">
         <Sheet open={mobile} onOpenChange={setMobile}><SheetTrigger asChild><Button variant="ghost" size="icon" aria-label="Open navigation"><Menu size={20} /></Button></SheetTrigger><SheetContent side="left" className={`workspace-mobile-sheet turnfin-module turnfin-${id}`} aria-describedby={`${id}-nav-description`}><SheetTitle className="sr-only">{module} navigation</SheetTitle><SheetDescription className="sr-only" id={`${id}-nav-description`}>Your modules and the {module} pages.</SheetDescription>{navigation(true)}</SheetContent></Sheet>
         <Link href={base} aria-label={`Turnfin ${module}`}><Brand module={module} /></Link><AppearanceMenu />
-        {action && <Button asChild size="icon"><Link href={action.href} aria-label={action.label}><action.icon size={18} /></Link></Button>}
       </header>
       <main id={`${id}-main`} ref={page} tabIndex={-1} className="workspace-page"><div className="page-content workspace-page-content"><div className={contentClass} style={maxWidth ? { maxWidth } : undefined}>{children}</div><footer className="app-footer"><span>Turnfin {module}</span><span className="brand-values">People. Places. Progress.</span></footer></div></main>
     </div>

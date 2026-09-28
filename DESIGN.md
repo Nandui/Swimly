@@ -381,7 +381,8 @@ always there. The keyholder guard keeps at least one active account holding
 role's modules. Inside a module it shows only that module's pages, with a "Back to Hub" link (back arrow, styled like any page link that is not current) in the sidebar footer, above the Help and Appearance buttons and Account
 (`HomeButton` in `src/components/workspace/your-modules.tsx`); modules are
 reached from Home. Never list the modules and a
-module's pages together. The pool deck keeps its own tablet frame.
+module's pages together. The sidebar holds navigation only: no action buttons such as "New
+  document"; a module's main action sits in its page heading. The pool deck keeps its own tablet frame.
 
 Analytics lives in Monitoring as a separate shadcn dashboard. Its bento grid
 uses three headline totals, a larger programme/level breakdown, and supporting
