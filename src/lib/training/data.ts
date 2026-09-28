@@ -54,7 +54,8 @@ export async function assignablePeople() {
   return prisma.user.findMany({
     where: { orgId: who.orgId ?? undefined, isActive: true, id: await scopedUserIds("training.assign") },
     orderBy: { name: "asc" },
-    select: { id: true, name: true, jobTitle: true },
+    // Their role, so a course can be given to everyone on a role at once.
+    select: { id: true, name: true, jobTitle: true, staffRole: { select: { id: true, name: true } } },
   });
 }
 

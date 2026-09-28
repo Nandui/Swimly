@@ -589,15 +589,17 @@ export async function library(
     values,
   );
 }
-/** One organisation chart: mirror the platform's sites (facility) and
- *  departments (team) into Docs groups with their platform ids, so documents,
- *  filters and team assignments use the same structure as the rest of Turnfin.
+/** One organisation chart: mirror the platform's sites (facility), departments
+ *  (team) and roles (a team named "… (role)") into Docs groups with their
+ *  platform ids, so documents, filters and assignments use the same structure
+ *  as the rest of Turnfin, and a document can be aimed at a role.
  *  A Docs-only group with the same name keeps its id (published versions refer
  *  to it) and is renamed "… (Docs group)" to tell them apart. Idempotent. */
 export async function syncPlatformGroups(tx: Sql) {
   const org = await tx.staff.organisation?.();
   if (!org) return;
-  for (const [kind, list] of [['facility', org.sites], ['team', org.departments]] as const) {
+  const roles = (org.roles ?? []).map((role) => ({ id: role.id, name: `${role.name} (role)` }));
+  for (const [kind, list] of [['facility', org.sites], ['team', [...org.departments, ...roles]]] as const) {
     for (const group of list) {
       await tx.query("UPDATE groups SET name=name||' (Docs group)' WHERE kind=$1 AND name=$2 AND source='docs' AND id<>$3", [kind, group.name, group.id]);
       await tx.query("INSERT INTO groups(id,kind,name,source) VALUES($1,$2,$3,'platform') ON CONFLICT(id) DO UPDATE SET name=excluded.name, source='platform' WHERE groups.name IS DISTINCT FROM excluded.name OR groups.source<>'platform'", [group.id, kind, group.name]);

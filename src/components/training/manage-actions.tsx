@@ -16,7 +16,7 @@ import { assignTraining, cancelAssignment, returnForPractice, saveCourse, setCou
 /** Training's dialogs. Each carries the Poolside Clear scope into its portal. */
 const THEME = "turnfin-docs turnfin-module";
 
-type Person = { id: string; name: string; jobTitle: string | null };
+type Person = { id: string; name: string; jobTitle: string | null; staffRole?: { id: string; name: string } | null };
 type CourseOption = { id: string; title: string };
 
 export function AssignTraining({ courses, people, courseId, userIds, label = "Assign training", variant = "default" }: {
@@ -30,6 +30,10 @@ export function AssignTraining({ courses, people, courseId, userIds, label = "As
 }) {
   const [chosen, setChosen] = useState<Set<string>>(new Set(userIds ?? []));
   const [filter, setFilter] = useState("");
+  // Everyone on a role, among the people this person may assign to.
+  const roles = [...new Map(people.flatMap((p) => (p.staffRole ? [[p.staffRole.id, p.staffRole.name] as const] : []))).entries()]
+    .map(([id, name]) => ({ id, name, ids: people.filter((p) => p.staffRole?.id === id).map((p) => p.id) }))
+    .sort((a, b) => a.name.localeCompare(b.name));
   const shown = people.filter((p) => !filter || `${p.name} ${p.jobTitle}`.toLowerCase().includes(filter.toLowerCase()));
   const fixed = !!userIds?.length && people.length <= (userIds?.length ?? 0);
   return (
@@ -57,6 +61,15 @@ export function AssignTraining({ courses, people, courseId, userIds, label = "As
       ) : (
         <fieldset className="space-y-2">
           <legend className="text-sm font-medium">People ({chosen.size} chosen)</legend>
+          {roles.length > 1 ? (
+            <div className="flex flex-wrap gap-2" role="group" aria-label="Choose everyone on a role">
+              {roles.map((role) => (
+                <Button key={role.id} type="button" variant="outline" size="sm" className="min-h-11" onClick={() => setChosen((prev) => new Set([...prev, ...role.ids]))}>
+                  Everyone on {role.name} ({role.ids.length})
+                </Button>
+              ))}
+            </div>
+          ) : null}
           <Input aria-label="Filter people" placeholder="Filter by name or job title" value={filter} onChange={(value) => setFilter(value)} />
           <ul className="max-h-64 space-y-1 overflow-y-auto">
             {shown.map((p) => (

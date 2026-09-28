@@ -11,9 +11,9 @@ let platform: Database;
 before(async () => {
   db = await createDocsTestDatabase();
   const staff: StaffDirectory = {
-    find: async (id) => { const p = await db.staff.find(id); return p && (id === 'riley' ? { ...p, siteIds: ['club_churchfield'], departmentIds: ['dept_aquatics'] } : p); },
-    list: async () => (await db.staff.list()).map((p) => (p.id === 'riley' ? { ...p, siteIds: ['club_churchfield'], departmentIds: ['dept_aquatics'] } : p)),
-    organisation: async () => ({ sites: [{ id: 'club_churchfield', name: 'LeisureWorld Churchfield' }], departments: [{ id: 'dept_aquatics', name: 'Aquatics' }] }),
+    find: async (id) => { const p = await db.staff.find(id); return p && (id === 'riley' ? { ...p, siteIds: ['club_churchfield'], departmentIds: ['dept_aquatics'], roleIds: ['role_lifeguard'] } : p); },
+    list: async () => (await db.staff.list()).map((p) => (p.id === 'riley' ? { ...p, siteIds: ['club_churchfield'], departmentIds: ['dept_aquatics'], roleIds: ['role_lifeguard'] } : p)),
+    organisation: async () => ({ sites: [{ id: 'club_churchfield', name: 'LeisureWorld Churchfield' }], departments: [{ id: 'dept_aquatics', name: 'Aquatics' }], roles: [{ id: 'role_lifeguard', name: 'Lifeguard' }] }),
   };
   platform = { ...db, staff, transaction: (fn) => db.transaction((tx) => fn({ ...tx, staff, query: tx.query.bind(tx) })) };
 });
@@ -41,4 +41,12 @@ test('membership merges Docs-only groups with the Staff profile, and platform id
 
 test('platform groups cannot be renamed from Docs', async () => {
   await assert.rejects(new DocumentService(platform).saveGroup('alex', 'team', 'Renamed', 'dept_aquatics'), /managed in Staff/);
+});
+
+test('a role is a Docs team of everyone on it, so reading can be aimed at a role', async () => {
+  await platform.transaction(syncPlatformGroups);
+  const group = (await rows<{ id: string; kind: string; name: string; source: string }>(db, "SELECT id,kind,name,source FROM groups WHERE id='role_lifeguard'"))[0];
+  assert.deepEqual(group, { id: 'role_lifeguard', kind: 'team', name: 'Lifeguard (role)', source: 'platform' });
+  const riley = (await listMembers(platform)).find((m) => m.id === 'riley')!;
+  assert.ok(riley.teamIds.includes('role_lifeguard'));
 });

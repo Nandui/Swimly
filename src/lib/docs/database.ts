@@ -2,13 +2,14 @@ import type { Member } from './types';
 
 /** A person from the Turnfin staff directory. `siteIds`/`departmentIds` are
  *  their place in the one platform organisation chart (main site, departments
- *  and the sites those departments belong to). */
-export type StaffIdentity = Omit<Member, 'facilityIds' | 'teamIds'> & { siteIds?: string[]; departmentIds?: string[] };
-export type PlatformGroups = { sites: { id: string; name: string }[]; departments: { id: string; name: string }[] };
+ *  and the sites those departments belong to); `roleIds` is their role, so
+ *  documents and reading can be aimed at a role (docs/how-turnfin-works.md). */
+export type StaffIdentity = Omit<Member, 'facilityIds' | 'teamIds'> & { siteIds?: string[]; departmentIds?: string[]; roleIds?: string[] };
+export type PlatformGroups = { sites: { id: string; name: string }[]; departments: { id: string; name: string }[]; roles?: { id: string; name: string }[] };
 export interface StaffDirectory {
   find(id: string): Promise<StaffIdentity | null>;
   list(): Promise<StaffIdentity[]>;
-  /** The platform's sites and departments, mirrored into Docs groups. */
+  /** The platform's sites, departments and roles, mirrored into Docs groups. */
   organisation?(): Promise<PlatformGroups>;
 }
 /** Docs SQL is isolated from the authoritative Turnfin staff directory. */
@@ -32,12 +33,13 @@ export async function listMembers(db: Sql): Promise<Member[]> {
   return identities.map(identity => merge(identity, membership.get(identity.id))).sort((a, b) => a.name.localeCompare(b.name));
 }
 /** Docs-only group membership (member_profiles) plus the person's platform
- *  sites and departments, which are managed in Staff, never here. */
+ *  sites, departments and role, which are managed in Staff, never here. A
+ *  role is a Docs team whose members are everyone on that role. */
 function merge(identity: StaffIdentity, profile?: Membership): Member {
-  const { siteIds = [], departmentIds = [], ...rest } = identity;
+  const { siteIds = [], departmentIds = [], roleIds = [], ...rest } = identity;
   return { ...rest,
     facilityIds: [...new Set([...(profile?.facilityIds ?? []), ...siteIds])],
-    teamIds: [...new Set([...(profile?.teamIds ?? []), ...departmentIds])],
+    teamIds: [...new Set([...(profile?.teamIds ?? []), ...departmentIds, ...roleIds])],
   };
 }
 export interface Database extends Sql {
