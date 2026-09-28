@@ -3,7 +3,7 @@ import test from "node:test";
 import { allModules } from "@/modules/registry";
 import { ALL_PERMISSIONS, SYSTEM_ROLES, UNRESTRICTED_PERMISSIONS } from "./permissions";
 import { ADMINISTRATOR_SCREENS, ALL_SCREENS } from "./screens";
-import { WORK_ANYWHERE, accessByReach, cleanLevels, isRestrictedRole, levelsFromAccess, storedAccess } from "./levels";
+import { WORK_ANYWHERE, accessByReach, cleanLevels, describeLevels, isRestrictedRole, levelsFromAccess, roleColumns, storedAccess } from "./levels";
 
 const owners = (key: string) =>
   allModules().flatMap((m) => [...m.access.levels, ...(m.access.extras ?? [])]
@@ -90,4 +90,12 @@ test("a legacy role holding HR everywhere converts to HR Everyone, not Their tea
   assert.deepEqual(hr.losses, []);
   const adminWithHr = levelsFromAccess([...UNRESTRICTED_PERMISSIONS, "hr.records.read"], []);
   assert.deepEqual(adminWithHr.role.levels, { admin: "manage", hr: "all" });
+});
+
+test("a role is described in the owner's words, and its columns match its levels", () => {
+  const role = cleanLevels({ "swim-school": "desk", refunds: "use" }, ["swim-school.cancel-classes"]);
+  assert.equal(describeLevels(role), "Refunds: Use · Swim school: Desk (can cancel classes)");
+  const columns = roleColumns(role);
+  assert.equal(columns.restricted, false);
+  assert.ok(columns.permissions.includes("classes.cancel") && columns.screens.includes("cancellations"));
 });

@@ -164,3 +164,24 @@ export function levelsFromAccess(permissions: readonly string[], screens: readon
     losses: [...beforeKeys].filter((key) => !afterKeys.has(key)).sort(),
   };
 }
+
+/** Everything a role row stores for these levels, so every save (the role
+ *  editor, the converter) writes the same translation. */
+export function roleColumns(role: RoleLevels) {
+  const clean = cleanLevels(role.levels, role.extras);
+  const { permissions, screens } = storedAccess(clean);
+  return { levels: clean.levels, extras: [...clean.extras], permissions, screens, restricted: isRestrictedRole(clean) };
+}
+
+/** "Swim school: Desk (can cancel classes) · Refunds: Use", for the activity
+ *  log and the converter's report. */
+export function describeLevels(role: RoleLevels): string {
+  const parts = allModules().flatMap((mod) => {
+    const rank = rankOf(mod, role.levels[mod.id]);
+    if (rank < 0) return [];
+    const ticks = (mod.access.extras ?? []).filter((e) => role.extras.includes(`${mod.id}.${e.key}`)).map((e) => e.label.toLowerCase());
+    return [`${mod.name}: ${mod.access.levels[rank].label}${ticks.length ? ` (${ticks.join(", ")})` : ""}`];
+  });
+  if (role.extras.includes(WORK_ANYWHERE)) parts.push("can work away from the centre's PCs");
+  return parts.length ? parts.join(" · ") : "No modules";
+}

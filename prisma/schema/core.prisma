@@ -61,6 +61,15 @@ model StaffRole {
   /// A role holding a restricted capability (HR, performance). Only a
   /// superadmin may edit it or assign it; administrators never inherit it.
   restricted  Boolean  @default(false)
+  /// The role as the owner sets it: one level for each module (module id →
+  /// level key, see `src/modules/registry.ts` and docs/how-turnfin-works.md).
+  /// Null for a role not yet converted. When set, `permissions` and `screens`
+  /// are its translation, written on save by `src/lib/staff/levels.ts`.
+  levels      Json?
+  /// Ticks beside the levels: `moduleId.extraKey`, or "work-anywhere".
+  extras      String[] @default([])
+  /// The name of the role's home page, e.g. "Front of House".
+  homeName    String?
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
 
@@ -97,6 +106,9 @@ model User {
   jobTitle      String?
   startedOn     DateTime? @db.Date
   primaryClubId String?
+  /// The sites this person works at, where their Swim school, Training and
+  /// Rota levels apply. Empty means every site (how everyone worked before).
+  siteIds       String[]  @default([])
   /// Sees everything in the organisation, including restricted (HR) data. A
   /// flag, not a permission, so no role editor can hand it out.
   isSuperadmin  Boolean   @default(false)

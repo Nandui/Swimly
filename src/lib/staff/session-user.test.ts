@@ -32,3 +32,34 @@ test("an org-wide additional role adds everywhere; no primary role still reads a
   assert.ok(user.permissions.includes("classes.cancel"));
   assert.equal(sessionUserFor({ ...account([]), staffRole: null }, null), null);
 });
+
+const levelled = (levels: Record<string, string>, siteIds: string[] = [], extras: string[] = []): Account => ({
+  ...account([]),
+  siteIds,
+  staffRole: { id: "reception", name: "Receptionist", permissions: [], home: "calendar", screens: [], levels, extras, homeName: "Front of House" },
+});
+
+test("a role with levels is built from its levels, not its stored keys", () => {
+  const user = sessionUserFor(levelled({ "swim-school": "desk", refunds: "use", docs: "read" }), "bishopstown")!;
+  for (const key of ["students.manage", "refunds.request", "docs.read"]) assert.ok(user.permissions.includes(key), key);
+  assert.ok(user.screens.includes("refunds") && user.screens.includes("students"));
+  assert.ok(user.primaryPermissions.includes("students.manage"), "no sites set: the desk applies everywhere");
+  assert.equal(user.grants.length, 0);
+});
+
+test("Swim school, Training and Rota apply only at the sites a person works at", () => {
+  const at = (site: string) => sessionUserFor(levelled({ "swim-school": "desk", refunds: "use" }, ["churchfield"]), site)!;
+  assert.ok(at("churchfield").permissions.includes("enrolment.manage"));
+  assert.ok(!at("bishopstown").permissions.includes("enrolment.manage"), "not at a site they do not work at");
+  assert.ok(at("bishopstown").permissions.includes("refunds.request"), "Refunds applies everywhere");
+  const grants = at("bishopstown").grants;
+  assert.deepEqual(grants.map((g) => [g.scopeKind, g.scopeId]), [["site", "churchfield"]]);
+  assert.ok(!at("bishopstown").primaryPermissions.includes("enrolment.manage"));
+});
+
+test("HR Their team reaches only the holder's reports, never the flat checks", () => {
+  const user = sessionUserFor(levelled({ hr: "team" }), null)!;
+  assert.ok(!user.permissions.includes("hr.records.read"));
+  assert.deepEqual(user.grants.map((g) => g.scopeKind), ["reports"]);
+  assert.ok(user.grants[0].permissions.includes("hr.reviews.write"));
+});
