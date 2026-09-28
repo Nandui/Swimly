@@ -3,7 +3,7 @@
 import * as React from "react";
 import Link from "next/link";
 import { usePathname, useSearchParams } from "next/navigation";
-import { ChevronDown, ChevronsUpDown, CircleHelp, CircleUser, House, LogOut, X, type LucideIcon } from "lucide-react";
+import { ChevronDown, ChevronsUpDown, CircleHelp, CircleUser, LogOut, X, type LucideIcon } from "lucide-react";
 import { AppLogo } from "@/components/app-logo";
 import { Badge } from "@/components/shadcn/badge";
 import { Button } from "@/components/shadcn/button";
@@ -12,12 +12,14 @@ import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel,
 import { Sidebar, SidebarContent, SidebarFooter, SidebarGroup, SidebarGroupLabel, SidebarHeader, SidebarInset, SidebarMenu, SidebarMenuButton, SidebarMenuItem, SidebarProvider, SidebarSeparator, SidebarTrigger, useSidebar } from "@/components/shadcn/sidebar";
 import { isNavItemActive } from "@/lib/nav-active";
 import { NAV_COLLAPSED_COOKIE, SHELL_PAGE_ID } from "@/lib/shell-preferences";
-import { useYourModules } from "@/components/workspace/your-modules";
+import { ModuleSwitcher } from "@/components/workspace/your-modules";
 
 export type NavItem = { href: string; label: string; icon: LucideIcon; badge?: number };
 export type NavGroup = { id: string; label: string; icon?: LucideIcon; collapsible?: boolean; items: NavItem[] };
 export type AppShellProps = {
   wordmark: string; homeHref?: string; groups: NavGroup[];
+  /** The module being shown, for the module switcher (docs/how-turnfin-works.md). */
+  module?: string;
   userName: string; userSubtitle?: string; onSignOut?: () => void;
   switcher?: React.ReactNode; search?: React.ReactNode; tools?: React.ReactNode;
   banner?: React.ReactNode; initialCollapsed?: boolean; contentMaxWidth?: number;
@@ -52,8 +54,6 @@ function WorkspaceSidebar(props: AppShellProps) {
   const { state, isMobile, setOpenMobile } = useSidebar();
   const pathname = usePathname();
   const collapsed = state === "collapsed" && !isMobile;
-  // "Your modules" first, the same in every frame (docs/how-turnfin-works.md).
-  const modules: NavGroup = { id: "modules", label: "Your modules", items: [{ href: "/", label: "Home", icon: House }, ...useYourModules().map((m) => ({ href: m.href, label: m.name, icon: m.icon }))] };
   return <Sidebar variant="inset" collapsible="icon" aria-label="Main navigation">
     <SidebarHeader className="gap-4 p-3 pb-4 group-data-[collapsible=icon]:items-center group-data-[collapsible=icon]:gap-3 group-data-[collapsible=icon]:px-0">
       <div className="flex items-center justify-between gap-2 group-data-[collapsible=icon]:flex-col">
@@ -62,14 +62,15 @@ function WorkspaceSidebar(props: AppShellProps) {
         </Link>
         {isMobile ? <Button variant="ghost" size="icon" className="size-11" aria-label="Close navigation" onClick={() => setOpenMobile(false)}><X aria-hidden="true" /></Button> : <SidebarTrigger aria-label={collapsed ? "Expand sidebar" : "Collapse sidebar"} title={collapsed ? "Expand sidebar" : "Collapse sidebar"} aria-expanded={!collapsed} className="size-11 shrink-0" />}
       </div>
-      {props.switcher || props.search ? <div className="flex w-full min-w-0 flex-col gap-2 group-data-[collapsible=icon]:items-center" aria-label="Workspace controls">
+      {props.module || props.switcher || props.search ? <div className="flex w-full min-w-0 flex-col gap-2 group-data-[collapsible=icon]:items-center" aria-label="Workspace controls">
+        {props.module ? <ModuleSwitcher current={props.module} compact={collapsed} onNavigate={() => setOpenMobile(false)} /> : null}
         {props.switcher}
         {props.search}
       </div> : null}
     </SidebarHeader>
     <SidebarSeparator className="mx-3 data-[orientation=horizontal]:w-auto group-data-[collapsible=icon]:mx-auto group-data-[collapsible=icon]:data-[orientation=horizontal]:w-6" />
     <SidebarContent className="px-3 py-4 group-data-[collapsible=icon]:overflow-auto group-data-[collapsible=icon]:px-0 group-data-[collapsible=icon]:[scrollbar-width:none]"><nav aria-label="Daily work and setup" className="space-y-6 group-data-[collapsible=icon]:space-y-4">
-      {[modules, ...props.groups].map(group => <NavigationGroup key={`${group.id}:${group.items.some(item => isNavItemActive(pathname, item.href))}`} group={group} pathname={pathname} collapsed={collapsed} />)}
+      {props.groups.map(group => <NavigationGroup key={`${group.id}:${group.items.some(item => isNavItemActive(pathname, item.href))}`} group={group} pathname={pathname} collapsed={collapsed} />)}
     </nav></SidebarContent>
     <SidebarFooter className="border-t border-ui-border p-3 group-data-[collapsible=icon]:px-0">
       <SidebarMenu className="group-data-[collapsible=icon]:items-center"><SidebarMenuItem><SidebarMenuButton asChild className="h-11 px-3" tooltip="Help centre (opens in a new tab)">

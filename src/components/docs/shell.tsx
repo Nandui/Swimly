@@ -17,14 +17,13 @@ import {
   PanelLeftClose,
   PanelLeftOpen,
   LifeBuoy,
-  Building2,
   ShieldCheck,
 } from 'lucide-react';
 import { canWrite, canManage, type Workspace } from '@/lib/docs/types';
 import { signOut } from 'next-auth/react';
 import { Avatar, Message } from './ui';
 import { Sidebar, SidebarProvider, SidebarMenuButton } from '@/components/shadcn/sidebar';
-import { YourModulesNav } from '@/components/workspace/your-modules';
+import { ModuleSwitcher } from '@/components/workspace/your-modules';
 import {
   Breadcrumb,
   BreadcrumbList,
@@ -95,15 +94,7 @@ export function Shell({
               </Button>
             )}
           </div>
-          {!compact && (
-            <div className="workspace-organisation">
-              <Building2 size={18} />
-              <div>
-                <strong>LeisureWorld</strong>
-                <span>Team workspace</span>
-              </div>
-            </div>
-          )}
+          <ModuleSwitcher current="docs" compact={compact} onNavigate={() => setMobile(false)} />
           {compact ? (
             <Button
               variant="ghost"
@@ -147,8 +138,6 @@ export function Shell({
           className="workspace-navigation"
           aria-label={inSheet ? 'Mobile navigation' : 'Main navigation'}
         >
-          <YourModulesNav current="docs" compact={compact} onNavigate={() => setMobile(false)} />
-          <p className="workspace-nav-label">Docs</p>
           {nav
             .filter((item) => item.href !== '/docs/reports' || (w.canReport ?? canManage(w.member)))
             .map((item) => {

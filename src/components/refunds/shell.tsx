@@ -29,7 +29,7 @@ export function RefundShell({ who, initialCollapsed = false, children }: {
   const pageLabel = pathname === '/refunds/new' ? 'New request' : onList ? 'Requests' : 'Request details';
   return (
     <ModuleShell module="Refunds" id="refunds" who={who} pageLabel={pageLabel} initialCollapsed={initialCollapsed} scopeNote="Your team's space"
-      groups={[{ label: 'Refunds', links: requests }, { label: 'Follow up', links: followUp }]}
+      groups={[{ label: 'Requests', links: requests }, { label: 'Follow up', links: followUp }]}
       action={who.request ? { href: '/refunds/new', label: 'New request', icon: Plus } : undefined}
       contentClass="refund-content" scrollKey={query.toString()}>
       {children}

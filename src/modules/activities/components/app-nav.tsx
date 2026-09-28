@@ -36,6 +36,7 @@ export function AppChrome({ screens, club, clubs, ...rest }: Props) {
       wordmark="Swim school"
       groups={visibleNavGroups(screens)}
       contentMaxWidth={pageWidthFor(pathname)}
+      module="swim-school"
       switcher={<ClubSwitcher club={club} clubs={clubs} sidebar />}
       search={canFindSwimmer ? (
         <WorkspaceSearch
