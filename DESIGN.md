@@ -261,8 +261,7 @@ waitlist actions and the desk teaching flow use the same shadcn components.
 Assessments uses two linked pages under its sidebar entry: Upcoming assessments
 and permission-gated Assessment setup. Session
 details focus on bookings and outcomes; dates, capacity and parent publishing
-live on the session's setup page. Awaiting enrolment has its own sidebar entry
-and screen grant. The searchable, paginated list combines pending placements
+live on the session's setup page. Awaiting enrolment has its own sidebar entry. The searchable, paginated list combines pending placements
 and class waitlists, grouping by swimmer and programme with each requested class
 visible. It offers family contacts, matching classes for placements and confirmed
 waitlist promotion when a space is available. Both lists re-home secondary
@@ -349,8 +348,8 @@ copy of that list, kept in step by hand, with nothing to catch it drifting.
 is no longer in the catalogue is ignored rather than fatal — which is what
 makes deleting a permission a safe edit.
 
-**Reads respect screen access.** Pages require their screen grant; setup pages
-and the activity log also require their named permissions. Mutations enforce
+**Reads respect permissions.** Each page requires the permission that opens it;
+setup pages and the activity log also require their named permissions. Mutations enforce
 their own permissions regardless of which controls are visible. Instructor
 records additionally require a confirmed start for that dated class.
 
@@ -377,30 +376,21 @@ one of those is an endpoint the browser can call.
 **Nothing refers to a role by name.** Not the code, not the nav, not the seed.
 That is what lets a club rename or delete every role the app shipped with.
 
-**A role also says which screens exist.** `StaffRole.screens` holds keys
-from the catalogue in `src/lib/staff/screens.ts`, one per top-level page.
-Administrators inherit all screens; for other roles the nav shows only those
-granted. Every page under the shell opens with
-`screenPage(screen, permission?)` and 404s for anyone whose role does not
-name it; a link that crosses into another screen asks `canSee` before it
-renders. Permissions are still the power to change something — screens are
-what is on the menu at all. That is how an instructor role is given Instructor
-and nothing else: the deck becomes their whole app. Account is never on the
-list because it is always there. The keyholder guard checks screens too:
-nobody may remove the last usable grant for Roles or Staff.
+**Screens are menu entries, opened by a permission.** Each top-level page in
+`src/lib/staff/screens.ts` names the one permission that opens it, and a role's
+levels give permissions (docs/how-turnfin-works.md). Nothing stores screens.
+Every page under the shell opens with `screenPage(screen, permission?)` and
+404s for anyone without that permission; a link into another screen asks
+`canSee` first. That is how a swim teacher (Pool deck: Teach) sees the
+instructor view and nothing else. Account is never on the list because it is
+always there. The keyholder guard keeps at least one active account holding
+`staff.manage` and one holding `roles.manage`.
 
-**A role also says where its day starts.** `StaffRole.home` is a key from the
-`ROLE_HOMES` map in the catalogue file — Schedule for the desk, Instructor for
-an instructor. Sign-in opens the home page; Open Swimly uses `/start`, which
-reads the role and redirects. The workspace wordmark stays within that workspace. A configured home that is not
-accessible falls back to another screen the role may open.
-
-Overview is retired. `/` is the role's home page;
-`/start` resolves their Swimly home. Schedule is the preferred fallback, then an accessible
-screen, then Account. Old `overview` screen grants are ignored; old home values
-normalize to `calendar`. The legacy database default remains compatible while
-new role forms and seeds explicitly save the selected home. Instructor-only
-roles retain their isolated destination. Overview's summary queries are removed.
+**The home page is the only front door.** `/` is the role's home page; old
+`/start`, `/reception`, `/reception-portal` and `/modules` links redirect to it.
+Every frame starts its menu with "Your modules" (Home and the role's
+modules), so moving between modules works the same everywhere; the pool deck
+keeps its own tablet frame.
 
 Analytics lives in Monitoring as a separate shadcn dashboard. Its bento grid
 uses three headline totals, a larger programme/level breakdown, and supporting

@@ -21,7 +21,7 @@ document is the model that makes both true. Owner decisions, September 2026.
    **one role** and the **sites they work at** (`User.siteIds`; none means every
    site).
 3. **Levels become permissions.** `src/lib/staff/levels.ts` translates levels
-   into the named permissions (capabilities) and screens that pages and actions
+   into the named permissions (capabilities) that pages, menus and actions
    check, so code never asks for a level or a role name. Some permissions are
    **restricted** (HR): administrators never get them, and only a superadmin
    gives HR.

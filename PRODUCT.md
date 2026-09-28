@@ -122,7 +122,7 @@ mode.
 
 Assessments separates Upcoming assessments and their swimmer rosters from
 Assessment setup for session creation, editing, cancellation and parent publication.
-Awaiting enrolment is a separate sidebar page and screen grant. It combines
+Awaiting enrolment is a separate sidebar page. It combines
 recorded placements without a class place in that programme with all class
 waitlists, including swimmers who have not been assessed or already have another
 class. Assessment follow-up belongs to the site of the latest assessment and
@@ -178,16 +178,14 @@ drafts, receipts, revision history, separate review/payment grants and staff
 alerts support the handoff. Turnfin does not send money or change Legend.
 See [docs/refunds.md](docs/refunds.md) for workflow and deployment.
 
-Overview is also retired. Schedule is the default for desk roles with calendar access; Duty manager
-and Instructor retain their chosen landing pages. Overview is absent from
-navigation and role choices. Older stored homes and screen grants need no
-database rewrite and never grant access to another screen by themselves.
+Overview is also retired. Everyone starts on their role's home page. Older stored
+homes and screen lists need no database rewrite and are no longer read: a page opens
+only for the permission it asks for.
 
 Analytics is a separate Monitoring dashboard with a bento layout: distinct
 enrolled swimmers, enrolled places versus total capacity per level, enrolment and unenrolment actions over
 the current Monday–Sunday week, and this month's cancelled class sessions. It follows the site
-selected in the sidebar. Administrators receive access automatically;
-other roles need the Analytics screen grant. See [metric definitions](docs/analytics.md).
+selected in the sidebar. It opens with Swim school: Manage (administrators have it). See [metric definitions](docs/analytics.md).
 
 Analytics also offers Reception activity, with weekly enrolments and unenrolments
 by the staff member recorded on each action and an expandable daily breakdown.
@@ -254,8 +252,8 @@ affect the totals. Individual results remain in Competencies.
 
 Schedule is the desk calendar at `/schedule`. Instructor is absent from desk
 navigation; desk attendance returns within the desk workspace. Instructor
-access needs its screen grant and attendance permission, independently of desk
-permissions. Accounts explicitly granted both can open either workspace, but
+access comes from the Pool deck level (taking attendance), independently of the
+Swim school desk. Accounts explicitly granted both can open either workspace, but
 neither workspace's normal navigation leads into the other. Legacy deck-only
 roles keep Instructor without gaining Schedule; existing desk roles keep Schedule.
 

@@ -92,7 +92,7 @@ The shell owns the main landmark and page inset: 16px, increasing to 24px at
 1024px in the desk workspace. Instructor keeps 16px. Do not nest a page frame.
 
 A role holds **one level for each module** (`StaffRole.levels`), translated into named
-permissions and screens by `src/lib/staff/levels.ts`; pages and actions ask for a named
+permissions by `src/lib/staff/levels.ts`; a screen is a menu entry opened by one permission. Pages and actions ask for a named
 permission, never a level or a role name. Each person holds **one role** plus the sites they
 work at (`User.siteIds`; none means every site). Swim school, Pool deck, Training and Rota apply at
 those sites, HR "Their team" only to the people they manage, the rest everywhere. **Admin:

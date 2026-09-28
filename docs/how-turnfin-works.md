@@ -30,7 +30,7 @@ Every decision is judged against these. Each pillar has one rule that delivers i
 
 ## Levels
 
-A role holds one level for each module (`StaffRole.levels`), plus up to two extras. Levels translate into the named permissions that pages and actions check, so security checks never ask for a level or a role name. The mapping lives in each module's description in `src/modules/registry.ts`.
+A role holds one level for each module (`StaffRole.levels`), plus up to two extras. Levels translate into the named permissions that pages, menus and actions check: **permissions are the only access language**. A screen is a menu entry opened by one permission; a module appears when the person holds any of its permissions. Security checks never ask for a level or a role name. The mapping lives in each module's description in `src/modules/registry.ts`.
 
 | Module | Levels | Extra |
 | --- | --- | --- |

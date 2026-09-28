@@ -14,11 +14,11 @@ Turnfin is **one Next.js app** made of **modules** on a shared **Core**, plus **
 
 `src/modules/registry.ts` holds one description for each module:
 - its name, icon and link;
-- its **levels** (None, then for example Use and Manage), each with one plain sentence, the permissions and screens it gives, and where it applies;
+- its **levels** (None, then for example Use and Manage), each with one plain sentence, the permissions it gives, and where it applies;
 - up to two **extras** across the app (Docs "Can approve", Swim school "Can cancel classes");
 - its **log name**.
 
-A role holds one level for each module (`StaffRole.levels`). `src/lib/staff/levels.ts` translates levels into the named permissions and screens that pages and actions check, so no check ever asks for a level or a role name. Adding a module means adding a folder and one description. A test fails if any permission or screen is not given by exactly one level.
+A role holds one level for each module (`StaffRole.levels`). `src/lib/staff/levels.ts` translates levels into the named permissions that pages and actions check, so no check ever asks for a level or a role name. A screen is a menu entry that appears when its one permission is held (`src/lib/staff/screens.ts`), and a module appears on the home page and in "Your modules" when the person holds any of its permissions. Adding a module means adding a folder and one description. A test fails if any permission is not given by exactly one level.
 
 ## The rules
 
