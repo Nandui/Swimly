@@ -26,7 +26,7 @@ test("default dates follow Dublin while selected dates and safe links stay fixed
 });
 
 test("old Today bookmarks redirect safely and retain a valid selected day", async () => {
-  const page = serverModule<typeof import("@/app/(activities)/today/page")>("src/app/(activities)/today/page.tsx", {
+  const page = serverModule<{ default: (props: { searchParams: Promise<Record<string, string>> }) => Promise<never> }>("apps/activities/src/app/(activities)/today/page.tsx", {
     "next/navigation": { redirect: (href: string) => { throw new Error(href); } },
   }).default;
   await assert.rejects(page({ searchParams: Promise.resolve({ date: "2026-09-16" }) }), { message: "/schedule?date=2026-09-16" });

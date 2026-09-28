@@ -7,6 +7,12 @@
       "runtimeArgs": ["run", "dev"],
       "port": 3000,
       "autoPort": true
+    },
+    {
+      "name": "activities-dev",
+      "runtimeExecutable": "npm",
+      "runtimeArgs": ["run", "dev:activities"],
+      "port": 3102
     }
   ]
 }

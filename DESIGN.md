@@ -700,17 +700,18 @@ version and refreshes the roster.
 
 ## Where things live
 
-Turnfin is split into Core, Work modules and Aquatics; see
+Turnfin is split into Core, Work modules and Activities; see
 [docs/architecture.md](docs/architecture.md) for the rules and the lint that
 enforces them.
 
 ```
 src/app/(core)/                Core: Staff, Roles, Clubs, Activity, Account
-src/app/(activities)/            the Aquatics desk shell and its pages
-src/app/(instructor)/          the Aquatics pool-deck workspace
+apps/activities/src/app/(activities)/  the Activities app: desk shell and pages
+apps/activities/src/app/(instructor)/  the Activities pool-deck workspace
+src/lib/zones.ts               which paths Work forwards to the Activities app
 src/app/sign-in/               the front door, outside the shell
-src/modules/activities/lib/      Aquatics domains (students, courses, enrolment, ...)
-src/modules/activities/components/ Aquatics feature components
+src/modules/activities/lib/    Activities domains (students, courses, enrolment, ...)
+src/modules/activities/components/ Activities feature components
 src/modules/registry.ts        the module catalogue (portal tiles)
 src/modules/contributions.ts   what modules add to Core pages, without imports
 src/components/ui-kit/         shared shadcn compositions — tag, page-header,
@@ -773,7 +774,7 @@ and writes an audit row for the account it creates.
 
 The owner specified Instructor as a dedicated tablet experience on the pool
 deck, isolated in both directions from desk work. Its route group is
-`src/app/(instructor)/instructor/`, outside the desk `(app)` layout. Its shadcn
+`apps/activities/src/app/(instructor)/instructor/`, outside the desk layout. Its shadcn
 frame contains classes, site switching, appearance and sign-out. The entire
 Instructor surface now uses shadcn Button, Item, Dialog, RadioGroup, Select,
 Collapsible, Alert, Label and Textarea. The shared teaching forms retain drafts,

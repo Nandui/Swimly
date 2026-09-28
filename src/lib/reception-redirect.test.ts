@@ -4,11 +4,12 @@ import { serverModule } from "@/test/server-module";
 import { visibleScreens } from "@/lib/staff/screens";
 import { expandPermissions } from "@/lib/staff/permissions";
 
-type Page = typeof import("@/app/(activities)/reception/page");
+// The retired Reception page lives in the Activities app (apps/activities).
+type Page = { default: (props: { searchParams: Promise<Record<string, string | string[] | undefined>> }) => Promise<never> };
 type User = { home: string; screens: string[]; permissions: string[] };
 
 function retiredPage(user: User | null) {
-  return serverModule<Page>("src/app/(activities)/reception/page.tsx", {
+  return serverModule<Page>("apps/activities/src/app/(activities)/reception/page.tsx", {
     "@/auth": { auth: async () => user ? { user } : null },
     "@/lib/authz": { canSee: (session: { user: User }, screen: "students") =>
       visibleScreens(session.user.screens, expandPermissions(session.user.permissions)).has(screen) },

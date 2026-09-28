@@ -5,14 +5,26 @@ import { databasePlan } from '../src/lib/database-environment';
 
 /** Run before every build. A deployment that boots without a database and
  *  discovers it on the first request has already served the error to someone;
- *  failing here costs nothing and names the fix. */
+ *  failing here costs nothing and names the fix.
+ *
+ *  `--app=activities` checks the Activities app (apps/activities) instead of
+ *  Turnfin Work: it has no Docs or HR, and needs Work's address instead. */
+const app = process.argv.includes('--app=activities') ? 'activities' : 'work';
+const deployed = Boolean(process.env.VERCEL_ENV);
 const errors: string[] = [];
 const warnings: string[] = [];
-try { docsStorageConfig(process.env); }
-catch (error) { errors.push(error instanceof Error && error.name !== 'TypeError' ? error.message : 'Check the Docs database URLs.'); }
-// HR is optional until its database is provisioned, but never in a shared one.
-try { if (!hrStorageConfig(process.env)) warnings.push('HR_DATABASE_URL is not set, so HR and performance stays switched off.'); }
-catch (error) { errors.push(error instanceof Error && error.name !== 'TypeError' ? error.message : 'Check the HR database URLs.'); }
+if (app === 'work') {
+  try { docsStorageConfig(process.env); }
+  catch (error) { errors.push(error instanceof Error && error.name !== 'TypeError' ? error.message : 'Check the Docs database URLs.'); }
+  // HR is optional until its database is provisioned, but never in a shared one.
+  try { if (!hrStorageConfig(process.env)) warnings.push('HR_DATABASE_URL is not set, so HR and performance stays switched off.'); }
+  catch (error) { errors.push(error instanceof Error && error.name !== 'TypeError' ? error.message : 'Check the HR database URLs.'); }
+  // Work forwards every Activities page to the Activities app; without its
+  // address, staff would get 404s for the whole swim school.
+  if (deployed && !process.env.ACTIVITIES_URL) errors.push('ACTIVITIES_URL is not set. Set it to the Activities app deployment (e.g. https://turnfin-activities.vercel.app) so Work can forward swim-school pages. See docs/architecture.md.');
+} else if (deployed && !process.env.WORK_ORIGIN) {
+  errors.push('WORK_ORIGIN is not set. Set it to the address staff use for Turnfin Work (e.g. turnfin.example.ie) so its pages may call Activities actions.');
+}
 
 // Production and dev must not share a database; see src/lib/database-environment.ts.
 const plan = databasePlan(process.env);

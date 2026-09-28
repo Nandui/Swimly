@@ -1,0 +1,16 @@
+{
+  "name": "turnfin-activities",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Turnfin Activities: the swim school (office, desk, pool deck) and the parent API. Built from the repository root: its code lives in ../../src. See docs/architecture.md.",
+  "scripts": {
+    "dev": "cd ../.. && npm run dev:activities",
+    "build": "cd ../.. && npm run build:activities",
+    "start": "cd ../.. && npm run start:activities"
+  },
+  "dependencies": {
+    "next": "16.3.2",
+    "react": "19.2.8",
+    "react-dom": "19.2.8"
+  }
+}

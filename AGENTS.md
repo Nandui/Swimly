@@ -39,12 +39,14 @@ unresolved concern. Say which checks actually ran.
 ## Project constraints
 
 Turnfin is **Core** (people, roles, sites, audit, the module catalogue), **Work
-modules** (Docs, Refunds, Training, HR, Rota, and Turnfin Me) and **Aquatics**
-(`src/modules/activities`, `src/app/(activities)`, `src/app/(instructor)`; owner decision,
-28 September 2026). Core never imports a module, and Aquatics never imports a Work
-module. Cross-module needs go through `src/modules/contributions.ts`, the session hooks
-or a composition root. Every screen is listed in exactly one of `CORE_SCREENS`,
-`ACTIVITIES_SCREENS` or `WORK_MODULE_SCREENS`. `npm run lint` enforces the imports; see
+modules** (Docs, Refunds, Training, HR, Rota, and Turnfin Me) and **Activities** (Swim
+school first; owner decision, 28 September 2026). Activities is its own Next.js app,
+`apps/activities` (routes only; code in `src/modules/activities`), served on Work's address
+through the rewrites in `src/lib/zones.ts`; add any new Activities route there. Core never
+imports a module, and Activities never imports a Work module or queries Core tables (use
+`src/lib/directory.ts`). Cross-module needs go through `src/modules/contributions.ts`, the
+session hooks, a composition root or a `ZoneLink`. Every screen is listed in exactly one of
+`CORE_SCREENS`, `ACTIVITIES_SCREENS` or `WORK_MODULE_SCREENS`. `npm run lint` enforces the imports and data rules; see
 [docs/architecture.md](docs/architecture.md).
 
 Who Swimly is for, what it must get right and what is deliberately undecided
@@ -66,7 +68,7 @@ layout, ui- colour/radius utilities from src/app/shadcn.css, and metadata-fed
 Badge/Tag tones. Shared form compositions in src/components/ui preserve native
 FormData, validation and reset behaviour. See DESIGN.md for the full contract.
 
-Instructor is an isolated pool-deck workspace under `(instructor)/instructor`,
+Instructor is an isolated pool-deck workspace under `apps/activities/src/app/(instructor)/instructor`,
 fully migrated to shadcn, including its class list, start confirmation,
 attendance, competencies and completion dialogs. Its controls are tablet-sized.
 Every class requires a confirmed start for that date. Once started, all staff
@@ -112,8 +114,9 @@ Prisma here is v7: the client is generated into `src/generated/prisma` and
 needs a driver adapter (`@prisma/adapter-pg`), and the datasource URL lives in
 `prisma.config.ts` rather than in the schema.
 
-Development and production share the Aquatics database: schema changes must be
-additive. Docs uses its own `DOCS_DATABASE_URL` / `DOCS_DIRECT_URL` and schema
+Development and production share the main database until `dev` gets its own (Stage 0,
+docs/database-operations.md), so schema changes must be additive; Work and Activities
+both use it. Docs uses its own `DOCS_DATABASE_URL` / `DOCS_DIRECT_URL` and schema
 migrations in `docs-database`; shared staff login/grants still come from Turnfin.
 Never repoint the main `DATABASE_URL` or fall back to it for Docs content. HR and
 performance likewise use their own `HR_DATABASE_URL` / `HR_DIRECT_URL` and

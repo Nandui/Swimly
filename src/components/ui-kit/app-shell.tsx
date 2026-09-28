@@ -1,7 +1,7 @@
 "use client";
 
 import * as React from "react";
-import Link from "next/link";
+import { ZoneLink } from "@/components/zone-link";
 import { usePathname, useSearchParams } from "next/navigation";
 import { ChevronDown, ChevronsUpDown, CircleHelp, CircleUser, LayoutGrid, LogOut, X, type LucideIcon } from "lucide-react";
 import { AppLogo } from "@/components/app-logo";
@@ -55,9 +55,9 @@ function WorkspaceSidebar(props: AppShellProps) {
   return <Sidebar variant="inset" collapsible="icon" aria-label="Main navigation">
     <SidebarHeader className="gap-4 p-3 pb-4 group-data-[collapsible=icon]:items-center group-data-[collapsible=icon]:gap-3 group-data-[collapsible=icon]:px-0">
       <div className="flex items-center justify-between gap-2 group-data-[collapsible=icon]:flex-col">
-        <Link href={props.homeHref ?? "/"} aria-label={props.wordmark} onClick={() => setOpenMobile(false)} className="flex min-h-11 min-w-11 items-center gap-2 font-semibold group-data-[collapsible=icon]:justify-center">
+        <ZoneLink href={props.homeHref ?? "/"} aria-label={props.wordmark} onClick={() => setOpenMobile(false)} className="flex min-h-11 min-w-11 items-center gap-2 font-semibold group-data-[collapsible=icon]:justify-center">
           <AppLogo className="group-data-[collapsible=icon]:size-8" /><span className="group-data-[collapsible=icon]:hidden">{props.wordmark}</span>
-        </Link>
+        </ZoneLink>
         {isMobile ? <Button variant="ghost" size="icon" className="size-11" aria-label="Close navigation" onClick={() => setOpenMobile(false)}><X aria-hidden="true" /></Button> : <SidebarTrigger aria-label={collapsed ? "Expand sidebar" : "Collapse sidebar"} title={collapsed ? "Expand sidebar" : "Collapse sidebar"} aria-expanded={!collapsed} className="size-11 shrink-0" />}
       </div>
       {props.switcher || props.search ? <div className="flex w-full min-w-0 flex-col gap-2 group-data-[collapsible=icon]:items-center" aria-label="Workspace controls">
@@ -71,10 +71,10 @@ function WorkspaceSidebar(props: AppShellProps) {
     </nav></SidebarContent>
     <SidebarFooter className="border-t border-ui-border p-3 group-data-[collapsible=icon]:px-0">
       {props.portalHref ? <SidebarMenu className="group-data-[collapsible=icon]:items-center"><SidebarMenuItem><SidebarMenuButton asChild className="h-11 px-3" tooltip="All modules">
-        <Link href={props.portalHref} onClick={() => setOpenMobile(false)}><LayoutGrid aria-hidden="true" /><span className="group-data-[collapsible=icon]:hidden">All modules</span></Link>
+        <ZoneLink href={props.portalHref} onClick={() => setOpenMobile(false)}><LayoutGrid aria-hidden="true" /><span className="group-data-[collapsible=icon]:hidden">All modules</span></ZoneLink>
       </SidebarMenuButton></SidebarMenuItem></SidebarMenu> : null}
       <SidebarMenu className="group-data-[collapsible=icon]:items-center"><SidebarMenuItem><SidebarMenuButton asChild className="h-11 px-3" tooltip="Help centre (opens in a new tab)">
-        <Link href="/help" target="_blank" rel="noopener noreferrer" aria-label="Help centre (opens in a new tab)"><CircleHelp aria-hidden="true" /><span className="group-data-[collapsible=icon]:hidden">Help centre</span></Link>
+        <ZoneLink href="/help" target="_blank" rel="noopener noreferrer" aria-label="Help centre (opens in a new tab)"><CircleHelp aria-hidden="true" /><span className="group-data-[collapsible=icon]:hidden">Help centre</span></ZoneLink>
       </SidebarMenuButton></SidebarMenuItem></SidebarMenu>
       <div className="flex min-w-0 items-center gap-2 group-data-[collapsible=icon]:flex-col-reverse">
         <div className="min-w-0 flex-1 group-data-[collapsible=icon]:flex-none"><AccountMenu {...props} /></div>
@@ -90,15 +90,15 @@ function NavigationGroup({ group, pathname, collapsed }: { group: NavGroup; path
   const GroupIcon = group.icon;
   const items = <SidebarMenu className="group-data-[collapsible=icon]:items-center">{group.items.map(item => <SidebarMenuItem key={item.href}>
     <SidebarMenuButton className="h-11 px-3" asChild isActive={isNavItemActive(pathname, item.href)} tooltip={item.label}>
-      <Link href={item.href} aria-label={item.label} aria-current={isNavItemActive(pathname, item.href) ? "page" : undefined} onClick={() => setOpenMobile(false)}>
+      <ZoneLink href={item.href} aria-label={item.label} aria-current={isNavItemActive(pathname, item.href) ? "page" : undefined} onClick={() => setOpenMobile(false)}>
         <span data-motion="sidebar-icon" className="size-4 shrink-0" aria-hidden="true"><item.icon className="size-full" /></span><span className="group-data-[collapsible=icon]:hidden">{item.label}</span>{item.badge ? <Badge variant="secondary" className="ml-auto group-data-[collapsible=icon]:hidden">{item.badge}</Badge> : null}
-      </Link>
+      </ZoneLink>
     </SidebarMenuButton>
   </SidebarMenuItem>)}</SidebarMenu>;
   if (!group.collapsible) return <SidebarGroup className="p-0"><SidebarGroupLabel className="mb-2 h-auto px-3 py-1 group-data-[collapsible=icon]:hidden">{group.label}</SidebarGroupLabel>{items}</SidebarGroup>;
   if (collapsed) return <SidebarGroup className="items-center p-0"><SidebarMenu className="items-center"><SidebarMenuItem>
     <DropdownMenu><DropdownMenuTrigger asChild><SidebarMenuButton className="h-11 px-3" tooltip={group.label} aria-label={group.label} isActive={active}>{GroupIcon ? <GroupIcon aria-hidden="true" /> : null}<span className="group-data-[collapsible=icon]:hidden">{group.label}</span></SidebarMenuButton></DropdownMenuTrigger>
-      <DropdownMenuContent side="right" align="start"><DropdownMenuLabel>{group.label}</DropdownMenuLabel>{group.items.map(item => <DropdownMenuItem asChild key={item.href}><Link href={item.href}><item.icon aria-hidden="true" />{item.label}</Link></DropdownMenuItem>)}</DropdownMenuContent>
+      <DropdownMenuContent side="right" align="start"><DropdownMenuLabel>{group.label}</DropdownMenuLabel>{group.items.map(item => <DropdownMenuItem asChild key={item.href}><ZoneLink href={item.href}><item.icon aria-hidden="true" />{item.label}</ZoneLink></DropdownMenuItem>)}</DropdownMenuContent>
     </DropdownMenu>
   </SidebarMenuItem></SidebarMenu></SidebarGroup>;
   return <SidebarGroup className="p-0"><Collapsible defaultOpen={active} className="group/setup">
@@ -112,7 +112,7 @@ function MobileWorkspaceToolbar(props: Pick<AppShellProps, "switcher" | "tools">
   return <header className="flex shrink-0 items-center gap-2 border-b border-ui-border px-4 py-2 md:hidden" aria-label="Workspace tools">
     <SidebarTrigger data-mobile-trigger aria-label="Open navigation" aria-expanded={openMobile} className="size-11 shrink-0" />
     <div className="min-w-0 flex-1">{props.switcher}</div>
-    <Button asChild variant="ghost" size="icon" className="size-11"><Link href="/help" target="_blank" rel="noopener noreferrer" aria-label="Help centre (opens in a new tab)"><CircleHelp aria-hidden="true" /></Link></Button>
+    <Button asChild variant="ghost" size="icon" className="size-11"><ZoneLink href="/help" target="_blank" rel="noopener noreferrer" aria-label="Help centre (opens in a new tab)"><CircleHelp aria-hidden="true" /></ZoneLink></Button>
     {props.tools ? <div className="shrink-0">{props.tools}</div> : null}
   </header>;
 }
@@ -125,7 +125,7 @@ function AccountMenu({ userName, userSubtitle, onSignOut }: Pick<AppShellProps, 
     </SidebarMenuButton></DropdownMenuTrigger>
     <DropdownMenuContent side={!isMobile && state === "collapsed" ? "right" : "top"} align="start" className="w-60">
       <DropdownMenuLabel>{userName}</DropdownMenuLabel><DropdownMenuSeparator />
-      <DropdownMenuItem asChild><Link href="/account"><CircleUser aria-hidden="true" />Account</Link></DropdownMenuItem>
+      <DropdownMenuItem asChild><ZoneLink href="/account"><CircleUser aria-hidden="true" />Account</ZoneLink></DropdownMenuItem>
       <DropdownMenuItem onSelect={onSignOut} disabled={!onSignOut}><LogOut aria-hidden="true" />Sign out</DropdownMenuItem>
     </DropdownMenuContent>
   </DropdownMenu></SidebarMenuItem></SidebarMenu>;

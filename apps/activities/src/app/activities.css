@@ -1,0 +1,6 @@
+/* Turnfin Activities uses the same design as Work: the shared globals and the
+   Poolside Clear system, compiled here. Tailwind also scans the shared code in
+   the repository's src/, where the Activities components live. */
+@import "../../../../src/app/globals.css";
+@import "../../../../src/app/docs/poolside.css";
+@source "../../../../src";

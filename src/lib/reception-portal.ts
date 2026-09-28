@@ -17,7 +17,7 @@ type ReceptionLink = {
 const TASKS: readonly ReceptionLink[] = [
   { id: "swimmers", label: "Find a swimmer", description: "Details, progress and enrolment", href: "/students", screen: "students" },
   { id: "classes", label: "Find a class", description: "Times, instructors and spaces", href: "/courses", screen: "courses" },
-  { id: "add", label: "Add a swimmer", description: "Create a new swimmer record", href: "/students", screen: "students", permission: "students.manage" },
+  { id: "add", label: "Add a swimmer", description: "Create a new swimmer record", href: "/students?add=1", screen: "students", permission: "students.manage" },
   { id: "assessments", label: "Book an assessment", description: "Find a session and book a place", href: "/assessments", screen: "assessments", permission: "enrolment.manage" },
   { id: "siblings", label: "Find sibling times", description: "Lessons that work for the family", href: "/together", screen: "together" },
 ];

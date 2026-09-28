@@ -7,7 +7,7 @@ test("image responses require sign-in, the matching version across sites", async
   let row: { imageData: Uint8Array; imageVersion: string } | null = { imageData: new Uint8Array([1, 2]), imageVersion: "version" };
   const scopes: unknown[] = [];
   const model = { findUnique: async (args: { where: unknown }) => { scopes.push(args.where); return row; } };
-  const route = serverModule<typeof import("@/app/api/curriculum-images/[kind]/[id]/route")>("src/app/api/curriculum-images/[kind]/[id]/route.ts", {
+  const route = serverModule<{ GET(request: Request, context: { params: Promise<{ kind: string; id: string }> }): Promise<Response> }>("apps/activities/src/app/api/curriculum-images/[kind]/[id]/route.ts", {
     "@/auth": { auth: async () => signedIn ? { user: { id: "staff" } } : null },
     "@/lib/clubs/current": { currentClubId: async () => "club" },
     "@/lib/prisma": { prisma: { programme: model, level: model } },
