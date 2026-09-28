@@ -40,13 +40,15 @@ export function YourModulesNav({ compact = false, onNavigate }: { compact?: bool
   );
 }
 
-/** Inside a module, the way back to the person's modules: an outline
- *  "Back to Hub" button in the sidebar footer. */
+/** Inside a module, the way back to the person's modules: "Back to Hub" in
+ *  the sidebar footer, looking like any page link that is not the current one. */
 export function HomeButton({ compact = false, onNavigate }: { compact?: boolean; onNavigate?: () => void }) {
   return (
-    <Button asChild variant="outline" size={compact ? 'icon' : 'default'} className={compact ? 'workspace-hub-button' : 'workspace-hub-button w-full justify-start'}>
-      <Link href="/" onClick={onNavigate} aria-label="Back to Hub" title={compact ? 'Back to Hub' : undefined}><ArrowLeft aria-hidden="true" />{!compact && <span>Back to Hub</span>}</Link>
-    </Button>
+    <SidebarMenuButton asChild>
+      <Link href="/" className="workspace-nav-item" aria-label="Back to Hub" title={compact ? 'Back to Hub' : undefined} onClick={onNavigate}>
+        <ArrowLeft size={18} aria-hidden="true" data-motion="sidebar-icon" /><span>Back to Hub</span>
+      </Link>
+    </SidebarMenuButton>
   );
 }
 

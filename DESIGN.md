@@ -378,7 +378,7 @@ always there. The keyholder guard keeps at least one active account holding
 **The home page is the only front door.** `/` is the role's home page; old
 `/start`, `/reception`, `/reception-portal` and `/modules` links redirect to it.
 **The sidebar shows one list at a time.** On the home page it lists the
-role's modules. Inside a module it shows only that module's pages, with an outline "Back to Hub" button (back arrow) in the sidebar footer, above the Help and Appearance buttons and Account
+role's modules. Inside a module it shows only that module's pages, with a "Back to Hub" link (back arrow, styled like any page link that is not current) in the sidebar footer, above the Help and Appearance buttons and Account
 (`HomeButton` in `src/components/workspace/your-modules.tsx`); modules are
 reached from Home. Never list the modules and a
 module's pages together. The pool deck keeps its own tablet frame.
