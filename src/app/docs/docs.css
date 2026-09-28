@@ -4539,29 +4539,6 @@
   :where(.turnfin-docs) .workspace-brand-row > button {
     color: var(--muted);
   }
-  :where(.turnfin-docs) .workspace-organisation {
-    display: flex;
-    align-items: center;
-    gap: 10px;
-    margin-top: 8px;
-    padding: 12px 10px;
-    background: var(--ui-background);
-    border: 1px solid var(--line);
-    border-radius: 9px;
-  }
-  :where(.turnfin-docs) .workspace-organisation > svg {
-    color: var(--muted);
-  }
-  :where(.turnfin-docs) .workspace-organisation strong {
-    display: block;
-    font-size: var(--pc-text-caption);
-    font-weight: 600;
-  }
-  :where(.turnfin-docs) .workspace-organisation span {
-    display: block;
-    font-size: var(--pc-text-caption);
-    color: var(--muted);
-  }
   :where(.turnfin-docs) .workspace-search {
     display: flex;
     align-items: center;

@@ -4,7 +4,7 @@ import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { useEffect, useRef, useState, type ReactNode } from 'react';
 import { signOut } from 'next-auth/react';
-import { Building2, CircleHelp, LogOut, Menu, PanelLeftClose, PanelLeftOpen, ShieldCheck, type LucideIcon } from 'lucide-react';
+import { CircleHelp, LogOut, Menu, PanelLeftClose, PanelLeftOpen, ShieldCheck, type LucideIcon } from 'lucide-react';
 import { Sidebar, SidebarProvider, SidebarMenuButton } from '@/components/shadcn/sidebar';
 import { Button } from '@/components/shadcn/button';
 import { Breadcrumb, BreadcrumbList, BreadcrumbItem, BreadcrumbLink, BreadcrumbPage, BreadcrumbSeparator } from '@/components/shadcn/breadcrumb';
@@ -73,7 +73,7 @@ export function ModuleShell({ module, id, current = id, who, links = [], groups,
     return <>
       <div className="workspace-sidebar-header">
         <div className="workspace-brand-row"><Link href={base} aria-label={`Turnfin ${module}`} onClick={close}><Brand module={module} /></Link>{!inSheet && <Button variant="ghost" size="icon" aria-label={compact ? 'Expand navigation' : 'Collapse navigation'} aria-expanded={!compact} onClick={() => changeCollapsed(!collapsed)}>{compact ? <PanelLeftOpen size={18} /> : <PanelLeftClose size={18} />}</Button>}</div>
-        {onHome ? !compact && <div className="workspace-organisation"><Building2 size={18} aria-hidden="true" /><div><strong>LeisureWorld</strong><span>{module}</span></div></div> : <HomeButton compact={compact} onNavigate={close} />}
+        {!onHome && <HomeButton compact={compact} onNavigate={close} />}
         {!onHome && !compact && tools && <div className="workspace-tools">{tools}</div>}
         {action && <Button asChild size={compact ? 'icon' : 'default'} className="workspace-create"><Link href={action.href} aria-label={action.label} title={compact ? action.label : undefined} onClick={close}><action.icon size={18} aria-hidden="true" />{!compact && <span>{action.label}</span>}</Link></Button>}
       </div>

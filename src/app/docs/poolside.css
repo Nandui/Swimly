@@ -177,9 +177,6 @@
 .turnfin-docs .workspace-brand-row .turnfin-brand { gap: 8px; }
 .turnfin-docs .workspace-brand-row .brand-wordmark { font-size: 20px; font-weight: 700; letter-spacing: -0.02em; }
 .turnfin-docs .workspace-brand-row .brand-wordmark > span { font-size: 13px; font-weight: 600; color: var(--pc-primary-ink); letter-spacing: 0; }
-.turnfin-docs .workspace-organisation { background: var(--pc-surface); border-color: var(--pc-line); border-radius: 12px; box-shadow: var(--pc-shadow-card); }
-.turnfin-docs .workspace-organisation strong,
-.turnfin-docs .workspace-organisation span { font-size: var(--pc-text-caption); }
 .turnfin-docs .workspace-search { min-height: 44px; border-radius: 12px; border-color: var(--pc-line-strong); background: var(--pc-surface); }
 .turnfin-docs .workspace-search input { align-self: stretch; height: auto; font-size: var(--pc-text-body); }
 .turnfin-docs .workspace-search:focus-within { outline: none; border-color: var(--pc-focus); box-shadow: 0 0 0 1px var(--pc-focus), var(--pc-focus-halo); }
