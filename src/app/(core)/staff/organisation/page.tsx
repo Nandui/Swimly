@@ -33,8 +33,8 @@ export default async function OrganisationPage() {
       <section className="min-w-0 flex flex-col gap-3" aria-labelledby="departments-heading">
         <h2 id="departments-heading" className="text-xl font-semibold tracking-tight">Departments</h2>
         <Lead>
-          <Num>{liveDepartments.length}</Num> {liveDepartments.length === 1 ? "department" : "departments"}. A role given for a
-          department reaches its members; a role given for a site reaches the people based there.
+          <Num>{liveDepartments.length}</Num> {liveDepartments.length === 1 ? "department" : "departments"}. They organise people; they do not
+          give anyone access. What a role can do applies at the sites each person works at.
         </Lead>
         {departments.length === 0 ? (
           <EmptyState icon="users" title="No departments yet" hint="Add the teams people work in, such as Aquatics, Reception, Gym and Maintenance." action={<SaveDepartment sites={sites} />} />

@@ -16,9 +16,9 @@ let data: typeof import("./data");
 let self: typeof import("./mine");
 let own: typeof import("./self");
 const ORG = "org_leisureworld";
-type GrantRow = { roleName: string; permissions: string[]; screens: string[]; scopeKind: string; scopeId: string };
+type GrantRow = { roleName: string; permissions: string[]; scopeKind: string; scopeId: string };
 const state = { id: "maya", permissions: [] as string[], screens: [] as string[], grants: [] as GrantRow[] };
-const TRAINER: GrantRow = { roleName: "Trainer", permissions: ["training.assign", "training.signoff"], screens: ["training"], scopeKind: "department", scopeId: "d-aquatics" };
+const TRAINER: GrantRow = { roleName: "Trainer", permissions: ["training.assign", "training.signoff"], scopeKind: "site", scopeId: "club_churchfield" };
 
 function session() {
   return { user: { id: state.id, name: state.id, orgId: ORG, isSuperadmin: false, roleName: "Role", permissions: state.permissions, primaryPermissions: state.permissions, screens: state.screens, primaryScreens: state.screens, grants: state.grants, authMethod: "password", authAt: Date.now() } };
@@ -50,7 +50,7 @@ before(async () => {
   const club = await db.club.findFirstOrThrow({ where: { orgId: ORG } });
   await db.department.createMany({ data: [{ id: "d-aquatics", orgId: ORG, name: "Aquatics", clubId: club.id }, { id: "d-reception", orgId: ORG, name: "Reception" }] });
   for (const [id, dept] of [["maya", null], ["liam", "d-aquatics"], ["ava", "d-aquatics"], ["riley", "d-aquatics"], ["noah", "d-reception"]] as const) {
-    await db.user.create({ data: { id, name: id, email: `${id}@example.invalid`, staffRoleId: "r-staff", orgId: ORG, jobTitle: "" } });
+    await db.user.create({ data: { id, name: id, email: `${id}@example.invalid`, staffRoleId: "r-staff", orgId: ORG, jobTitle: "", primaryClubId: dept === "d-aquatics" ? "club_churchfield" : dept === "d-reception" ? "club_bishopstown" : null } });
     if (dept) await db.userDepartment.create({ data: { userId: id, departmentId: dept } });
   }
   await db.qualificationType.create({ data: { id: "qt-rescue", orgId: ORG, name: "Synthetic rescue award", validityMonths: 24 } });

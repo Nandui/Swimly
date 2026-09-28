@@ -45,17 +45,13 @@ export const prismaDirectory = cache((): Directory => {
         ) SELECT DISTINCT id FROM chain`;
       return new Set(rows.map((row) => row.id));
     }),
-    departmentsOf: (userId) => once(`departments:${userId}`, async () =>
-      new Set((await prisma.userDepartment.findMany({ where: { userId }, select: { departmentId: true } })).map((row) => row.departmentId))),
-    primarySiteOf: (userId) => once(`site:${userId}`, async () =>
-      (await prisma.user.findUnique({ where: { id: userId }, select: { primaryClubId: true } }))?.primaryClubId ?? null),
-    sitesOfDepartments: (ids) => once(`dsites:${[...ids].sort().join(",")}`, async () =>
-      new Map((await prisma.department.findMany({ where: { id: { in: [...ids] } }, select: { id: true, clubId: true } })).map((row) => [row.id, row.clubId]))),
-    membersOfDepartments: (ids) => once(`dmembers:${[...ids].sort().join(",")}`, async () =>
-      new Set((await prisma.userDepartment.findMany({ where: { departmentId: { in: [...ids] } }, select: { userId: true } })).map((row) => row.userId))),
+    sitesOf: (userId) => once(`sites:${userId}`, async () => {
+      const user = await prisma.user.findUnique({ where: { id: userId }, select: { primaryClubId: true, siteIds: true } });
+      return new Set([...(user?.primaryClubId ? [user.primaryClubId] : []), ...(user?.siteIds ?? [])]);
+    }),
     membersOfSites: (ids) => once(`smembers:${[...ids].sort().join(",")}`, async () => {
       const users = await prisma.user.findMany({
-        where: { OR: [{ primaryClubId: { in: [...ids] } }, { departments: { some: { department: { clubId: { in: [...ids] } } } } }] },
+        where: { OR: [{ primaryClubId: { in: [...ids] } }, { siteIds: { hasSome: [...ids] } }] },
         select: { id: true },
       });
       return new Set(users.map((row) => row.id));
@@ -88,7 +84,7 @@ export async function subjectsFor(cap: PermissionKey) {
 }
 
 export async function sitesFor(cap: PermissionKey) {
-  return siteFilter(await currentActor(), cap, prismaDirectory());
+  return siteFilter(await currentActor(), cap);
 }
 
 export class StepUpRequired extends AuthorizationError {

@@ -9,7 +9,7 @@ import { expandPermissions, type PermissionKey } from "@/lib/staff/permissions";
 let fixture: Awaited<ReturnType<typeof isolatedPrisma>>;
 let actions: typeof import("./actions");
 const ORG = "org_leisureworld";
-const state = { id: "admin", permissions: ["staff.manage", "roles.manage"] as string[], superadmin: false, grants: [] as { roleName: string; permissions: string[]; screens: string[]; scopeKind: string; scopeId: string }[] };
+const state = { id: "admin", permissions: ["staff.manage", "roles.manage"] as string[], superadmin: false, grants: [] as { roleName: string; permissions: string[]; scopeKind: string; scopeId: string }[] };
 
 function session() {
   return { user: { id: state.id, name: state.id, orgId: ORG, isSuperadmin: state.superadmin, roleName: "Role", permissions: state.permissions, primaryPermissions: state.permissions, screens: ["staff"], primaryScreens: ["staff"], grants: state.grants } };
@@ -83,13 +83,15 @@ test("the superadmin tier: only superadmins grant it, and the last one stays", a
   assert.equal((await actions.setSuperadmin("zoe", true)).ok, false, "another organisation");
 });
 
-test("qualifications: a department lead records for their department only", async () => {
-  const lead = { roleName: "Qualifications lead", permissions: ["qualifications.manage"], screens: ["staff"], scopeKind: "department", scopeId: "d-aquatics" };
+test("qualifications: a site lead records for the people at their site only", async () => {
+  await fixture.prisma.user.update({ where: { id: "ava" }, data: { primaryClubId: "club_churchfield" } });
+  await fixture.prisma.user.update({ where: { id: "noah" }, data: { primaryClubId: "club_bishopstown" } });
+  const lead = { roleName: "Qualifications lead", permissions: ["qualifications.manage"], scopeKind: "site", scopeId: "club_churchfield" };
   as("liam", ["docs.read"], { grants: [lead] });
   const nplq = await fixture.prisma.qualificationType.findFirstOrThrow({ where: { orgId: ORG, name: { startsWith: "National Pool" } } });
   const record = { typeId: nplq.id, issuedOn: "2026-01-10", expiresOn: "2028-01-10", reference: "NPLQ-123", note: "" };
   assert.deepEqual(await actions.recordQualification("ava", record), { ok: true });
-  await assert.rejects(actions.recordQualification("noah", record), /permission/, "noah is not in aquatics");
+  await assert.rejects(actions.recordQualification("noah", record), /permission/, "noah works at another site");
   assert.equal((await actions.recordQualification("ava", { ...record, expiresOn: "2025-01-01" })).ok, false, "expires before issue");
   const saved = await fixture.prisma.qualification.findFirstOrThrow({ where: { userId: "ava" } });
   assert.equal(saved.verifiedById, "liam");

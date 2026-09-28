@@ -40,7 +40,7 @@ export function EditProfile({ person, sites, departments, people }: {
     <FormDialog
       trigger={<Button variant="outline">{icon(Pencil)}Edit profile</Button>}
       title={`${person.name}'s profile`}
-      description="Where they work and who they report to. Managers and departments decide whose records a scoped role can reach."
+      description="Their job, main site, manager and departments. Their manager decides who can see their HR record as their team."
       submitLabel="Save profile"
       successMessage="Profile updated"
       submit={(formData) => updateProfile(person.id, {
@@ -55,7 +55,7 @@ export function EditProfile({ person, sites, departments, people }: {
       <Field label="Started on" htmlFor="startedOn">
         <Input id="startedOn" name="startedOn" type="date" defaultValue={person.startedOn} />
       </Field>
-      <Field label="Main site" htmlFor="primaryClubId" hint="Where they are usually based. A site-scoped role reaches the people based there.">
+      <Field label="Main site" htmlFor="primaryClubId" hint="Where they are usually based. Staff who manage a site's training or rota cover the people based there.">
         <Select id="primaryClubId" name="primaryClubId" defaultValue={person.primaryClubId ?? ""} options={[{ value: "", label: "Not set" }, ...sites.map((s) => ({ value: s.id, label: s.name }))]} />
       </Field>
       <Field label="Manager" htmlFor="managerId" hint="Their line manager. A role given for “their own team” reaches everyone below them.">

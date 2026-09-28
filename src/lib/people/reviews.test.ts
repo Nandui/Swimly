@@ -11,9 +11,9 @@ let fixture: Awaited<ReturnType<typeof isolatedPrisma>>;
 let details: typeof import("./details-actions");
 let certificates: typeof import("@/lib/training/certificate-actions");
 const ORG = "org_leisureworld";
-type GrantRow = { roleName: string; permissions: string[]; screens: string[]; scopeKind: string; scopeId: string };
+type GrantRow = { roleName: string; permissions: string[]; scopeKind: string; scopeId: string };
 const state = { id: "alex", permissions: ["staff.manage", "roles.manage"] as string[], grants: [] as GrantRow[] };
-const QUALS: GrantRow = { roleName: "Qualifications lead", permissions: ["qualifications.manage"], screens: [], scopeKind: "department", scopeId: "d-aquatics" };
+const QUALS: GrantRow = { roleName: "Qualifications lead", permissions: ["qualifications.manage"], scopeKind: "site", scopeId: "club_churchfield" };
 
 function session() {
   return { user: { id: state.id, name: state.id, orgId: ORG, isSuperadmin: false, roleName: "Role", permissions: state.permissions, primaryPermissions: state.permissions, screens: [], primaryScreens: [], grants: state.grants, authMethod: "password", authAt: Date.now() } };
@@ -26,7 +26,10 @@ before(async () => {
   for (const id of ["alex", "liam", "ava", "noah"]) {
     await db.user.create({ data: { id, name: id, email: `${id}@example.invalid`, staffRoleId: "r-staff", orgId: ORG, phone: "000" } });
   }
-  for (const id of ["liam", "ava"]) await db.userDepartment.create({ data: { userId: id, departmentId: "d-aquatics" } });
+  for (const id of ["liam", "ava"]) {
+    await db.userDepartment.create({ data: { userId: id, departmentId: "d-aquatics" } });
+    await db.user.update({ where: { id }, data: { primaryClubId: "club_churchfield" } });
+  }
   await db.qualificationType.create({ data: { id: "qt-life", orgId: ORG, name: "Synthetic lifeguard", validityMonths: 24 } });
   const doubles = {
     "@/lib/prisma": { prisma: db },

@@ -48,21 +48,10 @@ async function scopeCovers(scope: Scope, actor: Actor, resource: Resource, dir: 
       return true;
     case "reports":
       return !!resource.subjectUserId && (await dir.reportsOf(actor.id)).has(resource.subjectUserId);
-    case "department":
-      if (resource.departmentId) return resource.departmentId === scope.id;
-      if (resource.subjectUserId) return (await dir.departmentsOf(resource.subjectUserId)).has(scope.id);
-      return false;
-    case "site": {
+    case "site":
       if (resource.siteId) return resource.siteId === scope.id;
-      if (resource.departmentId) return (await dir.sitesOfDepartments([resource.departmentId])).get(resource.departmentId) === scope.id;
-      if (resource.subjectUserId) {
-        if ((await dir.primarySiteOf(resource.subjectUserId)) === scope.id) return true;
-        const departments = [...(await dir.departmentsOf(resource.subjectUserId))];
-        const sites = await dir.sitesOfDepartments(departments);
-        return departments.some((id) => sites.get(id) === scope.id);
-      }
+      if (resource.subjectUserId) return (await dir.sitesOf(resource.subjectUserId)).has(scope.id);
       return false;
-    }
   }
 }
 
@@ -90,38 +79,29 @@ export async function subjectFilter(actor: Actor, cap: PermissionKey, dir: Direc
     return actor.orgId ? { kind: "some", userIds: await dir.orgMembers(actor.orgId) } : { kind: "all" };
   }
   const ids = new Set<string>();
-  const sites: string[] = [], departments: string[] = [];
+  const sites: string[] = [];
   for (const { scope } of grants) {
     if (scope.kind === "reports") for (const id of await dir.reportsOf(actor.id)) ids.add(id);
     if (scope.kind === "site") sites.push(scope.id);
-    if (scope.kind === "department") departments.push(scope.id);
   }
-  if (departments.length) for (const id of await dir.membersOfDepartments(departments)) ids.add(id);
   if (sites.length) for (const id of await dir.membersOfSites(sites)) ids.add(id);
   return { kind: "some", userIds: ids };
 }
 
-/** Which sites a capability reaches, for site-bound data (classes, rotas). A
- *  department grant reaches its department's site; `reports` reaches none. */
-export async function siteFilter(actor: Actor, cap: PermissionKey, dir: Directory): Promise<SiteFilter> {
+/** Which sites a capability reaches, for site-bound data (classes, rotas).
+ *  `reports` reaches none. */
+export async function siteFilter(actor: Actor, cap: PermissionKey): Promise<SiteFilter> {
   const grants = grantsFor(actor, cap);
   if (actor.superadmin || grants.some((grant) => grant.scope.kind === "all")) return { kind: "all" };
-  const ids = new Set<string>();
-  const departments: string[] = [];
-  for (const { scope } of grants) {
-    if (scope.kind === "site") ids.add(scope.id);
-    if (scope.kind === "department") departments.push(scope.id);
-  }
-  for (const site of (await dir.sitesOfDepartments(departments)).values()) if (site) ids.add(site);
-  return { kind: "some", siteIds: ids };
+  return { kind: "some", siteIds: new Set(grants.flatMap(({ scope }) => (scope.kind === "site" ? [scope.id] : []))) };
 }
 
 export function filterAllows(filter: SubjectFilter, userId: string) {
   return filter.kind === "all" || filter.userIds.has(userId);
 }
 
-/** Builds an Actor from role grants. `primary` always applies everywhere;
- *  assignments add capabilities where their scope says. */
+/** Builds an Actor from a role. `primary` applies everywhere; `assignments`
+ *  are the parts that apply only at a site or over the holder's team. */
 export function actorFrom(input: {
   id: string;
   name: string;

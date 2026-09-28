@@ -18,9 +18,9 @@ let mine: typeof import("./mine");
 let self: typeof import("./self");
 let exporter: typeof import("./export");
 const ORG = "org_leisureworld";
-type GrantRow = { roleName: string; permissions: string[]; screens: string[]; scopeKind: string; scopeId: string };
+type GrantRow = { roleName: string; permissions: string[]; scopeKind: string; scopeId: string };
 const state = { id: "liam", permissions: [] as string[], screens: [] as string[], grants: [] as GrantRow[], superadmin: false, authMethod: "password", authAt: Date.now() as number | null };
-const HR_LEAD: GrantRow = { roleName: "HR lead", permissions: ["hr.notes.write", "hr.reviews.write"], screens: ["hr"], scopeKind: "department", scopeId: "d-aquatics" };
+const HR_LEAD: GrantRow = { roleName: "HR lead", permissions: ["hr.notes.write", "hr.reviews.write"], scopeKind: "site", scopeId: "club_churchfield" };
 
 function session() {
   return { user: { id: state.id, name: state.id, orgId: ORG, isSuperadmin: state.superadmin, roleName: "Role", permissions: state.permissions, primaryPermissions: state.permissions,
@@ -55,7 +55,7 @@ before(async () => {
   const club = await db.club.findFirstOrThrow({ where: { orgId: ORG } });
   await db.department.createMany({ data: [{ id: "d-aquatics", orgId: ORG, name: "Aquatics", clubId: club.id }, { id: "d-reception", orgId: ORG, name: "Reception" }] });
   for (const [id, dept] of [["alex", null], ["admin", null], ["liam", "d-aquatics"], ["ava", "d-aquatics"], ["riley", "d-aquatics"], ["noah", "d-reception"]] as const) {
-    await db.user.create({ data: { id, name: id, email: `${id}@example.invalid`, staffRoleId: "r-staff", orgId: ORG } });
+    await db.user.create({ data: { id, name: id, email: `${id}@example.invalid`, staffRoleId: "r-staff", orgId: ORG, primaryClubId: dept === "d-aquatics" ? "club_churchfield" : dept === "d-reception" ? "club_bishopstown" : null } });
     if (dept) await db.userDepartment.create({ data: { userId: id, departmentId: dept } });
   }
   const d = doubles();
@@ -74,7 +74,7 @@ test("administrators never hold HR keys, so they cannot write or read HR records
 });
 
 let privateNote = "", sharedNote = "";
-test("a department HR lead writes only for their department, never for themselves", async () => {
+test("a site HR lead writes only for the people at their site, never for themselves", async () => {
   as("liam", { grants: [HR_LEAD] });
   assert.equal((await actions.addNote("noah", "Synthetic note text", "record")).ok, false, "reception is outside the department");
   assert.equal((await actions.addNote("liam", "Synthetic note text", "record")).ok, false, "their own record");
