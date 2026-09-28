@@ -57,10 +57,17 @@ only production applies migrations, and `dev` runs new code against old tables.
 
 1. Create a Postgres database for development, for example a Neon branch or a
    Vercel Postgres database. Copy production's schema by applying the committed
-   migrations; never copy real swimmer data into it. Staff accounts, roles and
-   sites may be copied with `scripts/copy-staff-to-dev.ts` (owner decision,
-   28 September 2026), which leaves out swimmers, parents, the activity log and
-   staff contact details.
+   migrations. Two copies from production exist:
+   - `scripts/copy-staff-to-dev.ts` copies staff accounts, roles and sites only
+     (owner decision, 28 September 2026).
+   - `scripts/copy-prod-to-dev.ts` replaces dev's data with **all** of production's
+     main database, as it is, including swimmers, parents and medical notes (owner
+     decision, 29 September 2026, made knowing the dev site is less protected).
+     It leaves out live parent sign-in tokens, keeps dev-only tables such as the
+     organisation, and must be followed by `scripts/convert-roles-to-levels.ts`
+     against dev. Treat dev as holding real personal data while it does.
+   Both read production in a read-only transaction, write only to a database
+   with the dev migrations, and dry-run unless given `--confirm`.
 2. On the `dev` deployment (Vercel Preview for the `dev` branch), set:
    - `DATABASE_URL` and `DIRECT_URL` to the development database (a database
      attached through Vercel's Neon integration provides `DATABASE_URL` and
