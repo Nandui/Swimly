@@ -1,15 +1,14 @@
 import { allModules, type ModuleManifest, type Reach } from "@/modules/registry";
 import { expandPermissions, hasAdministratorAccess, type PermissionKey } from "@/lib/staff/permissions";
-import { cleanScreens, visibleScreens, type ScreenKey } from "@/lib/staff/screens";
+import { SCREENS, isScreenKey } from "@/lib/staff/screens";
 
 /** A role as the owner thinks of it: one level for each module, plus a few
- *  ticks. See docs/how-turnfin-works.md.
+ *  ticks (docs/how-turnfin-works.md).
  *
- *  Levels are translated here into the named permissions and screens the app
- *  already checks, so no page or action ever asks for a level. The role row
- *  keeps the translation in `permissions` and `screens` (everything except
- *  HR "Their team", which only the policy engine reads), so every existing
- *  reader of those columns keeps working. */
+ *  Levels are translated here into the named permissions the app checks, so
+ *  no page or action ever asks for a level. The role row keeps the
+ *  translation in `permissions` (everything except HR "Their team", which only
+ *  the policy engine reads), so every reader of that column works as is. */
 
 /** Module id → level key. A missing module means None. */
 export type Levels = Readonly<Record<string, string>>;
@@ -19,11 +18,17 @@ export const WORK_ANYWHERE = "work-anywhere";
 
 export type RoleLevels = { levels: Levels; extras: readonly string[] };
 
-export type Access = { permissions: PermissionKey[]; screens: ScreenKey[] };
-
-export type AccessByReach = Record<Reach, Access>;
+/** What a role gives, split by where it applies. */
+export type AccessByReach = Record<Reach, PermissionKey[]>;
 
 const ADMIN_MODULE = "admin";
+
+/** The roles every new database starts with. The seed creates any that are
+ *  missing; an admin may rename them and change their levels. */
+export const SYSTEM_ROLES: { name: string; description: string; homeName: string; levels: Levels }[] = [
+  { name: "Admin", description: "Every module except HR, including people, roles and sites.", homeName: "Management", levels: { admin: "manage" } },
+  { name: "Instructor", description: "The class instructor view and nothing else.", homeName: "Pool deck", levels: { "pool-deck": "teach" } },
+];
 
 function moduleById(id: string) {
   return allModules().find((m) => m.id === id);
@@ -70,42 +75,30 @@ export function effectiveLevels(role: RoleLevels): RoleLevels {
   return { levels, extras: [...extras].sort() };
 }
 
-function emptyAccess(): Access {
-  return { permissions: [], screens: [] };
-}
-
-function add(into: Access, permissions: readonly PermissionKey[], screens: readonly ScreenKey[]) {
-  into.permissions.push(...permissions);
-  into.screens.push(...screens);
-}
-
-function tidy(access: Access): Access {
-  return { permissions: [...new Set(access.permissions)].sort(), screens: cleanScreens([...new Set(access.screens)]) };
-}
+const tidy = (keys: PermissionKey[]) => [...new Set(keys)].sort();
 
 /** What a role gives, split by where it applies. */
 export function accessByReach(role: RoleLevels): AccessByReach {
   const { levels, extras } = effectiveLevels(role);
-  const out: AccessByReach = { everywhere: emptyAccess(), sites: emptyAccess(), team: emptyAccess() };
+  const out: AccessByReach = { everywhere: [], sites: [], team: [] };
   for (const mod of allModules()) {
     const rank = rankOf(mod, levels[mod.id]);
     if (rank < 0) continue;
-    const chosen = mod.access.levels[rank];
-    const into = out[chosen.reach ?? mod.access.reach];
-    for (const level of mod.access.levels.slice(0, rank + 1)) add(into, level.permissions, level.screens);
+    const into = out[mod.access.levels[rank].reach ?? mod.access.reach];
+    for (const level of mod.access.levels.slice(0, rank + 1)) into.push(...level.permissions);
     for (const extra of mod.access.extras ?? []) {
-      if (extras.includes(`${mod.id}.${extra.key}`) && rank >= rankOf(mod, extra.from)) add(into, extra.permissions, extra.screens);
+      if (extras.includes(`${mod.id}.${extra.key}`) && rank >= rankOf(mod, extra.from)) into.push(...extra.permissions);
     }
   }
-  if (extras.includes(WORK_ANYWHERE)) out.everywhere.permissions.push("work.anywhere");
+  if (extras.includes(WORK_ANYWHERE)) out.everywhere.push("work.anywhere");
   return { everywhere: tidy(out.everywhere), sites: tidy(out.sites), team: tidy(out.team) };
 }
 
-/** What the role row stores in `permissions` and `screens`: everything
- *  except HR "Their team", which reaches only the holder's reports. */
-export function storedAccess(role: RoleLevels): Access {
+/** What the role row stores in `permissions`: everything except HR "Their
+ *  team", which reaches only the holder's reports. */
+export function storedPermissions(role: RoleLevels): PermissionKey[] {
   const { everywhere, sites } = accessByReach(role);
-  return tidy({ permissions: [...everywhere.permissions, ...sites.permissions], screens: [...everywhere.screens, ...sites.screens] });
+  return tidy([...everywhere, ...sites]);
 }
 
 /** Whether giving this role needs a superadmin: it holds a restricted module. */
@@ -115,19 +108,27 @@ export function isRestrictedRole(role: RoleLevels): boolean {
 
 export type Conversion = {
   role: RoleLevels;
-  /** Permissions and screens the role did not have before. Review these. */
+  /** Permissions the role did not have before. Review these. */
   gains: string[];
-  /** Permissions and screens the role had and would lose. Should be empty. */
+  /** Permissions the role had and would lose. Should be empty. */
   losses: string[];
 };
 
-/** Proposes levels for a role that still holds screens and permissions: for
- *  each module, the lowest level that covers everything it held there. Used
- *  by `scripts/convert-roles-to-levels.ts`, which prints the gains for the
- *  owner to review before anything is written. */
+/** Old screens that opened without any permission. Every other old screen
+ *  already needed the permission it needs now, so it adds nothing. */
+const OPEN_BEFORE = new Set<string>(["calendar", "students", "courses", "together", "assessments", "awaiting-enrolment", "legend-agreements", "analytics", "duty", "cancellations"]);
+
+/** Proposes levels for a role that still holds old-style permissions and
+ *  screens: for each module, the lowest level that covers everything it held
+ *  there. An old desk screen counts as "Use the swim school desk"; an old
+ *  Reports, Duty or Cancelled classes screen now needs an action permission,
+ *  so it is proposed and reported as a gain. Used by
+ *  `scripts/convert-roles-to-levels.ts` and the role editor, which show the
+ *  gains for the owner to review before anything is written. */
 export function levelsFromAccess(permissions: readonly string[], screens: readonly string[]): Conversion {
-  const beforePermissions = expandPermissions(permissions);
-  const beforeScreens = visibleScreens(screens, beforePermissions);
+  const opened = screens.filter((key) => isScreenKey(key) && OPEN_BEFORE.has(key)).map((key) => SCREENS.find((s) => s.key === key)!.requires);
+  const before = expandPermissions([...permissions, ...opened.filter((key) => key === "swimschool.desk")]);
+  const wanted = expandPermissions([...permissions, ...opened]);
   const levels: Record<string, string> = {};
   const extras: string[] = [];
   const administrator = hasAdministratorAccess(permissions);
@@ -135,14 +136,12 @@ export function levelsFromAccess(permissions: readonly string[], screens: readon
   // An administrator already reaches every unrestricted module; only a
   // restricted one (HR) still needs its own level.
   for (const mod of allModules().filter((m) => !administrator || m.access.restricted)) {
-    const extraKeys = new Set<string>((mod.access.extras ?? []).flatMap((e) => [...e.permissions, ...e.screens]));
-    const held = new Set([...beforePermissions, ...beforeScreens].filter((key) => !extraKeys.has(key)));
     let chosen = -1;
     mod.access.levels.forEach((level, index) => {
-      if ([...level.permissions, ...level.screens].some((key) => held.has(key))) chosen = index;
+      if (level.permissions.some((key) => wanted.has(key))) chosen = index;
     });
     for (const extra of mod.access.extras ?? []) {
-      if (extra.permissions.some((p) => beforePermissions.has(p)) || extra.screens.some((s) => beforeScreens.has(s))) {
+      if (extra.permissions.some((key) => wanted.has(key))) {
         extras.push(`${mod.id}.${extra.key}`);
         chosen = Math.max(chosen, rankOf(mod, extra.from));
       }
@@ -153,24 +152,22 @@ export function levelsFromAccess(permissions: readonly string[], screens: readon
     while (chosen >= 0 && mod.access.levels[chosen].reach === "team" && chosen < mod.access.levels.length - 1) chosen += 1;
     if (chosen >= 0) levels[mod.id] = mod.access.levels[chosen].key;
   }
-  if (beforePermissions.has("work.anywhere") && !administrator) extras.push(WORK_ANYWHERE);
+  if (before.has("work.anywhere") && !administrator) extras.push(WORK_ANYWHERE);
   const role = cleanLevels(levels, extras);
-  const after = accessByReach(role);
-  const afterKeys = new Set<string>([...after.everywhere.permissions, ...after.sites.permissions, ...after.team.permissions, ...after.everywhere.screens, ...after.sites.screens, ...after.team.screens]);
-  const beforeKeys = new Set<string>([...beforePermissions, ...beforeScreens]);
+  const reach = accessByReach(role);
+  const after = expandPermissions([...reach.everywhere, ...reach.sites, ...reach.team]);
   return {
     role,
-    gains: [...afterKeys].filter((key) => !beforeKeys.has(key)).sort(),
-    losses: [...beforeKeys].filter((key) => !afterKeys.has(key)).sort(),
+    gains: [...after].filter((key) => !before.has(key)).sort(),
+    losses: [...before].filter((key) => !after.has(key)).sort(),
   };
 }
 
 /** Everything a role row stores for these levels, so every save (the role
- *  editor, the converter) writes the same translation. */
+ *  editor, the converter, the seed) writes the same translation. */
 export function roleColumns(role: RoleLevels) {
   const clean = cleanLevels(role.levels, role.extras);
-  const { permissions, screens } = storedAccess(clean);
-  return { levels: clean.levels, extras: [...clean.extras], permissions, screens, restricted: isRestrictedRole(clean) };
+  return { levels: clean.levels, extras: [...clean.extras], permissions: storedPermissions(clean), restricted: isRestrictedRole(clean) };
 }
 
 /** "Swim school: Desk (can cancel classes) · Refunds: Use", for the activity

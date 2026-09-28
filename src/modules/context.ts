@@ -1,17 +1,14 @@
 import type { Session } from "next-auth";
 import { permissionsOf } from "@/lib/authz";
-import { visibleScreens } from "@/lib/staff/screens";
+import { expandPermissions } from "@/lib/staff/permissions";
 import { visibleModules, type ModuleContext } from "./registry";
 
-/** What the registry needs to know about the signed-in person. */
+/** Everything the person holds anywhere: at the site they are working in,
+ *  their other sites and over their team, so a module they use elsewhere is
+ *  still on their home page. Each module page checks again where it applies. */
 export function moduleContext(session: Session): ModuleContext {
-  const permissions = permissionsOf(session);
-  return {
-    permissions,
-    screens: visibleScreens(session.user.screens ?? [], permissions),
-    scopedScreens: new Set((session.user.grants ?? []).flatMap((grant) => grant.screens)),
-    superadmin: session.user.isSuperadmin === true,
-  };
+  const grants = (session.user.grants ?? []).flatMap((grant) => grant.permissions);
+  return { permissions: new Set([...permissionsOf(session), ...expandPermissions(grants)]) };
 }
 
 export function modulesFor(session: Session) {

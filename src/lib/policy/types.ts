@@ -26,7 +26,7 @@ export function scopeFrom(kind: string, id: string): Scope | null {
 }
 
 /** One role's capabilities, bound to where they apply. */
-export type Grant = { permissions: ReadonlySet<PermissionKey>; screens: readonly string[]; scope: Scope; roleName: string };
+export type Grant = { permissions: ReadonlySet<PermissionKey>; scope: Scope; roleName: string };
 
 /** Everything an authorization question needs to know about the person asking. */
 export type Actor = {

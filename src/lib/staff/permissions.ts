@@ -1,22 +1,12 @@
 import type { Role } from "@/generated/prisma/client";
 
-/** Every permission the app has to give, and nothing else.
+/** Every permission the app has to give, and nothing else: the one access
+ *  language (docs/how-turnfin-works.md). A role's levels give permissions;
+ *  pages, menus and actions ask for a permission, never a level or a role.
  *
- *  This catalogue is **code, not data**. A permission exists because a screen
- *  or an action asks for it, so the list can only change when the app does —
- *  which is why `StaffRole.permissions` is a string array rather than rows in
- *  a Permission table that would have to be kept in step by hand.
- *
- *  Two consequences worth naming:
- *
- *  **Unknown keys are ignored, never fatal.** A role holding a key that no
- *  longer exists simply does not get anything for it. That is what makes
- *  deleting a permission from this file a safe edit rather than one that
- *  needs a data migration first.
- *
- *  **Screens have their own catalogue.** Permissions allow actions within
- *  those screens. Administrator access includes both catalogues automatically;
- *  other roles keep their explicit grants. */
+ *  This catalogue is **code, not data**. A permission exists because a page
+ *  or an action asks for it. Unknown keys stored on a role are ignored, never
+ *  fatal, so deleting a permission here needs no data migration first. */
 
 export const PERMISSIONS = [
   { key: "refunds.read", group: "Refunds", label: "Read refund requests", description: "Open Refunds and follow submitted requests across sites. Drafts remain private to their creator." },
@@ -27,6 +17,12 @@ export const PERMISSIONS = [
   { key: "docs.write", group: "Docs", label: "Author documents", description: "Create and edit drafts and submit them for independent approval. Includes reading." },
   { key: "docs.approve", group: "Docs", label: "Approve documents", description: "Review and publish documents written by other staff. Includes authoring; never permits self-approval." },
   { key: "docs.manage", group: "Docs", label: "Administer Docs", description: "Manage document teams, templates, risk matrix, reading assignments and reading reports. Includes authoring, but approval requires its separate permission." },
+  {
+    key: "swimschool.desk",
+    group: "Swimmers",
+    label: "Use the swim school desk",
+    description: "Find swimmers, classes, the schedule, assessments and waiting lists. Changing them needs the permissions below.",
+  },
   {
     key: "parents.manage",
     group: "Swimmers",
@@ -254,6 +250,13 @@ export function hasAdministratorAccess(permissions: Iterable<string>): boolean {
  *  rather than solved at each call site, because the call site that forgets is
  *  the one that quietly locks someone out. */
 const IMPLIES: Partial<Record<PermissionKey, PermissionKey[]>> = {
+  // Anyone who changes swimmers, bookings or the timetable uses the desk.
+  // Roles not yet converted to levels keep their desk pages through this.
+  "students.manage": ["swimschool.desk"],
+  "enrolment.manage": ["swimschool.desk"],
+  "parents.manage": ["swimschool.desk"],
+  "courses.manage": ["swimschool.desk"],
+  "curriculum.manage": ["swimschool.desk"],
   "refunds.request": ["refunds.read"],
   "refunds.review": ["refunds.read"],
   "refunds.process": ["refunds.read"],
@@ -318,103 +321,6 @@ export const ALL_PERMISSIONS: PermissionKey[] = PERMISSIONS.map((p) => p.key);
 
 /** What administrators hold: every key except restricted ones (HR, performance). */
 export const UNRESTRICTED_PERMISSIONS: PermissionKey[] = ALL_PERMISSIONS.filter((key) => !isRestrictedPermission(key));
-
-/** Where a role lands after signing in, and where the wordmark goes. A
- *  metadata map like every other enum: the role stores the key, the app
- *  reads the path from here. An instructor's day starts on the deck; the
- *  desk's starts on Today. */
-export const ROLE_HOMES = {
-  "reception-portal": {
-    label: "Reception Portal",
-    path: "/reception-portal",
-    description: "Start in the Turnfin Reception Portal. Only existing reception and Docs access is offered; Activities opens an accessible desk page.",
-  },
-  duty: {
-    label: "Duty manager",
-    path: "/duty",
-    description: "Today’s classes, quick details and session cancellations.",
-  },
-  today: {
-    // Compatibility for existing roles and sessions. Not offered by new forms.
-    label: "Instructor",
-    path: "/instructor",
-    description: "Own classes, attendance and competencies on the deck.",
-  },
-  instructor: {
-    label: "Instructor",
-    path: "/instructor",
-    description: "Own classes, attendance and competencies. Needs the Instructor screen and attendance permission.",
-  },
-  calendar: {
-    label: "Schedule",
-    path: "/schedule",
-    description: "Classes and assessments for a selected day. Needs the Schedule screen; attendance keeps its own permission.",
-  },
-} as const;
-
-export type RoleHome = keyof typeof ROLE_HOMES;
-
-export const ROLE_HOME_ORDER: RoleHome[] = ["reception-portal", "calendar", "duty", "instructor"];
-
-export function normaliseRoleHome(value: unknown): RoleHome {
-  if (value === "today") return "instructor";
-  return isRoleHome(value) ? value : "calendar";
-}
-
-export function isRoleHome(value: unknown): value is RoleHome {
-  return typeof value === "string" && Object.hasOwn(ROLE_HOMES, value);
-}
-
-/** What the three shipped roles hold, and what a fresh database is seeded
- *  with. These are starting points an admin may edit, not a hierarchy the app
- *  enforces — nothing in the code refers to a role by name. Screen keys are
- *  strings here rather than `ScreenKey` to keep this file free of a cycle
- *  with `screens.ts`; the seed cleans them against the catalogue. */
-export const SYSTEM_ROLES: {
-  name: string;
-  description: string;
-  permissions: PermissionKey[];
-  home: RoleHome;
-  screens: string[];
-}[] = [
-  {
-    name: "Admin",
-    description: "Everything, including the timetable, the curriculum and these accounts.",
-    // Everything except restricted (HR) keys, which only a superadmin gives out.
-    permissions: ALL_PERMISSIONS.filter((key) => !isRestrictedPermission(key)),
-    home: "calendar",
-    screens: [
-      "analytics",
-      "calendar",
-      "duty",
-      "cancellations",
-      "instructor",
-      "students",
-      "courses",
-      "together",
-      "assessments",
-      "programmes",
-      "staff",
-      "roles",
-      "clubs",
-      "activity",
-    ],
-  },
-  {
-    name: "Instructor",
-    description: "The deck and nothing else: their classes today, attendance and competencies.",
-    permissions: ["attendance.mark", "attendance.cover", "progression.complete"],
-    home: "instructor",
-    screens: ["instructor"],
-  },
-  {
-    name: "Viewer",
-    description: "Can look things up and change nothing. Reception, or a duty manager.",
-    permissions: [],
-    home: "calendar",
-    screens: ["calendar", "students", "courses", "together", "assessments"],
-  },
-];
 
 /** Derives the legacy `User.role` enum from what a role actually holds, so the
  *  column stays truthful for the previous release still reading it. Delete

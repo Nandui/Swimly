@@ -64,7 +64,7 @@ export function classifyMedical<T extends { medicalNotes: string | null }>(row: 
  *  swimmer data at all, whatever URL or loader it reaches. */
 export function hasActivitiesAccess(session: Session): boolean {
   const caps = held(session);
-  return caps.has("attendance.mark") || [...visibleScreens(session.user.screens ?? [], caps)].some(isActivitiesScreen);
+  return [...visibleScreens(caps)].some(isActivitiesScreen);
 }
 
 export async function requireActivitiesAccess() {

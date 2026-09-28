@@ -17,7 +17,6 @@ import { PGLiteSocketServer } from "@electric-sql/pglite-socket";
 import { PrismaPg } from "@prisma/adapter-pg";
 import bcrypt from "bcryptjs";
 import { PrismaClient } from "../src/generated/prisma/client";
-import { SYSTEM_ROLES } from "../src/lib/staff/permissions";
 import { roleColumns } from "../src/lib/staff/levels";
 
 export const SANDBOX_PASSWORD = "sandbox-turnfin-2026";
@@ -56,12 +55,6 @@ const hash = await bcrypt.hash(SANDBOX_PASSWORD, 10);
 export const SANDBOX_PIN = "2580";
 const pinHash = await bcrypt.hash(SANDBOX_PIN, 10);
 const roles: Record<string, string> = {};
-for (const [i, role] of SYSTEM_ROLES.entries()) {
-  // Earlier migrations already create the system roles; bring them to the catalogue.
-  const data = { description: role.description, permissions: [...role.permissions], screens: [...role.screens], home: role.home, isSystem: true, sortOrder: i };
-  const created = await prisma.staffRole.upsert({ where: { name: role.name }, update: data, create: { name: role.name, ...data } });
-  roles[role.name] = created.id;
-}
 // The roles from "How Turnfin works" (docs/how-turnfin-works.md), as levels.
 const levelRoles: { name: string; homeName: string; levels: Record<string, string>; extras?: string[]; system?: boolean }[] = [
   { name: "Admin", homeName: "Management", levels: { admin: "manage" }, system: true },
@@ -72,9 +65,9 @@ const levelRoles: { name: string; homeName: string; levels: Record<string, strin
   { name: "Swim school manager", homeName: "Swim school office", levels: { "swim-school": "manage", "pool-deck": "lead", docs: "manage", training: "manage", rota: "manage", hr: "team" }, extras: ["swim-school.cancel-classes", "docs.approve"] },
 ];
 for (const [i, role] of levelRoles.entries()) {
-  const data = { homeName: role.homeName, ...roleColumns({ levels: role.levels, extras: role.extras ?? [] }), home: role.levels["pool-deck"] && !role.levels["swim-school"] ? "instructor" : "calendar" };
+  const data = { homeName: role.homeName, ...roleColumns({ levels: role.levels, extras: role.extras ?? [] }) };
   roles[role.name] = role.system
-    ? (await prisma.staffRole.update({ where: { name: role.name }, data })).id
+    ? (await prisma.staffRole.update({ where: { name: role.name }, data: { ...data, isSystem: true } })).id
     : (await prisma.staffRole.create({ data: { name: role.name, ...data, sortOrder: 10 + i } })).id;
 }
 

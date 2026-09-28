@@ -1,6 +1,6 @@
 import "server-only";
 import type { Session } from "next-auth";
-import { canSee, requireSession, AuthorizationError } from "@/lib/authz";
+import { requireSession, AuthorizationError } from "@/lib/authz";
 import { holdsAnywhere } from "@/lib/policy/engine";
 import { actorForSession } from "@/lib/policy/session";
 
@@ -23,10 +23,9 @@ export type TrainingActor = {
 
 export function trainingAccess(session: Session): TrainingActor | null {
   const actor = actorForSession(session);
-  // Training is people-scoped: a department or team role with the Training
-  // screen opens it too, unlike the flat site-based screens.
-  const screen = canSee(session, "training") || actor.superadmin || actor.grants.some((grant) => grant.screens.includes("training"));
-  if (!screen || !holdsAnywhere(actor, "training.records.read")) return null;
+  // Training is people-scoped: it opens for anyone holding the permission at
+  // any of their sites; each page limits records to the people it covers.
+  if (!holdsAnywhere(actor, "training.records.read")) return null;
   return {
     id: actor.id,
     name: actor.name,

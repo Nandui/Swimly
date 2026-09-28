@@ -4,10 +4,10 @@ import { serverModule } from "@/test/server-module";
 import { UNRESTRICTED_PERMISSIONS } from "@/lib/staff/permissions";
 import type { RoleInput } from "./roles";
 
-type Row = { id: string; name: string; description: string | null; home: string; homeName: string | null; permissions: string[]; screens: string[]; levels: unknown; extras: string[]; restricted: boolean };
+type Row = { id: string; name: string; description: string | null; homeName: string | null; permissions: string[]; screens: string[]; levels: unknown; extras: string[]; restricted: boolean };
 
 function fixture(options: { superadmin?: boolean } = {}) {
-  let role: Row = { id: "role", name: "Synthetic team", description: null, home: "overview", homeName: null, permissions: ["staff.manage"], screens: ["staff"], levels: null, extras: [], restricted: false };
+  let role: Row = { id: "role", name: "Synthetic team", description: null, homeName: null, permissions: ["staff.manage"], screens: ["staff"], levels: null, extras: [], restricted: false };
   const audits: string[] = [];
   let refusal: string | null = null;
   let auditFailure = false;
@@ -38,14 +38,13 @@ function fixture(options: { superadmin?: boolean } = {}) {
 const administrator: RoleInput = { name: "Synthetic team", description: "", homeName: "Management", levels: { admin: "manage" }, extras: [] };
 const receptionist: RoleInput = { name: "Synthetic desk", description: "", homeName: "Front of House", levels: { "swim-school": "desk", refunds: "use", docs: "read" }, extras: [] };
 
-test("a role is saved as levels, with their translation in the permission and screen columns", async () => {
+test("a role is saved as levels, with their translation in the permission column", async () => {
   const f = fixture();
   assert.equal((await f.actions.createRole(receptionist)).ok, true);
   assert.deepEqual(f.role().levels, receptionist.levels);
   assert.equal(f.role().homeName, "Front of House");
   assert.ok(f.role().permissions.includes("enrolment.manage") && f.role().permissions.includes("refunds.request"));
-  assert.ok(f.role().screens.includes("refunds") && !f.role().screens.includes("staff"));
-  assert.equal(f.role().home, "calendar");
+  assert.ok(!f.role().permissions.includes("staff.manage") && !f.role().permissions.includes("attendance.mark"));
   assert.equal(f.audits[0], "Created role Synthetic desk: Swim school: Desk · Refunds: Use · Docs: Read");
 });
 

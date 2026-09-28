@@ -5,7 +5,7 @@ import { isolatedPrisma } from "../../test/pglite-prisma";
 import { serverModule } from "../../test/server-module";
 import { money, parseFields, type RefundCommand } from "./rules";
 import { canReadRefund, type RefundActor, type RefundFields } from "./types";
-import { cleanScreens, homePathFor, isActivitiesScreen, visibleScreens } from "../staff/screens";
+import { isActivitiesScreen, visibleScreens } from "../staff/screens";
 import { expandPermissions } from "../staff/permissions";
 
 let db: Awaited<ReturnType<typeof isolatedPrisma>>;
@@ -54,13 +54,11 @@ test('money, date and submission validation avoid floating point and incomplete 
   assert.equal(parseFields({ ...fields, amount: '', customerName: '' }, false).requestedCents, null);
 });
 test('refund permissions preserve module boundaries and administrator inheritance', () => {
-  assert.deepEqual([...visibleScreens(['refunds'], expandPermissions(['refunds.request']))], ['refunds']);
-  assert.equal(visibleScreens(['refunds'], expandPermissions([])).size, 0);
+  assert.deepEqual([...visibleScreens(expandPermissions(['refunds.request']))], ['refunds']);
+  assert.equal(visibleScreens(expandPermissions([])).size, 0);
   assert.equal(expandPermissions(['refunds.review']).has('refunds.process'), false);
   assert.equal(expandPermissions(['staff.manage','roles.manage']).has('refunds.process'), true);
-  assert.equal(homePathFor('calendar', ['refunds.read'], ['refunds'], 'desk'), '/account');
   assert.equal(isActivitiesScreen('refunds'), false);
-  assert.deepEqual(cleanScreens(['today','refunds']), ['refunds','instructor']);
 });
 test('real additive migration supports private drafts, including withdrawn drafts, and cross-site reads', async () => {
   const draft = await create({}, 'save');

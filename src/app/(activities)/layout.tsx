@@ -5,7 +5,7 @@ import { auth } from "@/auth";
 import { AppChrome } from "@/modules/activities/components/app-nav";
 import { permissionsOf } from "@/lib/authz";
 import { getCurrentClub } from "@/lib/clubs/current";
-import { homePathFor, visibleScreens } from "@/lib/staff/screens";
+import { visibleScreens } from "@/lib/staff/screens";
 import { NAV_COLLAPSED_COOKIE } from "@/lib/shell-preferences";
 
 /** The signed-in grouped workspace. Authentication and screen access stay
@@ -23,10 +23,8 @@ export default async function AppLayout({ children }: { children: ReactNode }) {
     <AppChrome
       userName={session.user.name ?? session.user.email ?? "Unknown"}
       userSubtitle={session.user.roleName}
-      // The desk wordmark stays in this workspace, even for a dual-access
-      // account whose sign-in landing page is Instructor.
-      homeHref={homePathFor(session.user.home, session.user.permissions, session.user.screens, "desk")}
-      screens={visibleScreens(session.user.screens, permissionsOf(session))}
+      homeHref="/schedule"
+      screens={visibleScreens(permissionsOf(session))}
       club={club}
       clubs={clubs}
       initialCollapsed={collapsed}

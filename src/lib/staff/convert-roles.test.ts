@@ -35,24 +35,24 @@ test("a dry run reports every role and writes nothing", async () => {
 
 test("confirming converts roles that change nothing; roles that would gain wait", async () => {
   const report = await convert.convertRolesToLevels(fixture.prisma, { confirm: true, allowGains: false });
-  assert.deepEqual(report.filter((r) => r.converted).map((r) => r.name), ["Admin"]);
+  assert.ok(report.find((r) => r.name === "Admin")!.converted);
   assert.deepEqual(await levelsOf("Admin"), { admin: "manage" });
+  for (const r of report) assert.equal(r.converted, r.gains.length === 0, `${r.name} converts only when it gains nothing`);
   // The shipped Instructor also edits swimmers and enrolments, which is the
-  // desk's work: as Desk it would gain the desk screens, so it waits.
+  // desk's work: as Desk plus Pool deck it would gain parent access, so it waits.
   const instructor = report.find((r) => r.name === "Instructor")!;
   assert.match(instructor.levels, /Swim school: Desk/);
-  assert.ok(instructor.gains.includes("calendar"));
+  assert.ok(instructor.gains.includes("parents.manage"));
   assert.equal(await levelsOf("Instructor"), null);
-  assert.equal(await levelsOf("Viewer"), null, "Viewer gains the desk's editing, so it waits for review");
   const audit = await fixture.prisma.auditLog.findMany({ where: { action: "convert-to-levels" } });
-  assert.deepEqual(audit.map((a) => a.entityId), [before_.Admin.id]);
+  assert.equal(audit.length, report.filter((r) => r.converted).length);
 });
 
 test("a converted administrator signs in with exactly the access they had", async () => {
   const role = await fixture.prisma.staffRole.findUniqueOrThrow({ where: { name: "Admin" } });
   const account: Account = {
     id: "alex", name: "Alex", email: "alex@example.invalid", isActive: true, orgId: null, isSuperadmin: false, siteIds: [],
-    staffRole: { id: role.id, name: role.name, permissions: role.permissions, home: role.home, screens: role.screens, levels: role.levels, extras: role.extras },
+    staffRole: { id: role.id, name: role.name, permissions: role.permissions, levels: role.levels, extras: role.extras },
   };
   const user = sessionUserFor(account, null)!;
   assert.deepEqual([...expandPermissions(user.permissions)].sort(), [...expandPermissions(before_.Admin.permissions)].sort());
@@ -60,7 +60,8 @@ test("a converted administrator signs in with exactly the access they had", asyn
 
 test("after review, --allow-gains converts the rest, and a second run finds nothing", async () => {
   const report = await convert.convertRolesToLevels(fixture.prisma, { confirm: true, allowGains: true });
-  assert.deepEqual(report.map((r) => r.name).sort(), ["Instructor", "Viewer"]);
+  assert.ok(report.every((r) => r.converted));
   assert.deepEqual(await levelsOf("Viewer"), { "swim-school": "desk" });
+  assert.deepEqual(await levelsOf("Instructor"), { "swim-school": "desk", "pool-deck": "teach" });
   assert.deepEqual(await convert.convertRolesToLevels(fixture.prisma, { confirm: true, allowGains: true }), []);
 });

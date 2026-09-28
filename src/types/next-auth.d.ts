@@ -18,22 +18,18 @@ declare module "next-auth" {
       id: string;
       roleId: string;
       roleName: string;
+      /** What they may do at the site they are working in: the one access
+       *  language. Pages, menus and actions ask for a permission. */
       permissions: string[];
-      /** A `ROLE_HOMES` key: where this person's day starts. */
-      home: string;
-      /** `SCREENS` keys: which pages their role offers at all. */
-      screens: string[];
       /** The operator this person works for (the organisation boundary). */
       orgId?: string | null;
       /** Sees everything in the organisation, restricted (HR) data included. */
       isSuperadmin?: boolean;
-      /** Additional roles and where each applies, for the policy engine.
-       *  `permissions`/`screens` above already include the ones that apply
-       *  everywhere or at the current site. */
-      grants?: { roleName: string; permissions: string[]; screens: string[]; scopeKind: string; scopeId: string }[];
-      /** The primary role's own keys, which apply everywhere. */
+      /** Parts of their role that apply only at their other sites or over
+       *  their team, for the policy engine. */
+      grants?: { roleName: string; permissions: string[]; scopeKind: string; scopeId: string }[];
+      /** What their role gives everywhere. */
       primaryPermissions?: string[];
-      primaryScreens?: string[];
       /** How this session proved who it is: a password sign-in, a PIN quick
        *  switch on a shared device, or the development bypass; and when. */
       authMethod?: "password" | "pin" | "dev";

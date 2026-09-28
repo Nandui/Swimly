@@ -5,11 +5,11 @@ import { serverModule } from "@/test/server-module";
 import { expandPermissions } from "@/lib/staff/permissions";
 import { visibleScreens, type ScreenKey } from "@/lib/staff/screens";
 
-function guard(screens: string[], permissions: string[]) {
-  const session = { user: { id: "teacher", permissions, screens } } as Session;
+function guard(permissions: string[]) {
+  const session = { user: { id: "teacher", permissions } } as unknown as Session;
   const authz = {
     can: (_: Session, key: string) => new Set<string>(expandPermissions(permissions)).has(key),
-    canSee: (_: Session, screen: ScreenKey) => visibleScreens(screens, expandPermissions(permissions)).has(screen),
+    canSee: (_: Session, screen: ScreenKey) => visibleScreens(expandPermissions(permissions)).has(screen),
   };
   return serverModule<typeof import("./page-guard")>("src/modules/activities/lib/attendance/page-guard.ts", {
     "@/lib/authz": authz,
@@ -19,17 +19,17 @@ function guard(screens: string[], permissions: string[]) {
 }
 
 test("instructors open their teaching pages but not desk class forms", async () => {
-  for (const screens of [["instructor"], ["today"]]) {
-    const access = guard(screens, ["attendance.mark", "attendance.cover", "progression.assess"]);
-    await access.classPage("instructor");
-    await assert.rejects(access.classPage("desk"), /404/);
-  }
+  const access = guard(["attendance.mark", "attendance.cover", "progression.assess"]);
+  await access.classPage("instructor");
+  await assert.rejects(access.classPage("desk"), /404/);
 });
 
-test("desk attendance permission alone never opens the instructor workspace", async () => {
-  const desk = guard(["calendar", "courses"], ["attendance.markAny"]);
-  await desk.classPage("desk");
+test("the desk never opens the instructor workspace; a pool deck lead opens both class views", async () => {
+  const desk = guard(["swimschool.desk", "students.manage", "enrolment.manage"]);
   await assert.rejects(desk.classPage("instructor"), /404/);
-  await assert.rejects(guard(["instructor"], []).classPage("instructor"), /404/);
-  await assert.rejects(guard(["calendar"], []).classPage("desk"), /404/);
+  await assert.rejects(desk.classPage("desk"), /404/, "taking attendance is the pool deck's job");
+  const lead = guard(["swimschool.desk", "attendance.markAny"]);
+  await lead.classPage("desk");
+  await lead.classPage("instructor");
+  await assert.rejects(guard([]).classPage("instructor"), /404/);
 });

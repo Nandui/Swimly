@@ -1,26 +1,21 @@
 import { Building2, CalendarClock, Files, GraduationCap, HeartHandshake, ReceiptText, Waves, WavesLadder, type LucideIcon } from "lucide-react";
 import type { PermissionKey } from "@/lib/staff/permissions";
-import { isActivitiesScreen, isCoreScreen, type ScreenKey } from "@/lib/staff/screens";
 
-/** Every module Turnfin offers, declared in one place.
+/** Every module Turnfin offers, each described once (docs/how-turnfin-works.md).
  *
- *  A module is one area of the leisure centre's data with several audiences,
- *  and each audience gets its own surface (see DESIGN.md and the platform
- *  access plan). This registry is how the portal, the module switcher and the
- *  staff portal find them: a module appears for someone because its manifest says
- *  so, never because a component remembered to add a boolean.
+ *  A module's description says everything the rest of Turnfin needs: its name,
+ *  where it opens, its levels and the permissions each level gives. Menus, the
+ *  home page and the role editor are all built from these descriptions, so a
+ *  new module is a folder plus one `registerModule` call.
  *
- *  Visibility here is presentation. Security stays in each module's page
- *  guards, actions and the policy engine. */
+ *  Showing a module is presentation. Security stays in each page and action,
+ *  which ask for a named permission. */
 
+/** What the registry needs to know about the signed-in person. */
 export type ModuleContext = {
-  screens: ReadonlySet<ScreenKey>;
-  /** Screens from additional roles at any scope (a department, their team).
-   *  People-scoped modules such as Training open for these too; the module
-   *  itself decides whose records they reach. */
-  scopedScreens: ReadonlySet<string>;
+  /** Every permission they hold anywhere: at the site they are working in,
+   *  at their other sites, or over their team. */
   permissions: ReadonlySet<PermissionKey>;
-  superadmin: boolean;
 };
 
 /** Where a level applies. Swim school, Training and Rota work at the sites
@@ -29,15 +24,14 @@ export type ModuleContext = {
 export type Reach = "sites" | "team" | "everywhere";
 
 /** One step on a module's ladder. Levels are cumulative: a level gives its
- *  own permissions and screens plus everything to its left. Pages and actions
- *  never ask for a level; they keep asking for the named permission. */
+ *  own permissions plus everything to its left. Pages and actions never ask
+ *  for a level; they ask for the named permission. */
 export type ModuleLevel = {
   key: string;
   label: string;
   /** One plain sentence, shown where the level is set. */
   help: string;
   permissions: readonly PermissionKey[];
-  screens: readonly ScreenKey[];
   /** Overrides the module's reach (HR "Their team"). */
   reach?: Reach;
 };
@@ -51,7 +45,6 @@ export type ModuleExtra = {
   /** The lowest level the extra makes sense with. */
   from: string;
   permissions: readonly PermissionKey[];
-  screens: readonly ScreenKey[];
 };
 
 export type ModuleAccess = {
@@ -72,11 +65,7 @@ export type ModuleManifest = {
   /** How this module names itself in the shared activity log. */
   logName: string;
   access: ModuleAccess;
-  /** Offered on the Reception Portal as well as the general portal. */
-  reception?: boolean;
   href: string;
-  /** Whether this person has a Manage surface to open. Personal records live in Turnfin Me. */
-  visibleTo(ctx: ModuleContext): boolean;
 };
 
 const MODULES: ModuleManifest[] = [];
@@ -90,8 +79,14 @@ export function allModules(): readonly ModuleManifest[] {
   return MODULES;
 }
 
+/** Every permission a module can give, across its levels and extras. */
+export function modulePermissions(mod: ModuleManifest): PermissionKey[] {
+  return [...mod.access.levels, ...(mod.access.extras ?? [])].flatMap((step) => [...step.permissions]);
+}
+
+/** The modules this person has: those where they hold any permission. */
 export function visibleModules(ctx: ModuleContext): ModuleManifest[] {
-  return MODULES.filter((m) => m.visibleTo(ctx));
+  return MODULES.filter((m) => modulePermissions(m).some((key) => ctx.permissions.has(key)));
 }
 
 // ---------------------------------------------------------------------------
@@ -103,35 +98,31 @@ export function visibleModules(ctx: ModuleContext): ModuleManifest[] {
 
 registerModule({
   id: "swim-school",
-  reception: true,
   name: "Swim school",
   // Swim school is the first activity type (see src/modules/activities/types.ts).
   description: "Swimmers, bookings, classes and assessments at the desk, and the swim school's set-up. Camps, pool hire and fitness classes will join it.",
   icon: WavesLadder,
-  // Resolve permissions and the preferred workspace again when opened.
-  href: "/start",
+  href: "/schedule",
   logName: "Swim school",
   access: {
     reach: "sites",
     levels: [
       {
         key: "desk", label: "Desk", help: "Every swimmer, booking, move, waiting list and assessment booking.",
-        permissions: ["students.manage", "enrolment.manage", "parents.manage"],
-        screens: ["calendar", "students", "courses", "together", "assessments", "awaiting-enrolment", "legend-agreements"],
+        permissions: ["swimschool.desk", "students.manage", "enrolment.manage", "parents.manage"],
       },
       {
         key: "manage", label: "Manage", help: "Programmes, levels, classes and reports.",
-        permissions: ["courses.manage", "curriculum.manage", "progression.override"], screens: ["analytics", "programmes"],
+        permissions: ["courses.manage", "curriculum.manage", "progression.override"],
       },
     ],
     extras: [
       {
         key: "cancel-classes", label: "Can cancel classes", help: "The duty manager page: cancel today's sessions and pass them to billing.", from: "desk",
-        permissions: ["classes.cancel", "billing.notify"], screens: ["duty", "cancellations"],
+        permissions: ["classes.cancel", "billing.notify"],
       },
     ],
   },
-  visibleTo: ({ screens }) => [...screens].some((key) => isActivitiesScreen(key) && key !== "instructor"),
 });
 
 // The pool deck is its own module: teaching is a different job from the desk
@@ -149,20 +140,18 @@ registerModule({
     levels: [
       {
         key: "teach", label: "Teach", help: "Their own classes: attendance, competencies, assessments, and covering a colleague's class.",
-        permissions: ["attendance.mark", "attendance.cover", "progression.assess", "progression.complete", "assessments.run"], screens: ["instructor"],
+        permissions: ["attendance.mark", "attendance.cover", "progression.assess", "progression.complete", "assessments.run"],
       },
       {
         key: "lead", label: "Lead", help: "Also take attendance for any class, for example copying in a paper register.",
-        permissions: ["attendance.markAny"], screens: [],
+        permissions: ["attendance.markAny"],
       },
     ],
   },
-  visibleTo: ({ screens }) => screens.has("instructor"),
 });
 
 registerModule({
   id: "refunds",
-  reception: true,
   name: "Refunds",
   description: "Submit customer refund requests, follow finance decisions and record completed payments.",
   icon: ReceiptText,
@@ -171,16 +160,14 @@ registerModule({
   access: {
     reach: "everywhere",
     levels: [
-      { key: "use", label: "Use", help: "Log a customer's refund request and follow it.", permissions: ["refunds.read", "refunds.request"], screens: ["refunds"] },
-      { key: "manage", label: "Manage", help: "Decide refund requests and record payments. Nobody decides their own.", permissions: ["refunds.review", "refunds.process"], screens: [] },
+      { key: "use", label: "Use", help: "Log a customer's refund request and follow it.", permissions: ["refunds.read", "refunds.request"] },
+      { key: "manage", label: "Manage", help: "Decide refund requests and record payments. Nobody decides their own.", permissions: ["refunds.review", "refunds.process"] },
     ],
   },
-  visibleTo: ({ screens }) => screens.has("refunds"),
 });
 
 registerModule({
   id: "docs",
-  reception: true,
   name: "Docs",
   description: "Read, write and approve staff documents. Track required reading.",
   icon: Files,
@@ -189,15 +176,14 @@ registerModule({
   access: {
     reach: "everywhere",
     levels: [
-      { key: "read", label: "Read", help: "Read the documents aimed at their role.", permissions: ["docs.read"], screens: ["docs"] },
-      { key: "write", label: "Write", help: "Draft documents and send them for approval.", permissions: ["docs.write"], screens: [] },
-      { key: "manage", label: "Manage", help: "Aim documents at roles and see who has read them.", permissions: ["docs.manage"], screens: [] },
+      { key: "read", label: "Read", help: "Read the documents aimed at their role.", permissions: ["docs.read"] },
+      { key: "write", label: "Write", help: "Draft documents and send them for approval.", permissions: ["docs.write"] },
+      { key: "manage", label: "Manage", help: "Aim documents at roles and see who has read them.", permissions: ["docs.manage"] },
     ],
     extras: [
-      { key: "approve", label: "Can approve documents", help: "Approve and publish colleagues' documents, never their own.", from: "read", permissions: ["docs.approve"], screens: [] },
+      { key: "approve", label: "Can approve documents", help: "Approve and publish colleagues' documents, never their own.", from: "read", permissions: ["docs.approve"] },
     ],
   },
-  visibleTo: ({ screens }) => screens.has("docs"),
 });
 
 registerModule({
@@ -210,12 +196,10 @@ registerModule({
   access: {
     reach: "sites",
     levels: [
-      { key: "trainer", label: "Trainer", help: "Sign off practical training for people at their sites.", permissions: ["training.records.read", "training.signoff"], screens: ["training"] },
-      { key: "manage", label: "Manage", help: "Create courses, assign them and check certificates.", permissions: ["training.manage", "training.assign", "qualifications.manage"], screens: [] },
+      { key: "trainer", label: "Trainer", help: "Sign off practical training for people at their sites.", permissions: ["training.records.read", "training.signoff"] },
+      { key: "manage", label: "Manage", help: "Create courses, assign them and check certificates.", permissions: ["training.manage", "training.assign", "qualifications.manage"] },
     ],
   },
-  // Completing your own training happens in Turnfin Me; this is the Manage surface.
-  visibleTo: ({ screens, scopedScreens }) => screens.has("training") || scopedScreens.has("training"),
 });
 
 registerModule({
@@ -228,12 +212,10 @@ registerModule({
   access: {
     reach: "sites",
     levels: [
-      { key: "view", label: "View", help: "See the rota at their sites.", permissions: ["rota.view"], screens: ["rota"] },
-      { key: "manage", label: "Manage", help: "Plan and change shifts.", permissions: ["rota.manage"], screens: [] },
+      { key: "view", label: "View", help: "See the rota at their sites.", permissions: ["rota.view"] },
+      { key: "manage", label: "Manage", help: "Plan and change shifts.", permissions: ["rota.manage"] },
     ],
   },
-  // A site-scoped duty role brings the screen with it.
-  visibleTo: ({ screens, scopedScreens, superadmin }) => superadmin || screens.has("rota") || scopedScreens.has("rota"),
 });
 
 registerModule({
@@ -249,18 +231,15 @@ registerModule({
     levels: [
       {
         key: "team", label: "Their team", help: "Notes and reviews for the people they manage.", reach: "team",
-        permissions: ["hr.records.read", "hr.notes.write", "hr.reviews.write"], screens: ["hr"],
+        permissions: ["hr.records.read", "hr.notes.write", "hr.reviews.write"],
       },
-      { key: "all", label: "Everyone", help: "HR notes and reviews for everyone.", permissions: [], screens: [] },
+      { key: "all", label: "Everyone", help: "HR notes and reviews for everyone.", permissions: [] },
     ],
   },
-  // The flat HR screen already requires hr.records.read, which administrators
-  // never inherit; a department or team HR role brings the screen with it.
-  visibleTo: ({ screens, scopedScreens, superadmin }) => superadmin || screens.has("hr") || scopedScreens.has("hr"),
 });
 
-// Core is not a module but the organisation every module shares: people,
-// roles, sites and the activity log. It gets a tile for the people who manage it.
+// Admin is Core: the organisation every module shares (people, roles, sites
+// and the activity log).
 registerModule({
   id: "admin",
   name: "Admin",
@@ -276,9 +255,7 @@ registerModule({
         label: "Manage",
         help: "People, roles and sites, and the activity log. Admins can also use every other module except HR.",
         permissions: ["staff.manage", "roles.manage", "clubs.manage", "activity.view"],
-        screens: ["staff", "roles", "clubs", "activity"],
       },
     ],
   },
-  visibleTo: ({ screens }) => [...screens].some(isCoreScreen),
 });

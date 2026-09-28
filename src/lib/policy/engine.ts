@@ -127,17 +127,17 @@ export function actorFrom(input: {
   name: string;
   orgId: string | null;
   superadmin: boolean;
-  primary: { name: string; permissions: readonly string[]; screens: readonly string[] } | null;
-  assignments: { roleName: string; permissions: readonly string[]; screens: readonly string[]; scope: Scope }[];
+  primary: { name: string; permissions: readonly string[] } | null;
+  assignments: { roleName: string; permissions: readonly string[]; scope: Scope }[];
   authMethod?: Actor["authMethod"];
   authAt?: number | null;
 }): Actor {
   const grants: Grant[] = [];
   if (input.primary) {
-    grants.push({ roleName: input.primary.name, permissions: expandPermissions(input.primary.permissions, { superadmin: input.superadmin }), screens: input.primary.screens, scope: { kind: "all" } });
+    grants.push({ roleName: input.primary.name, permissions: expandPermissions(input.primary.permissions, { superadmin: input.superadmin }), scope: { kind: "all" } });
   }
   for (const assignment of input.assignments) {
-    grants.push({ roleName: assignment.roleName, permissions: expandPermissions(assignment.permissions), screens: assignment.screens, scope: assignment.scope });
+    grants.push({ roleName: assignment.roleName, permissions: expandPermissions(assignment.permissions), scope: assignment.scope });
   }
   return {
     id: input.id, name: input.name, orgId: input.orgId, superadmin: input.superadmin, grants,

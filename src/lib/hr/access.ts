@@ -1,6 +1,6 @@
 import "server-only";
 import type { Session } from "next-auth";
-import { canSee, requireSession, AuthorizationError } from "@/lib/authz";
+import { requireSession, AuthorizationError } from "@/lib/authz";
 import { holdsAnywhere } from "@/lib/policy/engine";
 import { actorForSession } from "@/lib/policy/session";
 
@@ -20,8 +20,7 @@ export type HrActor = {
 
 export function hrAccess(session: Session): HrActor | null {
   const actor = actorForSession(session);
-  const screen = canSee(session, "hr") || actor.superadmin || actor.grants.some((grant) => grant.screens.includes("hr"));
-  if (!screen || !holdsAnywhere(actor, "hr.records.read")) return null;
+  if (!holdsAnywhere(actor, "hr.records.read")) return null;
   return {
     id: actor.id, name: actor.name, orgId: actor.orgId ?? "", superadmin: actor.superadmin,
     notes: holdsAnywhere(actor, "hr.notes.write"),

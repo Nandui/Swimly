@@ -7,6 +7,6 @@ export async function operatorAccounts(name: string) {
   return prisma.user.findMany({
     where: { name, isActive: true },
     take: 2,
-    select: { id: true, name: true, staffRole: { select: { id: true, name: true, permissions: true, home: true, screens: true } } },
+    select: { id: true, name: true, staffRole: { select: { id: true, name: true, permissions: true } } },
   });
 }

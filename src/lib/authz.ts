@@ -71,7 +71,7 @@ export function can(session: Session, permission: PermissionKey): boolean {
  *  the screen requires. Pages ask this before they ask anything else; links
  *  that cross into another screen ask it before they render. */
 export function canSee(session: Session, screen: ScreenKey): boolean {
-  return visibleScreens(session.user.screens ?? [], permissionsOf(session)).has(screen);
+  return visibleScreens(permissionsOf(session)).has(screen);
 }
 
 /** True if the session holds **any** of these. For screens that exist to serve

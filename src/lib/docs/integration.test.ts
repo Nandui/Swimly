@@ -2,7 +2,8 @@ import { test, before, after } from 'node:test';
 import assert from 'node:assert/strict';
 import { randomUUID } from 'node:crypto';
 import { createDocsTestDatabase, type DocsTestDatabase } from '@/test/docs-database';
-import { cleanScreens, homePathFor } from '@/lib/staff/screens';
+import { visibleScreens } from '@/lib/staff/screens';
+import { expandPermissions } from '@/lib/staff/permissions';
 import { actor, DocumentService, library } from './domain';
 import { type Database, one, rows } from './database';
 import { canManage, canApprove, type DocumentContent } from './types';
@@ -23,9 +24,10 @@ test('current staff permissions and deactivation are checked on every operation'
   await db.identity.query('UPDATE public."User" SET "isActive"=false WHERE id=$1', ['riley']);
   await assert.rejects(library(db, 'riley'), /active staff/);
   await db.identity.query('UPDATE public."User" SET "isActive"=true WHERE id=$1', ['riley']);
-  await db.identity.query('UPDATE public."StaffRole" SET screens=$1 WHERE id=$2', [[], 'riley']);
+  const { rows } = await db.identity.query<{ permissions: string[] }>('SELECT permissions FROM public."StaffRole" WHERE id=$1', ['riley']);
+  await db.identity.query('UPDATE public."StaffRole" SET permissions=$1 WHERE id=$2', [[], 'riley']);
   await assert.rejects(library(db, 'riley'), /Docs access/);
-  await db.identity.query('UPDATE public."StaffRole" SET screens=$1 WHERE id=$2', [['docs'], 'riley']);
+  await db.identity.query('UPDATE public."StaffRole" SET permissions=$1 WHERE id=$2', [rows[0].permissions, 'riley']);
   await library(db, 'riley');
 });
 test('effective role preview cannot use the real administrator grants', async () => {
@@ -50,10 +52,8 @@ test('Docs administration cannot edit shared accounts or escalate their permissi
   assert.deepEqual(current.permissions, ['docs.read']);
   assert.equal(current.active, true);
 });
-test('Docs access preserves the Instructor and desk workspace boundaries', () => {
-  assert.deepEqual(cleanScreens(['today', 'docs']), ['instructor', 'docs']);
-  assert.equal(homePathFor('calendar', ['docs.read'], ['docs']), '/docs');
-  assert.equal(homePathFor('instructor', ['attendance.mark', 'docs.read'], ['instructor', 'docs'], 'desk'), '/account');
+test('Docs reading opens Docs and nothing of the swim school', () => {
+  assert.deepEqual([...visibleScreens(expandPermissions(['docs.read']))], ['docs']);
 });
 test('private file bytes are atomic, inaccessible before publication, then readable with Docs access', async () => {
   const service = new DocumentService(db), c = content(), session = randomUUID();

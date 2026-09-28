@@ -1,6 +1,5 @@
 import type { JSONContent } from '@tiptap/react';
 import { expandPermissions } from '@/lib/staff/permissions';
-import { visibleScreens } from '@/lib/staff/screens';
 export const documentTypes = ['SOP', 'NOP', 'EAP', 'Risk assessment', 'Policy', 'Custom'] as const;
 export type DocumentType = (typeof documentTypes)[number];
 export type Role = string;
@@ -10,7 +9,6 @@ export type Member = {
   email: string;
   role: Role;
   permissions: string[];
-  screens: string[];
   active: boolean;
   facilityIds: string[];
   teamIds: string[];
@@ -155,7 +153,7 @@ export type Workspace = {
   /** Whether this person may open reading reports (everyone, or a scoped set). */
   canReport?: boolean;
 };
-export const canRead = (m: Member) => m.active && visibleScreens(m.screens, expandPermissions(m.permissions)).has('docs');
+export const canRead = (m: Member) => m.active && expandPermissions(m.permissions).has('docs.read');
 export const canWrite = (m: Member) => canRead(m) && expandPermissions(m.permissions).has('docs.write');
 export const canApprove = (m: Member) => canRead(m) && expandPermissions(m.permissions).has('docs.approve');
 export const canManage = (m: Member) => canRead(m) && expandPermissions(m.permissions).has('docs.manage');

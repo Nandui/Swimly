@@ -63,7 +63,6 @@ export type HomeViewer = {
   id: string;
   name: string;
   permissions: readonly string[];
-  screens: readonly string[];
   /** Everything they hold anywhere: at other sites or over their team too. */
   anywhere: readonly string[];
   isSuperadmin: boolean;

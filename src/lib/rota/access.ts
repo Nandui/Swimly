@@ -1,6 +1,6 @@
 import "server-only";
 import type { Session } from "next-auth";
-import { canSee, requireSession, AuthorizationError } from "@/lib/authz";
+import { requireSession, AuthorizationError } from "@/lib/authz";
 import { holdsAnywhere } from "@/lib/policy/engine";
 import { actorForSession } from "@/lib/policy/session";
 
@@ -12,8 +12,7 @@ export type RotaActor = { id: string; name: string; orgId: string | null; manage
 
 export function rotaAccess(session: Session): RotaActor | null {
   const actor = actorForSession(session);
-  const screen = canSee(session, "rota") || actor.superadmin || actor.grants.some((grant) => grant.screens.includes("rota"));
-  if (!screen || !holdsAnywhere(actor, "rota.view")) return null;
+  if (!holdsAnywhere(actor, "rota.view")) return null;
   return { id: actor.id, name: actor.name, orgId: actor.orgId, manage: holdsAnywhere(actor, "rota.manage") };
 }
 

@@ -4,13 +4,12 @@ import { sessionUserFor, type Account } from "./session-user";
 
 const account = (): Account => ({
   id: "ava", name: "Ava", email: "ava@example.invalid", isActive: true, orgId: "lw", isSuperadmin: false,
-  staffRole: { id: "instructor", name: "Instructor", permissions: ["attendance.mark"], home: "instructor", screens: ["instructor"] },
+  staffRole: { id: "instructor", name: "Instructor", permissions: ["attendance.mark"] },
 });
 
 test("a role not yet converted applies its stored keys everywhere; no role reads as signed out", () => {
   const user = sessionUserFor(account(), "bishopstown")!;
   assert.deepEqual(user.permissions, ["attendance.mark"]);
-  assert.deepEqual(user.screens, ["instructor"]);
   assert.deepEqual(user.grants, []);
   assert.equal(sessionUserFor({ ...account(), staffRole: null }, null), null);
 });
@@ -18,13 +17,12 @@ test("a role not yet converted applies its stored keys everywhere; no role reads
 const levelled = (levels: Record<string, string>, siteIds: string[] = [], extras: string[] = []): Account => ({
   ...account(),
   siteIds,
-  staffRole: { id: "reception", name: "Receptionist", permissions: [], home: "calendar", screens: [], levels, extras, homeName: "Front of House" },
+  staffRole: { id: "reception", name: "Receptionist", permissions: [], levels, extras, homeName: "Front of House" },
 });
 
 test("a role with levels is built from its levels, not its stored keys", () => {
   const user = sessionUserFor(levelled({ "swim-school": "desk", refunds: "use", docs: "read" }), "bishopstown")!;
   for (const key of ["students.manage", "refunds.request", "docs.read"]) assert.ok(user.permissions.includes(key), key);
-  assert.ok(user.screens.includes("refunds") && user.screens.includes("students"));
   assert.ok(user.primaryPermissions.includes("students.manage"), "no sites set: the desk applies everywhere");
   assert.equal(user.grants.length, 0);
 });

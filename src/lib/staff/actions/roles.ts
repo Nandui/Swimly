@@ -12,8 +12,8 @@ import { logAudit } from "@/lib/audit";
 import { requirePermission } from "@/lib/authz";
 import { prisma } from "@/lib/prisma";
 import { guardKeyholders, withKeyholderLock } from "@/lib/staff/keyholders";
-import { cleanLevels, describeLevels, roleColumns, type RoleLevels } from "@/lib/staff/levels";
-import { legacyRoleFor, type RoleHome } from "@/lib/staff/permissions";
+import { cleanLevels, describeLevels, roleColumns } from "@/lib/staff/levels";
+import { legacyRoleFor } from "@/lib/staff/permissions";
 import { RESTRICTED_ROLE_REFUSAL } from "@/lib/staff/restricted";
 
 /** Roles are the rules about the rules, so every action here needs
@@ -46,17 +46,12 @@ const roleSchema = z.object({
 
 export type RoleInput = z.input<typeof roleSchema>;
 
-/** Where a role's session starts until home pages replace role homes. */
-function legacyHome(role: RoleLevels): RoleHome {
-  return role.levels["pool-deck"] && !role.levels["swim-school"] ? "instructor" : "calendar";
-}
-
 function prepare(input: RoleInput) {
   const parsed = roleSchema.safeParse(input);
   if (!parsed.success) return { ok: false, error: parsed.error.issues[0]?.message ?? "Check the role and try again." } as const;
   const role = cleanLevels(parsed.data.levels, parsed.data.extras);
   if (Object.keys(role.levels).length === 0) return { ok: false, error: "Give the role a level in at least one module, or nobody on it has anywhere to go." } as const;
-  return { ok: true, data: parsed.data, role, columns: roleColumns(role), home: legacyHome(role) } as const;
+  return { ok: true, data: parsed.data, role, columns: roleColumns(role) } as const;
 }
 
 export async function createRole(input: RoleInput): Promise<ActionResult> {
@@ -64,7 +59,7 @@ export async function createRole(input: RoleInput): Promise<ActionResult> {
 
   const prepared = prepare(input);
   if (!prepared.ok) return fail(prepared.error);
-  const { data: { name, description, homeName }, role, columns, home } = prepared;
+  const { data: { name, description, homeName }, role, columns } = prepared;
   if (columns.restricted && !session.user.isSuperadmin) return fail(RESTRICTED_ROLE_REFUSAL);
 
   const last = await prisma.staffRole.findFirst({
@@ -79,7 +74,6 @@ export async function createRole(input: RoleInput): Promise<ActionResult> {
           name,
           description: description || null,
           homeName: homeName || null,
-          home,
           ...columns,
           sortOrder: (last?.sortOrder ?? -1) + 1,
         },
@@ -110,7 +104,7 @@ export async function updateRole(id: string, input: RoleInput): Promise<ActionRe
 
   const prepared = prepare(input);
   if (!prepared.ok) return fail(prepared.error);
-  const { data: { name, description, homeName }, role, columns, home } = prepared;
+  const { data: { name, description, homeName }, role, columns } = prepared;
 
   const result = await onUniqueViolation(() => withKeyholderLock(async (tx) => {
     const existing = await tx.staffRole.findUnique({
@@ -145,14 +139,14 @@ export async function updateRole(id: string, input: RoleInput): Promise<ActionRe
 
     if (changes.length === 0) return ok();
     const refusal = await guardKeyholders(
-      { kind: "rolePermissions", roleId: id, permissions: columns.permissions, screens: columns.screens },
+      { kind: "rolePermissions", roleId: id, permissions: columns.permissions },
       tx
     );
     if (refusal) return fail(refusal);
 
     const updated = await tx.staffRole.update({
       where: { id },
-      data: { name, description: description || null, homeName: homeName || null, home, ...columns },
+      data: { name, description: description || null, homeName: homeName || null, ...columns },
       select: { id: true, name: true },
     });
 

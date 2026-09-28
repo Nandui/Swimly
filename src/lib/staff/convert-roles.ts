@@ -34,7 +34,7 @@ export async function convertRolesToLevels(db: typeof Db, options: { confirm: bo
     await db.$transaction(async (tx) => {
       await tx.staffRole.update({
         where: { id: role.id },
-        data: { levels: columns.levels, extras: columns.extras, permissions: columns.permissions, screens: columns.screens, restricted: columns.restricted },
+        data: { levels: columns.levels, extras: columns.extras, permissions: columns.permissions, restricted: columns.restricted },
       });
       await logAudit({
         actorId: null,

@@ -131,8 +131,6 @@ const {
       session.user.roleId = "";
       session.user.roleName = "";
       session.user.permissions = [];
-      session.user.home = "calendar";
-      session.user.screens = [];
       session.user.authMethod = token.authMethod ?? "password";
       session.user.authAt = token.authAt ?? null;
       session.user.sharedDevice = token.sharedDevice === true;
@@ -215,7 +213,7 @@ type SessionUser = Omit<Session["user"], "image">;
 
 /** On a dev build, an account that may manage roles can ask to see the app
  *  as another role. The person stays the same — id, name, email — and the
- *  role's permissions, screens and home are worn instead of their own.
+ *  role's permissions are worn instead of their own.
  *  `previewedRole` returns null everywhere the gate is shut, so this is a
  *  no-op on production whatever cookie arrives. */
 async function wearPreview(user: SessionUser): Promise<SessionUser> {
@@ -229,12 +227,9 @@ async function wearPreview(user: SessionUser): Promise<SessionUser> {
     roleId: role.id,
     roleName: role.name,
     permissions: role.permissions,
-    home: role.home,
-    screens: role.screens,
     isSuperadmin: false,
     grants: [],
     primaryPermissions: role.permissions,
-    primaryScreens: role.screens,
     preview: {
       roleId: role.id,
       roleName: role.name,

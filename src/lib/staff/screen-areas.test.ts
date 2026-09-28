@@ -1,6 +1,6 @@
 import assert from "node:assert/strict";
 import test from "node:test";
-import { ACTIVITIES_SCREENS, CORE_SCREENS, SCREENS, WORK_MODULE_SCREENS, cleanScreens, isActivitiesScreen, isCoreScreen } from "./screens";
+import { ACTIVITIES_SCREENS, CORE_SCREENS, SCREENS, WORK_MODULE_SCREENS, isActivitiesScreen, isCoreScreen } from "./screens";
 
 test("every screen belongs to exactly one of Core, Aquatics or a Work module", () => {
   const areas = [CORE_SCREENS, ACTIVITIES_SCREENS, WORK_MODULE_SCREENS].map((list) => new Set<string>(list));
@@ -20,7 +20,3 @@ test("Core screens are not Aquatics screens", () => {
   assert.equal(isActivitiesScreen("docs"), false);
 });
 
-test("a legacy Today grant beside former desk screens (now Core) still resolves to the desk calendar", () => {
-  assert.deepEqual(cleanScreens(["staff", "today"]), ["calendar", "instructor", "staff"]);
-  assert.deepEqual(cleanScreens(["today"]), ["instructor"]);
-});

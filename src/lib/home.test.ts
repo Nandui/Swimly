@@ -2,7 +2,7 @@ import assert from "node:assert/strict";
 import { test } from "node:test";
 import { serverModule } from "@/test/server-module";
 import { expandPermissions } from "@/lib/staff/permissions";
-import { cleanLevels, storedAccess } from "@/lib/staff/levels";
+import { cleanLevels, storedPermissions } from "@/lib/staff/levels";
 import type { HomeViewer } from "@/modules/contributions";
 
 /** The home page is the role's workspace: exactly the role's modules, its home
@@ -11,8 +11,8 @@ import type { HomeViewer } from "@/modules/contributions";
 type Role = { levels: Record<string, string>; extras?: string[]; homeName: string | null; name: string };
 
 function userFor(role: Role) {
-  const access = storedAccess(cleanLevels(role.levels, role.extras ?? []));
-  return { id: "u1", name: "Synthetic Person", roleId: "r1", roleName: role.name, permissions: access.permissions, screens: access.screens, grants: [], isSuperadmin: false };
+  const permissions = storedPermissions(cleanLevels(role.levels, role.extras ?? []));
+  return { id: "u1", name: "Synthetic Person", roleId: "r1", roleName: role.name, permissions, grants: [], isSuperadmin: false };
 }
 
 async function home(role: Role) {
@@ -49,7 +49,7 @@ test("the admin module appears only for a role that manages people, roles or sit
 
 function viewer(role: Role): HomeViewer {
   const user = userFor(role);
-  return { id: user.id, name: user.name, permissions: user.permissions, screens: user.screens, anywhere: user.permissions, isSuperadmin: false };
+  return { id: user.id, name: user.name, permissions: user.permissions, anywhere: user.permissions, isSuperadmin: false };
 }
 
 test("the swim school card lists only what the person can open", async () => {

@@ -58,7 +58,7 @@ registerHomeCard({
   moduleId: "swim-school",
   async items(viewer) {
     const held = expandPermissions(viewer.permissions, { superadmin: viewer.isSuperadmin });
-    const screens = visibleScreens(viewer.screens, held);
+    const screens = visibleScreens(held);
     return SWIM_LINKS
       .filter((link) => screens.has(link.screen) && (!link.permission || held.has(link.permission)))
       .map(({ label, hint, href }) => ({ label, hint, href }));
@@ -70,7 +70,7 @@ registerHomeCard({
   moduleId: "pool-deck",
   async items(viewer) {
     const held = expandPermissions(viewer.permissions, { superadmin: viewer.isSuperadmin });
-    if (!visibleScreens(viewer.screens, held).has("instructor")) return [];
+    if (!visibleScreens(held).has("instructor")) return [];
     return [
       { label: "Your classes today", hint: "Attendance, competencies and assessments", href: "/instructor" },
       { label: "Find a swimmer in your classes", href: "/instructor/swimmers" },

@@ -70,7 +70,7 @@ test("matrix: scope of a grant decides whose records it reaches", async () => {
 });
 
 test("administrators hold every ordinary capability, never restricted ones; superadmins hold both", async () => {
-  const admin = actorFrom({ id: "maya", name: "maya", orgId: "lw", superadmin: false, primary: { name: "Admin", permissions: ["staff.manage", "roles.manage"], screens: [] }, assignments: [] });
+  const admin = actorFrom({ id: "maya", name: "maya", orgId: "lw", superadmin: false, primary: { name: "Admin", permissions: ["staff.manage", "roles.manage"] }, assignments: [] });
   assert.equal(await can(admin, "docs.manage", { subjectUserId: "noah", orgId: "lw" }, dir), true);
   const superadmin = actorFrom({ id: "maya", name: "maya", orgId: "lw", superadmin: true, primary: basic, assignments: [] });
   assert.equal(await can(superadmin, "docs.manage", { subjectUserId: "noah", orgId: "lw" }, dir), true);

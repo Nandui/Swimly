@@ -2,7 +2,6 @@ import { randomUUID } from 'node:crypto';
 import type { Database, Sql } from './database';
 import { one, rows, findMember, listMembers } from './database';
 import { expandPermissions } from '@/lib/staff/permissions';
-import { visibleScreens } from '@/lib/staff/screens';
 import {
   contentSchema,
   validateBody,
@@ -44,8 +43,6 @@ export async function actor(tx: Sql, id: string) {
   if (!m?.active) fail('Please sign in with an active staff account.', 401);
   if (tx.access?.id === id) {
     const effective = expandPermissions(tx.access.permissions);
-    const screens = visibleScreens(tx.access.screens, effective);
-    m.screens = [...visibleScreens(m.screens, expandPermissions(m.permissions))].filter(key => screens.has(key));
     m.permissions = [...expandPermissions(m.permissions)].filter(key => effective.has(key));
   }
   if (!canRead(m)) fail('Docs access is required.', 403);

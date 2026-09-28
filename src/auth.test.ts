@@ -6,7 +6,7 @@ import { UNRESTRICTED_PERMISSIONS, expandPermissions } from "@/lib/staff/permiss
 import { ADMINISTRATOR_SCREENS, visibleScreens } from "@/lib/staff/screens";
 
 function fixture() {
-  const administrator = { id: "role-1", name: "Renamed management team", permissions: ["staff.manage", "roles.manage"], home: "overview", screens: ["overview"] };
+  const administrator = { id: "role-1", name: "Renamed management team", permissions: ["staff.manage", "roles.manage"] };
   const account = { id: "staff-1", name: "Synthetic Manager", email: "manager@example.test", isActive: true, staffRole: administrator as typeof administrator | null };
   let preview: typeof administrator | null = null;
   const { auth } = serverModule<typeof import("./auth")>("src/auth.ts", {
@@ -27,17 +27,17 @@ function fixture() {
 function access(session: Session | null) {
   assert.ok(session);
   const permissions = expandPermissions(session.user.permissions);
-  return { permissions: [...permissions], screens: [...visibleScreens(session.user.screens, permissions)] };
+  return { permissions: [...permissions], screens: [...visibleScreens(permissions)] };
 }
 
-test("renamed administrators get full access from current grants without updating stored screen lists", async () => {
+test("renamed administrators get full access from current grants", async () => {
   const f = fixture();
   assert.deepEqual(access(await f.auth()), { permissions: UNRESTRICTED_PERMISSIONS, screens: ADMINISTRATOR_SCREENS });
 });
 
 test("role previews replace administrator access and restoring the role restores full access", async () => {
   const f = fixture();
-  f.preview({ id: "deck-role", name: "Instructor", permissions: ["attendance.mark"], screens: ["instructor"], home: "instructor" });
+  f.preview({ id: "deck-role", name: "Instructor", permissions: ["attendance.mark"] });
   assert.deepEqual(access(await f.auth()), { permissions: ["attendance.mark"], screens: ["instructor"] });
   f.preview(null);
   assert.deepEqual(access(await f.auth()), { permissions: UNRESTRICTED_PERMISSIONS, screens: ADMINISTRATOR_SCREENS });
@@ -47,7 +47,7 @@ test("demotion, deactivation and removing a role revoke administrator access on 
   const f = fixture();
   assert.equal(access(await f.auth()).screens.includes("duty"), true);
   f.account.staffRole!.permissions = ["staff.manage"];
-  assert.deepEqual(access(await f.auth()), { permissions: ["staff.manage"], screens: [] });
+  assert.deepEqual(access(await f.auth()), { permissions: ["staff.manage"], screens: ["staff"] });
   f.account.isActive = false;
   assert.equal(await f.auth(), null);
   f.account.isActive = true;

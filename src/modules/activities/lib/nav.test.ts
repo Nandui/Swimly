@@ -5,7 +5,7 @@ import { visibleScreens } from "../../../lib/staff/screens";
 import { expandPermissions } from "../../../lib/staff/permissions";
 
 test("administrators see every desk destination, including duty and billing, without a link into Instructor", () => {
-  const screens = visibleScreens(["overview"], expandPermissions(["staff.manage", "roles.manage"]));
+  const screens = visibleScreens(expandPermissions(["staff.manage", "roles.manage"]));
   const links = visibleNavGroups(screens).flatMap(group => group.items.map(item => item.href));
   assert.deepEqual(new Set(links), new Set(NAV_ITEMS.map(item => item.href)));
   assert.ok(links.includes("/duty"));
@@ -17,8 +17,8 @@ test("administrators see every desk destination, including duty and billing, wit
 });
 
 test("grouping preserves screen and permission restrictions without empty headings", () => {
-  const screens = visibleScreens(["calendar", "instructor", "roles", "activity"], expandPermissions(["attendance.mark"]));
-  const groups = visibleNavGroups(screens);
+  assert.deepEqual(visibleNavGroups(visibleScreens(expandPermissions(["attendance.mark"]))), [], "the pool deck has no desk menu");
+  const groups = visibleNavGroups(new Set(["calendar", "instructor"]));
   assert.deepEqual(groups.map(group => group.label), ["Daily work"]);
   assert.deepEqual(groups.flatMap(group => group.items.map(item => item.href)), ["/schedule"]);
   assert.deepEqual(visibleNavGroups(new Set(["instructor"])), []);
@@ -34,10 +34,10 @@ test("Setup retains only allowed Aquatics destinations; Core screens live in the
   for (const core of ["/staff", "/roles", "/clubs", "/activity"]) assert.equal(hrefs.includes(core), false);
 });
 
-test("Awaiting enrolment is an independent sidebar destination with its own screen grant", () => {
-  const queueOnly = visibleNavGroups(visibleScreens(["awaiting-enrolment"], expandPermissions([])));
+test("Awaiting enrolment is its own sidebar destination", () => {
+  const queueOnly = visibleNavGroups(new Set(["awaiting-enrolment"]));
   assert.deepEqual(queueOnly.flatMap(group => group.items.map(item => item.href)), ["/awaiting-enrolment"]);
-  const assessmentsOnly = visibleNavGroups(visibleScreens(["assessments"], expandPermissions([])));
+  const assessmentsOnly = visibleNavGroups(new Set(["assessments"]));
   assert.deepEqual(assessmentsOnly.flatMap(group => group.items.map(item => item.href)), ["/assessments"]);
   assert.equal(isNavItemActive("/awaiting-enrolment", "/assessments"), false);
 });
@@ -50,19 +50,19 @@ test("nested pages select their destination without prefix collisions", () => {
   assert.equal(isNavItemActive("/", "/"), true);
 });
 
-test("Legend agreements has its own screen grant and administrators receive it automatically", () => {
-  const own = visibleNavGroups(visibleScreens(["legend-agreements"], expandPermissions([])));
+test("Legend agreements is its own destination and administrators receive it automatically", () => {
+  const own = visibleNavGroups(new Set(["legend-agreements"]));
   assert.deepEqual(own.flatMap(group => group.items.map(item => item.href)), ["/legend-agreements"]);
-  const admin = visibleScreens([], expandPermissions(["staff.manage", "roles.manage"]));
+  const admin = visibleScreens(expandPermissions(["staff.manage", "roles.manage"]));
   assert(admin.has("legend-agreements"));
-  assert.equal(visibleScreens(["instructor"], expandPermissions(["attendance.mark"])).has("legend-agreements"), false);
+  assert.equal(visibleScreens(expandPermissions(["attendance.mark"])).has("legend-agreements"), false);
 });
 
 test("swimmer lookup requires the Swimmers screen and never links to retired Reception", () => {
-  const retired = visibleScreens(["reception"], expandPermissions([]));
+  const retired = visibleScreens(expandPermissions([]));
   assert.equal(swimmerLookupHref(retired, "demo"), null);
   assert.deepEqual(visibleNavGroups(retired), []);
-  const screens = visibleScreens(["students", "reception", "calendar"], expandPermissions([]));
+  const screens = new Set(["students", "calendar"] as const);
   assert.deepEqual(visibleNavGroups(screens).flatMap(group => group.items.map(item => item.href)), ["/schedule", "/students"]);
   assert.equal(swimmerLookupHref(screens, "demo"), "/students/demo");
   assert.equal(swimmerLookupHref(new Set(["instructor"]), "demo"), null);

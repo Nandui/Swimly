@@ -8,7 +8,6 @@ import { staffDirectory } from './staff-directory';
 import { postgresConnectionString } from '@/lib/postgres-connection';
 import { docsStorageConfig } from './storage-config';
 import { ALL_PERMISSIONS } from '@/lib/staff/permissions';
-import { ALL_SCREENS } from '@/lib/staff/screens';
 
 const globalDocs = globalThis as unknown as { docsPool?: Pool };
 function pool() {
@@ -23,7 +22,7 @@ function pool() {
 /** Opens Docs with an optional effective-access override (a role preview
  *  narrows it). Without one, each person's access is exactly what the Turnfin
  *  staff directory says. */
-function openDatabase(access?: { id: string; permissions: string[]; screens: string[] }): Database {
+function openDatabase(access?: { id: string; permissions: string[] }): Database {
   function sql(client: PoolClient): Sql {
     return { access, staff: staffDirectory, query: async <T>(statement: string, params?: unknown[]) => {
       const result = await client.query<QueryResultRow>(statement, params);
@@ -63,8 +62,8 @@ export const staffDatabase = cache(async (): Promise<Database> => {
   // holds everything; the directory record says the same, so the intersection
   // Docs takes keeps it. Previews drop the flag, so they can only narrow.
   const access = session.user.isSuperadmin
-    ? { id: session.user.id, permissions: [...ALL_PERMISSIONS], screens: [...ALL_SCREENS] }
-    : { id: session.user.id, permissions: session.user.permissions, screens: session.user.screens };
+    ? { id: session.user.id, permissions: [...ALL_PERMISSIONS] }
+    : { id: session.user.id, permissions: session.user.permissions };
   return openDatabase(access);
 });
 

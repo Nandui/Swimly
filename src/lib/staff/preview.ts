@@ -6,10 +6,10 @@ import { expandPermissions } from "@/lib/staff/permissions";
 /** Seeing the app as another role would — a dev-build affordance.
  *
  *  Somebody who defines roles needs to see what each one gets: which
- *  screens, which buttons, where the day starts. Signing in and out of test
+ *  pages, which buttons, which home page. Signing in and out of test
  *  accounts is the slow way. Instead, on a dev build, an account that may
  *  manage roles can pick any role and the session is rebuilt as if they
- *  held it: its permissions, its screens, its home. The person stays who
+ *  held it: its permissions. The person stays who
  *  they are — audit rows still carry their name — only the role changes.
  *
  *  The gate is `devSignInAllowed()`, the same one that decides whether the
@@ -31,7 +31,7 @@ export async function previewedRole() {
   if (!wanted) return null;
   return prisma.staffRole.findUnique({
     where: { id: wanted },
-    select: { id: true, name: true, permissions: true, home: true, screens: true },
+    select: { id: true, name: true, permissions: true },
   });
 }
 

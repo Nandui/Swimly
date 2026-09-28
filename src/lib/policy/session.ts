@@ -18,10 +18,10 @@ export function actorForSession(session: Session): Actor {
     name: user.name ?? "Unknown",
     orgId: user.orgId ?? null,
     superadmin: user.isSuperadmin === true,
-    primary: { name: user.roleName, permissions: user.primaryPermissions ?? user.permissions, screens: user.primaryScreens ?? user.screens },
+    primary: { name: user.roleName, permissions: user.primaryPermissions ?? user.permissions },
     assignments: (user.grants ?? []).flatMap((grant) => {
       const scope = scopeFrom(grant.scopeKind, grant.scopeId);
-      return scope ? [{ roleName: grant.roleName, permissions: grant.permissions, screens: grant.screens, scope }] : [];
+      return scope ? [{ roleName: grant.roleName, permissions: grant.permissions, scope }] : [];
     }),
     authMethod: user.authMethod ?? "password",
     authAt: user.authAt ?? null,

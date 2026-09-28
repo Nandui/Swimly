@@ -10,15 +10,15 @@ import type { FollowUpInput } from "@/modules/activities/lib/enrolment/follow-up
 
 let fixture: Awaited<ReturnType<typeof isolatedPrisma>>;
 let actions: typeof import("./follow-up");
-const state = { signedIn: true, permission: true, screens: ["awaiting-enrolment"], actorId: "follow-up-alex", clubId: "club_bishopstown" };
+const state = { signedIn: true, permission: true, desk: true, actorId: "follow-up-alex", clubId: "club_bishopstown" };
 function doubles() {
   return {
     "@/lib/prisma": { prisma: fixture.prisma },
     "@/lib/authz": {
       AuthorizationError: Error,
-      requireSession: async () => { if (!state.signedIn) throw Error("Sign in required"); return { user: { id: state.actorId, name: state.actorId === "follow-up-alex" ? "Alex Example" : "Riley Example", permissions: state.permission ? ["enrolment.manage"] : [], screens: state.screens } }; },
+      requireSession: async () => { if (!state.signedIn) throw Error("Sign in required"); return { user: { id: state.actorId, name: state.actorId === "follow-up-alex" ? "Alex Example" : "Riley Example", permissions: state.permission ? ["enrolment.manage"] : state.desk ? ["swimschool.desk"] : ["attendance.mark"] } }; },
       can: (actor: { user: { permissions: string[] } }, permission: never) => expandPermissions(actor.user.permissions).has(permission),
-      canSee: (actor: { user: { permissions: string[]; screens: string[] } }, screen: never) => visibleScreens(actor.user.screens, expandPermissions(actor.user.permissions)).has(screen),
+      canSee: (actor: { user: { permissions: string[] } }, screen: never) => visibleScreens(expandPermissions(actor.user.permissions)).has(screen),
     },
     "@/lib/clubs/current": { currentClubId: async () => state.clubId, currentClubIdIfAny: async () => state.clubId },
     "next/cache": { revalidatePath() {} },
@@ -64,16 +64,16 @@ test("history and current outcome are shared across sites and survive leaving th
   } finally { state.clubId = "club_bishopstown"; state.actorId = "follow-up-alex"; }
 });
 
-test("requires a desk screen and enrolment.manage; read-only staff can inspect but cannot write", async () => {
+test("requires the desk and enrolment.manage; desk staff without it can inspect but cannot write", async () => {
   const count = await fixture.prisma.studentFollowUp.count();
   state.permission = false;
   try { assert.equal((await actions.getFollowUpHistory("contact-history")).summary.count, 2); await assert.rejects(actions.addFollowUp(input("contact-history")), /permission/); }
   finally { state.permission = true; }
-  state.screens = ["instructor"];
+  state.permission = false; state.desk = false;
   try { await assert.rejects(actions.getFollowUpHistory("contact-history"), /access/); await assert.rejects(actions.addFollowUp(input("contact-history")), /access/); }
-  finally { state.screens = ["students"]; }
+  finally { state.permission = true; state.desk = true; }
   assert.equal((await actions.getFollowUpHistory("contact-history")).summary.count, 2);
-  state.screens = ["awaiting-enrolment"]; state.signedIn = false;
+  state.signedIn = false;
   try { await assert.rejects(actions.getFollowUpHistory("contact-history"), /Sign in/); }
   finally { state.signedIn = true; }
   assert.equal(await fixture.prisma.studentFollowUp.count(), count);

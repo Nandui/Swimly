@@ -54,7 +54,7 @@ export async function POST(request: Request) {
     if (!data.clubId || !clubs.some(c => c.id === data.clubId)) return json({ error: "Choose an existing active club explicitly." }, 400);
     const clubId = data.clubId;
     const session = { user: { id: actor.id, name: `${actor.name} (command line)`, roleId: role.id, roleName: role.name,
-      permissions: [...permissions], home: role.home, screens: role.screens }, expires: new Date(expires).toISOString() };
+      permissions: [...permissions] }, expires: new Date(expires).toISOString() };
     return await operationContext.run({ session, clubId }, async () => {
       const page = { take: 50, ...(data.cursor ? { cursor: { id: data.cursor }, skip: 1 } : {}), orderBy: { id: "asc" as const } };
       switch (data.operation) {

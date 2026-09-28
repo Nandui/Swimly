@@ -1,22 +1,20 @@
 import 'server-only';
 import { prisma } from '@/lib/prisma';
 import { ALL_PERMISSIONS } from '@/lib/staff/permissions';
-import { ALL_SCREENS } from '@/lib/staff/screens';
 import type { StaffDirectory, StaffIdentity } from './database';
 
 const select = { id: true, name: true, email: true, isActive: true, isSuperadmin: true, primaryClubId: true,
   departments: { select: { departmentId: true, department: { select: { clubId: true, archivedAt: true } } } },
-  staffRole: { select: { id: true, name: true, permissions: true, screens: true } },
+  staffRole: { select: { id: true, name: true, permissions: true } },
 } as const;
 function identity(user: { id: string; name: string; email: string; isActive: boolean; isSuperadmin: boolean; primaryClubId: string | null;
   departments: { departmentId: string; department: { clubId: string | null; archivedAt: Date | null } }[];
-  staffRole: { id: string; name: string; permissions: string[]; screens: string[] } | null;
+  staffRole: { id: string; name: string; permissions: string[] } | null;
 }): StaffIdentity {
   const departments = (user.departments ?? []).filter((d) => !d.department.archivedAt);
   return { id: user.id, name: user.name, email: user.email,
     active: user.isActive && !!user.staffRole, role: user.staffRole?.name ?? '',
     permissions: user.isSuperadmin ? [...ALL_PERMISSIONS] : [...(user.staffRole?.permissions ?? [])],
-    screens: user.isSuperadmin ? [...ALL_SCREENS] : [...(user.staffRole?.screens ?? [])],
     // One organisation chart: the person's main site, their departments and
     // those departments' sites, as Docs facility and team membership.
     siteIds: [...new Set([user.primaryClubId, ...departments.map((d) => d.department.clubId)].filter((id): id is string => !!id))],

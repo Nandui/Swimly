@@ -34,7 +34,7 @@ export async function deliverRefundNotifications(requestId: string, who: RefundA
         const users = await prisma.user.findMany({ where: { isActive: true, ...(job.event.action === "submit" ? {} : { id: request.creatorId }) }, include: { staffRole: true } });
         const recipients = users.filter(user => {
           const role = user.staffRole;
-          const access = role && refundAccess({ ...user, permissions: role.permissions, screens: role.screens });
+          const access = role && refundAccess({ ...user, permissions: role.permissions });
           return access && (job.event.action !== "submit" || (access.review && user.id !== request.creatorId));
         });
         if (!recipients.length) throw new Error("No eligible recipient");
@@ -47,7 +47,7 @@ export async function deliverRefundNotifications(requestId: string, who: RefundA
         status = "SKIPPED";
       } else {
         const user = await prisma.user.findUnique({ where: { id: job.recipientId }, include: { staffRole: true } });
-        const access = user?.isActive && user.staffRole && refundAccess({ ...user, permissions: user.staffRole.permissions, screens: user.staffRole.screens });
+        const access = user?.isActive && user.staffRole && refundAccess({ ...user, permissions: user.staffRole.permissions });
         if (!user || !access || (job.event.action === "submit" && (!access.review || user.id === request.creatorId))) status = "SKIPPED";
         else {
           // Staff alerts use the staff sender (STAFF_* settings, falling back to the

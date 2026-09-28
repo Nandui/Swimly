@@ -15,7 +15,7 @@ export interface StaffDirectory {
 /** Docs SQL is isolated from the authoritative Turnfin staff directory. */
 export interface Sql {
   readonly staff: StaffDirectory;
-  readonly access?: { id: string; permissions: string[]; screens: string[] };
+  readonly access?: { id: string; permissions: string[] };
   query<T = Record<string, unknown>>(sql: string, params?: unknown[]): Promise<{ rows: T[] }>;
 }
 type Membership = Pick<Member, 'id' | 'facilityIds' | 'teamIds'>;

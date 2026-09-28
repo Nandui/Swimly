@@ -20,7 +20,6 @@ export async function loadHome() {
     id: user.id,
     name: user.name ?? "Staff member",
     permissions: user.permissions ?? [],
-    screens: user.screens ?? [],
     anywhere: [...(user.permissions ?? []), ...(user.grants ?? []).flatMap((grant) => grant.permissions)],
     isSuperadmin: user.isSuperadmin === true,
   });

@@ -6,19 +6,19 @@ import { serverModule } from "@/test/server-module";
 /** Owner rules: medical notes reach reception and swim school managers (desk
  *  and office), instructors only on the deck for the class they teach, and no
  *  other role. A Docs-only or Refunds-only role reads no swimmer data at all. */
-const session = (permissions: string[], screens: string[], isSuperadmin = false) =>
-  ({ user: { id: "x", permissions, screens, isSuperadmin } }) as unknown as Session;
+const session = (permissions: string[], isSuperadmin = false) =>
+  ({ user: { id: "x", permissions, isSuperadmin } }) as unknown as Session;
 let current: Session;
 const classification = serverModule<typeof import("./classification")>("src/modules/activities/classification.ts", {
   "@/lib/authz": { AuthorizationError: class extends Error {}, requireSession: async () => current },
 });
 
-const reception = session(["students.manage", "enrolment.manage"], ["students", "courses"]);
-const manager = session(["courses.manage", "curriculum.manage"], ["courses", "programmes"]);
-const instructor = session(["attendance.mark", "progression.assess"], ["instructor"]);
-const viewer = session([], ["calendar", "students"]);
-const docsOnly = session(["docs.read"], ["docs"]);
-const refundsOnly = session(["refunds.request"], ["refunds"]);
+const reception = session(["swimschool.desk", "students.manage", "enrolment.manage"]);
+const manager = session(["courses.manage", "curriculum.manage"]);
+const instructor = session(["attendance.mark", "progression.assess"]);
+const viewer = session(["swimschool.desk"]);
+const docsOnly = session(["docs.read"]);
+const refundsOnly = session(["refunds.request"]);
 
 test("medical notes: desk and office roles on the desk; teaching staff on the deck; nobody else", () => {
   assert.equal(classification.medicalAllowed(reception, "desk"), true);

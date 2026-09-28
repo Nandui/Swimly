@@ -1,7 +1,6 @@
 import type { Prisma } from "@/generated/prisma/client";
 import { prisma } from "@/lib/prisma";
 import { expandPermissions, permissionMeta, type PermissionKey } from "@/lib/staff/permissions";
-import { screenMeta, visibleScreens, type ScreenKey } from "@/lib/staff/screens";
 
 /** Nothing may leave the app without a keyholder.
  *
@@ -23,13 +22,8 @@ import { screenMeta, visibleScreens, type ScreenKey } from "@/lib/staff/screens"
  *  no permission of its own: as an action it would answer "how many people can
  *  manage accounts?" to anybody who asked. */
 
-/** Each key permission and the screen it is exercised from. A permission
- *  nobody can reach the page for is as lost as one nobody holds, so the
- *  guard checks both. */
-const KEYS: { permission: PermissionKey; screen: ScreenKey }[] = [
-  { permission: "staff.manage", screen: "staff" },
-  { permission: "roles.manage", screen: "roles" },
-];
+/** The two key permissions. Each also opens its page (Staff, Roles). */
+const KEYS: PermissionKey[] = ["staff.manage", "roles.manage"];
 
 type Db = Prisma.TransactionClient | typeof prisma;
 
@@ -38,7 +32,7 @@ type Db = Prisma.TransactionClient | typeof prisma;
  *  person who holds it — so the guard works from what the world *would* look
  *  like rather than from the edit itself. */
 export type Simulation =
-  | { kind: "rolePermissions"; roleId: string; permissions: string[]; screens?: string[] }
+  | { kind: "rolePermissions"; roleId: string; permissions: string[] }
   | { kind: "userRole"; userId: string; roleId: string }
   | { kind: "deactivate"; userId: string }
   | { kind: "superadmin"; userId: string; value: boolean };
@@ -47,24 +41,12 @@ export type Simulation =
 async function simulatedHolders(sim: Simulation, db: Db) {
   const [users, roles] = await Promise.all([
     db.user.findMany({ where: { isActive: true }, select: { id: true, staffRoleId: true } }),
-    db.staffRole.findMany({ select: { id: true, permissions: true, screens: true } }),
+    db.staffRole.findMany({ select: { id: true, permissions: true } }),
   ]);
 
-  const byRole = new Map(
-    roles.map((role) => [role.id, { permissions: role.permissions, screens: role.screens }])
-  );
-  if (sim.kind === "rolePermissions") {
-    const current = byRole.get(sim.roleId);
-    byRole.set(sim.roleId, {
-      permissions: sim.permissions,
-      screens: sim.screens ?? current?.screens ?? [],
-    });
-  }
-
-  const accessByRole = new Map([...byRole].map(([id, role]) => {
-    const permissions = expandPermissions(role.permissions);
-    return [id, { permissions, screens: visibleScreens(role.screens, permissions) }] as const;
-  }));
+  const byRole = new Map(roles.map((role) => [role.id, role.permissions]));
+  if (sim.kind === "rolePermissions") byRole.set(sim.roleId, sim.permissions);
+  const accessByRole = new Map([...byRole].map(([id, permissions]) => [id, expandPermissions(permissions)] as const));
   return users.flatMap((user) => {
     if (sim.kind === "deactivate" && user.id === sim.userId) return [];
     const roleId =
@@ -75,15 +57,9 @@ async function simulatedHolders(sim: Simulation, db: Db) {
   });
 }
 
-/** Active accounts that would hold the permission *and* see its screen. */
-export async function activeHoldersOf(
-  key: { permission: PermissionKey; screen: ScreenKey },
-  sim: Simulation,
-  db: Db = prisma
-): Promise<number> {
-  return (await simulatedHolders(sim, db)).filter((holder) =>
-    holder.permissions.has(key.permission) && holder.screens.has(key.screen)
-  ).length;
+/** Active accounts that would hold the permission. */
+export async function activeHoldersOf(permission: PermissionKey, sim: Simulation, db: Db = prisma): Promise<number> {
+  return (await simulatedHolders(sim, db)).filter((held) => held.has(permission)).length;
 }
 
 /** Returns a sentence to hand back, or null when the change is safe.
@@ -94,8 +70,8 @@ export async function activeHoldersOf(
 export async function guardKeyholders(sim: Simulation, db: Db = prisma): Promise<string | null> {
   const holders = await simulatedHolders(sim, db);
   for (const key of KEYS) {
-    if (!holders.some((holder) => holder.permissions.has(key.permission) && holder.screens.has(key.screen))) {
-      return `That would leave nobody able to ${permissionMeta(key.permission).label.toLowerCase()} — someone has to hold that and see the ${screenMeta(key.screen).label} screen. Give that to someone else first, or there will be no way back in.`;
+    if (!holders.some((held) => held.has(key))) {
+      return `That would leave nobody able to ${permissionMeta(key).label.toLowerCase()}. Give that to someone else first, or there will be no way back in.`;
     }
   }
   return null;

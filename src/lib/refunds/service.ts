@@ -27,7 +27,7 @@ async function queueNotifications(tx: Prisma.TransactionClient, row: RefundReque
   const users = await tx.user.findMany({ where: { isActive: true, ...(action === "submit" ? {} : { id: row.creatorId }) }, include: { staffRole: true } });
   const recipients = users.filter(user => {
     if (!user.staffRole) return false;
-    const access = refundAccess({ ...user, permissions: user.staffRole.permissions, screens: user.staffRole.screens });
+    const access = refundAccess({ ...user, permissions: user.staffRole.permissions });
     return !!access && (action !== "submit" || (access.review && user.id !== row.creatorId));
   });
   // A sentinel makes missing finance setup visible and retryable after grants change.

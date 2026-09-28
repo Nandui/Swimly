@@ -30,7 +30,7 @@ test("screenshot dimensions match the committed PNGs", () => {
 test("screenshot delivery authenticates and rejects unknown or traversal paths before reading files", async () => {
   let reads = 0;
   const imageRoute = (signedIn: boolean) => serverModule<typeof import("@/app/(help)/help/images/[id]/route")>("src/app/(help)/help/images/[id]/route.ts", {
-    "@/auth": { auth: async () => signedIn ? session(["students"]) : null },
+    "@/auth": { auth: async () => signedIn ? session(["swimschool.desk"]) : null },
     "node:fs/promises": { readFile: async (file: string) => { reads++; assert.match(file, /assets[\\/]help[\\/]workspace\.png$/); return new Uint8Array([137, 80, 78, 71]); } },
   });
   const request = new Request("https://example.invalid/help/images/workspace");
@@ -47,7 +47,7 @@ test("screenshot delivery authenticates and rejects unknown or traversal paths b
 });
 
 const deskIndex = articlesForScope("desk").map(summarizeArticle);
-const session = (screens: string[], permissions: string[] = []) => ({ user: { id: "synthetic-staff", home: "calendar", screens, permissions } }) as Session;
+const session = (permissions: string[]) => ({ user: { id: "synthetic-staff", permissions } }) as unknown as Session;
 function accessFor(user: Session | null) {
   return serverModule<typeof import("./access")>("src/lib/help/access.ts", {
     "@/lib/page-guards": { pageSession: async () => { if (!user) throw new Error("redirect:/sign-in"); return user; } },
@@ -109,17 +109,15 @@ test("unauthenticated help requests redirect for both workspaces and direct arti
   }
 });
 
-test("Instructor-only roles and legacy grants are redirected to their scoped manual", async () => {
-  for (const screens of [["instructor"], ["today"]]) {
-    const access = accessFor(session(screens, ["attendance.mark"]));
-    await assert.rejects(access.helpPage("desk", "take-attendance"), /redirect:\/help\/instructor\/take-attendance/);
-    await assert.rejects(access.helpPage("desk", "manage-staff"), /redirect:\/help\/instructor$/);
-    assert.equal((await access.helpPage("instructor")).home, "/instructor");
-  }
+test("Pool deck roles are redirected to their scoped manual", async () => {
+  const access = accessFor(session(["attendance.mark"]));
+  await assert.rejects(access.helpPage("desk", "take-attendance"), /redirect:\/help\/instructor\/take-attendance/);
+  await assert.rejects(access.helpPage("desk", "manage-staff"), /redirect:\/help\/instructor$/);
+  assert.equal((await access.helpPage("instructor")).home, "/instructor");
 });
 
-test("help does not grant Instructor access through a screen or attendance permission alone", async () => {
-  for (const user of [session(["instructor"]), session(["calendar"], ["attendance.markAny"])]) {
+test("the desk never gets the instructor manual", async () => {
+  for (const user of [session(["swimschool.desk"]), session(["swimschool.desk", "enrolment.manage"])]) {
     const access = accessFor(user);
     await assert.rejects(access.helpPage("instructor"), /404/);
     assert.ok(await access.helpPage("desk"));
@@ -127,13 +125,13 @@ test("help does not grant Instructor access through a screen or attendance permi
 });
 
 test("Open in app links respect screen grants and workspace boundaries", () => {
-  const user = session(["students", "programmes"], []);
+  const user = session(["swimschool.desk"]);
   const { helpAccess } = accessFor(user);
   const access = helpAccess(user, "desk");
   assert.equal(access.action(HELP_ARTICLES.find(article => article.slug === "find-swimmer")!)?.href, "/students");
   assert.equal(access.action(HELP_ARTICLES.find(article => article.slug === "manage-curriculum")!), undefined);
   assert.equal(access.action(HELP_ARTICLES.find(article => article.slug === "start-class")!), undefined);
-  const admin = session([], ["staff.manage", "roles.manage"]);
+  const admin = session(["staff.manage", "roles.manage"]);
   assert.equal(helpAccess(admin, "desk").action(HELP_ARTICLES.find(article => article.slug === "manage-curriculum")!)?.href, "/programmes");
   assert.equal(helpAccess(admin, "instructor").action(HELP_ARTICLES[0])?.href, "/instructor");
   assert.notEqual(helpAccess(admin, "desk").home, "/instructor");
