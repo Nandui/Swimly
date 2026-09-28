@@ -5,6 +5,7 @@ import { usePathname, useSearchParams } from 'next/navigation';
 import { useEffect, useRef, useState } from 'react';
 import {
   BookOpen,
+  CircleHelp,
   Home,
   Library,
   ClipboardCheck,
@@ -38,7 +39,7 @@ import { Brand } from '@/components/workspace/brand';
 import { AppearanceMenu } from './appearance-menu';
 
 const nav = [
-  { href: '/docs', label: 'Home', icon: Home },
+  { href: '/docs', label: 'Overview', icon: Home },
   { href: '/docs/library', label: 'Document library', icon: Library },
   { href: '/docs/work', label: 'My work', icon: ClipboardCheck },
   { href: '/docs/reports', label: 'Reading reports', icon: ChartNoAxesCombined },
@@ -94,7 +95,6 @@ export function Shell({
               </Button>
             )}
           </div>
-          <HomeButton compact={compact} onNavigate={() => setMobile(false)} />
           {compact ? (
             <Button
               variant="ghost"
@@ -214,6 +214,8 @@ export function Shell({
           )}
         </nav>
         <div className="workspace-sidebar-footer">
+          <HomeButton compact={compact} onNavigate={() => setMobile(false)} />
+          <Link href="/help" target="_blank" rel="noopener noreferrer" className="workspace-nav-item workspace-help" aria-label="Help centre (opens in a new tab)" title={compact ? 'Help centre' : undefined}><CircleHelp size={18} aria-hidden="true" /><span>Help centre</span></Link>
           <AppearanceMenu expanded={!compact} />
           <Message error={error} />
           {!compact && w.localMode && <span className="workspace-local">Local workspace</span>}

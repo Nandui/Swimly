@@ -3,9 +3,7 @@
 import Link from 'next/link';
 import { createContext, useContext, type ReactNode } from 'react';
 import { House } from 'lucide-react';
-import { Button } from '@/components/shadcn/button';
 import { SidebarMenuButton } from '@/components/shadcn/sidebar';
-import { cn } from '@/lib/utils';
 import { allModules, type ModuleManifest } from '@/modules/registry';
 
 /** The signed-in person's modules, set once by the root layout from their
@@ -41,12 +39,15 @@ export function YourModulesNav({ compact = false, onNavigate }: { compact?: bool
   );
 }
 
-/** Inside a module, the way back to the person's modules: one button to
- *  the home page, where they are listed. */
-export function HomeButton({ compact = false, onNavigate, className }: { compact?: boolean; onNavigate?: () => void; className?: string }) {
+/** Inside a module, the way back to the person's modules: "Back to Hub" in
+ *  the sidebar footer, beside Help centre and Account, styled like Home on the
+ *  home page. */
+export function HomeButton({ compact = false, onNavigate }: { compact?: boolean; onNavigate?: () => void }) {
   return (
-    <Button asChild variant="outline" size={compact ? 'icon' : 'default'} className={cn('home-button h-11 min-w-0', compact ? 'size-11' : 'w-full justify-start', className)}>
-      <Link href="/" onClick={onNavigate} aria-label="Home" title={compact ? 'Home' : undefined}><House aria-hidden="true" />{!compact && <span>Home</span>}</Link>
-    </Button>
+    <SidebarMenuButton asChild>
+      <Link href="/" className="workspace-nav-item workspace-hub-link" aria-label="Back to Hub" title={compact ? 'Back to Hub' : undefined} onClick={onNavigate}>
+        <House size={18} aria-hidden="true" data-motion="sidebar-icon" /><span>Back to Hub</span>
+      </Link>
+    </SidebarMenuButton>
   );
 }

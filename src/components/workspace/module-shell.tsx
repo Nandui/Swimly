@@ -20,7 +20,7 @@ export type ModuleLinkGroup = { label: string; links: ModuleLink[] };
 
 /** The one frame every module opens in (docs/how-turnfin-works.md). The
  *  sidebar shows one list at a time: on the home page the person's modules;
- *  inside a module a Home button and that module's own pages. Also a
+ *  inside a module that module's own pages, with "Back to Hub" in the footer. Also a
  *  breadcrumb, the mobile sheet and a remembered collapse preference. Links are presentation; every page checks
  *  its permission again. The pool deck keeps its own tablet frame. */
 export function ModuleShell({ module, id, current = id, who, links = [], groups, action, tools, scopeNote, pageLabel, initialCollapsed = false, base = `/${id}`, contentClass = 'module-content', maxWidth, scrollKey = '', children }: {
@@ -37,7 +37,7 @@ export function ModuleShell({ module, id, current = id, who, links = [], groups,
   groups?: ModuleLinkGroup[];
   /** One main action above the menu, e.g. "New request". */
   action?: { href: string; label: string; icon: LucideIcon };
-  /** Module controls under the Home button, e.g. the swim school's site and
+  /** Module controls under the brand, e.g. the swim school's site and
    *  swimmer search. Shown when the sidebar is expanded and in the phone sheet. */
   tools?: ReactNode;
   scopeNote: string;
@@ -73,7 +73,6 @@ export function ModuleShell({ module, id, current = id, who, links = [], groups,
     return <>
       <div className="workspace-sidebar-header">
         <div className="workspace-brand-row"><Link href={base} aria-label={`Turnfin ${module}`} onClick={close}><Brand module={module} /></Link>{!inSheet && <Button variant="ghost" size="icon" aria-label={compact ? 'Expand navigation' : 'Collapse navigation'} aria-expanded={!compact} onClick={() => changeCollapsed(!collapsed)}>{compact ? <PanelLeftOpen size={18} /> : <PanelLeftClose size={18} />}</Button>}</div>
-        {!onHome && <HomeButton compact={compact} onNavigate={close} />}
         {!onHome && !compact && tools && <div className="workspace-tools">{tools}</div>}
         {action && <Button asChild size={compact ? 'icon' : 'default'} className="workspace-create"><Link href={action.href} aria-label={action.label} title={compact ? action.label : undefined} onClick={close}><action.icon size={18} aria-hidden="true" />{!compact && <span>{action.label}</span>}</Link></Button>}
       </div>
@@ -82,6 +81,7 @@ export function ModuleShell({ module, id, current = id, who, links = [], groups,
         {sections.map((section) => <div key={section.label} className="contents">{section.label && <p className="workspace-nav-label">{section.label}</p>}{section.links.map(item)}</div>)}
       </nav>
       <div className="workspace-sidebar-footer">
+        {!onHome && <HomeButton compact={compact} onNavigate={close} />}
         <Link href="/help" target="_blank" rel="noopener noreferrer" className="workspace-nav-item workspace-help" aria-label="Help centre (opens in a new tab)" title={compact ? 'Help centre' : undefined}><CircleHelp size={18} aria-hidden="true" /><span>Help centre</span></Link>
         <AppearanceMenu expanded={!compact} />
         {error && <Notice tone="error" title={error} />}

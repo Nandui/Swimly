@@ -12,7 +12,7 @@ type Club = { id: string; name: string };
 
 /** The swim school in the shared module frame (docs/how-turnfin-works.md):
  *  its desk pages down the side, with the working site and swimmer search
- *  under the Home button. The layout passes plain values; the icons come from
+ *  under the brand. The layout passes plain values; the icons come from
  *  `@/modules/activities/lib/nav`, because a component is not serialisable. */
 export function AppChrome({ who, screens, club, clubs, initialCollapsed = false, children }: {
   who: { id: string; name: string };

@@ -185,8 +185,8 @@
 .turnfin-docs :is(.workspace-nav-item + .workspace-nav-label, .workspace-navigation > .contents:not(:first-child) > .workspace-nav-label) { margin-top: 24px; }
 .turnfin-docs .workspace-nav-item { margin: 2px 0; border-radius: 12px; font-size: var(--pc-text-body); font-weight: 500; color: var(--pc-ink-muted); transition: color 120ms var(--pc-ease), background-color 120ms var(--pc-ease); }
 .turnfin-docs .workspace-nav-item:hover { background: var(--pc-hover); color: var(--pc-ink); }
-.turnfin-docs .workspace-nav-item[aria-current='page'] { background: var(--pc-primary-soft); color: var(--pc-primary-ink); font-weight: 600; }
-.turnfin-docs .workspace-nav-item[aria-current='page']:hover { background: var(--pc-primary-soft-hover); }
+.turnfin-docs :is(.workspace-nav-item[aria-current='page'], .workspace-hub-link) { background: var(--pc-primary-soft); color: var(--pc-primary-ink); font-weight: 600; }
+.turnfin-docs :is(.workspace-nav-item[aria-current='page'], .workspace-hub-link):hover { background: var(--pc-primary-soft-hover); }
 .turnfin-docs .workspace-nav-count { min-width: 22px; height: 22px; padding: 0 6px; border-radius: 999px; background: var(--pc-primary); color: var(--pc-on-primary); font-size: var(--pc-text-caption); font-weight: 700; font-variant-numeric: tabular-nums; }
 .turnfin-docs .workspace-sidebar-footer { border-top-color: var(--pc-line); }
 .turnfin-docs .appearance-button { font-size: var(--pc-text-body); }
