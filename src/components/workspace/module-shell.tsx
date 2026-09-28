@@ -4,7 +4,7 @@ import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { useEffect, useRef, useState, type ReactNode } from 'react';
 import { signOut } from 'next-auth/react';
-import { CircleHelp, LogOut, Menu, PanelLeftClose, PanelLeftOpen, ShieldCheck, type LucideIcon } from 'lucide-react';
+import { LogOut, Menu, PanelLeftClose, PanelLeftOpen, ShieldCheck, type LucideIcon } from 'lucide-react';
 import { Sidebar, SidebarProvider, SidebarMenuButton } from '@/components/shadcn/sidebar';
 import { Button } from '@/components/shadcn/button';
 import { Breadcrumb, BreadcrumbList, BreadcrumbItem, BreadcrumbLink, BreadcrumbPage, BreadcrumbSeparator } from '@/components/shadcn/breadcrumb';
@@ -13,7 +13,7 @@ import { Brand } from '@/components/workspace/brand';
 import { AppearanceMenu } from '@/components/docs/appearance-menu';
 import { Avatar } from '@/components/docs/ui';
 import { Notice } from '@/components/ui-kit/notice';
-import { HomeButton, YourModulesNav } from '@/components/workspace/your-modules';
+import { HelpButton, HomeButton, YourModulesNav } from '@/components/workspace/your-modules';
 
 export type ModuleLink = { href: string; label: string; icon: LucideIcon; active: boolean };
 export type ModuleLinkGroup = { label: string; links: ModuleLink[] };
@@ -82,8 +82,7 @@ export function ModuleShell({ module, id, current = id, who, links = [], groups,
       </nav>
       <div className="workspace-sidebar-footer">
         {!onHome && <HomeButton compact={compact} onNavigate={close} />}
-        <Link href="/help" target="_blank" rel="noopener noreferrer" className="workspace-nav-item workspace-help" aria-label="Help centre (opens in a new tab)" title={compact ? 'Help centre' : undefined}><CircleHelp size={18} aria-hidden="true" /><span>Help centre</span></Link>
-        <AppearanceMenu expanded={!compact} />
+        <div className="workspace-footer-row"><HelpButton compact={compact} /><AppearanceMenu /></div>
         {error && <Notice tone="error" title={error} />}
         <div className="workspace-profile">{!compact && <Link href="/account" className="workspace-account" aria-label={`Your account: ${who.name}`} onClick={close}><Avatar member={who} /><div><strong>{who.name}</strong><span>Your account</span></div></Link>}<Button variant="ghost" size="icon" aria-label="Sign out" title="Sign out" disabled={leaving} onClick={async () => { setLeaving(true); setError(''); try { await signOut({ redirectTo: '/sign-in' }); } catch { setLeaving(false); setError('Could not sign out. Please try again.'); } }}><LogOut size={17} /></Button></div>
       </div>

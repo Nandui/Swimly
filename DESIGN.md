@@ -81,7 +81,7 @@ colours in both themes, with accessible names supplied by adjacent text or links
 **The swim school desk uses the shared `ModuleShell`** (28 September 2026), like Refunds,
 Training, HR, Rota and Admin: the Turnfin brand, the working site and
 "Find swimmer" (the `tools` slot), then the desk pages in Daily work, Monitoring and Setup;
-"Back to Hub", Help centre, Appearance and Account in the footer; a breadcrumb topbar naming the working
+"Back to Hub", Help, Appearance and Account in the footer; a breadcrumb topbar naming the working
 site; the phone sheet. Pages sit on the cool canvas; `src/app/(activities)/swim-school.css`
 puts tables, bare row lists and empty states on white panels and lets data pages fill the
 width. Together caps at 960px and programme details at 1152px (`pageWidthFor`). The old
@@ -378,7 +378,7 @@ always there. The keyholder guard keeps at least one active account holding
 **The home page is the only front door.** `/` is the role's home page; old
 `/start`, `/reception`, `/reception-portal` and `/modules` links redirect to it.
 **The sidebar shows one list at a time.** On the home page it lists the
-role's modules. Inside a module it shows only that module's pages, with one "Back to Hub" link in the sidebar footer beside Help centre and Account, styled like Home on the home page
+role's modules. Inside a module it shows only that module's pages, with an outline "Back to Hub" button (back arrow) in the sidebar footer, above the Help and Appearance buttons and Account
 (`HomeButton` in `src/components/workspace/your-modules.tsx`); modules are
 reached from Home. Never list the modules and a
 module's pages together. The pool deck keeps its own tablet frame.

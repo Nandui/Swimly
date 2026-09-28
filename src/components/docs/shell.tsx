@@ -5,7 +5,6 @@ import { usePathname, useSearchParams } from 'next/navigation';
 import { useEffect, useRef, useState } from 'react';
 import {
   BookOpen,
-  CircleHelp,
   Home,
   Library,
   ClipboardCheck,
@@ -24,7 +23,7 @@ import { canWrite, canManage, type Workspace } from '@/lib/docs/types';
 import { signOut } from 'next-auth/react';
 import { Avatar, Message } from './ui';
 import { Sidebar, SidebarProvider, SidebarMenuButton } from '@/components/shadcn/sidebar';
-import { HomeButton } from '@/components/workspace/your-modules';
+import { HelpButton, HomeButton } from '@/components/workspace/your-modules';
 import {
   Breadcrumb,
   BreadcrumbList,
@@ -215,8 +214,7 @@ export function Shell({
         </nav>
         <div className="workspace-sidebar-footer">
           <HomeButton compact={compact} onNavigate={() => setMobile(false)} />
-          <Link href="/help" target="_blank" rel="noopener noreferrer" className="workspace-nav-item workspace-help" aria-label="Help centre (opens in a new tab)" title={compact ? 'Help centre' : undefined}><CircleHelp size={18} aria-hidden="true" /><span>Help centre</span></Link>
-          <AppearanceMenu expanded={!compact} />
+          <div className="workspace-footer-row"><HelpButton compact={compact} /><AppearanceMenu /></div>
           <Message error={error} />
           {!compact && w.localMode && <span className="workspace-local">Local workspace</span>}
           <div className="workspace-profile">
