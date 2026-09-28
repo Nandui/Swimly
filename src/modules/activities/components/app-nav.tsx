@@ -7,7 +7,6 @@ import { ThemeFlip } from "@/components/theme-toggle";
 import { AppShell, type AppShellProps } from "@/components/ui-kit/app-shell";
 import { WorkspaceSearch } from "@/modules/activities/components/students/workspace-search";
 import { pageWidthFor, swimmerLookupHref, visibleNavGroups } from "@/modules/activities/lib/nav";
-import { APP_NAME } from "@/lib/app";
 import type { ScreenKey } from "@/lib/staff/screens";
 
 /** The shell, bound to this app.
@@ -34,8 +33,7 @@ export function AppChrome({ screens, club, clubs, ...rest }: Props) {
   return (
     <AppShell
       {...rest}
-      wordmark={APP_NAME}
-      portalHref="/"
+      wordmark="Swim school"
       groups={visibleNavGroups(screens)}
       contentMaxWidth={pageWidthFor(pathname)}
       switcher={<ClubSwitcher club={club} clubs={clubs} sidebar />}

@@ -4,7 +4,6 @@ import Link from 'next/link';
 import { usePathname, useSearchParams } from 'next/navigation';
 import { useEffect, useRef, useState } from 'react';
 import {
-  ArrowLeft,
   BookOpen,
   Home,
   Library,
@@ -25,6 +24,7 @@ import { canWrite, canManage, type Workspace } from '@/lib/docs/types';
 import { signOut } from 'next-auth/react';
 import { Avatar, Message } from './ui';
 import { Sidebar, SidebarProvider, SidebarMenuButton } from '@/components/shadcn/sidebar';
+import { YourModulesNav } from '@/components/workspace/your-modules';
 import {
   Breadcrumb,
   BreadcrumbList,
@@ -147,7 +147,8 @@ export function Shell({
           className="workspace-navigation"
           aria-label={inSheet ? 'Mobile navigation' : 'Main navigation'}
         >
-          <p className="workspace-nav-label">Workspace</p>
+          <YourModulesNav current="docs" compact={compact} onNavigate={() => setMobile(false)} />
+          <p className="workspace-nav-label">Docs</p>
           {nav
             .filter((item) => item.href !== '/docs/reports' || (w.canReport ?? canManage(w.member)))
             .map((item) => {
@@ -224,7 +225,6 @@ export function Shell({
           )}
         </nav>
         <div className="workspace-sidebar-footer">
-          <Button asChild variant="ghost"><Link href="/" aria-label="Home"><ArrowLeft size={16} aria-hidden="true" />{!compact && "Home"}</Link></Button>
           <AppearanceMenu expanded={!compact} />
           <Message error={error} />
           {!compact && w.localMode && <span className="workspace-local">Local workspace</span>}

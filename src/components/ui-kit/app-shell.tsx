@@ -12,6 +12,7 @@ import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel,
 import { Sidebar, SidebarContent, SidebarFooter, SidebarGroup, SidebarGroupLabel, SidebarHeader, SidebarInset, SidebarMenu, SidebarMenuButton, SidebarMenuItem, SidebarProvider, SidebarSeparator, SidebarTrigger, useSidebar } from "@/components/shadcn/sidebar";
 import { isNavItemActive } from "@/lib/nav-active";
 import { NAV_COLLAPSED_COOKIE, SHELL_PAGE_ID } from "@/lib/shell-preferences";
+import { useYourModules } from "@/components/workspace/your-modules";
 
 export type NavItem = { href: string; label: string; icon: LucideIcon; badge?: number };
 export type NavGroup = { id: string; label: string; icon?: LucideIcon; collapsible?: boolean; items: NavItem[] };
@@ -20,7 +21,6 @@ export type AppShellProps = {
   userName: string; userSubtitle?: string; onSignOut?: () => void;
   switcher?: React.ReactNode; search?: React.ReactNode; tools?: React.ReactNode;
   banner?: React.ReactNode; initialCollapsed?: boolean; contentMaxWidth?: number;
-  portalHref?: string;
   children: React.ReactNode;
 };
 
@@ -52,6 +52,8 @@ function WorkspaceSidebar(props: AppShellProps) {
   const { state, isMobile, setOpenMobile } = useSidebar();
   const pathname = usePathname();
   const collapsed = state === "collapsed" && !isMobile;
+  // "Your modules" first, the same in every frame (docs/how-turnfin-works.md).
+  const modules: NavGroup = { id: "modules", label: "Your modules", items: [{ href: "/", label: "Home", icon: House }, ...useYourModules().map((m) => ({ href: m.href, label: m.name, icon: m.icon }))] };
   return <Sidebar variant="inset" collapsible="icon" aria-label="Main navigation">
     <SidebarHeader className="gap-4 p-3 pb-4 group-data-[collapsible=icon]:items-center group-data-[collapsible=icon]:gap-3 group-data-[collapsible=icon]:px-0">
       <div className="flex items-center justify-between gap-2 group-data-[collapsible=icon]:flex-col">
@@ -67,12 +69,9 @@ function WorkspaceSidebar(props: AppShellProps) {
     </SidebarHeader>
     <SidebarSeparator className="mx-3 data-[orientation=horizontal]:w-auto group-data-[collapsible=icon]:mx-auto group-data-[collapsible=icon]:data-[orientation=horizontal]:w-6" />
     <SidebarContent className="px-3 py-4 group-data-[collapsible=icon]:overflow-auto group-data-[collapsible=icon]:px-0 group-data-[collapsible=icon]:[scrollbar-width:none]"><nav aria-label="Daily work and setup" className="space-y-6 group-data-[collapsible=icon]:space-y-4">
-      {props.groups.map(group => <NavigationGroup key={`${group.id}:${group.items.some(item => isNavItemActive(pathname, item.href))}`} group={group} pathname={pathname} collapsed={collapsed} />)}
+      {[modules, ...props.groups].map(group => <NavigationGroup key={`${group.id}:${group.items.some(item => isNavItemActive(pathname, item.href))}`} group={group} pathname={pathname} collapsed={collapsed} />)}
     </nav></SidebarContent>
     <SidebarFooter className="border-t border-ui-border p-3 group-data-[collapsible=icon]:px-0">
-      {props.portalHref ? <SidebarMenu className="group-data-[collapsible=icon]:items-center"><SidebarMenuItem><SidebarMenuButton asChild className="h-11 px-3" tooltip="Home">
-        <Link href={props.portalHref} onClick={() => setOpenMobile(false)}><House aria-hidden="true" /><span className="group-data-[collapsible=icon]:hidden">Home</span></Link>
-      </SidebarMenuButton></SidebarMenuItem></SidebarMenu> : null}
       <SidebarMenu className="group-data-[collapsible=icon]:items-center"><SidebarMenuItem><SidebarMenuButton asChild className="h-11 px-3" tooltip="Help centre (opens in a new tab)">
         <Link href="/help" target="_blank" rel="noopener noreferrer" aria-label="Help centre (opens in a new tab)"><CircleHelp aria-hidden="true" /><span className="group-data-[collapsible=icon]:hidden">Help centre</span></Link>
       </SidebarMenuButton></SidebarMenuItem></SidebarMenu>

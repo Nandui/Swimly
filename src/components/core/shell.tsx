@@ -30,9 +30,9 @@ export function CoreShell({ who, screens, initialCollapsed = false, children }: 
     ...LINKS.filter((link) => screens.includes(link.key)).map(({ href, label, icon }) => ({ href, label, icon, active: isOn(href) })),
     { href: '/account', label: 'Account', icon: UserRound, active: isOn('/account') },
   ];
-  const pageLabel = links.find((link) => link.active)?.label ?? 'Core';
+  const pageLabel = links.find((link) => link.active)?.label ?? 'Admin';
   return (
-    <ModuleShell module="Core" id="core" who={who} links={links} pageLabel={pageLabel} initialCollapsed={initialCollapsed} scopeNote="Shared by every module">
+    <ModuleShell module="Admin" id="core" current="admin" base="/core" who={who} links={links} pageLabel={pageLabel} initialCollapsed={initialCollapsed} scopeNote="Shared by every module">
       {children}
     </ModuleShell>
   );

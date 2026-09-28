@@ -9,6 +9,8 @@ import { auth } from "@/auth";
 import { SharedDeviceIdle } from "@/components/devices/session-forms";
 import { SHARED_IDLE_MINUTES } from "@/lib/devices/constants";
 import { DevelopmentRolePreview } from "@/components/staff/development-role-preview";
+import { YourModulesProvider } from "@/components/workspace/your-modules";
+import { modulesFor } from "@/modules/context";
 // Poolside Clear across the whole app: its typeface, self-hosted in every
 // environment, and its tokens and system rules (scoped to .turnfin-app on <body>).
 import "@fontsource/plus-jakarta-sans/400.css";
@@ -68,7 +70,7 @@ export default async function RootLayout({ children }: LayoutProps<"/">) {
             {/* Dev builds only: someone who manages roles sees any page as any
                 role would. Renders nothing on production. */}
             {session?.user ? <DevelopmentRolePreview session={session} /> : null}
-            {children}
+            <YourModulesProvider ids={session?.user ? modulesFor(session).map((m) => m.id) : []}>{children}</YourModulesProvider>
           </TooltipProvider>
         </ThemeProvider>
       </body>

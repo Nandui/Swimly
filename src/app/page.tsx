@@ -15,7 +15,7 @@ export default async function HomePage() {
   const home = await loadHome();
   const modules = allModules().filter((m) => home.moduleIds.includes(m.id));
   return (
-    <HomeShell homeName={home.homeName} moduleIds={home.moduleIds} who={home.who} initialCollapsed={home.collapsed}>
+    <HomeShell homeName={home.homeName} who={home.who} initialCollapsed={home.collapsed}>
       <HomeView homeName={home.homeName} roleName={home.roleName} today={home.today} modules={modules} items={home.items} />
     </HomeShell>
   );
