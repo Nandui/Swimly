@@ -1,5 +1,6 @@
 "use server";
 
+import { withOneStaff } from "@/lib/directory";
 import { revalidatePath } from "next/cache";
 import { z } from "zod";
 import { fail, ok, type ActionResult } from "@/lib/action-result";
@@ -39,9 +40,10 @@ export async function cancelClassSession(input: z.infer<typeof cancelSchema>): P
   if (iso !== today()) return fail("Only today’s session can be cancelled here. Refresh the duty manager view.");
   const clubId = await currentClubId(), date = parseDateOnly(iso);
   const result = await withCourseSeat(courseId, async tx => {
-    const raw = await tx.course.findUnique({ where: { id: courseId, clubId }, include: {
-      level: { include: { programme: true } }, instructor: { select: { name: true } },
+    const found = await tx.course.findUnique({ where: { id: courseId, clubId }, include: {
+      level: { include: { programme: true } },
     } });
+    const raw = found && await withOneStaff(found, "instructorId", "instructor", tx);
     if (!raw || raw.archivedAt) return fail("This class is no longer active at this site. Refresh the list.");
     if (weekdayOf(date) !== raw.dayOfWeek) return fail("This class does not run today. Refresh the list.");
     const existing = await tx.classCancellation.findUnique({ where: { courseId_date: { courseId, date } } });

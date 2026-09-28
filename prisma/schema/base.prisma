@@ -1,0 +1,23 @@
+// Turnfin database schema, split by area (see docs/architecture.md).
+// One database and one generated client; each file is owned by one area.
+
+// Swimly — the data layer.
+//
+// Three rules from the design kit are load-bearing here:
+//   * `Role` is the source of truth for permissions. It is mapped onto the
+//     three tiers in `src/lib/authz.ts`, and adding a value there without
+//     adding it to the map is a type error — which is the point.
+//   * `AuditLog` is not optional. Every mutation writes a row, scripts
+//     included. See `src/lib/audit.ts`.
+//   * Curriculum rows are archived, never deleted, and `onDelete: Restrict`
+//     guards the rest — a cascade would silently remove rows the audit log
+//     still claims exist.
+
+generator client {
+  provider = "prisma-client"
+  output   = "../../src/generated/prisma"
+}
+
+datasource db {
+  provider = "postgresql"
+}

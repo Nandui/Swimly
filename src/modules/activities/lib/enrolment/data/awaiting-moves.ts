@@ -1,3 +1,4 @@
+import { withClassRefs } from "@/modules/activities/lib/courses/refs";
 import type { Prisma } from "@/generated/prisma/client";
 import { requireSession } from "@/lib/authz";
 import { currentClubId } from "@/lib/clubs/current";
@@ -34,9 +35,10 @@ export async function getAwaitingMoves(input: { q?: string; page?: number } = {}
       id: true, status: true, readyToMoveAt: true, readyToMoveByName: true, readyToMoveLevelId: true, readyToMoveNote: true,
       student: { select: { id: true, firstName: true, lastName: true, memberNumber: true, contactName: true, contactEmail: true, contactPhone: true, ...FOLLOW_UP_SELECT } },
       course: { select: { id: true, name: true, dayOfWeek: true, startMinutes: true, durationMinutes: true, location: true, archivedAt: true,
-        club: { select: { id: true, name: true } }, instructor: { select: { name: true } }, level: { select: { id: true, name: true } } } },
+        clubId: true, instructorId: true, level: { select: { id: true, name: true } } } },
     },
   });
+  const courses = await withClassRefs(rows.map(row => row.course));
   const studentIds = rows.map(row => row.student.id);
   const levels = rows.flatMap(row => row.readyToMoveLevelId ? [row.readyToMoveLevelId] : []);
   const competencyIds = [...new Set(levels.flatMap(id => liveSharedLevel(curriculum, id)?.competencies.flatMap(c => curriculum.competencyIds.variants(c.id)) ?? []))];
@@ -44,7 +46,8 @@ export async function getAwaitingMoves(input: { q?: string; page?: number } = {}
     prisma.competencyResult.findMany({ where: { studentId: { in: studentIds }, competencyId: { in: competencyIds } }, select: { studentId: true, competencyId: true, status: true, updatedAt: true, assessedOn: true } }),
     prisma.levelCompletion.findMany({ where: { studentId: { in: studentIds }, levelId: { in: levels.flatMap(curriculum.levelIds.variants) } }, select: { studentId: true, levelId: true } }),
   ]) : [[], []];
-  const items = rows.map(row => {
+  const items = rows.map((found, index) => {
+    const row = { ...found, course: courses[index] };
     const level = row.readyToMoveLevelId ? liveSharedLevel(curriculum, row.readyToMoveLevelId) : null;
     const achieved = new Set(latestSharedMarks(marks.filter(mark => mark.studentId === row.student.id), curriculum.competencyIds.resolve).filter(mark => mark.status === "ACHIEVED").map(mark => mark.competencyId));
     const completed = level && completions.some(c => c.studentId === row.student.id && curriculum.levelIds.resolve(c.levelId) === level.id);

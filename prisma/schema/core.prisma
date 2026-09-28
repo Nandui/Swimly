@@ -1,0 +1,465 @@
+// Core: people, roles and assignments, sites (Club), departments, qualifications,
+// shared devices, staff sign-in and the audit log. Every module depends on these.
+
+// ---------------------------------------------------------------------------
+// Enums
+// ---------------------------------------------------------------------------
+
+/// **Legacy.** Superseded by the `StaffRole` table, which carries an explicit
+/// list of permissions instead of one of three fixed tiers.
+///
+/// It is still here, and still written on every account, for one reason: the
+/// production deployment and the development database are the same Postgres,
+/// so a deploy that dropped this column would break the running app between
+/// the migration and the next release. `legacyRoleFor()` in
+/// `src/lib/staff/permissions.ts` derives it from the permissions a role
+/// actually holds, so the column stays truthful without being consulted.
+///
+/// Drop it — and `User.role` with it — once production is running the release
+/// that reads `User.staffRoleId`. Nothing in the app reads it any more.
+enum Role {
+  ADMIN
+  INSTRUCTOR
+  VIEWER
+}
+
+// ---------------------------------------------------------------------------
+// Staff
+// ---------------------------------------------------------------------------
+
+/// A named set of permissions. Roles are data rather than an enum, so an admin
+/// can make the ones their club actually needs — a Head Coach who may edit the
+/// timetable but not accounts, a receptionist who may enrol but not assess.
+///
+/// `permissions` is a plain string array of keys from
+/// `src/lib/staff/permissions.ts` rather than a join table. The catalogue is
+/// code — it can only change when a screen or an action changes — so a
+/// Permission table would be a second copy of it, kept in step by hand, with
+/// nothing to catch it drifting. Unknown keys are ignored on read, which is
+/// what makes removing a permission from the catalogue safe.
+model StaffRole {
+  id          String   @id @default(cuid())
+  name        String   @unique
+  description String?
+  permissions String[]
+  /// Where the role starts after signing in: a key from `ROLE_HOMES` in
+  /// `src/lib/staff/permissions.ts` ("calendar", "duty" or "instructor"). A string rather
+  /// than an enum for the same reason `permissions` is: the catalogue is code.
+  /// The legacy database default is normalized to Today by the app; new roles
+  /// explicitly save their chosen home. Existing role rows need no rewrite.
+  home        String   @default("overview")
+  /// Which screens the role offers at all: keys from `SCREENS` in
+  /// `src/lib/staff/screens.ts`. Permissions say what may be changed;
+  /// screens say what is on the menu. A role with only "today" is an
+  /// instructor whose whole app is the deck.
+  screens     String[] @default([])
+  /// The three roles the app shipped with. They may be renamed and their
+  /// permissions edited, but they cannot be deleted: `seed.ts` and the
+  /// migration both name them, and a fresh database has to land somewhere.
+  isSystem    Boolean  @default(false)
+  sortOrder   Int      @default(0)
+  /// A role holding a restricted capability (HR, performance). Only a
+  /// superadmin may edit it or assign it; administrators never inherit it.
+  restricted  Boolean  @default(false)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  users       User[]
+  assignments RoleAssignment[]
+
+  @@index([sortOrder])
+}
+
+model User {
+  id           String   @id @default(cuid())
+  email        String   @unique
+  name         String
+  /// Null for accounts that sign in another way, or have not set one yet.
+  passwordHash String?
+  /// **Legacy.** Mirrors `staffRole` so the previous release keeps working
+  /// against the same database. See the note on the `Role` enum.
+  role         Role     @default(VIEWER)
+  /// Nullable only so the column could be added to a table that already had
+  /// rows. Every account gets one in the same migration, and `auth()` refuses
+  /// a session without one.
+  staffRoleId  String?
+  /// Deactivation is reversible and keeps the audit trail readable; deletion
+  /// is not. Prefer this.
+  isActive     Boolean  @default(true)
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  // --- People core (platform access model). All nullable/defaulted: additive. ---
+  /// The operator this person works for. Backfilled to LeisureWorld.
+  orgId         String?
+  /// Line manager: powers the "direct reports" scope. Cycles are refused on write.
+  managerId     String?
+  jobTitle      String?
+  startedOn     DateTime? @db.Date
+  primaryClubId String?
+  /// Sees everything in the organisation, including restricted (HR) data. A
+  /// flag, not a permission, so no role editor can hand it out.
+  isSuperadmin  Boolean   @default(false)
+  /// Personal PIN for quick switching on shared devices (bcrypt). Never a password.
+  pinHash       String?
+  /// When the password was last changed or verified for step-up.
+  passwordAt    DateTime?
+  /// Wrong PINs since the last success; five lock the PIN until a password sign-in.
+  pinFailures   Int       @default(0)
+  pinLockedAt   DateTime?
+
+  // --- Own details, kept by the person in Turnfin Me and changed only after a
+  // reviewer applies their request. Seen on Work by staff.manage only. ---
+  phone                 String?
+  homeAddress           String?
+  emergencyName         String?
+  emergencyPhone        String?
+  emergencyRelationship String?
+
+  organisation   Organisation?    @relation(fields: [orgId], references: [id], onDelete: Restrict)
+  manager        User?            @relation("LineManager", fields: [managerId], references: [id], onDelete: SetNull)
+  reports        User[]           @relation("LineManager")
+  departments    UserDepartment[]
+  roleAssignments RoleAssignment[] @relation("AssignedRole")
+  qualifications Qualification[]  @relation("QualificationHolder")
+  trainingAssignments TrainingAssignment[] @relation("TrainingLearner")
+  rotaShifts          RotaShift[]          @relation("RotaShiftAssignee")
+  sharedDevices  SharedDeviceUser[]
+
+  /// `Restrict`, not `SetNull`: an account with no role has no permissions and
+  /// cannot sign in, so deleting a role out from under one of its holders
+  /// would silently lock them out. The delete is refused and the admin has to
+  /// move people off it first.
+  staffRole               StaffRole?          @relation(fields: [staffRoleId], references: [id], onDelete: Restrict)
+  auditEntries            AuditLog[]
+  coursesTaught           Course[]
+  classesCovered          ClassCover[]        @relation("ClassCoverBy")
+  classesCoveredFor       ClassCover[]        @relation("ClassCoverFor")
+  attendanceMarked        AttendanceRecord[]
+  assessmentsMade         CompetencyResult[]
+  completionsConfirmed    LevelCompletion[]
+  classNotes              ClassNote[]
+  assessmentSessionsLed   AssessmentSession[] @relation("AssessmentInstructor")
+  assessmentBookingsMade  AssessmentBooking[] @relation("AssessmentBookedBy")
+  assessmentOutcomesGiven AssessmentBooking[] @relation("AssessmentAssessedBy")
+
+  @@index([role])
+  @@index([staffRoleId])
+  @@index([managerId])
+  @@index([orgId])
+}
+
+// ---------------------------------------------------------------------------
+// People core — one organisation chart and person record for every module
+// ---------------------------------------------------------------------------
+
+/// The operator. LeisureWorld today; the boundary that lets Turnfin be sold
+/// to other operators later without a rewrite. Every new table carries orgId.
+model Organisation {
+  id        String   @id @default(cuid())
+  name      String
+  slug      String   @unique
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  clubs              Club[]
+  users              User[]
+  departments        Department[]
+  roleAssignments    RoleAssignment[]
+  qualificationTypes QualificationType[]
+  qualifications     Qualification[]
+  trainingCourses    TrainingCourse[]
+  trainingAssignments TrainingAssignment[]
+  rotaShifts         RotaShift[]
+}
+
+/// A team such as Aquatics, Reception or Maintenance. Optionally tied to one
+/// site; archived rather than deleted so assignments and history stay readable.
+model Department {
+  id         String    @id @default(cuid())
+  orgId      String
+  clubId     String?
+  name       String
+  sortOrder  Int       @default(0)
+  archivedAt DateTime?
+  createdAt  DateTime  @default(now())
+  updatedAt  DateTime  @updatedAt
+
+  organisation Organisation     @relation(fields: [orgId], references: [id], onDelete: Restrict)
+  club         Club?            @relation(fields: [clubId], references: [id], onDelete: SetNull)
+  members      UserDepartment[]
+
+  @@unique([orgId, name])
+  @@index([orgId, sortOrder])
+}
+
+model UserDepartment {
+  userId       String
+  departmentId String
+  isPrimary    Boolean  @default(false)
+  createdAt    DateTime @default(now())
+
+  user       User       @relation(fields: [userId], references: [id], onDelete: Cascade)
+  department Department @relation(fields: [departmentId], references: [id], onDelete: Restrict)
+
+  @@id([userId, departmentId])
+  @@index([departmentId])
+}
+
+/// An additional role for a person, with where it applies. The primary role
+/// (`User.staffRoleId`) always applies everywhere; these add access on top.
+/// `scopeKind`: "all" | "site" (scopeId = Club) | "department" (scopeId =
+/// Department) | "reports" (the holder's own direct and indirect reports).
+/// `scopeId` is "" when the kind needs none, so the unique key holds.
+model RoleAssignment {
+  id          String   @id @default(cuid())
+  orgId       String
+  userId      String
+  roleId      String
+  scopeKind   String   @default("all")
+  scopeId     String   @default("")
+  grantedById String?
+  createdAt   DateTime @default(now())
+
+  organisation Organisation @relation(fields: [orgId], references: [id], onDelete: Restrict)
+  user         User         @relation("AssignedRole", fields: [userId], references: [id], onDelete: Cascade)
+  role         StaffRole    @relation(fields: [roleId], references: [id], onDelete: Restrict)
+
+  @@unique([userId, roleId, scopeKind, scopeId])
+  @@index([roleId])
+}
+
+/// A browser marked as shared (a reception PC, a poolside tablet). Its signed
+/// cookie enables PIN quick-switch and short idle sign-out. Revoking it ends
+/// quick-switch there at once.
+model SharedDevice {
+  id          String    @id @default(cuid())
+  orgId       String
+  name        String
+  clubId      String?
+  createdById String?
+  createdAt   DateTime  @default(now())
+  revokedAt   DateTime?
+  lastUsedAt  DateTime?
+
+  people SharedDeviceUser[]
+
+  @@index([orgId])
+}
+
+/// Who can quick-switch on a shared device: people who signed in there with
+/// their password at least once and have a PIN.
+model SharedDeviceUser {
+  deviceId   String
+  userId     String
+  lastUsedAt DateTime @default(now())
+
+  device SharedDevice @relation(fields: [deviceId], references: [id], onDelete: Cascade)
+  user   User         @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@id([deviceId, userId])
+  @@index([userId])
+}
+
+/// A kind of certificate: NPLQ, First Aid, Swim Teacher licence. `validityMonths`
+/// suggests an expiry date when a qualification is recorded.
+model QualificationType {
+  id             String    @id @default(cuid())
+  orgId          String
+  name           String
+  validityMonths Int?
+  archivedAt     DateTime?
+  createdAt      DateTime  @default(now())
+  updatedAt      DateTime  @updatedAt
+
+  organisation   Organisation    @relation(fields: [orgId], references: [id], onDelete: Restrict)
+  qualifications Qualification[]
+  trainingCourses TrainingCourse[]
+  rotaShifts     RotaShift[]
+
+  @@unique([orgId, name])
+}
+
+/// A person's certificate. Written by Training (courses, trainer sign-off) or
+/// recorded directly; read by Rota (expiry warnings) and the My hub.
+model Qualification {
+  id           String    @id @default(cuid())
+  orgId        String
+  userId       String
+  typeId       String
+  issuedOn     DateTime  @db.Date
+  expiresOn    DateTime? @db.Date
+  reference    String    @default("")
+  note         String    @default("")
+  verifiedById String?
+  verifiedAt   DateTime?
+  revokedAt    DateTime?
+  createdAt    DateTime  @default(now())
+  updatedAt    DateTime  @updatedAt
+
+  organisation Organisation      @relation(fields: [orgId], references: [id], onDelete: Restrict)
+  user         User              @relation("QualificationHolder", fields: [userId], references: [id], onDelete: Cascade)
+  type         QualificationType @relation(fields: [typeId], references: [id], onDelete: Restrict)
+
+  @@index([userId])
+  @@index([orgId, expiresOn])
+}
+
+model AuditLog {
+  id          String   @id @default(cuid())
+  /// Nullable so a deleted account does not take its history with it.
+  actorId     String?
+  /// Denormalised on purpose: the log must still read correctly after the
+  /// actor's account is gone.
+  actorName   String
+  /// "create" | "update" | "delete", or a domain verb.
+  action      String
+  /// The model name, e.g. "Student".
+  entity      String
+  entityId    String?
+  /// How the log is filtered, because it is how the app is navigated. A plain
+  /// column rather than a relation, so the log survives the programme.
+  programmeId String?
+  /// Which club it happened in, kept the same way and for the same reason: a
+  /// plain nullable column. Null for what the clubs share — accounts, roles.
+  clubId      String?
+  /// Written for a person reading months later: name what changed and to what.
+  summary     String
+  /// Optional structured evidence for swimmer history. Older summaries remain readable.
+  details     Json?
+  createdAt   DateTime @default(now())
+
+  actor User? @relation(fields: [actorId], references: [id], onDelete: SetNull)
+
+  @@index([createdAt])
+  @@index([entity, entityId])
+  @@index([actorId])
+  @@index([programmeId, createdAt])
+  @@index([clubId, createdAt])
+}
+
+// ---------------------------------------------------------------------------
+// Clubs — one app, several sites
+// ---------------------------------------------------------------------------
+
+/// A physical site and timetable working area. Classes and assessment sessions
+/// belong to a site; swimmers, curriculum, progress, staff and roles are shared.
+/// Student and Programme clubId retain registration provenance for old records.
+model Club {
+  id         String    @id @default(cuid())
+  name       String    @unique
+  sortOrder  Int       @default(0)
+  archivedAt DateTime?
+  createdAt  DateTime  @default(now())
+  updatedAt  DateTime  @updatedAt
+  /// The operator this site belongs to. Backfilled to LeisureWorld.
+  orgId      String?
+
+  organisation       Organisation?       @relation(fields: [orgId], references: [id], onDelete: Restrict)
+  programmes         Programme[]
+  students           Student[]
+  courses            Course[]
+  assessmentSessions AssessmentSession[]
+  departments        Department[]
+  rotaShifts         RotaShift[]
+
+  @@index([sortOrder])
+}
+
+/// Turnfin Me (the staff app) signs people in with a one-time email code each
+/// time; no password. `purpose` is "sign-in" or "confirm" (a fresh code
+/// before HR records, tied to the session). Codes and tokens are stored hashed.
+model StaffSignInChallenge {
+  id        String    @id
+  userId    String
+  purpose   String    @default("sign-in")
+  sessionId String?
+  codeHash  String
+  attempts  Int       @default(0)
+  expiresAt DateTime
+  usedAt    DateTime?
+  createdAt DateTime  @default(now())
+
+  @@index([userId, createdAt])
+}
+
+model StaffSession {
+  id          String    @id @default(cuid())
+  userId      String
+  tokenHash   String    @unique
+  expiresAt   DateTime
+  confirmedAt DateTime?
+  revokedAt   DateTime?
+  lastUsedAt  DateTime  @default(now())
+  createdAt   DateTime  @default(now())
+
+  @@index([userId])
+}
+
+/// A person's proposed change to their own contact and emergency details,
+/// sent from Turnfin Me. Nothing changes until a reviewer applies it on Work.
+model StaffDetailChangeRequest {
+  id             String    @id @default(cuid())
+  orgId          String
+  userId         String
+  proposed       Json
+  message        String    @default("")
+  status         String    @default("PENDING")
+  reply          String    @default("")
+  reviewedById   String?
+  reviewedByName String?
+  reviewedAt     DateTime?
+  createdAt      DateTime  @default(now())
+  updatedAt      DateTime  @updatedAt
+
+  @@index([orgId, status])
+  @@index([userId])
+}
+
+/// A certificate a person uploaded in Turnfin Me. Verifying it on Work records
+/// the Qualification; declining keeps the upload with the reason.
+model QualificationEvidence {
+  id              String    @id @default(cuid())
+  orgId           String
+  userId          String
+  typeId          String?
+  typeName        String    @default("")
+  issuedOn        DateTime? @db.Date
+  expiresOn       DateTime? @db.Date
+  reference       String    @default("")
+  fileName        String
+  mime            String
+  size            Int
+  bytes           Bytes
+  status          String    @default("PENDING")
+  reviewNote      String    @default("")
+  reviewedById    String?
+  reviewedByName  String?
+  reviewedAt      DateTime?
+  qualificationId String?
+  createdAt       DateTime  @default(now())
+
+  @@index([orgId, status])
+  @@index([userId])
+}
+
+/// Which reminder emails a person wants. No row means every reminder is on.
+model StaffNotificationPreference {
+  userId              String   @id
+  trainingDue         Boolean  @default(true)
+  qualificationExpiry Boolean  @default(true)
+  readingOverdue      Boolean  @default(true)
+  shiftChanges        Boolean  @default(true)
+  updatedAt           DateTime @updatedAt
+}
+
+/// One row per reminder sent, so the daily job never repeats one.
+model StaffReminderLog {
+  id     String   @id @default(cuid())
+  userId String
+  kind   String
+  ref    String
+  sentAt DateTime @default(now())
+
+  @@unique([userId, kind, ref])
+}

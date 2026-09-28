@@ -1,3 +1,4 @@
+import { auditedActions } from "@/lib/audit";
 import type { Prisma } from "@/generated/prisma/client";
 import { requireSession } from "@/lib/authz";
 import { currentClubId } from "@/lib/clubs/current";
@@ -45,10 +46,7 @@ export async function getAwaitingEnrolment(input: { q?: string; page?: number } 
   // Withdrawn waitlists never provided a class place. Their original action
   // distinguishes them from withdrawn enrolments without changing the schema.
   const withdrawnIds = [...new Set(candidates.flatMap(row => row.student.enrolments.filter(e => e.status === "WITHDRAWN").map(e => e.id)))];
-  const history = withdrawnIds.length ? await prisma.auditLog.findMany({
-    where: { entity: "Enrolment", entityId: { in: withdrawnIds }, action: { in: ["waitlist", "enrol"] } },
-    select: { entityId: true, action: true },
-  }) : [];
+  const history = await auditedActions("Enrolment", withdrawnIds, ["waitlist", "enrol"]);
   const waitlistOrigins = new Set(history.filter(row => row.action === "waitlist").map(row => row.entityId));
   const classPlaces = new Set(history.filter(row => row.action === "enrol").map(row => row.entityId));
   const assessedDate = (row: typeof candidates[number]) => row.assessedOn ?? row.session.date;

@@ -1,3 +1,4 @@
+import { withStaff } from "@/lib/directory";
 import { requireSession } from "@/lib/authz";
 import { currentClubId } from "@/lib/clubs/current";
 import { HOLDS_A_PLACE } from "@/modules/activities/lib/assessments/constants";
@@ -10,17 +11,17 @@ import type { CalendarAssessment } from "./calendar";
 export async function getTodayAssessments(iso: string): Promise<CalendarAssessment[]> {
   await requireSession();
   if (!isDateOnly(iso)) return [];
-  const rows = await prisma.assessmentSession.findMany({
+  const rows = await withStaff(await prisma.assessmentSession.findMany({
     where: { clubId: await currentClubId(), date: parseDateOnly(iso), cancelledAt: null },
     orderBy: [{ startMinutes: "asc" }, { id: "asc" }],
     select: {
       id: true, startMinutes: true, durationMinutes: true, location: true, capacity: true,
-      instructorId: true, instructor: { select: { id: true, name: true } },
+      instructorId: true,
       programme: { select: { id: true, name: true } },
       type: { select: { id: true, name: true } },
       _count: { select: { bookings: { where: { status: { in: HOLDS_A_PLACE } } } } },
     },
-  });
+  }), "instructorId", "instructor");
   if (!rows.length) return [];
   const curriculum = await getSharedCurriculum();
   return rows.map(({ programme, type, _count, ...row }) => ({

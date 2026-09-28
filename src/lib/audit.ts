@@ -56,3 +56,15 @@ export async function logAudit(
 
   await db.auditLog.create({ data: { ...input, clubId } });
 }
+
+/** Which of these audited actions were recorded for these records, e.g. to
+ *  tell a withdrawn waitlist from a withdrawn class place. Returns
+ *  `{ entityId, action }` pairs only, never summaries or details. */
+export async function auditedActions(entity: string, entityIds: readonly string[], actions: readonly string[]) {
+  if (entityIds.length === 0) return [];
+  const rows = await prisma.auditLog.findMany({
+    where: { entity, entityId: { in: [...entityIds] }, action: { in: [...actions] } },
+    select: { entityId: true, action: true },
+  });
+  return rows.filter((row): row is { entityId: string; action: string } => row.entityId !== null);
+}

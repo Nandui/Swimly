@@ -8,7 +8,7 @@ import { lockParent } from "@/modules/activities/lib/parent/security";
 import { ParentApiError, notFound } from "@/modules/activities/lib/parent/errors";
 import { emailSchema, errorResponse, idSchema, json, parseInput, readBody, reasonSchema } from "@/modules/activities/lib/parent/http";
 import { dublinInstant } from "@/modules/activities/lib/parent/time";
-import { SESSION_SELECT, sessionAvailability, type PublicSession } from "@/modules/activities/lib/parent/assessments";
+import { SESSION_SELECT, sessionAvailability, withSessionSites, type PublicSession } from "@/modules/activities/lib/parent/assessments";
 import { readSharedCurriculum, type SharedCurriculum } from "@/modules/activities/lib/curriculum/data/shared";
 import { listAccessReviews, reviewAccessRequest } from "@/modules/activities/lib/parent/access-review";
 
@@ -87,8 +87,9 @@ async function dispatch(request: Request, path: string[]) {
     const data = safe ? null : await readBody(request, z.object({ enabled: z.boolean(), bookingClosesAt: z.iso.datetime({ offset: true }).nullable().optional(), reason: reasonSchema }).strict());
     return json(await prisma.$transaction(async tx => {
       await tx.$queryRaw`SELECT id FROM "AssessmentSession" WHERE id=${sessionId} FOR UPDATE`;
-      const session = await tx.assessmentSession.findUnique({ where: { id: sessionId, clubId }, select: SESSION_SELECT });
-      if (!session) notFound();
+      const found = await tx.assessmentSession.findUnique({ where: { id: sessionId, clubId }, select: SESSION_SELECT });
+      if (!found) notFound();
+      const [session] = await withSessionSites([found], tx);
       const curriculum = await readSharedCurriculum(tx);
       const current = publicationDto(session, curriculum);
       if (!data) return current;

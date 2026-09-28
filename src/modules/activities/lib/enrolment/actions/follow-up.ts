@@ -1,5 +1,6 @@
 "use server";
 
+import { sitesByIds } from "@/lib/directory";
 import { z } from "zod";
 import { revalidatePath } from "next/cache";
 import { prisma } from "@/lib/prisma";
@@ -45,7 +46,7 @@ export async function addFollowUp(input: FollowUpInput): Promise<ActionResult> {
     if (!student) return fail("That swimmer is no longer available.");
     const latest = await tx.studentFollowUp.findFirst({ where: { studentId: data.studentId }, orderBy: { sequence: "desc" }, select: { sequence: true } });
     if ((latest?.sequence ?? null) !== data.expectedLatest) return fail("A colleague has added an update. Reload the history, review it, then save your note again.");
-    const club = await tx.club.findUnique({ where: { id: clubId }, select: { name: true } });
+    const club = (await sitesByIds([clubId], tx)).get(clubId);
     if (!club) return fail("Choose a working site before saving.");
     const row = await tx.studentFollowUp.create({ data: {
       studentId: data.studentId, operationId: data.operationId, actorId: actor.user.id, actorName: actor.user.name ?? "Staff member",

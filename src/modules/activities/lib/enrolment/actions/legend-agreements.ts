@@ -1,5 +1,6 @@
 "use server";
 
+import { withSite } from "@/lib/directory";
 import { revalidatePath } from "next/cache";
 import { requirePermission } from "@/lib/authz";
 import { currentClubId } from "@/lib/clubs/current";
@@ -21,14 +22,14 @@ export async function confirmLegendAgreement(id: string): Promise<ActionResult> 
     const row = await tx.enrolment.findUnique({ where: { id, course: { clubId } }, select: {
       id: true, status: true, programmeId: true, legendAgreementStatus: true,
       student: { select: { firstName: true, lastName: true } },
-      course: { select: { name: true, dayOfWeek: true, startMinutes: true, level: { select: { name: true } }, club: { select: { name: true } } } },
+      course: { select: { name: true, dayOfWeek: true, startMinutes: true, level: { select: { name: true } }, clubId: true } },
     } });
     if (!row || row.status !== "ACTIVE") return fail("That place has ended or moved. Refresh the list before confirming.");
     if (row.legendAgreementStatus === "DONE") return ok();
     await tx.enrolment.update({ where: { id }, data: agreementRecord("DONE", actor.user) });
     await logAudit({ actorId: actor.user.id, actorName: actor.user.name ?? "Unknown", action: "legend-agreement",
       entity: "Enrolment", entityId: id, programmeId: row.programmeId, clubId,
-      summary: `Confirmed the Legend billing agreement is updated for ${fullName(row.student)} in ${courseLabelWithSite(row.course)}`,
+      summary: `Confirmed the Legend billing agreement is updated for ${fullName(row.student)} in ${courseLabelWithSite(await withSite(row.course, "clubId", "club", tx))}`,
     }, tx);
     return ok();
   });

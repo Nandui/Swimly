@@ -1,5 +1,6 @@
 "use server";
 
+import { withOneStaff } from "@/lib/directory";
 import { revalidatePath } from "next/cache";
 import { z } from "zod";
 import { fail, ok, type ActionResult } from "@/lib/action-result";
@@ -46,7 +47,7 @@ async function claim(input: TakeOverInput, session: Session, starting: boolean):
 
   const clubId = await currentClubId();
   const result = await withCourseSeat(courseId, async (tx) => {
-    const course = await tx.course.findUnique({
+    const found = await tx.course.findUnique({
       where: { id: courseId, clubId },
       select: {
         id: true,
@@ -55,11 +56,12 @@ async function claim(input: TakeOverInput, session: Session, starting: boolean):
         startMinutes: true,
         archivedAt: true,
         instructorId: true,
-        instructor: { select: { name: true } },
         level: { select: { name: true, programmeId: true } },
       },
     });
-    if (!course) return fail("That class no longer exists.");
+    if (!found) return fail("That class no longer exists.");
+    // The instructor's name comes from Core's directory, read in this transaction.
+    const course = await withOneStaff(found, "instructorId", "instructor", tx);
     if (course.archivedAt) return fail("That class is archived.");
     const own = course.instructorId === session.user.id;
 

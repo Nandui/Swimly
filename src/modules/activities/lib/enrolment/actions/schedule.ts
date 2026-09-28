@@ -21,7 +21,7 @@ export async function scheduleUnenrolment(id: string, date: string | null): Prom
   const result = await withCourseSeat(source.courseId, async (tx) => {
     const row = await tx.enrolment.findUnique({
       where: { id },
-      include: { student: true, course: { include: { level: true, club: { select: { name: true } } } } },
+      include: { student: true, course: { include: { level: true } } },
     });
     if (!row || row.status !== "ACTIVE") return fail("Only an active place can have a scheduled unenrolment.");
     const scheduledEndOn = date === null ? null : parseDateOnly(date);

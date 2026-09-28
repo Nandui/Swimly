@@ -1,3 +1,4 @@
+import { withSites } from "@/lib/directory";
 import type { AttendanceStatus, DayOfWeek } from "@/generated/prisma/client";
 import { requireSession } from "@/lib/authz";
 import { classifyMedical, medicalAllowed, requireActivitiesAccess, type ActivitiesSurface } from "@/modules/activities/classification";
@@ -140,14 +141,15 @@ export async function getAttendanceForStudent(studentId: string, take = 30) {
           id: true,
           name: true,
           dayOfWeek: true,
-          startMinutes: true, club: { select: { id: true, name: true } },
+          startMinutes: true, clubId: true,
           level: { select: { id: true, name: true } },
         },
       },
     },
   });
   const curriculum = await getSharedCurriculum();
-  return rows.map(row => ({ ...row, course: sharedCourse(row.course, curriculum) }));
+  const courses = await withSites(rows.map(row => row.course), "clubId", "club");
+  return rows.map((row, index) => ({ ...row, course: sharedCourse(courses[index], curriculum) }));
 }
 
 export type StudentAttendance = Awaited<ReturnType<typeof getAttendanceForStudent>>[number];

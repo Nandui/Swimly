@@ -1,3 +1,5 @@
+import { liveSiteIds, withSites, type SiteRef, type StaffRef } from "@/lib/directory";
+import { withClassRefs } from "@/modules/activities/lib/courses/refs";
 import type { ParentAccount, Prisma } from "@/generated/prisma/client";
 import { parseDateOnly, today, weekdayOf } from "@/lib/format";
 import { requireChild } from "@/modules/activities/lib/parent/children";
@@ -6,11 +8,12 @@ import { dublinInstant, PARENT_TIMEZONE } from "@/modules/activities/lib/parent/
 const DAY = 86_400_000;
 const courseSelect = {
   id: true, name: true, dayOfWeek: true, startMinutes: true, durationMinutes: true, location: true,
-  club: { select: { id: true, name: true } },
+  clubId: true, instructorId: true,
   level: { select: { name: true, programme: { select: { name: true } } } },
-  instructor: { select: { name: true } },
 } as const satisfies Prisma.CourseSelect;
-type Course = Prisma.CourseGetPayload<{ select: typeof courseSelect }>;
+/** Site and instructor come from Core's directory; parents see the site's
+ *  id and name and the instructor's name only. */
+type Course = Prisma.CourseGetPayload<{ select: typeof courseSelect }> & { club: SiteRef; instructor: StaffRef | null };
 
 function lesson(course: Course, date: Date, instructorName = course.instructor?.name ?? null) {
   const iso = date.toISOString().slice(0, 10);
@@ -27,10 +30,11 @@ function lesson(course: Course, date: Date, instructorName = course.instructor?.
 export async function childLessons(tx: Prisma.TransactionClient, parent: ParentAccount, childId: string, now = new Date()) {
   const child = await requireChild(tx, parent, childId);
   const day = parseDateOnly(today(now)), from = new Date(day.getTime() - 83 * DAY), until = new Date(day.getTime() + 90 * DAY);
-  const [enrolments, records, cancellations, weeklyEnrolment] = await Promise.all([
+  const liveSites = await liveSiteIds(tx);
+  const [foundEnrolments, foundRecords, foundCancellations, weeklyEnrolment] = await Promise.all([
     tx.enrolment.findMany({ where: { studentId: childId, status: "ACTIVE", startedOn: { lte: until },
       AND: [{ OR: [{ endedOn: null }, { endedOn: { gt: day } }] }, { OR: [{ scheduledEndOn: null }, { scheduledEndOn: { gt: day } }] }],
-      course: { archivedAt: null, club: { archivedAt: null } } },
+      course: { archivedAt: null, clubId: { in: liveSites } } },
       select: { startedOn: true, endedOn: true, scheduledEndOn: true, course: { select: { ...courseSelect,
         covers: { where: { date: { gte: day, lte: until } }, select: { date: true, coverByName: true } },
         cancellations: { where: { date: { gte: day, lte: until } }, select: { date: true } },
@@ -40,12 +44,20 @@ export async function childLessons(tx: Prisma.TransactionClient, parent: ParentA
     tx.classCancellation.findMany({ where: { date: { gte: from, lte: until },
       OR: [{ swimmers: { some: { studentId: childId } } }, { course: { attendance: { some: { studentId: childId, date: { gte: from, lte: day } } } } }] },
       select: { courseId: true, date: true, className: true, startMinutes: true, durationMinutes: true,
-        course: { select: { club: { select: { id: true, name: true } } } },
+        course: { select: { clubId: true } },
         swimmers: { where: { studentId: childId }, select: { studentId: true } } } }),
     // Keep former swimmers' journals even when their last lesson is outside the
     // attendance window. An assessment or waiting-list place is not a lesson.
     tx.enrolment.findFirst({ where: { studentId: childId, status: { not: "WAITLISTED" } }, select: { id: true } }),
   ]);
+  const [enrolmentCourses, recordCourses, cancellationCourses] = await Promise.all([
+    withClassRefs(foundEnrolments.map(row => row.course), tx),
+    withClassRefs(foundRecords.map(row => row.course), tx),
+    withSites(foundCancellations.map(row => row.course), "clubId", "club", tx),
+  ]);
+  const enrolments = foundEnrolments.map((row, index) => ({ ...row, course: enrolmentCourses[index] }));
+  const records = foundRecords.map((row, index) => ({ ...row, course: recordCourses[index] }));
+  const cancellations = foundCancellations.map((row, index) => ({ ...row, course: cancellationCourses[index] }));
   const upcoming = new Map<string, NonNullable<ReturnType<typeof lesson>>>();
   const cancelledUpcoming = new Map<string, NonNullable<ReturnType<typeof lesson>>>();
   if (child.status === "ACTIVE") for (const enrolment of enrolments) {

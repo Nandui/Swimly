@@ -1,3 +1,4 @@
+import { directoryDouble } from "@/test/directory-double";
 import assert from "node:assert/strict";
 import { test } from "node:test";
 import { serverModule } from "@/test/server-module";
@@ -11,7 +12,7 @@ function fixture() {
     course: { findUnique: async ({ where }: { where: { clubId: string } }) => {
       assert.ok(locked);
       return where.clubId !== "site" ? null : { id: "class", name: "Turtles", archivedAt: archived ? new Date() : null, dayOfWeek: weekday,
-        startMinutes: 900, durationMinutes: 30, location: "Learner pool", instructor: { name: "Scheduled teacher" },
+        startMinutes: 900, durationMinutes: 30, location: "Learner pool", instructorId: "scheduled",
         level: { id: "level", name: "Turtles", programme: { id: "programme", name: "Swim skills" } } };
     } },
     classCancellation: {
@@ -27,7 +28,7 @@ function fixture() {
     classCover: { findUnique: async () => ({ coverByName: "Cover teacher" }) },
     attendanceRecord: { count: async () => 2 },
   };
-  const actions = serverModule<typeof import("./actions")>("src/modules/activities/lib/cancellations/actions.ts", {
+  const actions = serverModule<typeof import("./actions")>("src/modules/activities/lib/cancellations/actions.ts", { "@/lib/directory": directoryDouble({ people: [{ id: "scheduled", name: "Scheduled teacher" }] }),
     "@/lib/authz": { requirePermission: async (key: string) => { permissions.push(key); if (!allowed) throw Error("denied"); return { user: { id: "manager", name: "Duty Manager" } }; }, canSee: () => screen, AuthorizationError: Error },
     "@/lib/clubs/current": { currentClubId: async () => club },
     "@/modules/activities/lib/curriculum/data/shared": { readSharedCurriculum: async () => ({}), sharedCourse: (course: unknown) => course },

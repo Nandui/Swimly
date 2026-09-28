@@ -7,6 +7,7 @@ import { LIST_ORDER, LIVE } from "@/modules/activities/lib/curriculum/constants"
 import { getSharedCurriculum } from "@/modules/activities/lib/curriculum/data/shared";
 import { getProgrammes } from "@/modules/activities/lib/curriculum/data/curriculum";
 import { prisma } from "@/lib/prisma";
+import { withSites, withStaff, type SiteRef, type StaffRef } from "@/lib/directory";
 
 /** Reads for assessment sessions and bookings. Writes live in `../actions/`.
  *  The lists are the current club's; a session fetched by id is not filtered,
@@ -15,7 +16,6 @@ import { prisma } from "@/lib/prisma";
 const SESSION_SELECT = {
   id: true,
   clubId: true,
-  club: { select: { id: true, name: true } },
   date: true,
   startMinutes: true,
   durationMinutes: true,
@@ -28,22 +28,26 @@ const SESSION_SELECT = {
   typeId: true,
   type: { select: { id: true, name: true } },
   instructorId: true,
-  instructor: { select: { id: true, name: true } },
   _count: { select: { bookings: { where: { status: { in: HOLDS_A_PLACE } } } } },
 } as const satisfies Prisma.AssessmentSessionSelect;
 
-export type SessionRow = Prisma.AssessmentSessionGetPayload<{ select: typeof SESSION_SELECT }>;
+/** A session's site and instructor come from Core's directory. */
+export type SessionRow = Prisma.AssessmentSessionGetPayload<{ select: typeof SESSION_SELECT }> & { club: SiteRef; instructor: StaffRef | null };
+
+async function withSessionRefs<T extends { clubId: string; instructorId: string | null }>(rows: T[]) {
+  return withStaff(await withSites(rows, "clubId", "club"), "instructorId", "instructor");
+}
 
 /** Every session, oldest first. Few enough that the page splits them into
  *  upcoming, past and cancelled itself rather than asking three times. */
 export async function getAssessmentSessions(): Promise<SessionRow[]> {
   await requireSession();
 
-  const rows = await prisma.assessmentSession.findMany({
+  const rows = await withSessionRefs(await prisma.assessmentSession.findMany({
     where: { clubId: await currentClubId() },
     orderBy: [{ date: "asc" }, { startMinutes: "asc" }],
     select: SESSION_SELECT,
-  });
+  }));
   const curriculum = await getSharedCurriculum();
   return rows.map(row => ({ ...row, programmeId: curriculum.programmeIds.resolve(row.programmeId), programme: { id: curriculum.programmeIds.resolve(row.programmeId), name: curriculum.programme(row.programmeId)?.name ?? row.programme.name }, typeId: row.typeId ? curriculum.typeIds.resolve(row.typeId) : null, type: row.type ? { id: curriculum.typeIds.resolve(row.type.id), name: curriculum.types.find(t => t.id === curriculum.typeIds.resolve(row.type!.id))?.name ?? row.type.name } : null }));
 }
@@ -80,7 +84,7 @@ export async function getAssessmentSession(id: string, scope?: { clubId: string;
   const session = await requireActivitiesAccess();
   const medical = medicalAllowed(session, surface);
 
-  const row = await prisma.assessmentSession.findUnique({
+  const found = await prisma.assessmentSession.findUnique({
     where: { id, ...scope },
     select: {
       ...SESSION_SELECT,
@@ -101,7 +105,8 @@ export async function getAssessmentSession(id: string, scope?: { clubId: string;
       },
     },
   });
-  if (!row) return null;
+  if (!found) return null;
+  const [row] = await withSessionRefs([found]);
   const curriculum = await getSharedCurriculum();
   const programme = curriculum.programme(row.programmeId);
   return { ...row, programmeId: programme?.id ?? row.programmeId,
@@ -135,7 +140,7 @@ export async function getStudentAssessments(studentId: string) {
           id: true,
           date: true,
           startMinutes: true,
-          cancelledAt: true, club: { select: { id: true, name: true } },
+          cancelledAt: true, clubId: true,
           programme: { select: { id: true, name: true } },
           type: { select: { id: true, name: true } },
         },
@@ -143,7 +148,9 @@ export async function getStudentAssessments(studentId: string) {
     },
   });
   const curriculum = await getSharedCurriculum();
-  return rows.map(row => {
+  const sessions = await withSites(rows.map(row => row.session), "clubId", "club");
+  return rows.map((found, index) => {
+    const row = { ...found, session: sessions[index] };
     const programme = curriculum.programme(row.session.programme.id);
     const type = row.session.type
       ? curriculum.types.find(t => t.id === curriculum.typeIds.resolve(row.session.type!.id)) : null;

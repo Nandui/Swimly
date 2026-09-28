@@ -1,3 +1,4 @@
+import { directoryDouble } from "@/test/directory-double";
 import assert from "node:assert/strict";
 import { test } from "node:test";
 import { curriculumProgramme } from "@/test/curriculum";
@@ -39,7 +40,7 @@ function fixture() {
     auditLog: { create: async ({ data }: { data: Record<string, unknown> }) => { audits.push(data); } },
   };
   const prisma = { ...tx, $transaction: async (run: (db: typeof tx) => Promise<unknown>) => run(tx) };
-  const actions = serverModule<Actions>("src/modules/activities/lib/courses/actions/courses.ts", {
+  const actions = serverModule<Actions>("src/modules/activities/lib/courses/actions/courses.ts", { "@/lib/directory": directoryDouble({ people: [{ id: "instructor", name: "Instructor" }] }),
     "@/lib/prisma": { prisma },
     "@/lib/authz": { requirePermission: async () => ({ user: { id: "staff", name: "Test Staff" } }) },
     "@/lib/clubs/current": { currentClubId: async () => "club", currentClubIdIfAny: async () => "club" },

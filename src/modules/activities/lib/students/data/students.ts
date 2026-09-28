@@ -1,3 +1,4 @@
+import { withSite } from "@/lib/directory";
 import type { Prisma, StudentStatus } from "@/generated/prisma/client";
 import { requireSession } from "@/lib/authz";
 import { classifyMedical, medicalAllowed, requireActivitiesAccess } from "@/modules/activities/classification";
@@ -131,12 +132,11 @@ export async function getStudentCounts() {
 export async function getStudent(id: string) {
   const session = await requireActivitiesAccess();
 
-  const row = await prisma.student.findUnique({
+  const found = await prisma.student.findUnique({
     where: { id },
     select: {
       id: true,
       clubId: true,
-      club: { select: { id: true, name: true } },
       memberNumber: true,
       firstName: true,
       lastName: true,
@@ -155,7 +155,10 @@ export async function getStudent(id: string) {
       notes: true,
     },
   });
-  return row ? classifyMedical(row, medicalAllowed(session, "desk")) : null;
+  if (!found) return null;
+  // The home site name comes from Core's directory.
+  const row = await withSite(found, "clubId", "club");
+  return classifyMedical(row, medicalAllowed(session, "desk"));
 }
 
 export type StudentDetail = NonNullable<Awaited<ReturnType<typeof getStudent>>>;

@@ -1,3 +1,5 @@
+import { operatorAccounts } from "@/lib/operations/operator";
+import { liveSites } from "@/lib/directory";
 import { z } from "zod";
 import { prisma } from "@/lib/prisma";
 import { operationContext } from "@/lib/operations/context";
@@ -41,14 +43,13 @@ export async function POST(request: Request) {
     const data = parsed.data;
     const actorName = process.env.SWIMLY_OPERATIONS_ACTOR;
     if (!actorName) return json({ error: "Operator not configured." }, 503);
-    const actors = await prisma.user.findMany({ where: { name: actorName, isActive: true }, take: 2,
-      select: { id: true, name: true, staffRole: { select: { id: true, name: true, permissions: true, home: true, screens: true } } } });
+    const actors = await operatorAccounts(actorName);
     if (actors.length !== 1 || !actors[0].staffRole) return json({ error: "Operator account unavailable or ambiguous." }, 403);
     const actor = actors[0], role = actor.staffRole!;
     const held = expandPermissions(role.permissions);
     const permissions = scope.filter(p => held.has(p));
     if (!permissions.length) return json({ error: "Operator lacks record-management permissions." }, 403);
-    const clubs = await prisma.club.findMany({ where: { archivedAt: null }, select: { id: true, name: true } });
+    const clubs = await liveSites();
     if (data.operation === "check") return json({ ok: true, actor: { id: actor.id, name: actor.name }, permissions, clubs });
     if (!data.clubId || !clubs.some(c => c.id === data.clubId)) return json({ error: "Choose an existing active club explicitly." }, 400);
     const clubId = data.clubId;

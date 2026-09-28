@@ -8,7 +8,7 @@ function course(id: string, changes: Partial<TransferTarget> = {}): TransferTarg
   return {
     id, name: null, clubId: "bishopstown", club: { id: "bishopstown", name: "Bishopstown" },
     level: { id: "turtles", name: "Turtles" }, dayOfWeek: "MONDAY", startMinutes: 960,
-    durationMinutes: 30, location: "Learner Pool", instructor: { name: "Demo Instructor" },
+    durationMinutes: 30, location: "Learner Pool", instructorId: "demo-instructor", instructor: { id: "demo-instructor", name: "Demo Instructor" },
     capacity: 8, _count: { enrolments: 5 }, ...changes,
   };
 }

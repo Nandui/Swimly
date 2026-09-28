@@ -1,3 +1,4 @@
+import { directoryDouble } from "@/test/directory-double";
 import assert from "node:assert/strict";
 import { test } from "node:test";
 import { serverModule } from "@/test/server-module";
@@ -10,7 +11,7 @@ test("shared artwork resolves original IDs, falls back to its programme, and nev
   const empty = curriculumProgramme("empty", ["empty-level"]);
   const alias = curriculumProgramme("copy", ["copy-own"]);
   alias.sharedWithId = "programme"; alias.levels[0].sharedWithId = "own";
-  const data = serverModule<typeof import("./images")>("src/modules/activities/lib/curriculum/data/images.ts", {
+  const data = serverModule<typeof import("./images")>("src/modules/activities/lib/curriculum/data/images.ts", { "@/lib/directory": directoryDouble(),
     "@/lib/authz": { requireSession: async () => ({}) },
     "@/lib/prisma": { prisma: { programme: { findMany: async (args: unknown) => { query = args; return [programme, empty, alias]; } } } },
   });

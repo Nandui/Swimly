@@ -1,5 +1,6 @@
 "use server";
 
+import { isArchivedSite } from "@/lib/directory";
 import { revalidatePath } from "next/cache";
 import { z } from "zod";
 import type { Prisma } from "@/generated/prisma/client";
@@ -26,7 +27,7 @@ const enrolSchema = z.object({
 export type EnrolInput = z.infer<typeof enrolSchema>;
 
 const COURSE_SELECT = {
-  id: true, clubId: true, club: { select: { id: true, name: true, archivedAt: true } }, name: true, dayOfWeek: true, startMinutes: true,
+  id: true, clubId: true, name: true, dayOfWeek: true, startMinutes: true,
   capacity: true, archivedAt: true, levelId: true,
   level: { select: { id: true, name: true, archivedAt: true, programmeId: true, programme: { select: { archivedAt: true } } } },
 } as const satisfies Prisma.CourseSelect;
@@ -107,7 +108,7 @@ export async function enrolStudent(input: EnrolInput, confirmation?: Confirmatio
     if (student.status !== "ACTIVE") return fail(`${fullName(student)} is marked inactive.`);
     if (!rawCourse) return fail("That class no longer exists.");
     const course = sharedCourse(rawCourse, await readSharedCurriculum(tx));
-    if (course.archivedAt || course.club.archivedAt) return fail("That class or its site is archived.");
+    if (course.archivedAt || await isArchivedSite(course.clubId, tx)) return fail("That class or its site is archived.");
     if (course.level.archivedAt || course.level.programme.archivedAt) return fail("That class's level or programme is archived. Restore it first.");
     const open = await tx.enrolment.findFirst({
       where: { studentId, courseId, status: { in: ["ACTIVE", "WAITLISTED"] } }, select: { status: true },
@@ -224,7 +225,7 @@ export async function promoteFromWaitlist(id: string, legendAgreement?: LegendAg
     if (!enrolment) return fail("That enrolment no longer exists.");
     if (enrolment.status !== "WAITLISTED") return fail("They are not on the waitlist.");
     if (enrolment.student.status !== "ACTIVE") return fail(`${fullName(enrolment.student)} is marked inactive.`);
-    if (enrolment.course.archivedAt || enrolment.course.club.archivedAt) return fail("That class or its site is archived.");
+    if (enrolment.course.archivedAt || await isArchivedSite(enrolment.course.clubId, tx)) return fail("That class or its site is archived.");
     const shared = sharedCourse(enrolment.course, await readSharedCurriculum(tx));
     if (shared.level.archivedAt || shared.level.programme.archivedAt) return fail("That class's level or programme is archived. Restore it first.");
     const taken = await tx.enrolment.count({ where: { courseId: enrolment.courseId, status: "ACTIVE" } });
@@ -268,7 +269,7 @@ export async function transferEnrolment(id: string, toCourseId: string, placemen
     if (!rawTo) return fail("That class no longer exists.");
     const curriculum = await readSharedCurriculum(tx);
     const to = sharedCourse(rawTo, curriculum);
-    if (to.archivedAt || to.club.archivedAt) return fail("That class or its site is archived.");
+    if (to.archivedAt || await isArchivedSite(to.clubId, tx)) return fail("That class or its site is archived.");
     if (to.level.archivedAt || to.level.programme.archivedAt) return fail("That class's level or programme is archived. Restore it first.");
     const open = await tx.enrolment.findFirst({
       where: { studentId: from.studentId, courseId: toCourseId, status: { in: ["ACTIVE", "WAITLISTED"] } },

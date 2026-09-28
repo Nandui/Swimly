@@ -1,5 +1,6 @@
 "use server";
 
+import { isActiveStaff } from "@/lib/directory";
 import { revalidatePath } from "next/cache";
 import { z } from "zod";
 import type { DayOfWeek } from "@/generated/prisma/client";
@@ -96,7 +97,7 @@ export async function createCourse(input: CourseInput): Promise<ActionResult> {
   if (!level) return fail("That level no longer exists.");
   if (level.archivedAt) return fail(`${level.name} is archived. Restore it first.`);
   if (level.programme.archivedAt) return fail("That programme is archived. Restore it first.");
-  if (data.instructorId && !await prisma.user.findUnique({ where: { id: data.instructorId, isActive: true }, select: { id: true } })) {
+  if (data.instructorId && !await isActiveStaff(data.instructorId)) {
     return fail("That instructor is not available. Pick an active staff member.");
   }
 
@@ -151,7 +152,6 @@ export async function updateCourse(id: string, input: CourseInput): Promise<Acti
         location: true,
         instructorId: true,
         level: { select: { name: true, programmeId: true } },
-        instructor: { select: { name: true } },
         _count: { select: { enrolments: { where: TAKES_A_PLACE } } },
       },
     });
@@ -179,7 +179,7 @@ export async function updateCourse(id: string, input: CourseInput): Promise<Acti
       return fail(`${level.name} is archived. Restore it first.`);
     }
     if (level.programme.archivedAt && level.id !== existing.levelId) return fail("That programme is archived. Restore it first.");
-    if (data.instructorId && data.instructorId !== existing.instructorId && !await tx.user.findUnique({ where: { id: data.instructorId, isActive: true }, select: { id: true } })) {
+    if (data.instructorId && data.instructorId !== existing.instructorId && !await isActiveStaff(data.instructorId, tx)) {
       return fail("That instructor is not available. Pick an active staff member.");
     }
 

@@ -1,3 +1,4 @@
+import { directoryDouble } from "@/test/directory-double";
 import assert from "node:assert/strict";
 import { test } from "node:test";
 import { serverModule } from "@/test/server-module";
@@ -8,7 +9,7 @@ type Query = {
 };
 
 function subject(findMany: (query: Query) => Promise<unknown[]>, requireSession = async () => ({})) {
-  return serverModule<typeof import("./assessments")>("src/modules/activities/lib/today/assessments.ts", {
+  return serverModule<typeof import("./assessments")>("src/modules/activities/lib/today/assessments.ts", { "@/lib/directory": directoryDouble(),
     "@/lib/authz": { requireSession },
     "@/lib/clubs/current": { currentClubId: async () => "current-site" },
     "@/lib/prisma": { prisma: { assessmentSession: { findMany } } },
@@ -23,7 +24,7 @@ function subject(findMany: (query: Query) => Promise<unknown[]>, requireSession 
 test("Today queries only the current site's dated, non-cancelled sessions and seat-holding counts", async () => {
   const { getTodayAssessments } = subject(async query => {
     assert.deepEqual(query.where, { clubId: "current-site", date: new Date("2026-09-12T00:00:00.000Z"), cancelledAt: null });
-    assert.deepEqual(Object.keys(query.select).sort(), ["_count", "capacity", "durationMinutes", "id", "instructor", "instructorId", "location", "programme", "startMinutes", "type"]);
+    assert.deepEqual(Object.keys(query.select).sort(), ["_count", "capacity", "durationMinutes", "id", "instructorId", "location", "programme", "startMinutes", "type"]);
     assert.deepEqual(query.select._count, { select: { bookings: { where: { status: { in: ["BOOKED", "ATTENDED"] } } } } });
     return [{ id: "assessment", startMinutes: 600, durationMinutes: 30, location: "Learner Pool", capacity: 6,
       instructorId: null, instructor: null, programme: { id: "legacy-programme", name: "Old programme" },

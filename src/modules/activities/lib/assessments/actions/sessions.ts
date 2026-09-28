@@ -1,5 +1,6 @@
 "use server";
 
+import { isActiveStaff } from "@/lib/directory";
 import { revalidatePath } from "next/cache";
 import { z } from "zod";
 import { fail, ok, type ActionResult } from "@/lib/action-result";
@@ -69,7 +70,7 @@ export async function createSession(input: SessionInput): Promise<ActionResult> 
 
   const kind = curriculum.types.find(t => t.id === curriculum.typeIds.resolve(data.typeId) && t.programmeId === programme.id && !t.archivedAt);
   if (!kind) return fail(`That kind of assessment does not belong to ${programme.name}.`);
-  if (data.instructorId && !await prisma.user.findUnique({ where: { id: data.instructorId, isActive: true }, select: { id: true } })) {
+  if (data.instructorId && !await isActiveStaff(data.instructorId)) {
     return fail("That instructor is not available. Pick an active staff member.");
   }
 
@@ -152,7 +153,7 @@ export async function updateSession(id: string, input: SessionInput): Promise<Ac
       const kind = curriculum.types.find(t => t.id === data.typeId && t.programmeId === data.programmeId && !t.archivedAt);
       if (!kind) return fail("That kind of assessment does not belong to this programme.");
     }
-    if (data.instructorId && data.instructorId !== existing.instructorId && !await tx.user.findUnique({ where: { id: data.instructorId, isActive: true }, select: { id: true } })) {
+    if (data.instructorId && data.instructorId !== existing.instructorId && !await isActiveStaff(data.instructorId, tx)) {
       return fail("That instructor is not available. Pick an active staff member.");
     }
 

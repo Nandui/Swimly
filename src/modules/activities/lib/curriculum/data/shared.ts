@@ -1,16 +1,18 @@
 import { cache } from "react";
 import type { Prisma } from "@/generated/prisma/client";
 import { prisma } from "@/lib/prisma";
+import { withSites } from "@/lib/directory";
 import { sharedIds } from "@/modules/activities/lib/curriculum/shared";
 
 /** Internal reader: callers authenticate first. A transaction gets its own
  * snapshot; server pages share one catalogue read within the request. */
 export async function readSharedCurriculum(db: Prisma.TransactionClient = prisma) {
-  const programmes = await db.programme.findMany({
+  // Site names come from Core's directory, not a join through Club.
+  const programmes = await withSites(await db.programme.findMany({
     orderBy: [{ sortOrder: "asc" }, { name: "asc" }, { id: "asc" }],
     select: {
       id: true, sharedWithId: true, name: true, description: true, sortOrder: true,
-      archivedAt: true, imageVersion: true, clubId: true, club: { select: { id: true, name: true } },
+      archivedAt: true, imageVersion: true, clubId: true,
       _count: { select: { enrolments: true } },
       levels: { select: {
         id: true, sharedWithId: true, programmeId: true, name: true, description: true,
@@ -26,7 +28,7 @@ export async function readSharedCurriculum(db: Prisma.TransactionClient = prisma
         sortOrder: true, archivedAt: true, _count: { select: { sessions: true } },
       } },
     },
-  });
+  }), "clubId", "club", db);
   const rawLevels = programmes.flatMap(p => p.levels);
   const rawCompetencies = rawLevels.flatMap(l => l.competencies);
   const rawTypes = programmes.flatMap(p => p.assessmentTypes);

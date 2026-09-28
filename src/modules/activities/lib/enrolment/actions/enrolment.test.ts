@@ -1,3 +1,4 @@
+import { directoryDouble } from "@/test/directory-double";
 import assert from "node:assert/strict";
 import { test } from "node:test";
 import { curriculumProgramme, sharedCurriculumRows } from "@/test/curriculum";
@@ -13,6 +14,8 @@ function fixture() {
     level: { id: "entry", name: "Entry", programmeId: "programme", archivedAt: null, programme: { archivedAt: null } },
   }));
   const student = { id: "swimmer", clubId: "club", firstName: "Test", lastName: "Swimmer", status: "ACTIVE" };
+  // Site status comes from Core's directory; tests archive a site here.
+  const sites: { id: string; name: string; archivedAt: Date | null }[] = [{ id: "club", name: "Site A", archivedAt: null }];
   const rows = [{ id: "source", studentId: "swimmer", courseId: "a", programmeId: "programme", levelId: "entry", status: "ACTIVE", placementReason: null as string | null, legendAgreementStatus: "NEEDS_CHECK" as "NEEDS_CHECK" | "PENDING" | "DONE", legendAgreementUpdatedAt: null as Date | null, legendAgreementUpdatedById: null as string | null, legendAgreementUpdatedByName: null as string | null }];
   const audits: object[] = [];
   const locks: string[][] = [];
@@ -86,14 +89,14 @@ function fixture() {
       finally { locks.push([...activeLocks]); release(); }
     },
   };
-  const actions = serverModule<Actions>("src/modules/activities/lib/enrolment/actions/enrolment.ts", {
+  const actions = serverModule<Actions>("src/modules/activities/lib/enrolment/actions/enrolment.ts", { "@/lib/directory": directoryDouble({ sites }),
     "@/lib/prisma": { prisma },
     "@/lib/authz": { requirePermission: async () => ({ user: { id: "staff", name: "Test Staff" } }) },
     "@/lib/clubs/current": { currentClubId: async () => "club", currentClubIdIfAny: async () => "club" },
     "next/cache": { revalidatePath: () => { } },
   });
   return {
-    actions, rows, courses, student, audits, locks, curriculum, catalogue, completions,
+    actions, rows, courses, student, sites, audits, locks, curriculum, catalogue, completions,
     failAudit: (after = 0) => { auditFailureAfter = after; },
     beforeTransaction: (run: () => void) => { beforeTransaction = run; },
   };
@@ -323,7 +326,7 @@ test("failure to audit the source site rolls back the whole cross-site transfer"
 });
 
 test("an archived destination site cannot receive an enrolment or transfer", async () => {
-  const f = fixture(); f.courses[1].club.archivedAt = new Date();
+  const f = fixture(); f.sites[0].archivedAt = new Date();
   assert.equal((await f.actions.enrolStudent(enrolInput, { choice: "keep", ids: ["source"] })).ok, false);
   assert.equal((await f.actions.transferEnrolment("source", "b", "", { choice: "move", ids: ["source", "b"] })).ok, false);
   assert.equal(f.rows.length, 1); assert.equal(f.rows[0].status, "ACTIVE");

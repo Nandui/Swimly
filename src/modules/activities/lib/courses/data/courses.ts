@@ -4,7 +4,8 @@ import { requireSession } from "@/lib/authz";
 import { currentClubId } from "@/lib/clubs/current";
 import { getSharedCurriculum, sharedCourse, sharedPlacement, liveSharedLevel } from "@/modules/activities/lib/curriculum/data/shared";
 import { prisma } from "@/lib/prisma";
-import { ADMINISTRATOR_PERMISSIONS } from "@/lib/staff/permissions";
+import { activeStaffHolding, liveSiteIds } from "@/lib/directory";
+import { withClassRefs } from "@/modules/activities/lib/courses/refs";
 
 /** Enrolments that occupy a place. Waitlisted, withdrawn, transferred and
  *  completed rows do not. One constant so no read invents its own answer. */
@@ -13,7 +14,6 @@ export const TAKES_A_PLACE = { status: "ACTIVE" } as const;
 const COURSE_SELECT = {
   id: true,
   clubId: true,
-  club: { select: { id: true, name: true } },
   name: true,
   dayOfWeek: true,
   startMinutes: true,
@@ -33,19 +33,19 @@ const COURSE_SELECT = {
       programme: { select: { id: true, name: true, sortOrder: true } },
     },
   },
-  instructor: { select: { id: true, name: true } },
   _count: { select: { enrolments: { where: TAKES_A_PLACE } } },
 } as const;
+
 
 export async function getCourses(includeArchived = false, allSites = false) {
   await requireSession();
 
   const curriculum = await getSharedCurriculum();
-  const rows = await prisma.course.findMany({
-    where: { ...(allSites ? { club: { archivedAt: null } } : { clubId: await currentClubId() }), ...(includeArchived ? {} : { archivedAt: null }) },
+  const rows = await withClassRefs(await prisma.course.findMany({
+    where: { ...(allSites ? { clubId: { in: await liveSiteIds() } } : { clubId: await currentClubId() }), ...(includeArchived ? {} : { archivedAt: null }) },
     orderBy: [{ dayOfWeek: "asc" }, { startMinutes: "asc" }],
     select: COURSE_SELECT,
-  });
+  }));
   // The directory includes historical curriculum; enrolment pickers still
   // exclude retired levels when requesting active classes across sites.
   return rows.filter(row => !allSites || includeArchived || liveSharedLevel(curriculum, row.levelId)).map(row => sharedCourse(row, curriculum));
@@ -56,7 +56,8 @@ export type CourseRow = Awaited<ReturnType<typeof getCourses>>[number];
 export async function getCourse(id: string) {
   await requireSession();
 
-  const row = await prisma.course.findUnique({ where: { id }, select: COURSE_SELECT });
+  const found = await prisma.course.findUnique({ where: { id }, select: COURSE_SELECT });
+  const row = found ? (await withClassRefs([found]))[0] : null;
   return row ? sharedCourse(row, await getSharedCurriculum()) : null;
 }
 
@@ -68,7 +69,7 @@ export async function getCoursesOnDay(dayOfWeek: DayOfWeek, instructorId?: strin
   await requireSession();
 
   const curriculum = await getSharedCurriculum();
-  const rows = await prisma.course.findMany({
+  const rows = await withClassRefs(await prisma.course.findMany({
     where: {
       clubId: await currentClubId(),
       dayOfWeek,
@@ -77,7 +78,7 @@ export async function getCoursesOnDay(dayOfWeek: DayOfWeek, instructorId?: strin
     },
     orderBy: [{ startMinutes: "asc" }],
     select: COURSE_SELECT,
-  });
+  }));
   return rows.map(row => sharedCourse(row, curriculum));
 }
 
@@ -131,17 +132,7 @@ export type RosterEntry = Awaited<ReturnType<typeof getRoster>>[number];
 export async function getInstructorOptions() {
   await requireSession();
 
-  return prisma.user.findMany({
-    where: {
-      isActive: true,
-      staffRole: { OR: [
-        { permissions: { hasSome: ["attendance.mark", "attendance.markAny"] } },
-        { permissions: { hasEvery: [...ADMINISTRATOR_PERMISSIONS] } },
-      ] },
-    },
-    orderBy: { name: "asc" },
-    select: { id: true, name: true },
-  });
+  return activeStaffHolding(["attendance.mark", "attendance.markAny"]);
 }
 
 export type InstructorOption = Awaited<ReturnType<typeof getInstructorOptions>>[number];

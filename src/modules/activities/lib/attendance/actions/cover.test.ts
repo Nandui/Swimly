@@ -1,3 +1,4 @@
+import { directoryDouble } from "@/test/directory-double";
 import assert from "node:assert/strict";
 import { test } from "node:test";
 import type { Session } from "next-auth";
@@ -28,7 +29,6 @@ function fixture() {
           id: "class",
           name: "Synthetic lesson",
           instructorId: "scheduled",
-          instructor: { name: "Scheduled Teacher" },
           dayOfWeek: "FRIDAY",
           startMinutes: 900,
           archivedAt: archived ? new Date() : null,
@@ -50,7 +50,7 @@ function fixture() {
   };
   const actions = serverModule<typeof import("./cover")>(
     "src/modules/activities/lib/attendance/actions/cover.ts",
-    {
+    { "@/lib/directory": directoryDouble({ people: [{ id: "scheduled", name: "Scheduled Teacher" }] }),
       "@/lib/authz": {
         requirePermission: async () => ({
           user: { id: actor, name: actor, permissions: [...permissions] },

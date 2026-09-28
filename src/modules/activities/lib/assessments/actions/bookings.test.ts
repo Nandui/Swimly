@@ -1,3 +1,4 @@
+import { directoryDouble } from "@/test/directory-double";
 import assert from "node:assert/strict";
 import { test } from "node:test";
 import { curriculumProgramme } from "@/test/curriculum";
@@ -43,7 +44,7 @@ function fixture() {
     beforeTransaction?.(); beforeTransaction = undefined;
     return run(tx);
   } };
-  const actions = serverModule<Actions>("src/modules/activities/lib/assessments/actions/bookings.ts", {
+  const actions = serverModule<Actions>("src/modules/activities/lib/assessments/actions/bookings.ts", { "@/lib/directory": directoryDouble({ sites: [{ id: "club", name: "Site A" }] }),
     "@/lib/prisma": { prisma },
     "@/lib/authz": { requirePermission: async () => ({ user: { id: "staff", name: "Test Staff" } }) },
     "@/lib/clubs/current": { currentClubId: async () => "club", currentClubIdIfAny: async () => "club" },

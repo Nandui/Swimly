@@ -8,7 +8,8 @@ import { defineConfig } from "prisma/config";
 const cliUrl = process.env["DIRECT_URL"] ?? process.env["DATABASE_URL"];
 
 export default defineConfig({
-  schema: "prisma/schema.prisma",
+  // One schema split by area: base, core, work, activities (see docs/architecture.md).
+  schema: "prisma/schema",
   migrations: {
     path: "prisma/migrations",
     seed: "tsx prisma/seed.ts",

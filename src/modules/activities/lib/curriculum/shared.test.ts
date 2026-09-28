@@ -1,3 +1,4 @@
+import { directoryDouble } from "@/test/directory-double";
 import assert from "node:assert/strict";
 import { test } from "node:test";
 import { latestSharedMarks, sharedIds } from "./shared";
@@ -24,7 +25,7 @@ test("the shared catalogue includes unique children from site copies and aggrega
   rows[0].name = "Renamed shared programme";
   rows[1].levels[0]._count.courses = 3;
   rows[1].levels[0].competencies.push({ ...rows[1].levels[0].competencies[0], id: "unique-skill", name: "Glide", sharedWithId: null });
-  const data = serverModule<typeof import("./data/shared")>("src/modules/activities/lib/curriculum/data/shared.ts", {
+  const data = serverModule<typeof import("./data/shared")>("src/modules/activities/lib/curriculum/data/shared.ts", { "@/lib/directory": directoryDouble(),
     "@/lib/prisma": { prisma: { programme: { findMany: async () => rows } } },
   });
   const catalogue = await data.readSharedCurriculum();

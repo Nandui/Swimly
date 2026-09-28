@@ -1,3 +1,4 @@
+import { liveSiteIds, liveSites, withSiteStatus, type SiteStatusRef } from "@/lib/directory";
 import { createHash } from "node:crypto";
 import { z } from "zod";
 import { revalidatePath } from "next/cache";
@@ -16,11 +17,15 @@ import { dublinInstant, PARENT_TIMEZONE } from "@/modules/activities/lib/parent/
 export const SESSION_SELECT = {
   id: true, date: true, startMinutes: true, durationMinutes: true, location: true, capacity: true,
   cancelledAt: true, programmeId: true, typeId: true, clubId: true,
-  club: { select: { id: true, name: true, archivedAt: true } },
   parentPublication: { select: { enabled: true, bookingClosesAt: true } },
   _count: { select: { bookings: { where: { status: { in: HOLDS_A_PLACE } } } } },
 } as const satisfies Prisma.AssessmentSessionSelect;
-export type PublicSession = Prisma.AssessmentSessionGetPayload<{ select: typeof SESSION_SELECT }>;
+/** A session with its site (and whether the site is archived) from Core's directory. */
+export type PublicSession = Prisma.AssessmentSessionGetPayload<{ select: typeof SESSION_SELECT }> & { club: SiteStatusRef };
+
+export function withSessionSites<T extends { clubId: string }>(rows: T[], db?: Parameters<typeof withSiteStatus>[3]) {
+  return withSiteStatus(rows, "clubId", "club", db);
+}
 
 export function sessionAvailability(session: PublicSession, curriculum: SharedCurriculum, now: Date) {
   const start = dublinInstant(session.date.toISOString().slice(0, 10), session.startMinutes);
@@ -46,12 +51,13 @@ export function sessionDto(session: PublicSession, curriculum: SharedCurriculum)
 }
 
 export async function listSites() {
-  return { items: await prisma.club.findMany({ where: { archivedAt: null }, select: { id: true, name: true }, orderBy: [{ sortOrder: "asc" }, { name: "asc" }] }) };
+  return { items: await liveSites() };
 }
 
 export async function getPublicSession(id: string) {
-  const session = await prisma.assessmentSession.findUnique({ where: { id }, select: SESSION_SELECT });
-  if (!session) notFound();
+  const found = await prisma.assessmentSession.findUnique({ where: { id }, select: SESSION_SELECT });
+  if (!found) notFound();
+  const [session] = await withSessionSites([found]);
   const curriculum = await readSharedCurriculum();
   if (!sessionAvailability(session, curriculum, new Date()).open) notFound();
   return sessionDto(session, curriculum);
@@ -75,12 +81,13 @@ export async function listSessions(request: Request) {
     catch { throw new ParentApiError(400, "INVALID_CURSOR", "Start a new search."); }
     if (!isDateOnly(cursor.date)) throw new ParentApiError(400, "INVALID_CURSOR", "Start a new search.");
   }
-  const rows = await prisma.assessmentSession.findMany({ where: {
-    ...(input.siteId ? { clubId: input.siteId } : {}), date: { gte: parseDateOnly(from), lte: parseDateOnly(to) }, cancelledAt: null,
-    club: { archivedAt: null }, parentPublication: { is: { enabled: true, OR: [{ bookingClosesAt: null }, { bookingClosesAt: { gt: now } }] } },
+  const live = await liveSiteIds();
+  const rows = await withSessionSites(await prisma.assessmentSession.findMany({ where: {
+    clubId: { in: input.siteId ? live.filter(id => id === input.siteId) : live }, date: { gte: parseDateOnly(from), lte: parseDateOnly(to) }, cancelledAt: null,
+    parentPublication: { is: { enabled: true, OR: [{ bookingClosesAt: null }, { bookingClosesAt: { gt: now } }] } },
     ...(cursor ? { OR: [{ date: { gt: parseDateOnly(cursor.date) } }, { date: parseDateOnly(cursor.date), startMinutes: { gt: cursor.start } },
       { date: parseDateOnly(cursor.date), startMinutes: cursor.start, id: { gt: cursor.id } }] } : {}),
-  }, select: SESSION_SELECT, orderBy: [{ date: "asc" }, { startMinutes: "asc" }, { id: "asc" }], take: input.limit + 1 });
+  }, select: SESSION_SELECT, orderBy: [{ date: "asc" }, { startMinutes: "asc" }, { id: "asc" }], take: input.limit + 1 }));
   const curriculum = await readSharedCurriculum();
   const page = rows.slice(0, input.limit), last = page.at(-1);
   return { items: page.filter(s => sessionAvailability(s, curriculum, now).open).map(s => sessionDto(s, curriculum)),
@@ -109,8 +116,9 @@ export async function reserveAssessment(tx: Prisma.TransactionClient, parent: Pa
     throw new ParentApiError(400, "INVALID_REQUEST", "Enter a valid date of birth that is not in the future.");
   }
   await tx.$queryRaw`SELECT id FROM "AssessmentSession" WHERE id=${input.sessionId} FOR UPDATE`;
-  const session = await tx.assessmentSession.findUnique({ where: { id: input.sessionId }, select: SESSION_SELECT });
-  if (!session) notFound();
+  const found = await tx.assessmentSession.findUnique({ where: { id: input.sessionId }, select: SESSION_SELECT });
+  if (!found) notFound();
+  const [session] = await withSessionSites([found], tx);
   const curriculum = await readSharedCurriculum(tx);
   const available = sessionAvailability(session, curriculum, new Date());
   if (!available.open) throw new ParentApiError(409, "BOOKING_CLOSED", "That assessment is no longer open for booking.");
@@ -158,6 +166,7 @@ export async function listBookings(request: Request, tx: Prisma.TransactionClien
     ...(input.cursor ? { id: { lt: input.cursor } } : {}) },
     select: { id: true, studentId: true, status: true, createdAt: true, session: { select: SESSION_SELECT } }, orderBy: { id: "desc" }, take: input.limit + 1 });
   const curriculum = await readSharedCurriculum(tx), page = rows.slice(0, input.limit);
-  return { items: page.map(row => ({ id: row.id, childId: row.studentId, status: row.status, createdAt: row.createdAt.toISOString(), session: sessionDto(row.session, curriculum) })),
+  const sessions = await withSessionSites(page.map(row => row.session), tx);
+  return { items: page.map((row, index) => ({ id: row.id, childId: row.studentId, status: row.status, createdAt: row.createdAt.toISOString(), session: sessionDto(sessions[index], curriculum) })),
     nextCursor: rows.length > input.limit ? page.at(-1)!.id : null };
 }

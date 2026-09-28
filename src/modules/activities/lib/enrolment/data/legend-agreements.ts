@@ -1,3 +1,4 @@
+import { sitesByIds } from "@/lib/directory";
 import type { Prisma } from "@/generated/prisma/client";
 import { requireSession } from "@/lib/authz";
 import { currentClubId } from "@/lib/clubs/current";
@@ -23,7 +24,7 @@ export async function getLegendAgreements(input: { q?: string; view?: string; pa
   const done: Prisma.EnrolmentWhereInput = { ...base, legendAgreementStatus: "DONE" };
   const [outstandingCount, doneCount, club, curriculum] = await Promise.all([
     prisma.enrolment.count({ where: outstanding }), prisma.enrolment.count({ where: done }),
-    prisma.club.findUniqueOrThrow({ where: { id: clubId }, select: { name: true } }), getSharedCurriculum(),
+    sitesByIds([clubId]).then(sites => { const site = sites.get(clubId); if (!site) throw new Error("That site no longer exists."); return site; }), getSharedCurriculum(),
   ]);
   const total = view === "done" ? doneCount : outstandingCount;
   const pages = Math.max(1, Math.ceil(total / PAGE_SIZE));

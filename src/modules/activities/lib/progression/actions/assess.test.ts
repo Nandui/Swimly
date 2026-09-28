@@ -1,3 +1,4 @@
+import { directoryDouble } from "@/test/directory-double";
 import assert from "node:assert/strict";
 import { test } from "node:test";
 import { serverModule } from "@/test/server-module";
@@ -47,7 +48,7 @@ function fixture() {
     catch (e) { marks.splice(0, marks.length, ...before.marks); completions.splice(0, completions.length, ...before.completions); audits.splice(0, audits.length, ...before.audits); throw e; }
     finally { locked = false; courseLocked = false; release(); }
   } };
-  const actions = serverModule<typeof import("./assess")>("src/modules/activities/lib/progression/actions/assess.ts", {
+  const actions = serverModule<typeof import("./assess")>("src/modules/activities/lib/progression/actions/assess.ts", { "@/lib/directory": directoryDouble(),
     "@/lib/prisma": { prisma },
     "@/lib/authz": { requirePermission: async () => { if (!allowed) throw Error("denied"); return { user: { id: "staff", name: "New Assessor" } }; }, canSee: (_s: unknown, screen: string) => screen === "instructor" || desk, can: (_s: unknown, permission: string) => permission === "attendance.mark" || overrides },
     "@/lib/clubs/current": { currentClubId: async () => "club", currentClubIdIfAny: async () => "club" },
