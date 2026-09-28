@@ -57,7 +57,10 @@ only production applies migrations, and `dev` runs new code against old tables.
 
 1. Create a Postgres database for development, for example a Neon branch or a
    Vercel Postgres database. Copy production's schema by applying the committed
-   migrations; never copy real swimmer or staff data into it.
+   migrations; never copy real swimmer data into it. Staff accounts, roles and
+   sites may be copied with `scripts/copy-staff-to-dev.ts` (owner decision,
+   28 September 2026), which leaves out swimmers, parents, the activity log and
+   staff contact details.
 2. On the `dev` deployment (Vercel Preview for the `dev` branch), set:
    - `DATABASE_URL` and `DIRECT_URL` to the development database (a database
      attached through Vercel's Neon integration provides `DATABASE_URL` and
@@ -82,7 +85,7 @@ The databases (Neon, Frankfurt, attached through Vercel's Neon integration):
 | Database | Holds | Attached to |
 | --- | --- | --- |
 | `swimly-db` | Production Core and Work (and Activities until it moves) | Work, Production |
-| `turnfin-dev-db` | Development Core and Work, fictional data only | Work and Activities, Preview and Development |
+| `turnfin-dev-db` | Development Core and Work: fictional data, plus staff, roles and sites copied from production | Work and Activities, Preview and Development |
 | `turnfin-activities-db` | Production Activities, as `ACTIVITIES_*` | Activities, Production |
 | `turnfin-activities-dev-db` | Development Activities, as `ACTIVITIES_*` | Activities, Preview and Development |
 
