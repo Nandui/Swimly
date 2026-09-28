@@ -17,7 +17,7 @@ window.portalPreview = {fail: false, calls: []};
 function Preview() {
   if (location.pathname === '/sign-in') return <main className="p-6"><h1 className="text-2xl font-semibold">Signed out of preview</h1></main>;
   if (location.pathname === '/start') return <AppShell wordmark="Swimly" homeHref="/start" portalHref="/modules" groups={[]} userName="Alex Example"><h1 className="text-2xl font-semibold">Swimly workspace preview</h1><p className="mt-4 text-sm">In the app, your role determines which workspace opens.</p></AppShell>;
-  return <StaffPortal modules={allModules().filter(m => m.id === 'swimly')} userName={new URLSearchParams(location.search).has('long-name') ? 'Alexandra Example-Longsurname Example-Longsurname' : 'Alex Example'} />;
+  return <StaffPortal modules={allModules().filter(m => m.id === 'swim-school')} userName={new URLSearchParams(location.search).has('long-name') ? 'Alexandra Example-Longsurname Example-Longsurname' : 'Alex Example'} />;
 }
 
 createRoot(document.getElementById('root')).render(<ThemeProvider initialMode={theme}><TooltipProvider><Preview /></TooltipProvider></ThemeProvider>);
