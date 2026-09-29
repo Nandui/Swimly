@@ -11,6 +11,7 @@ import { Sheet, SheetContent, SheetDescription, SheetTitle, SheetTrigger } from 
 import { Brand } from '@/components/workspace/brand';
 import { AppearanceMenu } from '@/components/docs/appearance-menu';
 import { AccountMenu } from '@/components/workspace/account-menu';
+import { RolePreviewToggle } from '@/components/staff/role-preview';
 import { HelpButton, HomeButton, YourModulesNav } from '@/components/workspace/your-modules';
 
 export type ModuleLink = { href: string; label: string; icon: LucideIcon; active: boolean };
@@ -76,7 +77,7 @@ export function ModuleShell({ module, id, current = id, who, links = [], groups,
       </nav>
       <div className="workspace-sidebar-footer">
         {!onHome && <HomeButton compact={compact} onNavigate={close} />}
-        <div className="workspace-footer-row"><HelpButton compact={compact} /><AppearanceMenu /></div>
+        <div className="workspace-footer-row"><HelpButton compact={compact} /><RolePreviewToggle compact={compact} /><AppearanceMenu /></div>
         <AccountMenu name={who.name} compact={compact} onNavigate={close} />
       </div>
     </>;

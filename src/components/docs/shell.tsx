@@ -22,6 +22,7 @@ import { canWrite, canManage, type Workspace } from '@/lib/docs/types';
 
 import { Sidebar, SidebarProvider, SidebarMenuButton } from '@/components/shadcn/sidebar';
 import { AccountMenu } from '@/components/workspace/account-menu';
+import { RolePreviewToggle } from '@/components/staff/role-preview';
 import { HelpButton, HomeButton } from '@/components/workspace/your-modules';
 import {
   Breadcrumb,
@@ -198,7 +199,7 @@ export function Shell({
         </nav>
         <div className="workspace-sidebar-footer">
           <HomeButton compact={compact} onNavigate={() => setMobile(false)} />
-          <div className="workspace-footer-row"><HelpButton compact={compact} /><AppearanceMenu /></div>
+          <div className="workspace-footer-row"><HelpButton compact={compact} /><RolePreviewToggle compact={compact} /><AppearanceMenu /></div>
           {!compact && w.localMode && <span className="workspace-local">Local workspace</span>}
           <AccountMenu name={w.member.name} subtitle={w.member.role} compact={compact} onNavigate={() => setMobile(false)} />
         </div>

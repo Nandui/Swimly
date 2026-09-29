@@ -203,6 +203,8 @@
 .turnfin-docs .workspace-tools { display: flex; flex-direction: column; gap: 8px; }
 .turnfin-docs .workspace-footer-row { display: flex; align-items: center; gap: 8px; }
 .turnfin-docs .workspace-sidebar[data-collapsed='true'] .workspace-footer-row { flex-direction: column; }
+/* Dev build "View as": tinted while another role is being worn. */
+.turnfin-docs .workspace-preview-toggle[data-active='true'] { color: var(--pc-primary-ink); box-shadow: inset 0 0 0 1px var(--pc-primary-ink); }
 .turnfin-docs .workspace-topbar { min-height: 60px; border-bottom-color: var(--pc-line); background: var(--pc-canvas); }
 .turnfin-docs :is(.workspace-breadcrumb, .workspace-breadcrumb [data-slot='breadcrumb-list'], .workspace-private) { font-size: var(--pc-text-caption); line-height: var(--pc-leading-caption); }
 .turnfin-docs .workspace-breadcrumb [data-slot='breadcrumb-link'] { color: var(--pc-ink-muted); text-decoration: none; }
@@ -393,5 +395,5 @@
   :where(.turnfin-app) .brand-wordmark > span { font-size: var(--pc-text-caption); font-weight: 600; letter-spacing: 0; color: var(--pc-primary-ink); }
 }
 
-/* Frames fill the viewport below the dev build's role preview bar (it sets --turnfin-top-bar). */
-.turnfin-app .turnfin-workspace { height: calc(100dvh - var(--turnfin-top-bar, 0px)); }
+/* Frames fill the viewport. */
+.turnfin-app .turnfin-workspace { height: 100dvh; }

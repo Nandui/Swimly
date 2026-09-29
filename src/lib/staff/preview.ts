@@ -2,6 +2,7 @@ import { cookies } from "next/headers";
 import { devSignInAllowed } from "@/lib/dev-sign-in";
 import { prisma } from "@/lib/prisma";
 import { expandPermissions } from "@/lib/staff/permissions";
+import { ACCOUNT_SELECT } from "@/lib/staff/session-user";
 
 /** Seeing the app as another role would — a dev-build affordance.
  *
@@ -9,7 +10,7 @@ import { expandPermissions } from "@/lib/staff/permissions";
  *  pages, which buttons, which home page. Signing in and out of test
  *  accounts is the slow way. Instead, on a dev build, an account that may
  *  manage roles can pick any role and the session is rebuilt as if they
- *  held it: its permissions. The person stays who
+ *  held it: its levels, at their own sites, in every module. The person stays who
  *  they are — audit rows still carry their name — only the role changes.
  *
  *  The gate is `devSignInAllowed()`, the same one that decides whether the
@@ -29,15 +30,17 @@ export async function previewedRole() {
   if (!previewAllowed()) return null;
   const wanted = (await cookies()).get(PREVIEW_COOKIE)?.value;
   if (!wanted) return null;
+  // The same role fields a real sign-in reads, so the preview is built from
+  // the role's levels exactly as it would be for someone holding it.
   return prisma.staffRole.findUnique({
     where: { id: wanted },
-    select: { id: true, name: true, permissions: true },
+    select: ACCOUNT_SELECT.staffRole.select,
   });
 }
 
-/** Whether these (real) permissions may start a preview. */
-export function mayPreview(permissions: readonly string[]): boolean {
-  return previewAllowed() && expandPermissions(permissions).has("roles.manage");
+/** Whether this (real) account may start a preview. */
+export function mayPreview(permissions: readonly string[], isSuperadmin = false): boolean {
+  return previewAllowed() && (isSuperadmin || expandPermissions(permissions).has("roles.manage"));
 }
 
 /** Every role, for the picker. No permission check of its own: the caller

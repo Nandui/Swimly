@@ -1,25 +1,30 @@
 "use client";
 
-import { useEffect, useRef, useTransition } from "react";
+import { createContext, useContext, useTransition, type ReactNode } from "react";
 import { Eye, EyeOff, Loader2 } from "lucide-react";
-import { Alert, AlertDescription, AlertTitle } from "@/components/shadcn/alert";
 import { Button } from "@/components/shadcn/button";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuRadioGroup, DropdownMenuRadioItem, DropdownMenuSeparator, DropdownMenuTrigger } from "@/components/shadcn/dropdown-menu";
 import { previewRole } from "@/lib/staff/actions/preview";
 import { toast } from "@/lib/toast";
 
 type RoleOption = { id: string; name: string; description: string | null };
-export function RolePreviewBar({ roles, current, actualRoleName }: { roles: RoleOption[]; current: { id: string; name: string } | null; actualRoleName: string }) {
+export type RolePreviewState = { roles: RoleOption[]; current: { id: string; name: string } | null; actualRoleName: string };
+
+/** Set once, by the root layout, only on a dev build for someone who may
+ *  manage roles. Every frame's sidebar reads it; no module owns it. */
+const RolePreviewContext = createContext<RolePreviewState | null>(null);
+
+export function RolePreviewProvider({ value, children }: { value: RolePreviewState | null; children: ReactNode }) {
+  return <RolePreviewContext.Provider value={value}>{children}</RolePreviewContext.Provider>;
+}
+
+/** "View as": a small button in the sidebar footer, beside Help and
+ *  Appearance. Renders nothing where previewing is not allowed. */
+export function RolePreviewToggle({ compact = false }: { compact?: boolean }) {
+  const state = useContext(RolePreviewContext);
   const [pending, startTransition] = useTransition();
-  // Tell the frames below how tall this bar is, so they fit the rest of the screen.
-  const bar = useRef<HTMLDivElement>(null);
-  useEffect(() => {
-    const root = document.documentElement, el = bar.current;
-    if (!el) return;
-    const observer = new ResizeObserver(() => root.style.setProperty("--turnfin-top-bar", `${el.offsetHeight}px`));
-    observer.observe(el);
-    return () => { observer.disconnect(); root.style.removeProperty("--turnfin-top-bar"); };
-  }, []);
+  if (!state) return null;
+  const { roles, current, actualRoleName } = state;
   function choose(id: string | null) {
     if (id === (current?.id ?? null)) return;
     startTransition(async () => {
@@ -27,15 +32,18 @@ export function RolePreviewBar({ roles, current, actualRoleName }: { roles: Role
       if (result && !result.ok) toast.error(result.error);
     });
   }
-  return <Alert ref={bar} className="shrink-0 rounded-none border-x-0 border-t-0 bg-ui-muted px-4 py-2">
-    <Eye aria-hidden="true" /><div className="flex min-w-0 flex-wrap items-center justify-between gap-2">
-      <div><AlertTitle>Dev build</AlertTitle><AlertDescription>{current ? `Seeing the app as ${current.name}. You are ${actualRoleName}.` : `You are ${actualRoleName}. Pick a role to see the app as they would.`}</AlertDescription></div>
-      <DropdownMenu><DropdownMenuTrigger asChild><Button variant="outline" size="sm" disabled={pending} aria-label={current ? `Viewing as ${current.name}. Change role` : "View as a role"}>{pending ? <Loader2 className="animate-spin" aria-hidden="true" /> : <Eye aria-hidden="true" />}{pending ? "Switching…" : current?.name ?? "View as"}</Button></DropdownMenuTrigger>
-        <DropdownMenuContent align="end" className="w-72 max-w-[calc(100vw-2rem)]"><DropdownMenuLabel>See the app as</DropdownMenuLabel>
-          <DropdownMenuRadioGroup value={current?.id ?? ""} onValueChange={choose}>{roles.map(role => <DropdownMenuRadioItem value={role.id} key={role.id}><span><span className="block">{role.name}</span>{role.description ? <span className="block text-xs text-ui-muted-foreground">{role.description}</span> : null}</span></DropdownMenuRadioItem>)}</DropdownMenuRadioGroup>
-          {current ? <><DropdownMenuSeparator /><DropdownMenuItem onSelect={() => choose(null)}><EyeOff aria-hidden="true" />Stop, back to being {actualRoleName}</DropdownMenuItem></> : null}
-        </DropdownMenuContent>
-      </DropdownMenu>
-    </div>
-  </Alert>;
+  const label = current ? `Viewing as ${current.name}. Change role` : "View as another role";
+  return <DropdownMenu>
+    <DropdownMenuTrigger asChild>
+      <Button variant={current ? "secondary" : "ghost"} size="icon" className="workspace-preview-toggle" data-active={current ? "true" : undefined} disabled={pending} aria-label={label} title={current ? `Viewing as ${current.name}` : "View as another role"}>
+        {pending ? <Loader2 className="animate-spin" aria-hidden="true" /> : <Eye aria-hidden="true" />}
+      </Button>
+    </DropdownMenuTrigger>
+    <DropdownMenuContent side={compact ? "right" : "top"} align="start" className="w-72 max-w-[calc(100vw-2rem)]">
+      <DropdownMenuLabel className="font-normal"><span className="block font-medium">{current ? `Viewing as ${current.name}` : "See the app as"}</span><span className="block text-xs text-ui-muted-foreground">Dev build. You are {actualRoleName}.</span></DropdownMenuLabel>
+      <DropdownMenuSeparator />
+      <DropdownMenuRadioGroup value={current?.id ?? ""} onValueChange={choose}>{roles.map(role => <DropdownMenuRadioItem className="min-h-11" value={role.id} key={role.id}><span><span className="block">{role.name}</span>{role.description ? <span className="block text-xs text-ui-muted-foreground">{role.description}</span> : null}</span></DropdownMenuRadioItem>)}</DropdownMenuRadioGroup>
+      {current ? <><DropdownMenuSeparator /><DropdownMenuItem className="min-h-11" onSelect={() => choose(null)}><EyeOff aria-hidden="true" />Stop, back to being {actualRoleName}</DropdownMenuItem></> : null}
+    </DropdownMenuContent>
+  </DropdownMenu>;
 }

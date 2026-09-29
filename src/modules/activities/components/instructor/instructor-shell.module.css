@@ -9,7 +9,7 @@
 }
 
 /* Poolside Clear, as in every module: the cool canvas, a white top bar and white panels. */
-.workspace { background: var(--pc-canvas); height: calc(100dvh - var(--turnfin-top-bar, 0px)); }
+.workspace { background: var(--pc-canvas); height: 100dvh; }
 .topbar { background: var(--pc-surface); border-color: var(--pc-line); }
 .workspace :global([data-slot='item-group']) {
   border: 1px solid var(--pc-line);

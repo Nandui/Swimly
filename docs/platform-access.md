@@ -47,7 +47,10 @@ modules; every page and action checks its permission again.
 Admin: Manage is the administrator: Manage in every module except HR. Only a
 superadmin makes another superadmin, and the last active superadmin cannot be
 removed or deactivated. Only a superadmin creates, edits or gives a role holding
-HR (`StaffRole.restricted`). Role previews (development only) drop the
+HR (`StaffRole.restricted`). Role previews (development only; "View as", the
+eye button in every sidebar footer, for anyone holding `roles.manage` or a
+superadmin) rebuild the session from the previewed role's levels at the
+viewer's own sites, as `sessionUserFor` does for a real holder, and drop the
 superadmin flag, so they can only remove access. The first superadmin is designated by an operator:
 
     npx tsx scripts/grant-superadmin.ts --email owner@example.com --confirm

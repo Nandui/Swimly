@@ -43,6 +43,7 @@ declare module "next-auth" {
         roleName: string;
         actualRoleName: string;
         actualPermissions: string[];
+        actualIsSuperadmin?: boolean;
       } | null;
     } & DefaultSession["user"];
   }

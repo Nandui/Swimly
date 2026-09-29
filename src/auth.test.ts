@@ -6,9 +6,10 @@ import { UNRESTRICTED_PERMISSIONS, expandPermissions } from "@/lib/staff/permiss
 import { ADMINISTRATOR_SCREENS, visibleScreens } from "@/lib/staff/screens";
 
 function fixture() {
-  const administrator = { id: "role-1", name: "Renamed management team", permissions: ["staff.manage", "roles.manage"] };
-  const account = { id: "staff-1", name: "Synthetic Manager", email: "manager@example.test", isActive: true, staffRole: administrator as typeof administrator | null };
-  let preview: typeof administrator | null = null;
+  type Role = { id: string; name: string; permissions: string[]; levels?: Record<string, string> };
+  const administrator: Role = { id: "role-1", name: "Renamed management team", permissions: ["staff.manage", "roles.manage"] };
+  const account = { id: "staff-1", name: "Synthetic Manager", email: "manager@example.test", isActive: true, staffRole: administrator as Role | null };
+  let preview: Role | null = null;
   const { auth } = serverModule<typeof import("./auth")>("src/auth.ts", {
     "next-auth": Object.assign(() => ({ auth: async () => ({ user: { id: account.id }, expires: "2099-01-01" }), handlers: {}, signIn: async () => {}, signOut: async () => {} }), { CredentialsSignin: class extends Error {} }),
     "next-auth/providers/credentials": (options: unknown) => options,
@@ -41,6 +42,19 @@ test("role previews replace administrator access and restoring the role restores
   assert.deepEqual(access(await f.auth()), { permissions: ["attendance.mark"], screens: ["instructor"] });
   f.preview(null);
   assert.deepEqual(access(await f.auth()), { permissions: UNRESTRICTED_PERMISSIONS, screens: ADMINISTRATOR_SCREENS });
+});
+
+test("a previewed role is built from its levels in every module, not its stored keys", async () => {
+  const f = fixture();
+  // Stored keys left over from before levels must not leak into the preview.
+  f.preview({ id: "reception", name: "Receptionist", permissions: ["students.manage"], levels: { refunds: "use", docs: "read" } });
+  const session = await f.auth();
+  const permissions: string[] = access(session).permissions;
+  for (const key of ["refunds.request", "docs.read"]) assert.ok(permissions.includes(key), key);
+  assert.ok(!permissions.includes("students.manage"));
+  assert.equal(session!.user.roleName, "Receptionist");
+  assert.equal(session!.user.isSuperadmin, false);
+  assert.deepEqual(session!.user.preview?.actualPermissions, ["staff.manage", "roles.manage"]);
 });
 
 test("demotion, deactivation and removing a role revoke administrator access on the next request", async () => {

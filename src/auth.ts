@@ -18,7 +18,7 @@ import { mayWorkAnywhere, workDeviceRequired } from "@/lib/devices/work-device";
 class WorkDeviceRequired extends CredentialsSignin {
   code = "work_device";
 }
-import { ACCOUNT_SELECT, sessionUserFor } from "@/lib/staff/session-user";
+import { ACCOUNT_SELECT, sessionUserFor, type Account } from "@/lib/staff/session-user";
 
 /** Built as a function so the dev provider is **absent** from the array in
  *  production rather than present-and-refusing. There is then no endpoint to
@@ -183,10 +183,11 @@ export const auth = cache(async function auth(): Promise<Session | null> {
     // timer did (a tablet left on the deck overnight).
     if (session.user.sharedDevice && (!session.user.authAt || Date.now() - session.user.authAt > SHARED_SESSION_MAX_MS)) return null;
 
-    const user = sessionUserFor(current, await currentSiteForSession());
+    const siteId = await currentSiteForSession();
+    const user = sessionUserFor(current, siteId);
     if (!user) return null;
 
-    return { ...session, user: { ...session.user, ...(await wearPreview(user)) } };
+    return { ...session, user: { ...session.user, ...(await wearPreview(user, current, siteId)) } };
   }
 
   if (process.env.NODE_ENV === "production" || process.env.DEV_AUTH_BYPASS !== "1") {
@@ -200,11 +201,12 @@ export const auth = cache(async function auth(): Promise<Session | null> {
   });
   if (!admin) return null;
 
-  const user = sessionUserFor(admin, await currentSiteForSession());
+  const siteId = await currentSiteForSession();
+  const user = sessionUserFor(admin, siteId);
   if (!user) return null;
 
   return {
-    user: await wearPreview(user),
+    user: await wearPreview(user, admin, siteId),
     expires: new Date(Date.now() + 60 * 60 * 1000).toISOString(),
   };
 });
@@ -212,29 +214,27 @@ export const auth = cache(async function auth(): Promise<Session | null> {
 type SessionUser = Omit<Session["user"], "image">;
 
 /** On a dev build, an account that may manage roles can ask to see the app
- *  as another role. The person stays the same — id, name, email — and the
- *  role's permissions are worn instead of their own.
+ *  as another role. The person stays the same — id, name, email, sites — and
+ *  the session is rebuilt by `sessionUserFor` as if they held that role, so
+ *  its levels apply in every module exactly as for a real holder.
  *  `previewedRole` returns null everywhere the gate is shut, so this is a
  *  no-op on production whatever cookie arrives. */
-async function wearPreview(user: SessionUser): Promise<SessionUser> {
-  if (!mayPreview(user.permissions)) return user;
+async function wearPreview(user: SessionUser, account: Account, siteId: string | null): Promise<SessionUser> {
+  if (!mayPreview(user.permissions, user.isSuperadmin)) return user;
   const role = await previewedRole();
   if (!role) return user;
-  // A preview can only take access away: the worn role replaces the primary
-  // role, and the superadmin flag and every additional assignment are dropped.
+  // The superadmin flag is dropped: a preview shows only what the role gives.
+  const worn = sessionUserFor({ ...account, isSuperadmin: false, staffRole: role }, siteId);
+  if (!worn) return user;
   return {
     ...user,
-    roleId: role.id,
-    roleName: role.name,
-    permissions: role.permissions,
-    isSuperadmin: false,
-    grants: [],
-    primaryPermissions: role.permissions,
+    ...worn,
     preview: {
       roleId: role.id,
       roleName: role.name,
       actualRoleName: user.roleName,
       actualPermissions: user.permissions,
+      actualIsSuperadmin: user.isSuperadmin === true,
     },
   };
 }
