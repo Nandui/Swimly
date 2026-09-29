@@ -29,3 +29,21 @@ The additive migration `20260917150000_legend_agreements` creates the status and
 attribution columns with `NEEDS_CHECK` as the default for pre-existing records.
 Deploy the migration before the application that reads these columns. Tests use
 an isolated PostgreSQL-compatible database and fictional browser fixtures.
+
+## Matching a list from Legend (29 September 2026)
+
+**Match a Legend list** on the Legend agreements page (needs `enrolment.manage`) takes the
+Member Agreements export filtered to the Aquatics agreement (`.xlsx`, sheet "Data"). Checking
+it writes nothing and shows, for the working site: places **to confirm** (member on the list,
+agreement live, its price name fits the place's programme or level, e.g. "Lifesaving" and
+"RLSS Lifesaving"), places where **Legend names another programme** and places whose
+**agreement ended** in Legend (both left for a person), and counts of members already
+confirmed, at the other site, or with no swim place. **Confirm** marks each place to confirm as
+updated in Legend under the person's name with its own audit entry, exactly as confirming one
+by one; the file is read again and only places still active and outstanding change. Member
+numbers are matched without spaces and in capitals. The rules are in
+`src/modules/activities/lib/enrolment/legend-list.ts` (tested).
+
+For every site at once without signing in, an operator runs the same rules against production
+(`docs/database-operations.md`): `npm run prod -- scripts/legend-confirm.ts <list.xlsx>` (dry run,
+counts only), then `--confirm --as <staff email>` to record them under that person.

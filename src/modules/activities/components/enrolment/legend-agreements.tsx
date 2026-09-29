@@ -8,6 +8,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { EmptyState } from "@/components/ui-kit/empty-state";
 import { Tag } from "@/components/ui-kit/tag";
 import { ConfirmLegendAgreement } from "./confirm-legend-agreement";
+import { LegendListMatch } from "./legend-list-match";
 import { LEGEND_AGREEMENT_META } from "@/modules/activities/lib/enrolment/legend-agreement";
 import type { LegendAgreementResult } from "@/modules/activities/lib/enrolment/data/legend-agreements";
 import { fullName } from "@/modules/activities/lib/students/constants";
@@ -20,6 +21,7 @@ const number = (value: number) => value.toLocaleString("en-IE");
 export function LegendAgreements({ result, canConfirm, profiles, classes }: {
   result: LegendAgreementResult; canConfirm: boolean; profiles: boolean; classes: boolean;
 }) {
+  const matchList = canConfirm ? <LegendListMatch /> : null;
   const { items, q, view, total, page, pages, outstandingCount, doneCount, siteName } = result;
   const views = [{ key: "outstanding", label: "Outstanding", count: outstandingCount }, { key: "done", label: "Confirmed", count: doneCount }];
   function href(nextView: string, nextPage = 1) {
@@ -31,7 +33,10 @@ export function LegendAgreements({ result, canConfirm, profiles, classes }: {
   }
   return <section className="flex min-w-0 flex-col gap-4 text-ui-foreground" aria-labelledby="agreements-heading">
     <header className="mb-2 space-y-2">
-      <h1 id="agreements-heading" className="text-2xl font-semibold tracking-tight">Legend agreements</h1>
+      <div className="flex flex-wrap items-start justify-between gap-3">
+        <h1 id="agreements-heading" className="text-2xl font-semibold tracking-tight">Legend agreements</h1>
+        {matchList}
+      </div>
       <p className="text-sm text-ui-muted-foreground">{siteName} · Update the billing agreement in Legend, then confirm it here.</p>
     </header>
     <div className="space-y-4">
