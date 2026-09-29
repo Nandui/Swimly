@@ -23,26 +23,28 @@ import type { ScreenKey } from "@/lib/staff/screens";
  *  role that names that screen and holds whatever it requires. That is
  *  courtesy, not security: the page declines to exist and the action
  *  refuses the call, and only the last of those three is load-bearing. */
-export type NavItem = { href: string; label: string; icon: LucideIcon };
+export type NavItem = { href: string; label: string; icon: LucideIcon; description?: string };
 export type NavGroup = { id: string; label: string; items: NavItem[] };
 
 export type AppNavItem = NavItem & {
+  /** One line on what the page is for, shown on the swim school overview. */
+  description: string;
   screen: ScreenKey;
   group: "daily" | "monitoring" | "setup";
 };
 
 export const NAV_ITEMS: AppNavItem[] = [
-  { href: "/duty", label: "Duty manager", icon: ClipboardList, screen: "duty", group: "daily" },
-  { href: "/schedule", label: "Schedule", icon: CalendarCheck, screen: "calendar", group: "daily" },
-  { href: "/students", label: "Swimmers", icon: Users, screen: "students", group: "daily" },
-  { href: "/courses", label: "Classes", icon: CalendarDays, screen: "courses", group: "daily" },
-  { href: "/assessments", label: "Assessments", icon: ClipboardCheck, screen: "assessments", group: "daily" },
-  { href: "/awaiting-enrolment", label: "Awaiting enrolment", icon: UserRoundCheck, screen: "awaiting-enrolment", group: "daily" },
-  { href: "/legend-agreements", label: "Legend agreements", icon: FileCheck2, screen: "legend-agreements", group: "daily" },
-  { href: "/together", label: "Together", icon: CalendarHeart, screen: "together", group: "daily" },
-  { href: "/analytics", label: "Analytics", icon: ChartNoAxesCombined, screen: "analytics", group: "monitoring" },
-  { href: "/cancellations", label: "Cancelled classes", icon: CalendarX2, screen: "cancellations", group: "monitoring" },
-  { href: "/programmes", label: "Programmes", icon: Layers, screen: "programmes", group: "setup" },
+  { href: "/duty", label: "Duty manager", description: "Today's classes at a glance, and cancelling a session", icon: ClipboardList, screen: "duty", group: "daily" },
+  { href: "/schedule", label: "Schedule", description: "Classes and assessments by day, with every pool area", icon: CalendarCheck, screen: "calendar", group: "daily" },
+  { href: "/students", label: "Swimmers", description: "Find a swimmer, their family, progress and enrolment", icon: Users, screen: "students", group: "daily" },
+  { href: "/courses", label: "Classes", description: "The weekly timetable: places, instructors and levels", icon: CalendarDays, screen: "courses", group: "daily" },
+  { href: "/assessments", label: "Assessments", description: "Assessment sessions, bookings and placements", icon: ClipboardCheck, screen: "assessments", group: "daily" },
+  { href: "/awaiting-enrolment", label: "Awaiting enrolment", description: "Swimmers ready for a class place, and family follow-ups", icon: UserRoundCheck, screen: "awaiting-enrolment", group: "daily" },
+  { href: "/legend-agreements", label: "Legend agreements", description: "Billing agreements still to confirm for class places", icon: FileCheck2, screen: "legend-agreements", group: "daily" },
+  { href: "/together", label: "Together", description: "A time that suits every child in one family", icon: CalendarHeart, screen: "together", group: "daily" },
+  { href: "/analytics", label: "Analytics", description: "Enrolment, capacity and attendance reports", icon: ChartNoAxesCombined, screen: "analytics", group: "monitoring" },
+  { href: "/cancellations", label: "Cancelled classes", description: "Cancelled sessions whose billing needs following up", icon: CalendarX2, screen: "cancellations", group: "monitoring" },
+  { href: "/programmes", label: "Programmes", description: "Programmes, levels and competencies", icon: Layers, screen: "programmes", group: "setup" },
 ];
 
 /** Takes the already-resolved set of screens this person can open, so the

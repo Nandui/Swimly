@@ -2,7 +2,7 @@
 
 import { usePathname } from 'next/navigation';
 import type { ReactNode } from 'react';
-import { Activity, Building2, KeyRound, UserCog, UserRound, type LucideIcon } from 'lucide-react';
+import { Activity, Building2, KeyRound, LayoutDashboard, UserCog, UserRound, type LucideIcon } from 'lucide-react';
 import { ModuleShell } from '@/components/workspace/module-shell';
 
 export type CoreLinkKey = 'staff' | 'roles' | 'clubs' | 'activity';
@@ -27,6 +27,7 @@ export function CoreShell({ who, screens, initialCollapsed = false, children }: 
   const pathname = usePathname();
   const isOn = (href: string) => pathname === href || pathname.startsWith(`${href}/`);
   const links = [
+    { href: '/core', label: 'Overview', icon: LayoutDashboard, active: pathname === '/core' },
     ...LINKS.filter((link) => screens.includes(link.key)).map(({ href, label, icon }) => ({ href, label, icon, active: isOn(href) })),
     { href: '/account', label: 'Account', icon: UserRound, active: isOn('/account') },
   ];

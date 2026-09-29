@@ -7,6 +7,10 @@ import { ModuleShell } from "@/components/workspace/module-shell";
 import { WorkspaceSearch } from "@/modules/activities/components/students/workspace-search";
 import { isNavItemActive, pageWidthFor, swimmerLookupHref, visibleNavGroups } from "@/modules/activities/lib/nav";
 import type { ScreenKey } from "@/lib/staff/screens";
+import { LayoutDashboard } from "lucide-react";
+
+/** The swim school's first page (`src/app/(activities)/swim-school`). */
+const SWIM_SCHOOL_OVERVIEW = "/swim-school";
 
 type Club = { id: string; name: string };
 
@@ -25,13 +29,16 @@ export function AppChrome({ who, screens, club, clubs, initialCollapsed = false,
 }) {
   const router = useRouter();
   const pathname = usePathname();
-  const groups = visibleNavGroups(screens).map(group => ({
-    label: group.label,
-    links: group.items.map(item => ({ href: item.href, label: item.label, icon: item.icon, active: isNavItemActive(pathname, item.href) })),
-  }));
+  const groups = [
+    { label: "", links: [{ href: SWIM_SCHOOL_OVERVIEW, label: "Overview", icon: LayoutDashboard, active: pathname === SWIM_SCHOOL_OVERVIEW }] },
+    ...visibleNavGroups(screens).map(group => ({
+      label: group.label,
+      links: group.items.map(item => ({ href: item.href, label: item.label, icon: item.icon, active: isNavItemActive(pathname, item.href) })),
+    })),
+  ];
   const pageLabel = groups.flatMap(group => group.links).find(link => link.active)?.label ?? "Swim school";
   return (
-    <ModuleShell module="Swim school" id="swim-school" base="/schedule" who={who} groups={groups} pageLabel={pageLabel}
+    <ModuleShell module="Swim school" id="swim-school" base={SWIM_SCHOOL_OVERVIEW} who={who} groups={groups} pageLabel={pageLabel}
       initialCollapsed={initialCollapsed} scopeNote={club.name} contentClass="module-content swim-school-content" maxWidth={pageWidthFor(pathname)}
       tools={<>
         <ClubSwitcher club={club} clubs={clubs} />

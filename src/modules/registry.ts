@@ -102,7 +102,7 @@ registerModule({
   // Swim school is the first activity type (see src/modules/activities/types.ts).
   description: "Swimmers, bookings, classes and assessments at the desk, and the swim school's set-up. Camps, pool hire and fitness classes will join it.",
   icon: WavesLadder,
-  href: "/schedule",
+  href: "/swim-school",
   logName: "Swim school",
   access: {
     reach: "sites",
@@ -207,7 +207,7 @@ registerModule({
   name: "Rota",
   description: "Plan the week's shifts at a site, with warnings for expired qualifications.",
   icon: CalendarClock,
-  href: "/rota",
+  href: "/rota/overview",
   logName: "Rota",
   access: {
     reach: "sites",

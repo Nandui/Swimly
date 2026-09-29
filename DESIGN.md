@@ -108,17 +108,27 @@ Controls use the shared shadcn primitives, which pick up Poolside Clear everywhe
 `.turnfin-app`. See [Docs integration](docs/turnfin-docs.md).
 
 **The home page** (`/`, owner decision 28 September 2026) is the role's workspace: the role's
-home name as the H1 under the date, with the role and working site beneath. Then, in the order the
-day needs them: **quick actions** (outline buttons with an icon, e.g. Add a swimmer, Log a refund
-request, Report an absence); **Today at <site>** (figure tiles: classes and assessments running,
-an instructor's own classes with the next three, who is on shift); **Waiting for you** (a tile per
-queue with its count, those needing the person first with a "Needs you" tag from `HOME_ITEM_META`,
-empty queues muted, and "All clear" when nothing needs them); **Your modules** (a compact card per
-module with its remaining links and Open); and the Turnfin Me note. Tiles are whole-tile 44px+
-links, two to a row on a phone and four on a wide screen. It uses the shared `ModuleShell` frame
-with the role's modules down the side. Each module supplies its items (`registerHomeCard`); an
-item's `kind` (`action`, `today`) or `count` decides its section. Keep it to the everyday jobs and
-to figures the person may already see. The module
+home name as the H1, with the date, role and working site on one line beneath (no label above the
+heading). Then **quick actions** (outline buttons with an icon, e.g. Add a swimmer, Log a refund
+request, Report an absence), and two columns from 1024px: the day's work on the left, **Today at
+<site>** (figure tiles in rows without gaps: two or three side by side, four as two by two; an
+instructor's own classes with the next three take a full row) and **Waiting for you** (one panel of
+rows, each queue with its count, needing-you first with a "Needs you" tag from `HOME_ITEM_META`,
+empty queues muted, "All clear" when nothing needs them); on the right **Your modules** (one panel
+of rows, each with how many things need the person there) and the Turnfin Me note. On a phone it
+is one column in that order. Each module supplies its items (`registerHomeCard`); an item's `kind`
+(`action`, `today`) or `count` decides its section, and the shared pieces live in
+`src/components/home/home-parts.tsx`. Keep it to the everyday jobs and to figures the person may
+already see.
+
+**A module's first page is its overview** (`ModuleOverview`, 29 September 2026) where the module
+has no natural one: Swim school (`/swim-school`), Rota (`/rota/overview`) and Admin (`/core`).
+The module's name and one line as the H1, its quick actions, Today, Waiting for you (the same
+items it gives the home page, so the two agree), and **Everything in <module>**: one panel of its
+pages as grouped rows (icon, name, one line on what it is for), two columns when wide. "Overview"
+is the first link in the module's sidebar and the brand leads there. Pool deck opens on the deck,
+Docs and Training on their own overviews, Refunds on its requests with their summary, HR on its
+people search. The module
 launcher (`/modules`) and the Reception Portal are retired and redirect to `/`; every shell's
 "All modules" link is now "Home". The supplied transparent Turnfin fin logo lives at
 `public/brand/turnfin.png`.
