@@ -3,7 +3,7 @@ import { SignInForm } from "@/components/sign-in-form";
 import { getDevAdmin } from "@/lib/dev-sign-in";
 import { currentSharedDevice } from "@/lib/devices/shared-device";
 
-export const metadata: Metadata = { title: "Sign in" };
+export const metadata: Metadata = { title: { absolute: "Sign in · Turnfin" }, icons: { icon: "/brand/turnfin.png" } };
 
 /** The gate is asked here, on the server, and only a name crosses to the
  *  client. On production `getDevAdmin` returns null, the button is never
