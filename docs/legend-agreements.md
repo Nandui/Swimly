@@ -30,20 +30,17 @@ attribution columns with `NEEDS_CHECK` as the default for pre-existing records.
 Deploy the migration before the application that reads these columns. Tests use
 an isolated PostgreSQL-compatible database and fictional browser fixtures.
 
-## Matching a list from Legend (29 September 2026)
+## Uploading a list from Legend (29 September 2026)
 
-**Match a Legend list** on the Legend agreements page (needs `enrolment.manage`) takes the
-Member Agreements export filtered to the Aquatics agreement (`.xlsx`, sheet "Data"). Checking
-it writes nothing and shows, for the working site: places **to confirm** (member on the list,
-agreement live, its price name fits the place's programme or level, e.g. "Lifesaving" and
-"RLSS Lifesaving"), places where **Legend names another programme** and places whose
-**agreement ended** in Legend (both left for a person), and counts of members already
-confirmed, at the other site, or with no swim place. **Confirm** marks each place to confirm as
-updated in Legend under the person's name with its own audit entry, exactly as confirming one
-by one; the file is read again and only places still active and outstanding change. Member
-numbers are matched without spaces and in capitals. The rules are in
+**Upload Legend list** on the Legend agreements page takes the Member Agreements export
+(`.xlsx`, sheet "Data"). Every place still to check (Needs checking or Still to do) whose
+swimmer's member number is on the list is confirmed as updated in Legend (owner decision: a
+matching member number is enough). It covers every site where the person may confirm
+(`enrolment.manage`). The count per site comes first and saves nothing; **Confirm** reads the
+file again and records each place under the person's name with its own audit entry, exactly as
+confirming one by one. Member numbers are matched in capitals without spaces. The rule is in
 `src/modules/activities/lib/enrolment/legend-list.ts` (tested).
 
-For every site at once without signing in, an operator runs the same rules against production
+Without signing in, an operator runs the same rule against production
 (`docs/database-operations.md`): `npm run prod -- scripts/legend-confirm.ts <list.xlsx>` (dry run,
 counts only), then `--confirm --as <staff email>` to record them under that person.
