@@ -117,6 +117,7 @@ export function Shell({
               />
             </form>
           )}
+          <AccountMenu name={w.member.name} compact={compact} onNavigate={() => setMobile(false)} />
         </div>
         <nav
           className="workspace-navigation"
@@ -201,7 +202,6 @@ export function Shell({
           <HomeButton compact={compact} onNavigate={() => setMobile(false)} />
           <div className="workspace-footer-row"><HelpButton compact={compact} /><RolePreviewToggle compact={compact} /><AppearanceMenu /></div>
           {!compact && w.localMode && <span className="workspace-local">Local workspace</span>}
-          <AccountMenu name={w.member.name} subtitle={w.member.role} compact={compact} onNavigate={() => setMobile(false)} />
         </div>
       </>
     );

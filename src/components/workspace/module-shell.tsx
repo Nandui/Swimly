@@ -70,6 +70,7 @@ export function ModuleShell({ module, id, current = id, who, links = [], groups,
       <div className="workspace-sidebar-header">
         <div className="workspace-brand-row"><Link href={base} aria-label={`Turnfin ${module}`} onClick={close}><Brand module={module} /></Link>{!inSheet && <Button variant="ghost" size="icon" aria-label={compact ? 'Expand navigation' : 'Collapse navigation'} aria-expanded={!compact} onClick={() => changeCollapsed(!collapsed)}>{compact ? <PanelLeftOpen size={18} /> : <PanelLeftClose size={18} />}</Button>}</div>
         {!onHome && !compact && tools && <div className="workspace-tools">{tools}</div>}
+        <AccountMenu name={who.name} compact={compact} onNavigate={close} />
       </div>
       <nav className="workspace-navigation" aria-label={inSheet ? `Mobile ${module} navigation` : `${module} navigation`}>
         {onHome && <YourModulesNav compact={compact} onNavigate={close} />}
@@ -78,7 +79,6 @@ export function ModuleShell({ module, id, current = id, who, links = [], groups,
       <div className="workspace-sidebar-footer">
         {!onHome && <HomeButton compact={compact} onNavigate={close} />}
         <div className="workspace-footer-row"><HelpButton compact={compact} /><RolePreviewToggle compact={compact} /><AppearanceMenu /></div>
-        <AccountMenu name={who.name} compact={compact} onNavigate={close} />
       </div>
     </>;
   }

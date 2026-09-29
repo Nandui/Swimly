@@ -194,7 +194,7 @@
 .turnfin-docs .appearance-button small { font-size: var(--pc-text-caption); }
 .turnfin-docs .workspace-profile strong,
 .turnfin-docs .workspace-profile div > span { font-size: var(--pc-text-caption); }
-/* Footer: the name opens Account; module tools (site, search) sit under the Home button. */
+/* The greeting and name at the top of the sidebar open Account. */
 .turnfin-docs .workspace-account { height: auto; min-height: var(--pc-control-height); padding: 6px 8px; gap: 10px; font-weight: 400; }
 .turnfin-docs .workspace-account[data-size^='icon'] { padding: 0; }
 .turnfin-docs .workspace-account-text { display: flex; flex-direction: column; min-width: 0; text-align: left; }

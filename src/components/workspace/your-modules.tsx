@@ -2,7 +2,7 @@
 
 import Link from 'next/link';
 import { createContext, useContext, type ReactNode } from 'react';
-import { ArrowLeft, CircleHelp, House } from 'lucide-react';
+import { ArrowLeft, CircleHelp } from 'lucide-react';
 import { Button } from '@/components/shadcn/button';
 import { SidebarMenuButton } from '@/components/shadcn/sidebar';
 import { allModules, type ModuleManifest } from '@/modules/registry';
@@ -24,7 +24,7 @@ export function useYourModules(): ModuleManifest[] {
  *  sidebar shows only that module's pages, under `HomeButton`. */
 export function YourModulesNav({ compact = false, onNavigate }: { compact?: boolean; onNavigate?: () => void }) {
   const modules = useYourModules();
-  const item = (key: string, href: string, label: string, Icon: typeof House, active: boolean) => (
+  const item = (key: string, href: string, label: string, Icon: ModuleManifest['icon'], active: boolean) => (
     <SidebarMenuButton key={key} asChild>
       <Link href={href} className="workspace-nav-item" aria-label={label} title={compact ? label : undefined} aria-current={active ? 'page' : undefined} onClick={onNavigate}>
         <Icon size={18} aria-hidden="true" data-motion="sidebar-icon" /><span>{label}</span>
@@ -33,7 +33,6 @@ export function YourModulesNav({ compact = false, onNavigate }: { compact?: bool
   );
   return (
     <>
-      {item('home', '/', 'Home', House, true)}
       <p className="workspace-nav-label">Your modules</p>
       {modules.map((m) => item(m.id, m.href, m.name, m.icon, false))}
     </>
