@@ -48,6 +48,23 @@ Missing or expired configuration fails closed. Authentication headers and reques
 bodies are never logged by this route. Responses are not cached.
 
 Use only for user-authorized tasks. Setup does not authorize unrelated changes.
+
+## Operator scripts against production (`npm run prod`)
+
+Scripts that need the database itself (role conversion, superadmin, copies)
+run against production through one door:
+
+    npm run prod -- scripts/convert-roles-to-levels.ts            # dry run
+    npm run prod -- scripts/convert-roles-to-levels.ts --confirm
+
+`scripts/prod.ts` reads only `.env.production.local` (ignored by Git), names the
+target host and database before running, and passes the connection to the
+script. Nothing else reads that file, so `npm run dev`, the sandbox and builds
+cannot reach production by accident. Vercel keeps production's `DATABASE_URL`
+as a sensitive variable, which `vercel env pull` cannot read, so the owner pastes
+the direct (unpooled) `swimly-db` connection string from Neon into that file
+once. Never print, commit or share it. The scripts stay dry runs until given
+`--confirm`; read the dry run before writing.
 Do not write test swimmers or classes to production.
 
 ## A separate database for `dev`
