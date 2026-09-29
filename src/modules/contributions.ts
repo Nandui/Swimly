@@ -68,8 +68,14 @@ export type HomeViewer = {
   isSuperadmin: boolean;
 };
 
-/** One line on a module's home card: somewhere to go, and how many things
- *  wait there when the module can count them for this person. */
+/** A quick action's icon, by name, so modules stay free of UI imports. */
+export type HomeIcon = "search" | "userPlus" | "calendarPlus" | "receipt" | "userX" | "filePlus" | "clipboardCheck";
+
+/** One thing a module puts on the home page. Where it shows depends on its kind:
+ *  - `"action"`: a quick action button at the top ("Add a swimmer");
+ *  - `"today"`: a fact about today, with its figure ("Classes today: 14");
+ *  - anything with a `count`: a tile under "Waiting for you";
+ *  - otherwise a link on the module's own card. */
 export type HomeItem = {
   label: string;
   href: string;
@@ -77,6 +83,10 @@ export type HomeItem = {
   count?: number;
   /** Something is waiting that this person should act on. */
   attention?: boolean;
+  kind?: "action" | "today";
+  icon?: HomeIcon;
+  /** A few short lines under a today fact, e.g. an instructor's next classes. */
+  list?: { label: string; hint?: string }[];
 };
 
 export type HomeCard = {

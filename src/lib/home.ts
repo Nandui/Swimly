@@ -2,6 +2,7 @@ import "server-only";
 import { cookies } from "next/headers";
 import { pageSession } from "@/lib/page-guards";
 import { prisma } from "@/lib/prisma";
+import { getCurrentClub } from "@/lib/clubs/current";
 import { modulesFor } from "@/modules/context";
 import { homeCardItems } from "@/modules/server";
 
@@ -10,9 +11,11 @@ import { homeCardItems } from "@/modules/server";
 export async function loadHome() {
   const session = await pageSession();
   const user = session.user;
-  const [role, jar] = await Promise.all([
+  const [role, jar, site] = await Promise.all([
     prisma.staffRole.findUnique({ where: { id: user.roleId }, select: { name: true, homeName: true } }),
     cookies(),
+    // The working site names "Today"; an organisation without sites just has no name here.
+    getCurrentClub().then((current) => current.club.name, () => null),
   ]);
   const roleName = role?.name ?? user.roleName ?? "Staff";
   const moduleIds = modulesFor(session).map((m) => m.id);
@@ -27,6 +30,7 @@ export async function loadHome() {
     who: { id: user.id, name: user.name ?? "Staff member" },
     roleName,
     homeName: role?.homeName || roleName,
+    siteName: site,
     moduleIds,
     items,
     collapsed: jar.get("turnfin.home.sidebar")?.value === "collapsed",

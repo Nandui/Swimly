@@ -1,6 +1,7 @@
 import assert from "node:assert/strict";
 import { test } from "node:test";
 import { serverModule } from "@/test/server-module";
+import * as format from "@/lib/format";
 import { expandPermissions } from "@/lib/staff/permissions";
 import { cleanLevels, storedPermissions } from "@/lib/staff/levels";
 import type { HomeViewer } from "@/modules/contributions";
@@ -23,6 +24,7 @@ async function home(role: Role) {
     "next/headers": { cookies: async () => ({ get: () => undefined }) },
     "@/lib/page-guards": { pageSession: async () => ({ user }) },
     "@/lib/prisma": { prisma: { staffRole: { findUnique: async () => ({ name: role.name, homeName: role.homeName }) } } },
+    "@/lib/clubs/current": { getCurrentClub: async () => ({ club: { id: "c1", name: "Synthetic site" }, clubs: [] }) },
     "@/lib/authz": { permissionsOf: (s: { user: { permissions: string[] } }) => expandPermissions(s.user.permissions) },
     "@/modules/server": { homeCardItems: async (ids: string[]) => { asked.push(ids); return new Map(); } },
   });
@@ -52,19 +54,51 @@ function viewer(role: Role): HomeViewer {
   return { id: user.id, name: user.name, permissions: user.permissions, anywhere: user.permissions, isSuperadmin: false };
 }
 
-test("the swim school card lists only what the person can open", async () => {
+/** Today at a synthetic site: three classes, one of them cancelled; the
+ *  person teaches two and covers none. */
+const course = (id: string, instructorId: string, startMinutes: number) => ({ id, instructorId, startMinutes, durationMinutes: 30, location: "Main pool", name: null, level: { name: `Level ${id}` } });
+function swimSchool() {
   const contributions = serverModule<typeof import("@/modules/contributions")>("src/modules/contributions.ts", { "server-only": {} });
-  serverModule("src/modules/activities/contributions.ts", { "server-only": {}, "@/lib/prisma": { prisma: {} }, "@/modules/contributions": contributions });
-  const labels = async (levels: Record<string, string>, extras: string[] = [], id = "swim-school") =>
-    ((await contributions.homeCardItems([id], viewer({ name: "R", homeName: null, levels, extras }))).get(id) ?? []).map((i) => i.label);
+  serverModule("src/modules/activities/contributions.ts", {
+    "server-only": {},
+    "@/lib/prisma": { prisma: { parentChangeRequest: { count: async () => 2 } } },
+    "@/modules/contributions": contributions,
+    "@/lib/format": { ...format, today: () => "2026-09-29", minutesNow: () => 0 },
+    "@/modules/activities/lib/courses/data/courses": { getCoursesOnDay: async () => [course("a", "u1", 960), course("b", "u1", 1020), course("c", "someone", 1080)] },
+    "@/modules/activities/lib/attendance/data/cover": { getCoversForDay: async () => new Map() },
+    "@/modules/activities/lib/cancellations/data": { getCancellationsForDay: async () => new Map([["b", { id: "x", courseId: "b", reason: "Pool closed" }]]) },
+    "@/modules/activities/lib/today/assessments": { getTodayAssessments: async () => [{ booked: 4 }] },
+    "@/modules/activities/lib/enrolment/data/awaiting-enrolment": { getAwaitingEnrolment: async () => ({ total: 0 }) },
+  });
+  return async (levels: Record<string, string>, extras: string[] = [], id = "swim-school") =>
+    (await contributions.homeCardItems([id], viewer({ name: "R", homeName: null, levels, extras }))).get(id) ?? [];
+}
 
-  assert.deepEqual(await labels({ "pool-deck": "teach" }, [], "pool-deck"), ["Your classes today", "Find a swimmer in your classes"]);
+test("the swim school card lists only what the person can open", async () => {
+  const items = swimSchool();
+  const labels = async (levels: Record<string, string>, extras: string[] = [], id = "swim-school") => (await items(levels, extras, id)).map((i) => i.label);
+
+  assert.deepEqual(await labels({ "pool-deck": "teach" }, [], "pool-deck"), ["Your classes today", "Open my classes", "Find a swimmer in your classes"]);
   assert.deepEqual(await labels({ "swim-school": "desk" }, [], "pool-deck"), [], "the desk never gets the pool deck");
   const desk = await labels({ "swim-school": "desk" });
-  assert.ok(desk.includes("Find a swimmer") && desk.includes("Add a swimmer") && desk.includes("Today's classes"));
+  assert.ok(desk.includes("Find a swimmer") && desk.includes("Add a swimmer") && desk.includes("Classes today"));
   assert.ok(!desk.includes("Cancelled classes") && !desk.includes("Programmes and levels"));
   assert.ok((await labels({ "swim-school": "desk" }, ["swim-school.cancel-classes"])).includes("Cancelled classes"));
   assert.ok((await labels({ "swim-school": "manage" })).includes("Programmes and levels"));
+});
+
+test("today's figures leave out cancelled classes, and a teacher sees only their own", async () => {
+  const items = swimSchool();
+  const desk = await items({ "swim-school": "desk" });
+  const classes = desk.find((i) => i.label === "Classes today");
+  assert.deepEqual([classes?.kind, classes?.count, classes?.hint], ["today", 2, "1 class cancelled"]);
+  assert.equal(desk.find((i) => i.label === "Assessments today")?.hint, "4 swimmers booked");
+  const updates = desk.find((i) => i.label === "Parent updates");
+  assert.deepEqual([updates?.count, updates?.attention], [2, true]);
+  const mine = (await items({ "pool-deck": "teach" }, [], "pool-deck"))[0];
+  assert.equal(mine.count, 1, "their cancelled class and someone else's are left out");
+  assert.deepEqual(mine.list?.map((l) => l.label), ["Level a"]);
+  assert.equal(mine.hint, "Next at 16:00");
 });
 
 test("one module's failing card never breaks the home page", async () => {

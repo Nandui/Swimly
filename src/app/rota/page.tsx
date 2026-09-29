@@ -41,10 +41,10 @@ export default async function RotaPage({ searchParams }: { searchParams: Promise
               </div>
             ) : <input type="hidden" name="site" value={site?.id} />}
             <input type="hidden" name="week" value={monday} />
-            {data.sites.length > 1 ? <Button type="submit" className="min-h-11">Show</Button> : null}
+            {data.sites.length > 1 ? <Button type="submit" variant="outline" className="min-h-11">Show</Button> : null}
             <nav aria-label="Weeks" className="flex gap-2">
               <Button asChild variant="outline" className="min-h-11"><Link href={link(addDaysIso(monday, -7))}><ChevronLeft aria-hidden="true" />Previous</Link></Button>
-              <Button asChild variant="ghost" className="min-h-11"><Link href={link(today())}>This week</Link></Button>
+              <Button asChild variant="outline" className="min-h-11"><Link href={link(today())}>This week</Link></Button>
               <Button asChild variant="outline" className="min-h-11"><Link href={link(addDaysIso(monday, 7))}>Next<ChevronRight aria-hidden="true" /></Link></Button>
             </nav>
           </form>

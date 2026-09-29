@@ -1,5 +1,6 @@
 import "server-only";
 import { certificateQueue } from "@/lib/training/certificates";
+import { expiringQualifications } from "@/lib/training/data";
 import { expandPermissions } from "@/lib/staff/permissions";
 import { registerHomeCard, type HomeItem } from "@/modules/contributions";
 
@@ -12,9 +13,9 @@ registerHomeCard({
     const items: HomeItem[] = [];
     if (held.has("training.signoff")) items.push({ label: "Practical sign-offs", hint: "Confirm skills shown in person", href: "/training/sign-off" });
     if (held.has("qualifications.manage")) {
-      const pending = (await certificateQueue("PENDING")).rows.length;
-      items.push({ label: "Certificates to check", href: "/training/certificates", count: pending, attention: pending > 0 });
-      items.push({ label: "Expiring qualifications", href: "/training/expiring" });
+      const [pending, expiring] = await Promise.all([certificateQueue("PENDING"), expiringQualifications()]);
+      items.push({ label: "Certificates to check", href: "/training/certificates", count: pending.rows.length, attention: pending.rows.length > 0 });
+      items.push({ label: "Qualifications expiring", hint: "Expired or due soon", href: "/training/expiring", count: expiring.rows.length, attention: expiring.rows.length > 0 });
     }
     if (held.has("training.manage") || held.has("training.assign")) items.push({ label: "Courses and assigning", href: "/training/courses" });
     return items;

@@ -22,8 +22,9 @@ import { swimmerProfileHref } from "@/modules/activities/lib/students/directory"
 import { toast } from "@/lib/toast";
 import { withTimeout } from "@/lib/save-feedback";
 
-export function AddSwimmer({ student, trigger }: { student?: StudentDetail; trigger?: ReactElement } = {}) {
-  const [open, setOpen] = useState(false);
+/** `defaultOpen` opens the dialog on arrival, for the home page's "Add a swimmer". */
+export function AddSwimmer({ student, trigger, defaultOpen = false }: { student?: StudentDetail; trigger?: ReactElement; defaultOpen?: boolean } = {}) {
+  const [open, setOpen] = useState(defaultOpen);
   const [expanded, setExpanded] = useState(false);
   const { formRef, summaryRef, ...feedback } = useFormFeedback();
   const error = feedback.message;

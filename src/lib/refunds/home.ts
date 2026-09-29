@@ -26,7 +26,8 @@ registerHomeCard({
     if (who.request) {
       const info = await count("NEEDS_INFORMATION", true);
       if (info > 0) items.push({ label: "Your requests need more information", href: "/refunds?status=NEEDS_INFORMATION", count: info, attention: true });
-      items.push({ label: "Log a refund request", hint: "For a customer at the desk", href: "/refunds/new" });
+      items.push({ kind: "action", icon: "receipt", label: "Log a refund request", href: "/refunds/new" });
+      items.push({ label: "Your refund requests", href: "/refunds" });
     }
     return items;
   },
