@@ -2,6 +2,7 @@ import "server-only";
 import { parseDateOnly, today } from "@/lib/format";
 import { prisma } from "@/lib/prisma";
 import { rotaSites } from "@/lib/rota/data";
+import { samePerson } from "@/lib/rota/constants";
 import { expandPermissions } from "@/lib/staff/permissions";
 import { registerHomeCard, type HomeItem } from "@/modules/contributions";
 
@@ -17,15 +18,17 @@ registerHomeCard({
     const { sites } = await rotaSites();
     const day = parseDateOnly(today());
     const shifts = sites.length ? await prisma.rotaShift.findMany({
-      where: { siteId: { in: sites.map((s) => s.id) }, cancelledAt: null, date: day },
-      select: { userId: true },
+      where: { siteId: { in: sites.map((s) => s.id) }, kind: "shift", cancelledAt: null, date: day },
+      select: { userId: true, rotaPersonId: true },
     }) : [];
-    const people = [...new Set(shifts.flatMap((s) => (s.userId ? [s.userId] : [])))];
-    const off = people.length ? new Set((await prisma.rotaAbsence.findMany({
-      where: { userId: { in: people }, withdrawnAt: null, firstDay: { lte: day }, OR: [{ lastDay: null }, { lastDay: { gte: day } }] },
-      select: { userId: true },
-    })).map((a) => a.userId)) : new Set<string>();
-    const uncovered = shifts.filter((s) => !s.userId || off.has(s.userId)).length;
+    const users = [...new Set(shifts.flatMap((s) => (s.userId ? [s.userId] : [])))];
+    const entries = [...new Set(shifts.flatMap((s) => (s.rotaPersonId ? [s.rotaPersonId] : [])))];
+    const someone = [...(users.length ? [{ userId: { in: users } }] : []), ...(entries.length ? [{ rotaPersonId: { in: entries } }] : [])];
+    const off = someone.length ? await prisma.rotaAbsence.findMany({
+      where: { OR: someone, withdrawnAt: null, firstDay: { lte: day }, AND: [{ OR: [{ lastDay: null }, { lastDay: { gte: day } }] }] },
+      select: { userId: true, rotaPersonId: true },
+    }) : [];
+    const uncovered = shifts.filter((s) => (!s.userId && !s.rotaPersonId) || off.some((a) => samePerson(a, s))).length;
     const items: HomeItem[] = [{
       kind: "today", label: "On shift today", href: "/rota", count: shifts.length - uncovered,
       hint: shifts.length === 0 ? "No shifts planned today" : uncovered ? `${uncovered} ${uncovered === 1 ? "shift needs" : "shifts need"} cover` : "Every shift has someone",

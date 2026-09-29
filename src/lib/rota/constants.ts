@@ -22,14 +22,36 @@ export const ABSENCE_REASON_META = {
   other: { label: "Other", color: "gray" },
 } as const satisfies Record<string, StatusMeta>;
 export type AbsenceReason = keyof typeof ABSENCE_REASON_META;
+
+/** What a roster re-upload did to someone's day (Roster changes). */
+export const ROSTER_CHANGE_META = {
+  added: { label: "Added", color: "green" },
+  changed: { label: "Changed", color: "blue" },
+  removed: { label: "Removed", color: "red" },
+} as const satisfies Record<string, StatusMeta>;
+
+/** A roster day that is not a shift: full holiday (FHOP) or another code. */
+export const ROSTER_LEAVE_META = {
+  holiday: { label: "Full holiday (paid)", color: "blue" },
+  leave: { label: "Leave", color: "gray" },
+} as const satisfies Record<string, StatusMeta>;
 export const ABSENCE_REASONS = Object.keys(ABSENCE_REASON_META) as AbsenceReason[];
 
-type AbsenceLike = { userId: string; firstDay: Date; lastDay: Date | null };
+/** Someone on the rota: their account, their entry on the imported roster
+ *  (everyone on it, login or not), or both. */
+export type PersonRef = { userId: string | null; rotaPersonId?: string | null };
+type AbsenceLike = PersonRef & { firstDay: Date; lastDay: Date | null };
 const isoOf = (date: Date) => date.toISOString().slice(0, 10);
 
+/** The same person, by roster entry or by account. */
+export function samePerson(a: PersonRef, b: PersonRef) {
+  return (!!a.rotaPersonId && a.rotaPersonId === b.rotaPersonId) || (!!a.userId && a.userId === b.userId);
+}
+
 /** Is this person off on this day? An absence with no last day runs on. */
-export function absentOn(absences: readonly AbsenceLike[], userId: string, iso: string) {
-  return absences.some((a) => a.userId === userId && isoOf(a.firstDay) <= iso && (!a.lastDay || isoOf(a.lastDay) >= iso));
+export function absentOn(absences: readonly AbsenceLike[], who: string | PersonRef, iso: string) {
+  const person = typeof who === "string" ? { userId: who } : who;
+  return absences.some((a) => samePerson(a, person) && isoOf(a.firstDay) <= iso && (!a.lastDay || isoOf(a.lastDay) >= iso));
 }
 
 export const WEEKDAY_LABELS = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"] as const;
@@ -61,22 +83,24 @@ export function addDaysIso(iso: string, days: number) {
 }
 
 type Held = { typeId: string; issuedOn: Date; expiresOn: Date | null; revokedAt: Date | null };
-type ShiftLike = { id: string; userId: string | null; date: Date; startMinutes: number; endMinutes: number; requiredTypeId: string | null };
+type ShiftLike = PersonRef & { id: string; date: Date; startMinutes: number; endMinutes: number; requiredTypeId: string | null; kind?: string };
 
 /** What is wrong with a shift, given the assignee's qualifications, their
- *  other shifts that day and whether they are off. Pure, so the rules are
- *  tested on their own. */
+ *  other shifts that day and whether they are off. A holiday or leave day from
+ *  the roster is not a shift and has nothing wrong with it. Pure, so the rules
+ *  are tested on their own. */
 export function shiftWarnings(shift: ShiftLike, held: readonly Held[], sameDay: readonly ShiftLike[], absences: readonly AbsenceLike[] = []): RotaWarning[] {
-  if (!shift.userId) return ["open"];
+  if (shift.kind && shift.kind !== "shift") return [];
+  if (!shift.userId && !shift.rotaPersonId) return ["open"];
   const warnings: RotaWarning[] = [];
-  if (absentOn(absences, shift.userId, isoOf(shift.date))) warnings.push("absent");
+  if (absentOn(absences, shift, isoOf(shift.date))) warnings.push("absent");
   if (shift.requiredTypeId) {
     const on = shift.date.toISOString().slice(0, 10);
     const ofType = held.filter((q) => q.typeId === shift.requiredTypeId && !q.revokedAt && q.issuedOn.toISOString().slice(0, 10) <= on);
     if (ofType.length === 0) warnings.push("missing");
     else if (!ofType.some((q) => !q.expiresOn || q.expiresOn.toISOString().slice(0, 10) >= on)) warnings.push("expired");
   }
-  if (sameDay.some((other) => other.id !== shift.id && other.userId === shift.userId && other.startMinutes < shift.endMinutes && shift.startMinutes < other.endMinutes)) {
+  if (sameDay.some((other) => other.id !== shift.id && (!other.kind || other.kind === "shift") && samePerson(other, shift) && other.startMinutes < shift.endMinutes && shift.startMinutes < other.endMinutes)) {
     warnings.push("overlap");
   }
   return warnings;

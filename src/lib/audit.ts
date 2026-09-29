@@ -52,13 +52,13 @@ export const MODULE_OF_ENTITY: Readonly<Record<string, string>> = {
   TrainingCourse: "Training", TrainingAssignment: "Training", Qualification: "Training", QualificationType: "Training", QualificationEvidence: "Training",
   // Refunds and Rota.
   RefundRequest: "Refunds", RefundNotification: "Refunds",
-  RotaShift: "Rota", RotaAbsence: "Rota",
+  RotaShift: "Rota", RotaAbsence: "Rota", RotaImport: "Rota", RotaDepartment: "Rota",
 };
 
 /** Rows that belong to no club, so their audit entries belong to none either
  *  and show up in every club's activity. */
 // Organisation-level records (People core) belong to no single site either.
-const SHARED_ENTITIES = new Set(["User", "StaffRole", "Student", "Programme", "Level", "Competency", "AssessmentType", "Organisation", "Department", "RoleAssignment", "QualificationType", "Qualification", "SharedDevice", "TrainingCourse", "TrainingAssignment", "RotaAbsence"]);
+const SHARED_ENTITIES = new Set(["User", "StaffRole", "Student", "Programme", "Level", "Competency", "AssessmentType", "Organisation", "Department", "RoleAssignment", "QualificationType", "Qualification", "SharedDevice", "TrainingCourse", "TrainingAssignment", "RotaAbsence", "RotaImport", "RotaDepartment"]);
 
 /** @param db Pass the transaction client when the audit row must live or die
  *  with the write it describes. The default writes on its own connection,

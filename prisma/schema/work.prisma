@@ -170,14 +170,111 @@ model RotaShift {
   cancelledAt    DateTime?
   createdAt      DateTime  @default(now())
   updatedAt      DateTime  @updatedAt
+  /// Who is rostered, from the imported roster: set for everyone on it,
+  /// login or not. `userId` is also set when that person has an account.
+  rotaPersonId   String?
+  /// "shift" (times), "holiday" (FHOP, full holiday paid) or "leave" (another
+  /// roster code, kept in `note`). Only shifts count as work.
+  kind           String    @default("shift")
+  /// The roster's department code, e.g. "520"; its site and label are in RotaDepartment.
+  departmentCode String?
+  /// The roster upload that created it; null for a shift added by hand.
+  importId       String?
 
   organisation Organisation       @relation(fields: [orgId], references: [id], onDelete: Restrict)
   site         Club               @relation(fields: [siteId], references: [id], onDelete: Restrict)
   requiredType QualificationType? @relation(fields: [requiredTypeId], references: [id], onDelete: SetNull)
   user         User?              @relation("RotaShiftAssignee", fields: [userId], references: [id], onDelete: SetNull)
+  rotaPerson   RotaPerson?        @relation(fields: [rotaPersonId], references: [id], onDelete: SetNull)
+  import       RotaImport?        @relation(fields: [importId], references: [id], onDelete: SetNull)
 
   @@index([siteId, date])
   @@index([userId, date])
+  @@index([rotaPersonId, date])
+  @@index([importId])
+}
+
+/// Someone on the imported roster (the payroll export's EmpNo and name),
+/// login or not. Linked to their Turnfin account when one clearly matches, so
+/// they see their shifts in Turnfin Me.
+model RotaPerson {
+  id         String   @id @default(cuid())
+  orgId      String
+  employeeNo String
+  name       String
+  userId     String?  @unique
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+
+  organisation Organisation  @relation(fields: [orgId], references: [id], onDelete: Restrict)
+  user         User?         @relation("RotaPersonAccount", fields: [userId], references: [id], onDelete: SetNull)
+  shifts       RotaShift[]
+  absences     RotaAbsence[]
+
+  @@unique([orgId, employeeNo])
+}
+
+/// A roster department code (e.g. "520") and where it works: its site and a
+/// label for the rota. A code without a site stops an import until a manager
+/// says where it belongs.
+model RotaDepartment {
+  id        String   @id @default(cuid())
+  orgId     String
+  code      String
+  label     String   @default("")
+  siteId    String?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  organisation Organisation @relation(fields: [orgId], references: [id], onDelete: Restrict)
+  site         Club?        @relation(fields: [siteId], references: [id], onDelete: SetNull)
+
+  @@unique([orgId, code])
+}
+
+/// One upload of a week's roster. A later upload of the same week replaces
+/// its shifts; what moved is recorded as RotaChange rows.
+model RotaImport {
+  id             String   @id @default(cuid())
+  orgId          String
+  weekStart      DateTime @db.Date
+  fileName       String
+  importedById   String?
+  importedByName String
+  shifts         Int      @default(0)
+  holidays       Int      @default(0)
+  people         Int      @default(0)
+  added          Int      @default(0)
+  removed        Int      @default(0)
+  changed        Int      @default(0)
+  createdAt      DateTime @default(now())
+
+  organisation Organisation @relation(fields: [orgId], references: [id], onDelete: Restrict)
+  rotaShifts   RotaShift[]
+  changes      RotaChange[]
+
+  @@index([orgId, weekStart])
+}
+
+/// What one re-upload changed for one person on one day: "added", "removed"
+/// or "changed", with the day's entries before and after as plain text.
+model RotaChange {
+  id         String   @id @default(cuid())
+  orgId      String
+  importId   String
+  date       DateTime @db.Date
+  employeeNo String
+  personName String
+  kind       String
+  before     String   @default("")
+  after      String   @default("")
+  createdAt  DateTime @default(now())
+
+  organisation Organisation @relation(fields: [orgId], references: [id], onDelete: Restrict)
+  import       RotaImport   @relation(fields: [importId], references: [id], onDelete: Cascade)
+
+  @@index([importId])
+  @@index([orgId, date])
 }
 
 /// Someone off work (Rota, docs/rota.md): sickness, a family emergency, a
@@ -188,7 +285,10 @@ model RotaShift {
 model RotaAbsence {
   id             String    @id @default(cuid())
   orgId          String
-  userId         String
+  /// The person's account, when they have one; `rotaPersonId` covers everyone
+  /// on the imported roster, login or not. At least one is set.
+  userId         String?
+  rotaPersonId   String?
   reason         String
   firstDay       DateTime  @db.Date
   lastDay        DateTime? @db.Date
@@ -200,8 +300,10 @@ model RotaAbsence {
   updatedAt      DateTime  @updatedAt
 
   organisation Organisation @relation(fields: [orgId], references: [id], onDelete: Restrict)
-  user         User         @relation("RotaAbsentPerson", fields: [userId], references: [id], onDelete: Cascade)
+  user         User?        @relation("RotaAbsentPerson", fields: [userId], references: [id], onDelete: Cascade)
+  rotaPerson   RotaPerson?  @relation(fields: [rotaPersonId], references: [id], onDelete: Cascade)
 
   @@index([orgId, firstDay])
   @@index([userId, firstDay])
+  @@index([rotaPersonId, firstDay])
 }

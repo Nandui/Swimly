@@ -1,16 +1,19 @@
 import type { Metadata } from "next";
 import Link from "next/link";
-import { CalendarDays, ChevronLeft, ChevronRight } from "lucide-react";
+import { CalendarDays, ChevronLeft, ChevronRight, Upload } from "lucide-react";
 import { Button } from "@/components/shadcn/button";
 import { Label } from "@/components/shadcn/label";
 import { NativeSelect, NativeSelectOption } from "@/components/shadcn/native-select";
 import { CancelShift, ShiftDialog } from "@/components/rota/actions";
 import { RotaWarningTag } from "@/components/rota/status";
 import { formatDate, today } from "@/lib/format";
-import { addDaysIso, clock, WEEKDAY_LABELS } from "@/lib/rota/constants";
+import { addDaysIso, clock, ROSTER_LEAVE_META, WEEKDAY_LABELS } from "@/lib/rota/constants";
+import { Tag } from "@/components/ui-kit/tag";
 import { rotaWeek } from "@/lib/rota/data";
 
 export const metadata: Metadata = { title: { absolute: "Turnfin Rota" } };
+
+const personName = (s: { rotaPerson: { name: string } | null; user: { name: string } | null }) => s.rotaPerson?.name ?? s.user?.name ?? "";
 
 export default async function RotaPage({ searchParams }: { searchParams: Promise<{ site?: string; week?: string }> }) {
   const input = await searchParams;
@@ -19,7 +22,7 @@ export default async function RotaPage({ searchParams }: { searchParams: Promise
   const link = (week: string) => `/rota?${new URLSearchParams({ ...(site ? { site: site.id } : {}), week })}`;
   const warnings = data.days.reduce((sum, d) => sum + d.shifts.filter((s) => s.warnings.some((w) => w !== "open" && w !== "absent")).length, 0);
   const absent = data.days.reduce((sum, d) => sum + d.shifts.filter((s) => s.warnings.includes("absent")).length, 0);
-  const open = data.days.reduce((sum, d) => sum + d.shifts.filter((s) => !s.userId).length, 0);
+  const open = data.days.reduce((sum, d) => sum + d.shifts.filter((s) => s.kind === "shift" && !s.userId && !s.rotaPersonId).length, 0);
   return (
     <div className="space-y-6">
       <div className="module-heading">
@@ -27,6 +30,7 @@ export default async function RotaPage({ searchParams }: { searchParams: Promise
           <h1>Rota{site ? `: ${site.name}` : ""}</h1>
           <p className="text-sm">Week of {formatDate(new Date(`${monday}T00:00:00Z`))}. {warnings === 0 ? "No qualification problems." : `${warnings} ${warnings === 1 ? "shift needs" : "shifts need"} a look.`}{absent ? ` ${absent} ${absent === 1 ? "shift needs" : "shifts need"} cover for someone who is off.` : ""}{open ? ` ${open} unfilled.` : ""}</p>
         </div>
+        {data.who.manage ? <Button asChild className="min-h-11"><Link href="/rota/import"><Upload aria-hidden="true" />Upload roster</Link></Button> : null}
       </div>
       {data.sites.length === 0 ? (
         <div className="module-empty"><CalendarDays aria-hidden="true" /><h2 className="font-semibold">No sites to show</h2><p className="mt-2 text-sm text-ui-muted-foreground">Your rota role does not cover a site yet.</p></div>
@@ -57,15 +61,17 @@ export default async function RotaPage({ searchParams }: { searchParams: Promise
                 </div>
                 {day.shifts.length === 0 ? <p className="text-sm text-ui-muted-foreground">No shifts.</p> : (
                   <ul className="mt-2">
-                    {day.shifts.map((s) => (
+                    {[...day.shifts].sort((a, b) => Number(a.kind !== "shift") - Number(b.kind !== "shift")).map((s) => (
                       <li key={s.id} className="flex flex-wrap items-center justify-between gap-3 py-3">
                         <div className="min-w-0 flex-1 space-y-1">
-                          <p><span className="font-semibold tabular-nums">{clock(s.startMinutes)}–{clock(s.endMinutes)}</span> · {s.role}{s.user ? ` · ${s.user.name}` : ""}</p>
+                          {s.kind === "shift"
+                            ? <p><span className="font-semibold tabular-nums">{clock(s.startMinutes)}–{s.endMinutes > 1440 ? `${clock(s.endMinutes - 1440)} (next day)` : clock(s.endMinutes)}</span> · {s.role}{personName(s) ? ` · ${personName(s)}` : ""}</p>
+                            : <p className="flex flex-wrap items-center gap-2"><Tag color={ROSTER_LEAVE_META[s.kind as keyof typeof ROSTER_LEAVE_META]?.color ?? "gray"}>{s.kind === "holiday" ? ROSTER_LEAVE_META.holiday.label : s.note || ROSTER_LEAVE_META.leave.label}</Tag><span>{personName(s)}</span><span className="text-ui-muted-foreground">· {s.role}</span></p>}
                           {s.requiredType || s.note ? <p className="text-xs text-ui-muted-foreground">{[s.requiredType ? `Needs ${s.requiredType.name}` : null, s.note || null].filter(Boolean).join(" · ")}</p> : null}
                         </div>
                         <div className="flex flex-wrap items-center gap-2">
                           {s.warnings.map((w) => <RotaWarningTag key={w} warning={w} />)}
-                          {site?.manage ? <><ShiftDialog siteId={site.id} date={day.iso} shift={s} people={data.people} types={data.types} /><CancelShift id={s.id} label={`${s.role} ${clock(s.startMinutes)}`} /></> : null}
+                          {site?.manage && !s.importId ? <><ShiftDialog siteId={site.id} date={day.iso} shift={s} people={data.people} types={data.types} /><CancelShift id={s.id} label={`${s.role} ${clock(s.startMinutes)}`} /></> : null}
                         </div>
                       </li>
                     ))}

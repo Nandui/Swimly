@@ -72,3 +72,30 @@ absence from Turnfin Me is not built yet.
 - `src/lib/rota/`: `access.ts`, `data.ts` (the week), `mine.ts` (own shifts), `actions.ts`, `constants.ts`
 - Self-service: `src/lib/rota/mine.ts` (staff API); UI: `src/app/rota/`, `src/components/rota/`; shift-change emails from `src/lib/staff-api/reminders.ts`
 - Tests: `src/lib/rota/rota.test.ts`
+
+## Uploading the week's roster (29 September 2026)
+
+Rota managers upload the payroll system's weekly export (RosterBrowser, `.xlsx`, one sheet
+"Roster for <year>-W<week>") at **Upload roster** (`/rota/import`). One file covers both sites.
+
+- **Reading it** (`src/lib/rota/roster.ts`, pure and tested): EmpNo, EmployeeName, then a time
+  range or a code and a department code per day. A second shift on a day is a second row.
+  `FHOP` is a full holiday, paid; any other code is kept as leave with its code. An overnight
+  shift ends the next morning. Anything unreadable is listed and left out, never guessed.
+- **Check, then import.** Checking writes nothing: people (new, and how many have a login),
+  shifts per site, holidays, and for a re-upload what changes. Importing reads the file again.
+- **Departments** (`/rota/departments`): each code belongs to a site and has a name the rota
+  shows. An upload with a new code waits until someone says where it works. Moving a code moves
+  its imported shifts.
+- **Everyone by name.** `RotaPerson` holds each employee number and name, login or not. It links
+  to an account when exactly one active account has the same name (the roster writes the
+  surname first and "O Halloran" for O'Halloran), so that person sees their shifts in Turnfin Me.
+- **Re-uploading a week** replaces its imported entries (the old ones are cancelled, not
+  deleted) and records each person-day that was added, removed or changed as `RotaChange` rows,
+  shown at **Roster changes** (`/rota/changes`). Shifts added by hand are never touched, and
+  imported ones are changed by uploading again, not edited.
+- **Absences** can be reported for anyone on the roster, login or not (an absence names an
+  account, a roster entry, or both). Their shifts show Absent on the week. Roster holidays show
+  on Absences as "On holiday in the next two weeks": planned, so nothing to report.
+- Needs `rota.manage` at every site the file's departments map to. Holiday and leave days are
+  not shifts: they never count as on shift, as unfilled, or in Turnfin Me.

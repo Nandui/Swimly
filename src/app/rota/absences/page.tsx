@@ -3,7 +3,9 @@ import { notFound } from "next/navigation";
 import { UserX } from "lucide-react";
 import { BackAtWork, RemoveAbsence, ReportAbsence } from "@/components/rota/absences";
 import { AbsenceReasonTag } from "@/components/rota/status";
+import { Tag } from "@/components/ui-kit/tag";
 import { formatDate } from "@/lib/format";
+import { ROSTER_LEAVE_META } from "@/lib/rota/constants";
 import { requireRotaActor } from "@/lib/rota/access";
 import { rotaAbsences, type RotaAbsenceRow } from "@/lib/rota/data";
 
@@ -15,11 +17,24 @@ function when(a: Pick<RotaAbsenceRow, "firstDay" | "lastDay">) {
   return a.lastDay.getTime() === a.firstDay.getTime() ? day(a.firstDay) : `${day(a.firstDay)} to ${day(a.lastDay)}`;
 }
 
+/** Roster holiday days, one line per person. */
+function onHoliday(entries: { date: Date; kind: string; note: string; rotaPerson: { name: string } | null }[]) {
+  const people = new Map<string, { name: string; label: string; days: string[] }>();
+  for (const e of entries) {
+    const name = e.rotaPerson?.name ?? "Someone";
+    const label = e.kind === "holiday" ? ROSTER_LEAVE_META.holiday.label : e.note || ROSTER_LEAVE_META.leave.label;
+    const row = people.get(name) ?? { name, label, days: [] };
+    row.days.push(day(e.date));
+    people.set(name, row);
+  }
+  return [...people.values()];
+}
+
 /** Who is off. Rota managers record absences here; the week shows the
  *  affected shifts as Absent so cover can be found. */
 export default async function AbsencesPage() {
   if (!(await requireRotaActor()).manage) notFound();
-  const { today, current, returned, people } = await rotaAbsences();
+  const { today, current, returned, people, holidays } = await rotaAbsences();
   return (
     <div className="space-y-6">
       <div className="module-heading">
@@ -51,6 +66,20 @@ export default async function AbsencesPage() {
           </ul>
         )}
       </section>
+      {holidays.length ? (
+        <section aria-labelledby="absences-holiday">
+          <h2 id="absences-holiday" className="mb-3">On holiday in the next two weeks</h2>
+          <p className="mb-3 text-sm text-ui-muted-foreground">From the uploaded roster: planned, so nothing to report.</p>
+          <ul className="module-list">
+            {onHoliday(holidays).map((h) => (
+              <li key={h.name} className="flex flex-wrap items-center justify-between gap-3 px-5 py-4">
+                <p className="flex flex-wrap items-center gap-2"><span className="module-row-title">{h.name}</span><Tag color={ROSTER_LEAVE_META.holiday.color}>{h.label}</Tag></p>
+                <p className="text-sm text-ui-muted-foreground">{h.days.join(", ")}</p>
+              </li>
+            ))}
+          </ul>
+        </section>
+      ) : null}
       {returned.length ? (
         <section aria-labelledby="absences-returned">
           <h2 id="absences-returned" className="mb-3">Back in the last 30 days</h2>

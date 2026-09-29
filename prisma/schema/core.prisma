@@ -137,6 +137,7 @@ model User {
   trainingAssignments TrainingAssignment[] @relation("TrainingLearner")
   rotaShifts          RotaShift[]          @relation("RotaShiftAssignee")
   rotaAbsences        RotaAbsence[]        @relation("RotaAbsentPerson")
+  rotaPerson          RotaPerson?          @relation("RotaPersonAccount")
   sharedDevices  SharedDeviceUser[]
 
   /// `Restrict`, not `SetNull`: an account with no role has no permissions and
@@ -185,6 +186,10 @@ model Organisation {
   trainingAssignments TrainingAssignment[]
   rotaShifts         RotaShift[]
   rotaAbsences       RotaAbsence[]
+  rotaPeople         RotaPerson[]
+  rotaDepartments    RotaDepartment[]
+  rotaImports        RotaImport[]
+  rotaChanges        RotaChange[]
 }
 
 /// A team such as Aquatics, Reception or Maintenance. Optionally tied to one
@@ -380,6 +385,7 @@ model Club {
   assessmentSessions AssessmentSession[]
   departments        Department[]
   rotaShifts         RotaShift[]
+  rotaDepartments    RotaDepartment[]
 
   @@index([sortOrder])
 }

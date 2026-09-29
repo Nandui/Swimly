@@ -8,7 +8,7 @@ import { addDaysIso, shiftWarnings } from "@/lib/rota/constants";
 export async function myShifts(userId: string, days = 14) {
   const from = today();
   const shifts = await prisma.rotaShift.findMany({
-    where: { userId, cancelledAt: null, date: { gte: parseDateOnly(from), lte: parseDateOnly(addDaysIso(from, days - 1)) } },
+    where: { userId, kind: "shift", cancelledAt: null, date: { gte: parseDateOnly(from), lte: parseDateOnly(addDaysIso(from, days - 1)) } },
     orderBy: [{ date: "asc" }, { startMinutes: "asc" }],
     select: { id: true, userId: true, date: true, startMinutes: true, endMinutes: true, role: true, note: true, requiredTypeId: true,
       site: { select: { name: true } }, requiredType: { select: { name: true } } },

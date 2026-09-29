@@ -5,10 +5,10 @@ import { z } from "zod";
 import { fail, ok, type ActionResult } from "@/lib/action-result";
 import { AuthorizationError } from "@/lib/authz";
 import { logAudit } from "@/lib/audit";
-import { isDateOnly, parseDateOnly } from "@/lib/format";
+import { isDateOnly, parseDateOnly, today } from "@/lib/format";
 import { prisma } from "@/lib/prisma";
 import { requireCapFor } from "@/lib/policy/session";
-import { ABSENCE_REASONS, clock, parseClock } from "@/lib/rota/constants";
+import { ABSENCE_REASONS, addDaysIso, clock, parseClock } from "@/lib/rota/constants";
 import { notifyShiftChange } from "@/lib/staff-api/reminders";
 
 /** Rota writes. Each needs `rota.manage` at the shift's site (a site-scoped
@@ -115,6 +115,7 @@ export async function cancelShift(id: string): Promise<ActionResult> {
    log names the person and the days, never the reason. */
 
 const absenceSchema = z.object({
+  /** "p:<roster entry>", "u:<account>", or a bare account id. */
   userId: z.string().trim().min(1, "Choose who is off."),
   reason: z.enum(ABSENCE_REASONS, { message: "Choose a reason." }),
   firstDay: z.string().refine(isDateOnly, "Choose the first day off."),
@@ -123,16 +124,46 @@ const absenceSchema = z.object({
 });
 export type AbsenceInput = z.input<typeof absenceSchema>;
 
-async function allowedFor(userId: string) {
-  const person = await prisma.user.findFirst({ where: { id: userId }, select: { id: true, name: true, orgId: true, isActive: true } });
-  if (!person?.orgId) return { ok: false as const, error: "That person is not on the rota." };
+type Person = { name: string; orgId: string; isActive: boolean; userId: string | null; rotaPersonId: string | null };
+const NOT_COVERED = "You can only record absences for people at the sites your role covers.";
+
+/** Who an absence is for, and whether this manager may record it. Someone
+ *  with an account is covered as before (their sites and team). Someone on
+ *  the roster without one is covered where they have been rostered lately. */
+async function allowedFor(ref: { userId?: string | null; rotaPersonId?: string | null }) {
+  let person: Person | null = null;
+  if (ref.rotaPersonId) {
+    const entry = await prisma.rotaPerson.findFirst({ where: { id: ref.rotaPersonId }, select: { id: true, name: true, orgId: true, userId: true, user: { select: { isActive: true } } } });
+    if (entry) person = { name: entry.name, orgId: entry.orgId, isActive: entry.user?.isActive ?? true, userId: entry.userId, rotaPersonId: entry.id };
+  } else if (ref.userId) {
+    const user = await prisma.user.findFirst({ where: { id: ref.userId }, select: { id: true, name: true, orgId: true, isActive: true, rotaPerson: { select: { id: true } } } });
+    if (user?.orgId) person = { name: user.name, orgId: user.orgId, isActive: user.isActive, userId: user.id, rotaPersonId: user.rotaPerson?.id ?? null };
+  }
+  if (!person) return { ok: false as const, error: "That person is not on the rota." };
   try {
-    const actor = await requireCapFor("rota.manage", { subjectUserId: person.id, orgId: person.orgId });
-    return { ok: true as const, actor, person: { ...person, orgId: person.orgId } };
+    if (person.userId) {
+      const actor = await requireCapFor("rota.manage", { subjectUserId: person.userId, orgId: person.orgId });
+      return { ok: true as const, actor, person };
+    }
+    const sites = await prisma.rotaShift.findMany({
+      where: { rotaPersonId: person.rotaPersonId!, date: { gte: parseDateOnly(addDaysIso(today(), -56)) } },
+      distinct: ["siteId"], select: { siteId: true },
+    });
+    for (const { siteId } of sites) {
+      try { return { ok: true as const, actor: await requireCapFor("rota.manage", { siteId, orgId: person.orgId }), person }; }
+      catch (error) { if (!(error instanceof AuthorizationError)) throw error; }
+    }
+    return { ok: false as const, error: NOT_COVERED };
   } catch (error) {
-    if (error instanceof AuthorizationError) return { ok: false as const, error: "You can only record absences for people at the sites your role covers." };
+    if (error instanceof AuthorizationError) return { ok: false as const, error: NOT_COVERED };
     throw error;
   }
+}
+
+/** "p:<id>" is a roster entry, "u:<id>" or a bare id an account. */
+function refOf(value: string) {
+  if (value.startsWith("p:")) return { rotaPersonId: value.slice(2) };
+  return { userId: value.startsWith("u:") ? value.slice(2) : value };
 }
 
 const days = (first: string, last: string | null) => last ? (last === first ? `on ${first}` : `from ${first} to ${last}`) : `from ${first}`;
@@ -143,27 +174,28 @@ export async function reportAbsence(input: AbsenceInput): Promise<ActionResult> 
   if (!parsed.success) return fail(parsed.error.issues[0].message);
   const { userId, reason, firstDay, lastDay, note } = parsed.data;
   if (lastDay && lastDay < firstDay) return fail("The last day off can't be before the first.");
-  const allowed = await allowedFor(userId);
+  const allowed = await allowedFor(refOf(userId));
   if (!allowed.ok) return fail(allowed.error);
   const { actor, person } = allowed;
   if (!person.isActive) return fail("That person is no longer active.");
+  const samePersonWhere = { OR: [...(person.userId ? [{ userId: person.userId }] : []), ...(person.rotaPersonId ? [{ rotaPersonId: person.rotaPersonId }] : [])] };
   return prisma.$transaction(async (tx) => {
     // One absence at a time: a second one over the same days is a mistake.
     const clash = await tx.rotaAbsence.findFirst({
-      where: { userId, withdrawnAt: null, firstDay: { lte: parseDateOnly(lastDay ?? "9999-12-31") }, OR: [{ lastDay: null }, { lastDay: { gte: parseDateOnly(firstDay) } }] },
+      where: { ...samePersonWhere, withdrawnAt: null, firstDay: { lte: parseDateOnly(lastDay ?? "9999-12-31") }, AND: [{ OR: [{ lastDay: null }, { lastDay: { gte: parseDateOnly(firstDay) } }] }] },
       select: { id: true },
     });
     if (clash) return fail(`${person.name} is already recorded as off on some of those days.`);
-    const created = await tx.rotaAbsence.create({ data: { orgId: person.orgId, userId, reason, firstDay: parseDateOnly(firstDay), lastDay: lastDay ? parseDateOnly(lastDay) : null, note, reportedById: actor.id, reportedByName: actor.name } });
+    const created = await tx.rotaAbsence.create({ data: { orgId: person.orgId, userId: person.userId, rotaPersonId: person.rotaPersonId, reason, firstDay: parseDateOnly(firstDay), lastDay: lastDay ? parseDateOnly(lastDay) : null, note, reportedById: actor.id, reportedByName: actor.name } });
     await logAudit({ actorId: actor.id, actorName: actor.name, action: "create", entity: "RotaAbsence", entityId: created.id, clubId: null, summary: `Recorded ${person.name} as off ${days(firstDay, lastDay)}` }, tx);
     return ok();
   }).then((result) => { if (result.ok) revalidateRota(); return result; });
 }
 
 async function absenceFor(id: string) {
-  const absence = await prisma.rotaAbsence.findFirst({ where: { id, withdrawnAt: null }, select: { id: true, userId: true, firstDay: true } });
+  const absence = await prisma.rotaAbsence.findFirst({ where: { id, withdrawnAt: null }, select: { id: true, userId: true, rotaPersonId: true, firstDay: true } });
   if (!absence) return { ok: false as const, error: "That absence no longer exists." };
-  const allowed = await allowedFor(absence.userId);
+  const allowed = await allowedFor(absence.rotaPersonId ? { rotaPersonId: absence.rotaPersonId } : { userId: absence.userId });
   return allowed.ok ? { ...allowed, absence } : allowed;
 }
 
