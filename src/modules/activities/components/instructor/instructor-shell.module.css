@@ -1,5 +1,8 @@
 /* Pool-deck controls stay thumb-sized at tablet widths too, including when
-   the browser reports a mouse. Shared desktop components keep their density. */
+   the browser reports a mouse. Shared desktop components keep their density.
+   The deck, and dialogs opened from it, keep the 44px control token. */
+.workspace,
+:global(body):has(.workspace) { --pc-control-height: 44px; }
 .workspace :where(button, a[href]:not(.sr-only), [role="radio"], [role="tab"]),
 :global(body):has(.workspace) :global([data-slot="dialog-content"]) :where(button, [role="combobox"]),
 :global(body):has(.workspace) :global([data-slot="alert-dialog-content"]) button,

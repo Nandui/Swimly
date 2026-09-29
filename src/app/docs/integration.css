@@ -23,10 +23,10 @@
   color: var(--ui-foreground);
   font-size: 14px;
 }
-.turnfin-docs button, .turnfin-docs [data-slot='native-select'], .turnfin-docs [data-slot='input'] { min-height: 44px; }
+.turnfin-docs button, .turnfin-docs [data-slot='native-select'], .turnfin-docs [data-slot='input'] { min-height: var(--pc-control-height); }
 .turnfin-docs button[data-slot='checkbox'], .turnfin-docs button[data-slot='radio-group-item'] { min-height: 18px; }
-.turnfin-docs label:has([data-slot='checkbox']), .turnfin-docs label:has([data-slot='radio-group-item']) { min-height: 44px; }
-.turnfin-docs [data-slot='dialog-close'] { min-width: 44px; min-height: 44px; }
+.turnfin-docs label:has([data-slot='checkbox']), .turnfin-docs label:has([data-slot='radio-group-item']) { min-height: var(--pc-control-height); }
+.turnfin-docs [data-slot='dialog-close'] { min-width: var(--pc-control-height); min-height: var(--pc-control-height); }
 .turnfin-docs [data-slot='button'] { border-radius: var(--ui-radius); }
 .turnfin-docs [data-slot='badge'] { font-weight: 500; }
 .turnfin-docs input:focus, .turnfin-docs textarea:focus, .turnfin-docs select:focus { outline: none; }
@@ -39,9 +39,9 @@
 .turnfin-docs .workspace-search { min-width: 0; }
 .turnfin-docs .workspace-search input:focus-visible, .turnfin-docs .home-search input:focus-visible { box-shadow: none; }
 .turnfin-docs .workspace-search:focus-within { outline: 2px solid var(--ui-ring); outline-offset: 2px; }
-.turnfin-docs :is(button, a[data-slot='button']):not([role='checkbox'], [role='radio']) { min-height: 44px !important; min-width: 44px; }
+.turnfin-docs :is(button, a[data-slot='button']):not([role='checkbox'], [role='radio']) { min-height: var(--pc-control-height) !important; min-width: var(--pc-control-height); }
 .turnfin-docs [data-slot='button'][data-variant='default'] { color: var(--ui-primary-foreground); }
-.turnfin-docs [role='menuitemradio'] { min-height: 44px; }
+.turnfin-docs [role='menuitemradio'] { min-height: var(--pc-control-height); }
 @media (min-width: 901px) and (max-width: 1100px) {
   .turnfin-docs .staff-directory > .table-scroll { display: none; }
   .turnfin-docs .staff-mobile-list { display: grid; list-style: none; margin: 0; padding: 0 20px; }

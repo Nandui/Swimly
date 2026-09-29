@@ -24,8 +24,12 @@ describe the retired look; the Poolside tokens now drive those same components. 
   components from the CLI must use this namespace and `@/lib/utils` for `cn`.
 - Status labels use Badge or the shared Tag composition, with `data-tone`
   selected by a domain metadata map. Do not choose status colours at a call site.
-- One H1 per page, 24px and semibold. Body text is 14px, supporting metadata
-  12px, and section headings 20px, on the Poolside type scale (`--pc-text-*`).
+- One H1 per page. The Poolside type scale (`--pc-text-*`, 29 September 2026) is
+  22px page titles, 16px section titles, 14px body, 12px captions and metadata,
+  and 28px figures; Tailwind's `text-xs` to `text-3xl` map onto it. Controls are
+  `--pc-control-height`: 38px on a desktop with a mouse, 44px wherever a finger
+  may tap (phones, tablets, touch screens) and always on the pool deck. Fields
+  keep 16px text on touch so phones do not zoom on focus.
 - Default gaps are 16px within groups and 24px between major sections.
   The shell owns a single content inset: 16px, increasing to 24px at viewport
   widths of 1024px and above in the desk workspace. Instructor keeps 16px.
@@ -81,7 +85,8 @@ colours in both themes, with accessible names supplied by adjacent text or links
 **The swim school desk uses the shared `ModuleShell`** (28 September 2026), like Refunds,
 Training, HR, Rota and Admin: the Turnfin brand, the working site and
 "Find swimmer" (the `tools` slot), then the desk pages in Daily work, Monitoring and Setup;
-"Back to Hub", Help and Appearance in the footer, and at its foot the signed-in person (`AccountMenu`: Manage account, Sign out); a breadcrumb topbar naming the working
+the signed-in person under them (`AccountMenu`: a greeting over their name, opening Manage account and
+Sign out); "Back to Hub", Help, "View as" (dev builds) and Appearance in the footer; a breadcrumb topbar naming the working
 site; the phone sheet. Pages sit on the cool canvas; `src/app/(activities)/swim-school.css`
 puts tables, bare row lists and empty states on white panels and lets data pages fill the
 width. Together caps at 960px and programme details at 1152px (`pageWidthFor`). The old
@@ -103,11 +108,17 @@ Controls use the shared shadcn primitives, which pick up Poolside Clear everywhe
 `.turnfin-app`. See [Docs integration](docs/turnfin-docs.md).
 
 **The home page** (`/`, owner decision 28 September 2026) is the role's workspace: the role's
-home name as the H1, one card per module the role has, each listing what waits for this person
-there, and a Turnfin Me note. It uses the shared `ModuleShell` frame with the role's modules down
-the side. Cards size to their content in a one-, two- and three-column grid; every card line is a
-44px link, and a line that needs the person carries a "Needs you" tag from `HOME_ITEM_META`. Each
-module supplies its own card (`registerHomeCard`); keep a card to the everyday jobs. The module
+home name as the H1 under the date, with the role and working site beneath. Then, in the order the
+day needs them: **quick actions** (outline buttons with an icon, e.g. Add a swimmer, Log a refund
+request, Report an absence); **Today at <site>** (figure tiles: classes and assessments running,
+an instructor's own classes with the next three, who is on shift); **Waiting for you** (a tile per
+queue with its count, those needing the person first with a "Needs you" tag from `HOME_ITEM_META`,
+empty queues muted, and "All clear" when nothing needs them); **Your modules** (a compact card per
+module with its remaining links and Open); and the Turnfin Me note. Tiles are whole-tile 44px+
+links, two to a row on a phone and four on a wide screen. It uses the shared `ModuleShell` frame
+with the role's modules down the side. Each module supplies its items (`registerHomeCard`); an
+item's `kind` (`action`, `today`) or `count` decides its section. Keep it to the everyday jobs and
+to figures the person may already see. The module
 launcher (`/modules`) and the Reception Portal are retired and redirect to `/`; every shell's
 "All modules" link is now "Home". The supplied transparent Turnfin fin logo lives at
 `public/brand/turnfin.png`.
@@ -378,7 +389,7 @@ always there. The keyholder guard keeps at least one active account holding
 **The home page is the only front door.** `/` is the role's home page; old
 `/start`, `/reception`, `/reception-portal` and `/modules` links redirect to it.
 **The sidebar shows one list at a time.** On the home page it lists the
-role's modules. Inside a module it shows only that module's pages, with a "Back to Hub" link (back arrow, styled like any page link that is not current) in the sidebar footer, above the Help and Appearance buttons and Account
+role's modules. Inside a module it shows only that module's pages, with a "Back to Hub" link (back arrow, styled like any page link that is not current) in the sidebar footer, above the Help and Appearance buttons; the signed-in person sits at the top of every sidebar, where Home used to be
 (`HomeButton` in `src/components/workspace/your-modules.tsx`); modules are
 reached from Home. Never list the modules and a
 module's pages together. The sidebar holds navigation only: no action buttons such as "New

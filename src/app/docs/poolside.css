@@ -44,18 +44,20 @@
 
   /* Type scale: five sizes only. Captions and metadata; body, controls and labels; section
      titles; page titles; large figures. docs.css and module CSS reference these tokens. */
-  --pc-text-caption: 13px;
-  --pc-leading-caption: 18px;
-  --pc-text-body: 15px;
-  --pc-leading-body: 22px;
-  --pc-text-title: 18px;
-  --pc-leading-title: 26px;
-  --pc-text-page: 24px;
-  --pc-leading-page: 32px;
-  --pc-text-figure: 32px;
-  --pc-leading-figure: 40px;
+  --pc-text-caption: 12px;
+  --pc-leading-caption: 16px;
+  --pc-text-body: 14px;
+  --pc-leading-body: 20px;
+  --pc-text-title: 16px;
+  --pc-leading-title: 24px;
+  --pc-text-page: 22px;
+  --pc-leading-page: 28px;
+  --pc-text-figure: 28px;
+  --pc-leading-figure: 34px;
 
-  /* Control geometry: one height, inset and radius for every button and field. */
+  /* Control geometry: one height, inset and radius for every button and field.
+     44px wherever a finger may tap (phones, tablets, touch screens, the pool
+     deck); 38px on a desktop with a mouse, below. */
   --pc-control-height: 44px;
   --pc-control-pad: 16px;
   --pc-radius-inner: 8px;
@@ -151,6 +153,16 @@
   --slate: var(--pc-ink-muted);
   --radius: 16px;
 }
+/* A desktop with a mouse: controls tighten to 38px. Touch keeps 44px (shadcn.css raises
+   every control again under a coarse pointer or a narrow screen), and so does the pool
+   deck, which sets the token back on its own frame. Call sites that ask for min-h-11
+   mean "a control's height", so they follow the token too. */
+@media (hover: hover) and (pointer: fine) and (min-width: 48.0625rem) {
+  .turnfin-app,
+  .turnfin-docs,
+  .turnfin-refunds { --pc-control-height: 38px; }
+  .turnfin-app .min-h-11 { min-height: var(--pc-control-height); }
+}
 .turnfin-app,
 .turnfin-app {
   font-family: var(--font-sans);
@@ -179,7 +191,7 @@
 .turnfin-docs .workspace-brand-row .turnfin-brand { gap: 8px; }
 .turnfin-docs .workspace-brand-row .brand-wordmark { font-size: 20px; font-weight: 700; letter-spacing: -0.02em; }
 .turnfin-docs .workspace-brand-row .brand-wordmark > span { font-size: 13px; font-weight: 600; color: var(--pc-primary-ink); letter-spacing: 0; }
-.turnfin-docs .workspace-search { min-height: 44px; border-radius: 12px; border-color: var(--pc-line-strong); background: var(--pc-surface); }
+.turnfin-docs .workspace-search { min-height: var(--pc-control-height); border-radius: 12px; border-color: var(--pc-line-strong); background: var(--pc-surface); }
 .turnfin-docs .workspace-search input { align-self: stretch; height: auto; font-size: var(--pc-text-body); }
 .turnfin-docs .workspace-search:focus-within { outline: none; border-color: var(--pc-focus); box-shadow: 0 0 0 1px var(--pc-focus), var(--pc-focus-halo); }
 .turnfin-docs .workspace-nav-label { margin: 0 12px 8px; font-size: var(--pc-text-caption); font-weight: 600; color: var(--pc-ink-muted); }
@@ -397,3 +409,11 @@
 
 /* Frames fill the viewport. */
 .turnfin-app .turnfin-workspace { height: 100dvh; }
+
+/* A desktop with a mouse, continued (after the field rules it adjusts): fields read at body
+   size (16px elsewhere stops phones zooming on focus), and controls given a fixed h-11 take
+   the control height like everything else. */
+@media (hover: hover) and (pointer: fine) and (min-width: 48.0625rem) {
+  .turnfin-app :is([data-slot='input'], [data-slot='textarea'], [data-slot='select-trigger'], [data-slot='native-select']):not(.title-input) { font-size: var(--pc-text-body); }
+  .turnfin-app :is([data-slot='button'], [data-slot='input'], [data-slot='select-trigger'], [data-slot='native-select'], .ui-motion-press).h-11 { height: var(--pc-control-height); }
+}
