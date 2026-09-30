@@ -157,3 +157,16 @@ Set `PLAYWRIGHT_MODULE` to the installed Playwright module when it is supplied
 by the workspace runtime. Evidence is written under ignored
 `.impeccable/review/docs`. For a synthetic preview, run
 `npx tsx scripts/docs-preview/server.mjs --serve-docs` and open port 4195.
+
+## Importing a Notion register (29 September 2026)
+
+`scripts/docs-import-notion.ts` brings a Notion document register (such as the Bishopstown
+NOP & SOP register) into Docs from Notion's Markdown export, run against production with
+`npm run prod` (docs/database-operations.md; `.env.production.local` then also needs
+`DOCS_DATABASE_URL`). Each page whose title starts with a reference ("[OPS-BT-PO-SOP-01]")
+becomes a document for the chosen site: reference and title from the heading, NOP/SOP/EAP from
+the tags or title, the review date from "Next review", the summary from the Purpose section,
+and the body converted from Markdown (`src/lib/docs/markdown.ts`, tested). A page tagged Draft
+stays a draft; any other is submitted by `--author` and approved by `--approver` through the
+normal workflow and audit, so it is published. References already in Docs are skipped, so it
+can run again; a dry run prints counts first.
