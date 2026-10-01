@@ -15,12 +15,14 @@ type Shift = { id: string; date: Date; startMinutes: number; endMinutes: number;
 
 /** Add a shift (optionally on a given day) or change one. Qualification gaps
  *  are shown on the rota afterwards; they never stop the save. */
-export function ShiftDialog({ siteId, date, shift, people, types }: { siteId: string; date: string; shift?: Shift; people: (Option & { jobTitle: string | null })[]; types: Option[] }) {
+export function ShiftDialog({ siteId, date, shift, people, types, label }: { siteId: string; date: string; shift?: Shift; people: (Option & { jobTitle: string | null })[]; types: Option[]; label?: string }) {
   return (
     <FormDialog
       portalClassName={THEME}
       width="sm:max-w-lg"
-      trigger={shift
+      trigger={shift && label
+        ? <Button variant="outline" className="min-h-11"><Pencil aria-hidden="true" />{label}</Button>
+        : shift
         ? <Button variant="ghost" size="icon" className="size-11" aria-label={`Change ${shift.role} ${clock(shift.startMinutes)}`}><Pencil aria-hidden="true" /></Button>
         : <Button variant="outline" className="min-h-11"><Plus aria-hidden="true" />Add shift</Button>}
       title={shift ? `Change ${shift.role}` : "Add a shift"}
@@ -56,11 +58,13 @@ export function ShiftDialog({ siteId, date, shift, people, types }: { siteId: st
   );
 }
 
-export function CancelShift({ id, label }: { id: string; label: string }) {
+export function CancelShift({ id, label, withText = false }: { id: string; label: string; withText?: boolean }) {
   return (
     <FormDialog
       portalClassName={THEME}
-      trigger={<Button variant="ghost" size="icon" className="size-11" aria-label={`Cancel ${label}`}><X aria-hidden="true" /></Button>}
+      trigger={withText
+        ? <Button variant="ghost" className="min-h-11 text-[var(--pc-danger)]"><X aria-hidden="true" />Cancel shift</Button>
+        : <Button variant="ghost" size="icon" className="size-11" aria-label={`Cancel ${label}`}><X aria-hidden="true" /></Button>}
       title={`Cancel ${label}?`}
       description="It disappears from the rota and from the person's Turnfin Me. The change is recorded."
       submitLabel="Cancel shift"

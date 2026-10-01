@@ -2,84 +2,76 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { CalendarDays, ChevronLeft, ChevronRight, Upload } from "lucide-react";
 import { Button } from "@/components/shadcn/button";
-import { Label } from "@/components/shadcn/label";
 import { NativeSelect, NativeSelectOption } from "@/components/shadcn/native-select";
-import { CancelShift, ShiftDialog } from "@/components/rota/actions";
-import { RotaWarningTag } from "@/components/rota/status";
-import { formatDate, today } from "@/lib/format";
-import { addDaysIso, clock, ROSTER_LEAVE_META, WEEKDAY_LABELS } from "@/lib/rota/constants";
-import { Tag } from "@/components/ui-kit/tag";
+import { ShiftDialog } from "@/components/rota/actions";
+import { RotaSheet } from "@/components/rota/sheet";
+import { today } from "@/lib/format";
+import { addDaysIso, ROSTER_LEAVE_META } from "@/lib/rota/constants";
 import { rotaWeek } from "@/lib/rota/data";
+import { buildSheet } from "@/lib/rota/sheet";
 
 export const metadata: Metadata = { title: { absolute: "Turnfin Rota" } };
 
-const personName = (s: { rotaPerson: { name: string } | null; user: { name: string } | null }) => s.rotaPerson?.name ?? s.user?.name ?? "";
+const DAY = new Intl.DateTimeFormat("en-GB", { day: "numeric", month: "short", timeZone: "UTC" });
+const WEEKDAY = new Intl.DateTimeFormat("en-GB", { weekday: "short", timeZone: "UTC" });
+const at = (iso: string) => new Date(`${iso}T00:00:00Z`);
 
+/** One site's week as a roster sheet: people down the side, days across. */
 export default async function RotaPage({ searchParams }: { searchParams: Promise<{ site?: string; week?: string }> }) {
   const input = await searchParams;
   const data = await rotaWeek(input.site, input.week);
   const { site, monday } = data;
   const link = (week: string) => `/rota?${new URLSearchParams({ ...(site ? { site: site.id } : {}), week })}`;
-  const warnings = data.days.reduce((sum, d) => sum + d.shifts.filter((s) => s.warnings.some((w) => w !== "open" && w !== "absent")).length, 0);
-  const absent = data.days.reduce((sum, d) => sum + d.shifts.filter((s) => s.warnings.includes("absent")).length, 0);
-  const open = data.days.reduce((sum, d) => sum + d.shifts.filter((s) => s.kind === "shift" && !s.userId && !s.rotaPersonId).length, 0);
+  const sunday = addDaysIso(monday, 6);
+  const now = today();
+  const all = data.days.flatMap((d) => d.shifts);
+  const warnings = all.filter((s) => s.warnings.some((w) => w !== "open" && w !== "absent")).length;
+  const absent = all.filter((s) => s.warnings.includes("absent")).length;
+  const open = all.filter((s) => s.kind === "shift" && !s.userId && !s.rotaPersonId).length;
+  const sheet = buildSheet(data.days, (s) => (s.kind === "holiday" ? "Holiday" : s.note || ROSTER_LEAVE_META.leave.label));
+  const days = data.days.map((d) => ({ iso: d.iso, weekday: WEEKDAY.format(at(d.iso)), date: DAY.format(at(d.iso)), today: d.iso === now }));
+  const editable = Object.fromEntries(all.filter((s) => !s.importId).map((s) => [s.id, {
+    id: s.id, date: s.date, startMinutes: s.startMinutes, endMinutes: s.endMinutes, role: s.role, note: s.note, userId: s.userId, requiredTypeId: s.requiredTypeId,
+  }]));
+  const summary = [
+    absent ? `${absent} ${absent === 1 ? "shift needs" : "shifts need"} cover` : null,
+    open ? `${open} unfilled` : null,
+    warnings ? `${warnings} with a qualification or double-booking warning` : null,
+  ].filter(Boolean);
+
   return (
-    <div className="space-y-6">
+    <div className="space-y-4">
       <div className="module-heading">
-        <div className="space-y-2">
-          <h1>Rota{site ? `: ${site.name}` : ""}</h1>
-          <p className="text-sm">Week of {formatDate(new Date(`${monday}T00:00:00Z`))}. {warnings === 0 ? "No qualification problems." : `${warnings} ${warnings === 1 ? "shift needs" : "shifts need"} a look.`}{absent ? ` ${absent} ${absent === 1 ? "shift needs" : "shifts need"} cover for someone who is off.` : ""}{open ? ` ${open} unfilled.` : ""}</p>
+        <div className="space-y-1">
+          <h1>Rota{site ? <span className="font-normal text-ui-muted-foreground">: {site.name}</span> : null}</h1>
+          <p className="text-sm">{DAY.format(at(monday))} to {DAY.format(at(sunday))} {at(sunday).getUTCFullYear()} · {sheet.people} {sheet.people === 1 ? "person" : "people"}{summary.length ? ` · ${summary.join(" · ")}` : " · nothing needs a look"}</p>
         </div>
-        {data.who.manage ? <Button asChild className="min-h-11"><Link href="/rota/import"><Upload aria-hidden="true" />Upload roster</Link></Button> : null}
+        <div className="flex flex-wrap items-center gap-2">
+          {site ? (
+            <nav aria-label="Weeks" className="flex items-center gap-1">
+              <Button asChild variant="outline" size="icon" aria-label="Previous week"><Link href={link(addDaysIso(monday, -7))}><ChevronLeft aria-hidden="true" /></Link></Button>
+              <Button asChild variant={monday <= now && now <= sunday ? "secondary" : "outline"}><Link href={link(now)} aria-current={monday <= now && now <= sunday ? "date" : undefined}>This week</Link></Button>
+              <Button asChild variant="outline" size="icon" aria-label="Next week"><Link href={link(addDaysIso(monday, 7))}><ChevronRight aria-hidden="true" /></Link></Button>
+            </nav>
+          ) : null}
+          {site?.manage ? <ShiftDialog siteId={site.id} date={monday <= now && now <= sunday ? now : monday} people={data.people} types={data.types} /> : null}
+          {data.who.manage ? <Button asChild className="min-h-11"><Link href="/rota/import"><Upload aria-hidden="true" />Upload roster</Link></Button> : null}
+        </div>
       </div>
-      {data.sites.length === 0 ? (
+      {data.sites.length === 0 || !site ? (
         <div className="module-empty"><CalendarDays aria-hidden="true" /><h2 className="font-semibold">No sites to show</h2><p className="mt-2 text-sm text-ui-muted-foreground">Your rota role does not cover a site yet.</p></div>
       ) : (
         <>
-          <form method="get" className="module-filters flex flex-wrap items-end gap-3" aria-label="Choose a site and week">
-            {data.sites.length > 1 ? (
-              <div className="min-w-0 flex-1 space-y-2"><Label htmlFor="rota-site">Site</Label>
-                <NativeSelect id="rota-site" name="site" defaultValue={site?.id} className="min-h-11 w-full">
+          <RotaSheet sheet={sheet} days={days} siteId={site.id} manage={site.manage} editable={editable} people={data.people} types={data.types}
+            siteChooser={data.sites.length > 1 ? (
+              <form key="site" method="get" className="flex min-w-0 items-center gap-2" aria-label="Choose a site">
+                <div className="w-full sm:w-60"><NativeSelect name="site" defaultValue={site.id} aria-label="Site">
                   {data.sites.map((s) => <NativeSelectOption key={s.id} value={s.id}>{s.name}</NativeSelectOption>)}
-                </NativeSelect>
-              </div>
-            ) : <input type="hidden" name="site" value={site?.id} />}
-            <input type="hidden" name="week" value={monday} />
-            {data.sites.length > 1 ? <Button type="submit" variant="outline" className="min-h-11">Show</Button> : null}
-            <nav aria-label="Weeks" className="flex gap-2">
-              <Button asChild variant="outline" className="min-h-11"><Link href={link(addDaysIso(monday, -7))}><ChevronLeft aria-hidden="true" />Previous</Link></Button>
-              <Button asChild variant="outline" className="min-h-11"><Link href={link(today())}>This week</Link></Button>
-              <Button asChild variant="outline" className="min-h-11"><Link href={link(addDaysIso(monday, 7))}>Next<ChevronRight aria-hidden="true" /></Link></Button>
-            </nav>
-          </form>
-          <div className="space-y-4">
-            {data.days.map((day, i) => (
-              <section key={day.iso} className="module-panel" aria-labelledby={`day-${day.iso}`}>
-                <div className="flex flex-wrap items-center justify-between gap-3">
-                  <h2 id={`day-${day.iso}`}>{WEEKDAY_LABELS[i]} <span className="font-normal text-ui-muted-foreground">{formatDate(new Date(`${day.iso}T00:00:00Z`))}</span></h2>
-                  {site?.manage ? <ShiftDialog siteId={site.id} date={day.iso} people={data.people} types={data.types} /> : null}
-                </div>
-                {day.shifts.length === 0 ? <p className="text-sm text-ui-muted-foreground">No shifts.</p> : (
-                  <ul className="mt-2">
-                    {[...day.shifts].sort((a, b) => Number(a.kind !== "shift") - Number(b.kind !== "shift")).map((s) => (
-                      <li key={s.id} className="flex flex-wrap items-center justify-between gap-3 py-3">
-                        <div className="min-w-0 flex-1 space-y-1">
-                          {s.kind === "shift"
-                            ? <p><span className="font-semibold tabular-nums">{clock(s.startMinutes)}–{s.endMinutes > 1440 ? `${clock(s.endMinutes - 1440)} (next day)` : clock(s.endMinutes)}</span> · {s.role}{personName(s) ? ` · ${personName(s)}` : ""}</p>
-                            : <p className="flex flex-wrap items-center gap-2"><Tag color={ROSTER_LEAVE_META[s.kind as keyof typeof ROSTER_LEAVE_META]?.color ?? "gray"}>{s.kind === "holiday" ? ROSTER_LEAVE_META.holiday.label : s.note || ROSTER_LEAVE_META.leave.label}</Tag><span>{personName(s)}</span><span className="text-ui-muted-foreground">· {s.role}</span></p>}
-                          {s.requiredType || s.note ? <p className="text-xs text-ui-muted-foreground">{[s.requiredType ? `Needs ${s.requiredType.name}` : null, s.note || null].filter(Boolean).join(" · ")}</p> : null}
-                        </div>
-                        <div className="flex flex-wrap items-center gap-2">
-                          {s.warnings.map((w) => <RotaWarningTag key={w} warning={w} />)}
-                          {site?.manage && !s.importId ? <><ShiftDialog siteId={site.id} date={day.iso} shift={s} people={data.people} types={data.types} /><CancelShift id={s.id} label={`${s.role} ${clock(s.startMinutes)}`} /></> : null}
-                        </div>
-                      </li>
-                    ))}
-                  </ul>
-                )}
-              </section>
-            ))}
-          </div>
+                </NativeSelect></div>
+                <input type="hidden" name="week" value={monday} />
+                <Button type="submit" variant="outline">Show</Button>
+              </form>
+            ) : null} />
         </>
       )}
     </div>
