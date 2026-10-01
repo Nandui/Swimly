@@ -119,10 +119,9 @@ export function RotaPlan({ plan, days, today, siteId, manage, editable, options,
               <dt className="text-ui-muted-foreground">Who</dt>
               <dd className="font-semibold">{open.entry.who ?? "Unfilled"}</dd>
               {open.entry.part ? <><dt className="text-ui-muted-foreground">Role</dt><dd>{open.entry.part}</dd></> : null}
-              <dt className="text-ui-muted-foreground">Hours</dt>
-              <dd className="tabular-nums">{hours(open.entry.minutes)}</dd>
+              {open.entry.href ? null : <><dt className="text-ui-muted-foreground">Hours</dt><dd className="tabular-nums">{hours(open.entry.minutes)}</dd></>}
               {open.entry.detail ? <><dt className="text-ui-muted-foreground">Details</dt><dd>{open.entry.detail}</dd></> : null}
-              {!open.entry.editable ? <><dt className="text-ui-muted-foreground">Came from</dt><dd>The old roster upload, so it cannot be changed here.</dd></> : null}
+              {!open.entry.editable ? <><dt className="text-ui-muted-foreground">Came from</dt><dd>{open.entry.href ? "The Swim school timetable. Instructors and cover are set there." : "The old roster upload, so it cannot be changed here."}</dd></> : null}
             </dl>
             {open.entry.absent || open.entry.warnings.length ? (
               <div className="flex flex-wrap gap-2">
@@ -130,6 +129,7 @@ export function RotaPlan({ plan, days, today, siteId, manage, editable, options,
                 {open.entry.warnings.map((w) => <RotaWarningTag key={w} warning={w} />)}
               </div>
             ) : null}
+            {open.entry.href ? <Button asChild variant="outline" className="min-h-11 self-start"><a href={open.entry.href}>Open the day in the Swim school</a></Button> : null}
             {manage && shift ? (
               <div className="flex flex-wrap items-center gap-2 border-t border-ui-border pt-4">
                 <ShiftDialog siteId={siteId} date={open.day.iso} today={today} shift={shift} options={options} label={open.entry.absent ? "Give cover" : "Change duty"} suggested={open.entry.absent ? "cover" : undefined} />

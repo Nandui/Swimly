@@ -5,6 +5,7 @@ import { serverModule } from "@/test/server-module";
 import { expandPermissions, type PermissionKey } from "@/lib/staff/permissions";
 import { absentOn, addDaysIso, bookingDates, followOn, mondayOf, needsFitNote, parseClock, returnStage, shiftWarnings } from "./constants";
 import { today } from "@/lib/format";
+import { buildPlan } from "./plan";
 
 /** The Rota: a site-scoped planner plans only their site, qualification gaps
  *  and double-bookings warn but never refuse, and each person sees only their
@@ -24,6 +25,8 @@ function session() {
     screens: state.screens, primaryScreens: state.screens, grants: state.grants, authMethod: "password", authAt: Date.now() } };
 }
 class NotFound extends Error {}
+/** Swim classes the Swim school reports through the commitments seam (invented). */
+const classes: { source: string; userId: string | null; siteId: string; date: string; startMinutes: number; endMinutes: number; label: string; href?: string }[] = [];
 function doubles() {
   return {
     "@/lib/prisma": { prisma: fixture.prisma },
@@ -38,6 +41,10 @@ function doubles() {
     "next/navigation": { notFound: () => { throw new NotFound("not found"); } },
     "server-only": {},
     react: { cache: <T,>(fn: T) => fn },
+    "@/modules/server": {
+      commitmentsFor: async (q: { siteIds?: string[]; userIds?: string[]; from: string; to: string }) => classes.filter((c) => c.date >= q.from && c.date <= q.to
+        && (!q.siteIds || q.siteIds.includes(c.siteId)) && (!q.userIds || (!!c.userId && q.userIds.includes(c.userId)))),
+    },
   };
 }
 const as = (id: string, grants: GrantRow[] = [], permissions: string[] = []) => Object.assign(state, { id, grants, permissions, screens: permissions.length ? ["rota"] : [] });
@@ -338,4 +345,21 @@ test("bookings: each session's places go on the plan unfilled; cancelling takes 
   assert.equal(await db.rotaShift.count({ where: { bookingId: club.id, cancelledAt: null } }), 0, "every session still to come is off the plan");
   assert.equal((await db.rotaShiftChange.findFirstOrThrow({ where: { shiftId: todays.id } })).fromUserId, "noah", "and the person taken off keeps it on their file");
   assert.equal((await actions.cancelBooking(club.id)).ok, false, "already cancelled");
+});
+
+test("swim classes: on the plan read-only, and a duty while teaching warns", async () => {
+  as("maya", [planner()]);
+  const day = addDaysIso(mondayOf(today()), 14);
+  classes.push(
+    { source: "activities.classes", userId: "ava", siteId: churchfield, date: day, startMinutes: 960, endMinutes: 1005, label: "Level 3", href: `/schedule?date=${day}` },
+    { source: "activities.classes", userId: null, siteId: churchfield, date: day, startMinutes: 1020, endMinutes: 1065, label: "Level 1" },
+  );
+  assert.equal((await actions.saveShift(null, { siteId: churchfield, date: day, start: "12:00", end: "17:00", role: "Lane supervision", departmentId: "d-pool", requiredTypeId: "", userId: "ava", note: "" })).ok, true, "warns, never blocks");
+  const week = await data.rotaWeek(churchfield, day);
+  const lane = week.days[0].shifts.find((s) => s.role === "Lane supervision")!;
+  assert.ok(lane.warnings.includes("teaching"), "Ava teaches at 16:00");
+  const plan = buildPlan(week.days);
+  const swim = plan.groups.find((g) => g.label === "Swim school")!.rows[0].days[0][0];
+  assert.deepEqual([swim.who, swim.text, swim.part, swim.editable, swim.href], ["2 classes · 1 instructor", "16:00–17:45", "1 without an instructor", false, `/schedule?date=${day}`]);
+  classes.length = 0;
 });

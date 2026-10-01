@@ -8,6 +8,7 @@ export const ROTA_WARNING_META = {
   expired: { label: "Qualification expired", color: "red" },
   missing: { label: "Qualification not recorded", color: "orange" },
   overlap: { label: "Double-booked", color: "orange" },
+  teaching: { label: "Teaching a swim class then", color: "orange" },
   open: { label: "Unfilled", color: "gray" },
 } as const satisfies Record<string, StatusMeta>;
 export type RotaWarning = keyof typeof ROTA_WARNING_META;
@@ -196,7 +197,9 @@ type ShiftLike = PersonRef & { id: string; date: Date; startMinutes: number; end
  *  other shifts that day and whether they are off. A holiday or leave day from
  *  the roster is not a shift and has nothing wrong with it. Pure, so the rules
  *  are tested on their own. */
-export function shiftWarnings(shift: ShiftLike, held: readonly Held[], sameDay: readonly ShiftLike[], absences: readonly AbsenceLike[] = []): RotaWarning[] {
+export function shiftWarnings(shift: ShiftLike, held: readonly Held[], sameDay: readonly ShiftLike[], absences: readonly AbsenceLike[] = [],
+  /** What else the person is committed to that day (swim classes they teach). */
+  elsewhere: readonly { userId: string | null; startMinutes: number; endMinutes: number }[] = []): RotaWarning[] {
   if (shift.kind && shift.kind !== "shift") return [];
   if (!shift.userId && !shift.rotaPersonId) return ["open"];
   const warnings: RotaWarning[] = [];
@@ -210,5 +213,6 @@ export function shiftWarnings(shift: ShiftLike, held: readonly Held[], sameDay: 
   if (sameDay.some((other) => other.id !== shift.id && (!other.kind || other.kind === "shift") && samePerson(other, shift) && other.startMinutes < shift.endMinutes && shift.startMinutes < other.endMinutes)) {
     warnings.push("overlap");
   }
+  if (shift.userId && elsewhere.some((c) => c.userId === shift.userId && c.startMinutes < shift.endMinutes && shift.startMinutes < c.endMinutes)) warnings.push("teaching");
   return warnings;
 }

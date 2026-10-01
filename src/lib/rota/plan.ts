@@ -41,6 +41,8 @@ export type PlanEntry = {
   warnings: RotaWarning[];
   /** Added in Turnfin, so it can be changed here; old imported ones cannot. */
   editable: boolean;
+  /** Set on the Swim school's row: where its classes are seen and changed. */
+  href?: string;
   detail: string;
 };
 
@@ -55,7 +57,10 @@ export function hours(minutes: number) {
   return Number.isInteger(h) ? String(h) : h.toFixed(2).replace(/0$/, "");
 }
 
-export function buildPlan(days: readonly { iso: string; shifts: readonly PlanShift[] }[]) {
+/** The swim classes of one day, from the Swim school: times and who teaches. */
+export type PlanClass = { userId: string | null; startMinutes: number; endMinutes: number; href?: string };
+
+export function buildPlan(days: readonly { iso: string; shifts: readonly PlanShift[]; classes?: readonly PlanClass[] }[]) {
   const groups = new Map<string, { key: string; label: string; order: number; rows: Map<string, PlanRow> }>();
   days.forEach((d, day) => {
     for (const s of d.shifts) {
@@ -79,6 +84,25 @@ export function buildPlan(days: readonly { iso: string; shifts: readonly PlanShi
       });
     }
   });
+  // The Swim school's classes, read-only: one entry a day with how many and who teaches.
+  if (days.some((d) => d.classes?.length)) {
+    groups.set("Swim school", { key: "g:swim", label: "Swim school", order: Number.MAX_SAFE_INTEGER - 1, rows: new Map([["swim", {
+      key: "g:swim:classes", duty: "Swim classes", needs: "Instructors are set in the Swim school",
+      days: days.map((d) => {
+        const list = d.classes ?? [];
+        if (!list.length) return [];
+        const start = Math.min(...list.map((c) => c.startMinutes)), end = Math.max(...list.map((c) => c.endMinutes));
+        const instructors = new Set(list.flatMap((c) => (c.userId ? [c.userId] : []))).size;
+        const open = list.filter((c) => !c.userId).length;
+        return [{
+          id: `swim:${d.iso}`, text: `${clock(start)}–${clock(end)}`, minutes: 0,
+          who: `${list.length} ${list.length === 1 ? "class" : "classes"} · ${instructors} ${instructors === 1 ? "instructor" : "instructors"}`,
+          part: open ? `${open} without an instructor` : null, absent: false, warnings: [], editable: false, detail: "From the Swim school timetable",
+          href: list[0].href,
+        }];
+      }),
+    }]]) });
+  }
   const sorted = [...groups.values()]
     .sort((a, b) => a.order - b.order || a.label.localeCompare(b.label))
     .map(({ key, label, rows }) => ({

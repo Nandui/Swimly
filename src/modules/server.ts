@@ -11,4 +11,4 @@ import "@/lib/rota/file";
 import "@/lib/hr/home";
 import "@/lib/people/home";
 
-export { homeCardItems, personFile, siteSummaryLines, staffColumnValues } from "./contributions";
+export { commitmentsFor, homeCardItems, personFile, siteSummaryLines, staffColumnValues } from "./contributions";

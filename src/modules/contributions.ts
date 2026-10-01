@@ -153,3 +153,46 @@ export function registerPersonFileSection(section: PersonFileSection) {
 export async function personFile(userId: string, orgId: string) {
   return Promise.all(personFileSections.map(async (section) => ({ id: section.id, heading: section.heading, ...(await section.load(userId, orgId)) })));
 }
+
+// ---------------------------------------------------------------------------
+// Commitments: who is busy when
+// ---------------------------------------------------------------------------
+
+/** Someone (or nobody yet) committed to something at a site for a time on a
+ *  day: a swim class they teach, a duty on the rota. Modules report their own,
+ *  and any module can check a person's time against everyone else's, so a
+ *  supervisor sees "teaching a class then" without Rota importing the swim
+ *  school. When a module moves to its own app, its source calls that app. */
+export type Commitment = {
+  /** The source's id, e.g. "activities.classes". */
+  source: string;
+  userId: string | null;
+  siteId: string;
+  /** ISO date. */
+  date: string;
+  startMinutes: number;
+  endMinutes: number;
+  /** "Level 3, Learner pool". */
+  label: string;
+  /** Where to see or change it. */
+  href?: string;
+};
+export type CommitmentQuery = { siteIds?: readonly string[]; userIds?: readonly string[]; from: string; to: string };
+export type CommitmentSource = { id: string; list(query: CommitmentQuery): Promise<Commitment[]> };
+
+const commitmentSources: CommitmentSource[] = [];
+
+export function registerCommitments(source: CommitmentSource) {
+  const at = commitmentSources.findIndex((s) => s.id === source.id);
+  if (at >= 0) commitmentSources[at] = source;
+  else commitmentSources.push(source);
+}
+
+/** Every registered source's commitments matching the query, except the
+ *  caller's own (it knows those already). Callers must hold the access the
+ *  page needs; these are times and short labels, never records. */
+export async function commitmentsFor(query: CommitmentQuery, except?: string) {
+  if (query.userIds && query.userIds.length === 0 && !query.siteIds) return [];
+  const lists = await Promise.all(commitmentSources.filter((s) => s.id !== except).map((s) => s.list(query)));
+  return lists.flat();
+}

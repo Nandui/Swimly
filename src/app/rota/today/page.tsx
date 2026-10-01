@@ -23,7 +23,7 @@ const span = (s: { startMinutes: number; endMinutes: number }) => `${clock(s.sta
 export default async function TodayPage({ searchParams }: { searchParams: Promise<{ site?: string }> }) {
   const data = await rotaToday((await searchParams).site);
   const { site, today: now } = data;
-  const plan = buildPlan([{ iso: now, shifts: data.shifts }]);
+  const plan = buildPlan([{ iso: now, shifts: data.shifts, classes: data.classes }]);
   const options = { people: data.people, types: data.types, departments: data.departments, duties: data.duties };
   // The timeline runs from the earliest start to the latest end, whole hours, at least 06:00 to 22:00.
   const from = Math.min(360, ...data.shifts.map((s) => Math.floor(s.startMinutes / 60) * 60));
@@ -131,6 +131,10 @@ export default async function TodayPage({ searchParams }: { searchParams: Promis
                           <div className="relative min-h-14">
                             {nowAt ? <span aria-hidden="true" className="absolute inset-y-0 w-0.5 bg-[var(--pc-primary)]" style={{ left: nowAt }} /> : null}
                             {r.days[0].map((e) => {
+                              if (e.href) {
+                                const [a, z] = e.text.split("–").map((t) => Number(t.slice(0, 2)) * 60 + Number(t.slice(3, 5)));
+                                return <a key={e.id} href={e.href} className="absolute inset-y-2 flex items-center gap-1.5 truncate rounded-[var(--pc-radius-inner)] bg-[var(--pc-primary-soft)] px-2 text-xs text-[var(--pc-primary-ink)] hover:underline" style={{ left: pos(a), width: `calc(${pos(z)} - ${pos(a)})` }}><span className="font-semibold">{e.who}</span>{e.part ? <span>· {e.part}</span> : null}</a>;
+                              }
                               const s = shiftOf(e.id);
                               const tone = e.absent ? "border-[var(--pc-danger)] bg-[var(--pc-danger-soft)]" : !e.who ? "border-dashed border-ui-muted-foreground bg-ui-card" : "border-ui-border bg-[var(--pc-surface-sunken)]";
                               const body = (

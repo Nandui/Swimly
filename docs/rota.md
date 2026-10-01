@@ -17,6 +17,13 @@ the main database and uses the platform access model (docs/platform-access.md).
   included, into a week that has not started, never doubling one already planned.
   It opens for anyone with the Rota screen and `rota.view` at any scope, and
   shows only the sites that capability covers; any other site is a 404.
+- **Swim classes** come from the Swim school through the commitments seam
+  (`commitmentsFor` in `src/modules/contributions.ts`; docs/architecture.md): the
+  plan shows a read-only "Swim classes" row per day (how many classes, how many
+  instructors, any without one, linking to that day's Schedule), Today shows them
+  on its timeline, a duty whose person is teaching a class then warns **Teaching a
+  swim class then**, and Today never suggests someone teaching as cover.
+  Instructors and cover are still set in the Swim school.
 - **Bookings** (`/rota/bookings`). School lessons, parties, lane hire and events that
   need staff (owner request, 1 October 2026). A booking says what it is
   (`BOOKING_KIND_META`), who it is for, where, its department, the weekdays, the
