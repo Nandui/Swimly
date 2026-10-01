@@ -121,3 +121,35 @@ export async function homeCardItems(moduleIds: readonly string[], viewer: HomeVi
   }));
   return out;
 }
+
+// ---------------------------------------------------------------------------
+// Personal file
+// ---------------------------------------------------------------------------
+
+/** One thing on a person's file, in words: "Sickness, 29 Sep to 2 Oct (4 days)"
+ *  with its detail, "Return to work 3 Oct with Maya: fit to work". */
+export type PersonFileEntry = { id: string; title: string; detail: string; /** ISO date it is about. */ on: string };
+
+/** What a module keeps about one person for their personal file (the HR
+ *  record and its export), such as Rota's absences and returns to work.
+ *  Callers must already hold `hr.records.read` over the person and log the
+ *  read; sections return what the module holds, never permissions. */
+export type PersonFileSection = {
+  /** Stable key, e.g. "rota.absences". */
+  id: string;
+  heading: string;
+  load(userId: string, orgId: string): Promise<{ summary: string; entries: PersonFileEntry[] }>;
+};
+
+const personFileSections: PersonFileSection[] = [];
+
+export function registerPersonFileSection(section: PersonFileSection) {
+  const at = personFileSections.findIndex((s) => s.id === section.id);
+  if (at >= 0) personFileSections[at] = section;
+  else personFileSections.push(section);
+}
+
+/** Every registered section of this person's file, in registration order. */
+export async function personFile(userId: string, orgId: string) {
+  return Promise.all(personFileSections.map(async (section) => ({ id: section.id, heading: section.heading, ...(await section.load(userId, orgId)) })));
+}

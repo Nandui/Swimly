@@ -126,4 +126,7 @@ async function seedRota(db: PrismaClient) {
     shift("club_churchfield", 1, 7, 15, "Lifeguard", "sbx_riley", "qt_nplq"),
     shift("club_churchfield", 1, 15, 22, "Lifeguard", "sbx_ava", "qt_nplq"),
   ] });
+  // Ava was off sick for nine days until yesterday; today is her first shift
+  // back, so her return to work is due (and asks about the fit note).
+  await db.rotaAbsence.create({ data: { orgId: ORG, userId: "sbx_ava", reason: "sickness", firstDay: day(-9), lastDay: day(-1), note: "Synthetic: called in before her shift.", reportedById: "sbx_maya", reportedByName: "Maya Example" } });
 }

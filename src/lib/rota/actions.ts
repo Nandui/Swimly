@@ -8,7 +8,7 @@ import { logAudit } from "@/lib/audit";
 import { isDateOnly, parseDateOnly, today } from "@/lib/format";
 import { prisma } from "@/lib/prisma";
 import { requireCapFor } from "@/lib/policy/session";
-import { ABSENCE_REASONS, addDaysIso, clock, parseClock } from "@/lib/rota/constants";
+import { ABSENCE_REASONS, RETURN_FITS, addDaysIso, clock, needsFitNote, parseClock } from "@/lib/rota/constants";
 import { notifyShiftChange } from "@/lib/staff-api/reminders";
 
 /** Rota writes. Each needs `rota.manage` at the shift's site (a site-scoped
@@ -200,11 +200,13 @@ export async function reportAbsence(input: AbsenceInput): Promise<ActionResult> 
 }
 
 async function absenceFor(id: string) {
-  const absence = await prisma.rotaAbsence.findFirst({ where: { id, withdrawnAt: null }, select: { id: true, userId: true, rotaPersonId: true, firstDay: true, lastDay: true } });
+  const absence = await prisma.rotaAbsence.findFirst({ where: { id, withdrawnAt: null }, select: { id: true, userId: true, rotaPersonId: true, reason: true, firstDay: true, lastDay: true, returnMetOn: true } });
   if (!absence) return { ok: false as const, error: "That absence no longer exists." };
   const allowed = await allowedFor(absence.rotaPersonId ? { rotaPersonId: absence.rotaPersonId } : { userId: absence.userId });
   return allowed.ok ? { ...allowed, absence } : allowed;
 }
+
+const RETURN_RECORDED = "Their return to work is already recorded. If they are off again, report a new absence.";
 
 /** They are back: the last day off is set, and the rota stops warning after it. */
 export async function endAbsence(id: string, lastDay: string): Promise<ActionResult> {
@@ -212,6 +214,7 @@ export async function endAbsence(id: string, lastDay: string): Promise<ActionRes
   const found = await absenceFor(id);
   if (!found.ok) return fail(found.error);
   const { actor, person, absence } = found;
+  if (absence.returnMetOn) return fail(RETURN_RECORDED);
   const first = absence.firstDay.toISOString().slice(0, 10);
   if (lastDay < first) return fail(`Their absence started on ${first}, so the last day off can't be before it.`);
   const result = await prisma.$transaction(async (tx) => {
@@ -236,6 +239,7 @@ export async function extendAbsence(id: string, input: { lastDay: string; note: 
   const found = await absenceFor(id);
   if (!found.ok) return fail(found.error);
   const { actor, person, absence } = found;
+  if (absence.returnMetOn) return fail(RETURN_RECORDED);
   const was = absence.lastDay?.toISOString().slice(0, 10) ?? null;
   if (was && was < addDaysIso(today(), -1)) return fail(`${person.name} was back after ${was}. Report a new absence and link it if it is the same thing again.`);
   if (was === null && !lastDay) return fail(`${person.name}'s return is already not known. Choose the new last day off, if you know it.`);
@@ -253,6 +257,50 @@ export async function extendAbsence(id: string, input: { lastDay: string; note: 
     if (moved.count !== 1) return fail("Someone changed this absence just now. Refresh and try again.");
     await tx.rotaAbsenceUpdate.create({ data: { absenceId: id, kind: "extended", lastDay: lastDay ? parseDateOnly(lastDay) : null, note, byId: actor.id, byName: actor.name } });
     await logAudit({ actorId: actor.id, actorName: actor.name, action: "update", entity: "RotaAbsence", entityId: id, clubId: null, summary: `Extended ${person.name}'s absence ${lastDay ? `to ${lastDay}` : "with the return not known"}` }, tx);
+    return ok();
+  });
+  if (result.ok) revalidateRota();
+  return result;
+}
+
+const returnSchema = z.object({
+  metOn: z.string().refine(isDateOnly, "Choose the day you talked."),
+  fit: z.enum(RETURN_FITS, { message: "Say whether they are fit to work." }),
+  adjustments: z.string().trim().max(300, "Keep the changes under 300 characters."),
+  /** "yes" or "no"; asked only for sickness over seven days. */
+  fitNote: z.enum(["", "yes", "no"]).default(""),
+  note: z.string().trim().max(500, "Keep the note under 500 characters."),
+});
+export type ReturnInput = z.input<typeof returnSchema>;
+
+/** The return-to-work conversation, once they are back. It closes the
+ *  absence: after it, the absence can no longer be extended or re-dated, and
+ *  it is on their personal file. The shared log never names the reason. */
+export async function recordReturnToWork(id: string, input: ReturnInput): Promise<ActionResult> {
+  const parsed = returnSchema.safeParse(input);
+  if (!parsed.success) return fail(parsed.error.issues[0].message);
+  const { metOn, fit, adjustments, fitNote, note } = parsed.data;
+  const found = await absenceFor(id);
+  if (!found.ok) return fail(found.error);
+  const { actor, person, absence } = found;
+  if (absence.returnMetOn) return fail("Their return to work is already recorded.");
+  const lastDay = absence.lastDay?.toISOString().slice(0, 10);
+  if (!lastDay) return fail(`${person.name} is still off. Use Back at work first.`);
+  if (metOn <= lastDay) return fail(`They were off until ${lastDay}, so the conversation is from the day after.`);
+  if (metOn > today()) return fail("Record the conversation once it has happened.");
+  if (fit === "adjusted" && !adjustments) return fail("Say what changes to their work you agreed.");
+  const asked = needsFitNote({ reason: absence.reason, firstDay: absence.firstDay.toISOString().slice(0, 10), lastDay });
+  if (asked && !fitNote) return fail("Say whether their fit note came in.");
+  const result = await prisma.$transaction(async (tx) => {
+    const saved = await tx.rotaAbsence.updateMany({
+      where: { id, withdrawnAt: null, returnMetOn: null, lastDay: absence.lastDay },
+      data: {
+        returnMetOn: parseDateOnly(metOn), returnFit: fit, returnAdjustments: fit === "adjusted" ? adjustments : "",
+        returnFitNote: asked ? fitNote === "yes" : null, returnNote: note, returnById: actor.id, returnByName: actor.name,
+      },
+    });
+    if (saved.count !== 1) return fail("Someone changed this absence just now. Refresh and try again.");
+    await logAudit({ actorId: actor.id, actorName: actor.name, action: "update", entity: "RotaAbsence", entityId: id, clubId: null, summary: `Recorded ${person.name}'s return to work on ${metOn}` }, tx);
     return ok();
   });
   if (result.ok) revalidateRota();

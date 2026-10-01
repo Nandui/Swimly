@@ -24,6 +24,16 @@ Tables: `notes`, `reviews`, `access_events` (every read) and `audit_events`
 (every change, in the same transaction). Each carries `org_id` and the
 subject's user id.
 
+## The personal file
+
+The HR record is the person's personal file. Besides notes and reviews it shows
+what other modules keep about them, through the personal-file seam
+(`registerPersonFileSection` / `personFile` in `src/modules/contributions.ts`):
+today Rota's **Absences and returns to work** (docs/rota.md). Those records stay
+in their module's database; HR reads them inside the same logged read as the
+record, and the subject export includes them as `personalFile`. A new module
+adds its part by registering a section; HR does not change.
+
 ## Capabilities (all restricted)
 
 | Key | Lets you |

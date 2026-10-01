@@ -7,6 +7,7 @@ import type { ReviewStatus } from "@/lib/hr/constants";
 import { NOTE_COLUMNS, REVIEW_COLUMNS, type HrNote, type HrReview } from "@/lib/hr/columns";
 export type { HrNote, HrReview } from "@/lib/hr/columns";
 import { mayFor, requireCapFor, subjectsFor } from "@/lib/policy/session";
+import { personFile } from "@/modules/server";
 
 /** HR reads for the workspace. Each resolves who the reader covers through the
  *  policy engine (restricted, so a stale or PIN session is refused), filters
@@ -56,21 +57,24 @@ async function coveredPerson(who: HrActor, userId: string) {
   return person;
 }
 
-/** One person's HR record: visible notes and reviews, and what the reader may add. */
+/** One person's HR record: visible notes and reviews, what other modules keep
+ *  on their personal file (absences and returns to work), and what the reader
+ *  may add. The one logged read covers all of it. */
 export async function hrPerson(userId: string) {
   const who = await requireHrActor();
   const person = await coveredPerson(who, userId);
   const db = hrDatabase();
-  const [notes, reviews] = await Promise.all([
+  const [notes, reviews, file] = await Promise.all([
     db.query<HrNote>(`SELECT ${NOTE_COLUMNS} FROM notes WHERE org_id=$1 AND subject_user_id=$2 AND withdrawn_at IS NULL
       AND (visibility <> 'private' OR author_id=$3 OR $4) ORDER BY created_at DESC`, [who.orgId, userId, who.id, who.superadmin]),
     db.query<HrReview>(`SELECT ${REVIEW_COLUMNS} FROM reviews WHERE org_id=$1 AND subject_user_id=$2
       AND (status <> 'draft' OR reviewer_id=$3 OR $4) ORDER BY created_at DESC`, [who.orgId, userId, who.id, who.superadmin]),
+    personFile(userId, who.orgId),
   ]);
   await logHrAccess(db, who, [userId], "HrRecord", userId, "HR record");
   const self = userId === who.id;
   return {
-    who, person, notes, reviews,
+    who, person, notes, reviews, file,
     // Nobody writes their own HR record.
     canWriteNotes: !self && await mayFor("hr.notes.write", { subjectUserId: userId, orgId: who.orgId }),
     canWriteReviews: !self && await mayFor("hr.reviews.write", { subjectUserId: userId, orgId: who.orgId }),

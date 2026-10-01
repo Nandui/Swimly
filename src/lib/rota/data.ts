@@ -5,7 +5,7 @@ import { prisma } from "@/lib/prisma";
 import { sitesFor, subjectsFor } from "@/lib/policy/session";
 import { requireRotaActor } from "@/lib/rota/access";
 import { AuthorizationError } from "@/lib/authz";
-import { absentOn, addDaysIso, mondayOf, samePerson, shiftWarnings, type AbsenceReason, type AbsenceUpdateKind, type PersonRef } from "@/lib/rota/constants";
+import { absentOn, addDaysIso, mondayOf, returnStage, samePerson, shiftWarnings, type AbsenceReason, type AbsenceUpdateKind, type PersonRef, type ReturnFit } from "@/lib/rota/constants";
 
 /** Rota reads. The sites a person may see come from the policy engine; a site
  *  outside them is a 404, never an empty rota. */
@@ -71,9 +71,10 @@ export async function rotaWeek(siteId: string | undefined, week: string | undefi
 }
 export type RotaDay = Awaited<ReturnType<typeof rotaWeek>>["days"][number];
 
-/** The Absences page: who is off now or soon, and who came back in the last
- *  30 days, among the people the manager's rota role covers. Each current or
- *  upcoming absence counts the shifts it leaves without their person. */
+/** The Absences page, among the people the manager's rota role covers: who
+ *  is off now or soon, whose return to work is still to record, and who came
+ *  back in the last 30 days. Each current or upcoming absence counts the
+ *  shifts it leaves without their person. */
 export async function rotaAbsences() {
   const who = await requireRotaActor();
   if (!who.manage) throw new AuthorizationError("Managing the rota is required.");
@@ -82,15 +83,17 @@ export async function rotaAbsences() {
   const { users, rosterPeople } = await absenceReach(orgId);
   const inReach = { OR: [...(users === "all" ? [{ userId: { not: null } }] : [{ userId: { in: users } }]), { rotaPersonId: { in: rosterPeople.map((p) => p.id) } }] };
   const rows = await prisma.rotaAbsence.findMany({
-    where: { orgId, withdrawnAt: null, AND: [inReach, { OR: [{ lastDay: null }, { lastDay: { gte: parseDateOnly(since) } }] }] },
+    // Current ones, those back in the last 30 days, and any return to work still to record.
+    where: { orgId, withdrawnAt: null, AND: [inReach, { OR: [{ lastDay: null }, { lastDay: { gte: parseDateOnly(since) } }, { returnMetOn: null }] }] },
     orderBy: [{ firstDay: "asc" }],
     select: { id: true, userId: true, rotaPersonId: true, reason: true, firstDay: true, lastDay: true, note: true, reportedByName: true, createdAt: true,
+      returnMetOn: true, returnFit: true, returnAdjustments: true, returnFitNote: true, returnNote: true, returnByName: true,
       user: { select: { name: true } }, rotaPerson: { select: { name: true } },
       continues: { select: { firstDay: true, lastDay: true, reason: true } },
       updates: { orderBy: { createdAt: "asc" }, select: { id: true, kind: true, lastDay: true, note: true, byName: true, createdAt: true } } },
   });
-  const named = rows.map(({ user, rotaPerson, updates, ...a }) => ({
-    ...a, user: { name: rotaPerson?.name ?? user?.name ?? "Someone" },
+  const named = rows.map(({ user, rotaPerson, updates, returnFit, ...a }) => ({
+    ...a, returnFit: returnFit as ReturnFit | null, user: { name: rotaPerson?.name ?? user?.name ?? "Someone" },
     updates: updates.map((u) => ({ ...u, kind: u.kind as AbsenceUpdateKind })),
     extensions: updates.filter((u) => u.kind === "extended").length,
   }));
@@ -104,7 +107,16 @@ export async function rotaAbsences() {
     ...a, reason: a.reason as AbsenceReason,
     shiftsToCover: shifts.filter((s) => absentOn([a], s, s.date.toISOString().slice(0, 10))).length,
   }));
-  const returned = named.filter((a) => !open.includes(a)).reverse().map((a) => ({ ...a, reason: a.reason as AbsenceReason }));
+  // Back: the return to work is due from their first shift after the absence,
+  // and waits there until it is recorded.
+  const ended = named.filter((a) => !open.includes(a)).reverse().map((a) => ({ ...a, reason: a.reason as AbsenceReason }));
+  const firstShifts = await firstShiftsBack(ended.filter((a) => !a.returnMetOn));
+  const staged = ended.map((a) => {
+    const firstShift = firstShifts.get(a.id) ?? null;
+    return { ...a, firstShift, stage: returnStage({ lastDay: iso(a.lastDay)!, returnMetOn: iso(a.returnMetOn) }, firstShift, from) };
+  });
+  const returning = staged.filter((a) => a.stage !== "recorded");
+  const returned = staged.filter((a) => a.stage === "recorded");
   // Holiday from the roster in the next two weeks: planned, so not reported here, but shown.
   const holidays = await prisma.rotaShift.findMany({
     where: { orgId, kind: { not: "shift" }, cancelledAt: null, date: { gte: parseDateOnly(from), lte: parseDateOnly(soon) }, rotaPersonId: { in: rosterPeople.map((p) => p.id) } },
@@ -116,13 +128,49 @@ export async function rotaAbsences() {
     orderBy: { name: "asc" }, select: { id: true, name: true, jobTitle: true },
   });
   // Each person's recent absences, so reporting again can ask "is this an extension?"
-  const iso = (d: Date | null) => d ? d.toISOString().slice(0, 10) : null;
   const recentOf = (ref: PersonRef) => named.filter((a) => samePerson(a, ref)).map((a) => ({ id: a.id, reason: a.reason as AbsenceReason, firstDay: iso(a.firstDay)!, lastDay: iso(a.lastDay) }));
   const people = [
     ...rosterPeople.map((p) => ({ id: `p:${p.id}`, name: p.name, jobTitle: `No. ${p.employeeNo}`, absences: recentOf({ rotaPersonId: p.id, userId: p.userId }) })),
     ...accounts.map((u) => ({ id: `u:${u.id}`, name: u.name, jobTitle: u.jobTitle, absences: recentOf({ userId: u.id }) })),
   ].sort((a, b) => a.name.localeCompare(b.name));
-  return { who, today: from, current, returned, people, holidays };
+  return { who, today: from, current, returning, returned, people, holidays };
+}
+
+const iso = (d: Date | null) => d ? d.toISOString().slice(0, 10) : null;
+
+/** For the home page: how many returns to work are due now (their first
+ *  shift back has come) among the people this manager covers. */
+export async function returnsToWorkDue() {
+  const who = await requireRotaActor();
+  if (!who.manage) return 0;
+  const orgId = who.orgId ?? undefined, from = today();
+  const { users, rosterPeople } = await absenceReach(orgId);
+  const inReach = { OR: [...(users === "all" ? [{ userId: { not: null } }] : [{ userId: { in: users } }]), { rotaPersonId: { in: rosterPeople.map((p) => p.id) } }] };
+  const ended = await prisma.rotaAbsence.findMany({
+    where: { orgId, withdrawnAt: null, returnMetOn: null, lastDay: { lt: parseDateOnly(from) }, AND: [inReach] },
+    select: { id: true, userId: true, rotaPersonId: true, lastDay: true },
+  });
+  const firstShifts = await firstShiftsBack(ended);
+  return ended.filter((a) => returnStage({ lastDay: iso(a.lastDay)!, returnMetOn: null }, firstShifts.get(a.id) ?? null, from) === "due").length;
+}
+
+/** The date of each ended absence's first shift back: the person's first
+ *  rostered shift after their last day off. Absences with none are left out. */
+async function firstShiftsBack(absences: { id: string; userId: string | null; rotaPersonId: string | null; lastDay: Date | null }[]) {
+  const out = new Map<string, string>();
+  const ended = absences.filter((a) => a.lastDay);
+  if (!ended.length) return out;
+  const whose = ended.flatMap((a) => [...(a.userId ? [{ userId: a.userId }] : []), ...(a.rotaPersonId ? [{ rotaPersonId: a.rotaPersonId }] : [])]);
+  const earliest = ended.map((a) => a.lastDay!).sort((x, y) => x.getTime() - y.getTime())[0];
+  const shifts = await prisma.rotaShift.findMany({
+    where: { OR: whose, kind: "shift", cancelledAt: null, date: { gt: earliest } },
+    orderBy: [{ date: "asc" }], select: { userId: true, rotaPersonId: true, date: true },
+  });
+  for (const a of ended) {
+    const first = shifts.find((s) => s.date > a.lastDay! && samePerson(a, s));
+    if (first) out.set(a.id, iso(first.date)!);
+  }
+  return out;
 }
 
 /** Whose absences this manager may see and record: the accounts their rota
@@ -138,6 +186,7 @@ async function absenceReach(orgId: string | undefined) {
   return { users: reach.kind === "all" ? "all" as const : [...reach.userIds], rosterPeople };
 }
 export type RotaAbsenceRow = Awaited<ReturnType<typeof rotaAbsences>>["current"][number];
+export type RotaReturnRow = Awaited<ReturnType<typeof rotaAbsences>>["returning"][number];
 
 /** Each roster upload, newest first, and what the chosen one changed. */
 export async function rotaChanges(importId: string | undefined) {

@@ -25,7 +25,7 @@ A role holds one level for each module (`StaffRole.levels`). `src/lib/staff/leve
 1. **Core never imports a module.** Modules import Core; Core does not import them.
 2. **The swim school depends on Core only**, never on a Work module (Docs, Refunds, Training, HR, Rota).
 3. **Cross-module needs go through a seam**, never a direct import:
-   - **Contributions** (`src/modules/contributions.ts`): a module registers read-only summaries that Core pages show. The swim school adds the Staff page's *Classes* column and each site's *programmes · swimmers · classes* line on Clubs.
+   - **Contributions** (`src/modules/contributions.ts`): a module registers read-only summaries that Core pages show. The swim school adds the Staff page's *Classes* column and each site's *programmes · swimmers · classes* line on Clubs. Rota adds *Absences and returns to work* to a person's personal file (the HR record and its export).
    - **Session hooks** (`src/modules/session-hooks.ts`): per-request work a module needs. The swim school applies due scheduled unenrolments before any read. `requireSession` loads the hook file lazily.
    - **Self-registration**: shared UI can be extended by a module without knowing it. For example, the swimmer picker declares itself with `labelsItself` from `form-dialog`.
    - **Links**: one module links to another's screens by URL, never by importing them. The Reception Portal's *Add a swimmer* task opens `/students?add=1`.

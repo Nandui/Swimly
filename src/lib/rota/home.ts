@@ -1,7 +1,7 @@
 import "server-only";
 import { parseDateOnly, today } from "@/lib/format";
 import { prisma } from "@/lib/prisma";
-import { rotaSites } from "@/lib/rota/data";
+import { returnsToWorkDue, rotaSites } from "@/lib/rota/data";
 import { samePerson } from "@/lib/rota/constants";
 import { expandPermissions } from "@/lib/staff/permissions";
 import { registerHomeCard, type HomeItem } from "@/modules/contributions";
@@ -36,6 +36,8 @@ registerHomeCard({
     }];
     if (manage) {
       items.push({ kind: "action", icon: "userX", label: "Report an absence", href: "/rota/absences" });
+      const returns = await returnsToWorkDue();
+      if (returns) items.push({ label: "Returns to work to record", hint: "They are back on shift", href: "/rota/absences#absences-return", count: returns, attention: true });
       items.push({ label: "Plan this week's shifts", href: "/rota" }, { label: "Absences", hint: "Who is off, now and soon", href: "/rota/absences" });
     } else {
       items.push({ label: "This week's rota", href: "/rota" });

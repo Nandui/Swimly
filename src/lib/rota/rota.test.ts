@@ -3,7 +3,7 @@ import { after, before, test } from "node:test";
 import { isolatedPrisma } from "@/test/pglite-prisma";
 import { serverModule } from "@/test/server-module";
 import { expandPermissions, type PermissionKey } from "@/lib/staff/permissions";
-import { absentOn, addDaysIso, followOn, mondayOf, parseClock, shiftWarnings } from "./constants";
+import { absentOn, addDaysIso, followOn, mondayOf, needsFitNote, parseClock, returnStage, shiftWarnings } from "./constants";
 import { today } from "@/lib/format";
 
 /** The Rota: a site-scoped planner plans only their site, qualification gaps
@@ -206,4 +206,55 @@ test("absences: a site planner records them only for people at their site, never
   assert.ok(after.every((s) => !s.warnings.includes("absent")), "removed absences no longer count");
   as("noah", [{ roleName: "Viewer", permissions: ["rota.view"], screens: ["rota"], scopeKind: "site", scopeId: churchfield }]);
   await assert.rejects(data.rotaAbsences(), /Managing the rota/);
+});
+
+test("return to work: due from the first shift back; a fit note is asked for sickness over seven days", () => {
+  const back = { lastDay: "2026-10-04", returnMetOn: null };
+  assert.equal(returnStage(back, "2026-10-07", "2026-10-06"), "waiting", "before their first shift back");
+  assert.equal(returnStage(back, "2026-10-07", "2026-10-07"), "due", "on it");
+  assert.equal(returnStage(back, null, "2026-10-05"), "due", "no shift on the rota: due the day after");
+  assert.equal(returnStage({ ...back, returnMetOn: "2026-10-07" }, "2026-10-07", "2026-10-09"), "recorded");
+  assert.equal(needsFitNote({ reason: "sickness", firstDay: "2026-10-01", lastDay: "2026-10-07" }), false, "seven days: self-certified");
+  assert.equal(needsFitNote({ reason: "sickness", firstDay: "2026-10-01", lastDay: "2026-10-08" }), true);
+  assert.equal(needsFitNote({ reason: "family", firstDay: "2026-10-01", lastDay: "2026-10-20" }), false, "only sickness");
+});
+
+test("return to work: recorded once they are back, it closes the absence and goes on their personal file", async () => {
+  await fixture.prisma.user.update({ where: { id: "riley" }, data: { primaryClubId: churchfield } });
+  as("maya", [planner()]);
+  const firstDay = addDaysIso(today(), -12), lastDay = addDaysIso(today(), -1);
+  assert.equal((await actions.reportAbsence({ userId: "riley", reason: "sickness", firstDay, lastDay, note: "" })).ok, true);
+  const waiting = (await data.rotaAbsences()).returning.find((a) => a.userId === "riley")!;
+  assert.deepEqual([waiting.firstShift, waiting.stage], [tomorrow(), "waiting"], "their first shift back is tomorrow");
+  assert.equal(await data.returnsToWorkDue(), 0);
+  assert.equal((await actions.saveShift(null, { siteId: churchfield, date: today(), start: "07:00", end: "11:00", role: "Lifeguard", requiredTypeId: "", userId: "riley", note: "" })).ok, true);
+  assert.equal((await data.rotaAbsences()).returning.find((a) => a.userId === "riley")?.stage, "due", "on shift today");
+  assert.equal(await data.returnsToWorkDue(), 1, "the home page asks for it");
+
+  const id = waiting.id;
+  const answer = { metOn: today(), fit: "adjusted" as const, adjustments: "Shorter shifts for two weeks", fitNote: "yes" as const, note: "Glad to be back" };
+  assert.equal((await actions.recordReturnToWork(id, { ...answer, metOn: lastDay })).ok, false, "not on a day they were off");
+  assert.equal((await actions.recordReturnToWork(id, { ...answer, metOn: tomorrow() })).ok, false, "not before it happens");
+  assert.equal((await actions.recordReturnToWork(id, { ...answer, adjustments: "" })).ok, false, "changes need saying");
+  assert.equal((await actions.recordReturnToWork(id, { ...answer, fitNote: "" })).ok, false, "twelve days of sickness needs the fit note answer");
+  as("noah", [{ ...planner(), scopeId: bishopstown }]);
+  assert.equal((await actions.recordReturnToWork(id, answer)).ok, false, "a planner at another site");
+  as("maya", [planner()]);
+  assert.equal((await actions.recordReturnToWork(id, answer)).ok, true);
+  assert.equal((await actions.recordReturnToWork(id, answer)).ok, false, "only once");
+  assert.equal((await actions.extendAbsence(id, { lastDay: "", note: "" })).ok, false, "closed: report a new absence instead");
+  assert.equal((await actions.endAbsence(id, today())).ok, false, "closed: not re-dated");
+  const audit = await fixture.prisma.auditLog.findFirstOrThrow({ where: { entity: "RotaAbsence", entityId: id, summary: { contains: "return to work" } } });
+  assert.doesNotMatch(audit.summary, /sick|shorter|glad/i, "the shared log says neither why nor what was said");
+
+  const page = await data.rotaAbsences();
+  assert.ok(!page.returning.some((a) => a.id === id));
+  assert.equal(page.returned.find((a) => a.id === id)?.returnFit, "adjusted");
+
+  const file = serverModule<typeof import("./file")>("src/lib/rota/file.ts", doubles());
+  const record = await file.absenceFile("riley", ORG);
+  assert.equal(record.summary, "1 absence in the last 12 months, 12 calendar days off.");
+  assert.match(record.entries[0].title, /^Sickness, .+ \(12 days\)$/);
+  assert.match(record.entries[0].detail, /Return to work on .+ with maya: back with changes \(Shorter shifts for two weeks\) · Fit note received · Glad to be back/);
+  assert.equal((await file.absenceFile("ava", ORG)).entries.length, 0, "withdrawn absences are not on the file");
 });

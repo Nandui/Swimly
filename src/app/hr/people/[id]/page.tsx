@@ -62,6 +62,22 @@ export default async function HrPersonPage({ params }: { params: Promise<{ id: s
           )}
         </section>
       </div>
+      {data.file.map((section) => (
+        <section key={section.id} className="module-panel" aria-labelledby={`file-${section.id}`}>
+          <h2 id={`file-${section.id}`}>{section.heading}</h2>
+          <p className="text-sm text-ui-muted-foreground">{section.summary}</p>
+          {section.entries.length ? (
+            <ul className="mt-2 divide-y divide-ui-border">
+              {section.entries.map((e) => (
+                <li key={e.id} className="space-y-1 py-3">
+                  <p className="font-semibold">{e.title}</p>
+                  <p className="text-sm text-ui-muted-foreground">{e.detail}</p>
+                </li>
+              ))}
+            </ul>
+          ) : null}
+        </section>
+      ))}
     </div>
   );
 }

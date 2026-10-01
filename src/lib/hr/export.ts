@@ -6,11 +6,13 @@ import { NOTE_COLUMNS, REVIEW_COLUMNS, type HrNote, type HrReview } from "@/lib/
 import { logHrAccess } from "@/lib/hr/records";
 import { recentlyConfirmed } from "@/lib/policy/engine";
 import { actorForSession } from "@/lib/policy/session";
+import { personFile } from "@/modules/server";
 
 export class ExportRefused extends Error {}
 
 /** Everything Turnfin holds about one staff member's employment, for a subject
- *  access request: their profile, training, qualifications and the whole HR
+ *  access request: their profile, training, qualifications, their personal
+ *  file from other modules (absences and returns to work) and the whole HR
  *  record (private notes and drafts included, withdrawn notes marked). Only a
  *  superadmin with a recent password can take it, and the export is logged. */
 export async function subjectExport(userId: string) {
@@ -28,10 +30,11 @@ export async function subjectExport(userId: string) {
   ]);
   const db = hrDatabase();
   const orgId = actor.orgId ?? "";
-  const [notes, reviews, reads] = await Promise.all([
+  const [notes, reviews, reads, file] = await Promise.all([
     db.query<HrNote & { withdrawnAt: Date | null; withdrawnReason: string }>(`SELECT ${NOTE_COLUMNS}, withdrawn_at AS "withdrawnAt", withdrawn_reason AS "withdrawnReason" FROM notes WHERE org_id=$1 AND subject_user_id=$2 ORDER BY created_at`, [orgId, userId]),
     db.query<HrReview>(`SELECT ${REVIEW_COLUMNS} FROM reviews WHERE org_id=$1 AND subject_user_id=$2 ORDER BY created_at`, [orgId, userId]),
     db.query<{ actorName: string; purpose: string; at: Date }>(`SELECT actor_name AS "actorName", purpose, at FROM access_events WHERE org_id=$1 AND $2 = ANY(subject_user_ids) ORDER BY at`, [orgId, userId]),
+    personFile(userId, orgId),
   ]);
   await logHrAccess(db, { id: actor.id, name: actor.name, orgId }, [userId], "HrExport", userId, "subject export");
   return {
@@ -40,6 +43,7 @@ export async function subjectExport(userId: string) {
     person,
     qualifications,
     training,
+    personalFile: file,
     hr: { notes, reviews, whoReadThisRecord: reads },
   };
 }

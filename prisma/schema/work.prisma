@@ -299,6 +299,18 @@ model RotaAbsence {
   /// same thing: that earlier absence. A plain extension changes `lastDay`
   /// instead and is kept in `updates`.
   continuesId    String?
+  /// The return-to-work conversation, held once they are back (from their
+  /// first shift): when, whether they are fit to work or need changes to it,
+  /// whether a fit note came in (sickness over 7 days) and a note. Null until
+  /// it is recorded. It goes on their personal file (the HR record).
+  returnMetOn       DateTime? @db.Date
+  /// fit | adjusted (`RETURN_FIT_META`)
+  returnFit         String?
+  returnAdjustments String    @default("")
+  returnFitNote     Boolean?
+  returnNote        String    @default("")
+  returnById        String?
+  returnByName      String?
   withdrawnAt    DateTime?
   createdAt      DateTime  @default(now())
   updatedAt      DateTime  @updatedAt

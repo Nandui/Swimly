@@ -1,18 +1,19 @@
 "use client";
 
 import { useState } from "react";
-import { CalendarCheck, CalendarPlus, Trash2, UserX } from "lucide-react";
+import { CalendarCheck, CalendarPlus, MessageSquareText, Trash2, UserX } from "lucide-react";
 import { Button } from "@/components/shadcn/button";
 import { Checkbox } from "@/components/shadcn/checkbox";
 import { Input } from "@/components/shadcn/input";
 import { Label } from "@/components/shadcn/label";
 import { NativeSelect, NativeSelectOption } from "@/components/shadcn/native-select";
 import { RadioGroup, RadioGroupItem } from "@/components/shadcn/radio-group";
+import { Textarea } from "@/components/shadcn/textarea";
 import { Field, FormDialog } from "@/components/form-dialog";
 import { Notice } from "@/components/ui-kit/notice";
 import { formatDate } from "@/lib/format";
-import { endAbsence, extendAbsence, reportAbsence, withdrawAbsence, type AbsenceInput } from "@/lib/rota/actions";
-import { ABSENCE_REASON_META, ABSENCE_REASONS, addDaysIso, followOn, type AbsenceReason } from "@/lib/rota/constants";
+import { endAbsence, extendAbsence, recordReturnToWork, reportAbsence, withdrawAbsence, type AbsenceInput } from "@/lib/rota/actions";
+import { ABSENCE_REASON_META, ABSENCE_REASONS, RETURN_FIT_META, SELF_CERTIFIED_DAYS, addDaysIso, followOn, needsFitNote, type AbsenceReason, type ReturnFit } from "@/lib/rota/constants";
 
 const THEME = "turnfin-docs turnfin-module";
 type Earlier = { id: string; reason: AbsenceReason; firstDay: string; lastDay: string | null };
@@ -194,6 +195,61 @@ export function BackAtWork({ id, name, today }: { id: string; name: string; toda
       submit={(formData) => endAbsence(id, String(formData.get("lastDay") ?? ""))}
     >
       <Field label="Last day off" htmlFor={`absence-end-${id}`}><Input id={`absence-end-${id}`} name="lastDay" type="date" required defaultValue={today} className="min-h-11" /></Field>
+    </FormDialog>
+  );
+}
+
+/** The return-to-work conversation, once they are back: when it was, whether
+ *  they are fit to work or need changes to it for a while, the fit note for
+ *  sickness over seven days, and a note. It closes the absence and goes on
+ *  their personal file. */
+export function ReturnToWork({ id, name, reason, firstDay, lastDay, today }: { id: string; name: string; reason: AbsenceReason; firstDay: string; lastDay: string; today: string }) {
+  const [fit, setFit] = useState<ReturnFit>("fit");
+  const [fitNote, setFitNote] = useState<"" | "yes" | "no">("");
+  const asked = needsFitNote({ reason, firstDay, lastDay });
+  return (
+    <FormDialog
+      portalClassName={THEME}
+      width="sm:max-w-lg"
+      onOpen={() => { setFit("fit"); setFitNote(""); }}
+      trigger={<Button className="min-h-11"><MessageSquareText aria-hidden="true" />Return to work</Button>}
+      title={`${name}'s return to work`}
+      description="A short talk on their first shift back: how they are, and anything that would help. It goes on their personal file."
+      submitLabel="Save return to work"
+      successMessage="Return to work recorded"
+      submit={(formData) => recordReturnToWork(id, {
+        metOn: String(formData.get("metOn") ?? ""), fit, adjustments: String(formData.get("adjustments") ?? ""),
+        fitNote, note: String(formData.get("note") ?? ""),
+      })}
+    >
+      <Field label="Day you talked" htmlFor={`return-on-${id}`}>
+        <Input id={`return-on-${id}`} name="metOn" type="date" required min={addDaysIso(lastDay, 1)} max={today} defaultValue={today} className="min-h-11" />
+      </Field>
+      <fieldset className="space-y-2">
+        <legend className="text-sm font-medium text-ui-foreground">Are they fit to work?</legend>
+        <Choice name={`return-fit-${id}`} value={fit} onChange={(v) => setFit(v as ReturnFit)} options={[
+          { value: "fit", label: RETURN_FIT_META.fit.label, hint: "Back to their usual shifts and duties." },
+          { value: "adjusted", label: RETURN_FIT_META.adjusted.label, hint: "For example lighter duties or shorter shifts for a while." },
+        ]} />
+      </fieldset>
+      {fit === "adjusted" ? (
+        <Field label="Changes agreed" htmlFor={`return-changes-${id}`} hint="What changes, and until when.">
+          <Input id={`return-changes-${id}`} name="adjustments" required maxLength={300} className="min-h-11" />
+        </Field>
+      ) : null}
+      {asked ? (
+        <fieldset className="space-y-2">
+          <legend className="text-sm font-medium text-ui-foreground">Has their fit note come in?</legend>
+          <p className="text-sm text-ui-muted-foreground">Sickness over {SELF_CERTIFIED_DAYS} days needs one from their doctor.</p>
+          <Choice name={`return-note-${id}`} value={fitNote} onChange={(v) => setFitNote(v as typeof fitNote)} options={[
+            { value: "yes", label: "Yes, we have it", hint: "Keep it with their records." },
+            { value: "no", label: "Not yet", hint: "Ask them to send it in." },
+          ]} />
+        </fieldset>
+      ) : null}
+      <Field label="Note (optional)" htmlFor={`return-text-${id}`} hint="How they are and any support agreed. Never medical details.">
+        <Textarea id={`return-text-${id}`} name="note" maxLength={500} rows={3} />
+      </Field>
     </FormDialog>
   );
 }

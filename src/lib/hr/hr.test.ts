@@ -42,6 +42,8 @@ function doubles() {
     "next/navigation": { notFound: () => { throw new NotFound("not found"); }, redirect: (to: string) => { throw new Error(`redirect ${to}`); } },
     "server-only": {},
     react: { cache: <T,>(fn: T) => fn },
+    // Other modules' parts of the personal file (Rota's absences), by person.
+    "@/modules/server": { personFile: async (userId: string) => [{ id: "rota.absences", heading: "Absences and returns to work", summary: "Synthetic", entries: [{ id: `a-${userId}`, title: "Sickness", detail: "", on: "2026-10-01" }] }] },
   };
 }
 const as = (id: string, extra: Partial<typeof state> = {}) =>
@@ -103,6 +105,7 @@ test("private notes stay with the author; drafts stay with the reviewer; every r
   draft = saved.id!;
   const liamView = await records.hrPerson("ava");
   assert.equal(liamView.notes.length, 3);
+  assert.deepEqual(liamView.file.map((s) => s.entries[0].id), ["a-ava"], "the personal file from other modules is on the record");
   assert.equal(liamView.reviews.length, 1);
   // A second HR reader for Aquatics sees neither the private note nor the draft.
   as("riley", { grants: [{ ...HR_LEAD, permissions: ["hr.records.read"] }] });
@@ -155,4 +158,5 @@ test("only the author withdraws a note; the subject export is superadmin-only an
   assert.ok(data?.hr.notes.some((n) => n.withdrawnAt));
   assert.equal(data?.hr.reviews.length, 1);
   assert.ok((data?.hr.whoReadThisRecord.length ?? 0) >= 2);
+  assert.equal(data?.personalFile[0].id, "rota.absences", "and in the export");
 });

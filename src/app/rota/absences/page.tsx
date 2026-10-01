@@ -1,15 +1,15 @@
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { UserX } from "lucide-react";
-import { BackAtWork, ExtendAbsence, RemoveAbsence, ReportAbsence } from "@/components/rota/absences";
-import { AbsenceReasonTag } from "@/components/rota/status";
+import { BackAtWork, ExtendAbsence, RemoveAbsence, ReportAbsence, ReturnToWork } from "@/components/rota/absences";
+import { AbsenceReasonTag, ReturnFitTag } from "@/components/rota/status";
 import { Button } from "@/components/shadcn/button";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/shadcn/collapsible";
 import { Tag } from "@/components/ui-kit/tag";
 import { formatDate } from "@/lib/format";
 import { ROSTER_LEAVE_META } from "@/lib/rota/constants";
 import { requireRotaActor } from "@/lib/rota/access";
-import { rotaAbsences, type RotaAbsenceRow } from "@/lib/rota/data";
+import { rotaAbsences, type RotaAbsenceRow, type RotaReturnRow } from "@/lib/rota/data";
 
 export const metadata: Metadata = { title: "Absences" };
 
@@ -69,11 +69,17 @@ function onHoliday(entries: { date: Date; kind: string; note: string; rotaPerson
   return [...people.values()];
 }
 
+/** When the return to work is due: from their first shift back. */
+function due(a: Pick<RotaReturnRow, "firstShift" | "stage">) {
+  if (!a.firstShift) return "No shift on the rota since, so it is due now";
+  return a.stage === "due" ? `First shift back ${day(new Date(`${a.firstShift}T00:00:00Z`))}, so it is due now` : `Due on their first shift back, ${day(new Date(`${a.firstShift}T00:00:00Z`))}`;
+}
+
 /** Who is off. Rota managers record absences here; the week shows the
  *  affected shifts as Absent so cover can be found. */
 export default async function AbsencesPage() {
   if (!(await requireRotaActor()).manage) notFound();
-  const { today, current, returned, people, holidays } = await rotaAbsences();
+  const { today, current, returning, returned, people, holidays } = await rotaAbsences();
   return (
     <div className="space-y-6">
       <div className="module-heading">
@@ -107,6 +113,24 @@ export default async function AbsencesPage() {
           </ul>
         )}
       </section>
+      {returning.length ? (
+        <section aria-labelledby="absences-return-heading" id="absences-return">
+          <h2 id="absences-return-heading" className="mb-3">Return to work</h2>
+          <p className="mb-3 text-sm text-ui-muted-foreground">Back from an absence. Talk to them on their first shift back and record it here; it goes on their personal file.</p>
+          <ul className="module-list">
+            {returning.map((a) => (
+              <li key={a.id} className="flex flex-wrap items-center justify-between gap-3 px-5 py-4">
+                <div className="min-w-0 flex-1 space-y-1">
+                  <p className="flex flex-wrap items-center gap-2"><span className="module-row-title">{a.user.name}</span><AbsenceReasonTag reason={a.reason} /></p>
+                  <p className="text-sm">{when(a)} · {due(a)}</p>
+                  {story(a) ? <p className="text-xs text-ui-muted-foreground">{story(a)}</p> : null}
+                </div>
+                <ReturnToWork id={a.id} name={a.user.name} reason={a.reason} firstDay={iso(a.firstDay)} lastDay={iso(a.lastDay!)} today={today} />
+              </li>
+            ))}
+          </ul>
+        </section>
+      ) : null}
       {holidays.length ? (
         <section aria-labelledby="absences-holiday">
           <h2 id="absences-holiday" className="mb-3">On holiday in the next two weeks</h2>
@@ -127,8 +151,8 @@ export default async function AbsencesPage() {
           <ul className="module-list">
             {returned.map((a) => (
               <li key={a.id} className="space-y-1 px-5 py-4">
-                <p className="flex flex-wrap items-center gap-2"><span className="module-row-title">{a.user.name}</span><AbsenceReasonTag reason={a.reason} /></p>
-                <p className="text-sm text-ui-muted-foreground">{[when(a), story(a) || null].filter(Boolean).join(" · ")}</p>
+                <p className="flex flex-wrap items-center gap-2"><span className="module-row-title">{a.user.name}</span><AbsenceReasonTag reason={a.reason} />{a.returnFit ? <ReturnFitTag fit={a.returnFit} /> : null}</p>
+                <p className="text-sm text-ui-muted-foreground">{[when(a), a.returnMetOn ? `return to work ${day(a.returnMetOn)}${a.returnByName ? ` with ${a.returnByName}` : ""}` : null, story(a) || null].filter(Boolean).join(" · ")}</p>
               </li>
             ))}
           </ul>

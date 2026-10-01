@@ -11,7 +11,7 @@ access model (docs/platform-access.md).
   with the Rota screen and `rota.view` at any scope. It shows only the sites that
   capability covers; any other site is a 404.
 - **Absences** (`/rota/absences`, rota managers only). Who is off now or soon,
-  and who came back in the last 30 days. **Report absence** records a person, a
+  whose **return to work** is still to record, and who came back in the last 30 days. **Report absence** records a person, a
   reason (sickness, family emergency, bereavement or other), the first day off and,
   if known, the last. **Extend** runs a current absence on to a later last day
   (or to "return not known"). **Back at work** sets the last day off; the bin
@@ -90,10 +90,41 @@ the extensions listed under it. Extending is refused for an absence that ended
 before yesterday (report a new one and link it), for a day not later than the
 current last day, and when it would run into another absence of theirs.
 
+### Return to work
+
+Owner request, 1 October 2026: an absence goes into a return to work once the
+person has their first shift back, and all of it goes on their personal file.
+
+- Once an absence's last day has passed, it moves from "Off now or soon" to
+  **Return to work**. `returnStage` (constants.ts, tested) says where it stands:
+  **due** from their first rostered shift after the absence (or, with no shift on
+  the rota, from the day after their last day off), **waiting** before that shift,
+  **recorded** once done. Due ones are a "Returns to work to record" tile on the
+  home page (`returnsToWorkDue`).
+- **Return to work** (`recordReturnToWork`) records the conversation: the day you
+  talked (after their last day off, not in the future), whether they are **fit to
+  work** or **back with changes** (`RETURN_FIT_META`; changes must be said), whether
+  their fit note came in (asked only for sickness over 7 days, `needsFitNote`),
+  and a note. It is stored on `RotaAbsence` (`return*` columns) and closes the
+  absence: it can no longer be extended or re-dated, and a new absence is
+  reported instead. The shared log says only that it was recorded.
+- Unrecorded returns stay on the list whatever their age; recorded ones show
+  under "Back in the last 30 days" with their answer.
+
+### The personal file
+
+Rota registers `rota.absences` with the personal-file seam
+(`registerPersonFileSection` in `src/modules/contributions.ts`, from
+`src/lib/rota/file.ts`). The HR record (docs/hr.md) and its subject export show
+every absence of the person (their account, or their roster entry once linked to
+it), with its story and return to work, and their absences and calendar days
+off in the last 12 months. HR never imports Rota. Turnfin Me can later show the
+person their own absences through the same seam, with an allowlisted response.
+
 ## Files
 
-- Schema: `RotaShift` (`prisma/migrations/20261001120000_rota`), `RotaAbsence` (`prisma/migrations/20261005120000_rota_absence`), `RotaAbsenceUpdate` and `continuesId` (`prisma/migrations/20261007120000_rota_absence_updates`)
-- `src/lib/rota/`: `access.ts`, `data.ts` (the week), `mine.ts` (own shifts), `actions.ts`, `constants.ts`
+- Schema: `RotaShift` (`prisma/migrations/20261001120000_rota`), `RotaAbsence` (`prisma/migrations/20261005120000_rota_absence`), `RotaAbsenceUpdate` and `continuesId` (`prisma/migrations/20261007120000_rota_absence_updates`), return to work (`prisma/migrations/20261009120000_rota_return_to_work`)
+- `src/lib/rota/`: `access.ts`, `data.ts` (the week, absences, returns due), `mine.ts` (own shifts), `actions.ts`, `constants.ts`, `file.ts` (the personal file)
 - Self-service: `src/lib/rota/mine.ts` (staff API); UI: `src/app/rota/`, `src/components/rota/`; shift-change emails from `src/lib/staff-api/reminders.ts`
 - Tests: `src/lib/rota/rota.test.ts`
 

@@ -79,6 +79,37 @@ export function followOn<T extends EarlierAbsence>(earlier: readonly T[], firstD
   return daysBack <= ABSENCE_AGAIN_DAYS ? { kind: "again", absence: latest, daysBack } : null;
 }
 
+/** The return-to-work conversation's answer: back as before, or back with
+ *  changes to their work for a while. Tones come from here. */
+export const RETURN_FIT_META = {
+  fit: { label: "Fit to work", color: "green" },
+  adjusted: { label: "Back with changes", color: "blue" },
+} as const satisfies Record<string, StatusMeta>;
+export type ReturnFit = keyof typeof RETURN_FIT_META;
+export const RETURN_FITS = Object.keys(RETURN_FIT_META) as ReturnFit[];
+
+/** Sickness over seven days needs a fit note from a doctor; up to seven, the
+ *  person self-certifies. The return to work asks about it only then. */
+export const SELF_CERTIFIED_DAYS = 7;
+
+/** Calendar days from the first day off to the last, both counted. */
+export function daysOff(firstDay: string, lastDay: string) {
+  return Math.round((Date.parse(`${lastDay}T00:00:00Z`) - Date.parse(`${firstDay}T00:00:00Z`)) / 86_400_000) + 1;
+}
+
+export function needsFitNote(a: { reason: string; firstDay: string; lastDay: string }) {
+  return a.reason === "sickness" && daysOff(a.firstDay, a.lastDay) > SELF_CERTIFIED_DAYS;
+}
+
+/** Where an ended absence's return to work stands: recorded; due, because
+ *  their first shift back has come (or they have no shift on the rota, so
+ *  it is due from the day after their last day off); or waiting for that
+ *  shift. `firstShift` is the date of their first shift after the absence. */
+export function returnStage(a: { lastDay: string; returnMetOn: string | null }, firstShift: string | null, today: string): "recorded" | "due" | "waiting" {
+  if (a.returnMetOn) return "recorded";
+  return (firstShift ?? addDaysIso(a.lastDay, 1)) <= today ? "due" : "waiting";
+}
+
 /** What happened to an absence, for its story on the Absences page. */
 export const ABSENCE_UPDATE_KINDS = ["reported", "extended", "back"] as const;
 export type AbsenceUpdateKind = (typeof ABSENCE_UPDATE_KINDS)[number];
