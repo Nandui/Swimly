@@ -139,18 +139,6 @@ async function absenceReach(orgId: string | undefined) {
 }
 export type RotaAbsenceRow = Awaited<ReturnType<typeof rotaAbsences>>["current"][number];
 
-/** The roster's department codes: where each works and what the rota calls
- *  it, with the sites this manager can point them at. */
-export async function rotaDepartments() {
-  const { who, sites } = await rotaSites();
-  if (!who.manage) throw new AuthorizationError("Managing the rota is required.");
-  const departments = await prisma.rotaDepartment.findMany({
-    where: { orgId: who.orgId ?? undefined }, orderBy: { code: "asc" },
-    select: { code: true, label: true, siteId: true },
-  });
-  return { sites: sites.filter((s) => s.manage), departments };
-}
-
 /** Each roster upload, newest first, and what the chosen one changed. */
 export async function rotaChanges(importId: string | undefined) {
   const who = await requireRotaActor();

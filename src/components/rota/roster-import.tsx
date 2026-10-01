@@ -2,23 +2,20 @@
 
 import { useRef, useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
-import { CalendarCheck, FileSpreadsheet, Upload } from "lucide-react";
-import { Button } from "@/components/shadcn/button";
+import { FileSpreadsheet, Upload } from "lucide-react";
 import { Input } from "@/components/shadcn/input";
 import { Label } from "@/components/shadcn/label";
-import { NativeSelect, NativeSelectOption } from "@/components/shadcn/native-select";
 import { LoadingButton } from "@/components/ui/loading-button";
 import { Notice } from "@/components/ui-kit/notice";
 import { formatDate } from "@/lib/format";
-import { applyRosterImport, previewRosterImport, saveRotaDepartments, type RosterPreview } from "@/lib/rota/import";
+import { applyRosterImport, previewRosterImport, type RosterPreview } from "@/lib/rota/import";
 import { toast } from "@/lib/toast";
 
-type Site = { id: string; name: string };
-
-/** Upload the week's roster: check it first (nothing is saved), say where any
- *  new department works, then import. The server reads the file again on
+/** Upload the week's roster: check it first (nothing is saved), then import.
+ *  Department codes are placed from the payroll system's list, so the file is
+ *  all it needs. The server reads the file again on
  *  import rather than trusting the preview. */
-export function RosterImport({ sites }: { sites: Site[] }) {
+export function RosterImport() {
   const router = useRouter();
   const input = useRef<HTMLInputElement>(null);
   const [file, setFile] = useState<File | null>(null);
@@ -64,14 +61,13 @@ export function RosterImport({ sites }: { sites: Site[] }) {
         {error ? <Notice tone="error" title={error} /> : null}
       </section>
 
-      {preview ? <PreviewPanel preview={preview} sites={sites} onMapped={() => check()} importing={importing} onImport={importWeek} /> : null}
+      {preview ? <PreviewPanel preview={preview} importing={importing} onImport={importWeek} /> : null}
     </div>
   );
 }
 
-function PreviewPanel({ preview, sites, onMapped, importing, onImport }: { preview: RosterPreview; sites: Site[]; onMapped: () => void; importing: boolean; onImport: () => void }) {
+function PreviewPanel({ preview, importing, onImport }: { preview: RosterPreview; importing: boolean; onImport: () => void }) {
   const week = formatDate(new Date(`${preview.weekStart}T00:00:00Z`));
-  const blocked = preview.unmapped.length > 0;
   return (
     <section className="module-panel flex flex-col gap-5" aria-labelledby="roster-preview">
       <div className="flex flex-col gap-1">
@@ -92,12 +88,9 @@ function PreviewPanel({ preview, sites, onMapped, importing, onImport }: { previ
           description={<ul className="mt-1 list-disc pl-5">{preview.problems.slice(0, 8).map((p) => <li key={p}>{p}</li>)}</ul>} />
       ) : null}
 
-      {blocked ? (
-        <div className="flex flex-col gap-3">
-          <Notice tone="warning" title={`Where ${preview.unmapped.length === 1 ? "does this department" : "do these departments"} work?`}
-            description="Each department code on the roster belongs to a site. Give it a site and a name the rota can show; this is asked once per code." />
-          <DepartmentRows codes={preview.unmapped} sites={sites} submitLabel="Save and check again" onSaved={onMapped} />
-        </div>
+      {preview.leftOut.length ? (
+        <Notice title="Other places on the roster are left out"
+          description={`${preview.leftOut.map((l) => `${l.place === "No site" ? "Departments without a place" : l.place} (${l.codes.join(", ")}): ${l.entries} ${l.entries === 1 ? "day" : "days"}, ${l.people} ${l.people === 1 ? "person" : "people"}`).join("; ")}. They are not sites in Turnfin, so only the sites it has are imported.`} />
       ) : null}
 
       {preview.changes && preview.changes.sample.length ? (
@@ -116,10 +109,9 @@ function PreviewPanel({ preview, sites, onMapped, importing, onImport }: { previ
       ) : null}
 
       <div className="flex flex-wrap items-center gap-3">
-        <LoadingButton type="button" pending={importing} pendingLabel="Importing…" disabled={blocked} onClick={onImport} className="min-h-11">
+        <LoadingButton type="button" pending={importing} pendingLabel="Importing…" disabled={preview.shifts + preview.holidays + preview.leave === 0} onClick={onImport} className="min-h-11">
           <Upload aria-hidden="true" />{preview.changes ? "Replace the week" : "Import the week"}
         </LoadingButton>
-        {blocked ? <p className="text-sm text-ui-muted-foreground">Say where each department works first.</p> : null}
       </div>
     </section>
   );
@@ -131,49 +123,6 @@ function Figure({ label, value, hint }: { label: string; value: number | string;
       <dt className="text-xs font-semibold text-ui-muted-foreground">{label}</dt>
       <dd className="text-2xl font-bold tabular-nums">{value}</dd>
       <dd className="text-xs text-ui-muted-foreground">{hint}</dd>
-    </div>
-  );
-}
-
-/** A site and a label for each department code; saved together. */
-export function DepartmentRows({ codes, sites, initial = {}, submitLabel = "Save departments", onSaved }: {
-  codes: string[];
-  sites: Site[];
-  initial?: Record<string, { siteId: string | null; label: string }>;
-  submitLabel?: string;
-  onSaved?: () => void;
-}) {
-  const router = useRouter();
-  const [rows, setRows] = useState(() => codes.map((code) => ({ code, siteId: initial[code]?.siteId ?? (sites.length === 1 ? sites[0].id : ""), label: initial[code]?.label ?? "" })));
-  const [error, setError] = useState<string | null>(null);
-  const [saving, start] = useTransition();
-  const set = (i: number, patch: Partial<(typeof rows)[number]>) => setRows((all) => all.map((r, j) => (j === i ? { ...r, ...patch } : r)));
-  function save() {
-    setError(null);
-    start(async () => {
-      const result = await saveRotaDepartments(rows);
-      if (!result.ok) { setError(result.error); return; }
-      toast.success("Departments saved");
-      if (onSaved) onSaved(); else router.refresh();
-    });
-  }
-  if (!sites.length) return <Notice tone="warning" title="Your rota role does not cover a site, so departments can't be placed." />;
-  return (
-    <div className="flex flex-col gap-3">
-      <ul className="flex flex-col gap-2">
-        {rows.map((row, i) => (
-          <li key={row.code} className="grid gap-2 sm:grid-cols-[5rem_minmax(0,1fr)_minmax(0,1fr)] sm:items-center">
-            <span className="flex items-center gap-2 text-sm font-semibold tabular-nums"><CalendarCheck aria-hidden="true" className="size-4 text-ui-primary" />{row.code}</span>
-            <NativeSelect aria-label={`Site for department ${row.code}`} value={row.siteId} onChange={(e) => set(i, { siteId: e.target.value })} className="min-h-11 w-full">
-              <NativeSelectOption value="">Choose a site</NativeSelectOption>
-              {sites.map((s) => <NativeSelectOption key={s.id} value={s.id}>{s.name}</NativeSelectOption>)}
-            </NativeSelect>
-            <Input aria-label={`Name for department ${row.code}`} placeholder="Name, e.g. Lifeguards" maxLength={60} value={row.label} onChange={(e) => set(i, { label: e.target.value })} className="min-h-11" />
-          </li>
-        ))}
-      </ul>
-      {error ? <Notice tone="error" title={error} /> : null}
-      <div><Button type="button" variant="outline" disabled={saving} onClick={save} className="min-h-11">{saving ? "Saving…" : submitLabel}</Button></div>
     </div>
   );
 }

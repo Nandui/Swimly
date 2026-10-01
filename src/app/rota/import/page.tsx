@@ -1,7 +1,6 @@
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { RosterImport } from "@/components/rota/roster-import";
-import { rotaDepartments } from "@/lib/rota/data";
 import { requireRotaActor } from "@/lib/rota/access";
 
 export const metadata: Metadata = { title: "Upload roster" };
@@ -10,7 +9,6 @@ export const metadata: Metadata = { title: "Upload roster" };
 export default async function RotaImportPage() {
   const who = await requireRotaActor();
   if (!who.manage) notFound();
-  const { sites } = await rotaDepartments();
   return (
     <div className="space-y-6">
       <div className="module-heading">
@@ -19,7 +17,7 @@ export default async function RotaImportPage() {
           <p className="text-sm">Bring in the week for both sites. Everyone on it shows on the rota by name, login or not, and a new upload of the same week is logged under Changes.</p>
         </div>
       </div>
-      <RosterImport sites={sites.map(({ id, name }) => ({ id, name }))} />
+      <RosterImport />
     </div>
   );
 }

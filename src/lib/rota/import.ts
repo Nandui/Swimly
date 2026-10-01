@@ -10,12 +10,15 @@ import { prisma } from "@/lib/prisma";
 import { requireCapFor } from "@/lib/policy/session";
 import { requireRotaActor } from "@/lib/rota/access";
 import { addDaysIso } from "@/lib/rota/constants";
+import { rosterDepartment, siteForPlace } from "@/lib/rota/departments";
 import { diffRoster, parseRoster, RosterError, sameName, type ParsedRoster, type RosterChange, type RosterEntry } from "@/lib/rota/roster";
 
 /** Uploading the week's roster (docs/rota.md). A preview first, which writes
  *  nothing; then the import, which reads the file again rather than trusting
- *  the preview. Needs `rota.manage` at every site the file's departments map
- *  to. A later upload of the same week replaces that week's imported entries
+ *  the preview. Each department code's site comes from the payroll system's
+ *  code list (departments.ts); days at places that are not Turnfin sites are
+ *  left out and counted. Needs `rota.manage` at every site the file's
+ *  departments reach. A later upload of the same week replaces that week's imported entries
  *  and records what moved; shifts added by hand are never touched. */
 
 const MAX_BYTES = 5 * 1024 * 1024;
@@ -30,8 +33,8 @@ export type RosterPreview = {
   holidays: number;
   leave: number;
   sites: { name: string; shifts: number }[];
-  /** Codes with no site yet: the import waits until each has one. */
-  unmapped: string[];
+  /** Days at places that are not sites in Turnfin: left out, counted by place. */
+  leftOut: { place: string; codes: string[]; entries: number; people: number }[];
   problems: string[];
   /** Null on the week's first upload. */
   changes: { added: number; removed: number; changed: number; sample: RosterChange[] } | null;
@@ -61,10 +64,24 @@ async function plan(roster: ParsedRoster) {
   if (!who.manage || !who.orgId) throw new AuthorizationError("Managing the rota is required.");
   const orgId = who.orgId;
   const codes = [...new Set(roster.entries.map((e) => e.department))].sort();
-  const departments = await prisma.rotaDepartment.findMany({ where: { orgId, code: { in: codes } }, select: { code: true, label: true, siteId: true, site: { select: { id: true, name: true, archivedAt: true } } } });
-  const siteOf = new Map(departments.filter((d) => d.site && !d.site.archivedAt).map((d) => [d.code, d.site!]));
-  const labelOf = new Map(departments.map((d) => [d.code, d.label]));
-  const unmapped = codes.filter((code) => !siteOf.has(code));
+  const clubs = await prisma.club.findMany({ where: { orgId, archivedAt: null }, select: { id: true, name: true } });
+  // A code placed by hand earlier (a site chosen for it) still counts when the code list has no place for it.
+  const saved = await prisma.rotaDepartment.findMany({ where: { orgId, code: { in: codes }, site: { archivedAt: null } }, select: { code: true, site: { select: { id: true, name: true } } } });
+  const siteOf = new Map<string, { id: string; name: string }>();
+  const labelOf = new Map<string, string>();
+  const outside = new Map<string, string>();
+  for (const code of codes) {
+    const department = rosterDepartment(code);
+    const site = siteForPlace(department.place, clubs) ?? saved.find((d) => d.code === code)?.site ?? null;
+    labelOf.set(code, department.label);
+    if (site) siteOf.set(code, site); else outside.set(code, department.place ?? "No site");
+  }
+  const kept = roster.entries.filter((e) => siteOf.has(e.department));
+  const leftOut = [...new Set(outside.values())].sort().map((place) => {
+    const entries = roster.entries.filter((e) => outside.get(e.department) === place);
+    return { place, codes: [...outside].filter(([, p]) => p === place).map(([c]) => c), entries: entries.length, people: new Set(entries.map((e) => e.employeeNo)).size };
+  });
+  const people = roster.people.filter((p) => kept.some((e) => e.employeeNo === p.employeeNo));
   // Every site the file touches, and the rota permission there.
   const sites = [...new Map([...siteOf.values()].map((s) => [s.id, s])).values()];
   for (const site of sites) {
@@ -84,7 +101,7 @@ async function plan(roster: ParsedRoster) {
     kind: s.kind as RosterEntry["kind"], start: s.kind === "shift" ? s.startMinutes : 0, end: s.kind === "shift" ? s.endMinutes : 0,
     department: s.departmentCode ?? "", code: s.kind === "shift" ? "" : s.note,
   }));
-  return { who, orgId, siteOf, labelOf, unmapped, previous, before };
+  return { who, orgId, siteOf, labelOf, leftOut, kept, people, previous, before };
 }
 
 export async function previewRosterImport(formData: FormData): Promise<{ ok: true; preview: RosterPreview } | { ok: false; error: string }> {
@@ -96,24 +113,24 @@ export async function previewRosterImport(formData: FormData): Promise<{ ok: tru
     if (error instanceof AuthorizationError) return { ok: false, error: error.message };
     throw error;
   }
-  const { orgId, siteOf, unmapped, previous, before } = planned;
-  const known = await prisma.rotaPerson.findMany({ where: { orgId, employeeNo: { in: roster.people.map((p) => p.employeeNo) } }, select: { employeeNo: true, userId: true } });
-  const accounts = await matchAccounts(orgId, roster.people.filter((p) => !known.some((k) => k.employeeNo === p.employeeNo)));
+  const { orgId, siteOf, leftOut, kept, people, previous, before } = planned;
+  const known = await prisma.rotaPerson.findMany({ where: { orgId, employeeNo: { in: people.map((p) => p.employeeNo) } }, select: { employeeNo: true, userId: true } });
+  const accounts = await matchAccounts(orgId, people.filter((p) => !known.some((k) => k.employeeNo === p.employeeNo)));
   const bySite = new Map<string, number>();
-  for (const e of roster.entries) if (e.kind === "shift" && siteOf.has(e.department)) bySite.set(siteOf.get(e.department)!.name, (bySite.get(siteOf.get(e.department)!.name) ?? 0) + 1);
-  const changes = previous.length ? diffRoster(before, roster.entries) : null;
+  for (const e of kept) if (e.kind === "shift" && siteOf.has(e.department)) bySite.set(siteOf.get(e.department)!.name, (bySite.get(siteOf.get(e.department)!.name) ?? 0) + 1);
+  const changes = previous.length ? diffRoster(before, kept) : null;
   return {
     ok: true,
     preview: {
       fileName, weekStart: roster.weekStart,
-      people: roster.people.length,
-      newPeople: roster.people.length - known.length,
+      people: people.length,
+      newPeople: people.length - known.length,
       linked: known.filter((k) => k.userId).length + accounts.size,
-      shifts: roster.entries.filter((e) => e.kind === "shift").length,
-      holidays: roster.entries.filter((e) => e.kind === "holiday").length,
-      leave: roster.entries.filter((e) => e.kind === "leave").length,
+      shifts: kept.filter((e) => e.kind === "shift").length,
+      holidays: kept.filter((e) => e.kind === "holiday").length,
+      leave: kept.filter((e) => e.kind === "leave").length,
       sites: [...bySite].map(([name, shifts]) => ({ name, shifts })).sort((a, b) => a.name.localeCompare(b.name)),
-      unmapped, problems: roster.problems,
+      leftOut, problems: roster.problems,
       changes: changes && {
         added: changes.filter((c) => c.kind === "added").length,
         removed: changes.filter((c) => c.kind === "removed").length,
@@ -146,16 +163,15 @@ export async function applyRosterImport(formData: FormData): Promise<ActionResul
     if (error instanceof AuthorizationError) return fail(error.message);
     throw error;
   }
-  const { who, orgId, siteOf, labelOf, unmapped, previous, before } = planned;
-  if (unmapped.length) return fail(`Say which site ${unmapped.length === 1 ? "department" : "departments"} ${unmapped.join(", ")} ${unmapped.length === 1 ? "belongs" : "belong"} to first.`);
-  if (!roster.entries.length) return fail("That roster has no shifts to import.");
-  const accounts = await matchAccounts(orgId, roster.people);
-  const changes = previous.length ? diffRoster(before, roster.entries) : [];
+  const { who, orgId, siteOf, labelOf, kept, people, previous, before } = planned;
+  if (!kept.length) return fail("That roster has no shifts at Turnfin sites to import.");
+  const accounts = await matchAccounts(orgId, people);
+  const changes = previous.length ? diffRoster(before, kept) : [];
 
   const result = await prisma.$transaction(async (tx) => {
     // Everyone on the roster, by employee number; names follow the latest file.
     const personId = new Map<string, { id: string; userId: string | null }>();
-    for (const p of roster.people) {
+    for (const p of people) {
       const existing = await tx.rotaPerson.findUnique({ where: { orgId_employeeNo: { orgId, employeeNo: p.employeeNo } }, select: { id: true, userId: true } });
       const saved = existing
         ? await tx.rotaPerson.update({ where: { id: existing.id }, data: { name: p.name, ...(existing.userId ? {} : { userId: accounts.get(p.employeeNo) ?? null }) }, select: { id: true, userId: true } })
@@ -164,16 +180,16 @@ export async function applyRosterImport(formData: FormData): Promise<ActionResul
     }
     const created = await tx.rotaImport.create({ data: {
       orgId, weekStart: parseDateOnly(roster.weekStart), fileName, importedById: who.id, importedByName: who.name,
-      people: roster.people.length,
-      shifts: roster.entries.filter((e) => e.kind === "shift").length,
-      holidays: roster.entries.filter((e) => e.kind === "holiday").length,
+      people: people.length,
+      shifts: kept.filter((e) => e.kind === "shift").length,
+      holidays: kept.filter((e) => e.kind === "holiday").length,
       added: changes.filter((c) => c.kind === "added").length,
       removed: changes.filter((c) => c.kind === "removed").length,
       changed: changes.filter((c) => c.kind === "changed").length,
     } });
     // The week's previous upload gives way to this one.
     if (previous.length) await tx.rotaShift.updateMany({ where: { id: { in: previous.map((s) => s.id) }, cancelledAt: null }, data: { cancelledAt: new Date() } });
-    await tx.rotaShift.createMany({ data: roster.entries.map((e) => {
+    await tx.rotaShift.createMany({ data: kept.map((e) => {
       const person = personId.get(e.employeeNo)!;
       return {
         orgId, siteId: siteOf.get(e.department)!.id, date: parseDateOnly(e.date),
@@ -191,41 +207,10 @@ export async function applyRosterImport(formData: FormData): Promise<ActionResul
       actorId: who.id, actorName: who.name, action: previous.length ? "update" : "create", entity: "RotaImport", entityId: created.id, clubId: null,
       summary: previous.length
         ? `Uploaded a new roster for the week of ${roster.weekStart} (${fileName}): ${changes.length} ${changes.length === 1 ? "change" : "changes"}`
-        : `Uploaded the roster for the week of ${roster.weekStart} (${fileName}): ${roster.people.length} people`,
+        : `Uploaded the roster for the week of ${roster.weekStart} (${fileName}): ${people.length} people`,
     }, tx);
     return ok();
   }, { timeout: 60_000 });
   if (result.ok) { revalidatePath("/rota"); revalidatePath("/rota/changes"); revalidatePath("/rota/absences"); }
-  return result;
-}
-
-/** Where each department code works, and what the rota calls it. A code can
- *  point only at a site where this person manages the rota. */
-export async function saveRotaDepartments(entries: { code: string; siteId: string; label: string }[]): Promise<ActionResult> {
-  const who = await requireRotaActor();
-  if (!who.manage || !who.orgId) return fail("Managing the rota is required.");
-  const orgId = who.orgId;
-  const clean = entries.map((e) => ({ code: e.code.trim(), siteId: e.siteId.trim(), label: e.label.trim().slice(0, 60) })).filter((e) => /^[\w-]{1,12}$/.test(e.code));
-  if (clean.some((e) => !e.siteId)) return fail("Choose a site for every department.");
-  const sites = await prisma.club.findMany({ where: { orgId, archivedAt: null, id: { in: [...new Set(clean.map((e) => e.siteId))] } }, select: { id: true, name: true } });
-  for (const e of clean) {
-    const site = sites.find((s) => s.id === e.siteId);
-    if (!site) return fail("That site is not open.");
-    try { await requireCapFor("rota.manage", { siteId: site.id, orgId }); } catch (error) {
-      if (error instanceof AuthorizationError) return fail(`Your rota role does not cover ${site.name}.`);
-      throw error;
-    }
-  }
-  const result = await prisma.$transaction(async (tx) => {
-    for (const e of clean) {
-      await tx.rotaDepartment.upsert({ where: { orgId_code: { orgId, code: e.code } }, create: { orgId, code: e.code, siteId: e.siteId, label: e.label }, update: { siteId: e.siteId, label: e.label } });
-      // Entries already imported under this code follow it, label included.
-      await tx.rotaShift.updateMany({ where: { orgId, departmentCode: e.code, importId: { not: null } }, data: { siteId: e.siteId, role: e.label || `Department ${e.code}` } });
-    }
-    await logAudit({ actorId: who.id, actorName: who.name, action: "update", entity: "RotaDepartment", entityId: clean.map((e) => e.code).join(","), clubId: null,
-      summary: `Set where roster ${clean.length === 1 ? "department" : "departments"} ${clean.map((e) => e.code).join(", ")} ${clean.length === 1 ? "works" : "work"}` }, tx);
-    return ok();
-  });
-  if (result.ok) { revalidatePath("/rota"); revalidatePath("/rota/departments"); }
   return result;
 }

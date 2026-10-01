@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import { Building2, CalendarDays, History, Upload, UserX } from "lucide-react";
+import { CalendarDays, History, Upload, UserX } from "lucide-react";
 import { ModuleOverview } from "@/components/workspace/module-overview";
 import { loadModuleOverview } from "@/lib/home";
 import { requireRotaActor } from "@/lib/rota/access";
@@ -20,7 +20,6 @@ export default async function RotaOverviewPage() {
       ] }, ...(who.manage ? [{ label: "Roster", links: [
         { href: "/rota/import", label: "Upload roster", icon: Upload, description: "Bring in the week for both sites from the payroll export" },
         { href: "/rota/changes", label: "Roster changes", icon: History, description: "Each upload, and what moved when a week was uploaded again" },
-        { href: "/rota/departments", label: "Departments", icon: Building2, description: "Where each roster department works, and its name" },
       ] }] : [])]} />
   );
 }

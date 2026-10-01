@@ -2,7 +2,7 @@
 
 import type { ReactNode } from 'react';
 import { usePathname } from 'next/navigation';
-import { Building2, CalendarDays, History, LayoutDashboard, Upload, UserX } from 'lucide-react';
+import { CalendarDays, History, LayoutDashboard, Upload, UserX } from 'lucide-react';
 import { ModuleShell } from '@/components/workspace/module-shell';
 import type { RotaActor } from '@/lib/rota/access';
 
@@ -16,7 +16,6 @@ export function RotaShell({ who, initialCollapsed = false, children }: { who: Ro
       { href: '/rota/absences', label: 'Absences', icon: UserX, active: pathname.startsWith('/rota/absences') },
       { href: '/rota/import', label: 'Upload roster', icon: Upload, active: pathname.startsWith('/rota/import') },
       { href: '/rota/changes', label: 'Roster changes', icon: History, active: pathname.startsWith('/rota/changes') },
-      { href: '/rota/departments', label: 'Departments', icon: Building2, active: pathname.startsWith('/rota/departments') },
     ] : []),
   ];
   return (

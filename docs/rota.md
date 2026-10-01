@@ -108,9 +108,15 @@ Rota managers upload the payroll system's weekly export (RosterBrowser, `.xlsx`,
   shift ends the next morning. Anything unreadable is listed and left out, never guessed.
 - **Check, then import.** Checking writes nothing: people (new, and how many have a login),
   shifts per site, holidays, and for a re-upload what changes. Importing reads the file again.
-- **Departments** (`/rota/departments`): each code belongs to a site and has a name the rota
-  shows. An upload with a new code waits until someone says where it works. Moving a code moves
-  its imported shifts.
+- **Departments** come from the payroll system's code list, built in (`src/lib/rota/departments.ts`,
+  owner request 1 October 2026: "I just need to upload the roster file"). Each code names its
+  place (BT Bishopstown, CF Churchfield, DO, Mahon, SPC) and a name the rota shows ("520 - CF
+  Pool" is Pool at Churchfield). A place finds its Turnfin site by name; a code missing from the
+  list is placed by its number (below 320 Bishopstown, 320 to 599 Churchfield). Days at places
+  that are not Turnfin sites (DO, Mahon, SPC today) and at codes with no place (764 Supervisor,
+  765 Shift Supervisor) are left out and counted on the preview; nothing waits for an answer.
+  A new code on the payroll list is one line in that file. The Departments page is retired;
+  `RotaDepartment` rows saved earlier still place a code the list cannot.
 - **Everyone by name.** `RotaPerson` holds each employee number and name, login or not. It links
   to an account when exactly one active account has the same name (the roster writes the
   surname first and "O Halloran" for O'Halloran), so that person sees their shifts in Turnfin Me.
@@ -121,5 +127,5 @@ Rota managers upload the payroll system's weekly export (RosterBrowser, `.xlsx`,
 - **Absences** can be reported for anyone on the roster, login or not (an absence names an
   account, a roster entry, or both). Their shifts show Absent on the week. Roster holidays show
   on Absences as "On holiday in the next two weeks": planned, so nothing to report.
-- Needs `rota.manage` at every site the file's departments map to. Holiday and leave days are
+- Needs `rota.manage` at every site the file's departments reach. Holiday and leave days are
   not shifts: they never count as on shift, as unfilled, or in Turnfin Me.
