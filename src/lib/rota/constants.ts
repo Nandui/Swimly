@@ -79,6 +79,25 @@ export function followOn<T extends EarlierAbsence>(earlier: readonly T[], firstD
   return daysBack <= ABSENCE_AGAIN_DAYS ? { kind: "again", absence: latest, daysBack } : null;
 }
 
+/** Why a duty changed once its week had started (Timepoint already holds that
+ *  week). Covering an absence is chosen for the manager when the person
+ *  taken off is recorded as off that day. */
+export const ROTA_CHANGE_REASON_META = {
+  cover: { label: "Covering an absence", color: "blue" },
+  swap: { label: "Swap agreed between staff", color: "gray" },
+  extra: { label: "Extra hours approved", color: "orange" },
+  correction: { label: "Correcting a mistake in the plan", color: "gray" },
+} as const satisfies Record<string, StatusMeta>;
+export type RotaChangeReason = keyof typeof ROTA_CHANGE_REASON_META;
+export const ROTA_CHANGE_REASONS = Object.keys(ROTA_CHANGE_REASON_META) as RotaChangeReason[];
+
+/** A week has started from its Monday: from then on Timepoint holds it, so a
+ *  change to one of its duties needs a reason and is logged. Before then the
+ *  plan is a draft and changes freely (Copy last week included). */
+export function weekStarted(dateIso: string, todayIso: string) {
+  return mondayOf(dateIso) <= todayIso;
+}
+
 /** The return-to-work conversation's answer: back as before, or back with
  *  changes to their work for a while. Tones come from here. */
 export const RETURN_FIT_META = {

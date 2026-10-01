@@ -180,6 +180,9 @@ model RotaShift {
   departmentCode String?
   /// The roster upload that created it; null for a shift added by hand.
   importId       String?
+  /// The department the duty belongs to (Core's Department), for the week
+  /// plan's grouping. Null on old and imported shifts.
+  departmentId   String?
 
   organisation Organisation       @relation(fields: [orgId], references: [id], onDelete: Restrict)
   site         Club               @relation(fields: [siteId], references: [id], onDelete: Restrict)
@@ -187,11 +190,53 @@ model RotaShift {
   user         User?              @relation("RotaShiftAssignee", fields: [userId], references: [id], onDelete: SetNull)
   rotaPerson   RotaPerson?        @relation(fields: [rotaPersonId], references: [id], onDelete: SetNull)
   import       RotaImport?        @relation(fields: [importId], references: [id], onDelete: SetNull)
+  department   Department?        @relation(fields: [departmentId], references: [id], onDelete: SetNull)
+  changes      RotaShiftChange[]
 
   @@index([siteId, date])
   @@index([userId, date])
   @@index([rotaPersonId, date])
   @@index([importId])
+}
+
+/// A change to a duty once its week has started (owner request, 1 October
+/// 2026): Timepoint already holds that week, so each change keeps its reason
+/// (`ROTA_CHANGE_REASON_META`), the absence it covers when it does, and
+/// whether Timepoint was updated. It goes on the personal file of each
+/// person it moves, and an open "Update Timepoint" is a follow-up.
+model RotaShiftChange {
+  id             String    @id @default(cuid())
+  orgId          String
+  shiftId        String
+  siteId         String
+  /// The duty's day.
+  date           DateTime  @db.Date
+  /// added | changed | cancelled
+  kind           String
+  /// What it was and what it is now, in words ("Lifeguard 14:00–22:00, Ava Example").
+  before         String    @default("")
+  after          String    @default("")
+  /// The people it took off and put on the duty, for their personal file.
+  fromUserId     String?
+  toUserId       String?
+  /// cover | swap | extra | correction
+  reason         String
+  /// The absence it covers, when the reason is cover.
+  absenceId      String?
+  note           String    @default("")
+  byId           String?
+  byName         String
+  timepointAt    DateTime?
+  timepointById  String?
+  timepointByName String?
+  createdAt      DateTime  @default(now())
+
+  shift RotaShift @relation(fields: [shiftId], references: [id], onDelete: Cascade)
+
+  @@index([orgId, date])
+  @@index([shiftId])
+  @@index([fromUserId])
+  @@index([toUserId])
 }
 
 /// Someone on the imported roster (the payroll export's EmpNo and name),

@@ -1,7 +1,7 @@
 import "server-only";
 import { formatDate, today } from "@/lib/format";
 import { prisma } from "@/lib/prisma";
-import { ABSENCE_REASON_META, RETURN_FIT_META, addDaysIso, daysOff, type AbsenceReason, type ReturnFit } from "@/lib/rota/constants";
+import { ABSENCE_REASON_META, RETURN_FIT_META, ROTA_CHANGE_REASON_META, addDaysIso, daysOff, type AbsenceReason, type ReturnFit, type RotaChangeReason } from "@/lib/rota/constants";
 import { registerPersonFileSection, type PersonFileEntry } from "@/modules/contributions";
 
 /** Rota's part of a person's file: every absence recorded for them, with its
@@ -53,3 +53,32 @@ export async function absenceFile(userId: string, orgId: string): Promise<{ summ
 }
 
 registerPersonFileSection({ id: "rota.absences", heading: "Absences and returns to work", load: absenceFile });
+
+/** Changes to their duties once the week had started: taken off one or put on
+ *  one, with the reason, who changed it, and whether Timepoint has it. */
+export async function dutyChangeFile(userId: string, orgId: string): Promise<{ summary: string; entries: PersonFileEntry[] }> {
+  const rows = await prisma.rotaShiftChange.findMany({
+    where: { orgId, OR: [{ fromUserId: userId }, { toUserId: userId }] },
+    orderBy: { createdAt: "desc" }, take: 200,
+    select: { id: true, date: true, kind: true, before: true, after: true, fromUserId: true, reason: true, note: true, byName: true, createdAt: true, timepointAt: true },
+  });
+  const yearAgo = addDaysIso(today(), -364);
+  const recent = rows.filter((r) => iso(r.date) >= yearAgo).length;
+  const entries = rows.map((r): PersonFileEntry => {
+    const off = r.fromUserId === userId && r.kind !== "added";
+    return {
+      id: r.id,
+      title: `${off ? (r.kind === "cancelled" ? "Duty cancelled" : "Taken off a duty") : "Put on a duty"}: ${off ? r.before : r.after}`,
+      detail: [
+        ROTA_CHANGE_REASON_META[r.reason as RotaChangeReason]?.label ?? r.reason,
+        `by ${r.byName} on ${day(iso(r.createdAt))}`,
+        r.note || null,
+        r.timepointAt ? "In Timepoint" : "Not yet in Timepoint",
+      ].filter(Boolean).join(" · "),
+      on: iso(r.date),
+    };
+  });
+  return { summary: recent ? `${plural(recent, "change")} to their duties in the last 12 months.` : "No changes to their duties in the last 12 months.", entries };
+}
+
+registerPersonFileSection({ id: "rota.changes", heading: "Changes to their duties", load: dutyChangeFile });

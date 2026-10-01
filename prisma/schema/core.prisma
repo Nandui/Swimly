@@ -207,6 +207,7 @@ model Department {
   organisation Organisation     @relation(fields: [orgId], references: [id], onDelete: Restrict)
   club         Club?            @relation(fields: [clubId], references: [id], onDelete: SetNull)
   members      UserDepartment[]
+  rotaShifts   RotaShift[]
 
   @@unique([orgId, name])
   @@index([orgId, sortOrder])

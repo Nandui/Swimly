@@ -1,15 +1,29 @@
 # Turnfin Rota
 
-Who is on shift, where and when, with a warning when someone's qualification
-won't cover the shift. It lives in the main database and uses the platform
-access model (docs/platform-access.md).
+The deployment plan: who does which duty, where and when, planned by the week
+and run by the day, with a warning when someone is off, double-booked or not
+qualified for the duty. Timepoint keeps the roster itself (hours, clocking,
+payroll exports); Turnfin keeps who does what and why it changed. It lives in
+the main database and uses the platform access model (docs/platform-access.md).
 
 ## Surfaces
 
-- **Rota workspace** (`/rota`, Poolside Clear on the shared `ModuleShell`). This
-  is a week view, Monday to Sunday, for one site at a time. It opens for anyone
-  with the Rota screen and `rota.view` at any scope. It shows only the sites that
-  capability covers; any other site is a 404.
+- **Week plan** (`/rota`, Poolside Clear on the shared `ModuleShell`). Department
+  supervisors plan one site's week, Monday to Sunday: one row per duty, grouped by
+  department (Core's departments for that site and the organisation-wide ones),
+  a column per day, each entry saying when and who, or Unfilled. The duty name is
+  typed; names used at the site in the last 12 weeks are offered again (owner
+  decision, 1 October 2026). **Copy last week** brings last week's duties, people
+  included, into a week that has not started, never doubling one already planned.
+  It opens for anyone with the Rota screen and `rota.view` at any scope, and
+  shows only the sites that capability covers; any other site is a 404.
+- **Today** (`/rota/today`). The duty managers' day: every department's duties on
+  one timeline with a line at the time now (a time-ordered list on phones);
+  **Needs you**, the duties still to come whose person is off or that are
+  unfilled, each with up to three people who are free (not off, not on another
+  duty then, at any site) and hold its qualification, and **Give cover**; and
+  **Changes today**, each with its reason, who made it and whether Timepoint has it,
+  with **Done in Timepoint**.
 - **Absences** (`/rota/absences`, rota managers only). Who is off now or soon,
   whose **return to work** is still to record, and who came back in the last 30 days. **Report absence** records a person, a
   reason (sickness, family emergency, bereavement or other), the first day off and,
@@ -90,6 +104,20 @@ the extensions listed under it. Extending is refused for an absence that ended
 before yesterday (report a new one and link it), for a day not later than the
 current last day, and when it would run into another absence of theirs.
 
+### Changes once a week has started
+
+Owner request, 1 October 2026. From a week's Monday Timepoint holds it, so any
+change to one of its duties (adding, moving, changing the person or the time,
+cancelling) asks for its reason (`ROTA_CHANGE_REASON_META`: covering an absence,
+swap agreed, extra hours approved, correcting a mistake), an optional note, and
+whether Timepoint is already updated. Each is kept as a `RotaShiftChange` with
+what it was and is now, the people it took off and put on, and the absence it
+covers (found for "covering an absence" when the person taken off is off that
+day). An unticked Timepoint stays open until **Done in Timepoint**, and the
+change goes on the personal file of each person it moves. Changing only the note
+asks nothing. Before its Monday a week is a draft and changes freely
+(`weekStarted`, constants.ts, tested).
+
 ### Return to work
 
 Owner request, 1 October 2026: an absence goes into a return to work once the
@@ -123,8 +151,8 @@ person their own absences through the same seam, with an allowlisted response.
 
 ## Files
 
-- Schema: `RotaShift` (`prisma/migrations/20261001120000_rota`), `RotaAbsence` (`prisma/migrations/20261005120000_rota_absence`), `RotaAbsenceUpdate` and `continuesId` (`prisma/migrations/20261007120000_rota_absence_updates`), return to work (`prisma/migrations/20261009120000_rota_return_to_work`)
-- `src/lib/rota/`: `access.ts`, `data.ts` (the week, absences, returns due), `mine.ts` (own shifts), `actions.ts`, `constants.ts`, `file.ts` (the personal file)
+- Schema: `RotaShift` (`prisma/migrations/20261001120000_rota`), its department and `RotaShiftChange` (`prisma/migrations/20261011120000_rota_plan`), `RotaAbsence` (`prisma/migrations/20261005120000_rota_absence`), `RotaAbsenceUpdate` and `continuesId` (`prisma/migrations/20261007120000_rota_absence_updates`), return to work (`prisma/migrations/20261009120000_rota_return_to_work`)
+- `src/lib/rota/`: `access.ts`, `data.ts` (the week, today, absences, returns due), `plan.ts` (the week plan's rows, pure and tested), `mine.ts` (own shifts), `actions.ts`, `constants.ts`, `file.ts` (the personal file)
 - Self-service: `src/lib/rota/mine.ts` (staff API); UI: `src/app/rota/`, `src/components/rota/`; shift-change emails from `src/lib/staff-api/reminders.ts`
 - Tests: `src/lib/rota/rota.test.ts`
 

@@ -108,24 +108,28 @@ async function seedHr(db: PrismaClient, hrUrl: string) {
   } finally { await hr.end(); }
 }
 
-/** Rota: Maya, duty manager at Churchfield (Rota: Manage at her site), plans it. Today and tomorrow show
- *  every warning: Riley's lifeguard shift while his NPLQ is expired (until his
- *  refresher is signed off), an open swim teacher shift, and Riley double-booked
- *  at Bishopstown. */
+/** Rota: Maya, duty manager at Churchfield (Rota: Manage at her site), plans it as
+ *  duties by department. Today and tomorrow show every warning: Riley is off
+ *  sick today so his poolside duty needs cover, his NPLQ is expired for
+ *  tomorrow, a swim teacher duty is unfilled, and Riley is double-booked at
+ *  Bishopstown. */
 async function seedRota(db: PrismaClient) {
   const ORG = "org_leisureworld";
   const day = (offset: number) => { const d = new Date(); d.setUTCHours(0, 0, 0, 0); d.setUTCDate(d.getUTCDate() + offset); return d; };
-  const shift = (siteId: string, offset: number, start: number, end: number, role: string, userId: string | null, requiredTypeId: string | null = null) =>
-    ({ orgId: ORG, siteId, date: day(offset), startMinutes: start * 60, endMinutes: end * 60, role, userId, requiredTypeId, createdById: "sbx_maya", createdByName: "Maya Example" });
+  const shift = (siteId: string, offset: number, start: number, end: number, role: string, departmentId: string | null, userId: string | null, requiredTypeId: string | null = null) =>
+    ({ orgId: ORG, siteId, date: day(offset), startMinutes: start * 60, endMinutes: end * 60, role, departmentId, userId, requiredTypeId, createdById: "sbx_maya", createdByName: "Maya Example" });
   await db.rotaShift.createMany({ data: [
-    shift("club_churchfield", 0, 7, 15, "Lifeguard", "sbx_ava", "qt_nplq"),
-    shift("club_churchfield", 0, 15, 22, "Lifeguard", "sbx_riley", "qt_nplq"),
-    shift("club_churchfield", 0, 16, 19, "Swim teacher", null, "qt_swim_teacher"),
-    shift("club_churchfield", 0, 9, 17, "Duty manager", "sbx_liam"),
-    shift("club_bishopstown", 0, 18, 21, "Lifeguard", "sbx_riley", "qt_nplq"),
-    shift("club_churchfield", 1, 7, 15, "Lifeguard", "sbx_riley", "qt_nplq"),
-    shift("club_churchfield", 1, 15, 22, "Lifeguard", "sbx_ava", "qt_nplq"),
+    shift("club_churchfield", 0, 7, 15, "Poolside, main pool", "dept_aquatics", "sbx_ava", "qt_nplq"),
+    shift("club_churchfield", 0, 15, 22, "Poolside, main pool", "dept_aquatics", "sbx_riley", "qt_nplq"),
+    shift("club_churchfield", 0, 16, 19, "Swim teacher", "dept_aquatics", null, "qt_swim_teacher"),
+    shift("club_churchfield", 0, 9, 17, "Duty manager", null, "sbx_liam"),
+    shift("club_churchfield", 0, 12, 18, "Front desk", "dept_reception", "sbx_noah"),
+    shift("club_bishopstown", 0, 18, 21, "Poolside", "dept_aquatics", "sbx_riley", "qt_nplq"),
+    shift("club_churchfield", 1, 7, 15, "Poolside, main pool", "dept_aquatics", "sbx_riley", "qt_nplq"),
+    shift("club_churchfield", 1, 15, 22, "Poolside, main pool", "dept_aquatics", "sbx_ava", "qt_nplq"),
+    shift("club_churchfield", 1, 12, 18, "Front desk", "dept_reception", "sbx_noah"),
   ] });
+  await db.rotaAbsence.create({ data: { orgId: ORG, userId: "sbx_riley", reason: "sickness", firstDay: day(0), lastDay: day(0), note: "Synthetic: rang in at 08:00.", reportedById: "sbx_maya", reportedByName: "Maya Example" } });
   // Ava was off sick for nine days until yesterday; today is her first shift
   // back, so her return to work is due (and asks about the fit note).
   await db.rotaAbsence.create({ data: { orgId: ORG, userId: "sbx_ava", reason: "sickness", firstDay: day(-9), lastDay: day(-1), note: "Synthetic: called in before her shift.", reportedById: "sbx_maya", reportedByName: "Maya Example" } });

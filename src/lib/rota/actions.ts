@@ -8,7 +8,8 @@ import { logAudit } from "@/lib/audit";
 import { isDateOnly, parseDateOnly, today } from "@/lib/format";
 import { prisma } from "@/lib/prisma";
 import { requireCapFor } from "@/lib/policy/session";
-import { ABSENCE_REASONS, RETURN_FITS, addDaysIso, clock, needsFitNote, parseClock } from "@/lib/rota/constants";
+import { ABSENCE_REASONS, RETURN_FITS, ROTA_CHANGE_REASONS, addDaysIso, clock, mondayOf, needsFitNote, parseClock, weekStarted } from "@/lib/rota/constants";
+import type { Prisma } from "@/generated/prisma/client";
 import { notifyShiftChange } from "@/lib/staff-api/reminders";
 
 /** Rota writes. Each needs `rota.manage` at the shift's site (a site-scoped
@@ -16,16 +17,26 @@ import { notifyShiftChange } from "@/lib/staff-api/reminders";
  *  double-bookings are warnings on the rota, never a refusal. Audited with the
  *  shift's own site. */
 
+const changeSchema = z.object({
+  /** Why it changed; needed once the duty's week has started. */
+  reason: z.enum(["", ...ROTA_CHANGE_REASONS]).default(""),
+  changeNote: z.string().trim().max(200, "Keep the note under 200 characters.").default(""),
+  /** Already changed in Timepoint too. */
+  timepoint: z.boolean().default(false),
+});
+export type ChangeInput = z.input<typeof changeSchema>;
+
 const shiftSchema = z.object({
   siteId: z.string().min(1),
   date: z.string().refine(isDateOnly, "Choose a date."),
   start: z.string(),
   end: z.string(),
-  role: z.string().trim().min(2, "Say what the shift is, for example Lifeguard.").max(60),
+  role: z.string().trim().min(2, "Say what the duty is, for example Poolside.").max(60),
+  departmentId: z.string().trim().max(64).default("").transform((v) => v || null),
   requiredTypeId: z.string().trim().max(64).transform((v) => v || null),
   userId: z.string().trim().max(64).transform((v) => v || null),
   note: z.string().trim().max(300),
-});
+}).and(changeSchema);
 export type ShiftInput = z.input<typeof shiftSchema>;
 
 async function allowedAt(siteId: string) {
@@ -40,74 +51,176 @@ async function allowedAt(siteId: string) {
   }
 }
 
+const NEEDS_REASON = "This week has started, so Timepoint already has it. Say why it changed.";
+const iso = (date: Date) => date.toISOString().slice(0, 10);
+/** "Poolside on 2026-10-08 14:00–22:00, Ava Example": what the change log keeps. */
+function describe(s: { role: string; date: Date; startMinutes: number; endMinutes: number }, who: string | null) {
+  return `${s.role} on ${iso(s.date)} ${clock(s.startMinutes)}–${clock(s.endMinutes)}, ${who ?? "unfilled"}`;
+}
+/** The absence a cover change covers: the person taken off is off that day. */
+async function coveredAbsence(tx: Prisma.TransactionClient, userId: string | null, date: Date) {
+  if (!userId) return null;
+  const absence = await tx.rotaAbsence.findFirst({
+    where: { userId, withdrawnAt: null, firstDay: { lte: date }, OR: [{ lastDay: null }, { lastDay: { gte: date } }] },
+    select: { id: true },
+  });
+  return absence?.id ?? null;
+}
+
+/** Add or change a duty. Before its week starts the plan is a draft; after,
+ *  Timepoint holds the week, so a change needs a reason and is logged with
+ *  it (and goes on the personal file of each person it moves). */
 export async function saveShift(id: string | null, input: ShiftInput): Promise<ActionResult> {
   const parsed = shiftSchema.safeParse(input);
   if (!parsed.success) return fail(parsed.error.issues[0].message);
   const data = parsed.data;
   const start = parseClock(data.start), end = parseClock(data.end);
   if (start === null || end === null) return fail("Use times like 07:00.");
-  if (end <= start) return fail("The shift has to end after it starts, on the same day.");
-  if (end - start > 16 * 60) return fail("A shift can be up to 16 hours.");
+  if (end <= start) return fail("The duty has to end after it starts, on the same day.");
+  if (end - start > 16 * 60) return fail("A duty can be up to 16 hours.");
   const allowed = await allowedAt(data.siteId);
   if (!allowed.ok) return fail(allowed.error);
   const { actor, site } = allowed;
   if (!site.orgId) return fail("That site is not set up for the rota.");
-  if (data.userId && !(await prisma.user.findFirst({ where: { id: data.userId, orgId: site.orgId, isActive: true }, select: { id: true } }))) {
-    return fail("That person is no longer active.");
-  }
+  const person = data.userId ? await prisma.user.findFirst({ where: { id: data.userId, orgId: site.orgId, isActive: true }, select: { id: true, name: true } }) : null;
+  if (data.userId && !person) return fail("That person is no longer active.");
   if (data.requiredTypeId && !(await prisma.qualificationType.findFirst({ where: { id: data.requiredTypeId, orgId: site.orgId }, select: { id: true } }))) {
     return fail("That qualification is no longer offered.");
   }
+  if (data.departmentId && !(await prisma.department.findFirst({ where: { id: data.departmentId, orgId: site.orgId, archivedAt: null, OR: [{ clubId: null }, { clubId: site.id }] }, select: { id: true } }))) {
+    return fail("Choose one of this site's departments.");
+  }
   const values = {
     siteId: site.id, date: parseDateOnly(data.date), startMinutes: start, endMinutes: end, role: data.role,
-    requiredTypeId: data.requiredTypeId, userId: data.userId, note: data.note,
+    departmentId: data.departmentId, requiredTypeId: data.requiredTypeId, userId: data.userId, note: data.note,
   };
   const summary = `${data.role} at ${site.name} on ${data.date}, ${clock(start)}–${clock(end)}`;
+  const now = today();
   let previousUserId: string | null = null;
   const result = await prisma.$transaction(async (tx) => {
-    if (id) {
-      const existing = await tx.rotaShift.findFirst({ where: { id, cancelledAt: null }, select: { siteId: true, userId: true } });
-      if (!existing) return fail("That shift no longer exists.");
-      // Moving a shift between sites needs the permission at both.
-      if (existing.siteId !== site.id) {
-        const from = await allowedAt(existing.siteId);
-        if (!from.ok) return fail(from.error);
-      }
+    const existing = id ? await tx.rotaShift.findFirst({
+      where: { id, cancelledAt: null, importId: null },
+      select: { siteId: true, userId: true, date: true, startMinutes: true, endMinutes: true, role: true, departmentId: true, user: { select: { name: true } } },
+    }) : null;
+    if (id && !existing) return fail("That duty no longer exists, or came from the old roster upload.");
+    // Moving a duty between sites needs the permission at both.
+    if (existing && existing.siteId !== site.id) {
+      const from = await allowedAt(existing.siteId);
+      if (!from.ok) return fail(from.error);
+    }
+    const moved = !existing || existing.userId !== data.userId || iso(existing.date) !== data.date || existing.startMinutes !== start
+      || existing.endMinutes !== end || existing.role !== data.role || existing.departmentId !== data.departmentId;
+    const live = moved && (weekStarted(data.date, now) || (!!existing && weekStarted(iso(existing.date), now)));
+    if (live && !data.reason) return fail(NEEDS_REASON);
+    let shiftId = id;
+    if (existing) {
       previousUserId = existing.userId;
-      await tx.rotaShift.update({ where: { id }, data: values });
-      await logAudit({ actorId: actor.id, actorName: actor.name, action: "update", entity: "RotaShift", entityId: id, clubId: site.id, summary: `Changed ${summary}` }, tx);
+      await tx.rotaShift.update({ where: { id: id! }, data: values });
+      await logAudit({ actorId: actor.id, actorName: actor.name, action: "update", entity: "RotaShift", entityId: id!, clubId: site.id, summary: `Changed ${summary}` }, tx);
     } else {
       const created = await tx.rotaShift.create({ data: { ...values, orgId: site.orgId!, createdById: actor.id, createdByName: actor.name } });
+      shiftId = created.id;
       await logAudit({ actorId: actor.id, actorName: actor.name, action: "create", entity: "RotaShift", entityId: created.id, clubId: site.id, summary: `Added ${summary}` }, tx);
+    }
+    if (live && data.reason) {
+      const fromUserId = existing && existing.userId !== data.userId ? existing.userId : null;
+      await tx.rotaShiftChange.create({ data: {
+        orgId: site.orgId!, shiftId: shiftId!, siteId: site.id, date: values.date, kind: existing ? "changed" : "added",
+        before: existing ? describe(existing, existing.user?.name ?? null) : "", after: describe(values, person?.name ?? null),
+        fromUserId, toUserId: data.userId, reason: data.reason,
+        absenceId: data.reason === "cover" && existing ? await coveredAbsence(tx, existing.userId, existing.date) : null,
+        note: data.changeNote, byId: actor.id, byName: actor.name,
+        ...(data.timepoint ? { timepointAt: new Date(), timepointById: actor.id, timepointByName: actor.name } : {}),
+      } });
     }
     return ok();
   });
   if (result.ok) {
     revalidatePath("/rota");
-    // Tell the people whose shifts changed (Turnfin Me email, if they want it).
+    revalidatePath("/rota/today");
+    // Tell the people whose duties changed (Turnfin Me email, if they want it).
     await notifyShiftChange(data.userId, `${id ? "Your shift changed" : "You have a new shift"}: ${summary}.`);
     if (previousUserId && previousUserId !== data.userId) await notifyShiftChange(previousUserId, `You are no longer on this shift: ${summary}.`);
   }
   return result;
 }
 
-export async function cancelShift(id: string): Promise<ActionResult> {
-  const shift = await prisma.rotaShift.findFirst({ where: { id, cancelledAt: null }, select: { siteId: true, role: true, date: true, startMinutes: true, endMinutes: true, userId: true } });
-  if (!shift) return fail("That shift no longer exists.");
+export async function cancelShift(id: string, input: ChangeInput = {}): Promise<ActionResult> {
+  const parsed = changeSchema.safeParse(input);
+  if (!parsed.success) return fail(parsed.error.issues[0].message);
+  const change = parsed.data;
+  const shift = await prisma.rotaShift.findFirst({
+    where: { id, cancelledAt: null }, select: { siteId: true, orgId: true, role: true, date: true, startMinutes: true, endMinutes: true, userId: true, user: { select: { name: true } } },
+  });
+  if (!shift) return fail("That duty no longer exists.");
+  const live = weekStarted(iso(shift.date), today());
+  if (live && !change.reason) return fail(NEEDS_REASON);
   const allowed = await allowedAt(shift.siteId);
   if (!allowed.ok) return fail(allowed.error);
   const { actor, site } = allowed;
   const result = await prisma.$transaction(async (tx) => {
     const moved = await tx.rotaShift.updateMany({ where: { id, cancelledAt: null }, data: { cancelledAt: new Date() } });
-    if (moved.count !== 1) return fail("That shift is already cancelled.");
-    await logAudit({ actorId: actor.id, actorName: actor.name, action: "cancel", entity: "RotaShift", entityId: id, clubId: site.id, summary: `Cancelled ${shift.role} at ${site.name} on ${shift.date.toISOString().slice(0, 10)}` }, tx);
+    if (moved.count !== 1) return fail("That duty is already cancelled.");
+    if (live && change.reason) {
+      await tx.rotaShiftChange.create({ data: {
+        orgId: shift.orgId, shiftId: id, siteId: shift.siteId, date: shift.date, kind: "cancelled",
+        before: describe(shift, shift.user?.name ?? null), fromUserId: shift.userId, reason: change.reason,
+        absenceId: change.reason === "cover" ? await coveredAbsence(tx, shift.userId, shift.date) : null,
+        note: change.changeNote, byId: actor.id, byName: actor.name,
+        ...(change.timepoint ? { timepointAt: new Date(), timepointById: actor.id, timepointByName: actor.name } : {}),
+      } });
+    }
+    await logAudit({ actorId: actor.id, actorName: actor.name, action: "cancel", entity: "RotaShift", entityId: id, clubId: site.id, summary: `Cancelled ${shift.role} at ${site.name} on ${iso(shift.date)}` }, tx);
     return ok();
   });
   if (result.ok) {
     revalidatePath("/rota");
-    await notifyShiftChange(shift.userId, `Your shift was cancelled: ${shift.role} at ${site.name} on ${shift.date.toISOString().slice(0, 10)}, ${clock(shift.startMinutes)}–${clock(shift.endMinutes)}.`);
+    revalidatePath("/rota/today");
+    await notifyShiftChange(shift.userId, `Your shift was cancelled: ${shift.role} at ${site.name} on ${iso(shift.date)}, ${clock(shift.startMinutes)}–${clock(shift.endMinutes)}.`);
   }
   return result;
+}
+
+/** Brings last week's duties into a week that has not started, people
+ *  included, so a usual week is one click and only the differences need
+ *  planning. Duties already planned the same way are not doubled. */
+export async function copyLastWeek(siteId: string, monday: string): Promise<ActionResult> {
+  if (!isDateOnly(monday) || mondayOf(monday) !== monday) return fail("Choose a week.");
+  if (weekStarted(monday, today())) return fail("This week has started. Change its duties one at a time, with a reason.");
+  const allowed = await allowedAt(siteId);
+  if (!allowed.ok) return fail(allowed.error);
+  const { actor, site } = allowed;
+  if (!site.orgId) return fail("That site is not set up for the rota.");
+  const from = parseDateOnly(addDaysIso(monday, -7)), to = parseDateOnly(addDaysIso(monday, 6));
+  const select = { date: true, startMinutes: true, endMinutes: true, role: true, departmentId: true, requiredTypeId: true, userId: true, note: true } as const;
+  const shifts = await prisma.rotaShift.findMany({ where: { siteId, kind: "shift", cancelledAt: null, importId: null, date: { gte: from, lte: to } }, select });
+  const key = (s: (typeof shifts)[number], shiftDays: number) =>
+    [addDaysIso(iso(s.date), shiftDays), s.startMinutes, s.endMinutes, s.role.toLowerCase(), s.departmentId ?? "", s.userId ?? ""].join("|");
+  const planned = new Set(shifts.filter((s) => iso(s.date) >= monday).map((s) => key(s, 0)));
+  const copies = shifts.filter((s) => iso(s.date) < monday && !planned.has(key(s, 7)));
+  if (!copies.length) return fail(shifts.some((s) => iso(s.date) < monday) ? "Every duty from last week is already planned." : "Last week has no duties to copy.");
+  await prisma.$transaction(async (tx) => {
+    await tx.rotaShift.createMany({ data: copies.map((s) => ({ ...s, date: parseDateOnly(addDaysIso(iso(s.date), 7)), siteId, orgId: site.orgId!, createdById: actor.id, createdByName: actor.name })) });
+    await logAudit({ actorId: actor.id, actorName: actor.name, action: "create", entity: "RotaShift", entityId: null, clubId: site.id, summary: `Copied ${copies.length} ${copies.length === 1 ? "duty" : "duties"} from last week into the week of ${monday} at ${site.name}` }, tx);
+  });
+  revalidatePath("/rota");
+  return ok();
+}
+
+/** The change is in Timepoint too. Closes its "Update Timepoint" follow-up. */
+export async function markTimepointUpdated(changeId: string): Promise<ActionResult> {
+  const change = await prisma.rotaShiftChange.findFirst({ where: { id: changeId }, select: { siteId: true, timepointAt: true, after: true, before: true } });
+  if (!change) return fail("That change no longer exists.");
+  if (change.timepointAt) return ok();
+  const allowed = await allowedAt(change.siteId);
+  if (!allowed.ok) return fail(allowed.error);
+  const { actor, site } = allowed;
+  await prisma.$transaction(async (tx) => {
+    await tx.rotaShiftChange.update({ where: { id: changeId }, data: { timepointAt: new Date(), timepointById: actor.id, timepointByName: actor.name } });
+    await logAudit({ actorId: actor.id, actorName: actor.name, action: "update", entity: "RotaShift", entityId: null, clubId: site.id, summary: `Recorded a rota change as updated in Timepoint: ${change.after || change.before}` }, tx);
+  });
+  revalidatePath("/rota/today");
+  return ok();
 }
 
 /* Absences. Recording one needs `rota.manage` over that person: a site-scoped

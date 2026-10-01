@@ -93,7 +93,7 @@ after(async () => { await fixture?.close(); });
 const tomorrow = () => addDaysIso(today(), 1);
 test("a site-scoped planner plans only their site; warnings never block", async () => {
   as("maya", [planner()]);
-  const shift = (siteId: string, userId: string, start = "07:00", end = "15:00") => ({ siteId, date: tomorrow(), start, end, role: "Lifeguard", requiredTypeId: "qt-life", userId, note: "" });
+  const shift = (siteId: string, userId: string, start = "07:00", end = "15:00") => ({ siteId, date: tomorrow(), start, end, role: "Lifeguard", requiredTypeId: "qt-life", userId, note: "", reason: "extra" as const });
   assert.equal((await actions.saveShift(null, shift(bishopstown, "ava"))).ok, false, "another site");
   assert.equal((await actions.saveShift(null, shift(churchfield, "ava"))).ok, true);
   assert.equal((await actions.saveShift(null, shift(churchfield, "riley"))).ok, true, "an expired qualification still saves");
@@ -131,10 +131,10 @@ test("each person sees only their own shifts, with qualification warnings", asyn
 test("cancelling needs the permission at that site", async () => {
   const shift = await fixture.prisma.rotaShift.findFirstOrThrow({ where: { userId: "noah" } });
   as("noah", [{ ...planner(), scopeId: bishopstown }]);
-  assert.equal((await actions.cancelShift(shift.id)).ok, false);
+  assert.equal((await actions.cancelShift(shift.id, { reason: "correction" })).ok, false);
   as("maya", [planner()]);
-  assert.equal((await actions.cancelShift(shift.id)).ok, true);
-  assert.equal((await actions.cancelShift(shift.id)).ok, false);
+  assert.equal((await actions.cancelShift(shift.id, { reason: "correction" })).ok, true);
+  assert.equal((await actions.cancelShift(shift.id, { reason: "correction" })).ok, false);
 });
 
 test("reporting again: still off (or off until yesterday) is an extension; back within four weeks asks 'again?'", () => {
@@ -227,7 +227,7 @@ test("return to work: recorded once they are back, it closes the absence and goe
   const waiting = (await data.rotaAbsences()).returning.find((a) => a.userId === "riley")!;
   assert.deepEqual([waiting.firstShift, waiting.stage], [tomorrow(), "waiting"], "their first shift back is tomorrow");
   assert.equal(await data.returnsToWorkDue(), 0);
-  assert.equal((await actions.saveShift(null, { siteId: churchfield, date: today(), start: "07:00", end: "11:00", role: "Lifeguard", requiredTypeId: "", userId: "riley", note: "" })).ok, true);
+  assert.equal((await actions.saveShift(null, { siteId: churchfield, date: today(), start: "07:00", end: "11:00", role: "Lifeguard", requiredTypeId: "", userId: "riley", note: "", reason: "extra" })).ok, true);
   assert.equal((await data.rotaAbsences()).returning.find((a) => a.userId === "riley")?.stage, "due", "on shift today");
   assert.equal(await data.returnsToWorkDue(), 1, "the home page asks for it");
 
@@ -257,4 +257,45 @@ test("return to work: recorded once they are back, it closes the absence and goe
   assert.match(record.entries[0].title, /^Sickness, .+ \(12 days\)$/);
   assert.match(record.entries[0].detail, /Return to work on .+ with maya: back with changes \(Shorter shifts for two weeks\) · Fit note received · Glad to be back/);
   assert.equal((await file.absenceFile("ava", ORG)).entries.length, 0, "withdrawn absences are not on the file");
+});
+
+test("the week plan: a draft until its week starts; after that each change keeps its reason, and Copy last week only fills a week ahead", async () => {
+  const db = fixture.prisma;
+  await db.department.create({ data: { id: "d-pool", orgId: ORG, name: "Pool", clubId: churchfield } });
+  await db.department.create({ data: { id: "d-gym", orgId: ORG, name: "Gym", clubId: bishopstown } });
+  as("maya", [planner()]);
+  const next = addDaysIso(mondayOf(today()), 7);
+  const duty = (date: string, userId: string, extra: Record<string, string> = {}) => ({ siteId: churchfield, date, start: "06:00", end: "14:00", role: "Poolside", departmentId: "d-pool", requiredTypeId: "", userId, note: "", ...extra });
+  const logged = await db.rotaShiftChange.count();
+  assert.equal((await actions.saveShift(null, duty(next, "ava", { departmentId: "d-gym" }))).ok, false, "another site's department");
+  assert.equal((await actions.saveShift(null, duty(next, "ava"))).ok, true, "next week is a draft: no reason needed");
+  assert.equal(await db.rotaShiftChange.count(), logged, "nothing logged for a draft");
+
+  assert.equal((await actions.copyLastWeek(churchfield, mondayOf(today()))).ok, false, "a started week is changed one duty at a time");
+  assert.equal((await actions.copyLastWeek(churchfield, addDaysIso(next, 7))).ok, true);
+  const copied = await db.rotaShift.findFirstOrThrow({ where: { date: new Date(`${addDaysIso(next, 7)}T00:00:00Z`), role: "Poolside" } });
+  assert.deepEqual([copied.userId, copied.departmentId], ["ava", "d-pool"], "people and departments come too");
+  assert.equal((await actions.copyLastWeek(churchfield, addDaysIso(next, 7))).ok, false, "never doubled");
+
+  // This week has started: Timepoint holds it.
+  assert.equal((await actions.reportAbsence({ userId: "ava", reason: "sickness", firstDay: today(), lastDay: today(), note: "" })).ok, true);
+  assert.equal((await actions.saveShift(null, duty(today(), "ava"))).ok, false, "a change to a started week needs a reason");
+  assert.equal((await actions.saveShift(null, { ...duty(today(), "ava"), reason: "extra" })).ok, true);
+  const planned = await db.rotaShift.findFirstOrThrow({ where: { date: new Date(`${today()}T00:00:00Z`), role: "Poolside" } });
+  assert.equal((await actions.saveShift(planned.id, { ...duty(today(), "ava"), note: "Bring a whistle" })).ok, true, "only the note: nothing to explain");
+  assert.equal((await actions.saveShift(planned.id, { ...duty(today(), "riley"), reason: "cover", changeNote: "Agreed by phone" })).ok, true);
+  const cover = await db.rotaShiftChange.findFirstOrThrow({ where: { shiftId: planned.id, kind: "changed" } });
+  const absence = await db.rotaAbsence.findFirstOrThrow({ where: { userId: "ava", withdrawnAt: null, firstDay: new Date(`${today()}T00:00:00Z`) } });
+  assert.deepEqual([cover.fromUserId, cover.toUserId, cover.absenceId, cover.timepointAt], ["ava", "riley", absence.id, null], "who it moved, and the absence it covers");
+  assert.match(cover.before, /Poolside .* ava$/);
+  assert.equal(await db.rotaShiftChange.count({ where: { shiftId: planned.id } }), 2, "added and changed, not the note");
+  assert.equal((await actions.markTimepointUpdated(cover.id)).ok, true);
+  assert.ok((await db.rotaShiftChange.findUniqueOrThrow({ where: { id: cover.id } })).timepointAt, "Timepoint updated");
+  assert.equal((await actions.cancelShift(planned.id)).ok, false, "cancelling in a started week needs a reason too");
+  assert.equal((await actions.cancelShift(planned.id, { reason: "correction", timepoint: true })).ok, true);
+  assert.ok((await db.rotaShiftChange.findFirstOrThrow({ where: { shiftId: planned.id, kind: "cancelled" } })).timepointAt);
+  const file = serverModule<typeof import("./file")>("src/lib/rota/file.ts", doubles());
+  const ava = await file.dutyChangeFile("ava", ORG);
+  assert.ok(ava.entries.some((e) => /^Taken off a duty: Poolside/.test(e.title) && /Covering an absence · by maya/.test(e.detail)), "on the personal file of the person taken off");
+  assert.ok((await file.dutyChangeFile("riley", ORG)).entries.some((e) => e.title.startsWith("Put on a duty") && e.detail.endsWith("In Timepoint")));
 });
