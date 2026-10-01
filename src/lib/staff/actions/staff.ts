@@ -35,7 +35,9 @@ export async function createPerson(input: PersonInput & { password: string }): P
     if (!role) return fail("That role no longer exists.");
     if (role.restricted && !session.user.isSuperadmin) return fail(RESTRICTED_ROLE_REFUSAL);
     const created = await tx.user.create({
-      data: { name, email, staffRoleId: role.id, role: legacyRoleFor(role.permissions), passwordHash },
+      // A new person joins the organisation of whoever adds them; without it they
+      // are missing from every organisation-scoped list (rota, people, PIN sign-in).
+      data: { name, email, orgId: session.user.orgId, staffRoleId: role.id, role: legacyRoleFor(role.permissions), passwordHash },
       select: { id: true, name: true, email: true },
     });
     await logAudit({
