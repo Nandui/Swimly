@@ -22,6 +22,8 @@ export type PlanShift = {
   rotaPerson: { name: string } | null;
   department: { name: string; sortOrder: number } | null;
   requiredType: { name: string } | null;
+  /** Set on a place at a booking's session: the role it is for. */
+  bookingNeed?: { role: string } | null;
   warnings: RotaWarning[];
 };
 
@@ -32,6 +34,8 @@ export type PlanEntry = {
   minutes: number;
   /** Who does it; null when it is unfilled. */
   who: string | null;
+  /** The booking role this place is for, e.g. "Swim teacher". */
+  part: string | null;
   absent: boolean;
   /** Qualification and double-booking warnings, never "absent" or "open". */
   warnings: RotaWarning[];
@@ -67,6 +71,7 @@ export function buildPlan(days: readonly { iso: string; shifts: readonly PlanShi
         id: s.id, text: `${clock(s.startMinutes)}–${s.endMinutes > 1440 ? clock(s.endMinutes - 1440) : clock(s.endMinutes)}`,
         minutes: Math.max(0, s.endMinutes - s.startMinutes),
         who: s.user?.name ?? s.rotaPerson?.name ?? null,
+        part: s.bookingNeed?.role ?? null,
         absent: s.warnings.includes("absent"),
         warnings: s.warnings.filter((w) => w !== "absent" && w !== "open"),
         editable: !s.importId,
@@ -79,7 +84,7 @@ export function buildPlan(days: readonly { iso: string; shifts: readonly PlanShi
     .map(({ key, label, rows }) => ({
       key, label,
       rows: [...rows.values()]
-        .map((r) => ({ ...r, days: r.days.map((cell) => cell.sort((a, b) => a.text.localeCompare(b.text))) }))
+        .map((r) => ({ ...r, days: r.days.map((cell) => cell.sort((a, b) => a.text.localeCompare(b.text) || (a.part ?? "").localeCompare(b.part ?? ""))) }))
         .sort((a, b) => a.duty.localeCompare(b.duty)),
     }));
   const all = days.map((d) => d.shifts.filter((s) => s.kind === "shift"));

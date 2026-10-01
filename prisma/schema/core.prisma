@@ -208,6 +208,7 @@ model Department {
   club         Club?            @relation(fields: [clubId], references: [id], onDelete: SetNull)
   members      UserDepartment[]
   rotaShifts   RotaShift[]
+  rotaBookings RotaBooking[]
 
   @@unique([orgId, name])
   @@index([orgId, sortOrder])
@@ -294,6 +295,7 @@ model QualificationType {
 
   organisation   Organisation    @relation(fields: [orgId], references: [id], onDelete: Restrict)
   qualifications Qualification[]
+  rotaBookingNeeds RotaBookingNeed[]
   trainingCourses TrainingCourse[]
   rotaShifts     RotaShift[]
 
@@ -386,6 +388,7 @@ model Club {
   assessmentSessions AssessmentSession[]
   departments        Department[]
   rotaShifts         RotaShift[]
+  rotaBookings       RotaBooking[]
   rotaDepartments    RotaDepartment[]
 
   @@index([sortOrder])

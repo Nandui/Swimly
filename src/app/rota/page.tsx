@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 import Link from "next/link";
-import { CalendarDays, ChevronLeft, ChevronRight } from "lucide-react";
+import { CalendarDays, CalendarRange, ChevronLeft, ChevronRight } from "lucide-react";
 import { Button } from "@/components/shadcn/button";
 import { NativeSelect, NativeSelectOption } from "@/components/shadcn/native-select";
 import { CopyLastWeek, ShiftDialog } from "@/components/rota/actions";
@@ -59,6 +59,7 @@ export default async function WeekPlanPage({ searchParams }: { searchParams: Pro
             </nav>
           ) : null}
           {site?.manage && !started ? <CopyLastWeek siteId={site.id} monday={monday} /> : null}
+          {site?.manage ? <Button asChild variant="outline" className="min-h-11"><Link href={`/rota/bookings?site=${site.id}`}><CalendarRange aria-hidden="true" />Bookings</Link></Button> : null}
           {site?.manage ? <ShiftDialog siteId={site.id} date={monday <= now && now <= sunday ? now : monday} today={now} options={options} /> : null}
         </div>
       </div>

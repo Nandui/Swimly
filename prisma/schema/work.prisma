@@ -183,6 +183,10 @@ model RotaShift {
   /// The department the duty belongs to (Core's Department), for the week
   /// plan's grouping. Null on old and imported shifts.
   departmentId   String?
+  /// A place on one session of a booking (school lessons, a party, lane hire):
+  /// the booking, and which of its needs this place fills.
+  bookingId      String?
+  bookingNeedId  String?
 
   organisation Organisation       @relation(fields: [orgId], references: [id], onDelete: Restrict)
   site         Club               @relation(fields: [siteId], references: [id], onDelete: Restrict)
@@ -191,12 +195,69 @@ model RotaShift {
   rotaPerson   RotaPerson?        @relation(fields: [rotaPersonId], references: [id], onDelete: SetNull)
   import       RotaImport?        @relation(fields: [importId], references: [id], onDelete: SetNull)
   department   Department?        @relation(fields: [departmentId], references: [id], onDelete: SetNull)
+  booking      RotaBooking?       @relation(fields: [bookingId], references: [id], onDelete: SetNull)
+  bookingNeed  RotaBookingNeed?   @relation(fields: [bookingNeedId], references: [id], onDelete: SetNull)
   changes      RotaShiftChange[]
 
   @@index([siteId, date])
   @@index([userId, date])
   @@index([rotaPersonId, date])
   @@index([importId])
+  @@index([departmentId])
+  @@index([bookingId])
+}
+
+/// Something at a site that needs staff (owner request, 1 October 2026):
+/// school lessons, a party, lane hire, an event. It runs on the chosen weekdays
+/// from `firstDay` to `lastDay` (one day for a one-off), and each session gets a
+/// duty per place it needs, unfilled until a supervisor plans who. Cancelling
+/// it cancels its sessions still to come.
+model RotaBooking {
+  id            String    @id @default(cuid())
+  orgId         String
+  siteId        String
+  departmentId  String?
+  /// school | party | lanes | event | other (`BOOKING_KIND_META`)
+  kind          String
+  /// Who it is for, e.g. "Example National School".
+  title         String
+  /// Where at the site, e.g. "Learner pool".
+  place         String    @default("")
+  /// Monday = 0 to Sunday = 6.
+  weekdays      Int[]
+  startMinutes  Int
+  endMinutes    Int
+  firstDay      DateTime  @db.Date
+  lastDay       DateTime  @db.Date
+  note          String    @default("")
+  createdById   String?
+  createdByName String
+  cancelledAt   DateTime?
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+
+  site       Club              @relation(fields: [siteId], references: [id], onDelete: Restrict)
+  department Department?       @relation(fields: [departmentId], references: [id], onDelete: SetNull)
+  needs      RotaBookingNeed[]
+  shifts     RotaShift[]
+
+  @@index([siteId, lastDay])
+}
+
+/// The staff a booking needs at each session: a role, how many, and the
+/// qualification it needs (e.g. 2 swim teachers, 1 lifeguard with NPLQ).
+model RotaBookingNeed {
+  id             String  @id @default(cuid())
+  bookingId      String
+  role           String
+  count          Int
+  requiredTypeId String?
+
+  booking      RotaBooking        @relation(fields: [bookingId], references: [id], onDelete: Cascade)
+  requiredType QualificationType? @relation(fields: [requiredTypeId], references: [id], onDelete: SetNull)
+  shifts       RotaShift[]
+
+  @@index([bookingId])
 }
 
 /// A change to a duty once its week has started (owner request, 1 October

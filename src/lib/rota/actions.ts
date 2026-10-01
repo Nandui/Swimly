@@ -8,7 +8,7 @@ import { logAudit } from "@/lib/audit";
 import { isDateOnly, parseDateOnly, today } from "@/lib/format";
 import { prisma } from "@/lib/prisma";
 import { requireCapFor } from "@/lib/policy/session";
-import { ABSENCE_REASONS, RETURN_FITS, ROTA_CHANGE_REASONS, addDaysIso, clock, mondayOf, needsFitNote, parseClock, weekStarted } from "@/lib/rota/constants";
+import { ABSENCE_REASONS, BOOKING_KINDS, BOOKING_MAX_PLACES, RETURN_FITS, ROTA_CHANGE_REASONS, addDaysIso, bookingDates, bookingDuty, clock, mondayOf, needsFitNote, parseClock, weekStarted, type RotaChangeReason } from "@/lib/rota/constants";
 import type { Prisma } from "@/generated/prisma/client";
 import { notifyShiftChange } from "@/lib/staff-api/reminders";
 
@@ -220,6 +220,116 @@ export async function markTimepointUpdated(changeId: string): Promise<ActionResu
     await logAudit({ actorId: actor.id, actorName: actor.name, action: "update", entity: "RotaShift", entityId: null, clubId: site.id, summary: `Recorded a rota change as updated in Timepoint: ${change.after || change.before}` }, tx);
   });
   revalidatePath("/rota/today");
+  return ok();
+}
+
+/* Bookings: school lessons, parties, lane hire, events. Saving one creates an
+   unfilled duty for each place at each session; supervisors plan who on the
+   week plan. Filling a place in a started week asks for its reason like any
+   other change. */
+
+const bookingSchema = z.object({
+  siteId: z.string().min(1),
+  kind: z.enum(BOOKING_KINDS, { message: "Choose what it is." }),
+  title: z.string().trim().min(2, "Say who it is for, for example the school's name.").max(80, "Keep it under 80 characters."),
+  place: z.string().trim().max(60, "Keep the place under 60 characters."),
+  departmentId: z.string().trim().max(64).default("").transform((v) => v || null),
+  weekdays: z.array(z.number().int().min(0).max(6)).min(1, "Choose at least one day.").max(7),
+  start: z.string(),
+  end: z.string(),
+  firstDay: z.string().refine(isDateOnly, "Choose the first day."),
+  lastDay: z.string().refine(isDateOnly, "Choose the last day."),
+  needs: z.array(z.object({
+    role: z.string().trim().min(2, "Name each role, for example Swim teacher.").max(40),
+    count: z.number().int().min(1, "Each role needs at least one person.").max(20, "Up to 20 people for one role."),
+    requiredTypeId: z.string().trim().max(64).default("").transform((v) => v || null),
+  })).min(1, "Say who it needs.").max(8),
+  note: z.string().trim().max(300),
+});
+export type BookingInput = z.input<typeof bookingSchema>;
+
+export async function saveBooking(input: BookingInput): Promise<ActionResult> {
+  const parsed = bookingSchema.safeParse(input);
+  if (!parsed.success) return fail(parsed.error.issues[0].message);
+  const data = parsed.data;
+  const start = parseClock(data.start), end = parseClock(data.end);
+  if (start === null || end === null) return fail("Use times like 09:30.");
+  if (end <= start) return fail("It has to end after it starts, on the same day.");
+  if (data.lastDay < data.firstDay) return fail("The last day can't be before the first.");
+  if (data.firstDay < today()) return fail("A booking starts today or later.");
+  const dates = bookingDates(data.firstDay, data.lastDay, data.weekdays);
+  if (!dates.length) return fail("None of those days fall between the first and last day.");
+  const places = dates.length * data.needs.reduce((n, need) => n + need.count, 0);
+  if (places > BOOKING_MAX_PLACES) return fail(`That makes ${places} places to fill. Split it into shorter bookings, up to ${BOOKING_MAX_PLACES} places each.`);
+  const allowed = await allowedAt(data.siteId);
+  if (!allowed.ok) return fail(allowed.error);
+  const { actor, site } = allowed;
+  if (!site.orgId) return fail("That site is not set up for the rota.");
+  if (data.departmentId && !(await prisma.department.findFirst({ where: { id: data.departmentId, orgId: site.orgId, archivedAt: null, OR: [{ clubId: null }, { clubId: site.id }] }, select: { id: true } }))) {
+    return fail("Choose one of this site's departments.");
+  }
+  const types = [...new Set(data.needs.flatMap((n) => (n.requiredTypeId ? [n.requiredTypeId] : [])))];
+  if (types.length && (await prisma.qualificationType.count({ where: { id: { in: types }, orgId: site.orgId } })) !== types.length) {
+    return fail("One of those qualifications is no longer offered.");
+  }
+  const duty = bookingDuty(data.kind, data.title);
+  await prisma.$transaction(async (tx) => {
+    const booking = await tx.rotaBooking.create({ data: {
+      orgId: site.orgId!, siteId: site.id, departmentId: data.departmentId, kind: data.kind, title: data.title, place: data.place,
+      weekdays: [...new Set(data.weekdays)].sort(), startMinutes: start, endMinutes: end,
+      firstDay: parseDateOnly(data.firstDay), lastDay: parseDateOnly(data.lastDay), note: data.note,
+      createdById: actor.id, createdByName: actor.name,
+      needs: { create: data.needs.map((n) => ({ role: n.role, count: n.count, requiredTypeId: n.requiredTypeId })) },
+    }, select: { id: true, needs: { select: { id: true, role: true, count: true, requiredTypeId: true } } } });
+    await tx.rotaShift.createMany({ data: dates.flatMap((date) => booking.needs.flatMap((need) => Array.from({ length: need.count }, () => ({
+      orgId: site.orgId!, siteId: site.id, date: parseDateOnly(date), startMinutes: start, endMinutes: end, role: duty,
+      departmentId: data.departmentId, requiredTypeId: need.requiredTypeId, userId: null, note: data.place,
+      bookingId: booking.id, bookingNeedId: need.id, createdById: actor.id, createdByName: actor.name,
+    })))) });
+    await logAudit({ actorId: actor.id, actorName: actor.name, action: "create", entity: "RotaShift", entityId: booking.id, clubId: site.id,
+      summary: `Booked ${duty} at ${site.name}, ${dates.length} ${dates.length === 1 ? "session" : "sessions"} from ${data.firstDay} to ${data.lastDay}, ${places} places to fill` }, tx);
+  });
+  revalidatePath("/rota");
+  revalidatePath("/rota/bookings");
+  revalidatePath("/rota/today");
+  return ok();
+}
+
+/** Cancels a booking's sessions still to come. People already on one in a
+ *  started week are taken off with the reason given, as any change is. */
+export async function cancelBooking(id: string, input: ChangeInput = {}): Promise<ActionResult> {
+  const parsed = changeSchema.safeParse(input);
+  if (!parsed.success) return fail(parsed.error.issues[0].message);
+  const change = parsed.data;
+  const booking = await prisma.rotaBooking.findFirst({ where: { id, cancelledAt: null }, select: { siteId: true, orgId: true, kind: true, title: true } });
+  if (!booking) return fail("That booking is already cancelled.");
+  const allowed = await allowedAt(booking.siteId);
+  if (!allowed.ok) return fail(allowed.error);
+  const { actor, site } = allowed;
+  const now = today();
+  const ahead = await prisma.rotaShift.findMany({
+    where: { bookingId: id, cancelledAt: null, date: { gte: parseDateOnly(now) } },
+    select: { id: true, date: true, role: true, startMinutes: true, endMinutes: true, userId: true, user: { select: { name: true } } },
+  });
+  const live = ahead.filter((s) => s.userId && weekStarted(iso(s.date), now));
+  if (live.length && !change.reason) return fail(`${live.length} ${live.length === 1 ? "place this week has someone" : "places this week have people"} on it. Say why it is cancelled.`);
+  await prisma.$transaction(async (tx) => {
+    await tx.rotaBooking.update({ where: { id }, data: { cancelledAt: new Date() } });
+    await tx.rotaShift.updateMany({ where: { id: { in: ahead.map((s) => s.id) } }, data: { cancelledAt: new Date() } });
+    if (live.length && change.reason) {
+      await tx.rotaShiftChange.createMany({ data: live.map((s) => ({
+        orgId: booking.orgId, shiftId: s.id, siteId: booking.siteId, date: s.date, kind: "cancelled", before: describe(s, s.user?.name ?? null),
+        fromUserId: s.userId, reason: change.reason as RotaChangeReason, note: change.changeNote, byId: actor.id, byName: actor.name,
+        ...(change.timepoint ? { timepointAt: new Date(), timepointById: actor.id, timepointByName: actor.name } : {}),
+      })) });
+    }
+    await logAudit({ actorId: actor.id, actorName: actor.name, action: "cancel", entity: "RotaShift", entityId: id, clubId: site.id,
+      summary: `Cancelled the booking ${bookingDuty(booking.kind, booking.title)} at ${site.name}, ${ahead.length} places still to come` }, tx);
+  });
+  revalidatePath("/rota");
+  revalidatePath("/rota/bookings");
+  revalidatePath("/rota/today");
+  for (const s of live) await notifyShiftChange(s.userId, `Your shift was cancelled: ${s.role} at ${site.name} on ${iso(s.date)}, ${clock(s.startMinutes)}–${clock(s.endMinutes)}.`);
   return ok();
 }
 

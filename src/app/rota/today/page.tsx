@@ -137,11 +137,12 @@ export default async function TodayPage({ searchParams }: { searchParams: Promis
                                 <span className="flex min-w-0 items-center gap-1.5 truncate">
                                   {e.absent ? <UserX aria-hidden="true" className="size-3.5 shrink-0 text-[var(--pc-danger)]" /> : !e.absent && e.warnings.length ? <TriangleAlert aria-hidden="true" className="size-3.5 shrink-0 text-[var(--pc-warning)]" /> : null}
                                   <span className={cn("font-semibold", e.absent && "line-through decoration-[var(--pc-danger)]")}>{e.who ?? "Unfilled"}</span>
+                                  {e.part ? <span className="text-ui-muted-foreground">{e.part}</span> : null}
                                   <span className="text-ui-muted-foreground tabular-nums">{e.text}</span>
                                 </span>
                               );
                               const style = { left: pos(s.startMinutes), width: `calc(${pos(s.endMinutes)} - ${pos(s.startMinutes)})` };
-                              const label = [r.duty, e.text, e.who ?? "unfilled", e.absent ? "absent, needs cover" : null].filter(Boolean).join(", ");
+                              const label = [r.duty, e.part, e.text, e.who ?? "unfilled", e.absent ? "absent, needs cover" : null].filter(Boolean).join(", ");
                               const cls = cn("absolute inset-y-2 flex items-center rounded-[var(--pc-radius-inner)] border px-2 text-left text-xs", tone);
                               return site.manage && e.editable
                                 ? <ShiftDialog key={e.id} siteId={site.id} date={now} today={now} shift={editable(e.id)} options={options} suggested={e.absent ? "cover" : undefined}

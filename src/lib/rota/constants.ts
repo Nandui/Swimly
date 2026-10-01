@@ -91,6 +91,34 @@ export const ROTA_CHANGE_REASON_META = {
 export type RotaChangeReason = keyof typeof ROTA_CHANGE_REASON_META;
 export const ROTA_CHANGE_REASONS = Object.keys(ROTA_CHANGE_REASON_META) as RotaChangeReason[];
 
+/** What a booking is. Its sessions show on the week plan under its name. */
+export const BOOKING_KIND_META = {
+  school: { label: "School lessons", color: "blue" },
+  party: { label: "Party", color: "orange" },
+  lanes: { label: "Lane hire", color: "gray" },
+  event: { label: "Event", color: "green" },
+  other: { label: "Other", color: "gray" },
+} as const satisfies Record<string, StatusMeta>;
+export type BookingKind = keyof typeof BOOKING_KIND_META;
+export const BOOKING_KINDS = Object.keys(BOOKING_KIND_META) as BookingKind[];
+/** The most places one booking may create, so a typo in a date cannot fill a year. */
+export const BOOKING_MAX_PLACES = 600;
+
+/** The duty name a booking's places carry: "School lessons: Example NS". */
+export function bookingDuty(kind: string, title: string) {
+  return `${BOOKING_KIND_META[kind as BookingKind]?.label ?? "Booking"}: ${title}`;
+}
+
+/** Each date from `firstDay` to `lastDay` on one of `weekdays` (Monday = 0). */
+export function bookingDates(firstDay: string, lastDay: string, weekdays: readonly number[]) {
+  const out: string[] = [];
+  for (let d = firstDay; d <= lastDay && out.length <= 400; d = addDaysIso(d, 1)) {
+    const weekday = (new Date(`${d}T00:00:00Z`).getUTCDay() + 6) % 7;
+    if (weekdays.includes(weekday)) out.push(d);
+  }
+  return out;
+}
+
 /** A week has started from its Monday: from then on Timepoint holds it, so a
  *  change to one of its duties needs a reason and is logged. Before then the
  *  plan is a draft and changes freely (Copy last week included). */

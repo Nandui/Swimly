@@ -35,7 +35,7 @@ export async function rotaWeek(siteId: string | undefined, week: string | undefi
     select: { id: true, date: true, startMinutes: true, endMinutes: true, role: true, note: true, userId: true, requiredTypeId: true,
       rotaPersonId: true, kind: true, importId: true, departmentId: true,
       user: { select: { name: true } }, rotaPerson: { select: { name: true } }, requiredType: { select: { name: true } },
-      department: { select: { name: true, sortOrder: true } } },
+      department: { select: { name: true, sortOrder: true } }, bookingId: true, bookingNeed: { select: { role: true } } },
   });
   const userIds = [...new Set(shifts.flatMap((s) => (s.userId ? [s.userId] : [])))];
   const personIds = [...new Set(shifts.flatMap((s) => (s.rotaPersonId ? [s.rotaPersonId] : [])))];
@@ -76,6 +76,32 @@ export async function rotaWeek(siteId: string | undefined, week: string | undefi
   return { who, sites, site, monday, days, people, types, departments, duties: recent.map((r) => r.role) };
 }
 export type RotaDay = Awaited<ReturnType<typeof rotaWeek>>["days"][number];
+
+/** The bookings at one site still running or ended in the last 30 days,
+ *  with how many of their places still to come are unfilled. */
+export async function rotaBookings(siteId: string | undefined) {
+  const { who, sites } = await rotaSites();
+  const site = siteId ? sites.find((s) => s.id === siteId) : sites[0];
+  if (siteId && !site) notFound();
+  const now = today();
+  if (!site) return { who, sites, site: null, today: now, bookings: [], types: [], departments: [] };
+  const orgId = who.orgId ?? undefined;
+  const [bookings, ahead, staffed, types, departments] = await Promise.all([
+    prisma.rotaBooking.findMany({
+      where: { siteId: site.id, cancelledAt: null, lastDay: { gte: parseDateOnly(addDaysIso(now, -30)) } }, orderBy: [{ firstDay: "asc" }, { startMinutes: "asc" }],
+      select: { id: true, kind: true, title: true, place: true, weekdays: true, startMinutes: true, endMinutes: true, firstDay: true, lastDay: true, note: true, createdByName: true,
+        department: { select: { name: true } }, needs: { select: { role: true, count: true, requiredType: { select: { name: true } } } } },
+    }),
+    prisma.rotaShift.groupBy({ by: ["bookingId"], where: { siteId: site.id, bookingId: { not: null }, cancelledAt: null, userId: null, date: { gte: parseDateOnly(now) } }, _count: { _all: true } }),
+    // Places this week (started, so in Timepoint) that already have someone.
+    prisma.rotaShift.groupBy({ by: ["bookingId"], where: { siteId: site.id, bookingId: { not: null }, cancelledAt: null, userId: { not: null }, date: { gte: parseDateOnly(now), lte: parseDateOnly(addDaysIso(mondayOf(now), 6)) } }, _count: { _all: true } }),
+    site.manage ? prisma.qualificationType.findMany({ where: { orgId, archivedAt: null }, orderBy: { name: "asc" }, select: { id: true, name: true } }) : [],
+    site.manage ? prisma.department.findMany({ where: { orgId, archivedAt: null, OR: [{ clubId: null }, { clubId: site.id }] }, orderBy: [{ sortOrder: "asc" }, { name: "asc" }], select: { id: true, name: true } }) : [],
+  ]);
+  const unfilled = new Map(ahead.map((a) => [a.bookingId, a._count._all]));
+  const staffedNow = new Set(staffed.map((s) => s.bookingId));
+  return { who, sites, site, today: now, types, departments, bookings: bookings.map((b) => ({ ...b, unfilled: unfilled.get(b.id) ?? 0, staffedThisWeek: staffedNow.has(b.id) })) };
+}
 
 /** Today's plan for duty managers: the day's duties at one site, what needs
  *  them now (duties whose person is off, with who could cover; unfilled ones

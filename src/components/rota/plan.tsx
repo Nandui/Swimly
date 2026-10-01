@@ -118,6 +118,7 @@ export function RotaPlan({ plan, days, today, siteId, manage, editable, options,
             <dl className="grid grid-cols-[7rem_minmax(0,1fr)] gap-x-4 gap-y-2 text-sm">
               <dt className="text-ui-muted-foreground">Who</dt>
               <dd className="font-semibold">{open.entry.who ?? "Unfilled"}</dd>
+              {open.entry.part ? <><dt className="text-ui-muted-foreground">Role</dt><dd>{open.entry.part}</dd></> : null}
               <dt className="text-ui-muted-foreground">Hours</dt>
               <dd className="tabular-nums">{hours(open.entry.minutes)}</dd>
               {open.entry.detail ? <><dt className="text-ui-muted-foreground">Details</dt><dd>{open.entry.detail}</dd></> : null}
@@ -149,7 +150,7 @@ function Entry({ entry, onPick }: { entry: PlanEntry; onPick: () => void }) {
     ? "border-[var(--pc-danger)] bg-[var(--pc-danger-soft)] text-ui-foreground"
     : !entry.who ? "border-dashed border-ui-muted-foreground bg-ui-card text-ui-foreground hover:border-[var(--pc-primary)]"
     : "border-ui-border bg-ui-card text-ui-foreground hover:border-[var(--pc-primary)]";
-  const label = [entry.text, entry.who ?? "unfilled", entry.absent ? "absent, needs cover" : null, entry.warnings.length ? `${entry.warnings.length} warning${entry.warnings.length === 1 ? "" : "s"}` : null].filter(Boolean).join(", ");
+  const label = [entry.text, entry.part, entry.who ?? "unfilled", entry.absent ? "absent, needs cover" : null, entry.warnings.length ? `${entry.warnings.length} warning${entry.warnings.length === 1 ? "" : "s"}` : null].filter(Boolean).join(", ");
   return (
     <Button type="button" variant="ghost" onClick={onPick} aria-label={label}
       className={cn("flex h-auto min-h-8 w-full flex-col items-start justify-start gap-0 rounded-[var(--pc-radius-inner)] border px-1.5 py-1 text-left font-normal leading-tight whitespace-normal transition-colors focus-visible:outline-2 focus-visible:outline-offset-1 focus-visible:outline-[var(--pc-focus)] pointer-coarse:min-h-11", tone)}>
@@ -159,6 +160,7 @@ function Entry({ entry, onPick }: { entry: PlanEntry; onPick: () => void }) {
         {!entry.absent && entry.warnings.length ? <TriangleAlert aria-hidden="true" className="ml-auto size-3.5 shrink-0 text-[var(--pc-warning)]" /> : null}
       </span>
       <span className={cn("w-full truncate text-xs font-semibold", entry.absent && "line-through decoration-[var(--pc-danger)]")}>{entry.who ?? "Unfilled"}</span>
+      {entry.part ? <span className="w-full truncate text-[11px] text-ui-muted-foreground">{entry.part}</span> : null}
     </Button>
   );
 }

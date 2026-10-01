@@ -17,6 +17,16 @@ the main database and uses the platform access model (docs/platform-access.md).
   included, into a week that has not started, never doubling one already planned.
   It opens for anyone with the Rota screen and `rota.view` at any scope, and
   shows only the sites that capability covers; any other site is a 404.
+- **Bookings** (`/rota/bookings`). School lessons, parties, lane hire and events that
+  need staff (owner request, 1 October 2026). A booking says what it is
+  (`BOOKING_KIND_META`), who it is for, where, its department, the weekdays, the
+  times, the first and last day (the same day for a one-off) and the staff each
+  session needs: roles, how many, and the qualification each needs. Saving it puts
+  a place for each role at each session on the week plan, unfilled, under the duty
+  "School lessons: Example National School", each place showing its role. Filling
+  places is planning like any other duty. Cancelling a booking cancels its sessions
+  still to come; when people this week are already on one, it asks for the reason
+  and logs each person taken off. A booking can create up to 600 places.
 - **Today** (`/rota/today`). The duty managers' day: every department's duties on
   one timeline with a line at the time now (a time-ordered list on phones);
   **Needs you**, the duties still to come whose person is off or that are
@@ -151,7 +161,7 @@ person their own absences through the same seam, with an allowlisted response.
 
 ## Files
 
-- Schema: `RotaShift` (`prisma/migrations/20261001120000_rota`), its department and `RotaShiftChange` (`prisma/migrations/20261011120000_rota_plan`), `RotaAbsence` (`prisma/migrations/20261005120000_rota_absence`), `RotaAbsenceUpdate` and `continuesId` (`prisma/migrations/20261007120000_rota_absence_updates`), return to work (`prisma/migrations/20261009120000_rota_return_to_work`)
+- Schema: `RotaShift` (`prisma/migrations/20261001120000_rota`), its department and `RotaShiftChange` (`prisma/migrations/20261011120000_rota_plan`), `RotaBooking` and `RotaBookingNeed` (`prisma/migrations/20261012120000_rota_bookings`), `RotaAbsence` (`prisma/migrations/20261005120000_rota_absence`), `RotaAbsenceUpdate` and `continuesId` (`prisma/migrations/20261007120000_rota_absence_updates`), return to work (`prisma/migrations/20261009120000_rota_return_to_work`)
 - `src/lib/rota/`: `access.ts`, `data.ts` (the week, today, absences, returns due), `plan.ts` (the week plan's rows, pure and tested), `mine.ts` (own shifts), `actions.ts`, `constants.ts`, `file.ts` (the personal file)
 - Self-service: `src/lib/rota/mine.ts` (staff API); UI: `src/app/rota/`, `src/components/rota/`; shift-change emails from `src/lib/staff-api/reminders.ts`
 - Tests: `src/lib/rota/rota.test.ts`

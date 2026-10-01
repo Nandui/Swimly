@@ -129,6 +129,18 @@ async function seedRota(db: PrismaClient) {
     shift("club_churchfield", 1, 15, 22, "Poolside, main pool", "dept_aquatics", "sbx_ava", "qt_nplq"),
     shift("club_churchfield", 1, 12, 18, "Front desk", "dept_reception", "sbx_noah"),
   ] });
+  // School lessons every weekday morning this week and next, in the learner pool.
+  const dates = Array.from({ length: 14 }, (_, i) => day(i)).filter((d) => d.getUTCDay() >= 1 && d.getUTCDay() <= 5);
+  const lessons = await db.rotaBooking.create({ data: {
+    orgId: ORG, siteId: "club_churchfield", departmentId: "dept_aquatics", kind: "school", title: "Example National School", place: "Learner pool",
+    weekdays: [0, 1, 2, 3, 4], startMinutes: 570, endMinutes: 690, firstDay: day(0), lastDay: day(13), createdById: "sbx_maya", createdByName: "Maya Example",
+    needs: { create: [{ role: "Swim teacher", count: 2, requiredTypeId: "qt_swim_teacher" }, { role: "Lifeguard", count: 1, requiredTypeId: "qt_nplq" }] },
+  }, select: { id: true, needs: { select: { id: true, role: true, count: true, requiredTypeId: true } } } });
+  await db.rotaShift.createMany({ data: dates.flatMap((date, d) => lessons.needs.flatMap((need) => Array.from({ length: need.count }, (_, i) => ({
+    orgId: ORG, siteId: "club_churchfield", date, startMinutes: 570, endMinutes: 690, role: "School lessons: Example National School", departmentId: "dept_aquatics",
+    requiredTypeId: need.requiredTypeId, note: "Learner pool", bookingId: lessons.id, bookingNeedId: need.id, createdById: "sbx_maya", createdByName: "Maya Example",
+    userId: d === 0 && need.role === "Swim teacher" && i === 0 ? "sbx_ava" : null,
+  })))) });
   await db.rotaAbsence.create({ data: { orgId: ORG, userId: "sbx_riley", reason: "sickness", firstDay: day(0), lastDay: day(0), note: "Synthetic: rang in at 08:00.", reportedById: "sbx_maya", reportedByName: "Maya Example" } });
   // Ava was off sick for nine days until yesterday; today is her first shift
   // back, so her return to work is due (and asks about the fit note).

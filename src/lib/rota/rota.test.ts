@@ -3,7 +3,7 @@ import { after, before, test } from "node:test";
 import { isolatedPrisma } from "@/test/pglite-prisma";
 import { serverModule } from "@/test/server-module";
 import { expandPermissions, type PermissionKey } from "@/lib/staff/permissions";
-import { absentOn, addDaysIso, followOn, mondayOf, needsFitNote, parseClock, returnStage, shiftWarnings } from "./constants";
+import { absentOn, addDaysIso, bookingDates, followOn, mondayOf, needsFitNote, parseClock, returnStage, shiftWarnings } from "./constants";
 import { today } from "@/lib/format";
 
 /** The Rota: a site-scoped planner plans only their site, qualification gaps
@@ -298,4 +298,44 @@ test("the week plan: a draft until its week starts; after that each change keeps
   const ava = await file.dutyChangeFile("ava", ORG);
   assert.ok(ava.entries.some((e) => /^Taken off a duty: Poolside/.test(e.title) && /Covering an absence · by maya/.test(e.detail)), "on the personal file of the person taken off");
   assert.ok((await file.dutyChangeFile("riley", ORG)).entries.some((e) => e.title.startsWith("Put on a duty") && e.detail.endsWith("In Timepoint")));
+});
+
+test("booking dates: the chosen weekdays between the first and last day", () => {
+  assert.deepEqual(bookingDates("2026-10-05", "2026-10-11", [0, 2, 4]), ["2026-10-05", "2026-10-07", "2026-10-09"], "Monday is 0");
+  assert.deepEqual(bookingDates("2026-10-10", "2026-10-10", [5]), ["2026-10-10"], "a one-off Saturday");
+  assert.deepEqual(bookingDates("2026-10-06", "2026-10-06", [0]), [], "not on that day");
+});
+
+test("bookings: each session's places go on the plan unfilled; cancelling takes off the sessions still to come", async () => {
+  const db = fixture.prisma;
+  as("maya", [planner()]);
+  const next = addDaysIso(mondayOf(today()), 7);
+  const input = { siteId: churchfield, kind: "school" as const, title: "Example National School", place: "Learner pool", departmentId: "d-pool",
+    weekdays: [0, 1, 2, 3, 4], start: "09:30", end: "11:30", firstDay: next, lastDay: addDaysIso(next, 13), note: "",
+    needs: [{ role: "Swim teacher", count: 2, requiredTypeId: "" }, { role: "Lifeguard", count: 1, requiredTypeId: "qt-life" }] };
+  assert.equal((await actions.saveBooking({ ...input, firstDay: addDaysIso(today(), -1) })).ok, false, "not in the past");
+  assert.equal((await actions.saveBooking({ ...input, siteId: bishopstown })).ok, false, "another site");
+  assert.equal((await actions.saveBooking({ ...input, lastDay: addDaysIso(next, 400) })).ok, false, "too many places for one booking");
+  assert.equal((await actions.saveBooking(input)).ok, true);
+  const booking = await db.rotaBooking.findFirstOrThrow({ where: { title: "Example National School" } });
+  const places = await db.rotaShift.findMany({ where: { bookingId: booking.id }, include: { bookingNeed: true } });
+  assert.equal(places.length, 10 * 3, "ten sessions, three places each");
+  assert.ok(places.every((p) => p.userId === null && p.role === "School lessons: Example National School" && p.departmentId === "d-pool"));
+  assert.equal(places.filter((p) => p.bookingNeed?.role === "Lifeguard" && p.requiredTypeId === "qt-life").length, 10);
+
+  const week = await data.rotaWeek(churchfield, next);
+  assert.equal(week.days[0].shifts.filter((s) => s.bookingId === booking.id).length, 3, "on the week plan");
+  assert.equal((await data.rotaBookings(churchfield)).bookings.find((b) => b.id === booking.id)?.unfilled, 30);
+
+  // A booking running this week, with someone on one of its places today.
+  const now = { ...input, title: "Example Swim Club", kind: "lanes" as const, firstDay: today(), lastDay: addDaysIso(today(), 7), weekdays: [0, 1, 2, 3, 4, 5, 6], needs: [{ role: "Lifeguard", count: 1, requiredTypeId: "" }] };
+  assert.equal((await actions.saveBooking(now)).ok, true);
+  const club = await db.rotaBooking.findFirstOrThrow({ where: { title: "Example Swim Club" } });
+  const todays = await db.rotaShift.findFirstOrThrow({ where: { bookingId: club.id, date: new Date(`${today()}T00:00:00Z`) } });
+  await db.rotaShift.update({ where: { id: todays.id }, data: { userId: "noah" } });
+  assert.equal((await actions.cancelBooking(club.id)).ok, false, "someone this week is on it: say why");
+  assert.equal((await actions.cancelBooking(club.id, { reason: "correction", changeNote: "The club cancelled" })).ok, true);
+  assert.equal(await db.rotaShift.count({ where: { bookingId: club.id, cancelledAt: null } }), 0, "every session still to come is off the plan");
+  assert.equal((await db.rotaShiftChange.findFirstOrThrow({ where: { shiftId: todays.id } })).fromUserId, "noah", "and the person taken off keeps it on their file");
+  assert.equal((await actions.cancelBooking(club.id)).ok, false, "already cancelled");
 });
