@@ -13,7 +13,7 @@ async function main() {
   }
   const config = hrStorageConfig(process.env);
   if (!config) {
-    console.log('HR_DATABASE_URL is not set; HR stays off until it is provisioned.');
+    console.log('No HR database is set (HR_DATABASE_URL or HR_DB_DATABASE_URL); HR stays off until it is provisioned.');
     return;
   }
   const client = new Client({ connectionString: postgresConnectionString(config.direct), connectionTimeoutMillis: 15000 });

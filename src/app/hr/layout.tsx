@@ -31,7 +31,7 @@ export default async function HrLayout({ children }: { children: ReactNode }) {
       {hrConfigured() ? children : (
         <div className="space-y-6">
           <div className="module-heading"><div className="space-y-2"><h1>HR and performance</h1></div></div>
-          <Notice tone="info" title="HR storage is not set up yet" description="HR records live in their own database. Once it is provisioned (HR_DATABASE_URL), this workspace opens. Nothing else in Turnfin is affected." />
+          <Notice tone="info" title="HR storage is not set up yet" description="HR records live in their own database. Once it is provisioned (HR_DATABASE_URL, or the Neon integration with the HR_DB prefix), this workspace opens. Nothing else in Turnfin is affected." />
         </div>
       )}
     </HrShell>

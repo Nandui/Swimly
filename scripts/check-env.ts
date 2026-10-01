@@ -11,7 +11,7 @@ const warnings: string[] = [];
 try { docsStorageConfig(process.env); }
 catch (error) { errors.push(error instanceof Error && error.name !== 'TypeError' ? error.message : 'Check the Docs database URLs.'); }
 // HR is optional until its database is provisioned, but never in a shared one.
-try { if (!hrStorageConfig(process.env)) warnings.push('HR_DATABASE_URL is not set, so HR and performance stays switched off.'); }
+try { if (!hrStorageConfig(process.env)) warnings.push('No HR database is set (HR_DATABASE_URL or HR_DB_DATABASE_URL), so HR and performance stays switched off.'); }
 catch (error) { errors.push(error instanceof Error && error.name !== 'TypeError' ? error.message : 'Check the HR database URLs.'); }
 
 // Production and dev must not share a database; see src/lib/database-environment.ts.

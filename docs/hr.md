@@ -9,7 +9,9 @@ access model has (docs/platform-access.md).
 HR records live in their own Postgres database, like Docs:
 
 - `HR_DATABASE_URL` (runtime) and optionally `HR_DIRECT_URL` (unpooled, same
-  database) for migrations. Both must differ from the Turnfin and Docs databases;
+  database) for migrations. A database attached through Vercel's Neon
+  integration with the prefix `HR_DB` provides `HR_DB_DATABASE_URL` and
+  `HR_DB_DATABASE_URL_UNPOOLED`, which are read in their place. Both must differ from the Turnfin and Docs databases;
   `scripts/check-env.ts` refuses a shared one.
 - Schema `turnfin_hr`, migrations in `hr-database/migrations/NNN_name.sql`,
   applied in order with checksums by `scripts/migrate-hr.ts` at the end of a
@@ -77,8 +79,10 @@ switch on a shared device, or a password older than 15 minutes, goes to
 ## Turning it on
 
 1. Provision a separate Postgres database for HR.
-2. Set `HR_DATABASE_URL` (and `HR_DIRECT_URL` if the runtime URL is pooled) in
-   the production environment.
+2. Attach it to the Work project (`swimly-crm`) through Vercel's Neon
+   integration with the prefix `HR_DB`, for **Production only** (a preview
+   must never reach production HR records), or set `HR_DATABASE_URL` (and
+   `HR_DIRECT_URL` if the runtime URL is pooled) in the production environment.
 3. Deploy. The build applies `hr-database/migrations`.
 4. As a superadmin, create a restricted HR role (for example **HR lead**, with
    `hr.notes.write` and `hr.reviews.write` and the HR screen) and assign it with a
