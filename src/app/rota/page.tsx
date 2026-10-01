@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 import Link from "next/link";
-import { CalendarDays, ChevronLeft, ChevronRight, Upload } from "lucide-react";
+import { CalendarDays, ChevronLeft, ChevronRight } from "lucide-react";
 import { Button } from "@/components/shadcn/button";
 import { NativeSelect, NativeSelectOption } from "@/components/shadcn/native-select";
 import { ShiftDialog } from "@/components/rota/actions";
@@ -55,7 +55,6 @@ export default async function RotaPage({ searchParams }: { searchParams: Promise
             </nav>
           ) : null}
           {site?.manage ? <ShiftDialog siteId={site.id} date={monday <= now && now <= sunday ? now : monday} people={data.people} types={data.types} /> : null}
-          {data.who.manage ? <Button asChild className="min-h-11"><Link href="/rota/import"><Upload aria-hidden="true" />Upload roster</Link></Button> : null}
         </div>
       </div>
       {data.sites.length === 0 || !site ? (

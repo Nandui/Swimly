@@ -128,35 +128,18 @@ person their own absences through the same seam, with an allowlisted response.
 - Self-service: `src/lib/rota/mine.ts` (staff API); UI: `src/app/rota/`, `src/components/rota/`; shift-change emails from `src/lib/staff-api/reminders.ts`
 - Tests: `src/lib/rota/rota.test.ts`
 
-## Uploading the week's roster (29 September 2026)
+## Roster upload: retired (1 October 2026)
 
-Rota managers upload the payroll system's weekly export (RosterBrowser, `.xlsx`, one sheet
-"Roster for <year>-W<week>") at **Upload roster** (`/rota/import`). One file covers both sites.
+Owner decision, 1 October 2026: Timepoint keeps the roster (who works which hours,
+clocking and the payroll exports); Turnfin does not import it. Upload roster
+(`/rota/import`), Roster changes (`/rota/changes`) and their code (the RosterBrowser
+reader, the payroll department list and name matching) are removed. Turnfin's Rota
+becomes the deployment plan instead: department supervisors plan who does what at
+their site's departments for the week, and duty managers run and adapt the day's
+plan (being designed; mock-ups first).
 
-- **Reading it** (`src/lib/rota/roster.ts`, pure and tested): EmpNo, EmployeeName, then a time
-  range or a code and a department code per day. A second shift on a day is a second row.
-  `FHOP` is a full holiday, paid; any other code is kept as leave with its code. An overnight
-  shift ends the next morning. Anything unreadable is listed and left out, never guessed.
-- **Check, then import.** Checking writes nothing: people (new, and how many have a login),
-  shifts per site, holidays, and for a re-upload what changes. Importing reads the file again.
-- **Departments** come from the payroll system's code list, built in (`src/lib/rota/departments.ts`,
-  owner request 1 October 2026: "I just need to upload the roster file"). Each code names its
-  place (BT Bishopstown, CF Churchfield, DO, Mahon, SPC) and a name the rota shows ("520 - CF
-  Pool" is Pool at Churchfield). A place finds its Turnfin site by name; a code missing from the
-  list is placed by its number (below 320 Bishopstown, 320 to 599 Churchfield). Days at places
-  that are not Turnfin sites (DO, Mahon, SPC today) and at codes with no place (764 Supervisor,
-  765 Shift Supervisor) are left out and counted on the preview; nothing waits for an answer.
-  A new code on the payroll list is one line in that file. The Departments page is retired;
-  `RotaDepartment` rows saved earlier still place a code the list cannot.
-- **Everyone by name.** `RotaPerson` holds each employee number and name, login or not. It links
-  to an account when exactly one active account has the same name (the roster writes the
-  surname first and "O Halloran" for O'Halloran), so that person sees their shifts in Turnfin Me.
-- **Re-uploading a week** replaces its imported entries (the old ones are cancelled, not
-  deleted) and records each person-day that was added, removed or changed as `RotaChange` rows,
-  shown at **Roster changes** (`/rota/changes`). Shifts added by hand are never touched, and
-  imported ones are changed by uploading again, not edited.
-- **Absences** can be reported for anyone on the roster, login or not (an absence names an
-  account, a roster entry, or both). Their shifts show Absent on the week. Roster holidays show
-  on Absences as "On holiday in the next two weeks": planned, so nothing to report.
-- Needs `rota.manage` at every site the file's departments reach. Holiday and leave days are
-  not shifts: they never count as on shift, as unfilled, or in Turnfin Me.
+What stays, so nothing recorded is lost: imported shifts still show on the week they
+belong to; `RotaPerson` entries still name the people on old shifts and absences, and
+someone with a recently imported shift can still be reported absent until those
+shifts age out (56 days); the `RotaImport`, `RotaChange` and `RotaDepartment` tables
+are kept (the shared database only takes additive changes) but nothing writes to them.

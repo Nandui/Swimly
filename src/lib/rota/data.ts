@@ -187,19 +187,3 @@ async function absenceReach(orgId: string | undefined) {
 }
 export type RotaAbsenceRow = Awaited<ReturnType<typeof rotaAbsences>>["current"][number];
 export type RotaReturnRow = Awaited<ReturnType<typeof rotaAbsences>>["returning"][number];
-
-/** Each roster upload, newest first, and what the chosen one changed. */
-export async function rotaChanges(importId: string | undefined) {
-  const who = await requireRotaActor();
-  if (!who.manage) throw new AuthorizationError("Managing the rota is required.");
-  const imports = await prisma.rotaImport.findMany({
-    where: { orgId: who.orgId ?? undefined }, orderBy: { createdAt: "desc" }, take: 30,
-    select: { id: true, weekStart: true, fileName: true, importedByName: true, createdAt: true, people: true, shifts: true, holidays: true, added: true, removed: true, changed: true },
-  });
-  const selected = imports.find((i) => i.id === importId) ?? imports[0] ?? null;
-  const changes = selected ? await prisma.rotaChange.findMany({
-    where: { importId: selected.id }, orderBy: [{ date: "asc" }, { personName: "asc" }],
-    select: { id: true, date: true, employeeNo: true, personName: true, kind: true, before: true, after: true },
-  }) : [];
-  return { imports, selected, changes };
-}
