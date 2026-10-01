@@ -55,6 +55,10 @@ superadmin flag, so they can only remove access. The first superadmin is designa
 
     npx tsx scripts/grant-superadmin.ts --email owner@example.com --confirm
 
+LeisureWorld's first superadmin, the owner, was designated by the migration
+`20261010120000_first_superadmin` (1 October 2026), which does nothing once any
+active superadmin exists.
+
 ## The People core
 
 One person record and one organisation chart that every module reads
