@@ -295,15 +295,42 @@ model RotaAbsence {
   note           String    @default("")
   reportedById   String?
   reportedByName String
+  /// Off again soon after an earlier absence, and the manager said it is the
+  /// same thing: that earlier absence. A plain extension changes `lastDay`
+  /// instead and is kept in `updates`.
+  continuesId    String?
   withdrawnAt    DateTime?
   createdAt      DateTime  @default(now())
   updatedAt      DateTime  @updatedAt
 
-  organisation Organisation @relation(fields: [orgId], references: [id], onDelete: Restrict)
-  user         User?        @relation("RotaAbsentPerson", fields: [userId], references: [id], onDelete: Cascade)
-  rotaPerson   RotaPerson?  @relation(fields: [rotaPersonId], references: [id], onDelete: Cascade)
+  organisation Organisation        @relation(fields: [orgId], references: [id], onDelete: Restrict)
+  user         User?               @relation("RotaAbsentPerson", fields: [userId], references: [id], onDelete: Cascade)
+  rotaPerson   RotaPerson?         @relation(fields: [rotaPersonId], references: [id], onDelete: Cascade)
+  continues    RotaAbsence?        @relation("RotaAbsenceAgain", fields: [continuesId], references: [id], onDelete: SetNull)
+  followedBy   RotaAbsence[]       @relation("RotaAbsenceAgain")
+  updates      RotaAbsenceUpdate[]
 
   @@index([orgId, firstDay])
   @@index([userId, firstDay])
   @@index([rotaPersonId, firstDay])
+  @@index([continuesId])
+}
+
+/// The story of one absence: reported, extended (with the new last day, or
+/// none when the return is not known), back. Kept so a manager sees how a
+/// "two days" became two weeks.
+model RotaAbsenceUpdate {
+  id        String    @id @default(cuid())
+  absenceId String
+  /// reported | extended | back
+  kind      String
+  lastDay   DateTime? @db.Date
+  note      String    @default("")
+  byId      String?
+  byName    String
+  createdAt DateTime  @default(now())
+
+  absence RotaAbsence @relation(fields: [absenceId], references: [id], onDelete: Cascade)
+
+  @@index([absenceId, createdAt])
 }

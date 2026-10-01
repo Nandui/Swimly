@@ -121,6 +121,8 @@ const absenceSchema = z.object({
   firstDay: z.string().refine(isDateOnly, "Choose the first day off."),
   lastDay: z.string().trim().refine((v) => v === "" || isDateOnly(v), "Use a date for the last day, or leave it empty.").transform((v) => v || null),
   note: z.string().trim().max(200, "Keep the note under 200 characters."),
+  /** Off again soon after an earlier absence, and it is the same thing: that absence. */
+  continuesId: z.string().trim().max(64).optional().transform((v) => v || null),
 });
 export type AbsenceInput = z.input<typeof absenceSchema>;
 
@@ -172,7 +174,7 @@ function revalidateRota() { revalidatePath("/rota"); revalidatePath("/rota/absen
 export async function reportAbsence(input: AbsenceInput): Promise<ActionResult> {
   const parsed = absenceSchema.safeParse(input);
   if (!parsed.success) return fail(parsed.error.issues[0].message);
-  const { userId, reason, firstDay, lastDay, note } = parsed.data;
+  const { userId, reason, firstDay, lastDay, note, continuesId } = parsed.data;
   if (lastDay && lastDay < firstDay) return fail("The last day off can't be before the first.");
   const allowed = await allowedFor(refOf(userId));
   if (!allowed.ok) return fail(allowed.error);
@@ -185,15 +187,20 @@ export async function reportAbsence(input: AbsenceInput): Promise<ActionResult> 
       where: { ...samePersonWhere, withdrawnAt: null, firstDay: { lte: parseDateOnly(lastDay ?? "9999-12-31") }, AND: [{ OR: [{ lastDay: null }, { lastDay: { gte: parseDateOnly(firstDay) } }] }] },
       select: { id: true },
     });
-    if (clash) return fail(`${person.name} is already recorded as off on some of those days.`);
-    const created = await tx.rotaAbsence.create({ data: { orgId: person.orgId, userId: person.userId, rotaPersonId: person.rotaPersonId, reason, firstDay: parseDateOnly(firstDay), lastDay: lastDay ? parseDateOnly(lastDay) : null, note, reportedById: actor.id, reportedByName: actor.name } });
-    await logAudit({ actorId: actor.id, actorName: actor.name, action: "create", entity: "RotaAbsence", entityId: created.id, clubId: null, summary: `Recorded ${person.name} as off ${days(firstDay, lastDay)}` }, tx);
+    if (clash) return fail(`${person.name} is already recorded as off on some of those days. Extend that absence instead.`);
+    // "Same thing again" links to one of their own earlier absences that ended before this one.
+    const earlier = continuesId ? await tx.rotaAbsence.findFirst({ where: { id: continuesId, ...samePersonWhere, withdrawnAt: null, lastDay: { lt: parseDateOnly(firstDay) } }, select: { id: true, firstDay: true } }) : null;
+    if (continuesId && !earlier) return fail("The earlier absence to link to is not theirs, or has not ended.");
+    const created = await tx.rotaAbsence.create({ data: { orgId: person.orgId, userId: person.userId, rotaPersonId: person.rotaPersonId, reason, firstDay: parseDateOnly(firstDay), lastDay: lastDay ? parseDateOnly(lastDay) : null, note, reportedById: actor.id, reportedByName: actor.name, continuesId: earlier?.id ?? null } });
+    await tx.rotaAbsenceUpdate.create({ data: { absenceId: created.id, kind: "reported", lastDay: created.lastDay, note, byId: actor.id, byName: actor.name } });
+    const again = earlier ? `, off again after an absence from ${earlier.firstDay.toISOString().slice(0, 10)}` : "";
+    await logAudit({ actorId: actor.id, actorName: actor.name, action: "create", entity: "RotaAbsence", entityId: created.id, clubId: null, summary: `Recorded ${person.name} as off ${days(firstDay, lastDay)}${again}` }, tx);
     return ok();
   }).then((result) => { if (result.ok) revalidateRota(); return result; });
 }
 
 async function absenceFor(id: string) {
-  const absence = await prisma.rotaAbsence.findFirst({ where: { id, withdrawnAt: null }, select: { id: true, userId: true, rotaPersonId: true, firstDay: true } });
+  const absence = await prisma.rotaAbsence.findFirst({ where: { id, withdrawnAt: null }, select: { id: true, userId: true, rotaPersonId: true, firstDay: true, lastDay: true } });
   if (!absence) return { ok: false as const, error: "That absence no longer exists." };
   const allowed = await allowedFor(absence.rotaPersonId ? { rotaPersonId: absence.rotaPersonId } : { userId: absence.userId });
   return allowed.ok ? { ...allowed, absence } : allowed;
@@ -209,7 +216,43 @@ export async function endAbsence(id: string, lastDay: string): Promise<ActionRes
   if (lastDay < first) return fail(`Their absence started on ${first}, so the last day off can't be before it.`);
   const result = await prisma.$transaction(async (tx) => {
     await tx.rotaAbsence.update({ where: { id }, data: { lastDay: parseDateOnly(lastDay) } });
+    await tx.rotaAbsenceUpdate.create({ data: { absenceId: id, kind: "back", lastDay: parseDateOnly(lastDay), byId: actor.id, byName: actor.name } });
     await logAudit({ actorId: actor.id, actorName: actor.name, action: "update", entity: "RotaAbsence", entityId: id, clubId: null, summary: `Recorded ${person.name} as back after ${lastDay}` }, tx);
+    return ok();
+  });
+  if (result.ok) revalidateRota();
+  return result;
+}
+
+/** Still off: the absence runs on to a later last day, or with no last day
+ *  when the return is not known yet. The same absence, not a new one, so it
+ *  counts once; each extension is kept in its story. A manager can extend an
+ *  absence that has ended only up to the day before, so it runs on unbroken. */
+export async function extendAbsence(id: string, input: { lastDay: string; note: string }): Promise<ActionResult> {
+  const lastDay = input.lastDay.trim();
+  if (lastDay && !isDateOnly(lastDay)) return fail("Use a date for the new last day off, or say the return is not known.");
+  const note = input.note.trim();
+  if (note.length > 200) return fail("Keep the note under 200 characters.");
+  const found = await absenceFor(id);
+  if (!found.ok) return fail(found.error);
+  const { actor, person, absence } = found;
+  const was = absence.lastDay?.toISOString().slice(0, 10) ?? null;
+  if (was && was < addDaysIso(today(), -1)) return fail(`${person.name} was back after ${was}. Report a new absence and link it if it is the same thing again.`);
+  if (was === null && !lastDay) return fail(`${person.name}'s return is already not known. Choose the new last day off, if you know it.`);
+  if (lastDay && was && lastDay <= was) return fail(`Their last day off is already ${was}. Choose a later day, or use Back at work if they returned sooner.`);
+  if (lastDay && lastDay < absence.firstDay.toISOString().slice(0, 10)) return fail("The new last day can't be before the absence started.");
+  // Running on must not run into another absence of theirs.
+  const samePersonWhere = { OR: [...(absence.userId ? [{ userId: absence.userId }] : []), ...(absence.rotaPersonId ? [{ rotaPersonId: absence.rotaPersonId }] : [])] };
+  const result = await prisma.$transaction(async (tx) => {
+    const next = await tx.rotaAbsence.findFirst({
+      where: { ...samePersonWhere, id: { not: id }, withdrawnAt: null, firstDay: { gt: absence.firstDay, ...(lastDay ? { lte: parseDateOnly(lastDay) } : {}) } },
+      select: { firstDay: true },
+    });
+    if (next) return fail(`${person.name} already has an absence from ${next.firstDay.toISOString().slice(0, 10)}. End this one before it.`);
+    const moved = await tx.rotaAbsence.updateMany({ where: { id, withdrawnAt: null, lastDay: absence.lastDay }, data: { lastDay: lastDay ? parseDateOnly(lastDay) : null } });
+    if (moved.count !== 1) return fail("Someone changed this absence just now. Refresh and try again.");
+    await tx.rotaAbsenceUpdate.create({ data: { absenceId: id, kind: "extended", lastDay: lastDay ? parseDateOnly(lastDay) : null, note, byId: actor.id, byName: actor.name } });
+    await logAudit({ actorId: actor.id, actorName: actor.name, action: "update", entity: "RotaAbsence", entityId: id, clubId: null, summary: `Extended ${person.name}'s absence ${lastDay ? `to ${lastDay}` : "with the return not known"}` }, tx);
     return ok();
   });
   if (result.ok) revalidateRota();

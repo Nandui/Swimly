@@ -1,8 +1,10 @@
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { UserX } from "lucide-react";
-import { BackAtWork, RemoveAbsence, ReportAbsence } from "@/components/rota/absences";
+import { BackAtWork, ExtendAbsence, RemoveAbsence, ReportAbsence } from "@/components/rota/absences";
 import { AbsenceReasonTag } from "@/components/rota/status";
+import { Button } from "@/components/shadcn/button";
+import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/shadcn/collapsible";
 import { Tag } from "@/components/ui-kit/tag";
 import { formatDate } from "@/lib/format";
 import { ROSTER_LEAVE_META } from "@/lib/rota/constants";
@@ -15,6 +17,43 @@ const day = (date: Date) => formatDate(new Date(`${date.toISOString().slice(0, 1
 function when(a: Pick<RotaAbsenceRow, "firstDay" | "lastDay">) {
   if (!a.lastDay) return `From ${day(a.firstDay)}, return not known`;
   return a.lastDay.getTime() === a.firstDay.getTime() ? day(a.firstDay) : `${day(a.firstDay)} to ${day(a.lastDay)}`;
+}
+
+const iso = (date: Date) => date.toISOString().slice(0, 10);
+const times = (n: number) => (n === 1 ? "once" : n === 2 ? "twice" : `${n} times`);
+
+/** How the absence got here: "First reported until 2 Oct · extended twice" and,
+ *  when it is the same thing again, the earlier absence it follows. */
+function story(a: Pick<RotaAbsenceRow, "updates" | "extensions" | "continues">) {
+  const first = a.updates.find((u) => u.kind === "reported");
+  const parts: string[] = [];
+  if (a.extensions) parts.push(`Extended ${times(a.extensions)}${first ? `; first reported ${first.lastDay ? `until ${day(first.lastDay)}` : "with the return not known"}` : ""}`);
+  if (a.continues) parts.push(`Off again after ${a.continues.lastDay ? `an absence ending ${day(a.continues.lastDay)}` : "an earlier absence"}`);
+  return parts.join(" · ");
+}
+
+/** Each extension, newest last, with who recorded it and their note. */
+function Updates({ updates }: { updates: RotaAbsenceRow["updates"] }) {
+  const extended = updates.filter((u) => u.kind === "extended");
+  if (!extended.length) return null;
+  return (
+    <Collapsible className="text-xs text-ui-muted-foreground">
+      <CollapsibleTrigger asChild>
+        <Button variant="link" size="sm" className="h-auto min-h-8 p-0! text-xs">History</Button>
+      </CollapsibleTrigger>
+      <CollapsibleContent>
+      <ol className="mt-1 space-y-1 border-l border-ui-border pl-3">
+        {updates.map((u) => (
+          <li key={u.id}>
+            {formatDate(u.createdAt)}: {u.kind === "reported" ? "reported" : u.kind === "extended" ? "extended" : "back"}
+            {u.kind !== "back" ? (u.lastDay ? ` until ${day(u.lastDay)}` : ", return not known") : u.lastDay ? ` after ${day(u.lastDay)}` : ""}
+            {` by ${u.byName}`}{u.note ? ` · ${u.note}` : ""}
+          </li>
+        ))}
+      </ol>
+      </CollapsibleContent>
+    </Collapsible>
+  );
 }
 
 /** Roster holiday days, one line per person. */
@@ -55,9 +94,11 @@ export default async function AbsencesPage() {
                 <div className="min-w-0 flex-1 space-y-1">
                   <p className="flex flex-wrap items-center gap-2"><span className="module-row-title">{a.user.name}</span><AbsenceReasonTag reason={a.reason} /></p>
                   <p className="text-sm">{when(a)}{a.shiftsToCover ? ` · ${a.shiftsToCover} ${a.shiftsToCover === 1 ? "shift needs" : "shifts need"} cover` : " · no shifts affected"}</p>
-                  <p className="text-xs text-ui-muted-foreground">{[`Reported by ${a.reportedByName}`, a.note || null].filter(Boolean).join(" · ")}</p>
+                  <p className="text-xs text-ui-muted-foreground">{[`Reported by ${a.reportedByName}`, story(a) || null, a.updates.at(-1)?.note || a.note || null].filter(Boolean).join(" · ")}</p>
+                  <Updates updates={a.updates} />
                 </div>
                 <div className="flex flex-wrap items-center gap-2">
+                  <ExtendAbsence id={a.id} name={a.user.name} firstDay={iso(a.firstDay)} lastDay={a.lastDay ? iso(a.lastDay) : null} today={today} />
                   <BackAtWork id={a.id} name={a.user.name} today={today} />
                   <RemoveAbsence id={a.id} name={a.user.name} />
                 </div>
@@ -87,7 +128,7 @@ export default async function AbsencesPage() {
             {returned.map((a) => (
               <li key={a.id} className="space-y-1 px-5 py-4">
                 <p className="flex flex-wrap items-center gap-2"><span className="module-row-title">{a.user.name}</span><AbsenceReasonTag reason={a.reason} /></p>
-                <p className="text-sm text-ui-muted-foreground">{when(a)}</p>
+                <p className="text-sm text-ui-muted-foreground">{[when(a), story(a) || null].filter(Boolean).join(" · ")}</p>
               </li>
             ))}
           </ul>

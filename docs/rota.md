@@ -13,8 +13,9 @@ access model (docs/platform-access.md).
 - **Absences** (`/rota/absences`, rota managers only). Who is off now or soon,
   and who came back in the last 30 days. **Report absence** records a person, a
   reason (sickness, family emergency, bereavement or other), the first day off and,
-  if known, the last. **Back at work** sets the last day off; the bin removes one
-  recorded in error.
+  if known, the last. **Extend** runs a current absence on to a later last day
+  (or to "return not known"). **Back at work** sets the last day off; the bin
+  removes one recorded in error.
 - **My shifts** in Turnfin Me (the staff app). Each
   person sees their own shifts for the coming weeks. No permission is needed.
 
@@ -66,9 +67,32 @@ Reasons come from `ABSENCE_REASON_META`, each with its own icon in `AbsenceReaso
 One absence at a time per person: overlapping days are refused. Reporting your own
 absence from Turnfin Me is not built yet.
 
+### Extensions and "off again"
+
+Owner request, 1 October 2026. Managers report with what they know, and it
+changes: "off two days" becomes two weeks, or someone is back a few days and off
+again. `followOn` (constants.ts, tested) decides what a new report for the same
+person might be, and **Report absence** asks:
+
+- **Still off** (open-ended, or their last day off is on or after the day before
+  the new first day): "Is this an extension of that absence?" Yes extends the
+  same absence (`extendAbsence`): a later last day, or the return not known. It
+  stays one absence and counts once. When the new days are already covered,
+  extending is the only answer; something different means Back at work first.
+- **Back within 28 days** (`ABSENCE_AGAIN_DAYS`): "Is it the same thing again?"
+  Yes records a new absence linked to the earlier one (`continuesId`); no records
+  it on its own.
+
+Each absence keeps its story in `RotaAbsenceUpdate` (reported, extended, back,
+with the last day each time, who, and the note). The page shows "Extended twice;
+first reported until 2 Oct" and "Off again after an absence ending 24 Sep", with
+the extensions listed under it. Extending is refused for an absence that ended
+before yesterday (report a new one and link it), for a day not later than the
+current last day, and when it would run into another absence of theirs.
+
 ## Files
 
-- Schema: `RotaShift` (`prisma/migrations/20261001120000_rota`), `RotaAbsence` (`prisma/migrations/20261005120000_rota_absence`)
+- Schema: `RotaShift` (`prisma/migrations/20261001120000_rota`), `RotaAbsence` (`prisma/migrations/20261005120000_rota_absence`), `RotaAbsenceUpdate` and `continuesId` (`prisma/migrations/20261007120000_rota_absence_updates`)
 - `src/lib/rota/`: `access.ts`, `data.ts` (the week), `mine.ts` (own shifts), `actions.ts`, `constants.ts`
 - Self-service: `src/lib/rota/mine.ts` (staff API); UI: `src/app/rota/`, `src/components/rota/`; shift-change emails from `src/lib/staff-api/reminders.ts`
 - Tests: `src/lib/rota/rota.test.ts`

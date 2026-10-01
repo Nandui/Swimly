@@ -5,7 +5,7 @@ import { prisma } from "@/lib/prisma";
 import { sitesFor, subjectsFor } from "@/lib/policy/session";
 import { requireRotaActor } from "@/lib/rota/access";
 import { AuthorizationError } from "@/lib/authz";
-import { absentOn, addDaysIso, mondayOf, shiftWarnings, type AbsenceReason } from "@/lib/rota/constants";
+import { absentOn, addDaysIso, mondayOf, samePerson, shiftWarnings, type AbsenceReason, type AbsenceUpdateKind, type PersonRef } from "@/lib/rota/constants";
 
 /** Rota reads. The sites a person may see come from the policy engine; a site
  *  outside them is a 404, never an empty rota. */
@@ -85,9 +85,15 @@ export async function rotaAbsences() {
     where: { orgId, withdrawnAt: null, AND: [inReach, { OR: [{ lastDay: null }, { lastDay: { gte: parseDateOnly(since) } }] }] },
     orderBy: [{ firstDay: "asc" }],
     select: { id: true, userId: true, rotaPersonId: true, reason: true, firstDay: true, lastDay: true, note: true, reportedByName: true, createdAt: true,
-      user: { select: { name: true } }, rotaPerson: { select: { name: true } } },
+      user: { select: { name: true } }, rotaPerson: { select: { name: true } },
+      continues: { select: { firstDay: true, lastDay: true, reason: true } },
+      updates: { orderBy: { createdAt: "asc" }, select: { id: true, kind: true, lastDay: true, note: true, byName: true, createdAt: true } } },
   });
-  const named = rows.map(({ user, rotaPerson, ...a }) => ({ ...a, user: { name: rotaPerson?.name ?? user?.name ?? "Someone" } }));
+  const named = rows.map(({ user, rotaPerson, updates, ...a }) => ({
+    ...a, user: { name: rotaPerson?.name ?? user?.name ?? "Someone" },
+    updates: updates.map((u) => ({ ...u, kind: u.kind as AbsenceUpdateKind })),
+    extensions: updates.filter((u) => u.kind === "extended").length,
+  }));
   const open = named.filter((a) => !a.lastDay || a.lastDay.toISOString().slice(0, 10) >= from);
   const whose = open.flatMap((a) => [...(a.userId ? [{ userId: a.userId }] : []), ...(a.rotaPersonId ? [{ rotaPersonId: a.rotaPersonId }] : [])]);
   const shifts = whose.length ? await prisma.rotaShift.findMany({
@@ -109,9 +115,12 @@ export async function rotaAbsences() {
     where: { orgId, isActive: true, rotaPerson: null, ...(users === "all" ? {} : { id: { in: users } }) },
     orderBy: { name: "asc" }, select: { id: true, name: true, jobTitle: true },
   });
+  // Each person's recent absences, so reporting again can ask "is this an extension?"
+  const iso = (d: Date | null) => d ? d.toISOString().slice(0, 10) : null;
+  const recentOf = (ref: PersonRef) => named.filter((a) => samePerson(a, ref)).map((a) => ({ id: a.id, reason: a.reason as AbsenceReason, firstDay: iso(a.firstDay)!, lastDay: iso(a.lastDay) }));
   const people = [
-    ...rosterPeople.map((p) => ({ id: `p:${p.id}`, name: p.name, jobTitle: `No. ${p.employeeNo}` })),
-    ...accounts.map((u) => ({ id: `u:${u.id}`, name: u.name, jobTitle: u.jobTitle })),
+    ...rosterPeople.map((p) => ({ id: `p:${p.id}`, name: p.name, jobTitle: `No. ${p.employeeNo}`, absences: recentOf({ rotaPersonId: p.id, userId: p.userId }) })),
+    ...accounts.map((u) => ({ id: `u:${u.id}`, name: u.name, jobTitle: u.jobTitle, absences: recentOf({ userId: u.id }) })),
   ].sort((a, b) => a.name.localeCompare(b.name));
   return { who, today: from, current, returned, people, holidays };
 }

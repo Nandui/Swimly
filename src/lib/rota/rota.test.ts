@@ -3,7 +3,7 @@ import { after, before, test } from "node:test";
 import { isolatedPrisma } from "@/test/pglite-prisma";
 import { serverModule } from "@/test/server-module";
 import { expandPermissions, type PermissionKey } from "@/lib/staff/permissions";
-import { absentOn, addDaysIso, mondayOf, parseClock, shiftWarnings } from "./constants";
+import { absentOn, addDaysIso, followOn, mondayOf, parseClock, shiftWarnings } from "./constants";
 import { today } from "@/lib/format";
 
 /** The Rota: a site-scoped planner plans only their site, qualification gaps
@@ -137,6 +137,19 @@ test("cancelling needs the permission at that site", async () => {
   assert.equal((await actions.cancelShift(shift.id)).ok, false);
 });
 
+test("reporting again: still off (or off until yesterday) is an extension; back within four weeks asks 'again?'", () => {
+  const open = { id: "a", firstDay: "2026-10-01", lastDay: null };
+  assert.deepEqual(followOn([open], "2026-10-05"), { kind: "extend", absence: open, overlaps: true });
+  const toFriday = { id: "b", firstDay: "2026-10-01", lastDay: "2026-10-02" };
+  assert.deepEqual(followOn([toFriday], "2026-10-03"), { kind: "extend", absence: toFriday, overlaps: false }, "the day after their last day off runs on");
+  assert.deepEqual(followOn([toFriday], "2026-10-02"), { kind: "extend", absence: toFriday, overlaps: true });
+  assert.deepEqual(followOn([toFriday], "2026-10-10"), { kind: "again", absence: toFriday, daysBack: 7 });
+  assert.equal(followOn([toFriday], "2026-11-15"), null, "long after: nothing to ask");
+  assert.equal(followOn([toFriday], "2026-09-20"), null, "before it: nothing to ask");
+  const older = { id: "c", firstDay: "2026-09-01", lastDay: "2026-09-03" };
+  assert.equal(followOn([older, toFriday], "2026-10-06")?.absence.id, "b", "the latest one counts");
+});
+
 test("absences: a site planner records them only for people at their site, never logging the reason", async () => {
   await fixture.prisma.user.update({ where: { id: "ava" }, data: { primaryClubId: churchfield } });
   await fixture.prisma.user.update({ where: { id: "noah" }, data: { primaryClubId: bishopstown } });
@@ -163,6 +176,27 @@ test("absences: a site planner records them only for people at their site, never
   assert.equal((await actions.endAbsence(id, tomorrow())).ok, true);
   const later = (await data.rotaWeek(churchfield, tomorrow())).days.flatMap((d) => d.shifts).filter((s) => s.userId === "ava");
   assert.ok(later.every((s) => s.warnings.includes("absent")), "the last day off still counts");
+
+  // Still off: the same absence runs on, once, and keeps its story.
+  assert.equal((await actions.extendAbsence(id, { lastDay: tomorrow(), note: "" })).ok, false, "not later than now");
+  assert.equal((await actions.extendAbsence(id, { lastDay: addDaysIso(tomorrow(), 4), note: "Called again" })).ok, true);
+  assert.equal((await actions.extendAbsence(id, { lastDay: "", note: "" })).ok, true, "return not known");
+  assert.equal((await actions.extendAbsence(id, { lastDay: "", note: "" })).ok, false, "already not known");
+  const story = await fixture.prisma.rotaAbsenceUpdate.findMany({ where: { absenceId: id }, orderBy: { createdAt: "asc" } });
+  assert.deepEqual(story.map((u) => [u.kind, u.lastDay?.toISOString().slice(0, 10) ?? null]), [["reported", null], ["back", tomorrow()], ["extended", addDaysIso(tomorrow(), 4)], ["extended", null]]);
+  assert.equal((await fixture.prisma.rotaAbsence.count({ where: { userId: "ava", withdrawnAt: null } })), 1, "an extension is not a new absence");
+  const extendedRow = (await data.rotaAbsences()).current[0];
+  assert.equal(extendedRow.extensions, 2);
+  assert.equal((await actions.endAbsence(id, addDaysIso(tomorrow(), 2))).ok, true);
+
+  // Off again a few days after coming back: a new absence, linked when it is the same thing.
+  const again = input("ava", { firstDay: addDaysIso(tomorrow(), 6), continuesId: id });
+  assert.equal((await actions.reportAbsence({ ...again, continuesId: "someone-else" })).ok, false);
+  assert.equal((await actions.reportAbsence(again)).ok, true);
+  const linked = await fixture.prisma.rotaAbsence.findFirstOrThrow({ where: { userId: "ava", continuesId: id } });
+  assert.equal(linked.firstDay.toISOString().slice(0, 10), addDaysIso(tomorrow(), 6));
+  assert.ok((await data.rotaAbsences()).people.find((p) => p.id === "u:ava")?.absences.length === 2, "the dialog knows their recent absences");
+  await fixture.prisma.rotaAbsence.update({ where: { id: linked.id }, data: { withdrawnAt: new Date() } });
 
   as("noah", [{ ...planner(), scopeId: bishopstown }]);
   assert.equal((await actions.withdrawAbsence(id)).ok, false, "a planner at another site cannot touch it");

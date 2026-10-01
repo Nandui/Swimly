@@ -54,6 +54,35 @@ export function absentOn(absences: readonly AbsenceLike[], who: string | PersonR
   return absences.some((a) => samePerson(a, person) && isoOf(a.firstDay) <= iso && (!a.lastDay || isoOf(a.lastDay) >= iso));
 }
 
+/** How soon after coming back a new absence is worth asking about: "is this
+ *  the same thing again?" Four weeks, the usual window for linked sickness. */
+export const ABSENCE_AGAIN_DAYS = 28;
+
+type EarlierAbsence = { id: string; firstDay: string; lastDay: string | null };
+/** What a new report for this person, starting on `firstDay`, might be:
+ *  - `extend`: they are still off (open-ended, or their last day off is on or
+ *    after the day before), so this is most likely the same absence running on.
+ *    `overlaps` when the new days are already covered: only extending makes sense.
+ *  - `again`: they came back within ABSENCE_AGAIN_DAYS; it may be the same
+ *    thing again, which the manager decides.
+ *  - null: nothing recent. Pass the person's absences, any order. */
+export function followOn<T extends EarlierAbsence>(earlier: readonly T[], firstDay: string):
+  | { kind: "extend"; absence: T; overlaps: boolean }
+  | { kind: "again"; absence: T; daysBack: number }
+  | null {
+  const started = earlier.filter((a) => a.firstDay <= firstDay).sort((a, b) => b.firstDay.localeCompare(a.firstDay));
+  const latest = started[0];
+  if (!latest) return null;
+  const dayBefore = addDaysIso(firstDay, -1);
+  if (!latest.lastDay || latest.lastDay >= dayBefore) return { kind: "extend", absence: latest, overlaps: !latest.lastDay || latest.lastDay >= firstDay };
+  const daysBack = Math.round((Date.parse(`${firstDay}T00:00:00Z`) - Date.parse(`${latest.lastDay}T00:00:00Z`)) / 86_400_000) - 1;
+  return daysBack <= ABSENCE_AGAIN_DAYS ? { kind: "again", absence: latest, daysBack } : null;
+}
+
+/** What happened to an absence, for its story on the Absences page. */
+export const ABSENCE_UPDATE_KINDS = ["reported", "extended", "back"] as const;
+export type AbsenceUpdateKind = (typeof ABSENCE_UPDATE_KINDS)[number];
+
 export const WEEKDAY_LABELS = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"] as const;
 
 /** `HH:MM` → minutes past midnight, or null. */
