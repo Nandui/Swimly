@@ -121,10 +121,11 @@ export async function rotaToday(siteId: string | undefined) {
   const clockNow = new Intl.DateTimeFormat("en-GB", { hour: "2-digit", minute: "2-digit", hourCycle: "h23", timeZone: "Europe/Dublin" }).format(new Date());
   const minutesNow = Number(clockNow.slice(0, 2)) * 60 + Number(clockNow.slice(3, 5));
   const classes = day?.classes ?? [];
-  if (!week.site) return { ...week, today: now, minutesNow, shifts, classes, needs: [], changes: [] };
+  if (!week.site) return { ...week, today: now, minutesNow, shifts, classes, teachers: {} as Record<string, string>, needs: [], changes: [], bookings: [] };
   const date = parseDateOnly(now);
   const orgId = week.who.orgId ?? undefined;
-  const [busy, off, held, changes, teaching] = await Promise.all([
+  const weekday = (new Date(`${now}T00:00:00Z`).getUTCDay() + 6) % 7;
+  const [busy, off, held, changes, teaching, bookings] = await Promise.all([
     // Everyone's duties today, at any site, so cover never double-books.
     prisma.rotaShift.findMany({ where: { orgId, date, kind: "shift", cancelledAt: null, userId: { not: null } }, select: { userId: true, startMinutes: true, endMinutes: true } }),
     prisma.rotaAbsence.findMany({ where: { orgId, withdrawnAt: null, userId: { not: null }, firstDay: { lte: date }, OR: [{ lastDay: null }, { lastDay: { gte: date } }] }, select: { userId: true } }),
@@ -133,6 +134,12 @@ export async function rotaToday(siteId: string | undefined) {
       select: { id: true, kind: true, before: true, after: true, reason: true, note: true, byName: true, createdAt: true, timepointAt: true, timepointByName: true } }),
     // Swim classes anyone teaches today, so cover never lands on someone teaching.
     week.site.manage && week.people.length ? commitmentsFor({ userIds: week.people.map((p) => p.id), from: now, to: now }) : [],
+    // Today's bookings at this site: on the timeline beside the duties they need.
+    prisma.rotaBooking.findMany({
+      where: { siteId: week.site.id, cancelledAt: null, firstDay: { lte: date }, lastDay: { gte: date }, weekdays: { has: weekday } },
+      orderBy: [{ startMinutes: "asc" }],
+      select: { id: true, kind: true, title: true, place: true, startMinutes: true, endMinutes: true, needs: { select: { count: true } } },
+    }),
   ]);
   const offIds = new Set(off.map((a) => a.userId));
   // Free and qualified for this duty's time: not off, not on another duty then.
@@ -143,7 +150,16 @@ export async function rotaToday(siteId: string | undefined) {
     .filter((s) => s.endMinutes > minutesNow && (s.warnings.includes("absent") || (!s.userId && !s.rotaPersonId)))
     .sort((a, b) => a.startMinutes - b.startMinutes)
     .map((s) => ({ shift: s, absent: s.warnings.includes("absent"), cover: week.site!.manage ? coverFor(s) : [] }));
-  return { ...week, today: now, minutesNow, shifts, classes, needs, changes };
+  // How many of each booking's places today have someone.
+  const placed = (id: string) => shifts.filter((s) => s.bookingId === id);
+  const todayBookings = bookings.map(({ needs: wanted, ...b }) => ({
+    ...b, places: placed(b.id).length || wanted.reduce((n, w) => n + w.count, 0),
+    filled: placed(b.id).filter((s) => (s.userId || s.rotaPersonId) && !s.warnings.includes("absent")).length,
+  }));
+  // Who teaches today's swim classes, by name, for the timeline's Swim school lanes.
+  const teacherIds = [...new Set(classes.flatMap((c) => (c.userId ? [c.userId] : [])))];
+  const teachers = teacherIds.length ? await prisma.user.findMany({ where: { id: { in: teacherIds } }, select: { id: true, name: true } }) : [];
+  return { ...week, today: now, minutesNow, shifts, classes, teachers: Object.fromEntries(teachers.map((t) => [t.id, t.name])), needs, changes, bookings: todayBookings };
 }
 
 /** The Absences page, among the people the manager's rota role covers: who

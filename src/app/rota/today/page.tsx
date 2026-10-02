@@ -1,12 +1,13 @@
 import type { Metadata } from "next";
 import Link from "next/link";
-import { CalendarDays, CheckCircle2, Clock3, TriangleAlert, UserX } from "lucide-react";
+import type { ReactNode } from "react";
+import { CalendarCheck, CalendarDays, CheckCircle2, Clock3, TriangleAlert, UserX } from "lucide-react";
 import { Button } from "@/components/shadcn/button";
 import { NativeSelect, NativeSelectOption } from "@/components/shadcn/native-select";
 import { MarkTimepoint, ShiftDialog } from "@/components/rota/actions";
 import { Tag } from "@/components/ui-kit/tag";
 import { formatDate } from "@/lib/format";
-import { ROTA_CHANGE_REASON_META, clock, type RotaChangeReason } from "@/lib/rota/constants";
+import { BOOKING_KIND_META, ROTA_CHANGE_REASON_META, clock, type BookingKind, type RotaChangeReason } from "@/lib/rota/constants";
 import { rotaToday } from "@/lib/rota/data";
 import { buildPlan } from "@/lib/rota/plan";
 import { cn } from "@/lib/utils";
@@ -26,8 +27,9 @@ export default async function TodayPage({ searchParams }: { searchParams: Promis
   const plan = buildPlan([{ iso: now, shifts: data.shifts, classes: data.classes }]);
   const options = { people: data.people, types: data.types, departments: data.departments, duties: data.duties };
   // The timeline runs from the earliest start to the latest end, whole hours, at least 06:00 to 22:00.
-  const from = Math.min(360, ...data.shifts.map((s) => Math.floor(s.startMinutes / 60) * 60));
-  const to = Math.max(1320, ...data.shifts.map((s) => Math.ceil(s.endMinutes / 60) * 60));
+  const spans = [...data.shifts, ...data.bookings, ...data.classes];
+  const from = Math.min(360, ...spans.map((s) => Math.floor(s.startMinutes / 60) * 60));
+  const to = Math.max(1320, ...spans.map((s) => Math.ceil(s.endMinutes / 60) * 60));
   const pos = (m: number) => `${(((m - from) / (to - from)) * 100).toFixed(2)}%`;
   const hours = Array.from({ length: (to - from) / 120 + 1 }, (_, i) => from + i * 120);
   const nowAt = data.minutesNow >= from && data.minutesNow <= to ? pos(data.minutesNow) : null;
@@ -37,6 +39,10 @@ export default async function TodayPage({ searchParams }: { searchParams: Promis
     return { id: s.id, date: s.date, startMinutes: s.startMinutes, endMinutes: s.endMinutes, role: s.role, note: s.note, userId: s.userId, requiredTypeId: s.requiredTypeId, departmentId: s.departmentId };
   };
   const pending = data.changes.filter((c) => !c.timepointAt).length;
+  // The Swim school's classes today, one lane per instructor (no instructor last), each class its own bar.
+  const teachers = [...Map.groupBy(data.classes, (c) => c.userId ?? "").entries()]
+    .map(([userId, list]) => ({ key: userId || "none", userId: userId || null, name: userId ? data.teachers[userId] ?? "Instructor" : "No instructor", classes: [...list].sort((x, y) => x.startMinutes - y.startMinutes) }))
+    .sort((x, y) => Number(!x.userId) - Number(!y.userId) || x.classes[0].startMinutes - y.classes[0].startMinutes);
 
   return (
     <div className="space-y-4">
@@ -116,44 +122,87 @@ export default async function TodayPage({ searchParams }: { searchParams: Promis
               <>
                 {/* Wide screens: a timeline. */}
                 <div className="hidden md:block">
-                  <div className="grid grid-cols-[11rem_minmax(0,1fr)] border-b border-ui-border bg-[var(--pc-surface-sunken)] text-xs font-semibold text-ui-muted-foreground">
+                  <div className="grid grid-cols-[13rem_minmax(0,1fr)] border-b border-ui-border bg-[var(--pc-surface-sunken)] text-xs font-semibold text-ui-muted-foreground">
                     <div className="px-3 py-2">Duty</div>
                     <div className="relative h-8" aria-hidden="true">
                       {hours.map((h) => <span key={h} className="absolute top-2 -translate-x-1/2 first:translate-x-0 last:-translate-x-full" style={{ left: pos(h) }}>{clock(h)}</span>)}
                     </div>
                   </div>
-                  {plan.groups.map((g) => (
+                  {data.bookings.length ? (
+                    <div>
+                      <GroupHeading label="Bookings" count={data.bookings.length} />
+                      {data.bookings.map((b) => {
+                        const short = b.filled < b.places;
+                        return (
+                          <Lane key={b.id} nowAt={nowAt} label={<><span className="block truncate font-medium">{b.title}</span><span className="block truncate text-xs text-ui-muted-foreground">{[span(b), BOOKING_KIND_META[b.kind as BookingKind]?.label, b.place].filter(Boolean).join(" · ")}</span></>}>
+                            <Link href={`/rota/bookings?site=${site.id}`} aria-label={`${b.title}, ${span(b)}, ${b.filled} of ${b.places} staffed`}
+                              className={cn("absolute inset-y-1.5 flex min-w-0 items-center gap-1.5 overflow-hidden rounded-[var(--pc-radius-inner)] border px-2 text-xs hover:border-[var(--pc-primary)] focus-visible:outline-2 focus-visible:outline-[var(--pc-focus)]",
+                                short ? "border-[var(--pc-warning)] bg-[var(--pc-warning-soft)]" : "border-transparent bg-[var(--pc-aqua-soft)] text-[var(--pc-aqua-ink)]")}
+                              style={{ left: pos(b.startMinutes), width: `calc(${pos(b.endMinutes)} - ${pos(b.startMinutes)})` }}>
+                              {short ? <TriangleAlert aria-hidden="true" className="size-3.5 shrink-0 text-[var(--pc-warning)]" /> : <CalendarCheck aria-hidden="true" className="size-3.5 shrink-0" />}
+                              <span className="truncate font-semibold tabular-nums">{b.places ? `${b.filled}/${b.places} staffed` : "No staff needed"}</span>
+                            </Link>
+                          </Lane>
+                        );
+                      })}
+                    </div>
+                  ) : null}
+                  {teachers.length ? (
+                    <div>
+                      <GroupHeading label="Swim school" count={data.classes.length} note="From the Swim school timetable; instructors and cover are set there" />
+                      {teachers.map((t) => (
+                        <Lane key={t.key} nowAt={nowAt} label={<><span className={cn("block truncate font-medium", !t.userId && "text-[var(--pc-warning)]")}>{t.name}</span><span className="block text-xs text-ui-muted-foreground">{t.classes.length} {t.classes.length === 1 ? "class" : "classes"}</span></>}>
+                          {t.classes.map((c, i) => (
+                            <a key={`${t.key}:${i}`} href={c.href} title={`${span(c)} ${c.label}`} aria-label={`${c.label}, ${span(c)}, ${t.userId ? `taught by ${t.name}` : "no instructor"}`}
+                              className={cn("absolute inset-y-1.5 flex min-w-0 items-center overflow-hidden rounded-[var(--pc-radius-inner)] border px-1.5 text-xs hover:border-[var(--pc-primary)] focus-visible:outline-2 focus-visible:outline-[var(--pc-focus)]",
+                                t.userId ? "border-transparent bg-[var(--pc-primary-soft)] text-[var(--pc-primary-ink)]" : "border-dashed border-[var(--pc-warning)] bg-[var(--pc-warning-soft)]")}
+                              style={{ left: pos(c.startMinutes), width: `calc(${pos(c.endMinutes)} - ${pos(c.startMinutes)})` }}>
+                              <span className="truncate font-medium">{c.label}</span>
+                            </a>
+                          ))}
+                        </Lane>
+                      ))}
+                    </div>
+                  ) : null}
+                  {plan.groups.filter((g) => g.key !== "g:swim").map((g) => (
                     <div key={g.key}>
-                      <div className="border-b border-ui-border px-3 py-1.5 text-sm font-semibold text-[var(--pc-primary-ink)]">{g.label}</div>
-                      {g.rows.map((r) => (
-                        <div key={r.key} className="grid grid-cols-[11rem_minmax(0,1fr)] border-b border-ui-border">
-                          <div className="px-3 py-2 text-sm font-medium">{r.duty}{r.needs ? <span className="block text-xs font-normal text-ui-muted-foreground">{r.needs}</span> : null}</div>
-                          <div className="relative min-h-14">
-                            {nowAt ? <span aria-hidden="true" className="absolute inset-y-0 w-0.5 bg-[var(--pc-primary)]" style={{ left: nowAt }} /> : null}
-                            {r.days[0].map((e) => {
-                              if (e.href) {
-                                const [a, z] = e.text.split("–").map((t) => Number(t.slice(0, 2)) * 60 + Number(t.slice(3, 5)));
-                                return <a key={e.id} href={e.href} className="absolute inset-y-2 flex items-center gap-1.5 truncate rounded-[var(--pc-radius-inner)] bg-[var(--pc-primary-soft)] px-2 text-xs text-[var(--pc-primary-ink)] hover:underline" style={{ left: pos(a), width: `calc(${pos(z)} - ${pos(a)})` }}><span className="font-semibold">{e.who}</span>{e.part ? <span>· {e.part}</span> : null}</a>;
-                              }
-                              const s = shiftOf(e.id);
-                              const tone = e.absent ? "border-[var(--pc-danger)] bg-[var(--pc-danger-soft)]" : !e.who ? "border-dashed border-ui-muted-foreground bg-ui-card" : "border-ui-border bg-[var(--pc-surface-sunken)]";
-                              const body = (
-                                <span className="flex min-w-0 items-center gap-1.5 truncate">
-                                  {e.absent ? <UserX aria-hidden="true" className="size-3.5 shrink-0 text-[var(--pc-danger)]" /> : !e.absent && e.warnings.length ? <TriangleAlert aria-hidden="true" className="size-3.5 shrink-0 text-[var(--pc-warning)]" /> : null}
-                                  <span className={cn("font-semibold", e.absent && "line-through decoration-[var(--pc-danger)]")}>{e.who ?? "Unfilled"}</span>
-                                  {e.part ? <span className="text-ui-muted-foreground">{e.part}</span> : null}
-                                  <span className="text-ui-muted-foreground tabular-nums">{e.text}</span>
-                                </span>
-                              );
-                              const style = { left: pos(s.startMinutes), width: `calc(${pos(s.endMinutes)} - ${pos(s.startMinutes)})` };
-                              const label = [r.duty, e.part, e.text, e.who ?? "unfilled", e.absent ? "absent, needs cover" : null].filter(Boolean).join(", ");
-                              const cls = cn("absolute inset-y-2 flex items-center rounded-[var(--pc-radius-inner)] border px-2 text-left text-xs", tone);
-                              return site.manage && e.editable
-                                ? <ShiftDialog key={e.id} siteId={site.id} date={now} today={now} shift={editable(e.id)} options={options} suggested={e.absent ? "cover" : undefined}
-                                    trigger={{ label: `Change ${label}`, variant: "ghost", className: cn(cls, "h-auto justify-start font-normal hover:border-[var(--pc-primary)] focus-visible:outline-2 focus-visible:outline-[var(--pc-focus)]"), style, children: body }} />
-                                : <div key={e.id} aria-label={label} className={cls} style={style}>{body}</div>;
-                            })}
+                      <GroupHeading label={g.label} />
+                      {g.rows.map((r) => r.days[0].some((e) => e.href) ? (
+                        // The Swim school's classes: one summary lane, read-only.
+                        <Lane key={r.key} nowAt={nowAt} label={<><span className="block truncate font-medium">{r.duty}</span>{r.needs ? <span className="block text-xs text-ui-muted-foreground">{r.needs}</span> : null}</>}>
+                          {r.days[0].map((e) => {
+                            const [a, z] = e.text.split("–").map((t) => Number(t.slice(0, 2)) * 60 + Number(t.slice(3, 5)));
+                            return <a key={e.id} href={e.href} className="absolute inset-y-1.5 flex items-center gap-1.5 truncate rounded-[var(--pc-radius-inner)] bg-[var(--pc-primary-soft)] px-2 text-xs text-[var(--pc-primary-ink)] hover:underline" style={{ left: pos(a), width: `calc(${pos(z)} - ${pos(a)})` }}><span className="font-semibold">{e.who}</span>{e.part ? <span>· {e.part}</span> : null}</a>;
+                          })}
+                        </Lane>
+                      ) : (
+                        <div key={r.key}>
+                          {/* The duty, then everyone on it on their own lane, in start order. */}
+                          <div className="border-b border-ui-border bg-[var(--pc-surface-sunken)] px-3 py-1 text-xs font-semibold text-ui-muted-foreground">
+                            {r.duty}{r.needs ? <span className="font-normal"> · {r.needs}</span> : null}<span className="font-normal"> · {r.days[0].length}</span>
                           </div>
+                          {[...r.days[0]].sort((x, y) => shiftOf(x.id).startMinutes - shiftOf(y.id).startMinutes).map((e) => {
+                            const s = shiftOf(e.id);
+                            const tone = e.absent ? "border-[var(--pc-danger)] bg-[var(--pc-danger-soft)]" : !e.who ? "border-dashed border-ui-muted-foreground bg-ui-card" : "border-ui-border bg-[var(--pc-surface-sunken)]";
+                            const body = (
+                              <span className="flex min-w-0 items-center gap-1.5 truncate">
+                                {e.absent ? <UserX aria-hidden="true" className="size-3.5 shrink-0 text-[var(--pc-danger)]" /> : e.warnings.length ? <TriangleAlert aria-hidden="true" className="size-3.5 shrink-0 text-[var(--pc-warning)]" /> : null}
+                                <span className={cn("font-semibold tabular-nums", e.absent && "line-through decoration-[var(--pc-danger)]")}>{e.text}</span>
+                                {e.part ? <span className="text-ui-muted-foreground">{e.part}</span> : null}
+                              </span>
+                            );
+                            const style = { left: pos(s.startMinutes), width: `calc(${pos(s.endMinutes)} - ${pos(s.startMinutes)})` };
+                            const label = [r.duty, e.part, e.text, e.who ?? "unfilled", e.absent ? "absent, needs cover" : null].filter(Boolean).join(", ");
+                            const cls = cn("absolute inset-y-1.5 flex items-center rounded-[var(--pc-radius-inner)] border px-2 text-left text-xs", tone);
+                            return (
+                              <Lane key={e.id} nowAt={nowAt} label={<span className={cn("block truncate font-medium", !e.who && "text-[var(--pc-warning)]", e.absent && "text-ui-muted-foreground line-through")}>{e.who ?? "Unfilled"}</span>}>
+                                {site.manage && e.editable
+                                  ? <ShiftDialog siteId={site.id} date={now} today={now} shift={editable(e.id)} options={options} suggested={e.absent ? "cover" : undefined}
+                                      trigger={{ label: `Change ${label}`, variant: "ghost", className: cn(cls, "h-auto justify-start font-normal hover:border-[var(--pc-primary)] focus-visible:outline-2 focus-visible:outline-[var(--pc-focus)]"), style, children: body }} />
+                                  : <div aria-label={label} className={cls} style={style}>{body}</div>}
+                              </Lane>
+                            );
+                          })}
                         </div>
                       ))}
                     </div>
@@ -180,6 +229,28 @@ export default async function TodayPage({ searchParams }: { searchParams: Promis
           </section>
         </div>
       )}
+    </div>
+  );
+}
+
+function GroupHeading({ label, count, note }: { label: string; count?: number; note?: string }) {
+  return (
+    <div className="border-b border-ui-border px-3 pt-3 pb-1.5 text-sm font-semibold text-[var(--pc-primary-ink)]">
+      {label}{count ? <span className="font-normal text-ui-muted-foreground"> · {count}</span> : null}
+      {note ? <span className="block text-xs font-normal text-ui-muted-foreground">{note}</span> : null}
+    </div>
+  );
+}
+
+/** One row of the timeline: who or what on the left, its bar across the day. */
+function Lane({ label, nowAt, children }: { label: ReactNode; nowAt: string | null; children: ReactNode }) {
+  return (
+    <div className="grid grid-cols-[13rem_minmax(0,1fr)] border-b border-ui-border">
+      <div className="min-w-0 px-3 py-1.5 text-sm">{label}</div>
+      <div className="relative min-h-10">
+        {nowAt ? <span aria-hidden="true" className="absolute inset-y-0 w-0.5 bg-[var(--pc-primary)]" style={{ left: nowAt }} /> : null}
+        {children}
+      </div>
     </div>
   );
 }
