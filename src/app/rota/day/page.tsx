@@ -7,11 +7,12 @@ import { NativeSelect, NativeSelectOption } from "@/components/shadcn/native-sel
 import { ShiftDialog } from "@/components/rota/actions";
 import { DayNote } from "@/components/rota/day-note";
 import { SegmentsDialog } from "@/components/rota/segments";
+import { ActivityDialog, AssignDialog, RemoveActivity } from "@/components/rota/activities";
 import { today } from "@/lib/format";
 import { BOOKING_KIND_META, addDaysIso, clock, mondayOf, type BookingKind } from "@/lib/rota/constants";
 import { rotaDay } from "@/lib/rota/data";
 import { hours } from "@/lib/rota/plan";
-import { buildTimeline, dayRange, type PersonRow, type Segment } from "@/lib/rota/timeline";
+import { buildTimeline, dayRange, type Candidate, type PersonRow, type Segment } from "@/lib/rota/timeline";
 import { cn } from "@/lib/utils";
 
 export const metadata: Metadata = { title: { absolute: "Day plan · Turnfin Rota" } };
@@ -37,12 +38,19 @@ export default async function DayPlanPage({ searchParams }: { searchParams: Prom
   const { site, day } = data;
   const now = today();
   const link = (date: string) => `/rota/day?${new URLSearchParams({ ...(site ? { site: site.id } : {}), date })}`;
-  const { rows, cover } = buildTimeline(data.shifts, data.classes);
-  const { from, to } = dayRange([...data.shifts, ...data.bookings, ...data.classes]);
+  const { rows, cover } = buildTimeline(data.shifts, data.classes, data.planned);
+  const { from, to } = dayRange([...data.shifts, ...data.bookings, ...data.classes, ...data.planned]);
   const pos = (m: number) => `${(((m - from) / (to - from)) * 100).toFixed(3)}%`;
   const box = (a: number, b: number): CSSProperties => ({ left: pos(a), width: `calc(${pos(b)} - ${pos(a)})` });
   const ticks = Array.from({ length: (to - from) / 60 + 1 }, (_, i) => from + i * 60);
-  const tone = new Map(cover.map((c, i) => [c.label, TONES[i % TONES.length]]));
+  const tone = new Map(cover.map((c, i) => [c.label.toLowerCase(), TONES[i % TONES.length]]));
+  // Everyone on shift who could take on an activity: what they already do, and what they hold.
+  const candidates: Candidate[] = rows.flatMap((r) => r.name ? r.shifts.filter((s) => s.editable).map((s) => ({
+    shiftId: s.id, name: r.name!, start: s.start, end: s.end, absent: s.absent, types: r.userId ? data.held[r.userId] ?? [] : [],
+    busy: [...s.segments.map((g) => ({ start: g.start, end: g.end, label: g.label })), ...r.teaching.map((t) => ({ start: t.start, end: t.end, label: "Teaching" })),
+      // Their other shifts that day (a booking's place, say) keep them busy too.
+      ...r.shifts.filter((o) => o.id !== s.id).map((o) => ({ start: o.start, end: o.end, label: o.part ?? o.role }))],
+  })) : []);
   const options = { people: data.people, types: data.types, departments: data.departments, duties: data.duties };
   const byId = new Map(data.shifts.map((s) => [s.id, s]));
   const nowLine = day === now ? (() => { const d = new Date(); const m = Number(new Intl.DateTimeFormat("en-GB", { hour: "numeric", hourCycle: "h23", timeZone: "Europe/Dublin" }).format(d)) * 60 + d.getMinutes(); return m >= from && m <= to ? pos(m) : null; })() : null;
@@ -92,14 +100,50 @@ export default async function DayPlanPage({ searchParams }: { searchParams: Prom
                 </div>
               </div>
 
-              {cover.length ? (
-                <Group title="Cover" note="Who is on each activity, and when nobody is">
-                  {cover.map((c) => (
-                    <Lane key={c.label} ticks={ticks} pos={pos} nowLine={nowLine} label={<><span className="block truncate font-medium">{c.label}</span><span className={cn("block text-xs", c.gaps.length ? "text-[var(--pc-danger)]" : "text-ui-muted-foreground")}>{c.gaps.length ? `${c.gaps.length} ${c.gaps.length === 1 ? "gap" : "gaps"}` : "Covered"}</span></>}>
-                      {c.spans.map((s, i) => <Bar key={i} style={box(s.start, s.end)} className={tone.get(c.label)} title={`${s.who} ${span(s.start, s.end)}`}>{s.who}</Bar>)}
-                      {c.gaps.map((g, i) => <Bar key={`g${i}`} style={box(g.start, g.end)} className="border border-dashed border-[var(--pc-danger)] bg-[var(--pc-danger-soft)] text-[var(--pc-danger)]" title={`Nobody ${span(g.start, g.end)}`}><TriangleAlert aria-hidden="true" className="size-3 shrink-0" />Nobody {span(g.start, g.end)}</Bar>)}
-                    </Lane>
-                  ))}
+              {cover.length || site.manage ? (
+                <Group title="Activities" note={site.manage ? "What needs covering and who is on it. Open a gap, or the activity, to put someone on it" : "What needs covering and who is on it"}
+                  action={site.manage ? <ActivityDialog siteId={site.id} date={day} types={data.types} names={data.activities} /> : null}>
+                  {cover.length === 0 ? <p className="px-3 py-4 text-sm text-ui-muted-foreground">No activities planned for this day. Add one, for example the 25m pool lifeguard from opening to close.</p> : null}
+                  {cover.map((c) => {
+                    const a = c.activity;
+                    const lanes = stack(c.spans);
+                    const height = Math.max(1, lanes.count) * 26 + 12;
+                    const who = { label: c.label, requiredTypeId: a?.requiredTypeId ?? null, requiredType: a?.requiredType ?? null };
+                    const meta = a ? [`${a.people} at a time`, a.requiredType ? `needs ${a.requiredType}` : null, span(a.start, a.end)].filter(Boolean).join(" · ") : "Not planned, only in shifts";
+                    return (
+                      <Lane key={c.label} ticks={ticks} pos={pos} nowLine={nowLine} height={height} label={
+                        <div className="flex items-start gap-1">
+                          <div className="min-w-0 flex-1">
+                            <span className="block truncate font-medium">{c.label}</span>
+                            <span className="block truncate text-xs text-ui-muted-foreground">{meta}</span>
+                            <span className={cn("block text-xs", c.gaps.length ? "text-[var(--pc-danger)]" : "text-[var(--pc-success)]")}>{c.gaps.length ? `${c.gaps.length} ${c.gaps.length === 1 ? "gap" : "gaps"} to fill` : "Covered"}</span>
+                          </div>
+                          {site.manage && a ? <>
+                            <ActivityDialog siteId={site.id} date={day} types={data.types} names={data.activities} activity={{ id: a.id, label: c.label, start: a.start, end: a.end, people: a.people, requiredTypeId: a.requiredTypeId, note: a.note }}
+                              trigger={{ label: `Change ${c.label}`, className: "size-8 min-h-8 p-0 pointer-coarse:size-11", children: <Pencil aria-hidden="true" className="size-3.5" /> }} />
+                            <RemoveActivity id={a.id} label={c.label} />
+                          </> : null}
+                        </div>}>
+                        {/* The planned window: open it to put someone on any stretch of it. */}
+                        {a ? (site.manage
+                          ? <AssignDialog activity={who} span={{ start: a.start, end: a.end }} candidates={candidates}
+                              trigger={{ label: `Put someone on ${c.label}`, className: "absolute inset-y-1 rounded-[var(--pc-radius-inner)] border border-dashed border-ui-border bg-transparent p-0 hover:border-[var(--pc-primary)] hover:bg-[var(--pc-hover)]", style: box(a.start, a.end), children: <span className="sr-only">Put someone on {c.label}</span> }} />
+                          : <span aria-hidden="true" className="absolute inset-y-1 rounded-[var(--pc-radius-inner)] border border-dashed border-ui-border" style={box(a.start, a.end)} />) : null}
+                        {c.spans.map((x, i) => (
+                          <span key={i} title={`${x.who} ${span(x.start, x.end)}`} className={cn("pointer-events-none absolute flex h-[22px] items-center overflow-hidden rounded-[var(--pc-radius-inner)] px-1.5 text-xs font-medium whitespace-nowrap", tone.get(c.label.toLowerCase()))}
+                            style={{ ...box(x.start, x.end), top: 6 + lanes.of[i] * 26 }}>{x.who}</span>
+                        ))}
+                        {c.gaps.map((g, i) => {
+                          const text = <><TriangleAlert aria-hidden="true" className="size-3 shrink-0" />{g.short > 1 || (a?.people ?? 1) > 1 ? `${g.short} short` : "Nobody"} {span(g.start, g.end)}</>;
+                          const cls = "absolute bottom-1 z-[2] flex h-[22px] items-center gap-1 overflow-hidden rounded-[var(--pc-radius-inner)] border border-dashed border-[var(--pc-danger)] bg-[var(--pc-danger-soft)] px-1.5 text-xs font-medium whitespace-nowrap text-[var(--pc-danger)]";
+                          return site.manage
+                            ? <AssignDialog key={`g${i}`} activity={who} span={g} candidates={candidates}
+                                trigger={{ label: `Fill ${c.label} ${span(g.start, g.end)}, ${g.short} short`, className: cn(cls, "justify-start p-0 px-1.5 hover:bg-[var(--pc-danger-soft)] hover:brightness-95"), style: box(g.start, g.end), children: text }} />
+                            : <span key={`g${i}`} className={cls} style={box(g.start, g.end)}>{text}</span>;
+                        })}
+                      </Lane>
+                    );
+                  })}
                 </Group>
               ) : null}
 
@@ -130,7 +174,7 @@ export default async function DayPlanPage({ searchParams }: { searchParams: Prom
                       const inner = (
                         <>
                           {s.segments.length === 0 ? <span className="relative truncate px-1.5">{s.part ?? s.role}</span> : null}
-                          {s.segments.map((g, i) => <Piece key={i} g={g} shift={s} tone={g.kind === "break" ? "rota-break text-ui-muted-foreground" : tone.get(g.label.trim()) ?? TONES[0]} />)}
+                          {s.segments.map((g, i) => <Piece key={i} g={g} shift={s} tone={g.kind === "break" ? "rota-break text-ui-muted-foreground" : tone.get(g.label.trim().toLowerCase()) ?? TONES[0]} />)}
                         </>
                       );
                       const cls = cn("absolute top-1.5 h-7 overflow-hidden rounded-[var(--pc-radius-inner)] border p-0 text-left text-xs font-normal",
@@ -174,23 +218,26 @@ export default async function DayPlanPage({ searchParams }: { searchParams: Prom
   );
 }
 
-function Group({ title, note, children }: { title: string; note?: string; children: ReactNode }) {
+function Group({ title, note, action, children }: { title: string; note?: string; action?: ReactNode; children: ReactNode }) {
   return (
     <div>
-      <div className="border-b border-ui-border px-3 pt-3 pb-1.5">
-        <h2 className="text-sm font-semibold text-[var(--pc-primary-ink)]">{title}</h2>
-        {note ? <p className="text-xs text-ui-muted-foreground">{note}</p> : null}
+      <div className="flex items-end justify-between gap-2 border-b border-ui-border px-3 pt-3 pb-1.5">
+        <div>
+          <h2 className="text-sm font-semibold text-[var(--pc-primary-ink)]">{title}</h2>
+          {note ? <p className="text-xs text-ui-muted-foreground">{note}</p> : null}
+        </div>
+        {action}
       </div>
       {children}
     </div>
   );
 }
 
-function Lane({ label, ticks, pos, nowLine, tall = false, children }: { label: ReactNode; ticks: number[]; pos: (m: number) => string; nowLine: string | null; tall?: boolean; children: ReactNode }) {
+function Lane({ label, ticks, pos, nowLine, tall = false, height, children }: { label: ReactNode; ticks: number[]; pos: (m: number) => string; nowLine: string | null; tall?: boolean; height?: number; children: ReactNode }) {
   return (
     <div className="grid grid-cols-[14rem_minmax(0,1fr)] border-b border-ui-border">
       <div className="min-w-0 px-3 py-1.5 text-sm">{label}</div>
-      <div className={cn("relative", tall ? "min-h-12" : "min-h-10")}>
+      <div className={cn("relative", tall ? "min-h-12" : "min-h-10")} style={height ? { minHeight: height + 26 } : undefined}>
         {ticks.map((t) => <span key={t} aria-hidden="true" className="absolute inset-y-0 w-px bg-ui-border/60" style={{ left: pos(t) }} />)}
         {nowLine ? <span aria-hidden="true" className="absolute inset-y-0 z-[1] w-0.5 bg-[var(--pc-primary)]" style={{ left: nowLine }} /> : null}
         {children}
@@ -199,8 +246,16 @@ function Lane({ label, ticks, pos, nowLine, tall = false, children }: { label: R
   );
 }
 
-function Bar({ style, className, title, children }: { style: CSSProperties; className?: string; title: string; children: ReactNode }) {
-  return <span title={title} className={cn("absolute inset-y-1.5 flex items-center gap-1 overflow-hidden rounded-[var(--pc-radius-inner)] px-1.5 text-xs font-medium whitespace-nowrap", className)} style={style}>{children}</span>;
+/** Overlapping stretches on their own lines, so two people on poolside both show. */
+function stack(spans: readonly { start: number; end: number }[]) {
+  const ends: number[] = [];
+  const of = spans.map((s) => {
+    const free = ends.findIndex((e) => e <= s.start);
+    const at = free >= 0 ? free : ends.length;
+    ends[at] = s.end;
+    return at;
+  });
+  return { of, count: ends.length };
 }
 
 /** One activity or break inside a shift's bar, placed by its share of the shift. */

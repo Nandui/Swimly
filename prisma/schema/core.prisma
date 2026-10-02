@@ -298,6 +298,7 @@ model QualificationType {
   rotaBookingNeeds RotaBookingNeed[]
   trainingCourses TrainingCourse[]
   rotaShifts     RotaShift[]
+  rotaActivities RotaActivity[]
 
   @@unique([orgId, name])
 }
@@ -390,6 +391,7 @@ model Club {
   rotaShifts         RotaShift[]
   rotaBookings       RotaBooking[]
   rotaDayNotes       RotaDayNote[]
+  rotaActivities     RotaActivity[]
   rotaDepartments    RotaDepartment[]
 
   @@index([sortOrder])

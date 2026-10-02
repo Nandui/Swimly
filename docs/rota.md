@@ -42,8 +42,18 @@ the main database and uses the platform access model (docs/platform-access.md).
   activities ("25m pool lifeguard", "Reception") and **breaks**, saved together
   (`RotaShiftSegment`, `saveSegments`; inside the shift, never overlapping, `segmentProblem`).
   Time with nothing planned is the shift's own duty. Breaks come off the hours shown.
-  **Cover** across the top shows each activity through the day, who is on it and the gaps
-  when nobody is (a break or a late handover). The day's **bookings** show with how many
+  **Activities** across the top (owner request, 2 October 2026: "the activity to be on the
+  planner and on click allow assigning staff that is available with the correct needs"):
+  **Add activity** plans something the site needs covered that day (`RotaActivity`: "25m
+  pool lifeguard" 06:30–21:30, how many people at once, the qualification it needs,
+  optionally every day to Sunday). Its row shows who is on it and, in red, each stretch
+  when fewer are on it than it needs (`coverGaps`). Opening a gap, or the activity, lists
+  everyone on shift for that stretch (`fitsFor`): free for all of it first, then free for
+  part of it (the longest free stretch), then busy and why (an activity, a break, teaching
+  a swim class, another duty, off); anyone without the qualification is marked, never
+  refused. **Assign** makes that stretch an activity inside their shift
+  (`assignActivity`). Activities seen only inside shifts still show, with the time between
+  people as their gaps. The day's **bookings** show with how many
   places are staffed; the **Swim school** classes someone teaches show as a mark on their
   row, and instructors with classes and no duty get their own rows. **Add duty** takes
   **Places**, so "2 lifeguards necessary" is one step: the extra places start unfilled.

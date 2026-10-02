@@ -491,3 +491,33 @@ model RotaDayNote {
 
   @@unique([siteId, date])
 }
+
+/// Something the site needs covered during a day, on the plan in its own
+/// right (owner request, October 2026: "the activity to be on the planner and
+/// on click allow assigning staff that is available with the correct needs"):
+/// "25m pool lifeguard" from 06:30 to 21:30, one person at a time, holding a
+/// pool lifeguard qualification. People cover it through activities inside
+/// their shifts (`RotaShiftSegment` with the same name); the plan shows when
+/// fewer than `people` are on it.
+model RotaActivity {
+  id             String   @id @default(cuid())
+  orgId          String
+  siteId         String
+  date           DateTime @db.Date
+  label          String
+  startMinutes   Int
+  endMinutes     Int
+  /// How many people at once, e.g. 2 on poolside.
+  people         Int      @default(1)
+  requiredTypeId String?
+  note           String   @default("")
+  createdById    String?
+  createdByName  String
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+
+  site         Club               @relation(fields: [siteId], references: [id], onDelete: Cascade)
+  requiredType QualificationType? @relation(fields: [requiredTypeId], references: [id], onDelete: SetNull)
+
+  @@index([siteId, date])
+}

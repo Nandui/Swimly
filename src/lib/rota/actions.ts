@@ -251,6 +251,98 @@ export async function saveSegments(shiftId: string, input: SegmentInput[]): Prom
   return ok();
 }
 
+const activitySchema = z.object({
+  siteId: z.string().min(1),
+  date: z.string().refine(isDateOnly, "Choose a day."),
+  label: z.string().trim().min(2, "Say what the activity is, for example 25m pool lifeguard.").max(60),
+  start: z.string(),
+  end: z.string(),
+  people: z.coerce.number().int().min(1, "At least one person.").max(20, "Up to 20 people at once."),
+  requiredTypeId: z.string().trim().max(64).transform((v) => v || null),
+  note: z.string().trim().max(200),
+  /** New ones only: also plan it on the days after this one to Sunday. */
+  restOfWeek: z.boolean().default(false),
+});
+export type ActivityInput = z.input<typeof activitySchema>;
+
+/** Plan something the site needs covered during a day (25m pool lifeguard,
+ *  06:30–21:30, one at a time, holding a pool lifeguard qualification), or
+ *  change one. People cover it from inside their shifts. Needs `rota.manage`
+ *  at the site; audited with the site. */
+export async function saveActivity(id: string | null, input: ActivityInput): Promise<ActionResult> {
+  const parsed = activitySchema.safeParse(input);
+  if (!parsed.success) return fail(parsed.error.issues[0].message);
+  const data = parsed.data;
+  const start = parseClock(data.start), end = parseClock(data.end);
+  if (start === null || end === null) return fail("Use times like 06:30.");
+  if (end <= start) return fail("The activity has to end after it starts, on the same day.");
+  const allowed = await allowedAt(data.siteId);
+  if (!allowed.ok) return fail(allowed.error);
+  const { actor, site } = allowed;
+  if (!site.orgId) return fail("That site is not set up for the rota.");
+  if (data.requiredTypeId && !(await prisma.qualificationType.findFirst({ where: { id: data.requiredTypeId, orgId: site.orgId }, select: { id: true } }))) return fail("That qualification is no longer offered.");
+  const values = { label: data.label, startMinutes: start, endMinutes: end, people: data.people, requiredTypeId: data.requiredTypeId, note: data.note };
+  const days = id || !data.restOfWeek ? [data.date] : Array.from({ length: 7 }, (_, i) => addDaysIso(data.date, i)).filter((d) => mondayOf(d) === mondayOf(data.date));
+  const result = await prisma.$transaction(async (tx) => {
+    if (id) {
+      const moved = await tx.rotaActivity.updateMany({ where: { id, siteId: site.id }, data: values });
+      if (moved.count !== 1) return fail("That activity is no longer on the plan.");
+    } else {
+      await tx.rotaActivity.createMany({ data: days.map((d) => ({ ...values, orgId: site.orgId!, siteId: site.id, date: parseDateOnly(d), createdById: actor.id, createdByName: actor.name })) });
+    }
+    await logAudit({ actorId: actor.id, actorName: actor.name, action: id ? "update" : "create", entity: "RotaActivity", entityId: id, clubId: site.id,
+      summary: `${id ? "Changed" : "Planned"} ${data.label} at ${site.name}, ${clock(start)}–${clock(end)}, ${data.people} at a time, ${days.length === 1 ? `on ${data.date}` : `${data.date} to ${days.at(-1)}`}` }, tx);
+    return ok();
+  });
+  if (result.ok) revalidatePath("/rota/day");
+  return result;
+}
+
+/** Take an activity off the day's plan. People's time on it stays in their shifts. */
+export async function removeActivity(id: string): Promise<ActionResult> {
+  const activity = await prisma.rotaActivity.findFirst({ where: { id }, select: { siteId: true, label: true, date: true } });
+  if (!activity) return ok();
+  const allowed = await allowedAt(activity.siteId);
+  if (!allowed.ok) return fail(allowed.error);
+  const { actor, site } = allowed;
+  await prisma.$transaction(async (tx) => {
+    await tx.rotaActivity.delete({ where: { id } });
+    await logAudit({ actorId: actor.id, actorName: actor.name, action: "cancel", entity: "RotaActivity", entityId: id, clubId: site.id, summary: `Took ${activity.label} off the plan at ${site.name} on ${iso(activity.date)}` }, tx);
+  });
+  revalidatePath("/rota/day");
+  return ok();
+}
+
+/** Put someone on an activity: it becomes that stretch of their shift. It
+ *  must fit inside the shift and not overlap what they already do there; a
+ *  missing qualification is shown on the plan, never a refusal. */
+export async function assignActivity(input: { shiftId: string; label: string; start: string; end: string }): Promise<ActionResult> {
+  const start = parseClock(input.start), end = parseClock(input.end);
+  const label = input.label.trim();
+  if (start === null || end === null) return fail("Use times like 10:30.");
+  if (label.length < 2 || label.length > 60) return fail("Say what the activity is.");
+  const shift = await prisma.rotaShift.findFirst({
+    where: { id: input.shiftId, cancelledAt: null, kind: "shift", importId: null },
+    select: { siteId: true, date: true, role: true, startMinutes: true, endMinutes: true, user: { select: { name: true } }, rotaPerson: { select: { name: true } },
+      segments: { select: { startMinutes: true, endMinutes: true, kind: true, label: true } } },
+  });
+  if (!shift) return fail("That shift is no longer on the plan.");
+  const all = [...shift.segments, { startMinutes: start, endMinutes: end, kind: "activity", label }];
+  const problem = segmentProblem(shift, all);
+  if (problem) return fail(problem);
+  const allowed = await allowedAt(shift.siteId);
+  if (!allowed.ok) return fail(allowed.error);
+  const { actor, site } = allowed;
+  const who = shift.user?.name ?? shift.rotaPerson?.name ?? "the unfilled duty";
+  await prisma.$transaction(async (tx) => {
+    await tx.rotaShiftSegment.create({ data: { shiftId: input.shiftId, startMinutes: start, endMinutes: end, kind: "activity", label } });
+    await logAudit({ actorId: actor.id, actorName: actor.name, action: "update", entity: "RotaShift", entityId: input.shiftId, clubId: site.id,
+      summary: `Put ${who} on ${label} ${clock(start)}–${clock(end)} on ${iso(shift.date)}` }, tx);
+  });
+  revalidatePath("/rota/day");
+  return ok();
+}
+
 /** The day's note on the plan (a last day, who covers whom and why). Empty text
  *  removes it. Needs `rota.manage` at the site; audited with the site. */
 export async function saveDayNote(siteId: string, date: string, text: string): Promise<ActionResult> {

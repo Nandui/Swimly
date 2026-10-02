@@ -120,12 +120,15 @@ export async function rotaDay(siteId: string | undefined, date: string | undefin
   const found = week.days.find((d) => d.iso === day);
   const shifts = (found?.shifts ?? []).filter((s) => s.kind === "shift");
   const classes = found?.classes ?? [];
-  const empty = { ...week, day, shifts, classes, bookings: [], note: "", teachers: {} as Record<string, string>, activities: ACTIVITY_SUGGESTIONS };
+  const empty = { ...week, day, shifts, classes, bookings: [], note: "", teachers: {} as Record<string, string>, activities: ACTIVITY_SUGGESTIONS,
+    planned: [] as { id: string; label: string; startMinutes: number; endMinutes: number; people: number; requiredTypeId: string | null; requiredType: { name: string } | null; note: string }[],
+    held: {} as Record<string, string[]> };
   if (!week.site) return empty;
   const at = parseDateOnly(day);
   const weekday = (at.getUTCDay() + 6) % 7;
   const teacherIds = [...new Set(classes.flatMap((c) => (c.userId ? [c.userId] : [])))];
-  const [bookings, note, used, teachers] = await Promise.all([
+  const staffIds = [...new Set(shifts.flatMap((s) => (s.userId ? [s.userId] : [])))];
+  const [bookings, note, used, teachers, planned, quals] = await Promise.all([
     prisma.rotaBooking.findMany({
       where: { siteId: week.site.id, cancelledAt: null, firstDay: { lte: at }, lastDay: { gte: at }, weekdays: { has: weekday } },
       orderBy: [{ startMinutes: "asc" }],
@@ -138,7 +141,14 @@ export async function rotaDay(siteId: string | undefined, date: string | undefin
       distinct: ["label"], select: { label: true }, take: 40,
     }),
     teacherIds.length ? prisma.user.findMany({ where: { id: { in: teacherIds } }, select: { id: true, name: true } }) : [],
+    // The day's planned activities: what needs covering, when, by how many, holding what.
+    prisma.rotaActivity.findMany({ where: { siteId: week.site.id, date: at }, orderBy: [{ startMinutes: "asc" }],
+      select: { id: true, label: true, startMinutes: true, endMinutes: true, people: true, requiredTypeId: true, requiredType: { select: { name: true } }, note: true } }),
+    // What the people on the plan hold that day, so only those with the right one are suggested first.
+    staffIds.length ? prisma.qualification.findMany({ where: { userId: { in: staffIds }, revokedAt: null, issuedOn: { lte: at }, OR: [{ expiresOn: null }, { expiresOn: { gte: at } }] }, select: { userId: true, typeId: true } }) : [],
   ]);
+  const held: Record<string, string[]> = {};
+  for (const q of quals) (held[q.userId] ??= []).push(q.typeId);
   const placed = (id: string) => shifts.filter((s) => s.bookingId === id);
   return {
     ...empty,
@@ -148,7 +158,8 @@ export async function rotaDay(siteId: string | undefined, date: string | undefin
     })),
     note: note?.text ?? "",
     teachers: Object.fromEntries(teachers.map((t) => [t.id, t.name])),
-    activities: [...new Set([...used.map((u) => u.label), ...ACTIVITY_SUGGESTIONS])],
+    activities: [...new Set([...planned.map((p) => p.label), ...used.map((u) => u.label), ...ACTIVITY_SUGGESTIONS])],
+    planned, held,
   };
 }
 
