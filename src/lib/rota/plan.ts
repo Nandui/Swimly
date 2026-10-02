@@ -115,7 +115,7 @@ export function buildPlan(days: readonly { iso: string; shifts: readonly PlanShi
   return {
     groups: sorted,
     /** Duties with nobody on them, each day. */
-    unfilled: all.map((list) => list.filter((s) => !s.userId && !s.rotaPersonId).length),
+    unfilled: days.map((d) => d.shifts.filter((s) => s.kind === "shift" && !s.userId && !s.rotaPersonId).length),
     /** People on a duty each day, not counting anyone off. */
     onShift: all.map((list) => new Set(list.filter((s) => (s.userId || s.rotaPersonId) && !s.warnings.includes("absent")).map((s) => s.userId ?? s.rotaPersonId)).size),
     dayMinutes: all.map((list) => list.filter((s) => s.userId || s.rotaPersonId).reduce((m, s) => m + Math.max(0, s.endMinutes - s.startMinutes), 0)),

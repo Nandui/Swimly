@@ -17,6 +17,8 @@ const THEME = "turnfin-docs turnfin-module";
 
 type Option = { id: string; name: string };
 type Shift = { id: string; date: Date; startMinutes: number; endMinutes: number; role: string; note: string; userId: string | null; requiredTypeId: string | null; departmentId: string | null };
+/** What a new duty starts with, e.g. from a day on the pool breakdown. */
+export type DutyPreset = { role?: string; start?: number; end?: number };
 export type PlanOptions = { people: (Option & { jobTitle: string | null })[]; types: Option[]; departments: Option[]; duties: string[] };
 
 /** Why a duty changed once its week has started, the optional note, and
@@ -54,7 +56,7 @@ const changeOf = (formData: FormData): ChangeInput => ({
 /** Add a duty (optionally on a given day) or change one. Qualification gaps
  *  are shown on the plan afterwards; they never stop the save. Once the
  *  duty's week has started, the change asks for its reason. */
-export function ShiftDialog({ siteId, date, today, shift, options, label, suggested, trigger, person }: {
+export function ShiftDialog({ siteId, date, today, shift, options, label, suggested, trigger, person, preset }: {
   siteId: string; date: string; today: string; shift?: Shift; options: PlanOptions; label?: string;
   /** The reason to offer first, e.g. cover when the person on it is off. */
   suggested?: RotaChangeReason;
@@ -63,6 +65,8 @@ export function ShiftDialog({ siteId, date, today, shift, options, label, sugges
   trigger?: { label: string; variant?: "ghost" | "outline"; className?: string; style?: CSSProperties; children: ReactNode };
   /** The person to put on it, e.g. the cover Today suggests. */
   person?: string;
+  /** A new duty's starting values. */
+  preset?: DutyPreset;
 }) {
   const initial = shift ? shift.date.toISOString().slice(0, 10) : date;
   const [day, setDay] = useState(initial);
@@ -87,7 +91,8 @@ export function ShiftDialog({ siteId, date, today, shift, options, label, sugges
       submit={(formData) => saveShift(shift?.id ?? null, {
         siteId, date: String(formData.get("date") ?? ""), start: String(formData.get("start") ?? ""), end: String(formData.get("end") ?? ""),
         role: String(formData.get("role") ?? ""), departmentId: String(formData.get("departmentId") ?? ""), requiredTypeId: String(formData.get("requiredTypeId") ?? ""),
-        userId: String(formData.get("userId") ?? ""), note: String(formData.get("note") ?? ""), ...changeOf(formData),
+        userId: String(formData.get("userId") ?? ""), note: String(formData.get("note") ?? ""),
+        count: shift ? 1 : Number(formData.get("count") ?? 1), ...changeOf(formData),
       })}
     >
       <div className="grid gap-4 sm:grid-cols-2">
@@ -98,15 +103,20 @@ export function ShiftDialog({ siteId, date, today, shift, options, label, sugges
           </NativeSelect>
         </Field>
         <Field label="Duty" htmlFor={`${fid}-role`} hint="For example Poolside, Gym floor, Front desk.">
-          <Input id={`${fid}-role`} name="role" required minLength={2} maxLength={60} defaultValue={shift?.role} list={`${fid}-duties`} className="min-h-11" />
+          <Input id={`${fid}-role`} name="role" required minLength={2} maxLength={60} defaultValue={shift?.role ?? preset?.role} list={`${fid}-duties`} className="min-h-11" />
           <datalist id={`${fid}-duties`}>{options.duties.map((d) => <option key={d} value={d} />)}</datalist>
         </Field>
       </div>
       <Field label="Date" htmlFor={`${fid}-date`}><Input id={`${fid}-date`} name="date" type="date" required value={day} onChange={(e) => setDay(e.target.value)} className="min-h-11" /></Field>
       <div className="grid grid-cols-2 gap-4">
-        <Field label="Starts" htmlFor={`${fid}-start`}><Input id={`${fid}-start`} name="start" type="time" required defaultValue={shift ? clock(shift.startMinutes) : "07:00"} className="min-h-11" /></Field>
-        <Field label="Ends" htmlFor={`${fid}-end`}><Input id={`${fid}-end`} name="end" type="time" required defaultValue={shift ? clock(shift.endMinutes) : "15:00"} className="min-h-11" /></Field>
+        <Field label="Starts" htmlFor={`${fid}-start`}><Input id={`${fid}-start`} name="start" type="time" required defaultValue={clock(shift?.startMinutes ?? preset?.start ?? 420)} className="min-h-11" /></Field>
+        <Field label="Ends" htmlFor={`${fid}-end`}><Input id={`${fid}-end`} name="end" type="time" required defaultValue={clock(shift?.endMinutes ?? preset?.end ?? 900)} className="min-h-11" /></Field>
       </div>
+      {shift ? null : (
+        <Field label="Places" htmlFor={`${fid}-count`} hint="More than one when several are needed, for example 2 lifeguards. Extra places start unfilled.">
+          <Input id={`${fid}-count`} name="count" type="number" min={1} max={12} defaultValue={1} className="min-h-11 w-24" />
+        </Field>
+      )}
       <Field label="Person" htmlFor={`${fid}-person`}>
         <NativeSelect id={`${fid}-person`} name="userId" defaultValue={person ?? shift?.userId ?? ""} className="min-h-11 w-full">
           <NativeSelectOption value="">Unfilled</NativeSelectOption>

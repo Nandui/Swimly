@@ -52,7 +52,7 @@ export const MODULE_OF_ENTITY: Readonly<Record<string, string>> = {
   TrainingCourse: "Training", TrainingAssignment: "Training", Qualification: "Training", QualificationType: "Training", QualificationEvidence: "Training",
   // Refunds and Rota.
   RefundRequest: "Refunds", RefundNotification: "Refunds",
-  RotaShift: "Rota", RotaAbsence: "Rota", RotaImport: "Rota", RotaDepartment: "Rota",
+  RotaShift: "Rota", RotaDayNote: "Rota", RotaAbsence: "Rota", RotaImport: "Rota", RotaDepartment: "Rota",
 };
 
 /** Rows that belong to no club, so their audit entries belong to none either

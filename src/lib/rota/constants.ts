@@ -162,6 +162,31 @@ export function returnStage(a: { lastDay: string; returnMetOn: string | null }, 
 export const ABSENCE_UPDATE_KINDS = ["reported", "extended", "back"] as const;
 export type AbsenceUpdateKind = (typeof ABSENCE_UPDATE_KINDS)[number];
 
+/** What a stretch of a shift is (owner request, October 2026: "assigning
+ *  their activity during a shift and all the breaks"). Tones come from here. */
+export const SEGMENT_KIND_META = {
+  activity: { label: "Activity", color: "blue" },
+  break: { label: "Break", color: "gray" },
+} as const satisfies Record<string, StatusMeta>;
+export type SegmentKind = keyof typeof SEGMENT_KIND_META;
+export const SEGMENT_KINDS = Object.keys(SEGMENT_KIND_META) as SegmentKind[];
+/** Activities offered before a site has its own; the ones used there come first. */
+export const ACTIVITY_SUGGESTIONS = ["25m pool lifeguard", "18m pool lifeguard", "Poolside", "Teaching", "Rookie", "Reception", "Plant room", "Cleaning", "Gym floor"];
+
+export type SegmentLike = { startMinutes: number; endMinutes: number; kind: string; label: string };
+/** What is wrong with a shift's segments, or null: each inside the shift, none
+ *  overlapping, each with a name. Pure; the action and the dialog both use it. */
+export function segmentProblem(shift: { startMinutes: number; endMinutes: number }, segments: readonly SegmentLike[]): string | null {
+  const sorted = [...segments].sort((a, b) => a.startMinutes - b.startMinutes);
+  for (const [i, s] of sorted.entries()) {
+    if (s.endMinutes <= s.startMinutes) return `${s.label || "A segment"} has to end after it starts.`;
+    if (s.startMinutes < shift.startMinutes || s.endMinutes > shift.endMinutes) return `${s.label || "A segment"} has to be inside the shift, ${clock(shift.startMinutes)}–${clock(shift.endMinutes)}.`;
+    if (s.kind === "activity" && s.label.trim().length < 2) return "Say what each activity is, for example 25m pool lifeguard.";
+    if (i && sorted[i - 1].endMinutes > s.startMinutes) return `${sorted[i - 1].label} and ${s.label} overlap. One thing at a time.`;
+  }
+  return null;
+}
+
 export const WEEKDAY_LABELS = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"] as const;
 
 /** `HH:MM` → minutes past midnight, or null. */

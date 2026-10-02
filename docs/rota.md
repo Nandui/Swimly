@@ -34,6 +34,22 @@ the main database and uses the platform access model (docs/platform-access.md).
   places is planning like any other duty. Cancelling a booking cancels its sessions
   still to come; when people this week are already on one, it asks for the reason
   and logs each person taken off. A booking can create up to 600 places.
+- **Day plan** (`/rota/day`; a day heading on the week plan opens it). Owner request, 2
+  October 2026: the information in the duty managers' weekly pool breakdown (shifts and how
+  many each needs, lessons and schools with their instructors, pool positions and handovers,
+  bookings, breaks, notes) planned on a timeline, not copied as a document. One row per
+  person with their shift; a manager opens a shift to plan **what they do when inside it**:
+  activities ("25m pool lifeguard", "Reception") and **breaks**, saved together
+  (`RotaShiftSegment`, `saveSegments`; inside the shift, never overlapping, `segmentProblem`).
+  Time with nothing planned is the shift's own duty. Breaks come off the hours shown.
+  **Cover** across the top shows each activity through the day, who is on it and the gaps
+  when nobody is (a break or a late handover). The day's **bookings** show with how many
+  places are staffed; the **Swim school** classes someone teaches show as a mark on their
+  row, and instructors with classes and no duty get their own rows. **Add duty** takes
+  **Places**, so "2 lifeguards necessary" is one step: the extra places start unfilled.
+  Each day has a **note** (`RotaDayNote`). Activities used at the site in the last 12 weeks
+  are offered first. Timepoint holds shift times, not activities, so planning activities
+  never asks for a reason. Pure and tested: `buildTimeline` (`src/lib/rota/timeline.ts`).
 - **Today** (`/rota/today`). The duty managers' day: every department's duties on
   one timeline with a line at the time now (a time-ordered list on phones);
   **Needs you**, the duties still to come whose person is off or that are

@@ -1,6 +1,7 @@
 "use client";
 
 import { useMemo, useState, type ReactNode } from "react";
+import Link from "next/link";
 import { TriangleAlert, UserX } from "lucide-react";
 import { Button } from "@/components/shadcn/button";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/shadcn/dialog";
@@ -56,8 +57,11 @@ export function RotaPlan({ plan, days, today, siteId, manage, editable, options,
             {days.map((d) => (
               <TableHead key={d.iso} scope="col" aria-current={d.today ? "date" : undefined}
                 className={cn("sticky top-0 z-20 min-w-28 border-b border-ui-border px-2 py-2 text-left font-semibold", d.today ? "bg-[var(--pc-primary-soft)] text-[var(--pc-primary-ink)]" : "bg-[var(--pc-surface-sunken)]")}>
-                <span className="block text-xs">{d.weekday}</span>
-                <span className={cn("block text-xs font-normal", d.today ? "" : "text-ui-muted-foreground")}>{d.date}{d.today ? " · today" : ""}</span>
+                {/* The day's timeline: who does what when, and their breaks. */}
+                <Link href={`/rota/day?${new URLSearchParams({ site: siteId, date: d.iso })}`} className="-m-1 block rounded-[var(--pc-radius-inner)] p-1 hover:underline focus-visible:outline-2 focus-visible:outline-[var(--pc-focus)]" aria-label={`Day plan for ${d.weekday} ${d.date}`}>
+                  <span className="block text-xs">{d.weekday}</span>
+                  <span className={cn("block text-xs font-normal", d.today ? "" : "text-ui-muted-foreground")}>{d.date}{d.today ? " · today" : ""}</span>
+                </Link>
               </TableHead>
             ))}
           </TableRow>

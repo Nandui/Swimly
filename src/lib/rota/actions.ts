@@ -8,7 +8,7 @@ import { logAudit } from "@/lib/audit";
 import { isDateOnly, parseDateOnly, today } from "@/lib/format";
 import { prisma } from "@/lib/prisma";
 import { requireCapFor } from "@/lib/policy/session";
-import { ABSENCE_REASONS, BOOKING_KINDS, BOOKING_MAX_PLACES, RETURN_FITS, ROTA_CHANGE_REASONS, addDaysIso, bookingDates, bookingDuty, clock, mondayOf, needsFitNote, parseClock, weekStarted, type RotaChangeReason } from "@/lib/rota/constants";
+import { ABSENCE_REASONS, SEGMENT_KINDS, segmentProblem, BOOKING_KINDS, BOOKING_MAX_PLACES, RETURN_FITS, ROTA_CHANGE_REASONS, addDaysIso, bookingDates, bookingDuty, clock, mondayOf, needsFitNote, parseClock, weekStarted, type RotaChangeReason } from "@/lib/rota/constants";
 import type { Prisma } from "@/generated/prisma/client";
 import { notifyShiftChange } from "@/lib/staff-api/reminders";
 
@@ -36,6 +36,8 @@ const shiftSchema = z.object({
   requiredTypeId: z.string().trim().max(64).transform((v) => v || null),
   userId: z.string().trim().max(64).transform((v) => v || null),
   note: z.string().trim().max(300),
+  /** New duties only: how many places to add at once ("2 lifeguards necessary"). */
+  count: z.coerce.number().int().min(1, "Add at least one place.").max(12, "Add up to 12 places at once.").default(1),
 }).and(changeSchema);
 export type ShiftInput = z.input<typeof shiftSchema>;
 
@@ -94,6 +96,8 @@ export async function saveShift(id: string | null, input: ShiftInput): Promise<A
     siteId: site.id, date: parseDateOnly(data.date), startMinutes: start, endMinutes: end, role: data.role,
     departmentId: data.departmentId, requiredTypeId: data.requiredTypeId, userId: data.userId, note: data.note,
   };
+  if (id && data.count > 1) return fail("Change one duty at a time.");
+  if (data.count > 1 && data.userId) return fail("Several places start unfilled. Leave the person empty, then fill each one.");
   const summary = `${data.role} at ${site.name} on ${data.date}, ${clock(start)}–${clock(end)}`;
   const now = today();
   let previousUserId: string | null = null;
@@ -120,7 +124,9 @@ export async function saveShift(id: string | null, input: ShiftInput): Promise<A
     } else {
       const created = await tx.rotaShift.create({ data: { ...values, orgId: site.orgId!, createdById: actor.id, createdByName: actor.name } });
       shiftId = created.id;
-      await logAudit({ actorId: actor.id, actorName: actor.name, action: "create", entity: "RotaShift", entityId: created.id, clubId: site.id, summary: `Added ${summary}` }, tx);
+      // More places for the same duty, all unfilled ("2 lifeguards necessary").
+      if (data.count > 1) await tx.rotaShift.createMany({ data: Array.from({ length: data.count - 1 }, () => ({ ...values, orgId: site.orgId!, createdById: actor.id, createdByName: actor.name })) });
+      await logAudit({ actorId: actor.id, actorName: actor.name, action: "create", entity: "RotaShift", entityId: created.id, clubId: site.id, summary: `Added ${data.count > 1 ? `${data.count} places: ` : ""}${summary}` }, tx);
     }
     if (live && data.reason) {
       const fromUserId = existing && existing.userId !== data.userId ? existing.userId : null;
@@ -202,6 +208,64 @@ export async function copyLastWeek(siteId: string, monday: string): Promise<Acti
   await prisma.$transaction(async (tx) => {
     await tx.rotaShift.createMany({ data: copies.map((s) => ({ ...s, date: parseDateOnly(addDaysIso(iso(s.date), 7)), siteId, orgId: site.orgId!, createdById: actor.id, createdByName: actor.name })) });
     await logAudit({ actorId: actor.id, actorName: actor.name, action: "create", entity: "RotaShift", entityId: null, clubId: site.id, summary: `Copied ${copies.length} ${copies.length === 1 ? "duty" : "duties"} from last week into the week of ${monday} at ${site.name}` }, tx);
+  });
+  revalidatePath("/rota");
+  return ok();
+}
+
+const segmentSchema = z.object({
+  start: z.string(),
+  end: z.string(),
+  kind: z.enum(SEGMENT_KINDS),
+  label: z.string().trim().max(60, "Keep each activity under 60 characters."),
+});
+export type SegmentInput = z.input<typeof segmentSchema>;
+
+/** What someone does during their shift: its activities and breaks, saved
+ *  together (replacing the ones before). Inside the shift, never overlapping.
+ *  Timepoint holds shift times, not activities, so this never asks for a
+ *  reason. Needs `rota.manage` at the shift's site; audited with the site. */
+export async function saveSegments(shiftId: string, input: SegmentInput[]): Promise<ActionResult> {
+  const parsed = z.array(segmentSchema).max(24, "Up to 24 activities and breaks a shift.").safeParse(input);
+  if (!parsed.success) return fail(parsed.error.issues[0].message);
+  const segments = parsed.data.map((s) => ({ startMinutes: parseClock(s.start), endMinutes: parseClock(s.end), kind: s.kind, label: s.kind === "break" ? s.label || "Break" : s.label }));
+  if (segments.some((s) => s.startMinutes === null || s.endMinutes === null)) return fail("Use times like 10:30.");
+  const shift = await prisma.rotaShift.findFirst({ where: { id: shiftId, cancelledAt: null, kind: "shift" }, select: { siteId: true, date: true, role: true, startMinutes: true, endMinutes: true, user: { select: { name: true } }, rotaPerson: { select: { name: true } } } });
+  if (!shift) return fail("That duty no longer exists.");
+  const clean = segments as { startMinutes: number; endMinutes: number; kind: "activity" | "break"; label: string }[];
+  const problem = segmentProblem(shift, clean);
+  if (problem) return fail(problem);
+  const allowed = await allowedAt(shift.siteId);
+  if (!allowed.ok) return fail(allowed.error);
+  const { actor, site } = allowed;
+  const who = shift.user?.name ?? shift.rotaPerson?.name ?? "the unfilled duty";
+  await prisma.$transaction(async (tx) => {
+    await tx.rotaShiftSegment.deleteMany({ where: { shiftId } });
+    if (clean.length) await tx.rotaShiftSegment.createMany({ data: clean.map((s) => ({ shiftId, ...s })) });
+    await logAudit({ actorId: actor.id, actorName: actor.name, action: "update", entity: "RotaShift", entityId: shiftId, clubId: site.id,
+      summary: `Planned ${who}'s ${shift.role} on ${iso(shift.date)}: ${clean.length ? clean.sort((a, b) => a.startMinutes - b.startMinutes).map((s) => `${clock(s.startMinutes)}–${clock(s.endMinutes)} ${s.label}`).join(", ") : "no activities"}` }, tx);
+  });
+  revalidatePath("/rota");
+  revalidatePath("/rota/day");
+  revalidatePath("/rota/today");
+  return ok();
+}
+
+/** The day's note on the plan (a last day, who covers whom and why). Empty text
+ *  removes it. Needs `rota.manage` at the site; audited with the site. */
+export async function saveDayNote(siteId: string, date: string, text: string): Promise<ActionResult> {
+  if (!isDateOnly(date)) return fail("Choose a day.");
+  const clean = text.trim();
+  if (clean.length > 1000) return fail("Keep the note under 1,000 characters.");
+  const allowed = await allowedAt(siteId);
+  if (!allowed.ok) return fail(allowed.error);
+  const { actor, site } = allowed;
+  if (!site.orgId) return fail("That site is not set up for the rota.");
+  const day = parseDateOnly(date);
+  await prisma.$transaction(async (tx) => {
+    if (clean) await tx.rotaDayNote.upsert({ where: { siteId_date: { siteId, date: day } }, create: { orgId: site.orgId!, siteId, date: day, text: clean, byId: actor.id, byName: actor.name }, update: { text: clean, byId: actor.id, byName: actor.name } });
+    else await tx.rotaDayNote.deleteMany({ where: { siteId, date: day } });
+    await logAudit({ actorId: actor.id, actorName: actor.name, action: "update", entity: "RotaDayNote", entityId: null, clubId: site.id, summary: `${clean ? "Wrote" : "Cleared"} the rota note for ${date} at ${site.name}` }, tx);
   });
   revalidatePath("/rota");
   return ok();

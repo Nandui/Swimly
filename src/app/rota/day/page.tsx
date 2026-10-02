@@ -1,0 +1,257 @@
+import type { Metadata } from "next";
+import type { CSSProperties, ReactNode } from "react";
+import Link from "next/link";
+import { CalendarCheck, CalendarDays, ChevronLeft, ChevronRight, GraduationCap, Pencil, TriangleAlert, UserX } from "lucide-react";
+import { Button } from "@/components/shadcn/button";
+import { NativeSelect, NativeSelectOption } from "@/components/shadcn/native-select";
+import { ShiftDialog } from "@/components/rota/actions";
+import { DayNote } from "@/components/rota/day-note";
+import { SegmentsDialog } from "@/components/rota/segments";
+import { today } from "@/lib/format";
+import { BOOKING_KIND_META, addDaysIso, clock, mondayOf, type BookingKind } from "@/lib/rota/constants";
+import { rotaDay } from "@/lib/rota/data";
+import { hours } from "@/lib/rota/plan";
+import { buildTimeline, dayRange, type PersonRow, type Segment } from "@/lib/rota/timeline";
+import { cn } from "@/lib/utils";
+
+export const metadata: Metadata = { title: { absolute: "Day plan · Turnfin Rota" } };
+
+const LONG = new Intl.DateTimeFormat("en-GB", { weekday: "long", day: "numeric", month: "long", year: "numeric", timeZone: "UTC" });
+const at = (iso: string) => new Date(`${iso}T00:00:00Z`);
+const span = (a: number, b: number) => `${clock(a)}–${clock(b)}`;
+/** Each activity keeps one tone through the day, so "25m pool lifeguard" reads the same on every row. */
+const TONES = [
+  "bg-[var(--pc-primary-soft)] text-[var(--pc-primary-ink)]",
+  "bg-[var(--pc-aqua-soft)] text-[var(--pc-aqua-ink)]",
+  "bg-[var(--pc-success-soft)] text-[var(--pc-success)]",
+  "bg-[var(--pc-cover-soft)] text-[var(--pc-cover)]",
+];
+
+/** One day of a site's plan as a timeline: everyone on their own row with
+ *  their shift, what they do when inside it and their breaks; each activity's
+ *  cover with its gaps; the day's bookings; and the Swim school classes. A
+ *  manager opens a shift to plan its activities, or a name to change the duty. */
+export default async function DayPlanPage({ searchParams }: { searchParams: Promise<{ site?: string; date?: string }> }) {
+  const input = await searchParams;
+  const data = await rotaDay(input.site, input.date);
+  const { site, day } = data;
+  const now = today();
+  const link = (date: string) => `/rota/day?${new URLSearchParams({ ...(site ? { site: site.id } : {}), date })}`;
+  const { rows, cover } = buildTimeline(data.shifts, data.classes);
+  const { from, to } = dayRange([...data.shifts, ...data.bookings, ...data.classes]);
+  const pos = (m: number) => `${(((m - from) / (to - from)) * 100).toFixed(3)}%`;
+  const box = (a: number, b: number): CSSProperties => ({ left: pos(a), width: `calc(${pos(b)} - ${pos(a)})` });
+  const ticks = Array.from({ length: (to - from) / 60 + 1 }, (_, i) => from + i * 60);
+  const tone = new Map(cover.map((c, i) => [c.label, TONES[i % TONES.length]]));
+  const options = { people: data.people, types: data.types, departments: data.departments, duties: data.duties };
+  const byId = new Map(data.shifts.map((s) => [s.id, s]));
+  const nowLine = day === now ? (() => { const d = new Date(); const m = Number(new Intl.DateTimeFormat("en-GB", { hour: "numeric", hourCycle: "h23", timeZone: "Europe/Dublin" }).format(d)) * 60 + d.getMinutes(); return m >= from && m <= to ? pos(m) : null; })() : null;
+  // Swim school instructors with no duty that day still show, so the pool's day is complete.
+  const onPlan = new Set(rows.flatMap((r) => (r.userId ? [r.userId] : [])));
+  const teachingOnly = [...new Set(data.classes.flatMap((c) => (c.userId && !onPlan.has(c.userId) ? [c.userId] : [])))];
+  const untaught = data.classes.filter((c) => !c.userId);
+  const open = rows.filter((r) => !r.name).length;
+  const gaps = cover.reduce((n, c) => n + c.gaps.length, 0);
+
+  return (
+    <div className="space-y-4">
+      <div className="module-heading">
+        <div className="space-y-1">
+          <h1>Day plan{site ? <span className="font-normal text-ui-muted-foreground">: {site.name}</span> : null}</h1>
+          <p className="text-sm">{LONG.format(at(day))} · {rows.filter((r) => r.name).length} on the plan{open ? ` · ${open} unfilled` : ""}{gaps ? ` · ${gaps} ${gaps === 1 ? "gap" : "gaps"} in cover` : ""}</p>
+        </div>
+        <div className="flex flex-wrap items-center gap-2">
+          <nav aria-label="Days" className="flex items-center gap-1">
+            <Button asChild variant="outline" size="icon" aria-label="Previous day"><Link href={link(addDaysIso(day, -1))}><ChevronLeft aria-hidden="true" /></Link></Button>
+            <Button asChild variant={day === now ? "secondary" : "outline"}><Link href={link(now)}>Today</Link></Button>
+            <Button asChild variant="outline" size="icon" aria-label="Next day"><Link href={link(addDaysIso(day, 1))}><ChevronRight aria-hidden="true" /></Link></Button>
+          </nav>
+          {site ? <Button asChild variant="outline" className="min-h-11"><Link href={`/rota?${new URLSearchParams({ site: site.id, week: mondayOf(day) })}`}><CalendarDays aria-hidden="true" />Week</Link></Button> : null}
+          {site?.manage ? <ShiftDialog siteId={site.id} date={day} today={now} options={options} /> : null}
+        </div>
+      </div>
+      {!site ? (
+        <div className="module-empty"><CalendarDays aria-hidden="true" /><h2 className="font-semibold">No sites to show</h2><p className="mt-2 text-sm text-ui-muted-foreground">Your rota role does not cover a site yet.</p></div>
+      ) : (
+        <>
+          {data.sites.length > 1 ? (
+            <form method="get" className="flex items-center gap-2" aria-label="Choose a site">
+              <div className="w-full sm:w-60"><NativeSelect name="site" defaultValue={site.id} aria-label="Site">
+                {data.sites.map((s) => <NativeSelectOption key={s.id} value={s.id}>{s.name}</NativeSelectOption>)}
+              </NativeSelect></div>
+              <input type="hidden" name="date" value={day} />
+              <Button type="submit" variant="outline">Show</Button>
+            </form>
+          ) : null}
+          <section aria-label="The day as a timeline" className="overflow-x-auto rounded-[var(--pc-radius-panel)] border border-ui-border bg-ui-card">
+            <div className="min-w-[56rem]">
+              <div className="sticky top-0 z-10 grid grid-cols-[14rem_minmax(0,1fr)] border-b border-ui-border bg-[var(--pc-surface-sunken)] text-xs font-semibold text-ui-muted-foreground">
+                <div className="px-3 py-2">Who</div>
+                <div className="relative h-8" aria-hidden="true">
+                  {ticks.map((t, i) => i % 2 === 0 ? <span key={t} className="absolute top-2 -translate-x-1/2 first:translate-x-0 last:-translate-x-full tabular-nums" style={{ left: pos(t) }}>{clock(t)}</span> : null)}
+                </div>
+              </div>
+
+              {cover.length ? (
+                <Group title="Cover" note="Who is on each activity, and when nobody is">
+                  {cover.map((c) => (
+                    <Lane key={c.label} ticks={ticks} pos={pos} nowLine={nowLine} label={<><span className="block truncate font-medium">{c.label}</span><span className={cn("block text-xs", c.gaps.length ? "text-[var(--pc-danger)]" : "text-ui-muted-foreground")}>{c.gaps.length ? `${c.gaps.length} ${c.gaps.length === 1 ? "gap" : "gaps"}` : "Covered"}</span></>}>
+                      {c.spans.map((s, i) => <Bar key={i} style={box(s.start, s.end)} className={tone.get(c.label)} title={`${s.who} ${span(s.start, s.end)}`}>{s.who}</Bar>)}
+                      {c.gaps.map((g, i) => <Bar key={`g${i}`} style={box(g.start, g.end)} className="border border-dashed border-[var(--pc-danger)] bg-[var(--pc-danger-soft)] text-[var(--pc-danger)]" title={`Nobody ${span(g.start, g.end)}`}><TriangleAlert aria-hidden="true" className="size-3 shrink-0" />Nobody {span(g.start, g.end)}</Bar>)}
+                    </Lane>
+                  ))}
+                </Group>
+              ) : null}
+
+              {data.bookings.length ? (
+                <Group title="Bookings">
+                  {data.bookings.map((b) => {
+                    const short = b.filled < b.places;
+                    return (
+                      <Lane key={b.id} ticks={ticks} pos={pos} nowLine={nowLine} label={<><span className="block truncate font-medium">{b.title}</span><span className="block truncate text-xs text-ui-muted-foreground">{[span(b.startMinutes, b.endMinutes), BOOKING_KIND_META[b.kind as BookingKind]?.label, b.place].filter(Boolean).join(" · ")}</span></>}>
+                        <Link href={`/rota/bookings?site=${site.id}`} style={box(b.startMinutes, b.endMinutes)} aria-label={`${b.title}, ${span(b.startMinutes, b.endMinutes)}, ${b.filled} of ${b.places} staffed`}
+                          className={cn("absolute inset-y-1.5 flex items-center gap-1 overflow-hidden rounded-[var(--pc-radius-inner)] border px-1.5 text-xs font-semibold hover:border-[var(--pc-primary)]", short ? "border-[var(--pc-warning)] bg-[var(--pc-warning-soft)]" : "border-transparent bg-[var(--pc-aqua-soft)] text-[var(--pc-aqua-ink)]")}>
+                          {short ? <TriangleAlert aria-hidden="true" className="size-3 shrink-0 text-[var(--pc-warning)]" /> : <CalendarCheck aria-hidden="true" className="size-3 shrink-0" />}
+                          <span className="truncate">{b.places ? `${b.filled}/${b.places} staffed` : "No staff needed"}</span>
+                        </Link>
+                      </Lane>
+                    );
+                  })}
+                </Group>
+              ) : null}
+
+              <Group title="People" note={site.manage ? "Open a shift to plan its activities and breaks" : undefined}>
+                {rows.length === 0 ? <p className="px-3 py-6 text-sm text-ui-muted-foreground">Nobody is planned this day yet.</p> : rows.map((r) => (
+                  <Lane key={r.key} ticks={ticks} pos={pos} nowLine={nowLine} tall label={<PersonLabel row={r} edit={site.manage ? (s) => {
+                    const x = byId.get(s)!;
+                    return { id: x.id, date: x.date, startMinutes: x.startMinutes, endMinutes: x.endMinutes, role: x.role, note: x.note, userId: x.userId, requiredTypeId: x.requiredTypeId, departmentId: x.departmentId };
+                  } : null} siteId={site.id} day={day} now={now} options={options} />}>
+                    {r.shifts.map((s) => {
+                      const inner = (
+                        <>
+                          {s.segments.length === 0 ? <span className="relative truncate px-1.5">{s.part ?? s.role}</span> : null}
+                          {s.segments.map((g, i) => <Piece key={i} g={g} shift={s} tone={g.kind === "break" ? "rota-break text-ui-muted-foreground" : tone.get(g.label.trim()) ?? TONES[0]} />)}
+                        </>
+                      );
+                      const cls = cn("absolute top-1.5 h-7 overflow-hidden rounded-[var(--pc-radius-inner)] border p-0 text-left text-xs font-normal",
+                        s.absent ? "border-[var(--pc-danger)] bg-[var(--pc-danger-soft)]" : !r.name ? "border-dashed border-[var(--pc-warning)] bg-ui-card" : s.part ? "border-[var(--pc-primary)] bg-ui-card" : "border-ui-border bg-[var(--pc-surface-sunken)]");
+                      const label = `${r.name ?? "Unfilled"}, ${s.part ?? s.role}, ${span(s.start, s.end)}${s.segments.length ? `: ${s.segments.map((g) => `${span(g.start, g.end)} ${g.label}`).join(", ")}` : ""}${s.absent ? ", absent" : ""}`;
+                      return site.manage && s.editable
+                        ? <SegmentsDialog key={s.id} activities={data.activities} shift={{ id: s.id, start: s.start, end: s.end, role: s.part ?? s.role, who: r.name, segments: s.segments }}
+                            trigger={{ label: `Plan ${label}`, className: cn(cls, "flex items-stretch justify-start hover:border-[var(--pc-primary)]"), style: box(s.start, s.end), children: inner }} />
+                        : <div key={s.id} aria-label={label} className={cn(cls, "flex items-stretch")} style={box(s.start, s.end)}>{inner}</div>;
+                    })}
+                    {r.teaching.map((t, i) => <TeachMark key={`t${i}`} t={t} style={box(t.start, t.end)} />)}
+                  </Lane>
+                ))}
+              </Group>
+
+              {teachingOnly.length || untaught.length ? (
+                <Group title="Swim school" note="Instructors with classes and no duty this day. Classes and cover are set in the Swim school">
+                  {[...teachingOnly.map((id) => ({ key: id, name: data.teachers[id] ?? "Instructor", list: data.classes.filter((c) => c.userId === id) })),
+                    ...(untaught.length ? [{ key: "none", name: null, list: untaught }] : [])].map((t) => (
+                    <Lane key={t.key} ticks={ticks} pos={pos} nowLine={nowLine} label={<><span className={cn("block truncate font-medium", !t.name && "text-[var(--pc-warning)]")}>{t.name ?? "No instructor"}</span><span className="block text-xs text-ui-muted-foreground">{t.list.length} {t.list.length === 1 ? "class" : "classes"}</span></>}>
+                      {t.list.map((c, i) => (
+                        <a key={i} href={c.href} style={box(c.startMinutes, c.endMinutes)} title={`${span(c.startMinutes, c.endMinutes)} ${c.label}`} aria-label={`${c.label}, ${span(c.startMinutes, c.endMinutes)}`}
+                          className={cn("absolute inset-y-1.5 flex items-center overflow-hidden rounded-[var(--pc-radius-inner)] border px-1 text-xs hover:border-[var(--pc-primary)]", t.name ? "border-transparent bg-[var(--pc-primary-soft)] text-[var(--pc-primary-ink)]" : "border-dashed border-[var(--pc-warning)] bg-[var(--pc-warning-soft)]")}>
+                          <span className="truncate">{c.label}</span>
+                        </a>
+                      ))}
+                    </Lane>
+                  ))}
+                </Group>
+              ) : null}
+            </div>
+          </section>
+          <Legend />
+          <section className="module-panel max-w-2xl">
+            {site.manage ? <DayNote siteId={site.id} date={day} text={data.note} label={LONG.format(at(day))} />
+              : <div className="space-y-1"><h2 className="text-sm font-semibold">Notes</h2><p className="text-sm whitespace-pre-line text-ui-muted-foreground">{data.note || "None."}</p></div>}
+          </section>
+        </>
+      )}
+    </div>
+  );
+}
+
+function Group({ title, note, children }: { title: string; note?: string; children: ReactNode }) {
+  return (
+    <div>
+      <div className="border-b border-ui-border px-3 pt-3 pb-1.5">
+        <h2 className="text-sm font-semibold text-[var(--pc-primary-ink)]">{title}</h2>
+        {note ? <p className="text-xs text-ui-muted-foreground">{note}</p> : null}
+      </div>
+      {children}
+    </div>
+  );
+}
+
+function Lane({ label, ticks, pos, nowLine, tall = false, children }: { label: ReactNode; ticks: number[]; pos: (m: number) => string; nowLine: string | null; tall?: boolean; children: ReactNode }) {
+  return (
+    <div className="grid grid-cols-[14rem_minmax(0,1fr)] border-b border-ui-border">
+      <div className="min-w-0 px-3 py-1.5 text-sm">{label}</div>
+      <div className={cn("relative", tall ? "min-h-12" : "min-h-10")}>
+        {ticks.map((t) => <span key={t} aria-hidden="true" className="absolute inset-y-0 w-px bg-ui-border/60" style={{ left: pos(t) }} />)}
+        {nowLine ? <span aria-hidden="true" className="absolute inset-y-0 z-[1] w-0.5 bg-[var(--pc-primary)]" style={{ left: nowLine }} /> : null}
+        {children}
+      </div>
+    </div>
+  );
+}
+
+function Bar({ style, className, title, children }: { style: CSSProperties; className?: string; title: string; children: ReactNode }) {
+  return <span title={title} className={cn("absolute inset-y-1.5 flex items-center gap-1 overflow-hidden rounded-[var(--pc-radius-inner)] px-1.5 text-xs font-medium whitespace-nowrap", className)} style={style}>{children}</span>;
+}
+
+/** One activity or break inside a shift's bar, placed by its share of the shift. */
+function Piece({ g, shift, tone }: { g: Segment; shift: { start: number; end: number }; tone: string }) {
+  const pct = (m: number) => `${(((m - shift.start) / (shift.end - shift.start)) * 100).toFixed(3)}%`;
+  return <span className={cn("absolute inset-y-0 flex items-center truncate border-r border-ui-card px-1 text-xs font-medium", tone)} style={{ left: pct(g.start), width: `calc(${pct(g.end)} - ${pct(g.start)})` }} title={`${span(g.start, g.end)} ${g.label}`}>{g.label}</span>;
+}
+
+/** A swim class they teach, as a thin mark under their shift. */
+function TeachMark({ t, style }: { t: Segment; style: CSSProperties }) {
+  return (
+    <a href={t.href} title={`Teaching ${span(t.start, t.end)} ${t.label}`} aria-label={`Teaching ${t.label}, ${span(t.start, t.end)}`}
+      className="absolute bottom-0.5 flex h-2 items-center rounded-full bg-[var(--pc-primary)] hover:h-3" style={style}>
+      <GraduationCap aria-hidden="true" className="sr-only" />
+    </a>
+  );
+}
+
+function PersonLabel({ row, edit, siteId, day, now, options }: {
+  row: PersonRow; edit: ((id: string) => Parameters<typeof ShiftDialog>[0]["shift"]) | null; siteId: string; day: string; now: string;
+  options: Parameters<typeof ShiftDialog>[0]["options"];
+}) {
+  const first = row.shifts[0];
+  const warn = row.shifts.some((s) => s.warnings.length);
+  const absent = row.shifts.some((s) => s.absent);
+  return (
+    <div className="flex items-start gap-1">
+      <div className="min-w-0 flex-1">
+        <span className={cn("flex items-center gap-1 truncate font-medium", !row.name && "text-[var(--pc-warning)]", absent && "text-ui-muted-foreground line-through")}>
+          {absent ? <UserX aria-hidden="true" className="size-3.5 shrink-0 text-[var(--pc-danger)]" /> : warn ? <TriangleAlert aria-hidden="true" className="size-3.5 shrink-0 text-[var(--pc-warning)]" /> : null}
+          <span className="truncate">{row.name ?? "Unfilled"}</span>
+        </span>
+        <span className="block truncate text-xs text-ui-muted-foreground">{row.roles} · {hours(row.minutes)}h{row.breaks ? `, ${row.breaks}m break` : ""}</span>
+      </div>
+      {edit && first.editable ? (
+        <ShiftDialog siteId={siteId} date={day} today={now} shift={edit(first.id)} options={options}
+          trigger={{ label: `Change ${row.name ?? "the unfilled"} ${first.role} duty`, variant: "ghost", className: "size-8 min-h-8 p-0 pointer-coarse:size-11", children: <Pencil aria-hidden="true" className="size-3.5" /> }} />
+      ) : null}
+    </div>
+  );
+}
+
+function Legend() {
+  return (
+    <ul className="flex flex-wrap items-center gap-x-4 gap-y-2 text-xs text-ui-muted-foreground" aria-label="Key">
+      <li className="flex items-center gap-1.5"><span aria-hidden="true" className="h-3 w-5 rounded-sm border border-ui-border bg-[var(--pc-surface-sunken)]" />Shift, nothing planned inside</li>
+      <li className="flex items-center gap-1.5"><span aria-hidden="true" className="h-3 w-5 rounded-sm bg-[var(--pc-primary-soft)]" />Activity</li>
+      <li className="flex items-center gap-1.5"><span aria-hidden="true" className="rota-break h-3 w-5 rounded-sm border border-ui-border" />Break</li>
+      <li className="flex items-center gap-1.5"><span aria-hidden="true" className="h-1.5 w-5 rounded-full bg-[var(--pc-primary)]" />Teaching a swim class</li>
+      <li className="flex items-center gap-1.5"><span aria-hidden="true" className="h-3 w-5 rounded-sm border border-[var(--pc-primary)]" />Place on a booking</li>
+      <li className="flex items-center gap-1.5"><TriangleAlert aria-hidden="true" className="size-3.5 text-[var(--pc-danger)]" />Nobody on an activity</li>
+    </ul>
+  );
+}

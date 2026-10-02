@@ -389,6 +389,7 @@ model Club {
   departments        Department[]
   rotaShifts         RotaShift[]
   rotaBookings       RotaBooking[]
+  rotaDayNotes       RotaDayNote[]
   rotaDepartments    RotaDepartment[]
 
   @@index([sortOrder])

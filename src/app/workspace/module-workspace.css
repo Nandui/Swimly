@@ -77,3 +77,6 @@
 .turnfin-module .module-panel li + li { border-top: 1px solid var(--pc-line); }
 /* Ghost buttons inside a panel list read as inline actions: their label lines up with the text. */
 .turnfin-module .module-panel li > button[data-variant='ghost'] { margin-inline-start: calc(var(--pc-control-pad) * -1); }
+
+/* Rota: a break inside a shift on the day timeline, hatched so it reads without colour. */
+.turnfin-module .rota-break { background: repeating-linear-gradient(135deg, var(--pc-neutral-soft) 0 6px, var(--pc-surface) 6px 12px); }

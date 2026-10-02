@@ -198,6 +198,7 @@ model RotaShift {
   booking      RotaBooking?       @relation(fields: [bookingId], references: [id], onDelete: SetNull)
   bookingNeed  RotaBookingNeed?   @relation(fields: [bookingNeedId], references: [id], onDelete: SetNull)
   changes      RotaShiftChange[]
+  segments     RotaShiftSegment[]
 
   @@index([siteId, date])
   @@index([userId, date])
@@ -451,4 +452,42 @@ model RotaAbsenceUpdate {
   absence RotaAbsence @relation(fields: [absenceId], references: [id], onDelete: Cascade)
 
   @@index([absenceId, createdAt])
+}
+
+/// What someone does during a stretch of their shift (owner request, October
+/// 2026: "assigning their activity during a shift and all the breaks"): an
+/// activity such as "25m pool lifeguard" or "Reception", or a break. Inside the
+/// shift's times, never overlapping each other. Time with no segment is just
+/// the shift's own duty.
+model RotaShiftSegment {
+  id           String   @id @default(cuid())
+  shiftId      String
+  startMinutes Int
+  endMinutes   Int
+  /// "activity" or "break" (`SEGMENT_KIND_META`).
+  kind         String
+  /// The activity, e.g. "25m pool lifeguard"; "Break" for a break.
+  label        String
+  createdAt    DateTime @default(now())
+
+  shift RotaShift @relation(fields: [shiftId], references: [id], onDelete: Cascade)
+
+  @@index([shiftId])
+}
+
+/// The day's note on the plan, e.g. a last day, or who covers whom and why.
+/// One per site per day; empty text removes it.
+model RotaDayNote {
+  id        String   @id @default(cuid())
+  orgId     String
+  siteId    String
+  date      DateTime @db.Date
+  text      String
+  byId      String?
+  byName    String
+  updatedAt DateTime @updatedAt
+
+  site Club @relation(fields: [siteId], references: [id], onDelete: Cascade)
+
+  @@unique([siteId, date])
 }
