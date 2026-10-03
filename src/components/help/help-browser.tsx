@@ -41,15 +41,15 @@ export function HelpBrowser({ articles, scope }: { articles: HelpSummary[]; scop
   }
 
   const topicButtons = <>
-    <Button variant="ghost" onClick={() => change({ topic: "all" })} aria-pressed={filters.topic === "all"} className={cn("min-h-11 w-full justify-between whitespace-normal text-left", filters.topic === "all" && "bg-ui-accent text-ui-accent-foreground")}>
+    <Button variant="ghost" onClick={() => change({ topic: "all" })} aria-pressed={filters.topic === "all"} className={cn("min-h-11 w-full justify-between whitespace-normal text-left", filters.topic === "all" ? "bg-ui-accent text-ui-accent-foreground" : "text-ui-foreground")}>
       All topics<span className="text-xs tabular-nums">{articles.length}</span>
     </Button>
-    {categories.map(category => <Button key={category.id} variant="ghost" onClick={() => change({ topic: category.id })} aria-pressed={filters.topic === category.id} className={cn("min-h-11 w-full justify-between gap-2 whitespace-normal text-left", filters.topic === category.id && "bg-ui-accent text-ui-accent-foreground")}>
+    {categories.map(category => <Button key={category.id} variant="ghost" onClick={() => change({ topic: category.id })} aria-pressed={filters.topic === category.id} className={cn("min-h-11 w-full justify-between gap-2 whitespace-normal text-left", filters.topic === category.id ? "bg-ui-accent text-ui-accent-foreground" : "text-ui-foreground")}>
       {category.title}<span className="text-xs tabular-nums">{articles.filter(article => article.category === category.id).length}</span>
     </Button>)}
   </>;
 
-  return <div className="space-y-8">
+  return <div className="space-y-6">
     <section aria-labelledby="help-title" className="space-y-4">
       <div className="space-y-2"><h1 id="help-title" className="text-2xl font-semibold">{scope === "instructor" ? "Help for your teaching day" : "What would you like to do?"}</h1><p className="max-w-2xl leading-relaxed text-ui-muted-foreground">{scope === "instructor" ? "Practical guides for starting a class, taking attendance and recording progress." : "Find a quick answer or follow a guide, from adding a swimmer to running the day’s classes."}</p></div>
       <form role="search" aria-label="Search the help centre" onSubmit={event => { event.preventDefault(); input.current?.focus(); }} className="max-w-2xl">
@@ -60,24 +60,24 @@ export function HelpBrowser({ articles, scope }: { articles: HelpSummary[]; scop
       </form>
     </section>
 
-    <div className="flex flex-col gap-6 md:flex-row lg:gap-10">
+    <div className="flex flex-col gap-4 md:flex-row">
       <aside className="shrink-0 md:w-56 print:hidden">
-        <nav aria-label="Help topics" className="hidden space-y-1 md:block"><h2 className="mb-3 px-4 text-sm font-semibold">Browse by topic</h2>{topicButtons}</nav>
-        <Collapsible className="rounded-ui-lg border border-ui-border md:hidden">
-          <CollapsibleTrigger asChild><Button variant="ghost" className="group h-auto min-h-11 w-full justify-between gap-3 rounded-ui-lg px-4 py-3 text-left whitespace-normal"><span>Browse by topic · {selectedCategory?.title ?? "All topics"}</span><ChevronDown aria-hidden="true" className="size-4 shrink-0 group-data-[state=open]:rotate-180" /></Button></CollapsibleTrigger>
+        <nav aria-label="Help topics" className="pc-panel hidden gap-1 p-4 md:flex"><h2 className="mb-2 px-4 text-sm font-semibold">Browse by topic</h2>{topicButtons}</nav>
+        <Collapsible className="rounded-ui-xl bg-ui-card md:hidden">
+          <CollapsibleTrigger asChild><Button variant="ghost" className="group h-auto min-h-11 w-full justify-between gap-3 rounded-ui-xl px-4 py-3 text-left whitespace-normal"><span>Browse by topic · {selectedCategory?.title ?? "All topics"}</span><ChevronDown aria-hidden="true" className="size-4 shrink-0 group-data-[state=open]:rotate-180" /></Button></CollapsibleTrigger>
           <CollapsibleContent><nav aria-label="Help topics" className="space-y-1 border-t border-ui-border p-2">{topicButtons}</nav></CollapsibleContent>
         </Collapsible>
       </aside>
-      <div className="min-w-0 flex-1 space-y-8">
-        {!searching && filters.topic === "all" ? <section aria-labelledby="common-tasks" className="rounded-ui-lg bg-ui-muted/50 p-4 lg:p-6">
-          <h2 id="common-tasks" className="text-xl font-semibold">Common tasks</h2>
-          <ul className="mt-3 grid gap-x-6 sm:grid-cols-2">{common.map(article => <li key={article.slug}><Link href={helpHref(scope, article.slug)} className="group flex min-h-11 items-center justify-between gap-3 py-3 font-medium text-ui-primary underline-offset-4 hover:underline"><span>{article.title}</span><ArrowRight aria-hidden="true" className="size-4 shrink-0" /></Link></li>)}</ul>
+      <div className="min-w-0 flex-1 space-y-4">
+        {!searching && filters.topic === "all" ? <section aria-labelledby="common-tasks" className="pc-panel">
+          <h2 id="common-tasks" className="text-lg font-semibold">Common tasks</h2>
+          <ul className="grid gap-x-6 sm:grid-cols-2">{common.map(article => <li key={article.slug}><Link href={helpHref(scope, article.slug)} className="group flex min-h-11 items-center justify-between gap-3 py-3 font-medium text-ui-primary underline-offset-4 hover:underline"><span>{article.title}</span><ArrowRight aria-hidden="true" className="size-4 shrink-0" /></Link></li>)}</ul>
         </section> : null}
-        <section aria-labelledby="results-heading" className="space-y-4">
-          <div className="flex flex-wrap items-baseline justify-between gap-2"><h2 id="results-heading" className="text-xl font-semibold">{searching ? "Search results" : selectedCategory?.title ?? "All guides"}</h2><p role="status" aria-live="polite" aria-atomic="true" className="text-xs text-ui-muted-foreground">{results.length} {results.length === 1 ? "guide" : "guides"}{searching ? " found" : ""}</p></div>
+        <section aria-labelledby="results-heading" className="pc-panel">
+          <div className="flex flex-wrap items-baseline justify-between gap-2"><h2 id="results-heading" className="text-lg font-semibold">{searching ? "Search results" : selectedCategory?.title ?? "All guides"}</h2><p role="status" aria-live="polite" aria-atomic="true" className="text-xs text-ui-muted-foreground">{results.length} {results.length === 1 ? "guide" : "guides"}{searching ? " found" : ""}</p></div>
           {selectedCategory ? <p className="text-ui-muted-foreground">{selectedCategory.description}</p> : null}
-          {results.length ? <ul className="divide-y divide-ui-border border-y border-ui-border">{results.map(article => <li key={article.slug}>
-            <Item asChild className="min-h-11 flex-nowrap items-start gap-3 px-2 py-5"><Link href={helpHref(scope, article.slug, filters)} className="group">
+          {results.length ? <ul className="flex flex-col gap-2">{results.map(article => <li key={article.slug}>
+            <Item asChild className="min-h-16 flex-nowrap items-start gap-3 rounded-ui-lg border border-ui-border px-4 py-3 hover:bg-ui-muted"><Link href={helpHref(scope, article.slug, filters)} className="group">
               <BookOpen aria-hidden="true" className="mt-1 hidden size-5 shrink-0 text-ui-muted-foreground sm:block" />
               <div className="min-w-0 flex-1 space-y-1"><h3 className="font-semibold text-ui-foreground group-hover:text-ui-primary">{article.title}</h3><p className="leading-relaxed text-ui-muted-foreground">{article.summary}</p><p className="pt-1 text-xs text-ui-muted-foreground">{HELP_CATEGORIES.find(category => category.id === article.category)?.title} · {article.minutes} min read</p></div>
               <ArrowRight aria-hidden="true" className="mt-1 size-4 shrink-0 text-ui-muted-foreground" />

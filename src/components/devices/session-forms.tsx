@@ -6,32 +6,22 @@ import { useRouter } from "next/navigation";
 import { signIn, signOut } from "next-auth/react";
 import { Delete, UserRound } from "lucide-react";
 import { Button } from "@/components/shadcn/button";
-import { Card } from "@/components/shadcn/card";
-import { AppLogo } from "@/components/app-logo";
+import { AuthFrame } from "@/components/auth-frame";
 import { Notice } from "@/components/ui-kit/notice";
 import { Input } from "@/components/ui/input";
 import { LoadingButton } from "@/components/ui/loading-button";
-import { APP_NAME } from "@/lib/app";
 import { SHARED_IDLE_MINUTES } from "@/lib/devices/constants";
 import { removeOwnPin, setOwnPin } from "@/lib/devices/actions";
 import { toast } from "sonner";
 
 function Frame({ title, children }: { title: string; children: React.ReactNode }) {
   return (
-    <div className="min-w-0 flex min-h-svh items-center justify-center p-4">
-      <Card className="w-full max-w-sm p-6">
-        <div className="min-w-0 flex flex-col gap-5">
-          <div className="min-w-0 flex flex-col gap-1">
-            <div className="min-w-0 flex gap-2 items-center">
-              <AppLogo />
-              <span className="text-sm text-ui-foreground font-semibold">{APP_NAME}</span>
-            </div>
-            <h1 className="text-2xl font-semibold tracking-tight">{title}</h1>
-          </div>
-          {children}
-        </div>
-      </Card>
-    </div>
+    <AuthFrame>
+      <div className="min-w-0 flex flex-col gap-5">
+        <h1 className="text-2xl font-semibold">{title}</h1>
+        {children}
+      </div>
+    </AuthFrame>
   );
 }
 
