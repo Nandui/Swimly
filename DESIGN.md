@@ -1,17 +1,17 @@
 # Swimly — design and implementation
 
 The staff app uses **shadcn/ui** and a cookie-backed light/dark/system appearance
-preference. **The whole app uses the Poolside Clear design** (owner decision, 27 September
-2026): Plus Jakarta Sans, the fin's teal and aqua, a cool canvas with white panels and a
-pool-night dark mode. Its tokens and system rules (type scale, controls, fields, badges,
-alerts, dialogs, focus) live in `src/app/docs/poolside.css`, scoped to `.turnfin-app`,
-which the root layout puts on `<body>`; the root layout also loads the typeface. The swim school,
-the pool deck, the home page, Docs, Refunds, Training, HR, Rota and Admin all
-follow it, and all but the pool deck share one frame, `ModuleShell`. Rules for the Docs/Refunds shell and their pages stay scoped to `.turnfin-docs`.
-Earlier mentions below of Figtree, "Neutral surfaces" or the Reception Portal's Inter theme
-describe the retired look; the Poolside tokens now drive those same components. Components live in
-`src/components/shadcn`. The owner approved the full conversion on 13 September
-2026; no screen, form adapter or shared provider depends on another UI system.
+preference. **The whole app uses Poolside Clear v2** (owner decisions, 27 September and
+3 October 2026): Plus Jakarta Sans, the fin logo's blue for actions, selection and focus, a
+cool canvas inside a rounded frame, white borderless panels of separate rounded rows, pill
+controls, and a deep pool-night dark mode. Its tokens and system rules live in
+`src/app/docs/poolside.css`, scoped to `.turnfin-app`, which the root layout puts on `<body>`;
+the root layout also loads the typeface. The earlier Docs theme (`brand.css`) is retired:
+no other stylesheet defines theme tokens. The swim school, the home page, Docs, Refunds,
+Training, HR, Rota and Admin share one frame, `ModuleShell`; the pool deck, Help and the
+sign-in pages use the same top bar parts (`tf-*` classes) without the module bar. Earlier
+mentions below of Figtree, "Neutral surfaces", sidebars or the Reception Portal's Inter
+theme describe the retired look. Components live in `src/components/shadcn`.
 
 ## Design rules
 
@@ -24,16 +24,14 @@ describe the retired look; the Poolside tokens now drive those same components. 
   components from the CLI must use this namespace and `@/lib/utils` for `cn`.
 - Status labels use Badge or the shared Tag composition, with `data-tone`
   selected by a domain metadata map. Do not choose status colours at a call site.
-- One H1 per page. The Poolside type scale (`--pc-text-*`, 29 September 2026) is
-  22px page titles, 16px section titles, 14px body, 12px captions and metadata,
-  and 28px figures; Tailwind's `text-xs` to `text-3xl` map onto it. Controls are
-  `--pc-control-height`: 38px on a desktop with a mouse, 44px wherever a finger
-  may tap (phones, tablets, touch screens) and always on the pool deck. Fields
-  keep 16px text on touch so phones do not zoom on focus.
-- Default gaps are 16px within groups and 24px between major sections.
-  The shell owns a single content inset: 16px, increasing to 24px at viewport
-  widths of 1024px and above in the desk workspace. Instructor keeps 16px.
-  Do not add another page frame.
+- One H1 per page. The Poolside type scale (`--pc-text-*`) is 28px page titles (24px on
+  phones), 18px section titles, 14px body, 12px captions and metadata, and 28px figures;
+  Tailwind's `text-xs` to `text-3xl` map onto it. Every control is
+  `--pc-control-height` (44px) at every width. Fields keep 16px text on touch so phones do
+  not zoom on focus.
+- Default gaps are 16px between panels and 8px between rows in a panel; panels have a
+  24px inset. The frame owns the page inset (24px around the frame and inside it, none
+  on phones, where the frame becomes the page). Do not add another page frame.
 - Preserve labelled controls, visible focus, 44px touch targets, readable
   contrast, keyboard operation, reduced motion and wrapping at narrow widths.
 - Every mutation authorizes by a named permission, validates and guards before
@@ -77,86 +75,68 @@ labels crossfade, destination chevrons nudge and appearance icons transition.
 Buttons have a small press response. Reduced motion removes those movements
 while preserving immediate state feedback; do not introduce page-entry motion.
 
-The supplied app logo lives at `public/brand/app-logo.png`. `AppLogo` renders it
-through Next Image in the desk navigation, sign-in and pool-deck home control;
-the same asset supplies browser and touch icons. Preserve its transparency and
-colours in both themes, with accessible names supplied by adjacent text or links.
+The Turnfin fin (`public/brand/turnfin.png`) is the brand everywhere: the top-left of every
+frame, linking home, and above the sign-in panel. The older app logo
+(`public/brand/app-logo.png`, `AppLogo`) remains only for browser icons and the
+design-preview fixtures in `scripts/`.
 
-**The swim school desk uses the shared `ModuleShell`** (28 September 2026), like Refunds,
-Training, HR, Rota and Admin: the Turnfin brand, the working site and
-"Find swimmer" (the `tools` slot), then the desk pages in Daily work, Monitoring and Setup;
-the signed-in person under them (`AccountMenu`: a greeting over their name, opening Manage account and
-Sign out); "Back to Hub", Help, "View as" (dev builds) and Appearance in the footer; a breadcrumb topbar naming the working
-site; the phone sheet. Pages sit on the cool canvas; `src/app/(activities)/swim-school.css`
-puts tables, bare row lists and empty states on white panels and lets data pages fill the
-width. Together caps at 960px and programme details at 1152px (`pageWidthFor`). The old
-desk frame (`src/components/ui-kit/app-shell.tsx`) is used only by the design-preview
-fixtures in `scripts/`. The pool deck keeps its own tablet top bar, in Poolside Clear with
-the Turnfin brand (`src/components/workspace/brand.tsx`), the canvas and white panels.
+**The frame** (`ModuleShell`, DESIGN v2, 3 October 2026): on the outer canvas, one rounded
+frame holds a top row (the fin; the module's pages as a pill bar, the current page filled
+blue; and a tools bar on the right with module tools such as the working site and search,
+"View as" in dev builds, and the account menu, which holds Appearance, Manage account, Help
+and Sign out), then the person's modules as an icon rail down the left (each names itself on
+hover and keyboard focus) beside the page. Page links that do not fit go under "More" at
+three widths (`BAR_FITS`: from 1100px, from 768px and on phones), so no link scrolls out of
+sight. From 768px to 1099px the page bar takes its own row. On phones and touch screens the
+rail becomes a labelled bottom bar (Home, three modules with the current one always shown,
+More). The pool deck keeps its own top bar (fin, Classes and Swimmers, site, help and its
+own menu) and no module bar; see docs/instructor.md.
 
 ## Screens
 
-Docs at `/docs` uses the **Poolside Clear** design (September 2026), shared with
-Refunds: Plus Jakarta Sans, the fin logo's deep teal for actions and selection,
-an aqua focus halo, a cool canvas with white 16px panels, a white sidebar in
-light mode that becomes a deep pool-teal island in dark mode (light text, aqua
-marker and New button), and a pool-night dark mode. The theme lives in `src/app/docs/poolside.css`, scoped to
-`.turnfin-docs` (and `.turnfin-refunds`), and re-points the shared `--ui-*` tokens
-and the Docs layout adapter; the imported Docs sidebar, reading and authoring
-layouts in `docs.css` are unchanged. Labels are sentence case, never capitals.
-Controls use the shared shadcn primitives, which pick up Poolside Clear everywhere through
-`.turnfin-app`. See [Docs integration](docs/turnfin-docs.md).
+Docs at `/docs` is in the shared frame: Overview (titled Docs, like every module),
+Document library, My work, and Reading reports and Administration for those who may open
+them, with a search shortcut in the tools. The Docs reading and authoring layouts in
+`docs.css` keep their structure under the v2 tokens; the editor toolbar wraps rather than
+scrolling sideways. See [Docs integration](docs/turnfin-docs.md).
 
 **The home page** (`/`, owner decision 28 September 2026) is the role's workspace: the role's
-home name as the H1, with the date, role and working site on one line beneath (no label above the
-heading). Then **quick actions** (outline buttons with an icon, e.g. Add a swimmer, Log a refund
-request, Report an absence), and two columns from 1024px: the day's work on the left, **Today at
-<site>** (figure tiles in rows without gaps: two or three side by side, four as two by two; an
-instructor's own classes with the next three take a full row) and **Waiting for you** (one panel of
-rows, each queue with its count, needing-you first with a "Needs you" tag from `HOME_ITEM_META`,
-empty queues muted, "All clear" when nothing needs them); on the right **Your modules** (one panel
-of rows, each with how many things need the person there) and the Turnfin Me note. On a phone it
-is one column in that order. Each module supplies its items (`registerHomeCard`); an item's `kind`
-(`action`, `today`) or `count` decides its section, and the shared pieces live in
-`src/components/home/home-parts.tsx`. Keep it to the everyday jobs and to figures the person may
-already see.
+home name as the H1, with the date, role and working site beneath and a "things need you"
+tag. Then **Classes today**, a timeline of the day's sessions by pool area (half-hour
+columns, a line at the current time; each session a block whose state comes from
+`HOME_SESSION_META` with a label and icon, so colour is never the only signal; on phones a
+short "On now and next" list instead), then **Waiting for you** (needing-you rows first,
+the first one highlighted), **Today at <site>** (figure tiles) and **Quick actions**, with the
+Turnfin Me note. Each module supplies its items (`registerHomeCard`); an item's `kind`
+(`action`, `today`, `timeline`) or `count` decides its section, and the shared pieces live
+in `src/components/home/home-parts.tsx`. Keep it to the everyday jobs and to figures the
+person may already see.
 
 **A module's first page is its overview** (`ModuleOverview`, 29 September 2026) where the module
 has no natural one: Swim school (`/swim-school`), Rota (`/rota/overview`) and Admin (`/core`).
 The module's name and one line as the H1, its quick actions, Today, Waiting for you (the same
 items it gives the home page, so the two agree), and **Everything in <module>**: one panel of its
 pages as grouped rows (icon, name, one line on what it is for), two columns when wide. "Overview"
-is the first link in the module's sidebar and the brand leads there. Pool deck opens on the deck,
+is the first link in the module's page bar. Pool deck opens on the deck,
 Docs and Training on their own overviews, Refunds on its requests with their summary, HR on its
 people search. The module
 launcher (`/modules`) and the Reception Portal are retired and redirect to `/`; every shell's
 "All modules" link is now "Home". The supplied transparent Turnfin fin logo lives at
 `public/brand/turnfin.png`.
 
-Refunds at `/refunds` uses the **Poolside Clear** design (September 2026): Plus
-Jakarta Sans, the fin logo's deep teal (`--pc-primary`) with an aqua focus halo,
-a cool canvas with white 16px-radius panels, and a deep pool-night dark mode.
-Its theme is the shared `src/app/docs/poolside.css` (see Docs above), including
-dialogs, select popovers and the mobile sheet; `src/app/refunds/refunds.css` only
-arranges the Refunds screens. It still reuses the Docs shell layout, brand and appearance
-controls, with an independent Refunds sidebar, mobile sheet, collapse preference
-and breadcrumb. Statuses use `RefundStatusTag`, which pairs each label with its own
-icon so colour is never the only signal. The shell owns the only
-main landmark, page inset and page scroll. `.turnfin-refunds` scopes its layouts.
-Summary figures sit in separate tiles, followed by labelled filters and responsive
-linked rows; both sites are shown by default. White panels group filters and request
-sections against the canvas, and the next-action panel carries a teal edge. A request separates requested/approved/payment
-totals from customer facts and the next-action panel. On phones all content
-stacks; history uses shadcn Collapsible controls. Finance decisions use shadcn
-Dialogs with 44px controls, focus restoration and preserved values after errors.
-Forms retain native FormData and labelled inputs. Status colours come only from
-Refunds metadata. Draft privacy and permissions change available controls, never
-the workspace boundary. See [docs/refunds.md](docs/refunds.md).
+Refunds at `/refunds` is in the shared frame with three request views in the page bar
+(Refund requests, My requests, My drafts). The summary tiles are the follow-up queues
+(Awaiting review, Needs information, Awaiting payment, Refunded): each links to its status
+and is outlined in blue when it is the open filter, so each status has one way in. Filters
+sit in a white panel; requests are separate rounded rows. On a request, the next-action
+panel is the one panel with an edge (2px blue). Statuses use `RefundStatusTag`, which pairs
+each label with its own icon. Finance decisions use shadcn Dialogs with 44px controls,
+focus restoration and preserved values after errors. `src/app/refunds/refunds.css` only
+arranges the Refunds screens. See [docs/refunds.md](docs/refunds.md).
 
 Training (`/training`), HR (`/hr`) and Rota (`/rota`) are people- and site-scoped workspaces
-built on one shell, `ModuleShell` (`src/components/workspace/module-shell.tsx`): the
-shared Poolside Clear theme and the Docs shell layout with the module's own sidebar, mobile
-sheet, collapse preference and breadcrumb. `src/app/workspace/module-workspace.css`
+built on the shared frame, `ModuleShell` (`src/components/workspace/module-shell.tsx`), each
+with its own page bar. `src/app/workspace/module-workspace.css`
 (scoped by `.turnfin-module`, with `module-*` classes) only arranges their screens; a new
 module reuses it rather than copying a stylesheet. Their form dialogs pass `portalClassName="turnfin-docs turnfin-module"` to `FormDialog`
 so they keep the theme, and selects inside them are shadcn `NativeSelect`. Statuses use
@@ -168,71 +148,64 @@ semantic elements; status tones come from `apps/me/src/lib/meta.ts`, each with a
 [docs/staff-app.md](docs/staff-app.md),
 [docs/training.md](docs/training.md), [docs/hr.md](docs/hr.md) and [docs/rota.md](docs/rota.md).
 
-### Poolside Clear system rules (Docs and Refunds)
+### Poolside Clear v2 system rules
 
-These rules came out of the September 2026 audit of every Docs and Refunds screen
-and apply to any module that adopts Poolside Clear. Tokens live in
-`src/app/docs/poolside.css`; never write a literal size, radius or control height.
+These rules apply to every screen. Tokens live in `src/app/docs/poolside.css`; never write
+a literal size, radius, colour or control height.
 
 **Type.** Five sizes, each with a matching `--pc-leading-*` line height:
 
 | Token | Size | Use |
 | --- | --- | --- |
-| `--pc-text-caption` | 13px | Metadata, hints, table headers, badges, breadcrumbs, counts |
-| `--pc-text-body` | 15px | Body, controls, field labels, list and table row titles |
+| `--pc-text-caption` | 12px | Metadata, hints, table headers, tags, counts |
+| `--pc-text-body` | 14px | Body, controls, field labels, row titles |
 | `--pc-text-title` | 18px | Panel, section and dialog titles |
-| `--pc-text-page` | 24px | The single H1 |
-| `--pc-text-figure` | 32px | Summary figures (24px on phones) |
+| `--pc-text-page` | 28px (24px on phones) | The single H1 |
+| `--pc-text-figure` | 28px (24px on phones) | Summary figures |
 
 - In markup use Tailwind's `text-xs`, `text-sm`, `text-lg` and `text-2xl`; inside the
-  scope they resolve to caption, body, title and page. Never use `text-[…]`.
-- Line height comes from the size token. Do not add `leading-*` utilities.
-- Weights: 400 body; 500 sidebar navigation only; 600 labels, buttons, row titles,
-  subheadings (H3) and section titles; 700 the H1 and figures. Nothing above 700.
-- Sibling panels use the same heading size; a card title is never smaller than its
-  description.
-- Labels are sentence case with no letter-spacing; no numbered 01/02 indices.
+  scope they resolve to caption, body, title and page. Never use `text-[…]` or
+  `leading-*`.
+- Weights: 400 body; 600 labels, buttons, row titles, section titles and the H1; 700
+  figures. No letter-spacing; labels are sentence case.
+
+**Colour.** `--pc-primary` (blue) marks actions, the current page and selection; focus is a
+blue ring with a soft halo. Status colour comes only from domain metadata maps, always with
+an icon. Session blocks use `--pc-block-*` with their `--pc-on-block-*` text colour. The
+first row needing someone (`[data-first]`) is yellow; empty queues are muted. Every
+text/control pair meets 4.5:1 (text) or 3:1 (edges, focus) in both modes.
+
+**Shape.** Controls, bar items, tags and segmented filters are pills (`--pc-radius-control`,
+999px). Rows, tiles and nested cards are 16px (`--pc-radius-card`); panels and dialogs 24px
+(`--pc-radius-panel`). Panels have no border and no shadow; rows inside them have a 1px
+line. Multi-line boxes (textareas, notices) use 16px, never a pill.
 
 **Controls.**
-- Every shared Button is `--pc-control-height` (44px) with `--pc-radius-control`
-  (12px), a `--pc-control-pad` (16px) inset and 15px/600 labels. Icon buttons are
-  44px squares. Menu and popover triggers count: style Buttons through
-  `.ui-motion-press` as well as `data-slot='button'`, because Radix `asChild`
-  triggers replace the Button's `data-slot`.
-- Fields (input, textarea, select, native select) are 44px, 15px/400 (16px below
-  768px so iOS does not zoom), 12px radius. Field labels and fieldset legends are
-  15px/600; hints are caption. Checkbox and radio labels are body weight, aligned to
-  the top of wrapped text, and the whole row is the 44px target.
-- Radii: `--pc-radius-panel` (16px) for panels, tiles and dialogs;
-  `--pc-radius-control` (12px) for controls; `--pc-radius-inner` (8px) for controls
-  nested inside another control (editor toolbar, segmented tabs, menu items).
+- Every shared Button and field is 44px with a 16px inset and 14px/600 labels (fields
+  400). Icon buttons are 44px. Style menu and popover triggers through `.ui-motion-press`
+  and `[data-slot='dropdown-menu-trigger']` as well as `data-slot='button'`, because Radix
+  `asChild` triggers replace the Button's `data-slot`.
+- Bar items draw a 36px pill inside a 44px hit area (`.tf-bar-item::before`).
+- Filters between a few views of one list are `SegmentedLinks`
+  (`src/components/ui-kit/segmented-links.tsx`): pill links with optional counts and
+  `aria-current`.
 
 **Layout.**
-- List and table rows: the item name is the primary line at body/600; reference,
-  dates and owner sit on a caption line beneath. Table cells are body size with a
-  14px × 16px inset; headers are caption/600, muted, never capitals.
-- Summary tiles share one panel style whether or not they filter; clickable tiles
-  show a teal edge on hover and a soft fill when active. Figures sit at the bottom
-  of the tile so a row lines up when a label wraps.
-- Side-column actions stack full width, primary action first, and wrap long labels
-  left-aligned rather than overflowing. In a full-width panel they form an
-  equal-width grid.
-- A ghost button that continues a block of text (for example "View recorded
-  details" in history) is pulled flush so its label aligns with the text.
-- Sidebar footer rows (All modules, Appearance, profile) are left-aligned when the
-  sidebar is expanded and centred icons when collapsed.
-- The topbar breadcrumb starts at the module (`Docs`, `Refunds`) and links back to
-  its overview; the current page is not a link.
-- Check every change at 375, 768, 1024 and 1280px in light and dark: no horizontal
-  scroll, no clipped labels, no control under 44px.
+- A list is a white panel of separate rounded rows (`.pc-panel` with `.pc-rows`, or a
+  shadcn `item-group` / table inside `.tf-main`, which the theme styles the same way). A
+  table that is a grid, like the booking sheet, opts out with `data-layout="grid"`.
+- Row: the name at body/600, a caption line beneath, counts and a chevron on the right.
+- Summary tiles: borderless white tiles, figure at the bottom so a row lines up when a
+  label wraps; a tile that filters shows a soft fill on hover and a blue edge when open.
+- Page header: H1 and one line on the left, actions on the right aligned to the bottom,
+  the primary action last.
+- Check every change at 375, 768, 1024 and 1280px in light and dark: no horizontal scroll,
+  no clipped labels, no control under 44px, no link hidden in a scrolling bar.
 
 **Cascade.** `docs.css` uses these tokens only. Its original layouts sit in
-`@layer components.legacy`, below the Docs redesign in `@layer components`, so the
-redesign wins wherever both set a property and utility classes in the markup win
-over the original layouts. `poolside.css` and module CSS stay unlayered on top. A
-rule that must beat a utility class on a shadcn primitive (for example a responsive
-`display: none` on a Label, or grid layout on a Label used as a card) belongs in
-`poolside.css`, not `docs.css`.
+`@layer components.legacy`, below the Docs redesign in `@layer components`. `poolside.css`
+and module CSS stay unlayered on top. A rule that must beat a utility class on a shadcn
+primitive belongs in `poolside.css`.
 
 Schedule keeps its booking sheet with sticky level labels and horizontal time scrolling.
 The sheet expands vertically within the workspace's single page scroll. Phones
@@ -317,8 +290,8 @@ These controls remain in the desk workspace. See [staff parent controls](docs/pa
 ## Forms, search and confirmation
 
 The authenticated help centre owns a separate document frame at `/help`, using
-the same typography and theme. The desk sidebar and phone toolbar open Help in
-a new tab. Instructor opens `/help/instructor`, with teaching-only guides and a
+the same theme and the v2 top bar (fin, appearance, the way back). The module rail and
+the account menu open Help in a new tab. Instructor opens `/help/instructor`, with teaching-only guides and a
 return to Classes. Search and topic navigation lead to full guides with numbered
 steps, troubleshooting and related tasks. Captioned screenshots beside the steps
 use synthetic records, fit the available width and open at full size in a new
@@ -398,12 +371,10 @@ always there. The keyholder guard keeps at least one active account holding
 
 **The home page is the only front door.** `/` is the role's home page; old
 `/start`, `/reception`, `/reception-portal` and `/modules` links redirect to it.
-**The sidebar shows one list at a time.** On the home page it lists the
-role's modules. Inside a module it shows only that module's pages, with a "Back to Hub" link (back arrow, styled like any page link that is not current) in the sidebar footer, above the Help and Appearance buttons; the signed-in person sits at the top of every sidebar, where Home used to be
-(`HomeButton` in `src/components/workspace/your-modules.tsx`); modules are
-reached from Home. Never list the modules and a
-module's pages together. The sidebar holds navigation only: no action buttons such as "New
-  document"; a module's main action sits in its page heading. The pool deck keeps its own tablet frame.
+**Two kinds of navigation, never mixed.** The module rail (bottom bar on phones and touch)
+lists Home and the person's modules (`useYourModules`); the page bar lists only the open
+module's pages. Both hold navigation only: no action buttons such as "New document"; a
+module's main action sits in its page heading. The pool deck keeps its own frame.
 
 Analytics lives in Monitoring as a separate shadcn dashboard. Its bento grid
 uses three headline totals, a larger programme/level breakdown, and supporting

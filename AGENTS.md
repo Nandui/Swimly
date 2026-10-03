@@ -57,8 +57,8 @@ live in [PRODUCT.md](PRODUCT.md). Read it before changing what a screen does;
 read the design files below before changing how it looks.
 
 The entire staff app uses shadcn/ui components from src/components/shadcn.
-The **whole app** uses the Poolside Clear design (Plus Jakarta Sans, the fin's teal and
-aqua; owner decision, 27 September 2026). Its tokens and system rules are in
+The **whole app** uses Poolside Clear v2 (Plus Jakarta Sans, the fin's blue, pill controls,
+white borderless panels of separate rows; owner decisions, 27 September and 3 October 2026). Its tokens and system rules are in
 `src/app/docs/poolside.css`, scoped to `.turnfin-app` on `<body>` by the root layout, so
 every page and portalled dialog follows it; Docs/Refunds shell rules stay on `.turnfin-docs`.
 Refunds adds `.turnfin-refunds`; the people-scoped workspaces (Training, HR, Rota) share
@@ -88,8 +88,9 @@ The core rules: ask for a named permission, never a role; every mutation
 writes an audit row; status tones come through metadata maps; and run the
 screen checklist in DESIGN.md before finishing. Preserve one H1, visible
 focus, 44px touch targets, both modes and layouts at 375, 768, 1024 and 1280.
-The shell owns the main landmark and page inset: 16px, increasing to 24px at
-1024px in the desk workspace. Instructor keeps 16px. Do not nest a page frame.
+The frame (`ModuleShell`) owns the main landmark and page inset: 24px around and inside
+the rounded frame, none on phones where the frame is the page. Instructor keeps 16px. Do
+not nest a page frame.
 
 A role holds **one level for each module** (`StaffRole.levels`), translated into named
 permissions by `src/lib/staff/levels.ts`; a screen is a menu entry opened by one permission. Pages and actions ask for a named
