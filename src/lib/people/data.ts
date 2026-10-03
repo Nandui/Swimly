@@ -41,7 +41,7 @@ export async function getPersonDetail(userId: string) {
   const person = await prisma.user.findFirst({
     where: { id: userId, orgId: session.user.orgId ?? undefined },
     select: {
-      id: true, name: true, email: true, isActive: true, jobTitle: true, startedOn: true, isSuperadmin: true,
+      id: true, name: true, email: true, isActive: true, jobTitle: true, startedOn: true, dateOfBirth: true, isSuperadmin: true,
       primaryClubId: true, managerId: true, siteIds: true,
       manager: { select: { id: true, name: true } },
       staffRole: { select: { id: true, name: true, levels: true, extras: true, permissions: true, screens: true, homeName: true } },
@@ -66,6 +66,7 @@ export async function getPersonDetail(userId: string) {
     primaryClub: person.primaryClubId ? { name: names.get(person.primaryClubId) ?? "Removed site" } : null,
     worksAt: person.siteIds.map((id) => ({ id, name: names.get(id) ?? "Removed site" })),
     startedOn: person.startedOn?.toISOString().slice(0, 10) ?? "",
+    dateOfBirth: person.dateOfBirth?.toISOString().slice(0, 10) ?? "",
     qualifications: person.qualifications.map((q) => ({
       id: q.id, name: q.type.name, reference: q.reference, note: q.note,
       issuedOn: q.issuedOn.toISOString().slice(0, 10), expiresOn: q.expiresOn?.toISOString().slice(0, 10) ?? "",

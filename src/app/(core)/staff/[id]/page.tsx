@@ -36,6 +36,7 @@ export default async function PersonPage({ params }: { params: Promise<{ id: str
   const facts: [string, React.ReactNode][] = [
     ["Job title", person.jobTitle || "Not set"],
     ["Started", person.startedOn ? formatDate(new Date(`${person.startedOn}T00:00:00Z`)) : "Not set"],
+    ["Date of birth", person.dateOfBirth ? formatDate(new Date(`${person.dateOfBirth}T00:00:00Z`)) : "Not set"],
     ["Main site", person.primaryClub?.name ?? "Not set"],
     ["Manager", person.manager ? <UiLink className="underline underline-offset-4" href={`/staff/${person.manager.id}`}>{person.manager.name}</UiLink> : "No manager"],
     ["Departments", person.departments.length ? person.departments.map((d) => d.department.name + (d.isPrimary && person.departments.length > 1 ? " (main)" : "")).join(", ") : "None"],

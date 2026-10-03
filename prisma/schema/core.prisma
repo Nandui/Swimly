@@ -105,6 +105,9 @@ model User {
   managerId     String?
   jobTitle      String?
   startedOn     DateTime? @db.Date
+  /// Optional, kept by staff managers on the Staff page. Rota reads only the
+  /// age band it gives on a day (under 16, 16 or 17) for under-18s' breaks.
+  dateOfBirth   DateTime? @db.Date
   primaryClubId String?
   /// The sites this person works at, where their Swim school, Training and
   /// Rota levels apply. Empty means every site (how everyone worked before).

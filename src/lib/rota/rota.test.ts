@@ -3,7 +3,7 @@ import { after, before, test } from "node:test";
 import { isolatedPrisma } from "@/test/pglite-prisma";
 import { serverModule } from "@/test/server-module";
 import { expandPermissions, type PermissionKey } from "@/lib/staff/permissions";
-import { PAID_BREAK, UNPAID_BREAK, absentOn, addDaysIso, bookingDates, breakEntitlement, describeEntitlement, followOn, isPaidBreak, mondayOf, needsFitNote, parseClock, returnStage, segmentProblem, shiftWarnings, suggestBreaks } from "./constants";
+import { PAID_BREAK, UNPAID_BREAK, absentOn, addDaysIso, bookingDates, breakEntitlement, describeEntitlement, followOn, isPaidBreak, mondayOf, needsFitNote, parseClock, returnStage, segmentProblem, shiftWarnings, suggestBreaks, youngBand } from "./constants";
 import { today } from "@/lib/format";
 import { buildPlan } from "./plan";
 
@@ -409,4 +409,19 @@ test("breaks by the house rule: entitlement by shift length, placed in free time
   // Planned full: the break cuts into the activity, which then shows a gap.
   const full = suggestBreaks({ startMinutes: 360, endMinutes: 660 }, [{ startMinutes: 360, endMinutes: 660, kind: "activity", label: "Reception" }]);
   assert.deepEqual(full.map((g) => [g.kind, g.startMinutes, g.endMinutes]), [["activity", 360, 510], ["break", 510, 525], ["activity", 525, 660]]);
+});
+
+test("under-18s: at least 30 minutes unpaid after 4.5 hours (16 and 17) or 4 hours (under 16)", () => {
+  assert.equal(youngBand(null, "2026-10-03"), null);
+  assert.equal(youngBand("2010-10-03", "2026-10-03"), "under18", "16 on their birthday");
+  assert.equal(youngBand("2010-10-04", "2026-10-03"), "under16", "15 the day before");
+  assert.equal(youngBand("2008-10-03", "2026-10-03"), null, "18: the standard rule");
+  const total = (m: number, young: "under16" | "under18" | null) => breakEntitlement(m, young).map((b) => `${b.minutes}${b.paid ? "p" : "u"}`).join(" ");
+  assert.equal(total(270, "under18"), "15u", "4.5 hours exactly: the standard break");
+  assert.equal(total(285, "under18"), "30u", "past 4.5 hours: extended to 30");
+  assert.equal(total(255, "under16"), "30u", "under 16, past 4 hours");
+  assert.equal(total(240, "under16"), "", "4 hours: none");
+  assert.equal(total(480, "under18"), "15p 30u 15p", "already 30 unpaid");
+  assert.equal(describeEntitlement(300, "under18"), "30 minutes: 30 unpaid, under-18 minimum included.");
+  assert.deepEqual(suggestBreaks({ startMinutes: 540, endMinutes: 840 }, [], "under18").map((g) => [g.label, g.endMinutes - g.startMinutes]), [[UNPAID_BREAK, 30]]);
 });

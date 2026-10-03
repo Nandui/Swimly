@@ -24,7 +24,7 @@ const icon = (Icon: typeof Plus) => <Icon aria-hidden={true} className="size-4 s
 // ---------------------------------------------------------------------------
 
 export function EditProfile({ person, sites, departments, people }: {
-  person: { id: string; name: string; jobTitle: string | null; startedOn: string; primaryClubId: string | null; managerId: string | null; departments: { departmentId: string; isPrimary: boolean }[] };
+  person: { id: string; name: string; jobTitle: string | null; startedOn: string; dateOfBirth: string; primaryClubId: string | null; managerId: string | null; departments: { departmentId: string; isPrimary: boolean }[] };
   sites: Option[];
   departments: Option[];
   people: { id: string; name: string; jobTitle: string | null }[];
@@ -44,7 +44,7 @@ export function EditProfile({ person, sites, departments, people }: {
       submitLabel="Save profile"
       successMessage="Profile updated"
       submit={(formData) => updateProfile(person.id, {
-        jobTitle: text(formData, "jobTitle"), startedOn: text(formData, "startedOn"),
+        jobTitle: text(formData, "jobTitle"), startedOn: text(formData, "startedOn"), dateOfBirth: text(formData, "dateOfBirth"),
         primaryClubId: text(formData, "primaryClubId"), managerId: text(formData, "managerId"),
         departmentIds: chosen, primaryDepartmentId: primary,
       })}
@@ -54,6 +54,9 @@ export function EditProfile({ person, sites, departments, people }: {
       </Field>
       <Field label="Started on" htmlFor="startedOn">
         <Input id="startedOn" name="startedOn" type="date" defaultValue={person.startedOn} />
+      </Field>
+      <Field label="Date of birth (optional)" htmlFor="dateOfBirth" hint="Only for staff under 18: the rota gives them their longer breaks. The rota never shows the date.">
+        <Input id="dateOfBirth" name="dateOfBirth" type="date" defaultValue={person.dateOfBirth} max={new Date().toISOString().slice(0, 10)} />
       </Field>
       <Field label="Main site" htmlFor="primaryClubId" hint="Where they are usually based. Staff who manage a site's training or rota cover the people based there.">
         <Select id="primaryClubId" name="primaryClubId" defaultValue={person.primaryClubId ?? ""} options={[{ value: "", label: "Not set" }, ...sites.map((s) => ({ value: s.id, label: s.name }))]} />

@@ -7,12 +7,14 @@ import { Input } from "@/components/shadcn/input";
 import { NativeSelect, NativeSelectOption } from "@/components/shadcn/native-select";
 import { FormDialog } from "@/components/form-dialog";
 import { saveSegments } from "@/lib/rota/actions";
-import { PAID_BREAK, SEGMENT_KIND_META, UNPAID_BREAK, clock, describeEntitlement, isPaidBreak, parseClock, segmentProblem, suggestBreaks, type SegmentKind } from "@/lib/rota/constants";
+import { PAID_BREAK, SEGMENT_KIND_META, UNPAID_BREAK, clock, describeEntitlement, isPaidBreak, parseClock, segmentProblem, suggestBreaks, type SegmentKind, type YoungBand } from "@/lib/rota/constants";
 import { cn } from "@/lib/utils";
 
 const THEME = "turnfin-docs turnfin-module";
 type Row = { key: number; start: string; end: string; kind: SegmentKind; label: string };
-export type SegmentShift = { id: string; start: number; end: number; role: string; who: string | null; segments: { start: number; end: number; kind: string; label: string }[] };
+export type SegmentShift = { id: string; start: number; end: number; role: string; who: string | null; segments: { start: number; end: number; kind: string; label: string }[];
+  /** Under 18 that day, for their longer breaks; never the date of birth. */
+  young?: YoungBand | null };
 
 /** Plan what someone does during their shift: activities (25m pool
  *  lifeguard, Reception) and breaks, each with its times. Saved together;
@@ -47,7 +49,7 @@ export function SegmentsDialog({ shift, activities, trigger }: {
   }
   /** The house rule's breaks for this shift, in time with nothing planned; the manager on shift moves or confirms them. */
   function suggest() {
-    const planned = suggestBreaks({ startMinutes: shift.start, endMinutes: shift.end }, parsed.filter((p) => p.startMinutes >= 0 && p.endMinutes > p.startMinutes));
+    const planned = suggestBreaks({ startMinutes: shift.start, endMinutes: shift.end }, parsed.filter((p) => p.startMinutes >= 0 && p.endMinutes > p.startMinutes), shift.young ?? null);
     setRows(planned.map((p, i) => ({ key: next + i, start: clock(p.startMinutes), end: clock(p.endMinutes), kind: p.kind === "break" ? "break" : "activity", label: p.label })));
     setNext((n) => n + planned.length);
   }
@@ -102,7 +104,7 @@ export function SegmentsDialog({ shift, activities, trigger }: {
         <Button type="button" variant="outline" onClick={() => add("break")}><Coffee aria-hidden="true" />Add break</Button>
         <Button type="button" variant="outline" onClick={suggest}><Sparkles aria-hidden="true" />Suggest breaks</Button>
       </div>
-      <p className="text-sm text-ui-muted-foreground">Breaks for {Math.round(((shift.end - shift.start) / 60) * 10) / 10} hours: {describeEntitlement(shift.end - shift.start)} Unpaid breaks come off their hours.</p>
+      <p className="text-sm text-ui-muted-foreground">Breaks for {Math.round(((shift.end - shift.start) / 60) * 10) / 10} hours: {describeEntitlement(shift.end - shift.start, shift.young ?? null)}{shift.young ? ` They are ${shift.young === "under16" ? "under 16" : "16 or 17"}.` : ""} Unpaid breaks come off their hours.</p>
       {problem && rows.length ? <p className="text-sm text-[var(--pc-warning)]" role="status">{problem}</p> : null}
     </FormDialog>
   );

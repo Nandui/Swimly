@@ -159,7 +159,12 @@ someone off an activity; only a shift planned full has a break cut out of an
 activity, which then shows as a gap (warn, never block). Each break is **Paid
 break** or **Unpaid break**; unpaid ones come off the hours shown, paid ones stay
 (an older plain "Break" counts as unpaid). On-the-day changes affect that day
-only. The extra breaks for under-18s need a date of birth Turnfin does not hold yet.
+only. **Under-18s** (handbook; Protection of Young Persons (Employment) Act 1996) get
+at least 30 minutes unpaid after 4.5 hours of work at 16 and 17, or after 4 hours under
+16, the standard breaks extended to meet it (`youngBand`, `breakEntitlement`). It
+needs the person's **date of birth**, an optional field on their profile (Staff, Edit
+profile; staff managers only, migration `20261015120000_user_date_of_birth`). The rota
+reads only the band on the day (under 16, or 16 and 17), never the date.
 
 ### Changes once a week has started
 

@@ -6,7 +6,7 @@ import { sitesFor, subjectsFor } from "@/lib/policy/session";
 import { requireRotaActor } from "@/lib/rota/access";
 import { commitmentsFor } from "@/modules/server";
 import { AuthorizationError } from "@/lib/authz";
-import { ACTIVITY_SUGGESTIONS, absentOn, addDaysIso, mondayOf, returnStage, samePerson, shiftWarnings, type AbsenceReason, type AbsenceUpdateKind, type PersonRef, type ReturnFit } from "@/lib/rota/constants";
+import { ACTIVITY_SUGGESTIONS, absentOn, addDaysIso, mondayOf, returnStage, samePerson, shiftWarnings, type AbsenceReason, type AbsenceUpdateKind, type PersonRef, type ReturnFit, youngBand, type YoungBand } from "@/lib/rota/constants";
 
 /** Rota reads. The sites a person may see come from the policy engine; a site
  *  outside them is a 404, never an empty rota. */
@@ -122,13 +122,13 @@ export async function rotaDay(siteId: string | undefined, date: string | undefin
   const classes = found?.classes ?? [];
   const empty = { ...week, day, shifts, classes, bookings: [], note: "", teachers: {} as Record<string, string>, activities: ACTIVITY_SUGGESTIONS,
     planned: [] as { id: string; label: string; startMinutes: number; endMinutes: number; people: number; requiredTypeId: string | null; requiredType: { name: string } | null; note: string }[],
-    held: {} as Record<string, string[]> };
+    held: {} as Record<string, string[]>, young: {} as Record<string, YoungBand> };
   if (!week.site) return empty;
   const at = parseDateOnly(day);
   const weekday = (at.getUTCDay() + 6) % 7;
   const teacherIds = [...new Set(classes.flatMap((c) => (c.userId ? [c.userId] : [])))];
   const staffIds = [...new Set(shifts.flatMap((s) => (s.userId ? [s.userId] : [])))];
-  const [bookings, note, used, teachers, planned, quals] = await Promise.all([
+  const [bookings, note, used, teachers, planned, quals, births] = await Promise.all([
     prisma.rotaBooking.findMany({
       where: { siteId: week.site.id, cancelledAt: null, firstDay: { lte: at }, lastDay: { gte: at }, weekdays: { has: weekday } },
       orderBy: [{ startMinutes: "asc" }],
@@ -146,7 +146,11 @@ export async function rotaDay(siteId: string | undefined, date: string | undefin
       select: { id: true, label: true, startMinutes: true, endMinutes: true, people: true, requiredTypeId: true, requiredType: { select: { name: true } }, note: true } }),
     // What the people on the plan hold that day, so only those with the right one are suggested first.
     staffIds.length ? prisma.qualification.findMany({ where: { userId: { in: staffIds }, revokedAt: null, issuedOn: { lte: at }, OR: [{ expiresOn: null }, { expiresOn: { gte: at } }] }, select: { userId: true, typeId: true } }) : [],
+    // Under-18s on the plan, for their breaks: only the band leaves this function, never the date.
+    staffIds.length ? prisma.user.findMany({ where: { id: { in: staffIds }, dateOfBirth: { gt: parseDateOnly(addDaysIso(day, -18 * 366)) } }, select: { id: true, dateOfBirth: true } }) : [],
   ]);
+  const young: Record<string, YoungBand> = {};
+  for (const b of births) { const band = youngBand(b.dateOfBirth ? b.dateOfBirth.toISOString().slice(0, 10) : null, day); if (band) young[b.id] = band; }
   const held: Record<string, string[]> = {};
   for (const q of quals) (held[q.userId] ??= []).push(q.typeId);
   const placed = (id: string) => shifts.filter((s) => s.bookingId === id);
@@ -159,7 +163,7 @@ export async function rotaDay(siteId: string | undefined, date: string | undefin
     note: note?.text ?? "",
     teachers: Object.fromEntries(teachers.map((t) => [t.id, t.name])),
     activities: [...new Set([...planned.map((p) => p.label), ...used.map((u) => u.label), ...ACTIVITY_SUGGESTIONS])],
-    planned, held,
+    planned, held, young,
   };
 }
 

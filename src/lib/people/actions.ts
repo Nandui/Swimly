@@ -27,6 +27,8 @@ const isoDate = z.string().regex(/^\d{4}-\d{2}-\d{2}$/, "Use a date.");
 const profileSchema = z.object({
   jobTitle: z.string().trim().max(80, "Keep the job title under 80 characters."),
   startedOn: z.union([isoDate, z.literal("")]),
+  /** Optional; only an age band on a day reaches the rota (under-18s' breaks). */
+  dateOfBirth: z.union([isoDate, z.literal("")]).default(""),
   primaryClubId: optionalId,
   managerId: optionalId,
   departmentIds: z.array(z.string().min(1)).max(20),
@@ -48,7 +50,8 @@ export async function updateProfile(userId: string, input: ProfileInput): Promis
   const session = await requirePermission("staff.manage");
   const parsed = profileSchema.safeParse(input);
   if (!parsed.success) return fail(parsed.error.issues[0].message);
-  const { jobTitle, startedOn, primaryClubId, managerId, departmentIds, primaryDepartmentId } = parsed.data;
+  const { jobTitle, startedOn, dateOfBirth, primaryClubId, managerId, departmentIds, primaryDepartmentId } = parsed.data;
+  if (dateOfBirth && (dateOfBirth > new Date().toISOString().slice(0, 10) || dateOfBirth < "1920-01-01")) return fail("Check the date of birth.");
   const result = await prisma.$transaction(async (tx) => {
     const person = await tx.user.findUnique({ where: { id: userId }, select: { id: true, name: true, orgId: true } });
     if (!person) return fail("That account no longer exists.");
@@ -62,7 +65,7 @@ export async function updateProfile(userId: string, input: ProfileInput): Promis
     const departments = await tx.department.findMany({ where: { id: { in: departmentIds }, orgId: person.orgId ?? undefined, archivedAt: null }, select: { id: true } });
     if (departments.length !== new Set(departmentIds).size) return fail("One of those departments no longer exists.");
     if (primaryDepartmentId && !departmentIds.includes(primaryDepartmentId)) return fail("The main department must be one of theirs.");
-    await tx.user.update({ where: { id: userId }, data: { jobTitle: jobTitle || null, startedOn: startedOn ? new Date(`${startedOn}T00:00:00Z`) : null, primaryClubId, managerId } });
+    await tx.user.update({ where: { id: userId }, data: { jobTitle: jobTitle || null, startedOn: startedOn ? new Date(`${startedOn}T00:00:00Z`) : null, dateOfBirth: dateOfBirth ? new Date(`${dateOfBirth}T00:00:00Z`) : null, primaryClubId, managerId } });
     await tx.userDepartment.deleteMany({ where: { userId } });
     if (departmentIds.length) {
       await tx.userDepartment.createMany({ data: [...new Set(departmentIds)].map((departmentId) => ({ userId, departmentId, isPrimary: departmentId === (primaryDepartmentId ?? departmentIds[0]) })) });

@@ -188,23 +188,42 @@ export function isPaidBreak(g: { kind: string; label: string }) {
  *  over 4 and under 6 hours, one 15-minute unpaid; 6 to under 8, 30 unpaid
  *  and 15 paid; 8 to 10, 30 unpaid and two 15 paid; over 10, 45 unpaid and
  *  two 15 paid. The manager on shift allocates them. */
-export function breakEntitlement(shiftMinutes: number): { minutes: number; paid: boolean }[] {
+export function breakEntitlement(shiftMinutes: number, young: YoungBand | null = null): { minutes: number; paid: boolean }[] {
   const h = shiftMinutes / 60;
-  if (h <= 4) return [];
-  if (h < 6) return [{ minutes: 15, paid: false }];
-  if (h < 8) return [{ minutes: 15, paid: true }, { minutes: 30, paid: false }];
-  if (h <= 10) return [{ minutes: 15, paid: true }, { minutes: 30, paid: false }, { minutes: 15, paid: true }];
-  return [{ minutes: 15, paid: true }, { minutes: 45, paid: false }, { minutes: 15, paid: true }];
+  const list = h <= 4 ? []
+    : h < 6 ? [{ minutes: 15, paid: false }]
+    : h < 8 ? [{ minutes: 15, paid: true }, { minutes: 30, paid: false }]
+    : h <= 10 ? [{ minutes: 15, paid: true }, { minutes: 30, paid: false }, { minutes: 15, paid: true }]
+    : [{ minutes: 15, paid: true }, { minutes: 45, paid: false }, { minutes: 15, paid: true }];
+  // Under 18 (handbook, Protection of Young Persons (Employment) Act 1996): at least
+  // 30 minutes unpaid after 4.5 hours (16 and 17) or 4 hours (under 16), the standard
+  // breaks extended to meet it.
+  if (young && shiftMinutes > (young === "under16" ? 240 : 270)) {
+    const unpaid = list.find((b) => !b.paid);
+    if (!unpaid) return [...list, { minutes: 30, paid: false }];
+    if (unpaid.minutes < 30) unpaid.minutes = 30;
+  }
+  return list;
+}
+
+/** Under-18s' band on a day, from a date of birth: under 16, or 16 and 17. */
+export type YoungBand = "under16" | "under18";
+export function youngBand(dateOfBirth: string | null, onIso: string): YoungBand | null {
+  if (!dateOfBirth) return null;
+  const [y, m, d] = dateOfBirth.split("-").map(Number);
+  const [ty, tm, td] = onIso.split("-").map(Number);
+  const age = ty - y - (tm < m || (tm === m && td < d) ? 1 : 0);
+  return age < 16 ? "under16" : age < 18 ? "under18" : null;
 }
 
 /** "60 minutes: 30 unpaid and two 15-minute paid breaks", for the dialog. */
-export function describeEntitlement(shiftMinutes: number) {
-  const list = breakEntitlement(shiftMinutes);
-  if (!list.length) return "No break for a shift of 4 hours or less.";
+export function describeEntitlement(shiftMinutes: number, young: YoungBand | null = null) {
+  const list = breakEntitlement(shiftMinutes, young);
+  if (!list.length) return young ? "No break for a shift this short." : "No break for a shift of 4 hours or less.";
   const unpaid = list.filter((b) => !b.paid).reduce((m, b) => m + b.minutes, 0);
   const paid = list.filter((b) => b.paid);
   const total = list.reduce((m, b) => m + b.minutes, 0);
-  return `${total} minutes: ${unpaid} unpaid${paid.length ? ` and ${paid.length === 1 ? "one" : "two"} 15-minute paid ${paid.length === 1 ? "break" : "breaks"}` : ""}.`;
+  return `${total} minutes: ${unpaid} unpaid${paid.length ? ` and ${paid.length === 1 ? "one" : "two"} 15-minute paid ${paid.length === 1 ? "break" : "breaks"}` : ""}${young ? ", under-18 minimum included" : ""}.`;
 }
 
 /** The shift's plan with its breaks suggested by the house rule, replacing
@@ -212,9 +231,9 @@ export function describeEntitlement(shiftMinutes: number) {
  *  and after, each on a quarter hour in time with nothing planned, so a break
  *  never takes someone off an activity; only when the shift is planned full
  *  does a break cut into an activity (and that stretch shows as a gap). */
-export function suggestBreaks(shift: { startMinutes: number; endMinutes: number }, segments: readonly SegmentLike[]): SegmentLike[] {
+export function suggestBreaks(shift: { startMinutes: number; endMinutes: number }, segments: readonly SegmentLike[], young: YoungBand | null = null): SegmentLike[] {
   const length = shift.endMinutes - shift.startMinutes;
-  const wanted = breakEntitlement(length);
+  const wanted = breakEntitlement(length, young);
   let plan: SegmentLike[] = segments.filter((g) => g.kind !== "break").map((g) => ({ ...g }));
   const fractions = wanted.length === 1 ? [0.5] : wanted.length === 2 ? [0.35, 0.6] : [0.25, 0.5, 0.75];
   const free = (start: number, end: number) => start >= shift.startMinutes && end <= shift.endMinutes && !plan.some((g) => g.startMinutes < end && start < g.endMinutes);

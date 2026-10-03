@@ -182,7 +182,7 @@ export default async function DayPlanPage({ searchParams }: { searchParams: Prom
                         s.absent ? "border-[var(--pc-danger)] bg-[var(--pc-danger-soft)]" : !r.name ? "border-dashed border-[var(--pc-warning)] bg-ui-card" : s.part ? "border-[var(--pc-primary)] bg-ui-card" : "border-ui-border bg-[var(--pc-surface-sunken)]");
                       const label = `${r.name ?? "Unfilled"}, ${s.part ?? s.role}, ${span(s.start, s.end)}${s.segments.length ? `: ${s.segments.map((g) => `${span(g.start, g.end)} ${g.label}`).join(", ")}` : ""}${s.absent ? ", absent" : ""}`;
                       return site.manage && s.editable
-                        ? <SegmentsDialog key={s.id} activities={data.activities} shift={{ id: s.id, start: s.start, end: s.end, role: s.part ?? s.role, who: r.name, segments: s.segments }}
+                        ? <SegmentsDialog key={s.id} activities={data.activities} shift={{ id: s.id, start: s.start, end: s.end, role: s.part ?? s.role, who: r.name, segments: s.segments, young: r.userId ? data.young[r.userId] ?? null : null }}
                             trigger={{ label: `Plan ${label}`, className: cn(cls, "flex items-stretch justify-start hover:border-[var(--pc-primary)]"), style: box(s.start, s.end), children: inner }} />
                         : <div key={s.id} aria-label={label} className={cn(cls, "flex items-stretch")} style={box(s.start, s.end)}>{inner}</div>;
                     })}
