@@ -8,12 +8,21 @@ the main database and uses the platform access model (docs/platform-access.md).
 
 ## Surfaces
 
-- **Week plan** (`/rota`, Poolside Clear on the shared `ModuleShell`). Department
-  supervisors plan one site's week, Monday to Sunday: one row per duty, grouped by
-  department (Core's departments for that site and the organisation-wide ones),
-  a column per day, each entry saying when and who, or Unfilled. The duty name is
-  typed; names used at the site in the last 12 weeks are offered again (owner
-  decision, 1 October 2026). **Copy a week** starts a week that has not started from any earlier week (owner request, 3 October 2026: "plan each day by hand but have the option to start from a copy of a previous week"); the Day plan's **Copy a day** does the same for one day onto another (`copyPlan`). The supervisor chooses **the same people** or **the shape only** (every duty unfilled). Duties come with the activities and breaks inside them, plus the activities to cover and the day notes; booking places come from their bookings, not copies. Only days with nothing planned yet are filled, so a copy never doubles or overwrites a plan.
+- **Week plan** (`/rota`, Poolside Clear on the shared `ModuleShell`). The week as a
+  roster sheet (owner decision, 3 October 2026: the duty grid was "extremely confusing
+  to use, to read and not practical"): **people down the side**, grouped by the
+  department they work most that week, **days across**, paid hours at the end
+  (`buildRoster`, `src/lib/rota/roster.ts`, pure and tested). Each cell shows the shift
+  in bold and what they mainly do (their activities, else the duty); off is red and
+  struck through, a warning amber with its icon. A **To fill** row above everyone lists
+  each day's unfilled duties, booking places and cover for someone off; choosing one
+  gives it to someone. Four tiles: on the plan, to fill, off, warnings. **Choosing a
+  shift** opens that person's day in a side panel: its warnings, their activities and
+  breaks (Suggest breaks included, saved with **Save day**), Change shift and Cancel
+  duty. **An empty day's +** gives them a shift. A day's heading opens its Day plan.
+  The status beside the title says **Planning ahead · changes are free** or **Under
+  way · changes ask for a reason**. Department supervisors plan upcoming weeks here.
+  **Copy a week** starts a week that has not started from any earlier week (owner request, 3 October 2026: "plan each day by hand but have the option to start from a copy of a previous week"); the Day plan's **Copy a day** does the same for one day onto another (`copyPlan`). The supervisor chooses **the same people** or **the shape only** (every duty unfilled). Duties come with the activities and breaks inside them, plus the activities to cover and the day notes; booking places come from their bookings, not copies. Only days with nothing planned yet are filled, so a copy never doubles or overwrites a plan.
   It opens for anyone with the Rota screen and `rota.view` at any scope, and
   shows only the sites that capability covers; any other site is a 404.
 - **Swim classes** come from the Swim school through the commitments seam

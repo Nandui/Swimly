@@ -27,7 +27,7 @@ export async function rotaSites() {
 export async function rotaWeek(siteId: string | undefined, week: string | undefined) {
   const { who, sites } = await rotaSites();
   const site = siteId ? sites.find((s) => s.id === siteId) : sites[0];
-  if (!site) { if (siteId) notFound(); return { who, sites, site: null, monday: mondayOf(today()), days: [], people: [], types: [], departments: [], duties: [] }; }
+  if (!site) { if (siteId) notFound(); return { who, sites, site: null, monday: mondayOf(today()), days: [], people: [], types: [], departments: [], duties: [], young: {} as Record<string, YoungBand> }; }
   const monday = mondayOf(week && isDateOnly(week) ? week : today());
   const sunday = addDaysIso(monday, 6);
   const shifts = await prisma.rotaShift.findMany({
@@ -43,7 +43,7 @@ export async function rotaWeek(siteId: string | undefined, week: string | undefi
   const personIds = [...new Set(shifts.flatMap((s) => (s.rotaPersonId ? [s.rotaPersonId] : [])))];
   const inWeek = { gte: parseDateOnly(monday), lte: parseDateOnly(sunday) };
   const someone = [...(userIds.length ? [{ userId: { in: userIds } }] : []), ...(personIds.length ? [{ rotaPersonId: { in: personIds } }] : [])];
-  const [held, elsewhere, absences, teaching, classes] = await Promise.all([
+  const [held, elsewhere, absences, teaching, classes, births] = await Promise.all([
     prisma.qualification.findMany({ where: { userId: { in: userIds } }, select: { userId: true, typeId: true, issuedOn: true, expiresOn: true, revokedAt: true } }),
     // Double-bookings across sites count too.
     someone.length ? prisma.rotaShift.findMany({
@@ -59,7 +59,17 @@ export async function rotaWeek(siteId: string | undefined, week: string | undefi
     userIds.length ? commitmentsFor({ userIds, from: monday, to: sunday }) : [],
     // And every class at this site, for the plan's Swim classes row.
     commitmentsFor({ siteIds: [site.id], from: monday, to: sunday }),
+    // Under-18s on the plan, for their breaks: only a band per day leaves this function, never the date.
+    userIds.length ? prisma.user.findMany({ where: { id: { in: userIds }, dateOfBirth: { gt: parseDateOnly(addDaysIso(monday, -18 * 366)) } }, select: { id: true, dateOfBirth: true } }) : [],
   ]);
+  const young: Record<string, YoungBand> = {};
+  for (const b of births) {
+    for (let i = 0; i < 7; i++) {
+      const on = addDaysIso(monday, i);
+      const band = youngBand(b.dateOfBirth ? b.dateOfBirth.toISOString().slice(0, 10) : null, on);
+      if (band) young[`${b.id}:${on}`] = band;
+    }
+  }
   const days = Array.from({ length: 7 }, (_, i) => {
     const iso = addDaysIso(monday, i);
     return {
@@ -80,7 +90,7 @@ export async function rotaWeek(siteId: string | undefined, week: string | undefi
     // Duties typed before at this site, offered again (owner decision: supervisors type them).
     prisma.rotaShift.findMany({ where: { siteId: site.id, kind: "shift", importId: null, date: { gte: parseDateOnly(addDaysIso(monday, -84)) } }, distinct: ["role"], orderBy: { role: "asc" }, select: { role: true } }),
   ]) : [[], [], [], []];
-  return { who, sites, site, monday, days, people, types, departments, duties: recent.map((r) => r.role) };
+  return { who, sites, site, monday, days, people, types, departments, duties: recent.map((r) => r.role), young };
 }
 export type RotaDay = Awaited<ReturnType<typeof rotaWeek>>["days"][number];
 
