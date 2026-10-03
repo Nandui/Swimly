@@ -4,28 +4,28 @@
    from the metadata maps in src/lib/meta.ts, always with an icon. */
 :root {
   color-scheme: light dark;
-  --pc-canvas: light-dark(#f4f8f9, #0b161a);
-  --pc-surface: light-dark(#ffffff, #12222a);
-  --pc-surface-sunken: light-dark(#eaf1f3, #0e1c22);
-  --pc-ink: light-dark(#0f2a33, #e6f0f3);
-  --pc-ink-muted: light-dark(#4c6770, #9cb4bc);
-  --pc-line: light-dark(#dbe6ea, #22363f);
-  --pc-line-strong: light-dark(#728b93, #5f7b85);
-  --pc-primary: light-dark(#0a5d80, #5cc8e4);
-  --pc-primary-hover: light-dark(#084b68, #84d6ec);
-  --pc-on-primary: light-dark(#ffffff, #062430);
-  --pc-primary-soft: light-dark(#e0f1f7, #11394a);
-  --pc-primary-ink: light-dark(#08506f, #9fe0f2);
-  --pc-focus: light-dark(#0a5d80, #6fd6ee);
-  --pc-focus-halo: 0 0 0 4px light-dark(rgb(18 200 198 / 0.28), rgb(47 224 218 / 0.3));
-  --pc-success: light-dark(#16734a, #5fd49a);
-  --pc-success-soft: light-dark(#e2f4ea, #123a2a);
-  --pc-warning: light-dark(#8a5300, #f2bd5a);
-  --pc-warning-soft: light-dark(#fdf1d8, #3b2d0f);
-  --pc-danger: light-dark(#b3261e, #ff9b8f);
-  --pc-danger-soft: light-dark(#fdeae7, #46201c);
-  --pc-neutral-soft: light-dark(#e8eef0, #22343b);
-  --pc-shadow-card: 0 1px 2px light-dark(rgb(15 42 51 / 0.06), rgb(0 0 0 / 0));
+  --pc-canvas: light-dark(#eef2f6, #0c1320);
+  --pc-surface: light-dark(#ffffff, #131c2b);
+  --pc-surface-sunken: light-dark(#f4f6f9, #182334);
+  --pc-ink: light-dark(#0f1b2d, #e8eef7);
+  --pc-ink-muted: light-dark(#56627a, #9babc2);
+  --pc-line: light-dark(#e2e7ef, #24324a);
+  --pc-line-strong: light-dark(#77849a, #6b7d99);
+  --pc-primary: light-dark(#1d5fd1, #78a6ff);
+  --pc-primary-hover: light-dark(#174ea8, #9dbfff);
+  --pc-on-primary: light-dark(#ffffff, #081733);
+  --pc-primary-soft: light-dark(#e9f0fd, #17284a);
+  --pc-primary-ink: light-dark(#174ea8, #a8c5ff);
+  --pc-focus: light-dark(#1d5fd1, #78a6ff);
+  --pc-focus-halo: 0 0 0 4px light-dark(rgb(29 95 209 / 0.2), rgb(120 166 255 / 0.28));
+  --pc-success: light-dark(#157046, #7fe0a8);
+  --pc-success-soft: light-dark(#e3f5ec, #10301f);
+  --pc-warning: light-dark(#8a5a00, #f7cf6e);
+  --pc-warning-soft: light-dark(#fdf2dc, #35270b);
+  --pc-danger: light-dark(#b4321f, #ffa395);
+  --pc-danger-soft: light-dark(#fde8e6, #3a1815);
+  --pc-neutral-soft: light-dark(#f4f6f9, #182334);
+  --pc-shadow-card: none;
   --pc-text-caption: 13px;
   --pc-leading-caption: 18px;
   --pc-text-body: 15px;
@@ -35,9 +35,9 @@
   --pc-text-page: 24px;
   --pc-leading-page: 32px;
   --pc-control-height: 44px;
-  --pc-radius-inner: 8px;
-  --pc-radius-control: 12px;
-  --pc-radius-panel: 16px;
+  --pc-radius-inner: 16px;
+  --pc-radius-control: 999px;
+  --pc-radius-panel: 24px;
   --font-sans: "Plus Jakarta Sans", ui-sans-serif, system-ui, sans-serif;
 }
 
@@ -84,7 +84,7 @@ a { color: var(--pc-primary); }
 }
 
 /* Panels and lists */
-.card { background: var(--pc-surface); border: 1px solid var(--pc-line); border-radius: var(--pc-radius-panel); box-shadow: var(--pc-shadow-card); padding: 20px; }
+.card { background: var(--pc-surface); border: 0; border-radius: var(--pc-radius-panel); box-shadow: none; padding: 24px; }
 .list { margin: 0; padding: 0; list-style: none; }
 .list > li + li { border-top: 1px solid var(--pc-line); }
 .item { display: flex; align-items: center; justify-content: space-between; gap: 12px; min-height: 56px; padding: 12px 0; color: inherit; text-decoration: none; }
@@ -106,8 +106,8 @@ a.item:hover .item-title { text-decoration: underline; text-underline-offset: 3p
 .field { display: flex; flex-direction: column; gap: 6px; }
 .field label, .field legend { font-weight: 600; }
 .field .hint { font-size: var(--pc-text-caption); line-height: var(--pc-leading-caption); color: var(--pc-ink-muted); }
-.input { min-height: var(--pc-control-height); width: 100%; padding: 10px 12px; border: 1px solid var(--pc-line-strong); border-radius: var(--pc-radius-control); background: var(--pc-surface); color: var(--pc-ink); font: inherit; font-size: 16px; }
-textarea.input { min-height: 96px; resize: vertical; }
+.input { min-height: var(--pc-control-height); width: 100%; padding: 10px 16px; border: 1px solid var(--pc-line-strong); border-radius: var(--pc-radius-control); background: var(--pc-surface); color: var(--pc-ink); font: inherit; font-size: 16px; }
+textarea.input { min-height: 96px; resize: vertical; border-radius: var(--pc-radius-inner); }
 .input:focus-visible { outline: none; border-color: var(--pc-focus); box-shadow: 0 0 0 1px var(--pc-focus), var(--pc-focus-halo); }
 .code { font-size: 28px; letter-spacing: 8px; text-align: center; font-variant-numeric: tabular-nums; }
 .check { display: flex; align-items: flex-start; gap: 12px; min-height: 44px; font-weight: 500; }
@@ -123,7 +123,7 @@ textarea.input { min-height: 96px; resize: vertical; }
 .tone-gray { background: var(--pc-neutral-soft); color: var(--pc-ink-muted); }
 
 /* Notices */
-.notice { border-radius: var(--pc-radius-control); padding: 12px 16px; background: var(--pc-primary-soft); color: var(--pc-primary-ink); }
+.notice { border-radius: var(--pc-radius-inner); padding: 12px 16px; background: var(--pc-primary-soft); color: var(--pc-primary-ink); }
 .notice strong { display: block; }
 .notice p { color: var(--pc-ink); }
 .notice.error { background: var(--pc-danger-soft); color: var(--pc-danger); }
@@ -137,4 +137,4 @@ textarea.input { min-height: 96px; resize: vertical; }
 .doc table { border-collapse: collapse; width: 100%; display: block; overflow-x: auto; }
 .doc :is(th, td) { border: 1px solid var(--pc-line); padding: 8px; text-align: left; vertical-align: top; }
 .doc blockquote { margin: 0; padding-left: 12px; border-left: 3px solid var(--pc-line-strong); }
-.doc .callout { padding: 12px 16px; border-radius: var(--pc-radius-control); background: var(--pc-primary-soft); }
+.doc .callout { padding: 12px 16px; border-radius: var(--pc-radius-inner); background: var(--pc-primary-soft); }
