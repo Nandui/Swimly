@@ -626,3 +626,14 @@ html:has(.tf-shell) { scroll-padding-bottom: 112px; }
 
 /* An empty state on the page itself sits on a white panel. */
 .turnfin-app .tf-main [data-slot='empty']:not(:is([data-slot='card'], [data-slot='table-container'], [data-slot='item-group'], [role='dialog'], .pc-panel) [data-slot='empty']) { border: 0; border-radius: var(--pc-radius-panel); background: var(--pc-surface); }
+
+/* Docs pages inside the v2 frame: the frame owns the inset, so the old page padding goes. */
+.turnfin-app .tf-main .workspace-page-content { padding: 0; }
+.turnfin-app .tf-main .workspace-page-content > * { max-width: none; }
+
+/* Docs in v2: no kicker lines above titles; icons are the one neutral tile (colour only means
+   status); the emergency plans shortcut uses the danger tone, as emergencies do everywhere. */
+.turnfin-docs :is(.eyebrow:has(+ h1), .page-heading > div > .eyebrow, .section-heading .section-kicker) { display: none; }
+.turnfin-docs .doc-icon { border: 0; border-radius: 999px; background: var(--pc-primary-soft); color: var(--pc-primary); }
+.turnfin-docs .emergency-banner { border: 0; border-radius: var(--pc-radius-card); background: var(--pc-danger-soft); color: var(--pc-danger); }
+.turnfin-docs .emergency-banner :is(strong, span, p, a, svg) { color: inherit; }
