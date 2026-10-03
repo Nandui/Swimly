@@ -3,7 +3,7 @@ import { after, before, test } from "node:test";
 import { isolatedPrisma } from "@/test/pglite-prisma";
 import { serverModule } from "@/test/server-module";
 import { expandPermissions, type PermissionKey } from "@/lib/staff/permissions";
-import { absentOn, addDaysIso, bookingDates, followOn, mondayOf, needsFitNote, parseClock, returnStage, shiftWarnings } from "./constants";
+import { PAID_BREAK, UNPAID_BREAK, absentOn, addDaysIso, bookingDates, breakEntitlement, describeEntitlement, followOn, isPaidBreak, mondayOf, needsFitNote, parseClock, returnStage, segmentProblem, shiftWarnings, suggestBreaks } from "./constants";
 import { today } from "@/lib/format";
 import { buildPlan } from "./plan";
 
@@ -278,11 +278,15 @@ test("the week plan: a draft until its week starts; after that each change keeps
   assert.equal((await actions.saveShift(null, duty(next, "ava"))).ok, true, "next week is a draft: no reason needed");
   assert.equal(await db.rotaShiftChange.count(), logged, "nothing logged for a draft");
 
-  assert.equal((await actions.copyLastWeek(churchfield, mondayOf(today()))).ok, false, "a started week is changed one duty at a time");
-  assert.equal((await actions.copyLastWeek(churchfield, addDaysIso(next, 7))).ok, true);
+  const copy = (from: string, to: string, extra: { whole?: boolean; people?: boolean } = {}) => actions.copyPlan({ siteId: churchfield, from, to, whole: true, people: true, ...extra });
+  assert.equal((await copy(addDaysIso(mondayOf(today()), -7), mondayOf(today()))).ok, false, "a started week is changed one duty at a time");
+  assert.equal((await copy(next, addDaysIso(next, 7))).ok, true);
   const copied = await db.rotaShift.findFirstOrThrow({ where: { date: new Date(`${addDaysIso(next, 7)}T00:00:00Z`), role: "Poolside" } });
   assert.deepEqual([copied.userId, copied.departmentId], ["ava", "d-pool"], "people and departments come too");
-  assert.equal((await actions.copyLastWeek(churchfield, addDaysIso(next, 7))).ok, false, "never doubled");
+  assert.equal((await copy(next, addDaysIso(next, 7))).ok, false, "never doubled: days with a plan are left alone");
+  assert.equal((await copy(next, addDaysIso(next, 15), { whole: false, people: false })).ok, true, "one day onto another, the shape only");
+  const shape = await db.rotaShift.findFirstOrThrow({ where: { date: new Date(`${addDaysIso(next, 15)}T00:00:00Z`), role: "Poolside" } });
+  assert.equal(shape.userId, null, "unfilled");
 
   // This week has started: Timepoint holds it.
   assert.equal((await actions.reportAbsence({ userId: "ava", reason: "sickness", firstDay: today(), lastDay: today(), note: "" })).ok, true);
@@ -362,4 +366,47 @@ test("swim classes: on the plan read-only, and a duty while teaching warns", asy
   const swim = plan.groups.find((g) => g.label === "Swim school")!.rows[0].days[0][0];
   assert.deepEqual([swim.who, swim.text, swim.part, swim.editable, swim.href], ["2 classes · 1 instructor", "16:00–17:45", "1 without an instructor", false, `/schedule?date=${day}`]);
   classes.length = 0;
+});
+
+test("copying a plan brings the activities and breaks inside duties, the activities to cover and the day's note", async () => {
+  const db = fixture.prisma;
+  as("maya", [planner()]);
+  const source = addDaysIso(mondayOf(today()), 42), target = addDaysIso(source, 7);
+  const at = (iso: string) => new Date(`${iso}T00:00:00Z`);
+  await db.rotaShift.create({ data: { orgId: ORG, siteId: churchfield, date: at(source), startMinutes: 360, endMinutes: 840, role: "Poolside", userId: "riley", createdByName: "seed",
+    segments: { create: [{ startMinutes: 360, endMinutes: 600, kind: "activity", label: "25m pool lifeguard" }, { startMinutes: 600, endMinutes: 630, kind: "break", label: "Break" }] } } });
+  await db.rotaActivity.create({ data: { orgId: ORG, siteId: churchfield, date: at(source), label: "25m pool lifeguard", startMinutes: 390, endMinutes: 1290, people: 1, createdByName: "seed" } });
+  await db.rotaDayNote.create({ data: { orgId: ORG, siteId: churchfield, date: at(source), text: "Gala setup from 18:00", byName: "seed" } });
+  assert.equal((await actions.copyPlan({ siteId: churchfield, from: source, to: target, whole: true, people: true })).ok, true);
+  const copied = await db.rotaShift.findFirstOrThrow({ where: { date: at(target), role: "Poolside" }, include: { segments: { orderBy: { startMinutes: "asc" } } } });
+  assert.deepEqual(copied.segments.map((g) => [g.kind, g.label, g.startMinutes]), [["activity", "25m pool lifeguard", 360], ["break", "Break", 600]]);
+  assert.equal(copied.userId, "riley");
+  assert.equal(await db.rotaActivity.count({ where: { date: at(target), label: "25m pool lifeguard" } }), 1);
+  assert.equal((await db.rotaDayNote.findFirstOrThrow({ where: { siteId: churchfield, date: at(target) } })).text, "Gala setup from 18:00");
+});
+
+test("breaks by the house rule: entitlement by shift length, placed in free time, paid ones kept in the hours", () => {
+  const total = (m: number) => breakEntitlement(m).map((b) => `${b.minutes}${b.paid ? "p" : "u"}`).join(" ");
+  assert.equal(total(240), "", "4 hours: none");
+  assert.equal(total(241), "15u", "over 4");
+  assert.equal(total(359), "15u");
+  assert.equal(total(360), "15p 30u", "6 to 8 hours: 45 minutes");
+  assert.equal(total(480), "15p 30u 15p", "8 to 10 hours: 60 minutes");
+  assert.equal(total(600), "15p 30u 15p");
+  assert.equal(total(601), "15p 45u 15p", "over 10 hours: 75 minutes");
+  assert.equal(describeEntitlement(540), "60 minutes: 30 unpaid and two 15-minute paid breaks.");
+
+  // 06:00–15:00 (9 hours) with the morning on the 25m pool: breaks avoid it.
+  const shift = { startMinutes: 360, endMinutes: 900 };
+  const lifeguard = { startMinutes: 360, endMinutes: 600, kind: "activity", label: "25m pool lifeguard" };
+  const plan = suggestBreaks(shift, [lifeguard, { startMinutes: 700, endMinutes: 730, kind: "break", label: "Break" }]);
+  const breaks = plan.filter((g) => g.kind === "break");
+  assert.deepEqual(breaks.map((b) => b.label), [PAID_BREAK, UNPAID_BREAK, PAID_BREAK], "the old break is replaced");
+  assert.ok(breaks.every((b) => b.startMinutes >= 600 && b.startMinutes % 15 === 0), "never on the pool, on quarter hours");
+  assert.equal(segmentProblem(shift, plan), null, "a valid plan");
+  assert.deepEqual([isPaidBreak(breaks[0]), isPaidBreak(breaks[1]), isPaidBreak({ kind: "break", label: "Break" })], [true, false, false]);
+
+  // Planned full: the break cuts into the activity, which then shows a gap.
+  const full = suggestBreaks({ startMinutes: 360, endMinutes: 660 }, [{ startMinutes: 360, endMinutes: 660, kind: "activity", label: "Reception" }]);
+  assert.deepEqual(full.map((g) => [g.kind, g.startMinutes, g.endMinutes]), [["activity", 360, 510], ["break", 510, 525], ["activity", 525, 660]]);
 });

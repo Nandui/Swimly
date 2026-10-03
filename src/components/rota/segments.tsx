@@ -1,13 +1,13 @@
 "use client";
 
 import { useState, type CSSProperties, type ReactNode } from "react";
-import { Coffee, Plus, Trash2 } from "lucide-react";
+import { Coffee, Plus, Sparkles, Trash2 } from "lucide-react";
 import { Button } from "@/components/shadcn/button";
 import { Input } from "@/components/shadcn/input";
 import { NativeSelect, NativeSelectOption } from "@/components/shadcn/native-select";
 import { FormDialog } from "@/components/form-dialog";
 import { saveSegments } from "@/lib/rota/actions";
-import { SEGMENT_KIND_META, clock, parseClock, segmentProblem, type SegmentKind } from "@/lib/rota/constants";
+import { PAID_BREAK, SEGMENT_KIND_META, UNPAID_BREAK, clock, describeEntitlement, isPaidBreak, parseClock, segmentProblem, suggestBreaks, type SegmentKind } from "@/lib/rota/constants";
 import { cn } from "@/lib/utils";
 
 const THEME = "turnfin-docs turnfin-module";
@@ -27,7 +27,7 @@ export function SegmentsDialog({ shift, activities, trigger }: {
   const initial = (): Row[] => shift.segments.map((s, i) => ({ key: i, start: clock(s.start), end: clock(s.end), kind: s.kind === "break" ? "break" : "activity", label: s.label }));
   const [rows, setRows] = useState<Row[]>(initial);
   const [next, setNext] = useState(shift.segments.length);
-  const parsed = rows.map((r) => ({ startMinutes: parseClock(r.start) ?? -1, endMinutes: parseClock(r.end) ?? -1, kind: r.kind, label: r.kind === "break" ? r.label || "Break" : r.label }));
+  const parsed = rows.map((r) => ({ startMinutes: parseClock(r.start) ?? -1, endMinutes: parseClock(r.end) ?? -1, kind: r.kind, label: r.kind === "break" ? r.label || UNPAID_BREAK : r.label }));
   const problem = rows.some((r) => parseClock(r.start) === null || parseClock(r.end) === null) ? "Use times like 10:30." : segmentProblem({ startMinutes: shift.start, endMinutes: shift.end }, parsed);
   const id = `seg-${shift.id}`;
 
@@ -42,8 +42,14 @@ export function SegmentsDialog({ shift, activities, trigger }: {
     }
     if (start >= shift.end) { start = shift.start; gapEnd = shift.end; }
     const end = kind === "break" ? Math.min(gapEnd, start + 30) : gapEnd;
-    setRows((all) => [...all, { key: next, start: clock(start), end: clock(end), kind, label: kind === "break" ? "Break" : "" }]);
+    setRows((all) => [...all, { key: next, start: clock(start), end: clock(end), kind, label: kind === "break" ? UNPAID_BREAK : "" }]);
     setNext((n) => n + 1);
+  }
+  /** The house rule's breaks for this shift, in time with nothing planned; the manager on shift moves or confirms them. */
+  function suggest() {
+    const planned = suggestBreaks({ startMinutes: shift.start, endMinutes: shift.end }, parsed.filter((p) => p.startMinutes >= 0 && p.endMinutes > p.startMinutes));
+    setRows(planned.map((p, i) => ({ key: next + i, start: clock(p.startMinutes), end: clock(p.endMinutes), kind: p.kind === "break" ? "break" : "activity", label: p.label })));
+    setNext((n) => n + planned.length);
   }
   const set = (key: number, patch: Partial<Row>) => setRows((all) => all.map((r) => (r.key === key ? { ...r, ...patch } : r)));
   const pct = (m: number) => `${(((m - shift.start) / (shift.end - shift.start)) * 100).toFixed(2)}%`;
@@ -73,11 +79,18 @@ export function SegmentsDialog({ shift, activities, trigger }: {
             <li key={r.key} className="grid grid-cols-[1fr_1fr] gap-2 sm:grid-cols-[6.5rem_6.5rem_7.5rem_minmax(0,1fr)_auto] sm:items-center">
               <Input type="time" aria-label="Starts" value={r.start} onChange={(e) => set(r.key, { start: e.target.value })} required />
               <Input type="time" aria-label="Ends" value={r.end} onChange={(e) => set(r.key, { end: e.target.value })} required />
-              <NativeSelect aria-label="What it is" value={r.kind} onChange={(e) => set(r.key, { kind: e.target.value as SegmentKind, label: e.target.value === "break" ? "Break" : "" })}>
+              <NativeSelect aria-label="What it is" value={r.kind} onChange={(e) => set(r.key, { kind: e.target.value as SegmentKind, label: e.target.value === "break" ? UNPAID_BREAK : "" })}>
                 {(Object.keys(SEGMENT_KIND_META) as SegmentKind[]).map((k) => <NativeSelectOption key={k} value={k}>{SEGMENT_KIND_META[k].label}</NativeSelectOption>)}
               </NativeSelect>
-              <Input aria-label={r.kind === "break" ? "Break name" : "Activity"} value={r.label} list={`${id}-activities`} maxLength={60}
-                placeholder={r.kind === "break" ? "Break" : "For example 25m pool lifeguard"} onChange={(e) => set(r.key, { label: e.target.value })} />
+              {r.kind === "break" ? (
+                <NativeSelect aria-label="Paid or unpaid" value={isPaidBreak(r) ? PAID_BREAK : UNPAID_BREAK} onChange={(e) => set(r.key, { label: e.target.value })}>
+                  <NativeSelectOption value={UNPAID_BREAK}>{UNPAID_BREAK}</NativeSelectOption>
+                  <NativeSelectOption value={PAID_BREAK}>{PAID_BREAK}</NativeSelectOption>
+                </NativeSelect>
+              ) : (
+                <Input aria-label="Activity" value={r.label} list={`${id}-activities`} maxLength={60}
+                  placeholder="For example 25m pool lifeguard" onChange={(e) => set(r.key, { label: e.target.value })} />
+              )}
               <Button type="button" variant="ghost" size="icon" aria-label={`Remove ${r.label || "this"} ${r.start}`} onClick={() => setRows((all) => all.filter((x) => x.key !== r.key))}><Trash2 aria-hidden="true" /></Button>
             </li>
           ))}
@@ -87,7 +100,9 @@ export function SegmentsDialog({ shift, activities, trigger }: {
       <div className="flex flex-wrap gap-2">
         <Button type="button" variant="outline" onClick={() => add("activity")}><Plus aria-hidden="true" />Add activity</Button>
         <Button type="button" variant="outline" onClick={() => add("break")}><Coffee aria-hidden="true" />Add break</Button>
+        <Button type="button" variant="outline" onClick={suggest}><Sparkles aria-hidden="true" />Suggest breaks</Button>
       </div>
+      <p className="text-sm text-ui-muted-foreground">Breaks for {Math.round(((shift.end - shift.start) / 60) * 10) / 10} hours: {describeEntitlement(shift.end - shift.start)} Unpaid breaks come off their hours.</p>
       {problem && rows.length ? <p className="text-sm text-[var(--pc-warning)]" role="status">{problem}</p> : null}
     </FormDialog>
   );

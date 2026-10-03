@@ -174,6 +174,68 @@ export const SEGMENT_KINDS = Object.keys(SEGMENT_KIND_META) as SegmentKind[];
 export const ACTIVITY_SUGGESTIONS = ["25m pool lifeguard", "18m pool lifeguard", "Poolside", "Teaching", "Rookie", "Reception", "Plant room", "Cleaning", "Gym floor"];
 
 export type SegmentLike = { startMinutes: number; endMinutes: number; kind: string; label: string };
+
+/** Break names. A break named "Paid break" stays in the hours; any other
+ *  break (unpaid, or an older plain "Break") comes off them. */
+export const PAID_BREAK = "Paid break";
+export const UNPAID_BREAK = "Unpaid break";
+export function isPaidBreak(g: { kind: string; label: string }) {
+  return g.kind === "break" && g.label.trim().toLowerCase() === PAID_BREAK.toLowerCase();
+}
+
+/** The house rule for breaks (Employee Policies and Procedures Handbook
+ *  2026, rest periods; owner, 3 October 2026), by shift length:
+ *  over 4 and under 6 hours, one 15-minute unpaid; 6 to under 8, 30 unpaid
+ *  and 15 paid; 8 to 10, 30 unpaid and two 15 paid; over 10, 45 unpaid and
+ *  two 15 paid. The manager on shift allocates them. */
+export function breakEntitlement(shiftMinutes: number): { minutes: number; paid: boolean }[] {
+  const h = shiftMinutes / 60;
+  if (h <= 4) return [];
+  if (h < 6) return [{ minutes: 15, paid: false }];
+  if (h < 8) return [{ minutes: 15, paid: true }, { minutes: 30, paid: false }];
+  if (h <= 10) return [{ minutes: 15, paid: true }, { minutes: 30, paid: false }, { minutes: 15, paid: true }];
+  return [{ minutes: 15, paid: true }, { minutes: 45, paid: false }, { minutes: 15, paid: true }];
+}
+
+/** "60 minutes: 30 unpaid and two 15-minute paid breaks", for the dialog. */
+export function describeEntitlement(shiftMinutes: number) {
+  const list = breakEntitlement(shiftMinutes);
+  if (!list.length) return "No break for a shift of 4 hours or less.";
+  const unpaid = list.filter((b) => !b.paid).reduce((m, b) => m + b.minutes, 0);
+  const paid = list.filter((b) => b.paid);
+  const total = list.reduce((m, b) => m + b.minutes, 0);
+  return `${total} minutes: ${unpaid} unpaid${paid.length ? ` and ${paid.length === 1 ? "one" : "two"} 15-minute paid ${paid.length === 1 ? "break" : "breaks"}` : ""}.`;
+}
+
+/** The shift's plan with its breaks suggested by the house rule, replacing
+ *  any breaks it had. The unpaid break goes near the middle, paid ones before
+ *  and after, each on a quarter hour in time with nothing planned, so a break
+ *  never takes someone off an activity; only when the shift is planned full
+ *  does a break cut into an activity (and that stretch shows as a gap). */
+export function suggestBreaks(shift: { startMinutes: number; endMinutes: number }, segments: readonly SegmentLike[]): SegmentLike[] {
+  const length = shift.endMinutes - shift.startMinutes;
+  const wanted = breakEntitlement(length);
+  let plan: SegmentLike[] = segments.filter((g) => g.kind !== "break").map((g) => ({ ...g }));
+  const fractions = wanted.length === 1 ? [0.5] : wanted.length === 2 ? [0.35, 0.6] : [0.25, 0.5, 0.75];
+  const free = (start: number, end: number) => start >= shift.startMinutes && end <= shift.endMinutes && !plan.some((g) => g.startMinutes < end && start < g.endMinutes);
+  wanted.forEach((b, i) => {
+    const target = Math.round((shift.startMinutes + length * fractions[i] - b.minutes / 2) / 15) * 15;
+    let start: number | null = null;
+    for (let step = 0; step * 15 <= length && start === null; step++) {
+      for (const at of [target + step * 15, target - step * 15]) if (start === null && free(at, at + b.minutes)) start = at;
+    }
+    const at = start ?? Math.min(Math.max(target, shift.startMinutes), shift.endMinutes - b.minutes);
+    const end = at + b.minutes;
+    if (start === null) {
+      // Planned full: cut the break out of whatever it lands on.
+      plan = plan.flatMap((g) => g.startMinutes < end && at < g.endMinutes
+        ? [...(g.startMinutes < at ? [{ ...g, endMinutes: at }] : []), ...(g.endMinutes > end ? [{ ...g, startMinutes: end }] : [])]
+        : [g]);
+    }
+    plan.push({ startMinutes: at, endMinutes: end, kind: "break", label: b.paid ? PAID_BREAK : UNPAID_BREAK });
+  });
+  return plan.sort((a, b) => a.startMinutes - b.startMinutes);
+}
 /** What is wrong with a shift's segments, or null: each inside the shift, none
  *  overlapping, each with a name. Pure; the action and the dialog both use it. */
 export function segmentProblem(shift: { startMinutes: number; endMinutes: number }, segments: readonly SegmentLike[]): string | null {

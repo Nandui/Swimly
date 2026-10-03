@@ -3,7 +3,7 @@ import Link from "next/link";
 import { CalendarDays, CalendarRange, ChevronLeft, ChevronRight } from "lucide-react";
 import { Button } from "@/components/shadcn/button";
 import { NativeSelect, NativeSelectOption } from "@/components/shadcn/native-select";
-import { CopyLastWeek, ShiftDialog } from "@/components/rota/actions";
+import { CopyPlan, ShiftDialog } from "@/components/rota/actions";
 import { RotaPlan } from "@/components/rota/plan";
 import { today } from "@/lib/format";
 import { addDaysIso, weekStarted } from "@/lib/rota/constants";
@@ -58,7 +58,7 @@ export default async function WeekPlanPage({ searchParams }: { searchParams: Pro
               <Button asChild variant="outline" size="icon" aria-label="Next week"><Link href={link(addDaysIso(monday, 7))}><ChevronRight aria-hidden="true" /></Link></Button>
             </nav>
           ) : null}
-          {site?.manage && !started ? <CopyLastWeek siteId={site.id} monday={monday} /> : null}
+          {site?.manage && !started ? <CopyPlan siteId={site.id} to={monday} whole /> : null}
           {site?.manage ? <Button asChild variant="outline" className="min-h-11"><Link href={`/rota/bookings?site=${site.id}`}><CalendarRange aria-hidden="true" />Bookings</Link></Button> : null}
           {site?.manage ? <ShiftDialog siteId={site.id} date={monday <= now && now <= sunday ? now : monday} today={now} options={options} /> : null}
         </div>

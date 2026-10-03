@@ -10,8 +10,8 @@ import { NativeSelect, NativeSelectOption } from "@/components/shadcn/native-sel
 import { RadioGroup, RadioGroupItem } from "@/components/shadcn/radio-group";
 import { ConfirmAction } from "@/components/confirm-action";
 import { Field, FormDialog } from "@/components/form-dialog";
-import { cancelShift, copyLastWeek, markTimepointUpdated, saveShift, type ChangeInput } from "@/lib/rota/actions";
-import { ROTA_CHANGE_REASON_META, ROTA_CHANGE_REASONS, clock, weekStarted, type RotaChangeReason } from "@/lib/rota/constants";
+import { cancelShift, copyPlan, markTimepointUpdated, saveShift, type ChangeInput } from "@/lib/rota/actions";
+import { ROTA_CHANGE_REASON_META, ROTA_CHANGE_REASONS, addDaysIso, clock, mondayOf, weekStarted, type RotaChangeReason } from "@/lib/rota/constants";
 
 const THEME = "turnfin-docs turnfin-module";
 
@@ -154,17 +154,42 @@ export function CancelShift({ id, label, live, withText = false, suggested }: { 
   );
 }
 
-/** Last week's duties, people included, into a week that has not started. */
-export function CopyLastWeek({ siteId, monday }: { siteId: string; monday: string }) {
+/** Starts a week or a day from an earlier one: duties with the same people or
+ *  unfilled, the activities and breaks inside them, the activities to cover
+ *  and the day's note. Only days with nothing planned yet are filled. */
+export function CopyPlan({ siteId, to, whole }: { siteId: string; to: string; whole: boolean }) {
+  const [people, setPeople] = useState("same");
+  const what = whole ? "week" : "day";
   return (
-    <ConfirmAction
-      trigger={<Button variant="outline" className="min-h-11"><CopyPlus aria-hidden="true" />Copy last week</Button>}
-      title="Copy last week's duties into this week?"
-      description="Every duty from last week comes in on the same day and time, with the same person. Duties already planned the same way are not doubled. Change the differences afterwards."
-      confirmLabel="Copy last week"
-      successMessage="Last week copied"
-      run={() => copyLastWeek(siteId, monday)}
-    />
+    <FormDialog
+      portalClassName={THEME}
+      width="sm:max-w-lg"
+      onOpen={() => setPeople("same")}
+      trigger={<Button variant="outline" className="min-h-11"><CopyPlus aria-hidden="true" />Copy a {what}</Button>}
+      title={`Start this ${what} from another`}
+      description={`Duties, the activities and breaks inside them, the activities to cover and the notes come across${whole ? ", day by day" : ""}. Days that already have a plan are left as they are. Change what is different afterwards.`}
+      submitLabel={`Copy the ${what}`}
+      successMessage={`${whole ? "Week" : "Day"} copied`}
+      submit={(formData) => {
+        const picked = String(formData.get("from") ?? "");
+        return copyPlan({ siteId, to, whole, people: people === "same", from: whole && picked ? mondayOf(picked) : picked });
+      }}
+    >
+      <Field label={whole ? "Copy the week of" : "Copy the day"} htmlFor={`copy-from-${to}`} hint={whole ? "Any day in that week." : "For example the same day last week."}>
+        <Input id={`copy-from-${to}`} name="from" type="date" required max={addDaysIso(to, -1)} defaultValue={addDaysIso(to, -7)} className="min-h-11" />
+      </Field>
+      <fieldset className="space-y-1">
+        <legend className="text-sm font-medium">People</legend>
+        <RadioGroup value={people} onValueChange={setPeople} className="gap-1">
+          {[["same", "The same people", "Each duty keeps who did it. Absences and clashes show as warnings."], ["none", "The shape only", "Every duty comes in unfilled, to choose who this time."]].map(([value, label, hint]) => (
+            <div key={value} className="flex min-h-11 items-start gap-3 py-1">
+              <RadioGroupItem id={`copy-people-${to}-${value}`} value={value} className="mt-1" />
+              <Label htmlFor={`copy-people-${to}-${value}`} className="block font-normal"><span className="block font-medium">{label}</span><span className="block text-sm text-ui-muted-foreground">{hint}</span></Label>
+            </div>
+          ))}
+        </RadioGroup>
+      </fieldset>
+    </FormDialog>
   );
 }
 

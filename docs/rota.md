@@ -13,8 +13,7 @@ the main database and uses the platform access model (docs/platform-access.md).
   department (Core's departments for that site and the organisation-wide ones),
   a column per day, each entry saying when and who, or Unfilled. The duty name is
   typed; names used at the site in the last 12 weeks are offered again (owner
-  decision, 1 October 2026). **Copy last week** brings last week's duties, people
-  included, into a week that has not started, never doubling one already planned.
+  decision, 1 October 2026). **Copy a week** starts a week that has not started from any earlier week (owner request, 3 October 2026: "plan each day by hand but have the option to start from a copy of a previous week"); the Day plan's **Copy a day** does the same for one day onto another (`copyPlan`). The supervisor chooses **the same people** or **the shape only** (every duty unfilled). Duties come with the activities and breaks inside them, plus the activities to cover and the day notes; booking places come from their bookings, not copies. Only days with nothing planned yet are filled, so a copy never doubles or overwrites a plan.
   It opens for anyone with the Rota screen and `rota.view` at any scope, and
   shows only the sites that capability covers; any other site is a 404.
 - **Swim classes** come from the Swim school through the commitments seam
@@ -146,6 +145,21 @@ first reported until 2 Oct" and "Off again after an absence ending 24 Sep", with
 the extensions listed under it. Extending is refused for an absence that ended
 before yesterday (report a new one and link it), for a day not later than the
 current last day, and when it would run into another absence of theirs.
+
+### Breaks
+
+The house rule (Employee Policies and Procedures Handbook 2026, rest periods; owner,
+3 October 2026), in `breakEntitlement`: over 4 and under 6 hours, one 15-minute
+unpaid break; 6 to under 8, 30 unpaid and 15 paid; 8 to 10, 30 unpaid and two 15
+paid; over 10, 45 unpaid and two 15 paid. The manager on shift allocates them:
+**Suggest breaks** in a shift's plan (`suggestBreaks`, tested) replaces its breaks
+with the entitlement, the unpaid one near the middle and paid ones before and
+after, on quarter hours in time with nothing planned, so a break never takes
+someone off an activity; only a shift planned full has a break cut out of an
+activity, which then shows as a gap (warn, never block). Each break is **Paid
+break** or **Unpaid break**; unpaid ones come off the hours shown, paid ones stay
+(an older plain "Break" counts as unpaid). On-the-day changes affect that day
+only. The extra breaks for under-18s need a date of birth Turnfin does not hold yet.
 
 ### Changes once a week has started
 

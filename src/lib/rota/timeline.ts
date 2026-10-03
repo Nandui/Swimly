@@ -1,4 +1,4 @@
-import type { RotaWarning } from "@/lib/rota/constants";
+import { isPaidBreak, type RotaWarning } from "@/lib/rota/constants";
 
 /** One day of the plan as a timeline (owner request, October 2026: "the
  *  timeline view and adding people, assigning their activity during a shift
@@ -107,7 +107,8 @@ export function buildTimeline(shifts: readonly TimelineShift[], classes: readonl
   }
   const rows: PersonRow[] = [...people.values()].map((p) => {
     const list = [...p.list].sort((a, b) => a.startMinutes - b.startMinutes);
-    const breaks = list.flatMap((s) => s.segments.filter((g) => g.kind === "break")).reduce((m, g) => m + g.endMinutes - g.startMinutes, 0);
+    // Unpaid breaks come off the hours (and are the break shown); paid ones stay in them (house rule).
+    const breaks = list.flatMap((s) => s.segments.filter((g) => g.kind === "break" && !isPaidBreak(g))).reduce((m, g) => m + g.endMinutes - g.startMinutes, 0);
     // A booking's place inside the person's own shift is time on that shift, not more hours.
     const own = list.filter((s) => !s.bookingId || !list.some((o) => o !== s && !o.bookingId && o.startMinutes <= s.startMinutes && o.endMinutes >= s.endMinutes));
     return {

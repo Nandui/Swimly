@@ -4,12 +4,12 @@ import Link from "next/link";
 import { CalendarCheck, CalendarDays, ChevronLeft, ChevronRight, GraduationCap, Pencil, TriangleAlert, UserX } from "lucide-react";
 import { Button } from "@/components/shadcn/button";
 import { NativeSelect, NativeSelectOption } from "@/components/shadcn/native-select";
-import { ShiftDialog } from "@/components/rota/actions";
+import { CopyPlan, ShiftDialog } from "@/components/rota/actions";
 import { DayNote } from "@/components/rota/day-note";
 import { SegmentsDialog } from "@/components/rota/segments";
 import { ActivityDialog, AssignDialog, RemoveActivity } from "@/components/rota/activities";
 import { today } from "@/lib/format";
-import { BOOKING_KIND_META, addDaysIso, clock, mondayOf, type BookingKind } from "@/lib/rota/constants";
+import { BOOKING_KIND_META, addDaysIso, clock, mondayOf, weekStarted, type BookingKind } from "@/lib/rota/constants";
 import { rotaDay } from "@/lib/rota/data";
 import { hours } from "@/lib/rota/plan";
 import { buildTimeline, dayRange, type Candidate, type PersonRow, type Segment } from "@/lib/rota/timeline";
@@ -75,6 +75,7 @@ export default async function DayPlanPage({ searchParams }: { searchParams: Prom
             <Button asChild variant="outline" size="icon" aria-label="Next day"><Link href={link(addDaysIso(day, 1))}><ChevronRight aria-hidden="true" /></Link></Button>
           </nav>
           {site ? <Button asChild variant="outline" className="min-h-11"><Link href={`/rota?${new URLSearchParams({ site: site.id, week: mondayOf(day) })}`}><CalendarDays aria-hidden="true" />Week</Link></Button> : null}
+          {site?.manage && !weekStarted(day, now) ? <CopyPlan siteId={site.id} to={day} whole={false} /> : null}
           {site?.manage ? <ShiftDialog siteId={site.id} date={day} today={now} options={options} /> : null}
         </div>
       </div>
@@ -288,7 +289,7 @@ function PersonLabel({ row, edit, siteId, day, now, options }: {
           {absent ? <UserX aria-hidden="true" className="size-3.5 shrink-0 text-[var(--pc-danger)]" /> : warn ? <TriangleAlert aria-hidden="true" className="size-3.5 shrink-0 text-[var(--pc-warning)]" /> : null}
           <span className="truncate">{row.name ?? "Unfilled"}</span>
         </span>
-        <span className="block truncate text-xs text-ui-muted-foreground">{row.roles} · {hours(row.minutes)}h{row.breaks ? `, ${row.breaks}m break` : ""}</span>
+        <span className="block truncate text-xs text-ui-muted-foreground">{row.roles} · {hours(row.minutes)}h{row.breaks ? `, ${row.breaks}m unpaid break` : ""}</span>
       </div>
       {edit && first.editable ? (
         <ShiftDialog siteId={siteId} date={day} today={now} shift={edit(first.id)} options={options}

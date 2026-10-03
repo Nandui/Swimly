@@ -8,7 +8,7 @@ import { logAudit } from "@/lib/audit";
 import { isDateOnly, parseDateOnly, today } from "@/lib/format";
 import { prisma } from "@/lib/prisma";
 import { requireCapFor } from "@/lib/policy/session";
-import { ABSENCE_REASONS, SEGMENT_KINDS, segmentProblem, BOOKING_KINDS, BOOKING_MAX_PLACES, RETURN_FITS, ROTA_CHANGE_REASONS, addDaysIso, bookingDates, bookingDuty, clock, mondayOf, needsFitNote, parseClock, weekStarted, type RotaChangeReason } from "@/lib/rota/constants";
+import { UNPAID_BREAK, ABSENCE_REASONS, SEGMENT_KINDS, segmentProblem, BOOKING_KINDS, BOOKING_MAX_PLACES, RETURN_FITS, ROTA_CHANGE_REASONS, addDaysIso, bookingDates, bookingDuty, clock, mondayOf, needsFitNote, parseClock, weekStarted, type RotaChangeReason } from "@/lib/rota/constants";
 import type { Prisma } from "@/generated/prisma/client";
 import { notifyShiftChange } from "@/lib/staff-api/reminders";
 
@@ -187,29 +187,77 @@ export async function cancelShift(id: string, input: ChangeInput = {}): Promise<
   return result;
 }
 
-/** Brings last week's duties into a week that has not started, people
- *  included, so a usual week is one click and only the differences need
- *  planning. Duties already planned the same way are not doubled. */
-export async function copyLastWeek(siteId: string, monday: string): Promise<ActionResult> {
-  if (!isDateOnly(monday) || mondayOf(monday) !== monday) return fail("Choose a week.");
-  if (weekStarted(monday, today())) return fail("This week has started. Change its duties one at a time, with a reason.");
+const copySchema = z.object({
+  siteId: z.string().min(1),
+  /** The first day copied from: a Monday for a whole week, else the day. */
+  from: z.string().refine(isDateOnly, "Choose what to copy from."),
+  /** The first day copied into: a Monday for a whole week, else the day. */
+  to: z.string().refine(isDateOnly, "Choose where to copy to."),
+  whole: z.boolean(),
+  /** The same people, or the shape only, with every duty unfilled. */
+  people: z.boolean(),
+});
+export type CopyPlanInput = z.input<typeof copySchema>;
+
+/** Copies a plan from any earlier week or day, so supervisors start a day
+ *  from one that worked and change what is different: duties (with the same
+ *  people or unfilled), the activities and breaks inside them, the activities
+ *  to cover and the day's note. Only days with nothing planned yet are
+ *  filled, so a copy never doubles or overwrites a plan, and only in weeks
+ *  that have not started. Booking places come from their bookings, not copies. */
+export async function copyPlan(input: CopyPlanInput): Promise<ActionResult> {
+  const parsed = copySchema.safeParse(input);
+  if (!parsed.success) return fail(parsed.error.issues[0].message);
+  const { siteId, from, to, whole, people } = parsed.data;
+  if (whole && (mondayOf(from) !== from || mondayOf(to) !== to)) return fail("Choose whole weeks, Monday to Sunday.");
+  if (from === to) return fail("Choose a different week or day to copy from.");
+  const span = whole ? 7 : 1;
+  const targets = Array.from({ length: span }, (_, i) => addDaysIso(to, i));
+  if (weekStarted(targets[0], today())) return fail("That week has started. Change its duties one at a time, with a reason.");
   const allowed = await allowedAt(siteId);
   if (!allowed.ok) return fail(allowed.error);
   const { actor, site } = allowed;
   if (!site.orgId) return fail("That site is not set up for the rota.");
-  const from = parseDateOnly(addDaysIso(monday, -7)), to = parseDateOnly(addDaysIso(monday, 6));
-  const select = { date: true, startMinutes: true, endMinutes: true, role: true, departmentId: true, requiredTypeId: true, userId: true, note: true } as const;
-  const shifts = await prisma.rotaShift.findMany({ where: { siteId, kind: "shift", cancelledAt: null, importId: null, date: { gte: from, lte: to } }, select });
-  const key = (s: (typeof shifts)[number], shiftDays: number) =>
-    [addDaysIso(iso(s.date), shiftDays), s.startMinutes, s.endMinutes, s.role.toLowerCase(), s.departmentId ?? "", s.userId ?? ""].join("|");
-  const planned = new Set(shifts.filter((s) => iso(s.date) >= monday).map((s) => key(s, 0)));
-  const copies = shifts.filter((s) => iso(s.date) < monday && !planned.has(key(s, 7)));
-  if (!copies.length) return fail(shifts.some((s) => iso(s.date) < monday) ? "Every duty from last week is already planned." : "Last week has no duties to copy.");
+  const range = (start: string) => ({ gte: parseDateOnly(start), lte: parseDateOnly(addDaysIso(start, span - 1)) });
+  const [source, planned, activities, plannedActivities, notes, plannedNotes] = await Promise.all([
+    prisma.rotaShift.findMany({
+      where: { siteId, kind: "shift", cancelledAt: null, importId: null, bookingId: null, date: range(from) },
+      select: { date: true, startMinutes: true, endMinutes: true, role: true, departmentId: true, requiredTypeId: true, userId: true, note: true,
+        segments: { select: { startMinutes: true, endMinutes: true, kind: true, label: true } } },
+    }),
+    prisma.rotaShift.findMany({ where: { siteId, kind: "shift", cancelledAt: null, bookingId: null, date: range(to) }, select: { date: true } }),
+    prisma.rotaActivity.findMany({ where: { siteId, date: range(from) }, select: { date: true, label: true, startMinutes: true, endMinutes: true, people: true, requiredTypeId: true, note: true } }),
+    prisma.rotaActivity.findMany({ where: { siteId, date: range(to) }, select: { date: true } }),
+    prisma.rotaDayNote.findMany({ where: { siteId, date: range(from) }, select: { date: true, text: true } }),
+    prisma.rotaDayNote.findMany({ where: { siteId, date: range(to) }, select: { date: true } }),
+  ]);
+  // Day n of the source lands on day n of the target; a day that already has a plan is left alone.
+  const offset = (d: Date) => Math.round((Date.parse(iso(d)) - Date.parse(from)) / 86_400_000);
+  const busy = new Set([...planned, ...plannedActivities].map((s) => iso(s.date)));
+  const onto = (d: Date) => { const target = addDaysIso(to, offset(d)); return busy.has(target) ? null : target; };
+  const shifts = source.flatMap((s) => { const date = onto(s.date); return date ? [{ ...s, date }] : []; });
+  const covers = activities.flatMap((a) => { const date = onto(a.date); return date ? [{ ...a, date }] : []; });
+  const kept = notes.flatMap((n) => { const date = addDaysIso(to, offset(n.date)); return plannedNotes.some((p) => iso(p.date) === date) ? [] : [{ ...n, date }]; });
+  const skipped = [...new Set(source.concat().map((s) => addDaysIso(to, offset(s.date))).filter((d) => busy.has(d)))].length;
+  if (!shifts.length && !covers.length) {
+    return fail(source.length || activities.length ? "Every day there already has a plan. Clear a day first to copy onto it." : "Nothing is planned there to copy.");
+  }
   await prisma.$transaction(async (tx) => {
-    await tx.rotaShift.createMany({ data: copies.map((s) => ({ ...s, date: parseDateOnly(addDaysIso(iso(s.date), 7)), siteId, orgId: site.orgId!, createdById: actor.id, createdByName: actor.name })) });
-    await logAudit({ actorId: actor.id, actorName: actor.name, action: "create", entity: "RotaShift", entityId: null, clubId: site.id, summary: `Copied ${copies.length} ${copies.length === 1 ? "duty" : "duties"} from last week into the week of ${monday} at ${site.name}` }, tx);
+    for (const s of shifts) {
+      await tx.rotaShift.create({ data: {
+        orgId: site.orgId!, siteId, date: parseDateOnly(s.date), startMinutes: s.startMinutes, endMinutes: s.endMinutes, role: s.role,
+        departmentId: s.departmentId, requiredTypeId: s.requiredTypeId, userId: people ? s.userId : null, note: s.note,
+        createdById: actor.id, createdByName: actor.name,
+        segments: { create: s.segments.map((g) => ({ startMinutes: g.startMinutes, endMinutes: g.endMinutes, kind: g.kind, label: g.label })) },
+      } });
+    }
+    if (covers.length) await tx.rotaActivity.createMany({ data: covers.map((a) => ({ ...a, date: parseDateOnly(a.date), orgId: site.orgId!, siteId, createdById: actor.id, createdByName: actor.name })) });
+    for (const n of kept) await tx.rotaDayNote.create({ data: { orgId: site.orgId!, siteId, date: parseDateOnly(n.date), text: n.text, byId: actor.id, byName: actor.name } });
+    await logAudit({ actorId: actor.id, actorName: actor.name, action: "create", entity: "RotaShift", entityId: null, clubId: site.id,
+      summary: `Copied the plan of ${whole ? `the week of ${from}` : from} into ${whole ? `the week of ${to}` : to} at ${site.name}: ${shifts.length} ${shifts.length === 1 ? "duty" : "duties"}${people ? "" : ", unfilled"}, ${covers.length} ${covers.length === 1 ? "activity" : "activities"} to cover${skipped ? `; ${skipped} ${skipped === 1 ? "day" : "days"} already planned left as they were` : ""}` }, tx);
   });
   revalidatePath("/rota");
+  revalidatePath("/rota/day");
   return ok();
 }
 
@@ -228,7 +276,7 @@ export type SegmentInput = z.input<typeof segmentSchema>;
 export async function saveSegments(shiftId: string, input: SegmentInput[]): Promise<ActionResult> {
   const parsed = z.array(segmentSchema).max(24, "Up to 24 activities and breaks a shift.").safeParse(input);
   if (!parsed.success) return fail(parsed.error.issues[0].message);
-  const segments = parsed.data.map((s) => ({ startMinutes: parseClock(s.start), endMinutes: parseClock(s.end), kind: s.kind, label: s.kind === "break" ? s.label || "Break" : s.label }));
+  const segments = parsed.data.map((s) => ({ startMinutes: parseClock(s.start), endMinutes: parseClock(s.end), kind: s.kind, label: s.kind === "break" ? s.label || UNPAID_BREAK : s.label }));
   if (segments.some((s) => s.startMinutes === null || s.endMinutes === null)) return fail("Use times like 10:30.");
   const shift = await prisma.rotaShift.findFirst({ where: { id: shiftId, cancelledAt: null, kind: "shift" }, select: { siteId: true, date: true, role: true, startMinutes: true, endMinutes: true, user: { select: { name: true } }, rotaPerson: { select: { name: true } } } });
   if (!shift) return fail("That duty no longer exists.");
