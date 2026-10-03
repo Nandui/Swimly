@@ -1,22 +1,26 @@
 "use client";
 
 import { useEffect, type ReactNode } from "react";
+import Image from "next/image";
 import Link from "next/link";
 import { usePathname, useSearchParams } from "next/navigation";
 import { signOut } from "next-auth/react";
-import { ArrowLeft, CircleHelp, LogOut, UserRound, Users } from "lucide-react";
-import { Brand } from "@/components/workspace/brand";
+import { ChevronDown, CircleHelp, LogOut, Monitor, Moon, Sun } from "lucide-react";
+import { Avatar, AvatarFallback } from "@/components/shadcn/avatar";
+import { useThemeMode } from "@/components/theme-provider";
+import { parseThemeMode } from "@/lib/theme-mode";
 import { Button } from "@/components/shadcn/button";
 import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuLabel,
+  DropdownMenuRadioGroup,
+  DropdownMenuRadioItem,
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/shadcn/dropdown-menu";
 import { ClubSwitcher } from "@/components/clubs/club-switcher";
-import { ThemeFlip } from "@/components/theme-toggle";
 import { instructorHomeHref } from "@/modules/activities/lib/attendance/navigation";
 import { SHELL_PAGE_ID } from "@/lib/shell-preferences";
 import styles from "./instructor-shell.module.css";
@@ -42,6 +46,7 @@ export function InstructorShell({
 }) {
   const pathname = usePathname();
   const params = useSearchParams();
+  const { mode, setMode } = useThemeMode();
   const search = params.toString();
   const home = instructorHomeHref({
     tab: params.get("tab") ?? undefined,
@@ -62,78 +67,50 @@ export function InstructorShell({
         Skip to class
       </a>
       {banner}
-      <header
-        className={`${styles.topbar} shrink-0 border-b px-4 py-3`}
-        aria-label="Pool deck tools"
-      >
-        <div className="mx-auto flex max-w-6xl flex-wrap items-center gap-3">
-          <Button
-            asChild
-            variant="ghost"
-            className="min-h-11 shrink-0 px-2 text-base font-semibold"
-          >
-            <Link href={home}>
-              {pathname === "/instructor" ? (
-                <Brand module="Pool deck" />
-              ) : (
-                <ArrowLeft aria-hidden="true" />
-              )}
-              <span>
-                {pathname === "/instructor" ? <span className="sr-only">Pool deck classes</span> : "Classes"}
-              </span>
-            </Link>
+      <header className={`${styles.topbar} tf-top shrink-0`} aria-label="Pool deck tools">
+        <Link href={home} className="tf-brand" aria-label="Pool deck classes">
+          <Image src="/brand/turnfin.png" alt="" width={72} height={72} priority />
+        </Link>
+        <nav className="tf-bar tf-pages" aria-label="Pool deck">
+          <Link href={home} className="tf-bar-item" aria-current={pathname !== "/instructor/swimmers" ? "page" : undefined}>Classes</Link>
+          <Link href="/instructor/swimmers" className="tf-bar-item" aria-current={pathname === "/instructor/swimmers" ? "page" : undefined}>Swimmers</Link>
+        </nav>
+        <div className="tf-bar tf-tools" role="group" aria-label="Site, help and account">
+          <ClubSwitcher club={club} clubs={clubs} touchTargets />
+          <Button asChild variant="ghost" size="icon" className="tf-bar-item tf-icon">
+            <Link href="/help/instructor" target="_blank" rel="noopener noreferrer" aria-label="Help (opens in a new tab)"><CircleHelp aria-hidden="true" /></Link>
           </Button>
-          <div className="order-last w-full min-w-0 sm:order-none sm:w-60">
-            <ClubSwitcher club={club} clubs={clubs} touchTargets />
-          </div>
-          <div className="ml-auto flex items-center gap-2">
-            <Button asChild variant="ghost" className="min-h-11 px-2">
-              <Link href="/instructor/swimmers" aria-current={pathname === "/instructor/swimmers" ? "page" : undefined}><Users aria-hidden="true" />Swimmers</Link>
-            </Button>
-            <Button asChild variant="ghost" className="min-h-11 px-2">
-              <Link href="/help/instructor" target="_blank" rel="noopener noreferrer" aria-label="Help (opens in a new tab)"><CircleHelp aria-hidden="true" />Help</Link>
-            </Button>
-            <ThemeFlip />
-            <DropdownMenu>
-              <DropdownMenuTrigger asChild>
-                <Button
-                  variant="outline"
-                  className="min-h-11 min-w-11"
-                  aria-label={`Instructor menu: ${userName}`}
-                >
-                  <UserRound aria-hidden="true" />
-                  <span className="hidden max-w-48 truncate md:inline">
-                    {userName}
-                  </span>
-                </Button>
-              </DropdownMenuTrigger>
-              <DropdownMenuContent align="end" className="max-w-72">
-                <DropdownMenuLabel className="break-words">
-                  {userName}
-                </DropdownMenuLabel>
-                <DropdownMenuSeparator />
-                <DropdownMenuItem
-                  className="min-h-11"
-                  onSelect={() => {
-                    void signOut({ callbackUrl: "/sign-in" });
-                  }}
-                >
-                  <LogOut aria-hidden="true" />
-                  Sign out
-                </DropdownMenuItem>
-              </DropdownMenuContent>
-            </DropdownMenu>
-          </div>
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button variant="ghost" className="tf-bar-item tf-who" aria-label={`Instructor menu: ${userName}`}>
+                <Avatar className="avatar size-8"><AvatarFallback className="bg-ui-brand-soft text-xs font-semibold text-ui-brand-ink">{userName.split(" ").map((part) => part[0]).slice(0, 2).join("")}</AvatarFallback></Avatar><ChevronDown aria-hidden="true" />
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end" className="w-72 max-w-[calc(100vw-2rem)]">
+              <DropdownMenuLabel className="break-words">{userName}</DropdownMenuLabel>
+              <DropdownMenuSeparator />
+              <DropdownMenuLabel className="text-xs font-semibold text-ui-muted-foreground">Appearance</DropdownMenuLabel>
+              <DropdownMenuRadioGroup value={mode} onValueChange={(value) => setMode(parseThemeMode(value))}>
+                <DropdownMenuRadioItem value="system" className="min-h-11"><Monitor aria-hidden="true" />System</DropdownMenuRadioItem>
+                <DropdownMenuRadioItem value="light" className="min-h-11"><Sun aria-hidden="true" />Light</DropdownMenuRadioItem>
+                <DropdownMenuRadioItem value="dark" className="min-h-11"><Moon aria-hidden="true" />Dark</DropdownMenuRadioItem>
+              </DropdownMenuRadioGroup>
+              <DropdownMenuSeparator />
+              <DropdownMenuItem className="min-h-11" onSelect={() => { void signOut({ callbackUrl: "/sign-in" }); }}>
+                <LogOut aria-hidden="true" />Sign out
+              </DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
         </div>
       </header>
       <main
         id="instructor-main"
         tabIndex={-1}
-        className="flex min-h-0 min-w-0 flex-1 flex-col"
+        className="tf-main flex min-h-0 min-w-0 flex-1 flex-col"
       >
         <div
           id={SHELL_PAGE_ID}
-          className="min-h-0 flex-1 overflow-y-auto overscroll-contain p-4"
+          className="min-h-0 flex-1 overflow-y-auto overscroll-contain px-4 pt-6 pb-4"
         >
           <div className="mx-auto w-full min-w-0 max-w-6xl">{children}</div>
         </div>

@@ -11,14 +11,19 @@
   min-width: calc(var(--spacing) * 11);
 }
 
-/* Poolside Clear, as in every module: the cool canvas, a white top bar and white panels. */
+/* Poolside Clear v2, as in every module: the cool canvas, the v2 top bar (fin, page bar, tools
+   bar) and white panels of separate rows. The deck has no module bar (docs/instructor.md). */
 .workspace { background: var(--pc-canvas); height: 100dvh; }
-.topbar { background: var(--pc-surface); border-color: var(--pc-line); }
+.topbar { width: 100%; max-width: calc(72rem + 32px); margin: 0 auto; padding: 16px 16px 0; }
 .workspace :global([data-slot='item-group']) {
-  border: 1px solid var(--pc-line);
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: 8px 16px 16px;
+  border: 0;
   border-radius: var(--pc-radius-panel);
   background: var(--pc-surface);
-  box-shadow: var(--pc-shadow-card);
-  overflow: hidden;
+  box-shadow: none;
 }
-.workspace :global([data-slot='item-group'] > [data-slot='item']) { padding-inline: 16px; }
+.workspace :global([data-slot='item-group'] > [data-slot='item']) { padding: 12px 16px; border: 1px solid var(--pc-line); border-radius: var(--pc-radius-card); }
+.workspace :global([data-slot='item-group'] > [data-slot='item-separator']) { display: none; }

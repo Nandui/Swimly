@@ -38,6 +38,7 @@ import { CANCELLATION_META } from "@/modules/activities/lib/cancellations/consta
 import { Tag } from "@/components/ui-kit/tag";
 import { InstructorAssessments } from "@/modules/activities/components/instructor/assessments";
 import { getTodayAssessments } from "@/modules/activities/lib/today/assessments";
+import { SegmentedLinks } from "@/components/ui-kit/segmented-links";
 
 export const metadata: Metadata = { title: "Instructor" };
 type Grouping = "time" | "level";
@@ -181,48 +182,18 @@ export default async function InstructorPage(props: PageProps<"/instructor">) {
         <RefreshClasses />
       </header>
       <InstructorAssessments sessions={assessments} canRun={can(session, "assessments.run")} params={{ tab, group }} />
-      <div className="flex flex-wrap items-center justify-between gap-3 border-b border-ui-border pb-4">
-        <nav aria-label="Whose classes" className="flex gap-1">
-          <Button asChild variant={tab === "mine" ? "secondary" : "ghost"}>
-            <Link
-              aria-current={tab === "mine" ? "page" : undefined}
-              href={href({ tab: "mine" })}
-            >
-              My classes{" "}
-              <span className="text-ui-muted-foreground">{mine.length}</span>
-            </Link>
-          </Button>
-          <Button asChild variant={tab === "all" ? "secondary" : "ghost"}>
-            <Link
-              aria-current={tab === "all" ? "page" : undefined}
-              href={href({ tab: "all" })}
-            >
-              All classes{" "}
-              <span className="text-ui-muted-foreground">{courses.length}</span>
-            </Link>
-          </Button>
-        </nav>
-        <nav aria-label="Group classes" className="flex items-center gap-1">
-          <span className="mr-2 text-sm text-ui-muted-foreground">
-            Group by
-          </span>
-          <Button asChild variant={group === "time" ? "outline" : "ghost"}>
-            <Link
-              href={href({ group: "time" })}
-              aria-current={group === "time" ? "true" : undefined}
-            >
-              Time
-            </Link>
-          </Button>
-          <Button asChild variant={group === "level" ? "outline" : "ghost"}>
-            <Link
-              href={href({ group: "level" })}
-              aria-current={group === "level" ? "true" : undefined}
-            >
-              Level
-            </Link>
-          </Button>
-        </nav>
+      <div className="flex flex-wrap items-center justify-between gap-3">
+        <SegmentedLinks label="Whose classes" items={[
+          { href: href({ tab: "mine" }), label: "My classes", count: mine.length, current: tab === "mine" },
+          { href: href({ tab: "all" }), label: "All classes", count: courses.length, current: tab === "all" },
+        ]} />
+        <div className="flex items-center gap-2">
+          <span className="text-sm text-ui-muted-foreground">Group by</span>
+          <SegmentedLinks label="Group classes" items={[
+            { href: href({ group: "time" }), label: "Time", current: group === "time" },
+            { href: href({ group: "level" }), label: "Level", current: group === "level" },
+          ]} />
+        </div>
       </div>
       {!shown.length ? (
         <div className="flex flex-col items-start gap-3 py-8">

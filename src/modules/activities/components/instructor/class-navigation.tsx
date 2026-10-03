@@ -1,6 +1,5 @@
-import Link from "next/link";
-import { Button } from "@/components/shadcn/button";
 import { instructorClassHref, instructorClassOverviewHref, type ClassQuery } from "@/modules/activities/lib/attendance/navigation";
+import { SegmentedLinks } from "@/components/ui-kit/segmented-links";
 
 export function InstructorClassNavigation({ id, params, active }: {
   id: string;
@@ -13,12 +12,6 @@ export function InstructorClassNavigation({ id, params, active }: {
     { key: "overview", label: "Class overview", href: instructorClassOverviewHref(id, params) },
   ];
   return (
-    <nav aria-label="Class steps" className="flex flex-wrap gap-2 border-b border-ui-border pb-3">
-      {links.map(link => (
-        <Button key={link.key} asChild variant={active === link.key ? "secondary" : "ghost"} className="min-h-11">
-          <Link href={link.href} aria-current={active === link.key ? "page" : undefined}>{link.label}</Link>
-        </Button>
-      ))}
-    </nav>
+    <SegmentedLinks label="Class steps" items={links.map(link => ({ href: link.href, label: link.label, current: active === link.key }))} />
   );
 }

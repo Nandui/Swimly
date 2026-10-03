@@ -455,19 +455,19 @@
 .turnfin-app .tf-bar { position: relative; display: inline-flex; flex: none; align-items: center; width: max-content; max-width: 100%; padding: 4px; border-radius: 999px; background: var(--pc-surface); overflow-x: auto; scrollbar-width: none; }
 .turnfin-app .tf-pages { flex: 0 1 auto; min-width: 0; }
 .turnfin-app .tf-tools { margin-left: auto; overflow: visible; }
-.turnfin-app :is(.tf-bar-item, .tf-tools > [data-slot='button'], .tf-tools > .ui-motion-press) { position: relative; isolation: isolate; display: inline-flex; flex: none; align-items: center; justify-content: center; gap: 6px; width: auto; min-width: 44px; min-height: 44px; height: 44px; margin: -4px 0; padding: 0 16px; border: 0; border-radius: 999px; background: none; box-shadow: none; color: var(--pc-ink); font-size: var(--pc-text-body); font-weight: 600; white-space: nowrap; text-decoration: none; cursor: pointer; }
-.turnfin-app :is(.tf-bar-item, .tf-tools > [data-slot='button'], .tf-tools > .ui-motion-press)::before { content: ''; position: absolute; inset: 4px 0; z-index: -1; border-radius: 999px; transition: background-color 120ms var(--pc-ease); }
-.turnfin-app :is(.tf-bar-item, .tf-tools > [data-slot='button'], .tf-tools > .ui-motion-press):hover { background: none; }
-.turnfin-app :is(.tf-bar-item, .tf-tools > [data-slot='button'], .tf-tools > .ui-motion-press):hover::before { background: var(--pc-surface-sunken); }
+.turnfin-app :is(.tf-bar-item, .tf-tools > :is([data-slot='button'], [data-slot='dropdown-menu-trigger']), .tf-tools > .ui-motion-press) { position: relative; isolation: isolate; display: inline-flex; flex: none; align-items: center; justify-content: center; gap: 6px; width: auto; min-width: 44px; min-height: 44px; height: 44px; margin: -4px 0; padding: 0 16px; border: 0; border-radius: 999px; background: none; box-shadow: none; color: var(--pc-ink); font-size: var(--pc-text-body); font-weight: 600; white-space: nowrap; text-decoration: none; cursor: pointer; }
+.turnfin-app :is(.tf-bar-item, .tf-tools > :is([data-slot='button'], [data-slot='dropdown-menu-trigger']), .tf-tools > .ui-motion-press)::before { content: ''; position: absolute; inset: 4px 0; z-index: -1; border-radius: 999px; transition: background-color 120ms var(--pc-ease); }
+.turnfin-app :is(.tf-bar-item, .tf-tools > :is([data-slot='button'], [data-slot='dropdown-menu-trigger']), .tf-tools > .ui-motion-press):hover { background: none; }
+.turnfin-app :is(.tf-bar-item, .tf-tools > :is([data-slot='button'], [data-slot='dropdown-menu-trigger']), .tf-tools > .ui-motion-press):hover::before { background: var(--pc-surface-sunken); }
 .turnfin-app .tf-bar-item[aria-current] { color: var(--pc-on-primary); }
 .turnfin-app .tf-bar-item[aria-current]::before { background: var(--pc-primary) !important; }
-.turnfin-app :is(.tf-bar-item, .tf-tools > [data-slot='button']):focus-visible { outline-offset: -2px; }
-.turnfin-app :is(.tf-bar-item, .tf-tools > [data-slot='button']) > svg { width: 16px; height: 16px; }
+.turnfin-app :is(.tf-bar-item, .tf-tools > :is([data-slot='button'], [data-slot='dropdown-menu-trigger'])):focus-visible { outline-offset: -2px; }
+.turnfin-app :is(.tf-bar-item, .tf-tools > :is([data-slot='button'], [data-slot='dropdown-menu-trigger'])) > svg { width: 16px; height: 16px; }
 .turnfin-app :is(.tf-icon, .tf-tools > [data-size^='icon']) { width: 44px; padding: 0; }
 .turnfin-app .tf-who { padding: 0 10px 0 4px; gap: 4px; }
 .turnfin-app .tf-who .avatar { width: 32px; height: 32px; border: 0; }
 .turnfin-app .tf-who .avatar [data-slot='avatar-fallback'] { font-size: var(--pc-text-caption); line-height: var(--pc-leading-caption); font-weight: 600; }
-.turnfin-app .tf-tools > [data-slot='button'] > span { max-width: 180px; overflow: hidden; text-overflow: ellipsis; }
+.turnfin-app .tf-tools > :is([data-slot='button'], [data-slot='dropdown-menu-trigger']):not(.tf-who) > span:not([data-slot='avatar']) { max-width: 180px; overflow: hidden; text-overflow: ellipsis; }
 
 .turnfin-app .tf-rail { position: sticky; top: 24px; display: flex; flex: none; flex-direction: column; align-items: center; gap: 12px; width: 64px; }
 .turnfin-app .tf-rail-group { display: flex; flex-direction: column; align-items: center; padding: 4px; border-radius: 999px; background: var(--pc-surface); }
@@ -494,8 +494,8 @@ html:has(.tf-shell) { scroll-padding-bottom: 112px; }
 
 /* Tablet: page links take their own row, lined up with the page. */
 @media (min-width: 768px) and (max-width: 1100px) {
-  .turnfin-app .tf-top { flex-wrap: wrap; row-gap: 16px; }
-  .turnfin-app .tf-pages { order: 3; flex: 1 1 100%; width: auto; margin-left: 88px; }
+  .turnfin-app .tf-shell .tf-top { flex-wrap: wrap; row-gap: 16px; }
+  .turnfin-app .tf-shell .tf-pages { order: 3; flex: 1 1 100%; width: auto; margin-left: 88px; }
 }
 /* Phones, and any touch screen: the labelled bottom bar replaces the module bar. */
 @media (max-width: 767px), (hover: none) and (pointer: coarse) {
@@ -509,10 +509,10 @@ html:has(.tf-shell) { scroll-padding-bottom: 112px; }
   .turnfin-app .tf-frame { min-height: 100dvh; gap: 16px; padding: 16px 16px 104px; border: 0; border-radius: 0; }
   .turnfin-app .tf-top { flex-wrap: wrap; gap: 12px; }
   .turnfin-app .tf-pages { order: 3; flex: 1 1 100%; width: auto; }
-  .turnfin-app .tf-tools > [data-slot='button'] > span { display: none; }
+  .turnfin-app .tf-tools > :is([data-slot='button'], [data-slot='dropdown-menu-trigger']):not(.tf-who) > span:not([data-slot='avatar']) { display: none; }
 }
 @media (prefers-reduced-motion: reduce) {
-  .turnfin-app .tf-rail-label, .turnfin-app :is(.tf-bar-item, .tf-tools > [data-slot='button'])::before { transition: none; }
+  .turnfin-app .tf-rail-label, .turnfin-app :is(.tf-bar-item, .tf-tools > :is([data-slot='button'], [data-slot='dropdown-menu-trigger']))::before { transition: none; }
 }
 
 /* ---------------------------------------------------------------------------------------------
