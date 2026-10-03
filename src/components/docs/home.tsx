@@ -40,8 +40,7 @@ export function HomeView({ workspace: w }: { workspace: Workspace }) {
     <div className="knowledge-home home-operational">
       <header className="home-heading">
         <div>
-          <p className="section-kicker">Turnfin Docs</p>
-          <h1>Your workspace</h1>
+          <h1>Docs</h1>
           <p className="muted">
             Welcome back, {w.member.name.split(' ')[0]}. Here’s what needs your attention.
           </p>

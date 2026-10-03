@@ -1,4 +1,4 @@
-/* Adapter for shared primitives. Docs' approved repository theme is in brand.css. */
+/* Adapter for shared primitives. The theme itself is Poolside Clear (poolside.css). */
 .turnfin-docs {
   --bg: var(--ui-workspace);
   --paper: var(--ui-card);
@@ -33,6 +33,8 @@
 .turnfin-docs .button.primary { color: var(--ui-primary-foreground); background: var(--ui-primary); }
 .turnfin-docs .button.primary:hover { background: var(--ui-primary-hover); }
 .turnfin-docs .reader-layout, .turnfin-docs .editor-layout { min-width: 0; }
+/* Centred with auto margins, the editor would otherwise size to its toolbar and spill out of the frame. */
+.turnfin-docs .editor-layout { width: 100%; }
 .turnfin-docs .workflow-dialog { max-width: min(640px, calc(100vw - 32px)); }
 .turnfin-docs .home-facility { display: flex; flex-direction: row; }
 .turnfin-docs .workspace-search input, .turnfin-docs .home-search input { border: 0; box-shadow: none; background: transparent; min-width: 0; }

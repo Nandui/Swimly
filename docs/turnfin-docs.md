@@ -12,9 +12,8 @@ administration screens. Since September 2026 its colours and type follow the
 and aqua, a cool canvas with white panels and a pool-night dark mode, defined in
 `src/app/docs/poolside.css`. Module CSS and portal wrappers are scoped to
 `.turnfin-docs`; shared controls come from `src/components/shadcn`.
-Aquatics and the general staff portal retain their existing design. The Reception
-Portal keeps the earlier Docs theme (Inter, ocean blue) through `brand.css`; it does
-not load `poolside.css`. See docs/reception-portal.md.
+Every page, the Reception Portal included, gets Poolside Clear from the root layout; the
+earlier Docs theme (`brand.css`) is retired. See docs/reception-portal.md.
 
 ## Staff access
 

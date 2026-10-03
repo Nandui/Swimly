@@ -8,7 +8,6 @@ import { getCurrentClub } from "@/lib/clubs/current";
 import { visibleScreens } from "@/lib/staff/screens";
 import "../docs/docs.css";
 import "../docs/integration.css";
-import "../docs/brand.css";
 import "../workspace/module-workspace.css";
 import "./swim-school.css";
 

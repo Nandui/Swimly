@@ -5,7 +5,6 @@ import { loadHome } from "@/lib/home";
 import { allModules } from "@/modules/registry";
 import './docs/docs.css';
 import './docs/integration.css';
-import './docs/brand.css';
 import './workspace/module-workspace.css';
 
 export const metadata: Metadata = { title: { absolute: "Turnfin" }, icons: { icon: "/brand/turnfin.png" } };

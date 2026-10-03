@@ -4,7 +4,6 @@ import { Shell } from '@/components/docs/shell';
 import { cookies } from 'next/headers';
 import './docs.css';
 import './integration.css';
-import './brand.css';
 import './editor.css';
 import './poolside.css';
 import '@fontsource/plus-jakarta-sans/400.css';

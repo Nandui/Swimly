@@ -6,7 +6,6 @@ import { requireRefundActor } from "@/lib/refunds/auth";
 import { RefundShell } from "@/components/refunds/shell";
 import '../docs/docs.css';
 import '../docs/integration.css';
-import '../docs/brand.css';
 import '../docs/poolside.css';
 import './refunds.css';
 import '@fontsource/plus-jakarta-sans/400.css';

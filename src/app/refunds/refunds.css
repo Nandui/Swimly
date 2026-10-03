@@ -1,53 +1,55 @@
 /* Refunds page layouts. The Poolside Clear theme (tokens, shell, controls, fields) is shared
    with Docs in ../docs/poolside.css; this file only arranges the Refunds screens. */
 .turnfin-refunds .workspace-page { position: relative; }
-.turnfin-refunds .workspace-page-content > * { max-width: 1200px; }
+.turnfin-refunds .workspace-page-content > * { max-width: none; }
 .turnfin-refunds .workspace-mobile-toolbar > a[aria-label='Turnfin Refunds overview'] { flex: 1; min-width: 0; }
 .turnfin-refunds :is(.refund-content, [data-slot='dialog-content']) label:not(:has([type='checkbox'], [type='radio'])) { display: block; }
 
 /* Page heading */
 .turnfin-refunds .refund-content { min-width: 0; }
-.turnfin-refunds .refund-heading { display: flex; flex-wrap: wrap; align-items: flex-start; justify-content: space-between; gap: 16px; margin-bottom: 24px; }
+.turnfin-refunds .refund-heading { display: flex; flex-wrap: wrap; align-items: flex-end; justify-content: space-between; gap: 16px; margin-bottom: 16px; }
 .turnfin-refunds .refund-heading h1 { font-size: var(--pc-text-page); font-weight: 600; line-height: var(--pc-leading-page); letter-spacing: -0.01em; }
 .turnfin-refunds .refund-heading p { margin-top: 4px; color: var(--pc-ink-muted); }
 .turnfin-refunds .refund-eyebrow { font-size: var(--pc-text-caption); line-height: var(--pc-leading-caption); font-weight: 600; color: var(--pc-ink-muted); font-variant-numeric: tabular-nums; }
 
 /* Summary: one tile per figure */
 .turnfin-refunds .refund-summary { margin: 0; padding: 0; border: 0; background: none; gap: 12px; }
-.turnfin-refunds .refund-summary > div { padding: 16px 20px; background: var(--pc-surface); border: 1px solid var(--pc-line); border-radius: var(--pc-radius-panel); box-shadow: var(--pc-shadow-card); min-width: 0; }
+.turnfin-refunds .refund-summary > div { padding: 16px 20px; background: var(--pc-surface); border: 0; border-radius: var(--pc-radius-panel); box-shadow: none; min-width: 0; }
 .turnfin-refunds .refund-summary dt { display: flex; align-items: center; gap: 8px; font-size: var(--pc-text-caption); line-height: var(--pc-leading-caption); font-weight: 600; color: var(--pc-ink-muted); }
 .turnfin-refunds .refund-summary dt > svg { width: 16px; height: 16px; flex: none; }
-.turnfin-refunds .refund-summary dd { margin-top: 8px; font-size: var(--pc-text-figure); line-height: var(--pc-leading-figure); font-weight: 700; letter-spacing: -0.02em; font-variant-numeric: tabular-nums; }
+.turnfin-refunds .refund-summary dd { margin-top: 8px; font-size: var(--pc-text-figure); line-height: var(--pc-leading-figure); font-weight: 700; font-variant-numeric: tabular-nums; }
 .turnfin-refunds .refund-summary dd.refund-summary-text { font-size: var(--pc-text-title); line-height: var(--pc-leading-title); font-weight: 600; letter-spacing: 0; margin-top: 12px; }
 .turnfin-refunds .refund-summary a { display: block; color: inherit; text-decoration: none; border-radius: var(--pc-radius-panel); }
 .turnfin-refunds .refund-summary > div:has(> a) { padding: 0; transition: border-color 120ms var(--pc-ease), background-color 120ms var(--pc-ease); }
-.turnfin-refunds .refund-summary > div:has(> a):hover { border-color: var(--pc-primary); }
+.turnfin-refunds .refund-summary > div:has(> a):hover { background: var(--pc-surface-sunken); }
+.turnfin-refunds .refund-summary > div:has(> a[aria-current]) { box-shadow: inset 0 0 0 2px var(--pc-primary); }
 .turnfin-refunds .refund-summary > div > a { padding: 16px 20px; }
 .turnfin-refunds .refund-totals-note { margin-top: 8px; }
 
 /* Filters */
-.turnfin-refunds .refund-filters { margin-top: 24px; padding: 20px; border: 1px solid var(--pc-line); border-radius: var(--pc-radius-panel); background: var(--pc-surface); box-shadow: var(--pc-shadow-card); }
+.turnfin-refunds .refund-filters { margin-top: 16px; padding: 24px; border: 0; border-radius: var(--pc-radius-panel); background: var(--pc-surface); box-shadow: none; }
 
 /* Results list */
-.turnfin-refunds .refund-results { margin-top: 24px; }
+.turnfin-refunds .refund-results { margin-top: 16px; }
 .turnfin-refunds .refund-results > p { margin-bottom: 8px; font-weight: 600; color: var(--pc-ink-muted); }
 .turnfin-refunds .refund-results ul { margin: 0; padding: 0; list-style: none; }
-.turnfin-refunds .refund-list { border: 1px solid var(--pc-line); border-radius: var(--pc-radius-panel); background: var(--pc-surface); box-shadow: var(--pc-shadow-card); overflow: hidden; }
-.turnfin-refunds .refund-list > li + li { border-top: 1px solid var(--pc-line); }
-.turnfin-refunds .refund-row { color: inherit; text-decoration: none; transition: background-color 120ms var(--pc-ease); }
+.turnfin-refunds /* A white panel of separate rows (DESIGN.md, Poolside Clear v2). */
+.turnfin-refunds .refund-list { display: flex; flex-direction: column; gap: 8px; padding: 8px 16px 16px; border: 0; border-radius: var(--pc-radius-panel); background: var(--pc-surface); box-shadow: none; }
+.turnfin-refunds .refund-list > li { border: 1px solid var(--pc-line); border-radius: var(--pc-radius-card); overflow: hidden; }
+.turnfin-refunds .refund-row { min-height: 64px; color: inherit; text-decoration: none; transition: background-color 120ms var(--pc-ease); }
 .turnfin-refunds .refund-row:hover { background: var(--pc-surface-sunken); }
-.turnfin-refunds .refund-row:focus-visible { outline: 2px solid var(--pc-focus); outline-offset: -2px; }
+.turnfin-refunds .refund-row:focus-visible { outline: 2px solid var(--pc-focus); outline-offset: -2px; border-radius: var(--pc-radius-card); }
 .turnfin-refunds .refund-row-customer { font-size: var(--pc-text-body); line-height: var(--pc-leading-body); font-weight: 600; }
 .turnfin-refunds .refund-row-amount { font-size: var(--pc-text-body); line-height: var(--pc-leading-body); font-weight: 700; font-variant-numeric: tabular-nums; }
 .turnfin-refunds .refund-row-arrow { color: var(--pc-ink-muted); transition: translate 200ms var(--pc-ease), color 120ms var(--pc-ease); }
 .turnfin-refunds .refund-row:is(:hover, :focus-visible) .refund-row-arrow { translate: 2px 0; color: var(--pc-ink); }
-.turnfin-refunds .refund-empty { padding: 48px 24px; text-align: center; border: 1px dashed var(--pc-line-strong); border-radius: var(--pc-radius-panel); background: var(--pc-surface); }
-.turnfin-refunds .refund-empty > svg { margin: 0 auto 12px; width: 40px; height: 40px; padding: 10px; border-radius: var(--pc-radius-control); background: var(--pc-primary-soft); color: var(--pc-primary-ink); }
+.turnfin-refunds .refund-empty { padding: 48px 24px; text-align: center; border: 0; border-radius: var(--pc-radius-panel); background: var(--pc-surface); }
+.turnfin-refunds .refund-empty > svg { margin: 0 auto 12px; width: 40px; height: 40px; padding: 10px; border-radius: 999px; background: var(--pc-primary-soft); color: var(--pc-primary); }
 
 /* Panels */
 .turnfin-refunds .refund-request-form > fieldset { display: grid; gap: 24px; }
-.turnfin-refunds .refund-panel { padding: 20px; border: 1px solid var(--pc-line); border-radius: var(--pc-radius-panel); background: var(--pc-surface); box-shadow: var(--pc-shadow-card); }
-.turnfin-refunds .refund-panel h2 { font-size: var(--pc-text-title); line-height: var(--pc-leading-title); font-weight: 600; letter-spacing: -0.01em; }
+.turnfin-refunds .refund-panel { padding: 24px; border: 0; border-radius: var(--pc-radius-panel); background: var(--pc-surface); box-shadow: none; }
+.turnfin-refunds .refund-panel h2 { font-size: var(--pc-text-title); line-height: var(--pc-leading-title); font-weight: 600; }
 .turnfin-refunds .refund-panel h2 + :is(div, dl, ol, p) { margin-top: 16px; }
 .turnfin-refunds .refund-panel dt { font-weight: 600; }
 .turnfin-refunds .refund-panel dd { margin-top: 4px; }
@@ -57,9 +59,10 @@
    labels never wrap into uneven rows in the narrow side column. */
 .turnfin-refunds .refund-action-buttons { display: grid; grid-template-columns: repeat(auto-fill, minmax(min(100%, 200px), 1fr)); gap: 8px; }
 .turnfin-refunds .refund-action-buttons > [data-variant='default'] { order: -1; }
-.turnfin-refunds .refund-action-panel {border-color: var(--pc-primary); box-shadow: 0 0 0 1px var(--pc-primary), var(--pc-shadow-card); }
-.turnfin-refunds .refund-detail-columns { display: grid; gap: 24px; margin-top: 24px; }
-.turnfin-refunds .refund-history { margin-top: 24px; }
+.turnfin-refunds /* The next action is the one panel with an edge: the action colour, 2px. */
+.turnfin-refunds .refund-action-panel { box-shadow: inset 0 0 0 2px var(--pc-primary); }
+.turnfin-refunds .refund-detail-columns { display: grid; gap: 16px; margin-top: 16px; }
+.turnfin-refunds .refund-history { margin-top: 16px; }
 .turnfin-refunds .refund-history ol { margin-bottom: 0; padding: 0; list-style: none; }
 .turnfin-refunds .refund-history li:last-child { padding-bottom: 0; }
 .turnfin-refunds .refund-new > .refund-heading { display: block; }

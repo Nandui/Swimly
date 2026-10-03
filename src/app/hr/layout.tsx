@@ -9,7 +9,6 @@ import { hrConfigured } from "@/lib/hr/database";
 import { pageSession } from "@/lib/page-guards";
 import '../docs/docs.css';
 import '../docs/integration.css';
-import '../docs/brand.css';
 import '../docs/poolside.css';
 import '../workspace/module-workspace.css';
 import '@fontsource/plus-jakarta-sans/400.css';

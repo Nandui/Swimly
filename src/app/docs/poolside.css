@@ -497,6 +497,17 @@ html:has(.tf-shell) { scroll-padding-bottom: 112px; }
   .turnfin-app .tf-shell .tf-top { flex-wrap: wrap; row-gap: 16px; }
   .turnfin-app .tf-shell .tf-pages { order: 3; flex: 1 1 100%; width: auto; margin-left: 88px; }
 }
+/* Page links that do not fit go under "More" (ModuleShell, BAR_FITS): one cut from 1100px, one
+   from 768px and one on phones, so a link never scrolls out of sight. */
+.turnfin-app .tf-shell .tf-pages > :is([data-more='wide'], [data-more-menu='narrow'], [data-more-menu='phone']) { display: none; }
+@media (max-width: 1099px) {
+  .turnfin-app .tf-shell .tf-pages > :is([data-more='narrow'], [data-more-menu='wide']) { display: none; }
+  .turnfin-app .tf-shell .tf-pages > [data-more-menu='narrow'] { display: inline-flex; }
+}
+@media (max-width: 767px) {
+  .turnfin-app .tf-shell .tf-pages > :is([data-more='phone'], [data-more-menu='narrow']) { display: none; }
+  .turnfin-app .tf-shell .tf-pages > [data-more-menu='phone'] { display: inline-flex; }
+}
 /* Phones, and any touch screen: the labelled bottom bar replaces the module bar. */
 @media (max-width: 767px), (hover: none) and (pointer: coarse) {
   .turnfin-app .tf-rail { display: none; }

@@ -14,8 +14,10 @@ import { useYourModules } from '@/components/workspace/your-modules';
 export type ModuleLink = { href: string; label: string; icon: LucideIcon; active: boolean };
 export type ModuleLinkGroup = { label: string; links: ModuleLink[] };
 
-/** Page links the top bar shows before the rest go under "More". */
-const VISIBLE_PAGES = 7;
+/** How many page links fit the top bar at each width (poolside.css): from 1100px, from 768px
+ *  and on phones. When a module has more, the last place goes to "More" with the rest. */
+const BAR_FITS = [['wide', 7], ['narrow', 4], ['phone', 3]] as const;
+type BarWidth = (typeof BAR_FITS)[number][0];
 
 /** The one frame every module opens in (docs/how-turnfin-works.md, DESIGN.md "Poolside Clear
  *  v2"): the fin and the module's pages along the top, search, site and account on the right;
@@ -52,10 +54,9 @@ export function ModuleShell({ module, id, current = id, who, links = [], groups,
   const pathname = usePathname();
   useEffect(() => { window.scrollTo({ top: 0 }); }, [pathname, scrollKey]);
   const pages = (groups ?? [{ label: '', links }]).flatMap((group) => group.links);
-  const overflow = pages.length > VISIBLE_PAGES;
-  const shown = overflow ? pages.slice(0, VISIBLE_PAGES - 1) : pages;
-  const more = overflow ? pages.slice(VISIBLE_PAGES - 1) : [];
-  const moreActive = more.some((page) => page.active);
+  const cuts = BAR_FITS.filter(([, fits]) => pages.length > fits);
+  /** The widest bar a link no longer fits in, if any. */
+  const hiddenFrom = (index: number) => cuts.find(([, fits]) => index >= fits - 1)?.[0];
   const railCurrent = current === 'core' ? 'admin' : current;
 
   return (
@@ -69,25 +70,11 @@ export function ModuleShell({ module, id, current = id, who, links = [], groups,
           {pages.length > 0 && (
             <nav className="tf-bar tf-pages" aria-label={`${module} pages`}>
               <span className="sr-only">{scopeNote}</span>
-              {shown.map((page) => (
-                <Link key={page.href} href={page.href} className="tf-bar-item" aria-current={page.active ? 'page' : undefined}>{page.label}</Link>
+              {pages.map((page, index) => (
+                <Link key={page.href} href={page.href} className="tf-bar-item" aria-current={page.active ? 'page' : undefined}
+                  data-more={hiddenFrom(index)}>{page.label}</Link>
               ))}
-              {overflow && (
-                <DropdownMenu>
-                  <DropdownMenuTrigger asChild>
-                    <Button variant="ghost" className="tf-bar-item" aria-current={moreActive ? 'page' : undefined}>
-                      {moreActive ? more.find((page) => page.active)?.label : 'More'}<ChevronDown aria-hidden="true" />
-                    </Button>
-                  </DropdownMenuTrigger>
-                  <DropdownMenuContent align="start" className="w-64 max-w-[calc(100vw-2rem)]">
-                    {more.map((page) => (
-                      <DropdownMenuItem key={page.href} asChild className="min-h-11">
-                        <Link href={page.href} aria-current={page.active ? 'page' : undefined}><page.icon aria-hidden="true" />{page.label}</Link>
-                      </DropdownMenuItem>
-                    ))}
-                  </DropdownMenuContent>
-                </DropdownMenu>
-              )}
+              {cuts.map(([width, fits]) => <PagesMore key={width} pages={pages.slice(fits - 1)} width={width} />)}
             </nav>
           )}
           <div className="tf-bar tf-tools" role="group" aria-label="Search, site and account">
@@ -105,6 +92,27 @@ export function ModuleShell({ module, id, current = id, who, links = [], groups,
       </div>
       <ModuleBottomBar current={railCurrent} />
     </div>
+  );
+}
+
+/** The pages that do not fit the bar at one width, in a menu named after the open one. */
+function PagesMore({ pages, width }: { pages: ModuleLink[]; width: BarWidth }) {
+  const active = pages.find((page) => page.active);
+  return (
+    <DropdownMenu>
+      <DropdownMenuTrigger asChild>
+        <Button variant="ghost" className="tf-bar-item" data-more-menu={width} aria-current={active ? 'page' : undefined}>
+          {active ? active.label : 'More'}<ChevronDown aria-hidden="true" />
+        </Button>
+      </DropdownMenuTrigger>
+      <DropdownMenuContent align="start" className="w-64 max-w-[calc(100vw-2rem)]">
+        {pages.map((page) => (
+          <DropdownMenuItem key={page.href} asChild className="min-h-11">
+            <Link href={page.href} aria-current={page.active ? 'page' : undefined}><page.icon aria-hidden="true" />{page.label}</Link>
+          </DropdownMenuItem>
+        ))}
+      </DropdownMenuContent>
+    </DropdownMenu>
   );
 }
 

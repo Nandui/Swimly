@@ -7,7 +7,6 @@ import { trainingAccess } from "@/lib/training/access";
 import { TrainingShell } from "@/components/training/shell";
 import '../docs/docs.css';
 import '../docs/integration.css';
-import '../docs/brand.css';
 import '../docs/poolside.css';
 import '../workspace/module-workspace.css';
 import '@fontsource/plus-jakarta-sans/400.css';
