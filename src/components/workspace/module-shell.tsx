@@ -1,97 +1,160 @@
 'use client';
 
+import Image from 'next/image';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { useEffect, useRef, useState, type ReactNode } from 'react';
-import { Menu, PanelLeftClose, PanelLeftOpen, ShieldCheck, type LucideIcon } from 'lucide-react';
-import { Sidebar, SidebarProvider, SidebarMenuButton } from '@/components/shadcn/sidebar';
+import { useEffect, type ReactNode } from 'react';
+import { ChevronDown, CircleHelp, House, LayoutGrid, type LucideIcon } from 'lucide-react';
 import { Button } from '@/components/shadcn/button';
-import { Breadcrumb, BreadcrumbList, BreadcrumbItem, BreadcrumbLink, BreadcrumbPage, BreadcrumbSeparator } from '@/components/shadcn/breadcrumb';
-import { Sheet, SheetContent, SheetDescription, SheetTitle, SheetTrigger } from '@/components/docs/primitives/sheet';
-import { Brand } from '@/components/workspace/brand';
-import { AppearanceMenu } from '@/components/docs/appearance-menu';
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/shadcn/dropdown-menu';
 import { AccountMenu } from '@/components/workspace/account-menu';
 import { RolePreviewToggle } from '@/components/staff/role-preview';
-import { HelpButton, HomeButton, YourModulesNav } from '@/components/workspace/your-modules';
+import { useYourModules } from '@/components/workspace/your-modules';
 
 export type ModuleLink = { href: string; label: string; icon: LucideIcon; active: boolean };
 export type ModuleLinkGroup = { label: string; links: ModuleLink[] };
 
-/** The one frame every module opens in (docs/how-turnfin-works.md). The
- *  sidebar shows one list at a time: on the home page the person's modules;
- *  inside a module that module's own pages, with "Back to Hub" in the footer. Also a
- *  breadcrumb, the mobile sheet and a remembered collapse preference. Links are presentation; every page checks
- *  its permission again. The pool deck keeps its own tablet frame. */
-export function ModuleShell({ module, id, current = id, who, links = [], groups, tools, scopeNote, pageLabel, initialCollapsed = false, base = `/${id}`, contentClass = 'module-content', maxWidth, scrollKey = '', children }: {
+/** Page links the top bar shows before the rest go under "More". */
+const VISIBLE_PAGES = 7;
+
+/** The one frame every module opens in (docs/how-turnfin-works.md, DESIGN.md "Poolside Clear
+ *  v2"): the fin and the module's pages along the top, search, site and account on the right;
+ *  the person's modules in an icon bar down the left (a labelled bar along the bottom on phones
+ *  and touch screens). Links are presentation; every page checks its permission again. The pool
+ *  deck keeps its own tablet frame. */
+export function ModuleShell({ module, id, current = id, who, links = [], groups, tools, scopeNote, contentClass = 'module-content', maxWidth, scrollKey = '', children }: {
   /** Display name, e.g. "Training". */
   module: string;
-  /** Short id for the scope class, cookie and landmarks, e.g. "training". */
+  /** Short id for the scope class and landmarks, e.g. "training". */
   id: string;
-  /** The module id marked in "Your modules" ("home" on the home page). */
+  /** The module marked in the module bar ("home" on the home page). */
   current?: string;
   who: { id: string; name: string };
   /** The module's own pages, as one list… */
   links?: ModuleLink[];
-  /** …or as several named groups. */
+  /** …or as several named groups (shown in order; the names are for the "More" menu). */
   groups?: ModuleLinkGroup[];
-  /** Module controls under the brand, e.g. the swim school's site and
-   *  swimmer search. Shown when the sidebar is expanded and in the phone sheet. */
+  /** Module controls in the top bar, e.g. the swim school's site and swimmer search. */
   tools?: ReactNode;
+  /** A short note on whose records these are; read by screen readers with the page links. */
   scopeNote: string;
-  pageLabel: string;
+  pageLabel?: string;
   initialCollapsed?: boolean;
-  /** Where the brand and breadcrumb lead. The home page itself is "/". */
+  /** Where the module's first page is; kept for callers, the fin always leads home. */
   base?: string;
   contentClass?: string;
-  /** Caps the page's width; without it the module's stylesheet decides. */
+  /** Caps the page's width; without it the page fills the frame. */
   maxWidth?: number;
   /** Scroll back to the top when this changes as well as the path (filters). */
   scrollKey?: string;
   children: ReactNode;
 }) {
   const pathname = usePathname();
-  const [collapsed, setCollapsed] = useState(initialCollapsed), [mobile, setMobile] = useState(false);
-  const page = useRef<HTMLElement>(null);
-  useEffect(() => { page.current?.scrollTo({ top: 0 }); }, [pathname, scrollKey]);
-  // Arriving on another page (a link, or the swimmer search) closes the phone menu.
-  const [shownPath, setShownPath] = useState(pathname);
-  if (shownPath !== pathname) { setShownPath(pathname); setMobile(false); }
-  const onHome = current === 'home';
-  const sections = groups ?? (links.length ? [{ label: '', links }] : []);
-  function changeCollapsed(value: boolean) {
-    setCollapsed(value);
-    document.cookie = `turnfin.${id}.sidebar=${value ? 'collapsed' : 'expanded'}; Path=/; Max-Age=31536000; SameSite=Lax`;
-  }
-  function navigation(inSheet: boolean) {
-    const compact = collapsed && !inSheet;
-    const close = () => setMobile(false);
-    const item = (entry: ModuleLink) => <SidebarMenuButton key={entry.label} asChild><Link href={entry.href} className="workspace-nav-item" aria-label={entry.label} title={compact ? entry.label : undefined} aria-current={entry.active ? 'page' : undefined} onClick={close}><entry.icon size={18} aria-hidden="true" data-motion="sidebar-icon" /><span>{entry.label}</span></Link></SidebarMenuButton>;
-    return <>
-      <div className="workspace-sidebar-header">
-        <div className="workspace-brand-row"><Link href={base} aria-label={`Turnfin ${module}`} onClick={close}><Brand module={module} /></Link>{!inSheet && <Button variant="ghost" size="icon" aria-label={compact ? 'Expand navigation' : 'Collapse navigation'} aria-expanded={!compact} onClick={() => changeCollapsed(!collapsed)}>{compact ? <PanelLeftOpen size={18} /> : <PanelLeftClose size={18} />}</Button>}</div>
-        {!onHome && !compact && tools && <div className="workspace-tools">{tools}</div>}
-        <AccountMenu name={who.name} compact={compact} onNavigate={close} />
+  useEffect(() => { window.scrollTo({ top: 0 }); }, [pathname, scrollKey]);
+  const pages = (groups ?? [{ label: '', links }]).flatMap((group) => group.links);
+  const overflow = pages.length > VISIBLE_PAGES;
+  const shown = overflow ? pages.slice(0, VISIBLE_PAGES - 1) : pages;
+  const more = overflow ? pages.slice(VISIBLE_PAGES - 1) : [];
+  const moreActive = more.some((page) => page.active);
+  const railCurrent = current === 'core' ? 'admin' : current;
+
+  return (
+    <div className={`turnfin-docs turnfin-module turnfin-${id} tf-shell`}>
+      <a className="skip-link" href={`#${id}-main`}>Skip to content</a>
+      <div className="tf-frame">
+        <header className="tf-top">
+          <Link href="/" className="tf-brand" aria-label="Turnfin home">
+            <Image src="/brand/turnfin.png" alt="" width={72} height={72} priority />
+          </Link>
+          {pages.length > 0 && (
+            <nav className="tf-bar tf-pages" aria-label={`${module} pages`}>
+              <span className="sr-only">{scopeNote}</span>
+              {shown.map((page) => (
+                <Link key={page.href} href={page.href} className="tf-bar-item" aria-current={page.active ? 'page' : undefined}>{page.label}</Link>
+              ))}
+              {overflow && (
+                <DropdownMenu>
+                  <DropdownMenuTrigger asChild>
+                    <Button variant="ghost" className="tf-bar-item" aria-current={moreActive ? 'page' : undefined}>
+                      {moreActive ? more.find((page) => page.active)?.label : 'More'}<ChevronDown aria-hidden="true" />
+                    </Button>
+                  </DropdownMenuTrigger>
+                  <DropdownMenuContent align="start" className="w-64 max-w-[calc(100vw-2rem)]">
+                    {more.map((page) => (
+                      <DropdownMenuItem key={page.href} asChild className="min-h-11">
+                        <Link href={page.href} aria-current={page.active ? 'page' : undefined}><page.icon aria-hidden="true" />{page.label}</Link>
+                      </DropdownMenuItem>
+                    ))}
+                  </DropdownMenuContent>
+                </DropdownMenu>
+              )}
+            </nav>
+          )}
+          <div className="tf-bar tf-tools" role="group" aria-label="Search, site and account">
+            {tools}
+            <RolePreviewToggle />
+            <AccountMenu name={who.name} variant="bar" />
+          </div>
+        </header>
+        <div className="tf-body">
+          <ModuleRail current={railCurrent} />
+          <main id={`${id}-main`} tabIndex={-1} className="tf-main">
+            <div className={contentClass} style={maxWidth ? { maxWidth } : undefined}>{children}</div>
+          </main>
+        </div>
       </div>
-      <nav className="workspace-navigation" aria-label={inSheet ? `Mobile ${module} navigation` : `${module} navigation`}>
-        {onHome && <YourModulesNav compact={compact} onNavigate={close} />}
-        {sections.map((section) => <div key={section.label} className="contents">{section.label && <p className="workspace-nav-label">{section.label}</p>}{section.links.map(item)}</div>)}
-      </nav>
-      <div className="workspace-sidebar-footer">
-        {!onHome && <HomeButton compact={compact} onNavigate={close} />}
-        <div className="workspace-footer-row"><HelpButton compact={compact} /><RolePreviewToggle compact={compact} /><AppearanceMenu /></div>
-      </div>
-    </>;
-  }
-  return <div className={`turnfin-docs turnfin-module turnfin-${id}`}><SidebarProvider open={!collapsed} onOpenChange={open => changeCollapsed(!open)} className="app-shell turnfin-workspace" data-collapsed={collapsed}>
-    <a className="skip-link" href={`#${id}-main`}>Skip to content</a>
-    <Sidebar collapsible="none" className="workspace-sidebar" data-collapsed={collapsed}>{navigation(false)}</Sidebar>
-    <div className="workspace-surface">
-      <header className="workspace-topbar"><Breadcrumb className="workspace-breadcrumb"><BreadcrumbList>{current !== 'home' && <><BreadcrumbItem><BreadcrumbLink asChild><Link href="/">Hub</Link></BreadcrumbLink></BreadcrumbItem><BreadcrumbSeparator /></>}<BreadcrumbItem><BreadcrumbLink asChild><Link href={base}>{module}</Link></BreadcrumbLink></BreadcrumbItem><BreadcrumbSeparator /><BreadcrumbItem><BreadcrumbPage>{pageLabel}</BreadcrumbPage></BreadcrumbItem></BreadcrumbList></Breadcrumb><span className="workspace-private"><ShieldCheck size={15} aria-hidden="true" />{scopeNote}</span></header>
-      <header className="workspace-mobile-toolbar">
-        <Sheet open={mobile} onOpenChange={setMobile}><SheetTrigger asChild><Button variant="ghost" size="icon" aria-label="Open navigation"><Menu size={20} /></Button></SheetTrigger><SheetContent side="left" className={`workspace-mobile-sheet turnfin-module turnfin-${id}`} aria-describedby={`${id}-nav-description`}><SheetTitle className="sr-only">{module} navigation</SheetTitle><SheetDescription className="sr-only" id={`${id}-nav-description`}>Your modules and the {module} pages.</SheetDescription>{navigation(true)}</SheetContent></Sheet>
-        <Link href={base} aria-label={`Turnfin ${module}`}><Brand module={module} /></Link><AppearanceMenu />
-      </header>
-      <main id={`${id}-main`} ref={page} tabIndex={-1} className="workspace-page"><div className="page-content workspace-page-content"><div className={contentClass} style={maxWidth ? { maxWidth } : undefined}>{children}</div><footer className="app-footer"><span>Turnfin {module}</span><span className="brand-values">People. Places. Progress.</span></footer></div></main>
+      <ModuleBottomBar current={railCurrent} />
     </div>
-  </SidebarProvider></div>;
+  );
+}
+
+/** The person's modules, down the left on a desktop with a mouse. Each icon names itself on
+ *  hover and on keyboard focus. */
+function ModuleRail({ current }: { current: string }) {
+  const modules = useYourModules();
+  const item = (key: string, href: string, label: string, Icon: LucideIcon) => (
+    <Link key={key} href={href} className="tf-rail-item" aria-label={label} aria-current={current === key ? 'page' : undefined}>
+      <Icon aria-hidden="true" /><span className="tf-rail-label" aria-hidden="true">{label}</span>
+    </Link>
+  );
+  return (
+    <nav className="tf-rail" aria-label="Modules">
+      <div className="tf-rail-group">{item('home', '/', 'Home', House)}{modules.map((m) => item(m.id, m.href, m.name, m.icon))}</div>
+      <div className="tf-rail-group">
+        <a href="/help" target="_blank" rel="noopener noreferrer" className="tf-rail-item" aria-label="Help (opens in a new tab)"><CircleHelp aria-hidden="true" /><span className="tf-rail-label" aria-hidden="true">Help</span></a>
+      </div>
+    </nav>
+  );
+}
+
+/** Phones and touch screens: the modules along the bottom, each with its name, since touch has
+ *  no hover. Home, up to three modules (the current one always among them) and More. */
+function ModuleBottomBar({ current }: { current: string }) {
+  const modules = useYourModules();
+  const first = modules.slice(0, 3);
+  const active = modules.find((m) => m.id === current);
+  const chosen = active && !first.includes(active) ? [...first.slice(0, 2), active] : first;
+  const rest = modules.filter((m) => !chosen.includes(m));
+  const item = (key: string, href: string, label: string, Icon: LucideIcon) => (
+    <Link key={key} href={href} className="tf-bottom-item" aria-current={current === key ? 'page' : undefined}>
+      <span className="tf-bottom-icon"><Icon aria-hidden="true" /></span><span>{label}</span>
+    </Link>
+  );
+  return (
+    <nav className="tf-bottom" aria-label="Modules">
+      {item('home', '/', 'Home', House)}
+      {chosen.map((m) => item(m.id, m.href, m.name, m.icon))}
+      <DropdownMenu>
+        <DropdownMenuTrigger asChild>
+          <Button variant="ghost" className="tf-bottom-item"><span className="tf-bottom-icon"><LayoutGrid aria-hidden="true" /></span><span>More</span></Button>
+        </DropdownMenuTrigger>
+        <DropdownMenuContent side="top" align="end" className="w-64 max-w-[calc(100vw-2rem)]">
+          {rest.map((m) => (
+            <DropdownMenuItem key={m.id} asChild className="min-h-11"><Link href={m.href}><m.icon aria-hidden="true" />{m.name}</Link></DropdownMenuItem>
+          ))}
+          <DropdownMenuItem asChild className="min-h-11"><a href="/help" target="_blank" rel="noopener noreferrer"><CircleHelp aria-hidden="true" />Help<span className="sr-only"> (opens in a new tab)</span></a></DropdownMenuItem>
+        </DropdownMenuContent>
+      </DropdownMenu>
+    </nav>
+  );
 }

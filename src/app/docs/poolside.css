@@ -1,68 +1,89 @@
-/* Poolside Clear, the Turnfin design for the whole staff app (owner decision, September 2026):
-   the fin's teal and aqua, Plus Jakarta Sans, a calm canvas with white 16px panels and a deep
-   pool-night dark mode. Tokens and the system rules (type, controls, fields, badges, alerts,
-   dialogs, focus) are scoped to .turnfin-app, which the root layout puts on <body>, so every
-   page and every portalled dialog gets them. Rules for the Docs/Refunds shell and their pages
-   stay scoped to .turnfin-docs. It re-points the shared --ui-* tokens, so shadcn primitives
-   follow without per-page work. */
+/* Poolside Clear v2, the Turnfin design for the whole staff app (owner decisions, September and
+   October 2026): Plus Jakarta Sans, one calm blue for action and selection, navy-tinted
+   neutrals, five status colours of matched strength, soft single-hue gradients only on time
+   blocks, white 24px panels on a cool canvas inside a rounded frame, and a deep navy dark mode.
+   Tokens and the system rules (type, controls, fields, badges, alerts, dialogs, focus) are
+   scoped to .turnfin-app, which the root layout puts on <body>, so every page and every
+   portalled dialog gets them. Rules for the Docs/Refunds shell and their pages stay scoped to
+   .turnfin-docs. It re-points the shared --ui-* tokens, so shadcn primitives follow without
+   per-page work. The approved mockups and component sheet: DESIGN.md, "Poolside Clear v2". */
 .turnfin-app,
 .turnfin-docs,
 .turnfin-refunds {
-  --pc-canvas: light-dark(#f4f8f9, #0b161a);
-  --pc-surface: light-dark(#ffffff, #12222a);
-  --pc-surface-sunken: light-dark(#eaf1f3, #0e1c22);
-  --pc-surface-raised: light-dark(#ffffff, #182c35);
-  --pc-ink: light-dark(#0f2a33, #e6f0f3);
-  --pc-ink-muted: light-dark(#4c6770, #9cb4bc);
-  --pc-line: light-dark(#dbe6ea, #22363f);
-  --pc-line-strong: light-dark(#728b93, #5f7b85);
-  --pc-primary: light-dark(#0a5d80, #5cc8e4);
-  --pc-primary-hover: light-dark(#084b68, #84d6ec);
-  --pc-on-primary: light-dark(#ffffff, #062430);
-  --pc-primary-soft: light-dark(#e0f1f7, #11394a);
-  --pc-primary-soft-hover: light-dark(#d3eaf3, #154656);
-  --pc-primary-ink: light-dark(#08506f, #9fe0f2);
-  --pc-aqua: light-dark(#12c8c6, #2fe0da);
-  --pc-aqua-soft: light-dark(#dcf6f5, #0f3a3c);
-  --pc-aqua-ink: light-dark(#0b5d5c, #7de8e4);
-  --pc-aqua-line: light-dark(#7fcfcd, #2f7f7d);
-  --pc-hover: light-dark(#e6eef1, #1a2e36);
-  --pc-focus: light-dark(#0a5d80, #6fd6ee);
-  --pc-focus-halo: 0 0 0 4px light-dark(rgb(18 200 198 / 0.28), rgb(47 224 218 / 0.3));
-  --pc-success: light-dark(#16734a, #5fd49a);
-  --pc-success-soft: light-dark(#e2f4ea, #123a2a);
-  --pc-warning: light-dark(#8a5300, #f2bd5a);
-  --pc-warning-soft: light-dark(#fdf1d8, #3b2d0f);
-  --pc-danger: light-dark(#b3261e, #ff9b8f);
-  --pc-danger-soft: light-dark(#fdeae7, #46201c);
-  --pc-cover: light-dark(#6a3fa3, #c9a8f5);
-  --pc-cover-soft: light-dark(#f1eafb, #2e2144);
-  --pc-neutral-soft: light-dark(#e8eef0, #22343b);
-  --pc-shadow-card: 0 1px 2px light-dark(rgb(15 42 51 / 0.06), rgb(0 0 0 / 0)), 0 0 0 1px light-dark(rgb(15 42 51 / 0), rgb(255 255 255 / 0.03));
-  --pc-shadow-overlay: 0 12px 32px -8px light-dark(rgb(15 42 51 / 0.18), rgb(0 0 0 / 0.6)), 0 2px 6px light-dark(rgb(15 42 51 / 0.08), rgb(0 0 0 / 0.3));
+  --pc-outer: light-dark(#f7f9fb, #070c14);
+  --pc-canvas: light-dark(#eef2f6, #0c1320);
+  --pc-frame-line: light-dark(#e1e6ee, #1c2739);
+  --pc-surface: light-dark(#ffffff, #131c2b);
+  --pc-surface-sunken: light-dark(#f4f6f9, #182334);
+  --pc-surface-raised: light-dark(#ffffff, #182334);
+  --pc-ink: light-dark(#0f1b2d, #e8eef7);
+  --pc-ink-muted: light-dark(#56627a, #9babc2);
+  --pc-line: light-dark(#e2e7ef, #24324a);
+  /* Edges of things you type into or choose from: 3:1 against every surface. */
+  --pc-line-strong: light-dark(#77849a, #6b7d99);
+  --pc-primary: light-dark(#1d5fd1, #78a6ff);
+  --pc-primary-hover: light-dark(#174ea8, #9dbfff);
+  --pc-on-primary: light-dark(#ffffff, #081733);
+  --pc-primary-soft: light-dark(#e9f0fd, #17284a);
+  --pc-primary-soft-hover: light-dark(#dde8fc, #1d3360);
+  --pc-primary-ink: light-dark(#174ea8, #a8c5ff);
+  /* Former aqua accents now follow the blue, so older module rules stay in the palette. */
+  --pc-aqua: var(--pc-primary);
+  --pc-aqua-soft: var(--pc-primary-soft);
+  --pc-aqua-ink: var(--pc-primary-ink);
+  --pc-aqua-line: light-dark(#9dbaf0, #3a5c9c);
+  --pc-hover: light-dark(#f4f6f9, #1b2636);
+  --pc-focus: light-dark(#1d5fd1, #78a6ff);
+  --pc-focus-halo: 0 0 0 4px light-dark(rgb(29 95 209 / 0.2), rgb(120 166 255 / 0.28));
+  --pc-success: light-dark(#157046, #7fe0a8);
+  --pc-success-soft: light-dark(#e3f5ec, #10301f);
+  --pc-warning: light-dark(#8a5a00, #f7cf6e);
+  --pc-warning-soft: light-dark(#fdf2dc, #35270b);
+  --pc-danger: light-dark(#b4321f, #ffa395);
+  --pc-danger-soft: light-dark(#fde8e6, #3a1815);
+  --pc-cover: light-dark(#5b3fc4, #c3b5ff);
+  --pc-cover-soft: light-dark(#efeafd, #231c47);
+  --pc-neutral-soft: light-dark(#f4f6f9, #182334);
+  /* The single do-first item on a page. */
+  --pc-yellow: light-dark(#fde9a8, #4a3b10);
+  --pc-on-yellow: light-dark(#3a2a00, #fbe7a8);
+  --pc-hatch: light-dark(#e3e8ef, #1f2b3f);
+  /* Time blocks (timelines, schedule cells, shifts): soft single-hue gradients, text 4.5:1 on both ends. */
+  --pc-block-now: linear-gradient(135deg, light-dark(#c8f2da, #1f6040), light-dark(#9fe3bd, #184d33));
+  --pc-on-block-now: light-dark(#0b3d24, #dff7e9);
+  --pc-block-next: linear-gradient(135deg, light-dark(#dce8ff, #27467f), light-dark(#bcd3fb, #1d3866));
+  --pc-on-block-next: light-dark(#0f2f6e, #dde8ff);
+  --pc-block-cover: linear-gradient(135deg, light-dark(#fff0c8, #6e5014), light-dark(#fbdc93, #5b420e));
+  --pc-on-block-cover: light-dark(#4a2f00, #fff1cf);
+  --pc-block-assess: linear-gradient(135deg, light-dark(#e8e1ff, #40307e), light-dark(#d0c3fb, #322567));
+  --pc-on-block-assess: light-dark(#2f1b78, #ece6ff);
+  --pc-shadow-card: none;
+  --pc-shadow-overlay: 0 16px 40px -12px light-dark(rgb(15 27 45 / 0.35), rgb(0 0 0 / 0.6)), 0 0 0 1px var(--pc-line);
   --pc-ease: cubic-bezier(0.2, 0, 0, 1);
 
   /* Type scale: five sizes only. Captions and metadata; body, controls and labels; section
-     titles; page titles; large figures. docs.css and module CSS reference these tokens. */
+     titles; page titles; large figures (page and figure drop to 24px on phones). Reading text
+     in documents is 16px. docs.css and module CSS reference these tokens. */
   --pc-text-caption: 12px;
   --pc-leading-caption: 16px;
   --pc-text-body: 14px;
   --pc-leading-body: 20px;
-  --pc-text-title: 16px;
+  --pc-text-title: 18px;
   --pc-leading-title: 24px;
-  --pc-text-page: 22px;
-  --pc-leading-page: 28px;
+  --pc-text-page: 28px;
+  --pc-leading-page: 36px;
   --pc-text-figure: 28px;
   --pc-leading-figure: 34px;
 
-  /* Control geometry: one height, inset and radius for every button and field.
-     44px wherever a finger may tap (phones, tablets, touch screens, the pool
-     deck); 38px on a desktop with a mouse, below. */
+  /* Control geometry: every button, field, tab and menu item is 44px on every device. Bars
+     (page links, tabs, the module bar) inset their items 4px and draw them 36px, keeping a
+     44px hit area. Corners: round controls, 16px inside a panel, 24px panels. */
   --pc-control-height: 44px;
   --pc-control-pad: 16px;
-  --pc-radius-inner: 8px;
-  --pc-radius-control: 12px;
-  --pc-radius-panel: 16px;
+  --pc-radius-inner: 999px;
+  --pc-radius-control: 999px;
+  --pc-radius-card: 16px;
+  --pc-radius-panel: 24px;
 
   /* Tailwind's text utilities (shadcn internals and module markup) follow the same scale. */
   --text-xs: var(--pc-text-caption);
@@ -153,16 +174,14 @@
   --slate: var(--pc-ink-muted);
   --radius: 16px;
 }
-/* A desktop with a mouse: controls tighten to 38px. Touch keeps 44px (shadcn.css raises
-   every control again under a coarse pointer or a narrow screen), and so does the pool
-   deck, which sets the token back on its own frame. Call sites that ask for min-h-11
-   mean "a control's height", so they follow the token too. */
-@media (hover: hover) and (pointer: fine) and (min-width: 48.0625rem) {
-  .turnfin-app,
-  .turnfin-docs,
-  .turnfin-refunds { --pc-control-height: 38px; }
-  .turnfin-app .min-h-11 { min-height: var(--pc-control-height); }
+/* Phones: the page title and figures step down to 24px. */
+@media (max-width: 767px) {
+  .turnfin-app { --pc-text-page: 24px; --pc-leading-page: 30px; --pc-text-figure: 24px; --pc-leading-figure: 30px; }
 }
+/* Corner utilities follow the three radii: 16px for anything inside a panel, 24px for panels and
+   dialogs (shadcn's rounded-ui-* scale is otherwise derived from one base radius). */
+.turnfin-app :is(.rounded-ui-md, .rounded-ui-lg) { border-radius: var(--pc-radius-card); }
+.turnfin-app :is(.rounded-ui-xl, .rounded-ui-2xl) { border-radius: var(--pc-radius-panel); }
 .turnfin-app,
 .turnfin-app {
   font-family: var(--font-sans);
@@ -173,7 +192,7 @@
 
 /* Type: one bold page title, 600-weight section titles, sentence-case labels (never capitals). */
 .turnfin-app :is(h1, h2, h3, h4) { font-family: var(--font-sans); color: var(--pc-ink); }
-.turnfin-app h1 { font-size: var(--pc-text-page); font-weight: 700; line-height: var(--pc-leading-page); letter-spacing: -0.015em; }
+.turnfin-app h1 { font-size: var(--pc-text-page); font-weight: 600; line-height: var(--pc-leading-page); letter-spacing: -0.01em; }
 /* Heading defaults sit in the base layer so module rules (e.g. a card title at body size) and
    Tailwind utilities in the markup can still refine them. */
 @layer base {
@@ -332,24 +351,24 @@
 .turnfin-docs .button { border-radius: var(--pc-radius-control); font-weight: 600; }
 /* Editor toolbar and segmented tabs sit inside a control, so they use the inner radius. */
 .turnfin-docs :is(.editor-toolbar .ui-motion-press, .editor-toolbar [data-slot='select-trigger'], .editor-toolbar select, [data-slot='tabs-trigger']) { border-radius: var(--pc-radius-inner); }
-.turnfin-app [data-slot='badge'] { gap: 4px; min-height: 26px; padding: 0 10px; border-radius: 999px; font-size: var(--pc-text-caption); line-height: var(--pc-leading-caption); font-weight: 600; }
+.turnfin-app [data-slot='badge'] { gap: 4px; min-height: 24px; padding: 0 10px; border-radius: 999px; font-size: var(--pc-text-caption); line-height: var(--pc-leading-caption); font-weight: 600; }
 .turnfin-app [data-slot='badge']:has(> svg) { padding-left: 8px; }
 .turnfin-app [data-slot='badge'] > svg { width: 14px; height: 14px; stroke-width: 2.5; }
 .turnfin-app [data-slot='badge']:is(:not([data-tone]), [data-tone='gray'])[data-variant='secondary'] { background: var(--pc-neutral-soft); color: var(--pc-ink-muted); }
-.turnfin-app [data-slot='alert'] { border: 0; border-radius: 12px; background: var(--pc-primary-soft); color: var(--pc-primary-ink); padding: 12px 16px; }
+.turnfin-app [data-slot='alert'] { border: 0; border-radius: var(--pc-radius-card); background: var(--pc-primary-soft); color: var(--pc-primary-ink); padding: 12px 16px; }
 .turnfin-app [data-slot='alert'] [data-slot='alert-title'] { font-weight: 600; }
 .turnfin-app [data-slot='alert'] [data-slot='alert-description'] { color: var(--pc-ink); }
 .turnfin-app [data-slot='alert'][data-tone='error'] { background: var(--pc-danger-soft); color: var(--pc-danger); }
 .turnfin-app [data-slot='alert'][data-tone='warning'] { background: var(--pc-warning-soft); color: var(--pc-warning); }
 .turnfin-app :is([data-slot='dialog-content'], [data-slot='alert-dialog-content'], [data-slot='sheet-content']) { border-color: var(--pc-line); background: var(--pc-surface-raised); font-family: var(--font-sans); }
-.turnfin-app :is([data-slot='dialog-content'], [data-slot='alert-dialog-content']) { border: 0; border-radius: 16px; box-shadow: var(--pc-shadow-overlay); }
+.turnfin-app :is([data-slot='dialog-content'], [data-slot='alert-dialog-content']) { border: 0; border-radius: var(--pc-radius-panel); box-shadow: var(--pc-shadow-overlay); }
 .turnfin-app :is([data-slot='dialog-title'], [data-slot='alert-dialog-title'], [data-slot='sheet-title']) { font-size: var(--pc-text-title); line-height: var(--pc-leading-title); font-weight: 600; letter-spacing: -0.01em; }
-.turnfin-app :is([data-slot='select-content'], [data-slot='popover-content'], [data-slot='dropdown-menu-content']) { border-color: var(--pc-line); border-radius: 12px; box-shadow: var(--pc-shadow-overlay); font-family: var(--font-sans); }
+.turnfin-app :is([data-slot='select-content'], [data-slot='popover-content'], [data-slot='dropdown-menu-content']) { border-color: var(--pc-line); border-radius: var(--pc-radius-card); box-shadow: var(--pc-shadow-overlay); font-family: var(--font-sans); }
 .turnfin-app :is([data-slot='select-item'], [data-slot='dropdown-menu-item']) { font-family: var(--font-sans); font-size: var(--pc-text-body); border-radius: var(--pc-radius-inner); }
 
 /* Fields */
 .turnfin-app :is([data-slot='input'], [data-slot='textarea'], [data-slot='select-trigger'], [data-slot='native-select']):not(.title-input) { min-height: var(--pc-control-height); border-radius: var(--pc-radius-control); border-color: var(--pc-line-strong); background: var(--pc-surface); box-shadow: none; font-size: 16px; font-weight: 400; color: var(--pc-ink); transition: border-color 120ms var(--pc-ease), box-shadow 120ms var(--pc-ease); }
-.turnfin-app [data-slot='textarea']:not(.title-input) { min-height: 96px; padding-top: 10px; padding-bottom: 10px; line-height: 22px; }
+.turnfin-app [data-slot='textarea']:not(.title-input) { border-radius: var(--pc-radius-card); min-height: 96px; padding-top: 10px; padding-bottom: 10px; line-height: 22px; }
 .turnfin-docs .editor-title-panel [data-slot='textarea']:not(.title-input) { min-height: 72px; }
 .turnfin-app :is([data-slot='input'], [data-slot='textarea'], [data-slot='select-trigger'], [data-slot='native-select']):not(.title-input):focus-visible { border-color: var(--pc-focus); box-shadow: 0 0 0 1px var(--pc-focus), var(--pc-focus-halo); }
 .turnfin-app :is([data-slot='input'], [data-slot='textarea'])[aria-invalid='true'] { border-color: var(--pc-danger); background: var(--pc-danger-soft); }
@@ -416,4 +435,82 @@
 @media (hover: hover) and (pointer: fine) and (min-width: 48.0625rem) {
   .turnfin-app :is([data-slot='input'], [data-slot='textarea'], [data-slot='select-trigger'], [data-slot='native-select']):not(.title-input) { font-size: var(--pc-text-body); }
   .turnfin-app :is([data-slot='button'], [data-slot='input'], [data-slot='select-trigger'], [data-slot='native-select'], .ui-motion-press).h-11 { height: var(--pc-control-height); }
+}
+
+/* ---------------------------------------------------------------------------------------------
+   The frame (Poolside Clear v2, ModuleShell): a rounded canvas on the outer ground; the fin, the
+   module's page links and the tools along the top; the module bar down the left; a labelled
+   bottom bar on phones and touch screens. Every menu is one "bar": a 4px inset on all sides, its
+   items drawn 36px with a 44px hit area, so a bar is 44px tall like every control. On the canvas
+   a bar is white; inside a panel it is the sunken grey. */
+.turnfin-app .tf-shell { min-height: 100dvh; padding: 24px; background: var(--pc-outer); }
+.turnfin-app .tf-frame { display: flex; flex-direction: column; gap: 24px; max-width: 1440px; min-height: calc(100dvh - 48px); margin: 0 auto; padding: 24px; border-radius: 36px; border: 1px solid var(--pc-frame-line); background: var(--pc-canvas); }
+.turnfin-app .tf-top { display: flex; align-items: center; gap: 24px; min-width: 0; }
+.turnfin-app .tf-brand { display: inline-flex; flex: none; align-items: center; justify-content: center; width: 64px; height: 64px; border-radius: var(--pc-radius-card); }
+.turnfin-app .tf-brand img { display: block; width: 72px; height: 72px; max-width: none; margin: -4px; transform: translateX(3px); }
+.turnfin-app .tf-brand:hover { background: var(--pc-surface); }
+.turnfin-app .tf-body { display: flex; flex: 1; gap: 24px; align-items: flex-start; min-width: 0; }
+.turnfin-app .tf-main { flex: 1 1 auto; min-width: 0; outline: none; }
+
+.turnfin-app .tf-bar { position: relative; display: inline-flex; flex: none; align-items: center; width: max-content; max-width: 100%; padding: 4px; border-radius: 999px; background: var(--pc-surface); overflow-x: auto; scrollbar-width: none; }
+.turnfin-app .tf-pages { flex: 0 1 auto; min-width: 0; }
+.turnfin-app .tf-tools { margin-left: auto; overflow: visible; }
+.turnfin-app :is(.tf-bar-item, .tf-tools > [data-slot='button'], .tf-tools > .ui-motion-press) { position: relative; isolation: isolate; display: inline-flex; flex: none; align-items: center; justify-content: center; gap: 6px; width: auto; min-width: 44px; min-height: 44px; height: 44px; margin: -4px 0; padding: 0 16px; border: 0; border-radius: 999px; background: none; box-shadow: none; color: var(--pc-ink); font-size: var(--pc-text-body); font-weight: 600; white-space: nowrap; text-decoration: none; cursor: pointer; }
+.turnfin-app :is(.tf-bar-item, .tf-tools > [data-slot='button'], .tf-tools > .ui-motion-press)::before { content: ''; position: absolute; inset: 4px 0; z-index: -1; border-radius: 999px; transition: background-color 120ms var(--pc-ease); }
+.turnfin-app :is(.tf-bar-item, .tf-tools > [data-slot='button'], .tf-tools > .ui-motion-press):hover { background: none; }
+.turnfin-app :is(.tf-bar-item, .tf-tools > [data-slot='button'], .tf-tools > .ui-motion-press):hover::before { background: var(--pc-surface-sunken); }
+.turnfin-app .tf-bar-item[aria-current] { color: var(--pc-on-primary); }
+.turnfin-app .tf-bar-item[aria-current]::before { background: var(--pc-primary) !important; }
+.turnfin-app :is(.tf-bar-item, .tf-tools > [data-slot='button']):focus-visible { outline-offset: -2px; }
+.turnfin-app :is(.tf-bar-item, .tf-tools > [data-slot='button']) > svg { width: 16px; height: 16px; }
+.turnfin-app :is(.tf-icon, .tf-tools > [data-size^='icon']) { width: 44px; padding: 0; }
+.turnfin-app .tf-who { padding: 0 10px 0 4px; gap: 4px; }
+.turnfin-app .tf-who .avatar { width: 32px; height: 32px; border: 0; }
+.turnfin-app .tf-who .avatar [data-slot='avatar-fallback'] { font-size: var(--pc-text-caption); line-height: var(--pc-leading-caption); font-weight: 600; }
+.turnfin-app .tf-tools > [data-slot='button'] > span { max-width: 180px; overflow: hidden; text-overflow: ellipsis; }
+
+.turnfin-app .tf-rail { position: sticky; top: 24px; display: flex; flex: none; flex-direction: column; align-items: center; gap: 12px; width: 64px; }
+.turnfin-app .tf-rail-group { display: flex; flex-direction: column; align-items: center; padding: 4px; border-radius: 999px; background: var(--pc-surface); }
+.turnfin-app .tf-rail-item { position: relative; isolation: isolate; display: flex; align-items: center; justify-content: center; width: 44px; height: 44px; margin: 0 -4px; border-radius: 999px; color: var(--pc-ink-muted); }
+.turnfin-app .tf-rail-item > svg { width: 20px; height: 20px; }
+.turnfin-app .tf-rail-item::before { content: ''; position: absolute; inset: 4px; z-index: -1; border-radius: 999px; }
+.turnfin-app .tf-rail-item:hover { color: var(--pc-ink); }
+.turnfin-app .tf-rail-item:hover::before { background: var(--pc-surface-sunken); }
+.turnfin-app .tf-rail-item[aria-current] { color: var(--pc-on-primary); }
+.turnfin-app .tf-rail-item[aria-current]::before { background: var(--pc-primary); }
+.turnfin-app .tf-rail-item:focus-visible { outline-offset: -2px; }
+.turnfin-app .tf-rail-label { position: absolute; top: 50%; left: calc(100% + 12px); z-index: 30; padding: 4px 10px; border-radius: 999px; background: var(--pc-ink); color: var(--pc-surface); font-size: var(--pc-text-caption); line-height: var(--pc-leading-caption); font-weight: 600; white-space: nowrap; pointer-events: none; opacity: 0; transform: translateY(-50%); transition: opacity 120ms var(--pc-ease); }
+.turnfin-app .tf-rail-item:is(:hover, :focus-visible) .tf-rail-label { opacity: 1; }
+
+.turnfin-app .tf-bottom { position: fixed; right: 8px; bottom: 8px; left: 8px; z-index: 40; display: none; padding: 4px; border-radius: 999px; background: var(--pc-surface); box-shadow: 0 10px 30px -10px rgb(15 27 45 / 0.35), 0 0 0 1px var(--pc-line); }
+.turnfin-app .tf-bottom-item { display: flex; flex: 1 1 auto; flex-direction: column; align-items: center; justify-content: center; gap: 2px; min-width: 52px; min-height: 56px; padding: 0 2px; border: 0; border-radius: 999px; background: none; color: var(--pc-ink-muted); font-size: var(--pc-text-caption); line-height: var(--pc-leading-caption); font-weight: 600; white-space: nowrap; cursor: pointer; }
+.turnfin-app .tf-bottom-icon { display: flex; align-items: center; justify-content: center; width: 56px; height: 32px; border-radius: 999px; }
+.turnfin-app .tf-bottom-icon > svg { width: 20px; height: 20px; }
+.turnfin-app .tf-bottom-item[aria-current] { color: var(--pc-primary); }
+.turnfin-app .tf-bottom-item[aria-current] .tf-bottom-icon { background: var(--pc-primary); color: var(--pc-on-primary); }
+.turnfin-app .tf-bottom-item:hover .tf-bottom-icon { background: var(--pc-surface-sunken); }
+.turnfin-app .tf-bottom-item[aria-current]:hover .tf-bottom-icon { background: var(--pc-primary); }
+html:has(.tf-shell) { scroll-padding-bottom: 112px; }
+
+/* Tablet: page links take their own row, lined up with the page. */
+@media (min-width: 768px) and (max-width: 1100px) {
+  .turnfin-app .tf-top { flex-wrap: wrap; row-gap: 16px; }
+  .turnfin-app .tf-pages { order: 3; flex: 1 1 100%; width: auto; margin-left: 88px; }
+}
+/* Phones, and any touch screen: the labelled bottom bar replaces the module bar. */
+@media (max-width: 767px), (hover: none) and (pointer: coarse) {
+  .turnfin-app .tf-rail { display: none; }
+  .turnfin-app .tf-bottom { display: flex; }
+  .turnfin-app .tf-frame { padding-bottom: 104px; }
+  .turnfin-app .tf-pages { margin-left: 0; }
+}
+@media (max-width: 767px) {
+  .turnfin-app .tf-shell { padding: 0; }
+  .turnfin-app .tf-frame { min-height: 100dvh; gap: 16px; padding: 16px 16px 104px; border: 0; border-radius: 0; }
+  .turnfin-app .tf-top { flex-wrap: wrap; gap: 12px; }
+  .turnfin-app .tf-pages { order: 3; flex: 1 1 100%; width: auto; }
+  .turnfin-app .tf-tools > [data-slot='button'] > span { display: none; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .turnfin-app .tf-rail-label, .turnfin-app :is(.tf-bar-item, .tf-tools > [data-slot='button'])::before { transition: none; }
 }
