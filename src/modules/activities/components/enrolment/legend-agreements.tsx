@@ -14,7 +14,7 @@ import type { LegendAgreementResult } from "@/modules/activities/lib/enrolment/d
 import { fullName } from "@/modules/activities/lib/students/constants";
 import { courseName, formatSlot } from "@/modules/activities/lib/courses/constants";
 import { formatDate, formatDateTime } from "@/lib/format";
-import { cn } from "@/lib/utils";
+import { SegmentedLinks } from "@/components/ui-kit/segmented-links";
 
 const number = (value: number) => value.toLocaleString("en-IE");
 
@@ -51,11 +51,7 @@ export function LegendAgreements({ result, canConfirm, profiles, classes }: {
         </div>
         <Button type="submit" className="h-11">Search</Button>
       </Form>
-      <nav aria-label="Agreement status" className="inline-flex max-w-full items-center gap-1 rounded-ui-lg bg-ui-muted p-1">
-        {views.map(item => <Button key={item.key} asChild variant="ghost" size="sm" className={cn("min-h-11 gap-1.5 px-2 text-xs sm:px-3 sm:text-sm", view === item.key && "bg-ui-background text-ui-foreground shadow-sm hover:bg-ui-background")}>
-          <Link href={href(item.key)} aria-current={view === item.key ? "page" : undefined}>{item.label}{" "}<span className="text-xs text-ui-muted-foreground tabular-nums">{number(item.count)}</span></Link>
-        </Button>)}
-      </nav>
+      <SegmentedLinks label="Agreement status" items={views.map(item => ({ href: href(item.key), label: item.label, count: number(item.count), current: view === item.key }))} />
     </div>
     <div className="space-y-3">
       <div className="flex min-h-8 flex-wrap items-center justify-between gap-2 text-sm text-ui-muted-foreground">

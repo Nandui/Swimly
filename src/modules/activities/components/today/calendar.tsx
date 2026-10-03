@@ -128,7 +128,7 @@ export function ScheduleCalendar({ courses, assessments, iso, todayIso, initialN
               : <AssessmentBooking assessment={entry.value} now={now} allowed={access.assessments} />}</li>)}</ul>
           </section>)}
         </section> : <section className={styles["sheet-scroll"]} aria-label="Schedule booking sheet. Scroll horizontally for more times." tabIndex={0}>
-          <Table aria-label="Schedule booking sheet" containerClassName="overflow-visible" style={{ minWidth: 136 + slots.length * 144 }}>
+          <Table aria-label="Schedule booking sheet" data-layout="grid" containerClassName="overflow-visible" style={{ minWidth: 136 + slots.length * 144 }}>
             <colgroup><col />{slots.map(slot => <col key={slot.start} />)}</colgroup>
             <TableHeader><TableRow>
               <TableHead scope="col">Level / time</TableHead>

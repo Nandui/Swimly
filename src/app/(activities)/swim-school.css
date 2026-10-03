@@ -7,15 +7,15 @@
    lists and empty states that are not already inside a panel. */
 .turnfin-swim-school .swim-school-content [data-slot='table-container'],
 .turnfin-swim-school .swim-school-content [data-slot='item-group'][class~='border-y'] {
-  border: 1px solid var(--pc-line);
+  border: 0;
   border-radius: var(--pc-radius-panel);
   background: var(--pc-surface);
-  box-shadow: var(--pc-shadow-card);
+  box-shadow: none;
   overflow: hidden;
 }
 .turnfin-swim-school .swim-school-content [data-slot='table-container'] { overflow-x: auto; }
 .turnfin-swim-school .swim-school-content [data-slot='empty']:not(:is([data-slot='card'], [data-slot='table-container'], [data-slot='item-group'], [role='dialog']) [data-slot='empty']) {
-  border: 1px dashed var(--pc-line-strong);
+  border: 0;
   border-radius: var(--pc-radius-panel);
   background: var(--pc-surface);
 }

@@ -1,7 +1,5 @@
-import Link from "next/link";
 import { ChartNoAxesCombined, ClipboardCheck, Users } from "lucide-react";
-import { Button } from "@/components/shadcn/button";
-import { cn } from "@/lib/utils";
+import { SegmentedLinks } from "@/components/ui-kit/segmented-links";
 
 const pages = [
   { key: "overview", href: "/analytics", label: "Overview", icon: ChartNoAxesCombined },
@@ -10,10 +8,5 @@ const pages = [
 ] as const;
 
 export function AnalyticsNav({ active }: { active: typeof pages[number]["key"] }) {
-  return <nav aria-label="Analytics pages" className="flex flex-wrap gap-2 border-b border-ui-border pb-4">
-    {pages.map(({ key, href, label, icon: Icon }) => <Button asChild variant="ghost" key={key}
-      className={cn("min-h-11", active === key && "bg-ui-brand-soft text-ui-brand-ink hover:bg-ui-brand-soft hover:text-ui-brand-ink")}>
-      <Link href={href} aria-current={active === key ? "page" : undefined}><Icon aria-hidden="true" />{label}</Link>
-    </Button>)}
-  </nav>;
+  return <SegmentedLinks label="Analytics pages" items={pages.map(({ key, href, label, icon: Icon }) => ({ href, label: <><Icon aria-hidden="true" className="size-4" />{label}</>, current: active === key }))} />;
 }

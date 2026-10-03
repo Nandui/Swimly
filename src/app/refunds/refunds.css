@@ -8,7 +8,7 @@
 /* Page heading */
 .turnfin-refunds .refund-content { min-width: 0; }
 .turnfin-refunds .refund-heading { display: flex; flex-wrap: wrap; align-items: flex-start; justify-content: space-between; gap: 16px; margin-bottom: 24px; }
-.turnfin-refunds .refund-heading h1 { font-size: var(--pc-text-page); font-weight: 700; line-height: var(--pc-leading-page); letter-spacing: -0.015em; }
+.turnfin-refunds .refund-heading h1 { font-size: var(--pc-text-page); font-weight: 600; line-height: var(--pc-leading-page); letter-spacing: -0.01em; }
 .turnfin-refunds .refund-heading p { margin-top: 4px; color: var(--pc-ink-muted); }
 .turnfin-refunds .refund-eyebrow { font-size: var(--pc-text-caption); line-height: var(--pc-leading-caption); font-weight: 600; color: var(--pc-ink-muted); font-variant-numeric: tabular-nums; }
 

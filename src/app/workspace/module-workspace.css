@@ -9,7 +9,7 @@
 /* Page heading */
 .turnfin-module .module-content { min-width: 0; }
 .turnfin-module .module-heading { display: flex; flex-wrap: wrap; align-items: flex-start; justify-content: space-between; gap: 16px; margin-bottom: 24px; }
-.turnfin-module .module-heading h1 { font-size: var(--pc-text-page); font-weight: 700; line-height: var(--pc-leading-page); letter-spacing: -0.015em; }
+.turnfin-module .module-heading h1 { font-size: var(--pc-text-page); font-weight: 600; line-height: var(--pc-leading-page); letter-spacing: -0.01em; }
 .turnfin-module .module-heading p { margin-top: 4px; color: var(--pc-ink-muted); }
 
 /* Summary: one tile per figure */

@@ -1,6 +1,7 @@
 import type { ReactNode } from "react";
 import Form from "next/form";
 import Link from "next/link";
+import { SegmentedLinks } from "@/components/ui-kit/segmented-links";
 import { ArrowLeft, ArrowRight, Search, SearchX, UsersRound, X } from "lucide-react";
 import { Button } from "@/components/shadcn/button";
 import { Input } from "@/components/shadcn/input";
@@ -9,7 +10,6 @@ import { Empty, EmptyContent, EmptyDescription, EmptyHeader, EmptyMedia, EmptyTi
 import type { StudentRow } from "@/modules/activities/lib/students/data/students";
 import { swimmerDirectoryHref, type SwimmerStatusFilter } from "@/modules/activities/lib/students/directory";
 import { StudentDirectory } from "./student-directory";
-import { cn } from "@/lib/utils";
 
 const LENSES = [{ key: "ALL", label: "All swimmers" }, { key: "ACTIVE", label: "Active" }, { key: "INACTIVE", label: "Inactive" }] as const;
 const number = (value: number) => value.toLocaleString("en-IE");
@@ -52,15 +52,7 @@ export function SwimmerBrowser({ students, total, page, pageSize, counts, q, sta
           <Button type="submit" className="h-11">Search</Button>
         </Form>
         <div className="flex flex-wrap items-center justify-between gap-3">
-          <nav aria-label="Filter swimmers by status" className="inline-flex max-w-full items-center gap-1 rounded-ui-lg bg-ui-muted p-1">
-            {LENSES.map((lens) => (
-              <Button key={lens.key} asChild variant="ghost" size="sm" className={cn("min-h-11 gap-1.5 px-2 text-xs sm:px-3 sm:text-sm", status === lens.key && "bg-ui-background text-ui-foreground shadow-sm hover:bg-ui-background")}>
-                <Link href={swimmerDirectoryHref({ q, status: lens.key })} aria-current={status === lens.key ? "page" : undefined}>
-                  {lens.label}<span className="text-xs text-ui-muted-foreground tabular-nums">{number(countFor(lens.key))}</span>
-                </Link>
-              </Button>
-            ))}
-          </nav>
+          <SegmentedLinks label="Filter swimmers by status" items={LENSES.map((lens) => ({ href: swimmerDirectoryHref({ q, status: lens.key }), label: lens.label, count: number(countFor(lens.key)), current: status === lens.key }))} />
         </div>
       </div>
 

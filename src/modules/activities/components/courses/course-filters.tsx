@@ -13,7 +13,7 @@ import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, Command
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/shadcn/popover";
 import type { FilterDimension } from "@/modules/activities/lib/courses/filters";
 import { classBrowserHref } from "@/modules/activities/lib/courses/browse";
-import { cn } from "@/lib/utils";
+import { SegmentedLinks } from "@/components/ui-kit/segmented-links";
 
 const PRIMARY = ["site", "level", "day"];
 const EXTRA = ["programme", "time", "instructor", "location"];
@@ -44,11 +44,7 @@ export function CourseFilters({ dimensions, q, active, state, todayDay, views, s
         <Input key={q} id="class-query" name="q" type="search" defaultValue={q} placeholder="Class, level, site or instructor…" className="h-11 pl-10" autoComplete="off" />
       </div></div><Button type="submit" className="h-11">Search</Button>
     </Form>
-    <nav aria-label="Class availability" className="grid grid-cols-2 gap-1 rounded-ui-lg bg-ui-muted p-1 sm:inline-flex">
-      {views.map(view => <Button key={view.key} asChild variant="ghost" size="sm" className={cn("justify-between gap-2 sm:justify-center", selectedView === view.key && "bg-ui-background text-ui-foreground shadow-sm hover:bg-ui-background")}>
-        <Link href={href({ state: view.state, places: view.places })} aria-current={selectedView === view.key ? "page" : undefined}>{view.label}<span className="text-xs text-ui-muted-foreground tabular-nums">{view.count}</span></Link>
-      </Button>)}
-    </nav>
+    <SegmentedLinks label="Class availability" items={views.map(view => ({ href: href({ state: view.state, places: view.places }), label: view.label, count: view.count, current: selectedView === view.key }))} />
     <Collapsible open={expanded} onOpenChange={setExpanded} className="space-y-3">
       <div className="grid grid-cols-2 items-end gap-3 lg:grid-cols-4">
         {PRIMARY.map(key => dimensions.find(d => d.key === key)).map(d => d ? <FilterPicker key={d.key} dimension={d} disabled={pending} onPick={value => pick(d.key, value)} /> : null)}

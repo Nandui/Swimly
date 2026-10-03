@@ -8,6 +8,7 @@ import { Tag } from "@/components/ui-kit/tag";
 import { AssessmentNav } from "./assessment-nav";
 import { SESSION_STATUS_META, isPast, sessionDay, sessionSpan } from "@/modules/activities/lib/assessments/constants";
 import type { SessionRow } from "@/modules/activities/lib/assessments/data/assessments";
+import { SegmentedLinks } from "@/components/ui-kit/segmented-links";
 
 export type SessionView = "upcoming" | "past" | "cancelled";
 export function sessionView(value: unknown, setup = false): SessionView {
@@ -27,14 +28,8 @@ export function SessionDirectory({ sessions, today, setup = false, manage, view,
       actions={createAction} />
     <AssessmentNav active={setup ? "setup" : "upcoming"} manage={manage} />
     <div className="flex flex-wrap items-center justify-between gap-4">
-      <nav aria-label="Session dates" className="flex flex-wrap gap-1">
-        {(["upcoming", "past", ...(setup ? ["cancelled"] : [])] as SessionView[]).map(item => <Button asChild key={item}
-          variant={view === item ? "secondary" : "ghost"} className="min-h-11">
-          <Link href={item === "upcoming" ? base : `${base}?view=${item}`} aria-current={view === item ? "page" : undefined}>
-            {item === "upcoming" ? "Today & upcoming" : item === "past" ? "Past sessions" : "Cancelled"}
-          </Link>
-        </Button>)}
-      </nav>
+      <SegmentedLinks label="Session dates" items={(["upcoming", "past", ...(setup ? ["cancelled"] : [])] as SessionView[]).map(item => ({
+        href: item === "upcoming" ? base : `${base}?view=${item}`, label: item === "upcoming" ? "Today & upcoming" : item === "past" ? "Past sessions" : "Cancelled", current: view === item }))} />
       <p className="text-sm text-ui-muted-foreground" role="status">{matches.length} {matches.length === 1 ? "session" : "sessions"} · {booked} booked places</p>
     </div>
     {matches.length ? <Table className="table-fixed [&_td]:whitespace-normal [&_th]:whitespace-normal">
