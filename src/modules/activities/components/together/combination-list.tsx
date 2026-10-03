@@ -52,7 +52,7 @@ function CombinationPages({
   );
   const offset = (cursors.length - 1) * 5;
   return (
-    <section className="min-w-0 flex flex-col gap-3">
+    <section className="pc-panel">
       <h3 className="text-base font-semibold tracking-tight">{heading}</h3>
       <span aria-live="polite" className="text-sm text-ui-muted-foreground">
         {page.combinations.length === 1 && !page.next && offset === 0

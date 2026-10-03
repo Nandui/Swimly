@@ -73,8 +73,8 @@ export default async function ProgrammesPage() {
       )}
 
       {archived.length > 0 ? (
-        <section className="min-w-0 flex flex-col gap-3">
-          <h2 className="text-xl font-semibold tracking-tight">Archived</h2>
+        <section className="pc-panel">
+          <h2 className="text-lg font-semibold">Archived</h2>
           <Lead>
             Not offered any more. Everything recorded against them is still
             readable.

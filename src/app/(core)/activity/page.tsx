@@ -1,5 +1,4 @@
 import type { Metadata } from "next";
-import Link from "next/link";
 
 import { ActivityTable } from "@/components/activity-table";
 import { EmptyState } from "@/components/ui-kit/empty-state";
@@ -8,8 +7,8 @@ import { PageHeader } from "@/components/ui-kit/page-header";
 import { Lead, Num } from "@/components/ui-kit/prose";
 import { ACTIVITY_PER_PAGE, getActivity } from "@/lib/activity/data/audit-log";
 import { screenPage } from "@/lib/page-guards";
-import { Button } from "@/components/shadcn/button";
 import { allModules } from "@/modules/registry";
+import { SegmentedLinks } from "@/components/ui-kit/segmented-links";
 
 export const metadata: Metadata = { title: "Activity" };
 
@@ -21,7 +20,8 @@ export default async function ActivityPage(props: PageProps<"/activity">) {
     Number(typeof params.page === "string" ? params.page : 1) || 1,
   );
 
-  const modules = allModules().map((m) => m.logName);
+  // Swim school and Pool deck share one log name, so each name is listed once.
+  const modules = [...new Set(allModules().map((m) => m.logName))];
   const moduleName = typeof params.module === "string" && modules.includes(params.module) ? params.module : undefined;
   const { entries, total, page } = await getActivity(requested, moduleName);
 
@@ -32,13 +32,7 @@ export default async function ActivityPage(props: PageProps<"/activity">) {
     <div className="min-w-0 flex flex-col gap-6">
       <PageHeader title="Activity" description="Who changed what, and when." />
 
-      <nav aria-label="Filter by module" className="flex flex-wrap gap-2">
-        {[undefined, ...modules].map((name) => (
-          <Button key={name ?? "all"} asChild size="sm" variant={name === moduleName ? "default" : "outline"} className="min-h-11">
-            <Link href={name ? `/activity?module=${encodeURIComponent(name)}` : "/activity"} aria-current={name === moduleName ? "page" : undefined}>{name ?? "Every module"}</Link>
-          </Button>
-        ))}
-      </nav>
+      <SegmentedLinks label="Filter by module" items={[undefined, ...modules].map((name) => ({ href: name ? `/activity?module=${encodeURIComponent(name)}` : "/activity", label: name ?? "Every module", current: name === moduleName }))} />
 
       {total === 0 ? (
         <EmptyState

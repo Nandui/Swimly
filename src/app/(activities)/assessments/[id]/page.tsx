@@ -159,8 +159,8 @@ export default async function AssessmentSessionPage(
         />
       ) : (
         <div className="min-w-0 flex flex-col gap-6">
-          <section className="min-w-0 flex flex-col gap-3">
-            <h2 className="text-xl font-semibold tracking-tight">Booked</h2>
+          <section className="pc-panel">
+            <h2 className="text-lg font-semibold">Booked</h2>
             {holding.length === 0 ? (
               <p className="text-sm text-ui-muted-foreground block">
                 Nobody is holding a place.
@@ -176,8 +176,8 @@ export default async function AssessmentSessionPage(
           </section>
 
           {gone.length > 0 ? (
-            <section className="min-w-0 flex flex-col gap-3">
-              <h2 className="text-xl font-semibold tracking-tight">
+            <section className="pc-panel">
+              <h2 className="text-lg font-semibold">
                 Not coming
               </h2>
               <BookingTable

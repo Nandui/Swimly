@@ -42,8 +42,8 @@ export default async function AccountPage() {
         someone who can manage accounts can change your role or your email.
       </Lead>
 
-      <section className="min-w-0 flex flex-col gap-3">
-        <h2 className="text-xl font-semibold tracking-tight">
+      <section className="pc-panel">
+        <h2 className="text-lg font-semibold">
           What you can do
         </h2>
         {granted.length === 0 ? (
@@ -71,8 +71,8 @@ export default async function AccountPage() {
         )}
       </section>
 
-      <section className="min-w-0 flex flex-col gap-3">
-        <h2 className="text-xl font-semibold tracking-tight">Appearance</h2>
+      <section className="pc-panel">
+        <h2 className="text-lg font-semibold">Appearance</h2>
         <Lead>
           Light or dark, or whatever your device is set to. Remembered in this
           browser only.
@@ -80,8 +80,8 @@ export default async function AccountPage() {
         <ThemeToggle />
       </section>
 
-      <section className="min-w-0 flex flex-col gap-3">
-        <h2 className="text-xl font-semibold tracking-tight">
+      <section className="pc-panel">
+        <h2 className="text-lg font-semibold">
           Change your password
         </h2>
         <Lead>
@@ -91,8 +91,8 @@ export default async function AccountPage() {
         <ChangePasswordForm />
       </section>
 
-      <section className="min-w-0 flex flex-col gap-3">
-        <h2 className="text-xl font-semibold tracking-tight">Quick-switch PIN</h2>
+      <section className="pc-panel">
+        <h2 className="text-lg font-semibold">Quick-switch PIN</h2>
         <Lead>
           On a shared reception computer or poolside tablet, tap your name and enter this PIN
           instead of your password. It only works on devices registered as shared, and only after

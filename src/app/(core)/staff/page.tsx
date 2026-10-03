@@ -119,8 +119,8 @@ export default async function StaffPage() {
       )}
 
       {inactive.length > 0 ? (
-        <section className="min-w-0 flex flex-col gap-3">
-          <h2 className="text-xl font-semibold tracking-tight">Deactivated</h2>
+        <section className="pc-panel">
+          <h2 className="text-lg font-semibold">Deactivated</h2>
           <Lead>
             They cannot sign in. Everything they recorded is still readable, and
             reactivating them gives the same account back.

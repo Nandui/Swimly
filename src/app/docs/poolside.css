@@ -615,3 +615,14 @@ html:has(.tf-shell) { scroll-padding-bottom: 112px; }
 .turnfin-app .pc-surface-seg .pc-seg, .turnfin-app :is(.pc-panel, [data-slot='card']) .pc-seg { background: var(--pc-surface-sunken); }
 .turnfin-app [data-slot='item'][data-variant='outline'] { min-height: 64px; padding: 12px 16px; border-color: var(--pc-line); border-radius: var(--pc-radius-card); background: var(--pc-surface); }
 .turnfin-app a[data-slot='item'][data-variant='outline']:hover { background: var(--pc-surface-sunken); }
+
+/* A list of shadcn items on the page (not already inside a panel, card or dialog) is a white panel
+   of separate rows, like every v2 list. */
+.turnfin-app .tf-main [data-slot='item-group']:not(:is([data-slot='card'], [role='dialog'], .pc-panel, [data-slot='popover-content']) [data-slot='item-group']) { gap: 8px; padding: 8px 16px 16px; border: 0; border-radius: var(--pc-radius-panel); background: var(--pc-surface); }
+.turnfin-app .tf-main [data-slot='item-group'] { display: flex; flex-direction: column; gap: 8px; }
+.turnfin-app .tf-main [data-slot='item-group'] > [data-slot='item'], .turnfin-app .tf-main [data-slot='item-group'] > [role='listitem'] > [data-slot='item'] { min-height: 64px; padding: 12px 16px; border: 1px solid var(--pc-line); border-radius: var(--pc-radius-card); background: var(--pc-surface); }
+.turnfin-app .tf-main [data-slot='item-group'] > :is(a[data-slot='item'], [role='listitem'] > a[data-slot='item']):hover { background: var(--pc-surface-sunken); }
+.turnfin-app .tf-main [data-slot='item-group'] > [data-slot='item-separator'] { display: none; }
+
+/* An empty state on the page itself sits on a white panel. */
+.turnfin-app .tf-main [data-slot='empty']:not(:is([data-slot='card'], [data-slot='table-container'], [data-slot='item-group'], [role='dialog'], .pc-panel) [data-slot='empty']) { border: 0; border-radius: var(--pc-radius-panel); background: var(--pc-surface); }

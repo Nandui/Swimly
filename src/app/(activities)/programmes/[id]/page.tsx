@@ -122,13 +122,13 @@ export default async function ProgrammePage(
         </div>
       )}
 
-      <section className="min-w-0 flex flex-col gap-3">
+      <section className="pc-panel">
         <div
           className={
             "min-w-0 flex gap-2 items-center justify-between flex-wrap"
           }
         >
-          <h2 className="text-xl font-semibold tracking-tight">
+          <h2 className="text-lg font-semibold">
             Kinds of assessment
           </h2>
           {programme.archivedAt ? null : (
@@ -244,7 +244,7 @@ function LevelSection({
         <div className="min-w-0 flex gap-3 items-start px-3 py-2">
           <div className="min-w-0 flex-1">
             <div className="min-w-0 flex flex-col gap-0.5">
-              <h2 className="text-xl font-semibold tracking-tight">
+              <h2 className="text-lg font-semibold">
                 <div className="min-w-0 flex gap-2 items-center flex-wrap">
                   <CurriculumImage
                     kind="level"

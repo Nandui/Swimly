@@ -30,7 +30,7 @@ export default async function OrganisationPage() {
         actions={<SaveDepartment sites={sites} />}
       />
 
-      <section className="min-w-0 flex flex-col gap-3" aria-labelledby="departments-heading">
+      <section className="pc-panel" aria-labelledby="departments-heading">
         <h2 id="departments-heading" className="text-xl font-semibold tracking-tight">Departments</h2>
         <Lead>
           <Num>{liveDepartments.length}</Num> {liveDepartments.length === 1 ? "department" : "departments"}. They organise people; they do not
@@ -63,7 +63,7 @@ export default async function OrganisationPage() {
         )}
       </section>
 
-      <section className="min-w-0 flex flex-col gap-3" aria-labelledby="qualifications-heading">
+      <section className="pc-panel" aria-labelledby="qualifications-heading">
         <div className="flex flex-wrap items-center justify-between gap-3">
           <h2 id="qualifications-heading" className="text-xl font-semibold tracking-tight">Qualifications</h2>
           <SaveQualificationType />

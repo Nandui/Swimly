@@ -35,8 +35,8 @@ export function TogetherResults({
   return (
     <div className="min-w-0 flex flex-col gap-6">
       {withTogether.length > 0 ? (
-        <section className="min-w-0 flex flex-col gap-3">
-          <h2 className="text-xl font-semibold tracking-tight">
+        <section className="pc-panel">
+          <h2 className="text-lg font-semibold">
             {count === 1
               ? "Where they can swim"
               : `All ${count} starting at the same time`}
@@ -63,8 +63,8 @@ export function TogetherResults({
       ) : null}
 
       {withSpread.length > 0 ? (
-        <section className="min-w-0 flex flex-col gap-3">
-          <h2 className="text-xl font-semibold tracking-tight">
+        <section className="pc-panel">
+          <h2 className="text-lg font-semibold">
             Same day, different times
           </h2>
           <Lead>
