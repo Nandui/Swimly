@@ -514,3 +514,67 @@ html:has(.tf-shell) { scroll-padding-bottom: 112px; }
 @media (prefers-reduced-motion: reduce) {
   .turnfin-app .tf-rail-label, .turnfin-app :is(.tf-bar-item, .tf-tools > [data-slot='button'])::before { transition: none; }
 }
+
+/* ---------------------------------------------------------------------------------------------
+   Shared v2 parts (the component sheet): panels, rows, figure tiles, time blocks. Pages compose
+   these; they never restyle them. */
+.turnfin-app .pc-panel { display: flex; flex-direction: column; gap: 16px; min-width: 0; padding: 24px; border-radius: var(--pc-radius-panel); background: var(--pc-surface); }
+.turnfin-app .pc-panel-head { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 8px 12px; min-height: 44px; }
+.turnfin-app .pc-panel-head > h2 { margin: 0; }
+.turnfin-app .pc-rows { display: flex; flex-direction: column; gap: 8px; margin: 0; padding: 0; list-style: none; }
+.turnfin-app .pc-rows-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(min(100%, 300px), 1fr)); }
+.turnfin-app .pc-row { display: flex; flex-wrap: wrap; align-items: center; gap: 12px; min-width: 0; min-height: 64px; padding: 12px 16px; border: 1px solid var(--pc-line); border-radius: var(--pc-radius-card); background: var(--pc-surface); color: var(--pc-ink); text-decoration: none; }
+.turnfin-app a.pc-row:hover { background: var(--pc-surface-sunken); }
+.turnfin-app a.pc-row:focus-visible { outline: 2px solid var(--pc-focus); outline-offset: 2px; }
+.turnfin-app .pc-row-body { display: flex; flex: 1 1 140px; flex-direction: column; min-width: 0; }
+.turnfin-app .pc-row-title { font-weight: 600; }
+.turnfin-app .pc-row-hint { font-size: var(--pc-text-caption); line-height: var(--pc-leading-caption); color: var(--pc-ink-muted); }
+.turnfin-app .pc-row-trail { display: flex; flex: 0 1 auto; flex-wrap: wrap; align-items: center; justify-content: flex-end; gap: 8px 12px; max-width: 100%; margin-left: auto; }
+.turnfin-app .pc-row-count { min-width: 24px; font-size: var(--pc-text-title); line-height: var(--pc-leading-title); font-weight: 700; font-variant-numeric: tabular-nums; text-align: right; }
+.turnfin-app .pc-row-chevron { width: 16px; height: 16px; color: var(--pc-ink-muted); }
+.turnfin-app .pc-row[data-first] { border-color: transparent; background: var(--pc-yellow); color: var(--pc-on-yellow); }
+.turnfin-app .pc-row[data-first] :is(.pc-row-hint, .pc-row-chevron) { color: inherit; }
+.turnfin-app a.pc-row[data-first]:hover { background: var(--pc-yellow); }
+.turnfin-app .pc-row[data-muted] { color: var(--pc-ink-muted); }
+.turnfin-app .pc-tile-icon { display: inline-flex; flex: none; align-items: center; justify-content: center; width: 40px; height: 40px; border-radius: 999px; background: var(--pc-primary-soft); color: var(--pc-primary); }
+.turnfin-app .pc-tile-icon > svg { width: 20px; height: 20px; }
+.turnfin-app .pc-stats { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 128px), 1fr)); gap: 12px; }
+.turnfin-app .pc-stat { position: relative; display: flex; flex-direction: column; align-items: flex-start; gap: 8px; min-width: 0; padding: 16px; border: 1px solid var(--pc-line); border-radius: var(--pc-radius-card); color: var(--pc-ink); text-decoration: none; }
+.turnfin-app a.pc-stat:hover { background: var(--pc-surface-sunken); }
+.turnfin-app .pc-stat-figure { font-size: var(--pc-text-figure); line-height: var(--pc-leading-figure); font-weight: 700; font-variant-numeric: tabular-nums; }
+.turnfin-app .pc-stat [data-slot='badge'] { max-width: 100%; white-space: normal; }
+.turnfin-app .pc-note { display: flex; align-items: flex-start; gap: 12px; padding: 16px; border-radius: var(--pc-radius-card); background: var(--pc-surface-sunken); }
+
+/* Time blocks: one pattern for the home timeline, schedule cells, the duty list and shifts. */
+.turnfin-app .pc-block { display: flex; align-items: center; gap: 10px; min-width: 0; min-height: 56px; padding: 8px 10px 8px 12px; border-radius: var(--pc-radius-card); color: var(--pc-ink); text-decoration: none; overflow: hidden; }
+.turnfin-app .pc-block-body { display: flex; flex: 1; flex-direction: column; min-width: 0; }
+.turnfin-app .pc-block-body > * { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.turnfin-app .pc-block-title { font-weight: 600; }
+.turnfin-app .pc-block-hint { font-size: var(--pc-text-caption); line-height: var(--pc-leading-caption); }
+.turnfin-app .pc-block-time { flex: none; font-weight: 600; font-variant-numeric: tabular-nums; line-height: 18px; }
+.turnfin-app .pc-block-time small { display: block; font-size: var(--pc-text-caption); font-weight: 400; }
+.turnfin-app .pc-block-tag { display: inline-flex; flex: none; align-items: center; gap: 4px; min-height: 24px; padding: 0 8px; border-radius: 999px; background: var(--pc-surface); color: var(--pc-ink); font-size: var(--pc-text-caption); line-height: var(--pc-leading-caption); font-weight: 600; }
+.turnfin-app .pc-block-tag > svg { width: 14px; height: 14px; }
+.turnfin-app .pc-block[data-state='now'] { background: var(--pc-block-now); color: var(--pc-on-block-now); }
+.turnfin-app .pc-block[data-state='next'] { background: var(--pc-block-next); color: var(--pc-on-block-next); }
+.turnfin-app .pc-block[data-state='cover'] { background: var(--pc-block-cover); color: var(--pc-on-block-cover); }
+.turnfin-app .pc-block[data-state='assessment'] { background: var(--pc-block-assess); color: var(--pc-on-block-assess); }
+.turnfin-app .pc-block[data-state='done'] { background: var(--pc-surface-sunken); color: var(--pc-ink-muted); }
+.turnfin-app .pc-block[data-state='off'] { background: repeating-linear-gradient(135deg, var(--pc-hatch) 0 6px, transparent 6px 12px); box-shadow: inset 0 0 0 1px var(--pc-line); color: var(--pc-ink-muted); }
+.turnfin-app .pc-block[data-state='off'] .pc-block-title { text-decoration: line-through; }
+.turnfin-app a.pc-block:focus-visible { outline: 2px solid var(--pc-focus); outline-offset: 2px; }
+.turnfin-app .pc-timeline-scroll { position: relative; overflow-x: auto; }
+.turnfin-app .pc-timeline { display: grid; gap: 8px; }
+.turnfin-app .pc-timeline-hour { display: flex; align-items: center; justify-content: center; min-height: 44px; border: 1px solid var(--pc-line); border-radius: var(--pc-radius-card); font-weight: 600; font-variant-numeric: tabular-nums; }
+.turnfin-app .pc-timeline-hour[data-past] { border-color: transparent; background: var(--pc-hatch); color: var(--pc-ink-muted); }
+.turnfin-app .pc-timeline-hour[data-now] { border-color: var(--pc-primary); background: var(--pc-primary); color: var(--pc-on-primary); }
+.turnfin-app .pc-timeline-lane { display: flex; flex-direction: column; justify-content: center; min-width: 0; min-height: 56px; padding: 8px 12px; border: 1px solid var(--pc-line); border-radius: var(--pc-radius-card); }
+.turnfin-app .pc-timeline-lane > * { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.turnfin-app .pc-timeline-now { position: relative; pointer-events: none; }
+.turnfin-app .pc-timeline-now::after { content: ''; position: absolute; top: -8px; bottom: 0; left: var(--at); border-left: 2px dashed var(--pc-primary); }
+.turnfin-app .pc-only-narrow { display: none; }
+@media (max-width: 767px) {
+  .turnfin-app .pc-only-wide { display: none; }
+  .turnfin-app .pc-only-narrow { display: flex; }
+  .turnfin-app .pc-panel { padding: 16px; gap: 12px; }
+}

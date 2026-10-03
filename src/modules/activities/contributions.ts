@@ -2,7 +2,7 @@ import "server-only";
 import { prisma } from "@/lib/prisma";
 import { expandPermissions, type PermissionKey } from "@/lib/staff/permissions";
 import { visibleScreens, type ScreenKey } from "@/lib/staff/screens";
-import { registerCommitments, registerHomeCard, registerSiteSummary, registerStaffColumn, type Commitment, type HomeItem } from "@/modules/contributions";
+import { registerCommitments, registerHomeCard, registerSiteSummary, registerStaffColumn, type Commitment, type HomeItem, type HomeSession } from "@/modules/contributions";
 import { minutesNow, parseDateOnly, today } from "@/lib/format";
 import { weekdayOfIso } from "@/modules/activities/lib/attendance/dates";
 import { getCoversForDay } from "@/modules/activities/lib/attendance/data/cover";
@@ -115,10 +115,11 @@ registerHomeCard({
     const allowed = (line: SwimLine) => screens.has(line.screen) && (!line.permission || held.has(line.permission));
     const strip = ({ label, hint, href, kind, icon }: SwimLine): HomeItem => ({ label, hint, href, kind, icon });
     const iso = today();
-    const [classes, cancelled, assessments, awaiting, parentUpdates] = await Promise.all([
+    const [classes, cancelled, assessments, covers, awaiting, parentUpdates] = await Promise.all([
       screens.has("calendar") ? getCoursesOnDay(weekdayOfIso(iso)) : null,
       screens.has("calendar") ? getCancellationsForDay(iso) : null,
       screens.has("calendar") ? getTodayAssessments(iso) : null,
+      screens.has("calendar") ? getCoversForDay(iso) : null,
       screens.has("awaiting-enrolment") ? getAwaitingEnrolment() : null,
       screens.has("students") && held.has("students.manage") ? prisma.parentChangeRequest.count({ where: { status: "PENDING" } }) : null,
     ]);
@@ -126,6 +127,26 @@ registerHomeCard({
     if (classes && cancelled) {
       const off = classes.filter((c) => cancelled.has(c.id)).length;
       items.push({ kind: "today", label: "Classes today", count: classes.length - off, hint: off ? `${plainCount(off, "class", "classes")} cancelled` : "None cancelled", href: "/schedule" });
+    }
+    if (classes && cancelled && assessments && covers) {
+      const now = minutesNow();
+      const state = (start: number, end: number): HomeSession["state"] => (end <= now ? "done" : start <= now ? "now" : "next");
+      const sessions: HomeSession[] = [
+        ...classes.map((c): HomeSession => {
+          const end = c.startMinutes + c.durationMinutes, cover = covers.get(c.id);
+          const who = cover?.coverByName ?? c.instructor?.name;
+          const timed = state(c.startMinutes, end);
+          return {
+            label: courseName(c), area: c.location || "Pool area not set", start: c.startMinutes, end, hint: who ?? "No instructor", href: `/courses/${c.id}`,
+            state: cancelled.has(c.id) ? "off" : !who && timed !== "done" ? "cover" : timed,
+          };
+        }),
+        ...assessments.map((a): HomeSession => ({
+          label: a.typeName ?? `${a.programmeName} assessment`, area: a.location || "Pool area not set", start: a.startMinutes, end: a.startMinutes + a.durationMinutes,
+          hint: `${a.booked} booked`, href: `/assessments/${a.id}`, state: "assessment",
+        })),
+      ];
+      if (sessions.length) items.push({ kind: "timeline", label: "Classes today", href: "/schedule", sessions });
     }
     if (assessments) {
       const booked = assessments.reduce((sum, a) => sum + a.booked, 0);

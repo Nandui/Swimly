@@ -83,10 +83,26 @@ export type HomeItem = {
   count?: number;
   /** Something is waiting that this person should act on. */
   attention?: boolean;
-  kind?: "action" | "today";
+  kind?: "action" | "today" | "timeline";
   icon?: HomeIcon;
   /** A few short lines under a today fact, e.g. an instructor's next classes. */
   list?: { label: string; hint?: string }[];
+  /** Today's sessions for the day-at-a-glance timeline (kind "timeline"), one lane per area. */
+  sessions?: HomeSession[];
+};
+
+/** One block on the home timeline. Its state picks the colour and the label, from
+ *  `HOME_SESSION_META`; times are minutes after midnight. */
+export type HomeSession = {
+  label: string;
+  /** The lane it sits in, e.g. a pool area. */
+  area: string;
+  start: number;
+  end: number;
+  /** Who is running it, or a short note such as "6 booked". */
+  hint?: string;
+  state: "done" | "now" | "next" | "cover" | "off" | "assessment";
+  href: string;
 };
 
 export type HomeCard = {

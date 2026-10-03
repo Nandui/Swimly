@@ -12,7 +12,7 @@ export function PageHeader({
   actions?: React.ReactNode;
 }) {
   return (
-    <div className="min-w-0 flex flex-wrap gap-x-6 gap-y-4 items-start justify-between">
+    <div className="min-w-0 flex flex-wrap gap-x-6 gap-y-4 items-end justify-between">
       <div className="min-w-0 flex flex-col gap-1 grow basis-[min(100%,22rem)]">
         <h1 className="text-2xl font-semibold tracking-tight">{title}</h1>
         {description ? (

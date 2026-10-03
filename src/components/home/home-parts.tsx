@@ -1,36 +1,40 @@
 import Link from "next/link";
-import { CalendarPlus, ChevronRight, CircleCheck, ClipboardCheck, FilePlus, ReceiptText, Search, TriangleAlert, UserPlus, UserX, type LucideIcon } from "lucide-react";
-import { Button } from "@/components/shadcn/button";
-import { Card } from "@/components/shadcn/card";
+import { CalendarPlus, ChevronRight, CircleCheck, CircleX, ClipboardCheck, Clock3, FilePlus, Play, ReceiptText, Search, TriangleAlert, UserPlus, UserX, type LucideIcon } from "lucide-react";
 import { Tag } from "@/components/ui-kit/tag";
-import { HOME_ITEM_META } from "@/lib/home-meta";
-import type { HomeIcon, HomeItem } from "@/modules/contributions";
+import { HOME_ITEM_META, HOME_SESSION_META } from "@/lib/home-meta";
+import type { HomeIcon, HomeItem, HomeSession } from "@/modules/contributions";
 
-/** The pieces the home page and every module overview share, so a figure, a
- *  queue or a quick action looks the same wherever it appears. Each item
- *  carries the icon of the module it came from. */
+/** The pieces the home page and every module overview share (DESIGN.md, "Poolside Clear v2"),
+ *  so a figure, a queue, a quick action or the day's timeline looks the same wherever it
+ *  appears. Each item carries the icon of the module it came from. */
 export type Placed = HomeItem & { moduleIcon: LucideIcon; key: string };
 
 const ACTION_ICONS: Record<HomeIcon, LucideIcon> = {
   search: Search, userPlus: UserPlus, calendarPlus: CalendarPlus, receipt: ReceiptText, userX: UserX, filePlus: FilePlus, clipboardCheck: ClipboardCheck,
 };
 
-/** Split a module's items into the three places they show. */
+const SESSION_ICONS: Record<HomeSession["state"], LucideIcon> = {
+  done: CircleCheck, now: Play, next: Clock3, cover: TriangleAlert, off: CircleX, assessment: ClipboardCheck,
+};
+
+/** Split a module's items into the places they show. */
 export function sortItems(items: Placed[]) {
   // What needs the person first, then anything waiting, then the empty queues.
   const rank = (i: HomeItem) => (i.attention ? 0 : i.count ? 1 : 2);
   return {
     actions: items.filter((i) => i.kind === "action"),
     today: items.filter((i) => i.kind === "today"),
+    timeline: items.filter((i) => i.kind === "timeline" && i.sessions?.length),
     waiting: items.filter((i) => !i.kind && i.count !== undefined).sort((a, b) => rank(a) - rank(b)),
     links: items.filter((i) => !i.kind && i.count === undefined),
   };
 }
 
+/** A white panel with its title and, top right, one quiet action or summary. */
 export function Section({ id, title, aside, children }: { id: string; title: string; aside?: React.ReactNode; children: React.ReactNode }) {
   return (
-    <section aria-labelledby={id} className="flex min-w-0 flex-col gap-3">
-      <div className="flex flex-wrap items-baseline justify-between gap-x-4 gap-y-1">
+    <section aria-labelledby={id} className="pc-panel">
+      <div className="pc-panel-head">
         <h2 id={id} className="text-lg font-semibold">{title}</h2>
         {aside}
       </div>
@@ -39,132 +43,183 @@ export function Section({ id, title, aside, children }: { id: string; title: str
   );
 }
 
-export function QuickActions({ items }: { items: Placed[] }) {
-  if (!items.length) return null;
-  return (
-    <nav aria-label="Quick actions">
-      <ul className="grid grid-cols-2 gap-2 sm:flex sm:flex-wrap">
-        {items.map((action) => {
-          const Icon = action.icon ? ACTION_ICONS[action.icon] : action.moduleIcon;
-          return (
-            <li key={action.key}>
-              <Button asChild variant="outline" className="h-auto min-h-11 w-full justify-start whitespace-normal bg-ui-card py-2 text-left sm:w-auto">
-                <Link href={action.href}><Icon aria-hidden="true" className="text-ui-primary" />{action.label}</Link>
-              </Button>
-            </li>
-          );
-        })}
-      </ul>
-    </nav>
-  );
-}
-
-/** Today's figures in rows without gaps: side by side when there are two or
- *  three, two by two when there are four (four in a row once the page is
- *  wide enough). A figure with a list, an instructor's next classes, takes
- *  a full row. */
-export function TodayGrid({ items, wide = false }: { items: Placed[]; wide?: boolean }) {
-  const plain = items.filter((i) => !i.list?.length).length;
-  const columns = plain === 3 ? "sm:grid-cols-3" : plain >= 4 ? `sm:grid-cols-2 ${wide ? "lg:grid-cols-4" : "2xl:grid-cols-4"}` : plain === 2 ? "sm:grid-cols-2" : "";
-  return (
-    <ul className={`grid min-w-0 grid-cols-2 gap-3 ${columns} [&>li:last-child:nth-child(odd)]:col-span-full ${plain === 3 || plain === 1 ? "sm:[&>li:last-child:nth-child(odd)]:col-span-1" : ""}`}>
-      {items.map((item) => <li key={item.key} className={item.list?.length ? "col-span-full" : undefined}><FigureTile item={item} /></li>)}
-    </ul>
-  );
-}
-
-/** A figure with its label, the whole tile one link. */
-function FigureTile({ item }: { item: Placed }) {
-  const Icon = item.moduleIcon;
-  return (
-    <Card className="relative h-full min-w-0 gap-1.5 p-4 shadow-none transition-colors hover:bg-ui-accent has-[a:focus-visible]:outline-2 has-[a:focus-visible]:outline-ui-ring">
-      <div className="flex min-w-0 items-center gap-2 text-xs font-semibold text-ui-muted-foreground">
-        <Icon aria-hidden="true" className="size-4 shrink-0 text-ui-primary" />
-        <Link href={item.href} className="min-w-0 flex-1 outline-none after:absolute after:inset-0 after:rounded-[inherit]">{item.label}</Link>
-        <ChevronRight aria-hidden="true" className="size-4 shrink-0" />
-      </div>
-      <div className="flex flex-wrap items-center gap-2">
-        <span className={`text-3xl font-bold tabular-nums tracking-tight${item.count ? "" : " text-ui-muted-foreground"}`}>{item.count}</span>
-        {item.attention ? <NeedsYou /> : null}
-      </div>
-      {item.hint ? <p className="text-xs text-ui-muted-foreground">{item.hint}</p> : null}
-      {item.list?.length ? (
-        <ul className="mt-1 flex flex-col divide-y divide-ui-border border-t border-ui-border">
-          {item.list.map((line) => (
-            <li key={`${line.label}:${line.hint}`} className="flex min-w-0 flex-wrap items-baseline justify-between gap-x-3 py-2 text-sm">
-              <span className="min-w-0 font-medium">{line.label}</span>
-              {line.hint ? <span className="text-xs text-ui-muted-foreground tabular-nums">{line.hint}</span> : null}
-            </li>
-          ))}
-        </ul>
-      ) : null}
-    </Card>
-  );
-}
-
 function NeedsYou() {
-  return <Tag color={HOME_ITEM_META.attention.color}><TriangleAlert aria-hidden="true" className="size-3" />{HOME_ITEM_META.attention.label}</Tag>;
+  return <Tag color={HOME_ITEM_META.attention.color}><TriangleAlert aria-hidden="true" />{HOME_ITEM_META.attention.label}</Tag>;
 }
 
 /** "3 things need you", or "All clear". */
 export function NeedsSummary({ count }: { count: number }) {
+  return count
+    ? <Tag color={HOME_ITEM_META.attention.color}><TriangleAlert aria-hidden="true" />{count} {count === 1 ? "thing needs" : "things need"} you</Tag>
+    : <p className="flex items-center gap-1.5 text-sm text-ui-muted-foreground"><CircleCheck aria-hidden="true" className="size-4 text-ui-primary" />All clear</p>;
+}
+
+/** Quick actions as rows: an icon, what it does, and the way in. */
+export function QuickActions({ items }: { items: Placed[] }) {
+  if (!items.length) return null;
   return (
-    <p className="flex items-center gap-1.5 text-sm text-ui-muted-foreground">
-      {count ? `${count} ${count === 1 ? "thing needs" : "things need"} you` : <><CircleCheck aria-hidden="true" className="size-4 text-ui-primary" />All clear</>}
-    </p>
+    <ul className="pc-rows" aria-label="Quick actions">
+      {items.map((action) => {
+        const Icon = action.icon ? ACTION_ICONS[action.icon] : action.moduleIcon;
+        return (
+          <li key={action.key}>
+            <Link href={action.href} className="pc-row">
+              <span className="pc-tile-icon"><Icon aria-hidden="true" /></span>
+              <span className="pc-row-body"><span className="pc-row-title">{action.label}</span></span>
+              <span className="pc-row-trail"><ChevronRight aria-hidden="true" className="pc-row-chevron" /></span>
+            </Link>
+          </li>
+        );
+      })}
+    </ul>
   );
 }
 
-/** Queues as one panel of rows: what it is, and how many wait. */
-export function WaitingList({ items }: { items: Placed[] }) {
+/** Today's figures as tiles: the module's icon, the figure, what it counts and one line more.
+ *  A figure with a list (an instructor's next classes) lists them under the tiles. */
+export function TodayGrid({ items }: { items: Placed[]; wide?: boolean }) {
+  const lists = items.filter((i) => i.list?.length);
   return (
-    <Card className="gap-0 overflow-hidden p-0 shadow-none">
-      <ul className="flex flex-col divide-y divide-ui-border">
+    <>
+      <ul className="pc-stats">
         {items.map((item) => {
           const Icon = item.moduleIcon;
           return (
-            <li key={item.key}>
-              <Link href={item.href} className="flex min-h-14 items-center gap-3 px-4 py-2.5 hover:bg-ui-accent focus-visible:outline-2 focus-visible:-outline-offset-2 focus-visible:outline-ui-ring">
-                <Icon aria-hidden="true" className="size-4 shrink-0 text-ui-primary" />
-                <span className="min-w-0 flex-1">
-                  <span className="block text-sm font-medium">{item.label}</span>
-                  {item.hint ? <span className="block text-xs text-ui-muted-foreground">{item.hint}</span> : null}
-                </span>
-                {item.attention ? <NeedsYou /> : null}
-                <span className={`min-w-8 text-right text-base font-semibold tabular-nums${item.count ? "" : " text-ui-muted-foreground"}`}>{item.count}</span>
-                <ChevronRight aria-hidden="true" className="size-4 shrink-0 text-ui-muted-foreground" />
+            <li key={item.key} className="flex">
+              <Link href={item.href} className="pc-stat w-full">
+                <span className="pc-tile-icon"><Icon aria-hidden="true" /></span>
+                <span><span className={`pc-stat-figure block${item.count ? "" : " text-ui-muted-foreground"}`}>{item.count}</span><span className="block font-semibold">{item.label}</span></span>
+                {item.attention ? <NeedsYou /> : item.hint ? <span className="text-xs text-ui-muted-foreground">{item.hint}</span> : null}
               </Link>
             </li>
           );
         })}
       </ul>
-    </Card>
+      {lists.map((item) => (
+        <ul key={`${item.key}:list`} className="pc-rows" aria-label={item.label}>
+          {item.list!.map((line) => (
+            <li key={`${line.label}:${line.hint}`} className="pc-row" style={{ minHeight: 56 }}>
+              <span className="pc-row-body"><span className="pc-row-title">{line.label}</span>{line.hint ? <span className="pc-row-hint tabular-nums">{line.hint}</span> : null}</span>
+            </li>
+          ))}
+        </ul>
+      ))}
+    </>
   );
 }
 
-/** A module's pages as one panel of grouped rows, two columns when wide. */
+/** Queues as rows: what it is and how many wait. The first one that needs this person is the
+ *  page's single do-first item. */
+export function WaitingList({ items }: { items: Placed[] }) {
+  const first = items.findIndex((i) => i.attention);
+  return (
+    <ul className="pc-rows">
+      {items.map((item, index) => (
+        <li key={item.key}>
+          <Link href={item.href} className="pc-row" data-first={index === first ? "" : undefined} data-muted={!item.count ? "" : undefined}>
+            <span className="pc-row-body"><span className="pc-row-title">{item.label}</span>{item.hint ? <span className="pc-row-hint">{item.hint}</span> : null}</span>
+            <span className="pc-row-trail">
+              {item.attention && index !== first ? <NeedsYou /> : null}
+              {item.attention && index === first ? <span className="sr-only">{HOME_ITEM_META.attention.label}</span> : null}
+              <span className="pc-row-count">{item.count}</span>
+              <ChevronRight aria-hidden="true" className="pc-row-chevron" />
+            </span>
+          </Link>
+        </li>
+      ))}
+    </ul>
+  );
+}
+
+/** A module's pages as grouped rows, two or three across when wide. */
 export function PageList({ groups }: { groups: { label: string; links: { href: string; label: string; description?: string; icon: LucideIcon }[] }[] }) {
   return (
-    <Card className="gap-0 p-2 shadow-none">
+    <div className="flex flex-col gap-4">
       {groups.filter((g) => g.links.length).map((group) => (
-        <div key={group.label} className="flex flex-col">
-          {group.label ? <p className="px-3 pb-1 pt-3 text-xs font-semibold text-ui-muted-foreground">{group.label}</p> : null}
-          <ul className="grid gap-x-2 lg:grid-cols-2">
+        <div key={group.label} className="flex flex-col gap-2">
+          {group.label ? <h3 className="text-xs font-semibold text-ui-muted-foreground">{group.label}</h3> : null}
+          <ul className="pc-rows pc-rows-grid">
             {group.links.map((link) => (
-              <li key={link.href}>
-                <Link href={link.href} className="flex min-h-11 items-start gap-3 rounded-ui-md px-3 py-2.5 hover:bg-ui-accent focus-visible:outline-2 focus-visible:outline-ui-ring">
-                  <span className="mt-0.5 flex size-8 shrink-0 items-center justify-center rounded-ui-md bg-ui-accent text-ui-primary"><link.icon aria-hidden="true" className="size-4" /></span>
-                  <span className="min-w-0 flex-1">
-                    <span className="block text-sm font-semibold">{link.label}</span>
-                    {link.description ? <span className="block text-xs text-ui-muted-foreground">{link.description}</span> : null}
-                  </span>
-                  <ChevronRight aria-hidden="true" className="mt-2 size-4 shrink-0 text-ui-muted-foreground" />
+              <li key={link.href} className="flex">
+                <Link href={link.href} className="pc-row w-full">
+                  <span className="pc-tile-icon"><link.icon aria-hidden="true" /></span>
+                  <span className="pc-row-body"><span className="pc-row-title">{link.label}</span>{link.description ? <span className="pc-row-hint">{link.description}</span> : null}</span>
+                  <span className="pc-row-trail"><ChevronRight aria-hidden="true" className="pc-row-chevron" /></span>
                 </Link>
               </li>
             ))}
           </ul>
         </div>
       ))}
-    </Card>
+    </div>
+  );
+}
+
+const clock = (minutes: number) => `${String(Math.floor(minutes / 60)).padStart(2, "0")}:${String(minutes % 60).padStart(2, "0")}`;
+
+function SessionTag({ state, iconOnly }: { state: HomeSession["state"]; iconOnly?: boolean }) {
+  const Icon = SESSION_ICONS[state];
+  const label = HOME_SESSION_META[state].label;
+  return <span className="pc-block-tag"><Icon aria-hidden="true" />{iconOnly ? <span className="sr-only">{label}</span> : label}</span>;
+}
+
+/** The day at a glance: one lane per area, half-hour columns, a dashed line at the time now.
+ *  On a phone it becomes the list of what is on now and next. `now` is minutes after midnight. */
+export function Timeline({ sessions, now }: { sessions: HomeSession[]; now: number }) {
+  const from = Math.floor(Math.min(...sessions.map((s) => s.start)) / 60) * 60;
+  // At least four hours, so a quiet day still reads as a day.
+  const to = Math.max(Math.ceil(Math.max(...sessions.map((s) => s.end)) / 60) * 60, from + 240);
+  const columns = Math.max(2, (to - from) / 30);
+  const lanes = [...new Set(sessions.map((s) => s.area))].sort((a, b) => a.localeCompare(b));
+  const hours = Array.from({ length: columns / 2 }, (_, i) => from + i * 60);
+  const col = (minutes: number) => Math.floor((minutes - from) / 30) + 2;
+  const upcoming = sessions.filter((s) => s.state !== "done" && s.state !== "off").sort((a, b) => a.start - b.start).slice(0, 5);
+  const states = [...new Set(sessions.map((s) => s.state))];
+  return (
+    <>
+      <div className="pc-timeline-scroll pc-only-wide">
+        <div className="pc-timeline" style={{ gridTemplateColumns: `200px repeat(${columns}, minmax(56px, 1fr))`, gridTemplateRows: `44px repeat(${lanes.length}, 56px)`, minWidth: 200 + columns * 64 }}>
+          <span className="self-center text-xs font-semibold text-ui-muted-foreground" style={{ gridColumn: 1, gridRow: 1 }}>Area</span>
+          {hours.map((hour) => (
+            <span key={hour} className="pc-timeline-hour" style={{ gridColumn: `${col(hour)} / span 2`, gridRow: 1 }}
+              data-past={hour + 60 <= now ? "" : undefined} data-now={hour <= now && now < hour + 60 ? "" : undefined}>
+              {clock(hour)}{hour <= now && now < hour + 60 ? <span className="sr-only">, now {clock(now)}</span> : null}
+            </span>
+          ))}
+          {lanes.map((lane, index) => {
+            const count = sessions.filter((s) => s.area === lane).length;
+            return (
+              <span key={lane} className="pc-timeline-lane" style={{ gridColumn: 1, gridRow: index + 2 }}>
+                <span className="font-semibold">{lane}</span><span className="text-xs text-ui-muted-foreground">{count} {count === 1 ? "session" : "sessions"}</span>
+              </span>
+            );
+          })}
+          {sessions.map((s) => (
+            <Link key={`${s.href}:${s.start}`} href={s.href} className="pc-block" data-state={s.state}
+              style={{ gridColumn: `${col(s.start)} / span ${Math.max(1, Math.round((s.end - s.start) / 30))}`, gridRow: lanes.indexOf(s.area) + 2 }}>
+              <span className="pc-block-body"><span className="pc-block-title">{s.label}</span><span className="pc-block-hint tabular-nums">{s.hint ? `${s.hint} · ` : ""}{clock(s.start)} to {clock(s.end)}</span></span>
+              {s.state !== "next" ? <SessionTag state={s.state} iconOnly /> : null}
+            </Link>
+          ))}
+          {now >= from && now < to ? (
+            <span aria-hidden="true" className="pc-timeline-now" style={{ gridColumn: col(now), gridRow: `2 / ${lanes.length + 2}`, ["--at" as string]: `${(((now - from) % 30) / 30) * 100}%` }} />
+          ) : null}
+        </div>
+      </div>
+      <ul className="pc-only-wide flex flex-wrap gap-2" aria-label="Key">
+        {states.map((state) => <li key={state}><Tag color={HOME_SESSION_META[state].color}>{(() => { const Icon = SESSION_ICONS[state]; return <Icon aria-hidden="true" />; })()}{HOME_SESSION_META[state].label}</Tag></li>)}
+      </ul>
+      <ul className="pc-only-narrow flex-col gap-2" aria-label="On now and next">
+        {upcoming.length ? upcoming.map((s) => (
+          <li key={`${s.href}:${s.start}:n`}>
+            <Link href={s.href} className="pc-block" data-state={s.state}>
+              <span className="pc-block-time">{clock(s.start)}<small>to {clock(s.end)}</small></span>
+              <span className="pc-block-body"><span className="pc-block-title">{s.label}</span><span className="pc-block-hint">{s.hint ? `${s.hint} · ` : ""}{s.area}</span></span>
+              <SessionTag state={s.state} />
+            </Link>
+          </li>
+        )) : <li className="text-sm text-ui-muted-foreground">Nothing else on today.</li>}
+      </ul>
+    </>
   );
 }
