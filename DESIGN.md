@@ -85,9 +85,9 @@ frame holds a top row (the fin; the module's pages as a pill bar, the current pa
 blue; and a tools bar on the right with module tools such as the working site and search,
 "View as" in dev builds, and the account menu, which holds Appearance, Manage account, Help
 and Sign out), then the person's modules as an icon rail down the left (each names itself on
-hover and keyboard focus) beside the page. Page links that do not fit go under "More" at
-three widths (`BAR_FITS`: from 1100px, from 768px and on phones), so no link scrolls out of
-sight. From 768px to 1099px the page bar takes its own row. On phones and touch screens the
+hover and keyboard focus) beside the page. The bar shows as many page links as fit
+(measured, `useBarFit`) and puts the rest under "More", which keeps its short name and is
+filled when it holds the open page; no link scrolls out of sight. From 768px to 1099px the page bar takes its own row. On phones and touch screens the
 rail becomes a labelled bottom bar (Home, three modules with the current one always shown,
 More). The pool deck keeps its own top bar (fin, Classes and Swimmers, site, help and its
 own menu) and no module bar; see docs/instructor.md.

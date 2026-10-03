@@ -1213,16 +1213,18 @@
 }
 :where(.turnfin-docs) .breadcrumb {
   display: flex;
-  gap: 9px;
+  gap: 8px;
   align-items: center;
   font-size: var(--pc-text-caption);
   color: var(--muted);
-  margin-bottom: 22px;
+  margin-bottom: 8px;
 }
+/* The back link is a full 44px target, like every control. */
 :where(.turnfin-docs) .breadcrumb a {
   display: inline-flex;
   align-items: center;
-  gap: 7px;
+  gap: 8px;
+  min-height: var(--pc-control-height);
   color: var(--muted);
 }
 :where(.turnfin-docs) .reader-toolbar {

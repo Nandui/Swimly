@@ -71,9 +71,11 @@ export function InstructorShell({
         <Link href={home} className="tf-brand" aria-label="Pool deck classes">
           <Image src="/brand/turnfin.png" alt="" width={72} height={72} priority />
         </Link>
-        <nav className="tf-bar tf-pages" aria-label="Pool deck">
-          <Link href={home} className="tf-bar-item" aria-current={pathname !== "/instructor/swimmers" ? "page" : undefined}>Classes</Link>
-          <Link href="/instructor/swimmers" className="tf-bar-item" aria-current={pathname === "/instructor/swimmers" ? "page" : undefined}>Swimmers</Link>
+        <nav className="tf-pages" aria-label="Pool deck">
+          <div className="tf-bar">
+            <Link href={home} className="tf-bar-item" aria-current={pathname !== "/instructor/swimmers" ? "page" : undefined}>Classes</Link>
+            <Link href="/instructor/swimmers" className="tf-bar-item" aria-current={pathname === "/instructor/swimmers" ? "page" : undefined}>Swimmers</Link>
+          </div>
         </nav>
         <div className="tf-bar tf-tools" role="group" aria-label="Site, help and account">
           <ClubSwitcher club={club} clubs={clubs} touchTargets />

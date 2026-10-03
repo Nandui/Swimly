@@ -3,7 +3,7 @@
 import Image from 'next/image';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { useEffect, type ReactNode } from 'react';
+import { useEffect, useLayoutEffect, useRef, useState, type ReactNode, type RefObject } from 'react';
 import { ChevronDown, CircleHelp, House, LayoutGrid, type LucideIcon } from 'lucide-react';
 import { Button } from '@/components/shadcn/button';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/shadcn/dropdown-menu';
@@ -13,11 +13,6 @@ import { useYourModules } from '@/components/workspace/your-modules';
 
 export type ModuleLink = { href: string; label: string; icon: LucideIcon; active: boolean };
 export type ModuleLinkGroup = { label: string; links: ModuleLink[] };
-
-/** How many page links fit the top bar at each width (poolside.css): from 1100px, from 768px
- *  and on phones. When a module has more, the last place goes to "More" with the rest. */
-const BAR_FITS = [['wide', 7], ['narrow', 4], ['phone', 3]] as const;
-type BarWidth = (typeof BAR_FITS)[number][0];
 
 /** The one frame every module opens in (docs/how-turnfin-works.md, DESIGN.md "Poolside Clear
  *  v2"): the fin and the module's pages along the top, search, site and account on the right;
@@ -54,9 +49,8 @@ export function ModuleShell({ module, id, current = id, who, links = [], groups,
   const pathname = usePathname();
   useEffect(() => { window.scrollTo({ top: 0 }); }, [pathname, scrollKey]);
   const pages = (groups ?? [{ label: '', links }]).flatMap((group) => group.links);
-  const cuts = BAR_FITS.filter(([, fits]) => pages.length > fits);
-  /** The widest bar a link no longer fits in, if any. */
-  const hiddenFrom = (index: number) => cuts.find(([, fits]) => index >= fits - 1)?.[0];
+  const navRef = useRef<HTMLElement>(null), measureRef = useRef<HTMLDivElement>(null);
+  const fit = useBarFit(navRef, measureRef, pages.length);
   const railCurrent = current === 'core' ? 'admin' : current;
 
   return (
@@ -68,13 +62,19 @@ export function ModuleShell({ module, id, current = id, who, links = [], groups,
             <Image src="/brand/turnfin.png" alt="" width={72} height={72} priority />
           </Link>
           {pages.length > 0 && (
-            <nav className="tf-bar tf-pages" aria-label={`${module} pages`}>
+            <nav ref={navRef} className="tf-pages" aria-label={`${module} pages`}>
               <span className="sr-only">{scopeNote}</span>
-              {pages.map((page, index) => (
-                <Link key={page.href} href={page.href} className="tf-bar-item" aria-current={page.active ? 'page' : undefined}
-                  data-more={hiddenFrom(index)}>{page.label}</Link>
-              ))}
-              {cuts.map(([width, fits]) => <PagesMore key={width} pages={pages.slice(fits - 1)} width={width} />)}
+              <div className="tf-bar">
+                {pages.slice(0, fit).map((page) => (
+                  <Link key={page.href} href={page.href} className="tf-bar-item" aria-current={page.active ? 'page' : undefined}>{page.label}</Link>
+                ))}
+                {fit < pages.length && <PagesMore pages={pages.slice(fit)} />}
+              </div>
+              {/* Every label at its natural width, unseen, so the bar can tell how many fit. */}
+              <div ref={measureRef} className="tf-bar-measure" aria-hidden="true">
+                {pages.map((page) => <span key={page.href} className="tf-bar-item">{page.label}</span>)}
+                <span className="tf-bar-item">More<ChevronDown /></span>
+              </div>
             </nav>
           )}
           <div className="tf-bar tf-tools" role="group" aria-label="Search, site and account">
@@ -95,14 +95,38 @@ export function ModuleShell({ module, id, current = id, who, links = [], groups,
   );
 }
 
-/** The pages that do not fit the bar at one width, in a menu named after the open one. */
-function PagesMore({ pages, width }: { pages: ModuleLink[]; width: BarWidth }) {
+/** As many page links as fit the bar, measured, so a link never scrolls out of sight; the rest go
+ *  under "More". Until measured (the server render) every link shows, clipped by the bar. */
+function useBarFit(nav: RefObject<HTMLElement | null>, measure: RefObject<HTMLDivElement | null>, count: number) {
+  const [fit, setFit] = useState(count);
+  useLayoutEffect(() => {
+    const bar = nav.current, sizes = measure.current;
+    if (!bar || !sizes) return;
+    const update = () => {
+      const widths = [...sizes.children].map((child) => child.getBoundingClientRect().width);
+      const more = widths.pop() ?? 0;
+      const room = bar.clientWidth - 8; // the bar's own 4px inset each side
+      let used = 0, shown = 0;
+      while (shown < count && used + widths[shown] + (shown + 1 < count ? more : 0) <= room) used += widths[shown++];
+      setFit(Math.max(1, shown));
+    };
+    update();
+    const observer = new ResizeObserver(update);
+    observer.observe(bar);
+    return () => observer.disconnect();
+  }, [nav, measure, count]);
+  return fit;
+}
+
+/** The pages that do not fit the bar. "More" keeps its short name so the bar never grows; it is
+ *  filled when it holds the open page, which the page's H1 names. */
+function PagesMore({ pages }: { pages: ModuleLink[] }) {
   const active = pages.find((page) => page.active);
   return (
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
-        <Button variant="ghost" className="tf-bar-item" data-more-menu={width} aria-current={active ? 'page' : undefined}>
-          {active ? active.label : 'More'}<ChevronDown aria-hidden="true" />
+        <Button variant="ghost" className="tf-bar-item" aria-current={active ? 'page' : undefined} aria-label={active ? `More pages, including ${active.label}, the current page` : undefined}>
+          More<ChevronDown aria-hidden="true" />
         </Button>
       </DropdownMenuTrigger>
       <DropdownMenuContent align="start" className="w-64 max-w-[calc(100vw-2rem)]">
