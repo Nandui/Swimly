@@ -92,7 +92,7 @@ export function InstructorReport({ data }: { data: InstructorAnalyticsData }) {
               </TableRow>;
             })}</TableBody>
           </Table>
-          {classes.length === 0 ? <EmptyState compact title="No classes match this selection." /> : null}
+          {classes.length === 0 ? <EmptyState compact title="No classes match" hint="Choose another tab to see more of this week’s classes." /> : null}
         </TabsContent>
       </Tabs>
     </section>

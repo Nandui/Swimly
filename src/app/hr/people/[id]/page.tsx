@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import { cache } from "react";
 import Link from "next/link";
-import { ChevronRight, Download } from "lucide-react";
+import { CalendarClock, ChevronRight, Download, FileText, UserX, type LucideIcon } from "lucide-react";
 import { Button } from "@/components/shadcn/button";
 import { AddNote, StartReview, WithdrawNote } from "@/components/hr/actions";
 import { EmptyState } from "@/components/ui-kit/empty-state";
@@ -13,6 +13,9 @@ import { hrPerson } from "@/lib/hr/records";
 import { requireFreshSession } from "@/lib/policy/session";
 import { AuthorizationError } from "@/lib/authz";
 import { hrConfigured } from "@/lib/hr/database";
+
+/** The tile icon for each module's section of the person's file, by its stable key. */
+const FILE_ICONS: Record<string, LucideIcon> = { "rota.absences": UserX, "rota.changes": CalendarClock };
 
 /** One read (and one access log row) per request, shared by the page and its tab title. */
 const load = cache(hrPerson);
@@ -93,7 +96,9 @@ export default async function HrPersonPage({ params }: { params: Promise<{ id: s
           )}
         </section>
       </div>
-      {data.file.map((section) => (
+      {data.file.map((section) => {
+        const Icon = FILE_ICONS[section.id] ?? FileText;
+        return (
         <section key={section.id} className="pc-panel" aria-labelledby={`file-${section.id}`}>
           <div className="pc-panel-head"><h2 id={`file-${section.id}`}>{section.heading}</h2></div>
           <p className="text-sm text-ui-muted-foreground">{section.summary}</p>
@@ -101,6 +106,7 @@ export default async function HrPersonPage({ params }: { params: Promise<{ id: s
             <ul className="pc-rows">
               {section.entries.map((e) => (
                 <li key={e.id} className="pc-row">
+                  <span className="pc-tile-icon" aria-hidden="true"><Icon /></span>
                   <div className="pc-row-body">
                     <span className="pc-row-title">{e.title}</span>
                     <span className="pc-row-hint">{e.detail}</span>
@@ -110,7 +116,8 @@ export default async function HrPersonPage({ params }: { params: Promise<{ id: s
             </ul>
           ) : null}
         </section>
-      ))}
+        );
+      })}
     </>
   );
 }

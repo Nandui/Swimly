@@ -194,7 +194,7 @@ export async function updateCourse(id: string, input: CourseInput): Promise<Acti
       changes.push(`duration ${existing.durationMinutes} → ${data.durationMinutes} min`);
     }
     if (data.capacity !== existing.capacity) {
-      changes.push(`capacity ${existing.capacity ?? "uncapped"} → ${data.capacity ?? "uncapped"}`);
+      changes.push(`capacity ${existing.capacity ?? "no limit"} → ${data.capacity ?? "no limit"}`);
     }
     if (data.instructorId !== existing.instructorId) changes.push("instructor");
     if ((data.location ?? "") !== (existing.location ?? "")) changes.push("location");

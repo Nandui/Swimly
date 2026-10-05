@@ -9,10 +9,10 @@ import { EmptyState } from "@/components/ui-kit/empty-state";
 import { PageHeader } from "@/components/ui-kit/page-header";
 import type { StudentRow } from "@/modules/activities/lib/students/data/students";
 import { swimmerDirectoryHref, type SwimmerStatusFilter } from "@/modules/activities/lib/students/directory";
+import { formatCount, plural } from "@/lib/format";
 import { StudentDirectory } from "./student-directory";
 
 const LENSES = [{ key: "ALL", label: "All" }, { key: "ACTIVE", label: "Active" }, { key: "INACTIVE", label: "Inactive" }] as const;
-const number = (value: number) => value.toLocaleString("en-IE");
 
 export function SwimmerBrowser({ students, total, page, pageSize, counts, q, status, addAction, parentAction }: {
   students: StudentRow[];
@@ -43,7 +43,7 @@ export function SwimmerBrowser({ students, total, page, pageSize, counts, q, sta
             {status !== "ALL" ? <input type="hidden" name="status" value={status} /> : null}
             <SearchField id="swimmer-query" label="Find a swimmer" defaultValue={q} placeholder="Name, member number or contact" />
           </Form>
-          <SegmentedLinks label="Filter swimmers by status" items={LENSES.map((lens) => ({ href: swimmerDirectoryHref({ q, status: lens.key }), label: lens.label, count: number(countFor(lens.key)), current: status === lens.key }))} />
+          <SegmentedLinks label="Filter swimmers by status" items={LENSES.map((lens) => ({ href: swimmerDirectoryHref({ q, status: lens.key }), label: lens.label, count: formatCount(countFor(lens.key)), current: status === lens.key }))} />
         </div>
         {students.length ? <StudentDirectory students={students} returnTo={returnTo} /> : (
           <EmptyState
@@ -59,7 +59,7 @@ export function SwimmerBrowser({ students, total, page, pageSize, counts, q, sta
           <LinkPagination label="Swimmer directory pages" page={page} totalItems={total} pageSize={pageSize} pathname="/students" query={query} />
         ) : total ? (
           <p className="text-center text-xs text-ui-muted-foreground tabular-nums" aria-live="polite" aria-atomic="true">
-            {number(total)} {total === 1 ? "swimmer" : "swimmers"}
+            {plural(total, "swimmer")}
           </p>
         ) : null}
       </section>

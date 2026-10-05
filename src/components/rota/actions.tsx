@@ -39,7 +39,7 @@ function ChangeFields({ id, suggested }: { id: string; suggested?: RotaChangeRea
           <ChoiceRow key={r} type="radio" id={`${id}-reason-${r}`} value={r} title={ROTA_CHANGE_REASON_META[r].label} />
         ))}
       </RadioGroup>
-      <Field label="Note" htmlFor={`${id}-change-note`} optional><Input id={`${id}-change-note`} name="changeNote" maxLength={200} className="min-h-11" /></Field>
+      <Field label="About the change" htmlFor={`${id}-change-note`} optional hint="Kept with the reason."><Input id={`${id}-change-note`} name="changeNote" maxLength={200} className="min-h-11" /></Field>
       <ChoiceRow type="checkbox" id={`${id}-timepoint`} name="timepoint" value="1" title="Updated in Timepoint" hint="Leave it unticked if you will do it later: it stays a follow-up until it is done." />
     </fieldset>
   );
@@ -83,7 +83,7 @@ export function ShiftDialog({ siteId, date, today, shift, options, label, sugges
         : <Button className="min-h-11"><Plus aria-hidden="true" />Add a shift</Button>)}
       title={shift ? `Change the ${shift.role} shift` : "Add a shift"}
       description="Leave the person empty for an unfilled shift. A missing or expired qualification shows as a warning; it does not stop you."
-      submitLabel={shift ? "Save shift" : "Add shift"}
+      submitLabel={shift ? "Save shift" : "Add a shift"}
       successMessage={shift ? "Shift saved" : "Shift added"}
       submit={(formData) => saveShift(shift?.id ?? null, {
         siteId, date: String(formData.get("date") ?? ""), start: String(formData.get("start") ?? ""), end: String(formData.get("end") ?? ""),
@@ -92,7 +92,7 @@ export function ShiftDialog({ siteId, date, today, shift, options, label, sugges
         count: shift ? 1 : Number(formData.get("count") ?? 1), ...changeOf(formData),
       })}
     >
-      <div className="grid gap-4 sm:grid-cols-2">
+      <div className="grid items-end gap-4 sm:grid-cols-2">
         <Field label="Department" htmlFor={`${fid}-department`}>
           <NativeSelect id={`${fid}-department`} name="departmentId" defaultValue={shift?.departmentId ?? options.departments[0]?.id ?? ""} className="min-h-11 w-full">
             <NativeSelectOption value="">No department</NativeSelectOption>

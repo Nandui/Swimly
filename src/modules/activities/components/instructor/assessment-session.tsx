@@ -35,7 +35,7 @@ export function InstructorAssessmentSession({ session, backHref }: { session: Se
       ) : null}
       <section aria-labelledby="assessment-booked" className="pc-panel">
         <div className="pc-panel-head"><h2 id="assessment-booked">Booked swimmers</h2></div>
-        {booked.length ? <AssessmentBookings bookings={booked} session={session} /> : <EmptyState compact title="No swimmers are booked on this assessment." />}
+        {booked.length ? <AssessmentBookings bookings={booked} session={session} /> : <EmptyState compact title="No swimmers booked" hint="Nobody is booked on this assessment yet." />}
       </section>
       {notComing.length ? (
         <section aria-labelledby="assessment-not-coming" className="pc-panel">

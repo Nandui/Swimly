@@ -1175,6 +1175,7 @@
   }
   /* The attachments drop zone: the label is the target; the file input inside stays sr-only. */
   :where(.turnfin-docs) .editor-drop-zone {
+    position: relative;
     display: flex;
     flex-direction: column;
     align-items: center;

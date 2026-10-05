@@ -113,7 +113,7 @@ export const MODULE_GUIDES: HelpArticle[] = [
     before: ["You need the Rota: Manage level at the site. Choose the site in the tools bar first."],
     steps: [
       { title: "Open the week plan", text: "In Rota choose Week plan. Each row is a person, with To fill at the top for places that still need someone. Use the arrows or Week to change the week." },
-      { title: "Add a shift", text: "Choose Add a shift, or the plus on someone’s day. Choose the department, duty, date, start and end, the number of places and the person, and whether it needs a qualification. Choose Add shift." },
+      { title: "Add a shift", text: "Choose Add a shift, or the plus on someone’s day. Choose the department, duty, date, start and end, the number of places and the person, and whether it needs a qualification. Choose Add a shift at the bottom." },
       { title: "Check the warnings", text: "A shift marked Check this shift has a problem, such as an expired qualification or someone booked twice. Absent shows people who are off; their places appear under To fill." },
     ],
     result: "The week shows who is on and where cover is needed. Everyone sees their own shifts in Turnfin Me.",
@@ -126,8 +126,8 @@ export const MODULE_GUIDES: HelpArticle[] = [
     keywords: ["absence", "sick", "off", "absent", "cover", "rota", "return to work", "leave"],
     before: ["You need the Rota: Manage level for the person’s site. Only rota managers see the reason."],
     steps: [
-      { title: "Choose Report absence", text: "In Rota choose Absences, then Report absence at the top right. Home’s quick actions have the same link." },
-      { title: "Fill in who and when", text: "Choose who is off, the first day off and the reason. Add the last day off if you know it, and an optional note. Choose Report absence." },
+      { title: "Choose Report an absence", text: "In Rota choose Absences, then Report an absence at the top right. Report an absence on Home, the Rota overview and Today opens the same form." },
+      { title: "Fill in who and when", text: "Choose who is off, the first day off and the reason. Add the last day off if you know it, and an optional note. Choose Report an absence." },
       { title: "Cover their shifts", text: "Their shifts in that time show as Absent on the week plan, and the places appear under To fill." },
       { title: "Record the return to work", text: "When they come back, choose Back at work. Talk to them on their first shift back, then choose Return to work to record it on their file." },
     ],
@@ -156,7 +156,7 @@ export const MODULE_GUIDES: HelpArticle[] = [
     before: ["You need the HR: Their team level for people you manage, or Everyone."],
     steps: [
       { title: "Start a review", text: "Open the person’s HR record and choose Start a review. Enter the review period, for example 2026 annual review, and choose Start draft." },
-      { title: "Write the review", text: "Fill in the summary, strengths, goals for the next period and overall. It stays a draft only you can see; choose Save draft as you go." },
+      { title: "Write the review", text: "Fill in the summary, strengths, goals for the next period and overall. It stays a draft that only you and superadmins can see; choose Save draft as you go." },
       { title: "Share it with them", text: "Save your latest changes, then choose Share with and the person’s name. Once shared it cannot be edited. They read it in Turnfin Me and can add a comment when they acknowledge it." },
     ],
     result: "The review shows Awaiting acknowledgement, then Acknowledged once they have read it.",

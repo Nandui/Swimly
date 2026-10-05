@@ -14,7 +14,7 @@ export function ScheduleDayNavigation({ iso, todayIso, pending, onSelect }: {
   // their own and the seven days as a full-width grid below, so no day is ever hidden in a scroll.
   return <nav aria-label="Schedule dates" className="flex min-w-0 flex-wrap items-center gap-2 max-lg:w-full">
     <Button variant="outline" size="icon" aria-label="Previous week" disabled={pending} onClick={() => onSelect(shiftWeeks(days[0], -1))}><ChevronLeft aria-hidden /></Button>
-    <div className="grid w-full grid-cols-7 gap-1 max-lg:order-last md:gap-2 lg:flex lg:w-auto">
+    <div className="grid w-full grid-cols-7 gap-0 max-lg:order-last md:gap-2 lg:flex lg:w-auto">
       {days.map(date => {
         const weekday = date === todayIso ? "Today" : formatWeekday(date, "short");
         return <Button key={date} variant={date === iso ? "default" : "outline"} className="pc-day" disabled={pending}

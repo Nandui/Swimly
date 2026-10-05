@@ -131,7 +131,7 @@ function PlacementReason() {
         id={id}
         name="placementReason"
         rows={2}
-        placeholder="Assessed at trial on 12 Sep — comfortable at this level"
+        placeholder="Assessed at trial on 12 Sep, comfortable at this level"
       />
     </Field>
   );

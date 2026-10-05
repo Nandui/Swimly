@@ -44,7 +44,7 @@ export default async function TogetherPage(props: PageProps<"/together">) {
     <div className="min-w-0 flex flex-col gap-6">
       <PageHeader
         title="Together"
-        description="One trip to the pool for more than one child: find a day, or a single slot, that suits all of them."
+        description="One trip to the pool for more than one child: find a day, or a single slot, that suits all of them"
       />
 
       <section className="pc-panel" aria-label="Children">

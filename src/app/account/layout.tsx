@@ -10,8 +10,8 @@ export const metadata: Metadata = { title: { default: "Account", template: TITLE
 
 /** The person's own Account (password, PIN, appearance, what their role lets
  *  them do). It is not part of Admin: it sits in the Home frame, with Home
- *  current in the rail and one "Account" pill in the bar. Every signed-in
- *  person can open it. */
+ *  current in the rail and no page bar; the H1 names the page. Every
+ *  signed-in person can open it. */
 export default async function AccountLayout({ children }: { children: ReactNode }) {
   const session = await pageSession();
   const sites = await getCurrentClub().catch(() => null);

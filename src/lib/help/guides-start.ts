@@ -28,10 +28,10 @@ export const START_GUIDES: HelpArticle[] = [
       { title: "Choose the site you are working at", text: "Select the site and wait for the page to finish updating. Check the selected name before continuing." },
       { title: "Understand which lists change", text: "Schedule, Duty manager, cancellation follow-up and Analytics use the working site. The Swimmers directory remains shared. Classes and enrolment pickers have their own site filters.", scopes: ["desk"] },
       { title: "Check your classes", text: "My classes and All classes now show the selected site. A swimmer’s saved competencies carry over when they move between sites.", scopes: ["instructor"] },
-      { title: "Check a destination’s site", text: "When the desk enrols or moves a swimmer, the destination can be at either site. A class search filter does not change the site in the tools bar.", scopes: ["desk"] },
+      { title: "Check a destination’s site", text: "When the desk enrols or moves a swimmer, the destination can be at any of your sites. A class search filter does not change the site in the tools bar.", scopes: ["desk"] },
     ],
     result: "You see the intended timetable while the swimmer keeps one record and their earned progress.",
-    troubleshooting: [{ question: "Why can I still see swimmers from the other site?", answer: "That is expected. The same swimmer record is available at both sites. Do not add a duplicate record just because the person is changing pools." }],
+    troubleshooting: [{ question: "Why can I still see swimmers from another site?", answer: "That is expected. The same swimmer record is available at every site. Do not add a duplicate record just because the person is changing pools." }],
     related: ["get-started", "move-swimmer", "start-class"],
   },
   {

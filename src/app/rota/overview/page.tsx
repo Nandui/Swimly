@@ -11,10 +11,10 @@ export const metadata: Metadata = { title: "Rota" };
  *  the rota's pages. The layout has already checked rota access. */
 export default async function RotaOverviewPage() {
   const who = await requireRotaActor();
-  const { items, siteName } = await loadModuleOverview("rota");
+  const { items, siteName, failed } = await loadModuleOverview("rota");
   const mod = allModules().find((m) => m.id === "rota")!;
   return (
-    <ModuleOverview name={mod.name} description={mod.description} icon={mod.icon} siteName={siteName} items={items}
+    <ModuleOverview name={mod.name} description={mod.description} icon={mod.icon} siteName={siteName} items={items} failed={failed}
       groups={[{ label: "", links: rotaPages(who.manage).filter((page) => page.href !== "/rota/overview").map(({ href, label, icon, description }) => ({ href, label, icon, description })) }]} />
   );
 }

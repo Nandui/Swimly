@@ -7,7 +7,7 @@ export const PARENT_GUIDES: HelpArticle[] = [
     keywords: ["parent", "request", "link child", "approval", "guardian", "pending", "decline"],
     before: ["You need the Swimmers screen and Manage parent access permission.", "A request is not proof of guardianship. Verify the parent against the existing swimmer record before approving."],
     steps: [
-      { title: "Open the requests queue", text: "Choose Parent accounts from Swimmers. Parent access requests shows families from every site, starting with Waiting for review. Refresh requests checks for new submissions." },
+      { title: "Open the requests queue", text: "Choose Parent accounts from Swimmers. Parent access requests shows families from every site, starting with Waiting for review. Refresh checks for new submissions." },
       { title: "Check the parent and match their child", text: "Read the parent’s verified sign-in email, name, phone and submitted child details. Choose Review and approve. Search for the existing swimmer, then open their profile in a new tab to check identity and guardianship. Never create another swimmer to resolve a link request." },
       { title: "Confirm the decision and reply", text: "To approve, check the selected swimmer and enter a reply to the parent plus your internal audit reason. Choose Approve and link swimmer. To decline, choose Decline request and explain what the parent should check or do next. Replies are visible in the parent app; the audit reason stays with staff." },
       { title: "Check the result", text: "Approved and Declined filters show completed requests and the reviewer. The parent sees the decision under Your requests. Approved children appear under My children. No customer email is needed, and signing in still uses an email verification code." },
@@ -64,7 +64,7 @@ export const PARENT_GUIDES: HelpArticle[] = [
     result: "Parents can find published sessions and book available places until the deadline. Their confirmations appear in My bookings; a separate booking confirmation email is not sent.",
     troubleshooting: [
       { question: "Why does it say Booking closed?", answer: "The booking deadline or session start may have passed, the session may be cancelled, or its site or curriculum may be archived. Check those details. If only the deadline has passed and the session is still eligible, edit the deadline to reopen booking." },
-      { question: "Can I publish a session at the other site?", answer: "Switch to that site in the site picker first, then open the session. Publishing follows the selected site." },
+      { question: "Can I publish a session at another site?", answer: "Switch to that site in the site picker first, then open the session. Publishing follows the selected site." },
     ], related: ["assessment-sessions", "book-assessment", "parent-access"], action: "assessments",
   },
 ];

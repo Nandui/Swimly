@@ -28,7 +28,7 @@ export function SessionDirectory({ sessions, today, setup = false, manage, view,
   return <div className="min-w-0 flex flex-col gap-6">
     <PageHeader back={setup ? { href: "/assessments", label: "Assessments" } : undefined}
       title={setup ? "Assessment setup" : view === "past" ? "Past assessments" : "Upcoming assessments"}
-      description={setup ? "Create sessions and manage their dates, places, assessors and parent booking settings." : view === "past" ? "Look back at earlier sessions, their swimmers and outcomes." : "See what is running at this site, open the swimmer list and record assessment outcomes."}
+      description={setup ? "Create sessions and manage their dates, places, assessors and parent booking settings" : view === "past" ? "Look back at earlier sessions, their swimmers and outcomes" : "See what is running at this site, open the swimmer list and record assessment outcomes"}
       actions={setup ? createAction : manage ? <Button asChild variant="outline"><Link href="/assessments/setup"><Settings2 aria-hidden="true" />Assessment setup</Link></Button> : undefined} />
     <section className="pc-panel" aria-label="Assessment sessions">
       <div className="min-w-0 flex flex-wrap items-center justify-between gap-3">
@@ -61,9 +61,11 @@ export function SessionDirectory({ sessions, today, setup = false, manage, view,
             </TableCell>
             <TableCell className="hidden lg:table-cell">{s.instructor?.name ?? <Tag meta={COURSE_STATUS_META.unassigned} />}</TableCell>
             <TableCell className="hidden tabular-nums md:table-cell"><strong className="font-semibold">{s._count.bookings}</strong>{s.capacity !== null ? ` of ${s.capacity}` : " booked"}</TableCell>
-            <TableCell className="text-right"><Button asChild variant="outline" className="max-w-full">
+            {/* Phones: a 44px icon button (words in .pc-only-wide, named by aria-label), so the
+                session cell keeps the width. */}
+            <TableCell className="w-px text-right"><Button asChild variant="outline">
               <Link href={`/assessments/${s.id}${setup ? "/setup" : ""}`} aria-label={`${setup ? "Set up session" : "View swimmers"}, ${sessionDay(s)}, ${sessionSpan(s)}`}>
-                {setup ? "Set up" : "View swimmers"}<ChevronRight aria-hidden="true" className="hidden sm:block" />
+                <span className="pc-only-wide">{setup ? "Set up" : "View swimmers"}</span><ChevronRight aria-hidden="true" />
               </Link>
             </Button></TableCell>
           </TableRow>;

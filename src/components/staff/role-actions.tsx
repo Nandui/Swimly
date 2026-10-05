@@ -190,12 +190,12 @@ export function AddRole({ canGiveRestricted = false }: { canGiveRestricted?: boo
       trigger={
         <Button variant="default">
           <Plus aria-hidden={true} className="size-4 shrink-0" />
-          Add role
+          Add a role
         </Button>
       }
       title="Add a role"
       description="A role is a job. Give it the lowest level in each module that lets the job get done."
-      submitLabel="Add role"
+      submitLabel="Add a role"
       successMessage="Role added"
       width="sm:max-w-2xl"
       submit={(formData) => createRole(readRole(formData))}

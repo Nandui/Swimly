@@ -126,10 +126,15 @@ export function registerHomeCard(card: HomeCard) {
   else homeCards.push(card);
 }
 
-/** The items for each of these modules. A module whose card fails shows its
- *  plain link instead, so one module can never break the home page. */
-export async function homeCardItems(moduleIds: readonly string[], viewer: HomeViewer): Promise<Map<string, HomeItem[]>> {
+/** Each module's items, and the modules whose card failed to load. */
+export type HomeCardItems = Map<string, HomeItem[]> & { failed: string[] };
+
+/** The items for each of these modules. A module whose card fails is left out
+ *  and named in `failed`, so the page can say its figures didn't load; one
+ *  module can never break the home page. */
+export async function homeCardItems(moduleIds: readonly string[], viewer: HomeViewer): Promise<HomeCardItems> {
   const out = new Map<string, HomeItem[]>();
+  const failed: string[] = [];
   await Promise.all(moduleIds.map(async (id) => {
     const card = homeCards.find((c) => c.moduleId === id);
     if (!card) return;
@@ -137,9 +142,10 @@ export async function homeCardItems(moduleIds: readonly string[], viewer: HomeVi
       out.set(id, await card.items(viewer));
     } catch (error) {
       console.error(`Home card for ${id} failed`, error);
+      failed.push(id);
     }
   }));
-  return out;
+  return Object.assign(out, { failed: moduleIds.filter((id) => failed.includes(id)) });
 }
 
 // ---------------------------------------------------------------------------

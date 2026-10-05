@@ -119,7 +119,7 @@ registerModule({
     ],
     extras: [
       {
-        key: "cancel-classes", label: "Can cancel classes", help: "The duty manager page: cancel today's sessions and pass them to billing.", from: "desk",
+        key: "cancel-classes", label: "Can cancel classes", help: "Cancel today's sessions on the duty manager page and pass them to billing.", from: "desk",
         permissions: ["classes.cancel", "billing.notify"],
       },
     ],

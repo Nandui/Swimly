@@ -43,7 +43,7 @@ export default async function BookingsPage({ searchParams }: { searchParams: Pro
         description="School lessons, parties, lane hire and events that need staff. Each session is on the week plan with its places to fill."
         actions={site?.manage ? <BookingDialog siteId={site.id} today={data.today} departments={data.departments} types={data.types} /> : undefined} />
       {data.bookings.length === 0 ? (
-        <EmptyState icon="calendarRange" title="No bookings" hint="When a school, a party or a club books time that needs staff, add it here." />
+        <EmptyState icon="calendarRange" title="No bookings yet" hint="When a school, a party or a club books time that needs staff, add it here." />
       ) : (
         <section aria-label="Bookings" className="pc-panel">
           <ul className="pc-rows">

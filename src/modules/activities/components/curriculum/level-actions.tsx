@@ -2,6 +2,7 @@
 import { Button } from "@/components/shadcn/button";
 
 import {
+  Archive,
   ArchiveRestore,
   ChevronDown,
   ChevronUp,
@@ -90,12 +91,12 @@ export function AddLevel({ programmeId }: { programmeId: string }) {
       trigger={
         <Button variant="default">
           {<Plus aria-hidden={true} className="size-4 shrink-0" />}
-          {"Add level"}
+          {"Add a level"}
         </Button>
       }
       title="Add a level"
       description="Levels are worked through in order. This one goes at the end; move it afterwards."
-      submitLabel="Add level"
+      submitLabel="Add a level"
       successMessage="Level added"
       submit={(formData) =>
         createLevel(programmeId, readInput(formData), formData)
@@ -115,7 +116,7 @@ export function EditLevel({ level }: { level: Named }) {
           aria-label={`Edit ${level.name}`}
         >
           <Pencil aria-hidden={true} className="size-4 shrink-0" />
-          Edit
+          <span className="pc-only-wide">Edit</span>
         </Button>
       }
       title={`Edit ${level.name}`}
@@ -140,7 +141,7 @@ export function ArchiveLevel({ level }: { level: Named }) {
         run={() => setLevelArchived(level.id, false)}
       >
         <ArchiveRestore aria-hidden={true} className="size-4 shrink-0" />
-        Restore
+        <span className="pc-only-wide">Restore</span>
       </ActionButton>
     );
   }
@@ -152,7 +153,8 @@ export function ArchiveLevel({ level }: { level: Named }) {
           variant="outline"
           aria-label={`Archive ${level.name}`}
         >
-          Archive
+          <Archive aria-hidden={true} className="size-4 shrink-0" />
+          <span className="pc-only-wide">Archive</span>
         </Button>
       }
       title={`Archive ${level.name}?`}
@@ -238,12 +240,12 @@ export function AddCompetency({
       trigger={
         <Button variant="outline">
           {<Plus aria-hidden={true} className="size-4 shrink-0" />}
-          {"Add competency"}
+          {"Add a competency"}
         </Button>
       }
       title={`Add a competency to ${levelName}`}
       description="Every competency here has to be signed off before a swimmer can complete the level."
-      submitLabel="Add competency"
+      submitLabel="Add a competency"
       successMessage="Competency added"
       submit={(formData) => createCompetency(levelId, readInput(formData))}
     >
@@ -261,7 +263,7 @@ export function EditCompetency({ competency }: { competency: Named }) {
           aria-label={`Edit ${competency.name}`}
         >
           <Pencil aria-hidden={true} className="size-4 shrink-0" />
-          Edit
+          <span className="pc-only-wide">Edit</span>
         </Button>
       }
       title="Edit competency"
@@ -292,7 +294,7 @@ export function ArchiveCompetency({
         run={() => setCompetencyArchived(competency.id, false)}
       >
         <ArchiveRestore aria-hidden={true} className="size-4 shrink-0" />
-        Restore
+        <span className="pc-only-wide">Restore</span>
       </ActionButton>
     );
   }
@@ -304,7 +306,8 @@ export function ArchiveCompetency({
           variant="outline"
           aria-label={`Archive ${competency.name}`}
         >
-          Archive
+          <Archive aria-hidden={true} className="size-4 shrink-0" />
+          <span className="pc-only-wide">Archive</span>
         </Button>
       }
       title="Archive this competency?"

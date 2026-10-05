@@ -29,9 +29,13 @@ export function sortItems(items: Placed[]) {
 }
 
 /** A white panel with its title and, top right, one quiet action or summary. */
-export function Section({ id, title, aside, children }: { id: string; title: React.ReactNode; aside?: React.ReactNode; children: React.ReactNode }) {
+export function Section({ id, title, aside, children, wideOnly = false }: {
+  id: string; title: React.ReactNode; aside?: React.ReactNode; children: React.ReactNode;
+  /** Shown only from 1280px, e.g. a timeline whose narrow list would be empty. */
+  wideOnly?: boolean;
+}) {
   return (
-    <section aria-labelledby={id} className="pc-panel">
+    <section aria-labelledby={id} className={wideOnly ? "pc-panel pc-timeline-wide" : "pc-panel"}>
       <div className="pc-panel-head">
         <h2 id={id} className="text-lg font-semibold">{title}</h2>
         {aside}

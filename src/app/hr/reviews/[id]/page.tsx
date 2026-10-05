@@ -12,7 +12,7 @@ export const metadata: Metadata = { title: "Review" };
 export default async function HrReviewPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
   await requireFreshSession("hr.records.read", `/hr/reviews/${id}`);
-  const { person, review, editable } = await hrReview(id);
+  const { who, person, review, editable } = await hrReview(id);
   const sections = [["Summary", review.summary], ["Strengths", review.strengths], ["Goals for the next period", review.goals]] as const;
   return (
     <>
@@ -23,7 +23,7 @@ export default async function HrReviewPage({ params }: { params: Promise<{ id: s
         status={<Tag meta={REVIEW_STATUS_META[review.status]} />}
       />
       {editable ? (
-        <ReviewEditor review={review} name={person.name} />
+        <ReviewEditor review={review} name={person.name} isReviewer={review.reviewerId === who.id} />
       ) : (
         <section className="pc-panel" aria-labelledby="review-body">
           <div className="pc-panel-head"><h2 id="review-body">Review</h2></div>

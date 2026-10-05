@@ -115,7 +115,39 @@ export async function ClassSession({
 
   const cancellation = await getCancellation(id, iso);
   const backLabel = returnTo.source ? returnTo.label : "Class details";
-  if (cancellation) return <div className="min-w-0 flex flex-col gap-6"><PageHeader back={{ href: returnTo.href, label: backLabel }} title={courseName(course)} description={formatSlot(course)} /><Notice title="This session is cancelled"><p>{formatDate(parseDateOnly(iso))} · {cancellation.reason}</p><p>Existing teaching records are kept. Further marks cannot be saved for this session.</p></Notice></div>;
+
+  const stepHref = (next: Step, date = iso) =>
+    workspace === "instructor"
+      ? instructorClassHref(course.id, { ...params, date, step: next })
+      : `/courses/${encodeURIComponent(course.id)}/class?date=${date}${sourceQuery}${next === "competencies" ? "&step=competencies" : ""}`;
+  // The same week actions on a live and a cancelled session, so the header never moves.
+  const weekActions = (
+    <>
+      <Button variant="outline" asChild={true}>
+        <UiLink href={stepHref("attendance", shiftWeeks(iso, -1))}>
+          <AppIcon name="chevronLeft" size="sm" />
+          Week before
+        </UiLink>
+      </Button>
+      {/* On the latest date "Week after" stays, disabled, so the
+          actions do not move between dates. */}
+      {shiftWeeks(iso, 1) <= today() ? (
+        <Button variant="outline" asChild={true}>
+          <UiLink href={stepHref("attendance", shiftWeeks(iso, 1))}>
+            Week after
+            <AppIcon name="chevronRight" size="sm" />
+          </UiLink>
+        </Button>
+      ) : (
+        <Button variant="outline" disabled>
+          Week after
+          <AppIcon name="chevronRight" size="sm" />
+        </Button>
+      )}
+    </>
+  );
+
+  if (cancellation) return <div className="min-w-0 flex flex-col gap-6"><PageHeader back={{ href: returnTo.href, label: backLabel }} title={courseName(course)} description={`${formatSlot(course)} · ${formatDate(parseDateOnly(iso))}`} actions={weekActions} /><Notice title="This session is cancelled"><p>{cancellation.reason}</p><p>Existing teaching records are kept. Further marks cannot be saved for this session.</p></Notice></div>;
 
   const [{ lines, taken, note, revision }, cover, progress] = await Promise.all(
     [getRegister(id, iso, workspace === "instructor" ? "deck" : "desk"), getClassCover(id, iso), getClassProgress(id)],
@@ -139,11 +171,6 @@ export async function ClassSession({
   const askTakeOver = !course.archivedAt && needsTakeOver(access);
   const admin = can(session, "progression.override");
 
-  const stepHref = (next: Step, date = iso) =>
-    workspace === "instructor"
-      ? instructorClassHref(course.id, { ...params, date, step: next })
-      : `/courses/${encodeURIComponent(course.id)}/class?date=${date}${sourceQuery}${next === "competencies" ? "&step=competencies" : ""}`;
-
   const readyToComplete = progress.swimmers.filter(
     (s) => s.eligible && !s.completedOn,
   );
@@ -157,33 +184,7 @@ export async function ClassSession({
       <div className="min-w-0 flex flex-col gap-2">
         <PageHeader
           back={{ href: returnTo.href, label: backLabel }}
-          actions={
-            step === "attendance" ? (
-              <>
-                <Button variant="outline" asChild={true}>
-                  <UiLink href={stepHref("attendance", shiftWeeks(iso, -1))}>
-                    <AppIcon name="chevronLeft" size="sm" />
-                    Week before
-                  </UiLink>
-                </Button>
-                {/* On the latest date "Week after" stays, disabled, so the
-                    actions do not move between dates. */}
-                {shiftWeeks(iso, 1) <= today() ? (
-                  <Button variant="outline" asChild={true}>
-                    <UiLink href={stepHref("attendance", shiftWeeks(iso, 1))}>
-                      Week after
-                      <AppIcon name="chevronRight" size="sm" />
-                    </UiLink>
-                  </Button>
-                ) : (
-                  <Button variant="outline" disabled>
-                    Week after
-                    <AppIcon name="chevronRight" size="sm" />
-                  </Button>
-                )}
-              </>
-            ) : null
-          }
+          actions={step === "attendance" ? weekActions : null}
           title={courseName(course)}
           description={
             `${formatSlot(course)} · ${formatDate(parseDateOnly(iso))}` +

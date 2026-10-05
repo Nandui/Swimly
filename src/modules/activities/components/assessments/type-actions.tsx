@@ -1,7 +1,7 @@
 "use client";
 import { Button } from "@/components/shadcn/button";
 
-import { ArchiveRestore, Pencil, Plus } from "lucide-react";
+import { Archive, ArchiveRestore, Pencil, Plus } from "lucide-react";
 import { ActionButton, ConfirmAction } from "@/components/confirm-action";
 import { Field, FormDialog } from "@/components/form-dialog";
 
@@ -51,7 +51,7 @@ function TypeFields({ type }: { type?: Named }) {
           name="description"
           rows={2}
           defaultValue={type?.description ?? ""}
-          placeholder="Totally new to the water — never had a lesson."
+          placeholder="Totally new to the water, never had a lesson"
         />
       </Field>
     </>
@@ -74,7 +74,7 @@ export function AddAssessmentType({
         </Button>
       }
       title={`Add a kind of assessment to ${programmeName}`}
-      description="New swimmers, mixed abilities, returning after a break — whatever the desk needs to tell apart when booking."
+      description="New swimmers, mixed abilities, returning after a break: whatever the desk needs to tell apart when booking."
       submitLabel="Add"
       successMessage="Assessment type added"
       submit={(formData) =>
@@ -92,7 +92,7 @@ export function EditAssessmentType({ type }: { type: Named }) {
       trigger={
         <Button variant="outline" aria-label={`Edit ${type.name}`}>
           <Pencil aria-hidden={true} className="size-4 shrink-0" />
-          Edit
+          <span className="pc-only-wide">Edit</span>
         </Button>
       }
       title={`Edit ${type.name}`}
@@ -121,7 +121,7 @@ export function ArchiveAssessmentType({
         run={() => setAssessmentTypeArchived(type.id, false)}
       >
         <ArchiveRestore aria-hidden={true} className="size-4 shrink-0" />
-        Restore
+        <span className="pc-only-wide">Restore</span>
       </ActionButton>
     );
   }
@@ -132,7 +132,8 @@ export function ArchiveAssessmentType({
           variant="outline"
           aria-label={`Archive ${type.name}`}
         >
-          Archive
+          <Archive aria-hidden={true} className="size-4 shrink-0" />
+          <span className="pc-only-wide">Archive</span>
         </Button>
       }
       title={`Archive ${type.name}?`}

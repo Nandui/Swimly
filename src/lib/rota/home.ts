@@ -36,14 +36,14 @@ registerHomeCard({
     const uncovered = shifts.filter((s) => (!s.userId && !s.rotaPersonId) || off.some((a) => samePerson(a, s))).length;
     const items: HomeItem[] = [{
       kind: "today", label: here ? "On shift" : "On shift at your sites", href: "/rota/today", count: shifts.length - uncovered,
-      hint: shifts.length === 0 ? "No shifts planned today" : uncovered ? `${uncovered} ${uncovered === 1 ? "shift needs" : "shifts need"} cover` : "Every shift has someone",
+      hint: shifts.length === 0 ? "No shifts planned today" : uncovered ? `${uncovered} uncovered` : "Every shift has someone",
       attention: manage && uncovered > 0,
     }];
     if (manage) {
       // Only people rostered today are looked at, so the hint says so.
       const offPeople = new Set(off.map((a) => a.userId ?? `entry:${a.rotaPersonId}`)).size;
       items.push({ kind: "today", icon: "userX", label: "Off today", href: "/rota/absences", count: offPeople, hint: "Rostered today and off" });
-      items.push({ kind: "action", icon: "userX", label: "Report an absence", href: "/rota/absences" });
+      items.push({ kind: "action", icon: "userX", label: "Report an absence", href: "/rota/absences?report=1" });
       const returns = await returnsToWorkDue();
       if (returns) items.push({ label: "Returns to work to record", hint: "They are back on shift", href: "/rota/absences#absences-return", count: returns, attention: true });
     }

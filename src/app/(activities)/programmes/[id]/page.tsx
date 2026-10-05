@@ -94,9 +94,7 @@ export default async function ProgrammePage(
         <Num>{liveLevels.length}</Num>{" "}
         {liveLevels.length === 1 ? "level" : "levels"}, worked through in this
         order, with <Num>{competencies}</Num>{" "}
-        {competencies === 1 ? "competency" : "competencies"} between them. Every
-        competency in a level has to be signed off before a swimmer can complete
-        it. Curriculum and progress are shared across all sites.
+        {competencies === 1 ? "competency" : "competencies"} between them.
       </Lead>
 
       {programme.levels.length === 0 ? (

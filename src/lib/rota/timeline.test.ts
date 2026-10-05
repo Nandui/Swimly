@@ -41,7 +41,9 @@ test("segments stay inside the shift, one at a time", () => {
   assert.match(segmentProblem(s, [{ startMinutes: h("08:00"), endMinutes: h("10:00"), kind: "activity", label: "Reception" }])!, /inside the shift/);
   assert.match(segmentProblem(s, [{ startMinutes: h("09:00"), endMinutes: h("12:00"), kind: "activity", label: "A" + "b" }, { startMinutes: h("11:00"), endMinutes: h("12:30"), kind: "break", label: "Break" }])!, /overlap/);
   assert.match(segmentProblem(s, [{ startMinutes: h("09:00"), endMinutes: h("10:00"), kind: "activity", label: "" }])!, /Say what/);
-  assert.deepEqual(dayRange([{ startMinutes: h("05:45"), endMinutes: h("22:30") }]), { from: h("05:00"), to: h("23:00") });
+  assert.deepEqual(dayRange([{ startMinutes: h("05:45"), endMinutes: h("22:30") }]), { from: h("04:00"), to: 1440 });
+  assert.deepEqual(dayRange([{ startMinutes: h("09:30"), endMinutes: h("17:00") }, { startMinutes: h("12:00"), endMinutes: h("18:15") }]), { from: h("08:00"), to: h("20:00") }, "the planned span and an hour either side");
+  assert.deepEqual(dayRange([]), { from: h("06:00"), to: h("22:00") });
 });
 
 test("a planned activity shows when fewer than it needs are on it", () => {

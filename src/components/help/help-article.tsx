@@ -26,7 +26,9 @@ export function HelpArticleView({ article, related, scope, filters, action }: {
           <CircleHelp aria-hidden="true" className="size-5 shrink-0 text-ui-primary" />
           <div className="flex min-w-0 flex-1 flex-col gap-2">
             <h2 id="before-heading" className="text-sm">Before you start</h2>
-            <ul className="flex max-w-prose list-disc flex-col gap-1 pl-5">{article.before.map(item => <li key={item}>{item}</li>)}</ul>
+            {article.before.length === 1
+              ? <p className="max-w-prose">{article.before[0]}</p>
+              : <ul className="flex max-w-prose list-disc flex-col gap-1 pl-5">{article.before.map(item => <li key={item}>{item}</li>)}</ul>}
             {action ? <Button asChild variant="outline" className="self-start print:hidden"><Link href={action.href} target="_blank" rel="noopener noreferrer" aria-label={`${action.label} (opens in a new tab)`}>{action.label}<ExternalLink aria-hidden="true" /></Link></Button> : null}
           </div>
         </section>

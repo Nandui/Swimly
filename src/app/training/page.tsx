@@ -54,12 +54,12 @@ export default async function TrainingOverviewPage({ searchParams }: { searchPar
       <section className="pc-panel" aria-label="Training records">
         <form method="get" className="flex flex-wrap items-end gap-4" role="search" aria-label="Filter training">
           <SearchField label="Person" placeholder="Name" name="q" defaultValue={input.q ?? ""} className="grow basis-64" />
-          <div className="min-w-0 grow basis-40 space-y-2 sm:grow-0"><Label htmlFor="training-view" className="block">Show</Label>
+          <div className="min-w-0 grow basis-40 space-y-2 sm:grow-0 sm:basis-auto sm:min-w-52"><Label htmlFor="training-view" className="block">Show</Label>
             <NativeSelect id="training-view" name="view" defaultValue={data.view} className="min-h-11 w-full">
               {Object.entries(OVERVIEW_VIEWS).map(([value, label]) => <NativeSelectOption key={value} value={value}>{label}</NativeSelectOption>)}
             </NativeSelect>
           </div>
-          <div className="min-w-0 grow basis-40 space-y-2 sm:grow-0"><Label htmlFor="training-course" className="block">Course</Label>
+          <div className="min-w-0 grow basis-40 space-y-2 sm:grow-0 sm:basis-auto sm:min-w-52"><Label htmlFor="training-course" className="block">Course</Label>
             <NativeSelect id="training-course" name="course" defaultValue={input.course ?? ""} className="min-h-11 w-full">
               <NativeSelectOption value="">All courses</NativeSelectOption>
               {data.courses.map((c) => <NativeSelectOption key={c.id} value={c.id}>{c.title}</NativeSelectOption>)}

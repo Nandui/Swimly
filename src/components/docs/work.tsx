@@ -1,6 +1,5 @@
 'use client';
 import { SearchField } from '@/components/ui-kit/search-field';
-import { NativeSelectOption } from '@/components/shadcn/native-select';
 import Link from 'next/link';
 import { useRouter, useSearchParams } from 'next/navigation';
 import {
@@ -21,7 +20,7 @@ import {
   type DocumentType,
 } from '@/lib/docs/types';
 import { Tag } from '@/components/ui-kit/tag';
-import { DocIcon, FilterSelect } from './ui';
+import { DocIcon, FilterPicker } from './ui';
 import { EmptyState } from '@/components/ui-kit/empty-state';
 import { PageHeader } from '@/components/ui-kit/page-header';
 import { Button } from '@/components/shadcn/button';
@@ -179,7 +178,7 @@ export function WorkView({ workspace: w, drafts }: { workspace: Workspace; draft
                   className="pc-row"
                   href={url('view', id)}
                   scroll={false}
-                  aria-current={queue.id === id ? 'page' : undefined}
+                  aria-current={queue.id === id ? 'true' : undefined}
                 >
                   <span className="pc-tile-icon"><Icon aria-hidden="true" /></span>
                   <span className="pc-row-title min-w-0 flex-1">{label}</span>
@@ -210,22 +209,16 @@ export function WorkView({ workspace: w, drafts }: { workspace: Workspace; draft
               <input type="hidden" name="view" value={queue.id} />
               {facility && <input type="hidden" name="facility" value={facility} />}
             </form>
-            <FilterSelect
+            <FilterPicker
               label="Facility"
               value={facility}
               onChange={(value) => router.push(url('facility', value), { scroll: false })}
-            >
-              <NativeSelectOption value="">All facilities</NativeSelectOption>
-              {w.facilities.map((f) => (
-                <NativeSelectOption key={f.id} value={f.id}>
-                  {f.name}
-                </NativeSelectOption>
-              ))}
-            </FilterSelect>
+              options={[{ value: '', label: 'All facilities' }, ...w.facilities.map((f) => ({ value: f.id, label: f.name }))]}
+            />
           </div>
+          {/* An empty queue says so in its empty state; the count shows only when there are rows. */}
           <p className="text-xs text-ui-muted-foreground" role="status">
-            {visible.length} {visible.length === 1 ? 'document' : 'documents'}
-            {search ? ` matching “${search}”` : ''}
+            {visible.length ? `${visible.length} ${visible.length === 1 ? 'document' : 'documents'}${search ? ` matching “${search}”` : ''}` : ''}
           </p>
           {visible.length ? (
             <ul className="pc-rows">

@@ -14,11 +14,11 @@ export const metadata: Metadata = { title: "Swim school" };
 export default async function SwimSchoolOverviewPage() {
   const session = await pageSession();
   const screens = visibleScreens(permissionsOf(session));
-  const { items, siteName } = await loadModuleOverview("swim-school");
+  const { items, siteName, failed } = await loadModuleOverview("swim-school");
   const mod = allModules().find((m) => m.id === "swim-school")!;
   const groups = visibleNavGroups(screens).map((group) => ({
     label: group.label,
     links: group.items.map(({ href, label, icon, description }) => ({ href, label, icon, description })),
   }));
-  return <ModuleOverview name={mod.name} description={mod.description} icon={mod.icon} siteName={siteName} items={items} groups={groups} />;
+  return <ModuleOverview name={mod.name} description={mod.description} icon={mod.icon} siteName={siteName} items={items} groups={groups} failed={failed} />;
 }

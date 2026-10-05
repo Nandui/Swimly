@@ -2,6 +2,7 @@
 import { Button } from "@/components/shadcn/button";
 
 import {
+  Archive,
   ArchiveRestore,
   ChevronDown,
   ChevronUp,
@@ -86,12 +87,12 @@ export function AddProgramme() {
       trigger={
         <Button variant="default">
           {<Plus aria-hidden={true} className="size-4 shrink-0" />}
-          {"Add programme"}
+          {"Add a programme"}
         </Button>
       }
       title="Add a programme"
       description="A programme holds the ordered levels a swimmer works through."
-      submitLabel="Add programme"
+      submitLabel="Add a programme"
       successMessage="Programme added"
       submit={(formData) => createProgramme(readInput(formData), formData)}
     >
@@ -113,7 +114,7 @@ export function EditProgramme({
         variant === "icon" ? (
           <Button variant="outline" aria-label={`Edit ${programme.name}`}>
             <Pencil aria-hidden={true} className="size-4 shrink-0" />
-            Edit
+            <span className="pc-only-wide">Edit</span>
           </Button>
         ) : (
           <Button variant="outline">
@@ -146,7 +147,7 @@ export function ArchiveProgramme({ programme }: { programme: Programme }) {
         run={() => setProgrammeArchived(programme.id, false)}
       >
         <ArchiveRestore aria-hidden={true} className="size-4 shrink-0" />
-        Restore
+        <span className="pc-only-wide">Restore</span>
       </ActionButton>
     );
   }
@@ -158,7 +159,8 @@ export function ArchiveProgramme({ programme }: { programme: Programme }) {
           variant="outline"
           aria-label={`Archive ${programme.name}`}
         >
-          Archive
+          <Archive aria-hidden={true} className="size-4 shrink-0" />
+          <span className="pc-only-wide">Archive</span>
         </Button>
       }
       title={`Archive ${programme.name}?`}

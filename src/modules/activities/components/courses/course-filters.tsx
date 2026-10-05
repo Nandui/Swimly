@@ -30,6 +30,9 @@ export function CourseFilters({ dimensions, q, active, state, todayDay, views, s
   const params = useSearchParams();
   const [pending, startNavigation] = useTransition();
   const extraCount = dimensions.filter(d => EXTRA.includes(d.key) && d.selected).length;
+  // The search box clears itself; "Clear filters" resets only the pickers.
+  const pickerKeys = [...PRIMARY, ...EXTRA];
+  const pickers = dimensions.filter(d => pickerKeys.includes(d.key) && d.selected).length;
   const [expanded, setExpanded] = useState(extraCount > 0);
   const href = (changes: Record<string, string | null>) => classBrowserHref(Object.fromEntries(params), { ...changes, page: null });
   function pick(key: string, value: string | null) {
@@ -53,12 +56,12 @@ export function CourseFilters({ dimensions, q, active, state, todayDay, views, s
         {PRIMARY.map(picker)}
         <CollapsibleTrigger asChild><Button variant="outline" className="max-w-full"><SlidersHorizontal aria-hidden="true" />More filters{extraCount ? ` (${extraCount})` : ""}</Button></CollapsibleTrigger>
         <CollapsibleContent className="contents">{EXTRA.map(picker)}</CollapsibleContent>
-        {active ? <Button asChild variant="ghost"><Link href={state === "archived" ? "/courses?state=archived" : "/courses"}>Clear filters</Link></Button> : null}
+        {pickers ? <Button asChild variant="ghost"><Link href={href(Object.fromEntries(pickerKeys.map(key => [key, null])))}>Clear filters</Link></Button> : null}
       </div>
     </Collapsible>
     <div className="min-w-0 flex flex-wrap items-center justify-between gap-2">
       <p className="text-xs text-ui-muted-foreground tabular-nums" aria-live="polite" aria-atomic="true">{showing.total ? `${formatCount(showing.first)} to ${formatCount(showing.last)} of ${plural(showing.total, active ? "matching class" : state === "archived" ? "archived class" : "class", active ? "matching classes" : state === "archived" ? "archived classes" : "classes")}` : "0 classes"}</p>
-      {state !== "archived" ? <Button asChild variant="ghost" className="ml-auto"><Link href={href({ day: todayDay })}>Today only</Link></Button> : null}
+      {state !== "archived" && showing.total ? <Button asChild variant="ghost" className="ml-auto"><Link href={href({ day: todayDay })}>Today only</Link></Button> : null}
     </div>
   </div>;
 }

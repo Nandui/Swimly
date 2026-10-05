@@ -49,7 +49,7 @@ export function BookingDialog({ siteId, today, departments, types }: { siteId: s
         needs: needs.map(({ role, count, requiredTypeId }) => ({ role, count, requiredTypeId })), note: String(formData.get("note") ?? ""),
       })}
     >
-      <div className="grid gap-4 sm:grid-cols-2">
+      <div className="grid items-end gap-4 sm:grid-cols-2">
         <Field label="What it is" htmlFor="booking-kind">
           <NativeSelect id="booking-kind" name="kind" defaultValue="school" className="min-h-11 w-full">
             {BOOKING_KINDS.map((k) => <NativeSelectOption key={k} value={k}>{BOOKING_KIND_META[k].label}</NativeSelectOption>)}

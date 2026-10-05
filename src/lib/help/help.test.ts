@@ -68,7 +68,7 @@ test("every guide has a stable unique address, usable content and valid related 
 });
 
 test("guides describe the current frame, with no retired interface, old brand or customer names", () => {
-  const retired = /sidebar|Swimly|LeisureWorld|Bishopstown|Churchfield|Working area|sun or moon/i;
+  const retired = /sidebar|Swimly|LeisureWorld|Bishopstown|Churchfield|Working area|sun or moon|\b(both|either) sites?\b|\bthe other site\b/i;
   for (const article of HELP_ARTICLES) assert.doesNotMatch(JSON.stringify(article), retired, article.slug);
   for (const [slug, images] of Object.entries(GUIDE_SCREENSHOTS)) assert.doesNotMatch(JSON.stringify(images), retired, slug);
   for (const category of HELP_CATEGORIES) {

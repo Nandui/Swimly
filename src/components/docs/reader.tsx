@@ -59,6 +59,9 @@ import { Notice } from '@/components/ui-kit/notice';
 import { Tag } from '@/components/ui-kit/tag';
 
 /** The reader's text sizes (V2Document's A−, A, A+): 16px is the default reading size. */
+/** One fact in the document's meta grid: a box with its caption over the value, or one line on phones. */
+const metaBox =
+  'rounded-ui-md border border-ui-border px-4 py-3 max-sm:flex max-sm:flex-wrap max-sm:items-baseline max-sm:justify-between max-sm:gap-x-3 max-sm:py-2';
 const SIZES = [
   { value: '14', label: 'A−', name: 'Smaller text' },
   { value: '16', label: 'A', name: 'Default text size' },
@@ -267,13 +270,14 @@ export function Reader({
               />
             )}
           </div>
-          <dl className="grid grid-cols-[repeat(auto-fit,minmax(9rem,1fr))] gap-3">
-            <div className="rounded-ui-md border border-ui-border px-4 py-3">
+          {/* Phones: one fact per line, caption left and value right, so no box is left alone. */}
+          <dl className="grid grid-cols-[repeat(auto-fit,minmax(9rem,1fr))] gap-3 max-sm:grid-cols-1 max-sm:gap-2">
+            <div className={metaBox}>
               <dt className="text-xs text-ui-muted-foreground">Document ref.</dt>
               <dd className="font-semibold">{c.reference}</dd>
             </div>
             {s && (
-              <div className="rounded-ui-md border border-ui-border px-4 py-3">
+              <div className={metaBox}>
                 <dt className="text-xs text-ui-muted-foreground">{submitted ? 'Submitted' : 'Published'}</dt>
                 <dd className="font-semibold">
                   {formatDate(s.createdAt)}
@@ -281,7 +285,7 @@ export function Reader({
                 </dd>
               </div>
             )}
-            <div className="rounded-ui-md border border-ui-border px-4 py-3">
+            <div className={metaBox}>
               <dt className="text-xs text-ui-muted-foreground">Review due</dt>
               <dd className="flex flex-wrap items-center gap-2 font-semibold">
                 {formatDate(c.reviewDate)}
@@ -351,8 +355,9 @@ export function Reader({
           </div>
         </article>
         <aside className="reader-rail flex min-w-0 grow basis-[300px] flex-col gap-4">
+          {/* Below 768px the contents would sit after the whole document, so it is left out (V2PhoneDocument). */}
           {contents.length > 0 && (
-            <nav className="pc-panel" aria-labelledby="contents-title">
+            <nav className="pc-panel max-md:hidden!" aria-labelledby="contents-title">
               <h2 id="contents-title">On this page</h2>
               <ul className="flex flex-col gap-2">
                 {contents.map((item) => (

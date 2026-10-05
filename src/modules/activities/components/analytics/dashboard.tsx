@@ -30,7 +30,7 @@ export function AnalyticsDashboard({ data }: { data: AnalyticsData }) {
       <section className="pc-panel" aria-labelledby="enrolled-by-level">
         <div className="pc-panel-head"><h2 id="enrolled-by-level">Enrolled by level</h2></div>
         <p className="text-xs text-ui-muted-foreground">Enrolled places of the total across each level’s weekly classes.</p>
-        {data.swimmers === 0 ? <EmptyState compact title="No swimmers are currently enrolled in this view." /> : null}
+        {data.swimmers === 0 ? <EmptyState compact title="No swimmers enrolled" hint="Nobody is enrolled in a class in this view at the moment." /> : null}
         {data.groups.length === 0 ? <p className="text-sm text-ui-muted-foreground">Levels will appear here once the curriculum is set up.</p> : data.groups.map(group => <section key={group.id} aria-labelledby={`programme-${group.id}`} className="flex min-w-0 flex-col gap-2">
           <h3 id={`programme-${group.id}`} className="text-xs font-semibold text-ui-muted-foreground">{group.name}</h3>
           <ul className="pc-rows">{group.levels.map(level => <li key={level.id} className="pc-row flex-col gap-2">

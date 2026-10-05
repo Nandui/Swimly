@@ -3,6 +3,7 @@ import { ChevronRight, type LucideIcon } from "lucide-react";
 import { Button } from "@/components/shadcn/button";
 import { EmptyState } from "@/components/ui-kit/empty-state";
 import { PageHeader } from "@/components/ui-kit/page-header";
+import { FiguresFailed } from "@/components/home/figures-failed";
 import { ACTION_ICONS, NeedsSummary, PageList, Section, TodayGrid, WaitingList, sortItems, type Placed } from "@/components/home/home-parts";
 import type { HomeItem } from "@/modules/contributions";
 
@@ -12,13 +13,15 @@ export type OverviewGroup = { label: string; links: { href: string; label: strin
  *  quick actions in the header (the main one last, in blue), today's figures and what waits for
  *  this person side by side, and every page it has with a line on what each is for. The items
  *  are the ones the module gives the home page (`registerHomeCard`), so the two always agree. */
-export function ModuleOverview({ name, description, icon, siteName, items, groups }: {
+export function ModuleOverview({ name, description, icon, siteName, items, groups, failed = false }: {
   name: string;
   description: string;
   icon: LucideIcon;
   siteName: string | null;
   items: HomeItem[];
   groups: OverviewGroup[];
+  /** The module's figures failed to load (`loadModuleOverview`): say so in their place. */
+  failed?: boolean;
 }) {
   const placed: Placed[] = items.map((item) => ({ ...item, moduleIcon: icon, key: `${item.href}:${item.label}` }));
   const { actions, today, timeline, waiting } = sortItems(placed);
@@ -39,6 +42,7 @@ export function ModuleOverview({ name, description, icon, siteName, items, group
   return (
     <div className="flex min-w-0 flex-col gap-4">
       <PageHeader title={name} description={description} actions={buttons.length ? buttons : undefined} />
+      {failed ? <FiguresFailed /> : null}
       {(today.length > 0 || waiting.length > 0) && (
         <div className="pc-grid">
           {today.length > 0 && (

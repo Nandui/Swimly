@@ -301,7 +301,7 @@ export function ConfirmLevel({
             name="overrideReason"
             rows={2}
             required
-            placeholder="Assessed in open water instead — the pool test does not apply"
+            placeholder="Assessed in open water instead, so the pool test does not apply"
           />
         </Field>
       )}

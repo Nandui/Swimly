@@ -148,7 +148,7 @@ them, with a search shortcut in the tools. Every Docs page is built from the sha
 to their status and are outlined when open), `SegmentedLinks` for the library's types and the
 admin sections (they wrap, never scroll), labelled pill selects, `Tag`s from
 `DOC_STATUS_META` and `RISK_BAND_TONE_META`, and one `documentTypeLabels` map for type words.
-The reader puts the document in a panel beside an "On this page" rail with A−/A/A+ sizes;
+The reader puts the document in a panel beside an "On this page" rail (left out below 768px) with A−/A/A+ sizes;
 headings in a document scale with that size (18/24 at the default 16px). The editor puts the
 writing beside the document details from 1100px; its toolbar is one sunken bar that wraps on
 wide screens and becomes two rows on phones, the other tools moving into More. See
@@ -343,7 +343,8 @@ line. Multi-line boxes (textareas, notices) use 16px, never a pill.
     (sr-only, not a tab stop) for FormData, `required`, `accept` and reset, and the chosen
     file's name shows as a caption. It posts its `name` only once a file is chosen, so "no
     file" sends no empty entry to a server action. Never the browser's "Choose file / No file chosen".
-- Avatars are the shared `Avatar` (`src/components/shadcn/avatar.tsx`) with `initials()`:
+- Avatars are the shared `Avatar` (`src/components/shadcn/avatar.tsx`) with `initials()`
+  (the one helper, `nameInitials` in `src/lib/format.ts`, which server pages import directly):
   32px by default (bars, inline), `size="lg"` 40px (rows), `size="xl"` 64px (profile).
   Initials are 12px/600 (18px on `xl`) on the sunken fill with a 1px inset line. Only the
   signed-in person's own avatar takes `self` (soft blue fill, no line). Call sites add no
@@ -380,8 +381,9 @@ line. Multi-line boxes (textareas, notices) use 16px, never a pill.
 - Row: the name at body/600, a caption line beneath, counts and a chevron on the right.
 - Figure tiles are `.pc-stat` in a `.pc-stats` grid: icon, figure over label, caption.
   Inside a panel a tile is 16px with a 1px line, two per row (a lone tile keeps half the
-  panel). On the canvas it is a borderless white 24px tile and the row fills. A tile that
-  filters shows a soft fill on hover and a 2px blue edge when open (`aria-current`).
+  panel). On the canvas it is a borderless white 24px tile and the row fills. A lone tile is
+  at most 320px wide either way. A tile that filters shows a soft fill on hover and a 2px blue
+  edge when open (`aria-current="true"`).
 - Shadcn rows use `ItemTitle` (body/600) over `ItemDescription` (12px caption, muted, no
   clamp); do not rebuild the pair from ad hoc divs. A table's row header (`th scope="row"`)
   sits inside the row card in regular weight; a name inside it carries its own 600.
@@ -451,7 +453,7 @@ permission keys) stay as they are.
 - One name per concept: **site** (never club or working area), **Pool deck**, **HR**,
   **waitlist**, **No limit** (never uncapped).
 - Create buttons read "Add a <noun>" ("Add a swimmer", "Add a site"). Domain verbs stay as
-  they are: Find a swimmer, Book an assessment, Log a refund request, Report absence.
+  they are: Find a swimmer, Book an assessment, Log a refund request, Report an absence.
 - "and", not "&". Commas or colons, not em dashes.
 - Dates, times and counts come only from `src/lib/format.ts`, in one locale (en-GB, with
   "Sep" not "Sept"); never write `Intl.DateTimeFormat` or `toLocaleDateString` in a

@@ -74,7 +74,7 @@ export function StartReview({ subjectUserId, name }: { subjectUserId: string; na
       portalClassName={THEME}
       trigger={<Button variant="outline" className="min-h-11"><FilePlus2 aria-hidden="true" />Start a review</Button>}
       title={`Start a review for ${name}`}
-      description="It stays a draft only you can see until you share it with them."
+      description="It stays a draft, seen only by you and superadmins, until you share it with them."
       submitLabel="Start draft"
       successMessage="Draft started"
       submit={(formData) => saveReview(null, subjectUserId, { period: String(formData.get("period") ?? ""), summary: "", strengths: "", goals: "", overall: "" })}
@@ -90,7 +90,7 @@ type Draft = { id: string; subjectUserId: string; period: string; summary: strin
 
 /** The reviewer's editor for a draft. Saving keeps it private; sharing locks
  *  it and shows it to the person. */
-export function ReviewEditor({ review, name }: { review: Draft; name: string }) {
+export function ReviewEditor({ review, name, isReviewer }: { review: Draft; name: string; isReviewer: boolean }) {
   const router = useRouter();
   const [pending, start] = useTransition();
   const [error, setError] = useState<string | null>(null);
@@ -127,7 +127,9 @@ export function ReviewEditor({ review, name }: { review: Draft; name: string }) 
         <div className="pc-panel-head">
           <p role="status" className="text-sm font-semibold">
             {pending ? "Saving…" : `Draft saved ${formatDateTime(new Date(review.updatedAt))}`}
-            <span className="font-normal text-ui-muted-foreground"> · only you can see it</span>
+            <span className="font-normal text-ui-muted-foreground">
+              {isReviewer ? " · only you and superadmins can see it" : " · only the reviewer and superadmins can see it"}
+            </span>
           </p>
           <div className="flex flex-wrap gap-2">
             <Button type="submit" variant="outline" className="min-h-11" disabled={pending}><Save aria-hidden="true" />Save draft</Button>

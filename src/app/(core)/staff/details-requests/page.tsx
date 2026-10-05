@@ -20,16 +20,17 @@ export default async function DetailRequestsPage({ searchParams }: { searchParam
   const rows = await listDetailRequests(done ? "DONE" : "PENDING");
   return (
     <div className="min-w-0 flex flex-col gap-4">
-      <PageHeader back={{ href: "/staff", label: "Staff" }} title="Details changes" description="Phone, address and emergency contacts that staff asked to update in Turnfin Me." />
-      <div className="flex flex-wrap items-center gap-x-4 gap-y-2">
-        <SegmentedLinks label="Which requests" items={[
-          { href: "/staff/details-requests", label: "Waiting", current: !done },
-          { href: "/staff/details-requests?view=done", label: "Decided", current: done },
-        ]} />
-        <p className="text-sm text-ui-muted-foreground">
-          {done ? "Recently decided requests." : "Check each change, then apply it or decline it with a reply."}
-        </p>
-      </div>
+      <PageHeader
+        back={{ href: "/staff", label: "Staff" }}
+        title="Details changes"
+        description={done
+          ? "Recently decided changes to phone, address and emergency contacts"
+          : "Phone, address and emergency contacts staff asked to update in Turnfin Me. Check each change, then apply it or decline it with a reply"}
+      />
+      <SegmentedLinks label="Which requests" items={[
+        { href: "/staff/details-requests", label: "Waiting", current: !done },
+        { href: "/staff/details-requests?view=done", label: "Decided", current: done },
+      ]} />
       {rows.length === 0 ? (
         <EmptyState icon="clipboardList" title={done ? "Nothing decided yet" : "No changes waiting"} hint="Staff update their own details in Turnfin Me. Their requests appear here." />
       ) : rows.map((row) => {

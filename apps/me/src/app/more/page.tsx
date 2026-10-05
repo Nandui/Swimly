@@ -1,8 +1,13 @@
 "use client";
 
+import { useEffect, useSyncExternalStore } from "react";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { Bell, ChevronRight, GraduationCap, MessageCircle, UserRound } from "lucide-react";
 import { Frame } from "@/components/frame";
+import { session } from "@/lib/api";
+
+const noSubscription = () => () => {};
 
 const LINKS = [
   { href: "/qualifications", label: "Qualifications", hint: "Your certificates, and upload a new one", icon: GraduationCap },
@@ -11,7 +16,13 @@ const LINKS = [
   { href: "/reminders", label: "Reminders", hint: "Which emails you get", icon: Bell },
 ];
 
+/** The menu loads nothing, so it checks the session itself, as the data pages do: signed out,
+ *  it goes to sign-in and never shows the frame. Unknown until the browser reads the token. */
 export default function MorePage() {
+  const router = useRouter();
+  const token = useSyncExternalStore(noSubscription, () => session.token(), () => undefined);
+  useEffect(() => { if (token === null) router.replace(`/sign-in?next=${encodeURIComponent("/more")}`); }, [token, router]);
+  if (!token) return null;
   return (
     <Frame title="More">
       <div className="stack">

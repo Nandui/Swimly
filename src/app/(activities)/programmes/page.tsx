@@ -48,7 +48,7 @@ export default async function ProgrammesPage() {
     <div className="min-w-0 flex flex-col gap-6">
       <PageHeader
         title="Programmes"
-        description="The curriculum: what a swimmer works through, in the order they work through it."
+        description="The curriculum: what a swimmer works through, in the order they work through it"
         actions={<AddProgramme />}
       />
 

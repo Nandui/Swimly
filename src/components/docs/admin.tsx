@@ -29,7 +29,9 @@ import {
   DOC_STATUS_META,
 } from '@/lib/docs/types';
 import { RichEditor } from './rich-editor';
-import { Avatar, FilterSelect } from './ui';
+import { FilterSelect } from './ui';
+import { Avatar, AvatarFallback } from '@/components/shadcn/avatar';
+import { nameInitials } from '@/lib/format';
 import { Notice } from '@/components/ui-kit/notice';
 import { Tag } from '@/components/ui-kit/tag';
 import { PageHeader } from '@/components/ui-kit/page-header';
@@ -176,9 +178,18 @@ export function AdminView({
                   {visibleStaff.map((m) => {
                     const teams = m.teamIds.map((id) => w.teams.find((t) => t.id === id)?.name).filter(Boolean).join(', ');
                     const places = m.facilityIds.map((id) => w.facilities.find((f) => f.id === id)?.name).filter(Boolean).join(', ');
+                    const tags = (
+                      <>
+                        {m.role ? <Tag meta={DOC_STATUS_META.role} label={m.role} /> : null}
+                        <Tag meta={DOC_STATUS_META[m.active ? 'active' : 'inactive']} />
+                      </>
+                    );
+                    // Phones: the edit button stays top right and the tags wrap in the body.
                     return (
-                      <li className="pc-row" key={m.id}>
-                        <Avatar size="lg" member={m} />
+                      <li className="pc-row max-sm:flex-nowrap! max-sm:items-start!" key={m.id}>
+                        <Avatar size="lg" aria-hidden="true">
+                          <AvatarFallback>{nameInitials(m.name)}</AvatarFallback>
+                        </Avatar>
                         <span className="pc-row-body">
                           <span className="pc-row-title">{m.name}</span>
                           <span className="pc-row-hint">{m.email}</span>
@@ -186,10 +197,10 @@ export function AdminView({
                             {`Teams: ${teams || 'none'} · Facilities: ${places || 'all'}`}
                             {!m.access.read ? ' · No Docs access: grant it in Turnfin Roles' : ''}
                           </span>
+                          <span className="mt-2 flex flex-wrap gap-2 sm:hidden">{tags}</span>
                         </span>
-                        <span className="pc-row-trail">
-                          {m.role ? <Tag meta={DOC_STATUS_META.role} label={m.role} /> : null}
-                          <Tag meta={DOC_STATUS_META[m.active ? 'active' : 'inactive']} />
+                        <span className="pc-row-trail max-sm:flex-none">
+                          <span className="contents max-sm:hidden">{tags}</span>
                           <MemberGroupsDialog workspace={w} member={m} onSaved={() => router.refresh()} />
                         </span>
                       </li>

@@ -35,6 +35,8 @@ export async function loadHome() {
     /** The screens the person can open, for the top row's pages and search. */
     screens: visibleScreens(permissionsOf(session)),
     items,
+    /** Modules whose figures failed to load, so the page says so rather than leaving them out silently. */
+    failed: items.failed ?? [],
     today: formatDay(today()),
     meUrl: turnfinMeUrl(),
   };
@@ -59,9 +61,11 @@ function viewerOf(user: Session["user"]): HomeViewer {
  *  person looking, and the working site's name for "Today". */
 export async function loadModuleOverview(moduleId: string) {
   const session = await pageSession();
-  const [items, siteName] = await Promise.all([
-    homeCardItems([moduleId], viewerOf(session.user)).then((all) => all.get(moduleId) ?? []),
+  const [all, siteName] = await Promise.all([
+    homeCardItems([moduleId], viewerOf(session.user)),
     getCurrentClub().then((current) => current.club.name, () => null),
   ]);
-  return { items, siteName };
+  /** True when the module's figures failed to load, so the overview says so. */
+  const failed = (all.failed ?? []).includes(moduleId);
+  return { items: all.get(moduleId) ?? [], siteName, failed };
 }

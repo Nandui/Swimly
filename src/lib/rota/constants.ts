@@ -56,7 +56,7 @@ export function qualificationShort(name: string) {
 export const ROTA_BLOCK_META = {
   done: { label: "Finished", color: "gray", icon: CircleCheck, state: "done" },
   now: { label: "On now", color: "green", icon: Activity, state: "now" },
-  next: { label: "Duty", color: "blue", icon: CalendarDays, state: "next" },
+  next: { label: "Shift", color: "blue", icon: CalendarDays, state: "next" },
   gap: { label: "Gap in cover", color: "orange", icon: TriangleAlert, state: "cover" },
   absent: { label: "Off", color: "red", icon: UserX, state: "off" },
   unfilled: { label: "Unfilled", color: "gray", icon: CircleDashed, state: "open" },
@@ -153,7 +153,8 @@ export const ROTA_CHANGE_REASONS = Object.keys(ROTA_CHANGE_REASON_META) as RotaC
 
 /** What a booking is. Its sessions show on the week plan under its name. */
 export const BOOKING_KIND_META = {
-  school: { label: "School lessons", color: "blue", icon: School },
+  // Purple, like the booking blocks on the Day plan and Today.
+  school: { label: "School lessons", color: "purple", icon: School },
   party: { label: "Party", color: "orange", icon: PartyPopper },
   lanes: { label: "Lane hire", color: "gray", icon: WavesHorizontal },
   event: { label: "Event", color: "green", icon: CalendarDays },

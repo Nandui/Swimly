@@ -97,7 +97,7 @@ export default async function AccountPage() {
                 <div className="pc-row-body">
                   <span className="pc-row-title">{line.module}: {line.level}</span>
                   <span className="pc-row-hint">{line.help}</span>
-                  {line.ticks.map((tick) => <span key={tick.label} className="pc-row-hint">{tick.label}: {tick.help}</span>)}
+                  {line.ticks.map((tick) => <span key={tick.label} className="pc-row-hint">{tick.label} · {tick.help}</span>)}
                 </div>
               </li>
             );

@@ -9,7 +9,6 @@ import '@/app/docs/brand.css';
 import '@/app/docs/editor.css';
 import '@/app/docs/poolside.css';
 import '@fontsource/plus-jakarta-sans/400.css';
-import '@fontsource/plus-jakarta-sans/500.css';
 import '@fontsource/plus-jakarta-sans/600.css';
 import '@fontsource/plus-jakarta-sans/700.css';
 import { ThemeProvider } from '@/components/theme-provider';

@@ -35,6 +35,23 @@ html:has(.refund-submit-bar) { scroll-padding-bottom: 120px; }
   .turnfin-refunds .refund-detail-columns { grid-template-columns: minmax(0, 1fr) minmax(280px, 320px); }
   .turnfin-refunds .refund-detail-columns > aside { position: sticky; top: 24px; }
 }
+/* Phones: the queue tiles go compact (icon, figure and label on one line, no caption) so the
+   list starts on the first screen, and "Log a refund request" stays a pill rather than taking
+   the full-width action row. A request's three summary tiles stack, never leaving an orphan. */
+@media (max-width: 639px) {
+  .turnfin-app .turnfin-refunds ul.refund-tiles.pc-stats { gap: 8px; }
+  .turnfin-app .turnfin-refunds ul.refund-tiles.pc-stats > li > .pc-stat { flex-direction: row; align-items: center; gap: 12px; padding: 12px 16px; }
+  .turnfin-refunds .refund-tiles .pc-tile-icon { width: 32px; height: 32px; }
+  .turnfin-refunds .refund-tiles .pc-tile-icon > svg { width: 16px; height: 16px; }
+  .turnfin-refunds .refund-tile-text { display: flex; align-items: center; gap: 8px; min-width: 0; line-height: 1.25; }
+  .turnfin-app .turnfin-refunds ul.refund-summary.pc-stats { grid-template-columns: minmax(0, 1fr); gap: 8px; }
+  .turnfin-app .turnfin-refunds ul.refund-summary.pc-stats > li > .pc-stat { display: grid; grid-template-columns: auto minmax(0, 1fr); align-items: center; gap: 4px 12px; padding: 16px; }
+  .turnfin-refunds .refund-summary .pc-stat > :last-child { grid-column: 2; }
+}
+@media (max-width: 767px) {
+  .turnfin-refunds .pc-phead-actions:has(> .refund-new) { width: auto; }
+  .turnfin-app .turnfin-refunds .pc-phead-actions > .refund-new.ui-motion-press { flex: none; }
+}
 /* Phones and touch screens: the bar clears the labelled bottom bar (poolside.css, .tf-bottom). */
 @media (max-width: 767px), (hover: none) and (pointer: coarse) {
   .turnfin-refunds .refund-submit-bar { bottom: 88px; padding-left: 16px; }

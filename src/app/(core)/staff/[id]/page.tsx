@@ -49,7 +49,7 @@ export default async function PersonPage({ params }: { params: Promise<{ id: str
     ["Started", person.startedOn ? formatDate(new Date(`${person.startedOn}T00:00:00Z`)) : "Not set"],
     ["Date of birth", person.dateOfBirth ? formatDate(new Date(`${person.dateOfBirth}T00:00:00Z`)) : "Not set"],
     ["Main site", person.primaryClub?.name ?? "Not set"],
-    ["Manager", person.manager ? <UiLink className="underline underline-offset-4" href={`/staff/${person.manager.id}`}>{person.manager.name}</UiLink> : "No manager"],
+    ["Manager", person.manager ? <UiLink className="-my-3 inline-flex min-h-11 items-center underline underline-offset-4" href={`/staff/${person.manager.id}`}>{person.manager.name}</UiLink> : "No manager"],
     ["Departments", person.departments.length ? person.departments.map((d) => d.department.name + (d.isPrimary && person.departments.length > 1 ? " (main)" : "")).join(", ") : "None"],
   ];
 
@@ -87,7 +87,7 @@ export default async function PersonPage({ params }: { params: Promise<{ id: str
         </dl>
         {person.reports.length ? (
           <p className="text-sm text-ui-muted-foreground">
-            Manages {person.reports.map((r, i) => <span key={r.id}>{i ? ", " : ""}<UiLink className="underline underline-offset-4" href={`/staff/${r.id}`}>{r.name}</UiLink></span>)}
+            Manages {person.reports.map((r, i) => <span key={r.id}>{i ? ", " : ""}<UiLink className="-my-3 inline-flex min-h-11 items-center underline underline-offset-4" href={`/staff/${r.id}`}>{r.name}</UiLink></span>)}
           </p>
         ) : null}
       </section>

@@ -130,16 +130,6 @@
   background: var(--ui-status-purple-bg);
 }
 
-/* Selection is branded; general hover surfaces and domain status tones stay neutral/semantic. */
-[data-slot="button"][aria-current="page"],
-[data-slot="tabs-list"][data-variant="default"] [data-slot="tabs-trigger"][data-state="active"] {
-  background-color: var(--ui-brand-soft);
-  color: var(--ui-brand-ink);
-}
-[data-slot="button"][aria-current="page"]:hover {
-  background-color: var(--ui-brand-soft-hover);
-}
-
 @media (max-width: 48rem), (pointer: coarse) {
   [data-variant][data-size]:is(button, [role="combobox"]) {
     min-height: 2.75rem;

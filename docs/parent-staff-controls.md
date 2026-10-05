@@ -12,7 +12,7 @@ migration; it needs no new environment variables.
   access. Approval sends no email. These records are shared across every site.
 - **Swimmers → Parent accounts** (`/students/parents`): two panels. The first is
   a shared queue of parent access requests as rows, with a Waiting for review /
-  Approved / Declined segmented filter, a ghost Refresh requests and pagination
+  Approved / Declined segmented filter, the shared outline Refresh button and pagination
   at the foot; waiting rows end with Decline request then Review and approve. Staff
   verify the guardian and select an existing swimmer at any site, then
   approve or decline with an internal audit reason and a separate parent-facing

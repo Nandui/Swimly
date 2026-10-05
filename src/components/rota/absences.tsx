@@ -68,7 +68,7 @@ const untilOf = (formData: FormData) => (formData.get("unknown") ? "" : String(f
  *  whether this is the same absence running on and, if so, extends it rather
  *  than starting another. When they came back in the last four weeks, it asks
  *  whether this is the same thing again and links the two. */
-export function ReportAbsence({ people, today }: { people: Person[]; today: string }) {
+export function ReportAbsence({ people, today, defaultOpen = false }: { people: Person[]; today: string; /** Open on arrival, from `?report=1`. */ defaultOpen?: boolean }) {
   const [personId, setPersonId] = useState("");
   const [firstDay, setFirstDay] = useState(today);
   const [answer, setAnswer] = useState<"same" | "separate">("same");
@@ -83,10 +83,11 @@ export function ReportAbsence({ people, today }: { people: Person[]; today: stri
       portalClassName={THEME}
       width="sm:max-w-lg"
       onOpen={reset}
-      trigger={<Button className="min-h-11"><UserX aria-hidden="true" />Report absence</Button>}
+      defaultOpen={defaultOpen}
+      trigger={<Button><UserX aria-hidden="true" />Report an absence</Button>}
       title="Report an absence"
       description="Their shifts in this time show as Absent on the rota so you can find cover. Only rota managers see the reason."
-      submitLabel={extending ? "Extend absence" : "Report absence"}
+      submitLabel={extending ? "Extend absence" : "Report an absence"}
       successMessage={extending ? "Absence extended" : "Absence recorded"}
       submit={(formData) => extending && follow
         ? extendAbsence(follow.absence.id, { lastDay: untilOf(formData), note: String(formData.get("note") ?? "") })

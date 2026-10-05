@@ -209,10 +209,10 @@ export function SaveDepartment({ department, sites }: { department?: { id: strin
     <FormDialog
       trigger={department
         ? <Button variant="outline" size="icon" aria-label={`Edit ${department.name}`}>{icon(Pencil)}</Button>
-        : <Button variant="default">{icon(Plus)}Add department</Button>}
+        : <Button variant="default">{icon(Plus)}Add a department</Button>}
       title={department ? `Edit ${department.name}` : "Add a department"}
       description="A team such as Aquatics, Reception or Maintenance. Tie it to a site if it only works at one."
-      submitLabel={department ? "Save department" : "Add department"}
+      submitLabel={department ? "Save department" : "Add a department"}
       successMessage={department ? "Department updated" : "Department added"}
       submit={(formData) => saveDepartment(department?.id ?? null, { name: text(formData, "name"), clubId: text(formData, "clubId") })}
     >
@@ -249,10 +249,10 @@ export function SaveQualificationType({ type }: { type?: { id: string; name: str
     <FormDialog
       trigger={type
         ? <Button variant="outline" size="icon" aria-label={`Edit ${type.name}`}>{icon(Pencil)}</Button>
-        : <Button variant="outline">{icon(Plus)}Add qualification</Button>}
+        : <Button variant="outline">{icon(Plus)}Add a qualification</Button>}
       title={type ? `Edit ${type.name}` : "Add a qualification"}
       description="A certificate staff can hold, such as a lifeguard or first aid qualification."
-      submitLabel={type ? "Save qualification" : "Add qualification"}
+      submitLabel={type ? "Save qualification" : "Add a qualification"}
       successMessage={type ? "Qualification updated" : "Qualification added"}
       submit={(formData) => saveQualificationType(type?.id ?? null, { name: text(formData, "name"), validityMonths: text(formData, "validityMonths") })}
     >

@@ -7,7 +7,8 @@ import { signIn, signOut } from "next-auth/react";
 import { Check, ChevronRight, Delete, UserRound } from "lucide-react";
 import { Button } from "@/components/shadcn/button";
 import { AuthFrame } from "@/components/auth-frame";
-import { Avatar } from "@/components/docs/ui";
+import { Avatar, AvatarFallback } from "@/components/shadcn/avatar";
+import { nameInitials } from "@/lib/format";
 import { Notice } from "@/components/ui-kit/notice";
 import { Input } from "@/components/ui/input";
 import { LoadingButton } from "@/components/ui/loading-button";
@@ -61,9 +62,9 @@ export function QuickSwitch({ device, people }: { device: string; people: { id: 
           <ul className="pc-rows" aria-label="People who can switch in">
             {people.map((person) => (
               <li key={person.id}>
-                {/* Outline gives the row its edge and hover; .pc-row gives the shape. */}
+                {/* A Button for the press and focus; .pc-row gives the shape, inset and hover (poolside.css). */}
                 <Button type="button" variant="outline" className="pc-row h-auto w-full justify-start text-start whitespace-normal" onClick={() => { setChosen(person); setPin(""); setError(null); }}>
-                  <Avatar member={person} />
+                  <Avatar aria-hidden="true"><AvatarFallback>{nameInitials(person.name)}</AvatarFallback></Avatar>
                   <span className="pc-row-body"><span className="pc-row-title">{person.name}</span></span>
                   <span className="pc-row-trail"><ChevronRight aria-hidden="true" className="pc-row-chevron" /></span>
                 </Button>

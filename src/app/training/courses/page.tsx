@@ -50,7 +50,7 @@ export default async function TrainingCoursesPage({ searchParams }: { searchPara
                 </div>
                 <div className="pc-row-trail">
                   {course.archivedAt ? <Tag meta={ARCHIVAL_STATUS_META.archived} /> : null}
-                  {who.assign && !archived && people.length > 0 ? <AssignTraining courses={[course]} people={people} courseId={course.id} label="Assign" variant="outline" /> : null}
+                  {who.assign && !archived && people.length > 0 ? <AssignTraining courses={[course]} people={people} courseId={course.id} label="Assign" variant="outline" rowFor={course.title} /> : null}
                   {who.manage && !archived ? <CourseDialog course={course} qualificationTypes={types} /> : null}
                   {who.manage ? <ArchiveCourse id={course.id} title={course.title} archived={!!course.archivedAt} /> : null}
                 </div>

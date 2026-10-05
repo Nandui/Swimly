@@ -49,7 +49,7 @@ const plans = [
   { id: 'training-assign', steps: [{ go: '/training' }, { click: 'Assign training' }], shot: 'dialog' },
   { id: 'training-signoff', steps: [{ go: '/training/sign-off' }] },
   { id: 'rota-week', as: 'maya', steps: [{ go: '/rota' }] },
-  { id: 'rota-absence', as: 'maya', steps: [{ go: '/rota/absences' }, { click: 'Report absence' }], shot: 'dialog' },
+  { id: 'rota-absence', as: 'maya', steps: [{ go: '/rota/absences' }, { click: 'Report an absence' }], shot: 'dialog' },
   { id: 'hr-note', steps: [{ go: '/hr' }, { confirmPassword: true }, { link: /^Ava Example/ }, { click: 'Add note' }], shot: 'dialog' },
   { id: 'hr-review', steps: [{ go: '/hr' }, { confirmPassword: true }, { link: /^Ava Example/ }, { link: /review/ }] },
   // Swimmers, enrolment and parents
@@ -58,7 +58,9 @@ const plans = [
   { id: 'profile', steps: robin },
   { id: 'edit-swimmer', steps: [...robin, { tab: 'Details' }, { click: 'Edit details' }], shot: 'dialog' },
   { id: 'enrol', steps: [...robin, { click: 'Manage enrolment' }, { click: 'Enrol in a class' }], shot: 'dialog' },
-  { id: 'move', steps: [...robin, { click: 'Manage enrolment' }, { click: /^Move class/ }], shot: 'dialog' },
+  // Robin's level has no other open class, so clear the filters and select one (another site's if
+  // there is one), so the footer shows the selected-class summary.
+  { id: 'move', steps: [...robin, { click: 'Manage enrolment' }, { click: /^Move class/ }, { click: 'Clear filters' }, { choose: [/pool.*Riverside/i, /pool/i] }], shot: 'dialog' },
   { id: 'waitlist', steps: [...jamie, { click: 'Manage enrolment' }], shot: 'dialog' },
   { id: 'end-enrolment', steps: [...robin, { click: 'Manage enrolment' }, { click: /^Unenrol/ }], shot: 'dialog' },
   { id: 'together', steps: [{ go: '/together' }] },
@@ -98,8 +100,8 @@ const plans = [
   // Administration
   { id: 'programme', steps: [{ go: '/programmes' }, { click: /^Add (a )?programme/ }, { fill: { Name: 'Water safety' } }], shot: 'dialog' },
   { id: 'curriculum', steps: [{ go: '/programmes' }, { link: /Learn to swim/ }, { click: /^Add (a )?competency/ }], shot: 'dialog' },
-  { id: 'staff', as: 'alex', steps: [{ go: '/staff' }, { click: 'Add person' }, { fill: { Name: 'Jordan Example', Email: 'jordan@example.invalid' } }], shot: 'dialog' },
-  { id: 'clubs', as: 'alex', steps: [{ go: '/clubs' }, { click: 'Add site' }, { fill: { Name: 'Lakeside' } }], shot: 'dialog' },
+  { id: 'staff', as: 'alex', steps: [{ go: '/staff' }, { click: 'Add a person' }, { fill: { Name: 'Jordan Example', Email: 'jordan@example.invalid' } }], shot: 'dialog' },
+  { id: 'clubs', as: 'alex', steps: [{ go: '/clubs' }, { click: 'Add a site' }, { fill: { Name: 'Lakeside' } }], shot: 'dialog' },
   { id: 'activity', as: 'alex', steps: [{ go: '/activity' }] },
 ];
 // One signed-in browser context per sandbox person, reused across their plans.
@@ -136,7 +138,14 @@ async function run(page, step) {
   }
   if (step.tab) { await page.getByRole('tab', named(step.tab)).first().click(); return; }
   if (step.fill) { for (const [label, value] of Object.entries(step.fill)) await page.getByLabel(label, { exact: true }).first().fill(value); return; }
-  if (step.choose) { await page.getByRole('radio', named(step.choose)).first().click(); return; }
+  if (step.choose) {
+    // A list of names is tried in order: the first radio that exists is chosen.
+    for (const name of [step.choose].flat()) {
+      const radio = page.getByRole('radio', named(name)).first();
+      if (await radio.count()) { await radio.click(); return; }
+    }
+    throw Error(`No radio named ${[step.choose].flat().join(' or ')}`);
+  }
   if (step.tick) { await page.getByRole('checkbox', named(step.tick)).first().click(); return; }
   if (step.option) { await page.getByRole('option', named(step.option)).first().click(); return; }
   if (step.press) { await page.keyboard.press(step.press); return; }

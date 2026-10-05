@@ -25,7 +25,7 @@ export default async function DeckSwimmersPage({ searchParams }: { searchParams:
     <>
       <PageHeader
         title="Swimmers at this site"
-        description="Find a swimmer by name to see their level and class. Medical notes show for swimmers in classes you teach or are covering today."
+        description="Find a swimmer by name to see their level and class. Medical notes show for swimmers in classes you teach or are covering today"
       />
       <section className="pc-panel" aria-label="Find a swimmer">
         {/* An exact lookup by name (DeckSwimmers), so it keeps its visible Find button. */}
@@ -34,7 +34,7 @@ export default async function DeckSwimmersPage({ searchParams }: { searchParams:
           <Button type="submit"><Search aria-hidden="true" />Find</Button>
         </form>
         {query.length < 2 ? (
-          <EmptyState compact icon="userSearch" title="Type at least two letters of a name." />
+          <EmptyState compact icon="userSearch" title="Type at least two letters of a name" />
         ) : results.length === 0 ? (
           <EmptyState compact icon="searchX" title={`No swimmer matches “${query}”`} hint="Only swimmers with a current place at this site are listed." />
         ) : (

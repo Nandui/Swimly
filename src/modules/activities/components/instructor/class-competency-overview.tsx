@@ -9,14 +9,16 @@ export function ClassCompetencyOverview({ competencies, swimmers }: {
   return (
     <section className="pc-panel" aria-labelledby="class-overview">
       <div className="pc-panel-head">
-        <h2 id="class-overview">Class overview</h2>
+        <div className="min-w-0">
+          <h2 id="class-overview">Class overview</h2>
+          <p className="pc-row-hint">
+            Saved progress for all enrolled swimmers, including those absent.
+            Save marks in Competencies to update these totals.
+          </p>
+        </div>
       </div>
-      <p className="max-w-prose text-ui-muted-foreground">
-        Saved progress for all enrolled swimmers, including those absent.
-        Save marks in Competencies to update these totals.
-      </p>
-      {!swimmers.length ? <EmptyState compact icon="users" title="No swimmers are currently enrolled in this class." />
-        : !competencies.length ? <EmptyState compact icon="clipboardList" title="This level has no competencies yet." /> : (
+      {!swimmers.length ? <EmptyState compact icon="users" title="No swimmers enrolled" hint="Nobody is enrolled in this class at the moment." />
+        : !competencies.length ? <EmptyState compact icon="clipboardList" title="No competencies yet" hint="This level has no competencies to mark." /> : (
           <ul aria-label="Competency totals" className="pc-stats pc-stats-fill m-0 list-none p-0">
             {competencies.map(competency => {
               const achieved = swimmers.filter(swimmer => swimmer.marks[competency.id] === "ACHIEVED").length;

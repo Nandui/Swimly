@@ -228,8 +228,8 @@ export function ageInYears(dateOfBirth: Date, now: Date = new Date()): number {
   return age;
 }
 
-/** Up to two initials from a person's name, for an avatar fallback. Server-safe twin of the
- *  helper in the (client) Avatar module, so server pages can render row avatars. */
+/** Up to two initials from a person's name, for an avatar fallback. The only initials helper:
+ *  server-safe, and re-exported by the (client) Avatar module as `initials`. */
 export function nameInitials(name: string): string {
   return name.split(/\s+/).filter(Boolean).map((part) => part[0]).slice(0, 2).join("");
 }

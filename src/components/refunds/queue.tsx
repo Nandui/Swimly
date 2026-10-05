@@ -62,20 +62,20 @@ export function RefundQueue({ data }: { data: Data }) {
   const people = [...new Map(data.people.map(person => [person.creatorId, { value: person.creatorId, label: person.creatorName }])).values()];
   const handlers = [...new Map(data.people.filter(person => person.handlerId).map(person => [person.handlerId!, { value: person.handlerId!, label: person.handlerName! }])).values()];
   const count = (keys: string[]) => keys.reduce((sum, key) => sum + (data.counts[key] || 0), 0);
-  const statusLabel = { open: "Open requests", actionable: "Waiting for your team", review: "Awaiting review", all: "All requests" }[f.status] ?? refundStatuses[f.status as RefundStatus]?.label ?? "Requests";
+  const statusLabel = { open: "Open requests", actionable: "Needs my team’s action", review: "Awaiting review", all: "All requests" }[f.status] ?? refundStatuses[f.status as RefundStatus]?.label ?? "Requests";
   const what = view === "drafts" ? "Your drafts" : view === "mine" ? (f.status === "all" ? "Requests you logged" : `${statusLabel}, logged by you`) : statusLabel;
   const site = data.sites.find(item => item.id === f.site)?.name ?? "All sites";
   const title = view === "mine" ? "My requests" : view === "drafts" ? "My drafts" : "Refund requests";
-  const create = who.request ? <Button asChild><Link href="/refunds/new"><ReceiptText aria-hidden="true" />Log a refund request</Link></Button> : null;
+  const create = who.request ? <Button asChild className="refund-new"><Link href="/refunds/new"><ReceiptText aria-hidden="true" />Log a refund request</Link></Button> : null;
   return <>
     <PageHeader title={title} description={`${what} · ${site}`} actions={create} />
-    <ul className="pc-stats" aria-label="Follow-up queues">
+    <ul className="pc-stats refund-tiles" aria-label="Follow-up queues">
       {TILES.map(tile => {
         const value = count(tile.counts), Icon = tile.icon;
         return <li key={tile.status} className="flex">
-          <Link href={href({ status: tile.status })} className="pc-stat w-full" aria-current={f.status === tile.status ? "page" : undefined}>
+          <Link href={href({ status: tile.status })} className="pc-stat w-full" aria-current={f.status === tile.status ? "true" : undefined}>
             <span className="pc-tile-icon"><Icon aria-hidden="true" /></span>
-            <span><span className={cn("pc-stat-figure block", !value && "text-ui-muted-foreground")}>{value}</span><span className="block font-semibold">{tile.label}</span></span>
+            <span className="refund-tile-text"><span className={cn("pc-stat-figure block", !value && "text-ui-muted-foreground")}>{value}</span><span className="block font-semibold">{tile.label}</span></span>
             <span className="text-xs text-ui-muted-foreground max-sm:hidden">{tile.hint}</span>
           </Link>
         </li>;

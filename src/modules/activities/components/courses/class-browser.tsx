@@ -10,7 +10,7 @@ import { AddClass } from "./add-class";
 import { CourseFilters } from "./course-filters";
 import { CAPACITY_META, COURSE_STATUS_META, capacityTone, classTimes, courseName, DAY_META, placesLeft } from "@/modules/activities/lib/courses/constants";
 import { CLASS_PAGE_SIZE, classBrowserHref, classBrowserModel, classDetailsHref } from "@/modules/activities/lib/courses/browse";
-import { activeFilterCount, courseFilterDimensions, hasPlace } from "@/modules/activities/lib/courses/filters";
+import { activeFilterCount, courseFilterDimensions, hasPlace, PICKER_KEYS } from "@/modules/activities/lib/courses/filters";
 import type { CourseRow, InstructorOption } from "@/modules/activities/lib/courses/data/courses";
 import type { LevelOption } from "@/modules/activities/lib/curriculum/data/curriculum";
 import { ARCHIVAL_STATUS_META } from "@/lib/status";
@@ -30,6 +30,9 @@ export function ClassBrowser({ courses, params, todayDay, levels, instructors, c
   const model = classBrowserModel(courses, params);
   const { filters, state, collection, rows, matches, page, returnTo } = model;
   const active = activeFilterCount(filters);
+  // One reset per case: the search box clears the words, "Clear filters" the pickers, and the
+  // empty state only resets a view (places) that neither of those covers.
+  const pickers = PICKER_KEYS.filter(key => key !== "places" && filters[key]).length;
   const openCount = courses.filter(c => !c.archivedAt && hasPlace(c)).length;
   const lenses = [
     { key: "all", label: "All classes", count: model.activeCount, state: null, places: null },
@@ -41,7 +44,7 @@ export function ClassBrowser({ courses, params, todayDay, levels, instructors, c
   const pages = Math.max(1, Math.ceil(matches.length / CLASS_PAGE_SIZE));
   const resetHref = state === "archived" ? "/courses?state=archived" : "/courses";
   return <div className="min-w-0 flex flex-col gap-6" data-class-browser>
-    <PageHeader title="Classes" description="Find a weekly class across all sites and see where there’s room."
+    <PageHeader title="Classes" description="Find a weekly class across all sites and see where there’s room"
       actions={canManage ? <AddClass levels={levels} instructors={instructors} workingSite={workingSite} /> : undefined} />
     <section className="pc-panel" aria-label="Classes">
       <CourseFilters dimensions={courseFilterDimensions(collection, filters)} q={filters.q} active={active} state={state} todayDay={todayDay}
@@ -67,8 +70,8 @@ export function ClassBrowser({ courses, params, todayDay, levels, instructors, c
         as="h2"
         icon={active ? "searchX" : "waves"}
         title={active ? "No classes match" : state === "archived" ? "No archived classes" : "No classes yet"}
-        hint={active ? "Try another level, day or site. You can clear the filters to see all classes." : state === "archived" ? "Archived classes will appear here with their history kept on record." : canManage ? "Add a weekly class to start filling the timetable." : "No weekly classes are available yet."}
-        action={active ? <Button asChild variant="outline"><Link href={resetHref}>{state === "archived" ? "Show archived classes" : "Show all classes"}</Link></Button> : undefined}
+        hint={active ? (pickers && filters.q ? "Try other words, or clear the filters to see more classes." : pickers ? "Try another level, day or site, or clear the filters to see all classes." : filters.q ? "Search by class, level, site or instructor name." : "Try another view to see more classes.") : state === "archived" ? "Archived classes will appear here with their history kept on record." : canManage ? "Add a weekly class to start filling the timetable." : "No weekly classes are available yet."}
+        action={active && !pickers && !filters.q ? <Button asChild variant="outline"><Link href={resetHref}>{state === "archived" ? "Show archived classes" : "Show all classes"}</Link></Button> : undefined}
       />}
       <LinkPagination label="Class pages" page={page} pageCount={pages} pathname="/courses" query={Object.fromEntries(new URLSearchParams(classBrowserHref(params, { page: null }).split("?")[1] ?? ""))} />
     </section>

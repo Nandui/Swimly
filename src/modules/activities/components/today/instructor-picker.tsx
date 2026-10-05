@@ -16,7 +16,7 @@ export function InstructorPicker({ value, options, onChange }: { value: string; 
         <span className="truncate">{options.find(option => option.value === value)?.label ?? "All instructors"}</span><ChevronsUpDown aria-hidden="true" />
       </Button>
     </PopoverTrigger><PopoverContent align="start" className="w-72 max-w-[calc(100vw-2rem)] p-0">
-      <Command><CommandInput placeholder="Search instructors…" aria-label="Search instructors" /><CommandList id={`${id}-options`}><CommandEmpty>No instructors found.</CommandEmpty><CommandGroup>
+      <Command><CommandInput placeholder="Search instructors" aria-label="Search instructors" /><CommandList id={`${id}-options`}><CommandEmpty>No instructors found.</CommandEmpty><CommandGroup>
         {options.map(option => <CommandItem key={option.value} value={option.value} keywords={[option.label]} onSelect={() => { onChange(option.value); setOpen(false); }}><span>{option.label}</span>{value === option.value ? <Check className="ml-auto" aria-label="Selected" /> : null}</CommandItem>)}
       </CommandGroup></CommandList></Command>
     </PopoverContent></Popover>

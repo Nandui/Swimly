@@ -10,9 +10,9 @@ import { LoadingButton } from "@/components/ui/loading-button";
 import { Notice } from "@/components/ui-kit/notice";
 import { applyLegendList, previewLegendList, type LegendListPreview } from "@/modules/activities/lib/enrolment/actions/legend-list";
 import { toast } from "@/lib/toast";
+import { formatCount, plural } from "@/lib/format";
 
-const number = (value: number) => value.toLocaleString("en-IE");
-const places = (n: number) => `${number(n)} ${n === 1 ? "place" : "places"}`;
+const places = (n: number) => plural(n, "place");
 
 /** Upload the list exported from Legend: every place still to check whose
  *  member number is on it is confirmed as updated in Legend. The count comes
@@ -51,7 +51,7 @@ export function LegendListMatch() {
       <DialogContent className="flex flex-col gap-4 sm:max-w-lg">
         <DialogHeader>
           <DialogTitle>Upload Legend list</DialogTitle>
-          <DialogDescription>Every place still to check whose member number is on the list is confirmed as updated in Legend, at both sites.</DialogDescription>
+          <DialogDescription>Every place still to check whose member number is on the list is confirmed as updated in Legend, at every site.</DialogDescription>
         </DialogHeader>
 
         <FileField id="legend-list-file" label="List from Legend" description="The .xlsx export from Legend." accept=".xlsx,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
@@ -64,7 +64,7 @@ export function LegendListMatch() {
             <div className="rounded-ui-lg border border-ui-border bg-ui-accent p-4">
               <p className="text-2xl font-bold tabular-nums">{places(preview.places)}</p>
               <p className="text-sm text-ui-muted-foreground">
-                {preview.places ? `${number(preview.swimmers)} ${preview.swimmers === 1 ? "swimmer" : "swimmers"} from ${number(preview.members)} member numbers on the list. ${preview.bySite.map((s) => `${s.name}: ${number(s.places)}`).join(" · ")}` : `None of the ${number(preview.members)} member numbers has a place still to check.`}
+                {preview.places ? `${plural(preview.swimmers, "swimmer")} from ${plural(preview.members, "member number")} on the list. ${preview.bySite.map((s) => `${s.name}: ${formatCount(s.places)}`).join(" · ")}` : `None of the ${formatCount(preview.members)} member numbers has a place still to check.`}
               </p>
             </div>
             {preview.places ? (

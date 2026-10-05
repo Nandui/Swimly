@@ -7,10 +7,10 @@ export const SWIMMER_GUIDES: HelpArticle[] = [
     before: ["You need the Swimmers screen. Editing requires permission to add and edit swimmers."],
     steps: [
       { title: "Search Swimmers", text: "Use a name, member number, contact name, email or phone number. The swimmer search in the tools bar at the top right is a shortcut to the same records." },
-      { title: "Check the identifying details", text: "Compare the member number, age when shown and contact information. Swimmers from both sites are included. Use All, Active or Inactive to adjust the status filter." },
+      { title: "Check the identifying details", text: "Compare the member number, age when shown and contact information. Swimmers from every site are included. Use All, Active or Inactive to adjust the status filter." },
       { title: "Open the profile", text: "Choose the swimmer’s row. The profile brings together their enrolments, progress, attendance, assessment history and details." },
       { title: "Update Details", text: "Open the Details tab and its edit action. Correct the relevant personal, contact, emergency or medical information, then save and check the result." },
-    ], result: "The same updated record is available when staff work at either site.",
+    ], result: "The same updated record is available when staff work at any site.",
     troubleshooting: [{ question: "I cannot find someone I know is registered.", answer: "Clear the search, choose All statuses and try their member number or contact details. Check for a spelling difference before creating another record." }],
     related: ["add-swimmer", "swimmer-history", "inactive-swimmers"], action: "students",
   },
@@ -55,7 +55,7 @@ export const SWIMMER_GUIDES: HelpArticle[] = [
   },
   {
     slug: "enrol-swimmer", title: "Enrol a swimmer in a class", category: "enrolment", scopes: ["desk"],
-    summary: "Find an available class at either site and review what happens to any existing places.", keywords: ["enrol", "enrollment", "enrolment", "book", "place", "available", "registration"],
+    summary: "Find an available class at any of your sites and review what happens to any existing places.", keywords: ["enrol", "enrollment", "enrolment", "book", "place", "available", "registration"],
     before: ["The swimmer must be active. You need permission to enrol and move swimmers."],
     steps: [
       { title: "Open Manage enrolment", text: "From the swimmer’s profile, choose Manage enrolment, then Enrol in a class." },

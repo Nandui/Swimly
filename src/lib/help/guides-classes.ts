@@ -135,7 +135,7 @@ export const CLASS_GUIDES: HelpArticle[] = [
     before: ["You need the Assessments screen and permission to edit the timetable. Check the working site before adding a session."],
     steps: [
       { title: "Open Assessment setup", text: "In Assessments, choose Assessment setup, then Add a session. Select Programme and Kind, then set Date, Start, Minutes and Places." },
-      { title: "Complete the practical details", text: "Choose the pool and assessor and add any notes. Review the site, date and time before choosing Add session." },
+      { title: "Complete the practical details", text: "Choose the pool and assessor and add any notes. Review the site, date and time before choosing Add a session." },
       { title: "Inspect or edit the session", text: "In Assessment setup, choose Set up beside the session. Use Edit to change its details, then Save changes. Parent booking publication is managed on this same setup page. View swimmers opens the separate booking roster." },
       { title: "Cancel only when the whole session will not run", text: "Use the session’s cancellation action and read the confirmation. To remove only one swimmer’s booking, use the booking cancellation instead." },
     ], result: "The assessment is available as a dated session, or its cancellation is recorded after confirmation.",
@@ -175,12 +175,12 @@ export const CLASS_GUIDES: HelpArticle[] = [
     before: ["Your role needs the Awaiting enrolment screen. Check the site in the tools bar at the top right. Enrolling also requires enrolment permission."],
     steps: [
       { title: "Open Awaiting enrolment", text: "Choose Awaiting enrolment in the Swim school page bar (under More if it does not fit). Enrolments and waitlists includes assessed swimmers awaiting a place and class waitlists, even without an assessment. Awaiting moves lists current swimmers explicitly confirmed ready by an instructor. Search either list by name or member number." },
-      { title: "Follow up an instructor's move request", text: "Open Awaiting moves to see the current class, the confirming instructor, date and any note. Use Move swimmer to choose a class at either site and confirm the move. The swimmer stays in their current class until you do this, then leaves this list. Needs review means progress or the class level changed; ask the instructor to review readiness before proceeding." },
+      { title: "Follow up an instructor's move request", text: "Open Awaiting moves to see the current class, the confirming instructor, date and any note. Use Move swimmer to choose a class at any of your sites and confirm the move. The swimmer stays in their current class until you do this, then leaves this list. Needs review means progress or the class level changed; ask the instructor to review readiness before proceeding." },
       { title: "Review the placement and family contact", text: "Check the swimmer, member number, any assessed level and each waitlisted class. Open an assessment date or swimmer profile when your access permits it. A waitlist can remain while the swimmer attends another class." },
       { title: "Arrange a class place", text: "For an assessment placement, choose Enrol to find classes at that level across sites. For a waitlisted class with space, choose Enrol from waitlist and confirm. Full or archived classes cannot receive a place here. Capacity is checked again when you confirm." },
-      { title: "Check the follow-up is complete", text: "A class place in the same programme resolves the assessment follow-up, including a future start or a class at the other site. Each outstanding waitlist stays visible until promoted, moved or withdrawn through the usual enrolment controls." },
+      { title: "Check the follow-up is complete", text: "A class place in the same programme resolves the assessment follow-up, including a future start or a class at another site. Each outstanding waitlist stays visible until promoted, moved or withdrawn through the usual enrolment controls." },
     ], result: "The enrolment is recorded through the usual capacity and audit checks. The assessment remains in the swimmer's history.",
-    troubleshooting: [{ question: "Why is an assessed swimmer not in this list?", answer: "Check that they are active and have a recorded placement. Their latest assessment may belong to the other site, or a class enrolment may already have resolved the follow-up." }],
+    troubleshooting: [{ question: "Why is an assessed swimmer not in this list?", answer: "Check that they are active and have a recorded placement. Their latest assessment may belong to another site, or a class enrolment may already have resolved the follow-up." }],
     related: ["assessment-outcome", "enrol-swimmer", "waitlist", "swimmer-history"], action: "awaiting-enrolment",
   },
 ];

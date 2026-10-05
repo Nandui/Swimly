@@ -21,7 +21,7 @@ const THEME = "turnfin-module";
 type Person = { id: string; name: string; jobTitle: string | null; staffRole?: { id: string; name: string } | null };
 type CourseOption = { id: string; title: string };
 
-export function AssignTraining({ courses, people, courseId, userIds, label = "Assign training", variant = "default" }: {
+export function AssignTraining({ courses, people, courseId, userIds, label = "Assign training", variant = "default", rowFor }: {
   courses: CourseOption[];
   people: Person[];
   /** Preselect a course (renewals) and people (a person's record). */
@@ -29,6 +29,8 @@ export function AssignTraining({ courses, people, courseId, userIds, label = "As
   userIds?: string[];
   label?: string;
   variant?: "default" | "outline";
+  /** A row action for this record (e.g. the course title): on phones it is an icon button named by it. */
+  rowFor?: string;
 }) {
   const [chosen, setChosen] = useState<Set<string>>(new Set(userIds ?? []));
   const [filter, setFilter] = useState("");
@@ -42,7 +44,9 @@ export function AssignTraining({ courses, people, courseId, userIds, label = "As
     <FormDialog
       portalClassName={THEME}
       width="sm:max-w-lg"
-      trigger={<Button variant={variant} className="min-h-11"><UserPlus aria-hidden="true" />{label}</Button>}
+      trigger={rowFor
+        ? <Button variant={variant} className="min-h-11" aria-label={`${label} ${rowFor}`}><UserPlus aria-hidden="true" /><span className="pc-only-wide">{label}</span></Button>
+        : <Button variant={variant} className="min-h-11"><UserPlus aria-hidden="true" />{label}</Button>}
       title={label}
       description="Each person sees it in Turnfin Me with the due date. People who already have this course open are skipped."
       submitLabel="Assign"
@@ -112,11 +116,11 @@ export function CourseDialog({ course, qualificationTypes }: { course?: CourseDr
       portalClassName={THEME}
       width="sm:max-w-2xl"
       trigger={course
-        ? <Button variant="outline" className="min-h-11"><Pencil aria-hidden="true" />Edit</Button>
+        ? <Button variant="outline" className="min-h-11" aria-label={`Edit ${course.title}`}><Pencil aria-hidden="true" /><span className="pc-only-wide">Edit</span></Button>
         : <Button className="min-h-11"><Plus aria-hidden="true" />Add a course</Button>}
       title={course ? `Edit ${course.title}` : "Add a course"}
       description="People read the material in Turnfin Me and mark it done. A practical course then waits for a trainer's sign-off."
-      submitLabel={course ? "Save course" : "Add course"}
+      submitLabel={course ? "Save course" : "Add a course"}
       successMessage={course ? "Course saved" : "Course added"}
       submit={(formData) => saveCourse(course?.id ?? null, {
         title: String(formData.get("title") ?? ""),
@@ -149,7 +153,7 @@ export function CourseDialog({ course, qualificationTypes }: { course?: CourseDr
 export function ArchiveCourse({ id, title, archived }: { id: string; title: string; archived: boolean }) {
   return (
     <ConfirmAction
-      trigger={<Button variant="outline" className="min-h-11">{archived ? <ArchiveRestore aria-hidden="true" /> : <Archive aria-hidden="true" />}{archived ? "Restore" : "Retire"}</Button>}
+      trigger={<Button variant="outline" className="min-h-11" aria-label={`${archived ? "Restore" : "Retire"} ${title}`}>{archived ? <ArchiveRestore aria-hidden="true" /> : <Archive aria-hidden="true" />}<span className="pc-only-wide">{archived ? "Restore" : "Retire"}</span></Button>}
       title={archived ? `Restore ${title}?` : `Retire ${title}?`}
       description={archived ? "It can be assigned again." : "It can no longer be assigned. Open and finished training on it is kept."}
       confirmLabel={archived ? "Restore" : "Retire course"}

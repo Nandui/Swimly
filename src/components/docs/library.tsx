@@ -1,11 +1,11 @@
 'use client';
 
-import { NativeSelectOption } from '@/components/shadcn/native-select';
 import { SearchField } from '@/components/ui-kit/search-field';
 import Link from 'next/link';
 import { useRouter, useSearchParams } from 'next/navigation';
-import { useTransition } from 'react';
-import { Archive, ChevronLeft, ChevronRight, FilePlus2 } from 'lucide-react';
+import { useState, useTransition } from 'react';
+import { Archive, ChevronLeft, ChevronRight, FilePlus2, SlidersHorizontal } from 'lucide-react';
+import { cn } from '@/lib/utils';
 import {
   canWrite,
   documentTypeLabels,
@@ -15,7 +15,7 @@ import {
 } from '@/lib/docs/types';
 import { Button } from '@/components/shadcn/button';
 import { DocumentList } from './document-list';
-import { FilterSelect } from './ui';
+import { FilterPicker } from './ui';
 import { EmptyState } from '@/components/ui-kit/empty-state';
 import { PageHeader } from '@/components/ui-kit/page-header';
 import { SegmentedLinks } from '@/components/ui-kit/segmented-links';
@@ -60,6 +60,8 @@ export function LibraryView({
     startTransition(() => router.push(`/docs/library${next.size ? `?${next}` : ''}`, { scroll: false }));
   }
   const hasFilters = !!(query || facility || team || type);
+  const pickerCount = [facility, team, sort === 'title'].filter(Boolean).length;
+  const [phoneOpen, setPhoneOpen] = useState(false);
   const clearUrl = archived ? '/docs/library?archived=true' : '/docs/library';
   /** The library URL with one parameter changed (the type links and the archive switch). */
   function href(key: string, value: string) {
@@ -121,27 +123,42 @@ export function LibraryView({
             ]}
           />
         </div>
-        <div className="flex flex-wrap items-end gap-3">
-          <FilterSelect label="Facility" value={facility} onChange={(value) => filter('facility', value)} disabled={pending}>
-            <NativeSelectOption value="">All facilities</NativeSelectOption>
-            {w.facilities.map((f) => (
-              <NativeSelectOption key={f.id} value={f.id}>
-                {f.name}
-              </NativeSelectOption>
-            ))}
-          </FilterSelect>
-          <FilterSelect label="Team" value={team} onChange={(value) => filter('team', value)} disabled={pending}>
-            <NativeSelectOption value="">All teams</NativeSelectOption>
-            {w.teams.map((t) => (
-              <NativeSelectOption key={t.id} value={t.id}>
-                {t.name}
-              </NativeSelectOption>
-            ))}
-          </FilterSelect>
-          <FilterSelect label="Sort by" value={sort} onChange={(value) => filter('sort', value)} disabled={pending}>
-            <NativeSelectOption value="recent">Recently published</NativeSelectOption>
-            <NativeSelectOption value="title">Title, A–Z</NativeSelectOption>
-          </FilterSelect>
+        <div className="flex flex-wrap items-center gap-2">
+          {/* Phones: the pickers sit behind one Filters button so the documents start sooner. */}
+          <Button
+            type="button"
+            variant="outline"
+            className="sm:hidden"
+            aria-expanded={phoneOpen}
+            aria-controls="library-pickers"
+            onClick={() => setPhoneOpen((open) => !open)}
+          >
+            <SlidersHorizontal aria-hidden="true" />
+            Filters{pickerCount ? ` (${pickerCount})` : ''}
+          </Button>
+          <div id="library-pickers" className={cn('contents', !phoneOpen && 'max-sm:hidden')}>
+            <FilterPicker
+              label="Facility"
+              value={facility}
+              onChange={(value) => filter('facility', value)}
+              disabled={pending}
+              options={[{ value: '', label: 'All facilities' }, ...w.facilities.map((f) => ({ value: f.id, label: f.name }))]}
+            />
+            <FilterPicker
+              label="Team"
+              value={team}
+              onChange={(value) => filter('team', value)}
+              disabled={pending}
+              options={[{ value: '', label: 'All teams' }, ...w.teams.map((t) => ({ value: t.id, label: t.name }))]}
+            />
+            <FilterPicker
+              label="Sort by"
+              value={sort}
+              onChange={(value) => filter('sort', value)}
+              disabled={pending}
+              options={[{ value: 'recent', label: 'Recently published' }, { value: 'title', label: 'Title, A–Z' }]}
+            />
+          </div>
           <Button asChild variant="outline" className="sm:ml-auto">
             {archived ? (
               <Link href={href('archived', '')}>

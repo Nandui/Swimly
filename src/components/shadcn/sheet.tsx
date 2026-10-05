@@ -66,7 +66,7 @@ function SheetContent({
         data-side={side}
         className={cn(
           // Edge to edge on phones; from 768px a 24px panel inset 8px from the viewport.
-          "fixed z-50 flex flex-col gap-4 bg-ui-background shadow-[var(--pc-shadow-overlay)] ui-motion-surface data-[state=closed]:animate-out data-[state=open]:animate-in md:rounded-[var(--pc-radius-panel)]",
+          "fixed z-50 flex flex-col gap-4 bg-ui-background ui-motion-surface data-[state=closed]:animate-out data-[state=open]:animate-in md:rounded-[var(--pc-radius-panel)]",
           side === "right" &&
             "inset-y-0 right-0 h-full w-3/4 max-md:w-full data-[state=closed]:slide-out-to-right data-[state=open]:slide-in-from-right sm:max-w-sm md:inset-y-2 md:right-2 md:h-auto",
           side === "left" &&
@@ -89,7 +89,7 @@ function SheetContent({
               size="icon"
               aria-label="Close"
               data-slot="sheet-close"
-              className="absolute top-3 right-3 text-[var(--pc-ink-muted)]"
+              className="absolute top-3 right-3"
             >
               <XIcon aria-hidden="true" />
             </Button>

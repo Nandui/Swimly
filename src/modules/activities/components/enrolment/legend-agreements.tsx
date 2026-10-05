@@ -12,10 +12,9 @@ import { LEGEND_AGREEMENT_META } from "@/modules/activities/lib/enrolment/legend
 import type { LegendAgreementResult } from "@/modules/activities/lib/enrolment/data/legend-agreements";
 import { fullName } from "@/modules/activities/lib/students/constants";
 import { courseName, formatSlot } from "@/modules/activities/lib/courses/constants";
-import { formatDate, formatDateTime } from "@/lib/format";
+import { formatCount, formatDate, formatDateTime, plural } from "@/lib/format";
 import { SegmentedLinks } from "@/components/ui-kit/segmented-links";
 
-const number = (value: number) => value.toLocaleString("en-IE");
 
 export function LegendAgreements({ result, canConfirm, profiles, classes }: {
   result: LegendAgreementResult; canConfirm: boolean; profiles: boolean; classes: boolean;
@@ -33,7 +32,7 @@ export function LegendAgreements({ result, canConfirm, profiles, classes }: {
   const rows = items.map(row => {
     const name = fullName(row.student), label = `${courseName(row.course)} · ${formatSlot(row.course)}`;
     const meta = LEGEND_AGREEMENT_META[row.legendAgreementStatus];
-    const identity = <><span className="block font-semibold">{name}</span><span className="block text-xs text-ui-muted-foreground">{row.student.memberNumber ? `#${row.student.memberNumber}` : "No member number"}</span></>;
+    const identity = <><span className="block font-semibold">{name}</span>{row.student.memberNumber ? <span className="block text-xs text-ui-muted-foreground">#{row.student.memberNumber}</span> : null}</>;
     const classDetails = <><span className="block">{courseName(row.course)}</span><span className="block text-xs text-ui-muted-foreground">{formatSlot(row.course)}</span></>;
     return {
       row,
@@ -56,10 +55,10 @@ export function LegendAgreements({ result, canConfirm, profiles, classes }: {
           {view === "done" ? <input type="hidden" name="view" value="done" /> : null}
           <SearchField id="agreement-search" label="Find a swimmer" placeholder="Name or member number" defaultValue={q} maxLength={100} clearHref={`/legend-agreements${view === "done" ? "?view=done" : ""}`} />
         </Form>
-        <SegmentedLinks label="Agreement status" items={views.map(item => ({ href: href(item.key), label: item.label, count: number(item.count), current: view === item.key }))} />
+        <SegmentedLinks label="Agreement status" items={views.map(item => ({ href: href(item.key), label: item.label, count: formatCount(item.count), current: view === item.key }))} />
       </div>
       <div className="min-w-0 flex flex-wrap items-center justify-between gap-2">
-        <p className="font-semibold" role="status" aria-live="polite" aria-atomic="true">{number(total)} {total === 1 ? "class place" : "class places"}{view === "done" ? " confirmed" : " outstanding"}{q ? ` matching “${q}”` : ""}</p>
+        <p className="font-semibold" role="status" aria-live="polite" aria-atomic="true">{plural(total, "class place")}{view === "done" ? " confirmed" : " outstanding"}{q ? ` matching “${q}”` : ""}</p>
         <span className="text-xs text-ui-muted-foreground">{view === "done" ? "Recently confirmed first" : "Oldest enrolments first"}</span>
       </div>
       {!canConfirm ? <p className="text-sm text-ui-muted-foreground">Ask for permission to enrol and move swimmers to confirm agreements.</p> : null}

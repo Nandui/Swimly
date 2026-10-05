@@ -27,7 +27,7 @@ export default async function TodayPage({ searchParams }: { searchParams: Promis
   const { site, today: now } = data;
   const plan = buildPlan([{ iso: now, shifts: data.shifts, classes: data.classes }]);
   const options = { people: data.people, types: data.types, departments: data.departments, duties: data.duties };
-  // The timeline runs from the earliest start to the latest end, whole hours, at least 06:00 to 22:00.
+  // The timeline runs from an hour before the earliest start to an hour after the latest end, whole hours.
   const { from, to } = dayRange([...data.shifts, ...data.bookings, ...data.classes]);
   const shiftOf = (id: string) => data.shifts.find((s) => s.id === id)!;
   const editable = (id: string) => {
@@ -97,7 +97,7 @@ export default async function TodayPage({ searchParams }: { searchParams: Promis
       <PageHeader title={site ? `Today: ${site.name}` : "Today"}
         description={`${formatDate(new Date(`${now}T00:00:00Z`))} · ${clock(data.minutesNow)} · the day is under way, so each change asks for its reason`}
         actions={site?.manage ? <>
-          <Button asChild variant="outline"><Link href="/rota/absences"><UserX aria-hidden="true" />Report absence</Link></Button>
+          <Button asChild variant="outline"><Link href="/rota/absences?report=1"><UserX aria-hidden="true" />Report an absence</Link></Button>
           <ShiftDialog siteId={site.id} date={now} today={now} options={options} />
         </> : undefined} />
       {!site ? (

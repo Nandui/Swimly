@@ -97,7 +97,7 @@ export function SegmentsFields({ shift, activities, plan }: { shift: SegmentShif
         <ul className="pc-rows" aria-label="Activities and breaks">
           {[...rows].sort((a, b) => a.start.localeCompare(b.start)).map((r) => (
             <li key={r.key} className="pc-row items-end">
-              <div className="grid min-w-0 flex-1 basis-full grid-cols-2 gap-3 sm:basis-0 sm:grid-cols-[6.5rem_6.5rem_minmax(0,1fr)]">
+              <div className="grid min-w-0 flex-1 basis-full grid-cols-2 gap-3 sm:basis-0 sm:grid-cols-[8.5rem_8.5rem_minmax(0,1fr)]">
                 <Field label="Starts" htmlFor={`${id}-${r.key}-start`}><Input id={`${id}-${r.key}-start`} type="time" value={r.start} onChange={(e) => set(r.key, { start: e.target.value })} required /></Field>
                 <Field label="Ends" htmlFor={`${id}-${r.key}-end`}><Input id={`${id}-${r.key}-end`} type="time" value={r.end} onChange={(e) => set(r.key, { end: e.target.value })} required /></Field>
                 <Field label="What it is" htmlFor={`${id}-${r.key}-kind`}>
@@ -244,7 +244,8 @@ function PlanForm({ shift, activities, actions, onSaved }: { shift: SegmentShift
       </form>
       <SheetFooter className="mt-0 flex-row flex-wrap items-center justify-between gap-2 border-t border-ui-border p-6">
         <div className="flex flex-wrap gap-2">{actions}</div>
-        <LoadingButton type="submit" form={formId} pending={pending}>Save plan</LoadingButton>
+        {/* The primary stays last and right when the footer wraps; on phones it takes the full width. */}
+        <LoadingButton type="submit" form={formId} pending={pending} className="ml-auto max-sm:w-full">Save plan</LoadingButton>
       </SheetFooter>
     </FormFeedbackProvider>
   );

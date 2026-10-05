@@ -14,6 +14,11 @@ import type { StudentHit } from "@/modules/activities/lib/students/actions/searc
 import { ACCESS_REQUEST_META, type AccessReview, parentDateTime, saveParentAdmin } from "@/modules/activities/lib/parent/admin-client";
 import { ParentFormDialog, ParentLoadState, ParentReason } from "./parent-fields";
 import { useParentResource } from "./use-parent-resource";
+import { LoadingButton } from "@/components/ui/loading-button";
+import { formatDate, parseDateOnly } from "@/lib/format";
+
+/** The API sends a date-only day (or a full ISO instant); show it as a day. */
+const birthDate = (value: string) => formatDate(parseDateOnly(value.slice(0, 10)));
 
 function Review({ request, approved, onSuccess }: { request: AccessReview; approved: boolean; onSuccess: () => void }) {
   const [student, setStudent] = useState<StudentHit | null>(null);
@@ -31,7 +36,7 @@ function Review({ request, approved, onSuccess }: { request: AccessReview; appro
     }}>
     <div className="pc-note text-sm"><div className="min-w-0 space-y-1">
       <p className="font-semibold">{request.parent.name || "Parent"}</p><p className="break-all">{request.parent.email}</p>
-      <p>Requesting {request.firstName} {request.lastName} · born {request.dateOfBirth}</p>
+      <p>Requesting {request.firstName} {request.lastName} · born {birthDate(request.dateOfBirth)}</p>
     </div></div>
     {approved && <>
       <StudentSearch label="Match to an existing swimmer" selected={student} onSelect={setStudent} includeInactive description="Search across every site. Check the swimmer’s profile and your records to verify this parent." />
@@ -64,7 +69,7 @@ export function ParentAccessRequests() {
     <div className="flex flex-wrap items-center justify-between gap-3">
       <SegmentedChoice aria-label="Request status" value={status} onValueChange={value => { setStatus(value as keyof typeof ACCESS_REQUEST_META); setPage(1); }}
         options={(Object.keys(ACCESS_REQUEST_META) as Array<keyof typeof ACCESS_REQUEST_META>).map(value => ({ value, label: ACCESS_REQUEST_META[value].label }))} />
-      <Button ref={refreshButton} variant="ghost" className="min-h-11" onClick={resource.reload}><RefreshCw aria-hidden="true" />Refresh requests</Button>
+      <LoadingButton ref={refreshButton} variant="outline" pending={resource.loading} pendingLabel="Refreshing…" onClick={resource.reload}><RefreshCw aria-hidden="true" />Refresh</LoadingButton>
     </div>
     <ParentLoadState {...resource} />
     {resource.data && <div aria-live="polite" className="flex flex-col gap-4">
@@ -72,7 +77,7 @@ export function ParentAccessRequests() {
       {resource.data.items.length ? <ul className="pc-rows">{resource.data.items.map(request => <li key={request.id} className="pc-row">
         <div className="pc-row-body basis-64">
           <h3 className="pc-row-title break-words">{request.firstName} {request.lastName}</h3>
-          <p className="pc-row-hint">Date of birth: {request.dateOfBirth} · Requested by {request.parent.name || "a parent (name not supplied)"}</p>
+          <p className="pc-row-hint">Date of birth: {birthDate(request.dateOfBirth)} · Requested by {request.parent.name || "a parent (name not supplied)"}</p>
           <p className="pc-row-hint break-all">{request.parent.email} · {request.parent.phone || "No phone supplied"}</p>
           <p className="pc-row-hint whitespace-pre-wrap break-words">Lesson details from parent: {request.context || "Not supplied"}</p>
           <p className="pc-row-hint">Sent {parentDateTime(request.createdAt)}{request.reviewedAt && ` · Reviewed by ${request.reviewedByName} on ${parentDateTime(request.reviewedAt)}`}</p>

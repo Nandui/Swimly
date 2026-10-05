@@ -1,10 +1,10 @@
 "use client";
 
 import { useId, useState } from "react";
-import { ChevronDown, MapPin, Search } from "lucide-react";
+import { ChevronDown, MapPin } from "lucide-react";
 import { Button } from "@/components/shadcn/button";
 import { Checkbox } from "@/components/shadcn/checkbox";
-import { Input } from "@/components/shadcn/input";
+import { SearchField } from "@/components/ui-kit/search-field";
 import { Label } from "@/components/shadcn/label";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/shadcn/collapsible";
 import { Tag } from "@/components/ui-kit/tag";
@@ -28,7 +28,7 @@ function ClassFilter({ label, value, onChange, children }: {
 }) {
   return <Select value={value} onValueChange={onChange}>
     <SelectTrigger aria-label={label} className="min-h-11 w-full min-w-0">
-      <span className="min-w-0 truncate">{label}: <SelectValue /></span>
+      <span className="min-w-0 truncate"><span className="hidden sm:inline">{label}: </span><SelectValue /></span>
     </SelectTrigger>
     <SelectContent>{children}</SelectContent>
   </Select>;
@@ -73,12 +73,11 @@ function ClassPicker({ courses, name, selectedId, onSelect, currentEnrolment }: 
         options={[{ id: "all", name: "All sites" }, ...sites].map(site => ({ value: site.id, label: site.name }))} />
     </div>
 
-    <div className="grid gap-3 sm:grid-cols-3 lg:grid-cols-[minmax(0,2fr)_repeat(3,minmax(0,1fr))]">
-      <div className="relative sm:col-span-3 lg:col-span-1">
-        <Search className="pointer-events-none absolute top-1/2 left-3 size-4 -translate-y-1/2 text-ui-muted-foreground" aria-hidden="true" />
-        <Input type="search" aria-label="Search classes" placeholder="Search classes…" value={filters.search}
-          onChange={event => setFilter("search", event.target.value)}
-          onKeyDown={event => { if (event.key === "Enter") event.preventDefault(); }} className="min-h-11 pl-9" />
+    {/* Phones keep Level, Day and Time on one row so the class list stays in reach. */}
+    <div className="grid grid-cols-3 items-end gap-2 sm:gap-3 lg:grid-cols-[minmax(0,2fr)_repeat(3,minmax(0,1fr))]">
+      {/* Enter in the search box must not submit the dialog's form. */}
+      <div className="col-span-3 lg:col-span-1" onKeyDown={event => { if (event.key === "Enter" && event.target instanceof HTMLInputElement) event.preventDefault(); }}>
+        <SearchField label="Search classes" labelHidden placeholder="Class, level or instructor" value={filters.search} onValueChange={value => setFilter("search", value)} />
       </div>
       <ClassFilter label="Level" value={filters.level} onChange={value => setFilter("level", value)}>
         <SelectItem value="all" className="min-h-11">All levels</SelectItem>

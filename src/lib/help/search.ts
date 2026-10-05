@@ -32,6 +32,8 @@ function normalize(value: string): string {
 }
 
 /** Every meaningful word must match. Title and task vocabulary outrank incidental mentions. */
+const topicIndex = (article: HelpSummary) => HELP_CATEGORIES.findIndex(category => category.id === article.category);
+
 export function searchHelp(articles: HelpSummary[], filters: HelpFilters): HelpSummary[] {
   const words = [...new Set(normalize(filters.q).split(" ").filter(word => word && !FILLER.has(word)))];
   return articles.filter(article => filters.topic === "all" || article.category === filters.topic)
@@ -46,5 +48,6 @@ export function searchHelp(articles: HelpSummary[], filters: HelpFilters): HelpS
         else return { article, score: -1 };
       }
       return { article, score };
-    }).filter(result => result.score >= 0).sort((a, b) => b.score - a.score).map(result => result.article);
+    // Best match first; equal matches (every guide when not searching) follow the topic order.
+    }).filter(result => result.score >= 0).sort((a, b) => b.score - a.score || topicIndex(a.article) - topicIndex(b.article)).map(result => result.article);
 }

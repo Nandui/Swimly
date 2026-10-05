@@ -54,12 +54,12 @@ export const MANAGEMENT_GUIDES: HelpArticle[] = [
   },
   {
     slug: "manage-curriculum", title: "Manage programmes, levels and competencies", category: "setup", scopes: ["desk"],
-    summary: "Maintain the shared curriculum used by classes and swimmer progress at both sites.",
+    summary: "Maintain the shared curriculum used by classes and swimmer progress at every site.",
     keywords: ["curriculum", "syllabus", "skills", "order", "archive", "image", "restore"],
-    before: ["You need access to Programmes and permission to edit the curriculum. Changes affect both sites."],
+    before: ["You need access to Programmes and permission to edit the curriculum. Changes affect every site."],
     steps: [
-      { title: "Open or add a programme", text: "Open Programmes. Choose an existing programme or Add programme, enter its name and optional description, then save. An optional image is saved with the form." },
-      { title: "Maintain the levels", text: "Open the programme and choose Add level to append a level. Use the ordering controls to put levels in the order swimmers work through them. Edit a level to update its name, description or image." },
+      { title: "Open or add a programme", text: "Open Programmes. Choose an existing programme or Add a programme, enter its name and optional description, then save. An optional image is saved with the form." },
+      { title: "Maintain the levels", text: "Open the programme and choose Add a level to append a level. Use the ordering controls to put levels in the order swimmers work through them. Edit a level to update its name, description or image." },
       { title: "Describe the competencies", text: "Within the level, add or edit each competency. Write the skill in What the swimmer has to do, and guidance in Notes for the instructor. Save the change." },
       { title: "Maintain kinds of assessment", text: "On the programme, choose Add a kind of assessment. Enter a name and optional description explaining who the session is for, then choose Add. Existing kinds can be edited or archived; archiving stops new use and keeps existing sessions." },
       { title: "Retire items with care", text: "Use Archive for a programme, level or competency that is no longer offered. Read the confirmation before proceeding. Use Restore if an archived item should be available again." },
@@ -76,7 +76,7 @@ export const MANAGEMENT_GUIDES: HelpArticle[] = [
     keywords: ["invite", "new teacher", "instructor account", "forgot password", "reset password", "reactivate"],
     before: ["You need access to Staff and permission to manage staff accounts."],
     steps: [
-      { title: "Add the person", text: "Open Staff and choose Add person. Enter their name, email, role and temporary password, following the password requirements shown in the form. Save the account." },
+      { title: "Add the person", text: "Open Staff and choose Add a person. Enter their name, email, role and temporary password, following the password requirements shown in the form. Save the account." },
       { title: "Give them sign-in details", text: "Share the app address and credentials through your organisation’s approved process. Creating an account does not send an invitation email." },
       { title: "Change details or access", text: "Use the person’s Edit control to change their name, email or role, then Save changes. If they need different access, give them another role or change the role’s levels in Roles." },
       { title: "Reset a forgotten password", text: "Use Set a new password for that person. Enter a password that meets the shown requirements, save it, and give it to the staff member through your organisation’s approved process." },
@@ -94,7 +94,7 @@ export const MANAGEMENT_GUIDES: HelpArticle[] = [
     keywords: ["permissions", "access", "roles", "levels", "administrator", "home page", "landing", "teacher", "module"],
     before: ["You need Admin: Manage. Editing a role affects every staff account assigned to it. Only a superadmin can give HR."],
     steps: [
-      { title: "Open or add a role", text: "In Admin, open Roles. Choose Add role, or the edit button beside an existing role. Give it a clear name, a home page name such as Front of House, and an optional description." },
+      { title: "Open or add a role", text: "In Admin, open Roles. Choose Add a role, or the edit button beside an existing role. Give it a clear name, a home page name such as Front of House, and an optional description." },
       { title: "Choose a level in each module", text: "Under What this role can do in each module, pick None or a level for Swim school, Pool deck, Refunds, Docs, Training, Rota, HR and Admin. Each level includes the ones before it; the line under the row says what it allows. Give the lowest level that lets the job get done." },
       { title: "Add any extra permissions", text: "Some levels offer a tick for one extra permission, such as cancelling classes or approving documents. Tick it only when the job needs it. Admin: Manage gives Manage in every module except HR." },
       { title: "Decide where they can sign in", text: "Tick Can work away from the centre’s computers only when the role needs to use Turnfin on a phone or another device that is not registered." },
@@ -112,7 +112,7 @@ export const MANAGEMENT_GUIDES: HelpArticle[] = [
     keywords: ["sites", "clubs", "facility", "location", "new site", "restore"],
     before: ["You need Admin access to manage sites."],
     steps: [
-      { title: "Add or rename a site", text: "Open Sites. Choose Add site, enter the name staff use and choose Add site. To rename a site, use its Rename control and Save changes." },
+      { title: "Add or rename a site", text: "Open Sites. Choose Add a site, enter the name staff use and choose Add a site at the bottom. To rename a site, use its Rename control and Save changes." },
       { title: "Set up its timetable", text: "Choose the new site in the site picker and add its classes and assessment sessions. Use the existing shared swimmers and curriculum; do not recreate them for the site." },
       { title: "Archive a retired site", text: "Choose Archive for the site and read the confirmation. It leaves the site picker. Anyone working there moves to an available site on their next visit." },
       { title: "Restore it when needed", text: "Find the archived site in Sites and use Restore. Its retained records become available through the site again." },

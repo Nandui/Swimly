@@ -25,14 +25,12 @@ export default async function CertificatesPage({ searchParams }: { searchParams:
     <>
       <PageHeader
         title="Certificates to check"
-        description={done ? "Recently checked certificates." : "Open each file, check it, then record it or decline it with a reason."}
-        actions={
-          <SegmentedLinks label="Certificates" items={[
-            { href: "/training/certificates", label: "Waiting", current: !done },
-            { href: "/training/certificates?view=done", label: "Checked", current: done },
-          ]} />
-        }
+        description={done ? "Recently checked certificates" : "Open each file, check it, then record it or decline it with a reason"}
       />
+      <SegmentedLinks label="Certificates" items={[
+        { href: "/training/certificates", label: "Waiting", current: !done },
+        { href: "/training/certificates?view=done", label: "Checked", current: done },
+      ]} />
       {rows.length === 0 ? (
         <EmptyState as="h2" icon="certificate" title={done ? "Nothing checked yet" : "Nothing waiting"} hint="Staff upload certificates in Turnfin Me. They appear here for the people you cover." />
       ) : (

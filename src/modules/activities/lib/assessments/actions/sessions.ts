@@ -183,7 +183,7 @@ export async function updateSession(id: string, input: SessionInput): Promise<Ac
         `Updated the assessment session on ${sessionLabel(data)}` +
         (moved ? ` (was ${sessionLabel(existing)})` : "") +
         (existing.capacity !== data.capacity
-          ? ` — capacity ${existing.capacity ?? "uncapped"} → ${data.capacity ?? "uncapped"}`
+          ? ` — capacity ${existing.capacity ?? "no limit"} → ${data.capacity ?? "no limit"}`
           : "") +
         (changes.length ? ` (${changes.join(", ")})` : ""),
     }, tx);

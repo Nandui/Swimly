@@ -61,7 +61,7 @@ export function RefundDetail({ data, who, sites }: { data: Detail; who: RefundAc
   return <>
     <PageHeader title={refundNumber(row.number)} description={`${row.customerName || 'New customer refund'} · ${row.clubName}`} status={<Tag meta={refundStatuses[row.status]} />}
       actions={<Button asChild variant="outline"><Link href="/refunds"><ChevronLeft aria-hidden="true" />Back to requests</Link></Button>} />
-    <ul className="pc-stats" aria-label="Summary">{summary(row).map(({ label, value, hint, icon: Icon }) => <li key={label} className="flex"><div className="pc-stat w-full">
+    <ul className="pc-stats refund-summary" aria-label="Summary">{summary(row).map(({ label, value, hint, icon: Icon }) => <li key={label} className="flex"><div className="pc-stat w-full">
       <span className="pc-tile-icon"><Icon aria-hidden="true" /></span>
       <span><span className="pc-stat-figure block break-words">{value}</span><span className="block font-semibold">{label}</span></span>
       <span className="text-xs text-ui-muted-foreground">{hint}</span>

@@ -116,7 +116,7 @@ try {
   preview.state.failAudit = false;
   await staff.getByRole('button', { name: 'Approve and link swimmer' }).click();
   await staff.locator('[data-slot=dialog-content]').waitFor({ state: 'hidden' });
-  await staff.waitForFunction(() => document.activeElement?.textContent?.trim() === 'Refresh requests', undefined, { timeout: 2000 });
+  await staff.waitForFunction(() => document.activeElement?.textContent?.trim().startsWith('Refresh'), undefined, { timeout: 2000 });
   assert.equal((await preview.prisma.parentChildAccess.findFirstOrThrow()).studentId, 'demo-swimmer-1');
   await parent.reload(); await parent.getByText('Request approved', { exact: true }).waitFor();
   await parent.getByRole('link', { name: 'View my children', exact: true }).click();
@@ -125,7 +125,7 @@ try {
   await fillParent('Avery');
   await parent.getByRole('button', { name: 'Send request to swim school' }).click();
   await parent.getByText('Your request for Avery is with the swim school.', { exact: false }).waitFor();
-  await staff.getByRole('button', { name: 'Refresh requests' }).click();
+  await staff.getByRole('button', { name: 'Refresh', exact: true }).click();
   await staff.getByRole('button', { name: 'Decline request', exact: true }).click();
   const reply = 'Please check the child’s name and date of birth, then send a new request.';
   await staff.locator('[data-slot=dialog-content]').getByLabel('Reply to the parent').fill(reply);

@@ -19,6 +19,7 @@ import { formatDate, parseDateOnly, today } from "@/lib/format";
 import { fullName } from "@/modules/activities/lib/students/constants";
 import { Notice } from "@/components/ui-kit/notice";
 import { PageHeader } from "@/components/ui-kit/page-header";
+import { WrongClub } from "@/components/clubs/wrong-club";
 import { StartClass } from "./start-class";
 import { InstructorClassNavigation } from "./class-navigation";
 import { ClassCompetencyOverview } from "./class-competency-overview";
@@ -44,7 +45,7 @@ export async function InstructorClassSession({
   const when = `${formatSessionTime(course)} · ${formatDate(parseDateOnly(iso))}`;
   const header = (
     <PageHeader
-      back={{ href: home, label: "Your classes" }}
+      back={{ href: home, label: "Classes" }}
       title={name}
       description={`${when}${course.location ? ` · ${course.location}` : ""}`}
       status={
@@ -59,11 +60,9 @@ export async function InstructorClassSession({
       <>
         {header}
         {view.state === "cancelled" ? <Notice tone="warning" title="This session is cancelled"><p>{view.cancellation.reason}</p><p>Attendance and competencies cannot be saved for this session.</p></Notice> : view.state === "wrong-site" ? (
-          <Notice tone="warning" title={`This class is at ${course.club.name}`}>
-            <p>Choose that site in the site switcher to continue.</p>
-          </Notice>
+          <WrongClub header={false} what="This class" noun="this class" owner={course.club} current={view.club} />
         ) : view.state === "archived" ? (
-          <Notice tone="warning" title="This class is archived." />
+          <Notice tone="warning" title="This class is archived" />
         ) : (
           <section className="pc-panel items-start" aria-labelledby="ready-to-teach">
             <h2 id="ready-to-teach">Ready to teach?</h2>
@@ -132,7 +131,8 @@ export async function InstructorClassSession({
         ) : (
           <EmptyState
             icon="users"
-            title="No swimmers were enrolled for this class on that date."
+            title="No swimmers enrolled"
+            hint="Nobody was enrolled in this class on that date."
             action={
               <Button asChild variant="outline">
                 <Link href={stepHref("competencies")}>

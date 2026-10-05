@@ -120,7 +120,7 @@ function PersonFields({
   );
 }
 
-/** `defaultOpen` opens the dialog on arrival, for Admin's "Add person" quick action (/staff?add=1). */
+/** `defaultOpen` opens the dialog on arrival, for Admin's "Add a person" quick action (/staff?add=1). */
 export function AddPerson({ roles, defaultOpen = false }: { roles: RoleOption[]; defaultOpen?: boolean }) {
   return (
     <FormDialog
@@ -128,12 +128,12 @@ export function AddPerson({ roles, defaultOpen = false }: { roles: RoleOption[];
       trigger={
         <Button variant="default">
           {<UserPlus aria-hidden={true} className="size-4 shrink-0" />}
-          {"Add person"}
+          {"Add a person"}
         </Button>
       }
       title="Add a person"
       description="They can sign in as soon as you save this. Nobody is emailed: you hand them the password yourself."
-      submitLabel="Add person"
+      submitLabel="Add a person"
       successMessage="Account created"
       submit={(formData) =>
         createPerson({
@@ -205,7 +205,7 @@ export function ResetPersonPassword({ person }: { person: Person }) {
         </Button>
       }
       title={`Set a new password for ${person.name}`}
-      description="Their old password stops working immediately. Nobody is emailed — tell them yourself."
+      description="Their old password stops working immediately. Nobody is emailed: tell them yourself."
       submitLabel="Set password"
       successMessage="Password set"
       submit={(formData) =>
@@ -254,7 +254,7 @@ export function SetPersonActive({ person }: { person: Person }) {
         </Button>
       }
       title={`Deactivate ${person.name}?`}
-      description="They stop being able to sign in, from their next page load rather than whenever their session would have expired. Everything they recorded — registers, assessments, the audit trail — stays exactly as it is, and you can reactivate them later. Classes they teach keep their name on them."
+      description="They stop being able to sign in, from their next page load rather than whenever their session would have expired. Everything they recorded (registers, assessments, the audit trail) stays exactly as it is, and you can reactivate them later. Classes they teach keep their name on them."
       confirmLabel="Deactivate"
       successMessage="Account deactivated"
       run={() => setPersonActive(person.id, false)}

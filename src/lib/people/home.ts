@@ -15,7 +15,7 @@ registerHomeCard({
       const session = await requirePermission("staff.manage");
       const pending = await prisma.staffDetailChangeRequest.count({ where: { orgId: session.user.orgId ?? undefined, status: "PENDING" } });
       items.push({ label: "Details changes to check", hint: "Sent from Turnfin Me", href: "/staff/details-requests", count: pending, attention: pending > 0 });
-      items.push({ kind: "action", icon: "userPlus", label: "Add person", href: "/staff?add=1" });
+      items.push({ kind: "action", icon: "userPlus", label: "Add a person", href: "/staff?add=1" });
     }
     return items;
   },

@@ -36,6 +36,7 @@ test("To fill: unfilled duties, booking places, and cover for someone off; the t
     shift("s1", "Sam Sample", "Poolside", 720, 1020, { warnings: ["teaching"] }),
   ]]));
   assert.deepEqual(roster.fill[0].map((f) => [f.what, f.cover]), [["Swim teacher", null], ["Lifeguard: Example NS", null], ["Poolside", "Riley Sample"]]);
+  assert.deepEqual(roster.fill[0].map((f) => f.role), ["Swim teacher", "Lifeguard", "Poolside"], "a day column shows the role alone");
   const riley = roster.groups[0].people.find((p) => p.name === "Riley Sample")!;
   assert.deepEqual([riley.days[0][0].absent, riley.minutes], [true, 0], "off: not counted in their hours");
   assert.deepEqual(roster.tiles, { people: 2, minutes: 300, toFill: 3, offPeople: 1, offShifts: 1, warnings: 1 });

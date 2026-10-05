@@ -6,6 +6,7 @@ import { useState, useEffect } from 'react';
 import { useEditor, EditorContent, type JSONContent } from '@tiptap/react';
 import { safeUrl } from '@/lib/docs/content';
 import { documentWordCount } from '@/lib/docs/formatting';
+import { plural } from '@/lib/format';
 import { documentExtensions } from '@/lib/docs/editor-extensions';
 import type { Attachment } from '@/lib/docs/types';
 import { EditorToolbar } from './editor-toolbar';
@@ -156,7 +157,7 @@ export function RichEditor({
         )}
       </div>
       <EditorContent editor={editor} />
-      <div className="editor-status-bar"><span>{words.toLocaleString()} {words === 1 ? 'word' : 'words'}</span><span>Ctrl/Cmd + Z to undo</span></div>
+      <div className="editor-status-bar"><span>{plural(words, 'word')}</span><span>Ctrl/Cmd + Z to undo</span></div>
     </div>
   );
 }

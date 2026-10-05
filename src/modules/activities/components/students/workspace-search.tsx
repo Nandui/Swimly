@@ -37,7 +37,7 @@ export function WorkspaceSearch({ onSelect }: { onSelect: (hit: StudentHit) => v
   }, [open, query]);
   return <CommandDialog open={open} onOpenChange={changeOpen} title="Find swimmer" description="Search by name or member number, including inactive swimmers." shouldFilter={false}
     trigger={<Button variant="ghost" size="icon" className="tf-bar-item tf-icon" aria-label="Find swimmer" title="Find swimmer"><Search aria-hidden="true" /></Button>}>
-      <CommandInput value={query} onValueChange={changeQuery} aria-label="Search swimmers" placeholder="Name or member number…" />
+      <CommandInput value={query} onValueChange={changeQuery} aria-label="Search swimmers" placeholder="Name or member number" />
       <CommandList aria-busy={pending}>
         {!query.trim() ? <CommandEmpty>Start typing a name or member number.</CommandEmpty> : pending ? <div role="status" className="flex items-center justify-center gap-2 p-6 text-sm text-ui-muted-foreground"><Loader2 className="size-4 animate-spin" aria-hidden="true" />Searching…</div> : error ? <div className="p-2"><Notice tone="error" live="alert" title={error} /></div> : hits.length === 0 ? <CommandEmpty>No swimmers found.</CommandEmpty> : null}
         {hits.length ? <CommandGroup heading="Swimmers">{hits.map(hit => <CommandItem key={hit.id} value={hit.id} onSelect={() => { changeOpen(false); onSelect(hit); }}>

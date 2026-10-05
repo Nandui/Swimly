@@ -8,7 +8,6 @@ import {
   TableBody,
   Table,
 } from "@/components/shadcn/table";
-import { cn } from "@/lib/utils";
 
 import type { Metadata } from "next";
 
@@ -22,7 +21,7 @@ import {
   ResetPersonPassword,
   SetPersonActive,
 } from "@/components/staff/person-actions";
-import { plural } from "@/lib/format";
+import { nameInitials, plural } from "@/lib/format";
 import { screenPage } from "@/lib/page-guards";
 import {
   STAFF_STATUS_META,
@@ -129,9 +128,16 @@ export default async function StaffPage(props: PageProps<"/staff">) {
   );
 }
 
-/** The avatar's initials, as `initials` in the shadcn avatar works them out. That one lives in a
- *  client module, so a server page cannot call it. */
-const initialsOf = (name: string) => name.split(/\s+/).filter(Boolean).map((part) => part[0]).slice(0, 2).join("");
+
+function PersonActions({ person, roles }: { person: Person; roles: RoleOption[] }) {
+  return (
+    <>
+      <ResetPersonPassword person={person} />
+      <EditPerson person={person} roles={roles} />
+      <SetPersonActive person={person} />
+    </>
+  );
+}
 
 function PeopleTable({
   people,
@@ -159,7 +165,7 @@ function PeopleTable({
               {column.header}
             </TableHead>
           ))}
-          <TableHead scope="col">
+          <TableHead scope="col" className="max-md:hidden">
             <span className="sr-only">Actions</span>
           </TableHead>
         </TableRow>
@@ -180,7 +186,7 @@ function PeopleTable({
               <TableCell>
                 <div className="min-w-0 flex gap-3 items-center">
                   <UiLink href={`/staff/${person.id}`} className="min-w-0 flex gap-3 items-center rounded-[var(--pc-radius-card)] underline-offset-4 hover:[&_.pc-row-title]:underline">
-                    <Avatar size="lg" aria-hidden="true" className="max-sm:hidden"><AvatarFallback>{initialsOf(person.name)}</AvatarFallback></Avatar>
+                    <Avatar size="lg" aria-hidden="true"><AvatarFallback>{nameInitials(person.name)}</AvatarFallback></Avatar>
                     <span className="min-w-0 flex flex-col">
                       <span className="pc-row-title inline-flex min-h-6 flex-wrap items-center gap-x-2">
                         {person.name}{person.id === currentUserId ? " (you)" : null}
@@ -192,14 +198,24 @@ function PeopleTable({
                         {person.email}
                       </span>
                       {orgLine ? <span className="pc-row-hint block">{orgLine}</span> : null}
-                      <span className={cn("pc-row-hint block", "lg:hidden")}>
-                        {[person.staffRole?.name ?? "No role", ...extras.filter((extra) => extra.value).map((extra) => `${extra.header} ${extra.value}`)].join(" · ")}
+                      <span className="mt-1 flex flex-wrap items-center gap-x-2 gap-y-1 lg:hidden">
+                        <Tag meta={reach} label={person.staffRole?.name ?? "No role"} />
+                        {extras.some((extra) => extra.value) ? (
+                          <span className="pc-row-hint">
+                            {extras.filter((extra) => extra.value).map((extra) => `${extra.header} ${extra.value}`).join(" · ")}
+                          </span>
+                        ) : null}
                       </span>
                     </span>
                   </UiLink>
                 </div>
+                {/* Phones: the actions move under the person, in one line. */}
+                <div className="mt-3 flex flex-wrap gap-2 md:hidden">
+                  <PersonActions person={person} roles={roles} />
+                </div>
               </TableCell>
-              <TableCell className={"max-lg:hidden"}>
+              {/* max-md:hidden too, so the phone row card closes on the person cell (poolside.css). */}
+              <TableCell className="max-md:hidden max-lg:hidden">
                 <span className="flex flex-col items-start gap-1">
                   <Tag meta={reach} label={person.staffRole?.name ?? "No role"} />
                   <span className="pc-row-hint">
@@ -208,21 +224,15 @@ function PeopleTable({
                 </span>
               </TableCell>
               {extras.map((extra) => (
-                <TableCell key={extra.id} className={"max-lg:hidden"}>
+                <TableCell key={extra.id} className="max-md:hidden max-lg:hidden">
                   <span className="tabular-nums">
                     {extra.value}
                   </span>
                 </TableCell>
               ))}
-              <TableCell>
-                <div
-                  className={
-                    "min-w-0 flex gap-2 items-center justify-end flex-nowrap max-sm:flex-col"
-                  }
-                >
-                  <ResetPersonPassword person={person} />
-                  <EditPerson person={person} roles={roles} />
-                  <SetPersonActive person={person} />
+              <TableCell className="max-md:hidden">
+                <div className="min-w-0 flex gap-2 items-center justify-end flex-nowrap">
+                  <PersonActions person={person} roles={roles} />
                 </div>
               </TableCell>
             </TableRow>

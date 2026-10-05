@@ -24,10 +24,10 @@ export default async function CoreHome() {
   ] as const;
   const organisation = pages.filter((page) => canSee(session, page.screen)).map(({ href, label, icon, description }) => ({ href, label, icon, description }));
   if (organisation.length === 0) redirect("/");
-  const { items, siteName } = await loadModuleOverview("admin");
+  const { items, siteName, failed } = await loadModuleOverview("admin");
   const mod = allModules().find((m) => m.id === "admin")!;
   return (
-    <ModuleOverview name={mod.name} description={mod.description} icon={mod.icon} siteName={siteName} items={items}
+    <ModuleOverview name={mod.name} description={mod.description} icon={mod.icon} siteName={siteName} items={items} failed={failed}
       groups={[{ label: "Organisation", links: organisation }]} />
   );
 }

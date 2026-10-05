@@ -37,7 +37,7 @@ export async function getInstructorClass(id: string, requestedDate: unknown) {
       : mostRecentOccurrence(course.dayOfWeek);
   const base = { course, session, iso };
   if (course.clubId !== club.id)
-    return { ...base, state: "wrong-site" as const };
+    return { ...base, state: "wrong-site" as const, club };
   if (course.archivedAt) return { ...base, state: "archived" as const };
   const cancellation = await getCancellation(id, iso);
   if (cancellation) return { ...base, state: "cancelled" as const, cancellation };

@@ -46,7 +46,7 @@ export function ModuleShell({ module, id, current = id, who, links = [], groups,
   const pageGroups = groups ?? [{ label: '', links }];
   const pages = pageGroups.flatMap((group) => group.links);
   const navRef = useRef<HTMLElement>(null), measureRef = useRef<HTMLDivElement>(null);
-  const fit = useBarFit(navRef, measureRef, pages.length);
+  const { fit, measured } = useBarFit(navRef, measureRef, pages.length);
   const railCurrent = current === 'core' ? 'admin' : current;
   // Only the open page itself is the "page"; a link to one of its parents is "true".
   const currentFor = (page: ModuleLink) => !page.active ? undefined : pathname === page.href.split('?')[0] ? 'page' as const : 'true' as const;
@@ -68,7 +68,7 @@ export function ModuleShell({ module, id, current = id, who, links = [], groups,
           {pages.length > 1 ? (
             <nav ref={navRef} className="tf-pages" aria-label={`${module} pages`}>
               <span className="sr-only">{scopeNote}</span>
-              <div className="tf-bar">
+              <div className="tf-bar" data-measured={measured || undefined}>
                 {pages.slice(0, fit).map((page) => (
                   <Link key={page.href} href={page.href} className="tf-bar-item" aria-current={currentFor(page)}>{page.label}</Link>
                 ))}
@@ -101,9 +101,11 @@ export function ModuleShell({ module, id, current = id, who, links = [], groups,
 
 /** As many page links as fit the bar, measured, so a link never scrolls out of sight; the rest go
  *  under "More". Until measured (the server render) the links that do not fit wrap out of
- *  sight below the 44px bar (poolside.css), so it never scrolls. */
+ *  sight below the 44px bar, and the open page's link goes first so it is never one of them
+ *  (poolside.css), so it never scrolls. */
 function useBarFit(nav: RefObject<HTMLElement | null>, measure: RefObject<HTMLDivElement | null>, count: number) {
   const [fit, setFit] = useState(count);
+  const [measured, setMeasured] = useState(false);
   useLayoutEffect(() => {
     const bar = nav.current, sizes = measure.current;
     if (!bar || !sizes) return;
@@ -114,13 +116,14 @@ function useBarFit(nav: RefObject<HTMLElement | null>, measure: RefObject<HTMLDi
       let used = 0, shown = 0;
       while (shown < count && used + widths[shown] + (shown + 1 < count ? more : 0) <= room) used += widths[shown++];
       setFit(Math.max(1, shown));
+      setMeasured(true);
     };
     update();
     const observer = new ResizeObserver(update);
     observer.observe(bar);
     return () => observer.disconnect();
   }, [nav, measure, count]);
-  return fit;
+  return { fit, measured };
 }
 
 /** The pages that do not fit the bar, under their group names. "More" keeps its short name so

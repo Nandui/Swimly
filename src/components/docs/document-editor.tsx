@@ -387,7 +387,7 @@ export function DocumentEditor({
                 <span className="text-xs font-normal text-ui-muted-foreground">PDF or DOCX · Up to 4 MB per file</span>
                 <Input
                   type="file"
-                  className="sr-only"
+                  className="sr-only w-px"
                   disabled={!locked || uploading}
                   accept=".pdf,.docx"
                   onChange={async (e) => {
@@ -554,7 +554,8 @@ export function DocumentEditor({
           {!approvers.length && (
             <Notice
               tone="error"
-              title="No independent approver is available. An administrator must assign an active approver who has not edited this revision."
+              title="No independent approver available"
+              description="An administrator must assign an active approver who has not edited this revision."
             />
           )}
           {error ? <Notice tone="error" live="alert" title={error} /> : null}

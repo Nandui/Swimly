@@ -3,16 +3,11 @@
 import * as React from "react"
 import { cn } from "@/lib/utils"
 import { Avatar as AvatarPrimitive } from "radix-ui"
+import { nameInitials } from "@/lib/format"
 
-/** Up to two initials from a person's name, for an avatar fallback. */
-function initials(name: string) {
-  return name
-    .split(/\s+/)
-    .filter(Boolean)
-    .map((part) => part[0])
-    .slice(0, 2)
-    .join("")
-}
+/** Up to two initials from a person's name, for an avatar fallback: the one server-safe helper
+ *  in lib/format.ts, re-exported so client callers keep importing it with the Avatar. */
+const initials = nameInitials
 
 /** The Poolside Clear v2 avatar: "default" 32px (bars), "lg" 40px (rows),
  *  "xl" 64px (profile). `self` marks the signed-in person's own avatar with

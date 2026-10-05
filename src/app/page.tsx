@@ -15,7 +15,7 @@ export default async function HomePage() {
   const tools = swim && home.sites ? <SwimSchoolTools screens={home.screens} club={home.sites.club} clubs={home.sites.clubs} /> : undefined;
   return (
     <HomeShell who={home.who} sites={home.sites} tools={tools} pages={swim ? dailyPages(home.screens) : []}>
-      <HomeView homeName={home.homeName} roleName={home.roleName} siteName={home.siteName} today={home.today} modules={modules} items={home.items} meUrl={home.meUrl} />
+      <HomeView homeName={home.homeName} roleName={home.roleName} siteName={home.siteName} today={home.today} modules={modules} items={home.items} failed={home.failed} meUrl={home.meUrl} />
     </HomeShell>
   );
 }

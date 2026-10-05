@@ -225,7 +225,7 @@ export function AddSession(props: Omit<FieldProps, "session">) {
       }
       title="Add an assessment session"
       description="A date, a time and a number of places. Children are booked onto it from the session's own page."
-      submitLabel="Add session"
+      submitLabel="Add a session"
       successMessage="Session added"
       width="sm:max-w-xl"
       submit={(formData) => createSession(readInput(formData))}

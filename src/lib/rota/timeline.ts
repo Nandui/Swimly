@@ -103,11 +103,13 @@ export function teachingSpans<T extends { userId: string | null; startMinutes: n
   return out;
 }
 
-/** Whole hours around everything on the day, at least 06:00 to 22:00. */
+/** Whole hours from an hour before the first thing on the day to an hour after the last, so the
+ *  blocks get the width; 06:00 to 22:00 when nothing is planned. */
 export function dayRange(times: readonly { startMinutes: number; endMinutes: number }[]) {
+  if (!times.length) return { from: 360, to: 1320 };
   return {
-    from: Math.min(360, ...times.map((t) => Math.floor(t.startMinutes / 60) * 60)),
-    to: Math.max(1320, ...times.map((t) => Math.ceil(t.endMinutes / 60) * 60)),
+    from: Math.max(0, Math.floor(Math.min(...times.map((t) => t.startMinutes)) / 60) * 60 - 60),
+    to: Math.min(1440, Math.ceil(Math.max(...times.map((t) => t.endMinutes)) / 60) * 60 + 60),
   };
 }
 

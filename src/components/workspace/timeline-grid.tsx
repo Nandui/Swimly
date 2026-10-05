@@ -119,7 +119,7 @@ export function TimelineGrid({ from, to, now, lanes, blocks, laneHeading, label,
             const at = rowOf.get(block.lane);
             if (at === undefined) return null;
             const width = ((Math.min(block.end, to) - Math.max(block.start, from)) / range) * TRACK_PX;
-            return <Block key={block.key} block={block} density={width >= 240 ? "full" : width >= 44 ? "compact" : width >= 24 ? "icon" : "mark"}
+            return <Block key={block.key} block={block} roomy={width >= 240} density={width >= 120 ? "full" : width >= 44 ? "compact" : width >= 24 ? "icon" : "mark"}
               style={{ gridColumn: `${col(block.start)} / ${Math.max(colEnd(block.end), col(block.start) + 1)}`, gridRow: at + (block.row ?? 0) }} />;
           })}
           {/* One dashed line, broken only where a group heading crosses the track. */}
@@ -148,9 +148,11 @@ function LaneTile({ lane, style }: { lane: TimelineLane; style?: CSSProperties }
   );
 }
 
-function spoken(block: TimelineBlock) {
+/** `withHint` when the block shows its title alone, so the words it leaves out are still said. */
+function spoken(block: TimelineBlock, withHint = false) {
   const extra = block.extra?.map((tag) => tag.label) ?? [];
-  return [block.label ?? `${block.title}, ${formatTimeRange(block.start, block.end)}, ${block.tag.label}`, ...extra].join(", ");
+  const hint = withHint && !block.label && block.hint && block.hint !== formatTimeRange(block.start, block.end) ? [block.hint] : [];
+  return [block.label ?? `${block.title}, ${formatTimeRange(block.start, block.end)}, ${block.tag.label}`, ...hint, ...extra].join(", ");
 }
 
 function TagMark({ tag, iconOnly }: { tag: TimelineTag; iconOnly?: boolean }) {
@@ -171,23 +173,29 @@ function Strip({ block }: { block: TimelineBlock }) {
   );
 }
 
-/** One block, as dense as its width allows: words and a labelled tag, the title with an
- *  icon-only tag, the icon alone (named and with a tooltip), or a plain mark too narrow to
- *  press, whose lane action and the agenda are the way in. */
-function Block({ block, density, style }: { block: TimelineBlock; density: TimelineDensity; style: CSSProperties }) {
+/** One block, as dense as its width allows: its words and tag (labelled when `roomy`), the title
+ *  alone, the icon alone (named and with a tooltip), or a plain mark too narrow to press, whose
+ *  lane action and the agenda are the way in. Whatever is not shown is in the spoken label. */
+function Block({ block, density, roomy, style }: { block: TimelineBlock; density: TimelineDensity; roomy: boolean; style: CSSProperties }) {
   if (density === "mark") {
     return <span aria-hidden="true" className="pc-block" data-block={block.state} data-density="mark" style={style} />;
   }
-  const children = density === "icon" ? <block.tag.icon aria-hidden="true" /> : (
+  // Compact blocks keep their room for the title; the hint and tag go into the spoken label.
+  const children = density === "icon" ? <block.tag.icon aria-hidden="true" /> : density === "compact" ? (
+    <>
+      <span className="pc-block-body"><span className="pc-block-title">{block.title}</span></span>
+      <Strip block={block} />
+    </>
+  ) : (
     <>
       <span className="pc-block-body"><span className="pc-block-title">{block.title}</span>{block.hint ? <span className="pc-block-hint tabular-nums">{block.hint}</span> : null}</span>
-      <TagMark tag={block.tag} iconOnly={density !== "full"} />
-      {density === "full" ? block.extra?.map((tag) => <TagMark key={tag.label} tag={tag} iconOnly />) : null}
+      <TagMark tag={block.tag} iconOnly={!roomy} />
+      {roomy ? block.extra?.map((tag) => <TagMark key={tag.label} tag={tag} iconOnly />) : null}
       <Strip block={block} />
     </>
   );
   const className = "pc-block";
-  const label = spoken(block);
+  const label = spoken(block, density === "compact");
   const element = block.render
     ? block.render({ label, className, style, children, block: { state: block.state, density } })
     : block.href

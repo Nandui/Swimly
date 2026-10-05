@@ -83,7 +83,7 @@ function DialogContent({
               size="icon"
               aria-label="Close"
               data-slot="dialog-close"
-              className={cn("absolute top-3 right-3 text-[var(--pc-ink-muted)]", closeClassName)}
+              className={cn("absolute top-3 right-3", closeClassName)}
             >
               <XIcon aria-hidden="true" />
             </Button>

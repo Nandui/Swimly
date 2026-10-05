@@ -26,9 +26,13 @@ the main database and uses the platform access model (docs/platform-access.md).
   (`WEEK_STATE_META`: **Planning ahead**, or **Under way: changes ask for a reason**).
   The header holds the week picker (previous and next around a **Week** menu of nearby
   weeks that always has This week), the **Department** menu, **Copy a week** and **Add a
-  shift** (both menus are lists of links, so arrowing never loads a page). Below 768px
-  the week is an agenda, a list per day for all seven days (DESIGN.md "Phones use
-  Agenda"); this departs from V2Rota's phone mockup, which scrolls the sheet sideways.
+  shift** (both menus are lists of links, so arrowing never loads a page). Below 1280px
+  (the shared timeline's breakpoint) the week is an agenda, a list per day for all seven
+  days (DESIGN.md "Phones use Agenda"); this departs from V2Rota's phone mockup, which
+  scrolls the sheet sideways. In the grid a To fill block names the role alone
+  ("Lifeguard"); the booking it is for is in its spoken label and the agenda. Lane names
+  wrap to two lines, the caption is the person's job title for everyone, and the key ends
+  with **Today, outlined**.
   **Choosing a shift** opens that person's day in the side panel (`ShiftPlanSheet`, the
   one editor for a shift's plan, also opened from the Day plan's blocks): its warnings,
   their activities and breaks (Suggest breaks included, saved with **Save plan**; a
@@ -105,7 +109,7 @@ the main database and uses the platform access model (docs/platform-access.md).
   <name>**; and **Changes today**, each with its reason as a tag, who made it and, in
   its caption, whether Timepoint has it, with **Done in Timepoint**.
 - **Absences** (`/rota/absences`, rota managers only). Who is off now or soon,
-  whose **return to work** is still to record, and who came back in the last 30 days. **Report absence** records a person, a
+  whose **return to work** is still to record, and who came back in the last 30 days. **Report an absence** (also on Home, the overview and Today, which arrive with `?report=1` and open it) records a person, a
   reason (sickness, family emergency, bereavement or other), the first day off and,
   if known, the last. **Extend** runs a current absence on to a later last day
   (or to "return not known"). **Back at work** sets the last day off; **Remove**
@@ -170,7 +174,7 @@ absence from Turnfin Me is not built yet.
 Owner request, 1 October 2026. Managers report with what they know, and it
 changes: "off two days" becomes two weeks, or someone is back a few days and off
 again. `followOn` (constants.ts, tested) decides what a new report for the same
-person might be, and **Report absence** asks:
+person might be, and **Report an absence** asks:
 
 - **Still off** (open-ended, or their last day off is on or after the day before
   the new first day): "Is this an extension of that absence?" Yes extends the

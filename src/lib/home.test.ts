@@ -108,6 +108,7 @@ test("one module's failing card never breaks the home page", async () => {
   try {
     const items = await contributions.homeCardItems(["broken", "fine"], viewer({ name: "R", homeName: null, levels: {} }));
     assert.equal(items.has("broken"), false);
+    assert.deepEqual(items.failed, ["broken"], "named, so the page can say its figures didn't load");
     assert.deepEqual(items.get("fine"), [{ label: "Fine", href: "/fine", count: 0 }]);
   } finally {
     console.error = quiet;

@@ -2,8 +2,9 @@
 
 import { useEffect, useRef, useState, useTransition, type ReactNode } from "react";
 import { useRouter } from "next/navigation";
-import { CircleCheck, CircleX, Clock, Loader2, RefreshCw, type LucideIcon } from "lucide-react";
+import { CircleCheck, CircleX, Clock, RefreshCw, type LucideIcon } from "lucide-react";
 import { Button } from "@/components/shadcn/button";
+import { LoadingButton } from "@/components/ui/loading-button";
 import { Tag } from "@/components/ui-kit/tag";
 import { EmptyState } from "@/components/ui-kit/empty-state";
 import { Notice } from "@/components/ui-kit/notice";
@@ -85,7 +86,7 @@ export function ScheduleCalendar({ courses, assessments, iso, todayIso, initialN
 
   return <section ref={surface} className={styles.calendar} data-schedule-calendar aria-busy={refreshing}>
     <PageHeader title="Schedule" description={`${formatDay(iso)} · ${clubName}`} actions={<>
-      <Button variant="outline" onClick={refresh} disabled={refreshing} aria-busy={refreshing}>{refreshing ? <Loader2 className="animate-spin motion-reduce:animate-none" aria-hidden="true" /> : <RefreshCw aria-hidden="true" />}Refresh</Button>
+      <LoadingButton variant="outline" pending={refreshing} pendingLabel="Refreshing…" onClick={refresh}><RefreshCw aria-hidden="true" />Refresh</LoadingButton>
       {target && isToday ? <Button onClick={jump}><Clock aria-hidden="true" />{running ? "Jump to now" : "Jump to next"}</Button> : null}
     </>} />
     <span className="sr-only" role="status">{refreshing ? "Loading schedule" : `Showing ${formatDay(iso)}`}</span>

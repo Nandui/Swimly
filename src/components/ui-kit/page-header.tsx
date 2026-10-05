@@ -4,8 +4,8 @@ import { BackLink } from "@/components/ui-kit/back-link";
  *  quiet description line, then status tags and actions at the end, bottom
  *  aligned with the primary action last. The H1 holds the title only; status
  *  tags go in `status`, never inside it. The title keeps a readable width;
- *  when the actions do not fit beside it they wrap underneath instead of
- *  squeezing it, and on phones the buttons share that row (poolside.css,
+ *  when the actions do not fit beside it they wrap underneath, still right
+ *  aligned from 768px, instead of squeezing it, and on phones the buttons share that row (poolside.css,
  *  `.pc-phead-actions`). poolside.css styles the H1. */
 export function PageHeader({
   title,
@@ -32,7 +32,7 @@ export function PageHeader({
         ) : null}
       </div>
       {status || actions ? (
-        <div className="pc-phead-actions min-w-0 flex gap-2 items-center flex-wrap">
+        <div className="pc-phead-actions min-w-0 flex gap-2 items-center flex-wrap md:ml-auto md:justify-end">
           {status}
           {actions}
         </div>

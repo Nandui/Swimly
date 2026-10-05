@@ -3,13 +3,13 @@
 import Link from 'next/link';
 import { useState } from 'react';
 import { BookOpen, CheckCheck, ChevronRight, LifeBuoy, Pencil } from 'lucide-react';
-import { NativeSelectOption } from '@/components/shadcn/native-select';
 import { Button } from '@/components/shadcn/button';
 import { SearchField } from '@/components/ui-kit/search-field';
 import { EmptyState } from '@/components/ui-kit/empty-state';
 import { PageHeader } from '@/components/ui-kit/page-header';
 import { canWrite, documentTypeLabels, type DocumentType, type Workspace } from '@/lib/docs/types';
-import { DocIcon, FilterSelect } from './ui';
+import { DocIcon, FilterPicker } from './ui';
+import { cn } from '@/lib/utils';
 import { DocumentList } from './document-list';
 
 const collections: { type: DocumentType; description: string }[] = [
@@ -45,14 +45,12 @@ export function HomeView({ workspace: w, description }: { workspace: Workspace; 
         title="Docs"
         description={description}
         actions={
-          <FilterSelect label="Facility" className="grow sm:grow-0 sm:min-w-56" value={facility} onChange={setFacility}>
-            <NativeSelectOption value="">All facilities</NativeSelectOption>
-            {w.facilities.map((item) => (
-              <NativeSelectOption key={item.id} value={item.id}>
-                {item.name}
-              </NativeSelectOption>
-            ))}
-          </FilterSelect>
+          <FilterPicker
+            label="Facility"
+            value={facility}
+            onChange={setFacility}
+            options={[{ value: '', label: 'All facilities' }, ...w.facilities.map((item) => ({ value: item.id, label: item.name }))]}
+          />
         }
       />
 
@@ -128,7 +126,9 @@ export function HomeView({ workspace: w, description }: { workspace: Workspace; 
         <h2 id="collections-title">Collections</h2>
         {/* Four collections fit one row on a wide panel (DCOverview), two on a phone. */}
         <ul className="pc-stats" style={{ gridTemplateColumns: 'repeat(auto-fit, minmax(min(100%, 130px), 1fr))' }}>
-          {collections.map(({ type, description }) => (
+          {collections.map(({ type, description }) => {
+            const count = documents.filter((d) => d.content.type === type).length;
+            return (
             <li key={type} className="flex min-w-0">
               <Link
                 className="pc-stat w-full"
@@ -136,13 +136,14 @@ export function HomeView({ workspace: w, description }: { workspace: Workspace; 
               >
                 <DocIcon type={type} />
                 <span>
-                  <span className="pc-stat-figure block">{documents.filter((d) => d.content.type === type).length}</span>
+                  <span className={cn('pc-stat-figure block', !count && 'text-ui-muted-foreground')}>{count}</span>
                   <span className="block font-semibold">{documentTypeLabels[type].many}</span>
                 </span>
                 <span className="text-xs text-ui-muted-foreground">{description}</span>
               </Link>
             </li>
-          ))}
+            );
+          })}
         </ul>
       </section>
 

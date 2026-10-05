@@ -3,6 +3,7 @@ import { ChevronRight, Smartphone } from "lucide-react";
 import { Button } from "@/components/shadcn/button";
 import { EmptyState } from "@/components/ui-kit/empty-state";
 import { PageHeader } from "@/components/ui-kit/page-header";
+import { FiguresFailed } from "@/components/home/figures-failed";
 import { minutesNow } from "@/lib/format";
 import type { ModuleManifest } from "@/modules/registry";
 import type { HomeItem } from "@/modules/contributions";
@@ -12,13 +13,15 @@ import { NeedsSummary, QuickActions, Section, Timeline, TodayGrid, WaitingList, 
  *  what waits for this person, today's figures and the quick actions, with the note that their
  *  own things are in Turnfin Me. Modules supply every item (`registerHomeCard`); each module's
  *  own overview carries the rest, and the module bar is the way into each module. */
-export function HomeView({ homeName, roleName, siteName, today, modules, items, meUrl = null }: {
+export function HomeView({ homeName, roleName, siteName, today, modules, items, failed = [], meUrl = null }: {
   homeName: string;
   roleName: string;
   siteName: string | null;
   today: string;
   modules: readonly ModuleManifest[];
   items: ReadonlyMap<string, HomeItem[]>;
+  /** Modules whose figures failed to load: a notice says so in place of their panels. */
+  failed?: readonly string[];
   /** Turnfin Me's address when the staff API is set up; the note links there. */
   meUrl?: string | null;
 }) {
@@ -26,6 +29,9 @@ export function HomeView({ homeName, roleName, siteName, today, modules, items, 
   const { actions, today: todayFacts, timeline, waiting } = sortItems(placed);
   const needing = [...waiting, ...todayFacts].filter((i) => i.attention).length;
   const sessions = timeline.flatMap((t) => t.kind === "timeline" ? t.sessions : []);
+  // Below 1280px the timeline is the list of what is still on; with nothing left it is not shown.
+  const left = sessions.some((s) => s.state !== "done" && s.state !== "off");
+  const missing = modules.filter((mod) => failed.includes(mod.id)).map((mod) => mod.name);
   const note = (
     <>
       <Smartphone aria-hidden="true" className="mt-0.5 size-5 shrink-0 text-ui-primary" />
@@ -45,9 +51,10 @@ export function HomeView({ homeName, roleName, siteName, today, modules, items, 
         <EmptyState icon="keyRound" title="Nothing here yet" hint="Your role has no modules yet. Ask an admin to give it a level in the modules you need." />
       ) : (
         <>
+          {missing.length > 0 ? <FiguresFailed modules={missing} /> : null}
           {sessions.length > 0 && (
             // Below 1280px the grid becomes the list of what is on now and next, and says so.
-            <Section id="home-timeline"
+            <Section id="home-timeline" wideOnly={!left}
               title={<><span className="pc-timeline-wide-only">{timeline[0].label}</span><span className="pc-timeline-narrow-only">On now and next</span></>}
               aside={<Button asChild variant="ghost"><Link href={timeline[0].href}><span className="pc-timeline-wide-only">Open schedule</span><span className="pc-timeline-narrow-only">Schedule</span><ChevronRight aria-hidden="true" /></Link></Button>}>
               <Timeline sessions={sessions} now={minutesNow()} />

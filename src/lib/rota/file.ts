@@ -42,7 +42,8 @@ export async function absenceFile(userId: string, orgId: string): Promise<{ summ
       clause(a.returnNote),
     ] : [last ? "Return to work not recorded yet" : null];
     const detail = [
-      `Reported by ${a.reportedByName}${clause(a.note) ? `: ${clause(a.note)}` : ""}`,
+      `Reported by ${a.reportedByName}`,
+      clause(a.note),
       a.updates.length ? `Extended ${times(a.updates.length)}` : null,
       a.continues ? `Off again after an absence ending ${a.continues.lastDay ? day(iso(a.continues.lastDay)) : "earlier"}` : null,
       ...ret,

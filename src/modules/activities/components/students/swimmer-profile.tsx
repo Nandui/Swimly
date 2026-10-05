@@ -138,7 +138,8 @@ export function SwimmerProfile({ student, enrolments, programmes, assessments, t
 }
 
 function ProfileDetails({ student }: { student: StudentDetail }) {
-  const link = "inline-flex min-h-11 items-center font-semibold text-ui-brand-ink";
+  // Inline links in a 44px row: the row carries the height, so every field row is even.
+  const link = "font-semibold text-ui-brand-ink underline-offset-4 hover:underline";
   const tel = (value: string) => <a className={`${link} tabular-nums`} href={`tel:${value.replace(/\s/g, "")}`}>{value}</a>;
   const medical = student.medicalNotes || (student.hasMedicalNotes ? "On file. Reception, swim school managers and this swimmer's instructors can read them." : null);
   const fields: [string, React.ReactNode][] = [["Member number", student.memberNumber], ["Date of birth", student.dateOfBirth ? formatDate(student.dateOfBirth) : null], ["Joined", formatDate(student.joinedOn)], ["Home site", student.club.name], ["Contact", student.contactName], ["Phone", student.contactPhone ? tel(student.contactPhone) : null], ["Email", student.contactEmail ? <a key="email" href={`mailto:${student.contactEmail}`} className={`${link} break-all`}>{student.contactEmail}</a> : null], ["Emergency contact", [student.emergencyName, student.emergencyRelationship].filter(Boolean).join(" · ")], ["Emergency phone", student.emergencyPhone ? tel(student.emergencyPhone) : null], ["Medical notes", medical], ["Other notes", student.notes], ["Photo consent", student.photoConsent ? `Given${student.photoConsentOn ? ` on ${formatDate(student.photoConsentOn)}` : ""}` : "Not given"]];

@@ -39,12 +39,12 @@ export function AddClub() {
       trigger={
         <Button variant="default">
           {<Plus aria-hidden={true} className="size-4 shrink-0" />}
-          {"Add site"}
+          {"Add a site"}
         </Button>
       }
       title="Add a site"
       description="A new site starts with an empty timetable. Swimmers, programmes and progress are shared across all sites."
-      submitLabel="Add site"
+      submitLabel="Add a site"
       successMessage="Site added"
       submit={(formData) => createClub(readInput(formData))}
     >

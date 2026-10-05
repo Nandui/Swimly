@@ -8,7 +8,7 @@ import { Avatar, AvatarFallback } from "@/components/shadcn/avatar";
 import { Button } from "@/components/shadcn/button";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/shadcn/collapsible";
 import { Tag } from "@/components/ui-kit/tag";
-import { formatDate, plural } from "@/lib/format";
+import { formatDate, nameInitials, plural } from "@/lib/format";
 import { ABSENCE_REASON_META, RETURN_FIT_META, ROSTER_LEAVE_META } from "@/lib/rota/constants";
 import { requireRotaActor } from "@/lib/rota/access";
 import { rotaAbsences, type RotaAbsenceRow, type RotaReturnRow } from "@/lib/rota/data";
@@ -22,8 +22,6 @@ function when(a: Pick<RotaAbsenceRow, "firstDay" | "lastDay">) {
 }
 
 const iso = (date: Date) => date.toISOString().slice(0, 10);
-/** Up to two initials for the avatar (the avatar module's helper is client-only). */
-const initials = (name: string) => name.split(/\s+/).filter(Boolean).map((part) => part[0]).slice(0, 2).join("");
 const times = (n: number) => (n === 1 ? "once" : n === 2 ? "twice" : `${n} times`);
 
 /** How the absence got here: "First reported until 2 Oct · extended twice" and,
@@ -43,7 +41,7 @@ function PersonRow({ name, tags, lines, actions, updates }: { name: string; tags
   const history = updates?.some((u) => u.kind === "extended") ? updates : null;
   const body = (
     <>
-      <Avatar size="lg" aria-hidden="true"><AvatarFallback>{initials(name)}</AvatarFallback></Avatar>
+      <Avatar size="lg" aria-hidden="true"><AvatarFallback>{nameInitials(name)}</AvatarFallback></Avatar>
       <span className="pc-row-body">
         <span className="flex flex-wrap items-center gap-2"><span className="pc-row-title">{name}</span>{tags}</span>
         {lines.filter(Boolean).map((line, i) => <span key={i} className="pc-row-hint">{line}</span>)}
@@ -110,14 +108,16 @@ function due(a: Pick<RotaReturnRow, "firstShift" | "stage">) {
 
 /** Who is off. Rota managers record absences here; the week shows the
  *  affected shifts as Absent so cover can be found. */
-export default async function AbsencesPage() {
+export default async function AbsencesPage({ searchParams }: { searchParams: Promise<{ report?: string }> }) {
   if (!(await requireRotaActor()).manage) notFound();
+  // Home's and Today's "Report an absence" arrive with ?report=1 and open the dialog.
+  const report = (await searchParams).report === "1";
   const { today, current, returning, returned, people, holidays, siteNames } = await rotaAbsences();
   const scope = siteNames === null ? "all sites" : siteNames.length ? siteNames.join(", ") : "no sites yet";
   return (
     <div className="flex flex-col gap-6">
       <PageHeader title="Absences" description="Who is off, and the shifts that need cover. Only rota managers see the reason."
-        actions={<ReportAbsence people={people} today={today} />} />
+        actions={<ReportAbsence people={people} today={today} defaultOpen={report} />} />
       <Panel id="absences-current" title="Off now or soon">
         {current.length === 0 ? (
           <EmptyState compact icon="userX" title="Nobody you look after is off" hint={`People at ${scope} whom your rota role covers. When someone calls in sick or can’t come in, report it here.`} />

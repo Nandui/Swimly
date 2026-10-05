@@ -375,7 +375,7 @@ function Swimmer({ entry, access }: { entry: RosterEntry; access: ClassAccess })
         {access.students ? (
           <UiLink
             href={`/students/${student.id}`}
-            className="inline-flex min-h-11 items-center font-semibold text-ui-foreground underline-offset-4 hover:underline"
+            className="-my-3 inline-flex min-h-11 items-center font-semibold text-ui-foreground underline-offset-4 hover:underline"
           >
             {fullName(student)}
           </UiLink>
@@ -384,12 +384,16 @@ function Swimmer({ entry, access }: { entry: RosterEntry; access: ClassAccess })
             {fullName(student)}
           </span>
         )}
-        <span className="text-xs text-ui-muted-foreground">
-          {student.memberNumber ?? "No member number"} ·{" "}
-          {student.dateOfBirth
-            ? `Age ${ageLabel(student.dateOfBirth)}`
-            : "Age not recorded"}
-        </span>
+        {student.memberNumber || student.dateOfBirth ? (
+          <span className="text-xs text-ui-muted-foreground">
+            {[
+              student.memberNumber ? `#${student.memberNumber}` : null,
+              student.dateOfBirth ? `Age ${ageLabel(student.dateOfBirth)}` : null,
+            ]
+              .filter(Boolean)
+              .join(" · ")}
+          </span>
+        ) : null}
         {student.hasMedicalNotes || student.status !== "ACTIVE" ? (
           <div className="mt-1 min-w-0 flex gap-2 items-center flex-wrap">
             {student.hasMedicalNotes ? (

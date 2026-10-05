@@ -3,10 +3,11 @@ import { Label } from '@/components/shadcn/label';
 import { NativeSelectOption } from '@/components/shadcn/native-select';
 import { Checkbox } from '@/components/shadcn/checkbox';
 import { Table, TableHeader, TableRow, TableHead, TableBody, TableCell } from '@/components/shadcn/table';
-import { useId } from 'react';
+import { useId, useState } from 'react';
+import { cn } from '@/lib/utils';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { Button } from '@/components/shadcn/button';
-import { BookOpen, ChartNoAxesColumn, ChevronRight, CircleCheck, Download, TriangleAlert } from 'lucide-react';
+import { BookOpen, ChartNoAxesColumn, ChevronRight, CircleCheck, Download, SlidersHorizontal, TriangleAlert } from 'lucide-react';
 import Link from 'next/link';
 import {
   formatDate,
@@ -66,6 +67,8 @@ export function ReportsView({
   const waiting = scope.filter((r) => r.status === 'outstanding').length;
   const active = completed + waiting;
   const hasFilters = Object.values(filters).some(Boolean);
+  const filterCount = Object.values(filters).filter(Boolean).length;
+  const [phoneOpen, setPhoneOpen] = useState(false);
   const set = (key: keyof ReportFilters, value: string | boolean) =>
     setFilters({ ...filters, [key]: value, ...(key === 'document' ? { version: '' } : {}) });
   const query = new URLSearchParams(
@@ -99,7 +102,7 @@ export function ReportsView({
   const nameOf = (r: Requirement) => w.members.find((m) => m.id === r.memberId)?.name || 'Former staff';
   /** Where a record stands in words, for the phone caption that replaces its last columns. */
   const when = (r: Requirement) =>
-    r.acknowledgedAt ? `read ${formatDate(r.acknowledgedAt)}` : r.dueDate ? `due ${formatDate(r.dueDate)}` : 'no deadline';
+    r.acknowledgedAt ? `read ${formatDate(r.acknowledgedAt)}` : r.dueDate ? `due ${formatDate(r.dueDate)}` : 'due date not set';
   return (
     <>
       <PageHeader
@@ -139,7 +142,7 @@ export function ReportsView({
               <span className="pc-stat-figure block">{active ? `${Math.round((completed / active) * 100)}%` : '—'}</span>
               <span className="block font-semibold">Reading complete</span>
             </span>
-            <span className="text-xs text-ui-muted-foreground">Of assignments still open or read</span>
+            <span className="text-xs text-ui-muted-foreground">Across all current assignments</span>
           </div>
         </li>
       </ul>
@@ -153,6 +156,19 @@ export function ReportsView({
               </Button>
             )}
           </div>
+          {/* Phones: the filters sit behind one button so the records start sooner. */}
+          <Button
+            type="button"
+            variant="outline"
+            className="self-start sm:hidden"
+            aria-expanded={phoneOpen}
+            aria-controls="report-filters"
+            onClick={() => setPhoneOpen((open) => !open)}
+          >
+            <SlidersHorizontal aria-hidden="true" />
+            Filters{filterCount ? ` (${filterCount})` : ''}
+          </Button>
+          <div id="report-filters" className={cn('contents', !phoneOpen && 'max-sm:hidden')}>
           <div className="flex flex-wrap items-end gap-3 lg:flex-col lg:items-stretch">
             <FilterSelect label="Document" className="grow basis-48 lg:basis-auto" value={filters.document || ''} onChange={(value) => set('document', value)}>
               <NativeSelectOption value="">All documents</NativeSelectOption>
@@ -201,6 +217,7 @@ export function ReportsView({
             />
             Include earlier versions, archived documents and cancelled reading
           </Label>
+          </div>
         </section>
         <section className="pc-panel" aria-labelledby="report-records-heading">
           <div>
@@ -235,7 +252,7 @@ export function ReportsView({
                       <span className="block font-semibold">{nameOf(r)}</span>
                       {/* Phones: the document, version and date move under the name. */}
                       <Link className="flex min-h-11 flex-col justify-center underline-offset-2 hover:underline md:hidden" href={`/docs/documents/${r.documentId}?version=${r.versionId}`}>
-                        <span className="text-ui-brand-ink">{r.title}</span>
+                        <span className="font-semibold">{r.title}</span>
                         <span className="text-xs text-ui-muted-foreground">{`${r.reference} · version ${r.version} · ${when(r)}`}</span>
                       </Link>
                     </TableCell>

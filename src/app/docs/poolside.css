@@ -222,6 +222,9 @@ body.turnfin-app { background: var(--pc-outer); }
 .turnfin-app .pc-day > small { font-size: var(--pc-text-caption); line-height: var(--pc-leading-caption); font-weight: 400; color: var(--pc-ink-muted); }
 .turnfin-app .pc-day[aria-pressed='true'] > small { color: inherit; }
 @media (min-width: 1024px) { .turnfin-app .ui-motion-press.pc-day { min-width: 56px; } }
+/* Phones: the seven days touch (no gap), so each stays 44px wide inside a panel at 375; the
+   unchosen days drop their edge so the strip reads as one row, not seven boxes. */
+@media (max-width: 767px) { .turnfin-app .ui-motion-press.pc-day[data-variant='outline'] { border-color: transparent; } }
 .turnfin-app .ui-motion-press > svg { width: 18px; height: 18px; }
 /* Variants: default (blue fill), outline (white with the soft --pc-line edge, V2System .btn),
    ghost (blue text), destructive and link (no inset, so it lines up with the text around it).
@@ -273,6 +276,10 @@ body.turnfin-app { background: var(--pc-outer); }
 .turnfin-app [data-slot='alert']:is([data-tone='error'], [data-tone='warning'], [data-tone='success']) [data-slot='alert-description'] { color: inherit; }
 .turnfin-app :is([data-slot='dialog-content'], [data-slot='alert-dialog-content'], [data-slot='sheet-content']) { border-color: var(--pc-line); background: var(--pc-surface-raised); font-family: var(--font-sans); }
 .turnfin-app :is([data-slot='dialog-content'], [data-slot='alert-dialog-content']) { border: 0; border-radius: var(--pc-radius-panel); box-shadow: var(--pc-shadow-overlay); }
+.turnfin-app [data-slot='sheet-content'] { box-shadow: var(--pc-shadow-overlay); }
+/* The 44px X in a dialog or sheet is a quiet control: muted ink, the sunken fill on hover. */
+.turnfin-app .ui-motion-press:is([data-slot='dialog-close'], [data-slot='sheet-close']) { color: var(--pc-ink-muted); }
+.turnfin-app .ui-motion-press:is([data-slot='dialog-close'], [data-slot='sheet-close']):hover { background: var(--pc-surface-sunken); color: var(--pc-ink); }
 .turnfin-app :is([data-slot='dialog-title'], [data-slot='alert-dialog-title'], [data-slot='sheet-title']) { font-size: var(--pc-text-title); line-height: var(--pc-leading-title); font-weight: 600; letter-spacing: 0; }
 /* Menus, selects and popovers (V2System .menu): 24px panels with no edge but the overlay
    shadow; their padding comes from the component defaults so call-site p-0 still wins. Items
@@ -295,10 +302,6 @@ body.turnfin-app { background: var(--pc-outer); }
 .turnfin-app .tf-account-menu .tf-menu-item { gap: 12px; min-height: var(--pc-control-height); margin: 0 -4px; padding: 0 12px; border-radius: var(--pc-radius-control); color: var(--pc-ink); font-weight: 600; }
 .turnfin-app .tf-account-menu .tf-menu-item svg { color: currentColor; }
 .turnfin-app .tf-account-menu .tf-menu-item:is(:focus, [data-highlighted]) { background: var(--pc-surface-sunken); color: var(--pc-ink); }
-/* The segmented choice inside a panel (V2System .bar.soft): a sunken pill track, each choice
-   drawn 36px with a 44px hit area, the chosen one a white pill with a strong edge. Used by
-   the account menu's Appearance, whose choices are menu radio items so arrows reach them. */
-/* Appearance in this menu is the shared .pc-seg bar (menu radio items, see below). */
 .turnfin-app .tf-account-menu .tf-menu-item:focus-visible { outline: 2px solid var(--pc-focus); outline-offset: -2px; }
 
 /* Fields */
@@ -362,6 +365,9 @@ body.turnfin-app { background: var(--pc-outer); }
 /* The frame's page bar never scrolls: links that do not fit wrap out of sight until useBarFit
    moves them under "More" (the deck's own bar has no More, so this stays in the frame). */
 .turnfin-app .tf-shell .tf-pages > .tf-bar { flex-wrap: wrap; height: 44px; overflow: hidden; }
+/* Until measured (the server render, before "More" exists) the open page's link goes first, so
+   a page that will live under "More" is never the one wrapped out of sight. */
+.turnfin-app .tf-shell .tf-pages > .tf-bar:not([data-measured]) > [aria-current] { order: -1; }
 /* ModuleShell measures every page label here to decide how many fit before "More". */
 .turnfin-app .tf-bar-measure { position: absolute; top: 0; left: 0; display: flex; height: 0; overflow: hidden; visibility: hidden; pointer-events: none; }
 .turnfin-app .tf-tools { margin-left: auto; overflow: visible; }
@@ -412,6 +418,10 @@ body.turnfin-app { background: var(--pc-outer); }
 .turnfin-app .tf-bottom-item:hover .tf-bottom-icon { background: var(--pc-surface-sunken); }
 .turnfin-app .tf-bottom-item[aria-current]:hover .tf-bottom-icon { background: var(--pc-primary); }
 html:has(.tf-shell) { scroll-padding-bottom: 112px; }
+/* What the bottom bar takes from the foot of the viewport, and the one offset for everything that
+   clears it (the frame's padding, the save bar, desk toasts): its 8px edge, its 82px height when
+   a label wraps, and a 16px gap. */
+.turnfin-app { --tf-bottom-space: 106px; }
 
 /* Tablet: page links take their own row, lined up with the page. */
 @media (min-width: 768px) and (max-width: 1099px) {
@@ -424,14 +434,14 @@ html:has(.tf-shell) { scroll-padding-bottom: 112px; }
   .turnfin-app .tf-rail { display: none; }
   .turnfin-app .tf-bottom { display: flex; }
   /* Room for the bottom bar, only where there is one (the pool deck has none). */
-  .turnfin-app .tf-shell:has(> .tf-bottom) > .tf-frame { padding-bottom: 104px; }
-  .turnfin-app .tf-shell:has(> .tf-bottom) .pc-save-bar { bottom: calc(88px + env(safe-area-inset-bottom)); }
+  .turnfin-app .tf-shell:has(> .tf-bottom) > .tf-frame { padding-bottom: var(--tf-bottom-space); }
+  .turnfin-app .tf-shell:has(> .tf-bottom) .pc-save-bar { bottom: calc(var(--tf-bottom-space) + env(safe-area-inset-bottom)); }
   .turnfin-app .tf-pages, .turnfin-app .tf-shell .tf-pages { margin-left: 0; }
 }
 @media (max-width: 767px) {
   .turnfin-app .tf-shell { padding: 0; }
   .turnfin-app .tf-frame { min-height: 100dvh; gap: 16px; padding: 16px; border: 0; border-radius: 0; }
-  .turnfin-app .tf-shell:has(> .tf-bottom) > .tf-frame { padding-bottom: 104px; }
+  .turnfin-app .tf-shell:has(> .tf-bottom) > .tf-frame { padding-bottom: var(--tf-bottom-space); }
   .turnfin-app .tf-top { flex-wrap: wrap; gap: 12px; }
   .turnfin-app .tf-pages { order: 3; flex: 1 1 100%; width: auto; }
   .turnfin-app .tf-tools > :is([data-slot='button'], [data-slot='dropdown-menu-trigger']):not(.tf-who) > span:not([data-slot='avatar']) { display: none; }
@@ -473,10 +483,10 @@ html:has(.tf-shell) { scroll-padding-bottom: 112px; }
 .turnfin-app [data-sonner-toaster] [data-sonner-toast][data-styled='true'] [data-close-button]:focus-visible { box-shadow: none; outline: 2px solid var(--pc-focus); outline-offset: -2px; }
 .turnfin-app [data-sonner-toaster] [data-sonner-toast][data-styled='true'] [data-close-button] > svg { width: 16px; height: 16px; }
 /* Wherever the bottom bar shows (phones and touch screens), desk toasts sit above it, in the
-   104px the frame keeps free for it (the bar grows to 90px when labels wrap). Sonner's own
+   --tf-bottom-space the frame keeps free for it. Sonner's own
    mobile offset only applies at 600px and below. The deck's toasts are at the top. */
 @media (max-width: 767px), (hover: none) and (pointer: coarse) {
-  .turnfin-app [data-sonner-toaster][data-y-position='bottom'] { bottom: 104px; }
+  .turnfin-app [data-sonner-toaster][data-y-position='bottom'] { bottom: var(--tf-bottom-space); }
 }
 
 /* ---------------------------------------------------------------------------------------------
@@ -488,19 +498,19 @@ html:has(.tf-shell) { scroll-padding-bottom: 112px; }
 .turnfin-app .pc-rows { display: flex; flex-direction: column; gap: 8px; margin: 0; padding: 0; list-style: none; }
 .turnfin-app .pc-rows-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(min(100%, 300px), 1fr)); }
 .turnfin-app .pc-row { display: flex; flex-wrap: wrap; align-items: center; gap: 12px; min-width: 0; min-height: 64px; padding: 12px 16px; border: 1px solid var(--pc-line); border-radius: var(--pc-radius-card); background: var(--pc-surface); color: var(--pc-ink); text-decoration: none; }
-.turnfin-app a.pc-row:hover { background: var(--pc-surface-sunken); }
-.turnfin-app a.pc-row:focus-visible { outline: 2px solid var(--pc-focus); outline-offset: 2px; }
-/* A row that opens a view of the page (Docs' work queues): the open one takes the blue edge and soft fill. */
-.turnfin-app a.pc-row[aria-current] { border-color: var(--pc-primary); background: var(--pc-primary-soft); }
+.turnfin-app :is(a, button).pc-row:hover { background: var(--pc-surface-sunken); }
+.turnfin-app :is(a, button).pc-row:focus-visible { outline: 2px solid var(--pc-focus); outline-offset: 2px; }
+/* A row that is a shared Button (the quick-switch people) keeps the row's inset, not the control's. */
+.turnfin-app button.pc-row.ui-motion-press { padding: 12px 16px; }
 .turnfin-app .pc-row-body { display: flex; flex: 1 1 140px; flex-direction: column; min-width: 0; }
 .turnfin-app .pc-row-title { font-weight: 600; }
-.turnfin-app .pc-row-hint { font-size: var(--pc-text-caption); line-height: var(--pc-leading-caption); color: var(--pc-ink-muted); }
+.turnfin-app .pc-row-hint { font-size: var(--pc-text-caption); line-height: var(--pc-leading-caption); font-weight: 400; color: var(--pc-ink-muted); }
 .turnfin-app .pc-row-trail { display: flex; flex: 0 1 auto; flex-wrap: wrap; align-items: center; justify-content: flex-end; gap: 8px 12px; max-width: 100%; margin-left: auto; }
 .turnfin-app .pc-row-count { min-width: 24px; font-size: var(--pc-text-title); line-height: var(--pc-leading-title); font-weight: 700; font-variant-numeric: tabular-nums; text-align: right; }
 .turnfin-app .pc-row-chevron { width: 16px; height: 16px; color: var(--pc-ink-muted); }
 .turnfin-app .pc-row[data-first] { border-color: transparent; background: var(--pc-yellow); color: var(--pc-on-yellow); }
 .turnfin-app .pc-row[data-first] :is(.pc-row-hint, .pc-row-chevron) { color: inherit; }
-.turnfin-app a.pc-row[data-first]:hover { background: var(--pc-yellow); }
+.turnfin-app :is(a, button).pc-row[data-first]:hover { background: var(--pc-yellow); }
 .turnfin-app .pc-row[data-muted] { color: var(--pc-ink-muted); }
 /* A row that opens in place (the deck's swimmers): its head is one plain trigger, the chevron
    drawn as the outline icon button; the open row takes the primary edge, with no fill. */
@@ -511,7 +521,8 @@ html:has(.tf-shell) { scroll-padding-bottom: 112px; }
 .turnfin-app .pc-row-toggle-icon > svg { width: 16px; height: 16px; transition: transform 120ms var(--pc-ease); }
 .turnfin-app .pc-row-toggle:hover .pc-row-toggle-icon { background: var(--pc-surface-sunken); }
 .turnfin-app .pc-row-toggle[data-state='open'] .pc-row-toggle-icon > svg { transform: rotate(180deg); }
-/* The current row of a list that filters or navigates (Help's topics): a soft blue fill. */
+/* The current row of a list that filters or navigates (Help's topics, Docs' work queues): a soft
+   blue fill, no edge. */
 .turnfin-app a.pc-row[aria-current] { border-color: transparent; background: var(--pc-primary-soft); }
 .turnfin-app a.pc-row[aria-current]:hover { background: var(--pc-primary-soft-hover); }
 /* Compact rows: a 44px list of single labels (Help's topics and "On this page"). */
@@ -541,6 +552,11 @@ html:has(.tf-shell) { scroll-padding-bottom: 112px; }
 .turnfin-app .pc-stats.pc-stats-fill { grid-template-columns: repeat(auto-fill, minmax(max(min(100%, 140px), calc((100% - 36px) / 4)), 1fr)); }
 .turnfin-app a.pc-stat:hover { background: var(--pc-surface-sunken); }
 .turnfin-app a.pc-stat[aria-current] { border-color: var(--pc-primary); box-shadow: inset 0 0 0 1px var(--pc-primary); }
+/* On the canvas the tile has no edge of its own, so the open one draws the whole 2px inside. */
+.turnfin-app .pc-stats:not(:is([data-slot='card'], [role='dialog'], .pc-panel) .pc-stats) > a.pc-stat[aria-current],
+.turnfin-app .pc-stats:not(:is([data-slot='card'], [role='dialog'], .pc-panel) .pc-stats) > * > a.pc-stat[aria-current] { box-shadow: inset 0 0 0 2px var(--pc-primary); }
+/* A lone tile never stretches into a banner: at most 320px, in a panel or on the canvas. */
+.turnfin-app .pc-stats > :only-child { max-width: 320px; }
 /* Panels side by side: one column on phones, two from 768px, and every panel in one row from
    1280px. A .pc-grid-stack keeps its panels in one column below 1280px (the home page's Today
    over Quick actions, beside Waiting) and hands them to the row at 1280px; a lone child spans
@@ -562,7 +578,7 @@ html:has(.tf-shell) { scroll-padding-bottom: 112px; }
 /* The save bar (SaveBar: the register and the competency checklist, desk and deck): a panel of
    its own below the main one, the status on the left and the primary on the right, held 16px
    above the viewport's edge while the page scrolls. Where the bottom bar shows (desk phones and
-   touch screens) it sits 16px above that bar instead (72 + 16). */
+   touch screens) it sits 16px above that bar instead (--tf-bottom-space). */
 .turnfin-app .pc-save-bar { position: sticky; z-index: 10; bottom: calc(16px + env(safe-area-inset-bottom)); flex-direction: row; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 12px; padding: 12px 16px 12px 24px; box-shadow: var(--pc-shadow-overlay); }
 /* A status tag that opens more (the register's Medical tag): the tag's own height in the row,
    a 44px hit area around it. */
@@ -640,6 +656,11 @@ html:has(.tf-shell) { scroll-padding-bottom: 112px; }
 .turnfin-app .pc-timeline-lane-caption { color: var(--pc-ink-muted); font-size: var(--pc-text-caption); line-height: var(--pc-leading-caption); }
 .turnfin-app .pc-timeline-lane-action { display: flex; flex: none; align-items: center; gap: 4px; }
 .turnfin-app .pc-timeline-now { position: relative; z-index: 1; pointer-events: none; }
+/* Blocks sit above the now line, so it never crosses their words; hatched blocks get an opaque ground. */
+.turnfin-app .pc-timeline > .pc-block { position: relative; z-index: 2; }
+.turnfin-app .pc-timeline > .pc-block:is([data-block='off'], [data-block='open']) { background-color: var(--pc-surface); }
+/* The week plan's lane names wrap to two lines rather than cutting a name short. */
+.turnfin-app .rota-roster .pc-timeline-lane-label { display: -webkit-box; -webkit-box-orient: vertical; -webkit-line-clamp: 2; white-space: normal; }
 .turnfin-app .pc-timeline-now::after { content: ''; position: absolute; top: -4px; bottom: -4px; left: var(--at); border-left: 2px dashed var(--pc-primary); }
 .turnfin-app .pc-timeline-narrow { display: none; flex-direction: column; gap: 16px; }
 .turnfin-app .pc-agenda-item { display: flex; align-items: stretch; gap: 8px; }
