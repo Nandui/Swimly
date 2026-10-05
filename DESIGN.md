@@ -43,7 +43,9 @@ theme describe the retired look. Components live in `src/components/shadcn`.
   not zoom on focus.
 - Default gaps are 16px between panels and 8px between rows in a panel; panels have a
   24px inset. The frame owns the page inset (24px around the frame and inside it, none
-  on phones, where the frame becomes the page). Do not add another page frame.
+  on phones, where the frame becomes the page). The frame fills the window at every width,
+  with no maximum width; only the pool deck caps its frame (1180px, tablet-first). Do not
+  add another page frame.
 - Preserve labelled controls, visible focus, 44px touch targets, readable
   contrast, keyboard operation, reduced motion and wrapping at narrow widths.
 - Every mutation authorizes by a named permission, validates and guards before
