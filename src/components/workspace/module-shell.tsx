@@ -10,7 +10,9 @@ import { AccountMenu } from '@/components/workspace/account-menu';
 import { RolePreviewToggle } from '@/components/staff/role-preview';
 import { useYourModules } from '@/components/workspace/your-modules';
 
-export type ModuleLink = { href: string; label: string; icon: LucideIcon; active: boolean };
+/** A page in the bar. The icon shows in the "More" menu; links handed over by a server page
+ *  (the home page's) have none, because a component cannot cross to the client. */
+export type ModuleLink = { href: string; label: string; icon?: LucideIcon; active: boolean };
 export type ModuleLinkGroup = { label: string; links: ModuleLink[] };
 
 /** The one frame every module opens in (docs/how-turnfin-works.md, DESIGN.md "Poolside Clear
@@ -138,7 +140,7 @@ function PagesMore({ groups, currentFor }: { groups: ModuleLinkGroup[]; currentF
             {group.label && <DropdownMenuLabel className="text-xs font-semibold text-ui-muted-foreground">{group.label}</DropdownMenuLabel>}
             {group.links.map((page) => (
               <DropdownMenuItem key={page.href} asChild className="min-h-11 aria-[current]:bg-ui-accent aria-[current]:font-semibold aria-[current]:text-ui-accent-foreground">
-                <Link href={page.href} aria-current={currentFor(page)}><page.icon aria-hidden="true" />{page.label}</Link>
+                <Link href={page.href} aria-current={currentFor(page)}>{page.icon ? <page.icon aria-hidden="true" /> : null}{page.label}</Link>
               </DropdownMenuItem>
             ))}
           </DropdownMenuGroup>

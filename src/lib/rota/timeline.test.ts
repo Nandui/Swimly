@@ -1,7 +1,7 @@
 import assert from "node:assert/strict";
 import { test } from "node:test";
 import { segmentProblem } from "./constants";
-import { buildTimeline, coverGaps, dayRange, fitsFor, type TimelineShift } from "./timeline";
+import { buildTimeline, coverGaps, dayRange, fitsFor, teachingSpans, type TimelineShift } from "./timeline";
 
 /** Invented people; the shape the day loads. */
 const h = (t: string) => Number(t.slice(0, 2)) * 60 + Number(t.slice(3));
@@ -66,4 +66,16 @@ test("who can cover: free and qualified first, then part of it, then busy with w
   assert.deepEqual(fits.map((f) => [f.candidate.name, f.status, f.qualified]), [["Free", "free", true], ["Unqualified", "free", false], ["Part", "part", true], ["Busy", "busy", true], ["Off", "busy", true]]);
   assert.equal(fits[2].reason, "Free 12:00–13:00");
   assert.equal(fits[3].reason, "Reception 09:00–17:00");
+});
+
+test("an instructor's back-to-back classes are one teaching block, a later class its own", () => {
+  const c = (userId: string | null, a: string, b: string) => ({ userId, startMinutes: h(a), endMinutes: h(b), href: `/schedule?at=${a}` });
+  const spans = teachingSpans([c("ella", "09:30", "10:00"), c("ella", "09:00", "09:30"), c("ella", "10:10", "10:40"), c("ella", "16:00", "16:30"), c(null, "09:00", "09:30"), c("aaron", "09:00", "09:30")]);
+  assert.deepEqual(spans.map((s) => [s.userId, s.start, s.end, s.count]), [
+    [null, h("09:00"), h("09:30"), 1],
+    ["aaron", h("09:00"), h("09:30"), 1],
+    ["ella", h("09:00"), h("10:40"), 3],
+    ["ella", h("16:00"), h("16:30"), 1],
+  ]);
+  assert.equal(spans[2].href, "/schedule?at=09:00", "the stretch links to its first class's day");
 });

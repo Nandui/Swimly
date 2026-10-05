@@ -1,6 +1,6 @@
 import assert from "node:assert/strict";
 import { test } from "node:test";
-import { calendarAgendaSlots, calendarAssessmentHref, calendarClassHref, calendarProgrammes, calendarSlots, classPhase, filterCalendarAssessments, filterCalendarClasses, type CalendarAssessment, type CalendarClass } from "./calendar";
+import { calendarAgendaSlots, calendarAssessmentHref, calendarClassHref, calendarProgrammes, calendarSlots, classPhase, filterCalendarAssessments, filterCalendarClasses, sessionState, type CalendarAssessment, type CalendarClass } from "./calendar";
 
 function course(id: string, startMinutes: number, overrides: Partial<CalendarClass> = {}): CalendarClass {
   return {
@@ -143,4 +143,17 @@ test("filtered booking sheets show only relevant levels and retain cover classes
   const groups = calendarProgrammes(filterCalendarClasses([own, cover, unrelated], "all", "mine", "teacher"));
   assert.deepEqual(groups[0].levels.map(row => row.level.id), ["starfish", "penguins"]);
   assert.equal(groups[0].levels[0].starts.get(930)?.[0].id, "cover");
+});
+
+test("sessionState gives home and duty the same block state", () => {
+  const at = (startMinutes: number, instructor: string | null, cancellation: { reason: string } | null = null) =>
+    ({ startMinutes, durationMinutes: 30, cancellation, instructor });
+  assert.equal(sessionState(at(600, "Alex", { reason: "Pool closed" }), 610), "off");
+  assert.equal(sessionState(at(600, null), 610), "cover");
+  assert.equal(sessionState(at(660, null), 610), "cover");
+  assert.equal(sessionState(at(540, null), 610), "done");
+  assert.equal(sessionState(at(600, "Alex"), 610), "now");
+  assert.equal(sessionState(at(660, "Alex"), 610), "next");
+  assert.equal(sessionState(at(540, "Alex"), 610), "done");
+  assert.equal(sessionState(at(660, "Alex"), null), "next");
 });

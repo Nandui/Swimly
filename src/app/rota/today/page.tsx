@@ -1,17 +1,19 @@
 import type { Metadata } from "next";
 import Link from "next/link";
-import type { ReactNode } from "react";
-import { CalendarCheck, CheckCircle2, Clock3, TriangleAlert, UserX } from "lucide-react";
+import { CheckCircle2, ChevronRight, Clock3, UserX } from "lucide-react";
 import { Button } from "@/components/shadcn/button";
 import { NativeSelect, NativeSelectOption } from "@/components/shadcn/native-select";
 import { MarkTimepoint, ShiftDialog } from "@/components/rota/actions";
 import { EmptyState } from "@/components/ui-kit/empty-state";
 import { Tag } from "@/components/ui-kit/tag";
-import { formatDate, formatTime, minutesNow } from "@/lib/format";
-import { BOOKING_KIND_META, ROTA_CHANGE_REASON_META, clock, type BookingKind, type RotaChangeReason } from "@/lib/rota/constants";
+import { TimelineGrid, type TimelineBlock, type TimelineLane } from "@/components/workspace/timeline-grid";
+import { formatDate, formatTime, formatTimeRange, minutesNow, plural } from "@/lib/format";
+import { ROTA_BLOCK_META, ROTA_CHANGE_REASON_META, ROTA_WARNING_META, clock, shiftBlockKind, type RotaBlockKind, type RotaChangeReason } from "@/lib/rota/constants";
 import { rotaToday } from "@/lib/rota/data";
 import { buildPlan } from "@/lib/rota/plan";
-import { cn } from "@/lib/utils";
+import { dayRange, teachingSpans } from "@/lib/rota/timeline";
+
+const tagOf = (kind: RotaBlockKind) => ({ icon: ROTA_BLOCK_META[kind].icon, label: ROTA_BLOCK_META[kind].label });
 
 export const metadata: Metadata = { title: "Today" };
 
@@ -27,22 +29,69 @@ export default async function TodayPage({ searchParams }: { searchParams: Promis
   const plan = buildPlan([{ iso: now, shifts: data.shifts, classes: data.classes }]);
   const options = { people: data.people, types: data.types, departments: data.departments, duties: data.duties };
   // The timeline runs from the earliest start to the latest end, whole hours, at least 06:00 to 22:00.
-  const spans = [...data.shifts, ...data.bookings, ...data.classes];
-  const from = Math.min(360, ...spans.map((s) => Math.floor(s.startMinutes / 60) * 60));
-  const to = Math.max(1320, ...spans.map((s) => Math.ceil(s.endMinutes / 60) * 60));
-  const pos = (m: number) => `${(((m - from) / (to - from)) * 100).toFixed(2)}%`;
-  const hours = Array.from({ length: (to - from) / 120 + 1 }, (_, i) => from + i * 120);
-  const nowAt = data.minutesNow >= from && data.minutesNow <= to ? pos(data.minutesNow) : null;
+  const { from, to } = dayRange([...data.shifts, ...data.bookings, ...data.classes]);
   const shiftOf = (id: string) => data.shifts.find((s) => s.id === id)!;
   const editable = (id: string) => {
     const s = shiftOf(id);
     return { id: s.id, date: s.date, startMinutes: s.startMinutes, endMinutes: s.endMinutes, role: s.role, note: s.note, userId: s.userId, requiredTypeId: s.requiredTypeId, departmentId: s.departmentId };
   };
   const pending = data.changes.filter((c) => !c.timepointAt).length;
-  // The Swim school's classes today, one lane per instructor (no instructor last), each class its own bar.
+  // The Swim school's classes today, one lane per instructor (no instructor last), back-to-back classes as one block.
   const teachers = [...Map.groupBy(data.classes, (c) => c.userId ?? "").entries()]
     .map(([userId, list]) => ({ key: userId || "none", userId: userId || null, name: userId ? data.teachers[userId] ?? "Instructor" : "No instructor", classes: [...list].sort((x, y) => x.startMinutes - y.startMinutes) }))
     .sort((x, y) => Number(!x.userId) - Number(!y.userId) || x.classes[0].startMinutes - y.classes[0].startMinutes);
+  const kindAt = (start: number, end: number) => shiftBlockKind(now, now, data.minutesNow, start, end);
+
+  // Today's duties on the shared timeline: bookings, the Swim school, then each department and
+  // duty with everyone on it. The Day plan for today shows the same day with its activities.
+  const lanes: TimelineLane[] = [];
+  const blocks: TimelineBlock[] = [];
+  if (site && data.bookings.length) {
+    lanes.push({ key: "h:bookings", label: "Bookings", caption: plural(data.bookings.length, "booking"), header: true });
+    for (const b of data.bookings) {
+      const short = b.filled < b.places;
+      const staffed = b.places ? `${b.filled} of ${b.places} staffed` : "No staff needed";
+      lanes.push({ key: `b:${b.id}`, label: b.title, caption: staffed });
+      blocks.push({ key: `b:${b.id}`, lane: `b:${b.id}`, start: b.startMinutes, end: b.endMinutes, state: short ? "cover" : "assessment", title: b.title,
+        hint: formatTimeRange(b.startMinutes, b.endMinutes), agendaHint: staffed, tag: tagOf(short ? "short" : "booking"), href: `/rota/bookings?site=${site.id}` });
+    }
+  }
+  if (site && teachers.length) {
+    lanes.push({ key: "h:swim", label: "Swim school", caption: "From the Swim school timetable; instructors and cover are set there", header: true });
+    for (const t of teachers) {
+      const key = `swim:${t.key}`;
+      lanes.push({ key, label: t.name, caption: plural(t.classes.length, "class", "classes") });
+      teachingSpans(t.classes).forEach((x, i) => blocks.push({
+        key: `${key}:${i}`, lane: key, start: x.start, end: x.end, state: t.userId ? ROTA_BLOCK_META[kindAt(x.start, x.end)].state : "cover",
+        title: t.name, hint: `${formatTimeRange(x.start, x.end)} · ${plural(x.count, "class", "classes")}`, agendaHint: plural(x.count, "class", "classes"),
+        tag: tagOf(t.userId ? "teaching" : "gap"), href: x.href,
+      }));
+    }
+  }
+  if (site) for (const g of plan.groups.filter((group) => group.key !== "g:swim")) {
+    lanes.push({ key: `h:${g.key}`, label: g.label, header: true });
+    for (const r of g.rows) {
+      if (r.days[0].some((e) => e.href)) continue; // The Swim school's classes have their own lanes above.
+      const entries = [...r.days[0]].sort((x, y) => shiftOf(x.id).startMinutes - shiftOf(y.id).startMinutes);
+      lanes.push({ key: `d:${r.key}`, label: r.duty, caption: [r.needs, plural(entries.length, "person", "people")].filter(Boolean).join(" · "), header: true });
+      for (const e of entries) {
+        const s = shiftOf(e.id);
+        const kind: RotaBlockKind = e.absent ? "absent" : !e.who ? "unfilled" : kindAt(s.startMinutes, s.endMinutes);
+        const warning = e.warnings[0];
+        const label = [r.duty, e.part, formatTimeRange(s.startMinutes, s.endMinutes), e.who ?? "unfilled", e.absent ? "off, needs cover" : null].filter(Boolean).join(", ");
+        lanes.push({ key: e.id, label: e.who ?? "Unfilled", caption: e.part ?? r.duty });
+        blocks.push({
+          key: e.id, lane: e.id, start: s.startMinutes, end: s.endMinutes, state: ROTA_BLOCK_META[kind].state, title: e.part ?? r.duty,
+          hint: formatTimeRange(s.startMinutes, s.endMinutes), agendaHint: e.who ?? "Unfilled", tag: tagOf(kind),
+          extra: warning ? [{ icon: ROTA_WARNING_META[warning].icon, label: ROTA_WARNING_META[warning].label }] : undefined,
+          label: site.manage && e.editable ? `Change ${label}` : label,
+          render: site.manage && e.editable ? (parts) => (
+            <ShiftDialog siteId={site.id} date={now} today={now} shift={editable(e.id)} options={options} suggested={e.absent ? "cover" : undefined} trigger={parts} />
+          ) : undefined,
+        });
+      }
+    }
+  }
 
   return (
     <div className="space-y-4">
@@ -114,143 +163,19 @@ export default async function TodayPage({ searchParams }: { searchParams: Promis
               )}
             </section>
           </aside>
-          <section aria-labelledby="today-duties" className="min-w-0 overflow-hidden rounded-[var(--pc-radius-panel)] border border-ui-border bg-ui-card">
-            <h2 id="today-duties" className="sr-only">Duties today</h2>
-            {plan.groups.length === 0 ? (
-              <p className="px-5 py-10 text-center text-sm text-ui-muted-foreground">No duties planned today. <Link href={`/rota?site=${site.id}`} className="underline underline-offset-2">Open the week plan</Link>.</p>
+          <section aria-labelledby="today-duties" className="pc-panel">
+            <div className="pc-panel-head">
+              <h2 id="today-duties" className="text-lg font-semibold">Duties today</h2>
+              <Button asChild variant="ghost"><Link href={`/rota/day?${new URLSearchParams({ site: site.id, date: now })}`}>Open day plan<ChevronRight aria-hidden="true" /></Link></Button>
+            </div>
+            {plan.groups.length === 0 && teachers.length === 0 && data.bookings.length === 0 ? (
+              <EmptyState icon="calendarDays" title="No duties planned today" action={<Button asChild variant="outline"><Link href={`/rota?site=${site.id}`}>Open the week plan</Link></Button>} />
             ) : (
-              <>
-                {/* Wide screens: a timeline. */}
-                <div className="hidden md:block">
-                  <div className="grid grid-cols-[13rem_minmax(0,1fr)] border-b border-ui-border bg-[var(--pc-surface-sunken)] text-xs font-semibold text-ui-muted-foreground">
-                    <div className="px-3 py-2">Duty</div>
-                    <div className="relative h-8" aria-hidden="true">
-                      {hours.map((h) => <span key={h} className="absolute top-2 -translate-x-1/2 first:translate-x-0 last:-translate-x-full" style={{ left: pos(h) }}>{clock(h)}</span>)}
-                    </div>
-                  </div>
-                  {data.bookings.length ? (
-                    <div>
-                      <GroupHeading label="Bookings" count={data.bookings.length} />
-                      {data.bookings.map((b) => {
-                        const short = b.filled < b.places;
-                        return (
-                          <Lane key={b.id} nowAt={nowAt} label={<><span className="block truncate font-medium">{b.title}</span><span className="block truncate text-xs text-ui-muted-foreground">{[span(b), BOOKING_KIND_META[b.kind as BookingKind]?.label, b.place].filter(Boolean).join(" · ")}</span></>}>
-                            <Link href={`/rota/bookings?site=${site.id}`} aria-label={`${b.title}, ${span(b)}, ${b.filled} of ${b.places} staffed`}
-                              className={cn("absolute inset-y-1.5 flex min-w-0 items-center gap-1.5 overflow-hidden rounded-[var(--pc-radius-control)] border px-2 text-xs hover:border-[var(--pc-primary)] focus-visible:outline-2 focus-visible:outline-[var(--pc-focus)]",
-                                short ? "border-[var(--pc-warning)] bg-[var(--pc-warning-soft)]" : "border-transparent bg-[var(--pc-primary-soft)] text-[var(--pc-primary-ink)]")}
-                              style={{ left: pos(b.startMinutes), width: `calc(${pos(b.endMinutes)} - ${pos(b.startMinutes)})` }}>
-                              {short ? <TriangleAlert aria-hidden="true" className="size-3.5 shrink-0 text-[var(--pc-warning)]" /> : <CalendarCheck aria-hidden="true" className="size-3.5 shrink-0" />}
-                              <span className="truncate font-semibold tabular-nums">{b.places ? `${b.filled}/${b.places} staffed` : "No staff needed"}</span>
-                            </Link>
-                          </Lane>
-                        );
-                      })}
-                    </div>
-                  ) : null}
-                  {teachers.length ? (
-                    <div>
-                      <GroupHeading label="Swim school" count={data.classes.length} note="From the Swim school timetable; instructors and cover are set there" />
-                      {teachers.map((t) => (
-                        <Lane key={t.key} nowAt={nowAt} label={<><span className={cn("block truncate font-medium", !t.userId && "text-[var(--pc-warning)]")}>{t.name}</span><span className="block text-xs text-ui-muted-foreground">{t.classes.length} {t.classes.length === 1 ? "class" : "classes"}</span></>}>
-                          {t.classes.map((c, i) => (
-                            <a key={`${t.key}:${i}`} href={c.href} title={`${span(c)} ${c.label}`} aria-label={`${c.label}, ${span(c)}, ${t.userId ? `taught by ${t.name}` : "no instructor"}`}
-                              className={cn("absolute inset-y-1.5 flex min-w-0 items-center overflow-hidden rounded-[var(--pc-radius-control)] border px-1.5 text-xs hover:border-[var(--pc-primary)] focus-visible:outline-2 focus-visible:outline-[var(--pc-focus)]",
-                                t.userId ? "border-transparent bg-[var(--pc-primary-soft)] text-[var(--pc-primary-ink)]" : "border-dashed border-[var(--pc-warning)] bg-[var(--pc-warning-soft)]")}
-                              style={{ left: pos(c.startMinutes), width: `calc(${pos(c.endMinutes)} - ${pos(c.startMinutes)})` }}>
-                              <span className="truncate font-medium">{c.label}</span>
-                            </a>
-                          ))}
-                        </Lane>
-                      ))}
-                    </div>
-                  ) : null}
-                  {plan.groups.filter((g) => g.key !== "g:swim").map((g) => (
-                    <div key={g.key}>
-                      <GroupHeading label={g.label} />
-                      {g.rows.map((r) => r.days[0].some((e) => e.href) ? (
-                        // The Swim school's classes: one summary lane, read-only.
-                        <Lane key={r.key} nowAt={nowAt} label={<><span className="block truncate font-medium">{r.duty}</span>{r.needs ? <span className="block text-xs text-ui-muted-foreground">{r.needs}</span> : null}</>}>
-                          {r.days[0].map((e) => {
-                            const [a, z] = e.text.split("–").map((t) => Number(t.slice(0, 2)) * 60 + Number(t.slice(3, 5)));
-                            return <a key={e.id} href={e.href} className="absolute inset-y-1.5 flex items-center gap-1.5 truncate rounded-[var(--pc-radius-control)] bg-[var(--pc-primary-soft)] px-2 text-xs text-[var(--pc-primary-ink)] hover:underline" style={{ left: pos(a), width: `calc(${pos(z)} - ${pos(a)})` }}><span className="font-semibold">{e.who}</span>{e.part ? <span>· {e.part}</span> : null}</a>;
-                          })}
-                        </Lane>
-                      ) : (
-                        <div key={r.key}>
-                          {/* The duty, then everyone on it on their own lane, in start order. */}
-                          <div className="border-b border-ui-border bg-[var(--pc-surface-sunken)] px-3 py-1 text-xs font-semibold text-ui-muted-foreground">
-                            {r.duty}{r.needs ? <span className="font-normal"> · {r.needs}</span> : null}<span className="font-normal"> · {r.days[0].length}</span>
-                          </div>
-                          {[...r.days[0]].sort((x, y) => shiftOf(x.id).startMinutes - shiftOf(y.id).startMinutes).map((e) => {
-                            const s = shiftOf(e.id);
-                            const tone = e.absent ? "border-[var(--pc-danger)] bg-[var(--pc-danger-soft)]" : !e.who ? "border-dashed border-ui-muted-foreground bg-ui-card" : "border-ui-border bg-[var(--pc-surface-sunken)]";
-                            const body = (
-                              <span className="flex min-w-0 items-center gap-1.5 truncate">
-                                {e.absent ? <UserX aria-hidden="true" className="size-3.5 shrink-0 text-[var(--pc-danger)]" /> : e.warnings.length ? <TriangleAlert aria-hidden="true" className="size-3.5 shrink-0 text-[var(--pc-warning)]" /> : null}
-                                <span className={cn("font-semibold tabular-nums", e.absent && "line-through decoration-[var(--pc-danger)]")}>{e.text}</span>
-                                {e.part ? <span className="text-ui-muted-foreground">{e.part}</span> : null}
-                              </span>
-                            );
-                            const style = { left: pos(s.startMinutes), width: `calc(${pos(s.endMinutes)} - ${pos(s.startMinutes)})` };
-                            const label = [r.duty, e.part, e.text, e.who ?? "unfilled", e.absent ? "absent, needs cover" : null].filter(Boolean).join(", ");
-                            const cls = cn("absolute inset-y-1.5 flex items-center rounded-[var(--pc-radius-control)] border px-2 text-left text-xs", tone);
-                            return (
-                              <Lane key={e.id} nowAt={nowAt} label={<span className={cn("block truncate font-medium", !e.who && "text-[var(--pc-warning)]", e.absent && "text-ui-muted-foreground line-through")}>{e.who ?? "Unfilled"}</span>}>
-                                {site.manage && e.editable
-                                  ? <ShiftDialog siteId={site.id} date={now} today={now} shift={editable(e.id)} options={options} suggested={e.absent ? "cover" : undefined}
-                                      trigger={{ label: `Change ${label}`, variant: "ghost", className: cn(cls, "h-auto justify-start font-normal hover:border-[var(--pc-primary)] focus-visible:outline-2 focus-visible:outline-[var(--pc-focus)]"), style, children: body }} />
-                                  : <div aria-label={label} className={cls} style={style}>{body}</div>}
-                              </Lane>
-                            );
-                          })}
-                        </div>
-                      ))}
-                    </div>
-                  ))}
-                </div>
-                {/* Phones: the day as a list, in time order. */}
-                <ul className="divide-y divide-ui-border md:hidden">
-                  {[...data.shifts].sort((a, b) => a.startMinutes - b.startMinutes).map((s) => {
-                    const who = s.user?.name ?? s.rotaPerson?.name ?? null;
-                    const absent = s.warnings.includes("absent");
-                    return (
-                      <li key={s.id} className="flex items-center justify-between gap-3 px-4 py-3">
-                        <span className="min-w-0">
-                          <span className="block text-sm font-semibold">{span(s)} · {s.role}</span>
-                          <span className="flex items-center gap-1.5 text-sm text-ui-muted-foreground">{absent ? <UserX aria-hidden="true" className="size-3.5 text-[var(--pc-danger)]" /> : null}{who ? `${who}${absent ? ", absent" : ""}` : "Unfilled"}{s.department ? ` · ${s.department.name}` : ""}</span>
-                        </span>
-                        {site.manage && !s.importId ? <ShiftDialog siteId={site.id} date={now} today={now} shift={editable(s.id)} options={options} suggested={absent ? "cover" : undefined} /> : null}
-                      </li>
-                    );
-                  })}
-                </ul>
-              </>
+              <TimelineGrid from={from} to={to} now={data.minutesNow} lanes={lanes} blocks={blocks} laneHeading="Duty" label="Duties today" />
             )}
           </section>
         </div>
       )}
-    </div>
-  );
-}
-
-function GroupHeading({ label, count, note }: { label: string; count?: number; note?: string }) {
-  return (
-    <div className="border-b border-ui-border px-3 pt-3 pb-1.5 text-sm font-semibold text-[var(--pc-primary-ink)]">
-      {label}{count ? <span className="font-normal text-ui-muted-foreground"> · {count}</span> : null}
-      {note ? <span className="block text-xs font-normal text-ui-muted-foreground">{note}</span> : null}
-    </div>
-  );
-}
-
-/** One row of the timeline: who or what on the left, its bar across the day. */
-function Lane({ label, nowAt, children }: { label: ReactNode; nowAt: string | null; children: ReactNode }) {
-  return (
-    <div className="grid grid-cols-[13rem_minmax(0,1fr)] border-b border-ui-border">
-      <div className="min-w-0 px-3 py-1.5 text-sm">{label}</div>
-      <div className="relative min-h-10">
-        {nowAt ? <span aria-hidden="true" className="absolute inset-y-0 w-0.5 bg-[var(--pc-primary)]" style={{ left: nowAt }} /> : null}
-        {children}
-      </div>
     </div>
   );
 }

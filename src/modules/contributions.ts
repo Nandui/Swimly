@@ -69,27 +69,31 @@ export type HomeViewer = {
 };
 
 /** A quick action's icon, by name, so modules stay free of UI imports. */
-export type HomeIcon = "search" | "userPlus" | "calendarPlus" | "receipt" | "userX" | "filePlus" | "clipboardCheck";
+export type HomeIcon = "userPlus" | "calendarPlus" | "receipt" | "userX" | "filePlus" | "clipboardCheck";
 
-/** One thing a module puts on the home page. Where it shows depends on its kind:
- *  - `"action"`: a quick action button at the top ("Add a swimmer");
- *  - `"today"`: a fact about today, with its figure ("Classes today: 14");
- *  - anything with a `count`: a tile under "Waiting for you";
- *  - otherwise a link on the module's own card. */
-export type HomeItem = {
+type HomeItemBase = {
   label: string;
   href: string;
+  /** One line more. On a figure that needs the person, it is the reason in the tag. */
   hint?: string;
-  count?: number;
   /** Something is waiting that this person should act on. */
   attention?: boolean;
-  kind?: "action" | "today" | "timeline";
+  /** The quick action's or figure's icon; a figure without one shows its module's. */
   icon?: HomeIcon;
-  /** A few short lines under a today fact, e.g. an instructor's next classes. */
-  list?: { label: string; hint?: string }[];
-  /** Today's sessions for the day-at-a-glance timeline (kind "timeline"), one lane per area. */
-  sessions?: HomeSession[];
 };
+
+/** One thing a module puts on the home page and its own overview. Where it shows depends on
+ *  its kind:
+ *  - `"action"`: a quick action ("Add a swimmer");
+ *  - `"today"`: a figure about today at the working site ("Classes: 14");
+ *  - `"timeline"`: today's sessions on the day-at-a-glance timeline, one lane per area;
+ *  - no kind: a queue under "Waiting for you", which must carry its `count`.
+ *  There are no plain links: the module's pages are in its page bar and overview. */
+export type HomeItem =
+  | (HomeItemBase & { kind: "action"; count?: undefined; sessions?: undefined })
+  | (HomeItemBase & { kind: "today"; count: number; sessions?: undefined })
+  | (HomeItemBase & { kind: "timeline"; sessions: HomeSession[]; count?: undefined })
+  | (HomeItemBase & { kind?: undefined; count: number; sessions?: undefined });
 
 /** One block on the home timeline. Its state picks the colour and the label, from
  *  `HOME_SESSION_META`; times are minutes after midnight. */

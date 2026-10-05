@@ -54,6 +54,7 @@ export function FormDialog({
   children,
   onOpen,
   onSuccess,
+  defaultOpen = false,
 }: {
   trigger: React.ReactNode;
   title: string;
@@ -72,8 +73,10 @@ export function FormDialog({
   onOpen?: () => void;
   /** Complete an inline workflow after its dialog has saved successfully. */
   onSuccess?: () => void;
+  /** Open on arrival (initial state only), e.g. a home page quick action's `?add=1`. */
+  defaultOpen?: boolean;
 }) {
-  const [open, setOpen] = React.useState(false);
+  const [open, setOpen] = React.useState(defaultOpen);
   const rememberTrigger = useDialogTriggerFocus(open);
   const { formRef, summaryRef, ...feedback } = useFormFeedback();
   const error = feedback.message;

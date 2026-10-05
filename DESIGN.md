@@ -8,8 +8,11 @@ controls, and a deep pool-night dark mode. Its tokens and system rules live in
 `src/app/docs/poolside.css`, scoped to `.turnfin-app`, which the root layout puts on `<body>`;
 the root layout also loads the typeface. The earlier Docs theme (`brand.css`) is retired:
 no other stylesheet defines theme tokens. The swim school, the home page, Docs, Refunds,
-Training, HR, Rota and Admin share one frame, `ModuleShell`; the pool deck, Help and the
-sign-in pages use the same top bar parts (`tf-*` classes) without the module bar. Earlier
+Training, HR, Rota and Admin share one frame, `ModuleShell`; the pool deck and Help use the
+same top bar parts (`tf-*` classes) without the module bar. Sign-in, switch user, confirm it's
+you, the root 404 and error use `AuthFrame`: one 460px white panel on `--pc-outer`, plus a blue
+brand panel beside it on sign-in only (hidden on phones; AUSignIn, AUSwitch, AUConfirm). The
+quick-switch people are `.pc-row` buttons and its PIN pad keys are 56px (`.pc-keypad`). Earlier
 mentions below of Figtree, "Neutral surfaces", sidebars or the Reception Portal's Inter
 theme describe the retired look. Components live in `src/components/shadcn`.
 
@@ -85,7 +88,8 @@ Buttons have a small press response. Reduced motion removes those movements
 while preserving immediate state feedback; do not introduce page-entry motion.
 
 The Turnfin fin (`public/brand/turnfin.png`) is the only brand mark, everywhere: the top-left
-of every frame, linking home, above the sign-in panel and the 404 page, and the browser and
+of every frame, linking home; on a white tile in the sign-in brand panel; at the top of the
+confirm-it's-you, 404 and error panels (`Fin` in `src/components/auth-frame.tsx`); and the browser and
 home-screen icon (`src/app/icon.png`, `src/app/apple-icon.png`, Next's file conventions; no
 layout or page sets `icons`, which would turn the file icon off). Tab titles read
 "<page name> · Turnfin": the page name is its H1 without the working-site suffix, record pages
@@ -143,21 +147,35 @@ scrolling sideways. See [Docs integration](docs/turnfin-docs.md).
 
 **The home page** (`/`, owner decision 28 September 2026) is the role's workspace: the role's
 home name as the H1, with the date, role and working site beneath and a "things need you"
-tag. Then **Classes today**, a timeline of the day's sessions by pool area (half-hour
-columns, a line at the current time; each session a block whose state comes from
-`HOME_SESSION_META` with a label and icon, so colour is never the only signal; on phones a
-short "On now and next" list instead), then **Waiting for you** (needing-you rows first,
-the first one highlighted), **Today at <site>** (figure tiles) and **Quick actions**, with the
-Turnfin Me note. Each module supplies its items (`registerHomeCard`); an item's `kind`
-(`action`, `today`, `timeline`) or `count` decides its section, and the shared pieces live
-in `src/components/home/home-parts.tsx`. Keep it to the everyday jobs and to figures the
-person may already see.
+tag (or a gray "All clear"). The top row is the swim school's when the role has it, as V2Home
+shows: the page bar is Today plus the swim school's daily pages the person can open, and the
+tools are swimmer search and the site picker (`SwimSchoolTools` and `dailyPages`, through the
+`src/modules/server.ts` composition root); otherwise the site picker alone. The working site
+is the one picked, else the person's Main site, else the first of their Works at sites. Then
+**Classes today**, the shared `TimelineGrid` of the day's sessions by pool area (a Waves lane
+tile, hour tiles, at most an hour's lead-in, a dashed line at the time now; every block carries
+its `HOME_SESSION_META` tag, so colour is never the only signal). Below 1280px the grid is
+replaced by the "On now and next" list (the panel is titled so, with a "Schedule" link). Then
+**Waiting for you** (counted queues only, needing-you rows first, the first one highlighted,
+each with a caption), **Today at <site>** (figure tiles with their own icon and a singular or
+plural label; a figure that needs the person puts its reason in the tag) over **Quick
+actions** (only when there are some), and the Turnfin Me note (a link when Turnfin Me's
+address is set). The three sit in `.pc-grid`: one column on phones, Waiting beside Today and
+Quick actions from 768px, three across from 1280px. Each module supplies its items
+(`registerHomeCard`); an item's `kind` (`action`, `today`, `timeline`) or its `count` (a
+queue) decides its section, and there are no plain links. The shared pieces live in
+`src/components/home/home-parts.tsx`. Keep it to the everyday jobs and to figures the person
+may already see.
 
 **A module's first page is its overview** (`ModuleOverview`, 29 September 2026) where the module
 has no natural one: Swim school (`/swim-school`), Rota (`/rota/overview`) and Admin (`/core`).
-The module's name and one line as the H1, its quick actions, Today, Waiting for you (the same
-items it gives the home page, so the two agree), and **Everything in <module>**: one panel of its
-pages as grouped rows (icon, name, one line on what it is for), two columns when wide. "Overview"
+The module's name and its registry description as the H1 and line, its quick actions with their
+icons (the module's first action last, in blue), Today (with "Open schedule" when the module has
+a timeline), Waiting for you (the same items it gives the home page, so the two agree; its
+"things need you" counts only those rows), and **Everything in <module>**: one panel of its
+pages as grouped rows (icon, name, one line on what it is for), two columns when wide, or an
+empty state when there is nothing to open at the site. Rota's list comes from
+`src/components/rota/pages.ts`, the same list as its page bar. "Overview"
 is the first link in the module's page bar. Pool deck opens on the deck,
 Docs and Training on their own overviews, Refunds on its requests with their summary, HR on its
 people search. The module
@@ -353,8 +371,16 @@ line. Multi-line boxes (textareas, notices) use 16px, never a pill.
 - Shadcn rows use `ItemTitle` (body/600) over `ItemDescription` (12px caption, muted, no
   clamp); do not rebuild the pair from ad hoc divs. A table's row header (`th scope="row"`)
   sits inside the row card in regular weight; a name inside it carries its own 600.
-- Panels side by side use `.pc-grid` (auto-fit, 320px minimum, 16px gap), so two panels
-  share the row with no empty track and stack when there is no room.
+- Panels side by side use `.pc-grid` (16px gap): one column on phones, two from 768px, every
+  panel in one row from 1280px. A `.pc-grid-stack` keeps its panels in one column below
+  1280px; a lone child spans the row, so there is never an empty track.
+- Timelines (home, Rota Day plan and Today) are the shared `TimelineGrid`
+  (`src/components/workspace/timeline-grid.tsx`): lane tiles, hour tiles, blocks placed to
+  the minute, one dashed now line, nothing scrolling sideways. The grid shows from 1280px;
+  below it the same blocks, links and dialog triggers are an agenda in time order. A block
+  shows as much as its width allows: words with a labelled tag, the title with an icon tag, or
+  (24 to 43px, inside the grid only) its icon with a tooltip, its 44px route being the lane
+  tile's action and the agenda. Block state is `data-block`, never colour alone.
 - Page blocks sit 16px apart: the frame's content wrapper (`.tf-content` in ModuleShell,
   Instructor and Help) is a flex column with a 16px gap. It reaches blocks a page returns
   as direct children (a fragment), not ones inside its own `gap-6`/`space-y-6` wrapper; an
@@ -488,7 +514,8 @@ queue membership; history is paginated 20 entries at a time.
 
 Together, Activity, Programmes and levels, Staff, Roles,
 Sites, Account, sign-in and loading states also use this shared foundation.
-Responsive tables re-home secondary columns as supporting lines.
+Responsive tables re-home secondary columns as supporting lines; poolside.css gives the last
+visible cell the row card's right edge below 1024px, so a re-homed table still closes its rows.
 
 Parent accounts also contains the shared parent-link request queue: pending,
 approved and declined filters; explicit swimmer matching across sites; and a
@@ -887,7 +914,8 @@ Turnfin is split into Core, Work modules and Activities; see
 enforces them.
 
 ```
-src/app/(core)/                Core: Staff, Roles, Sites (/clubs), Activity, Account
+src/app/(core)/                Core (Admin): Staff, Roles, Sites (/clubs), Activity
+src/app/account/               the person's own Account, in the Home frame (Home current)
 src/app/(activities)/          the Swim school desk shell and its pages
 src/app/(instructor)/          the Swim school pool-deck workspace
 src/app/sign-in/               the front door, outside the shell

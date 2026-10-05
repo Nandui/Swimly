@@ -1,6 +1,7 @@
 import {
   AlertCircle,
   ArrowRight,
+  Award,
   BookOpen,
   Building2,
   CalendarCheck,
@@ -33,6 +34,7 @@ import { cn } from "@/lib/utils";
 const ICONS = {
   alert: AlertCircle,
   arrowRight: ArrowRight,
+  award: Award,
   book: BookOpen,
   building: Building2,
   calendarCheck: CalendarCheck,

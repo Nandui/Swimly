@@ -88,6 +88,21 @@ export function fitsFor(span: { start: number; end: number; requiredTypeId: stri
 }
 const clockOf = (m: number) => `${String(Math.floor(m / 60)).padStart(2, "0")}:${String(m % 60).padStart(2, "0")}`;
 
+/** One instructor's teaching as stretches: classes back to back (up to 15 minutes apart) are
+ *  one block, "09:00 to 13:00, 6 classes", so a 30-minute class never becomes a sliver. Pure. */
+export function teachingSpans<T extends { userId: string | null; startMinutes: number; endMinutes: number; href?: string }>(classes: readonly T[]) {
+  const out: { userId: string | null; start: number; end: number; count: number; href?: string }[] = [];
+  const sorted = [...classes].sort((a, b) => (a.userId ?? "").localeCompare(b.userId ?? "") || a.startMinutes - b.startMinutes);
+  for (const c of sorted) {
+    const last = out.at(-1);
+    if (last && last.userId === c.userId && c.startMinutes <= last.end + 15) {
+      last.end = Math.max(last.end, c.endMinutes);
+      last.count += 1;
+    } else out.push({ userId: c.userId, start: c.startMinutes, end: c.endMinutes, count: 1, href: c.href });
+  }
+  return out;
+}
+
 /** Whole hours around everything on the day, at least 06:00 to 22:00. */
 export function dayRange(times: readonly { startMinutes: number; endMinutes: number }[]) {
   return {

@@ -6,6 +6,7 @@ import { Button } from "@/components/shadcn/button";
 import { Input } from "@/components/shadcn/input";
 import { NativeSelect, NativeSelectOption } from "@/components/shadcn/native-select";
 import { FormDialog } from "@/components/form-dialog";
+import { blockAttrs, type BlockPart } from "@/components/rota/actions";
 import { saveSegments } from "@/lib/rota/actions";
 import { PAID_BREAK, SEGMENT_KIND_META, UNPAID_BREAK, clock, describeEntitlement, isPaidBreak, parseClock, segmentProblem, suggestBreaks, type SegmentKind, type YoungBand } from "@/lib/rota/constants";
 import { cn } from "@/lib/utils";
@@ -112,7 +113,7 @@ export function SegmentsDialog({ shift, activities, trigger }: {
   /** Activity names to offer: the site's own first. */
   activities: string[];
   /** The caller's own trigger, e.g. the shift's bar on the timeline. */
-  trigger: { label: string; className?: string; style?: CSSProperties; children: ReactNode };
+  trigger: { label: string; className?: string; style?: CSSProperties; children: ReactNode; block?: BlockPart };
 }) {
   const plan = useSegments(shift);
   return (
@@ -120,7 +121,7 @@ export function SegmentsDialog({ shift, activities, trigger }: {
       portalClassName={THEME}
       width="sm:max-w-2xl"
       onOpen={plan.reset}
-      trigger={<Button type="button" variant="ghost" aria-label={trigger.label} className={trigger.className} style={trigger.style}>{trigger.children}</Button>}
+      trigger={<Button type="button" variant={trigger.block ? "link" : "ghost"} aria-label={trigger.label} className={trigger.className} style={trigger.style} {...blockAttrs(trigger.block)}>{trigger.children}</Button>}
       title={`${shift.who ?? "Unfilled"}: ${shift.role}, ${clock(shift.start)}–${clock(shift.end)}`}
       description="What they do when, and their breaks. Time with nothing planned is the shift's own duty."
       submitLabel="Save plan"

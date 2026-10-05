@@ -2,7 +2,7 @@
 import { Button } from "@/components/shadcn/button";
 
 import * as React from "react";
-import { KeyRound, Pencil, Plus, UserCheck, UserMinus } from "lucide-react";
+import { KeyRound, Pencil, UserCheck, UserPlus, UserX } from "lucide-react";
 import { ActionButton, ConfirmAction } from "@/components/confirm-action";
 import { Field, FormDialog } from "@/components/form-dialog";
 
@@ -120,17 +120,19 @@ function PersonFields({
   );
 }
 
-export function AddPerson({ roles }: { roles: RoleOption[] }) {
+/** `defaultOpen` opens the dialog on arrival, for Admin's "Add person" quick action (/staff?add=1). */
+export function AddPerson({ roles, defaultOpen = false }: { roles: RoleOption[]; defaultOpen?: boolean }) {
   return (
     <FormDialog
+      defaultOpen={defaultOpen}
       trigger={
         <Button variant="default">
-          {<Plus aria-hidden={true} className="size-4 shrink-0" />}
+          {<UserPlus aria-hidden={true} className="size-4 shrink-0" />}
           {"Add person"}
         </Button>
       }
       title="Add a person"
-      description="They can sign in as soon as you save this, with the email and password you set here."
+      description="They can sign in as soon as you save this. Nobody is emailed: you hand them the password yourself."
       submitLabel="Add person"
       successMessage="Account created"
       submit={(formData) =>
@@ -149,7 +151,6 @@ export function AddPerson({ roles }: { roles: RoleOption[] }) {
           required
           autoComplete="off"
           minLength={MIN_PASSWORD_LENGTH}
-          placeholder="somethingtheycanread"
         />
       </Field>
     </FormDialog>
@@ -159,13 +160,20 @@ export function AddPerson({ roles }: { roles: RoleOption[] }) {
 export function EditPerson({
   person,
   roles,
+  label,
 }: {
   person: Person;
   roles: RoleOption[];
+  /** A worded outline trigger instead of the row's pencil, e.g. the person page's "Change role". */
+  label?: string;
 }) {
   return (
     <FormDialog
-      trigger={
+      trigger={label ?
+        <Button variant="outline">
+          <KeyRound aria-hidden={true} className="size-4 shrink-0" />
+          {label}
+        </Button> :
         <Button
           variant="outline"
           aria-label={`Edit ${person.name}`}
@@ -226,8 +234,10 @@ export function SetPersonActive({ person }: { person: Person }) {
         ariaLabel={`Reactivate ${person.name}`}
         successMessage="Account reactivated"
         run={() => setPersonActive(person.id, true)}
+        size="default"
       >
         <UserCheck aria-hidden={true} className="size-4 shrink-0" />
+        Reactivate
       </ActionButton>
     );
   }
@@ -240,7 +250,7 @@ export function SetPersonActive({ person }: { person: Person }) {
           aria-label={`Deactivate ${person.name}`}
           size="icon"
         >
-          {<UserMinus aria-hidden={true} className="size-4 shrink-0" />}
+          {<UserX aria-hidden={true} className="size-4 shrink-0" />}
         </Button>
       }
       title={`Deactivate ${person.name}?`}

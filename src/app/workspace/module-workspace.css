@@ -77,4 +77,4 @@
 .turnfin-module .module-panel li > button[data-variant='ghost'] { margin-inline-start: calc(var(--pc-control-pad) * -1); }
 
 /* Rota: a break inside a shift on the day timeline, hatched so it reads without colour. */
-.turnfin-module .rota-break { background: repeating-linear-gradient(135deg, var(--pc-neutral-soft) 0 6px, var(--pc-surface) 6px 12px); }
+.turnfin-module .rota-break { background: repeating-linear-gradient(135deg, var(--pc-hatch) 0 3px, var(--pc-surface) 3px 6px); }

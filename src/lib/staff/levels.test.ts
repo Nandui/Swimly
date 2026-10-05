@@ -3,7 +3,7 @@ import test from "node:test";
 import { allModules } from "@/modules/registry";
 import { ALL_PERMISSIONS, UNRESTRICTED_PERMISSIONS, expandPermissions } from "./permissions";
 import { ADMINISTRATOR_SCREENS, visibleScreens } from "./screens";
-import { SYSTEM_ROLES, WORK_ANYWHERE, accessByReach, cleanLevels, describeLevels, isRestrictedRole, levelsFromAccess, roleColumns, storedPermissions } from "./levels";
+import { SYSTEM_ROLES, WORK_ANYWHERE, accessByReach, cleanLevels, describeLevels, isRestrictedRole, levelLines, levelsFromAccess, roleColumns, storedPermissions } from "./levels";
 
 const owners = (key: string) =>
   allModules().flatMap((m) => [...m.access.levels, ...(m.access.extras ?? [])]
@@ -104,6 +104,15 @@ test("a role is described in the owner's words, and its columns match its levels
   const columns = roleColumns(role);
   assert.equal(columns.restricted, false);
   assert.ok(columns.permissions.includes("classes.cancel") && screensOf(columns.permissions).has("cancellations"));
+});
+
+test("level lines give one row per module, with the level's help and its ticks", () => {
+  const role = cleanLevels({ "swim-school": "desk", refunds: "use" }, ["swim-school.cancel-classes", WORK_ANYWHERE]);
+  const lines = levelLines(role);
+  assert.deepEqual(lines.map((line) => `${line.module}: ${line.level}`), ["Swim school: Desk", "Refunds: Use"]);
+  assert.equal(lines[1].help, "Log a customer's refund request and follow it.");
+  assert.deepEqual(lines[0].ticks.map((tick) => tick.label), ["Can cancel classes"]);
+  assert.deepEqual(levelLines(cleanLevels({})), []);
 });
 
 test("an old screen never grants a permission its page already needed", () => {

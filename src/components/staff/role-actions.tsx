@@ -133,7 +133,7 @@ function RoleFields({ role, canGiveRestricted }: { role?: Role; canGiveRestricte
       </Field>
 
       {role && (role.levels === null || role.levels === undefined) ? (
-        <Notice tone={gains.length ? "warning" : "info"} title="This role still uses the old screens and permissions">
+        <Notice tone={gains.length ? "warning" : "info"} title="This role uses older permission settings">
           {gains.length
             ? "Saving switches it to the levels below, which give a little more than it has now. Check them before you save."
             : "Saving switches it to the levels below, which give exactly what it has now."}

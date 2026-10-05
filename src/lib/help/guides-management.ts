@@ -112,7 +112,7 @@ export const MANAGEMENT_GUIDES: HelpArticle[] = [
     keywords: ["sites", "clubs", "facility", "location", "new site", "restore"],
     before: ["You need Admin access to manage sites."],
     steps: [
-      { title: "Add or rename a site", text: "Open Sites. Choose Add a site, enter the name staff use and choose Add site. To rename a site, use its Rename control and Save changes." },
+      { title: "Add or rename a site", text: "Open Sites. Choose Add site, enter the name staff use and choose Add site. To rename a site, use its Rename control and Save changes." },
       { title: "Set up its timetable", text: "Choose the new site in the site picker and add its classes and assessment sessions. Use the existing shared swimmers and curriculum; do not recreate them for the site." },
       { title: "Archive a retired site", text: "Choose Archive for the site and read the confirmation. It leaves the site picker. Anyone working there moves to an available site on their next visit." },
       { title: "Restore it when needed", text: "Find the archived site in Sites and use Restore. Its retained records become available through the site again." },

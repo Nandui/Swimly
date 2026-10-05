@@ -4,8 +4,8 @@ import { ActivityTable } from "@/components/activity-table";
 import { EmptyState } from "@/components/ui-kit/empty-state";
 import { LinkPagination } from "@/components/ui-kit/link-pagination";
 import { PageHeader } from "@/components/ui-kit/page-header";
-import { Lead } from "@/components/ui-kit/prose";
 import { ACTIVITY_PER_PAGE, getActivity } from "@/lib/activity/data/audit-log";
+import { formatCount } from "@/lib/format";
 import { screenPage } from "@/lib/page-guards";
 import { allModules } from "@/modules/registry";
 import { SegmentedLinks } from "@/components/ui-kit/segmented-links";
@@ -24,37 +24,43 @@ export default async function ActivityPage(props: PageProps<"/activity">) {
   const modules = [...new Set(allModules().map((m) => m.logName))];
   const moduleName = typeof params.module === "string" && modules.includes(params.module) ? params.module : undefined;
   const { entries, total, page } = await getActivity(requested, moduleName);
+  const first = (page - 1) * ACTIVITY_PER_PAGE + 1;
+  const last = first + entries.length - 1;
 
   return (
-    <div className="min-w-0 flex flex-col gap-6">
+    <div className="min-w-0 flex flex-col gap-4">
       <PageHeader title="Activity" description="Who changed what, and when." />
 
-      <SegmentedLinks label="Filter by module" items={[undefined, ...modules].map((name) => ({ href: name ? `/activity?module=${encodeURIComponent(name)}` : "/activity", label: name ?? "Every module", current: name === moduleName }))} />
+      <section className="pc-panel" aria-label="Activity">
+        <SegmentedLinks label="Filter by module" items={[undefined, ...modules].map((name) => ({ href: name ? `/activity?module=${encodeURIComponent(name)}` : "/activity", label: name ?? "Every module", current: name === moduleName }))} />
 
-      {total === 0 ? (
-        <EmptyState
-          icon="scrollText"
-          title="The trail is empty"
-          hint={moduleName ? `Nothing in ${moduleName} yet. Entries from before 28 September 2026 have no module.` : "Nothing has been created, updated or deleted yet."}
-        />
-      ) : (
-        <>
-          <Lead>Newest first.</Lead>
+        {total === 0 ? (
+          <EmptyState
+            icon="scrollText"
+            title="The trail is empty"
+            hint={moduleName ? `Nothing in ${moduleName} yet. Entries from before 28 September 2026 have no module.` : "Nothing has been created, updated or deleted yet."}
+          />
+        ) : (
+          <>
+            <p className="text-xs text-ui-muted-foreground">
+              Entries {formatCount(first)} to {formatCount(last)} of {formatCount(total)}, newest first.
+            </p>
 
-          <ActivityTable entries={entries} />
+            <ActivityTable entries={entries} />
 
-          {total > ACTIVITY_PER_PAGE ? (
-            <LinkPagination
-              label="Pages of the trail"
-              page={page}
-              totalItems={total}
-              pageSize={ACTIVITY_PER_PAGE}
-              pathname="/activity"
-              query={moduleName ? { module: moduleName } : {}}
-            />
-          ) : null}
-        </>
-      )}
+            {total > ACTIVITY_PER_PAGE ? (
+              <LinkPagination
+                label="Pages of the trail"
+                page={page}
+                totalItems={total}
+                pageSize={ACTIVITY_PER_PAGE}
+                pathname="/activity"
+                query={moduleName ? { module: moduleName } : {}}
+              />
+            ) : null}
+          </>
+        )}
+      </section>
     </div>
   );
 }

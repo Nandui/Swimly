@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import { CalendarDays, CalendarRange, Clock3, UserX } from "lucide-react";
+import { rotaPages } from "@/components/rota/pages";
 import { ModuleOverview } from "@/components/workspace/module-overview";
 import { loadModuleOverview } from "@/lib/home";
 import { requireRotaActor } from "@/lib/rota/access";
@@ -15,11 +15,6 @@ export default async function RotaOverviewPage() {
   const mod = allModules().find((m) => m.id === "rota")!;
   return (
     <ModuleOverview name={mod.name} description={mod.description} icon={mod.icon} siteName={siteName} items={items}
-      groups={[{ label: "", links: [
-        { href: "/rota", label: "Week plan", icon: CalendarDays, description: who.manage ? "Plan who does which duty, by department, for the week" : "Who does which duty this week" },
-        { href: "/rota/bookings", label: "Bookings", icon: CalendarRange, description: "School lessons, parties and lane hire that need staff" },
-        { href: "/rota/today", label: "Today", icon: Clock3, description: who.manage ? "Run today's plan: cover, unfilled duties and today's changes" : "Today's duties" },
-        ...(who.manage ? [{ href: "/rota/absences", label: "Absences", icon: UserX, description: "Who is off, now and soon, and the shifts that need cover" }] : []),
-      ] }]} />
+      groups={[{ label: "", links: rotaPages(who.manage).filter((page) => page.href !== "/rota/overview").map(({ href, label, icon, description }) => ({ href, label, icon, description })) }]} />
   );
 }

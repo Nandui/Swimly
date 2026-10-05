@@ -17,6 +17,29 @@ export const ROTA_WARNING_META = {
 } as const satisfies Record<string, StatusMeta>;
 export type RotaWarning = keyof typeof ROTA_WARNING_META;
 
+/** Each kind of block on the Day plan and Today timelines: its words, tone and icon (the legend
+ *  and every block's tag), and the TimelineGrid state that picks its fill. A shift's state
+ *  follows the clock only on today; a past day is done and a future one next. */
+export const ROTA_BLOCK_META = {
+  done: { label: "Finished", color: "gray", icon: CircleCheck, state: "done" },
+  now: { label: "On now", color: "green", icon: Activity, state: "now" },
+  next: { label: "Duty", color: "blue", icon: CalendarDays, state: "next" },
+  gap: { label: "Gap in cover", color: "orange", icon: TriangleAlert, state: "cover" },
+  absent: { label: "Off", color: "red", icon: UserX, state: "off" },
+  unfilled: { label: "Unfilled", color: "gray", icon: CircleDashed, state: "open" },
+  booking: { label: "Booking", color: "purple", icon: School, state: "assessment" },
+  short: { label: "Short of staff", color: "orange", icon: Users, state: "cover" },
+  teaching: { label: "Swim teaching", color: "blue", icon: GraduationCap, state: "next" },
+} as const satisfies Record<string, StatusMeta & { state: "done" | "now" | "next" | "cover" | "off" | "open" | "assessment" }>;
+export type RotaBlockKind = keyof typeof ROTA_BLOCK_META;
+
+/** A shift's block on a given day: by the clock today, done before today, next after. */
+export function shiftBlockKind(day: string, today: string, minutesNow: number, start: number, end: number): "done" | "now" | "next" {
+  if (day < today) return "done";
+  if (day > today) return "next";
+  return end <= minutesNow ? "done" : start <= minutesNow ? "now" : "next";
+}
+
 /** Why someone is off. Only rota managers see the reason; the rota itself
  *  says just "Absent". Never record medical details, only the reason. */
 export const ABSENCE_REASON_META = {

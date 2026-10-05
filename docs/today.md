@@ -7,27 +7,45 @@ curriculum order. A cell shows every class at that level and start, ordered by
 pool area. Empty cells show a quiet dash with accessible “No class” text. Level and programme IDs distinguish
 records with the same name. Filters remove rows without matching classes.
 
-The sheet measures the space available inside the shell: a 136px level column
-and at least 144px per time column. One continuous sheet scrolls within its
-bounded region, keeping time headers and level labels visible. Staff can
-switch between Booking sheet and Agenda. Below 600px of working space,
-classes use Agenda automatically. Sidebar resizing updates the layout;
-all classes remain reachable, and longer labels wrap rather than truncate.
-There is no pagination or fold hiding earlier classes.
+The page follows V2Schedule: a PageHeader (the day and site, an outline
+Refresh and, on today only, a primary Jump to now or Jump to next), then one
+white panel holding everything else. Its first row is the week: outline
+previous and next week buttons, seven day tiles (weekday over the date, the
+chosen day filled blue, the real today marked `aria-current="date"`) and an
+outline Today button, with the Booking sheet / Agenda toggle on the right.
+Below 1024px the buttons take their own row and the seven days a full-width
+grid, so no day is ever hidden in a scroll. Summary tags with icons follow
+(classes, assessments, running now, coming up), then an info Notice when
+assessments are also scheduled, with View in agenda.
 
-Each class shows its level/name, start and end, pool area, instructor or
-declared cover, occupied and available places. A circled check means spaces
-are available; a circled X means full, replacing the Full pill. Both icons
-have accessible descriptions and a visible legend. Null capacity means
-uncapped and therefore available. Over-capacity classes use the full icon
-with an explicit over-capacity count. Attendance-completion markers are not
-shown. Longer classes keep their actual end time.
+The sheet uses a 136px level column and fixed 144px time columns, and is only
+as wide as they need. It scrolls across times inside the panel, keeping time
+headers and level labels visible. The header cell reads "Level and time"; a
+time header gives the start and its class count, "On now · 1 class" for the
+running start and "Next · 2 classes" for the next one. Staff can switch
+between Booking sheet and Agenda. Below 600px of working space, classes use
+Agenda automatically. All classes remain reachable, and longer labels wrap
+rather than truncate. There is no pagination or fold hiding earlier classes.
+
+Each class is a shared time block (`.pc-block`) coloured by its state, keyed
+like the home timeline and the duty list (`sessionState`, `HOME_SESSION_META`):
+running now, coming up, finished, cancelled, or cover needed when nobody is
+teaching it. A declared substitute keeps the class's colour and reads
+"Name (cover)". A future day's classes are neutral blocks. The block shows
+the instructor, the pool area with occupied/capacity places (the course name
+too when it differs from the level), and one tag with an icon: a circled
+check for "2 free" or "No limit" (null capacity is uncapped), a circled X for
+"Full" or an explicit "2 over" count. Full never changes the block's colour.
+The tag carries the longer description as its tooltip and in the block's
+accessible name, so there is no separate legend. In Agenda each block also
+shows the course name and its start and end. Attendance-completion markers
+are not shown.
 
 Agenda combines weekly classes with assessment sessions dated today, in exact
 start-time order, retaining simultaneous sessions of either type. Cancelled
 assessment sessions are excluded; sessions with no bookings remain visible.
-Assessment Items show a neutral Assessment label, kind/programme, pool,
-instructor, start/end and occupied/free places using the same capacity icons.
+Assessment blocks use the purple assessment state and its Assessment tag, with
+kind/programme, pool, instructor, start/end, bookings and the same places tag.
 The booking sheet keeps its class/level geometry and offers View in agenda when
 assessments are scheduled. Assessment-only days open Agenda automatically.
 

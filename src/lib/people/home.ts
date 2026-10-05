@@ -4,7 +4,7 @@ import { prisma } from "@/lib/prisma";
 import { expandPermissions } from "@/lib/staff/permissions";
 import { registerHomeCard, type HomeItem } from "@/modules/contributions";
 
-/** Admin on the home page: people, roles and sites, and what waits to be checked. */
+/** Admin on the home page: what waits to be checked. Its pages are on its overview. */
 registerHomeCard({
   moduleId: "admin",
   async items(viewer) {
@@ -15,11 +15,8 @@ registerHomeCard({
       const session = await requirePermission("staff.manage");
       const pending = await prisma.staffDetailChangeRequest.count({ where: { orgId: session.user.orgId ?? undefined, status: "PENDING" } });
       items.push({ label: "Details changes to check", hint: "Sent from Turnfin Me", href: "/staff/details-requests", count: pending, attention: pending > 0 });
-      items.push({ label: "Staff", href: "/staff" });
+      items.push({ kind: "action", icon: "userPlus", label: "Add person", href: "/staff?add=1" });
     }
-    if (held.has("roles.manage")) items.push({ label: "Roles", href: "/roles" });
-    if (held.has("clubs.manage")) items.push({ label: "Sites", href: "/clubs" });
-    if (held.has("activity.view")) items.push({ label: "Activity", hint: "Who changed what, and when", href: "/activity" });
     return items;
   },
 });

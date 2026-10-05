@@ -12,9 +12,9 @@ import { cn } from "@/lib/utils";
 
 import type { Metadata } from "next";
 
+import { Avatar, AvatarFallback } from "@/components/shadcn/avatar";
 import { EmptyState } from "@/components/ui-kit/empty-state";
 import { PageHeader } from "@/components/ui-kit/page-header";
-import { Lead, Num } from "@/components/ui-kit/prose";
 import { Tag } from "@/components/ui-kit/tag";
 import {
   AddPerson,
@@ -22,7 +22,7 @@ import {
   ResetPersonPassword,
   SetPersonActive,
 } from "@/components/staff/person-actions";
-import { can } from "@/lib/authz";
+import { plural } from "@/lib/format";
 import { screenPage } from "@/lib/page-guards";
 import {
   STAFF_STATUS_META,
@@ -38,8 +38,9 @@ import { AppIcon } from "@/components/ui-kit/app-icon";
 
 export const metadata: Metadata = { title: "Staff" };
 
-export default async function StaffPage() {
+export default async function StaffPage(props: PageProps<"/staff">) {
   const session = await screenPage("staff", "staff.manage");
+  const params = await props.searchParams;
 
   const [people, roles, org] = await Promise.all([
     listPeopleForDisplay(),
@@ -55,7 +56,7 @@ export default async function StaffPage() {
   ).length;
 
   return (
-    <div className="min-w-0 flex flex-col gap-6">
+    <div className="min-w-0 flex flex-col gap-4">
       <PageHeader
         title="Staff"
         description="Who can sign in, and what each of them is allowed to change."
@@ -79,27 +80,10 @@ export default async function StaffPage() {
                 {"Organisation"}
               </UiLink>
             </Button>
-            {can(session, "roles.manage") ? (
-              <Button variant="outline" asChild={true}>
-                <UiLink href="/roles">
-                  {<AppIcon name="keyRound" size="sm" />}
-                  {"Roles"}
-                </UiLink>
-              </Button>
-            ) : null}
-            <AddPerson roles={roles} />
+            <AddPerson roles={roles} defaultOpen={params.add === "1"} />
           </>
         }
       />
-
-      <Lead>
-        <Num>{active.length}</Num>{" "}
-        {active.length === 1 ? "person can" : "people can"} sign in, across{" "}
-        <Num>{roles.length}</Num> {roles.length === 1 ? "role" : "roles"}.{" "}
-        <Num>{keyholders}</Num> of them can manage accounts. There is no sign-up
-        and no invitation email: you create the account with a password, hand it
-        over, and they change it from Account once they are in.
-      </Lead>
 
       {active.length === 0 ? (
         <EmptyState
@@ -109,22 +93,29 @@ export default async function StaffPage() {
           action={<AddPerson roles={roles} />}
         />
       ) : (
-        <PeopleTable
-          people={active}
-          roles={roles}
-          org={org}
-          columns={columns}
-          currentUserId={session.user.id}
-        />
+        <section className="pc-panel" aria-label="Staff">
+          <p className="text-sm text-ui-muted-foreground">
+            {plural(active.length, "person", "people")} can sign in, across {plural(roles.length, "role")}.{" "}
+            {keyholders} of them can manage accounts. There is no sign-up and no invitation email.
+          </p>
+          <PeopleTable
+            people={active}
+            roles={roles}
+            org={org}
+            columns={columns}
+            currentUserId={session.user.id}
+          />
+        </section>
       )}
 
       {inactive.length > 0 ? (
-        <section className="pc-panel">
-          <h2 className="text-lg font-semibold">Deactivated</h2>
-          <Lead>
-            They cannot sign in. Everything they recorded is still readable, and
-            reactivating them gives the same account back.
-          </Lead>
+        <section className="pc-panel" aria-labelledby="staff-deactivated">
+          <div className="pc-panel-head">
+            <h2 id="staff-deactivated" className="text-lg font-semibold">Deactivated</h2>
+          </div>
+          <p className="text-sm text-ui-muted-foreground">
+            They cannot sign in. Everything they recorded is still readable.
+          </p>
           <PeopleTable
             people={inactive}
             roles={roles}
@@ -137,6 +128,10 @@ export default async function StaffPage() {
     </div>
   );
 }
+
+/** The avatar's initials, as `initials` in the shadcn avatar works them out. That one lives in a
+ *  client module, so a server page cannot call it. */
+const initialsOf = (name: string) => name.split(/\s+/).filter(Boolean).map((part) => part[0]).slice(0, 2).join("");
 
 function PeopleTable({
   people,
@@ -173,50 +168,48 @@ function PeopleTable({
         {people.map((person) => {
           const permissions = person.staffRole?.permissions ?? [];
           const reach = roleReach(permissions);
-          // On narrow screens each module value follows the role, e.g. "Classes 3".
-          const extras = columns.map((column) => ({ id: column.id, header: column.header, value: column.values.get(person.id) ?? "0" }));
+          // On narrow screens each module value follows the role, e.g. "Classes 3"; a 0 is left out.
+          const extras = columns.map((column) => {
+            const value = column.values.get(person.id) ?? "0";
+            return { id: column.id, header: column.header, value: value === "0" ? "" : value };
+          });
+          const o = org.get(person.id);
+          const orgLine = [o?.jobTitle, o?.departments.join(", "), o?.manager ? `reports to ${o.manager}` : null].filter(Boolean).join(" · ");
           return (
             <TableRow key={person.id}>
               <TableCell>
-                <div className="min-w-0 flex gap-2 items-center flex-wrap">
-                  <UiLink href={`/staff/${person.id}`} className="text-sm text-ui-foreground font-medium underline-offset-4 hover:underline inline-flex min-h-11 items-center">
-                    {person.name}
-                  </UiLink>
-                  {person.id === currentUserId ? (
-                    <span className="text-sm text-ui-muted-foreground">
-                      (you)
+                <div className="min-w-0 flex gap-3 items-center">
+                  <UiLink href={`/staff/${person.id}`} className="min-w-0 flex gap-3 items-center rounded-[var(--pc-radius-card)] underline-offset-4 hover:[&_.pc-row-title]:underline">
+                    <Avatar size="lg" aria-hidden="true" className="max-sm:hidden"><AvatarFallback>{initialsOf(person.name)}</AvatarFallback></Avatar>
+                    <span className="min-w-0 flex flex-col">
+                      <span className="pc-row-title inline-flex min-h-6 flex-wrap items-center gap-x-2">
+                        {person.name}{person.id === currentUserId ? " (you)" : null}
+                        {!person.hasPassword ? (
+                          <Tag meta={STAFF_STATUS_META.noPassword} />
+                        ) : null}
+                      </span>
+                      <span className="pc-row-hint block [overflow-wrap:anywhere]">
+                        {person.email}
+                      </span>
+                      {orgLine ? <span className="pc-row-hint block">{orgLine}</span> : null}
+                      <span className={cn("pc-row-hint block", "lg:hidden")}>
+                        {[person.staffRole?.name ?? "No role", ...extras.filter((extra) => extra.value).map((extra) => `${extra.header} ${extra.value}`)].join(" · ")}
+                      </span>
                     </span>
-                  ) : null}
-                  {!person.hasPassword ? (
-                    <Tag meta={STAFF_STATUS_META.noPassword} />
-                  ) : null}
+                  </UiLink>
                 </div>
-                <span className="text-sm text-ui-muted-foreground block [overflow-wrap:anywhere]">
-                  {person.email}
-                </span>
-                {(() => {
-                  const o = org.get(person.id);
-                  const line = [o?.jobTitle, o?.departments.join(", "), o?.manager ? `reports to ${o.manager}` : null].filter(Boolean).join(" · ");
-                  return line ? <span className="text-sm text-ui-muted-foreground block">{line}</span> : null;
-                })()}
-                <span
-                  className={cn(
-                    "text-sm text-ui-muted-foreground block",
-                    "lg:hidden",
-                  )}
-                >
-                  {[person.staffRole?.name ?? "No role", ...extras.map((extra) => `${extra.header} ${extra.value}`)].join(" · ")}
-                </span>
               </TableCell>
               <TableCell className={"max-lg:hidden"}>
-                <Tag meta={reach} label={person.staffRole?.name ?? "No role"} />
-                <span className="text-sm text-ui-muted-foreground block">
-                  {permissionCountLabel(permissions.length)}
+                <span className="flex flex-col items-start gap-1">
+                  <Tag meta={reach} label={person.staffRole?.name ?? "No role"} />
+                  <span className="pc-row-hint">
+                    {permissionCountLabel(permissions.length)}
+                  </span>
                 </span>
               </TableCell>
               {extras.map((extra) => (
                 <TableCell key={extra.id} className={"max-lg:hidden"}>
-                  <span className="text-sm text-ui-muted-foreground tabular-nums">
+                  <span className="tabular-nums">
                     {extra.value}
                   </span>
                 </TableCell>
@@ -224,7 +217,7 @@ function PeopleTable({
               <TableCell>
                 <div
                   className={
-                    "min-w-0 flex gap-1 items-center justify-end flex-wrap"
+                    "min-w-0 flex gap-2 items-center justify-end flex-nowrap max-sm:flex-col"
                   }
                 >
                   <ResetPersonPassword person={person} />

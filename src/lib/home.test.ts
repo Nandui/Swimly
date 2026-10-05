@@ -78,39 +78,37 @@ test("the swim school card lists only what the person can open", async () => {
   const items = swimSchool();
   const labels = async (levels: Record<string, string>, extras: string[] = [], id = "swim-school") => (await items(levels, extras, id)).map((i) => i.label);
 
-  assert.deepEqual(await labels({ "pool-deck": "teach" }, [], "pool-deck"), ["Your classes today", "Open my classes", "Find a swimmer in your classes"]);
+  assert.deepEqual(await labels({ "pool-deck": "teach" }, [], "pool-deck"), ["Your class", "Open my classes"]);
   assert.deepEqual(await labels({ "swim-school": "desk" }, [], "pool-deck"), [], "the desk never gets the pool deck");
   const desk = await labels({ "swim-school": "desk" });
-  assert.ok(desk.includes("Find a swimmer") && desk.includes("Add a swimmer") && desk.includes("Classes today"));
-  assert.ok(!desk.includes("Cancelled classes") && !desk.includes("Programmes and levels"));
-  assert.ok((await labels({ "swim-school": "desk" }, ["swim-school.cancel-classes"])).includes("Cancelled classes"));
-  assert.ok((await labels({ "swim-school": "manage" })).includes("Programmes and levels"));
+  assert.ok(desk.includes("Add a swimmer") && desk.includes("Book an assessment") && desk.includes("Parent updates") && desk.includes("Classes today"));
+  assert.ok(!desk.includes("Find a swimmer"), "finding a swimmer is the frame's search");
+  assert.deepEqual(await labels({ docs: "read" }), [], "no action or queue without the swim school");
+  assert.ok((await items({ "swim-school": "desk" })).every((i) => i.kind || i.count !== undefined), "no plain links: every item has a place");
 });
 
 test("today's figures leave out cancelled classes, and a teacher sees only their own", async () => {
   const items = swimSchool();
   const desk = await items({ "swim-school": "desk" });
-  const classes = desk.find((i) => i.label === "Classes today");
+  const classes = desk.find((i) => i.label === "Classes");
   assert.deepEqual([classes?.kind, classes?.count, classes?.hint], ["today", 2, "1 class cancelled"]);
-  assert.equal(desk.find((i) => i.label === "Assessments today")?.hint, "4 swimmers booked");
+  assert.equal(desk.find((i) => i.label === "Assessment")?.hint, "4 swimmers booked", "one assessment reads singular");
   const updates = desk.find((i) => i.label === "Parent updates");
   assert.deepEqual([updates?.count, updates?.attention], [2, true]);
   const mine = (await items({ "pool-deck": "teach" }, [], "pool-deck"))[0];
-  assert.equal(mine.count, 1, "their cancelled class and someone else's are left out");
-  assert.deepEqual(mine.list?.map((l) => l.label), ["Level a"]);
-  assert.equal(mine.hint, "Next at 16:00");
+  assert.deepEqual([mine.count, mine.hint], [1, "Next at 16:00"], "their cancelled class and someone else's are left out");
 });
 
 test("one module's failing card never breaks the home page", async () => {
   const contributions = serverModule<typeof import("@/modules/contributions")>("src/modules/contributions.ts", { "server-only": {} });
   contributions.registerHomeCard({ moduleId: "broken", items: async () => { throw new Error("database down"); } });
-  contributions.registerHomeCard({ moduleId: "fine", items: async () => [{ label: "Fine", href: "/fine" }] });
+  contributions.registerHomeCard({ moduleId: "fine", items: async () => [{ label: "Fine", href: "/fine", count: 0 }] });
   const quiet = console.error;
   console.error = () => {};
   try {
     const items = await contributions.homeCardItems(["broken", "fine"], viewer({ name: "R", homeName: null, levels: {} }));
     assert.equal(items.has("broken"), false);
-    assert.deepEqual(items.get("fine"), [{ label: "Fine", href: "/fine" }]);
+    assert.deepEqual(items.get("fine"), [{ label: "Fine", href: "/fine", count: 0 }]);
   } finally {
     console.error = quiet;
   }

@@ -1,5 +1,8 @@
 import "server-only";
+import { permissionsOf } from "@/lib/authz";
 import { pageSession } from "@/lib/page-guards";
+import { staffApiConfig } from "@/lib/staff-api/config";
+import { visibleScreens } from "@/lib/staff/screens";
 import { prisma } from "@/lib/prisma";
 import { formatDay, today } from "@/lib/format";
 import { getCurrentClub } from "@/lib/clubs/current";
@@ -29,9 +32,17 @@ export async function loadHome() {
     siteName: sites?.club.name ?? null,
     sites,
     moduleIds,
+    /** The screens the person can open, for the top row's pages and search. */
+    screens: visibleScreens(permissionsOf(session)),
     items,
     today: formatDay(today()),
+    meUrl: turnfinMeUrl(),
   };
+}
+
+/** Where Turnfin Me lives, when the staff API is set up; the home page's note links there. */
+function turnfinMeUrl(): string | null {
+  try { return staffApiConfig().meUrl || null; } catch { return null; }
 }
 
 function viewerOf(user: Session["user"]): HomeViewer {

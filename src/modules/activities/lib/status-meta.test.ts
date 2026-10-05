@@ -13,7 +13,7 @@ import { ACCESS_REQUEST_META, PARENT_ACCESS_META, PARENT_ACCOUNT_META, PUBLICATI
 import { COMPETENCY_STATUS_META, COMPLETION_META, LEVEL_PROGRESS_META } from "./progression/constants";
 import { MEDICAL_STATUS_META, PARENT_CHANGE_STATUS_META, STUDENT_STATUS_META } from "./students/constants";
 import { HISTORY_META } from "./students/history";
-import { CALENDAR_PHASE_META } from "./today/calendar";
+import { SCHEDULE_SUMMARY_META } from "./today/calendar";
 
 const TONES = new Set(["green", "blue", "orange", "red", "purple", "gray"]);
 const MAPS: Record<string, Record<string, StatusMeta>> = {
@@ -22,7 +22,7 @@ const MAPS: Record<string, Record<string, StatusMeta>> = {
   PLACEMENT_META, WAITLIST_AVAILABILITY_META, CONTACT_OUTCOMES, LEGEND_AGREEMENT_META, ACCESS_REQUEST_META,
   PARENT_ACCESS_META, PARENT_ACCOUNT_META, PUBLICATION_META, COMPETENCY_STATUS_META, COMPLETION_META,
   LEVEL_PROGRESS_META, MEDICAL_STATUS_META, PARENT_CHANGE_STATUS_META, STUDENT_STATUS_META, HISTORY_META,
-  CALENDAR_PHASE_META,
+  SCHEDULE_SUMMARY_META,
 };
 
 test("every swim school status meta has a label, one of the six tones and an icon of its own", () => {

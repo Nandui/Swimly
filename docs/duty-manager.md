@@ -2,7 +2,14 @@
 
 `/duty` gives staff a quick view of today's classes at the selected site.
 Search by class, level, programme, instructor, pool or time. All, On now,
-Upcoming and Cancelled filters preserve the full day. Quick view contains
+Coming up and Cancelled filters preserve the full day. Each class is one row:
+a time block and status tag from the same `HOME_SESSION_META` map and
+`sessionState` helper as the home timeline (On now, Coming up, Cover needed
+when nobody is teaching it, Finished, Cancelled), then programme, instructor,
+pool and swimmer count, or the reason once cancelled. On phones Quick view
+and Cancel session become 44px icon buttons that keep their full names for
+screen readers. People who can open Cancelled classes see a link to it in the
+header, with the number still awaiting billing. Quick view contains
 the instructor, attendance count and swimmer names/member numbers; it does
 not expose medical notes or contact details.
 

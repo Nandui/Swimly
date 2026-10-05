@@ -11,6 +11,7 @@ import { Label } from "@/components/shadcn/label";
 import { NativeSelect, NativeSelectOption } from "@/components/shadcn/native-select";
 import { ConfirmAction } from "@/components/confirm-action";
 import { Field, FormDialog } from "@/components/form-dialog";
+import { blockAttrs, type BlockPart } from "@/components/rota/actions";
 import { assignActivity, removeActivity, saveActivity } from "@/lib/rota/actions";
 import { clock, parseClock } from "@/lib/rota/constants";
 import { fitsFor, type Candidate } from "@/lib/rota/timeline";
@@ -24,7 +25,7 @@ export type ActivityValue = { id: string; label: string; start: number; end: num
 /** Plan something the site needs covered during the day, or change it. */
 export function ActivityDialog({ siteId, date, activity, types, names, trigger }: {
   siteId: string; date: string; activity?: ActivityValue; types: Option[]; names: string[];
-  trigger?: { label: string; className?: string; style?: CSSProperties; children: ReactNode };
+  trigger?: { label: string; className?: string; style?: CSSProperties; children: ReactNode; size?: "icon" };
 }) {
   const id = activity ? `act-${activity.id}` : "act-new";
   return (
@@ -32,7 +33,7 @@ export function ActivityDialog({ siteId, date, activity, types, names, trigger }
       portalClassName={THEME}
       width="sm:max-w-lg"
       trigger={trigger
-        ? <Button type="button" variant="ghost" aria-label={trigger.label} className={trigger.className} style={trigger.style}>{trigger.children}</Button>
+        ? <Button type="button" variant="ghost" size={trigger.size} aria-label={trigger.label} className={trigger.className} style={trigger.style}>{trigger.children}</Button>
         : <Button variant="outline" className="min-h-11"><Plus aria-hidden="true" />Add activity</Button>}
       title={activity ? `Change ${activity.label}` : "Add an activity to cover"}
       description="Something the site needs covered, for example the 25m pool lifeguard from opening to close. People cover it from inside their shifts."
@@ -73,7 +74,7 @@ export function ActivityDialog({ siteId, date, activity, types, names, trigger }
 export function RemoveActivity({ id, label }: { id: string; label: string }) {
   return (
     <ConfirmAction
-      trigger={<Button variant="ghost" size="icon" className="size-8 pointer-coarse:size-11" aria-label={`Take ${label} off this day`}><Trash2 aria-hidden="true" className="size-3.5" /></Button>}
+      trigger={<Button variant="ghost" size="icon" aria-label={`Take ${label} off this day`}><Trash2 aria-hidden="true" /></Button>}
       title={`Take ${label} off this day?`}
       description="It stops showing as something to cover. Anyone already on it keeps that time in their shift."
       confirmLabel="Take it off"
@@ -92,7 +93,7 @@ export function AssignDialog({ activity, span, candidates, trigger }: {
   /** The stretch to cover, e.g. a gap. */
   span: { start: number; end: number };
   candidates: Candidate[];
-  trigger: { label: string; className?: string; style?: CSSProperties; children: ReactNode };
+  trigger: { label: string; className?: string; style?: CSSProperties; children: ReactNode; size?: "icon"; block?: BlockPart };
 }) {
   const router = useRouter();
   const [open, setOpen] = useState(false);
@@ -116,7 +117,7 @@ export function AssignDialog({ activity, span, candidates, trigger }: {
 
   return (
     <Dialog open={open} onOpenChange={(v) => { setOpen(v); if (v) { setFrom(clock(span.start)); setTo(clock(span.end)); setDone([]); } }}>
-      <Button type="button" variant="ghost" aria-label={trigger.label} className={trigger.className} style={trigger.style} onClick={() => setOpen(true)}>{trigger.children}</Button>
+      <Button type="button" variant={trigger.block ? "link" : "ghost"} size={trigger.size} aria-label={trigger.label} className={trigger.className} style={trigger.style} {...blockAttrs(trigger.block)} onClick={() => setOpen(true)}>{trigger.children}</Button>
       <DialogContent portalClassName={THEME} className="sm:max-w-lg">
         <DialogHeader>
           <DialogTitle>Who covers {activity.label}?</DialogTitle>

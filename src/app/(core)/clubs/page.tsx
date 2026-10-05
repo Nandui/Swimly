@@ -1,11 +1,4 @@
-import {
-  ItemContent,
-  ItemActions,
-  ItemDescription,
-  Item,
-  ItemGroup,
-  ItemTitle,
-} from "@/components/shadcn/item";
+import { Building2 } from "lucide-react";
 
 import { CLUB_STATUS_META } from "@/lib/clubs/constants";
 import { ARCHIVAL_STATUS_META } from "@/lib/status";
@@ -14,7 +7,6 @@ import { plural } from "@/lib/format";
 
 import { EmptyState } from "@/components/ui-kit/empty-state";
 import { PageHeader } from "@/components/ui-kit/page-header";
-import { Lead, Num } from "@/components/ui-kit/prose";
 import { Tag } from "@/components/ui-kit/tag";
 import {
   AddClub,
@@ -41,36 +33,37 @@ export default async function ClubsPage() {
   const archived = clubs.filter((club) => club.archivedAt);
 
   return (
-    <div className="min-w-0 flex flex-col gap-6">
+    <div className="min-w-0 flex flex-col gap-4">
       <PageHeader
         title="Sites"
-        description="Each site keeps its own programmes, classes and swimmers. Staff accounts and roles are shared between them."
+        description="Your sites. Swimmers, programmes and staff are shared; each site keeps its own timetable."
         actions={<AddClub />}
       />
-
-      <Lead>
-        <Num>{plural(live.length, "site")}</Num>. You are working in{" "}
-        <Num>{current.name}</Num>; the site picker in the top bar changes that,
-        and every swim school page follows it.
-      </Lead>
 
       {live.length === 0 ? (
         <EmptyState
           icon="building"
-          title="No sites yet"
+          title="No sites"
           hint="Everything belongs to a site, so there has to be one."
           action={<AddClub />}
         />
       ) : (
-        <ClubList clubs={live} currentId={current.id} summaries={summaries} />
+        <section className="pc-panel" aria-label="Sites">
+          <p className="text-sm text-ui-muted-foreground">
+            {plural(live.length, "site")}. You are working at {current.name}; the site picker on Home and in Swim school changes that.
+          </p>
+          <ClubList clubs={live} currentId={current.id} summaries={summaries} />
+        </section>
       )}
 
       {archived.length > 0 ? (
-        <section className="pc-panel">
-          <h2 className="text-lg font-semibold">Archived</h2>
-          <Lead>
-            Not in the switcher. Everything recorded under them is still there.
-          </Lead>
+        <section className="pc-panel" aria-labelledby="sites-archived">
+          <div className="pc-panel-head">
+            <h2 id="sites-archived" className="text-lg font-semibold">Archived</h2>
+          </div>
+          <p className="text-sm text-ui-muted-foreground">
+            Not in the site picker. Everything recorded under them is still there.
+          </p>
           <ClubList clubs={archived} currentId={current.id} summaries={summaries} archived />
         </section>
       ) : null}
@@ -90,35 +83,24 @@ function ClubList({
   archived?: boolean;
 }) {
   return (
-    <ItemGroup className="divide-y divide-ui-border">
+    <ul className="pc-rows">
       {clubs.map((club) => (
-        <Item
-          key={club.id}
-          role="listitem"
-          className="items-start [overflow-wrap:anywhere]"
-        >
-          <ItemContent className="min-w-0">
-            <ItemTitle className="min-w-0 flex-wrap">
-              <span>{club.name}</span>
-              {club.id === currentId ? (
-                <Tag meta={CLUB_STATUS_META.current} />
-              ) : null}
-              {archived ? (
-                <Tag meta={ARCHIVAL_STATUS_META.archived} />
-              ) : null}
-            </ItemTitle>
-            {summaries.get(club.id) ? <ItemDescription>{summaries.get(club.id)}</ItemDescription> : null}
-          </ItemContent>
-          <ItemActions className="flex-wrap">
-            {
-              <div className="min-w-0 flex gap-1 items-center">
-                <EditClub club={club} />
-                <ArchiveClub club={club} />
-              </div>
-            }
-          </ItemActions>
-        </Item>
+        <li key={club.id} className="pc-row [overflow-wrap:anywhere]">
+          <span className="pc-tile-icon" aria-hidden="true"><Building2 /></span>
+          <div className="pc-row-body">
+            <span className="pc-row-title">{club.name}</span>
+            {summaries.get(club.id) ? <span className="pc-row-hint">{summaries.get(club.id)}</span> : null}
+          </div>
+          <div className="pc-row-trail">
+            {club.id === currentId ? <Tag meta={CLUB_STATUS_META.current} /> : null}
+            {archived ? <Tag meta={ARCHIVAL_STATUS_META.archived} /> : null}
+            <div className="flex flex-nowrap gap-2">
+              <EditClub club={club} />
+              <ArchiveClub club={club} />
+            </div>
+          </div>
+        </li>
       ))}
-    </ItemGroup>
+    </ul>
   );
 }

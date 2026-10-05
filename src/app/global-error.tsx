@@ -17,7 +17,7 @@ export default function GlobalError({ retry }: { error: Error & { digest?: strin
     <html lang="en" suppressHydrationWarning>
       <body className="turnfin-app">
         <title>Something went wrong · Turnfin</title>
-        <AuthFrame>
+        <AuthFrame fin="start">
           <PageError retry={retry} />
         </AuthFrame>
       </body>

@@ -1,7 +1,7 @@
 "use client";
 import { Button } from "@/components/shadcn/button";
 
-import { Archive, ArchiveRestore, Pencil, Plus } from "lucide-react";
+import { ArchiveRestore, CirclePause, Pencil, Plus } from "lucide-react";
 import { ActionButton, ConfirmAction } from "@/components/confirm-action";
 import { Field, FormDialog } from "@/components/form-dialog";
 
@@ -39,7 +39,7 @@ export function AddClub() {
       trigger={
         <Button variant="default">
           {<Plus aria-hidden={true} className="size-4 shrink-0" />}
-          {"Add a site"}
+          {"Add site"}
         </Button>
       }
       title="Add a site"
@@ -95,11 +95,11 @@ export function ArchiveClub({ club }: { club: Club }) {
           aria-label={`Archive ${club.name}`}
           size="icon"
         >
-          {<Archive aria-hidden={true} className="size-4 shrink-0" />}
+          {<CirclePause aria-hidden={true} className="size-4 shrink-0" />}
         </Button>
       }
       title={`Archive ${club.name}?`}
-      description="It leaves the site picker, and anyone working there moves to the first site still open. Its timetable and history are kept. Shared swimmers and curriculum stay available at the other sites."
+      description="It leaves the site picker, and anyone working there lands on the first site still open. Its timetable and history are kept, and you can restore it later. Shared swimmers and curriculum stay available at the other sites."
       confirmLabel="Archive"
       successMessage="Site archived"
       run={() => setClubArchived(club.id, true)}

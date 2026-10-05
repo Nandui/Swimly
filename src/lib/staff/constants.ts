@@ -5,7 +5,7 @@ import type { StatusMeta } from "@/lib/status";
 export const STAFF_STATUS_META = {
   noPassword: { label: "No password set", color: "orange", icon: TriangleAlert },
   builtInRole: { label: "Built in", color: "gray", icon: Lock },
-  oldSettings: { label: "Old settings until saved", color: "orange", icon: History },
+  oldSettings: { label: "Older settings", color: "orange", icon: History },
 } as const satisfies Record<string, StatusMeta>;
 
 /** Roles are rows now, so there is no enum to hang a metadata map on and no

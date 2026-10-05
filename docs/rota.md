@@ -62,14 +62,20 @@ the main database and uses the platform access model (docs/platform-access.md).
   refused. **Assign** makes that stretch an activity inside their shift
   (`assignActivity`). Activities seen only inside shifts still show, with the time between
   people as their gaps. The day's **bookings** show with how many
-  places are staffed; the **Swim school** classes someone teaches show as a mark on their
-  row, and instructors with classes and no duty get their own rows. **Add duty** takes
+  places are staffed; the **Swim school** classes someone teaches show as a teaching tag on
+  the shift block they fall in, and instructors with classes and no duty get their own lanes,
+  their back-to-back classes as one block (`teachingSpans`). The plan is drawn on the shared
+  `TimelineGrid` (DESIGN.md): from 1280px a grid with lane tiles (the activity's edit, remove
+  and "Put someone on" actions, a person's change-duty pencil), blocks whose state and tag
+  come from `ROTA_BLOCK_META`, and a dashed line at the time now on today; narrower, the same
+  blocks and actions as an agenda in time order, so nothing is hidden in a sideways scroller. **Add duty** takes
   **Places**, so "2 lifeguards necessary" is one step: the extra places start unfilled.
   Each day has a **note** (`RotaDayNote`). Activities used at the site in the last 12 weeks
   are offered first. Timepoint holds shift times, not activities, so planning activities
   never asks for a reason. Pure and tested: `buildTimeline` (`src/lib/rota/timeline.ts`).
 - **Today** (`/rota/today`). The duty managers' day: every department's duties on
-  one timeline with a line at the time now (a time-ordered list on phones);
+  one `TimelineGrid` with a dashed line at the time now (below 1280px the same duties
+  as an agenda in time order, each still opening its duty), and a link to today's Day plan;
   **Needs you**, the duties still to come whose person is off or that are
   unfilled, each with up to three people who are free (not off, not on another
   duty then, at any site) and hold its qualification, and **Give cover**; and

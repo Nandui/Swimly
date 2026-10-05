@@ -12,18 +12,30 @@ import { NeedsSummary, QuickActions, Section, Timeline, TodayGrid, WaitingList, 
  *  what waits for this person, today's figures and the quick actions, with the note that their
  *  own things are in Turnfin Me. Modules supply every item (`registerHomeCard`); each module's
  *  own overview carries the rest, and the module bar is the way into each module. */
-export function HomeView({ homeName, roleName, siteName, today, modules, items }: {
+export function HomeView({ homeName, roleName, siteName, today, modules, items, meUrl = null }: {
   homeName: string;
   roleName: string;
   siteName: string | null;
   today: string;
   modules: readonly ModuleManifest[];
   items: ReadonlyMap<string, HomeItem[]>;
+  /** Turnfin Me's address when the staff API is set up; the note links there. */
+  meUrl?: string | null;
 }) {
   const placed: Placed[] = modules.flatMap((mod) => (items.get(mod.id) ?? []).map((item) => ({ ...item, moduleIcon: mod.icon, key: `${mod.id}:${item.label}` })));
   const { actions, today: todayFacts, timeline, waiting } = sortItems(placed);
   const needing = [...waiting, ...todayFacts].filter((i) => i.attention).length;
-  const sessions = timeline.flatMap((t) => t.sessions ?? []);
+  const sessions = timeline.flatMap((t) => t.kind === "timeline" ? t.sessions : []);
+  const note = (
+    <>
+      <Smartphone aria-hidden="true" className="mt-0.5 size-5 shrink-0 text-ui-primary" />
+      <span className="flex flex-col">
+        <span className="text-sm font-semibold">Your own things are in Turnfin Me</span>
+        <span className="text-xs text-ui-muted-foreground">Training, reading, shifts and HR, on your phone.</span>
+      </span>
+    </>
+  );
+  const meNote = meUrl ? <a href={meUrl} className="pc-note" target="_blank" rel="noopener noreferrer">{note}<span className="sr-only"> (opens in a new tab)</span></a> : <div className="pc-note">{note}</div>;
 
   return (
     <div className="flex min-w-0 flex-col gap-4">
@@ -34,8 +46,10 @@ export function HomeView({ homeName, roleName, siteName, today, modules, items }
       ) : (
         <>
           {sessions.length > 0 && (
-            <Section id="home-timeline" title={timeline[0].label}
-              aside={<Button asChild variant="ghost"><Link href={timeline[0].href}>Open schedule<ChevronRight aria-hidden="true" /></Link></Button>}>
+            // Below 1280px the grid becomes the list of what is on now and next, and says so.
+            <Section id="home-timeline"
+              title={<><span className="pc-timeline-wide-only">{timeline[0].label}</span><span className="pc-timeline-narrow-only">On now and next</span></>}
+              aside={<Button asChild variant="ghost"><Link href={timeline[0].href}><span className="pc-timeline-wide-only">Open schedule</span><span className="pc-timeline-narrow-only">Schedule</span><ChevronRight aria-hidden="true" /></Link></Button>}>
               <Timeline sessions={sessions} now={minutesNow()} />
             </Section>
           )}
@@ -45,21 +59,20 @@ export function HomeView({ homeName, roleName, siteName, today, modules, items }
                 <WaitingList items={waiting} />
               </Section>
             )}
-            {todayFacts.length > 0 && (
-              <Section id="home-today" title={siteName ? `Today at ${siteName}` : "Today"}>
-                <TodayGrid items={todayFacts} />
-              </Section>
-            )}
-            <Section id="home-actions" title="Quick actions">
-              <QuickActions items={actions} />
-              <div className="pc-note">
-                <Smartphone aria-hidden="true" className="mt-0.5 size-5 shrink-0 text-ui-primary" />
-                <div className="flex flex-col">
-                  <span className="text-sm font-semibold">Your own things are in Turnfin Me</span>
-                  <span className="text-xs text-ui-muted-foreground">Your training, required reading, qualifications, shifts and anything HR shares with you, on your phone.</span>
-                </div>
-              </div>
-            </Section>
+            {/* Today over Quick actions beside Waiting; three across from 1280px. */}
+            <div className="pc-grid-stack">
+              {todayFacts.length > 0 && (
+                <Section id="home-today" title={siteName ? `Today at ${siteName}` : "Today"}>
+                  <TodayGrid items={todayFacts} />
+                </Section>
+              )}
+              {actions.length > 0 ? (
+                <Section id="home-actions" title="Quick actions">
+                  <QuickActions items={actions} />
+                  {meNote}
+                </Section>
+              ) : meNote}
+            </div>
           </div>
         </>
       )}

@@ -1,9 +1,11 @@
 import { CircleCheck, ClipboardCheck, Clock3, Play, TriangleAlert, XCircle } from "lucide-react";
 import type { StatusMeta } from "@/lib/status";
 
-/** How a home card marks a line that waits for this person. */
+/** How the home page and overviews mark a line or figure that waits for this person (the
+ *  figure's reason replaces the words), and a page where nothing does. */
 export const HOME_ITEM_META = {
   attention: { label: "Needs you", color: "orange", icon: TriangleAlert },
+  clear: { label: "All clear", color: "gray", icon: CircleCheck },
 } as const satisfies Record<string, StatusMeta>;
 
 /** Each block on the home timeline: its label, tone and icon. The timeline blocks show the icon

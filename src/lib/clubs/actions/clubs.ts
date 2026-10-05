@@ -47,7 +47,7 @@ const clubSchema = z.object({
   name: z
     .string()
     .trim()
-    .min(1, "Give the club a name.")
+    .min(1, "Give the site a name.")
     .max(80, "Keep the name under 80 characters."),
 });
 
@@ -83,7 +83,7 @@ export async function createClub(input: ClubInput): Promise<ActionResult> {
       }, tx);
       return created;
     }),
-    `There is already a club called ${name}.`
+    `There is already a site called ${name}.`
   );
   if ("ok" in created) return created;
 
@@ -103,7 +103,7 @@ export async function updateClub(id: string, input: ClubInput): Promise<ActionRe
     where: { id },
     select: { id: true, name: true },
   });
-  if (!existing) return fail("That club no longer exists.");
+  if (!existing) return fail("That site no longer exists.");
   if (existing.name === name) return ok();
 
   const updated = await onUniqueViolation(
@@ -125,7 +125,7 @@ export async function updateClub(id: string, input: ClubInput): Promise<ActionRe
       }, tx);
       return updated;
     }),
-    `There is already a club called ${name}.`
+    `There is already a site called ${name}.`
   );
   if ("ok" in updated) return updated;
 
@@ -147,12 +147,12 @@ export async function setClubArchived(id: string, archived: boolean): Promise<Ac
       where: { id },
       select: { id: true, name: true, archivedAt: true },
     });
-    if (!existing) return fail("That club no longer exists.");
+    if (!existing) return fail("That site no longer exists.");
     if (Boolean(existing.archivedAt) === archived) return ok();
 
     if (archived) {
       const others = await tx.club.count({ where: { archivedAt: null, id: { not: id } } });
-      if (others === 0) return fail("Keep at least one active club. Add another before archiving this one.");
+      if (others === 0) return fail("Keep at least one active site. Add another before archiving this one.");
     }
 
     await tx.club.update({

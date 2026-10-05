@@ -12,8 +12,7 @@ import { Tag } from "@/components/ui-kit/tag";
 import { Notice } from "@/components/ui-kit/notice";
 import { CANCELLATION_META } from "@/modules/activities/lib/cancellations/constants";
 import { markBillingNotified } from "@/modules/activities/lib/cancellations/actions";
-import { formatTime } from "@/modules/activities/lib/courses/constants";
-import { formatDate, parseDateOnly } from "@/lib/format";
+import { formatDate, formatTime, formatTimeRange, parseDateOnly, plural } from "@/lib/format";
 import { SAVE_UNCONFIRMED_MESSAGE, withTimeout } from "@/lib/save-feedback";
 
 export type BillingCancellation = {
@@ -30,10 +29,10 @@ export function BillingReview({ row, canNotify }: { row: BillingCancellation; ca
   const { formRef, summaryRef, ...feedback } = useFormFeedback();
   const meta = row.billingNotifiedAt ? CANCELLATION_META.notified : CANCELLATION_META.pending;
   return <Dialog open={open} onOpenChange={value => { if (!pending) setOpen(value); }}><DialogTrigger asChild><Button variant="outline" className="min-h-11" aria-label={`Review cancellation: ${row.className}, ${formatDate(parseDateOnly(row.date))}, ${formatTime(row.startMinutes)}`}>Review cancellation</Button></DialogTrigger>
-    <DialogContent showCloseButton={false} className="max-h-[90dvh] overflow-y-auto sm:max-w-xl"><DialogHeader><DialogTitle>{row.className}</DialogTitle><DialogDescription>{formatDate(parseDateOnly(row.date))} · {formatTime(row.startMinutes)}–{formatTime(row.startMinutes + row.durationMinutes)} · {row.location || "Pool area not set"}</DialogDescription></DialogHeader>
-      <div className="space-y-3"><Tag meta={meta} /><p className="text-sm whitespace-pre-wrap break-words">{row.reason}</p><p className="text-xs text-ui-muted-foreground">Cancelled by {row.cancelledByName} · {formatDate(new Date(row.cancelledAt))}</p>{row.attendanceRecorded ? <p className="rounded-ui-md bg-ui-muted p-3 text-sm">{row.attendanceRecorded} attendance records already existed. Check these before deciding on a billing change.</p> : null}</div>
+    <DialogContent showCloseButton={false} className="max-h-[90dvh] overflow-y-auto sm:max-w-xl"><DialogHeader><DialogTitle>{row.className}</DialogTitle><DialogDescription>{formatDate(parseDateOnly(row.date))} · {formatTimeRange(row.startMinutes, row.startMinutes + row.durationMinutes)} · {row.location || "Pool area not set"}</DialogDescription></DialogHeader>
+      <div className="space-y-3"><Tag meta={meta} /><p className="text-sm whitespace-pre-wrap break-words">{row.reason}</p><p className="text-xs text-ui-muted-foreground">Cancelled by {row.cancelledByName} · {formatDate(new Date(row.cancelledAt))}</p>{row.attendanceRecorded ? <Notice tone="warning" title={`${plural(row.attendanceRecorded, "attendance record")} already existed.`} description="Check these before deciding on a billing change." /> : null}</div>
       <section><h3 className="mb-2 text-sm font-semibold">Affected swimmers · {row.swimmers.length}</h3><p className="mb-2 text-xs text-ui-muted-foreground">Enrolled when the session was cancelled.</p><ul className="divide-y divide-ui-border">{row.swimmers.map(swimmer => <li key={swimmer.studentId} className="flex flex-wrap justify-between gap-2 py-2 text-sm"><span>{swimmer.swimmerName}</span><span className="text-ui-muted-foreground">{swimmer.memberNumber || "No member number"}</span></li>)}</ul>{!row.swimmers.length ? <p className="text-sm text-ui-muted-foreground">No swimmers were enrolled.</p> : null}</section>
-      {row.billingNotifiedAt ? <div className="space-y-1 rounded-ui-md border border-ui-border p-3 text-sm"><p className="font-medium">Billing notified by {row.billingNotifiedByName} · {formatDate(new Date(row.billingNotifiedAt))}</p><p className="whitespace-pre-wrap break-words">{row.billingNote}</p></div> : null}
+      {row.billingNotifiedAt ? <section className="space-y-1"><h3 className="text-sm font-semibold">Billing notified</h3><p className="text-xs text-ui-muted-foreground">{row.billingNotifiedByName ? `By ${row.billingNotifiedByName} · ` : ""}{formatDate(new Date(row.billingNotifiedAt))}</p><p className="text-sm whitespace-pre-wrap break-words">{row.billingNote}</p></section> : null}
       <FormFeedbackProvider feedback={feedback}><form ref={formRef} className="space-y-4" onSubmit={event => {
         event.preventDefault(); if (pending) return;
         startTransition(async () => {

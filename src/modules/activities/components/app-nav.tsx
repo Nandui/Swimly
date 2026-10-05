@@ -26,7 +26,6 @@ export function AppChrome({ who, screens, club, clubs, children }: {
   clubs: Club[];
   children: ReactNode;
 }) {
-  const router = useRouter();
   const pathname = usePathname();
   const groups = [
     { label: "", links: [{ href: SWIM_SCHOOL_OVERVIEW, label: "Overview", icon: LayoutDashboard, active: pathname === SWIM_SCHOOL_OVERVIEW }] },
@@ -38,15 +37,25 @@ export function AppChrome({ who, screens, club, clubs, children }: {
   return (
     <ModuleShell module="Swim school" id="swim-school" who={who} groups={groups}
       scopeNote={club.name} contentClass="module-content swim-school-content" maxWidth={pageWidthFor(pathname)}
-      tools={<>
-        {screens.has("students") && <WorkspaceSearch key={`${club.id}:${pathname}`} onSelect={hit => {
-          if (!hit) return;
-          const href = swimmerLookupHref(screens, hit.id);
-          if (href) router.push(href);
-        }} />}
-        <ClubSwitcher club={club} clubs={clubs} />
-      </>}>
+      tools={<SwimSchoolTools screens={screens} club={club} clubs={clubs} />}>
       {children}
     </ModuleShell>
+  );
+}
+
+/** The swim school's top-bar tools: swimmer search for those who can open Swimmers, then the
+ *  working site. The swim school's frame and the home page both use them. */
+export function SwimSchoolTools({ screens, club, clubs }: { screens: Set<ScreenKey>; club: Club; clubs: Club[] }) {
+  const router = useRouter();
+  const pathname = usePathname();
+  return (
+    <>
+      {screens.has("students") && <WorkspaceSearch key={`${club.id}:${pathname}`} onSelect={hit => {
+        if (!hit) return;
+        const href = swimmerLookupHref(screens, hit.id);
+        if (href) router.push(href);
+      }} />}
+      <ClubSwitcher club={club} clubs={clubs} />
+    </>
   );
 }

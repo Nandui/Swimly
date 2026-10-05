@@ -1,8 +1,9 @@
 import Link from "next/link";
-import type { LucideIcon } from "lucide-react";
+import { ChevronRight, type LucideIcon } from "lucide-react";
 import { Button } from "@/components/shadcn/button";
+import { EmptyState } from "@/components/ui-kit/empty-state";
 import { PageHeader } from "@/components/ui-kit/page-header";
-import { NeedsSummary, PageList, Section, TodayGrid, WaitingList, sortItems, type Placed } from "@/components/home/home-parts";
+import { ACTION_ICONS, NeedsSummary, PageList, Section, TodayGrid, WaitingList, sortItems, type Placed } from "@/components/home/home-parts";
 import type { HomeItem } from "@/modules/contributions";
 
 export type OverviewGroup = { label: string; links: { href: string; label: string; description?: string; icon: LucideIcon }[] };
@@ -20,20 +21,29 @@ export function ModuleOverview({ name, description, icon, siteName, items, group
   groups: OverviewGroup[];
 }) {
   const placed: Placed[] = items.map((item) => ({ ...item, moduleIcon: icon, key: `${item.href}:${item.label}` }));
-  const { actions, today, waiting } = sortItems(placed);
-  const needing = [...waiting, ...today].filter((i) => i.attention).length;
-  const buttons = actions.map((action, index) => (
-    <Button key={action.key} asChild variant={index === actions.length - 1 ? "default" : "outline"}>
-      <Link href={action.href}>{action.label}</Link>
-    </Button>
-  ));
+  const { actions, today, timeline, waiting } = sortItems(placed);
+  // The summary counts only the rows it sits beside.
+  const needing = waiting.filter((i) => i.attention).length;
+  // The module's first action is its main one: shown last, in blue.
+  const ordered = [...actions].reverse();
+  const buttons = ordered.map((action, index) => {
+    const Icon = action.icon ? ACTION_ICONS[action.icon] : null;
+    return (
+      <Button key={action.key} asChild variant={index === ordered.length - 1 ? "default" : "outline"}>
+        <Link href={action.href}>{Icon ? <Icon aria-hidden="true" /> : null}{action.label}</Link>
+      </Button>
+    );
+  });
+  const schedule = timeline[0];
+  const pages = groups.filter((group) => group.links.length > 0);
   return (
     <div className="flex min-w-0 flex-col gap-4">
       <PageHeader title={name} description={description} actions={buttons.length ? buttons : undefined} />
       {(today.length > 0 || waiting.length > 0) && (
         <div className="pc-grid">
           {today.length > 0 && (
-            <Section id="overview-today" title={siteName ? `Today at ${siteName}` : "Today"}>
+            <Section id="overview-today" title={siteName ? `Today at ${siteName}` : "Today"}
+              aside={schedule ? <Button asChild variant="ghost"><Link href={schedule.href}>Open schedule<ChevronRight aria-hidden="true" /></Link></Button> : undefined}>
               <TodayGrid items={today} />
             </Section>
           )}
@@ -45,7 +55,9 @@ export function ModuleOverview({ name, description, icon, siteName, items, group
         </div>
       )}
       <Section id="overview-pages" title={`Everything in ${name}`}>
-        <PageList groups={groups} />
+        {pages.length ? <PageList groups={pages} /> : (
+          <EmptyState as="h3" icon="layers" title={`Nothing to open at ${siteName ?? "this site"}`} hint="Switch site or ask your manager" />
+        )}
       </Section>
     </div>
   );

@@ -31,11 +31,11 @@ export function RegisterThisDevice({ sites }: { sites: { id: string; name: strin
 export function ForgetThisDevice() {
   return (
     <ConfirmAction
-      trigger={<Button variant="outline"><Unplug aria-hidden="true" className="size-4" />Stop sharing this browser</Button>}
-      title="Stop treating this browser as shared?"
+      trigger={<Button variant="outline"><Unplug aria-hidden="true" className="size-4" />Stop using this browser as a work device</Button>}
+      title="Stop using this browser as a work device?"
       description="Quick switch and the short idle sign-out stop here. The device stays listed until you revoke it."
-      confirmLabel="Stop sharing"
-      successMessage="This browser is no longer shared"
+      confirmLabel="Stop using it"
+      successMessage="This browser is no longer a work device"
       run={() => forgetThisDevice()}
     />
   );

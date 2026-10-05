@@ -2,8 +2,8 @@ import "server-only";
 import { prisma } from "@/lib/prisma";
 import { expandPermissions, type PermissionKey } from "@/lib/staff/permissions";
 import { visibleScreens, type ScreenKey } from "@/lib/staff/screens";
-import { registerCommitments, registerHomeCard, registerSiteSummary, registerStaffColumn, type Commitment, type HomeItem, type HomeSession } from "@/modules/contributions";
-import { formatTime, formatTimeRange, minutesNow, parseDateOnly, plural, today } from "@/lib/format";
+import { registerCommitments, registerHomeCard, registerSiteSummary, registerStaffColumn, type Commitment, type HomeIcon, type HomeItem, type HomeSession } from "@/modules/contributions";
+import { formatTime, minutesNow, parseDateOnly, plural, today } from "@/lib/format";
 import { weekdayOfIso } from "@/modules/activities/lib/attendance/dates";
 import { getCoversForDay } from "@/modules/activities/lib/attendance/data/cover";
 import { getCancellationsForDay } from "@/modules/activities/lib/cancellations/data";
@@ -11,6 +11,7 @@ import { courseName } from "@/modules/activities/lib/courses/constants";
 import { getCoursesOnDay } from "@/modules/activities/lib/courses/data/courses";
 import { getAwaitingEnrolment } from "@/modules/activities/lib/enrolment/data/awaiting-enrolment";
 import { getTodayAssessments } from "@/modules/activities/lib/today/assessments";
+import { sessionState } from "@/modules/activities/lib/today/calendar";
 
 
 /** Classes each person is the scheduled instructor for, archived ones included,
@@ -88,20 +89,13 @@ registerSiteSummary({
 });
 
 /** The Swim school on the home page, for the viewer's working site. Quick
- *  actions for the desk's everyday jobs, today's classes and assessments, the
- *  follow-up queues with their counts, and links to the rest. Each thing
- *  appears only when the viewer can already open it. */
-type SwimLine = HomeItem & { screen: ScreenKey; permission?: PermissionKey };
-const SWIM_ACTIONS: readonly SwimLine[] = [
-  { kind: "action", icon: "search", label: "Find a swimmer", href: "/students", screen: "students" },
-  { kind: "action", icon: "userPlus", label: "Add a swimmer", href: "/students?add=1", screen: "students", permission: "students.manage" },
-  { kind: "action", icon: "calendarPlus", label: "Book an assessment", href: "/assessments", screen: "assessments", permission: "enrolment.manage" },
-];
-const SWIM_LINKS: readonly SwimLine[] = [
-  { label: "Duty manager", hint: "Today's classes and cancelling a session", href: "/duty", screen: "duty" },
-  { label: "Cancelled classes", hint: "Follow up billing", href: "/cancellations", screen: "cancellations" },
-  { label: "Programmes and levels", href: "/programmes", screen: "programmes" },
-  { label: "Reports", href: "/analytics", screen: "analytics" },
+ *  actions for the desk's everyday jobs, today's classes and assessments, and
+ *  the follow-up queues with their counts. Each thing appears only when the
+ *  viewer can already open it. Finding a swimmer is the frame's search. */
+type SwimAction = { label: string; href: string; icon: HomeIcon; screen: ScreenKey; permission?: PermissionKey };
+const SWIM_ACTIONS: readonly SwimAction[] = [
+  { icon: "userPlus", label: "Add a swimmer", href: "/students?add=1", screen: "students", permission: "students.manage" },
+  { icon: "calendarPlus", label: "Book an assessment", href: "/assessments", screen: "assessments", permission: "enrolment.manage" },
 ];
 
 registerHomeCard({
@@ -109,8 +103,8 @@ registerHomeCard({
   async items(viewer) {
     const held = expandPermissions(viewer.permissions, { superadmin: viewer.isSuperadmin });
     const screens = visibleScreens(held);
-    const allowed = (line: SwimLine) => screens.has(line.screen) && (!line.permission || held.has(line.permission));
-    const strip = ({ label, hint, href, kind, icon }: SwimLine): HomeItem => ({ label, hint, href, kind, icon });
+    const allowed = (line: SwimAction) => screens.has(line.screen) && (!line.permission || held.has(line.permission));
+    const strip = ({ label, href, icon }: SwimAction): HomeItem => ({ kind: "action", label, href, icon });
     const iso = today();
     const [classes, cancelled, assessments, covers, awaiting, parentUpdates] = await Promise.all([
       screens.has("calendar") ? getCoursesOnDay(weekdayOfIso(iso)) : null,
@@ -123,19 +117,17 @@ registerHomeCard({
     const items: HomeItem[] = SWIM_ACTIONS.filter(allowed).map(strip);
     if (classes && cancelled) {
       const off = classes.filter((c) => cancelled.has(c.id)).length;
-      items.push({ kind: "today", label: "Classes today", count: classes.length - off, hint: off ? `${plural(off, "class", "classes")} cancelled` : "None cancelled", href: "/schedule" });
+      items.push({ kind: "today", label: classes.length - off === 1 ? "Class" : "Classes", count: classes.length - off, hint: off ? `${plural(off, "class", "classes")} cancelled` : "None cancelled", href: "/schedule" });
     }
     if (classes && cancelled && assessments && covers) {
       const now = minutesNow();
-      const state = (start: number, end: number): HomeSession["state"] => (end <= now ? "done" : start <= now ? "now" : "next");
       const sessions: HomeSession[] = [
         ...classes.map((c): HomeSession => {
           const end = c.startMinutes + c.durationMinutes, cover = covers.get(c.id);
-          const who = cover?.coverByName ?? c.instructor?.name;
-          const timed = state(c.startMinutes, end);
+          const who = cover?.coverByName ?? c.instructor?.name ?? null;
           return {
             label: courseName(c), area: c.location || "Pool area not set", start: c.startMinutes, end, hint: who ?? "No instructor", href: `/courses/${c.id}`,
-            state: cancelled.has(c.id) ? "off" : !who && timed !== "done" ? "cover" : timed,
+            state: sessionState({ ...c, cancellation: cancelled.get(c.id) ?? null, instructor: who }, now),
           };
         }),
         ...assessments.map((a): HomeSession => ({
@@ -147,16 +139,16 @@ registerHomeCard({
     }
     if (assessments) {
       const booked = assessments.reduce((sum, a) => sum + a.booked, 0);
-      items.push({ kind: "today", label: "Assessments today", count: assessments.length, hint: assessments.length ? `${plural(booked, "swimmer", "swimmers")} booked` : "No sessions today", href: "/schedule" });
+      items.push({ kind: "today", icon: "clipboardCheck", label: assessments.length === 1 ? "Assessment" : "Assessments", count: assessments.length, hint: assessments.length ? `${plural(booked, "swimmer", "swimmers")} booked` : "No sessions today", href: "/schedule" });
     }
     if (awaiting) items.push({ label: "Awaiting enrolment", hint: "Class places and family follow-ups", href: "/awaiting-enrolment", count: awaiting.total, attention: awaiting.total > 0 });
     if (parentUpdates !== null) items.push({ label: "Parent updates", hint: "Contact and medical corrections", href: "/students/parent-changes", count: parentUpdates, attention: parentUpdates > 0 });
-    return [...items, ...SWIM_LINKS.filter(allowed).map(strip)];
+    return items;
   },
 });
 
 /** The Pool deck on the home page: the teacher's own classes today, what is
- *  next, and the swimmer lookup. */
+ *  next, and the way onto the deck. */
 registerHomeCard({
   moduleId: "pool-deck",
   async items(viewer) {
@@ -168,12 +160,10 @@ registerHomeCard({
     const ahead = mine.filter((c) => c.startMinutes + c.durationMinutes > now);
     return [
       {
-        kind: "today", label: "Your classes today", href: "/instructor", count: mine.length,
+        kind: "today", label: mine.length === 1 ? "Your class" : "Your classes", href: "/instructor", count: mine.length,
         hint: ahead.length ? `Next at ${formatTime(ahead[0].startMinutes)}` : mine.length ? "All done for today" : "Nothing on your list today",
-        list: ahead.slice(0, 3).map((c) => ({ label: courseName(c), hint: `${formatTimeRange(c.startMinutes, c.startMinutes + c.durationMinutes)} · ${c.location || "Pool"}` })),
       },
       { kind: "action", icon: "clipboardCheck", label: "Open my classes", href: "/instructor" },
-      { label: "Find a swimmer in your classes", href: "/instructor/swimmers" },
     ];
   },
 });

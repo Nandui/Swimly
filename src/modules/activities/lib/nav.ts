@@ -64,6 +64,12 @@ export function visibleNavGroups(screens: Set<ScreenKey>): NavGroup[] {
   ].filter(group => group.items.length > 0);
 }
 
+/** The daily-work pages this person can open, as plain links (no icons, so a server page can
+ *  hand them to a client frame): the home page's page bar after Today. */
+export function dailyPages(screens: Set<ScreenKey>): { href: string; label: string }[] {
+  return visibleNavItems(screens).filter((item) => item.group === "daily").map(({ href, label }) => ({ href, label }));
+}
+
 export { isNavItemActive } from "@/lib/nav-active";
 
 /** Search must land on a screen the person can actually open. */

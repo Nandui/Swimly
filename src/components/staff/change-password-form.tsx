@@ -57,7 +57,7 @@ export function ChangePasswordForm() {
   }
 
   return (
-    <FormFeedbackProvider feedback={feedback}><form ref={formRef} aria-busy={pending} onSubmit={handleSubmit} className="max-w-sm">
+    <FormFeedbackProvider feedback={feedback}><form ref={formRef} aria-busy={pending} onSubmit={handleSubmit}>
       <div className="min-w-0 flex flex-col gap-4">
         <Field label="Current password" htmlFor="current">
           <Input

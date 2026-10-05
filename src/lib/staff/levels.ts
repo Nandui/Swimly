@@ -170,14 +170,29 @@ export function roleColumns(role: RoleLevels) {
   return { levels: clean.levels, extras: [...clean.extras], permissions: storedPermissions(clean), restricted: isRestrictedRole(clean) };
 }
 
-/** "Swim school: Desk (can cancel classes) · Refunds: Use", for the activity
- *  log and the converter's report. */
-export function describeLevels(role: RoleLevels): string {
-  const parts = allModules().flatMap((mod) => {
+/** One module a role reaches: its level, that level's help sentence and the
+ *  ticks (extras) held there, e.g. the Account page's "What you can do". */
+export type LevelLine = { moduleId: string; module: string; level: string; help: string; ticks: { label: string; help: string }[] };
+
+/** The role's modules, in catalogue order, with no line for a module it has
+ *  no level in. The work-anywhere tick is not a module; read it from `extras`. */
+export function levelLines(role: RoleLevels): LevelLine[] {
+  return allModules().flatMap((mod) => {
     const rank = rankOf(mod, role.levels[mod.id]);
     if (rank < 0) return [];
-    const ticks = (mod.access.extras ?? []).filter((e) => role.extras.includes(`${mod.id}.${e.key}`)).map((e) => e.label.toLowerCase());
-    return [`${mod.name}: ${mod.access.levels[rank].label}${ticks.length ? ` (${ticks.join(", ")})` : ""}`];
+    const level = mod.access.levels[rank];
+    const ticks = (mod.access.extras ?? []).filter((e) => role.extras.includes(`${mod.id}.${e.key}`)).map((e) => ({ label: e.label, help: e.help }));
+    return [{ moduleId: mod.id, module: mod.name, level: level.label, help: level.help, ticks }];
+  });
+}
+
+/** "Swim school: Desk (can cancel classes) · Refunds: Use", for the activity
+ *  log and the converter's report. Audit summaries store this string, so it
+ *  must not change shape. */
+export function describeLevels(role: RoleLevels): string {
+  const parts = levelLines(role).map((line) => {
+    const ticks = line.ticks.map((tick) => tick.label.toLowerCase());
+    return `${line.module}: ${line.level}${ticks.length ? ` (${ticks.join(", ")})` : ""}`;
   });
   if (role.extras.includes(WORK_ANYWHERE)) parts.push("can work away from the centre's PCs");
   return parts.length ? parts.join(" · ") : "No modules";

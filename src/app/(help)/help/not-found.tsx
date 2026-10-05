@@ -8,7 +8,7 @@ export const metadata: Metadata = { title: "Page not found" };
  *  guide shows the root not-found card on the sign-in canvas. */
 export default function HelpNotFound() {
   return (
-    <AuthFrame>
+    <AuthFrame fin="center">
       <RootNotFound />
     </AuthFrame>
   );

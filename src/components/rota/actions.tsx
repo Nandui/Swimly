@@ -14,6 +14,13 @@ import { ROTA_CHANGE_REASON_META, ROTA_CHANGE_REASONS, addDaysIso, clock, monday
 
 const THEME = "turnfin-module";
 
+/** A trigger that is a timeline block (TimelineGrid): its state and density, for the block's
+ *  fill and shape. Week plan's triggers leave it out. */
+export type BlockPart = { state: string; density: string };
+export function blockAttrs(block?: BlockPart) {
+  return block ? { "data-block": block.state, "data-density": block.density } : {};
+}
+
 type Option = { id: string; name: string };
 type Shift = { id: string; date: Date; startMinutes: number; endMinutes: number; role: string; note: string; userId: string | null; requiredTypeId: string | null; departmentId: string | null };
 /** What a new duty starts with, e.g. from a day on the pool breakdown. */
@@ -52,7 +59,7 @@ export function ShiftDialog({ siteId, date, today, shift, options, label, sugges
   suggested?: RotaChangeReason;
   /** A trigger of the caller's own, e.g. a block on Today's timeline. Passed
    *  as parts, not an element, so a server page can hand it over. */
-  trigger?: { label: string; variant?: "ghost" | "outline"; className?: string; style?: CSSProperties; children: ReactNode };
+  trigger?: { label: string; variant?: "ghost" | "outline"; className?: string; style?: CSSProperties; children: ReactNode; size?: "icon"; block?: BlockPart };
   /** The person to put on it, e.g. the cover Today suggests. */
   person?: string;
   /** A new duty's starting values. */
@@ -68,7 +75,7 @@ export function ShiftDialog({ siteId, date, today, shift, options, label, sugges
       width="sm:max-w-lg"
       onOpen={() => setDay(initial)}
       trigger={trigger
-        ? <Button type="button" variant={trigger.variant ?? "outline"} aria-label={trigger.label} className={trigger.className} style={trigger.style}>{trigger.children}</Button>
+        ? <Button type="button" variant={trigger.block ? "link" : trigger.variant ?? "outline"} size={trigger.size} aria-label={trigger.label} className={trigger.className} style={trigger.style} {...blockAttrs(trigger.block)}>{trigger.children}</Button>
         : (shift && label
         ? <Button variant="outline" className="min-h-11"><Pencil aria-hidden="true" />{label}</Button>
         : shift

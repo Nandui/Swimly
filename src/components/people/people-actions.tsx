@@ -1,7 +1,7 @@
 "use client";
 
 import * as React from "react";
-import { Archive, ArchiveRestore, Award, Ban, Building2, Pencil, Plus, ShieldCheck, ShieldOff } from "lucide-react";
+import { ArchiveRestore, Award, Building2, CirclePause, Pencil, Plus, ShieldCheck, ShieldOff, XCircle } from "lucide-react";
 import { Button } from "@/components/shadcn/button";
 import { Checkbox } from "@/components/shadcn/checkbox";
 import { Label } from "@/components/shadcn/label";
@@ -38,7 +38,7 @@ export function EditProfile({ person, sites, departments, people }: {
   });
   return (
     <FormDialog
-      trigger={<Button variant="outline">{icon(Pencil)}Edit profile</Button>}
+      trigger={<Button variant="default">{icon(Pencil)}Edit profile</Button>}
       title={`${person.name}'s profile`}
       description="Their job, main site, manager and departments. Their manager decides who can see their HR record as their team."
       submitLabel="Save profile"
@@ -186,7 +186,7 @@ export function RecordQualification({ userId, name, types }: { userId: string; n
 export function RevokeQualification({ id, label }: { id: string; label: string }) {
   return (
     <FormDialog
-      trigger={<Button variant="outline" size="icon" aria-label={`Withdraw ${label}`}>{icon(Ban)}</Button>}
+      trigger={<Button variant="outline" size="icon" aria-label={`Withdraw ${label}`}>{icon(XCircle)}</Button>}
       title={`Withdraw ${label}?`}
       description="It stays on their record as withdrawn, with your reason."
       submitLabel="Withdraw"
@@ -209,7 +209,7 @@ export function SaveDepartment({ department, sites }: { department?: { id: strin
     <FormDialog
       trigger={department
         ? <Button variant="outline" size="icon" aria-label={`Edit ${department.name}`}>{icon(Pencil)}</Button>
-        : <Button variant="default">{icon(Building2)}Add department</Button>}
+        : <Button variant="default">{icon(Plus)}Add department</Button>}
       title={department ? `Edit ${department.name}` : "Add a department"}
       description="A team such as Aquatics, Reception or Maintenance. Tie it to a site if it only works at one."
       submitLabel={department ? "Save department" : "Add department"}
@@ -225,10 +225,22 @@ export function SaveDepartment({ department, sites }: { department?: { id: strin
 }
 
 export function ArchiveDepartment({ id, name, archived }: { id: string; name: string; archived: boolean }) {
+  if (archived) {
+    return (
+      <ActionButton ariaLabel={`Restore ${name}`} successMessage="Department restored" run={() => setDepartmentArchived(id, false)}>
+        {icon(ArchiveRestore)}
+      </ActionButton>
+    );
+  }
   return (
-    <ActionButton ariaLabel={`${archived ? "Restore" : "Archive"} ${name}`} successMessage={archived ? "Department restored" : "Department archived"} run={() => setDepartmentArchived(id, !archived)}>
-      {archived ? icon(ArchiveRestore) : icon(Archive)}
-    </ActionButton>
+    <ConfirmAction
+      trigger={<Button variant="outline" size="icon" aria-label={`Archive ${name}`}>{icon(CirclePause)}</Button>}
+      title={`Archive ${name}?`}
+      description="It leaves the department lists and nobody can be added to it. Only an empty department can be archived. You can restore it later."
+      confirmLabel="Archive"
+      successMessage="Department archived"
+      run={() => setDepartmentArchived(id, true)}
+    />
   );
 }
 
@@ -237,7 +249,7 @@ export function SaveQualificationType({ type }: { type?: { id: string; name: str
     <FormDialog
       trigger={type
         ? <Button variant="outline" size="icon" aria-label={`Edit ${type.name}`}>{icon(Pencil)}</Button>
-        : <Button variant="outline">{icon(Award)}Add qualification</Button>}
+        : <Button variant="outline">{icon(Plus)}Add qualification</Button>}
       title={type ? `Edit ${type.name}` : "Add a qualification"}
       description="A certificate staff can hold, such as a lifeguard or first aid qualification."
       submitLabel={type ? "Save qualification" : "Add qualification"}
@@ -253,9 +265,21 @@ export function SaveQualificationType({ type }: { type?: { id: string; name: str
 }
 
 export function ArchiveQualificationType({ id, name, archived }: { id: string; name: string; archived: boolean }) {
+  if (archived) {
+    return (
+      <ActionButton ariaLabel={`Restore ${name}`} successMessage="Qualification restored" run={() => setQualificationTypeArchived(id, false)}>
+        {icon(ArchiveRestore)}
+      </ActionButton>
+    );
+  }
   return (
-    <ActionButton ariaLabel={`${archived ? "Restore" : "Archive"} ${name}`} successMessage={archived ? "Qualification restored" : "Qualification archived"} run={() => setQualificationTypeArchived(id, !archived)}>
-      {archived ? icon(ArchiveRestore) : icon(Archive)}
-    </ActionButton>
+    <ConfirmAction
+      trigger={<Button variant="outline" size="icon" aria-label={`Archive ${name}`}>{icon(CirclePause)}</Button>}
+      title={`Archive ${name}?`}
+      description="It can no longer be recorded for anyone. Qualifications already recorded stay on their profiles. You can restore it later."
+      confirmLabel="Archive"
+      successMessage="Qualification archived"
+      run={() => setQualificationTypeArchived(id, true)}
+    />
   );
 }

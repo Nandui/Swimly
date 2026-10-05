@@ -40,7 +40,7 @@ const plans=[
   {id:'analytics'}, {id:'programme',click:'Add programme',dialog:true,fill:{Name:'Water Safety & Fun'}},
   {id:'curriculum',click:'Add competency',dialog:true,fill:{'What the swimmer has to do':'Float on the back for five seconds'}},
   {id:'staff',click:'Add person',dialog:true,fill:{Name:'Alex Example',Email:'staff@example.invalid'}},
-  {id:'roles',click:'Edit Teaching team',dialog:true}, {id:'clubs',click:'Add a club',dialog:true,fill:{Name:'Example site'}}, {id:'activity'},
+  {id:'roles',click:'Edit Teaching team',dialog:true}, {id:'clubs',click:'Add site',dialog:true,fill:{Name:'Example site'}}, {id:'activity'},
 ];
 try {
   for(const plan of plans.filter(p=>!process.env.HELP_CAPTURE_ONLY||process.env.HELP_CAPTURE_ONLY.split(',').includes(p.id))){

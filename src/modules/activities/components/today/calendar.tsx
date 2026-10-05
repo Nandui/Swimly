@@ -1,16 +1,19 @@
 "use client";
 
-import { useEffect, useRef, useState, useTransition } from "react";
+import { useEffect, useRef, useState, useTransition, type ReactNode } from "react";
 import { useRouter } from "next/navigation";
-import { CheckCircle2, CircleX, List, Loader2, Table2, Users, RefreshCw } from "lucide-react";
+import { CircleCheck, CircleX, Clock, Loader2, RefreshCw, type LucideIcon } from "lucide-react";
 import { Button } from "@/components/shadcn/button";
 import { Tag } from "@/components/ui-kit/tag";
 import { EmptyState } from "@/components/ui-kit/empty-state";
-import { Item } from "@/components/shadcn/item";
+import { Notice } from "@/components/ui-kit/notice";
+import { PageHeader } from "@/components/ui-kit/page-header";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/shadcn/tabs";
-import { capacityTone, courseName, formatTime, placesLeft } from "@/modules/activities/lib/courses/constants";
-import { formatDay, formatTimeRange, minutesNow, plural, today } from "@/lib/format";
-import { CALENDAR_PHASE_META, calendarAgendaSlots, calendarAssessmentHref, calendarClassHref, calendarProgrammes, calendarSlots, classPhase, type CalendarAssessment, type CalendarClass } from "@/modules/activities/lib/today/calendar";
+import { capacityTone, courseName, placesLeft } from "@/modules/activities/lib/courses/constants";
+import { formatDay, formatTime, formatTimeRange, minutesNow, plural, today } from "@/lib/format";
+import { HOME_SESSION_META } from "@/lib/home-meta";
+import { cn } from "@/lib/utils";
+import { SCHEDULE_SUMMARY_META, calendarAgendaSlots, calendarAssessmentHref, calendarClassHref, calendarProgrammes, calendarSlots, classPhase, sessionState, type CalendarAssessment, type CalendarClass } from "@/modules/activities/lib/today/calendar";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/shadcn/table";
 import { ScheduleDayNavigation } from "./day-navigation";
 import { scheduleHref, scheduleNow } from "@/modules/activities/lib/schedule/dates";
@@ -81,59 +84,50 @@ export function ScheduleCalendar({ courses, assessments, iso, todayIso, initialN
   };
 
   return <section ref={surface} className={styles.calendar} data-schedule-calendar aria-busy={refreshing}>
-    <header className="flex flex-wrap items-start justify-between gap-4">
-      <div><h1 className="text-2xl font-semibold">Schedule</h1><p className="mt-1 text-sm text-ui-muted-foreground">{`${formatDay(iso)} · ${clubName}`}</p></div>
-      <div className="flex flex-wrap items-center gap-2">
-        <Button variant="ghost" className="min-h-11" onClick={refresh} disabled={refreshing} aria-busy={refreshing}>{refreshing ? <Loader2 className="animate-spin motion-reduce:animate-none" aria-hidden="true" /> : <RefreshCw aria-hidden="true" />}Refresh</Button>
-        {target && isToday ? <Button className="min-h-11" onClick={jump}>{running ? "Jump to now" : "Jump to next"}</Button> : null}
-      </div>
-    </header>
-    <ScheduleDayNavigation iso={iso} todayIso={clock.date} pending={refreshing} onSelect={date => startRefresh(() => router.push(scheduleHref(date), { scroll: false }))} />
+    <PageHeader title="Schedule" description={`${formatDay(iso)} · ${clubName}`} actions={<>
+      <Button variant="outline" onClick={refresh} disabled={refreshing} aria-busy={refreshing}>{refreshing ? <Loader2 className="animate-spin motion-reduce:animate-none" aria-hidden="true" /> : <RefreshCw aria-hidden="true" />}Refresh</Button>
+      {target && isToday ? <Button onClick={jump}><Clock aria-hidden="true" />{running ? "Jump to now" : "Jump to next"}</Button> : null}
+    </>} />
     <span className="sr-only" role="status">{refreshing ? "Loading schedule" : `Showing ${formatDay(iso)}`}</span>
-    <div inert={refreshing || undefined} className={refreshing ? "opacity-60" : undefined}>
+    <div className="pc-panel">
     <Tabs value={agenda ? 'agenda' : 'sheet'} onValueChange={next => setView(next as 'sheet' | 'agenda')} className="gap-4">
-
-    <section className={styles["sheet-toolbar"]} aria-label="Schedule display">
-      <div className={styles["sheet-summary"]} role="status" aria-live="polite">
-        <strong>{courses.length} {courses.length === 1 ? "class" : "classes"}</strong>
-        {assessments.length > 0 ? <strong>{assessments.length} {assessments.length === 1 ? "assessment" : "assessments"}</strong> : null}
-        {running > 0 ? <Tag meta={CALENDAR_PHASE_META.running} label={`${running} running now`} /> : null}
-        {isToday && later > 0 ? <span>{later} upcoming</span> : null}
-      </div>
-      <TabsList aria-label="Calendar display" className={width < 600 ? "hidden" : "group-data-[orientation=horizontal]/tabs:h-auto"}>
-        <TabsTrigger value="sheet" className="min-h-11" disabled={courses.length === 0 && assessments.length > 0}><Table2 aria-hidden="true" />Booking sheet</TabsTrigger>
-        <TabsTrigger ref={agendaTrigger} value="agenda" className="min-h-11"><List aria-hidden="true" />Agenda</TabsTrigger>
+    <div className="flex flex-wrap items-center justify-between gap-3">
+      <ScheduleDayNavigation iso={iso} todayIso={clock.date} pending={refreshing} onSelect={date => startRefresh(() => router.push(scheduleHref(date), { scroll: false }))} />
+      <TabsList aria-label="Calendar display" className={width < 600 ? "hidden" : undefined}>
+        <TabsTrigger value="sheet" disabled={courses.length === 0 && assessments.length > 0}>Booking sheet</TabsTrigger>
+        <TabsTrigger ref={agendaTrigger} value="agenda">Agenda</TabsTrigger>
       </TabsList>
-    </section>
+    </div>
+    <div inert={refreshing || undefined} className={cn("flex min-w-0 flex-col gap-4", refreshing && "opacity-60")}>
 
-    {courses.length === 0 && assessments.length > 0 && width >= 600 ? <p className="text-sm text-ui-muted-foreground">Assessment sessions appear in Agenda. The booking sheet shows weekly classes.</p> : null}
+    <div className="flex flex-wrap items-center gap-2" role="status" aria-live="polite">
+      <Tag meta={SCHEDULE_SUMMARY_META.classes} label={plural(courses.length, "class", "classes")} />
+      {assessments.length > 0 ? <Tag meta={SCHEDULE_SUMMARY_META.assessments} label={plural(assessments.length, "assessment")} /> : null}
+      {running > 0 ? <Tag meta={HOME_SESSION_META.now} label={`${running} running now`} /> : null}
+      {isToday && later > 0 ? <Tag meta={SCHEDULE_SUMMARY_META.upcoming} label={`${later} coming up`} /> : null}
+    </div>
 
-    {(courses.length > 0 || assessments.length > 0) ? <div className={styles["sheet-legend"]} aria-label="Availability">
-        <span><CheckCircle2 aria-hidden="true" />Spaces available</span>
-        <span><CircleX aria-hidden="true" />Full</span>
-    </div> : null}
+    {courses.length === 0 && assessments.length > 0 && width >= 600 ? <Notice title="Assessment sessions appear in Agenda." description="The booking sheet shows weekly classes." /> : null}
 
-    {!agenda && assessments.length > 0 ? <div className="flex flex-wrap items-center justify-between gap-2 rounded-ui-lg border border-ui-border bg-ui-muted/40 px-4 py-3">
-      <p className="text-sm">{assessments.length} {assessments.length === 1 ? "assessment is" : "assessments are"} also scheduled on this day.</p>
-      <Button variant="outline" className="min-h-11" onClick={() => { setView('agenda'); agendaTrigger.current?.focus(); }}><List aria-hidden="true" />View in agenda</Button>
-    </div> : null}
+    {!agenda && assessments.length > 0 ? <Notice title={`${plural(assessments.length, "assessment")} ${assessments.length === 1 ? "is" : "are"} also scheduled on this day.`}
+      actions={<Button variant="outline" onClick={() => { setView('agenda'); agendaTrigger.current?.focus(); }}>View in agenda</Button>} /> : null}
 
     <TabsContent value={agenda ? 'agenda' : 'sheet'} className="m-0 min-w-0" tabIndex={-1}>
     {courses.length === 0 && assessments.length === 0 ? <CalendarEmpty />
         : agenda ? <section className={styles["agenda"]} aria-label="Schedule agenda">
           {agendaSlots.map(slot => <section key={slot.start} aria-labelledby={`time-${slot.start}`}>
-            <header className={styles["agenda-time"]}><TimeHeading slot={slot} /><span className="text-sm text-ui-muted-foreground">{slot.entries.length} {slot.entries.length === 1 ? 'session' : 'sessions'}</span></header>
+            <header className={styles["agenda-time"]}><TimeHeading slot={slot} count={plural(slot.entries.length, "session")} /></header>
             <ul className={styles["agenda-list"]}>{slot.entries.map(entry => <li key={`${entry.kind}-${entry.value.id}`}>{entry.kind === 'class'
               ? <Booking course={entry.value} now={now} iso={iso} access={access} agenda />
               : <AssessmentBooking assessment={entry.value} now={now} allowed={access.assessments} />}</li>)}</ul>
           </section>)}
         </section> : <section className={styles["sheet-scroll"]} aria-label="Schedule booking sheet. Scroll horizontally for more times." tabIndex={0}>
-          <Table aria-label="Schedule booking sheet" data-layout="grid" containerClassName="overflow-visible" style={{ minWidth: 136 + slots.length * 144 }}>
-            <colgroup><col />{slots.map(slot => <col key={slot.start} />)}</colgroup>
+          <Table aria-label="Schedule booking sheet" data-layout="grid" containerClassName="overflow-visible">
+            <colgroup><col className={styles["level-col"]} />{slots.map(slot => <col key={slot.start} className={styles["time-col"]} />)}</colgroup>
             <TableHeader><TableRow>
-              <TableHead scope="col">Level / time</TableHead>
+              <TableHead scope="col">Level and time</TableHead>
               {slots.map(slot => <TableHead key={slot.start} scope="col" id={`column-${slot.start}`} data-phase={slot.phase}>
-                <TimeHeading slot={slot} /><span className={styles["sheet-time-count"]}>{slot.classes.length} {slot.classes.length === 1 ? 'class' : 'classes'}</span>
+                <TimeHeading slot={slot} count={plural(slot.classes.length, "class", "classes")} />
               </TableHead>)}
             </TableRow></TableHeader>
             {programmes.map(({ programme, levels }) => <TableBody key={programme.id} aria-labelledby={`programme-${programme.id}`}>
@@ -150,14 +144,14 @@ export function ScheduleCalendar({ courses, assessments, iso, todayIso, initialN
                   return <TableCell key={slot.start} headers={`level-${level.id} column-${slot.start}`} data-empty={!classes}>
                     {classes ? <ul className={styles["booking-list"]} aria-label={`${level.name}, ${formatTime(slot.start)}`}>
                       {classes.map(course => <li key={course.id}><Booking course={course} now={now} iso={iso} access={access} /></li>)}
-                    </ul> : <><span aria-hidden="true">—</span><span className={styles["sr-only"]}>No class</span></>}
+                    </ul> : <><span aria-hidden="true">—</span><span className="sr-only">No class</span></>}
                   </TableCell>;
                 })}
               </TableRow>)}
             </TableBody>)}
           </Table>
         </section>}
-    </TabsContent></Tabs></div>
+    </TabsContent></div></Tabs></div>
   </section>;
 }
 
@@ -165,11 +159,40 @@ function CalendarEmpty() {
   return <EmptyState as="h2" icon="calendarCheck" title="Nothing scheduled for this day" hint="There are no classes or assessments scheduled at this pool on the selected day." />;
 }
 
-function TimeHeading({ slot }: { slot: Pick<Slot, "start" | "phase"> }) {
+/** A start time with its count; the running start says "On now" (the session map's word) and the
+ *  next start "Next", so the column needing attention is named, not only coloured. */
+function TimeHeading({ slot, count }: { slot: Pick<Slot, "start" | "phase">; count: string }) {
+  const lead = slot.phase === "running" ? `${HOME_SESSION_META.now.label} · ` : slot.phase === "next" ? "Next · " : "";
   return <div className={styles["sheet-time"]}>
     <h2 id={`time-${slot.start}`} tabIndex={-1}>{formatTime(slot.start)}</h2>
-    {slot.phase === 'running' ? <Tag meta={CALENDAR_PHASE_META.running} label="Now" /> : slot.phase === 'next' ? <Tag meta={CALENDAR_PHASE_META.next} label="Next" /> : null}
+    <span className={styles["sheet-time-count"]}>{lead}{count}</span>
   </div>;
+}
+
+/** Places left as a block tag: "2 free" or "No limit" with a check, "Full" or "2 over" with a
+ *  cross; `spoken` is the longer form for the accessible name and tooltip. */
+function availability(taken: number, capacity: number | null) {
+  const free = placesLeft(taken, capacity), over = capacityTone(taken, capacity);
+  if (free === null) return { icon: CircleCheck, tag: "No limit", spoken: "Spaces available, no limit" };
+  if (free > 0) return { icon: CircleCheck, tag: `${free} free`, spoken: `${plural(free, "space")} available` };
+  if (over && capacity !== null && taken > capacity) return { icon: CircleX, tag: over.label, spoken: `Full, ${over.label} capacity` };
+  return { icon: CircleX, tag: "Full", spoken: "Full, no spaces available" };
+}
+
+/** One time block: title, caption lines that take the block's own text colour, then its tags. */
+function Block({ href, label, state, title, lines, tags }: {
+  href?: string; label: string; state?: string; title: string; lines: string[]; tags: ReactNode;
+}) {
+  const content = <>
+    <span className="pc-block-body"><span className="pc-block-title">{title}</span>{lines.map((line, index) => <span key={index} className="pc-block-hint">{line}</span>)}</span>
+    <span className={styles["block-tags"]}>{tags}</span>
+  </>;
+  return href ? <a href={href} className="pc-block" data-state={state} aria-label={label}>{content}</a>
+    : <article className="pc-block" data-state={state} aria-label={label}>{content}</article>;
+}
+
+function BlockTag({ icon: Icon, label, title }: { icon: LucideIcon; label: string; title?: string }) {
+  return <span className="pc-block-tag" title={title}><Icon aria-hidden />{label}</span>;
 }
 
 function AssessmentBooking({ assessment, now, allowed }: { assessment: CalendarAssessment; now: number | null; allowed: boolean }) {
@@ -177,62 +200,39 @@ function AssessmentBooking({ assessment, now, allowed }: { assessment: CalendarA
   const href = calendarAssessmentHref(assessment.id, allowed);
   const name = assessment.typeName || 'Assessment session';
   const location = assessment.location || 'Location not set';
-  const free = placesLeft(assessment.booked, assessment.capacity);
-  const available = free === null || free > 0;
-  const availability = available
-    ? free === null ? 'Spaces available · no limit' : `${plural(free, 'space')} available`
-    : 'Full · no spaces available';
-  const AvailabilityIcon = available ? CheckCircle2 : CircleX;
-  const bookedLabel = assessment.capacity === null ? `${assessment.booked} booked` : `${assessment.booked} of ${assessment.capacity} booked`;
-  const content = <>
-    <span className={styles["booking-status"]}><Tag meta={CALENDAR_PHASE_META.assessment} /></span>
-    <span className={styles["booking-title"]}><span>{name}</span><span className={styles["booking-availability"]} data-available={available} role="img" aria-label={availability} title={availability}><AvailabilityIcon aria-hidden="true" /></span></span>
-    <span className={styles["booking-subtitle"]}>{assessment.programmeName} · {location}</span>
-    <span className={styles["booking-subtitle"]}>{assessment.instructor?.name || 'No instructor assigned'}</span>
-    <span className={styles["booking-time"]}>{formatTimeRange(assessment.startMinutes, assessment.startMinutes + assessment.durationMinutes)}</span>
-    <span className={styles["booking-capacity"]}>
-      <span className={styles["booking-places"]} title={bookedLabel}><Users aria-hidden="true" /><span aria-hidden="true">{assessment.capacity === null ? assessment.booked : `${assessment.booked}/${assessment.capacity}`}</span><span className={styles["sr-only"]}>{bookedLabel}</span></span>
-      <span className={styles["booking-free"]}>{assessment.capacity !== null && assessment.booked > assessment.capacity ? `${assessment.booked - assessment.capacity} over capacity` : free !== null ? `${free} free` : 'No limit'}</span>
-    </span>
-    {phase === 'running' ? <span className={styles["booking-status"]}><Tag meta={CALENDAR_PHASE_META.running} /></span> : null}
-  </>;
-  const label = `Assessment: ${name}, ${formatTime(assessment.startMinutes)}, ${location}, ${availability}`;
-  return <Item asChild variant="outline" className={styles.booking} data-phase={phase}>{href ? <a href={href} aria-label={`Open ${label}`}>{content}</a> : <article aria-label={label}>{content}</article>}</Item>;
+  const places = availability(assessment.booked, assessment.capacity);
+  const booked = assessment.capacity === null ? `${assessment.booked} booked` : `${assessment.booked}/${assessment.capacity} booked`;
+  const meta = HOME_SESSION_META.assessment;
+  const label = `Assessment: ${name}, ${formatTime(assessment.startMinutes)}, ${location}, ${places.spoken}${phase === "running" ? ", running now" : ""}`;
+  return <Block href={href} label={href ? `Open ${label}` : label} state="assessment" title={name}
+    lines={[`${assessment.programmeName} · ${location}`, assessment.instructor?.name || 'No instructor assigned', `${formatTimeRange(assessment.startMinutes, assessment.startMinutes + assessment.durationMinutes)} · ${booked}`]}
+    tags={<><BlockTag icon={meta.icon} label={meta.label} /><BlockTag icon={places.icon} label={places.tag} title={places.spoken} /></>} />;
 }
 
 function Booking({ course, now, iso, access, agenda = false }: { course: CalendarClass; now: number | null; iso: string; access: Access; agenda?: boolean }) {
-  if (course.cancellation) return <Item variant="outline" className={styles.booking}>
-    <span className={styles["booking-title"]}>{agenda ? courseName(course) : course.location || "Pool"}</span>
-    <span className={styles["booking-status"]}><Tag meta={CALENDAR_PHASE_META.cancelled} /></span>
-    <span className={styles["booking-time"]}>{formatTimeRange(course.startMinutes, course.startMinutes + course.durationMinutes)}</span>
-    <span className="break-words text-xs text-ui-muted-foreground">{course.cancellation.reason}</span>
-  </Item>;
-  const phase = classPhase(course, now);
   const name = courseName(course);
-  const href = calendarClassHref(course.id, iso, access);
-  const tone = capacityTone(course.enrolled, course.capacity);
-  const free = placesLeft(course.enrolled, course.capacity);
-  // Null capacity is no limit in Swimly; full and over-capacity classes have no places.
-  const available = free === null || free > 0;
-  const swimmersLabel = course.capacity === null ? `${plural(course.enrolled, 'swimmer')} enrolled` : `${course.enrolled} of ${plural(course.capacity, 'swimmer')}`;
-  const availability = available
-    ? free === null ? 'Spaces available · no limit' : `${plural(free, 'space')} available`
-    : tone && course.capacity !== null && course.enrolled > course.capacity ? `Full · ${tone.label} capacity` : 'Full · no spaces available';
-  const AvailabilityIcon = available ? CheckCircle2 : CircleX;
+  const time = formatTimeRange(course.startMinutes, course.startMinutes + course.durationMinutes);
   const location = course.location || 'Location not set';
-  const content = <>
-    <span className={styles["booking-title"]}><span>{agenda ? name : location}</span>
-      <span className={styles["booking-availability"]} data-available={available} role="img" aria-label={availability} title={availability}><AvailabilityIcon aria-hidden="true" /></span>
-    </span>
-    {agenda ? <span className={styles["booking-subtitle"]}>{location}</span> : name !== course.level.name ? <span className={styles["booking-subtitle"]}>{name}</span> : null}
-    <span className={styles["booking-subtitle"]}>{course.cover ? course.cover.coverByName + (course.cover.coverById !== (course.cover.instructorId === undefined ? course.instructorId : course.cover.instructorId) ? ' · Cover' : '') : course.instructor?.name || 'No instructor assigned'}</span>
-    <span className={styles["booking-time"]}>{formatTimeRange(course.startMinutes, course.startMinutes + course.durationMinutes)}</span>
-    <span className={styles["booking-capacity"]}>
-      <span className={styles["booking-places"]} title={swimmersLabel}><Users aria-hidden="true" /><span aria-hidden="true">{course.capacity === null ? course.enrolled : `${course.enrolled}/${course.capacity}`}</span><span className={styles["sr-only"]}>{swimmersLabel}</span></span>
-      <span className={styles["booking-free"]}>{course.capacity !== null && course.enrolled > course.capacity ? `${course.enrolled - course.capacity} over capacity` : free !== null ? `${free} free` : 'No limit'}</span>
-    </span>
-    {agenda && phase === 'running' ? <span className={styles["booking-status"]}><Tag meta={CALENDAR_PHASE_META.running} /></span> : null}
-  </>;
-  return <Item asChild variant="outline" className={styles.booking} data-phase={phase}>{href ? <a href={href} aria-label={`Open class: ${name}, ${formatTime(course.startMinutes)}, ${location}, ${availability}${phase === 'running' ? ', running now' : ''}`}>{content}</a>
-    : <article aria-label={`${name}, ${formatTime(course.startMinutes)}, ${location}, ${availability}`}>{content}</article>}</Item>;
+  // A declared substitute keeps the class's phase colour and reads "(cover)"; only a class nobody
+  // is teaching takes the cover state, as on the home timeline.
+  const teacher = course.cover?.coverByName ?? course.instructor?.name ?? null;
+  const substitute = !!course.cover && course.cover.coverById !== (course.cover.instructorId === undefined ? course.instructorId : course.cover.instructorId);
+  const who = teacher ? `${teacher}${substitute ? " (cover)" : ""}` : "No instructor";
+  const state = sessionState({ ...course, instructor: teacher }, now);
+  // A future day has no clock yet, so its classes are neutral blocks rather than "coming up".
+  const shown = now === null && state === "next" ? undefined : state;
+  const href = calendarClassHref(course.id, iso, access);
+  const levelLine = !agenda && name !== course.level.name ? [name] : [];
+  if (course.cancellation) {
+    const off = HOME_SESSION_META.off;
+    return <Block label={`${name}, ${time}, ${location}, ${off.label}`} state="off" title={agenda ? name : who}
+      lines={[...levelLine, ...(agenda ? [who] : []), `${location} · ${course.cancellation.reason}`]} tags={<BlockTag icon={off.icon} label={off.label} />} />;
+  }
+  const places = availability(course.enrolled, course.capacity);
+  const swimmers = course.capacity === null ? `${plural(course.enrolled, 'swimmer')} enrolled` : `${course.enrolled} of ${plural(course.capacity, 'swimmer')}`;
+  const count = `${location} · ${course.capacity === null ? `${course.enrolled} enrolled` : `${course.enrolled}/${course.capacity}`}`;
+  const label = `${name}, ${formatTime(course.startMinutes)}, ${location}, ${places.spoken}${state === "now" ? ", running now" : ""}`;
+  return <Block href={href} label={href ? `Open class: ${label}` : label} state={shown} title={agenda ? name : who}
+    lines={agenda ? [who, count, time] : [...levelLine, count]}
+    tags={<BlockTag icon={places.icon} label={places.tag} title={`${swimmers}. ${places.spoken}`} />} />;
 }

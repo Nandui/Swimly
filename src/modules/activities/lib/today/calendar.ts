@@ -1,5 +1,5 @@
 import type { CourseRow } from "@/modules/activities/lib/courses/data/courses";
-import { CalendarClock, CircleCheck, ClipboardCheck, Clock3, Play, XCircle } from "lucide-react";
+import { CalendarDays, ClipboardCheck, Clock3 } from "lucide-react";
 import type { StatusMeta } from "@/lib/status";
 
 export type CalendarClass = Pick<CourseRow,
@@ -49,13 +49,12 @@ export function calendarAssessmentHref(id: string, allowed: boolean) {
   return allowed ? `/assessments/${encodeURIComponent(id)}` : undefined;
 }
 
-export const CALENDAR_PHASE_META = {
-  cancelled: { label: "Cancelled", color: "red", icon: XCircle },
-  running: { label: "Running now", color: "green", icon: Play },
-  next: { label: "Next start", color: "blue", icon: Clock3 },
-  finished: { label: "Finished", color: "gray", icon: CircleCheck },
-  later: { label: "Later", color: "gray", icon: CalendarClock },
-  assessment: { label: "Assessment", color: "purple", icon: ClipboardCheck },
+/** The schedule's summary counts. Phase tags (running, cancelled, assessment) come from
+ *  HOME_SESSION_META, so the schedule, duty list and home timeline share one set of words. */
+export const SCHEDULE_SUMMARY_META = {
+  classes: { label: "Classes", color: "gray", icon: CalendarDays },
+  assessments: { label: "Assessments", color: "gray", icon: ClipboardCheck },
+  upcoming: { label: "Coming up", color: "gray", icon: Clock3 },
 } as const satisfies Record<string, StatusMeta>;
 
 export function classPhase(course: Pick<CalendarClass, "startMinutes" | "durationMinutes" | "cancellation">, now: number | null) {
@@ -63,6 +62,21 @@ export function classPhase(course: Pick<CalendarClass, "startMinutes" | "duratio
   if (now === null) return "later";
   if (now >= course.startMinutes + course.durationMinutes) return "finished";
   return now >= course.startMinutes ? "running" : "later";
+}
+
+/** A class's block state on the home timeline and the duty list, keyed like
+ *  HOME_SESSION_META so both read from one map: cancelled is off, a class
+ *  with nobody to teach it needs cover until it has finished, then running,
+ *  coming up or finished. `instructor` is whoever teaches today (cover
+ *  included), or null. */
+export function sessionState(
+  course: Pick<CalendarClass, "startMinutes" | "durationMinutes" | "cancellation"> & { instructor: string | null },
+  now: number | null,
+): "off" | "cover" | "now" | "next" | "done" {
+  const phase = classPhase(course, now);
+  if (phase === "cancelled") return "off";
+  if (!course.instructor && phase !== "finished") return "cover";
+  return phase === "running" ? "now" : phase === "later" ? "next" : "done";
 }
 
 export function filterCalendarClasses(courses: CalendarClass[], location: string, instructor: string, me: string) {

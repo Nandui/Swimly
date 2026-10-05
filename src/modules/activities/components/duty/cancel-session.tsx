@@ -10,8 +10,8 @@ import { LoadingButton } from "@/components/ui/loading-button";
 import { FormFeedbackProvider, useFormFeedback } from "@/components/ui/form-feedback";
 import { Notice } from "@/components/ui-kit/notice";
 import { cancelClassSession } from "@/modules/activities/lib/cancellations/actions";
-import { formatDate, parseDateOnly } from "@/lib/format";
-import { formatTime } from "@/modules/activities/lib/courses/constants";
+import { CalendarX2 } from "lucide-react";
+import { formatDate, formatTime, formatTimeRange, parseDateOnly } from "@/lib/format";
 import type { DutyClass } from "@/modules/activities/lib/duty/data";
 import { SAVE_UNCONFIRMED_MESSAGE, withTimeout } from "@/lib/save-feedback";
 
@@ -21,11 +21,11 @@ export function CancelSession({ course, date, disabled }: { course: DutyClass; d
   const { formRef, summaryRef, ...feedback } = useFormFeedback();
   const router = useRouter();
   return <Dialog open={open} onOpenChange={value => { if (!pending) setOpen(value); }}>
-    <DialogTrigger asChild><Button variant="outline" className="min-h-11" disabled={disabled} aria-label={`Cancel session: ${course.name}, ${formatTime(course.startMinutes)}`}>Cancel session</Button></DialogTrigger>
+    <DialogTrigger asChild><Button variant="outline" disabled={disabled} aria-label={`Cancel session: ${course.name}, ${formatTime(course.startMinutes)}`}><CalendarX2 aria-hidden="true" /><span className="pc-only-wide">Cancel session</span></Button></DialogTrigger>
     <DialogContent showCloseButton={false} className="max-h-[90dvh] overflow-y-auto">
-      <DialogHeader><DialogTitle>Cancel this session?</DialogTitle><DialogDescription>{course.name} · {formatDate(parseDateOnly(date))} · {formatTime(course.startMinutes)}–{formatTime(course.startMinutes + course.durationMinutes)}</DialogDescription></DialogHeader>
+      <DialogHeader><DialogTitle>Cancel this session?</DialogTitle><DialogDescription>{course.name} · {formatDate(parseDateOnly(date))} · {formatTimeRange(course.startMinutes, course.startMinutes + course.durationMinutes)}</DialogDescription></DialogHeader>
       <p className="text-sm">This cancels today’s session only. The weekly class and enrolments stay in place. The affected swimmers will be added to the billing follow-up list.</p>
-      {course.started || course.attendanceRecorded > 0 ? <p className="rounded-ui-md border border-ui-border bg-ui-muted p-3 text-sm">This class has already been started or has attendance recorded. Those records will be kept, and further teaching saves will be blocked.</p> : null}
+      {course.started || course.attendanceRecorded > 0 ? <Notice tone="warning" title="This class has already been started or has attendance recorded." description="Those records will be kept, and further teaching saves will be blocked." /> : null}
       <FormFeedbackProvider feedback={feedback}><form ref={formRef} className="space-y-4" onSubmit={event => {
         event.preventDefault();
         if (pending) return;

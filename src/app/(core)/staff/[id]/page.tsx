@@ -2,16 +2,20 @@ import type { Metadata } from "next";
 import { cache } from "react";
 import { notFound } from "next/navigation";
 import UiLink from "next/link";
+import { Building2, KeyRound } from "lucide-react";
 import { Item, ItemActions, ItemContent, ItemDescription, ItemGroup, ItemTitle } from "@/components/shadcn/item";
+import { EmptyState } from "@/components/ui-kit/empty-state";
 import { PageHeader } from "@/components/ui-kit/page-header";
 import { Tag } from "@/components/ui-kit/tag";
 import {
   EditProfile, RecordQualification, RevokeQualification, SuperadminToggle, WorksAt,
 } from "@/components/people/people-actions";
+import { EditPerson } from "@/components/staff/person-actions";
 import { formatDate } from "@/lib/format";
 import { screenPage } from "@/lib/page-guards";
 import { PERSON_STATUS_META, QUALIFICATION_STATE_META } from "@/lib/people/constants";
 import { getOrganisation, getPersonDetail, listPeopleOptions } from "@/lib/people/data";
+import { listRolesForPicker } from "@/lib/staff/data/roles";
 import { cleanLevels, describeLevels, levelsFromAccess } from "@/lib/staff/levels";
 
 /** One read per request, shared by the page and its tab title. */
@@ -29,8 +33,8 @@ export async function generateMetadata({ params }: { params: Promise<{ id: strin
 export default async function PersonPage({ params }: { params: Promise<{ id: string }> }) {
   const session = await screenPage("staff", "staff.manage");
   const { id } = await params;
-  const [person, organisation, people] = await Promise.all([
-    loadPerson(id), getOrganisation(), listPeopleOptions(),
+  const [person, organisation, people, roles] = await Promise.all([
+    loadPerson(id), getOrganisation(), listPeopleOptions(), listRolesForPicker(),
   ]);
   if (!person) notFound();
   const departments = organisation.departments.filter((d) => !d.archivedAt);
@@ -50,18 +54,16 @@ export default async function PersonPage({ params }: { params: Promise<{ id: str
   ];
 
   return (
-    <div className="min-w-0 flex flex-col gap-6">
+    <div className="min-w-0 flex flex-col gap-4">
       <PageHeader
         back={{ href: "/staff", label: "Staff" }}
         title={person.name}
-        description={person.email}
-        status={
-          person.isSuperadmin || !person.isActive ? (
-            <>
-              {person.isSuperadmin ? <Tag meta={PERSON_STATUS_META.superadmin} /> : null}
-              {!person.isActive ? <Tag meta={PERSON_STATUS_META.deactivated} /> : null}
-            </>
-          ) : null
+        description={
+          <span className="inline-flex flex-wrap items-center gap-2">
+            <span className="[overflow-wrap:anywhere]">{person.email}</span>
+            {person.isSuperadmin ? <Tag meta={PERSON_STATUS_META.superadmin} /> : null}
+            {!person.isActive ? <Tag meta={PERSON_STATUS_META.deactivated} /> : null}
+          </span>
         }
         actions={
           <>
@@ -71,13 +73,15 @@ export default async function PersonPage({ params }: { params: Promise<{ id: str
         }
       />
 
-      <section aria-labelledby="profile-heading" className="min-w-0 flex flex-col gap-3">
-        <h2 id="profile-heading" className="text-xl font-semibold">Profile</h2>
-        <dl className="grid gap-4 sm:grid-cols-2">
+      <section aria-labelledby="profile-heading" className="pc-panel">
+        <div className="pc-panel-head">
+          <h2 id="profile-heading" className="text-lg font-semibold">Profile</h2>
+        </div>
+        <dl className="grid gap-4 [grid-template-columns:repeat(auto-fit,minmax(min(100%,180px),1fr))]">
           {facts.map(([label, value]) => (
             <div key={label} className="min-w-0">
-              <dt className="text-sm text-ui-muted-foreground">{label}</dt>
-              <dd className="mt-1 text-sm [overflow-wrap:anywhere]">{value}</dd>
+              <dt className="text-xs font-semibold text-ui-muted-foreground">{label}</dt>
+              <dd className="mt-1 [overflow-wrap:anywhere]">{value}</dd>
             </div>
           ))}
         </dl>
@@ -88,36 +92,45 @@ export default async function PersonPage({ params }: { params: Promise<{ id: str
         ) : null}
       </section>
 
-      <section aria-labelledby="roles-heading" className="min-w-0 flex flex-col gap-3">
-        <div className="flex flex-wrap items-center justify-between gap-3">
-          <h2 id="roles-heading" className="text-xl font-semibold">Role and sites</h2>
-          {person.isActive ? <WorksAt userId={person.id} name={person.name} sites={liveSites} current={person.worksAt.map((s) => s.id)} /> : null}
+      <section aria-labelledby="roles-heading" className="pc-panel">
+        <div className="pc-panel-head">
+          <h2 id="roles-heading" className="text-lg font-semibold">Role and sites</h2>
+          {person.isActive ? (
+            <div className="flex flex-wrap gap-2">
+              <EditPerson person={person} roles={roles} label="Change role" />
+              <WorksAt userId={person.id} name={person.name} sites={liveSites} current={person.worksAt.map((s) => s.id)} />
+            </div>
+          ) : null}
         </div>
-        <dl className="grid gap-4 sm:grid-cols-2">
-          <div className="min-w-0">
-            <dt className="text-sm text-ui-muted-foreground">Role</dt>
-            <dd className="mt-1 text-sm">
-              <span className="font-medium">{role?.name ?? "No role"}</span>
-              {levels ? <span className="block text-ui-muted-foreground">{levels}{role?.levels === null ? " (proposed; the role keeps its old settings until it is saved on Roles)" : ""}</span> : null}
-            </dd>
-          </div>
-          <div className="min-w-0">
-            <dt className="text-sm text-ui-muted-foreground">Works at</dt>
-            <dd className="mt-1 text-sm">{person.worksAt.length ? person.worksAt.map((s) => s.name).join(", ") : "Every site"}</dd>
-          </div>
-        </dl>
-        <p className="text-sm text-ui-muted-foreground">Change their role on the Staff list. Swim school, Training and Rota apply at the sites they work at; everything else applies everywhere.</p>
+        <ul className="pc-rows">
+          <li className="pc-row">
+            <span className="pc-tile-icon" aria-hidden="true"><KeyRound /></span>
+            <div className="pc-row-body">
+              <span className="pc-row-title">{role?.name ?? "No role"}</span>
+              {levels ? <span className="pc-row-hint">{levels}</span> : null}
+              {role?.levels === null ? <span className="pc-row-hint">Uses older permission settings · open it on Roles and save to switch to levels</span> : null}
+            </div>
+          </li>
+          <li className="pc-row">
+            <span className="pc-tile-icon" aria-hidden="true"><Building2 /></span>
+            <div className="pc-row-body">
+              <span className="pc-row-title">Works at</span>
+              <span className="pc-row-hint">{person.worksAt.length ? person.worksAt.map((s) => s.name).join(", ") : "Every site"}</span>
+            </div>
+          </li>
+        </ul>
+        <p className="pc-row-hint">Swim school, Training and Rota apply at the sites they work at; everything else applies everywhere.</p>
       </section>
 
-      <section aria-labelledby="qualifications-heading" className="min-w-0 flex flex-col gap-3">
-        <div className="flex flex-wrap items-center justify-between gap-3">
-          <h2 id="qualifications-heading" className="text-xl font-semibold">Qualifications</h2>
+      <section aria-labelledby="qualifications-heading" className="pc-panel">
+        <div className="pc-panel-head">
+          <h2 id="qualifications-heading" className="text-lg font-semibold">Qualifications</h2>
           {types.length ? <RecordQualification userId={person.id} name={person.name} types={types} /> : null}
         </div>
         {person.qualifications.length === 0 ? (
-          <p className="text-sm text-ui-muted-foreground">No qualifications recorded.</p>
+          <EmptyState compact icon="award" title="No qualifications recorded" />
         ) : (
-          <ItemGroup className="divide-y divide-ui-border">
+          <ItemGroup>
             {person.qualifications.map((q) => {
               const meta = QUALIFICATION_STATE_META[q.state];
               return (

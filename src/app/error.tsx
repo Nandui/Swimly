@@ -7,7 +7,7 @@ import { PageError } from "@/components/ui-kit/page-state";
  *  never wraps its layout): the same state on the sign-in canvas. */
 export default function RootError({ retry }: { error: Error & { digest?: string }; retry: () => void }) {
   return (
-    <AuthFrame>
+    <AuthFrame fin="start">
       <PageError retry={retry} />
     </AuthFrame>
   );

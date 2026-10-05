@@ -44,34 +44,26 @@ export function ActivityTable({ entries }: { entries: ActivityEntry[] }) {
                   cannot break on their own; without this one of them makes
                   the table wider than a phone. */}
               <TableCell className={"[overflow-wrap:anywhere]"}>
+                <span className="block">{entry.summary}</span>
                 {entry.module ? <span className="block text-xs text-ui-muted-foreground">{entry.module}</span> : null}
-                <span className="text-sm text-ui-foreground font-medium">
-                  {entry.summary}
-                </span>
                 <span
                   className={cn(
-                    "text-sm text-ui-muted-foreground block",
+                    "text-xs text-ui-muted-foreground block",
                     "lg:hidden",
                   )}
                 >
                   {entry.actorName} · {formatDateTime(entry.createdAt)}
                 </span>
-                <Tag meta={meta} className="lg:hidden" />
+                <Tag meta={meta} className="lg:hidden mt-1" />
               </TableCell>
               <TableCell className={"max-lg:hidden"}>
-                <span className="text-sm text-ui-muted-foreground">
-                  {entry.actorName}
-                </span>
+                <span className="whitespace-nowrap">{entry.actorName}</span>
               </TableCell>
               <TableCell className={"max-lg:hidden"}>
                 <Tag meta={meta} />
               </TableCell>
               <TableCell className={"max-lg:hidden"}>
-                <span
-                  className={
-                    "text-sm text-ui-muted-foreground whitespace-nowrap tabular-nums"
-                  }
-                >
+                <span className="whitespace-nowrap tabular-nums">
                   {formatDateTime(entry.createdAt)}
                 </span>
               </TableCell>

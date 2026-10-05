@@ -1,12 +1,9 @@
-import { ItemGroup, ItemContent, Item, ItemActions } from "@/components/shadcn/item";
-
-import { cn } from "@/lib/utils";
 import type { Metadata } from "next";
 
 import { EmptyState } from "@/components/ui-kit/empty-state";
 import { PageHeader } from "@/components/ui-kit/page-header";
-import { Lead, Num } from "@/components/ui-kit/prose";
 import { Tag } from "@/components/ui-kit/tag";
+import { plural } from "@/lib/format";
 import { AddRole, DeleteRole, EditRole } from "@/components/staff/role-actions";
 import { screenPage } from "@/lib/page-guards";
 import { STAFF_STATUS_META, roleReach } from "@/lib/staff/constants";
@@ -23,18 +20,12 @@ export default async function RolesPage() {
   const assigned = roles.reduce((n, role) => n + role._count.users, 0);
 
   return (
-    <div className="min-w-0 flex flex-col gap-6">
+    <div className="min-w-0 flex flex-col gap-4">
       <PageHeader
         title="Roles"
         description="A role is a job, with one level for each module."
         actions={<AddRole canGiveRestricted={canGiveRestricted} />}
       />
-
-      <Lead>
-        <Num>{roles.length}</Num> {roles.length === 1 ? "role" : "roles"}, held between them by{" "}
-        <Num>{assigned}</Num> {assigned === 1 ? "account" : "accounts"}. Each level includes the ones before it, and
-        people on a role start on its home page.
-      </Lead>
 
       {roles.length === 0 ? (
         <EmptyState
@@ -44,11 +35,17 @@ export default async function RolesPage() {
           action={<AddRole canGiveRestricted={canGiveRestricted} />}
         />
       ) : (
-        <ItemGroup className="divide-y divide-ui-border">
-          {roles.map((role) => (
-            <RoleRowItem key={role.id} role={role} canGiveRestricted={canGiveRestricted} />
-          ))}
-        </ItemGroup>
+        <section className="pc-panel" aria-label="Roles">
+          <p className="text-sm text-ui-muted-foreground">
+            {plural(roles.length, "role")}, held between them by {plural(assigned, "account")}. Each level includes the
+            ones before it, and people on a role start on its home page.
+          </p>
+          <ul className="pc-rows">
+            {roles.map((role) => (
+              <RoleRowItem key={role.id} role={role} canGiveRestricted={canGiveRestricted} />
+            ))}
+          </ul>
+        </section>
       )}
     </div>
   );
@@ -58,32 +55,27 @@ function RoleRowItem({ role, canGiveRestricted }: { role: RoleRow; canGiveRestri
   const reach = roleReach(role.permissions);
   const converted = role.levels !== null;
   const levels = converted ? cleanLevels(role.levels, role.extras) : levelsFromAccess(role.permissions, role.screens).role;
-  const lines = describeLevels(levels).split(" · ");
+  const about = [role.description, `Home page: ${role.homeName || "not named yet"}`, plural(role._count.users, "account")].filter(Boolean).join(" · ");
 
   return (
-    <Item role="listitem" className={cn("items-start [overflow-wrap:anywhere]", "max-sm:flex-col max-sm:items-stretch")}>
-      <ItemContent className="min-w-0 gap-2">
-        <div className="min-w-0 flex gap-2 items-center flex-wrap">
-          <span className="text-base text-ui-foreground font-semibold">{role.name}</span>
+    <li className="pc-row [overflow-wrap:anywhere]">
+      <div className="pc-row-body">
+        <span className="pc-row-title flex flex-wrap items-center gap-x-2 gap-y-1">
+          {role.name}
           <Tag meta={reach} />
           {role.isSystem ? <Tag meta={STAFF_STATUS_META.builtInRole} /> : null}
           {converted ? null : <Tag meta={STAFF_STATUS_META.oldSettings} />}
-        </div>
-        {role.description ? <p className="text-sm text-ui-muted-foreground">{role.description}</p> : null}
-        <p className="text-sm text-ui-muted-foreground">
-          Home page: {role.homeName || "not named yet"} · <span className="tabular-nums">{role._count.users}</span>{" "}
-          {role._count.users === 1 ? "account" : "accounts"}
-        </p>
-        <ul className="flex flex-wrap gap-x-4 gap-y-1 text-sm text-ui-foreground" aria-label={`What ${role.name} can do`}>
-          {lines.map((line) => <li key={line}>{line}</li>)}
-        </ul>
-      </ItemContent>
-      <ItemActions className="flex-wrap">
-        <div className="min-w-0 flex gap-1 items-center">
+        </span>
+        <span className="pc-row-hint">{about}</span>
+        <span className="pc-row-hint">{describeLevels(levels)}</span>
+        {converted ? null : <span className="pc-row-hint">Open and save to switch to levels.</span>}
+      </div>
+      <div className="pc-row-trail">
+        <div className="flex flex-nowrap gap-2">
           <EditRole role={role} canGiveRestricted={canGiveRestricted} />
           <DeleteRole role={role} users={role._count.users} />
         </div>
-      </ItemActions>
-    </Item>
+      </div>
+    </li>
   );
 }

@@ -249,7 +249,15 @@ body.turnfin-app { background: var(--pc-outer); }
    compact inset. */
 .turnfin-app :is([data-slot='button'], .ui-motion-press) { min-height: var(--pc-control-height); border-radius: var(--pc-radius-control); font-size: var(--pc-text-body); line-height: var(--pc-leading-body); font-weight: 600; transition: background-color 120ms var(--pc-ease), color 120ms var(--pc-ease), border-color 120ms var(--pc-ease), translate 120ms var(--pc-ease); }
 .turnfin-app .ui-motion-press:not([data-size^='icon'], .toolbar-button) { padding-inline: var(--pc-control-pad); }
+/* The quick-switch PIN pad (AUSwitch): 56px keys with title-size digits for touch. */
+.turnfin-app .pc-keypad > [data-slot='button'] { min-height: 56px; font-size: var(--pc-text-title); }
 .turnfin-app .ui-motion-press[data-size^='icon'] { width: var(--pc-control-height); min-width: var(--pc-control-height); padding: 0; }
+/* A day tile in a week strip (Schedule): the weekday over the date caption, a 56px card-radius
+   tile; the chosen day is the default (blue) button, the rest outline. */
+.turnfin-app .ui-motion-press.pc-day { flex-direction: column; gap: 0; height: auto; min-width: 0; min-height: 56px; padding: 4px 0; border-radius: var(--pc-radius-card); }
+.turnfin-app .pc-day > small { font-size: var(--pc-text-caption); line-height: var(--pc-leading-caption); font-weight: 400; color: var(--pc-ink-muted); }
+.turnfin-app .pc-day[aria-pressed='true'] > small { color: inherit; }
+@media (min-width: 1024px) { .turnfin-app .ui-motion-press.pc-day { min-width: 56px; } }
 .turnfin-app .ui-motion-press > svg { width: 18px; height: 18px; }
 /* Variants: default (blue fill), outline (white with the soft --pc-line edge, V2System .btn),
    ghost (blue text), destructive and link (no inset, so it lines up with the text around it).
@@ -545,10 +553,26 @@ html:has(.tf-shell) { scroll-padding-bottom: 112px; }
 .turnfin-app .pc-stats:not(:is([data-slot='card'], [role='dialog'], .pc-panel) .pc-stats) > .pc-stat, .turnfin-app .pc-stats:not(:is([data-slot='card'], [role='dialog'], .pc-panel) .pc-stats) > * > .pc-stat { padding: 24px; border-color: transparent; border-radius: var(--pc-radius-panel); background: var(--pc-surface); }
 .turnfin-app a.pc-stat:hover { background: var(--pc-surface-sunken); }
 .turnfin-app a.pc-stat[aria-current] { border-color: var(--pc-primary); box-shadow: inset 0 0 0 1px var(--pc-primary); }
-.turnfin-app .pc-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 320px), 1fr)); gap: 16px; align-items: start; min-width: 0; }
+/* Panels side by side: one column on phones, two from 768px, and every panel in one row from
+   1280px. A .pc-grid-stack keeps its panels in one column below 1280px (the home page's Today
+   over Quick actions, beside Waiting) and hands them to the row at 1280px; a lone child spans
+   the row, so a missing panel never leaves a void. */
+.turnfin-app .pc-grid { display: grid; grid-template-columns: minmax(0, 1fr); gap: 16px; align-items: start; min-width: 0; }
+.turnfin-app .pc-grid-stack { display: flex; flex-direction: column; gap: 16px; min-width: 0; }
+@media (min-width: 768px) {
+  .turnfin-app .pc-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .turnfin-app .pc-grid > :only-child { grid-column: 1 / -1; }
+  .turnfin-app .pc-grid > .pc-grid-stack:only-child { display: contents; }
+}
+@media (min-width: 1280px) {
+  .turnfin-app .pc-grid { grid-template-columns: none; grid-auto-flow: column; grid-auto-columns: minmax(0, 1fr); }
+  .turnfin-app .pc-grid > .pc-grid-stack { display: contents; }
+}
 .turnfin-app .pc-stat-figure { font-size: var(--pc-text-figure); line-height: var(--pc-leading-figure); font-weight: 700; font-variant-numeric: tabular-nums; }
 .turnfin-app .pc-stat [data-slot='badge'] { max-width: 100%; white-space: normal; }
 .turnfin-app .pc-note { display: flex; align-items: flex-start; gap: 12px; padding: 16px; border-radius: var(--pc-radius-card); background: var(--pc-surface-sunken); }
+.turnfin-app a.pc-note { color: inherit; text-decoration: none; }
+.turnfin-app a.pc-note:hover { box-shadow: inset 0 0 0 1px var(--pc-line); }
 
 /* Time blocks: one pattern for the home timeline, schedule cells, the duty list and shifts. */
 .turnfin-app .pc-block { display: flex; align-items: center; gap: 10px; min-width: 0; min-height: 56px; padding: 8px 10px 8px 12px; border-radius: var(--pc-radius-card); color: var(--pc-ink); text-decoration: none; overflow: hidden; }
@@ -560,28 +584,81 @@ html:has(.tf-shell) { scroll-padding-bottom: 112px; }
 .turnfin-app .pc-block-time small { display: block; font-size: var(--pc-text-caption); line-height: var(--pc-leading-caption); font-weight: 400; }
 .turnfin-app .pc-block-tag { display: inline-flex; flex: none; align-items: center; gap: 4px; min-height: 24px; padding: 0 8px; border-radius: 999px; background: var(--pc-surface); color: var(--pc-ink); font-size: var(--pc-text-caption); line-height: var(--pc-leading-caption); font-weight: 600; }
 .turnfin-app .pc-block-tag > svg { width: 14px; height: 14px; }
-.turnfin-app .pc-block[data-state='now'] { background: var(--pc-block-now); color: var(--pc-on-block-now); }
-.turnfin-app .pc-block[data-state='next'] { background: var(--pc-block-next); color: var(--pc-on-block-next); }
-.turnfin-app .pc-block[data-state='cover'] { background: var(--pc-block-cover); color: var(--pc-on-block-cover); }
-.turnfin-app .pc-block[data-state='assessment'] { background: var(--pc-block-assess); color: var(--pc-on-block-assess); }
-.turnfin-app .pc-block[data-state='done'] { background: var(--pc-surface-sunken); color: var(--pc-ink-muted); }
-.turnfin-app .pc-block[data-state='off'] { background: repeating-linear-gradient(135deg, var(--pc-hatch) 0 6px, transparent 6px 12px); box-shadow: inset 0 0 0 1px var(--pc-line); color: var(--pc-ink-muted); }
-.turnfin-app .pc-block[data-state='off'] .pc-block-title { text-decoration: line-through; }
-.turnfin-app a.pc-block:focus-visible { outline: 2px solid var(--pc-focus); outline-offset: 2px; }
-.turnfin-app .pc-timeline-scroll { position: relative; overflow-x: auto; }
-.turnfin-app .pc-timeline { display: grid; gap: 8px; }
-.turnfin-app .pc-timeline-hour { display: flex; align-items: center; justify-content: center; min-height: 44px; border: 1px solid var(--pc-line); border-radius: var(--pc-radius-card); font-weight: 600; font-variant-numeric: tabular-nums; }
+/* A block's state: `data-block` on the shared TimelineGrid (a dialog trigger's own `data-state`
+   belongs to Radix), `data-state` on older callers. */
+.turnfin-app .pc-block:is([data-block='now'], [data-state='now']) { background: var(--pc-block-now); color: var(--pc-on-block-now); }
+.turnfin-app .pc-block:is([data-block='next'], [data-state='next']) { background: var(--pc-block-next); color: var(--pc-on-block-next); }
+.turnfin-app .pc-block:is([data-block='cover'], [data-state='cover']) { background: var(--pc-block-cover); color: var(--pc-on-block-cover); }
+.turnfin-app .pc-block:is([data-block='assessment'], [data-state='assessment']) { background: var(--pc-block-assess); color: var(--pc-on-block-assess); }
+.turnfin-app .pc-block:is([data-block='done'], [data-state='done']) { background: var(--pc-surface-sunken); color: var(--pc-ink-muted); }
+.turnfin-app .pc-block:is([data-block='off'], [data-state='off'], [data-block='open']) { background: repeating-linear-gradient(135deg, var(--pc-hatch) 0 6px, transparent 6px 12px); box-shadow: inset 0 0 0 1px var(--pc-line); color: var(--pc-ink-muted); }
+.turnfin-app .pc-block:is([data-block='off'], [data-state='off']) .pc-block-title { text-decoration: line-through; }
+.turnfin-app .pc-block:is(a, button):focus-visible { outline: 2px solid var(--pc-focus); outline-offset: 2px; }
+/* A block that is a dialog trigger (a shadcn Button): the block's shape and colours, not the
+   control's. */
+.turnfin-app .pc-block.ui-motion-press { justify-content: flex-start; height: auto; padding: 8px 10px 8px 12px; text-align: start; white-space: normal; font-weight: 400; text-decoration: none; }
+.turnfin-app .pc-block.ui-motion-press:hover { filter: brightness(0.97); }
+.turnfin-app .pc-block.ui-motion-press:is([data-block='now']):hover { background: var(--pc-block-now); color: var(--pc-on-block-now); }
+.turnfin-app .pc-block.ui-motion-press:is([data-block='next']):hover { background: var(--pc-block-next); color: var(--pc-on-block-next); }
+.turnfin-app .pc-block.ui-motion-press:is([data-block='cover']):hover { background: var(--pc-block-cover); color: var(--pc-on-block-cover); }
+.turnfin-app .pc-block.ui-motion-press:is([data-block='assessment']):hover { background: var(--pc-block-assess); color: var(--pc-on-block-assess); }
+.turnfin-app .pc-block.ui-motion-press:is([data-block='done']):hover { background: var(--pc-surface-sunken); color: var(--pc-ink-muted); }
+.turnfin-app .pc-block.ui-motion-press:is([data-block='off'], [data-block='open']):hover { background: repeating-linear-gradient(135deg, var(--pc-hatch) 0 6px, transparent 6px 12px); color: var(--pc-ink-muted); }
+.turnfin-app a.pc-block:hover { filter: brightness(0.97); }
+.turnfin-app .pc-block > svg { flex: none; width: 18px; height: 18px; }
+.turnfin-app .pc-block[data-density='icon'] { justify-content: center; padding: 0; }
+.turnfin-app .pc-block[data-density='compact'] { gap: 6px; padding-inline: 10px 6px; }
+.turnfin-app .pc-block[data-density='mark'] { padding: 0; }
+.turnfin-app .pc-block:has(> .pc-block-strip) { position: relative; padding-bottom: 14px; }
+.turnfin-app .pc-block-strip { position: absolute; inset-inline: 12px; bottom: 6px; height: 6px; border-radius: 999px; overflow: hidden; }
+.turnfin-app .pc-block-strip > span { position: absolute; inset-block: 0; box-shadow: inset 0 0 0 1px var(--pc-line); }
+.turnfin-app .pc-block-strip > [data-kind='activity'] { background: var(--pc-surface); }
+/* The day as a grid from 1280px: lanes, hour tiles, blocks to the minute on 5-minute columns
+   (--tl-cols is set by TimelineGrid), and the dashed line at the time now. */
+.turnfin-app .pc-timeline { --tl-lane: 200px; --tl-head: 44px; --tl-row: 56px; display: grid; grid-template-columns: var(--tl-lane) repeat(var(--tl-cols), minmax(0, 1fr)); column-gap: 0; row-gap: 8px; min-width: 0; }
+.turnfin-app .pc-timeline > :is(.pc-timeline-hour, .pc-block) { margin-inline: 4px; }
+.turnfin-app .pc-timeline > .pc-block { min-height: 0; }
+.turnfin-app .pc-timeline-heading { align-self: center; color: var(--pc-ink-muted); font-size: var(--pc-text-caption); line-height: var(--pc-leading-caption); font-weight: 600; }
+.turnfin-app .pc-timeline-hour { display: flex; align-items: center; justify-content: center; min-width: 0; min-height: 44px; overflow: hidden; border: 1px solid var(--pc-line); border-radius: var(--pc-radius-card); font-weight: 600; font-variant-numeric: tabular-nums; white-space: nowrap; }
 .turnfin-app .pc-timeline-hour[data-past] { border-color: transparent; background: var(--pc-hatch); color: var(--pc-ink-muted); }
 .turnfin-app .pc-timeline-hour[data-now] { border-color: var(--pc-primary); background: var(--pc-primary); color: var(--pc-on-primary); }
-.turnfin-app .pc-timeline-lane { display: flex; flex-direction: column; justify-content: center; min-width: 0; min-height: 56px; padding: 8px 12px; border: 1px solid var(--pc-line); border-radius: var(--pc-radius-card); }
-.turnfin-app .pc-timeline-lane > * { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-.turnfin-app .pc-timeline-now { position: relative; pointer-events: none; }
-.turnfin-app .pc-timeline-now::after { content: ''; position: absolute; top: -8px; bottom: 0; left: var(--at); border-left: 2px dashed var(--pc-primary); }
+.turnfin-app .pc-timeline-lane { display: flex; align-items: center; gap: 12px; min-width: 0; min-height: 56px; margin-inline-end: 4px; padding: 8px 8px 8px 12px; border: 1px solid var(--pc-line); border-radius: var(--pc-radius-card); }
+.turnfin-app .pc-timeline-lane:has(> .pc-tile-icon) { padding-inline-start: 8px; }
+.turnfin-app .pc-timeline-lane[data-header] { border-color: transparent; padding-inline-start: 0; }
+.turnfin-app .pc-timeline-lane-body { display: flex; flex: 1; flex-direction: column; min-width: 0; }
+.turnfin-app .pc-timeline-lane-body > * { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.turnfin-app .pc-timeline-lane-label { color: var(--pc-ink); font-size: var(--pc-text-body); line-height: var(--pc-leading-body); font-weight: 600; }
+.turnfin-app .pc-timeline-lane-caption { color: var(--pc-ink-muted); font-size: var(--pc-text-caption); line-height: var(--pc-leading-caption); }
+.turnfin-app .pc-timeline-lane-action { display: flex; flex: none; align-items: center; gap: 4px; }
+.turnfin-app .pc-timeline-now { position: relative; z-index: 1; pointer-events: none; }
+.turnfin-app .pc-timeline-now::after { content: ''; position: absolute; top: -4px; bottom: -4px; left: var(--at); border-left: 2px dashed var(--pc-primary); }
+.turnfin-app .pc-timeline-narrow { display: none; flex-direction: column; gap: 16px; }
+.turnfin-app .pc-agenda-item { display: flex; align-items: stretch; gap: 8px; }
+.turnfin-app .pc-agenda-item > .pc-block { flex: 1; }
+/* On phones a block with extra marks shows every tag as its icon, so the title keeps its room;
+   the words stay for screen readers. */
+@media (max-width: 767px) {
+  .turnfin-app .pc-timeline-narrow .pc-block:has(.pc-block-tag ~ .pc-block-tag) .pc-block-tag-label { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); white-space: nowrap; }
+}
+@media (max-width: 1279px) {
+  .turnfin-app .pc-timeline-wide { display: none; }
+  .turnfin-app .pc-timeline-narrow { display: flex; }
+}
+.turnfin-app .pc-timeline-narrow-only { display: none; }
+@media (max-width: 1279px) {
+  .turnfin-app .pc-timeline-narrow-only { display: inline; }
+  .turnfin-app .pc-timeline-wide-only { display: none; }
+}
 .turnfin-app .pc-only-narrow { display: none; }
 @media (max-width: 767px) {
   .turnfin-app .pc-only-wide { display: none; }
   .turnfin-app .pc-only-narrow { display: flex; }
   .turnfin-app .pc-panel { padding: 16px; gap: 12px; }
+  /* A row action whose words sit in .pc-only-wide becomes a 44px icon button on phones; its
+     aria-label still names it. */
+  .turnfin-app .ui-motion-press:has(> .pc-only-wide) { width: var(--pc-control-height); min-width: var(--pc-control-height); padding: 0; }
+  /* Seven day tiles share a phone's width, so the weekday ("Today" included) steps down to caption size. */
+  .turnfin-app .ui-motion-press.pc-day { font-size: var(--pc-text-caption); line-height: var(--pc-leading-caption); }
 }
 
 /* v2 primitives */
@@ -603,6 +680,12 @@ html:has(.tf-shell) { scroll-padding-bottom: 112px; }
 .turnfin-app [data-slot='table']:not([data-layout='grid']) [data-slot='table-body'] :is([data-slot='table-cell'], [data-slot='table-head']) { padding: 12px 16px; border-top: 1px solid var(--pc-line); border-bottom: 1px solid var(--pc-line); background: var(--pc-surface); vertical-align: middle; }
 .turnfin-app [data-slot='table']:not([data-layout='grid']) [data-slot='table-body'] :is([data-slot='table-cell'], [data-slot='table-head']):first-child { border-left: 1px solid var(--pc-line); border-radius: var(--pc-radius-card) 0 0 var(--pc-radius-card); }
 .turnfin-app [data-slot='table']:not([data-layout='grid']) [data-slot='table-body'] :is([data-slot='table-cell'], [data-slot='table-head']):last-child { border-right: 1px solid var(--pc-line); border-radius: 0 var(--pc-radius-card) var(--pc-radius-card) 0; }
+/* A table that re-homes its trailing columns below lg (max-lg:hidden) still closes its row card:
+   the last visible cell takes the right edge. */
+@media (max-width: 1023.98px) {
+  .turnfin-app [data-slot='table']:not([data-layout='grid']) [data-slot='table-body'] [data-slot='table-cell']:not(.max-lg\:hidden):not(:has(~ [data-slot='table-cell']:not(.max-lg\:hidden))) { border-right: 1px solid var(--pc-line); border-radius: 0 var(--pc-radius-card) var(--pc-radius-card) 0; }
+  .turnfin-app [data-slot='table']:not([data-layout='grid']) [data-slot='table-body'] [data-slot='table-cell']:first-child:not(.max-lg\:hidden):not(:has(~ [data-slot='table-cell']:not(.max-lg\:hidden))) { border-radius: var(--pc-radius-card); }
+}
 .turnfin-app [data-slot='table']:not([data-layout='grid']) [data-slot='table-body'] [data-slot='table-row']:hover :is([data-slot='table-cell'], [data-slot='table-head']) { background: var(--pc-surface-sunken); }
 .turnfin-app [data-slot='table']:not([data-layout='grid']) [data-slot='table-body'] [data-slot='table-head'] { height: auto; text-align: left; color: var(--pc-ink); font-size: var(--pc-text-body); line-height: var(--pc-leading-body); font-weight: 400; }
 

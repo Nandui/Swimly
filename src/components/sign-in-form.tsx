@@ -9,10 +9,12 @@ import { useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { signIn } from "next-auth/react";
+import { Tablet } from "lucide-react";
 
 import { Input } from "@/components/ui/input";
 
-/** The front door, in the shared AuthFrame: the fin above one white panel.
+/** The front door, in the shared AuthFrame: the blue brand panel beside one white panel
+ *  (AUSignIn).
  *
  *  `devAdminName` arrives already decided by the server: the page only passes
  *  a name when the deployment is allowed a passwordless sign-in, so the client
@@ -76,19 +78,21 @@ export function SignInForm({ devAdminName, sharedDeviceName = null }: { devAdmin
   }
 
   return (
-    <AuthFrame note="No account yet? Ask a manager to add you in Admin.">
+    <AuthFrame welcome>
       <div className="flex min-w-0 flex-col gap-1">
         <h1 className="text-2xl font-semibold">Sign in</h1>
         <p className="text-sm text-ui-muted-foreground">Use your work email and password.</p>
       </div>
 
       {sharedDeviceName ? (
-        <Notice
-          title={`${sharedDeviceName} is a shared device`}
-          description="If you have set a PIN and signed in here before, switch in with it instead."
-          tone="info"
-          actions={<Button asChild variant="outline"><Link href="/switch">Switch user</Link></Button>}
-        ></Notice>
+        <div className="pc-note flex-wrap">
+          <Tablet aria-hidden="true" className="mt-0.5 size-5 shrink-0 text-ui-primary" />
+          <div className="min-w-0 flex-1 basis-40">
+            <p className="text-sm font-semibold">{`${sharedDeviceName} is a work device`}</p>
+            <p className="text-xs text-ui-muted-foreground">If you have set a PIN and signed in here before, switch in with it instead.</p>
+          </div>
+          <Button asChild variant="outline" className="ml-auto"><Link href="/switch">Switch user</Link></Button>
+        </div>
       ) : null}
 
       <form onSubmit={handleSubmit}>
@@ -127,6 +131,8 @@ export function SignInForm({ devAdminName, sharedDeviceName = null }: { devAdmin
           </LoadingButton>
         </div>
       </form>
+
+      <p className="text-xs text-ui-muted-foreground">No account yet? Ask a manager to add you in Admin.</p>
 
       {devAdminName ? (
         <>
