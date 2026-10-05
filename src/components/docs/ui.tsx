@@ -13,7 +13,7 @@ import {
 } from 'lucide-react';
 import type { DocumentType, Member } from '@/lib/docs/types';
 import { Badge as StatusBadge } from '@/components/shadcn/badge';
-import { Avatar as ProfileAvatar, AvatarFallback } from '@/components/shadcn/avatar';
+import { Avatar as ProfileAvatar, AvatarFallback, initials } from '@/components/shadcn/avatar';
 import { Alert, AlertDescription } from '@/components/shadcn/alert';
 import { Empty, EmptyHeader, EmptyMedia, EmptyTitle, EmptyDescription } from '@/components/shadcn/empty';
 export const typeIcons = {
@@ -49,22 +49,17 @@ export function Badge({
     </StatusBadge>
   );
 }
+/** A staff member's neutral avatar: 32px inline, `size="lg"` (40px) in rows. */
 export function Avatar({
   member,
-  small = false,
+  size,
 }: {
   member: Pick<Member, 'name'>;
-  small?: boolean;
+  size?: 'default' | 'lg';
 }) {
   return (
-    <ProfileAvatar className={`avatar${small ? ' small' : ''}`} aria-hidden="true">
-      <AvatarFallback className="bg-ui-brand-soft text-ui-brand-ink">
-        {member.name
-          .split(' ')
-          .map((n) => n[0])
-          .slice(0, 2)
-          .join('')}
-      </AvatarFallback>
+    <ProfileAvatar size={size} aria-hidden="true">
+      <AvatarFallback>{initials(member.name)}</AvatarFallback>
     </ProfileAvatar>
   );
 }

@@ -1,10 +1,10 @@
 # Platform access: one Turnfin, many areas
 
 Turnfin is the staff platform for every area of the leisure centre: the swim
-school (Aquatics), Docs, Refunds, Training, HR and performance, and the Rota.
+school (Aquatics), Docs, Refunds, Training, HR and the Rota.
 Legend remains the booking and billing system, so Bookings is not a module.
 
-Some information must never reach certain staff (HR and performance above all),
+Some information must never reach certain staff (HR above all),
 and some information from a module must reach people who cannot use the module
 itself: a lifeguard completes a training and sees their own certificates
 without ever seeing how trainings are managed or anyone else's records. This
@@ -177,7 +177,7 @@ The Rota (docs/rota.md) is site-bound: `rota.view` and `rota.manage` resolve wit
 one site plans that site only. It warns about expired qualifications and
 double-bookings but never blocks. Everyone sees their own shifts in Turnfin Me.
 
-## HR and performance
+## HR
 
 HR (docs/hr.md) is the restricted module: its own database (`HR_DATABASE_URL`),
 restricted capabilities that administrators never inherit, a recent password for

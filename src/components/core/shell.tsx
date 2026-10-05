@@ -10,7 +10,7 @@ export type CoreLinkKey = 'staff' | 'roles' | 'clubs' | 'activity';
 const LINKS: { key: CoreLinkKey; href: string; label: string; icon: LucideIcon }[] = [
   { key: 'staff', href: '/staff', label: 'Staff', icon: UserCog },
   { key: 'roles', href: '/roles', label: 'Roles', icon: KeyRound },
-  { key: 'clubs', href: '/clubs', label: 'Clubs', icon: Building2 },
+  { key: 'clubs', href: '/clubs', label: 'Sites', icon: Building2 },
   { key: 'activity', href: '/activity', label: 'Activity', icon: Activity },
 ];
 

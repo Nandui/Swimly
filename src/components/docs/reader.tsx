@@ -110,7 +110,7 @@ export function Reader({
     setSuccess('');
     start(async () => {
       const result = await fn();
-      if (!result.ok) setError(result.error || 'Please try again.');
+      if (!result.ok) setError(result.error || 'Could not save that. Try again.');
       else {
         setSuccess(message);
         setDialog(null);
@@ -307,7 +307,6 @@ export function Reader({
             </div>
             <div className="document-owner">
               <Avatar
-                small
                 member={w.members.find((m) => m.id === c.ownerId) || { name: 'Document owner' }}
               />
               <span>

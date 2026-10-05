@@ -33,7 +33,7 @@ export async function GET(request: NextRequest) {
       },
     });
   } catch (e) {
-    return new Response(e instanceof DomainError ? e.message : 'Unable to export report.', {
+    return new Response(e instanceof DomainError ? e.message : 'Could not export the report. Try again.', {
       status: e instanceof DomainError ? e.code : 500,
     });
   }

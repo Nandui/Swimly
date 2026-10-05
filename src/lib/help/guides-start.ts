@@ -21,7 +21,7 @@ export const START_GUIDES: HelpArticle[] = [
     slug: "switch-sites", title: "Switch site and understand shared records", category: "start", scopes: ["desk", "instructor"],
     summary: "Choose Bishopstown or Churchfield without creating a second swimmer record.",
     keywords: ["site", "pool", "Bishopstown", "Churchfield", "club", "shared", "location", "facility"],
-    before: ["A site is a working area for its timetable. Swimmer identity, contacts, curriculum and progress are shared across sites."],
+    before: ["Each site has its own timetable. Swimmer identity, contacts, curriculum and progress are shared across sites."],
     steps: [
       { title: "Find the site selector", text: "Use the selector in the sidebar or phone toolbar.", scopes: ["desk"] },
       { title: "Find the site selector", text: "Use the selector in the pool-deck header.", scopes: ["instructor"] },

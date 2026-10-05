@@ -1,7 +1,7 @@
 import assert from "node:assert/strict";
 import { test } from "node:test";
 import { ALL_CLASSES, filterClassChoices } from "./class-picker";
-import { formatTimeRange } from "@/modules/activities/lib/courses/constants";
+import { classTimes } from "@/modules/activities/lib/courses/constants";
 import type { TransferTarget } from "./data/enrolments";
 
 function course(id: string, changes: Partial<TransferTarget> = {}): TransferTarget {
@@ -49,5 +49,5 @@ test("results are ordered through the week and filtering does not mutate the sou
 });
 
 test("time ranges use the actual class duration", () => {
-  assert.equal(formatTimeRange({ startMinutes: 990, durationMinutes: 45 }), "16:30–17:15");
+  assert.equal(classTimes({ startMinutes: 990, durationMinutes: 45 }), "16:30 to 17:15");
 });

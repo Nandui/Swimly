@@ -34,7 +34,7 @@ export function LegendAgreements({ result, canConfirm, profiles, classes }: {
   return <section className="flex min-w-0 flex-col gap-4 text-ui-foreground" aria-labelledby="agreements-heading">
     <header className="mb-2 space-y-2">
       <div className="flex flex-wrap items-start justify-between gap-3">
-        <h1 id="agreements-heading" className="text-2xl font-semibold tracking-tight">Legend agreements</h1>
+        <h1 id="agreements-heading" className="text-2xl font-semibold">Legend agreements</h1>
         {matchList}
       </div>
       <p className="text-sm text-ui-muted-foreground">{siteName} · Update the billing agreement in Legend, then confirm it here.</p>

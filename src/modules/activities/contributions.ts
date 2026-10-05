@@ -3,16 +3,15 @@ import { prisma } from "@/lib/prisma";
 import { expandPermissions, type PermissionKey } from "@/lib/staff/permissions";
 import { visibleScreens, type ScreenKey } from "@/lib/staff/screens";
 import { registerCommitments, registerHomeCard, registerSiteSummary, registerStaffColumn, type Commitment, type HomeItem, type HomeSession } from "@/modules/contributions";
-import { minutesNow, parseDateOnly, today } from "@/lib/format";
+import { formatTime, formatTimeRange, minutesNow, parseDateOnly, plural, today } from "@/lib/format";
 import { weekdayOfIso } from "@/modules/activities/lib/attendance/dates";
 import { getCoversForDay } from "@/modules/activities/lib/attendance/data/cover";
 import { getCancellationsForDay } from "@/modules/activities/lib/cancellations/data";
-import { courseName, formatTime } from "@/modules/activities/lib/courses/constants";
+import { courseName } from "@/modules/activities/lib/courses/constants";
 import { getCoursesOnDay } from "@/modules/activities/lib/courses/data/courses";
 import { getAwaitingEnrolment } from "@/modules/activities/lib/enrolment/data/awaiting-enrolment";
 import { getTodayAssessments } from "@/modules/activities/lib/today/assessments";
 
-const plural = (n: number, one: string, many: string) => `${n.toLocaleString("en-IE")} ${n === 1 ? one : many}`;
 
 /** Classes each person is the scheduled instructor for, archived ones included,
  *  as the Staff page has always counted them. */
@@ -105,8 +104,6 @@ const SWIM_LINKS: readonly SwimLine[] = [
   { label: "Reports", href: "/analytics", screen: "analytics" },
 ];
 
-const plainCount = (n: number, one: string, many: string) => `${n} ${n === 1 ? one : many}`;
-
 registerHomeCard({
   moduleId: "swim-school",
   async items(viewer) {
@@ -126,7 +123,7 @@ registerHomeCard({
     const items: HomeItem[] = SWIM_ACTIONS.filter(allowed).map(strip);
     if (classes && cancelled) {
       const off = classes.filter((c) => cancelled.has(c.id)).length;
-      items.push({ kind: "today", label: "Classes today", count: classes.length - off, hint: off ? `${plainCount(off, "class", "classes")} cancelled` : "None cancelled", href: "/schedule" });
+      items.push({ kind: "today", label: "Classes today", count: classes.length - off, hint: off ? `${plural(off, "class", "classes")} cancelled` : "None cancelled", href: "/schedule" });
     }
     if (classes && cancelled && assessments && covers) {
       const now = minutesNow();
@@ -150,7 +147,7 @@ registerHomeCard({
     }
     if (assessments) {
       const booked = assessments.reduce((sum, a) => sum + a.booked, 0);
-      items.push({ kind: "today", label: "Assessments today", count: assessments.length, hint: assessments.length ? `${plainCount(booked, "swimmer", "swimmers")} booked` : "No sessions today", href: "/schedule" });
+      items.push({ kind: "today", label: "Assessments today", count: assessments.length, hint: assessments.length ? `${plural(booked, "swimmer", "swimmers")} booked` : "No sessions today", href: "/schedule" });
     }
     if (awaiting) items.push({ label: "Awaiting enrolment", hint: "Class places and family follow-ups", href: "/awaiting-enrolment", count: awaiting.total, attention: awaiting.total > 0 });
     if (parentUpdates !== null) items.push({ label: "Parent updates", hint: "Contact and medical corrections", href: "/students/parent-changes", count: parentUpdates, attention: parentUpdates > 0 });
@@ -173,7 +170,7 @@ registerHomeCard({
       {
         kind: "today", label: "Your classes today", href: "/instructor", count: mine.length,
         hint: ahead.length ? `Next at ${formatTime(ahead[0].startMinutes)}` : mine.length ? "All done for today" : "Nothing on your list today",
-        list: ahead.slice(0, 3).map((c) => ({ label: courseName(c), hint: `${formatTime(c.startMinutes)} to ${formatTime(c.startMinutes + c.durationMinutes)} · ${c.location || "Pool"}` })),
+        list: ahead.slice(0, 3).map((c) => ({ label: courseName(c), hint: `${formatTimeRange(c.startMinutes, c.startMinutes + c.durationMinutes)} · ${c.location || "Pool"}` })),
       },
       { kind: "action", icon: "clipboardCheck", label: "Open my classes", href: "/instructor" },
       { label: "Find a swimmer in your classes", href: "/instructor/swimmers" },

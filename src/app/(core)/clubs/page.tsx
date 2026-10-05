@@ -8,6 +8,7 @@ import {
 import { CLUB_STATUS_META } from "@/lib/clubs/constants";
 import { ARCHIVAL_STATUS_META } from "@/lib/status";
 import type { Metadata } from "next";
+import { plural } from "@/lib/format";
 
 import { EmptyState } from "@/components/ui-kit/empty-state";
 import { PageHeader } from "@/components/ui-kit/page-header";
@@ -23,7 +24,7 @@ import { getClubs, type ClubRow } from "@/lib/clubs/data/clubs";
 import { siteSummaryLines } from "@/modules/server";
 import { screenPage } from "@/lib/page-guards";
 
-export const metadata: Metadata = { title: "Clubs" };
+export const metadata: Metadata = { title: "Sites" };
 
 export default async function ClubsPage() {
   await screenPage("clubs", "clubs.manage");
@@ -40,22 +41,22 @@ export default async function ClubsPage() {
   return (
     <div className="min-w-0 flex flex-col gap-6">
       <PageHeader
-        title="Clubs"
+        title="Sites"
         description="Each site keeps its own programmes, classes and swimmers. Staff accounts and roles are shared between them."
         actions={<AddClub />}
       />
 
       <Lead>
-        <Num>{live.length}</Num> {live.length === 1 ? "club" : "clubs"}. You are
-        working in <Num>{current.name}</Num>; the site switcher in the Activities
-        sidebar changes that, and every Activities page follows it.
+        <Num>{plural(live.length, "site")}</Num>. You are working in{" "}
+        <Num>{current.name}</Num>; the site picker in the top bar changes that,
+        and every swim school page follows it.
       </Lead>
 
       {live.length === 0 ? (
         <EmptyState
           icon="building"
-          title="No clubs"
-          hint="Everything belongs to a club, so there has to be one."
+          title="No sites yet"
+          hint="Everything belongs to a site, so there has to be one."
           action={<AddClub />}
         />
       ) : (

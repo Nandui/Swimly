@@ -33,7 +33,7 @@ export function SwimmerBrowser({ students, total, page, pageSize, counts, q, sta
     <section className="flex min-w-0 flex-col gap-4 text-ui-foreground" aria-labelledby="swimmers-heading" data-swimmer-browser>
       <header className="mb-2 space-y-2">
         <div className="flex flex-wrap items-center justify-between gap-3">
-          <h1 id="swimmers-heading" className="text-2xl font-semibold tracking-tight">Swimmers</h1>
+          <h1 id="swimmers-heading" className="text-2xl font-semibold">Swimmers</h1>
           <div className="flex flex-wrap gap-2">{parentAction}{addAction}</div>
         </div>
         <p className="text-sm text-ui-muted-foreground">Search across all sites, then open a swimmer’s profile.</p>

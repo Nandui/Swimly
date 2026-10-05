@@ -14,7 +14,7 @@ export function AuthFrame({ note, children }: { note?: React.ReactNode; children
             <span className="relative size-14 shrink-0 overflow-hidden" aria-hidden="true">
               <Image src="/brand/turnfin.png" alt="" width={176} height={176} priority className="absolute left-1/2 top-1/2 size-[170%] max-w-none -translate-x-1/2 -translate-y-1/2" />
             </span>
-            <span className="text-2xl font-bold text-ui-foreground">Turnfin</span>
+            <span className="text-2xl font-semibold text-ui-foreground">Turnfin</span>
           </span>
           <Card className="gap-5 p-6">{children}</Card>
           {note ? <p className="text-center text-xs text-ui-muted-foreground">{note}</p> : null}

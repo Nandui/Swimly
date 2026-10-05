@@ -21,7 +21,7 @@ export default async function DeckSwimmersPage({ searchParams }: { searchParams:
   return (
     <div className="mx-auto flex max-w-3xl flex-col gap-5">
       <div>
-        <h1 className="text-2xl font-semibold tracking-tight">Swimmers at this site</h1>
+        <h1 className="text-2xl font-semibold">Swimmers at this site</h1>
         <p className="text-sm text-ui-muted-foreground">Find a swimmer by name to see their level and class. Medical notes show for swimmers in classes you teach or are covering today.</p>
       </div>
       <form className="flex gap-2" role="search" action="/instructor/swimmers">

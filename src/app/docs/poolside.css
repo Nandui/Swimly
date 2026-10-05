@@ -173,12 +173,14 @@
 /* Type: one bold page title, 600-weight section titles, sentence-case labels (never capitals). */
 .turnfin-app :is(h1, h2, h3, h4) { font-family: var(--font-sans); color: var(--pc-ink); }
 .turnfin-app h1 { font-size: var(--pc-text-page); font-weight: 600; line-height: var(--pc-leading-page); letter-spacing: -0.01em; }
+/* No letter-spacing anywhere else: unlayered, so it beats Docs' legacy heading rules. */
+.turnfin-app :is(h2, h3, h4) { letter-spacing: 0; }
 /* Heading defaults sit in the base layer so module rules (e.g. a card title at body size) and
    Tailwind utilities in the markup can still refine them. */
 @layer base {
-  .turnfin-app h2 { font-size: var(--pc-text-title); font-weight: 600; line-height: var(--pc-leading-title); letter-spacing: 0; }
+  .turnfin-app h2 { font-size: var(--pc-text-title); font-weight: 600; line-height: var(--pc-leading-title); }
   .turnfin-app svg { flex-shrink: 0; }
-  .turnfin-app :is(h3, h4) { font-size: var(--pc-text-body); font-weight: 600; line-height: var(--pc-leading-body); letter-spacing: 0; }
+  .turnfin-app :is(h3, h4) { font-size: var(--pc-text-body); font-weight: 600; line-height: var(--pc-leading-body); }
 }
 .turnfin-docs :is(.eyebrow, .section-kicker, .data-table th, .risk-read-card dt, .document-kicker) { text-transform: none; letter-spacing: 0; }
 .turnfin-docs :is(.eyebrow, .section-kicker) { font-size: var(--pc-text-caption); line-height: var(--pc-leading-caption); font-weight: 600; color: var(--pc-primary-ink); }
@@ -260,13 +262,13 @@
 
 /* Fields */
 .turnfin-app :is([data-slot='input'], [data-slot='textarea'], [data-slot='select-trigger'], [data-slot='native-select']):not(.title-input) { min-height: var(--pc-control-height); border-radius: var(--pc-radius-control); border-color: var(--pc-line-strong); background: var(--pc-surface); box-shadow: none; font-size: 16px; font-weight: 400; color: var(--pc-ink); transition: border-color 120ms var(--pc-ease), box-shadow 120ms var(--pc-ease); }
-.turnfin-app [data-slot='textarea']:not(.title-input) { border-radius: var(--pc-radius-card); min-height: 96px; padding-top: 10px; padding-bottom: 10px; line-height: 22px; }
+.turnfin-app [data-slot='textarea']:not(.title-input) { border-radius: var(--pc-radius-card); min-height: 96px; padding-top: 10px; padding-bottom: 10px; line-height: var(--pc-leading-title); }
 .turnfin-docs .editor-title-panel [data-slot='textarea']:not(.title-input) { min-height: 72px; }
 .turnfin-app :is([data-slot='input'], [data-slot='textarea'], [data-slot='select-trigger'], [data-slot='native-select']):not(.title-input):focus-visible { border-color: var(--pc-focus); box-shadow: 0 0 0 1px var(--pc-focus), var(--pc-focus-halo); }
 .turnfin-app :is([data-slot='input'], [data-slot='textarea'])[aria-invalid='true'] { border-color: var(--pc-danger); background: var(--pc-danger-soft); }
 .turnfin-app :is([data-slot='input'], [data-slot='textarea'])::placeholder { color: var(--pc-ink-muted); }
 /* The editor's document title reads as the page title, not as a boxed field. */
-.turnfin-docs .editor-title-panel .title-input { height: auto; min-height: 44px; padding: 0; border: 0; border-radius: 0; background: none; box-shadow: none; font-size: var(--pc-text-page); line-height: var(--pc-leading-page); font-weight: 700; letter-spacing: -0.015em; }
+.turnfin-docs .editor-title-panel .title-input { height: auto; min-height: 44px; padding: 0; border: 0; border-radius: 0; background: none; box-shadow: none; font-size: var(--pc-text-page); line-height: var(--pc-leading-page); font-weight: 600; letter-spacing: -0.01em; }
 .turnfin-docs .editor-title-panel .title-input:focus-visible { box-shadow: none; outline: 2px solid var(--pc-focus); outline-offset: 4px; border-radius: 4px; }
 
 /* Tables: caption-size column headers, body-size cells, one cell inset. */
@@ -293,20 +295,11 @@
 .turnfin-app :is([data-slot='field-description'], .field-hint, .hint) { font-size: var(--pc-text-caption); line-height: var(--pc-leading-caption); font-weight: 400; color: var(--pc-ink-muted); }
 @media (min-width: 768px) {
   .turnfin-app :is([data-slot='input'], [data-slot='textarea'], [data-slot='select-trigger'], [data-slot='native-select']):not(.title-input) { font-size: var(--pc-text-body); }
+  .turnfin-app [data-slot='textarea']:not(.title-input) { line-height: var(--pc-leading-body); }
 }
 
 @media (max-width: 767px) {
   .turnfin-docs .workspace-page-content { padding: 20px 16px; }
-}
-
-/* The Turnfin brand (fin and wordmark) anywhere in the app, e.g. the pool deck's top bar.
-   Same low priority as the Docs originals, so frame-specific sizes still win. */
-@layer components {
-  :where(.turnfin-app) .turnfin-brand { display: inline-flex; align-items: center; gap: 8px; color: var(--pc-ink); white-space: nowrap; }
-  :where(.turnfin-app) .turnfin-fin { position: relative; display: block; flex-shrink: 0; width: 38px; height: 40px; overflow: hidden; }
-  :where(.turnfin-app) .turnfin-fin img { position: absolute; top: 50%; left: 50%; width: 76px; height: 76px; max-width: none; transform: translate(-50%, -50%); }
-  :where(.turnfin-app) .brand-wordmark { display: inline-flex; align-items: baseline; gap: 5px; font-size: 20px; font-weight: 700; letter-spacing: -0.02em; }
-  :where(.turnfin-app) .brand-wordmark > span { font-size: var(--pc-text-caption); font-weight: 600; letter-spacing: 0; color: var(--pc-primary-ink); }
 }
 
 /* A desktop with a mouse, continued (after the field rules it adjusts): fields read at body
@@ -347,8 +340,6 @@
 .turnfin-app :is(.tf-bar-item, .tf-tools > :is([data-slot='button'], [data-slot='dropdown-menu-trigger'])) > svg { width: 16px; height: 16px; }
 .turnfin-app :is(.tf-icon, .tf-tools > [data-size^='icon']) { width: 44px; padding: 0; }
 .turnfin-app .tf-who { padding: 0 10px 0 4px; gap: 4px; }
-.turnfin-app .tf-who .avatar { width: 32px; height: 32px; border: 0; }
-.turnfin-app .tf-who .avatar [data-slot='avatar-fallback'] { font-size: var(--pc-text-caption); line-height: var(--pc-leading-caption); font-weight: 600; }
 .turnfin-app .tf-tools > :is([data-slot='button'], [data-slot='dropdown-menu-trigger']):not(.tf-who) > span:not([data-slot='avatar']) { max-width: 180px; overflow: hidden; text-overflow: ellipsis; }
 
 .turnfin-app .tf-rail { position: sticky; top: 24px; display: flex; flex: none; flex-direction: column; align-items: center; gap: 12px; width: 64px; }
@@ -433,8 +424,8 @@ html:has(.tf-shell) { scroll-padding-bottom: 112px; }
 .turnfin-app .pc-block-body > * { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .turnfin-app .pc-block-title { font-weight: 600; }
 .turnfin-app .pc-block-hint { font-size: var(--pc-text-caption); line-height: var(--pc-leading-caption); }
-.turnfin-app .pc-block-time { flex: none; font-weight: 600; font-variant-numeric: tabular-nums; line-height: 18px; }
-.turnfin-app .pc-block-time small { display: block; font-size: var(--pc-text-caption); font-weight: 400; }
+.turnfin-app .pc-block-time { flex: none; font-weight: 600; font-variant-numeric: tabular-nums; line-height: var(--pc-leading-body); }
+.turnfin-app .pc-block-time small { display: block; font-size: var(--pc-text-caption); line-height: var(--pc-leading-caption); font-weight: 400; }
 .turnfin-app .pc-block-tag { display: inline-flex; flex: none; align-items: center; gap: 4px; min-height: 24px; padding: 0 8px; border-radius: 999px; background: var(--pc-surface); color: var(--pc-ink); font-size: var(--pc-text-caption); line-height: var(--pc-leading-caption); font-weight: 600; }
 .turnfin-app .pc-block-tag > svg { width: 14px; height: 14px; }
 .turnfin-app .pc-block[data-state='now'] { background: var(--pc-block-now); color: var(--pc-on-block-now); }

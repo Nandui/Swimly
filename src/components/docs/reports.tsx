@@ -267,7 +267,6 @@ export function ReportsView({
                         <TableCell>
                           <span className="staff-cell">
                             <Avatar
-                              small
                               member={
                                 w.members.find((m) => m.id === r.memberId) || {
                                   name: 'Former staff',

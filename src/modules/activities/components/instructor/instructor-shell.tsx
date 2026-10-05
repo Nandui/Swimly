@@ -6,7 +6,7 @@ import Link from "next/link";
 import { usePathname, useSearchParams } from "next/navigation";
 import { signOut } from "next-auth/react";
 import { ChevronDown, CircleHelp, LogOut, Monitor, Moon, Sun } from "lucide-react";
-import { Avatar, AvatarFallback } from "@/components/shadcn/avatar";
+import { Avatar, AvatarFallback, initials } from "@/components/shadcn/avatar";
 import { useThemeMode } from "@/components/theme-provider";
 import { parseThemeMode } from "@/lib/theme-mode";
 import { Button } from "@/components/shadcn/button";
@@ -85,7 +85,7 @@ export function InstructorShell({
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
               <Button variant="ghost" className="tf-bar-item tf-who" aria-label={`Instructor menu: ${userName}`}>
-                <Avatar className="avatar size-8"><AvatarFallback className="bg-ui-brand-soft text-xs font-semibold text-ui-brand-ink">{userName.split(" ").map((part) => part[0]).slice(0, 2).join("")}</AvatarFallback></Avatar><ChevronDown aria-hidden="true" />
+                <Avatar self aria-hidden="true"><AvatarFallback>{initials(userName)}</AvatarFallback></Avatar><ChevronDown aria-hidden="true" />
               </Button>
             </DropdownMenuTrigger>
             <DropdownMenuContent align="end" className="w-72 max-w-[calc(100vw-2rem)]">

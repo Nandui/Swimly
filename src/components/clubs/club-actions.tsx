@@ -27,7 +27,7 @@ function ClubFields({ club }: { club?: Club }) {
         required
         autoFocus
         defaultValue={club?.name}
-        placeholder="LeisureWorld Douglas"
+        placeholder="Riverside"
       />
     </Field>
   );
@@ -39,13 +39,13 @@ export function AddClub() {
       trigger={
         <Button variant="default" size="sm">
           {<Plus aria-hidden={true} className="size-4 shrink-0" />}
-          {"Add a club"}
+          {"Add a site"}
         </Button>
       }
-      title="Add a club"
+      title="Add a site"
       description="A new site starts with an empty timetable. Swimmers, programmes and progress are shared across all sites."
-      submitLabel="Add club"
-      successMessage="Club added"
+      submitLabel="Add site"
+      successMessage="Site added"
       submit={(formData) => createClub(readInput(formData))}
     >
       <ClubFields />
@@ -67,7 +67,7 @@ export function EditClub({ club }: { club: Club }) {
       }
       title={`Rename ${club.name}`}
       submitLabel="Save changes"
-      successMessage="Club renamed"
+      successMessage="Site renamed"
       submit={(formData) => updateClub(club.id, readInput(formData))}
     >
       <ClubFields club={club} />
@@ -80,7 +80,7 @@ export function ArchiveClub({ club }: { club: Club }) {
     return (
       <ActionButton
         ariaLabel={`Restore ${club.name}`}
-        successMessage="Club restored"
+        successMessage="Site restored"
         run={() => setClubArchived(club.id, false)}
       >
         <ArchiveRestore aria-hidden={true} className="size-4 shrink-0" />
@@ -99,9 +99,9 @@ export function ArchiveClub({ club }: { club: Club }) {
         </Button>
       }
       title={`Archive ${club.name}?`}
-      description="It leaves the switcher, and anyone working in it lands on the first club still open. Its timetable and history are retained. Shared swimmers and curriculum remain available at the other sites."
+      description="It leaves the site picker, and anyone working there moves to the first site still open. Its timetable and history are kept. Shared swimmers and curriculum stay available at the other sites."
       confirmLabel="Archive"
-      successMessage="Club archived"
+      successMessage="Site archived"
       run={() => setClubArchived(club.id, true)}
     />
   );

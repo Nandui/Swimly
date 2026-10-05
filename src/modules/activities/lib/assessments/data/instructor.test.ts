@@ -1,13 +1,14 @@
 import assert from "node:assert/strict";
 import { test } from "node:test";
 import { serverModule } from "@/test/server-module";
+import * as format from "@/lib/format";
 
 test("Instructor guards assessment access before reading bookings and constrains site, date and cancellation", async () => {
   const calls: unknown[] = [];
   const { getInstructorAssessmentSession } = serverModule<typeof import("./instructor")>("src/modules/activities/lib/assessments/data/instructor.ts", {
     "@/lib/page-guards": { screenPage: async (...args: unknown[]) => { calls.push(args); } },
     "@/lib/clubs/current": { currentClubId: async () => "selected-site" },
-    "@/lib/format": { today: () => "2026-09-16", parseDateOnly: (iso: string) => new Date(`${iso}T00:00:00Z`) },
+    "@/lib/format": { ...format, today: () => "2026-09-16", parseDateOnly: (iso: string) => new Date(`${iso}T00:00:00Z`) },
     "@/lib/authz": { requireSession: async () => { calls.push("authenticated"); return { user: { id: "staff", permissions: ["students.manage", "attendance.mark"], screens: ["students", "courses", "instructor"] } }; } },
     "@/modules/activities/lib/curriculum/data/shared": {},
     "@/modules/activities/lib/curriculum/data/curriculum": {},

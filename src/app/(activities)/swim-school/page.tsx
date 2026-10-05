@@ -20,5 +20,5 @@ export default async function SwimSchoolOverviewPage() {
     label: group.label,
     links: group.items.map(({ href, label, icon, description }) => ({ href, label, icon, description })),
   }));
-  return <ModuleOverview name={mod.name} description="Swimmers, classes and assessments at the desk, and the swim school's set-up." icon={mod.icon} siteName={siteName} items={items} groups={groups} />;
+  return <ModuleOverview name={mod.name} description={mod.description} icon={mod.icon} siteName={siteName} items={items} groups={groups} />;
 }

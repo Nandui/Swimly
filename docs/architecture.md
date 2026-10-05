@@ -25,7 +25,7 @@ A role holds one level for each module (`StaffRole.levels`). `src/lib/staff/leve
 1. **Core never imports a module.** Modules import Core; Core does not import them.
 2. **The swim school depends on Core only**, never on a Work module (Docs, Refunds, Training, HR, Rota).
 3. **Cross-module needs go through a seam**, never a direct import:
-   - **Contributions** (`src/modules/contributions.ts`): a module registers read-only summaries that Core pages show. The swim school adds the Staff page's *Classes* column and each site's *programmes · swimmers · classes* line on Clubs. Rota adds *Absences and returns to work* to a person's personal file (the HR record and its export). **Commitments** (who is busy when): the swim school reports each class, its time and who teaches it that day (`activities.classes`), so Rota shows the day's classes on its plan and warns when someone on a duty is teaching then, without importing the swim school.
+   - **Contributions** (`src/modules/contributions.ts`): a module registers read-only summaries that Core pages show. The swim school adds the Staff page's *Classes* column and each site's *programmes · swimmers · classes* line on Sites (`/clubs`). Rota adds *Absences and returns to work* to a person's personal file (the HR record and its export). **Commitments** (who is busy when): the swim school reports each class, its time and who teaches it that day (`activities.classes`), so Rota shows the day's classes on its plan and warns when someone on a duty is teaching then, without importing the swim school.
    - **Session hooks** (`src/modules/session-hooks.ts`): per-request work a module needs. The swim school applies due scheduled unenrolments before any read. `requireSession` loads the hook file lazily.
    - **Self-registration**: shared UI can be extended by a module without knowing it. For example, the swimmer picker declares itself with `labelsItself` from `form-dialog`.
    - **Links**: one module links to another's screens by URL, never by importing them. The Reception Portal's *Add a swimmer* task opens `/students?add=1`.
@@ -56,6 +56,6 @@ On 28 September 2026 the swim school briefly ran as a second Next.js app (`apps/
 
 ## Known follow-ups
 
-- Refunds, Training, HR and Rota still borrow the Docs shell pieces (`components/docs/{primitives,ui}`; the brand has moved to `components/workspace/brand.tsx` and the Docs stylesheets). They should move to `components/workspace` so Work modules stop depending on Docs.
+- Refunds, Training, HR and Rota still borrow the Docs shell pieces (`components/docs/{primitives,ui}` and the Docs stylesheets; the fin is drawn by `ModuleShell` and the sign-in `AuthFrame`). They should move to `components/workspace` so Work modules stop depending on Docs.
 - HR reads Docs' storage configuration (`lib/hr/storage-config.ts` imports `lib/docs/storage-config`); a Core storage helper would remove it.
 - `AuditLog.programmeId` is swim-school-shaped; a module-neutral `module` column is planned.

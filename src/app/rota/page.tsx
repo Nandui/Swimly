@@ -5,7 +5,7 @@ import { Button } from "@/components/shadcn/button";
 import { NativeSelect, NativeSelectOption } from "@/components/shadcn/native-select";
 import { CopyPlan, ShiftDialog } from "@/components/rota/actions";
 import { RosterWeek, type RosterShiftDetail } from "@/components/rota/roster";
-import { today } from "@/lib/format";
+import { formatDateRange, formatDayMonth, formatWeekday, today } from "@/lib/format";
 import { ACTIVITY_SUGGESTIONS, addDaysIso, weekStarted } from "@/lib/rota/constants";
 import { rotaWeek } from "@/lib/rota/data";
 import { buildRoster } from "@/lib/rota/roster";
@@ -13,9 +13,6 @@ import { cn } from "@/lib/utils";
 
 export const metadata: Metadata = { title: { absolute: "Week plan · Turnfin Rota" } };
 
-const DAY = new Intl.DateTimeFormat("en-GB", { day: "numeric", month: "short", timeZone: "UTC" });
-const WEEKDAY = new Intl.DateTimeFormat("en-GB", { weekday: "short", timeZone: "UTC" });
-const at = (iso: string) => new Date(`${iso}T00:00:00Z`);
 
 /** One site's week as a roster sheet (owner decision, 3 October 2026):
  *  people down the side, days across. Department supervisors plan upcoming
@@ -31,7 +28,7 @@ export default async function WeekPlanPage({ searchParams }: { searchParams: Pro
   const thisWeek = monday <= now && now <= sunday;
   const started = weekStarted(monday, now);
   const roster = buildRoster(data.days);
-  const days = data.days.map((d) => ({ iso: d.iso, weekday: WEEKDAY.format(at(d.iso)), date: DAY.format(at(d.iso)), today: d.iso === now }));
+  const days = data.days.map((d) => ({ iso: d.iso, weekday: formatWeekday(d.iso, "short"), date: formatDayMonth(d.iso), today: d.iso === now }));
   const shifts: Record<string, RosterShiftDetail> = Object.fromEntries(data.days.flatMap((d) => d.shifts.filter((s) => s.kind === "shift").map((s) => [s.id, {
     id: s.id, start: s.startMinutes, end: s.endMinutes, role: s.bookingNeed?.role ?? s.role, who: s.user?.name ?? s.rotaPerson?.name ?? null,
     segments: s.segments.map((g) => ({ start: g.startMinutes, end: g.endMinutes, kind: g.kind, label: g.label })),
@@ -59,7 +56,7 @@ export default async function WeekPlanPage({ searchParams }: { searchParams: Pro
           {site ? (
             <nav aria-label="Weeks" className="flex items-center gap-1">
               <Button asChild variant="outline" size="icon" aria-label="Previous week"><Link href={link(addDaysIso(monday, -7))}><ChevronLeft aria-hidden="true" /></Link></Button>
-              <span className="inline-flex min-h-11 items-center rounded-[var(--pc-radius-control)] border border-ui-border bg-ui-card px-3 text-sm font-semibold">{DAY.format(at(monday))} to {DAY.format(at(sunday))}</span>
+              <span className="inline-flex min-h-11 items-center rounded-[var(--pc-radius-control)] border border-ui-border bg-ui-card px-3 text-sm font-semibold">{formatDateRange(monday, sunday)}</span>
               <Button asChild variant="outline" size="icon" aria-label="Next week"><Link href={link(addDaysIso(monday, 7))}><ChevronRight aria-hidden="true" /></Link></Button>
               {!thisWeek ? <Button asChild variant="ghost" className="min-h-11"><Link href={link(now)}>This week</Link></Button> : null}
             </nav>

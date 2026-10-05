@@ -27,7 +27,7 @@ export function useLoad<T>(path: string | null) {
     if (!session.token()) { router.replace(`/sign-in?next=${encodeURIComponent(pathname)}`); return null; }
     try { return { data: await api<T>(path) }; }
     catch (caught) {
-      const failure = caught instanceof ApiError ? caught : new ApiError(0, "ERROR", "Something went wrong. Please try again.");
+      const failure = caught instanceof ApiError ? caught : new ApiError(0, "ERROR", "Could not complete that. Try again.");
       if (failure.status === 401) { router.replace(`/sign-in?next=${encodeURIComponent(pathname)}`); return null; }
       return { error: failure };
     }

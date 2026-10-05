@@ -18,12 +18,12 @@ export default async function CoreHome() {
   const pages = [
     { screen: "staff", href: "/staff", label: "Staff", icon: UserCog, description: "Who can sign in, their roles, sites and work devices" },
     { screen: "roles", href: "/roles", label: "Roles", icon: KeyRound, description: "What each role can open and do, module by module" },
-    { screen: "clubs", href: "/clubs", label: "Clubs", icon: Building2, description: "The sites, and which one this device works at" },
+    { screen: "clubs", href: "/clubs", label: "Sites", icon: Building2, description: "The sites, and which one this device works at" },
     { screen: "activity", href: "/activity", label: "Activity", icon: Activity, description: "Who changed what, and when" },
   ] as const;
   const organisation = pages.filter((page) => canSee(session, page.screen)).map(({ href, label, icon, description }) => ({ href, label, icon, description }));
   return (
-    <ModuleOverview name={mod.name} description="People, roles and clubs, and the activity log, shared by every module." icon={mod.icon} siteName={siteName} items={items}
+    <ModuleOverview name={mod.name} description={mod.description} icon={mod.icon} siteName={siteName} items={items}
       groups={[
         { label: organisation.length ? "Organisation" : "", links: organisation },
         { label: "You", links: [{ href: "/account", label: "Account", icon: UserRound, description: "Your password, PIN and appearance" }] },

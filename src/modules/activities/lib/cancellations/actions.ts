@@ -10,7 +10,7 @@ import { currentClubId } from "@/lib/clubs/current";
 import { courseName } from "@/modules/activities/lib/courses/constants";
 import { readSharedCurriculum, sharedCourse } from "@/modules/activities/lib/curriculum/data/shared";
 import { withCourseSeat } from "@/modules/activities/lib/enrolment/seat";
-import { formatDate, isDateOnly, parseDateOnly, today, weekdayOf } from "@/lib/format";
+import { formatDate, isDateOnly, parseDateOnly, plural, today, weekdayOf } from "@/lib/format";
 import { fullName } from "@/modules/activities/lib/students/constants";
 
 const cancelSchema = z.object({
@@ -69,7 +69,7 @@ export async function cancelClassSession(input: z.infer<typeof cancelSchema>): P
     } });
     await logAudit({ actorId: session.user.id, actorName: cancelledByName, action: "cancel-session", entity: "Course", entityId: courseId,
       clubId, programmeId: course.level.programme.id,
-      summary: `Cancelled ${courseName(course)} on ${formatDate(date)} — ${reason}. ${swimmers.length} swimmers awaiting billing follow-up.`,
+      summary: `Cancelled ${courseName(course)} on ${formatDate(date)}: ${reason}. ${plural(swimmers.length, "swimmer")} awaiting billing follow-up.`,
       details: { cancellationId: cancellation.id, date: iso, reason, affectedSwimmers: swimmers.length, attendanceRecorded },
     }, tx);
     return ok();

@@ -85,7 +85,7 @@ export default async function AccountPage() {
           Change your password
         </h2>
         <Lead>
-          If someone set the one you are using, change it here — they chose it
+          If someone set the one you are using, change it here: they chose it
           and it was never private. You stay signed in.
         </Lead>
         <ChangePasswordForm />

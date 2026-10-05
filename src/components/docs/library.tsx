@@ -89,7 +89,7 @@ export function LibraryView({
               <Button asChild>
                 <Link href="/docs/documents/new">
                   <Plus size={17} aria-hidden="true" />
-                  New document
+                  Add a document
                 </Link>
               </Button>
             </div>

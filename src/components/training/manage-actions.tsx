@@ -96,8 +96,8 @@ export function CourseDialog({ course, qualificationTypes }: { course?: CourseDr
       width="sm:max-w-2xl"
       trigger={course
         ? <Button variant="outline" className="min-h-11"><Pencil aria-hidden="true" />Edit</Button>
-        : <Button className="min-h-11"><Plus aria-hidden="true" />New course</Button>}
-      title={course ? `Edit ${course.title}` : "New course"}
+        : <Button className="min-h-11"><Plus aria-hidden="true" />Add a course</Button>}
+      title={course ? `Edit ${course.title}` : "Add a course"}
       description="People read the material in Turnfin Me and mark it done. A practical course then waits for a trainer's sign-off."
       submitLabel={course ? "Save course" : "Add course"}
       successMessage={course ? "Course saved" : "Course added"}

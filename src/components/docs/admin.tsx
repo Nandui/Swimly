@@ -98,7 +98,7 @@ export function AdminView({
     setSuccess('');
     start(async () => {
       const result = await fn();
-      if (!result.ok) setError(result.error || 'Please try again.');
+      if (!result.ok) setError(result.error || 'Could not save that. Try again.');
       else {
         setSuccess(message);
         setEditing(null);
@@ -200,7 +200,7 @@ export function AdminView({
                         <TableRow key={m.id}>
                           <TableCell>
                             <span className="staff-cell">
-                              <Avatar member={m} />
+                              <Avatar size="lg" member={m} />
                               <span>
                                 <strong>{m.name}</strong>
                                 <small>{m.email}</small>
@@ -249,7 +249,7 @@ export function AdminView({
                   {visibleStaff.map((member) => (
                     <li key={member.id}>
                       <div className="staff-mobile-heading">
-                        <Avatar small member={member} />
+                        <Avatar member={member} />
                         <div>
                           <strong>{member.name}</strong>
                           <span>{member.email}</span>

@@ -6,7 +6,7 @@ import { Button } from "@/components/shadcn/button";
 import { NativeSelect, NativeSelectOption } from "@/components/shadcn/native-select";
 import { MarkTimepoint, ShiftDialog } from "@/components/rota/actions";
 import { Tag } from "@/components/ui-kit/tag";
-import { formatDate } from "@/lib/format";
+import { formatDate, formatTime, minutesNow } from "@/lib/format";
 import { BOOKING_KIND_META, ROTA_CHANGE_REASON_META, clock, type BookingKind, type RotaChangeReason } from "@/lib/rota/constants";
 import { rotaToday } from "@/lib/rota/data";
 import { buildPlan } from "@/lib/rota/plan";
@@ -14,7 +14,6 @@ import { cn } from "@/lib/utils";
 
 export const metadata: Metadata = { title: { absolute: "Today · Turnfin Rota" } };
 
-const TIME = new Intl.DateTimeFormat("en-GB", { hour: "2-digit", minute: "2-digit", hourCycle: "h23", timeZone: "Europe/Dublin" });
 const span = (s: { startMinutes: number; endMinutes: number }) => `${clock(s.startMinutes)}–${clock(s.endMinutes)}`;
 
 /** Today's plan for duty managers: every department's duties on one
@@ -98,7 +97,7 @@ export default async function TodayPage({ searchParams }: { searchParams: Promis
                       <p className="font-semibold">{c.kind === "cancelled" ? `Cancelled: ${c.before}` : c.kind === "added" ? `Added: ${c.after}` : `${c.before} → ${c.after.split(", ").at(-1)}`}</p>
                       <p className="flex flex-wrap items-center gap-2 text-ui-muted-foreground">
                         <Tag color={ROTA_CHANGE_REASON_META[c.reason as RotaChangeReason].color}>{ROTA_CHANGE_REASON_META[c.reason as RotaChangeReason].label}</Tag>
-                        {TIME.format(c.createdAt)} · by {c.byName}{c.note ? ` · ${c.note}` : ""}
+                        {formatTime(minutesNow(c.createdAt))} · by {c.byName}{c.note ? ` · ${c.note}` : ""}
                       </p>
                       {c.timepointAt ? (
                         <p className="flex items-center gap-1.5 font-medium text-[var(--pc-success)]"><CheckCircle2 aria-hidden="true" className="size-4" />Updated in Timepoint{c.timepointByName ? ` by ${c.timepointByName}` : ""}</p>

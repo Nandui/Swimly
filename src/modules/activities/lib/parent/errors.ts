@@ -3,7 +3,7 @@ export class ParentApiError extends Error {
 }
 
 export function unavailable(): never {
-  throw new ParentApiError(503, "UNAVAILABLE", "Parent access is not available yet. Please try again later.");
+  throw new ParentApiError(503, "UNAVAILABLE", "Parent access is not available yet. Try again later.");
 }
 
 export function notFound(): never {

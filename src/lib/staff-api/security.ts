@@ -20,7 +20,7 @@ export async function rateLimit(bucket: string, maximum: number, seconds: number
       count = CASE WHEN "ParentRateLimit"."windowStart" <= ${cutoff} THEN 1 ELSE "ParentRateLimit".count + 1 END,
       "windowStart" = CASE WHEN "ParentRateLimit"."windowStart" <= ${cutoff} THEN ${now} ELSE "ParentRateLimit"."windowStart" END
     RETURNING count`;
-  if (rows[0].count > maximum) throw new StaffApiError(429, "RATE_LIMITED", "Too many attempts. Please try again later.");
+  if (rows[0].count > maximum) throw new StaffApiError(429, "RATE_LIMITED", "Too many attempts. Wait a few minutes and try again.");
 }
 
 /** Only Vercel's overwritten IP header is trusted; elsewhere one shared bucket. */

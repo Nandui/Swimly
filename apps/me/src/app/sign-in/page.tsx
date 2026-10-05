@@ -24,7 +24,7 @@ function SignIn() {
     try {
       const result = await api<{ challengeId: string }>("auth/request-code", { method: "POST", body: { email }, auth: false });
       setChallenge(result.challengeId); setCode("");
-    } catch (caught) { setError(caught instanceof ApiError ? caught.message : "Something went wrong. Try again."); }
+    } catch (caught) { setError(caught instanceof ApiError ? caught.message : "Could not sign you in. Try again."); }
     finally { setBusy(false); }
   }
   async function verify(event: FormEvent) {
@@ -34,7 +34,7 @@ function SignIn() {
       const result = await api<{ accessToken: string }>("auth/verify-code", { method: "POST", body: { challengeId: challenge, code }, auth: false });
       session.set(result.accessToken);
       router.replace(destination);
-    } catch (caught) { setError(caught instanceof ApiError ? caught.message : "Something went wrong. Try again."); setBusy(false); }
+    } catch (caught) { setError(caught instanceof ApiError ? caught.message : "Could not sign you in. Try again."); setBusy(false); }
   }
 
   return (

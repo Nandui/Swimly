@@ -1,10 +1,39 @@
 /** Where the pool is. Calendar decisions use this zone, not the server's. */
 export const SCHOOL_TIMEZONE = "Europe/Dublin";
 
-/** One formatter, one locale, so the same instant reads the same way on every
- *  screen. Pinned rather than taken from the request, because a date that
- *  changes shape between two tables is a date nobody can scan down a column. */
-const DATE_TIME = new Intl.DateTimeFormat("en-GB", {
+/** Every date, time and count on screen comes from this file, in one locale,
+ *  so the same day reads the same way everywhere ("Sunday 4 October",
+ *  "Sun 4 Oct", "28 Sep to 4 Oct", "16:00 to 16:30"). Pinned rather than taken
+ *  from the request, because a date that changes shape between two tables is
+ *  a date nobody can scan down a column. */
+const LOCALE = "en-GB";
+
+/** en-GB abbreviates September as "Sept" next to "Oct"; every other month is
+ *  three letters. Only the month part is touched, so literals such as the
+ *  ", " before a time survive. Built from parts so server and browser agree. */
+function formatParts(formatter: Intl.DateTimeFormat, value: Date): string {
+  return formatter
+    .formatToParts(value)
+    .map((part) => (part.type === "month" && part.value === "Sept" ? "Sep" : part.value))
+    .join("");
+}
+
+function partsOf(formatter: Intl.DateTimeFormat, value: Date) {
+  const parts: Partial<Record<Intl.DateTimeFormatPartTypes, string>> = {};
+  for (const part of formatter.formatToParts(value)) {
+    parts[part.type] = part.type === "month" && part.value === "Sept" ? "Sep" : part.value;
+  }
+  return parts;
+}
+
+/** A date-only value: a `YYYY-MM-DD` string or a `@db.Date` (UTC midnight). */
+type DayValue = Date | string;
+
+function asDay(value: DayValue): Date {
+  return typeof value === "string" ? parseDateOnly(value) : value;
+}
+
+const DATE_TIME = new Intl.DateTimeFormat(LOCALE, {
   day: "numeric",
   month: "short",
   year: "numeric",
@@ -14,14 +43,14 @@ const DATE_TIME = new Intl.DateTimeFormat("en-GB", {
 });
 
 export function formatDateTime(value: Date): string {
-  return DATE_TIME.format(value);
+  return formatParts(DATE_TIME, value);
 }
 
 /** Date-only columns (`@db.Date`) come back as a `Date` at **UTC midnight**.
  *  Formatting one in local time shows the previous day anywhere west of
  *  Greenwich, so this pins UTC. Use it for anything stored as a date rather
  *  than an instant: a register date, a date of birth, a completion date. */
-const DATE_ONLY = new Intl.DateTimeFormat("en-GB", {
+const DATE_ONLY = new Intl.DateTimeFormat(LOCALE, {
   day: "numeric",
   month: "short",
   year: "numeric",
@@ -29,7 +58,98 @@ const DATE_ONLY = new Intl.DateTimeFormat("en-GB", {
 });
 
 export function formatDate(value: Date): string {
-  return DATE_ONLY.format(value);
+  return formatParts(DATE_ONLY, value);
+}
+
+const DAY_PARTS = new Intl.DateTimeFormat(LOCALE, {
+  weekday: "long",
+  day: "numeric",
+  month: "long",
+  year: "numeric",
+  timeZone: "UTC",
+});
+
+const SHORT_DAY_PARTS = new Intl.DateTimeFormat(LOCALE, {
+  weekday: "short",
+  day: "numeric",
+  month: "short",
+  year: "numeric",
+  timeZone: "UTC",
+});
+
+const MONTH_PARTS = new Intl.DateTimeFormat(LOCALE, {
+  month: "long",
+  year: "numeric",
+  timeZone: "UTC",
+});
+
+function currentYear(now: Date): string {
+  return today(now).slice(0, 4);
+}
+
+/** "Sunday 4 October": a day named in full, as a heading or a label. The year
+ *  is added only when it is not this year at the pool ("Friday 1 January
+ *  2027"). Date-only values are read in UTC, as `formatDate` does. */
+export function formatDay(value: DayValue, now: Date = new Date()): string {
+  const parts = partsOf(DAY_PARTS, asDay(value));
+  const year = parts.year === currentYear(now) ? "" : ` ${parts.year}`;
+  return `${parts.weekday} ${parts.day} ${parts.month}${year}`;
+}
+
+/** "Sun 4 Oct": the compact day, for a column, a chip or a week strip. */
+export function formatShortDay(value: DayValue): string {
+  const parts = partsOf(SHORT_DAY_PARTS, asDay(value));
+  return `${parts.weekday} ${parts.day} ${parts.month}`;
+}
+
+/** "Sun" or "Sunday": the weekday alone, for a day column headed by its date. */
+export function formatWeekday(value: DayValue, width: "long" | "short" = "long"): string {
+  const parts = partsOf(width === "long" ? DAY_PARTS : SHORT_DAY_PARTS, asDay(value));
+  return parts.weekday ?? "";
+}
+
+/** "4 Oct": day and month with no weekday or year. */
+export function formatDayMonth(value: DayValue): string {
+  const parts = partsOf(SHORT_DAY_PARTS, asDay(value));
+  return `${parts.day} ${parts.month}`;
+}
+
+/** "October 2026": a whole month, for a report period. */
+export function formatMonth(value: DayValue): string {
+  const parts = partsOf(MONTH_PARTS, asDay(value));
+  return `${parts.month} ${parts.year}`;
+}
+
+/** "28 Sep to 4 Oct". Both ends carry the year when the range crosses a year
+ *  or is not this year ("28 Dec 2026 to 3 Jan 2027"). Never Intl's
+ *  formatRange, which joins with an en dash. */
+export function formatDateRange(from: DayValue, to: DayValue, now: Date = new Date()): string {
+  const start = partsOf(SHORT_DAY_PARTS, asDay(from));
+  const end = partsOf(SHORT_DAY_PARTS, asDay(to));
+  const withYear = start.year !== end.year || start.year !== currentYear(now);
+  const label = (parts: typeof start) => `${parts.day} ${parts.month}${withYear ? ` ${parts.year}` : ""}`;
+  return `${label(start)} to ${label(end)}`;
+}
+
+/** Minutes from midnight → "16:30". The unit a class's `startMinutes` and a
+ *  shift's times are kept in. */
+export function formatTime(minutes: number): string {
+  const hours = Math.floor(minutes / 60);
+  const rest = minutes % 60;
+  return `${String(hours).padStart(2, "0")}:${String(rest).padStart(2, "0")}`;
+}
+
+/** Two clock times in minutes → "16:30 to 17:15". */
+export function formatTimeRange(startMinutes: number, endMinutes: number): string {
+  return `${formatTime(startMinutes)} to ${formatTime(endMinutes)}`;
+}
+
+const COUNT = new Intl.NumberFormat(LOCALE);
+
+/** "1 swimmer", "12 swimmers", "1,204 swimmers". Pass `many` when the plural
+ *  is not the singular plus "s" ("1 class", "3 classes"). */
+export function plural(n: number, one: string, many: string = `${one}s`): string {
+  return `${COUNT.format(n)} ${n === 1 ? one : many}`;
 }
 
 /** `en-CA` is the shortest way to a real `YYYY-MM-DD` out of `Intl`. */
@@ -45,7 +165,7 @@ export function today(now: Date = new Date()): string {
   return ISO_IN_SCHOOL_TIME.format(now);
 }
 
-const CLOCK_IN_SCHOOL_TIME = new Intl.DateTimeFormat("en-GB", {
+const CLOCK_IN_SCHOOL_TIME = new Intl.DateTimeFormat(LOCALE, {
   hour: "2-digit",
   minute: "2-digit",
   hourCycle: "h23",
@@ -80,7 +200,7 @@ export function toDateOnlyString(value: Date): string {
   return value.toISOString().slice(0, 10);
 }
 
-const WEEKDAY_IN_UTC = new Intl.DateTimeFormat("en-GB", {
+const WEEKDAY_IN_UTC = new Intl.DateTimeFormat(LOCALE, {
   weekday: "long",
   timeZone: "UTC",
 });

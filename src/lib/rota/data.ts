@@ -1,6 +1,6 @@
 import "server-only";
 import { notFound } from "next/navigation";
-import { isDateOnly, parseDateOnly, today } from "@/lib/format";
+import { isDateOnly, minutesNow as poolMinutesNow, parseDateOnly, today } from "@/lib/format";
 import { prisma } from "@/lib/prisma";
 import { sitesFor, subjectsFor } from "@/lib/policy/session";
 import { requireRotaActor } from "@/lib/rota/access";
@@ -186,8 +186,7 @@ export async function rotaToday(siteId: string | undefined) {
   const week = await rotaWeek(siteId, now);
   const day = week.days.find((d) => d.iso === now);
   const shifts = (day?.shifts ?? []).filter((s) => s.kind === "shift");
-  const clockNow = new Intl.DateTimeFormat("en-GB", { hour: "2-digit", minute: "2-digit", hourCycle: "h23", timeZone: "Europe/Dublin" }).format(new Date());
-  const minutesNow = Number(clockNow.slice(0, 2)) * 60 + Number(clockNow.slice(3, 5));
+  const minutesNow = poolMinutesNow();
   const classes = day?.classes ?? [];
   if (!week.site) return { ...week, today: now, minutesNow, shifts, classes, teachers: {} as Record<string, string>, needs: [], changes: [], bookings: [] };
   const date = parseDateOnly(now);

@@ -124,7 +124,7 @@ export function SuperadminToggle({ userId, name, value }: { userId: string; name
     <ConfirmAction
       trigger={<Button variant="outline">{icon(ShieldOff)}Remove superadmin</Button>}
       title={`Remove ${name} as a superadmin?`}
-      description="They keep their roles but lose access to restricted records such as HR and performance, unless a role gives them that."
+      description="They keep their roles but lose access to restricted HR records, unless a role gives them that."
       confirmLabel="Remove superadmin"
       successMessage="Superadmin removed"
       run={() => setSuperadmin(userId, false)}
@@ -133,7 +133,7 @@ export function SuperadminToggle({ userId, name, value }: { userId: string; name
     <ConfirmAction
       trigger={<Button variant="outline">{icon(ShieldCheck)}Make superadmin</Button>}
       title={`Make ${name} a superadmin?`}
-      description="A superadmin sees and changes everything in the organisation, including HR and performance records. Every view of restricted records is logged."
+      description="A superadmin sees and changes everything in the organisation, including HR records. Every view of restricted records is logged."
       confirmLabel="Make superadmin"
       successMessage="Superadmin granted"
       run={() => setSuperadmin(userId, true)}

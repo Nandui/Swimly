@@ -45,8 +45,8 @@
 
 /* Panels */
 .turnfin-module .module-panel { padding: 24px; border: 0; border-radius: var(--pc-radius-panel); background: var(--pc-surface); box-shadow: none; }
-.turnfin-module .module-panel h2 { font-size: var(--pc-text-title); line-height: var(--pc-leading-title); font-weight: 600; letter-spacing: 0; }
-.turnfin-module .module-panel h2 + :is(div, dl, ol, p) { margin-top: 16px; }
+.turnfin-module .module-panel h2 { font-size: var(--pc-text-title); line-height: var(--pc-leading-title); font-weight: 600; }
+.turnfin-module .module-panel h2 +:is(div, dl, ol, p) { margin-top: 16px; }
 .turnfin-module .module-panel dt { font-weight: 600; }
 .turnfin-module .module-panel dd { margin-top: 4px; }
 .turnfin-module .module-panel h3 + p { margin-top: 8px; }

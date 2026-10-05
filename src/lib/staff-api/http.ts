@@ -66,7 +66,7 @@ export async function staffResponse(request: Request, run: () => Promise<Respons
 export function errorResponse(error: unknown) {
   const known = error instanceof StaffApiError;
   if (!known) console.error("Staff API request failed", { name: error instanceof Error ? error.name : "UnknownError" });
-  const response = json({ error: { code: known ? error.code : "INTERNAL_ERROR", message: known ? error.message : "Something went wrong. Please try again." } }, known ? error.status : 500);
+  const response = json({ error: { code: known ? error.code : "INTERNAL_ERROR", message: known ? error.message : "Could not complete that. Try again." } }, known ? error.status : 500);
   if (known && error.status === 429) response.headers.set("Retry-After", "3600");
   if (known && error.status === 401) response.headers.set("WWW-Authenticate", "Bearer");
   if (known) for (const [key, value] of Object.entries(error.headers)) response.headers.set(key, value);

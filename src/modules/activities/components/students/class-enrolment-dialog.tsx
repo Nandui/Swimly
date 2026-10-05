@@ -12,7 +12,7 @@ import { EmptyState } from "@/components/ui-kit/empty-state";
 import { RadioGroup, RadioGroupItem } from "@/components/shadcn/radio-group";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/shadcn/select";
 import { Textarea } from "@/components/ui/textarea";
-import { DAY_META, DAYS_IN_ORDER, courseName, formatTime, formatTimeRange, placesLeft } from "@/modules/activities/lib/courses/constants";
+import { DAY_META, DAYS_IN_ORDER, classTimes, courseName, formatTime, placesLeft } from "@/modules/activities/lib/courses/constants";
 import { ALL_CLASSES, filterClassChoices, type ClassPickerFilters } from "@/modules/activities/lib/enrolment/class-picker";
 import type { StudentEnrolment, TransferTarget } from "@/modules/activities/lib/enrolment/data/enrolments";
 import type { ActionResult, ConfirmationReply } from "@/lib/action-result";
@@ -61,7 +61,7 @@ function ClassPicker({ courses, name, selectedId, onSelect, currentEnrolment }: 
     {currentEnrolment ? <div className="space-y-1 rounded-ui-md bg-ui-muted p-3 text-sm">
       <p className="text-xs font-medium text-ui-muted-foreground">{currentEnrolment.status === "WAITLISTED" ? "Current waitlist class" : "Current class"}</p>
       <p className="leading-relaxed"><strong className="font-semibold">{courseName(currentEnrolment.course)}</strong>
-        {` · ${DAY_META[currentEnrolment.course.dayOfWeek].label} ${formatTimeRange(currentEnrolment.course)} · ${currentEnrolment.course.club.name}`}</p>
+        {` · ${DAY_META[currentEnrolment.course.dayOfWeek].label} ${classTimes(currentEnrolment.course)} · ${currentEnrolment.course.club.name}`}</p>
     </div> : null}
 
     <fieldset className="min-w-0 space-y-2">
@@ -126,7 +126,7 @@ function ClassPicker({ courses, name, selectedId, onSelect, currentEnrolment }: 
             </span>
             <span className="col-start-2 min-w-0 break-words md:col-start-auto"><span className="sr-only">Site: </span>{course.club.name}</span>
             <span className="col-start-2 md:col-start-auto"><span className="sr-only">Day: </span>{DAY_META[course.dayOfWeek].label}</span>
-            <span className="col-start-2 tabular-nums md:col-start-auto"><span className="sr-only">Time: </span>{formatTimeRange(course)}</span>
+            <span className="col-start-2 tabular-nums md:col-start-auto"><span className="sr-only">Time: </span>{classTimes(course)}</span>
             <span className="col-start-2 md:col-start-auto">
               {full ? <><span className="font-medium">Full</span><span className="block text-xs text-ui-muted-foreground">{currentEnrolment ? "No places to move into" : "Waitlist available"}</span></>
                 : places === null ? "No limit" : <><strong className="font-semibold tabular-nums">{places}</strong> available</>}
@@ -162,7 +162,7 @@ export function ClassEnrolmentDialog({ trigger, courses, currentEnrolment, submi
     onOpenChange={() => { setSelectedId(""); setAllowWaitlist(false); setPlacementOpen(false); }}
     footer={selected ? <div className="space-y-1" aria-live="polite">
       <p className="text-xs text-ui-muted-foreground">Selected class</p>
-      <p className="font-semibold">{courseName(selected)} · {DAY_META[selected.dayOfWeek].label} {formatTimeRange(selected)}</p>
+      <p className="font-semibold">{courseName(selected)} · {DAY_META[selected.dayOfWeek].label} {classTimes(selected)}</p>
       <p className="flex flex-wrap items-center gap-x-2 gap-y-1"><MapPin className="size-4 shrink-0" aria-hidden="true" />{selected.club.name}
         {differentSite ? <Badge variant="outline">Different site</Badge> : null}</p>
       {differentSite ? <p className="text-xs text-ui-muted-foreground">Moving from {currentEnrolment.course.club.name}.</p> : null}

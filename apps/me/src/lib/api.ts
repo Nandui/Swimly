@@ -42,7 +42,7 @@ export async function api<T>(path: string, init: { method?: string; body?: unkno
   if (!response.ok) {
     const error = data?.error ?? {};
     if (response.status === 401 && init.auth !== false) session.clear();
-    throw new ApiError(response.status, error.code ?? "ERROR", error.message ?? "Something went wrong. Please try again.");
+    throw new ApiError(response.status, error.code ?? "ERROR", error.message ?? "Could not complete that. Try again.");
   }
   return data as T;
 }

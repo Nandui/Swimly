@@ -75,7 +75,7 @@ export function QueueContact({ student }: { student: { contactName: string | nul
   return <div className="min-w-0 text-sm">
     <p className="text-xs text-ui-muted-foreground">Family contact</p>
     {student.contactName && <p className="mt-1 break-words">{student.contactName}</p>}
-    {student.contactPhone && <a className={link} href={`tel:${student.contactPhone.replace(/[^+\d]/g, "")}`}><Phone aria-hidden="true" className="size-4 shrink-0" /><span className="break-all">{student.contactPhone}</span></a>}
+    {student.contactPhone && <a className={link} href={`tel:${student.contactPhone.replace(/[^+\d]/g, "")}`}><Phone aria-hidden="true" className="size-4 shrink-0" /><span className="break-all tabular-nums">{student.contactPhone}</span></a>}
     {student.contactEmail && <a className={link} href={`mailto:${student.contactEmail}`}><Mail aria-hidden="true" className="size-4 shrink-0" /><span className="break-all">{student.contactEmail}</span></a>}
     {!student.contactPhone && !student.contactEmail && <p className="mt-1 text-ui-muted-foreground">No phone or email recorded</p>}
   </div>;

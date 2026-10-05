@@ -1,5 +1,5 @@
 import "server-only";
-import { formatDate, today } from "@/lib/format";
+import { formatDate, plural, today } from "@/lib/format";
 import { prisma } from "@/lib/prisma";
 import { ABSENCE_REASON_META, RETURN_FIT_META, ROTA_CHANGE_REASON_META, addDaysIso, daysOff, type AbsenceReason, type ReturnFit, type RotaChangeReason } from "@/lib/rota/constants";
 import { registerPersonFileSection, type PersonFileEntry } from "@/modules/contributions";
@@ -11,7 +11,8 @@ import { registerPersonFileSection, type PersonFileEntry } from "@/modules/contr
 
 const iso = (d: Date) => d.toISOString().slice(0, 10);
 const day = (value: string) => formatDate(new Date(`${value}T00:00:00Z`));
-const plural = (n: number, one: string, many = `${one}s`) => `${n} ${n === 1 ? one : many}`;
+/** A free-text note joined into a " · " line drops its own closing full stop. */
+const clause = (text: string | null) => text?.trim().replace(/\.+$/, "") || null;
 const times = (n: number) => (n === 1 ? "once" : n === 2 ? "twice" : `${n} times`);
 
 export async function absenceFile(userId: string, orgId: string): Promise<{ summary: string; entries: PersonFileEntry[] }> {
@@ -38,10 +39,10 @@ export async function absenceFile(userId: string, orgId: string): Promise<{ summ
     const ret = a.returnMetOn ? [
       `Return to work on ${day(iso(a.returnMetOn))}${a.returnByName ? ` with ${a.returnByName}` : ""}: ${RETURN_FIT_META[a.returnFit as ReturnFit]?.label.toLowerCase() ?? "recorded"}${a.returnAdjustments ? ` (${a.returnAdjustments})` : ""}`,
       a.returnFitNote === null ? null : a.returnFitNote ? "Fit note received" : "Fit note not received",
-      a.returnNote || null,
+      clause(a.returnNote),
     ] : [last ? "Return to work not recorded yet" : null];
     const detail = [
-      `Reported by ${a.reportedByName}${a.note ? `: ${a.note}` : ""}`,
+      `Reported by ${a.reportedByName}${clause(a.note) ? `: ${clause(a.note)}` : ""}`,
       a.updates.length ? `Extended ${times(a.updates.length)}` : null,
       a.continues ? `Off again after an absence ending ${a.continues.lastDay ? day(iso(a.continues.lastDay)) : "earlier"}` : null,
       ...ret,
@@ -72,7 +73,7 @@ export async function dutyChangeFile(userId: string, orgId: string): Promise<{ s
       detail: [
         ROTA_CHANGE_REASON_META[r.reason as RotaChangeReason]?.label ?? r.reason,
         `by ${r.byName} on ${day(iso(r.createdAt))}`,
-        r.note || null,
+        clause(r.note),
         r.timepointAt ? "In Timepoint" : "Not yet in Timepoint",
       ].filter(Boolean).join(" · "),
       on: iso(r.date),

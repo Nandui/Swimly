@@ -52,7 +52,7 @@ export async function InstructorClassSession({
       </Button>
       <div className="flex flex-wrap items-center justify-between gap-3">
         <div className="min-w-0 space-y-1">
-          <h1 className="text-2xl font-semibold tracking-tight">{name}</h1>
+          <h1 className="text-2xl font-semibold">{name}</h1>
           <p className="text-sm text-ui-muted-foreground">
             {formatSlot(course)} · {formatDate(parseDateOnly(iso))}
             {course.location ? ` · ${course.location}` : ""}

@@ -60,6 +60,7 @@ export type ModuleManifest = {
   /** Stable: stored as the key of `StaffRole.levels`. Never rename. */
   id: string;
   name: string;
+  /** The overview page's subtitle: one line, no closing full stop. */
   description: string;
   icon: LucideIcon;
   /** How this module names itself in the shared activity log. */
@@ -100,7 +101,7 @@ registerModule({
   id: "swim-school",
   name: "Swim school",
   // Swim school is the first activity type (see src/modules/activities/types.ts).
-  description: "Swimmers, bookings, classes and assessments at the desk, and the swim school's set-up. Camps, pool hire and fitness classes will join it.",
+  description: "Swimmers, classes and assessments at the desk, and the swim school's set-up",
   icon: WavesLadder,
   href: "/swim-school",
   logName: "Swim school",
@@ -108,7 +109,7 @@ registerModule({
     reach: "sites",
     levels: [
       {
-        key: "desk", label: "Desk", help: "Every swimmer, booking, move, waiting list and assessment booking.",
+        key: "desk", label: "Desk", help: "Every swimmer, booking, move, waitlist and assessment booking.",
         permissions: ["swimschool.desk", "students.manage", "enrolment.manage", "parents.manage"],
       },
       {
@@ -131,7 +132,7 @@ registerModule({
 registerModule({
   id: "pool-deck",
   name: "Pool deck",
-  description: "The class instructor view: today's classes, attendance, competencies and assessments.",
+  description: "Today's classes at the pool: attendance, competencies and assessments",
   icon: Waves,
   href: "/instructor",
   logName: "Swim school",
@@ -153,7 +154,7 @@ registerModule({
 registerModule({
   id: "refunds",
   name: "Refunds",
-  description: "Submit customer refund requests, follow finance decisions and record completed payments.",
+  description: "Customer refund requests, finance decisions and completed payments",
   icon: ReceiptText,
   href: "/refunds",
   logName: "Refunds",
@@ -169,7 +170,7 @@ registerModule({
 registerModule({
   id: "docs",
   name: "Docs",
-  description: "Read, write and approve staff documents. Track required reading.",
+  description: "Staff documents to read, write and approve, and who has read them",
   icon: Files,
   href: "/docs",
   logName: "Docs",
@@ -189,7 +190,7 @@ registerModule({
 registerModule({
   id: "training",
   name: "Training",
-  description: "Build courses, assign training, sign off practical skills and follow expiring qualifications.",
+  description: "Training for the people you cover: what is due, waiting for sign-off and done",
   icon: GraduationCap,
   href: "/training",
   logName: "Training",
@@ -205,7 +206,7 @@ registerModule({
 registerModule({
   id: "rota",
   name: "Rota",
-  description: "Plan the week's shifts at a site, with warnings for expired qualifications.",
+  description: "Shifts at the sites you cover, with warnings for expired qualifications and people who are off",
   icon: CalendarClock,
   href: "/rota/overview",
   logName: "Rota",
@@ -220,8 +221,8 @@ registerModule({
 
 registerModule({
   id: "hr",
-  name: "HR and performance",
-  description: "Notes and performance reviews for the people you look after. Restricted.",
+  name: "HR",
+  description: "Restricted notes and performance reviews for the people you look after",
   icon: HeartHandshake,
   href: "/hr",
   logName: "HR",
@@ -243,7 +244,7 @@ registerModule({
 registerModule({
   id: "admin",
   name: "Admin",
-  description: "Staff, roles, sites and the activity log, shared by every module.",
+  description: "People, roles and sites, and the activity log, shared by every module",
   icon: Building2,
   href: "/core",
   logName: "Admin",

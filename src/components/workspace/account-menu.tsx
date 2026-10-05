@@ -6,7 +6,7 @@ import { signOut } from 'next-auth/react';
 import { ChevronDown, CircleHelp, CircleUser, Loader2, LogOut, Monitor, Moon, Sun } from 'lucide-react';
 import { Button } from '@/components/shadcn/button';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuRadioGroup, DropdownMenuRadioItem, DropdownMenuSeparator, DropdownMenuTrigger } from '@/components/shadcn/dropdown-menu';
-import { Avatar } from '@/components/docs/ui';
+import { Avatar, AvatarFallback, initials } from '@/components/shadcn/avatar';
 import { useThemeMode } from '@/components/theme-provider';
 import { parseThemeMode } from '@/lib/theme-mode';
 import { toast } from '@/lib/toast';
@@ -21,13 +21,13 @@ export function AccountMenu({ name }: { name: string }) {
   async function leave() {
     setLeaving(true);
     try { await signOut({ redirectTo: '/sign-in' }); }
-    catch { setLeaving(false); toast.error('Could not sign out. Please try again.'); }
+    catch { setLeaving(false); toast.error('Could not sign out. Try again.'); }
   }
   return (
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
         <Button variant="ghost" className="tf-bar-item tf-who" aria-label={`Account menu: ${name}`} disabled={leaving}>
-          {leaving ? <Loader2 className="animate-spin" aria-hidden="true" /> : <Avatar member={{ name }} />}<ChevronDown aria-hidden="true" />
+          {leaving ? <Loader2 className="animate-spin" aria-hidden="true" /> : <Avatar self aria-hidden="true"><AvatarFallback>{initials(name)}</AvatarFallback></Avatar>}<ChevronDown aria-hidden="true" />
         </Button>
       </DropdownMenuTrigger>
       <DropdownMenuContent side="bottom" align="end" className="w-72 max-w-[calc(100vw-2rem)]">

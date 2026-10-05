@@ -119,7 +119,7 @@ function CourseFields({
             defaultValue={course?.durationMinutes ?? 30}
           />
         </Field>
-        <Field label="Capacity" htmlFor="capacity" hint="Blank means uncapped.">
+        <Field label="Capacity" htmlFor="capacity" hint="Leave blank for no limit.">
           <Input
             id="capacity"
             name="capacity"

@@ -1,6 +1,8 @@
-# Turnfin HR and performance
+# Turnfin HR
 
-HR notes and performance reviews for the people a role covers. It is the most
+HR notes and performance reviews for the people a role covers. On screen the module,
+its H1, its bar label and its permission group are all called "HR" (owner-approved
+mockups said "HR and performance", which does not fit a phone bar slot). It is the most
 sensitive part of Turnfin, so it is built with every protection the platform
 access model has (docs/platform-access.md).
 

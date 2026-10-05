@@ -14,7 +14,7 @@ export async function GET(_request: Request, { params }: { params: Promise<{ id:
       },
     });
   } catch (e) {
-    return new Response(e instanceof DomainError ? e.message : 'Unable to load file.', {
+    return new Response(e instanceof DomainError ? e.message : 'Could not load the file. Try again.', {
       status: e instanceof DomainError ? e.code : 500,
     });
   }

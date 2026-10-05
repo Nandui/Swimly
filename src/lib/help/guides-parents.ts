@@ -54,7 +54,7 @@ export const PARENT_GUIDES: HelpArticle[] = [
     slug: "publish-parent-assessment", title: "Publish an assessment for parents to book", category: "assessments", scopes: ["desk"],
     summary: "Make a session available in LeisureWorld Aquatics and choose when parent booking closes.",
     keywords: ["parent", "LeisureWorld Aquatics", "publish", "unpublish", "assessment", "booking deadline", "online booking"],
-    before: ["You need the Assessments screen and Edit the timetable permission.", "Select the session’s site as your working area. The session must be in the future, not cancelled, and use an active site, programme and assessment type."],
+    before: ["You need the Assessments screen and Edit the timetable permission.", "Choose the session’s site in the site picker. The session must be in the future, not cancelled, and use an active site, programme and assessment type."],
     steps: [
       { title: "Open the assessment session", text: "In Assessments, choose Assessment setup, then Set up beside the session. Check its site, date, time and places. Booking in LeisureWorld Aquatics shows its parent publication status." },
       { title: "Choose Publish to LeisureWorld Aquatics", text: "Check the session named in the dialog. Set an optional future booking deadline in Ireland time, no later than the session starts. Leave it blank to close booking at the start. Add your reason and choose Publish session." },
@@ -64,7 +64,7 @@ export const PARENT_GUIDES: HelpArticle[] = [
     result: "Parents can find published sessions and book available places until the deadline. Their confirmations appear in My bookings; a separate booking confirmation email is not sent.",
     troubleshooting: [
       { question: "Why does it say Booking closed?", answer: "The booking deadline or session start may have passed, the session may be cancelled, or its site or curriculum may be archived. Check those details. If only the deadline has passed and the session is still eligible, edit the deadline to reopen booking." },
-      { question: "Can I publish a session at the other site?", answer: "Switch the working area to that site first, then open the session. Publishing follows the selected site." },
+      { question: "Can I publish a session at the other site?", answer: "Switch to that site in the site picker first, then open the session. Publishing follows the selected site." },
     ], related: ["assessment-sessions", "book-assessment", "parent-access"], action: "assessments",
   },
 ];

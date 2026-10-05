@@ -53,7 +53,7 @@ function CombinationPages({
   const offset = (cursors.length - 1) * 5;
   return (
     <section className="pc-panel">
-      <h3 className="text-base font-semibold tracking-tight">{heading}</h3>
+      <h3 className="text-base font-semibold">{heading}</h3>
       <span aria-live="polite" className="text-sm text-ui-muted-foreground">
         {page.combinations.length === 1 && !page.next && offset === 0
           ? "1 combination"
@@ -105,7 +105,7 @@ function SlotList({
 
   return (
     <section className="space-y-3">
-      {<h4 className="text-base font-semibold tracking-tight">{heading}</h4>}
+      {<h4 className="text-base font-semibold">{heading}</h4>}
       <ItemGroup className="divide-y divide-ui-border">
         {sorted.map((placement) => (
           <Item

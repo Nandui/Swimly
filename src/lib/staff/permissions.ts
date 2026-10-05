@@ -13,7 +13,7 @@ export const PERMISSIONS = [
   { key: "refunds.request", group: "Refunds", label: "Submit refund requests", description: "Create private drafts, submit requests and answer finance queries. Includes reading." },
   { key: "refunds.review", group: "Refunds", label: "Review refund requests", description: "Take responsibility, request information, approve or decline other staff's requests. Includes reading, not payment recording." },
   { key: "refunds.process", group: "Refunds", label: "Record refund payments", description: "Record external payment of approved refunds and cancel unpaid approvals. Includes reading, not approval." },
-  { key: "docs.read", group: "Docs", label: "Read published documents", description: "Open Docs, read published versions and acknowledge assigned reading. Also needs the Docs screen." },
+  { key: "docs.read", group: "Docs", label: "Read published documents", description: "Open Docs, read published versions and acknowledge assigned reading." },
   { key: "docs.write", group: "Docs", label: "Author documents", description: "Create and edit drafts and submit them for independent approval. Includes reading." },
   { key: "docs.approve", group: "Docs", label: "Approve documents", description: "Review and publish documents written by other staff. Includes authoring; never permits self-approval." },
   { key: "docs.manage", group: "Docs", label: "Administer Docs", description: "Manage document teams, templates, risk matrix, reading assignments and reading reports. Includes authoring, but approval requires its separate permission." },
@@ -21,13 +21,13 @@ export const PERMISSIONS = [
     key: "swimschool.desk",
     group: "Swimmers",
     label: "Use the swim school desk",
-    description: "Find swimmers, classes, the schedule, assessments and waiting lists. Changing them needs the permissions below.",
+    description: "Find swimmers, classes, the schedule, assessments and the waitlist. Changing them needs the permissions below.",
   },
   {
     key: "parents.manage",
     group: "Swimmers",
     label: "Manage parent access",
-    description: "Approve or revoke a parent's access to a swimmer, and suspend parent accounts. Does not grant staff access.",
+    description: "Approve or revoke a parent's access to a swimmer, and suspend parent accounts. Does not give staff access.",
   },
   {
     key: "classes.cancel",
@@ -59,7 +59,7 @@ export const PERMISSIONS = [
     group: "On the deck",
     label: "Take attendance for their own classes",
     description:
-      "Mark attendance for the classes they teach. The separate Instructor workspace also requires the Instructor screen grant.",
+      "Mark attendance for the classes they teach, on the pool deck.",
   },
   {
     key: "attendance.cover",
@@ -73,7 +73,7 @@ export const PERMISSIONS = [
     group: "On the deck",
     label: "Take attendance for any class",
     description:
-      "Mark attendance for classes they do not teach without taking them over — the desk copying in a paper sheet, or whoever is holding the tablet. Includes the two above.",
+      "Mark attendance for classes they do not teach without taking them over: the desk copying in a paper sheet, or whoever is holding the tablet. Includes the two above.",
   },
   {
     key: "progression.assess",
@@ -100,7 +100,7 @@ export const PERMISSIONS = [
     group: "On the deck",
     label: "Run assessment sessions",
     description:
-      "At a Swim School Assessment, mark who came and place each child at a level.",
+      "At a swim school assessment, mark who came and place each child at a level.",
   },
   {
     key: "courses.manage",
@@ -114,7 +114,7 @@ export const PERMISSIONS = [
     group: "The rules",
     label: "Edit the curriculum",
     description:
-      "Programmes, levels and competencies — what a swimmer works through and in what order.",
+      "Programmes, levels and competencies: what a swimmer works through and in what order.",
   },
   {
     key: "staff.manage",
@@ -127,14 +127,14 @@ export const PERMISSIONS = [
     group: "Administration",
     label: "Manage roles",
     description:
-      "Create roles and decide what each one may do — including this permission. Give it carefully.",
+      "Create roles and decide what each one may do, including this permission. Give it carefully.",
   },
   {
     key: "clubs.manage",
     group: "Administration",
-    label: "Manage clubs",
+    label: "Manage sites",
     description:
-      "Add a site, rename one, retire one. Which club a person is working in is theirs to switch; this is about which clubs exist.",
+      "Add, rename and archive sites. Each person still chooses the site they are working at.",
   },
   {
     key: "qualifications.manage",
@@ -146,7 +146,7 @@ export const PERMISSIONS = [
     key: "training.manage",
     group: "Training",
     label: "Build the training catalogue",
-    description: "Create, edit and retire training courses, and choose which qualification a course grants. Assigning and signing off are separate.",
+    description: "Create, edit and retire training courses, and choose which qualification a course gives. Assigning and signing off are separate.",
   },
   {
     key: "training.assign",
@@ -180,21 +180,21 @@ export const PERMISSIONS = [
   },
   {
     key: "hr.records.read",
-    group: "HR and performance",
+    group: "HR",
     label: "Read HR records",
-    description: "Open the HR and performance records (notes and reviews) of the people this role covers. Restricted: only a superadmin can give it, and it asks for your password again.",
+    description: "Open the HR records (notes and reviews) of the people this role covers. Restricted: only a superadmin can give it, and it asks for your password again.",
     restricted: true,
   },
   {
     key: "hr.notes.write",
-    group: "HR and performance",
+    group: "HR",
     label: "Write HR notes",
     description: "Add notes to the HR record of the people this role covers, kept private, on their record or shared with them. Includes reading. Restricted.",
     restricted: true,
   },
   {
     key: "hr.reviews.write",
-    group: "HR and performance",
+    group: "HR",
     label: "Write performance reviews",
     description: "Draft performance reviews for the people this role covers and share them with the person. Includes reading. Restricted.",
     restricted: true,
@@ -203,7 +203,7 @@ export const PERMISSIONS = [
     key: "work.anywhere",
     group: "Administration",
     label: "Work from any device",
-    description: "Sign in to Turnfin Work away from a registered work PC, for example on a phone. Without it, staff can only work on the centre's registered PCs (once that rule is switched on).",
+    description: "Sign in away from a registered work PC, for example on a phone. Without it, staff can only sign in on registered work PCs (once that rule is switched on).",
   },
   {
     key: "activity.view",
@@ -229,7 +229,7 @@ export const PERMISSION_GROUP_ORDER: PermissionGroup[] = [
   "People",
   "Training",
   "Rota",
-  "HR and performance",
+  "HR",
   "Administration",
 ];
 

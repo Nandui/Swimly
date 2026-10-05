@@ -1,6 +1,7 @@
 import "server-only";
 import { pageSession } from "@/lib/page-guards";
 import { prisma } from "@/lib/prisma";
+import { formatDay, today } from "@/lib/format";
 import { getCurrentClub } from "@/lib/clubs/current";
 import { modulesFor } from "@/modules/context";
 import { homeCardItems } from "@/modules/server";
@@ -27,7 +28,7 @@ export async function loadHome() {
     siteName: site,
     moduleIds,
     items,
-    today: new Intl.DateTimeFormat("en-IE", { weekday: "long", day: "numeric", month: "long", timeZone: "Europe/Dublin" }).format(new Date()),
+    today: formatDay(today()),
   };
 }
 

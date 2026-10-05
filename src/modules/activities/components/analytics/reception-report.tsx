@@ -11,10 +11,9 @@ import { AnalyticsNav } from "./navigation";
 import { AnalyticsRefresh } from "./refresh";
 import { ReportUpdated, weekLabel } from "./period";
 import type { ReceptionAnalyticsData } from "@/modules/activities/lib/analytics/report-data";
-import { formatDate, parseDateOnly } from "@/lib/format";
+import { formatShortDay } from "@/lib/format";
 
 const number = new Intl.NumberFormat("en-IE");
-const weekday = new Intl.DateTimeFormat("en-IE", { weekday: "short", timeZone: "UTC" });
 
 export function ReceptionReport({ data }: { data: ReceptionAnalyticsData }) {
   const [search, setSearch] = useState("");
@@ -22,7 +21,7 @@ export function ReceptionReport({ data }: { data: ReceptionAnalyticsData }) {
   const enrolled = data.people.reduce((sum, person) => sum + person.enrolled, 0);
   const withdrawn = data.people.reduce((sum, person) => sum + person.withdrawn, 0);
   return <div className="flex min-w-0 flex-col gap-6">
-    <PageHeader title="Reception activity" description={`${data.siteName} · This week, Monday–Sunday · ${weekLabel(data.period)}`} actions={<AnalyticsRefresh />} />
+    <PageHeader title="Reception activity" description={`${data.siteName} · This week, Monday to Sunday ·${weekLabel(data.period)}`} actions={<AnalyticsRefresh />} />
     <AnalyticsNav active="reception" />
     <dl className="grid grid-cols-2 gap-6 border-b border-ui-border pb-6">
       <div className="space-y-2"><dt className="text-sm text-ui-muted-foreground">Enrolments this week</dt><dd className="text-4xl font-semibold tabular-nums">{number.format(enrolled)}</dd></div>
@@ -42,7 +41,7 @@ export function ReceptionReport({ data }: { data: ReceptionAnalyticsData }) {
               <Collapsible className="mt-1">
                 <CollapsibleTrigger asChild><Button variant="link" className="h-auto min-h-11 justify-start px-0 text-left whitespace-normal underline">Daily breakdown<span className="sr-only"> for {person.name}</span></Button></CollapsibleTrigger>
                 <CollapsibleContent><dl className="space-y-3 pb-2">{person.daily.map(day => <div key={day.day}>
-                  <dt className="text-xs text-ui-muted-foreground">{weekday.format(parseDateOnly(day.day))} · {formatDate(parseDateOnly(day.day))}</dt>
+                  <dt className="text-xs text-ui-muted-foreground">{formatShortDay(day.day)}</dt>
                   <dd className="mt-1 text-sm">{day.day > data.period.date ? "Upcoming" : `${number.format(day.enrolled)} enrolled · ${number.format(day.withdrawn)} unenrolled`}</dd>
                 </div>)}</dl></CollapsibleContent>
               </Collapsible>

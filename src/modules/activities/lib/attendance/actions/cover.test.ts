@@ -3,6 +3,7 @@ import assert from "node:assert/strict";
 import { test } from "node:test";
 import type { Session } from "next-auth";
 import { serverModule } from "@/test/server-module";
+import * as format from "@/lib/format";
 import { expandPermissions, type PermissionKey } from "@/lib/staff/permissions";
 
 function fixture() {
@@ -62,6 +63,7 @@ function fixture() {
       },
       "@/lib/clubs/current": { currentClubId: async () => "site" },
       "@/lib/format": {
+        ...format,
         isDateOnly: (s: string) => /^2026-09-\d{2}$/.test(s),
         parseDateOnly: (s: string) => new Date(s),
         today: () => "2026-09-11",

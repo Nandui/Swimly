@@ -14,7 +14,7 @@ export const GUIDE_SCREENSHOTS: Record<string, Placement[]> = {
   "publish-parent-assessment": [{ image: "parent-publication", step: "Choose Publish to LeisureWorld Aquatics", caption: "Check the site and session, then set a booking deadline in Ireland time or leave it blank for the start.", alt: "Publish assessment dialog with an example Bishopstown session, optional booking deadline and audit reason." }],
   "get-started": [{ image: "workspace", step: "Plan today’s work", caption: "The desk navigation and daily Schedule sit together in the workspace.", alt: "Desk sidebar with Schedule selected and a booking sheet showing class times, pool areas and places." }],
   "switch-sites": [
-    { image: "site-menu", step: "Choose the site you are working at", caption: "Open Working area and choose the site for your timetable.", alt: "Working area menu with Bishopstown selected and Churchfield available.", scope: "desk" },
+    { image: "site-menu", step: "Choose the site you are working at", caption: "Open the site picker and choose the site for your timetable.", alt: "Working area menu with Bishopstown selected and Churchfield available.", scope: "desk" },
     { image: "instructor-site", step: "Choose the site you are working at", caption: "The site selector stays in the Instructor header.", alt: "Pool-deck header with the Working area menu open and both sites listed.", scope: "instructor" },
   ],
   "appearance": [
@@ -77,7 +77,7 @@ export const GUIDE_SCREENSHOTS: Record<string, Placement[]> = {
   ],
   "manage-staff": [{ image: "staff", step: "Add the person", caption: "Create an individual account and choose its role.", alt: "Add a person dialog with a synthetic name and email, role selector and temporary password field." }],
   "manage-roles": [{ image: "roles", step: "Choose screens", caption: "Choose the pages available to this role, then review its action permissions.", alt: "Teaching-team role editor with name, description and screen access choices." }],
-  "manage-clubs": [{ image: "clubs", step: "Add or rename a site", caption: "A new site starts with an empty timetable and uses the shared records.", alt: "Add a club dialog explaining shared swimmers and programmes, with a demonstration site name." }],
+  "manage-clubs": [{ image: "clubs", step: "Add or rename a site", caption: "A new site starts with an empty timetable and uses the shared records.", alt: "Add a site dialog explaining shared swimmers and programmes, with a demonstration site name." }],
   "activity-log": [{ image: "activity", step: "Read the entry", caption: "Each entry identifies the change, the person and the time.", alt: "Activity table with synthetic enrolment and contact-update entries, actor, action and time columns." }],
 };
 

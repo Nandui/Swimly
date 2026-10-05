@@ -22,7 +22,7 @@ async function run<T>(fn: () => Promise<T>, refresh = true): Promise<ActionResul
           ? e.message
           : e instanceof z.ZodError
             ? e.issues[0].message
-            : 'Something went wrong. Your changes were not applied. Please try again.',
+            : 'Could not apply your changes. Try again.',
       code: e instanceof DomainError ? e.code : 400,
     };
   }

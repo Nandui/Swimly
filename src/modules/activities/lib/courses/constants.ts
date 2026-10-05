@@ -1,5 +1,6 @@
 import type { DayOfWeek } from "@/generated/prisma/client";
 import type { StatusMeta } from "@/lib/status";
+import { formatTime, formatTimeRange } from "@/lib/format";
 
 export const COURSE_STATUS_META = {
   unassigned: { label: "Unassigned", color: "orange" },
@@ -11,7 +12,7 @@ export const COURSE_PHASE_META = {
 } as const satisfies Record<string, StatusMeta>;
 
 /** Domain vocabulary for a class in the timetable. No call site composes a
- *  time string — "16:30" is one function, and so is "Mondays, 16:30–17:00". */
+ *  time string — "16:30" is one function, and so is "Mondays, 16:30 to 17:00". */
 
 export const DAY_META: Record<DayOfWeek, { label: string; short: string; index: number }> = {
   MONDAY: { label: "Monday", short: "Mon", index: 0 },
@@ -27,12 +28,9 @@ export const DAYS_IN_ORDER = (Object.keys(DAY_META) as DayOfWeek[]).sort(
   (a, b) => DAY_META[a].index - DAY_META[b].index
 );
 
-/** Minutes from midnight → "16:30". */
-export function formatTime(minutes: number): string {
-  const hours = Math.floor(minutes / 60);
-  const rest = minutes % 60;
-  return `${String(hours).padStart(2, "0")}:${String(rest).padStart(2, "0")}`;
-}
+/** Minutes from midnight → "16:30". Lives in lib/format with the other clock
+ *  and date helpers; re-exported so class code keeps one import. */
+export { formatTime };
 
 /** "16:30" → 990. Returns null for anything that is not a 24-hour clock time. */
 export function parseTime(value: string): number | null {
@@ -43,15 +41,14 @@ export function parseTime(value: string): number | null {
 
 type Slot = { dayOfWeek: DayOfWeek; startMinutes: number; durationMinutes: number };
 
-export function formatTimeRange(slot: Pick<Slot, "startMinutes" | "durationMinutes">): string {
-  return `${formatTime(slot.startMinutes)}–${formatTime(slot.startMinutes + slot.durationMinutes)}`;
+/** "16:30 to 17:00": a class's own times. */
+export function classTimes(slot: Pick<Slot, "startMinutes" | "durationMinutes">): string {
+  return formatTimeRange(slot.startMinutes, slot.startMinutes + slot.durationMinutes);
 }
 
-/** "Mondays, 16:30–17:00" — how someone plans around it. */
+/** "Mondays, 16:30 to 17:00": how someone plans around it. */
 export function formatSlot(slot: Slot): string {
-  return `${DAY_META[slot.dayOfWeek].label}s, ${formatTime(slot.startMinutes)}–${formatTime(
-    slot.startMinutes + slot.durationMinutes
-  )}`;
+  return `${DAY_META[slot.dayOfWeek].label}s, ${classTimes(slot)}`;
 }
 
 /** "Mon 16:30" — the compact form, for a column or a picker. */

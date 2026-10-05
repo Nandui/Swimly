@@ -24,7 +24,7 @@ export function InstructorAssessments({ sessions, canRun, params = {} }: {
           <Item key={session.id} role="listitem" className="items-center rounded-none px-0 py-5">
             <div className="min-w-0 basis-20 shrink-0">
               <p className="text-base font-semibold tabular-nums">{formatTime(session.startMinutes)}</p>
-              <p className="text-xs text-ui-muted-foreground">{formatTime(session.startMinutes + session.durationMinutes)}</p>
+              <p className="text-xs text-ui-muted-foreground tabular-nums">{formatTime(session.startMinutes + session.durationMinutes)}</p>
             </div>
             <ItemContent className="min-w-0 basis-44">
               <h3 className="text-base font-semibold break-words">{session.typeName ?? "Swim School Assessment"}</h3>

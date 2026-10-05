@@ -46,7 +46,7 @@ type Competency = {
   assessedOn?: Date | null;
 };
 
-/** "Achieved · Ella O'Brien · 2 Sept 2026": the mark as it stands on the
+/** "Achieved · Sam Murphy · 2 Sep 2026": the mark as it stands on the
  *  record, with the instructor who made it. */
 export function assessedLine(competency: Competency): string | null {
   if (!competency.status || !competency.assessedByName) return null;

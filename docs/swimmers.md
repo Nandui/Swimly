@@ -40,7 +40,8 @@ Live-page verification reads structure only; no real swimmer data is exported.
 The owner selected option 3, “Journey through the school”. The profile at
 `/students/[id]` now uses actual shadcn Avatar, Progress, Tabs, Collapsible,
 Dialog, Command/Popover, Select and form controls with independent Neutral
-tokens. It remains a desk page; the isolated Instructor workspace has no links
+tokens. The header avatar is the shared 64px `size="xl"` avatar and each chapter's
+meter is the shared blue `Progress`, with no profile-specific styling. It remains a desk page; the isolated Instructor workspace has no links
 or access paths into it.
 
 - Journey opens with enrolment chapters: active places first, then older ones.

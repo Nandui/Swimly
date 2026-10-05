@@ -12,8 +12,9 @@ export const metadata: Metadata = { title: { absolute: "Turnfin Rota" } };
 export default async function RotaOverviewPage() {
   const who = await requireRotaActor();
   const { items, siteName } = await loadModuleOverview("rota");
+  const mod = allModules().find((m) => m.id === "rota")!;
   return (
-    <ModuleOverview name="Rota" description="Shifts at the sites you cover, with warnings for expired qualifications and people who are off." icon={allModules().find((m) => m.id === "rota")!.icon} siteName={siteName} items={items}
+    <ModuleOverview name={mod.name} description={mod.description} icon={mod.icon} siteName={siteName} items={items}
       groups={[{ label: "", links: [
         { href: "/rota", label: "Week plan", icon: CalendarDays, description: who.manage ? "Plan who does which duty, by department, for the week" : "Who does which duty this week" },
         { href: "/rota/bookings", label: "Bookings", icon: CalendarRange, description: "School lessons, parties and lane hire that need staff" },

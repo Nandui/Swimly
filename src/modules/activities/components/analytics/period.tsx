@@ -1,8 +1,8 @@
-import { formatDate, formatDateTime, parseDateOnly } from "@/lib/format";
+import { formatDateRange, formatDateTime } from "@/lib/format";
 import type { analyticsPeriod } from "@/modules/activities/lib/analytics/rules";
 
 export function weekLabel(period: ReturnType<typeof analyticsPeriod>) {
-  return `${formatDate(parseDateOnly(period.weekStart))} – ${formatDate(parseDateOnly(period.weekEnd))}`;
+  return formatDateRange(period.weekStart, period.weekEnd);
 }
 
 export function ReportUpdated({ at }: { at: string }) {

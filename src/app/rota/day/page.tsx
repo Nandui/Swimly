@@ -8,7 +8,7 @@ import { CopyPlan, ShiftDialog } from "@/components/rota/actions";
 import { DayNote } from "@/components/rota/day-note";
 import { SegmentsDialog } from "@/components/rota/segments";
 import { ActivityDialog, AssignDialog, RemoveActivity } from "@/components/rota/activities";
-import { today } from "@/lib/format";
+import { formatDay, minutesNow, plural, today } from "@/lib/format";
 import { BOOKING_KIND_META, addDaysIso, clock, mondayOf, weekStarted, type BookingKind } from "@/lib/rota/constants";
 import { rotaDay } from "@/lib/rota/data";
 import { hours } from "@/lib/rota/plan";
@@ -17,8 +17,6 @@ import { cn } from "@/lib/utils";
 
 export const metadata: Metadata = { title: { absolute: "Day plan · Turnfin Rota" } };
 
-const LONG = new Intl.DateTimeFormat("en-GB", { weekday: "long", day: "numeric", month: "long", year: "numeric", timeZone: "UTC" });
-const at = (iso: string) => new Date(`${iso}T00:00:00Z`);
 const span = (a: number, b: number) => `${clock(a)}–${clock(b)}`;
 /** Each activity keeps one tone through the day, so "25m pool lifeguard" reads the same on every row. */
 const TONES = [
@@ -53,7 +51,7 @@ export default async function DayPlanPage({ searchParams }: { searchParams: Prom
   })) : []);
   const options = { people: data.people, types: data.types, departments: data.departments, duties: data.duties };
   const byId = new Map(data.shifts.map((s) => [s.id, s]));
-  const nowLine = day === now ? (() => { const d = new Date(); const m = Number(new Intl.DateTimeFormat("en-GB", { hour: "numeric", hourCycle: "h23", timeZone: "Europe/Dublin" }).format(d)) * 60 + d.getMinutes(); return m >= from && m <= to ? pos(m) : null; })() : null;
+  const nowLine = day === now ? (() => { const m = minutesNow(); return m >= from && m <= to ? pos(m) : null; })() : null;
   // Swim school instructors with no duty that day still show, so the pool's day is complete.
   const onPlan = new Set(rows.flatMap((r) => (r.userId ? [r.userId] : [])));
   const teachingOnly = [...new Set(data.classes.flatMap((c) => (c.userId && !onPlan.has(c.userId) ? [c.userId] : [])))];
@@ -66,7 +64,7 @@ export default async function DayPlanPage({ searchParams }: { searchParams: Prom
       <div className="module-heading">
         <div className="space-y-1">
           <h1>Day plan{site ? <span className="font-normal text-ui-muted-foreground">: {site.name}</span> : null}</h1>
-          <p className="text-sm">{LONG.format(at(day))} · {rows.filter((r) => r.name).length} on the plan{open ? ` · ${open} unfilled` : ""}{gaps ? ` · ${gaps} ${gaps === 1 ? "gap" : "gaps"} in cover` : ""}</p>
+          <p className="text-sm">{formatDay(day)} · {rows.filter((r) => r.name).length} on the plan{open ? ` · ${open} unfilled` : ""}{gaps ? ` · ${plural(gaps, "gap")} in cover` : ""}</p>
         </div>
         <div className="flex flex-wrap items-center gap-2">
           <nav aria-label="Days" className="flex items-center gap-1">
@@ -210,7 +208,7 @@ export default async function DayPlanPage({ searchParams }: { searchParams: Prom
           </section>
           <Legend />
           <section className="module-panel max-w-2xl">
-            {site.manage ? <DayNote siteId={site.id} date={day} text={data.note} label={LONG.format(at(day))} />
+            {site.manage ? <DayNote siteId={site.id} date={day} text={data.note} label={formatDay(day)} />
               : <div className="space-y-1"><h2 className="text-sm font-semibold">Notes</h2><p className="text-sm whitespace-pre-line text-ui-muted-foreground">{data.note || "None."}</p></div>}
           </section>
         </>

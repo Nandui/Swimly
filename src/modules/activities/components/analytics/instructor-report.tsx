@@ -10,7 +10,7 @@ import { PageHeader } from "@/components/ui-kit/page-header";
 import { Tag } from "@/components/ui-kit/tag";
 import { ATTENDANCE_REPORT_META } from "@/modules/activities/lib/analytics/reports";
 import type { InstructorAnalyticsData } from "@/modules/activities/lib/analytics/report-data";
-import { formatTimeRange } from "@/modules/activities/lib/courses/constants";
+import { classTimes } from "@/modules/activities/lib/courses/constants";
 import { formatDate, formatDateTime, parseDateOnly } from "@/lib/format";
 import { AnalyticsNav } from "./navigation";
 import { AnalyticsRefresh } from "./refresh";
@@ -27,7 +27,7 @@ export function InstructorReport({ data }: { data: InstructorAnalyticsData }) {
   const classes = data.classes.filter(row => (!instructor || row.instructorKey === instructor)
     && (filter === "all" || (filter === "outstanding" ? row.status === "missing" || row.status === "partial" : row.status === filter)));
   return <div className="flex min-w-0 flex-col gap-6">
-    <PageHeader title="Instructor attendance" description={`${data.siteName} · This week, Monday–Sunday · ${weekLabel(data.period)}`} actions={<AnalyticsRefresh />} />
+    <PageHeader title="Instructor attendance" description={`${data.siteName} · This week, Monday to Sunday ·${weekLabel(data.period)}`} actions={<AnalyticsRefresh />} />
     <AnalyticsNav active="instructors" />
     <dl className="grid grid-cols-2 gap-6 border-b border-ui-border pb-6 lg:grid-cols-4">
       {[{ label: "Classes finished", value: data.totals.due }, { label: "Attendance saved", value: data.totals.saved }, { label: "Partly recorded", value: data.totals.partial }, { label: "Not taken", value: data.totals.missing }].map(item => <div key={item.label} className="space-y-2"><dt className="text-sm text-ui-muted-foreground">{item.label}</dt><dd className="text-4xl font-semibold tabular-nums">{item.value}</dd></div>)}
@@ -70,7 +70,7 @@ export function InstructorReport({ data }: { data: InstructorAnalyticsData }) {
             const saved = row.savedBy.length ? row.savedBy.join(", ") : "No attendance saved";
             return <TableRow key={`${row.courseId}:${row.date}`}>
               <TableHead scope="row" className="max-w-0 whitespace-normal py-4 font-normal">
-                <p className="text-xs text-ui-muted-foreground">{formatDate(parseDateOnly(row.date))} · {formatTimeRange(row)}</p>
+                <p className="text-xs text-ui-muted-foreground">{formatDate(parseDateOnly(row.date))} · {classTimes(row)}</p>
                 {data.canOpenClasses ? <Button asChild variant="link" className="min-h-11 max-w-full justify-start whitespace-normal px-0 text-left font-semibold"><Link href={`/courses/${row.courseId}`}>{row.className}</Link></Button> : <p className="my-2 font-semibold">{row.className}</p>}
                 <p className="text-sm">{row.instructorName}</p>
                 {row.scheduledName !== row.instructorName ? <p className="mt-1 text-xs text-ui-muted-foreground">Cover for {row.scheduledName}</p> : null}

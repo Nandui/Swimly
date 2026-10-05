@@ -5,7 +5,7 @@ export class StaffApiError extends Error {
 }
 
 export function unavailable(): never {
-  throw new StaffApiError(503, "UNAVAILABLE", "Turnfin Me is not available yet. Please try again later.");
+  throw new StaffApiError(503, "UNAVAILABLE", "Turnfin Me is not available yet. Try again later.");
 }
 
 export function notFound(): never {

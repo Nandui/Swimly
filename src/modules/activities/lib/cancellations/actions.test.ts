@@ -2,6 +2,7 @@ import { directoryDouble } from "@/test/directory-double";
 import assert from "node:assert/strict";
 import { test } from "node:test";
 import { serverModule } from "@/test/server-module";
+import * as format from "@/lib/format";
 
 function fixture() {
   let allowed = true, screen = true, club = "site", archived = false, weekday = "SUNDAY", failAudit = false, locked = false;
@@ -32,7 +33,7 @@ function fixture() {
     "@/lib/authz": { requirePermission: async (key: string) => { permissions.push(key); if (!allowed) throw Error("denied"); return { user: { id: "manager", name: "Duty Manager" } }; }, canSee: () => screen, AuthorizationError: Error },
     "@/lib/clubs/current": { currentClubId: async () => club },
     "@/modules/activities/lib/curriculum/data/shared": { readSharedCurriculum: async () => ({}), sharedCourse: (course: unknown) => course },
-    "@/lib/format": { today: () => "2026-09-13", isDateOnly: (iso: string) => /^2026-09-\d{2}$/.test(iso), parseDateOnly: (iso: string) => new Date(iso), weekdayOf: () => "SUNDAY", formatDate: (date: Date) => date.toISOString().slice(0, 10) },
+    "@/lib/format": { ...format, today: () => "2026-09-13", isDateOnly: (iso: string) => /^2026-09-\d{2}$/.test(iso), parseDateOnly: (iso: string) => new Date(iso), weekdayOf: () => "SUNDAY", formatDate: (date: Date) => date.toISOString().slice(0, 10) },
     "@/modules/activities/lib/enrolment/seat": { withCourseSeat: async (_id: string, run: (db: typeof tx) => Promise<unknown>) => {
       const before = queue; let release!: () => void; queue = new Promise<void>(r => { release = r; }); await before; locked = true;
       const snapshot = structuredClone(stored), auditCount = audits.length;

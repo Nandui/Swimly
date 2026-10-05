@@ -33,8 +33,8 @@ export function BookingDialog({ siteId, today, departments, types }: { siteId: s
       portalClassName={THEME}
       width="sm:max-w-2xl"
       onOpen={reset}
-      trigger={<Button variant="outline" className="min-h-11"><CalendarPlus aria-hidden="true" />New booking</Button>}
-      title="New booking"
+      trigger={<Button variant="outline" className="min-h-11"><CalendarPlus aria-hidden="true" />Add a booking</Button>}
+      title="Add a booking"
       description="Something at the site that needs staff: school lessons, a party, lane hire. Each session shows on the week plan with its places to fill."
       submitLabel="Save booking"
       successMessage="Booking saved"

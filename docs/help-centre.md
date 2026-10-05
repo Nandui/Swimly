@@ -71,7 +71,7 @@ of prose so a rename does not require rewriting guides.
 | `guides-start.ts` | Workspace shells, site switcher, Account, permissions and save/draft handling |
 | `guides-swimmers.ts` | Swimmer profile and edit form, enrolment dialogs/actions, Together |
 | `guides-classes.ts` | Classes and Schedule, desk/Instructor teaching forms, progression, assessments |
-| `guides-management.ts` | Duty manager, cancellation queue, Analytics, curriculum, Staff, Roles, Clubs and Activity |
+| `guides-management.ts` | Duty manager, cancellation queue, Analytics, curriculum, Staff, Roles, Sites and Activity |
 
 ## Updating screenshots
 

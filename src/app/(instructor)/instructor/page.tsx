@@ -24,13 +24,12 @@ import { weekdayOfIso } from "@/modules/activities/lib/attendance/dates";
 import { getCoversForDay } from "@/modules/activities/lib/attendance/data/cover";
 import { getRegisterStateForDay } from "@/modules/activities/lib/attendance/data/register";
 import {
-  DAY_META,
   courseName,
   formatTime,
   formatSlot,
 } from "@/modules/activities/lib/courses/constants";
 import { getCoursesOnDay, type CourseRow } from "@/modules/activities/lib/courses/data/courses";
-import { formatDate, minutesNow, parseDateOnly, today } from "@/lib/format";
+import { formatDay, minutesNow, plural, today } from "@/lib/format";
 import { screenPage } from "@/lib/page-guards";
 import { can } from "@/lib/authz";
 import { getCancellationsForDay } from "@/modules/activities/lib/cancellations/data";
@@ -92,14 +91,14 @@ export default async function InstructorPage(props: PageProps<"/instructor">) {
           <p className="text-base font-semibold tabular-nums">
             {formatTime(course.startMinutes)}
           </p>
-          <p className="text-xs text-ui-muted-foreground">
+          <p className="text-xs text-ui-muted-foreground tabular-nums">
             {formatTime(course.startMinutes + course.durationMinutes)}
           </p>
         </div>
         <ItemContent className="min-w-0 basis-44">
           <h3 className="text-base font-semibold">{name}</h3>
           <p className="text-sm text-ui-muted-foreground">
-            {course.location || "Pool"} · {course._count.enrolments} swimmers
+            {course.location || "Pool"} · {plural(course._count.enrolments, "swimmer")}
             {tab === "all" && state === "available" && !own
               ? " · " + (course.instructor?.name ?? "No instructor assigned")
               : ""}
@@ -157,10 +156,10 @@ export default async function InstructorPage(props: PageProps<"/instructor">) {
     return (
       <section key={s.key} aria-label={s.title} className="space-y-1">
         <div className="flex flex-wrap items-baseline gap-3 border-b border-ui-border pb-3">
-          <h2 className="text-lg font-semibold">{s.title}</h2>
+          <h2 className="text-lg font-semibold tabular-nums">{s.title}</h2>
           <p className="text-sm text-ui-muted-foreground">
             {group === "time" && s.phase === "now" ? "On now · " : ""}
-            {s.courses.length} {s.courses.length === 1 ? "class" : "classes"}
+            {plural(s.courses.length, "class", "classes")}
             {s.subtitle ? " · " + s.subtitle : ""}
           </p>
         </div>
@@ -174,9 +173,9 @@ export default async function InstructorPage(props: PageProps<"/instructor">) {
     <div className="flex flex-col gap-6">
       <header className="flex flex-wrap items-center justify-between gap-3">
         <div className="space-y-1">
-          <h1 className="text-2xl font-semibold tracking-tight">Instructor</h1>
+          <h1 className="text-2xl font-semibold">Instructor</h1>
           <p className="text-sm text-ui-muted-foreground">
-            {DAY_META[day].label}, {formatDate(parseDateOnly(iso))}
+            {formatDay(iso)}
           </p>
         </div>
         <RefreshClasses />
@@ -222,7 +221,7 @@ export default async function InstructorPage(props: PageProps<"/instructor">) {
               <CollapsibleTrigger asChild>
                 <Button variant="ghost" className="w-full justify-between">
                   Earlier today (
-                  {earlier.reduce((n, s) => n + s.courses.length, 0)} classes)
+                  {plural(earlier.reduce((n, s) => n + s.courses.length, 0), "class", "classes")})
                   <ChevronDown aria-hidden="true" />
                 </Button>
               </CollapsibleTrigger>

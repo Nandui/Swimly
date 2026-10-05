@@ -26,7 +26,8 @@ theme describe the retired look. Components live in `src/components/shadcn`.
   selected by a domain metadata map. Do not choose status colours at a call site.
 - One H1 per page. The Poolside type scale (`--pc-text-*`) is 28px page titles (24px on
   phones), 18px section titles, 14px body, 12px captions and metadata, and 28px figures;
-  Tailwind's `text-xs` to `text-3xl` map onto it. Every control is
+  markup uses only `text-xs`, `text-sm`, `text-lg` and `text-2xl`; `text-base`, `text-xl`
+  and `text-3xl` are mapped only as a safety net. Every control is
   `--pc-control-height` (44px) at every width. Fields keep 16px text on touch so phones do
   not zoom on focus.
 - Default gaps are 16px between panels and 8px between rows in a panel; panels have a
@@ -167,7 +168,9 @@ a literal size, radius, colour or control height.
   scope they resolve to caption, body, title and page. Never use `text-[…]` or
   `leading-*`.
 - Weights: 400 body; 600 labels, buttons, row titles, section titles and the H1; 700
-  figures. No letter-spacing; labels are sentence case.
+  figures. No letter-spacing, except the H1 (-0.01em), and no `tracking-*` utilities;
+  labels are sentence case. Times, phone numbers and figures that sit beside one another use
+  `tabular-nums`.
 
 **Colour.** `--pc-primary` (blue) marks actions, the current page and selection; focus is a
 blue ring with a soft halo. Status colour comes only from domain metadata maps, always with
@@ -189,6 +192,13 @@ line. Multi-line boxes (textareas, notices) use 16px, never a pill.
 - Filters between a few views of one list are `SegmentedLinks`
   (`src/components/ui-kit/segmented-links.tsx`): pill links with optional counts and
   `aria-current`.
+- Avatars are the shared `Avatar` (`src/components/shadcn/avatar.tsx`) with `initials()`:
+  32px by default (bars, inline), `size="lg"` 40px (rows), `size="xl"` 64px (profile).
+  Initials are 12px/600 (18px on `xl`) on the sunken fill with a 1px inset line. Only the
+  signed-in person's own avatar takes `self` (soft blue fill, no line). Call sites add no
+  avatar size, colour or border.
+- Meters are the shared `Progress`: an 8px sunken track with a rounded blue bar. Call
+  sites may set width and position only, never height, colour or radius.
 
 **Layout.**
 - A list is a white panel of separate rounded rows (`.pc-panel` with `.pc-rows`, or a
@@ -201,6 +211,29 @@ line. Multi-line boxes (textareas, notices) use 16px, never a pill.
   the primary action last.
 - Check every change at 375, 768, 1024 and 1280px in light and dark: no horizontal scroll,
   no clipped labels, no control under 44px, no link hidden in a scrolling bar.
+
+**Copy.** For words people read; code and data names (`Club`, `clubId`, `/clubs`,
+permission keys) stay as they are.
+- One name per concept: **site** (never club or working area), **Pool deck**, **HR**,
+  **waitlist**, **No limit** (never uncapped).
+- Create buttons read "Add a <noun>" ("Add a swimmer", "Add a site"). Domain verbs stay as
+  they are: Find a swimmer, Book an assessment, Log refund request, Report absence.
+- "and", not "&". Commas or colons, not em dashes.
+- Dates, times and counts come only from `src/lib/format.ts`, in one locale (en-GB, with
+  "Sep" not "Sept"); never write `Intl.DateTimeFormat` or `toLocaleDateString` in a
+  screen. `formatDay` "Sunday 4 October" (the year only when it is not this year),
+  `formatShortDay` "Sun 4 Oct", `formatDate` "4 Oct 2026", `formatDateTime`,
+  `formatDateRange` "28 Sep to 4 Oct", `formatTime` "16:30", `formatTimeRange`
+  "16:30 to 17:15". Ranges use "to", never a dash. Counts go through
+  `plural(n, one, many?)`: "1 swimmer", "3 classes".
+- Errors: "Could not <do the thing>. Try again." Rate limits and unavailable services:
+  "… Try again later." or "Wait a few minutes and try again." Never "Please try again" or
+  "Unable to".
+- Empty states: "No <things> yet" or "No <things> match", with no full stop in the title.
+  Subtitles and module descriptions (`src/modules/registry.ts`, shown on each overview)
+  end without a full stop.
+- No ellipsis in placeholders. Examples are neutral (Riverside, Sam Murphy); no customer or
+  site names, and no site counts, in code.
 
 **Cascade.** `docs.css` uses these tokens only. Its original layouts sit in
 `@layer components.legacy`, below the Docs redesign in `@layer components`. `poolside.css`
@@ -270,7 +303,7 @@ the swimmer profile. Notes are staff-only, shared across sites and unrelated to
 queue membership; history is paginated 20 entries at a time.
 
 Together, Activity, Programmes and levels, Staff, Roles,
-Clubs, Account, sign-in and loading states also use this shared foundation.
+Sites, Account, sign-in and loading states also use this shared foundation.
 Responsive tables re-home secondary columns as supporting lines.
 
 Parent accounts also contains the shared parent-link request queue: pending,
@@ -667,7 +700,7 @@ Turnfin is split into Core, Work modules and Activities; see
 enforces them.
 
 ```
-src/app/(core)/                Core: Staff, Roles, Clubs, Activity, Account
+src/app/(core)/                Core: Staff, Roles, Sites (/clubs), Activity, Account
 src/app/(activities)/          the Swim school desk shell and its pages
 src/app/(instructor)/          the Swim school pool-deck workspace
 src/app/sign-in/               the front door, outside the shell

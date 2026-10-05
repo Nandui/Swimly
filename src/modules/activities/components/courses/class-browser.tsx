@@ -39,7 +39,7 @@ export function ClassBrowser({ courses, params, todayDay, levels, instructors, c
   const resetHref = state === "archived" ? "/courses?state=archived" : "/courses";
   return <section className="min-w-0 space-y-6 text-ui-foreground" aria-labelledby="classes-heading" data-class-browser>
     <header className="space-y-2">
-      <div className="flex items-center justify-between gap-3"><h1 id="classes-heading" className="text-2xl font-semibold tracking-tight">Classes</h1>{canManage ? <AddClass levels={levels} instructors={instructors} workingSite={workingSite} /> : null}</div>
+      <div className="flex items-center justify-between gap-3"><h1 id="classes-heading" className="text-2xl font-semibold">Classes</h1>{canManage ? <AddClass levels={levels} instructors={instructors} workingSite={workingSite} /> : null}</div>
       <p className="text-sm text-ui-muted-foreground">Find a weekly class across all sites and see where there’s room.</p>
     </header>
     <CourseFilters dimensions={courseFilterDimensions(collection, filters)} q={filters.q} active={active} state={state} todayDay={todayDay}

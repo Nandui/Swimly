@@ -18,7 +18,7 @@ export default async function HrPeoplePage({ searchParams }: { searchParams: Pro
     <div className="space-y-6">
       <div className="module-heading">
         <div className="space-y-2">
-          <h1>HR and performance</h1>
+          <h1>HR</h1>
           <p className="text-sm">The people your HR role covers. Opening a record is logged.</p>
         </div>
       </div>

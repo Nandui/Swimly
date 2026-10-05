@@ -43,7 +43,7 @@ export const SCREENS = [
   },
   {
     key: "instructor",
-    label: "Instructor",
+    label: "Pool deck",
     path: "/instructor",
     description: "A separate tablet workspace for instructors: own classes, cover, attendance, competencies and today's assessments. Not shown in the desk navigation.",
     requires: "attendance.mark",
@@ -113,7 +113,7 @@ export const SCREENS = [
   },
   {
     key: "clubs",
-    label: "Clubs",
+    label: "Sites",
     path: "/clubs",
     description: "Which sites exist. Needs the permission to manage them.",
     requires: "clubs.manage",
@@ -127,7 +127,7 @@ export const SCREENS = [
   },
   { key: "training", label: "Training", path: "/training", description: "A separate workspace for the training catalogue, assigning courses, trainer sign-off and expiring qualifications. Everyone completes their own training in Turnfin Me without it.", requires: "training.records.read" },
   { key: "rota", label: "Rota", path: "/rota", description: "A separate workspace for the week's shifts at a site, with warnings when someone's qualification has expired. Staff see their own shifts in Turnfin Me.", requires: "rota.view" },
-  { key: "hr", label: "HR and performance", path: "/hr", description: "A separate, restricted workspace for HR notes and performance reviews of the people a role covers. Staff read what is shared with them in Turnfin Me.", requires: "hr.records.read" },
+  { key: "hr", label: "HR", path: "/hr", description: "A separate, restricted workspace for HR notes and performance reviews of the people a role covers. Staff read what is shared with them in Turnfin Me.", requires: "hr.records.read" },
   { key: "docs", label: "Docs", path: "/docs", description: "A separate workspace for documents, independent approvals and required reading.", requires: "docs.read" },
 ] as const satisfies readonly {
   key: string;

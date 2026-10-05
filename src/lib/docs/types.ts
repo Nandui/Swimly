@@ -1,5 +1,6 @@
 import type { JSONContent } from '@tiptap/react';
 import { expandPermissions } from '@/lib/staff/permissions';
+import { formatDate as formatDateOnly } from '@/lib/format';
 export const documentTypes = ['SOP', 'NOP', 'EAP', 'Risk assessment', 'Policy', 'Custom'] as const;
 export type DocumentType = (typeof documentTypes)[number];
 export type Role = string;
@@ -170,13 +171,6 @@ export function toWorkspaceMember(m: Member, viewer: Member): WorkspaceMember {
   };
 }
 export const formatDate = (value?: string | null) =>
-  value
-    ? new Intl.DateTimeFormat('en-GB', {
-        day: 'numeric',
-        month: 'short',
-        year: 'numeric',
-        timeZone: 'UTC',
-      }).format(new Date(value))
-    : 'Not set';
+  value ? formatDateOnly(new Date(value)) : 'Not set';
 export const overdue = (value?: string | null) =>
   !!value && value.slice(0, 10) < new Date().toISOString().slice(0, 10);

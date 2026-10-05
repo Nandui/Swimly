@@ -1,4 +1,5 @@
 import type { ActionResult } from "@/lib/action-result";
+import { formatDateTime } from "@/lib/format";
 import { dublinInstant, PARENT_TIMEZONE } from "./time";
 
 export type GuardianAccess = {
@@ -98,5 +99,5 @@ export function bookingDeadline(value: string): string | null {
 }
 
 export function parentDateTime(value: string) {
-  return new Intl.DateTimeFormat("en-IE", { timeZone: PARENT_TIMEZONE, dateStyle: "medium", timeStyle: "short" }).format(new Date(value));
+  return formatDateTime(new Date(value));
 }

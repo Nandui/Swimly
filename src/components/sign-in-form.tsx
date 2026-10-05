@@ -52,7 +52,7 @@ export function SignInForm({ devAdminName, sharedDeviceName = null }: { devAdmin
           return;
         }
       } catch {
-        setError("Something went wrong signing in. Try again.");
+        setError("Could not sign you in. Try again.");
         return;
       }
       land();
@@ -78,7 +78,7 @@ export function SignInForm({ devAdminName, sharedDeviceName = null }: { devAdmin
   return (
     <AuthFrame note="No account yet? Ask a manager to add you in Admin.">
       <div className="flex min-w-0 flex-col gap-1">
-        <h1 className="text-2xl font-semibold tracking-tight">Sign in</h1>
+        <h1 className="text-2xl font-semibold">Sign in</h1>
         <p className="text-sm text-ui-muted-foreground">Use your work email and password.</p>
       </div>
 
