@@ -2,6 +2,9 @@ import { randomUUID } from "node:crypto";
 import { screenPage } from "@/lib/page-guards";
 import { refundSites } from "@/lib/refunds/data";
 import { RefundRequestForm } from "@/components/refunds/request-form";
+import type { Metadata } from "next";
+
+export const metadata: Metadata = { title: "New refund request" };
 
 export default async function NewRefundPage() {
   await screenPage("refunds", "refunds.request");

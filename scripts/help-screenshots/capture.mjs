@@ -19,8 +19,8 @@ const dest=path.resolve('assets/help');await fs.mkdir(dest,{recursive:true});
 const manifest=process.env.HELP_CAPTURE_ONLY?JSON.parse(await fs.readFile(path.join(dest,'manifest.json'),'utf8')):{};
 const failures=[];
 const plans=[
-  {id:'workspace',full:true}, {id:'site-menu',full:true,click:'Working area: LeisureWorld Bishopstown. Switch site'},
-  {id:'instructor-home',full:true}, {id:'instructor-menu',full:true,click:'Instructor menu: Alex Example'}, {id:'instructor-site',full:true,click:'Working area: LeisureWorld Bishopstown. Switch site'},
+  {id:'workspace',full:true}, {id:'site-menu',full:true,click:'LeisureWorld Bishopstown, change site'},
+  {id:'instructor-home',full:true}, {id:'instructor-menu',full:true,click:'Account menu: Alex Example'}, {id:'instructor-site',full:true,click:'LeisureWorld Bishopstown, change site'},
   {id:'appearance'}, {id:'password'}, {id:'directory',width:1280}, {id:'profile'},
   {id:'add-swimmer',click:'Add swimmer',dialog:true,fill:{'First name':'Avery','Last name':'Example','Member number':'DEMO-5'}},
   {id:'edit-swimmer',click:'Edit details',dialog:true},

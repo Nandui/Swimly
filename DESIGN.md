@@ -76,21 +76,53 @@ labels crossfade, destination chevrons nudge and appearance icons transition.
 Buttons have a small press response. Reduced motion removes those movements
 while preserving immediate state feedback; do not introduce page-entry motion.
 
-The Turnfin fin (`public/brand/turnfin.png`) is the brand everywhere: the top-left of every
-frame, linking home, and above the sign-in panel. The older app logo image
-(`public/brand/app-logo.png`) remains only for browser icons.
+The Turnfin fin (`public/brand/turnfin.png`) is the only brand mark, everywhere: the top-left
+of every frame, linking home, above the sign-in panel and the 404 page, and the browser and
+home-screen icon (`src/app/icon.png`, `src/app/apple-icon.png`, Next's file conventions; no
+layout or page sets `icons`, which would turn the file icon off). Tab titles read
+"<page name> · Turnfin": the page name is its H1 without the working-site suffix, record pages
+use the record's name (never a child's), and any layout that sets a title also sets
+`TITLE_TEMPLATE` from `src/lib/app.ts`. The ground behind the frame (the body background) is
+`--pc-outer`, and `--pc-canvas` below 768px; the viewport theme-color repeats that pair.
 
 **The frame** (`ModuleShell`, DESIGN v2, 3 October 2026): on the outer canvas, one rounded
 frame holds a top row (the fin; the module's pages as a pill bar, the current page filled
-blue; and a tools bar on the right with module tools such as the working site and search,
-"View as" in dev builds, and the account menu, which holds Appearance, Manage account, Help
-and Sign out), then the person's modules as an icon rail down the left (each names itself on
-hover and keyboard focus) beside the page. The bar shows as many page links as fit
-(measured, `useBarFit`) and puts the rest under "More", which keeps its short name and is
-filled when it holds the open page; no link scrolls out of sight. From 768px to 1099px the page bar takes its own row. On phones and touch screens the
-rail becomes a labelled bottom bar (Home, three modules with the current one always shown,
-More). The pool deck keeps its own top bar (fin, Classes and Swimmers, site, help and its
-own menu) and no module bar; see docs/instructor.md.
+blue; and a tools bar on the right: search, then the working site, "View as" in dev builds,
+and the account menu), then the
+person's modules as an icon rail down the left (each names itself on hover and keyboard focus)
+beside the page. The bar shows as many page links as fit (measured, `useBarFit`) and puts the
+rest under "More", grouped under their group names; More keeps its short name and is filled
+when it holds the open page. The bar never scrolls: until measured, links that do not fit wrap
+out of sight. A module with one page has no page bar (its scope note is still read out). From
+768px to 1099px the page bar takes its own row, lined up with the page (past the rail with a
+mouse, at the page's edge on touch). On phones and touch screens the rail becomes a labelled
+bottom bar, at most 480px wide: Home, three modules with the current one always shown, and
+More, or Help itself when no module is left over. Its items share the width equally and a long
+name wraps to two centred lines, never clipped or overlapping; only the current module is blue.
+- The working site picker (`ClubSwitcher`, the same on Home, Swim school and the pool deck) shows
+  the building, the site's name in full (truncating only past 28 characters) and a chevron; on
+  phones it is a 44px building button named "<site>, change site". Its menu is "Working site";
+  the toast reads "Now working at <site>". Building2 means only the site; Admin uses Settings.
+- The account menu (`AccountMenu`, V2Home-menu) opens from the 32px avatar and chevron, named
+  "Account menu: <name>". It is a 320px panel (24px radius, 16px padding and gap, no
+  separators): the 40px primary-soft avatar beside the name at 600 and a "<role> · <site>"
+  caption (the worn role in View as; both from the root layout through `useYourAccount`); the
+  "Appearance" caption over a pill segmented row (System, Light, Dark; menu radio items, so
+  arrow keys reach them, `.tf-seg`); then Manage account and Sign out as 44px pills at 600 with
+  a sunken fill when highlighted. Help is not in it: it sits in the rail, the bottom bar's More
+  and the deck bar. The pool deck uses the same menu without Manage account.
+- `aria-current`: "page" only on the page bar link for the exact page; "true" on a page link
+  that is a parent of it, on a filled More and on the current module in the rail and bottom bar.
+- Focus on a filled (current) item is a ring with a surface gap (`::before`, or the bottom
+  bar's icon pill) over a transparent outline, so it shows on the blue and in forced colours.
+- One skip link, `.skip-link` in poolside.css: "Skip to content", a 44px blue pill at the top
+  left once focused, above the bottom bar.
+- The frame's radius is `--pc-radius-frame` (36px); the bottom bar's shadow is
+  `--pc-shadow-overlay`.
+
+The pool deck keeps its own top bar (fin, Classes and Swimmers, site, help and the shared
+account menu without Manage account)
+and no module bar; see docs/instructor.md.
 
 ## Screens
 
@@ -323,8 +355,8 @@ These controls remain in the desk workspace. See [staff parent controls](docs/pa
 ## Forms, search and confirmation
 
 The authenticated help centre owns a separate document frame at `/help`, using
-the same theme and the v2 top bar (fin, appearance, the way back). The module rail and
-the account menu open Help in a new tab. Instructor opens `/help/instructor`, with teaching-only guides and a
+the same theme and the v2 top bar (fin, appearance, the way back). The module rail, the
+bottom bar's More and the deck bar open Help in a new tab; the account menu has no Help. Instructor opens `/help/instructor`, with teaching-only guides and a
 return to Classes. Search and topic navigation lead to full guides with numbered
 steps, troubleshooting and related tasks. Captioned screenshots beside the steps
 use synthetic records, fit the available width and open at full size in a new
@@ -517,7 +549,7 @@ denormalised so the log survives it either way.
 
 LeisureWorld shares swimmer identity, contacts, curriculum and earned progress
 across its sites. A Club owns classes and dated assessment sessions. The
-cookie-backed working area filters the timetable; it does not restrict swimmer
+cookie-backed working site filters the timetable; it does not restrict swimmer
 search or profile access. Switching sites keeps the current page and selected
 swimmer. Staff permissions continue to apply by name.
 

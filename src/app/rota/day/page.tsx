@@ -15,7 +15,7 @@ import { hours } from "@/lib/rota/plan";
 import { buildTimeline, dayRange, type Candidate, type PersonRow, type Segment } from "@/lib/rota/timeline";
 import { cn } from "@/lib/utils";
 
-export const metadata: Metadata = { title: { absolute: "Day plan · Turnfin Rota" } };
+export const metadata: Metadata = { title: "Day plan" };
 
 const span = (a: number, b: number) => `${clock(a)}–${clock(b)}`;
 /** Each activity keeps one tone through the day, so "25m pool lifeguard" reads the same on every row. */

@@ -19,7 +19,9 @@ document is the model that makes both true. Owner decisions, September 2026.
 2. **Roles with levels.** A role holds one level for each module (None, then for
    example Use and Manage) plus at most a couple of extras. Each person holds
    **one role** and the **sites they work at** (`User.siteIds`; none means every
-   site).
+   site). The working site (`getCurrentClub`, `src/lib/clubs/current.ts`) is one of
+   those sites: without a valid choice it defaults to their primary site, then their
+   first site, and the site picker and `switchClub` offer only their sites.
 3. **Levels become permissions.** `src/lib/staff/levels.ts` translates levels
    into the named permissions (capabilities) that pages, menus and actions
    check, so code never asks for a level or a role name. Some permissions are

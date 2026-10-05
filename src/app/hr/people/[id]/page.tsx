@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { cache } from "react";
 import Link from "next/link";
 import { Download } from "lucide-react";
 import { Button } from "@/components/shadcn/button";
@@ -7,13 +8,30 @@ import { NoteVisibilityTag, ReviewStatusTag } from "@/components/hr/status";
 import { formatDate, formatDateTime } from "@/lib/format";
 import { hrPerson } from "@/lib/hr/records";
 import { requireFreshSession } from "@/lib/policy/session";
+import { AuthorizationError } from "@/lib/authz";
+import { hrConfigured } from "@/lib/hr/database";
 
-export const metadata: Metadata = { title: "HR record" };
+/** One read (and one access log row) per request, shared by the page and its tab title. */
+const load = cache(hrPerson);
+
+export async function generateMetadata({ params }: { params: Promise<{ id: string }> }): Promise<Metadata> {
+  const { id } = await params;
+  // Switched off: the layout shows a notice in place of the page.
+  if (!hrConfigured()) return { title: "HR" };
+  try {
+    await requireFreshSession("hr.records.read", `/hr/people/${id}`);
+    return { title: (await load(id)).person.name };
+  } catch (error) {
+    // No HR access: the layout turns the page into a 404, so the title is the 404 page's.
+    if (error instanceof AuthorizationError) return { title: "Page not found" };
+    throw error;
+  }
+}
 
 export default async function HrPersonPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
   await requireFreshSession("hr.records.read", `/hr/people/${id}`);
-  const data = await hrPerson(id);
+  const data = await load(id);
   const { person, notes, reviews, who } = data;
   return (
     <div className="space-y-6">

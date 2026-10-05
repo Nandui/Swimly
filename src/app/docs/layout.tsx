@@ -1,10 +1,12 @@
+import type { Metadata } from 'next';
+import { TITLE_TEMPLATE } from '@/lib/app';
 import { requireMember } from '@/lib/docs/auth';
 import { readingReportScope } from '@/lib/docs/report-scope';
 import { Shell } from '@/components/docs/shell';
 import './docs.css';
 import './integration.css';
 import './editor.css';
-export const metadata = { title: { absolute: 'Turnfin Docs' } };
+export const metadata: Metadata = { title: { default: 'Docs', template: TITLE_TEMPLATE } };
 export const dynamic = 'force-dynamic';
 export default async function AppLayout({ children }: { children: React.ReactNode }) {
   const m = await requireMember();

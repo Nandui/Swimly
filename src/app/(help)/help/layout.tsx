@@ -1,8 +1,9 @@
 import type { Metadata } from "next";
 import { pageSession } from "@/lib/page-guards";
+import { TITLE_TEMPLATE } from "@/lib/app";
 
 export const metadata: Metadata = {
-  title: "Help centre",
+  title: { default: "Help centre", template: TITLE_TEMPLATE },
   robots: { index: false, follow: false },
 };
 

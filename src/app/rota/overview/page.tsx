@@ -5,7 +5,7 @@ import { loadModuleOverview } from "@/lib/home";
 import { requireRotaActor } from "@/lib/rota/access";
 import { allModules } from "@/modules/registry";
 
-export const metadata: Metadata = { title: { absolute: "Turnfin Rota" } };
+export const metadata: Metadata = { title: "Rota" };
 
 /** The rota's first page: who is on today, the manager's quick actions, and
  *  the rota's pages. The layout has already checked rota access. */

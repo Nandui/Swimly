@@ -358,20 +358,6 @@
 :where(.turnfin-docs) .page-heading .muted {
   font-size: var(--pc-text-caption);
 }
-:where(.turnfin-docs) .skip-link {
-  position: fixed;
-  top: 10px;
-  left: 10px;
-  z-index: 300;
-  transform: translateY(-150%);
-  padding: 12px 18px;
-  color: var(--ui-primary-foreground);
-  background: var(--primary);
-  border-radius: 6px;
-}
-:where(.turnfin-docs) .skip-link:focus {
-  transform: none;
-}
 :where(.turnfin-docs) .app-shell {
   min-height: 100vh;
 }
@@ -4083,8 +4069,7 @@
   color: var(--muted);
 }
 :where(.turnfin-docs) .brand-mark,
-:where(.turnfin-docs) .button.primary,
-:where(.turnfin-docs) .skip-link {
+:where(.turnfin-docs) .button.primary {
   color: var(--ui-primary-foreground);
 }
 :where(.turnfin-docs) .button.primary {

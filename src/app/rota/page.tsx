@@ -11,7 +11,7 @@ import { rotaWeek } from "@/lib/rota/data";
 import { buildRoster } from "@/lib/rota/roster";
 import { cn } from "@/lib/utils";
 
-export const metadata: Metadata = { title: { absolute: "Week plan · Turnfin Rota" } };
+export const metadata: Metadata = { title: "Week plan" };
 
 
 /** One site's week as a roster sheet (owner decision, 3 October 2026):

@@ -14,7 +14,7 @@ await buildPreview({ entryPoint:'scripts/refunds-preview/fixture.jsx', outputDir
 }});
 await fs.copyFile('public/brand/turnfin.png',path.join(outputDir,'brand/turnfin.png'));
 const htmlFile=path.join(outputDir,'index.html');
-await fs.writeFile(htmlFile,(await fs.readFile(htmlFile,'utf8')).replace('Instructor preview','Turnfin Refunds · isolated preview').replace('href="data:,"','href="/brand/turnfin.png"'));
+await fs.writeFile(htmlFile,(await fs.readFile(htmlFile,'utf8')).replace('Instructor preview','Refunds preview').replace('href="data:,"','href="/brand/turnfin.png"'));
 if(process.argv.includes('--build-only')) process.exit(0);
 
 // This helper creates an in-memory PostgreSQL engine; it never reads a live URL.

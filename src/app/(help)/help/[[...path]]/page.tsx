@@ -31,7 +31,7 @@ async function resolveHelp({ params, searchParams }: Props) {
 
 export async function generateMetadata(props: Props): Promise<Metadata> {
   const { article, scope } = await resolveHelp(props);
-  return { title: article ? `${article.title} · Help` : scope === "instructor" ? "Instructor help" : "Help centre" };
+  return { title: article ? article.title : scope === "instructor" ? "Instructor help" : "Help centre" };
 }
 
 export default async function HelpPage(props: Props) {

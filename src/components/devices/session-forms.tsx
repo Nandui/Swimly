@@ -112,7 +112,7 @@ export function ConfirmPassword({ email, name, next }: { email: string; name: st
   const [error, setError] = React.useState<string | null>(null);
   const [pending, start] = React.useTransition();
   return (
-    <Frame title="Confirm it's you">
+    <Frame title="Confirm it’s you">
       <p className="text-sm text-ui-muted-foreground">
         {name}, this area holds restricted records. Enter your password to open it. You will not be asked again for 15 minutes.
       </p>

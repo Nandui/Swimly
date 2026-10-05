@@ -36,8 +36,10 @@ the pool. Its route group and layout stay separate from the desk workspace.
   Both views share drafts and one **Save marks** action across the class.
   Switching views or swimmers keeps unsaved changes. Absent swimmers remain
   under **Not in today**; level completion is still a separate confirmation.
-- The frame offers classes, a swimmer lookup for the working site, site,
-  appearance and sign-out. It has no desk sidebar, cross-site search, class
+- The frame offers classes, a swimmer lookup for the working site, site, help
+  (`/help/instructor`, a new tab) and the shared account menu (`AccountMenu`
+  with `showManageAccount={false}`: who you are, appearance and sign-out; no
+  Manage account). It has no desk sidebar, cross-site search, class
   administration or swimmer-profile links. The lookup (`/instructor/swimmers`)
   shows name, age, level and class; medical notes appear only for swimmers in a
   class the instructor teaches or is covering today, never contacts or staff notes.

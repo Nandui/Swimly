@@ -1,3 +1,4 @@
+import { cache } from "react";
 import type { DayOfWeek } from "@/generated/prisma/client";
 import { requireActivitiesAccess } from "@/modules/activities/classification";
 import { requireSession } from "@/lib/authz";
@@ -53,13 +54,14 @@ export async function getCourses(includeArchived = false, allSites = false) {
 
 export type CourseRow = Awaited<ReturnType<typeof getCourses>>[number];
 
-export async function getCourse(id: string) {
+/** Cached per request, so a class page's tab title and its body share one read. */
+export const getCourse = cache(async function getCourse(id: string) {
   await requireSession();
 
   const found = await prisma.course.findUnique({ where: { id }, select: COURSE_SELECT });
   const row = found ? (await withClassRefs([found]))[0] : null;
   return row ? sharedCourse(row, await getSharedCurriculum()) : null;
-}
+});
 
 export type CourseDetail = NonNullable<Awaited<ReturnType<typeof getCourse>>>;
 

@@ -8,7 +8,7 @@ import { ReviewStatusTag } from "@/components/hr/status";
 import { hrPeople } from "@/lib/hr/records";
 import { requireFreshSession } from "@/lib/policy/session";
 
-export const metadata: Metadata = { title: { absolute: "Turnfin HR" } };
+export const metadata: Metadata = { title: "HR" };
 
 export default async function HrPeoplePage({ searchParams }: { searchParams: Promise<{ q?: string }> }) {
   await requireFreshSession("hr.records.read", "/hr");

@@ -26,9 +26,9 @@ try {
     await page.screenshot({path:path.join(output,`bento-${width}-${theme}.png`),fullPage:true});
   }
   await page.goto(base+'/reception-portal?access=admin');
-  await page.getByRole('button',{name:/Working area:/}).click();
+  await page.getByRole('button',{name:/, change site$/}).click();
   await page.getByRole('menuitemradio',{name:'LeisureWorld Churchfield'}).click();
-  await page.getByRole('button',{name:/Working area: LeisureWorld Churchfield/}).waitFor();
+  await page.getByRole('button',{name:'LeisureWorld Churchfield, change site'}).waitFor();
   const add=page.getByRole('button',{name:/Add a swimmer/});
   await add.click();
   const dialog=page.getByRole('dialog');

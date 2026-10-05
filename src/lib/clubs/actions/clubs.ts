@@ -20,13 +20,15 @@ export async function switchClub(
   id: string,
   options: { stay?: boolean } = {}
 ): Promise<ActionResult> {
-  await requireSession();
+  const session = await requireSession();
 
-  const club = await prisma.club.findFirst({
-    where: { id, archivedAt: null },
-    select: { id: true },
-  });
-  if (!club) return fail("That club is not available.");
+  const [club, person] = await Promise.all([
+    prisma.club.findFirst({ where: { id, archivedAt: null }, select: { id: true } }),
+    prisma.user.findUnique({ where: { id: session.user.id }, select: { siteIds: true } }),
+  ]);
+  // Only a site the person works at (no sites means every site), as the picker lists.
+  const sites = person?.siteIds ?? [];
+  if (!club || (sites.length > 0 && !sites.includes(club.id))) return fail("Could not switch sites. Check the site and try again.");
 
   (await cookies()).set(CLUB_COOKIE, club.id, {
     httpOnly: true,

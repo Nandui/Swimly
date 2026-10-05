@@ -1,5 +1,8 @@
 import { listRefunds, type RefundFilters } from "@/lib/refunds/data";
 import { RefundQueue } from "@/components/refunds/queue";
+import type { Metadata } from "next";
+
+export const metadata: Metadata = { title: "Refund requests" };
 
 export default async function RefundsPage({ searchParams }: PageProps<"/refunds">) {
   const raw = await searchParams;

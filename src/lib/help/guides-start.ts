@@ -23,7 +23,7 @@ export const START_GUIDES: HelpArticle[] = [
     keywords: ["site", "pool", "Bishopstown", "Churchfield", "club", "shared", "location", "facility"],
     before: ["Each site has its own timetable. Swimmer identity, contacts, curriculum and progress are shared across sites."],
     steps: [
-      { title: "Find the site selector", text: "Use the selector in the sidebar or phone toolbar.", scopes: ["desk"] },
+      { title: "Find the site selector", text: "Use the site name in the top bar, beside your account. On a phone it is the building button.", scopes: ["desk"] },
       { title: "Find the site selector", text: "Use the selector in the pool-deck header.", scopes: ["instructor"] },
       { title: "Choose the site you are working at", text: "Select the site and wait for the page to finish updating. Check the selected name before continuing." },
       { title: "Understand which lists change", text: "Schedule, Duty manager, cancellation follow-up and Analytics use the working site. The Swimmers directory remains shared. Classes and enrolment pickers have their own site filters.", scopes: ["desk"] },
@@ -51,7 +51,7 @@ export const START_GUIDES: HelpArticle[] = [
     summary: "Update your own password and leave a shared device signed out.", keywords: ["login", "sign in", "password", "account", "logout", "log out", "forgotten"],
     before: ["To change your password yourself, you need to know your current password."],
     steps: [
-      { title: "Open Account", text: "Open your account menu in the sidebar and choose Account." },
+      { title: "Open Account", text: "Select your initials at the top right of the frame and choose Manage account." },
       { title: "Enter the password details", text: "Fill in Current password, New password and New password again. Follow the requirements shown beside the field." },
       { title: "Save and check the result", text: "Submit the password change and wait for confirmation. If an error appears, correct the indicated field and try again." },
       { title: "Sign out of a shared device", text: "Open your account menu and choose Sign out when you have finished your work." },
@@ -96,7 +96,7 @@ export const START_GUIDES: HelpArticle[] = [
     before: ["Save attendance and competency changes before signing out."],
     steps: [
       { title: "Finish and save your teaching work", text: "Wait for the app to confirm your changes are saved. Resolve any unsaved draft before leaving the class." },
-      { title: "Open your account menu", text: "Select the person icon in the pool-deck header and choose Sign out. Leave the sign-in screen ready for the next instructor to use their own account." },
+      { title: "Open your account menu", text: "Select your initials at the right of the pool-deck header and choose Sign out. Leave the sign-in screen ready for the next instructor to use their own account." },
       { title: "Ask for a password reset when needed", text: "If you forget your password, ask the staff member who manages accounts to set a new one. There is no password-reset email in the app." },
     ], result: "Your shared device is signed out, or an account manager can help you regain access.",
     troubleshooting: [{ question: "My password still does not work.", answer: "Check the email and password you were given. Ask the account manager to check that your account is active. Do not use another instructor’s login, as saved teaching work is recorded under that account." }],

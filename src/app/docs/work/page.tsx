@@ -3,6 +3,8 @@ import { database, rows } from '@/lib/docs/database';
 import { workspace } from '@/lib/docs/queries';
 import { canWrite, type Draft } from '@/lib/docs/types';
 import { WorkView } from '@/components/docs/work';
+import type { Metadata } from 'next';
+export const metadata: Metadata = { title: 'My work' };
 export default async function WorkPage() {
   const m = await requireMember();
   return (

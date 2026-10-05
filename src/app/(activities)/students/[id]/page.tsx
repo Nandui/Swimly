@@ -10,7 +10,9 @@ import { getStudentAssessments } from "@/modules/activities/lib/assessments/data
 import { getSwimmerHistory } from "@/modules/activities/lib/students/data/history";
 import { swimmerReturnHref } from "@/modules/activities/lib/students/directory";
 
-export const metadata: Metadata = { title: "Swimmer journey" };
+/** Never the child's name: tab titles persist in browser history on shared
+ *  reception and poolside devices, which the idle sign-out cannot clear. */
+export const metadata: Metadata = { title: "Swimmer" };
 
 export default async function StudentPage(props: PageProps<"/students/[id]">) {
   const session = await screenPage("students");

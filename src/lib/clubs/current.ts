@@ -6,23 +6,35 @@ import { operationContext } from "@/lib/operations/context";
 
 export type CurrentClub = { id: string; name: string };
 
-/** Which club this request is working in, and the live clubs it could be.
+/** Which site this request is working in, and the live sites the person may
+ *  work at (the site picker's list).
  *
- *  Read from the cookie and checked against the clubs that exist, so a stale
- *  or tampered value falls back to the first club rather than to nothing. One
- *  small query per request, memoised: every data module asks, and every page
- *  asks through several of them. */
+ *  Read from the cookie and checked against the sites that exist and the
+ *  person's own sites (`User.siteIds`; none means every site). A missing,
+ *  stale or tampered value falls back to their primary site, then to the
+ *  first site they may work at, rather than to a site they do not work at.
+ *  One small query per request, memoised: every data module asks, and every
+ *  page asks through several of them. A script's operation context names its
+ *  site outright and skips the person. */
 export const getCurrentClub = cache(
   async (): Promise<{ club: CurrentClub; clubs: CurrentClub[] }> => {
-    const clubs = await prisma.club.findMany({
+    const live = await prisma.club.findMany({
       where: { archivedAt: null },
       orderBy: [{ sortOrder: "asc" }, { name: "asc" }],
       select: { id: true, name: true },
     });
-    if (clubs.length === 0) throw new Error("No club is set up. Run the migrations.");
+    if (live.length === 0) throw new Error("No club is set up. Run the migrations.");
 
-    const wanted = operationContext.getStore()?.clubId ?? (await cookies()).get(CLUB_COOKIE)?.value;
-    return { club: clubs.find((club) => club.id === wanted) ?? clubs[0], clubs };
+    const operation = operationContext.getStore()?.clubId;
+    if (operation) return { club: live.find((club) => club.id === operation) ?? live[0], clubs: live };
+
+    // Imported when needed: auth builds its session from this module.
+    const own = await import("@/auth").then((mod) => mod.signedInSites()).catch(() => null);
+    const theirs = own?.sites.length ? live.filter((club) => own.sites.includes(club.id)) : [];
+    const clubs = theirs.length > 0 ? theirs : live;
+    const wanted = (await cookies()).get(CLUB_COOKIE)?.value;
+    const club = clubs.find((c) => c.id === wanted) ?? clubs.find((c) => c.id === own?.primary) ?? clubs[0];
+    return { club, clubs };
   }
 );
 

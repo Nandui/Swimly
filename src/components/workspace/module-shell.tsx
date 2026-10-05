@@ -5,8 +5,7 @@ import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { useEffect, useLayoutEffect, useRef, useState, type ReactNode, type RefObject } from 'react';
 import { ChevronDown, CircleHelp, House, LayoutGrid, type LucideIcon } from 'lucide-react';
-import { Button } from '@/components/shadcn/button';
-import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/shadcn/dropdown-menu';
+import { DropdownMenu, DropdownMenuContent, DropdownMenuGroup, DropdownMenuItem, DropdownMenuLabel, DropdownMenuTrigger } from '@/components/shadcn/dropdown-menu';
 import { AccountMenu } from '@/components/workspace/account-menu';
 import { RolePreviewToggle } from '@/components/staff/role-preview';
 import { useYourModules } from '@/components/workspace/your-modules';
@@ -44,10 +43,18 @@ export function ModuleShell({ module, id, current = id, who, links = [], groups,
 }) {
   const pathname = usePathname();
   useEffect(() => { window.scrollTo({ top: 0 }); }, [pathname, scrollKey]);
-  const pages = (groups ?? [{ label: '', links }]).flatMap((group) => group.links);
+  const pageGroups = groups ?? [{ label: '', links }];
+  const pages = pageGroups.flatMap((group) => group.links);
   const navRef = useRef<HTMLElement>(null), measureRef = useRef<HTMLDivElement>(null);
   const fit = useBarFit(navRef, measureRef, pages.length);
   const railCurrent = current === 'core' ? 'admin' : current;
+  // Only the open page itself is the "page"; a link to one of its parents is "true".
+  const currentFor = (page: ModuleLink) => !page.active ? undefined : pathname === page.href.split('?')[0] ? 'page' as const : 'true' as const;
+  // The links past the fit, still under their group names, for "More".
+  const overflow = pageGroups.reduce<{ start: number; groups: ModuleLinkGroup[] }>((acc, group) => {
+    const hidden = group.links.filter((_, index) => acc.start + index >= fit);
+    return { start: acc.start + group.links.length, groups: hidden.length ? [...acc.groups, { label: group.label, links: hidden }] : acc.groups };
+  }, { start: 0, groups: [] }).groups;
 
   return (
     <div className={`turnfin-module turnfin-${id} tf-shell`}>
@@ -57,14 +64,15 @@ export function ModuleShell({ module, id, current = id, who, links = [], groups,
           <Link href="/" className="tf-brand" aria-label="Turnfin home">
             <Image src="/brand/turnfin.png" alt="" width={72} height={72} priority />
           </Link>
-          {pages.length > 0 && (
+          {/* A module with one page needs no page bar; its H1 names it. */}
+          {pages.length > 1 ? (
             <nav ref={navRef} className="tf-pages" aria-label={`${module} pages`}>
               <span className="sr-only">{scopeNote}</span>
               <div className="tf-bar">
                 {pages.slice(0, fit).map((page) => (
-                  <Link key={page.href} href={page.href} className="tf-bar-item" aria-current={page.active ? 'page' : undefined}>{page.label}</Link>
+                  <Link key={page.href} href={page.href} className="tf-bar-item" aria-current={currentFor(page)}>{page.label}</Link>
                 ))}
-                {fit < pages.length && <PagesMore pages={pages.slice(fit)} />}
+                {fit < pages.length && <PagesMore groups={overflow} currentFor={currentFor} />}
               </div>
               {/* Every label at its natural width, unseen, so the bar can tell how many fit. */}
               <div ref={measureRef} className="tf-bar-measure" aria-hidden="true">
@@ -72,7 +80,7 @@ export function ModuleShell({ module, id, current = id, who, links = [], groups,
                 <span className="tf-bar-item">More<ChevronDown /></span>
               </div>
             </nav>
-          )}
+          ) : <span className="sr-only">{scopeNote}</span>}
           <div className="tf-bar tf-tools" role="group" aria-label="Search, site and account">
             {tools}
             <RolePreviewToggle />
@@ -92,7 +100,8 @@ export function ModuleShell({ module, id, current = id, who, links = [], groups,
 }
 
 /** As many page links as fit the bar, measured, so a link never scrolls out of sight; the rest go
- *  under "More". Until measured (the server render) every link shows, clipped by the bar. */
+ *  under "More". Until measured (the server render) the links that do not fit wrap out of
+ *  sight below the 44px bar (poolside.css), so it never scrolls. */
 function useBarFit(nav: RefObject<HTMLElement | null>, measure: RefObject<HTMLDivElement | null>, count: number) {
   const [fit, setFit] = useState(count);
   useLayoutEffect(() => {
@@ -114,22 +123,25 @@ function useBarFit(nav: RefObject<HTMLElement | null>, measure: RefObject<HTMLDi
   return fit;
 }
 
-/** The pages that do not fit the bar. "More" keeps its short name so the bar never grows; it is
- *  filled when it holds the open page, which the page's H1 names. */
-function PagesMore({ pages }: { pages: ModuleLink[] }) {
-  const active = pages.find((page) => page.active);
+/** The pages that do not fit the bar, under their group names. "More" keeps its short name so
+ *  the bar never grows; it is filled when it holds the open page, which the page's H1 names. */
+function PagesMore({ groups, currentFor }: { groups: ModuleLinkGroup[]; currentFor: (page: ModuleLink) => 'page' | 'true' | undefined }) {
+  const active = groups.flatMap((group) => group.links).find((page) => page.active);
   return (
     <DropdownMenu>
-      <DropdownMenuTrigger asChild>
-        <Button variant="ghost" className="tf-bar-item" aria-current={active ? 'page' : undefined} aria-label={active ? `More pages, including ${active.label}, the current page` : undefined}>
-          More<ChevronDown aria-hidden="true" />
-        </Button>
+      <DropdownMenuTrigger className="tf-bar-item" aria-current={active ? 'true' : undefined} aria-label={active ? `More pages, including ${active.label}, the current page` : undefined}>
+        More<ChevronDown aria-hidden="true" />
       </DropdownMenuTrigger>
       <DropdownMenuContent align="start" className="w-64 max-w-[calc(100vw-2rem)]">
-        {pages.map((page) => (
-          <DropdownMenuItem key={page.href} asChild className="min-h-11">
-            <Link href={page.href} aria-current={page.active ? 'page' : undefined}><page.icon aria-hidden="true" />{page.label}</Link>
-          </DropdownMenuItem>
+        {groups.map((group) => (
+          <DropdownMenuGroup key={group.label || group.links[0].href}>
+            {group.label && <DropdownMenuLabel className="text-xs font-semibold text-ui-muted-foreground">{group.label}</DropdownMenuLabel>}
+            {group.links.map((page) => (
+              <DropdownMenuItem key={page.href} asChild className="min-h-11 aria-[current]:bg-ui-accent aria-[current]:font-semibold aria-[current]:text-ui-accent-foreground">
+                <Link href={page.href} aria-current={currentFor(page)}><page.icon aria-hidden="true" />{page.label}</Link>
+              </DropdownMenuItem>
+            ))}
+          </DropdownMenuGroup>
         ))}
       </DropdownMenuContent>
     </DropdownMenu>
@@ -141,7 +153,7 @@ function PagesMore({ pages }: { pages: ModuleLink[] }) {
 function ModuleRail({ current }: { current: string }) {
   const modules = useYourModules();
   const item = (key: string, href: string, label: string, Icon: LucideIcon) => (
-    <Link key={key} href={href} className="tf-rail-item" aria-label={label} aria-current={current === key ? 'page' : undefined}>
+    <Link key={key} href={href} className="tf-rail-item" aria-label={label} aria-current={current === key ? 'true' : undefined}>
       <Icon aria-hidden="true" /><span className="tf-rail-label" aria-hidden="true">{label}</span>
     </Link>
   );
@@ -156,7 +168,8 @@ function ModuleRail({ current }: { current: string }) {
 }
 
 /** Phones and touch screens: the modules along the bottom, each with its name, since touch has
- *  no hover. Home, up to three modules (the current one always among them) and More. */
+ *  no hover. Home, up to three modules (the current one always among them) and More; with no
+ *  modules left over, Help takes More's place. */
 function ModuleBottomBar({ current }: { current: string }) {
   const modules = useYourModules();
   const first = modules.slice(0, 3);
@@ -164,7 +177,7 @@ function ModuleBottomBar({ current }: { current: string }) {
   const chosen = active && !first.includes(active) ? [...first.slice(0, 2), active] : first;
   const rest = modules.filter((m) => !chosen.includes(m));
   const item = (key: string, href: string, label: string, Icon: LucideIcon) => (
-    <Link key={key} href={href} className="tf-bottom-item" aria-current={current === key ? 'page' : undefined}>
+    <Link key={key} href={href} className="tf-bottom-item" aria-current={current === key ? 'true' : undefined}>
       <span className="tf-bottom-icon"><Icon aria-hidden="true" /></span><span>{label}</span>
     </Link>
   );
@@ -172,17 +185,19 @@ function ModuleBottomBar({ current }: { current: string }) {
     <nav className="tf-bottom" aria-label="Modules">
       {item('home', '/', 'Home', House)}
       {chosen.map((m) => item(m.id, m.href, m.name, m.icon))}
-      <DropdownMenu>
-        <DropdownMenuTrigger asChild>
-          <Button variant="ghost" className="tf-bottom-item"><span className="tf-bottom-icon"><LayoutGrid aria-hidden="true" /></span><span>More</span></Button>
-        </DropdownMenuTrigger>
+      {rest.length === 0 ? (
+        <a href="/help" target="_blank" rel="noopener noreferrer" className="tf-bottom-item">
+          <span className="tf-bottom-icon"><CircleHelp aria-hidden="true" /></span><span>Help<span className="sr-only"> (opens in a new tab)</span></span>
+        </a>
+      ) : <DropdownMenu>
+        <DropdownMenuTrigger className="tf-bottom-item"><span className="tf-bottom-icon"><LayoutGrid aria-hidden="true" /></span><span>More</span></DropdownMenuTrigger>
         <DropdownMenuContent side="top" align="end" className="w-64 max-w-[calc(100vw-2rem)]">
           {rest.map((m) => (
             <DropdownMenuItem key={m.id} asChild className="min-h-11"><Link href={m.href}><m.icon aria-hidden="true" />{m.name}</Link></DropdownMenuItem>
           ))}
           <DropdownMenuItem asChild className="min-h-11"><a href="/help" target="_blank" rel="noopener noreferrer"><CircleHelp aria-hidden="true" />Help<span className="sr-only"> (opens in a new tab)</span></a></DropdownMenuItem>
         </DropdownMenuContent>
-      </DropdownMenu>
+      </DropdownMenu>}
     </nav>
   );
 }

@@ -6,9 +6,10 @@ import { HrShell } from "@/components/hr/shell";
 import { hrAccess } from "@/lib/hr/access";
 import { hrConfigured } from "@/lib/hr/database";
 import { pageSession } from "@/lib/page-guards";
+import { TITLE_TEMPLATE } from "@/lib/app";
 import '../workspace/module-workspace.css';
 
-export const metadata: Metadata = { title: { default: "Turnfin HR", template: "%s · Turnfin HR" }, icons: { icon: "/brand/turnfin.png" } };
+export const metadata: Metadata = { title: { default: "HR", template: TITLE_TEMPLATE } };
 
 /** The restricted HR workspace. Opens only for a restricted HR role (at any
  *  scope) or a superadmin; each page asks for a recent password and limits

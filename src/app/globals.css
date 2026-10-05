@@ -17,8 +17,8 @@
   html[data-theme="dark"] {
     color-scheme: dark;
   }
+  /* The ground (body background) is set by poolside.css on body.turnfin-app. */
   body {
-    background: var(--ui-background);
     color: var(--ui-foreground);
     font-family: var(--font-sans);
     -webkit-font-smoothing: antialiased;

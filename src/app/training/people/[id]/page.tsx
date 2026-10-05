@@ -1,16 +1,30 @@
 import type { Metadata } from "next";
+import { cache } from "react";
 import { AssignTraining, CancelTraining } from "@/components/training/manage-actions";
 import { QualificationStateTag, TrainingStatusTag } from "@/components/training/status";
 import { formatDate } from "@/lib/format";
+import { AuthorizationError } from "@/lib/authz";
 import { listCourses, personTraining } from "@/lib/training/data";
 
-export const metadata: Metadata = { title: "Training record" };
+/** One read per request, shared by the page and its tab title. personTraining
+ *  is the guard: it 404s anyone the reader's Training role does not cover. */
+const load = cache(personTraining);
+
+export async function generateMetadata({ params }: { params: Promise<{ id: string }> }): Promise<Metadata> {
+  try {
+    return { title: (await load((await params).id)).person.name };
+  } catch (error) {
+    // No Training access: the layout turns the page into a 404, so the title is the 404 page's.
+    if (error instanceof AuthorizationError) return { title: "Page not found" };
+    throw error;
+  }
+}
 
 /** One person's training and qualifications, for someone whose Training role
  *  covers them. Anyone else is a 404. */
 export default async function TrainingPersonPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
-  const data = await personTraining(id);
+  const data = await load(id);
   const courses = data.canAssign ? (await listCourses()).courses : [];
   const person = { id: data.person.id, name: data.person.name, jobTitle: data.person.jobTitle };
   return (

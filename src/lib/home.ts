@@ -13,10 +13,11 @@ import type { HomeViewer } from "@/modules/contributions";
 export async function loadHome() {
   const session = await pageSession();
   const user = session.user;
-  const [role, site] = await Promise.all([
+  const [role, sites] = await Promise.all([
     prisma.staffRole.findUnique({ where: { id: user.roleId }, select: { name: true, homeName: true } }),
-    // The working site names "Today"; an organisation without sites just has no name here.
-    getCurrentClub().then((current) => current.club.name, () => null),
+    // The working site names "Today" and the top bar's site picker; an organisation without
+    // sites just has neither.
+    getCurrentClub().catch(() => null),
   ]);
   const roleName = role?.name ?? user.roleName ?? "Staff";
   const moduleIds = modulesFor(session).map((m) => m.id);
@@ -25,7 +26,8 @@ export async function loadHome() {
     who: { id: user.id, name: user.name ?? "Staff member" },
     roleName,
     homeName: role?.homeName || roleName,
-    siteName: site,
+    siteName: sites?.club.name ?? null,
+    sites,
     moduleIds,
     items,
     today: formatDay(today()),

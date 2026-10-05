@@ -1,4 +1,4 @@
-import { Building2, CalendarClock, Files, GraduationCap, HeartHandshake, ReceiptText, Waves, WavesLadder, type LucideIcon } from "lucide-react";
+import { CalendarClock, Files, GraduationCap, HeartHandshake, ReceiptText, Settings, Waves, WavesLadder, type LucideIcon } from "lucide-react";
 import type { PermissionKey } from "@/lib/staff/permissions";
 
 /** Every module Turnfin offers, each described once (docs/how-turnfin-works.md).
@@ -245,7 +245,8 @@ registerModule({
   id: "admin",
   name: "Admin",
   description: "People, roles and sites, and the activity log, shared by every module",
-  icon: Building2,
+  // Settings, not Building2: the building means the working site everywhere else.
+  icon: Settings,
   href: "/core",
   logName: "Admin",
   access: {

@@ -15,8 +15,8 @@ const SWIM_SCHOOL_OVERVIEW = "/swim-school";
 type Club = { id: string; name: string };
 
 /** The swim school in the shared module frame (docs/how-turnfin-works.md):
- *  its desk pages down the side, with the working site and swimmer search
- *  under the brand. The layout passes plain values; the icons come from
+ *  its desk pages along the top, then swimmer search and the working site in
+ *  the tools bar. The layout passes plain values; the icons come from
  *  `@/modules/activities/lib/nav`, because a component is not serialisable. */
 export function AppChrome({ who, screens, club, clubs, children }: {
   who: { id: string; name: string };
@@ -39,12 +39,12 @@ export function AppChrome({ who, screens, club, clubs, children }: {
     <ModuleShell module="Swim school" id="swim-school" who={who} groups={groups}
       scopeNote={club.name} contentClass="module-content swim-school-content" maxWidth={pageWidthFor(pathname)}
       tools={<>
-        <ClubSwitcher club={club} clubs={clubs} />
         {screens.has("students") && <WorkspaceSearch key={`${club.id}:${pathname}`} onSelect={hit => {
           if (!hit) return;
           const href = swimmerLookupHref(screens, hit.id);
           if (href) router.push(href);
         }} />}
+        <ClubSwitcher club={club} clubs={clubs} />
       </>}>
       {children}
     </ModuleShell>

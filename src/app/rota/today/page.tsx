@@ -12,7 +12,7 @@ import { rotaToday } from "@/lib/rota/data";
 import { buildPlan } from "@/lib/rota/plan";
 import { cn } from "@/lib/utils";
 
-export const metadata: Metadata = { title: { absolute: "Today · Turnfin Rota" } };
+export const metadata: Metadata = { title: "Today" };
 
 const span = (s: { startMinutes: number; endMinutes: number }) => `${clock(s.startMinutes)}–${clock(s.endMinutes)}`;
 

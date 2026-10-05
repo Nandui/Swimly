@@ -141,6 +141,16 @@ const {
 
 export { handlers, signIn, signOut };
 
+/** The signed-in person's own sites, read from the sign-in cookie alone: the full session
+ *  (`auth`) needs the working site first, so the working site cannot ask it. `sites` empty
+ *  means every site. Null when nobody is signed in (or outside a request). */
+export const signedInSites = cache(async (): Promise<{ primary: string | null; sites: string[] } | null> => {
+  const id = (await nextAuth())?.user?.id;
+  if (!id) return null;
+  const user = await prisma.user.findUnique({ where: { id }, select: { primaryClubId: true, siteIds: true } });
+  return user ? { primary: user.primaryClubId, sites: user.siteIds } : null;
+});
+
 async function currentSiteForSession(): Promise<string | null> {
   try { return (await getCurrentClub()).club.id; } catch { return null; }
 }

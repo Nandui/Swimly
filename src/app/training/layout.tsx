@@ -2,11 +2,12 @@ import type { Metadata } from "next";
 import type { ReactNode } from "react";
 import { notFound } from "next/navigation";
 import { pageSession } from "@/lib/page-guards";
+import { TITLE_TEMPLATE } from "@/lib/app";
 import { trainingAccess } from "@/lib/training/access";
 import { TrainingShell } from "@/components/training/shell";
 import '../workspace/module-workspace.css';
 
-export const metadata: Metadata = { title: { default: "Turnfin Training", template: "%s · Turnfin Training" }, icons: { icon: "/brand/turnfin.png" } };
+export const metadata: Metadata = { title: { default: "Training", template: TITLE_TEMPLATE } };
 
 /** The Training Manage surface. Opens for anyone with the Training screen and
  *  a Training capability at any scope (a department or team role counts);

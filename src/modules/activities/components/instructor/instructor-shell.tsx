@@ -4,23 +4,10 @@ import { useEffect, type ReactNode } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import { usePathname, useSearchParams } from "next/navigation";
-import { signOut } from "next-auth/react";
-import { ChevronDown, CircleHelp, LogOut, Monitor, Moon, Sun } from "lucide-react";
-import { Avatar, AvatarFallback, initials } from "@/components/shadcn/avatar";
-import { useThemeMode } from "@/components/theme-provider";
-import { parseThemeMode } from "@/lib/theme-mode";
+import { CircleHelp } from "lucide-react";
 import { Button } from "@/components/shadcn/button";
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuLabel,
-  DropdownMenuRadioGroup,
-  DropdownMenuRadioItem,
-  DropdownMenuSeparator,
-  DropdownMenuTrigger,
-} from "@/components/shadcn/dropdown-menu";
 import { ClubSwitcher } from "@/components/clubs/club-switcher";
+import { AccountMenu } from "@/components/workspace/account-menu";
 import { instructorHomeHref } from "@/modules/activities/lib/attendance/navigation";
 import { SHELL_PAGE_ID } from "@/lib/shell-preferences";
 import styles from "./instructor-shell.module.css";
@@ -46,7 +33,6 @@ export function InstructorShell({
 }) {
   const pathname = usePathname();
   const params = useSearchParams();
-  const { mode, setMode } = useThemeMode();
   const search = params.toString();
   const home = instructorHomeHref({
     tab: params.get("tab") ?? undefined,
@@ -82,27 +68,7 @@ export function InstructorShell({
           <Button asChild variant="ghost" size="icon" className="tf-bar-item tf-icon">
             <Link href="/help/instructor" target="_blank" rel="noopener noreferrer" aria-label="Help (opens in a new tab)"><CircleHelp aria-hidden="true" /></Link>
           </Button>
-          <DropdownMenu>
-            <DropdownMenuTrigger asChild>
-              <Button variant="ghost" className="tf-bar-item tf-who" aria-label={`Instructor menu: ${userName}`}>
-                <Avatar self aria-hidden="true"><AvatarFallback>{initials(userName)}</AvatarFallback></Avatar><ChevronDown aria-hidden="true" />
-              </Button>
-            </DropdownMenuTrigger>
-            <DropdownMenuContent align="end" className="w-72 max-w-[calc(100vw-2rem)]">
-              <DropdownMenuLabel className="break-words">{userName}</DropdownMenuLabel>
-              <DropdownMenuSeparator />
-              <DropdownMenuLabel className="text-xs font-semibold text-ui-muted-foreground">Appearance</DropdownMenuLabel>
-              <DropdownMenuRadioGroup value={mode} onValueChange={(value) => setMode(parseThemeMode(value))}>
-                <DropdownMenuRadioItem value="system" className="min-h-11"><Monitor aria-hidden="true" />System</DropdownMenuRadioItem>
-                <DropdownMenuRadioItem value="light" className="min-h-11"><Sun aria-hidden="true" />Light</DropdownMenuRadioItem>
-                <DropdownMenuRadioItem value="dark" className="min-h-11"><Moon aria-hidden="true" />Dark</DropdownMenuRadioItem>
-              </DropdownMenuRadioGroup>
-              <DropdownMenuSeparator />
-              <DropdownMenuItem className="min-h-11" onSelect={() => { void signOut({ callbackUrl: "/sign-in" }); }}>
-                <LogOut aria-hidden="true" />Sign out
-              </DropdownMenuItem>
-            </DropdownMenuContent>
-          </DropdownMenu>
+          <AccountMenu name={userName} showManageAccount={false} />
         </div>
       </header>
       <main

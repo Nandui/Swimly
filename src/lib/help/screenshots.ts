@@ -14,8 +14,8 @@ export const GUIDE_SCREENSHOTS: Record<string, Placement[]> = {
   "publish-parent-assessment": [{ image: "parent-publication", step: "Choose Publish to LeisureWorld Aquatics", caption: "Check the site and session, then set a booking deadline in Ireland time or leave it blank for the start.", alt: "Publish assessment dialog with an example Bishopstown session, optional booking deadline and audit reason." }],
   "get-started": [{ image: "workspace", step: "Plan today’s work", caption: "The desk navigation and daily Schedule sit together in the workspace.", alt: "Desk sidebar with Schedule selected and a booking sheet showing class times, pool areas and places." }],
   "switch-sites": [
-    { image: "site-menu", step: "Choose the site you are working at", caption: "Open the site picker and choose the site for your timetable.", alt: "Working area menu with Bishopstown selected and Churchfield available.", scope: "desk" },
-    { image: "instructor-site", step: "Choose the site you are working at", caption: "The site selector stays in the Instructor header.", alt: "Pool-deck header with the Working area menu open and both sites listed.", scope: "instructor" },
+    { image: "site-menu", step: "Choose the site you are working at", caption: "Open the site picker in the top bar and choose the site for your timetable.", alt: "Working site menu with Bishopstown selected and Churchfield available.", scope: "desk" },
+    { image: "instructor-site", step: "Choose the site you are working at", caption: "The site picker stays in the Pool deck header.", alt: "Pool deck header with the Working site menu open and both sites listed.", scope: "instructor" },
   ],
   "appearance": [
     { image: "appearance", step: "Follow the device when available", caption: "Account offers System, Light and Dark appearance.", alt: "Appearance control with System, Light and Dark choices; Light is selected.", scope: "desk" },
@@ -27,7 +27,7 @@ export const GUIDE_SCREENSHOTS: Record<string, Placement[]> = {
     { image: "instructor-home", step: "Check the workspace", caption: "Instructor has a separate teaching header and no desk sidebar.", alt: "Instructor navigation with Classes, working site, Help, appearance and account controls.", scope: "instructor" },
   ],
   "saving-and-connection": [{ image: "save-conflict", step: "Resolve changes made by someone else", caption: "Compare the saved attendance with your draft before choosing which to keep.", alt: "Attendance conflict message showing saved absent marks versus a present draft and recovery buttons." }],
-  "instructor-account": [{ image: "instructor-menu", step: "Open your account menu", caption: "Sign out from the person menu when your teaching work is saved.", alt: "Instructor account menu open with a Sign out action." }],
+  "instructor-account": [{ image: "instructor-menu", step: "Open your account menu", caption: "Sign out from your account menu when your teaching work is saved.", alt: "Pool deck account menu open: your name, role and site, the Appearance choices and Sign out." }],
   "find-swimmer": [{ image: "directory", step: "Check the identifying details", caption: "Use the member number, level and contact to identify the correct swimmer.", alt: "Shared swimmer directory with four example swimmers, member numbers, current levels, contacts and Active status." }],
   "add-swimmer": [{ image: "add-swimmer", step: "Enter the swimmer’s information", caption: "Start with the name, then complete the contact and other details you have.", alt: "Add a swimmer form containing a demonstration name and member number, with contact fields below." }],
   "swimmer-history": [{ image: "profile", step: "Start with Journey", caption: "Journey groups the swimmer’s enrolments and progress into chapters.", alt: "Example swimmer profile showing Journey, enrolment chapters, competency progress and current class details." }],

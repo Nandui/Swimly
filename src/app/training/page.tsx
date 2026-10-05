@@ -10,7 +10,7 @@ import { TrainingStatusTag } from "@/components/training/status";
 import { formatDate } from "@/lib/format";
 import { assignablePeople, trainingOverview, OVERVIEW_VIEWS } from "@/lib/training/data";
 
-export const metadata: Metadata = { title: { absolute: "Turnfin Training" } };
+export const metadata: Metadata = { title: "Training" };
 
 export default async function TrainingOverviewPage({ searchParams }: { searchParams: Promise<{ view?: string; course?: string; q?: string }> }) {
   const input = await searchParams;

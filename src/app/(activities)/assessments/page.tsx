@@ -5,7 +5,9 @@ import { can } from "@/lib/authz";
 import { today } from "@/lib/format";
 import { screenPage } from "@/lib/page-guards";
 
-export const metadata: Metadata = { title: "Upcoming assessments" };
+export async function generateMetadata({ searchParams }: PageProps<"/assessments">): Promise<Metadata> {
+  return { title: sessionView((await searchParams).view) === "past" ? "Past assessments" : "Upcoming assessments" };
+}
 
 export default async function AssessmentsPage({ searchParams }: PageProps<"/assessments">) {
   const actor = await screenPage("assessments");

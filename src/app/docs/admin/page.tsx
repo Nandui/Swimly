@@ -4,6 +4,8 @@ import { database, rows } from '@/lib/docs/database';
 import { workspace } from '@/lib/docs/queries';
 import { canManage, type AuditEvent } from '@/lib/docs/types';
 import { AdminView } from '@/components/docs/admin';
+import type { Metadata } from 'next';
+export const metadata: Metadata = { title: 'Administration' };
 export default async function AdminPage() {
   const m = await requireMember();
   if (!canManage(m)) redirect('/docs');

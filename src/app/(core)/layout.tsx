@@ -3,9 +3,10 @@ import type { ReactNode } from "react";
 import { CoreShell, type CoreLinkKey } from "@/components/core/shell";
 import { canSee } from "@/lib/authz";
 import { pageSession } from "@/lib/page-guards";
+import { TITLE_TEMPLATE } from "@/lib/app";
 import '../workspace/module-workspace.css';
 
-export const metadata: Metadata = { title: { default: "Turnfin Core", template: "%s · Turnfin Core" }, icons: { icon: "/brand/turnfin.png" } };
+export const metadata: Metadata = { title: { default: "Admin", template: TITLE_TEMPLATE } };
 
 const CORE_SCREENS: CoreLinkKey[] = ["staff", "roles", "clubs", "activity"];
 

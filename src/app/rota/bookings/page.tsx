@@ -9,7 +9,7 @@ import { formatDate } from "@/lib/format";
 import { BOOKING_KIND_META, WEEKDAY_LABELS, clock, type BookingKind } from "@/lib/rota/constants";
 import { rotaBookings } from "@/lib/rota/data";
 
-export const metadata: Metadata = { title: { absolute: "Bookings · Turnfin Rota" } };
+export const metadata: Metadata = { title: "Bookings" };
 
 const day = (date: Date) => formatDate(new Date(`${date.toISOString().slice(0, 10)}T00:00:00Z`));
 /** "Mon to Fri", "Tue, Thu", "Saturdays". */

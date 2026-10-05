@@ -4,13 +4,14 @@ import { ThemeProvider } from "@/components/theme-provider";
 import { ToastBridge } from "@/lib/toast";
 import { TooltipProvider } from "@/components/shadcn/tooltip";
 import { THEME_COOKIE, parseThemeMode } from "@/lib/theme-mode";
-import { APP_NAME } from "@/lib/app";
+import { APP_NAME, TITLE_TEMPLATE } from "@/lib/app";
 import { auth } from "@/auth";
 import { SharedDeviceIdle } from "@/components/devices/session-forms";
 import { SHARED_IDLE_MINUTES } from "@/lib/devices/constants";
 import { DevelopmentRolePreview } from "@/components/staff/development-role-preview";
 import { YourModulesProvider } from "@/components/workspace/your-modules";
 import { modulesFor } from "@/modules/context";
+import { getCurrentClub } from "@/lib/clubs/current";
 // Poolside Clear across the whole app: its typeface, self-hosted in every
 // environment, and its tokens and system rules (scoped to .turnfin-app on <body>).
 import "@fontsource/plus-jakarta-sans/400.css";
@@ -20,26 +21,30 @@ import "@fontsource/plus-jakarta-sans/700.css";
 import "./globals.css";
 import "./docs/poolside.css";
 
+/** One template all the way down: a layout that sets a title must also set
+ *  TITLE_TEMPLATE. The browser and home-screen icons are the fin, from the
+ *  file conventions src/app/icon.png and src/app/apple-icon.png, so nothing
+ *  may set `icons` (one entry would turn the file icon off on that route). */
 export const metadata: Metadata = {
-  title: { default: APP_NAME, template: `%s · ${APP_NAME}` },
-  description: "The leisure centre's swim lessons and bookings, in one place.",
-  icons: {
-    icon: { url: "/brand/app-logo.png", type: "image/png" },
-    apple: { url: "/brand/app-logo.png", type: "image/png" },
-  },
+  title: { default: APP_NAME, template: TITLE_TEMPLATE },
+  description: "Swim school, pool deck, refunds, documents, training, rota and HR for leisure centre teams, in one place.",
 };
 
 /** `viewportFit: cover` lets the page run under the notch and the home
  *  indicator, which is what makes `env(safe-area-inset-*)` non-zero — the
  *  deck's save bar pads by it. The theme colours tint the browser chrome to
- *  match the page ground in each mode. */
+ *  match the ground in each mode, the same rule as the body background in
+ *  poolside.css: --pc-canvas below 768px, where the frame is the page, and
+ *  --pc-outer from 768px, where the frame sits on the outer ground. */
 export const viewport: Viewport = {
   width: "device-width",
   initialScale: 1,
   viewportFit: "cover",
   themeColor: [
-    { media: "(prefers-color-scheme: light)", color: "#f4f8f9" },
-    { media: "(prefers-color-scheme: dark)", color: "#0b161a" },
+    { media: "(prefers-color-scheme: light) and (max-width: 767px)", color: "#eef2f6" },
+    { media: "(prefers-color-scheme: dark) and (max-width: 767px)", color: "#0c1320" },
+    { media: "(prefers-color-scheme: light) and (min-width: 768px)", color: "#f7f9fb" },
+    { media: "(prefers-color-scheme: dark) and (min-width: 768px)", color: "#070c14" },
   ],
 };
 
@@ -54,6 +59,13 @@ export default async function RootLayout({ children }: LayoutProps<"/">) {
   // screen when left idle, so nobody walks up to someone else's session.
   const session = await auth();
   const shared = session?.user?.sharedDevice === true;
+  // The working site for the account menu's caption. auth() has already asked
+  // for it in this request's cache, so this costs no query; it throws when no
+  // site exists yet (as in auth.ts). switchClub revalidates this layout.
+  let site = "";
+  if (session?.user) {
+    try { site = (await getCurrentClub()).club.name; } catch { site = ""; }
+  }
 
   return (
     // The appearance provider updates this attribute when the preference changes.
@@ -71,7 +83,13 @@ export default async function RootLayout({ children }: LayoutProps<"/">) {
                 role would, from "View as" in the frame's tools bar. Gives the
                 toggle nothing on production. */}
             <DevelopmentRolePreview session={session}>
-              <YourModulesProvider ids={session?.user ? modulesFor(session).map((m) => m.id) : []}>{children}</YourModulesProvider>
+              <YourModulesProvider
+                ids={session?.user ? modulesFor(session).map((m) => m.id) : []}
+                role={session?.user?.roleName ?? ""}
+                site={site}
+              >
+                {children}
+              </YourModulesProvider>
             </DevelopmentRolePreview>
           </TooltipProvider>
         </ThemeProvider>

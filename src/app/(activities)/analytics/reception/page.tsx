@@ -3,7 +3,7 @@ import { ReceptionReport } from "@/modules/activities/components/analytics/recep
 import { getReceptionAnalytics } from "@/modules/activities/lib/analytics/report-data";
 import { screenPage } from "@/lib/page-guards";
 
-export const metadata: Metadata = { title: "Reception activity · Analytics" };
+export const metadata: Metadata = { title: "Reception activity" };
 
 export default async function ReceptionAnalyticsPage() {
   await screenPage("analytics");

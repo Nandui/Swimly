@@ -11,6 +11,7 @@ import { cn } from "@/lib/utils";
 import { CurriculumImage } from "@/modules/activities/components/curriculum/curriculum-image";
 import { ARCHIVAL_STATUS_META } from "@/lib/status";
 import type { Metadata } from "next";
+import { cache } from "react";
 import { notFound } from "next/navigation";
 
 import { BackLink } from "@/components/ui-kit/back-link";
@@ -43,7 +44,14 @@ import {
 } from "@/modules/activities/lib/curriculum/data/curriculum";
 import { screenPage } from "@/lib/page-guards";
 
-export const metadata: Metadata = { title: "Programme" };
+/** One query per request, shared by the page and its tab title. */
+const loadProgramme = cache(getProgramme);
+
+export async function generateMetadata(props: PageProps<"/programmes/[id]">): Promise<Metadata> {
+  await screenPage("programmes", "curriculum.manage");
+  const programme = await loadProgramme((await props.params).id, true);
+  return { title: programme?.name ?? "Page not found" };
+}
 
 export default async function ProgrammePage(
   props: PageProps<"/programmes/[id]">,
@@ -52,7 +60,7 @@ export default async function ProgrammePage(
   const { id } = await props.params;
 
   const [programme, assessmentTypes] = await Promise.all([
-    getProgramme(id, true),
+    loadProgramme(id, true),
     getAssessmentTypes(id),
   ]);
   if (!programme) notFound();

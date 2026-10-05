@@ -8,6 +8,7 @@ import { ThemeToggle } from '@/components/theme-toggle';
 import { TooltipProvider } from '@/components/shadcn/tooltip';
 import { ModuleShell } from '@/components/workspace/module-shell';
 import { InstructorShell } from '@/modules/activities/components/instructor/instructor-shell';
+import { YourModulesProvider } from '@/components/workspace/your-modules';
 import { ClubSwitcher } from '@/components/clubs/club-switcher';
 import { visibleNavGroups } from '@/modules/activities/lib/nav';
 import { ALL_SCREENS } from '@/lib/staff/screens';
@@ -52,7 +53,7 @@ function Screen() {
     case 'workspace': case 'site-menu': return <ModuleShell module="Swim school" id="swim-school" who={{id:'demo',name:'Alex Example'}} scopeNote={sites[0].name} contentClass="module-content swim-school-content"
       groups={visibleNavGroups(new Set(ALL_SCREENS)).map(group=>({label:group.label,links:group.items.map(item=>({href:item.href,label:item.label,icon:item.icon,active:item.href==='/schedule'}))}))}
       tools={<ClubSwitcher club={sites[0]} clubs={sites}/>}><ScheduleCalendar courses={scheduleCourses} assessments={[]} iso={date} todayIso={date} initialNow={950} clubName={sites[0].name} access={{attendance:true,courses:true,assessments:true}}/></ModuleShell>;
-    case 'instructor-menu': case 'instructor-site': case 'instructor-home': return <InstructorShell club={sites[0]} clubs={sites} userName="Alex Example">{null}</InstructorShell>;
+    case 'instructor-menu': case 'instructor-site': case 'instructor-home': return <YourModulesProvider ids={[]} role="Instructor" site={sites[0].name}><InstructorShell club={sites[0]} clubs={sites} userName="Alex Example">{null}</InstructorShell></YourModulesProvider>;
     case 'appearance': return <section className="space-y-4"><h1 className="text-2xl font-semibold">Appearance</h1><p>Choose how the app looks on this device.</p><ThemeToggle/></section>;
     case 'password': return <ChangePasswordForm/>;
     case 'directory': return <><h1 className="mb-6 text-2xl font-semibold">Swimmers</h1><StudentDirectory students={swimmers}/></>;

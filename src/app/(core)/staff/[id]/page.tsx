@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { cache } from "react";
 import { notFound } from "next/navigation";
 import UiLink from "next/link";
 import { Item, ItemActions, ItemContent, ItemGroup } from "@/components/shadcn/item";
@@ -14,7 +15,14 @@ import { PERSON_STATUS_META, QUALIFICATION_STATE_META } from "@/lib/people/const
 import { getOrganisation, getPersonDetail, listPeopleOptions } from "@/lib/people/data";
 import { cleanLevels, describeLevels, levelsFromAccess } from "@/lib/staff/levels";
 
-export const metadata: Metadata = { title: "Person" };
+/** One read per request, shared by the page and its tab title. */
+const loadPerson = cache(getPersonDetail);
+
+export async function generateMetadata({ params }: { params: Promise<{ id: string }> }): Promise<Metadata> {
+  await screenPage("staff", "staff.manage");
+  const person = await loadPerson((await params).id);
+  return { title: person?.name ?? "Page not found" };
+}
 
 /** One person's place in the organisation: where they work, who they report
  *  to, the roles they hold and where, and their qualifications. Account
@@ -23,7 +31,7 @@ export default async function PersonPage({ params }: { params: Promise<{ id: str
   const session = await screenPage("staff", "staff.manage");
   const { id } = await params;
   const [person, organisation, people] = await Promise.all([
-    getPersonDetail(id), getOrganisation(), listPeopleOptions(),
+    loadPerson(id), getOrganisation(), listPeopleOptions(),
   ]);
   if (!person) notFound();
   const departments = organisation.departments.filter((d) => !d.archivedAt);

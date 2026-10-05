@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
+import { courseName } from "@/modules/activities/lib/courses/constants";
 import { ClassDetailView } from "@/modules/activities/components/courses/class-detail";
 import { CurriculumImage } from "@/modules/activities/components/curriculum/curriculum-image";
 import { can, canSee } from "@/lib/authz";
@@ -13,7 +14,13 @@ import { today } from "@/lib/format";
 import { screenPage } from "@/lib/page-guards";
 import { scheduleHref } from "@/modules/activities/lib/schedule/dates";
 
-export const metadata: Metadata = { title: "Class" };
+/** The class name, as the H1 shows it (never its status tag). getCourse is
+ *  cached per request, so the page below reuses this read. */
+export async function generateMetadata(props: PageProps<"/courses/[id]">): Promise<Metadata> {
+  await screenPage("courses");
+  const course = await getCourse((await props.params).id);
+  return { title: course ? courseName(course) : "Page not found" };
+}
 
 export default async function CoursePage(props: PageProps<"/courses/[id]">) {
   const session = await screenPage("courses");

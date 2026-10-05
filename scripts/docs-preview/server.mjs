@@ -17,7 +17,7 @@ export async function docsPreview(port = 0) {
     'next/navigation': 'export const usePathname=()=>location.pathname; export const useSearchParams=()=>new URLSearchParams(location.search); export const useRouter=()=>({push(href){window.docsNavigating=true;location.assign(href)},replace(href){window.docsNavigating=true;location.replace(href)},refresh(){if(!window.docsNavigating)location.reload()}});',
   }});
   const html = path.join(output, 'index.html');
-  await fs.writeFile(html, (await fs.readFile(html, 'utf8')).replace('Instructor preview', 'Turnfin Docs · synthetic preview'));
+  await fs.writeFile(html, (await fs.readFile(html, 'utf8')).replace('Instructor preview', 'Docs preview'));
   await fs.copyFile('public/brand/turnfin.png',path.join(output,'brand/turnfin.png'));
   const db = await createDocsTestDatabase();
   const service = new DocumentService(db);

@@ -74,7 +74,7 @@ export function LibraryView({
             ? 'Document archive'
             : type === 'EAP'
               ? 'Emergency plans'
-              : 'The document library'
+              : 'Document library'
         }
         description={
           archived
