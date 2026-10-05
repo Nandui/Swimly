@@ -162,9 +162,13 @@
   --slate: var(--pc-ink-muted);
   --radius: 16px;
 }
-/* Phones: the page title and figures step down to 24px. */
+/* Phones: the page title and figures step down to 24px, and PageHeader's actions take their
+   own full-width row where the buttons share the width. Icon buttons, status tags and other
+   children (the home "things need you" tag) keep their natural width. */
 @media (max-width: 767px) {
   .turnfin-app { --pc-text-page: 24px; --pc-leading-page: 30px; --pc-text-figure: 24px; --pc-leading-figure: 30px; }
+  .turnfin-app .pc-phead-actions { width: 100%; }
+  .turnfin-app .pc-phead-actions > .ui-motion-press:not([data-size^='icon']) { flex: 1 1 auto; }
 }
 /* Corner utilities follow the three radii: 16px for anything inside a panel, 24px for panels and
    dialogs (shadcn's rounded-ui-* scale is otherwise derived from one base radius). */
@@ -281,11 +285,17 @@ body.turnfin-app { background: var(--pc-outer); }
 .turnfin-app [data-slot='badge']:is(:not([data-tone]), [data-tone='gray'])[data-variant='secondary'] { background: var(--pc-neutral-soft); color: var(--pc-ink-muted); }
 /* The neutral fill is barely darker than a white panel, so the gray tag draws a hairline. */
 .turnfin-app [data-slot='badge'][data-tone='gray'] { box-shadow: inset 0 0 0 1px var(--pc-line); }
-.turnfin-app [data-slot='alert'] { border: 0; border-radius: var(--pc-radius-card); background: var(--pc-primary-soft); color: var(--pc-primary-ink); padding: 12px 16px; }
+/* Notices (V2System callouts): info sits on the sunken fill with a blue icon; error, warning and
+   success use their soft fill and tone ink for icon, title and text alike (5.2:1 or better). */
+.turnfin-app [data-slot='alert'] { border: 0; border-radius: var(--pc-radius-card); background: var(--pc-surface-sunken); color: var(--pc-ink); padding: 12px 16px; }
+.turnfin-app [data-slot='alert'] > svg { color: var(--pc-primary); }
 .turnfin-app [data-slot='alert'] [data-slot='alert-title'] { font-weight: 600; }
 .turnfin-app [data-slot='alert'] [data-slot='alert-description'] { color: var(--pc-ink); }
 .turnfin-app [data-slot='alert'][data-tone='error'] { background: var(--pc-danger-soft); color: var(--pc-danger); }
 .turnfin-app [data-slot='alert'][data-tone='warning'] { background: var(--pc-warning-soft); color: var(--pc-warning); }
+.turnfin-app [data-slot='alert'][data-tone='success'] { background: var(--pc-success-soft); color: var(--pc-success); }
+.turnfin-app [data-slot='alert']:is([data-tone='error'], [data-tone='warning'], [data-tone='success']) > svg,
+.turnfin-app [data-slot='alert']:is([data-tone='error'], [data-tone='warning'], [data-tone='success']) [data-slot='alert-description'] { color: inherit; }
 .turnfin-app :is([data-slot='dialog-content'], [data-slot='alert-dialog-content'], [data-slot='sheet-content']) { border-color: var(--pc-line); background: var(--pc-surface-raised); font-family: var(--font-sans); }
 .turnfin-app :is([data-slot='dialog-content'], [data-slot='alert-dialog-content']) { border: 0; border-radius: var(--pc-radius-panel); box-shadow: var(--pc-shadow-overlay); }
 .turnfin-app :is([data-slot='dialog-title'], [data-slot='alert-dialog-title'], [data-slot='sheet-title']) { font-size: var(--pc-text-title); line-height: var(--pc-leading-title); font-weight: 600; letter-spacing: 0; }

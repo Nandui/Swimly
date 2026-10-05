@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 import Link from "next/link";
-import { BookOpen } from "lucide-react";
+import { EmptyState } from "@/components/ui-kit/empty-state";
 import { Tag } from "@/components/ui-kit/tag";
 import { ARCHIVAL_STATUS_META } from "@/lib/status";
 import { ArchiveCourse, AssignTraining, CourseDialog } from "@/components/training/manage-actions";
@@ -28,7 +28,7 @@ export default async function TrainingCoursesPage({ searchParams }: { searchPara
         {who.manage && !archived ? <CourseDialog qualificationTypes={types} /> : null}
       </div>
       {courses.length === 0 ? (
-        <div className="module-empty"><BookOpen aria-hidden="true" /><h2 className="font-semibold">{archived ? "No retired courses" : "No courses yet"}</h2><p className="mt-2 text-sm text-ui-muted-foreground">{who.manage && !archived ? "Add the first course people should complete." : "Ask whoever builds the training catalogue to add one."}</p></div>
+        <EmptyState as="h2" icon="book" title={archived ? "No retired courses" : "No courses yet"} hint={who.manage && !archived ? "Add the first course people should complete." : "Ask whoever builds the training catalogue to add one."} />
       ) : (
         <ul className="module-list">
           {courses.map((course) => (

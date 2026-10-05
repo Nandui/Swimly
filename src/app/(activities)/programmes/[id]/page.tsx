@@ -16,7 +16,6 @@ import type { Metadata } from "next";
 import { cache } from "react";
 import { notFound } from "next/navigation";
 
-import { BackLink } from "@/components/ui-kit/back-link";
 import { EmptyState } from "@/components/ui-kit/empty-state";
 import { PageHeader } from "@/components/ui-kit/page-header";
 import { Lead, Num } from "@/components/ui-kit/prose";
@@ -76,33 +75,29 @@ export default async function ProgrammePage(
 
   return (
     <div className="min-w-0 flex flex-col gap-6">
-      <div className="min-w-0 flex flex-col gap-2">
-        <BackLink href="/programmes" current={programme.name}>
-          Programmes
-        </BackLink>
-        <PageHeader
-          title={
-            <div className="min-w-0 flex gap-2 items-center">
-              <CurriculumImage
-                kind="programme"
-                id={programme.id}
-                name={programme.name}
-              />
-              {programme.name}
-            </div>
-          }
-          description={programme.description ?? undefined}
-          actions={
-            <>
-              <EditProgramme
-                programme={{ ...programme, archivedAt: programme.archivedAt }}
-                variant="button"
-              />
-              <AddLevel programmeId={programme.id} />
-            </>
-          }
-        />
-      </div>
+      <PageHeader
+        back={{ href: "/programmes", label: "Programmes" }}
+        title={
+          <span className="min-w-0 flex gap-2 items-center">
+            <CurriculumImage
+              kind="programme"
+              id={programme.id}
+              name={programme.name}
+            />
+            {programme.name}
+          </span>
+        }
+        description={programme.description ?? undefined}
+        actions={
+          <>
+            <EditProgramme
+              programme={{ ...programme, archivedAt: programme.archivedAt }}
+              variant="button"
+            />
+            <AddLevel programmeId={programme.id} />
+          </>
+        }
+      />
 
       <Lead>
         <Num>{liveLevels.length}</Num>{" "}

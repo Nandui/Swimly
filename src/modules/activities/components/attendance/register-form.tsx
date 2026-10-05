@@ -20,10 +20,8 @@ import {
 } from "@/components/shadcn/collapsible";
 import { Label } from "@/components/shadcn/label";
 import { Textarea } from "@/components/shadcn/textarea";
-import {
-  MarkChoices,
-  TeachingNotice,
-} from "@/modules/activities/components/instructor/teaching-ui";
+import { MarkChoices } from "@/modules/activities/components/instructor/teaching-ui";
+import { Notice } from "@/components/ui-kit/notice";
 import type { AttendanceStatus } from "@/generated/prisma/client";
 import { markRegister } from "@/modules/activities/lib/attendance/actions/register";
 import {
@@ -396,9 +394,9 @@ function RegisterFormState({
           onReplace={() => save(conflict.revision)}
         />
       ) : null}
-      {error && !conflict ? <TeachingNotice title={error} error /> : null}
+      {error && !conflict ? <Notice tone="error" live="alert" title={error} /> : null}
       {storageUnavailable && !readOnly ? (
-        <TeachingNotice title="This browser cannot keep a backup. Keep this tab open until attendance is saved." />
+        <Notice tone="warning" title="This browser cannot keep a backup. Keep this tab open until attendance is saved." />
       ) : null}
       {!readOnly ? (
         <SaveBar

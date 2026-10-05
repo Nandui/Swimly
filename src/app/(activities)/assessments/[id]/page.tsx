@@ -13,7 +13,6 @@ import UiLink from "next/link";
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 
-import { BackLink } from "@/components/ui-kit/back-link";
 import { EmptyState } from "@/components/ui-kit/empty-state";
 import { PageHeader } from "@/components/ui-kit/page-header";
 import { Lead, Num } from "@/components/ui-kit/prose";
@@ -91,39 +90,32 @@ export default async function AssessmentSessionPage(
 
   return (
     <div className="min-w-0 flex flex-col gap-6">
-      <div className="min-w-0 flex flex-col gap-2">
-        <BackLink href={isPast(session, today()) ? "/assessments?view=past" : "/assessments"} current={sessionDay(session)}>
-          Assessments
-        </BackLink>
-        <PageHeader
-          title={
-            <div className="min-w-0 flex gap-2 items-center flex-wrap">
-              {sessionDay(session)}
-              {session.cancelledAt ? (
-                <Tag meta={SESSION_STATUS_META.cancelled} />
-              ) : null}
-              {open && full ? (
-                <Tag meta={SESSION_STATUS_META.full} />
-              ) : null}
-            </div>
-          }
-          description={
-            `${sessionSpan(session)} · ${session.programme.name} · ${session.type?.name ?? "kind not set"}` +
-            (session.location ? ` · ${session.location}` : "") +
-            (session.instructor
-              ? ` · ${session.instructor.name}`
-              : " · assessor not decided")
-          }
-          actions={
-            <>
-              {book && open ? (
-                <BookOntoSession session={session} taken={taken} />
-              ) : null}
-              {manage ? <Button asChild variant="outline" className="min-h-11"><UiLink href={`/assessments/${id}/setup`}>Session setup</UiLink></Button> : null}
-            </>
-          }
-        />
-      </div>
+      <PageHeader
+        back={{ href: isPast(session, today()) ? "/assessments?view=past" : "/assessments", label: "Assessments" }}
+        title={sessionDay(session)}
+        description={
+          `${sessionSpan(session)} · ${session.programme.name} · ${session.type?.name ?? "kind not set"}` +
+          (session.location ? ` · ${session.location}` : "") +
+          (session.instructor
+            ? ` · ${session.instructor.name}`
+            : " · assessor not decided")
+        }
+        status={
+          session.cancelledAt ? (
+            <Tag meta={SESSION_STATUS_META.cancelled} />
+          ) : full ? (
+            <Tag meta={SESSION_STATUS_META.full} />
+          ) : null
+        }
+        actions={
+          <>
+            {book && open ? (
+              <BookOntoSession session={session} taken={taken} />
+            ) : null}
+            {manage ? <Button asChild variant="outline" className="min-h-11"><UiLink href={`/assessments/${id}/setup`}>Session setup</UiLink></Button> : null}
+          </>
+        }
+      />
 
       <AssessmentNav active="upcoming" manage={manage} />
 

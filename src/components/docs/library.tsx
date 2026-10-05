@@ -17,7 +17,8 @@ import {
 } from '@/lib/docs/types';
 import { Button } from '@/components/shadcn/button';
 import { DocumentList } from './document-list';
-import { PageHeading, EmptyState } from './ui';
+import { PageHeading } from './ui';
+import { EmptyState } from '@/components/ui-kit/empty-state';
 
 const typeLabels: Record<DocumentType, string> = {
   SOP: 'Procedures',
@@ -224,7 +225,8 @@ export function LibraryView({
           <Card asChild>
             <div className="panel">
               <EmptyState
-                headingLevel={2}
+                as="h2"
+                icon="book"
                 title={
                   hasFilters
                     ? 'No documents match just yet'
@@ -232,21 +234,20 @@ export function LibraryView({
                       ? 'The archive is empty'
                       : 'Your library starts here'
                 }
-                description={
+                hint={
                   hasFilters
                     ? 'Try a broader search or clear your filters to see more documents.'
                     : archived
                       ? 'Archived documents will appear here with their version history.'
                       : 'Published guidance will appear here, ready for the whole team.'
                 }
-                href={
-                  hasFilters
-                    ? clearUrl
-                    : canWrite(w.member) && !archived
-                      ? '/docs/documents/new'
-                      : undefined
+                action={
+                  hasFilters ? (
+                    <Button asChild variant="outline"><Link href={clearUrl}>Clear filters</Link></Button>
+                  ) : canWrite(w.member) && !archived ? (
+                    <Button asChild variant="outline"><Link href="/docs/documents/new">Create a document</Link></Button>
+                  ) : undefined
                 }
-                label={hasFilters ? 'Clear filters' : 'Create a document'}
               />
             </div>
           </Card>

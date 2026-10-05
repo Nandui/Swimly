@@ -1,7 +1,5 @@
-import Link from "next/link";
 import type { ReactNode } from "react";
 import { ChevronDown, Mail, Phone } from "lucide-react";
-import { Button } from "@/components/shadcn/button";
 import { SearchField } from "@/components/ui-kit/search-field";
 import { Item, ItemGroup } from "@/components/shadcn/item";
 import { CollapsibleTrigger, CollapsibleContent } from "@/components/shadcn/collapsible";
@@ -9,6 +7,7 @@ import { QueueDisclosure } from "./queue-disclosure";
 import { CONTACT_CHANNELS, CONTACT_OUTCOMES, type FollowUpSummary } from "@/modules/activities/lib/enrolment/follow-up";
 import { formatDate, parseDateOnly } from "@/lib/format";
 import { PageHeader } from "@/components/ui-kit/page-header";
+import { LinkPagination } from "@/components/ui-kit/link-pagination";
 import { AwaitingNavigation } from "./awaiting-navigation";
 
 export function AwaitingQueue({ view, total, q, children }: {
@@ -74,13 +73,6 @@ export function QueueContact({ student }: { student: { contactName: string | nul
 }
 
 export function QueuePagination({ page, pages, q, moves = false }: { page: number; pages: number; q: string; moves?: boolean }) {
-  if (pages <= 1) return null;
-  const href = (number: number) => `/awaiting-enrolment?${new URLSearchParams({ ...(moves ? { view: "moves" } : {}), ...(q ? { q } : {}), page: String(number) })}`;
-  return <nav aria-label={moves ? "Awaiting moves pages" : "Awaiting enrolment pages"} className="flex flex-wrap items-center justify-between gap-3">
-    <span className="text-sm text-ui-muted-foreground">Page {page} of {pages}</span><div className="flex gap-2">
-      {page > 1 && <Button asChild variant="outline" className="min-h-11"><Link href={href(page - 1)}>Previous</Link></Button>}
-      {page < pages && <Button asChild variant="outline" className="min-h-11"><Link href={href(page + 1)}>Next</Link></Button>}
-    </div>
-  </nav>;
+  return <LinkPagination label={moves ? "Awaiting moves pages" : "Awaiting enrolment pages"} page={page} pageCount={pages} pathname="/awaiting-enrolment" query={{ ...(moves ? { view: "moves" } : {}), ...(q ? { q } : {}) }} />;
 }
 

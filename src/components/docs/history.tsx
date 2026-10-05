@@ -7,13 +7,15 @@ import Link from 'next/link';
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { diffWords } from 'diff';
-import { ArrowLeft, History, RotateCcw, ArrowUpRight, GitCompareArrows } from 'lucide-react';
+import { History, RotateCcw, ArrowUpRight, GitCompareArrows } from 'lucide-react';
+import { BackLink } from '@/components/ui-kit/back-link';
 import { plainText } from '@/lib/docs/content';
 import { DOC_STATUS_META, formatDate, canWrite, type Workspace, type Snapshot, type AuditEvent } from '@/lib/docs/types';
 import { Tag } from '@/components/ui-kit/tag';
 import { startDraftAction } from '@/app/docs/actions';
 import { DocumentBody, RiskAssessmentView } from './document-body';
-import { PageHeading, Message } from './ui';
+import { PageHeading } from './ui';
+import { Notice } from '@/components/ui-kit/notice';
 export function HistoryView({
   workspace: w,
   id,
@@ -40,12 +42,7 @@ export function HistoryView({
   return (
     <>
       <div className="breadcrumb">
-        <Link href={`/docs/documents/${id}`}>
-          <ArrowLeft size={15} />
-          Document
-        </Link>
-        <span>/</span>
-        <span>History</span>
+        <BackLink href={`/docs/documents/${id}`} label="Document" />
       </div>
       <PageHeading
         eyebrow="A clear record of change"
@@ -64,7 +61,7 @@ export function HistoryView({
           ) : undefined
         }
       />
-      <Message error={error} />
+      {error ? <Notice tone="error" live="alert" title={error} className="my-4" /> : null}
       <div className="history-workspace" data-comparing={compare}>
         <div className="history-revisions">
           {compare && a && b && (

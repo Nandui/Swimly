@@ -10,7 +10,7 @@
 }
 .header {
   display: flex;
-  align-items: center;
+  align-items: flex-end;
   justify-content: space-between;
   flex-wrap: wrap;
   gap: calc(var(--spacing) * 4);

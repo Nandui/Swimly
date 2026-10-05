@@ -2,10 +2,11 @@ import type { ReactNode } from "react";
 import Form from "next/form";
 import Link from "next/link";
 import { SegmentedLinks } from "@/components/ui-kit/segmented-links";
-import { ArrowLeft, ArrowRight, SearchX, UsersRound, X } from "lucide-react";
+import { X } from "lucide-react";
+import { LinkPagination } from "@/components/ui-kit/link-pagination";
 import { Button } from "@/components/shadcn/button";
 import { SearchField } from "@/components/ui-kit/search-field";
-import { Empty, EmptyContent, EmptyDescription, EmptyHeader, EmptyMedia, EmptyTitle } from "@/components/shadcn/empty";
+import { EmptyState } from "@/components/ui-kit/empty-state";
 import type { StudentRow } from "@/modules/activities/lib/students/data/students";
 import { swimmerDirectoryHref, type SwimmerStatusFilter } from "@/modules/activities/lib/students/directory";
 import { StudentDirectory } from "./student-directory";
@@ -54,22 +55,15 @@ export function SwimmerBrowser({ students, total, page, pageSize, counts, q, sta
           {filtered ? <Button asChild variant="ghost"><Link href="/students"><X aria-hidden="true" />Clear filters</Link></Button> : <span className="text-xs">Surname A–Z</span>}
         </div>
         {students.length ? <StudentDirectory students={students} returnTo={returnTo} /> : (
-          <Empty className="border border-ui-border bg-ui-muted/30 py-16">
-            <EmptyHeader>
-              <EmptyMedia variant="icon">{filtered ? <SearchX /> : <UsersRound />}</EmptyMedia>
-              <EmptyTitle>{filtered ? "No swimmers found" : "Your swimmers will appear here"}</EmptyTitle>
-              <EmptyDescription>{q ? "Try a different spelling, a member number or a contact name. You can also search all statuses." : filtered ? "There are no swimmers with this status. Choose all swimmers to see the directory." : "Add your first swimmer to start building their profile."}</EmptyDescription>
-            </EmptyHeader>
-            <EmptyContent>{filtered ? <Button asChild variant="outline"><Link href="/students">Show all swimmers</Link></Button> : addAction}</EmptyContent>
-          </Empty>
+          <EmptyState
+            as="h2"
+            icon={filtered ? "searchX" : "usersRound"}
+            title={filtered ? "No swimmers found" : "Your swimmers will appear here"}
+            hint={q ? "Try a different spelling, a member number or a contact name. You can also search all statuses." : filtered ? "There are no swimmers with this status. Choose all swimmers to see the directory." : "Add your first swimmer to start building their profile."}
+            action={filtered ? <Button asChild variant="outline"><Link href="/students">Show all swimmers</Link></Button> : addAction}
+          />
         )}
-        {pages > 1 ? (
-          <nav aria-label="Swimmer directory pages" className="flex items-center justify-between gap-2 pt-2">
-            {page > 1 ? <Button asChild variant="outline"><Link href={swimmerDirectoryHref({ q, status, page: page - 1 })}><ArrowLeft aria-hidden="true" />Previous</Link></Button> : <Button variant="outline" disabled><ArrowLeft aria-hidden="true" />Previous</Button>}
-            <span className="text-sm text-ui-muted-foreground tabular-nums">{page} / {pages}<span className="sr-only"> pages</span></span>
-            {page < pages ? <Button asChild variant="outline"><Link href={swimmerDirectoryHref({ q, status, page: page + 1 })}>Next<ArrowRight aria-hidden="true" /></Link></Button> : <Button variant="outline" disabled>Next<ArrowRight aria-hidden="true" /></Button>}
-          </nav>
-        ) : null}
+        <LinkPagination label="Swimmer directory pages" page={page} pageCount={pages} pathname="/students" query={Object.fromEntries(new URLSearchParams(swimmerDirectoryHref({ q, status }).split("?")[1] ?? ""))} />
       </div>
     </section>
   );

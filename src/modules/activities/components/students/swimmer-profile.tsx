@@ -3,12 +3,13 @@
 import { EmptyState } from "@/components/ui-kit/empty-state";
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import { ArrowLeft, CalendarDays, ChevronDown, Info, MapPin, UserRound } from "lucide-react";
+import { CalendarDays, ChevronDown, Info, MapPin, TriangleAlert, UserRound } from "lucide-react";
 import { Button } from "@/components/shadcn/button";
 import { Avatar, AvatarFallback } from "@/components/shadcn/avatar";
 import { Progress } from "@/components/shadcn/progress";
 import { Tag } from "@/components/ui-kit/tag";
-import { Alert, AlertDescription, AlertTitle } from "@/components/shadcn/alert";
+import { BackLink } from "@/components/ui-kit/back-link";
+import { Notice } from "@/components/ui-kit/notice";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/shadcn/collapsible";
 import { Input } from "@/components/shadcn/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/shadcn/select";
@@ -55,12 +56,11 @@ export function SwimmerProfile({ student, enrolments, programmes, assessments, t
   function navigate(next: Tab) { setTab(next); router.replace(swimmerProfileHref(student.id, returnTo, next), { scroll: false }); }
   function showCompetencies(id: string) { setLevel(id); navigate("competencies"); }
   return <article className={styles.profile} data-swimmer-profile>
-    <Button asChild variant="link" className="min-h-11 self-start px-0 text-ui-muted-foreground hover:text-ui-foreground has-[>svg]:px-0"><a href={returnTo}><ArrowLeft className="size-4" aria-hidden="true" />Swimmers</a></Button>
     <header className={styles.header}>
-      <div className={styles.identity}><Avatar size="xl" aria-hidden="true"><AvatarFallback>{student.firstName.slice(0, 1)}{student.lastName.slice(0, 1)}</AvatarFallback></Avatar><div className="min-w-0"><h1 className="text-2xl font-semibold [overflow-wrap:anywhere]">{name}</h1><p className="mt-2 text-sm text-ui-muted-foreground">{student.dateOfBirth ? `Age ${ageInYears(student.dateOfBirth, new Date(instant))} · ` : ""}{student.memberNumber ? `Member ${student.memberNumber} · ` : ""}Joined {formatDate(student.joinedOn)}</p>{student.status !== "ACTIVE" ? <Tag meta={STUDENT_STATUS_META[student.status]} /> : null}</div></div>
+      <div className="min-w-0 flex flex-col gap-1"><BackLink href={returnTo} label="Swimmers" /><div className={styles.identity}><Avatar size="xl" aria-hidden="true"><AvatarFallback>{student.firstName.slice(0, 1)}{student.lastName.slice(0, 1)}</AvatarFallback></Avatar><div className="min-w-0"><h1 className="[overflow-wrap:anywhere]">{name}</h1><p className="mt-2 text-sm text-ui-muted-foreground">{student.dateOfBirth ? `Age ${ageInYears(student.dateOfBirth, new Date(instant))} · ` : ""}{student.memberNumber ? `Member ${student.memberNumber} · ` : ""}Joined {formatDate(student.joinedOn)}</p>{student.status !== "ACTIVE" ? <Tag meta={STUDENT_STATUS_META[student.status]} /> : null}</div></div></div>
       <div className="flex flex-wrap gap-2"><FollowUpHistory studentId={student.id} name={fullName(student)} canRecord={access.enrol} />{access.edit ? <AddSwimmer student={student} /> : null}{access.enrol ? <ManageProfileEnrolments studentId={student.id} active={student.status === "ACTIVE"} enrolments={enrolments} targets={targets} /> : null}</div>
     </header>
-    {student.medicalNotes ? <Alert variant="destructive"><AlertTitle>Medical notes — read before swimming</AlertTitle><AlertDescription className="whitespace-pre-wrap">{student.medicalNotes}</AlertDescription></Alert> : student.hasMedicalNotes ? <Alert><AlertTitle>Medical notes on file</AlertTitle><AlertDescription>Reception, swim school managers and the instructors teaching this swimmer can read them.</AlertDescription></Alert> : null}
+    {student.medicalNotes ? <Notice tone="error" icon={TriangleAlert} title="Medical notes: read before swimming"><p className="whitespace-pre-wrap">{student.medicalNotes}</p></Notice> : student.hasMedicalNotes ? <Notice title="Medical notes on file" description="Reception, swim school managers and the instructors teaching this swimmer can read them." /> : null}
     <Tabs value={tab} onValueChange={value => navigate(value as Tab)} className="gap-0">
       <TabsList aria-label="Swimmer profile sections"><TabsTrigger value="journey">Journey</TabsTrigger><TabsTrigger value="competencies">Competencies</TabsTrigger><TabsTrigger value="attendance">Attendance</TabsTrigger><TabsTrigger value="assessments">Assessments</TabsTrigger><TabsTrigger value="details">Details</TabsTrigger>{access.parents ? <TabsTrigger value="parents">Parent access</TabsTrigger> : null}</TabsList>
       <div className={styles.body}>

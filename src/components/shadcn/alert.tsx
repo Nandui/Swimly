@@ -1,33 +1,23 @@
 import * as React from "react"
-import { cva, type VariantProps } from "class-variance-authority"
 import { cn } from "@/lib/utils"
 
-const alertVariants = cva(
-  "relative grid w-full grid-cols-[0_1fr] items-start gap-y-0.5 rounded-ui-lg border px-4 py-3 text-sm has-[>svg]:grid-cols-[calc(var(--spacing)*4)_1fr] has-[>svg]:gap-x-3 [&>svg]:size-4 [&>svg]:translate-y-0.5 [&>svg]:text-current",
-  {
-    variants: {
-      variant: {
-        default: "bg-ui-card text-ui-card-foreground",
-        destructive:
-          "bg-ui-card text-ui-destructive *:data-[slot=alert-description]:text-ui-destructive/90 [&>svg]:text-current",
-      },
-    },
-    defaultVariants: {
-      variant: "default",
-    },
-  }
-)
+// Turnfin: colour comes from data-tone (poolside.css), and there is no default role, so a
+// static notice does not interrupt a screen reader. Use Notice from ui-kit, not this directly.
+type AlertTone = "info" | "warning" | "error" | "success"
 
 function Alert({
   className,
-  variant,
+  tone = "info",
   ...props
-}: React.ComponentProps<"div"> & VariantProps<typeof alertVariants>) {
+}: React.ComponentProps<"div"> & { tone?: AlertTone }) {
   return (
     <div
       data-slot="alert"
-      role="alert"
-      className={cn(alertVariants({ variant }), className)}
+      data-tone={tone}
+      className={cn(
+        "relative grid w-full grid-cols-[0_1fr] items-start gap-y-0.5 rounded-ui-lg px-4 py-3 text-sm has-[>svg]:grid-cols-[calc(var(--spacing)*4)_1fr] has-[>svg]:gap-x-3 [&>svg]:size-4 [&>svg]:translate-y-0.5",
+        className
+      )}
       {...props}
     />
   )

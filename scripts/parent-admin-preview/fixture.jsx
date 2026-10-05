@@ -14,7 +14,6 @@ import { AssessmentPublicationPanel } from '@/modules/activities/components/pare
 import { SwimmerProfile } from '@/modules/activities/components/students/swimmer-profile';
 import { SwimmerBrowser } from '@/modules/activities/components/students/swimmer-browser';
 import { PageHeader } from '@/components/ui-kit/page-header';
-import { BackLink } from '@/components/ui-kit/back-link';
 import { swimmers, enrolments, progress, history, courses } from '../help-screenshots/data.mjs';
 
 const params = new URLSearchParams(location.search);
@@ -23,8 +22,8 @@ const screen = params.get('screen') || (location.pathname === '/students/parents
 const demo = window.parentAdminDemo;
 window.helpDemo = { history, swimmers };
 function Screen() {
-  if (screen === 'accounts') return <div className="space-y-6"><BackLink href="/?screen=directory" current="Parent accounts">Swimmers</BackLink><PageHeader title="Parent accounts" description="Review family requests and manage access to LeisureWorld Aquatics."/><ParentAccessRequests/><section className="space-y-4 border-t border-ui-border pt-6"><h2 className="text-xl font-semibold">Find a parent account</h2><ParentAccounts/></section></div>;
-  if (screen === 'publication') return <div className="space-y-6"><BackLink href="/?screen=directory" current="Assessment">Assessments</BackLink><PageHeader title="Swim school assessment" description={`${demo.date} · 16:00–16:30 · LeisureWorld Bishopstown · Water Safety & Fun`}/><AssessmentPublicationPanel sessionId="demo-assessment" startsAt={demo.startsAt} sessionLabel={`${demo.date} · 16:00–16:30 · LeisureWorld Bishopstown · Water Safety & Fun`}/></div>;
+  if (screen === 'accounts') return <div className="space-y-6"><PageHeader back={{ href: '/?screen=directory', label: 'Swimmers' }} title="Parent accounts" description="Review family requests and manage access to LeisureWorld Aquatics."/><ParentAccessRequests/><section className="space-y-4 border-t border-ui-border pt-6"><h2 className="text-xl font-semibold">Find a parent account</h2><ParentAccounts/></section></div>;
+  if (screen === 'publication') return <div className="space-y-6"><PageHeader back={{ href: '/?screen=directory', label: 'Assessments' }} title="Swim school assessment" description={`${demo.date} · 16:00–16:30 · LeisureWorld Bishopstown · Water Safety & Fun`}/><AssessmentPublicationPanel sessionId="demo-assessment" startsAt={demo.startsAt} sessionLabel={`${demo.date} · 16:00–16:30 · LeisureWorld Bishopstown · Water Safety & Fun`}/></div>;
   if (screen === 'directory') return <SwimmerBrowser students={swimmers} total={4} page={1} pageSize={25} counts={{all:4,active:4,inactive:0}} q="" status="ALL" parentAction={<Button asChild variant="outline" className="min-h-11"><Link href="/?screen=accounts">Parent accounts</Link></Button>} addAction={<Button className="min-h-11">Add swimmer</Button>}/>;
   return <SwimmerProfile student={swimmers[0]} enrolments={enrolments} programmes={progress} assessments={[]} targets={courses} history={history} returnTo="/?screen=directory" instant={demo.instant} initialTab="parents" access={{edit:false,enrol:false,assess:false,complete:false,override:false,courses:true,assessments:true,audit:false,parents:screen!=='restricted'}}/>;
 }

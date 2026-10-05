@@ -1,9 +1,10 @@
 import type { Metadata } from "next";
 import Link from "next/link";
-import { ArrowRight, Search, Users } from "lucide-react";
+import { ArrowRight, Search } from "lucide-react";
 import { Button } from "@/components/shadcn/button";
 import { Input } from "@/components/shadcn/input";
 import { Label } from "@/components/shadcn/label";
+import { EmptyState } from "@/components/ui-kit/empty-state";
 import { Tag } from "@/components/ui-kit/tag";
 import { REVIEW_STATUS_META } from "@/lib/hr/constants";
 import { hrPeople } from "@/lib/hr/records";
@@ -30,7 +31,7 @@ export default async function HrPeoplePage({ searchParams }: { searchParams: Pro
       <div className="module-results space-y-3">
         <p className="text-sm">{people.length} {people.length === 1 ? "person" : "people"}</p>
         {people.length === 0 ? (
-          <div className="module-empty"><Users aria-hidden="true" /><h2 className="font-semibold">Nobody to show</h2><p className="mt-2 text-sm text-ui-muted-foreground">Nobody your role covers matches.</p></div>
+          <EmptyState as="h2" icon="users" title="Nobody to show" hint="Nobody your role covers matches." />
         ) : (
           <ul className="module-list">
             {people.map((p) => (

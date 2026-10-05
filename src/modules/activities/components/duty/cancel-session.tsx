@@ -8,6 +8,7 @@ import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, D
 import { Textarea } from "@/components/ui/textarea";
 import { LoadingButton } from "@/components/ui/loading-button";
 import { FormFeedbackProvider, useFormFeedback } from "@/components/ui/form-feedback";
+import { Notice } from "@/components/ui-kit/notice";
 import { cancelClassSession } from "@/modules/activities/lib/cancellations/actions";
 import { formatDate, parseDateOnly } from "@/lib/format";
 import { formatTime } from "@/modules/activities/lib/courses/constants";
@@ -38,7 +39,7 @@ export function CancelSession({ course, date, disabled }: { course: DutyClass; d
         });
       }}>
         <Textarea label="Reason for cancellation" name="reason" value={reason} onChange={event => setReason(event.target.value)} required maxLength={500} disabled={pending} description="Keep this about the class; avoid personal or medical details." />
-        {feedback.message ? <div ref={summaryRef} role="alert" tabIndex={-1} className="text-sm text-ui-destructive">{feedback.message}</div> : null}
+        {feedback.message ? <div ref={summaryRef} tabIndex={-1}><Notice tone="error" live="alert" title={feedback.message} /></div> : null}
         <DialogFooter><Button variant="outline" type="button" className="min-h-11" disabled={pending} onClick={() => setOpen(false)}>Keep session</Button><LoadingButton type="submit" className="min-h-11" variant="destructive" pending={pending} pendingLabel="Cancelling…">Confirm cancellation</LoadingButton></DialogFooter>
       </form></FormFeedbackProvider>
     </DialogContent>

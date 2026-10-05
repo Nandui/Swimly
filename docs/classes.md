@@ -27,7 +27,7 @@ audited action; no live writes are used for design verification.
 pool area and capacity, followed by enrolled swimmers and a separate waitlist.
 Swimmer rows include member number, age when recorded, pinned placement level
 and programme, placement reason and any scheduled unenrolment. Medical notes
-are indicated, not displayed in the roster. The Classes breadcrumb preserves
+are indicated, not displayed in the roster. The Classes back link preserves
 the browser's search, filters, archive state and page. Its return URL only
 accepts `/courses` and known browser parameters, including the site filter.
 

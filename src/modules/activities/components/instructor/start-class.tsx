@@ -16,7 +16,7 @@ import {
 } from "@/components/shadcn/dialog";
 import { startClass } from "@/modules/activities/lib/attendance/actions/cover";
 import { withTimeout, SAVE_UNCONFIRMED_MESSAGE } from "@/lib/save-feedback";
-import { TeachingNotice } from "./teaching-ui";
+import { Notice } from "@/components/ui-kit/notice";
 
 export function StartClass({
   courseId,
@@ -92,7 +92,7 @@ export function StartClass({
           Confirm you are at the pool and teaching this class. Your start will
           be recorded. Other instructors can also open and help with this session.
         </p>
-        {error ? <TeachingNotice title={error} error /> : null}
+        {error ? <Notice tone="error" live="alert" title={error} /> : null}
         <DialogFooter>
           <Button
             variant="outline"

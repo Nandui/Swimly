@@ -213,7 +213,7 @@ function CompetencyChecklistState({
         })}
       </ItemGroup>
 
-      {error ? <Notice title={error} tone="error"></Notice> : null}
+      {error ? <Notice title={error} tone="error" live="alert" /> : null}
 
       {readOnly ? null : (
         <div className="min-w-0 flex gap-3 items-center justify-end">

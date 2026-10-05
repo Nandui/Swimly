@@ -2,9 +2,11 @@
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
-import { Plus, ArrowRight, Search, Inbox, CircleHelp, Clock3, CheckCheck, ReceiptText } from "lucide-react";
+import { Plus, ArrowRight, Search, Inbox, CircleHelp, Clock3, CheckCheck } from "lucide-react";
 import { Button } from "@/components/shadcn/button";
+import { EmptyState } from "@/components/ui-kit/empty-state";
 import { Tag } from "@/components/ui-kit/tag";
+import { LinkPagination } from "@/components/ui-kit/link-pagination";
 import { RefundInput, RefundSelect } from "@/components/refunds/fields";
 import { refundStatuses, refundServices, refundNumber, euros } from "@/lib/refunds/types";
 import { formatDate } from "@/lib/format";
@@ -13,6 +15,9 @@ import type { listRefunds } from "@/lib/refunds/data";
 export function RefundQueue({ data }: { data: Awaited<ReturnType<typeof listRefunds>> }) {
   const router = useRouter(), [filters, setFilters] = useState(data.filters);
   const url = (page = 1) => { const query = new URLSearchParams(); for (const [key, value] of Object.entries(filters)) if (key !== "page" && value && value !== "all") query.set(key, value); if (filters.status === "all") query.set("status", "all"); query.set("page", String(page)); return `/refunds?${query}`; };
+  // The pager keeps the applied filters (not unsubmitted edits in the form).
+  const pageQuery: Record<string, string> = {};
+  for (const [key, value] of Object.entries(data.filters)) if (key !== "page" && typeof value === "string" && value && (value !== "all" || key === "status")) pageQuery[key] = value;
   const set = (key: keyof typeof filters) => (value: string) => setFilters(previous => ({ ...previous, [key]: value }));
   const people = [...new Map(data.people.map(person => [person.creatorId, { value: person.creatorId, label: person.creatorName }])).values()];
   const handlers = [...new Map(data.people.filter(person => person.handlerId).map(person => [person.handlerId!, { value: person.handlerId!, label: person.handlerName! }])).values()];
@@ -33,8 +38,8 @@ export function RefundQueue({ data }: { data: Awaited<ReturnType<typeof listRefu
       </div><div className="flex gap-2"><Button className="min-h-11" type="submit"><Search aria-hidden="true" />Apply filters</Button><Button asChild variant="ghost" className="min-h-11"><Link href="/refunds" onClick={() => setFilters({ status: data.who.review || data.who.process ? 'actionable' : 'open' })}>Reset</Link></Button></div>
     </form>
     <div className="refund-results space-y-3"><p className="text-sm text-ui-muted-foreground">{data.total} {data.total === 1 ? 'request' : 'requests'}</p>
-      {data.rows.length === 0 ? <div className="refund-empty"><ReceiptText aria-hidden="true" /><h2 className="font-semibold">No requests to show</h2><p className="mt-2 text-sm text-ui-muted-foreground">Try changing the filters, or create a request for a customer.</p></div> : <ul className="refund-list">{data.rows.map(row => <li key={row.id}><Link href={`/refunds/${row.id}`} className="refund-row flex min-h-24 flex-wrap items-center justify-between gap-4 p-4 sm:px-5"><div className="min-w-0 flex-1 space-y-2"><div className="flex flex-wrap items-center gap-2"><span className="refund-eyebrow">{refundNumber(row.number)}</span><Tag meta={refundStatuses[row.status]} /></div><p className="refund-row-customer break-words">{row.customerName || 'Unnamed draft'}</p><p className="text-xs text-ui-muted-foreground">{row.clubName} · {refundServices[row.service]} · {row.creatorName}</p><p className="text-xs text-ui-muted-foreground">{row.handlerName ? `Finance: ${row.handlerName}` : 'Finance: unassigned'} · {formatDate(new Date(row.submittedAt || row.createdAt))}</p></div><div className="flex items-center gap-4"><div className="text-right"><p className="refund-row-amount">{euros(row.approvedCents ?? row.requestedCents)}</p><p className="mt-1 text-xs text-ui-muted-foreground">{row.approvedCents !== null ? 'Approved' : 'Requested'}</p></div><ArrowRight className="refund-row-arrow size-5" aria-hidden="true" /></div></Link></li>)}</ul>}
+      {data.rows.length === 0 ? <EmptyState as="h2" icon="receipt" title="No requests to show" hint="Try changing the filters, or create a request for a customer." /> : <ul className="refund-list">{data.rows.map(row => <li key={row.id}><Link href={`/refunds/${row.id}`} className="refund-row flex min-h-24 flex-wrap items-center justify-between gap-4 p-4 sm:px-5"><div className="min-w-0 flex-1 space-y-2"><div className="flex flex-wrap items-center gap-2"><span className="refund-eyebrow">{refundNumber(row.number)}</span><Tag meta={refundStatuses[row.status]} /></div><p className="refund-row-customer break-words">{row.customerName || 'Unnamed draft'}</p><p className="text-xs text-ui-muted-foreground">{row.clubName} · {refundServices[row.service]} · {row.creatorName}</p><p className="text-xs text-ui-muted-foreground">{row.handlerName ? `Finance: ${row.handlerName}` : 'Finance: unassigned'} · {formatDate(new Date(row.submittedAt || row.createdAt))}</p></div><div className="flex items-center gap-4"><div className="text-right"><p className="refund-row-amount">{euros(row.approvedCents ?? row.requestedCents)}</p><p className="mt-1 text-xs text-ui-muted-foreground">{row.approvedCents !== null ? 'Approved' : 'Requested'}</p></div><ArrowRight className="refund-row-arrow size-5" aria-hidden="true" /></div></Link></li>)}</ul>}
     </div>
-    {data.pages > 1 && <nav aria-label="Request pages" className="flex items-center justify-between gap-3">{data.page === 1 ? <Button disabled variant="outline" className="min-h-11">Previous</Button> : <Button asChild variant="outline" className="min-h-11"><Link href={url(data.page - 1)}>Previous</Link></Button>}<span className="text-sm">Page {data.page} of {data.pages}</span>{data.page === data.pages ? <Button disabled variant="outline" className="min-h-11">Next</Button> : <Button asChild variant="outline" className="min-h-11"><Link href={url(data.page + 1)}>Next</Link></Button>}</nav>}
+    <LinkPagination label="Request pages" page={data.page} pageCount={data.pages} pathname="/refunds" query={pageQuery} />
   </div>;
 }

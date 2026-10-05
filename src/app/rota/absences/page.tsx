@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
-import { UserX } from "lucide-react";
+import { EmptyState } from "@/components/ui-kit/empty-state";
 import { BackAtWork, ExtendAbsence, RemoveAbsence, ReportAbsence, ReturnToWork } from "@/components/rota/absences";
 import { Button } from "@/components/shadcn/button";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/shadcn/collapsible";
@@ -91,7 +91,7 @@ export default async function AbsencesPage() {
       <section aria-labelledby="absences-current">
         <h2 id="absences-current" className="mb-3">Off now or soon</h2>
         {current.length === 0 ? (
-          <div className="module-empty"><UserX aria-hidden="true" /><p className="font-semibold">Nobody is off</p><p className="mt-2 text-sm text-ui-muted-foreground">When someone calls in sick or can&apos;t come in, report it here.</p></div>
+          <EmptyState icon="userX" title="Nobody is off" hint="When someone calls in sick or can’t come in, report it here." />
         ) : (
           <ul className="module-list">
             {current.map((a) => (

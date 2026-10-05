@@ -67,7 +67,7 @@ export function RefundFinanceActions({ row, who, deliveryCount }: { row: RefundV
         {action === 'approve' && <RefundInput id="approved-amount" name="amount" label="Approved refund (€)" value={amount} onChange={event => setAmount(event.target.value)} inputMode="decimal" required />}
         {action === 'pay' && <><RefundInput id="paid-on" name="paidOn" label="Refund payment date" type="date" value={paidOn} onChange={event => setPaidOn(event.target.value)} required /><RefundSelect id="paid-method" name="paidMethod" label="Payment method" value={paidMethod} onChange={setPaidMethod} options={Object.entries(paymentMethods).map(([value, label]) => ({ value, label }))} /><RefundInput id="paid-reference" name="paidReference" label="External payment reference" value={paidReference} maxLength={200} onChange={event => setPaidReference(event.target.value)} required /></>}
         {action !== 'claim' && <RefundText id="decision-note" name="note" label={action === 'pay' ? 'Payment note (optional)' : action === 'approve' ? 'Decision note (required for a reduced amount)' : 'Reason'} value={note} maxLength={4000} onChange={event => setNote(event.target.value)} required={action !== 'approve' && action !== 'pay'} />}
-        {error && <Notice tone="error" title={error} />}
+        {error && <Notice tone="error" live="alert" title={error} />}
         <DialogFooter><Button type="button" variant="outline" className="min-h-11" onClick={() => setAction(null)}>Go back</Button><LoadingButton type="submit" pending={pending} className="min-h-11">{action ? actionLabels[action] : 'Confirm'}</LoadingButton></DialogFooter>
       </fieldset></form>
     </DialogContent></Dialog>

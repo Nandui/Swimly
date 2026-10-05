@@ -1,24 +1,51 @@
 import type { ReactNode } from "react";
-import { AlertCircle, Info, TriangleAlert } from "lucide-react";
+import {
+  AlertCircle,
+  CircleCheck,
+  Info,
+  TriangleAlert,
+  type LucideIcon,
+} from "lucide-react";
 import { Alert, AlertDescription, AlertTitle } from "@/components/shadcn/alert";
 
-const NOTICE = { error: AlertCircle, warning: TriangleAlert, info: Info };
+/** The only notice in Turnfin: each tone has its colour (poolside.css) and an icon. */
+const NOTICE_ICON = {
+  info: Info,
+  warning: TriangleAlert,
+  error: AlertCircle,
+  success: CircleCheck,
+} satisfies Record<string, LucideIcon>;
+
+export type NoticeTone = keyof typeof NOTICE_ICON;
+
 export function Notice({
   tone = "info",
+  icon,
+  live,
   title,
   description,
   actions,
   children,
+  className,
 }: {
-  tone?: keyof typeof NOTICE;
+  tone?: NoticeTone;
+  /** A context icon (lock, phone, eye) in place of the tone's own. */
+  icon?: LucideIcon;
+  /**
+   * "alert" only for an error caused by the person's own action; "status" for the result of
+   * async work. Static notices (banners, load errors) announce nothing.
+   */
+  live?: "alert" | "status";
   title: ReactNode;
   description?: ReactNode;
   actions?: ReactNode;
   children?: ReactNode;
+  /** Outer spacing only. */
+  className?: string;
 }) {
-  const Icon = NOTICE[tone];
+  const Icon = icon ?? NOTICE_ICON[tone];
   return (
-    <Alert variant={tone === "error" ? "destructive" : "default"} data-tone={tone}>
+    <Alert tone={tone} role={live} className={className}>
       <Icon aria-hidden="true" />
       <AlertTitle className="min-w-0 line-clamp-none break-words">
         {title}

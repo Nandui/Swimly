@@ -1,6 +1,5 @@
 import type { Metadata } from "next";
 import { Item, ItemActions, ItemContent, ItemDescription, ItemGroup, ItemTitle } from "@/components/shadcn/item";
-import { BackLink } from "@/components/ui-kit/back-link";
 import { EmptyState } from "@/components/ui-kit/empty-state";
 import { PageHeader } from "@/components/ui-kit/page-header";
 import { Lead } from "@/components/ui-kit/prose";
@@ -29,8 +28,8 @@ export default async function DevicesPage() {
   const siteName = new Map(sites.map((s) => [s.id, s.name]));
   return (
     <div className="min-w-0 flex flex-col gap-6">
-      <BackLink href="/staff" current="Work devices">Staff</BackLink>
       <PageHeader
+        back={{ href: "/staff", label: "Staff" }}
         title="Work devices"
         description="The centre's computers and tablets where staff do their work."
         actions={here ? <ForgetThisDevice /> : <RegisterThisDevice sites={sites} />}

@@ -1,3 +1,2 @@
-export default function RefundLoading() {
-  return <div className="space-y-3" aria-busy="true"><h1 className="text-2xl font-semibold">Refunds</h1><p role="status" className="text-sm text-ui-muted-foreground">Loading requests…</p></div>;
-}
+/** The frame stays; the page placeholder shows until the data arrives. */
+export { PageLoading as default } from "@/components/ui-kit/page-loading";

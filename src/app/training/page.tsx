@@ -1,11 +1,12 @@
 import type { Metadata } from "next";
 import Link from "next/link";
-import { ArrowRight, CheckCheck, ClipboardCheck, GraduationCap, Hourglass, Search, TriangleAlert } from "lucide-react";
+import { ArrowRight, CheckCheck, ClipboardCheck, Hourglass, Search, TriangleAlert } from "lucide-react";
 import { Button } from "@/components/shadcn/button";
 import { Input } from "@/components/shadcn/input";
 import { Label } from "@/components/shadcn/label";
 import { NativeSelect, NativeSelectOption } from "@/components/shadcn/native-select";
 import { AssignTraining } from "@/components/training/manage-actions";
+import { EmptyState } from "@/components/ui-kit/empty-state";
 import { Tag } from "@/components/ui-kit/tag";
 import { TRAINING_STATUS_META } from "@/lib/training/constants";
 import { formatDate } from "@/lib/format";
@@ -64,7 +65,7 @@ export default async function TrainingOverviewPage({ searchParams }: { searchPar
       <div className="module-results space-y-3">
         <p className="text-sm">{data.total} {data.total === 1 ? "record" : "records"}{data.total > data.rows.length ? `, showing the first ${data.rows.length}` : ""}</p>
         {data.rows.length === 0 ? (
-          <div className="module-empty"><GraduationCap aria-hidden="true" /><h2 className="font-semibold">Nothing to show</h2><p className="mt-2 text-sm text-ui-muted-foreground">Try another filter{data.who.assign ? ", or assign a course" : ""}.</p></div>
+          <EmptyState as="h2" icon="graduation" title="Nothing to show" hint={`Try another filter${data.who.assign ? ", or assign a course" : ""}.`} />
         ) : (
           <ul className="module-list">
             {data.rows.map((row) => (

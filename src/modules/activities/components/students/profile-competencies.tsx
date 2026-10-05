@@ -7,7 +7,7 @@ import { ChevronDown } from "lucide-react";
 import { LoadingButton } from "@/components/ui/loading-button";
 import { Button } from "@/components/shadcn/button";
 import { Tag } from "@/components/ui-kit/tag";
-import { Alert, AlertDescription } from "@/components/shadcn/alert";
+import { Notice } from "@/components/ui-kit/notice";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/shadcn/collapsible";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/shadcn/select";
 import { Textarea } from "@/components/ui/textarea";
@@ -55,7 +55,7 @@ function ProfileMarks({ studentId, level, editable }: { studentId: string; level
     <div className="min-w-0 flex-1 basis-56"><p className="text-sm font-medium">{c.name}{c.archived ? " · Archived" : ""}</p>{c.description ? <p className="text-xs text-ui-muted-foreground">{c.description}</p> : null}<p className="mt-1 text-xs text-ui-muted-foreground">{c.assessedByName ? `${c.assessedByName}${c.assessedOn ? ` · ${formatDate(c.assessedOn)}` : ""}` : "No mark recorded"}</p></div>
     <div className="flex flex-wrap items-center gap-2">{editable && !c.archived ? <Select value={marks[c.id] ?? "unmarked"} disabled={pending} onValueChange={value => setEdits(old => ({ ...old, [c.id]: value === "unmarked" ? null : value as "ACHIEVED" | "WORKING_ON" }))}><SelectTrigger aria-label={`Mark for ${c.name}`} className="min-w-40"><SelectValue /></SelectTrigger><SelectContent><SelectItem value="unmarked">{NOT_MARKED_META.label}</SelectItem><SelectItem value="WORKING_ON">{COMPETENCY_STATUS_META.WORKING_ON.label}</SelectItem><SelectItem value="ACHIEVED">Achieved</SelectItem></SelectContent></Select> : <Tag meta={c.status ? COMPETENCY_STATUS_META[c.status] : NOT_MARKED_META} />}<CompetencyHistory studentId={studentId} id={c.id} name={c.name} /></div>
   </li>)}</ul>
-    {error ? <Alert variant="destructive"><AlertDescription>{error}</AlertDescription></Alert> : null}
+    {error ? <Notice tone="error" live="alert" title={error} /> : null}
     {editable ? <div className="flex items-center gap-3"><LoadingButton pending={pending} disabled={!dirty} aria-describedby={`marks-hint-${level.id}`} onClick={() => startTransition(async () => { setError(""); try { const result = await saveAssessment({ studentId, levelId: level.id, results: level.competencies.filter(c => c.status !== marks[c.id]).map(c => ({ competencyId: c.id, status: marks[c.id] })) }); if (!result.ok) { setError(result.error); return; } setEdits({}); toast.success("Competency marks saved"); router.refresh(); } catch { setError("Could not confirm the save. Check the swimmer’s history before trying again. Your marks are still here."); } })}>Save marks</LoadingButton><span id={`marks-hint-${level.id}`} className="text-sm text-ui-muted-foreground" role="status">{pending ? "Saving your marks…" : dirty ? "Unsaved changes" : "Change a mark to enable saving."}</span></div> : null}
   </div>;
 }

@@ -17,7 +17,7 @@ import { FieldFrame } from "@/components/ui/field-frame";
 import { confirmLevelCompletion } from "@/modules/activities/lib/progression/actions/assess";
 import { withTimeout, SAVE_UNCONFIRMED_MESSAGE } from "@/lib/save-feedback";
 import { toast } from "@/lib/toast";
-import { TeachingNotice } from "./teaching-ui";
+import { Notice } from "@/components/ui-kit/notice";
 
 export function CompleteLevel({
   studentId,
@@ -76,7 +76,7 @@ export function CompleteLevel({
             disabled={pending}
           />
         </FieldFrame>
-        {error ? <TeachingNotice title={error} error /> : null}
+        {error ? <Notice tone="error" live="alert" title={error} /> : null}
         <DialogFooter>
           <Button
             variant="outline"

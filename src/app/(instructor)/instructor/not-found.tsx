@@ -1,10 +1,10 @@
-import Link from "next/link";
-import { Button } from "@/components/shadcn/button";
+import type { Metadata } from "next";
+import { PageNotFound } from "@/components/ui-kit/page-state";
 
+export const metadata: Metadata = { title: "Page not found" };
+
+/** Any deck page that does not exist or is not open to this person (a class,
+ *  an assessment, a swimmer), so the copy stays neutral and leads back to classes. */
 export default function NotFound() {
-  return <div className="flex flex-col items-start gap-4 py-6">
-    <h1 className="text-2xl font-semibold">Class unavailable</h1>
-    <p className="text-ui-muted-foreground">This class could not be opened. Return to your classes and try again.</p>
-    <Button asChild><Link href="/instructor">Back to classes</Link></Button>
-  </div>;
+  return <PageNotFound href="/instructor" actionLabel="Back to classes" />;
 }

@@ -2,7 +2,6 @@ import type { Metadata } from "next";
 import UiLink from "next/link";
 import { Card } from "@/components/shadcn/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/shadcn/table";
-import { BackLink } from "@/components/ui-kit/back-link";
 import { EmptyState } from "@/components/ui-kit/empty-state";
 import { PageHeader } from "@/components/ui-kit/page-header";
 import { Lead } from "@/components/ui-kit/prose";
@@ -22,8 +21,7 @@ export default async function DetailRequestsPage({ searchParams }: { searchParam
   const rows = await listDetailRequests(done ? "DONE" : "PENDING");
   return (
     <div className="min-w-0 flex flex-col gap-6">
-      <BackLink href="/staff" current="Details changes">Staff</BackLink>
-      <PageHeader title="Details changes" description="Phone, address and emergency contacts that staff asked to update in Turnfin Me." />
+      <PageHeader back={{ href: "/staff", label: "Staff" }} title="Details changes" description="Phone, address and emergency contacts that staff asked to update in Turnfin Me." />
       <Lead>
         {done ? "Recently decided requests." : "Check each change, then apply it or decline it with a reply. The record only changes when you apply."}{" "}
         <UiLink className="underline underline-offset-4" href={done ? "/staff/details-requests" : "/staff/details-requests?view=done"}>{done ? "Show waiting requests" : "Show decided requests"}</UiLink>

@@ -9,6 +9,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { LoadingButton } from "@/components/ui/loading-button";
 import { FormFeedbackProvider, useFormFeedback } from "@/components/ui/form-feedback";
 import { Tag } from "@/components/ui-kit/tag";
+import { Notice } from "@/components/ui-kit/notice";
 import { CANCELLATION_META } from "@/modules/activities/lib/cancellations/constants";
 import { markBillingNotified } from "@/modules/activities/lib/cancellations/actions";
 import { formatTime } from "@/modules/activities/lib/courses/constants";
@@ -45,7 +46,7 @@ export function BillingReview({ row, canNotify }: { row: BillingCancellation; ca
         });
       }}>
         {canNotify && !row.billingNotifiedAt ? <Textarea label="Billing handoff note" name="note" value={note} onChange={event => setNote(event.target.value)} required maxLength={500} disabled={pending} description="After notifying billing, record who you contacted and how. This saves the handoff; it does not send a message or change a bill." /> : null}
-        {feedback.message ? <div ref={summaryRef} role="alert" tabIndex={-1} className="text-sm text-ui-destructive">{feedback.message}</div> : null}
+        {feedback.message ? <div ref={summaryRef} tabIndex={-1}><Notice tone="error" live="alert" title={feedback.message} /></div> : null}
         <DialogFooter><Button type="button" variant="outline" className="min-h-11" disabled={pending} onClick={() => setOpen(false)}>Close</Button>{canNotify && !row.billingNotifiedAt ? <LoadingButton type="submit" className="min-h-11" pending={pending} pendingLabel="Recording…">Mark billing notified</LoadingButton> : null}</DialogFooter>
       </form></FormFeedbackProvider>
     </DialogContent>

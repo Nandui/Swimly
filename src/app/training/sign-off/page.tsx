@@ -1,8 +1,8 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
-import { ClipboardCheck } from "lucide-react";
 import { ReturnForPractice, SignOff } from "@/components/training/manage-actions";
+import { EmptyState } from "@/components/ui-kit/empty-state";
 import { formatDate, formatDateTime } from "@/lib/format";
 import { signoffQueue } from "@/lib/training/data";
 
@@ -22,7 +22,7 @@ export default async function TrainingSignoffPage() {
         </div>
       </div>
       {rows.length === 0 ? (
-        <div className="module-empty"><ClipboardCheck aria-hidden="true" /><h2 className="font-semibold">Nobody is waiting</h2><p className="mt-2 text-sm text-ui-muted-foreground">Practical training appears here when someone you cover asks for sign-off.</p></div>
+        <EmptyState as="h2" icon="clipboardCheck" title="Nobody is waiting" hint="Practical training appears here when someone you cover asks for sign-off." />
       ) : (
         <ul className="module-list">
           {rows.map((row) => (

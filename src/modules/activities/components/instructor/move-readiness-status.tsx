@@ -10,7 +10,7 @@ import { formatDate } from "@/lib/format";
 import { cancelInstructorMoveReadiness } from "@/modules/activities/lib/progression/actions/assess";
 import { SAVE_UNCONFIRMED_MESSAGE, withTimeout } from "@/lib/save-feedback";
 import { toast } from "@/lib/toast";
-import { TeachingNotice } from "./teaching-ui";
+import { Notice } from "@/components/ui-kit/notice";
 
 export function MoveReadinessStatus({ studentId, studentName, courseId, date, current, confirmedBy, confirmedAt }: {
   studentId: string; studentName: string; courseId: string; date: string; current: boolean; confirmedBy: string | null; confirmedAt: Date;
@@ -28,7 +28,7 @@ export function MoveReadinessStatus({ studentId, studentName, courseId, date, cu
       <DialogContent showCloseButton={false}>
         <DialogHeader><DialogTitle>Remove {studentName} from awaiting moves?</DialogTitle>
           <DialogDescription>Their competencies and level completion stay recorded. You can mark them ready again later.</DialogDescription></DialogHeader>
-        {error ? <TeachingNotice title={error} error /> : null}
+        {error ? <Notice tone="error" live="alert" title={error} /> : null}
         <DialogFooter>
           <Button variant="outline" className="min-h-11" disabled={pending} onClick={() => setOpen(false)}>Keep on list</Button>
           <LoadingButton className="min-h-11" pending={pending} onClick={() => startTransition(async () => {

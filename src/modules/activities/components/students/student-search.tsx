@@ -19,6 +19,7 @@ import {
   PopoverTrigger,
 } from "@/components/shadcn/popover";
 import { FieldFrame, fieldHintId } from "@/components/ui/field-frame";
+import { Notice } from "@/components/ui-kit/notice";
 import { searchStudents, type StudentHit } from "@/modules/activities/lib/students/actions/search";
 import { ageLabel, fullName } from "@/modules/activities/lib/students/constants";
 
@@ -158,9 +159,9 @@ export function StudentSearch({
                     Searching…
                   </div>
                 ) : error ? (
-                  <p role="alert" className="p-4 text-sm text-ui-destructive">
-                    {error}
-                  </p>
+                  <div className="p-2">
+                    <Notice tone="error" live="alert" title={error} />
+                  </div>
                 ) : !hits.length ? (
                   <CommandEmpty>{emptyText}</CommandEmpty>
                 ) : null}

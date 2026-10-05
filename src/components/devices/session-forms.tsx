@@ -96,7 +96,7 @@ export function QuickSwitch({ device, people }: { device: string; people: { id: 
           <Button type="button" variant="outline" tabIndex={-1} className="min-h-12 text-lg" onClick={() => press("0")}>0</Button>
           <span />
         </div>
-        {error ? <Notice title={error} tone="error" /> : null}
+        {error ? <Notice title={error} tone="error" live="alert" /> : null}
         <LoadingButton type="submit" pending={pending} pendingLabel="Checking…" disabled={pin.length < 4} className="w-full">Continue</LoadingButton>
         <Button type="button" variant="ghost" onClick={() => { setChosen(null); setPin(""); }}>Not {chosen.name.split(" ")[0]}?</Button>
       </form>
@@ -126,7 +126,7 @@ export function ConfirmPassword({ email, name, next }: { email: string; name: st
         });
       }}>
         <Input label="Password" type="password" value={password} onChange={setPassword} name="password" required autoComplete="current-password" autoFocus />
-        {error ? <Notice title={error} tone="error" /> : null}
+        {error ? <Notice title={error} tone="error" live="alert" /> : null}
         <LoadingButton type="submit" pending={pending} pendingLabel="Checking…" className="w-full">Confirm</LoadingButton>
         <Button asChild variant="ghost"><Link href="/">Go back</Link></Button>
       </form>
@@ -154,7 +154,7 @@ export function PinSettings({ hasPin, locked }: { hasPin: boolean; locked: boole
       {locked ? <Notice title="Your PIN is locked" description="Too many wrong PINs. Sign in with your password on the shared device to unlock it." tone="warning" /> : null}
       <Input label="Current password" type="password" value={password} onChange={setPassword} name="currentPassword" required autoComplete="current-password" />
       <Input label={hasPin ? "New PIN" : "PIN"} type="password" value={pin} onChange={(v) => setPin(v.replace(/\D/g, "").slice(0, 8))} name="pin" inputMode="numeric" autoComplete="off" description="4 to 8 digits, not a repeated digit or a simple run like 1234." />
-      {error ? <Notice title={error} tone="error" /> : null}
+      {error ? <Notice title={error} tone="error" live="alert" /> : null}
       <div className="flex flex-wrap gap-2">
         <LoadingButton type="submit" pending={pending} pendingLabel="Saving…" disabled={pin.length < 4 || !password}>{hasPin ? "Change PIN" : "Set PIN"}</LoadingButton>
         {hasPin ? <Button type="button" variant="outline" disabled={pending || !password} onClick={() => run(() => removeOwnPin(password), "PIN removed")}>Remove PIN</Button> : null}

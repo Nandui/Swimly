@@ -4,6 +4,7 @@ import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import { Button } from "@/components/shadcn/button";
 import { Tag } from "@/components/ui-kit/tag";
+import { LinkPagination } from "@/components/ui-kit/link-pagination";
 import { Card } from "@/components/shadcn/card";
 import { EmptyState } from "@/components/ui-kit/empty-state";
 import { Textarea } from "@/components/ui/textarea";
@@ -83,7 +84,7 @@ export function ParentAccessRequests() {
           {request.status === "PENDING" && <div className="flex flex-wrap gap-2"><Review request={request} approved onSuccess={reviewed} /><Review request={request} approved={false} onSuccess={reviewed} /></div>}
         </div>
       </Card>)}
-      {resource.data.total > 20 && <div className="flex items-center gap-3"><Button variant="outline" className="min-h-11" disabled={page === 1} onClick={() => setPage(page - 1)}>Previous</Button><p className="text-sm">Page {page} of {Math.ceil(resource.data.total / 20)}</p><Button variant="outline" className="min-h-11" disabled={page * 20 >= resource.data.total} onClick={() => setPage(page + 1)}>Next</Button></div>}
+      <LinkPagination label="Request pages" page={page} totalItems={resource.data.total} pageSize={20} onPage={setPage} />
     </div>}
   </section>;
 }

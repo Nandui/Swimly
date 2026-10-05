@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
-import { Hourglass } from "lucide-react";
 import { AssignTraining } from "@/components/training/manage-actions";
+import { EmptyState } from "@/components/ui-kit/empty-state";
 import { Tag } from "@/components/ui-kit/tag";
 import { QUALIFICATION_STATE_META } from "@/lib/people/constants";
 import { formatDate } from "@/lib/format";
@@ -24,7 +24,7 @@ export default async function TrainingExpiringPage() {
         </div>
       </div>
       {rows.length === 0 ? (
-        <div className="module-empty"><Hourglass aria-hidden="true" /><h2 className="font-semibold">Nothing expiring</h2><p className="mt-2 text-sm text-ui-muted-foreground">Everyone you cover is in date for the next {EXPIRY_WARNING_DAYS} days.</p></div>
+        <EmptyState as="h2" icon="hourglass" title="Nothing expiring" hint={`Everyone you cover is in date for the next ${EXPIRY_WARNING_DAYS} days.`} />
       ) : (
         <ul className="module-list">
           {rows.map((row) => (

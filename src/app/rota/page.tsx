@@ -1,8 +1,9 @@
 import type { Metadata } from "next";
 import Link from "next/link";
-import { CalendarDays, CalendarRange, ChevronLeft, ChevronRight } from "lucide-react";
+import { CalendarRange, ChevronLeft, ChevronRight } from "lucide-react";
 import { Button } from "@/components/shadcn/button";
 import { NativeSelect, NativeSelectOption } from "@/components/shadcn/native-select";
+import { EmptyState } from "@/components/ui-kit/empty-state";
 import { CopyPlan, ShiftDialog } from "@/components/rota/actions";
 import { RosterWeek, type RosterShiftDetail } from "@/components/rota/roster";
 import { formatDateRange, formatDayMonth, formatWeekday, today } from "@/lib/format";
@@ -67,7 +68,7 @@ export default async function WeekPlanPage({ searchParams }: { searchParams: Pro
         </div>
       </div>
       {data.sites.length === 0 || !site ? (
-        <div className="module-empty"><CalendarDays aria-hidden="true" /><h2 className="font-semibold">No sites to show</h2><p className="mt-2 text-sm text-ui-muted-foreground">Your rota role does not cover a site yet.</p></div>
+        <EmptyState as="h2" icon="calendarDays" title="No sites to show" hint="Your rota role does not cover a site yet." />
       ) : (
         <RosterWeek roster={roster} days={days} today={now} siteId={site.id} manage={site.manage} shifts={shifts} activities={activities} options={options}
           siteChooser={data.sites.length > 1 ? (

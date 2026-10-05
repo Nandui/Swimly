@@ -10,7 +10,7 @@ export const CLASS_GUIDES: HelpArticle[] = [
       { title: "Use the extra filters", text: "More filters includes Programme, Time, Instructor and Pool area. Choose Spaces available, Full or Archived when that is the set you need." },
       { title: "Open the class", text: "Choose its row or View class. Check the weekly schedule, site, pool area, instructor and capacity at the top of the detail page." },
       { title: "Inspect the roster and waitlist", text: "Read Enrolled swimmers and the separate waitlist. The roster includes identifying details and the placement level attached to each enrolment. Available actions depend on your permissions." },
-      { title: "Return to the same results", text: "Use the Classes breadcrumb to return with your search, filters and page preserved. Refresh reloads the latest class information." },
+      { title: "Return to the same results", text: "Use the Classes back link to return with your search, filters and page preserved. Refresh reloads the latest class information." },
     ], result: "You can compare classes and inspect a specific roster without opening a large dropdown.",
     troubleshooting: [{ question: "The availability icon looks different from the attendance status.", answer: "The circled check and X describe available places or a full class. They do not tell you whether attendance has been recorded." }],
     related: ["daily-schedule", "manage-class", "enrol-swimmer"], action: "courses",

@@ -20,7 +20,6 @@ import {
   TransferEnrolment,
 } from "@/modules/activities/components/enrolment/enrolment-actions";
 import { AppIcon } from "@/components/ui-kit/app-icon";
-import { BackLink } from "@/components/ui-kit/back-link";
 import { EmptyState } from "@/components/ui-kit/empty-state";
 import { PageHeader } from "@/components/ui-kit/page-header";
 import { Tag } from "@/components/ui-kit/tag";
@@ -87,33 +86,31 @@ export function ClassDetailView({
   const available = placesLeft(active.length, course.capacity);
   return (
     <div className="min-w-0 flex flex-col gap-6">
-      <div className={cn("min-w-0 flex flex-col gap-3", "[&_a]:min-h-11")}>
-        <BackLink href={backHref} current={courseName(course)}>
-          {backLabel}
-        </BackLink>
-        <PageHeader
-          title={
-            <div className="min-w-0 flex gap-2 items-center flex-wrap">
-              {levelImage}
-              {courseName(course)}
-            </div>
-          }
-          description={`${course.club.name} · ${course.level.programme.name} · ${course.level.name}`}
-          actions={
-            access.manage && !course.archivedAt ? (
-              <EnrolIntoCourse course={course} taken={active.length} />
-            ) : undefined
-          }
-        />
-        {course.archivedAt || tone ? (
-          <div className="min-w-0 flex gap-2 items-center flex-wrap">
-            {course.archivedAt ? (
-              <Tag meta={ARCHIVAL_STATUS_META.archived} />
-            ) : null}
-            {tone ? <Tag meta={tone} /> : null}
-          </div>
-        ) : null}
-      </div>
+      <PageHeader
+        back={{ href: backHref, label: backLabel }}
+        title={
+          <span className="min-w-0 flex gap-2 items-center flex-wrap">
+            {levelImage}
+            {courseName(course)}
+          </span>
+        }
+        description={`${course.club.name} · ${course.level.programme.name} · ${course.level.name}`}
+        status={
+          course.archivedAt || tone ? (
+            <>
+              {course.archivedAt ? (
+                <Tag meta={ARCHIVAL_STATUS_META.archived} />
+              ) : null}
+              {tone ? <Tag meta={tone} /> : null}
+            </>
+          ) : null
+        }
+        actions={
+          access.manage && !course.archivedAt ? (
+            <EnrolIntoCourse course={course} taken={active.length} />
+          ) : undefined
+        }
+      />
 
       <section
         aria-label="Class details"

@@ -1,5 +1,4 @@
 'use client';
-import { Alert } from '@/components/shadcn/alert';
 import { Dialog, DialogContent, DialogTitle, DialogDescription } from '@/components/docs/primitives/dialog';
 import {
   AlertDialog,
@@ -20,7 +19,6 @@ import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { useState, useTransition } from 'react';
 import {
-  ArrowLeft,
   CheckCircle2,
   FilePenLine,
   History,
@@ -53,8 +51,10 @@ import {
   type Snapshot,
   type AssignmentRule,
 } from '@/lib/docs/types';
-import { DocIcon, Message, Avatar } from './ui';
+import { DocIcon, Avatar } from './ui';
+import { Notice } from '@/components/ui-kit/notice';
 import { Tag } from '@/components/ui-kit/tag';
+import { BackLink } from '@/components/ui-kit/back-link';
 type Props = {
   workspace: Workspace;
   document: DocumentRecord;
@@ -136,12 +136,7 @@ export function Reader({
   return (
     <div className="reader-workspace">
       <div className="breadcrumb">
-        <Link href="/docs/library">
-          <ArrowLeft size={15} />
-          Library
-        </Link>
-        <span>/</span>
-        <span>{c.reference}</span>
+        <BackLink href="/docs/library" label="Library" />
       </div>
       <div className="reader-toolbar">
         <div className="reader-status">
@@ -217,45 +212,65 @@ export function Reader({
           )}
         </div>
       </div>
-      <Message error={error} success={success} />
+      {error ? (
+        <Notice tone="error" live="alert" title={error} className="my-4" />
+      ) : success ? (
+        <Notice tone="success" live="status" title={success} className="my-4" />
+      ) : null}
       {historical && (
-        <Alert role="status" className="notice warning">
-          You are reading a previous version.
-          <Link href={`/docs/documents/${d.id}`}>
-            Open the current approved version <ArrowRight size={15} />
-          </Link>
-        </Alert>
+        <Notice
+          tone="warning"
+          className="my-4"
+          title="You are reading a previous version."
+          actions={
+            <Button asChild variant="outline">
+              <Link href={`/docs/documents/${d.id}`}>
+                Open the current approved version <ArrowRight aria-hidden="true" />
+              </Link>
+            </Button>
+          }
+        />
       )}
       {submitted && (
-        <Alert role="status" className="notice warning">
-          This is a frozen review submission. Staff use the current approved publication.
-        </Alert>
+        <Notice
+          tone="warning"
+          className="my-4"
+          title="This is a frozen review submission. Staff use the current approved publication."
+        />
       )}
       {d.archivedAt && (
-        <Alert role="status" className="notice warning">
-          Archived {formatDate(d.archivedAt)}. {d.archiveReason}
-        </Alert>
+        <Notice
+          tone="warning"
+          className="my-4"
+          title={`Archived ${formatDate(d.archivedAt)}.`}
+          description={d.archiveReason || undefined}
+        />
       )}
       {draft && s?.kind === 'publication' && !historical && !d.archivedAt && (
-        <div className="draft-notice">
-          <FilePenLine size={17} />
-          <span>
-            {draft.status === 'in_review'
+        <Notice
+          icon={FilePenLine}
+          className="my-4"
+          title={
+            draft.status === 'in_review'
               ? 'A new revision is awaiting approval.'
-              : 'A new draft is in progress.'}{' '}
-            Staff continue to see this approved version.
-          </span>
-          <Link
-            href={
-              draft.status === 'in_review'
-                ? `/docs/documents/${d.id}?version=${draft.submissionId}`
-                : `/docs/documents/${d.id}/edit`
-            }
-          >
-            {draft.status === 'in_review' ? 'View submission' : 'Open draft'}
-            <ArrowUpRightIcon />
-          </Link>
-        </div>
+              : 'A new draft is in progress.'
+          }
+          description="Staff continue to see this approved version."
+          actions={
+            <Button asChild variant="outline">
+              <Link
+                href={
+                  draft.status === 'in_review'
+                    ? `/docs/documents/${d.id}?version=${draft.submissionId}`
+                    : `/docs/documents/${d.id}/edit`
+                }
+              >
+                {draft.status === 'in_review' ? 'View submission' : 'Open draft'}
+                <ArrowUpRightIcon aria-hidden="true" />
+              </Link>
+            </Button>
+          }
+        />
       )}
       <div className="reading-layout">
         <Button
@@ -559,7 +574,7 @@ export function Reader({
               </Label>
             </>
           )}
-          <Message error={error} />
+          {error ? <Notice tone="error" live="alert" title={error} className="my-4" /> : null}
           <div className="form-actions">
             {dialog === 'archive' ? (
               <AlertDialogCancel disabled={pending}>Cancel</AlertDialogCancel>

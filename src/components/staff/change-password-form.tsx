@@ -95,7 +95,7 @@ export function ChangePasswordForm() {
           />
         </Field>
 
-        {error ? <div ref={summaryRef} tabIndex={-1}><Notice title={error} tone="error" /></div> : null}
+        {error ? <div ref={summaryRef} tabIndex={-1}><Notice title={error} tone="error" live="alert" /></div> : null}
 
         <div className="min-w-0 flex gap-2 items-center">
           <LoadingButton

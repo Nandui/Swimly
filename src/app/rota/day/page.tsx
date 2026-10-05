@@ -4,6 +4,7 @@ import Link from "next/link";
 import { CalendarCheck, CalendarDays, ChevronLeft, ChevronRight, GraduationCap, Pencil, TriangleAlert, UserX } from "lucide-react";
 import { Button } from "@/components/shadcn/button";
 import { NativeSelect, NativeSelectOption } from "@/components/shadcn/native-select";
+import { EmptyState } from "@/components/ui-kit/empty-state";
 import { CopyPlan, ShiftDialog } from "@/components/rota/actions";
 import { DayNote } from "@/components/rota/day-note";
 import { SegmentsDialog } from "@/components/rota/segments";
@@ -78,7 +79,7 @@ export default async function DayPlanPage({ searchParams }: { searchParams: Prom
         </div>
       </div>
       {!site ? (
-        <div className="module-empty"><CalendarDays aria-hidden="true" /><h2 className="font-semibold">No sites to show</h2><p className="mt-2 text-sm text-ui-muted-foreground">Your rota role does not cover a site yet.</p></div>
+        <EmptyState as="h2" icon="calendarDays" title="No sites to show" hint="Your rota role does not cover a site yet." />
       ) : (
         <>
           {data.sites.length > 1 ? (

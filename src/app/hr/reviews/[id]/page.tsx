@@ -1,8 +1,6 @@
 import type { Metadata } from "next";
-import Link from "next/link";
-import { ArrowLeft } from "lucide-react";
-import { Button } from "@/components/shadcn/button";
 import { ReviewEditor } from "@/components/hr/actions";
+import { PageHeader } from "@/components/ui-kit/page-header";
 import { Tag } from "@/components/ui-kit/tag";
 import { formatDate } from "@/lib/format";
 import { REVIEW_OVERALL_LABELS, REVIEW_STATUS_META } from "@/lib/hr/constants";
@@ -18,13 +16,12 @@ export default async function HrReviewPage({ params }: { params: Promise<{ id: s
   const sections = [["Summary", review.summary], ["Strengths", review.strengths], ["Goals for the next period", review.goals]] as const;
   return (
     <div className="space-y-6">
-      <Button asChild variant="ghost" className="-ml-3 min-h-11"><Link href={`/hr/people/${person.id}`}><ArrowLeft aria-hidden="true" />{person.name}</Link></Button>
-      <div className="module-heading">
-        <div className="space-y-2">
-          <div className="flex flex-wrap items-center gap-3"><h1>{review.period}</h1><Tag meta={REVIEW_STATUS_META[review.status]} /></div>
-          <p className="text-sm">For {person.name} · by {review.reviewerName}{review.sharedAt ? ` · shared ${formatDate(new Date(review.sharedAt))}` : ""}</p>
-        </div>
-      </div>
+      <PageHeader
+        back={{ href: `/hr/people/${person.id}`, label: person.name }}
+        title={review.period}
+        description={`For ${person.name} · by ${review.reviewerName}${review.sharedAt ? ` · shared ${formatDate(new Date(review.sharedAt))}` : ""}`}
+        status={<Tag meta={REVIEW_STATUS_META[review.status]} />}
+      />
       {editable ? (
         <ReviewEditor review={review} name={person.name} />
       ) : (

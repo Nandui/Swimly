@@ -23,7 +23,8 @@ import {
   type DocumentType,
 } from '@/lib/docs/types';
 import { Tag } from '@/components/ui-kit/tag';
-import { PageHeading, DocIcon, EmptyState } from './ui';
+import { PageHeading, DocIcon } from './ui';
+import { EmptyState } from '@/components/ui-kit/empty-state';
 import { Button } from '@/components/shadcn/button';
 
 export function WorkView({ workspace: w, drafts }: { workspace: Workspace; drafts: Draft[] }) {
@@ -84,10 +85,11 @@ export function WorkView({ workspace: w, drafts }: { workspace: Workspace; draft
       <div className="task-workspace">
         <PageHeading eyebrow="Personal workspace" title="My work" description="Authoring, reviews and review dates for people who write documents." />
         <EmptyState
+          as="h2"
+          icon="book"
           title="Your required reading is in Turnfin Me"
-          description="Open Turnfin Me on your phone to read and acknowledge the documents assigned to you. You can still browse the library here."
-          href="/docs/library"
-          label="Browse library"
+          hint="Open Turnfin Me on your phone to read and acknowledge the documents assigned to you. You can still browse the library here."
+          action={<Button asChild variant="outline"><Link href="/docs/library">Browse library</Link></Button>}
         />
       </div>
     );
@@ -241,6 +243,8 @@ export function WorkView({ workspace: w, drafts }: { workspace: Workspace; draft
               </ul>
             ) : (
               <EmptyState
+                as="h3"
+                icon="book"
                 title={
                   search
                     ? 'No matching documents'
@@ -250,24 +254,17 @@ export function WorkView({ workspace: w, drafts }: { workspace: Workspace; draft
                         ? 'No reviews waiting'
                         : 'No reviews due soon'
                 }
-                description={
+                hint={
                   search
                     ? 'Clear your search to see all documents in this queue.'
                     : queue.description
                 }
-                href={
-                  search
-                    ? url('q', '')
-                    : queue.id === 'drafts'
-                      ? '/docs/documents/new'
-                      : undefined
-                }
-                label={
-                  search
-                    ? 'Clear search'
-                    : queue.id === 'drafts'
-                      ? 'Create a document'
-                      : 'Browse library'
+                action={
+                  search ? (
+                    <Button asChild variant="outline"><Link href={url('q', '')}>Clear search</Link></Button>
+                  ) : queue.id === 'drafts' ? (
+                    <Button asChild variant="outline"><Link href="/docs/documents/new">Create a document</Link></Button>
+                  ) : undefined
                 }
               />
             )}

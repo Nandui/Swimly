@@ -1,9 +1,6 @@
 "use client";
 
-import { Info } from "lucide-react";
-import type { ReactNode } from "react";
 import { SegmentedChoice } from "@/components/ui-kit/segmented-links";
-import { Alert, AlertTitle, AlertDescription } from "@/components/shadcn/alert";
 
 /** The same keyboard-operable, thumb-sized choice for attendance and skills. */
 export function MarkChoices({
@@ -28,25 +25,5 @@ export function MarkChoices({
       fill="phone"
       options={options}
     />
-  );
-}
-
-export function TeachingNotice({
-  title,
-  children,
-  error = false,
-}: {
-  title: string;
-  children?: ReactNode;
-  error?: boolean;
-}) {
-  return (
-    <Alert variant={error ? "destructive" : "default"}>
-      <Info aria-hidden="true" />
-      <AlertTitle className="line-clamp-none leading-relaxed">
-        {title}
-      </AlertTitle>
-      {children ? <AlertDescription>{children}</AlertDescription> : null}
-    </Alert>
   );
 }

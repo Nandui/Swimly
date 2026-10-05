@@ -4,7 +4,7 @@ import { EmptyState } from "@/components/ui-kit/empty-state";
 import { useEffect, useRef, useState } from "react";
 import { ArrowRightLeft, CalendarCheck, ClipboardCheck, History, LoaderCircle, Trophy, UserRound } from "lucide-react";
 import { Button } from "@/components/shadcn/button";
-import { Alert, AlertDescription } from "@/components/shadcn/alert";
+import { Notice } from "@/components/ui-kit/notice";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from "@/components/shadcn/dialog";
 import { loadSwimmerHistory } from "@/modules/activities/lib/students/actions/history";
 import { formatDate, formatDateTime, parseDateOnly } from "@/lib/format";
@@ -83,7 +83,7 @@ function HistoryFeedPage({ studentId, query, initial, compact, footer }: { stude
     {page && !page.canAudit ? <p className="mb-3 text-sm text-ui-muted-foreground">Showing saved records. Viewing changes requires activity access.</p> : null}
     {events.length ? <HistoryRows events={events} studentId={studentId} showCompetencyLinks={!query.competencyId} brief={!expanded} /> : !pending && !error ? <EmptyState compact title="No recorded activity matches this view." /> : null}
     {pending ? <p role="status" className="flex items-center gap-2 py-3 text-sm"><LoaderCircle className="size-4 animate-spin" aria-hidden="true" />Loading history…</p> : null}
-    {error ? <Alert variant="destructive"><AlertDescription>{error}<Button variant="outline" disabled={pending} onClick={() => more(!page)}>Try again</Button></AlertDescription></Alert> : null}
+    {error ? <Notice tone="error" live="alert" title={error} actions={<Button variant="outline" disabled={pending} onClick={() => more(!page)}>Try again</Button>} /> : null}
     <div className="flex flex-wrap items-center gap-2">{!expanded && page?.events.length ? <Button variant="ghost" onClick={() => setExpanded(true)}>Show all class activity</Button> : expanded && page?.next ? <Button variant="outline" disabled={pending} onClick={() => more()}>Load earlier activity</Button> : null}{footer}</div>
   </div>;
 }

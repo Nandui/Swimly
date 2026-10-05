@@ -24,10 +24,8 @@ import {
   SelectValue,
 } from "@/components/shadcn/select";
 import { Label } from "@/components/shadcn/label";
-import {
-  MarkChoices,
-  TeachingNotice,
-} from "@/modules/activities/components/instructor/teaching-ui";
+import { MarkChoices } from "@/modules/activities/components/instructor/teaching-ui";
+import { Notice } from "@/components/ui-kit/notice";
 import { SaveBar } from "@/modules/activities/components/attendance/register-form";
 import {
   SAVE_TIMEOUT_MS,
@@ -610,9 +608,9 @@ function DeckChecklistState({
           </CollapsibleContent>
         </Collapsible>
       ) : null}
-      {error ? <TeachingNotice title={error} error /> : null}
+      {error ? <Notice tone="error" live="alert" title={error} /> : null}
       {storageUnavailable && !readOnly ? (
-        <TeachingNotice title="This browser cannot keep a backup. Keep this tab open until marks are saved." />
+        <Notice tone="warning" title="This browser cannot keep a backup. Keep this tab open until marks are saved." />
       ) : null}
       <SaveBar
         status={

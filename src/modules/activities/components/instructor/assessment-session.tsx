@@ -1,7 +1,5 @@
 import { EmptyState } from "@/components/ui-kit/empty-state";
-import Link from "next/link";
-import { ChevronLeft } from "lucide-react";
-import { Button } from "@/components/shadcn/button";
+import { BackLink } from "@/components/ui-kit/back-link";
 import { Item, ItemContent, ItemGroup } from "@/components/shadcn/item";
 import { Tag } from "@/components/ui-kit/tag";
 import { MarkNoShow, RecordOutcome } from "@/modules/activities/components/assessments/booking-actions";
@@ -15,15 +13,15 @@ export function InstructorAssessmentSession({ session, backHref }: { session: Se
   const placed = booked.filter(booking => booking.outcomeLevel).length;
   return (
     <div className="flex min-w-0 flex-col gap-6">
-      <header className="space-y-3">
-        <Button asChild variant="ghost" className="-ml-3"><Link href={backHref}><ChevronLeft aria-hidden="true" />Back to Instructor</Link></Button>
+      <header className="flex flex-col gap-1">
+        <BackLink href={backHref} label="Instructor" />
         <div className="space-y-1">
-          <h1 className="text-2xl font-semibold break-words">{session.type?.name ?? "Swim School Assessment"}</h1>
+          <h1 className="break-words">{session.type?.name ?? "Swim school assessment"}</h1>
           <p className="text-sm text-ui-muted-foreground">{sessionDay(session)} · {sessionSpan(session)}</p>
           <p className="text-sm text-ui-muted-foreground break-words">{session.club.name} · {session.location || "Pool"} · {session.programme.name}</p>
           <p className="text-sm text-ui-muted-foreground">{session.instructor?.name ?? "Assessor not assigned"} · {booked.length} booked · {placed} placed</p>
         </div>
-        {session.notes ? <p className="text-sm whitespace-pre-wrap break-words">{session.notes}</p> : null}
+        {session.notes ? <p className="mt-2 text-sm whitespace-pre-wrap break-words">{session.notes}</p> : null}
       </header>
       <section aria-labelledby="assessment-booked" className="space-y-3">
         <h2 id="assessment-booked" className="text-xl font-semibold">Booked swimmers</h2>

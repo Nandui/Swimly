@@ -13,7 +13,6 @@ import { COMPETENCY_STATUS_META } from "@/modules/activities/lib/progression/con
 import { ATTENDANCE_RECORD_META } from "@/modules/activities/lib/attendance/constants";
 import { notFound } from "next/navigation";
 
-import { BackLink } from "@/components/ui-kit/back-link";
 import { EmptyState } from "@/components/ui-kit/empty-state";
 import { PageHeader } from "@/components/ui-kit/page-header";
 import { Lead, Num } from "@/components/ui-kit/prose";
@@ -115,7 +114,8 @@ export async function ClassSession({
       : mostRecentOccurrence(course.dayOfWeek);
 
   const cancellation = await getCancellation(id, iso);
-  if (cancellation) return <div className="space-y-4"><BackLink href={returnTo.href} current={courseName(course)}>{returnTo.label}</BackLink><h1 className="text-2xl font-semibold">{courseName(course)}</h1><Notice title="This session is cancelled"><p>{formatDate(parseDateOnly(iso))} · {cancellation.reason}</p><p>Existing teaching records are kept. Further marks cannot be saved for this session.</p></Notice></div>;
+  const backLabel = returnTo.source ? returnTo.label : "Class details";
+  if (cancellation) return <div className="min-w-0 flex flex-col gap-6"><PageHeader back={{ href: returnTo.href, label: backLabel }} title={courseName(course)} description={formatSlot(course)} /><Notice title="This session is cancelled"><p>{formatDate(parseDateOnly(iso))} · {cancellation.reason}</p><p>Existing teaching records are kept. Further marks cannot be saved for this session.</p></Notice></div>;
 
   const [{ lines, taken, note, revision }, cover, progress] = await Promise.all(
     [getRegister(id, iso, workspace === "instructor" ? "deck" : "desk"), getClassCover(id, iso), getClassProgress(id)],
@@ -151,14 +151,20 @@ export async function ClassSession({
 
   return (
     <div className="min-w-0 flex flex-col gap-6">
-      <div className="min-w-0 flex flex-col gap-2">
-        <BackLink
-          href={returnTo.href}
-          current={returnTo.source ? courseName(course) : "Class"}
-        >
-          {returnTo.source ? returnTo.label : courseName(course)}
-        </BackLink>
         <PageHeader
+          back={{ href: returnTo.href, label: backLabel }}
+          status={
+            taken || (cover && cover.coverById !== cover.instructorId) ? (
+              <>
+                {taken ? (
+                  <Tag meta={ATTENDANCE_RECORD_META.taken} />
+                ) : null}
+                {cover && cover.coverById !== cover.instructorId ? (
+                  <Tag meta={ATTENDANCE_RECORD_META.covered} />
+                ) : null}
+              </>
+            ) : null
+          }
           actions={
             step === "attendance" ? (
               <>
@@ -179,28 +185,7 @@ export async function ClassSession({
               </>
             ) : null
           }
-          title={
-            <div className="min-w-0 flex gap-2 items-center flex-wrap">
-              {workspace === "desk" && canSee(session, "courses") ? (
-                <UiLink
-                  href={`/courses/${course.id}`}
-                  className={
-                    "text-ui-foreground underline-offset-4 hover:underline"
-                  }
-                >
-                  {courseName(course)}
-                </UiLink>
-              ) : (
-                courseName(course)
-              )}
-              {taken ? (
-                <Tag meta={ATTENDANCE_RECORD_META.taken} />
-              ) : null}
-              {cover && cover.coverById !== cover.instructorId ? (
-                <Tag meta={ATTENDANCE_RECORD_META.covered} />
-              ) : null}
-            </div>
-          }
+          title={courseName(course)}
           description={
             `${formatSlot(course)} · ${formatDate(parseDateOnly(iso))}` +
             (cover
@@ -210,7 +195,6 @@ export async function ClassSession({
                 : "")
           }
         />
-      </div>
 
       <SegmentedLinks
         label="Class steps"

@@ -9,7 +9,7 @@ import { documentWordCount } from '@/lib/docs/formatting';
 import { documentExtensions } from '@/lib/docs/editor-extensions';
 import type { Attachment } from '@/lib/docs/types';
 import { EditorToolbar } from './editor-toolbar';
-import { Message } from './ui';
+import { Notice } from '@/components/ui-kit/notice';
 export function RichEditor({
   value,
   onChange,
@@ -87,7 +87,7 @@ export function RichEditor({
                 </Label>
               </>
             )}
-            <Message error={error} />
+            {error ? <Notice tone="error" live="alert" title={error} className="my-4" /> : null}
             <div className="form-actions">
               <Button
                 variant="outline"

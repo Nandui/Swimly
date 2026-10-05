@@ -114,7 +114,7 @@ export function SignInForm({ devAdminName, sharedDeviceName = null }: { devAdmin
             autoComplete="current-password"
           />
 
-          {error ? <Notice title={error} tone="error"></Notice> : null}
+          {error ? <Notice title={error} tone="error" live="alert" /> : null}
 
           <LoadingButton
             type="submit"

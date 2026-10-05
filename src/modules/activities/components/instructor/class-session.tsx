@@ -1,7 +1,6 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import {
-  ArrowLeft,
   ArrowRight,
   Check,
   ClipboardList,
@@ -20,7 +19,8 @@ import { can } from "@/lib/authz";
 import { courseName, formatSlot } from "@/modules/activities/lib/courses/constants";
 import { formatDate, parseDateOnly, today } from "@/lib/format";
 import { fullName } from "@/modules/activities/lib/students/constants";
-import { TeachingNotice } from "./teaching-ui";
+import { Notice } from "@/components/ui-kit/notice";
+import { PageHeader } from "@/components/ui-kit/page-header";
 import { StartClass } from "./start-class";
 import { InstructorClassNavigation } from "./class-navigation";
 import { ClassCompetencyOverview } from "./class-competency-overview";
@@ -43,22 +43,12 @@ export async function InstructorClassSession({
   const stepHref = (step: string) =>
     instructorClassHref(id, { ...params, date: iso, step });
   const header = (
-    <div className="space-y-3">
-      <Button asChild variant="ghost" className="-ml-3">
-        <Link href={home}>
-          <ArrowLeft aria-hidden="true" />
-          Your classes
-        </Link>
-      </Button>
-      <div className="flex flex-wrap items-center justify-between gap-3">
-        <div className="min-w-0 space-y-1">
-          <h1 className="text-2xl font-semibold">{name}</h1>
-          <p className="text-sm text-ui-muted-foreground">
-            {formatSlot(course)} · {formatDate(parseDateOnly(iso))}
-            {course.location ? ` · ${course.location}` : ""}
-          </p>
-        </div>
-        {view.state === "ready" ? (
+    <PageHeader
+      back={{ href: home, label: "Your classes" }}
+      title={name}
+      description={`${formatSlot(course)} · ${formatDate(parseDateOnly(iso))}${course.location ? ` · ${course.location}` : ""}`}
+      status={
+        view.state === "ready" ? (
           <p className="flex items-center gap-2 text-sm text-ui-muted-foreground">
             {view.register.taken ? (
               <Check className="size-4" aria-hidden="true" />
@@ -67,20 +57,20 @@ export async function InstructorClassSession({
             )}
             {view.register.taken ? "Attendance saved" : "Attendance to take"}
           </p>
-        ) : null}
-      </div>
-    </div>
+        ) : null
+      }
+    />
   );
   if (view.state !== "ready")
     return (
       <div className="flex flex-col gap-6">
         {header}
-        {view.state === "cancelled" ? <TeachingNotice title="This session is cancelled"><p>{view.cancellation.reason}</p><p>Attendance and competencies cannot be saved for this session.</p></TeachingNotice> : view.state === "wrong-site" ? (
-          <TeachingNotice title={`This class is at ${course.club.name}`}>
+        {view.state === "cancelled" ? <Notice tone="warning" title="This session is cancelled"><p>{view.cancellation.reason}</p><p>Attendance and competencies cannot be saved for this session.</p></Notice> : view.state === "wrong-site" ? (
+          <Notice tone="warning" title={`This class is at ${course.club.name}`}>
             <p>Choose that site in the site switcher to continue.</p>
-          </TeachingNotice>
+          </Notice>
         ) : view.state === "archived" ? (
-          <TeachingNotice title="This class is archived." />
+          <Notice tone="warning" title="This class is archived." />
         ) : (
           <section className="flex flex-col items-start gap-4 rounded-ui-lg border border-ui-border p-5">
             <h2 className="text-lg font-semibold">Ready to teach?</h2>
@@ -162,7 +152,7 @@ export async function InstructorClassSession({
       ) : (
         <>
           {!mayAssess ? (
-            <TeachingNotice title="You can view competencies but do not have permission to mark them." />
+            <Notice title="You can view competencies but do not have permission to mark them." />
           ) : null}
           <DeckChecklist
             courseId={id}

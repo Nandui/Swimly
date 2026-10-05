@@ -7,7 +7,7 @@ import { Button } from "@/components/shadcn/button";
 import { Checkbox } from "@/components/shadcn/checkbox";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/shadcn/collapsible";
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from "@/components/shadcn/dialog";
-import { Alert, AlertDescription } from "@/components/shadcn/alert";
+import { Notice } from "@/components/ui-kit/notice";
 import { Input } from "@/components/ui/input";
 import { LoadingButton } from "@/components/ui/loading-button";
 import { FormFeedbackProvider, useFormFeedback } from "@/components/ui/form-feedback";
@@ -92,7 +92,7 @@ export function AddSwimmer({ student, trigger, defaultOpen = false }: { student?
           <div className="space-y-2"><Label htmlFor={`${id}-status`}>Status</Label><Select name="status" defaultValue={student?.status ?? "ACTIVE"} disabled={pending}><SelectTrigger id={`${id}-status`} className="w-full"><SelectValue /></SelectTrigger><SelectContent><SelectItem className="min-h-11" value="ACTIVE">Active</SelectItem><SelectItem className="min-h-11" value="INACTIVE">Inactive</SelectItem></SelectContent></Select></div>
         </fieldset></div>
         <div className="shrink-0 space-y-3 border-t border-ui-border p-4 sm:px-6">
-          {error ? <Alert ref={summaryRef} tabIndex={-1} variant="destructive" role="alert"><AlertDescription>{error}</AlertDescription></Alert> : null}
+          {error ? <div ref={summaryRef} tabIndex={-1}><Notice tone="error" live="alert" title={error} /></div> : null}
           <DialogFooter><Button type="button" variant="outline" onClick={() => changeOpen(false)} disabled={pending}>Cancel</Button><LoadingButton type="submit" pending={pending}>{student ? "Save details" : "Add and open profile"}</LoadingButton></DialogFooter>
         </div>
       </form></FormFeedbackProvider>

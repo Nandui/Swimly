@@ -1,20 +1,13 @@
-import { Button } from '@/components/shadcn/button';
-import Link from 'next/link';
 import {
-  ArrowUpRight,
   BookOpen,
   FileCheck2,
   FileText,
   LifeBuoy,
   ShieldCheck,
   ClipboardList,
-  Check,
-  AlertCircle,
 } from 'lucide-react';
 import type { DocumentType, Member } from '@/lib/docs/types';
 import { Avatar as ProfileAvatar, AvatarFallback, initials } from '@/components/shadcn/avatar';
-import { Alert, AlertDescription } from '@/components/shadcn/alert';
-import { Empty, EmptyHeader, EmptyMedia, EmptyTitle, EmptyDescription } from '@/components/shadcn/empty';
 export const typeIcons = {
   SOP: FileCheck2,
   NOP: BookOpen,
@@ -65,54 +58,5 @@ export function PageHeading({
       </div>
       {action}
     </div>
-  );
-}
-export function EmptyState({
-  title,
-  description,
-  href,
-  label,
-  headingLevel = 3,
-}: {
-  title: string;
-  description: string;
-  href?: string;
-  label?: string;
-  headingLevel?: 2 | 3;
-}) {
-  const Heading = headingLevel === 2 ? 'h2' : 'h3';
-  return (
-    <Empty className="empty-state">
-      <EmptyHeader>
-        <EmptyMedia>
-          <BookOpen size={30} aria-hidden="true" />
-        </EmptyMedia>
-        <EmptyTitle>
-          <Heading>{title}</Heading>
-        </EmptyTitle>
-        <EmptyDescription>{description}</EmptyDescription>
-      </EmptyHeader>
-      {href && (
-        <Button asChild variant="outline">
-          <Link className="button secondary" href={href}>
-            {label}
-            <ArrowUpRight size={16} />
-          </Link>
-        </Button>
-      )}
-    </Empty>
-  );
-}
-export function Message({ error, success }: { error?: string | null; success?: string | null }) {
-  if (!error && !success) return null;
-  return (
-    <Alert
-      variant={error ? 'destructive' : 'default'}
-      className={`notice ${error ? 'error' : 'success'}`}
-      role={error ? 'alert' : 'status'}
-    >
-      {error ? <AlertCircle size={18} /> : <Check size={18} />}
-      <AlertDescription className="text-inherit">{error || success}</AlertDescription>
-    </Alert>
   );
 }

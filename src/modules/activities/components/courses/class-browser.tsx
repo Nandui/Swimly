@@ -1,9 +1,10 @@
 import Link from "next/link";
-import { ArrowLeft, ArrowRight, ChevronRight, CircleCheck, CircleX, SearchX, Waves } from "lucide-react";
+import { ChevronRight, CircleCheck, CircleX } from "lucide-react";
 import { Button } from "@/components/shadcn/button";
 import { Tag } from "@/components/ui-kit/tag";
+import { LinkPagination } from "@/components/ui-kit/link-pagination";
 import { Item, ItemGroup, ItemContent, ItemTitle } from "@/components/shadcn/item";
-import { Empty, EmptyContent, EmptyDescription, EmptyHeader, EmptyMedia, EmptyTitle } from "@/components/shadcn/empty";
+import { EmptyState } from "@/components/ui-kit/empty-state";
 import { AddClass } from "./add-class";
 import { CourseFilters } from "./course-filters";
 import { courseName, DAY_META, formatTime } from "@/modules/activities/lib/courses/constants";
@@ -62,16 +63,14 @@ export function ClassBrowser({ courses, params, todayDay, levels, instructors, c
             <span className={styles.arrow} data-motion="direction" aria-hidden="true"><ChevronRight className="size-full" /></span><span className="sr-only">View class</span>
           </Link></Item>
         </div>)}</ItemGroup>
-      </div> : <Empty className="border border-ui-border bg-ui-muted/30 py-12">
-        <EmptyHeader><EmptyMedia variant="icon">{active ? <SearchX /> : <Waves />}</EmptyMedia><EmptyTitle>{active ? "No classes match" : state === "archived" ? "No archived classes" : "No classes yet"}</EmptyTitle>
-          <EmptyDescription>{active ? "Try another level, day or site. You can clear the filters to see all classes." : state === "archived" ? "Archived classes will appear here with their history kept on record." : canManage ? "Add a weekly class to start filling the timetable." : "No weekly classes are available yet."}</EmptyDescription></EmptyHeader>
-        <EmptyContent>{active ? <Button asChild variant="outline"><Link href={resetHref}>{state === "archived" ? "Show archived classes" : "Show all classes"}</Link></Button> : null}</EmptyContent>
-      </Empty>}
-      {pages > 1 ? <nav aria-label="Class pages" className="flex items-center justify-between gap-2 pt-2">
-        {page > 1 ? <Button asChild variant="outline"><Link href={classBrowserHref(params, { page: page > 2 ? String(page - 1) : null })}><ArrowLeft aria-hidden="true" />Previous</Link></Button> : <Button variant="outline" disabled><ArrowLeft aria-hidden="true" />Previous</Button>}
-        <span className="text-sm text-ui-muted-foreground tabular-nums">{page} / {pages}<span className="sr-only"> pages</span></span>
-        {page < pages ? <Button asChild variant="outline"><Link href={classBrowserHref(params, { page: String(page + 1) })}>Next<ArrowRight aria-hidden="true" /></Link></Button> : <Button variant="outline" disabled>Next<ArrowRight aria-hidden="true" /></Button>}
-      </nav> : null}
+      </div> : <EmptyState
+        as="h2"
+        icon={active ? "searchX" : "waves"}
+        title={active ? "No classes match" : state === "archived" ? "No archived classes" : "No classes yet"}
+        hint={active ? "Try another level, day or site. You can clear the filters to see all classes." : state === "archived" ? "Archived classes will appear here with their history kept on record." : canManage ? "Add a weekly class to start filling the timetable." : "No weekly classes are available yet."}
+        action={active ? <Button asChild variant="outline"><Link href={resetHref}>{state === "archived" ? "Show archived classes" : "Show all classes"}</Link></Button> : undefined}
+      />}
+      <LinkPagination label="Class pages" page={page} pageCount={pages} pathname="/courses" query={Object.fromEntries(new URLSearchParams(classBrowserHref(params, { page: null }).split("?")[1] ?? ""))} />
     </div>
   </section>;
 }

@@ -2,32 +2,42 @@ import { Skeleton } from "@/components/shadcn/skeleton";
 
 /** What a page shows for the moment between a click and its data.
  *
- *  A module's `loading.tsx` renders this, so Next wraps each page in a
- *  Suspense boundary: the frame and this placeholder arrive at once and the
- *  real page streams in behind them. It costs no query.
+ *  Every `loading.tsx` re-exports this, so Next wraps each page in a Suspense
+ *  boundary: the frame and this placeholder arrive at once and the real page
+ *  streams in behind them. It costs no query.
  *
- *  Shaped like every page: a title, a description line, a sentence, rows. No
- *  spinner: a spinner says "wait", a page-shaped placeholder says "here it
- *  comes". */
-export function PageLoading() {
+ *  Shaped like every v2 page (DESIGN.md, "States"): a title and a description
+ *  line on the canvas, then a white panel of row cards. `tiles` adds the
+ *  figure tiles a report page opens with. Bars use the line colour so they
+ *  show on the white panel in both themes. No spinner: a spinner says "wait",
+ *  a page-shaped placeholder says "here it comes". */
+export function PageLoading({ tiles = false }: { tiles?: boolean }) {
   return (
     <div role="status" aria-busy="true" aria-live="polite" className="min-w-0 flex flex-col gap-6">
       <span className="sr-only">Loading</span>
       <div className="min-w-0 flex flex-col gap-2">
-        <Skeleton style={{ width: 176, height: 28 }} />
-        <Skeleton style={{ width: "min(20rem, 100%)", height: 16 }} />
+        <Skeleton className="h-(--pc-leading-page) w-44 max-w-full" />
+        <Skeleton className="h-(--pc-leading-caption) w-80 max-w-full" />
       </div>
-      <Skeleton style={{ width: "min(28rem, 100%)", height: 16 }} />
-      <div className="min-w-0 flex flex-col gap-3">
-        {Array.from({ length: 6 }, (_, i) => (
-          <div key={i} className="min-w-0 flex gap-4 items-center">
-            <Skeleton style={{ width: 160, height: 16 }} />
-            <Skeleton style={{ width: 96, height: 12 }} className="max-md:hidden" />
-            <div className="min-w-0 ml-auto">
-              <Skeleton style={{ width: 64, height: 12 }} />
+      {tiles ? (
+        <div className="pc-stats">
+          {Array.from({ length: 4 }, (_, i) => (
+            <div key={i} className="pc-stat">
+              <Skeleton className="h-(--pc-leading-caption) w-24 max-w-full" />
+              <Skeleton className="h-(--pc-leading-figure) w-16 max-w-full" />
             </div>
-          </div>
-        ))}
+          ))}
+        </div>
+      ) : null}
+      <div className="pc-panel">
+        <ul className="pc-rows">
+          {Array.from({ length: 6 }, (_, i) => (
+            <li key={i} className="pc-row">
+              <Skeleton className="h-(--pc-leading-caption) w-40 max-w-[60%]" />
+              <Skeleton className="h-(--pc-leading-caption) w-16 ml-auto" />
+            </li>
+          ))}
+        </ul>
       </div>
     </div>
   );

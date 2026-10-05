@@ -1,11 +1,8 @@
 "use client";
 
-import { Button } from "@/components/shadcn/button";
+import { PageError } from "@/components/ui-kit/page-state";
 
+/** The shared error state, with the one warning money needs: a save may have landed. */
 export default function RefundErrorPage({ retry }: { error: Error & { digest?: string }; retry: () => void }) {
-  return <div className="space-y-4">
-    <h1 className="text-2xl font-semibold">Refunds could not be loaded</h1>
-    <p className="text-sm text-ui-muted-foreground">Could not load this page. Try again. If you were saving a request, check its history before making another change.</p>
-    <Button className="min-h-11" onClick={retry}>Try again</Button>
-  </div>;
+  return <PageError retry={retry} hint="If you were saving a request, check its history before making another change." />;
 }

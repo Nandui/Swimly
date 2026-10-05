@@ -2,7 +2,6 @@ import type { Metadata } from "next";
 import UiLink from "next/link";
 import { Card } from "@/components/shadcn/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/shadcn/table";
-import { BackLink } from "@/components/ui-kit/back-link";
 import { EmptyState } from "@/components/ui-kit/empty-state";
 import { PageHeader } from "@/components/ui-kit/page-header";
 import { Lead } from "@/components/ui-kit/prose";
@@ -23,8 +22,7 @@ export default async function ParentChangesPage({ searchParams }: { searchParams
   const rows = await listParentChangeRequests(done ? "DONE" : "PENDING");
   return (
     <div className="min-w-0 flex flex-col gap-6">
-      <BackLink href="/students" current="Parent updates">Swimmers</BackLink>
-      <PageHeader title="Parent updates" description="Contact, emergency and medical corrections sent by parents from the parent app." />
+      <PageHeader back={{ href: "/students", label: "Swimmers" }} title="Parent updates" description="Contact, emergency and medical corrections sent by parents from the parent app." />
       <Lead>
         {done ? "Recently decided requests." : "Check each change, then apply it or decline it with a reply. The swimmer's record only changes when you apply."}{" "}
         <UiLink className="underline underline-offset-4" href={done ? "/students/parent-changes" : "/students/parent-changes?view=done"}>{done ? "Show waiting requests" : "Show decided requests"}</UiLink>

@@ -1,10 +1,11 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import type { ReactNode } from "react";
-import { CalendarCheck, CalendarDays, CheckCircle2, Clock3, TriangleAlert, UserX } from "lucide-react";
+import { CalendarCheck, CheckCircle2, Clock3, TriangleAlert, UserX } from "lucide-react";
 import { Button } from "@/components/shadcn/button";
 import { NativeSelect, NativeSelectOption } from "@/components/shadcn/native-select";
 import { MarkTimepoint, ShiftDialog } from "@/components/rota/actions";
+import { EmptyState } from "@/components/ui-kit/empty-state";
 import { Tag } from "@/components/ui-kit/tag";
 import { formatDate, formatTime, minutesNow } from "@/lib/format";
 import { BOOKING_KIND_META, ROTA_CHANGE_REASON_META, clock, type BookingKind, type RotaChangeReason } from "@/lib/rota/constants";
@@ -64,7 +65,7 @@ export default async function TodayPage({ searchParams }: { searchParams: Promis
         </div>
       </div>
       {!site ? (
-        <div className="module-empty"><CalendarDays aria-hidden="true" /><h2 className="font-semibold">No sites to show</h2><p className="mt-2 text-sm text-ui-muted-foreground">Your rota role does not cover a site yet.</p></div>
+        <EmptyState as="h2" icon="calendarDays" title="No sites to show" hint="Your rota role does not cover a site yet." />
       ) : (
         <div className="flex flex-col gap-4">
           <aside className="grid items-start gap-4 lg:grid-cols-2">

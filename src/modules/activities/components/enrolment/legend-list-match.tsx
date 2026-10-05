@@ -57,7 +57,7 @@ export function LegendListMatch() {
         <FileField id="legend-list-file" label="List from Legend" description="The .xlsx export from Legend." accept=".xlsx,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
           onChange={(e) => { const f = e.target.files?.[0] ?? null; setFile(f); setPreview(null); if (f) check(f); }} />
         {checking ? <p className="flex items-center gap-2 text-sm text-ui-muted-foreground"><FileSpreadsheet aria-hidden="true" className="size-4" />Matching member numbers…</p> : null}
-        {error ? <Notice tone="error" title={error} /> : null}
+        {error ? <Notice tone="error" live="alert" title={error} /> : null}
 
         {preview ? (
           <div className="flex flex-col gap-4">

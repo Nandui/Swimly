@@ -90,7 +90,7 @@ type Draft = { id: string; subjectUserId: string; period: string; summary: strin
 export function ReviewEditor({ review, name }: { review: Draft; name: string }) {
   const router = useRouter();
   const [pending, start] = useTransition();
-  const [message, setMessage] = useState<{ tone: "info" | "error"; text: string } | null>(null);
+  const [message, setMessage] = useState<{ tone: "success" | "error"; text: string } | null>(null);
   function save(form: HTMLFormElement) {
     const data = new FormData(form);
     setMessage(null);
@@ -99,7 +99,7 @@ export function ReviewEditor({ review, name }: { review: Draft; name: string }) 
         period: String(data.get("period") ?? ""), summary: String(data.get("summary") ?? ""),
         strengths: String(data.get("strengths") ?? ""), goals: String(data.get("goals") ?? ""), overall: String(data.get("overall") ?? "") as ReviewOverall | "",
       });
-      setMessage(result.ok ? { tone: "info", text: "Draft saved. Only you can see it." } : { tone: "error", text: result.error });
+      setMessage(result.ok ? { tone: "success", text: "Draft saved. Only you can see it." } : { tone: "error", text: result.error });
       if (result.ok) router.refresh();
     });
   }
@@ -116,7 +116,7 @@ export function ReviewEditor({ review, name }: { review: Draft; name: string }) 
           {Object.entries(REVIEW_OVERALL_LABELS).map(([value, label]) => <NativeSelectOption key={value} value={value}>{label}</NativeSelectOption>)}
         </NativeSelect>
       </Field>
-      {message ? <Notice tone={message.tone} title={message.text} /> : null}
+      {message ? <Notice tone={message.tone} live={message.tone === "error" ? "alert" : "status"} title={message.text} /> : null}
       <div className="flex flex-wrap gap-2">
         <Button type="submit" variant="outline" className="min-h-11" disabled={pending}><Save aria-hidden="true" />Save draft</Button>
         <ShareReview id={review.id} name={name} />

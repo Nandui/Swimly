@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { Suspense } from "react";
 import { notFound } from "next/navigation";
 import { HelpFrame } from "@/components/help/help-frame";
+import { PageLoading } from "@/components/ui-kit/page-loading";
 import { HelpBrowser } from "@/components/help/help-browser";
 import { HelpArticleView } from "@/components/help/help-article";
 import { articlesForScope, summarizeArticle } from "@/lib/help/catalogue";
@@ -38,6 +39,6 @@ export default async function HelpPage(props: Props) {
   const { scope, access, filters, articles, article } = await resolveHelp(props);
   return <HelpFrame scope={scope} home={access.home}>
     {article ? <HelpArticleView article={article} related={articles.filter(item => article.related.includes(item.slug))} scope={scope} filters={filters} action={access.action(article)} /> :
-      <Suspense fallback={<p role="status">Loading help guides…</p>}><HelpBrowser articles={articles.map(summarizeArticle)} scope={scope} /></Suspense>}
+      <Suspense fallback={<PageLoading />}><HelpBrowser articles={articles.map(summarizeArticle)} scope={scope} /></Suspense>}
   </HelpFrame>;
 }

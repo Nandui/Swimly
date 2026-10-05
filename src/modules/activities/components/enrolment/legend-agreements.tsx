@@ -1,6 +1,7 @@
 import Form from "next/form";
 import Link from "next/link";
-import { ArrowLeft, ArrowRight, X } from "lucide-react";
+import { X } from "lucide-react";
+import { LinkPagination } from "@/components/ui-kit/link-pagination";
 import { Button } from "@/components/shadcn/button";
 import { SearchField } from "@/components/ui-kit/search-field";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/shadcn/table";
@@ -86,11 +87,7 @@ export function LegendAgreements({ result, canConfirm, profiles, classes }: {
     </Table> : <div className="rounded-ui-md border border-ui-border bg-ui-muted/30 py-8"><EmptyState icon="clipboardCheck" title={q ? "No matching agreements" : view === "done" ? "No agreements confirmed yet" : "No outstanding agreements"}
       hint={q ? "Try another name or member number." : view === "done" ? "Confirm an agreement after updating it in Legend." : "All recorded active class places at this site have been confirmed."} /></div>}
     <p className="text-xs leading-relaxed text-ui-muted-foreground">Active enrolments only, one check per class place. “Needs checking” means no confirmation has been recorded yet.</p>
-    {pages > 1 ? <nav aria-label="Agreement pages" className="flex items-center justify-between gap-2 pt-2">
-      {page > 1 ? <Button asChild variant="outline" className="min-h-11"><Link href={href(view, page - 1)}><ArrowLeft aria-hidden="true" />Previous</Link></Button> : <Button variant="outline" className="min-h-11" disabled><ArrowLeft aria-hidden="true" />Previous</Button>}
-      <span className="text-sm text-ui-muted-foreground tabular-nums">{page} / {pages}<span className="sr-only"> pages</span></span>
-      {page < pages ? <Button asChild variant="outline" className="min-h-11"><Link href={href(view, page + 1)}>Next<ArrowRight aria-hidden="true" /></Link></Button> : <Button variant="outline" className="min-h-11" disabled>Next<ArrowRight aria-hidden="true" /></Button>}
-    </nav> : null}
+    <LinkPagination label="Agreement pages" page={page} pageCount={pages} pathname="/legend-agreements" query={{ ...(view === "done" ? { view: "done" } : {}), ...(q ? { q } : {}) }} />
     </div>
   </section>;
 }

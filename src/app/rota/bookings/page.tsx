@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 import Link from "next/link";
-import { CalendarRange } from "lucide-react";
+import { EmptyState } from "@/components/ui-kit/empty-state";
 import { Button } from "@/components/shadcn/button";
 import { NativeSelect, NativeSelectOption } from "@/components/shadcn/native-select";
 import { BookingDialog, CancelBooking } from "@/components/rota/bookings";
@@ -56,7 +56,7 @@ export default async function BookingsPage({ searchParams }: { searchParams: Pro
         </div>
       </div>
       {data.bookings.length === 0 ? (
-        <div className="module-empty"><CalendarRange aria-hidden="true" /><p className="font-semibold">No bookings</p><p className="mt-2 text-sm text-ui-muted-foreground">When a school, a party or a club books time that needs staff, add it here.</p></div>
+        <EmptyState icon="calendarRange" title="No bookings" hint="When a school, a party or a club books time that needs staff, add it here." />
       ) : (
         <ul className="module-list">
           {data.bookings.map((b) => {

@@ -223,6 +223,12 @@ now; Pencil draft or "Changes things"; Archive archived; Ban withdrawn; MapPin w
 HeartPulse medical; Eye read only; KeyRound administrator; Lock built in. Session blocks use `--pc-block-*` with their `--pc-on-block-*` text colour. The
 first row needing someone (`[data-first]`) is yellow; empty queues are muted. Every
 text/control pair meets 4.5:1 (text) or 3:1 (edges, focus) in both modes.
+Notices are `Notice` (`src/components/ui-kit/notice.tsx`), the only notice: tone info
+(sunken fill, blue icon, ink text), warning, error or success (soft tone fill, tone ink), each
+with its icon (Info, TriangleAlert, AlertCircle, CircleCheck) or a context icon passed as
+`icon` (the swimmer's medical notes use TriangleAlert). `live="alert"` only for an error caused
+by the person's action, `live="status"` for async results; static notices announce nothing.
+Never use the shadcn Alert directly.
 
 **Shape.** Controls, bar items, tags and segment items are pills (`--pc-radius-control`,
 999px); a segmented bar takes `--pc-radius-panel`, a pill on one row. Rows, tiles and nested cards are 16px (`--pc-radius-card`); panels and dialogs 24px
@@ -353,10 +359,42 @@ line. Multi-line boxes (textareas, notices) use 16px, never a pill.
   Instructor and Help) is a flex column with a 16px gap. It reaches blocks a page returns
   as direct children (a fragment), not ones inside its own `gap-6`/`space-y-6` wrapper; an
   inline-level child there (a back link, a lone button) needs `self-start`.
-- Page header: H1 and one line on the left, actions on the right aligned to the bottom,
-  the primary action last.
+- Page header (`PageHeader`): H1 and one line on the left, actions on the right aligned to
+  the bottom, the primary action last. The H1 holds the title only: status tags go in
+  `status`, first in the actions group before the buttons. On phones (767px and below) the
+  actions take their own row and the buttons share it; tags and icon buttons keep their
+  width. A child page passes `back={{ href, label }}`: one `BackLink` (the ghost pill,
+  chevron plus the parent's name, flush with the page edge, 44px) 4px above the H1. No
+  breadcrumbs, no hand-made back links; a page without PageHeader uses `BackLink` itself.
+- Pagination is `LinkPagination` only, at the foot of the list: outline Previous on the
+  left, a centred 12px muted caption ("26 to 50 of 1,102", or "Page 2 of 5"), Next on the
+  right. Links keep the other search params; client-state lists pass `onPage`.
 - Check every change at 375, 768, 1024 and 1280px in light and dark: no horizontal scroll,
   no clipped labels, no control under 44px, no link hidden in a scrolling bar.
+
+**States.** One pattern each, all in `src/components/ui-kit`:
+- Empty: `EmptyState` is the only entry point (never the shadcn `Empty` parts, no
+  hand-built `module-empty` blocks). The round icon tile (40px, `--pc-primary-soft` with a
+  blue 20px icon, the `.pc-tile-icon` look), a title at 18px/600, a 14px hint and at most
+  one action. Pass `as="h2"`/`"h3"` when the empty state stands in for a section's content,
+  `role="status"` when it replaces live results. On the canvas it is a white panel; inside a
+  panel or card it sits flat.
+- Loading: every `loading.tsx` re-exports `PageLoading` (`tiles` for report pages): two
+  header bars, then a `.pc-panel` of six `.pc-row` skeletons. Skeleton bars are `--pc-line`
+  so they show on the white panel in both modes, and stop pulsing under reduced motion.
+  Nested `loading.tsx` files stay, so a move within a module shows the placeholder again.
+  There is no root `loading.tsx`: it would stream every auth redirect and 404 as a 200.
+- Not found: a refused page declines to exist (`src/lib/page-guards.ts`), so "missing" and
+  "not in your role" are one state with neutral copy ("This page isn’t available", ask your
+  manager). Each module's `not-found.tsx` renders `PageNotFound` inside its frame (H1 "Page
+  not found", the empty state in a panel, a primary "Go to Home" or back action);
+  Instructor goes "Back to classes", a refund request "Back to requests", a document "Back
+  to the document library". A `notFound()` thrown by a layout (a module the role lacks)
+  lands on the root `src/app/not-found.tsx`: the same content in the sign-in `AuthFrame`.
+- Error: each module's `error.tsx` is `PageError` (H1, an error `Notice`, "Try again"
+  calling `retry`, which re-fetches; never `reset`). Refunds adds the "check its history"
+  hint. `src/app/error.tsx` catches Home and module layouts on the `AuthFrame` canvas, and
+  `src/app/global-error.tsx` brings its own document, typeface and tokens.
 
 **Copy.** For words people read; code and data names (`Club`, `clubId`, `/clubs`,
 permission keys) stay as they are.
@@ -629,7 +667,7 @@ authorizes, and its comment says why it is where it is.
 `/courses` with no `day` in the URL shows today's classes. The whole week is
 `day=any`, and the filter bar writes that value rather than deleting the key
 when the chip is cleared — an absent key means today, so deleting it would snap
-back. Every page has a `loading.tsx` above it (one file, at the `(app)`
+back. Every page has a `loading.tsx` above it (`PageLoading`, at each module
 segment) so the shell paints before the data does.
 
 ### The nav holds only pages that exist
@@ -819,7 +857,7 @@ is derived from the class/date, saved marks and class note; it needs no schema
 column. The action reads and checks it under the same course lock used for
 enrolment and cover, then writes the register and audit together. If another
 person saved a different version, the action returns the saved values without
-writing. A focused shadcn Alert compares the saved register with the draft;
+writing. A focused region with a warning `Notice` compares the saved register with the draft;
 the instructor can use the saved register or explicitly save their version.
 A second intervening save is checked again. An identical retry succeeds without
 rewriting records or adding audit rows.
@@ -858,7 +896,7 @@ src/modules/activities/components/ Activities feature components
 src/modules/registry.ts        every module's description and levels
 src/modules/contributions.ts   what modules add to Core pages, without imports
 src/components/ui-kit/         shared shadcn compositions — tag, page-header,
-                               empty-state, segmented-links
+                               empty-state, page-loading, page-state, segmented-links
 src/components/ui/             shadcn compositions for native form submission
 src/components/                Core and Work feature components
 src/lib/<domain>/data/         reads  — plain async functions, no "use server"

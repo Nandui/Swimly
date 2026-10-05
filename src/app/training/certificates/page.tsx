@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
-import { FileBadge } from "lucide-react";
+import { EmptyState } from "@/components/ui-kit/empty-state";
 import { Tag } from "@/components/ui-kit/tag";
 import { DeclineCertificate, VerifyCertificate } from "@/components/training/certificate-actions";
 import { formatDate, formatDateTime } from "@/lib/format";
@@ -28,7 +28,7 @@ export default async function CertificatesPage({ searchParams }: { searchParams:
         </div>
       </div>
       {rows.length === 0 ? (
-        <div className="module-empty"><FileBadge aria-hidden="true" /><h2 className="font-semibold">{done ? "Nothing checked yet" : "Nothing waiting"}</h2><p className="mt-2 text-sm text-ui-muted-foreground">Staff upload certificates in Turnfin Me. They appear here for the people you cover.</p></div>
+        <EmptyState as="h2" icon="certificate" title={done ? "Nothing checked yet" : "Nothing waiting"} hint="Staff upload certificates in Turnfin Me. They appear here for the people you cover." />
       ) : (
         <ul className="module-list">
           {rows.map((row) => {

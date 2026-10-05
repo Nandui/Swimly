@@ -1,5 +1,4 @@
 'use client';
-import { Alert } from '@/components/shadcn/alert';
 import { Dialog, DialogContent, DialogTitle, DialogDescription } from '@/components/docs/primitives/dialog';
 
 import { Card } from '@/components/shadcn/card';
@@ -29,7 +28,8 @@ import {
   DOC_STATUS_META,
 } from '@/lib/docs/types';
 import { RichEditor } from './rich-editor';
-import { PageHeading, Avatar, Message } from './ui';
+import { PageHeading, Avatar } from './ui';
+import { Notice } from '@/components/ui-kit/notice';
 import { Tag } from '@/components/ui-kit/tag';
 export type MailItem = {
   id: string;
@@ -147,7 +147,7 @@ export function AdminView({
           ))}
         </nav>
         <div className="settings-content">
-          <Message error={error} success={success} />
+          {error ? <Notice tone="error" live="alert" title={error} className="my-4" /> : success ? <Notice tone="success" live="status" title={success} className="my-4" /> : null}
           {tab === 'people' && (
             <Card asChild>
               <section className="panel staff-directory">
@@ -440,10 +440,11 @@ export function AdminView({
                   <Tag meta={DOC_STATUS_META[w.matrix.configured ? 'configured' : 'setupRequired']} />
                 </div>
                 {w.localMode && (
-                  <Alert role="status" className="notice warning">
-                    The local sample matrix is illustrative. Set and review your own definitions
-                    before operational use.
-                  </Alert>
+                  <Notice
+                    tone="warning"
+                    className="my-4"
+                    title="The local sample matrix is illustrative. Set and review your own definitions before operational use."
+                  />
                 )}
                 <div className="matrix-edit-grid">
                   {(['likelihood', 'severity'] as const).map((axis) => (
@@ -738,7 +739,7 @@ export function AdminView({
 
               </>
             )}
-            <Message error={error} />
+            {error ? <Notice tone="error" live="alert" title={error} className="my-4" /> : null}
             <div className="form-actions">
               <Button
                 variant="outline"

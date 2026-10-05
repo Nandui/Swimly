@@ -21,7 +21,8 @@ import {
 } from '@/lib/docs/types';
 import { Tag } from '@/components/ui-kit/tag';
 import { filterReading, type ReportFilters } from '@/lib/docs/reporting';
-import { PageHeading, Avatar, EmptyState } from './ui';
+import { PageHeading, Avatar } from './ui';
+import { EmptyState } from '@/components/ui-kit/empty-state';
 
 /** Where one person's required reading stands. */
 const readingStatus = (r: Pick<Requirement, 'status' | 'dueDate'>): DocStatus =>
@@ -310,10 +311,11 @@ export function ReportsView({
               </div>
             ) : (
               <EmptyState
+                as="h3"
+                icon="book"
                 title="No matching reading records"
-                description="Change your filters or assign required reading from a document."
-                href={hasFilters ? '/docs/reports' : '/docs/library'}
-                label={hasFilters ? 'Clear filters' : 'Open the library'}
+                hint="Change your filters or assign required reading from a document."
+                action={<Button asChild variant="outline"><Link href={hasFilters ? '/docs/reports' : '/docs/library'}>{hasFilters ? 'Clear filters' : 'Open the library'}</Link></Button>}
               />
             )}
             {visible.length > 0 && (

@@ -39,8 +39,6 @@
 .turnfin-module .module-row-title { font-size: var(--pc-text-body); line-height: var(--pc-leading-body); font-weight: 600; }
 .turnfin-module .module-row-arrow { color: var(--pc-ink-muted); transition: translate 200ms var(--pc-ease), color 120ms var(--pc-ease); }
 .turnfin-module .module-row:is(:hover, :focus-visible) .module-row-arrow { translate: 2px 0; color: var(--pc-ink); }
-.turnfin-module .module-empty { padding: 48px 24px; text-align: center; border: 0; border-radius: var(--pc-radius-panel); background: var(--pc-surface); }
-.turnfin-module .module-empty > svg { margin: 0 auto 12px; width: 40px; height: 40px; padding: 10px; border-radius: 999px; background: var(--pc-primary-soft); color: var(--pc-primary); }
 
 /* Panels */
 .turnfin-module .module-panel { padding: 24px; border: 0; border-radius: var(--pc-radius-panel); background: var(--pc-surface); box-shadow: none; }

@@ -1,5 +1,4 @@
 'use client';
-import { Alert } from '@/components/shadcn/alert';
 import { Dialog, DialogContent, DialogTitle, DialogDescription } from '@/components/docs/primitives/dialog';
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/shadcn/tabs';
 import {
@@ -19,11 +18,9 @@ import { Checkbox } from '@/components/shadcn/checkbox';
 import { Button } from '@/components/shadcn/button';
 import { Input } from '@/components/shadcn/input';
 import { Textarea } from '@/components/shadcn/textarea';
-import Link from 'next/link';
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import {
-  ArrowLeft,
   Cloud,
   CloudOff,
   Send,
@@ -46,8 +43,9 @@ import {
 } from '@/lib/docs/types';
 import { riskBand } from '@/lib/docs/content';
 import { RichEditor } from './rich-editor';
-import { Message } from './ui';
+import { Notice } from '@/components/ui-kit/notice';
 import { Tag } from '@/components/ui-kit/tag';
+import { BackLink } from '@/components/ui-kit/back-link';
 export function DocumentEditor({
   workspace: w,
   initial,
@@ -236,12 +234,7 @@ export function DocumentEditor({
       className="authoring-workspace"
     >
       <div className="breadcrumb">
-        <Link href={`/docs/documents/${initial.documentId}`}>
-          <ArrowLeft size={15} />
-          Document
-        </Link>
-        <span>/</span>
-        <span>Edit draft</span>
+        <BackLink href={`/docs/documents/${initial.documentId}`} label="Document" />
       </div>
       <div className="editor-page-heading">
         <div>
@@ -280,21 +273,24 @@ export function DocumentEditor({
           </Button>
         </div>
       </div>
-      <Message error={error} />
+      {error ? <Notice tone="error" live="alert" title={error} className="my-4" /> : null}
       {lockError && (
-        <Alert role="status" className="notice error">
-          <LockKeyhole size={19} />
-          <span>{lockError}</span>
-          <Button variant="outline" className="button secondary compact" onClick={() => void acquire()}>
-            <RefreshCw size={15} />
-            Reconnect
-          </Button>
-        </Alert>
+        <Notice
+          tone="error"
+          live="alert"
+          icon={LockKeyhole}
+          className="my-4"
+          title={lockError}
+          actions={
+            <Button variant="outline" onClick={() => void acquire()}>
+              <RefreshCw aria-hidden="true" />
+              Reconnect
+            </Button>
+          }
+        />
       )}
       {!locked && !lockError && (
-        <Alert role="status" className="notice">
-          Acquiring your editing session…
-        </Alert>
+        <Notice live="status" className="my-4" title="Acquiring your editing session…" />
       )}
       <div className="editor-section-switch">
         <TabsList aria-label="Editor sections">
@@ -304,9 +300,12 @@ export function DocumentEditor({
         <span>Draft → Independent review → Published</span>
       </div>
       {initial.feedback && (
-        <Alert role="status" className="notice warning">
-          <strong>Reviewer feedback:</strong> {initial.feedback}
-        </Alert>
+        <Notice
+          tone="warning"
+          className="my-4"
+          title="Reviewer feedback"
+          description={initial.feedback}
+        />
       )}
       <div className="editor-layout" data-editor-view={editorView}>
         <TabsContent value="write" forceMount className="editor-main">
@@ -571,9 +570,13 @@ export function DocumentEditor({
             </NativeSelect>
           </Label>
           {!approvers.length && (
-            <Message error="No independent approver is available. An administrator must assign an active approver who has not edited this revision." />
+            <Notice
+              tone="error"
+              className="my-4"
+              title="No independent approver is available. An administrator must assign an active approver who has not edited this revision."
+            />
           )}
-          <Message error={error} />
+          {error ? <Notice tone="error" live="alert" title={error} className="my-4" /> : null}
           <div className="form-actions">
             <Button
               variant="outline"
@@ -670,7 +673,11 @@ function RiskEditor({
           </Button>
         </div>
         {!w.matrix.configured && (
-          <Message error="The risk matrix must be configured in Administration before submission." />
+          <Notice
+            tone="error"
+            className="my-4"
+            title="The risk matrix must be configured in Administration before submission."
+          />
         )}
         {!c.riskRows.length && (
           <p className="empty-inline">Add the first hazard to start your assessment.</p>

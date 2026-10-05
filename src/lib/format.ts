@@ -146,6 +146,11 @@ export function formatTimeRange(startMinutes: number, endMinutes: number): strin
 
 const COUNT = new Intl.NumberFormat(LOCALE);
 
+/** A bare count with grouping, "1,204", for figures without a noun (a pager's "1 to 25 of 1,102"). */
+export function formatCount(n: number): string {
+  return COUNT.format(n);
+}
+
 /** "1 swimmer", "12 swimmers", "1,204 swimmers". Pass `many` when the plural
  *  is not the singular plus "s" ("1 class", "3 classes"). */
 export function plural(n: number, one: string, many: string = `${one}s`): string {

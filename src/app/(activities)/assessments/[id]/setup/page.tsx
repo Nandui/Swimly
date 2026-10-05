@@ -6,7 +6,6 @@ import { CancelSession, EditSession } from "@/modules/activities/components/asse
 import { WrongClub } from "@/components/clubs/wrong-club";
 import { AssessmentPublicationPanel } from "@/modules/activities/components/parents/assessment-publication";
 import { Button } from "@/components/shadcn/button";
-import { BackLink } from "@/components/ui-kit/back-link";
 import { PageHeader } from "@/components/ui-kit/page-header";
 import { getAssessmentProgrammeOptions, getAssessmentSession, getAssessmentTypeOptions } from "@/modules/activities/lib/assessments/data/assessments";
 import { sessionDay, sessionSpan } from "@/modules/activities/lib/assessments/constants";
@@ -26,8 +25,7 @@ export default async function SessionSetupPage({ params }: PageProps<"/assessmen
   if (session.clubId !== club.id) return <WrongClub what="This assessment session" owner={session.club} current={club} />;
   const [programmes, types, instructors] = await Promise.all([getAssessmentProgrammeOptions(), getAssessmentTypeOptions(), getInstructorOptions()]);
   return <div className="min-w-0 space-y-6">
-    <BackLink href="/assessments/setup" current="Session setup">Assessment setup</BackLink>
-    <PageHeader title={sessionDay(session)} description={`${sessionSpan(session)} · ${session.programme.name} · ${session.type?.name ?? "Kind not set"}`}
+    <PageHeader back={{ href: "/assessments/setup", label: "Assessment setup" }} title={sessionDay(session)} description={`${sessionSpan(session)} · ${session.programme.name} · ${session.type?.name ?? "Kind not set"}`}
       actions={<Button asChild variant="outline" className="min-h-11"><Link href={`/assessments/${id}`}>View swimmers</Link></Button>} />
     <AssessmentNav active="setup" manage />
     <section aria-labelledby="session-details-heading" className="space-y-4">

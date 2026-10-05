@@ -16,7 +16,8 @@ import {
   ShieldCheck,
 } from 'lucide-react';
 import { canWrite, type DocumentType, type Workspace } from '@/lib/docs/types';
-import { DocIcon, EmptyState } from './ui';
+import { DocIcon } from './ui';
+import { EmptyState } from '@/components/ui-kit/empty-state';
 import { Button } from '@/components/shadcn/button';
 import { DocumentList } from './document-list';
 
@@ -92,8 +93,10 @@ export function HomeView({ workspace: w }: { workspace: Workspace }) {
             </div>
             {/* Personal records live in Turnfin Me, the staff app, never on Work. */}
             <EmptyState
+              as="h3"
+              icon="book"
               title="Read and acknowledge in Turnfin Me"
-              description="Documents assigned to you, their deadlines and your acknowledgements are in Turnfin Me on your phone. The library here is open for looking things up at work."
+              hint="Documents assigned to you, their deadlines and your acknowledgements are in Turnfin Me on your phone. The library here is open for looking things up at work."
             />
             <div className="reading-panel-footer">
               <span>
@@ -173,10 +176,11 @@ export function HomeView({ workspace: w }: { workspace: Workspace }) {
           <Card asChild>
             <div className="panel">
               <EmptyState
+                as="h3"
+                icon="book"
                 title="No publications yet"
-                description="Approved documents for this facility will appear here once published."
-                href="/docs/library"
-                label="Explore the library"
+                hint="Approved documents for this facility will appear here once published."
+                action={<Button asChild variant="outline"><Link href="/docs/library">Explore the library</Link></Button>}
               />
             </div>
           </Card>

@@ -2,10 +2,10 @@
 
 import { useEffect, useRef, useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
-import { CalendarCheck, CheckCircle2, CircleX, List, Loader2, Table2, Users, RefreshCw } from "lucide-react";
+import { CheckCircle2, CircleX, List, Loader2, Table2, Users, RefreshCw } from "lucide-react";
 import { Button } from "@/components/shadcn/button";
 import { Tag } from "@/components/ui-kit/tag";
-import { Empty, EmptyDescription, EmptyHeader, EmptyMedia, EmptyTitle } from "@/components/shadcn/empty";
+import { EmptyState } from "@/components/ui-kit/empty-state";
 import { Item } from "@/components/shadcn/item";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/shadcn/tabs";
 import { capacityTone, courseName, formatTime, placesLeft } from "@/modules/activities/lib/courses/constants";
@@ -162,7 +162,7 @@ export function ScheduleCalendar({ courses, assessments, iso, todayIso, initialN
 }
 
 function CalendarEmpty() {
-  return <Empty className="border border-ui-border"><EmptyHeader><EmptyMedia variant="icon"><CalendarCheck aria-hidden="true" /></EmptyMedia><EmptyTitle>Nothing scheduled for this day</EmptyTitle><EmptyDescription>There are no classes or assessments scheduled at this pool on the selected day.</EmptyDescription></EmptyHeader></Empty>;
+  return <EmptyState as="h2" icon="calendarCheck" title="Nothing scheduled for this day" hint="There are no classes or assessments scheduled at this pool on the selected day." />;
 }
 
 function TimeHeading({ slot }: { slot: Pick<Slot, "start" | "phase"> }) {

@@ -205,7 +205,7 @@ export function FormDialog({
 
                 {error ? (
                   <div ref={summaryRef} tabIndex={-1}>
-                    <Notice tone="error" title={error} />
+                    <Notice tone="error" live="alert" title={error} />
                   </div>
                 ) : null}
               </div>

@@ -6,7 +6,7 @@ import { LoadingButton } from "@/components/ui/loading-button";
 import { FormFeedbackProvider, useFormFeedback } from "@/components/ui/form-feedback";
 import { Button } from "@/components/shadcn/button";
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from "@/components/shadcn/dialog";
-import { Alert, AlertDescription } from "@/components/shadcn/alert";
+import { Notice } from "@/components/ui-kit/notice";
 import type { ActionConfirmation, ActionResult, ConfirmationReply } from "@/lib/action-result";
 import { toast } from "@/lib/toast";
 import { withTimeout } from "@/lib/save-feedback";
@@ -49,7 +49,7 @@ export function ProfileActionDialog({ trigger, title, description, submitLabel =
         <div className={cn(wide ? "min-h-0 space-y-4 overflow-y-auto px-4 pb-4 sm:px-6 sm:pb-6" : "space-y-4")}>
         <fieldset disabled={pending || !!confirmation} hidden={!!confirmation} className="min-w-0 space-y-4">{children}</fieldset>
         {confirmation ? <section ref={confirmationHeading} tabIndex={-1} className="space-y-3" aria-label="Confirm this change"><h3 className="font-semibold">{confirmation.title}</h3><p className="whitespace-pre-line text-sm">{confirmation.description}</p></section> : null}
-        {error ? <Alert ref={summaryRef} tabIndex={-1} variant="destructive"><AlertDescription>{error}</AlertDescription></Alert> : null}
+        {error ? <div ref={summaryRef} tabIndex={-1}><Notice tone="error" live="alert" title={error} /></div> : null}
         </div>
         <div className={cn(wide && "flex shrink-0 flex-col gap-3 border-t border-ui-border p-4 sm:flex-row sm:items-center sm:justify-between sm:px-6")}>
         {wide && !confirmation ? <div className="min-w-0 text-sm">{footer}</div> : null}

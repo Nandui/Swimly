@@ -6,7 +6,7 @@ import { Button } from "@/components/shadcn/button";
 import { Input } from "@/components/ui/input";
 import { LoadingButton } from "@/components/ui/loading-button";
 import { Notice } from "@/components/ui-kit/notice";
-import { Empty, EmptyHeader, EmptyTitle, EmptyDescription } from "@/components/shadcn/empty";
+import { EmptyState } from "@/components/ui-kit/empty-state";
 import { parentAdminRequest, parentDateTime, PARENT_ACCOUNT_META, saveParentAdmin, type ManagedParentAccount } from "@/modules/activities/lib/parent/admin-client";
 import { ParentFormDialog, ParentReason } from "./parent-fields";
 
@@ -41,12 +41,13 @@ export function ParentAccounts() {
       <LoadingButton type="submit" className="min-h-11" pending={pending} pendingLabel="Searching…">Find account</LoadingButton>
     </form>
     <div ref={resultRef} tabIndex={-1} className="space-y-4 rounded-ui-lg focus-visible:outline-2 focus-visible:outline-ui-ring" aria-live="polite">
-      {error ? <Notice tone="error" title={error} /> : null}
-      {result && !account ? <Empty><EmptyHeader>
-        <EmptyTitle><h2>No account found</h2></EmptyTitle>
-        <p className="break-all text-sm font-medium">{result.email}</p>
-        <EmptyDescription>Check the address. A parent account is created when they first verify a sign-in code. You can approve their email on a swimmer’s profile before they sign in.</EmptyDescription>
-      </EmptyHeader></Empty> : null}
+      {error ? <Notice tone="error" live="alert" title={error} /> : null}
+      {result && !account ? <EmptyState
+        as="h2"
+        icon="userSearch"
+        title="No account found"
+        hint={<><span className="mb-1 block break-all font-medium text-ui-foreground">{result.email}</span>Check the address. A parent account is created when they first verify a sign-in code. You can approve their email on a swimmer’s profile before they sign in.</>}
+      /> : null}
       {account ? <section className="space-y-4 border-y border-ui-border py-6" aria-labelledby="parent-account-heading">
         <div className="flex flex-wrap items-start justify-between gap-4">
           <div className="min-w-0 space-y-2"><h2 id="parent-account-heading" className="break-words text-xl font-semibold">{account.name || "Parent account"}</h2><p className="break-all text-sm">{account.email}</p></div>

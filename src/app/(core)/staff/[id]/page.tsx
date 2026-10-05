@@ -3,7 +3,6 @@ import { cache } from "react";
 import { notFound } from "next/navigation";
 import UiLink from "next/link";
 import { Item, ItemActions, ItemContent, ItemDescription, ItemGroup, ItemTitle } from "@/components/shadcn/item";
-import { BackLink } from "@/components/ui-kit/back-link";
 import { PageHeader } from "@/components/ui-kit/page-header";
 import { Tag } from "@/components/ui-kit/tag";
 import {
@@ -52,10 +51,18 @@ export default async function PersonPage({ params }: { params: Promise<{ id: str
 
   return (
     <div className="min-w-0 flex flex-col gap-6">
-      <BackLink href="/staff" current={person.name}>Staff</BackLink>
       <PageHeader
+        back={{ href: "/staff", label: "Staff" }}
         title={person.name}
         description={person.email}
+        status={
+          person.isSuperadmin || !person.isActive ? (
+            <>
+              {person.isSuperadmin ? <Tag meta={PERSON_STATUS_META.superadmin} /> : null}
+              {!person.isActive ? <Tag meta={PERSON_STATUS_META.deactivated} /> : null}
+            </>
+          ) : null
+        }
         actions={
           <>
             {session.user.isSuperadmin && person.isActive ? <SuperadminToggle userId={person.id} name={person.name} value={person.isSuperadmin} /> : null}
@@ -63,10 +70,6 @@ export default async function PersonPage({ params }: { params: Promise<{ id: str
           </>
         }
       />
-      <div className="flex flex-wrap gap-2">
-        {person.isSuperadmin ? <Tag meta={PERSON_STATUS_META.superadmin} /> : null}
-        {!person.isActive ? <Tag meta={PERSON_STATUS_META.deactivated} /> : null}
-      </div>
 
       <section aria-labelledby="profile-heading" className="min-w-0 flex flex-col gap-3">
         <h2 id="profile-heading" className="text-xl font-semibold">Profile</h2>

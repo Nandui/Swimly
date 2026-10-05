@@ -42,8 +42,6 @@
 .turnfin-refunds .refund-row-amount { font-size: var(--pc-text-body); line-height: var(--pc-leading-body); font-weight: 700; font-variant-numeric: tabular-nums; }
 .turnfin-refunds .refund-row-arrow { color: var(--pc-ink-muted); transition: translate 200ms var(--pc-ease), color 120ms var(--pc-ease); }
 .turnfin-refunds .refund-row:is(:hover, :focus-visible) .refund-row-arrow { translate: 2px 0; color: var(--pc-ink); }
-.turnfin-refunds .refund-empty { padding: 48px 24px; text-align: center; border: 0; border-radius: var(--pc-radius-panel); background: var(--pc-surface); }
-.turnfin-refunds .refund-empty > svg { margin: 0 auto 12px; width: 40px; height: 40px; padding: 10px; border-radius: 999px; background: var(--pc-primary-soft); color: var(--pc-primary); }
 
 /* Panels */
 .turnfin-refunds .refund-request-form > fieldset { display: grid; gap: 24px; }

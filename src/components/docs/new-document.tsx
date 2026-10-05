@@ -7,8 +7,8 @@ import { Textarea } from '@/components/shadcn/textarea';
 import { Button } from '@/components/shadcn/button';
 import { useEffect, useRef, useState } from 'react';
 import { useRouter } from 'next/navigation';
-import Link from 'next/link';
-import { ArrowRight, ArrowLeft } from 'lucide-react';
+import { ArrowRight } from 'lucide-react';
+import { BackLink } from '@/components/ui-kit/back-link';
 import {
   documentTypes,
   type Workspace,
@@ -16,7 +16,8 @@ import {
   type DocumentContent,
 } from '@/lib/docs/types';
 import { createDocumentAction } from '@/app/docs/actions';
-import { DocIcon, PageHeading, Message } from './ui';
+import { DocIcon, PageHeading } from './ui';
+import { Notice } from '@/components/ui-kit/notice';
 const descriptions = {
   SOP: 'A clear, repeatable way to complete a task.',
   NOP: 'Everyday arrangements for running your facility.',
@@ -53,10 +54,7 @@ export function NewDocument({ workspace: w }: { workspace: Workspace }) {
   return (
     <div className="new-document">
       <div className="breadcrumb">
-        <Link href="/docs/library">
-          <ArrowLeft size={15} />
-          Library
-        </Link>
+        <BackLink href="/docs/library" label="Library" />
       </div>
       <PageHeading
         eyebrow="Give good guidance a home"
@@ -219,7 +217,7 @@ export function NewDocument({ workspace: w }: { workspace: Workspace }) {
               />
               <small>Optional. You can add or refine this while writing.</small>
             </Label>
-            <Message error={error} />
+            {error ? <Notice tone="error" live="alert" title={error} className="my-4" /> : null}
             <div className="form-actions">
               <Button type="button" variant="outline" onClick={() => setStep(1)} disabled={busy}>
                 Back

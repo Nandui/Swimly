@@ -72,7 +72,7 @@ export function FollowUpHistory({ studentId, name, canRecord, summary, presentat
             {canRecord && <Button disabled={loading || saving || !data} className="min-h-11" onClick={() => { setAdding(true); setSaved(''); }}><Plus aria-hidden="true" />Add contact or note</Button>}
             <Button variant="ghost" className="min-h-11" disabled={loading || saving} onClick={() => void load()}><RefreshCw aria-hidden="true" />Reload history</Button>
           </div>
-          {error && <Notice tone="error" title={error} />}
+          {error && <Notice tone="error" live="alert" title={error} />}
           {saved && <p className="text-sm text-ui-muted-foreground" role="status">{saved}</p>}
           {adding && canRecord && <form onSubmit={save} className="space-y-4 rounded-ui-lg border border-ui-border bg-ui-muted/30 p-4">
             <h3 className="font-semibold">Record contact or work completed</h3>

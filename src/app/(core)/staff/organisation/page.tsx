@@ -1,6 +1,5 @@
 import type { Metadata } from "next";
 import { Item, ItemActions, ItemContent, ItemDescription, ItemGroup, ItemTitle } from "@/components/shadcn/item";
-import { BackLink } from "@/components/ui-kit/back-link";
 import { EmptyState } from "@/components/ui-kit/empty-state";
 import { PageHeader } from "@/components/ui-kit/page-header";
 import { Lead, Num } from "@/components/ui-kit/prose";
@@ -23,8 +22,8 @@ export default async function OrganisationPage() {
 
   return (
     <div className="min-w-0 flex flex-col gap-6">
-      <BackLink href="/staff" current="Organisation">Staff</BackLink>
       <PageHeader
+        back={{ href: "/staff", label: "Staff" }}
         title="Organisation"
         description={`How ${organisation?.name ?? "the organisation"} is arranged: the departments people belong to and the qualifications they hold.`}
         actions={<SaveDepartment sites={sites} />}

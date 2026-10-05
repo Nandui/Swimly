@@ -3,7 +3,7 @@
 import { useId, useState, useTransition, type ComponentProps } from "react";
 import { useRouter } from "next/navigation";
 import { Plus } from "lucide-react";
-import { Alert, AlertDescription } from "@/components/shadcn/alert";
+import { Notice } from "@/components/ui-kit/notice";
 import { Button } from "@/components/shadcn/button";
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from "@/components/shadcn/dialog";
 import { Input } from "@/components/ui/input";
@@ -47,7 +47,7 @@ export function AddClass({ levels, instructors, workingSite }: { levels: LevelOp
         });
       }}>
         <div className="min-h-0 overflow-y-auto"><fieldset disabled={pending} className="min-w-0 space-y-5 p-6">
-          {!levels.length ? <Alert><AlertDescription>No active levels are available. Add a level before creating a class.</AlertDescription></Alert> : null}
+          {!levels.length ? <Notice tone="warning" title="No active levels are available. Add a level before creating a class." /> : null}
           <Select id={`${id}-level`} name="levelId" label="Level" required disabled={pending} placeholder="Choose a level" options={[...groups.entries()].map(([programmeId, group]) => ({id: programmeId, title: group.name, options: group.levels.map(level => ({value: level.id, label: level.name}))}))} />
           <Entry name="name" label="Class name" maxLength={80} optional hint="Leave blank to use the level name." />
           <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
@@ -60,7 +60,7 @@ export function AddClass({ levels, instructors, workingSite }: { levels: LevelOp
           <Entry name="location" label="Pool area" maxLength={80} optional placeholder="Learner Pool, Lane 3" />
         </fieldset></div>
         <div className="shrink-0 space-y-3 border-t border-ui-border p-4 sm:px-6">
-          {error ? <Alert ref={summaryRef} tabIndex={-1} variant="destructive" role="alert"><AlertDescription>{error}</AlertDescription></Alert> : null}
+          {error ? <div ref={summaryRef} tabIndex={-1}><Notice tone="error" live="alert" title={error} /></div> : null}
           <DialogFooter><Button type="button" variant="outline" disabled={pending} onClick={() => changeOpen(false)}>Cancel</Button><LoadingButton type="submit" pending={pending} pendingLabel="Adding class…" disabled={!levels.length}>Add class</LoadingButton></DialogFooter>
         </div>
       </form></FormFeedbackProvider>

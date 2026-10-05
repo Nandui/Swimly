@@ -97,7 +97,7 @@ export function ConfirmAction({
               <div>{description}</div>
             </AlertDialogDescription>
           </AlertDialogHeader>
-          {error ? <Notice tone="error" title={error} /> : null}
+          {error ? <Notice tone="error" live="alert" title={error} /> : null}
           <AlertDialogFooter>
             <AlertDialogCancel disabled={pending}>Cancel</AlertDialogCancel>
             <LoadingButton

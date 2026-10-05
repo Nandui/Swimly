@@ -1,7 +1,7 @@
 "use client";
 import { useEffect, useRef } from "react";
 import { Button } from "@/components/shadcn/button";
-import { TeachingNotice } from "@/modules/activities/components/instructor/teaching-ui";
+import { Notice } from "@/components/ui-kit/notice";
 import { ATTENDANCE_STATUS_META } from "@/modules/activities/lib/attendance/constants";
 import type { DraftMark } from "@/modules/activities/lib/attendance/draft";
 import type { RegisterLine } from "@/modules/activities/lib/attendance/data/register";
@@ -45,7 +45,7 @@ export function RegisterConflict({
       aria-label="Saved register differences"
       tabIndex={-1}
     >
-      <TeachingNotice title="Review the saved attendance">
+      <Notice tone="warning" title="Review the saved attendance">
         <p>
           Your draft has not replaced the saved attendance. Compare the
           differences, then choose which version to keep.
@@ -99,7 +99,7 @@ export function RegisterConflict({
             Save my version
           </Button>
         </div>
-      </TeachingNotice>
+      </Notice>
     </div>
   );
 }
