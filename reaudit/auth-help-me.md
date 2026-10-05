@@ -1,0 +1,7 @@
+# Re-audit: auth-help-me (PASSED HP-01, ME-01, ME-02, ME-03)
+1. [medium] /switch QuickSwitch rows (outline Button + .pc-row) don't hover and lose 16px inset: widen a.pc-row:hover/:focus-visible and [data-first] hover to :is(a, button).pc-row (poolside.css ~491-503); add `.turnfin-app button.pc-row { padding: 12px 16px }` after control rules; fix comment session-forms.tsx:60
+2. [medium] Help copy assumes two sites ("both sites", "either site"): guides-management.ts:57,59; guides-swimmers.ts:10,13,58; guides-start.ts:31,34; guides-classes.ts:178; screenshots.ts:108 -> neutral ("any of your sites", "every site", "another site"); add /\b(both|either) sites?\b/i to retired regex in help.test.ts:71
+3. [medium] Help move-swimmer step 3 screenshot shows an empty Move dialog: make the capture select an open class at the swimmer's level (sandbox data / capture.mjs plan), crop to the dialog; recapture with HELP_PLAYWRIGHT_MODULE=/opt/node-tools/node_modules/playwright/index.mjs CHROME=/opt/pw-browsers/chromium HELP_CAPTURE_ONLY=<id>; update manifest
+4. [low] poolside.css has two a.pc-row[aria-current] rules (:494 blue edge for Docs queues, :515 Help transparent) — keep one or scope Help's to .tf-help
+5. [low] Help article "Before you start": one requirement renders as a <ul>; render a <p> when before.length === 1 — help-article.tsx
+6. [low] /help "All guides" order differs from topic order: sort by HELP_CATEGORIES index (stable) — catalogue.ts or help-browser.tsx

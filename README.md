@@ -40,6 +40,10 @@ The sandbox restarts empty, so find record ids with:
 
 Refunds, Docs documents and a started class have to be created through the UI. Use fictional data only.
 
+## Status, 5 October 2026: complete
+
+All 49 tasks are applied, gated and pushed on `redesign` (12 commits after `01f9aa2`), plus one re-audit round and its fixes (`reaudit/*.md`). The earlier `dc7c374`/`d126fa5` were lost with the old machine and everything was redone. Open owner decisions are listed in the final recap: Rota Absences scope, viewer job titles, "shift" vs "duty", tables as rows on phones, the Account pill, Rota Today's timeline. Cloud helpers: `AGENT-BRIEF.md`, `LANE-BRIEF.md`, `REAUDIT-BRIEF.md`, `RESIDUAL-BRIEF.md`, `gate.sh`, `peek.py`, `tools/seed-ui.mjs` (fills the sandbox with fictional refunds, documents and a started class).
+
 ## Status when the work moved to the cloud (4 October 2026)
 
 **Done:**

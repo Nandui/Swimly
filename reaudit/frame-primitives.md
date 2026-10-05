@@ -1,0 +1,13 @@
+# Re-audit: frame-primitives (PASSED all SYS except SYS-05, SYS-14; FINAL-01 passed)
+1. [medium] Sheets have no shadow (Tailwind reads shadow-[var(--pc-shadow-overlay)] as a colour): use shadow-(--pc-shadow-overlay) or add [data-slot='sheet-content'] to the shadow rule — shadcn/sheet.tsx:69; poolside.css:275
+2. [low] 44px close X is primary blue (ghost colour rule wins): scoped rule making dialog/sheet close X var(--pc-ink-muted) (+hover); drop dead utility — poolside.css after ~234; dialog.tsx:85; sheet.tsx
+3. [medium] WrongClub copy "club" (same as fresh-eyes 3) — clubs/wrong-club.tsx:27,31
+4. [low] Create triggers "Add level/programme/person/site/competency/role/session/course" -> "Add a <noun>" (DESIGN copy); update help-screenshot clicks and guides that name them — curriculum/level-actions.tsx:93,98,241,246; programme-actions.tsx:89,94; clubs/club-actions.tsx:42,47; staff/person-actions.tsx:131,136; staff/role-actions.tsx:198; training/manage-actions.tsx:119; rota/actions.tsx:86; people/people-actions.tsx:215,255; assessments/session-actions.tsx:228
+5. [low] /docs/work queue row aria-current="page" -> "true" — docs/work.tsx:182
+6. [low] /schedule at 375: seven day tiles 41px wide (<44) — make each ≥44px (smaller gap or wrap) — poolside.css:221-224 + schedule week strip
+7. [low] Page bar before hydration hides the current page when it lives under More: render More as a non-wrapping last item (or put the active link first in the fallback) — workspace/module-shell.tsx:63-80; poolside.css:364
+8. [low] Empty-state titles written as sentences/with full stops; shorten to "No <things> yet/match", move detail to hint — analytics/instructor-report.tsx:95; analytics/dashboard.tsx:33; instructor/class-competency-overview.tsx:18; instructor/assessment-session.tsx:38; instructor/class-session.tsx:135; docs/document-editor.tsx:557; app/rota/bookings/page.tsx:46
+9. [low] toLocaleString("en-IE") / no-locale counts: use formatCount/plural — legend-agreements.tsx:18; legend-list-match.tsx:14; swimmer-browser.tsx:15; docs/rich-editor.tsx:159
+10. [low] Four initials helpers (shadcn/avatar.tsx initials, lib/format.ts:233 nameInitials, (core)/staff/page.tsx:134 initialsOf, rota/absences/page.tsx:26): keep one (format.ts nameInitials is server-safe; avatar re-exports it), update callers
+11. [low] Dead/contradicting CSS: duplicate a.pc-row[aria-current] (poolside.css:493-494 vs 515) — keep one; delete orphan comments poolside.css:298-301; delete shadcn.css:133-141 [aria-current=page] soft fill block
+12. [low] scripts/*/fixture.jsx still import @fontsource/plus-jakarta-sans/500.css — remove (legend-agreements, move-readiness, follow-up, analytics, refunds, assessment-workspace, docs previews)

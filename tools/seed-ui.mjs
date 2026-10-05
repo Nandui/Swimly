@@ -230,12 +230,13 @@ async function seedRefunds() {
 // alex@ (superadmin) authors; liam@ (Swim school manager, docs.approve) independently approves.
 async function newDocument({ type, title, summary, body }) {
   await go('/docs/documents/new');
-  await click({ css: `[role=radio][aria-label="${type}"]` });
+  await click({ css: `[role=radio][value="${type}"]` });
   await click({ text: 'Use this template' });
-  await waitFor(`!!document.querySelector('form.new-document-form')`, 'the document essentials form');
-  await fill('form.new-document-form input[placeholder^="e.g."]', title);
-  await fill('form.new-document-form textarea', summary);
-  await click({ text: 'Create draft and start writing', scope: 'form.new-document-form' });
+  const form = 'form[aria-labelledby="essentials-heading"]';
+  await waitFor(`!!document.querySelector('${form}')`, 'the document essentials form');
+  await fill(`${form} input[placeholder="Pool opening procedure"]`, title);
+  await fill(`${form} textarea`, summary);
+  await click({ text: 'Create draft and start writing', scope: form });
   const path = await waitFor(`/^\\/docs\\/documents\\/[^/]+\\/edit$/.test(location.pathname) && location.pathname`, `the editor for "${title}"`, 30000);
   // Wait for the editing lease, then type into the rich editor and save.
   await holdLease();
