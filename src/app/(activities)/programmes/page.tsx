@@ -126,7 +126,7 @@ function ProgrammeTable({
                 <UiLink
                   href={`/programmes/${programme.id}`}
                   className={
-                    "text-ui-foreground underline-offset-4 hover:underline font-medium"
+                    "text-ui-foreground underline-offset-4 hover:underline font-semibold"
                   }
                 >
                   {programme.name}

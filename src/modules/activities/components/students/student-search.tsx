@@ -177,7 +177,7 @@ export function StudentSearch({
                         }}
                       >
                         <span>
-                          <span className="block font-medium">
+                          <span className="block font-semibold">
                             {fullName(hit)}
                           </span>
                           <span className="block text-xs text-ui-muted-foreground">

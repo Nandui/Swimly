@@ -38,7 +38,7 @@ export function AddNote({ subjectUserId, name }: { subjectUserId: string; name: 
         <Textarea id="hr-note-body" name="body" rows={6} required minLength={3} maxLength={5000} />
       </Field>
       <fieldset className="space-y-2">
-        <legend className="text-sm font-medium">Who can read it</legend>
+        <legend className="text-sm font-semibold">Who can read it</legend>
         <RadioGroup value={visibility} onValueChange={setVisibility} className="gap-2">
           {NOTE_VISIBILITIES.map((key) => (
             <ChoiceRow key={key} type="radio" id={`hr-vis-${key}`} value={key} title={NOTE_VISIBILITY_META[key].label} hint={NOTE_VISIBILITY_META[key].hint} />

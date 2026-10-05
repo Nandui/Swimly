@@ -247,6 +247,10 @@ body.turnfin-app { background: var(--pc-outer); }
    (0,3,0), so the inset rings on rail, segmented, module and refund rows still win. Fields draw
    their own edge, ring and halo instead (below). */
 .turnfin-app :is(a, button, summary, [role='tab'], :where([tabindex]:not([tabindex='-1']))):focus-visible { outline: 2px solid var(--pc-focus); outline-offset: 2px; }
+/* Headings and regions given tabindex=-1 are script focus targets (a step or result heading),
+   never reached with Tab, so they draw no ring; Chrome would otherwise paint its black default
+   after a script focus. Controls with tabindex=-1 (menu items, roving radios) keep the ring. */
+.turnfin-app :is(h1, h2, h3, h4, h5, h6, main, section, [role='region'], [role='status'])[tabindex='-1']:focus { outline: none; }
 /* Editor toolbar controls and tabs are round, like every control. */
 .turnfin-docs :is(.editor-toolbar .ui-motion-press, .editor-toolbar [data-slot='select-trigger'], .editor-toolbar select) { border-radius: var(--pc-radius-control); }
 .turnfin-app [data-slot='tabs-trigger'] { border-radius: var(--pc-radius-control); }

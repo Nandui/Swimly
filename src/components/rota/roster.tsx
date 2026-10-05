@@ -152,7 +152,7 @@ export function RosterWeek({ roster, days, today, siteId, manage, shifts, activi
           const people = shown.flatMap((g) => g.people).flatMap((p) => p.days[i].map((c) => ({ p, c }))).sort((x, y) => x.c.start - y.c.start);
           return (
             <section key={d.iso} aria-labelledby={`agenda-${d.iso}`} className="flex flex-col gap-2">
-              <h2 id={`agenda-${d.iso}`} className="text-base">
+              <h2 id={`agenda-${d.iso}`} className="text-sm">
                 <Link href={`/rota/day?${new URLSearchParams({ site: siteId, date: d.iso })}`} aria-current={d.today ? "date" : undefined}
                   className="inline-flex min-h-11 items-center gap-2 font-semibold underline-offset-4 hover:underline">
                   {d.weekday} {d.date}{d.today ? " · today" : ""}

@@ -159,6 +159,8 @@
   [data-slot="input"],
   [data-slot="textarea"] {
     min-height: 2.75rem;
+    /* Deliberate off-scale 16px: below it iOS zooms on focus. The only 16px rule for
+       command-input (swimmer and instructor search); poolside.css restores 14px on desktops. */
     font-size: 1rem;
   }
   [data-slot="command-input-wrapper"] {

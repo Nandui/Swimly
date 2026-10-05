@@ -41,7 +41,7 @@ export function WorkspaceSearch({ onSelect }: { onSelect: (hit: StudentHit) => v
       <CommandList aria-busy={pending}>
         {!query.trim() ? <CommandEmpty>Start typing a name or member number.</CommandEmpty> : pending ? <div role="status" className="flex items-center justify-center gap-2 p-6 text-sm text-ui-muted-foreground"><Loader2 className="size-4 animate-spin" aria-hidden="true" />Searching…</div> : error ? <div className="p-2"><Notice tone="error" live="alert" title={error} /></div> : hits.length === 0 ? <CommandEmpty>No swimmers found.</CommandEmpty> : null}
         {hits.length ? <CommandGroup heading="Swimmers">{hits.map(hit => <CommandItem key={hit.id} value={hit.id} onSelect={() => { changeOpen(false); onSelect(hit); }}>
-          <UserRound aria-hidden="true" /><span><span className="block font-medium">{fullName(hit)}</span><span className="block text-xs text-ui-muted-foreground">{ageLabel(hit.dateOfBirth)}{hit.memberNumber ? ` · ${hit.memberNumber}` : ""}{hit.status === "INACTIVE" ? " · Inactive" : ""}</span></span>
+          <UserRound aria-hidden="true" /><span><span className="block font-semibold">{fullName(hit)}</span><span className="block text-xs text-ui-muted-foreground">{ageLabel(hit.dateOfBirth)}{hit.memberNumber ? ` · ${hit.memberNumber}` : ""}{hit.status === "INACTIVE" ? " · Inactive" : ""}</span></span>
         </CommandItem>)}</CommandGroup> : null}
       </CommandList>
     </CommandDialog>;

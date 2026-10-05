@@ -15,7 +15,6 @@ import { getCurrentClub } from "@/lib/clubs/current";
 // Poolside Clear across the whole app: its typeface, self-hosted in every
 // environment, and its tokens and system rules (scoped to .turnfin-app on <body>).
 import "@fontsource/plus-jakarta-sans/400.css";
-import "@fontsource/plus-jakarta-sans/500.css";
 import "@fontsource/plus-jakarta-sans/600.css";
 import "@fontsource/plus-jakarta-sans/700.css";
 import "./globals.css";

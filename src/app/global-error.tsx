@@ -3,7 +3,6 @@
 // global-error replaces the root layout, so it brings its own document, the
 // typeface and the Poolside Clear tokens. No theme provider: it follows the device.
 import "@fontsource/plus-jakarta-sans/400.css";
-import "@fontsource/plus-jakarta-sans/500.css";
 import "@fontsource/plus-jakarta-sans/600.css";
 import "@fontsource/plus-jakarta-sans/700.css";
 import "./globals.css";

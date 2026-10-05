@@ -47,7 +47,7 @@ export default async function DetailRequestsPage({ searchParams }: { searchParam
               <TableBody>
                 {row.changes.map((change) => (
                   <TableRow key={change.field}>
-                    <TableCell className="font-medium">{change.label}</TableCell>
+                    <TableCell className="font-semibold">{change.label}</TableCell>
                     <TableCell className="whitespace-pre-wrap text-ui-muted-foreground">{change.current || "Not recorded"}</TableCell>
                     <TableCell className="whitespace-pre-wrap">{change.proposed || "Remove"}</TableCell>
                   </TableRow>

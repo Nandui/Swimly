@@ -98,7 +98,7 @@ export function FollowUpHistory({ studentId, name, canRecord, summary, presentat
             <ol className={presentation === 'queue' ? 'space-y-4' : 'divide-y divide-ui-border'}>{data?.entries.map(entry => <li key={entry.id} className={presentation === 'queue' ? 'space-y-3 rounded-ui-lg border border-ui-border p-4' : 'space-y-3 py-5 first:pt-0'}>
               <div className="flex flex-wrap items-center justify-between gap-2"><Tag meta={CONTACT_OUTCOMES[entry.outcome]} /><time className="text-xs text-ui-muted-foreground" dateTime={entry.occurredOn}>{formatDate(parseDateOnly(entry.occurredOn))}</time></div>
               <p className="text-sm font-semibold">{CONTACT_CHANNELS[entry.channel]} · {entry.actorName}</p>
-              <p className="whitespace-pre-wrap break-words text-sm leading-relaxed">{entry.note}</p>
+              <p className="whitespace-pre-wrap break-words text-sm">{entry.note}</p>
               <p className="text-xs text-ui-muted-foreground">{entry.nextContactOn ? `Next follow-up: ${formatDate(parseDateOnly(entry.nextContactOn))}` : 'No follow-up date set'}<br />Recorded {formatDateTime(new Date(entry.createdAt))} · {entry.clubName}</p>
             </li>)}</ol>
             {data?.nextBefore && <Button variant="outline" className="min-h-11" disabled={loading || saving} onClick={() => void load(data.nextBefore!)}>Load earlier updates</Button>}

@@ -411,6 +411,16 @@ line. Multi-line boxes (textareas, notices) use 16px, never a pill.
   right. Links keep the other search params; client-state lists pass `onPage`.
 - Check every change at 375, 768, 1024 and 1280px in light and dark: no horizontal scroll,
   no clipped labels, no control under 44px, no link hidden in a scrolling bar.
+- Type check: in `src` and `apps/me/src` these return nothing.
+  `.ts`/`.tsx`: `(^|[^-a-z])(tracking|leading)-[a-z0-9]`, `\bfont-medium\b`,
+  `\btext-(base|xl|3xl|4xl|5xl)\b`, `text-\[[0-9.]+(px|rem|em)\]` (colour values such as
+  `text-[var(--pc-…)]` are fine). `*.css`: `font-weight: 500`, and literal `font-size`,
+  `line-height` or `letter-spacing` (use `--pc-text-*` and `--pc-leading-*`). The 500 face is
+  not loaded, so anything asking for it falls back to 400. Exceptions: the H1 rules
+  (-0.01em), `.document-prose` (document content scales with the reader's
+  text size), the 16px field and command-input rules on touch (no zoom on focus), and print.
+  `poolside.css` still maps `--text-base`, `--text-xl` and `--text-3xl` onto the scale as a
+  safety net for shadcn internals.
 
 **States.** One pattern each, all in `src/components/ui-kit`:
 - Empty: `EmptyState` is the only entry point (never the shadcn `Empty` parts, no
@@ -1060,7 +1070,9 @@ See [docs/instructor.md](docs/instructor.md) for the flow and verification.
 - Every status comes from a domain metadata map and reads in both themes.
 - No undefined theme variables or colours outside the app tokens.
 - Text contrast at least 4.5:1 and control edges at least 3:1.
-- Visible keyboard focus, working skip link, reduced motion, labelled controls.
+- Visible keyboard focus, working skip link, reduced motion, labelled controls. Headings
+  and regions focused by script (`tabIndex={-1}`) draw no ring.
+- The type check greps under Layout return nothing outside their listed exceptions.
 - 375, 768, 1024 and 1280 in light and dark: no page overflow, 16px page insets
   increasing to 24px from 1024px for desk pages, reachable navigation and 44px
   touch targets. Secondary columns wrap or collapse.
