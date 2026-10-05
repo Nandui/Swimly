@@ -50,7 +50,6 @@ export function CompleteLevel({
       <DialogTrigger asChild>
         <Button
           variant="outline"
-          className="min-h-11"
           disabled={disabled}
           aria-label={`Mark ${studentName} ready to move`}
         >
@@ -80,14 +79,12 @@ export function CompleteLevel({
         <DialogFooter>
           <Button
             variant="outline"
-            className="min-h-11"
             disabled={pending}
             onClick={() => setOpen(false)}
           >
             Cancel
           </Button>
           <LoadingButton
-            className="min-h-11"
             pending={pending}
             onClick={() =>
               startTransition(async () => {

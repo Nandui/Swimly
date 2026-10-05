@@ -11,8 +11,10 @@ export async function saveRefund(input: RefundCommand): Promise<RefundResult> {
     const who = await requireRefundActor();
     const row = await mutateRefund(who, input);
     let warning: string | undefined;
-    try { if (await deliverRefundNotifications(row.id, who)) warning = "Saved. Some staff alerts are waiting for delivery; finance can retry them from this request."; }
-    catch { warning = "Saved. Email delivery could not be confirmed; finance can retry from the request."; }
+    // Only finance can send an alert again, so only finance hears that one didn't go.
+    const finance = who.review || who.process;
+    try { if (await deliverRefundNotifications(row.id, who) && finance) warning = "Saved. We couldn’t confirm the email alert; you can send it again from this request."; }
+    catch { if (finance) warning = "Saved. We couldn’t confirm the email alert; you can send it again from this request."; }
     revalidatePath("/refunds", "layout");
     return { ok: true, id: row.id, version: row.version, ...(warning ? { warning } : {}) };
   } catch (error) {
@@ -25,6 +27,6 @@ export async function retryRefundEmails(id: string): Promise<RefundResult> {
     if (!who.review && !who.process) throw new RefundError("Finance access is required to retry staff alerts.");
     const pending = await deliverRefundNotifications(id, who, true);
     revalidatePath("/refunds", "layout");
-    return { ok: true, id, version: 0, ...(pending ? { warning: "Some alerts are still waiting. Check staff access and sender settings before retrying." } : {}) };
-  } catch (error) { return { ok: false, error: error instanceof RefundError ? error.message : "Could not retry alerts. Try again later." }; }
+    return { ok: true, id, version: 0, ...(pending ? { warning: "Some alerts still haven’t gone. Check that the people they go to have Refunds access, then try again later." } : {}) };
+  } catch (error) { return { ok: false, error: error instanceof RefundError ? error.message : "We couldn’t send the alerts again. Try again later." }; }
 }

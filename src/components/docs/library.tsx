@@ -1,33 +1,29 @@
 'use client';
 
-import { Label } from '@/components/shadcn/label';
-import { NativeSelect, NativeSelectOption } from '@/components/shadcn/native-select';
+import { NativeSelectOption } from '@/components/shadcn/native-select';
 import { SearchField } from '@/components/ui-kit/search-field';
-import { Card } from '@/components/shadcn/card';
 import Link from 'next/link';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { useTransition } from 'react';
-import { Archive, Plus, X } from 'lucide-react';
+import { Archive, ChevronLeft, ChevronRight, FilePlus2 } from 'lucide-react';
 import {
   canWrite,
-  documentTypes,
+  documentTypeLabels,
   type DocumentType,
   type Workspace,
   type LibraryDocument,
 } from '@/lib/docs/types';
 import { Button } from '@/components/shadcn/button';
 import { DocumentList } from './document-list';
-import { PageHeading } from './ui';
+import { FilterSelect } from './ui';
 import { EmptyState } from '@/components/ui-kit/empty-state';
+import { PageHeader } from '@/components/ui-kit/page-header';
+import { SegmentedLinks } from '@/components/ui-kit/segmented-links';
 
-const typeLabels: Record<DocumentType, string> = {
-  SOP: 'Procedures',
-  NOP: 'Operations',
-  EAP: 'Emergency plans',
-  'Risk assessment': 'Risk assessments',
-  Policy: 'Policies',
-  Custom: 'Other',
-};
+/** The type filter always offers these four (V2Docs); Operations and Other join them only
+ *  when documents in scope have that type. */
+const mainTypes: DocumentType[] = ['EAP', 'Policy', 'SOP', 'Risk assessment'];
+const extraTypes: DocumentType[] = ['NOP', 'Custom'];
 
 export function LibraryView({
   workspace: w,
@@ -65,194 +61,149 @@ export function LibraryView({
   }
   const hasFilters = !!(query || facility || team || type);
   const clearUrl = archived ? '/docs/library?archived=true' : '/docs/library';
+  /** The library URL with one parameter changed (the type links and the archive switch). */
+  function href(key: string, value: string) {
+    const next = new URLSearchParams(params.toString());
+    if (value) next.set(key, value);
+    else next.delete(key);
+    return `/docs/library${next.size ? `?${next}` : ''}`;
+  }
+  const types = [
+    ...mainTypes,
+    ...extraTypes.filter((t) => t === type || scoped.some((d) => d.content.type === t)),
+  ];
 
   return (
-    <div className="knowledge-library">
-      <PageHeading
-        eyebrow="A shared source of truth"
-        title={
-          archived
-            ? 'Document archive'
-            : type === 'EAP'
-              ? 'Emergency plans'
-              : 'Document library'
-        }
+    <>
+      <PageHeader
+        title={archived ? 'Document archive' : 'Document library'}
         description={
           archived
-            ? 'Previous guidance, preserved with its complete history.'
-            : type === 'EAP'
-              ? 'Find the approved response for your facility, without the search.'
-              : 'Everything your team knows. Right where you need it.'
+            ? 'Archived documents, kept with their full history'
+            : 'Procedures, policies and risk assessments for your facility'
         }
-        action={
-          canWrite(w.member) ? (
-            <div className="library-create">
-              <Button asChild>
-                <Link href="/docs/documents/new">
-                  <Plus size={17} aria-hidden="true" />
-                  Add a document
-                </Link>
-              </Button>
-            </div>
+        actions={
+          canWrite(w.member) && !archived ? (
+            <Button asChild>
+              <Link href="/docs/documents/new">
+                <FilePlus2 aria-hidden="true" />
+                New document
+              </Link>
+            </Button>
           ) : undefined
         }
       />
-      <div className="library-type-filters" role="group" aria-label="Filter by document type">
-        <Button
-          variant="ghost"
-          aria-pressed={!type}
-          onClick={() => filter('type', '')}
-          disabled={pending}
-        >
-          All documents <span>{scoped.length}</span>
-        </Button>
-        {documentTypes.map((item) => (
-          <Button
-            key={item}
-            variant="ghost"
-            aria-pressed={type === item}
-            onClick={() => filter('type', item)}
-            disabled={pending}
+      <section className="pc-panel" aria-label={archived ? 'Archived documents' : 'Documents'}>
+        <div className="flex flex-wrap items-end gap-3">
+          <form
+            action="/docs/library"
+            role="search"
+            aria-label="Search the document library"
+            className="min-w-0 flex-1 basis-64"
           >
-            {typeLabels[item]}
-            <span>{scoped.filter((d) => d.content.type === item).length}</span>
-          </Button>
-        ))}
-      </div>
-      <Label className="library-mobile-type">
-        <span className="sr-only">Document type</span>
-        <NativeSelect
-          value={type}
-          onChange={(event) => filter('type', event.target.value)}
-          disabled={pending}
-        >
-          <NativeSelectOption value="">All documents ({scoped.length})</NativeSelectOption>
-          {documentTypes.map((item) => (
-            <NativeSelectOption key={item} value={item}>
-              {typeLabels[item]} (
-              {scoped.filter((document) => document.content.type === item).length})
-            </NativeSelectOption>
-          ))}
-        </NativeSelect>
-      </Label>
-      <div className="library-filter-bar">
-        <form
-          action="/docs/library"
-          role="search"
-          aria-label="Search document library"
-        >
-          <SearchField
-            label="Search documents"
-            placeholder="Title, reference or content"
-            defaultValue={query}
+            <SearchField
+              label="Search documents"
+              placeholder="Title, reference or text"
+              defaultValue={query}
+            />
+            {type && <input type="hidden" name="type" value={type} />}
+            {facility && <input type="hidden" name="facility" value={facility} />}
+            {team && <input type="hidden" name="team" value={team} />}
+            {archived && <input type="hidden" name="archived" value="true" />}
+            {sort === 'title' && <input type="hidden" name="sort" value={sort} />}
+          </form>
+          {/* The bar wraps onto a second row on narrow screens; no type is ever scrolled away. */}
+          <SegmentedLinks
+            label="Document type"
+            items={[
+              { href: href('type', ''), label: 'All', current: !type },
+              ...types.map((t) => ({ href: href('type', t), label: documentTypeLabels[t].many, current: type === t })),
+            ]}
           />
-          {type && <input type="hidden" name="type" value={type} />}
-          {facility && <input type="hidden" name="facility" value={facility} />}
-          {team && <input type="hidden" name="team" value={team} />}
-          {archived && <input type="hidden" name="archived" value="true" />}
-          {sort === 'title' && <input type="hidden" name="sort" value={sort} />}
-        </form>
-        <Label>
-          <span className="sr-only">Facility</span>
-          <NativeSelect
-            value={facility}
-            onChange={(e) => filter('facility', e.target.value)}
-            disabled={pending}
-          >
+        </div>
+        <div className="flex flex-wrap items-end gap-3">
+          <FilterSelect label="Facility" value={facility} onChange={(value) => filter('facility', value)} disabled={pending}>
             <NativeSelectOption value="">All facilities</NativeSelectOption>
             {w.facilities.map((f) => (
               <NativeSelectOption key={f.id} value={f.id}>
                 {f.name}
               </NativeSelectOption>
             ))}
-          </NativeSelect>
-        </Label>
-        <Label>
-          <span className="sr-only">Team</span>
-          <NativeSelect
-            value={team}
-            onChange={(e) => filter('team', e.target.value)}
-            disabled={pending}
-          >
+          </FilterSelect>
+          <FilterSelect label="Team" value={team} onChange={(value) => filter('team', value)} disabled={pending}>
             <NativeSelectOption value="">All teams</NativeSelectOption>
             {w.teams.map((t) => (
               <NativeSelectOption key={t.id} value={t.id}>
                 {t.name}
               </NativeSelectOption>
             ))}
-          </NativeSelect>
-        </Label>
-        <Button
-          variant="ghost"
-          aria-pressed={archived}
-          onClick={() => filter('archived', archived ? '' : 'true')}
-          disabled={pending}
-        >
-          <Archive size={17} aria-hidden="true" />
-          Archive
-        </Button>
-      </div>
-      <div className="library-result-bar">
-        <div>
-          <span role="status">
+          </FilterSelect>
+          <FilterSelect label="Sort by" value={sort} onChange={(value) => filter('sort', value)} disabled={pending}>
+            <NativeSelectOption value="recent">Recently published</NativeSelectOption>
+            <NativeSelectOption value="title">Title, A–Z</NativeSelectOption>
+          </FilterSelect>
+          <Button asChild variant="outline" className="sm:ml-auto">
+            {archived ? (
+              <Link href={href('archived', '')}>
+                <ChevronLeft aria-hidden="true" />
+                Back to the library
+              </Link>
+            ) : (
+              <Link href={href('archived', 'true')}>
+                <Archive aria-hidden="true" />
+                Archived documents
+              </Link>
+            )}
+          </Button>
+        </div>
+        <div className="flex flex-wrap items-center gap-x-3">
+          <p role="status" className="text-xs text-ui-muted-foreground">
             {pending
               ? 'Updating documents…'
               : `${visible.length} ${visible.length === 1 ? 'document' : 'documents'}${query ? ` matching “${query}”` : ''}`}
-          </span>
+          </p>
           {hasFilters && (
-            <Link href={clearUrl} className="clear-filters">
-              <X size={14} aria-hidden="true" />
-              Clear filters
-            </Link>
+            <Button asChild variant="link">
+              <Link href={clearUrl}>Clear filters</Link>
+            </Button>
           )}
         </div>
-        <Label>
-          <span className="sr-only">Sort documents</span>
-          <NativeSelect
-            value={sort}
-            onChange={(e) => filter('sort', e.target.value)}
-            disabled={pending}
-          >
-            <NativeSelectOption value="recent">Recently published</NativeSelectOption>
-            <NativeSelectOption value="title">Title, A–Z</NativeSelectOption>
-          </NativeSelect>
-        </Label>
-      </div>
-      <div aria-busy={pending} className="library-results">
-        {visible.length ? (
-          <DocumentList documents={visible} facilities={w.facilities} />
-        ) : (
-          <Card asChild>
-            <div className="panel">
-              <EmptyState
-                as="h2"
-                icon="book"
-                title={
-                  hasFilters
-                    ? 'No documents match just yet'
-                    : archived
-                      ? 'The archive is empty'
-                      : 'Your library starts here'
-                }
-                hint={
-                  hasFilters
-                    ? 'Try a broader search or clear your filters to see more documents.'
-                    : archived
-                      ? 'Archived documents will appear here with their version history.'
-                      : 'Published guidance will appear here, ready for the whole team.'
-                }
-                action={
-                  hasFilters ? (
-                    <Button asChild variant="outline"><Link href={clearUrl}>Clear filters</Link></Button>
-                  ) : canWrite(w.member) && !archived ? (
-                    <Button asChild variant="outline"><Link href="/docs/documents/new">Create a document</Link></Button>
-                  ) : undefined
-                }
-              />
-            </div>
-          </Card>
-        )}
-      </div>
-    </div>
+        <div aria-busy={pending}>
+          {visible.length ? (
+            <DocumentList documents={visible} facilities={w.facilities} />
+          ) : (
+            <EmptyState
+              as="h2"
+              icon="book"
+              title={hasFilters ? 'No documents match' : archived ? 'No archived documents' : 'No documents yet'}
+              hint={
+                hasFilters
+                  ? 'Try a broader search, or clear the filters'
+                  : archived
+                    ? 'Archived documents appear here with their version history'
+                    : 'Published documents appear here for the whole team'
+              }
+              action={
+                hasFilters ? (
+                  <Button asChild variant="outline">
+                    <Link href={clearUrl}>
+                      Clear filters
+                      <ChevronRight aria-hidden="true" />
+                    </Link>
+                  </Button>
+                ) : canWrite(w.member) && !archived ? (
+                  <Button asChild variant="outline">
+                    <Link href="/docs/documents/new">
+                      New document
+                      <ChevronRight aria-hidden="true" />
+                    </Link>
+                  </Button>
+                ) : undefined
+              }
+            />
+          )}
+        </div>
+      </section>
+    </>
   );
 }

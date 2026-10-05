@@ -24,7 +24,9 @@ async function resolveHelp({ params, searchParams }: Props) {
   const filters = helpFilters(typeof query.q === "string" ? query.q : undefined, typeof query.topic === "string" ? query.topic : undefined);
   const access = await helpPage(scope, slug, filters);
   if (segments.length > 1) notFound();
-  const articles = articlesForScope(scope);
+  // A module's guides, and links to them, show only to people who can open the module.
+  const readable = articlesForScope(scope).filter(item => access.canRead(item));
+  const articles = readable.map(item => ({ ...item, related: item.related.filter(slug => readable.some(other => other.slug === slug)) }));
   const article = articles.find(item => item.slug === slug);
   if (slug && !article) notFound();
   return { scope, access, filters, articles, article };

@@ -1,18 +1,19 @@
 "use client";
 import { Tag } from "@/components/ui-kit/tag";
-import { MEDICAL_STATUS_META } from "@/modules/activities/lib/students/constants";
+import { MEDICAL_STATUS_META, ageLabel } from "@/modules/activities/lib/students/constants";
 
 import * as React from "react";
 import { useRouter } from "next/navigation";
 import {
-  ArrowRight,
   Check,
+  CheckCheck,
   ChevronDown,
+  ChevronRight,
   HeartPulse,
 } from "lucide-react";
+import { Avatar, AvatarFallback, initials } from "@/components/shadcn/avatar";
 import { Button } from "@/components/shadcn/button";
 import { LoadingButton } from "@/components/ui/loading-button";
-import { Item, ItemGroup, ItemContent } from "@/components/shadcn/item";
 import {
   Collapsible,
   CollapsibleContent,
@@ -29,7 +30,6 @@ import {
   ATTENDANCE_STATUS_META,
 } from "@/modules/activities/lib/attendance/constants";
 import type { RegisterLine } from "@/modules/activities/lib/attendance/data/register";
-import { ageInYears } from "@/lib/format";
 import { parseAttendanceDraft } from "@/modules/activities/lib/attendance/draft";
 import {
   SAVE_TIMEOUT_MS,
@@ -47,12 +47,14 @@ export function SaveBar({
   status: string;
   children: React.ReactNode;
 }) {
+  // A panel of its own after the main one; poolside.css (.pc-save-bar) holds it above the
+  // viewport's edge, or above the bottom bar where the frame shows one.
   return (
-    <div className="sticky bottom-[-1rem] z-10 -mx-4 -mb-4 flex flex-wrap items-center justify-between gap-3 border-t border-ui-border bg-ui-background px-4 py-3 pb-[max(0.75rem,env(safe-area-inset-bottom))]">
+    <div className="pc-panel pc-save-bar">
       <p
         role="status"
         aria-live="polite"
-        className="min-w-0 flex-1 text-sm text-ui-muted-foreground"
+        className="min-w-0 flex-1 font-semibold"
       >
         {status}
       </p>
@@ -294,9 +296,10 @@ function RegisterFormState({
   })).filter((entry) => entry.count > 0);
 
   return (
-    <div className="flex flex-col gap-5">
-      <div className="flex flex-wrap items-center justify-between gap-3">
-        <p className="text-sm text-ui-muted-foreground" aria-live="polite">
+    <>
+    <section className="pc-panel" aria-label="Attendance">
+      <div className="pc-panel-head">
+        <p className="font-semibold" aria-live="polite">
           {counts
             .map(
               (entry) =>
@@ -312,44 +315,36 @@ function RegisterFormState({
             onClick={() => setAll("PRESENT")}
             disabled={pending}
           >
+            <CheckCheck aria-hidden="true" />
             Everyone in
           </Button>
         ) : null}
       </div>
-      <ItemGroup className="divide-y divide-ui-border">
+      <ul className="pc-rows">
         {lines.map((line) => {
           const mark = marks.get(line.studentId),
             name = line.firstName + " " + line.lastName;
-          return (
-            <Item
-              key={line.studentId}
-              role="listitem"
-              className="items-center rounded-none px-0 py-4"
-            >
-              <ItemContent className="min-w-0 basis-48">
-                <p className="text-base font-semibold">{name}</p>
-                <p className="text-sm text-ui-muted-foreground">
-                  {line.dateOfBirth ? ageInYears(line.dateOfBirth) + " · " : ""}
-                  {line.levelName || "—"}
-                  {line.offRoster ? " · No longer in this class" : ""}
-                </p>
+          const hint = [
+            line.dateOfBirth ? `Age ${ageLabel(line.dateOfBirth)}` : null,
+            line.levelName || null,
+            line.offRoster ? "No longer in this class" : null,
+          ].filter(Boolean).join(" · ");
+          const row = (
+            <li className="pc-row">
+              <Avatar size="lg" aria-hidden="true"><AvatarFallback>{initials(name)}</AvatarFallback></Avatar>
+              <div className="pc-row-body items-start gap-1">
+                <p className="pc-row-title break-words">{name}</p>
+                {hint ? <p className="pc-row-hint">{hint}</p> : null}
+                {/* Medical notes open from the tag where this person may read them; otherwise
+                    the tag only says there are some. */}
                 {line.medicalNotes ? (
-                  <Collapsible>
-                    <CollapsibleTrigger asChild>
-                      <Button variant="outline" className="mt-1">
-                        <HeartPulse aria-hidden="true" />
-                        Medical information
-                        <ChevronDown aria-hidden="true" />
-                      </Button>
-                    </CollapsibleTrigger>
-                    <CollapsibleContent className="max-w-prose whitespace-pre-wrap py-3 text-sm">
-                      {line.medicalNotes}
-                    </CollapsibleContent>
-                  </Collapsible>
+                  <CollapsibleTrigger className="pc-tag-trigger" aria-label={`Medical information for ${name}`}>
+                    <Tag meta={MEDICAL_STATUS_META.notes} label={<>{MEDICAL_STATUS_META.notes.label}<ChevronDown aria-hidden="true" /></>} />
+                  </CollapsibleTrigger>
                 ) : line.hasMedicalNotes ? (
-                  <Tag meta={MEDICAL_STATUS_META.notes} className="mt-1" />
+                  <Tag meta={MEDICAL_STATUS_META.notes} />
                 ) : null}
-              </ItemContent>
+              </div>
               <MarkChoices
                 label={"Attendance for " + name}
                 value={mark?.status ?? "ABSENT"}
@@ -362,10 +357,23 @@ function RegisterFormState({
                   set(line.studentId, value as AttendanceStatus)
                 }
               />
-            </Item>
+              {line.medicalNotes ? (
+                <CollapsibleContent className="basis-full">
+                  <p className="pc-note max-w-prose whitespace-pre-wrap">
+                    <HeartPulse aria-hidden="true" className="mt-0.5 size-4 shrink-0" />
+                    <span>{line.medicalNotes}</span>
+                  </p>
+                </CollapsibleContent>
+              ) : null}
+            </li>
+          );
+          return line.medicalNotes ? (
+            <Collapsible key={line.studentId} asChild>{row}</Collapsible>
+          ) : (
+            <React.Fragment key={line.studentId}>{row}</React.Fragment>
           );
         })}
-      </ItemGroup>
+      </ul>
       <div className="flex flex-col gap-2">
         <Label htmlFor="class-note">Class note</Label>
         <Textarea
@@ -398,34 +406,34 @@ function RegisterFormState({
       {storageUnavailable && !readOnly ? (
         <Notice tone="warning" title="This browser cannot keep a backup. Keep this tab open until attendance is saved." />
       ) : null}
-      {!readOnly ? (
-        <SaveBar
-          status={
-            restored
-              ? "Restored on this device · not saved"
-              : dirty
-                ? "Not saved yet"
-                : lines.some((line) => line.status !== null)
-                  ? "Up to date"
-                  : "Ready to save"
-          }
+    </section>
+    {!readOnly ? (
+      <SaveBar
+        status={
+          restored
+            ? "Restored on this device · not saved"
+            : dirty
+              ? "Not saved yet"
+              : lines.some((line) => line.status !== null)
+                ? "Up to date"
+                : "Ready to save"
+        }
+      >
+        <LoadingButton
+          pending={pending}
+          disabled={!!conflict}
+          onClick={() => save()}
         >
-          <LoadingButton
-            className="min-h-11"
-            pending={pending}
-            disabled={!!conflict}
-            onClick={() => save()}
-          >
-            <Check aria-hidden="true" />
-            {continueHref
-                ? "Save and continue"
-                : "Save attendance"}
-            {continueHref ? (
-              <ArrowRight aria-hidden="true" />
-            ) : null}
-          </LoadingButton>
-        </SaveBar>
-      ) : null}
-    </div>
+          <Check aria-hidden="true" />
+          {continueHref
+              ? "Save and continue"
+              : "Save attendance"}
+          {continueHref ? (
+            <ChevronRight aria-hidden="true" />
+          ) : null}
+        </LoadingButton>
+      </SaveBar>
+    ) : null}
+    </>
   );
 }

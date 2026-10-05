@@ -1,21 +1,26 @@
-/* Turnfin Me in Poolside Clear, phone-first.
-   The tokens are copied from Work's src/app/docs/poolside.css (the app-wide design); keep the
-   two in step when either changes. Colours come from these tokens only; status colour comes
-   from the metadata maps in src/lib/meta.ts, always with an icon. */
-:root {
-  color-scheme: light dark;
+/* Turnfin Me in Poolside Clear v2, phone-first.
+   The tokens and the v2 parts (the fin, the bar, the bottom bar, panels, rows, tile icons) are
+   copied verbatim from Work's src/app/docs/poolside.css, scoped to .turnfin-app on <body> as Work
+   does, so the two diff 1:1; keep them in step when either changes. The one place Me differs is the
+   block marked "Me only". Colours come from these tokens only; status colour comes from the
+   metadata maps in src/lib/meta.ts, always with an icon. */
+:root { color-scheme: light dark; }
+.turnfin-app {
   --pc-canvas: light-dark(#eef2f6, #0c1320);
   --pc-surface: light-dark(#ffffff, #131c2b);
   --pc-surface-sunken: light-dark(#f4f6f9, #182334);
   --pc-ink: light-dark(#0f1b2d, #e8eef7);
   --pc-ink-muted: light-dark(#56627a, #9babc2);
   --pc-line: light-dark(#e2e7ef, #24324a);
+  /* Edges of things you type into or choose from: 3:1 against every surface. */
   --pc-line-strong: light-dark(#77849a, #6b7d99);
   --pc-primary: light-dark(#1d5fd1, #78a6ff);
   --pc-primary-hover: light-dark(#174ea8, #9dbfff);
   --pc-on-primary: light-dark(#ffffff, #081733);
   --pc-primary-soft: light-dark(#e9f0fd, #17284a);
+  --pc-primary-soft-hover: light-dark(#dde8fc, #1d3360);
   --pc-primary-ink: light-dark(#174ea8, #a8c5ff);
+  --pc-hover: light-dark(#f4f6f9, #1b2636);
   --pc-focus: light-dark(#1d5fd1, #78a6ff);
   --pc-focus-halo: 0 0 0 4px light-dark(rgb(29 95 209 / 0.2), rgb(120 166 255 / 0.28));
   --pc-success: light-dark(#157046, #7fe0a8);
@@ -25,37 +30,66 @@
   --pc-danger: light-dark(#b4321f, #ffa395);
   --pc-danger-soft: light-dark(#fde8e6, #3a1815);
   --pc-neutral-soft: light-dark(#f4f6f9, #182334);
+  /* The single do-first item on a page. */
+  --pc-yellow: light-dark(#fde9a8, #4a3b10);
+  --pc-on-yellow: light-dark(#3a2a00, #fbe7a8);
   --pc-shadow-card: none;
-  --pc-text-caption: 13px;
-  --pc-leading-caption: 18px;
-  --pc-text-body: 15px;
-  --pc-leading-body: 22px;
+  --pc-shadow-overlay: 0 16px 40px -12px light-dark(rgb(15 27 45 / 0.35), rgb(0 0 0 / 0.6)), 0 0 0 1px var(--pc-line);
+  --pc-ease: cubic-bezier(0.2, 0, 0, 1);
+
+  /* Type scale: five sizes only. Captions and metadata; body, controls and labels; section
+     titles; page titles; large figures (page and figure drop to 24px on phones). Reading text
+     in documents is 16px. */
+  --pc-text-caption: 12px;
+  --pc-leading-caption: 16px;
+  --pc-text-body: 14px;
+  --pc-leading-body: 20px;
   --pc-text-title: 18px;
-  --pc-leading-title: 26px;
-  --pc-text-page: 24px;
-  --pc-leading-page: 32px;
+  --pc-leading-title: 24px;
+  --pc-text-page: 28px;
+  --pc-leading-page: 36px;
+  --pc-text-figure: 28px;
+  --pc-leading-figure: 34px;
+  /* Me only: the 16px reading size above, as a token for documents (.doc). */
+  --pc-text-reading: 16px;
+  --pc-leading-reading: 26px;
+
+  /* Control geometry: every button, field, tab and menu item is 44px on every device. Corners:
+     round controls, 16px inside a panel, 24px panels. */
   --pc-control-height: 44px;
-  --pc-radius-inner: 16px;
+  --pc-control-pad: 16px;
   --pc-radius-control: 999px;
+  --pc-radius-card: 16px;
   --pc-radius-panel: 24px;
   --font-sans: "Plus Jakarta Sans", ui-sans-serif, system-ui, sans-serif;
 }
+@media (max-width: 767px) {
+  .turnfin-app { --pc-text-page: 24px; --pc-leading-page: 30px; --pc-text-figure: 24px; --pc-leading-figure: 30px; }
+}
 
+/* Work gets these from Tailwind preflight. */
 *, *::before, *::after { box-sizing: border-box; }
 html, body { margin: 0; }
-body {
-  min-height: 100dvh;
-  background: var(--pc-canvas);
-  color: var(--pc-ink);
+:is(h1, h2, h3, h4, p) { margin: 0; }
+button, input, select, textarea { font: inherit; color: inherit; }
+fieldset { margin: 0; padding: 0; border: 0; min-inline-size: 0; }
+
+.turnfin-app {
   font-family: var(--font-sans);
   font-size: var(--pc-text-body);
   line-height: var(--pc-leading-body);
-  -webkit-font-smoothing: antialiased;
+  color: var(--pc-ink);
 }
-h1 { margin: 0; font-size: var(--pc-text-page); line-height: var(--pc-leading-page); font-weight: 700; letter-spacing: -0.015em; }
-h2 { margin: 0; font-size: var(--pc-text-title); line-height: var(--pc-leading-title); font-weight: 600; letter-spacing: -0.01em; }
-h3 { margin: 0; font-size: var(--pc-text-body); font-weight: 600; }
-p { margin: 0; }
+body.turnfin-app { min-height: 100dvh; background: var(--pc-canvas); -webkit-font-smoothing: antialiased; }
+
+/* Type: one bold page title, 600-weight section titles, sentence-case labels (never capitals). */
+.turnfin-app :is(h1, h2, h3, h4) { font-family: var(--font-sans); color: var(--pc-ink); }
+.turnfin-app h1 { font-size: var(--pc-text-page); font-weight: 600; line-height: var(--pc-leading-page); letter-spacing: -0.01em; }
+.turnfin-app :is(h2, h3, h4) { letter-spacing: 0; }
+.turnfin-app h2 { font-size: var(--pc-text-title); font-weight: 600; line-height: var(--pc-leading-title); }
+.turnfin-app svg { flex-shrink: 0; }
+.turnfin-app :is(h3, h4) { font-size: var(--pc-text-body); font-weight: 600; line-height: var(--pc-leading-body); }
+
 a { color: var(--pc-primary); }
 :is(a, button, input, select, textarea, summary):focus-visible { outline: 2px solid var(--pc-focus); outline-offset: 2px; }
 .muted { color: var(--pc-ink-muted); }
@@ -64,77 +98,157 @@ a { color: var(--pc-primary); }
 .stack { display: flex; flex-direction: column; gap: 16px; }
 .stack-sm { display: flex; flex-direction: column; gap: 8px; }
 .row { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; }
-.spread { display: flex; flex-wrap: wrap; align-items: flex-start; justify-content: space-between; gap: 12px; }
 .pre { white-space: pre-wrap; overflow-wrap: anywhere; }
+.tabular { font-variant-numeric: tabular-nums; }
 
-/* Frame: a top bar, the page, and a bottom tab bar on phones (a side list from 768px). */
+/* Frame: the top row on the canvas (the fin, the name, Sign out), the page, and the floating
+   bottom bar, all in one 720px column. */
 .frame { min-height: 100dvh; display: flex; flex-direction: column; }
-.topbar { position: sticky; top: 0; z-index: 10; display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 10px 16px; padding-top: max(10px, env(safe-area-inset-top)); background: var(--pc-surface); border-bottom: 1px solid var(--pc-line); }
-.brand { display: flex; align-items: center; gap: 8px; font-weight: 700; font-size: 18px; color: var(--pc-ink); text-decoration: none; min-height: 44px; }
-.brand img { width: 28px; height: 28px; }
-.brand span { font-weight: 600; font-size: 13px; color: var(--pc-primary-ink); }
-.page { flex: 1; width: 100%; max-width: 720px; margin: 0 auto; padding: 20px 16px calc(96px + env(safe-area-inset-bottom)); }
-.tabs { position: fixed; bottom: 0; left: 0; right: 0; z-index: 10; display: grid; grid-template-columns: repeat(5, 1fr); background: var(--pc-surface); border-top: 1px solid var(--pc-line); padding-bottom: env(safe-area-inset-bottom); }
-.tabs a { display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 2px; min-height: 56px; font-size: 12px; font-weight: 500; color: var(--pc-ink-muted); text-decoration: none; }
-.tabs a svg { width: 22px; height: 22px; }
-.tabs a[aria-current='page'] { color: var(--pc-primary-ink); font-weight: 700; }
-@media (min-width: 768px) {
-  .page { padding-bottom: 48px; }
-  .tabs { position: sticky; top: 65px; bottom: auto; margin: 0 auto; max-width: 720px; border: 1px solid var(--pc-line); border-top: 0; border-radius: 0 0 var(--pc-radius-panel) var(--pc-radius-panel); }
+.topbar { display: flex; align-items: center; gap: 12px; width: 100%; max-width: 720px; margin: 0 auto; padding: max(16px, env(safe-area-inset-top)) 16px 0; }
+.topbar > .tf-bar { margin-left: auto; }
+.brand { display: flex; align-items: center; gap: 12px; min-width: 0; }
+.brand-name { font-size: var(--pc-text-title); line-height: var(--pc-leading-title); font-weight: 600; color: var(--pc-ink); }
+.page { flex: 1; width: 100%; max-width: 720px; margin: 0 auto; padding: 16px 16px calc(104px + env(safe-area-inset-bottom)); }
+/* Sign-in: one narrow column with no bottom bar. */
+.page.narrow { max-width: 440px; padding-top: max(48px, env(safe-area-inset-top)); padding-bottom: calc(48px + env(safe-area-inset-bottom)); }
+
+/* ---------------------------------------------------------------------------------------------
+   Copied verbatim from src/app/docs/poolside.css: the fin, the bar (.tf-bar-item parts only),
+   the bottom bar, panels, rows and tile icons. */
+.turnfin-app .tf-brand { display: inline-flex; flex: none; align-items: center; justify-content: center; width: 64px; height: 64px; border-radius: var(--pc-radius-card); }
+.turnfin-app .tf-brand img { display: block; width: 72px; height: 72px; max-width: none; margin: -4px; transform: translateX(3px); }
+.turnfin-app .tf-brand:hover { background: var(--pc-surface); }
+
+.turnfin-app .tf-bar { position: relative; display: inline-flex; flex: none; align-items: center; width: max-content; max-width: 100%; padding: 4px; border-radius: 999px; background: var(--pc-surface); overflow-x: auto; scrollbar-width: none; }
+.turnfin-app .tf-bar-item { position: relative; isolation: isolate; display: inline-flex; flex: none; align-items: center; justify-content: center; gap: 6px; width: auto; min-width: 44px; min-height: 44px; height: 44px; margin: -4px 0; padding: 0 16px; border: 0; border-radius: 999px; background: none; box-shadow: none; color: var(--pc-ink); font-size: var(--pc-text-body); font-weight: 600; white-space: nowrap; text-decoration: none; cursor: pointer; }
+.turnfin-app .tf-bar-item::before { content: ''; position: absolute; inset: 4px 0; z-index: -1; border-radius: 999px; transition: background-color 120ms var(--pc-ease); }
+.turnfin-app .tf-bar-item:hover { background: none; }
+.turnfin-app .tf-bar-item:hover::before { background: var(--pc-surface-sunken); }
+.turnfin-app .tf-bar-item[aria-current] { color: var(--pc-on-primary); }
+.turnfin-app .tf-bar-item[aria-current]::before { background: var(--pc-primary) !important; }
+.turnfin-app .tf-bar-item:focus-visible { outline-offset: -2px; }
+.turnfin-app :is(.tf-bar-item, .tf-bottom-item)[aria-current]:focus-visible { outline: 2px solid transparent; }
+.turnfin-app .tf-bar-item[aria-current]:focus-visible::before,
+.turnfin-app .tf-bottom-item[aria-current]:focus-visible .tf-bottom-icon { box-shadow: 0 0 0 2px var(--pc-surface), 0 0 0 4px var(--pc-focus); }
+.turnfin-app .tf-bar-item > svg { width: 16px; height: 16px; }
+
+.turnfin-app .tf-bottom { position: fixed; right: 8px; bottom: 8px; left: 8px; z-index: 40; display: none; max-width: 480px; margin-inline: auto; padding: 4px; border-radius: 999px; background: var(--pc-surface); box-shadow: var(--pc-shadow-overlay); }
+.turnfin-app .tf-bottom-item { display: flex; flex: 1 1 0; flex-direction: column; align-items: center; justify-content: center; gap: 2px; min-width: 0; min-height: 56px; padding: 4px 2px; border: 0; border-radius: 999px; background: none; color: var(--pc-ink-muted); font-size: var(--pc-text-caption); line-height: var(--pc-leading-caption); font-weight: 600; text-decoration: none; cursor: pointer; }
+.turnfin-app .tf-bottom-item > span:last-child { max-width: 100%; white-space: normal; text-align: center; text-wrap: balance; overflow-wrap: anywhere; }
+.turnfin-app .tf-bottom-icon { display: flex; align-items: center; justify-content: center; width: 56px; height: 32px; border-radius: 999px; }
+.turnfin-app .tf-bottom-icon > svg { width: 20px; height: 20px; }
+.turnfin-app .tf-bottom-item[aria-current] { color: var(--pc-primary); }
+.turnfin-app .tf-bottom-item[aria-current] .tf-bottom-icon { background: var(--pc-primary); color: var(--pc-on-primary); }
+.turnfin-app .tf-bottom-item:hover .tf-bottom-icon { background: var(--pc-surface-sunken); }
+.turnfin-app .tf-bottom-item[aria-current]:hover .tf-bottom-icon { background: var(--pc-primary); }
+@media (prefers-reduced-motion: reduce) {
+  .turnfin-app .tf-bar-item::before { transition: none; }
 }
 
-/* Panels and lists */
-.card { background: var(--pc-surface); border: 0; border-radius: var(--pc-radius-panel); box-shadow: none; padding: 24px; }
-.list { margin: 0; padding: 0; list-style: none; }
-.list > li + li { border-top: 1px solid var(--pc-line); }
-.item { display: flex; align-items: center; justify-content: space-between; gap: 12px; min-height: 56px; padding: 12px 0; color: inherit; text-decoration: none; }
-a.item:hover .item-title { text-decoration: underline; text-underline-offset: 3px; }
-.item-title { font-weight: 600; }
-.item-main { min-width: 0; display: flex; flex-direction: column; gap: 2px; }
-.item svg.chevron { flex: none; width: 18px; height: 18px; color: var(--pc-ink-muted); }
+.turnfin-app .pc-panel { display: flex; flex-direction: column; gap: 16px; min-width: 0; padding: 24px; border-radius: var(--pc-radius-panel); background: var(--pc-surface); }
+.turnfin-app .pc-panel-head { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 8px 12px; min-height: 44px; }
+.turnfin-app .pc-panel-head > h2 { margin: 0; }
+.turnfin-app .pc-rows { display: flex; flex-direction: column; gap: 8px; margin: 0; padding: 0; list-style: none; }
+.turnfin-app .pc-row { display: flex; flex-wrap: wrap; align-items: center; gap: 12px; min-width: 0; min-height: 64px; padding: 12px 16px; border: 1px solid var(--pc-line); border-radius: var(--pc-radius-card); background: var(--pc-surface); color: var(--pc-ink); text-decoration: none; }
+.turnfin-app a.pc-row:hover { background: var(--pc-surface-sunken); }
+.turnfin-app a.pc-row:focus-visible { outline: 2px solid var(--pc-focus); outline-offset: 2px; }
+.turnfin-app .pc-row-body { display: flex; flex: 1 1 140px; flex-direction: column; min-width: 0; }
+.turnfin-app .pc-row-title { font-weight: 600; }
+.turnfin-app .pc-row-hint { font-size: var(--pc-text-caption); line-height: var(--pc-leading-caption); color: var(--pc-ink-muted); }
+.turnfin-app .pc-row-trail { display: flex; flex: 0 1 auto; flex-wrap: wrap; align-items: center; justify-content: flex-end; gap: 8px 12px; max-width: 100%; margin-left: auto; }
+.turnfin-app .pc-row-chevron { width: 16px; height: 16px; color: var(--pc-ink-muted); }
+.turnfin-app .pc-row[data-first] { border-color: transparent; background: var(--pc-yellow); color: var(--pc-on-yellow); }
+.turnfin-app .pc-row[data-first] :is(.pc-row-hint, .pc-row-chevron) { color: inherit; }
+.turnfin-app a.pc-row[data-first]:hover { background: var(--pc-yellow); }
+.turnfin-app .pc-row[data-muted] { color: var(--pc-ink-muted); }
+.turnfin-app label.pc-row { flex-direction: row; flex-wrap: nowrap; align-items: flex-start; min-height: 56px; font-weight: 400; cursor: pointer; }
+.turnfin-app label.pc-row:hover { background: var(--pc-surface-sunken); }
+.turnfin-app label.pc-row:has(:focus-visible) { outline: 2px solid var(--pc-focus); outline-offset: 2px; }
+.turnfin-app label.pc-row:has(:disabled) { cursor: not-allowed; color: var(--pc-ink-muted); }
+.turnfin-app .pc-tile-icon { display: inline-flex; flex: none; align-items: center; justify-content: center; width: 40px; height: 40px; border-radius: 999px; background: var(--pc-primary-soft); color: var(--pc-primary); }
+.turnfin-app .pc-tile-icon > svg { width: 20px; height: 20px; }
+@media (max-width: 767px) {
+  .turnfin-app .pc-panel { padding: 16px; gap: 12px; }
+}
+
+/* ---------------------------------------------------------------------------------------------
+   Me only: the single place Me differs from Work. Me has no module rail, so the bottom bar shows
+   at every width, capped to the page's 720px column, and clears the home indicator; the page
+   scrolls focus targets clear of it. */
+.turnfin-app .tf-bottom { display: flex; left: max(8px, calc(50% - 352px)); right: max(8px, calc(50% - 352px)); bottom: calc(8px + env(safe-area-inset-bottom)); }
+html:has(.tf-bottom) { scroll-padding-bottom: calc(112px + env(safe-area-inset-bottom)); }
+
+/* Me's own small parts, built on the same tokens. */
+/* An initials circle for your own record (Work's Avatar `self`). */
+.avatar { display: inline-flex; flex: none; align-items: center; justify-content: center; width: 40px; height: 40px; border-radius: 999px; background: var(--pc-primary-soft); color: var(--pc-primary-ink); font-size: var(--pc-text-caption); line-height: var(--pc-leading-caption); font-weight: 600; }
+/* Loading: sunken rows the shape of the list that is coming (Work's PageLoading). */
+.placeholder-row { height: 64px; border-radius: var(--pc-radius-card); background: var(--pc-surface-sunken); }
 
 /* Controls: one height, radius and weight */
-.button { display: inline-flex; align-items: center; justify-content: center; gap: 8px; min-height: var(--pc-control-height); padding: 0 16px; border-radius: var(--pc-radius-control); border: 1px solid transparent; font: inherit; font-weight: 600; cursor: pointer; text-decoration: none; background: var(--pc-primary); color: var(--pc-on-primary); }
-.button:hover { background: var(--pc-primary-hover); }
-.button[disabled] { opacity: 0.6; cursor: not-allowed; }
+.button { display: inline-flex; align-items: center; justify-content: center; gap: 8px; min-height: var(--pc-control-height); padding: 0 var(--pc-control-pad); border-radius: var(--pc-radius-control); border: 1px solid transparent; font: inherit; font-weight: 600; cursor: pointer; text-decoration: none; background: var(--pc-primary); color: var(--pc-on-primary); }
+.button:not(:disabled):hover { background: var(--pc-primary-hover); }
+.button:disabled, .input:disabled { opacity: 0.5; cursor: not-allowed; }
 .button.outline { background: var(--pc-surface); color: var(--pc-ink); border-color: var(--pc-line-strong); }
-.button.outline:hover { background: var(--pc-surface-sunken); }
+.button.outline:not(:disabled):hover { background: var(--pc-surface-sunken); }
 .button.ghost { background: transparent; color: var(--pc-primary); }
-.button.ghost:hover { background: var(--pc-primary-soft); color: var(--pc-primary-ink); }
-.button.block { width: 100%; }
-.button svg { width: 18px; height: 18px; }
-.field { display: flex; flex-direction: column; gap: 6px; }
-.field label, .field legend { font-weight: 600; }
+.button.ghost:not(:disabled):hover { background: var(--pc-primary-soft); color: var(--pc-primary-ink); }
+.button.block { align-self: flex-start; }
+.button svg { width: 16px; height: 16px; }
+/* A back link: a ghost button pulled out so its chevron lines up with the page edge. */
+.back-link { align-self: flex-start; margin-inline-start: -12px; }
+@media (max-width: 767px) {
+  .button.block { width: 100%; align-self: stretch; }
+}
+.field { display: flex; flex-direction: column; gap: 8px; }
+.field :is(label, legend, .label) { font-weight: 600; }
 .field .hint { font-size: var(--pc-text-caption); line-height: var(--pc-leading-caption); color: var(--pc-ink-muted); }
+/* Fields stay 16px on phones and touch screens so iOS does not zoom on focus: the one literal size. */
 .input { min-height: var(--pc-control-height); width: 100%; padding: 10px 16px; border: 1px solid var(--pc-line-strong); border-radius: var(--pc-radius-control); background: var(--pc-surface); color: var(--pc-ink); font: inherit; font-size: 16px; }
-textarea.input { min-height: 96px; resize: vertical; border-radius: var(--pc-radius-inner); }
+@media (hover: hover) and (pointer: fine) and (min-width: 48.0625rem) {
+  .input { font-size: var(--pc-text-body); }
+}
+textarea.input { min-height: 96px; resize: vertical; border-radius: var(--pc-radius-card); }
 .input:focus-visible { outline: none; border-color: var(--pc-focus); box-shadow: 0 0 0 1px var(--pc-focus), var(--pc-focus-halo); }
-.code { font-size: 28px; letter-spacing: 8px; text-align: center; font-variant-numeric: tabular-nums; }
-.check { display: flex; align-items: flex-start; gap: 12px; min-height: 44px; font-weight: 500; }
-.check input { width: 22px; height: 22px; margin-top: 1px; accent-color: var(--pc-primary); }
+label.pc-row > input[type='checkbox'] { flex: none; width: 20px; height: 20px; margin: 0; accent-color: var(--pc-primary); }
+/* A file input hidden behind its "Choose a file" button label keeps a visible focus ring. */
+.sr-only:focus-visible + label { outline: 2px solid var(--pc-focus); outline-offset: 2px; }
 
 /* Tags: tone from metadata, always with an icon */
-.tag { display: inline-flex; align-items: center; gap: 4px; min-height: 26px; padding: 0 10px 0 8px; border-radius: 999px; font-size: var(--pc-text-caption); line-height: var(--pc-leading-caption); font-weight: 600; white-space: nowrap; }
-.tag svg { width: 14px; height: 14px; stroke-width: 2.5; }
+.tag { display: inline-flex; align-items: center; gap: 4px; min-height: 24px; padding: 0 10px; border-radius: 999px; font-size: var(--pc-text-caption); line-height: var(--pc-leading-caption); font-weight: 600; white-space: nowrap; }
+.tag svg { width: 14px; height: 14px; }
 .tone-green { background: var(--pc-success-soft); color: var(--pc-success); }
 .tone-orange { background: var(--pc-warning-soft); color: var(--pc-warning); }
 .tone-red { background: var(--pc-danger-soft); color: var(--pc-danger); }
 .tone-blue { background: var(--pc-primary-soft); color: var(--pc-primary-ink); }
 .tone-gray { background: var(--pc-neutral-soft); color: var(--pc-ink-muted); }
 
-/* Notices */
-.notice { border-radius: var(--pc-radius-inner); padding: 12px 16px; background: var(--pc-primary-soft); color: var(--pc-primary-ink); }
-.notice strong { display: block; }
-.notice p { color: var(--pc-ink); }
+/* Notices: the callout layout (Work's .pc-note shape) with an icon per tone. */
+.notice { display: flex; align-items: flex-start; gap: 12px; padding: 16px; border-radius: var(--pc-radius-card); background: var(--pc-primary-soft); color: var(--pc-primary-ink); }
+.notice > svg { width: 20px; height: 20px; }
+.notice-body { display: flex; flex: 1; flex-direction: column; min-width: 0; }
+.notice strong { font-weight: 600; }
 .notice.error { background: var(--pc-danger-soft); color: var(--pc-danger); }
 .notice.warning { background: var(--pc-warning-soft); color: var(--pc-warning); }
+/* The one do-first item on Home (MeHome's yellow callout), a link. */
+.notice.first { background: var(--pc-yellow); color: var(--pc-on-yellow); text-decoration: none; }
+.notice.first > .pc-row-chevron { margin-top: 2px; color: inherit; }
 
-/* Documents */
-.doc { overflow-wrap: anywhere; }
+/* Documents: 16px reading text. */
+.doc { font-size: var(--pc-text-reading); line-height: var(--pc-leading-reading); overflow-wrap: anywhere; }
 .doc > * + * { margin-top: 12px; }
-.doc :is(h1, h2, h3, h4) { margin-top: 20px; }
+.doc > :is(h2, h3, h4):not(:first-child) { margin-top: 24px; }
 .doc ul, .doc ol { padding-left: 22px; margin: 0; }
+.doc :is(code, pre) { font-family: ui-monospace, SFMono-Regular, Menlo, monospace; }
+.doc pre { margin-inline: 0; margin-bottom: 0; padding: 12px 16px; border-radius: var(--pc-radius-card); background: var(--pc-surface-sunken); font-size: var(--pc-text-body); line-height: var(--pc-leading-body); white-space: pre-wrap; overflow-wrap: anywhere; }
+.doc hr { border: 0; border-top: 1px solid var(--pc-line); margin-inline: 0; margin-bottom: 0; }
 .doc table { border-collapse: collapse; width: 100%; display: block; overflow-x: auto; }
 .doc :is(th, td) { border: 1px solid var(--pc-line); padding: 8px; text-align: left; vertical-align: top; }
 .doc blockquote { margin: 0; padding-left: 12px; border-left: 3px solid var(--pc-line-strong); }
-.doc .callout { padding: 12px 16px; border-radius: var(--pc-radius-inner); background: var(--pc-primary-soft); }
+.doc .callout { padding: 12px 16px; border-radius: var(--pc-radius-card); background: var(--pc-primary-soft); }
+/* Top-level numbered lists are the mockup's steps: sunken rows with a blue counter. A paragraph
+   and a nested list inside one step stack in its second column; nested lists keep plain markers. */
+.doc > ol { list-style: none; padding: 0; counter-reset: s; display: flex; flex-direction: column; gap: 8px; }
+.doc > ol > li { display: grid; grid-template-columns: 24px 1fr; column-gap: 12px; padding: 12px 16px; border-radius: var(--pc-radius-card); background: var(--pc-surface-sunken); counter-increment: s; }
+.doc > ol > li::before { content: counter(s); grid-row: 1 / span 99; display: flex; align-items: center; justify-content: center; width: 24px; height: 24px; margin-top: 1px; border-radius: 999px; background: var(--pc-primary); color: var(--pc-on-primary); font-size: var(--pc-text-caption); line-height: var(--pc-leading-caption); font-weight: 600; }
+.doc > ol > li > * { grid-column: 2; }
+.doc > ol > li > * + * { margin-top: 8px; }

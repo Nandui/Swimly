@@ -12,23 +12,24 @@ import {
 } from '@/components/docs/primitives/alert-dialog';
 
 import { Label } from '@/components/shadcn/label';
-import { Card } from '@/components/shadcn/card';
 import { NativeSelect, NativeSelectOption } from '@/components/shadcn/native-select';
 import { Checkbox } from '@/components/shadcn/checkbox';
 import { Button } from '@/components/shadcn/button';
 import { Input } from '@/components/shadcn/input';
 import { Textarea } from '@/components/shadcn/textarea';
-import { useCallback, useEffect, useRef, useState } from 'react';
+import { useCallback, useEffect, useId, useRef, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import {
   Cloud,
   CloudOff,
   Send,
+  Pencil,
   Plus,
   Trash2,
   Paperclip,
   LockKeyhole,
   RefreshCw,
+  Upload,
 } from 'lucide-react';
 import { lockAction, saveDraftAction, submitAction } from '@/app/docs/actions';
 import {
@@ -38,6 +39,8 @@ import {
   type RiskRow,
   type Attachment,
   DOC_STATUS_META,
+  SELF_LOCK_MESSAGE,
+  documentTypeLabels,
   riskBandMeta,
   UNCLASSIFIED_RISK_META,
 } from '@/lib/docs/types';
@@ -45,7 +48,8 @@ import { riskBand } from '@/lib/docs/content';
 import { RichEditor } from './rich-editor';
 import { Notice } from '@/components/ui-kit/notice';
 import { Tag } from '@/components/ui-kit/tag';
-import { BackLink } from '@/components/ui-kit/back-link';
+import { PageHeader } from '@/components/ui-kit/page-header';
+import { IconButton } from '@/components/ui/icon-button';
 export function DocumentEditor({
   workspace: w,
   initial,
@@ -72,6 +76,13 @@ export function DocumentEditor({
   const [busy, setBusy] = useState(false);
   const [uploading, setUploading] = useState(false);
   const [contributors, setContributors] = useState(initial.contributors);
+  const titleId = useId();
+  const summaryId = useId();
+  const referenceId = useId();
+  const ownerId = useId();
+  const reviewId = useId();
+  const changeId = useId();
+  const approverId = useId();
   const saved = useRef(JSON.stringify(initial.content));
   const saving = useRef<Promise<boolean> | null>(null);
   const mounted = useRef(true);
@@ -80,8 +91,8 @@ export function DocumentEditor({
     contentRef.current = next;
     setContent(next);
   }
-  const acquire = useCallback(async (editSession = session.current) => {
-    const result = await lockAction(initial.documentId, editSession);
+  const acquire = useCallback(async (editSession = session.current, takeOver = false) => {
+    const result = await lockAction(initial.documentId, editSession, false, takeOver);
     if (!mounted.current || session.current !== editSession) {
       if (result.ok) void lockAction(initial.documentId, editSession, true);
       return;
@@ -227,156 +238,156 @@ export function DocumentEditor({
   const approvers = w.members.filter(
     (m) => m.active && m.access.approve && !contributors.includes(m.id) && m.id !== w.member.id,
   );
+  const failed = saveStatus === 'Couldn’t save';
+  const selfLocked = lockError === SELF_LOCK_MESSAGE;
   return (
     <Tabs
       value={editorView}
       onValueChange={(value) => setEditorView(value as 'write' | 'details')}
-      className="authoring-workspace"
+      className="authoring-workspace flex min-w-0 flex-col gap-4"
     >
-      <div className="breadcrumb">
-        <BackLink href={`/docs/documents/${initial.documentId}`} label="Document" />
-      </div>
-      <div className="editor-page-heading">
-        <div>
-          {initial.status === 'changes_requested' ? (
-            <Tag meta={DOC_STATUS_META.changesRequested} />
-          ) : null}
-          <h1>Edit document</h1>
-          <p>Changes stay in this draft until they are reviewed and approved.</p>
-        </div>
-        <div className="editor-page-actions">
-          <span
-            className={`save-status ${saveStatus === 'Couldn’t save' ? 'save-error' : ''}`}
-            role="status"
-          >
-            {saveStatus === 'Couldn’t save' ? <CloudOff size={17} /> : <Cloud size={17} />}{' '}
-            {saveStatus}
-          </span>
-          <Button
-            variant="outline"
-            className="button secondary"
-            disabled={!locked || busy}
-            onClick={() => void persist()}
-          >
-            Save now
-          </Button>
-          <Button
-            variant="default"
-            className="button primary"
-            disabled={!locked || busy || uploading}
-            onClick={async () => {
-              if (await persist()) setDialog(true);
-            }}
-          >
-            <Send size={17} />
-            Submit for review
-          </Button>
-        </div>
-      </div>
-      {error ? <Notice tone="error" live="alert" title={error} className="my-4" /> : null}
+      <PageHeader
+        back={{ href: `/docs/documents/${initial.documentId}`, label: 'Document' }}
+        title="Edit document"
+        description="Changes stay in this draft until they are reviewed and approved"
+        status={
+          <>
+            {initial.status === 'changes_requested' ? <Tag meta={DOC_STATUS_META.changesRequested} /> : null}
+            <span
+              className={`flex items-center gap-1.5 text-xs ${failed ? 'text-ui-destructive' : 'text-ui-muted-foreground'}`}
+              role="status"
+            >
+              {failed ? <CloudOff aria-hidden="true" className="size-4" /> : <Cloud aria-hidden="true" className="size-4" />}
+              {saveStatus}
+            </span>
+          </>
+        }
+        actions={
+          <>
+            <Button variant="outline" disabled={!locked || busy} onClick={() => void persist()}>
+              Save now
+            </Button>
+            <Button
+              disabled={!locked || busy || uploading}
+              onClick={async () => {
+                if (await persist()) setDialog(true);
+              }}
+            >
+              <Send aria-hidden="true" />
+              Submit for review
+            </Button>
+          </>
+        }
+      />
+      {error ? <Notice tone="error" live="alert" title={error} /> : null}
       {lockError && (
         <Notice
           tone="error"
           live="alert"
           icon={LockKeyhole}
-          className="my-4"
           title={lockError}
           actions={
-            <Button variant="outline" onClick={() => void acquire()}>
-              <RefreshCw aria-hidden="true" />
-              Reconnect
-            </Button>
+            selfLocked ? (
+              <Button variant="outline" onClick={() => void acquire(session.current, true)}>
+                <Pencil aria-hidden="true" />
+                Edit here
+              </Button>
+            ) : (
+              <Button variant="outline" onClick={() => void acquire()}>
+                <RefreshCw aria-hidden="true" />
+                Reconnect
+              </Button>
+            )
           }
         />
       )}
-      {!locked && !lockError && (
-        <Notice live="status" className="my-4" title="Acquiring your editing session…" />
+      {!locked && !lockError && <Notice live="status" title="Opening the editor…" />}
+      {initial.feedback && (
+        <Notice tone="warning" title="Reviewer feedback" description={initial.feedback} />
       )}
-      <div className="editor-section-switch">
+      <div className="flex flex-wrap items-center justify-between gap-3">
         <TabsList aria-label="Editor sections">
           <TabsTrigger value="write">Write document</TabsTrigger>
-          <TabsTrigger value="details">Details & audience</TabsTrigger>
+          <TabsTrigger value="details">Details and audience</TabsTrigger>
         </TabsList>
-        <span>Draft → Independent review → Published</span>
+        <p className="text-xs text-ui-muted-foreground">Draft · Independent review · Published</p>
       </div>
-      {initial.feedback && (
-        <Notice
-          tone="warning"
-          className="my-4"
-          title="Reviewer feedback"
-          description={initial.feedback}
-        />
-      )}
-      <div className="editor-layout" data-editor-view={editorView}>
-        <TabsContent value="write" forceMount className="editor-main">
-          <section className="editor-title-panel">
-            <Label>
-              Document title
+      <TabsContent value="write" forceMount className="data-[state=inactive]:hidden">
+        <div className="editor-columns">
+          <section className="pc-panel min-w-0" aria-label="Document">
+            <div className="flex flex-col gap-2">
+              <Label className="block" htmlFor={titleId}>Document title</Label>
               <Input
-                className="title-input"
+                id={titleId}
                 value={content.title}
                 disabled={!locked}
                 onChange={(e) => change({ title: e.target.value })}
                 maxLength={200}
               />
-            </Label>
-            <Label>
-              Short summary
+            </div>
+            <div className="flex flex-col gap-2">
+              <Label className="block" htmlFor={summaryId}>Short summary</Label>
               <Textarea
+                id={summaryId}
                 value={content.summary}
                 disabled={!locked}
                 onChange={(e) => change({ summary: e.target.value })}
                 maxLength={1200}
-                placeholder="Explain what this document helps the reader do."
+                placeholder="Explain what this document helps the reader do"
                 rows={2}
               />
-            </Label>
-          </section>
-          <RichEditor
-            key={editorKey}
-            value={content.body}
-            disabled={!locked || busy}
-            onChange={(body) => change({ body })}
-            upload={upload}
-          />
-          {content.type === 'Risk assessment' && (
-            <RiskEditor
-              content={content}
-              onChange={(riskRows) => change({ riskRows })}
-              workspace={w}
+            </div>
+            <RichEditor
+              key={editorKey}
+              value={content.body}
               disabled={!locked || busy}
+              onChange={(body) => change({ body })}
+              upload={upload}
             />
-          )}
-          <Card asChild>
-            <section className="panel attachment-editor">
-              <h2>Reference attachments</h2>
-              <p>
-                Attach supporting PDF or Word documents. Uploaded files are preserved with each
-                published version.
-              </p>
-              {content.attachments.map((file) => (
-                <div className="attachment" key={file.id}>
-                  <Paperclip size={18} />
-                  <a href={`/api/docs/files/${file.id}`}>{file.name}</a>
-                  <Button
-                    variant="ghost"
-                    className="icon-button"
-                    aria-label={`Remove ${file.name}`}
-                    disabled={!locked}
-                    onClick={() =>
-                      change({ attachments: content.attachments.filter((f) => f.id !== file.id) })
-                    }
-                  >
-                    <Trash2 size={16} />
-                  </Button>
-                </div>
-              ))}
-              <Label className="upload-area">
-                <Paperclip size={21} />
-                <strong>{uploading ? 'Uploading…' : 'Choose a PDF or Word document'}</strong>
-                <span>PDF or DOCX · Up to 4 MB per file</span>
+            {content.type === 'Risk assessment' && (
+              <RiskEditor
+                content={content}
+                onChange={(riskRows) => change({ riskRows })}
+                workspace={w}
+                disabled={!locked || busy}
+              />
+            )}
+            <section className="flex flex-col gap-3" aria-labelledby="attachments-title">
+              <div>
+                <h2 id="attachments-title">Reference attachments</h2>
+                <p className="text-sm text-ui-muted-foreground">
+                  Supporting PDF or Word documents, kept with each published version
+                </p>
+              </div>
+              {content.attachments.length > 0 && (
+                <ul className="pc-rows">
+                  {content.attachments.map((file) => (
+                    <li className="pc-row" key={file.id}>
+                      <span className="pc-tile-icon"><Paperclip aria-hidden="true" /></span>
+                      <span className="pc-row-body">
+                        <a className="pc-row-title underline-offset-2 hover:underline" href={`/api/docs/files/${file.id}`}>{file.name}</a>
+                        <span className="pc-row-hint">{(file.size / 1024).toFixed(0)} KB</span>
+                      </span>
+                      <IconButton
+                        label={`Remove ${file.name}`}
+                        disabled={!locked}
+                        onClick={() =>
+                          change({ attachments: content.attachments.filter((f) => f.id !== file.id) })
+                        }
+                      >
+                        <Trash2 aria-hidden="true" />
+                      </IconButton>
+                    </li>
+                  ))}
+                </ul>
+              )}
+              <Label className="editor-drop-zone">
+                <span className="pc-tile-icon"><Upload aria-hidden="true" /></span>
+                <span className="font-semibold">{uploading ? 'Uploading…' : 'Choose a PDF or Word document'}</span>
+                <span className="text-xs font-normal text-ui-muted-foreground">PDF or DOCX · Up to 4 MB per file</span>
                 <Input
                   type="file"
+                  className="sr-only"
                   disabled={!locked || uploading}
                   accept=".pdf,.docx"
                   onChange={async (e) => {
@@ -394,122 +405,92 @@ export function DocumentEditor({
                 />
               </Label>
             </section>
-          </Card>
-        </TabsContent>
-        <TabsContent value="details" forceMount asChild>
-          <Card asChild>
-            <aside className="editor-details panel">
-              <h2>Document details</h2>
-              <Label>
-                Reference number
-                <Input
-                  disabled={!locked}
-                  value={content.reference}
-                  onChange={(e) => change({ reference: e.target.value })}
-                  maxLength={50}
-                />
-              </Label>
-              <Label>
-                Document type
-                <Input value={content.type} readOnly />
-              </Label>
-              <Label>
-                Document owner
-                <NativeSelect
-                  disabled={!locked}
-                  value={content.ownerId}
-                  onChange={(e) => change({ ownerId: e.target.value })}
-                >
-                  {w.members
-                    .filter((m) => m.access.write)
-                    .map((m) => (
-                      <NativeSelectOption value={m.id} key={m.id}>
-                        {m.name}
-                      </NativeSelectOption>
-                    ))}
-                </NativeSelect>
-              </Label>
-              <Label>
-                Next review date
-                <Input
-                  type="date"
-                  disabled={!locked}
-                  value={content.reviewDate}
-                  onChange={(e) => change({ reviewDate: e.target.value })}
-                />
-              </Label>
-              <fieldset disabled={!locked}>
-                <legend>Facilities</legend>
-                {w.facilities.map((f) => (
-                  <Label className="checkbox-label" key={f.id}>
-                    <Checkbox
-                      checked={content.facilityIds.includes(f.id)}
-                      onCheckedChange={(checked) =>
-                        change({
-                          facilityIds:
-                            checked === true
-                              ? [...content.facilityIds, f.id]
-                              : content.facilityIds.filter((id) => id !== f.id),
-                        })
-                      }
-                    />
-                    {f.name}
-                  </Label>
-                ))}
-              </fieldset>
-              <fieldset disabled={!locked}>
-                <legend>Teams</legend>
-                {w.teams.map((t) => (
-                  <Label className="checkbox-label" key={t.id}>
-                    <Checkbox
-                      checked={content.teamIds.includes(t.id)}
-                      onCheckedChange={(checked) =>
-                        change({
-                          teamIds:
-                            checked === true
-                              ? [...content.teamIds, t.id]
-                              : content.teamIds.filter((id) => id !== t.id),
-                        })
-                      }
-                    />
-                    {t.name}
-                  </Label>
-                ))}
-              </fieldset>
-              <fieldset className="related-document-picker" disabled={!locked}>
-                <legend>Related documents</legend>
-                <p>Select any published guidance that supports this document.</p>
-                {w.documents
-                  .filter((d) => d.currentVersionId && d.id !== initial.documentId)
-                  .map((d) => (
-                    <Label className="checkbox-label" key={d.id}>
-                      <Checkbox
-                        checked={content.relatedIds.includes(d.id)}
-                        onCheckedChange={(event) =>
-                          change({
-                            relatedIds:
-                              event === true
-                                ? [...content.relatedIds, d.id]
-                                : content.relatedIds.filter((id) => id !== d.id),
-                          })
-                        }
-                      />
-                      {d.content.title}
-                    </Label>
+          </section>
+          <aside className="pc-panel min-w-0" aria-labelledby="details-title">
+            <h2 id="details-title">Document details</h2>
+            <div className="flex flex-col gap-2">
+              <Label className="block" htmlFor={referenceId}>Reference number</Label>
+              <Input
+                id={referenceId}
+                disabled={!locked}
+                value={content.reference}
+                onChange={(e) => change({ reference: e.target.value })}
+                maxLength={50}
+              />
+            </div>
+            <dl>
+              <dt className="text-xs text-ui-muted-foreground">Document type</dt>
+              <dd className="font-semibold">{documentTypeLabels[content.type].long}</dd>
+            </dl>
+            <div className="flex flex-col gap-2">
+              <Label className="block" htmlFor={ownerId}>Document owner</Label>
+              <NativeSelect
+                id={ownerId}
+                disabled={!locked}
+                value={content.ownerId}
+                onChange={(e) => change({ ownerId: e.target.value })}
+              >
+                {w.members
+                  .filter((m) => m.access.write)
+                  .map((m) => (
+                    <NativeSelectOption value={m.id} key={m.id}>
+                      {m.name}
+                    </NativeSelectOption>
                   ))}
-              </fieldset>
-              <div className="editor-help">
-                <LockKeyhole size={18} />
-                <p>
-                  {locked
-                    ? 'You have the editing session. Others can read while you work.'
-                    : 'Editing is locked until your session connects.'}
-                </p>
-              </div>
-            </aside>
-          </Card>
-        </TabsContent>
-      </div>
+              </NativeSelect>
+            </div>
+            <div className="flex flex-col gap-2">
+              <Label className="block" htmlFor={reviewId}>Next review date</Label>
+              <Input
+                id={reviewId}
+                type="date"
+                disabled={!locked}
+                value={content.reviewDate}
+                onChange={(e) => change({ reviewDate: e.target.value })}
+              />
+            </div>
+            <p className="text-xs text-ui-muted-foreground">
+              {locked
+                ? 'You’re editing. Others can read the document while you work.'
+                : 'Editing opens once the editor is ready.'}
+            </p>
+          </aside>
+        </div>
+      </TabsContent>
+      <TabsContent value="details" forceMount className="data-[state=inactive]:hidden">
+        <section className="pc-panel" aria-labelledby="audience-title">
+          <div>
+            <h2 id="audience-title">Details and audience</h2>
+            <p className="text-sm text-ui-muted-foreground">Who the document is for, and what it links to</p>
+          </div>
+          <div className="grid min-w-0 gap-6 md:grid-cols-[repeat(auto-fit,minmax(14rem,1fr))]">
+            <ChoiceList
+              legend="Facilities"
+              items={w.facilities}
+              chosen={content.facilityIds}
+              disabled={!locked}
+              onChange={(facilityIds) => change({ facilityIds })}
+            />
+            <ChoiceList
+              legend="Teams"
+              items={w.teams}
+              chosen={content.teamIds}
+              disabled={!locked}
+              onChange={(teamIds) => change({ teamIds })}
+            />
+            <ChoiceList
+              legend="Related documents"
+              hint="Published guidance that supports this document"
+              items={w.documents
+                .filter((d) => d.currentVersionId && d.id !== initial.documentId)
+                .map((d) => ({ id: d.id, name: d.content.title }))}
+              chosen={content.relatedIds}
+              disabled={!locked}
+              onChange={(relatedIds) => change({ relatedIds })}
+            />
+          </div>
+        </section>
+      </TabsContent>
       <AlertDialog
         open={!!leaveHref}
         onOpenChange={(open) => {
@@ -543,24 +524,25 @@ export function DocumentEditor({
           if (!busy) setDialog(open);
         }}
       >
-        <DialogContent className="workflow-dialog" showCloseButton={!busy}>
+        <DialogContent className="flex flex-col gap-4" showCloseButton={!busy}>
           <DialogTitle>Send your draft for review</DialogTitle>
           <DialogDescription>
             The draft will be frozen until the reviewer approves it or requests changes.
           </DialogDescription>
-          <Label>
-            What changed?
+          <div className="flex flex-col gap-2">
+            <Label className="block" htmlFor={changeId}>What changed?</Label>
             <Textarea
+              id={changeId}
               value={summary}
               onChange={(e) => setSummary(e.target.value)}
               maxLength={2000}
-              placeholder="Give the reviewer and your team a clear summary."
+              placeholder="A short summary for the reviewer and your team"
               required
             />
-          </Label>
-          <Label>
-            Approver
-            <NativeSelect aria-label="Approver" value={approver} onChange={(e) => setApprover(e.target.value)} required>
+          </div>
+          <div className="flex flex-col gap-2">
+            <Label className="block" htmlFor={approverId}>Approver</Label>
+            <NativeSelect id={approverId} value={approver} onChange={(e) => setApprover(e.target.value)} required>
               <NativeSelectOption value="">Select an independent approver</NativeSelectOption>
               {approvers.map((m) => (
                 <NativeSelectOption key={m.id} value={m.id}>
@@ -568,20 +550,18 @@ export function DocumentEditor({
                 </NativeSelectOption>
               ))}
             </NativeSelect>
-          </Label>
+          </div>
           {!approvers.length && (
             <Notice
               tone="error"
-              className="my-4"
               title="No independent approver is available. An administrator must assign an active approver who has not edited this revision."
             />
           )}
-          {error ? <Notice tone="error" live="alert" title={error} className="my-4" /> : null}
-          <div className="form-actions">
+          {error ? <Notice tone="error" live="alert" title={error} /> : null}
+          <div className="flex flex-wrap justify-end gap-2">
             <Button
               variant="outline"
               data-dialog-close
-              className="button secondary"
               disabled={busy}
               onClick={() => setDialog(false)}
             >
@@ -589,7 +569,6 @@ export function DocumentEditor({
             </Button>
             <Button
               variant="default"
-              className="button primary"
               disabled={busy || !approver || !summary.trim()}
               onClick={async () => {
                 setBusy(true);
@@ -615,13 +594,52 @@ export function DocumentEditor({
                 }
               }}
             >
-              <Send size={17} />
+              <Send aria-hidden="true" />
               {busy ? 'Submitting…' : 'Send for review'}
             </Button>
           </div>
         </DialogContent>
       </Dialog>
     </Tabs>
+  );
+}
+/** A group of checkboxes for the audience (facilities, teams, related documents): the legend as
+ *  the field label, then 44px rows. The fieldset carries the lock (disabled while not editing). */
+function ChoiceList({
+  legend,
+  hint,
+  items,
+  chosen,
+  disabled,
+  onChange,
+}: {
+  legend: string;
+  hint?: string;
+  items: { id: string; name: string }[];
+  chosen: string[];
+  disabled: boolean;
+  onChange: (ids: string[]) => void;
+}) {
+  return (
+    <fieldset className="editor-choices" disabled={disabled}>
+      <legend>{legend}</legend>
+      {hint ? <p className="text-xs text-ui-muted-foreground">{hint}</p> : null}
+      {items.length ? (
+        items.map((item) => (
+          <Label className="flex min-h-11 flex-row items-center gap-3 font-normal" key={item.id}>
+            <Checkbox
+              checked={chosen.includes(item.id)}
+              onCheckedChange={(checked) =>
+                onChange(checked === true ? [...chosen, item.id] : chosen.filter((id) => id !== item.id))
+              }
+            />
+            {item.name}
+          </Label>
+        ))
+      ) : (
+        <p className="text-sm text-ui-muted-foreground">None to choose from yet</p>
+      )}
+    </fieldset>
   );
 }
 function RiskEditor({
@@ -638,16 +656,14 @@ function RiskEditor({
   const update = (id: string, patch: Partial<RiskRow>) =>
     onChange(c.riskRows.map((r) => (r.id === id ? { ...r, ...patch } : r)));
   return (
-    <Card asChild>
-      <section className="panel risk-editor">
-        <div className="panel-heading">
+      <section className="flex flex-col gap-3" aria-labelledby="risk-editor-title">
+        <div className="flex flex-wrap items-center justify-between gap-3">
           <div>
-            <h2>Risk assessment</h2>
-            <p>Identify hazards, document controls, and assign follow-up actions.</p>
+            <h2 id="risk-editor-title">Risk assessment</h2>
+            <p className="text-sm text-ui-muted-foreground">Hazards, their controls and the follow-up actions</p>
           </div>
           <Button
             variant="outline"
-            className="button secondary compact"
             disabled={disabled}
             onClick={() =>
               onChange([
@@ -668,33 +684,31 @@ function RiskEditor({
               ])
             }
           >
-            <Plus size={16} />
+            <Plus aria-hidden="true" />
             Add hazard
           </Button>
         </div>
         {!w.matrix.configured && (
           <Notice
             tone="error"
-            className="my-4"
             title="The risk matrix must be configured in Administration before submission."
           />
         )}
         {!c.riskRows.length && (
-          <p className="empty-inline">Add the first hazard to start your assessment.</p>
+          <p className="text-sm text-ui-muted-foreground">Add the first hazard to start the assessment</p>
         )}
         {c.riskRows.map((r, index) => (
           <fieldset className="risk-edit-row" key={r.id} disabled={disabled}>
-            <div className="risk-edit-heading">
+            <legend className="sr-only">Hazard {index + 1}</legend>
+            <div className="flex items-center justify-between gap-3">
               <strong>Hazard {index + 1}</strong>
-              <Button
-                variant="ghost"
-                className="icon-button"
+              <IconButton
                 type="button"
-                aria-label={`Remove hazard ${index + 1}`}
+                label={`Remove hazard ${index + 1}`}
                 onClick={() => onChange(c.riskRows.filter((row) => row.id !== r.id))}
               >
-                <Trash2 size={17} />
-              </Button>
+                <Trash2 aria-hidden="true" />
+              </IconButton>
             </div>
             <Label>
               Hazard
@@ -783,6 +797,5 @@ function RiskEditor({
           </fieldset>
         ))}
       </section>
-    </Card>
   );
 }

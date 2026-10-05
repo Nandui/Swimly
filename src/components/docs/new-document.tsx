@@ -1,30 +1,30 @@
 'use client';
 import { Label } from '@/components/shadcn/label';
-import { Card } from '@/components/shadcn/card';
-import { Input } from '@/components/shadcn/input';
 import { RadioGroup, RadioGroupItem } from '@/components/shadcn/radio-group';
-import { Textarea } from '@/components/shadcn/textarea';
 import { Button } from '@/components/shadcn/button';
 import { useEffect, useRef, useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { ArrowRight } from 'lucide-react';
-import { BackLink } from '@/components/ui-kit/back-link';
+import { ChevronRight } from 'lucide-react';
+import { PageHeader } from '@/components/ui-kit/page-header';
+import { Input as FieldInput } from '@/components/ui/input';
+import { Textarea as FieldTextarea } from '@/components/ui/textarea';
 import {
   documentTypes,
+  documentTypeLabels,
   type Workspace,
   type DocumentType,
   type DocumentContent,
 } from '@/lib/docs/types';
 import { createDocumentAction } from '@/app/docs/actions';
-import { DocIcon, PageHeading } from './ui';
+import { DocIcon } from './ui';
 import { Notice } from '@/components/ui-kit/notice';
 const descriptions = {
-  SOP: 'A clear, repeatable way to complete a task.',
-  NOP: 'Everyday arrangements for running your facility.',
-  EAP: 'Clear roles and actions when an emergency occurs.',
-  'Risk assessment': 'Hazards, controls, and a structured risk assessment.',
-  Policy: 'The principles and commitments that guide your team.',
-  Custom: 'Start with a blank document and make it your own.',
+  SOP: 'A clear, repeatable way to complete a task',
+  NOP: 'Everyday arrangements for running your facility',
+  EAP: 'Roles and actions when something goes wrong',
+  'Risk assessment': 'Hazards, who is affected and the controls',
+  Policy: 'The principles that guide your team',
+  Custom: 'Start from a blank page',
 };
 export function NewDocument({ workspace: w }: { workspace: Workspace }) {
   const router = useRouter();
@@ -51,91 +51,80 @@ export function NewDocument({ workspace: w }: { workspace: Workspace }) {
   const [reference, setReference] = useState(nextRef('SOP'));
   const [error, setError] = useState('');
   const [busy, setBusy] = useState(false);
+  const steps = ['Choose a template', 'Document essentials', 'Write and review'];
   return (
-    <div className="new-document">
-      <div className="breadcrumb">
-        <BackLink href="/docs/library" label="Library" />
-      </div>
-      <PageHeading
-        eyebrow="Give good guidance a home"
+    <div className="flex min-w-0 flex-col gap-4">
+      <PageHeader
+        back={{ href: '/docs/library', label: 'Document library' }}
         title="Create a document"
-        description="Choose a template, add the essentials, then start writing."
+        description="Choose a template, add the essentials, then start writing"
       />
       <ol className="create-steps" aria-label="Document creation progress">
-        <li aria-current={step === 1 ? 'step' : undefined}>
-          <span>1</span>Choose a template
-        </li>
-        <li aria-current={step === 2 ? 'step' : undefined}>
-          <span>2</span>Document essentials
-        </li>
-        <li>
-          <span>3</span>Write and review
-        </li>
+        {steps.map((label, index) => (
+          <li key={label} aria-current={step === index + 1 ? 'step' : undefined}>
+            <span className="create-step-of">Step {index + 1} of 3 · </span>
+            <span className="create-step-number" aria-hidden="true">{index + 1}.{' '}</span>
+            {label}
+          </li>
+        ))}
       </ol>
-      <h2 className="create-step-heading" tabIndex={-1} ref={stepHeading}>
-        {step === 1
-          ? 'What kind of document are you creating?'
-          : 'Give your document a clear identity'}
-      </h2>
       {step === 1 && (
-        <div className="create-template-layout">
-          <RadioGroup
-            className="template-grid"
-            aria-label="Document type"
-            value={type}
-            onValueChange={(value) => {
-              setType(value as DocumentType);
-              setReference(nextRef(value as DocumentType));
-            }}
-          >
-            {documentTypes.map((t) => (
-              <Label className={`template-card ${type === t ? 'selected' : ''}`} key={t}>
-                <RadioGroupItem value={t} aria-label={t} />
-                <DocIcon type={t} size={24} />
-                <h2>
-                  {t === 'SOP'
-                    ? 'Standard operating procedure'
-                    : t === 'NOP'
-                      ? 'Normal operating procedure'
-                      : t === 'EAP'
-                        ? 'Emergency action plan'
-                        : t === 'Policy'
-                          ? 'Policy'
-                          : t === 'Custom'
-                            ? 'Custom document'
-                            : t}
-                </h2>
-                <p>{descriptions[t]}</p>
-              </Label>
-            ))}
-          </RadioGroup>
-          <Card asChild>
-            <aside className="template-preview panel">
-              <DocIcon type={type} size={26} />
-              <h2>{selectedTemplate?.name || 'Blank document'}</h2>
-              <p>{descriptions[type]}</p>
-              <h3>Your starting structure</h3>
-              {templateSections.length ? (
-                <ol>
-                  {templateSections.map((section, index) => (
-                    <li key={index}>{section}</li>
-                  ))}
-                </ol>
-              ) : (
-                <p>A blank writing canvas, ready for your content.</p>
-              )}
-              <Button type="button" onClick={() => setStep(2)}>
-                Use this template <ArrowRight size={17} aria-hidden="true" />
-              </Button>
-              <small>You can edit every section in the document editor.</small>
-            </aside>
-          </Card>
+        <div className="editor-columns">
+          <section className="pc-panel min-w-0" aria-labelledby="template-heading">
+            <h2 id="template-heading" tabIndex={-1} ref={stepHeading}>
+              What kind of document are you creating?
+            </h2>
+            <RadioGroup
+              className="pc-rows pc-rows-grid"
+              aria-labelledby="template-heading"
+              value={type}
+              onValueChange={(value) => {
+                setType(value as DocumentType);
+                setReference(nextRef(value as DocumentType));
+              }}
+            >
+              {documentTypes.map((t) => (
+                <Label className="pc-row template-choice" key={t}>
+                  <RadioGroupItem value={t} className="sr-only" aria-describedby={`template-${t.replace(' ', '-')}`} />
+                  <DocIcon type={t} />
+                  <span className="pc-row-body">
+                    <span className="pc-row-title">{documentTypeLabels[t].long}</span>
+                    <span className="pc-row-hint" id={`template-${t.replace(' ', '-')}`}>{descriptions[t]}</span>
+                  </span>
+                </Label>
+              ))}
+            </RadioGroup>
+          </section>
+          <aside className="pc-panel min-w-0" aria-labelledby="preview-heading">
+            <div>
+              <h2 id="preview-heading">{selectedTemplate?.name || 'Blank document'}</h2>
+              <p className="text-sm text-ui-muted-foreground">{descriptions[type]}</p>
+            </div>
+            <h3 className="text-xs text-ui-muted-foreground">Your starting structure</h3>
+            {templateSections.length ? (
+              <ol className="pc-rows">
+                {templateSections.map((section, index) => (
+                  <li key={index} className="pc-row min-h-0 py-2">
+                    <span className="pc-tile-icon size-8 text-xs font-semibold">{index + 1}</span>
+                    <span className="pc-row-body">{section}</span>
+                  </li>
+                ))}
+              </ol>
+            ) : (
+              <p className="text-sm text-ui-muted-foreground">A blank page, ready for your content</p>
+            )}
+            <Button type="button" onClick={() => setStep(2)}>
+              Use this template
+              <ChevronRight aria-hidden="true" />
+            </Button>
+            <p className="text-xs text-ui-muted-foreground">You can edit every section in the document editor</p>
+          </aside>
         </div>
       )}
       {step === 2 && (
-        <Card asChild>
           <form
-            className="panel new-document-form"
+            className="pc-panel"
+            aria-labelledby="essentials-heading"
             onSubmit={async (e) => {
               e.preventDefault();
               setBusy(true);
@@ -174,61 +163,58 @@ export function NewDocument({ workspace: w }: { workspace: Workspace }) {
               }
             }}
           >
-            <div className="create-selected-template">
+            <h2 id="essentials-heading" tabIndex={-1} ref={stepHeading}>
+              Give your document a clear identity
+            </h2>
+            <div className="pc-row">
               <DocIcon type={type} />
-              <div>
-                <strong>{selectedTemplate?.name || 'Blank document'}</strong>
-                <span>Owned by {w.member.name}</span>
-              </div>
-              <Button variant="ghost" type="button" onClick={() => setStep(1)} disabled={busy}>
+              <span className="pc-row-body">
+                <span className="pc-row-title">{selectedTemplate?.name || 'Blank document'}</span>
+                <span className="pc-row-hint">{documentTypeLabels[type].long} · Owned by {w.member.name}</span>
+              </span>
+              <Button variant="outline" type="button" onClick={() => setStep(1)} disabled={busy}>
                 Change template
               </Button>
             </div>
-            <div className="form-grid">
-              <Label>
-                Document title
-                <Input
-                  required
-                  autoComplete="off"
-                  maxLength={200}
-                  value={title}
-                  onChange={(e) => setTitle(e.target.value)}
-                  placeholder="e.g. Pool opening procedure"
-                />
-              </Label>
-              <Label>
-                Reference number
-                <Input
-                  required
-                  maxLength={50}
-                  value={reference}
-                  onChange={(e) => setReference(e.target.value)}
-                />
-              </Label>
-            </div>
-            <Label className="create-summary">
-              Short summary{' '}
-              <Textarea
-                value={summary}
-                onChange={(event) => setSummary(event.target.value)}
-                maxLength={1200}
-                rows={3}
-                placeholder="What will this document help someone do?"
+            <div className="grid min-w-0 gap-4 md:grid-cols-2">
+              <FieldInput
+                label="Document title"
+                required
+                autoComplete="off"
+                maxLength={200}
+                value={title}
+                onChange={setTitle}
+                placeholder="Pool opening procedure"
               />
-              <small>Optional. You can add or refine this while writing.</small>
-            </Label>
-            {error ? <Notice tone="error" live="alert" title={error} className="my-4" /> : null}
-            <div className="form-actions">
+              <FieldInput
+                label="Reference number"
+                required
+                maxLength={50}
+                value={reference}
+                onChange={setReference}
+              />
+            </div>
+            <FieldTextarea
+              label="Short summary"
+              optional
+              description="You can add or refine this while writing"
+              value={summary}
+              onChange={(event) => setSummary(event.target.value)}
+              maxLength={1200}
+              rows={3}
+              placeholder="What will this document help someone do?"
+            />
+            {error ? <Notice tone="error" live="alert" title={error} /> : null}
+            <div className="flex flex-wrap justify-end gap-2">
               <Button type="button" variant="outline" onClick={() => setStep(1)} disabled={busy}>
                 Back
               </Button>
-              <Button variant="default" className="button primary" disabled={busy}>
+              <Button disabled={busy}>
                 {busy ? 'Creating…' : 'Create draft and start writing'}
-                <ArrowRight size={17} />
+                <ChevronRight aria-hidden="true" />
               </Button>
             </div>
           </form>
-        </Card>
       )}
     </div>
   );

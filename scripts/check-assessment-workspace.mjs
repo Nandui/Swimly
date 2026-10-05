@@ -94,11 +94,5 @@ try {
   await page.keyboard.press('Enter');
   assert.equal(await page.evaluate(()=>document.activeElement?.id),'swim-school-main');
   assert.deepEqual(errors,[]);
-  if(process.argv.includes('--write-help-images')) {
-    await fs.copyFile(path.resolve('.impeccable/review/assessment-workspace/awaiting-enrolment-1280-light.png'),path.resolve('assets/help/assessment-awaiting-enrolment.png'));
-    const manifest=JSON.parse(await fs.readFile('assets/help/manifest.json','utf8'));
-    manifest['assessment-awaiting-enrolment']={width:1280,height:1100};
-    await fs.writeFile('assets/help/manifest.json',JSON.stringify(manifest,null,2)+'\n');
-  }
   console.log(`Assessment workspace passed: navigation, dialogs, search/pagination, empty/restricted views, keyboard skip link, 44px controls and ${layouts} responsive/theme layouts. Synthetic data only.`);
 } finally {await browser.close();await new Promise(resolve=>server.close(resolve));}

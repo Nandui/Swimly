@@ -10,6 +10,7 @@ import { documentExtensions } from '@/lib/docs/editor-extensions';
 import type { Attachment } from '@/lib/docs/types';
 import { EditorToolbar } from './editor-toolbar';
 import { Notice } from '@/components/ui-kit/notice';
+import { FileField } from '@/components/ui/file-field';
 export function RichEditor({
   value,
   onChange,
@@ -68,15 +69,12 @@ export function RichEditor({
               </Label>
             ) : (
               <>
-                <Label>
-                  Image file
-                  <Input
-                    autoFocus
-                    type="file"
-                    accept="image/png,image/jpeg,image/webp"
-                    onChange={(e) => setImage(e.target.files?.[0] || null)}
-                  />
-                </Label>
+                <FileField
+                  label="Image file"
+                  description="PNG, JPEG or WebP"
+                  accept="image/png,image/jpeg,image/webp"
+                  onChange={(e) => setImage(e.target.files?.[0] || null)}
+                />
                 <Label>
                   Alternative text
                   <Input
@@ -87,11 +85,10 @@ export function RichEditor({
                 </Label>
               </>
             )}
-            {error ? <Notice tone="error" live="alert" title={error} className="my-4" /> : null}
-            <div className="form-actions">
+            {error ? <Notice tone="error" live="alert" title={error} /> : null}
+            <div className="flex flex-wrap justify-end gap-2">
               <Button
                 variant="outline"
-                className="button secondary compact"
                 type="button"
                 onClick={() => setPanel(null)}
               >
@@ -100,7 +97,6 @@ export function RichEditor({
               {panel === 'link' && (
                 <Button
                   variant="outline"
-                  className="button secondary compact"
                   type="button"
                   disabled={disabled || busy || !editor}
                   onClick={() => {
@@ -113,7 +109,6 @@ export function RichEditor({
               )}
               <Button
                 variant="default"
-                className="button primary compact"
                 type="button"
                 disabled={busy || disabled || !editor}
                 onClick={async () => {

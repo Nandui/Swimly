@@ -89,7 +89,8 @@ writes an audit row; status tones come through metadata maps; and run the
 screen checklist in DESIGN.md before finishing. Preserve one H1, visible
 focus, 44px touch targets, both modes and layouts at 375, 768, 1024 and 1280.
 The frame (`ModuleShell`) owns the main landmark and page inset: 24px around and inside
-the rounded frame, none on phones where the frame is the page. Instructor keeps 16px. Do
+the rounded frame, none on phones where the frame is the page. The pool deck uses the same
+`tf-shell`/`tf-frame` (capped at 1180px, no rail or bottom bar) with the same insets. Do
 not nest a page frame.
 
 A role holds **one level for each module** (`StaffRole.levels`), translated into named

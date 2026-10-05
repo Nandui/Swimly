@@ -8,11 +8,19 @@ import { Notice } from "@/components/ui-kit/notice";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from "@/components/shadcn/dialog";
 import { loadSwimmerHistory } from "@/modules/activities/lib/students/actions/history";
 import { formatDate, formatDateTime, parseDateOnly } from "@/lib/format";
-import { HISTORY_MARKS, type HistoryEvent, type HistoryPage, type HistoryQuery } from "@/modules/activities/lib/students/history";
+import type { HistoryEvent, HistoryPage, HistoryQuery } from "@/modules/activities/lib/students/history";
+import { COMPETENCY_STATUS_META } from "@/modules/activities/lib/progression/constants";
+import { ATTENDANCE_STATUS_META } from "@/modules/activities/lib/attendance/constants";
 import styles from "./swimmer-profile.module.css";
 
 const ICONS = { competencies: Trophy, attendance: CalendarCheck, enrolment: ArrowRightLeft, completion: Trophy, assessment: ClipboardCheck, profile: UserRound };
-function mark(value: string | null | undefined) { return value ? HISTORY_MARKS[value] ?? value : "Not marked"; }
+/** A recorded mark in the words the rest of the app uses for it. */
+function mark(value: string | null | undefined) {
+  if (!value) return "Not marked";
+  if (value in COMPETENCY_STATUS_META) return COMPETENCY_STATUS_META[value as keyof typeof COMPETENCY_STATUS_META].label;
+  if (value in ATTENDANCE_STATUS_META) return ATTENDANCE_STATUS_META[value as keyof typeof ATTENDANCE_STATUS_META].label;
+  return value;
+}
 
 export function CompetencyHistory({ studentId, id, name }: { studentId: string; id: string; name: string }) {
   return <Dialog><DialogTrigger asChild><Button variant="ghost" aria-label={`History of ${name}`}><History aria-hidden="true" />History</Button></DialogTrigger>

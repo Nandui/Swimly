@@ -1,33 +1,88 @@
 import Link from "next/link";
 import { Button } from "@/components/shadcn/button";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/shadcn/collapsible";
-import { Banknote, BadgeCheck, CreditCard } from "lucide-react";
+import { BadgeCheck, ChevronDown, ChevronLeft, Euro, ReceiptText, type LucideIcon } from "lucide-react";
+import { PageHeader } from "@/components/ui-kit/page-header";
 import { Tag } from "@/components/ui-kit/tag";
 import { Notice } from "@/components/ui-kit/notice";
 import { RefundFinanceActions } from "@/components/refunds/finance-actions";
 import { RefundRequestForm } from "@/components/refunds/request-form";
 import { RefundReceipts } from "@/components/refunds/receipts";
-import { editableRefund, euros, paymentMethods, refundActions, refundNumber, refundServices, refundStatuses, type RefundActor, type RefundDetail as Detail } from "@/lib/refunds/types";
+import { editableRefund, euros, paymentMethods, refundActions, refundNextActions, refundNextStep, refundNumber, refundServices, refundStatuses, type RefundActor, type RefundDetail as Detail, type RefundView } from "@/lib/refunds/types";
 import { formatDate, formatDateTime, parseDateOnly } from "@/lib/format";
+import { cn } from "@/lib/utils";
+
+/** One fact: a caption over its value. Long text takes the whole row. */
+function Facts({ items }: { items: [string, string, boolean?][] }) {
+  return <dl className="refund-facts">{items.map(([label, value, wide]) => <div key={label} className={cn("min-w-0", wide && "refund-wide")}>
+    <dt className="text-xs font-semibold text-ui-muted-foreground">{label}</dt>
+    <dd className={cn("mt-1 break-words", wide && "whitespace-pre-wrap")}>{value}</dd>
+  </div>)}</dl>;
+}
+
+/** The three figures at the top of a request: what was asked, what was approved, and payment. */
+function summary(row: RefundView): { label: string; value: string; hint: string; icon: LucideIcon }[] {
+  const decided = row.approvedCents !== null && (row.status === "APPROVED" || row.status === "REFUNDED");
+  const approved = decided ? euros(row.approvedCents)
+    : row.status === "WITHDRAWN" && row.approvedCents !== null ? "Approval cancelled"
+    : row.status === "DECLINED" || row.status === "WITHDRAWN" ? "Not approved"
+    : row.status === "DRAFT" ? "Not submitted" : "Pending";
+  return [
+    { label: "Requested", value: euros(row.requestedCents), hint: refundServices[row.service], icon: Euro },
+    { label: "Approved", value: approved, hint: decided && row.approvedByName ? `By ${row.approvedByName}` : row.status === "DECLINED" || row.status === "WITHDRAWN" ? "Closed without a refund" : "Not decided yet", icon: BadgeCheck },
+    { label: "Payment", value: row.status === "REFUNDED" ? (row.paidOn ? formatDate(parseDateOnly(row.paidOn)) : "Recorded") : row.status === "APPROVED" ? "Not paid yet" : "Not recorded", hint: "Made outside Turnfin", icon: ReceiptText },
+  ];
+}
 
 export function RefundDetail({ data, who, sites }: { data: Detail; who: RefundActor; sites: { id: string; name: string }[] }) {
   const row = data.request, editable = editableRefund(row, who);
   const query = row.status === 'NEEDS_INFORMATION' ? [...data.events].reverse().find(event => event.action === 'information') : undefined;
-  const facts = [
+  const facts: [string, string, boolean?][] = [
     ['Customer', row.customerName || 'Not entered'], ['Site', row.clubName], ['Service', refundServices[row.service]],
     ['Member number', row.memberNumber || 'Not provided'], ['Contact email', row.contactEmail || 'Not provided'], ['Contact phone', row.contactPhone || 'Not provided'],
     ['Original payment date', row.paymentDate ? formatDate(parseDateOnly(row.paymentDate)) : 'Not entered'], ['Original payment reference', row.paymentReference || 'Not entered'],
     ['Submitted by', row.creatorName], ['Finance handler', row.handlerName || 'Unassigned'],
+    ['Service description', row.description || 'Not entered', true], ['Refund reason', row.reason || 'Not entered', true],
   ];
-  return <div className="space-y-6">
-    <div className="refund-heading"><div className="space-y-2"><div className="flex flex-wrap items-center gap-3"><h1 className="text-2xl font-semibold tabular-nums">{refundNumber(row.number)}</h1><Tag meta={refundStatuses[row.status]} /></div><p className="break-words text-sm text-ui-muted-foreground">{row.customerName || 'New customer refund'} · {row.clubName}</p></div><Button asChild variant="outline" className="min-h-11"><Link href="/refunds">Back to requests</Link></Button></div>
-    <dl className="refund-summary grid sm:grid-cols-3"><div><dt><Banknote aria-hidden="true" />Requested</dt><dd>{euros(row.requestedCents)}</dd></div><div><dt><BadgeCheck aria-hidden="true" />Approved</dt><dd className={row.approvedCents === null ? 'refund-summary-text' : undefined}>{row.approvedCents === null ? 'Pending' : euros(row.approvedCents)}</dd>{row.approvedByName && <p className="mt-1 text-xs text-ui-muted-foreground">By {row.approvedByName}</p>}</div><div><dt><CreditCard aria-hidden="true" />Payment</dt><dd className="refund-summary-text">{row.status === 'REFUNDED' ? `Recorded ${row.paidOn ? formatDate(parseDateOnly(row.paidOn)) : ''}` : row.status === 'APPROVED' ? 'Awaiting external payment' : 'Not recorded'}</dd></div></dl>
+  const finance = <RefundFinanceActions row={row} who={who} deliveryCount={data.delivery.length} />;
+  const receipts = <RefundReceipts id={row.id} version={row.version} attachments={data.attachments} editable={editable} />;
+  const history = <section className="pc-panel" aria-labelledby="history-heading"><h2 id="history-heading" className="text-lg font-semibold">Request history</h2>
+    <ol className="pc-feed refund-history">{data.events.map(event => {
+      const recorded = Object.entries({ Customer: event.snapshot.customerName, Site: event.snapshot.clubName, 'Service description': event.snapshot.description, Reason: event.snapshot.reason, 'Payment reference': event.snapshot.paymentReference, 'Refund reference': event.snapshot.paidReference }).filter((entry): entry is [string, string] => typeof entry[1] === 'string' && entry[1] !== '');
+      return <li key={event.id}><span className="pc-feed-dot" aria-hidden="true" /><div className="min-w-0 flex-1">
+        <p className="break-words"><strong className="font-semibold">{refundActions[event.action as keyof typeof refundActions] || event.action}</strong> · {event.actorName} · {formatDateTime(new Date(event.createdAt))}</p>
+        {event.note && <p className="mt-1 whitespace-pre-wrap break-words text-sm">{event.note}</p>}
+        {['submit', 'approve', 'pay'].includes(event.action) && <p className="text-xs text-ui-muted-foreground">Requested {euros(typeof event.snapshot.requestedCents === 'number' ? event.snapshot.requestedCents : null)}{typeof event.snapshot.approvedCents === 'number' ? ` · Approved ${euros(event.snapshot.approvedCents)}` : ''}</p>}
+        {recorded.length > 0 && <Collapsible><CollapsibleTrigger asChild><Button variant="ghost" className="group"><ChevronDown aria-hidden="true" className="transition-transform group-data-[state=open]:rotate-180" />View recorded details</Button></CollapsibleTrigger>
+          <CollapsibleContent><div className="mt-2 rounded-ui-md bg-ui-muted p-4"><Facts items={recorded.map(([label, value]) => [label, value, label === 'Service description' || label === 'Reason'])} /></div></CollapsibleContent></Collapsible>}
+      </div></li>;
+    })}</ol>
+  </section>;
+  return <>
+    <PageHeader title={refundNumber(row.number)} description={`${row.customerName || 'New customer refund'} · ${row.clubName}`} status={<Tag meta={refundStatuses[row.status]} />}
+      actions={<Button asChild variant="outline"><Link href="/refunds"><ChevronLeft aria-hidden="true" />Back to requests</Link></Button>} />
+    <ul className="pc-stats" aria-label="Summary">{summary(row).map(({ label, value, hint, icon: Icon }) => <li key={label} className="flex"><div className="pc-stat w-full">
+      <span className="pc-tile-icon"><Icon aria-hidden="true" /></span>
+      <span><span className="pc-stat-figure block break-words">{value}</span><span className="block font-semibold">{label}</span></span>
+      <span className="text-xs text-ui-muted-foreground">{hint}</span>
+    </div></li>)}</ul>
     {query && <Notice tone="warning" title="Finance needs more information" description={query.note} />}
-    <div className="refund-detail-columns items-start"><div className="min-w-0 space-y-6">
-      {editable ? <RefundRequestForm id={row.id} row={row} sites={sites} /> : <section className="refund-panel space-y-5" aria-labelledby="request-details"><h2 id="request-details" className="text-lg font-semibold">Request details</h2><dl className="grid gap-x-6 gap-y-4 sm:grid-cols-2">{facts.map(([label, value]) => <div key={label} className="min-w-0"><dt className="text-xs text-ui-muted-foreground">{label}</dt><dd className="mt-1 break-words text-sm">{value}</dd></div>)}</dl><div><h3 className="text-sm font-semibold">Service description</h3><p className="mt-2 whitespace-pre-wrap break-words text-sm">{row.description || 'Not entered'}</p></div><div><h3 className="text-sm font-semibold">Refund reason</h3><p className="mt-2 whitespace-pre-wrap break-words text-sm">{row.reason || 'Not entered'}</p></div></section>}
-      {row.status === 'REFUNDED' && <section className="refund-panel space-y-3"><h2 className="text-lg font-semibold">External payment record</h2><p className="text-sm">{euros(row.approvedCents)} · {paymentMethods[row.paidMethod as keyof typeof paymentMethods] || row.paidMethod}</p><p className="break-words text-sm">Reference: {row.paidReference}</p><p className="text-sm text-ui-muted-foreground">Recorded by {row.paidByName}. The payment was made outside Turnfin.</p></section>}
-      <div className="refund-panel"><RefundReceipts id={row.id} version={row.version} attachments={data.attachments} editable={editable} /></div>
-    </div><aside className="refund-panel refund-action-panel min-w-0 space-y-6"><RefundFinanceActions row={row} who={who} deliveryCount={data.delivery.length} />{data.delivery.filter(job => job.error).map(job => <p key={job.id} className="text-xs text-ui-muted-foreground">{job.error}</p>)}</aside></div>
-    <section className="refund-panel refund-history space-y-4" aria-labelledby="history-heading"><h2 id="history-heading" className="text-lg font-semibold">Request history</h2><ol className="divide-y divide-ui-border">{data.events.map(event => <li key={event.id} className="space-y-2 py-4"><div className="flex flex-wrap items-center justify-between gap-2"><h3 className="text-sm font-semibold">{refundActions[event.action as keyof typeof refundActions] || event.action}</h3><p className="text-xs text-ui-muted-foreground">{event.actorName} · {formatDateTime(new Date(event.createdAt))}</p></div>{event.note && <p className="whitespace-pre-wrap break-words text-sm">{event.note}</p>}{['submit','approve','pay'].includes(event.action) && <p className="text-xs text-ui-muted-foreground">Requested {euros(typeof event.snapshot.requestedCents === 'number' ? event.snapshot.requestedCents : null)}{typeof event.snapshot.approvedCents === 'number' ? ` · Approved ${euros(event.snapshot.approvedCents)}` : ''}</p>}<Collapsible className="text-sm"><CollapsibleTrigger asChild><Button variant="ghost" className="min-h-11 text-ui-primary">View recorded details</Button></CollapsibleTrigger><CollapsibleContent><dl className="grid gap-3 rounded-ui-md bg-ui-muted p-4 sm:grid-cols-2">{Object.entries({ Customer: event.snapshot.customerName, Site: event.snapshot.clubName, Service: event.snapshot.description, Reason: event.snapshot.reason, 'Payment reference': event.snapshot.paymentReference, 'Refund reference': event.snapshot.paidReference }).filter(([, value]) => typeof value === 'string' && value).map(([label, value]) => <div key={label} className="min-w-0"><dt className="text-xs text-ui-muted-foreground">{label}</dt><dd className="mt-1 whitespace-pre-wrap break-words">{String(value)}</dd></div>)}</dl></CollapsibleContent></Collapsible></li>)}</ol></section>
-  </div>;
+    {editable ? <RefundRequestForm id={row.id} row={row} sites={sites} actions={finance}>{receipts}{history}</RefundRequestForm>
+      : <div className="refund-detail-columns">
+        <div className="refund-main">
+          <section className="pc-panel" aria-labelledby="request-details"><h2 id="request-details" className="text-lg font-semibold">Request details</h2><Facts items={facts} /></section>
+          {row.status === 'REFUNDED' && <section className="pc-panel" aria-labelledby="payment-record"><h2 id="payment-record" className="text-lg font-semibold">External payment record</h2>
+            <Facts items={[['Amount', euros(row.approvedCents)], ['Method', paymentMethods[row.paidMethod as keyof typeof paymentMethods] || row.paidMethod || 'Not entered'], ['Reference', row.paidReference || 'Not entered'], ['Recorded by', row.paidByName || 'Not recorded']]} />
+            <p className="text-xs text-ui-muted-foreground">The payment was made outside Turnfin.</p></section>}
+          {receipts}
+          {history}
+        </div>
+        {/* Only a request this person can move on gets the edge; a closed one is a plain panel. */}
+        <aside className={cn('pc-panel', refundNextActions(row, who).length > 0 && 'refund-action-panel')} aria-labelledby="next-action">
+          <h2 id="next-action" className="text-lg font-semibold">Next action</h2>
+          <p className="text-sm text-ui-muted-foreground">{refundNextStep(row.status)}</p>
+          {finance}
+        </aside>
+      </div>}
+  </>;
 }

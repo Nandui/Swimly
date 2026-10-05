@@ -1,6 +1,5 @@
 import assert from 'node:assert/strict';
 import path from 'node:path';
-import fs from 'node:fs/promises';
 import {pathToFileURL} from 'node:url';
 import {buildAnalyticsPreview, outputDir, routes} from './analytics-preview/build.mjs';
 import {servePreview} from './instructor-swimmer-preview/build.mjs';
@@ -66,18 +65,6 @@ try {
   await page.getByText('No weekly classes are scheduled at this site this week.').waitFor();
   await page.goto(`${base}/analytics/reception?empty`);
   await page.getByText('No enrolments or unenrolments have been recorded at this site this week.').waitFor();
-  if (process.env.UPDATE_HELP_IMAGES === '1') {
-    const manifest = JSON.parse(await fs.readFile('assets/help/manifest.json','utf8'));
-    for (const [route,id,height] of [['analytics','analytics',1800],['analytics/reception','analytics-reception',1300],['analytics/instructors','analytics-instructors',2400]]) {
-      await page.setViewportSize({width:1440,height});
-      await page.goto(`${base}/${route}?theme=light`);
-      await page.getByRole('heading',{level:1}).waitFor();
-      await page.evaluate(()=>document.fonts.ready);
-      const png = await page.getByRole('main').screenshot({path:`assets/help/${id}.png`});
-      manifest[id]={width:png.readUInt32BE(16),height:png.readUInt32BE(20)};
-    }
-    await fs.writeFile('assets/help/manifest.json',JSON.stringify(manifest,null,2)+'\n');
-  }
   assert.deepEqual(errors,[]);
   console.log('Analytics UI passed: 24 layouts, navigation, staff search, keyboard daily breakdown, instructor selection, status filters, empty states and permission-gated class links. Synthetic data only.');
 } finally {await browser.close();server.close();}

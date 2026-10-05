@@ -12,14 +12,15 @@ type Ctx = { prisma: PrismaClient; docsUrl: string; hrUrl: string | null; roles:
 
 export async function seed(ctx: Ctx) {
   await seedAquatics(ctx.prisma);
+  await seedHelpExamples(ctx.prisma);
   await seedTraining(ctx.prisma);
   if (ctx.hrUrl) await seedHr(ctx.prisma, ctx.hrUrl);
   await seedRota(ctx.prisma);
 }
 
 /** Two sites' worth of classes so the deck and desk surfaces can be checked:
- *  Ava teaches Otters at Churchfield today, Riley teaches Seals there too, and
- *  one Bishopstown class shows that the site lookup stays on its own site. A
+ *  Ava teaches Otters at Hillview (club_churchfield) today, Riley teaches Seals there too, and
+ *  one Riverside (club_bishopstown) class shows that the site lookup stays on its own site. A
  *  parent has a pending change request waiting for reception. */
 async function seedAquatics(db: PrismaClient) {
   const today = DAYS[new Date().getDay()];
@@ -59,6 +60,63 @@ async function seedAquatics(db: PrismaClient) {
   await db.parentChangeRequest.create({ data: {
     parentId: parent.id, studentId: ids.Robin, key: "sandbox-change-0001", proposed, message: "New number and an update from the GP",
     requestHash: createHash("sha256").update(JSON.stringify([ids.Robin, proposed, "sandbox"])).digest("hex"),
+  } });
+}
+
+/** The records Help's screenshots show (scripts/help-screenshots/capture.mjs): competencies with
+ *  some achieved, a waitlist place, an assessment today with a booking and one next week, a
+ *  cancelled class awaiting billing, a parent's link request and a refund waiting for finance.
+ *  All at Hillview (club_churchfield) except the refund, logged at Riverside. */
+async function seedHelpExamples(db: PrismaClient) {
+  const day = (offset: number) => { const d = new Date(); d.setUTCHours(0, 0, 0, 0); d.setUTCDate(d.getUTCDate() + offset); return d; };
+  const programme = await db.programme.findFirstOrThrow({ where: { clubId: "club_churchfield" } });
+  const otters = await db.level.findFirstOrThrow({ where: { programmeId: programme.id, name: "Otters" } });
+  const seals = await db.level.findFirstOrThrow({ where: { programmeId: programme.id, name: "Seals" } });
+  const skills = async (levelId: string, names: string[]) => Promise.all(names.map((name, sortOrder) => db.competency.create({ data: { levelId, name, sortOrder } })));
+  const otterSkills = await skills(otters.id, ["Submerge and blow bubbles", "Float on the back for five seconds", "Push and glide on the front", "Kick on the front with a float"]);
+  await skills(seals.id, ["Swim 10 metres front crawl", "Swim 10 metres back crawl", "Tread water for 30 seconds"]);
+  const swimmer = (firstName: string) => db.student.findFirstOrThrow({ where: { firstName } });
+  const robin = await swimmer("Robin"), jamie = await swimmer("Jamie");
+  const ottersClass = await db.course.findFirstOrThrow({ where: { levelId: otters.id } });
+  const sealsClass = await db.course.findFirstOrThrow({ where: { levelId: seals.id } });
+  // Robin has every Otters skill (ready to complete the level); Jamie has two.
+  await db.competencyResult.createMany({ data: [
+    ...otterSkills.map((skill) => ({ studentId: robin.id, competencyId: skill.id })),
+    ...otterSkills.slice(0, 2).map((skill) => ({ studentId: jamie.id, competencyId: skill.id })),
+  ].map((row) => ({ ...row, status: "ACHIEVED" as const, assessedInCourseId: ottersClass.id, assessedById: "sbx_ava", assessedByName: "Ava Example", assessedOn: day(-7) })) });
+  // Jamie also waits for a place in Seals.
+  await db.enrolment.create({ data: { studentId: jamie.id, courseId: sealsClass.id, levelId: seals.id, programmeId: programme.id, status: "WAITLISTED", startedOn: day(0), placementReason: "Synthetic: family asked to move up next term." } });
+  // A new swimmer booked onto today's assessment, and a session next week to publish.
+  const avery = await db.student.create({ data: {
+    clubId: "club_churchfield", firstName: "Avery", lastName: "Example", dateOfBirth: new Date("2019-03-01T00:00:00Z"),
+    contactName: "Example family", contactEmail: "avery.family@example.test", contactPhone: "000 000 0000",
+  } });
+  const kind = await db.assessmentType.create({ data: { programmeId: programme.id, name: "New swimmers", description: "Children new to the swim school." } });
+  const today = await db.assessmentSession.create({ data: { clubId: "club_churchfield", date: day(0), startMinutes: 18 * 60, durationMinutes: 30, location: "Learner pool", capacity: 6, instructorId: "sbx_ava", programmeId: programme.id, typeId: kind.id } });
+  await db.assessmentSession.create({ data: { clubId: "club_churchfield", date: day(7), startMinutes: 10 * 60, durationMinutes: 45, location: "Learner pool", capacity: 8, instructorId: "sbx_ava", programmeId: programme.id, typeId: kind.id } });
+  await db.assessmentBooking.create({ data: { sessionId: today.id, studentId: avery.id, bookedById: "sbx_maya", bookedByName: "Maya Example" } });
+  // Otters was cancelled a week ago; billing has not been told yet.
+  await db.classCancellation.create({ data: {
+    courseId: ottersClass.id, clubId: "club_churchfield", date: day(-7), className: "Otters", levelName: "Otters", programmeName: programme.name,
+    startMinutes: ottersClass.startMinutes, durationMinutes: ottersClass.durationMinutes, location: ottersClass.location, instructorName: "Ava Example",
+    reason: "Synthetic: learner pool closed for maintenance.", cancelledById: "sbx_maya", cancelledByName: "Maya Example", cancelledAt: day(-7),
+    swimmers: { create: [robin, jamie].map((s) => ({ studentId: s.id, swimmerName: `${s.firstName} ${s.lastName}` })) },
+  } });
+  // A parent asks to link their child from the parent app.
+  const pat = await db.parentAccount.create({ data: { email: "pat.example@example.test", name: "Pat Example", phone: "000 333 4444" } });
+  await db.parentAccessRequest.create({ data: {
+    parentId: pat.id, key: "sandbox-link-0001", requestHash: createHash("sha256").update("sandbox-link-0001").digest("hex"),
+    childFingerprint: createHash("sha256").update("jamie|sample|2018-05-01").digest("hex"), firstName: "Jamie", lastName: "Sample",
+    dateOfBirth: new Date("2018-05-01T00:00:00Z"), context: "Synthetic: Jamie swims in Otters on weekday afternoons.",
+  } });
+  // A refund Noah logged at reception, waiting for finance.
+  const refundId = randomUUID();
+  await db.refundRequest.create({ data: {
+    id: refundId, status: "SUBMITTED", creatorId: "sbx_noah", creatorName: "Noah Example", clubId: "club_bishopstown", clubName: "Riverside",
+    customerName: "Sam Example", contactEmail: "sam.example@example.test", memberNumber: "EX-1042", service: "AQUATICS",
+    description: "Ten-week swim course, autumn term", requestedCents: 4500, paymentDate: day(-20).toISOString().slice(0, 10),
+    paymentReference: "EXAMPLE-0042", reason: "Synthetic: the family moved away before the course started.", submittedAt: day(-1),
+    events: { create: [{ operationId: randomUUID(), actorId: "sbx_noah", actorName: "Noah Example", action: "submit", snapshot: {} }] },
   } });
 }
 
@@ -108,11 +166,11 @@ async function seedHr(db: PrismaClient, hrUrl: string) {
   } finally { await hr.end(); }
 }
 
-/** Rota: Maya, duty manager at Churchfield (Rota: Manage at her site), plans it as
+/** Rota: Maya, duty manager at Hillview (Rota: Manage at her site), plans it as
  *  duties by department. Today and tomorrow show every warning: Riley is off
  *  sick today so his poolside duty needs cover, his NPLQ is expired for
  *  tomorrow, a swim teacher duty is unfilled, and Riley is double-booked at
- *  Bishopstown. */
+ *  Riverside. */
 async function seedRota(db: PrismaClient) {
   const ORG = "org_leisureworld";
   const day = (offset: number) => { const d = new Date(); d.setUTCHours(0, 0, 0, 0); d.setUTCDate(d.getUTCDate() + offset); return d; };

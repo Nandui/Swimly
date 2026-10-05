@@ -1,12 +1,10 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
-import {
-  ArrowRight,
-  Check,
-  ClipboardList,
-  LockKeyhole,
-} from "lucide-react";
+import { ChevronRight, LockKeyhole } from "lucide-react";
 import { Button } from "@/components/shadcn/button";
+import { EmptyState } from "@/components/ui-kit/empty-state";
+import { Tag } from "@/components/ui-kit/tag";
+import { ATTENDANCE_RECORD_META } from "@/modules/activities/lib/attendance/constants";
 import { RegisterForm } from "@/modules/activities/components/attendance/register-form";
 import { DeckChecklist } from "@/modules/activities/components/progression/deck-checklist";
 import { getInstructorClass } from "@/modules/activities/lib/attendance/data/instructor-class";
@@ -16,7 +14,7 @@ import {
   type ClassQuery,
 } from "@/modules/activities/lib/attendance/navigation";
 import { can } from "@/lib/authz";
-import { courseName, formatSlot } from "@/modules/activities/lib/courses/constants";
+import { courseName, formatSessionTime } from "@/modules/activities/lib/courses/constants";
 import { formatDate, parseDateOnly, today } from "@/lib/format";
 import { fullName } from "@/modules/activities/lib/students/constants";
 import { Notice } from "@/components/ui-kit/notice";
@@ -42,28 +40,23 @@ export async function InstructorClassSession({
   const competencies = params.step === "competencies";
   const stepHref = (step: string) =>
     instructorClassHref(id, { ...params, date: iso, step });
+  // "Sun 16:00 to 16:30 · 4 Oct 2026": this one dated session, not the weekly slot.
+  const when = `${formatSessionTime(course)} · ${formatDate(parseDateOnly(iso))}`;
   const header = (
     <PageHeader
       back={{ href: home, label: "Your classes" }}
       title={name}
-      description={`${formatSlot(course)} · ${formatDate(parseDateOnly(iso))}${course.location ? ` · ${course.location}` : ""}`}
+      description={`${when}${course.location ? ` · ${course.location}` : ""}`}
       status={
         view.state === "ready" ? (
-          <p className="flex items-center gap-2 text-sm text-ui-muted-foreground">
-            {view.register.taken ? (
-              <Check className="size-4" aria-hidden="true" />
-            ) : (
-              <ClipboardList className="size-4" aria-hidden="true" />
-            )}
-            {view.register.taken ? "Attendance saved" : "Attendance to take"}
-          </p>
+          <Tag meta={view.register.taken ? ATTENDANCE_RECORD_META.taken : ATTENDANCE_RECORD_META.notTaken} />
         ) : null
       }
     />
   );
   if (view.state !== "ready")
     return (
-      <div className="flex flex-col gap-6">
+      <>
         {header}
         {view.state === "cancelled" ? <Notice tone="warning" title="This session is cancelled"><p>{view.cancellation.reason}</p><p>Attendance and competencies cannot be saved for this session.</p></Notice> : view.state === "wrong-site" ? (
           <Notice tone="warning" title={`This class is at ${course.club.name}`}>
@@ -72,9 +65,9 @@ export async function InstructorClassSession({
         ) : view.state === "archived" ? (
           <Notice tone="warning" title="This class is archived." />
         ) : (
-          <section className="flex flex-col items-start gap-4 rounded-ui-lg border border-ui-border p-5">
-            <h2 className="text-lg font-semibold">Ready to teach?</h2>
-            <p className="max-w-prose text-sm text-ui-muted-foreground">
+          <section className="pc-panel items-start" aria-labelledby="ready-to-teach">
+            <h2 id="ready-to-teach">Ready to teach?</h2>
+            <p className="max-w-prose text-ui-muted-foreground">
               Confirm you are taking this class before opening the swimmers’
               attendance and competencies.
             </p>
@@ -85,13 +78,13 @@ export async function InstructorClassSession({
                 courseId={id}
                 date={iso}
                 name={name}
-                schedule={formatSlot(course)}
+                schedule={when}
                 own={course.instructorId === session.user.id}
                 instructorName={course.instructor?.name ?? null}
                 href={stepHref("attendance")}
               />
             ) : (
-              <p className="flex items-center gap-2 text-sm text-ui-muted-foreground">
+              <p className="flex items-center gap-2 text-ui-muted-foreground">
                 <LockKeyhole className="size-4" aria-hidden="true" />
                 {iso !== today()
                   ? "Start a class from today’s list on the day it runs."
@@ -100,7 +93,7 @@ export async function InstructorClassSession({
             )}
           </section>
         )}
-      </div>
+      </>
     );
   const { register, progress } = view,
     mayAssess = can(session, "progression.assess"),
@@ -119,7 +112,7 @@ export async function InstructorClassSession({
     ? Object.fromEntries(register.lines.map((l) => [l.studentId, l.status]))
     : null;
   return (
-    <div className="flex flex-col gap-6">
+    <>
       {header}
       <InstructorClassNavigation id={id} params={{ ...params, date: iso }} active={overview ? "overview" : competencies ? "competencies" : "attendance"} />
       {overview ? (
@@ -137,17 +130,18 @@ export async function InstructorClassSession({
             continueHref={stepHref("competencies")}
           />
         ) : (
-          <div className="space-y-4">
-            <p className="text-ui-muted-foreground">
-              No swimmers were enrolled for this class on that date.
-            </p>
-            <Button asChild variant="outline">
-              <Link href={stepHref("competencies")}>
-                Competencies
-                <ArrowRight aria-hidden="true" />
-              </Link>
-            </Button>
-          </div>
+          <EmptyState
+            icon="users"
+            title="No swimmers were enrolled for this class on that date."
+            action={
+              <Button asChild variant="outline">
+                <Link href={stepHref("competencies")}>
+                  Competencies
+                  <ChevronRight aria-hidden="true" />
+                </Link>
+              </Button>
+            }
+          />
         )
       ) : (
         <>
@@ -169,6 +163,6 @@ export async function InstructorClassSession({
           />
         </>
       )}
-    </div>
+    </>
   );
 }

@@ -4,7 +4,7 @@
  *
  *  Starts PGlite Postgres servers for the main database and each separate
  *  module database (Docs, HR), applies every committed migration, seeds a
- *  fictional LeisureWorld, and runs `next dev` pointed only at them. It never
+ *  fictional leisure group, and runs `next dev` pointed only at them. It never
  *  reads .env database settings and never connects to a real database; stop it
  *  and everything is gone.
  *
@@ -46,10 +46,15 @@ const hrUrl = existsSync("hr-database/migrations")
   : null;
 
 // ---------------------------------------------------------------------------
-// A fictional LeisureWorld
+// A fictional leisure group
 // ---------------------------------------------------------------------------
 const prisma = new PrismaClient({ adapter: new PrismaPg({ connectionString: mainUrl }) });
 const ORG = "org_leisureworld";
+// The migrations create the first customer's organisation and two sites. Rename them to
+// invented names, so nothing captured here (Help's screenshots, docs/help-centre.md) shows them.
+await prisma.organisation.update({ where: { id: ORG }, data: { name: "Example Leisure" } });
+await prisma.club.update({ where: { id: "club_bishopstown" }, data: { name: "Riverside" } });
+await prisma.club.update({ where: { id: "club_churchfield" }, data: { name: "Hillview" } });
 const hash = await bcrypt.hash(SANDBOX_PASSWORD, 10);
 /** Every sandbox account also has this quick-switch PIN for shared devices. */
 export const SANDBOX_PIN = "2580";
@@ -80,7 +85,7 @@ await prisma.department.createMany({ data: [
 type Seed = { id: string; name: string; role: string; title: string; site: string; departments: string[]; manager?: string; superadmin?: boolean; sites?: string[] };
 const people: Seed[] = [
   { id: "sbx_alex", name: "Alex Example", role: "Admin", title: "General manager", site: "club_bishopstown", departments: [], superadmin: true },
-  { id: "sbx_maya", name: "Maya Example", role: "Duty manager", title: "Duty manager, Churchfield", site: "club_churchfield", departments: [], manager: "sbx_alex", sites: ["club_churchfield"] },
+  { id: "sbx_maya", name: "Maya Example", role: "Duty manager", title: "Duty manager, Hillview", site: "club_churchfield", departments: [], manager: "sbx_alex", sites: ["club_churchfield"] },
   { id: "sbx_liam", name: "Liam Example", role: "Swim school manager", title: "Aquatics lead", site: "club_churchfield", departments: ["dept_aquatics"], manager: "sbx_maya" },
   { id: "sbx_ava", name: "Ava Example", role: "Instructor", title: "Swim teacher", site: "club_churchfield", departments: ["dept_aquatics"], manager: "sbx_liam" },
   { id: "sbx_noah", name: "Noah Example", role: "Receptionist", title: "Receptionist", site: "club_bishopstown", departments: ["dept_reception"], manager: "sbx_alex" },
@@ -113,7 +118,7 @@ if (existsSync(new URL(seedModule, import.meta.url))) {
 }
 await prisma.$disconnect();
 
-console.log(`[sandbox] Seeded a fictional LeisureWorld. Sign in as alex@sandbox.invalid (superadmin), maya@, liam@, ava@, noah@ or riley@sandbox.invalid with the sandbox password in scripts/sandbox.mts.`);
+console.log(`[sandbox] Seeded a fictional leisure group (Riverside and Hillview). Sign in as alex@sandbox.invalid (superadmin), maya@, liam@, ava@, noah@ or riley@sandbox.invalid with the sandbox password in scripts/sandbox.mts.`);
 const env = {
   ...process.env,
   DATABASE_URL: mainUrl, DIRECT_URL: mainUrl, DOCS_DATABASE_URL: docsUrl, DOCS_DIRECT_URL: docsUrl,

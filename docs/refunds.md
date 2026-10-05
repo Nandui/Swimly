@@ -3,12 +3,14 @@
 Refunds is a separate staff workspace for all LeisureWorld services, reached from
 the general Turnfin portal and Reception Portal. It shares staff identity and the
 main Turnfin database. It never sends money, changes Legend, emails customers or
-requires a swimmer record. Docs retains its separate database; Refunds shares its shell layout but has its own Poolside Clear theme.
+requires a swimmer record. Docs retains its separate database. Refunds opens in the
+shared module frame and uses the whole app's Poolside Clear v2 design.
 
 ## Reception and finance workflow
 
-1. Reception opens **New request**. Choose either site and Aquatics, Membership,
-   Booking or Other. Submission requires the customer name, service description,
+1. Reception opens **Log a refund request**. Choose a site (preset when the person
+   works at exactly one) and Aquatics, Membership, Booking or Other; a draft needs
+   both. Submission requires the customer name, service description,
    requested EUR amount, original payment date/reference and refund reason.
    Contact details, member number and receipts are optional. Do not enter bank or
    card details. Amounts are stored as integer cents.
@@ -17,7 +19,9 @@ requires a swimmer record. Docs retains its separate database; Refunds shares it
    optional receipts, then **Submit to finance**.
 3. The shared queue starts with both sites. Finance initially sees requests
    awaiting review or payment. Search and site, status, service, submitter and
-   handler filters narrow the queue. Totals follow all filters except status.
+   handler filters narrow the queue. Totals follow all filters except status, and
+   each total links to its view with the other filters kept, so a tile's count is
+   its list. **Awaiting review** is a view of submitted and in-review requests.
 4. Finance can **Take responsibility** or explicitly take over from a colleague.
    This is an assignment, not a lock. Other authorised finance staff can help.
 5. Finance approves, declines or requests information. Requesters cannot review
@@ -94,9 +98,11 @@ they still have access. Messages contain only the RF number, status and an
 authenticated link. No customer details or files are sent.
 
 Jobs are persisted before delivery and attempted after the workflow transaction
-commits. Delivery failures never roll back the request. The detail page shows
-pending/failed alerts and their safe error text, with **Retry staff alerts** for
-finance. Missing recipient setup also remains visible and can be reconciled
+commits. Delivery failures never roll back the request. For finance, the detail
+page shows one notice when alerts are pending or failed ("We couldn’t confirm the
+email alert"), with **Send again**; reception is not shown it. The safe error text
+stays stored on the job (`RefundNotification.error`) for diagnosis rather than on
+the page. Missing recipient setup also remains visible and can be reconciled
 after Roles is fixed. Revoked/inactive recipients are skipped. Accepted jobs are
 not resent; an uncertain provider response may already have delivered and a
 manual retry can send another email. Retries claim jobs atomically; abandoned
@@ -163,23 +169,38 @@ production sender configuration is present.
 
 ## Workspace appearance
 
-Refunds uses the Poolside Clear design: Plus Jakarta Sans (self-hosted through
-`@fontsource/plus-jakarta-sans`), the fin logo's deep teal for actions and
-selection, an aqua focus halo, a cool canvas with white panels, and a deep
-pool-night dark mode. The theme is the whole app's, in `src/app/docs/poolside.css`
-(tokens and system rules on `body.turnfin-app`); the Refunds layout wraps the frame in
-`.turnfin-docs`, which scopes only the Docs/Refunds shell and layout rules. It re-points the shared
-`--ui-*` tokens, so shadcn controls, dialogs, select popovers and the mobile sheet
-follow them. `src/app/refunds/refunds.css` holds only the Refunds layouts. Every text and control
-pair meets 4.5:1 (text) or 3:1 (edges, focus) in both themes.
+Refunds has no theme of its own. The root layout puts Poolside Clear v2 on
+`body.turnfin-app` (`src/app/docs/poolside.css`), so the frame, shadcn controls, dialogs
+and select popovers all follow it. The Refunds layout wraps the frame in `.turnfin-docs`,
+which scopes only the Docs/Refunds shell rules. `src/app/refunds/refunds.css` only
+arranges the Refunds screens: the request page's two columns, the field and fact grids
+and the sticky save bar on a new request.
 
-`RefundShell` opens in the shared module frame (`ModuleShell`) and owns its page links.
-No Docs data or permissions are imported. Status tags are
-`<Tag meta={refundStatuses[status]} />`; each entry in `refundStatuses`
-(`src/lib/refunds/types.ts`) carries its label, tone and a distinct icon. Queue filters, forms, history and finance dialogs keep their
-existing behaviour. Aquatics, Docs and the portals keep their own themes.
+`RefundShell` opens in the shared module frame (`ModuleShell`) with three views in the
+page bar: Refund requests, My requests and My drafts (`refundListView`). Refund requests
+is current on every other Refunds page, including a request and the new-request form.
+No Docs data or permissions are imported.
 
-The theme was checked in the isolated preview (`scripts/refunds-preview`) on the
-queue, request details and a finance dialog, in light and dark at 1280px and at
-375px. That check covered one H1, no horizontal overflow and 44px controls.
-Typecheck, lint and the Refunds tests passed.
+- **List** (V2Refunds): `PageHeader` (the title follows the view; "Log a refund
+  request"), four figure tiles (`.pc-stats`; Awaiting review, Needs information,
+  Awaiting payment, Refunded; blue edge on the open one), then one white panel with
+  the search, pill pickers that apply on change (Site, Status, Service, Handler, and
+  Submitted by under More filters; all behind one Filters button on phones), a count,
+  the requests as `.pc-rows` and `LinkPagination`.
+- **Request** (RFDetail): `PageHeader` with the status tag and "Back to requests",
+  three figure tiles, then the details, receipts and history in the main column and
+  the Next action panel (2px blue edge only when the person can act) beside it from
+  1280px, after it below. On an editable request the panel holds Submit and Save draft
+  (one pending state with the form), then Withdraw. Receipts upload on choosing a file
+  (`FileField`); history is a `.pc-feed`.
+- **New request** (RFNew): the shared `Input`, `Select` and `Textarea` ("Optional"
+  captions), a `.pc-note`, and a sticky bar ("Not submitted yet", Save draft, Submit to
+  finance) that clears the phone bottom bar.
+
+Status tags are `<Tag meta={refundStatuses[status]} />`; each entry in `refundStatuses`
+(`src/lib/refunds/types.ts`) carries its label, tone and a distinct icon, shared with the
+tiles. Decline, withdraw and cancel confirm in the danger colour. Only finance sees
+the email alert notice and its "Send again".
+
+The screens were checked live against V2Refunds, RFDetail and RFNew at 375px dark
+and 1280px light: one H1, no horizontal overflow and 44px controls.

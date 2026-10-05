@@ -43,7 +43,7 @@ export function AddSwimmer({ student, trigger, defaultOpen = false }: { student?
         <DialogTitle>{student ? "Edit swimmer details" : "Add a swimmer"}</DialogTitle>
         <DialogDescription>{student ? "Update their shared profile and contact details." : "Start with their name. You can complete the rest now or in their profile."}</DialogDescription>
       </DialogHeader>
-      <FormFeedbackProvider feedback={feedback}><form ref={formRef} aria-busy={pending} className="flex min-h-0 flex-1 flex-col" onSubmit={(event) => {
+      <FormFeedbackProvider feedback={feedback}><form ref={formRef} method="post" aria-busy={pending} className="flex min-h-0 flex-1 flex-col" onSubmit={(event) => {
         event.preventDefault();
         if (pending) return;
         const input = readStudentInput(new FormData(event.currentTarget));

@@ -17,7 +17,7 @@ export function DayNote({ siteId, date, text, labelledBy }: { siteId: string; da
   const [saving, start] = useTransition();
   const changed = value.trim() !== text.trim();
   return (
-    <form className="flex flex-col items-start gap-4" onSubmit={(e) => {
+    <form method="post" className="flex flex-col items-start gap-4" onSubmit={(e) => {
       e.preventDefault();
       start(async () => {
         const result = await saveDayNote(siteId, date, value);

@@ -1,8 +1,10 @@
 import React, { useEffect, useState } from 'react';
 import { createRoot } from 'react-dom/client';
-import '@fontsource/figtree/latin-400.css';
-import '@fontsource/figtree/latin-500.css';
-import '@fontsource/figtree/latin-600.css';
+import '@fontsource/plus-jakarta-sans/latin-400.css';
+import '@fontsource/plus-jakarta-sans/latin-500.css';
+import '@fontsource/plus-jakarta-sans/latin-600.css';
+import '@fontsource/plus-jakarta-sans/latin-700.css';
+import '@/app/docs/poolside.css';
 import { ThemeProvider } from '@/components/theme-provider';
 import { TooltipProvider } from '@/components/shadcn/tooltip';
 import { InstructorShell } from '@/modules/activities/components/instructor/instructor-shell';
@@ -78,4 +80,5 @@ function Preview() {
     </InstructorShell>
   </TooltipProvider></ThemeProvider>;
 }
+document.body.classList.add('turnfin-app'); // the root layout's token scope, so portalled dialogs match too
 createRoot(document.getElementById('root')).render(<Preview/>);

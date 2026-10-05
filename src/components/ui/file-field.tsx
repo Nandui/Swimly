@@ -1,7 +1,7 @@
 "use client";
 
 import * as React from "react";
-import { Upload } from "lucide-react";
+import { Loader2, Upload } from "lucide-react";
 import { Button } from "@/components/shadcn/button";
 import { Input } from "@/components/shadcn/input";
 import { FieldFrame, fieldHintId } from "./field-frame";
@@ -15,6 +15,9 @@ export type FileFieldProps = Omit<React.ComponentProps<"input">, "type" | "id" |
   /** An error from the consumer (a file it refused); a missing required file has its own. */
   error?: string;
   className?: string;
+  /** While a file uploads as soon as it is chosen: the button shows `pendingLabel` and waits. */
+  pending?: boolean;
+  pendingLabel?: string;
 };
 
 /** One file field (Poolside Clear v2, MeQualifications): the label, the caption hint, then a
@@ -28,6 +31,8 @@ export function FileField({
   optional,
   error,
   className,
+  pending = false,
+  pendingLabel = "Uploading…",
   ref,
   onChange,
   onInvalid,
@@ -99,12 +104,15 @@ export function FileField({
               .join(" ") || undefined
           }
           aria-invalid={message ? true : undefined}
+          aria-disabled={pending || undefined}
+          aria-busy={pending || undefined}
           className="w-full justify-start"
-          onClick={() => input.current?.click()}
+          onClick={() => { if (!pending) input.current?.click(); }}
         >
-          <Upload aria-hidden="true" />
-          Choose a file
+          {pending ? <Loader2 className="animate-spin" aria-hidden="true" /> : <Upload aria-hidden="true" />}
+          {pending ? pendingLabel : "Choose a file"}
         </Button>
+        <span aria-live="polite" aria-atomic="true" className="sr-only">{pending ? pendingLabel : ""}</span>
       </div>
       {fileName ? (
         <p id={`${id}-file`} data-slot="field-description" className="text-xs break-all text-ui-muted-foreground">

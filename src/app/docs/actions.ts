@@ -41,7 +41,7 @@ export async function startDraftAction(id: string, versionId?: string) {
     ),
   );
 }
-export async function lockAction(id: string, session: string, release = false) {
+export async function lockAction(id: string, session: string, release = false, takeOver = false) {
   return run(
     async () =>
       new DocumentService(await database()).lock(
@@ -49,6 +49,7 @@ export async function lockAction(id: string, session: string, release = false) {
         id,
         session,
         release,
+        takeOver === true,
       ),
     false,
   );

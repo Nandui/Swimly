@@ -1,9 +1,11 @@
 import Link from 'next/link';
-import { ArrowUpRight } from 'lucide-react';
-import { DOC_STATUS_META, formatDate, overdue, type Group, type LibraryDocument } from '@/lib/docs/types';
+import { ChevronRight } from 'lucide-react';
+import { DOC_STATUS_META, documentTypeLabels, formatDate, overdue, type Group, type LibraryDocument } from '@/lib/docs/types';
 import { Tag } from '@/components/ui-kit/tag';
 import { DocIcon } from './ui';
 
+/** Documents as a list of separate rounded rows (V2Docs, DCOverview): the type tile, the
+ *  title over "reference · type · version · published · facilities", the status, a chevron. */
 export function DocumentList({
   documents,
   facilities,
@@ -12,51 +14,39 @@ export function DocumentList({
   facilities: Group[];
 }) {
   return (
-    <div className="knowledge-list">
-      <div className="knowledge-list-labels" aria-hidden="true">
-        <span>Document</span>
-        <span>Facility</span>
-        <span>Published</span>
-        <span>Status</span>
-      </div>
-      <ul>
-        {documents.map((document) => (
+    <ul className="pc-rows">
+      {documents.map((document) => {
+        const c = document.content;
+        const places = c.facilityIds
+          .map((id) => facilities.find((facility) => facility.id === id)?.name)
+          .filter(Boolean)
+          .join(', ');
+        const caption = [
+          c.reference,
+          documentTypeLabels[c.type].one,
+          document.version ? `version ${document.version}` : null,
+          document.publishedAt ? formatDate(document.publishedAt) : 'Not published',
+          places || 'All facilities',
+        ].filter(Boolean).join(' · ');
+        return (
           <li key={document.id}>
-            <Link className="knowledge-row" href={`/docs/documents/${document.id}`}>
-              <div className="knowledge-title">
-                <DocIcon type={document.content.type} />
-                <div>
-                  <strong>{document.content.title}</strong>
-                  <span>
-                    {document.content.reference} · {document.content.type}
-                    {document.version ? ` · v${document.version}` : ''}
-                  </span>
-                </div>
-              </div>
-              <span className="knowledge-facility">
-                {document.content.facilityIds
-                  .map((id) => facilities.find((facility) => facility.id === id)?.name)
-                  .filter(Boolean)
-                  .join(', ') || 'All facilities'}
+            <Link className="pc-row" href={`/docs/documents/${document.id}`}>
+              <DocIcon type={c.type} />
+              <span className="pc-row-body">
+                <span className="pc-row-title">{c.title}</span>
+                <span className="pc-row-hint">{caption}</span>
               </span>
-              <span className="knowledge-date">
-                {document.publishedAt ? formatDate(document.publishedAt) : 'Not published'}
+              <span className="pc-row-trail">
+                <Tag meta={DOC_STATUS_META[document.archivedAt ? 'archived' : document.version ? 'approved' : 'draft']} />
+                {document.version && !document.archivedAt && overdue(c.reviewDate) && (
+                  <Tag meta={DOC_STATUS_META.reviewOverdue} />
+                )}
+                <ChevronRight className="pc-row-chevron" aria-hidden="true" />
               </span>
-              <div className="knowledge-status">
-                <Tag
-                  meta={DOC_STATUS_META[document.archivedAt ? 'archived' : document.version ? 'approved' : 'draft']}
-                />
-                {document.version &&
-                  !document.archivedAt &&
-                  overdue(document.content.reviewDate) && (
-                    <Tag meta={DOC_STATUS_META.overdue} label="Review overdue" />
-                  )}
-              </div>
-              <ArrowUpRight size={17} className="knowledge-arrow" aria-hidden="true" />
             </Link>
           </li>
-        ))}
-      </ul>
-    </div>
+        );
+      })}
+    </ul>
   );
 }

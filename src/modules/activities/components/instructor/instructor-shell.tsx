@@ -9,7 +9,6 @@ import { Button } from "@/components/shadcn/button";
 import { ClubSwitcher } from "@/components/clubs/club-switcher";
 import { AccountMenu } from "@/components/workspace/account-menu";
 import { instructorHomeHref } from "@/modules/activities/lib/attendance/navigation";
-import { SHELL_PAGE_ID } from "@/lib/shell-preferences";
 import styles from "./instructor-shell.module.css";
 
 type Club = { id: string; name: string };
@@ -38,51 +37,39 @@ export function InstructorShell({
     tab: params.get("tab") ?? undefined,
     group: params.get("group") ?? undefined,
   });
+  // The window scrolls, as in ModuleShell, so a sticky save bar sits on the viewport's edge.
   useEffect(() => {
-    document.getElementById(SHELL_PAGE_ID)?.scrollTo({ top: 0 });
+    window.scrollTo({ top: 0 });
   }, [pathname, search]);
 
   return (
-    <div
-      className={`${styles.workspace} shadcn-workspace flex h-dvh flex-col overflow-hidden text-ui-foreground`}
-    >
-      <a
-        href="#instructor-main"
-        className="sr-only fixed left-4 top-4 z-50 rounded-ui-md bg-ui-primary p-3 text-ui-primary-foreground focus:not-sr-only"
-      >
-        Skip to class
-      </a>
-      {banner}
-      <header className={`${styles.topbar} tf-top shrink-0`} aria-label="Pool deck tools">
-        <Link href={home} className="tf-brand" aria-label="Pool deck classes">
-          <Image src="/brand/turnfin.png" alt="" width={72} height={72} priority />
-        </Link>
-        <nav className="tf-pages" aria-label="Pool deck">
-          <div className="tf-bar">
-            <Link href={home} className="tf-bar-item" aria-current={pathname !== "/instructor/swimmers" ? "page" : undefined}>Classes</Link>
-            <Link href="/instructor/swimmers" className="tf-bar-item" aria-current={pathname === "/instructor/swimmers" ? "page" : undefined}>Swimmers</Link>
+    <div className={`${styles.workspace} shadcn-workspace tf-shell text-ui-foreground`}>
+      <a className="skip-link" href="#instructor-main">Skip to content</a>
+      {/* The frame's own inset (24px from 768px, a flat 16px frame on phones), capped as in DeckHome. */}
+      <div className="tf-frame" style={{ maxWidth: 1180 }}>
+        {banner}
+        <header className="tf-top" aria-label="Pool deck tools">
+          <Link href={home} className="tf-brand" aria-label="Pool deck classes">
+            <Image src="/brand/turnfin.png" alt="" width={72} height={72} priority />
+          </Link>
+          <nav className="tf-pages" aria-label="Pool deck">
+            <div className="tf-bar">
+              <Link href={home} className="tf-bar-item" aria-current={pathname !== "/instructor/swimmers" ? "page" : undefined}>Classes</Link>
+              <Link href="/instructor/swimmers" className="tf-bar-item" aria-current={pathname === "/instructor/swimmers" ? "page" : undefined}>Swimmers</Link>
+            </div>
+          </nav>
+          <div className="tf-bar tf-tools" role="group" aria-label="Site, help and account">
+            <ClubSwitcher club={club} clubs={clubs} touchTargets />
+            <Button asChild variant="ghost" size="icon" className="tf-bar-item tf-icon">
+              <Link href="/help/instructor" target="_blank" rel="noopener noreferrer" aria-label="Help (opens in a new tab)"><CircleHelp aria-hidden="true" /></Link>
+            </Button>
+            <AccountMenu name={userName} showManageAccount={false} />
           </div>
-        </nav>
-        <div className="tf-bar tf-tools" role="group" aria-label="Site, help and account">
-          <ClubSwitcher club={club} clubs={clubs} touchTargets />
-          <Button asChild variant="ghost" size="icon" className="tf-bar-item tf-icon">
-            <Link href="/help/instructor" target="_blank" rel="noopener noreferrer" aria-label="Help (opens in a new tab)"><CircleHelp aria-hidden="true" /></Link>
-          </Button>
-          <AccountMenu name={userName} showManageAccount={false} />
-        </div>
-      </header>
-      <main
-        id="instructor-main"
-        tabIndex={-1}
-        className="tf-main flex min-h-0 min-w-0 flex-1 flex-col"
-      >
-        <div
-          id={SHELL_PAGE_ID}
-          className="min-h-0 flex-1 overflow-y-auto overscroll-contain px-4 pt-6 pb-4"
-        >
-          <div className="tf-content mx-auto w-full min-w-0 max-w-6xl">{children}</div>
-        </div>
-      </main>
+        </header>
+        <main id="instructor-main" tabIndex={-1} className="tf-main">
+          <div className="tf-content">{children}</div>
+        </main>
+      </div>
     </div>
   );
 }

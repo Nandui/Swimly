@@ -28,7 +28,8 @@ try {
   await page.getByRole('heading',{name:'Class overview',exact:true}).waitFor();
   assert.equal(new URL(page.url()).pathname,overview);
   assert.equal(new URL(page.url()).searchParams.get('group'),'level');
-  assert.equal(await page.getByRole('link',{name:'Class overview',exact:true}).getAttribute('aria-current'),'page');
+  // A view inside the page (SegmentedLinks) is "true"; only the frame's page bar marks "page".
+  assert.equal(await page.getByRole('link',{name:'Class overview',exact:true}).getAttribute('aria-current'),'true');
   // Morgan is absent and still contributes to the 5-person denominator and first three skills.
   await totals([5,4,2,1,0,0]);
   assert.equal(await page.getByRole('table').count(),0);

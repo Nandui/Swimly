@@ -102,18 +102,3 @@
   opacity: 1;
   translate: 0 0;
 }
-[data-motion="theme-icon"] {
-  transition: opacity var(--ui-motion-component) var(--ui-ease),
-    rotate var(--ui-motion-surface) var(--ui-ease),
-    scale var(--ui-motion-surface) var(--ui-ease);
-}
-[data-motion="theme-icon"][data-active="false"] {
-  opacity: 0;
-  rotate: calc(-1 * var(--ui-motion-icon-angle));
-  scale: var(--ui-motion-selection-scale);
-}
-[data-motion="theme-icon"][data-active="true"] {
-  opacity: 1;
-  rotate: 0deg;
-  scale: 1;
-}

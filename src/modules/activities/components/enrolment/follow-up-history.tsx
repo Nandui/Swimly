@@ -74,7 +74,7 @@ export function FollowUpHistory({ studentId, name, canRecord, summary, presentat
           </div>
           {error && <Notice tone="error" live="alert" title={error} />}
           {saved && <p className="text-sm text-ui-muted-foreground" role="status">{saved}</p>}
-          {adding && canRecord && <form onSubmit={save} className="space-y-4 rounded-ui-lg border border-ui-border bg-ui-muted/30 p-4">
+          {adding && canRecord && <form method="post" onSubmit={save} className="space-y-4 rounded-ui-lg border border-ui-border bg-ui-muted/30 p-4">
             <h3 className="font-semibold">Record contact or work completed</h3>
             <p className="text-sm text-ui-muted-foreground">Log a call, message or class search. Saving does not contact the parent or change their enrolment.</p>
             <fieldset disabled={saving || loading} className="min-w-0 space-y-4">

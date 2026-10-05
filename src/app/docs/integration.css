@@ -1,28 +1,11 @@
 /* Docs and Refunds layout rules only. The theme, tokens and control rules come from Poolside
    Clear (poolside.css) on body.turnfin-app; nothing here restyles shared controls. */
 .turnfin-docs {
-  --reading-size: 18px;
+  --reading-size: 16px;
   font-family: var(--font-sans);
   color: var(--ui-foreground);
 }
 .turnfin-docs input:focus, .turnfin-docs textarea:focus, .turnfin-docs select:focus { outline: none; }
-.turnfin-docs .button.primary { color: var(--ui-primary-foreground); background: var(--ui-primary); }
-.turnfin-docs .button.primary:hover { background: var(--ui-primary-hover); }
-.turnfin-docs .reader-layout, .turnfin-docs .editor-layout { min-width: 0; }
-/* Centred with auto margins, the editor would otherwise size to its toolbar and spill out of the frame. */
-.turnfin-docs .editor-layout { width: 100%; }
-.turnfin-docs .workflow-dialog { max-width: min(640px, calc(100vw - 32px)); }
-.turnfin-docs .home-facility { display: flex; flex-direction: row; }
-.turnfin-docs .home-search input { border: 0; box-shadow: none; background: transparent; min-width: 0; }
-.turnfin-docs .home-search input:focus-visible { box-shadow: none; }
-@media (min-width: 901px) and (max-width: 1100px) {
-  .turnfin-docs .staff-directory > .table-scroll { display: none; }
-  .turnfin-docs .staff-mobile-list { display: grid; list-style: none; margin: 0; padding: 0 20px; }
-  .turnfin-docs .staff-mobile-list li { display: grid; gap: 12px; padding: 20px 0; border-top: 1px solid var(--ui-border); }
-  .turnfin-docs .staff-mobile-heading { display: flex; gap: 12px; align-items: center; }
-  .turnfin-docs .staff-mobile-heading span { display: block; }
-  .turnfin-docs .staff-mobile-badges { display: flex; gap: 8px; }
-}
 @media (prefers-reduced-motion: reduce) {
   .turnfin-docs *, .turnfin-docs *::before, .turnfin-docs *::after { animation: none !important; transition: none !important; scroll-behavior: auto !important; }
 }

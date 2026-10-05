@@ -56,16 +56,16 @@ try {
   const topics=page.getByRole('button',{name:/Browse by topic/});
   await topics.focus();await page.keyboard.press('Enter');
   assert.equal(await topics.getAttribute('aria-expanded'),'true');
-  await page.getByRole('button',{name:/Enrolment & moves/}).click();
-  assert(new URL(page.url()).searchParams.get('topic')==='enrolment');
-  await page.getByRole('searchbox',{name:'Search help guides'}).fill('zzzz-not-found');
+  await page.getByRole('link',{name:/Enrolment and moves/}).click();
+  await page.waitForURL(url=>url.searchParams.get('topic')==='enrolment');
+  await page.getByRole('searchbox',{name:'Search the guides'}).fill('zzzz-not-found');
   await page.getByText('No guides match this search').waitFor();
   await page.getByRole('button',{name:'Show all guides'}).click();
-  assert.equal(await page.getByRole('searchbox',{name:'Search help guides'}).inputValue(),'');
-  assert(await page.getByRole('searchbox',{name:'Search help guides'}).evaluate(el=>el===document.activeElement));
+  assert.equal(await page.getByRole('searchbox',{name:'Search the guides'}).inputValue(),'');
+  assert(await page.getByRole('searchbox',{name:'Search the guides'}).evaluate(el=>el===document.activeElement));
 
   await open('profile');
-  const chapter=page.getByRole('button',{name:'Turtles, LeisureWorld Bishopstown, Active',exact:true});
+  const chapter=page.getByRole('button',{name:'Turtles, Riverside, Active',exact:true});
   await chapter.focus();await page.keyboard.press('Enter');
   assert.equal(await chapter.getAttribute('aria-expanded'),'false');
   await page.keyboard.press('Space');

@@ -1,36 +1,37 @@
 'use client';
-import { Dialog, DialogContent, DialogTitle, DialogDescription } from '@/components/docs/primitives/dialog';
 import {
   AlertDialog,
   AlertDialogContent,
   AlertDialogTitle,
   AlertDialogDescription,
   AlertDialogCancel,
+  AlertDialogFooter,
 } from '@/components/docs/primitives/alert-dialog';
 
-import { Card } from '@/components/shadcn/card';
 import { Label } from '@/components/shadcn/label';
 import { Checkbox } from '@/components/shadcn/checkbox';
 import { Button } from '@/components/shadcn/button';
 import { Textarea } from '@/components/shadcn/textarea';
-import { Input } from '@/components/shadcn/input';
-import { Popover, PopoverContent, PopoverTrigger } from '@/components/docs/primitives/popover';
+import { Progress } from '@/components/shadcn/progress';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
-import { useState, useTransition } from 'react';
+import { useId, useState, useTransition } from 'react';
 import {
+  Archive,
   CheckCircle2,
+  ChevronRight,
   FilePenLine,
   History,
-  Printer,
-  Minus,
-  Plus,
   Paperclip,
-  Archive,
-  Users,
+  Pencil,
+  Printer,
   Send,
-  ArrowRight,
+  Smartphone,
+  Users,
 } from 'lucide-react';
+import { FormDialog } from '@/components/form-dialog';
+import { SegmentedChoice } from '@/components/ui-kit/segmented-links';
+import { PageHeader } from '@/components/ui-kit/page-header';
 import {
   startDraftAction,
   reviewAction,
@@ -44,6 +45,7 @@ import {
   formatDate,
   overdue,
   DOC_STATUS_META,
+  documentTypeLabels,
   type Workspace,
   type DocumentRecord,
   type DocumentContent,
@@ -51,10 +53,17 @@ import {
   type Snapshot,
   type AssignmentRule,
 } from '@/lib/docs/types';
-import { DocIcon, Avatar } from './ui';
+import { DocIcon, docTypeMeta } from './ui';
+import { Input as FieldInput } from '@/components/ui/input';
 import { Notice } from '@/components/ui-kit/notice';
 import { Tag } from '@/components/ui-kit/tag';
-import { BackLink } from '@/components/ui-kit/back-link';
+
+/** The reader's text sizes (V2Document's A−, A, A+): 16px is the default reading size. */
+const SIZES = [
+  { value: '14', label: 'A−', name: 'Smaller text' },
+  { value: '16', label: 'A', name: 'Default text size' },
+  { value: '20', label: 'A+', name: 'Larger text' },
+];
 type Props = {
   workspace: Workspace;
   document: DocumentRecord;
@@ -81,17 +90,15 @@ export function Reader({
   children,
 }: Props) {
   const router = useRouter();
-  const [size, setSize] = useState(18);
+  const [size, setSize] = useState('16');
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
   const [pending, start] = useTransition();
-  const [dialog, setDialog] = useState<'assign' | 'archive' | null>(null);
+  const [archiving, setArchiving] = useState(false);
   const [feedback, setFeedback] = useState('');
   const [reason, setReason] = useState('');
-  const [people, setPeople] = useState(assignments?.memberIds || []);
-  const [teams, setTeams] = useState(assignments?.teamIds || []);
-  const [due, setDue] = useState(assignments?.dueDate?.slice(0, 10) || '');
-  const [contentsOpen, setContentsOpen] = useState(false);
+  const reasonId = useId();
+  const feedbackId = useId();
   const historical = s?.kind === 'publication' && s.id !== d.currentVersionId;
   const submitted = s?.kind === 'submission';
   const isOwner = canWrite(w.member) && (c.ownerId === w.member.id || canManage(w.member));
@@ -115,7 +122,7 @@ export function Reader({
       if (!result.ok) setError(result.error || 'Could not save that. Try again.');
       else {
         setSuccess(message);
-        setDialog(null);
+        setArchiving(false);
         if (openCurrent) router.push(`/docs/documents/${d.id}`);
         router.refresh();
       }
@@ -129,103 +136,75 @@ export function Reader({
       else router.push(`/docs/documents/${d.id}/edit`);
     });
   }
-  const ReaderDialog = dialog === 'archive' ? AlertDialog : Dialog;
-  const ReaderDialogContent = dialog === 'archive' ? AlertDialogContent : DialogContent;
-  const ReaderDialogTitle = dialog === 'archive' ? AlertDialogTitle : DialogTitle;
-  const ReaderDialogDescription = dialog === 'archive' ? AlertDialogDescription : DialogDescription;
+  const owner = w.members.find((m) => m.id === c.ownerId)?.name || 'Document owner';
+  const places =
+    c.facilityIds
+      .map((id) => w.facilities.find((f) => f.id === id)?.name)
+      .filter(Boolean)
+      .join(', ') || 'All facilities';
+  const contents = [
+    ...toc.map((item) => ({ href: `#${item.id}`, label: item.label, nested: item.level > 2 })),
+    ...(c.type === 'Risk assessment' ? [{ href: '#risk-assessment', label: 'Risk assessment', nested: false }] : []),
+    ...(c.attachments.length ? [{ href: '#references', label: 'Reference attachments', nested: false }] : []),
+    ...(c.relatedIds.length ? [{ href: '#related', label: 'Related documents', nested: false }] : []),
+  ];
+  const totals = readingTotals && readingTotals.assigned > 0 ? readingTotals : null;
+  const owns = isOwner && !d.archivedAt;
   return (
-    <div className="reader-workspace">
-      <div className="breadcrumb">
-        <BackLink href="/docs/library" label="Library" />
-      </div>
-      <div className="reader-toolbar">
-        <div className="reader-status">
-          {submitted && !d.archivedAt ? (
-            <Tag meta={DOC_STATUS_META.submitted} label="Review submission" />
-          ) : (
-            <Tag
-              meta={
-                DOC_STATUS_META[
-                  d.archivedAt ? 'archived' : !s ? 'draftPreview' : historical ? 'historical' : 'current'
-                ]
-              }
+    <div className="reader-workspace flex min-w-0 flex-col gap-4">
+      <PageHeader
+        back={{ href: '/docs/library', label: 'Document library' }}
+        title={c.title}
+        description={[c.summary.trim().replace(/\.$/, ''), `Owned by ${owner}`].filter(Boolean).join(' · ')}
+        actions={
+          <>
+            <SegmentedChoice
+              aria-label="Text size"
+              value={size}
+              onValueChange={setSize}
+              options={SIZES.map(({ value, label, name }) => ({
+                value,
+                label: (
+                  <>
+                    <span aria-hidden="true">{label}</span>
+                    <span className="sr-only">{name}</span>
+                  </>
+                ),
+              }))}
             />
-          )}
-          {s?.version && <span>Version {s.version}</span>}
-        </div>
-        <div className="reader-actions">
-          <Popover>
-            <PopoverTrigger asChild>
-              <Button variant="outline">Reading options</Button>
-            </PopoverTrigger>
-            <PopoverContent
-              className="reader-option-controls"
-              align="end"
-              aria-label="Reading options"
-            >
-              <span>Text size</span>
-              <Button
-                variant="ghost"
-                className="icon-button"
-                aria-label="Decrease text size"
-                disabled={size <= 16}
-                onClick={() => setSize((v) => v - 1)}
-              >
-                <Minus size={16} />
-              </Button>
-              <span className="text-size">Aa</span>
-              <Button
-                variant="ghost"
-                className="icon-button"
-                aria-label="Increase text size"
-                disabled={size >= 24}
-                onClick={() => setSize((v) => v + 1)}
-              >
-                <Plus size={16} />
-              </Button>
-              <Button
-                variant="ghost"
-                className="button ghost compact"
-                onClick={() => window.print()}
-              >
-                <Printer size={16} />
-                <span>Print / PDF</span>
-              </Button>
-            </PopoverContent>
-          </Popover>
-          <Button asChild variant="ghost">
-            <Link className="button ghost compact" href={`/docs/documents/${d.id}/history`}>
-              <History size={16} />
-              <span>History</span>
-            </Link>
-          </Button>
-          {canWrite(w.member) && !d.archivedAt && draft?.status !== 'in_review' && (
-            <Button
-              variant="outline"
-              className="button secondary compact"
-              disabled={pending}
-              onClick={edit}
-            >
-              <FilePenLine size={16} />
-              {draft ? 'Continue draft' : 'Edit document'}
+            <Button asChild variant="outline">
+              <Link href={`/docs/documents/${d.id}/history`}>
+                <History aria-hidden="true" />
+                History
+              </Link>
             </Button>
-          )}
-        </div>
-      </div>
+            <Button variant="outline" onClick={() => window.print()}>
+              <Printer aria-hidden="true" />
+              Print
+            </Button>
+            {canWrite(w.member) && !d.archivedAt && draft?.status !== 'in_review' && (
+              <Button disabled={pending} onClick={edit}>
+                <Pencil aria-hidden="true" />
+                {draft ? 'Continue draft' : 'Edit document'}
+              </Button>
+            )}
+          </>
+        }
+      />
       {error ? (
-        <Notice tone="error" live="alert" title={error} className="my-4" />
+        <Notice tone="error" live="alert" title={error} />
       ) : success ? (
-        <Notice tone="success" live="status" title={success} className="my-4" />
+        <Notice tone="success" live="status" title={success} />
       ) : null}
       {historical && (
         <Notice
           tone="warning"
-          className="my-4"
           title="You are reading a previous version."
           actions={
             <Button asChild variant="outline">
               <Link href={`/docs/documents/${d.id}`}>
-                Open the current approved version <ArrowRight aria-hidden="true" />
+                Open the current version
+                <ChevronRight aria-hidden="true" />
               </Link>
             </Button>
           }
@@ -234,14 +213,12 @@ export function Reader({
       {submitted && (
         <Notice
           tone="warning"
-          className="my-4"
           title="This is a frozen review submission. Staff use the current approved publication."
         />
       )}
       {d.archivedAt && (
         <Notice
           tone="warning"
-          className="my-4"
           title={`Archived ${formatDate(d.archivedAt)}.`}
           description={d.archiveReason || undefined}
         />
@@ -249,7 +226,6 @@ export function Reader({
       {draft && s?.kind === 'publication' && !historical && !d.archivedAt && (
         <Notice
           icon={FilePenLine}
-          className="my-4"
           title={
             draft.status === 'in_review'
               ? 'A new revision is awaiting approval.'
@@ -266,122 +242,107 @@ export function Reader({
                 }
               >
                 {draft.status === 'in_review' ? 'View submission' : 'Open draft'}
-                <ArrowUpRightIcon aria-hidden="true" />
+                <ChevronRight aria-hidden="true" />
               </Link>
             </Button>
           }
         />
       )}
-      <div className="reading-layout">
-        <Button
-          className="reader-contents-toggle"
-          variant="outline"
-          aria-expanded={contentsOpen}
-          aria-controls="reader-contents"
-          onClick={() => setContentsOpen(!contentsOpen)}
-        >
-          {contentsOpen ? 'Hide document contents' : 'Jump to a section'}
-        </Button>
+      <div className="flex min-w-0 flex-wrap items-start gap-4">
         <article
-          className="document-paper"
+          className="pc-panel document-article min-w-0 grow-[999] basis-[560px]"
           style={{ '--reading-size': `${size}px` } as React.CSSProperties}
         >
-          <header className="document-header">
-            <div className="document-kicker">
-              <DocIcon type={c.type} />
-              <span>
-                {c.type === 'SOP'
-                  ? 'Standard operating procedure'
-                  : c.type === 'NOP'
-                    ? 'Normal operating procedure'
-                    : c.type === 'EAP'
-                      ? 'Emergency action plan'
-                      : c.type}
-              </span>
-            </div>
-            <h1>{c.title}</h1>
-            <p className="document-summary">{c.summary}</p>
-            <div className="document-meta">
-              <div>
-                <span>Document ref.</span>
-                <strong>{c.reference}</strong>
-              </div>
-              <div>
-                <span>{submitted ? 'Submitted' : 'Published'}</span>
-                <strong>{formatDate(s?.createdAt)}</strong>
-              </div>
-              <div>
-                <span>Review due</span>
-                <strong className={overdue(c.reviewDate) ? 'overdue-text' : ''}>
-                  {formatDate(c.reviewDate)}
-                  {overdue(c.reviewDate) && ' · Overdue'}
-                </strong>
-              </div>
-            </div>
-            <div className="document-owner">
-              <Avatar
-                member={w.members.find((m) => m.id === c.ownerId) || { name: 'Document owner' }}
+          <div className="flex flex-wrap gap-2">
+            <Tag meta={docTypeMeta(c.type)} />
+            {submitted && !d.archivedAt ? (
+              <Tag meta={DOC_STATUS_META.submitted} label="Review submission" />
+            ) : (
+              <Tag
+                meta={
+                  DOC_STATUS_META[
+                    d.archivedAt ? 'archived' : !s ? 'draftPreview' : historical ? 'historical' : 'current'
+                  ]
+                }
               />
-              <span>
-                Owned by{' '}
-                <strong>
-                  {w.members.find((m) => m.id === c.ownerId)?.name || 'Document owner'}
-                </strong>
-              </span>
-              <span className="owner-facility">
-                {c.facilityIds
-                  .map((id) => w.facilities.find((f) => f.id === id)?.name)
-                  .join(' · ') || 'All facilities'}
-              </span>
+            )}
+          </div>
+          <dl className="grid grid-cols-[repeat(auto-fit,minmax(9rem,1fr))] gap-3">
+            <div className="rounded-ui-md border border-ui-border px-4 py-3">
+              <dt className="text-xs text-ui-muted-foreground">Document ref.</dt>
+              <dd className="font-semibold">{c.reference}</dd>
             </div>
-          </header>
+            {s && (
+              <div className="rounded-ui-md border border-ui-border px-4 py-3">
+                <dt className="text-xs text-ui-muted-foreground">{submitted ? 'Submitted' : 'Published'}</dt>
+                <dd className="font-semibold">
+                  {formatDate(s.createdAt)}
+                  {s.version ? ` · version ${s.version}` : ''}
+                </dd>
+              </div>
+            )}
+            <div className="rounded-ui-md border border-ui-border px-4 py-3">
+              <dt className="text-xs text-ui-muted-foreground">Review due</dt>
+              <dd className="flex flex-wrap items-center gap-2 font-semibold">
+                {formatDate(c.reviewDate)}
+                {overdue(c.reviewDate) && <Tag meta={DOC_STATUS_META.reviewOverdue} />}
+              </dd>
+            </div>
+          </dl>
+          <p className="text-xs text-ui-muted-foreground">For {places}</p>
           {children}
           {c.attachments.length > 0 && (
-            <section className="attachments-section" id="references">
-              <h2>Reference attachments</h2>
-              {c.attachments.map((file) => (
-                <a key={file.id} href={`/api/docs/files/${file.id}`} className="attachment">
-                  <Paperclip size={18} />
-                  <span>
-                    <strong>{file.name}</strong>
-                    <small>{(file.size / 1024).toFixed(0)} KB · Reference file</small>
-                  </span>
-                  <ArrowRight size={17} />
-                </a>
-              ))}
+            <section className="flex flex-col gap-3" id="references" aria-labelledby="references-title">
+              <h2 id="references-title">Reference attachments</h2>
+              <ul className="pc-rows">
+                {c.attachments.map((file) => (
+                  <li key={file.id}>
+                    <a className="pc-row" href={`/api/docs/files/${file.id}`}>
+                      <span className="pc-tile-icon"><Paperclip aria-hidden="true" /></span>
+                      <span className="pc-row-body">
+                        <span className="pc-row-title">{file.name}</span>
+                        <span className="pc-row-hint">{(file.size / 1024).toFixed(0)} KB · Reference file</span>
+                      </span>
+                      <ChevronRight className="pc-row-chevron" aria-hidden="true" />
+                    </a>
+                  </li>
+                ))}
+              </ul>
             </section>
           )}
           {c.relatedIds.length > 0 && (
-            <section className="attachments-section">
-              <h2>Related documents</h2>
-              {c.relatedIds.map((id) => (
-                <Link className="attachment" key={id} href={`/docs/documents/${id}`}>
-                  <FilePenLine size={18} />
-                  {w.documents.find((item) => item.id === id)?.content.title || 'Related document'}
-                  <ArrowRight size={17} />
-                </Link>
-              ))}
+            <section className="flex flex-col gap-3" id="related" aria-labelledby="related-title">
+              <h2 id="related-title">Related documents</h2>
+              <ul className="pc-rows">
+                {c.relatedIds.map((id) => {
+                  const related = w.documents.find((item) => item.id === id);
+                  return (
+                    <li key={id}>
+                      <Link className="pc-row" href={`/docs/documents/${id}`}>
+                        {related ? <DocIcon type={related.content.type} /> : <span className="pc-tile-icon"><FilePenLine aria-hidden="true" /></span>}
+                        <span className="pc-row-body">
+                          <span className="pc-row-title">{related?.content.title || 'Related document'}</span>
+                          {related && <span className="pc-row-hint">{documentTypeLabels[related.content.type].long}</span>}
+                        </span>
+                        <ChevronRight className="pc-row-chevron" aria-hidden="true" />
+                      </Link>
+                    </li>
+                  );
+                })}
+              </ul>
             </section>
           )}
           {s?.kind === 'publication' && !historical && !d.archivedAt && (
-            <div className="acknowledgement" id="acknowledge">
-              {acknowledgedAt ? (
-                <>
-                  <CheckCircle2 size={25} />
-                  <div>
-                    <h3>You’ve read this version</h3>
-                    <p>Acknowledged on {formatDate(acknowledgedAt)}.</p>
-                  </div>
-                </>
-              ) : (
-                <>
-                  <CheckCircle2 size={25} />
-                  <div>
-                    <h3>Assigned to you?</h3>
-                    <p>Acknowledge required reading in Turnfin Me on your phone. It records version {s.version} against your name.</p>
-                  </div>
-                </>
-              )}
+            <div className="pc-note" id="acknowledge">
+              {acknowledgedAt ? <CheckCircle2 aria-hidden="true" className="size-5 text-ui-primary" /> : <Smartphone aria-hidden="true" className="size-5 text-ui-primary" />}
+              <div className="min-w-0">
+                <h3>{acknowledgedAt ? 'You’ve read this version' : 'Assigned to you?'}</h3>
+                <p className="text-sm">
+                  {acknowledgedAt
+                    ? `Acknowledged on ${formatDate(acknowledgedAt)}.`
+                    : `Confirm you have read it in Turnfin Me on your phone. It records version ${s.version} against your name.`}
+                </p>
+              </div>
             </div>
           )}
           <div className="print-footer">
@@ -389,225 +350,175 @@ export function Reader({
             {formatDate(new Date().toISOString())}
           </div>
         </article>
-        <aside className="reading-sidebar" data-contents-open={contentsOpen}>
-          <div className="contents-panel" id="reader-contents">
-            <p className="eyebrow">On this page</p>
-            <nav aria-label="Document contents">
-              {toc.map((item) => (
-                <a
-                  key={item.id}
-                  className={item.level > 2 ? 'nested' : ''}
-                  href={`#${item.id}`}
-                  onClick={() => setContentsOpen(false)}
-                >
-                  {item.label}
-                </a>
-              ))}
-              {c.type === 'Risk assessment' && (
-                <a href="#risk-assessment" onClick={() => setContentsOpen(false)}>
-                  Risk assessment
-                </a>
-              )}
-              {c.attachments.length > 0 && (
-                <a href="#references" onClick={() => setContentsOpen(false)}>
-                  Reference attachments
-                </a>
-              )}
+        <aside className="reader-rail flex min-w-0 grow basis-[300px] flex-col gap-4">
+          {contents.length > 0 && (
+            <nav className="pc-panel" aria-labelledby="contents-title">
+              <h2 id="contents-title">On this page</h2>
+              <ul className="flex flex-col gap-2">
+                {contents.map((item) => (
+                  <li key={item.href}>
+                    <a className="reader-contents-link" data-nested={item.nested || undefined} href={item.href}>
+                      {item.label}
+                    </a>
+                  </li>
+                ))}
+              </ul>
             </nav>
-          </div>
-          <div className="reader-note">
-            <CheckCircle2 size={19} />
-            <strong>
-              {s?.kind === 'publication' ? 'Version-controlled guidance' : 'Work in progress'}
-            </strong>
-            <p>
-              {s?.kind === 'publication'
-                ? 'Changes are reviewed before a new version reaches your team.'
-                : 'This content becomes staff guidance only after independent approval.'}
-            </p>
-          </div>
-          {readingTotals && readingTotals.assigned > 0 && (
-            <div className="reader-note reading-totals" aria-label="Reading of the current version">
-              <strong>Reading this version</strong>
-              <p>
-                {readingTotals.completed} of {readingTotals.assigned} read
-                {readingTotals.overdue > 0 ? ` · ${readingTotals.overdue} overdue` : ''}
-              </p>
-            </div>
           )}
-          {isOwner && !d.archivedAt && (
-            <div className="owner-actions">
-              <Button
-                variant="outline"
-                className="button secondary"
-                onClick={() => setDialog('assign')}
-              >
-                <Users size={16} />
-                Assign required reading
-              </Button>
-              <Button variant="ghost" className="button ghost" onClick={() => setDialog('archive')}>
-                <Archive size={16} />
-                Archive document
-              </Button>
-            </div>
+          {(totals || owns) && (
+            <section className="pc-panel" aria-labelledby="reading-title">
+              <h2 id="reading-title">Reading this version</h2>
+              {totals ? (
+                <div className="flex flex-col gap-2">
+                  <p>
+                    <span className="pc-stat-figure block">{totals.completed}</span>
+                    <span className="text-xs text-ui-muted-foreground">
+                      of {totals.assigned} {totals.assigned === 1 ? 'person has' : 'people have'} read it
+                    </span>
+                  </p>
+                  <Progress value={(totals.completed / totals.assigned) * 100} aria-label="Read so far" />
+                  {totals.overdue > 0 && <Tag meta={DOC_STATUS_META.overdue} label={`${totals.overdue} overdue`} className="self-start" />}
+                </div>
+              ) : (
+                <p className="text-sm text-ui-muted-foreground">Nobody is assigned to read this version yet</p>
+              )}
+              {owns && (
+                <div className="flex flex-col gap-2">
+                  <FormDialog
+                    trigger={
+                      <Button variant="outline" className="w-full">
+                        <Users aria-hidden="true" />
+                        Assign required reading
+                      </Button>
+                    }
+                    title="Assign required reading"
+                    description="Choose teams or people. Each new version asks them to read it again."
+                    submitLabel="Save assignments"
+                    successMessage="Reading assignments updated"
+                    portalClassName="turnfin-docs"
+                    submit={async (form) => {
+                      const result = await assignAction(
+                        d.id,
+                        form.getAll('memberIds').map(String),
+                        form.getAll('teamIds').map(String),
+                        String(form.get('due') || '') || null,
+                      );
+                      return result.ok ? { ok: true } : { ok: false, error: result.error };
+                    }}
+                    onSuccess={() => router.refresh()}
+                  >
+                    <fieldset className="flex flex-col">
+                      <legend className="mb-2">Teams</legend>
+                      {w.teams.map((t) => (
+                        <Label className="flex min-h-11 flex-row items-center gap-3 font-normal" key={t.id}>
+                          <Checkbox name="teamIds" value={t.id} defaultChecked={assignments?.teamIds.includes(t.id)} />
+                          {t.name}
+                        </Label>
+                      ))}
+                    </fieldset>
+                    <fieldset className="flex flex-col">
+                      <legend className="mb-2">Individual staff</legend>
+                      {w.members
+                        .filter((m) => m.access.read)
+                        .map((m) => (
+                          <Label className="flex min-h-11 flex-row items-center gap-3 font-normal" key={m.id}>
+                            <Checkbox name="memberIds" value={m.id} defaultChecked={assignments?.memberIds.includes(m.id)} />
+                            {m.name}
+                          </Label>
+                        ))}
+                    </fieldset>
+                    <FieldInput label="Deadline" optional type="date" name="due" defaultValue={assignments?.dueDate?.slice(0, 10) || ''} />
+                  </FormDialog>
+                  <Button variant="ghost" onClick={() => setArchiving(true)}>
+                    <Archive aria-hidden="true" />
+                    Archive document
+                  </Button>
+                </div>
+              )}
+            </section>
           )}
         </aside>
       </div>
       {reviewable && (
-        <Card asChild>
-          <section className="review-decision panel">
-            <div>
-              <h2>Ready for the team?</h2>
-              <p>Change summary: {s.changeSummary}</p>
-            </div>
-            <Label>
-              Review feedback
-              <Textarea
-                value={feedback}
-                onChange={(e) => setFeedback(e.target.value)}
-                placeholder="Required when requesting changes. Optional when approving."
-                maxLength={5000}
-              />
-            </Label>
-            <div className="form-actions">
-              <Button
-                variant="outline"
-                className="button secondary"
-                disabled={pending || !feedback.trim()}
-                onClick={() =>
-                  action(
-                    () => reviewAction(d.id, s.id, 'changes_requested', feedback),
-                    'Changes requested. The author can revise the draft.',
-                  )
-                }
-              >
-                <Send size={16} />
-                Request changes
-              </Button>
-              <Button
-                variant="default"
-                className="button primary"
-                disabled={pending}
-                onClick={() =>
-                  action(
-                    () => reviewAction(d.id, s.id, 'approved', feedback),
-                    'Approved and published.',
-                    true,
-                  )
-                }
-              >
-                <CheckCircle2 size={17} />
-                Approve and publish
-              </Button>
-            </div>
-          </section>
-        </Card>
-      )}
-      <ReaderDialog
-        open={!!dialog}
-        onOpenChange={(open) => {
-          if (!open && !pending) setDialog(null);
-        }}
-      >
-        <ReaderDialogContent className="workflow-dialog">
-          <ReaderDialogTitle>
-            {dialog === 'assign' ? 'Assign required reading' : 'Archive this document'}
-          </ReaderDialogTitle>
-          {dialog === 'assign' ? (
-            <>
-              <ReaderDialogDescription>
-                Select staff or teams. New publications will require a fresh acknowledgement.
-              </ReaderDialogDescription>
-              <fieldset>
-                <legend>Teams</legend>
-                {w.teams.map((t) => (
-                  <Label className="checkbox-label" key={t.id}>
-                    <Checkbox
-                      checked={teams.includes(t.id)}
-                      onCheckedChange={(checked) =>
-                        setTeams((v) =>
-                          checked === true ? [...v, t.id] : v.filter((id) => id !== t.id),
-                        )
-                      }
-                    />
-                    {t.name}
-                  </Label>
-                ))}
-              </fieldset>
-              <fieldset>
-                <legend>Individual staff</legend>
-                {w.members
-                  .filter((m) => m.access.read)
-                  .map((m) => (
-                    <Label className="checkbox-label" key={m.id}>
-                      <Checkbox
-                        checked={people.includes(m.id)}
-                        onCheckedChange={(checked) =>
-                          setPeople((v) =>
-                            checked === true ? [...v, m.id] : v.filter((id) => id !== m.id),
-                          )
-                        }
-                      />
-                      {m.name}
-                    </Label>
-                  ))}
-              </fieldset>
-              <Label>
-                Optional deadline
-                <Input type="date" value={due} onChange={(e) => setDue(e.target.value)} />
-              </Label>
-            </>
-          ) : (
-            <>
-              <ReaderDialogDescription>
-                The document leaves the library and outstanding reading lists. Its history will be
-                retained.
-              </ReaderDialogDescription>
-              <Label>
-                Reason for archiving
-                <Textarea
-                  required
-                  value={reason}
-                  onChange={(e) => setReason(e.target.value)}
-                  maxLength={2000}
-                />
-              </Label>
-            </>
-          )}
-          {error ? <Notice tone="error" live="alert" title={error} className="my-4" /> : null}
-          <div className="form-actions">
-            {dialog === 'archive' ? (
-              <AlertDialogCancel disabled={pending}>Cancel</AlertDialogCancel>
-            ) : (
-              <Button
-                variant="outline"
-                data-dialog-close
-                className="button secondary"
-                onClick={() => setDialog(null)}
-              >
-                Cancel
-              </Button>
-            )}
+        <section className="pc-panel" aria-labelledby="review-title">
+          <div>
+            <h2 id="review-title">Ready for the team?</h2>
+            <p className="text-sm text-ui-muted-foreground">Change summary: {s.changeSummary}</p>
+          </div>
+          <div className="flex flex-col gap-2">
+            <Label className="block" htmlFor={feedbackId}>Review feedback</Label>
+            <Textarea
+              id={feedbackId}
+              value={feedback}
+              onChange={(e) => setFeedback(e.target.value)}
+              placeholder="Required when requesting changes, optional when approving"
+              maxLength={5000}
+            />
+          </div>
+          <div className="flex flex-wrap justify-end gap-2">
             <Button
-              variant={dialog === 'archive' ? 'destructive' : 'default'}
-              disabled={pending || (dialog === 'archive' && !reason.trim())}
+              variant="outline"
+              disabled={pending || !feedback.trim()}
               onClick={() =>
-                dialog === 'assign'
-                  ? action(
-                      () => assignAction(d.id, people, teams, due || null),
-                      'Reading assignments updated.',
-                    )
-                  : action(() => archiveAction(d.id, reason), 'Document archived.')
+                action(
+                  () => reviewAction(d.id, s.id, 'changes_requested', feedback),
+                  'Changes requested. The author can revise the draft.',
+                )
               }
             >
-              {pending ? 'Saving…' : dialog === 'assign' ? 'Save assignments' : 'Archive document'}
+              <Send aria-hidden="true" />
+              Request changes
+            </Button>
+            <Button
+              disabled={pending}
+              onClick={() =>
+                action(
+                  () => reviewAction(d.id, s.id, 'approved', feedback),
+                  'Approved and published.',
+                  true,
+                )
+              }
+            >
+              <CheckCircle2 aria-hidden="true" />
+              Approve and publish
             </Button>
           </div>
-        </ReaderDialogContent>
-      </ReaderDialog>
+        </section>
+      )}
+      <AlertDialog
+        open={archiving}
+        onOpenChange={(open) => {
+          if (!open && !pending) setArchiving(false);
+        }}
+      >
+        <AlertDialogContent>
+          <AlertDialogTitle>Archive this document</AlertDialogTitle>
+          <AlertDialogDescription>
+            The document leaves the library and outstanding reading lists. Its history is kept.
+          </AlertDialogDescription>
+          <div className="flex flex-col gap-2">
+            <Label className="block" htmlFor={reasonId}>Reason for archiving</Label>
+            <Textarea
+              id={reasonId}
+              required
+              value={reason}
+              onChange={(e) => setReason(e.target.value)}
+              maxLength={2000}
+            />
+          </div>
+          {error ? <Notice tone="error" live="alert" title={error} /> : null}
+          <AlertDialogFooter>
+            <AlertDialogCancel disabled={pending}>Cancel</AlertDialogCancel>
+            <Button
+              variant="destructive"
+              disabled={pending || !reason.trim()}
+              onClick={() => action(() => archiveAction(d.id, reason), 'Document archived.')}
+            >
+              {pending ? 'Archiving…' : 'Archive document'}
+            </Button>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
-}
-function ArrowUpRightIcon() {
-  return <ArrowRight size={15} />;
 }

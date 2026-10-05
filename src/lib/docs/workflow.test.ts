@@ -165,8 +165,16 @@ test('reader cannot create, edit, submit, approve, report, or see unpublished do
 test('editing leases exclude another user and a second tab from the same user', async () => {
   const f = await create();
   await assert.rejects(service.lock('alex', f.id, 'other'), /is editing/);
-  await assert.rejects(service.lock('jamie', f.id, 'other-tab'), /is editing/);
+  await assert.rejects(service.lock('jamie', f.id, 'other-tab'), /another window/);
   await assert.rejects(service.save('jamie', f.id, 'other-tab', f.d.revision, f.c), /expired/);
+});
+test('a person can move their own editing lease to another window, never someone else’s', async () => {
+  const f = await create();
+  await assert.rejects(service.lock('alex', f.id, 'other', false, true), /is editing/);
+  await service.lock('jamie', f.id, 'other-tab', false, true);
+  await assert.rejects(service.save('jamie', f.id, f.session, f.d.revision, f.c), /expired/);
+  const saved = await service.save('jamie', f.id, 'other-tab', f.d.revision, { ...f.c, title: 'Saved from the new window' });
+  assert.equal(saved.revision, f.d.revision + 1);
 });
 test('expired leases and stale revisions fail without overwriting content', async () => {
   const f = await create();

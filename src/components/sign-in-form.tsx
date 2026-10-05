@@ -95,7 +95,7 @@ export function SignInForm({ devAdminName, sharedDeviceName = null }: { devAdmin
         </div>
       ) : null}
 
-      <form onSubmit={handleSubmit}>
+      <form method="post" onSubmit={handleSubmit}>
         <div className="flex min-w-0 flex-col gap-4">
           <Input
             label="Email"

@@ -92,7 +92,7 @@ try {
   assert(await button('Next competency').isDisabled());
   await button('Everyone in today achieved').click();
   await button('Not in today (1)').click();
-  await checked(skill('Exit the water safely','Morgan Example'),'Not Achieved');
+  await checked(skill('Exit the water safely','Morgan Example'),'Not achieved');
   await checked(skill('Exit the water safely','Casey Example'),'Achieved'); // Late is included.
   await button('By swimmer').click();
   assert.equal(await swimmer('Jamie Example').getAttribute('aria-expanded'),'true');

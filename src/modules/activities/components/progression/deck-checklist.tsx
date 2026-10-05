@@ -3,14 +3,17 @@ import * as React from "react";
 import Link from "next/link";
 import {
   Check,
+  CheckCheck,
   ChevronLeft,
   ChevronRight,
   ChevronDown,
+  Info,
 } from "lucide-react";
+import { Avatar, AvatarFallback, initials } from "@/components/shadcn/avatar";
 import { Button } from "@/components/shadcn/button";
 import { LoadingButton } from "@/components/ui/loading-button";
-import { SegmentedChoice } from "@/components/ui-kit/segmented-links";
-import { Item, ItemContent, ItemGroup } from "@/components/shadcn/item";
+import { EmptyState } from "@/components/ui-kit/empty-state";
+import { Tag } from "@/components/ui-kit/tag";
 import {
   Collapsible,
   CollapsibleContent,
@@ -42,7 +45,12 @@ import {
 } from "@/modules/activities/lib/progression/actions/assess";
 import { toast } from "@/lib/toast";
 import { CompleteLevel } from "@/modules/activities/components/instructor/complete-level";
-import { MoveReadinessStatus } from "@/modules/activities/components/instructor/move-readiness-status";
+import { MoveReadinessStatus, moveReadinessMeta } from "@/modules/activities/components/instructor/move-readiness-status";
+import { ASSESSMENT_CHOICES, COMPETENCY_STATUS_META } from "@/modules/activities/lib/progression/constants";
+
+/** The two marks, in the words every competency screen uses ("Not achieved", "Achieved"). */
+const MARK_OPTIONS = ASSESSMENT_CHOICES.map((value) => ({ value, label: COMPETENCY_STATUS_META[value].label }));
+const VIEWS = [{ value: "swimmer", label: "By swimmer" }, { value: "competency", label: "By competency" }] as const;
 
 type Choice = CompetencyStatus | null;
 
@@ -63,10 +71,6 @@ export type DeckSwimmer = {
   moveReadinessCurrent?: boolean;
 };
 
-const MARK_LABEL: Record<CompetencyStatus, string> = {
-  WORKING_ON: "Not achieved",
-  ACHIEVED: "Achieved",
-};
 type Marks = Map<string, Map<string, Choice>>;
 type Stored = Record<string, Record<string, Choice>>;
 
@@ -317,14 +321,17 @@ function DeckChecklistState({
 
   if (competencies.length === 0)
     return (
-      <div className="flex flex-col items-start gap-4">
-        <p className="text-ui-muted-foreground">
-          This level has no competencies yet.
-        </p>
-        <Button asChild variant="outline">
-          <Link href={doneHref}>Back to {doneLabel}</Link>
-        </Button>
-      </div>
+      <section className="pc-panel" aria-label="Competencies">
+        <EmptyState
+          icon="clipboardList"
+          title="This level has no competencies yet."
+          action={
+            <Button asChild variant="outline">
+              <Link href={doneHref}><ChevronLeft aria-hidden="true" />Back to {doneLabel}</Link>
+            </Button>
+          }
+        />
+      </section>
     );
   const currentIndex = Math.min(current, competencies.length - 1),
     competency = competencies[currentIndex];
@@ -336,13 +343,15 @@ function DeckChecklistState({
   const markedAtAll = [...marks.values()].some((row) =>
     [...row.values()].some(Boolean),
   );
-  const progressLabel = (swimmer: DeckSwimmer) => (
-    <span className="block text-sm font-normal text-ui-muted-foreground">
-      {achievedFor(swimmer.studentId)} of {competencies.length} achieved
-      {swimmer.completed ? " · Level complete" : ""}
-      {swimmer.offLevel ? " · Placed at another level" : ""}
-      {attendance?.[swimmer.studentId] === "LATE" ? " · Late" : ""}
-    </span>
+  const progressLabel = (swimmer: DeckSwimmer) =>
+    [
+      `${achievedFor(swimmer.studentId)} of ${competencies.length} achieved`,
+      swimmer.completed ? "Level complete" : null,
+      swimmer.offLevel ? "Placed at another level" : null,
+      attendance?.[swimmer.studentId] === "LATE" ? "Late" : null,
+    ].filter(Boolean).join(" · ");
+  const avatar = (name: string) => (
+    <Avatar size="lg" aria-hidden="true"><AvatarFallback>{initials(name)}</AvatarFallback></Avatar>
   );
   const swimmerRow = (swimmer: DeckSwimmer, dimmed: boolean) => {
     const open = expandedSwimmer === swimmer.studentId;
@@ -354,54 +363,49 @@ function DeckChecklistState({
         key={swimmer.studentId}
         open={open}
         onOpenChange={(next) => setExpandedSwimmer(next ? swimmer.studentId : null)}
-        className="rounded-ui-lg border border-ui-border data-[state=open]:border-ui-brand-border"
+        asChild
       >
-        <div className={"flex flex-wrap items-center gap-x-3 " + (open ? "rounded-t-ui-lg bg-ui-brand-soft" : "rounded-ui-lg hover:bg-ui-accent")}>
-          <h3 className="min-w-0 flex-1 basis-full sm:basis-48">
-            <CollapsibleTrigger asChild>
-              <Button
-                variant="ghost"
-                className="h-auto min-h-16 w-full justify-between gap-3 rounded-ui-lg px-4 py-3 text-left whitespace-normal hover:bg-transparent dark:hover:bg-transparent"
-              >
-                <span className="min-w-0 space-y-1">
-                  <span className={"block text-base font-semibold break-words " + (dimmed ? "text-ui-muted-foreground" : "")}>
-                    {swimmer.name}
-                  </span>
-                  {progressLabel(swimmer)}
-                </span>
-                <ChevronDown className={open ? "rotate-180" : ""} aria-hidden="true" />
-              </Button>
+        <li className="pc-row" data-muted={dimmed ? "" : undefined}>
+          {/* One tab stop per row: the whole head is the trigger; the chevron only shows it. */}
+          <h3 className="flex min-w-0 basis-full">
+            <CollapsibleTrigger className="pc-row-toggle">
+              {avatar(swimmer.name)}
+              <span className="pc-row-body">
+                <span className="pc-row-title break-words">{swimmer.name}</span>
+                <span className="pc-row-hint">{progressLabel(swimmer)}</span>
+              </span>
+              <span className="pc-row-trail">
+                {swimmer.readyToMoveAt ? <Tag meta={moveReadinessMeta(Boolean(swimmer.moveReadinessCurrent))} /> : null}
+                <span className="pc-row-toggle-icon" aria-hidden="true"><ChevronDown /></span>
+              </span>
             </CollapsibleTrigger>
           </h3>
-          {open && !readOnly ? (
-            <Button
-              variant="outline"
-              className="mx-4 mb-3 min-h-11 sm:ml-0 sm:mb-0"
-              disabled={pending || achievedFor(swimmer.studentId) === competencies.length}
-              onClick={() => achieveAllFor(swimmer.studentId)}
-              aria-label={`Mark all achieved for ${swimmer.name}`}
-            >
-              <Check aria-hidden="true" />Mark all achieved
-            </Button>
-          ) : null}
-        </div>
-        <CollapsibleContent>
-          <div role="region" aria-label={`${swimmer.name} competencies`} className="border-t border-ui-border px-4">
-            {dimmed ? <p className="pt-4 text-sm text-ui-muted-foreground">Not in today. These are their recorded competencies.</p> : null}
-            <ol className="divide-y divide-ui-border">
+          <CollapsibleContent className="basis-full">
+          <div role="region" aria-label={`${swimmer.name} competencies`} className="flex flex-col gap-3">
+            {open && !readOnly ? (
+              <Button
+                variant="outline"
+                className="self-end"
+                disabled={pending || allAchieved}
+                onClick={() => achieveAllFor(swimmer.studentId)}
+                aria-label={`Mark all achieved for ${swimmer.name}`}
+              >
+                <CheckCheck aria-hidden="true" />Mark all achieved
+              </Button>
+            ) : null}
+            {dimmed ? <p className="pc-row-hint">Not in today. These are their recorded competencies.</p> : null}
+            <ol className="pc-rows">
               {competencies.map((item, index) => (
-                <li key={item.id} className="flex flex-col gap-3 py-4 md:flex-row md:items-center md:justify-between md:gap-6">
-                  <div className="min-w-0 flex-1 space-y-1">
-                    <p className="font-medium break-words">{index + 1}. {item.name}</p>
-                    {item.description ? <p className="max-w-prose text-sm text-ui-muted-foreground">{item.description}</p> : null}
+                <li key={item.id} className="pc-row">
+                  <span className="pc-tile-icon font-semibold" aria-hidden="true">{index + 1}</span>
+                  <div className="pc-row-body">
+                    <p className="pc-row-title break-words">{item.name}</p>
+                    {item.description ? <p className="pc-row-hint max-w-prose">{item.description}</p> : null}
                   </div>
                   <MarkChoices
                     label={item.name + " — " + swimmer.name}
                     value={marks.get(swimmer.studentId)?.get(item.id) ?? "WORKING_ON"}
-                    options={[
-                      { value: "WORKING_ON", label: MARK_LABEL.WORKING_ON },
-                      { value: "ACHIEVED", label: MARK_LABEL.ACHIEVED },
-                    ]}
+                    options={MARK_OPTIONS}
                     disabled={readOnly || pending}
                     onChange={(next) => choose(swimmer.studentId, item.id, next as CompetencyStatus)}
                   />
@@ -409,7 +413,7 @@ function DeckChecklistState({
               ))}
             </ol>
             {readinessAvailable && (swimmer.readyToMoveAt || allAchieved) ? (
-              <div className="flex flex-col items-start gap-3 border-t border-ui-border py-4">
+              <div className="pc-note flex-col items-start gap-3">
                 {swimmer.readyToMoveAt ? (
                   <MoveReadinessStatus
                     studentId={swimmer.studentId}
@@ -422,12 +426,13 @@ function DeckChecklistState({
                   />
                 ) : null}
                 {allAchieved && !allSaved ? (
-                  <p className="text-sm text-ui-muted-foreground">
+                  <p className="flex items-start gap-3">
+                    <Info aria-hidden="true" className="mt-0.5 size-4 shrink-0" />
                     Save marks to confirm {swimmer.name} is ready to move.
                   </p>
                 ) : allAchieved && allSaved && !swimmer.moveReadinessCurrent ? (
                   <>
-                    <p className="text-sm text-ui-muted-foreground">
+                    <p>
                       All competencies in {moveReadiness.levelName} are achieved and saved.
                       Confirm when {swimmer.name} is ready for their next class.
                     </p>
@@ -445,47 +450,54 @@ function DeckChecklistState({
               </div>
             ) : null}
           </div>
-        </CollapsibleContent>
+          </CollapsibleContent>
+        </li>
       </Collapsible>
     );
   };
   const row = (swimmer: DeckSwimmer, dimmed: boolean) => (
-    <Item
-      key={swimmer.studentId}
-      role="listitem"
-      className={
-        "items-center rounded-none px-0 py-4" +
-        (dimmed ? " text-ui-muted-foreground" : "")
-      }
-    >
-      <ItemContent className="min-w-0 basis-48">
-        <p className="text-base font-semibold">{swimmer.name}</p>
-        {progressLabel(swimmer)}
-      </ItemContent>
+    <li key={swimmer.studentId} className="pc-row" data-muted={dimmed ? "" : undefined}>
+      {avatar(swimmer.name)}
+      <div className="pc-row-body">
+        <p className="pc-row-title break-words">{swimmer.name}</p>
+        <p className="pc-row-hint">{progressLabel(swimmer)}</p>
+      </div>
       <MarkChoices
         label={competency.name + " — " + swimmer.name}
         value={marks.get(swimmer.studentId)?.get(competency.id) ?? "WORKING_ON"}
-        options={[
-          { value: "WORKING_ON", label: MARK_LABEL.WORKING_ON },
-          { value: "ACHIEVED", label: MARK_LABEL.ACHIEVED },
-        ]}
+        options={MARK_OPTIONS}
         disabled={readOnly || pending}
         onChange={(next) =>
           choose(swimmer.studentId, competency.id, next as CompetencyStatus)
         }
       />
-    </Item>
+    </li>
+  );
+  const list = (people: DeckSwimmer[], dimmed: boolean, label: string) => (
+    <ul className="pc-rows" aria-label={label}>
+      {people.map((s) => (bySwimmer ? swimmerRow(s, dimmed) : row(s, dimmed)))}
+    </ul>
   );
   return (
-    <div className="flex flex-col gap-5">
+    <>
+    <section className="pc-panel" aria-label="Competencies">
       {teaching ? (
-        <SegmentedChoice
-          aria-label="Competency view"
-          fill="phone"
-          value={view}
-          onValueChange={(next) => setView(next === "competency" ? "competency" : "swimmer")}
-          options={[{ value: "swimmer", label: "By swimmer" }, { value: "competency", label: "By competency" }]}
-        />
+        // Two views of one draft: plain toggle buttons (aria-pressed), not radios, so each is
+        // one press with Enter or Space.
+        <div className="pc-seg pc-seg-fill-phone" role="group" aria-label="Competency view">
+          {VIEWS.map((option) => (
+            <Button
+              key={option.value}
+              type="button"
+              variant="ghost"
+              className="pc-seg-item"
+              aria-pressed={view === option.value}
+              onClick={() => setView(option.value)}
+            >
+              {option.label}
+            </Button>
+          ))}
+        </div>
       ) : null}
       {!bySwimmer ? <>
       {!teaching ? (
@@ -497,13 +509,13 @@ function DeckChecklistState({
         >
           <SelectTrigger
             id="competency-picker"
-            className="min-h-11 w-full max-w-xl"
+            className="w-full max-w-xl"
           >
             <SelectValue />
           </SelectTrigger>
           <SelectContent>
             {competencies.map((c, index) => (
-              <SelectItem className="min-h-11" key={c.id} value={String(index)}>
+              <SelectItem key={c.id} value={String(index)}>
                 {index + 1}. {c.name}
               </SelectItem>
             ))}
@@ -511,100 +523,78 @@ function DeckChecklistState({
         </Select>
       </div>
       ) : null}
-      <section
-        aria-labelledby="deck-competency"
-        className="flex flex-col gap-4 rounded-ui-lg border border-ui-border bg-ui-muted/40 p-4"
-      >
-        <div className="flex items-start justify-between gap-3">
-          <div className="min-w-0 space-y-2">
-            <p className="text-xs text-ui-muted-foreground">
-              Competency {currentIndex + 1} of {competencies.length}
+      <div className="pc-panel-head items-start">
+        <div className="flex min-w-0 flex-1 flex-col gap-1">
+          <p className="pc-row-hint">
+            Competency {currentIndex + 1} of {competencies.length}
+          </p>
+          <h2 id="deck-competency" className="break-words">
+            {competency.name}
+          </h2>
+          {competency.description ? (
+            <p className="pc-row-hint max-w-prose">
+              {competency.description}
             </p>
-            <h2 id="deck-competency" className="text-xl font-semibold">
-              {competency.name}
-            </h2>
-            {competency.description ? (
-              <p className="max-w-prose text-sm text-ui-muted-foreground">
-                {competency.description}
-              </p>
-            ) : null}
-            <p className="text-sm text-ui-muted-foreground" aria-live="polite">
-              {achievedHere} of {here.length}
-              {attendance ? " in today" : ""} achieved
-            </p>
-          </div>
-          <div className="flex shrink-0 gap-1">
-            <Button
-              variant="outline"
-              size="icon"
-              aria-label="Previous competency"
-              disabled={currentIndex === 0}
-              onClick={() => setCurrent(Math.max(0, currentIndex - 1))}
-            >
-              <ChevronLeft aria-hidden="true" />
-            </Button>
-            <Button
-              variant="outline"
-              size="icon"
-              aria-label="Next competency"
-              disabled={currentIndex === competencies.length - 1}
-              onClick={() =>
-                setCurrent(Math.min(competencies.length - 1, currentIndex + 1))
-              }
-            >
-              <ChevronRight aria-hidden="true" />
-            </Button>
-          </div>
+          ) : null}
+          <p className="pc-row-hint" aria-live="polite">
+            {achievedHere} of {here.length}
+            {attendance ? " in today" : ""} achieved
+          </p>
         </div>
-        {!readOnly && here.length ? (
+        <div className="flex shrink-0 gap-2">
           <Button
             variant="outline"
-            className="self-start whitespace-normal"
-            disabled={pending}
-            onClick={() => everyone(competency.id, "ACHIEVED")}
+            size="icon"
+            aria-label="Previous competency"
+            disabled={currentIndex === 0}
+            onClick={() => setCurrent(Math.max(0, currentIndex - 1))}
           >
-            <Check aria-hidden="true" />
-            {attendance ? "Everyone in today achieved" : "Everyone achieved"}
+            <ChevronLeft aria-hidden="true" />
           </Button>
-        ) : null}
-      </section>
-      </> : null}
+          <Button
+            variant="outline"
+            size="icon"
+            aria-label="Next competency"
+            disabled={currentIndex === competencies.length - 1}
+            onClick={() =>
+              setCurrent(Math.min(competencies.length - 1, currentIndex + 1))
+            }
+          >
+            <ChevronRight aria-hidden="true" />
+          </Button>
+        </div>
+      </div>
+      {!readOnly && here.length ? (
+        <Button
+          variant="outline"
+          className="self-start whitespace-normal"
+          disabled={pending}
+          onClick={() => everyone(competency.id, "ACHIEVED")}
+        >
+          <CheckCheck aria-hidden="true" />
+          {attendance ? "Everyone in today achieved" : "Everyone achieved"}
+        </Button>
+      ) : null}
+      </> : <h2 className="sr-only">Swimmer competencies</h2>}
       {here.length ? (
-        bySwimmer ? (
-          <section aria-label="Swimmers in today" className="space-y-3">
-            <h2 className="sr-only">Swimmer competencies</h2>
-            {here.map((s) => swimmerRow(s, false))}
-          </section>
-        ) : (
-        <ItemGroup className="divide-y divide-ui-border">
-          {here.map((s) => row(s, false))}
-        </ItemGroup>
-        )
+        list(here, false, bySwimmer ? "Swimmers in today" : `${competency.name} marks`)
       ) : (
-        <p className="text-ui-muted-foreground">
-          {swimmers.length
-            ? "Nobody was marked in today."
-            : "Nobody in this class yet."}
-        </p>
+        <EmptyState
+          compact
+          icon="users"
+          title={swimmers.length ? "Nobody was marked in today." : "Nobody in this class yet."}
+        />
       )}
       {away.length ? (
-        <Collapsible open={showAbsent} onOpenChange={setShowAbsent}>
+        <Collapsible open={showAbsent} onOpenChange={setShowAbsent} className="group/away flex flex-col gap-3">
           <CollapsibleTrigger asChild>
-            <Button variant="ghost" className="w-full justify-between">
-              Not in today ({away.length})<ChevronDown aria-hidden="true" />
+            <Button variant="link" className="self-start">
+              <ChevronDown className="transition-transform group-data-[state=open]/away:rotate-180" aria-hidden="true" />
+              Not in today ({away.length})
             </Button>
           </CollapsibleTrigger>
           <CollapsibleContent>
-            {bySwimmer ? (
-              <section aria-label="Swimmers not in today" className="space-y-3 pt-3">
-                <h2 className="sr-only">Competencies for swimmers not in today</h2>
-                {away.map((s) => swimmerRow(s, true))}
-              </section>
-            ) : (
-            <ItemGroup className="divide-y divide-ui-border">
-              {away.map((s) => row(s, true))}
-            </ItemGroup>
-            )}
+            {list(away, true, "Swimmers not in today")}
           </CollapsibleContent>
         </Collapsible>
       ) : null}
@@ -612,6 +602,7 @@ function DeckChecklistState({
       {storageUnavailable && !readOnly ? (
         <Notice tone="warning" title="This browser cannot keep a backup. Keep this tab open until marks are saved." />
       ) : null}
+    </section>
       <SaveBar
         status={
           changes.length
@@ -621,7 +612,7 @@ function DeckChecklistState({
                 " " +
                 (changes.length === 1 ? "mark" : "marks") +
                 " not saved yet" +
-                (teaching ? " · Across this class" : "")
+                (teaching ? " · across this class" : "")
             : saved
               ? "Saved"
               : markedAtAll
@@ -647,6 +638,6 @@ function DeckChecklistState({
           </Button>
         )}
       </SaveBar>
-    </div>
+    </>
   );
 }

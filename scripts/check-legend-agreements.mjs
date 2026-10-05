@@ -158,11 +158,5 @@ try {
   await page.keyboard.press('Enter');
   assert.equal(await page.evaluate(()=>document.activeElement?.id),'swim-school-main');
   assert.deepEqual(errors,[]);
-  if(process.argv.includes('--write-help-images')) {
-    await fs.copyFile(path.join(root,'agreements-1280-light.png'),path.resolve('assets/help/legend-agreements.png'));
-    const manifest=JSON.parse(await fs.readFile('assets/help/manifest.json','utf8'));
-    manifest['legend-agreements']={width:1280,height:1100};
-    await fs.writeFile('assets/help/manifest.json',JSON.stringify(manifest,null,2)+'\n');
-  }
   console.log(`Legend agreements passed: confirmation success/failure/cancel, history, search, empty/restricted states, required choices, promotion payload, per-class reset, moves, keyboard, 44px page controls and ${layouts} responsive/theme layouts. Synthetic data only.`);
 } finally {await browser.close();await new Promise(resolve=>server.close(resolve));}

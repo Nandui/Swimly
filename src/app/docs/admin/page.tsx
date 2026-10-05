@@ -15,7 +15,8 @@ export default async function AdminPage() {
       workspace={await workspace(m.id)}
       events={await rows<AuditEvent>(
         db,
-        'SELECT * FROM audit_events ORDER BY created_at DESC LIMIT 100',
+        // Editing-lease renewals stay in the audit table; the activity view shows decisions and changes.
+        "SELECT * FROM audit_events WHERE action NOT IN ('editing_session','editing_released') ORDER BY created_at DESC LIMIT 100",
       )}
       mail={[]}
     />

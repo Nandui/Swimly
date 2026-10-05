@@ -27,13 +27,16 @@ export default function RemindersPage() {
     <Frame title="Reminders">
       <div className="stack">
         <div className="stack-sm"><h1>Reminders</h1><p className="muted">We email you when something needs you. Emails never include HR details.</p></div>
-        {failure ? <Notice title={failure} tone="error" /> : null}
-        {error ? <LoadError error={error} retry={reload} /> : !data ? <Loading /> : (
-          <fieldset className="card stack-sm" style={{ margin: 0 }}>
+        {failure ? <Notice title={failure} tone="error" live /> : null}
+        {error ? <LoadError error={error} retry={reload} /> : !data ? <Loading rows={4} /> : (
+          <fieldset className="pc-panel" aria-describedby="reminders-saved">
             <legend className="sr-only">Email me when</legend>
-            {OPTIONS.map((o) => (
-              <label key={o.key} className="check"><input type="checkbox" checked={data[o.key]} onChange={(e) => toggle(o.key, e.target.checked)} />{o.label}</label>
-            ))}
+            <div className="pc-rows">
+              {OPTIONS.map((o) => (
+                <label key={o.key} className="pc-row"><input type="checkbox" checked={data[o.key]} onChange={(e) => toggle(o.key, e.target.checked)} />{o.label}</label>
+              ))}
+            </div>
+            <p id="reminders-saved" className="caption">Saved as soon as you change one.</p>
           </fieldset>
         )}
       </div>

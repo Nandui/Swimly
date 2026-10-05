@@ -62,6 +62,12 @@ export function formatSlot(slot: Slot): string {
   return `${DAY_META[slot.dayOfWeek].label}s, ${classTimes(slot)}`;
 }
 
+/** "Sun 16:00 to 16:30": one dated session's day and times, for a class header and the Start
+ *  class dialog (beside the date), where "Sundays, …" would read as the whole term. */
+export function formatSessionTime(slot: Slot): string {
+  return `${DAY_META[slot.dayOfWeek].short} ${classTimes(slot)}`;
+}
+
 /** "Mon 16:30" — the compact form, for a column or a picker. */
 export function formatSlotShort(slot: {
   dayOfWeek: DayOfWeek;

@@ -2,9 +2,9 @@
 
 import { useCallback, useEffect, useState, type FormEvent } from "react";
 import { usePathname, useRouter } from "next/navigation";
-import { Check, KeyRound } from "lucide-react";
+import { CircleCheck, KeyRound } from "lucide-react";
 import { Frame } from "@/components/frame";
-import { Loading, Notice, Tag } from "@/components/ui";
+import { EmptyRows, LoadError, Loading, Notice, Tag } from "@/components/ui";
 import { ApiError, api, session } from "@/lib/api";
 import { date } from "@/lib/format";
 import { REVIEW_META, REVIEW_OVERALL } from "@/lib/meta";
@@ -22,30 +22,33 @@ export default function HrPage() {
   const [code, setCode] = useState("");
   const [comments, setComments] = useState<{ [id: string]: string }>({});
   const [busy, setBusy] = useState(false);
+  // Action failures (a wrong code, a save that failed) stay beside the form; a failed read
+  // replaces the page with Try again.
   const [failure, setFailure] = useState<string | null>(null);
+  const [loadError, setLoadError] = useState<ApiError | null>(null);
 
-  type Outcome = { record: HrRecord } | { locked: true } | { failure: string } | null;
+  type Outcome = { record: HrRecord } | { locked: true } | { loadError: ApiError } | null;
   const request = useCallback(async (): Promise<Outcome> => {
     if (!session.token()) { router.replace(`/sign-in?next=${encodeURIComponent(pathname)}`); return null; }
     try { return { record: await api<HrRecord>("hr") }; }
     catch (caught) {
       if (caught instanceof ApiError && caught.code === "CONFIRM_REQUIRED") return { locked: true };
       if (caught instanceof ApiError && caught.status === 401) { router.replace(`/sign-in?next=${encodeURIComponent(pathname)}`); return null; }
-      return { failure: caught instanceof ApiError ? caught.message : "Couldn't load this." };
+      return { loadError: caught instanceof ApiError ? caught : new ApiError(0, "ERROR", "Couldn't load this.") };
     }
   }, [pathname, router]);
   const apply = useCallback((outcome: Outcome) => {
     if (!outcome) return;
-    if ("record" in outcome) { setRecord(outcome.record); setLocked(false); }
-    else if ("locked" in outcome) setLocked(true);
-    else setFailure(outcome.failure);
+    if ("record" in outcome) { setRecord(outcome.record); setLocked(false); setLoadError(null); }
+    else if ("locked" in outcome) { setLocked(true); setLoadError(null); }
+    else setLoadError(outcome.loadError);
   }, []);
   useEffect(() => {
     let live = true;
     request().then((outcome) => { if (live) apply(outcome); });
     return () => { live = false; };
   }, [request, apply]);
-  const load = useCallback(async () => apply(await request()), [request, apply]);
+  const load = useCallback(async () => { setLoadError(null); apply(await request()); }, [request, apply]);
 
   async function sendCode() {
     setBusy(true); setFailure(null);
@@ -73,26 +76,27 @@ export default function HrPage() {
     <Frame title="Shared by HR">
       <div className="stack">
         <div className="stack-sm"><h1>Shared by HR</h1><p className="muted">Reviews and notes your manager or HR chose to share with you. Private notes are never shown.</p></div>
-        {failure ? <Notice title={failure} tone="error" /> : null}
-        {locked ? (
-          challenge ? (
-            <form className="card stack" onSubmit={confirm}>
-              <h2>Enter the code we just emailed you</h2>
-              <div className="field"><label htmlFor="hr-code">Six-digit code</label><input id="hr-code" className="input code" inputMode="numeric" autoComplete="one-time-code" maxLength={6} required value={code} onChange={(e) => setCode(e.target.value.replace(/\D/g, ""))} /></div>
-              <button type="submit" className="button block" disabled={busy || code.length !== 6}>Open</button>
-            </form>
-          ) : (
-            <section className="card stack">
-              <h2>Confirm it&apos;s you</h2>
-              <p className="muted">HR records need a fresh code, even when you are signed in. It lasts 15 minutes.</p>
-              <button type="button" className="button block" onClick={sendCode} disabled={busy}><KeyRound aria-hidden="true" />Email me a code</button>
+        {failure ? <Notice title={failure} tone="error" live /> : null}
+        {loadError ? <LoadError error={loadError} retry={load} /> : locked ? (
+          <>
+            <section className="pc-panel" aria-labelledby="hr-confirm">
+              <h2 id="hr-confirm">Confirm it&apos;s you</h2>
+              <p>HR records need a fresh code, even when you are signed in. It lasts 15 minutes.</p>
+              <button type="button" className={challenge ? "button outline block" : "button block"} onClick={sendCode} disabled={busy}><KeyRound aria-hidden="true" />Email me a code</button>
             </section>
-          )
+            {challenge ? (
+              <form className="pc-panel" onSubmit={confirm} aria-labelledby="hr-code-title">
+                <h2 id="hr-code-title">Enter the code we just emailed you</h2>
+                <div className="field"><label htmlFor="hr-code">Six-digit code</label><input id="hr-code" className="input tabular" inputMode="numeric" autoComplete="one-time-code" pattern="\d{6}" maxLength={6} placeholder="123456" required autoFocus value={code} onChange={(e) => setCode(e.target.value.replace(/\D/g, ""))} /></div>
+                <button type="submit" className="button block" disabled={busy || code.length !== 6}>Open</button>
+              </form>
+            ) : null}
+          </>
         ) : !record ? <Loading /> : !record.configured ? <Notice title="HR records are not set up yet" /> : (
           <>
-            {record.reviews.length === 0 && record.notes.length === 0 ? <Notice title="Nothing has been shared with you" /> : null}
+            {record.reviews.length === 0 && record.notes.length === 0 ? <section className="pc-panel" aria-label="Shared with you"><EmptyRows>Nothing has been shared with you.</EmptyRows></section> : null}
             {record.reviews.map((r) => (
-              <section key={r.id} className="card stack-sm" aria-labelledby={`rv-${r.id}`}>
+              <section key={r.id} className="pc-panel" aria-labelledby={`rv-${r.id}`}>
                 <div className="row"><h2 id={`rv-${r.id}`}>{r.period}</h2><Tag meta={REVIEW_META[r.status]} /></div>
                 <p className="caption">From {r.reviewer}{r.sharedAt ? ` · shared ${date(r.sharedAt)}` : ""}</p>
                 {([["Summary", r.summary], ["Strengths", r.strengths], ["Goals for the next period", r.goals]] as const).map(([label, text]) => text ? (
@@ -108,16 +112,16 @@ export default function HrPage() {
                       <textarea id={`c-${r.id}`} className="input" maxLength={2000} value={comments[r.id] ?? ""} onChange={(e) => setComments((prev) => ({ ...prev, [r.id]: e.target.value }))} />
                       <span className="hint">Acknowledging says you have read it, not that you agree with every word.</span>
                     </div>
-                    <button type="button" className="button block" onClick={() => acknowledge(r.id)} disabled={busy}><Check aria-hidden="true" />Acknowledge</button>
+                    <button type="button" className="button block" onClick={() => acknowledge(r.id)} disabled={busy}><CircleCheck aria-hidden="true" />Acknowledge</button>
                   </div>
                 )}
               </section>
             ))}
             {record.notes.length > 0 ? (
-              <section className="card stack-sm" aria-labelledby="hr-notes">
-                <h2 id="hr-notes">Notes</h2>
-                <ul className="list">{record.notes.map((n) => (
-                  <li key={n.id} className="stack-sm" style={{ padding: "12px 0" }}><p className="caption">{n.author} · {date(n.createdAt)}</p><p className="pre">{n.body}</p></li>
+              <section className="pc-panel" aria-labelledby="hr-notes">
+                <div className="pc-panel-head"><h2 id="hr-notes">Notes</h2></div>
+                <ul className="pc-rows">{record.notes.map((n) => (
+                  <li key={n.id} className="pc-row"><div className="pc-row-body stack-sm"><p className="caption">{n.author} · {date(n.createdAt)}</p><p className="pre">{n.body}</p></div></li>
                 ))}</ul>
               </section>
             ) : null}

@@ -139,7 +139,8 @@ test('saved requests survive failed email; retry sends staff-only minimal alerts
   current = reception; currentGrants = ['refunds.request']; mailFails = true;
   const result = await actions.saveRefund({ id: randomUUID(), operationId: randomUUID(), version: 0, action: 'submit', fields });
   assert.equal(result.ok, true); if (!result.ok) return;
-  assert.match(result.warning || '', /Saved/);
+  // Only finance can send an alert again, so reception is not told one is waiting.
+  assert.equal(result.warning, undefined);
   assert.equal((await db.prisma.refundRequest.findUniqueOrThrow({ where: { id: result.id } })).status, 'SUBMITTED');
   assert.equal(await db.prisma.refundNotification.count({ where: { requestId: result.id, status: 'FAILED' } }), 1);
   mailFails = false; const previous = sent.length;

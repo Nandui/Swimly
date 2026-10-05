@@ -5,14 +5,14 @@ import { workspace } from '@/lib/docs/queries';
 import { LibraryView } from '@/components/docs/library';
 import type { Metadata } from 'next';
 
-/** The tab title follows the H1, which the archive and the emergency plans filter rename. */
+/** The tab title follows the H1, which the archive renames. */
 export async function generateMetadata({
   searchParams,
 }: {
-  searchParams: Promise<{ archived?: string; type?: string }>;
+  searchParams: Promise<{ archived?: string }>;
 }): Promise<Metadata> {
   const p = await searchParams;
-  return { title: p.archived === 'true' ? 'Document archive' : p.type === 'EAP' ? 'Emergency plans' : 'Document library' };
+  return { title: p.archived === 'true' ? 'Document archive' : 'Document library' };
 }
 export default async function LibraryPage({
   searchParams,

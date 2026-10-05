@@ -1,210 +1,254 @@
 {
-  "workspace": {
-    "width": 1200,
-    "height": 980
-  },
-  "site-menu": {
-    "width": 1200,
-    "height": 980
-  },
-  "instructor-home": {
-    "width": 768,
-    "height": 85
-  },
-  "instructor-menu": {
-    "width": 768,
-    "height": 310
-  },
-  "instructor-site": {
-    "width": 768,
-    "height": 206
-  },
-  "appearance": {
-    "width": 1152,
-    "height": 184
-  },
-  "password": {
-    "width": 1152,
-    "height": 334
-  },
-  "directory": {
-    "width": 1152,
-    "height": 505
-  },
-  "profile": {
-    "width": 1152,
-    "height": 853
-  },
-  "add-swimmer": {
-    "width": 672,
-    "height": 700
-  },
-  "edit-swimmer": {
-    "width": 672,
-    "height": 700
-  },
-  "enrol": {
-    "width": 1168,
-    "height": 882
-  },
-  "move": {
-    "width": 1168,
-    "height": 882
-  },
-  "waitlist": {
-    "width": 768,
-    "height": 404
-  },
-  "end-enrolment": {
-    "width": 672,
-    "height": 388
-  },
-  "classes": {
-    "width": 1152,
-    "height": 1233
-  },
-  "class-detail": {
-    "width": 1152,
-    "height": 1015
+  "activity": {
+    "width": 1280,
+    "height": 800
   },
   "add-class": {
     "width": 576,
-    "height": 714
+    "height": 824
   },
-  "schedule": {
-    "width": 1152,
-    "height": 580
-  },
-  "together": {
-    "width": 1152,
-    "height": 436
-  },
-  "start-class": {
-    "width": 512,
-    "height": 218
-  },
-  "attendance": {
-    "width": 1152,
-    "height": 691
-  },
-  "save-conflict": {
-    "width": 1152,
-    "height": 400
-  },
-  "competencies": {
-    "width": 1152,
-    "height": 761
-  },
-  "complete-class": {
-    "width": 512,
-    "height": 278
-  },
-  "profile-competencies": {
-    "width": 1152,
-    "height": 450
-  },
-  "complete-level": {
+  "add-swimmer": {
     "width": 672,
-    "height": 254
-  },
-  "assessment-session": {
-    "width": 576,
-    "height": 776
-  },
-  "assessment-booking": {
-    "width": 448,
-    "height": 318
-  },
-  "assessment-outcome": {
-    "width": 448,
-    "height": 424
-  },
-  "cancel-session": {
-    "width": 512,
-    "height": 342
-  },
-  "billing": {
-    "width": 576,
-    "height": 620
+    "height": 790
   },
   "analytics": {
-    "width": 1176,
-    "height": 1784
+    "width": 1280,
+    "height": 800
   },
-  "programme": {
-    "width": 448,
-    "height": 526
+  "analytics-instructors": {
+    "width": 1280,
+    "height": 800
   },
-  "curriculum": {
-    "width": 448,
-    "height": 396
+  "analytics-reception": {
+    "width": 1280,
+    "height": 800
   },
-  "staff": {
-    "width": 448,
-    "height": 612
-  },
-  "roles": {
-    "width": 512,
-    "height": 948
-  },
-  "clubs": {
-    "width": 448,
-    "height": 294
-  },
-  "activity": {
-    "width": 1152,
-    "height": 222
-  },
-  "parent-profile": {
-    "width": 448,
-    "height": 472
-  },
-  "parent-accounts": {
-    "width": 448,
-    "height": 410
-  },
-  "parent-publication": {
-    "width": 448,
-    "height": 540
-  },
-  "parent-link-request": {
-    "width": 448,
-    "height": 778
-  },
-  "instructor-assessments": {
-    "width": 1024,
-    "height": 1100
-  },
-  "instructor-swimmer-competencies": {
-    "width": 1024,
-    "height": 1450
+  "appearance": {
+    "width": 1280,
+    "height": 395
   },
   "assessment-awaiting-enrolment": {
     "width": 1280,
-    "height": 1100
+    "height": 800
   },
-  "legend-agreements": {
+  "assessment-booking": {
+    "width": 448,
+    "height": 336
+  },
+  "assessment-outcome": {
+    "width": 448,
+    "height": 476
+  },
+  "assessment-session": {
+    "width": 576,
+    "height": 880
+  },
+  "attendance": {
+    "width": 1024,
+    "height": 720
+  },
+  "billing": {
+    "width": 576,
+    "height": 644
+  },
+  "cancel-session": {
+    "width": 512,
+    "height": 522
+  },
+  "class-detail": {
     "width": 1280,
-    "height": 1100
+    "height": 800
   },
-  "analytics-reception": {
-    "width": 1176,
-    "height": 1284
+  "classes": {
+    "width": 1280,
+    "height": 800
   },
-  "analytics-instructors": {
-    "width": 1176,
-    "height": 2384
+  "clubs": {
+    "width": 448,
+    "height": 316
+  },
+  "competencies": {
+    "width": 1280,
+    "height": 800
+  },
+  "complete-class": {
+    "width": 448,
+    "height": 344
+  },
+  "complete-level": {
+    "width": 672,
+    "height": 304
+  },
+  "curriculum": {
+    "width": 448,
+    "height": 456
+  },
+  "directory": {
+    "width": 1280,
+    "height": 800
+  },
+  "docs-home": {
+    "width": 1280,
+    "height": 800
+  },
+  "docs-new": {
+    "width": 1280,
+    "height": 800
+  },
+  "edit-swimmer": {
+    "width": 672,
+    "height": 790
+  },
+  "end-enrolment": {
+    "width": 672,
+    "height": 452
+  },
+  "enrol": {
+    "width": 1152,
+    "height": 700
+  },
+  "home": {
+    "width": 1280,
+    "height": 800
+  },
+  "hr-note": {
+    "width": 512,
+    "height": 590
+  },
+  "hr-review": {
+    "width": 1280,
+    "height": 800
+  },
+  "instructor-assessments": {
+    "width": 1024,
+    "height": 720
   },
   "instructor-by-competency": {
     "width": 1024,
-    "height": 1450
+    "height": 720
   },
   "instructor-class-overview": {
     "width": 1024,
-    "height": 1000
+    "height": 720
   },
   "instructor-class-overview-mobile": {
     "width": 375,
-    "height": 1100
+    "height": 760
+  },
+  "instructor-home": {
+    "width": 1024,
+    "height": 720
+  },
+  "instructor-menu": {
+    "width": 1024,
+    "height": 351
+  },
+  "instructor-site": {
+    "width": 1024,
+    "height": 271
+  },
+  "instructor-swimmer-competencies": {
+    "width": 1024,
+    "height": 720
+  },
+  "legend-agreements": {
+    "width": 1280,
+    "height": 800
+  },
+  "move": {
+    "width": 1152,
+    "height": 690
+  },
+  "parent-accounts": {
+    "width": 448,
+    "height": 456
+  },
+  "parent-link-request": {
+    "width": 448,
+    "height": 776
+  },
+  "parent-profile": {
+    "width": 448,
+    "height": 524
+  },
+  "parent-publication": {
+    "width": 448,
+    "height": 584
+  },
+  "password": {
+    "width": 1280,
+    "height": 800
+  },
+  "profile": {
+    "width": 1280,
+    "height": 800
+  },
+  "profile-competencies": {
+    "width": 1280,
+    "height": 800
+  },
+  "programme": {
+    "width": 448,
+    "height": 592
+  },
+  "refund-decision": {
+    "width": 1280,
+    "height": 800
+  },
+  "refund-new": {
+    "width": 1280,
+    "height": 800
+  },
+  "roles": {
+    "width": 672,
+    "height": 1068
+  },
+  "rota-absence": {
+    "width": 512,
+    "height": 692
+  },
+  "rota-week": {
+    "width": 1280,
+    "height": 800
+  },
+  "save-conflict": {
+    "width": 1024,
+    "height": 720
+  },
+  "schedule": {
+    "width": 1280,
+    "height": 800
+  },
+  "site-menu": {
+    "width": 1280,
+    "height": 271
+  },
+  "staff": {
+    "width": 448,
+    "height": 660
+  },
+  "start-class": {
+    "width": 512,
+    "height": 216
+  },
+  "together": {
+    "width": 1280,
+    "height": 800
+  },
+  "training-assign": {
+    "width": 512,
+    "height": 972
+  },
+  "training-signoff": {
+    "width": 1280,
+    "height": 800
+  },
+  "waitlist": {
+    "width": 768,
+    "height": 420
+  },
+  "workspace": {
+    "width": 1280,
+    "height": 800
   }
 }

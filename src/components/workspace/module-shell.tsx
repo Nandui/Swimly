@@ -19,7 +19,7 @@ export type ModuleLinkGroup = { label: string; links: ModuleLink[] };
  *  v2"): the fin and the module's pages along the top, search, site and account on the right;
  *  the person's modules in an icon bar down the left (a labelled bar along the bottom on phones
  *  and touch screens). Links are presentation; every page checks its permission again. The pool
- *  deck keeps its own tablet frame. */
+ *  deck uses the same tf-shell/tf-frame with its own top bar and no rail or bottom bar. */
 export function ModuleShell({ module, id, current = id, who, links = [], groups, tools, scopeNote, contentClass = 'module-content', scrollKey = '', children }: {
   /** Display name, e.g. "Training". */
   module: string;

@@ -20,6 +20,12 @@ type Profile = {
   lastDecision: { status: string; reply: string; decidedAt: string | null } | null;
 };
 
+/** "Aoife Byrne" → "AB": the first and last initials. */
+function initials(name: string) {
+  const words = name.trim().split(/\s+/).filter(Boolean);
+  return ((words[0]?.[0] ?? "") + (words.length > 1 ? words[words.length - 1][0] : "")).toUpperCase();
+}
+
 /** Your own contact and emergency details. Changes go to the office to check
  *  before your record changes. */
 export default function DetailsPage() {
@@ -48,14 +54,20 @@ export default function DetailsPage() {
         <div className="stack-sm"><h1>My details</h1><p className="muted">Keep these right so we can reach you, and someone for you in an emergency.</p></div>
         {error ? <LoadError error={error} retry={reload} /> : !data ? <Loading /> : (
           <>
-            <section className="card stack-sm" aria-label="You">
-              <p className="item-title">{data.name}</p>
-              <p className="caption">{[data.jobTitle, data.site, data.email].filter(Boolean).join(" · ")}</p>
+            <section className="pc-panel" aria-label="You">
+              <div className="pc-row">
+                <span className="avatar" aria-hidden="true">{initials(data.name)}</span>
+                <span className="pc-row-body">
+                  <span className="pc-row-title">{data.name}</span>
+                  <span className="pc-row-hint">{[data.jobTitle, data.site, data.email].filter(Boolean).join(" · ")}</span>
+                </span>
+              </div>
             </section>
             {data.pendingChange ? <Notice title={`Changes sent ${date(data.pendingChange.sentAt)}`}>The office is checking them. You can send more once they are done.</Notice>
               : data.lastDecision?.status === "DECLINED" ? <Notice title="Your last changes were not made" tone="warning">{data.lastDecision.reply}</Notice> : null}
-            <form className="card stack" onSubmit={send}>
-              <fieldset disabled={!!data.pendingChange || busy} className="stack" style={{ border: 0, padding: 0, margin: 0 }}>
+            <form className="pc-panel" onSubmit={send} aria-labelledby="details-title">
+              <div className="pc-panel-head"><h2 id="details-title">Your details</h2></div>
+              <fieldset disabled={!!data.pendingChange || busy} className="stack">
                 {FIELDS.map((f) => (
                   <div key={f.key} className="field">
                     <label htmlFor={f.key}>{f.label}</label>
@@ -64,8 +76,8 @@ export default function DetailsPage() {
                       : <input id={f.key} name={f.key} type={f.type} className="input" maxLength={f.max} defaultValue={data.details[f.key] ?? ""} autoComplete={f.key === "phone" ? "tel" : "off"} />}
                   </div>
                 ))}
-                <div className="field"><label htmlFor="message">Note for the office (optional)</label><input id="message" name="message" className="input" maxLength={500} /></div>
-                {message ? <Notice title={message.text} tone={message.tone} /> : null}
+                <div className="field"><label htmlFor="message">Note for the office (optional)</label><textarea id="message" name="message" className="input" maxLength={500} /></div>
+                {message ? <Notice title={message.text} tone={message.tone} live /> : null}
                 <button type="submit" className="button block"><Send aria-hidden="true" />Send changes</button>
               </fieldset>
             </form>

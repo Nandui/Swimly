@@ -6,6 +6,11 @@ export function helpFilters(q?: string | null, topic?: string | null): HelpFilte
   return { q: (q ?? "").slice(0, 160), topic: HELP_CATEGORIES.some(item => item.id === topic) ? topic as HelpCategory : "all" };
 }
 
+/** A summary as one clause of a "summary · topic · n min read" caption. */
+export function clause(text: string): string {
+  return text.replace(/\.$/, "");
+}
+
 export function helpHref(scope: HelpScope, slug?: string, filters?: HelpFilters): string {
   const base = scope === "instructor" ? "/help/instructor" : "/help";
   const params = new URLSearchParams();

@@ -12,7 +12,16 @@ export async function refundSites() {
   await requireRefundActor();
   return prisma.club.findMany({ where: { archivedAt: null }, orderBy: [{ sortOrder: "asc" }, { name: "asc" }], select: { id: true, name: true } });
 }
-export type RefundFilters = { q?: string; site?: string; status?: string; service?: string; creator?: string; handler?: string; page?: string };
+/** The site a new request starts at: the person's one work site when they have exactly one
+ *  (none listed means every site, so no default), else the only site there is. */
+export async function refundDefaultSite(sites: { id: string }[]) {
+  const who = await requireRefundActor();
+  if (sites.length === 1) return sites[0].id;
+  const user = await prisma.user.findUnique({ where: { id: who.id }, select: { siteIds: true } });
+  const mine = sites.filter(site => user?.siteIds.includes(site.id));
+  return mine.length === 1 ? mine[0].id : "";
+}
+export type RefundFilters ={ q?: string; site?: string; status?: string; service?: string; creator?: string; handler?: string; page?: string };
 export async function listRefunds(filters: RefundFilters) {
   const who = await requireRefundActor();
   const status = filters.status || (who.review || who.process ? "actionable" : "open");
@@ -28,8 +37,10 @@ export async function listRefunds(filters: RefundFilters) {
   const scope = { AND: [...and] };
   if (Object.hasOwn(refundStatuses, status)) and.push({ status });
   else if (status === "actionable") and.push({ status: { in: [...(who.review ? ["SUBMITTED", "IN_REVIEW"] : []), ...(who.process ? ["APPROVED"] : []), ...(who.request ? ["NEEDS_INFORMATION"] : [])] } });
+  else if (status === "review") and.push({ status: { in: ["SUBMITTED", "IN_REVIEW"] } });
   else if (status === "open") and.push({ status: { notIn: ["REFUNDED", "DECLINED", "WITHDRAWN"] } });
   const where = { AND: and };
+  const oldestFirst = status === "actionable" || status === "review";
   const [total, counts, people, sites] = await Promise.all([
     prisma.refundRequest.count({ where }),
     prisma.refundRequest.groupBy({ by: ["status"], where: scope, _count: { _all: true } }),
@@ -37,7 +48,7 @@ export async function listRefunds(filters: RefundFilters) {
     prisma.club.findMany({ orderBy: [{ sortOrder: "asc" }, { name: "asc" }], select: { id: true, name: true } }),
   ]);
   const pages = Math.max(1, Math.ceil(total / 25)), page = Math.min(pages, Math.max(1, Number.parseInt(filters.page || "1", 10) || 1));
-  const rows = await prisma.refundRequest.findMany({ where, orderBy: [{ submittedAt: status === "actionable" ? "asc" : "desc" }, { createdAt: "desc" }, { id: "asc" }], skip: (page - 1) * 25, take: 25 });
+  const rows = await prisma.refundRequest.findMany({ where, orderBy: [{ submittedAt: oldestFirst ? "asc" : "desc" }, { createdAt: "desc" }, { id: "asc" }], skip: (page - 1) * 25, take: 25 });
   return { who, rows: rows.map(refundView), total, counts: Object.fromEntries(counts.map(item => [item.status, item._count._all])), people, sites, page, pages, filters: { ...filters, status } };
 }
 export async function getRefund(id: string): Promise<RefundDetail> {

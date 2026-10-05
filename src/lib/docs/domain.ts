@@ -15,6 +15,7 @@ import {
   canRead,
   canManage,
   canApprove,
+  SELF_LOCK_MESSAGE,
   type Member,
   type DocumentContent,
   type Draft,
@@ -223,7 +224,10 @@ export class DocumentService {
       return draft(tx, id);
     });
   }
-  async lock(who: string, id: string, session: string, release = false) {
+  /** Acquire, renew or release the editing lease. `takeOver` lets a person move their own live
+   *  lease to this window (another tab or a page they reloaded); it never takes another
+   *  person's lease. */
+  async lock(who: string, id: string, session: string, release = false, takeOver = false) {
     return this.db.transaction(async (tx) => {
       author(await actor(tx, who));
       const document = await doc(tx, id);
@@ -245,8 +249,12 @@ export class DocumentService {
         new Date(d.leaseUntil).getTime() > Date.now() &&
         (d.leaseOwner !== who || d.leaseSession !== session)
       ) {
-        const person = await actor(tx, d.leaseOwner!);
-        fail(`${person.name} is editing this document. Try again after they finish.`, 409);
+        if (d.leaseOwner === who) {
+          if (!takeOver) fail(SELF_LOCK_MESSAGE, 409);
+        } else {
+          const person = await actor(tx, d.leaseOwner!);
+          fail(`${person.name} is editing this document. Try again after they finish.`, 409);
+        }
       }
       await tx.query(
         "UPDATE drafts SET lease_owner=$2,lease_session=$3,lease_until=now()+interval '2 minutes' WHERE document_id=$1",

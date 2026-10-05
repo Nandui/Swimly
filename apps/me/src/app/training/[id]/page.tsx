@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { useParams } from "next/navigation";
 import { useState } from "react";
-import { ArrowLeft, Check } from "lucide-react";
+import { ChevronLeft, CircleCheck, Send } from "lucide-react";
 import { Frame } from "@/components/frame";
 import { LoadError, Loading, Notice, Tag, useLoad } from "@/components/ui";
 import { ApiError, api } from "@/lib/api";
@@ -21,16 +21,18 @@ export default function TrainingDetailPage() {
   const [note, setNote] = useState("");
   const [busy, setBusy] = useState(false);
   const [failure, setFailure] = useState<string | null>(null);
+  // The outcome Notice is announced only when this visit just produced it.
+  const [justDone, setJustDone] = useState(false);
   async function complete() {
     setBusy(true); setFailure(null);
-    try { setData(await api<Detail>(`training/${id}/complete`, { method: "POST", body: { note } })); }
+    try { setData(await api<Detail>(`training/${id}/complete`, { method: "POST", body: { note } })); setJustDone(true); }
     catch (caught) { setFailure(caught instanceof ApiError ? caught.message : "That didn't save. Try again."); }
     finally { setBusy(false); }
   }
   return (
-    <Frame title="Training">
+    <Frame title="My training">
       <div className="stack">
-        <Link href="/training" className="button ghost" style={{ alignSelf: "flex-start" }}><ArrowLeft aria-hidden="true" />My training</Link>
+        <Link href="/training" className="button ghost back-link"><ChevronLeft aria-hidden="true" />My training</Link>
         {error ? <LoadError error={error} retry={reload} /> : !data ? <Loading /> : (
           <>
             <div className="stack-sm">
@@ -41,23 +43,25 @@ export default function TrainingDetailPage() {
                   data.requiresSignoff ? "a trainer signs this off in person" : null, data.grants ? `records your ${data.grants}` : null].filter(Boolean).join(" · ")}
               </p>
             </div>
-            {data.state === "submitted" ? <Notice title="Waiting for sign-off">A trainer will watch you do it and sign it off.</Notice> : null}
-            {data.state === "completed" ? <Notice title={`Completed ${date(data.completedAt)}`}>{data.signedOffBy ? `Signed off by ${data.signedOffBy}.${data.trainerNote ? ` ${data.trainerNote}` : ""}` : "Well done."}</Notice> : null}
+            {data.state === "submitted" ? <Notice title="Waiting for sign-off" live={justDone}>A trainer will watch you do it and sign it off.</Notice> : null}
+            {data.state === "completed" ? <Notice title={`Completed ${date(data.completedAt)}`} live={justDone}>{data.signedOffBy ? `Signed off by ${data.signedOffBy}.${data.trainerNote ? ` ${data.trainerNote}` : ""}` : "Well done."}</Notice> : null}
             {(data.state === "assigned" || data.state === "overdue") && data.trainerNote ? <Notice title={`Not signed off yet${data.signedOffBy ? ` by ${data.signedOffBy}` : ""}`} tone="warning">{data.trainerNote}</Notice> : null}
-            <section className="card stack-sm" aria-labelledby="material">
+            <section className="pc-panel" aria-labelledby="material">
               <h2 id="material">What to do</h2>
               {data.content ? <p className="pre">{data.content}</p> : <p className="muted">Your trainer will go through this with you.</p>}
             </section>
             {data.state === "assigned" || data.state === "overdue" ? (
-              <section className="card stack" aria-labelledby="done-title">
+              <section className="pc-panel" aria-labelledby="done-title">
                 <h2 id="done-title">{data.requiresSignoff ? "Ready for sign-off?" : "Done it?"}</h2>
                 <div className="field">
                   <label htmlFor="note">{data.requiresSignoff ? "Note for your trainer (optional)" : "Note (optional)"}</label>
                   <textarea id="note" className="input" maxLength={1000} value={note} onChange={(e) => setNote(e.target.value)} />
                   {data.requiresSignoff ? <span className="hint">For example, when you are next on shift to show it.</span> : null}
                 </div>
-                {failure ? <Notice title={failure} tone="error" /> : null}
-                <button type="button" className="button block" onClick={complete} disabled={busy}><Check aria-hidden="true" />{data.requiresSignoff ? "Ask for sign-off" : "Mark as done"}</button>
+                {failure ? <Notice title={failure} tone="error" live /> : null}
+                <button type="button" className="button block" onClick={complete} disabled={busy}>
+                  {data.requiresSignoff ? <><Send aria-hidden="true" />Ask for sign-off</> : <><CircleCheck aria-hidden="true" />Mark as done</>}
+                </button>
               </section>
             ) : null}
           </>

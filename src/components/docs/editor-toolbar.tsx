@@ -16,23 +16,24 @@ import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/shadcn/too
 import { Popover, PopoverTrigger, PopoverContent } from './primitives/popover';
 import { headingLevels, fontSizes, textColours, highlightColours } from '@/lib/docs/formatting';
 
-function Tool({ label, icon: Icon, onClick, active, disabled }: {
-  label: string; icon: LucideIcon; onClick: () => void; active?: boolean; disabled?: boolean;
+/** One toolbar button. `wide` tools stay in the bar from 601px; on phones they live in More. */
+function Tool({ label, icon: Icon, onClick, active, disabled, wide = false }: {
+  label: string; icon: LucideIcon; onClick: () => void; active?: boolean; disabled?: boolean; wide?: boolean;
 }) {
   return <Tooltip><TooltipTrigger asChild>
-    <Button type="button" variant="ghost" className={`toolbar-button ${active ? 'active' : ''}`}
+    <Button type="button" variant="ghost" className={`toolbar-button${wide ? ' editor-wide-only' : ''}`}
       aria-label={label} aria-pressed={active} disabled={disabled}
-      onMouseDown={event => event.preventDefault()} onClick={onClick}><Icon size={18} /></Button>
+      onMouseDown={event => event.preventDefault()} onClick={onClick}><Icon aria-hidden="true" /></Button>
   </TooltipTrigger><TooltipContent>{label}</TooltipContent></Tooltip>;
 }
 
-function ToolMenu({ label, icon: Icon, disabled, compact = false, children }: {
-  label: string; icon: LucideIcon; disabled: boolean; compact?: boolean; children: (close: () => void) => ReactNode;
+function ToolMenu({ label, icon: Icon, disabled, compact = false, wide = false, tool, children }: {
+  label: string; icon: LucideIcon; disabled: boolean; compact?: boolean; wide?: boolean; tool?: string; children: (close: () => void) => ReactNode;
 }) {
   const [open, setOpen] = useState(false);
   return <Popover open={open && !disabled} onOpenChange={setOpen}>
-    <PopoverTrigger asChild><Button type="button" variant="ghost" disabled={disabled} className="editor-menu-trigger" aria-label={label} title={compact ? label : undefined}>
-      <Icon size={18} />{!compact && <>{label}<ChevronDown size={14} /></>}
+    <PopoverTrigger asChild><Button type="button" variant="ghost" disabled={disabled} data-tool={tool} className={`editor-menu-trigger${wide ? ' editor-wide-only' : ''}`} aria-label={label} title={compact ? label : undefined}>
+      <Icon aria-hidden="true" />{!compact && <>{label}<ChevronDown aria-hidden="true" className="size-3.5" /></>}
     </Button></PopoverTrigger>
     <PopoverContent align="start" className="editor-tool-menu" onCloseAutoFocus={event => {
       // Commands return focus to the document; Escape still returns to the trigger.
@@ -60,13 +61,27 @@ export function EditorToolbar({ editor, disabled, openLink, openImage }: {
     };
   } });
   const unavailable = disabled || !editor;
-  const tool = (label: string, icon: LucideIcon, run: () => void, active?: boolean, unavailableHere = false) =>
-    <Tool key={label} label={label} icon={icon} onClick={run} active={active} disabled={unavailable || unavailableHere} />;
+  const aligns: [string, LucideIcon, 'left' | 'center' | 'right' | 'justify'][] = [
+    ['Align left', AlignLeft, 'left'],
+    ['Align centre', AlignCenter, 'center'],
+    ['Align right', AlignRight, 'right'],
+    ['Justify', AlignJustify, 'justify'],
+  ];
+  const sizeSelect = <NativeSelect aria-label="Font size" value={state?.fontSize || ''} disabled={unavailable}
+    onChange={event => event.target.value ? editor?.chain().focus().setFontSize(event.target.value).run() : editor?.chain().focus().unsetFontSize().run()}>
+    <NativeSelectOption value="">Auto size</NativeSelectOption>
+    {state?.fontSize && !fontSizes.some(size => `${size}px` === state.fontSize) && <NativeSelectOption value={state.fontSize}>{state.fontSize}</NativeSelectOption>}
+    {fontSizes.map(size => <NativeSelectOption key={size} value={`${size}px`}>{size} px</NativeSelectOption>)}
+  </NativeSelect>;
+  const tool = (label: string, icon: LucideIcon, run: () => void, active?: boolean, unavailableHere = false, wide = false) =>
+    <Tool key={label} label={label} icon={icon} onClick={run} active={active} disabled={unavailable || unavailableHere} wide={wide} />;
   const menuItem = (label: string, Icon: LucideIcon, run: () => void, close: () => void, active?: boolean, unavailableHere = false) =>
     <Button key={label} type="button" variant="ghost" className="editor-menu-item" disabled={unavailable || unavailableHere}
-      aria-pressed={active} onClick={() => { if (!unavailable) run(); close(); }}><Icon size={18} />{label}</Button>;
-  const colourMenu = (highlight: boolean) => <ToolMenu label={highlight ? 'Highlight' : 'Colour'} icon={highlight ? Highlighter : Palette} disabled={unavailable} compact>
-    {close => <>
+      aria-pressed={active} onClick={() => { if (!unavailable) run(); close(); }}><Icon aria-hidden="true" />{label}</Button>;
+  const colourMenu = (highlight: boolean) => <ToolMenu label={highlight ? 'Highlight' : 'Colour'} icon={highlight ? Highlighter : Palette} disabled={unavailable} compact wide>
+    {close => colourGrid(highlight, close)}
+  </ToolMenu>;
+  const colourGrid = (highlight: boolean, close: () => void) => <>
       <p className="editor-menu-label">{highlight ? 'Highlight colour' : 'Text colour'}</p>
       <div className="editor-colour-grid">
         {(highlight ? highlightColours : textColours).map(colour => <Button key={colour.value} type="button" variant="outline"
@@ -84,11 +99,13 @@ export function EditorToolbar({ editor, disabled, openLink, openImage }: {
         if (highlight) editor?.chain().focus().unsetHighlight().run();
         else editor?.chain().focus().unsetColor().run();
       }, close)}
-    </>}
-  </ToolMenu>;
+    </>;
 
+  /* One sunken bar that wraps. On phones (≤600px, editor.css) it reorders into two rows: the
+     style, Insert and More; then bold, italic, both lists, undo and redo. The other tools are
+     hidden there and offered inside More instead. */
   return <>
-    <div className="editor-toolbar editor-formatting-row" role="group" aria-label="Text formatting">
+    <div className="editor-toolbar" role="group" aria-label="Formatting and insertions">
       <div className="editor-style-select"><NativeSelect aria-label="Text style" value={state?.heading || 'p'} disabled={unavailable}
         onChange={event => {
           if (event.target.value === 'p') editor?.chain().focus().setParagraph().run();
@@ -97,34 +114,25 @@ export function EditorToolbar({ editor, disabled, openLink, openImage }: {
         <NativeSelectOption value="p">Normal text</NativeSelectOption>
         {headingLevels.map(level => <NativeSelectOption key={level} value={String(level)}>H{level} · Heading {level}</NativeSelectOption>)}
       </NativeSelect></div>
-      <div className="editor-size-select"><NativeSelect aria-label="Font size" value={state?.fontSize || ''} disabled={unavailable}
-        onChange={event => event.target.value ? editor?.chain().focus().setFontSize(event.target.value).run() : editor?.chain().focus().unsetFontSize().run()}>
-        <NativeSelectOption value="">Auto size</NativeSelectOption>
-        {state?.fontSize && !fontSizes.some(size => `${size}px` === state.fontSize) && <NativeSelectOption value={state.fontSize}>{state.fontSize}</NativeSelectOption>}
-        {fontSizes.map(size => <NativeSelectOption key={size} value={`${size}px`}>{size} px</NativeSelectOption>)}
-      </NativeSelect></div>
+      <div className="editor-size-select editor-wide-only">{sizeSelect}</div>
       {tool('Bold', Bold, () => editor?.chain().focus().toggleBold().run(), state?.marks.bold)}
       {tool('Italic', Italic, () => editor?.chain().focus().toggleItalic().run(), state?.marks.italic)}
-      {tool('Underline', Underline, () => editor?.chain().focus().toggleUnderline().run(), state?.marks.underline)}
-      {tool('Strikethrough', Strikethrough, () => editor?.chain().focus().toggleStrike().run(), state?.marks.strike)}
+      {tool('Underline', Underline, () => editor?.chain().focus().toggleUnderline().run(), state?.marks.underline, false, true)}
+      {tool('Strikethrough', Strikethrough, () => editor?.chain().focus().toggleStrike().run(), state?.marks.strike, false, true)}
       {colourMenu(false)}{colourMenu(true)}
-      <span className="toolbar-spacer" />
-      {tool('Undo', Undo2, () => editor?.chain().focus().undo().run(), undefined, !state?.canUndo)}
-      {tool('Redo', Redo2, () => editor?.chain().focus().redo().run(), undefined, !state?.canRedo)}
-    </div>
-    <div className="editor-toolbar editor-structure-row" role="group" aria-label="Paragraphs and insertions">
+      <span className="editor-toolbar-divider editor-wide-only" />
       {tool('Bullet list', List, () => editor?.chain().focus().toggleBulletList().run(), state?.marks.bulletList)}
       {tool('Numbered list', ListOrdered, () => editor?.chain().focus().toggleOrderedList().run(), state?.marks.orderedList)}
-      {tool('Checklist', ListTodo, () => editor?.chain().focus().toggleTaskList().run(), state?.marks.taskList)}
-      {tool('Indent list item', IndentIncrease, () => editor?.chain().focus().sinkListItem(state?.item || 'listItem').run(), undefined, !state?.canIndent)}
-      {tool('Outdent list item', IndentDecrease, () => editor?.chain().focus().liftListItem(state?.item || 'listItem').run(), undefined, !state?.canOutdent)}
-      <span className="editor-toolbar-divider" />
-      {tool('Align left', AlignLeft, () => editor?.chain().focus().setTextAlign('left').run(), state?.align === 'left')}
-      {tool('Align centre', AlignCenter, () => editor?.chain().focus().setTextAlign('center').run(), state?.align === 'center')}
-      {tool('Align right', AlignRight, () => editor?.chain().focus().setTextAlign('right').run(), state?.align === 'right')}
-      {tool('Justify', AlignJustify, () => editor?.chain().focus().setTextAlign('justify').run(), state?.align === 'justify')}
-      <span className="editor-toolbar-divider" />
-      <ToolMenu label="Insert" icon={Plus} disabled={unavailable}>{close => <>
+      {tool('Checklist', ListTodo, () => editor?.chain().focus().toggleTaskList().run(), state?.marks.taskList, false, true)}
+      {tool('Indent list item', IndentIncrease, () => editor?.chain().focus().sinkListItem(state?.item || 'listItem').run(), undefined, !state?.canIndent, true)}
+      {tool('Outdent list item', IndentDecrease, () => editor?.chain().focus().liftListItem(state?.item || 'listItem').run(), undefined, !state?.canOutdent, true)}
+      <span className="editor-toolbar-divider editor-wide-only" />
+      {aligns.map(([label, Icon, value]) => tool(label, Icon, () => editor?.chain().focus().setTextAlign(value).run(), state?.align === value, false, true))}
+      <span className="editor-toolbar-divider editor-wide-only" />
+      {tool('Undo', Undo2, () => editor?.chain().focus().undo().run(), undefined, !state?.canUndo)}
+      {tool('Redo', Redo2, () => editor?.chain().focus().redo().run(), undefined, !state?.canRedo)}
+      <span className="editor-toolbar-break" aria-hidden="true" />
+      <ToolMenu label="Insert" icon={Plus} tool="insert" disabled={unavailable}>{close => <>
         {menuItem('Link', LinkIcon, openLink, close)}
         {openImage && menuItem('Image', ImagePlus, openImage, close)}
         {menuItem('Table', Table2, () => editor?.chain().focus().insertTable({ rows: 3, cols: 3, withHeaderRow: true }).run(), close, undefined, state?.table)}
@@ -134,7 +142,22 @@ export function EditorToolbar({ editor, disabled, openLink, openImage }: {
           type: 'callout', attrs: { kind }, content: [{ type: 'paragraph', content: [{ type: 'text', text: kind === 'info' ? 'Important information' : 'Warning' }] }],
         }).run(), close))}
       </>}</ToolMenu>
-      <ToolMenu label="More" icon={Ellipsis} disabled={unavailable}>{close => <>
+      <ToolMenu label="More" icon={Ellipsis} tool="more" disabled={unavailable}>{close => <>
+        {/* Phones only: the tools the bar hides below 601px. */}
+        <div className="editor-narrow-only">
+          <p className="editor-menu-label">Text</p>
+          <div className="px-2 pb-2">{sizeSelect}</div>
+          {menuItem('Underline', Underline, () => editor?.chain().focus().toggleUnderline().run(), close, state?.marks.underline)}
+          {menuItem('Strikethrough', Strikethrough, () => editor?.chain().focus().toggleStrike().run(), close, state?.marks.strike)}
+          {colourGrid(false, close)}
+          {colourGrid(true, close)}
+          <p className="editor-menu-label">Paragraph</p>
+          {menuItem('Checklist', ListTodo, () => editor?.chain().focus().toggleTaskList().run(), close, state?.marks.taskList)}
+          {menuItem('Indent list item', IndentIncrease, () => editor?.chain().focus().sinkListItem(state?.item || 'listItem').run(), close, undefined, !state?.canIndent)}
+          {menuItem('Outdent list item', IndentDecrease, () => editor?.chain().focus().liftListItem(state?.item || 'listItem').run(), close, undefined, !state?.canOutdent)}
+          {aligns.map(([label, Icon, value]) => menuItem(label, Icon, () => editor?.chain().focus().setTextAlign(value).run(), close, state?.align === value))}
+          <p className="editor-menu-label">More</p>
+        </div>
         {menuItem('Block quote', Quote, () => editor?.chain().focus().toggleBlockquote().run(), close, state?.marks.blockquote)}
         {menuItem('Inline code', Code, () => editor?.chain().focus().toggleCode().run(), close, state?.marks.code)}
         {menuItem('Subscript', Subscript, () => editor?.chain().focus().unsetSuperscript().toggleSubscript().run(), close, state?.marks.subscript)}

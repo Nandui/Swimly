@@ -1,27 +1,31 @@
 # Staff help centre
 
-`/help` is the signed-in staff manual. Every module frame has a Help link, in
-the module bar on a desktop and under More in the bottom bar on phones and touch
-screens (not in the account menu). Instructor has a Help link to
-`/help/instructor` in the deck's top bar. Both open a new tab so an in-progress form stays open.
+`/help` is the signed-in staff manual, in its own v2 frame (the fin, "Help
+centre" and the way back; DESIGN.md "Forms, search and confirmation"). Every
+module frame has a Help link: at the bottom of the module bar on a desktop, and
+under More in the bottom bar on phones and touch screens (not in the account
+menu). The pool deck has a Help icon to `/help/instructor` in its top bar. Both
+open a new tab so an in-progress form stays open.
 
-The manual has 39 authored guides: 37 available in the desk library and 9 in
-Instructor, including shared guides with workspace-specific steps. Topics cover
-navigation and sites; swimmers and contacts; enrolments, moves, waitlists and
-sibling times; classes and Schedule; teaching and progression; assessments;
-cancellations and billing handoffs; analytics; staff, roles, curriculum and sites;
-and account or save troubleshooting. Guidance describes the current app rather
-than promising email, refunds, offline saves or automatic moves that it does not
-provide.
+The manual has 53 authored guides: 51 in the desk library and 10 on the pool
+deck, including shared guides with workspace-specific steps. Topics cover every
+part of Turnfin: navigation and sites; Home and Turnfin Me; swimmers and
+contacts; enrolments, moves, waitlists and sibling times; classes and the
+schedule; teaching and progression; assessments; cancellations, billing
+handoffs and analytics; Refunds; Docs; Training; Rota; HR; administration
+(curriculum, staff, roles and sites); and account or save troubleshooting.
+Guidance describes the current app rather than promising email, offline saves
+or automatic moves that it does not provide.
+
+The Refunds, Docs, Training, Rota and HR topics (`HELP_CATEGORY_SCREENS` in
+`src/lib/help/types.ts`) show only to people whose role can open that module;
+their guides, and links to them, are left out for everyone else. Home, Turnfin
+Me and the swim school guides show to every desk reader.
 
 Every guide includes screenshots of the current app beside the steps they
 illustrate, with descriptive alternative text, captions and a full-size link.
-The 42 screenshots use synthetic people and records and show light appearance.
-They remain visible when printing a guide.
-
-Parent access, parent accounts and assessment publishing have desk-only guides.
-Their screenshots are captured from the real controls in the isolated parent
-management preview (`scripts/check-parent-admin.mjs`).
+The 63 screenshots are taken from the sandbox's fictional people and records,
+show light appearance and the v2 frame, and remain visible when printing a guide.
 
 ## Access and navigation
 
@@ -35,7 +39,8 @@ management preview (`scripts/check-parent-admin.mjs`).
   preserving an article only if it exists in that scope. Legacy grants use the
   existing screen resolver.
 - Instructor search, related guides and task links remain scoped to teaching.
-  Its return link is Classes. Desk return links resolve to an allowed desk home.
+  Its top bar goes "Back to classes" and its guides say "Instructor guide". Desk
+  help goes "Back to app", to an allowed desk home.
   Open-in-app links check screen grants and their required permissions, including
   inherited administrator access.
 - Search and topic selection are stored in bounded `q` and validated `topic`
@@ -71,24 +76,47 @@ of prose so a rename does not require rewriting guides.
 | `guides-start.ts` | Workspace shells, site switcher, Account, permissions and save/draft handling |
 | `guides-swimmers.ts` | Swimmer profile and edit form, enrolment dialogs/actions, Together |
 | `guides-classes.ts` | Classes and Schedule, desk/Instructor teaching forms, progression, assessments |
-| `guides-management.ts` | Duty manager, cancellation queue, Analytics, curriculum, Staff, Roles, Sites and Activity |
+| `guides-management.ts` | Duty manager, cancellation queue, Analytics, curriculum, Staff, Roles (levels), Sites and Activity |
+| `guides-agreements.ts`, `guides-parents.ts` | Legend agreements, parent requests, parent access and accounts, assessment publication |
+| `guides-modules.ts` (Home) | The home page (`src/app/page.tsx`) and docs/staff-app.md for Turnfin Me |
+| `guides-modules.ts` (Refunds) | `src/components/refunds` (request form, finance actions) |
+| `guides-modules.ts` (Docs) | `src/components/docs` (home, library, new document, editor, reader) |
+| `guides-modules.ts` (Training) | `src/components/training/manage-actions.tsx`, Training pages |
+| `guides-modules.ts` (Rota) | `src/components/rota` (roster, actions, absences) and `src/lib/rota/actions.ts` |
+| `guides-modules.ts` (HR) | `src/components/hr/actions.tsx`, `src/lib/hr/constants.ts` |
+
+Each module guide's "Before you start" names the level it needs, from
+`src/modules/registry.ts`. Desk steps describe ModuleShell (page bar, tools bar
+with the site picker and swimmer search, account menu, module bar or bottom
+bar); pool-deck steps describe the deck's own top bar and menu.
 
 ## Updating screenshots
 
-`scripts/help-screenshots/fixture.jsx` renders the real app components with data
-from `data.mjs`. The isolated bundle replaces server actions, authentication and
-routing; mutations throw, data reads use synthetic fixtures and browser requests
-are restricted to the local fixture. It does not connect to the database.
+Every image comes from the real app in the local sandbox (`npm run sandbox`),
+whose organisation, sites (Riverside and Hillview), people and records are all
+invented; `scripts/sandbox-seed.ts` (`seedHelpExamples`) adds the records the
+images need, such as competencies, a waitlist place, today's assessment, a
+cancelled class, a parent's link request and a refund waiting for finance.
+Then run `node scripts/help-screenshots/capture.mjs`. It signs in as the sandbox
+people, opens each page, dialog or menu named in its plans (it never submits a
+form, apart from one attendance save in the sandbox to show a save conflict) and
+writes the PNGs and their measured dimensions into `assets/help/manifest.json`,
+merging with the entries it did not capture. It refuses any address but
+localhost. Desk pages are captured at 1280 × 800 with the frame's top bar, so
+they show the fin, the page bar and the tools bar; pool-deck images at 1024 and
+the phone overview at 375.
 
-Run `node scripts/help-screenshots/capture.mjs` with Playwright and Chrome
-available. If Playwright is supplied by the workspace runtime rather than the
-project, set `HELP_PLAYWRIGHT_MODULE` to its absolute `index.mjs` path. Optional
-`HELP_CAPTURE_ONLY` accepts comma-separated screenshot IDs for a targeted refresh.
-The script builds into ignored `.impeccable/review/help-screenshots`, then writes
-PNGs and their measured dimensions to `assets/help/manifest.json`.
+If Playwright is supplied by the workspace runtime rather than the project, set
+`HELP_PLAYWRIGHT_MODULE` to its absolute `index.mjs` path, and `CHROME` to a
+Chromium binary if Playwright's own is not installed. `HELP_BASE` points at
+another local sandbox port. Optional `HELP_CAPTURE_ONLY` accepts comma-separated
+screenshot IDs for a targeted refresh. Failures leave a screenshot in ignored
+`.impeccable/review/help-screenshots`. capture.mjs is the only script that writes
+`assets/help`; the isolated previews (`scripts/check-*.mjs`) no longer do.
 
 Review regenerated images for legibility and relevant open controls. Keep all
-example names, contacts and records synthetic. `src/lib/help/screenshots.ts`
+example names, contacts and records synthetic, and never point the script at a
+real deployment. `src/lib/help/screenshots.ts`
 attaches images by guide slug, exact step title and optional workspace scope;
 update these anchors when renaming a step. Write captions around the user's task
 and alt text around the visible controls. Never capture a live customer session.

@@ -38,7 +38,8 @@ try {
   assert(await page.getByRole('link', {name: 'Skip to content'}).evaluate(el => el === document.activeElement));
   await page.keyboard.press('Enter');
   assert(await page.getByRole('main').evaluate(el => el === document.activeElement));
-  await page.getByRole('button', {name: 'Switch to dark mode'}).click();
+  await page.getByRole('button', {name: /^Account menu:/}).click();
+  await page.getByRole('menuitemradio', {name: 'Dark'}).click();
   assert.equal(await page.locator('html').getAttribute('data-theme'), 'dark');
   assert((await context.cookies()).some(cookie => cookie.name === 'swimly.theme' && cookie.value === 'dark'));
   await page.getByRole('link', {name: 'Open Aquatics'}).click();

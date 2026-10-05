@@ -1,14 +1,24 @@
 import type { JSONContent } from '@tiptap/react';
 import {
-  Archive, BadgeCheck, BookOpen, CalendarClock, CheckCheck, CircleAlert, CircleCheck, CircleHelp, CirclePause,
+  Archive, BadgeCheck, BookOpen, CalendarClock, CalendarX2, CheckCheck, CircleAlert, CircleCheck, CircleHelp, CirclePause,
   ClipboardCheck, Eye, FileCheck2, FilePenLine, History, Inbox, OctagonAlert, Pencil, ScanSearch, SlidersHorizontal,
-  TriangleAlert, UserCheck, XCircle,
+  TriangleAlert, UserCheck, UserRound, XCircle,
 } from 'lucide-react';
 import { expandPermissions } from '@/lib/staff/permissions';
 import { formatDate as formatDateOnly } from '@/lib/format';
 import type { StatusMeta } from '@/lib/status';
 export const documentTypes = ['SOP', 'NOP', 'EAP', 'Risk assessment', 'Policy', 'Custom'] as const;
 export type DocumentType = (typeof documentTypes)[number];
+/** The one set of words for each document type: `one` on a card or caption, `many` on a
+ *  filter or collection, `long` where the type is named in full (the reader, new document). */
+export const documentTypeLabels: Record<DocumentType, { one: string; many: string; long: string }> = {
+  SOP: { one: 'Procedure', many: 'Procedures', long: 'Standard operating procedure' },
+  NOP: { one: 'Operations', many: 'Operations', long: 'Normal operating procedure' },
+  EAP: { one: 'Emergency plan', many: 'Emergency plans', long: 'Emergency action plan' },
+  'Risk assessment': { one: 'Risk assessment', many: 'Risk assessments', long: 'Risk assessment' },
+  Policy: { one: 'Policy', many: 'Policies', long: 'Policy' },
+  Custom: { one: 'Other', many: 'Other', long: 'Custom document' },
+};
 export type Role = string;
 export type Member = {
   id: string;
@@ -176,6 +186,35 @@ export function toWorkspaceMember(m: Member, viewer: Member): WorkspaceMember {
     ...(canManage(viewer) ? { email: m.email, role: m.role } : {}),
   };
 }
+/** Sentence-case words for each audit action Docs writes (history and administration). */
+export const DOC_EVENT_LABELS: Record<string, string> = {
+  created: 'Document created',
+  draft_started: 'Draft started',
+  restored_to_draft: 'Version restored as a draft',
+  draft_saved: 'Draft edited',
+  file_uploaded: 'File uploaded',
+  submitted: 'Sent for review',
+  changes_requested: 'Changes requested',
+  published: 'Document published',
+  reading_assigned: 'Required reading updated',
+  acknowledged: 'Reading acknowledged',
+  archived: 'Document archived',
+  matrix_updated: 'Risk matrix updated',
+  template_updated: 'Template updated',
+  group_updated: 'Group updated',
+  membership_updated: 'Staff groups updated',
+  editing_session: 'Editing started',
+  editing_released: 'Editing finished',
+};
+/** An audit action in words; an unknown code is sentence-cased rather than shown raw. */
+export function docEventLabel(action: string) {
+  const known = DOC_EVENT_LABELS[action];
+  if (known) return known;
+  const words = action.replace(/[-_]+/g, ' ').trim();
+  return words.charAt(0).toUpperCase() + words.slice(1);
+}
+/** The editing lease is held by the same person in another window (or a page they reloaded). */
+export const SELF_LOCK_MESSAGE = 'You’re editing this in another window. Close it, or edit here.';
 export const formatDate = (value?: string | null) =>
   value ? formatDateOnly(new Date(value)) : 'Not set';
 export const overdue = (value?: string | null) =>
@@ -197,6 +236,7 @@ export const DOC_STATUS_META = {
   historical: { label: 'Historical version', color: 'gray', icon: History },
   archived: { label: 'Archived', color: 'gray', icon: Archive },
   reviewDue: { label: 'Review due', color: 'orange', icon: CalendarClock },
+  reviewOverdue: { label: 'Review overdue', color: 'red', icon: CalendarX2 },
   overdue: { label: 'Overdue', color: 'red', icon: TriangleAlert },
   toRead: { label: 'To read', color: 'orange', icon: BookOpen },
   acknowledged: { label: 'Acknowledged', color: 'green', icon: CheckCheck },
@@ -204,6 +244,8 @@ export const DOC_STATUS_META = {
   configured: { label: 'Configured', color: 'green', icon: SlidersHorizontal },
   setupRequired: { label: 'Setup required', color: 'orange', icon: TriangleAlert },
   active: { label: 'Active', color: 'green', icon: UserCheck },
+  /** A person's Turnfin role, shown with its own name as the label. */
+  role: { label: 'Role', color: 'blue', icon: UserRound },
   inactive: { label: 'Inactive', color: 'gray', icon: CirclePause },
 } as const satisfies Record<string, StatusMeta>;
 export type DocStatus = keyof typeof DOC_STATUS_META;
@@ -212,7 +254,7 @@ export type DocStatus = keyof typeof DOC_STATUS_META;
  *  this maps each to a tone and an icon of its own. */
 export const RISK_BAND_TONE_META = {
   green: { label: 'Low', color: 'green', icon: CircleCheck },
-  amber: { label: 'Medium', color: 'orange', icon: CircleAlert },
+  amber: { label: 'Moderate', color: 'orange', icon: CircleAlert },
   orange: { label: 'High', color: 'orange', icon: TriangleAlert },
   red: { label: 'Very high', color: 'red', icon: OctagonAlert },
 } as const satisfies Record<'green' | 'amber' | 'orange' | 'red', StatusMeta>;

@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { useState, type ReactNode } from "react";
-import { BookOpen, CalendarDays, GraduationCap, House, LogOut, Menu } from "lucide-react";
+import { BookOpen, CalendarDays, GraduationCap, House, LayoutGrid, LogOut } from "lucide-react";
 import { api, session } from "@/lib/api";
 
 const TABS = [
@@ -11,11 +11,25 @@ const TABS = [
   { href: "/training", label: "Training", icon: GraduationCap },
   { href: "/reading", label: "Reading", icon: BookOpen },
   { href: "/shifts", label: "Shifts", icon: CalendarDays },
-  { href: "/more", label: "More", icon: Menu },
+  { href: "/more", label: "More", icon: LayoutGrid },
 ];
 const MORE = ["/more", "/qualifications", "/hr", "/details", "/reminders"];
 
-/** Every signed-in page: the brand, sign out, the page, and the tab bar. */
+/** The fin on its tile (Work's `.tf-brand`) and the name beside it. Signed-in pages link the
+ *  fin home; sign-in shows it without a link. */
+export function Brand({ href }: { href?: string }) {
+  // eslint-disable-next-line @next/next/no-img-element
+  const fin = <img src="/icon-192.png" alt="" width={72} height={72} />;
+  return (
+    <div className="brand">
+      {href ? <Link href={href} className="tf-brand" aria-label="Turnfin Me home">{fin}</Link> : <span className="tf-brand" aria-hidden="true">{fin}</span>}
+      <span className="brand-name">Turnfin Me</span>
+    </div>
+  );
+}
+
+/** Every signed-in page: the top row (the fin, the name, Sign out), the page, and the bottom
+ *  bar. `title` is the page's H1; it also names the browser tab. */
 export function Frame({ title, children }: { title: string; children: ReactNode }) {
   const pathname = usePathname();
   const router = useRouter();
@@ -29,19 +43,22 @@ export function Frame({ title, children }: { title: string; children: ReactNode 
   }
   return (
     <div className="frame">
+      <title>{`${title} · Turnfin Me`}</title>
       <header className="topbar">
-        <Link href="/" className="brand" aria-label="Turnfin Me home">
-          {/* eslint-disable-next-line @next/next/no-img-element */}
-          <img src="/icon.png" alt="" /> Turnfin <span>Me</span>
-        </Link>
-        <button type="button" className="button ghost" onClick={signOut} disabled={leaving}><LogOut aria-hidden="true" />Sign out</button>
+        <Brand href="/" />
+        <div className="tf-bar">
+          <button type="button" className="tf-bar-item" onClick={signOut} disabled={leaving}><LogOut aria-hidden="true" />{leaving ? "Signing out…" : "Sign out"}</button>
+        </div>
       </header>
-      <nav className="tabs" aria-label="Turnfin Me">
+      <main className="page" id="main" aria-label={title}>{children}</main>
+      <nav className="tf-bottom" aria-label="Turnfin Me">
         {TABS.map(({ href, label, icon: Icon }) => (
-          <Link key={href} href={href} aria-current={active(href) ? "page" : undefined}><Icon aria-hidden="true" />{label}</Link>
+          <Link key={href} href={href} className="tf-bottom-item" aria-current={active(href) ? "page" : undefined}>
+            <span className="tf-bottom-icon"><Icon aria-hidden="true" /></span>
+            <span>{label}</span>
+          </Link>
         ))}
       </nav>
-      <main className="page" id="main" aria-label={title}>{children}</main>
     </div>
   );
 }

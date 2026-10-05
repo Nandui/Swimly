@@ -5,7 +5,9 @@ import postcss from 'postcss';
 import tailwind from '@tailwindcss/postcss';
 
 export const output = path.resolve('.impeccable/review/help-screenshots/site');
-export async function buildScreenshots({ entryPoint = 'scripts/help-screenshots/fixture.jsx', outputDirectory = output, title = 'Help screenshot examples' } = {}) {
+/** Bundles an isolated preview fixture (parent management, the shadcn audit). Help's own images
+ *  come from the sandbox instead (capture.mjs). */
+export async function buildScreenshots({ entryPoint, outputDirectory = output, title = 'Isolated preview' }) {
   const destination = outputDirectory;
   const fixture = {name:'help-screenshot-boundaries',setup(build){
     build.onResolve({filter:/^next\/(navigation|link|image)$|^next-auth\/react$|^@\/(?:lib|modules\/[\w-]+\/lib)\/.*\/actions(?:\/|$)/},args=>({path:args.path,namespace:'demo'}));

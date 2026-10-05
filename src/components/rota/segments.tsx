@@ -235,7 +235,7 @@ function PlanForm({ shift, activities, actions, onSaved }: { shift: SegmentShift
   // inside a portalled dialog still bubbles through React to the form around it).
   return (
     <FormFeedbackProvider feedback={feedback}>
-      <form id={formId} ref={formRef} onSubmit={submit} aria-busy={pending} className="flex min-h-0 flex-1 flex-col gap-4 overflow-y-auto px-6 pb-4">
+      <form id={formId} ref={formRef} method="post" onSubmit={submit} aria-busy={pending} className="flex min-h-0 flex-1 flex-col gap-4 overflow-y-auto px-6 pb-4">
         <fieldset disabled={pending} className="flex min-w-0 flex-col gap-4">
           <legend className="sr-only">What they do when</legend>
           <SegmentsFields shift={shift} activities={activities} plan={plan} />

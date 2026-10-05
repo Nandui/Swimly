@@ -67,6 +67,27 @@ test("every guide has a stable unique address, usable content and valid related 
   for (const category of HELP_CATEGORIES) assert.ok(HELP_ARTICLES.some(article => article.category === category.id), category.id);
 });
 
+test("guides describe the current frame, with no retired interface, old brand or customer names", () => {
+  const retired = /sidebar|Swimly|LeisureWorld|Bishopstown|Churchfield|Working area|sun or moon/i;
+  for (const article of HELP_ARTICLES) assert.doesNotMatch(JSON.stringify(article), retired, article.slug);
+  for (const [slug, images] of Object.entries(GUIDE_SCREENSHOTS)) assert.doesNotMatch(JSON.stringify(images), retired, slug);
+  for (const category of HELP_CATEGORIES) {
+    assert.doesNotMatch(category.title, /&/, category.id);
+    assert.ok(articlesForScope("desk").some(article => article.category === category.id), `${category.id} has no desk guide`);
+  }
+});
+
+test("a module's guides show only to people who can open that module", () => {
+  const user = session(["swimschool.desk"]);
+  const access = accessFor(user).helpAccess(user, "desk");
+  const guide = (slug: string) => HELP_ARTICLES.find(article => article.slug === slug)!;
+  assert.equal(access.canRead(guide("move-swimmer")), true);
+  assert.equal(access.canRead(guide("home-page")), true);
+  assert.equal(access.canRead(guide("report-absence")), false);
+  const rota = session(["swimschool.desk", "rota.view"]);
+  assert.equal(accessFor(rota).helpAccess(rota, "desk").canRead(guide("report-absence")), true);
+});
+
 test("search finds natural task phrases, spelling variants and specific terminology", () => {
   const cases = [
     ["how do I move a swimmer", "move-swimmer"], ["transfer", "move-swimmer"],

@@ -12,26 +12,32 @@ import { SAVE_UNCONFIRMED_MESSAGE, withTimeout } from "@/lib/save-feedback";
 import { toast } from "@/lib/toast";
 import { Notice } from "@/components/ui-kit/notice";
 
+/** A swimmer's move readiness, the same on a closed checklist row and an open one: awaiting
+ *  the move while it is current, otherwise for review. */
+export function moveReadinessMeta(current: boolean) {
+  return FOLLOW_UP_META[current ? "awaitingMove" : "reviewMove"];
+}
+
 export function MoveReadinessStatus({ studentId, studentName, courseId, date, current, confirmedBy, confirmedAt }: {
   studentId: string; studentName: string; courseId: string; date: string; current: boolean; confirmedBy: string | null; confirmedAt: Date;
 }) {
   const [open, setOpen] = useState(false), [error, setError] = useState<string | null>(null);
   const [pending, startTransition] = useTransition();
-  const meta = FOLLOW_UP_META[current ? "awaitingMove" : "reviewMove"];
+  const meta = moveReadinessMeta(current);
   return <div className="flex flex-wrap items-center gap-3">
     <div className="space-y-1">
       <Tag meta={meta} />
       <p className="text-xs text-ui-muted-foreground">{confirmedBy ?? "Staff"} · {formatDate(confirmedAt)}</p>
     </div>
     <Dialog open={open} onOpenChange={value => { if (!pending) setOpen(value); }}>
-      <DialogTrigger asChild><Button variant="ghost" className="min-h-11" aria-label={`Remove ${studentName} from awaiting moves`}>Undo readiness</Button></DialogTrigger>
+      <DialogTrigger asChild><Button variant="ghost" aria-label={`Remove ${studentName} from awaiting moves`}>Undo readiness</Button></DialogTrigger>
       <DialogContent showCloseButton={false}>
         <DialogHeader><DialogTitle>Remove {studentName} from awaiting moves?</DialogTitle>
           <DialogDescription>Their competencies and level completion stay recorded. You can mark them ready again later.</DialogDescription></DialogHeader>
         {error ? <Notice tone="error" live="alert" title={error} /> : null}
         <DialogFooter>
-          <Button variant="outline" className="min-h-11" disabled={pending} onClick={() => setOpen(false)}>Keep on list</Button>
-          <LoadingButton className="min-h-11" pending={pending} onClick={() => startTransition(async () => {
+          <Button variant="outline" disabled={pending} onClick={() => setOpen(false)}>Keep on list</Button>
+          <LoadingButton pending={pending} onClick={() => startTransition(async () => {
             try {
               const result = await withTimeout(cancelInstructorMoveReadiness({ studentId, teaching: { courseId, date } }));
               if (!result.ok) { setError(result.error); return; }

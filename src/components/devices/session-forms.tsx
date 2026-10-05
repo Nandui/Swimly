@@ -78,7 +78,7 @@ export function QuickSwitch({ device, people }: { device: string; people: { id: 
 
   return (
     <Frame title={`Hello, ${chosen.name.split(" ")[0]}`} description="Enter your PIN. 4 to 8 digits.">
-      <form onSubmit={(e) => { e.preventDefault(); submit(pin); }} className="flex flex-col gap-4">
+      <form method="post" onSubmit={(e) => { e.preventDefault(); submit(pin); }} className="flex flex-col gap-4">
         <Input
           label="Your PIN"
           value={pin}
@@ -117,7 +117,7 @@ export function ConfirmPassword({ email, name, next }: { email: string; name: st
   const [pending, start] = React.useTransition();
   return (
     <Frame fin title="Confirm it’s you" description={`${name}, this area holds restricted records. Enter your password to open it. You will not be asked again for 15 minutes.`}>
-      <form className="flex flex-col gap-4" onSubmit={(e) => {
+      <form method="post" className="flex flex-col gap-4" onSubmit={(e) => {
         e.preventDefault();
         start(async () => {
           const result = await signIn("credentials", { email, password, redirect: false }).catch(() => null);
@@ -154,7 +154,7 @@ export function PinSettings({ hasPin, locked }: { hasPin: boolean; locked: boole
     router.refresh();
   });
   return (
-    <form className="flex flex-col gap-4" onSubmit={(e) => { e.preventDefault(); run(() => setOwnPin(password, pin), hasPin ? "PIN changed" : "PIN set"); }}>
+    <form method="post" className="flex flex-col gap-4" onSubmit={(e) => { e.preventDefault(); run(() => setOwnPin(password, pin), hasPin ? "PIN changed" : "PIN set"); }}>
       {locked ? <Notice title="Your PIN is locked" description="Too many wrong PINs. Sign in with your password on that work device to unlock it." tone="warning" /> : null}
       <Input label="Current password" type="password" value={password} onChange={setPassword} name="currentPassword" required autoComplete="current-password" />
       <Input label={hasPin ? "New PIN" : "PIN"} type="password" value={pin} onChange={(v) => setPin(v.replace(/\D/g, "").slice(0, 8))} name="pin" inputMode="numeric" autoComplete="off" description="4 to 8 digits, not a repeated digit or a simple run like 1234." />

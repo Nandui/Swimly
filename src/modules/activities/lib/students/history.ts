@@ -14,7 +14,6 @@ export const HISTORY_META = {
   completion: { label: "Level milestones", color: "gray", icon: Award }, assessment: { label: "Assessments", color: "gray", icon: ClipboardCheck },
   profile: { label: "Profile", color: "gray", icon: UserRound },
 } as const satisfies Record<string, StatusMeta>;
-export const HISTORY_MARKS: Record<string, string> = { ACHIEVED: "Achieved", WORKING_ON: "Not achieved", PRESENT: "Present", ABSENT: "Absent", LATE: "Late" };
 const mark = z.enum(["ACHIEVED", "WORKING_ON"]).nullable();
 export const evidenceSchema = z.object({
   version: z.literal(1), kind: z.string(), date: z.string().optional(), courseId: z.string().nullable().optional(),

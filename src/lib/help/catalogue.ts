@@ -4,10 +4,11 @@ import { START_GUIDES } from "./guides-start";
 import { SWIMMER_GUIDES } from "./guides-swimmers";
 import { PARENT_GUIDES } from "./guides-parents";
 import { AGREEMENT_GUIDES } from "./guides-agreements";
+import { MODULE_GUIDES } from "./guides-modules";
 import type { HelpArticle, HelpScope } from "./types";
 import { screenshotsForStep } from "./screenshots";
 
-export const HELP_ARTICLES: HelpArticle[] = [...START_GUIDES, ...SWIMMER_GUIDES, ...AGREEMENT_GUIDES, ...CLASS_GUIDES, ...MANAGEMENT_GUIDES, ...PARENT_GUIDES];
+export const HELP_ARTICLES: HelpArticle[] = [...START_GUIDES, ...MODULE_GUIDES, ...SWIMMER_GUIDES, ...AGREEMENT_GUIDES, ...CLASS_GUIDES, ...MANAGEMENT_GUIDES, ...PARENT_GUIDES];
 
 export function articlesForScope(scope: HelpScope): HelpArticle[] {
   return HELP_ARTICLES.filter(article => article.scopes.includes(scope)).map(article => ({

@@ -6,8 +6,40 @@ import {
   ShieldCheck,
   ClipboardList,
 } from 'lucide-react';
-import type { DocumentType, Member } from '@/lib/docs/types';
+import { useId } from 'react';
+import { documentTypeLabels, type DocumentType, type Member } from '@/lib/docs/types';
+import type { StatusMeta } from '@/lib/status';
 import { Avatar as ProfileAvatar, AvatarFallback, initials } from '@/components/shadcn/avatar';
+import { Label } from '@/components/shadcn/label';
+import { NativeSelect } from '@/components/shadcn/native-select';
+
+/** A labelled pill select in a Docs filter row (library, My work, reports): the label sits
+ *  above the 44px pill, and the pair takes a share of the row. */
+export function FilterSelect({
+  label,
+  value,
+  onChange,
+  disabled,
+  className,
+  children,
+}: {
+  label: string;
+  value: string;
+  onChange: (value: string) => void;
+  disabled?: boolean;
+  className?: string;
+  children: React.ReactNode;
+}) {
+  const id = useId();
+  return (
+    <div className={`flex min-w-0 flex-col gap-2 ${className ?? 'grow basis-48 sm:grow-0'}`}>
+      <Label className="block" htmlFor={id}>{label}</Label>
+      <NativeSelect id={id} className="w-full" value={value} onChange={(event) => onChange(event.target.value)} disabled={disabled}>
+        {children}
+      </NativeSelect>
+    </div>
+  );
+}
 export const typeIcons = {
   SOP: FileCheck2,
   NOP: BookOpen,
@@ -16,11 +48,16 @@ export const typeIcons = {
   Policy: ShieldCheck,
   Custom: FileText,
 };
-export function DocIcon({ type, size = 20 }: { type: DocumentType; size?: number }) {
+/** A document's type as a tag: its full name and its icon, always neutral (a type is not a status). */
+export function docTypeMeta(type: DocumentType): StatusMeta {
+  return { label: documentTypeLabels[type].long, color: 'gray', icon: typeIcons[type] || FileText };
+}
+/** A document's type as the one neutral 40px icon tile (colour only ever means status). */
+export function DocIcon({ type }: { type: DocumentType }) {
   const Icon = typeIcons[type] || FileText;
   return (
-    <span className={`doc-icon type-${type.toLowerCase().replaceAll(' ', '-')}`}>
-      <Icon size={size} strokeWidth={1.7} aria-hidden="true" />
+    <span className="pc-tile-icon">
+      <Icon aria-hidden="true" />
     </span>
   );
 }
@@ -36,27 +73,5 @@ export function Avatar({
     <ProfileAvatar size={size} aria-hidden="true">
       <AvatarFallback>{initials(member.name)}</AvatarFallback>
     </ProfileAvatar>
-  );
-}
-export function PageHeading({
-  eyebrow,
-  title,
-  description,
-  action,
-}: {
-  eyebrow?: string;
-  title: string;
-  description?: string;
-  action?: React.ReactNode;
-}) {
-  return (
-    <div className="page-heading">
-      <div>
-        {eyebrow && <p className="eyebrow">{eyebrow}</p>}
-        <h1>{title}</h1>
-        {description && <p className="muted">{description}</p>}
-      </div>
-      {action}
-    </div>
   );
 }

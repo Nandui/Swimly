@@ -168,13 +168,4 @@ try {
   assert.deepEqual(failures,[]);
   console.log(`PASS: ${checks} responsive layout checks; approval/revoke/restore, exact lookup, suspend/reactivate, publish/deadline/unpublish, permissions, retry, duplicate submit, focus and preserved input.`);
   await fs.writeFile(path.join(evidence,'verification.json'),JSON.stringify({checks,failures,screenshots},null,2));
-  if (process.argv.includes('--write-help-images')) {
-    const manifest = JSON.parse(await fs.readFile('assets/help/manifest.json','utf8'));
-    for (const id of ['parent-profile','parent-accounts','parent-publication']) {
-      const png = await fs.readFile(screenshots[id]);
-      await fs.writeFile(`assets/help/${id}.png`,png);
-      manifest[id] = {width:png.readUInt32BE(16),height:png.readUInt32BE(20)};
-    }
-    await fs.writeFile('assets/help/manifest.json',JSON.stringify(manifest,null,2)+'\n');
-  }
 } finally {await browser.close();await preview.close();}

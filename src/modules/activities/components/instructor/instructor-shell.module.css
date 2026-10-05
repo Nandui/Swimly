@@ -1,8 +1,7 @@
 /* Pool-deck controls stay thumb-sized at tablet widths too, including when
    the browser reports a mouse. Shared desktop components keep their density.
-   The deck, and dialogs opened from it, keep the 44px control token. */
-.workspace,
-:global(body):has(.workspace) { --pc-control-height: 44px; }
+   Poolside covers buttons, inputs and select triggers; this adds plain links, radios, tabs,
+   dialog buttons and comboboxes, and select items (DESIGN.md, 44px deck targets). */
 .workspace :where(button, a[href]:not(.sr-only), [role="radio"], [role="tab"]),
 :global(body):has(.workspace) :global([data-slot="dialog-content"]) :where(button, [role="combobox"]),
 :global(body):has(.workspace) :global([data-slot="alert-dialog-content"]) button,
@@ -10,20 +9,6 @@
   min-height: calc(var(--spacing) * 11);
   min-width: calc(var(--spacing) * 11);
 }
-
-/* Poolside Clear v2, as in every module: the cool canvas, the v2 top bar (fin, page bar, tools
-   bar) and white panels of separate rows. The deck has no module bar (docs/instructor.md). */
-.workspace { background: var(--pc-canvas); height: 100dvh; }
-.topbar { width: 100%; max-width: calc(72rem + 32px); margin: 0 auto; padding: 16px 16px 0; }
-.workspace :global([data-slot='item-group']) {
-  display: flex;
-  flex-direction: column;
-  gap: 8px;
-  padding: 8px 16px 16px;
-  border: 0;
-  border-radius: var(--pc-radius-panel);
-  background: var(--pc-surface);
-  box-shadow: none;
-}
-.workspace :global([data-slot='item-group'] > [data-slot='item']) { padding: 12px 16px; border: 1px solid var(--pc-line); border-radius: var(--pc-radius-card); }
-.workspace :global([data-slot='item-group'] > [data-slot='item-separator']) { display: none; }
+/* The deck is in the shared frame (tf-shell, tf-frame) and scrolls the window; a pull at the
+   end of a register does not bounce the whole page on a tablet. */
+:global(html):has(.workspace) { overscroll-behavior-y: contain; }

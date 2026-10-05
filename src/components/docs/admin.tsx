@@ -1,17 +1,14 @@
 'use client';
-import { Dialog, DialogContent, DialogTitle, DialogDescription } from '@/components/docs/primitives/dialog';
-
 import { Card } from '@/components/shadcn/card';
 import { Label } from '@/components/shadcn/label';
 import { NativeSelect, NativeSelectOption } from '@/components/shadcn/native-select';
-import { Table, TableHeader, TableRow, TableHead, TableBody, TableCell } from '@/components/shadcn/table';
 import { Checkbox } from '@/components/shadcn/checkbox';
 import { Button } from '@/components/shadcn/button';
 import { Input } from '@/components/shadcn/input';
 import { Textarea } from '@/components/shadcn/textarea';
 import { useState, useTransition } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
-import {  Plus, Pencil, Save, Mail, ArrowUpRight, CheckCircle2 } from 'lucide-react';
+import { Plus, Pencil, Save, Mail, ChevronRight, CheckCircle2, Trash2 } from 'lucide-react';
 import {
   saveMemberAction,
   saveGroupAction,
@@ -25,12 +22,22 @@ import {
   type AuditEvent,
   type Template,
   formatDate,
+  docEventLabel,
+  documentTypeLabels,
+  riskBandMeta,
+  RISK_BAND_TONE_META,
   DOC_STATUS_META,
 } from '@/lib/docs/types';
 import { RichEditor } from './rich-editor';
-import { PageHeading, Avatar } from './ui';
+import { Avatar, FilterSelect } from './ui';
 import { Notice } from '@/components/ui-kit/notice';
 import { Tag } from '@/components/ui-kit/tag';
+import { PageHeader } from '@/components/ui-kit/page-header';
+import { SegmentedLinks } from '@/components/ui-kit/segmented-links';
+import { SearchField } from '@/components/ui-kit/search-field';
+import { EmptyState } from '@/components/ui-kit/empty-state';
+import { IconButton } from '@/components/ui/icon-button';
+import { FormDialog } from '@/components/form-dialog';
 export type MailItem = {
   id: string;
   recipient: string;
@@ -59,7 +66,6 @@ export function AdminView({
     ...(w.localMode ? ['mail'] : []),
   ];
   const tab = sections.includes(params.get('section') || '') ? params.get('section')! : 'people';
-  const setTab = (value: string) => router.push(`/docs/admin?section=${value}`, { scroll: false });
   const [staffSearch, setStaffSearch] = useState('');
   const [staffStatus, setStaffStatus] = useState('');
   const visibleStaff = w.members.filter(
@@ -70,9 +76,18 @@ export function AdminView({
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
   const [pending, start] = useTransition();
-  const [editing, setEditing] = useState<WorkspaceMember | null>(null);
   const [groupName, setGroupName] = useState('');
   const [groupId, setGroupId] = useState<string | undefined>();
+  // A section change clears its messages and any group being renamed, so a group id never
+  // carries from Facilities into Teams (the sections are plain links, so this view stays mounted).
+  const [shownTab, setShownTab] = useState(tab);
+  if (shownTab !== tab) {
+    setShownTab(tab);
+    setError('');
+    setSuccess('');
+    setGroupName('');
+    setGroupId(undefined);
+  }
   const [template, setTemplate] = useState<Template>(w.templates[0]);
   const [matrix, setMatrix] = useState<RiskMatrix>(
     w.matrix.likelihood.length === 5
@@ -103,7 +118,6 @@ export function AdminView({
       if (!result.ok) setError(result.error || 'Could not save that. Try again.');
       else {
         setSuccess(message);
-        setEditing(null);
         setGroupName('');
         setGroupId(undefined);
         router.refresh();
@@ -112,15 +126,14 @@ export function AdminView({
   }
   return (
     <>
-      <PageHeading
-        eyebrow="Your organisation"
+      <PageHeader
         title="Administration"
-        description="Manage document groups, templates and standards. Staff accounts and permissions are shared with Turnfin."
-
+        description="Manage document groups, templates and standards. Staff accounts and permissions are shared with Turnfin"
       />
-      <div className="settings-layout">
-        <nav className="settings-navigation" aria-label="Administration sections">
-          {[
+      <div className="flex min-w-0 flex-col gap-4">
+        <SegmentedLinks
+          label="Administration sections"
+          items={[
             ['people', 'People'],
             ['facility', 'Facilities'],
             ['team', 'Teams'],
@@ -128,289 +141,183 @@ export function AdminView({
             ['matrix', 'Risk matrix'],
             ['activity', 'Activity'],
             ...(w.localMode ? [['mail', 'Local mailbox']] : []),
-          ].map(([key, label]) => (
-            <Button
-              variant="ghost"
-              key={key}
-              className={tab === key ? 'selected' : ''}
-              aria-pressed={tab === key}
-              onClick={() => {
-                setTab(key);
-                setError('');
-                setSuccess('');
-                setGroupName('');
-                setGroupId(undefined);
-              }}
-            >
-              {label}
-            </Button>
-          ))}
-        </nav>
-        <div className="settings-content">
-          {error ? <Notice tone="error" live="alert" title={error} className="my-4" /> : success ? <Notice tone="success" live="status" title={success} className="my-4" /> : null}
+          ].map(([key, label]) => ({ href: `/docs/admin?section=${key}`, label, current: tab === key }))}
+        />
+        <div className="flex min-w-0 flex-col gap-4">
+          {error ? <Notice tone="error" live="alert" title={error} /> : success ? <Notice tone="success" live="status" title={success} /> : null}
           {tab === 'people' && (
-            <Card asChild>
-              <section className="panel staff-directory">
-                <div className="panel-heading">
-                  <div>
-                    <h2>Staff directory</h2>
-                    <p>Everyone has their own account and a clear role.</p>
-                  </div>
-                  <p className="text-sm text-ui-muted-foreground tabular-nums">
-                    {w.members.filter((m) => m.active).length} active staff
-                  </p>
+            <section className="pc-panel" aria-labelledby="staff-heading">
+              <div className="pc-panel-head">
+                <div>
+                  <h2 id="staff-heading">Staff directory</h2>
+                  <p className="text-sm text-ui-muted-foreground">Everyone has their own account and a clear role</p>
                 </div>
-                <div className="staff-directory-filters">
-                  <Label>
-                    <span className="sr-only">Find staff</span>
-                    <Input
-                      type="search"
-                      placeholder="Search name or email…"
-                      value={staffSearch}
-                      onChange={(event) => setStaffSearch(event.target.value)}
-                    />
-                  </Label>
-                  <Label>
-                    <span className="sr-only">Staff status</span>
-                    <NativeSelect
-                      value={staffStatus}
-                      onChange={(event) => setStaffStatus(event.target.value)}
-                    >
-                      <NativeSelectOption value="">All staff</NativeSelectOption>
-                      <NativeSelectOption value="active">Active</NativeSelectOption>
-                      <NativeSelectOption value="inactive">Inactive</NativeSelectOption>
-                    </NativeSelect>
-                  </Label>
-                  <span role="status">
-                    {visibleStaff.length} staff {visibleStaff.length === 1 ? 'member' : 'members'}
-                  </span>
-                </div>
-                <div className="table-scroll">
-                  <Table className="data-table">
-                    <TableHeader>
-                      <TableRow>
-                        <TableHead>Name</TableHead>
-                        <TableHead>Role</TableHead>
-                        <TableHead>Teams</TableHead>
-                        <TableHead>Facilities</TableHead>
-                        <TableHead>Status</TableHead>
-                        <TableHead>
-                          <span className="sr-only">Actions</span>
-                        </TableHead>
-                      </TableRow>
-                    </TableHeader>
-                    <TableBody>
-                      {visibleStaff.map((m) => (
-                        <TableRow key={m.id}>
-                          <TableCell>
-                            <span className="staff-cell">
-                              <Avatar size="lg" member={m} />
-                              <span>
-                                <strong>{m.name}</strong>
-                                <small>{m.email}</small>
-                              </span>
-                            </span>
-                          </TableCell>
-                          <TableCell>
-                            {m.role}
-                          </TableCell>
-                          <TableCell>
-                            {m.teamIds
-                              .map((id) => w.teams.find((t) => t.id === id)?.name)
-                              .join(', ') || '—'}
-                          </TableCell>
-                          <TableCell>
-                            {m.facilityIds
-                              .map((id) => w.facilities.find((t) => t.id === id)?.name)
-                              .join(', ') || '—'}
-                          </TableCell>
-                          <TableCell>
-                            <Tag meta={DOC_STATUS_META[m.active ? 'active' : 'inactive']} />
-                          </TableCell>
-                          <TableCell>
-                            <Button
-                              variant="ghost"
-                              className="icon-button"
-                              aria-label={`Edit ${m.name}`}
-                              disabled={!m.access.read}
-                              title={!m.access.read ? 'Grant Docs access in Turnfin Roles first.' : 'Edit document groups'}
-                              onClick={() => {
-                                setError('');
-                                setEditing(structuredClone(m));
-                              }}
-                            >
-                              <Pencil size={17} />
-                            </Button>
-                          </TableCell>
-                        </TableRow>
-                      ))}
-                    </TableBody>
-                  </Table>
-                </div>
-                <ul className="staff-mobile-list">
-                  {visibleStaff.map((member) => (
-                    <li key={member.id}>
-                      <div className="staff-mobile-heading">
-                        <Avatar member={member} />
-                        <div>
-                          <strong>{member.name}</strong>
-                          <span>{member.email}</span>
-                        </div>
-                      </div>
-                      <div className="staff-mobile-badges">
-                        <span className="text-sm">{member.role}</span>
-                        <Tag meta={DOC_STATUS_META[member.active ? 'active' : 'inactive']} />
-                      </div>
-                      <p>
-                        {member.facilityIds
-                          .map((id) => w.facilities.find((facility) => facility.id === id)?.name)
-                          .join(' · ') || 'No facilities assigned'}
-                      </p>
-                      <p>
-                        Teams:{' '}
-                        {member.teamIds
-                          .map((id) => w.teams.find((team) => team.id === id)?.name)
-                          .join(', ') || 'None assigned'}
-                      </p>
-                      <Button
-                        variant="outline"
-                        onClick={() => {
-                          setError('');
-                          setEditing(structuredClone(member));
-                        }}
-                        aria-label={`Edit ${member.name}`}
-                        disabled={!member.access.read}
-                      >
-                        <Pencil size={16} aria-hidden="true" />
-                        Edit document groups
-                      </Button>
-                    </li>
-                  ))}
+                <Tag meta={DOC_STATUS_META.active} label={`${w.members.filter((m) => m.active).length} active staff`} />
+              </div>
+              <div className="flex flex-wrap items-end gap-3">
+                <SearchField
+                  label="Search staff"
+                  placeholder="Name or email"
+                  value={staffSearch}
+                  onValueChange={setStaffSearch}
+                  className="min-w-0 flex-1 basis-64"
+                />
+                <FilterSelect label="Show" value={staffStatus} onChange={setStaffStatus}>
+                  <NativeSelectOption value="">All staff</NativeSelectOption>
+                  <NativeSelectOption value="active">Active</NativeSelectOption>
+                  <NativeSelectOption value="inactive">Inactive</NativeSelectOption>
+                </FilterSelect>
+              </div>
+              <p role="status" className="text-xs text-ui-muted-foreground">
+                {visibleStaff.length} staff {visibleStaff.length === 1 ? 'member' : 'members'}
+              </p>
+              {visibleStaff.length ? (
+                <ul className="pc-rows">
+                  {visibleStaff.map((m) => {
+                    const teams = m.teamIds.map((id) => w.teams.find((t) => t.id === id)?.name).filter(Boolean).join(', ');
+                    const places = m.facilityIds.map((id) => w.facilities.find((f) => f.id === id)?.name).filter(Boolean).join(', ');
+                    return (
+                      <li className="pc-row" key={m.id}>
+                        <Avatar size="lg" member={m} />
+                        <span className="pc-row-body">
+                          <span className="pc-row-title">{m.name}</span>
+                          <span className="pc-row-hint">{m.email}</span>
+                          <span className="pc-row-hint">
+                            {`Teams: ${teams || 'none'} · Facilities: ${places || 'all'}`}
+                            {!m.access.read ? ' · No Docs access: grant it in Turnfin Roles' : ''}
+                          </span>
+                        </span>
+                        <span className="pc-row-trail">
+                          {m.role ? <Tag meta={DOC_STATUS_META.role} label={m.role} /> : null}
+                          <Tag meta={DOC_STATUS_META[m.active ? 'active' : 'inactive']} />
+                          <MemberGroupsDialog workspace={w} member={m} onSaved={() => router.refresh()} />
+                        </span>
+                      </li>
+                    );
+                  })}
                 </ul>
-                {!visibleStaff.length && (
-                  <p className="empty-inline">
-                    No staff match this search. Try another name or change the status filter.
-                  </p>
-                )}
-              </section>
-            </Card>
+              ) : (
+                <EmptyState
+                  as="h3"
+                  icon="users"
+                  title="No staff match"
+                  hint="Try another name, or change the Show filter"
+                />
+              )}
+            </section>
           )}
           {(tab === 'facility' || tab === 'team') && (
-            <div className="admin-split">
-              <Card asChild>
-                <section className="panel">
-                  <div className="panel-heading">
-                    <div>
-                      <h2>{tab === 'facility' ? 'Facilities' : 'Teams'}</h2>
-                      <p>
-                        {tab === 'facility'
-                          ? 'Organise guidance around the places your staff work.'
-                          : 'Group staff to make required reading easier to assign.'}{' '}
-                        Sites and departments come from Staff, under Organisation, and so
-                        does who belongs to them.
-                      </p>
-                    </div>
-                  </div>
-                  {(tab === 'facility' ? w.facilities : w.teams).map((g) => (
-                    <div className="group-row" key={g.id}>
-                      <div>
-                        <strong>{g.name}</strong>
-                        <small>
-                          {
-                            w.members.filter((m) =>
-                              (tab === 'facility' ? m.facilityIds : m.teamIds).includes(g.id),
-                            ).length
-                          }{' '}
-                          staff members{g.source === 'platform' ? ' · managed in Staff' : ' · Docs-only group'}
-                        </small>
-                      </div>
-                      {g.source !== 'platform' && <Button
-                        variant="ghost"
-                        className="icon-button"
-                        aria-label={`Rename ${g.name}`}
-                        onClick={() => {
-                          setGroupName(g.name);
-                          setGroupId(g.id);
-                        }}
-                      >
-                        <Pencil size={17} />
-                      </Button>}
-                    </div>
-                  ))}
-                </section>
-              </Card>
-              <Card asChild>
-                <form
-                  className="panel admin-form"
-                  onSubmit={(e) => {
-                    e.preventDefault();
-                    run(
-                      () => saveGroupAction(tab, groupName, groupId),
-                      groupId ? 'Name updated.' : 'Created successfully.',
+            <div className="docs-split">
+              <section className="pc-panel" aria-labelledby="groups-heading">
+                <div>
+                  <h2 id="groups-heading">{tab === 'facility' ? 'Facilities' : 'Teams'}</h2>
+                  <p className="text-sm text-ui-muted-foreground">
+                    {tab === 'facility'
+                      ? 'Organise guidance around the places your staff work.'
+                      : 'Group staff to make required reading easier to assign.'}{' '}
+                    Sites and departments come from Staff, under Organisation, and so does who
+                    belongs to them.
+                  </p>
+                </div>
+                <ul className="pc-rows">
+                  {(tab === 'facility' ? w.facilities : w.teams).map((g) => {
+                    const count = w.members.filter((m) =>
+                      (tab === 'facility' ? m.facilityIds : m.teamIds).includes(g.id),
+                    ).length;
+                    return (
+                      <li className="pc-row" key={g.id}>
+                        <span className="pc-row-body">
+                          <span className="pc-row-title">{g.name}</span>
+                          <span className="pc-row-hint">
+                            {count} {count === 1 ? 'staff member' : 'staff members'}
+                            {g.source === 'platform' ? ' · managed in Staff' : ' · Docs-only group'}
+                          </span>
+                        </span>
+                        {g.source !== 'platform' && (
+                          <IconButton
+                            label={`Rename ${g.name}`}
+                            onClick={() => {
+                              setGroupName(g.name);
+                              setGroupId(g.id);
+                            }}
+                          >
+                            <Pencil aria-hidden="true" />
+                          </IconButton>
+                        )}
+                      </li>
                     );
-                  }}
-                >
-                  <h2>{groupId ? 'Rename' : `Add a ${tab}`}</h2>
-                  <Label>
-                    Name
-                    <Input
-                      value={groupName}
-                      onChange={(e) => setGroupName(e.target.value)}
-                      maxLength={100}
-                      required
-                    />
-                  </Label>
-                  <Button variant="default" className="button primary" disabled={pending}>
-                    <Plus size={16} />
-                    {groupId ? 'Save name' : 'Add ' + tab}
-                  </Button>
-                </form>
-              </Card>
+                  })}
+                </ul>
+              </section>
+              <form
+                className="pc-panel"
+                aria-labelledby="group-form-heading"
+                onSubmit={(e) => {
+                  e.preventDefault();
+                  run(
+                    () => saveGroupAction(tab, groupName, groupId),
+                    groupId ? 'Name updated.' : 'Created successfully.',
+                  );
+                }}
+              >
+                <h2 id="group-form-heading">{groupId ? 'Rename' : tab === 'facility' ? 'Add a facility' : 'Add a team'}</h2>
+                <div className="flex flex-col gap-2">
+                  <Label className="block" htmlFor="docs-group-name">Name</Label>
+                  <Input
+                    id="docs-group-name"
+                    value={groupName}
+                    onChange={(e) => setGroupName(e.target.value)}
+                    maxLength={100}
+                    required
+                  />
+                </div>
+                <Button disabled={pending} className="self-start">
+                  {groupId ? <Save aria-hidden="true" /> : <Plus aria-hidden="true" />}
+                  {groupId ? 'Save name' : tab === 'facility' ? 'Add facility' : 'Add team'}
+                </Button>
+              </form>
             </div>
           )}
           {tab === 'templates' && template && (
             <Card asChild>
-              <section className="panel template-admin">
-                <div className="panel-heading">
-                  <div>
-                    <h2>Document templates</h2>
-                    <p>
-                      Template changes apply to new documents. Existing documents keep their
-                      content.
-                    </p>
-                  </div>
-                  <NativeSelect
-                    aria-label="Select template"
+              <section className="pc-panel" aria-labelledby="templates-heading">
+                <div>
+                  <h2 id="templates-heading">Document templates</h2>
+                  <p className="text-sm text-ui-muted-foreground">
+                    Template changes apply to new documents. Existing documents keep their content.
+                  </p>
+                </div>
+                <div className="flex flex-wrap items-end gap-3">
+                  <FilterSelect
+                    label="Template"
                     value={template.id}
-                    onChange={(e) =>
-                      setTemplate(
-                        structuredClone(w.templates.find((t) => t.id === e.target.value)!),
-                      )
+                    onChange={(value) =>
+                      setTemplate(structuredClone(w.templates.find((t) => t.id === value)!))
                     }
                   >
                     {w.templates.map((t) => (
                       <NativeSelectOption key={t.id} value={t.id}>
-                        {t.type}
+                        {documentTypeLabels[t.type].long}
                       </NativeSelectOption>
                     ))}
-                  </NativeSelect>
+                  </FilterSelect>
+                  <div className="flex min-w-0 flex-1 basis-64 flex-col gap-2">
+                    <Label className="block" htmlFor="docs-template-name">Template name</Label>
+                    <Input
+                      id="docs-template-name"
+                      value={template.name}
+                      onChange={(e) => setTemplate((t) => ({ ...t, name: e.target.value }))}
+                    />
+                  </div>
                 </div>
-                <Label className="template-name">
-                  Template name
-                  <Input
-                    value={template.name}
-                    onChange={(e) => setTemplate((t) => ({ ...t, name: e.target.value }))}
-                  />
-                </Label>
                 <RichEditor
                   key={template.id}
                   value={template.body}
                   onChange={(body) => setTemplate((t) => ({ ...t, body }))}
                 />
-                <div className="form-actions padded">
+                <div className="flex justify-end">
                   <Button
                     variant="default"
-                    className="button primary"
                     disabled={pending}
                     onClick={() =>
                       run(
@@ -419,7 +326,7 @@ export function AdminView({
                       )
                     }
                   >
-                    <Save size={16} />
+                    <Save aria-hidden="true" />
                     Save template
                   </Button>
                 </div>
@@ -428,13 +335,13 @@ export function AdminView({
           )}
           {tab === 'matrix' && (
             <Card asChild>
-              <section className="panel matrix-admin">
-                <div className="panel-heading">
+              <section className="pc-panel matrix-admin" aria-labelledby="matrix-heading">
+                <div className="pc-panel-head">
                   <div>
-                    <h2>Risk scoring matrix</h2>
-                    <p>
+                    <h2 id="matrix-heading">Risk scoring matrix</h2>
+                    <p className="text-sm text-ui-muted-foreground">
                       Set your organisation’s 5×5 definitions and bands. Published assessments
-                      retain their original matrix.
+                      keep their original matrix.
                     </p>
                   </div>
                   <Tag meta={DOC_STATUS_META[w.matrix.configured ? 'configured' : 'setupRequired']} />
@@ -442,7 +349,6 @@ export function AdminView({
                 {w.localMode && (
                   <Notice
                     tone="warning"
-                    className="my-4"
                     title="The local sample matrix is illustrative. Set and review your own definitions before operational use."
                   />
                 )}
@@ -452,7 +358,7 @@ export function AdminView({
                       <h3>{axis === 'likelihood' ? 'Likelihood' : 'Severity'}</h3>
                       {matrix[axis].map((entry, i) => (
                         <div className="matrix-level" key={i}>
-                          <strong>{i + 1}</strong>
+                          <span className="pc-tile-icon font-semibold" aria-hidden="true">{i + 1}</span>
                           <div>
                             <Label>
                               <span className="sr-only">
@@ -495,15 +401,24 @@ export function AdminView({
                     </div>
                   ))}
                 </div>
-                <h3>Score bands</h3>
-                <p className="muted">
-                  Cover every score from 1 to 25 exactly once, with no gaps or overlapping ranges.
-                </p>
-                <div className="band-editor">
+                <div>
+                  <h3>Score bands</h3>
+                  <p className="text-sm text-ui-muted-foreground">
+                    Cover every score from 1 to 25 exactly once, with no gaps or overlapping ranges.
+                  </p>
+                </div>
+                <div className="risk-band-row risk-band-header" aria-hidden="true">
+                  <span>Label</span>
+                  <span>From</span>
+                  <span>To</span>
+                  <span>Risk level</span>
+                  <span />
+                </div>
+                <ul className="pc-rows">
                   {matrix.bands.map((band, i) => (
-                    <div className="band-row" key={i}>
+                    <li className="risk-band-row" key={i}>
                       <Label>
-                        Label
+                        <span className="risk-band-label">Label<span className="sr-only"> of band {i + 1}</span></span>
                         <Input
                           value={band.label}
                           onChange={(e) =>
@@ -517,7 +432,7 @@ export function AdminView({
                         />
                       </Label>
                       <Label>
-                        From
+                        <span className="risk-band-label">From<span className="sr-only"> (band {i + 1})</span></span>
                         <Input
                           type="number"
                           min={1}
@@ -534,7 +449,7 @@ export function AdminView({
                         />
                       </Label>
                       <Label>
-                        To
+                        <span className="risk-band-label">To<span className="sr-only"> (band {i + 1})</span></span>
                         <Input
                           type="number"
                           min={1}
@@ -551,7 +466,7 @@ export function AdminView({
                         />
                       </Label>
                       <Label>
-                        Colour
+                        <span className="risk-band-label">Risk level<span className="sr-only"> of band {i + 1}</span></span>
                         <NativeSelect
                           value={band.color}
                           onChange={(e) =>
@@ -563,30 +478,31 @@ export function AdminView({
                             }))
                           }
                         >
-                          {['green', 'amber', 'orange', 'red'].map((v) => (
-                            <NativeSelectOption key={v} value={v}>
-                              {v}
+                          {Object.entries(RISK_BAND_TONE_META).map(([value, meta]) => (
+                            <NativeSelectOption key={value} value={value}>
+                              {meta.label}
                             </NativeSelectOption>
                           ))}
                         </NativeSelect>
                       </Label>
-                      <Button
-                        variant="ghost"
-                        className="button ghost compact"
-                        disabled={matrix.bands.length === 1}
-                        onClick={() =>
-                          setMatrix((m) => ({ ...m, bands: m.bands.filter((_, j) => j !== i) }))
-                        }
-                      >
-                        Remove
-                      </Button>
-                    </div>
+                      <span className="flex min-w-0 flex-wrap items-center justify-end gap-2">
+                        <Tag meta={riskBandMeta(band)} />
+                        <IconButton
+                          label={`Remove band ${i + 1}`}
+                          disabled={matrix.bands.length === 1}
+                          onClick={() =>
+                            setMatrix((m) => ({ ...m, bands: m.bands.filter((_, j) => j !== i) }))
+                          }
+                        >
+                          <Trash2 aria-hidden="true" />
+                        </IconButton>
+                      </span>
+                    </li>
                   ))}
-                </div>
-                <div className="form-actions">
+                </ul>
+                <div className="flex flex-wrap justify-end gap-2">
                   <Button
                     variant="outline"
-                    className="button secondary"
                     disabled={matrix.bands.length >= 8}
                     onClick={() =>
                       setMatrix((m) => ({
@@ -595,11 +511,11 @@ export function AdminView({
                       }))
                     }
                   >
+                    <Plus aria-hidden="true" />
                     Add band
                   </Button>
                   <Button
                     variant="default"
-                    className="button primary"
                     disabled={pending}
                     onClick={() =>
                       run(
@@ -608,7 +524,7 @@ export function AdminView({
                       )
                     }
                   >
-                    <CheckCircle2 size={17} />
+                    <CheckCircle2 aria-hidden="true" />
                     Confirm and save matrix
                   </Button>
                 </div>
@@ -616,149 +532,124 @@ export function AdminView({
             </Card>
           )}
           {tab === 'activity' && (
-            <Card asChild>
-              <section className="panel audit-panel">
-                <h2>Workspace activity</h2>
-                {events.map((e) => (
-                  <div key={e.id} className="audit-row">
-                    <span className="status-dot" />
-                    <div>
-                      <strong>{e.action.replaceAll('_', ' ')}</strong>
-                      <p>{e.detail}</p>
-                      <small>
-                        {w.members.find((m) => m.id === e.actorId)?.name} ·{' '}
-                        {formatDate(e.createdAt)}
-                      </small>
-                    </div>
-                  </div>
-                ))}
-              </section>
-            </Card>
-          )}
-          {tab === 'mail' && (
-            <Card asChild>
-              <section className="panel">
-                <div className="panel-heading">
-                  <div>
-                    <h2>Local invitation and reset mailbox</h2>
-                    <p>
-                      Development delivery only. These links are visible to administrators; no email
-                      is sent.
-                    </p>
-                  </div>
-                  <Mail size={22} />
-                </div>
-                {mail.length ? (
-                  mail.map((item) => (
-                    <div className="mail-row" key={item.id}>
-                      <div>
-                        <strong>{item.subject}</strong>
-                        <p>
-                          {item.recipient} · {formatDate(item.createdAt)}
+            <section className="pc-panel" aria-labelledby="activity-heading">
+              <h2 id="activity-heading">Workspace activity</h2>
+              {events.length ? (
+                <ul className="pc-feed">
+                  {events.map((e) => (
+                    <li key={e.id}>
+                      <span className="pc-feed-dot" aria-hidden="true" />
+                      <div className="min-w-0">
+                        <p className="font-semibold">{docEventLabel(e.action)}</p>
+                        {e.detail ? <p className="text-sm break-words">{e.detail}</p> : null}
+                        <p className="pc-row-hint">
+                          {w.members.find((m) => m.id === e.actorId)?.name} · {formatDate(e.createdAt)}
                         </p>
                       </div>
+                    </li>
+                  ))}
+                </ul>
+              ) : (
+                <EmptyState as="h3" icon="book" title="No activity yet" hint="Changes to documents, groups and settings appear here" />
+              )}
+            </section>
+          )}
+          {tab === 'mail' && (
+            <section className="pc-panel" aria-labelledby="mail-heading">
+              <div>
+                <h2 id="mail-heading">Local invitation and reset mailbox</h2>
+                <p className="text-sm text-ui-muted-foreground">
+                  Development delivery only. These links are visible to administrators; no email is sent.
+                </p>
+              </div>
+              {mail.length ? (
+                <ul className="pc-rows">
+                  {mail.map((item) => (
+                    <li className="pc-row" key={item.id}>
+                      <span className="pc-tile-icon"><Mail aria-hidden="true" /></span>
+                      <span className="pc-row-body">
+                        <span className="pc-row-title">{item.subject}</span>
+                        <span className="pc-row-hint">{item.recipient} · {formatDate(item.createdAt)}</span>
+                      </span>
                       <Button asChild variant="outline">
-                        <a className="button secondary compact" href={item.link}>
+                        <a href={item.link}>
                           Open account link
-                          <ArrowUpRight size={16} />
+                          <ChevronRight aria-hidden="true" />
                         </a>
                       </Button>
-                    </div>
-                  ))
-                ) : (
-                  <p className="empty-inline">Invitations and password resets will appear here.</p>
-                )}
-              </section>
-            </Card>
+                    </li>
+                  ))}
+                </ul>
+              ) : (
+                <EmptyState as="h3" icon="book" title="No messages yet" hint="Invitations and password resets appear here" />
+              )}
+            </section>
           )}
         </div>
       </div>
-      <Dialog
-        open={!!editing}
-        onOpenChange={(open) => {
-          if (!open && !pending) {
-            setEditing(null);
-          }
-        }}
-      >
-        <DialogContent className="workflow-dialog" showCloseButton={!pending}>
-          <form
-            className="dialog-form"
-            onSubmit={(e) => {
-              e.preventDefault();
-              if (editing) run(() => saveMemberAction(editing), 'Document groups updated.');
-            }}
-          >
-            <DialogTitle>Document groups</DialogTitle>
-            <DialogDescription>Accounts, permissions, sites and departments are managed in Turnfin Staff. Here you can add Docs-only groups; site and department membership follows their Staff profile.</DialogDescription>
-            <p>{editing?.name} · {editing?.email}</p>
-            {editing && (
-              <>
-                <fieldset>
-                  <legend>Facilities</legend>
-                  {w.facilities.map((g) => (
-                    <Label className="checkbox-label" key={g.id}>
-                      <Checkbox
-                        disabled={g.source === 'platform'}
-                        checked={editing.facilityIds.includes(g.id)}
-                        onCheckedChange={(checked) =>
-                          setEditing({
-                            ...editing,
-                            facilityIds:
-                              checked === true
-                                ? [...editing.facilityIds, g.id]
-                                : editing.facilityIds.filter((id) => id !== g.id),
-                          })
-                        }
-                      />
-                      {g.name}{g.source === 'platform' ? ' (from Staff)' : ''}
-                    </Label>
-                  ))}
-                </fieldset>
-                <fieldset>
-                  <legend>Teams</legend>
-                  {w.teams.map((g) => (
-                    <Label className="checkbox-label" key={g.id}>
-                      <Checkbox
-                        disabled={g.source === 'platform'}
-                        checked={editing.teamIds.includes(g.id)}
-                        onCheckedChange={(checked) =>
-                          setEditing({
-                            ...editing,
-                            teamIds:
-                              checked === true
-                                ? [...editing.teamIds, g.id]
-                                : editing.teamIds.filter((id) => id !== g.id),
-                          })
-                        }
-                      />
-                      {g.name}{g.source === 'platform' ? ' (from Staff)' : ''}
-                    </Label>
-                  ))}
-                </fieldset>
-
-              </>
-            )}
-            {error ? <Notice tone="error" live="alert" title={error} className="my-4" /> : null}
-            <div className="form-actions">
-              <Button
-                variant="outline"
-                data-dialog-close
-                className="button secondary"
-                type="button"
-                onClick={() => {
-                  setEditing(null);
-                }}
-              >
-                Cancel
-              </Button>
-              <Button variant="default" className="button primary" disabled={pending}>
-                {pending ? 'Saving…' : 'Save document groups'}
-              </Button>
-            </div>
-          </form>
-        </DialogContent>
-      </Dialog>
     </>
+  );
+}
+
+/** One person's Docs-only groups, edited in the shared FormDialog from the row's pencil.
+ *  Sites and departments come from Staff: they show checked and locked, marked "from Staff",
+ *  and the server ignores them if sent. */
+function MemberGroupsDialog({
+  workspace: w,
+  member,
+  onSaved,
+}: {
+  workspace: Workspace;
+  member: WorkspaceMember;
+  onSaved: () => void;
+}) {
+  const choices = (legend: string, name: string, groups: Workspace['facilities'], chosen: string[]) => (
+    <fieldset className="editor-choices">
+      <legend>{legend}</legend>
+      {groups.length ? (
+        groups.map((g) => (
+          <Label className="flex min-h-11 flex-row items-center gap-3 font-normal" key={g.id}>
+            <Checkbox
+              name={name}
+              value={g.id}
+              disabled={g.source === 'platform'}
+              defaultChecked={chosen.includes(g.id)}
+            />
+            <span>
+              {g.name}
+              {g.source === 'platform' ? <span className="block text-xs text-ui-muted-foreground">From Staff</span> : null}
+            </span>
+          </Label>
+        ))
+      ) : (
+        <p className="text-sm text-ui-muted-foreground">None yet</p>
+      )}
+    </fieldset>
+  );
+  return (
+    <FormDialog
+      trigger={
+        <IconButton label={`Edit document groups for ${member.name}`} disabled={!member.access.read}>
+          <Pencil aria-hidden="true" />
+        </IconButton>
+      }
+      title="Document groups"
+      description={`${member.name}${member.email ? ` · ${member.email}` : ''}. Sites and departments follow their Staff profile; add Docs-only groups here.`}
+      submitLabel="Save document groups"
+      successMessage="Document groups updated"
+      portalClassName="turnfin-docs"
+      submit={async (form) => {
+        const result = await saveMemberAction({
+          id: member.id,
+          facilityIds: form.getAll('facilityIds').map(String),
+          teamIds: form.getAll('teamIds').map(String),
+        });
+        return result.ok ? { ok: true } : { ok: false, error: result.error };
+      }}
+      onSuccess={onSaved}
+    >
+      {choices('Facilities', 'facilityIds', w.facilities, member.facilityIds)}
+      {choices('Teams', 'teamIds', w.teams, member.teamIds)}
+    </FormDialog>
   );
 }

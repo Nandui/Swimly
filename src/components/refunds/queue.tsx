@@ -1,45 +1,131 @@
 "use client";
+import Form from "next/form";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { useState } from "react";
-import { Plus, ArrowRight, Search, Inbox, CircleHelp, Clock3, CheckCheck } from "lucide-react";
+import { useState, useTransition } from "react";
+import { ChevronRight, Inbox, ReceiptText, SlidersHorizontal } from "lucide-react";
 import { Button } from "@/components/shadcn/button";
+import { Select, SelectContent, SelectGroup, SelectItem, SelectLabel, SelectTrigger, SelectValue } from "@/components/shadcn/select";
 import { EmptyState } from "@/components/ui-kit/empty-state";
+import { PageHeader } from "@/components/ui-kit/page-header";
+import { SearchField } from "@/components/ui-kit/search-field";
 import { Tag } from "@/components/ui-kit/tag";
 import { LinkPagination } from "@/components/ui-kit/link-pagination";
-import { RefundInput, RefundSelect } from "@/components/refunds/fields";
-import { refundStatuses, refundServices, refundNumber, euros } from "@/lib/refunds/types";
-import { formatDate } from "@/lib/format";
+import { refundListView, refundStatuses, refundServices, refundNumber, euros, type RefundStatus } from "@/lib/refunds/types";
+import { formatDate, plural } from "@/lib/format";
+import { cn } from "@/lib/utils";
 import type { listRefunds } from "@/lib/refunds/data";
 
-export function RefundQueue({ data }: { data: Awaited<ReturnType<typeof listRefunds>> }) {
-  const router = useRouter(), [filters, setFilters] = useState(data.filters);
-  const url = (page = 1) => { const query = new URLSearchParams(); for (const [key, value] of Object.entries(filters)) if (key !== "page" && value && value !== "all") query.set(key, value); if (filters.status === "all") query.set("status", "all"); query.set("page", String(page)); return `/refunds?${query}`; };
-  // The pager keeps the applied filters (not unsubmitted edits in the form).
-  const pageQuery: Record<string, string> = {};
-  for (const [key, value] of Object.entries(data.filters)) if (key !== "page" && typeof value === "string" && value && (value !== "all" || key === "status")) pageQuery[key] = value;
-  const set = (key: keyof typeof filters) => (value: string) => setFilters(previous => ({ ...previous, [key]: value }));
+type Data = Awaited<ReturnType<typeof listRefunds>>;
+type Option = { value: string; label: string };
+const KEPT = ["q", "site", "status", "service", "creator", "handler"] as const;
+const ALL = "all";
+/** The status picker's views; each is a set of statuses (lib/refunds/data.ts, listRefunds). */
+const VIEWS: Option[] = [
+  { value: "open", label: "Open requests" }, { value: "actionable", label: "Needs my team’s action" },
+  { value: "review", label: "Awaiting review" }, { value: "all", label: "All statuses" },
+];
+/** The follow-up queues as figure tiles. Awaiting review is a view (submitted and in review). */
+const TILES = [
+  { status: "review", label: "Awaiting review", hint: "Submitted and in review", icon: Inbox, counts: ["SUBMITTED", "IN_REVIEW"] },
+  ...(["NEEDS_INFORMATION", "APPROVED", "REFUNDED"] as const).map(status => ({
+    status, label: refundStatuses[status].label, icon: refundStatuses[status].icon, counts: [status],
+    hint: { NEEDS_INFORMATION: "Sent back to reception", APPROVED: "Approved, not yet paid", REFUNDED: "Payment recorded" }[status],
+  })),
+];
+const EMPTY: Record<string, string> = {
+  review: "Nothing is waiting for review", SUBMITTED: "Nothing is waiting for review", IN_REVIEW: "Nothing is in review",
+  actionable: "Nothing is waiting for your team", NEEDS_INFORMATION: "Nothing needs more information",
+  APPROVED: "No approved refunds waiting for payment", REFUNDED: "No refunds recorded yet", DRAFT: "No drafts",
+  DECLINED: "No declined requests", WITHDRAWN: "No withdrawn requests",
+};
+
+export function RefundQueue({ data }: { data: Data }) {
+  const router = useRouter(), [pending, startNavigation] = useTransition();
+  const f = data.filters as Record<(typeof KEPT)[number], string | undefined> & { status: string }, who = data.who;
+  const view = refundListView({ get: key => f[key as (typeof KEPT)[number]] ?? null }, who.id);
+  const defaultStatus = who.review || who.process ? "actionable" : "open";
+  // Each link keeps the other filters and drops the page, so a tile's count is its list.
+  const query = (changes: Partial<Record<(typeof KEPT)[number], string | null>> = {}) => {
+    const params: Record<string, string> = {};
+    for (const key of KEPT) { const value = key in changes ? changes[key] : f[key]; if (value) params[key] = value; }
+    return params;
+  };
+  const href = (changes: Partial<Record<(typeof KEPT)[number], string | null>>) => { const params = new URLSearchParams(query(changes)); return params.size ? `/refunds?${params}` : "/refunds"; };
+  const pick = (key: (typeof KEPT)[number]) => (value: string) =>
+    startNavigation(() => router.push(href({ [key]: key !== "status" && value === ALL ? null : value }), { scroll: false }));
+  const viewHref = view === "mine" ? `/refunds?creator=${encodeURIComponent(who.id)}&status=all` : view === "drafts" ? "/refunds?status=DRAFT" : "/refunds";
+  const creatorFilter = view !== "mine" && f.creator ? 1 : 0;
+  const filterCount = [f.site, f.service, f.handler, view === "requests" && f.status !== defaultStatus].filter(Boolean).length + creatorFilter;
+  const filtering = filterCount > 0 || Boolean(f.q?.trim());
+  const [phoneOpen, setPhoneOpen] = useState(false), [more, setMore] = useState(creatorFilter > 0);
   const people = [...new Map(data.people.map(person => [person.creatorId, { value: person.creatorId, label: person.creatorName }])).values()];
   const handlers = [...new Map(data.people.filter(person => person.handlerId).map(person => [person.handlerId!, { value: person.handlerId!, label: person.handlerName! }])).values()];
   const count = (keys: string[]) => keys.reduce((sum, key) => sum + (data.counts[key] || 0), 0);
-  return <div className="space-y-6">
-    <div className="refund-heading"><div className="space-y-2"><h1 className="text-2xl font-semibold">Refund requests</h1><p className="text-sm text-ui-muted-foreground">Reception and finance, working together across LeisureWorld.</p></div>{data.who.request && <Button asChild className="min-h-11"><Link href="/refunds/new"><Plus aria-hidden="true" />New request</Link></Button>}</div>
-    <dl className="refund-summary grid grid-cols-2 gap-6 sm:grid-cols-4">
-      {([['Awaiting review', 'SUBMITTED', count(['SUBMITTED', 'IN_REVIEW']), Inbox], ['Needs information', 'NEEDS_INFORMATION', count(['NEEDS_INFORMATION']), CircleHelp], ['Awaiting payment', 'APPROVED', count(['APPROVED']), Clock3], ['Refunded', 'REFUNDED', count(['REFUNDED']), CheckCheck]] as const).map(([label, status, value, Icon]) => <div key={label}><Link href={`/refunds?status=${status}`} aria-current={data.filters.status === status ? "page" : undefined}><dt><Icon aria-hidden="true" />{label}</dt><dd>{value}</dd></Link></div>)}
-    </dl><p className="refund-totals-note text-xs text-ui-muted-foreground">Totals follow the search, site, service and staff filters, across all statuses.</p>
-    <form onSubmit={event => { event.preventDefault(); router.push(url()); }} className="refund-filters space-y-4">
-      <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-        <RefundInput id="refund-search" label="Find a request" placeholder="Customer, member, payment or RF number" value={filters.q || ""} onChange={event => set('q')(event.target.value)} />
-        <RefundSelect id="filter-site" label="Site" value={filters.site || "all"} onChange={set('site')} options={[{ value: 'all', label: 'All sites' }, ...data.sites.map(site => ({ value: site.id, label: site.name }))]} />
-        <RefundSelect id="filter-status" label="Status" value={filters.status || 'open'} onChange={set('status')} options={[{ value: 'open', label: 'Open requests' }, { value: 'actionable', label: 'Needs my team’s action' }, { value: 'all', label: 'All statuses' }, ...Object.entries(refundStatuses).map(([value, meta]) => ({ value, label: meta.label }))]} />
-        <RefundSelect id="filter-service" label="Service" value={filters.service || 'all'} onChange={set('service')} options={[{ value: 'all', label: 'All services' }, ...Object.entries(refundServices).map(([value, label]) => ({ value, label }))]} />
-        <RefundSelect id="filter-creator" label="Submitted by" value={filters.creator || 'all'} onChange={set('creator')} options={[{ value: 'all', label: 'All staff' }, ...people]} />
-        <RefundSelect id="filter-handler" label="Finance handler" value={filters.handler || 'all'} onChange={set('handler')} options={[{ value: 'all', label: 'All handlers' }, { value: 'unassigned', label: 'Unassigned' }, ...handlers]} />
-      </div><div className="flex gap-2"><Button className="min-h-11" type="submit"><Search aria-hidden="true" />Apply filters</Button><Button asChild variant="ghost" className="min-h-11"><Link href="/refunds" onClick={() => setFilters({ status: data.who.review || data.who.process ? 'actionable' : 'open' })}>Reset</Link></Button></div>
-    </form>
-    <div className="refund-results space-y-3"><p className="text-sm text-ui-muted-foreground">{data.total} {data.total === 1 ? 'request' : 'requests'}</p>
-      {data.rows.length === 0 ? <EmptyState as="h2" icon="receipt" title="No requests to show" hint="Try changing the filters, or create a request for a customer." /> : <ul className="refund-list">{data.rows.map(row => <li key={row.id}><Link href={`/refunds/${row.id}`} className="refund-row flex min-h-24 flex-wrap items-center justify-between gap-4 p-4 sm:px-5"><div className="min-w-0 flex-1 space-y-2"><div className="flex flex-wrap items-center gap-2"><span className="refund-eyebrow">{refundNumber(row.number)}</span><Tag meta={refundStatuses[row.status]} /></div><p className="refund-row-customer break-words">{row.customerName || 'Unnamed draft'}</p><p className="text-xs text-ui-muted-foreground">{row.clubName} · {refundServices[row.service]} · {row.creatorName}</p><p className="text-xs text-ui-muted-foreground">{row.handlerName ? `Finance: ${row.handlerName}` : 'Finance: unassigned'} · {formatDate(new Date(row.submittedAt || row.createdAt))}</p></div><div className="flex items-center gap-4"><div className="text-right"><p className="refund-row-amount">{euros(row.approvedCents ?? row.requestedCents)}</p><p className="mt-1 text-xs text-ui-muted-foreground">{row.approvedCents !== null ? 'Approved' : 'Requested'}</p></div><ArrowRight className="refund-row-arrow size-5" aria-hidden="true" /></div></Link></li>)}</ul>}
-    </div>
-    <LinkPagination label="Request pages" page={data.page} pageCount={data.pages} pathname="/refunds" query={pageQuery} />
-  </div>;
+  const statusLabel = { open: "Open requests", actionable: "Waiting for your team", review: "Awaiting review", all: "All requests" }[f.status] ?? refundStatuses[f.status as RefundStatus]?.label ?? "Requests";
+  const what = view === "drafts" ? "Your drafts" : view === "mine" ? (f.status === "all" ? "Requests you logged" : `${statusLabel}, logged by you`) : statusLabel;
+  const site = data.sites.find(item => item.id === f.site)?.name ?? "All sites";
+  const title = view === "mine" ? "My requests" : view === "drafts" ? "My drafts" : "Refund requests";
+  const create = who.request ? <Button asChild><Link href="/refunds/new"><ReceiptText aria-hidden="true" />Log a refund request</Link></Button> : null;
+  return <>
+    <PageHeader title={title} description={`${what} · ${site}`} actions={create} />
+    <ul className="pc-stats" aria-label="Follow-up queues">
+      {TILES.map(tile => {
+        const value = count(tile.counts), Icon = tile.icon;
+        return <li key={tile.status} className="flex">
+          <Link href={href({ status: tile.status })} className="pc-stat w-full" aria-current={f.status === tile.status ? "page" : undefined}>
+            <span className="pc-tile-icon"><Icon aria-hidden="true" /></span>
+            <span><span className={cn("pc-stat-figure block", !value && "text-ui-muted-foreground")}>{value}</span><span className="block font-semibold">{tile.label}</span></span>
+            <span className="text-xs text-ui-muted-foreground max-sm:hidden">{tile.hint}</span>
+          </Link>
+        </li>;
+      })}
+    </ul>
+    <section className="pc-panel" aria-label="Requests" aria-busy={pending}>
+      <Form action="/refunds" role="search" aria-label="Find a refund request" className="min-w-0">
+        {KEPT.map(key => key !== "q" && f[key] ? <input key={key} type="hidden" name={key} value={f[key]} /> : null)}
+        <SearchField id="refund-search" label="Find a request" defaultValue={f.q ?? ""} placeholder="Name, member or RF number" maxLength={200} clearHref={href({ q: null })} />
+      </Form>
+      <div className="flex min-w-0 flex-wrap items-center gap-2">
+        <Button type="button" variant="outline" className="sm:hidden" aria-expanded={phoneOpen} aria-controls="refund-pickers" onClick={() => setPhoneOpen(open => !open)}><SlidersHorizontal aria-hidden="true" />Filters{filterCount ? ` (${filterCount})` : ""}</Button>
+        <div id="refund-pickers" className={cn("contents", !phoneOpen && "max-sm:hidden")}>
+          <Picker label="Site" value={f.site || ALL} disabled={pending} onPick={pick("site")} groups={[{ title: "", options: [{ value: ALL, label: "All sites" }, ...data.sites.map(item => ({ value: item.id, label: item.name }))] }]} />
+          <Picker label="Status" value={f.status} disabled={pending} onPick={pick("status")} groups={[{ title: "Views", options: VIEWS }, { title: "Statuses", options: Object.entries(refundStatuses).map(([value, meta]) => ({ value, label: meta.label })) }]} />
+          <Picker label="Service" value={f.service || ALL} disabled={pending} onPick={pick("service")} groups={[{ title: "", options: [{ value: ALL, label: "All services" }, ...Object.entries(refundServices).map(([value, label]) => ({ value, label }))] }]} />
+          <Picker label="Handler" value={f.handler || ALL} disabled={pending} onPick={pick("handler")} groups={[{ title: "", options: [{ value: ALL, label: "All handlers" }, { value: "unassigned", label: "Unassigned" }, ...handlers] }]} />
+          <Button type="button" variant="outline" className="max-sm:hidden" aria-expanded={more} aria-controls="refund-more" onClick={() => setMore(open => !open)}><SlidersHorizontal aria-hidden="true" />More filters{creatorFilter ? " (1)" : ""}</Button>
+          <div id="refund-more" className={cn("contents", !more && "sm:hidden")}>
+            <Picker label="Submitted by" value={f.creator || ALL} disabled={pending} onPick={pick("creator")} groups={[{ title: "", options: [{ value: ALL, label: "All staff" }, ...people] }]} />
+          </div>
+        </div>
+        {filtering ? <Button asChild variant="ghost"><Link href={viewHref}>Clear filters</Link></Button> : null}
+      </div>
+      {data.total ? <p className="text-xs text-ui-muted-foreground tabular-nums" aria-live="polite" aria-atomic="true">{plural(data.total, filtering ? "matching request" : "request", filtering ? "matching requests" : "requests")}</p> : null}
+      {data.rows.length === 0
+        ? <EmptyState as="h2" role="status" icon="receipt" title={EMPTY[f.status] ?? (view === "mine" ? "You haven’t logged a request yet" : "No requests to show")} hint={filtering ? "Try changing the filters." : undefined} action={!filtering && (view !== "requests" || f.status === "open") ? create : undefined} />
+        : <ul className="pc-rows">{data.rows.map(row => <li key={row.id}>
+          <Link href={`/refunds/${row.id}`} className="pc-row">
+            <span className="pc-row-body"><span className="pc-row-title break-words">{row.customerName || "Unnamed draft"}</span><span className="pc-row-hint">{refundNumber(row.number)} · {row.clubName} · {formatDate(new Date(row.submittedAt || row.createdAt))}</span></span>
+            <span className="pc-row-trail"><span className="font-semibold tabular-nums">{euros(row.approvedCents ?? row.requestedCents)}</span><Tag meta={refundStatuses[row.status]} /><ChevronRight aria-hidden="true" className="pc-row-chevron" /></span>
+          </Link>
+        </li>)}</ul>}
+      <LinkPagination label="Request pages" page={data.page} pageCount={data.pages} pathname="/refunds" query={query()} />
+    </section>
+  </>;
+}
+
+/** A filter as a pill that applies on change: its name, then the chosen value. */
+function Picker({ label, value, groups, onPick, disabled }: { label: string; value: string; groups: { title: string; options: Option[] }[]; onPick: (value: string) => void; disabled: boolean }) {
+  const chosen = groups.flatMap(group => group.options).find(option => option.value === value)?.label ?? "";
+  return <Select value={value} onValueChange={onPick} disabled={disabled}>
+    <SelectTrigger aria-label={`${label}: ${chosen}`} className="max-w-full min-w-0 gap-1.5">
+      <span className="text-ui-muted-foreground">{label}</span><SelectValue />
+    </SelectTrigger>
+    <SelectContent>
+      {groups.map(group => <SelectGroup key={group.title || label}>
+        {group.title ? <SelectLabel>{group.title}</SelectLabel> : null}
+        {group.options.map(option => <SelectItem key={option.value} value={option.value}>{option.label}</SelectItem>)}
+      </SelectGroup>)}
+    </SelectContent>
+  </Select>;
 }

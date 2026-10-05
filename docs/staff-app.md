@@ -120,7 +120,7 @@ Work (the Swimly app):
 - `STAFF_API_ENABLED=true`
 - `STAFF_AUTH_SECRET` (32+ characters)
 - `STAFF_API_ALLOWED_ORIGINS` (the Me app's origin)
-- `STAFF_ME_URL` (where emails link)
+- `STAFF_ME_URL` (where emails link; when it is https, emails also show Me's fin from `<STAFF_ME_URL>/icon-192.png`)
 - `STAFF_EMAIL_FROM` (optional; the Google sender falls back to `PARENT_*`)
 - `CRON_SECRET`
 - `WORK_DEVICE_REQUIRED`, once the PCs are registered
@@ -142,9 +142,18 @@ configuration starts Turnfin Me on :3101 against it.
 - **Review queues:** `src/lib/people/details-*.ts`, `src/lib/training/certificate*.ts`.
 - **Reminders:** `src/lib/staff-api/reminders.ts` and `src/app/api/cron/reminders/route.ts`.
 - **Work-device rule:** `src/lib/devices/work-device.ts`.
-- **Turnfin Me:** `apps/me/**`. Its tokens are copied from `src/app/docs/poolside.css`; keep them in step.
+- **Turnfin Me:** `apps/me/**`. Its tokens and the v2 parts (the fin tile, the bar, the bottom
+  bar, panels, rows and tile icons) are copied verbatim from `src/app/docs/poolside.css` into
+  `apps/me/src/app/globals.css`, scoped to `body.turnfin-app` as Work does, so the two diff 1:1;
+  keep them in step. The one difference is a block marked "Me only": Me has no module rail, so
+  its bottom bar shows at every width, capped to the 720px column, and clears the safe areas.
+  Dates follow Work's format rules (en-GB, "Mon 12 Oct", "20 Sep 2026", never "Sept").
+- **Turnfin Me emails:** the code and reminder templates in `src/lib/staff-api/email.ts`
+  (`staffCodeEmail`, `staffReminderEmail`) copy the Poolside Clear v2 light and dark hex values
+  from `poolside.css`, because mail clients cannot read CSS variables; keep them in step.
 - **Tests:**
   - `src/lib/staff-api/api.test.ts`
   - `src/lib/staff-api/reminders.test.ts`
+  - `src/lib/staff-api/email.test.ts`
   - `src/lib/people/reviews.test.ts`
   - `src/lib/devices/work-device.test.ts`

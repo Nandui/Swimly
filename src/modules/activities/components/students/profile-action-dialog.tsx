@@ -45,7 +45,7 @@ export function ProfileActionDialog({ trigger, title, description, submitLabel =
     <DialogTrigger asChild>{trigger}</DialogTrigger>
     <DialogContent className={cn("max-h-[90dvh] overflow-y-auto sm:max-w-2xl", wide && "flex flex-col gap-0 overflow-hidden p-0 sm:max-w-[calc(100%-2rem)] xl:max-w-6xl")} showCloseButton={false}>
       <DialogHeader className={cn(wide && "shrink-0 p-4 sm:p-6")}><DialogTitle>{title}</DialogTitle><DialogDescription>{description}</DialogDescription></DialogHeader>
-      <FormFeedbackProvider feedback={feedback}><form ref={formRef} aria-busy={pending} onSubmit={event => { event.preventDefault(); if (!confirmation && !submitDisabled) run(new FormData(event.currentTarget)); }} className={cn(wide ? "flex min-h-0 flex-1 flex-col" : "space-y-5")}>
+      <FormFeedbackProvider feedback={feedback}><form ref={formRef} method="post" aria-busy={pending} onSubmit={event => { event.preventDefault(); if (!confirmation && !submitDisabled) run(new FormData(event.currentTarget)); }} className={cn(wide ? "flex min-h-0 flex-1 flex-col" : "space-y-5")}>
         <div className={cn(wide ? "min-h-0 space-y-4 overflow-y-auto px-4 pb-4 sm:px-6 sm:pb-6" : "space-y-4")}>
         <fieldset disabled={pending || !!confirmation} hidden={!!confirmation} className="min-w-0 space-y-4">{children}</fieldset>
         {confirmation ? <section ref={confirmationHeading} tabIndex={-1} className="space-y-3" aria-label="Confirm this change"><h3 className="font-semibold">{confirmation.title}</h3><p className="whitespace-pre-line text-sm">{confirmation.description}</p></section> : null}

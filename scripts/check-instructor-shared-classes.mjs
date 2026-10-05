@@ -19,7 +19,7 @@ try {
   for(const width of [375,768,1024,1280]) for(const theme of ['light','dark']) {
     await page.setViewportSize({width,height:1000});
     await page.goto(`${base}/instructor?shared&tab=all&group=level&theme=${theme}`);
-    await page.getByRole('heading',{name:'Instructor',exact:true}).waitFor();
+    await page.getByRole('heading',{name:'Pool deck',exact:true}).waitFor();
     await page.evaluate(()=>document.fonts.ready);
     assert.equal(await page.getByRole('link',{name:/^Open class:/}).count(),2);
     assert.equal(await page.getByRole('button',{name:/^Start class:/}).count(),1);
@@ -37,15 +37,6 @@ try {
   await dialog.waitFor();
   assert.match(await dialog.innerText(),/Other instructors can also open/);
   await page.evaluate(()=>Promise.allSettled(document.getAnimations().filter(a=>a.effect?.getTiming().iterations!==Infinity).map(a=>a.finished)));
-  if(process.argv.includes('--write-help-image')) {
-    const file='assets/help/start-class.png';
-    await dialog.screenshot({path:file});
-    const sharp=(await import('sharp')).default;
-    const {width,height}=await sharp(file).metadata();
-    const manifest=JSON.parse(await fs.readFile('assets/help/manifest.json','utf8'));
-    manifest['start-class']={width,height};
-    await fs.writeFile('assets/help/manifest.json',JSON.stringify(manifest,null,2)+'\n');
-  }
   await dialog.getByRole('button',{name:'Cancel',exact:true}).click();
   assert.deepEqual(errors,[]);
   console.log('Shared Instructor checks passed: existing and deleted-teacher starts offer Open class; eight layouts and updated start dialog.');

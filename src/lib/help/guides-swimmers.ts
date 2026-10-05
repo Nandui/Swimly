@@ -6,7 +6,7 @@ export const SWIMMER_GUIDES: HelpArticle[] = [
     summary: "Search one shared directory and check you have the right person before editing.", keywords: ["find", "search", "child", "customer", "member number", "contact", "phone", "medical", "edit"],
     before: ["You need the Swimmers screen. Editing requires permission to add and edit swimmers."],
     steps: [
-      { title: "Search Swimmers", text: "Use a name, member number, contact name, email or phone number. The sidebar’s swimmer search is another shortcut to the same records." },
+      { title: "Search Swimmers", text: "Use a name, member number, contact name, email or phone number. The swimmer search in the tools bar at the top right is a shortcut to the same records." },
       { title: "Check the identifying details", text: "Compare the member number, age when shown and contact information. Swimmers from both sites are included. Use All, Active or Inactive to adjust the status filter." },
       { title: "Open the profile", text: "Choose the swimmer’s row. The profile brings together their enrolments, progress, attendance, assessment history and details." },
       { title: "Update Details", text: "Open the Details tab and its edit action. Correct the relevant personal, contact, emergency or medical information, then save and check the result." },
@@ -70,7 +70,7 @@ export const SWIMMER_GUIDES: HelpArticle[] = [
   },
   {
     slug: "move-swimmer", title: "Move a swimmer to another class or site", category: "enrolment", scopes: ["desk"],
-    summary: "Compare the destination and confirm a move without losing the swimmer’s history.", keywords: ["move", "transfer", "another site", "Bishopstown", "Churchfield", "change class", "relocate", "switch"],
+    summary: "Compare the destination and confirm a move without losing the swimmer’s history.", keywords: ["move", "transfer", "another site", "site", "pool", "change class", "relocate", "switch"],
     before: ["You need permission to enrol and move swimmers. The destination must have a place available."],
     steps: [
       { title: "Choose the place to move", text: "Open the swimmer’s profile, choose Manage enrolment and select Move class beside the correct current place." },

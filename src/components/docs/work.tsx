@@ -1,16 +1,14 @@
 'use client';
-import { Card } from '@/components/shadcn/card';
 import { SearchField } from '@/components/ui-kit/search-field';
-import { Label } from '@/components/shadcn/label';
-import { NativeSelect, NativeSelectOption } from '@/components/shadcn/native-select';
+import { NativeSelectOption } from '@/components/shadcn/native-select';
 import Link from 'next/link';
 import { useRouter, useSearchParams } from 'next/navigation';
 import {
-  ArrowRight,
-  Clock3,
-  FilePenLine,
-  ClipboardCheck,
-  Plus,
+  CalendarClock,
+  CheckCheck,
+  ChevronRight,
+  FilePlus2,
+  Pencil,
 } from 'lucide-react';
 import {
   formatDate,
@@ -23,8 +21,9 @@ import {
   type DocumentType,
 } from '@/lib/docs/types';
 import { Tag } from '@/components/ui-kit/tag';
-import { PageHeading, DocIcon } from './ui';
+import { DocIcon, FilterSelect } from './ui';
 import { EmptyState } from '@/components/ui-kit/empty-state';
+import { PageHeader } from '@/components/ui-kit/page-header';
 import { Button } from '@/components/shadcn/button';
 
 export function WorkView({ workspace: w, drafts }: { workspace: Workspace; drafts: Draft[] }) {
@@ -59,22 +58,25 @@ export function WorkView({ workspace: w, drafts }: { workspace: Workspace; draft
             id: 'reviews',
             label: 'Awaiting my review',
             count: review.length,
-            Icon: ClipboardCheck,
-            description: 'Submissions assigned to you for independent approval.',
+            Icon: CheckCheck,
+            description: 'Submissions assigned to you for independent approval',
+            empty: 'Nothing is waiting for your approval',
           },
           {
             id: 'drafts',
             label: 'Drafts in progress',
             count: editing.length,
-            Icon: FilePenLine,
-            description: 'Shared drafts, with requested changes first.',
+            Icon: Pencil,
+            description: 'Shared drafts, with requested changes first',
+            empty: 'Start a document and its draft appears here',
           },
           {
             id: 'due',
             label: 'Review dates',
             count: due.length,
-            Icon: Clock3,
-            description: 'Documents you own that need reviewing within 30 days.',
+            Icon: CalendarClock,
+            description: 'Documents you own that need reviewing within 30 days',
+            empty: 'None of your documents needs reviewing in the next 30 days',
           },
         ]
       : []),
@@ -82,16 +84,23 @@ export function WorkView({ workspace: w, drafts }: { workspace: Workspace; draft
   const queue = queues.find((q) => q.id === params.get('view')) || queues[0];
   if (!queue) {
     return (
-      <div className="task-workspace">
-        <PageHeading eyebrow="Personal workspace" title="My work" description="Authoring, reviews and review dates for people who write documents." />
+      <>
+        <PageHeader title="My work" description="Authoring, reviews and review dates for people who write documents" />
         <EmptyState
           as="h2"
           icon="book"
           title="Your required reading is in Turnfin Me"
           hint="Open Turnfin Me on your phone to read and acknowledge the documents assigned to you. You can still browse the library here."
-          action={<Button asChild variant="outline"><Link href="/docs/library">Browse library</Link></Button>}
+          action={
+            <Button asChild variant="outline">
+              <Link href="/docs/library">
+                Browse the library
+                <ChevronRight aria-hidden="true" />
+              </Link>
+            </Button>
+          }
         />
-      </div>
+      </>
     );
   }
   function url(key: string, value: string) {
@@ -145,132 +154,135 @@ export function WorkView({ workspace: w, drafts }: { workspace: Workspace; draft
     `${item.title} ${item.reference}`.toLowerCase().includes(search.toLowerCase()),
   );
   return (
-    <div className="task-workspace">
-      <PageHeading
-        eyebrow="Personal workspace"
+    <>
+      <PageHeader
         title="My work"
-        description="A clear next step for every document."
-        action={
+        description="A clear next step for every document"
+        actions={
           canWrite(w.member) ? (
             <Button asChild>
               <Link href="/docs/documents/new">
-                <Plus size={17} aria-hidden="true" />
-                Add a document
+                <FilePlus2 aria-hidden="true" />
+                New document
               </Link>
             </Button>
           ) : undefined
         }
       />
-      <div className="task-layout">
-        <nav className="task-queues" aria-label="Work queues">
-          {queues.map(({ id, label, count, Icon }) => (
-            <Link
-              key={id}
-              href={url('view', id)}
-              scroll={false}
-              aria-current={queue.id === id ? 'page' : undefined}
-            >
-              <Icon size={18} aria-hidden="true" />
-              <span>{label}</span>
-              <strong>{count}</strong>
-            </Link>
-          ))}
-        </nav>
-        <Card asChild>
-          <section className="task-panel" aria-labelledby="queue-heading">
-            <header className="task-panel-heading">
-              <div>
-                <h2 id="queue-heading">{queue.label}</h2>
-                <p>{queue.description}</p>
-              </div>
-              <p className="text-sm text-ui-muted-foreground tabular-nums">
-                {queue.count} {queue.count === 1 ? 'document' : 'documents'}
-              </p>
-            </header>
-            <div className="task-filters">
-              <form
-                action="/docs/work"
-                role="search"
-                aria-label="Search this work queue"
-              >
-                <SearchField
-                  label={`Search ${queue.label.toLowerCase()}`}
-                  defaultValue={search}
-                  placeholder="Title or reference"
-                />
-                <input type="hidden" name="view" value={queue.id} />
-                {facility && <input type="hidden" name="facility" value={facility} />}
-              </form>
-              <Label>
-                <span className="sr-only">Filter work by facility</span>
-                <NativeSelect
-                  value={facility}
-                  onChange={(e) => router.push(url('facility', e.target.value), { scroll: false })}
+      <div className="grid min-w-0 items-start gap-4 lg:grid-cols-[minmax(0,19rem)_minmax(0,1fr)]">
+        <nav className="pc-panel" aria-labelledby="queues-heading">
+          <h2 id="queues-heading">Queues</h2>
+          <ul className="pc-rows">
+            {queues.map(({ id, label, count, Icon }) => (
+              <li key={id}>
+                <Link
+                  className="pc-row"
+                  href={url('view', id)}
+                  scroll={false}
+                  aria-current={queue.id === id ? 'page' : undefined}
                 >
-                  <NativeSelectOption value="">All facilities</NativeSelectOption>
-                  {w.facilities.map((f) => (
-                    <NativeSelectOption key={f.id} value={f.id}>
-                      {f.name}
-                    </NativeSelectOption>
-                  ))}
-                </NativeSelect>
-              </Label>
-            </div>
-            <p className="task-result-count" role="status">
-              {visible.length} {visible.length === 1 ? 'document' : 'documents'}
-              {search ? ` matching “${search}”` : ''}
-            </p>
-            {visible.length ? (
-              <ul className="task-list">
-                {visible.map((item) => (
-                  <li key={item.id}>
-                    <Link href={item.href}>
-                      <DocIcon type={item.type} />
-                      <div className="task-item-copy">
-                        <strong>{item.title}</strong>
-                        <span>
-                          {item.reference} · {item.detail}
-                        </span>
-                        {item.feedback && (
-                          <p className="task-feedback">Reviewer feedback: {item.feedback}</p>
-                        )}
-                      </div>
-                      <Tag meta={DOC_STATUS_META[item.status]} />
-                      <ArrowRight size={17} aria-hidden="true" />
-                    </Link>
-                  </li>
-                ))}
-              </ul>
-            ) : (
-              <EmptyState
-                as="h3"
-                icon="book"
-                title={
-                  search
-                    ? 'No matching documents'
-                    : queue.id === 'drafts'
-                      ? 'No drafts in progress'
-                      : queue.id === 'reviews'
-                        ? 'No reviews waiting'
-                        : 'No reviews due soon'
-                }
-                hint={
-                  search
-                    ? 'Clear your search to see all documents in this queue.'
-                    : queue.description
-                }
-                action={
-                  search ? (
-                    <Button asChild variant="outline"><Link href={url('q', '')}>Clear search</Link></Button>
-                  ) : queue.id === 'drafts' ? (
-                    <Button asChild variant="outline"><Link href="/docs/documents/new">Create a document</Link></Button>
-                  ) : undefined
-                }
+                  <span className="pc-tile-icon"><Icon aria-hidden="true" /></span>
+                  <span className="pc-row-title min-w-0 flex-1">{label}</span>
+                  <span className="pc-row-count">{count}</span>
+                  <ChevronRight className="pc-row-chevron" aria-hidden="true" />
+                </Link>
+              </li>
+            ))}
+          </ul>
+        </nav>
+        <section className="pc-panel" aria-labelledby="queue-heading">
+          <div>
+            <h2 id="queue-heading">{queue.label}</h2>
+            <p className="text-sm text-ui-muted-foreground">{queue.description}</p>
+          </div>
+          <div className="flex flex-wrap items-end gap-3">
+            <form
+              action="/docs/work"
+              role="search"
+              aria-label={`Search ${queue.label.toLowerCase()}`}
+              className="min-w-0 flex-1 basis-64"
+            >
+              <SearchField
+                label={`Search ${queue.label.toLowerCase()}`}
+                defaultValue={search}
+                placeholder="Title or reference"
               />
-            )}
-          </section>
-        </Card>
+              <input type="hidden" name="view" value={queue.id} />
+              {facility && <input type="hidden" name="facility" value={facility} />}
+            </form>
+            <FilterSelect
+              label="Facility"
+              value={facility}
+              onChange={(value) => router.push(url('facility', value), { scroll: false })}
+            >
+              <NativeSelectOption value="">All facilities</NativeSelectOption>
+              {w.facilities.map((f) => (
+                <NativeSelectOption key={f.id} value={f.id}>
+                  {f.name}
+                </NativeSelectOption>
+              ))}
+            </FilterSelect>
+          </div>
+          <p className="text-xs text-ui-muted-foreground" role="status">
+            {visible.length} {visible.length === 1 ? 'document' : 'documents'}
+            {search ? ` matching “${search}”` : ''}
+          </p>
+          {visible.length ? (
+            <ul className="pc-rows">
+              {visible.map((item) => (
+                <li key={item.id}>
+                  <Link className="pc-row" href={item.href}>
+                    <DocIcon type={item.type} />
+                    <span className="pc-row-body">
+                      <span className="pc-row-title">{item.title}</span>
+                      <span className="pc-row-hint">
+                        {item.reference} · {item.detail}
+                        {item.feedback ? ` · Reviewer feedback: ${item.feedback}` : ''}
+                      </span>
+                    </span>
+                    <span className="pc-row-trail">
+                      <Tag meta={DOC_STATUS_META[item.status]} />
+                      <ChevronRight className="pc-row-chevron" aria-hidden="true" />
+                    </span>
+                  </Link>
+                </li>
+              ))}
+            </ul>
+          ) : (
+            <EmptyState
+              as="h3"
+              icon="book"
+              title={
+                search
+                  ? 'No documents match'
+                  : queue.id === 'drafts'
+                    ? 'No drafts in progress'
+                    : queue.id === 'reviews'
+                      ? 'No reviews waiting'
+                      : 'No reviews due soon'
+              }
+              hint={search ? 'Clear the search to see every document in this queue' : queue.empty}
+              action={
+                search ? (
+                  <Button asChild variant="outline">
+                    <Link href={url('q', '')}>
+                      Clear search
+                      <ChevronRight aria-hidden="true" />
+                    </Link>
+                  </Button>
+                ) : queue.id === 'drafts' ? (
+                  <Button asChild variant="outline">
+                    <Link href="/docs/documents/new">
+                      New document
+                      <ChevronRight aria-hidden="true" />
+                    </Link>
+                  </Button>
+                ) : undefined
+              }
+            />
+          )}
+        </section>
       </div>
-    </div>
+    </>
   );
 }

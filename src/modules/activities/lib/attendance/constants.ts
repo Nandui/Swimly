@@ -1,10 +1,12 @@
-import { CircleCheck, Clock3, LogOut, TriangleAlert, Users, XCircle } from "lucide-react";
+import { CircleCheck, ClipboardList, Clock3, LogOut, Users, XCircle } from "lucide-react";
 import type { AttendanceStatus } from "@/generated/prisma/client";
 import type { StatusMeta } from "@/lib/status";
 
+/** A class's register for the day, in the same words on the desk and the pool deck. Still to
+ *  take is the amber "to do" tone with a clipboard, so it never reads as Late (a clock). */
 export const ATTENDANCE_RECORD_META = {
-  taken: { label: "Attendance taken", color: "green", icon: CircleCheck },
-  notTaken: { label: "Attendance not taken", color: "orange", icon: TriangleAlert },
+  taken: { label: "Attendance saved", color: "green", icon: CircleCheck },
+  notTaken: { label: "Attendance to take", color: "orange", icon: ClipboardList },
   covered: { label: "Covered", color: "purple", icon: Users },
   leftClass: { label: "No longer in this class", color: "gray", icon: LogOut },
 } as const satisfies Record<string, StatusMeta>;

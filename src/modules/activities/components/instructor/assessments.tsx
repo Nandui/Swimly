@@ -1,7 +1,7 @@
 import Link from "next/link";
-import { ArrowRight } from "lucide-react";
+import { ChevronRight, ClipboardCheck } from "lucide-react";
 import { Button } from "@/components/shadcn/button";
-import { Item, ItemContent, ItemGroup } from "@/components/shadcn/item";
+import { formatTimeRange, plural } from "@/lib/format";
 import { instructorAssessmentHref, type ClassQuery } from "@/modules/activities/lib/attendance/navigation";
 import { formatTime } from "@/modules/activities/lib/courses/constants";
 import type { CalendarAssessment } from "@/modules/activities/lib/today/calendar";
@@ -14,33 +14,39 @@ export function InstructorAssessments({ sessions, canRun, params = {} }: {
 }) {
   if (!sessions.length) return null;
   return (
-    <section aria-labelledby="instructor-assessments" className="space-y-1">
-      <div className="flex flex-wrap items-baseline gap-3 border-b border-ui-border pb-3">
-        <h2 id="instructor-assessments" className="text-lg font-semibold">Assessments today</h2>
-        <p className="text-sm text-ui-muted-foreground">{sessions.length} {sessions.length === 1 ? "session" : "sessions"} at this site</p>
+    <section aria-labelledby="instructor-assessments" className="pc-panel">
+      <div className="pc-panel-head">
+        <h2 id="instructor-assessments">Assessments today</h2>
+        <p className="pc-row-hint">{plural(sessions.length, "session")} at this site</p>
       </div>
-      <ItemGroup className="divide-y divide-ui-border">
+      <ul className="pc-rows">
         {sessions.map(session => (
-          <Item key={session.id} role="listitem" className="items-center rounded-none px-0 py-5">
-            <div className="min-w-0 basis-20 shrink-0">
-              <p className="text-base font-semibold tabular-nums">{formatTime(session.startMinutes)}</p>
-              <p className="text-xs text-ui-muted-foreground tabular-nums">{formatTime(session.startMinutes + session.durationMinutes)}</p>
+          <li key={session.id} className="pc-row">
+            <span className="pc-tile-icon" aria-hidden="true"><ClipboardCheck /></span>
+            <div className="pc-row-body">
+              <h3 className="pc-row-title break-words">{session.typeName ?? "Swim School Assessment"}</h3>
+              <p className="pc-row-hint break-words">
+                {[
+                  formatTimeRange(session.startMinutes, session.startMinutes + session.durationMinutes),
+                  session.programmeName,
+                  session.location || "Pool",
+                  session.instructor?.name ?? "Assessor not assigned",
+                  `${session.booked} booked${session.capacity === null ? "" : ` of ${plural(session.capacity, "place")}`}`,
+                ].join(" · ")}
+              </p>
             </div>
-            <ItemContent className="min-w-0 basis-44">
-              <h3 className="text-base font-semibold break-words">{session.typeName ?? "Swim School Assessment"}</h3>
-              <p className="text-sm text-ui-muted-foreground break-words">{session.programmeName} · {session.location || "Pool"}</p>
-              <p className="text-sm text-ui-muted-foreground">{session.instructor?.name ?? "Assessor not assigned"} · {session.booked} booked{session.capacity === null ? "" : ` / ${session.capacity} places`}</p>
-            </ItemContent>
-            {canRun ? (
-              <Button asChild variant="outline">
-                <Link href={instructorAssessmentHref(session.id, params)} aria-label={`Open assessment: ${session.typeName ?? session.programmeName}, ${formatTime(session.startMinutes)}`}>
-                  Open assessment<ArrowRight aria-hidden="true" />
-                </Link>
-              </Button>
-            ) : <p className="text-sm text-ui-muted-foreground">Ask a manager for access to run assessments.</p>}
-          </Item>
+            <div className="pc-row-trail">
+              {canRun ? (
+                <Button asChild>
+                  <Link href={instructorAssessmentHref(session.id, params)} aria-label={`Open assessment: ${session.typeName ?? session.programmeName}, ${formatTime(session.startMinutes)}`}>
+                    Open assessment<ChevronRight aria-hidden="true" />
+                  </Link>
+                </Button>
+              ) : <p className="pc-row-hint">Ask a manager for access to run assessments.</p>}
+            </div>
+          </li>
         ))}
-      </ItemGroup>
+      </ul>
     </section>
   );
 }

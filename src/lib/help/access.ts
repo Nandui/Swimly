@@ -5,7 +5,7 @@ import { expandPermissions } from "@/lib/staff/permissions";
 import { screenMeta, visibleScreens } from "@/lib/staff/screens";
 import { articlesForScope } from "./catalogue";
 import { helpHref, type HelpFilters } from "./search";
-import type { HelpArticle, HelpScope } from "./types";
+import { HELP_CATEGORY_SCREENS, type HelpArticle, type HelpScope } from "./types";
 
 export function helpAccess(session: Session, scope: HelpScope) {
   const user = session.user;
@@ -15,6 +15,11 @@ export function helpAccess(session: Session, scope: HelpScope) {
     instructorOnly,
     allowed: scope === "desk" ? !instructorOnly : screens.has("instructor"),
     home: scope === "instructor" ? "/instructor" : "/",
+    /** A module's guides show only to people who can open that module. */
+    canRead(article: HelpArticle) {
+      const screen = HELP_CATEGORY_SCREENS[article.category];
+      return !screen || screens.has(screen);
+    },
     action(article: HelpArticle): { href: string; label: string } | undefined {
       if (scope === "instructor") return { href: "/instructor", label: "Open classes" };
       if (article.action === "account") return { href: "/account", label: "Open Account" };

@@ -1,8 +1,9 @@
 import Link from "next/link";
-import { ArrowLeft, ArrowRight, ExternalLink } from "lucide-react";
+import { ChevronRight, CircleHelp, ExternalLink } from "lucide-react";
 import { Button } from "@/components/shadcn/button";
-import { HELP_CATEGORIES, type HelpArticle, type HelpScope } from "@/lib/help/types";
-import { helpHref, type HelpFilters } from "@/lib/help/search";
+import { PageHeader } from "@/components/ui-kit/page-header";
+import type { HelpArticle, HelpScope } from "@/lib/help/types";
+import { clause, helpHref, type HelpFilters } from "@/lib/help/search";
 import { summarizeArticle } from "@/lib/help/catalogue";
 import { ArticleTools } from "./article-tools";
 import { GuideScreenshot } from "./guide-screenshot";
@@ -11,19 +12,39 @@ export function HelpArticleView({ article, related, scope, filters, action }: {
   article: HelpArticle; related: HelpArticle[]; scope: HelpScope; filters: HelpFilters;
   action?: { href: string; label: string };
 }) {
-  const category = HELP_CATEGORIES.find(item => item.id === article.category)!;
-  return <div className="space-y-6">
-    <nav aria-label="Guide navigation" className="flex flex-wrap items-center gap-x-4 print:hidden"><Link href={helpHref(scope, undefined, filters)} className="inline-flex min-h-11 items-center gap-2 text-ui-muted-foreground underline-offset-4 hover:text-ui-foreground hover:underline"><ArrowLeft aria-hidden="true" className="size-4" />{filters.q.trim() ? "Back to search results" : "All guides"}</Link><Link href={helpHref(scope, undefined, { q: "", topic: article.category })} className="inline-flex min-h-11 items-center text-ui-primary underline-offset-4 hover:underline">{category.title}</Link></nav>
+  const contents = [["before-you-start", "Before you start"], ["steps", "Step by step"], ["result", "What happens next"], ...(article.troubleshooting.length ? [["troubleshooting", "If something isn’t right"]] : [])];
+  return <article className="flex min-w-0 flex-col gap-4">
+    <PageHeader
+      back={{ href: helpHref(scope, undefined, filters), label: filters.q.trim() ? "Search results" : "All guides" }}
+      title={article.title}
+      description={`${clause(article.summary)} · ${summarizeArticle(article).minutes} min read · ${scope === "instructor" ? "Instructor guide" : "Staff guide"}`}
+      actions={<ArticleTools />}
+    />
     <div className="flex items-start gap-4">
-      <article className="pc-panel min-w-0 max-w-3xl flex-1 gap-8 lg:p-8">
-        <header className="space-y-4"><div className="space-y-2"><h1 className="text-2xl font-semibold text-balance">{article.title}</h1><p className="max-w-prose leading-relaxed text-ui-muted-foreground">{article.summary}</p><p className="text-xs text-ui-muted-foreground">{summarizeArticle(article).minutes} min read · {scope === "instructor" ? "Instructor guide" : "Staff guide"}</p></div><ArticleTools /></header>
-        <section id="before-you-start" aria-labelledby="before-heading" className="scroll-mt-6 space-y-3 rounded-ui-lg bg-ui-muted/50 p-4 lg:p-6"><h2 id="before-heading" className="font-semibold">Before you start</h2><ul className="list-disc space-y-2 pl-5 leading-relaxed">{article.before.map(item => <li key={item}>{item}</li>)}</ul>{action ? <Button asChild variant="outline" className="min-h-11 print:hidden"><Link href={action.href} target="_blank" rel="noopener noreferrer" aria-label={`${action.label} (opens in a new tab)`}>{action.label}<ExternalLink aria-hidden="true" /></Link></Button> : null}</section>
-        <section id="steps" aria-labelledby="steps-heading" className="scroll-mt-6 space-y-5"><h2 id="steps-heading" className="text-xl font-semibold">Step by step</h2><ol className="space-y-6">{article.steps.map((step, index) => <li key={step.title} className="flex gap-4 break-inside-avoid"><span aria-hidden="true" className="flex size-9 shrink-0 items-center justify-center rounded-full border border-ui-border bg-ui-muted/50 font-semibold tabular-nums">{index + 1}</span><div className="min-w-0 space-y-2 pt-1"><h3 className="font-semibold">{step.title}</h3><p className="max-w-prose leading-relaxed">{step.text}</p>{step.screenshots?.map(screenshot => <GuideScreenshot key={screenshot.id} screenshot={screenshot} />)}</div></li>)}</ol></section>
-        <section id="result" aria-labelledby="result-heading" className="scroll-mt-6 space-y-3 border-t border-ui-border pt-6"><h2 id="result-heading" className="text-xl font-semibold">What happens next</h2><p className="max-w-prose leading-relaxed">{article.result}</p></section>
-        {article.troubleshooting.length ? <section id="troubleshooting" aria-labelledby="troubleshooting-heading" className="scroll-mt-6 space-y-4 border-t border-ui-border pt-6"><h2 id="troubleshooting-heading" className="text-xl font-semibold">If something isn’t right</h2><dl className="space-y-5">{article.troubleshooting.map(item => <div key={item.question} className="break-inside-avoid space-y-2"><dt className="font-semibold">{item.question}</dt><dd className="max-w-prose leading-relaxed text-ui-muted-foreground">{item.answer}</dd></div>)}</dl></section> : null}
-        {related.length ? <section aria-labelledby="related-heading" className="space-y-3 border-t border-ui-border pt-6 print:hidden"><h2 id="related-heading" className="text-xl font-semibold">Related guides</h2><ul className="divide-y divide-ui-border">{related.map(item => <li key={item.slug}><Link href={helpHref(scope, item.slug)} className="flex min-h-11 items-center justify-between gap-3 py-3 font-medium text-ui-primary underline-offset-4 hover:underline">{item.title}<ArrowRight aria-hidden="true" className="size-4 shrink-0" /></Link></li>)}</ul></section> : null}
-      </article>
-      <nav aria-label="On this page" className="pc-panel sticky top-6 hidden w-52 shrink-0 gap-0 p-4 lg:flex print:hidden"><p className="mb-2 font-semibold">On this page</p>{[["before-you-start", "Before you start"], ["steps", "Step by step"], ["result", "What happens next"], ...(article.troubleshooting.length ? [["troubleshooting", "Troubleshooting"]] : [])].map(([id, label]) => <a key={id} href={`#${id}`} className="flex min-h-11 items-center text-ui-muted-foreground underline-offset-4 hover:text-ui-foreground hover:underline">{label}</a>)}</nav>
+      <div className="pc-panel min-w-0 flex-1 gap-8 lg:p-8">
+        <section id="before-you-start" aria-labelledby="before-heading" className="pc-note scroll-mt-6">
+          <CircleHelp aria-hidden="true" className="size-5 shrink-0 text-ui-primary" />
+          <div className="flex min-w-0 flex-1 flex-col gap-2">
+            <h2 id="before-heading" className="text-sm">Before you start</h2>
+            <ul className="flex max-w-prose list-disc flex-col gap-1 pl-5">{article.before.map(item => <li key={item}>{item}</li>)}</ul>
+            {action ? <Button asChild variant="outline" className="self-start print:hidden"><Link href={action.href} target="_blank" rel="noopener noreferrer" aria-label={`${action.label} (opens in a new tab)`}>{action.label}<ExternalLink aria-hidden="true" /></Link></Button> : null}
+          </div>
+        </section>
+        <section id="steps" aria-labelledby="steps-heading" className="flex scroll-mt-6 flex-col gap-4"><h2 id="steps-heading">Step by step</h2>
+          <ol className="pc-rows">{article.steps.map((step, index) => <li key={step.title} className="pc-note break-inside-avoid">
+            <span aria-hidden="true" className="flex size-6 shrink-0 items-center justify-center rounded-full bg-ui-primary text-xs font-semibold tabular-nums text-ui-primary-foreground">{index + 1}</span>
+            <div className="flex min-w-0 flex-1 flex-col gap-1"><h3>{step.title}</h3><p className="max-w-prose">{step.text}</p>{step.screenshots?.map(screenshot => <GuideScreenshot key={screenshot.id} screenshot={screenshot} />)}</div>
+          </li>)}</ol>
+        </section>
+        <section id="result" aria-labelledby="result-heading" className="flex scroll-mt-6 flex-col gap-2"><h2 id="result-heading">What happens next</h2><p className="max-w-prose">{article.result}</p></section>
+        {article.troubleshooting.length ? <section id="troubleshooting" aria-labelledby="troubleshooting-heading" className="flex scroll-mt-6 flex-col gap-4"><h2 id="troubleshooting-heading">If something isn’t right</h2><dl className="flex flex-col gap-4">{article.troubleshooting.map(item => <div key={item.question} className="flex break-inside-avoid flex-col gap-1"><dt className="font-semibold">{item.question}</dt><dd className="max-w-prose text-ui-muted-foreground">{item.answer}</dd></div>)}</dl></section> : null}
+        {related.length ? <section aria-labelledby="related-heading" className="flex flex-col gap-4 print:hidden"><h2 id="related-heading">Related guides</h2><ul className="pc-rows">{related.map(item => <li key={item.slug}><Link href={helpHref(scope, item.slug)} className="pc-row"><span className="pc-row-body pc-row-title">{item.title}</span><ChevronRight aria-hidden="true" className="pc-row-chevron" /></Link></li>)}</ul></section> : null}
+      </div>
+      <div className="sticky top-6 hidden w-56 shrink-0 self-start lg:block print:hidden">
+        <nav aria-labelledby="on-this-page" className="pc-panel"><h2 id="on-this-page" className="text-lg">On this page</h2>
+          <ul className="pc-rows" data-size="compact">{contents.map(([id, label]) => <li key={id}><a href={`#${id}`} className="pc-row pc-row-title">{label}</a></li>)}</ul>
+        </nav>
+      </div>
     </div>
-  </div>;
+  </article>;
 }

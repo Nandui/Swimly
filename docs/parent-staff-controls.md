@@ -61,8 +61,8 @@ and the 375, 768, 1024 and 1280px light/dark checks. If Playwright is provided b
 the workspace runtime, set `PLAYWRIGHT_MODULE` to its `playwright/index.mjs`.
 The script creates its own loopback server and closes it afterwards. Review
 captures are stored under ignored `.impeccable/review/parent-admin`.
-Add `--write-help-images` to refresh the three committed guide screenshots after
-the checks pass.
+Help's guide screenshots of these controls come from the sandbox through
+`scripts/help-screenshots/capture.mjs` (docs/help-centre.md), not from this preview.
 
 For the complete parent-to-staff request check, point the local parent dev server
 at `http://127.0.0.1:4189/api/parent/v1` with its origin set to

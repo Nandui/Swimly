@@ -43,7 +43,8 @@ export default async function HistoryPage({ params }: { params: Promise<{ id: st
         canWrite(m)
           ? await rows<AuditEvent>(
               db,
-              'SELECT * FROM audit_events WHERE document_id=$1 ORDER BY created_at DESC',
+              // Editing-lease renewals stay in the audit table but are not history worth reading.
+              "SELECT * FROM audit_events WHERE document_id=$1 AND action NOT IN ('editing_session','editing_released') ORDER BY created_at DESC",
               [id],
             )
           : []

@@ -40,8 +40,7 @@
   [data-motion="action-label"] {
     translate: none !important;
   }
-  [data-motion="selection"],
-  [data-motion="theme-icon"] {
+  [data-motion="selection"] {
     scale: none !important;
     rotate: none !important;
   }

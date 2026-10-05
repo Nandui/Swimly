@@ -17,7 +17,7 @@ registerHomeCard({
     const items: HomeItem[] = [];
     if (who.review) {
       const n = await count(["SUBMITTED", "IN_REVIEW"]);
-      items.push({ label: "Refund requests to decide", hint: "From the front desk", href: "/refunds?status=actionable", count: n, attention: n > 0 });
+      items.push({ label: "Refund requests to decide", hint: "From the front desk", href: "/refunds?status=review", count: n, attention: n > 0 });
     }
     if (who.process) {
       const n = await count("APPROVED");

@@ -108,7 +108,7 @@ export function ReviewEditor({ review, name }: { review: Draft; name: string }) 
   }
   return (
     // The form wraps both panels, so Save draft in the footer still submits the fields.
-    <form className="flex flex-col gap-4" onSubmit={(event) => { event.preventDefault(); save(event.currentTarget); }}>
+    <form method="post" className="flex flex-col gap-4" onSubmit={(event) => { event.preventDefault(); save(event.currentTarget); }}>
       <section className="pc-panel" aria-labelledby="review-editor">
         <div className="pc-panel-head"><h2 id="review-editor">Draft</h2></div>
         <div className="space-y-2"><Label htmlFor="rv-period" className="block">Review period</Label><Input id="rv-period" name="period" defaultValue={review.period} required minLength={2} maxLength={80} className="min-h-11" /></div>

@@ -1,13 +1,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
-import {
-  ArrowRight,
-  Check,
-  ClipboardList,
-  ChevronDown,
-} from "lucide-react";
+import { ChevronDown, ChevronRight } from "lucide-react";
 import { Button } from "@/components/shadcn/button";
-import { Item, ItemGroup, ItemContent } from "@/components/shadcn/item";
 import {
   Collapsible,
   CollapsibleContent,
@@ -26,10 +20,14 @@ import { getRegisterStateForDay } from "@/modules/activities/lib/attendance/data
 import {
   courseName,
   formatTime,
-  formatSlot,
+  formatSessionTime,
 } from "@/modules/activities/lib/courses/constants";
 import { getCoursesOnDay, type CourseRow } from "@/modules/activities/lib/courses/data/courses";
-import { formatDay, minutesNow, plural, today } from "@/lib/format";
+import { formatDate, formatDay, minutesNow, parseDateOnly, plural, today } from "@/lib/format";
+import { HOME_SESSION_META } from "@/lib/home-meta";
+import { PageHeader } from "@/components/ui-kit/page-header";
+import { EmptyState } from "@/components/ui-kit/empty-state";
+import { ATTENDANCE_RECORD_META } from "@/modules/activities/lib/attendance/constants";
 import { screenPage } from "@/lib/page-guards";
 import { can } from "@/lib/authz";
 import { getCancellationsForDay } from "@/modules/activities/lib/cancellations/data";
@@ -39,7 +37,7 @@ import { InstructorAssessments } from "@/modules/activities/components/instructo
 import { getTodayAssessments } from "@/modules/activities/lib/today/assessments";
 import { SegmentedLinks } from "@/components/ui-kit/segmented-links";
 
-export const metadata: Metadata = { title: "Instructor" };
+export const metadata: Metadata = { title: "Pool deck" };
 type Grouping = "time" | "level";
 type Phase = "earlier" | "now" | "later";
 
@@ -81,55 +79,40 @@ export default async function InstructorPage(props: PageProps<"/instructor">) {
       name = courseName(course),
       own = course.instructorId === me;
     const openHref = instructorClassHref(course.id, { tab, group, date: iso });
+    const cancelled = cancellations.get(course.id);
+    // The time block wears the class's own phase (a level section can hold several), with the
+    // state's icon and words beside the colour; "next" is the plain blue block.
+    const block = cancelled ? "off" : ({ earlier: "done", now: "now", later: "next" } as const)[phaseOf(course, now)];
+    const blockMeta = HOME_SESSION_META[block];
+    const caption = [
+      course.location || "Pool",
+      plural(course._count.enrolments, "swimmer"),
+      cancelled?.reason,
+      tab === "all" && state === "available" && !own ? course.instructor?.name ?? "No instructor assigned" : null,
+      state === "shared" ? `Started by ${claim?.coverByName}` : null,
+    ].filter(Boolean).join(" · ");
     return (
-      <Item
-        key={course.id}
-        role="listitem"
-        className="items-center rounded-none px-0 py-5"
-      >
-        <div className="min-w-0 basis-20 shrink-0">
-          <p className="text-base font-semibold tabular-nums">
+      <li key={course.id} className="pc-row">
+        <span className="pc-block w-24 flex-none" data-state={block}>
+          <span className="pc-block-time">
             {formatTime(course.startMinutes)}
-          </p>
-          <p className="text-xs text-ui-muted-foreground tabular-nums">
-            {formatTime(course.startMinutes + course.durationMinutes)}
-          </p>
+            <small>to {formatTime(course.startMinutes + course.durationMinutes)}</small>
+          </span>
+          {block !== "next" ? <blockMeta.icon className="ml-auto" aria-hidden="true" /> : null}
+          <span className="sr-only">{blockMeta.label}</span>
+        </span>
+        <div className="pc-row-body">
+          <h3 className="pc-row-title break-words">{name}</h3>
+          <p className="pc-row-hint break-words">{caption}</p>
         </div>
-        <ItemContent className="min-w-0 basis-44">
-          <h3 className="text-base font-semibold">{name}</h3>
-          <p className="text-sm text-ui-muted-foreground">
-            {course.location || "Pool"} · {plural(course._count.enrolments, "swimmer")}
-            {tab === "all" && state === "available" && !own
-              ? " · " + (course.instructor?.name ?? "No instructor assigned")
-              : ""}
-          </p>
-          {state === "shared" ? <p className="text-xs text-ui-muted-foreground">Started by {claim?.coverByName}</p> : null}
-        </ItemContent>
-        <div className="flex w-full items-center justify-between gap-3 sm:w-auto sm:gap-5">
-          {cancellations.has(course.id) ? <div className="space-y-1"><Tag meta={CANCELLATION_META.cancelled} /><p className="max-w-sm break-words text-sm text-ui-muted-foreground">{cancellations.get(course.id)?.reason}</p></div> : state !== "available" ? (
+        <div className="pc-row-trail">
+          {cancelled ? <Tag meta={CANCELLATION_META.cancelled} /> : state !== "available" ? (
             <>
-              <p className="flex items-center gap-2 text-sm text-ui-muted-foreground">
-                {marked.has(course.id) ? (
-                  <Check className="size-4" aria-hidden="true" />
-                ) : (
-                  <ClipboardList className="size-4" aria-hidden="true" />
-                )}
-                {marked.has(course.id)
-                  ? "Attendance saved"
-                  : "Attendance to take"}
-              </p>
+              <Tag meta={marked.has(course.id) ? ATTENDANCE_RECORD_META.taken : ATTENDANCE_RECORD_META.notTaken} />
               <Button asChild variant="outline">
-                <Link
-                  href={openHref}
-                  aria-label={
-                    "Open class: " +
-                    name +
-                    ", " +
-                    formatTime(course.startMinutes)
-                  }
-                >
+                <Link href={openHref} aria-label={`Open class: ${name}, ${formatTime(course.startMinutes)}`}>
                   Open class
-                  <ArrowRight aria-hidden="true" />
+                  <ChevronRight aria-hidden="true" />
                 </Link>
               </Button>
             </>
@@ -138,101 +121,89 @@ export default async function InstructorPage(props: PageProps<"/instructor">) {
               courseId={course.id}
               date={iso}
               name={name}
-              schedule={formatSlot(course)}
+              schedule={`${formatSessionTime(course)} · ${formatDate(parseDateOnly(iso))}`}
               own={own}
               instructorName={course.instructor?.name ?? null}
               href={openHref}
             />
           ) : (
-            <p className="text-sm text-ui-muted-foreground">
-              Assigned to another instructor
-            </p>
+            <p className="pc-row-hint">Assigned to another instructor</p>
           )}
         </div>
-      </Item>
+      </li>
     );
   }
+  const firstAhead = sections.find((s) => s.phase === "later")?.key;
   function section(s: Section) {
+    const when = group !== "time" ? null : s.phase === "now" ? "On now" : s.key === firstAhead ? "Next" : null;
     return (
-      <section key={s.key} aria-label={s.title} className="space-y-1">
-        <div className="flex flex-wrap items-baseline gap-3 border-b border-ui-border pb-3">
-          <h2 className="text-lg font-semibold tabular-nums">{s.title}</h2>
-          <p className="text-sm text-ui-muted-foreground">
-            {group === "time" && s.phase === "now" ? "On now · " : ""}
-            {plural(s.courses.length, "class", "classes")}
-            {s.subtitle ? " · " + s.subtitle : ""}
+      <section key={s.key} aria-labelledby={`classes-${s.key}`} className="flex flex-col gap-3">
+        <div className="pc-panel-head">
+          <h2 id={`classes-${s.key}`} className="tabular-nums">{s.title}</h2>
+          <p className="pc-row-hint">
+            {[when, plural(s.courses.length, "class", "classes"), s.subtitle].filter(Boolean).join(" · ")}
           </p>
         </div>
-        <ItemGroup className="divide-y divide-ui-border">
-          {s.courses.map(row)}
-        </ItemGroup>
+        <ul className="pc-rows">{s.courses.map(row)}</ul>
       </section>
     );
   }
+  const cancelledToday = shown.filter((course) => cancellations.has(course.id));
+  const earlierCount = earlier.reduce((n, s) => n + s.courses.length, 0);
   return (
-    <div className="flex flex-col gap-6">
-      <header className="flex flex-wrap items-center justify-between gap-3">
-        <div className="space-y-1">
-          <h1 className="text-2xl font-semibold">Instructor</h1>
-          <p className="text-sm text-ui-muted-foreground">
-            {formatDay(iso)}
-          </p>
-        </div>
-        <RefreshClasses />
-      </header>
+    <>
+      <PageHeader title="Pool deck" description={formatDay(iso)} actions={<RefreshClasses />} />
       <InstructorAssessments sessions={assessments} canRun={can(session, "assessments.run")} params={{ tab, group }} />
-      <div className="flex flex-wrap items-center justify-between gap-3">
-        <SegmentedLinks label="Whose classes" items={[
-          { href: href({ tab: "mine" }), label: "My classes", count: mine.length, current: tab === "mine" },
-          { href: href({ tab: "all" }), label: "All classes", count: courses.length, current: tab === "all" },
-        ]} />
-        <div className="flex items-center gap-2">
-          <span className="text-sm text-ui-muted-foreground">Group by</span>
-          <SegmentedLinks label="Group classes" items={[
-            { href: href({ group: "time" }), label: "Time", current: group === "time" },
-            { href: href({ group: "level" }), label: "Level", current: group === "level" },
+      <section className="pc-panel" aria-label="Classes today">
+        <div className="flex flex-wrap items-center gap-x-4 gap-y-3">
+          <SegmentedLinks label="Whose classes" items={[
+            { href: href({ tab: "mine" }), label: "My classes", count: mine.length, current: tab === "mine" },
+            { href: href({ tab: "all" }), label: "All classes", count: courses.length, current: tab === "all" },
           ]} />
+          <div className="flex flex-wrap items-center gap-3">
+            <span className="pc-row-hint font-semibold" aria-hidden="true">Group by</span>
+            <SegmentedLinks label="Group classes by" items={[
+              { href: href({ group: "time" }), label: "Time", current: group === "time" },
+              { href: href({ group: "level" }), label: "Level", current: group === "level" },
+            ]} />
+          </div>
         </div>
-      </div>
-      {!shown.length ? (
-        <div className="flex flex-col items-start gap-3 py-8">
-          <h2 className="text-lg font-semibold">
-            {tab === "mine"
-              ? "No classes assigned to you today"
-              : "No classes today"}
-          </h2>
-          <p className="text-sm text-ui-muted-foreground">
-            {tab === "mine"
-              ? "Find a class to take in All classes."
-              : "There are no active classes scheduled at this site today."}
-          </p>
-          {tab === "mine" && courses.length ? (
-            <Button asChild variant="outline">
-              <Link href={href({ tab: "all" })}>See all classes</Link>
-            </Button>
-          ) : null}
-        </div>
-      ) : (
-        <>
-          {listed.map(section)}
-          {shown.some(course => cancellations.has(course.id)) ? <section aria-label="Cancelled sessions" className="space-y-1"><h2 className="border-b border-ui-border pb-3 text-lg font-semibold">Cancelled today</h2><ItemGroup className="divide-y divide-ui-border">{shown.filter(course => cancellations.has(course.id)).map(row)}</ItemGroup></section> : null}
-          {fold ? (
-            <Collapsible>
-              <CollapsibleTrigger asChild>
-                <Button variant="ghost" className="w-full justify-between">
-                  Earlier today (
-                  {plural(earlier.reduce((n, s) => n + s.courses.length, 0), "class", "classes")})
-                  <ChevronDown aria-hidden="true" />
-                </Button>
-              </CollapsibleTrigger>
-              <CollapsibleContent className="space-y-6 pt-5">
-                {earlier.map(section)}
-              </CollapsibleContent>
-            </Collapsible>
-          ) : null}
-        </>
-      )}
-    </div>
+        {!shown.length ? (
+          <EmptyState
+            as="h2"
+            icon="calendarDays"
+            title={tab === "mine" ? "No classes assigned to you today" : "No classes today"}
+            hint={tab === "mine" && courses.length ? "Find a class to take in All classes." : "No classes are scheduled at this site today."}
+            action={tab === "mine" && courses.length ? (
+              <Button asChild variant="outline"><Link href={href({ tab: "all" })}>See all classes</Link></Button>
+            ) : undefined}
+          />
+        ) : (
+          <>
+            {listed.map(section)}
+            {cancelledToday.length ? (
+              <section aria-labelledby="classes-cancelled" className="flex flex-col gap-3">
+                <div className="pc-panel-head"><h2 id="classes-cancelled">Cancelled today</h2></div>
+                <ul className="pc-rows">{cancelledToday.map(row)}</ul>
+              </section>
+            ) : null}
+            {fold ? (
+              <Collapsible className="group/earlier flex flex-col gap-4">
+                <CollapsibleTrigger asChild>
+                  <Button variant="link" className="self-start">
+                    <ChevronDown className="transition-transform group-data-[state=open]/earlier:rotate-180" aria-hidden="true" />
+                    Earlier today ({plural(earlierCount, "class", "classes")})
+                  </Button>
+                </CollapsibleTrigger>
+                <CollapsibleContent className="flex flex-col gap-4">
+                  {earlier.map(section)}
+                </CollapsibleContent>
+              </Collapsible>
+            ) : null}
+          </>
+        )}
+      </section>
+    </>
   );
 }
 

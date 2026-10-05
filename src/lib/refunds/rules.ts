@@ -14,7 +14,7 @@ export function money(value: string): number | null {
 const text = (max: number) => z.string().trim().max(max);
 export const fieldsSchema = z.object({
   clubId: text(100).min(1, "Choose a site."), customerName: text(200), contactEmail: text(254).refine(v => !v || z.string().email().safeParse(v).success, "Enter a valid email address."),
-  contactPhone: text(80), memberNumber: text(80), service: z.enum(Object.keys(refundServices) as [keyof typeof refundServices, ...Array<keyof typeof refundServices>]),
+  contactPhone: text(80), memberNumber: text(80), service: z.enum(Object.keys(refundServices) as [keyof typeof refundServices, ...Array<keyof typeof refundServices>], { message: "Choose a service." }),
   description: text(2000), amount: text(24), paymentDate: text(10).refine(v => !v || (isDateOnly(v) && v <= today()), "Choose a valid payment date, today or earlier."), paymentReference: text(200), reason: text(4000),
 });
 export function parseFields(input: unknown, submit: boolean) {

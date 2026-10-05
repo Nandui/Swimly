@@ -1,14 +1,12 @@
 'use client';
-import { Card } from '@/components/shadcn/card';
 import { Label } from '@/components/shadcn/label';
-import { NativeSelect, NativeSelectOption } from '@/components/shadcn/native-select';
+import { NativeSelectOption } from '@/components/shadcn/native-select';
 import { Checkbox } from '@/components/shadcn/checkbox';
 import { Table, TableHeader, TableRow, TableHead, TableBody, TableCell } from '@/components/shadcn/table';
-import { useState } from 'react';
+import { useId } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { Button } from '@/components/shadcn/button';
-import { Progress } from '@/components/shadcn/progress';
-import { Download, CheckCircle2, Clock3, Users } from 'lucide-react';
+import { BookOpen, ChartNoAxesColumn, ChevronRight, CircleCheck, Download, TriangleAlert } from 'lucide-react';
 import Link from 'next/link';
 import {
   formatDate,
@@ -21,8 +19,9 @@ import {
 } from '@/lib/docs/types';
 import { Tag } from '@/components/ui-kit/tag';
 import { filterReading, type ReportFilters } from '@/lib/docs/reporting';
-import { PageHeading, Avatar } from './ui';
+import { FilterSelect } from './ui';
 import { EmptyState } from '@/components/ui-kit/empty-state';
+import { PageHeader } from '@/components/ui-kit/page-header';
 
 /** Where one person's required reading stands. */
 const readingStatus = (r: Pick<Requirement, 'status' | 'dueDate'>): DocStatus =>
@@ -44,7 +43,7 @@ export function ReportsView({
 }) {
   const router = useRouter();
   const params = useSearchParams();
-  const [showFilters, setShowFilters] = useState(false);
+  const historyId = useId();
   const filters: ReportFilters = {
     document: params.get('document') || '',
     version: params.get('version') || '',
@@ -84,271 +83,198 @@ export function ReportsView({
         ]),
     ).values(),
   );
+  /** This page's URL with the status filter changed and every other filter kept. */
+  const statusHref = (status: string) => {
+    const next = new URLSearchParams(query);
+    if (status) next.set('status', status);
+    else next.delete('status');
+    return `/docs/reports${next.size ? `?${next}` : ''}`;
+  };
+  const late = scope.filter((r) => r.status === 'outstanding' && overdue(r.dueDate)).length;
+  const tiles = [
+    { status: '', icon: BookOpen, value: scope.length, label: 'Reading assignments', caption: filters.history ? 'Including earlier versions' : 'Current versions' },
+    { status: 'completed', icon: CircleCheck, value: completed, label: 'Acknowledged', caption: 'Read and confirmed' },
+    { status: 'outstanding', icon: TriangleAlert, value: waiting, label: 'Still to read', caption: late ? <Tag meta={DOC_STATUS_META.overdue} label={`${late} overdue`} /> : 'None overdue' },
+  ];
+  const nameOf = (r: Requirement) => w.members.find((m) => m.id === r.memberId)?.name || 'Former staff';
+  /** Where a record stands in words, for the phone caption that replaces its last columns. */
+  const when = (r: Requirement) =>
+    r.acknowledgedAt ? `read ${formatDate(r.acknowledgedAt)}` : r.dueDate ? `due ${formatDate(r.dueDate)}` : 'no deadline';
   return (
-    <div className="report-workspace">
-      <PageHeading
-        eyebrow="Keep everyone up to date"
+    <>
+      <PageHeader
         title="Reading reports"
-        description="See who has read each version, and where your team needs a reminder."
-        action={
+        description="See who has read each version, and where your team needs a reminder"
+        actions={
           <Button asChild variant="outline">
-            <a className="button secondary" href={`/api/docs/reports?${query}`}>
-              <Download size={17} />
+            <a href={`/api/docs/reports?${query}`}>
+              <Download aria-hidden="true" />
               Export CSV
             </a>
           </Button>
         }
       />
-      <div className="report-stats">
-        <Button
-          variant="outline"
-          className="panel report-stat-button h-auto whitespace-normal"
-          onClick={() => set('status', '')}
-          aria-pressed={!filters.status}
-        >
-          <Users size={21} />
-          <strong>{scope.length}</strong>
-          <span>Reading assignments</span>
-        </Button>
-        <Button
-          variant="outline"
-          className="panel report-stat-button h-auto whitespace-normal"
-          onClick={() => set('status', 'completed')}
-          aria-pressed={filters.status === 'completed'}
-        >
-          <CheckCircle2 size={21} />
-          <strong>{completed}</strong>
-          <span>Acknowledged</span>
-        </Button>
-        <Button
-          variant="outline"
-          className="panel report-stat-button h-auto whitespace-normal"
-          onClick={() => set('status', 'outstanding')}
-          aria-pressed={filters.status === 'outstanding'}
-        >
-          <Clock3 size={21} />
-          <strong>{waiting}</strong>
-          <span>Still to read</span>
-        </Button>
-        <Card asChild>
-          <div className="panel">
-            <Progress
-              className="completion-track"
-              value={active ? (completed / active) * 100 : 0}
-              aria-label="Reading complete"
-            />
-            <strong>{active ? `${Math.round((completed / active) * 100)}%` : '—'}</strong>
-            <span>Reading complete</span>
+      <ul className="pc-stats" aria-label="Reading at a glance">
+        {tiles.map(({ status, icon: Icon, value, label, caption }) => (
+          <li key={label} className="flex min-w-0">
+            <Link
+              href={statusHref(status)}
+              scroll={false}
+              className="pc-stat w-full"
+              aria-current={status && filters.status === status ? 'true' : undefined}
+            >
+              <span className="pc-tile-icon"><Icon aria-hidden="true" /></span>
+              <span>
+                <span className="pc-stat-figure block">{value}</span>
+                <span className="block font-semibold">{label}</span>
+              </span>
+              {typeof caption === 'string' ? <span className="text-xs text-ui-muted-foreground">{caption}</span> : caption}
+            </Link>
+          </li>
+        ))}
+        <li className="flex min-w-0">
+          <div className="pc-stat w-full">
+            <span className="pc-tile-icon"><ChartNoAxesColumn aria-hidden="true" /></span>
+            <span>
+              <span className="pc-stat-figure block">{active ? `${Math.round((completed / active) * 100)}%` : '—'}</span>
+              <span className="block font-semibold">Reading complete</span>
+            </span>
+            <span className="text-xs text-ui-muted-foreground">Of assignments still open or read</span>
           </div>
-        </Card>
-      </div>
-      <section className="reports-workbench">
-        <aside className="report-filter-panel" data-expanded={showFilters}>
-          <div className="report-filter-heading">
-            <h2>Filter records</h2>
+        </li>
+      </ul>
+      <div className="grid min-w-0 items-start gap-4 lg:grid-cols-[minmax(0,17rem)_minmax(0,1fr)]">
+        <section className="pc-panel" aria-labelledby="report-filter-heading">
+          <div className="pc-panel-head">
+            <h2 id="report-filter-heading">Filter records</h2>
             {hasFilters && (
-              <Button variant="ghost" onClick={() => setFilters({})}>
-                Reset
+              <Button asChild variant="link">
+                <Link href="/docs/reports" scroll={false}>Reset</Link>
               </Button>
             )}
           </div>
-          <div className="report-mobile-filter-toggle">
-            <Button
-              variant="outline"
-              aria-expanded={showFilters}
-              aria-controls="report-filter-fields"
-              onClick={() => setShowFilters(!showFilters)}
-            >
-              {showFilters ? 'Hide filters' : 'Show filters'}
-              {hasFilters ? ' · Active' : ''}
-            </Button>
+          <div className="flex flex-wrap items-end gap-3 lg:flex-col lg:items-stretch">
+            <FilterSelect label="Document" className="grow basis-48 lg:basis-auto" value={filters.document || ''} onChange={(value) => set('document', value)}>
+              <NativeSelectOption value="">All documents</NativeSelectOption>
+              {documents.map((d) => (
+                <NativeSelectOption key={d.id} value={d.id}>
+                  {d.content.title}
+                </NativeSelectOption>
+              ))}
+            </FilterSelect>
+            <FilterSelect label="Version" className="grow basis-48 lg:basis-auto" value={filters.version || ''} onChange={(value) => set('version', value)}>
+              <NativeSelectOption value="">All selected versions</NativeSelectOption>
+              {versions.map((v) => (
+                <NativeSelectOption key={v.id} value={v.id}>
+                  {v.label}
+                </NativeSelectOption>
+              ))}
+            </FilterSelect>
+            <FilterSelect label="Team" className="grow basis-48 lg:basis-auto" value={filters.team || ''} onChange={(value) => set('team', value)}>
+              <NativeSelectOption value="">All teams</NativeSelectOption>
+              {w.teams.map((t) => (
+                <NativeSelectOption key={t.id} value={t.id}>
+                  {t.name}
+                </NativeSelectOption>
+              ))}
+            </FilterSelect>
+            <FilterSelect label="Facility" className="grow basis-48 lg:basis-auto" value={filters.facility || ''} onChange={(value) => set('facility', value)}>
+              <NativeSelectOption value="">All facilities</NativeSelectOption>
+              {w.facilities.map((f) => (
+                <NativeSelectOption key={f.id} value={f.id}>
+                  {f.name}
+                </NativeSelectOption>
+              ))}
+            </FilterSelect>
+            <FilterSelect label="Status" className="grow basis-48 lg:basis-auto" value={filters.status || ''} onChange={(value) => set('status', value)}>
+              <NativeSelectOption value="">All statuses</NativeSelectOption>
+              <NativeSelectOption value="outstanding">To read</NativeSelectOption>
+              <NativeSelectOption value="completed">Acknowledged</NativeSelectOption>
+              <NativeSelectOption value="cancelled">Cancelled</NativeSelectOption>
+            </FilterSelect>
           </div>
-          <div id="report-filter-fields">
-            <div className="report-filters">
-              <Label>
-                Document
-                <NativeSelect
-                  value={filters.document || ''}
-                  onChange={(e) => set('document', e.target.value)}
-                >
-                  <NativeSelectOption value="">All documents</NativeSelectOption>
-                  {documents.map((d) => (
-                    <NativeSelectOption key={d.id} value={d.id}>
-                      {d.content.title}
-                    </NativeSelectOption>
-                  ))}
-                </NativeSelect>
-              </Label>
-              <Label>
-                Version
-                <NativeSelect
-                  value={filters.version || ''}
-                  onChange={(e) => set('version', e.target.value)}
-                >
-                  <NativeSelectOption value="">All selected versions</NativeSelectOption>
-                  {versions.map((v) => (
-                    <NativeSelectOption key={v.id} value={v.id}>
-                      {v.label}
-                    </NativeSelectOption>
-                  ))}
-                </NativeSelect>
-              </Label>
-              <Label>
-                Team
-                <NativeSelect
-                  value={filters.team || ''}
-                  onChange={(e) => set('team', e.target.value)}
-                >
-                  <NativeSelectOption value="">All teams</NativeSelectOption>
-                  {w.teams.map((t) => (
-                    <NativeSelectOption key={t.id} value={t.id}>
-                      {t.name}
-                    </NativeSelectOption>
-                  ))}
-                </NativeSelect>
-              </Label>
-              <Label>
-                Facility
-                <NativeSelect
-                  value={filters.facility || ''}
-                  onChange={(e) => set('facility', e.target.value)}
-                >
-                  <NativeSelectOption value="">All facilities</NativeSelectOption>
-                  {w.facilities.map((f) => (
-                    <NativeSelectOption key={f.id} value={f.id}>
-                      {f.name}
-                    </NativeSelectOption>
-                  ))}
-                </NativeSelect>
-              </Label>
-              <Label>
-                Status
-                <NativeSelect
-                  value={filters.status || ''}
-                  onChange={(e) => set('status', e.target.value)}
-                >
-                  <NativeSelectOption value="">All statuses</NativeSelectOption>
-                  <NativeSelectOption value="outstanding">To read</NativeSelectOption>
-                  <NativeSelectOption value="completed">Acknowledged</NativeSelectOption>
-                  <NativeSelectOption value="cancelled">Cancelled</NativeSelectOption>
-                </NativeSelect>
-              </Label>
-            </div>
-            <Label className="checkbox-label history-toggle">
-              <Checkbox
-                checked={!!filters.history}
-                onCheckedChange={(checked) => set('history', checked === true)}
-              />
-              Include previous versions, archived documents, and cancelled assignments
-            </Label>
+          <Label htmlFor={historyId} className="flex min-h-11 flex-row items-start gap-3 py-3 font-normal">
+            <Checkbox
+              id={historyId}
+              checked={!!filters.history}
+              onCheckedChange={(checked) => set('history', checked === true)}
+            />
+            Include earlier versions, archived documents and cancelled reading
+          </Label>
+        </section>
+        <section className="pc-panel" aria-labelledby="report-records-heading">
+          <div>
+            <h2 id="report-records-heading">
+              {filters.status === 'outstanding'
+                ? 'Outstanding reading'
+                : filters.status === 'completed'
+                  ? 'Acknowledged reading'
+                  : 'Reading records'}
+            </h2>
+            <p role="status" className="text-xs text-ui-muted-foreground">
+              {visible.length} {visible.length === 1 ? 'record' : 'records'} ·{' '}
+              {filters.history ? 'Includes earlier versions' : 'Current published versions'}
+            </p>
           </div>
-        </aside>
-        <Card asChild>
-          <div className="report-records panel">
-            <div className="report-records-heading">
-              <div>
-                <h2>
-                  {filters.status === 'outstanding'
-                    ? 'Outstanding reading'
-                    : filters.status === 'completed'
-                      ? 'Acknowledged reading'
-                      : 'Reading records'}
-                </h2>
-                <p role="status">
-                  {visible.length} {visible.length === 1 ? 'record' : 'records'} ·{' '}
-                  {filters.history
-                    ? 'Includes historical assignments'
-                    : 'Current published versions'}
-                </p>
-              </div>
-            </div>
-            {visible.length ? (
-              <div className="table-scroll">
-                <Table className="data-table">
-                  <TableHeader>
-                    <TableRow>
-                      <TableHead>Staff member</TableHead>
-                      <TableHead>Document</TableHead>
-                      <TableHead>Version</TableHead>
-                      <TableHead>Due date</TableHead>
-                      <TableHead>Status</TableHead>
-                      <TableHead>Acknowledged</TableHead>
-                    </TableRow>
-                  </TableHeader>
-                  <TableBody>
-                    {visible.map((r) => (
-                      <TableRow key={r.id}>
-                        <TableCell>
-                          <span className="staff-cell">
-                            <Avatar
-                              member={
-                                w.members.find((m) => m.id === r.memberId) || {
-                                  name: 'Former staff',
-                                }
-                              }
-                            />
-                            {w.members.find((m) => m.id === r.memberId)?.name}
-                          </span>
-                        </TableCell>
-                        <TableCell>
-                          <Link href={`/docs/documents/${r.documentId}?version=${r.versionId}`}>
-                            {r.title}
-                          </Link>
-                          <small>{r.reference}</small>
-                        </TableCell>
-                        <TableCell>v{r.version}</TableCell>
-                        <TableCell>{formatDate(r.dueDate)}</TableCell>
-                        <TableCell>
-                          <Tag meta={DOC_STATUS_META[readingStatus(r)]} />
-                        </TableCell>
-                        <TableCell>
-                          {r.acknowledgedAt ? formatDate(r.acknowledgedAt) : '—'}
-                        </TableCell>
-                      </TableRow>
-                    ))}
-                  </TableBody>
-                </Table>
-              </div>
-            ) : (
-              <EmptyState
-                as="h3"
-                icon="book"
-                title="No matching reading records"
-                hint="Change your filters or assign required reading from a document."
-                action={<Button asChild variant="outline"><Link href={hasFilters ? '/docs/reports' : '/docs/library'}>{hasFilters ? 'Clear filters' : 'Open the library'}</Link></Button>}
-              />
-            )}
-            {visible.length > 0 && (
-              <ul className="report-mobile-records">
+          {visible.length ? (
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead>Staff member</TableHead>
+                  <TableHead className="max-md:hidden">Document</TableHead>
+                  <TableHead className="max-md:hidden">Version</TableHead>
+                  <TableHead className="max-md:hidden">Due date</TableHead>
+                  <TableHead>Status</TableHead>
+                  <TableHead className="max-md:hidden">Acknowledged</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
                 {visible.map((r) => (
-                  <li key={r.id}>
-                    <div>
-                      <strong>
-                        {w.members.find((member) => member.id === r.memberId)?.name ||
-                          'Former staff'}
-                      </strong>
+                  <TableRow key={r.id}>
+                    <TableCell className="whitespace-normal">
+                      <span className="block font-semibold">{nameOf(r)}</span>
+                      {/* Phones: the document, version and date move under the name. */}
+                      <Link className="flex min-h-11 flex-col justify-center underline-offset-2 hover:underline md:hidden" href={`/docs/documents/${r.documentId}?version=${r.versionId}`}>
+                        <span className="text-ui-brand-ink">{r.title}</span>
+                        <span className="text-xs text-ui-muted-foreground">{`${r.reference} · version ${r.version} · ${when(r)}`}</span>
+                      </Link>
+                    </TableCell>
+                    <TableCell className="max-md:hidden whitespace-normal">
+                      <Link className="flex min-h-11 flex-col justify-center underline-offset-2 hover:underline" href={`/docs/documents/${r.documentId}?version=${r.versionId}`}>
+                        <span className="font-semibold">{r.title}</span>
+                        <span className="text-xs text-ui-muted-foreground">{r.reference}</span>
+                      </Link>
+                    </TableCell>
+                    <TableCell className="max-md:hidden tabular-nums">v{r.version}</TableCell>
+                    <TableCell className="max-md:hidden">{formatDate(r.dueDate)}</TableCell>
+                    <TableCell>
                       <Tag meta={DOC_STATUS_META[readingStatus(r)]} />
-                    </div>
-                    <Link href={`/docs/documents/${r.documentId}?version=${r.versionId}`}>
-                      {r.title}
-                    </Link>
-                    <p>
-                      {r.reference} · Version {r.version}
-                    </p>
-                    <span>
-                      {r.acknowledgedAt
-                        ? `Read ${formatDate(r.acknowledgedAt)}`
-                        : r.dueDate
-                          ? `Due ${formatDate(r.dueDate)}`
-                          : 'No deadline'}
-                    </span>
-                  </li>
+                    </TableCell>
+                    <TableCell className="max-md:hidden">
+                      {r.acknowledgedAt ? formatDate(r.acknowledgedAt) : '—'}
+                    </TableCell>
+                  </TableRow>
                 ))}
-              </ul>
-            )}
-          </div>
-        </Card>
-      </section>
-    </div>
+              </TableBody>
+            </Table>
+          ) : (
+            <EmptyState
+              as="h3"
+              icon="book"
+              title="No reading records match"
+              hint="Change the filters, or assign required reading from a document"
+              action={
+                <Button asChild variant="outline">
+                  <Link href={hasFilters ? '/docs/reports' : '/docs/library'}>
+                    {hasFilters ? 'Clear filters' : 'Open the library'}
+                    <ChevronRight aria-hidden="true" />
+                  </Link>
+                </Button>
+              }
+            />
+          )}
+        </section>
+      </div>
+    </>
   );
 }

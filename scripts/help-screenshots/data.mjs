@@ -1,6 +1,6 @@
 // Deliberately synthetic. This module never imports database or environment data.
 export const date = '2026-09-14';
-export const sites = [{id:'demo-bishopstown',name:'LeisureWorld Bishopstown'},{id:'demo-churchfield',name:'LeisureWorld Churchfield'}];
+export const sites = [{id:'demo-riverside',name:'Riverside'},{id:'demo-hillview',name:'Hillview'}];
 export const programme = {id:'demo-programme',name:'Water Safety & Fun',sortOrder:0,description:'Building confidence and skills in the water.',archivedAt:null};
 export const levels = ['Starfish','Penguins','Turtles','Dolphins'].map((name,i)=>({id:`demo-level-${i}`,name,sortOrder:i,programme,programmeId:programme.id,archivedAt:null}));
 export const instructors = [{id:'demo-teacher',name:'Alex Example'},{id:'demo-cover',name:'Robin Example'}];

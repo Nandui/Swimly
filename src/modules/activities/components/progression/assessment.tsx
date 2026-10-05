@@ -58,10 +58,6 @@ export function assessedLine(competency: Competency): string | null {
   }`;
 }
 
-const MARK_LABEL: Record<CompetencyStatus, string> = {
-  WORKING_ON: COMPETENCY_STATUS_META.WORKING_ON.label,
-  ACHIEVED: COMPETENCY_STATUS_META.ACHIEVED.label,
-};
 const MARK_ORDER: CompetencyStatus[] = ["WORKING_ON", "ACHIEVED"];
 
 /** The checklist for one swimmer at one level.
@@ -201,7 +197,7 @@ function CompetencyChecklistState({
                           }}
                           disabled={readOnly || pending}
                           fill="phone"
-                          options={MARK_ORDER.map((status) => ({ value: status, label: MARK_LABEL[status] }))}
+                          options={MARK_ORDER.map((status) => ({ value: status, label: COMPETENCY_STATUS_META[status].label }))}
                         />
                       </div>
                     </div>

@@ -16,9 +16,9 @@ export const CLASS_GUIDES: HelpArticle[] = [
     related: ["daily-schedule", "manage-class", "enrol-swimmer"], action: "courses",
   },
   {
-    slug: "daily-schedule", title: "Read the daily Schedule", category: "classes", scopes: ["desk"],
+    slug: "daily-schedule", title: "Read the daily schedule", category: "classes", scopes: ["desk"],
     summary: "Choose a day and see its classes, assessments, instructors and available places.", keywords: ["today", "schedule", "calendar", "agenda", "booking sheet", "week", "time"],
-    before: ["Check the site selected in the sidebar. Schedule shows one day at that site."],
+    before: ["Check the site in the tools bar at the top right. Schedule shows one day at that site."],
     steps: [
       { title: "Choose the date", text: "Schedule opens on today. Select a day from the week strip, use the previous or next week controls, or choose Today to return. A week change selects that week’s Monday." },
       { title: "Read the booking sheet", text: "Levels run down the left and class start times across the top. Scroll horizontally for later times. Each booking shows its end time, pool, instructor and places." },
@@ -45,7 +45,7 @@ export const CLASS_GUIDES: HelpArticle[] = [
   {
     slug: "start-class", title: "Start your class or take cover", category: "teaching", scopes: ["instructor"],
     summary: "Confirm that you are teaching today’s class before opening its register.", keywords: ["instructor", "start", "cover", "take over", "claim", "pool deck", "my classes", "in progress"],
-    before: ["You need the Instructor screen and attendance permission. Starting another instructor’s class also requires permission to take over their class."],
+    before: ["You need the Pool deck: Teach level, which includes covering a colleague’s class. Once a class is started, any instructor at the site can open it and help."],
     steps: [
       { title: "Check the site and today’s list", text: "Use My classes for your scheduled classes, or All classes when covering another teacher. You can group the list by time or level." },
       { title: "Choose Start class", text: "Read the class and date in the confirmation. Confirm that you are at the pool and teaching this class. Your own scheduled classes require this confirmation too." },
@@ -172,9 +172,9 @@ export const CLASS_GUIDES: HelpArticle[] = [
   {
     slug: "assessment-enrolment-follow-up", title: "Follow up swimmers awaiting enrolment", category: "enrolment", scopes: ["desk"],
     summary: "Find assessed swimmers and class waitlists, then arrange a class place.", keywords: ["awaiting enrolment", "assessed", "follow up", "placement", "waiting", "waitlist", "class place"],
-    before: ["Your role needs the Awaiting enrolment screen. Check the site in the sidebar. Enrolling also requires enrolment permission."],
+    before: ["Your role needs the Awaiting enrolment screen. Check the site in the tools bar at the top right. Enrolling also requires enrolment permission."],
     steps: [
-      { title: "Open Awaiting enrolment", text: "Choose Awaiting enrolment directly from the sidebar. Enrolments and waitlists includes assessed swimmers awaiting a place and class waitlists, even without an assessment. Awaiting moves lists current swimmers explicitly confirmed ready by an instructor. Search either list by name or member number." },
+      { title: "Open Awaiting enrolment", text: "Choose Awaiting enrolment in the Swim school page bar (under More if it does not fit). Enrolments and waitlists includes assessed swimmers awaiting a place and class waitlists, even without an assessment. Awaiting moves lists current swimmers explicitly confirmed ready by an instructor. Search either list by name or member number." },
       { title: "Follow up an instructor's move request", text: "Open Awaiting moves to see the current class, the confirming instructor, date and any note. Use Move swimmer to choose a class at either site and confirm the move. The swimmer stays in their current class until you do this, then leaves this list. Needs review means progress or the class level changed; ask the instructor to review readiness before proceeding." },
       { title: "Review the placement and family contact", text: "Check the swimmer, member number, any assessed level and each waitlisted class. Open an assessment date or swimmer profile when your access permits it. A waitlist can remain while the swimmer attends another class." },
       { title: "Arrange a class place", text: "For an assessment placement, choose Enrol to find classes at that level across sites. For a waitlisted class with space, choose Enrol from waitlist and confirm. Full or archived classes cannot receive a place here. Capacity is checked again when you confirm." },

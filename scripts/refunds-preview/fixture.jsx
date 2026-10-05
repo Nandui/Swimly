@@ -16,8 +16,9 @@ import './preview.css';
 import { RefundQueue } from '@/components/refunds/queue';
 import { RefundDetail } from '@/components/refunds/detail';
 import { RefundRequestForm } from '@/components/refunds/request-form';
-import { RefundSelect } from '@/components/refunds/fields';
+import { Select } from '@/components/ui/select';
 import { Notice } from '@/components/ui-kit/notice';
+import { PageHeader } from '@/components/ui-kit/page-header';
 
 const role = sessionStorage.getItem('refund-preview-role') || 'reception';
 const initialTheme = new URLSearchParams(location.search).get('theme') === 'dark' ? 'dark' : 'light';
@@ -31,9 +32,9 @@ window.fetch = (url, options={}) => fetchOriginal(url, { ...options, headers:{..
 function Preview() {
   const [data,setData] = useState(null), [error,setError] = useState('');
   useEffect(()=>{ fetch(`/preview/data?href=${encodeURIComponent(location.pathname+location.search)}`).then(async response=>{const payload=await response.json();if(!response.ok)throw Error(payload.error);setData(payload)}).catch(error=>setError(error.message));},[]);
-  return <div className="refund-preview"><div className="refund-preview-controls flex flex-wrap items-end justify-between gap-3 border-b border-ui-border bg-ui-background p-4"><p className="text-sm text-ui-muted-foreground">Refunds preview · fictional customers · isolated database · no real emails</p><div className="w-56"><RefundSelect id="preview-role" label="Preview as" value={role} onChange={next=>{sessionStorage.setItem('refund-preview-role',next);location.reload()}} options={[{value:'reception',label:'Reception — Alex Example'},{value:'finance',label:'Finance — Riley Example'},{value:'reader',label:'Read-only staff'}]} /></div></div>
+  return <div className="refund-preview"><div className="refund-preview-controls flex flex-wrap items-end justify-between gap-3 border-b border-ui-border bg-ui-background p-4"><p className="text-sm text-ui-muted-foreground">Refunds preview · fictional customers · isolated database · no real emails</p><div className="w-56"><Select id="preview-role" label="Preview as" value={role} onValueChange={next=>{sessionStorage.setItem('refund-preview-role',next);location.reload()}} options={[{value:'reception',label:'Reception — Alex Example'},{value:'finance',label:'Finance — Riley Example'},{value:'reader',label:'Read-only staff'}]} /></div></div>
     <RefundShell who={data?.who || {id:'preview-'+role,name:'Example staff',request:role==='reception',review:role==='finance',process:role==='finance'}}>
-      {error ? <Notice tone="error" title={error} /> : !data ? <p role="status">Loading the example workspace…</p> : data.kind==='queue' ? <RefundQueue data={data.queue} /> : data.kind==='new' ? <div className="refund-new"><div className="refund-heading"><h1 className="text-2xl font-semibold">New refund request</h1><p className="text-sm text-ui-muted-foreground">Send the details to finance. They will review the request and record the refund once paid.</p></div><RefundRequestForm id={data.id} sites={data.sites} /></div> : <RefundDetail data={data.detail} sites={data.sites} who={data.who} />}
+      {error ? <Notice tone="error" title={error} /> : !data ? <p role="status">Loading the example workspace…</p> : data.kind==='queue' ? <RefundQueue data={data.queue} /> : data.kind==='new' ? <><PageHeader title="New refund request" description="Send the details to finance. They will review the request and record the refund once paid." /><RefundRequestForm id={data.id} sites={data.sites} /></> : <RefundDetail data={data.detail} sites={data.sites} who={data.who} />}
     </RefundShell></div>;
 }
 createRoot(document.getElementById('root')).render(<ThemeProvider initialMode={initialTheme}><TooltipProvider><Preview /></TooltipProvider></ThemeProvider>);

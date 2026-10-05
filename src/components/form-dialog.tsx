@@ -180,6 +180,7 @@ export function FormDialog({
           >
             <FormFeedbackProvider feedback={feedback}><form
               ref={formRef}
+              method="post"
               onSubmit={handleSubmit}
               aria-busy={pending}
               className={styles.form}

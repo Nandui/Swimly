@@ -67,10 +67,7 @@ export function StartClass({
       }}
     >
       <DialogTrigger asChild>
-        <Button
-          className="min-h-11"
-          aria-label={`Start class: ${name}, ${schedule}`}
-        >
+        <Button aria-label={`Start class: ${name}, ${schedule}`}>
           <Play aria-hidden="true" />
           Start class
         </Button>
@@ -88,7 +85,7 @@ export function StartClass({
               : ""}
           </DialogDescription>
         </DialogHeader>
-        <p className="text-sm leading-relaxed">
+        <p className="text-sm">
           Confirm you are at the pool and teaching this class. Your start will
           be recorded. Other instructors can also open and help with this session.
         </p>
@@ -96,13 +93,12 @@ export function StartClass({
         <DialogFooter>
           <Button
             variant="outline"
-            className="min-h-11"
             disabled={pending}
             onClick={() => setOpen(false)}
           >
             Cancel
           </Button>
-          <LoadingButton className="min-h-11" pending={pending} pendingLabel="Starting…" onClick={confirm}>
+          <LoadingButton pending={pending} pendingLabel="Starting…" onClick={confirm}>
             <Play aria-hidden="true" />Confirm and start
           </LoadingButton>
         </DialogFooter>

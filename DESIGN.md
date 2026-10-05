@@ -71,7 +71,8 @@ mode uses a system-colour outline so focus remains visible without shadows.
 The root layout reads `swimly.theme` and sets `data-theme` before first paint.
 The appearance provider updates that attribute and cookie. With no explicit
 mode, CSS `color-scheme: light dark` follows the device. The account RadioGroup
-offers System, Light and Dark; the appearance button flips the resolved mode.
+offers System, Light and Dark. Appearance lives in the account menu and on Account; no
+page has a separate appearance button.
 Sonner notifications share these tokens; errors remain until dismissed.
 
 The [interaction system](docs/interaction-system.md) records the screen audit
@@ -83,7 +84,7 @@ fields, focuses the first failed field after submission and preserves typing
 focus during correction. Keep essential instructions visible and operational
 pages, rows and static cards stationary.
 Microinteractions move only control contents: selection marks settle, loading
-labels crossfade, destination chevrons nudge and appearance icons transition.
+labels crossfade and destination chevrons nudge.
 Buttons have a small press response. Reduced motion removes those movements
 while preserving immediate state feedback; do not introduce page-entry motion.
 
@@ -141,9 +142,17 @@ and no module bar; see docs/instructor.md.
 
 Docs at `/docs` is in the shared frame: Overview (titled Docs, like every module),
 Document library, My work, and Reading reports and Administration for those who may open
-them, with a search shortcut in the tools. The Docs reading and authoring layouts in
-`docs.css` keep their structure under the v2 tokens; the editor toolbar wraps rather than
-scrolling sideways. See [Docs integration](docs/turnfin-docs.md).
+them, with a search shortcut in the tools. Every Docs page is built from the shared parts
+(DCOverview, V2Docs, DCWork, DCReports, V2Document, DCEdit, DCNew, DCHistory, DCAdmin):
+`PageHeader`, white `.pc-panel`s of `.pc-row`s, `.pc-stats` figure tiles (reports' tiles link
+to their status and are outlined when open), `SegmentedLinks` for the library's types and the
+admin sections (they wrap, never scroll), labelled pill selects, `Tag`s from
+`DOC_STATUS_META` and `RISK_BAND_TONE_META`, and one `documentTypeLabels` map for type words.
+The reader puts the document in a panel beside an "On this page" rail with A−/A/A+ sizes;
+headings in a document scale with that size (18/24 at the default 16px). The editor puts the
+writing beside the document details from 1100px; its toolbar is one sunken bar that wraps on
+wide screens and becomes two rows on phones, the other tools moving into More. See
+[Docs integration](docs/turnfin-docs.md).
 
 **The home page** (`/`, owner decision 28 September 2026) is the role's workspace: the role's
 home name as the H1, with the date, role and working site beneath and a "things need you"
@@ -185,10 +194,12 @@ launcher (`/modules`) and the Reception Portal are retired and redirect to `/`; 
 
 Refunds at `/refunds` is in the shared frame with three request views in the page bar
 (Refund requests, My requests, My drafts). The summary tiles are the follow-up queues
-(Awaiting review, Needs information, Awaiting payment, Refunded): each links to its status
-and is outlined in blue when it is the open filter, so each status has one way in. Filters
-sit in a white panel; requests are separate rounded rows. On a request, the next-action
-panel is the one panel with an edge (2px blue). Statuses use `<Tag meta={refundStatuses[status]} />`;
+(Awaiting review, Needs information, Awaiting payment, Refunded): each links to its view
+(Awaiting review = submitted and in review), keeping the other filters, and is outlined in
+blue when it is the open filter, so each status has one way in. Search, pill pickers that
+apply on change and the requests (`.pc-rows`) share one white panel. On a request, the
+next-action panel is the one panel with an edge (2px blue), and only when the person can
+act; it holds Submit on an editable request. Statuses use `<Tag meta={refundStatuses[status]} />`;
 each status in `src/lib/refunds/types.ts` has its own icon. Finance decisions use shadcn Dialogs with 44px controls,
 focus restoration and preserved values after errors. `src/app/refunds/refunds.css` only
 arranges the Refunds screens. See [docs/refunds.md](docs/refunds.md).
@@ -202,9 +213,12 @@ every portalled dialog already has it; their form dialogs pass `portalClassName=
 to `FormDialog` only so the module layout CSS reaches them, and selects inside them are shadcn `NativeSelect`. Statuses use
 `<Tag meta={…} />` with metas whose icons live in the map itself (`TRAINING_STATUS_META`,
 `QUALIFICATION_STATE_META`, `NOTE_VISIBILITY_META`, `REVIEW_STATUS_META`, `ROTA_WARNING_META`). Each person's own side is not on Work at
-all: it is Turnfin Me (`apps/me`), a phone-first app in Poolside Clear with a bottom tab bar,
-44px controls and the same tokens (copied into `apps/me/src/app/globals.css`), built from plain
-semantic elements; status tones come from `apps/me/src/lib/meta.ts`, each with an icon. See
+all: it is Turnfin Me (`apps/me`), a phone-first app in Poolside Clear v2 with the floating
+bottom bar at every width, 44px controls, and the same tokens and v2 parts (the fin tile, bar,
+bottom bar, panels, rows and tile icons) copied verbatim from `src/app/docs/poolside.css` into
+`apps/me/src/app/globals.css` under `body.turnfin-app`, with one block marked "Me only" (the
+bottom bar at every width, capped to the 720px column, and the safe areas). It is built from
+plain semantic elements; status tones come from `apps/me/src/lib/meta.ts`, each with an icon. See
 [docs/staff-app.md](docs/staff-app.md),
 [docs/training.md](docs/training.md), [docs/hr.md](docs/hr.md) and [docs/rota.md](docs/rota.md).
 
@@ -427,7 +441,7 @@ permission keys) stay as they are.
 - One name per concept: **site** (never club or working area), **Pool deck**, **HR**,
   **waitlist**, **No limit** (never uncapped).
 - Create buttons read "Add a <noun>" ("Add a swimmer", "Add a site"). Domain verbs stay as
-  they are: Find a swimmer, Book an assessment, Log refund request, Report absence.
+  they are: Find a swimmer, Book an assessment, Log a refund request, Report absence.
 - "and", not "&". Commas or colons, not em dashes.
 - Dates, times and counts come only from `src/lib/format.ts`, in one locale (en-GB, with
   "Sep" not "Sept"); never write `Intl.DateTimeFormat` or `toLocaleDateString` in a
@@ -445,9 +459,11 @@ permission keys) stay as they are.
 - No ellipsis in placeholders. Examples are neutral (Riverside, Sam Murphy); no customer or
   site names, and no site counts, in code.
 
-**Cascade.** `docs.css` uses these tokens only. Its original layouts sit in
-`@layer components.legacy`, below the Docs redesign in `@layer components`. `poolside.css`
-and module CSS stay unlayered on top. A rule that must beat a utility class on a shadcn
+**Cascade.** `docs.css` keeps only the Docs rules something still renders (document prose,
+the risk assessment views, comparison, a few editor and print rules); its radii and colours
+are tokens, with literal colours only in print rules. The remaining original rules sit in
+`@layer components.legacy`, below the Docs v2 rules in `@layer components`. `editor.css`
+(document prose and the editor) and `poolside.css` and module CSS stay unlayered on top. A rule that must beat a utility class on a shadcn
 primitive belongs in `poolside.css`.
 
 Schedule keeps its booking sheet with sticky level labels and horizontal time scrolling.
@@ -540,14 +556,21 @@ These controls remain in the desk workspace. See [staff parent controls](docs/pa
 
 ## Forms, search and confirmation
 
-The authenticated help centre owns a separate document frame at `/help`, using
-the same theme and the v2 top bar (fin, appearance, the way back). The module rail, the
-bottom bar's More and the deck bar open Help in a new tab; the account menu has no Help. Instructor opens `/help/instructor`, with teaching-only guides and a
-return to Classes. Search and topic navigation lead to full guides with numbered
-steps, troubleshooting and related tasks. Captioned screenshots beside the steps
+The authenticated help centre owns its own v2 frame at `/help` (HPIndex, HPArticle): the
+rounded frame with no rail, a top bar with the fin, "Help centre" and the way back ("Back to
+app", or "Back to classes" for Instructor; icon-only on phones). Appearance follows the
+setting from the account menu. The module rail, the bottom bar's More and the deck bar open
+Help in a new tab; the account menu has no Help. Instructor opens `/help/instructor`, with
+teaching-only guides. The index is a search panel with a visible label, topics as compact
+rows with counts (the current one soft blue), common tasks as a grid of rows with tile
+icons and guides as rows with one caption ("summary · topic · n min read"). An article
+has a PageHeader ("‹ All guides", or "‹ Search results" keeping the search; two outline
+tools), then one panel: "Before you start" as a sunken note, steps as sunken rows with
+filled numbers, and related guides as rows. Captioned screenshots beside the steps
 use synthetic records, fit the available width and open at full size in a new
 tab. Their image URLs require a staff session too. Topic navigation collapses on phones;
-articles have a contents rail on wide screens. Task links respect screen access,
+articles have an "On this page" rail of compact rows from 1024px. Printing drops the frame,
+its bars and the tools. Task links respect screen access,
 and the manual reads no operational data. See [help content and access](docs/help-centre.md).
 
 `src/components/ui` composes shadcn inputs with labels, hints and native form
@@ -630,7 +653,8 @@ always there. The keyholder guard keeps at least one active account holding
 **Two kinds of navigation, never mixed.** The module rail (bottom bar on phones and touch)
 lists Home and the person's modules (`useYourModules`); the page bar lists only the open
 module's pages. Both hold navigation only: no action buttons such as "New document"; a
-module's main action sits in its page heading. The pool deck keeps its own frame.
+module's main action sits in its page heading. The pool deck keeps its own top bar (in the
+shared frame, without the rail or bottom bar).
 
 Analytics (Swim school) opens with figure tiles on the canvas (`.pc-stats`: three
 headline totals), then two panels side by side (`.pc-grid`): Enrolled by level, each
@@ -867,8 +891,9 @@ and simultaneous confirmations do not overwrite it or duplicate its audit.
 All authorised instructors can open a started class, including an existing
 session whose original instructor's account has been deleted.
 
-The deck shows Start class or Open class. Attendance saved/to-take remains a
-plain operational indicator; shared sessions identify who started them. Each
+The deck shows Start class or Open class. Attendance saved or to take is a status
+Tag (`ATTENDANCE_RECORD_META.taken` / `notTaken`, the same words on the desk); shared
+sessions identify who started them. Each
 save records its actual actor. Attendance, competencies and completion recheck
 the dated start and permissions under the course lock; the class page checks
 the start before loading swimmers. Register revision checks still prevent stale

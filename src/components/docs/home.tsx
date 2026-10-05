@@ -1,34 +1,27 @@
 'use client';
 
-import { Label } from '@/components/shadcn/label';
-import { NativeSelect, NativeSelectOption } from '@/components/shadcn/native-select';
-import { SearchField } from '@/components/ui-kit/search-field';
-import { Card } from '@/components/shadcn/card';
 import Link from 'next/link';
 import { useState } from 'react';
-import {
-  ArrowRight,
-  ArrowUpRight,
-  Check,
-  LifeBuoy,
-  MapPin,
-  Search,
-  ShieldCheck,
-} from 'lucide-react';
-import { canWrite, type DocumentType, type Workspace } from '@/lib/docs/types';
-import { DocIcon } from './ui';
-import { EmptyState } from '@/components/ui-kit/empty-state';
+import { BookOpen, CheckCheck, ChevronRight, LifeBuoy, Pencil } from 'lucide-react';
+import { NativeSelectOption } from '@/components/shadcn/native-select';
 import { Button } from '@/components/shadcn/button';
+import { SearchField } from '@/components/ui-kit/search-field';
+import { EmptyState } from '@/components/ui-kit/empty-state';
+import { PageHeader } from '@/components/ui-kit/page-header';
+import { canWrite, documentTypeLabels, type DocumentType, type Workspace } from '@/lib/docs/types';
+import { DocIcon, FilterSelect } from './ui';
 import { DocumentList } from './document-list';
 
-const collections: { type: DocumentType; label: string; description: string }[] = [
-  { type: 'SOP', label: 'Procedures', description: 'The everyday essentials' },
-  { type: 'NOP', label: 'Operations', description: 'Keep things running well' },
-  { type: 'Policy', label: 'Policies', description: 'A shared way of working' },
-  { type: 'Risk assessment', label: 'Risk assessments', description: 'Understand and manage risk' },
+const collections: { type: DocumentType; description: string }[] = [
+  { type: 'SOP', description: 'Everyday tasks, step by step' },
+  { type: 'NOP', description: 'How the facility runs each day' },
+  { type: 'Policy', description: 'The rules everyone works to' },
+  { type: 'Risk assessment', description: 'Hazards and their controls' },
 ];
 
-export function HomeView({ workspace: w }: { workspace: Workspace }) {
+/** The Docs overview (DCOverview): find a document, the emergency plans, the person's
+ *  authoring work, the collections and what was published last. */
+export function HomeView({ workspace: w, description }: { workspace: Workspace; description: string }) {
   const [facility, setFacility] = useState('');
   const matchesFacility = (ids: string[]) => !facility || !ids.length || ids.includes(facility);
   const documents = w.documents.filter(
@@ -36,159 +29,144 @@ export function HomeView({ workspace: w }: { workspace: Workspace }) {
   );
   const facilityQuery = facility ? `facility=${encodeURIComponent(facility)}` : '';
   const libraryUrl = `/docs/library${facilityQuery ? `?${facilityQuery}` : ''}`;
+  const work = [
+    ...(canWrite(w.member)
+      ? [
+          { href: '/docs/work?view=drafts', icon: Pencil, title: 'Continue a draft', hint: 'Pick up where the team left off' },
+          { href: '/docs/work?view=reviews', icon: CheckCheck, title: 'Review submissions', hint: 'Decisions waiting for you' },
+        ]
+      : []),
+    { href: libraryUrl, icon: BookOpen, title: 'Browse the library', hint: 'Every published document for your facility' },
+  ];
 
   return (
-    <div className="knowledge-home home-operational">
-      <header className="home-heading">
-        <div>
-          <h1>Docs</h1>
-          <p className="muted">
-            Welcome back, {w.member.name.split(' ')[0]}. Here’s what needs your attention.
-          </p>
-        </div>
-        <Label className="home-facility">
-          <MapPin size={16} aria-hidden="true" />
-          <span className="sr-only">Filter by facility</span>
-          <NativeSelect value={facility} onChange={(event) => setFacility(event.target.value)}>
+    <>
+      <PageHeader
+        title="Docs"
+        description={description}
+        actions={
+          <FilterSelect label="Facility" className="grow sm:grow-0 sm:min-w-56" value={facility} onChange={setFacility}>
             <NativeSelectOption value="">All facilities</NativeSelectOption>
             {w.facilities.map((item) => (
               <NativeSelectOption key={item.id} value={item.id}>
                 {item.name}
               </NativeSelectOption>
             ))}
-          </NativeSelect>
-        </Label>
-      </header>
+          </FilterSelect>
+        }
+      />
 
-      <form className="flex flex-wrap items-end gap-3" action="/docs/library" role="search" aria-label="Find guidance">
-        <SearchField
-          label="Find a document"
-          placeholder="Find a procedure, policy or document"
-          className="max-w-md flex-1 basis-72"
-        />
-        {facility && <input type="hidden" name="facility" value={facility} />}
-        <Button type="submit">
-          <Search aria-hidden="true" />
-          Search
-        </Button>
-      </form>
-      <section className="emergency-banner" aria-label="Emergency plans">
-        <LifeBuoy size={25} aria-hidden="true" />
-        <div>
-          <strong>Emergency plans</strong>
-          <span>Approved responses for your facility.</span>
-        </div>
-        <Link href={`/docs/library?type=EAP${facilityQuery ? `&${facilityQuery}` : ''}`}>
-          Open plans <ArrowRight size={17} aria-hidden="true" />
-        </Link>
+      <section className="pc-panel" aria-label="Find a document">
+        <form className="flex flex-wrap items-end gap-3" action="/docs/library" role="search" aria-label="Find a document">
+          <SearchField
+            label="Find a document"
+            placeholder="Find a procedure, policy or document"
+            className="max-w-xl flex-1 basis-64"
+          />
+          {facility && <input type="hidden" name="facility" value={facility} />}
+          <Button type="submit">
+            Search
+            <ChevronRight aria-hidden="true" />
+          </Button>
+        </form>
       </section>
 
-      <div className="home-focus-grid">
-        <Card asChild>
-          <section className="reading-panel" aria-labelledby="required-reading-title">
-            <div className="section-heading">
-              <div>
-                <h2 id="required-reading-title">Your required reading</h2>
-              </div>
-            </div>
-            {/* Personal records live in Turnfin Me, the staff app, never on Work. */}
-            <EmptyState
-              as="h3"
-              icon="book"
-              title="Read and acknowledge in Turnfin Me"
-              hint="Documents assigned to you, their deadlines and your acknowledgements are in Turnfin Me on your phone. The library here is open for looking things up at work."
-            />
-            <div className="reading-panel-footer">
-              <span>
-                <ShieldCheck size={15} aria-hidden="true" /> Every acknowledgement is recorded.
-              </span>
-              <Link href={libraryUrl} className="text-link">
-                Browse the library <ArrowRight size={15} aria-hidden="true" />
-              </Link>
-            </div>
-          </section>
-        </Card>
+      <section className="pc-note flex-wrap items-center" data-tone="danger" aria-labelledby="emergency-title">
+        <LifeBuoy aria-hidden="true" className="size-5" />
+        <div className="min-w-0 flex-1 basis-48">
+          <h2 id="emergency-title" className="text-sm">Emergency plans</h2>
+          <p className="pc-row-hint">Approved responses for your facility</p>
+        </div>
+        <Button asChild variant="outline">
+          <Link href={`/docs/library?type=EAP${facilityQuery ? `&${facilityQuery}` : ''}`}>
+            Open plans
+            <ChevronRight aria-hidden="true" />
+          </Link>
+        </Button>
+      </section>
 
-        <aside className="home-side">
-          <nav className="home-work-links" aria-label="Workspace actions">
-            {canWrite(w.member) && (
-              <>
-                <Link href="/docs/work?view=drafts">
-                  <span>
-                    <strong>Continue a draft</strong>
-                    <small>Pick up where the team left off</small>
-                  </span>
-                  <ArrowRight size={17} aria-hidden="true" />
+      <div className="pc-grid">
+        <section className="pc-panel" aria-labelledby="required-reading-title">
+          <h2 id="required-reading-title">Your required reading</h2>
+          {/* Personal records live in Turnfin Me, the staff app, never on Work. */}
+          <EmptyState
+            as="h3"
+            icon="book"
+            title="Read and acknowledge in Turnfin Me"
+            hint="Documents assigned to you, their deadlines and your acknowledgements are in Turnfin Me on your phone. The library here is open for looking things up at work."
+            action={
+              <Button asChild variant="outline">
+                <Link href={libraryUrl}>
+                  Browse the library
+                  <ChevronRight aria-hidden="true" />
                 </Link>
-                <Link href="/docs/work?view=reviews">
-                  <span>
-                    <strong>Review submissions</strong>
-                    <small>Decisions waiting for you</small>
+              </Button>
+            }
+          />
+        </section>
+
+        <section className="pc-panel" aria-labelledby="your-work-title">
+          <h2 id="your-work-title">Your work</h2>
+          <ul className="pc-rows">
+            {work.map(({ href, icon: Icon, title, hint }) => (
+              <li key={title}>
+                <Link className="pc-row" href={href}>
+                  <span className="pc-tile-icon"><Icon aria-hidden="true" /></span>
+                  <span className="pc-row-body">
+                    <span className="pc-row-title">{title}</span>
+                    <span className="pc-row-hint">{hint}</span>
                   </span>
-                  <ArrowRight size={17} aria-hidden="true" />
+                  <ChevronRight className="pc-row-chevron" aria-hidden="true" />
                 </Link>
-              </>
-            )}
-            <Link href={libraryUrl}>
-              <span>
-                <strong>Browse the library</strong>
-                <small>Every published document for your facility</small>
-              </span>
-              <ArrowRight size={17} aria-hidden="true" />
-            </Link>
-          </nav>
-        </aside>
+              </li>
+            ))}
+          </ul>
+        </section>
       </div>
 
-      <nav className="collection-grid" aria-label="Browse document collections">
-        {collections.map(({ type, label, description }) => (
-          <Link
-            className="collection-link"
-            key={type}
-            href={`/docs/library?type=${encodeURIComponent(type)}${facilityQuery ? `&${facilityQuery}` : ''}`}
-          >
-            <div className="collection-top">
-              <DocIcon type={type} />
-              <span>{documents.filter((d) => d.content.type === type).length}</span>
-            </div>
-            <strong>
-              {label}
-              <ArrowUpRight size={16} aria-hidden="true" />
-            </strong>
-            <p>{description}</p>
-          </Link>
-        ))}
-      </nav>
+      <section className="pc-panel" aria-labelledby="collections-title">
+        <h2 id="collections-title">Collections</h2>
+        {/* Four collections fit one row on a wide panel (DCOverview), two on a phone. */}
+        <ul className="pc-stats" style={{ gridTemplateColumns: 'repeat(auto-fit, minmax(min(100%, 130px), 1fr))' }}>
+          {collections.map(({ type, description }) => (
+            <li key={type} className="flex min-w-0">
+              <Link
+                className="pc-stat w-full"
+                href={`/docs/library?type=${encodeURIComponent(type)}${facilityQuery ? `&${facilityQuery}` : ''}`}
+              >
+                <DocIcon type={type} />
+                <span>
+                  <span className="pc-stat-figure block">{documents.filter((d) => d.content.type === type).length}</span>
+                  <span className="block font-semibold">{documentTypeLabels[type].many}</span>
+                </span>
+                <span className="text-xs text-ui-muted-foreground">{description}</span>
+              </Link>
+            </li>
+          ))}
+        </ul>
+      </section>
 
-      <section className="recent-section" aria-labelledby="recent-heading">
-        <div className="section-heading">
-          <div>
-            <p className="section-kicker">Keep in the know</p>
-            <h2 id="recent-heading">Recently published</h2>
-          </div>
-          <Link className="text-link" href={libraryUrl}>
-            View all documents <ArrowRight size={16} aria-hidden="true" />
-          </Link>
+      <section className="pc-panel" aria-labelledby="recent-heading">
+        <div className="pc-panel-head">
+          <h2 id="recent-heading">Recently published</h2>
+          <Button asChild variant="link">
+            <Link href={libraryUrl}>
+              View all documents
+              <ChevronRight aria-hidden="true" />
+            </Link>
+          </Button>
         </div>
         {documents.length ? (
           <DocumentList documents={documents.slice(0, 5)} facilities={w.facilities} />
         ) : (
-          <Card asChild>
-            <div className="panel">
-              <EmptyState
-                as="h3"
-                icon="book"
-                title="No publications yet"
-                hint="Approved documents for this facility will appear here once published."
-                action={<Button asChild variant="outline"><Link href="/docs/library">Explore the library</Link></Button>}
-              />
-            </div>
-          </Card>
+          <EmptyState
+            as="h3"
+            icon="book"
+            title="No published documents yet"
+            hint="Approved documents for this facility appear here once they are published"
+          />
         )}
       </section>
-      <p className="home-assurance">
-        <Check size={15} aria-hidden="true" /> Approved guidance, so everyone’s on the same page.
-      </p>
-    </div>
+    </>
   );
 }

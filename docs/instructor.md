@@ -36,6 +36,12 @@ the pool. Its route group and layout stay separate from the desk workspace.
   Both views share drafts and one **Save marks** action across the class.
   Switching views or swimmers keeps unsaved changes. Absent swimmers remain
   under **Not in today**; level completion is still a separate confirmation.
+- The deck sits in the shared frame (`tf-shell`, `tf-frame` capped at 1180px: 24px ground
+  and inset from 768px, a flat 16px frame on phones) with no module rail or bottom bar,
+  and scrolls the window. Its skip link is the shared "Skip to content" pill. The home
+  page is titled **Pool deck**: an Assessments today panel, then one panel holding
+  My/All classes, Group by and every section, each class row with a time block in its
+  state (finished, on now, next, cancelled) and a register Tag.
 - The frame offers classes, a swimmer lookup for the working site, site, help
   (`/help/instructor`, a new tab) and the shared account menu (`AccountMenu`
   with `showManageAccount={false}`: who you are, appearance and sign-out; no
