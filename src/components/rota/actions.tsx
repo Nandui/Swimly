@@ -13,7 +13,7 @@ import { Field, FormDialog } from "@/components/form-dialog";
 import { cancelShift, copyPlan, markTimepointUpdated, saveShift, type ChangeInput } from "@/lib/rota/actions";
 import { ROTA_CHANGE_REASON_META, ROTA_CHANGE_REASONS, addDaysIso, clock, mondayOf, weekStarted, type RotaChangeReason } from "@/lib/rota/constants";
 
-const THEME = "turnfin-docs turnfin-module";
+const THEME = "turnfin-module";
 
 type Option = { id: string; name: string };
 type Shift = { id: string; date: Date; startMinutes: number; endMinutes: number; role: string; note: string; userId: string | null; requiredTypeId: string | null; departmentId: string | null };

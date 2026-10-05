@@ -17,7 +17,7 @@ import { fitsFor, type Candidate } from "@/lib/rota/timeline";
 import { toast } from "@/lib/toast";
 import { cn } from "@/lib/utils";
 
-const THEME = "turnfin-docs turnfin-module";
+const THEME = "turnfin-module";
 type Option = { id: string; name: string };
 export type ActivityValue = { id: string; label: string; start: number; end: number; people: number; requiredTypeId: string | null; note: string };
 

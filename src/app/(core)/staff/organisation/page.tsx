@@ -31,7 +31,7 @@ export default async function OrganisationPage() {
       />
 
       <section className="pc-panel" aria-labelledby="departments-heading">
-        <h2 id="departments-heading" className="text-xl font-semibold tracking-tight">Departments</h2>
+        <h2 id="departments-heading" className="text-xl font-semibold">Departments</h2>
         <Lead>
           <Num>{liveDepartments.length}</Num> {liveDepartments.length === 1 ? "department" : "departments"}. They organise people; they do not
           give anyone access. What a role can do applies at the sites each person works at.
@@ -65,7 +65,7 @@ export default async function OrganisationPage() {
 
       <section className="pc-panel" aria-labelledby="qualifications-heading">
         <div className="flex flex-wrap items-center justify-between gap-3">
-          <h2 id="qualifications-heading" className="text-xl font-semibold tracking-tight">Qualifications</h2>
+          <h2 id="qualifications-heading" className="text-xl font-semibold">Qualifications</h2>
           <SaveQualificationType />
         </div>
         <Lead>

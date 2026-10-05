@@ -10,7 +10,7 @@ import { saveSegments } from "@/lib/rota/actions";
 import { PAID_BREAK, SEGMENT_KIND_META, UNPAID_BREAK, clock, describeEntitlement, isPaidBreak, parseClock, segmentProblem, suggestBreaks, type SegmentKind, type YoungBand } from "@/lib/rota/constants";
 import { cn } from "@/lib/utils";
 
-const THEME = "turnfin-docs turnfin-module";
+const THEME = "turnfin-module";
 type Row = { key: number; start: string; end: string; kind: SegmentKind; label: string };
 export type SegmentShift = { id: string; start: number; end: number; role: string; who: string | null; segments: { start: number; end: number; kind: string; label: string }[];
   /** Under 18 that day, for their longer breaks; never the date of birth. */

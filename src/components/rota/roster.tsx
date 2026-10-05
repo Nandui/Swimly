@@ -16,7 +16,7 @@ import { weekStarted } from "@/lib/rota/constants";
 import { hours } from "@/lib/rota/plan";
 import type { RosterCell, RosterData, RosterPerson } from "@/lib/rota/roster";
 
-const THEME = "turnfin-docs turnfin-module";
+const THEME = "turnfin-module";
 type Day = { iso: string; weekday: string; date: string; today: boolean };
 export type RosterShiftDetail = SegmentShift & {
   date: Date; startMinutes: number; endMinutes: number; note: string; userId: string | null;

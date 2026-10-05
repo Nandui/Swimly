@@ -15,7 +15,7 @@ import { NOTE_VISIBILITY_META, NOTE_VISIBILITIES, REVIEW_OVERALL_LABELS, type Re
 import { addNote, saveReview, shareReview, withdrawNote } from "@/lib/hr/actions";
 
 /** HR dialogs carry the Poolside Clear scope into their portal. */
-const THEME = "turnfin-docs turnfin-module";
+const THEME = "turnfin-module";
 
 export function AddNote({ subjectUserId, name }: { subjectUserId: string; name: string }) {
   const [visibility, setVisibility] = useState("record");

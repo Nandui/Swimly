@@ -7,7 +7,7 @@ import { ModuleShell } from '@/components/workspace/module-shell';
 import type { RotaActor } from '@/lib/rota/access';
 
 /** Rota's navigation in the shared workspace shell. Absences are for rota managers. */
-export function RotaShell({ who, initialCollapsed = false, children }: { who: RotaActor; initialCollapsed?: boolean; children: ReactNode }) {
+export function RotaShell({ who, children }: { who: RotaActor; children: ReactNode }) {
   const pathname = usePathname();
   const links = [
     { href: '/rota/overview', label: 'Overview', icon: LayoutDashboard, active: pathname === '/rota/overview' },
@@ -20,8 +20,7 @@ export function RotaShell({ who, initialCollapsed = false, children }: { who: Ro
     ] : []),
   ];
   return (
-    <ModuleShell module="Rota" id="rota" base="/rota/overview" who={who} pageLabel={links.find((l) => l.active)?.label ?? 'Week'} initialCollapsed={initialCollapsed}
-      links={links} scopeNote="Only the sites you cover">
+    <ModuleShell module="Rota" id="rota" who={who} links={links} scopeNote="Only the sites you cover">
       {children}
     </ModuleShell>
   );

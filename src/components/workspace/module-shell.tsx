@@ -35,10 +35,6 @@ export function ModuleShell({ module, id, current = id, who, links = [], groups,
   tools?: ReactNode;
   /** A short note on whose records these are; read by screen readers with the page links. */
   scopeNote: string;
-  pageLabel?: string;
-  initialCollapsed?: boolean;
-  /** Where the module's first page is; kept for callers, the fin always leads home. */
-  base?: string;
   contentClass?: string;
   /** Caps the page's width; without it the page fills the frame. */
   maxWidth?: number;
@@ -54,7 +50,7 @@ export function ModuleShell({ module, id, current = id, who, links = [], groups,
   const railCurrent = current === 'core' ? 'admin' : current;
 
   return (
-    <div className={`turnfin-docs turnfin-module turnfin-${id} tf-shell`}>
+    <div className={`turnfin-module turnfin-${id} tf-shell`}>
       <a className="skip-link" href={`#${id}-main`}>Skip to content</a>
       <div className="tf-frame">
         <header className="tf-top">

@@ -10,8 +10,11 @@ Docs keeps that repository's sidebar, reading layouts, authoring flow and
 administration screens. Since September 2026 its colours and type follow the
 **Poolside Clear** design shared with Refunds: Plus Jakarta Sans, the fin's teal
 and aqua, a cool canvas with white panels and a pool-night dark mode, defined in
-`src/app/docs/poolside.css`. Module CSS and portal wrappers are scoped to
-`.turnfin-docs`; shared controls come from `src/components/shadcn`.
+`src/app/docs/poolside.css`, whose tokens and control rules sit on `body.turnfin-app`. Only
+the Docs and Refunds layout CSS (`docs.css`, `integration.css`, `editor.css`) and their portal
+wrappers are scoped to `.turnfin-docs`, which `src/app/docs/layout.tsx` and
+`src/app/refunds/layout.tsx` put around the frame; it never restyles shared controls, which
+come from `src/components/shadcn`.
 Every page, the Reception Portal included, gets Poolside Clear from the root layout; the
 earlier Docs theme (`brand.css`) is retired. See docs/reception-portal.md.
 

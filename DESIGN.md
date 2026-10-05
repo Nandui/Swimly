@@ -138,8 +138,9 @@ Training (`/training`), HR (`/hr`) and Rota (`/rota`) are people- and site-scope
 built on the shared frame, `ModuleShell` (`src/components/workspace/module-shell.tsx`), each
 with its own page bar. `src/app/workspace/module-workspace.css`
 (scoped by `.turnfin-module`, with `module-*` classes) only arranges their screens; a new
-module reuses it rather than copying a stylesheet. Their form dialogs pass `portalClassName="turnfin-docs turnfin-module"` to `FormDialog`
-so they keep the theme, and selects inside them are shadcn `NativeSelect`. Statuses use
+module reuses it rather than copying a stylesheet. The theme comes from `body.turnfin-app`, so
+every portalled dialog already has it; their form dialogs pass `portalClassName="turnfin-module"`
+to `FormDialog` only so the module layout CSS reaches them, and selects inside them are shadcn `NativeSelect`. Statuses use
 metadata-fed tags with their own icons (`TrainingStatusTag`, `QualificationStateTag`,
 `NoteVisibilityTag`, `ReviewStatusTag`, `RotaWarningTag`). Each person's own side is not on Work at
 all: it is Turnfin Me (`apps/me`), a phone-first app in Poolside Clear with a bottom tab bar,

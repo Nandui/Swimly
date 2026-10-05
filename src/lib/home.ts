@@ -1,5 +1,4 @@
 import "server-only";
-import { cookies } from "next/headers";
 import { pageSession } from "@/lib/page-guards";
 import { prisma } from "@/lib/prisma";
 import { getCurrentClub } from "@/lib/clubs/current";
@@ -13,9 +12,8 @@ import type { HomeViewer } from "@/modules/contributions";
 export async function loadHome() {
   const session = await pageSession();
   const user = session.user;
-  const [role, jar, site] = await Promise.all([
+  const [role, site] = await Promise.all([
     prisma.staffRole.findUnique({ where: { id: user.roleId }, select: { name: true, homeName: true } }),
-    cookies(),
     // The working site names "Today"; an organisation without sites just has no name here.
     getCurrentClub().then((current) => current.club.name, () => null),
   ]);
@@ -29,7 +27,6 @@ export async function loadHome() {
     siteName: site,
     moduleIds,
     items,
-    collapsed: jar.get("turnfin.home.sidebar")?.value === "collapsed",
     today: new Intl.DateTimeFormat("en-IE", { weekday: "long", day: "numeric", month: "long", timeZone: "Europe/Dublin" }).format(new Date()),
   };
 }

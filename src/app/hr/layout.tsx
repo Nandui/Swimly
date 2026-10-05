@@ -1,20 +1,12 @@
 import type { Metadata } from "next";
 import type { ReactNode } from "react";
-import { cookies } from "next/headers";
 import { notFound } from "next/navigation";
 import { Notice } from "@/components/ui-kit/notice";
 import { HrShell } from "@/components/hr/shell";
 import { hrAccess } from "@/lib/hr/access";
 import { hrConfigured } from "@/lib/hr/database";
 import { pageSession } from "@/lib/page-guards";
-import '../docs/docs.css';
-import '../docs/integration.css';
-import '../docs/poolside.css';
 import '../workspace/module-workspace.css';
-import '@fontsource/plus-jakarta-sans/400.css';
-import '@fontsource/plus-jakarta-sans/500.css';
-import '@fontsource/plus-jakarta-sans/600.css';
-import '@fontsource/plus-jakarta-sans/700.css';
 
 export const metadata: Metadata = { title: { default: "Turnfin HR", template: "%s · Turnfin HR" }, icons: { icon: "/brand/turnfin.png" } };
 
@@ -24,9 +16,8 @@ export const metadata: Metadata = { title: { default: "Turnfin HR", template: "%
 export default async function HrLayout({ children }: { children: ReactNode }) {
   const who = hrAccess(await pageSession());
   if (!who) notFound();
-  const collapsed = (await cookies()).get('turnfin.hr.sidebar')?.value === 'collapsed';
   return (
-    <HrShell who={who} initialCollapsed={collapsed}>
+    <HrShell who={who}>
       {hrConfigured() ? children : (
         <div className="space-y-6">
           <div className="module-heading"><div className="space-y-2"><h1>HR and performance</h1></div></div>

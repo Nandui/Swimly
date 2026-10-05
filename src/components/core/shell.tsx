@@ -18,10 +18,9 @@ const LINKS: { key: CoreLinkKey; href: string; label: string; icon: LucideIcon }
  *  log) and each person's account. It belongs to no module, so Aquatics,
  *  Docs and the rest all rely on it without owning it. Links follow the
  *  screens this person can open; every page checks again. */
-export function CoreShell({ who, screens, initialCollapsed = false, children }: {
+export function CoreShell({ who, screens, children }: {
   who: { id: string; name: string };
   screens: CoreLinkKey[];
-  initialCollapsed?: boolean;
   children: ReactNode;
 }) {
   const pathname = usePathname();
@@ -31,9 +30,8 @@ export function CoreShell({ who, screens, initialCollapsed = false, children }: 
     ...LINKS.filter((link) => screens.includes(link.key)).map(({ href, label, icon }) => ({ href, label, icon, active: isOn(href) })),
     { href: '/account', label: 'Account', icon: UserRound, active: isOn('/account') },
   ];
-  const pageLabel = links.find((link) => link.active)?.label ?? 'Admin';
   return (
-    <ModuleShell module="Admin" id="core" current="admin" base="/core" who={who} links={links} pageLabel={pageLabel} initialCollapsed={initialCollapsed} scopeNote="Shared by every module">
+    <ModuleShell module="Admin" id="core" current="admin" who={who} links={links} scopeNote="Shared by every module">
       {children}
     </ModuleShell>
   );

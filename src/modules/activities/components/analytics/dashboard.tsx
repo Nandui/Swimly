@@ -37,7 +37,7 @@ export function AnalyticsDashboard({ data }: { data: AnalyticsData }) {
         <CardContent className="space-y-3"><p className="text-5xl font-semibold tracking-tight tabular-nums">{number.format(data.withdrawn)}</p><p className="text-sm text-ui-muted-foreground">Class withdrawals recorded, including scheduled unenrolments.</p></CardContent>
       </Card>
       <Card className="min-w-0 sm:col-span-2 xl:col-span-8 xl:row-span-2">
-        <CardHeader><h2 className="text-lg font-semibold tracking-tight">Enrolled by level</h2><CardDescription>Current enrolled places / total capacity across each level’s weekly classes. Each bar shows how full that level is.</CardDescription></CardHeader>
+        <CardHeader><h2 className="text-lg font-semibold">Enrolled by level</h2><CardDescription>Current enrolled places / total capacity across each level’s weekly classes. Each bar shows how full that level is.</CardDescription></CardHeader>
         <CardContent className="space-y-7">
           {data.swimmers === 0 ? <EmptyState compact title="No swimmers are currently enrolled in this view." /> : null}
           {data.groups.length === 0 ? <p className="text-sm text-ui-muted-foreground">Levels will appear here once the curriculum is set up.</p> : data.groups.map(group => <section key={group.id} aria-labelledby={`programme-${group.id}`} className="space-y-4">
@@ -61,14 +61,14 @@ export function AnalyticsDashboard({ data }: { data: AnalyticsData }) {
         </CardContent>
       </Card>
       <Card className="h-full xl:col-span-4">
-        <CardHeader><div className="flex items-center justify-between gap-3"><h2 className="text-lg font-semibold tracking-tight">Class cancellations</h2><CalendarX2 className="size-5 shrink-0 text-ui-muted-foreground" aria-hidden /></div><CardDescription>{month} · Cancelled sessions</CardDescription></CardHeader>
+        <CardHeader><div className="flex items-center justify-between gap-3"><h2 className="text-lg font-semibold">Class cancellations</h2><CalendarX2 className="size-5 shrink-0 text-ui-muted-foreground" aria-hidden /></div><CardDescription>{month} · Cancelled sessions</CardDescription></CardHeader>
         <CardContent className="space-y-5"><div className="space-y-2"><p className="text-4xl font-semibold tracking-tight tabular-nums">{number.format(data.cancellations.sessions)}</p><p className="text-sm text-ui-muted-foreground">{number.format(data.cancellations.affectedPlaces)} swimmer bookings affected</p></div>
           <dl className="space-y-3 border-t border-ui-border pt-4"><div className="flex items-center justify-between gap-4 text-sm"><dt>Awaiting billing</dt><dd className="font-semibold tabular-nums">{number.format(data.cancellations.pending)}</dd></div><div className="flex items-center justify-between gap-4 text-sm"><dt>Billing notified</dt><dd className="font-semibold tabular-nums">{number.format(data.cancellations.notified)}</dd></div></dl>
           {data.canOpenCancellations ? <Button asChild variant="outline" className="min-h-11 w-full"><Link href="/cancellations">Open billing follow-up<ArrowUpRight className="size-4" aria-hidden /></Link></Button> : null}
         </CardContent>
       </Card>
       <Card className="h-full xl:col-span-4">
-        <CardHeader><h2 className="text-lg font-semibold tracking-tight">Daily activity</h2><CardDescription>{period} · Includes today so far</CardDescription></CardHeader>
+        <CardHeader><h2 className="text-lg font-semibold">Daily activity</h2><CardDescription>{period} · Includes today so far</CardDescription></CardHeader>
         <CardContent>
           <Table>
             <TableCaption className="sr-only">Enrolments and unenrolments recorded this Monday to Sunday. Future days have no activity yet.</TableCaption>

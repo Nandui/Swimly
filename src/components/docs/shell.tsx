@@ -10,11 +10,9 @@ import { ModuleShell } from '@/components/workspace/module-shell';
  *  a search shortcut to the library in the tools, and the person's modules down the side. */
 export function Shell({
   workspace: w,
-  initialCollapsed = false,
   children,
 }: {
   workspace: Pick<Workspace, 'member' | 'localMode' | 'canReport'> & { outstandingReading: number };
-  initialCollapsed?: boolean;
   children: React.ReactNode;
 }) {
   const pathname = usePathname();
@@ -26,8 +24,8 @@ export function Shell({
     ...(canManage(w.member) ? [{ href: '/docs/admin', label: 'Administration', icon: Settings, active: pathname.startsWith('/docs/admin') }] : []),
   ];
   return (
-    <ModuleShell module="Docs" id="docs" base="/docs" who={{ id: w.member.id, name: w.member.name }} links={links}
-      initialCollapsed={initialCollapsed} scopeNote={w.localMode ? 'Local workspace' : 'Approved guidance for your facility'}
+    <ModuleShell module="Docs" id="docs" who={{ id: w.member.id, name: w.member.name }} links={links}
+      scopeNote={w.localMode ? 'Local workspace' : 'Approved guidance for your facility'}
       contentClass="page-content workspace-page-content"
       tools={<Button asChild variant="ghost" size="icon" className="tf-bar-item tf-icon"><Link href="/docs/library" aria-label="Search documents" title="Search documents"><Search aria-hidden="true" /></Link></Button>}>
       {children}

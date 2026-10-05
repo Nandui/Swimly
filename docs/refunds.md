@@ -166,15 +166,15 @@ production sender configuration is present.
 Refunds uses the Poolside Clear design: Plus Jakarta Sans (self-hosted through
 `@fontsource/plus-jakarta-sans`), the fin logo's deep teal for actions and
 selection, an aqua focus halo, a cool canvas with white panels, and a deep
-pool-night dark mode. The theme is shared with Docs in `src/app/docs/poolside.css`
-(scoped to `.turnfin-docs` and `.turnfin-refunds`). It re-points the shared
+pool-night dark mode. The theme is the whole app's, in `src/app/docs/poolside.css`
+(tokens and system rules on `body.turnfin-app`); the Refunds layout wraps the frame in
+`.turnfin-docs`, which scopes only the Docs/Refunds shell and layout rules. It re-points the shared
 `--ui-*` tokens, so shadcn controls, dialogs, select popovers and the mobile sheet
 follow them. `src/app/refunds/refunds.css` holds only the Refunds layouts. Every text and control
 pair meets 4.5:1 (text) or 3:1 (edges, focus) in both themes.
 
-`RefundShell` still shares the Docs shell layout, brand and appearance controls,
-and owns its navigation, mobile sheet, breadcrumb and `turnfin.refunds.sidebar`
-collapse cookie. No Docs data or permissions are imported. Status badges come from
+`RefundShell` opens in the shared module frame (`ModuleShell`) and owns its page links.
+No Docs data or permissions are imported. Status badges come from
 `RefundStatusTag` (`src/components/refunds/status.tsx`), which adds a distinct icon
 to each status label. Queue filters, forms, history and finance dialogs keep their
 existing behaviour. Aquatics, Docs and the portals keep their own themes.

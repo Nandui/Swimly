@@ -61,7 +61,7 @@ export default async function PersonPage({ params }: { params: Promise<{ id: str
       </div>
 
       <section aria-labelledby="profile-heading" className="min-w-0 flex flex-col gap-3">
-        <h2 id="profile-heading" className="text-xl font-semibold tracking-tight">Profile</h2>
+        <h2 id="profile-heading" className="text-xl font-semibold">Profile</h2>
         <dl className="grid gap-4 sm:grid-cols-2">
           {facts.map(([label, value]) => (
             <div key={label} className="min-w-0">
@@ -79,7 +79,7 @@ export default async function PersonPage({ params }: { params: Promise<{ id: str
 
       <section aria-labelledby="roles-heading" className="min-w-0 flex flex-col gap-3">
         <div className="flex flex-wrap items-center justify-between gap-3">
-          <h2 id="roles-heading" className="text-xl font-semibold tracking-tight">Role and sites</h2>
+          <h2 id="roles-heading" className="text-xl font-semibold">Role and sites</h2>
           {person.isActive ? <WorksAt userId={person.id} name={person.name} sites={liveSites} current={person.worksAt.map((s) => s.id)} /> : null}
         </div>
         <dl className="grid gap-4 sm:grid-cols-2">
@@ -100,7 +100,7 @@ export default async function PersonPage({ params }: { params: Promise<{ id: str
 
       <section aria-labelledby="qualifications-heading" className="min-w-0 flex flex-col gap-3">
         <div className="flex flex-wrap items-center justify-between gap-3">
-          <h2 id="qualifications-heading" className="text-xl font-semibold tracking-tight">Qualifications</h2>
+          <h2 id="qualifications-heading" className="text-xl font-semibold">Qualifications</h2>
           {types.length ? <RecordQualification userId={person.id} name={person.name} types={types} /> : null}
         </div>
         {person.qualifications.length === 0 ? (

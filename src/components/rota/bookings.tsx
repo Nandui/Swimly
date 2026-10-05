@@ -12,7 +12,7 @@ import { Notice } from "@/components/ui-kit/notice";
 import { cancelBooking, saveBooking, type BookingInput } from "@/lib/rota/actions";
 import { BOOKING_KIND_META, BOOKING_KINDS, BOOKING_MAX_PLACES, WEEKDAY_LABELS, bookingDates } from "@/lib/rota/constants";
 
-const THEME = "turnfin-docs turnfin-module";
+const THEME = "turnfin-module";
 type Option = { id: string; name: string };
 type Need = { key: number; role: string; count: number; requiredTypeId: string };
 

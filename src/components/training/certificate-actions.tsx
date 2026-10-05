@@ -9,7 +9,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { declineCertificate, verifyCertificate } from "@/lib/training/certificate-actions";
 
 /** Training's dialogs carry the Poolside Clear scope into their portal. */
-const THEME = "turnfin-docs turnfin-module";
+const THEME = "turnfin-module";
 
 type Row = { id: string; typeId: string | null; issuedOn: Date | null; expiresOn: Date | null; reference: string; person: { name: string } };
 const iso = (value: Date | null) => (value ? new Date(value).toISOString().slice(0, 10) : "");

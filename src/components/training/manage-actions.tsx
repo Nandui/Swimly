@@ -14,7 +14,7 @@ import { today } from "@/lib/format";
 import { assignTraining, cancelAssignment, returnForPractice, saveCourse, setCourseArchived, signOffTraining } from "@/lib/training/actions";
 
 /** Training's dialogs. Each carries the Poolside Clear scope into its portal. */
-const THEME = "turnfin-docs turnfin-module";
+const THEME = "turnfin-module";
 
 type Person = { id: string; name: string; jobTitle: string | null; staffRole?: { id: string; name: string } | null };
 type CourseOption = { id: string; title: string };

@@ -327,7 +327,7 @@ export async function ClassSession({
               aria-label="Ready to complete"
               className="min-w-0 flex flex-col gap-2"
             >
-              <h2 className="text-xl font-semibold tracking-tight">
+              <h2 className="text-xl font-semibold">
                 <div className="min-w-0 flex gap-2 items-center flex-wrap">
                   Ready to complete {progress.course.level.name}
                   <span className="sr-only">,</span>

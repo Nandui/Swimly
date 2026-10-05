@@ -163,7 +163,7 @@ export function ClassDetailView({
         >
           <h2
             id="enrolled-heading"
-            className="text-xl font-semibold tracking-tight"
+            className="text-xl font-semibold"
           >
             Enrolled swimmers ({active.length})
           </h2>
@@ -207,7 +207,7 @@ export function ClassDetailView({
       >
         <h2
           id="waitlist-heading"
-          className="text-xl font-semibold tracking-tight"
+          className="text-xl font-semibold"
         >
           Waitlist ({waiting.length})
         </h2>
@@ -240,7 +240,7 @@ export function ClassDetailView({
             }
           >
             <div className="min-w-0 flex flex-col gap-1">
-              <h2 className="text-xl font-semibold tracking-tight">
+              <h2 className="text-xl font-semibold">
                 Manage class
               </h2>
               <span className="text-sm text-ui-muted-foreground">

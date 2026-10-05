@@ -64,7 +64,7 @@ export function SwimmerProfile({ student, enrolments, programmes, assessments, t
       <div className={styles.body}>
         <div className="min-w-0">
           <TabsContent value="journey" className="m-0 space-y-5">
-            <div className="flex flex-wrap items-start justify-between gap-3"><div><h2 className="text-xl font-semibold tracking-tight">Every chapter, from their first swim</h2><p className="mt-1 text-sm text-ui-muted-foreground">Classes, progress and activity across both sites.</p></div>
+            <div className="flex flex-wrap items-start justify-between gap-3"><div><h2 className="text-xl font-semibold">Every chapter, from their first swim</h2><p className="mt-1 text-sm text-ui-muted-foreground">Classes, progress and activity across both sites.</p></div>
               <div className="flex flex-wrap items-center gap-2"><div role="group" aria-label="Journey display" className="flex rounded-ui-lg bg-ui-muted p-1"><Button variant={mode === "milestones" ? "outline" : "ghost"} aria-pressed={mode === "milestones"} onClick={() => setMode("milestones")}>Milestones</Button><Button variant={mode === "activity" ? "outline" : "ghost"} aria-pressed={mode === "activity"} onClick={() => setMode("activity")}>All activity</Button></div><Select value={programme} onValueChange={setProgramme}><SelectTrigger aria-label="Filter by programme"><SelectValue /></SelectTrigger><SelectContent><SelectItem value="all">All programmes</SelectItem>{programmeOptions.map(([id, label]) => <SelectItem value={id} key={id}>{label}</SelectItem>)}</SelectContent></Select></div>
             </div>
             {mode === "milestones" ? <div className={styles.chapters}>

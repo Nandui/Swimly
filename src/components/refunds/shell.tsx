@@ -8,8 +8,8 @@ import type { RefundActor } from '@/lib/refunds/types';
 
 /** Refunds in the shared module frame: its request views along the top. The follow-up queues
  *  are the summary tiles on the list (RefundQueue), so each status has one way in. */
-export function RefundShell({ who, initialCollapsed = false, children }: {
-  who: RefundActor; initialCollapsed?: boolean; children: ReactNode;
+export function RefundShell({ who, children }: {
+  who: RefundActor; children: ReactNode;
 }) {
   const pathname = usePathname(), query = useSearchParams();
   const onList = pathname === '/refunds';
@@ -20,9 +20,8 @@ export function RefundShell({ who, initialCollapsed = false, children }: {
     { href: `/refunds?creator=${encodeURIComponent(who.id)}&status=all`, label: 'My requests', icon: UserRound, active: onList && myRequests && selectedStatus !== 'DRAFT' },
     ...(who.request ? [{ href: '/refunds?status=DRAFT', label: 'My drafts', icon: FilePenLine, active: onList && selectedStatus === 'DRAFT' }] : []),
   ];
-  const pageLabel = pathname === '/refunds/new' ? 'New request' : onList ? 'Requests' : 'Request details';
   return (
-    <ModuleShell module="Refunds" id="refunds" who={who} pageLabel={pageLabel} initialCollapsed={initialCollapsed} scopeNote="Your team's space"
+    <ModuleShell module="Refunds" id="refunds" who={who} scopeNote="Your team's space"
       links={requests}
       contentClass="refund-content" scrollKey={query.toString()}>
       {children}

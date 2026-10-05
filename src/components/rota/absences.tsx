@@ -15,7 +15,7 @@ import { formatDate } from "@/lib/format";
 import { endAbsence, extendAbsence, recordReturnToWork, reportAbsence, withdrawAbsence, type AbsenceInput } from "@/lib/rota/actions";
 import { ABSENCE_REASON_META, ABSENCE_REASONS, RETURN_FIT_META, SELF_CERTIFIED_DAYS, addDaysIso, followOn, needsFitNote, type AbsenceReason, type ReturnFit } from "@/lib/rota/constants";
 
-const THEME = "turnfin-docs turnfin-module";
+const THEME = "turnfin-module";
 type Earlier = { id: string; reason: AbsenceReason; firstDay: string; lastDay: string | null };
 type Person = { id: string; name: string; jobTitle: string | null; absences: Earlier[] };
 
