@@ -9,7 +9,7 @@ import type { RotaActor } from '@/lib/rota/access';
 
 /** The pages that show one site: they take the site from `?site=` and show the picker. Overview
  *  (the working site) and Absences (every site the manager covers) do not. */
-const SITE_PAGES = new Set(['/rota', '/rota/day', '/rota/today', '/rota/bookings']);
+const SITE_PAGES = new Set(['/rota', '/rota/day', '/rota/bookings']);
 
 /** Rota's navigation in the shared workspace shell, from the one list of its pages. The site
  *  picker sits in the tools, and the site carries across the one-site pages. */

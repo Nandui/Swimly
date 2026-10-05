@@ -8,29 +8,36 @@ web
 
 ## Users
 
-**Primary: the staff of LeisureWorld's swim school at two Cork pools,
-Bishopstown and Churchfield.** Two jobs, confirmed 2 Sep 2026:
+**Turnfin is for LeisureWorld's own staff, and only LeisureWorld** (owner confirmed 5 October
+2026: one organisation, its sites in Cork; not offered to other centres). Everyone who works
+in the centre signs in to their role's home page. The jobs, by module:
 
-- **Reception and desk staff.** Find a family in seconds, enrol a child, move
-  them, book an assessment, answer the parent standing at the counter. On a
-  desktop at the desk, or on a phone anywhere in the building.
-- **Swim instructors on the pool deck.** Open today's classes, take the
-  register, tick competencies, take over a class that is not theirs when they
-  are the one standing at the pool. On a phone or tablet, poolside.
+- **Reception and desk staff** (Swim school, Refunds). Find a family in seconds, enrol a
+  child, move them, book an assessment, answer the parent standing at the counter, log a
+  refund request. On a desktop at the desk, or on a phone anywhere in the building.
+- **Swim instructors on the pool deck** (Pool deck). Open today's classes, take attendance,
+  tick competencies, take over a class that is not theirs when they are the one standing at
+  the pool. On a phone or tablet, poolside.
+- **Department supervisors** (Rota). Plan their department's week: which of their staff work
+  which shifts, the department's activities and who covers each.
+- **Duty managers** (Rota, Swim school). Run the day: see everything on, when and who; give
+  cover when someone is off; record changes, cancellations and returns to work.
+- **Lifeguards and other shift staff.** Their shifts, training and required reading reach
+  them in Turnfin Me rather than in the work app.
+- **Finance** (Refunds) reviews refund requests and records payments made elsewhere.
+- **Trainers and managers** (Training, Docs, HR) sign off training, keep qualifications and
+  documents current, and look after their team's HR records (HR is restricted).
+- **Administrators** set the centre up rather than use it all day: staff, roles with a level
+  for each module, sites, the curriculum.
 
-**Managers and administrators** set the building up rather than use it all
-day: staff accounts, roles and permissions, the curriculum, the clubs.
-
-**Planned separate audience (owner confirmed 14 September 2026):** parents and
-guardians, in a separate app connected through a dedicated API. They will see
-their linked children's progress and book assessment sessions, including for
-children not yet in Swimly. Competency changes become visible at 00:00 on the
-day after they are saved, using Europe/Dublin time (Monday changes appear on
-Tuesday). Parent-initiated class moves are a later phase, not part of the first
-release. The staff and Instructor workspaces remain separate. See
-[the parent API integration guide](docs/parent-app.md). The backend is implemented
-behind an activation flag; the separate frontend lives in
-[swimly-public-app](https://github.com/Nandui/swimly-public-app).
+**Separate audiences.** Each staff member's own things (training, required reading,
+qualifications, shifts, what HR shared) are in **Turnfin Me** (`apps/me`) on their own phone.
+**Parents and guardians** (owner confirmed 14 September 2026) use a separate app through a
+dedicated API: their linked children's progress and booking assessment sessions, including
+for children not yet in Turnfin. Competency changes become visible at 00:00 on the day after
+they are saved, Europe/Dublin time. Parent-initiated class moves are a later phase. See
+[the parent API integration guide](docs/parent-app.md); the backend is behind an activation
+flag and the frontend lives in [swimly-public-app](https://github.com/Nandui/swimly-public-app).
 
 **Conditions the users work in (confirmed):**
 
@@ -38,43 +45,51 @@ behind an activation flag; the separate frontend lives in
 - Mixed comfort with technology. Some staff are not confident with apps.
 - Some staff whose first language is not English.
 - Poolside wifi drops. A save has to survive that.
+- The work app runs on the centre's registered PCs; personal phones use Turnfin Me.
 
 ## Product Purpose
 
-Swimly is the tool the swim school runs on: the weekly timetable, who is in
-which class, the register taken on the deck, each child's progress through the
-club's own levels and competencies, assessment sessions for new swimmers, and
-one shared swimmer record and curriculum across both sites.
+Turnfin is the app LeisureWorld's centre runs on: one place where each person's role shows
+their job across every part of the centre. It is a set of **modules** on a shared core of
+people, roles, sites and the audit trail: Swim school (timetable, enrolment, progress,
+assessments), Pool deck (attendance and cover), Refunds, Docs, Training, Rota, HR and Admin.
+A role is a job with one level for each module; the role's home page is its workspace. See
+[how Turnfin works](docs/how-turnfin-works.md).
 
-It replaces the club's legacy booking system, whose data reached us only as
-printed timetables. That system knew who had paid for which class and nothing
-else.
+It sits beside the systems the centre keeps: **Legend** stays the booking and billing system,
+**Timepoint** keeps the roster's hours, clocking and payroll. Turnfin does not send money,
+change bills or replace either. The swim school's legacy booking system, whose data reached
+us only as printed timetables, is replaced for lessons.
 
-**Scope, confirmed:** swim lessons, done properly, for now. Other kinds of
-booking (camps, pool hire, fitness classes) are deliberately out of scope until
-the swim school runs on Swimly.
+**Scope, confirmed:** the centre's staff work in these modules. Other kinds of booking
+(camps, pool hire, fitness classes) stay out of scope; Legend handles bookings.
 
-**Success (to confirm with the owner):** both sites run a full term on it, every
-class is marked on the deck the day it runs, and the desk answers parents
-without opening the old system.
+**Success (to confirm with the owner):** every role starts its day on its Turnfin home page
+and finds what needs it there; both sites run a full term of swim lessons on it with every
+class marked on the deck the day it runs; and the rota, cover and absences are run from it.
 
 ## Positioning
 
-**Registers and cover on the deck** is the thing the old system could not do
-and Swimly must get right (confirmed as the one edge that matters). A class is
-marked on a phone, two taps from Instructor, and the record says who actually
-taught it: cover is declared by the person at the pool and written as a fact
-on the row, not arranged by an administrator who has gone home.
+**Each role's job in one place** is the thing the centre's other systems cannot do (owner
+confirmed 5 October 2026 as the one edge that matters). Legend knows bookings, Timepoint
+knows hours, paper knows the rest. In Turnfin a receptionist, a duty manager, an instructor
+and a supervisor each sign in to a home page built for their role, with what needs them today
+across every module, and every module checks its own permissions behind it.
 
-Two mechanisms a booking system cannot truthfully copy:
+Mechanisms a neighbouring product cannot truthfully copy:
 
-- Attendance and progress are one record per child, tied to the club's own
-  curriculum. Every competency mark carries who made it and when.
-- Who taught a class is stated, kept and readable on the register, the deck
-  screen and the activity trail. Nothing about it is inferred.
+- **Roles are jobs with a level per module.** One role per person, one level per module,
+  translated into named permissions; the home page, the navigation and the cards follow from
+  it, so training a new starter is "this is your role".
+- **One record, said who did what.** Every mark, register, cover, shift change, refund and
+  decision carries a name, a time and, where it matters, a reason, in one audit trail across
+  modules.
+- **Work and Me are separate.** The work app on the centre's PCs never holds personal
+  pages; each person's own things are in Turnfin Me.
 
-Secondary strengths: competency-based progression with a person confirming
-each level; two sites in one app with shared staff.
+The swim school keeps its own edge inside this: **attendance and cover on the deck**. A class
+is marked on a phone, two taps from the Pool deck, and the record says who actually taught
+it; cover is declared by the person at the pool, not inferred.
 
 ## Operating Context
 
@@ -279,20 +294,17 @@ These controls require the existing named permissions and write audit reasons.
 **Constraints that hold:**
 
 
-- One database serves development and production. Schema changes are
-  additive; nothing is dropped while production may read it.
-- A role names the screens its holders can open at all, so an instructor
-  role can be the deck and nothing else. Within those screens, reads are
-  open; every permission is the power to change something, or to read the
-  audit log.
+- Development has its own database (a copy of production, owner decision, 5 October
+  2026), but schema changes stay additive; nothing is dropped while production may read it.
+- A role is a job with one level for each module, translated into named permissions; a
+  screen is a menu entry opened by one permission. Pages and actions ask for a permission,
+  never a level or a role name.
 - Every mutation writes an audit row, scripts included.
 - Nothing refers to a role by name; the club may rename or delete any role.
-- Administrator access is defined by holding both staff and role management
-  permissions. It includes every current and future screen and permission except
-  restricted ones (HR and performance), which only a superadmin holds or gives out.
-  Other roles keep explicit grants. Extra roles can be limited to a site, a
-  department or the holder's own team (see docs/platform-access.md). Instructor navigation and confirmed class
-  start confirmation remain separate rules, including for administrators.
+- **Admin: Manage** is the administrator: Manage in every module except HR, which only a
+  superadmin holds or gives out. Each person holds one role plus the sites they work at;
+  extra scoped roles are retired (see docs/platform-access.md). Instructor navigation and
+  confirmed class start remain separate rules, including for administrators.
 - Swimmers can enrol, waitlist and move between classes at either site. Their
   identity, contacts and progress stay on one shared record. Site selection
   filters the working timetable; it is not a swimmer ownership boundary.
@@ -303,10 +315,7 @@ These controls require the existing named permissions and write audit reasons.
 
 **Explicitly undecided:**
 
-- **The product's name.** "Swimly" is a working name and will change. Nothing
-  may be built around the word; the name lives in one place.
-- Whether LeisureWorld's name or logo must appear inside the app. Deferred to
-  the rename.
+- Whether LeisureWorld's name or logo must appear inside the app.
 - The definition of a finished term (see Success above).
 - Other kinds of booking: out of scope now, shape unknown.
 - Translation of the interface: not decided; plain English is the confirmed
@@ -314,11 +323,11 @@ These controls require the existing named permissions and write audit reasons.
 
 ## Brand Commitments
 
-- **"Swimly" is a working name only** (confirmed 2 Sep 2026). It will be
-  renamed. Keep the name in one place, never in copy that would have to be
-  rewritten, and build nothing on the word itself.
-- No logo asset exists. LeisureWorld branding is not required inside the app
-  yet; that question is deferred to the rename.
+- **The product is Turnfin** (owner confirmed 5 October 2026, final). "Swimly" is retired
+  as a name: nothing people read says Swimly; code identifiers, package names and the
+  repository may keep it. Each person's own app is **Turnfin Me**.
+- The Turnfin fin logo is the brand mark (see DESIGN.md). Whether LeisureWorld branding
+  appears inside the app is not decided.
 - Voice, derived from confirmed user needs rather than a style guide: plain,
   short, concrete sentences; the club's own words; British and Irish spellings
   (enrol, programme); no idioms; an error is one sentence saying what to do.
@@ -336,18 +345,19 @@ when creating an active enrolment, including enrolment from a waitlist. They can
 enrol with the agreement still outstanding. Existing active places need checking.
 The Legend agreements page lists these places at the working site and records who
 confirms each one and when. Moves carry the existing status across sites without
-another question. Swimly tracks manual confirmation; Legend remains the billing
+another question. Turnfin tracks manual confirmation; Legend remains the billing
 system. See [Legend agreements](docs/legend-agreements.md).
 
 ## Evidence on Hand
 
-- **Real data, in the live database:** 1,803 swimmers, 232 weekly classes,
-  assessment sessions and bookings for both sites, imported from the club's
+- **Real data, in the live database** (counted 5 October 2026): 2,023 swimmers, 242 weekly
+  classes, 2,263 enrolments, assessment sessions and bookings for both sites, imported from the club's
   legacy system by the scripts under `scripts/import-*.ts`, each of which
   records what it kept, flagged and left out. These are real children's names
   and contacts and must never appear outside the app, in screenshots, or in
   marketing.
-- Four real staff accounts.
+- 35 real staff accounts. Development now holds a copy of this real data too, so the same
+  care applies there.
 - The legacy system's printed timetables (the import sources) are held by the
   owner, not in the repository.
 - **Absent, and not to be invented:** testimonials, case studies, press,
@@ -355,19 +365,20 @@ system. See [Legend agreements](docs/legend-agreements.md).
 
 ## Product Principles
 
-1. **The deck comes first.** Anything an instructor does poolside works
-   one-handed on a phone, two taps from Instructor, with wet hands, in glare and
+1. **Each role's job in one place.** A person signs in to their role's home page and finds
+   what needs them today across every module. A new feature belongs to a module and a level,
+   and shows up for the roles that hold it; it never asks people to go looking.
+2. **The deck comes first.** Anything an instructor does poolside works
+   one-handed on a phone, two taps from the Pool deck, with wet hands, in glare and
    in the dark, and survives a dropped connection.
-2. **Say who did what.** Every mark, register and cover carries a name and a
-   time. Nothing about who taught a class is inferred.
-3. **The club's words and the club's ladder.** Programmes, levels, kinds of
+3. **Say who did what.** Every mark, register, cover, shift change, refund and decision
+   carries a name and a time, and a reason where it matters. Nothing is inferred.
+4. **The club's words and the club's ladder.** Programmes, levels, kinds of
    assessment, member numbers and names are the club's, kept exactly; the
    app never renames the club's facts, and a person corrects them.
-4. **Plain words, few steps.** Written for staff with mixed comfort with
+5. **Plain words, few steps.** Written for staff with mixed comfort with
    technology and mixed first languages: common words, one idea per sentence,
    errors that say what to do, and nothing that can be broken by a wrong tap.
-5. **Timetables have sites; swimmer records are shared.** The working area
-   filters classes. Swimmer search, curriculum and earned progress span both.
 
 ## Accessibility & Inclusion
 

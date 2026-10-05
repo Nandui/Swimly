@@ -54,6 +54,7 @@ export function FormDialog({
   children,
   onOpen,
   onSuccess,
+  onClose,
   defaultOpen = false,
   destructive = false,
   cancelLabel = "Cancel",
@@ -79,6 +80,8 @@ export function FormDialog({
   onOpen?: () => void;
   /** Complete an inline workflow after its dialog has saved successfully. */
   onSuccess?: () => void;
+  /** After it closes, saved or not, e.g. to clear a timeline selection that opened it. */
+  onClose?: () => void;
   /** Open on arrival (initial state only), e.g. a home page quick action's `?add=1`. */
   defaultOpen?: boolean;
 }) {
@@ -113,6 +116,7 @@ export function FormDialog({
     setOpen(false);
     setError(null);
     setConfirmation(null);
+    onClose?.();
   }
 
   function handleSubmit(event: React.FormEvent<HTMLFormElement>) {
@@ -138,6 +142,7 @@ export function FormDialog({
             setError(null);
             setConfirmation(null);
             onSuccess?.();
+            onClose?.();
           });
         } else {
           startTransition(() => {

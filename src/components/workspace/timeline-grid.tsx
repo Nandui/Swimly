@@ -1,18 +1,21 @@
 import Link from "next/link";
-import type { CSSProperties, ReactNode } from "react";
+import { Fragment, type CSSProperties, type ReactNode } from "react";
 import type { LucideIcon } from "lucide-react";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/shadcn/tooltip";
+import { TimelineReadout } from "@/components/workspace/timeline-readout";
 import { formatTime, formatTimeRange } from "@/lib/format";
 
 /** The one day-at-a-glance timeline (DESIGN.md, "Poolside Clear v2"): the home page's classes
- *  and Rota's Day plan and Today. Lanes down the side (a tile with an optional icon, a label, a
- *  caption and a 44px action), hour tiles across the top (past and now marked), blocks placed
- *  to the minute on 5-minute columns, and one dashed line at the time now. Nothing scrolls
+ *  and Rota's Day plan and Today. Each lane is one rounded row like any list row: its name (an
+ *  optional icon, a label, a caption and a 44px action) and its time track, with faint hour
+ *  lines and the past shaded. Hours read along the top, blocks sit to the minute on 5-minute
+ *  columns, and one dashed line under a "now" pill marks the time now. A planning timeline
+ *  (`readout`) reads out the exact quarter hour under the pointer on the time bar. Nothing scrolls
  *  sideways: from 1280px the grid shows; below it the same blocks become an agenda in time
  *  order with the same links and dialog triggers. Server-safe, and free of any module. */
 
 /** A block's state picks its fill (`--pc-block-*`) and text (`--pc-on-block-*`). */
-export type TimelineState = "done" | "now" | "next" | "cover" | "off" | "open" | "assessment";
+export type TimelineState = "done" | "now" | "next" | "cover" | "off" | "absent" | "open" | "assessment" | "shift";
 /** Every block says its state in words and an icon, so colour is never the only signal. */
 export type TimelineTag = { icon: LucideIcon; label: string };
 /** What a dialog trigger needs to become a block: the caller hands these to its trigger. */
@@ -28,6 +31,9 @@ export type TimelineLane = {
   action?: ReactNode;
   /** A group heading (a department, Activities): a tile in ink with no time track. */
   header?: boolean;
+  /** The lane's name as a button that opens its editor (`.pc-timeline-lane-link`): the whole
+   *  name tile is the target, so a lane needs no separate edit icon. Its text is the label. */
+  edit?: ReactNode;
 };
 
 export type TimelineBlock = {
@@ -55,10 +61,13 @@ export type TimelineBlock = {
 };
 
 /** The width the time track has at the narrowest screen showing the grid (1280px). */
-const TRACK_PX = 838;
+const TRACK_PX = 790;
 const STEP = 5;
+/** Whether the "now" pill (centred on the time, about 52px wide) would cover an hour's label
+ *  (about 40px from its tick), given how far past the hour now is, in pixels. */
+const overlapsNow = (px: number) => px > -34 && px < 74;
 
-export function TimelineGrid({ from, to, now, lanes, blocks, laneHeading, label, agenda }: {
+export function TimelineGrid({ from, to, now, lanes, blocks, laneHeading, label, agenda, readout }: {
   /** Minutes after midnight; `from` on the hour. */
   from: number;
   to: number;
@@ -72,8 +81,12 @@ export function TimelineGrid({ from, to, now, lanes, blocks, laneHeading, label,
   label: string;
   /** Which blocks the agenda lists, how many, and what it says when it lists none. */
   agenda?: { show?: (block: TimelineBlock) => boolean; limit?: number; empty?: string };
+  /** A planning timeline: the time bar reads out the exact quarter hour under the pointer. */
+  readout?: boolean;
 }) {
   const range = Math.max(STEP, to - from);
+  // How wide a minute is at the narrowest screen showing the grid.
+  const pxPerMinute = TRACK_PX / range;
   const cols = Math.ceil(range / STEP);
   const col = (m: number) => 2 + Math.floor((Math.min(Math.max(m, from), to) - from) / STEP);
   const colEnd = (m: number) => 2 + Math.ceil((Math.min(Math.max(m, from), to) - from) / STEP);
@@ -81,6 +94,10 @@ export function TimelineGrid({ from, to, now, lanes, blocks, laneHeading, label,
   const hourStep = range > 12 * 60 ? 120 : 60;
   const hours: number[] = [];
   for (let h = from; h < to; h += hourStep) hours.push(h);
+  // The track as drawn (whole 5-minute columns), for its hour lines and its shaded past.
+  const span = cols * STEP;
+  const pct = (m: number) => `${((Math.min(Math.max(m, 0), span) / span) * 100).toFixed(3)}%`;
+  const trackStyle = { ["--tl-hour" as string]: pct(hourStep), ["--tl-past" as string]: now === null ? "0%" : pct(now - from) };
 
   // Each lane takes as many lines as its blocks need.
   const sizes = lanes.map((lane) => lane.header ? 1 : Math.max(1, ...blocks.filter((b) => b.lane === lane.key).map((b) => (b.row ?? 0) + 1)));
@@ -98,27 +115,35 @@ export function TimelineGrid({ from, to, now, lanes, blocks, laneHeading, label,
 
   return (
     <>
-      <div className="pc-timeline-wide">
+      <TimelineReadout className="pc-timeline-wide" range={readout ? { from, span } : null}>
         <div role="group" aria-label={label} className="pc-timeline" style={{ ["--tl-cols" as string]: cols, gridTemplateRows: `var(--tl-head) repeat(${lastRow - 2}, var(--tl-row))` }}>
           {laneHeading ? <span className="pc-timeline-heading" style={{ gridColumn: 1, gridRow: 1 }}>{laneHeading}</span> : null}
-          {hours.map((hour) => {
-            const end = Math.min(hour + hourStep, to);
-            const past = now !== null && end <= now;
-            const current = now !== null && hour <= now && now < end;
-            return (
-              <span key={hour} className="pc-timeline-hour" style={{ gridColumn: `${col(hour)} / ${colEnd(end)}`, gridRow: 1 }}
-                data-past={past ? "" : undefined} data-now={current ? "" : undefined}>
-                {formatTime(hour)}{current ? <span className="sr-only">, now {formatTime(now)}</span> : null}
-              </span>
-            );
-          })}
-          {placed.map(({ lane, at, lines }) => (
-            <LaneTile key={lane.key} lane={lane} style={{ gridColumn: lane.header ? "1 / -1" : 1, gridRow: `${at} / span ${lines}` }} />
+          {hours.map((hour) => (
+            <span key={hour} className="pc-timeline-hour" style={{ gridColumn: `${col(hour)} / ${colEnd(Math.min(hour + hourStep, to))}`, gridRow: 1 }}
+              data-past={now !== null && hour + hourStep <= now ? "" : undefined}>
+              {/* The "now" pill takes the place of an hour it would sit on. */}
+              {nowShown && overlapsNow((now - hour) * pxPerMinute) ? null : formatTime(hour)}
+            </span>
+          ))}
+          {nowShown ? (
+            <span className="pc-timeline-now-label" style={{ gridColumn: col(now), gridRow: 1, ["--at" as string]: `${(((now - from) % STEP) / STEP) * 100}%` }}>
+              <span className="sr-only">Now, </span>{formatTime(now)}
+            </span>
+          ) : null}
+          {/* A lane is one row: its name, then its track with hour lines and the past shaded. */}
+          {placed.map(({ lane, at, lines }) => lane.header ? (
+            <LaneTile key={lane.key} lane={lane} style={{ gridColumn: "1 / -1", gridRow: at }} />
+          ) : (
+            <Fragment key={lane.key}>
+              <span aria-hidden="true" className="pc-timeline-row" style={{ gridColumn: "1 / -1", gridRow: `${at} / span ${lines}` }} />
+              <span aria-hidden="true" className="pc-timeline-track" style={{ ...trackStyle, gridColumn: "2 / -1", gridRow: `${at} / span ${lines}` }} />
+              <LaneTile lane={lane} style={{ gridColumn: 1, gridRow: `${at} / span ${lines}` }} />
+            </Fragment>
           ))}
           {blocks.map((block) => {
             const at = rowOf.get(block.lane);
             if (at === undefined) return null;
-            const width = ((Math.min(block.end, to) - Math.max(block.start, from)) / range) * TRACK_PX;
+            const width = (Math.min(block.end, to) - Math.max(block.start, from)) * pxPerMinute;
             return <Block key={block.key} block={block} roomy={width >= 240} density={width >= 120 ? "full" : width >= 44 ? "compact" : width >= 24 ? "icon" : "mark"}
               style={{ gridColumn: `${col(block.start)} / ${Math.max(colEnd(block.end), col(block.start) + 1)}`, gridRow: at + (block.row ?? 0) }} />;
           })}
@@ -128,7 +153,7 @@ export function TimelineGrid({ from, to, now, lanes, blocks, laneHeading, label,
               style={{ gridColumn: col(now), gridRow: `${a} / ${z}`, ["--at" as string]: `${(((now - from) % STEP) / STEP) * 100}%` }} />
           )) : null}
         </div>
-      </div>
+      </TimelineReadout>
       <Agenda lanes={lanes} blocks={blocks} label={label} show={agenda?.show} limit={agenda?.limit} empty={agenda?.empty} />
     </>
   );
@@ -140,7 +165,7 @@ function LaneTile({ lane, style }: { lane: TimelineLane; style?: CSSProperties }
     <div className="pc-timeline-lane" data-header={lane.header ? "" : undefined} style={style}>
       {Icon ? <span className="pc-tile-icon"><Icon aria-hidden="true" /></span> : null}
       <span className="pc-timeline-lane-body">
-        {lane.header ? <h3 className="pc-timeline-lane-label">{lane.label}</h3> : <span className="pc-timeline-lane-label">{lane.label}</span>}
+        {lane.header ? <h3 className="pc-timeline-lane-label">{lane.label}</h3> : lane.edit ? <span className="pc-timeline-lane-label">{lane.edit}</span> : <span className="pc-timeline-lane-label">{lane.label}</span>}
         {lane.caption ? <span className="pc-timeline-lane-caption">{lane.caption}</span> : null}
       </span>
       {lane.action ? <span className="pc-timeline-lane-action">{lane.action}</span> : null}
@@ -201,7 +226,8 @@ function Block({ block, density, roomy, style }: { block: TimelineBlock; density
     : block.href
       ? <Link href={block.href} aria-label={label} className={className} data-block={block.state} data-density={density} style={style}>{children}</Link>
       : <span role="img" aria-label={label} className={className} data-block={block.state} data-density={density} style={style}>{children}</span>;
-  if (density !== "icon" || block.render) return element;
+  // Blocks that leave words out (an icon, or a title alone that may be cut short) say all of it on hover.
+  if (density === "full" || block.render) return element;
   return (
     <Tooltip>
       <TooltipTrigger asChild>{element}</TooltipTrigger>

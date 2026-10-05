@@ -35,7 +35,7 @@ registerHomeCard({
     }) : [];
     const uncovered = shifts.filter((s) => (!s.userId && !s.rotaPersonId) || off.some((a) => samePerson(a, s))).length;
     const items: HomeItem[] = [{
-      kind: "today", label: here ? "On shift" : "On shift at your sites", href: "/rota/today", count: shifts.length - uncovered,
+      kind: "today", label: here ? "On shift" : "On shift at your sites", href: "/rota/day", count: shifts.length - uncovered,
       hint: shifts.length === 0 ? "No shifts planned today" : uncovered ? `${uncovered} uncovered` : "Every shift has someone",
       attention: manage && uncovered > 0,
     }];

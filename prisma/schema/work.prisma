@@ -230,6 +230,8 @@ model RotaBooking {
   endMinutes    Int
   firstDay      DateTime  @db.Date
   lastDay       DateTime  @db.Date
+  /// Dates between the first and last day it does not run (a bank holiday, a mid-term break).
+  skipDates     DateTime[] @default([]) @db.Date
   note          String    @default("")
   createdById   String?
   createdByName String
@@ -510,6 +512,8 @@ model RotaActivity {
   /// How many people at once, e.g. 2 on poolside.
   people         Int      @default(1)
   requiredTypeId String?
+  /// The department that plans it; none for one the whole site shares.
+  departmentId   String?
   note           String   @default("")
   createdById    String?
   createdByName  String
@@ -518,6 +522,8 @@ model RotaActivity {
 
   site         Club               @relation(fields: [siteId], references: [id], onDelete: Cascade)
   requiredType QualificationType? @relation(fields: [requiredTypeId], references: [id], onDelete: SetNull)
+  department   Department?        @relation(fields: [departmentId], references: [id], onDelete: SetNull)
 
   @@index([siteId, date])
+  @@index([departmentId])
 }

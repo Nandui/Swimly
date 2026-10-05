@@ -1,7 +1,7 @@
 "use client";
 
-import { useState } from "react";
-import { Plus, Trash2, X } from "lucide-react";
+import { useState, type ReactNode } from "react";
+import { CalendarPlus, Plus, Trash2, X } from "lucide-react";
 import { Button } from "@/components/shadcn/button";
 import { Checkbox } from "@/components/shadcn/checkbox";
 import { Input } from "@/components/shadcn/input";
@@ -11,6 +11,7 @@ import { Field, FormDialog } from "@/components/form-dialog";
 import { ChoiceRow } from "@/components/ui/choice-row";
 import { Notice } from "@/components/ui-kit/notice";
 import { cancelBooking, saveBooking, type BookingInput } from "@/lib/rota/actions";
+import { formatDate } from "@/lib/format";
 import { BOOKING_KIND_META, BOOKING_KINDS, BOOKING_MAX_PLACES, WEEKDAY_LABELS, bookingDates, nextWeekday } from "@/lib/rota/constants";
 
 const THEME = "turnfin-module";
@@ -18,17 +19,36 @@ type Option = { id: string; name: string };
 type Need = { key: number; role: string; count: number; requiredTypeId: string };
 const WEEKDAYS = [0, 1, 2, 3, 4];
 
-/** A new booking: what, who for, where, which days, when, and the staff each
- *  session needs. Saving it puts the places on the week plan, unfilled. */
-export function BookingDialog({ siteId, today, departments, types }: { siteId: string; today: string; departments: Option[]; types: Option[] }) {
+/** Monday = 0 to Sunday = 6, as bookings store them. */
+const weekdayOf = (iso: string) => (new Date(`${iso}T00:00:00Z`).getUTCDay() + 6) % 7;
+
+/** A new booking: what, who for, where, which days, when, the dates it does not run, and the
+ *  staff each session needs. Saving it puts the places on the week plan, unfilled. The week
+ *  planner opens it from a stretch dragged on a day's timeline (`preset`): that day, those times,
+ *  that weekday, and the department shown; stretching the last day makes it repeat. */
+export function BookingDialog({ siteId, today, departments, types, preset, department, defaultOpen, onClose, trigger, outline }: {
+  siteId: string; today: string; departments: Option[]; types: Option[];
+  preset?: { date: string; start: string; end: string };
+  department?: string;
+  defaultOpen?: boolean;
+  onClose?: () => void;
+  /** A client-side trigger of the caller's own (a server page passes `outline` instead). */
+  trigger?: ReactNode;
+  /** The quieter "Add booking" button, for a header with a primary action of its own. */
+  outline?: boolean;
+}) {
   // The first and last day start on the next ticked weekday, so a weekend opening still has a session.
-  const start = nextWeekday(today, WEEKDAYS);
-  const [days, setDays] = useState<number[]>(WEEKDAYS);
+  const start = preset?.date ?? nextWeekday(today, WEEKDAYS);
+  const startDays = preset ? [weekdayOf(preset.date)] : WEEKDAYS;
+  const [days, setDays] = useState<number[]>(startDays);
   const [firstDay, setFirstDay] = useState(start);
   const [lastDay, setLastDay] = useState(start);
+  const [skip, setSkip] = useState<string[]>([]);
+  const [skipDraft, setSkipDraft] = useState("");
   const [needs, setNeeds] = useState<Need[]>([{ key: 1, role: "", count: 1, requiredTypeId: "" }]);
-  const reset = () => { setDays(WEEKDAYS); setFirstDay(start); setLastDay(start); setNeeds([{ key: 1, role: "", count: 1, requiredTypeId: "" }]); };
-  const sessions = firstDay && lastDay && lastDay >= firstDay ? bookingDates(firstDay, lastDay, days).length : 0;
+  const reset = () => { setDays(startDays); setFirstDay(start); setLastDay(start); setSkip([]); setSkipDraft(""); setNeeds([{ key: 1, role: "", count: 1, requiredTypeId: "" }]); };
+  const inRange = skip.filter((d) => d >= firstDay && d <= lastDay);
+  const sessions = firstDay && lastDay && lastDay >= firstDay ? bookingDates(firstDay, lastDay, days, inRange).length : 0;
   const places = sessions * needs.reduce((n, need) => n + (Number.isFinite(need.count) ? need.count : 0), 0);
   const setNeed = (key: number, patch: Partial<Need>) => setNeeds((list) => list.map((n) => (n.key === key ? { ...n, ...patch } : n)));
 
@@ -37,7 +57,9 @@ export function BookingDialog({ siteId, today, departments, types }: { siteId: s
       portalClassName={THEME}
       width="sm:max-w-2xl"
       onOpen={reset}
-      trigger={<Button><Plus aria-hidden="true" />New booking</Button>}
+      defaultOpen={defaultOpen}
+      onClose={onClose}
+      trigger={trigger ?? (outline ? <Button variant="outline"><CalendarPlus aria-hidden="true" />Add booking</Button> : <Button><Plus aria-hidden="true" />New booking</Button>)}
       title="New booking"
       description="Something at the site that needs staff: school lessons, a party, lane hire. Each session shows on the week plan with its places to fill."
       submitLabel="Save booking"
@@ -45,7 +67,7 @@ export function BookingDialog({ siteId, today, departments, types }: { siteId: s
       submit={(formData) => saveBooking({
         siteId, kind: String(formData.get("kind") ?? "") as BookingInput["kind"], title: String(formData.get("title") ?? ""),
         place: String(formData.get("place") ?? ""), departmentId: String(formData.get("departmentId") ?? ""), weekdays: days,
-        start: String(formData.get("start") ?? ""), end: String(formData.get("end") ?? ""), firstDay, lastDay,
+        start: String(formData.get("start") ?? ""), end: String(formData.get("end") ?? ""), firstDay, lastDay, skipDates: inRange,
         needs: needs.map(({ role, count, requiredTypeId }) => ({ role, count, requiredTypeId })), note: String(formData.get("note") ?? ""),
       })}
     >
@@ -58,7 +80,7 @@ export function BookingDialog({ siteId, today, departments, types }: { siteId: s
         <Field label="Who it is for" htmlFor="booking-title" hint="For example the school's name."><Input id="booking-title" name="title" required minLength={2} maxLength={80} className="min-h-11" /></Field>
         <Field label="Where" htmlFor="booking-place" optional hint="For example Learner pool."><Input id="booking-place" name="place" maxLength={60} className="min-h-11" /></Field>
         <Field label="Department" htmlFor="booking-department">
-          <NativeSelect id="booking-department" name="departmentId" defaultValue={departments[0]?.id ?? ""} className="min-h-11 w-full">
+          <NativeSelect id="booking-department" name="departmentId" defaultValue={department ?? departments[0]?.id ?? ""} className="min-h-11 w-full">
             <NativeSelectOption value="">No department</NativeSelectOption>
             {departments.map((d) => <NativeSelectOption key={d.id} value={d.id}>{d.name}</NativeSelectOption>)}
           </NativeSelect>
@@ -76,11 +98,33 @@ export function BookingDialog({ siteId, today, departments, types }: { siteId: s
         </div>
       </fieldset>
       <div className="grid grid-cols-2 gap-4 sm:grid-cols-4">
-        <Field label="Starts" htmlFor="booking-start"><Input id="booking-start" name="start" type="time" required defaultValue="09:30" className="min-h-11" /></Field>
-        <Field label="Ends" htmlFor="booking-end"><Input id="booking-end" name="end" type="time" required defaultValue="11:30" className="min-h-11" /></Field>
+        <Field label="Starts" htmlFor="booking-start"><Input id="booking-start" name="start" type="time" required step={900} defaultValue={preset?.start ?? "09:30"} className="min-h-11" /></Field>
+        <Field label="Ends" htmlFor="booking-end"><Input id="booking-end" name="end" type="time" required step={900} defaultValue={preset?.end ?? "11:30"} className="min-h-11" /></Field>
         <Field label="First day" htmlFor="booking-first"><Input id="booking-first" type="date" required min={today} value={firstDay} onChange={(e) => { setFirstDay(e.target.value); if (lastDay < e.target.value) setLastDay(e.target.value); }} className="min-h-11" /></Field>
         <Field label="Last day" htmlFor="booking-last"><Input id="booking-last" type="date" required min={firstDay} value={lastDay} onChange={(e) => setLastDay(e.target.value)} className="min-h-11" /></Field>
       </div>
+      {lastDay > firstDay ? (
+        <fieldset className="flex min-w-0 flex-col gap-2">
+          <legend className="mb-2 font-semibold">Dates it does not run <span className="font-normal text-ui-muted-foreground">(optional)</span></legend>
+          <div className="flex flex-wrap items-end gap-2">
+            <Field label="Date" htmlFor="booking-skip">
+              <Input id="booking-skip" type="date" min={firstDay} max={lastDay} value={skipDraft} onChange={(e) => setSkipDraft(e.target.value)} className="min-h-11" />
+            </Field>
+            <Button type="button" variant="outline" disabled={!skipDraft || skip.includes(skipDraft) || skipDraft < firstDay || skipDraft > lastDay}
+              onClick={() => { setSkip((list) => [...list, skipDraft].sort()); setSkipDraft(""); }}><Plus aria-hidden="true" />Leave out</Button>
+          </div>
+          {inRange.length ? (
+            <ul className="flex flex-wrap gap-2" aria-label="Dates it does not run">
+              {inRange.map((d) => (
+                <li key={d} className="flex items-center gap-1 rounded-[var(--pc-radius-control)] bg-[var(--pc-surface-sunken)] pl-3">
+                  <span className="text-sm">{formatDate(new Date(`${d}T00:00:00Z`))}</span>
+                  <Button type="button" variant="ghost" size="icon" aria-label={`Run it on ${formatDate(new Date(`${d}T00:00:00Z`))} after all`} onClick={() => setSkip((list) => list.filter((x) => x !== d))}><X aria-hidden="true" /></Button>
+                </li>
+              ))}
+            </ul>
+          ) : null}
+        </fieldset>
+      ) : null}
       <fieldset className="flex min-w-0 flex-col gap-2">
         <legend className="mb-2 font-semibold">Staff each session needs</legend>
         {needs.map((n, i) => (

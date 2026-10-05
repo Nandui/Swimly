@@ -110,7 +110,7 @@ function due(a: Pick<RotaReturnRow, "firstShift" | "stage">) {
  *  affected shifts as Absent so cover can be found. */
 export default async function AbsencesPage({ searchParams }: { searchParams: Promise<{ report?: string }> }) {
   if (!(await requireRotaActor()).manage) notFound();
-  // Home's and Today's "Report an absence" arrive with ?report=1 and open the dialog.
+  // Home's and This week's "Report an absence" arrive with ?report=1 and open the dialog.
   const report = (await searchParams).report === "1";
   const { today, current, returning, returned, people, holidays, siteNames } = await rotaAbsences();
   const scope = siteNames === null ? "all sites" : siteNames.length ? siteNames.join(", ") : "no sites yet";

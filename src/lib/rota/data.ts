@@ -1,6 +1,6 @@
 import "server-only";
 import { notFound } from "next/navigation";
-import { isDateOnly, minutesNow as poolMinutesNow, parseDateOnly, today } from "@/lib/format";
+import { isDateOnly, parseDateOnly, today } from "@/lib/format";
 import { prisma } from "@/lib/prisma";
 import { sitesFor, subjectsFor } from "@/lib/policy/session";
 import { requireRotaActor } from "@/lib/rota/access";
@@ -27,7 +27,7 @@ export async function rotaSites() {
 export async function rotaWeek(siteId: string | undefined, week: string | undefined) {
   const { who, sites } = await rotaSites();
   const site = siteId ? sites.find((s) => s.id === siteId) : sites[0];
-  if (!site) { if (siteId) notFound(); return { who, sites, site: null, monday: mondayOf(today()), days: [], people: [], types: [], departments: [], duties: [], young: {} as Record<string, YoungBand> }; }
+  if (!site) { if (siteId) notFound(); return { who, sites, site: null, monday: mondayOf(today()), days: [], people: [], types: [], departments: [], duties: [], young: {} as Record<string, YoungBand>, members: [] as RotaMember[], mine: null as string | null }; }
   const monday = mondayOf(week && isDateOnly(week) ? week : today());
   const sunday = addDaysIso(monday, 6);
   const shifts = await prisma.rotaShift.findMany({
@@ -43,12 +43,16 @@ export async function rotaWeek(siteId: string | undefined, week: string | undefi
   const personIds = [...new Set(shifts.flatMap((s) => (s.rotaPersonId ? [s.rotaPersonId] : [])))];
   const inWeek = { gte: parseDateOnly(monday), lte: parseDateOnly(sunday) };
   const someone = [...(userIds.length ? [{ userId: { in: userIds } }] : []), ...(personIds.length ? [{ rotaPersonId: { in: personIds } }] : [])];
-  const [held, elsewhere, absences, teaching, classes, births] = await Promise.all([
+  const orgId = who.orgId ?? undefined;
+  // The site's departments, the organisation-wide ones, and any other site's this site's shifts use
+  // (the same departments a shift or an activity here may take).
+  const atSite = { orgId, archivedAt: null, OR: [{ clubId: null }, { clubId: site.id }, { rotaShifts: { some: { siteId: site.id } } }] };
+  const [held, elsewhere, absences, teaching, classes, births, planned, departments, memberships, mine] = await Promise.all([
     prisma.qualification.findMany({ where: { userId: { in: userIds } }, select: { userId: true, typeId: true, issuedOn: true, expiresOn: true, revokedAt: true } }),
     // Double-bookings across sites count too.
     someone.length ? prisma.rotaShift.findMany({
       where: { OR: someone, cancelledAt: null, date: inWeek },
-      select: { id: true, userId: true, rotaPersonId: true, kind: true, date: true, startMinutes: true, endMinutes: true, requiredTypeId: true },
+      select: { id: true, userId: true, rotaPersonId: true, kind: true, date: true, startMinutes: true, endMinutes: true, requiredTypeId: true, bookingId: true },
     }) : [],
     // Who is off this week. The week shows only "Absent"; the reason is for managers.
     someone.length ? prisma.rotaAbsence.findMany({
@@ -61,6 +65,18 @@ export async function rotaWeek(siteId: string | undefined, week: string | undefi
     commitmentsFor({ siteIds: [site.id], from: monday, to: sunday }),
     // Under-18s on the plan, for their breaks: only a band per day leaves this function, never the date.
     userIds.length ? prisma.user.findMany({ where: { id: { in: userIds }, dateOfBirth: { gt: parseDateOnly(addDaysIso(monday, -18 * 366)) } }, select: { id: true, dateOfBirth: true } }) : [],
+    // The week's activities to cover, each with the department that plans it.
+    prisma.rotaActivity.findMany({ where: { siteId: site.id, date: inWeek }, orderBy: [{ startMinutes: "asc" }],
+      select: { id: true, date: true, label: true, startMinutes: true, endMinutes: true, people: true, requiredTypeId: true, requiredType: { select: { name: true } }, departmentId: true, note: true } }),
+    prisma.department.findMany({ where: atSite, orderBy: [{ sortOrder: "asc" }, { name: "asc" }], select: { id: true, name: true } }),
+    // Each department's staff who work at this site, so a supervisor sees everyone they can plan,
+    // shifts or not. Works at empty means their main site (or every site when they have none).
+    prisma.userDepartment.findMany({
+      where: { department: atSite, user: { orgId, isActive: true, OR: [{ siteIds: { has: site.id } }, { siteIds: { isEmpty: true }, OR: [{ primaryClubId: site.id }, { primaryClubId: null }] }] } },
+      select: { departmentId: true, isPrimary: true, user: { select: { id: true, name: true, jobTitle: true } } },
+    }),
+    // The department the viewer works in, where the Week plan opens.
+    prisma.userDepartment.findMany({ where: { userId: who.id, department: atSite }, orderBy: { isPrimary: "desc" }, take: 1, select: { departmentId: true } }),
   ]);
   const young: Record<string, YoungBand> = {};
   for (const b of births) {
@@ -79,20 +95,21 @@ export async function rotaWeek(siteId: string | undefined, week: string | undefi
         warnings: shiftWarnings(s, held.filter((q) => q.userId === s.userId), elsewhere.filter((o) => o.date.toISOString().slice(0, 10) === iso), absences, teaching.filter((c) => c.date === iso)),
       })),
       classes: classes.filter((c) => c.date === iso),
+      planned: planned.filter((a) => a.date.toISOString().slice(0, 10) === iso),
     };
   });
-  const orgId = who.orgId ?? undefined;
-  const [people, types, departments, recent] = site.manage ? await Promise.all([
+  const [people, types, recent] = site.manage ? await Promise.all([
     prisma.user.findMany({ where: { orgId, isActive: true }, orderBy: { name: "asc" }, select: { id: true, name: true, jobTitle: true } }),
     prisma.qualificationType.findMany({ where: { orgId, archivedAt: null }, orderBy: { name: "asc" }, select: { id: true, name: true } }),
-    // The site's departments, and the organisation-wide ones.
-    prisma.department.findMany({ where: { orgId, archivedAt: null, OR: [{ clubId: null }, { clubId: site.id }] }, orderBy: [{ sortOrder: "asc" }, { name: "asc" }], select: { id: true, name: true } }),
     // Duties typed before at this site, offered again (owner decision: supervisors type them).
     prisma.rotaShift.findMany({ where: { siteId: site.id, kind: "shift", importId: null, date: { gte: parseDateOnly(addDaysIso(monday, -84)) } }, distinct: ["role"], orderBy: { role: "asc" }, select: { role: true } }),
-  ]) : [[], [], [], []];
-  return { who, sites, site, monday, days, people, types, departments, duties: recent.map((r) => r.role), young };
+  ]) : [[], [], []];
+  const members: RotaMember[] = memberships.map((m) => ({ userId: m.user.id, name: m.user.name, jobTitle: m.user.jobTitle, departmentId: m.departmentId, primary: m.isPrimary }));
+  return { who, sites, site, monday, days, people, types, departments, duties: recent.map((r) => r.role), young, members, mine: mine[0]?.departmentId ?? null };
 }
 export type RotaDay = Awaited<ReturnType<typeof rotaWeek>>["days"][number];
+/** Someone in one of the site's departments: they belong on that department's Week plan. */
+export type RotaMember = { userId: string; name: string; jobTitle: string | null; departmentId: string; primary: boolean };
 
 /** The bookings at one site still running or ended in the last 30 days,
  *  with how many of their places still to come are unfilled. */
@@ -120,113 +137,63 @@ export async function rotaBookings(siteId: string | undefined) {
   return { who, sites, site, today: now, types, departments, bookings: bookings.map((b) => ({ ...b, unfilled: unfilled.get(b.id) ?? 0, staffedThisWeek: staffedNow.has(b.id) })) };
 }
 
-/** One day of a site's plan, for the day timeline: the day's duties with what
- *  each person does when (activities and breaks), the bookings that day, the
- *  Swim school's classes and who teaches them, the day's note and the
- *  activities this site has used, to offer again. Same access as the week. */
+/** One day of a site's plan, for This week's day (duty managers) and a department's day (the
+ *  supervisor's Week plan opens it): the day's shifts with what each person does when
+ *  (activities and breaks), the activities to cover, the bookings that day, the Swim school's
+ *  classes and who teaches them, the day's note and the activities this site has used, to offer
+ *  again. On today it also says what needs a duty manager now (shifts still to come whose
+ *  person is off, with who is free and qualified to cover; unfilled ones) and the changes made
+ *  to today's shifts, with their reason and whether Timepoint has them. Same access as the week. */
 export async function rotaDay(siteId: string | undefined, date: string | undefined) {
-  const day = date && isDateOnly(date) ? date : today();
+  const now = today();
+  const day = date && isDateOnly(date) ? date : now;
   const week = await rotaWeek(siteId, day);
   const found = week.days.find((d) => d.iso === day);
   const shifts = (found?.shifts ?? []).filter((s) => s.kind === "shift");
   const classes = found?.classes ?? [];
-  const empty = { ...week, day, shifts, classes, bookings: [], note: "", teachers: {} as Record<string, string>, activities: ACTIVITY_SUGGESTIONS,
-    planned: [] as { id: string; label: string; startMinutes: number; endMinutes: number; people: number; requiredTypeId: string | null; requiredType: { name: string } | null; note: string }[],
-    held: {} as Record<string, string[]>, young: {} as Record<string, YoungBand> };
-  if (!week.site) return empty;
+  const planned = found?.planned ?? [];
+  const site = week.site;
   const at = parseDateOnly(day);
   const weekday = (at.getUTCDay() + 6) % 7;
   const teacherIds = [...new Set(classes.flatMap((c) => (c.userId ? [c.userId] : [])))];
   const staffIds = [...new Set(shifts.flatMap((s) => (s.userId ? [s.userId] : [])))];
-  const [bookings, note, used, teachers, planned, quals, births] = await Promise.all([
+  const live = !!site && day === now;
+  const [bookings, note, used, teachers, quals, births, changes] = site ? await Promise.all([
     prisma.rotaBooking.findMany({
-      where: { siteId: week.site.id, cancelledAt: null, firstDay: { lte: at }, lastDay: { gte: at }, weekdays: { has: weekday } },
+      where: { siteId: site.id, cancelledAt: null, firstDay: { lte: at }, lastDay: { gte: at }, weekdays: { has: weekday } },
       orderBy: [{ startMinutes: "asc" }],
-      select: { id: true, kind: true, title: true, place: true, startMinutes: true, endMinutes: true, needs: { select: { count: true } } },
+      select: { id: true, kind: true, title: true, place: true, departmentId: true, startMinutes: true, endMinutes: true, needs: { select: { count: true } } },
     }),
-    prisma.rotaDayNote.findUnique({ where: { siteId_date: { siteId: week.site.id, date: at } }, select: { text: true } }),
+    prisma.rotaDayNote.findUnique({ where: { siteId_date: { siteId: site.id, date: at } }, select: { text: true } }),
     // Activities used at this site in the last 12 weeks come first in the suggestions.
     prisma.rotaShiftSegment.findMany({
-      where: { kind: "activity", shift: { siteId: week.site.id, date: { gte: parseDateOnly(addDaysIso(day, -84)) } } },
+      where: { kind: "activity", shift: { siteId: site.id, date: { gte: parseDateOnly(addDaysIso(day, -84)) } } },
       distinct: ["label"], select: { label: true }, take: 40,
     }),
     teacherIds.length ? prisma.user.findMany({ where: { id: { in: teacherIds } }, select: { id: true, name: true } }) : [],
-    // The day's planned activities: what needs covering, when, by how many, holding what.
-    prisma.rotaActivity.findMany({ where: { siteId: week.site.id, date: at }, orderBy: [{ startMinutes: "asc" }],
-      select: { id: true, label: true, startMinutes: true, endMinutes: true, people: true, requiredTypeId: true, requiredType: { select: { name: true } }, note: true } }),
     // What the people on the plan hold that day, so only those with the right one are suggested first.
     staffIds.length ? prisma.qualification.findMany({ where: { userId: { in: staffIds }, revokedAt: null, issuedOn: { lte: at }, OR: [{ expiresOn: null }, { expiresOn: { gte: at } }] }, select: { userId: true, typeId: true } }) : [],
     // Under-18s on the plan, for their breaks: only the band leaves this function, never the date.
     staffIds.length ? prisma.user.findMany({ where: { id: { in: staffIds }, dateOfBirth: { gt: parseDateOnly(addDaysIso(day, -18 * 366)) } }, select: { id: true, dateOfBirth: true } }) : [],
-  ]);
+    // Today only: the changes made to today's shifts.
+    live ? prisma.rotaShiftChange.findMany({ where: { siteId: site.id, date: at }, orderBy: { createdAt: "desc" },
+      select: { id: true, kind: true, before: true, after: true, reason: true, note: true, byName: true, createdAt: true, timepointAt: true, timepointByName: true } }) : [],
+  ]) : [[], null, [], [], [], [], []];
   const young: Record<string, YoungBand> = {};
   for (const b of births) { const band = youngBand(b.dateOfBirth ? b.dateOfBirth.toISOString().slice(0, 10) : null, day); if (band) young[b.id] = band; }
   const held: Record<string, string[]> = {};
   for (const q of quals) (held[q.userId] ??= []).push(q.typeId);
   const placed = (id: string) => shifts.filter((s) => s.bookingId === id);
   return {
-    ...empty,
-    bookings: bookings.map(({ needs, ...b }) => ({
-      ...b, places: placed(b.id).length || needs.reduce((n, w) => n + w.count, 0),
+    ...week, day, today: now, shifts, classes, planned, held, young, changes,
+    bookings: bookings.map(({ needs: wanted, ...b }) => ({
+      ...b, places: placed(b.id).length || wanted.reduce((n, w) => n + w.count, 0),
       filled: placed(b.id).filter((s) => (s.userId || s.rotaPersonId) && !s.warnings.includes("absent")).length,
     })),
     note: note?.text ?? "",
-    teachers: Object.fromEntries(teachers.map((t) => [t.id, t.name])),
+    teachers: Object.fromEntries(teachers.map((t) => [t.id, t.name])) as Record<string, string>,
     activities: [...new Set([...planned.map((p) => p.label), ...used.map((u) => u.label), ...ACTIVITY_SUGGESTIONS])],
-    planned, held, young,
   };
-}
-
-/** Today's plan for duty managers: the day's duties at one site, what needs
- *  them now (duties whose person is off, with who could cover; unfilled ones
- *  still to come) and the changes made to today's duties, with their reason
- *  and whether Timepoint has them. */
-export async function rotaToday(siteId: string | undefined) {
-  const now = today();
-  const week = await rotaWeek(siteId, now);
-  const day = week.days.find((d) => d.iso === now);
-  const shifts = (day?.shifts ?? []).filter((s) => s.kind === "shift");
-  const minutesNow = poolMinutesNow();
-  const classes = day?.classes ?? [];
-  if (!week.site) return { ...week, today: now, minutesNow, shifts, classes, teachers: {} as Record<string, string>, needs: [], changes: [], bookings: [] };
-  const date = parseDateOnly(now);
-  const orgId = week.who.orgId ?? undefined;
-  const weekday = (new Date(`${now}T00:00:00Z`).getUTCDay() + 6) % 7;
-  const [busy, off, held, changes, teaching, bookings] = await Promise.all([
-    // Everyone's duties today, at any site, so cover never double-books.
-    prisma.rotaShift.findMany({ where: { orgId, date, kind: "shift", cancelledAt: null, userId: { not: null } }, select: { userId: true, startMinutes: true, endMinutes: true } }),
-    prisma.rotaAbsence.findMany({ where: { orgId, withdrawnAt: null, userId: { not: null }, firstDay: { lte: date }, OR: [{ lastDay: null }, { lastDay: { gte: date } }] }, select: { userId: true } }),
-    prisma.qualification.findMany({ where: { orgId, revokedAt: null, issuedOn: { lte: date }, OR: [{ expiresOn: null }, { expiresOn: { gte: date } }] }, select: { userId: true, typeId: true } }),
-    prisma.rotaShiftChange.findMany({ where: { siteId: week.site.id, date }, orderBy: { createdAt: "desc" },
-      select: { id: true, kind: true, before: true, after: true, reason: true, note: true, byName: true, createdAt: true, timepointAt: true, timepointByName: true } }),
-    // Swim classes anyone teaches today, so cover never lands on someone teaching.
-    week.site.manage && week.people.length ? commitmentsFor({ userIds: week.people.map((p) => p.id), from: now, to: now }) : [],
-    // Today's bookings at this site: on the timeline beside the duties they need.
-    prisma.rotaBooking.findMany({
-      where: { siteId: week.site.id, cancelledAt: null, firstDay: { lte: date }, lastDay: { gte: date }, weekdays: { has: weekday } },
-      orderBy: [{ startMinutes: "asc" }],
-      select: { id: true, kind: true, title: true, place: true, startMinutes: true, endMinutes: true, needs: { select: { count: true } } },
-    }),
-  ]);
-  const offIds = new Set(off.map((a) => a.userId));
-  // Free and qualified for this duty's time: not off, not on another duty then.
-  const coverFor = (s: (typeof shifts)[number]) => week.people.filter((p) => p.id !== s.userId && !offIds.has(p.id)
-    && ![...busy, ...teaching].some((b) => b.userId === p.id && b.startMinutes < s.endMinutes && s.startMinutes < b.endMinutes)
-    && (!s.requiredTypeId || held.some((q) => q.userId === p.id && q.typeId === s.requiredTypeId))).slice(0, 3);
-  const needs = shifts
-    .filter((s) => s.endMinutes > minutesNow && (s.warnings.includes("absent") || (!s.userId && !s.rotaPersonId)))
-    .sort((a, b) => a.startMinutes - b.startMinutes)
-    .map((s) => ({ shift: s, absent: s.warnings.includes("absent"), cover: week.site!.manage ? coverFor(s) : [] }));
-  // How many of each booking's places today have someone.
-  const placed = (id: string) => shifts.filter((s) => s.bookingId === id);
-  const todayBookings = bookings.map(({ needs: wanted, ...b }) => ({
-    ...b, places: placed(b.id).length || wanted.reduce((n, w) => n + w.count, 0),
-    filled: placed(b.id).filter((s) => (s.userId || s.rotaPersonId) && !s.warnings.includes("absent")).length,
-  }));
-  // Who teaches today's swim classes, by name, for the timeline's Swim school lanes.
-  const teacherIds = [...new Set(classes.flatMap((c) => (c.userId ? [c.userId] : [])))];
-  const teachers = teacherIds.length ? await prisma.user.findMany({ where: { id: { in: teacherIds } }, select: { id: true, name: true } }) : [];
-  return { ...week, today: now, minutesNow, shifts, classes, teachers: Object.fromEntries(teachers.map((t) => [t.id, t.name])), needs, changes, bookings: todayBookings };
 }
 
 /** The Absences page, among the people the manager's rota role covers: who

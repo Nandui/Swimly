@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import Link from "next/link";
-import { CircleDashed, Plus } from "lucide-react";
+import { CircleDashed, ListChecks, Plus } from "lucide-react";
 import { Avatar, AvatarFallback, initials } from "@/components/shadcn/avatar";
 import { Button } from "@/components/shadcn/button";
 import { CancelShift, ShiftDialog, type PlanOptions } from "@/components/rota/actions";
@@ -10,24 +10,32 @@ import { ShiftPlanSheet, type SegmentShift } from "@/components/rota/segments";
 import { Tag } from "@/components/ui-kit/tag";
 import { cn } from "@/lib/utils";
 import { formatTime } from "@/lib/format";
-import { ROTA_SHIFT_META, ROTA_WARNING_META, weekStarted, type RotaShiftKind } from "@/lib/rota/constants";
+import { ROTA_BLOCK_META, ROTA_SHIFT_META, ROTA_WARNING_META, weekStarted, type RotaShiftKind } from "@/lib/rota/constants";
 import { hours } from "@/lib/rota/plan";
 import type { RosterCell, RosterData, RosterFill, RosterPerson } from "@/lib/rota/roster";
 
-type Day = { iso: string; weekday: string; date: string; today: boolean };
+/** A day across the top; `href` opens it (the department's day, when one is shown). */
+type Day = { iso: string; weekday: string; date: string; today: boolean; href: string };
+/** An activity to cover that day: who is on it, and how many stretches still need someone. */
+export type RosterCover = { id: string; label: string; start: number; end: number; gaps: number; who: string[] };
 export type RosterShiftDetail = SegmentShift & {
   date: Date; startMinutes: number; endMinutes: number; note: string; userId: string | null;
   requiredTypeId: string | null; departmentId: string | null; department: string | null; editable: boolean;
 };
 
 /** The week plan as a roster sheet (V2Rota): one white panel, people down the side as lane
- *  tiles by department, day tiles across (today filled, each opening its Day plan), paid hours
- *  at the end, and above everyone what still needs a person. Each shift is a block in its
+ *  tiles by department, day tiles across (today filled, each opening that day), paid hours
+ *  at the end, and above everyone the day's activities to cover (who is on each, or its gaps)
+ *  and what still needs a person. Each shift is a block in its
  *  state (ROTA_SHIFT_META): choose one to plan that person's day in the side panel; managers
  *  choose an empty day ("Off") to give them a shift. Below 1280px (the shared timeline's
  *  breakpoint) the same blocks are an agenda, a list per day, so no day hides in a sideways scroll. */
-export function RosterWeek({ roster, days, today, siteId, manage, shifts, activities, options }: {
+export function RosterWeek({ roster, days, today, siteId, manage, shifts, activities, options, cover = [], department }: {
   roster: RosterData;
+  /** Each day's activities to cover, in the department shown. */
+  cover?: RosterCover[][];
+  /** The department shown, for new shifts. */
+  department?: string;
   days: Day[];
   today: string;
   siteId: string;
@@ -71,14 +79,32 @@ export function RosterWeek({ roster, days, today, siteId, manage, shifts, activi
       </Button>
     );
   };
+  /** An activity to cover: who is on it, or its gaps; it opens the day, where it is planned. */
+  const coverBlock = (a: RosterCover, d: Day, agenda: boolean) => {
+    const meta = ROTA_BLOCK_META[a.gaps ? "gap" : "next"];
+    const words = a.gaps ? (a.who.length ? `${a.who.join(", ")} · ${a.gaps} to fill` : "Nobody yet") : a.who.join(", ");
+    return (
+      <Link key={a.id} href={d.href} aria-label={`${a.label}, ${formatTime(a.start)} to ${formatTime(a.end)}, ${words}${a.gaps ? `, ${meta.label.toLowerCase()}` : ""}: open ${d.weekday} ${d.date}`}
+        className={cn("pc-block w-full", d.today && !agenda && TODAY)} data-block={meta.state} data-layout={agenda ? undefined : "stack"}>
+        {agenda ? <span className="pc-block-time">{formatTime(a.start)}<small>to {formatTime(a.end)}</small></span>
+          : <span className="pc-block-time">{formatTime(a.start)} to {formatTime(a.end)}</span>}
+        <span className="pc-block-body">
+          <span className="pc-block-title">{a.label}</span>
+          <span className="pc-block-hint line-clamp-2">{a.gaps ? <meta.icon aria-hidden="true" className="mr-1 inline size-3.5 align-text-bottom" /> : null}{words}</span>
+        </span>
+      </Link>
+    );
+  };
+  const hasCover = cover.some((list) => list.length);
   /** A day with nothing for them: "Off"; for managers, the way to give them a shift. */
+  // A free day stays quiet, so the shifts stand out: an empty cell, and for managers a + on
+  // hover or focus to give them a shift. It still says "Off" to a screen reader.
   const emptyDay = (p: RosterPerson, d: Day) => manage && p.userId ? (
-    <ShiftDialog siteId={siteId} date={d.iso} today={today} options={options} person={p.userId}
-      trigger={{ label: `Off: add a shift for ${p.name}, ${d.weekday} ${d.date}`, variant: "ghost", style: { borderRadius: "var(--pc-radius-card)", color: "var(--pc-ink-muted)" },
-        className: "group min-h-14 w-full flex-col gap-0 border border-dashed border-[var(--pc-line-strong)] font-normal text-ui-muted-foreground hover:text-ui-foreground",
-        children: <><span>Off</span><Plus aria-hidden="true" className="text-ui-foreground [@media(hover:hover)]:opacity-0 group-hover:opacity-100 group-focus-visible:opacity-100" /></> }} />
+    <ShiftDialog siteId={siteId} date={d.iso} today={today} options={options} person={p.userId} department={department}
+      trigger={{ label: `Off: add a shift for ${p.name}, ${d.weekday} ${d.date}`, variant: "ghost", className: "rota-empty-day group",
+        children: <Plus aria-hidden="true" className="[@media(hover:hover)]:opacity-0 group-hover:opacity-100 group-focus-visible:opacity-100" /> }} />
   ) : (
-    <span className="flex min-h-14 items-center justify-center rounded-[var(--pc-radius-card)] border border-dashed border-ui-border text-sm text-ui-muted-foreground">Off</span>
+    <span className="rota-empty-day"><span className="sr-only">Off</span></span>
   );
 
   const sheet = open ? shifts[open.id] : undefined;
@@ -94,7 +120,7 @@ export function RosterWeek({ roster, days, today, siteId, manage, shifts, activi
               <div role="columnheader" className="pc-timeline-heading">Person</div>
               {days.map((d) => (
                 <div role="columnheader" key={d.iso}>
-                  <Link href={`/rota/day?${new URLSearchParams({ site: siteId, date: d.iso })}`} className="pc-timeline-hour h-full flex-col px-1 py-1 hover:bg-[var(--pc-surface-sunken)]"
+                  <Link href={d.href} className="pc-timeline-hour h-full flex-col px-1 py-1 hover:bg-[var(--pc-surface-sunken)]"
                     data-now={d.today || undefined} aria-current={d.today ? "date" : undefined}>
                     <span>{d.weekday}</span>
                     <span className={cn("text-xs font-normal", !d.today && "text-ui-muted-foreground")}>{d.date}</span>
@@ -104,6 +130,19 @@ export function RosterWeek({ roster, days, today, siteId, manage, shifts, activi
               ))}
               <div role="columnheader" className="pc-timeline-heading text-right">Hours</div>
             </div>
+
+            {hasCover ? (
+              <div role="row" className={cn("grid gap-2", cols)}>
+                <div role="rowheader" className="pc-timeline-lane self-start">
+                  <span className="pc-tile-icon" aria-hidden="true"><ListChecks /></span>
+                  <span className="pc-timeline-lane-body"><span className="pc-timeline-lane-label">Activities</span><span className="pc-timeline-lane-caption">Who covers them</span></span>
+                </div>
+                {days.map((d, i) => (
+                  <div role="cell" key={d.iso} className="flex flex-col gap-2">{(cover[i] ?? []).map((a) => coverBlock(a, d, false))}</div>
+                ))}
+                <div role="cell" />
+              </div>
+            ) : null}
 
             {roster.tiles.toFill ? (
               <div role="row" className={cn("grid gap-2", cols)}>
@@ -137,7 +176,7 @@ export function RosterWeek({ roster, days, today, siteId, manage, shifts, activi
                       </div>
                     ))}
                     <div role="cell" className="flex items-center justify-end font-semibold tabular-nums">
-                      {p.minutes ? hours(p.minutes) : <><span aria-hidden="true" className="font-normal text-ui-muted-foreground">–</span><span className="sr-only">No hours</span></>}
+                      {p.minutes ? `${hours(p.minutes)}h` : <><span aria-hidden="true" className="font-normal text-ui-muted-foreground">–</span><span className="sr-only">No hours</span></>}
                     </div>
                   </div>
                 ))}
@@ -145,25 +184,27 @@ export function RosterWeek({ roster, days, today, siteId, manage, shifts, activi
             ))}
           </div>
         </div>
-        {shown.length === 0 ? <p className="text-sm text-ui-muted-foreground">Nobody is planned this week{manage ? ". Add a shift, or copy a week to start from." : "."}</p> : null}
-        <Key today={days.some((d) => d.today)} />
+        {shown.length === 0 ? <p className="text-sm text-ui-muted-foreground">Nobody in this department yet{manage ? ". Add a shift, or copy a week to start from." : "."}</p> : null}
+        <Key today={days.some((d) => d.today)} cover={hasCover} />
       </section>
 
       {/* Below 1280px: the week as an agenda, a list per day (DESIGN.md, "Phones use Agenda"). */}
       <section aria-label="The week, day by day" className="pc-panel pc-timeline-narrow">
         {days.map((d, i) => {
           const fill = roster.fill[i];
+          const covers = cover[i] ?? [];
           const people = shown.flatMap((g) => g.people).flatMap((p) => p.days[i].map((c) => ({ p, c }))).sort((x, y) => x.c.start - y.c.start);
           return (
             <section key={d.iso} aria-labelledby={`agenda-${d.iso}`} className="flex flex-col gap-2">
               <h2 id={`agenda-${d.iso}`} className="text-sm">
-                <Link href={`/rota/day?${new URLSearchParams({ site: siteId, date: d.iso })}`} aria-current={d.today ? "date" : undefined}
+                <Link href={d.href} aria-current={d.today ? "date" : undefined}
                   className="inline-flex min-h-11 items-center gap-2 font-semibold underline-offset-4 hover:underline">
                   {d.weekday} {d.date}{d.today ? " · today" : ""}
                 </Link>
               </h2>
-              {fill.length || people.length ? (
+              {covers.length || fill.length || people.length ? (
                 <ul className="pc-rows">
+                  {covers.map((a) => <li key={a.id} className="flex">{coverBlock(a, d, true)}</li>)}
                   {fill.map((f) => <li key={f.id} className="flex">{fillBlock(f, d, true)}</li>)}
                   {people.map(({ p, c }) => <li key={c.id} className="flex">{cellBlock(c, p, d, true)}</li>)}
                 </ul>
@@ -171,7 +212,7 @@ export function RosterWeek({ roster, days, today, siteId, manage, shifts, activi
             </section>
           );
         })}
-        <Key />
+        <Key cover={hasCover} />
       </section>
 
       {open && sheet && sheetCell ? (
@@ -218,10 +259,11 @@ function BlockParts({ kind, start, end, words, title }: { kind: RotaShiftKind; s
 }
 
 /** What each block means, in words and icons (the tags), never colour alone. */
-function Key({ today = false }: { today?: boolean }) {
+function Key({ today = false, cover = false }: { today?: boolean; cover?: boolean }) {
   return (
     <ul className="flex flex-wrap gap-2" aria-label="Key">
       {(Object.keys(ROTA_SHIFT_META) as RotaShiftKind[]).map((k) => <li key={k}><Tag meta={ROTA_SHIFT_META[k]} /></li>)}
+      {cover ? <li><Tag meta={ROTA_BLOCK_META.gap} /></li> : null}
       {/* The grid marks today's column with an outline; the agenda says "today" in words. */}
       {today ? <li><Tag meta={ROTA_SHIFT_META.planned} label="Today, outlined" className={TODAY} /></li> : null}
     </ul>

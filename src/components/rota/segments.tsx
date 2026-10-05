@@ -26,7 +26,7 @@ export type SegmentShift = { id: string; start: number; end: number; role: strin
   young?: YoungBand | null };
 
 /** The rows of a shift's plan being edited, their check, and the moves on
- *  them; shared by the dialog (Day plan) and the side panel (Week plan). */
+ *  them; shared by the dialog (This week) and the side panel (Week plan). */
 export function useSegments(shift: SegmentShift) {
   const initial = (): Row[] => shift.segments.map((s, i) => ({ key: i, start: clock(s.start), end: clock(s.end), kind: s.kind === "break" ? "break" : "activity", label: s.label }));
   const [rows, setRows] = useState<Row[]>(initial);

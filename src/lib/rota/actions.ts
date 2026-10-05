@@ -89,7 +89,7 @@ export async function saveShift(id: string | null, input: ShiftInput): Promise<A
   if (data.requiredTypeId && !(await prisma.qualificationType.findFirst({ where: { id: data.requiredTypeId, orgId: site.orgId }, select: { id: true } }))) {
     return fail("That qualification is no longer offered.");
   }
-  if (data.departmentId && !(await prisma.department.findFirst({ where: { id: data.departmentId, orgId: site.orgId, archivedAt: null, OR: [{ clubId: null }, { clubId: site.id }] }, select: { id: true } }))) {
+  if (data.departmentId && !(await prisma.department.findFirst({ where: { id: data.departmentId, orgId: site.orgId, archivedAt: null, OR: [{ clubId: null }, { clubId: site.id }, { rotaShifts: { some: { siteId: site.id } } }] }, select: { id: true } }))) {
     return fail("Choose one of this site's departments.");
   }
   const values = {
@@ -143,7 +143,7 @@ export async function saveShift(id: string | null, input: ShiftInput): Promise<A
   });
   if (result.ok) {
     revalidatePath("/rota");
-    revalidatePath("/rota/today");
+    revalidatePath("/rota/day");
     // Tell the people whose duties changed (Turnfin Me email, if they want it).
     await notifyShiftChange(data.userId, `${id ? "Your shift changed" : "You have a new shift"}: ${summary}.`);
     if (previousUserId && previousUserId !== data.userId) await notifyShiftChange(previousUserId, `You are no longer on this shift: ${summary}.`);
@@ -181,7 +181,7 @@ export async function cancelShift(id: string, input: ChangeInput = {}): Promise<
   });
   if (result.ok) {
     revalidatePath("/rota");
-    revalidatePath("/rota/today");
+    revalidatePath("/rota/day");
     await notifyShiftChange(shift.userId, `Your shift was cancelled: ${shift.role} at ${site.name} on ${iso(shift.date)}, ${clock(shift.startMinutes)}–${clock(shift.endMinutes)}.`);
   }
   return result;
@@ -226,7 +226,7 @@ export async function copyPlan(input: CopyPlanInput): Promise<ActionResult> {
         segments: { select: { startMinutes: true, endMinutes: true, kind: true, label: true } } },
     }),
     prisma.rotaShift.findMany({ where: { siteId, kind: "shift", cancelledAt: null, bookingId: null, date: range(to) }, select: { date: true } }),
-    prisma.rotaActivity.findMany({ where: { siteId, date: range(from) }, select: { date: true, label: true, startMinutes: true, endMinutes: true, people: true, requiredTypeId: true, note: true } }),
+    prisma.rotaActivity.findMany({ where: { siteId, date: range(from) }, select: { date: true, label: true, startMinutes: true, endMinutes: true, people: true, requiredTypeId: true, departmentId: true, note: true } }),
     prisma.rotaActivity.findMany({ where: { siteId, date: range(to) }, select: { date: true } }),
     prisma.rotaDayNote.findMany({ where: { siteId, date: range(from) }, select: { date: true, text: true } }),
     prisma.rotaDayNote.findMany({ where: { siteId, date: range(to) }, select: { date: true } }),
@@ -295,7 +295,6 @@ export async function saveSegments(shiftId: string, input: SegmentInput[]): Prom
   });
   revalidatePath("/rota");
   revalidatePath("/rota/day");
-  revalidatePath("/rota/today");
   return ok();
 }
 
@@ -307,6 +306,8 @@ const activitySchema = z.object({
   end: z.string(),
   people: z.coerce.number().int().min(1, "At least one person.").max(20, "Up to 20 people at once."),
   requiredTypeId: z.string().trim().max(64).transform((v) => v || null),
+  /** The department that plans it; empty for one the whole site shares. */
+  departmentId: z.string().trim().max(64).default("").transform((v) => v || null),
   note: z.string().trim().max(200),
   /** New ones only: also plan it on the days after this one to Sunday. */
   restOfWeek: z.boolean().default(false),
@@ -329,7 +330,8 @@ export async function saveActivity(id: string | null, input: ActivityInput): Pro
   const { actor, site } = allowed;
   if (!site.orgId) return fail("That site is not set up for the rota.");
   if (data.requiredTypeId && !(await prisma.qualificationType.findFirst({ where: { id: data.requiredTypeId, orgId: site.orgId }, select: { id: true } }))) return fail("That qualification is no longer offered.");
-  const values = { label: data.label, startMinutes: start, endMinutes: end, people: data.people, requiredTypeId: data.requiredTypeId, note: data.note };
+  if (data.departmentId && !(await prisma.department.findFirst({ where: { id: data.departmentId, orgId: site.orgId, archivedAt: null, OR: [{ clubId: null }, { clubId: site.id }, { rotaShifts: { some: { siteId: site.id } } }] }, select: { id: true } }))) return fail("That department is not at this site.");
+  const values = { label: data.label, startMinutes: start, endMinutes: end, people: data.people, requiredTypeId: data.requiredTypeId, departmentId: data.departmentId, note: data.note };
   const days = id || !data.restOfWeek ? [data.date] : Array.from({ length: 7 }, (_, i) => addDaysIso(data.date, i)).filter((d) => mondayOf(d) === mondayOf(data.date));
   const result = await prisma.$transaction(async (tx) => {
     if (id) {
@@ -342,7 +344,7 @@ export async function saveActivity(id: string | null, input: ActivityInput): Pro
       summary: `${id ? "Changed" : "Planned"} ${data.label} at ${site.name}, ${clock(start)}–${clock(end)}, ${data.people} at a time, ${days.length === 1 ? `on ${data.date}` : `${data.date} to ${days.at(-1)}`}` }, tx);
     return ok();
   });
-  if (result.ok) revalidatePath("/rota/day");
+  if (result.ok) { revalidatePath("/rota"); revalidatePath("/rota/day"); }
   return result;
 }
 
@@ -364,9 +366,11 @@ export async function removeActivity(id: string): Promise<ActionResult> {
 /** Put someone on an activity: it becomes that stretch of their shift. It
  *  must fit inside the shift and not overlap what they already do there; a
  *  missing qualification is shown on the plan, never a refusal. */
-export async function assignActivity(input: { shiftId: string; label: string; start: string; end: string }): Promise<ActionResult> {
+export async function assignActivity(input: { shiftId: string; label: string; start: string; end: string; kind?: "activity" | "break" }): Promise<ActionResult> {
   const start = parseClock(input.start), end = parseClock(input.end);
-  const label = input.label.trim();
+  // A break inside the shift (the day planner's "Break"), or an activity.
+  const kind = input.kind === "break" ? "break" : "activity";
+  const label = input.label.trim() || (kind === "break" ? UNPAID_BREAK : "");
   if (start === null || end === null) return fail("Use times like 10:30.");
   if (label.length < 2 || label.length > 60) return fail("Say what the activity is.");
   const shift = await prisma.rotaShift.findFirst({
@@ -375,7 +379,7 @@ export async function assignActivity(input: { shiftId: string; label: string; st
       segments: { select: { startMinutes: true, endMinutes: true, kind: true, label: true } } },
   });
   if (!shift) return fail("That shift is no longer on the plan.");
-  const all = [...shift.segments, { startMinutes: start, endMinutes: end, kind: "activity", label }];
+  const all = [...shift.segments, { startMinutes: start, endMinutes: end, kind, label }];
   const problem = segmentProblem(shift, all);
   if (problem) return fail(problem);
   const allowed = await allowedAt(shift.siteId);
@@ -383,7 +387,7 @@ export async function assignActivity(input: { shiftId: string; label: string; st
   const { actor, site } = allowed;
   const who = shift.user?.name ?? shift.rotaPerson?.name ?? "the unfilled duty";
   await prisma.$transaction(async (tx) => {
-    await tx.rotaShiftSegment.create({ data: { shiftId: input.shiftId, startMinutes: start, endMinutes: end, kind: "activity", label } });
+    await tx.rotaShiftSegment.create({ data: { shiftId: input.shiftId, startMinutes: start, endMinutes: end, kind, label } });
     await logAudit({ actorId: actor.id, actorName: actor.name, action: "update", entity: "RotaShift", entityId: input.shiftId, clubId: site.id,
       summary: `Put ${who} on ${label} ${clock(start)}–${clock(end)} on ${iso(shift.date)}` }, tx);
   });
@@ -423,7 +427,7 @@ export async function markTimepointUpdated(changeId: string): Promise<ActionResu
     await tx.rotaShiftChange.update({ where: { id: changeId }, data: { timepointAt: new Date(), timepointById: actor.id, timepointByName: actor.name } });
     await logAudit({ actorId: actor.id, actorName: actor.name, action: "update", entity: "RotaShift", entityId: null, clubId: site.id, summary: `Recorded a rota change as updated in Timepoint: ${change.after || change.before}` }, tx);
   });
-  revalidatePath("/rota/today");
+  revalidatePath("/rota/day");
   return ok();
 }
 
@@ -443,6 +447,8 @@ const bookingSchema = z.object({
   end: z.string(),
   firstDay: z.string().refine(isDateOnly, "Choose the first day."),
   lastDay: z.string().refine(isDateOnly, "Choose the last day."),
+  /** Dates in the range it does not run. */
+  skipDates: z.array(z.string().refine(isDateOnly, "Choose each date it does not run.")).max(120).default([]),
   needs: z.array(z.object({
     role: z.string().trim().min(2, "Name each role, for example Swim teacher.").max(40),
     count: z.number().int().min(1, "Each role needs at least one person.").max(20, "Up to 20 people for one role."),
@@ -461,15 +467,16 @@ export async function saveBooking(input: BookingInput): Promise<ActionResult> {
   if (end <= start) return fail("It has to end after it starts, on the same day.");
   if (data.lastDay < data.firstDay) return fail("The last day can't be before the first.");
   if (data.firstDay < today()) return fail("A booking starts today or later.");
-  const dates = bookingDates(data.firstDay, data.lastDay, data.weekdays);
-  if (!dates.length) return fail("None of those days fall between the first and last day.");
+  const skipDates = [...new Set(data.skipDates)].filter((d) => d >= data.firstDay && d <= data.lastDay).sort();
+  const dates = bookingDates(data.firstDay, data.lastDay, data.weekdays, skipDates);
+  if (!dates.length) return fail("None of those days fall between the first and last day, once the dates it does not run are left out.");
   const places = dates.length * data.needs.reduce((n, need) => n + need.count, 0);
   if (places > BOOKING_MAX_PLACES) return fail(`That makes ${places} places to fill. Split it into shorter bookings, up to ${BOOKING_MAX_PLACES} places each.`);
   const allowed = await allowedAt(data.siteId);
   if (!allowed.ok) return fail(allowed.error);
   const { actor, site } = allowed;
   if (!site.orgId) return fail("That site is not set up for the rota.");
-  if (data.departmentId && !(await prisma.department.findFirst({ where: { id: data.departmentId, orgId: site.orgId, archivedAt: null, OR: [{ clubId: null }, { clubId: site.id }] }, select: { id: true } }))) {
+  if (data.departmentId && !(await prisma.department.findFirst({ where: { id: data.departmentId, orgId: site.orgId, archivedAt: null, OR: [{ clubId: null }, { clubId: site.id }, { rotaShifts: { some: { siteId: site.id } } }] }, select: { id: true } }))) {
     return fail("Choose one of this site's departments.");
   }
   const types = [...new Set(data.needs.flatMap((n) => (n.requiredTypeId ? [n.requiredTypeId] : [])))];
@@ -481,7 +488,7 @@ export async function saveBooking(input: BookingInput): Promise<ActionResult> {
     const booking = await tx.rotaBooking.create({ data: {
       orgId: site.orgId!, siteId: site.id, departmentId: data.departmentId, kind: data.kind, title: data.title, place: data.place,
       weekdays: [...new Set(data.weekdays)].sort(), startMinutes: start, endMinutes: end,
-      firstDay: parseDateOnly(data.firstDay), lastDay: parseDateOnly(data.lastDay), note: data.note,
+      firstDay: parseDateOnly(data.firstDay), lastDay: parseDateOnly(data.lastDay), skipDates: skipDates.map(parseDateOnly), note: data.note,
       createdById: actor.id, createdByName: actor.name,
       needs: { create: data.needs.map((n) => ({ role: n.role, count: n.count, requiredTypeId: n.requiredTypeId })) },
     }, select: { id: true, needs: { select: { id: true, role: true, count: true, requiredTypeId: true } } } });
@@ -491,11 +498,11 @@ export async function saveBooking(input: BookingInput): Promise<ActionResult> {
       bookingId: booking.id, bookingNeedId: need.id, createdById: actor.id, createdByName: actor.name,
     })))) });
     await logAudit({ actorId: actor.id, actorName: actor.name, action: "create", entity: "RotaShift", entityId: booking.id, clubId: site.id,
-      summary: `Booked ${duty} at ${site.name}, ${dates.length} ${dates.length === 1 ? "session" : "sessions"} from ${data.firstDay} to ${data.lastDay}, ${places} places to fill` }, tx);
+      summary: `Booked ${duty} at ${site.name}, ${dates.length} ${dates.length === 1 ? "session" : "sessions"} from ${data.firstDay} to ${data.lastDay}${skipDates.length ? ` except ${skipDates.join(", ")}` : ""}, ${places} places to fill` }, tx);
   });
   revalidatePath("/rota");
   revalidatePath("/rota/bookings");
-  revalidatePath("/rota/today");
+  revalidatePath("/rota/day");
   return ok();
 }
 
@@ -532,7 +539,7 @@ export async function cancelBooking(id: string, input: ChangeInput = {}): Promis
   });
   revalidatePath("/rota");
   revalidatePath("/rota/bookings");
-  revalidatePath("/rota/today");
+  revalidatePath("/rota/day");
   for (const s of live) await notifyShiftChange(s.userId, `Your shift was cancelled: ${s.role} at ${site.name} on ${iso(s.date)}, ${clock(s.startMinutes)}–${clock(s.endMinutes)}.`);
   return ok();
 }

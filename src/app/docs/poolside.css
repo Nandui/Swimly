@@ -632,17 +632,55 @@ html:has(.tf-shell) { scroll-padding-bottom: 112px; }
 .turnfin-app a.pc-block:hover { filter: brightness(0.97); }
 .turnfin-app .pc-block > svg { flex: none; width: 18px; height: 18px; }
 .turnfin-app .pc-block[data-density='icon'] { justify-content: center; padding: 0; }
-.turnfin-app .pc-block[data-density='compact'] { gap: 6px; padding-inline: 10px 6px; }
+.turnfin-app .pc-block[data-density='compact'] { gap: 6px; padding-inline: 8px 4px; }
 .turnfin-app .pc-block[data-density='mark'] { padding: 0; }
 .turnfin-app .pc-block:has(> .pc-block-strip) { position: relative; padding-bottom: 14px; }
 .turnfin-app .pc-block-strip { position: absolute; inset-inline: 12px; bottom: 6px; height: 6px; border-radius: 999px; overflow: hidden; }
 .turnfin-app .pc-block-strip > span { position: absolute; inset-block: 0; box-shadow: inset 0 0 0 1px var(--pc-line); }
 .turnfin-app .pc-block-strip > [data-kind='activity'] { background: var(--pc-surface); }
-/* The day as a grid from 1280px: lanes, hour tiles, blocks to the minute on 5-minute columns
-   (--tl-cols is set by TimelineGrid), and the dashed line at the time now. */
-.turnfin-app .pc-timeline { --tl-lane: 200px; --tl-head: 44px; --tl-row: 56px; display: grid; grid-template-columns: var(--tl-lane) repeat(var(--tl-cols), minmax(0, 1fr)); column-gap: 0; row-gap: 8px; min-width: 0; }
-.turnfin-app .pc-timeline > :is(.pc-timeline-hour, .pc-block) { margin-inline: 4px; }
-.turnfin-app .pc-timeline > .pc-block { min-height: 0; }
+/* The day as a grid from 1280px (--tl-cols is set by TimelineGrid): each lane is one rounded
+   row (its name, then its track with faint hour lines and the past shaded), hours read along
+   the top, blocks sit to the minute on 5-minute columns, and a "now" pill heads the dashed
+   line at the time now. */
+.turnfin-app .pc-timeline { --tl-lane: 240px; --tl-head: 32px; --tl-row: minmax(60px, auto); display: grid; grid-template-columns: var(--tl-lane) repeat(var(--tl-cols), minmax(0, 1fr)); column-gap: 0; row-gap: 8px; min-width: 0; }
+.turnfin-app .pc-timeline > .pc-block { min-height: 0; margin: 6px 4px; }
+.turnfin-app .pc-timeline-row { border: 1px solid var(--pc-line); border-radius: var(--pc-radius-card); background: var(--pc-surface); }
+/* Hour lines every --tl-hour of the track, the past to --tl-past in the sunken fill. */
+.turnfin-app .pc-timeline-track { margin: 1px 1px 1px 0; border-radius: 0 15px 15px 0; background:
+  repeating-linear-gradient(to right, var(--pc-line) 0 1px, transparent 1px var(--tl-hour)),
+  linear-gradient(to right, var(--pc-surface-sunken) var(--tl-past), transparent var(--tl-past)); }
+.turnfin-app .pc-timeline > .pc-timeline-lane { position: relative; z-index: 1; border-color: transparent; }
+/* A person's shift on the planner: the frame their duties sit in. Its free time is a soft blue
+   with a dashed edge, to drag across and plan; what they do sits inside it as blocks. */
+.turnfin-app .rota-free, .turnfin-app .pc-timeline > .pc-block[data-block='shift'] { position: relative; z-index: 2; min-width: 0; height: auto; margin: 2px 1px; padding: 0; border: 1px dashed color-mix(in srgb, var(--pc-primary) 45%, transparent); border-radius: 18px; background: color-mix(in srgb, var(--pc-primary-soft) 70%, var(--pc-surface)); color: var(--pc-ink-muted); cursor: crosshair; touch-action: none; user-select: none; }
+.turnfin-app .rota-free:hover { background: var(--pc-primary-soft); border-color: var(--pc-primary); }
+.turnfin-app .rota-free:focus-visible { outline: 2px solid var(--pc-focus); outline-offset: 2px; }
+.turnfin-app .pc-timeline > .pc-block[data-block='shift'] { cursor: default; }
+.turnfin-app .pc-timeline > .pc-block[data-block='shift'] > * { visibility: hidden; }
+.turnfin-app .rota-drag-range { position: absolute; inset-block: 4px; display: flex; align-items: center; justify-content: center; min-width: 0; overflow: hidden; border-radius: 12px; background: var(--pc-primary); color: var(--pc-on-primary); white-space: nowrap; }
+/* A lane's name that opens its editor: it reads as the name, and the whole name tile is the
+   target (a stretched button), so a lane needs no separate edit icon. */
+.turnfin-app .pc-timeline-lane-label > .pc-timeline-lane-link[data-slot='button'] { position: static; display: inline; width: auto; height: auto; min-height: 0; padding: 0; border: 0; background: none; box-shadow: none; color: var(--pc-ink); font: inherit; font-weight: 600; text-align: start; white-space: inherit; text-decoration: none; }
+.turnfin-app .pc-timeline-lane-label > .pc-timeline-lane-link[data-slot='button']::after { content: ''; position: absolute; inset: 0; border-radius: var(--pc-radius-card); }
+.turnfin-app .pc-timeline-lane-label > .pc-timeline-lane-link[data-slot='button']:hover { text-decoration: underline; text-underline-offset: 3px; background: none; }
+.turnfin-app .pc-timeline-lane-label > .pc-timeline-lane-link[data-slot='button']:focus-visible { outline: none; }
+.turnfin-app .pc-timeline-lane-label > .pc-timeline-lane-link[data-slot='button']:focus-visible::after { outline: 2px solid var(--pc-focus); outline-offset: -2px; }
+/* A planning timeline reads out the exact quarter hour under the pointer, on the time bar. */
+.turnfin-app .pc-timeline-wide { position: relative; }
+.turnfin-app .pc-timeline-readout { position: absolute; top: 6px; z-index: 5; padding: 1px 8px; transform: translateX(-50%); border-radius: var(--pc-radius-control); background: var(--pc-primary); color: var(--pc-on-primary); font-size: var(--pc-text-caption); line-height: var(--pc-leading-caption); font-weight: 600; font-variant-numeric: tabular-nums; pointer-events: none; }
+/* The day's summary in the planner's head: gaps to fill (amber) or all covered (quiet). */
+.turnfin-app .rota-summary { display: inline-flex; align-items: center; min-height: 28px; padding-inline: 12px; border-radius: var(--pc-radius-control); background: var(--pc-surface-sunken); color: var(--pc-ink-muted); font-size: var(--pc-text-caption); line-height: var(--pc-leading-caption); font-weight: 600; }
+.turnfin-app .rota-summary[data-tone='gap'] { background: var(--pc-warning-soft); color: var(--pc-warning); }
+/* The key's last item: a shift is the dashed box around what a person does. */
+.turnfin-app .rota-key-shift { display: inline-flex; align-items: center; min-height: 24px; padding-inline: 8px; border: 1px dashed color-mix(in srgb, var(--pc-primary) 45%, transparent); border-radius: var(--pc-radius-control); color: var(--pc-ink-muted); font-size: var(--pc-text-caption); line-height: var(--pc-leading-caption); font-weight: 600; }
+.turnfin-app .pc-timeline > .pc-timeline-hour:is(*, [data-past]) { justify-content: flex-start; min-height: 0; padding-inline: 4px; border: 0; border-radius: 0; background: none; color: var(--pc-ink-muted); font-size: var(--pc-text-caption); line-height: var(--pc-leading-caption); }
+.turnfin-app .pc-timeline > .pc-timeline-hour:not([data-past]) { color: var(--pc-ink); }
+/* The Week plan's day tabs: what still needs sorting out, as a small amber count. */
+.turnfin-app .rota-tab-count { display: inline-flex; align-items: center; justify-content: center; min-width: 20px; height: 20px; padding-inline: 6px; border-radius: var(--pc-radius-control); background: var(--pc-warning-soft); color: var(--pc-warning); font-size: var(--pc-text-caption); line-height: var(--pc-leading-caption); font-weight: 700; }
+/* A free day on the week sheet: an empty, quiet cell; for managers a + appears on hover or focus. */
+.turnfin-app .rota-empty-day { display: flex; align-items: center; justify-content: center; width: 100%; min-height: 56px; border-radius: var(--pc-radius-card); color: var(--pc-ink-muted); }
+.turnfin-app .rota-empty-day.ui-motion-press:hover { background: var(--pc-primary-soft); color: var(--pc-primary-ink); }
+.turnfin-app .pc-timeline-now-label { position: relative; z-index: 3; align-self: center; justify-self: start; width: max-content; margin-left: var(--at); padding: 2px 8px; transform: translateX(-50%); border-radius: var(--pc-radius-control); background: var(--pc-primary); color: var(--pc-on-primary); font-size: var(--pc-text-caption); line-height: var(--pc-leading-caption); font-weight: 600; font-variant-numeric: tabular-nums; white-space: nowrap; }
 .turnfin-app .pc-timeline-heading { align-self: center; color: var(--pc-ink-muted); font-size: var(--pc-text-caption); line-height: var(--pc-leading-caption); font-weight: 600; }
 .turnfin-app .pc-timeline-hour { display: flex; align-items: center; justify-content: center; min-width: 0; min-height: 44px; overflow: hidden; border: 1px solid var(--pc-line); border-radius: var(--pc-radius-card); font-weight: 600; font-variant-numeric: tabular-nums; white-space: nowrap; }
 .turnfin-app .pc-timeline-hour[data-past] { border-color: transparent; background: var(--pc-hatch); color: var(--pc-ink-muted); }
@@ -659,16 +697,18 @@ html:has(.tf-shell) { scroll-padding-bottom: 112px; }
 /* Blocks sit above the now line, so it never crosses their words; hatched blocks get an opaque ground. */
 .turnfin-app .pc-timeline > .pc-block { position: relative; z-index: 2; }
 .turnfin-app .pc-timeline > .pc-block:is([data-block='off'], [data-block='open']) { background-color: var(--pc-surface); }
-/* The week plan's lane names wrap to two lines rather than cutting a name short. */
-.turnfin-app .rota-roster .pc-timeline-lane-label { display: -webkit-box; -webkit-box-orient: vertical; -webkit-line-clamp: 2; white-space: normal; }
-.turnfin-app .pc-timeline-now::after { content: ''; position: absolute; top: -4px; bottom: -4px; left: var(--at); border-left: 2px dashed var(--pc-primary); }
+/* A finished block is a white card with a line, so it still reads on the shaded past. */
+.turnfin-app .pc-timeline > .pc-block[data-block='done'] { background: var(--pc-surface); box-shadow: inset 0 0 0 1px var(--pc-line); }
+/* Lane names (the timeline and the week plan) wrap to two lines rather than cutting a name short. */
+.turnfin-app :is(.rota-roster, .pc-timeline) .pc-timeline-lane-label { display: -webkit-box; -webkit-box-orient: vertical; -webkit-line-clamp: 2; white-space: normal; }
+.turnfin-app .pc-timeline-now::after { content: ''; position: absolute; top: -8px; bottom: 0; left: var(--at); border-left: 2px dashed var(--pc-primary); }
 .turnfin-app .pc-timeline-narrow { display: none; flex-direction: column; gap: 16px; }
 .turnfin-app .pc-agenda-item { display: flex; align-items: stretch; gap: 8px; }
 .turnfin-app .pc-agenda-item > .pc-block { flex: 1; }
-/* On phones a block with extra marks shows every tag as its icon, so the title keeps its room;
+/* On phones every tag in the agenda shows as its icon, so the title keeps its room;
    the words stay for screen readers. */
 @media (max-width: 767px) {
-  .turnfin-app .pc-timeline-narrow .pc-block:has(.pc-block-tag ~ .pc-block-tag) .pc-block-tag-label { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); white-space: nowrap; }
+  .turnfin-app .pc-timeline-narrow .pc-block .pc-block-tag-label { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); white-space: nowrap; }
 }
 @media (max-width: 1279px) {
   .turnfin-app .pc-timeline-wide { display: none; }

@@ -53,17 +53,19 @@ const changeOf = (formData: FormData): ChangeInput => ({
 /** Add a duty (optionally on a given day) or change one. Qualification gaps
  *  are shown on the plan afterwards; they never stop the save. Once the
  *  duty's week has started, the change asks for its reason. */
-export function ShiftDialog({ siteId, date, today, shift, options, label, suggested, trigger, person, preset }: {
+export function ShiftDialog({ siteId, date, today, shift, options, label, suggested, trigger, person, preset, department }: {
   siteId: string; date: string; today: string; shift?: Shift; options: PlanOptions; label?: string;
   /** The reason to offer first, e.g. cover when the person on it is off. */
   suggested?: RotaChangeReason;
-  /** A trigger of the caller's own, e.g. a block on Today's timeline. Passed
+  /** A trigger of the caller's own, e.g. a block on This week's timeline. Passed
    *  as parts, not an element, so a server page can hand it over. */
   trigger?: { label: string; variant?: "ghost" | "outline"; className?: string; style?: CSSProperties; children: ReactNode; size?: "icon"; block?: BlockPart };
   /** The person to put on it, e.g. the cover Today suggests. */
   person?: string;
   /** A new duty's starting values. */
   preset?: DutyPreset;
+  /** A new shift's department: the one the page shows. */
+  department?: string;
 }) {
   const initial = shift ? shift.date.toISOString().slice(0, 10) : date;
   const [day, setDay] = useState(initial);
@@ -94,7 +96,7 @@ export function ShiftDialog({ siteId, date, today, shift, options, label, sugges
     >
       <div className="grid items-end gap-4 sm:grid-cols-2">
         <Field label="Department" htmlFor={`${fid}-department`}>
-          <NativeSelect id={`${fid}-department`} name="departmentId" defaultValue={shift?.departmentId ?? options.departments[0]?.id ?? ""} className="min-h-11 w-full">
+          <NativeSelect id={`${fid}-department`} name="departmentId" defaultValue={shift?.departmentId ?? department ?? options.departments[0]?.id ?? ""} className="min-h-11 w-full">
             <NativeSelectOption value="">No department</NativeSelectOption>
             {options.departments.map((d) => <NativeSelectOption key={d.id} value={d.id}>{d.name}</NativeSelectOption>)}
           </NativeSelect>

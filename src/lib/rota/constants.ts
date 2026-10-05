@@ -50,7 +50,7 @@ export function qualificationShort(name: string) {
   return /\(([^()]+)\)\s*$/.exec(name)?.[1]?.trim() || name;
 }
 
-/** Each kind of block on the Day plan and Today timelines: its words, tone and icon (the legend
+/** Each kind of block on This week's timeline: its words, tone and icon (the legend
  *  and every block's tag), and the TimelineGrid state that picks its fill. A shift's state
  *  follows the clock only on today; a past day is done and a future one next. */
 export const ROTA_BLOCK_META = {
@@ -58,12 +58,12 @@ export const ROTA_BLOCK_META = {
   now: { label: "On now", color: "green", icon: Activity, state: "now" },
   next: { label: "Shift", color: "blue", icon: CalendarDays, state: "next" },
   gap: { label: "Gap in cover", color: "orange", icon: TriangleAlert, state: "cover" },
-  absent: { label: "Off", color: "red", icon: UserX, state: "off" },
+  absent: { label: "Absent", color: "red", icon: UserX, state: "absent" },
   unfilled: { label: "Unfilled", color: "gray", icon: CircleDashed, state: "open" },
   booking: { label: "Booking", color: "purple", icon: School, state: "assessment" },
   short: { label: "Short of staff", color: "orange", icon: Users, state: "cover" },
   teaching: { label: "Swim teaching", color: "blue", icon: GraduationCap, state: "next" },
-} as const satisfies Record<string, StatusMeta & { state: "done" | "now" | "next" | "cover" | "off" | "open" | "assessment" }>;
+} as const satisfies Record<string, StatusMeta & { state: "done" | "now" | "next" | "cover" | "off" | "absent" | "open" | "assessment" }>;
 export type RotaBlockKind = keyof typeof ROTA_BLOCK_META;
 
 /** A shift's block on a given day: by the clock today, done before today, next after. */
@@ -153,7 +153,7 @@ export const ROTA_CHANGE_REASONS = Object.keys(ROTA_CHANGE_REASON_META) as RotaC
 
 /** What a booking is. Its sessions show on the week plan under its name. */
 export const BOOKING_KIND_META = {
-  // Purple, like the booking blocks on the Day plan and Today.
+  // Purple, like the booking blocks on This week.
   school: { label: "School lessons", color: "purple", icon: School },
   party: { label: "Party", color: "orange", icon: PartyPopper },
   lanes: { label: "Lane hire", color: "gray", icon: WavesHorizontal },
@@ -171,11 +171,12 @@ export function bookingDuty(kind: string, title: string) {
 }
 
 /** Each date from `firstDay` to `lastDay` on one of `weekdays` (Monday = 0). */
-export function bookingDates(firstDay: string, lastDay: string, weekdays: readonly number[]) {
+export function bookingDates(firstDay: string, lastDay: string, weekdays: readonly number[], skip: readonly string[] = []) {
   const out: string[] = [];
   for (let d = firstDay; d <= lastDay && out.length <= 400; d = addDaysIso(d, 1)) {
     const weekday = (new Date(`${d}T00:00:00Z`).getUTCDay() + 6) % 7;
-    if (weekdays.includes(weekday)) out.push(d);
+    // A date it does not run (a bank holiday, a school's mid-term) is left out.
+    if (weekdays.includes(weekday) && !skip.includes(d)) out.push(d);
   }
   return out;
 }
@@ -357,7 +358,13 @@ export function addDaysIso(iso: string, days: number) {
 }
 
 type Held = { typeId: string; issuedOn: Date; expiresOn: Date | null; revokedAt: Date | null };
-type ShiftLike = PersonRef & { id: string; date: Date; startMinutes: number; endMinutes: number; requiredTypeId: string | null; kind?: string };
+type ShiftLike = PersonRef & { id: string; date: Date; startMinutes: number; endMinutes: number; requiredTypeId: string | null; kind?: string; bookingId?: string | null };
+
+/** A booking's place inside the same person's own shift is work in that shift, not a second
+ *  shift (owner decision, 5 October 2026: shifts first, bookings staffed from people on shift). */
+function within(place: ShiftLike, shift: ShiftLike) {
+  return !!place.bookingId && !shift.bookingId && shift.startMinutes <= place.startMinutes && place.endMinutes <= shift.endMinutes;
+}
 
 /** What is wrong with a shift, given the assignee's qualifications, their
  *  other shifts that day and whether they are off. A holiday or leave day from
@@ -376,7 +383,8 @@ export function shiftWarnings(shift: ShiftLike, held: readonly Held[], sameDay: 
     if (ofType.length === 0) warnings.push("missing");
     else if (!ofType.some((q) => !q.expiresOn || q.expiresOn.toISOString().slice(0, 10) >= on)) warnings.push("expired");
   }
-  if (sameDay.some((other) => other.id !== shift.id && (!other.kind || other.kind === "shift") && samePerson(other, shift) && other.startMinutes < shift.endMinutes && shift.startMinutes < other.endMinutes)) {
+  if (sameDay.some((other) => other.id !== shift.id && (!other.kind || other.kind === "shift") && samePerson(other, shift) && other.startMinutes < shift.endMinutes && shift.startMinutes < other.endMinutes
+    && !within(shift, other) && !within(other, shift))) {
     warnings.push("overlap");
   }
   if (shift.userId && elsewhere.some((c) => c.userId === shift.userId && c.startMinutes < shift.endMinutes && shift.startMinutes < c.endMinutes)) warnings.push("teaching");

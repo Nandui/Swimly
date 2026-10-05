@@ -164,7 +164,7 @@ tools are swimmer search and the site picker (`SwimSchoolTools` and `dailyPages`
 `src/modules/server.ts` composition root); otherwise the site picker alone. The working site
 is the one picked, else the person's Main site, else the first of their Works at sites. Then
 **Classes today**, the shared `TimelineGrid` of the day's sessions by pool area (a Waves lane
-tile, hour tiles, at most an hour's lead-in, a dashed line at the time now; every block carries
+row, hours along the top, at most an hour's lead-in, a dashed line at the time now; every block carries
 its `HOME_SESSION_META` tag, so colour is never the only signal). Below 1280px the grid is
 replaced by the "On now and next" list (the panel is titled so, with a "Schedule" link). Then
 **Waiting for you** (counted queues only, needing-you rows first, the first one highlighted,
@@ -279,7 +279,7 @@ line. Multi-line boxes (textareas, notices) use 16px, never a pill.
   buttons have the soft `--pc-line` edge; fields, select triggers and comboboxes keep
   `--pc-line-strong`. Link buttons have no inset. Destructive uses `--pc-danger` with
   `--pc-on-danger` text and `--pc-danger-hover`. A selected state is never a grey fill: use
-  outline with `aria-current` or `aria-pressed` (Rota "Today" carries `aria-current="date"`).
+  outline with `aria-current` or `aria-pressed` (Rota This week's "Today" carries `aria-current="date"`).
 - Row actions (edit, archive, delete, unenrol) are 44px outline circles with an ink icon
   (`variant="outline" size="icon"`; `IconButton` and `ActionButton` default to it). Bar,
   toolbar and in-field icons (View as, theme flip, clear search) stay ghost.
@@ -392,13 +392,33 @@ line. Multi-line boxes (textareas, notices) use 16px, never a pill.
 - Panels side by side use `.pc-grid` (16px gap): one column on phones, two from 768px, every
   panel in one row from 1280px. A `.pc-grid-stack` keeps its panels in one column below
   1280px; a lone child spans the row, so there is never an empty track.
-- Timelines (home, Rota Day plan and Today) are the shared `TimelineGrid`
-  (`src/components/workspace/timeline-grid.tsx`): lane tiles, hour tiles, blocks placed to
-  the minute, one dashed now line, nothing scrolling sideways. The grid shows from 1280px;
+- Timelines (home, and Rota's day planner on the Week plan and This week) are the shared `TimelineGrid`
+  (`src/components/workspace/timeline-grid.tsx`): each lane is one rounded row like a list row
+  (its name, caption and at most two 44px actions, then its track with faint hour lines and
+  the past in the sunken fill), hours as caption labels along the top, blocks placed to the
+  minute (a finished block is a white card with a line), one "now" pill over a dashed now
+  line, nothing scrolling sideways: the day fits the width. The grid shows from 1280px;
   below it the same blocks, links and dialog triggers are an agenda in time order. A block
-  shows as much as its width allows: words with a labelled tag, the title with an icon tag, or
+  shows as much as its width allows: words with a labelled tag, the title alone with a tooltip, or
   (24 to 43px, inside the grid only) its icon with a tooltip, its 44px route being the lane
-  tile's action and the agenda. Block state is `data-block`, never colour alone.
+  tile's action and the agenda. Block state is `data-block`, never colour alone. A lane's
+  `edit` makes its name the button to its editor (`.pc-timeline-lane-link`, a stretched button
+  over the whole name tile), so a lane needs no edit icon. A planning grid (`readout`) shows the
+  exact quarter hour under the pointer as a pill on the time bar (`TimelineReadout`), so the bar
+  keeps to hours; every block also says its times in words.
+- Rota's day planner (`DayPlanner`, `src/components/rota/day-planner.tsx`; owner decision,
+  5 October 2026, from an approved mockup after the scrolling quarter-hour version proved
+  confusing) is **one panel, one timeline that fits the width**, its head naming the day with a
+  summary pill (amber "1 gap to fill", or "Everything is covered"), and three section headings,
+  each with its one Add button: **Activities** (what the department needs covered, such as a pool's
+  lifeguard or the gym floor; each lane: who and when in blue, "No one" and when in amber, a gap
+  pressed to fill it), **Bookings** (one block per booking: first
+  names of who is on it, the time and how many are still needed), and **Staff** (each person's
+  shift as a dashed frame, `data-block="shift"` or the `.rota-free` drag target, with their
+  duties, breaks, bookings and classes inside it as ordinary blocks; a shift with nobody on it is
+  a "Nobody yet" lane). No charts, totals per moment, quarter-hour labels or drag lanes. One key
+  after the timeline: Someone on it, Nobody yet, Booking, Off or not qualified, and the dashed
+  box for a shift.
 - Page blocks sit 16px apart: the frame's content wrapper (`.tf-content` in ModuleShell,
   Instructor and Help) is a flex column with a 16px gap. It reaches blocks a page returns
   as direct children (a fragment), not ones inside its own `gap-6`/`space-y-6` wrapper; an

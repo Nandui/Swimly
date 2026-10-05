@@ -1,6 +1,6 @@
 import assert from "node:assert/strict";
 import { test } from "node:test";
-import { buildRoster, type RosterShift } from "./roster";
+import { buildRoster, forDepartment, type RosterShift } from "./roster";
 import { nextWeekday, qualificationShort } from "./constants";
 
 /** Invented people and departments; the shape the week loads. */
@@ -49,4 +49,25 @@ test("a booking names its qualification by its short code, and starts on a ticke
   assert.equal(nextWeekday("2026-10-04", [0, 1, 2, 3, 4]), "2026-10-05");
   assert.equal(nextWeekday("2026-10-06", [0, 1, 2, 3, 4]), "2026-10-06");
   assert.equal(nextWeekday("2026-10-05", [5]), "2026-10-10");
+});
+
+test("a department: its staff with no shift still get a row, and its own sheet keeps only its people and gaps", () => {
+  const departments = [{ id: "d-pool", name: "Pool" }, { id: "d-desk", name: "Reception" }];
+  const members = [
+    { userId: "u-Ava Sample", name: "Ava Sample", departmentId: "d-pool", primary: true },
+    { userId: "u-Mia Sample", name: "Mia Sample", departmentId: "d-pool", primary: true },
+    { userId: "u-Noah Sample", name: "Noah Sample", departmentId: "d-desk", primary: true },
+  ];
+  const roster = buildRoster(week([[
+    shift("a1", "Ava Sample", "Poolside", 420, 900),
+    shift("n1", "Noah Sample", "Front desk", 720, 1080, { departmentId: "d-desk", department: desk }),
+    shift("o1", null, "Poolside", 900, 1200),
+    shift("o2", null, "Front desk", 900, 1200, { departmentId: "d-desk", department: desk }),
+  ]]), members, departments);
+  const mia = roster.groups.find((g) => g.label === "Pool")!.people.find((p) => p.name === "Mia Sample")!;
+  assert.deepEqual([mia.days.every((d) => d.length === 0), mia.minutes], [true, 0], "a free week, ready to plan");
+  const pool = forDepartment(roster, "d-pool", members, "Pool");
+  assert.deepEqual(pool.groups.map((g) => [g.label, g.people.map((p) => p.name)]), [["Pool", ["Ava Sample", "Mia Sample"]]]);
+  assert.deepEqual(pool.fill[0].map((f) => f.id), ["o1"], "only its own shifts to fill");
+  assert.equal(pool.tiles.people, 2);
 });

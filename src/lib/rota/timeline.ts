@@ -62,7 +62,7 @@ export function coverGaps(window: { start: number; end: number; people: number }
 
 /** Someone on the day who could take on an activity: their shift there, what
  *  they are already doing (activities, breaks, teaching) and what they hold. */
-export type Candidate = { shiftId: string; name: string; start: number; end: number; busy: { start: number; end: number; label: string }[]; absent: boolean; types: string[] };
+export type Candidate = { shiftId: string; userId?: string | null; name: string; start: number; end: number; busy: { start: number; end: number; label: string }[]; absent: boolean; types: string[] };
 export type Fit = { candidate: Candidate; status: "free" | "part" | "busy"; from: number; to: number; reason: string; qualified: boolean };
 
 /** Who can cover `start`–`end`: free for all of it, free for part of it (the

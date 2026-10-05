@@ -20,32 +20,37 @@ import { cn } from "@/lib/utils";
 
 const THEME = "turnfin-module";
 type Option = { id: string; name: string };
-export type ActivityValue = { id: string; label: string; start: number; end: number; people: number; requiredTypeId: string | null; note: string };
+export type ActivityValue = { id: string; label: string; start: number; end: number; people: number; requiredTypeId: string | null; departmentId: string | null; note: string };
 
-/** Plan something the site needs covered during the day, or change it. */
-export function ActivityDialog({ siteId, date, activity, types, names, trigger }: {
+/** Plan something the site needs covered during a day, or change it. It belongs to a
+ *  department, the one whose supervisor plans it (none: the whole site shares it). */
+export function ActivityDialog({ siteId, date, activity, types, names, departments, department, trigger }: {
   siteId: string; date: string; activity?: ActivityValue; types: Option[]; names: string[];
-  trigger?: { label: string; className?: string; style?: CSSProperties; children: ReactNode; size?: "icon" };
+  departments: Option[];
+  /** The department the page shows: a new activity added there is that department's. */
+  department?: Option;
+  trigger?: { label: string; className?: string; style?: CSSProperties; children: ReactNode; size?: "icon"; variant?: "outline" | "link" };
 }) {
   const id = activity ? `act-${activity.id}` : "act-new";
+  const fixed = !activity && department ? department : null;
   return (
     <FormDialog
       portalClassName={THEME}
       width="sm:max-w-lg"
       trigger={trigger
-        ? <Button type="button" variant="ghost" size={trigger.size} aria-label={trigger.label} className={trigger.className} style={trigger.style}>{trigger.children}</Button>
+        ? <Button type="button" variant={trigger.variant ?? "outline"} size={trigger.size} aria-label={trigger.label} className={trigger.className} style={trigger.style}>{trigger.children}</Button>
         : <Button variant="outline" className="min-h-11"><Plus aria-hidden="true" />Add activity</Button>}
       title={activity ? `Change ${activity.label}` : "Add an activity to cover"}
-      description="Something the site needs covered, for example the 25m pool lifeguard from opening to close. People cover it from inside their shifts."
+      description={`Something ${fixed ? fixed.name : "the site"} needs covered, for example a pool's lifeguard from opening to close or the gym floor. People cover it from inside their shifts.`}
       submitLabel={activity ? "Save activity" : "Add activity"}
       successMessage={activity ? "Activity saved" : "Activity added"}
       submit={(formData) => saveActivity(activity?.id ?? null, {
         siteId, date, label: String(formData.get("label") ?? ""), start: String(formData.get("start") ?? ""), end: String(formData.get("end") ?? ""),
-        people: Number(formData.get("people") ?? 1), requiredTypeId: String(formData.get("requiredTypeId") ?? ""), note: String(formData.get("note") ?? ""),
+        people: Number(formData.get("people") ?? 1), requiredTypeId: String(formData.get("requiredTypeId") ?? ""), departmentId: String(formData.get("departmentId") ?? ""), note: String(formData.get("note") ?? ""),
         restOfWeek: formData.get("restOfWeek") === "on",
       })}
     >
-      <Field label="Activity" htmlFor={`${id}-label`} hint="For example 25m pool lifeguard, Poolside, Reception.">
+      <Field label="Activity" htmlFor={`${id}-label`} hint="For example 25m pool lifeguard, Gym floor, Reception.">
         <Input id={`${id}-label`} name="label" required minLength={2} maxLength={60} defaultValue={activity?.label} list={`${id}-names`} className="min-h-11" />
       </Field>
       <datalist id={`${id}-names`}>{names.map((n) => <option key={n} value={n} />)}</datalist>
@@ -54,6 +59,14 @@ export function ActivityDialog({ siteId, date, activity, types, names, trigger }
         <Field label="To" htmlFor={`${id}-end`}><Input id={`${id}-end`} name="end" type="time" required defaultValue={clock(activity?.end ?? 1290)} className="min-h-11" /></Field>
         <Field label="People at once" htmlFor={`${id}-people`}><Input id={`${id}-people`} name="people" type="number" min={1} max={20} required defaultValue={activity?.people ?? 1} className="min-h-11" /></Field>
       </div>
+      {fixed ? <input type="hidden" name="departmentId" value={fixed.id} /> : departments.length ? (
+        <Field label="Department" htmlFor={`${id}-department`} hint="Its supervisor plans who covers it.">
+          <NativeSelect id={`${id}-department`} name="departmentId" defaultValue={activity?.departmentId ?? ""} className="min-h-11 w-full">
+            <NativeSelectOption value="">The whole site</NativeSelectOption>
+            {departments.map((d) => <NativeSelectOption key={d.id} value={d.id}>{d.name}</NativeSelectOption>)}
+          </NativeSelect>
+        </Field>
+      ) : null}
       <Field label="Needs a qualification" htmlFor={`${id}-type`} optional>
         <NativeSelect id={`${id}-type`} name="requiredTypeId" defaultValue={activity?.requiredTypeId ?? ""} className="min-h-11 w-full">
           <NativeSelectOption value="">None</NativeSelectOption>
@@ -61,17 +74,24 @@ export function ActivityDialog({ siteId, date, activity, types, names, trigger }
         </NativeSelect>
       </Field>
       <Field label="Note" htmlFor={`${id}-note`} optional><Input id={`${id}-note`} name="note" maxLength={200} defaultValue={activity?.note} className="min-h-11" /></Field>
-      {activity ? null : (
+      {activity ? (
+        // Taking it off lives here, so the activity's row keeps one way in and its name stays readable.
+        <div className="flex flex-wrap items-center justify-between gap-2 border-t border-ui-border pt-4">
+          <span className="text-sm text-ui-muted-foreground">Not needed this day?</span>
+          <RemoveActivity id={activity.id} label={activity.label} />
+        </div>
+      ) : (
         <ChoiceRow type="checkbox" id={`${id}-week`} name="restOfWeek" title="Also every day after this one, to Sunday" />
       )}
     </FormDialog>
   );
 }
 
-export function RemoveActivity({ id, label }: { id: string; label: string }) {
+/** In the Change dialog: take the activity off this day. */
+function RemoveActivity({ id, label }: { id: string; label: string }) {
   return (
     <ConfirmAction
-      trigger={<Button variant="ghost" size="icon" aria-label={`Take ${label} off this day`}><Trash2 aria-hidden="true" /></Button>}
+      trigger={<Button type="button" variant="outline"><Trash2 aria-hidden="true" />Take it off this day</Button>}
       title={`Take ${label} off this day?`}
       description="It stops showing as something to cover. Anyone already on it keeps that time in their shift."
       confirmLabel="Take it off"
@@ -114,7 +134,7 @@ export function AssignDialog({ activity, span, candidates, trigger }: {
 
   return (
     <Dialog open={open} onOpenChange={(v) => { setOpen(v); if (v) { setFrom(clock(span.start)); setTo(clock(span.end)); setDone([]); } }}>
-      <Button type="button" variant={trigger.block ? "link" : "ghost"} size={trigger.size} aria-label={trigger.label} className={trigger.className} style={trigger.style} {...blockAttrs(trigger.block)} onClick={() => setOpen(true)}>{trigger.children}</Button>
+      <Button type="button" variant={trigger.block ? "link" : "outline"} size={trigger.size} aria-label={trigger.label} className={trigger.className} style={trigger.style} {...blockAttrs(trigger.block)} onClick={() => setOpen(true)}>{trigger.children}</Button>
       <DialogContent portalClassName={THEME} className="sm:max-w-lg">
         <DialogHeader>
           <DialogTitle>Who covers {activity.label}?</DialogTitle>
