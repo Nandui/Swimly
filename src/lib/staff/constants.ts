@@ -1,11 +1,11 @@
-import type { TagColor } from "@/components/ui-kit/tag";
+import { Eye, History, KeyRound, Lock, Pencil, TriangleAlert, UserCog } from "lucide-react";
 import { expandPermissions, hasAdministratorAccess } from "@/lib/staff/permissions";
 import type { StatusMeta } from "@/lib/status";
 
 export const STAFF_STATUS_META = {
-  noPassword: { label: "No password set", color: "yellow" },
-  builtInRole: { label: "Built in", color: "gray" },
-  oldSettings: { label: "Old settings until saved", color: "yellow" },
+  noPassword: { label: "No password set", color: "orange", icon: TriangleAlert },
+  builtInRole: { label: "Built in", color: "gray", icon: Lock },
+  oldSettings: { label: "Old settings until saved", color: "orange", icon: History },
 } as const satisfies Record<string, StatusMeta>;
 
 /** Roles are rows now, so there is no enum to hang a metadata map on and no
@@ -16,12 +16,12 @@ export const STAFF_STATUS_META = {
  *
  *  Full administrator access is distinguished from a role holding only one
  *  management key, so a restricted manager is never labelled an admin. */
-const REACH_META: Record<"administrator" | "keys" | "work" | "read", { label: string; color: TagColor }> = {
-  administrator: { label: "Administrator", color: "purple" },
-  keys: { label: "Holds the keys", color: "purple" },
-  work: { label: "Changes things", color: "blue" },
-  read: { label: "Read only", color: "gray" },
-};
+export const REACH_META = {
+  administrator: { label: "Administrator", color: "purple", icon: KeyRound },
+  keys: { label: "Holds the keys", color: "purple", icon: UserCog },
+  work: { label: "Changes things", color: "blue", icon: Pencil },
+  read: { label: "Read only", color: "gray", icon: Eye },
+} as const satisfies Record<"administrator" | "keys" | "work" | "read", StatusMeta>;
 
 export function roleReach(permissions: readonly string[]) {
   if (hasAdministratorAccess(permissions)) return REACH_META.administrator;

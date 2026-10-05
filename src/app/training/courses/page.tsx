@@ -36,7 +36,7 @@ export default async function TrainingCoursesPage({ searchParams }: { searchPara
               <div className="min-w-0 flex-1 space-y-1">
                 <div className="flex flex-wrap items-center gap-2">
                   <h2 className="module-row-title">{course.title}</h2>
-                  {course.archivedAt ? <Tag color={ARCHIVAL_STATUS_META.archived.color}>{ARCHIVAL_STATUS_META.archived.label}</Tag> : null}
+                  {course.archivedAt ? <Tag meta={ARCHIVAL_STATUS_META.archived} /> : null}
                 </div>
                 {course.summary ? <p className="text-sm">{course.summary}</p> : null}
                 <p className="text-xs text-ui-muted-foreground">

@@ -65,9 +65,9 @@ function RoleRowItem({ role, canGiveRestricted }: { role: RoleRow; canGiveRestri
       <ItemContent className="min-w-0 gap-2">
         <div className="min-w-0 flex gap-2 items-center flex-wrap">
           <span className="text-base text-ui-foreground font-semibold">{role.name}</span>
-          <Tag color={reach.color}>{reach.label}</Tag>
-          {role.isSystem ? <Tag color={STAFF_STATUS_META.builtInRole.color}>{STAFF_STATUS_META.builtInRole.label}</Tag> : null}
-          {converted ? null : <Tag color={STAFF_STATUS_META.oldSettings.color}>{STAFF_STATUS_META.oldSettings.label}</Tag>}
+          <Tag meta={reach} />
+          {role.isSystem ? <Tag meta={STAFF_STATUS_META.builtInRole} /> : null}
+          {converted ? null : <Tag meta={STAFF_STATUS_META.oldSettings} />}
         </div>
         {role.description ? <p className="text-sm text-ui-muted-foreground">{role.description}</p> : null}
         <p className="text-sm text-ui-muted-foreground">

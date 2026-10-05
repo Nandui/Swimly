@@ -4,8 +4,7 @@ import { Button } from "@/components/shadcn/button";
 import * as React from "react";
 import { Lock, Pencil, Plus, Trash2 } from "lucide-react";
 
-import { Checkbox } from "@/components/shadcn/checkbox";
-import { Label } from "@/components/shadcn/label";
+import { ChoiceRow } from "@/components/ui/choice-row";
 import { SegmentedChoice } from "@/components/ui-kit/segmented-links";
 
 import { ConfirmAction } from "@/components/confirm-action";
@@ -96,12 +95,8 @@ function Tick({ id, name, value, checked, onChange, label, hint }: {
   id: string; name: string; value: string; checked: boolean; onChange: (checked: boolean) => void; label: string; hint?: string;
 }) {
   return (
-    <div className="flex items-start gap-3">
-      <Checkbox id={id} checked={checked} onCheckedChange={(c) => onChange(c === true)} className="mt-3" />
-      <Label htmlFor={id} className="min-h-11 min-w-0 flex-1 cursor-pointer flex-col items-start justify-center gap-1">
-        <span>{label}</span>
-        {hint ? <span className="text-sm font-normal text-ui-muted-foreground">{hint}</span> : null}
-      </Label>
+    <div>
+      <ChoiceRow type="checkbox" id={id} title={label} hint={hint} checked={checked} onCheckedChange={(c) => onChange(c === true)} />
       {checked ? <input type="hidden" name={name} value={value} /> : null}
     </div>
   );
@@ -133,7 +128,7 @@ function RoleFields({ role, canGiveRestricted }: { role?: Role; canGiveRestricte
       <Field label="Home page name" htmlFor="homeName" hint="What people on this role see first when they sign in, for example Front of House.">
         <Input id="homeName" name="homeName" defaultValue={role?.homeName ?? ""} placeholder="Front of House" maxLength={40} />
       </Field>
-      <Field label="Description" htmlFor="description" hint="Optional. One line, so whoever gives it out knows who it is for.">
+      <Field label="Description" htmlFor="description" optional hint="One line, so whoever gives it out knows who it is for.">
         <Textarea id="description" name="description" rows={2} defaultValue={role?.description ?? ""} />
       </Field>
 

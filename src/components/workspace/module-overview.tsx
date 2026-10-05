@@ -31,7 +31,7 @@ export function ModuleOverview({ name, description, icon, siteName, items, group
     <div className="flex min-w-0 flex-col gap-4">
       <PageHeader title={name} description={description} actions={buttons.length ? buttons : undefined} />
       {(today.length > 0 || waiting.length > 0) && (
-        <div className="grid min-w-0 items-start gap-4" style={{ gridTemplateColumns: "repeat(auto-fit, minmax(min(100%, 380px), 1fr))" }}>
+        <div className="pc-grid">
           {today.length > 0 && (
             <Section id="overview-today" title={siteName ? `Today at ${siteName}` : "Today"}>
               <TodayGrid items={today} />

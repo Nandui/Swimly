@@ -49,7 +49,7 @@ export function SessionDirectory({ sessions, today, setup = false, manage, view,
             <p className="text-sm text-ui-muted-foreground">{s.programme.name} · {s.type?.name ?? "Kind not set"}</p>
             <p className="text-sm text-ui-muted-foreground lg:hidden">Assessor: {s.instructor?.name ?? "Not assigned"}</p>
             <p className="mt-1 text-sm md:hidden">{s._count.bookings}{s.capacity !== null ? ` of ${s.capacity}` : ""} booked</p>
-            {meta ? <Tag color={meta.color} className="mt-1">{meta.label}</Tag> : null}
+            {meta ? <Tag meta={meta} className="mt-1" /> : null}
           </TableCell>
           <TableCell className="hidden lg:table-cell">{s.instructor?.name ?? "Not assigned"}</TableCell>
           <TableCell className="hidden tabular-nums md:table-cell"><strong className="font-semibold">{s._count.bookings}</strong>{s.capacity !== null ? ` / ${s.capacity}` : " booked"}</TableCell>

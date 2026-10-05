@@ -1,10 +1,11 @@
+import { CircleCheck, Clock3, ScanSearch } from "lucide-react";
 import type { LegendAgreementStatus } from "@/generated/prisma/client";
 import type { StatusMeta } from "@/lib/status";
 
 export const LEGEND_AGREEMENT_META = {
-  NEEDS_CHECK: { label: "Needs checking", color: "gray" },
-  PENDING: { label: "Still to do", color: "orange" },
-  DONE: { label: "Updated in Legend", color: "green" },
+  NEEDS_CHECK: { label: "Needs checking", color: "gray", icon: ScanSearch },
+  PENDING: { label: "Still to do", color: "orange", icon: Clock3 },
+  DONE: { label: "Updated in Legend", color: "green", icon: CircleCheck },
 } as const satisfies Record<LegendAgreementStatus, StatusMeta>;
 
 export type LegendAgreementChoice = "PENDING" | "DONE";

@@ -9,10 +9,10 @@ import { NativeSelect, NativeSelectOption } from "@/components/shadcn/native-sel
 import { Sheet, SheetContent, SheetDescription, SheetHeader, SheetTitle } from "@/components/shadcn/sheet";
 import { CancelShift, ShiftDialog, type PlanOptions } from "@/components/rota/actions";
 import { SegmentsFields, useSegments, type SegmentShift } from "@/components/rota/segments";
-import { RotaWarningTag } from "@/components/rota/status";
+import { Tag } from "@/components/ui-kit/tag";
 import { toast } from "@/lib/toast";
 import { cn } from "@/lib/utils";
-import { weekStarted } from "@/lib/rota/constants";
+import { ROTA_WARNING_META, weekStarted } from "@/lib/rota/constants";
 import { hours } from "@/lib/rota/plan";
 import type { RosterCell, RosterData, RosterPerson } from "@/lib/rota/roster";
 
@@ -206,8 +206,8 @@ function DayPanel({ shift, person, day, cell, today, siteId, manage, activities,
       </SheetHeader>
       {cell.absent || cell.warnings.length ? (
         <div className="flex flex-wrap gap-2">
-          {cell.absent ? <RotaWarningTag warning="absent" /> : null}
-          {cell.warnings.map((w) => <RotaWarningTag key={w} warning={w} />)}
+          {cell.absent ? <Tag meta={ROTA_WARNING_META.absent} /> : null}
+          {cell.warnings.map((w) => <Tag key={w} meta={ROTA_WARNING_META[w]} />)}
         </div>
       ) : null}
       {editable ? (

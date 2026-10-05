@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { CalendarPlus, ChevronRight, CircleCheck, CircleX, ClipboardCheck, Clock3, FilePlus, Play, ReceiptText, Search, TriangleAlert, UserPlus, UserX, type LucideIcon } from "lucide-react";
+import { CalendarPlus, ChevronRight, CircleCheck, ClipboardCheck, FilePlus, ReceiptText, Search, UserPlus, UserX, type LucideIcon } from "lucide-react";
 import { Tag } from "@/components/ui-kit/tag";
 import { HOME_ITEM_META, HOME_SESSION_META } from "@/lib/home-meta";
 import type { HomeIcon, HomeItem, HomeSession } from "@/modules/contributions";
@@ -11,10 +11,6 @@ export type Placed = HomeItem & { moduleIcon: LucideIcon; key: string };
 
 const ACTION_ICONS: Record<HomeIcon, LucideIcon> = {
   search: Search, userPlus: UserPlus, calendarPlus: CalendarPlus, receipt: ReceiptText, userX: UserX, filePlus: FilePlus, clipboardCheck: ClipboardCheck,
-};
-
-const SESSION_ICONS: Record<HomeSession["state"], LucideIcon> = {
-  done: CircleCheck, now: Play, next: Clock3, cover: TriangleAlert, off: CircleX, assessment: ClipboardCheck,
 };
 
 /** Split a module's items into the places they show. */
@@ -44,13 +40,13 @@ export function Section({ id, title, aside, children }: { id: string; title: str
 }
 
 function NeedsYou() {
-  return <Tag color={HOME_ITEM_META.attention.color}><TriangleAlert aria-hidden="true" />{HOME_ITEM_META.attention.label}</Tag>;
+  return <Tag meta={HOME_ITEM_META.attention} />;
 }
 
 /** "3 things need you", or "All clear". */
 export function NeedsSummary({ count }: { count: number }) {
   return count
-    ? <Tag color={HOME_ITEM_META.attention.color}><TriangleAlert aria-hidden="true" />{count} {count === 1 ? "thing needs" : "things need"} you</Tag>
+    ? <Tag meta={HOME_ITEM_META.attention} label={`${count} ${count === 1 ? "thing needs" : "things need"} you`} />
     : <p className="flex items-center gap-1.5 text-sm text-ui-muted-foreground"><CircleCheck aria-hidden="true" className="size-4 text-ui-primary" />All clear</p>;
 }
 
@@ -158,8 +154,7 @@ export function PageList({ groups }: { groups: { label: string; links: { href: s
 const clock = (minutes: number) => `${String(Math.floor(minutes / 60)).padStart(2, "0")}:${String(minutes % 60).padStart(2, "0")}`;
 
 function SessionTag({ state, iconOnly }: { state: HomeSession["state"]; iconOnly?: boolean }) {
-  const Icon = SESSION_ICONS[state];
-  const label = HOME_SESSION_META[state].label;
+  const { icon: Icon, label } = HOME_SESSION_META[state];
   return <span className="pc-block-tag"><Icon aria-hidden="true" />{iconOnly ? <span className="sr-only">{label}</span> : label}</span>;
 }
 
@@ -207,7 +202,7 @@ export function Timeline({ sessions, now }: { sessions: HomeSession[]; now: numb
         </div>
       </div>
       <ul className="pc-only-wide flex flex-wrap gap-2" aria-label="Key">
-        {states.map((state) => <li key={state}><Tag color={HOME_SESSION_META[state].color}>{(() => { const Icon = SESSION_ICONS[state]; return <Icon aria-hidden="true" />; })()}{HOME_SESSION_META[state].label}</Tag></li>)}
+        {states.map((state) => <li key={state}><Tag meta={HOME_SESSION_META[state]} /></li>)}
       </ul>
       <ul className="pc-only-narrow flex-col gap-2" aria-label="On now and next">
         {upcoming.length ? upcoming.map((s) => (

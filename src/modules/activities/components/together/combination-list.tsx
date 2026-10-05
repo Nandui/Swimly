@@ -4,8 +4,10 @@ import UiLink from "next/link";
 import {
   ItemContent,
   ItemActions,
+  ItemDescription,
   Item,
   ItemGroup,
+  ItemTitle,
 } from "@/components/shadcn/item";
 
 import { useMemo, useState } from "react";
@@ -114,45 +116,29 @@ function SlotList({
             className="[overflow-wrap:anywhere]"
           >
             <ItemContent className="min-w-0">
-              <div className="text-sm font-medium">
-                {
-                  <span className="text-sm text-ui-foreground font-medium">
-                    {placement.name}
-                  </span>
-                }
-              </div>
-              <div className="text-sm text-ui-muted-foreground">
-                {
-                  <span className="text-sm text-ui-muted-foreground">
-                    <UiLink
-                      href={`/courses/${placement.course.id}`}
-                      className={
-                        "text-ui-foreground underline-offset-4 hover:underline text-sm"
-                      }
-                    >
-                      {courseName(placement.course)}
-                    </UiLink>
-                    {showTimes
-                      ? ` · ${formatTime(placement.course.startMinutes)}–${formatTime(placement.course.startMinutes + placement.course.durationMinutes)}`
-                      : ""}{" "}
-                    · {placement.course.level.name} ·{" "}
-                    {capacityLabel(
-                      placement.course._count.enrolments,
-                      placement.course.capacity,
-                    )}
-                  </span>
-                }
-              </div>
+              <ItemTitle>{placement.name}</ItemTitle>
+              <ItemDescription>
+                <UiLink
+                  href={`/courses/${placement.course.id}`}
+                  className="text-ui-foreground"
+                >
+                  {courseName(placement.course)}
+                </UiLink>
+                {showTimes
+                  ? ` · ${formatTime(placement.course.startMinutes)}–${formatTime(placement.course.startMinutes + placement.course.durationMinutes)}`
+                  : ""}{" "}
+                · {placement.course.level.name} ·{" "}
+                {capacityLabel(
+                  placement.course._count.enrolments,
+                  placement.course.capacity,
+                )}
+              </ItemDescription>
             </ItemContent>
             <ItemActions className="flex-wrap">
               {placement.alreadyIn ? (
-                <Tag color={PLACEMENT_META.alreadyEnrolled.color}>
-                  {PLACEMENT_META.alreadyEnrolled.label}
-                </Tag>
+                <Tag meta={PLACEMENT_META.alreadyEnrolled} />
               ) : (
-                <Tag color={PLACEMENT_META.hasPlace.color}>
-                  {PLACEMENT_META.hasPlace.label}
-                </Tag>
+                <Tag meta={PLACEMENT_META.hasPlace} />
               )}
             </ItemActions>
           </Item>

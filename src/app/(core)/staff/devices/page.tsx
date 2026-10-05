@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import { Item, ItemActions, ItemContent, ItemGroup } from "@/components/shadcn/item";
+import { Item, ItemActions, ItemContent, ItemDescription, ItemGroup, ItemTitle } from "@/components/shadcn/item";
 import { BackLink } from "@/components/ui-kit/back-link";
 import { EmptyState } from "@/components/ui-kit/empty-state";
 import { PageHeader } from "@/components/ui-kit/page-header";
@@ -54,14 +54,14 @@ export default async function DevicesPage() {
             return (
               <Item key={device.id} role="listitem" className="items-start">
                 <ItemContent className="min-w-0">
-                  <div className="flex flex-wrap items-center gap-2">
-                    <span className="text-sm font-medium">{device.name}</span>
-                    {status ? <Tag color={status.color}>{status.label}</Tag> : null}
-                  </div>
-                  <span className="text-sm text-ui-muted-foreground">
+                  <ItemTitle className="flex-wrap">
+                    <span>{device.name}</span>
+                    {status ? <Tag meta={status} /> : null}
+                  </ItemTitle>
+                  <ItemDescription>
                     {device.clubId ? siteName.get(device.clubId) ?? "Removed site" : "Any site"} · {device._count.people} {device._count.people === 1 ? "person" : "people"} can switch in
                     {device.lastUsedAt ? ` · last used ${formatDateTime(device.lastUsedAt)}` : ""}
-                  </span>
+                  </ItemDescription>
                 </ItemContent>
                 {!device.revokedAt ? <ItemActions><RevokeDevice id={device.id} name={device.name} /></ItemActions> : null}
               </Item>

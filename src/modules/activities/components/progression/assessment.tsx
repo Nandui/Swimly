@@ -4,8 +4,10 @@ import { SegmentedChoice } from "@/components/ui-kit/segmented-links";
 import {
   ItemMedia,
   ItemContent,
+  ItemDescription,
   Item,
   ItemGroup,
+  ItemTitle,
 } from "@/components/shadcn/item";
 
 import { Notice } from "@/components/ui-kit/notice";
@@ -50,15 +52,15 @@ type Competency = {
  *  record, with the instructor who made it. */
 export function assessedLine(competency: Competency): string | null {
   if (!competency.status || !competency.assessedByName) return null;
-  const label = competency.status === "ACHIEVED" ? "Achieved" : "Not Achieved";
+  const label = COMPETENCY_STATUS_META[competency.status].label;
   return `${label} · ${competency.assessedByName}${
     competency.assessedOn ? ` · ${formatDate(competency.assessedOn)}` : ""
   }`;
 }
 
 const MARK_LABEL: Record<CompetencyStatus, string> = {
-  WORKING_ON: "Not Achieved",
-  ACHIEVED: "Achieved",
+  WORKING_ON: COMPETENCY_STATUS_META.WORKING_ON.label,
+  ACHIEVED: COMPETENCY_STATUS_META.ACHIEVED.label,
 };
 const MARK_ORDER: CompetencyStatus[] = ["WORKING_ON", "ACHIEVED"];
 
@@ -66,7 +68,7 @@ const MARK_ORDER: CompetencyStatus[] = ["WORKING_ON", "ACHIEVED"];
  *
  *  Batched behind one Save, like the register and for the same reason: Server
  *  Actions dispatch one at a time per client, so a save per tap would queue.
- *  Missing marks display as Not Achieved without inventing an assessment. */
+ *  Missing marks display as Not achieved without inventing an assessment. */
 export function CompetencyChecklist(
   props: React.ComponentProps<typeof CompetencyChecklistState>,
 ) {
@@ -172,31 +174,19 @@ function CompetencyChecklistState({
                 }
               </ItemMedia>
               <ItemContent className="min-w-0">
-                <div className="text-sm font-medium">
-                  {
-                    <div className="min-w-0 flex gap-2 items-center flex-wrap">
-                      <Tag color={COMPETENCY_STATUS_META[value].color}>
-                        {MARK_LABEL[value]}
-                      </Tag>
-                      <span className="text-sm text-ui-foreground">
-                        {competency.name}
-                      </span>
-                    </div>
-                  }
-                </div>
-                <div className="text-sm text-ui-muted-foreground">
+                <ItemTitle className="min-w-0 flex-wrap">
+                  <Tag meta={COMPETENCY_STATUS_META[value]} />
+                  <span>{competency.name}</span>
+                </ItemTitle>
+                {competency.description ? (
+                  <ItemDescription>{competency.description}</ItemDescription>
+                ) : null}
+                {assessedLine(competency) ? (
+                  <ItemDescription>{assessedLine(competency)}</ItemDescription>
+                ) : null}
+                <div>
                   {
                     <div className="min-w-0 flex flex-col gap-2">
-                      {competency.description ? (
-                        <span className="text-sm text-ui-muted-foreground block">
-                          {competency.description}
-                        </span>
-                      ) : null}
-                      {assessedLine(competency) ? (
-                        <span className="text-sm text-ui-muted-foreground block">
-                          {assessedLine(competency)}
-                        </span>
-                      ) : null}
                       <div className="min-w-0 flex gap-2 items-center">
                         <SegmentedChoice
                           value={value}
@@ -336,9 +326,10 @@ export function CompletionTag({
   override: string | null;
 }) {
   return (
-    <Tag color={COMPLETION_META[override ? "override" : "earned"].color}>
-      {override ? `Completed with gaps · ${achieved}/${total}` : "Completed"}
-    </Tag>
+    <Tag
+      meta={COMPLETION_META[override ? "override" : "earned"]}
+      label={override ? `${COMPLETION_META.override.label} · ${achieved}/${total}` : undefined}
+    />
   );
 }
 

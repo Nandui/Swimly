@@ -188,9 +188,7 @@ function PeopleTable({
                     </span>
                   ) : null}
                   {!person.hasPassword ? (
-                    <Tag color={STAFF_STATUS_META.noPassword.color}>
-                      {STAFF_STATUS_META.noPassword.label}
-                    </Tag>
+                    <Tag meta={STAFF_STATUS_META.noPassword} />
                   ) : null}
                 </div>
                 <span className="text-sm text-ui-muted-foreground block [overflow-wrap:anywhere]">
@@ -211,9 +209,7 @@ function PeopleTable({
                 </span>
               </TableCell>
               <TableCell className={"max-lg:hidden"}>
-                <Tag color={reach.color}>
-                  {person.staffRole?.name ?? "No role"}
-                </Tag>
+                <Tag meta={reach} label={person.staffRole?.name ?? "No role"} />
                 <span className="text-sm text-ui-muted-foreground block">
                   {permissionCountLabel(permissions.length)}
                 </span>

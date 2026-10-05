@@ -1,6 +1,12 @@
 import type { JSONContent } from '@tiptap/react';
+import {
+  Archive, BadgeCheck, BookOpen, CalendarClock, CheckCheck, CircleAlert, CircleCheck, CircleHelp, CirclePause,
+  ClipboardCheck, Eye, FileCheck2, FilePenLine, History, Inbox, OctagonAlert, Pencil, ScanSearch, SlidersHorizontal,
+  TriangleAlert, UserCheck, XCircle,
+} from 'lucide-react';
 import { expandPermissions } from '@/lib/staff/permissions';
 import { formatDate as formatDateOnly } from '@/lib/format';
+import type { StatusMeta } from '@/lib/status';
 export const documentTypes = ['SOP', 'NOP', 'EAP', 'Risk assessment', 'Policy', 'Custom'] as const;
 export type DocumentType = (typeof documentTypes)[number];
 export type Role = string;
@@ -174,3 +180,45 @@ export const formatDate = (value?: string | null) =>
   value ? formatDateOnly(new Date(value)) : 'Not set';
 export const overdue = (value?: string | null) =>
   !!value && value.slice(0, 10) < new Date().toISOString().slice(0, 10);
+
+/** Every status Docs shows, with its words, tone and icon. Render one with
+ *  `<Tag meta={DOC_STATUS_META[key]} />`; pass keys, never metas, across a
+ *  server-to-client boundary. Within one tone no two entries share an icon. */
+export const DOC_STATUS_META = {
+  draft: { label: 'Draft', color: 'gray', icon: Pencil },
+  draftPreview: { label: 'Draft preview', color: 'gray', icon: Eye },
+  changesRequested: { label: 'Changes requested', color: 'orange', icon: FilePenLine },
+  inReview: { label: 'In review', color: 'blue', icon: ScanSearch },
+  forYourReview: { label: 'For your review', color: 'blue', icon: ClipboardCheck },
+  submitted: { label: 'Submitted', color: 'blue', icon: Inbox },
+  approved: { label: 'Approved', color: 'green', icon: CircleCheck },
+  published: { label: 'Published', color: 'green', icon: BadgeCheck },
+  current: { label: 'Current approved version', color: 'green', icon: FileCheck2 },
+  historical: { label: 'Historical version', color: 'gray', icon: History },
+  archived: { label: 'Archived', color: 'gray', icon: Archive },
+  reviewDue: { label: 'Review due', color: 'orange', icon: CalendarClock },
+  overdue: { label: 'Overdue', color: 'red', icon: TriangleAlert },
+  toRead: { label: 'To read', color: 'orange', icon: BookOpen },
+  acknowledged: { label: 'Acknowledged', color: 'green', icon: CheckCheck },
+  cancelled: { label: 'Cancelled', color: 'gray', icon: XCircle },
+  configured: { label: 'Configured', color: 'green', icon: SlidersHorizontal },
+  setupRequired: { label: 'Setup required', color: 'orange', icon: TriangleAlert },
+  active: { label: 'Active', color: 'green', icon: UserCheck },
+  inactive: { label: 'Inactive', color: 'gray', icon: CirclePause },
+} as const satisfies Record<string, StatusMeta>;
+export type DocStatus = keyof typeof DOC_STATUS_META;
+
+/** Risk bands keep their stored colour names ('amber' included, see content.ts);
+ *  this maps each to a tone and an icon of its own. */
+export const RISK_BAND_TONE_META = {
+  green: { label: 'Low', color: 'green', icon: CircleCheck },
+  amber: { label: 'Medium', color: 'orange', icon: CircleAlert },
+  orange: { label: 'High', color: 'orange', icon: TriangleAlert },
+  red: { label: 'Very high', color: 'red', icon: OctagonAlert },
+} as const satisfies Record<'green' | 'amber' | 'orange' | 'red', StatusMeta>;
+export const UNCLASSIFIED_RISK_META = { label: 'Unclassified', color: 'gray', icon: CircleHelp } as const satisfies StatusMeta;
+
+/** The tag meta for a band (by its stored colour); a missing or unknown band reads as unclassified. */
+export function riskBandMeta(band: { color: string } | null | undefined): StatusMeta {
+  return (band && (RISK_BAND_TONE_META as Record<string, StatusMeta>)[band.color]) || UNCLASSIFIED_RISK_META;
+}

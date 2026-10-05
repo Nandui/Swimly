@@ -1,7 +1,7 @@
 import Link from "next/link";
-import { Archive, ArrowLeft, ArrowRight, ChevronRight, CircleCheck, CircleX, SearchX, Waves } from "lucide-react";
+import { ArrowLeft, ArrowRight, ChevronRight, CircleCheck, CircleX, SearchX, Waves } from "lucide-react";
 import { Button } from "@/components/shadcn/button";
-import { Badge } from "@/components/shadcn/badge";
+import { Tag } from "@/components/ui-kit/tag";
 import { Item, ItemGroup, ItemContent, ItemTitle } from "@/components/shadcn/item";
 import { Empty, EmptyContent, EmptyDescription, EmptyHeader, EmptyMedia, EmptyTitle } from "@/components/shadcn/empty";
 import { AddClass } from "./add-class";
@@ -77,7 +77,7 @@ export function ClassBrowser({ courses, params, todayDay, levels, instructors, c
 }
 
 function ClassAvailability({ course }: { course: CourseRow }) {
-  if (course.archivedAt) return <Badge variant="secondary" data-tone={ARCHIVAL_STATUS_META.archived.color}><Archive aria-hidden="true" />{ARCHIVAL_STATUS_META.archived.label}</Badge>;
+  if (course.archivedAt) return <Tag meta={ARCHIVAL_STATUS_META.archived} />;
   const enrolled = course._count.enrolments;
   const open = hasPlace(course);
   const Icon = open ? CircleCheck : CircleX;

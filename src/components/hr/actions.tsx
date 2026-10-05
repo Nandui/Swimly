@@ -8,8 +8,9 @@ import { Input } from "@/components/shadcn/input";
 import { Label } from "@/components/shadcn/label";
 import { Textarea } from "@/components/shadcn/textarea";
 import { NativeSelect, NativeSelectOption } from "@/components/shadcn/native-select";
-import { RadioGroup, RadioGroupItem } from "@/components/shadcn/radio-group";
+import { RadioGroup } from "@/components/shadcn/radio-group";
 import { Field, FormDialog } from "@/components/form-dialog";
+import { ChoiceRow } from "@/components/ui/choice-row";
 import { Notice } from "@/components/ui-kit/notice";
 import { NOTE_VISIBILITY_META, NOTE_VISIBILITIES, REVIEW_OVERALL_LABELS, type ReviewOverall } from "@/lib/hr/constants";
 import { addNote, saveReview, shareReview, withdrawNote } from "@/lib/hr/actions";
@@ -36,15 +37,9 @@ export function AddNote({ subjectUserId, name }: { subjectUserId: string; name: 
       </Field>
       <fieldset className="space-y-2">
         <legend className="text-sm font-medium">Who can read it</legend>
-        <RadioGroup value={visibility} onValueChange={setVisibility} className="gap-1">
+        <RadioGroup value={visibility} onValueChange={setVisibility} className="gap-2">
           {NOTE_VISIBILITIES.map((key) => (
-            <div key={key} className="flex min-h-11 items-start gap-3 py-1">
-              <RadioGroupItem id={`hr-vis-${key}`} value={key} />
-              <Label htmlFor={`hr-vis-${key}`} className="block font-normal">
-                <span className="block font-medium">{NOTE_VISIBILITY_META[key].label}</span>
-                <span className="block text-sm text-ui-muted-foreground">{NOTE_VISIBILITY_META[key].hint}</span>
-              </Label>
-            </div>
+            <ChoiceRow key={key} type="radio" id={`hr-vis-${key}`} value={key} title={NOTE_VISIBILITY_META[key].label} hint={NOTE_VISIBILITY_META[key].hint} />
           ))}
         </RadioGroup>
       </fieldset>
@@ -115,12 +110,12 @@ export function ReviewEditor({ review, name }: { review: Draft; name: string }) 
       <div className="space-y-2"><Label htmlFor="rv-summary">Summary</Label><Textarea id="rv-summary" name="summary" defaultValue={review.summary} rows={5} maxLength={5000} /></div>
       <div className="space-y-2"><Label htmlFor="rv-strengths">Strengths</Label><Textarea id="rv-strengths" name="strengths" defaultValue={review.strengths} rows={4} maxLength={5000} /></div>
       <div className="space-y-2"><Label htmlFor="rv-goals">Goals for the next period</Label><Textarea id="rv-goals" name="goals" defaultValue={review.goals} rows={4} maxLength={5000} /></div>
-      <div className="space-y-2"><Label htmlFor="rv-overall">Overall (optional)</Label>
+      <Field label="Overall" htmlFor="rv-overall" optional>
         <NativeSelect id="rv-overall" name="overall" defaultValue={review.overall ?? ""} className="min-h-11 w-full">
           <NativeSelectOption value="">Not stated</NativeSelectOption>
           {Object.entries(REVIEW_OVERALL_LABELS).map(([value, label]) => <NativeSelectOption key={value} value={value}>{label}</NativeSelectOption>)}
         </NativeSelect>
-      </div>
+      </Field>
       {message ? <Notice tone={message.tone} title={message.text} /> : null}
       <div className="flex flex-wrap gap-2">
         <Button type="submit" variant="outline" className="min-h-11" disabled={pending}><Save aria-hidden="true" />Save draft</Button>

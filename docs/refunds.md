@@ -174,9 +174,9 @@ follow them. `src/app/refunds/refunds.css` holds only the Refunds layouts. Every
 pair meets 4.5:1 (text) or 3:1 (edges, focus) in both themes.
 
 `RefundShell` opens in the shared module frame (`ModuleShell`) and owns its page links.
-No Docs data or permissions are imported. Status badges come from
-`RefundStatusTag` (`src/components/refunds/status.tsx`), which adds a distinct icon
-to each status label. Queue filters, forms, history and finance dialogs keep their
+No Docs data or permissions are imported. Status tags are
+`<Tag meta={refundStatuses[status]} />`; each entry in `refundStatuses`
+(`src/lib/refunds/types.ts`) carries its label, tone and a distinct icon. Queue filters, forms, history and finance dialogs keep their
 existing behaviour. Aquatics, Docs and the portals keep their own themes.
 
 The theme was checked in the isolated preview (`scripts/refunds-preview`) on the

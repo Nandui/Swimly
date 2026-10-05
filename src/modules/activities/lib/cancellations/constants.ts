@@ -1,9 +1,10 @@
-import type { TagColor } from "@/components/ui-kit/tag";
+import { CircleCheck, Clock3, XCircle } from "lucide-react";
+import type { StatusMeta } from "@/lib/status";
 
 export const CANCELLATION_META = {
-  cancelled: { label: "Cancelled", color: "red" },
-  pending: { label: "Awaiting billing", color: "orange" },
-  notified: { label: "Billing notified", color: "green" },
-} as const satisfies Record<string, { label: string; color: TagColor }>;
+  cancelled: { label: "Cancelled", color: "red", icon: XCircle },
+  pending: { label: "Awaiting billing", color: "orange", icon: Clock3 },
+  notified: { label: "Billing notified", color: "green", icon: CircleCheck },
+} as const satisfies Record<string, StatusMeta>;
 
 export const CANCELLED_SESSION_ERROR = "This session has been cancelled. No further teaching records can be saved for it.";

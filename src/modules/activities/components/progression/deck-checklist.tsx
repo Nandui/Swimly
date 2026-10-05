@@ -66,7 +66,7 @@ export type DeckSwimmer = {
 };
 
 const MARK_LABEL: Record<CompetencyStatus, string> = {
-  WORKING_ON: "Not Achieved",
+  WORKING_ON: "Not achieved",
   ACHIEVED: "Achieved",
 };
 type Marks = Map<string, Map<string, Choice>>;

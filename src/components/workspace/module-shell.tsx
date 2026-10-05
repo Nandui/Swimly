@@ -90,7 +90,7 @@ export function ModuleShell({ module, id, current = id, who, links = [], groups,
         <div className="tf-body">
           <ModuleRail current={railCurrent} />
           <main id={`${id}-main`} tabIndex={-1} className="tf-main">
-            <div className={contentClass} style={maxWidth ? { maxWidth } : undefined}>{children}</div>
+            <div className={`tf-content ${contentClass}`} style={maxWidth ? { maxWidth } : undefined}>{children}</div>
           </main>
         </div>
       </div>

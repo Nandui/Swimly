@@ -6,6 +6,7 @@ import {
   ItemActions,
   Item,
   ItemGroup,
+  ItemTitle,
 } from "@/components/shadcn/item";
 
 import { COMPETENCY_STATUS_META } from "@/modules/activities/lib/progression/constants";
@@ -193,14 +194,10 @@ export async function ClassSession({
                 courseName(course)
               )}
               {taken ? (
-                <Tag color={ATTENDANCE_RECORD_META.taken.color}>
-                  {ATTENDANCE_RECORD_META.taken.label}
-                </Tag>
+                <Tag meta={ATTENDANCE_RECORD_META.taken} />
               ) : null}
               {cover && cover.coverById !== cover.instructorId ? (
-                <Tag color={ATTENDANCE_RECORD_META.covered.color}>
-                  {ATTENDANCE_RECORD_META.covered.label}
-                </Tag>
+                <Tag meta={ATTENDANCE_RECORD_META.covered} />
               ) : null}
             </div>
           }
@@ -338,26 +335,10 @@ export async function ClassSession({
                     className="[overflow-wrap:anywhere]"
                   >
                     <ItemContent className="min-w-0">
-                      <div className="text-sm font-medium">
-                        {
-                          <div
-                            className={
-                              "min-w-0 flex gap-2 items-center flex-wrap"
-                            }
-                          >
-                            <span
-                              className={
-                                "text-sm text-ui-foreground font-medium"
-                              }
-                            >
-                              {fullName(swimmer.student)}
-                            </span>
-                            <Tag color={COMPETENCY_STATUS_META.ACHIEVED.color}>
-                              {swimmer.achieved} of {swimmer.total}
-                            </Tag>
-                          </div>
-                        }
-                      </div>
+                      <ItemTitle className="min-w-0 flex-wrap">
+                        <span>{fullName(swimmer.student)}</span>
+                        <Tag meta={COMPETENCY_STATUS_META.ACHIEVED} label={`${swimmer.achieved} of ${swimmer.total}`} />
+                      </ItemTitle>
                     </ItemContent>
                     <ItemActions className="flex-wrap">
                       {mayComplete ? (

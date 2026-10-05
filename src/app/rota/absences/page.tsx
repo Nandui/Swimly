@@ -2,12 +2,11 @@ import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { UserX } from "lucide-react";
 import { BackAtWork, ExtendAbsence, RemoveAbsence, ReportAbsence, ReturnToWork } from "@/components/rota/absences";
-import { AbsenceReasonTag, ReturnFitTag } from "@/components/rota/status";
 import { Button } from "@/components/shadcn/button";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/shadcn/collapsible";
 import { Tag } from "@/components/ui-kit/tag";
 import { formatDate } from "@/lib/format";
-import { ROSTER_LEAVE_META } from "@/lib/rota/constants";
+import { ABSENCE_REASON_META, RETURN_FIT_META, ROSTER_LEAVE_META } from "@/lib/rota/constants";
 import { requireRotaActor } from "@/lib/rota/access";
 import { rotaAbsences, type RotaAbsenceRow, type RotaReturnRow } from "@/lib/rota/data";
 
@@ -98,7 +97,7 @@ export default async function AbsencesPage() {
             {current.map((a) => (
               <li key={a.id} className="flex flex-wrap items-center justify-between gap-3 px-5 py-4">
                 <div className="min-w-0 flex-1 space-y-1">
-                  <p className="flex flex-wrap items-center gap-2"><span className="module-row-title">{a.user.name}</span><AbsenceReasonTag reason={a.reason} /></p>
+                  <p className="flex flex-wrap items-center gap-2"><span className="module-row-title">{a.user.name}</span><Tag meta={ABSENCE_REASON_META[a.reason]} /></p>
                   <p className="text-sm">{when(a)}{a.shiftsToCover ? ` · ${a.shiftsToCover} ${a.shiftsToCover === 1 ? "shift needs" : "shifts need"} cover` : " · no shifts affected"}</p>
                   <p className="text-xs text-ui-muted-foreground">{[`Reported by ${a.reportedByName}`, story(a) || null, a.updates.at(-1)?.note || a.note || null].filter(Boolean).join(" · ")}</p>
                   <Updates updates={a.updates} />
@@ -121,7 +120,7 @@ export default async function AbsencesPage() {
             {returning.map((a) => (
               <li key={a.id} className="flex flex-wrap items-center justify-between gap-3 px-5 py-4">
                 <div className="min-w-0 flex-1 space-y-1">
-                  <p className="flex flex-wrap items-center gap-2"><span className="module-row-title">{a.user.name}</span><AbsenceReasonTag reason={a.reason} /></p>
+                  <p className="flex flex-wrap items-center gap-2"><span className="module-row-title">{a.user.name}</span><Tag meta={ABSENCE_REASON_META[a.reason]} /></p>
                   <p className="text-sm">{when(a)} · {due(a)}</p>
                   {story(a) ? <p className="text-xs text-ui-muted-foreground">{story(a)}</p> : null}
                 </div>
@@ -138,7 +137,7 @@ export default async function AbsencesPage() {
           <ul className="module-list">
             {onHoliday(holidays).map((h) => (
               <li key={h.name} className="flex flex-wrap items-center justify-between gap-3 px-5 py-4">
-                <p className="flex flex-wrap items-center gap-2"><span className="module-row-title">{h.name}</span><Tag color={ROSTER_LEAVE_META.holiday.color}>{h.label}</Tag></p>
+                <p className="flex flex-wrap items-center gap-2"><span className="module-row-title">{h.name}</span><Tag meta={ROSTER_LEAVE_META.holiday} label={h.label} /></p>
                 <p className="text-sm text-ui-muted-foreground">{h.days.join(", ")}</p>
               </li>
             ))}
@@ -151,7 +150,7 @@ export default async function AbsencesPage() {
           <ul className="module-list">
             {returned.map((a) => (
               <li key={a.id} className="space-y-1 px-5 py-4">
-                <p className="flex flex-wrap items-center gap-2"><span className="module-row-title">{a.user.name}</span><AbsenceReasonTag reason={a.reason} />{a.returnFit ? <ReturnFitTag fit={a.returnFit} /> : null}</p>
+                <p className="flex flex-wrap items-center gap-2"><span className="module-row-title">{a.user.name}</span><Tag meta={ABSENCE_REASON_META[a.reason]} />{a.returnFit ? <Tag meta={RETURN_FIT_META[a.returnFit]} /> : null}</p>
                 <p className="text-sm text-ui-muted-foreground">{[when(a), a.returnMetOn ? `return to work ${day(a.returnMetOn)}${a.returnByName ? ` with ${a.returnByName}` : ""}` : null, story(a) || null].filter(Boolean).join(" · ")}</p>
               </li>
             ))}

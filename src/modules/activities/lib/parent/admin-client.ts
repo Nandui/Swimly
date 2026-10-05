@@ -1,4 +1,6 @@
+import { CircleCheck, CirclePause, Clock3, Eye, EyeOff, Lock, XCircle } from "lucide-react";
 import type { ActionResult } from "@/lib/action-result";
+import type { StatusMeta } from "@/lib/status";
 import { formatDateTime } from "@/lib/format";
 import { dublinInstant, PARENT_TIMEZONE } from "./time";
 
@@ -16,14 +18,14 @@ export type AssessmentPublication = {
 };
 
 export const PARENT_ACCESS_META = {
-  approved: { label: "Approved", color: "green" },
-  revoked: { label: "Revoked", color: "gray" },
-} as const;
+  approved: { label: "Approved", color: "green", icon: CircleCheck },
+  revoked: { label: "Revoked", color: "gray", icon: XCircle },
+} as const satisfies Record<string, StatusMeta>;
 export const ACCESS_REQUEST_META = {
-  PENDING: { label: "Waiting for review", color: "orange" },
-  APPROVED: { label: "Approved", color: "green" },
-  DECLINED: { label: "Declined", color: "gray" },
-} as const;
+  PENDING: { label: "Waiting for review", color: "orange", icon: Clock3 },
+  APPROVED: { label: "Approved", color: "green", icon: CircleCheck },
+  DECLINED: { label: "Declined", color: "gray", icon: XCircle },
+} as const satisfies Record<string, StatusMeta>;
 export type AccessReview = {
   id: string; firstName: string; lastName: string; dateOfBirth: string; context: string;
   status: keyof typeof ACCESS_REQUEST_META; reply: string | null; createdAt: string; reviewedAt: string | null;
@@ -31,14 +33,14 @@ export type AccessReview = {
   student: { id: string; firstName: string; lastName: string } | null;
 };
 export const PARENT_ACCOUNT_META = {
-  active: { label: "Active", color: "green" },
-  suspended: { label: "Suspended", color: "red" },
-} as const;
+  active: { label: "Active", color: "green", icon: CircleCheck },
+  suspended: { label: "Suspended", color: "red", icon: CirclePause },
+} as const satisfies Record<string, StatusMeta>;
 export const PUBLICATION_META = {
-  unpublished: { label: "Not published", color: "gray" },
-  published: { label: "Published", color: "green" },
-  closed: { label: "Booking closed", color: "orange" },
-} as const;
+  unpublished: { label: "Not published", color: "gray", icon: EyeOff },
+  published: { label: "Published", color: "green", icon: Eye },
+  closed: { label: "Booking closed", color: "orange", icon: Lock },
+} as const satisfies Record<string, StatusMeta>;
 
 /** Staff cookies only; no parent tokens or server configuration enter the browser. */
 export async function parentAdminRequest<T>(path: string, options: {

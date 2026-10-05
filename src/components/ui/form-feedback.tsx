@@ -63,7 +63,7 @@ export function useFieldFeedback(name?: string) {
       const field = event.currentTarget;
       fieldRef.current = field;
       const label = (field.labels?.[0]?.textContent || field.getAttribute("aria-label") || "this field")
-        .replace(/\(required\)/g, "").trim().toLowerCase();
+        .trim().toLowerCase();
       setNativeError(field.validity.valueMissing ? `Enter ${label}.`
         : field.validity.typeMismatch && field instanceof HTMLInputElement && field.type === "email" ? "Enter a valid email address."
         : field.validationMessage);

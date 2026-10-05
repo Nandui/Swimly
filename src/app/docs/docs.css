@@ -267,39 +267,6 @@
   border-radius: var(--radius);
   overflow: hidden;
 }
-:where(.turnfin-docs) .badge {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  gap: 5px;
-  align-self: flex-start;
-  width: max-content;
-  max-width: 100%;
-  border-radius: 5px;
-  padding: 4px 8px;
-  font-size: var(--pc-text-caption);
-  line-height: var(--pc-leading-caption);
-  font-weight: 600;
-  white-space: nowrap;
-  background: var(--surface-tint);
-  color: var(--muted);
-}
-:where(.turnfin-docs) .badge.green {
-  background: var(--ui-status-green-bg);
-  color: var(--ui-status-green);
-}
-:where(.turnfin-docs) .badge.amber {
-  background: var(--ui-status-yellow-bg);
-  color: var(--ui-status-yellow);
-}
-:where(.turnfin-docs) .badge.orange {
-  background: var(--ui-status-orange-bg);
-  color: var(--ui-status-orange);
-}
-:where(.turnfin-docs) .badge.red {
-  background: var(--ui-status-red-bg);
-  color: var(--ui-status-red);
-}
 :where(.turnfin-docs) .status-dot {
   display: inline-block;
   width: 5px;
@@ -3925,7 +3892,7 @@
   :where(.turnfin-docs) .matrix-admin > .panel-heading {
     display: block;
   }
-  :where(.turnfin-docs) .matrix-admin .panel-heading .badge {
+  :where(.turnfin-docs) .matrix-admin .panel-heading [data-slot='badge'] {
     margin-top: 14px;
   }
   :where(.turnfin-docs) .matrix-edit-grid {
@@ -4213,7 +4180,7 @@
   :where(.turnfin-docs) .risk-read-card dd {
     color: #222;
   }
-  :where(.turnfin-docs) .badge {
+  :where(.turnfin-docs) [data-slot='badge'] {
     border: 1px solid #aaa !important;
     background: white !important;
     color: #222 !important;
@@ -4380,13 +4347,6 @@
     border-radius: 12px;
     background: var(--paper);
     box-shadow: none;
-  }
-  :where(.turnfin-docs) .badge {
-    border-radius: 5px;
-    padding: 3px 8px;
-    font-size: var(--pc-text-caption);
-    line-height: var(--pc-leading-caption);
-    font-weight: 500;
   }
   :where(.turnfin-docs) .doc-icon {
     border-radius: 10px;
@@ -5031,10 +4991,6 @@
     align-items: flex-start;
     flex-direction: column;
     gap: 5px;
-  }
-  :where(.turnfin-docs) .knowledge-overdue {
-    font-size: var(--pc-text-caption);
-    color: var(--ui-status-red);
   }
   :where(.turnfin-docs) .knowledge-arrow {
     color: var(--muted);
@@ -7008,7 +6964,7 @@
     :where(.turnfin-docs) .task-item-copy {
       grid-column: 1 / -1;
     }
-    :where(.turnfin-docs) .task-list .badge {
+    :where(.turnfin-docs) .task-list [data-slot='badge'] {
       justify-self: start;
     }
     :where(.turnfin-docs) .task-list a > svg {

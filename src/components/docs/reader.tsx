@@ -45,6 +45,7 @@ import {
   canApprove,
   formatDate,
   overdue,
+  DOC_STATUS_META,
   type Workspace,
   type DocumentRecord,
   type DocumentContent,
@@ -52,7 +53,8 @@ import {
   type Snapshot,
   type AssignmentRule,
 } from '@/lib/docs/types';
-import { DocIcon, Badge, Message, Avatar } from './ui';
+import { DocIcon, Message, Avatar } from './ui';
+import { Tag } from '@/components/ui-kit/tag';
 type Props = {
   workspace: Workspace;
   document: DocumentRecord;
@@ -143,21 +145,17 @@ export function Reader({
       </div>
       <div className="reader-toolbar">
         <div className="reader-status">
-          <Badge
-            tone={
-              d.archivedAt ? 'neutral' : submitted || !s ? 'amber' : historical ? 'amber' : 'green'
-            }
-          >
-            {d.archivedAt
-              ? 'Archived'
-              : submitted
-                ? 'Review submission'
-                : !s
-                  ? 'Draft preview'
-                  : historical
-                    ? 'Historical version'
-                    : 'Current approved version'}
-          </Badge>
+          {submitted && !d.archivedAt ? (
+            <Tag meta={DOC_STATUS_META.submitted} label="Review submission" />
+          ) : (
+            <Tag
+              meta={
+                DOC_STATUS_META[
+                  d.archivedAt ? 'archived' : !s ? 'draftPreview' : historical ? 'historical' : 'current'
+                ]
+              }
+            />
+          )}
           {s?.version && <span>Version {s.version}</span>}
         </div>
         <div className="reader-actions">
@@ -444,7 +442,6 @@ export function Reader({
         <Card asChild>
           <section className="review-decision panel">
             <div>
-              <Badge tone="amber">Your review</Badge>
               <h2>Ready for the team?</h2>
               <p>Change summary: {s.changeSummary}</p>
             </div>

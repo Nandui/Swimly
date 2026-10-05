@@ -39,7 +39,7 @@ export function HomeView({ homeName, roleName, siteName, today, modules, items }
               <Timeline sessions={sessions} now={minutesNow()} />
             </Section>
           )}
-          <div className="grid min-w-0 items-start gap-4" style={{ gridTemplateColumns: "repeat(auto-fit, minmax(min(100%, 320px), 1fr))" }}>
+          <div className="pc-grid">
             {waiting.length > 0 && (
               <Section id="home-waiting" title="Waiting for you">
                 <WaitingList items={waiting} />

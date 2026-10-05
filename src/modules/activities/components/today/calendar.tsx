@@ -4,7 +4,7 @@ import { useEffect, useRef, useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import { CalendarCheck, CheckCircle2, CircleX, List, Loader2, Table2, Users, RefreshCw } from "lucide-react";
 import { Button } from "@/components/shadcn/button";
-import { Badge } from "@/components/shadcn/badge";
+import { Tag } from "@/components/ui-kit/tag";
 import { Empty, EmptyDescription, EmptyHeader, EmptyMedia, EmptyTitle } from "@/components/shadcn/empty";
 import { Item } from "@/components/shadcn/item";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/shadcn/tabs";
@@ -97,7 +97,7 @@ export function ScheduleCalendar({ courses, assessments, iso, todayIso, initialN
       <div className={styles["sheet-summary"]} role="status" aria-live="polite">
         <strong>{courses.length} {courses.length === 1 ? "class" : "classes"}</strong>
         {assessments.length > 0 ? <strong>{assessments.length} {assessments.length === 1 ? "assessment" : "assessments"}</strong> : null}
-        {running > 0 ? <Badge variant="secondary" data-tone={CALENDAR_PHASE_META.running.color}>{`${running} running now`}</Badge> : null}
+        {running > 0 ? <Tag meta={CALENDAR_PHASE_META.running} label={`${running} running now`} /> : null}
         {isToday && later > 0 ? <span>{later} upcoming</span> : null}
       </div>
       <TabsList aria-label="Calendar display" className={width < 600 ? "hidden" : "group-data-[orientation=horizontal]/tabs:h-auto"}>
@@ -168,7 +168,7 @@ function CalendarEmpty() {
 function TimeHeading({ slot }: { slot: Pick<Slot, "start" | "phase"> }) {
   return <div className={styles["sheet-time"]}>
     <h2 id={`time-${slot.start}`} tabIndex={-1}>{formatTime(slot.start)}</h2>
-    {slot.phase === 'running' ? <Badge variant="secondary" data-tone={CALENDAR_PHASE_META.running.color}>Now</Badge> : slot.phase === 'next' ? <Badge variant="secondary" data-tone={CALENDAR_PHASE_META.next.color}>Next</Badge> : null}
+    {slot.phase === 'running' ? <Tag meta={CALENDAR_PHASE_META.running} label="Now" /> : slot.phase === 'next' ? <Tag meta={CALENDAR_PHASE_META.next} label="Next" /> : null}
   </div>;
 }
 
@@ -185,7 +185,7 @@ function AssessmentBooking({ assessment, now, allowed }: { assessment: CalendarA
   const AvailabilityIcon = available ? CheckCircle2 : CircleX;
   const bookedLabel = assessment.capacity === null ? `${assessment.booked} booked` : `${assessment.booked} of ${assessment.capacity} booked`;
   const content = <>
-    <span className={styles["booking-status"]}><Badge variant="secondary">Assessment</Badge></span>
+    <span className={styles["booking-status"]}><Tag meta={CALENDAR_PHASE_META.assessment} /></span>
     <span className={styles["booking-title"]}><span>{name}</span><span className={styles["booking-availability"]} data-available={available} role="img" aria-label={availability} title={availability}><AvailabilityIcon aria-hidden="true" /></span></span>
     <span className={styles["booking-subtitle"]}>{assessment.programmeName} · {location}</span>
     <span className={styles["booking-subtitle"]}>{assessment.instructor?.name || 'No instructor assigned'}</span>
@@ -194,7 +194,7 @@ function AssessmentBooking({ assessment, now, allowed }: { assessment: CalendarA
       <span className={styles["booking-places"]} title={bookedLabel}><Users aria-hidden="true" /><span aria-hidden="true">{assessment.capacity === null ? assessment.booked : `${assessment.booked}/${assessment.capacity}`}</span><span className={styles["sr-only"]}>{bookedLabel}</span></span>
       <span className={styles["booking-free"]}>{assessment.capacity !== null && assessment.booked > assessment.capacity ? `${assessment.booked - assessment.capacity} over capacity` : free !== null ? `${free} free` : 'No limit'}</span>
     </span>
-    {phase === 'running' ? <span className={styles["booking-status"]}><Badge variant="secondary" data-tone={CALENDAR_PHASE_META.running.color}>Running now</Badge></span> : null}
+    {phase === 'running' ? <span className={styles["booking-status"]}><Tag meta={CALENDAR_PHASE_META.running} /></span> : null}
   </>;
   const label = `Assessment: ${name}, ${formatTime(assessment.startMinutes)}, ${location}, ${availability}`;
   return <Item asChild variant="outline" className={styles.booking} data-phase={phase}>{href ? <a href={href} aria-label={`Open ${label}`}>{content}</a> : <article aria-label={label}>{content}</article>}</Item>;
@@ -203,7 +203,7 @@ function AssessmentBooking({ assessment, now, allowed }: { assessment: CalendarA
 function Booking({ course, now, iso, access, agenda = false }: { course: CalendarClass; now: number | null; iso: string; access: Access; agenda?: boolean }) {
   if (course.cancellation) return <Item variant="outline" className={styles.booking}>
     <span className={styles["booking-title"]}>{agenda ? courseName(course) : course.location || "Pool"}</span>
-    <span className={styles["booking-status"]}><Badge variant="secondary" data-tone={CALENDAR_PHASE_META.cancelled.color}>Cancelled</Badge></span>
+    <span className={styles["booking-status"]}><Tag meta={CALENDAR_PHASE_META.cancelled} /></span>
     <span className={styles["booking-time"]}>{formatTimeRange(course.startMinutes, course.startMinutes + course.durationMinutes)}</span>
     <span className="break-words text-xs text-ui-muted-foreground">{course.cancellation.reason}</span>
   </Item>;
@@ -231,7 +231,7 @@ function Booking({ course, now, iso, access, agenda = false }: { course: Calenda
       <span className={styles["booking-places"]} title={swimmersLabel}><Users aria-hidden="true" /><span aria-hidden="true">{course.capacity === null ? course.enrolled : `${course.enrolled}/${course.capacity}`}</span><span className={styles["sr-only"]}>{swimmersLabel}</span></span>
       <span className={styles["booking-free"]}>{course.capacity !== null && course.enrolled > course.capacity ? `${course.enrolled - course.capacity} over capacity` : free !== null ? `${free} free` : 'No limit'}</span>
     </span>
-    {agenda && phase === 'running' ? <span className={styles["booking-status"]}><Badge variant="secondary" data-tone={CALENDAR_PHASE_META.running.color}>Running now</Badge></span> : null}
+    {agenda && phase === 'running' ? <span className={styles["booking-status"]}><Tag meta={CALENDAR_PHASE_META.running} /></span> : null}
   </>;
   return <Item asChild variant="outline" className={styles.booking} data-phase={phase}>{href ? <a href={href} aria-label={`Open class: ${name}, ${formatTime(course.startMinutes)}, ${location}, ${availability}${phase === 'running' ? ', running now' : ''}`}>{content}</a>
     : <article aria-label={`${name}, ${formatTime(course.startMinutes)}, ${location}, ${availability}`}>{content}</article>}</Item>;

@@ -16,7 +16,7 @@ export function ApplyParentChange({ id, name }: { id: string; name: string }) {
       successMessage="Changes applied"
       submit={(formData) => applyParentChange(id, String(formData.get("reply") ?? ""))}
     >
-      <Field label="Reply to the parent (optional)" htmlFor="reply">
+      <Field label="Reply to the parent" htmlFor="reply" optional>
         <Textarea id="reply" name="reply" maxLength={500} rows={2} />
       </Field>
     </FormDialog>

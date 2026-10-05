@@ -108,11 +108,9 @@ export function ClassDetailView({
         {course.archivedAt || tone ? (
           <div className="min-w-0 flex gap-2 items-center flex-wrap">
             {course.archivedAt ? (
-              <Tag color={ARCHIVAL_STATUS_META.archived.color}>
-                {ARCHIVAL_STATUS_META.archived.label}
-              </Tag>
+              <Tag meta={ARCHIVAL_STATUS_META.archived} />
             ) : null}
-            {tone ? <Tag color={tone.color}>{tone.label}</Tag> : null}
+            {tone ? <Tag meta={tone} /> : null}
           </div>
         ) : null}
       </div>
@@ -352,14 +350,10 @@ function ClassRoster({
                       </span>
                     )}
                     {student.hasMedicalNotes ? (
-                      <Tag color={MEDICAL_STATUS_META.notes.color}>
-                        {MEDICAL_STATUS_META.notes.label}
-                      </Tag>
+                      <Tag meta={MEDICAL_STATUS_META.notes} />
                     ) : null}
                     {inactive ? (
-                      <Tag color={STUDENT_STATUS_META[student.status].color}>
-                        {STUDENT_STATUS_META[student.status].label}
-                      </Tag>
+                      <Tag meta={STUDENT_STATUS_META[student.status]} />
                     ) : null}
                   </div>
                   <span className="text-sm text-ui-muted-foreground">
@@ -482,7 +476,7 @@ function Placement({
     <>
       <div className="min-w-0 flex gap-2 items-center">
         {differs ? (
-          <Tag color={PLACEMENT_META.otherLevel.color}>{entry.level.name}</Tag>
+          <Tag meta={PLACEMENT_META.otherLevel} label={entry.level.name} />
         ) : (
           <span className="text-sm text-ui-foreground">{entry.level.name}</span>
         )}

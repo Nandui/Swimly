@@ -3,13 +3,12 @@
 import { useState } from "react";
 import { CalendarCheck, CalendarPlus, MessageSquareText, Trash2, UserX } from "lucide-react";
 import { Button } from "@/components/shadcn/button";
-import { Checkbox } from "@/components/shadcn/checkbox";
 import { Input } from "@/components/shadcn/input";
-import { Label } from "@/components/shadcn/label";
 import { NativeSelect, NativeSelectOption } from "@/components/shadcn/native-select";
-import { RadioGroup, RadioGroupItem } from "@/components/shadcn/radio-group";
+import { RadioGroup } from "@/components/shadcn/radio-group";
 import { Textarea } from "@/components/shadcn/textarea";
 import { Field, FormDialog } from "@/components/form-dialog";
+import { ChoiceRow } from "@/components/ui/choice-row";
 import { Notice } from "@/components/ui-kit/notice";
 import { formatDate } from "@/lib/format";
 import { endAbsence, extendAbsence, recordReturnToWork, reportAbsence, withdrawAbsence, type AbsenceInput } from "@/lib/rota/actions";
@@ -30,15 +29,9 @@ function describe(a: Earlier) {
 /** Two answers, each a full-height row. */
 function Choice({ name, value, onChange, options }: { name: string; value: string; onChange: (v: string) => void; options: { value: string; label: string; hint: string }[] }) {
   return (
-    <RadioGroup value={value} onValueChange={onChange} className="gap-1" name={name}>
+    <RadioGroup value={value} onValueChange={onChange} className="gap-2" name={name}>
       {options.map((o) => (
-        <div key={o.value} className="flex min-h-11 items-start gap-3 py-1">
-          <RadioGroupItem id={`${name}-${o.value}`} value={o.value} />
-          <Label htmlFor={`${name}-${o.value}`} className="block font-normal">
-            <span className="block font-medium">{o.label}</span>
-            <span className="block text-sm text-ui-muted-foreground">{o.hint}</span>
-          </Label>
-        </div>
+        <ChoiceRow key={o.value} type="radio" id={`${name}-${o.value}`} value={o.value} title={o.label} hint={o.hint} />
       ))}
     </RadioGroup>
   );
@@ -55,9 +48,8 @@ function UntilFields({ id, earliest, canBeUnknown, defaultDay }: { id: string; e
         <Input id={`${id}-until`} name="lastDay" type="date" min={earliest} required={!unknown} disabled={unknown} defaultValue={defaultDay ?? earliest} className="min-h-11" />
       </Field>
       {canBeUnknown ? (
-        <div className="flex min-h-11 items-center gap-3">
-          <Checkbox id={`${id}-unknown`} checked={unknown} onCheckedChange={(v) => setUnknown(v === true)} />
-          <Label htmlFor={`${id}-unknown`} className="font-normal">Return not known yet</Label>
+        <div>
+          <ChoiceRow type="checkbox" id={`${id}-unknown`} title="Return not known yet" checked={unknown} onCheckedChange={(v) => setUnknown(v === true)} />
           {unknown ? <input type="hidden" name="unknown" value="1" /> : null}
         </div>
       ) : null}
@@ -66,7 +58,7 @@ function UntilFields({ id, earliest, canBeUnknown, defaultDay }: { id: string; e
 }
 
 const noteField = (id: string) => (
-  <Field label="Note (optional)" htmlFor={id} hint="For example, when they will call again. Never medical details."><Input id={id} name="note" maxLength={200} className="min-h-11" /></Field>
+  <Field label="Note" htmlFor={id} optional hint="For example, when they will call again. Never medical details."><Input id={id} name="note" maxLength={200} className="min-h-11" /></Field>
 );
 const untilOf = (formData: FormData) => (formData.get("unknown") ? "" : String(formData.get("lastDay") ?? ""));
 
@@ -155,7 +147,7 @@ export function ReportAbsence({ people, today }: { people: Person[]; today: stri
               {ABSENCE_REASONS.map((r) => <NativeSelectOption key={r} value={r}>{ABSENCE_REASON_META[r].label}</NativeSelectOption>)}
             </NativeSelect>
           </Field>
-          <Field label="Last day off" htmlFor="absence-last" hint="Leave empty if you don't know yet."><Input id="absence-last" name="lastDay" type="date" min={firstDay} className="min-h-11" /></Field>
+          <Field label="Last day off" htmlFor="absence-last" optional hint="Leave it empty if you don't know yet."><Input id="absence-last" name="lastDay" type="date" min={firstDay} className="min-h-11" /></Field>
         </>
       )}
       {noteField("absence-note")}
@@ -247,7 +239,7 @@ export function ReturnToWork({ id, name, reason, firstDay, lastDay, today }: { i
           ]} />
         </fieldset>
       ) : null}
-      <Field label="Note (optional)" htmlFor={`return-text-${id}`} hint="How they are and any support agreed. Never medical details.">
+      <Field label="Note" htmlFor={`return-text-${id}`} optional hint="How they are and any support agreed. Never medical details.">
         <Textarea id={`return-text-${id}`} name="note" maxLength={500} rows={3} />
       </Field>
     </FormDialog>

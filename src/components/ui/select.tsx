@@ -10,7 +10,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/shadcn/select";
-import { FieldFrame } from "./field-frame";
+import { FieldFrame, fieldHintId } from "./field-frame";
 import { useFieldFeedback } from "./form-feedback";
 
 export type SelectOption = {
@@ -19,7 +19,8 @@ export type SelectOption = {
   description?: string;
   disabled?: boolean;
 };
-export type SelectGroup = { title: string; options: SelectOption[] };
+/** `id` is a stable key (a record id): two groups may share a title. */
+export type SelectGroup = { id: string; title: string; options: SelectOption[] };
 // Radix reserves an empty value for the placeholder. Empty options still post "".
 const EMPTY = "__swimly_empty_option__";
 
@@ -28,6 +29,7 @@ export function Select({
   name,
   label,
   description,
+  optional,
   options,
   value,
   defaultValue,
@@ -41,6 +43,8 @@ export function Select({
   name?: string;
   label?: string;
   description?: string;
+  /** Shows "Optional" in the caption under the label. */
+  optional?: boolean;
   options: SelectOption[] | SelectGroup[];
   value?: string;
   defaultValue?: string;
@@ -93,9 +97,9 @@ export function Select({
       id={id}
       label={label}
       description={description}
+      optional={optional}
       className={className}
-      error={feedback.error}
-      required={required}
+      error={feedback.error ?? (invalid ? "Choose an option." : undefined)}
     >
       <input
         ref={input}
@@ -131,7 +135,7 @@ export function Select({
             aria-invalid={invalid || !!feedback.error || undefined}
             aria-describedby={
               [
-                description ? `${id}-hint` : null,
+                fieldHintId(id, optional, description),
                 invalid || feedback.error ? `${id}-error` : null,
               ]
                 .filter(Boolean)
@@ -143,7 +147,7 @@ export function Select({
           <SelectContent>
             {options.map((option) =>
               "options" in option ? (
-                <Group key={option.title}>
+                <Group key={option.id}>
                   <SelectLabel>{option.title}</SelectLabel>
                   {option.options.map(item)}
                 </Group>
@@ -153,15 +157,6 @@ export function Select({
             )}
           </SelectContent>
         </ShadcnSelect>
-        {invalid && !feedback.error ? (
-          <p
-            id={`${id}-error`}
-            role="alert"
-            className="mt-2 text-sm text-ui-destructive"
-          >
-            Choose an option.
-          </p>
-        ) : null}
       </div>
     </FieldFrame>
   );

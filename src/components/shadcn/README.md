@@ -11,6 +11,9 @@ Local adaptations:
   components. The CLI's `cn` import must resolve to `@/lib/utils`.
 - `cn` uses the app's existing `@/lib/utils` helper.
 - Table accepts `containerClassName` so Today can own one scroll region.
+  TableHead is 600 (`font-semibold`), never the browser's 700.
+- ItemTitle is the row name (14px/600) and ItemDescription its caption (12px,
+  muted, no line clamp), matching the v2 row; use the pair instead of ad hoc divs.
 - CommandDialog keeps its accessible title inside DialogContent and forwards
   `shouldFilter` for server-filtered swimmer search.
 - Sonner uses the existing cookie-backed theme context and shadcn tokens.

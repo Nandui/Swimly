@@ -13,7 +13,7 @@ import {
   DialogTitle,
 } from "@/components/shadcn/dialog";
 import { Notice } from "@/components/ui-kit/notice";
-import { FieldFrame } from "@/components/ui/field-frame";
+import { FieldFrame, fieldHintId } from "@/components/ui/field-frame";
 import { cn } from "@/lib/utils";
 import styles from "./form-dialog.module.css";
 import type {
@@ -332,15 +332,18 @@ export function Field({
   label,
   htmlFor,
   hint,
+  optional,
   children,
 }: {
   label: string;
   htmlFor: string;
   hint?: string;
+  /** Shows "Optional" in the caption under the label; required fields stay unmarked. */
+  optional?: boolean;
   children: React.ReactNode;
 }) {
   if (
-    React.isValidElement<{ label?: string; description?: string; id?: string }>(
+    React.isValidElement<{ label?: string; description?: string; optional?: boolean; id?: string }>(
       children,
     ) &&
     LABELLED.has(children.type as React.ElementType)
@@ -348,13 +351,25 @@ export function Field({
     return React.cloneElement(children, {
       label,
       description: hint,
+      optional,
       id: children.props.id ?? htmlFor,
     });
   }
 
+  // Any other control: describe it by the caption when it is the labelled element.
+  const hintId = fieldHintId(htmlFor, optional, hint);
+  const control =
+    hintId &&
+    React.isValidElement<{ id?: string; "aria-describedby"?: string }>(children) &&
+    children.props.id === htmlFor
+      ? React.cloneElement(children, {
+          "aria-describedby":
+            [children.props["aria-describedby"], hintId].filter(Boolean).join(" "),
+        })
+      : children;
   return (
-    <FieldFrame label={label} id={htmlFor} description={hint}>
-      {children}
+    <FieldFrame label={label} id={htmlFor} description={hint} optional={optional}>
+      {control}
     </FieldFrame>
   );
 }

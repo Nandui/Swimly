@@ -1,6 +1,6 @@
 'use client';
 import { Card } from '@/components/shadcn/card';
-import { Input } from '@/components/shadcn/input';
+import { SearchField } from '@/components/ui-kit/search-field';
 import { Label } from '@/components/shadcn/label';
 import { NativeSelect, NativeSelectOption } from '@/components/shadcn/native-select';
 import Link from 'next/link';
@@ -9,7 +9,6 @@ import {
   ArrowRight,
   Clock3,
   FilePenLine,
-  Search,
   ClipboardCheck,
   Plus,
 } from 'lucide-react';
@@ -17,11 +16,14 @@ import {
   formatDate,
   canWrite,
   overdue,
+  DOC_STATUS_META,
+  type DocStatus,
   type Workspace,
   type Draft,
   type DocumentType,
 } from '@/lib/docs/types';
-import { PageHeading, DocIcon, Badge, EmptyState } from './ui';
+import { Tag } from '@/components/ui-kit/tag';
+import { PageHeading, DocIcon, EmptyState } from './ui';
 import { Button } from '@/components/shadcn/button';
 
 export function WorkView({ workspace: w, drafts }: { workspace: Workspace; drafts: Draft[] }) {
@@ -103,8 +105,7 @@ export function WorkView({ workspace: w, drafts }: { workspace: Workspace; draft
     type: DocumentType;
     href: string;
     detail: string;
-    status: string;
-    tone: string;
+    status: DocStatus;
     feedback?: string;
   };
   let items: Item[];
@@ -116,8 +117,7 @@ export function WorkView({ workspace: w, drafts }: { workspace: Workspace; draft
       type: d.content.type,
       href: `/docs/documents/${d.id}`,
       detail: `Review due ${formatDate(d.content.reviewDate)}`,
-      status: overdue(d.content.reviewDate) ? 'Overdue' : 'Upcoming',
-      tone: overdue(d.content.reviewDate) ? 'red' : 'amber',
+      status: overdue(d.content.reviewDate) ? 'overdue' : 'reviewDue',
     }));
   } else {
     items = (queue.id === 'reviews' ? review : editing).map((d) => ({
@@ -132,11 +132,10 @@ export function WorkView({ workspace: w, drafts }: { workspace: Workspace; draft
       detail: `Updated ${formatDate(d.updatedAt)}`,
       status:
         d.status === 'changes_requested'
-          ? 'Changes requested'
+          ? 'changesRequested'
           : d.status === 'in_review'
-            ? 'For your review'
-            : 'Draft',
-      tone: d.status === 'changes_requested' ? 'amber' : 'blue',
+            ? 'forYourReview'
+            : 'draft',
       feedback: d.feedback,
     }));
   }
@@ -182,29 +181,23 @@ export function WorkView({ workspace: w, drafts }: { workspace: Workspace; draft
                 <h2 id="queue-heading">{queue.label}</h2>
                 <p>{queue.description}</p>
               </div>
-              <Badge>{queue.count}</Badge>
+              <p className="text-sm text-ui-muted-foreground tabular-nums">
+                {queue.count} {queue.count === 1 ? 'document' : 'documents'}
+              </p>
             </header>
             <div className="task-filters">
               <form
                 action="/docs/work"
-                className="library-search"
                 role="search"
                 aria-label="Search this work queue"
               >
-                <Search size={17} aria-hidden="true" />
-                <Input
-                  key={search}
-                  name="q"
-                  type="search"
+                <SearchField
+                  label={`Search ${queue.label.toLowerCase()}`}
                   defaultValue={search}
-                  aria-label="Search this work queue"
-                  placeholder="Search title or reference…"
+                  placeholder="Title or reference"
                 />
                 <input type="hidden" name="view" value={queue.id} />
                 {facility && <input type="hidden" name="facility" value={facility} />}
-                <Button variant="ghost" size="icon" type="submit" aria-label="Search queue">
-                  <ArrowRight size={16} aria-hidden="true" />
-                </Button>
               </form>
               <Label>
                 <span className="sr-only">Filter work by facility</span>
@@ -240,7 +233,7 @@ export function WorkView({ workspace: w, drafts }: { workspace: Workspace; draft
                           <p className="task-feedback">Reviewer feedback: {item.feedback}</p>
                         )}
                       </div>
-                      <Badge tone={item.tone}>{item.status}</Badge>
+                      <Tag meta={DOC_STATUS_META[item.status]} />
                       <ArrowRight size={17} aria-hidden="true" />
                     </Link>
                   </li>

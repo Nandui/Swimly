@@ -1,16 +1,23 @@
+import { CircleCheck, CircleDot, Clock3, TriangleAlert, XCircle } from "lucide-react";
 import type { StatusMeta } from "@/lib/status";
 
-/** Training status tones come from here, never from a call site. Each state
- *  also has its own icon in `TrainingStatusTag`, so colour is never the only
- *  signal. `overdue` is derived: an assigned course past its due date. */
+/** Training status tone and icon come from here, never from a call site.
+ *  `overdue` is derived: an assigned course past its due date. */
 export const TRAINING_STATUS_META = {
-  assigned: { label: "To do", color: "blue" },
-  overdue: { label: "Overdue", color: "red" },
-  submitted: { label: "Awaiting sign-off", color: "orange" },
-  completed: { label: "Completed", color: "green" },
-  cancelled: { label: "Cancelled", color: "gray" },
+  assigned: { label: "To do", color: "blue", icon: CircleDot },
+  overdue: { label: "Overdue", color: "red", icon: TriangleAlert },
+  submitted: { label: "Awaiting sign-off", color: "orange", icon: Clock3 },
+  completed: { label: "Completed", color: "green", icon: CircleCheck },
+  cancelled: { label: "Cancelled", color: "gray", icon: XCircle },
 } as const satisfies Record<string, StatusMeta>;
 export type TrainingState = keyof typeof TRAINING_STATUS_META;
+
+/** A certificate staff uploaded in Turnfin Me, on its way to their record. */
+export const CERTIFICATE_STATUS_META = {
+  PENDING: { label: "Waiting to be checked", color: "orange", icon: Clock3 },
+  VERIFIED: { label: "Recorded", color: "green", icon: CircleCheck },
+  DECLINED: { label: "Declined", color: "gray", icon: XCircle },
+} as const satisfies Record<string, StatusMeta>;
 
 export const TRAINING_STATUSES = ["ASSIGNED", "SUBMITTED", "COMPLETED", "CANCELLED"] as const;
 export type TrainingStatus = (typeof TRAINING_STATUSES)[number];

@@ -12,7 +12,6 @@ import {
   AlertCircle,
 } from 'lucide-react';
 import type { DocumentType, Member } from '@/lib/docs/types';
-import { Badge as StatusBadge } from '@/components/shadcn/badge';
 import { Avatar as ProfileAvatar, AvatarFallback, initials } from '@/components/shadcn/avatar';
 import { Alert, AlertDescription } from '@/components/shadcn/alert';
 import { Empty, EmptyHeader, EmptyMedia, EmptyTitle, EmptyDescription } from '@/components/shadcn/empty';
@@ -30,23 +29,6 @@ export function DocIcon({ type, size = 20 }: { type: DocumentType; size?: number
     <span className={`doc-icon type-${type.toLowerCase().replaceAll(' ', '-')}`}>
       <Icon size={size} strokeWidth={1.7} aria-hidden="true" />
     </span>
-  );
-}
-export function Badge({
-  children,
-  tone = 'neutral',
-}: {
-  children: React.ReactNode;
-  tone?: string;
-}) {
-  return (
-    <StatusBadge
-      variant="secondary"
-      className={`badge ${tone}`}
-      data-tone={tone === 'amber' ? 'yellow' : tone}
-    >
-      {children}
-    </StatusBadge>
   );
 }
 /** A staff member's neutral avatar: 32px inline, `size="lg"` (40px) in rows. */

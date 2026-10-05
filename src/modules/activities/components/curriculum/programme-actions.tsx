@@ -55,7 +55,8 @@ function ProgrammeFields({ programme }: { programme?: Programme }) {
       <Field
         label="Description"
         htmlFor="description"
-        hint="Optional — one line is plenty."
+        optional
+        hint="One line is plenty."
       >
         <Textarea
           id="description"

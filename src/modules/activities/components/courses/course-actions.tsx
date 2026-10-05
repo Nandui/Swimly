@@ -63,7 +63,8 @@ function CourseFields({
           defaultValue={course?.levelId}
           required
           placeholder="Pick a level"
-          options={[...byProgramme.values()].map((group) => ({
+          options={[...byProgramme.entries()].map(([programmeId, group]) => ({
+            id: programmeId,
             title: group.name,
             options: group.levels.map((level) => ({
               value: level.id,
@@ -76,7 +77,8 @@ function CourseFields({
       <Field
         label="Name"
         htmlFor="name"
-        hint="Optional — most schools just call it by the level."
+        optional
+        hint="Most schools just call it by the level."
       >
         <Input
           id="name"
@@ -119,7 +121,7 @@ function CourseFields({
             defaultValue={course?.durationMinutes ?? 30}
           />
         </Field>
-        <Field label="Capacity" htmlFor="capacity" hint="Leave blank for no limit.">
+        <Field label="Capacity" htmlFor="capacity" optional hint="Leave blank for no limit.">
           <Input
             id="capacity"
             name="capacity"
@@ -150,7 +152,8 @@ function CourseFields({
       <Field
         label="Where"
         htmlFor="location"
-        hint="Optional — the pool, or the lane."
+        optional
+        hint="The pool, or the lane."
       >
         <Input
           id="location"

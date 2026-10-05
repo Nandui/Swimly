@@ -2,12 +2,12 @@
 
 import { Label } from '@/components/shadcn/label';
 import { NativeSelect, NativeSelectOption } from '@/components/shadcn/native-select';
-import { Input } from '@/components/shadcn/input';
+import { SearchField } from '@/components/ui-kit/search-field';
 import { Card } from '@/components/shadcn/card';
 import Link from 'next/link';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { useTransition } from 'react';
-import { Archive, ArrowRight, Plus, Search, X } from 'lucide-react';
+import { Archive, Plus, X } from 'lucide-react';
 import {
   canWrite,
   documentTypes,
@@ -137,17 +137,12 @@ export function LibraryView({
       <div className="library-filter-bar">
         <form
           action="/docs/library"
-          className="library-search"
           role="search"
           aria-label="Search document library"
         >
-          <Search size={18} aria-hidden="true" />
-          <Input
-            key={query}
-            type="search"
-            name="q"
-            aria-label="Search document library"
-            placeholder="Search title, reference or content…"
+          <SearchField
+            label="Search documents"
+            placeholder="Title, reference or content"
             defaultValue={query}
           />
           {type && <input type="hidden" name="type" value={type} />}
@@ -155,9 +150,6 @@ export function LibraryView({
           {team && <input type="hidden" name="team" value={team} />}
           {archived && <input type="hidden" name="archived" value="true" />}
           {sort === 'title' && <input type="hidden" name="sort" value={sort} />}
-          <Button type="submit" variant="ghost" size="icon" aria-label="Submit document search">
-            <ArrowRight size={17} aria-hidden="true" />
-          </Button>
         </form>
         <Label>
           <span className="sr-only">Facility</span>

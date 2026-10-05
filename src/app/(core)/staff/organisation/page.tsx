@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import { Item, ItemActions, ItemContent, ItemGroup } from "@/components/shadcn/item";
+import { Item, ItemActions, ItemContent, ItemDescription, ItemGroup, ItemTitle } from "@/components/shadcn/item";
 import { BackLink } from "@/components/ui-kit/back-link";
 import { EmptyState } from "@/components/ui-kit/empty-state";
 import { PageHeader } from "@/components/ui-kit/page-header";
@@ -43,13 +43,13 @@ export default async function OrganisationPage() {
             {departments.map((department) => (
               <Item key={department.id} role="listitem" className="items-start">
                 <ItemContent className="min-w-0">
-                  <div className="min-w-0 flex gap-2 items-center flex-wrap">
-                    <span className="text-sm text-ui-foreground font-medium">{department.name}</span>
-                    {department.archivedAt ? <Tag color={ARCHIVAL_STATUS_META.archived.color}>{ARCHIVAL_STATUS_META.archived.label}</Tag> : null}
-                  </div>
-                  <div className="text-sm text-ui-muted-foreground">
+                  <ItemTitle className="min-w-0 flex-wrap">
+                    <span>{department.name}</span>
+                    {department.archivedAt ? <Tag meta={ARCHIVAL_STATUS_META.archived} /> : null}
+                  </ItemTitle>
+                  <ItemDescription>
                     {department.club?.name ?? "Every site"} · {department._count.members} {department._count.members === 1 ? "person" : "people"}
-                  </div>
+                  </ItemDescription>
                 </ItemContent>
                 <ItemActions>
                   <div className="min-w-0 flex gap-1 items-center">
@@ -76,13 +76,13 @@ export default async function OrganisationPage() {
           {qualificationTypes.map((type) => (
             <Item key={type.id} role="listitem" className="items-start">
               <ItemContent className="min-w-0">
-                <div className="min-w-0 flex gap-2 items-center flex-wrap">
-                  <span className="text-sm text-ui-foreground font-medium">{type.name}</span>
-                  {type.archivedAt ? <Tag color={ARCHIVAL_STATUS_META.archived.color}>{ARCHIVAL_STATUS_META.archived.label}</Tag> : null}
-                </div>
-                <div className="text-sm text-ui-muted-foreground">
+                <ItemTitle className="min-w-0 flex-wrap">
+                  <span>{type.name}</span>
+                  {type.archivedAt ? <Tag meta={ARCHIVAL_STATUS_META.archived} /> : null}
+                </ItemTitle>
+                <ItemDescription>
                   {type.validityMonths ? `Usually valid for ${type.validityMonths} months` : "Does not expire"} · {type._count.qualifications} held
-                </div>
+                </ItemDescription>
               </ItemContent>
               <ItemActions>
                 <div className="min-w-0 flex gap-1 items-center">

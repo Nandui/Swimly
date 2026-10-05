@@ -53,13 +53,13 @@ export function ActivityDialog({ siteId, date, activity, types, names, trigger }
         <Field label="To" htmlFor={`${id}-end`}><Input id={`${id}-end`} name="end" type="time" required defaultValue={clock(activity?.end ?? 1290)} className="min-h-11" /></Field>
         <Field label="People at once" htmlFor={`${id}-people`}><Input id={`${id}-people`} name="people" type="number" min={1} max={20} required defaultValue={activity?.people ?? 1} className="min-h-11" /></Field>
       </div>
-      <Field label="Needs a qualification (optional)" htmlFor={`${id}-type`}>
+      <Field label="Needs a qualification" htmlFor={`${id}-type`} optional>
         <NativeSelect id={`${id}-type`} name="requiredTypeId" defaultValue={activity?.requiredTypeId ?? ""} className="min-h-11 w-full">
           <NativeSelectOption value="">None</NativeSelectOption>
           {types.map((t) => <NativeSelectOption key={t.id} value={t.id}>{t.name}</NativeSelectOption>)}
         </NativeSelect>
       </Field>
-      <Field label="Note (optional)" htmlFor={`${id}-note`}><Input id={`${id}-note`} name="note" maxLength={200} defaultValue={activity?.note} className="min-h-11" /></Field>
+      <Field label="Note" htmlFor={`${id}-note`} optional><Input id={`${id}-note`} name="note" maxLength={200} defaultValue={activity?.note} className="min-h-11" /></Field>
       {activity ? null : (
         <div className="flex min-h-11 items-center gap-3">
           <Checkbox id={`${id}-week`} name="restOfWeek" />

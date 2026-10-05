@@ -27,30 +27,33 @@ export function Switch({
         className,
       )}
     >
-      {label ? (
-        <Label
-          htmlFor={id}
-          className="min-h-11 min-w-0 flex-1 cursor-pointer flex-col items-start justify-center gap-1"
-        >
-          <span>{label}</span>
+      {label || description ? (
+        <div className="flex min-h-11 min-w-0 flex-1 flex-col justify-center gap-1">
+          {label ? (
+            <Label htmlFor={id} className="cursor-pointer">
+              {label}
+            </Label>
+          ) : null}
           {description ? (
-            <span
+            <p
               id={`${id}-hint`}
-              className="text-sm font-normal text-ui-muted-foreground"
+              data-slot="field-description"
+              className="text-xs font-normal text-ui-muted-foreground"
             >
               {description}
-            </span>
+            </p>
           ) : null}
-        </Label>
+        </div>
       ) : null}
+      {/* The name comes from `label` (or an explicit aria-label, or an outside htmlFor
+          label), never from the form field name. */}
       <ShadcnSwitch
         {...props}
         id={id}
-        aria-label={
-          props["aria-label"] ?? (label ? undefined : (props.name ?? "Setting"))
-        }
         aria-describedby={
-          description ? `${id}-hint` : props["aria-describedby"]
+          [props["aria-describedby"], description ? `${id}-hint` : null]
+            .filter(Boolean)
+            .join(" ") || undefined
         }
       />
     </div>

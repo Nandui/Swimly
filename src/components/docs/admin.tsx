@@ -26,9 +26,11 @@ import {
   type AuditEvent,
   type Template,
   formatDate,
+  DOC_STATUS_META,
 } from '@/lib/docs/types';
 import { RichEditor } from './rich-editor';
-import { PageHeading, Avatar, Badge, Message } from './ui';
+import { PageHeading, Avatar, Message } from './ui';
+import { Tag } from '@/components/ui-kit/tag';
 export type MailItem = {
   id: string;
   recipient: string;
@@ -154,7 +156,9 @@ export function AdminView({
                     <h2>Staff directory</h2>
                     <p>Everyone has their own account and a clear role.</p>
                   </div>
-                  <Badge>{w.members.filter((m) => m.active).length} active staff</Badge>
+                  <p className="text-sm text-ui-muted-foreground tabular-nums">
+                    {w.members.filter((m) => m.active).length} active staff
+                  </p>
                 </div>
                 <div className="staff-directory-filters">
                   <Label>
@@ -208,7 +212,7 @@ export function AdminView({
                             </span>
                           </TableCell>
                           <TableCell>
-                            <Badge>{m.role}</Badge>
+                            {m.role}
                           </TableCell>
                           <TableCell>
                             {m.teamIds
@@ -221,9 +225,7 @@ export function AdminView({
                               .join(', ') || '—'}
                           </TableCell>
                           <TableCell>
-                            <Badge tone={m.active ? 'green' : 'neutral'}>
-                              {m.active ? 'Active' : 'Inactive'}
-                            </Badge>
+                            <Tag meta={DOC_STATUS_META[m.active ? 'active' : 'inactive']} />
                           </TableCell>
                           <TableCell>
                             <Button
@@ -256,10 +258,8 @@ export function AdminView({
                         </div>
                       </div>
                       <div className="staff-mobile-badges">
-                        <Badge>{member.role}</Badge>
-                        <Badge tone={member.active ? 'green' : 'neutral'}>
-                          {member.active ? 'Active' : 'Inactive'}
-                        </Badge>
+                        <span className="text-sm">{member.role}</span>
+                        <Tag meta={DOC_STATUS_META[member.active ? 'active' : 'inactive']} />
                       </div>
                       <p>
                         {member.facilityIds
@@ -437,9 +437,7 @@ export function AdminView({
                       retain their original matrix.
                     </p>
                   </div>
-                  <Badge tone={w.matrix.configured ? 'green' : 'amber'}>
-                    {w.matrix.configured ? 'Configured' : 'Setup required'}
-                  </Badge>
+                  <Tag meta={DOC_STATUS_META[w.matrix.configured ? 'configured' : 'setupRequired']} />
                 </div>
                 {w.localMode && (
                   <Alert role="status" className="notice warning">

@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { Button } from "@/components/shadcn/button";
-import { Badge } from "@/components/shadcn/badge";
+import { Tag } from "@/components/ui-kit/tag";
 import { Input } from "@/components/ui/input";
 import { EmptyState } from "@/components/ui-kit/empty-state";
 import { PARENT_ACCESS_META, parentDateTime, saveParentAdmin, type GuardianAccess } from "@/modules/activities/lib/parent/admin-client";
@@ -33,7 +33,7 @@ export function GuardianAccessPanel({ studentId, swimmerName }: { studentId: str
             <div className="min-w-0 flex-1 space-y-2">
               <p className="break-all text-sm font-medium">{item.parentEmail}</p>
               <div className="flex flex-wrap items-center gap-2">
-                <Badge variant="secondary" data-tone={meta.color}>{meta.label}</Badge>
+                <Tag meta={meta} />
                 <span className="text-xs text-ui-muted-foreground">Updated {parentDateTime(item.updatedAt)}</span>
               </div>
             </div>

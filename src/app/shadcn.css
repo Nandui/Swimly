@@ -44,10 +44,6 @@
   --ui-status-yellow-bg: light-dark(oklch(0.96 0.04 85), oklch(0.28 0.04 85));
   --ui-status-purple: light-dark(oklch(0.4 0.12 300), oklch(0.85 0.08 300));
   --ui-status-purple-bg: light-dark(oklch(0.96 0.02 300), oklch(0.28 0.04 300));
-  --ui-status-pink: light-dark(oklch(0.4 0.12 350), oklch(0.85 0.08 350));
-  --ui-status-pink-bg: light-dark(oklch(0.96 0.02 350), oklch(0.28 0.04 350));
-  --ui-status-brown: light-dark(oklch(0.4 0.07 65), oklch(0.85 0.06 65));
-  --ui-status-brown-bg: light-dark(oklch(0.96 0.02 65), oklch(0.28 0.03 65));
   --ui-radius: 0.625rem;
 }
 
@@ -129,21 +125,9 @@
   color: var(--ui-status-orange);
   background: var(--ui-status-orange-bg);
 }
-[data-slot="badge"][data-tone="yellow"] {
-  color: var(--ui-status-yellow);
-  background: var(--ui-status-yellow-bg);
-}
 [data-slot="badge"][data-tone="purple"] {
   color: var(--ui-status-purple);
   background: var(--ui-status-purple-bg);
-}
-[data-slot="badge"][data-tone="pink"] {
-  color: var(--ui-status-pink);
-  background: var(--ui-status-pink-bg);
-}
-[data-slot="badge"][data-tone="brown"] {
-  color: var(--ui-status-brown);
-  background: var(--ui-status-brown-bg);
 }
 
 /* Selection is branded; general hover surfaces and domain status tones stay neutral/semantic. */

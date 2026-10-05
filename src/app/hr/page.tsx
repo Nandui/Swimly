@@ -4,7 +4,8 @@ import { ArrowRight, Search, Users } from "lucide-react";
 import { Button } from "@/components/shadcn/button";
 import { Input } from "@/components/shadcn/input";
 import { Label } from "@/components/shadcn/label";
-import { ReviewStatusTag } from "@/components/hr/status";
+import { Tag } from "@/components/ui-kit/tag";
+import { REVIEW_STATUS_META } from "@/lib/hr/constants";
 import { hrPeople } from "@/lib/hr/records";
 import { requireFreshSession } from "@/lib/policy/session";
 
@@ -39,7 +40,7 @@ export default async function HrPeoplePage({ searchParams }: { searchParams: Pro
                     <p className="module-row-title">{p.name}</p>
                     <p className="text-sm text-ui-muted-foreground">{p.jobTitle || "No job title"}{p.latestReview ? ` · latest review: ${p.latestReview.period}` : ""}</p>
                   </div>
-                  <div className="flex items-center gap-3">{p.latestReview ? <ReviewStatusTag status={p.latestReview.status} /> : null}<ArrowRight className="module-row-arrow size-5" aria-hidden="true" /></div>
+                  <div className="flex items-center gap-3">{p.latestReview ? <Tag meta={REVIEW_STATUS_META[p.latestReview.status]} /> : null}<ArrowRight className="module-row-arrow size-5" aria-hidden="true" /></div>
                 </Link>
               </li>
             ))}

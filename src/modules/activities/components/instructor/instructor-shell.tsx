@@ -80,7 +80,7 @@ export function InstructorShell({
           id={SHELL_PAGE_ID}
           className="min-h-0 flex-1 overflow-y-auto overscroll-contain px-4 pt-6 pb-4"
         >
-          <div className="mx-auto w-full min-w-0 max-w-6xl">{children}</div>
+          <div className="tf-content mx-auto w-full min-w-0 max-w-6xl">{children}</div>
         </div>
       </main>
     </div>

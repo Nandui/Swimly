@@ -1,6 +1,8 @@
 import "server-only";
+import { CircleCheck, Clock3, XCircle } from "lucide-react";
 import { requirePermission } from "@/lib/authz";
 import { prisma } from "@/lib/prisma";
+import type { StatusMeta } from "@/lib/status";
 
 /** Staff's own contact and emergency details as they asked to change them in
  *  Turnfin Me, beside what is on their record now. Needs `staff.manage`. */
@@ -15,10 +17,10 @@ export type DetailField = keyof typeof DETAIL_LABELS;
 export const DETAIL_FIELDS = Object.keys(DETAIL_LABELS) as DetailField[];
 
 export const DETAIL_REQUEST_STATUS_META = {
-  PENDING: { label: "Waiting for review", color: "orange" },
-  APPLIED: { label: "Applied", color: "green" },
-  DECLINED: { label: "Declined", color: "gray" },
-} as const;
+  PENDING: { label: "Waiting for review", color: "orange", icon: Clock3 },
+  APPLIED: { label: "Applied", color: "green", icon: CircleCheck },
+  DECLINED: { label: "Declined", color: "gray", icon: XCircle },
+} as const satisfies Record<string, StatusMeta>;
 
 export async function listDetailRequests(view: "PENDING" | "DONE" = "PENDING") {
   const session = await requirePermission("staff.manage");

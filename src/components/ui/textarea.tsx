@@ -2,7 +2,7 @@
 
 import * as React from "react";
 import { Textarea as ShadcnTextarea } from "@/components/shadcn/textarea";
-import { FieldFrame } from "./field-frame";
+import { FieldFrame, fieldHintId } from "./field-frame";
 import { useFieldFeedback } from "./form-feedback";
 
 export type TextareaProps = Omit<
@@ -11,6 +11,8 @@ export type TextareaProps = Omit<
 > & {
   label?: string;
   description?: string;
+  /** Shows "Optional" in the caption under the label. */
+  optional?: boolean;
   value?: string;
   defaultValue?: string | null;
 };
@@ -19,6 +21,7 @@ export function Textarea({
   id: suppliedId,
   label,
   description,
+  optional,
   className,
   value,
   defaultValue,
@@ -33,9 +36,9 @@ export function Textarea({
       id={id}
       label={label}
       description={description}
+      optional={optional}
       className={className}
       error={feedback.error}
-      required={props.required}
     >
       <ShadcnTextarea
         {...props}
@@ -53,7 +56,7 @@ export function Textarea({
           (label ? undefined : (props.placeholder ?? props.name ?? "Field"))
         }
         aria-describedby={
-          [props["aria-describedby"], description ? `${id}-hint` : null, feedback.error ? `${id}-error` : null]
+          [props["aria-describedby"], fieldHintId(id, optional, description), feedback.error ? `${id}-error` : null]
             .filter(Boolean)
             .join(" ") || undefined
         }

@@ -3,9 +3,9 @@
 import { useState } from "react";
 import { Archive, ArchiveRestore, Check, Pencil, Plus, RotateCcw, UserPlus, X } from "lucide-react";
 import { Button } from "@/components/shadcn/button";
-import { Checkbox } from "@/components/shadcn/checkbox";
-import { Label } from "@/components/shadcn/label";
 import { Field, FormDialog } from "@/components/form-dialog";
+import { ChoiceRow } from "@/components/ui/choice-row";
+import { SearchField } from "@/components/ui-kit/search-field";
 import { Input } from "@/components/ui/input";
 import { NativeSelect, NativeSelectOption } from "@/components/shadcn/native-select";
 import { Switch } from "@/components/ui/switch";
@@ -53,7 +53,7 @@ export function AssignTraining({ courses, people, courseId, userIds, label = "As
           {courses.map((c) => <NativeSelectOption key={c.id} value={c.id}>{c.title}</NativeSelectOption>)}
         </NativeSelect>
       </Field>
-      <Field label="Due by (optional)" htmlFor="assign-due">
+      <Field label="Due by" htmlFor="assign-due" optional>
         <Input id="assign-due" name="dueOn" type="date" min={today()} />
       </Field>
       {fixed ? (
@@ -70,12 +70,18 @@ export function AssignTraining({ courses, people, courseId, userIds, label = "As
               ))}
             </div>
           ) : null}
-          <Input aria-label="Filter people" placeholder="Filter by name or job title" value={filter} onChange={(value) => setFilter(value)} />
-          <ul className="max-h-64 space-y-1 overflow-y-auto">
+          <SearchField label="Filter people" labelHidden placeholder="Name or job title" value={filter} onValueChange={setFilter} />
+          <ul className="max-h-[min(28rem,50dvh)] space-y-2 overflow-y-auto p-1">
             {shown.map((p) => (
-              <li key={p.id} className="flex min-h-11 items-center gap-3">
-                <Checkbox id={`assign-${p.id}`} checked={chosen.has(p.id)} onCheckedChange={(on) => setChosen((prev) => { const next = new Set(prev); if (on) next.add(p.id); else next.delete(p.id); return next; })} />
-                <Label htmlFor={`assign-${p.id}`} className="font-normal">{p.name}{p.jobTitle ? <span className="text-ui-muted-foreground"> · {p.jobTitle}</span> : null}</Label>
+              <li key={p.id}>
+                <ChoiceRow
+                  type="checkbox"
+                  id={`assign-${p.id}`}
+                  title={p.name}
+                  hint={p.jobTitle ?? undefined}
+                  checked={chosen.has(p.id)}
+                  onCheckedChange={(on) => setChosen((prev) => { const next = new Set(prev); if (on) next.add(p.id); else next.delete(p.id); return next; })}
+                />
               </li>
             ))}
             {shown.length === 0 ? <li className="text-sm text-ui-muted-foreground">Nobody matches.</li> : null}
@@ -118,11 +124,8 @@ export function CourseDialog({ course, qualificationTypes }: { course?: CourseDr
       <Field label="What to do" htmlFor="course-content" hint="The material or steps. Links are fine; keep personal details out.">
         <Textarea id="course-content" name="content" defaultValue={course?.content} rows={8} maxLength={10000} />
       </Field>
-      <div className="flex min-h-11 items-center gap-3">
-        <Switch id="course-signoff" name="requiresSignoff" defaultChecked={course?.requiresSignoff} />
-        <Label htmlFor="course-signoff" className="font-normal">A trainer signs it off in person</Label>
-      </div>
-      <Field label="Records a qualification (optional)" htmlFor="course-grants" hint="On completion, the person gets this qualification, expiring after its validity.">
+      <Switch id="course-signoff" name="requiresSignoff" label="A trainer signs it off in person" defaultChecked={course?.requiresSignoff} />
+      <Field label="Records a qualification" htmlFor="course-grants" optional hint="On completion, the person gets this qualification, expiring after its validity.">
         <NativeSelect id="course-grants" name="grantsTypeId" defaultValue={course?.grantsType?.id ?? ""} className="min-h-11 w-full">
           <NativeSelectOption value="">None</NativeSelectOption>
           {qualificationTypes.map((q) => <NativeSelectOption key={q.id} value={q.id}>{q.name}{q.validityMonths ? ` (valid ${q.validityMonths} months)` : ""}</NativeSelectOption>)}
@@ -159,7 +162,7 @@ export function SignOff({ id, name, title }: { id: string; name: string; title: 
       successMessage="Signed off"
       submit={(formData) => signOffTraining(id, String(formData.get("note") ?? ""))}
     >
-      <Field label="Note (optional)" htmlFor="signoff-note" hint="Where and how you checked, for the record.">
+      <Field label="Note" htmlFor="signoff-note" optional hint="Where and how you checked, for the record.">
         <Textarea id="signoff-note" name="note" rows={3} maxLength={1000} />
       </Field>
     </FormDialog>

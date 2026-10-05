@@ -1,4 +1,4 @@
-import { ItemContent, Item, ItemGroup } from "@/components/shadcn/item";
+import { ItemContent, ItemDescription, Item, ItemGroup, ItemTitle } from "@/components/shadcn/item";
 
 import type { Metadata } from "next";
 
@@ -38,7 +38,7 @@ export default async function AccountPage() {
 
       <Lead>
         Signed in as <Num>{session.user.name}</Num> ({session.user.email}), on
-        the <Tag color={reach.color}>{session.user.roleName}</Tag> role. Only
+        the <Tag meta={reach} label={session.user.roleName} /> role. Only
         someone who can manage accounts can change your role or your email.
       </Lead>
 
@@ -60,10 +60,8 @@ export default async function AccountPage() {
                 className="[overflow-wrap:anywhere]"
               >
                 <ItemContent className="min-w-0">
-                  <div className="text-sm font-medium">{permission.label}</div>
-                  <div className="text-sm text-ui-muted-foreground">
-                    {permission.description}
-                  </div>
+                  <ItemTitle>{permission.label}</ItemTitle>
+                  <ItemDescription>{permission.description}</ItemDescription>
                 </ItemContent>
               </Item>
             ))}

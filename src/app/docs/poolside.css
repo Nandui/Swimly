@@ -231,7 +231,10 @@ body.turnfin-app { background: var(--pc-outer); }
 .turnfin-docs .owner-actions .ui-motion-press { width: 100%; height: auto; justify-content: flex-start; white-space: normal; text-align: left; }
 
 /* Filter rows wrap instead of squeezing the search field in narrow panels. */
-.turnfin-docs .task-filters { grid-template-columns: repeat(auto-fit, minmax(min(100%, 200px), 1fr)); }
+.turnfin-docs .task-filters { grid-template-columns: repeat(auto-fit, minmax(min(100%, 200px), 1fr)); align-items: end; }
+/* The shared SearchField carries a visible label, so its neighbours line up on the field. */
+.turnfin-docs .library-filter-bar { align-items: flex-end; }
+.turnfin-docs .library-filter-bar > form[role='search'] { flex: 1 1 280px; min-width: 0; max-width: 440px; }
 .turnfin-docs .staff-directory-filters { grid-template-columns: repeat(auto-fit, minmax(min(100%, 180px), 1fr)); }
 .turnfin-docs .staff-directory-filters > span { grid-column: 1 / -1; }
 .turnfin-docs .contents-panel a:hover { border-left: 0; margin-left: 0; background: var(--pc-primary-soft); color: var(--pc-primary-ink); }
@@ -276,6 +279,8 @@ body.turnfin-app { background: var(--pc-outer); }
 .turnfin-app [data-slot='badge']:has(> svg) { padding-left: 8px; }
 .turnfin-app [data-slot='badge'] > svg { width: 14px; height: 14px; stroke-width: 2.5; }
 .turnfin-app [data-slot='badge']:is(:not([data-tone]), [data-tone='gray'])[data-variant='secondary'] { background: var(--pc-neutral-soft); color: var(--pc-ink-muted); }
+/* The neutral fill is barely darker than a white panel, so the gray tag draws a hairline. */
+.turnfin-app [data-slot='badge'][data-tone='gray'] { box-shadow: inset 0 0 0 1px var(--pc-line); }
 .turnfin-app [data-slot='alert'] { border: 0; border-radius: var(--pc-radius-card); background: var(--pc-primary-soft); color: var(--pc-primary-ink); padding: 12px 16px; }
 .turnfin-app [data-slot='alert'] [data-slot='alert-title'] { font-weight: 600; }
 .turnfin-app [data-slot='alert'] [data-slot='alert-description'] { color: var(--pc-ink); }
@@ -335,7 +340,13 @@ body.turnfin-app { background: var(--pc-outer); }
    keep body weight. Field text is 16px on phones so iOS does not zoom, body size from 768px. */
 .turnfin-app :is(label, legend:not(.sr-only), [data-slot='label']):not(:has([type='checkbox'], [type='radio'], [data-slot='checkbox'], [data-slot='radio-group-item'])) { font-size: var(--pc-text-body); line-height: var(--pc-leading-body); font-weight: 600; color: var(--pc-ink); letter-spacing: 0; text-transform: none; }
 .turnfin-app label:has(> :is(input:not([type='checkbox'], [type='radio'], [type='file']), textarea, select, [data-slot='native-select-wrapper'], [data-slot='select-trigger'])) { align-items: stretch; gap: 8px; }
-.turnfin-app label:has([type='checkbox'], [type='radio'], [data-slot='checkbox'], [data-slot='radio-group-item']) { align-items: flex-start; font-size: var(--pc-text-body); line-height: var(--pc-leading-body); }
+/* Module and Refunds forms: a field label is a block, so its text sits left above the control
+   (docs.css makes every label a centred flex column). Choice labels keep their row. */
+.turnfin-app :is(.turnfin-module, .turnfin-refunds) :is(.module-content, .refund-content, [data-slot='dialog-content']) label:not(:has([type='checkbox'], [type='radio'], [data-slot='checkbox'], [data-slot='radio-group-item'])) { display: block; }
+.turnfin-app label:has([type='checkbox'], [type='radio'], [data-slot='checkbox'], [data-slot='radio-group-item']) { font-size: var(--pc-text-body); line-height: var(--pc-leading-body); }
+/* A visible box or dot lines up with the first line of a wrapping label; labelled chips whose
+   radio is hidden (the /roles level picker) keep their text centred. */
+.turnfin-app label:has(:is([data-slot='checkbox'], [data-slot='radio-group-item'], input:is([type='checkbox'], [type='radio']):not([aria-hidden='true'])):not(.sr-only)) { align-items: flex-start; }
 .turnfin-app label:has([type='checkbox'], [data-slot='checkbox']) > :is([type='checkbox'], [data-slot='checkbox']) { margin-top: 0; flex-shrink: 0; }
 /* Selectable cards (templates) read top-left like every other card, whatever their title length. */
 .turnfin-docs .template-card { align-items: flex-start; text-align: left; }
@@ -505,11 +516,26 @@ html:has(.tf-shell) { scroll-padding-bottom: 112px; }
 .turnfin-app .pc-row[data-first] :is(.pc-row-hint, .pc-row-chevron) { color: inherit; }
 .turnfin-app a.pc-row[data-first]:hover { background: var(--pc-yellow); }
 .turnfin-app .pc-row[data-muted] { color: var(--pc-ink-muted); }
+/* A choice row (ui/ChoiceRow, HRPerson): a radio or checkbox inside its label, the whole 56px
+   row the target. Beats docs.css's column label and its weight 500. */
+.turnfin-app label.pc-row { flex-direction: row; flex-wrap: nowrap; align-items: flex-start; min-height: 56px; font-weight: 400; cursor: pointer; }
+.turnfin-app label.pc-row > :is([data-slot='checkbox'], [data-slot='radio-group-item']) { margin-top: 2px; }
+.turnfin-app label.pc-row:hover { background: var(--pc-surface-sunken); }
+.turnfin-app label.pc-row:has(:focus-visible) { outline: 2px solid var(--pc-focus); outline-offset: 2px; }
+.turnfin-app label.pc-row:has([data-state='checked']) { border-color: var(--pc-primary); }
+.turnfin-app label.pc-row:has(:disabled) { cursor: not-allowed; color: var(--pc-ink-muted); }
 .turnfin-app .pc-tile-icon { display: inline-flex; flex: none; align-items: center; justify-content: center; width: 40px; height: 40px; border-radius: 999px; background: var(--pc-primary-soft); color: var(--pc-primary); }
 .turnfin-app .pc-tile-icon > svg { width: 20px; height: 20px; }
-.turnfin-app .pc-stats { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 128px), 1fr)); gap: 12px; }
+/* Figure tiles. Inside a panel: two per row, 16px tiles with a 1px line (V2System .stats). On the
+   canvas: borderless white 24px tiles that fill the row (V2Refunds, TROverview, SSAnalytics).
+   A tile that filters shows a soft fill on hover and a 2px blue edge when open (aria-current). */
+.turnfin-app .pc-stats { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; }
 .turnfin-app .pc-stat { position: relative; display: flex; flex-direction: column; align-items: flex-start; gap: 8px; min-width: 0; padding: 16px; border: 1px solid var(--pc-line); border-radius: var(--pc-radius-card); color: var(--pc-ink); text-decoration: none; }
+.turnfin-app .pc-stats:not(:is([data-slot='card'], [role='dialog'], .pc-panel) .pc-stats) { grid-template-columns: repeat(auto-fit, minmax(min(100%, 160px), 1fr)); gap: 16px; }
+.turnfin-app .pc-stats:not(:is([data-slot='card'], [role='dialog'], .pc-panel) .pc-stats) > .pc-stat, .turnfin-app .pc-stats:not(:is([data-slot='card'], [role='dialog'], .pc-panel) .pc-stats) > * > .pc-stat { padding: 24px; border-color: transparent; border-radius: var(--pc-radius-panel); background: var(--pc-surface); }
 .turnfin-app a.pc-stat:hover { background: var(--pc-surface-sunken); }
+.turnfin-app a.pc-stat[aria-current] { border-color: var(--pc-primary); box-shadow: inset 0 0 0 1px var(--pc-primary); }
+.turnfin-app .pc-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 320px), 1fr)); gap: 16px; align-items: start; min-width: 0; }
 .turnfin-app .pc-stat-figure { font-size: var(--pc-text-figure); line-height: var(--pc-leading-figure); font-weight: 700; font-variant-numeric: tabular-nums; }
 .turnfin-app .pc-stat [data-slot='badge'] { max-width: 100%; white-space: normal; }
 .turnfin-app .pc-note { display: flex; align-items: flex-start; gap: 12px; padding: 16px; border-radius: var(--pc-radius-card); background: var(--pc-surface-sunken); }
@@ -561,10 +587,14 @@ html:has(.tf-shell) { scroll-padding-bottom: 112px; }
 .turnfin-app [data-slot='table-header'] [data-slot='table-row'] { border: 0; background: none; }
 .turnfin-app [data-slot='table']:not([data-layout='grid']) [data-slot='table-head'] { height: auto; padding: 4px 16px 0; border: 0; background: none; color: var(--pc-ink-muted); font-size: var(--pc-text-caption); line-height: var(--pc-leading-caption); font-weight: 600; }
 .turnfin-app [data-slot='table-body'] [data-slot='table-row'] { border: 0; background: none; }
-.turnfin-app [data-slot='table']:not([data-layout='grid']) [data-slot='table-body'] [data-slot='table-cell'] { padding: 12px 16px; border-top: 1px solid var(--pc-line); border-bottom: 1px solid var(--pc-line); background: var(--pc-surface); vertical-align: middle; }
-.turnfin-app [data-slot='table']:not([data-layout='grid']) [data-slot='table-body'] [data-slot='table-cell']:first-child { border-left: 1px solid var(--pc-line); border-radius: var(--pc-radius-card) 0 0 var(--pc-radius-card); }
-.turnfin-app [data-slot='table']:not([data-layout='grid']) [data-slot='table-body'] [data-slot='table-cell']:last-child { border-right: 1px solid var(--pc-line); border-radius: 0 var(--pc-radius-card) var(--pc-radius-card) 0; }
-.turnfin-app [data-slot='table']:not([data-layout='grid']) [data-slot='table-body'] [data-slot='table-row']:hover [data-slot='table-cell'] { background: var(--pc-surface-sunken); }
+.turnfin-app [data-slot='table']:not([data-layout='grid']) [data-slot='table-header'] { background: none; }
+/* Body cells, row headers (th scope=row) included, make up the row card. Size, colour and weight
+   stay off td: poolside is unlayered and would beat a cell's own utilities. */
+.turnfin-app [data-slot='table']:not([data-layout='grid']) [data-slot='table-body'] :is([data-slot='table-cell'], [data-slot='table-head']) { padding: 12px 16px; border-top: 1px solid var(--pc-line); border-bottom: 1px solid var(--pc-line); background: var(--pc-surface); vertical-align: middle; }
+.turnfin-app [data-slot='table']:not([data-layout='grid']) [data-slot='table-body'] :is([data-slot='table-cell'], [data-slot='table-head']):first-child { border-left: 1px solid var(--pc-line); border-radius: var(--pc-radius-card) 0 0 var(--pc-radius-card); }
+.turnfin-app [data-slot='table']:not([data-layout='grid']) [data-slot='table-body'] :is([data-slot='table-cell'], [data-slot='table-head']):last-child { border-right: 1px solid var(--pc-line); border-radius: 0 var(--pc-radius-card) var(--pc-radius-card) 0; }
+.turnfin-app [data-slot='table']:not([data-layout='grid']) [data-slot='table-body'] [data-slot='table-row']:hover :is([data-slot='table-cell'], [data-slot='table-head']) { background: var(--pc-surface-sunken); }
+.turnfin-app [data-slot='table']:not([data-layout='grid']) [data-slot='table-body'] [data-slot='table-head'] { height: auto; text-align: left; color: var(--pc-ink); font-size: var(--pc-text-body); line-height: var(--pc-leading-body); font-weight: 400; }
 
 .turnfin-app [data-slot='tabs-list'][data-variant='default'] { flex-wrap: wrap; justify-content: flex-start; row-gap: 8px; height: auto; min-height: 44px; padding: 4px; border-radius: var(--pc-radius-panel); background: var(--pc-surface-sunken); }
 .turnfin-app [data-slot='tabs-list'][data-variant='default'] [data-slot='tabs-trigger'] { position: relative; isolation: isolate; flex: none; min-height: 44px; margin: -4px 0; padding: 0 16px; border: 0; border-radius: 999px; background: none; box-shadow: none; color: var(--pc-ink-muted); font-size: var(--pc-text-body); font-weight: 600; }
@@ -605,7 +635,7 @@ html:has(.tf-shell) { scroll-padding-bottom: 112px; }
 .turnfin-app .tf-main [data-slot='item-group']:not(:is([data-slot='card'], [role='dialog'], .pc-panel, [data-slot='popover-content']) [data-slot='item-group']) { gap: 8px; padding: 8px 16px 16px; border: 0; border-radius: var(--pc-radius-panel); background: var(--pc-surface); }
 .turnfin-app .tf-main [data-slot='item-group'] { display: flex; flex-direction: column; gap: 8px; }
 .turnfin-app .tf-main [data-slot='item-group'] > [data-slot='item'], .turnfin-app .tf-main [data-slot='item-group'] > [role='listitem'] > [data-slot='item'] { min-height: 64px; padding: 12px 16px; border: 1px solid var(--pc-line); border-radius: var(--pc-radius-card); background: var(--pc-surface); }
-.turnfin-app .tf-main [data-slot='item-group'] > :is(a[data-slot='item'], [role='listitem'] > a[data-slot='item']):hover { background: var(--pc-surface-sunken); }
+.turnfin-app .tf-main [data-slot='item-group'] > a[data-slot='item']:hover, .turnfin-app .tf-main [data-slot='item-group'] > [role='listitem'] > a[data-slot='item']:hover { background: var(--pc-surface-sunken); }
 .turnfin-app .tf-main [data-slot='item-group'] > [data-slot='item-separator'] { display: none; }
 
 /* An empty state on the page itself sits on a white panel. */
@@ -613,7 +643,11 @@ html:has(.tf-shell) { scroll-padding-bottom: 112px; }
 
 /* Docs pages inside the v2 frame: the frame owns the inset, so the old page padding goes. */
 .turnfin-app .tf-main .workspace-page-content { padding: 0; }
-.turnfin-app .tf-main .workspace-page-content > * { max-width: none; }
+.turnfin-app .tf-main .workspace-page-content > * { max-width: none; margin-inline: 0; }
+
+/* Page blocks sit 16px apart in every frame (ModuleShell, Instructor, Help). The gap reaches
+   blocks a page returns as direct children (a fragment), not ones inside its own wrapper. */
+.turnfin-app .tf-content { display: flex; flex-direction: column; gap: 16px; }
 
 /* Docs in v2: no kicker lines above titles; icons are the one neutral tile (colour only means
    status); the emergency plans shortcut uses the danger tone, as emergencies do everywhere. */

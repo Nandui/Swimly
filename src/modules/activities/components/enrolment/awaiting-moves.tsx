@@ -21,7 +21,7 @@ export function AwaitingMoves({ result, enrol, profiles, courses }: {
       const name = fullName(row.student);
       const label = `${courseLabel(row.course)} · ${row.course.club.name}`;
       const targets = courses.filter(course => course.id !== row.course.id);
-      return <QueueRow key={row.id} name={name} contactSummary={row.followUp} description={`${row.programmeName}${row.nextLevel ? ` · Next: ${row.nextLevel.name}` : ""}`} status={<Tag color={meta.color}>{meta.label}</Tag>} nextContact={row.followUp?.latest?.nextContactOn ? `${row.followUp.latest.nextContactOn < today() ? "Follow-up overdue" : "Follow up"} · ${formatDate(parseDateOnly(row.followUp.latest.nextContactOn))}` : undefined} identity={<>
+      return <QueueRow key={row.id} name={name} contactSummary={row.followUp} description={`${row.programmeName}${row.nextLevel ? ` · Next: ${row.nextLevel.name}` : ""}`} status={<Tag meta={meta} />} nextContact={row.followUp?.latest?.nextContactOn ? `${row.followUp.latest.nextContactOn < today() ? "Follow-up overdue" : "Follow up"} · ${formatDate(parseDateOnly(row.followUp.latest.nextContactOn))}` : undefined} identity={<>
         <div>{profiles ? <Link className="inline-flex min-h-11 items-center rounded-ui-sm font-semibold text-ui-primary underline-offset-4 hover:underline focus-visible:outline-2 focus-visible:outline-ui-ring focus-visible:outline-offset-2" href={`/students/${row.student.id}`}>{name}</Link> : <p className="font-semibold">{name}</p>}
           {row.student.memberNumber && <p className="break-all text-xs text-ui-muted-foreground">{row.student.memberNumber}</p>}
         </div>

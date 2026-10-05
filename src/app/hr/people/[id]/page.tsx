@@ -4,7 +4,8 @@ import Link from "next/link";
 import { Download } from "lucide-react";
 import { Button } from "@/components/shadcn/button";
 import { AddNote, StartReview, WithdrawNote } from "@/components/hr/actions";
-import { NoteVisibilityTag, ReviewStatusTag } from "@/components/hr/status";
+import { Tag } from "@/components/ui-kit/tag";
+import { NOTE_VISIBILITY_META, REVIEW_STATUS_META } from "@/lib/hr/constants";
 import { formatDate, formatDateTime } from "@/lib/format";
 import { hrPerson } from "@/lib/hr/records";
 import { requireFreshSession } from "@/lib/policy/session";
@@ -55,7 +56,7 @@ export default async function HrPersonPage({ params }: { params: Promise<{ id: s
                 <li key={n.id} className="space-y-2 py-3">
                   <div className="flex flex-wrap items-center justify-between gap-2">
                     <p className="text-xs text-ui-muted-foreground">{n.authorName} · {formatDateTime(new Date(n.createdAt))}</p>
-                    <NoteVisibilityTag visibility={n.visibility} />
+                    <Tag meta={NOTE_VISIBILITY_META[n.visibility]} />
                   </div>
                   <p className="whitespace-pre-wrap break-words">{n.body}</p>
                   {data.canWriteNotes && (n.authorId === who.id || who.superadmin) ? <WithdrawNote id={n.id} /> : null}
@@ -71,7 +72,7 @@ export default async function HrPersonPage({ params }: { params: Promise<{ id: s
               {reviews.map((r) => (
                 <li key={r.id} className="py-3">
                   <Link href={`/hr/reviews/${r.id}`} className="-mx-2 block space-y-1 rounded-[var(--pc-radius-control)] px-2 py-1 hover:bg-[var(--pc-surface-sunken)]">
-                    <span className="flex flex-wrap items-center gap-2"><span className="font-semibold">{r.period}</span><ReviewStatusTag status={r.status} /></span>
+                    <span className="flex flex-wrap items-center gap-2"><span className="font-semibold">{r.period}</span><Tag meta={REVIEW_STATUS_META[r.status]} /></span>
                     <span className="block text-xs text-ui-muted-foreground">{r.reviewerName} · {r.sharedAt ? `shared ${formatDate(new Date(r.sharedAt))}` : `started ${formatDate(new Date(r.createdAt))}`}</span>
                   </Link>
                 </li>

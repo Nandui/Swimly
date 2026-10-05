@@ -4,12 +4,11 @@ import { EmptyState } from "@/components/ui-kit/empty-state";
 import { useEffect, useRef, useState } from "react";
 import { ArrowRightLeft, CalendarCheck, ClipboardCheck, History, LoaderCircle, Trophy, UserRound } from "lucide-react";
 import { Button } from "@/components/shadcn/button";
-import { Badge } from "@/components/shadcn/badge";
 import { Alert, AlertDescription } from "@/components/shadcn/alert";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from "@/components/shadcn/dialog";
 import { loadSwimmerHistory } from "@/modules/activities/lib/students/actions/history";
 import { formatDate, formatDateTime, parseDateOnly } from "@/lib/format";
-import { HISTORY_MARKS, HISTORY_META, type HistoryEvent, type HistoryPage, type HistoryQuery } from "@/modules/activities/lib/students/history";
+import { HISTORY_MARKS, type HistoryEvent, type HistoryPage, type HistoryQuery } from "@/modules/activities/lib/students/history";
 import styles from "./swimmer-profile.module.css";
 
 const ICONS = { competencies: Trophy, attendance: CalendarCheck, enrolment: ArrowRightLeft, completion: Trophy, assessment: ClipboardCheck, profile: UserRound };
@@ -47,7 +46,7 @@ export function HistoryRows({ events, studentId, showCompetencyLinks = true, bri
         {event.evidence?.note ? <p className="whitespace-pre-wrap text-sm">{event.evidence.note}</p> : null}
         {event.evidence && "previousNote" in event.evidence && event.evidence.previousNote !== event.evidence.note ? <p className="text-xs text-ui-muted-foreground">Note changed: {event.evidence.previousNote || "None"} → {event.evidence.note || "Cleared"}</p> : null}
         <p className="text-xs text-ui-muted-foreground">{event.actor ? `${event.actor} · ` : ""}{event.snapshot ? "Saved record" : "Recorded"} {formatDateTime(new Date(event.at))}</p>
-        {event.snapshot ? <Badge variant="outline" data-tone={HISTORY_META[event.kind].color}>Latest record · earlier changes unavailable</Badge> : null}
+        {event.snapshot ? <p className="text-xs text-ui-muted-foreground">Latest record · earlier changes unavailable</p> : null}
       </div>
     </li>;
   })}</ol>;

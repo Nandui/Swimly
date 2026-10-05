@@ -40,10 +40,14 @@ import {
   type DocumentContent,
   type RiskRow,
   type Attachment,
+  DOC_STATUS_META,
+  riskBandMeta,
+  UNCLASSIFIED_RISK_META,
 } from '@/lib/docs/types';
 import { riskBand } from '@/lib/docs/content';
 import { RichEditor } from './rich-editor';
-import { Badge, Message } from './ui';
+import { Message } from './ui';
+import { Tag } from '@/components/ui-kit/tag';
 export function DocumentEditor({
   workspace: w,
   initial,
@@ -241,9 +245,9 @@ export function DocumentEditor({
       </div>
       <div className="editor-page-heading">
         <div>
-          <Badge tone="amber">
-            {initial.status === 'changes_requested' ? 'Changes requested' : 'Draft'}
-          </Badge>
+          {initial.status === 'changes_requested' ? (
+            <Tag meta={DOC_STATUS_META.changesRequested} />
+          ) : null}
           <h1>Edit document</h1>
           <p>Changes stay in this draft until they are reviewed and approved.</p>
         </div>
@@ -541,7 +545,6 @@ export function DocumentEditor({
         }}
       >
         <DialogContent className="workflow-dialog" showCloseButton={!busy}>
-          <Badge tone="green">Independent review</Badge>
           <DialogTitle>Send your draft for review</DialogTitle>
           <DialogDescription>
             The draft will be frozen until the reviewer approves it or requests changes.
@@ -709,9 +712,10 @@ function RiskEditor({
                   <div className="risk-rating" key={stage}>
                     <h3>
                       {stage === 'initial' ? 'Initial risk' : 'Residual risk'}
-                      <Badge tone={band?.color || 'neutral'}>
-                        {score} · {band?.label || 'Unclassified'}
-                      </Badge>
+                      <Tag
+                        meta={riskBandMeta(band)}
+                        label={`${score} · ${band?.label || UNCLASSIFIED_RISK_META.label}`}
+                      />
                     </h3>
                     {(['Likelihood', 'Severity'] as const).map((metric) => (
                       <Label key={metric}>

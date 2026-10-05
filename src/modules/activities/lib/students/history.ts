@@ -1,17 +1,20 @@
 import { z } from "zod";
+import { ArrowRightLeft, Award, ClipboardCheck, ClipboardList, List, ListChecks, UserRound } from "lucide-react";
+import type { StatusMeta } from "@/lib/status";
 import { DAY_META } from "@/modules/activities/lib/courses/constants";
 import { minutesNow, parseDateOnly, today, toDateOnlyString, weekdayOf } from "@/lib/format";
 import type { StudentEnrolment } from "@/modules/activities/lib/enrolment/data/enrolments";
 
 export const HISTORY_KINDS = ["all", "competencies", "attendance", "enrolment", "completion", "assessment", "profile"] as const;
 export type HistoryKind = typeof HISTORY_KINDS[number];
+/** Event kinds, not statuses: every one is gray, told apart by its icon. */
 export const HISTORY_META = {
-  all: { label: "All activity", color: "gray" }, competencies: { label: "Competencies", color: "green" },
-  attendance: { label: "Attendance", color: "blue" }, enrolment: { label: "Enrolments & moves", color: "gray" },
-  completion: { label: "Level milestones", color: "green" }, assessment: { label: "Assessments", color: "blue" },
-  profile: { label: "Profile", color: "gray" },
-} as const;
-export const HISTORY_MARKS: Record<string, string> = { ACHIEVED: "Achieved", WORKING_ON: "Not Achieved", PRESENT: "Present", ABSENT: "Absent", LATE: "Late" };
+  all: { label: "All activity", color: "gray", icon: List }, competencies: { label: "Competencies", color: "gray", icon: ListChecks },
+  attendance: { label: "Attendance", color: "gray", icon: ClipboardList }, enrolment: { label: "Enrolments & moves", color: "gray", icon: ArrowRightLeft },
+  completion: { label: "Level milestones", color: "gray", icon: Award }, assessment: { label: "Assessments", color: "gray", icon: ClipboardCheck },
+  profile: { label: "Profile", color: "gray", icon: UserRound },
+} as const satisfies Record<string, StatusMeta>;
+export const HISTORY_MARKS: Record<string, string> = { ACHIEVED: "Achieved", WORKING_ON: "Not achieved", PRESENT: "Present", ABSENT: "Absent", LATE: "Late" };
 const mark = z.enum(["ACHIEVED", "WORKING_ON"]).nullable();
 export const evidenceSchema = z.object({
   version: z.literal(1), kind: z.string(), date: z.string().optional(), courseId: z.string().nullable().optional(),

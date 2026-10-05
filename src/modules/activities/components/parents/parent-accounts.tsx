@@ -1,7 +1,7 @@
 "use client";
 
 import { useRef, useState } from "react";
-import { Badge } from "@/components/shadcn/badge";
+import { Tag } from "@/components/ui-kit/tag";
 import { Button } from "@/components/shadcn/button";
 import { Input } from "@/components/ui/input";
 import { LoadingButton } from "@/components/ui/loading-button";
@@ -50,7 +50,7 @@ export function ParentAccounts() {
       {account ? <section className="space-y-4 border-y border-ui-border py-6" aria-labelledby="parent-account-heading">
         <div className="flex flex-wrap items-start justify-between gap-4">
           <div className="min-w-0 space-y-2"><h2 id="parent-account-heading" className="break-words text-xl font-semibold">{account.name || "Parent account"}</h2><p className="break-all text-sm">{account.email}</p></div>
-          <Badge variant="secondary" data-tone={PARENT_ACCOUNT_META[account.isActive ? "active" : "suspended"].color}>{PARENT_ACCOUNT_META[account.isActive ? "active" : "suspended"].label}</Badge>
+          <Tag meta={PARENT_ACCOUNT_META[account.isActive ? "active" : "suspended"]} />
         </div>
         <dl className="grid gap-4 text-sm sm:grid-cols-2">
           <div><dt className="text-ui-muted-foreground">Phone</dt><dd className="mt-1 break-words">{account.phone || "Not provided"}</dd></div>

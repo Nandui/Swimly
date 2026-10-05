@@ -1,7 +1,7 @@
 "use client";
 
 import * as React from "react";
-import { Check, ChevronsUpDown } from "lucide-react";
+import { Check, ChevronDown } from "lucide-react";
 import { Button } from "@/components/shadcn/button";
 import {
   Command,
@@ -16,7 +16,7 @@ import {
   PopoverContent,
   PopoverTrigger,
 } from "@/components/shadcn/popover";
-import { FieldFrame } from "@/components/ui/field-frame";
+import { FieldFrame, fieldHintId } from "@/components/ui/field-frame";
 
 export type PickerOption = {
   value: string;
@@ -36,7 +36,9 @@ export function SearchablePicker({
   defaultValue = "",
   id: suppliedId,
   label,
+  labelHidden = false,
   description,
+  optional,
   onValueChange,
 }: {
   name: string;
@@ -47,7 +49,11 @@ export function SearchablePicker({
   defaultValue?: string;
   id?: string;
   label?: string;
+  /** No label above the field (a filter bar): the label then reads muted inside the trigger. */
+  labelHidden?: boolean;
   description?: string;
+  /** Shows "Optional" in the caption under the label. */
+  optional?: boolean;
   onValueChange?: (value: string) => void;
 }) {
   const generatedId = React.useId(),
@@ -68,22 +74,28 @@ export function SearchablePicker({
     return () => form.removeEventListener("reset", reset);
   }, [defaultValue, onValueChange]);
   return (
-    <FieldFrame id={id} label={label} description={description}>
+    <FieldFrame id={id} label={labelHidden ? undefined : label} description={description} optional={optional}>
       <input ref={input} type="hidden" name={name} value={value} />
       <Popover open={open} onOpenChange={setOpen}>
         <PopoverTrigger asChild>
+          {/* The field look (select-trigger: weight 400, ChevronDown), not an outline button;
+              it grows rather than clips when a long name wraps. */}
           <Button
             id={id}
             type="button"
             variant="outline"
             role="combobox"
+            data-slot="select-trigger"
             aria-expanded={open}
             aria-label={label ?? placeholder}
-            aria-describedby={description ? `${id}-hint` : undefined}
-            className="h-auto min-h-9 w-full justify-between text-left font-normal whitespace-normal"
+            aria-describedby={fieldHintId(id, optional, description)}
+            className="h-auto min-h-11 w-full justify-between gap-2 text-left whitespace-normal"
           >
-            <span className="min-w-0">{selected?.label ?? placeholder}</span>
-            <ChevronsUpDown
+            <span className="min-w-0 flex-1">
+              {label && labelHidden ? <span className="text-ui-muted-foreground">{label} </span> : null}
+              <span className={selected ? undefined : "text-ui-muted-foreground"}>{selected?.label ?? placeholder}</span>
+            </span>
+            <ChevronDown
               className="size-4 shrink-0 text-ui-muted-foreground"
               aria-hidden="true"
             />

@@ -12,8 +12,8 @@ import {
   DialogTitle,
   DialogTrigger,
 } from "@/components/shadcn/dialog";
-import { Label } from "@/components/shadcn/label";
 import { Textarea } from "@/components/shadcn/textarea";
+import { FieldFrame } from "@/components/ui/field-frame";
 import { confirmLevelCompletion } from "@/modules/activities/lib/progression/actions/assess";
 import { withTimeout, SAVE_UNCONFIRMED_MESSAGE } from "@/lib/save-feedback";
 import { toast } from "@/lib/toast";
@@ -66,18 +66,16 @@ export function CompleteLevel({
             They stay in this class until staff arrange the move.
           </DialogDescription>
         </DialogHeader>
-        <div className="space-y-2">
-          <Label htmlFor={`completion-note-${studentId}`}>
-            Note for reception (optional)
-          </Label>
+        <FieldFrame id={`completion-note-${studentId}`} label="Note for reception" optional>
           <Textarea
             id={`completion-note-${studentId}`}
+            aria-describedby={`completion-note-${studentId}-hint`}
             value={note}
             onChange={(e) => setNote(e.target.value)}
             maxLength={300}
             disabled={pending}
           />
-        </div>
+        </FieldFrame>
         {error ? <TeachingNotice title={error} error /> : null}
         <DialogFooter>
           <Button

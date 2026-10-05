@@ -1,9 +1,11 @@
 import {
   ItemContent,
   ItemActions,
+  ItemDescription,
   Item,
   ItemGroup,
   ItemMedia,
+  ItemTitle,
 } from "@/components/shadcn/item";
 
 import { cn } from "@/lib/utils";
@@ -165,19 +167,13 @@ export default async function ProgrammePage(
                 className="items-start [overflow-wrap:anywhere]"
               >
                 <ItemContent className="min-w-0">
-                  <div className="text-sm font-medium">
-                    {
-                      <div className="min-w-0 flex gap-2 items-center flex-wrap">
-                        {type.name}
-                        {type.archivedAt ? (
-                          <Tag color={ARCHIVAL_STATUS_META.archived.color}>
-                            {ARCHIVAL_STATUS_META.archived.label}
-                          </Tag>
-                        ) : null}
-                      </div>
-                    }
-                  </div>
-                  <div className="text-sm text-ui-muted-foreground">{`${type.description ? `${type.description} · ` : ""}${type._count.sessions} ${type._count.sessions === 1 ? "session" : "sessions"}`}</div>
+                  <ItemTitle className="min-w-0 flex-wrap">
+                    {type.name}
+                    {type.archivedAt ? (
+                      <Tag meta={ARCHIVAL_STATUS_META.archived} />
+                    ) : null}
+                  </ItemTitle>
+                  <ItemDescription>{`${type.description ? `${type.description} · ` : ""}${type._count.sessions} ${type._count.sessions === 1 ? "session" : "sessions"}`}</ItemDescription>
                 </ItemContent>
                 <ItemActions className="flex-wrap">
                   {
@@ -261,9 +257,7 @@ function LevelSection({
                   />
                   {level.name}
                   {archived ? (
-                    <Tag color={ARCHIVAL_STATUS_META.archived.color}>
-                      {ARCHIVAL_STATUS_META.archived.label}
-                    </Tag>
+                    <Tag meta={ARCHIVAL_STATUS_META.archived} />
                   ) : null}
                 </div>
               </h2>
@@ -321,25 +315,15 @@ function LevelSection({
                     }
                   </ItemMedia>
                   <ItemContent className="min-w-0">
-                    <div className="text-sm font-medium">
-                      {
-                        <div
-                          className={
-                            "min-w-0 flex gap-2 items-center flex-wrap"
-                          }
-                        >
-                          {competency.name}
-                          {competency.archivedAt ? (
-                            <Tag color={ARCHIVAL_STATUS_META.archived.color}>
-                              {ARCHIVAL_STATUS_META.archived.label}
-                            </Tag>
-                          ) : null}
-                        </div>
-                      }
-                    </div>
-                    <div className="text-sm text-ui-muted-foreground">
-                      {competency.description ?? undefined}
-                    </div>
+                    <ItemTitle className="min-w-0 flex-wrap">
+                      {competency.name}
+                      {competency.archivedAt ? (
+                        <Tag meta={ARCHIVAL_STATUS_META.archived} />
+                      ) : null}
+                    </ItemTitle>
+                    {competency.description ? (
+                      <ItemDescription>{competency.description}</ItemDescription>
+                    ) : null}
                   </ItemContent>
                   <ItemActions className="flex-wrap">
                     {

@@ -19,7 +19,7 @@ export function HelpFrame({ scope, home, children }: { scope: HelpScope; home: s
         <Link href={home} className="tf-bar-item"><ArrowLeft aria-hidden="true" />{scope === "instructor" ? "Back to classes" : "Back to app"}</Link>
       </div>
     </header>
-    <main id="help-main" tabIndex={-1} className="tf-main mx-auto min-h-0 max-w-6xl px-4 py-6 outline-none lg:px-6">{children}</main>
+    <main id="help-main" tabIndex={-1} className="tf-main tf-content mx-auto min-h-0 max-w-6xl px-4 py-6 outline-none lg:px-6">{children}</main>
     <footer className="mx-auto max-w-6xl px-4 pb-6 lg:px-6 print:hidden">
       <div className="pc-panel flex-row items-start gap-3">
         <LifeBuoy aria-hidden="true" className="mt-0.5 size-5 shrink-0 text-ui-muted-foreground" />

@@ -1,9 +1,8 @@
 import Form from "next/form";
 import Link from "next/link";
-import { ArrowLeft, ArrowRight, Search, X } from "lucide-react";
+import { ArrowLeft, ArrowRight, X } from "lucide-react";
 import { Button } from "@/components/shadcn/button";
-import { Input } from "@/components/shadcn/input";
-import { Label } from "@/components/shadcn/label";
+import { SearchField } from "@/components/ui-kit/search-field";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/shadcn/table";
 import { EmptyState } from "@/components/ui-kit/empty-state";
 import { Tag } from "@/components/ui-kit/tag";
@@ -40,16 +39,9 @@ export function LegendAgreements({ result, canConfirm, profiles, classes }: {
       <p className="text-sm text-ui-muted-foreground">{siteName} · Update the billing agreement in Legend, then confirm it here.</p>
     </header>
     <div className="space-y-4">
-      <Form action="/legend-agreements" className="flex items-end gap-2" role="search" aria-label="Legend agreements">
+      <Form action="/legend-agreements" className="max-w-xl" role="search" aria-label="Legend agreements">
         {view === "done" ? <input type="hidden" name="view" value="done" /> : null}
-        <div className="min-w-0 flex-1 space-y-2">
-          <Label htmlFor="agreement-search">Find a swimmer</Label>
-          <div className="relative">
-            <Search className="pointer-events-none absolute top-1/2 left-3 size-4 -translate-y-1/2 text-ui-muted-foreground" aria-hidden="true" />
-            <Input id="agreement-search" name="q" type="search" placeholder="Name or member number…" defaultValue={q} key={q} maxLength={100} autoComplete="off" className="h-11 pl-10" />
-          </div>
-        </div>
-        <Button type="submit" className="h-11">Search</Button>
+        <SearchField id="agreement-search" label="Find a swimmer" placeholder="Name or member number" defaultValue={q} maxLength={100} />
       </Form>
       <SegmentedLinks label="Agreement status" items={views.map(item => ({ href: href(item.key), label: item.label, count: number(item.count), current: view === item.key }))} />
     </div>
@@ -76,7 +68,7 @@ export function LegendAgreements({ result, canConfirm, profiles, classes }: {
           {classes ? <Link href={`/courses/${row.course.id}`} className="block min-h-11 content-center hover:underline">{classDetails}</Link> : <div>{classDetails}</div>}
           <p className="text-xs text-ui-muted-foreground">Enrolled {formatDate(row.startedOn)}{row.course.archivedAt ? " · Class archived" : ""}</p>
         </div>;
-        const status = <div className="min-w-0 space-y-1.5 break-words"><Tag color={meta.color}>{meta.label}</Tag>
+        const status = <div className="min-w-0 space-y-1.5 break-words"><Tag meta={meta} />
           {row.legendAgreementUpdatedAt ? <p className="text-xs text-ui-muted-foreground"><span className="block">{row.legendAgreementUpdatedByName ?? "Staff"}</span>{formatDateTime(row.legendAgreementUpdatedAt)}</p> : null}
         </div>;
         const action = view !== "done" && canConfirm ? <ConfirmLegendAgreement id={row.id} swimmerName={name} classLabel={`${label} · ${siteName}`} /> : null;

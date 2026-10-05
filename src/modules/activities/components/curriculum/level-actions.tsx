@@ -63,7 +63,8 @@ function LevelFields({ level }: { level?: Named }) {
       <Field
         label="Description"
         htmlFor="description"
-        hint="Optional — what a swimmer at this level can do."
+        optional
+        hint="What a swimmer at this level can do."
       >
         <Textarea
           id="description"
@@ -210,7 +211,8 @@ function CompetencyFields({ competency }: { competency?: Named }) {
       <Field
         label="Notes for the instructor"
         htmlFor="description"
-        hint="Optional — how it is assessed, or what counts as a pass."
+        optional
+        hint="How it is assessed, or what counts as a pass."
       >
         <Textarea
           id="description"

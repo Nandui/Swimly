@@ -2,7 +2,8 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { Hourglass } from "lucide-react";
 import { AssignTraining } from "@/components/training/manage-actions";
-import { QualificationStateTag } from "@/components/training/status";
+import { Tag } from "@/components/ui-kit/tag";
+import { QUALIFICATION_STATE_META } from "@/lib/people/constants";
 import { formatDate } from "@/lib/format";
 import { EXPIRY_WARNING_DAYS } from "@/lib/training/constants";
 import { expiringQualifications } from "@/lib/training/data";
@@ -31,7 +32,7 @@ export default async function TrainingExpiringPage() {
               <div className="min-w-0 flex-1 space-y-1">
                 <div className="flex flex-wrap items-center gap-2">
                   <Link href={`/training/people/${row.userId}`} className="module-row-title underline-offset-4 hover:underline">{row.name}</Link>
-                  <QualificationStateTag state={row.state} />
+                  <Tag meta={QUALIFICATION_STATE_META[row.state]} />
                 </div>
                 <p className="text-sm">{row.qualification}{row.jobTitle ? <span className="text-ui-muted-foreground"> · {row.jobTitle}</span> : null}</p>
                 <p className="text-xs text-ui-muted-foreground">

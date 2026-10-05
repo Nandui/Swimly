@@ -2,7 +2,7 @@
 
 import { Label } from '@/components/shadcn/label';
 import { NativeSelect, NativeSelectOption } from '@/components/shadcn/native-select';
-import { Input } from '@/components/shadcn/input';
+import { SearchField } from '@/components/ui-kit/search-field';
 import { Card } from '@/components/shadcn/card';
 import Link from 'next/link';
 import { useState } from 'react';
@@ -59,17 +59,16 @@ export function HomeView({ workspace: w }: { workspace: Workspace }) {
         </Label>
       </header>
 
-      <form className="home-search" action="/docs/library" role="search" aria-label="Find guidance">
-        <Search size={22} aria-hidden="true" />
-        <Input
-          type="search"
-          name="q"
-          aria-label="Search your team’s knowledge"
-          placeholder="Find a procedure, policy or document…"
+      <form className="flex flex-wrap items-end gap-3" action="/docs/library" role="search" aria-label="Find guidance">
+        <SearchField
+          label="Find a document"
+          placeholder="Find a procedure, policy or document"
+          className="max-w-md flex-1 basis-72"
         />
         {facility && <input type="hidden" name="facility" value={facility} />}
         <Button type="submit">
-          Search <ArrowRight size={16} aria-hidden="true" />
+          <Search aria-hidden="true" />
+          Search
         </Button>
       </form>
       <section className="emergency-banner" aria-label="Emergency plans">

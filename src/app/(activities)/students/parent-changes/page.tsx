@@ -40,7 +40,7 @@ export default async function ParentChangesPage({ searchParams }: { searchParams
                 <h2 className="text-lg font-semibold"><UiLink className="underline-offset-4 hover:underline" href={`/students/${row.student.id}`}>{row.student.name}</UiLink></h2>
                 <p className="text-sm text-ui-muted-foreground">From {row.parent.name ?? "a verified parent"} ({row.parent.email}) · {formatDateTime(row.createdAt)}</p>
               </div>
-              {status ? <Tag color={status.color}>{status.label}</Tag> : null}
+              {status ? <Tag meta={status} /> : null}
             </div>
             {row.message ? <p className="text-sm whitespace-pre-wrap"><span className="font-semibold">Parent&apos;s note: </span>{row.message}</p> : null}
             <Table>

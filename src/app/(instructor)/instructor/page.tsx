@@ -106,7 +106,7 @@ export default async function InstructorPage(props: PageProps<"/instructor">) {
           {state === "shared" ? <p className="text-xs text-ui-muted-foreground">Started by {claim?.coverByName}</p> : null}
         </ItemContent>
         <div className="flex w-full items-center justify-between gap-3 sm:w-auto sm:gap-5">
-          {cancellations.has(course.id) ? <div className="space-y-1"><Tag color={CANCELLATION_META.cancelled.color}>Cancelled</Tag><p className="max-w-sm break-words text-sm text-ui-muted-foreground">{cancellations.get(course.id)?.reason}</p></div> : state !== "available" ? (
+          {cancellations.has(course.id) ? <div className="space-y-1"><Tag meta={CANCELLATION_META.cancelled} /><p className="max-w-sm break-words text-sm text-ui-muted-foreground">{cancellations.get(course.id)?.reason}</p></div> : state !== "available" ? (
             <>
               <p className="flex items-center gap-2 text-sm text-ui-muted-foreground">
                 {marked.has(course.id) ? (

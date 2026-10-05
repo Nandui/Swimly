@@ -11,6 +11,7 @@ import { Textarea } from "@/components/shadcn/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/shadcn/select";
 import { Sheet, SheetContent, SheetDescription, SheetHeader, SheetTitle, SheetTrigger } from "@/components/shadcn/sheet";
 import { LoadingButton } from "@/components/ui/loading-button";
+import { FieldFrame } from "@/components/ui/field-frame";
 import { Tag } from "@/components/ui-kit/tag";
 import { Notice } from "@/components/ui-kit/notice";
 import { addFollowUp, getFollowUpHistory } from "@/modules/activities/lib/enrolment/actions/follow-up";
@@ -84,7 +85,7 @@ export function FollowUpHistory({ studentId, name, canRecord, summary, presentat
               </div>
               <div className="space-y-2"><Label htmlFor={`${id}-outcome`}>Current outcome</Label><Select value={outcome} onValueChange={value => change(setOutcome)(value as ContactOutcome)}><SelectTrigger id={`${id}-outcome`} className="min-h-11 w-full"><SelectValue /></SelectTrigger><SelectContent>{Object.entries(CONTACT_OUTCOMES).map(([key, meta]) => <SelectItem key={key} value={key} className="min-h-11">{meta.label}</SelectItem>)}</SelectContent></Select></div>
               <div className="space-y-2"><Label htmlFor={`${id}-note`}>What happened?</Label><Textarea id={`${id}-note`} name="note" required maxLength={3000} rows={4} value={note} onChange={event => change(setNote)(event.target.value)} placeholder="What did you discuss or check, and what needs to happen next?" /></div>
-              <div className="space-y-2"><Label htmlFor={`${id}-next`}>Next follow-up (optional)</Label><Input id={`${id}-next`} name="nextContactOn" type="date" className="min-h-11" min={occurredOn} value={nextContactOn} onChange={event => change(setNextContactOn)(event.target.value)} /><p className="text-xs text-ui-muted-foreground">Leave blank to clear the previous follow-up date. No automatic message is sent.</p></div>
+              <FieldFrame id={`${id}-next`} label="Next follow-up" optional description="Leave blank to clear the previous follow-up date. No automatic message is sent."><Input id={`${id}-next`} name="nextContactOn" type="date" className="min-h-11" min={occurredOn} value={nextContactOn} onChange={event => change(setNextContactOn)(event.target.value)} aria-describedby={`${id}-next-hint`} /></FieldFrame>
               <p className="text-xs text-ui-muted-foreground">Saved updates stay in the history. Add a new update to correct an earlier entry.</p>
               <div className="flex flex-wrap gap-2"><LoadingButton pending={saving} type="submit" className="min-h-11">Save update</LoadingButton><Button variant="ghost" type="button" className="min-h-11" onClick={() => setAdding(false)}>Hide form</Button></div>
               <p className="text-xs text-ui-muted-foreground">Unsaved text is kept while you stay on this page.</p>
@@ -95,7 +96,7 @@ export function FollowUpHistory({ studentId, name, canRecord, summary, presentat
             {loading && <p role="status" className="text-sm text-ui-muted-foreground">Loading history…</p>}
             {!loading && data && !data.entries.length && <p className="text-sm text-ui-muted-foreground">No follow-ups recorded yet.{canRecord ? ' Add the first update so colleagues know what has been done.' : ' Reception updates will appear here.'}</p>}
             <ol className={presentation === 'queue' ? 'space-y-4' : 'divide-y divide-ui-border'}>{data?.entries.map(entry => <li key={entry.id} className={presentation === 'queue' ? 'space-y-3 rounded-ui-md border border-ui-border bg-ui-muted/30 p-4' : 'space-y-3 py-5 first:pt-0'}>
-              <div className="flex flex-wrap items-center justify-between gap-2"><Tag color={CONTACT_OUTCOMES[entry.outcome].color}>{CONTACT_OUTCOMES[entry.outcome].label}</Tag><time className="text-xs text-ui-muted-foreground" dateTime={entry.occurredOn}>{formatDate(parseDateOnly(entry.occurredOn))}</time></div>
+              <div className="flex flex-wrap items-center justify-between gap-2"><Tag meta={CONTACT_OUTCOMES[entry.outcome]} /><time className="text-xs text-ui-muted-foreground" dateTime={entry.occurredOn}>{formatDate(parseDateOnly(entry.occurredOn))}</time></div>
               <p className="text-sm font-medium">{CONTACT_CHANNELS[entry.channel]} · {entry.actorName}</p>
               <p className="whitespace-pre-wrap break-words text-sm leading-relaxed">{entry.note}</p>
               <p className="text-xs text-ui-muted-foreground">{entry.nextContactOn ? `Next follow-up: ${formatDate(parseDateOnly(entry.nextContactOn))}` : 'No follow-up date set'}<br />Recorded {formatDateTime(new Date(entry.createdAt))} · {entry.clubName}</p>
@@ -106,7 +107,7 @@ export function FollowUpHistory({ studentId, name, canRecord, summary, presentat
   if (presentation === "queue") return <section aria-label={`Contact history for ${name}`} className="min-w-0 space-y-4"><div><h3 className="font-semibold">Contact history & notes{latestSummary?.count ? ` (${latestSummary.count})` : ""}</h3><p className="text-xs text-ui-muted-foreground">Shared with colleagues across both sites. Staff only.</p></div>{panel}</section>;
   return <div className="space-y-2">
     {summary && <div className="space-y-1 text-sm">
-      {latest ? <><Tag color={CONTACT_OUTCOMES[latest.outcome].color}>{CONTACT_OUTCOMES[latest.outcome].label}</Tag>
+      {latest ? <><Tag meta={CONTACT_OUTCOMES[latest.outcome]} />
         {due ? <p className="text-xs font-medium">{due < today() ? 'Follow-up overdue' : due === today() ? 'Follow up today' : 'Next follow-up'} · {formatDate(parseDateOnly(due))}</p> : <p className="text-xs text-ui-muted-foreground">No follow-up date set</p>}
         <p className="text-xs text-ui-muted-foreground">Recorded {formatDateTime(new Date(latest.createdAt))} · {latest.actorName}</p>
       </> : <p className="text-ui-muted-foreground">No follow-up recorded</p>}

@@ -22,7 +22,7 @@ converted. The remaining visible native controls have now been replaced:
 | Two native search labels | Label in Help and Awaiting enrolment |
 | Custom help result rows | Item composed with the guide link |
 | Custom staff parent-request and assessment-publication panels | Card, retaining their article/region semantics |
-| Custom different-site chip | Neutral Badge |
+| Custom different-site chip | `Tag` with `PLACEMENT_META.differentSite` |
 | Inconsistent empty states | Empty/EmptyState across analytics, duty/billing, staff parent management, swimmer records, class selection and Instructor |
 | Custom portal/duty/Instructor error feedback | Alert through the shared Notice composition |
 | Small desktop controls on swimmer profiles and Instructor retry | Minimum 44px height |

@@ -22,7 +22,7 @@ export function AwaitingEnrolment({ result, enrol, profiles, assessments, course
       const meta = FOLLOW_UP_META[row.waitlists.length ? "waitlisted" : "awaiting"];
       const name = fullName(row.student);
       const options = courses.filter(course => course.level.id === row.outcomeLevel?.id && !row.waitlists.some(waiting => waiting.course.id === course.id));
-      return <QueueRow key={row.id} name={name} contactSummary={row.followUp} description={`${row.programme.name}${row.outcomeLevel ? ` · ${row.outcomeLevel.name}` : ""}`} status={<Tag color={meta.color}>{meta.label}</Tag>} nextContact={row.followUp?.latest?.nextContactOn ? `${row.followUp.latest.nextContactOn < today() ? "Follow-up overdue" : "Follow up"} · ${formatDate(parseDateOnly(row.followUp.latest.nextContactOn))}` : undefined} identity={<>
+      return <QueueRow key={row.id} name={name} contactSummary={row.followUp} description={`${row.programme.name}${row.outcomeLevel ? ` · ${row.outcomeLevel.name}` : ""}`} status={<Tag meta={meta} />} nextContact={row.followUp?.latest?.nextContactOn ? `${row.followUp.latest.nextContactOn < today() ? "Follow-up overdue" : "Follow up"} · ${formatDate(parseDateOnly(row.followUp.latest.nextContactOn))}` : undefined} identity={<>
         <div>
           {profiles ? <Link className="inline-flex min-h-11 items-center rounded-ui-sm font-semibold text-ui-primary underline-offset-4 hover:underline focus-visible:outline-2 focus-visible:outline-ui-ring focus-visible:outline-offset-2" href={`/students/${row.student.id}`}>{name}</Link> : <p className="font-semibold">{name}</p>}
           {row.student.memberNumber && <p className="break-all text-xs text-ui-muted-foreground">{row.student.memberNumber}</p>}
@@ -40,7 +40,7 @@ export function AwaitingEnrolment({ result, enrol, profiles, assessments, course
             const label = courseLabel(waiting.course);
             return <li key={waiting.id} className="space-y-2 border-t border-ui-border pt-3">
               <p className="font-medium">{label}</p>
-              <div className="flex flex-wrap items-center gap-2"><Tag color={availability.color}>{availability.label}</Tag><span className="text-xs text-ui-muted-foreground">Waitlisted {formatDate(waiting.createdAt)}</span></div>
+              <div className="flex flex-wrap items-center gap-2"><Tag meta={availability} /><span className="text-xs text-ui-muted-foreground">Waitlisted {formatDate(waiting.createdAt)}</span></div>
               {enrol && !full && !waiting.course.archivedAt && <div className="[&_button]:h-auto [&_button]:min-h-11 [&_button]:max-w-full [&_button]:whitespace-normal">
                 <PromoteFromWaitlist enrolment={{ id: waiting.id, status: "WAITLISTED", student: { firstName: row.student.firstName, lastName: row.student.lastName } }} variant="button" classLabel={label} />
               </div>}

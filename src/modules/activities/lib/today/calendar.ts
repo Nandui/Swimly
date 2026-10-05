@@ -1,4 +1,5 @@
 import type { CourseRow } from "@/modules/activities/lib/courses/data/courses";
+import { CalendarClock, CircleCheck, ClipboardCheck, Clock3, Play, XCircle } from "lucide-react";
 import type { StatusMeta } from "@/lib/status";
 
 export type CalendarClass = Pick<CourseRow,
@@ -49,11 +50,12 @@ export function calendarAssessmentHref(id: string, allowed: boolean) {
 }
 
 export const CALENDAR_PHASE_META = {
-  cancelled: { label: "Cancelled", color: "red" },
-  running: { label: "Running now", color: "green" },
-  next: { label: "Next start", color: "blue" },
-  finished: { label: "Finished", color: "gray" },
-  later: { label: "Later", color: "gray" },
+  cancelled: { label: "Cancelled", color: "red", icon: XCircle },
+  running: { label: "Running now", color: "green", icon: Play },
+  next: { label: "Next start", color: "blue", icon: Clock3 },
+  finished: { label: "Finished", color: "gray", icon: CircleCheck },
+  later: { label: "Later", color: "gray", icon: CalendarClock },
+  assessment: { label: "Assessment", color: "purple", icon: ClipboardCheck },
 } as const satisfies Record<string, StatusMeta>;
 
 export function classPhase(course: Pick<CalendarClass, "startMinutes" | "durationMinutes" | "cancellation">, now: number | null) {

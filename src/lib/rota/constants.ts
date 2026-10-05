@@ -1,40 +1,43 @@
+import {
+  Activity, ArrowRightLeft, CalendarDays, CalendarOff, CircleCheck, CircleDashed, CircleEllipsis, CircleMinus, Coffee,
+  CopyX, FileQuestion, Flower2, GraduationCap, House, PartyPopper, Pencil, Plus, School, SlidersHorizontal, Thermometer,
+  Timer, TreePalm, TriangleAlert, Users, UserX, WavesHorizontal,
+} from "lucide-react";
 import type { StatusMeta } from "@/lib/status";
 
 /** Rota warnings. The rota never blocks a booking (owner decision, September
- *  2026); it says what is wrong. Tones come from here, never a call site, and
- *  each has its own icon in `RotaWarningTag`. */
+ *  2026); it says what is wrong. Tone and icon come from here, never a call site. */
 export const ROTA_WARNING_META = {
-  absent: { label: "Absent", color: "red" },
-  expired: { label: "Qualification expired", color: "red" },
-  missing: { label: "Qualification not recorded", color: "orange" },
-  overlap: { label: "Double-booked", color: "orange" },
-  teaching: { label: "Teaching a swim class then", color: "orange" },
-  open: { label: "Unfilled", color: "gray" },
+  absent: { label: "Absent", color: "red", icon: UserX },
+  expired: { label: "Qualification expired", color: "red", icon: TriangleAlert },
+  missing: { label: "Qualification not recorded", color: "orange", icon: FileQuestion },
+  overlap: { label: "Double-booked", color: "orange", icon: CopyX },
+  teaching: { label: "Teaching a swim class then", color: "orange", icon: GraduationCap },
+  open: { label: "Unfilled", color: "gray", icon: CircleDashed },
 } as const satisfies Record<string, StatusMeta>;
 export type RotaWarning = keyof typeof ROTA_WARNING_META;
 
 /** Why someone is off. Only rota managers see the reason; the rota itself
- *  says just "Absent". Tones come from here, each with its own icon in
- *  `AbsenceReasonTag`. Never record medical details, only the reason. */
+ *  says just "Absent". Never record medical details, only the reason. */
 export const ABSENCE_REASON_META = {
-  sickness: { label: "Sickness", color: "orange" },
-  family: { label: "Family emergency", color: "blue" },
-  bereavement: { label: "Bereavement", color: "gray" },
-  other: { label: "Other", color: "gray" },
+  sickness: { label: "Sickness", color: "orange", icon: Thermometer },
+  family: { label: "Family emergency", color: "blue", icon: House },
+  bereavement: { label: "Bereavement", color: "gray", icon: Flower2 },
+  other: { label: "Other", color: "gray", icon: CircleEllipsis },
 } as const satisfies Record<string, StatusMeta>;
 export type AbsenceReason = keyof typeof ABSENCE_REASON_META;
 
 /** What a roster re-upload did to someone's day (Roster changes). */
 export const ROSTER_CHANGE_META = {
-  added: { label: "Added", color: "green" },
-  changed: { label: "Changed", color: "blue" },
-  removed: { label: "Removed", color: "red" },
+  added: { label: "Added", color: "green", icon: Plus },
+  changed: { label: "Changed", color: "blue", icon: Pencil },
+  removed: { label: "Removed", color: "red", icon: CircleMinus },
 } as const satisfies Record<string, StatusMeta>;
 
 /** A roster day that is not a shift: full holiday (FHOP) or another code. */
 export const ROSTER_LEAVE_META = {
-  holiday: { label: "Full holiday (paid)", color: "blue" },
-  leave: { label: "Leave", color: "gray" },
+  holiday: { label: "Full holiday (paid)", color: "blue", icon: TreePalm },
+  leave: { label: "Leave", color: "gray", icon: CalendarOff },
 } as const satisfies Record<string, StatusMeta>;
 export const ABSENCE_REASONS = Object.keys(ABSENCE_REASON_META) as AbsenceReason[];
 
@@ -84,21 +87,21 @@ export function followOn<T extends EarlierAbsence>(earlier: readonly T[], firstD
  *  week). Covering an absence is chosen for the manager when the person
  *  taken off is recorded as off that day. */
 export const ROTA_CHANGE_REASON_META = {
-  cover: { label: "Covering an absence", color: "blue" },
-  swap: { label: "Swap agreed between staff", color: "gray" },
-  extra: { label: "Extra hours approved", color: "orange" },
-  correction: { label: "Correcting a mistake in the plan", color: "gray" },
+  cover: { label: "Covering an absence", color: "blue", icon: Users },
+  swap: { label: "Swap agreed between staff", color: "gray", icon: ArrowRightLeft },
+  extra: { label: "Extra hours approved", color: "orange", icon: Timer },
+  correction: { label: "Correcting a mistake in the plan", color: "gray", icon: Pencil },
 } as const satisfies Record<string, StatusMeta>;
 export type RotaChangeReason = keyof typeof ROTA_CHANGE_REASON_META;
 export const ROTA_CHANGE_REASONS = Object.keys(ROTA_CHANGE_REASON_META) as RotaChangeReason[];
 
 /** What a booking is. Its sessions show on the week plan under its name. */
 export const BOOKING_KIND_META = {
-  school: { label: "School lessons", color: "blue" },
-  party: { label: "Party", color: "orange" },
-  lanes: { label: "Lane hire", color: "gray" },
-  event: { label: "Event", color: "green" },
-  other: { label: "Other", color: "gray" },
+  school: { label: "School lessons", color: "blue", icon: School },
+  party: { label: "Party", color: "orange", icon: PartyPopper },
+  lanes: { label: "Lane hire", color: "gray", icon: WavesHorizontal },
+  event: { label: "Event", color: "green", icon: CalendarDays },
+  other: { label: "Other", color: "gray", icon: CircleEllipsis },
 } as const satisfies Record<string, StatusMeta>;
 export type BookingKind = keyof typeof BOOKING_KIND_META;
 export const BOOKING_KINDS = Object.keys(BOOKING_KIND_META) as BookingKind[];
@@ -130,8 +133,8 @@ export function weekStarted(dateIso: string, todayIso: string) {
 /** The return-to-work conversation's answer: back as before, or back with
  *  changes to their work for a while. Tones come from here. */
 export const RETURN_FIT_META = {
-  fit: { label: "Fit to work", color: "green" },
-  adjusted: { label: "Back with changes", color: "blue" },
+  fit: { label: "Fit to work", color: "green", icon: CircleCheck },
+  adjusted: { label: "Back with changes", color: "blue", icon: SlidersHorizontal },
 } as const satisfies Record<string, StatusMeta>;
 export type ReturnFit = keyof typeof RETURN_FIT_META;
 export const RETURN_FITS = Object.keys(RETURN_FIT_META) as ReturnFit[];
@@ -165,8 +168,8 @@ export type AbsenceUpdateKind = (typeof ABSENCE_UPDATE_KINDS)[number];
 /** What a stretch of a shift is (owner request, October 2026: "assigning
  *  their activity during a shift and all the breaks"). Tones come from here. */
 export const SEGMENT_KIND_META = {
-  activity: { label: "Activity", color: "blue" },
-  break: { label: "Break", color: "gray" },
+  activity: { label: "Activity", color: "blue", icon: Activity },
+  break: { label: "Break", color: "gray", icon: Coffee },
 } as const satisfies Record<string, StatusMeta>;
 export type SegmentKind = keyof typeof SEGMENT_KIND_META;
 export const SEGMENT_KINDS = Object.keys(SEGMENT_KIND_META) as SegmentKind[];

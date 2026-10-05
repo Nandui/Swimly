@@ -16,7 +16,7 @@ export function ApplyDetailChange({ id, name }: { id: string; name: string }) {
       successMessage="Changes applied"
       submit={(formData) => applyDetailChange(id, String(formData.get("reply") ?? ""))}
     >
-      <Field label="Note to them (optional)" htmlFor="reply">
+      <Field label="Note to them" htmlFor="reply" optional>
         <Textarea id="reply" name="reply" maxLength={500} rows={2} />
       </Field>
     </FormDialog>

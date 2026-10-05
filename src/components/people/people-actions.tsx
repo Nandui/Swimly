@@ -55,7 +55,7 @@ export function EditProfile({ person, sites, departments, people }: {
       <Field label="Started on" htmlFor="startedOn">
         <Input id="startedOn" name="startedOn" type="date" defaultValue={person.startedOn} />
       </Field>
-      <Field label="Date of birth (optional)" htmlFor="dateOfBirth" hint="Only for staff under 18: the rota gives them their longer breaks. The rota never shows the date.">
+      <Field label="Date of birth" htmlFor="dateOfBirth" optional hint="Only for staff under 18: the rota gives them their longer breaks. The rota never shows the date.">
         <Input id="dateOfBirth" name="dateOfBirth" type="date" defaultValue={person.dateOfBirth} max={new Date().toISOString().slice(0, 10)} />
       </Field>
       <Field label="Main site" htmlFor="primaryClubId" hint="Where they are usually based. Staff who manage a site's training or rota cover the people based there.">

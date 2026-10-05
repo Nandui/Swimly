@@ -130,9 +130,7 @@ function ProgrammeTable({
                   {programme.name}
                 </UiLink>
                 {archived ? (
-                  <Tag color={ARCHIVAL_STATUS_META.archived.color}>
-                    {ARCHIVAL_STATUS_META.archived.label}
-                  </Tag>
+                  <Tag meta={ARCHIVAL_STATUS_META.archived} />
                 ) : null}
               </div>
               {programme.description ? (

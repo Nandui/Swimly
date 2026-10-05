@@ -1,9 +1,8 @@
 "use client";
 
 import { useEffect, useId, useRef, useState } from "react";
-import { Input } from "@/components/shadcn/input";
-import { Label } from "@/components/shadcn/label";
 import { Button } from "@/components/shadcn/button";
+import { FileField } from "@/components/ui/file-field";
 import { ImageThumbnail } from "./image-thumbnail";
 import { IMAGE_ACCEPT, IMAGE_MAX_BYTES } from "@/modules/activities/lib/curriculum/image";
 
@@ -19,7 +18,8 @@ export function ImageField({
     input = useRef<HTMLInputElement>(null);
   const [removed, setRemoved] = useState(false),
     [preview, setPreview] = useState<string>(),
-    [error, setError] = useState<string | null>(null);
+    [error, setError] = useState<string | null>(null),
+    [cleared, setCleared] = useState(0);
   useEffect(() => {
     if (preview) return () => URL.revokeObjectURL(preview);
   }, [preview]);
@@ -37,15 +37,18 @@ export function ImageField({
   const src = preview ?? (removed ? undefined : currentSrc);
   return (
     <div className="min-w-0 space-y-2">
-      <Label htmlFor={id}>Image</Label>
-      <Input
+      {/* Remounted on "Remove image" (which clears the input without a change event), so no
+          stale file name shows. */}
+      <FileField
+        key={cleared}
         ref={input}
         id={id}
         name="image"
-        type="file"
+        label="Image"
         accept={IMAGE_ACCEPT}
-        aria-describedby={[`${id}-hint`, error ? `${id}-error` : null].filter(Boolean).join(" ")}
-        aria-invalid={!!error}
+        optional
+        description="JPG, PNG or WebP, up to 2 MB. Saved with the programme or level."
+        error={error ?? undefined}
         onChange={(event) => {
           const file = event.target.files?.[0];
           if (
@@ -63,14 +66,6 @@ export function ImageField({
           setPreview(file ? URL.createObjectURL(file) : undefined);
         }}
       />
-      <p id={`${id}-hint`} className="text-sm text-ui-muted-foreground">
-        JPG, PNG or WebP, up to 2 MB. Saved with the programme or level.
-      </p>
-      {error ? (
-        <p id={`${id}-error`} role="alert" className="text-sm text-ui-destructive">
-          {error}
-        </p>
-      ) : null}
       <input type="hidden" name="removeImage" value={String(removed)} />
       {src ? (
         <div className="flex flex-wrap items-center gap-2">
@@ -80,6 +75,7 @@ export function ImageField({
             variant="ghost"
             onClick={() => {
               if (input.current) input.current.value = "";
+              setCleared((count) => count + 1);
               setPreview(undefined);
               setRemoved(true);
               setError(null);

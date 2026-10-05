@@ -1,15 +1,17 @@
-import type { TagColor } from "@/components/ui-kit/tag";
+import { Ban, CircleCheck, CircleHelp, Clock3, FilePenLine, Inbox, ScanSearch, XCircle } from "lucide-react";
+import type { StatusMeta } from "@/lib/status";
 
+/** Each status has its own icon shape, so colour is never the only signal. */
 export const refundStatuses = {
-  DRAFT: { label: "Draft", color: "gray" },
-  SUBMITTED: { label: "Submitted", color: "blue" },
-  IN_REVIEW: { label: "In review", color: "purple" },
-  NEEDS_INFORMATION: { label: "Needs information", color: "orange" },
-  APPROVED: { label: "Awaiting payment", color: "blue" },
-  REFUNDED: { label: "Refunded", color: "green" },
-  DECLINED: { label: "Declined", color: "red" },
-  WITHDRAWN: { label: "Withdrawn", color: "gray" },
-} satisfies Record<string, { label: string; color: TagColor }>;
+  DRAFT: { label: "Draft", color: "gray", icon: FilePenLine },
+  SUBMITTED: { label: "Submitted", color: "blue", icon: Inbox },
+  IN_REVIEW: { label: "In review", color: "purple", icon: ScanSearch },
+  NEEDS_INFORMATION: { label: "Needs information", color: "orange", icon: CircleHelp },
+  APPROVED: { label: "Awaiting payment", color: "blue", icon: Clock3 },
+  REFUNDED: { label: "Refunded", color: "green", icon: CircleCheck },
+  DECLINED: { label: "Declined", color: "red", icon: XCircle },
+  WITHDRAWN: { label: "Withdrawn", color: "gray", icon: Ban },
+} satisfies Record<string, StatusMeta>;
 export type RefundStatus = keyof typeof refundStatuses;
 export const refundServices = { AQUATICS: "Aquatics", MEMBERSHIP: "Membership", BOOKING: "Booking", OTHER: "Other" } as const;
 export const paymentMethods = { CARD: "Card", BANK_TRANSFER: "Bank transfer", CASH: "Cash", OTHER: "Other" } as const;

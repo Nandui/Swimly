@@ -7,7 +7,7 @@ import { Checkbox } from "@/components/shadcn/checkbox";
 import { Input } from "@/components/shadcn/input";
 import { Label } from "@/components/shadcn/label";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/shadcn/collapsible";
-import { Badge } from "@/components/shadcn/badge";
+import { Tag } from "@/components/ui-kit/tag";
 import { EmptyState } from "@/components/ui-kit/empty-state";
 import { SegmentedChoice } from "@/components/ui-kit/segmented-links";
 import { RadioGroup, RadioGroupItem } from "@/components/shadcn/radio-group";
@@ -15,6 +15,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Textarea } from "@/components/ui/textarea";
 import { DAY_META, DAYS_IN_ORDER, classTimes, courseName, formatTime, placesLeft } from "@/modules/activities/lib/courses/constants";
 import { ALL_CLASSES, filterClassChoices, type ClassPickerFilters } from "@/modules/activities/lib/enrolment/class-picker";
+import { PLACEMENT_META } from "@/modules/activities/lib/enrolment/constants";
 import type { StudentEnrolment, TransferTarget } from "@/modules/activities/lib/enrolment/data/enrolments";
 import type { ActionResult, ConfirmationReply } from "@/lib/action-result";
 import { cn } from "@/lib/utils";
@@ -160,7 +161,7 @@ export function ClassEnrolmentDialog({ trigger, courses, currentEnrolment, submi
       <p className="text-xs text-ui-muted-foreground">Selected class</p>
       <p className="font-semibold">{courseName(selected)} · {DAY_META[selected.dayOfWeek].label} {classTimes(selected)}</p>
       <p className="flex flex-wrap items-center gap-x-2 gap-y-1"><MapPin className="size-4 shrink-0" aria-hidden="true" />{selected.club.name}
-        {differentSite ? <Badge variant="outline">Different site</Badge> : null}</p>
+        {differentSite ? <Tag meta={PLACEMENT_META.differentSite} /> : null}</p>
       {differentSite ? <p className="text-xs text-ui-muted-foreground">Moving from {currentEnrolment.course.club.name}.</p> : null}
       {full ? <p className="text-xs text-ui-muted-foreground">This class is full. Enrolment will join its waitlist.</p> : null}
     </div> : <p className="text-ui-muted-foreground">Select a class to continue.</p>}>

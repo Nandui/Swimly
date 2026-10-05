@@ -4,9 +4,9 @@ import { useId, useState, useTransition } from "react";
 import Form from "next/form";
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
-import { Check, ChevronDown, ChevronsUpDown, RefreshCw, Search, SlidersHorizontal, X } from "lucide-react";
+import { Check, ChevronDown, ChevronsUpDown, RefreshCw, SlidersHorizontal, X } from "lucide-react";
 import { Button } from "@/components/shadcn/button";
-import { Input } from "@/components/shadcn/input";
+import { SearchField } from "@/components/ui-kit/search-field";
 import { Label } from "@/components/shadcn/label";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/shadcn/collapsible";
 import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList } from "@/components/shadcn/command";
@@ -36,13 +36,10 @@ export function CourseFilters({ dimensions, q, active, state, todayDay, views, s
     startNavigation(() => router.push(href({ [key]: value, ...(key === "programme" ? { level: null } : {}) }), { scroll: false }));
   }
   return <div className="space-y-4" aria-busy={pending}>
-    <Form action="/courses" role="search" aria-label="Search weekly classes" className="flex items-end gap-2">
+    <Form action="/courses" role="search" aria-label="Search weekly classes" className="max-w-xl">
       {dimensions.map(d => d.selected ? <input key={d.key} type="hidden" name={d.key} value={d.selected} /> : null)}
       {state === "archived" ? <input type="hidden" name="state" value="archived" /> : null}
-      <div className="min-w-0 flex-1 space-y-2"><Label htmlFor="class-query">Find a class</Label><div className="relative">
-        <Search className="pointer-events-none absolute top-1/2 left-3 size-4 -translate-y-1/2 text-ui-muted-foreground" aria-hidden="true" />
-        <Input key={q} id="class-query" name="q" type="search" defaultValue={q} placeholder="Class, level, site or instructor…" className="h-11 pl-10" autoComplete="off" />
-      </div></div><Button type="submit" className="h-11">Search</Button>
+      <SearchField id="class-query" label="Find a class" defaultValue={q} placeholder="Class, level, site or instructor" clearHref={href({ q: null })} />
     </Form>
     <SegmentedLinks label="Class availability" items={views.map(view => ({ href: href({ state: view.state, places: view.places }), label: view.label, count: view.count, current: selectedView === view.key }))} />
     <Collapsible open={expanded} onOpenChange={setExpanded} className="space-y-3">

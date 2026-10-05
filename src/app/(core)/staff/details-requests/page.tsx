@@ -39,7 +39,7 @@ export default async function DetailRequestsPage({ searchParams }: { searchParam
                 <h2 className="text-lg font-semibold"><UiLink className="underline-offset-4 hover:underline" href={`/staff/${row.person.id}`}>{row.person.name}</UiLink></h2>
                 <p className="text-sm text-ui-muted-foreground">{row.person.jobTitle ? `${row.person.jobTitle} · ` : ""}{formatDateTime(row.createdAt)}</p>
               </div>
-              <Tag color={status.color}>{status.label}</Tag>
+              <Tag meta={status} />
             </div>
             {row.message ? <p className="whitespace-pre-wrap text-sm"><span className="font-semibold">Their note: </span>{row.message}</p> : null}
             <Table>

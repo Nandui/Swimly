@@ -99,7 +99,7 @@ needs the permission at both. Every change is audited with the shift's own site.
 ## Warnings, never blocks
 
 Owner decision, September 2026: the rota **warns** and never refuses. Warnings
-come from `ROTA_WARNING_META` and `RotaWarningTag`, each with its own icon:
+come from `ROTA_WARNING_META`, each with its own icon, shown with `<Tag meta={…} />`:
 
 - **Qualification expired**: the shift needs a qualification type, and every one
   the person holds had expired by the shift's day. Withdrawn ones don't count.
@@ -128,7 +128,7 @@ The reason is health-adjacent, so it is kept small:
 - The note is short and its hint says never to record medical details. Anything
   more belongs in HR (docs/hr.md).
 
-Reasons come from `ABSENCE_REASON_META`, each with its own icon in `AbsenceReasonTag`.
+Reasons come from `ABSENCE_REASON_META`, each with its own icon in the meta.
 One absence at a time per person: overlapping days are refused. Reporting your own
 absence from Turnfin Me is not built yet.
 

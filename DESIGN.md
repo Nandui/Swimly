@@ -22,8 +22,16 @@ theme describe the retired look. Components live in `src/components/shadcn`.
   are Item rows or Tables; Card is for a distinct panel, such as sign-in.
 - Colours and radii use `ui-` utilities backed by `src/app/shadcn.css`. New
   components from the CLI must use this namespace and `@/lib/utils` for `cn`.
-- Status labels use Badge or the shared Tag composition, with `data-tone`
-  selected by a domain metadata map. Do not choose status colours at a call site.
+- `<Tag meta={…} />` (`src/components/ui-kit/tag.tsx`) is the only way to show a status.
+  The meta is a `StatusMeta` entry (`src/lib/status.ts`: label, one of six tones green,
+  blue, orange, red, purple or gray, and a Lucide icon) from a domain metadata map; Tag
+  renders the icon and the 12px/600 label. `label` overrides the words only for dynamic
+  text that keeps the meta's meaning (a count, a role or level name, a short form such as
+  "Now"); `className` is for layout only. Within one map, two entries of the same tone
+  never share an icon. Never write `data-tone` on a Badge, pick a tone at a call site or
+  keep a private icon map; counts and plain values (roles, versions) are text, not tags.
+  Pass status keys, not metas, from a server component to a client one (icons are
+  components). The gray tag draws a hairline (`--pc-line`) so it reads on white.
 - One H1 per page. The Poolside type scale (`--pc-text-*`) is 28px page titles (24px on
   phones), 18px section titles, 14px body, 12px captions and metadata, and 28px figures;
   markup uses only `text-xs`, `text-sm`, `text-lg` and `text-2xl`; `text-base`, `text-xl`
@@ -162,8 +170,8 @@ Refunds at `/refunds` is in the shared frame with three request views in the pag
 (Awaiting review, Needs information, Awaiting payment, Refunded): each links to its status
 and is outlined in blue when it is the open filter, so each status has one way in. Filters
 sit in a white panel; requests are separate rounded rows. On a request, the next-action
-panel is the one panel with an edge (2px blue). Statuses use `RefundStatusTag`, which pairs
-each label with its own icon. Finance decisions use shadcn Dialogs with 44px controls,
+panel is the one panel with an edge (2px blue). Statuses use `<Tag meta={refundStatuses[status]} />`;
+each status in `src/lib/refunds/types.ts` has its own icon. Finance decisions use shadcn Dialogs with 44px controls,
 focus restoration and preserved values after errors. `src/app/refunds/refunds.css` only
 arranges the Refunds screens. See [docs/refunds.md](docs/refunds.md).
 
@@ -174,8 +182,8 @@ with its own page bar. `src/app/workspace/module-workspace.css`
 module reuses it rather than copying a stylesheet. The theme comes from `body.turnfin-app`, so
 every portalled dialog already has it; their form dialogs pass `portalClassName="turnfin-module"`
 to `FormDialog` only so the module layout CSS reaches them, and selects inside them are shadcn `NativeSelect`. Statuses use
-metadata-fed tags with their own icons (`TrainingStatusTag`, `QualificationStateTag`,
-`NoteVisibilityTag`, `ReviewStatusTag`, `RotaWarningTag`). Each person's own side is not on Work at
+`<Tag meta={…} />` with metas whose icons live in the map itself (`TRAINING_STATUS_META`,
+`QUALIFICATION_STATE_META`, `NOTE_VISIBILITY_META`, `REVIEW_STATUS_META`, `ROTA_WARNING_META`). Each person's own side is not on Work at
 all: it is Turnfin Me (`apps/me`), a phone-first app in Poolside Clear with a bottom tab bar,
 44px controls and the same tokens (copied into `apps/me/src/app/globals.css`), built from plain
 semantic elements; status tones come from `apps/me/src/lib/meta.ts`, each with an icon. See
@@ -207,7 +215,12 @@ a literal size, radius, colour or control height.
 
 **Colour.** `--pc-primary` (blue) marks actions, the current page and selection; focus is a
 blue ring with a soft halo. Status colour comes only from domain metadata maps, always with
-an icon. Session blocks use `--pc-block-*` with their `--pc-on-block-*` text colour. The
+an icon, through `<Tag meta={…} />`; there are six tones (orange is the amber warning tone).
+Shared icons: CircleCheck done, active or valid; CirclePause inactive or suspended; Inbox
+submitted; Clock3 waiting or pending; CalendarClock expires soon; XCircle cancelled, declined
+or revoked; TriangleAlert warning, overdue or cover needed; ClipboardCheck assessment; Play on
+now; Pencil draft or "Changes things"; Archive archived; Ban withdrawn; MapPin working in;
+HeartPulse medical; Eye read only; KeyRound administrator; Lock built in. Session blocks use `--pc-block-*` with their `--pc-on-block-*` text colour. The
 first row needing someone (`[data-first]`) is yellow; empty queues are muted. Every
 text/control pair meets 4.5:1 (text) or 3:1 (edges, focus) in both modes.
 
@@ -263,6 +276,35 @@ line. Multi-line boxes (textareas, notices) use 16px, never a pill.
     class picker's sites) are `SegmentedChoice`, never ghost and outline buttons with
     `aria-pressed`.
 - Radios and checkboxes are 20px with no shadow; the checkbox uses `rounded-ui-xs`.
+- Forms (`FieldFrame` in `src/components/ui`, used by ui/Input, Textarea, Select, Switch,
+  `SearchablePicker`, `StudentPicker` and the `FormDialog` `Field`; RFNew, ADAccount, AUSignIn):
+  - A field is its label (body/600), then a 12px muted caption (`data-slot="field-description"`)
+    holding "Optional" and/or the hint, then the control, then any error in `--pc-danger`
+    at body size with an `AlertCircle` icon. Required fields carry no marker (native
+    `required` stays); optional ones pass `optional`, never "(optional)" in the label or
+    "Optional —" in the hint. The caption is in the control's `aria-describedby`.
+  - Field labels are blocks in module and Refunds scopes (one rule in poolside.css), so
+    the text sits left above the control.
+  - Options with a hint are `ChoiceRow` (`ui/choice-row.tsx`, HRPerson): the radio or
+    checkbox inside its label as a 56px `.pc-row`, the name at body/600 and the hint as a
+    12px muted caption; the whole row picks it, a focused row takes the focus ring and a
+    chosen one a blue edge.
+  - A switch's hint sits under its label as the same caption; its name comes from `label`
+    (or an outside label), never the form field name.
+  - "Choose one" fields share the select look: ui/Select, NativeSelect and the
+    `SearchablePicker` / `StudentSearch` combobox triggers are white pills at weight 400 with
+    a full-strength `ChevronDown`; long names wrap. Select groups are keyed by a stable `id`.
+  - List filters use the one `SearchField` (`ui-kit/search-field.tsx`; V2Swimmers,
+    V2Classes, V2Awaiting, SSLegend): a visible label over a 44px pill with a leading search
+    icon, no trailing ellipsis in the placeholder and no visible submit. In a GET form
+    Enter submits through a hidden submit that is never a tab stop (`clearHref` adds a
+    ghost Clear); with `value`/`onValueChange` it is a live filter. Exact lookups (find a
+    parent account, the deck's Find) keep a visible button beside it.
+  - File inputs are `FileField` (`ui/file-field.tsx`, MeQualifications): a full-width
+    outline pill "Choose a file" with the Upload icon; the native input stays in the form
+    (sr-only, not a tab stop) for FormData, `required`, `accept` and reset, and the chosen
+    file's name shows as a caption. It posts its `name` only once a file is chosen, so "no
+    file" sends no empty entry to a server action. Never the browser's "Choose file / No file chosen".
 - Avatars are the shared `Avatar` (`src/components/shadcn/avatar.tsx`) with `initials()`:
   32px by default (bars, inline), `size="lg"` 40px (rows), `size="xl"` 64px (profile).
   Initials are 12px/600 (18px on `xl`) on the sunken fill with a 1px inset line. Only the
@@ -298,8 +340,19 @@ line. Multi-line boxes (textareas, notices) use 16px, never a pill.
   shadcn `item-group` / table inside `.tf-main`, which the theme styles the same way). A
   table that is a grid, like the booking sheet, opts out with `data-layout="grid"`.
 - Row: the name at body/600, a caption line beneath, counts and a chevron on the right.
-- Summary tiles: borderless white tiles, figure at the bottom so a row lines up when a
-  label wraps; a tile that filters shows a soft fill on hover and a blue edge when open.
+- Figure tiles are `.pc-stat` in a `.pc-stats` grid: icon, figure over label, caption.
+  Inside a panel a tile is 16px with a 1px line, two per row (a lone tile keeps half the
+  panel). On the canvas it is a borderless white 24px tile and the row fills. A tile that
+  filters shows a soft fill on hover and a 2px blue edge when open (`aria-current`).
+- Shadcn rows use `ItemTitle` (body/600) over `ItemDescription` (12px caption, muted, no
+  clamp); do not rebuild the pair from ad hoc divs. A table's row header (`th scope="row"`)
+  sits inside the row card in regular weight; a name inside it carries its own 600.
+- Panels side by side use `.pc-grid` (auto-fit, 320px minimum, 16px gap), so two panels
+  share the row with no empty track and stack when there is no room.
+- Page blocks sit 16px apart: the frame's content wrapper (`.tf-content` in ModuleShell,
+  Instructor and Help) is a flex column with a 16px gap. It reaches blocks a page returns
+  as direct children (a fragment), not ones inside its own `gap-6`/`space-y-6` wrapper; an
+  inline-level child there (a back link, a lone button) needs `self-start`.
 - Page header: H1 and one line on the left, actions on the right aligned to the bottom,
   the primary action last.
 - Check every change at 375, 768, 1024 and 1280px in light and dark: no horizontal scroll,
@@ -345,8 +398,8 @@ pagination, member number and age for disambiguation. Search matches names,
 member numbers and contacts. All/Active/Inactive filters and profile return
 links retain validated URL state. Sidebar swimmer search stays available here
 as on every desk page for users with access to Swimmers.
-Its header is separated from search by 24px; search, filters and results use
-16px gaps. Classes also uses 24px between its major page sections.
+Its header, search, filters and results sit 16px apart, as every page's blocks do;
+Classes uses the same 16px between its major page sections.
 
 The swimmer profile shows enrolment chapters, attendance, assessments and
 individual competency history. The current-state rail stacks on narrow screens.
@@ -428,7 +481,10 @@ and the manual reads no operational data. See [help content and access](docs/hel
 `src/components/ui` composes shadcn inputs with labels, hints and native form
 submission. Dates, times and numbers preserve native validation and bounds;
 uncontrolled inputs and textareas retain native reset behaviour. Named switches
-post `on` only when checked. Selects retain empty choices and grouped options.
+post `on` only when checked. Selects retain empty choices and grouped options; a
+missing required choice shows FieldFrame's error. FileField keeps the native file input
+(and its reset and validation) behind its button; ChoiceRow radios and checkboxes post
+like the bare shadcn controls.
 
 SearchablePicker uses Command/Popover for locally available option sets.
 StudentSearch asks the server after a 200ms debounce, excludes already chosen

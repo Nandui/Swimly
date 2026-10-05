@@ -2,7 +2,7 @@
 
 import * as React from "react";
 import { Input as ShadcnInput } from "@/components/shadcn/input";
-import { FieldFrame } from "./field-frame";
+import { FieldFrame, fieldHintId } from "./field-frame";
 import { useFieldFeedback } from "./form-feedback";
 
 export type InputProps = Omit<
@@ -11,6 +11,8 @@ export type InputProps = Omit<
 > & {
   label?: string;
   description?: string;
+  /** Shows "Optional" in the caption under the label. */
+  optional?: boolean;
   value?: string;
   defaultValue?: string | number | null;
   onChange?: (value: string) => void;
@@ -21,6 +23,7 @@ export function Input({
   id: suppliedId,
   label,
   description,
+  optional,
   className,
   value,
   defaultValue,
@@ -35,9 +38,9 @@ export function Input({
       id={id}
       label={label}
       description={description}
+      optional={optional}
       className={className}
       error={feedback.error}
-      required={props.required}
     >
       <ShadcnInput
         {...props}
@@ -53,7 +56,7 @@ export function Input({
           (label ? undefined : (props.placeholder ?? props.name ?? "Field"))
         }
         aria-describedby={
-          [props["aria-describedby"], description ? `${id}-hint` : null, feedback.error ? `${id}-error` : null]
+          [props["aria-describedby"], fieldHintId(id, optional, description), feedback.error ? `${id}-error` : null]
             .filter(Boolean)
             .join(" ") || undefined
         }

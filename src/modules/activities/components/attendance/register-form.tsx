@@ -349,7 +349,7 @@ function RegisterFormState({
                     </CollapsibleContent>
                   </Collapsible>
                 ) : line.hasMedicalNotes ? (
-                  <Tag color={MEDICAL_STATUS_META.notes.color} className="mt-1">{MEDICAL_STATUS_META.notes.label}</Tag>
+                  <Tag meta={MEDICAL_STATUS_META.notes} className="mt-1" />
                 ) : null}
               </ItemContent>
               <MarkChoices

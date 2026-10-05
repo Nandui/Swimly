@@ -2,7 +2,7 @@
 
 import { labelsItself } from "@/components/form-dialog";
 import * as React from "react";
-import { ChevronsUpDown, Loader2, Search, X } from "lucide-react";
+import { ChevronDown, Loader2, Search, X } from "lucide-react";
 import { Button } from "@/components/shadcn/button";
 import { IconButton } from "@/components/ui/icon-button";
 import {
@@ -18,7 +18,7 @@ import {
   PopoverContent,
   PopoverTrigger,
 } from "@/components/shadcn/popover";
-import { FieldFrame } from "@/components/ui/field-frame";
+import { FieldFrame, fieldHintId } from "@/components/ui/field-frame";
 import { searchStudents, type StudentHit } from "@/modules/activities/lib/students/actions/search";
 import { ageLabel, fullName } from "@/modules/activities/lib/students/constants";
 
@@ -35,6 +35,7 @@ export function StudentSearch({
   includeInactive = false,
   hasSearchIcon = false,
   id: suppliedId,
+  optional,
 }: {
   onSelect: (hit: StudentHit | null) => void;
   selected?: StudentHit | null;
@@ -42,6 +43,7 @@ export function StudentSearch({
   label?: string;
   labelHidden?: boolean;
   description?: string;
+  optional?: boolean;
   placeholder?: string;
   emptyText?: string;
   includeInactive?: boolean;
@@ -101,6 +103,7 @@ export function StudentSearch({
       id={id}
       label={labelHidden ? undefined : label}
       description={description}
+      optional={optional}
     >
       <div className="flex min-w-0 items-center gap-2">
         <Popover open={open} onOpenChange={changeOpen}>
@@ -110,18 +113,21 @@ export function StudentSearch({
               type="button"
               variant="outline"
               role="combobox"
+              data-slot="select-trigger"
               aria-expanded={open}
               aria-label={label}
-              aria-describedby={description ? `${id}-hint` : undefined}
-              className="h-auto min-h-11 min-w-0 flex-1 justify-between text-left font-normal whitespace-normal"
+              aria-describedby={fieldHintId(id, optional, description)}
+              className="h-auto min-h-11 min-w-0 flex-1 justify-between gap-2 text-left whitespace-normal"
             >
               {hasSearchIcon ? (
-                <Search className="size-4" aria-hidden="true" />
+                <Search className="size-4 text-ui-muted-foreground" aria-hidden="true" />
               ) : null}
               <span className="min-w-0 flex-1">
-                {selected ? fullName(selected) : placeholder}
+                <span className={selected ? undefined : "text-ui-muted-foreground"}>
+                  {selected ? fullName(selected) : placeholder}
+                </span>
               </span>
-              <ChevronsUpDown className="size-4" aria-hidden="true" />
+              <ChevronDown className="size-4 text-ui-muted-foreground" aria-hidden="true" />
             </Button>
           </PopoverTrigger>
           <PopoverContent
@@ -208,6 +214,7 @@ export function StudentPicker({
   id,
   label,
   description,
+  optional,
   placeholder = "Search by name or member number…",
   onValueChange,
 }: {
@@ -215,6 +222,7 @@ export function StudentPicker({
   id?: string;
   label?: string;
   description?: string;
+  optional?: boolean;
   placeholder?: string;
   onValueChange?: (value: string) => void;
 }) {
@@ -235,6 +243,7 @@ export function StudentPicker({
         label={label ?? "Swimmer"}
         labelHidden={label === undefined}
         description={description}
+        optional={optional}
         selected={chosen}
         onSelect={hit => { setChosen(hit); onValueChange?.(hit?.id ?? ""); }}
         placeholder={placeholder}

@@ -13,12 +13,25 @@ import Link from 'next/link';
 import {
   formatDate,
   overdue,
+  DOC_STATUS_META,
+  type DocStatus,
   type Workspace,
   type Requirement,
   type LibraryDocument,
 } from '@/lib/docs/types';
+import { Tag } from '@/components/ui-kit/tag';
 import { filterReading, type ReportFilters } from '@/lib/docs/reporting';
-import { PageHeading, Badge, Avatar, EmptyState } from './ui';
+import { PageHeading, Avatar, EmptyState } from './ui';
+
+/** Where one person's required reading stands. */
+const readingStatus = (r: Pick<Requirement, 'status' | 'dueDate'>): DocStatus =>
+  r.status === 'completed'
+    ? 'acknowledged'
+    : r.status === 'cancelled'
+      ? 'cancelled'
+      : overdue(r.dueDate)
+        ? 'overdue'
+        : 'toRead';
 export function ReportsView({
   workspace: w,
   items,
@@ -285,25 +298,7 @@ export function ReportsView({
                         <TableCell>v{r.version}</TableCell>
                         <TableCell>{formatDate(r.dueDate)}</TableCell>
                         <TableCell>
-                          <Badge
-                            tone={
-                              r.status === 'completed'
-                                ? 'green'
-                                : r.status === 'cancelled'
-                                  ? 'neutral'
-                                  : overdue(r.dueDate)
-                                    ? 'red'
-                                    : 'amber'
-                            }
-                          >
-                            {r.status === 'completed'
-                              ? 'Acknowledged'
-                              : r.status === 'cancelled'
-                                ? 'Cancelled'
-                                : overdue(r.dueDate)
-                                  ? 'Overdue'
-                                  : 'To read'}
-                          </Badge>
+                          <Tag meta={DOC_STATUS_META[readingStatus(r)]} />
                         </TableCell>
                         <TableCell>
                           {r.acknowledgedAt ? formatDate(r.acknowledgedAt) : '—'}
@@ -330,25 +325,7 @@ export function ReportsView({
                         {w.members.find((member) => member.id === r.memberId)?.name ||
                           'Former staff'}
                       </strong>
-                      <Badge
-                        tone={
-                          r.status === 'completed'
-                            ? 'green'
-                            : r.status === 'cancelled'
-                              ? 'neutral'
-                              : overdue(r.dueDate)
-                                ? 'red'
-                                : 'amber'
-                        }
-                      >
-                        {r.status === 'completed'
-                          ? 'Acknowledged'
-                          : r.status === 'cancelled'
-                            ? 'Cancelled'
-                            : overdue(r.dueDate)
-                              ? 'Overdue'
-                              : 'To read'}
-                      </Badge>
+                      <Tag meta={DOC_STATUS_META[readingStatus(r)]} />
                     </div>
                     <Link href={`/docs/documents/${r.documentId}?version=${r.versionId}`}>
                       {r.title}

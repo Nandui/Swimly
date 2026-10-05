@@ -3,7 +3,7 @@
 import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import { Button } from "@/components/shadcn/button";
-import { Badge } from "@/components/shadcn/badge";
+import { Tag } from "@/components/ui-kit/tag";
 import { Card } from "@/components/shadcn/card";
 import { EmptyState } from "@/components/ui-kit/empty-state";
 import { Textarea } from "@/components/ui/textarea";
@@ -69,7 +69,7 @@ export function ParentAccessRequests() {
       {resource.data.items.map(request => <Card key={request.id} className="gap-4 p-4 shadow-none sm:p-5" role="article">
         <div className="flex flex-wrap items-start justify-between gap-3">
           <div className="min-w-0"><h3 className="break-words text-lg font-semibold">{request.firstName} {request.lastName}</h3><p className="text-sm text-ui-muted-foreground">Date of birth: {request.dateOfBirth} · Parent-supplied details</p></div>
-          <Badge variant="secondary" data-tone={ACCESS_REQUEST_META[request.status].color}>{ACCESS_REQUEST_META[request.status].label}</Badge>
+          <Tag meta={ACCESS_REQUEST_META[request.status]} />
         </div>
         <dl className="grid gap-3 text-sm sm:grid-cols-2">
           <div className="min-w-0"><dt className="text-ui-muted-foreground">Requested by</dt><dd className="mt-1 break-words font-medium">{request.parent.name || "Name not supplied"}</dd><dd className="break-all">{request.parent.email}</dd><dd>{request.parent.phone || "No phone supplied"}</dd></div>

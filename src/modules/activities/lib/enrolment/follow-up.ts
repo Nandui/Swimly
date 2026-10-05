@@ -1,13 +1,14 @@
-import type { TagColor } from "@/components/ui-kit/tag";
+import { CalendarX, CircleCheck, Clock3, MessageSquare, PauseCircle, PhoneOff } from "lucide-react";
+import type { StatusMeta } from "@/lib/status";
 
 export const CONTACT_OUTCOMES = {
-  CONTACTED: { label: "Contacted", color: "blue" },
-  NO_REPLY: { label: "No reply", color: "gray" },
-  PARENT_NOT_READY: { label: "Parent not ready", color: "yellow" },
-  NO_SUITABLE_CLASS: { label: "No suitable class", color: "orange" },
-  AWAITING_PARENT: { label: "Awaiting parent response", color: "purple" },
-  READY_TO_ENROL: { label: "Ready to enrol", color: "green" },
-} as const satisfies Record<string, { label: string; color: TagColor }>;
+  CONTACTED: { label: "Contacted", color: "blue", icon: MessageSquare },
+  NO_REPLY: { label: "No reply", color: "gray", icon: PhoneOff },
+  PARENT_NOT_READY: { label: "Parent not ready", color: "orange", icon: PauseCircle },
+  NO_SUITABLE_CLASS: { label: "No suitable class", color: "orange", icon: CalendarX },
+  AWAITING_PARENT: { label: "Awaiting parent response", color: "purple", icon: Clock3 },
+  READY_TO_ENROL: { label: "Ready to enrol", color: "green", icon: CircleCheck },
+} as const satisfies Record<string, StatusMeta>;
 export const CONTACT_CHANNELS = { PHONE: "Phone call", EMAIL: "Email", IN_PERSON: "In person", SMS: "Text message", INTERNAL: "Internal work / note" } as const;
 export type ContactOutcome = keyof typeof CONTACT_OUTCOMES;
 export type ContactChannel = keyof typeof CONTACT_CHANNELS;

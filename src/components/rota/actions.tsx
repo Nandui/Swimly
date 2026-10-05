@@ -3,13 +3,12 @@
 import { useState, type CSSProperties, type ReactNode } from "react";
 import { CalendarCheck, CopyPlus, Pencil, Plus, X } from "lucide-react";
 import { Button } from "@/components/shadcn/button";
-import { Checkbox } from "@/components/shadcn/checkbox";
 import { Input } from "@/components/shadcn/input";
-import { Label } from "@/components/shadcn/label";
 import { NativeSelect, NativeSelectOption } from "@/components/shadcn/native-select";
-import { RadioGroup, RadioGroupItem } from "@/components/shadcn/radio-group";
+import { RadioGroup } from "@/components/shadcn/radio-group";
 import { ConfirmAction } from "@/components/confirm-action";
 import { Field, FormDialog } from "@/components/form-dialog";
+import { ChoiceRow } from "@/components/ui/choice-row";
 import { cancelShift, copyPlan, markTimepointUpdated, saveShift, type ChangeInput } from "@/lib/rota/actions";
 import { ROTA_CHANGE_REASON_META, ROTA_CHANGE_REASONS, addDaysIso, clock, mondayOf, weekStarted, type RotaChangeReason } from "@/lib/rota/constants";
 
@@ -28,22 +27,13 @@ function ChangeFields({ id, suggested }: { id: string; suggested?: RotaChangeRea
   return (
     <fieldset className="space-y-3 rounded-[var(--pc-radius-control)] border border-ui-border p-3">
       <legend className="px-1 text-sm font-medium">This week has started: why the change?</legend>
-      <RadioGroup name="reason" value={reason} onValueChange={setReason} className="gap-1" required>
+      <RadioGroup name="reason" value={reason} onValueChange={setReason} className="gap-2" required>
         {ROTA_CHANGE_REASONS.map((r) => (
-          <div key={r} className="flex min-h-11 items-center gap-3">
-            <RadioGroupItem id={`${id}-reason-${r}`} value={r} />
-            <Label htmlFor={`${id}-reason-${r}`} className="font-normal">{ROTA_CHANGE_REASON_META[r].label}</Label>
-          </div>
+          <ChoiceRow key={r} type="radio" id={`${id}-reason-${r}`} value={r} title={ROTA_CHANGE_REASON_META[r].label} />
         ))}
       </RadioGroup>
-      <Field label="Note (optional)" htmlFor={`${id}-change-note`}><Input id={`${id}-change-note`} name="changeNote" maxLength={200} className="min-h-11" /></Field>
-      <div className="flex min-h-11 items-start gap-3">
-        <Checkbox id={`${id}-timepoint`} name="timepoint" value="1" />
-        <Label htmlFor={`${id}-timepoint`} className="block font-normal">
-          <span className="block font-medium">Updated in Timepoint</span>
-          <span className="block text-sm text-ui-muted-foreground">Leave it unticked if you will do it later: it stays a follow-up until it is done.</span>
-        </Label>
-      </div>
+      <Field label="Note" htmlFor={`${id}-change-note`} optional><Input id={`${id}-change-note`} name="changeNote" maxLength={200} className="min-h-11" /></Field>
+      <ChoiceRow type="checkbox" id={`${id}-timepoint`} name="timepoint" value="1" title="Updated in Timepoint" hint="Leave it unticked if you will do it later: it stays a follow-up until it is done." />
     </fieldset>
   );
 }
@@ -123,13 +113,13 @@ export function ShiftDialog({ siteId, date, today, shift, options, label, sugges
           {options.people.map((p) => <NativeSelectOption key={p.id} value={p.id}>{p.name}{p.jobTitle ? ` · ${p.jobTitle}` : ""}</NativeSelectOption>)}
         </NativeSelect>
       </Field>
-      <Field label="Needs a qualification (optional)" htmlFor={`${fid}-type`}>
+      <Field label="Needs a qualification" htmlFor={`${fid}-type`} optional>
         <NativeSelect id={`${fid}-type`} name="requiredTypeId" defaultValue={shift?.requiredTypeId ?? ""} className="min-h-11 w-full">
           <NativeSelectOption value="">None</NativeSelectOption>
           {options.types.map((t) => <NativeSelectOption key={t.id} value={t.id}>{t.name}</NativeSelectOption>)}
         </NativeSelect>
       </Field>
-      <Field label="Note (optional)" htmlFor={`${fid}-note`}><Input id={`${fid}-note`} name="note" maxLength={300} defaultValue={shift?.note} className="min-h-11" /></Field>
+      <Field label="Note" htmlFor={`${fid}-note`} optional><Input id={`${fid}-note`} name="note" maxLength={300} defaultValue={shift?.note} className="min-h-11" /></Field>
       {live ? <ChangeFields id={fid} suggested={suggested} /> : null}
     </FormDialog>
   );
@@ -180,12 +170,9 @@ export function CopyPlan({ siteId, to, whole }: { siteId: string; to: string; wh
       </Field>
       <fieldset className="space-y-1">
         <legend className="text-sm font-medium">People</legend>
-        <RadioGroup value={people} onValueChange={setPeople} className="gap-1">
+        <RadioGroup value={people} onValueChange={setPeople} className="gap-2">
           {[["same", "The same people", "Each duty keeps who did it. Absences and clashes show as warnings."], ["none", "The shape only", "Every duty comes in unfilled, to choose who this time."]].map(([value, label, hint]) => (
-            <div key={value} className="flex min-h-11 items-start gap-3 py-1">
-              <RadioGroupItem id={`copy-people-${to}-${value}`} value={value} />
-              <Label htmlFor={`copy-people-${to}-${value}`} className="block font-normal"><span className="block font-medium">{label}</span><span className="block text-sm text-ui-muted-foreground">{hint}</span></Label>
-            </div>
+            <ChoiceRow key={value} type="radio" id={`copy-people-${to}-${value}`} value={value} title={label} hint={hint} />
           ))}
         </RadioGroup>
       </fieldset>

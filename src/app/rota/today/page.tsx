@@ -96,7 +96,7 @@ export default async function TodayPage({ searchParams }: { searchParams: Promis
                     <li key={c.id} className="space-y-1.5 py-3 text-sm first:pt-0">
                       <p className="font-semibold">{c.kind === "cancelled" ? `Cancelled: ${c.before}` : c.kind === "added" ? `Added: ${c.after}` : `${c.before} → ${c.after.split(", ").at(-1)}`}</p>
                       <p className="flex flex-wrap items-center gap-2 text-ui-muted-foreground">
-                        <Tag color={ROTA_CHANGE_REASON_META[c.reason as RotaChangeReason].color}>{ROTA_CHANGE_REASON_META[c.reason as RotaChangeReason].label}</Tag>
+                        <Tag meta={ROTA_CHANGE_REASON_META[c.reason as RotaChangeReason]} />
                         {formatTime(minutesNow(c.createdAt))} · by {c.byName}{c.note ? ` · ${c.note}` : ""}
                       </p>
                       {c.timepointAt ? (

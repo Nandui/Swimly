@@ -2,12 +2,12 @@ import Link from "next/link";
 import { Button } from "@/components/shadcn/button";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/shadcn/collapsible";
 import { Banknote, BadgeCheck, CreditCard } from "lucide-react";
-import { RefundStatusTag } from "@/components/refunds/status";
+import { Tag } from "@/components/ui-kit/tag";
 import { Notice } from "@/components/ui-kit/notice";
 import { RefundFinanceActions } from "@/components/refunds/finance-actions";
 import { RefundRequestForm } from "@/components/refunds/request-form";
 import { RefundReceipts } from "@/components/refunds/receipts";
-import { editableRefund, euros, paymentMethods, refundActions, refundNumber, refundServices, type RefundActor, type RefundDetail as Detail } from "@/lib/refunds/types";
+import { editableRefund, euros, paymentMethods, refundActions, refundNumber, refundServices, refundStatuses, type RefundActor, type RefundDetail as Detail } from "@/lib/refunds/types";
 import { formatDate, formatDateTime, parseDateOnly } from "@/lib/format";
 
 export function RefundDetail({ data, who, sites }: { data: Detail; who: RefundActor; sites: { id: string; name: string }[] }) {
@@ -20,7 +20,7 @@ export function RefundDetail({ data, who, sites }: { data: Detail; who: RefundAc
     ['Submitted by', row.creatorName], ['Finance handler', row.handlerName || 'Unassigned'],
   ];
   return <div className="space-y-6">
-    <div className="refund-heading"><div className="space-y-2"><div className="flex flex-wrap items-center gap-3"><h1 className="text-2xl font-semibold tabular-nums">{refundNumber(row.number)}</h1><RefundStatusTag status={row.status} /></div><p className="break-words text-sm text-ui-muted-foreground">{row.customerName || 'New customer refund'} · {row.clubName}</p></div><Button asChild variant="outline" className="min-h-11"><Link href="/refunds">Back to requests</Link></Button></div>
+    <div className="refund-heading"><div className="space-y-2"><div className="flex flex-wrap items-center gap-3"><h1 className="text-2xl font-semibold tabular-nums">{refundNumber(row.number)}</h1><Tag meta={refundStatuses[row.status]} /></div><p className="break-words text-sm text-ui-muted-foreground">{row.customerName || 'New customer refund'} · {row.clubName}</p></div><Button asChild variant="outline" className="min-h-11"><Link href="/refunds">Back to requests</Link></Button></div>
     <dl className="refund-summary grid sm:grid-cols-3"><div><dt><Banknote aria-hidden="true" />Requested</dt><dd>{euros(row.requestedCents)}</dd></div><div><dt><BadgeCheck aria-hidden="true" />Approved</dt><dd className={row.approvedCents === null ? 'refund-summary-text' : undefined}>{row.approvedCents === null ? 'Pending' : euros(row.approvedCents)}</dd>{row.approvedByName && <p className="mt-1 text-xs text-ui-muted-foreground">By {row.approvedByName}</p>}</div><div><dt><CreditCard aria-hidden="true" />Payment</dt><dd className="refund-summary-text">{row.status === 'REFUNDED' ? `Recorded ${row.paidOn ? formatDate(parseDateOnly(row.paidOn)) : ''}` : row.status === 'APPROVED' ? 'Awaiting external payment' : 'Not recorded'}</dd></div></dl>
     {query && <Notice tone="warning" title="Finance needs more information" description={query.note} />}
     <div className="refund-detail-columns items-start"><div className="min-w-0 space-y-6">

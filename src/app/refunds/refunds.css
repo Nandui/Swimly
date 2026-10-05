@@ -3,7 +3,6 @@
 .turnfin-refunds .workspace-page { position: relative; }
 .turnfin-refunds .workspace-page-content > * { max-width: none; }
 .turnfin-refunds .workspace-mobile-toolbar > a[aria-label='Turnfin Refunds overview'] { flex: 1; min-width: 0; }
-.turnfin-refunds :is(.refund-content, [data-slot='dialog-content']) label:not(:has([type='checkbox'], [type='radio'])) { display: block; }
 
 /* Page heading */
 .turnfin-refunds .refund-content { min-width: 0; }

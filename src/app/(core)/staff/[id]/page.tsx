@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import { cache } from "react";
 import { notFound } from "next/navigation";
 import UiLink from "next/link";
-import { Item, ItemActions, ItemContent, ItemGroup } from "@/components/shadcn/item";
+import { Item, ItemActions, ItemContent, ItemDescription, ItemGroup, ItemTitle } from "@/components/shadcn/item";
 import { BackLink } from "@/components/ui-kit/back-link";
 import { PageHeader } from "@/components/ui-kit/page-header";
 import { Tag } from "@/components/ui-kit/tag";
@@ -64,8 +64,8 @@ export default async function PersonPage({ params }: { params: Promise<{ id: str
         }
       />
       <div className="flex flex-wrap gap-2">
-        {person.isSuperadmin ? <Tag color={PERSON_STATUS_META.superadmin.color}>{PERSON_STATUS_META.superadmin.label}</Tag> : null}
-        {!person.isActive ? <Tag color={PERSON_STATUS_META.deactivated.color}>{PERSON_STATUS_META.deactivated.label}</Tag> : null}
+        {person.isSuperadmin ? <Tag meta={PERSON_STATUS_META.superadmin} /> : null}
+        {!person.isActive ? <Tag meta={PERSON_STATUS_META.deactivated} /> : null}
       </div>
 
       <section aria-labelledby="profile-heading" className="min-w-0 flex flex-col gap-3">
@@ -120,16 +120,16 @@ export default async function PersonPage({ params }: { params: Promise<{ id: str
               return (
                 <Item key={q.id} role="listitem" className="items-start">
                   <ItemContent className="min-w-0">
-                    <div className="flex flex-wrap items-center gap-2">
-                      <span className="text-sm font-medium">{q.name}</span>
-                      <Tag color={meta.color}>{meta.label}</Tag>
-                    </div>
-                    <span className="text-sm text-ui-muted-foreground">
+                    <ItemTitle className="flex-wrap">
+                      <span>{q.name}</span>
+                      <Tag meta={meta} />
+                    </ItemTitle>
+                    <ItemDescription>
                       Issued {formatDate(new Date(`${q.issuedOn}T00:00:00Z`))}
                       {q.expiresOn ? ` · expires ${formatDate(new Date(`${q.expiresOn}T00:00:00Z`))}` : " · does not expire"}
                       {q.reference ? ` · ${q.reference}` : ""}
                       {q.verifiedBy ? ` · verified by ${q.verifiedBy}` : ""}
-                    </span>
+                    </ItemDescription>
                   </ItemContent>
                   {q.state !== "revoked" ? <ItemActions><RevokeQualification id={q.id} label={q.name} /></ItemActions> : null}
                 </Item>

@@ -52,7 +52,7 @@ export function BookingDialog({ siteId, today, departments, types }: { siteId: s
           </NativeSelect>
         </Field>
         <Field label="Who it is for" htmlFor="booking-title" hint="For example the school's name."><Input id="booking-title" name="title" required minLength={2} maxLength={80} className="min-h-11" /></Field>
-        <Field label="Where (optional)" htmlFor="booking-place" hint="For example Learner pool."><Input id="booking-place" name="place" maxLength={60} className="min-h-11" /></Field>
+        <Field label="Where" htmlFor="booking-place" optional hint="For example Learner pool."><Input id="booking-place" name="place" maxLength={60} className="min-h-11" /></Field>
         <Field label="Department" htmlFor="booking-department">
           <NativeSelect id="booking-department" name="departmentId" defaultValue={departments[0]?.id ?? ""} className="min-h-11 w-full">
             <NativeSelectOption value="">No department</NativeSelectOption>
@@ -96,7 +96,7 @@ export function BookingDialog({ siteId, today, departments, types }: { siteId: s
         ))}
         {needs.length < 8 ? <Button type="button" variant="ghost" className="min-h-11" onClick={() => setNeeds((list) => [...list, { key: Math.max(...list.map((x) => x.key)) + 1, role: "", count: 1, requiredTypeId: "" }])}><Plus aria-hidden="true" />Add another role</Button> : null}
       </fieldset>
-      <Field label="Note (optional)" htmlFor="booking-note"><Input id="booking-note" name="note" maxLength={300} className="min-h-11" /></Field>
+      <Field label="Note" htmlFor="booking-note" optional><Input id="booking-note" name="note" maxLength={300} className="min-h-11" /></Field>
       <Notice title={sessions ? `${sessions} ${sessions === 1 ? "session" : "sessions"}, ${places} ${places === 1 ? "place" : "places"} to fill` : "No sessions yet"}
         description={places > BOOKING_MAX_PLACES ? `That is over ${BOOKING_MAX_PLACES} places: split it into shorter bookings.` : sessions ? "Plan who does them on the week plan, or copy last week once the first week is set." : "Choose the days, and a first and last day that include them."} />
     </FormDialog>
@@ -125,7 +125,7 @@ export function CancelBooking({ id, label, staffedThisWeek }: { id: string; labe
               <NativeSelectOption value="swap">Swap agreed between staff</NativeSelectOption>
             </NativeSelect>
           </Field>
-          <Field label="Note (optional)" htmlFor={`booking-cancel-note-${id}`}><Input id={`booking-cancel-note-${id}`} name="changeNote" maxLength={200} placeholder="The school cancelled for the term" className="min-h-11" /></Field>
+          <Field label="Note" htmlFor={`booking-cancel-note-${id}`} optional><Input id={`booking-cancel-note-${id}`} name="changeNote" maxLength={200} placeholder="The school cancelled for the term" className="min-h-11" /></Field>
           <div className="flex min-h-11 items-center gap-3"><Checkbox id={`booking-cancel-tp-${id}`} name="timepoint" /><Label htmlFor={`booking-cancel-tp-${id}`} className="font-normal">Updated in Timepoint</Label></div>
         </>
       ) : <p className="sr-only">Confirm to cancel.</p>}

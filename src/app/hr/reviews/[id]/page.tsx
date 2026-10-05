@@ -3,9 +3,9 @@ import Link from "next/link";
 import { ArrowLeft } from "lucide-react";
 import { Button } from "@/components/shadcn/button";
 import { ReviewEditor } from "@/components/hr/actions";
-import { ReviewStatusTag } from "@/components/hr/status";
+import { Tag } from "@/components/ui-kit/tag";
 import { formatDate } from "@/lib/format";
-import { REVIEW_OVERALL_LABELS } from "@/lib/hr/constants";
+import { REVIEW_OVERALL_LABELS, REVIEW_STATUS_META } from "@/lib/hr/constants";
 import { hrReview } from "@/lib/hr/records";
 import { requireFreshSession } from "@/lib/policy/session";
 
@@ -21,7 +21,7 @@ export default async function HrReviewPage({ params }: { params: Promise<{ id: s
       <Button asChild variant="ghost" className="-ml-3 min-h-11"><Link href={`/hr/people/${person.id}`}><ArrowLeft aria-hidden="true" />{person.name}</Link></Button>
       <div className="module-heading">
         <div className="space-y-2">
-          <div className="flex flex-wrap items-center gap-3"><h1>{review.period}</h1><ReviewStatusTag status={review.status} /></div>
+          <div className="flex flex-wrap items-center gap-3"><h1>{review.period}</h1><Tag meta={REVIEW_STATUS_META[review.status]} /></div>
           <p className="text-sm">For {person.name} · by {review.reviewerName}{review.sharedAt ? ` · shared ${formatDate(new Date(review.sharedAt))}` : ""}</p>
         </div>
       </div>

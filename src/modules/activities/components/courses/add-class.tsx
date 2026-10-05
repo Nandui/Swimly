@@ -48,16 +48,16 @@ export function AddClass({ levels, instructors, workingSite }: { levels: LevelOp
       }}>
         <div className="min-h-0 overflow-y-auto"><fieldset disabled={pending} className="min-w-0 space-y-5 p-6">
           {!levels.length ? <Alert><AlertDescription>No active levels are available. Add a level before creating a class.</AlertDescription></Alert> : null}
-          <Select id={`${id}-level`} name="levelId" label="Level" required disabled={pending} placeholder="Choose a level" options={[...groups.values()].map(group => ({title: group.name, options: group.levels.map(level => ({value: level.id, label: level.name}))}))} />
-          <Entry name="name" label="Class name" maxLength={80} hint="Optional. Leave blank to use the level name." />
+          <Select id={`${id}-level`} name="levelId" label="Level" required disabled={pending} placeholder="Choose a level" options={[...groups.entries()].map(([programmeId, group]) => ({id: programmeId, title: group.name, options: group.levels.map(level => ({value: level.id, label: level.name}))}))} />
+          <Entry name="name" label="Class name" maxLength={80} optional hint="Leave blank to use the level name." />
           <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
             <Select id={`${id}-day`} name="dayOfWeek" label="Day" defaultValue="MONDAY" disabled={pending} options={DAYS_IN_ORDER.map(day => ({value: day, label: DAY_META[day].label}))} />
             <Entry name="startTime" label="Start time" type="time" defaultValue="16:30" required />
             <Entry name="durationMinutes" label="Duration (minutes)" type="number" min={5} max={240} step={5} defaultValue={30} required />
-            <Entry name="capacity" label="Capacity" type="number" min={1} max={999} hint="Leave blank for no limit." />
+            <Entry name="capacity" label="Capacity" type="number" min={1} max={999} optional hint="Leave blank for no limit." />
           </div>
           <Select id={`${id}-instructor`} name="instructorId" label="Instructor" defaultValue={UNASSIGNED_INSTRUCTOR} disabled={pending} options={[{value: UNASSIGNED_INSTRUCTOR, label:"Not assigned"}, ...instructors.map(instructor => ({value: instructor.id,label: instructor.name}))]} />
-          <Entry name="location" label="Pool area" maxLength={80} placeholder="Learner Pool, Lane 3…" />
+          <Entry name="location" label="Pool area" maxLength={80} optional placeholder="Learner Pool, Lane 3" />
         </fieldset></div>
         <div className="shrink-0 space-y-3 border-t border-ui-border p-4 sm:px-6">
           {error ? <Alert ref={summaryRef} tabIndex={-1} variant="destructive" role="alert"><AlertDescription>{error}</AlertDescription></Alert> : null}

@@ -42,7 +42,7 @@ function AssessmentBookings({ bookings, session }: { bookings: BookingRow[]; ses
     const meta = BOOKING_STATUS_META[booking.status];
     return <Item key={booking.id} role="listitem" className="items-start rounded-none px-0 py-5">
       <ItemContent className="min-w-0 basis-56 space-y-2">
-        <div className="flex flex-wrap items-center gap-2"><h3 className="text-base font-semibold break-words">{fullName(booking.student)}</h3><Tag color={meta.color}>{meta.label}</Tag></div>
+        <div className="flex flex-wrap items-center gap-2"><h3 className="text-base font-semibold break-words">{fullName(booking.student)}</h3><Tag meta={meta} /></div>
         <p className="text-sm text-ui-muted-foreground">{booking.student.dateOfBirth ? `Age: ${ageLabel(booking.student.dateOfBirth)}` : "Age not recorded"}</p>
         {booking.student.medicalNotes ? <p className="text-sm whitespace-pre-wrap break-words"><span className="font-medium">Medical notes: </span>{booking.student.medicalNotes}</p> : null}
         {booking.outcomeLevel ? <p className="text-sm">Placed at <span className="font-medium">{booking.outcomeLevel.name}</span>{booking.assessedByName ? ` · ${booking.assessedByName}` : ""}</p> : null}

@@ -6,7 +6,8 @@ import { Input } from "@/components/shadcn/input";
 import { Label } from "@/components/shadcn/label";
 import { NativeSelect, NativeSelectOption } from "@/components/shadcn/native-select";
 import { AssignTraining } from "@/components/training/manage-actions";
-import { TrainingStatusTag } from "@/components/training/status";
+import { Tag } from "@/components/ui-kit/tag";
+import { TRAINING_STATUS_META } from "@/lib/training/constants";
 import { formatDate } from "@/lib/format";
 import { assignablePeople, trainingOverview, OVERVIEW_VIEWS } from "@/lib/training/data";
 
@@ -70,7 +71,7 @@ export default async function TrainingOverviewPage({ searchParams }: { searchPar
               <li key={row.id}>
                 <Link href={`/training/people/${row.user.id}`} className="module-row flex min-h-20 flex-wrap items-center justify-between gap-4 p-4 sm:px-5">
                   <div className="min-w-0 flex-1 space-y-1">
-                    <div className="flex flex-wrap items-center gap-2"><span className="module-row-title">{row.user.name}</span><TrainingStatusTag state={row.state} /></div>
+                    <div className="flex flex-wrap items-center gap-2"><span className="module-row-title">{row.user.name}</span><Tag meta={TRAINING_STATUS_META[row.state]} /></div>
                     <p className="text-sm">{row.course.title}{row.user.jobTitle ? <span className="text-ui-muted-foreground"> · {row.user.jobTitle}</span> : null}</p>
                     <p className="text-xs text-ui-muted-foreground">
                       {row.state === "completed" && row.completedAt

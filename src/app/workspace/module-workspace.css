@@ -4,7 +4,6 @@
 .turnfin-module .workspace-page { position: relative; }
 .turnfin-module .workspace-page-content > * { max-width: 1200px; }
 .turnfin-module .workspace-mobile-toolbar > a[aria-label$=' overview'] { flex: 1; min-width: 0; }
-.turnfin-module :is(.module-content, [data-slot='dialog-content']) label:not(:has([type='checkbox'], [type='radio'])) { display: block; }
 
 /* Page heading */
 .turnfin-module .module-content { min-width: 0; }

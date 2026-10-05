@@ -1,7 +1,8 @@
 import Link from 'next/link';
 import { ArrowUpRight } from 'lucide-react';
-import { formatDate, overdue, type Group, type LibraryDocument } from '@/lib/docs/types';
-import { Badge, DocIcon } from './ui';
+import { DOC_STATUS_META, formatDate, overdue, type Group, type LibraryDocument } from '@/lib/docs/types';
+import { Tag } from '@/components/ui-kit/tag';
+import { DocIcon } from './ui';
 
 export function DocumentList({
   documents,
@@ -42,15 +43,13 @@ export function DocumentList({
                 {document.publishedAt ? formatDate(document.publishedAt) : 'Not published'}
               </span>
               <div className="knowledge-status">
-                <Badge
-                  tone={document.archivedAt ? 'neutral' : document.version ? 'green' : 'amber'}
-                >
-                  {document.archivedAt ? 'Archived' : document.version ? 'Approved' : 'Draft'}
-                </Badge>
+                <Tag
+                  meta={DOC_STATUS_META[document.archivedAt ? 'archived' : document.version ? 'approved' : 'draft']}
+                />
                 {document.version &&
                   !document.archivedAt &&
                   overdue(document.content.reviewDate) && (
-                    <span className="knowledge-overdue">Review overdue</span>
+                    <Tag meta={DOC_STATUS_META.overdue} label="Review overdue" />
                   )}
               </div>
               <ArrowUpRight size={17} className="knowledge-arrow" aria-hidden="true" />

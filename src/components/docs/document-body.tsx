@@ -4,8 +4,8 @@ import Image from 'next/image';
 import { AlertTriangle, Info } from 'lucide-react';
 import { safeUrl, riskBand } from '@/lib/docs/content';
 import { headingLevels, safeAlignment, safeColour, safeFontSize, readableColour } from '@/lib/docs/formatting';
-import { formatDate, type DocumentContent } from '@/lib/docs/types';
-import { Badge } from './ui';
+import { formatDate, riskBandMeta, UNCLASSIFIED_RISK_META, type DocumentContent } from '@/lib/docs/types';
+import { Tag } from '@/components/ui-kit/tag';
 import { Button } from '@/components/shadcn/button';
 import { Table, TableBody, TableRow, TableHead, TableCell } from '@/components/shadcn/table';
 import { Separator } from '@/components/shadcn/separator';
@@ -181,9 +181,10 @@ export function RiskAssessmentView({
                 <dl>
                   <dt>Initial risk</dt>
                   <dd>
-                    <Badge tone={before?.color || 'neutral'}>
-                      {initial} · {before?.label || 'Unclassified'}
-                    </Badge>
+                    <Tag
+                      meta={riskBandMeta(before)}
+                      label={`${initial} · ${before?.label || UNCLASSIFIED_RISK_META.label}`}
+                    />
                     <small>
                       {r.initialLikelihood} likelihood × {r.initialSeverity} severity
                     </small>
@@ -192,9 +193,10 @@ export function RiskAssessmentView({
                 <dl>
                   <dt>Residual risk</dt>
                   <dd>
-                    <Badge tone={after?.color || 'neutral'}>
-                      {residual} · {after?.label || 'Unclassified'}
-                    </Badge>
+                    <Tag
+                      meta={riskBandMeta(after)}
+                      label={`${residual} · ${after?.label || UNCLASSIFIED_RISK_META.label}`}
+                    />
                     <small>
                       {r.residualLikelihood} likelihood × {r.residualSeverity} severity
                     </small>
@@ -253,9 +255,7 @@ export function RiskAssessmentView({
             </div>
             <div className="risk-band-key">
               {content.riskMatrix.bands.map((b) => (
-                <Badge tone={b.color} key={b.label}>
-                  {b.min}–{b.max}: {b.label}
-                </Badge>
+                <Tag meta={riskBandMeta(b)} key={b.label} label={`${b.min}–${b.max}: ${b.label}`} />
               ))}
             </div>
           </CollapsibleContent>

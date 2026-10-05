@@ -43,7 +43,8 @@ function TypeFields({ type }: { type?: Named }) {
       <Field
         label="Description"
         htmlFor="description"
-        hint="Optional — who this kind of session is for. The desk sees it when booking."
+        optional
+        hint="Who this kind of session is for. The desk sees it when booking."
       >
         <Textarea
           id="description"

@@ -43,8 +43,9 @@ policy engine (`subjectsFor`, `requireCapFor`), never the flat session check.
    expiring after the qualification type's validity. Signed-off courses are
    verified by the trainer; self-completed ones are unverified.
 
-Statuses and their icons come from `TRAINING_STATUS_META` and
-`TrainingStatusTag`; "Overdue" is derived from the due date.
+Statuses and their icons come from `TRAINING_STATUS_META` (and certificates from
+`CERTIFICATE_STATUS_META`), shown with `<Tag meta={…} />`; "Overdue" is derived from the
+due date.
 
 ## Expiring qualifications
 

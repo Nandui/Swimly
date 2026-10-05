@@ -1,8 +1,10 @@
 import {
   ItemContent,
   ItemActions,
+  ItemDescription,
   Item,
   ItemGroup,
+  ItemTitle,
 } from "@/components/shadcn/item";
 
 import { CLUB_STATUS_META } from "@/lib/clubs/constants";
@@ -96,26 +98,16 @@ function ClubList({
           className="items-start [overflow-wrap:anywhere]"
         >
           <ItemContent className="min-w-0">
-            <div className="text-sm font-medium">
-              {
-                <div className="min-w-0 flex gap-2 items-center flex-wrap">
-                  <span className="text-sm text-ui-foreground font-medium">
-                    {club.name}
-                  </span>
-                  {club.id === currentId ? (
-                    <Tag color={CLUB_STATUS_META.current.color}>
-                      {CLUB_STATUS_META.current.label}
-                    </Tag>
-                  ) : null}
-                  {archived ? (
-                    <Tag color={ARCHIVAL_STATUS_META.archived.color}>
-                      {ARCHIVAL_STATUS_META.archived.label}
-                    </Tag>
-                  ) : null}
-                </div>
-              }
-            </div>
-            {summaries.get(club.id) ? <div className="text-sm text-ui-muted-foreground">{summaries.get(club.id)}</div> : null}
+            <ItemTitle className="min-w-0 flex-wrap">
+              <span>{club.name}</span>
+              {club.id === currentId ? (
+                <Tag meta={CLUB_STATUS_META.current} />
+              ) : null}
+              {archived ? (
+                <Tag meta={ARCHIVAL_STATUS_META.archived} />
+              ) : null}
+            </ItemTitle>
+            {summaries.get(club.id) ? <ItemDescription>{summaries.get(club.id)}</ItemDescription> : null}
           </ItemContent>
           <ItemActions className="flex-wrap">
             {

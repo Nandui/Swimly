@@ -5,8 +5,7 @@ import { useRouter } from "next/navigation";
 import { CheckCheck, FileSpreadsheet, ListChecks } from "lucide-react";
 import { Button } from "@/components/shadcn/button";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from "@/components/shadcn/dialog";
-import { Input } from "@/components/shadcn/input";
-import { Label } from "@/components/shadcn/label";
+import { FileField } from "@/components/ui/file-field";
 import { LoadingButton } from "@/components/ui/loading-button";
 import { Notice } from "@/components/ui-kit/notice";
 import { applyLegendList, previewLegendList, type LegendListPreview } from "@/modules/activities/lib/enrolment/actions/legend-list";
@@ -55,11 +54,8 @@ export function LegendListMatch() {
           <DialogDescription>Every place still to check whose member number is on the list is confirmed as updated in Legend, at both sites.</DialogDescription>
         </DialogHeader>
 
-        <div className="space-y-2">
-          <Label htmlFor="legend-list-file">List from Legend (.xlsx)</Label>
-          <Input id="legend-list-file" type="file" accept=".xlsx,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet" className="min-h-11"
-            onChange={(e) => { const f = e.target.files?.[0] ?? null; setFile(f); setPreview(null); if (f) check(f); }} />
-        </div>
+        <FileField id="legend-list-file" label="List from Legend" description="The .xlsx export from Legend." accept=".xlsx,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+          onChange={(e) => { const f = e.target.files?.[0] ?? null; setFile(f); setPreview(null); if (f) check(f); }} />
         {checking ? <p className="flex items-center gap-2 text-sm text-ui-muted-foreground"><FileSpreadsheet aria-hidden="true" className="size-4" />Matching member numbers…</p> : null}
         {error ? <Notice tone="error" title={error} /> : null}
 

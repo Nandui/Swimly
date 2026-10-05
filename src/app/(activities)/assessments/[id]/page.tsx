@@ -100,14 +100,10 @@ export default async function AssessmentSessionPage(
             <div className="min-w-0 flex gap-2 items-center flex-wrap">
               {sessionDay(session)}
               {session.cancelledAt ? (
-                <Tag color={SESSION_STATUS_META.cancelled.color}>
-                  {SESSION_STATUS_META.cancelled.label}
-                </Tag>
+                <Tag meta={SESSION_STATUS_META.cancelled} />
               ) : null}
               {open && full ? (
-                <Tag color={SESSION_STATUS_META.full.color}>
-                  {SESSION_STATUS_META.full.label}
-                </Tag>
+                <Tag meta={SESSION_STATUS_META.full} />
               ) : null}
             </div>
           }
@@ -242,9 +238,7 @@ function BookingTable({
                     {fullName(b.student)}
                   </UiLink>
                   {b.student.hasMedicalNotes ? (
-                    <Tag color={MEDICAL_STATUS_META.notes.color}>
-                      {MEDICAL_STATUS_META.notes.label}
-                    </Tag>
+                    <Tag meta={MEDICAL_STATUS_META.notes} />
                   ) : null}
                 </div>
                 <span className="text-sm text-ui-muted-foreground block">
@@ -281,7 +275,7 @@ function BookingTable({
                 </span>
               </TableCell>
               <TableCell>
-                <Tag color={meta.color}>{meta.label}</Tag>
+                <Tag meta={meta} />
               </TableCell>
               <TableCell className={"max-md:hidden"}>
                 {b.outcomeLevel ? (

@@ -1,4 +1,5 @@
 import { minutesNow, today } from "@/lib/format";
+import { CalendarClock, CircleCheck, CircleDashed, Play, TriangleAlert, UserRoundX, XCircle } from "lucide-react";
 import type { StatusMeta } from "@/lib/status";
 import { activityTotals, type DailyActivity } from "./rules";
 
@@ -29,13 +30,13 @@ export type AttendanceOccurrence = {
 };
 
 export const ATTENDANCE_REPORT_META = {
-  saved: { label: "Saved", color: "green" },
-  partial: { label: "Partial", color: "orange" },
-  missing: { label: "Not taken", color: "red" },
-  in_progress: { label: "In progress", color: "blue" },
-  upcoming: { label: "Upcoming", color: "gray" },
-  cancelled: { label: "Cancelled", color: "gray" },
-  empty: { label: "No swimmers", color: "gray" },
+  saved: { label: "Saved", color: "green", icon: CircleCheck },
+  partial: { label: "Partial", color: "orange", icon: CircleDashed },
+  missing: { label: "Not taken", color: "red", icon: TriangleAlert },
+  in_progress: { label: "In progress", color: "blue", icon: Play },
+  upcoming: { label: "Upcoming", color: "gray", icon: CalendarClock },
+  cancelled: { label: "Cancelled", color: "gray", icon: XCircle },
+  empty: { label: "No swimmers", color: "gray", icon: UserRoundX },
 } satisfies Record<string, StatusMeta>;
 export type AttendanceReportStatus = keyof typeof ATTENDANCE_REPORT_META;
 

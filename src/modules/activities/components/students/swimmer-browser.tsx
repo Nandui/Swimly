@@ -2,10 +2,9 @@ import type { ReactNode } from "react";
 import Form from "next/form";
 import Link from "next/link";
 import { SegmentedLinks } from "@/components/ui-kit/segmented-links";
-import { ArrowLeft, ArrowRight, Search, SearchX, UsersRound, X } from "lucide-react";
+import { ArrowLeft, ArrowRight, SearchX, UsersRound, X } from "lucide-react";
 import { Button } from "@/components/shadcn/button";
-import { Input } from "@/components/shadcn/input";
-import { Label } from "@/components/shadcn/label";
+import { SearchField } from "@/components/ui-kit/search-field";
 import { Empty, EmptyContent, EmptyDescription, EmptyHeader, EmptyMedia, EmptyTitle } from "@/components/shadcn/empty";
 import type { StudentRow } from "@/modules/activities/lib/students/data/students";
 import { swimmerDirectoryHref, type SwimmerStatusFilter } from "@/modules/activities/lib/students/directory";
@@ -40,16 +39,9 @@ export function SwimmerBrowser({ students, total, page, pageSize, counts, q, sta
       </header>
 
       <div className="space-y-4">
-        <Form action="/students" className="flex items-end gap-2" role="search" aria-label="Swimmer directory">
+        <Form action="/students" className="max-w-xl" role="search" aria-label="Swimmer directory">
           {status !== "ALL" ? <input type="hidden" name="status" value={status} /> : null}
-          <div className="min-w-0 flex-1 space-y-2">
-            <Label htmlFor="swimmer-query">Find a swimmer</Label>
-            <div className="relative">
-              <Search className="pointer-events-none absolute top-1/2 left-3 size-4 -translate-y-1/2 text-ui-muted-foreground" aria-hidden="true" />
-              <Input key={q} id="swimmer-query" type="search" name="q" defaultValue={q} placeholder="Name, member number or contact…" className="h-11 pl-10" autoComplete="off" />
-            </div>
-          </div>
-          <Button type="submit" className="h-11">Search</Button>
+          <SearchField id="swimmer-query" label="Find a swimmer" defaultValue={q} placeholder="Name, member number or contact" />
         </Form>
         <div className="flex flex-wrap items-center justify-between gap-3">
           <SegmentedLinks label="Filter swimmers by status" items={LENSES.map((lens) => ({ href: swimmerDirectoryHref({ q, status: lens.key }), label: lens.label, count: number(countFor(lens.key)), current: status === lens.key }))} />

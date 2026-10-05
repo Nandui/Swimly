@@ -9,10 +9,11 @@ import { useRouter } from 'next/navigation';
 import { diffWords } from 'diff';
 import { ArrowLeft, History, RotateCcw, ArrowUpRight, GitCompareArrows } from 'lucide-react';
 import { plainText } from '@/lib/docs/content';
-import { formatDate, canWrite, type Workspace, type Snapshot, type AuditEvent } from '@/lib/docs/types';
+import { DOC_STATUS_META, formatDate, canWrite, type Workspace, type Snapshot, type AuditEvent } from '@/lib/docs/types';
+import { Tag } from '@/components/ui-kit/tag';
 import { startDraftAction } from '@/app/docs/actions';
 import { DocumentBody, RiskAssessmentView } from './document-body';
-import { PageHeading, Badge, Message } from './ui';
+import { PageHeading, Message } from './ui';
 export function HistoryView({
   workspace: w,
   id,
@@ -114,7 +115,7 @@ export function HistoryView({
                 <div className="side-by-side">
                   {[a, b].map((s, index) => (
                     <article key={`${s.id}-${index}`}>
-                      <Badge>{label(s)}</Badge>
+                      <p className="text-sm font-semibold text-ui-muted-foreground">{label(s)}</p>
                       <h2>{s.content.title}</h2>
                       <div className="compare-metadata">
                         <p>
@@ -161,12 +162,10 @@ export function HistoryView({
                   <div className="history-description">
                     <div>
                       <h2>{label(s)}</h2>
-                      <Badge tone={s.kind === 'publication' ? 'green' : 'amber'}>
-                        {s.kind === 'publication' ? 'Published' : 'Submitted'}
-                      </Badge>
+                      <Tag meta={DOC_STATUS_META[s.kind === 'publication' ? 'published' : 'submitted']} />
                       {index === 0 && <span className="muted">Most recent record</span>}
                       {w.documents.find((document) => document.id === id)?.currentVersionId ===
-                        s.id && <Badge tone="blue">Current approved version</Badge>}
+                        s.id && <Tag meta={DOC_STATUS_META.current} />}
                     </div>
                     <p>{s.changeSummary}</p>
                     <span>

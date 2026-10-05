@@ -76,7 +76,7 @@ export function InstructorReport({ data }: { data: InstructorAnalyticsData }) {
                 {row.scheduledName !== row.instructorName ? <p className="mt-1 text-xs text-ui-muted-foreground">Cover for {row.scheduledName}</p> : null}
                 {row.location ? <p className="mt-1 text-xs text-ui-muted-foreground">{row.location}</p> : null}
               </TableHead>
-              <TableCell className="max-w-0 whitespace-normal py-4 align-top"><Tag color={meta.color}>{meta.label}</Tag>
+              <TableCell className="max-w-0 whitespace-normal py-4 align-top"><Tag meta={meta} />
                 <p className="mt-2 text-sm tabular-nums">{row.marked} / {row.expected} marked</p>
                 {row.marked > 0 ? <p className="mt-1 text-xs leading-relaxed text-ui-muted-foreground">{row.present} present · {row.late} late · {row.absent} absent</p> : null}
                 <p className="mt-2 break-words text-xs text-ui-muted-foreground md:hidden">{saved}{row.lastSavedAt ? ` · ${formatDateTime(new Date(row.lastSavedAt))}` : ""}</p>

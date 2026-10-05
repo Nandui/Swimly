@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { ChevronRight } from "lucide-react";
-import { Badge } from "@/components/shadcn/badge";
+import { Tag } from "@/components/ui-kit/tag";
 import { Item, ItemContent, ItemGroup, ItemTitle } from "@/components/shadcn/item";
 import { STUDENT_STATUS_META, ageLabel, fullName } from "@/modules/activities/lib/students/constants";
 import type { StudentRow } from "@/modules/activities/lib/students/data/students";
@@ -43,7 +43,7 @@ export function StudentDirectory({ students, returnTo = "/students" }: { student
                     <p>{student.contactName || "No contact recorded"}</p>
                     {student.contactPhone ? <p className="text-ui-muted-foreground tabular-nums">{student.contactPhone}</p> : null}
                   </div>
-                  <div className={styles.status}><Badge variant="secondary" data-tone={status.color}>{status.label}</Badge></div>
+                  <div className={styles.status}><Tag meta={status} /></div>
                   <span className={styles.arrow} data-motion="direction" aria-hidden="true"><ChevronRight className="size-full" /></span>
                   <span className="sr-only">Open profile</span>
                 </Link>

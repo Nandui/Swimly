@@ -56,9 +56,7 @@ export function ActivityTable({ entries }: { entries: ActivityEntry[] }) {
                 >
                   {entry.actorName} · {formatDateTime(entry.createdAt)}
                 </span>
-                <Tag color={meta.color} className="lg:hidden">
-                  {meta.label}
-                </Tag>
+                <Tag meta={meta} className="lg:hidden" />
               </TableCell>
               <TableCell className={"max-lg:hidden"}>
                 <span className="text-sm text-ui-muted-foreground">
@@ -66,7 +64,7 @@ export function ActivityTable({ entries }: { entries: ActivityEntry[] }) {
                 </span>
               </TableCell>
               <TableCell className={"max-lg:hidden"}>
-                <Tag color={meta.color}>{meta.label}</Tag>
+                <Tag meta={meta} />
               </TableCell>
               <TableCell className={"max-lg:hidden"}>
                 <span

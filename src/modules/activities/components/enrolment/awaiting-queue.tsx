@@ -1,9 +1,8 @@
 import Link from "next/link";
 import type { ReactNode } from "react";
-import { ChevronDown, Mail, Phone, Search } from "lucide-react";
+import { ChevronDown, Mail, Phone } from "lucide-react";
 import { Button } from "@/components/shadcn/button";
-import { Input } from "@/components/shadcn/input";
-import { Label } from "@/components/shadcn/label";
+import { SearchField } from "@/components/ui-kit/search-field";
 import { Item, ItemGroup } from "@/components/shadcn/item";
 import { CollapsibleTrigger, CollapsibleContent } from "@/components/shadcn/collapsible";
 import { QueueDisclosure } from "./queue-disclosure";
@@ -19,16 +18,9 @@ export function AwaitingQueue({ view, total, q, children }: {
   return <div className="min-w-0 space-y-6">
     <PageHeader title="Awaiting enrolment" description="Select a swimmer to arrange a class or update their follow-up." />
     <AwaitingNavigation active={view} />
-    <form action="/awaiting-enrolment" className="flex flex-wrap items-end gap-3" role="search">
+    <form action="/awaiting-enrolment" className="max-w-xl" role="search">
       {moves && <input type="hidden" name="view" value="moves" />}
-      <div className="min-w-0 flex-1 basis-56 space-y-2">
-        <Label htmlFor="awaiting-swimmer-search">Find a swimmer</Label>
-        <div className="relative"><Search aria-hidden="true" className="pointer-events-none absolute top-3.5 left-3 size-4 text-ui-muted-foreground" />
-          <Input id="awaiting-swimmer-search" type="search" name="q" defaultValue={q} key={q} placeholder="Name or member number" maxLength={100} className="min-h-11 pl-9" />
-        </div>
-      </div>
-      <Button type="submit" variant="outline" className="min-h-11">Search</Button>
-      {q && <Button asChild variant="ghost" className="min-h-11"><Link href={moves ? "/awaiting-enrolment?view=moves" : "/awaiting-enrolment"}>Clear</Link></Button>}
+      <SearchField id="awaiting-swimmer-search" label="Find a swimmer" defaultValue={q} placeholder="Name or member number" maxLength={100} clearHref={moves ? "/awaiting-enrolment?view=moves" : "/awaiting-enrolment"} />
     </form>
     <section className="space-y-4" aria-label={moves ? "Move queue" : "Enrolment queue"}>
       <div className="flex flex-wrap items-baseline justify-between gap-x-4 gap-y-1">

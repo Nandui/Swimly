@@ -1,6 +1,6 @@
 "use client";
 
-import { Badge } from "@/components/shadcn/badge";
+import { Tag } from "@/components/ui-kit/tag";
 import { Button } from "@/components/shadcn/button";
 import { Card } from "@/components/shadcn/card";
 import { Input } from "@/components/ui/input";
@@ -20,7 +20,7 @@ export function AssessmentPublicationPanel({ sessionId, sessionLabel, startsAt }
   return <Card className="gap-4 p-4 shadow-none" role="region" aria-labelledby="parent-booking-heading">
     <div className="flex flex-wrap items-center justify-between gap-3">
       <h2 id="parent-booking-heading" tabIndex={-1} className="text-xl font-semibold">Booking in LeisureWorld Aquatics</h2>
-      {publication ? <Badge variant="secondary" data-tone={meta.color}>{meta.label}</Badge> : null}
+      {publication ? <Tag meta={meta} /> : null}
     </div>
     <ParentLoadState {...resource} />
     {publication ? <>

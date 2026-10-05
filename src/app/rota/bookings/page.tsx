@@ -64,7 +64,7 @@ export default async function BookingsPage({ searchParams }: { searchParams: Pro
             return (
               <li key={b.id} className="flex flex-wrap items-center justify-between gap-3 px-5 py-4">
                 <div className="min-w-0 flex-1 space-y-1">
-                  <p className="flex flex-wrap items-center gap-2"><span className="module-row-title">{b.title}</span><Tag color={meta.color}>{meta.label}</Tag></p>
+                  <p className="flex flex-wrap items-center gap-2"><span className="module-row-title">{b.title}</span><Tag meta={meta} /></p>
                   <p className="text-sm">{weekdays(b.weekdays)}, {clock(b.startMinutes)}–{clock(b.endMinutes)} · {b.firstDay.getTime() === b.lastDay.getTime() ? day(b.firstDay) : `${day(b.firstDay)} to ${day(b.lastDay)}`}{b.place ? ` · ${b.place}` : ""}{b.department ? ` · ${b.department.name}` : ""}</p>
                   <p className="text-xs text-ui-muted-foreground">{[`Needs ${needs(b.needs)}`, b.unfilled ? `${b.unfilled} ${b.unfilled === 1 ? "place" : "places"} still to fill` : "every place still to come is filled", b.note || null].filter(Boolean).join(" · ")}</p>
                 </div>

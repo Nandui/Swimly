@@ -6,14 +6,9 @@ import { Tag } from "@/components/ui-kit/tag";
 import { DeclineCertificate, VerifyCertificate } from "@/components/training/certificate-actions";
 import { formatDate, formatDateTime } from "@/lib/format";
 import { certificateQueue } from "@/lib/training/certificates";
+import { CERTIFICATE_STATUS_META } from "@/lib/training/constants";
 
 export const metadata: Metadata = { title: "Certificates to check" };
-
-const STATUS_META = {
-  PENDING: { label: "Waiting to be checked", color: "orange" },
-  VERIFIED: { label: "Recorded", color: "green" },
-  DECLINED: { label: "Declined", color: "gray" },
-} as const;
 
 /** Certificates staff uploaded in Turnfin Me, for the people the reader's
  *  qualifications role covers. Recording one adds it to their record. */
@@ -37,13 +32,13 @@ export default async function CertificatesPage({ searchParams }: { searchParams:
       ) : (
         <ul className="module-list">
           {rows.map((row) => {
-            const status = STATUS_META[row.status as keyof typeof STATUS_META];
+            const status = CERTIFICATE_STATUS_META[row.status as keyof typeof CERTIFICATE_STATUS_META];
             return (
               <li key={row.id} className="flex flex-wrap items-start justify-between gap-4 p-4 sm:px-5">
                 <div className="min-w-0 flex-1 space-y-1">
                   <div className="flex flex-wrap items-center gap-2">
                     <Link href={`/training/people/${row.person.id}`} className="module-row-title underline-offset-4 hover:underline">{row.person.name}</Link>
-                    {status ? <Tag color={status.color}>{status.label}</Tag> : null}
+                    {status ? <Tag meta={status} /> : null}
                   </div>
                   <p className="text-sm">{row.typeName || "Qualification not named"}{row.reference ? ` · ${row.reference}` : ""}</p>
                   <p className="text-xs text-ui-muted-foreground">

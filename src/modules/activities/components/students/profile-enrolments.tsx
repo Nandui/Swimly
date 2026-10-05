@@ -3,7 +3,7 @@
 import { EmptyState } from "@/components/ui-kit/empty-state";
 import { useId, useState } from "react";
 import { Button } from "@/components/shadcn/button";
-import { Badge } from "@/components/shadcn/badge";
+import { Tag } from "@/components/ui-kit/tag";
 import { Checkbox } from "@/components/shadcn/checkbox";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from "@/components/shadcn/dialog";
 import { Input } from "@/components/ui/input";
@@ -38,7 +38,7 @@ export function ManageProfileEnrolments({ studentId, active, enrolments, targets
   const current = enrolments.filter(e => e.status === "ACTIVE" || e.status === "WAITLISTED");
   return <Dialog><DialogTrigger asChild><Button>Manage enrolment</Button></DialogTrigger>
     <DialogContent className="max-h-[90dvh] overflow-y-auto sm:max-w-3xl"><DialogHeader><DialogTitle>Manage enrolment</DialogTitle><DialogDescription>Current places at both sites. Moves preserve the swimmer’s history.</DialogDescription></DialogHeader>
-      {current.length ? <ul className="divide-y divide-ui-border">{current.map(e => <li key={e.id} className="space-y-3 py-4"><div className="flex flex-wrap justify-between gap-2"><div><p className="font-semibold">{e.level.name} · {e.course.club.name}</p><p className="text-sm text-ui-muted-foreground">{formatSlotShort(e.course)}</p></div><Badge variant="secondary" data-tone={ENROLMENT_STATUS_META[e.status].color}>{ENROLMENT_STATUS_META[e.status].label}</Badge></div>
+      {current.length ? <ul className="divide-y divide-ui-border">{current.map(e => <li key={e.id} className="space-y-3 py-4"><div className="flex flex-wrap justify-between gap-2"><div><p className="font-semibold">{e.level.name} · {e.course.club.name}</p><p className="text-sm text-ui-muted-foreground">{formatSlotShort(e.course)}</p></div><Tag meta={ENROLMENT_STATUS_META[e.status]} /></div>
         {e.scheduledEndOn ? <p className="text-sm">Ends {formatDate(e.scheduledEndOn)}</p> : null}
         <div className="flex flex-wrap gap-2">
           <ClassEnrolmentDialog trigger={<Button variant="outline">Move class</Button>} courses={targets.filter(c => c.id !== e.course.id)} currentEnrolment={e}

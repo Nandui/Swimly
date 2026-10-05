@@ -1,25 +1,22 @@
-import type { TagColor } from "@/components/ui-kit/tag";
+import { CalendarCheck, CircleCheck, CircleHelp, Tag as TagIcon, UserX, Users, XCircle } from "lucide-react";
 import type { AssessmentBookingStatus } from "@/generated/prisma/client";
 import { formatDate, formatDay, formatTime, formatTimeRange } from "@/lib/format";
 import type { StatusMeta } from "@/lib/status";
 
 export const SESSION_STATUS_META = {
-  cancelled: { label: "Cancelled", color: "gray" },
-  full: { label: "Full", color: "yellow" },
-  missingKind: { label: "Kind not set", color: "orange" },
-  unassigned: { label: "Not decided", color: "orange" },
+  cancelled: { label: "Cancelled", color: "gray", icon: XCircle },
+  full: { label: "Full", color: "orange", icon: Users },
+  missingKind: { label: "Kind not set", color: "orange", icon: TagIcon },
+  unassigned: { label: "Not decided", color: "orange", icon: CircleHelp },
 } as const satisfies Record<string, StatusMeta>;
 
-/** Domain vocabulary for assessments. Status colour comes from here and
- *  nowhere else — one metadata map, tints from the nine. */
-export const BOOKING_STATUS_META: Record<
-  AssessmentBookingStatus,
-  { label: string; color: TagColor }
-> = {
-  BOOKED: { label: "Booked", color: "blue" },
-  ATTENDED: { label: "Attended", color: "green" },
-  NO_SHOW: { label: "Did not come", color: "orange" },
-  CANCELLED: { label: "Cancelled", color: "gray" },
+/** Domain vocabulary for assessments. Status tone and icon come from here and
+ *  nowhere else. */
+export const BOOKING_STATUS_META: Record<AssessmentBookingStatus, StatusMeta> = {
+  BOOKED: { label: "Booked", color: "blue", icon: CalendarCheck },
+  ATTENDED: { label: "Attended", color: "green", icon: CircleCheck },
+  NO_SHOW: { label: "Did not come", color: "orange", icon: UserX },
+  CANCELLED: { label: "Cancelled", color: "gray", icon: XCircle },
 };
 
 /** Bookings that hold a place. A cancellation or a no-show gives it back. */

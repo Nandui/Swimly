@@ -1,7 +1,8 @@
+import { MapPin } from "lucide-react";
 import type { StatusMeta } from "@/lib/status";
 
 export const CLUB_STATUS_META = {
-  current: { label: "Working in", color: "blue" },
+  current: { label: "Working in", color: "blue", icon: MapPin },
 } as const satisfies Record<string, StatusMeta>;
 
 /** The cookie that remembers which club somebody is working in. Per browser,

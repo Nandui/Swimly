@@ -17,10 +17,10 @@ export function MoveReadinessStatus({ studentId, studentName, courseId, date, cu
 }) {
   const [open, setOpen] = useState(false), [error, setError] = useState<string | null>(null);
   const [pending, startTransition] = useTransition();
-  const meta = FOLLOW_UP_META[current ? "readyToMove" : "reviewMove"];
+  const meta = FOLLOW_UP_META[current ? "awaitingMove" : "reviewMove"];
   return <div className="flex flex-wrap items-center gap-3">
     <div className="space-y-1">
-      <Tag color={meta.color}>{current ? "Awaiting move" : meta.label}</Tag>
+      <Tag meta={meta} />
       <p className="text-xs text-ui-muted-foreground">{confirmedBy ?? "Staff"} · {formatDate(confirmedAt)}</p>
     </div>
     <Dialog open={open} onOpenChange={value => { if (!pending) setOpen(value); }}>
