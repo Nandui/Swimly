@@ -218,7 +218,7 @@ export function AddSession(props: Omit<FieldProps, "session">) {
   return (
     <FormDialog
       trigger={
-        <Button variant="default" size="sm" className="min-h-11">
+        <Button variant="default" className="min-h-11">
           {<CalendarPlus aria-hidden={true} className="size-4 shrink-0" />}
           {"Add a session"}
         </Button>
@@ -245,15 +245,15 @@ export function EditSession({
       trigger={
         variant === "icon" ? (
           <Button
-            variant="ghost"
+            variant="outline"
             aria-label={`Edit the session on ${sessionLabel(session)}`}
-            size="icon-sm"
+            size="icon"
             className="size-11"
           >
             {<Pencil aria-hidden={true} className="size-4 shrink-0" />}
           </Button>
         ) : (
-          <Button variant="outline" size="sm" className="min-h-11">
+          <Button variant="outline" className="min-h-11">
             {<Pencil aria-hidden={true} className="size-4 shrink-0" />}
             {"Edit"}
           </Button>
@@ -276,9 +276,9 @@ export function CancelSession({ session }: { session: SessionRow }) {
     <ConfirmAction
       trigger={
         <Button
-          variant="ghost"
+          variant="outline"
           aria-label={`Cancel the session on ${sessionLabel(session)}`}
-          size="icon-sm"
+          size="icon"
           className="size-11"
         >
           {<Ban aria-hidden={true} className="size-4 shrink-0" />}

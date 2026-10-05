@@ -6,7 +6,7 @@ import { Lock, Pencil, Plus, Trash2 } from "lucide-react";
 
 import { Checkbox } from "@/components/shadcn/checkbox";
 import { Label } from "@/components/shadcn/label";
-import { RadioGroup, RadioGroupItem } from "@/components/shadcn/radio-group";
+import { SegmentedChoice } from "@/components/ui-kit/segmented-links";
 
 import { ConfirmAction } from "@/components/confirm-action";
 import { Field, FormDialog } from "@/components/form-dialog";
@@ -78,29 +78,13 @@ function LevelRow({ mod, level, posted, locked, onChange }: {
           <Icon aria-hidden="true" className={cn("size-5 shrink-0", level === NONE ? "text-ui-muted-foreground" : "text-ui-primary")} />
           {mod.name}
         </span>
-        <RadioGroup
+        <SegmentedChoice
           value={level}
           onValueChange={onChange}
           disabled={locked !== null}
           aria-labelledby={`${id}-name`}
-          className="flex flex-wrap gap-1 rounded-xl bg-ui-muted p-1"
-        >
-          {options.map((option) => (
-            <Label
-              key={option.key}
-              htmlFor={`${id}-${option.key}`}
-              className={cn(
-                "relative inline-flex min-h-11 cursor-pointer items-center rounded-lg px-3 text-sm font-medium text-ui-muted-foreground",
-                "has-[[data-state=checked]]:bg-ui-background has-[[data-state=checked]]:text-ui-foreground has-[[data-state=checked]]:font-semibold has-[[data-state=checked]]:shadow-[0_0_0_1px_var(--color-ui-input)]",
-                "has-[:focus-visible]:ring-[3px] has-[:focus-visible]:ring-ui-ring/50",
-                locked !== null && "cursor-not-allowed opacity-70",
-              )}
-            >
-              <RadioGroupItem id={`${id}-${option.key}`} value={option.key} className="sr-only" />
-              {option.label}
-            </Label>
-          ))}
-        </RadioGroup>
+          options={options.map((option) => ({ value: option.key, label: option.label }))}
+        />
       </div>
       <p className="text-sm text-ui-muted-foreground">{locked ?? help}</p>
       <input type="hidden" name={`level:${mod.id}`} value={posted} />
@@ -209,7 +193,7 @@ export function AddRole({ canGiveRestricted = false }: { canGiveRestricted?: boo
   return (
     <FormDialog
       trigger={
-        <Button variant="default" size="sm">
+        <Button variant="default">
           <Plus aria-hidden={true} className="size-4 shrink-0" />
           Add role
         </Button>
@@ -230,7 +214,7 @@ export function EditRole({ role, canGiveRestricted = false }: { role: Role; canG
   return (
     <FormDialog
       trigger={
-        <Button variant="ghost" aria-label={`Edit ${role.name}`} size="icon-sm">
+        <Button variant="outline" aria-label={`Edit ${role.name}`} size="icon">
           <Pencil aria-hidden={true} className="size-4 shrink-0" />
         </Button>
       }
@@ -252,7 +236,7 @@ export function DeleteRole({ role, users }: { role: Role; users: number }) {
   return (
     <ConfirmAction
       trigger={
-        <Button variant="ghost" aria-label={`Delete ${role.name}`} size="icon-sm">
+        <Button variant="outline" aria-label={`Delete ${role.name}`} size="icon">
           <Trash2 aria-hidden={true} className="size-4 shrink-0" />
         </Button>
       }

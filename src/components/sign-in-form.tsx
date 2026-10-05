@@ -119,7 +119,6 @@ export function SignInForm({ devAdminName, sharedDeviceName = null }: { devAdmin
           <LoadingButton
             type="submit"
             variant="default"
-            size="lg"
             pending={pending}
             pendingLabel="Signing in…"
             className="w-full"
@@ -142,7 +141,6 @@ export function SignInForm({ devAdminName, sharedDeviceName = null }: { devAdmin
               type="button"
               onClick={handleDevSignIn}
               variant="outline"
-              size="lg"
               disabled={pending}
               className="w-full"
             >{`Sign in as ${devAdminName}`}</Button>

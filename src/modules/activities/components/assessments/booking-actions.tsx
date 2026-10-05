@@ -35,7 +35,7 @@ export function BookOntoSession({
   return (
     <FormDialog
       trigger={
-        <Button variant="default" size="sm">
+        <Button variant="default">
           {<UserRoundPlus aria-hidden={true} className="size-4 shrink-0" />}
           {"Book a swimmer"}
         </Button>
@@ -73,9 +73,9 @@ export function CancelBooking({
     <ConfirmAction
       trigger={
         <Button
-          variant="ghost"
+          variant="outline"
           aria-label={`Cancel ${fullName(booking.student)}'s booking`}
-          size="icon-sm"
+          size="icon"
         >
           {<X aria-hidden={true} className="size-4 shrink-0" />}
         </Button>
@@ -94,9 +94,9 @@ export function MarkNoShow({ booking, variant = "icon" }: { booking: BookingRow;
     <ConfirmAction
       trigger={
         <Button
-          variant={variant === "button" ? "outline" : "ghost"}
+          variant="outline"
           aria-label={`${fullName(booking.student)} did not come`}
-          size={variant === "button" ? "default" : "icon-sm"}
+          size={variant === "button" ? "default" : "icon"}
           title="Did not come"
         >
           {<UserRoundX aria-hidden={true} className="size-4 shrink-0" />}
@@ -130,16 +130,16 @@ export function RecordOutcome({
       trigger={
         variant === "icon" ? (
           <Button
-            variant="ghost"
+            variant="outline"
             aria-label={
               again ? `Change where ${name} was placed` : `Place ${name}`
             }
-            size="icon-sm"
+            size="icon"
           >
             {<GraduationCap aria-hidden={true} className="size-4 shrink-0" />}
           </Button>
         ) : (
-          <Button variant={again ? "outline" : "default"} size="sm">
+          <Button variant={again ? "outline" : "default"}>
             {<GraduationCap aria-hidden={true} className="size-4 shrink-0" />}
             {`${again ? "Change placement" : "Place"}`}
           </Button>

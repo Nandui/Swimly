@@ -1,5 +1,5 @@
 "use client";
-import { RadioGroupItem, RadioGroup } from "@/components/shadcn/radio-group";
+import { SegmentedChoice } from "@/components/ui-kit/segmented-links";
 
 import {
   ItemMedia,
@@ -198,7 +198,7 @@ function CompetencyChecklistState({
                         </span>
                       ) : null}
                       <div className="min-w-0 flex gap-2 items-center">
-                        <RadioGroup
+                        <SegmentedChoice
                           value={value}
                           aria-label={`${competency.name} — ${studentName}`}
                           onValueChange={(next) => {
@@ -210,22 +210,9 @@ function CompetencyChecklistState({
                             });
                           }}
                           disabled={readOnly || pending}
-                          className={
-                            "inline-flex flex-wrap gap-1 rounded-ui-lg bg-ui-muted p-1"
-                          }
-                        >
-                          {MARK_ORDER.map((status) => (
-                            <RadioGroupItem
-                              key={status}
-                              value={status}
-                              className={
-                                "aspect-auto h-auto min-h-11 w-auto flex-1 bg-transparent dark:bg-transparent dark:data-[state=checked]:bg-ui-input/30 rounded-ui-md border-0 px-3 py-2 text-sm font-medium shadow-none data-[state=checked]:bg-ui-background data-[state=checked]:text-ui-foreground data-[state=checked]:shadow-sm"
-                              }
-                            >
-                              {MARK_LABEL[status]}
-                            </RadioGroupItem>
-                          ))}
-                        </RadioGroup>
+                          fill="phone"
+                          options={MARK_ORDER.map((status) => ({ value: status, label: MARK_LABEL[status] }))}
+                        />
                       </div>
                     </div>
                   }
@@ -246,7 +233,6 @@ function CompetencyChecklistState({
           <LoadingButton
             onClick={save}
             variant="default"
-            size="sm"
             disabled={!dirty}
             pending={pending}
           >
@@ -289,7 +275,6 @@ export function ConfirmLevel({
       trigger={
         <Button
           variant={eligible ? "default" : "outline"}
-          size="sm"
           title={
             blocked
               ? `${studentName} has ${achieved} of ${total}. Only an admin can complete a level with gaps.`
@@ -370,9 +355,9 @@ export function RevokeCompletion({
     <FormDialog
       trigger={
         <Button
-          variant="ghost"
+          variant="outline"
           aria-label={`Take back ${studentName}'s completion of ${levelName}`}
-          size="icon-sm"
+          size="icon"
           title="Take back"
         >
           {<Undo2 aria-hidden={true} className="size-4 shrink-0" />}

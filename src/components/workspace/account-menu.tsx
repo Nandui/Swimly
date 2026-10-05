@@ -25,7 +25,8 @@ const MODES = [
  *  The pool deck reuses it without Manage account (docs/instructor.md). Role
  *  and site come from the root layout through useYourAccount, so no shell
  *  passes them. Appearance is menu radio items, not the ThemeToggle radio
- *  group, because a menu cancels Tab: arrows must reach every choice. */
+ *  group, because a menu cancels Tab: arrows must reach every choice. They
+ *  wear the shared .pc-seg bar, so it looks the same as on /account. */
 export function AccountMenu({ name, showManageAccount = true }: { name: string; showManageAccount?: boolean }) {
   const [leaving, setLeaving] = useState(false);
   const { mode, setMode } = useThemeMode();
@@ -44,7 +45,7 @@ export function AccountMenu({ name, showManageAccount = true }: { name: string; 
         </Button>
       </DropdownMenuTrigger>
       <DropdownMenuContent side="bottom" align="end" sideOffset={8} alignOffset={-4} className="tf-account-menu w-80 max-w-[calc(100vw-2rem)]">
-        <DropdownMenuLabel className="flex items-center gap-3 p-0 font-normal">
+        <DropdownMenuLabel className="flex items-center gap-3 p-0 text-sm font-normal text-ui-foreground">
           <Avatar size="lg" self aria-hidden="true"><AvatarFallback>{initials(name)}</AvatarFallback></Avatar>
           <span className="min-w-0 break-words">
             <span className="block font-semibold">{name}</span>
@@ -53,9 +54,9 @@ export function AccountMenu({ name, showManageAccount = true }: { name: string; 
         </DropdownMenuLabel>
         <DropdownMenuGroup className="flex flex-col gap-2">
           <DropdownMenuLabel className="p-0 text-xs font-semibold text-ui-muted-foreground">Appearance</DropdownMenuLabel>
-          <DropdownMenuRadioGroup aria-label="Appearance" className="tf-seg" value={mode} onValueChange={(value) => setMode(parseThemeMode(value))}>
+          <DropdownMenuRadioGroup aria-label="Appearance" className="pc-seg pc-seg-fill" value={mode} onValueChange={(value) => setMode(parseThemeMode(value))}>
             {MODES.map(({ value, label, Icon }) => (
-              <DropdownMenuRadioItem key={value} value={value} className="tf-seg-item" onSelect={(event) => event.preventDefault()}><Icon aria-hidden="true" />{label}</DropdownMenuRadioItem>
+              <DropdownMenuRadioItem key={value} value={value} className="pc-seg-item" onSelect={(event) => event.preventDefault()}><Icon aria-hidden="true" />{label}</DropdownMenuRadioItem>
             ))}
           </DropdownMenuRadioGroup>
         </DropdownMenuGroup>

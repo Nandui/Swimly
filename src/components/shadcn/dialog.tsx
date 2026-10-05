@@ -39,7 +39,7 @@ function DialogOverlay({
     <DialogPrimitive.Overlay
       data-slot="dialog-overlay"
       className={cn(
-        "fixed inset-0 z-50 bg-black/50 ui-motion-surface data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:animate-in data-[state=open]:fade-in-0",
+        "fixed inset-0 z-50 bg-[var(--pc-scrim,rgb(0_0_0/0.5))] ui-motion-surface data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:animate-in data-[state=open]:fade-in-0",
         className
       )}
       {...props}
@@ -52,10 +52,14 @@ function DialogContent({
   portalClassName,
   children,
   showCloseButton = true,
+  closeClassName,
   ...props
 }: React.ComponentProps<typeof DialogPrimitive.Content> & {
   portalClassName?: string
+  /** Info dialogs keep the 44px round X; dialogs with their own Cancel or Back pass false. */
   showCloseButton?: boolean
+  /** Repositions the X, e.g. inside CommandDialog's input row. */
+  closeClassName?: string
 }) {
   return (
     <DialogPortal data-slot="dialog-portal">
@@ -65,18 +69,24 @@ function DialogContent({
         data-slot="dialog-content"
         className={cn(
           "fixed top-[50%] left-[50%] z-50 grid w-full max-w-[calc(100%-2rem)] translate-x-[-50%] translate-y-[-50%] gap-4 rounded-ui-lg border bg-ui-background p-6 shadow-lg ui-motion-surface outline-none data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=closed]:zoom-out-95 data-[state=open]:animate-in data-[state=open]:fade-in-0 data-[state=open]:zoom-in-95 sm:max-w-lg",
+          // Titles never run under the X (header 24px in + 40px clears the 44px X at 12px).
+          showCloseButton && "[&_[data-slot=dialog-header]]:pr-10",
           className
         )}
         {...props}
       >
         {children}
         {showCloseButton && (
-          <DialogPrimitive.Close
-            data-slot="dialog-close"
-            className="absolute top-4 right-4 rounded-ui-xs opacity-70 ring-offset-background transition-opacity ui-motion-feedback hover:opacity-100 focus:ring-2 focus:ring-ui-ring focus:ring-offset-2 focus:outline-hidden disabled:pointer-events-none data-[state=open]:bg-ui-accent data-[state=open]:text-ui-muted-foreground [&_svg]:pointer-events-none [&_svg]:shrink-0 [&_svg:not([class*='size-'])]:size-4"
-          >
-            <XIcon />
-            <span className="sr-only">Close</span>
+          <DialogPrimitive.Close asChild>
+            <Button
+              variant="ghost"
+              size="icon"
+              aria-label="Close"
+              data-slot="dialog-close"
+              className={cn("absolute top-3 right-3 text-[var(--pc-ink-muted)]", closeClassName)}
+            >
+              <XIcon aria-hidden="true" />
+            </Button>
           </DialogPrimitive.Close>
         )}
       </DialogPrimitive.Content>
@@ -89,7 +99,7 @@ function DialogHeader({ className, ...props }: React.ComponentProps<"div">) {
   return (
     <div
       data-slot="dialog-header"
-      className={cn("flex flex-col gap-2 text-center sm:text-left", className)}
+      className={cn("flex flex-col gap-2", className)}
       {...props}
     />
   )
@@ -107,7 +117,8 @@ function DialogFooter({
     <div
       data-slot="dialog-footer"
       className={cn(
-        "flex flex-col-reverse gap-2 sm:flex-row sm:justify-end",
+        // One row, primary last; on phones the buttons share the row and wrap whole.
+        "flex flex-row flex-wrap justify-end gap-2 max-md:*:flex-auto max-md:[&>[role=status]]:basis-full",
         className
       )}
       {...props}

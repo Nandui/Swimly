@@ -52,8 +52,8 @@ with white labels; dark mode uses a lighter blue with dark ink. Selection uses
 a soft blue surface and readable blue text. Workspace surfaces, ordinary hover
 states and status colours keep their existing meanings.
 
-Inputs and textareas retain their shadcn focus ring without a second global
-outline. Command searches mark focus with a two-pixel blue line along the
+Fields (inputs, textareas, select triggers and comboboxes) mark focus with their
+edge, a 1px ring and the halo, without a second global outline. Command searches mark focus with a two-pixel blue line along the
 whole search row, keeping the inner input inside the row's bounds. Forced-colour
 mode uses a system-colour outline so focus remains visible without shadows.
 
@@ -108,7 +108,8 @@ name wraps to two centred lines, never clipped or overlapping; only the current 
   separators): the 40px primary-soft avatar beside the name at 600 and a "<role> · <site>"
   caption (the worn role in View as; both from the root layout through `useYourAccount`); the
   "Appearance" caption over a pill segmented row (System, Light, Dark; menu radio items, so
-  arrow keys reach them, `.tf-seg`); then Manage account and Sign out as 44px pills at 600 with
+  arrow keys reach them, styled as the shared `.pc-seg pc-seg-fill` bar, the same control as
+  Appearance on /account); then Manage account and Sign out as 44px pills at 600 with
   a sunken fill when highlighted. Help is not in it: it sits in the rail, the bottom bar's More
   and the deck bar. The pool deck uses the same menu without Manage account.
 - `aria-current`: "page" only on the page bar link for the exact page; "true" on a page link
@@ -210,8 +211,8 @@ an icon. Session blocks use `--pc-block-*` with their `--pc-on-block-*` text col
 first row needing someone (`[data-first]`) is yellow; empty queues are muted. Every
 text/control pair meets 4.5:1 (text) or 3:1 (edges, focus) in both modes.
 
-**Shape.** Controls, bar items, tags and segmented filters are pills (`--pc-radius-control`,
-999px). Rows, tiles and nested cards are 16px (`--pc-radius-card`); panels and dialogs 24px
+**Shape.** Controls, bar items, tags and segment items are pills (`--pc-radius-control`,
+999px); a segmented bar takes `--pc-radius-panel`, a pill on one row. Rows, tiles and nested cards are 16px (`--pc-radius-card`); panels and dialogs 24px
 (`--pc-radius-panel`). Panels have no border and no shadow; rows inside them have a 1px
 line. Multi-line boxes (textareas, notices) use 16px, never a pill.
 
@@ -220,15 +221,75 @@ line. Multi-line boxes (textareas, notices) use 16px, never a pill.
   400). Icon buttons are 44px. Style menu and popover triggers through `.ui-motion-press`
   and `[data-slot='dropdown-menu-trigger']` as well as `data-slot='button'`, because Radix
   `asChild` triggers replace the Button's `data-slot`.
+- Button has five variants, `default`, `outline`, `ghost`, `destructive` and `link`, and two
+  sizes, `default` and `icon`; there is no `secondary` and no small or large size. Outline
+  buttons have the soft `--pc-line` edge; fields, select triggers and comboboxes keep
+  `--pc-line-strong`. Link buttons have no inset. Destructive uses `--pc-danger` with
+  `--pc-on-danger` text and `--pc-danger-hover`. A selected state is never a grey fill: use
+  outline with `aria-current` or `aria-pressed` (Rota "Today" carries `aria-current="date"`).
+- Row actions (edit, archive, delete, unenrol) are 44px outline circles with an ink icon
+  (`variant="outline" size="icon"`; `IconButton` and `ActionButton` default to it). Bar,
+  toolbar and in-field icons (View as, theme flip, clear search) stay ghost.
+- Focus is one 2px `--pc-focus` outline at a 2px gap on every link, button, summary, tab and
+  `tabindex` region (poolside.css controls block, written with `:where()` so inset rings on
+  rail, segmented, module and refund rows keep their -2px offset). Fields, select triggers
+  and comboboxes draw their edge, a 1px ring and the halo instead, with a transparent
+  outline for forced-colours mode.
+- Disabled is never half opacity: filled and outline buttons and fields sit on
+  `--pc-surface-sunken` with `--pc-ink-muted` text and a `--pc-line` edge; ghost and link
+  buttons (such as Docs editor tools) only mute. `LoadingButton` and `ActionButton` use
+  `aria-disabled` with a click guard while pending, so focus stays on the button;
+  `LoadingButton` hides the inactive label (`visibility: hidden`) and announces the pending
+  label through a polite live region after the button.
 - Bar items draw a 36px pill inside a 44px hit area (`.tf-bar-item::before`).
-- Filters between a few views of one list are `SegmentedLinks`
-  (`src/components/ui-kit/segmented-links.tsx`): pill links with optional counts and
-  `aria-current`.
+- One segmented control, `.pc-seg` (`src/components/ui-kit/segmented-links.tsx`): a sunken
+  bar of 36px pills in 44px hit areas, unselected muted ink, selected white (`--pc-surface`)
+  with an inset 1px `--pc-line-strong` edge and ink text, never a check mark. Counts sit in
+  `.pc-seg-count`; an option may carry a permanent leading icon.
+  - `SegmentedLinks` for links between views of one list (filters, steps such as "1.
+    Attendance | 2. Competencies"); the current link is `aria-current="true"`, since only the
+    frame's page bar marks the page.
+  - `SegmentedChoice` for one choice among a few (radios: Appearance, attendance and
+    competency marks, role levels, when to unenrol). `fill` shares the full width equally;
+    `fill="phone"` only below 640px. In a dropdown menu keep `DropdownMenuRadioItem` (arrows
+    must reach it) and give the group `pc-seg pc-seg-fill` and the items `pc-seg-item`.
+  - Bars, and the default `TabsList` (the only Tabs variant; no underline tabs), wrap onto more
+    rows (8px apart) and never scroll sideways. The panel radius keeps one row a pill and a
+    wrapped bar concentric with its items.
+  - Inside dialogs, sheets and popovers (raised, which in dark mode is the sunken colour) the
+    track becomes the page surface and the chosen pill the raised one (`--pc-seg-track`,
+    `--pc-seg-thumb`), so the bar stays visible in both modes.
+  - Client-state view switches (Milestones | All activity, By swimmer | By competency, the
+    class picker's sites) are `SegmentedChoice`, never ghost and outline buttons with
+    `aria-pressed`.
+- Radios and checkboxes are 20px with no shadow; the checkbox uses `rounded-ui-xs`.
 - Avatars are the shared `Avatar` (`src/components/shadcn/avatar.tsx`) with `initials()`:
   32px by default (bars, inline), `size="lg"` 40px (rows), `size="xl"` 64px (profile).
   Initials are 12px/600 (18px on `xl`) on the sunken fill with a 1px inset line. Only the
   signed-in person's own avatar takes `self` (soft blue fill, no line). Call sites add no
   avatar size, colour or border.
+- Overlays (dialog.tsx, alert-dialog.tsx, sheet.tsx, the menu block in poolside.css):
+  - Dialogs are 24px panels with the overlay shadow over `--pc-scrim` (a navy tint in light,
+    black/50 in dark; sheets share it). Headers are left-aligned at every width. Footers
+    are one row with the primary button last; under 768px the buttons share the row
+    (`flex: 1 1 auto`) and wrap whole, and a status line takes its own row.
+  - A dialog with its own Cancel or Back (every `FormDialog`, Add swimmer, the profile
+    action dialogs, Add class, refund decisions) has no X and closes with Cancel or Escape.
+    Info dialogs, sheets and `CommandDialog` keep a 44px round ghost X (the shared Button)
+    12px from the top right, centred in the command input row; headers clear it. Position
+    it by class only: `DialogClose asChild` Cancel buttons share its `data-slot`.
+  - Sheets are edge to edge under 768px; from 768px a 24px panel inset 8px from the
+    viewport with the overlay shadow and no edge or ruled header.
+  - Menus, selects and popovers are 24px panels with no edge and the overlay shadow, 12px
+    padding (component defaults, so call-site `p-0` on Command popovers still wins). Items
+    are 44px pills at 600, keeping a 36px gutter for a check or dot; caption lines inside
+    stay 400. Labels and group headings are muted 600 captions; groups are parted by 8px
+    of space, never a line. The select chevron is full-strength muted ink (3:1).
+  - Tooltips look like `.tf-rail-label`: an ink pill, 12px/600, no arrow, wrapping at 16rem.
+  - Toasts (sonner) use the app font at body size, a 16px card with no edge, the overlay
+    shadow, the icon in its status colour and a 44px round close inside on the right. Desk
+    toasts sit bottom right and clear the bottom bar wherever it shows; deck toasts sit at
+    the top so the save controls stay clear.
 - Meters are the shared `Progress`: an 8px sunken track with a rounded blue bar. Call
   sites may set width and position only, never height, colour or radius.
 

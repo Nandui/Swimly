@@ -65,8 +65,10 @@ keyboard focus, never replace labels or required instructions.
   their content without animating layout height. Tooltips wait 350ms.
 - `IconButton` supplies an accessible name and tooltip. Theme, compact actions,
   sidebar controls and icon form triggers reuse the guidance pattern.
-- `LoadingButton` reserves idle and busy labels, disables duplicate submission
-  and exposes progress. Creation, profile, teaching, confirmation and account
+- `LoadingButton` reserves idle and busy labels (the hidden one leaves the
+  accessible name), blocks duplicate submission with `aria-disabled` and a click
+  guard so focus stays on the button, and announces the pending label in a
+  polite live region. Creation, profile, teaching, confirmation and account
   forms use it without replacing their surrounding content.
 - `useFormFeedback` and the field adapters associate native/server errors with
   their fields. A failed submission focuses the first available invalid field

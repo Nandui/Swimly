@@ -9,6 +9,7 @@ import { Label } from "@/components/shadcn/label";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/shadcn/collapsible";
 import { Badge } from "@/components/shadcn/badge";
 import { EmptyState } from "@/components/ui-kit/empty-state";
+import { SegmentedChoice } from "@/components/ui-kit/segmented-links";
 import { RadioGroup, RadioGroupItem } from "@/components/shadcn/radio-group";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/shadcn/select";
 import { Textarea } from "@/components/ui/textarea";
@@ -64,16 +65,11 @@ function ClassPicker({ courses, name, selectedId, onSelect, currentEnrolment }: 
         {` · ${DAY_META[currentEnrolment.course.dayOfWeek].label} ${classTimes(currentEnrolment.course)} · ${currentEnrolment.course.club.name}`}</p>
     </div> : null}
 
-    <fieldset className="min-w-0 space-y-2">
-      <legend className="mb-2 text-sm font-medium">Site</legend>
-      <div className="flex flex-wrap gap-1 rounded-ui-md bg-ui-muted p-1">
-        {[{ id: "all", name: "All sites" }, ...sites].map(site => <Button key={site.id} type="button" variant="ghost"
-          aria-pressed={filters.site === site.id} onClick={() => setFilter("site", site.id)}
-          className={cn("h-auto min-h-11 min-w-0 flex-1 whitespace-normal px-3 py-2 md:flex-none", filters.site === site.id && "bg-ui-background text-ui-foreground shadow-xs hover:bg-ui-background")}>
-          {site.name}
-        </Button>)}
-      </div>
-    </fieldset>
+    <div className="min-w-0 space-y-2">
+      <p id={`${id}-site`} className="text-sm font-semibold">Site</p>
+      <SegmentedChoice aria-labelledby={`${id}-site`} value={filters.site} onValueChange={value => setFilter("site", value)}
+        options={[{ id: "all", name: "All sites" }, ...sites].map(site => ({ value: site.id, label: site.name }))} />
+    </div>
 
     <div className="grid gap-3 sm:grid-cols-3 lg:grid-cols-[minmax(0,2fr)_repeat(3,minmax(0,1fr))]">
       <div className="relative sm:col-span-3 lg:col-span-1">
@@ -118,7 +114,7 @@ function ClassPicker({ courses, name, selectedId, onSelect, currentEnrolment }: 
           return <Label key={course.id} htmlFor={`${id}-${course.id}`} className={cn(rowLayout,
             "min-h-16 px-3 py-3 text-sm font-normal leading-normal has-[:focus-visible]:-outline-offset-2 has-[:focus-visible]:outline-2 has-[:focus-visible]:outline-ui-ring",
             selected ? "bg-ui-brand-soft" : "hover:bg-ui-muted/50", disabled ? "cursor-not-allowed" : "cursor-pointer")}>
-            <RadioGroupItem id={`${id}-${course.id}`} value={course.id} disabled={disabled} className="row-span-5 my-1 md:row-span-1" />
+            <RadioGroupItem id={`${id}-${course.id}`} value={course.id} disabled={disabled} className="row-span-5 md:row-span-1" />
             <span className="min-w-0 break-words">
               <span className="block font-semibold">{courseName(course)}</span>
               <span className="block text-xs text-ui-muted-foreground">{course.name && course.name !== course.level.name ? `${course.level.name} · ` : ""}{course.durationMinutes}-minute lesson</span>

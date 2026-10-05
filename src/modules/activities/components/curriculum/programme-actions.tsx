@@ -84,7 +84,7 @@ export function AddProgramme() {
   return (
     <FormDialog
       trigger={
-        <Button variant="default" size="sm">
+        <Button variant="default">
           {<Plus aria-hidden={true} className="size-4 shrink-0" />}
           {"Add programme"}
         </Button>
@@ -112,14 +112,14 @@ export function EditProgramme({
       trigger={
         variant === "icon" ? (
           <Button
-            variant="ghost"
+            variant="outline"
             aria-label={`Edit ${programme.name}`}
-            size="icon-sm"
+            size="icon"
           >
             {<Pencil aria-hidden={true} className="size-4 shrink-0" />}
           </Button>
         ) : (
-          <Button variant="outline" size="sm">
+          <Button variant="outline">
             {<Pencil aria-hidden={true} className="size-4 shrink-0" />}
             {"Edit"}
           </Button>
@@ -156,9 +156,9 @@ export function ArchiveProgramme({ programme }: { programme: Programme }) {
     <ConfirmAction
       trigger={
         <Button
-          variant="ghost"
+          variant="outline"
           aria-label={`Archive ${programme.name}`}
-          size="icon-sm"
+          size="icon"
         >
           {<Archive aria-hidden={true} className="size-4 shrink-0" />}
         </Button>

@@ -173,7 +173,7 @@ export function AddCourse({
   return (
     <FormDialog
       trigger={
-        <Button variant="default" size="sm">
+        <Button variant="default">
           {<Plus aria-hidden={true} className="size-4 shrink-0" />}
           {"Add class"}
         </Button>
@@ -206,14 +206,14 @@ export function EditCourse({
       trigger={
         variant === "icon" ? (
           <Button
-            variant="ghost"
+            variant="outline"
             aria-label={`Edit ${courseLabel(course)}`}
-            size="icon-sm"
+            size="icon"
           >
             {<Pencil aria-hidden={true} className="size-4 shrink-0" />}
           </Button>
         ) : (
-          <Button variant="outline" size="sm">
+          <Button variant="outline">
             {<Pencil aria-hidden={true} className="size-4 shrink-0" />}
             {"Edit"}
           </Button>
@@ -247,9 +247,9 @@ export function ArchiveCourse({ course }: { course: CourseDetail }) {
     <ConfirmAction
       trigger={
         <Button
-          variant="ghost"
+          variant="outline"
           aria-label={`Archive ${courseLabel(course)}`}
-          size="icon-sm"
+          size="icon"
         >
           {<Archive aria-hidden={true} className="size-4 shrink-0" />}
         </Button>

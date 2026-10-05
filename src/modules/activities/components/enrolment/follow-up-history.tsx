@@ -115,8 +115,8 @@ export function FollowUpHistory({ studentId, name, canRecord, summary, presentat
       <div className="flex flex-wrap gap-2">
         <SheetTrigger asChild><Button variant="outline" className="min-h-11" aria-label={`Follow-up history for ${name}`} onClick={event => { trigger.current = event.currentTarget; }}><History className="size-4" aria-hidden="true" />Follow-up history{latestSummary?.count ? ` (${latestSummary.count})` : ''}</Button></SheetTrigger>
       </div>
-      <SheetContent onCloseAutoFocus={event => { if (trigger.current) { event.preventDefault(); trigger.current.focus(); } }} className="w-full gap-0 sm:max-w-2xl [&>button]:flex [&>button]:size-11 [&>button]:items-center [&>button]:justify-center">
-        <SheetHeader className="shrink-0 border-b border-ui-border p-4 pr-16 sm:p-6 sm:pr-16"><SheetTitle className="text-xl">Follow-up history</SheetTitle><SheetDescription><span className="font-medium text-ui-foreground">{name}</span><br />Shared across both sites, enrolments and moves. These notes are for staff only.</SheetDescription></SheetHeader>
+      <SheetContent onCloseAutoFocus={event => { if (trigger.current) { event.preventDefault(); trigger.current.focus(); } }} className="w-full gap-0 sm:max-w-2xl">
+        <SheetHeader className="shrink-0 p-4 pr-16 sm:p-6 sm:pr-16"><SheetTitle className="text-xl">Follow-up history</SheetTitle><SheetDescription><span className="font-medium text-ui-foreground">{name}</span><br />Shared across both sites, enrolments and moves. These notes are for staff only.</SheetDescription></SheetHeader>
         {panel}
       </SheetContent>
     </Sheet>

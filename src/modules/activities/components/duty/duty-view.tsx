@@ -66,7 +66,7 @@ export function DutyView({ courses, iso, clubName, initialNow, canCancel, canBil
 }
 
 function QuickView({ course, iso }: { course: DutyClass; iso: string }) {
-  return <Dialog><DialogTrigger asChild><Button variant="secondary" className="min-h-11" aria-label={`Quick view: ${course.name}, ${formatTime(course.startMinutes)}`}>Quick view</Button></DialogTrigger><DialogContent className="max-h-[90dvh] overflow-y-auto" showCloseButton={false}>
+  return <Dialog><DialogTrigger asChild><Button variant="outline" className="min-h-11" aria-label={`Quick view: ${course.name}, ${formatTime(course.startMinutes)}`}>Quick view</Button></DialogTrigger><DialogContent className="max-h-[90dvh] overflow-y-auto" showCloseButton={false}>
     <DialogHeader><DialogTitle>{course.name}</DialogTitle><DialogDescription>{formatDate(parseDateOnly(iso))} · {formatTimeRange(course.startMinutes, course.startMinutes + course.durationMinutes)} ·{course.location || "Pool area not set"}</DialogDescription></DialogHeader>
     <dl className="grid grid-cols-2 gap-3 text-sm"><div><dt className="text-ui-muted-foreground">Instructor</dt><dd>{course.instructor || "Not assigned"}</dd></div><div><dt className="text-ui-muted-foreground">Attendance</dt><dd>{course.attendanceRecorded ? `${course.attendanceRecorded} recorded` : "Not recorded"}</dd></div></dl>
     {course.cancellation ? <div className="space-y-2"><Tag color={CANCELLATION_META.cancelled.color}>Cancelled</Tag><p className="text-sm whitespace-pre-wrap break-words">{course.cancellation.reason}</p></div> : null}

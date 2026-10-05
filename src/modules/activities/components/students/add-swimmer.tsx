@@ -38,8 +38,8 @@ export function AddSwimmer({ student, trigger, defaultOpen = false }: { student?
   }
   return <Dialog open={open} onOpenChange={changeOpen}>
     <DialogTrigger asChild>{trigger ?? <Button variant={student ? "outline" : "default"}>{student ? "Edit details" : <><Plus aria-hidden="true" />Add swimmer</>}</Button>}</DialogTrigger>
-    <DialogContent className="flex max-h-[90dvh] flex-col gap-0 overflow-hidden p-0 sm:max-w-2xl [&_button:not([role=checkbox])]:min-h-11 [&_input:not([type=hidden])]:min-h-11" showCloseButton={!pending}>
-      <DialogHeader className="shrink-0 border-b border-ui-border p-6 pr-14 text-left">
+    <DialogContent className="flex max-h-[90dvh] flex-col gap-0 overflow-hidden p-0 sm:max-w-2xl [&_button:not([role=checkbox])]:min-h-11 [&_input:not([type=hidden])]:min-h-11" showCloseButton={false}>
+      <DialogHeader className="shrink-0 p-6">
         <DialogTitle>{student ? "Edit swimmer details" : "Add a swimmer"}</DialogTitle>
         <DialogDescription>{student ? "Update their shared profile and contact details." : "Start with their name. You can complete the rest now or in their profile."}</DialogDescription>
       </DialogHeader>

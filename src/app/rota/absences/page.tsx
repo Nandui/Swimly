@@ -39,7 +39,7 @@ function Updates({ updates }: { updates: RotaAbsenceRow["updates"] }) {
   return (
     <Collapsible className="text-xs text-ui-muted-foreground">
       <CollapsibleTrigger asChild>
-        <Button variant="link" size="sm" className="h-auto min-h-8 p-0! text-xs">History</Button>
+        <Button variant="link" className="h-auto min-h-8 p-0! text-xs">History</Button>
       </CollapsibleTrigger>
       <CollapsibleContent>
       <ol className="mt-1 space-y-1 border-l border-ui-border pl-3">

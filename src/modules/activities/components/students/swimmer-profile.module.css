@@ -21,19 +21,6 @@
   gap: calc(var(--spacing) * 4);
   min-width: 0;
 }
-.tabs {
-  width: 100%;
-  height: auto;
-  justify-content: start;
-  flex-wrap: wrap;
-  gap: calc(var(--spacing) * 2);
-  border-bottom: 1px solid var(--ui-border);
-  padding: 0 0 calc(var(--spacing) * 1);
-}
-.tabs [role="tab"] {
-  flex: 0 1 auto;
-  min-height: 2.75rem;
-}
 .body {
   display: grid;
   gap: calc(var(--spacing) * 6);

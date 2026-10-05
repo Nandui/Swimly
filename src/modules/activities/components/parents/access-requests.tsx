@@ -61,7 +61,7 @@ export function ParentAccessRequests() {
       <Button ref={refreshButton} variant="outline" className="min-h-11" onClick={resource.reload}>Refresh requests</Button>
     </div>
     <div role="group" aria-label="Request status" className="flex flex-wrap gap-2">
-      {(Object.keys(ACCESS_REQUEST_META) as Array<keyof typeof ACCESS_REQUEST_META>).map(value => <Button key={value} variant={value === status ? "secondary" : "ghost"} className="min-h-11" aria-pressed={value === status} onClick={() => { setStatus(value); setPage(1); }}>{ACCESS_REQUEST_META[value].label}</Button>)}
+      {(Object.keys(ACCESS_REQUEST_META) as Array<keyof typeof ACCESS_REQUEST_META>).map(value => <Button key={value} variant={value === status ? "outline" : "ghost"} className="min-h-11" aria-pressed={value === status} onClick={() => { setStatus(value); setPage(1); }}>{ACCESS_REQUEST_META[value].label}</Button>)}
     </div>
     <ParentLoadState {...resource} />
     {resource.data && <div aria-live="polite" className="space-y-4">

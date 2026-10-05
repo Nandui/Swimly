@@ -5,6 +5,8 @@ import { cn } from "@/lib/utils"
 import { XIcon } from "lucide-react"
 import { Dialog as SheetPrimitive } from "radix-ui"
 
+import { Button } from "@/components/shadcn/button"
+
 function Sheet({ ...props }: React.ComponentProps<typeof SheetPrimitive.Root>) {
   return <SheetPrimitive.Root data-slot="sheet" {...props} />
 }
@@ -35,7 +37,7 @@ function SheetOverlay({
     <SheetPrimitive.Overlay
       data-slot="sheet-overlay"
       className={cn(
-        "fixed inset-0 z-50 bg-black/50 ui-motion-surface data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:animate-in data-[state=open]:fade-in-0",
+        "fixed inset-0 z-50 bg-[var(--pc-scrim,rgb(0_0_0/0.5))] ui-motion-surface data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:animate-in data-[state=open]:fade-in-0",
         className
       )}
       {...props}
@@ -61,25 +63,36 @@ function SheetContent({
       <SheetOverlay />
       <SheetPrimitive.Content
         data-slot="sheet-content"
+        data-side={side}
         className={cn(
-          "fixed z-50 flex flex-col gap-4 bg-ui-background shadow-lg ui-motion-surface data-[state=closed]:animate-out data-[state=open]:animate-in",
+          // Edge to edge on phones; from 768px a 24px panel inset 8px from the viewport.
+          "fixed z-50 flex flex-col gap-4 bg-ui-background shadow-[var(--pc-shadow-overlay)] ui-motion-surface data-[state=closed]:animate-out data-[state=open]:animate-in md:rounded-[var(--pc-radius-panel)]",
           side === "right" &&
-            "inset-y-0 right-0 h-full w-3/4 border-l data-[state=closed]:slide-out-to-right data-[state=open]:slide-in-from-right sm:max-w-sm",
+            "inset-y-0 right-0 h-full w-3/4 max-md:w-full data-[state=closed]:slide-out-to-right data-[state=open]:slide-in-from-right sm:max-w-sm md:inset-y-2 md:right-2 md:h-auto",
           side === "left" &&
-            "inset-y-0 left-0 h-full w-3/4 border-r data-[state=closed]:slide-out-to-left data-[state=open]:slide-in-from-left sm:max-w-sm",
+            "inset-y-0 left-0 h-full w-3/4 max-md:w-full data-[state=closed]:slide-out-to-left data-[state=open]:slide-in-from-left sm:max-w-sm md:inset-y-2 md:left-2 md:h-auto",
           side === "top" &&
-            "inset-x-0 top-0 h-auto border-b data-[state=closed]:slide-out-to-top data-[state=open]:slide-in-from-top",
+            "inset-x-0 top-0 h-auto data-[state=closed]:slide-out-to-top data-[state=open]:slide-in-from-top md:inset-x-2 md:top-2",
           side === "bottom" &&
-            "inset-x-0 bottom-0 h-auto border-t data-[state=closed]:slide-out-to-bottom data-[state=open]:slide-in-from-bottom",
+            "inset-x-0 bottom-0 h-auto data-[state=closed]:slide-out-to-bottom data-[state=open]:slide-in-from-bottom md:inset-x-2 md:bottom-2",
+          // The header sits 16px in, so 64px clears the 44px X at 12px (also when a panel nests it).
+          showCloseButton && "[&_[data-slot=sheet-header]]:pr-16",
           className
         )}
         {...props}
       >
         {children}
         {showCloseButton && (
-          <SheetPrimitive.Close data-slot="sheet-close" className="absolute top-4 right-4 rounded-ui-xs opacity-70 ring-offset-background transition-opacity ui-motion-feedback hover:opacity-100 focus:ring-2 focus:ring-ui-ring focus:ring-offset-2 focus:outline-hidden disabled:pointer-events-none data-[state=open]:bg-ui-secondary">
-            <XIcon className="size-4" />
-            <span className="sr-only">Close</span>
+          <SheetPrimitive.Close asChild>
+            <Button
+              variant="ghost"
+              size="icon"
+              aria-label="Close"
+              data-slot="sheet-close"
+              className="absolute top-3 right-3 text-[var(--pc-ink-muted)]"
+            >
+              <XIcon aria-hidden="true" />
+            </Button>
           </SheetPrimitive.Close>
         )}
       </SheetPrimitive.Content>

@@ -39,7 +39,7 @@ export function AddNote({ subjectUserId, name }: { subjectUserId: string; name: 
         <RadioGroup value={visibility} onValueChange={setVisibility} className="gap-1">
           {NOTE_VISIBILITIES.map((key) => (
             <div key={key} className="flex min-h-11 items-start gap-3 py-1">
-              <RadioGroupItem id={`hr-vis-${key}`} value={key} className="mt-1" />
+              <RadioGroupItem id={`hr-vis-${key}`} value={key} />
               <Label htmlFor={`hr-vis-${key}`} className="block font-normal">
                 <span className="block font-medium">{NOTE_VISIBILITY_META[key].label}</span>
                 <span className="block text-sm text-ui-muted-foreground">{NOTE_VISIBILITY_META[key].hint}</span>

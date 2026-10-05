@@ -69,7 +69,7 @@ export default async function DayPlanPage({ searchParams }: { searchParams: Prom
         <div className="flex flex-wrap items-center gap-2">
           <nav aria-label="Days" className="flex items-center gap-1">
             <Button asChild variant="outline" size="icon" aria-label="Previous day"><Link href={link(addDaysIso(day, -1))}><ChevronLeft aria-hidden="true" /></Link></Button>
-            <Button asChild variant={day === now ? "secondary" : "outline"}><Link href={link(now)}>Today</Link></Button>
+            <Button asChild variant="outline"><Link href={link(now)} aria-current={day === now ? "date" : undefined}>Today</Link></Button>
             <Button asChild variant="outline" size="icon" aria-label="Next day"><Link href={link(addDaysIso(day, 1))}><ChevronRight aria-hidden="true" /></Link></Button>
           </nav>
           {site ? <Button asChild variant="outline" className="min-h-11"><Link href={`/rota?${new URLSearchParams({ site: site.id, week: mondayOf(day) })}`}><CalendarDays aria-hidden="true" />Week</Link></Button> : null}

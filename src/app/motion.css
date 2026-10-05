@@ -85,13 +85,16 @@
   scale: 1;
 }
 
-/* Both layers stay in the same grid cell; the accessible label changes once. */
+/* Both layers stay in the same grid cell; the hidden one keeps its space but
+   leaves the accessible name, so the button is named by the live label only. */
 [data-motion="action-label"] {
   pointer-events: none;
   transition: opacity var(--ui-motion-feedback) var(--ui-ease),
-    translate var(--ui-motion-feedback) var(--ui-ease);
+    translate var(--ui-motion-feedback) var(--ui-ease),
+    visibility var(--ui-motion-feedback) var(--ui-ease);
 }
 [data-motion="action-label"][aria-hidden="true"] {
+  visibility: hidden;
   opacity: 0;
   translate: 0 calc(-1 * var(--ui-motion-nudge-distance));
 }

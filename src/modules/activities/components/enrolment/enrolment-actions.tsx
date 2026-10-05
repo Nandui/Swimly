@@ -1,6 +1,6 @@
 "use client";
 import { Button } from "@/components/shadcn/button";
-import { RadioGroupItem, RadioGroup } from "@/components/shadcn/radio-group";
+import { SegmentedChoice } from "@/components/ui-kit/segmented-links";
 
 import { useId, useState } from "react";
 
@@ -180,7 +180,7 @@ export function EnrolIntoCourse({
     <FormDialog
       onOpen={() => setSelectedId("")}
       trigger={
-        <Button variant="default" size="sm">
+        <Button variant="default">
           {<UserRoundPlus aria-hidden={true} className="size-4 shrink-0" />}
           {"Enrol a swimmer"}
         </Button>
@@ -278,9 +278,9 @@ export function EndEnrolment({
           </Button>
         ) : (
           <Button
-            variant="ghost"
+            variant="outline"
             aria-label={`Unenrol ${name} from ${classLabel}`}
-            size="icon-sm"
+            size="icon"
           >
             {<LogOut aria-hidden={true} className="size-4 shrink-0" />}
           </Button>
@@ -315,41 +315,17 @@ export function EndEnrolment({
       }
     >
       {enrolment.status === "ACTIVE" ? (
-        <RadioGroup
+        <SegmentedChoice
           value={when}
           aria-label="When to unenrol"
           onValueChange={setWhen}
-          className={
-            "inline-flex flex-wrap gap-1 rounded-ui-lg bg-ui-muted p-1"
-          }
-        >
-          <RadioGroupItem
-            value="now"
-            className={
-              "aspect-auto h-auto min-h-11 w-auto flex-1 bg-transparent dark:bg-transparent dark:data-[state=checked]:bg-ui-input/30 rounded-ui-md border-0 px-3 py-2 text-sm font-medium shadow-none data-[state=checked]:bg-ui-background data-[state=checked]:text-ui-foreground data-[state=checked]:shadow-sm"
-            }
-          >
-            {"Now"}
-          </RadioGroupItem>
-          <RadioGroupItem
-            value="date"
-            className={
-              "aspect-auto h-auto min-h-11 w-auto flex-1 bg-transparent dark:bg-transparent dark:data-[state=checked]:bg-ui-input/30 rounded-ui-md border-0 px-3 py-2 text-sm font-medium shadow-none data-[state=checked]:bg-ui-background data-[state=checked]:text-ui-foreground data-[state=checked]:shadow-sm"
-            }
-          >
-            {"On a date"}
-          </RadioGroupItem>
-          {enrolment.scheduledEndOn ? (
-            <RadioGroupItem
-              value="keep"
-              className={
-                "aspect-auto h-auto min-h-11 w-auto flex-1 bg-transparent dark:bg-transparent dark:data-[state=checked]:bg-ui-input/30 rounded-ui-md border-0 px-3 py-2 text-sm font-medium shadow-none data-[state=checked]:bg-ui-background data-[state=checked]:text-ui-foreground data-[state=checked]:shadow-sm"
-              }
-            >
-              {"Keep place"}
-            </RadioGroupItem>
-          ) : null}
-        </RadioGroup>
+          fill="phone"
+          options={[
+            { value: "now", label: "Now" },
+            { value: "date", label: "On a date" },
+            ...(enrolment.scheduledEndOn ? [{ value: "keep", label: "Keep place" }] : []),
+          ]}
+        />
       ) : null}
       {when === "date" ? (
         <Field
@@ -409,7 +385,7 @@ export function PromoteFromWaitlist({
   classLabel?: string;
 }) {
   return <FormDialog
-    trigger={<Button variant={variant === "button" ? "outline" : "ghost"} size={variant === "button" ? "default" : "icon-sm"}
+    trigger={<Button variant="outline" size={variant === "button" ? "default" : "icon"}
       aria-label={`Enrol ${fullName(enrolment.student)} from the waitlist${classLabel ? ` for ${classLabel}` : ""}`}>
       {variant === "button" ? "Enrol from waitlist" : <ChevronsUp aria-hidden="true" />}
     </Button>}
@@ -446,9 +422,9 @@ export function TransferEnrolment({
           </Button>
         ) : (
           <Button
-            variant="ghost"
+            variant="outline"
             aria-label={`Move ${fullName(enrolment.student)} to another class`}
-            size="icon-sm"
+            size="icon"
           >
             {<ArrowRightLeft aria-hidden={true} className="size-4 shrink-0" />}
           </Button>

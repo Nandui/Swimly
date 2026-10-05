@@ -35,12 +35,12 @@ export function RolePreviewToggle({ compact = false }: { compact?: boolean }) {
   const label = current ? `Viewing as ${current.name}. Change role` : "View as another role";
   return <DropdownMenu>
     <DropdownMenuTrigger asChild>
-      <Button variant={current ? "secondary" : "ghost"} size="icon" className="workspace-preview-toggle" data-active={current ? "true" : undefined} disabled={pending} aria-label={label} title={current ? `Viewing as ${current.name}` : "View as another role"}>
+      <Button variant="ghost" size="icon" className="workspace-preview-toggle" data-active={current ? "true" : undefined} disabled={pending} aria-label={label} title={current ? `Viewing as ${current.name}` : "View as another role"}>
         {pending ? <Loader2 className="animate-spin" aria-hidden="true" /> : <Eye aria-hidden="true" />}
       </Button>
     </DropdownMenuTrigger>
     <DropdownMenuContent side={compact ? "right" : "bottom"} align={compact ? "start" : "end"} className="w-72 max-w-[calc(100vw-2rem)]">
-      <DropdownMenuLabel className="font-normal"><span className="block font-medium">{current ? `Viewing as ${current.name}` : "See the app as"}</span><span className="block text-xs text-ui-muted-foreground">Dev build. You are {actualRoleName}.</span></DropdownMenuLabel>
+      <DropdownMenuLabel className="text-sm font-normal text-ui-foreground"><span className="block font-semibold">{current ? `Viewing as ${current.name}` : "See the app as"}</span><span className="block text-xs text-ui-muted-foreground">Dev build. You are {actualRoleName}.</span></DropdownMenuLabel>
       <DropdownMenuSeparator />
       <DropdownMenuRadioGroup value={current?.id ?? ""} onValueChange={choose}>{roles.map(role => <DropdownMenuRadioItem className="min-h-11" value={role.id} key={role.id}><span><span className="block">{role.name}</span>{role.description ? <span className="block text-xs text-ui-muted-foreground">{role.description}</span> : null}</span></DropdownMenuRadioItem>)}</DropdownMenuRadioGroup>
       {current ? <><DropdownMenuSeparator /><DropdownMenuItem className="min-h-11" onSelect={() => choose(null)}><EyeOff aria-hidden="true" />Stop, back to being {actualRoleName}</DropdownMenuItem></> : null}

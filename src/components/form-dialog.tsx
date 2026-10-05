@@ -8,6 +8,7 @@ import {
   Dialog,
   DialogContent,
   DialogDescription,
+  DialogFooter,
   DialogHeader,
   DialogTitle,
 } from "@/components/shadcn/dialog";
@@ -166,7 +167,7 @@ export function FormDialog({
               "flex max-h-[calc(100dvh-2rem)] flex-col gap-0 p-0",
               width,
             )}
-            showCloseButton={!pending}
+            showCloseButton={false}
           >
             <FormFeedbackProvider feedback={feedback}><form
               ref={formRef}
@@ -209,7 +210,7 @@ export function FormDialog({
                 ) : null}
               </div>
 
-              <div className={styles.footer}>
+              <DialogFooter className="shrink-0 p-6">
                 <Button
                   type="button"
                   variant="outline"
@@ -239,7 +240,7 @@ export function FormDialog({
                   <LoadingButton type="submit" pending={pending}>{submitLabel}</LoadingButton>
                 )}
                 {confirmation && pending ? <span role="status" className="text-sm text-ui-muted-foreground">Saving change…</span> : null}
-              </div>
+              </DialogFooter>
             </form></FormFeedbackProvider>
           </DialogContent>
         </Dialog>

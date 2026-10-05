@@ -338,7 +338,7 @@ function RegisterFormState({
                 {line.medicalNotes ? (
                   <Collapsible>
                     <CollapsibleTrigger asChild>
-                      <Button variant="outline" size="sm" className="mt-1">
+                      <Button variant="outline" className="mt-1">
                         <HeartPulse aria-hidden="true" />
                         Medical information
                         <ChevronDown aria-hidden="true" />

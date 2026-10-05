@@ -64,7 +64,7 @@ export function AssignTraining({ courses, people, courseId, userIds, label = "As
           {roles.length > 1 ? (
             <div className="flex flex-wrap gap-2" role="group" aria-label="Choose everyone on a role">
               {roles.map((role) => (
-                <Button key={role.id} type="button" variant="outline" size="sm" className="min-h-11" onClick={() => setChosen((prev) => new Set([...prev, ...role.ids]))}>
+                <Button key={role.id} type="button" variant="outline" className="min-h-11" onClick={() => setChosen((prev) => new Set([...prev, ...role.ids]))}>
                   Everyone on {role.name} ({role.ids.length})
                 </Button>
               ))}

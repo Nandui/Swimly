@@ -25,12 +25,11 @@ function Tabs({
 }
 
 const tabsListVariants = cva(
-  "group/tabs-list inline-flex w-fit items-center justify-center rounded-ui-lg p-[3px] text-ui-muted-foreground group-data-[orientation=horizontal]/tabs:h-9 group-data-[orientation=vertical]/tabs:h-fit group-data-[orientation=vertical]/tabs:flex-col data-[variant=line]:rounded-none",
+  "group/tabs-list inline-flex w-fit items-center justify-center rounded-ui-lg p-[3px] text-ui-muted-foreground group-data-[orientation=horizontal]/tabs:h-9 group-data-[orientation=vertical]/tabs:h-fit group-data-[orientation=vertical]/tabs:flex-col",
   {
     variants: {
       variant: {
         default: "bg-ui-muted",
-        line: "gap-1 bg-transparent",
       },
     },
     defaultVariants: {
@@ -63,10 +62,8 @@ function TabsTrigger({
     <TabsPrimitive.Trigger
       data-slot="tabs-trigger"
       className={cn(
-        "relative inline-flex h-[calc(100%-1px)] flex-1 items-center justify-center gap-1.5 rounded-ui-md border border-transparent px-2 py-1 text-sm font-medium whitespace-nowrap text-ui-foreground/60 transition-[color,background-color,border-color,box-shadow] ui-motion-component group-data-[orientation=vertical]/tabs:w-full group-data-[orientation=vertical]/tabs:justify-start hover:text-ui-foreground focus-visible:border-ui-ring focus-visible:ring-[3px] focus-visible:ring-ui-ring/50 focus-visible:outline-1 focus-visible:outline-ui-ring disabled:pointer-events-none disabled:opacity-50 group-data-[variant=default]/tabs-list:data-[state=active]:shadow-sm group-data-[variant=line]/tabs-list:data-[state=active]:shadow-none dark:text-ui-muted-foreground dark:hover:text-ui-foreground [&_svg]:pointer-events-none [&_svg]:shrink-0 [&_svg:not([class*='size-'])]:size-4",
-        "group-data-[variant=line]/tabs-list:bg-transparent group-data-[variant=line]/tabs-list:data-[state=active]:bg-transparent dark:group-data-[variant=line]/tabs-list:data-[state=active]:border-transparent dark:group-data-[variant=line]/tabs-list:data-[state=active]:bg-transparent",
+        "relative inline-flex h-[calc(100%-1px)] flex-1 items-center justify-center gap-1.5 rounded-ui-md border border-transparent px-2 py-1 text-sm font-semibold whitespace-nowrap text-ui-foreground/60 transition-[color,background-color,border-color,box-shadow] ui-motion-component group-data-[orientation=vertical]/tabs:w-full group-data-[orientation=vertical]/tabs:justify-start hover:text-ui-foreground disabled:pointer-events-none disabled:opacity-50 group-data-[variant=default]/tabs-list:data-[state=active]:shadow-sm dark:text-ui-muted-foreground dark:hover:text-ui-foreground [&_svg]:pointer-events-none [&_svg]:shrink-0 [&_svg:not([class*='size-'])]:size-4",
         "data-[state=active]:bg-ui-background data-[state=active]:text-ui-foreground dark:data-[state=active]:border-ui-input dark:data-[state=active]:bg-ui-input/30 dark:data-[state=active]:text-ui-foreground",
-        "after:absolute after:bg-ui-foreground after:opacity-0 after:transition-opacity after:duration-(--ui-motion-component) group-data-[orientation=horizontal]/tabs:after:inset-x-0 group-data-[orientation=horizontal]/tabs:after:bottom-[-5px] group-data-[orientation=horizontal]/tabs:after:h-0.5 group-data-[orientation=vertical]/tabs:after:inset-y-0 group-data-[orientation=vertical]/tabs:after:-right-1 group-data-[orientation=vertical]/tabs:after:w-0.5 group-data-[variant=line]/tabs-list:data-[state=active]:after:opacity-100",
         className
       )}
       {...props}

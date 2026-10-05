@@ -67,7 +67,7 @@ export function AddAssessmentType({
   return (
     <FormDialog
       trigger={
-        <Button variant="outline" size="sm">
+        <Button variant="outline">
           {<Plus aria-hidden={true} className="size-4 shrink-0" />}
           {"Add a kind of assessment"}
         </Button>
@@ -89,7 +89,7 @@ export function EditAssessmentType({ type }: { type: Named }) {
   return (
     <FormDialog
       trigger={
-        <Button variant="ghost" aria-label={`Edit ${type.name}`} size="icon-sm">
+        <Button variant="outline" aria-label={`Edit ${type.name}`} size="icon">
           {<Pencil aria-hidden={true} className="size-4 shrink-0" />}
         </Button>
       }
@@ -125,9 +125,9 @@ export function ArchiveAssessmentType({
     <ConfirmAction
       trigger={
         <Button
-          variant="ghost"
+          variant="outline"
           aria-label={`Archive ${type.name}`}
-          size="icon-sm"
+          size="icon"
         >
           {<Archive aria-hidden={true} className="size-4 shrink-0" />}
         </Button>

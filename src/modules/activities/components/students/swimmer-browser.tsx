@@ -59,7 +59,7 @@ export function SwimmerBrowser({ students, total, page, pageSize, counts, q, sta
       <div className="space-y-3">
         <div className="flex min-h-8 flex-wrap items-center justify-between gap-2 text-sm text-ui-muted-foreground" aria-live="polite" aria-atomic="true">
           <p>{total ? <><span className="font-medium text-ui-foreground">{number((page - 1) * pageSize + 1)}–{number(Math.min(page * pageSize, total))}</span> of {number(total)} {filtered ? "matches" : "swimmers"}</> : "0 swimmers"}</p>
-          {filtered ? <Button asChild variant="ghost" size="sm"><Link href="/students"><X aria-hidden="true" />Clear filters</Link></Button> : <span className="text-xs">Surname A–Z</span>}
+          {filtered ? <Button asChild variant="ghost"><Link href="/students"><X aria-hidden="true" />Clear filters</Link></Button> : <span className="text-xs">Surname A–Z</span>}
         </div>
         {students.length ? <StudentDirectory students={students} returnTo={returnTo} /> : (
           <Empty className="border border-ui-border bg-ui-muted/30 py-16">

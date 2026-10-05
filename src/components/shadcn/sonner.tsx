@@ -28,8 +28,8 @@ const Toaster = ({ ...props }: ToasterProps) => {
         {
           "--normal-bg": "var(--ui-popover)",
           "--normal-text": "var(--ui-foreground)",
-          "--normal-border": "var(--ui-border)",
-          "--border-radius": "var(--ui-radius)",
+          "--normal-border": "transparent",
+          "--border-radius": "var(--pc-radius-card)",
         } as React.CSSProperties
       }
       {...props}

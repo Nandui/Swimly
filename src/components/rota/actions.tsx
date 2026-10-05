@@ -38,7 +38,7 @@ function ChangeFields({ id, suggested }: { id: string; suggested?: RotaChangeRea
       </RadioGroup>
       <Field label="Note (optional)" htmlFor={`${id}-change-note`}><Input id={`${id}-change-note`} name="changeNote" maxLength={200} className="min-h-11" /></Field>
       <div className="flex min-h-11 items-start gap-3">
-        <Checkbox id={`${id}-timepoint`} name="timepoint" value="1" className="mt-1" />
+        <Checkbox id={`${id}-timepoint`} name="timepoint" value="1" />
         <Label htmlFor={`${id}-timepoint`} className="block font-normal">
           <span className="block font-medium">Updated in Timepoint</span>
           <span className="block text-sm text-ui-muted-foreground">Leave it unticked if you will do it later: it stays a follow-up until it is done.</span>
@@ -183,7 +183,7 @@ export function CopyPlan({ siteId, to, whole }: { siteId: string; to: string; wh
         <RadioGroup value={people} onValueChange={setPeople} className="gap-1">
           {[["same", "The same people", "Each duty keeps who did it. Absences and clashes show as warnings."], ["none", "The shape only", "Every duty comes in unfilled, to choose who this time."]].map(([value, label, hint]) => (
             <div key={value} className="flex min-h-11 items-start gap-3 py-1">
-              <RadioGroupItem id={`copy-people-${to}-${value}`} value={value} className="mt-1" />
+              <RadioGroupItem id={`copy-people-${to}-${value}`} value={value} />
               <Label htmlFor={`copy-people-${to}-${value}`} className="block font-normal"><span className="block font-medium">{label}</span><span className="block text-sm text-ui-muted-foreground">{hint}</span></Label>
             </div>
           ))}

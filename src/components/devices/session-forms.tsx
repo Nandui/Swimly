@@ -97,7 +97,7 @@ export function QuickSwitch({ device, people }: { device: string; people: { id: 
           <span />
         </div>
         {error ? <Notice title={error} tone="error" /> : null}
-        <LoadingButton type="submit" size="lg" pending={pending} pendingLabel="Checking…" disabled={pin.length < 4} className="w-full">Continue</LoadingButton>
+        <LoadingButton type="submit" pending={pending} pendingLabel="Checking…" disabled={pin.length < 4} className="w-full">Continue</LoadingButton>
         <Button type="button" variant="ghost" onClick={() => { setChosen(null); setPin(""); }}>Not {chosen.name.split(" ")[0]}?</Button>
       </form>
     </Frame>
@@ -127,7 +127,7 @@ export function ConfirmPassword({ email, name, next }: { email: string; name: st
       }}>
         <Input label="Password" type="password" value={password} onChange={setPassword} name="password" required autoComplete="current-password" autoFocus />
         {error ? <Notice title={error} tone="error" /> : null}
-        <LoadingButton type="submit" size="lg" pending={pending} pendingLabel="Checking…" className="w-full">Confirm</LoadingButton>
+        <LoadingButton type="submit" pending={pending} pendingLabel="Checking…" className="w-full">Confirm</LoadingButton>
         <Button asChild variant="ghost"><Link href="/">Go back</Link></Button>
       </form>
     </Frame>

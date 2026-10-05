@@ -69,7 +69,6 @@ export function MoveUpToLevel({
     return (
       <Button
         variant="outline"
-        size="sm"
         title={`No class teaches ${nextLevelName} yet. Add one on the Classes page first.`}
         disabled={true}
       >
@@ -83,7 +82,7 @@ export function MoveUpToLevel({
     <FormDialog
       onOpen={() => setSelectedId("")}
       trigger={
-        <Button variant="default" size="sm">
+        <Button variant="default">
           {<ArrowUpRight aria-hidden={true} className="size-4 shrink-0" />}
           {`Move up to ${nextLevelName}`}
         </Button>

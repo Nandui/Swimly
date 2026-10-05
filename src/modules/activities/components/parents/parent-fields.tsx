@@ -6,7 +6,7 @@ import { Notice } from "@/components/ui-kit/notice";
 import { FormDialog } from "@/components/form-dialog";
 
 export function ParentFormDialog(props: React.ComponentProps<typeof FormDialog>) {
-  return <FormDialog {...props} width="sm:max-w-md [&_button]:min-h-11 [&_input]:min-h-11 [&_[data-slot=dialog-close]]:min-w-11 [&_[data-slot=dialog-close]]:top-2 [&_[data-slot=dialog-close]]:right-2" />;
+  return <FormDialog {...props} width="sm:max-w-md [&_button]:min-h-11 [&_input]:min-h-11" />;
 }
 
 export function ParentReason() {

@@ -55,16 +55,16 @@ export function CourseFilters({ dimensions, q, active, state, todayDay, views, s
       </CollapsibleContent>
     </Collapsible>
     {active ? <div className="flex min-w-0 flex-wrap gap-1">
-        {dimensions.filter(d => d.selected && d.key !== "places").map(d => <Button key={d.key} asChild variant="secondary" size="sm" className="h-auto min-h-9 max-w-full whitespace-normal py-2 text-left">
+        {dimensions.filter(d => d.selected && d.key !== "places").map(d => <Button key={d.key} asChild variant="outline" className="h-auto min-h-9 max-w-full whitespace-normal py-2 text-left">
           <Link href={href({ [d.key]: null })} aria-label={`Remove ${d.label.toLowerCase()} filter: ${d.selectedLabel ?? "Unavailable option"}`}><span className="min-w-0 break-words">{d.label}: {d.selectedLabel ?? "Unavailable option"}</span><X className="shrink-0" aria-hidden="true" /></Link>
         </Button>)}
-        {active ? <Button asChild variant="ghost" size="sm"><Link href={state === "archived" ? "/courses?state=archived" : "/courses"}>Clear filters</Link></Button> : null}
+        {active ? <Button asChild variant="ghost"><Link href={state === "archived" ? "/courses?state=archived" : "/courses"}>Clear filters</Link></Button> : null}
       </div> : null}
     <div className="flex flex-wrap items-center justify-between gap-2">
       <p className="text-sm text-ui-muted-foreground" aria-live="polite" aria-atomic="true">{showing.total ? <><span className="font-medium text-ui-foreground">{showing.first}–{showing.last}</span> of {showing.total} {active ? "matching classes" : state === "archived" ? "archived classes" : "classes"}</> : "0 classes"}</p>
       <div className="ml-auto flex gap-1">
-        {state !== "archived" ? <Button asChild variant="ghost" size="sm"><Link href={href({ day: todayDay })}>Today only</Link></Button> : null}
-        <Button variant="ghost" size="sm" disabled={pending} onClick={() => startNavigation(() => router.refresh())}><RefreshCw className={pending ? "animate-spin" : ""} aria-hidden="true" />{pending ? "Updating…" : "Refresh"}</Button>
+        {state !== "archived" ? <Button asChild variant="ghost"><Link href={href({ day: todayDay })}>Today only</Link></Button> : null}
+        <Button variant="ghost" disabled={pending} onClick={() => startNavigation(() => router.refresh())}><RefreshCw className={pending ? "animate-spin" : ""} aria-hidden="true" />{pending ? "Updating…" : "Refresh"}</Button>
       </div>
     </div>
   </div>;

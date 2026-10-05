@@ -13,6 +13,7 @@ import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/component
 import { Input } from "@/components/shadcn/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/shadcn/select";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/shadcn/tabs";
+import { SegmentedChoice } from "@/components/ui-kit/segmented-links";
 import type { StudentDetail } from "@/modules/activities/lib/students/data/students";
 import type { StudentEnrolment, TransferTarget } from "@/modules/activities/lib/enrolment/data/enrolments";
 import type { ProgrammeProgress } from "@/modules/activities/lib/progression/data/progress";
@@ -33,6 +34,7 @@ import { GuardianAccessPanel } from "@/modules/activities/components/parents/gua
 import styles from "./swimmer-profile.module.css";
 
 type Tab = "journey" | "competencies" | "attendance" | "assessments" | "details" | "parents";
+const JOURNEY_MODES = [{ value: "milestones", label: "Milestones" }, { value: "activity", label: "All activity" }];
 export type ProfileAccess = { edit: boolean; enrol: boolean; assess: boolean; complete: boolean; override: boolean; courses: boolean; assessments: boolean; audit: boolean; parents?: boolean };
 export type SwimmerProfileProps = { student: StudentDetail; enrolments: StudentEnrolment[]; programmes: ProgrammeProgress[]; assessments: StudentAssessment[]; targets: TransferTarget[]; history: HistoryPage; access: ProfileAccess; initialTab?: string; returnTo: string; instant: string };
 function profileTab(value?: string, parents = false): Tab {
@@ -60,12 +62,12 @@ export function SwimmerProfile({ student, enrolments, programmes, assessments, t
     </header>
     {student.medicalNotes ? <Alert variant="destructive"><AlertTitle>Medical notes — read before swimming</AlertTitle><AlertDescription className="whitespace-pre-wrap">{student.medicalNotes}</AlertDescription></Alert> : student.hasMedicalNotes ? <Alert><AlertTitle>Medical notes on file</AlertTitle><AlertDescription>Reception, swim school managers and the instructors teaching this swimmer can read them.</AlertDescription></Alert> : null}
     <Tabs value={tab} onValueChange={value => navigate(value as Tab)} className="gap-0">
-      <TabsList variant="line" className={styles.tabs} aria-label="Swimmer profile sections"><TabsTrigger value="journey">Journey</TabsTrigger><TabsTrigger value="competencies">Competencies</TabsTrigger><TabsTrigger value="attendance">Attendance</TabsTrigger><TabsTrigger value="assessments">Assessments</TabsTrigger><TabsTrigger value="details">Details</TabsTrigger>{access.parents ? <TabsTrigger value="parents">Parent access</TabsTrigger> : null}</TabsList>
+      <TabsList aria-label="Swimmer profile sections"><TabsTrigger value="journey">Journey</TabsTrigger><TabsTrigger value="competencies">Competencies</TabsTrigger><TabsTrigger value="attendance">Attendance</TabsTrigger><TabsTrigger value="assessments">Assessments</TabsTrigger><TabsTrigger value="details">Details</TabsTrigger>{access.parents ? <TabsTrigger value="parents">Parent access</TabsTrigger> : null}</TabsList>
       <div className={styles.body}>
         <div className="min-w-0">
           <TabsContent value="journey" className="m-0 space-y-5">
             <div className="flex flex-wrap items-start justify-between gap-3"><div><h2 className="text-xl font-semibold">Every chapter, from their first swim</h2><p className="mt-1 text-sm text-ui-muted-foreground">Classes, progress and activity across both sites.</p></div>
-              <div className="flex flex-wrap items-center gap-2"><div role="group" aria-label="Journey display" className="flex rounded-ui-lg bg-ui-muted p-1"><Button variant={mode === "milestones" ? "outline" : "ghost"} aria-pressed={mode === "milestones"} onClick={() => setMode("milestones")}>Milestones</Button><Button variant={mode === "activity" ? "outline" : "ghost"} aria-pressed={mode === "activity"} onClick={() => setMode("activity")}>All activity</Button></div><Select value={programme} onValueChange={setProgramme}><SelectTrigger aria-label="Filter by programme"><SelectValue /></SelectTrigger><SelectContent><SelectItem value="all">All programmes</SelectItem>{programmeOptions.map(([id, label]) => <SelectItem value={id} key={id}>{label}</SelectItem>)}</SelectContent></Select></div>
+              <div className="flex flex-wrap items-center gap-2"><SegmentedChoice aria-label="Journey display" value={mode} onValueChange={setMode} options={JOURNEY_MODES} /><Select value={programme} onValueChange={setProgramme}><SelectTrigger aria-label="Filter by programme"><SelectValue /></SelectTrigger><SelectContent><SelectItem value="all">All programmes</SelectItem>{programmeOptions.map(([id, label]) => <SelectItem value={id} key={id}>{label}</SelectItem>)}</SelectContent></Select></div>
             </div>
             {mode === "milestones" ? <div className={styles.chapters}>
               {chapters.map(e => {

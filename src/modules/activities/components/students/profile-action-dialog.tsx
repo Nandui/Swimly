@@ -43,8 +43,8 @@ export function ProfileActionDialog({ trigger, title, description, submitLabel =
   function changeOpen(next: boolean) { if (!pending) { setOpen(next); onOpenChange?.(next); feedback.reset(); if (!next) setConfirmation(null); } }
   return <Dialog open={open} onOpenChange={changeOpen}>
     <DialogTrigger asChild>{trigger}</DialogTrigger>
-    <DialogContent className={cn("max-h-[90dvh] overflow-y-auto sm:max-w-2xl", wide && "flex flex-col gap-0 overflow-hidden p-0 sm:max-w-[calc(100%-2rem)] xl:max-w-6xl [&>[data-slot=dialog-close]]:top-2 [&>[data-slot=dialog-close]]:right-2 [&>[data-slot=dialog-close]]:flex [&>[data-slot=dialog-close]]:size-11 [&>[data-slot=dialog-close]]:items-center [&>[data-slot=dialog-close]]:justify-center")} showCloseButton={!pending}>
-      <DialogHeader className={cn(wide && "shrink-0 p-4 pr-14 text-left sm:p-6 sm:pr-14")}><DialogTitle>{title}</DialogTitle><DialogDescription>{description}</DialogDescription></DialogHeader>
+    <DialogContent className={cn("max-h-[90dvh] overflow-y-auto sm:max-w-2xl", wide && "flex flex-col gap-0 overflow-hidden p-0 sm:max-w-[calc(100%-2rem)] xl:max-w-6xl")} showCloseButton={false}>
+      <DialogHeader className={cn(wide && "shrink-0 p-4 sm:p-6")}><DialogTitle>{title}</DialogTitle><DialogDescription>{description}</DialogDescription></DialogHeader>
       <FormFeedbackProvider feedback={feedback}><form ref={formRef} aria-busy={pending} onSubmit={event => { event.preventDefault(); if (!confirmation && !submitDisabled) run(new FormData(event.currentTarget)); }} className={cn(wide ? "flex min-h-0 flex-1 flex-col" : "space-y-5")}>
         <div className={cn(wide ? "min-h-0 space-y-4 overflow-y-auto px-4 pb-4 sm:px-6 sm:pb-6" : "space-y-4")}>
         <fieldset disabled={pending || !!confirmation} hidden={!!confirmation} className="min-w-0 space-y-4">{children}</fieldset>

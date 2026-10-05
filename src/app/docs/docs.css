@@ -7174,7 +7174,8 @@
   min-width: 0;
 }
 :where(.turnfin-docs) .workflow-dialog [data-slot$='dialog-title'] {
-  padding-right: 1.5rem;
+  /* Clears the 44px round close at 12px from the corner. */
+  padding-right: 2.5rem;
   line-height: 1.4;
 }
 :where(.turnfin-docs) [data-slot='native-select-wrapper'] {
@@ -7189,10 +7190,6 @@
 :where(.turnfin-docs) .checkbox-label:has([data-slot='checkbox']) {
   min-height: 2.75rem;
   cursor: pointer;
-}
-:where(.turnfin-docs) .checkbox-label [data-slot='checkbox'] {
-  width: 1.125rem;
-  height: 1.125rem;
 }
 :where(.turnfin-docs) .template-card > [data-slot='radio-group-item'] {
   position: absolute;

@@ -21,9 +21,13 @@ Local adaptations:
   workspace theme. Docs uses this to preserve its source palette in portals.
 - Card supports `asChild` for semantic source layouts without adding a nested
   panel. NativeSelect preserves native selection and form submission.
-- RadioGroupItem accepts custom children for the Instructor's labelled,
-  segmented attendance and competency choices. Radix still provides the
-  keyboard behaviour, group semantics and checked state.
+- RadioGroupItem with no children is the 20px dot radio (Checkbox is the
+  matching 20px box, no shadow). With children it drops all dot geometry and
+  decoration so `SegmentedChoice` (`src/components/ui-kit/segmented-links.tsx`)
+  can style it as a `.pc-seg-item`; that is the only place to pass children.
+  Radix still provides the keyboard behaviour, group semantics and checked
+  state. Tabs has one variant (the soft pill bar); the underline `line`
+  variant is gone.
 
 The booking sheet composes Table, Item, Tabs, Select, Command/Popover, Badge
 and Empty. Custom CSS expresses its time/level geometry and sticky headers.

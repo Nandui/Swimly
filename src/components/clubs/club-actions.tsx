@@ -37,7 +37,7 @@ export function AddClub() {
   return (
     <FormDialog
       trigger={
-        <Button variant="default" size="sm">
+        <Button variant="default">
           {<Plus aria-hidden={true} className="size-4 shrink-0" />}
           {"Add a site"}
         </Button>
@@ -58,9 +58,9 @@ export function EditClub({ club }: { club: Club }) {
     <FormDialog
       trigger={
         <Button
-          variant="ghost"
+          variant="outline"
           aria-label={`Rename ${club.name}`}
-          size="icon-sm"
+          size="icon"
         >
           {<Pencil aria-hidden={true} className="size-4 shrink-0" />}
         </Button>
@@ -91,9 +91,9 @@ export function ArchiveClub({ club }: { club: Club }) {
     <ConfirmAction
       trigger={
         <Button
-          variant="ghost"
+          variant="outline"
           aria-label={`Archive ${club.name}`}
-          size="icon-sm"
+          size="icon"
         >
           {<Archive aria-hidden={true} className="size-4 shrink-0" />}
         </Button>

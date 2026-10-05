@@ -9,6 +9,7 @@ import {
 } from "lucide-react";
 import { Button } from "@/components/shadcn/button";
 import { LoadingButton } from "@/components/ui/loading-button";
+import { SegmentedChoice } from "@/components/ui-kit/segmented-links";
 import { Item, ItemContent, ItemGroup } from "@/components/shadcn/item";
 import {
   Collapsible,
@@ -480,19 +481,13 @@ function DeckChecklistState({
   return (
     <div className="flex flex-col gap-5">
       {teaching ? (
-        <div role="group" aria-label="Competency view" className="flex w-full gap-1 rounded-ui-lg border border-ui-border bg-ui-muted p-1 sm:w-fit">
-          {([{ value: "swimmer", label: "By swimmer" }, { value: "competency", label: "By competency" }] as const).map(option => (
-            <Button
-              key={option.value}
-              variant="ghost"
-              aria-pressed={view === option.value}
-              className={"min-h-11 flex-1 px-4 sm:flex-none " + (view === option.value ? "bg-ui-brand-soft text-ui-brand-ink hover:bg-ui-brand-soft hover:text-ui-brand-ink" : "")}
-              onClick={() => setView(option.value)}
-            >
-              {option.label}
-            </Button>
-          ))}
-        </div>
+        <SegmentedChoice
+          aria-label="Competency view"
+          fill="phone"
+          value={view}
+          onValueChange={(next) => setView(next === "competency" ? "competency" : "swimmer")}
+          options={[{ value: "swimmer", label: "By swimmer" }, { value: "competency", label: "By competency" }]}
+        />
       ) : null}
       {!bySwimmer ? <>
       {!teaching ? (

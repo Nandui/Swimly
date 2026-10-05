@@ -99,7 +99,6 @@ export function TakeOver({
               type="button"
               onClick={() => setOpen(true)}
               variant="outline"
-              size="sm"
             >
               {
                 <UserRoundCheck

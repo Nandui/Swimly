@@ -16,7 +16,7 @@ import { BackLink } from "@/components/ui-kit/back-link";
 import { EmptyState } from "@/components/ui-kit/empty-state";
 import { PageHeader } from "@/components/ui-kit/page-header";
 import { Lead, Num } from "@/components/ui-kit/prose";
-import { TabStrip } from "@/components/ui-kit/tab-strip";
+import { SegmentedLinks } from "@/components/ui-kit/segmented-links";
 import { Tag } from "@/components/ui-kit/tag";
 import { RegisterForm } from "@/modules/activities/components/attendance/register-form";
 import { TakeOver } from "@/modules/activities/components/attendance/take-over";
@@ -215,21 +215,11 @@ export async function ClassSession({
         />
       </div>
 
-      <TabStrip
-        ariaLabel="Steps"
+      <SegmentedLinks
+        label="Class steps"
         items={[
-          {
-            key: "attendance",
-            href: stepHref("attendance"),
-            label: "1. Attendance",
-            active: step === "attendance",
-          },
-          {
-            key: "competencies",
-            href: stepHref("competencies"),
-            label: "2. Competencies",
-            active: step === "competencies",
-          },
+          { href: stepHref("attendance"), label: "1. Attendance", current: step === "attendance" },
+          { href: stepHref("competencies"), label: "2. Competencies", current: step === "competencies" },
         ]}
       />
 
@@ -303,7 +293,7 @@ export async function ClassSession({
           {/* Somebody who may only read still needs the way to step two. */}
           {!mayMark && lines.length > 0 ? (
             <div className="min-w-0 flex gap-2 items-center justify-end">
-              <Button variant="outline" size="lg" asChild={true}>
+              <Button variant="outline" asChild={true}>
                 <UiLink href={stepHref("competencies")}>
                   {"Competencies"}
                   {<AppIcon name="arrowRight" size="sm" />}

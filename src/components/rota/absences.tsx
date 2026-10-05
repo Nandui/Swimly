@@ -33,7 +33,7 @@ function Choice({ name, value, onChange, options }: { name: string; value: strin
     <RadioGroup value={value} onValueChange={onChange} className="gap-1" name={name}>
       {options.map((o) => (
         <div key={o.value} className="flex min-h-11 items-start gap-3 py-1">
-          <RadioGroupItem id={`${name}-${o.value}`} value={o.value} className="mt-1" />
+          <RadioGroupItem id={`${name}-${o.value}`} value={o.value} />
           <Label htmlFor={`${name}-${o.value}`} className="block font-normal">
             <span className="block font-medium">{o.label}</span>
             <span className="block text-sm text-ui-muted-foreground">{o.hint}</span>

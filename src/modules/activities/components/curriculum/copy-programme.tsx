@@ -26,7 +26,7 @@ export function CopyProgramme({
   return (
     <FormDialog
       trigger={
-        <Button variant="outline" size="sm">
+        <Button variant="outline">
           {<Copy aria-hidden={true} className="size-4 shrink-0" />}
           {"Copy to another club"}
         </Button>

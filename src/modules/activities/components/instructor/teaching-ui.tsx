@@ -1,8 +1,8 @@
 "use client";
 
-import { Check, Info } from "lucide-react";
+import { Info } from "lucide-react";
 import type { ReactNode } from "react";
-import { RadioGroup, RadioGroupItem } from "@/components/shadcn/radio-group";
+import { SegmentedChoice } from "@/components/ui-kit/segmented-links";
 import { Alert, AlertTitle, AlertDescription } from "@/components/shadcn/alert";
 
 /** The same keyboard-operable, thumb-sized choice for attendance and skills. */
@@ -20,28 +20,14 @@ export function MarkChoices({
   onChange: (value: string) => void;
 }) {
   return (
-    <RadioGroup
+    <SegmentedChoice
       aria-label={label}
       value={value}
       onValueChange={onChange}
       disabled={disabled}
-      orientation="horizontal"
-      className="flex w-full gap-1 rounded-ui-lg border border-ui-border bg-ui-muted p-1 sm:w-auto"
-    >
-      {options.map((option) => (
-        <RadioGroupItem
-          key={option.value}
-          value={option.value}
-          className="flex aspect-auto h-11 w-auto min-w-0 flex-1 items-center justify-center gap-1.5 rounded-ui-md border-transparent px-3 text-sm text-ui-muted-foreground shadow-none data-[state=checked]:border-ui-input data-[state=checked]:bg-ui-background data-[state=checked]:font-semibold data-[state=checked]:text-ui-foreground sm:flex-none"
-        >
-          <span className="size-4 shrink-0" data-motion="selection" data-state={value === option.value ? "checked" : "unchecked"} aria-hidden="true"><Check className="size-full" /></span>
-          <span className="grid">
-            <span className="invisible col-start-1 row-start-1 font-semibold" aria-hidden="true">{option.label}</span>
-            <span className="col-start-1 row-start-1">{option.label}</span>
-          </span>
-        </RadioGroupItem>
-      ))}
-    </RadioGroup>
+      fill="phone"
+      options={options}
+    />
   );
 }
 

@@ -88,7 +88,7 @@ export function AddLevel({ programmeId }: { programmeId: string }) {
   return (
     <FormDialog
       trigger={
-        <Button variant="default" size="sm">
+        <Button variant="default">
           {<Plus aria-hidden={true} className="size-4 shrink-0" />}
           {"Add level"}
         </Button>
@@ -111,9 +111,9 @@ export function EditLevel({ level }: { level: Named }) {
     <FormDialog
       trigger={
         <Button
-          variant="ghost"
+          variant="outline"
           aria-label={`Edit ${level.name}`}
-          size="icon-sm"
+          size="icon"
         >
           {<Pencil aria-hidden={true} className="size-4 shrink-0" />}
         </Button>
@@ -147,9 +147,9 @@ export function ArchiveLevel({ level }: { level: Named }) {
     <ConfirmAction
       trigger={
         <Button
-          variant="ghost"
+          variant="outline"
           aria-label={`Archive ${level.name}`}
-          size="icon-sm"
+          size="icon"
         >
           {<Archive aria-hidden={true} className="size-4 shrink-0" />}
         </Button>
@@ -233,7 +233,7 @@ export function AddCompetency({
   return (
     <FormDialog
       trigger={
-        <Button variant="outline" size="sm">
+        <Button variant="outline">
           {<Plus aria-hidden={true} className="size-4 shrink-0" />}
           {"Add competency"}
         </Button>
@@ -254,9 +254,9 @@ export function EditCompetency({ competency }: { competency: Named }) {
     <FormDialog
       trigger={
         <Button
-          variant="ghost"
+          variant="outline"
           aria-label={`Edit ${competency.name}`}
-          size="icon-sm"
+          size="icon"
         >
           {<Pencil aria-hidden={true} className="size-4 shrink-0" />}
         </Button>
@@ -296,9 +296,9 @@ export function ArchiveCompetency({
     <ConfirmAction
       trigger={
         <Button
-          variant="ghost"
+          variant="outline"
           aria-label={`Archive ${competency.name}`}
-          size="icon-sm"
+          size="icon"
         >
           {<Archive aria-hidden={true} className="size-4 shrink-0" />}
         </Button>

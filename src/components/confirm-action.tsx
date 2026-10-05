@@ -139,10 +139,10 @@ export function ActionButton({
       type="button"
       label={ariaLabel}
       description={title}
-      variant="ghost"
-      size="icon-sm"
+      variant="outline"
+      size="icon"
       className={className}
-      disabled={pending}
+      aria-disabled={pending || undefined}
       aria-busy={pending}
       onClick={() => {
         if (submitting.current) return;

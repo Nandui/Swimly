@@ -88,7 +88,6 @@
     border-color: var(--ui-border);
   }
 }
-[data-slot][data-variant="outline"]:is(button, [role="combobox"]),
 [data-slot="select-trigger"] {
   border-color: var(--ui-input);
 }
@@ -156,12 +155,6 @@
 [data-slot="button"][aria-current="page"]:hover {
   background-color: var(--ui-brand-soft-hover);
 }
-[data-slot="tabs-trigger"][data-state="active"] {
-  color: var(--ui-brand-ink);
-}
-[data-slot="tabs-trigger"]::after {
-  background-color: var(--ui-primary);
-}
 
 @media (max-width: 48rem), (pointer: coarse) {
   [data-variant][data-size]:is(button, [role="combobox"]) {
@@ -170,20 +163,12 @@
   }
   [data-slot="button"],
   [data-slot="select-trigger"],
-  [data-slot="select-item"],
   [data-slot="command-input-wrapper"],
-  [data-slot="command-item"],
-  [data-slot="dropdown-menu-item"],
-  [data-slot="dropdown-menu-radio-item"],
-  [data-slot="tabs-trigger"],
-  [data-slot="dialog-close"],
-  [data-slot="sheet-close"] {
+  [data-slot="tabs-trigger"] {
     min-height: 2.75rem;
   }
   [data-slot="button"],
-  [data-slot="tabs-trigger"],
-  [data-slot="dialog-close"],
-  [data-slot="sheet-close"] {
+  [data-slot="tabs-trigger"] {
     min-width: 2.75rem;
   }
   [data-slot="command-input"],

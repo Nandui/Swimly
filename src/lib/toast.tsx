@@ -14,6 +14,8 @@ export function ToastBridge() {
   const pathname = usePathname();
   const onDeck = pathname === "/instructor" || pathname.startsWith("/instructor/");
   // The deck's save/continue controls occupy the bottom edge. Never cover
-  // them with the notification confirming the save they just made.
-  return <Toaster position={onDeck ? "top-center" : "bottom-right"} offset={onDeck ? 80 : undefined} mobileOffset={onDeck ? 144 : undefined} closeButton />;
+  // them with the notification confirming the save they just made. Only the
+  // top is offset on phones: a number would inset all four sides and squeeze
+  // the toast. Desk toasts clear the bottom bar through poolside.css.
+  return <Toaster position={onDeck ? "top-center" : "bottom-right"} offset={onDeck ? 80 : undefined} mobileOffset={onDeck ? { top: 144 } : undefined} closeButton />;
 }

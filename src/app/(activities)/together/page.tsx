@@ -92,7 +92,6 @@ export default async function TogetherPage(props: PageProps<"/together">) {
               <Button
                 key={student.id}
                 variant="outline"
-                size="sm"
                 asChild={true}
               >
                 <UiLink href={hrefFor([...chosenIds, student.id])}>

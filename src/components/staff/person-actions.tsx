@@ -124,7 +124,7 @@ export function AddPerson({ roles }: { roles: RoleOption[] }) {
   return (
     <FormDialog
       trigger={
-        <Button variant="default" size="sm">
+        <Button variant="default">
           {<Plus aria-hidden={true} className="size-4 shrink-0" />}
           {"Add person"}
         </Button>
@@ -167,9 +167,9 @@ export function EditPerson({
     <FormDialog
       trigger={
         <Button
-          variant="ghost"
+          variant="outline"
           aria-label={`Edit ${person.name}`}
-          size="icon-sm"
+          size="icon"
         >
           {<Pencil aria-hidden={true} className="size-4 shrink-0" />}
         </Button>
@@ -189,9 +189,9 @@ export function ResetPersonPassword({ person }: { person: Person }) {
     <FormDialog
       trigger={
         <Button
-          variant="ghost"
+          variant="outline"
           aria-label={`Set a new password for ${person.name}`}
-          size="icon-sm"
+          size="icon"
         >
           {<KeyRound aria-hidden={true} className="size-4 shrink-0" />}
         </Button>
@@ -236,9 +236,9 @@ export function SetPersonActive({ person }: { person: Person }) {
     <ConfirmAction
       trigger={
         <Button
-          variant="ghost"
+          variant="outline"
           aria-label={`Deactivate ${person.name}`}
-          size="icon-sm"
+          size="icon"
         >
           {<UserMinus aria-hidden={true} className="size-4 shrink-0" />}
         </Button>

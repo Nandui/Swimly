@@ -56,7 +56,7 @@ export function LegendAgreements({ result, canConfirm, profiles, classes }: {
     <div className="space-y-3">
       <div className="flex min-h-8 flex-wrap items-center justify-between gap-2 text-sm text-ui-muted-foreground">
         <p role="status" aria-live="polite" aria-atomic="true"><span className="font-medium text-ui-foreground">{number(total)}</span> {total === 1 ? "class place" : "class places"}{view === "done" ? " confirmed" : " outstanding"}{q ? ` matching “${q}”` : ""}</p>
-        {q ? <Button asChild variant="ghost" size="sm" className="min-h-11"><Link href={`/legend-agreements${view === "done" ? "?view=done" : ""}`}><X aria-hidden="true" />Clear</Link></Button> : <span className="text-xs">{view === "done" ? "Recently confirmed first" : "Oldest enrolments first"}</span>}
+        {q ? <Button asChild variant="ghost" className="min-h-11"><Link href={`/legend-agreements${view === "done" ? "?view=done" : ""}`}><X aria-hidden="true" />Clear</Link></Button> : <span className="text-xs">{view === "done" ? "Recently confirmed first" : "Oldest enrolments first"}</span>}
       </div>
       {!canConfirm ? <p className="text-sm text-ui-muted-foreground">Ask for permission to enrol and move swimmers to confirm agreements.</p> : null}
     {items.length ? <Table containerClassName="rounded-ui-md border border-ui-border" className="table-fixed [&_td]:whitespace-normal [&_th]:whitespace-normal">

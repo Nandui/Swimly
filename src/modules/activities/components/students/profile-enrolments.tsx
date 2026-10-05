@@ -26,7 +26,7 @@ export function ProfileField({ label, children }: { label: string; children: Rea
 }
 function LeavePlace({ enrolment }: { enrolment: StudentEnrolment }) {
   const [when, setWhen] = useState(enrolment.scheduledEndOn ? "date" : "now"), id = useId();
-  return <ProfileActionDialog trigger={<Button variant="outline" size="sm">{enrolment.scheduledEndOn ? "Change end date" : "Unenrol"}</Button>}
+  return <ProfileActionDialog trigger={<Button variant="outline">{enrolment.scheduledEndOn ? "Change end date" : "Unenrol"}</Button>}
     title="End this enrolment" description={`${courseLabelWithSite(enrolment.course)}. Their attendance and progress stay on record.`} submitLabel="Confirm change"
     submit={data => when === "date" ? scheduleUnenrolment(enrolment.id, String(data.get("endDate") ?? "")) : when === "keep" ? scheduleUnenrolment(enrolment.id, null) : endEnrolment(enrolment.id, { status: data.get("finished") === "on" ? "COMPLETED" : "WITHDRAWN", note: String(data.get("note") ?? "") })}>
     {enrolment.status === "ACTIVE" ? <ProfileField label="When"><Select value={when} onValueChange={setWhen}><SelectTrigger aria-label="When to end enrolment"><SelectValue /></SelectTrigger><SelectContent><SelectItem value="now">Now</SelectItem><SelectItem value="date">On a date</SelectItem>{enrolment.scheduledEndOn ? <SelectItem value="keep">Keep this place</SelectItem> : null}</SelectContent></Select></ProfileField> : null}
@@ -41,9 +41,9 @@ export function ManageProfileEnrolments({ studentId, active, enrolments, targets
       {current.length ? <ul className="divide-y divide-ui-border">{current.map(e => <li key={e.id} className="space-y-3 py-4"><div className="flex flex-wrap justify-between gap-2"><div><p className="font-semibold">{e.level.name} · {e.course.club.name}</p><p className="text-sm text-ui-muted-foreground">{formatSlotShort(e.course)}</p></div><Badge variant="secondary" data-tone={ENROLMENT_STATUS_META[e.status].color}>{ENROLMENT_STATUS_META[e.status].label}</Badge></div>
         {e.scheduledEndOn ? <p className="text-sm">Ends {formatDate(e.scheduledEndOn)}</p> : null}
         <div className="flex flex-wrap gap-2">
-          <ClassEnrolmentDialog trigger={<Button variant="outline" size="sm">Move class</Button>} courses={targets.filter(c => c.id !== e.course.id)} currentEnrolment={e}
+          <ClassEnrolmentDialog trigger={<Button variant="outline">Move class</Button>} courses={targets.filter(c => c.id !== e.course.id)} currentEnrolment={e}
             submit={(data, confirmation) => transferEnrolment(e.id, String(data.get("toCourseId") ?? ""), String(data.get("placementReason") ?? ""), confirmation)} />
-          {e.status === "WAITLISTED" ? <ProfileActionDialog trigger={<Button variant="outline" size="sm">Enrol from waitlist</Button>} title="Enrol from the waitlist" description={`Activate the place in ${courseLabelWithSite(e.course)} if a space is available.`} submitLabel="Enrol" submit={data => promoteFromWaitlist(e.id, readLegendAgreement(data))}><LegendAgreementField /></ProfileActionDialog> : null}
+          {e.status === "WAITLISTED" ? <ProfileActionDialog trigger={<Button variant="outline">Enrol from waitlist</Button>} title="Enrol from the waitlist" description={`Activate the place in ${courseLabelWithSite(e.course)} if a space is available.`} submitLabel="Enrol" submit={data => promoteFromWaitlist(e.id, readLegendAgreement(data))}><LegendAgreementField /></ProfileActionDialog> : null}
           <LeavePlace enrolment={e} />
         </div></li>)}</ul> : <EmptyState compact title="No current enrolments or waitlist places." />}
       {active ? <ClassEnrolmentDialog trigger={<Button className="justify-self-start">Enrol in a class</Button>} courses={targets}

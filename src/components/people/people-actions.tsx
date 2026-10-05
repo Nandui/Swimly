@@ -186,7 +186,7 @@ export function RecordQualification({ userId, name, types }: { userId: string; n
 export function RevokeQualification({ id, label }: { id: string; label: string }) {
   return (
     <FormDialog
-      trigger={<Button variant="ghost" size="icon-sm" aria-label={`Withdraw ${label}`}>{icon(Ban)}</Button>}
+      trigger={<Button variant="outline" size="icon" aria-label={`Withdraw ${label}`}>{icon(Ban)}</Button>}
       title={`Withdraw ${label}?`}
       description="It stays on their record as withdrawn, with your reason."
       submitLabel="Withdraw"
@@ -208,7 +208,7 @@ export function SaveDepartment({ department, sites }: { department?: { id: strin
   return (
     <FormDialog
       trigger={department
-        ? <Button variant="ghost" size="icon-sm" aria-label={`Edit ${department.name}`}>{icon(Pencil)}</Button>
+        ? <Button variant="outline" size="icon" aria-label={`Edit ${department.name}`}>{icon(Pencil)}</Button>
         : <Button variant="default">{icon(Building2)}Add department</Button>}
       title={department ? `Edit ${department.name}` : "Add a department"}
       description="A team such as Aquatics, Reception or Maintenance. Tie it to a site if it only works at one."
@@ -236,7 +236,7 @@ export function SaveQualificationType({ type }: { type?: { id: string; name: str
   return (
     <FormDialog
       trigger={type
-        ? <Button variant="ghost" size="icon-sm" aria-label={`Edit ${type.name}`}>{icon(Pencil)}</Button>
+        ? <Button variant="outline" size="icon" aria-label={`Edit ${type.name}`}>{icon(Pencil)}</Button>
         : <Button variant="outline">{icon(Award)}Add qualification</Button>}
       title={type ? `Edit ${type.name}` : "Add a qualification"}
       description="A certificate staff can hold, such as a lifeguard or first aid qualification."

@@ -44,7 +44,7 @@ export function ForgetThisDevice() {
 export function RevokeDevice({ id, name }: { id: string; name: string }) {
   return (
     <ConfirmAction
-      trigger={<Button variant="ghost" size="icon-sm" aria-label={`Revoke ${name}`}><XCircle aria-hidden="true" className="size-4" /></Button>}
+      trigger={<Button variant="outline" size="icon" aria-label={`Revoke ${name}`}><XCircle aria-hidden="true" className="size-4" /></Button>}
       title={`Revoke ${name}?`}
       description="Quick switch stops on that device at once and its list of people is cleared. People can still sign in there with their email and password."
       confirmLabel="Revoke device"
