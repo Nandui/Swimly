@@ -76,7 +76,7 @@ export function ModuleShell({ module, id, current = id, who, links = [], groups,
           <div className="tf-bar tf-tools" role="group" aria-label="Search, site and account">
             {tools}
             <RolePreviewToggle />
-            <AccountMenu name={who.name} variant="bar" />
+            <AccountMenu name={who.name} />
           </div>
         </header>
         <div className="tf-body">

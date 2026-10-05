@@ -94,7 +94,7 @@ export function RosterWeek({ roster, days, today, siteId, manage, shifts, activi
                         <span className="block text-xs tabular-nums whitespace-nowrap text-ui-muted-foreground">{f.time}</span>
                       </span>
                     );
-                    const cls = "h-auto w-full justify-start whitespace-normal rounded-[var(--pc-radius-inner)] border border-dashed border-[var(--pc-warning)] bg-ui-card px-2 py-1 font-normal";
+                    const cls = "h-auto w-full justify-start whitespace-normal rounded-[var(--pc-radius-control)] border border-dashed border-[var(--pc-warning)] bg-ui-card px-2 py-1 font-normal";
                     return manage && s?.editable
                       ? <ShiftDialog key={f.id} siteId={siteId} date={days[i].iso} today={today} options={options} suggested={f.cover ? "cover" : undefined}
                           shift={{ id: s.id, date: s.date, startMinutes: s.startMinutes, endMinutes: s.endMinutes, role: s.role, note: s.note, userId: f.cover ? null : s.userId, requiredTypeId: s.requiredTypeId, departmentId: s.departmentId }}
@@ -167,7 +167,7 @@ function Cell({ cell, onOpen }: { cell: RosterCell; onOpen: () => void }) {
   const label = [cell.time, cell.what, cell.absent ? "off, needs cover" : null, warn ? `${cell.warnings.length} to check` : null].filter(Boolean).join(", ");
   return (
     <Button type="button" variant="ghost" onClick={onOpen} aria-label={label}
-      className={cn("flex h-auto min-h-11 w-full flex-col items-start justify-start gap-0 whitespace-normal rounded-[var(--pc-radius-inner)] border px-1.5 py-1 text-left font-normal leading-tight hover:border-[var(--pc-primary)]", tone)}>
+      className={cn("flex h-auto min-h-11 w-full flex-col items-start justify-start gap-0 whitespace-normal rounded-[var(--pc-radius-control)] border px-1.5 py-1 text-left font-normal leading-tight hover:border-[var(--pc-primary)]", tone)}>
       <span className="flex w-full items-center gap-1">
         <span className={cn("text-[13px] font-semibold tabular-nums whitespace-nowrap", cell.absent && "line-through decoration-[var(--pc-danger)]")}>{cell.time}</span>
         {cell.absent ? <UserX aria-hidden="true" className="ml-auto size-3.5 shrink-0 text-[var(--pc-danger)]" /> : warn ? <TriangleAlert aria-hidden="true" className="ml-auto size-3.5 shrink-0 text-[var(--pc-warning)]" /> : null}

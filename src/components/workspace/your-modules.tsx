@@ -1,10 +1,6 @@
 'use client';
 
-import Link from 'next/link';
 import { createContext, useContext, type ReactNode } from 'react';
-import { ArrowLeft, CircleHelp } from 'lucide-react';
-import { Button } from '@/components/shadcn/button';
-import { SidebarMenuButton } from '@/components/shadcn/sidebar';
 import { allModules, type ModuleManifest } from '@/modules/registry';
 
 /** The signed-in person's modules, set once by the root layout from their
@@ -18,44 +14,4 @@ export function YourModulesProvider({ ids, children }: { ids: readonly string[];
 export function useYourModules(): ModuleManifest[] {
   const ids = useContext(YourModules);
   return allModules().filter((m) => ids.includes(m.id));
-}
-
-/** The home page's menu: each of the person's modules. Inside a module the
- *  sidebar shows only that module's pages, under `HomeButton`. */
-export function YourModulesNav({ compact = false, onNavigate }: { compact?: boolean; onNavigate?: () => void }) {
-  const modules = useYourModules();
-  const item = (key: string, href: string, label: string, Icon: ModuleManifest['icon'], active: boolean) => (
-    <SidebarMenuButton key={key} asChild>
-      <Link href={href} className="workspace-nav-item" aria-label={label} title={compact ? label : undefined} aria-current={active ? 'page' : undefined} onClick={onNavigate}>
-        <Icon size={18} aria-hidden="true" data-motion="sidebar-icon" /><span>{label}</span>
-      </Link>
-    </SidebarMenuButton>
-  );
-  return (
-    <>
-      <p className="workspace-nav-label">Your modules</p>
-      {modules.map((m) => item(m.id, m.href, m.name, m.icon, false))}
-    </>
-  );
-}
-
-/** Inside a module, the way back to the person's modules: "Back to Hub" in
- *  the sidebar footer, looking like any page link that is not the current one. */
-export function HomeButton({ compact = false, onNavigate }: { compact?: boolean; onNavigate?: () => void }) {
-  return (
-    <SidebarMenuButton asChild>
-      <Link href="/" className="workspace-nav-item" aria-label="Back to Hub" title={compact ? 'Back to Hub' : undefined} onClick={onNavigate}>
-        <ArrowLeft size={18} aria-hidden="true" data-motion="sidebar-icon" /><span>Back to Hub</span>
-      </Link>
-    </SidebarMenuButton>
-  );
-}
-
-/** Help, beside the Appearance button in the sidebar footer. */
-export function HelpButton({ compact = false }: { compact?: boolean }) {
-  return (
-    <Button asChild variant="ghost" size={compact ? 'icon' : 'default'} className={compact ? undefined : 'flex-1 justify-start'}>
-      <Link href="/help" target="_blank" rel="noopener noreferrer" aria-label="Help (opens in a new tab)" title="Help"><CircleHelp aria-hidden="true" />{!compact && <span>Help</span>}</Link>
-    </Button>
-  );
 }

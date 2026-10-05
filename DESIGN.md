@@ -76,9 +76,8 @@ Buttons have a small press response. Reduced motion removes those movements
 while preserving immediate state feedback; do not introduce page-entry motion.
 
 The Turnfin fin (`public/brand/turnfin.png`) is the brand everywhere: the top-left of every
-frame, linking home, and above the sign-in panel. The older app logo
-(`public/brand/app-logo.png`, `AppLogo`) remains only for browser icons and the
-design-preview fixtures in `scripts/`.
+frame, linking home, and above the sign-in panel. The older app logo image
+(`public/brand/app-logo.png`) remains only for browser icons.
 
 **The frame** (`ModuleShell`, DESIGN v2, 3 October 2026): on the outer canvas, one rounded
 frame holds a top row (the fin; the module's pages as a pill bar, the current page filled
@@ -677,7 +676,7 @@ src/modules/activities/components/ Activities feature components
 src/modules/registry.ts        every module's description and levels
 src/modules/contributions.ts   what modules add to Core pages, without imports
 src/components/ui-kit/         shared shadcn compositions — tag, page-header,
-                               empty-state, app-shell
+                               empty-state, segmented-links
 src/components/ui/             shadcn compositions for native form submission
 src/components/                Core and Work feature components
 src/lib/<domain>/data/         reads  — plain async functions, no "use server"

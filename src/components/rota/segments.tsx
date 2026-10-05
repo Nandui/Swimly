@@ -63,7 +63,7 @@ export function SegmentsFields({ shift, activities, plan }: { shift: SegmentShif
   return (
     <>
       {/* The shift at a glance, as it will look on the timeline. */}
-      <div className="relative h-8 overflow-hidden rounded-[var(--pc-radius-inner)] border border-ui-border bg-[var(--pc-surface-sunken)]" aria-hidden="true">
+      <div className="relative h-8 overflow-hidden rounded-[var(--pc-radius-control)] border border-ui-border bg-[var(--pc-surface-sunken)]" aria-hidden="true">
         {parsed.filter((p) => p.startMinutes >= 0 && p.endMinutes > p.startMinutes).map((p, i) => (
           <span key={i} className={cn("absolute inset-y-0 flex items-center truncate px-1.5 text-xs", p.kind === "break" ? "rota-break text-ui-muted-foreground" : "bg-[var(--pc-primary-soft)] text-[var(--pc-primary-ink)]")}
             style={{ left: pct(Math.max(shift.start, p.startMinutes)), width: `calc(${pct(Math.min(shift.end, p.endMinutes))} - ${pct(Math.max(shift.start, p.startMinutes))})` }}>{p.label}</span>

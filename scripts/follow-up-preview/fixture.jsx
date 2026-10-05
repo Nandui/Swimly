@@ -1,16 +1,19 @@
 import React, {useEffect, useState} from 'react';
 import {createRoot} from 'react-dom/client';
-import '@fontsource/figtree/400.css';
-import '@fontsource/figtree/500.css';
-import '@fontsource/figtree/600.css';
+import '@fontsource/plus-jakarta-sans/400.css';
+import '@fontsource/plus-jakarta-sans/500.css';
+import '@fontsource/plus-jakarta-sans/600.css';
+import '@fontsource/plus-jakarta-sans/700.css';
+import '@/app/docs/poolside.css';
+import '@/app/workspace/module-workspace.css';
 import {ThemeProvider} from '@/components/theme-provider';
 import {TooltipProvider} from '@/components/shadcn/tooltip';
-import {AppShell} from '@/components/ui-kit/app-shell';
+import {ModuleShell} from '@/components/workspace/module-shell';
 import {AwaitingEnrolment} from '@/modules/activities/components/enrolment/awaiting-enrolment';
 import {AwaitingMoves} from '@/modules/activities/components/enrolment/awaiting-moves';
 import {FollowUpHistory} from '@/modules/activities/components/enrolment/follow-up-history';
 import {Notice} from '@/components/ui-kit/notice';
-import {NAV_ITEMS} from '@/modules/activities/lib/nav';
+import {NAV_ITEMS,isNavItemActive} from '@/modules/activities/lib/nav';
 
 const params = new URLSearchParams(location.search), theme=params.get('theme')==='dark'?'dark':'light';
 document.documentElement.dataset.theme=theme;
@@ -20,9 +23,11 @@ window.followUpPreview={async action(name,...args){while(args.length&&args.at(-1
 function Preview(){
   const [data,setData]=useState(null),[error,setError]=useState('');
   useEffect(()=>{const load=()=>fetch('/preview/queue'+location.search).then(response=>response.json()).then(payload=>setData(JSON.parse(JSON.stringify(payload),(key,value)=>['queuedOn','assessedOn','createdAt','date','readyToMoveAt'].includes(key)&&typeof value==='string'?new Date(value):value))).catch(()=>setError('Could not load the example queue.'));load();window.addEventListener('follow-up-refresh',load);return()=>window.removeEventListener('follow-up-refresh',load);},[]);
-  return <AppShell wordmark="Swimly" homeHref="/awaiting-enrolment" userName="Alex Example" groups={[{id:'daily',label:'Daily work',items:NAV_ITEMS.filter(item=>['awaiting-enrolment'].includes(item.screen))}]} switcher={<span className="text-sm">LeisureWorld Bishopstown</span>}>
+  const links=NAV_ITEMS.filter(item=>['awaiting-enrolment'].includes(item.screen)).map(item=>({href:item.href,label:item.label,icon:item.icon,active:isNavItemActive(location.pathname,item.href)}));
+  return <ModuleShell module="Swim school" id="swim-school" who={{id:'demo',name:'Alex Example'}} links={links} scopeNote="LeisureWorld Bishopstown" contentClass="module-content swim-school-content" tools={<span className="text-sm">LeisureWorld Bishopstown</span>}>
     <p className="mb-6 text-xs text-ui-muted-foreground">Follow-up preview · fictional swimmers · isolated database · no messages sent · {reader?'Read-only staff':'Reception'}</p>
     {error?<Notice tone="error" title={error}/>:!data?<p role="status">Loading example swimmers…</p>:profileName?<div className="space-y-6"><h1 className="text-2xl font-semibold">{profileName}</h1><p>Follow-up history remains available from a swimmer’s profile.</p><FollowUpHistory studentId={location.pathname.split('/').at(-1)} name={profileName} canRecord={!reader}/></div>:params.get('view')==='moves'?<AwaitingMoves result={data} courses={[]} enrol={!reader} profiles/>:<AwaitingEnrolment result={data} courses={[]} enrol={!reader} profiles assessments={false}/>}
-  </AppShell>;
+  </ModuleShell>;
 }
+document.body.classList.add('turnfin-app'); // the root layout's token scope, so portalled dialogs match too
 createRoot(document.getElementById('root')).render(<ThemeProvider initialMode={theme}><TooltipProvider><Preview/></TooltipProvider></ThemeProvider>);

@@ -11,15 +11,15 @@ type RoleOption = { id: string; name: string; description: string | null };
 export type RolePreviewState = { roles: RoleOption[]; current: { id: string; name: string } | null; actualRoleName: string };
 
 /** Set once, by the root layout, only on a dev build for someone who may
- *  manage roles. Every frame's sidebar reads it; no module owns it. */
+ *  manage roles. Every frame's tools bar reads it; no module owns it. */
 const RolePreviewContext = createContext<RolePreviewState | null>(null);
 
 export function RolePreviewProvider({ value, children }: { value: RolePreviewState | null; children: ReactNode }) {
   return <RolePreviewContext.Provider value={value}>{children}</RolePreviewContext.Provider>;
 }
 
-/** "View as": a small button in the sidebar footer, beside Help and
- *  Appearance. Renders nothing where previewing is not allowed. */
+/** "View as": a small button in the frame's tools bar, beside the account
+ *  menu. Renders nothing where previewing is not allowed. */
 export function RolePreviewToggle({ compact = false }: { compact?: boolean }) {
   const state = useContext(RolePreviewContext);
   const [pending, startTransition] = useTransition();

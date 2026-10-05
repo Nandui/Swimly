@@ -1,14 +1,17 @@
 import React from 'react';
 import {createRoot} from 'react-dom/client';
-import '@fontsource/figtree/400.css';
-import '@fontsource/figtree/500.css';
-import '@fontsource/figtree/600.css';
+import '@fontsource/plus-jakarta-sans/400.css';
+import '@fontsource/plus-jakarta-sans/500.css';
+import '@fontsource/plus-jakarta-sans/600.css';
+import '@fontsource/plus-jakarta-sans/700.css';
+import '@/app/docs/poolside.css';
+import '@/app/workspace/module-workspace.css';
 import {AnalyticsDashboard} from '@/modules/activities/components/analytics/dashboard';
 import {ReceptionReport} from '@/modules/activities/components/analytics/reception-report';
 import {InstructorReport} from '@/modules/activities/components/analytics/instructor-report';
 import {ThemeProvider} from '@/components/theme-provider';
 import {TooltipProvider} from '@/components/shadcn/tooltip';
-import {AppShell} from '@/components/ui-kit/app-shell';
+import {ModuleShell} from '@/components/workspace/module-shell';
 import {analyticsPeriod, activityTotals} from '@/modules/activities/lib/analytics/rules';
 import {instructorAttendanceTotals, staffActivityTotals} from '@/modules/activities/lib/analytics/reports';
 import {ChartNoAxesCombined} from 'lucide-react';
@@ -45,6 +48,8 @@ const dashboard = {...common, swimmers: 24, places: 26, ...activityTotals(period
 const instructors = {...common, ...instructorAttendanceTotals(empty ? [] : classes, now), canOpenClasses: !params.has('restricted')};
 const content = location.pathname.endsWith('/reception') ? <ReceptionReport data={{...common,people}} />
   : location.pathname.endsWith('/instructors') ? <InstructorReport data={instructors} /> : <AnalyticsDashboard data={dashboard} />;
+document.body.classList.add('turnfin-app'); // the root layout's token scope, so portalled menus match too
 createRoot(document.getElementById('root')).render(<ThemeProvider initialMode={theme}><TooltipProvider>
-  <AppShell wordmark="Swimly" homeHref="/analytics" groups={[{id:'monitoring',label:'Monitoring',items:[{label:'Analytics',href:'/analytics',icon:ChartNoAxesCombined}]}]} userName="Alex Example">{content}</AppShell>
+  <ModuleShell module="Swim school" id="swim-school" who={{id:'demo',name:'Alex Example'}} scopeNote="Demo site" contentClass="module-content swim-school-content"
+    groups={[{label:'Monitoring',links:[{label:'Analytics',href:'/analytics',icon:ChartNoAxesCombined,active:true}]}]}>{content}</ModuleShell>
 </TooltipProvider></ThemeProvider>);

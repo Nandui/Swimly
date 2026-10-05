@@ -9,7 +9,7 @@ export const output = path.resolve('.impeccable/review/instructor-swimmers/site'
 export async function buildPreview({entryPoint='scripts/instructor-swimmer-preview/fixture.jsx', outputDir=output, serverMocks={}, allowedActions=['saveInstructorAssessment','saveClassAssessment'], actionTarget='window.swimmerPreview.save', pathnameFallback='/instructor/classes/example-class'} = {}) {
   await fs.mkdir(outputDir,{recursive:true});
   await fs.mkdir(path.join(outputDir,'brand'),{recursive:true});
-  await fs.copyFile('public/brand/app-logo.png',path.join(outputDir,'brand/app-logo.png'));
+  await fs.copyFile('public/brand/turnfin.png',path.join(outputDir,'brand/turnfin.png'));
   const boundaries={name:'synthetic-instructor-boundaries',setup(build){
     build.onResolve({filter:/.*/},args=>Object.hasOwn(serverMocks,args.path)?{path:args.path,namespace:'fixture-data'}:undefined);
     build.onLoad({filter:/.*/,namespace:'fixture-data'},({path:id})=>({contents:serverMocks[id],loader:'js',resolveDir:process.cwd()}));

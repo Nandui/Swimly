@@ -75,14 +75,6 @@
   --color-ui-border: var(--ui-border);
   --color-ui-input: var(--ui-input);
   --color-ui-ring: var(--ui-ring);
-  --color-ui-sidebar: var(--ui-sidebar);
-  --color-ui-sidebar-foreground: var(--ui-foreground);
-  --color-ui-sidebar-primary: var(--ui-primary);
-  --color-ui-sidebar-primary-foreground: var(--ui-primary-foreground);
-  --color-ui-sidebar-accent: var(--ui-muted);
-  --color-ui-sidebar-accent-foreground: var(--ui-foreground);
-  --color-ui-sidebar-border: var(--ui-border);
-  --color-ui-sidebar-ring: var(--ui-ring);
   --radius-ui-xs: calc(var(--ui-radius) * 0.5);
   --radius-ui-sm: calc(var(--ui-radius) * 0.6);
   --radius-ui-md: calc(var(--ui-radius) * 0.8);
@@ -104,7 +96,7 @@
   border-color: var(--ui-destructive);
 }
 /* Fields own their focus treatment; don't add a second outline over it. */
-[data-slot]:not([data-slot="input"], [data-slot="textarea"], [data-slot="sidebar-input"], [data-slot="command-input"]):focus-visible,
+[data-slot]:not([data-slot="input"], [data-slot="textarea"], [data-slot="command-input"]):focus-visible,
 .shadcn-workspace a:focus-visible {
   outline: 2px solid var(--ui-ring);
   outline-offset: 2px;
@@ -117,8 +109,7 @@
 @media (forced-colors: active) {
   [data-slot="command-input-wrapper"]:has(> [data-slot="command-input"]:focus-visible),
   [data-slot="input"]:focus-visible,
-  [data-slot="textarea"]:focus-visible,
-  [data-slot="sidebar-input"]:focus-visible {
+  [data-slot="textarea"]:focus-visible {
     outline: 2px solid Highlight;
     outline-offset: -2px;
   }
@@ -156,36 +147,6 @@
   background: var(--ui-status-brown-bg);
 }
 
-/* Bounded workspace, including the development role bar. */
-.workspace-inset {
-  --ui-sidebar: var(--ui-workspace);
-}
-.workspace-inset [data-slot="sidebar-menu-button"][data-active="true"] {
-  background-color: var(--ui-brand-soft);
-}
-/* The inset canvas and muted token coincide in light mode. Hover needs its
-   own surface, including inside the portalled mobile navigation. */
-[data-sidebar="sidebar"] :is([data-slot="sidebar-menu-button"], [data-slot="button"], [data-slot="sidebar-trigger"]):not(:disabled):not([aria-disabled="true"]):is(:focus-visible, :active, [data-state="open"]) {
-  background-color: var(--ui-sidebar-hover);
-  color: var(--ui-foreground);
-}
-@media (hover: hover) and (pointer: fine) {
-  [data-sidebar="sidebar"] :is([data-slot="sidebar-menu-button"], [data-slot="button"], [data-slot="sidebar-trigger"]):not(:disabled):not([aria-disabled="true"]):hover {
-    background-color: var(--ui-sidebar-hover);
-    color: var(--ui-foreground);
-  }
-}
-/* Current-page selection remains distinct from a temporary hover. */
-[data-sidebar="sidebar"] [data-slot="sidebar-menu-button"][data-active="true"] {
-  background-color: var(--ui-brand-soft);
-  color: var(--ui-brand-ink);
-  box-shadow: inset 0 0 0 1px var(--ui-brand-border);
-}
-[data-sidebar="sidebar"] [data-slot="sidebar-menu-button"][data-active="true"]:is(:hover, :focus-visible, :active) {
-  background-color: var(--ui-brand-soft-hover);
-  color: var(--ui-brand-ink);
-  box-shadow: inset 0 0 0 1px var(--ui-primary);
-}
 /* Selection is branded; general hover surfaces and domain status tones stay neutral/semantic. */
 [data-slot="button"][aria-current="page"],
 [data-slot="tabs-list"][data-variant="default"] [data-slot="tabs-trigger"][data-state="active"] {
@@ -201,36 +162,13 @@
 [data-slot="tabs-trigger"]::after {
   background-color: var(--ui-primary);
 }
-.shadcn-workspace [data-slot="sidebar-container"] {
-  position: absolute;
-  height: 100%;
-}
-.shadcn-workspace [data-slot="sidebar-wrapper"] {
-  min-height: 0;
-}
-.shadcn-workspace [data-slot="sidebar-menu-button"] {
-  min-height: 2.5rem;
-}
-.shadcn-workspace [data-slot="sidebar-group-label"] {
-  color: var(--ui-muted-foreground);
-}
-[data-mobile="true"][data-slot="sidebar"] {
-  max-width: calc(100vw - 3rem);
-}
 
 @media (max-width: 48rem), (pointer: coarse) {
-  .shadcn-workspace [data-sidebar="menu-button"],
-  [data-sidebar="menu-button"] {
-    min-height: 2.75rem;
-    min-width: 2.75rem;
-  }
   [data-variant][data-size]:is(button, [role="combobox"]) {
     min-height: 2.75rem;
     min-width: 2.75rem;
   }
   [data-slot="button"],
-  [data-slot="sidebar-trigger"],
-  [data-slot="sidebar-menu-button"],
   [data-slot="select-trigger"],
   [data-slot="select-item"],
   [data-slot="command-input-wrapper"],
@@ -243,8 +181,6 @@
     min-height: 2.75rem;
   }
   [data-slot="button"],
-  [data-slot="sidebar-trigger"],
-  [data-slot="sidebar-menu-button"],
   [data-slot="tabs-trigger"],
   [data-slot="dialog-close"],
   [data-slot="sheet-close"] {

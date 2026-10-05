@@ -1,11 +1,12 @@
 import { createRoot } from 'react-dom/client';
-import '@fontsource/figtree/latin-400.css';
-import '@fontsource/figtree/latin-500.css';
-import '@fontsource/figtree/latin-600.css';
+import '@fontsource/plus-jakarta-sans/latin-400.css';
+import '@fontsource/plus-jakarta-sans/latin-500.css';
+import '@fontsource/plus-jakarta-sans/latin-600.css';
+import '@fontsource/plus-jakarta-sans/latin-700.css';
 import { ThemeProvider } from '@/components/theme-provider';
-import { ThemeFlip, ThemeToggle } from '@/components/theme-toggle';
+import { ThemeToggle } from '@/components/theme-toggle';
 import { TooltipProvider } from '@/components/shadcn/tooltip';
-import { AppShell } from '@/components/ui-kit/app-shell';
+import { ModuleShell } from '@/components/workspace/module-shell';
 import { InstructorShell } from '@/modules/activities/components/instructor/instructor-shell';
 import { ClubSwitcher } from '@/components/clubs/club-switcher';
 import { visibleNavGroups } from '@/modules/activities/lib/nav';
@@ -48,7 +49,9 @@ const togetherCourses=[courses[0],{...courses[0],id:'demo-sibling-class',levelId
 const noop=()=>{};
 function Screen() {
   switch (scenario) {
-    case 'workspace': case 'site-menu': return <AppShell wordmark="Swimly" userName="Alex Example" userSubtitle="Demonstration account" groups={visibleNavGroups(new Set(ALL_SCREENS))} tools={<ThemeFlip/>} switcher={<ClubSwitcher club={sites[0]} clubs={sites} sidebar/>}><ScheduleCalendar courses={scheduleCourses} assessments={[]} iso={date} todayIso={date} initialNow={950} clubName={sites[0].name} access={{attendance:true,courses:true,assessments:true}}/></AppShell>;
+    case 'workspace': case 'site-menu': return <ModuleShell module="Swim school" id="swim-school" who={{id:'demo',name:'Alex Example'}} scopeNote={sites[0].name} contentClass="module-content swim-school-content"
+      groups={visibleNavGroups(new Set(ALL_SCREENS)).map(group=>({label:group.label,links:group.items.map(item=>({href:item.href,label:item.label,icon:item.icon,active:item.href==='/schedule'}))}))}
+      tools={<ClubSwitcher club={sites[0]} clubs={sites}/>}><ScheduleCalendar courses={scheduleCourses} assessments={[]} iso={date} todayIso={date} initialNow={950} clubName={sites[0].name} access={{attendance:true,courses:true,assessments:true}}/></ModuleShell>;
     case 'instructor-menu': case 'instructor-site': case 'instructor-home': return <InstructorShell club={sites[0]} clubs={sites} userName="Alex Example">{null}</InstructorShell>;
     case 'appearance': return <section className="space-y-4"><h1 className="text-2xl font-semibold">Appearance</h1><p>Choose how the app looks on this device.</p><ThemeToggle/></section>;
     case 'password': return <ChangePasswordForm/>;
@@ -83,5 +86,6 @@ function Screen() {
     default: throw new Error(`Unknown screenshot: ${scenario}`);
   }
 }
+document.body.classList.add('turnfin-app'); // the root layout's token scope, so portalled dialogs match too
 const framed=['workspace','site-menu','instructor-menu','instructor-site','instructor-home'].includes(scenario);
 createRoot(document.getElementById('root')).render(<ThemeProvider initialMode="light"><TooltipProvider>{framed?<Screen/>:<main className="mx-auto max-w-6xl p-6 text-sm" data-capture><Screen/></main>}</TooltipProvider></ThemeProvider>);

@@ -6,7 +6,6 @@ import { permissionsOf } from "@/lib/authz";
 import { getCurrentClub } from "@/lib/clubs/current";
 import { visibleScreens } from "@/lib/staff/screens";
 import "../workspace/module-workspace.css";
-import "./swim-school.css";
 
 /** The swim school desk in the shared module frame. Authentication and screen
  *  access stay here; the frame owns navigation and responsive layout. */

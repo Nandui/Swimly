@@ -156,7 +156,7 @@ try {
   await page.keyboard.press('Tab');
   assert.equal(await page.evaluate(()=>document.activeElement?.textContent),'Skip to content');
   await page.keyboard.press('Enter');
-  assert.equal(await page.evaluate(()=>document.activeElement?.id),'workspace-main');
+  assert.equal(await page.evaluate(()=>document.activeElement?.id),'swim-school-main');
   assert.deepEqual(errors,[]);
   if(process.argv.includes('--write-help-images')) {
     await fs.copyFile(path.join(root,'agreements-1280-light.png'),path.resolve('assets/help/legend-agreements.png'));

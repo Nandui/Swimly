@@ -136,8 +136,8 @@ export default async function TodayPage({ searchParams }: { searchParams: Promis
                         return (
                           <Lane key={b.id} nowAt={nowAt} label={<><span className="block truncate font-medium">{b.title}</span><span className="block truncate text-xs text-ui-muted-foreground">{[span(b), BOOKING_KIND_META[b.kind as BookingKind]?.label, b.place].filter(Boolean).join(" · ")}</span></>}>
                             <Link href={`/rota/bookings?site=${site.id}`} aria-label={`${b.title}, ${span(b)}, ${b.filled} of ${b.places} staffed`}
-                              className={cn("absolute inset-y-1.5 flex min-w-0 items-center gap-1.5 overflow-hidden rounded-[var(--pc-radius-inner)] border px-2 text-xs hover:border-[var(--pc-primary)] focus-visible:outline-2 focus-visible:outline-[var(--pc-focus)]",
-                                short ? "border-[var(--pc-warning)] bg-[var(--pc-warning-soft)]" : "border-transparent bg-[var(--pc-aqua-soft)] text-[var(--pc-aqua-ink)]")}
+                              className={cn("absolute inset-y-1.5 flex min-w-0 items-center gap-1.5 overflow-hidden rounded-[var(--pc-radius-control)] border px-2 text-xs hover:border-[var(--pc-primary)] focus-visible:outline-2 focus-visible:outline-[var(--pc-focus)]",
+                                short ? "border-[var(--pc-warning)] bg-[var(--pc-warning-soft)]" : "border-transparent bg-[var(--pc-primary-soft)] text-[var(--pc-primary-ink)]")}
                               style={{ left: pos(b.startMinutes), width: `calc(${pos(b.endMinutes)} - ${pos(b.startMinutes)})` }}>
                               {short ? <TriangleAlert aria-hidden="true" className="size-3.5 shrink-0 text-[var(--pc-warning)]" /> : <CalendarCheck aria-hidden="true" className="size-3.5 shrink-0" />}
                               <span className="truncate font-semibold tabular-nums">{b.places ? `${b.filled}/${b.places} staffed` : "No staff needed"}</span>
@@ -154,7 +154,7 @@ export default async function TodayPage({ searchParams }: { searchParams: Promis
                         <Lane key={t.key} nowAt={nowAt} label={<><span className={cn("block truncate font-medium", !t.userId && "text-[var(--pc-warning)]")}>{t.name}</span><span className="block text-xs text-ui-muted-foreground">{t.classes.length} {t.classes.length === 1 ? "class" : "classes"}</span></>}>
                           {t.classes.map((c, i) => (
                             <a key={`${t.key}:${i}`} href={c.href} title={`${span(c)} ${c.label}`} aria-label={`${c.label}, ${span(c)}, ${t.userId ? `taught by ${t.name}` : "no instructor"}`}
-                              className={cn("absolute inset-y-1.5 flex min-w-0 items-center overflow-hidden rounded-[var(--pc-radius-inner)] border px-1.5 text-xs hover:border-[var(--pc-primary)] focus-visible:outline-2 focus-visible:outline-[var(--pc-focus)]",
+                              className={cn("absolute inset-y-1.5 flex min-w-0 items-center overflow-hidden rounded-[var(--pc-radius-control)] border px-1.5 text-xs hover:border-[var(--pc-primary)] focus-visible:outline-2 focus-visible:outline-[var(--pc-focus)]",
                                 t.userId ? "border-transparent bg-[var(--pc-primary-soft)] text-[var(--pc-primary-ink)]" : "border-dashed border-[var(--pc-warning)] bg-[var(--pc-warning-soft)]")}
                               style={{ left: pos(c.startMinutes), width: `calc(${pos(c.endMinutes)} - ${pos(c.startMinutes)})` }}>
                               <span className="truncate font-medium">{c.label}</span>
@@ -172,7 +172,7 @@ export default async function TodayPage({ searchParams }: { searchParams: Promis
                         <Lane key={r.key} nowAt={nowAt} label={<><span className="block truncate font-medium">{r.duty}</span>{r.needs ? <span className="block text-xs text-ui-muted-foreground">{r.needs}</span> : null}</>}>
                           {r.days[0].map((e) => {
                             const [a, z] = e.text.split("–").map((t) => Number(t.slice(0, 2)) * 60 + Number(t.slice(3, 5)));
-                            return <a key={e.id} href={e.href} className="absolute inset-y-1.5 flex items-center gap-1.5 truncate rounded-[var(--pc-radius-inner)] bg-[var(--pc-primary-soft)] px-2 text-xs text-[var(--pc-primary-ink)] hover:underline" style={{ left: pos(a), width: `calc(${pos(z)} - ${pos(a)})` }}><span className="font-semibold">{e.who}</span>{e.part ? <span>· {e.part}</span> : null}</a>;
+                            return <a key={e.id} href={e.href} className="absolute inset-y-1.5 flex items-center gap-1.5 truncate rounded-[var(--pc-radius-control)] bg-[var(--pc-primary-soft)] px-2 text-xs text-[var(--pc-primary-ink)] hover:underline" style={{ left: pos(a), width: `calc(${pos(z)} - ${pos(a)})` }}><span className="font-semibold">{e.who}</span>{e.part ? <span>· {e.part}</span> : null}</a>;
                           })}
                         </Lane>
                       ) : (
@@ -193,7 +193,7 @@ export default async function TodayPage({ searchParams }: { searchParams: Promis
                             );
                             const style = { left: pos(s.startMinutes), width: `calc(${pos(s.endMinutes)} - ${pos(s.startMinutes)})` };
                             const label = [r.duty, e.part, e.text, e.who ?? "unfilled", e.absent ? "absent, needs cover" : null].filter(Boolean).join(", ");
-                            const cls = cn("absolute inset-y-1.5 flex items-center rounded-[var(--pc-radius-inner)] border px-2 text-left text-xs", tone);
+                            const cls = cn("absolute inset-y-1.5 flex items-center rounded-[var(--pc-radius-control)] border px-2 text-left text-xs", tone);
                             return (
                               <Lane key={e.id} nowAt={nowAt} label={<span className={cn("block truncate font-medium", !e.who && "text-[var(--pc-warning)]", e.absent && "text-ui-muted-foreground line-through")}>{e.who ?? "Unfilled"}</span>}>
                                 {site.manage && e.editable

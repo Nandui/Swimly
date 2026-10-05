@@ -55,18 +55,6 @@
   rotate: 180deg;
 }
 
-[data-motion="sidebar-icon"] {
-  transition: translate var(--ui-motion-component) var(--ui-ease);
-}
-[data-sidebar="menu-button"]:not(:disabled):not([aria-disabled="true"]):is(:focus-visible, :active) > [data-motion="sidebar-icon"] {
-  translate: var(--ui-motion-nudge-distance) 0;
-}
-@media (hover: hover) and (pointer: fine) {
-  [data-sidebar="menu-button"]:not(:disabled):not([aria-disabled="true"]):hover > [data-motion="sidebar-icon"] {
-    translate: var(--ui-motion-nudge-distance) 0;
-  }
-}
-
 /* A small cue belongs to the destination icon, never to the whole data row. */
 [data-motion="direction"] {
   transition: translate var(--ui-motion-component) var(--ui-ease),

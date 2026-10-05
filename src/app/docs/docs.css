@@ -399,7 +399,6 @@
 :where(.turnfin-docs) .sidebar {
   position: fixed;
   inset: 0 auto 0 0;
-  width: var(--sidebar);
   background: var(--surface-subtle);
   border-right: 1px solid var(--line);
   padding: 31px 19px 0;
@@ -578,7 +577,6 @@
   display: none;
 }
 :where(.turnfin-docs) .workspace-main {
-  margin-left: var(--sidebar);
   min-height: 100vh;
   display: flex;
   flex-direction: column;
@@ -854,7 +852,6 @@
 :where(.turnfin-docs) .emergency-card {
   background: var(--ink);
   border: 1px solid var(--ink);
-  border-top-color: var(--aqua);
   border-radius: var(--radius);
   color: var(--ui-muted-foreground);
   padding: 24px;
@@ -2586,7 +2583,6 @@
   background: var(--surface-subtle);
 }
 :where(.turnfin-docs) .auth-story {
-  border-top: 4px solid var(--aqua);
   background: var(--ink);
   padding: 50px 64px;
   display: flex;
@@ -2600,7 +2596,6 @@
 }
 :where(.turnfin-docs) .auth-story .brand-mark {
   background: var(--ui-muted);
-  color: var(--sky);
   border: 1px solid #376583;
 }
 :where(.turnfin-docs) .auth-eyebrow {
@@ -4473,10 +4468,6 @@
     background: var(--ui-status-purple-bg);
     color: var(--ui-status-purple);
   }
-  :where(.turnfin-docs) .doc-icon.type-eap {
-    background: var(--ui-emergency-bg);
-    color: var(--ui-emergency-ink);
-  }
   :where(.turnfin-docs) .doc-icon.type-risk-assessment {
     background: var(--ui-status-yellow-bg);
     color: var(--ui-status-yellow);
@@ -4987,48 +4978,6 @@
     display: flex;
     flex-direction: column;
     gap: 18px;
-  }
-  :where(.turnfin-docs) .emergency-shortcut {
-    padding: 22px 24px;
-    border: 1px solid var(--ui-emergency-border);
-    border-radius: 12px;
-    background: var(--ui-emergency-bg);
-    color: var(--ui-emergency-ink);
-  }
-  :where(.turnfin-docs) .emergency-shortcut-top {
-    display: flex;
-    align-items: center;
-    gap: 9px;
-    margin-bottom: 16px;
-  }
-  :where(.turnfin-docs) .emergency-shortcut-top > span {
-    font-size: var(--pc-text-caption);
-    letter-spacing: 0.7px;
-    text-transform: uppercase;
-    font-weight: 600;
-  }
-  :where(.turnfin-docs) .emergency-shortcut h2 {
-    font-family: var(--font-display);
-    font-size: var(--pc-text-title);
-    font-weight: 400;
-    letter-spacing: -0.5px;
-    color: inherit;
-  }
-  :where(.turnfin-docs) .emergency-shortcut p {
-    margin: 9px 0 16px;
-    font-size: var(--pc-text-caption);
-    line-height: var(--pc-leading-caption);
-  }
-  :where(.turnfin-docs) .emergency-shortcut a {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    gap: 12px;
-    padding: 10px 0 0;
-    border-top: 1px solid var(--ui-emergency-border);
-    font-size: var(--pc-text-caption);
-    font-weight: 600;
-    min-height: 44px;
   }
   :where(.turnfin-docs) .emergency-shortcut a:hover {
     text-decoration: underline;
@@ -6204,10 +6153,7 @@
     gap: 12px;
     padding: 12px 18px;
     margin: 16px 0 24px;
-    border: 1px solid var(--ui-emergency-border);
     border-radius: 10px;
-    background: var(--ui-aqua-soft);
-    color: var(--ui-aqua-ink);
   }
   :where(.turnfin-docs) .emergency-banner > svg {
     flex-shrink: 0;
@@ -6526,7 +6472,6 @@
     padding: 28px;
     position: sticky;
     top: 24px;
-    border-top: 3px solid var(--brand-aqua);
   }
   :where(.turnfin-docs) .template-preview h2 {
     font-size: var(--pc-text-title);

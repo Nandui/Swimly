@@ -28,7 +28,9 @@ export async function buildScreenshots({ entryPoint = 'scripts/help-screenshots/
   await esbuild.build({entryPoints:[entryPoint],bundle:true,outdir:destination,jsx:'automatic',platform:'browser',format:'iife',define:{'process.env.NODE_ENV':'"production"','process.env':'{}'},loader:{'.woff':'file','.woff2':'file'},plugins:[fixture],minify:true});
   const from=path.resolve('src/app/globals.css');
   const css=await postcss([tailwind()]).process(await fs.readFile(from,'utf8'),{from});
-  await fs.writeFile(path.join(destination,'app.css'),css.css);
-  await fs.copyFile('public/brand/app-logo.png',path.join(destination,'brand/app-logo.png'));
+  // The root layout's Poolside Clear theme and the module frame, after Tailwind as in the app.
+  const theme=await Promise.all(['src/app/docs/poolside.css','src/app/workspace/module-workspace.css'].map(file=>fs.readFile(path.resolve(file),'utf8')));
+  await fs.writeFile(path.join(destination,'app.css'),[css.css,...theme].join('\n'));
+  await fs.copyFile('public/brand/turnfin.png',path.join(destination,'brand/turnfin.png'));
   await fs.writeFile(path.join(destination,'index.html'),`<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>${title}</title><link rel="icon" href="data:,"><link rel="stylesheet" href="/app.css"><link rel="stylesheet" href="/fixture.css"></head><body><div id="root"></div><script src="/fixture.js"></script></body></html>`);
 }

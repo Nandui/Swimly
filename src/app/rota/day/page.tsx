@@ -23,7 +23,7 @@ const span = (a: number, b: number) => `${clock(a)}–${clock(b)}`;
 /** Each activity keeps one tone through the day, so "25m pool lifeguard" reads the same on every row. */
 const TONES = [
   "bg-[var(--pc-primary-soft)] text-[var(--pc-primary-ink)]",
-  "bg-[var(--pc-aqua-soft)] text-[var(--pc-aqua-ink)]",
+  "bg-[var(--pc-primary-soft)] text-[var(--pc-primary-ink)]",
   "bg-[var(--pc-success-soft)] text-[var(--pc-success)]",
   "bg-[var(--pc-cover-soft)] text-[var(--pc-cover)]",
 ];
@@ -128,15 +128,15 @@ export default async function DayPlanPage({ searchParams }: { searchParams: Prom
                         {/* The planned window: open it to put someone on any stretch of it. */}
                         {a ? (site.manage
                           ? <AssignDialog activity={who} span={{ start: a.start, end: a.end }} candidates={candidates}
-                              trigger={{ label: `Put someone on ${c.label}`, className: "absolute inset-y-1 rounded-[var(--pc-radius-inner)] border border-dashed border-ui-border bg-transparent p-0 hover:border-[var(--pc-primary)] hover:bg-[var(--pc-hover)]", style: box(a.start, a.end), children: <span className="sr-only">Put someone on {c.label}</span> }} />
-                          : <span aria-hidden="true" className="absolute inset-y-1 rounded-[var(--pc-radius-inner)] border border-dashed border-ui-border" style={box(a.start, a.end)} />) : null}
+                              trigger={{ label: `Put someone on ${c.label}`, className: "absolute inset-y-1 rounded-[var(--pc-radius-control)] border border-dashed border-ui-border bg-transparent p-0 hover:border-[var(--pc-primary)] hover:bg-[var(--pc-hover)]", style: box(a.start, a.end), children: <span className="sr-only">Put someone on {c.label}</span> }} />
+                          : <span aria-hidden="true" className="absolute inset-y-1 rounded-[var(--pc-radius-control)] border border-dashed border-ui-border" style={box(a.start, a.end)} />) : null}
                         {c.spans.map((x, i) => (
-                          <span key={i} title={`${x.who} ${span(x.start, x.end)}`} className={cn("pointer-events-none absolute flex h-[22px] items-center overflow-hidden rounded-[var(--pc-radius-inner)] px-1.5 text-xs font-medium whitespace-nowrap", tone.get(c.label.toLowerCase()))}
+                          <span key={i} title={`${x.who} ${span(x.start, x.end)}`} className={cn("pointer-events-none absolute flex h-[22px] items-center overflow-hidden rounded-[var(--pc-radius-control)] px-1.5 text-xs font-medium whitespace-nowrap", tone.get(c.label.toLowerCase()))}
                             style={{ ...box(x.start, x.end), top: 6 + lanes.of[i] * 26 }}>{x.who}</span>
                         ))}
                         {c.gaps.map((g, i) => {
                           const text = <><TriangleAlert aria-hidden="true" className="size-3 shrink-0" />{g.short > 1 || (a?.people ?? 1) > 1 ? `${g.short} short` : "Nobody"} {span(g.start, g.end)}</>;
-                          const cls = "absolute bottom-1 z-[2] flex h-[22px] items-center gap-1 overflow-hidden rounded-[var(--pc-radius-inner)] border border-dashed border-[var(--pc-danger)] bg-[var(--pc-danger-soft)] px-1.5 text-xs font-medium whitespace-nowrap text-[var(--pc-danger)]";
+                          const cls = "absolute bottom-1 z-[2] flex h-[22px] items-center gap-1 overflow-hidden rounded-[var(--pc-radius-control)] border border-dashed border-[var(--pc-danger)] bg-[var(--pc-danger-soft)] px-1.5 text-xs font-medium whitespace-nowrap text-[var(--pc-danger)]";
                           return site.manage
                             ? <AssignDialog key={`g${i}`} activity={who} span={g} candidates={candidates}
                                 trigger={{ label: `Fill ${c.label} ${span(g.start, g.end)}, ${g.short} short`, className: cn(cls, "justify-start p-0 px-1.5 hover:bg-[var(--pc-danger-soft)] hover:brightness-95"), style: box(g.start, g.end), children: text }} />
@@ -155,7 +155,7 @@ export default async function DayPlanPage({ searchParams }: { searchParams: Prom
                     return (
                       <Lane key={b.id} ticks={ticks} pos={pos} nowLine={nowLine} label={<><span className="block truncate font-medium">{b.title}</span><span className="block truncate text-xs text-ui-muted-foreground">{[span(b.startMinutes, b.endMinutes), BOOKING_KIND_META[b.kind as BookingKind]?.label, b.place].filter(Boolean).join(" · ")}</span></>}>
                         <Link href={`/rota/bookings?site=${site.id}`} style={box(b.startMinutes, b.endMinutes)} aria-label={`${b.title}, ${span(b.startMinutes, b.endMinutes)}, ${b.filled} of ${b.places} staffed`}
-                          className={cn("absolute inset-y-1.5 flex items-center gap-1 overflow-hidden rounded-[var(--pc-radius-inner)] border px-1.5 text-xs font-semibold hover:border-[var(--pc-primary)]", short ? "border-[var(--pc-warning)] bg-[var(--pc-warning-soft)]" : "border-transparent bg-[var(--pc-aqua-soft)] text-[var(--pc-aqua-ink)]")}>
+                          className={cn("absolute inset-y-1.5 flex items-center gap-1 overflow-hidden rounded-[var(--pc-radius-control)] border px-1.5 text-xs font-semibold hover:border-[var(--pc-primary)]", short ? "border-[var(--pc-warning)] bg-[var(--pc-warning-soft)]" : "border-transparent bg-[var(--pc-primary-soft)] text-[var(--pc-primary-ink)]")}>
                           {short ? <TriangleAlert aria-hidden="true" className="size-3 shrink-0 text-[var(--pc-warning)]" /> : <CalendarCheck aria-hidden="true" className="size-3 shrink-0" />}
                           <span className="truncate">{b.places ? `${b.filled}/${b.places} staffed` : "No staff needed"}</span>
                         </Link>
@@ -178,7 +178,7 @@ export default async function DayPlanPage({ searchParams }: { searchParams: Prom
                           {s.segments.map((g, i) => <Piece key={i} g={g} shift={s} tone={g.kind === "break" ? "rota-break text-ui-muted-foreground" : tone.get(g.label.trim().toLowerCase()) ?? TONES[0]} />)}
                         </>
                       );
-                      const cls = cn("absolute top-1.5 h-7 overflow-hidden rounded-[var(--pc-radius-inner)] border p-0 text-left text-xs font-normal",
+                      const cls = cn("absolute top-1.5 h-7 overflow-hidden rounded-[var(--pc-radius-control)] border p-0 text-left text-xs font-normal",
                         s.absent ? "border-[var(--pc-danger)] bg-[var(--pc-danger-soft)]" : !r.name ? "border-dashed border-[var(--pc-warning)] bg-ui-card" : s.part ? "border-[var(--pc-primary)] bg-ui-card" : "border-ui-border bg-[var(--pc-surface-sunken)]");
                       const label = `${r.name ?? "Unfilled"}, ${s.part ?? s.role}, ${span(s.start, s.end)}${s.segments.length ? `: ${s.segments.map((g) => `${span(g.start, g.end)} ${g.label}`).join(", ")}` : ""}${s.absent ? ", absent" : ""}`;
                       return site.manage && s.editable
@@ -198,7 +198,7 @@ export default async function DayPlanPage({ searchParams }: { searchParams: Prom
                     <Lane key={t.key} ticks={ticks} pos={pos} nowLine={nowLine} label={<><span className={cn("block truncate font-medium", !t.name && "text-[var(--pc-warning)]")}>{t.name ?? "No instructor"}</span><span className="block text-xs text-ui-muted-foreground">{t.list.length} {t.list.length === 1 ? "class" : "classes"}</span></>}>
                       {t.list.map((c, i) => (
                         <a key={i} href={c.href} style={box(c.startMinutes, c.endMinutes)} title={`${span(c.startMinutes, c.endMinutes)} ${c.label}`} aria-label={`${c.label}, ${span(c.startMinutes, c.endMinutes)}`}
-                          className={cn("absolute inset-y-1.5 flex items-center overflow-hidden rounded-[var(--pc-radius-inner)] border px-1 text-xs hover:border-[var(--pc-primary)]", t.name ? "border-transparent bg-[var(--pc-primary-soft)] text-[var(--pc-primary-ink)]" : "border-dashed border-[var(--pc-warning)] bg-[var(--pc-warning-soft)]")}>
+                          className={cn("absolute inset-y-1.5 flex items-center overflow-hidden rounded-[var(--pc-radius-control)] border px-1 text-xs hover:border-[var(--pc-primary)]", t.name ? "border-transparent bg-[var(--pc-primary-soft)] text-[var(--pc-primary-ink)]" : "border-dashed border-[var(--pc-warning)] bg-[var(--pc-warning-soft)]")}>
                           <span className="truncate">{c.label}</span>
                         </a>
                       ))}

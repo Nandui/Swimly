@@ -1,3 +1,2 @@
-/** Display preference only, shared with the server for a stable first paint. */
-export const NAV_COLLAPSED_COOKIE = "swimly.nav-collapsed";
+/** The pool deck's scrolling page, which its shell scrolls back to the top. */
 export const SHELL_PAGE_ID = "swimly-page-scroll";

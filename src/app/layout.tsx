@@ -68,7 +68,7 @@ export default async function RootLayout({ children }: LayoutProps<"/">) {
             <ToastBridge />
             {shared ? <SharedDeviceIdle minutes={SHARED_IDLE_MINUTES} /> : null}
             {/* Dev builds only: someone who manages roles sees any page as any
-                role would, from "View as" in the sidebar footer. Gives the
+                role would, from "View as" in the frame's tools bar. Gives the
                 toggle nothing on production. */}
             <DevelopmentRolePreview session={session}>
               <YourModulesProvider ids={session?.user ? modulesFor(session).map((m) => m.id) : []}>{children}</YourModulesProvider>

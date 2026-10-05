@@ -1,13 +1,16 @@
 import React, { useEffect, useState } from 'react';
 import { createRoot } from 'react-dom/client';
 import { UserRoundCheck } from 'lucide-react';
-import '@fontsource/figtree/latin-400.css';
-import '@fontsource/figtree/latin-500.css';
-import '@fontsource/figtree/latin-600.css';
+import '@fontsource/plus-jakarta-sans/400.css';
+import '@fontsource/plus-jakarta-sans/500.css';
+import '@fontsource/plus-jakarta-sans/600.css';
+import '@fontsource/plus-jakarta-sans/700.css';
+import '@/app/docs/poolside.css';
+import '@/app/workspace/module-workspace.css';
 import { ThemeProvider } from '@/components/theme-provider';
 import { TooltipProvider } from '@/components/shadcn/tooltip';
 import { InstructorShell } from '@/modules/activities/components/instructor/instructor-shell';
-import { AppShell } from '@/components/ui-kit/app-shell';
+import { ModuleShell } from '@/components/workspace/module-shell';
 import { DeckChecklist } from '@/modules/activities/components/progression/deck-checklist';
 import { AwaitingMoves } from '@/modules/activities/components/enrolment/awaiting-moves';
 import { AwaitingEnrolment } from '@/modules/activities/components/enrolment/awaiting-enrolment';
@@ -52,13 +55,15 @@ function Preview() {
   const result = { items: query.has('empty') ? [] : items.filter(row => !query.get('q') || `${row.student.firstName} ${row.student.lastName}`.toLowerCase().includes(query.get('q').toLowerCase())), total: query.has('empty') ? 0 : items.length, q: query.get('q') ?? '', page: 1, pages: 1 };
   const desk = location.pathname === '/awaiting-enrolment';
   return <ThemeProvider initialMode={query.get('theme') || 'light'}><TooltipProvider>{desk ?
-    <AppShell wordmark="Aquatics" userName="Reception Example" groups={[{ id: 'daily', label: 'Daily work', items: [{ href: '/awaiting-enrolment', label: 'Awaiting enrolment', icon: UserRoundCheck }] }]} switcher={<span className="text-sm">{club.name}</span>}>
+    <ModuleShell module="Swim school" id="swim-school" who={{ id: 'demo', name: 'Reception Example' }} links={[{ href: '/awaiting-enrolment', label: 'Awaiting enrolment', icon: UserRoundCheck, active: true }]}
+      scopeNote={club.name} contentClass="module-content swim-school-content" tools={<span className="text-sm">{club.name}</span>}>
       {query.get('view') === 'moves' ? <AwaitingMoves result={result} courses={targets} enrol={!query.has('read-only')} profiles={false} /> : <AwaitingEnrolment result={{ items: [], total: 0, page: 1, pages: 1, q: '' }} courses={targets} enrol profiles={false} assessments={false} />}
-    </AppShell> :
+    </ModuleShell> :
     <InstructorShell userName="Alex Example" club={club} clubs={[club]}><div className="space-y-6">
       <div><h1 className="text-2xl font-semibold">Turtles</h1><p className="text-sm text-ui-muted-foreground">Monday · 15:00–15:30 · Learner pool</p></div>
       <DeckChecklist courseId="example-class" date="2026-09-21" levelId="turtles" competencies={skills} swimmers={checklist} attendance={null} readOnly={query.has('read-only')} teaching moveReadiness={query.has('read-only') ? undefined : { levelName: 'Turtles' }} doneHref="/instructor" doneLabel="classes" />
     </div></InstructorShell>}
   </TooltipProvider></ThemeProvider>;
 }
+document.body.classList.add('turnfin-app'); // the root layout's token scope, so portalled dialogs match too
 createRoot(document.getElementById('root')).render(<Preview />);

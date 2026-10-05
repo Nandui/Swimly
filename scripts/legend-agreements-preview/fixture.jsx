@@ -1,16 +1,19 @@
 import React, {useEffect, useState} from 'react';
 import {createRoot} from 'react-dom/client';
-import '@fontsource/figtree/400.css';
-import '@fontsource/figtree/500.css';
-import '@fontsource/figtree/600.css';
-import {AppShell} from '@/components/ui-kit/app-shell';
+import '@fontsource/plus-jakarta-sans/400.css';
+import '@fontsource/plus-jakarta-sans/500.css';
+import '@fontsource/plus-jakarta-sans/600.css';
+import '@fontsource/plus-jakarta-sans/700.css';
+import '@/app/docs/poolside.css';
+import '@/app/workspace/module-workspace.css';
+import {ModuleShell} from '@/components/workspace/module-shell';
 import {ThemeProvider} from '@/components/theme-provider';
 import {TooltipProvider} from '@/components/shadcn/tooltip';
 import {ToastBridge} from '@/lib/toast';
 import {LegendAgreements} from '@/modules/activities/components/enrolment/legend-agreements';
 import {ManageProfileEnrolments} from '@/modules/activities/components/students/profile-enrolments';
 import {EnrolIntoCourse, EnrolInCourseForStudent, PromoteFromWaitlist} from '@/modules/activities/components/enrolment/enrolment-actions';
-import {NAV_ITEMS} from '@/modules/activities/lib/nav';
+import {NAV_ITEMS,isNavItemActive} from '@/modules/activities/lib/nav';
 
 const query=new URLSearchParams(location.search), theme=query.get('theme')==='dark'?'dark':'light';
 document.documentElement.dataset.theme=theme;
@@ -45,7 +48,10 @@ function Screen(){
   const restricted=query.has('restricted');
   return <LegendAgreements result={{items,q,view,total:items.length,pages:1,page:1,outstandingCount:matching.filter(row=>row.legendAgreementStatus!=='DONE').length,doneCount:matching.filter(row=>row.legendAgreementStatus==='DONE').length,siteName:site.name}} canConfirm={!restricted} profiles={!restricted} classes={!restricted}/>;
 }
+const links=NAV_ITEMS.filter(item=>['calendar','students','courses','assessments','awaiting-enrolment','legend-agreements'].includes(item.screen))
+  .map(item=>({href:item.href,label:item.label,icon:item.icon,active:isNavItemActive(location.pathname,item.href)}));
+document.body.classList.add('turnfin-app'); // the root layout's token scope, so portalled dialogs match too
 createRoot(document.getElementById('root')).render(<ThemeProvider initialMode={theme}><TooltipProvider><ToastBridge/>
-  <AppShell wordmark="Swimly" homeHref="/legend-agreements" userName="Demo staff" groups={[{id:'daily',label:'Daily work',items:NAV_ITEMS.filter(item=>['calendar','students','courses','assessments','awaiting-enrolment','legend-agreements'].includes(item.screen))}]}
-    switcher={<span className="text-sm">{site.name}</span>}><Screen/></AppShell>
+  <ModuleShell module="Swim school" id="swim-school" who={{id:'demo',name:'Demo staff'}} links={links} scopeNote={site.name} contentClass="module-content swim-school-content"
+    tools={<span className="text-sm">{site.name}</span>}><Screen/></ModuleShell>
 </TooltipProvider></ThemeProvider>);

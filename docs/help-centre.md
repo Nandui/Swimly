@@ -1,7 +1,8 @@
 # Staff help centre
 
-`/help` is the signed-in staff manual. The desk sidebar (including its collapsed
-rail) and phone toolbar have a Help centre link. Instructor has a Help link to
+`/help` is the signed-in staff manual. Every module frame has a Help link, in
+the module bar on a desktop and under More in the bottom bar on phones and touch
+screens, and in the account menu. Instructor has a Help link to
 `/help/instructor`. Both open a new tab so an in-progress form stays open.
 
 The manual has 39 authored guides: 37 available in the desk library and 9 in
