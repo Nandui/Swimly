@@ -2,7 +2,7 @@
 
 import { useId, useState, useTransition, type ComponentProps } from "react";
 import { useRouter } from "next/navigation";
-import { Plus } from "lucide-react";
+import { CalendarPlus } from "lucide-react";
 import { Notice } from "@/components/ui-kit/notice";
 import { Button } from "@/components/shadcn/button";
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from "@/components/shadcn/dialog";
@@ -32,7 +32,7 @@ export function AddClass({ levels, instructors, workingSite }: { levels: LevelOp
   }
   function changeOpen(next: boolean) { if (!pending) { setOpen(next); feedback.reset(); } }
   return <Dialog open={open} onOpenChange={changeOpen}>
-    <DialogTrigger asChild><Button><Plus aria-hidden="true" />Add class</Button></DialogTrigger>
+    <DialogTrigger asChild><Button><CalendarPlus aria-hidden="true" />Add class</Button></DialogTrigger>
     <DialogContent className="flex max-h-[90dvh] flex-col gap-0 overflow-hidden p-0 sm:max-w-xl" showCloseButton={false}>
       <DialogHeader className="shrink-0 p-6"><DialogTitle>Add a class</DialogTitle><DialogDescription>A weekly class at {workingSite}, your current working site.</DialogDescription></DialogHeader>
       <FormFeedbackProvider feedback={feedback}><form ref={formRef} aria-busy={pending} className="flex min-h-0 flex-1 flex-col" onSubmit={event => {
@@ -57,9 +57,9 @@ export function AddClass({ levels, instructors, workingSite }: { levels: LevelOp
             <Entry name="capacity" label="Capacity" type="number" min={1} max={999} optional hint="Leave blank for no limit." />
           </div>
           <Select id={`${id}-instructor`} name="instructorId" label="Instructor" defaultValue={UNASSIGNED_INSTRUCTOR} disabled={pending} options={[{value: UNASSIGNED_INSTRUCTOR, label:"Not assigned"}, ...instructors.map(instructor => ({value: instructor.id,label: instructor.name}))]} />
-          <Entry name="location" label="Pool area" maxLength={80} optional placeholder="Learner Pool, Lane 3" />
+          <Entry name="location" label="Pool area" maxLength={80} optional placeholder="Learner pool, lane 3" />
         </fieldset></div>
-        <div className="shrink-0 space-y-3 border-t border-ui-border p-4 sm:px-6">
+        <div className="shrink-0 space-y-3 p-4 sm:px-6">
           {error ? <div ref={summaryRef} tabIndex={-1}><Notice tone="error" live="alert" title={error} /></div> : null}
           <DialogFooter><Button type="button" variant="outline" disabled={pending} onClick={() => changeOpen(false)}>Cancel</Button><LoadingButton type="submit" pending={pending} pendingLabel="Adding class…" disabled={!levels.length}>Add class</LoadingButton></DialogFooter>
         </div>

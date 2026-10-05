@@ -1,6 +1,6 @@
 import {
   Archive, ArrowRightLeft, CircleArrowRight, CircleCheck, Clock3, Flag, GraduationCap, MapPin, ScanSearch,
-  Ticket, UserMinus, Users,
+  Ticket, TriangleAlert, UserMinus, Users,
 } from "lucide-react";
 import type { EnrolmentStatus } from "@/generated/prisma/client";
 import type { StatusMeta } from "@/lib/status";
@@ -31,6 +31,8 @@ export const FOLLOW_UP_META = {
   awaiting: { label: "Awaiting class", color: "blue", icon: Clock3 },
   awaitingMove: { label: "Awaiting move", color: "blue", icon: ArrowRightLeft },
   waitlisted: ENROLMENT_STATUS_META.WAITLISTED,
+  /** The next contact date has passed ("Overdue · 28 Sep"). */
+  overdue: { label: "Overdue", color: "red", icon: TriangleAlert },
 } as const satisfies Record<string, StatusMeta>;
 
 export const WAITLIST_AVAILABILITY_META = {

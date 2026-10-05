@@ -235,29 +235,16 @@ export function AddSession(props: Omit<FieldProps, "session">) {
   );
 }
 
-export function EditSession({
-  variant = "icon",
-  ...props
-}: FieldProps & { session: SessionRow; variant?: "icon" | "button" }) {
+export function EditSession(props: FieldProps & { session: SessionRow }) {
   const { session } = props;
   return (
     <FormDialog
       trigger={
-        variant === "icon" ? (
-          <Button
-            variant="outline"
-            aria-label={`Edit the session on ${sessionLabel(session)}`}
-            size="icon"
-            className="size-11"
-          >
-            {<Pencil aria-hidden={true} className="size-4 shrink-0" />}
-          </Button>
-        ) : (
-          <Button variant="outline" className="min-h-11">
-            {<Pencil aria-hidden={true} className="size-4 shrink-0" />}
-            {"Edit"}
-          </Button>
-        )
+        <Button variant="outline">
+          <Pencil aria-hidden={true} className="size-4 shrink-0" />
+          Edit
+          <span className="sr-only"> the session on {sessionLabel(session)}</span>
+        </Button>
       }
       title={`Edit the session on ${sessionLabel(session)}`}
       submitLabel="Save changes"
@@ -275,13 +262,10 @@ export function CancelSession({ session }: { session: SessionRow }) {
   return (
     <ConfirmAction
       trigger={
-        <Button
-          variant="outline"
-          aria-label={`Cancel the session on ${sessionLabel(session)}`}
-          size="icon"
-          className="size-11"
-        >
-          {<Ban aria-hidden={true} className="size-4 shrink-0" />}
+        <Button variant="outline">
+          <Ban aria-hidden={true} className="size-4 shrink-0" />
+          Cancel session
+          <span className="sr-only"> on {sessionLabel(session)}</span>
         </Button>
       }
       title={`Cancel the session on ${sessionLabel(session)}?`}

@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import type { ReactNode } from "react";
 import { notFound } from "next/navigation";
 import { Notice } from "@/components/ui-kit/notice";
+import { PageHeader } from "@/components/ui-kit/page-header";
 import { HrShell } from "@/components/hr/shell";
 import { hrAccess } from "@/lib/hr/access";
 import { hrConfigured } from "@/lib/hr/database";
@@ -20,10 +21,11 @@ export default async function HrLayout({ children }: { children: ReactNode }) {
   return (
     <HrShell who={who}>
       {hrConfigured() ? children : (
-        <div className="space-y-6">
-          <div className="module-heading"><div className="space-y-2"><h1>HR</h1></div></div>
-          <Notice tone="info" title="HR storage is not set up yet" description="HR records live in their own database. Once it is provisioned (HR_DATABASE_URL, or the Neon integration with the HR_DB prefix), this workspace opens. Nothing else in Turnfin is affected." />
-        </div>
+        <>
+          <PageHeader title="HR" />
+          {/* Setup steps live in docs/hr.md; staff only need to know who to ask. */}
+          <Notice tone="info" title="HR isn’t switched on yet" description="Ask your Turnfin administrator to turn it on." />
+        </>
       )}
     </HrShell>
   );

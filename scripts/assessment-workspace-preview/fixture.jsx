@@ -30,7 +30,7 @@ window.assessmentWorkspace={calls:[],save:async(action,input)=>{window.assessmen
 const setup=location.pathname.endsWith('/setup');
 const awaiting=location.pathname.includes('/awaiting-enrolment');
 function Screen(){
-  if(awaiting) return <AwaitingEnrolment result={{items:query.has('empty')?[]:items,total:query.has('empty')?0:23,page:1,pages:query.has('empty')?1:2,q:query.get('q')??''}} courses={courses} enrol={!restricted} profiles={!restricted} assessments={!restricted}/>;
+  if(awaiting) return <AwaitingEnrolment result={{items:query.has('empty')?[]:items,total:query.has('empty')?0:23,page:1,pages:query.has('empty')?1:2,pageSize:20,q:query.get('q')??''}} counts={{enrolment:query.has('empty')?0:23,moves:0}} courses={courses} enrol={!restricted} profiles={!restricted} assessments={!restricted}/>;
   return <SessionDirectory sessions={query.has('empty')?[]:sessions} today="2026-09-16" setup={setup} manage={!restricted} view={sessionView(query.get('view'),setup)}
     createAction={setup&&!restricted?<AddSession programmes={[programme]} types={[type]} instructors={[{id:'demo-instructor',name:'Sam Example'}]} today="2026-09-16"/>:null}/>;
 }

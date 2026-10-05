@@ -22,6 +22,6 @@ export function LegendAgreementField({ required = true }: { required?: boolean }
     </RadioGroup>
     {feedback.error ? <p id={`${id}-error`} className="text-sm text-ui-destructive" role="alert">{feedback.error}</p> : null}
     {!required ? <p className="text-xs text-ui-muted-foreground">Optional while the class is full. You will be asked again when enrolling from the waitlist.</p> : null}
-    <p className="text-xs text-ui-muted-foreground">You can enrol now and finish the agreement later. Swimly records your confirmation; it does not update Legend.</p>
+    <p className="text-xs text-ui-muted-foreground">You can enrol now and finish the agreement later. Turnfin records your confirmation; it does not update Legend.</p>
   </fieldset>;
 }

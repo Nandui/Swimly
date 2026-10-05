@@ -2,16 +2,16 @@ import type { ReactNode } from "react";
 import Form from "next/form";
 import Link from "next/link";
 import { SegmentedLinks } from "@/components/ui-kit/segmented-links";
-import { X } from "lucide-react";
 import { LinkPagination } from "@/components/ui-kit/link-pagination";
 import { Button } from "@/components/shadcn/button";
 import { SearchField } from "@/components/ui-kit/search-field";
 import { EmptyState } from "@/components/ui-kit/empty-state";
+import { PageHeader } from "@/components/ui-kit/page-header";
 import type { StudentRow } from "@/modules/activities/lib/students/data/students";
 import { swimmerDirectoryHref, type SwimmerStatusFilter } from "@/modules/activities/lib/students/directory";
 import { StudentDirectory } from "./student-directory";
 
-const LENSES = [{ key: "ALL", label: "All swimmers" }, { key: "ACTIVE", label: "Active" }, { key: "INACTIVE", label: "Inactive" }] as const;
+const LENSES = [{ key: "ALL", label: "All" }, { key: "ACTIVE", label: "Active" }, { key: "INACTIVE", label: "Inactive" }] as const;
 const number = (value: number) => value.toLocaleString("en-IE");
 
 export function SwimmerBrowser({ students, total, page, pageSize, counts, q, status, addAction, parentAction }: {
@@ -26,45 +26,43 @@ export function SwimmerBrowser({ students, total, page, pageSize, counts, q, sta
   parentAction?: ReactNode;
 }) {
   const filtered = Boolean(q) || status !== "ALL";
-  const pages = Math.max(1, Math.ceil(total / pageSize));
   const returnTo = swimmerDirectoryHref({ q, status, page });
   const countFor = (key: SwimmerStatusFilter) => key === "ALL" ? counts.all : key === "ACTIVE" ? counts.active : counts.inactive;
+  const query: Record<string, string> = {};
+  if (q) query.q = q;
+  if (status !== "ALL") query.status = status;
+  const emptyHint = q
+    ? status === "ALL" ? "Try a different spelling, a member number or a contact name." : "Try a different spelling, or search every status."
+    : "There are no swimmers with this status.";
   return (
-    <section className="flex min-w-0 flex-col gap-4 text-ui-foreground" aria-labelledby="swimmers-heading" data-swimmer-browser>
-      <header className="mb-2 space-y-2">
-        <div className="flex flex-wrap items-center justify-between gap-3">
-          <h1 id="swimmers-heading" className="text-2xl font-semibold">Swimmers</h1>
-          <div className="flex flex-wrap gap-2">{parentAction}{addAction}</div>
-        </div>
-        <p className="text-sm text-ui-muted-foreground">Search across all sites, then open a swimmer’s profile.</p>
-      </header>
-
-      <div className="space-y-4">
-        <Form action="/students" className="max-w-xl" role="search" aria-label="Swimmer directory">
-          {status !== "ALL" ? <input type="hidden" name="status" value={status} /> : null}
-          <SearchField id="swimmer-query" label="Find a swimmer" defaultValue={q} placeholder="Name, member number or contact" />
-        </Form>
-        <div className="flex flex-wrap items-center justify-between gap-3">
+    <div className="tf-content min-w-0" data-swimmer-browser>
+      <PageHeader title="Swimmers" description="Every swimmer across your sites, sorted by surname" actions={<>{parentAction}{addAction}</>} />
+      <section className="pc-panel" aria-label="Swimmer directory">
+        <div className="flex flex-wrap items-end gap-3">
+          <Form action="/students" className="min-w-0 grow basis-[min(100%,27.5rem)] max-w-[27.5rem]" role="search" aria-label="Swimmers">
+            {status !== "ALL" ? <input type="hidden" name="status" value={status} /> : null}
+            <SearchField id="swimmer-query" label="Find a swimmer" defaultValue={q} placeholder="Name, member number or contact" />
+          </Form>
           <SegmentedLinks label="Filter swimmers by status" items={LENSES.map((lens) => ({ href: swimmerDirectoryHref({ q, status: lens.key }), label: lens.label, count: number(countFor(lens.key)), current: status === lens.key }))} />
-        </div>
-      </div>
-
-      <div className="space-y-3">
-        <div className="flex min-h-8 flex-wrap items-center justify-between gap-2 text-sm text-ui-muted-foreground" aria-live="polite" aria-atomic="true">
-          <p>{total ? <><span className="font-medium text-ui-foreground">{number((page - 1) * pageSize + 1)}–{number(Math.min(page * pageSize, total))}</span> of {number(total)} {filtered ? "matches" : "swimmers"}</> : "0 swimmers"}</p>
-          {filtered ? <Button asChild variant="ghost"><Link href="/students"><X aria-hidden="true" />Clear filters</Link></Button> : <span className="text-xs">Surname A–Z</span>}
         </div>
         {students.length ? <StudentDirectory students={students} returnTo={returnTo} /> : (
           <EmptyState
             as="h2"
+            role="status"
             icon={filtered ? "searchX" : "usersRound"}
             title={filtered ? "No swimmers found" : "Your swimmers will appear here"}
-            hint={q ? "Try a different spelling, a member number or a contact name. You can also search all statuses." : filtered ? "There are no swimmers with this status. Choose all swimmers to see the directory." : "Add your first swimmer to start building their profile."}
-            action={filtered ? <Button asChild variant="outline"><Link href="/students">Show all swimmers</Link></Button> : addAction}
+            hint={filtered ? emptyHint : "Add a swimmer to start their profile."}
+            action={filtered ? <Button asChild variant="outline"><Link href="/students">Clear filters</Link></Button> : undefined}
           />
         )}
-        <LinkPagination label="Swimmer directory pages" page={page} pageCount={pages} pathname="/students" query={Object.fromEntries(new URLSearchParams(swimmerDirectoryHref({ q, status }).split("?")[1] ?? ""))} />
-      </div>
-    </section>
+        {total > pageSize ? (
+          <LinkPagination label="Swimmer directory pages" page={page} totalItems={total} pageSize={pageSize} pathname="/students" query={query} />
+        ) : total ? (
+          <p className="text-center text-xs text-ui-muted-foreground tabular-nums" aria-live="polite" aria-atomic="true">
+            {number(total)} {total === 1 ? "swimmer" : "swimmers"}
+          </p>
+        ) : null}
+      </section>
+    </div>
   );
 }

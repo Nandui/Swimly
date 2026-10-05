@@ -1,9 +1,9 @@
-import { CircleCheck, Clock3, XCircle } from "lucide-react";
+import { CircleCheck, TriangleAlert, XCircle } from "lucide-react";
 import type { StatusMeta } from "@/lib/status";
 
 export const CANCELLATION_META = {
   cancelled: { label: "Cancelled", color: "red", icon: XCircle },
-  pending: { label: "Awaiting billing", color: "orange", icon: Clock3 },
+  pending: { label: "Awaiting billing", color: "orange", icon: TriangleAlert },
   notified: { label: "Billing notified", color: "green", icon: CircleCheck },
 } as const satisfies Record<string, StatusMeta>;
 

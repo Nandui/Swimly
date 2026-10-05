@@ -23,23 +23,23 @@ export function CompetencyHistory({ studentId, id, name }: { studentId: string; 
 }
 
 export function HistoryRows({ events, studentId, showCompetencyLinks = true, brief = false }: { events: HistoryEvent[]; studentId: string; showCompetencyLinks?: boolean; brief?: boolean }) {
-  return <ol className="divide-y divide-ui-border" aria-label="Swimmer activity">{events.map(event => {
+  return <ol className={brief ? "flex flex-col" : "pc-rows"} aria-label="Swimmer activity">{events.map(event => {
     const Icon = ICONS[event.kind], changes = event.evidence?.changes;
     const title = changes?.length ? `${changes.length} competency ${changes.length === 1 ? "mark" : "marks"} updated` : event.title;
     if (brief) {
       const change = changes?.length === 1 ? changes[0] : null;
-      const label = change ? `${change.name} — ${mark(change.after)}` : event.kind === "attendance" && event.evidence?.after ? `Attendance — ${mark(event.evidence.after)}` : title;
+      const label = change ? `${change.name}: ${mark(change.after)}` : event.kind === "attendance" && event.evidence?.after ? `Attendance: ${mark(event.evidence.after)}` : title;
       return <li key={event.id} className={styles.briefEvent}>
         <time dateTime={event.date}>{formatDate(parseDateOnly(event.date))}</time>
         <Icon aria-hidden="true" className="size-5" />
-        <div className="min-w-0"><p className="text-sm font-medium [overflow-wrap:anywhere]">{label}</p><p className="mt-1 text-xs text-ui-muted-foreground">{change ? `${mark(change.before)} → ${mark(change.after)} · ` : ""}{event.actor ?? "Saved record"}</p></div>
+        <div className="min-w-0"><p className="text-sm font-semibold [overflow-wrap:anywhere]">{label}</p><p className="pc-row-hint">{change ? `${mark(change.before)} → ${mark(change.after)} · ` : ""}{event.actor ?? "Saved record"}</p></div>
         {change && showCompetencyLinks ? <CompetencyHistory studentId={studentId} id={change.competencyId} name={change.name} /> : null}
       </li>;
     }
-    return <li key={event.id} className="flex min-w-0 gap-3 py-4">
-      <Icon className="mt-1 size-4 shrink-0 text-ui-muted-foreground" aria-hidden="true" />
+    return <li key={event.id} className="pc-row flex-nowrap">
+      <Icon className="mt-1 size-4 shrink-0 self-start text-ui-muted-foreground" aria-hidden="true" />
       <div className="min-w-0 flex-1 space-y-1">
-        <div className="flex flex-wrap items-start justify-between gap-x-4 gap-y-1"><p className="text-sm font-medium [overflow-wrap:anywhere]">{title}</p><time dateTime={event.date} className="text-xs text-ui-muted-foreground">{formatDate(parseDateOnly(event.date))}</time></div>
+        <div className="flex flex-wrap items-start justify-between gap-x-4 gap-y-1"><p className="font-semibold [overflow-wrap:anywhere]">{title}</p><time dateTime={event.date} className="pc-row-hint">{formatDate(parseDateOnly(event.date))}</time></div>
         {changes?.map(change => <div key={change.competencyId} className="flex flex-wrap items-center justify-between gap-2 py-1"><div className="min-w-0 text-sm"><p>{change.name}</p><p className="text-ui-muted-foreground">{mark(change.before)} → {mark(change.after)}</p></div>{showCompetencyLinks ? <CompetencyHistory studentId={studentId} id={change.competencyId} name={change.name} /> : null}</div>)}
         {event.evidence && "after" in event.evidence ? <p className="text-sm">{"before" in event.evidence ? `${mark(event.evidence.before)} → ` : ""}{mark(event.evidence.after)}</p> : null}
         {event.className || event.site ? <p className="text-xs text-ui-muted-foreground">{[event.className, event.site].filter(Boolean).join(" · ")}</p> : null}
@@ -52,11 +52,11 @@ export function HistoryRows({ events, studentId, showCompetencyLinks = true, bri
   })}</ol>;
 }
 
-export function HistoryFeed({ studentId, query = {}, initial, compact = false, footer }: { studentId: string; query?: HistoryQuery; initial?: HistoryPage; compact?: boolean; footer?: React.ReactNode }) {
-  return <HistoryFeedPage key={`${studentId}:${JSON.stringify(query)}:${compact}`} studentId={studentId} query={query} initial={initial} compact={compact} footer={footer} />;
+export function HistoryFeed({ studentId, query = {}, initial, compact = false, footer, emptyTitle }: { studentId: string; query?: HistoryQuery; initial?: HistoryPage; compact?: boolean; footer?: React.ReactNode; emptyTitle?: string }) {
+  return <HistoryFeedPage key={`${studentId}:${JSON.stringify(query)}:${compact}`} studentId={studentId} query={query} initial={initial} compact={compact} footer={footer} emptyTitle={emptyTitle} />;
 }
 
-function HistoryFeedPage({ studentId, query, initial, compact, footer }: { studentId: string; query: HistoryQuery; initial?: HistoryPage; compact: boolean; footer?: React.ReactNode }) {
+function HistoryFeedPage({ studentId, query, initial, compact, footer, emptyTitle = "No recorded activity matches this view" }: { studentId: string; query: HistoryQuery; initial?: HistoryPage; compact: boolean; footer?: React.ReactNode; emptyTitle?: string }) {
   const key = JSON.stringify(query);
   const [page, setPage] = useState<HistoryPage | null>(initial ?? null), [error, setError] = useState("");
   const [pending, setPending] = useState(!initial), [expanded, setExpanded] = useState(!compact);
@@ -81,7 +81,7 @@ function HistoryFeedPage({ studentId, query, initial, compact, footer }: { stude
   const events = expanded ? page?.events ?? [] : page?.events.slice(0, 3) ?? [];
   return <div aria-busy={pending} className="min-w-0">
     {page && !page.canAudit ? <p className="mb-3 text-sm text-ui-muted-foreground">Showing saved records. Viewing changes requires activity access.</p> : null}
-    {events.length ? <HistoryRows events={events} studentId={studentId} showCompetencyLinks={!query.competencyId} brief={!expanded} /> : !pending && !error ? <EmptyState compact title="No recorded activity matches this view." /> : null}
+    {events.length ? <HistoryRows events={events} studentId={studentId} showCompetencyLinks={!query.competencyId} brief={!expanded} /> : !pending && !error ? <EmptyState compact title={emptyTitle} /> : null}
     {pending ? <p role="status" className="flex items-center gap-2 py-3 text-sm"><LoaderCircle className="size-4 animate-spin" aria-hidden="true" />Loading history…</p> : null}
     {error ? <Notice tone="error" live="alert" title={error} actions={<Button variant="outline" disabled={pending} onClick={() => more(!page)}>Try again</Button>} /> : null}
     <div className="flex flex-wrap items-center gap-2">{!expanded && page?.events.length ? <Button variant="ghost" onClick={() => setExpanded(true)}>Show all class activity</Button> : expanded && page?.next ? <Button variant="outline" disabled={pending} onClick={() => more()}>Load earlier activity</Button> : null}{footer}</div>

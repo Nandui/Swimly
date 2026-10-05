@@ -30,6 +30,9 @@ export type RosterCell = {
   id: string;
   /** "07:00–15:00". */
   time: string;
+  /** Minutes after midnight. */
+  start: number;
+  end: number;
   /** What they mainly do: their activities in order, else the duty. */
   what: string;
   absent: boolean;
@@ -41,7 +44,7 @@ export type RosterCell = {
 export type RosterPerson = { key: string; userId: string | null; name: string; days: RosterCell[][]; minutes: number };
 export type RosterGroup = { key: string; label: string; people: RosterPerson[] };
 /** Something that needs a person: an unfilled duty, a booking place, or cover for someone off. */
-export type RosterFill = { id: string; what: string; time: string; cover: string | null };
+export type RosterFill = { id: string; what: string; time: string; start: number; end: number; cover: string | null };
 
 const NO_DEPARTMENT = "No department";
 const span = (s: { startMinutes: number; endMinutes: number }) => `${clock(s.startMinutes)}–${clock(s.endMinutes)}`;
@@ -65,9 +68,9 @@ export function buildRoster(days: readonly { iso: string; shifts: readonly Roste
       if (s.kind !== "shift") continue;
       const key = s.userId ? `u:${s.userId}` : s.rotaPersonId ? `p:${s.rotaPersonId}` : null;
       const what = s.bookingNeed?.role ? `${s.bookingNeed.role}: ${s.role.replace(/^[^:]+:\s*/, "")}` : s.role;
-      if (!key) { fill[day].push({ id: s.id, what, time: span(s), cover: null }); continue; }
+      if (!key) { fill[day].push({ id: s.id, what, time: span(s), start: s.startMinutes, end: s.endMinutes, cover: null }); continue; }
       const name = s.user?.name ?? s.rotaPerson?.name ?? "Someone";
-      if (s.warnings.includes("absent")) fill[day].push({ id: s.id, what, time: span(s), cover: name });
+      if (s.warnings.includes("absent")) fill[day].push({ id: s.id, what, time: span(s), start: s.startMinutes, end: s.endMinutes, cover: name });
       const person = people.get(key) ?? { key, userId: s.userId, name, entries: [] };
       person.entries.push({ day, s });
       people.set(key, person);
@@ -88,7 +91,7 @@ export function buildRoster(days: readonly { iso: string; shifts: readonly Roste
     const g = groups.get(label) ?? { key: `g:${id}`, label, order, people: [] };
     const cells: RosterCell[][] = days.map(() => []);
     for (const { day, s } of [...p.entries].sort((a, b) => a.s.startMinutes - b.s.startMinutes)) {
-      cells[day].push({ id: s.id, time: span(s), what: mainly(s), absent: s.warnings.includes("absent"),
+      cells[day].push({ id: s.id, time: span(s), start: s.startMinutes, end: s.endMinutes, what: mainly(s), absent: s.warnings.includes("absent"),
         warnings: s.warnings.filter((w) => w !== "absent" && w !== "open"), editable: !s.importId });
     }
     g.people.push({ key: p.key, userId: p.userId, name: p.name, days: cells,

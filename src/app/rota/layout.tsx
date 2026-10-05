@@ -5,6 +5,7 @@ import { RotaShell } from "@/components/rota/shell";
 import { pageSession } from "@/lib/page-guards";
 import { TITLE_TEMPLATE } from "@/lib/app";
 import { rotaAccess } from "@/lib/rota/access";
+import { rotaSites } from "@/lib/rota/data";
 import '../workspace/module-workspace.css';
 
 export const metadata: Metadata = { title: { default: "Rota", template: TITLE_TEMPLATE } };
@@ -14,5 +15,7 @@ export const metadata: Metadata = { title: { default: "Rota", template: TITLE_TE
 export default async function RotaLayout({ children }: { children: ReactNode }) {
   const who = rotaAccess(await pageSession());
   if (!who) notFound();
-  return <RotaShell who={who}>{children}</RotaShell>;
+  // The site picker's list, in rotaWeek's order (its first site is the default).
+  const { sites } = await rotaSites();
+  return <RotaShell who={who} sites={sites.map(({ id, name }) => ({ id, name }))}>{children}</RotaShell>;
 }

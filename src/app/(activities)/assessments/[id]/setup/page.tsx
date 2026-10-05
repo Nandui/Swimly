@@ -1,7 +1,6 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
-import { AssessmentNav } from "@/modules/activities/components/assessments/assessment-nav";
 import { CancelSession, EditSession } from "@/modules/activities/components/assessments/session-actions";
 import { WrongClub } from "@/components/clubs/wrong-club";
 import { AssessmentPublicationPanel } from "@/modules/activities/components/parents/assessment-publication";
@@ -24,19 +23,18 @@ export default async function SessionSetupPage({ params }: PageProps<"/assessmen
   if (!session) notFound();
   if (session.clubId !== club.id) return <WrongClub what="This assessment session" owner={session.club} current={club} />;
   const [programmes, types, instructors] = await Promise.all([getAssessmentProgrammeOptions(), getAssessmentTypeOptions(), getInstructorOptions()]);
-  return <div className="min-w-0 space-y-6">
+  return <div className="min-w-0 flex flex-col gap-6">
     <PageHeader back={{ href: "/assessments/setup", label: "Assessment setup" }} title={sessionDay(session)} description={`${sessionSpan(session)} · ${session.programme.name} · ${session.type?.name ?? "Kind not set"}`}
-      actions={<Button asChild variant="outline" className="min-h-11"><Link href={`/assessments/${id}`}>View swimmers</Link></Button>} />
-    <AssessmentNav active="setup" manage />
-    <section aria-labelledby="session-details-heading" className="space-y-4">
-      <div className="flex flex-wrap items-center justify-between gap-3">
-        <h2 id="session-details-heading" className="text-xl font-semibold">Session details</h2>
-        {!session.cancelledAt ? <div className="flex items-center gap-2"><EditSession session={session} programmes={programmes} types={types} instructors={instructors} today={today()} variant="button" /><CancelSession session={session} /></div> : <p className="text-sm text-ui-muted-foreground">This session is cancelled.</p>}
+      actions={<Button asChild variant="outline"><Link href={`/assessments/${id}`}>View swimmers</Link></Button>} />
+    <section aria-labelledby="session-details-heading" className="pc-panel">
+      <div className="pc-panel-head">
+        <h2 id="session-details-heading">Session details</h2>
+        {!session.cancelledAt ? <div className="flex flex-wrap items-center gap-2"><CancelSession session={session} /><EditSession session={session} programmes={programmes} types={types} instructors={instructors} today={today()} /></div> : <p className="text-sm text-ui-muted-foreground">This session is cancelled.</p>}
       </div>
-      <dl className="grid gap-4 rounded-ui-lg border border-ui-border p-4 text-sm sm:grid-cols-3">
-        <div><dt className="text-ui-muted-foreground">Pool area</dt><dd className="mt-1 font-medium">{session.location || "Not set"}</dd></div>
-        <div><dt className="text-ui-muted-foreground">Assessor</dt><dd className="mt-1 font-medium">{session.instructor?.name ?? "Not assigned"}</dd></div>
-        <div><dt className="text-ui-muted-foreground">Places</dt><dd className="mt-1 font-medium">{session._count.bookings} booked · {session.capacity === null ? "No limit" : `${session.capacity} total`}</dd></div>
+      <dl className="grid grid-cols-1 gap-3 sm:grid-cols-3">
+        <div className="pc-stat"><dt className="text-xs text-ui-muted-foreground">Pool area</dt><dd className="text-sm font-semibold">{session.location || "Not set"}</dd></div>
+        <div className="pc-stat"><dt className="text-xs text-ui-muted-foreground">Assessor</dt><dd className="text-sm font-semibold">{session.instructor?.name ?? "Not assigned"}</dd></div>
+        <div className="pc-stat"><dt className="text-xs text-ui-muted-foreground">Places</dt><dd className="text-sm font-semibold">{session._count.bookings} booked · {session.capacity === null ? "No limit" : `${session.capacity} total`}</dd></div>
       </dl>
       {session.notes ? <p className="text-sm text-ui-muted-foreground">{session.notes}</p> : null}
     </section>

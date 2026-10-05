@@ -89,18 +89,16 @@ export function CancelBooking({
   );
 }
 
-export function MarkNoShow({ booking, variant = "icon" }: { booking: BookingRow; variant?: "icon" | "button" }) {
+/** Row actions are labelled buttons (SSAssessSession): the visible words lead
+ *  the accessible name and the swimmer follows for screen readers. */
+export function MarkNoShow({ booking }: { booking: BookingRow }) {
   return (
     <ConfirmAction
       trigger={
-        <Button
-          variant="outline"
-          aria-label={`${fullName(booking.student)} did not come`}
-          size={variant === "button" ? "default" : "icon"}
-          title="Did not come"
-        >
-          {<UserRoundX aria-hidden={true} className="size-4 shrink-0" />}
-          {variant === "button" ? "Did not come" : null}
+        <Button variant="outline">
+          <UserRoundX aria-hidden={true} className="size-4 shrink-0" />
+          Did not come
+          <span className="sr-only">: {fullName(booking.student)}</span>
         </Button>
       }
       title={`${fullName(booking.student)} did not come?`}
@@ -117,33 +115,20 @@ export function MarkNoShow({ booking, variant = "icon" }: { booking: BookingRow;
 export function RecordOutcome({
   booking,
   session,
-  variant = "icon",
 }: {
   booking: BookingRow;
   session: SessionDetail;
-  variant?: "icon" | "button";
 }) {
   const name = fullName(booking.student);
   const again = Boolean(booking.outcomeLevel);
   return (
     <FormDialog
       trigger={
-        variant === "icon" ? (
-          <Button
-            variant="outline"
-            aria-label={
-              again ? `Change where ${name} was placed` : `Place ${name}`
-            }
-            size="icon"
-          >
-            {<GraduationCap aria-hidden={true} className="size-4 shrink-0" />}
-          </Button>
-        ) : (
-          <Button variant={again ? "outline" : "default"}>
-            {<GraduationCap aria-hidden={true} className="size-4 shrink-0" />}
-            {`${again ? "Change placement" : "Place"}`}
-          </Button>
-        )
+        <Button variant={again ? "outline" : "default"}>
+          <GraduationCap aria-hidden={true} className="size-4 shrink-0" />
+          {again ? "Change placement" : "Place"}
+          <span className="sr-only"> {name}</span>
+        </Button>
       }
       title={
         again ? `Change where ${name} belongs` : `Where does ${name} belong?`

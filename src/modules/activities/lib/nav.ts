@@ -77,10 +77,3 @@ export function swimmerLookupHref(screens: Set<ScreenKey>, id: string): string |
   if (screens.has("students")) return `/students/${encodeURIComponent(id)}`;
   return null;
 }
-
-/** Structural budgets only; data workspaces otherwise fill their region. */
-export function pageWidthFor(pathname: string): number | undefined {
-  if (pathname === "/together") return 960;
-  if (pathname.startsWith("/programmes/")) return 1152;
-  return undefined;
-}

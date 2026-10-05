@@ -149,39 +149,38 @@ export async function ClassSession({
   );
   const competencies = progress.course.level.competencies.length;
 
+  const covered = Boolean(cover && cover.coverById !== cover.instructorId);
   return (
     <div className="min-w-0 flex flex-col gap-6">
+      {/* The tags sit in their own row under the description (SSClassRegister),
+          so the bottom-aligned week actions keep their place. */}
+      <div className="min-w-0 flex flex-col gap-2">
         <PageHeader
           back={{ href: returnTo.href, label: backLabel }}
-          status={
-            taken || (cover && cover.coverById !== cover.instructorId) ? (
-              <>
-                {taken ? (
-                  <Tag meta={ATTENDANCE_RECORD_META.taken} />
-                ) : null}
-                {cover && cover.coverById !== cover.instructorId ? (
-                  <Tag meta={ATTENDANCE_RECORD_META.covered} />
-                ) : null}
-              </>
-            ) : null
-          }
           actions={
             step === "attendance" ? (
               <>
                 <Button variant="outline" asChild={true}>
                   <UiLink href={stepHref("attendance", shiftWeeks(iso, -1))}>
-                    {<AppIcon name="chevronLeft" size="sm" />}
-                    {"Week before"}
+                    <AppIcon name="chevronLeft" size="sm" />
+                    Week before
                   </UiLink>
                 </Button>
+                {/* On the latest date "Week after" stays, disabled, so the
+                    actions do not move between dates. */}
                 {shiftWeeks(iso, 1) <= today() ? (
                   <Button variant="outline" asChild={true}>
                     <UiLink href={stepHref("attendance", shiftWeeks(iso, 1))}>
-                      {"Week after"}
-                      {<AppIcon name="chevronRight" size="sm" />}
+                      Week after
+                      <AppIcon name="chevronRight" size="sm" />
                     </UiLink>
                   </Button>
-                ) : null}
+                ) : (
+                  <Button variant="outline" disabled>
+                    Week after
+                    <AppIcon name="chevronRight" size="sm" />
+                  </Button>
+                )}
               </>
             ) : null
           }
@@ -195,6 +194,13 @@ export async function ClassSession({
                 : "")
           }
         />
+        {taken || covered ? (
+          <div className="min-w-0 flex gap-2 items-center flex-wrap">
+            {taken ? <Tag meta={ATTENDANCE_RECORD_META.taken} /> : null}
+            {covered ? <Tag meta={ATTENDANCE_RECORD_META.covered} /> : null}
+          </div>
+        ) : null}
+      </div>
 
       <SegmentedLinks
         label="Class steps"
@@ -235,7 +241,7 @@ export async function ClassSession({
         <>
           {note ? (
             <Lead>
-              <span className="text-sm text-ui-foreground font-medium">
+              <span className="text-sm text-ui-foreground font-semibold">
                 Note:
               </span>{" "}
               {note.note}{" "}
@@ -298,7 +304,7 @@ export async function ClassSession({
               aria-label="Ready to complete"
               className="min-w-0 flex flex-col gap-2"
             >
-              <h2 className="text-xl font-semibold">
+              <h2>
                 <div className="min-w-0 flex gap-2 items-center flex-wrap">
                   Ready to complete {progress.course.level.name}
                   <span className="sr-only">,</span>

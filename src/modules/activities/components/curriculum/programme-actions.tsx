@@ -2,7 +2,6 @@
 import { Button } from "@/components/shadcn/button";
 
 import {
-  Archive,
   ArchiveRestore,
   ChevronDown,
   ChevronUp,
@@ -49,7 +48,7 @@ function ProgrammeFields({ programme }: { programme?: Programme }) {
           required
           autoFocus
           defaultValue={programme?.name}
-          placeholder="Learn to Swim"
+          placeholder="Learn to swim"
         />
       </Field>
       <Field
@@ -112,12 +111,9 @@ export function EditProgramme({
     <FormDialog
       trigger={
         variant === "icon" ? (
-          <Button
-            variant="outline"
-            aria-label={`Edit ${programme.name}`}
-            size="icon"
-          >
-            {<Pencil aria-hidden={true} className="size-4 shrink-0" />}
+          <Button variant="outline" aria-label={`Edit ${programme.name}`}>
+            <Pencil aria-hidden={true} className="size-4 shrink-0" />
+            Edit
           </Button>
         ) : (
           <Button variant="outline">
@@ -145,10 +141,12 @@ export function ArchiveProgramme({ programme }: { programme: Programme }) {
     return (
       <ActionButton
         ariaLabel={`Restore ${programme.name}`}
+        size="default"
         successMessage="Programme restored"
         run={() => setProgrammeArchived(programme.id, false)}
       >
         <ArchiveRestore aria-hidden={true} className="size-4 shrink-0" />
+        Restore
       </ActionButton>
     );
   }
@@ -159,13 +157,12 @@ export function ArchiveProgramme({ programme }: { programme: Programme }) {
         <Button
           variant="outline"
           aria-label={`Archive ${programme.name}`}
-          size="icon"
         >
-          {<Archive aria-hidden={true} className="size-4 shrink-0" />}
+          Archive
         </Button>
       }
       title={`Archive ${programme.name}?`}
-      description="It stops appearing when someone picks a programme, and its levels stop being offered. Everything already recorded against it — enrolments, completions, the audit trail — stays exactly as it is, and you can restore it later."
+      description="It stops appearing when someone picks a programme, and its levels stop being offered. Everything already recorded against it (enrolments, completions, the audit trail) stays exactly as it is, and you can restore it later."
       confirmLabel="Archive"
       successMessage="Programme archived"
       run={() => setProgrammeArchived(programme.id, true)}
@@ -182,18 +179,19 @@ export function MoveProgramme({
   first: boolean;
   last: boolean;
 }) {
+  if (first && last) return null;
   return (
     <>
       <ActionButton
         ariaLabel={`Move ${programme.name} up`}
-        className={first ? "invisible" : undefined}
+        disabled={first}
         run={() => moveProgramme(programme.id, "up")}
       >
         <ChevronUp aria-hidden={true} className="size-4 shrink-0" />
       </ActionButton>
       <ActionButton
         ariaLabel={`Move ${programme.name} down`}
-        className={last ? "invisible" : undefined}
+        disabled={last}
         run={() => moveProgramme(programme.id, "down")}
       >
         <ChevronDown aria-hidden={true} className="size-4 shrink-0" />

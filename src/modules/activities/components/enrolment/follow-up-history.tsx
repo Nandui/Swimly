@@ -95,20 +95,20 @@ export function FollowUpHistory({ studentId, name, canRecord, summary, presentat
             <p className="text-xs text-ui-muted-foreground">Newest recorded first · Calls, messages and internal notes</p>
             {loading && <p role="status" className="text-sm text-ui-muted-foreground">Loading history…</p>}
             {!loading && data && !data.entries.length && <p className="text-sm text-ui-muted-foreground">No follow-ups recorded yet.{canRecord ? ' Add the first update so colleagues know what has been done.' : ' Reception updates will appear here.'}</p>}
-            <ol className={presentation === 'queue' ? 'space-y-4' : 'divide-y divide-ui-border'}>{data?.entries.map(entry => <li key={entry.id} className={presentation === 'queue' ? 'space-y-3 rounded-ui-md border border-ui-border bg-ui-muted/30 p-4' : 'space-y-3 py-5 first:pt-0'}>
+            <ol className={presentation === 'queue' ? 'space-y-4' : 'divide-y divide-ui-border'}>{data?.entries.map(entry => <li key={entry.id} className={presentation === 'queue' ? 'space-y-3 rounded-ui-lg border border-ui-border p-4' : 'space-y-3 py-5 first:pt-0'}>
               <div className="flex flex-wrap items-center justify-between gap-2"><Tag meta={CONTACT_OUTCOMES[entry.outcome]} /><time className="text-xs text-ui-muted-foreground" dateTime={entry.occurredOn}>{formatDate(parseDateOnly(entry.occurredOn))}</time></div>
-              <p className="text-sm font-medium">{CONTACT_CHANNELS[entry.channel]} · {entry.actorName}</p>
+              <p className="text-sm font-semibold">{CONTACT_CHANNELS[entry.channel]} · {entry.actorName}</p>
               <p className="whitespace-pre-wrap break-words text-sm leading-relaxed">{entry.note}</p>
               <p className="text-xs text-ui-muted-foreground">{entry.nextContactOn ? `Next follow-up: ${formatDate(parseDateOnly(entry.nextContactOn))}` : 'No follow-up date set'}<br />Recorded {formatDateTime(new Date(entry.createdAt))} · {entry.clubName}</p>
             </li>)}</ol>
             {data?.nextBefore && <Button variant="outline" className="min-h-11" disabled={loading || saving} onClick={() => void load(data.nextBefore!)}>Load earlier updates</Button>}
           </section>
         </div>;
-  if (presentation === "queue") return <section aria-label={`Contact history for ${name}`} className="min-w-0 space-y-4"><div><h3 className="font-semibold">Contact history & notes{latestSummary?.count ? ` (${latestSummary.count})` : ""}</h3><p className="text-xs text-ui-muted-foreground">Shared with colleagues across both sites. Staff only.</p></div>{panel}</section>;
+  if (presentation === "queue") return <section aria-label={`Contact history for ${name}`} className="min-w-0 space-y-4"><div><h3 className="text-xs font-semibold text-ui-muted-foreground">Contact history and notes{latestSummary?.count ? ` (${latestSummary.count})` : ""}</h3><p className="text-xs text-ui-muted-foreground">Shared with colleagues across every site. Staff only.</p></div>{panel}</section>;
   return <div className="space-y-2">
     {summary && <div className="space-y-1 text-sm">
       {latest ? <><Tag meta={CONTACT_OUTCOMES[latest.outcome]} />
-        {due ? <p className="text-xs font-medium">{due < today() ? 'Follow-up overdue' : due === today() ? 'Follow up today' : 'Next follow-up'} · {formatDate(parseDateOnly(due))}</p> : <p className="text-xs text-ui-muted-foreground">No follow-up date set</p>}
+        {due ? <p className="text-xs font-semibold">{due < today() ? 'Follow-up overdue' : due === today() ? 'Follow up today' : 'Next follow-up'} · {formatDate(parseDateOnly(due))}</p> : <p className="text-xs text-ui-muted-foreground">No follow-up date set</p>}
         <p className="text-xs text-ui-muted-foreground">Recorded {formatDateTime(new Date(latest.createdAt))} · {latest.actorName}</p>
       </> : <p className="text-ui-muted-foreground">No follow-up recorded</p>}
     </div>}
@@ -117,7 +117,7 @@ export function FollowUpHistory({ studentId, name, canRecord, summary, presentat
         <SheetTrigger asChild><Button variant="outline" className="min-h-11" aria-label={`Follow-up history for ${name}`} onClick={event => { trigger.current = event.currentTarget; }}><History className="size-4" aria-hidden="true" />Follow-up history{latestSummary?.count ? ` (${latestSummary.count})` : ''}</Button></SheetTrigger>
       </div>
       <SheetContent onCloseAutoFocus={event => { if (trigger.current) { event.preventDefault(); trigger.current.focus(); } }} className="w-full gap-0 sm:max-w-2xl">
-        <SheetHeader className="shrink-0 p-4 pr-16 sm:p-6 sm:pr-16"><SheetTitle className="text-xl">Follow-up history</SheetTitle><SheetDescription><span className="font-medium text-ui-foreground">{name}</span><br />Shared across both sites, enrolments and moves. These notes are for staff only.</SheetDescription></SheetHeader>
+        <SheetHeader className="shrink-0 p-4 pr-16 sm:p-6 sm:pr-16"><SheetTitle>Follow-up history</SheetTitle><SheetDescription><span className="font-semibold text-ui-foreground">{name}</span><br />Shared across every site, enrolment and move. These notes are for staff only.</SheetDescription></SheetHeader>
         {panel}
       </SheetContent>
     </Sheet>

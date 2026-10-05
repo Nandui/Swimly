@@ -67,7 +67,7 @@ export const OVERVIEW_VIEWS = {
   open: "Open training",
   overdue: "Overdue",
   submitted: "Awaiting sign-off",
-  completed: "Completed",
+  completed: "Completed in 30 days",
   all: "All training",
 } as const;
 export type OverviewView = keyof typeof OVERVIEW_VIEWS;
@@ -78,11 +78,13 @@ export async function trainingOverview(input: { view?: string; course?: string; 
   const view: OverviewView = input.view && input.view in OVERVIEW_VIEWS ? (input.view as OverviewView) : "open";
   const userId = await scopedUserIds("training.records.read");
   const scope: Prisma.TrainingAssignmentWhereInput = { orgId: who.orgId ?? undefined, userId };
+  // "Completed" lists the same 30 days its tile counts.
+  const since = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000);
   const statusWhere: Prisma.TrainingAssignmentWhereInput =
     view === "open" ? { status: { in: [...OPEN_TRAINING_STATUSES] } }
     : view === "overdue" ? { status: "ASSIGNED", dueOn: { lt: parseDateOnly(on) } }
     : view === "submitted" ? { status: "SUBMITTED" }
-    : view === "completed" ? { status: "COMPLETED" }
+    : view === "completed" ? { status: "COMPLETED", completedAt: { gte: since } }
     : {};
   const q = (input.q ?? "").trim().slice(0, 80);
   const where: Prisma.TrainingAssignmentWhereInput = {
@@ -90,7 +92,6 @@ export async function trainingOverview(input: { view?: string; course?: string; 
     ...(input.course ? { courseId: input.course } : {}),
     ...(q ? { user: { name: { contains: q, mode: "insensitive" } } } : {}),
   };
-  const since = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000);
   const [rows, total, overdue, submitted, completed, expiring, courses] = await Promise.all([
     prisma.trainingAssignment.findMany({
       where, take: 100,

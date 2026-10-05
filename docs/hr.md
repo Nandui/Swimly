@@ -18,7 +18,7 @@ HR records live in their own Postgres database, like Docs:
 - Schema `turnfin_hr`, migrations in `hr-database/migrations/NNN_name.sql`,
   applied in order with checksums by `scripts/migrate-hr.ts` at the end of a
   **production** build, and only when `HR_DATABASE_URL` is set.
-- **Unset means HR is switched off**: the workspace says storage is not set up,
+- **Unset means HR is switched off**: the workspace says HR isn’t switched on yet and to ask a Turnfin administrator,
   Turnfin Me says it is not set up, and nothing else is affected.
 - The HR database stores ids and the names needed to read a record later. It
   never stores permissions: who may see what is decided in the main database by
@@ -65,7 +65,9 @@ switch on a shared device, or a password older than 15 minutes, goes to
 - **The person** (Turnfin Me, after a fresh email code) sees only shared reviews and notes
   marked shared with them. Its home screen says only that a review is waiting,
   never the content.
-- **Superadmins** see "Who read what", the read and change logs (`/hr/activity`).
+- **Superadmins** see "Who read what", the read and change logs (`/hr/activity`), 20 of each
+  per page. Reads are written as sentences from the stored `entity` ("Alex opened Ava’s
+  record"); the stored `purpose` text is left as written, since the subject export shows it.
   They can also export everything held about a person's employment as one JSON
   file (`/hr/people/{id}/export`): profile, training, qualifications and the whole
   HR record, including the read log. The export is itself logged.

@@ -21,6 +21,7 @@ import type { ActionResult, ConfirmationReply } from "@/lib/action-result";
 import { cn } from "@/lib/utils";
 import { ProfileActionDialog } from "./profile-action-dialog";
 import { LegendAgreementField } from "@/modules/activities/components/enrolment/legend-agreement-field";
+import styles from "./swimmer-profile.module.css";
 
 function ClassFilter({ label, value, onChange, children }: {
   label: string; value: string; onChange: (value: string) => void; children: React.ReactNode;
@@ -33,7 +34,7 @@ function ClassFilter({ label, value, onChange, children }: {
   </Select>;
 }
 
-const rowLayout = "grid grid-cols-[auto_minmax(0,1fr)] gap-x-3 gap-y-1 md:grid-cols-[auto_minmax(0,1.5fr)_minmax(0,1.5fr)_minmax(0,1fr)_minmax(0,1.1fr)_minmax(0,1fr)] md:items-center";
+const rowLayout = "grid grid-cols-[minmax(0,1fr)] gap-x-3 gap-y-1 md:grid-cols-[minmax(0,1.5fr)_minmax(0,1.5fr)_minmax(0,1fr)_minmax(0,1.1fr)_minmax(0,1fr)] md:items-center";
 
 function ClassPicker({ courses, name, selectedId, onSelect, currentEnrolment }: {
   courses: TransferTarget[]; name: string; selectedId: string; onSelect: (id: string) => void;
@@ -60,11 +61,11 @@ function ClassPicker({ courses, name, selectedId, onSelect, currentEnrolment }: 
     filters.time !== "all" || !!filters.search || filters.availableOnly;
 
   return <div className="space-y-4">
-    {currentEnrolment ? <div className="space-y-1 rounded-ui-md bg-ui-muted p-3 text-sm">
-      <p className="text-xs font-medium text-ui-muted-foreground">{currentEnrolment.status === "WAITLISTED" ? "Current waitlist class" : "Current class"}</p>
-      <p className="leading-relaxed"><strong className="font-semibold">{courseName(currentEnrolment.course)}</strong>
+    {currentEnrolment ? <div className="pc-note"><div className="min-w-0 space-y-1 text-sm">
+      <p className="pc-row-hint">{currentEnrolment.status === "WAITLISTED" ? "Current waitlist class" : "Current class"}</p>
+      <p><strong className="font-semibold">{courseName(currentEnrolment.course)}</strong>
         {` · ${DAY_META[currentEnrolment.course.dayOfWeek].label} ${classTimes(currentEnrolment.course)} · ${currentEnrolment.course.club.name}`}</p>
-    </div> : null}
+    </div></div> : null}
 
     <div className="min-w-0 space-y-2">
       <p id={`${id}-site`} className="text-sm font-semibold">Site</p>
@@ -102,31 +103,30 @@ function ClassPicker({ courses, name, selectedId, onSelect, currentEnrolment }: 
     </div>
     {selectionOutsideFilters ? <p className="text-sm text-ui-muted-foreground">Your selected class is outside these filters. It is still shown below.</p> : null}
 
-    <div className="overflow-hidden rounded-ui-md border border-ui-border">
-      <div aria-hidden="true" className={cn(rowLayout, "hidden bg-ui-muted px-3 py-3 text-xs font-medium text-ui-muted-foreground md:grid")}>
-        <span className="size-4" /><span>Class</span><span>Site</span><span>Day</span><span>Time</span><span>Places</span>
+    <div className={`flex flex-col gap-2 ${styles.picker}`}>
+      <div aria-hidden="true" className={cn(rowLayout, styles.pickerHead, "hidden md:grid")}>
+        <span>Class</span><span>Site</span><span>Day</span><span>Time</span><span>Places</span>
       </div>
-      {matches.length ? <RadioGroup value={selectedId} onValueChange={onSelect} aria-label="Choose a class" aria-required="true" className="gap-0 divide-y divide-ui-border">
+      {matches.length ? <RadioGroup value={selectedId} onValueChange={onSelect} aria-label="Choose a class" aria-required="true" className={`pc-rows ${styles.options}`}>
         {matches.map(course => {
           const places = placesLeft(course._count.enrolments, course.capacity);
           const full = places === 0;
           const disabled = full && !!currentEnrolment;
-          const selected = selectedId === course.id;
-          return <Label key={course.id} htmlFor={`${id}-${course.id}`} className={cn(rowLayout,
-            "min-h-16 px-3 py-3 text-sm font-normal leading-normal has-[:focus-visible]:-outline-offset-2 has-[:focus-visible]:outline-2 has-[:focus-visible]:outline-ui-ring",
-            selected ? "bg-ui-brand-soft" : "hover:bg-ui-muted/50", disabled ? "cursor-not-allowed" : "cursor-pointer")}>
-            <RadioGroupItem id={`${id}-${course.id}`} value={course.id} disabled={disabled} className="row-span-5 md:row-span-1" />
-            <span className="min-w-0 break-words">
-              <span className="block font-semibold">{courseName(course)}</span>
-              <span className="block text-xs text-ui-muted-foreground">{course.name && course.name !== course.level.name ? `${course.level.name} · ` : ""}{course.durationMinutes}-minute lesson</span>
-              {course.location || course.instructor?.name ? <span className="block text-xs text-ui-muted-foreground">{[course.location, course.instructor?.name].filter(Boolean).join(" · ")}</span> : null}
-            </span>
-            <span className="col-start-2 min-w-0 break-words md:col-start-auto"><span className="sr-only">Site: </span>{course.club.name}</span>
-            <span className="col-start-2 md:col-start-auto"><span className="sr-only">Day: </span>{DAY_META[course.dayOfWeek].label}</span>
-            <span className="col-start-2 tabular-nums md:col-start-auto"><span className="sr-only">Time: </span>{classTimes(course)}</span>
-            <span className="col-start-2 md:col-start-auto">
-              {full ? <><span className="font-medium">Full</span><span className="block text-xs text-ui-muted-foreground">{currentEnrolment ? "No places to move into" : "Waitlist available"}</span></>
-                : places === null ? "No limit" : <><strong className="font-semibold tabular-nums">{places}</strong> available</>}
+          return <Label key={course.id} htmlFor={`${id}-${course.id}`} className={`pc-row ${styles.option}`}>
+            <RadioGroupItem id={`${id}-${course.id}`} value={course.id} disabled={disabled} />
+            <span className={cn(rowLayout, "min-w-0 flex-1")}>
+              <span className="min-w-0 break-words">
+                <span className="block font-semibold">{courseName(course)}</span>
+                <span className="pc-row-hint block">{course.name && course.name !== course.level.name ? `${course.level.name} · ` : ""}{course.durationMinutes}-minute lesson</span>
+                {course.location || course.instructor?.name ? <span className="pc-row-hint block">{[course.location, course.instructor?.name].filter(Boolean).join(" · ")}</span> : null}
+              </span>
+              <span className="min-w-0 break-words"><span className="sr-only">Site: </span>{course.club.name}</span>
+              <span><span className="sr-only">Day: </span>{DAY_META[course.dayOfWeek].label}</span>
+              <span className="tabular-nums"><span className="sr-only">Time: </span>{classTimes(course)}</span>
+              <span>
+                {full ? <><span className="font-semibold">Full</span><span className="pc-row-hint block">{currentEnrolment ? "No places to move into" : "Waitlist available"}</span></>
+                  : places === null ? "No limit" : <><strong className="font-semibold tabular-nums">{places}</strong> available</>}
+              </span>
             </span>
           </Label>;
         })}
@@ -153,7 +153,7 @@ export function ClassEnrolmentDialog({ trigger, courses, currentEnrolment, submi
   const differentSite = selected && currentEnrolment && selected.club.id !== currentEnrolment.course.club.id;
   return <ProfileActionDialog trigger={trigger} wide
     title={moving ? "Move to another class" : "Enrol in a class"}
-    description={moving ? "Find a suitable class, then review the move." : "Find a class at either site. Existing places are reviewed before changes."}
+    description={moving ? "Find a suitable class, then review the move." : "Find a class at any site. Existing places are reviewed before changes."}
     submitLabel={moving ? "Review move" : "Review enrolment"} success={moving ? "Swimmer moved" : "Enrolment saved"}
     submit={submit} submitDisabled={!selected || (full && (moving || !allowWaitlist))}
     onOpenChange={() => { setSelectedId(""); setAllowWaitlist(false); setPlacementOpen(false); }}
@@ -170,13 +170,13 @@ export function ClassEnrolmentDialog({ trigger, courses, currentEnrolment, submi
       setPlacementOpen(courses.find(course => course.id === value)?.level.id !== currentEnrolment?.course.level.id);
     }} currentEnrolment={currentEnrolment} />
     {selected ? <Collapsible open={placementOpen} onOpenChange={setPlacementOpen} className="text-sm">
-      <CollapsibleTrigger asChild><Button type="button" variant="ghost" className="group h-auto min-h-11 w-full justify-between px-3 py-3 text-left whitespace-normal">Placement reason, if needed<ChevronDown aria-hidden="true" className="size-4 group-data-[state=open]:rotate-180" /></Button></CollapsibleTrigger>
+      <CollapsibleTrigger type="button" className={`${styles.chapterTrigger} group font-semibold`}>Placement reason, if needed<ChevronDown aria-hidden="true" className="size-4 shrink-0 group-data-[state=open]:rotate-180" /></CollapsibleTrigger>
       {/* Keep the field mounted so collapsed reasons still submit and survive toggling. */}
       <CollapsibleContent forceMount className="data-[state=closed]:hidden">
         <Textarea name="placementReason" label="Placement reason" description="Needed only if the swimmer has not earned this level." rows={2} maxLength={300} />
       </CollapsibleContent>
     </Collapsible> : null}
-    {!moving && selected ? <Label htmlFor={`${id}-waitlist`} className="min-h-11 cursor-pointer leading-normal">
+    {!moving && selected ? <Label htmlFor={`${id}-waitlist`} className="min-h-11 cursor-pointer">
       <Checkbox name="allowWaitlist" id={`${id}-waitlist`} checked={allowWaitlist} onCheckedChange={value => setAllowWaitlist(value === true)} />
       Join the waitlist if full
     </Label> : null}

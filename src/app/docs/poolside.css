@@ -542,6 +542,8 @@ html:has(.tf-shell) { scroll-padding-bottom: 112px; }
 .turnfin-app label.pc-row:has(:focus-visible) { outline: 2px solid var(--pc-focus); outline-offset: 2px; }
 .turnfin-app label.pc-row:has([data-state='checked']) { border-color: var(--pc-primary); }
 .turnfin-app label.pc-row:has(:disabled) { cursor: not-allowed; color: var(--pc-ink-muted); }
+/* Rows inside an overlay take its raised surface, so they never show as darker boxes in dark mode. */
+.turnfin-app :is([data-slot='dialog-content'], [data-slot='alert-dialog-content'], [data-slot='sheet-content']) .pc-row { background: transparent; }
 .turnfin-app .pc-tile-icon { display: inline-flex; flex: none; align-items: center; justify-content: center; width: 40px; height: 40px; border-radius: 999px; background: var(--pc-primary-soft); color: var(--pc-primary); }
 .turnfin-app .pc-tile-icon > svg { width: 20px; height: 20px; }
 /* Figure tiles. Inside a panel: two per row, 16px tiles with a 1px line (V2System .stats). On the
@@ -571,6 +573,10 @@ html:has(.tf-shell) { scroll-padding-bottom: 112px; }
 .turnfin-app .pc-stat-figure { font-size: var(--pc-text-figure); line-height: var(--pc-leading-figure); font-weight: 700; font-variant-numeric: tabular-nums; }
 .turnfin-app .pc-stat [data-slot='badge'] { max-width: 100%; white-space: normal; }
 .turnfin-app .pc-note { display: flex; align-items: flex-start; gap: 12px; padding: 16px; border-radius: var(--pc-radius-card); background: var(--pc-surface-sunken); }
+/* A feed (V2System .feed, HRActivity): a dot, a 600 line and a caption, with no row edges. */
+.turnfin-app .pc-feed { display: flex; flex-direction: column; gap: 8px; margin: 0; padding: 0; list-style: none; }
+.turnfin-app .pc-feed > li { display: flex; align-items: flex-start; gap: 8px; min-width: 0; }
+.turnfin-app .pc-feed-dot { flex: none; width: 8px; height: 8px; margin-top: 6px; border-radius: 999px; background: var(--pc-primary); }
 .turnfin-app a.pc-note { color: inherit; text-decoration: none; }
 .turnfin-app a.pc-note:hover { box-shadow: inset 0 0 0 1px var(--pc-line); }
 
@@ -591,8 +597,13 @@ html:has(.tf-shell) { scroll-padding-bottom: 112px; }
 .turnfin-app .pc-block:is([data-block='cover'], [data-state='cover']) { background: var(--pc-block-cover); color: var(--pc-on-block-cover); }
 .turnfin-app .pc-block:is([data-block='assessment'], [data-state='assessment']) { background: var(--pc-block-assess); color: var(--pc-on-block-assess); }
 .turnfin-app .pc-block:is([data-block='done'], [data-state='done']) { background: var(--pc-surface-sunken); color: var(--pc-ink-muted); }
-.turnfin-app .pc-block:is([data-block='off'], [data-state='off'], [data-block='open']) { background: repeating-linear-gradient(135deg, var(--pc-hatch) 0 6px, transparent 6px 12px); box-shadow: inset 0 0 0 1px var(--pc-line); color: var(--pc-ink-muted); }
+.turnfin-app .pc-block:is([data-block='off'], [data-state='off'], [data-block='open'], [data-state='open']) { background: repeating-linear-gradient(135deg, var(--pc-hatch) 0 6px, transparent 6px 12px); box-shadow: inset 0 0 0 1px var(--pc-line); color: var(--pc-ink-muted); }
 .turnfin-app .pc-block:is([data-block='off'], [data-state='off']) .pc-block-title { text-decoration: line-through; }
+/* Week plan (V2Rota): a planned shift whose person is absent keeps its time, in danger ink on
+   the danger wash; a stacked block puts the time over words that wrap (a narrow day column). */
+.turnfin-app .pc-block:is([data-block='absent'], [data-state='absent']), .turnfin-app .pc-block.ui-motion-press[data-block='absent']:hover { background: var(--pc-danger-soft); color: var(--pc-danger); }
+.turnfin-app .pc-block[data-layout='stack'] { flex-direction: column; align-items: stretch; gap: 0; }
+.turnfin-app .pc-block[data-layout='stack'] .pc-block-body > * { white-space: normal; }
 .turnfin-app .pc-block:is(a, button):focus-visible { outline: 2px solid var(--pc-focus); outline-offset: 2px; }
 /* A block that is a dialog trigger (a shadcn Button): the block's shape and colours, not the
    control's. */
@@ -686,6 +697,11 @@ html:has(.tf-shell) { scroll-padding-bottom: 112px; }
   .turnfin-app [data-slot='table']:not([data-layout='grid']) [data-slot='table-body'] [data-slot='table-cell']:not(.max-lg\:hidden):not(:has(~ [data-slot='table-cell']:not(.max-lg\:hidden))) { border-right: 1px solid var(--pc-line); border-radius: 0 var(--pc-radius-card) var(--pc-radius-card) 0; }
   .turnfin-app [data-slot='table']:not([data-layout='grid']) [data-slot='table-body'] [data-slot='table-cell']:first-child:not(.max-lg\:hidden):not(:has(~ [data-slot='table-cell']:not(.max-lg\:hidden))) { border-radius: var(--pc-radius-card); }
 }
+/* The same for columns re-homed below md (max-md:hidden), e.g. row actions moved under the name. */
+@media (max-width: 767.98px) {
+  .turnfin-app [data-slot='table']:not([data-layout='grid']) [data-slot='table-body'] [data-slot='table-cell']:not(.max-md\:hidden):not(:has(~ [data-slot='table-cell']:not(.max-md\:hidden))) { border-right: 1px solid var(--pc-line); border-radius: 0 var(--pc-radius-card) var(--pc-radius-card) 0; }
+  .turnfin-app [data-slot='table']:not([data-layout='grid']) [data-slot='table-body'] [data-slot='table-cell']:first-child:not(.max-md\:hidden):not(:has(~ [data-slot='table-cell']:not(.max-md\:hidden))) { border-radius: var(--pc-radius-card); }
+}
 .turnfin-app [data-slot='table']:not([data-layout='grid']) [data-slot='table-body'] [data-slot='table-row']:hover :is([data-slot='table-cell'], [data-slot='table-head']) { background: var(--pc-surface-sunken); }
 .turnfin-app [data-slot='table']:not([data-layout='grid']) [data-slot='table-body'] [data-slot='table-head'] { height: auto; text-align: left; color: var(--pc-ink); font-size: var(--pc-text-body); line-height: var(--pc-leading-body); font-weight: 400; }
 
@@ -729,6 +745,8 @@ html:has(.tf-shell) { scroll-padding-bottom: 112px; }
 .turnfin-app .tf-main [data-slot='item-group'] { display: flex; flex-direction: column; gap: 8px; }
 .turnfin-app .tf-main [data-slot='item-group'] > [data-slot='item'], .turnfin-app .tf-main [data-slot='item-group'] > [role='listitem'] > [data-slot='item'] { min-height: 64px; padding: 12px 16px; border: 1px solid var(--pc-line); border-radius: var(--pc-radius-card); background: var(--pc-surface); }
 .turnfin-app .tf-main [data-slot='item-group'] > a[data-slot='item']:hover, .turnfin-app .tf-main [data-slot='item-group'] > [role='listitem'] > a[data-slot='item']:hover { background: var(--pc-surface-sunken); }
+/* A row that opens in place (Awaiting enrolment) takes the primary edge while open. */
+.turnfin-app .tf-main [data-slot='item']:has(> [data-slot='collapsible'][data-state='open']) { border-color: var(--pc-primary); }
 .turnfin-app .tf-main [data-slot='item-group'] > [data-slot='item-separator'] { display: none; }
 
 /* An empty state on the page itself sits on a white panel. */

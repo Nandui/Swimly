@@ -13,7 +13,7 @@ export function TrainingShell({ who, children }: {
 }) {
   const pathname = usePathname();
   const links = [
-    { href: '/training', label: 'Overview', icon: LayoutList, active: pathname === '/training' },
+    { href: '/training', label: 'Overview', icon: LayoutList, active: pathname === '/training' || pathname.startsWith('/training/people/') },
     ...(who.signoff ? [{ href: '/training/sign-off', label: 'Sign-off', icon: ClipboardCheck, active: pathname === '/training/sign-off' }] : []),
     { href: '/training/expiring', label: 'Expiring qualifications', icon: Hourglass, active: pathname === '/training/expiring' },
     ...(who.qualifications ? [{ href: '/training/certificates', label: 'Certificates to check', icon: FileBadge, active: pathname.startsWith('/training/certificates') }] : []),

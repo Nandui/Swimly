@@ -20,8 +20,8 @@ export function AddToGroup({ chosen }: { chosen: string[] }) {
     <div className="min-w-0 flex flex-col gap-4 max-w-sm">
       <StudentSearch
         exclude={chosen}
-        label={chosen.length === 0 ? "Add a child" : "Add another"}
-        placeholder="Search swimmers…"
+        label={chosen.length === 0 ? "Add a swimmer" : "Add another swimmer"}
+        placeholder="Search swimmers"
         emptyText="Nobody matches."
         onSelect={(hit) => {
           if (hit)

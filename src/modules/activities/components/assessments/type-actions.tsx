@@ -1,7 +1,7 @@
 "use client";
 import { Button } from "@/components/shadcn/button";
 
-import { Archive, ArchiveRestore, Pencil, Plus } from "lucide-react";
+import { ArchiveRestore, Pencil, Plus } from "lucide-react";
 import { ActionButton, ConfirmAction } from "@/components/confirm-action";
 import { Field, FormDialog } from "@/components/form-dialog";
 
@@ -90,8 +90,9 @@ export function EditAssessmentType({ type }: { type: Named }) {
   return (
     <FormDialog
       trigger={
-        <Button variant="outline" aria-label={`Edit ${type.name}`} size="icon">
-          {<Pencil aria-hidden={true} className="size-4 shrink-0" />}
+        <Button variant="outline" aria-label={`Edit ${type.name}`}>
+          <Pencil aria-hidden={true} className="size-4 shrink-0" />
+          Edit
         </Button>
       }
       title={`Edit ${type.name}`}
@@ -115,10 +116,12 @@ export function ArchiveAssessmentType({
     return (
       <ActionButton
         ariaLabel={`Restore ${type.name}`}
+        size="default"
         successMessage="Assessment type restored"
         run={() => setAssessmentTypeArchived(type.id, false)}
       >
         <ArchiveRestore aria-hidden={true} className="size-4 shrink-0" />
+        Restore
       </ActionButton>
     );
   }
@@ -128,9 +131,8 @@ export function ArchiveAssessmentType({
         <Button
           variant="outline"
           aria-label={`Archive ${type.name}`}
-          size="icon"
         >
-          {<Archive aria-hidden={true} className="size-4 shrink-0" />}
+          Archive
         </Button>
       }
       title={`Archive ${type.name}?`}

@@ -1,13 +1,14 @@
 import Link from "next/link";
-import { ArrowRight } from "lucide-react";
+import { ChevronRight, ClipboardCheck, Settings2 } from "lucide-react";
 import { Button } from "@/components/shadcn/button";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/shadcn/table";
 import { EmptyState } from "@/components/ui-kit/empty-state";
 import { PageHeader } from "@/components/ui-kit/page-header";
 import { Tag } from "@/components/ui-kit/tag";
-import { AssessmentNav } from "./assessment-nav";
+import { plural } from "@/lib/format";
 import { SESSION_STATUS_META, isPast, sessionDay, sessionSpan } from "@/modules/activities/lib/assessments/constants";
 import type { SessionRow } from "@/modules/activities/lib/assessments/data/assessments";
+import { COURSE_STATUS_META } from "@/modules/activities/lib/courses/constants";
 import { SegmentedLinks } from "@/components/ui-kit/segmented-links";
 
 export type SessionView = "upcoming" | "past" | "cancelled";
@@ -22,47 +23,54 @@ export function SessionDirectory({ sessions, today, setup = false, manage, view,
   const matches = sessions.filter(s => view === "cancelled" ? !!s.cancelledAt : !s.cancelledAt && (view === "past" ? isPast(s, today) : !isPast(s, today)));
   if (view !== "upcoming") matches.reverse();
   const booked = matches.reduce((sum, s) => sum + s._count.bookings, 0);
-  return <div className="min-w-0 space-y-6">
-    <PageHeader title={setup ? "Assessment setup" : view === "past" ? "Past assessments" : "Upcoming assessments"}
-      description={setup ? "Create sessions and manage their dates, places, assessors and parent booking settings." : "See what is running at this site, open the swimmer list and record assessment outcomes."}
-      actions={createAction} />
-    <AssessmentNav active={setup ? "setup" : "upcoming"} manage={manage} />
-    <div className="flex flex-wrap items-center justify-between gap-4">
-      <SegmentedLinks label="Session dates" items={(["upcoming", "past", ...(setup ? ["cancelled"] : [])] as SessionView[]).map(item => ({
-        href: item === "upcoming" ? base : `${base}?view=${item}`, label: item === "upcoming" ? "Today & upcoming" : item === "past" ? "Past sessions" : "Cancelled", current: view === item }))} />
-      <p className="text-sm text-ui-muted-foreground" role="status">{matches.length} {matches.length === 1 ? "session" : "sessions"} · {booked} booked places</p>
-    </div>
-    {matches.length ? <Table className="table-fixed [&_td]:whitespace-normal [&_th]:whitespace-normal">
-      <TableHeader><TableRow>
-        <TableHead scope="col">Session</TableHead>
-        <TableHead scope="col" className="hidden w-1/5 lg:table-cell">Assessor</TableHead>
-        <TableHead scope="col" className="hidden w-32 md:table-cell">Swimmers booked</TableHead>
-        <TableHead scope="col" className="w-28 sm:w-44"><span className="sr-only">Open session</span></TableHead>
-      </TableRow></TableHeader>
-      <TableBody>{matches.map(s => {
-        const full = s.capacity !== null && s._count.bookings >= s.capacity;
-        const meta = s.cancelledAt ? SESSION_STATUS_META.cancelled : full ? SESSION_STATUS_META.full : null;
-        return <TableRow key={s.id}>
-          <TableCell className="py-4">
-            <p className="font-semibold">{sessionDay(s)}</p>
-            <p className="tabular-nums">{sessionSpan(s)}{s.location ? ` · ${s.location}` : ""}</p>
-            <p className="text-sm text-ui-muted-foreground">{s.programme.name} · {s.type?.name ?? "Kind not set"}</p>
-            <p className="text-sm text-ui-muted-foreground lg:hidden">Assessor: {s.instructor?.name ?? "Not assigned"}</p>
-            <p className="mt-1 text-sm md:hidden">{s._count.bookings}{s.capacity !== null ? ` of ${s.capacity}` : ""} booked</p>
-            {meta ? <Tag meta={meta} className="mt-1" /> : null}
-          </TableCell>
-          <TableCell className="hidden lg:table-cell">{s.instructor?.name ?? "Not assigned"}</TableCell>
-          <TableCell className="hidden tabular-nums md:table-cell"><strong className="font-semibold">{s._count.bookings}</strong>{s.capacity !== null ? ` / ${s.capacity}` : " booked"}</TableCell>
-          <TableCell className="text-right"><Button asChild variant="outline" className="h-auto min-h-11 max-w-full whitespace-normal px-3 py-2">
-            <Link href={`/assessments/${s.id}${setup ? "/setup" : ""}`} aria-label={`${setup ? "Set up session" : "View swimmers"}, ${sessionDay(s)}, ${sessionSpan(s)}`}>
-              {setup ? "Set up" : "View swimmers"}<ArrowRight aria-hidden="true" className="hidden sm:block" />
-            </Link>
-          </Button></TableCell>
-        </TableRow>;
-      })}</TableBody>
-    </Table> : <EmptyState icon="clipboardCheck"
-      title={view === "upcoming" ? "No upcoming assessments" : view === "past" ? "No past assessments" : "No cancelled assessments"}
-      hint={view === "upcoming" ? setup ? "Add a session to set its date, programme and places." : manage ? "Create a session in Assessment setup. It will appear here with its booked swimmers." : "Sessions scheduled for today and later will appear here." : "Sessions will appear here when they move into this list."}
-      action={setup && view === "upcoming" ? createAction : manage && view === "upcoming" ? <Button asChild variant="outline" className="min-h-11"><Link href="/assessments/setup">Assessment setup</Link></Button> : undefined} />}
+  // One bar only: the date lenses inside the list panel. Setup is a header action for managers,
+  // and the setup page returns through its back link (V2Assessments).
+  return <div className="min-w-0 flex flex-col gap-6">
+    <PageHeader back={setup ? { href: "/assessments", label: "Assessments" } : undefined}
+      title={setup ? "Assessment setup" : view === "past" ? "Past assessments" : "Upcoming assessments"}
+      description={setup ? "Create sessions and manage their dates, places, assessors and parent booking settings." : view === "past" ? "Look back at earlier sessions, their swimmers and outcomes." : "See what is running at this site, open the swimmer list and record assessment outcomes."}
+      actions={setup ? createAction : manage ? <Button asChild variant="outline"><Link href="/assessments/setup"><Settings2 aria-hidden="true" />Assessment setup</Link></Button> : undefined} />
+    <section className="pc-panel" aria-label="Assessment sessions">
+      <div className="min-w-0 flex flex-wrap items-center justify-between gap-3">
+        <SegmentedLinks label="Session dates" items={(["upcoming", "past", ...(setup ? ["cancelled"] : [])] as SessionView[]).map(item => ({
+          href: item === "upcoming" ? base : `${base}?view=${item}`, label: item === "upcoming" ? "Today and upcoming" : item === "past" ? "Past sessions" : "Cancelled", current: view === item }))} />
+        <p className="text-xs text-ui-muted-foreground tabular-nums" role="status">{plural(matches.length, "session")} · {plural(booked, "booked place")}</p>
+      </div>
+      {matches.length ? <Table className="[&_td]:whitespace-normal [&_th]:whitespace-normal">
+        <TableHeader><TableRow>
+          <TableHead scope="col">Session</TableHead>
+          <TableHead scope="col" className="hidden lg:table-cell">Assessor</TableHead>
+          <TableHead scope="col" className="hidden md:table-cell">Swimmers booked</TableHead>
+          <TableHead scope="col"><span className="sr-only">Open session</span></TableHead>
+        </TableRow></TableHeader>
+        <TableBody>{matches.map(s => {
+          const full = s.capacity !== null && s._count.bookings >= s.capacity;
+          const meta = s.cancelledAt ? SESSION_STATUS_META.cancelled : full ? SESSION_STATUS_META.full : null;
+          return <TableRow key={s.id}>
+            <TableCell>
+              <div className="min-w-0 flex gap-3 items-center">
+                <span className="pc-tile-icon" aria-hidden="true"><ClipboardCheck /></span>
+                <div className="min-w-0 flex flex-col items-start">
+                  <span className="flex flex-wrap items-center gap-2"><span className="font-semibold">{sessionDay(s)}</span>{meta ? <Tag meta={meta} /> : null}</span>
+                  <span className="pc-row-hint tabular-nums">{sessionSpan(s)}{s.location ? ` · ${s.location}` : ""}</span>
+                  <span className="pc-row-hint">{s.programme.name} · {s.type?.name ?? "Kind not set"}</span>
+                  <span className="pc-row-hint lg:hidden">Assessor: {s.instructor?.name ?? "Not assigned"}</span>
+                  <span className="pc-row-hint tabular-nums md:hidden">{s._count.bookings}{s.capacity !== null ? ` of ${s.capacity}` : ""} booked</span>
+                </div>
+              </div>
+            </TableCell>
+            <TableCell className="hidden lg:table-cell">{s.instructor?.name ?? <Tag meta={COURSE_STATUS_META.unassigned} />}</TableCell>
+            <TableCell className="hidden tabular-nums md:table-cell"><strong className="font-semibold">{s._count.bookings}</strong>{s.capacity !== null ? ` of ${s.capacity}` : " booked"}</TableCell>
+            <TableCell className="text-right"><Button asChild variant="outline" className="max-w-full">
+              <Link href={`/assessments/${s.id}${setup ? "/setup" : ""}`} aria-label={`${setup ? "Set up session" : "View swimmers"}, ${sessionDay(s)}, ${sessionSpan(s)}`}>
+                {setup ? "Set up" : "View swimmers"}<ChevronRight aria-hidden="true" className="hidden sm:block" />
+              </Link>
+            </Button></TableCell>
+          </TableRow>;
+        })}</TableBody>
+      </Table> : <EmptyState icon="clipboardCheck"
+        title={view === "upcoming" ? "No upcoming assessments" : view === "past" ? "No past assessments" : "No cancelled assessments"}
+        hint={view === "upcoming" ? setup ? "Choose Add a session to set its date, programme and places." : manage ? "Create a session in Assessment setup. It will appear here with its booked swimmers." : "Sessions scheduled for today and later will appear here." : "Sessions will appear here when they move into this list."} />}
+    </section>
   </div>;
 }

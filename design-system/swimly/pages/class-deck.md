@@ -18,8 +18,8 @@ thing to do next is the screen.
   plain rows, 56px tall minimum, the whole row tappable: name at 17px
   semibold, meta at 14px muted, and a "Start" or "Open" label at the right
   edge in primary or muted ink. No buttons in rows. The class name is text,
-  never a link: nothing on Today leads off the deck. The desk's page for a
-  class is a link on the class page's title instead.
+  never a link: nothing on Today leads off the deck. On the desk, the class
+  page's back link returns to the class's page; its H1 is plain text.
 - **Earlier today** folds into one line at the bottom, 44px tall, with the
   count and "attendance still to take for N" in the orange tag ink. When
   the whole day has finished there is no card and no fold, just the rows.
@@ -107,7 +107,9 @@ There is one attendance page and one competencies page: this one. Today,
 Overview and the class's desk page ("Open class") all open it; the old
 `/register` and `/assess` routes redirect here so bookmarks still land.
 Week before / Week after sit in the header on step one, so the desk can
-reach a past week from the same screen. The back link goes to Today for a
+reach a past week from the same screen; on the latest date "Week after"
+shows disabled, so the actions keep their place. The "Attendance taken" and
+"Covered" tags sit in their own row under the description. The back link goes to Today for a
 role that has it, otherwise to the class's desk page. The per-swimmer
 checklist is gone from the class; a swimmer's whole ladder lives on their
 profile, and moving up happens there.

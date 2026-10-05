@@ -462,8 +462,9 @@ pagination, member number and age for disambiguation. Search matches names,
 member numbers and contacts. All/Active/Inactive filters and profile return
 links retain validated URL state. Sidebar swimmer search stays available here
 as on every desk page for users with access to Swimmers.
-Its header, search, filters and results sit 16px apart, as every page's blocks do;
-Classes uses the same 16px between its major page sections.
+Under its page header, one panel holds the search field, the status filter (counts
+follow the search), the rows and the pager at its foot (V2Swimmers); Classes uses the
+same 16px between its major page sections.
 
 The swimmer profile shows enrolment chapters, attendance, assessments and
 individual competency history. The current-state rail stacks on narrow screens.
@@ -484,15 +485,21 @@ filters are prominent; advanced filters include Programme, Time, Instructor and
 Pool area. Availability describes capacity. Full class details, enrolment,
 waitlist actions and the desk teaching flow use the same shadcn components.
 
-Assessments uses two linked pages under its sidebar entry: Upcoming assessments
-and permission-gated Assessment setup. Session
+Assessments uses two pages under its sidebar entry: Upcoming assessments and
+permission-gated Assessment setup, reached by an outline "Assessment setup" header
+action and returning through its back link (V2Assessments). The only segmented
+bar is the date lenses inside the list panel (Today and upcoming, Past sessions,
+and Cancelled on setup). Session
 details focus on bookings and outcomes; dates, capacity and parent publishing
 live on the session's setup page. Awaiting enrolment has its own sidebar entry. The searchable, paginated list combines pending placements
 and class waitlists, grouping by swimmer and programme with each requested class
 visible. It offers family contacts, matching classes for placements and confirmed
 waitlist promotion when a space is available. Both lists re-home secondary
 columns on phones and retain 44px actions.
-Awaiting enrolment has linked Enrolments & waitlists and Awaiting moves views.
+Awaiting enrolment has linked Enrolments and waitlists and Awaiting moves views,
+each with its count, beside the search in one list panel (V2Awaiting). Rows are
+white and open in place with an outline View / Close pill; the open row takes the
+primary edge, and a passed follow-up date shows the red Overdue tag.
 The moves view shows the current class/site, next curriculum level where one
 exists, instructor confirmation, note and family contacts. It reuses the guarded
 cross-site move dialog. Changed progress is labelled Needs review and withholds
@@ -526,7 +533,7 @@ parents.manage permission as the profile controls.
 Parent access is a permission-gated swimmer profile tab with email/status rows
 and explicit approve, revoke and restore dialogs. Swimmers links to Parent
 accounts, an exact email search followed by account details and a reasoned
-suspend/reactivate dialog. Assessment session setup includes Booking in LeisureWorld Aquatics with
+suspend/reactivate dialog. Assessment session setup includes Parent booking with
 publication status, Ireland-time deadline editing and unpublish. The controls
 use shared form feedback and shadcn status tones; each write records a reason.
 These controls remain in the desk workspace. See [staff parent controls](docs/parent-staff-controls.md).
@@ -558,7 +565,9 @@ only the selected ID in the parent form. Workspace search uses CommandDialog.
 
 FormDialog keeps fields mounted after failure, scrolls the fields with actions
 visible, blocks duplicate submits and retains server-requested confirmation
-data. Success closes the dialog and restores trigger focus. ConfirmAction uses
+data. Success closes the dialog and restores trigger focus. A submit that removes or
+refuses something passes `destructive` (red submit); when "Cancel" would echo the submit
+("Cancel training"), `cancelLabel` renames the dismiss ("Keep it"). ConfirmAction uses
 AlertDialog with rich descriptions and closes only after a successful action.
 Image fields preview locally and upload only with the parent form's Save.
 
@@ -623,18 +632,20 @@ lists Home and the person's modules (`useYourModules`); the page bar lists only 
 module's pages. Both hold navigation only: no action buttons such as "New document"; a
 module's main action sits in its page heading. The pool deck keeps its own frame.
 
-Analytics lives in Monitoring as a separate shadcn dashboard. Its bento grid
-uses three headline totals, a larger programme/level breakdown, and supporting
-monthly cancellation and daily activity cards. Exact labels accompany the
-level bars showing enrolled places divided by that level's total class capacity;
-a table gives the current Monday–Sunday week without relying on colour, with
-future days marked as upcoming rather than zero activity. A shared page navigation
-links Overview, Reception activity and Instructor attendance. The two reports
-use compact bordered tables with staff search, plain numeric totals and 44px
-controls. Reception offers daily breakdowns per person. Instructor rows filter
-the dated class detail table; status buttons isolate outstanding, saved or upcoming
-classes. Attendance badges use the report metadata map. Saved-by detail moves
-into the attendance cell on phones.
+Analytics (Swim school) opens with figure tiles on the canvas (`.pc-stats`: three
+headline totals), then two panels side by side (`.pc-grid`): Enrolled by level, each
+level a row with "count of capacity · % filled" and its bar, and Class cancellations,
+two nested tiles and an outline link to Cancelled classes. Daily activity is a
+full-width panel holding the Monday to Sunday table (future days marked as upcoming
+rather than zero) and the Updated line. A shared SegmentedLinks bar, without icons,
+links Overview, Reception activity and Instructor attendance. Each report shows its
+totals as figure tiles, then one panel per section: title, a labelled SearchField
+live filter ("Find an instructor", "Find a staff member") and the table, whose row
+headers sit inside the row. Reception offers daily breakdowns per person. Instructor
+rows filter the dated class detail table; a Tabs pill bar with counts isolates
+outstanding, saved or upcoming classes. Attendance tags use the report metadata map,
+with icons; "Saved by" sits in the attendance cell at every width. Footnotes are one
+caption block at prose width.
 Site selection stays in the sidebar; the page offers refresh. Loading, empty
 and error states use shared primitives.
 It inherits the workspace spacing and blue accent. See [metric definitions

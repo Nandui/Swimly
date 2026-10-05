@@ -21,13 +21,12 @@ await context.route('**/*',route=>{
 const page=await context.newPage(),errors=[];
 page.on('pageerror',error=>errors.push(error.message));
 const settle=()=>page.evaluate(async()=>{await document.fonts.ready;await Promise.allSettled(document.getAnimations().filter(a=>a.effect?.getTiming().iterations!==Infinity).map(a=>a.finished));});
-const mainNav=()=>page.getByRole('navigation',{name:'Assessment pages',exact:true});
 try {
   await page.goto(base+'/assessments');
   await page.getByRole('heading',{level:1,name:'Upcoming assessments',exact:true}).waitFor();
   assert.equal(await page.getByRole('button',{name:'Add a session',exact:true}).count(),0);
   assert.equal(await page.getByRole('link',{name:/^View swimmers,/}).count(),2);
-  await mainNav().getByRole('link',{name:'Assessment setup',exact:true}).click();
+  await page.getByRole('link',{name:'Assessment setup',exact:true}).click();
   await page.getByRole('heading',{level:1,name:'Assessment setup',exact:true}).waitFor();
   await page.getByRole('button',{name:'Add a session',exact:true}).click();
   const dialog=page.getByRole('dialog');
@@ -35,17 +34,15 @@ try {
   assert(await dialog.getByRole('heading',{name:'Add an assessment session',exact:true}).isVisible());
   await page.keyboard.press('Escape');
   await dialog.waitFor({state:'hidden'});
-  assert.equal(await mainNav().getByRole('link',{name:'Awaiting enrolment',exact:true}).count(),0);
   await page.getByRole('link',{name:'Awaiting enrolment',exact:true}).click();
   await page.getByRole('heading',{level:1,name:'Awaiting enrolment',exact:true}).waitFor();
-  assert.equal(await mainNav().count(),0);
   assert.equal(await page.getByText('Waitlisted',{exact:true}).count(),2);
   const unassessed=page.getByRole('listitem',{name:'Morgan Example',exact:true});
   await unassessed.locator('[data-slot=collapsible-trigger]').click();
   assert.equal(await unassessed.getByText(/Assessed level/).count(),0);
   assert.equal(await unassessed.getByRole('listitem').count(),2);
-  assert.equal(await unassessed.getByRole('button',{name:/^Enrol .* from the waitlist/}).count(),1);
-  const promote=unassessed.getByRole('button',{name:/^Enrol .* from the waitlist/});
+  assert.equal(await unassessed.getByRole('button',{name:/^Enrol from waitlist /}).count(),1);
+  const promote=unassessed.getByRole('button',{name:/^Enrol from waitlist /});
   await promote.click();
   const confirmation=page.getByRole('dialog');
   await confirmation.waitFor();
@@ -61,7 +58,7 @@ try {
   await page.keyboard.press('Escape');
   await dialog.waitFor({state:'hidden'});
   await page.getByRole('searchbox',{name:'Find a swimmer',exact:true}).fill('Avery');
-  await page.getByRole('button',{name:'Search',exact:true}).click();
+  await page.getByRole('searchbox',{name:'Find a swimmer',exact:true}).press('Enter');
   await page.waitForURL('**/awaiting-enrolment?q=Avery');
   await page.getByRole('link',{name:'Next',exact:true}).click();
   await page.waitForURL('**/awaiting-enrolment?q=Avery&page=2');
@@ -71,11 +68,11 @@ try {
   }
   await page.goto(base+'/awaiting-enrolment?restricted');
   await page.getByRole('heading',{level:1,name:'Awaiting enrolment',exact:true}).waitFor();
-  assert.equal(await mainNav().getByRole('link',{name:'Assessment setup',exact:true}).count(),0);
+  assert.equal(await page.getByRole('link',{name:'Assessment setup',exact:true}).count(),0);
   assert.equal(await page.getByRole('button',{name:'Find a class',exact:true}).count(),0);
   assert.equal(await page.locator('a[href^="/students/"]').count(),0);
   assert.equal(await page.locator('main a[href^="/assessments/"]').count(),0);
-  assert.equal(await page.getByRole('button',{name:/^Enrol .* from the waitlist/}).count(),0);
+  assert.equal(await page.getByRole('button',{name:/^Enrol from waitlist /}).count(),0);
   let layouts=0;
   for(const width of [375,768,1024,1280]) for(const theme of ['light','dark']) for(const section of ['', '/setup','/awaiting-enrolment']) {
     await page.setViewportSize({width,height:1100});

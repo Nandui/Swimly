@@ -1,6 +1,8 @@
 import type { Metadata } from "next";
-import Link from "next/link";
+import { GraduationCap } from "lucide-react";
 import { EmptyState } from "@/components/ui-kit/empty-state";
+import { PageHeader } from "@/components/ui-kit/page-header";
+import { SegmentedLinks } from "@/components/ui-kit/segmented-links";
 import { Tag } from "@/components/ui-kit/tag";
 import { ARCHIVAL_STATUS_META } from "@/lib/status";
 import { ArchiveCourse, AssignTraining, CourseDialog } from "@/components/training/manage-actions";
@@ -16,42 +18,47 @@ export default async function TrainingCoursesPage({ searchParams }: { searchPara
   const [{ who, courses }, types] = await Promise.all([listCourses({ archived }), listQualificationTypeOptions()]);
   const people = who.assign && !archived ? await assignablePeople() : [];
   return (
-    <div className="space-y-6">
-      <div className="module-heading">
-        <div className="space-y-2">
-          <h1>{archived ? "Retired courses" : "Courses"}</h1>
-          <p className="text-sm">
-            {archived ? "Courses that can no longer be assigned. Training already done on them is kept." : "What people can be assigned. Practical courses need a trainer's sign-off."}{" "}
-            <Link href={archived ? "/training/courses" : "/training/courses?view=retired"} className="underline underline-offset-4">{archived ? "Show current courses" : "Show retired courses"}</Link>
-          </p>
-        </div>
-        {who.manage && !archived ? <CourseDialog qualificationTypes={types} /> : null}
-      </div>
+    <>
+      <PageHeader
+        title="Courses"
+        description={archived ? "Courses that can no longer be assigned. Training already done on them is kept." : "What people can be assigned. Practical courses need a trainer’s sign-off."}
+        actions={
+          <>
+            <SegmentedLinks label="Courses" items={[
+              { href: "/training/courses", label: "Current", current: !archived },
+              { href: "/training/courses?view=retired", label: "Retired", current: archived },
+            ]} />
+            {who.manage && !archived ? <CourseDialog qualificationTypes={types} /> : null}
+          </>
+        }
+      />
       {courses.length === 0 ? (
-        <EmptyState as="h2" icon="book" title={archived ? "No retired courses" : "No courses yet"} hint={who.manage && !archived ? "Add the first course people should complete." : "Ask whoever builds the training catalogue to add one."} />
+        <EmptyState as="h2" icon="book" {...(archived
+          ? { title: "No course has been retired", hint: "Retired courses appear here. Training already done on them is kept." }
+          : { title: "No courses yet", hint: who.manage ? "Add the first course people should complete." : "Ask whoever builds the training catalogue to add one." })} />
       ) : (
-        <ul className="module-list">
-          {courses.map((course) => (
-            <li key={course.id} className="flex flex-wrap items-start justify-between gap-4 p-4 sm:px-5">
-              <div className="min-w-0 flex-1 space-y-1">
-                <div className="flex flex-wrap items-center gap-2">
-                  <h2 className="module-row-title">{course.title}</h2>
-                  {course.archivedAt ? <Tag meta={ARCHIVAL_STATUS_META.archived} /> : null}
+        <section className="pc-panel" aria-label={archived ? "Retired courses" : "Current courses"}>
+          <ul className="pc-rows">
+            {courses.map((course) => (
+              <li key={course.id} className="pc-row">
+                <span className="pc-tile-icon"><GraduationCap aria-hidden="true" /></span>
+                <div className="pc-row-body">
+                  <h2 className="pc-row-title text-[length:var(--pc-text-body)] leading-[var(--pc-leading-body)]">{course.title}</h2>
+                  <p className="pc-row-hint">
+                    {[course.summary.trim().replace(/\.$/, "") || null, course.requiresSignoff ? "Trainer sign-off" : "Self-completed", course.grantsType ? `records ${course.grantsType.name}${course.grantsType.validityMonths ? `, valid ${course.grantsType.validityMonths} months` : ""}` : null].filter(Boolean).join(" · ")}
+                  </p>
                 </div>
-                {course.summary ? <p className="text-sm">{course.summary}</p> : null}
-                <p className="text-xs text-ui-muted-foreground">
-                  {[course.requiresSignoff ? "Trainer sign-off" : "Self-completed", course.grantsType ? `records ${course.grantsType.name}${course.grantsType.validityMonths ? `, valid ${course.grantsType.validityMonths} months` : ""}` : null].filter(Boolean).join(" · ")}
-                </p>
-              </div>
-              <div className="flex flex-wrap gap-2">
-                {who.assign && !archived && people.length > 0 ? <AssignTraining courses={[course]} people={people} courseId={course.id} label="Assign" variant="outline" /> : null}
-                {who.manage && !archived ? <CourseDialog course={course} qualificationTypes={types} /> : null}
-                {who.manage ? <ArchiveCourse id={course.id} title={course.title} archived={!!course.archivedAt} /> : null}
-              </div>
-            </li>
-          ))}
-        </ul>
+                <div className="pc-row-trail">
+                  {course.archivedAt ? <Tag meta={ARCHIVAL_STATUS_META.archived} /> : null}
+                  {who.assign && !archived && people.length > 0 ? <AssignTraining courses={[course]} people={people} courseId={course.id} label="Assign" variant="outline" /> : null}
+                  {who.manage && !archived ? <CourseDialog course={course} qualificationTypes={types} /> : null}
+                  {who.manage ? <ArchiveCourse id={course.id} title={course.title} archived={!!course.archivedAt} /> : null}
+                </div>
+              </li>
+            ))}
+          </ul>
+        </section>
       )}
-    </div>
+    </>
   );
 }

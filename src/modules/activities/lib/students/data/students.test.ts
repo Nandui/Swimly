@@ -30,6 +30,19 @@ test("directory finds full names, reversed names, member numbers and contacts ac
   assert.equal((await data.getStudents({ q: "Nobody Here" })).total, 0);
 });
 
+test("segment counts follow the search", async () => {
+  const data = serverModule<typeof import("./students")>("src/modules/activities/lib/students/data/students.ts", {
+    "@/lib/authz": { requireSession: async () => ({ user: { id: "staff", permissions: ["students.manage", "attendance.mark"], screens: ["students", "courses", "instructor"] } }) },
+    "@/modules/activities/lib/curriculum/data/shared": { getSharedCurriculum: async () => ({}) },
+    "@/lib/prisma": { prisma: { student: {
+      count: async ({ where }: { where: Where }) => records.filter(r => matches(r, where)).length,
+    } } },
+  });
+  assert.deepEqual(await data.getStudentCounts(), { all: 2, active: 1, inactive: 1 });
+  assert.deepEqual(await data.getStudentCounts("Noah"), { all: 1, active: 0, inactive: 1 });
+  assert.deepEqual(await data.getStudentCounts("Nobody Here"), { all: 0, active: 0, inactive: 0 });
+});
+
 test("paging is bounded to the available records before a database offset is requested", async () => {
   const offsets: number[] = [];
   const data = serverModule<typeof import("./students")>("src/modules/activities/lib/students/data/students.ts", {

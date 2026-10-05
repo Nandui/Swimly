@@ -126,6 +126,7 @@ export function ActionButton({
   title,
   variant = "outline",
   size = "icon",
+  disabled = false,
 }: {
   children: React.ReactNode;
   run: () => Promise<ActionResult>;
@@ -136,6 +137,8 @@ export function ActionButton({
   /** A worded action ("Reactivate") passes size "default" so its label is not squeezed to 44px. */
   variant?: "outline" | "ghost" | "default";
   size?: "icon" | "default";
+  /** A move at the end of its list stays in place, disabled, so the pair keeps one slot. */
+  disabled?: boolean;
 }) {
   const [pending, startTransition] = React.useTransition();
   const submitting = React.useRef(false);
@@ -147,6 +150,7 @@ export function ActionButton({
       variant={variant}
       size={size}
       className={className}
+      disabled={disabled}
       aria-disabled={pending || undefined}
       aria-busy={pending}
       onClick={() => {

@@ -57,7 +57,7 @@ Enrolment, assessment, student and class changes invalidate the new page.
 
 ## Reception follow-up history
 
-Enrolments & waitlists and Awaiting moves each show the latest outcome, recorder,
+Enrolments and waitlists and Awaiting moves each show the latest outcome, recorder,
 recording date and optional next follow-up date for the swimmer. Overdue dates
 are labelled explicitly. Follow-up history opens the complete contact/work log;
 it is also available from the swimmer profile after a place is arranged.

@@ -9,11 +9,13 @@ import { Label } from "@/components/shadcn/label";
 import { Textarea } from "@/components/shadcn/textarea";
 import { NativeSelect, NativeSelectOption } from "@/components/shadcn/native-select";
 import { RadioGroup } from "@/components/shadcn/radio-group";
+import { ConfirmAction } from "@/components/confirm-action";
 import { Field, FormDialog } from "@/components/form-dialog";
 import { ChoiceRow } from "@/components/ui/choice-row";
 import { Notice } from "@/components/ui-kit/notice";
 import { NOTE_VISIBILITY_META, NOTE_VISIBILITIES, REVIEW_OVERALL_LABELS, type ReviewOverall } from "@/lib/hr/constants";
 import { addNote, saveReview, shareReview, withdrawNote } from "@/lib/hr/actions";
+import { formatDateTime } from "@/lib/format";
 
 /** HR dialogs carry the Poolside Clear scope into their portal. */
 const THEME = "turnfin-module";
@@ -51,10 +53,11 @@ export function WithdrawNote({ id }: { id: string }) {
   return (
     <FormDialog
       portalClassName={THEME}
-      trigger={<Button variant="ghost" className="min-h-11"><Undo2 aria-hidden="true" />Withdraw</Button>}
+      trigger={<Button variant="outline" className="min-h-11"><Undo2 aria-hidden="true" />Withdraw</Button>}
       title="Withdraw this note?"
-      description="It stops showing on the record and in the person's hub. A superadmin can still see it in a subject export."
+      description="It stops showing on the record and in their Turnfin Me. A superadmin can still see it in a subject export."
       submitLabel="Withdraw note"
+      destructive
       successMessage="Note withdrawn"
       submit={(formData) => withdrawNote(id, String(formData.get("reason") ?? ""))}
     >
@@ -83,43 +86,54 @@ export function StartReview({ subjectUserId, name }: { subjectUserId: string; na
   );
 }
 
-type Draft = { id: string; subjectUserId: string; period: string; summary: string; strengths: string; goals: string; overall: ReviewOverall | null };
+type Draft = { id: string; subjectUserId: string; period: string; summary: string; strengths: string; goals: string; overall: ReviewOverall | null; createdAt: Date; updatedAt: Date };
 
 /** The reviewer's editor for a draft. Saving keeps it private; sharing locks
  *  it and shows it to the person. */
 export function ReviewEditor({ review, name }: { review: Draft; name: string }) {
   const router = useRouter();
   const [pending, start] = useTransition();
-  const [message, setMessage] = useState<{ tone: "success" | "error"; text: string } | null>(null);
+  const [error, setError] = useState<string | null>(null);
   function save(form: HTMLFormElement) {
     const data = new FormData(form);
-    setMessage(null);
+    setError(null);
     start(async () => {
       const result = await saveReview(review.id, review.subjectUserId, {
         period: String(data.get("period") ?? ""), summary: String(data.get("summary") ?? ""),
         strengths: String(data.get("strengths") ?? ""), goals: String(data.get("goals") ?? ""), overall: String(data.get("overall") ?? "") as ReviewOverall | "",
       });
-      setMessage(result.ok ? { tone: "success", text: "Draft saved. Only you can see it." } : { tone: "error", text: result.error });
       if (result.ok) router.refresh();
+      else setError(result.error);
     });
   }
   return (
-    <form className="module-panel space-y-4" onSubmit={(event) => { event.preventDefault(); save(event.currentTarget); }} aria-labelledby="review-editor">
-      <h2 id="review-editor">Draft</h2>
-      <div className="space-y-2"><Label htmlFor="rv-period">Review period</Label><Input id="rv-period" name="period" defaultValue={review.period} required minLength={2} maxLength={80} className="min-h-11" /></div>
-      <div className="space-y-2"><Label htmlFor="rv-summary">Summary</Label><Textarea id="rv-summary" name="summary" defaultValue={review.summary} rows={5} maxLength={5000} /></div>
-      <div className="space-y-2"><Label htmlFor="rv-strengths">Strengths</Label><Textarea id="rv-strengths" name="strengths" defaultValue={review.strengths} rows={4} maxLength={5000} /></div>
-      <div className="space-y-2"><Label htmlFor="rv-goals">Goals for the next period</Label><Textarea id="rv-goals" name="goals" defaultValue={review.goals} rows={4} maxLength={5000} /></div>
-      <Field label="Overall" htmlFor="rv-overall" optional>
-        <NativeSelect id="rv-overall" name="overall" defaultValue={review.overall ?? ""} className="min-h-11 w-full">
-          <NativeSelectOption value="">Not stated</NativeSelectOption>
-          {Object.entries(REVIEW_OVERALL_LABELS).map(([value, label]) => <NativeSelectOption key={value} value={value}>{label}</NativeSelectOption>)}
-        </NativeSelect>
-      </Field>
-      {message ? <Notice tone={message.tone} live={message.tone === "error" ? "alert" : "status"} title={message.text} /> : null}
-      <div className="flex flex-wrap gap-2">
-        <Button type="submit" variant="outline" className="min-h-11" disabled={pending}><Save aria-hidden="true" />Save draft</Button>
-        <ShareReview id={review.id} name={name} />
+    // The form wraps both panels, so Save draft in the footer still submits the fields.
+    <form className="flex flex-col gap-4" onSubmit={(event) => { event.preventDefault(); save(event.currentTarget); }}>
+      <section className="pc-panel" aria-labelledby="review-editor">
+        <div className="pc-panel-head"><h2 id="review-editor">Draft</h2></div>
+        <div className="space-y-2"><Label htmlFor="rv-period" className="block">Review period</Label><Input id="rv-period" name="period" defaultValue={review.period} required minLength={2} maxLength={80} className="min-h-11" /></div>
+        <div className="space-y-2"><Label htmlFor="rv-summary" className="block">Summary</Label><Textarea id="rv-summary" name="summary" defaultValue={review.summary} rows={5} maxLength={5000} /></div>
+        <div className="space-y-2"><Label htmlFor="rv-strengths" className="block">Strengths</Label><Textarea id="rv-strengths" name="strengths" defaultValue={review.strengths} rows={4} maxLength={5000} /></div>
+        <div className="space-y-2"><Label htmlFor="rv-goals" className="block">Goals for the next period</Label><Textarea id="rv-goals" name="goals" defaultValue={review.goals} rows={4} maxLength={5000} /></div>
+        <Field label="Overall" htmlFor="rv-overall" optional>
+          <NativeSelect id="rv-overall" name="overall" defaultValue={review.overall ?? ""} className="min-h-11 w-full">
+            <NativeSelectOption value="">Not stated</NativeSelectOption>
+            {Object.entries(REVIEW_OVERALL_LABELS).map(([value, label]) => <NativeSelectOption key={value} value={value}>{label}</NativeSelectOption>)}
+          </NativeSelect>
+        </Field>
+      </section>
+      {error ? <Notice tone="error" live="alert" title={error} /> : null}
+      <div className="pc-panel">
+        <div className="pc-panel-head">
+          <p role="status" className="text-sm font-semibold">
+            {pending ? "Saving…" : `Draft saved ${formatDateTime(new Date(review.updatedAt))}`}
+            <span className="font-normal text-ui-muted-foreground"> · only you can see it</span>
+          </p>
+          <div className="flex flex-wrap gap-2">
+            <Button type="submit" variant="outline" className="min-h-11" disabled={pending}><Save aria-hidden="true" />Save draft</Button>
+            <ShareReview id={review.id} name={name} />
+          </div>
+        </div>
       </div>
     </form>
   );
@@ -127,16 +141,13 @@ export function ReviewEditor({ review, name }: { review: Draft; name: string }) 
 
 function ShareReview({ id, name }: { id: string; name: string }) {
   return (
-    <FormDialog
-      portalClassName={THEME}
+    <ConfirmAction
       trigger={<Button type="button" className="min-h-11"><Send aria-hidden="true" />Share with {name.split(" ")[0]}</Button>}
       title={`Share this review with ${name}?`}
       description="Save your latest changes first. Once shared it cannot be edited; they see it in Turnfin Me and can add a comment when they acknowledge it."
-      submitLabel="Share review"
+      confirmLabel="Share review"
       successMessage="Review shared"
-      submit={() => shareReview(id)}
-    >
-      <p className="sr-only">Confirm to share.</p>
-    </FormDialog>
+      run={() => shareReview(id)}
+    />
   );
 }

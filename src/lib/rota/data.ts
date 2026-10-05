@@ -238,8 +238,10 @@ export async function rotaAbsences() {
   if (!who.manage) throw new AuthorizationError("Managing the rota is required.");
   const orgId = who.orgId ?? undefined;
   const from = today(), since = addDaysIso(from, -30), soon = addDaysIso(from, 13);
-  const { users, rosterPeople } = await absenceReach(orgId);
+  const { users, rosterPeople, sites } = await absenceReach(orgId);
   const inReach = { OR: [...(users === "all" ? [{ userId: { not: null } }] : [{ userId: { in: users } }]), { rotaPersonId: { in: rosterPeople.map((p) => p.id) } }] };
+  // The sites this manager covers, by name, so an empty page can say where it looked.
+  const siteNames = sites.kind === "all" ? null : (await prisma.club.findMany({ where: { id: { in: [...sites.siteIds] } }, orderBy: [{ sortOrder: "asc" }, { name: "asc" }], select: { name: true } })).map((c) => c.name);
   const rows = await prisma.rotaAbsence.findMany({
     // Current ones, those back in the last 30 days, and any return to work still to record.
     where: { orgId, withdrawnAt: null, AND: [inReach, { OR: [{ lastDay: null }, { lastDay: { gte: parseDateOnly(since) } }, { returnMetOn: null }] }] },
@@ -291,7 +293,7 @@ export async function rotaAbsences() {
     ...rosterPeople.map((p) => ({ id: `p:${p.id}`, name: p.name, jobTitle: `No. ${p.employeeNo}`, absences: recentOf({ rotaPersonId: p.id, userId: p.userId }) })),
     ...accounts.map((u) => ({ id: `u:${u.id}`, name: u.name, jobTitle: u.jobTitle, absences: recentOf({ userId: u.id }) })),
   ].sort((a, b) => a.name.localeCompare(b.name));
-  return { who, today: from, current, returning, returned, people, holidays };
+  return { who, today: from, current, returning, returned, people, holidays, siteNames };
 }
 
 const iso = (d: Date | null) => d ? d.toISOString().slice(0, 10) : null;
@@ -341,7 +343,7 @@ async function absenceReach(orgId: string | undefined) {
     where: { orgId, ...(sites.kind === "all" ? {} : { shifts: { some: { siteId: { in: [...sites.siteIds] }, date: recent } } }) },
     orderBy: { name: "asc" }, select: { id: true, name: true, employeeNo: true, userId: true },
   });
-  return { users: reach.kind === "all" ? "all" as const : [...reach.userIds], rosterPeople };
+  return { users: reach.kind === "all" ? "all" as const : [...reach.userIds], rosterPeople, sites };
 }
 export type RotaAbsenceRow = Awaited<ReturnType<typeof rotaAbsences>>["current"][number];
 export type RotaReturnRow = Awaited<ReturnType<typeof rotaAbsences>>["returning"][number];

@@ -1,12 +1,12 @@
-import { withSite } from "@/lib/directory";
+import { withSite, withSites, type SiteRef } from "@/lib/directory";
 import type { Prisma, StudentStatus } from "@/generated/prisma/client";
-import { requireSession } from "@/lib/authz";
 import { classifyMedical, medicalAllowed, requireActivitiesAccess } from "@/modules/activities/classification";
 import { getSharedCurriculum } from "@/modules/activities/lib/curriculum/data/shared";
 import { prisma } from "@/lib/prisma";
 
 const LIST_SELECT = {
   id: true,
+  clubId: true,
   memberNumber: true,
   firstName: true,
   lastName: true,
@@ -17,6 +17,8 @@ const LIST_SELECT = {
 } as const satisfies Prisma.StudentSelect;
 
 export type StudentRow = Prisma.StudentGetPayload<{ select: typeof LIST_SELECT }> & {
+  /** The swimmer's home site, named through Core's directory. */
+  club: SiteRef;
   /** The levels this student is currently placed at, one per programme they
    *  are in. Derived, because "current level" belongs to a
    *  (student, programme) pair rather than to a student. */
@@ -37,29 +39,35 @@ export type StudentFilters = {
  *  be reached by any amount of scrolling. */
 export const STUDENTS_PER_PAGE = 100;
 
+/** The directory search: every word must match a name, contact, email, phone
+ *  or member number. Shared by the list and its segment counts, so the counts
+ *  always describe the same search as the rows. */
+function searchWhere(query?: string): Prisma.StudentWhereInput {
+  const q = query?.trim();
+  if (!q) return {};
+  return {
+    AND: q.split(/\s+/).map((word) => ({
+      OR: [
+        { firstName: { contains: word, mode: "insensitive" as const } },
+        { lastName: { contains: word, mode: "insensitive" as const } },
+        { contactName: { contains: word, mode: "insensitive" as const } },
+        { contactEmail: { contains: word, mode: "insensitive" as const } },
+        { contactPhone: { contains: word } },
+        { memberNumber: { contains: word, mode: "insensitive" as const } },
+      ],
+    })),
+  };
+}
+
 /** The list. Set-based queries joined in memory rather than one query per row —
  *  the placement lookup is the part that would otherwise go N+1. */
 export async function getStudents(filters: StudentFilters = {}) {
   await requireActivitiesAccess();
 
   const curriculum = await getSharedCurriculum();
-  const q = filters.q?.trim();
   const where: Prisma.StudentWhereInput = {
     ...(filters.status && filters.status !== "ALL" ? { status: filters.status } : {}),
-    ...(q
-      ? {
-          AND: q.split(/\s+/).map((word) => ({
-            OR: [
-              { firstName: { contains: word, mode: "insensitive" as const } },
-              { lastName: { contains: word, mode: "insensitive" as const } },
-              { contactName: { contains: word, mode: "insensitive" as const } },
-              { contactEmail: { contains: word, mode: "insensitive" as const } },
-              { contactPhone: { contains: word } },
-              { memberNumber: { contains: word, mode: "insensitive" as const } },
-            ],
-          })),
-        }
-      : {}),
+    ...searchWhere(filters.q),
     ...(filters.levelId
       ? { enrolments: { some: { levelId: { in: curriculum.levelIds.variants(filters.levelId) }, status: "ACTIVE" } } }
       : {}),
@@ -105,8 +113,9 @@ export async function getStudents(filters: StudentFilters = {}) {
     byStudent.set(placement.studentId, list);
   }
 
+  const withClub = await withSites(students, "clubId", "club");
   return {
-    students: students.map((student) => ({
+    students: withClub.map((student) => ({
       ...student,
       placements: byStudent.get(student.id) ?? [],
     })),
@@ -115,12 +124,14 @@ export async function getStudents(filters: StudentFilters = {}) {
   };
 }
 
-export async function getStudentCounts() {
-  await requireSession();
+/** Segment counts for the directory, following the same search as the rows.
+ *  The search reaches contact, email and phone, so it needs Activities access. */
+export async function getStudentCounts(q?: string) {
+  await requireActivitiesAccess();
 
   const [all, active] = await Promise.all([
-    prisma.student.count(),
-    prisma.student.count({ where: { status: "ACTIVE" } }),
+    prisma.student.count({ where: { ...searchWhere(q) } }),
+    prisma.student.count({ where: { ...searchWhere(q), status: "ACTIVE" } }),
   ]);
 
   return { all, active, inactive: all - active };

@@ -1,8 +1,10 @@
 "use client";
 
 import { useState } from "react";
-import { Archive, ArchiveRestore, Check, Pencil, Plus, RotateCcw, UserPlus, X } from "lucide-react";
+import { Archive, ArchiveRestore, Check, ChevronDown, Pencil, Plus, RotateCcw, UserPlus, UsersRound, X } from "lucide-react";
 import { Button } from "@/components/shadcn/button";
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/shadcn/dropdown-menu";
+import { ConfirmAction } from "@/components/confirm-action";
 import { Field, FormDialog } from "@/components/form-dialog";
 import { ChoiceRow } from "@/components/ui/choice-row";
 import { SearchField } from "@/components/ui-kit/search-field";
@@ -59,19 +61,28 @@ export function AssignTraining({ courses, people, courseId, userIds, label = "As
       {fixed ? (
         <p className="text-sm">For {people.filter((p) => chosen.has(p.id)).map((p) => p.name).join(", ")}</p>
       ) : (
-        <fieldset className="space-y-2">
-          <legend className="text-sm font-medium">People ({chosen.size} chosen)</legend>
+        <fieldset className="space-y-3">
+          <legend className="mb-2 text-sm font-semibold">People ({chosen.size} chosen)</legend>
           {roles.length > 1 ? (
-            <div className="flex flex-wrap gap-2" role="group" aria-label="Choose everyone on a role">
-              {roles.map((role) => (
-                <Button key={role.id} type="button" variant="outline" className="min-h-11" onClick={() => setChosen((prev) => new Set([...prev, ...role.ids]))}>
-                  Everyone on {role.name} ({role.ids.length})
-                </Button>
-              ))}
-            </div>
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button type="button" variant="outline" className="min-h-11"><UsersRound aria-hidden="true" />Add everyone on a role<ChevronDown aria-hidden="true" /></Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="start">
+                {roles.map((role) => (
+                  <DropdownMenuItem key={role.id} onSelect={() => setChosen((prev) => new Set([...prev, ...role.ids]))}>
+                    {role.name} ({role.ids.length})
+                  </DropdownMenuItem>
+                ))}
+              </DropdownMenuContent>
+            </DropdownMenu>
           ) : null}
-          <SearchField label="Filter people" labelHidden placeholder="Name or job title" value={filter} onValueChange={setFilter} />
-          <ul className="max-h-[min(28rem,50dvh)] space-y-2 overflow-y-auto p-1">
+          {/* A live filter: Enter must not submit the assignment. */}
+          <div onKeyDown={(event) => { if (event.key === "Enter") event.preventDefault(); }}>
+            <SearchField label="Filter people" labelHidden placeholder="Name or job title" value={filter} onValueChange={setFilter} />
+          </div>
+          {/* One scroll: the dialog body scrolls with the footer pinned. */}
+          <ul className="pc-rows">
             {shown.map((p) => (
               <li key={p.id}>
                 <ChoiceRow
@@ -137,17 +148,15 @@ export function CourseDialog({ course, qualificationTypes }: { course?: CourseDr
 
 export function ArchiveCourse({ id, title, archived }: { id: string; title: string; archived: boolean }) {
   return (
-    <FormDialog
-      portalClassName={THEME}
-      trigger={<Button variant="ghost" className="min-h-11">{archived ? <ArchiveRestore aria-hidden="true" /> : <Archive aria-hidden="true" />}{archived ? "Restore" : "Retire"}</Button>}
+    <ConfirmAction
+      trigger={<Button variant="outline" className="min-h-11">{archived ? <ArchiveRestore aria-hidden="true" /> : <Archive aria-hidden="true" />}{archived ? "Restore" : "Retire"}</Button>}
       title={archived ? `Restore ${title}?` : `Retire ${title}?`}
       description={archived ? "It can be assigned again." : "It can no longer be assigned. Open and finished training on it is kept."}
-      submitLabel={archived ? "Restore" : "Retire course"}
+      confirmLabel={archived ? "Restore" : "Retire course"}
+      destructive={!archived}
       successMessage={archived ? "Course restored" : "Course retired"}
-      submit={() => setCourseArchived(id, !archived)}
-    >
-      <p className="sr-only">Confirm to continue.</p>
-    </FormDialog>
+      run={() => setCourseArchived(id, !archived)}
+    />
   );
 }
 
@@ -191,10 +200,12 @@ export function CancelTraining({ id, name, title }: { id: string; name: string; 
   return (
     <FormDialog
       portalClassName={THEME}
-      trigger={<Button variant="ghost" className="min-h-11"><X aria-hidden="true" />Cancel</Button>}
+      trigger={<Button variant="outline" className="min-h-11"><X aria-hidden="true" />Cancel training</Button>}
       title={`Cancel ${title} for ${name}?`}
       description="It disappears from their Turnfin Me. The record stays in their training history."
       submitLabel="Cancel training"
+      destructive
+      cancelLabel="Keep it"
       successMessage="Training cancelled"
       submit={(formData) => cancelAssignment(id, String(formData.get("reason") ?? ""))}
     >

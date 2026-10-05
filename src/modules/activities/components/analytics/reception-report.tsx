@@ -4,16 +4,18 @@ import { EmptyState } from "@/components/ui-kit/empty-state";
 import { useState } from "react";
 import { Button } from "@/components/shadcn/button";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/shadcn/collapsible";
-import { Input } from "@/components/shadcn/input";
+import { UserPlus, UserX } from "lucide-react";
+import { SearchField } from "@/components/ui-kit/search-field";
+import { StatTile } from "./stat-tile";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/shadcn/table";
 import { PageHeader } from "@/components/ui-kit/page-header";
 import { AnalyticsNav } from "./navigation";
 import { AnalyticsRefresh } from "./refresh";
 import { ReportUpdated, weekLabel } from "./period";
 import type { ReceptionAnalyticsData } from "@/modules/activities/lib/analytics/report-data";
-import { formatShortDay } from "@/lib/format";
+import { formatCount, formatShortDay } from "@/lib/format";
 
-const number = new Intl.NumberFormat("en-IE");
+const number = { format: formatCount };
 
 export function ReceptionReport({ data }: { data: ReceptionAnalyticsData }) {
   const [search, setSearch] = useState("");
@@ -21,21 +23,21 @@ export function ReceptionReport({ data }: { data: ReceptionAnalyticsData }) {
   const enrolled = data.people.reduce((sum, person) => sum + person.enrolled, 0);
   const withdrawn = data.people.reduce((sum, person) => sum + person.withdrawn, 0);
   return <div className="flex min-w-0 flex-col gap-6">
-    <PageHeader title="Reception activity" description={`${data.siteName} · This week, Monday to Sunday ·${weekLabel(data.period)}`} actions={<AnalyticsRefresh />} />
+    <PageHeader title="Reception activity" description={`${data.siteName} · This week, Monday to Sunday · ${weekLabel(data.period)}`} actions={<AnalyticsRefresh />} />
     <AnalyticsNav active="reception" />
-    <dl className="grid grid-cols-2 gap-6 border-b border-ui-border pb-6">
-      <div className="space-y-2"><dt className="text-sm text-ui-muted-foreground">Enrolments this week</dt><dd className="text-4xl font-semibold tabular-nums">{number.format(enrolled)}</dd></div>
-      <div className="space-y-2"><dt className="text-sm text-ui-muted-foreground">Unenrolments this week</dt><dd className="text-4xl font-semibold tabular-nums">{number.format(withdrawn)}</dd></div>
-    </dl>
-    <div className="space-y-3">
-      <h2 className="text-xl font-semibold">Activity by person</h2>
-      <p className="text-sm text-ui-muted-foreground">Staff who recorded enrolments or unenrolments at this site. Open a person’s daily breakdown to see their week.</p>
-      <Input aria-label="Find a staff member" placeholder="Find a staff member…" className="min-h-11" value={search} onChange={event => setSearch(event.target.value)} />
-      <div className="overflow-hidden rounded-ui-lg border border-ui-border">
-        <Table className="table-fixed">
-          <TableHeader className="bg-ui-muted"><TableRow><TableHead scope="col" className="w-1/2">Person</TableHead><TableHead scope="col" className="text-right">Enrolled</TableHead><TableHead scope="col" className="text-right">Unenrolled</TableHead></TableRow></TableHeader>
+    <ul className="pc-stats" aria-label="This week at a glance">
+      <StatTile icon={UserPlus} value={number.format(enrolled)} label="Enrolments" caption="This week" />
+      <StatTile icon={UserX} value={number.format(withdrawn)} label="Unenrolments" caption="This week" />
+    </ul>
+    <section className="pc-panel" aria-labelledby="activity-by-person">
+      <div className="pc-panel-head"><h2 id="activity-by-person">Activity by person</h2></div>
+      <p className="text-xs text-ui-muted-foreground">Staff who recorded enrolments or unenrolments at this site. Open a person’s daily breakdown to see their week.</p>
+      <SearchField label="Find a staff member" placeholder="Name" value={search} onValueChange={setSearch} className="sm:max-w-md" />
+      <div className="min-w-0">
+        <Table>
+          <TableHeader><TableRow><TableHead scope="col">Person</TableHead><TableHead scope="col" className="text-right">Enrolled</TableHead><TableHead scope="col" className="text-right">Unenrolled</TableHead></TableRow></TableHeader>
           <TableBody>{people.map(person => <TableRow key={person.id}>
-            <TableHead scope="row" className="max-w-0 whitespace-normal py-4 font-normal">
+            <TableHead scope="row" className="whitespace-normal align-top">
               <p className="break-words font-semibold">{person.name}</p>
               {person.retainedName ? <p className="mt-1 text-xs text-ui-muted-foreground">{person.name === "Scheduled unenrolment" ? "Automatic scheduled withdrawals" : "Recorded name · account unavailable"}</p> : null}
               <Collapsible className="mt-1">
@@ -52,8 +54,8 @@ export function ReceptionReport({ data }: { data: ReceptionAnalyticsData }) {
         </Table>
         {people.length === 0 ? <EmptyState role="status" compact title={search ? "No staff match your search." : "No enrolments or unenrolments have been recorded at this site this week."} /> : null}
       </div>
-    </div>
-    <footer className="space-y-2 text-xs leading-relaxed text-ui-muted-foreground">
+    </section>
+    <footer className="max-w-prose space-y-2 text-xs text-ui-muted-foreground">
       <p>Counts include today so far and reconcile with Overview. They use the person recorded on each action, across all staff roles. Moves, imports and waitlist removals are excluded. Automatic scheduled unenrolments are shown separately when applied; they are not attributed to the staff member who scheduled them.</p>
       <ReportUpdated at={data.updatedAt} />
     </footer>

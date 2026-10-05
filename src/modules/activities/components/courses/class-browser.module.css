@@ -1,12 +1,9 @@
-/* A white panel of separate rows (DESIGN.md, Poolside Clear v2). */
+/* Column headings over separate rows, inside the list panel (DESIGN.md, Poolside Clear v2). */
 .directory {
   display: flex;
   flex-direction: column;
   gap: 8px;
   min-width: 0;
-  padding: 8px 16px 16px;
-  border-radius: var(--pc-radius-panel);
-  background: var(--pc-surface);
 }
 .directory [data-slot='item-group'] {
   display: flex;
@@ -51,13 +48,14 @@
 }
 .name {
   width: auto;
-  font-size: var(--text-base);
+  font-size: var(--pc-text-body);
+  line-height: var(--pc-leading-body);
   font-weight: 600;
 }
-.secondary,
-.mobileSite {
-  color: var(--ui-muted-foreground);
-  font-size: var(--text-sm);
+.secondary {
+  color: var(--pc-ink-muted);
+  font-size: var(--pc-text-caption);
+  line-height: var(--pc-leading-caption);
 }
 .site,
 .instructor {
@@ -119,8 +117,5 @@
     grid-row: 1;
     justify-self: end;
     align-self: start;
-  }
-  .listItem:first-child .row {
-    border-radius: var(--ui-radius) var(--ui-radius) 0 0;
   }
 }

@@ -1,8 +1,7 @@
 import Form from "next/form";
 import Link from "next/link";
-import { X } from "lucide-react";
 import { LinkPagination } from "@/components/ui-kit/link-pagination";
-import { Button } from "@/components/shadcn/button";
+import { PageHeader } from "@/components/ui-kit/page-header";
 import { SearchField } from "@/components/ui-kit/search-field";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/shadcn/table";
 import { EmptyState } from "@/components/ui-kit/empty-state";
@@ -22,7 +21,7 @@ export function LegendAgreements({ result, canConfirm, profiles, classes }: {
   result: LegendAgreementResult; canConfirm: boolean; profiles: boolean; classes: boolean;
 }) {
   const matchList = canConfirm ? <LegendListMatch /> : null;
-  const { items, q, view, total, page, pages, outstandingCount, doneCount, siteName } = result;
+  const { items, q, view, total, page, pageSize, outstandingCount, doneCount, siteName } = result;
   const views = [{ key: "outstanding", label: "Outstanding", count: outstandingCount }, { key: "done", label: "Confirmed", count: doneCount }];
   function href(nextView: string, nextPage = 1) {
     const query = new URLSearchParams();
@@ -31,63 +30,66 @@ export function LegendAgreements({ result, canConfirm, profiles, classes }: {
     if (nextPage > 1) query.set("page", String(nextPage));
     return `/legend-agreements${query.size ? `?${query}` : ""}`;
   }
-  return <section className="flex min-w-0 flex-col gap-4 text-ui-foreground" aria-labelledby="agreements-heading">
-    <header className="mb-2 space-y-2">
-      <div className="flex flex-wrap items-start justify-between gap-3">
-        <h1 id="agreements-heading" className="text-2xl font-semibold">Legend agreements</h1>
-        {matchList}
+  const rows = items.map(row => {
+    const name = fullName(row.student), label = `${courseName(row.course)} · ${formatSlot(row.course)}`;
+    const meta = LEGEND_AGREEMENT_META[row.legendAgreementStatus];
+    const identity = <><span className="block font-semibold">{name}</span><span className="block text-xs text-ui-muted-foreground">{row.student.memberNumber ? `#${row.student.memberNumber}` : "No member number"}</span></>;
+    const classDetails = <><span className="block">{courseName(row.course)}</span><span className="block text-xs text-ui-muted-foreground">{formatSlot(row.course)}</span></>;
+    return {
+      row,
+      who: profiles ? <Link href={`/students/${row.student.id}`} className="block min-h-11 content-center break-words hover:underline">{identity}</Link> : <div className="break-words">{identity}</div>,
+      classInfo: <div className="min-w-0 break-words">
+        {classes ? <Link href={`/courses/${row.course.id}`} className="block min-h-11 content-center hover:underline">{classDetails}</Link> : <div>{classDetails}</div>}
+        <p className="text-xs text-ui-muted-foreground">Enrolled {formatDate(row.startedOn)}{row.course.archivedAt ? " · Class archived" : ""}</p>
+      </div>,
+      status: <div className="min-w-0 flex flex-col items-start gap-1 break-words"><Tag meta={meta} />
+        {row.legendAgreementUpdatedAt ? <p className="text-xs text-ui-muted-foreground">{row.legendAgreementUpdatedByName ?? "Staff"} · {formatDateTime(row.legendAgreementUpdatedAt)}</p> : null}
+      </div>,
+      action: view !== "done" && canConfirm ? <ConfirmLegendAgreement id={row.id} swimmerName={name} classLabel={`${label} · ${siteName}`} /> : null,
+    };
+  });
+  return <div className="min-w-0 flex flex-col gap-6">
+    <PageHeader title="Legend agreements" description={`${siteName} · Update the billing agreement in Legend, then confirm it here.`} actions={matchList} />
+    <section className="pc-panel" aria-label="Agreements">
+      <div className="min-w-0 flex flex-wrap items-end gap-3">
+        <Form action="/legend-agreements" className="min-w-0 flex-[1_1_18rem] md:max-w-md" role="search" aria-label="Legend agreements">
+          {view === "done" ? <input type="hidden" name="view" value="done" /> : null}
+          <SearchField id="agreement-search" label="Find a swimmer" placeholder="Name or member number" defaultValue={q} maxLength={100} clearHref={`/legend-agreements${view === "done" ? "?view=done" : ""}`} />
+        </Form>
+        <SegmentedLinks label="Agreement status" items={views.map(item => ({ href: href(item.key), label: item.label, count: number(item.count), current: view === item.key }))} />
       </div>
-      <p className="text-sm text-ui-muted-foreground">{siteName} · Update the billing agreement in Legend, then confirm it here.</p>
-    </header>
-    <div className="space-y-4">
-      <Form action="/legend-agreements" className="max-w-xl" role="search" aria-label="Legend agreements">
-        {view === "done" ? <input type="hidden" name="view" value="done" /> : null}
-        <SearchField id="agreement-search" label="Find a swimmer" placeholder="Name or member number" defaultValue={q} maxLength={100} />
-      </Form>
-      <SegmentedLinks label="Agreement status" items={views.map(item => ({ href: href(item.key), label: item.label, count: number(item.count), current: view === item.key }))} />
-    </div>
-    <div className="space-y-3">
-      <div className="flex min-h-8 flex-wrap items-center justify-between gap-2 text-sm text-ui-muted-foreground">
-        <p role="status" aria-live="polite" aria-atomic="true"><span className="font-medium text-ui-foreground">{number(total)}</span> {total === 1 ? "class place" : "class places"}{view === "done" ? " confirmed" : " outstanding"}{q ? ` matching “${q}”` : ""}</p>
-        {q ? <Button asChild variant="ghost" className="min-h-11"><Link href={`/legend-agreements${view === "done" ? "?view=done" : ""}`}><X aria-hidden="true" />Clear</Link></Button> : <span className="text-xs">{view === "done" ? "Recently confirmed first" : "Oldest enrolments first"}</span>}
+      <div className="min-w-0 flex flex-wrap items-center justify-between gap-2">
+        <p className="font-semibold" role="status" aria-live="polite" aria-atomic="true">{number(total)} {total === 1 ? "class place" : "class places"}{view === "done" ? " confirmed" : " outstanding"}{q ? ` matching “${q}”` : ""}</p>
+        <span className="text-xs text-ui-muted-foreground">{view === "done" ? "Recently confirmed first" : "Oldest enrolments first"}</span>
       </div>
       {!canConfirm ? <p className="text-sm text-ui-muted-foreground">Ask for permission to enrol and move swimmers to confirm agreements.</p> : null}
-    {items.length ? <Table containerClassName="rounded-ui-md border border-ui-border" className="table-fixed [&_td]:whitespace-normal [&_th]:whitespace-normal">
-      <caption className="sr-only">{view === "done" ? "Confirmed" : "Outstanding"} Legend agreements at {siteName}</caption>
-      <TableHeader className="bg-ui-muted"><TableRow className="hover:bg-ui-muted">
-        <TableHead scope="col" className="px-4 py-3 font-normal text-ui-muted-foreground sm:px-5"><span className="xl:hidden">Swimmer &amp; class</span><span className="hidden xl:inline">Swimmer</span></TableHead>
-        <TableHead scope="col" className="hidden w-[28%] px-4 py-3 font-normal text-ui-muted-foreground xl:table-cell">Class</TableHead>
-        <TableHead scope="col" className="hidden w-44 px-4 py-3 font-normal text-ui-muted-foreground lg:table-cell xl:w-48">Agreement</TableHead>
-        {view !== "done" && canConfirm ? <TableHead scope="col" className="hidden w-48 px-4 py-3 md:table-cell"><span className="sr-only">Actions</span></TableHead> : null}
-      </TableRow></TableHeader>
-      <TableBody>{items.map(row => {
-        const name = fullName(row.student), label = `${courseName(row.course)} · ${formatSlot(row.course)}`;
-        const meta = LEGEND_AGREEMENT_META[row.legendAgreementStatus];
-        const identity = <><span className="block text-base font-semibold">{name}</span><span className="block text-sm text-ui-muted-foreground">{row.student.memberNumber ? `#${row.student.memberNumber}` : "No member number"}</span></>;
-        const classDetails = <><span className="block font-medium">{courseName(row.course)}</span><span className="block text-sm text-ui-muted-foreground">{formatSlot(row.course)}</span></>;
-        const classInfo = <div className="min-w-0 space-y-1 break-words">
-          {classes ? <Link href={`/courses/${row.course.id}`} className="block min-h-11 content-center hover:underline">{classDetails}</Link> : <div>{classDetails}</div>}
-          <p className="text-xs text-ui-muted-foreground">Enrolled {formatDate(row.startedOn)}{row.course.archivedAt ? " · Class archived" : ""}</p>
-        </div>;
-        const status = <div className="min-w-0 space-y-1.5 break-words"><Tag meta={meta} />
-          {row.legendAgreementUpdatedAt ? <p className="text-xs text-ui-muted-foreground"><span className="block">{row.legendAgreementUpdatedByName ?? "Staff"}</span>{formatDateTime(row.legendAgreementUpdatedAt)}</p> : null}
-        </div>;
-        const action = view !== "done" && canConfirm ? <ConfirmLegendAgreement id={row.id} swimmerName={name} classLabel={`${label} · ${siteName}`} /> : null;
-        return <TableRow key={row.id} className="hover:bg-ui-muted/50">
-          <TableCell className="px-4 py-4 sm:px-5">
-            {profiles ? <Link href={`/students/${row.student.id}`} className="block min-h-11 content-center break-words hover:underline">{identity}</Link> : <div className="break-words">{identity}</div>}
-            <div className="mt-2 xl:hidden">{classInfo}</div>
-            <div className="mt-3 flex flex-wrap items-center justify-between gap-3 lg:hidden">{status}{action ? <div className="ml-auto md:hidden">{action}</div> : null}</div>
-          </TableCell>
-          <TableCell className="hidden px-4 py-4 xl:table-cell">{classInfo}</TableCell>
-          <TableCell className="hidden px-4 py-4 lg:table-cell">{status}</TableCell>
-          {action ? <TableCell className="hidden px-4 py-4 text-right md:table-cell">{action}</TableCell> : null}
-        </TableRow>;
-      })}</TableBody>
-    </Table> : <div className="rounded-ui-md border border-ui-border bg-ui-muted/30 py-8"><EmptyState icon="clipboardCheck" title={q ? "No matching agreements" : view === "done" ? "No agreements confirmed yet" : "No outstanding agreements"}
-      hint={q ? "Try another name or member number." : view === "done" ? "Confirm an agreement after updating it in Legend." : "All recorded active class places at this site have been confirmed."} /></div>}
-    <p className="text-xs leading-relaxed text-ui-muted-foreground">Active enrolments only, one check per class place. “Needs checking” means no confirmation has been recorded yet.</p>
-    <LinkPagination label="Agreement pages" page={page} pageCount={pages} pathname="/legend-agreements" query={{ ...(view === "done" ? { view: "done" } : {}), ...(q ? { q } : {}) }} />
-    </div>
-  </section>;
+      {rows.length ? <>
+        <Table containerClassName="pc-only-wide" className="[&_td]:whitespace-normal [&_th]:whitespace-normal">
+          <caption className="sr-only">{view === "done" ? "Confirmed" : "Outstanding"} Legend agreements at {siteName}</caption>
+          <TableHeader><TableRow>
+            <TableHead scope="col">Swimmer</TableHead>
+            <TableHead scope="col">Class</TableHead>
+            <TableHead scope="col">Agreement</TableHead>
+            {view !== "done" && canConfirm ? <TableHead scope="col"><span className="sr-only">Actions</span></TableHead> : null}
+          </TableRow></TableHeader>
+          <TableBody>{rows.map(({ row, who, classInfo, status, action }) => <TableRow key={row.id}>
+            <TableCell>{who}</TableCell>
+            <TableCell>{classInfo}</TableCell>
+            <TableCell>{status}</TableCell>
+            {action ? <TableCell className="text-right">{action}</TableCell> : null}
+          </TableRow>)}</TableBody>
+        </Table>
+        {/* Phones: closed rows with the action at the end. */}
+        <ul className="pc-rows pc-only-narrow" aria-label={`${view === "done" ? "Confirmed" : "Outstanding"} Legend agreements at ${siteName}`}>
+          {rows.map(({ row, who, classInfo, status, action }) => <li key={row.id} className="pc-row">
+            <div className="pc-row-body">{who}{classInfo}<div className="mt-2">{status}</div></div>
+            {action ? <div className="pc-row-trail">{action}</div> : null}
+          </li>)}
+        </ul>
+      </> : <EmptyState icon="clipboardCheck" title={q ? "No matching agreements" : view === "done" ? "No agreements confirmed yet" : "No outstanding agreements"}
+        hint={q ? "Try another name or member number." : view === "done" ? "Confirm an agreement after updating it in Legend." : "All recorded active class places at this site have been confirmed."} />}
+      <p className="text-xs text-ui-muted-foreground">Active enrolments only, one check per class place. “Needs checking” means no confirmation has been recorded yet.</p>
+      <LinkPagination label="Agreement pages" page={page} totalItems={total} pageSize={pageSize} pathname="/legend-agreements" query={{ ...(view === "done" ? { view: "done" } : {}), ...(q ? { q } : {}) }} />
+    </section>
+  </div>;
 }

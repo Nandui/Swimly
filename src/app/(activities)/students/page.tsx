@@ -14,8 +14,8 @@ export default async function StudentsPage(props: PageProps<"/students">) {
   const session = await screenPage("students");
   const params = await props.searchParams;
   const filters = swimmerFilters(params);
-  const [result, counts] = await Promise.all([getStudents(filters), getStudentCounts()]);
+  const [result, counts] = await Promise.all([getStudents(filters), getStudentCounts(filters.q)]);
   return <SwimmerBrowser {...filters} {...result} counts={counts} pageSize={STUDENTS_PER_PAGE}
-    parentAction={can(session, "parents.manage") ? <Button asChild variant="outline" className="min-h-11"><Link href="/students/parents">Parent accounts</Link></Button> : null}
+    parentAction={can(session, "parents.manage") ? <Button asChild variant="outline"><Link href="/students/parents">Parent accounts</Link></Button> : null}
     addAction={can(session, "students.manage") ? <AddSwimmer defaultOpen={params.add === "1"} /> : null} />;
 }

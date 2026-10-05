@@ -1,27 +1,13 @@
 /* Layouts shared by the people-scoped Turnfin workspaces (Training, HR, Rota) in
    ModuleShell. The Poolside Clear theme (tokens, shell, controls, fields) is shared with
    Docs and Refunds in src/app/docs/poolside.css; this file only arranges the screens. */
-.turnfin-module .workspace-page { position: relative; }
 .turnfin-module .workspace-page-content > * { max-width: 1200px; }
-.turnfin-module .workspace-mobile-toolbar > a[aria-label$=' overview'] { flex: 1; min-width: 0; }
 
 /* Page heading */
 .turnfin-module .module-content { min-width: 0; }
 .turnfin-module .module-heading { display: flex; flex-wrap: wrap; align-items: flex-end; justify-content: space-between; gap: 16px; margin-bottom: 16px; }
 .turnfin-module .module-heading h1 { font-size: var(--pc-text-page); font-weight: 600; line-height: var(--pc-leading-page); letter-spacing: -0.01em; }
 .turnfin-module .module-heading p { margin-top: 4px; color: var(--pc-ink-muted); }
-
-/* Summary: one tile per figure */
-.turnfin-module .module-summary { margin: 0; padding: 0; border: 0; background: none; gap: 12px; }
-.turnfin-module .module-summary > div { padding: 16px 20px; background: var(--pc-surface); border: 0; border-radius: var(--pc-radius-panel); box-shadow: none; min-width: 0; }
-.turnfin-module .module-summary dt { display: flex; align-items: center; gap: 8px; font-size: var(--pc-text-caption); line-height: var(--pc-leading-caption); font-weight: 600; color: var(--pc-ink-muted); }
-.turnfin-module .module-summary dt > svg { width: 16px; height: 16px; flex: none; }
-.turnfin-module .module-summary dd { margin-top: 8px; font-size: var(--pc-text-figure); line-height: var(--pc-leading-figure); font-weight: 700; font-variant-numeric: tabular-nums; }
-.turnfin-module .module-summary dd.module-summary-text { font-size: var(--pc-text-title); line-height: var(--pc-leading-title); font-weight: 600; letter-spacing: 0; margin-top: 12px; }
-.turnfin-module .module-summary a { display: block; color: inherit; text-decoration: none; border-radius: var(--pc-radius-panel); }
-.turnfin-module .module-summary > div:has(> a) { padding: 0; transition: border-color 120ms var(--pc-ease), background-color 120ms var(--pc-ease); }
-.turnfin-module .module-summary > div:has(> a):hover { background: var(--pc-surface-sunken); }
-.turnfin-module .module-summary > div > a { padding: 16px 20px; }
 
 /* Filters */
 .turnfin-module .module-filters { margin-top: 16px; padding: 24px; border: 0; border-radius: var(--pc-radius-panel); background: var(--pc-surface); box-shadow: none; }
@@ -53,21 +39,12 @@
   .turnfin-module .module-heading { margin-bottom: 20px; }
   .turnfin-module .module-panel,
   .turnfin-module .module-filters { padding: 16px; }
-  .turnfin-module .module-summary > div,
-  .turnfin-module .module-summary > div > a { padding: 12px 16px; }
-  .turnfin-module .module-summary > div:has(> a) { padding: 0; }
-  .turnfin-module .module-summary dd { font-size: var(--pc-text-page); line-height: var(--pc-leading-page); }
   .turnfin-module .module-row { align-items: flex-start; }
 }
 @media (prefers-reduced-motion: reduce) {
   .turnfin-module .module-row-arrow { transition: color 120ms; }
   .turnfin-module .module-row:is(:hover, :focus-visible) .module-row-arrow { translate: none; }
 }
-/* Summary figures share a baseline across a row even when a label wraps onto two lines. */
-.turnfin-module :is(.module-summary > div, .module-summary > div > a) { display: flex; flex-direction: column; }
-.turnfin-module .module-summary > div:has(> a) > a { flex: 1; }
-.turnfin-module .module-summary dd { margin-top: auto; padding-top: 8px; }
-
 /* A person's record: two panels side by side on wide screens. */
 .turnfin-module .module-columns { display: grid; gap: 16px; }
 @media (min-width: 1024px) { .turnfin-module .module-columns { grid-template-columns: minmax(0, 3fr) minmax(280px, 2fr); } }

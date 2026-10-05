@@ -16,9 +16,9 @@ const THEME = "turnfin-module";
 
 /** A trigger that is a timeline block (TimelineGrid): its state and density, for the block's
  *  fill and shape. Week plan's triggers leave it out. */
-export type BlockPart = { state: string; density: string };
+export type BlockPart = { state: string; density: string; layout?: "stack" };
 export function blockAttrs(block?: BlockPart) {
-  return block ? { "data-block": block.state, "data-density": block.density } : {};
+  return block ? { "data-block": block.state, "data-density": block.density, "data-layout": block.layout } : {};
 }
 
 type Option = { id: string; name: string };
@@ -32,8 +32,8 @@ export type PlanOptions = { people: (Option & { jobTitle: string | null })[]; ty
 function ChangeFields({ id, suggested }: { id: string; suggested?: RotaChangeReason }) {
   const [reason, setReason] = useState<string>(suggested ?? "");
   return (
-    <fieldset className="space-y-3 rounded-[var(--pc-radius-control)] border border-ui-border p-3">
-      <legend className="px-1 text-sm font-medium">This week has started: why the change?</legend>
+    <fieldset className="flex min-w-0 flex-col gap-3">
+      <legend className="mb-3 font-semibold">This week has started: why the change?</legend>
       <RadioGroup name="reason" value={reason} onValueChange={setReason} className="gap-2" required>
         {ROTA_CHANGE_REASONS.map((r) => (
           <ChoiceRow key={r} type="radio" id={`${id}-reason-${r}`} value={r} title={ROTA_CHANGE_REASON_META[r].label} />
@@ -80,11 +80,11 @@ export function ShiftDialog({ siteId, date, today, shift, options, label, sugges
         ? <Button variant="outline" className="min-h-11"><Pencil aria-hidden="true" />{label}</Button>
         : shift
         ? <Button variant="ghost" size="icon" className="size-11" aria-label={`Change ${shift.role} ${clock(shift.startMinutes)}`}><Pencil aria-hidden="true" /></Button>
-        : <Button className="min-h-11"><Plus aria-hidden="true" />Add duty</Button>)}
-      title={shift ? `Change ${shift.role}` : "Add a duty"}
-      description="Leave the person empty for an unfilled duty. A missing or expired qualification shows as a warning; it does not stop you."
-      submitLabel={shift ? "Save duty" : "Add duty"}
-      successMessage={shift ? "Duty saved" : "Duty added"}
+        : <Button className="min-h-11"><Plus aria-hidden="true" />Add a shift</Button>)}
+      title={shift ? `Change the ${shift.role} shift` : "Add a shift"}
+      description="Leave the person empty for an unfilled shift. A missing or expired qualification shows as a warning; it does not stop you."
+      submitLabel={shift ? "Save shift" : "Add shift"}
+      successMessage={shift ? "Shift saved" : "Shift added"}
       submit={(formData) => saveShift(shift?.id ?? null, {
         siteId, date: String(formData.get("date") ?? ""), start: String(formData.get("start") ?? ""), end: String(formData.get("end") ?? ""),
         role: String(formData.get("role") ?? ""), departmentId: String(formData.get("departmentId") ?? ""), requiredTypeId: String(formData.get("requiredTypeId") ?? ""),
@@ -138,15 +138,17 @@ export function CancelShift({ id, label, live, withText = false, suggested }: { 
       portalClassName={THEME}
       width="sm:max-w-lg"
       trigger={withText
-        ? <Button variant="ghost" className="min-h-11 text-[var(--pc-danger)]"><X aria-hidden="true" />Cancel duty</Button>
-        : <Button variant="ghost" size="icon" className="size-11" aria-label={`Cancel ${label}`}><X aria-hidden="true" /></Button>}
+        ? <Button variant="outline" className="min-h-11"><X aria-hidden="true" />Cancel shift</Button>
+        : <Button variant="outline" size="icon" className="size-11" aria-label={`Cancel ${label}`}><X aria-hidden="true" /></Button>}
       title={`Cancel ${label}?`}
       description="It disappears from the plan and from the person's Turnfin Me."
-      submitLabel="Cancel duty"
-      successMessage="Duty cancelled"
+      submitLabel="Cancel shift"
+      cancelLabel="Keep it"
+      destructive
+      successMessage="Shift cancelled"
       submit={(formData) => cancelShift(id, live ? changeOf(formData) : {})}
     >
-      {live ? <ChangeFields id={`cancel-${id}`} suggested={suggested} /> : <p className="sr-only">Confirm to cancel.</p>}
+      {live ? <ChangeFields id={`cancel-${id}`} suggested={suggested} /> : null}
     </FormDialog>
   );
 }
@@ -175,8 +177,8 @@ export function CopyPlan({ siteId, to, whole }: { siteId: string; to: string; wh
       <Field label={whole ? "Copy the week of" : "Copy the day"} htmlFor={`copy-from-${to}`} hint={whole ? "Any day in that week." : "For example the same day last week."}>
         <Input id={`copy-from-${to}`} name="from" type="date" required max={addDaysIso(to, -1)} defaultValue={addDaysIso(to, -7)} className="min-h-11" />
       </Field>
-      <fieldset className="space-y-1">
-        <legend className="text-sm font-medium">People</legend>
+      <fieldset className="flex min-w-0 flex-col gap-2">
+        <legend className="mb-2 font-semibold">People</legend>
         <RadioGroup value={people} onValueChange={setPeople} className="gap-2">
           {[["same", "The same people", "Each duty keeps who did it. Absences and clashes show as warnings."], ["none", "The shape only", "Every duty comes in unfilled, to choose who this time."]].map(([value, label, hint]) => (
             <ChoiceRow key={value} type="radio" id={`copy-people-${to}-${value}`} value={value} title={label} hint={hint} />

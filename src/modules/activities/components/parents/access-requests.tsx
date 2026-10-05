@@ -5,7 +5,8 @@ import Link from "next/link";
 import { Button } from "@/components/shadcn/button";
 import { Tag } from "@/components/ui-kit/tag";
 import { LinkPagination } from "@/components/ui-kit/link-pagination";
-import { Card } from "@/components/shadcn/card";
+import { RefreshCw } from "lucide-react";
+import { SegmentedChoice } from "@/components/ui-kit/segmented-links";
 import { EmptyState } from "@/components/ui-kit/empty-state";
 import { Textarea } from "@/components/ui/textarea";
 import { StudentSearch } from "@/modules/activities/components/students/student-search";
@@ -28,12 +29,12 @@ function Review({ request, approved, onSuccess }: { request: AccessReview; appro
       if (approved && !student) return Promise.resolve({ ok: false as const, error: "Choose the existing swimmer before approving access." });
       return saveParentAdmin(`access-requests/${request.id}`, "PATCH", { decision, ...(approved ? { studentId: student!.id } : {}), reason: String(data.get("reason") ?? ""), reply: String(data.get("reply") ?? "") });
     }}>
-    <div className="space-y-1 rounded-ui-md bg-ui-muted p-3 text-sm">
+    <div className="pc-note text-sm"><div className="min-w-0 space-y-1">
       <p className="font-semibold">{request.parent.name || "Parent"}</p><p className="break-all">{request.parent.email}</p>
       <p>Requesting {request.firstName} {request.lastName} · born {request.dateOfBirth}</p>
-    </div>
+    </div></div>
     {approved && <>
-      <StudentSearch label="Match to an existing swimmer" selected={student} onSelect={setStudent} includeInactive description="Search across both sites. Check the swimmer’s profile and your records to verify this parent." />
+      <StudentSearch label="Match to an existing swimmer" selected={student} onSelect={setStudent} includeInactive description="Search across every site. Check the swimmer’s profile and your records to verify this parent." />
       {student && <p className="text-sm"><Link href={`/students/${student.id}`} target="_blank" className="inline-flex min-h-11 items-center text-ui-primary underline">Check {student.firstName} {student.lastName}’s profile (new tab)</Link></p>}
     </>}
     <Textarea name="reply" label="Reply to the parent" description="Visible in the parent app. Keep internal checks in the reason below." required minLength={3} maxLength={500}
@@ -55,35 +56,34 @@ export function ParentAccessRequests() {
     }
   }, [resource.loading]);
   function reviewed() { focusAfterReview.current = true; resource.reload(); }
-  return <section aria-labelledby="access-requests-heading" className="space-y-4">
-    <div className="flex flex-wrap items-center justify-between gap-3">
-      <div><h2 id="access-requests-heading" className="text-xl font-semibold">Parent access requests{resource.data ? ` (${resource.data.pendingCount} waiting)` : ""}</h2>
-        <p className="mt-1 text-sm text-ui-muted-foreground">Families from both sites. Match each request to an existing swimmer before approving.</p></div>
-      <Button ref={refreshButton} variant="outline" className="min-h-11" onClick={resource.reload}>Refresh requests</Button>
+  return <section aria-labelledby="access-requests-heading" className="pc-panel">
+    <div className="min-w-0">
+      <h2 id="access-requests-heading">Parent access requests{resource.data ? ` (${resource.data.pendingCount} waiting)` : ""}</h2>
+      <p className="pc-row-hint">Families from every site. Match each request to an existing swimmer before approving.</p>
     </div>
-    <div role="group" aria-label="Request status" className="flex flex-wrap gap-2">
-      {(Object.keys(ACCESS_REQUEST_META) as Array<keyof typeof ACCESS_REQUEST_META>).map(value => <Button key={value} variant={value === status ? "outline" : "ghost"} className="min-h-11" aria-pressed={value === status} onClick={() => { setStatus(value); setPage(1); }}>{ACCESS_REQUEST_META[value].label}</Button>)}
+    <div className="flex flex-wrap items-center justify-between gap-3">
+      <SegmentedChoice aria-label="Request status" value={status} onValueChange={value => { setStatus(value as keyof typeof ACCESS_REQUEST_META); setPage(1); }}
+        options={(Object.keys(ACCESS_REQUEST_META) as Array<keyof typeof ACCESS_REQUEST_META>).map(value => ({ value, label: ACCESS_REQUEST_META[value].label }))} />
+      <Button ref={refreshButton} variant="ghost" className="min-h-11" onClick={resource.reload}><RefreshCw aria-hidden="true" />Refresh requests</Button>
     </div>
     <ParentLoadState {...resource} />
-    {resource.data && <div aria-live="polite" className="space-y-4">
-      {!resource.data.items.length && <EmptyState compact title={status === "PENDING" ? "No requests waiting for review." : "No requests in this view."} />}
-      {resource.data.items.map(request => <Card key={request.id} className="gap-4 p-4 shadow-none sm:p-5" role="article">
-        <div className="flex flex-wrap items-start justify-between gap-3">
-          <div className="min-w-0"><h3 className="break-words text-lg font-semibold">{request.firstName} {request.lastName}</h3><p className="text-sm text-ui-muted-foreground">Date of birth: {request.dateOfBirth} · Parent-supplied details</p></div>
-          <Tag meta={ACCESS_REQUEST_META[request.status]} />
+    {resource.data && <div aria-live="polite" className="flex flex-col gap-4">
+      {!resource.data.items.length && <EmptyState compact title={status === "PENDING" ? "No requests waiting for review" : "No requests in this view"} />}
+      {resource.data.items.length ? <ul className="pc-rows">{resource.data.items.map(request => <li key={request.id} className="pc-row">
+        <div className="pc-row-body basis-64">
+          <h3 className="pc-row-title break-words">{request.firstName} {request.lastName}</h3>
+          <p className="pc-row-hint">Date of birth: {request.dateOfBirth} · Requested by {request.parent.name || "a parent (name not supplied)"}</p>
+          <p className="pc-row-hint break-all">{request.parent.email} · {request.parent.phone || "No phone supplied"}</p>
+          <p className="pc-row-hint whitespace-pre-wrap break-words">Lesson details from parent: {request.context || "Not supplied"}</p>
+          <p className="pc-row-hint">Sent {parentDateTime(request.createdAt)}{request.reviewedAt && ` · Reviewed by ${request.reviewedByName} on ${parentDateTime(request.reviewedAt)}`}</p>
+          {!request.parent.isActive && <p className="pc-row-hint font-semibold">Parent account suspended. Approval is unavailable.</p>}
         </div>
-        <dl className="grid gap-3 text-sm sm:grid-cols-2">
-          <div className="min-w-0"><dt className="text-ui-muted-foreground">Requested by</dt><dd className="mt-1 break-words font-medium">{request.parent.name || "Name not supplied"}</dd><dd className="break-all">{request.parent.email}</dd><dd>{request.parent.phone || "No phone supplied"}</dd></div>
-          <div><dt className="text-ui-muted-foreground">Lesson details from parent</dt><dd className="mt-1 whitespace-pre-wrap break-words">{request.context || "Not supplied"}</dd></div>
-        </dl>
-        {!request.parent.isActive && <p className="text-sm font-medium">Parent account suspended. Approval is unavailable.</p>}
-        {request.reply && <div className="rounded-ui-md bg-ui-muted p-3 text-sm"><p className="font-semibold">Reply to parent</p><p className="mt-1 whitespace-pre-wrap break-words">{request.reply}</p></div>}
-        {request.student && <Button asChild variant="link" className="min-h-11 px-0"><Link href={`/students/${request.student.id}`}>Open {request.student.firstName} {request.student.lastName}’s profile</Link></Button>}
-        <div className="flex flex-wrap items-center justify-between gap-3">
-          <p className="text-xs text-ui-muted-foreground">Sent {parentDateTime(request.createdAt)}{request.reviewedAt && ` · Reviewed by ${request.reviewedByName} on ${parentDateTime(request.reviewedAt)}`}</p>
-          {request.status === "PENDING" && <div className="flex flex-wrap gap-2"><Review request={request} approved onSuccess={reviewed} /><Review request={request} approved={false} onSuccess={reviewed} /></div>}
+        <div className="pc-row-trail">
+          {request.status === "PENDING" ? <><Review request={request} approved={false} onSuccess={reviewed} /><Review request={request} approved onSuccess={reviewed} /></>
+            : <><Tag meta={ACCESS_REQUEST_META[request.status]} />{request.student && <Button asChild variant="ghost" className="min-h-11"><Link href={`/students/${request.student.id}`}>Open {request.student.firstName} {request.student.lastName}’s profile</Link></Button>}</>}
         </div>
-      </Card>)}
+        {request.reply && <div className="pc-note basis-full text-sm"><div className="min-w-0 space-y-1"><p className="font-semibold">Reply to parent</p><p className="whitespace-pre-wrap break-words">{request.reply}</p></div></div>}
+      </li>)}</ul> : null}
       <LinkPagination label="Request pages" page={page} totalItems={resource.data.total} pageSize={20} onPage={setPage} />
     </div>}
   </section>;

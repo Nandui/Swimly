@@ -19,7 +19,7 @@ export function AssessmentPublicationPanel({ sessionId, sessionLabel, startsAt }
   const meta = PUBLICATION_META[!publication?.enabled ? "unpublished" : publication.visibleToParents ? "published" : "closed"];
   return <Card className="gap-4 p-4 shadow-none" role="region" aria-labelledby="parent-booking-heading">
     <div className="flex flex-wrap items-center justify-between gap-3">
-      <h2 id="parent-booking-heading" tabIndex={-1} className="text-xl font-semibold">Booking in LeisureWorld Aquatics</h2>
+      <h2 id="parent-booking-heading" tabIndex={-1} >Parent booking</h2>
       {publication ? <Tag meta={meta} /> : null}
     </div>
     <ParentLoadState {...resource} />
@@ -27,19 +27,19 @@ export function AssessmentPublicationPanel({ sessionId, sessionLabel, startsAt }
       <div className="max-w-prose space-y-2 text-sm text-ui-muted-foreground">
         <p>{publication.visibleToParents ? publication.spacesAvailable === 0
           ? "Visible to parents, but full. No more places can be booked."
-          : "Parents can find this session and book an available place in LeisureWorld Aquatics."
+          : "Parents can find this session and book an available place in the parent app."
           : publication.enabled ? "Parent booking is closed. Existing bookings remain on this session."
-            : "Only staff can book this session until it is published to LeisureWorld Aquatics."}</p>
-        {publication.enabled ? <p>Booking deadline: <span className="font-medium text-ui-foreground">{parentDateTime(publication.bookingClosesAt ?? startsAt)}</span> · Ireland time</p> : null}
+            : "Only staff can book this session until it is published to the parent app."}</p>
+        {publication.enabled ? <p>Booking deadline: <span className="font-semibold text-ui-foreground">{parentDateTime(publication.bookingClosesAt ?? startsAt)}</span> · Ireland time</p> : null}
         {!publication.canPublish ? <p>This session cannot open for parent booking. It must be in the future, not cancelled, and use an active site, programme and assessment type.</p> : null}
       </div>
       <div className="flex flex-wrap gap-2">
         {publication.canPublish ? <ParentFormDialog
-          trigger={<Button variant={publication.enabled ? "outline" : "default"} className="min-h-11">{publication.enabled ? "Edit booking deadline" : "Publish to LeisureWorld Aquatics"}</Button>}
-          title={publication.enabled ? "Edit parent booking deadline" : "Publish assessment to LeisureWorld Aquatics"}
+          trigger={<Button variant={publication.enabled ? "outline" : "default"} className="min-h-11">{publication.enabled ? "Edit booking deadline" : "Publish to the parent app"}</Button>}
+          title={publication.enabled ? "Edit parent booking deadline" : "Publish assessment to the parent app"}
           description="Parents will be able to find this session and book available places."
           submitLabel={publication.enabled ? "Save deadline" : "Publish session"}
-          successMessage={publication.enabled ? "Parent booking deadline updated." : "Assessment published to LeisureWorld Aquatics."}
+          successMessage={publication.enabled ? "Parent booking deadline updated." : "Assessment published to the parent app."}
           submit={data => {
             let deadline: string | null;
             try { deadline = bookingDeadline(String(data.get("bookingClosesAt") ?? "")); }
@@ -49,7 +49,7 @@ export function AssessmentPublicationPanel({ sessionId, sessionLabel, startsAt }
             }
             return saveParentAdmin(path, "PUT", { enabled: true, bookingClosesAt: deadline, reason: String(data.get("reason") ?? "") });
           }} onSuccess={saved}>
-          <p className="rounded-ui-md bg-ui-muted p-3 text-sm font-medium break-words">{sessionLabel}</p>
+          <div className="pc-note text-sm"><p className="min-w-0 font-semibold break-words">{sessionLabel}</p></div>
           <Input type="datetime-local" name="bookingClosesAt" label="Booking deadline (Ireland time)" defaultValue={dublinDateTimeInput(publication.bookingClosesAt)}
             max={dublinDateTimeInput(startsAt)} description="Leave blank to close bookings when the session starts. Choose a future time no later than the start." />
           <ParentReason />
@@ -57,9 +57,9 @@ export function AssessmentPublicationPanel({ sessionId, sessionLabel, startsAt }
         {publication.enabled ? <ParentFormDialog
           trigger={<Button variant="outline" className="min-h-11">Unpublish</Button>}
           title="Unpublish assessment" description="Hide this session from parent booking. Existing bookings stay in place and staff can still manage them."
-          submitLabel="Unpublish session" successMessage="Assessment unpublished from LeisureWorld Aquatics."
+          submitLabel="Unpublish session" successMessage="Assessment unpublished from the parent app."
           submit={data => saveParentAdmin(path, "PUT", { enabled: false, reason: String(data.get("reason") ?? "") })} onSuccess={saved}>
-          <p className="rounded-ui-md bg-ui-muted p-3 text-sm font-medium break-words">{sessionLabel}</p><ParentReason />
+          <div className="pc-note text-sm"><p className="min-w-0 font-semibold break-words">{sessionLabel}</p></div><ParentReason />
         </ParentFormDialog> : null}
         <Button variant="ghost" className="min-h-11" onClick={resource.reload}>Refresh status</Button>
       </div>

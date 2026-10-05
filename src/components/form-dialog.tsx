@@ -55,11 +55,17 @@ export function FormDialog({
   onOpen,
   onSuccess,
   defaultOpen = false,
+  destructive = false,
+  cancelLabel = "Cancel",
 }: {
   trigger: React.ReactNode;
   title: string;
   description?: string;
   submitLabel?: string;
+  /** The submit removes or refuses something (cancel training, decline): a red submit. */
+  destructive?: boolean;
+  /** The dismiss button's label, when "Cancel" would echo the submit ("Keep it"). */
+  cancelLabel?: string;
   successMessage: string;
   submit: (
     formData: FormData,
@@ -220,7 +226,7 @@ export function FormDialog({
                   onClick={close}
                   disabled={pending}
                 >
-                  Cancel
+                  {cancelLabel}
                 </Button>
                 {confirmation ? (
                   confirmation.prompt.choices.map((choice) => (
@@ -240,7 +246,7 @@ export function FormDialog({
                     </Button>
                   ))
                 ) : (
-                  <LoadingButton type="submit" pending={pending}>{submitLabel}</LoadingButton>
+                  <LoadingButton type="submit" variant={destructive ? "destructive" : "default"} pending={pending}>{submitLabel}</LoadingButton>
                 )}
                 {confirmation && pending ? <span role="status" className="text-sm text-ui-muted-foreground">Saving change…</span> : null}
               </DialogFooter>

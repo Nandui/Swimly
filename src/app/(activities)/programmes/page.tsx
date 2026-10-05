@@ -52,24 +52,26 @@ export default async function ProgrammesPage() {
         actions={<AddProgramme />}
       />
 
-      <Lead>
-        <Num>{summary.programmes}</Num>{" "}
-        {summary.programmes === 1 ? "programme" : "programmes"}, holding{" "}
-        <Num>{summary.levels}</Num> {summary.levels === 1 ? "level" : "levels"}{" "}
-        and <Num>{summary.competencies}</Num>{" "}
-        {summary.competencies === 1 ? "competency" : "competencies"} between
-        them.
-      </Lead>
-
       {live.length === 0 ? (
         <EmptyState
           icon="layers"
           title="No programmes yet"
-          hint="A programme is a ladder — Learn to Swim, Squad, Adult Lessons. Add one and give it levels."
+          hint="A programme is a ladder: Learn to swim, Squad, Adult lessons. Add one and give it levels."
           action={<AddProgramme />}
         />
       ) : (
-        <ProgrammeTable programmes={live} />
+        <section className="pc-panel" aria-label="Programmes in use">
+          <Lead>
+            <Num>{summary.programmes}</Num>{" "}
+            {summary.programmes === 1 ? "programme" : "programmes"}, holding{" "}
+            <Num>{summary.levels}</Num>{" "}
+            {summary.levels === 1 ? "level" : "levels"} and{" "}
+            <Num>{summary.competencies}</Num>{" "}
+            {summary.competencies === 1 ? "competency" : "competencies"} between
+            them.
+          </Lead>
+          <ProgrammeTable programmes={live} />
+        </section>
       )}
 
       {archived.length > 0 ? (
@@ -106,7 +108,7 @@ function ProgrammeTable({
           <TableHead scope="col" className={"max-md:hidden"}>
             Enrolments
           </TableHead>
-          <TableHead scope="col">
+          <TableHead scope="col" className="max-md:hidden">
             <span className="sr-only">Actions</span>
           </TableHead>
         </TableRow>
@@ -147,6 +149,14 @@ function ProgrammeTable({
                 {levelCountLabel(programme._count.levels)} ·{" "}
                 {programme._count.enrolments} enrolled
               </span>
+              <div className="md:hidden mt-3">
+                <ProgrammeRowActions
+                  programme={programme}
+                  archived={archived}
+                  first={index === 0}
+                  last={index === programmes.length - 1}
+                />
+              </div>
             </TableCell>
             <TableCell className={"max-md:hidden"}>
               <span className="text-sm text-ui-muted-foreground tabular-nums">
@@ -158,26 +168,49 @@ function ProgrammeTable({
                 {programme._count.enrolments}
               </span>
             </TableCell>
-            <TableCell className="w-28 md:w-auto">
-              <div
-                className={
-                  "min-w-0 flex gap-1 items-center justify-end flex-wrap"
-                }
-              >
-                {archived ? null : (
-                  <MoveProgramme
-                    programme={programme}
-                    first={index === 0}
-                    last={index === programmes.length - 1}
-                  />
-                )}
-                <EditProgramme programme={programme} />
-                <ArchiveProgramme programme={programme} />
-              </div>
+            <TableCell className="max-md:hidden">
+              <ProgrammeRowActions
+                programme={programme}
+                archived={archived}
+                first={index === 0}
+                last={index === programmes.length - 1}
+                end
+              />
             </TableCell>
           </TableRow>
         ))}
       </TableBody>
     </Table>
+  );
+}
+
+/** Reorder pair in a fixed slot, then Edit and Archive. On phones the row
+ *  shows these under the name instead of in a squeezed trailing column. */
+function ProgrammeRowActions({
+  programme,
+  archived,
+  first,
+  last,
+  end,
+}: {
+  programme: Row;
+  archived?: boolean;
+  first: boolean;
+  last: boolean;
+  end?: boolean;
+}) {
+  return (
+    <div
+      className={cn(
+        "min-w-0 flex gap-2 items-center flex-wrap",
+        end && "justify-end",
+      )}
+    >
+      {archived ? null : (
+        <MoveProgramme programme={programme} first={first} last={last} />
+      )}
+      <EditProgramme programme={programme} />
+      <ArchiveProgramme programme={programme} />
+    </div>
   );
 }

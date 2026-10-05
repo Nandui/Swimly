@@ -1,7 +1,7 @@
 import {
-  Activity, ArrowRightLeft, CalendarDays, CalendarOff, CircleCheck, CircleDashed, CircleEllipsis, CircleMinus, Coffee,
+  Activity, ArrowRightLeft, CalendarClock, CalendarDays, CalendarOff, CircleCheck, CircleDashed, CircleEllipsis, CircleMinus, Coffee,
   CopyX, FileQuestion, Flower2, GraduationCap, House, PartyPopper, Pencil, Plus, School, SlidersHorizontal, Thermometer,
-  Timer, TreePalm, TriangleAlert, Users, UserX, WavesHorizontal,
+  Lock, Timer, TreePalm, TriangleAlert, Users, UserX, WavesHorizontal,
 } from "lucide-react";
 import type { StatusMeta } from "@/lib/status";
 
@@ -16,6 +16,39 @@ export const ROTA_WARNING_META = {
   open: { label: "Unfilled", color: "gray", icon: CircleDashed },
 } as const satisfies Record<string, StatusMeta>;
 export type RotaWarning = keyof typeof ROTA_WARNING_META;
+
+/** A week plan cell (the roster sheet and its phone agenda): its words, tone, icon (the key)
+ *  and the `.pc-block` state that picks its fill. An absent shift keeps its time, on danger. */
+export const ROTA_SHIFT_META = {
+  planned: { label: "Shift", color: "blue", icon: CalendarDays, state: "next" },
+  check: { label: "Check this shift", color: "orange", icon: TriangleAlert, state: "cover" },
+  absent: { label: "Absent", color: "red", icon: UserX, state: "absent" },
+  open: { label: "Unfilled", color: "gray", icon: CircleDashed, state: "open" },
+} as const satisfies Record<string, StatusMeta & { state: "next" | "cover" | "absent" | "open" }>;
+export type RotaShiftKind = keyof typeof ROTA_SHIFT_META;
+
+/** Where a week stands, for rota managers: planned freely before it starts; once it starts
+ *  (Timepoint holds it) every change asks for its reason. */
+export const WEEK_STATE_META = {
+  planning: { label: "Planning ahead", color: "green", icon: CalendarClock },
+  underWay: { label: "Under way: changes ask for a reason", color: "orange", icon: Lock },
+} as const satisfies Record<string, StatusMeta>;
+
+/** The first day on or after `fromIso` that falls on one of the weekdays (0 Monday … 6 Sunday),
+ *  for a new booking's first and last day. */
+export function nextWeekday(fromIso: string, weekdays: readonly number[]) {
+  if (!weekdays.length) return fromIso;
+  for (let d = fromIso, i = 0; i < 7; d = addDaysIso(d, 1), i++) {
+    if (weekdays.includes((new Date(`${d}T00:00:00Z`).getUTCDay() + 6) % 7)) return d;
+  }
+  return fromIso;
+}
+
+/** A booking's qualification in short: the trailing "(NPLQ)" of "National Pool Lifeguard
+ *  Qualification (NPLQ)" when the name has one, else the name. */
+export function qualificationShort(name: string) {
+  return /\(([^()]+)\)\s*$/.exec(name)?.[1]?.trim() || name;
+}
 
 /** Each kind of block on the Day plan and Today timelines: its words, tone and icon (the legend
  *  and every block's tag), and the TimelineGrid state that picks its fill. A shift's state

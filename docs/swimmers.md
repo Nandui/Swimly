@@ -6,12 +6,17 @@ components and shares the existing workspace and colour-mode preference.
 
 - Search words can match first and last name, member number, contact name,
   email or phone. All statuses and all sites are included by default.
-- All, Active and Inactive filters are URL links with whole-directory counts.
-  The result count describes the current search. Search/filter changes reset
-  pagination, and clear actions recover from empty results.
-- Each row is one keyboard-accessible profile link. Member number and age help
-  distinguish names; wide screens also show the main contact. Phones stack
-  identifying details and levels without horizontal scrolling.
+- Search, the All, Active and Inactive filters, the rows and the pager share
+  one white panel under the page header. The filters are URL links whose counts
+  follow the current search, so they always agree with the rows. The pager at
+  the panel foot shows the range ("1 to 100 of 1,102"); a single page shows the
+  total alone. Search/filter changes reset pagination, and the empty state's one
+  "Clear filters" action recovers from empty results.
+- Each row is one keyboard-accessible profile link: an initials avatar, the
+  name, a caption with member number (when there is one) and age, the current
+  level, the home site (from 1024px) and the status tag with its icon. Phones
+  re-home the status beside the name and the level beneath it, without
+  horizontal scrolling. Contacts stay searchable and are shown on the profile.
 - Results are ordered by surname, first name and ID, 100 per page. Invalid and
   stale page numbers are bounded before constructing a database offset.
 - Profile links preserve search, status and page through `returnTo`. Profile

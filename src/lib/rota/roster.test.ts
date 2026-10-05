@@ -1,6 +1,7 @@
 import assert from "node:assert/strict";
 import { test } from "node:test";
 import { buildRoster, type RosterShift } from "./roster";
+import { nextWeekday, qualificationShort } from "./constants";
 
 /** Invented people and departments; the shape the week loads. */
 const pool = { name: "Pool", sortOrder: 1 }, desk = { name: "Reception", sortOrder: 2 };
@@ -38,4 +39,13 @@ test("To fill: unfilled duties, booking places, and cover for someone off; the t
   const riley = roster.groups[0].people.find((p) => p.name === "Riley Sample")!;
   assert.deepEqual([riley.days[0][0].absent, riley.minutes], [true, 0], "off: not counted in their hours");
   assert.deepEqual(roster.tiles, { people: 2, minutes: 300, toFill: 3, offPeople: 1, offShifts: 1, warnings: 1 });
+});
+
+test("a booking names its qualification by its short code, and starts on a ticked weekday", () => {
+  assert.equal(qualificationShort("National Pool Lifeguard Qualification (NPLQ)"), "NPLQ");
+  assert.equal(qualificationShort("First aid"), "First aid");
+  // 2026-10-04 is a Sunday: Monday to Friday starts on Monday the 5th.
+  assert.equal(nextWeekday("2026-10-04", [0, 1, 2, 3, 4]), "2026-10-05");
+  assert.equal(nextWeekday("2026-10-06", [0, 1, 2, 3, 4]), "2026-10-06");
+  assert.equal(nextWeekday("2026-10-05", [5]), "2026-10-10");
 });

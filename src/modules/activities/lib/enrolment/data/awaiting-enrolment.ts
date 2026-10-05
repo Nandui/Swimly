@@ -131,7 +131,7 @@ export async function getAwaitingEnrolment(input: { q?: string; page?: number } 
       waitlists: waiting,
     }];
   });
-  return { items, total: ordered.length, page, pages, q };
+  return { items, total: ordered.length, page, pages, pageSize: PAGE_SIZE, q };
 }
 
 export type AwaitingEnrolmentResult = Awaited<ReturnType<typeof getAwaitingEnrolment>>;

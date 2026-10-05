@@ -42,6 +42,6 @@ export async function getLegendAgreements(input: { q?: string; view?: string; pa
   const items = rows.map(row => ({ ...row, course: { ...row.course, level: {
     ...row.course.level, name: curriculum.level(row.course.level.id)?.name ?? row.course.level.name,
   } } }));
-  return { items, q, view, total, pages, page, outstandingCount, doneCount, siteName: club.name };
+  return { items, q, view, total, pages, page, pageSize: PAGE_SIZE, outstandingCount, doneCount, siteName: club.name };
 }
 export type LegendAgreementResult = Awaited<ReturnType<typeof getLegendAgreements>>;

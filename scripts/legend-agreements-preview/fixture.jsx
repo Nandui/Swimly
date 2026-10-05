@@ -41,12 +41,12 @@ function Screen(){
     <div className="flex flex-wrap gap-3"><ManageProfileEnrolments studentId={student.id} active enrolments={[active,waiting]} targets={courses}/>
       <EnrolIntoCourse course={courses[0]} taken={5}/>
       <EnrolInCourseForStudent student={student} courses={courses} label="Enrol from class list"/>
-      <PromoteFromWaitlist enrolment={waiting} classLabel="Turtles · Thursday 16:30" variant="button"/></div></div>;
+      <PromoteFromWaitlist enrolment={waiting} classLabel="Turtles · Thursday 16:30"/></div></div>;
   const q=query.get('q')??'',view=query.get('view')==='done'?'done':'outstanding';
   const matching=rows.filter(row=>`${row.student.firstName} ${row.student.lastName} ${row.student.memberNumber}`.toLowerCase().includes(q.toLowerCase()));
   const items=matching.filter(row=>view==='done'?row.legendAgreementStatus==='DONE':row.legendAgreementStatus!=='DONE');
   const restricted=query.has('restricted');
-  return <LegendAgreements result={{items,q,view,total:items.length,pages:1,page:1,outstandingCount:matching.filter(row=>row.legendAgreementStatus!=='DONE').length,doneCount:matching.filter(row=>row.legendAgreementStatus==='DONE').length,siteName:site.name}} canConfirm={!restricted} profiles={!restricted} classes={!restricted}/>;
+  return <LegendAgreements result={{items,q,view,total:items.length,pages:1,page:1,pageSize:20,outstandingCount:matching.filter(row=>row.legendAgreementStatus!=='DONE').length,doneCount:matching.filter(row=>row.legendAgreementStatus==='DONE').length,siteName:site.name}} canConfirm={!restricted} profiles={!restricted} classes={!restricted}/>;
 }
 const links=NAV_ITEMS.filter(item=>['calendar','students','courses','assessments','awaiting-enrolment','legend-agreements'].includes(item.screen))
   .map(item=>({href:item.href,label:item.label,icon:item.icon,active:isNavItemActive(location.pathname,item.href)}));

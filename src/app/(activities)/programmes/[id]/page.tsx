@@ -1,15 +1,6 @@
-import {
-  ItemContent,
-  ItemActions,
-  ItemDescription,
-  Item,
-  ItemGroup,
-  ItemMedia,
-  ItemTitle,
-} from "@/components/shadcn/item";
+import { ClipboardCheck } from "lucide-react";
 
-import { cn } from "@/lib/utils";
-
+import { plural } from "@/lib/format";
 import { CurriculumImage } from "@/modules/activities/components/curriculum/curriculum-image";
 import { ARCHIVAL_STATUS_META } from "@/lib/status";
 import type { Metadata } from "next";
@@ -127,15 +118,9 @@ export default async function ProgrammePage(
         </div>
       )}
 
-      <section className="pc-panel">
-        <div
-          className={
-            "min-w-0 flex gap-2 items-center justify-between flex-wrap"
-          }
-        >
-          <h2 className="text-lg font-semibold">
-            Kinds of assessment
-          </h2>
+      <section className="pc-panel" aria-labelledby="assessment-kinds">
+        <div className="pc-panel-head">
+          <h2 id="assessment-kinds">Kinds of assessment</h2>
           {programme.archivedAt ? null : (
             <AddAssessmentType
               programmeId={programme.id}
@@ -144,8 +129,8 @@ export default async function ProgrammePage(
           )}
         </div>
         <Lead>
-          What an assessment session for this programme can be — new swimmers,
-          mixed abilities. The desk picks one when adding a session.
+          What an assessment session for this programme can be, such as new
+          swimmers or mixed abilities. The desk picks one when adding a session.
         </Lead>
         {assessmentTypes.length === 0 ? (
           <EmptyState
@@ -154,36 +139,31 @@ export default async function ProgrammePage(
             hint="Add one and it becomes something a session can be."
           />
         ) : (
-          <ItemGroup className="divide-y divide-ui-border">
+          <ul className="pc-rows">
             {assessmentTypes.map((type) => (
-              <Item
-                key={type.id}
-                role="listitem"
-                className="items-start [overflow-wrap:anywhere]"
-              >
-                <ItemContent className="min-w-0">
-                  <ItemTitle className="min-w-0 flex-wrap">
+              <li key={type.id} className="pc-row [overflow-wrap:anywhere]">
+                <span className="pc-tile-icon">
+                  <ClipboardCheck aria-hidden="true" />
+                </span>
+                <div className="pc-row-body">
+                  <span className="pc-row-title flex gap-2 items-center flex-wrap">
                     {type.name}
                     {type.archivedAt ? (
                       <Tag meta={ARCHIVAL_STATUS_META.archived} />
                     ) : null}
-                  </ItemTitle>
-                  <ItemDescription>{`${type.description ? `${type.description} · ` : ""}${type._count.sessions} ${type._count.sessions === 1 ? "session" : "sessions"}`}</ItemDescription>
-                </ItemContent>
-                <ItemActions className="flex-wrap">
-                  {
-                    <div className="min-w-0 flex gap-1 items-center">
-                      <EditAssessmentType type={type} />
-                      <ArchiveAssessmentType
-                        type={type}
-                        sessions={type._count.sessions}
-                      />
-                    </div>
-                  }
-                </ItemActions>
-              </Item>
+                  </span>
+                  <span className="pc-row-hint">{`${type.description ? `${type.description} · ` : ""}${plural(type._count.sessions, "session")}`}</span>
+                </div>
+                <div className="pc-row-trail">
+                  <EditAssessmentType type={type} />
+                  <ArchiveAssessmentType
+                    type={type}
+                    sessions={type._count.sessions}
+                  />
+                </div>
+              </li>
             ))}
-          </ItemGroup>
+          </ul>
         )}
       </section>
     </div>
@@ -233,43 +213,30 @@ function LevelSection({
   const archived = Boolean(level.archivedAt);
   const live = level.competencies.filter((c) => !c.archivedAt);
 
+  const headingId = `level-${level.id}`;
+  const caption = [
+    level.description,
+    competencyCountLabel(live.length),
+    level._count.courses > 0
+      ? plural(level._count.courses, "class", "classes")
+      : null,
+  ]
+    .filter(Boolean)
+    .join(" · ");
+
   return (
-    <section
-      className={
-        "min-w-0 space-y-4 border-t border-ui-border border-b border-ui-border p-0"
-      }
-    >
-      <div className="min-w-0 flex flex-col gap-0">
-        <div className="min-w-0 flex gap-3 items-start px-3 py-2">
-          <div className="min-w-0 flex-1">
-            <div className="min-w-0 flex flex-col gap-0.5">
-              <h2 className="text-lg font-semibold">
-                <div className="min-w-0 flex gap-2 items-center flex-wrap">
-                  <CurriculumImage
-                    kind="level"
-                    id={level.id}
-                    name={level.name}
-                  />
-                  {level.name}
-                  {archived ? (
-                    <Tag meta={ARCHIVAL_STATUS_META.archived} />
-                  ) : null}
-                </div>
-              </h2>
-              {level.description ? (
-                <span className="text-sm text-ui-muted-foreground block">
-                  {level.description}
-                </span>
-              ) : null}
-              <span className="text-sm text-ui-muted-foreground block">
-                {competencyCountLabel(live.length)}
-                {level._count.courses > 0
-                  ? ` · ${level._count.courses} ${level._count.courses === 1 ? "class" : "classes"}`
-                  : ""}
-              </span>
-            </div>
-          </div>
-          <div className="min-w-0 flex gap-1 items-center">
+    <section className="pc-panel" aria-labelledby={headingId}>
+      <div className="flex flex-col gap-1">
+        <div className="pc-panel-head">
+          <h2
+            id={headingId}
+            className="min-w-0 flex gap-2 items-center flex-wrap"
+          >
+            <CurriculumImage kind="level" id={level.id} name={level.name} />
+            {level.name}
+            {archived ? <Tag meta={ARCHIVAL_STATUS_META.archived} /> : null}
+          </h2>
+          <div className="min-w-0 flex gap-2 items-center flex-wrap">
             {archived ? null : (
               <MoveLevel level={level} first={first} last={last} />
             )}
@@ -277,79 +244,72 @@ function LevelSection({
             <ArchiveLevel level={level} />
           </div>
         </div>
+        <p className="text-sm text-ui-muted-foreground">{caption}</p>
+      </div>
 
-        {level.competencies.length === 0 ? (
-          <p
-            className={cn(
-              "text-sm text-ui-muted-foreground block text-center",
-              "px-3 py-6",
-            )}
-          >
-            Nothing to pass yet. Add the first competency and it becomes what
-            completing {level.name} means.
-          </p>
-        ) : (
-          <ItemGroup className="divide-y divide-ui-border">
+      {level.competencies.length === 0 ? (
+        <EmptyState
+          compact
+          title="No competencies yet"
+          hint={`Add the first competency and it becomes what completing ${level.name} means.`}
+          action={
+            archived ? undefined : (
+              <AddCompetency levelId={level.id} levelName={level.name} />
+            )
+          }
+        />
+      ) : (
+        <>
+          <ul className="pc-rows">
             {numberLive(level.competencies).map(
               ({ competency, position, first, last }) => (
-                <Item
+                <li
                   key={competency.id}
-                  role="listitem"
-                  className="items-start [overflow-wrap:anywhere]"
+                  className="pc-row [overflow-wrap:anywhere]"
                 >
-                  <ItemMedia>
-                    {
-                      <span
-                        className={cn(
-                          "text-sm text-ui-muted-foreground tabular-nums",
-                          "inline-block w-4",
-                        )}
-                      >
-                        {position ?? ""}
-                      </span>
-                    }
-                  </ItemMedia>
-                  <ItemContent className="min-w-0">
-                    <ItemTitle className="min-w-0 flex-wrap">
+                  {position !== null ? (
+                    <span className="pc-tile-icon font-semibold tabular-nums">
+                      {position}
+                    </span>
+                  ) : null}
+                  <div className="pc-row-body">
+                    <span className="pc-row-title flex gap-2 items-center flex-wrap">
                       {competency.name}
                       {competency.archivedAt ? (
                         <Tag meta={ARCHIVAL_STATUS_META.archived} />
                       ) : null}
-                    </ItemTitle>
+                    </span>
                     {competency.description ? (
-                      <ItemDescription>{competency.description}</ItemDescription>
+                      <span className="pc-row-hint">
+                        {competency.description}
+                      </span>
                     ) : null}
-                  </ItemContent>
-                  <ItemActions className="flex-wrap">
-                    {
-                      <div className="min-w-0 flex gap-1 items-center">
-                        {competency.archivedAt ? null : (
-                          <MoveCompetency
-                            competency={competency}
-                            first={first}
-                            last={last}
-                          />
-                        )}
-                        <EditCompetency competency={competency} />
-                        <ArchiveCompetency
-                          competency={competency}
-                          assessed={competency._count.results}
-                        />
-                      </div>
-                    }
-                  </ItemActions>
-                </Item>
+                  </div>
+                  <div className="pc-row-trail">
+                    {competency.archivedAt ? null : (
+                      <MoveCompetency
+                        competency={competency}
+                        first={first}
+                        last={last}
+                      />
+                    )}
+                    <EditCompetency competency={competency} />
+                    <ArchiveCompetency
+                      competency={competency}
+                      assessed={competency._count.results}
+                    />
+                  </div>
+                </li>
               ),
             )}
-          </ItemGroup>
-        )}
-
-        {archived ? null : (
-          <div className="min-w-0 flex gap-2 items-center px-3 py-2">
-            <AddCompetency levelId={level.id} levelName={level.name} />
-          </div>
-        )}
-      </div>
+          </ul>
+          {archived ? null : (
+            <div>
+              <AddCompetency levelId={level.id} levelName={level.name} />
+            </div>
+          )}
+        </>
+      )}
     </section>
   );
 }

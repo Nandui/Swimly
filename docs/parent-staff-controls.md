@@ -1,4 +1,4 @@
-# Managing LeisureWorld Aquatics from the staff workspace
+# Managing the parent app from the staff workspace
 
 The staff interface uses the existing `/api/parent-admin/v1` endpoints with
 staff cookies. It never copies parent credentials into the browser. The in-app
@@ -9,18 +9,20 @@ migration; it needs no new environment variables.
 
 - **Swimmers → profile → Parent access:** approve a guardian email, revoke it
   for this swimmer or restore a previous approval. Contact fields do not grant
-  access. Approval sends no email. These records are shared across both sites.
-- **Swimmers → Parent accounts** (`/students/parents`): a shared queue of parent
-  access requests, with pending/approved/declined filters and pagination. Staff
-  verify the guardian and select an existing swimmer across either site, then
+  access. Approval sends no email. These records are shared across every site.
+- **Swimmers → Parent accounts** (`/students/parents`): two panels. The first is
+  a shared queue of parent access requests as rows, with a Waiting for review /
+  Approved / Declined segmented filter, a ghost Refresh requests and pagination
+  at the foot; waiting rows end with Decline request then Review and approve. Staff
+  verify the guardian and select an existing swimmer at any site, then
   approve or decline with an internal audit reason and a separate parent-facing
   reply. Approval atomically creates/restores `ParentChildAccess` and resolves
   the request. Suspended accounts cannot be approved. Repeated decisions return
-  a conflict; audit failure rolls back both the link and decision. Below the
-  queue is exact email lookup,
-  account details and suspend/reactivate. Suspension revokes existing sessions.
+  a conflict; audit failure rolls back both the link and decision. The second
+  panel is exact email lookup, the account as one row (status tag and
+  suspend/reactivate in its trail). Suspension revokes existing sessions.
   Reactivation permits a fresh sign-in without restoring revoked child access.
-- **Assessments → Assessment setup → Set up → Booking in LeisureWorld Aquatics:** publish, edit a deadline,
+- **Assessments → Assessment setup → Set up → Parent booking:** publish, edit a deadline,
   unpublish and refresh status. The session must belong to the working site.
   Deadlines use Europe/Dublin even on a device set to another timezone. Blank
   means the session start. Unpublishing preserves existing bookings.

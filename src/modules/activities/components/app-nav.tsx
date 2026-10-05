@@ -5,7 +5,7 @@ import type { ReactNode } from "react";
 import { ClubSwitcher } from "@/components/clubs/club-switcher";
 import { ModuleShell } from "@/components/workspace/module-shell";
 import { WorkspaceSearch } from "@/modules/activities/components/students/workspace-search";
-import { isNavItemActive, pageWidthFor, swimmerLookupHref, visibleNavGroups } from "@/modules/activities/lib/nav";
+import { isNavItemActive, swimmerLookupHref, visibleNavGroups } from "@/modules/activities/lib/nav";
 import type { ScreenKey } from "@/lib/staff/screens";
 import { LayoutDashboard } from "lucide-react";
 
@@ -36,7 +36,7 @@ export function AppChrome({ who, screens, club, clubs, children }: {
   ];
   return (
     <ModuleShell module="Swim school" id="swim-school" who={who} groups={groups}
-      scopeNote={club.name} contentClass="module-content swim-school-content" maxWidth={pageWidthFor(pathname)}
+      scopeNote={club.name} contentClass="module-content swim-school-content"
       tools={<SwimSchoolTools screens={screens} club={club} clubs={clubs} />}>
       {children}
     </ModuleShell>

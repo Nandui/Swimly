@@ -22,7 +22,7 @@ const plans=[
   {id:'workspace',full:true}, {id:'site-menu',full:true,click:'LeisureWorld Bishopstown, change site'},
   {id:'instructor-home',full:true}, {id:'instructor-menu',full:true,click:'Account menu: Alex Example'}, {id:'instructor-site',full:true,click:'LeisureWorld Bishopstown, change site'},
   {id:'appearance'}, {id:'password'}, {id:'directory',width:1280}, {id:'profile'},
-  {id:'add-swimmer',click:'Add swimmer',dialog:true,fill:{'First name':'Avery','Last name':'Example','Member number':'DEMO-5'}},
+  {id:'add-swimmer',click:'Add a swimmer',dialog:true,fill:{'First name':'Avery','Last name':'Example','Member number':'DEMO-5'}},
   {id:'edit-swimmer',click:'Edit details',dialog:true},
   {id:'enrol',click:'Manage enrolment',then:'Enrol in a class',dialog:true},
   {id:'move',click:'Manage enrolment',then:'Move class',dialog:true},

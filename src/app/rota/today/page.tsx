@@ -1,10 +1,10 @@
 import type { Metadata } from "next";
 import Link from "next/link";
-import { CheckCircle2, ChevronRight, Clock3, UserX } from "lucide-react";
+import { ArrowRightLeft, ChevronRight, TriangleAlert, UserX } from "lucide-react";
 import { Button } from "@/components/shadcn/button";
-import { NativeSelect, NativeSelectOption } from "@/components/shadcn/native-select";
 import { MarkTimepoint, ShiftDialog } from "@/components/rota/actions";
 import { EmptyState } from "@/components/ui-kit/empty-state";
+import { PageHeader } from "@/components/ui-kit/page-header";
 import { Tag } from "@/components/ui-kit/tag";
 import { TimelineGrid, type TimelineBlock, type TimelineLane } from "@/components/workspace/timeline-grid";
 import { formatDate, formatTime, formatTimeRange, minutesNow, plural } from "@/lib/format";
@@ -17,7 +17,6 @@ const tagOf = (kind: RotaBlockKind) => ({ icon: ROTA_BLOCK_META[kind].icon, labe
 
 export const metadata: Metadata = { title: "Today" };
 
-const span = (s: { startMinutes: number; endMinutes: number }) => `${clock(s.startMinutes)}–${clock(s.endMinutes)}`;
 
 /** Today's plan for duty managers: every department's duties on one
  *  timeline, what needs them now (cover for someone off, unfilled duties
@@ -94,84 +93,77 @@ export default async function TodayPage({ searchParams }: { searchParams: Promis
   }
 
   return (
-    <div className="space-y-4">
-      <div className="module-heading">
-        <div className="space-y-1">
-          <h1>Today{site ? <span className="font-normal text-ui-muted-foreground">: {site.name}</span> : null}</h1>
-          <p className="text-sm">{formatDate(new Date(`${now}T00:00:00Z`))} · {clock(data.minutesNow)} · the day is under way, so each change asks for its reason</p>
-        </div>
-        <div className="flex flex-wrap items-center gap-2">
-          {data.sites.length > 1 && site ? (
-            <form method="get" className="flex items-center gap-2" aria-label="Choose a site">
-              <div className="w-full sm:w-56"><NativeSelect name="site" defaultValue={site.id} aria-label="Site">
-                {data.sites.map((s) => <NativeSelectOption key={s.id} value={s.id}>{s.name}</NativeSelectOption>)}
-              </NativeSelect></div>
-              <Button type="submit" variant="outline">Show</Button>
-            </form>
-          ) : null}
-          {site?.manage ? <Button asChild variant="outline" className="min-h-11"><Link href="/rota/absences"><UserX aria-hidden="true" />Report absence</Link></Button> : null}
-          {site?.manage ? <ShiftDialog siteId={site.id} date={now} today={now} options={options} /> : null}
-        </div>
-      </div>
+    <div className="flex flex-col gap-6">
+      <PageHeader title={site ? `Today: ${site.name}` : "Today"}
+        description={`${formatDate(new Date(`${now}T00:00:00Z`))} · ${clock(data.minutesNow)} · the day is under way, so each change asks for its reason`}
+        actions={site?.manage ? <>
+          <Button asChild variant="outline"><Link href="/rota/absences"><UserX aria-hidden="true" />Report absence</Link></Button>
+          <ShiftDialog siteId={site.id} date={now} today={now} options={options} />
+        </> : undefined} />
       {!site ? (
         <EmptyState as="h2" icon="calendarDays" title="No sites to show" hint="Your rota role does not cover a site yet." />
       ) : (
         <div className="flex flex-col gap-4">
-          <aside className="grid items-start gap-4 lg:grid-cols-2">
-            <section aria-labelledby="today-needs" className="module-panel space-y-3">
-              <h2 id="today-needs">Needs you{data.needs.length ? ` · ${data.needs.length}` : ""}</h2>
-              {data.needs.length === 0 ? <p className="text-sm text-ui-muted-foreground">Every duty still to come has someone on it.</p> : (
-                <ul className="divide-y divide-ui-border">
+          <div className="pc-grid">
+            <section aria-labelledby="today-needs" className="pc-panel">
+              <div className="pc-panel-head"><h2 id="today-needs">Needs you{data.needs.length ? ` · ${data.needs.length}` : ""}</h2></div>
+              {data.needs.length === 0 ? <EmptyState compact icon="calendarCheck" title="Every shift still to come has someone on it" /> : (
+                <ul className="pc-rows">
                   {data.needs.map(({ shift: s, absent, cover }) => (
-                    <li key={s.id} className="space-y-2 py-3 first:pt-0">
-                      <p className="font-semibold">{s.role} {span(s)}</p>
-                      <p className="text-sm text-ui-muted-foreground">{absent ? `${s.user?.name ?? s.rotaPerson?.name ?? "Someone"} is off.` : "Unfilled."} {cover.length ? "Free and qualified:" : site.manage ? "Nobody free and qualified on the plan." : ""}</p>
-                      {site.manage && !s.importId ? cover.map((p) => (
-                        <div key={p.id} className="flex items-center justify-between gap-2 text-sm">
-                          <span className="min-w-0 truncate font-medium">{p.name}</span>
-                          <ShiftDialog siteId={site.id} date={now} today={now} shift={editable(s.id)} options={options} person={p.id} suggested={absent ? "cover" : "extra"}
-                            trigger={{ label: `Give cover: ${p.name}, ${s.role}`, className: "min-h-11", children: "Give cover" }} />
-                        </div>
-                      )) : null}
+                    <li key={s.id} className="pc-row">
+                      {absent ? null : <span className="pc-tile-icon" aria-hidden="true"><TriangleAlert /></span>}
+                      <span className="pc-row-body">
+                        <span className="pc-row-title">{s.role} {formatTimeRange(s.startMinutes, s.endMinutes)}</span>
+                        <span className="pc-row-hint">{absent ? `${s.user?.name ?? s.rotaPerson?.name ?? "Someone"} is off` : "Unfilled"}{cover.length ? ". Free and qualified:" : site.manage ? " · nobody free and qualified" : ""}</span>
+                      </span>
+                      {site.manage && !s.importId && cover.length ? (
+                        <span className="flex basis-full flex-wrap gap-2">
+                          {cover.map((p) => (
+                            <ShiftDialog key={p.id} siteId={site.id} date={now} today={now} shift={editable(s.id)} options={options} person={p.id} suggested={absent ? "cover" : "extra"}
+                              trigger={{ label: `Give cover to ${p.name}, ${s.role} ${formatTimeRange(s.startMinutes, s.endMinutes)}`, children: `Give cover to ${p.name}` }} />
+                          ))}
+                        </span>
+                      ) : null}
                     </li>
                   ))}
                 </ul>
               )}
             </section>
-            <section aria-labelledby="today-changes" className="module-panel space-y-3">
-              <h2 id="today-changes">Changes today{pending ? ` · ${pending} not in Timepoint yet` : ""}</h2>
-              {data.changes.length === 0 ? <p className="text-sm text-ui-muted-foreground">No changes to today&apos;s duties.</p> : (
-                <ul className="divide-y divide-ui-border">
-                  {data.changes.map((c) => (
-                    <li key={c.id} className="space-y-1.5 py-3 text-sm first:pt-0">
-                      <p className="font-semibold">{c.kind === "cancelled" ? `Cancelled: ${c.before}` : c.kind === "added" ? `Added: ${c.after}` : `${c.before} → ${c.after.split(", ").at(-1)}`}</p>
-                      <p className="flex flex-wrap items-center gap-2 text-ui-muted-foreground">
-                        <Tag meta={ROTA_CHANGE_REASON_META[c.reason as RotaChangeReason]} />
-                        {formatTime(minutesNow(c.createdAt))} · by {c.byName}{c.note ? ` · ${c.note}` : ""}
-                      </p>
-                      {c.timepointAt ? (
-                        <p className="flex items-center gap-1.5 font-medium text-[var(--pc-success)]"><CheckCircle2 aria-hidden="true" className="size-4" />Updated in Timepoint{c.timepointByName ? ` by ${c.timepointByName}` : ""}</p>
-                      ) : (
-                        <div className="flex flex-wrap items-center justify-between gap-2">
-                          <span className="flex items-center gap-1.5 font-medium text-[var(--pc-warning)]"><Clock3 aria-hidden="true" className="size-4" />Timepoint not updated yet</span>
-                          {site.manage ? <MarkTimepoint id={c.id} what={c.after || c.before} /> : null}
-                        </div>
-                      )}
-                    </li>
-                  ))}
+            <section aria-labelledby="today-changes" className="pc-panel">
+              <div className="pc-panel-head"><h2 id="today-changes">Changes today{pending ? ` · ${pending} not in Timepoint yet` : ""}</h2></div>
+              {data.changes.length === 0 ? <EmptyState compact icon="calendarDays" title="No changes to today's shifts" /> : (
+                <ul className="pc-rows">
+                  {data.changes.map((c) => {
+                    const reason = ROTA_CHANGE_REASON_META[c.reason as RotaChangeReason];
+                    return (
+                      <li key={c.id} className="pc-row">
+                        <span className="pc-tile-icon" aria-hidden="true">{reason ? <reason.icon /> : <ArrowRightLeft />}</span>
+                        <span className="pc-row-body">
+                          <span className="pc-row-title">{c.kind === "cancelled" ? `Cancelled: ${c.before}` : c.kind === "added" ? `Added: ${c.after}` : `${c.before} → ${c.after.split(", ").at(-1)}`}</span>
+                          <span className="pc-row-hint">
+                            {formatTime(minutesNow(c.createdAt))} · by {c.byName}{c.note ? ` · ${c.note}` : ""} · {c.timepointAt ? `Updated in Timepoint${c.timepointByName ? ` by ${c.timepointByName}` : ""}` : "Timepoint not updated yet"}
+                          </span>
+                        </span>
+                        <span className="pc-row-trail">
+                          {reason ? <Tag meta={reason} /> : null}
+                          {!c.timepointAt && site.manage ? <MarkTimepoint id={c.id} what={c.after || c.before} /> : null}
+                        </span>
+                      </li>
+                    );
+                  })}
                 </ul>
               )}
             </section>
-          </aside>
-          <section aria-labelledby="today-duties" className="pc-panel">
+          </div>
+          <section aria-labelledby="today-shifts" className="pc-panel">
             <div className="pc-panel-head">
-              <h2 id="today-duties" className="text-lg font-semibold">Duties today</h2>
+              <h2 id="today-shifts">Shifts today</h2>
               <Button asChild variant="ghost"><Link href={`/rota/day?${new URLSearchParams({ site: site.id, date: now })}`}>Open day plan<ChevronRight aria-hidden="true" /></Link></Button>
             </div>
             {plan.groups.length === 0 && teachers.length === 0 && data.bookings.length === 0 ? (
-              <EmptyState icon="calendarDays" title="No duties planned today" action={<Button asChild variant="outline"><Link href={`/rota?site=${site.id}`}>Open the week plan</Link></Button>} />
+              <EmptyState icon="calendarDays" title="No shifts planned today" action={<Button asChild variant="outline"><Link href={`/rota?site=${site.id}`}>Open the week plan</Link></Button>} />
             ) : (
-              <TimelineGrid from={from} to={to} now={data.minutesNow} lanes={lanes} blocks={blocks} laneHeading="Duty" label="Duties today" />
+              <TimelineGrid from={from} to={to} now={data.minutesNow} lanes={lanes} blocks={blocks} laneHeading="Shift" label="Shifts today" />
             )}
           </section>
         </div>

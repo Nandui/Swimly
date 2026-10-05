@@ -2,7 +2,7 @@
 
 import { useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
-import { CheckCheck, FileSpreadsheet, ListChecks } from "lucide-react";
+import { CheckCheck, FileSpreadsheet, Upload } from "lucide-react";
 import { Button } from "@/components/shadcn/button";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from "@/components/shadcn/dialog";
 import { FileField } from "@/components/ui/file-field";
@@ -47,7 +47,7 @@ export function LegendListMatch() {
 
   return (
     <Dialog open={open} onOpenChange={(next) => { if (!confirming) { setOpen(next); if (!next) { setFile(null); setPreview(null); setError(null); } } }}>
-      <DialogTrigger asChild><Button variant="outline" className="min-h-11"><ListChecks aria-hidden="true" />Upload Legend list</Button></DialogTrigger>
+      <DialogTrigger asChild><Button variant="outline"><Upload aria-hidden="true" />Upload Legend list</Button></DialogTrigger>
       <DialogContent className="flex flex-col gap-4 sm:max-w-lg">
         <DialogHeader>
           <DialogTitle>Upload Legend list</DialogTitle>

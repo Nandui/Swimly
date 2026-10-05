@@ -1,10 +1,11 @@
-import { Clock3, Play, TriangleAlert, UserRoundX, Users } from "lucide-react";
+import { CircleCheck, CircleX, Clock3, Play, TriangleAlert } from "lucide-react";
 import type { DayOfWeek } from "@/generated/prisma/client";
 import type { StatusMeta } from "@/lib/status";
 import { formatTime, formatTimeRange } from "@/lib/format";
 
+/** A class with no instructor yet: a warning, since somebody has to teach it. */
 export const COURSE_STATUS_META = {
-  unassigned: { label: "Unassigned", color: "orange", icon: UserRoundX },
+  unassigned: { label: "Not assigned", color: "orange", icon: TriangleAlert },
 } as const satisfies Record<string, StatusMeta>;
 
 export const COURSE_PHASE_META = {
@@ -13,9 +14,11 @@ export const COURSE_PHASE_META = {
 } as const satisfies Record<string, StatusMeta>;
 
 /** A full class is not urgent, it is just full; only a class pushed past its
- *  own limit gets red. */
+ *  own limit gets red. `open` is the class list's "N places left" (the label is
+ *  swapped for the count). The circled check and X match the help guide. */
 export const CAPACITY_META = {
-  full: { label: "Full", color: "orange", icon: Users },
+  open: { label: "Spaces available", color: "green", icon: CircleCheck },
+  full: { label: "Full", color: "orange", icon: CircleX },
   over: { label: "Over capacity", color: "red", icon: TriangleAlert },
 } as const satisfies Record<string, StatusMeta>;
 

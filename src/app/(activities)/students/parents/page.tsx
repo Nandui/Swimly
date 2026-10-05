@@ -8,9 +8,12 @@ export const metadata: Metadata = { title: "Parent accounts" };
 
 export default async function ParentAccountsPage() {
   await screenPage("students", "parents.manage");
-  return <div className="min-w-0 space-y-6">
-    <PageHeader back={{ href: "/students", label: "Swimmers" }} title="Parent accounts" description="Review family requests and manage access to LeisureWorld Aquatics." />
+  return <div className="tf-content min-w-0">
+    <PageHeader back={{ href: "/students", label: "Swimmers" }} title="Parent accounts" description="Review family requests and manage access to the parent app" />
     <ParentAccessRequests />
-    <section className="space-y-4 border-t border-ui-border pt-6" aria-labelledby="find-parent-heading"><h2 id="find-parent-heading" className="text-xl font-semibold">Find a parent account</h2><ParentAccounts /></section>
+    <section className="pc-panel" aria-labelledby="find-parent-heading">
+      <div className="min-w-0"><h2 id="find-parent-heading">Find a parent account</h2><p className="pc-row-hint">Enter the full address the parent uses to sign in to the parent app.</p></div>
+      <ParentAccounts />
+    </section>
   </div>;
 }

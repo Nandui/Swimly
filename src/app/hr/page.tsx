@@ -1,53 +1,62 @@
 import type { Metadata } from "next";
 import Link from "next/link";
-import { ArrowRight, Search } from "lucide-react";
-import { Button } from "@/components/shadcn/button";
-import { Input } from "@/components/shadcn/input";
-import { Label } from "@/components/shadcn/label";
+import { ChevronRight, Lock } from "lucide-react";
+import { Avatar, AvatarFallback } from "@/components/shadcn/avatar";
 import { EmptyState } from "@/components/ui-kit/empty-state";
+import { PageHeader } from "@/components/ui-kit/page-header";
+import { SearchField } from "@/components/ui-kit/search-field";
 import { Tag } from "@/components/ui-kit/tag";
+import { formatDateTime, nameInitials, plural } from "@/lib/format";
 import { REVIEW_STATUS_META } from "@/lib/hr/constants";
 import { hrPeople } from "@/lib/hr/records";
+import { STEP_UP_MS } from "@/lib/policy/engine";
 import { requireFreshSession } from "@/lib/policy/session";
 
 export const metadata: Metadata = { title: "HR" };
 
 export default async function HrPeoplePage({ searchParams }: { searchParams: Promise<{ q?: string }> }) {
-  await requireFreshSession("hr.records.read", "/hr");
+  const actor = await requireFreshSession("hr.records.read", "/hr");
   const { q = "" } = await searchParams;
   const { people } = await hrPeople(q);
+  // Dev sign-ins pass the step-up without a password time, so they get no time sentence.
+  const confirmedAt = actor.authMethod === "password" && actor.authAt ? formatDateTime(new Date(actor.authAt)) : null;
   return (
-    <div className="space-y-6">
-      <div className="module-heading">
-        <div className="space-y-2">
-          <h1>HR</h1>
-          <p className="text-sm">The people your HR role covers. Opening a record is logged.</p>
-        </div>
+    <>
+      <PageHeader title="HR" description="The people your HR role covers. Opening a record is logged." />
+      <div className="pc-note">
+        <Lock aria-hidden="true" className="mt-0.5 size-5 shrink-0 text-ui-primary" />
+        <p className="text-sm">
+          Restricted · every read is logged.
+          {confirmedAt ? ` You confirmed your password at ${confirmedAt}; it lasts ${STEP_UP_MS / 60000} minutes.` : null}
+        </p>
       </div>
-      <form method="get" className="module-filters flex flex-wrap items-end gap-3" role="search" aria-label="Find a person">
-        <div className="min-w-0 flex-1 space-y-2"><Label htmlFor="hr-q">Person</Label><Input id="hr-q" name="q" defaultValue={q} placeholder="Name" className="min-h-11" /></div>
-        <Button type="submit" className="min-h-11"><Search aria-hidden="true" />Find</Button>
-      </form>
-      <div className="module-results space-y-3">
-        <p className="text-sm">{people.length} {people.length === 1 ? "person" : "people"}</p>
+      <section className="pc-panel" aria-label="People">
+        <form method="get" role="search" aria-label="Find a person">
+          <SearchField label="Person" placeholder="Name" name="q" defaultValue={q} clearHref={q ? "/hr" : undefined} />
+        </form>
+        {people.length > 0 ? <p className="text-xs text-ui-muted-foreground">{plural(people.length, "person", "people")}</p> : null}
         {people.length === 0 ? (
-          <EmptyState as="h2" icon="users" title="Nobody to show" hint="Nobody your role covers matches." />
+          <EmptyState as="h2" role="status" icon="users" title="Nobody to show" hint={q ? "Nobody your role covers matches that name." : "Your HR role covers nobody yet."} />
         ) : (
-          <ul className="module-list">
+          <ul className="pc-rows">
             {people.map((p) => (
               <li key={p.id}>
-                <Link href={`/hr/people/${p.id}`} className="module-row flex min-h-16 flex-wrap items-center justify-between gap-4 p-4 sm:px-5">
-                  <div className="min-w-0 flex-1 space-y-1">
-                    <p className="module-row-title">{p.name}</p>
-                    <p className="text-sm text-ui-muted-foreground">{p.jobTitle || "No job title"}{p.latestReview ? ` · latest review: ${p.latestReview.period}` : ""}</p>
-                  </div>
-                  <div className="flex items-center gap-3">{p.latestReview ? <Tag meta={REVIEW_STATUS_META[p.latestReview.status]} /> : null}<ArrowRight className="module-row-arrow size-5" aria-hidden="true" /></div>
+                <Link href={`/hr/people/${p.id}`} className="pc-row">
+                  <Avatar size="lg" aria-hidden="true"><AvatarFallback>{nameInitials(p.name)}</AvatarFallback></Avatar>
+                  <span className="pc-row-body">
+                    <span className="pc-row-title">{p.name}</span>
+                    <span className="pc-row-hint">{p.jobTitle || "No job title"}{p.latestReview ? ` · latest review: ${p.latestReview.period}` : ""}</span>
+                  </span>
+                  <span className="pc-row-trail">
+                    {p.latestReview ? <Tag meta={REVIEW_STATUS_META[p.latestReview.status]} /> : null}
+                    <ChevronRight aria-hidden="true" className="pc-row-chevron" />
+                  </span>
                 </Link>
               </li>
             ))}
           </ul>
         )}
-      </div>
-    </div>
+      </section>
+    </>
   );
 }

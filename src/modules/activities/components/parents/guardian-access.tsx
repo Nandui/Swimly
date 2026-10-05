@@ -16,34 +16,31 @@ export function GuardianAccessPanel({ studentId, swimmerName }: { studentId: str
     resource.reload();
     requestAnimationFrame(() => document.getElementById("parent-access-heading")?.focus());
   }
-  return <section className="space-y-6" aria-labelledby="parent-access-heading">
+  return <section className="flex flex-col gap-4" aria-labelledby="parent-access-heading">
     <div className="flex flex-wrap items-start justify-between gap-4">
-      <div className="max-w-prose space-y-2">
-        <h2 id="parent-access-heading" tabIndex={-1} className="text-xl font-semibold">Parent access</h2>
-        <p className="text-sm text-ui-muted-foreground">Approve the email a parent or guardian uses to sign in to LeisureWorld Aquatics. Access follows {swimmerName} across both sites.</p>
+      <div className="min-w-0 max-w-prose">
+        <h2 id="parent-access-heading" tabIndex={-1}>Parent access</h2>
+        <p className="pc-row-hint">Approve the email a parent or guardian uses to sign in to the parent app. Access follows {swimmerName} across every site.</p>
       </div>
       {resource.data ? <AccessForm path={path} swimmerName={swimmerName} onSaved={saved} /> : null}
     </div>
     <ParentLoadState {...resource} />
     {resource.data ? <>
-      {resource.data.items.length ? <ul className="divide-y divide-ui-border border-y border-ui-border">
+      {resource.data.items.length ? <ul className="pc-rows">
         {resource.data.items.map(item => {
           const meta = PARENT_ACCESS_META[item.revokedAt ? "revoked" : "approved"];
-          return <li key={item.id} className="flex flex-wrap items-center justify-between gap-4 py-4">
-            <div className="min-w-0 flex-1 space-y-2">
-              <p className="break-all text-sm font-medium">{item.parentEmail}</p>
-              <div className="flex flex-wrap items-center gap-2">
-                <Tag meta={meta} />
-                <span className="text-xs text-ui-muted-foreground">Updated {parentDateTime(item.updatedAt)}</span>
-              </div>
+          return <li key={item.id} className="pc-row">
+            <div className="pc-row-body basis-56">
+              <p className="pc-row-title break-all">{item.parentEmail}</p>
+              <p className="pc-row-hint">Updated {parentDateTime(item.updatedAt)}</p>
             </div>
-            <AccessForm path={path} swimmerName={swimmerName} entry={item} onSaved={saved} />
+            <div className="pc-row-trail"><Tag meta={meta} /><AccessForm path={path} swimmerName={swimmerName} entry={item} onSaved={saved} /></div>
           </li>;
         })}
       </ul> : <EmptyState compact title="No parent access approved" hint="Contact details alone do not grant access. Approve each guardian’s email after checking it belongs to the right person." />}
       <div className="max-w-prose space-y-2 text-sm text-ui-muted-foreground">
-        <p>Parents see released progress and bookings. Competency changes appear the next day at midnight in Ireland. Internal and medical notes stay private.</p>
-        <p>Approval does not send an email. The guardian signs in to LeisureWorld Aquatics with the approved address.</p>
+        <p>Parents see released progress and bookings. Competency changes appear the next day. Internal and medical notes stay private.</p>
+        <p>Approval does not send an email. The guardian signs in to the parent app with the approved address.</p>
         <Button variant="link" className="min-h-11 px-0" asChild><Link href="/students/parents">Find or manage a parent account</Link></Button>
       </div>
     </> : null}
@@ -57,12 +54,12 @@ function AccessForm({ path, swimmerName, entry, onSaved }: { path: string; swimm
     trigger={<Button variant={entry ? "outline" : "default"} className="min-h-11">{label}</Button>}
     title={label}
     description={revoke ? `Remove ${entry.parentEmail}’s access to ${swimmerName}. Access to other swimmers stays unchanged.`
-      : `Allow this guardian to see ${swimmerName}’s released progress and bookings in LeisureWorld Aquatics.`}
+      : `Allow this guardian to see ${swimmerName}’s released progress and bookings in the parent app.`}
     submitLabel={label} successMessage={revoke ? "Parent access revoked." : "Parent access approved."}
     submit={data => saveParentAdmin(path, revoke ? "DELETE" : "PUT", {
       email: entry?.parentEmail ?? String(data.get("email") ?? "").trim().toLowerCase(), reason: String(data.get("reason") ?? ""),
     })} onSuccess={onSaved}>
-    <div className="space-y-1 rounded-ui-md bg-ui-muted p-3 text-sm"><p className="font-medium break-words">{swimmerName}</p>{entry ? <p className="break-all">{entry.parentEmail}</p> : null}</div>
+    <div className="pc-note text-sm"><div className="min-w-0 space-y-1"><p className="font-semibold break-words">{swimmerName}</p>{entry ? <p className="break-all">{entry.parentEmail}</p> : null}</div></div>
     {!entry ? <Input type="email" name="email" label="Guardian email" required maxLength={254} autoComplete="off" autoCapitalize="none" spellCheck={false} /> : null}
     <ParentReason />
   </ParentFormDialog>;

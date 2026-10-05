@@ -41,7 +41,7 @@ Instructor remains a separate workspace. Schedule remains the default desk home.
   calendar month, including later sessions if records exist. Bookings affected
   count the frozen cancellation roster. Awaiting billing and Billing notified
   are the split for this month, not the queue's backlog across all dates.
-  The billing follow-up link appears only for the selected site and users
+  The Cancelled classes link appears only for the selected site and users
   with access to Cancelled classes; that queue covers all dates.
 
 ## Data and presentation
@@ -53,7 +53,8 @@ not swimmer identifiers, names, contacts or audit summaries. Analytics does
 not write records. The existing authenticated-session hook continues to apply
 authorized scheduled unenrolments as it does elsewhere in the app.
 
-The bento grid adapts to phone, tablet and desktop widths. Level bars have exact
+Figure tiles, then two panels side by side, then a full-width Daily activity panel
+adapt to phone, tablet and desktop widths (DESIGN.md, Analytics). Level bars have exact
 numeric labels; daily activity uses a table. Dates, scope and update time are
 visible. Refresh, loading, error and zero-result states are explicit. No new
 chart dependency is needed. Tests cover site scope, access, duplicate swimmers,

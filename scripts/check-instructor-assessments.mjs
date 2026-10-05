@@ -37,7 +37,7 @@ try {
   assert.equal(await page.getByRole('link',{name:'Back to Instructor'}).getAttribute('href'),'/instructor?tab=all&group=level');
   assert.equal(await page.locator('a[href^="/students"],a[href^="/assessments"]').count(),0);
   assert.equal(await page.getByRole('button',{name:'Book a swimmer',exact:true}).count(),0);
-  await person('Avery Example').getByRole('button',{name:'Place',exact:true}).click();
+  await person('Avery Example').getByRole('button',{name:'Place Avery Example',exact:true}).click();
   const dialog=page.getByRole('dialog');
   await settle();
   for(const control of await dialog.locator('button:visible,[role="combobox"]:visible').all()) {
@@ -54,7 +54,7 @@ try {
   await dialog.getByRole('button',{name:'Place',exact:true}).click();
   await dialog.waitFor({state:'hidden'});
   assert(await person('Avery Example').getByText('Turtles',{exact:true}).isVisible());
-  await person('Jamie Example').getByRole('button',{name:'Jamie Example did not come',exact:true}).click();
+  await person('Jamie Example').getByRole('button',{name:'Did not come: Jamie Example',exact:true}).click();
   await settle();
   for(const control of await page.getByRole('alertdialog').getByRole('button').all()) {
     const box=await control.boundingBox();assert(box.width>=44&&box.height>=44);

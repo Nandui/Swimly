@@ -1,4 +1,4 @@
-import { cn } from "@/lib/utils";
+import { Avatar, AvatarFallback } from "@/components/shadcn/avatar";
 import { Button } from "@/components/shadcn/button";
 import UiLink from "next/link";
 import {
@@ -112,13 +112,8 @@ export function ClassDetailView({
         }
       />
 
-      <section
-        aria-label="Class details"
-        className={
-          "min-w-0 space-y-4 border-t border-ui-border border-b border-ui-border p-0 py-4"
-        }
-      >
-        <div className={cn("min-w-0 grid gap-4", "grid-cols-2 xl:grid-cols-4")}>
+      <section aria-label="Class details" className="min-w-0">
+        <div className="min-w-0 grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-4">
           <ClassFact
             label="Weekly schedule"
             value={formatSlot(course)}
@@ -140,33 +135,23 @@ export function ClassDetailView({
               course.archivedAt
                 ? "Archived · closed to new enrolments"
                 : available === null
-                  ? "No capacity limit"
+                  ? `No limit · ${waiting.length} waiting`
                   : `${available} available · ${waiting.length} waiting`
             }
           />
         </div>
       </section>
 
-      <section
-        aria-labelledby="enrolled-heading"
-        className="min-w-0 flex flex-col gap-3"
-      >
-        <div
-          className={
-            "min-w-0 flex gap-3 items-center justify-between flex-wrap"
-          }
-        >
-          <h2
-            id="enrolled-heading"
-            className="text-xl font-semibold"
-          >
+      <section aria-labelledby="enrolled-heading" className="pc-panel">
+        <div className="pc-panel-head">
+          <h2 id="enrolled-heading">
             Enrolled swimmers ({active.length})
           </h2>
           {access.attendance && !course.archivedAt ? (
             <Button variant="outline" asChild={true}>
               <UiLink href={`/courses/${course.id}/class`}>
-                {<AppIcon name="clipboardList" size="sm" />}
-                {"Attendance & progress"}
+                <AppIcon name="clipboardList" size="sm" />
+                Attendance and progress
               </UiLink>
             </Button>
           ) : null}
@@ -196,22 +181,16 @@ export function ClassDetailView({
         )}
       </section>
 
-      <section
-        aria-labelledby="waitlist-heading"
-        className="min-w-0 flex flex-col gap-3"
-      >
-        <h2
-          id="waitlist-heading"
-          className="text-xl font-semibold"
-        >
-          Waitlist ({waiting.length})
-        </h2>
+      <section aria-labelledby="waitlist-heading" className="pc-panel">
+        <div className="pc-panel-head">
+          <h2 id="waitlist-heading">Waitlist ({waiting.length})</h2>
+        </div>
         {waiting.length ? (
           <>
-            <span className="text-sm text-ui-muted-foreground">
+            <p className="text-sm text-ui-muted-foreground">
               Waiting swimmers do not hold a place. Enrolling from the waitlist
               checks capacity again.
-            </span>
+            </p>
             <ClassRoster
               entries={waiting}
               course={course}
@@ -221,37 +200,28 @@ export function ClassDetailView({
             />
           </>
         ) : (
-          <span className="text-sm text-ui-muted-foreground">
+          <p className="text-sm text-ui-muted-foreground">
             No swimmers are waiting for this class.
-          </span>
+          </p>
         )}
       </section>
 
       {access.admin ? (
-        <section className="min-w-0 space-y-4 border-t border-ui-border p-0 pt-4">
-          <div
-            className={
-              "min-w-0 flex gap-3 items-center justify-between flex-wrap"
-            }
-          >
-            <div className="min-w-0 flex flex-col gap-1">
-              <h2 className="text-xl font-semibold">
-                Manage class
-              </h2>
-              <span className="text-sm text-ui-muted-foreground">
-                Update the weekly schedule, instructor or capacity.
-              </span>
-            </div>
+        <section aria-labelledby="manage-heading" className="pc-panel">
+          <div className="pc-panel-head">
+            <h2 id="manage-heading">Manage class</h2>
             <div className="min-w-0 flex gap-2 items-center flex-wrap">
+              <ArchiveCourse course={course} />
               <EditCourse
                 course={course}
                 levels={levels}
                 instructors={instructors}
-                variant="button"
               />
-              <ArchiveCourse course={course} />
             </div>
           </div>
+          <p className="text-sm text-ui-muted-foreground">
+            Update the weekly schedule, instructor or capacity.
+          </p>
         </section>
       ) : null}
     </div>
@@ -268,12 +238,14 @@ function ClassFact({
   hint?: string;
 }) {
   return (
-    <div className="min-w-0 flex flex-col gap-1">
-      <span className="text-sm text-ui-muted-foreground">{label}</span>
-      <span className="text-sm text-ui-foreground font-medium">{value}</span>
-      {hint ? (
-        <span className="text-sm text-ui-muted-foreground">{hint}</span>
-      ) : null}
+    <div className="pc-panel">
+      <div className="min-w-0 flex flex-col">
+        <span className="text-xs text-ui-muted-foreground">{label}</span>
+        <span className="text-sm text-ui-foreground font-semibold">{value}</span>
+        {hint ? (
+          <span className="text-xs text-ui-muted-foreground">{hint}</span>
+        ) : null}
+      </div>
     </div>
   );
 }
@@ -292,140 +264,144 @@ function ClassRoster({
   waiting?: boolean;
 }) {
   const label = courseLabel(course);
+  const since = waiting ? "Waiting since" : "Enrolled since";
+  const actions = (entry: RosterEntry) => (
+    <RosterActions
+      entry={entry}
+      classLabel={label}
+      targets={targets}
+      canPromote={waiting && !course.archivedAt}
+    />
+  );
   return (
-    <Table
-      aria-label={waiting ? "Waitlisted swimmers" : "Enrolled swimmers"}
-      className="w-full table-fixed [&_td]:whitespace-normal [&_th]:whitespace-normal"
-    >
-      <TableHeader>
-        <TableRow>
-          <TableHead scope="col">Swimmer</TableHead>
-          <TableHead scope="col" className={"hidden md:table-cell"}>
-            Placement
-          </TableHead>
-          <TableHead
-            scope="col"
-            className={"hidden lg:table-cell w-32 max-w-none"}
-          >
-            {waiting ? "Waiting since" : "Enrolled since"}
-          </TableHead>
-          {access.manage ? (
-            <TableHead
-              scope="col"
-              className={"hidden md:table-cell w-48 max-w-none"}
-            >
-              <span className={cn("text-sm text-ui-foreground", "sr-only")}>
-                Enrolment actions
-              </span>
-            </TableHead>
-          ) : null}
-        </TableRow>
-      </TableHeader>
-      <TableBody>
-        {entries.map((entry) => {
-          const student = entry.student;
-          const placementDiffers = entry.level.id !== course.levelId;
-          const inactive = student.status !== "ACTIVE";
-          return (
+    <>
+      {/* Phones and tablets: closed rows, actions in the row's trail. */}
+      <div className="lg:hidden">
+        <ul
+          className="pc-rows"
+          aria-label={waiting ? "Waitlisted swimmers" : "Enrolled swimmers"}
+        >
+          {entries.map((entry) => (
+            <li key={entry.id} className="pc-row">
+              <Swimmer entry={entry} access={access} />
+              <div className="pc-row-body">
+                <Placement
+                  entry={entry}
+                  differs={entry.level.id !== course.levelId}
+                />
+                <span className="pc-row-hint">
+                  {since} {formatDate(entry.startedOn)}
+                  {entry.scheduledEndOn
+                    ? ` · Unenrols ${formatDate(entry.scheduledEndOn)}`
+                    : ""}
+                </span>
+              </div>
+              {access.manage ? (
+                <div className="pc-row-trail">{actions(entry)}</div>
+              ) : null}
+            </li>
+          ))}
+        </ul>
+      </div>
+      {/* From 1024px: a table with every column visible. */}
+      <Table
+        aria-label={waiting ? "Waitlisted swimmers" : "Enrolled swimmers"}
+        containerClassName="hidden lg:block"
+        className="w-full [&_td]:whitespace-normal [&_th]:whitespace-normal"
+      >
+        <TableHeader>
+          <TableRow>
+            <TableHead scope="col">Swimmer</TableHead>
+            <TableHead scope="col">Placement</TableHead>
+            <TableHead scope="col">{since}</TableHead>
+            {access.manage ? (
+              <TableHead scope="col">
+                <span className="sr-only">Enrolment actions</span>
+              </TableHead>
+            ) : null}
+          </TableRow>
+        </TableHeader>
+        <TableBody>
+          {entries.map((entry) => (
             <TableRow key={entry.id}>
               <TableCell>
-                <div className="min-w-0 flex flex-col gap-2">
-                  <div className="min-w-0 flex gap-2 items-center flex-wrap">
-                    {access.students ? (
-                      <UiLink
-                        href={`/students/${student.id}`}
-                        className={cn(
-                          "text-ui-foreground underline-offset-4 hover:underline font-semibold",
-                          "inline-flex min-h-11 items-center",
-                        )}
-                      >
-                        {fullName(student)}
-                      </UiLink>
-                    ) : (
-                      <span className="text-sm text-ui-foreground font-semibold">
-                        {fullName(student)}
-                      </span>
-                    )}
-                    {student.hasMedicalNotes ? (
-                      <Tag meta={MEDICAL_STATUS_META.notes} />
-                    ) : null}
-                    {inactive ? (
-                      <Tag meta={STUDENT_STATUS_META[student.status]} />
-                    ) : null}
-                  </div>
-                  <span className="text-sm text-ui-muted-foreground">
-                    {student.memberNumber ?? "No member number"} ·{" "}
-                    {student.dateOfBirth
-                      ? `Age ${ageLabel(student.dateOfBirth)}`
-                      : "Age not recorded"}
-                  </span>
-                  <div
-                    className={cn("min-w-0 flex flex-col gap-1", "md:hidden")}
-                  >
-                    <Placement entry={entry} differs={placementDiffers} />
-                  </div>
-                  <span
-                    className={cn(
-                      "text-sm text-ui-muted-foreground",
-                      "lg:hidden",
-                    )}
-                  >
-                    {waiting ? "Waiting since" : "Enrolled since"}{" "}
-                    {formatDate(entry.startedOn)}
-                  </span>
+                <Swimmer entry={entry} access={access} />
+              </TableCell>
+              <TableCell>
+                <div className="min-w-0 flex flex-col">
+                  <Placement
+                    entry={entry}
+                    differs={entry.level.id !== course.levelId}
+                  />
+                </div>
+              </TableCell>
+              <TableCell>
+                <div className="min-w-0 flex flex-col">
+                  <span className="text-sm">{formatDate(entry.startedOn)}</span>
                   {entry.scheduledEndOn ? (
-                    <span className="text-sm text-ui-muted-foreground">
+                    <span className="text-xs text-ui-muted-foreground">
                       Unenrols {formatDate(entry.scheduledEndOn)}
                     </span>
                   ) : null}
-                  {access.manage ? (
-                    <div
-                      className={cn(
-                        "min-w-0 flex gap-2 items-center flex-wrap",
-                        "md:hidden",
-                      )}
-                    >
-                      <RosterActions
-                        entry={entry}
-                        classLabel={label}
-                        targets={targets}
-                        canPromote={waiting && !course.archivedAt}
-                      />
-                    </div>
-                  ) : null}
                 </div>
-              </TableCell>
-              <TableCell className={"hidden md:table-cell"}>
-                <div className="min-w-0 flex flex-col gap-1">
-                  <Placement entry={entry} differs={placementDiffers} />
-                </div>
-              </TableCell>
-              <TableCell className={"hidden lg:table-cell"}>
-                <span className="text-sm text-ui-muted-foreground">
-                  {formatDate(entry.startedOn)}
-                </span>
               </TableCell>
               {access.manage ? (
-                <TableCell className={"hidden md:table-cell"}>
-                  <div
-                    className={
-                      "min-w-0 flex gap-2 items-center justify-end flex-wrap"
-                    }
-                  >
-                    <RosterActions
-                      entry={entry}
-                      classLabel={label}
-                      targets={targets}
-                      canPromote={waiting && !course.archivedAt}
-                    />
+                <TableCell>
+                  <div className="min-w-0 flex gap-2 items-center justify-end flex-wrap">
+                    {actions(entry)}
                   </div>
                 </TableCell>
               ) : null}
             </TableRow>
-          );
-        })}
-      </TableBody>
-    </Table>
+          ))}
+        </TableBody>
+      </Table>
+    </>
+  );
+}
+
+/** Initials, the name (a link when the role has Swimmers), status tags, then member number and age. */
+function Swimmer({ entry, access }: { entry: RosterEntry; access: ClassAccess }) {
+  const student = entry.student;
+  return (
+    <div className="min-w-0 flex gap-3 items-center">
+      <Avatar aria-hidden="true">
+        <AvatarFallback>
+          {student.firstName.charAt(0)}
+          {student.lastName.charAt(0)}
+        </AvatarFallback>
+      </Avatar>
+      <div className="min-w-0 flex flex-col items-start">
+        {access.students ? (
+          <UiLink
+            href={`/students/${student.id}`}
+            className="inline-flex min-h-11 items-center font-semibold text-ui-foreground underline-offset-4 hover:underline"
+          >
+            {fullName(student)}
+          </UiLink>
+        ) : (
+          <span className="text-sm text-ui-foreground font-semibold">
+            {fullName(student)}
+          </span>
+        )}
+        <span className="text-xs text-ui-muted-foreground">
+          {student.memberNumber ?? "No member number"} ·{" "}
+          {student.dateOfBirth
+            ? `Age ${ageLabel(student.dateOfBirth)}`
+            : "Age not recorded"}
+        </span>
+        {student.hasMedicalNotes || student.status !== "ACTIVE" ? (
+          <div className="mt-1 min-w-0 flex gap-2 items-center flex-wrap">
+            {student.hasMedicalNotes ? (
+              <Tag meta={MEDICAL_STATUS_META.notes} />
+            ) : null}
+            {student.status !== "ACTIVE" ? (
+              <Tag meta={STUDENT_STATUS_META[student.status]} />
+            ) : null}
+          </div>
+        ) : null}
+      </div>
+    </div>
   );
 }
 
@@ -446,7 +422,6 @@ function RosterActions({
       {canPromote && active ? (
         <PromoteFromWaitlist
           enrolment={entry}
-          variant="button"
           classLabel={classLabel}
         />
       ) : null}
@@ -478,11 +453,11 @@ function Placement({
           <span className="text-sm text-ui-foreground">{entry.level.name}</span>
         )}
       </div>
-      <span className="text-sm text-ui-muted-foreground">
+      <span className="text-xs text-ui-muted-foreground">
         {entry.programme.name}
       </span>
       {entry.placementReason ? (
-        <span className="text-sm text-ui-muted-foreground">
+        <span className="text-xs text-ui-muted-foreground">
           Placement: {entry.placementReason}
         </span>
       ) : null}

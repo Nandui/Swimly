@@ -49,6 +49,7 @@ export function DeclineCertificate({ id, name }: { id: string; name: string }) {
       title={`Decline ${name}'s certificate?`}
       description="Nothing is recorded. They see your reason in Turnfin Me and can send a new one."
       submitLabel="Decline"
+      destructive
       successMessage="Certificate declined"
       submit={(formData) => declineCertificate(id, String(formData.get("note") ?? ""))}
     >

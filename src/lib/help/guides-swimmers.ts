@@ -19,7 +19,7 @@ export const SWIMMER_GUIDES: HelpArticle[] = [
     summary: "Create the swimmer record before booking a class or assessment.", keywords: ["new", "add", "register", "customer", "child", "signup", "sign up"],
     before: ["Search the shared directory first to avoid a duplicate. You need permission to add and edit swimmers."],
     steps: [
-      { title: "Open Swimmers and choose Add swimmer", text: "The form opens without leaving the directory." },
+      { title: "Open Swimmers and choose Add a swimmer", text: "The form opens without leaving the directory." },
       { title: "Enter the swimmer’s information", text: "Complete the required fields and add the contact and other details you have. Follow the form’s member-number and date guidance rather than guessing missing information." },
       { title: "Save the record", text: "Wait for the success message and the new profile to open. If the form reports a duplicate member number, check the existing record." },
       { title: "Choose the next task", text: "Use Manage enrolment to find a class, or open Assessments to book a suitable assessment session." },
@@ -117,7 +117,7 @@ export const SWIMMER_GUIDES: HelpArticle[] = [
     summary: "Use Together to compare options that have room for each swimmer at their current level.", keywords: ["sibling", "siblings", "sibbling", "family", "brother", "sister", "together", "same time", "friends"],
     before: ["You need the Together screen. It compares current enrolment levels, so each selected swimmer needs a current class level."],
     steps: [
-      { title: "Open Together and build the group", text: "Choose Add a child, find the first swimmer, then use Add another. The app may suggest other swimmers who share their contact details." },
+      { title: "Open Together and build the group", text: "Choose Add a swimmer, find the first swimmer, then use Add another swimmer. The app may suggest other swimmers who share their contact details." },
       { title: "Check who is included", text: "Review each selected swimmer and their level. Remove anyone who is not part of this search, or use Start again." },
       { title: "Compare the options", text: "Review All starting at the same time and Same day, different times. Check each class’s site, schedule and available places; use Next combinations when more options are available." },
       { title: "Make the bookings separately", text: "Once you have agreed an option, open each swimmer’s enrolment controls to enrol or move them. Searching Together does not reserve spaces or make a group booking." },

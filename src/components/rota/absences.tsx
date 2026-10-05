@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { CalendarCheck, CalendarPlus, MessageSquareText, Trash2, UserX } from "lucide-react";
+import { CalendarPlus, CircleCheck, MessageSquareText, Trash2, UserX } from "lucide-react";
 import { Button } from "@/components/shadcn/button";
 import { Input } from "@/components/shadcn/input";
 import { NativeSelect, NativeSelectOption } from "@/components/shadcn/native-select";
@@ -112,7 +112,7 @@ export function ReportAbsence({ people, today }: { people: Person[]; today: stri
             <p className="mt-2 text-sm">These days are part of that absence, so this extends it. If it is something else, mark them back at work first.</p>
           ) : (
             <fieldset className="mt-3 space-y-2">
-              <legend className="text-sm font-medium text-ui-foreground">Is this an extension of that absence?</legend>
+              <legend className="mb-2 font-semibold text-ui-foreground">Is this an extension of that absence?</legend>
               <Choice name="absence-follow" value={answer} onChange={(v) => setAnswer(v as typeof answer)} options={[
                 { value: "same", label: "Yes, they are still off", hint: "The same absence runs on. It counts once." },
                 { value: "separate", label: "No, it is a separate absence", hint: "For a different reason, starting fresh." },
@@ -124,7 +124,7 @@ export function ReportAbsence({ people, today }: { people: Person[]; today: stri
       {person && follow?.kind === "again" ? (
         <Notice title={`${person.name} was off recently`} description={`${describe(follow.absence)}; back ${follow.daysBack === 0 ? "for under a day" : `${follow.daysBack} ${follow.daysBack === 1 ? "day" : "days"}`} before this.`}>
           <fieldset className="mt-3 space-y-2">
-            <legend className="text-sm font-medium text-ui-foreground">Is it the same thing again?</legend>
+            <legend className="mb-2 font-semibold text-ui-foreground">Is it the same thing again?</legend>
             <Choice name="absence-again" value={answer} onChange={(v) => setAnswer(v as typeof answer)} options={[
               { value: "same", label: "Yes, the same again", hint: "A new absence, linked to the earlier one." },
               { value: "separate", label: "No, something different", hint: "A new absence on its own." },
@@ -179,7 +179,7 @@ export function BackAtWork({ id, name, today }: { id: string; name: string; toda
   return (
     <FormDialog
       portalClassName={THEME}
-      trigger={<Button variant="outline" className="min-h-11"><CalendarCheck aria-hidden="true" />Back at work</Button>}
+      trigger={<Button><CircleCheck aria-hidden="true" />Back at work</Button>}
       title={`${name} is back`}
       description="From the day after their last day off, their shifts no longer show as Absent."
       submitLabel="Save"
@@ -218,7 +218,7 @@ export function ReturnToWork({ id, name, reason, firstDay, lastDay, today }: { i
         <Input id={`return-on-${id}`} name="metOn" type="date" required min={addDaysIso(lastDay, 1)} max={today} defaultValue={today} className="min-h-11" />
       </Field>
       <fieldset className="space-y-2">
-        <legend className="text-sm font-medium text-ui-foreground">Are they fit to work?</legend>
+        <legend className="mb-2 font-semibold text-ui-foreground">Are they fit to work?</legend>
         <Choice name={`return-fit-${id}`} value={fit} onChange={(v) => setFit(v as ReturnFit)} options={[
           { value: "fit", label: RETURN_FIT_META.fit.label, hint: "Back to their usual shifts and duties." },
           { value: "adjusted", label: RETURN_FIT_META.adjusted.label, hint: "For example lighter duties or shorter shifts for a while." },
@@ -231,7 +231,7 @@ export function ReturnToWork({ id, name, reason, firstDay, lastDay, today }: { i
       ) : null}
       {asked ? (
         <fieldset className="space-y-2">
-          <legend className="text-sm font-medium text-ui-foreground">Has their fit note come in?</legend>
+          <legend className="mb-2 font-semibold text-ui-foreground">Has their fit note come in?</legend>
           <p className="text-sm text-ui-muted-foreground">Sickness over {SELF_CERTIFIED_DAYS} days needs one from their doctor.</p>
           <Choice name={`return-note-${id}`} value={fitNote} onChange={(v) => setFitNote(v as typeof fitNote)} options={[
             { value: "yes", label: "Yes, we have it", hint: "Keep it with their records." },
@@ -251,14 +251,16 @@ export function RemoveAbsence({ id, name }: { id: string; name: string }) {
   return (
     <FormDialog
       portalClassName={THEME}
-      trigger={<Button variant="ghost" size="icon" className="size-11" aria-label={`Remove the absence for ${name}`}><Trash2 aria-hidden="true" /></Button>}
+      trigger={<Button variant="outline" aria-label={`Remove the absence for ${name}`}><Trash2 aria-hidden="true" />Remove</Button>}
       title={`Remove the absence for ${name}?`}
       description="Only if it was recorded in error. Their shifts stop showing as Absent, and the removal is recorded."
       submitLabel="Remove absence"
+      cancelLabel="Keep it"
+      destructive
       successMessage="Absence removed"
       submit={() => withdrawAbsence(id)}
     >
-      <p className="sr-only">Confirm to remove.</p>
+      {null}
     </FormDialog>
   );
 }

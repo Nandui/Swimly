@@ -37,15 +37,14 @@ function LeavePlace({ enrolment }: { enrolment: StudentEnrolment }) {
 export function ManageProfileEnrolments({ studentId, active, enrolments, targets }: { studentId: string; active: boolean; enrolments: StudentEnrolment[]; targets: TransferTarget[] }) {
   const current = enrolments.filter(e => e.status === "ACTIVE" || e.status === "WAITLISTED");
   return <Dialog><DialogTrigger asChild><Button>Manage enrolment</Button></DialogTrigger>
-    <DialogContent className="max-h-[90dvh] overflow-y-auto sm:max-w-3xl"><DialogHeader><DialogTitle>Manage enrolment</DialogTitle><DialogDescription>Current places at both sites. Moves preserve the swimmer’s history.</DialogDescription></DialogHeader>
-      {current.length ? <ul className="divide-y divide-ui-border">{current.map(e => <li key={e.id} className="space-y-3 py-4"><div className="flex flex-wrap justify-between gap-2"><div><p className="font-semibold">{e.level.name} · {e.course.club.name}</p><p className="text-sm text-ui-muted-foreground">{formatSlotShort(e.course)}</p></div><Tag meta={ENROLMENT_STATUS_META[e.status]} /></div>
-        {e.scheduledEndOn ? <p className="text-sm">Ends {formatDate(e.scheduledEndOn)}</p> : null}
-        <div className="flex flex-wrap gap-2">
+    <DialogContent className="max-h-[90dvh] overflow-y-auto sm:max-w-3xl"><DialogHeader><DialogTitle>Manage enrolment</DialogTitle><DialogDescription>Current places at every site. Moves keep the swimmer’s history.</DialogDescription></DialogHeader>
+      {current.length ? <ul className="pc-rows">{current.map(e => <li key={e.id} className="pc-row"><div className="pc-row-body"><p className="pc-row-title">{e.level.name} · {e.course.club.name}</p><p className="pc-row-hint">{formatSlotShort(e.course)}{e.scheduledEndOn ? ` · Ends ${formatDate(e.scheduledEndOn)}` : ""}</p></div><div className="pc-row-trail"><Tag meta={ENROLMENT_STATUS_META[e.status]} /></div>
+        <div className="flex basis-full flex-wrap gap-2">
           <ClassEnrolmentDialog trigger={<Button variant="outline">Move class</Button>} courses={targets.filter(c => c.id !== e.course.id)} currentEnrolment={e}
             submit={(data, confirmation) => transferEnrolment(e.id, String(data.get("toCourseId") ?? ""), String(data.get("placementReason") ?? ""), confirmation)} />
           {e.status === "WAITLISTED" ? <ProfileActionDialog trigger={<Button variant="outline">Enrol from waitlist</Button>} title="Enrol from the waitlist" description={`Activate the place in ${courseLabelWithSite(e.course)} if a space is available.`} submitLabel="Enrol" submit={data => promoteFromWaitlist(e.id, readLegendAgreement(data))}><LegendAgreementField /></ProfileActionDialog> : null}
           <LeavePlace enrolment={e} />
-        </div></li>)}</ul> : <EmptyState compact title="No current enrolments or waitlist places." />}
+        </div></li>)}</ul> : <EmptyState compact title="No current enrolments or waitlist places" />}
       {active ? <ClassEnrolmentDialog trigger={<Button className="justify-self-start">Enrol in a class</Button>} courses={targets}
         submit={(data, confirmation) => enrolStudent({ studentId, courseId: String(data.get("courseId") ?? ""), placementReason: String(data.get("placementReason") ?? ""), allowWaitlist: data.get("allowWaitlist") === "on", legendAgreement: readLegendAgreement(data) }, confirmation)} /> : <p className="text-sm text-ui-muted-foreground">Reactivate this swimmer before adding a place.</p>}
     </DialogContent>

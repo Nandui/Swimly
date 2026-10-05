@@ -37,7 +37,7 @@ export function AddSwimmer({ student, trigger, defaultOpen = false }: { student?
     if (!next) { feedback.reset(); setExpanded(false); }
   }
   return <Dialog open={open} onOpenChange={changeOpen}>
-    <DialogTrigger asChild>{trigger ?? <Button variant={student ? "outline" : "default"}>{student ? "Edit details" : <><Plus aria-hidden="true" />Add swimmer</>}</Button>}</DialogTrigger>
+    <DialogTrigger asChild>{trigger ?? <Button variant={student ? "outline" : "default"}>{student ? "Edit details" : <><Plus aria-hidden="true" />Add a swimmer</>}</Button>}</DialogTrigger>
     <DialogContent className="flex max-h-[90dvh] flex-col gap-0 overflow-hidden p-0 sm:max-w-2xl [&_button:not([role=checkbox])]:min-h-11 [&_input:not([type=hidden])]:min-h-11" showCloseButton={false}>
       <DialogHeader className="shrink-0 p-6">
         <DialogTitle>{student ? "Edit swimmer details" : "Add a swimmer"}</DialogTitle>

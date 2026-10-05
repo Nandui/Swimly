@@ -12,16 +12,35 @@ the main database and uses the platform access model (docs/platform-access.md).
   roster sheet (owner decision, 3 October 2026: the duty grid was "extremely confusing
   to use, to read and not practical"): **people down the side**, grouped by the
   department they work most that week, **days across**, paid hours at the end
-  (`buildRoster`, `src/lib/rota/roster.ts`, pure and tested). Each cell shows the shift
-  in bold and what they mainly do (their activities, else the duty); off is red and
-  struck through, a warning amber with its icon. A **To fill** row above everyone lists
-  each day's unfilled duties, booking places and cover for someone off; choosing one
-  gives it to someone. Four tiles: on the plan, to fill, off, warnings. **Choosing a
-  shift** opens that person's day in a side panel: its warnings, their activities and
-  breaks (Suggest breaks included, saved with **Save day**), Change shift and Cancel
-  duty. **An empty day's +** gives them a shift. A day's heading opens its Day plan.
-  The status beside the title says **Planning ahead · changes are free** or **Under
-  way · changes ask for a reason**. Department supervisors plan upcoming weeks here.
+  (`buildRoster`, `src/lib/rota/roster.ts`, pure and tested). It follows V2Rota: one white
+  panel with no gridlines; day tiles across (today filled, each opening its Day plan), a
+  lane tile per person (initials, name, job title), and each shift a block in its state
+  from `ROTA_SHIFT_META` (the key shows them as tags): **Shift** (blue), **Check this
+  shift** (amber, with the warning's icon), **Absent** (danger, keeping its time) and
+  **Unfilled** (hatched). Today's blocks carry a primary outline. A **To fill** row
+  above everyone lists each day's unfilled shifts, booking places and cover for someone
+  off; a manager chooses one to give it to someone. A day with nothing for a person reads
+  **Off**; for managers it is dashed, with a **+**, and gives them a shift. Hours show a
+  muted "–" when nothing counts. The description gives the dates, the site and the
+  counts (on the plan, to fill, off) and, for managers only, the week's state as a tag
+  (`WEEK_STATE_META`: **Planning ahead**, or **Under way: changes ask for a reason**).
+  The header holds the week picker (previous and next around a **Week** menu of nearby
+  weeks that always has This week), the **Department** menu, **Copy a week** and **Add a
+  shift** (both menus are lists of links, so arrowing never loads a page). Below 768px
+  the week is an agenda, a list per day for all seven days (DESIGN.md "Phones use
+  Agenda"); this departs from V2Rota's phone mockup, which scrolls the sheet sideways.
+  **Choosing a shift** opens that person's day in the side panel (`ShiftPlanSheet`, the
+  one editor for a shift's plan, also opened from the Day plan's blocks): its warnings,
+  their activities and breaks (Suggest breaks included, saved with **Save plan**; a
+  failed save keeps the panel and its rows open with the error inside), **Change shift**
+  and **Cancel shift**. Viewers see the plan read-only, without the week's state.
+  Department supervisors plan upcoming weeks here. **Site picker**: Week plan, Day plan,
+  Today and Bookings show one site, chosen in the frame's tools (`RotaSiteSwitcher`); it
+  changes only `?site=` (the week and date stay) and the page bar carries it between
+  those pages. Overview (the working site) and Absences (every site covered) have none.
+  **Words**: the plan item is a **shift** in every control (Add a shift, Change shift,
+  Cancel shift, Save shift), following V2Rota and ROOverview rather than ROToday and
+  RODay's "Add duty"; **Duty** stays only as the field naming what the shift is for.
   **Copy a week** starts a week that has not started from any earlier week (owner request, 3 October 2026: "plan each day by hand but have the option to start from a copy of a previous week"); the Day plan's **Copy a day** does the same for one day onto another (`copyPlan`). The supervisor chooses **the same people** or **the shape only** (every duty unfilled). Duties come with the activities and breaks inside them, plus the activities to cover and the day notes; booking places come from their bookings, not copies. Only days with nothing planned yet are filled, so a copy never doubles or overwrites a plan.
   It opens for anyone with the Rota screen and `rota.view` at any scope, and
   shows only the sites that capability covers; any other site is a 404.
@@ -41,7 +60,10 @@ the main database and uses the platform access model (docs/platform-access.md).
   "School lessons: Example National School", each place showing its role. Filling
   places is planning like any other duty. Cancelling a booking cancels its sessions
   still to come; when people this week are already on one, it asks for the reason
-  and logs each person taken off. A booking can create up to 600 places.
+  and logs each person taken off. A booking can create up to 600 places. **New
+  booking** starts its first and last day on the next ticked weekday, and each row
+  names a qualification by its short code ("1 lifeguard (NPLQ)", `qualificationShort`),
+  with **Cancel booking** and then **Plan who**.
 - **Day plan** (`/rota/day`; a day heading on the week plan opens it). Owner request, 2
   October 2026: the information in the duty managers' weekly pool breakdown (shifts and how
   many each needs, lessons and schools with their instructors, pool positions and handovers,
@@ -68,9 +90,10 @@ the main database and uses the platform access model (docs/platform-access.md).
   `TimelineGrid` (DESIGN.md): from 1280px a grid with lane tiles (the activity's edit, remove
   and "Put someone on" actions, a person's change-duty pencil), blocks whose state and tag
   come from `ROTA_BLOCK_META`, and a dashed line at the time now on today; narrower, the same
-  blocks and actions as an agenda in time order, so nothing is hidden in a sideways scroller. **Add duty** takes
+  blocks and actions as an agenda in time order, so nothing is hidden in a sideways scroller. **Add a shift** takes
   **Places**, so "2 lifeguards necessary" is one step: the extra places start unfilled.
-  Each day has a **note** (`RotaDayNote`). Activities used at the site in the last 12 weeks
+  Each day has a **note** (`RotaDayNote`) in a full-width **Notes** panel with an
+  always-visible **Save note**, ready once the note changes. Activities used at the site in the last 12 weeks
   are offered first. Timepoint holds shift times, not activities, so planning activities
   never asks for a reason. Pure and tested: `buildTimeline` (`src/lib/rota/timeline.ts`).
 - **Today** (`/rota/today`). The duty managers' day: every department's duties on
@@ -78,15 +101,19 @@ the main database and uses the platform access model (docs/platform-access.md).
   as an agenda in time order, each still opening its duty), and a link to today's Day plan;
   **Needs you**, the duties still to come whose person is off or that are
   unfilled, each with up to three people who are free (not off, not on another
-  duty then, at any site) and hold its qualification, and **Give cover**; and
-  **Changes today**, each with its reason, who made it and whether Timepoint has it,
-  with **Done in Timepoint**.
+  shift then, at any site) and hold its qualification, each as **Give cover to
+  <name>**; and **Changes today**, each with its reason as a tag, who made it and, in
+  its caption, whether Timepoint has it, with **Done in Timepoint**.
 - **Absences** (`/rota/absences`, rota managers only). Who is off now or soon,
   whose **return to work** is still to record, and who came back in the last 30 days. **Report absence** records a person, a
   reason (sickness, family emergency, bereavement or other), the first day off and,
   if known, the last. **Extend** runs a current absence on to a later last day
-  (or to "return not known"). **Back at work** sets the last day off; the bin
-  removes one recorded in error.
+  (or to "return not known"). **Back at work** sets the last day off; **Remove**
+  (a red confirm) removes one recorded in error. Each section is a panel of rows with
+  the person's initials; with nobody off it says **Nobody you look after is off** and
+  names the sites the manager's role covers. Cancelling a shift or a booking and
+  removing an absence confirm with a red button, and in a started week still ask for
+  the reason.
 - **My shifts** in Turnfin Me (the staff app). Each
   person sees their own shifts for the coming weeks. No permission is needed.
 

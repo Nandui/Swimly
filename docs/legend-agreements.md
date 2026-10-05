@@ -1,6 +1,6 @@
 # Legend agreement follow-up
 
-Legend holds the billing agreements. Swimly records staff confirmation; it does
+Legend holds the billing agreements. Turnfin records staff confirmation; it does
 not read or change Legend. Tracking belongs to each enrolment, not the swimmer.
 
 Before saving a new active place, staff choose **Updated in Legend** or

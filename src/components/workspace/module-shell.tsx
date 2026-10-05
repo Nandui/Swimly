@@ -20,7 +20,7 @@ export type ModuleLinkGroup = { label: string; links: ModuleLink[] };
  *  the person's modules in an icon bar down the left (a labelled bar along the bottom on phones
  *  and touch screens). Links are presentation; every page checks its permission again. The pool
  *  deck keeps its own tablet frame. */
-export function ModuleShell({ module, id, current = id, who, links = [], groups, tools, scopeNote, contentClass = 'module-content', maxWidth, scrollKey = '', children }: {
+export function ModuleShell({ module, id, current = id, who, links = [], groups, tools, scopeNote, contentClass = 'module-content', scrollKey = '', children }: {
   /** Display name, e.g. "Training". */
   module: string;
   /** Short id for the scope class and landmarks, e.g. "training". */
@@ -37,8 +37,6 @@ export function ModuleShell({ module, id, current = id, who, links = [], groups,
   /** A short note on whose records these are; read by screen readers with the page links. */
   scopeNote: string;
   contentClass?: string;
-  /** Caps the page's width; without it the page fills the frame. */
-  maxWidth?: number;
   /** Scroll back to the top when this changes as well as the path (filters). */
   scrollKey?: string;
   children: ReactNode;
@@ -92,7 +90,7 @@ export function ModuleShell({ module, id, current = id, who, links = [], groups,
         <div className="tf-body">
           <ModuleRail current={railCurrent} />
           <main id={`${id}-main`} tabIndex={-1} className="tf-main">
-            <div className={`tf-content ${contentClass}`} style={maxWidth ? { maxWidth } : undefined}>{children}</div>
+            <div className={`tf-content ${contentClass}`}>{children}</div>
           </main>
         </div>
       </div>

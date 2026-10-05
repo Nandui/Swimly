@@ -4,7 +4,6 @@ import { useMemo, useState, useTransition, type CSSProperties, type ReactNode } 
 import { useRouter } from "next/navigation";
 import { Check, Plus, Trash2, TriangleAlert, UserPlus } from "lucide-react";
 import { Button } from "@/components/shadcn/button";
-import { Checkbox } from "@/components/shadcn/checkbox";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/shadcn/dialog";
 import { Input } from "@/components/shadcn/input";
 import { Label } from "@/components/shadcn/label";
@@ -12,6 +11,7 @@ import { NativeSelect, NativeSelectOption } from "@/components/shadcn/native-sel
 import { ConfirmAction } from "@/components/confirm-action";
 import { Field, FormDialog } from "@/components/form-dialog";
 import { blockAttrs, type BlockPart } from "@/components/rota/actions";
+import { ChoiceRow } from "@/components/ui/choice-row";
 import { assignActivity, removeActivity, saveActivity } from "@/lib/rota/actions";
 import { clock, parseClock } from "@/lib/rota/constants";
 import { fitsFor, type Candidate } from "@/lib/rota/timeline";
@@ -62,10 +62,7 @@ export function ActivityDialog({ siteId, date, activity, types, names, trigger }
       </Field>
       <Field label="Note" htmlFor={`${id}-note`} optional><Input id={`${id}-note`} name="note" maxLength={200} defaultValue={activity?.note} className="min-h-11" /></Field>
       {activity ? null : (
-        <div className="flex min-h-11 items-center gap-3">
-          <Checkbox id={`${id}-week`} name="restOfWeek" />
-          <Label htmlFor={`${id}-week`} className="font-normal">Also every day after this one, to Sunday</Label>
-        </div>
+        <ChoiceRow type="checkbox" id={`${id}-week`} name="restOfWeek" title="Also every day after this one, to Sunday" />
       )}
     </FormDialog>
   );
@@ -136,7 +133,7 @@ export function AssignDialog({ activity, span, candidates, trigger }: {
               return (
                 <li key={f.candidate.shiftId} className="flex items-center justify-between gap-3 py-2">
                   <span className="min-w-0">
-                    <span className={cn("block truncate font-medium", f.status === "busy" && "text-ui-muted-foreground")}>{f.candidate.name}</span>
+                    <span className={cn("block truncate font-semibold", f.status === "busy" && "text-ui-muted-foreground")}>{f.candidate.name}</span>
                     <span className="flex flex-wrap items-center gap-x-2 text-xs text-ui-muted-foreground">
                       <span>On shift {clock(f.candidate.start)}–{clock(f.candidate.end)}</span>
                       {f.reason ? <span>· {f.reason}</span> : null}

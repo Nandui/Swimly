@@ -4,10 +4,10 @@ import { useId, useState, useTransition } from "react";
 import Form from "next/form";
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
-import { Check, ChevronDown, ChevronsUpDown, RefreshCw, SlidersHorizontal, X } from "lucide-react";
+import { Check, ChevronDown, SlidersHorizontal } from "lucide-react";
 import { Button } from "@/components/shadcn/button";
 import { SearchField } from "@/components/ui-kit/search-field";
-import { Label } from "@/components/shadcn/label";
+import { formatCount, plural } from "@/lib/format";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/shadcn/collapsible";
 import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList } from "@/components/shadcn/command";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/shadcn/popover";
@@ -35,34 +35,30 @@ export function CourseFilters({ dimensions, q, active, state, todayDay, views, s
   function pick(key: string, value: string | null) {
     startNavigation(() => router.push(href({ [key]: value, ...(key === "programme" ? { level: null } : {}) }), { scroll: false }));
   }
-  return <div className="space-y-4" aria-busy={pending}>
-    <Form action="/courses" role="search" aria-label="Search weekly classes" className="max-w-xl">
-      {dimensions.map(d => d.selected ? <input key={d.key} type="hidden" name={d.key} value={d.selected} /> : null)}
-      {state === "archived" ? <input type="hidden" name="state" value="archived" /> : null}
-      <SearchField id="class-query" label="Find a class" defaultValue={q} placeholder="Class, level, site or instructor" clearHref={href({ q: null })} />
-    </Form>
-    <SegmentedLinks label="Class availability" items={views.map(view => ({ href: href({ state: view.state, places: view.places }), label: view.label, count: view.count, current: selectedView === view.key }))} />
-    <Collapsible open={expanded} onOpenChange={setExpanded} className="space-y-3">
-      <div className="grid grid-cols-2 items-end gap-3 lg:grid-cols-4">
-        {PRIMARY.map(key => dimensions.find(d => d.key === key)).map(d => d ? <FilterPicker key={d.key} dimension={d} disabled={pending} onPick={value => pick(d.key, value)} /> : null)}
-        <CollapsibleTrigger asChild><Button variant="outline" className="h-11 justify-between"><SlidersHorizontal aria-hidden="true" /><span>More filters{extraCount ? ` (${extraCount})` : ""}</span><ChevronDown aria-hidden="true" className={expanded ? "rotate-180" : ""} /></Button></CollapsibleTrigger>
-      </div>
-      <CollapsibleContent className="grid grid-cols-2 gap-3 rounded-ui-lg border border-ui-border bg-ui-muted/30 p-3 lg:grid-cols-4">
-        {EXTRA.map(key => dimensions.find(d => d.key === key)).map(d => d ? <FilterPicker key={d.key} dimension={d} disabled={pending} onPick={value => pick(d.key, value)} /> : null)}
-      </CollapsibleContent>
-    </Collapsible>
-    {active ? <div className="flex min-w-0 flex-wrap gap-1">
-        {dimensions.filter(d => d.selected && d.key !== "places").map(d => <Button key={d.key} asChild variant="outline" className="h-auto min-h-9 max-w-full whitespace-normal py-2 text-left">
-          <Link href={href({ [d.key]: null })} aria-label={`Remove ${d.label.toLowerCase()} filter: ${d.selectedLabel ?? "Unavailable option"}`}><span className="min-w-0 break-words">{d.label}: {d.selectedLabel ?? "Unavailable option"}</span><X className="shrink-0" aria-hidden="true" /></Link>
-        </Button>)}
+  const picker = (key: string) => {
+    const d = dimensions.find(dimension => dimension.key === key);
+    return d ? <FilterPicker key={d.key} dimension={d} disabled={pending} onPick={value => pick(d.key, value)} /> : null;
+  };
+  return <div className="min-w-0 flex flex-col gap-4" aria-busy={pending}>
+    <div className="min-w-0 flex flex-wrap items-end gap-3">
+      <Form action="/courses" role="search" aria-label="Search weekly classes" className="min-w-0 flex-[1_1_18rem] md:max-w-md">
+        {dimensions.map(d => d.selected ? <input key={d.key} type="hidden" name={d.key} value={d.selected} /> : null)}
+        {state === "archived" ? <input type="hidden" name="state" value="archived" /> : null}
+        <SearchField id="class-query" label="Find a class" defaultValue={q} placeholder="Class, level, site or instructor" clearHref={href({ q: null })} />
+      </Form>
+      <SegmentedLinks label="Class availability" items={views.map(view => ({ href: href({ state: view.state, places: view.places }), label: view.label, count: view.count, current: selectedView === view.key }))} />
+    </div>
+    <Collapsible open={expanded} onOpenChange={setExpanded} asChild>
+      <div className="min-w-0 flex flex-wrap items-center gap-2">
+        {PRIMARY.map(picker)}
+        <CollapsibleTrigger asChild><Button variant="outline" className="max-w-full"><SlidersHorizontal aria-hidden="true" />More filters{extraCount ? ` (${extraCount})` : ""}</Button></CollapsibleTrigger>
+        <CollapsibleContent className="contents">{EXTRA.map(picker)}</CollapsibleContent>
         {active ? <Button asChild variant="ghost"><Link href={state === "archived" ? "/courses?state=archived" : "/courses"}>Clear filters</Link></Button> : null}
-      </div> : null}
-    <div className="flex flex-wrap items-center justify-between gap-2">
-      <p className="text-sm text-ui-muted-foreground" aria-live="polite" aria-atomic="true">{showing.total ? <><span className="font-medium text-ui-foreground">{showing.first}–{showing.last}</span> of {showing.total} {active ? "matching classes" : state === "archived" ? "archived classes" : "classes"}</> : "0 classes"}</p>
-      <div className="ml-auto flex gap-1">
-        {state !== "archived" ? <Button asChild variant="ghost"><Link href={href({ day: todayDay })}>Today only</Link></Button> : null}
-        <Button variant="ghost" disabled={pending} onClick={() => startNavigation(() => router.refresh())}><RefreshCw className={pending ? "animate-spin" : ""} aria-hidden="true" />{pending ? "Updating…" : "Refresh"}</Button>
       </div>
+    </Collapsible>
+    <div className="min-w-0 flex flex-wrap items-center justify-between gap-2">
+      <p className="text-xs text-ui-muted-foreground tabular-nums" aria-live="polite" aria-atomic="true">{showing.total ? `${formatCount(showing.first)} to ${formatCount(showing.last)} of ${plural(showing.total, active ? "matching class" : state === "archived" ? "archived class" : "class", active ? "matching classes" : state === "archived" ? "archived classes" : "classes")}` : "0 classes"}</p>
+      {state !== "archived" ? <Button asChild variant="ghost" className="ml-auto"><Link href={href({ day: todayDay })}>Today only</Link></Button> : null}
     </div>
   </div>;
 }
@@ -73,17 +69,15 @@ function FilterPicker({ dimension: d, onPick, disabled }: { dimension: FilterDim
   const all = ALL_LABELS[d.key];
   const chosen = d.selected ? d.selectedLabel ?? "Unavailable option" : all;
   function select(value: string | null) { setOpen(false); onPick(value); }
-  return <div className="min-w-0 space-y-2"><Label htmlFor={id}>{d.label}</Label>
-    <Popover open={open} onOpenChange={setOpen}><PopoverTrigger asChild><Button id={id} variant="outline" role="combobox" aria-expanded={open} aria-controls={`${id}-options`} aria-label={`${d.label}: ${chosen}`} disabled={disabled} className="h-11 w-full min-w-0 justify-between font-normal">
-      <span className="truncate">{chosen}</span><ChevronsUpDown className="shrink-0" aria-hidden="true" />
+  return <Popover open={open} onOpenChange={setOpen}><PopoverTrigger asChild><Button id={id} variant="outline" role="combobox" aria-expanded={open} aria-controls={`${id}-options`} aria-label={`${d.label}: ${chosen}`} disabled={disabled} className="min-w-0 max-w-full">
+      <span className="font-normal text-ui-muted-foreground">{d.label}</span><span className="min-w-0 truncate">{chosen}</span><ChevronDown className="shrink-0" aria-hidden="true" />
     </Button></PopoverTrigger><PopoverContent align="start" aria-label={`${d.label} filter`} className="w-80 max-w-[calc(100vw-2rem)] p-0"><Command>
-      <CommandInput placeholder={`Search ${d.label.toLowerCase()}…`} aria-label={`Search ${d.label.toLowerCase()}`} />
+      <CommandInput placeholder={`Search ${d.label.toLowerCase()}`} aria-label={`Search ${d.label.toLowerCase()}`} />
       <CommandList id={`${id}-options`}><CommandEmpty>No options match.</CommandEmpty><CommandGroup>
         <CommandItem value="__all__" keywords={[all]} onSelect={() => select(null)}>{all}{!d.selected ? <Check className="ml-auto" aria-label="Selected" /> : null}</CommandItem>
         {d.options.map(option => <CommandItem key={option.value} value={option.value} keywords={[option.label]} onSelect={() => select(option.value)}>
           <span className="min-w-0 flex-1 break-words">{option.label}</span><span className="text-ui-muted-foreground tabular-nums">{option.count}</span>{d.selected === option.value ? <Check aria-label="Selected" /> : null}
         </CommandItem>)}
       </CommandGroup></CommandList>
-    </Command></PopoverContent></Popover>
-  </div>;
+    </Command></PopoverContent></Popover>;
 }

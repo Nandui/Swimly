@@ -21,131 +21,130 @@
   gap: calc(var(--spacing) * 4);
   min-width: 0;
 }
+/* The glance panel comes first in the DOM (phones read it first); from 850px it sits on the right. */
 .body {
   display: grid;
-  gap: calc(var(--spacing) * 6);
-  padding-top: calc(var(--spacing) * 6);
+  gap: 16px;
+  padding-top: 16px;
+  align-items: start;
 }
+.main,
+.glance {
+  min-width: 0;
+}
+/* Chapters: a list of separate 16px cards (V2Profile); the current one carries the blue edge. */
 .chapters {
   display: flex;
   flex-direction: column;
-  gap: 0.75rem;
-}
-.chapterRow {
-  position: relative;
-  display: grid;
-  grid-template-columns: 4.5rem minmax(0, 1fr);
-  gap: 0.75rem;
-}
-.chapterRow::before {
-  content: "";
-  position: absolute;
-  top: 1.25rem;
-  bottom: -2rem;
-  left: 3.75rem;
-  border-left: 1px solid var(--ui-border);
-}
-.chapterRow:last-child::before {
-  display: none;
-}
-.year::after {
-  content: "";
-  position: absolute;
-  top: 1.25rem;
-  left: 3.5rem;
-  width: 0.5rem;
-  height: 0.5rem;
-  border-radius: 50%;
-  background: var(--ui-muted-foreground);
-  outline: 0.25rem solid var(--ui-muted);
-}
-.chapterRow:has([data-current="true"]) .year::after {
-  background: var(--ui-status-green);
-  outline-color: var(--ui-status-green-bg);
-}
-.year {
-  color: var(--ui-muted-foreground);
-  font-size: 0.75rem;
-  padding-top: 1rem;
+  gap: 8px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
 }
 .chapter {
+  display: flex;
+  flex-direction: column;
   min-width: 0;
-  border: 1px solid var(--ui-border);
-  border-radius: var(--ui-radius);
-  overflow: hidden;
+  border: 1px solid var(--pc-line);
+  border-radius: var(--pc-radius-card);
+  background: var(--pc-surface);
 }
-.profile :is([data-slot="button"], [data-slot="select-trigger"], [data-slot="input"], [data-slot="tabs-trigger"]) {
-  min-height: 2.75rem;
+.profile .chapter[data-current="true"] {
+  border-color: var(--pc-primary);
+  box-shadow: 0 0 0 3px var(--pc-primary-soft);
 }
 .chapterTrigger {
   display: flex;
-  align-items: start;
+  align-items: flex-start;
   justify-content: space-between;
-  gap: 1rem;
+  gap: 12px;
   width: 100%;
-  min-height: 2.75rem;
-  padding: 1rem 1.25rem;
-  background: var(--ui-muted);
-  text-align: left;
+  min-height: var(--pc-control-height);
+  padding: 16px;
+  border: 0;
+  border-radius: var(--pc-radius-card);
+  background: none;
+  color: var(--pc-ink);
+  font: inherit;
+  text-align: start;
   cursor: pointer;
 }
-.chapter[data-current="true"] .chapterTrigger {
-  background: var(--ui-status-green-bg);
-}
-.chapterTrigger[data-state="open"] > svg {
-  transform: rotate(180deg);
+.chapterTrigger:hover {
+  background: var(--pc-surface-sunken);
 }
 .chapterTrigger:focus-visible {
-  outline: 2px solid var(--ui-ring);
-  outline-offset: -3px;
+  outline: 2px solid var(--pc-focus);
+  outline-offset: -2px;
 }
 .chapterContent {
-  padding: 1rem 1.25rem;
-}
-.progress {
-  margin-top: 0.75rem;
-}
-.aside {
-  min-width: 0;
   display: flex;
   flex-direction: column;
-  gap: 1.5rem;
-  font-size: 0.875rem;
-  color: var(--ui-muted-foreground);
+  gap: 12px;
+  padding: 0 16px 16px;
 }
-.aside section {
-  padding-bottom: 1.5rem;
-  border-bottom: 1px solid var(--ui-border);
+/* Details: one row per field, label beside the value, each at least a 44px target. */
+.profile .details > :global(.pc-row) {
+  min-height: var(--pc-control-height);
+  padding-block: 4px;
 }
-.aside h2 {
-  color: var(--ui-foreground);
+.details dt {
+  flex: 0 0 calc(var(--spacing) * 40);
+}
+.details dd {
+  flex: 1 1 calc(var(--spacing) * 48);
+  min-width: 0;
+}
+/* Competency levels on the profile: the same card as a chapter. */
+.level {
+  min-width: 0;
+  border: 1px solid var(--pc-line);
+  border-radius: var(--pc-radius-card);
+}
+.levelContent {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  padding: 0 16px 16px;
+}
+/* Class picker: each class is a selectable row; the header lines up with the row's text
+   (1px line + 16px inset + 16px radio + 12px gap). */
+.pickerHead {
+  padding: 0 17px 0 45px;
+  color: var(--pc-ink-muted);
+  font-size: var(--pc-text-caption);
+  line-height: var(--pc-leading-caption);
   font-weight: 600;
-  margin-bottom: 0.75rem;
 }
-.aside svg {
-  width: 1rem;
-  height: 1rem;
-  flex-shrink: 0;
-  margin-top: 0.125rem;
+.picker .options label.option {
+  align-items: center;
+}
+.picker .options label.option:has([data-state="checked"]) {
+  border: 2px solid var(--pc-primary);
+  padding: 11px 15px;
+  background: var(--pc-primary-soft);
+}
+.picker .options label.option:has(:disabled) {
+  cursor: not-allowed;
 }
 .briefEvent {
   display: grid;
-  grid-template-columns: 6.5rem 1.25rem minmax(0, 1fr) auto;
-  gap: 0.75rem;
+  grid-template-columns: calc(var(--spacing) * 26) calc(var(--spacing) * 5) minmax(0, 1fr) auto;
+  gap: 12px;
   align-items: center;
-  padding-block: 0.75rem;
-  min-height: 4rem;
+  padding-block: 12px;
+  min-height: 64px;
 }
 .briefEvent time {
-  font-size: 0.75rem;
-  color: var(--ui-muted-foreground);
+  font-size: var(--pc-text-caption);
+  line-height: var(--pc-leading-caption);
+  color: var(--pc-ink-muted);
 }
 .briefEvent > svg {
-  color: var(--ui-muted-foreground);
+  color: var(--pc-ink-muted);
 }
 @container (max-width: 700px) {
   .briefEvent {
-    grid-template-columns: 1.25rem minmax(0, 1fr) auto;
+    grid-template-columns: calc(var(--spacing) * 5) minmax(0, 1fr) auto;
   }
   .briefEvent time {
     grid-column: 2 / -1;
@@ -153,35 +152,19 @@
 }
 @container (min-width: 850px) {
   .body {
-    grid-template-columns: minmax(0, 1fr) 17rem;
+    grid-template-columns: minmax(0, 1fr) calc(var(--spacing) * 80);
   }
-  .aside {
-    border-left: 1px solid var(--ui-border);
-    padding-left: 1.5rem;
+  .glance {
+    grid-column: 2;
+    grid-row: 1;
+  }
+  .main {
+    grid-column: 1;
+    grid-row: 1;
   }
 }
 @container (max-width: 500px) {
   .identity {
-    gap: 0.75rem;
-  }
-  .chapterRow {
-    grid-template-columns: minmax(0, 1fr);
-  }
-  .chapterRow::before,
-  .year::after {
-    display: none;
-  }
-  .year {
-    padding-top: 0.5rem;
-  }
-  .chapterTrigger,
-  .chapterContent {
-    padding: 1rem;
-  }
-}
-
-@container (max-width: 500px) {
-  .chapterContent > div:first-child > div:first-child {
-    flex-basis: 100%;
+    gap: 12px;
   }
 }

@@ -44,12 +44,12 @@ export default async function TogetherPage(props: PageProps<"/together">) {
     <div className="min-w-0 flex flex-col gap-6">
       <PageHeader
         title="Together"
-        description="One trip to the pool for more than one child: find a day — or a single slot — that suits all of them."
+        description="One trip to the pool for more than one child: find a day, or a single slot, that suits all of them."
       />
 
-      <div className="min-w-0 flex flex-col gap-3">
+      <section className="pc-panel" aria-label="Children">
         {/* The group so far: removable selections with profile shortcuts. */}
-        <div className="min-w-0 flex gap-2 items-center flex-wrap">
+        <div className="min-w-0 flex gap-3 items-end flex-wrap">
           {chosen.map((student) => (
             <SelectedSwimmer
               key={student.id}
@@ -69,14 +69,9 @@ export default async function TogetherPage(props: PageProps<"/together">) {
           )}
 
           {chosen.length > 0 ? (
-            <UiLink
-              href="/together"
-              className={
-                "text-ui-foreground underline-offset-4 hover:underline"
-              }
-            >
-              Start again
-            </UiLink>
+            <Button variant="ghost" asChild>
+              <UiLink href="/together">Start again</UiLink>
+            </Button>
           ) : null}
         </div>
 
@@ -101,24 +96,26 @@ export default async function TogetherPage(props: PageProps<"/together">) {
               </Button>
             ))}
             {suggestions.length > 1 ? (
-              <UiLink
-                href={hrefFor([...chosenIds, ...suggestions.map((s) => s.id)])}
-                className={
-                  "text-ui-foreground underline-offset-4 hover:underline"
-                }
-              >
-                add all {suggestions.length}
-              </UiLink>
+              <Button variant="ghost" asChild>
+                <UiLink
+                  href={hrefFor([
+                    ...chosenIds,
+                    ...suggestions.map((s) => s.id),
+                  ])}
+                >
+                  Add all {suggestions.length}
+                </UiLink>
+              </Button>
             ) : null}
           </div>
         ) : null}
-      </div>
+      </section>
 
       {chosen.length === 0 ? (
         <EmptyState
           icon="users"
           title="Add the children you want to bring together"
-          hint="Brothers and sisters, or two friends who want to come at the same time — it makes no difference. Add the first and anyone sharing their phone number or email is offered alongside."
+          hint="Brothers and sisters, or two friends who want to come at the same time, it makes no difference. Add the first and anyone sharing their phone number or email is offered alongside."
         />
       ) : (
         <>

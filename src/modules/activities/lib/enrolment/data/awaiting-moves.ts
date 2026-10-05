@@ -63,7 +63,7 @@ export async function getAwaitingMoves(input: { q?: string; page?: number } = {}
       nextLevel: nextLevel ? { id: nextLevel.id, name: nextLevel.name } : null,
     };
   });
-  return { items, total, page, pages, q };
+  return { items, total, page, pages, pageSize: PAGE_SIZE, q };
 }
 
 export type AwaitingMovesResult = Awaited<ReturnType<typeof getAwaitingMoves>>;

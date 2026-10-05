@@ -78,8 +78,8 @@ export async function saveShift(id: string | null, input: ShiftInput): Promise<A
   const data = parsed.data;
   const start = parseClock(data.start), end = parseClock(data.end);
   if (start === null || end === null) return fail("Use times like 07:00.");
-  if (end <= start) return fail("The duty has to end after it starts, on the same day.");
-  if (end - start > 16 * 60) return fail("A duty can be up to 16 hours.");
+  if (end <= start) return fail("The shift has to end after it starts, on the same day.");
+  if (end - start > 16 * 60) return fail("A shift can be up to 16 hours.");
   const allowed = await allowedAt(data.siteId);
   if (!allowed.ok) return fail(allowed.error);
   const { actor, site } = allowed;
@@ -96,7 +96,7 @@ export async function saveShift(id: string | null, input: ShiftInput): Promise<A
     siteId: site.id, date: parseDateOnly(data.date), startMinutes: start, endMinutes: end, role: data.role,
     departmentId: data.departmentId, requiredTypeId: data.requiredTypeId, userId: data.userId, note: data.note,
   };
-  if (id && data.count > 1) return fail("Change one duty at a time.");
+  if (id && data.count > 1) return fail("Change one shift at a time.");
   if (data.count > 1 && data.userId) return fail("Several places start unfilled. Leave the person empty, then fill each one.");
   const summary = `${data.role} at ${site.name} on ${data.date}, ${clock(start)}–${clock(end)}`;
   const now = today();
@@ -106,7 +106,7 @@ export async function saveShift(id: string | null, input: ShiftInput): Promise<A
       where: { id, cancelledAt: null, importId: null },
       select: { siteId: true, userId: true, date: true, startMinutes: true, endMinutes: true, role: true, departmentId: true, user: { select: { name: true } } },
     }) : null;
-    if (id && !existing) return fail("That duty no longer exists, or came from the old roster upload.");
+    if (id && !existing) return fail("That shift no longer exists, or came from the old roster upload.");
     // Moving a duty between sites needs the permission at both.
     if (existing && existing.siteId !== site.id) {
       const from = await allowedAt(existing.siteId);
@@ -158,7 +158,7 @@ export async function cancelShift(id: string, input: ChangeInput = {}): Promise<
   const shift = await prisma.rotaShift.findFirst({
     where: { id, cancelledAt: null }, select: { siteId: true, orgId: true, role: true, date: true, startMinutes: true, endMinutes: true, userId: true, user: { select: { name: true } } },
   });
-  if (!shift) return fail("That duty no longer exists.");
+  if (!shift) return fail("That shift no longer exists.");
   const live = weekStarted(iso(shift.date), today());
   if (live && !change.reason) return fail(NEEDS_REASON);
   const allowed = await allowedAt(shift.siteId);
@@ -166,7 +166,7 @@ export async function cancelShift(id: string, input: ChangeInput = {}): Promise<
   const { actor, site } = allowed;
   const result = await prisma.$transaction(async (tx) => {
     const moved = await tx.rotaShift.updateMany({ where: { id, cancelledAt: null }, data: { cancelledAt: new Date() } });
-    if (moved.count !== 1) return fail("That duty is already cancelled.");
+    if (moved.count !== 1) return fail("That shift is already cancelled.");
     if (live && change.reason) {
       await tx.rotaShiftChange.create({ data: {
         orgId: shift.orgId, shiftId: id, siteId: shift.siteId, date: shift.date, kind: "cancelled",
@@ -279,7 +279,7 @@ export async function saveSegments(shiftId: string, input: SegmentInput[]): Prom
   const segments = parsed.data.map((s) => ({ startMinutes: parseClock(s.start), endMinutes: parseClock(s.end), kind: s.kind, label: s.kind === "break" ? s.label || UNPAID_BREAK : s.label }));
   if (segments.some((s) => s.startMinutes === null || s.endMinutes === null)) return fail("Use times like 10:30.");
   const shift = await prisma.rotaShift.findFirst({ where: { id: shiftId, cancelledAt: null, kind: "shift" }, select: { siteId: true, date: true, role: true, startMinutes: true, endMinutes: true, user: { select: { name: true } }, rotaPerson: { select: { name: true } } } });
-  if (!shift) return fail("That duty no longer exists.");
+  if (!shift) return fail("That shift no longer exists.");
   const clean = segments as { startMinutes: number; endMinutes: number; kind: "activity" | "break"; label: string }[];
   const problem = segmentProblem(shift, clean);
   if (problem) return fail(problem);

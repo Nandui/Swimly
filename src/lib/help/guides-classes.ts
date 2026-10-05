@@ -10,7 +10,7 @@ export const CLASS_GUIDES: HelpArticle[] = [
       { title: "Use the extra filters", text: "More filters includes Programme, Time, Instructor and Pool area. Choose Spaces available, Full or Archived when that is the set you need." },
       { title: "Open the class", text: "Choose its row or View class. Check the weekly schedule, site, pool area, instructor and capacity at the top of the detail page." },
       { title: "Inspect the roster and waitlist", text: "Read Enrolled swimmers and the separate waitlist. The roster includes identifying details and the placement level attached to each enrolment. Available actions depend on your permissions." },
-      { title: "Return to the same results", text: "Use the Classes back link to return with your search, filters and page preserved. Refresh reloads the latest class information." },
+      { title: "Return to the same results", text: "Use the Classes back link to return with your search, filters and page preserved." },
     ], result: "You can compare classes and inspect a specific roster without opening a large dropdown.",
     troubleshooting: [{ question: "The availability icon looks different from the attendance status.", answer: "The circled check and X describe available places or a full class. They do not tell you whether attendance has been recorded." }],
     related: ["daily-schedule", "manage-class", "enrol-swimmer"], action: "courses",
@@ -174,7 +174,7 @@ export const CLASS_GUIDES: HelpArticle[] = [
     summary: "Find assessed swimmers and class waitlists, then arrange a class place.", keywords: ["awaiting enrolment", "assessed", "follow up", "placement", "waiting", "waitlist", "class place"],
     before: ["Your role needs the Awaiting enrolment screen. Check the site in the sidebar. Enrolling also requires enrolment permission."],
     steps: [
-      { title: "Open Awaiting enrolment", text: "Choose Awaiting enrolment directly from the sidebar. Enrolments & waitlists includes assessed swimmers awaiting a place and class waitlists, even without an assessment. Awaiting moves lists current swimmers explicitly confirmed ready by an instructor. Search either list by name or member number." },
+      { title: "Open Awaiting enrolment", text: "Choose Awaiting enrolment directly from the sidebar. Enrolments and waitlists includes assessed swimmers awaiting a place and class waitlists, even without an assessment. Awaiting moves lists current swimmers explicitly confirmed ready by an instructor. Search either list by name or member number." },
       { title: "Follow up an instructor's move request", text: "Open Awaiting moves to see the current class, the confirming instructor, date and any note. Use Move swimmer to choose a class at either site and confirm the move. The swimmer stays in their current class until you do this, then leaves this list. Needs review means progress or the class level changed; ask the instructor to review readiness before proceeding." },
       { title: "Review the placement and family contact", text: "Check the swimmer, member number, any assessed level and each waitlisted class. Open an assessment date or swimmer profile when your access permits it. A waitlist can remain while the swimmer attends another class." },
       { title: "Arrange a class place", text: "For an assessment placement, choose Enrol to find classes at that level across sites. For a waitlisted class with space, choose Enrol from waitlist and confirm. Full or archived classes cannot receive a place here. Capacity is checked again when you confirm." },

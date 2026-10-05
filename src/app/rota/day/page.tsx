@@ -1,17 +1,17 @@
 import type { Metadata } from "next";
 import Link from "next/link";
-import { CalendarDays, ChevronLeft, ChevronRight, Pencil, UserPlus } from "lucide-react";
+import { ChevronLeft, ChevronRight, Pencil, UserPlus } from "lucide-react";
 import { Button } from "@/components/shadcn/button";
-import { NativeSelect, NativeSelectOption } from "@/components/shadcn/native-select";
 import { EmptyState } from "@/components/ui-kit/empty-state";
+import { PageHeader } from "@/components/ui-kit/page-header";
 import { Tag } from "@/components/ui-kit/tag";
 import { TimelineGrid, type TimelineBlock, type TimelineLane } from "@/components/workspace/timeline-grid";
-import { CopyPlan, ShiftDialog } from "@/components/rota/actions";
+import { CancelShift, CopyPlan, ShiftDialog } from "@/components/rota/actions";
 import { DayNote } from "@/components/rota/day-note";
-import { SegmentsDialog } from "@/components/rota/segments";
+import { ShiftPlanSheet } from "@/components/rota/segments";
 import { ActivityDialog, AssignDialog, RemoveActivity } from "@/components/rota/activities";
 import { formatDay, formatTimeRange, minutesNow, plural, today } from "@/lib/format";
-import { ROTA_BLOCK_META, ROTA_WARNING_META, addDaysIso, clock, mondayOf, shiftBlockKind, weekStarted, type RotaBlockKind } from "@/lib/rota/constants";
+import { ROTA_BLOCK_META, ROTA_WARNING_META, addDaysIso, clock, shiftBlockKind, weekStarted, type RotaBlockKind } from "@/lib/rota/constants";
 import { rotaDay } from "@/lib/rota/data";
 import { hours } from "@/lib/rota/plan";
 import { buildTimeline, dayRange, teachingSpans, type Candidate } from "@/lib/rota/timeline";
@@ -128,7 +128,7 @@ export default async function DayPlanPage({ searchParams }: { searchParams: Prom
         key: r.key, label: r.name ?? "Unfilled", caption: `${r.roles} · ${hours(r.minutes)}h${r.breaks ? `, ${r.breaks}m unpaid break` : ""}`,
         action: manage && first.editable ? (
           <ShiftDialog siteId={site.id} date={day} today={now} shift={editShift(first.id)} options={options}
-            trigger={{ label: `Change ${r.name ?? "the unfilled"} ${first.role} duty`, variant: "ghost", size: "icon", children: <Pencil aria-hidden="true" /> }} />
+            trigger={{ label: `Change ${r.name ?? "the unfilled"} ${first.role} shift`, variant: "ghost", size: "icon", children: <Pencil aria-hidden="true" /> }} />
         ) : undefined,
       });
       // A booking's place inside their own shift takes a second line rather than covering it.
@@ -147,8 +147,14 @@ export default async function DayPlanPage({ searchParams }: { searchParams: Prom
           agendaHint: r.name ?? "Unfilled",
           label: manage && s.editable ? `Plan ${label}` : label,
           render: manage && s.editable ? (parts) => (
-            <SegmentsDialog activities={data.activities} trigger={parts}
-              shift={{ id: s.id, start: s.start, end: s.end, role: duty, who: r.name, segments: s.segments, young: r.userId ? data.young[r.userId] ?? null : null }} />
+            <ShiftPlanSheet activities={data.activities} trigger={parts} editable
+              title={`${r.name ?? "Unfilled"} · ${formatDay(day)}`} description={`${duty} · ${formatTimeRange(s.start, s.end)}`}
+              warnings={[...(s.absent ? ["absent" as const] : []), ...s.warnings]}
+              shift={{ id: s.id, start: s.start, end: s.end, role: duty, who: r.name, segments: s.segments, young: r.userId ? data.young[r.userId] ?? null : null }}
+              actions={<>
+                <ShiftDialog siteId={site.id} date={day} today={now} shift={editShift(s.id)} options={options} label={s.absent ? "Give cover" : "Change shift"} suggested={s.absent ? "cover" : undefined} />
+                <CancelShift id={s.id} label={`${duty} ${formatTimeRange(s.start, s.end)}`} live={weekStarted(day, now)} withText />
+              </>} />
           ) : undefined,
         });
       }
@@ -174,36 +180,22 @@ export default async function DayPlanPage({ searchParams }: { searchParams: Prom
   const legend: RotaBlockKind[] = ["next", "gap", "booking", "unfilled", "absent", "teaching"];
 
   return (
-    <div className="space-y-4">
-      <div className="module-heading">
-        <div className="space-y-1">
-          <h1>Day plan{site ? <span className="font-normal text-ui-muted-foreground">: {site.name}</span> : null}</h1>
-          <p className="text-sm">{formatDay(day)} · {rows.filter((r) => r.name).length} on the plan{open ? ` · ${open} unfilled` : ""}{gaps ? ` · ${plural(gaps, "gap")} in cover` : ""}{manage ? ". Open a shift to plan its activities and breaks, or a gap to put someone on it" : ""}</p>
-        </div>
-        <div className="flex flex-wrap items-center gap-2">
-          <nav aria-label="Days" className="flex items-center gap-1">
+    <div className="flex flex-col gap-6">
+      <PageHeader title={site ? `Day plan: ${site.name}` : "Day plan"}
+        description={`${formatDay(day)} · ${rows.filter((r) => r.name).length} on the plan${open ? ` · ${open} unfilled` : ""}${gaps ? ` · ${plural(gaps, "gap")} in cover` : ""}`}
+        actions={<>
+          <nav aria-label="Days" className="flex items-center gap-2">
             <Button asChild variant="outline" size="icon" aria-label="Previous day"><Link href={link(addDaysIso(day, -1))}><ChevronLeft aria-hidden="true" /></Link></Button>
             <Button asChild variant="outline"><Link href={link(now)} aria-current={day === now ? "date" : undefined}>Today</Link></Button>
             <Button asChild variant="outline" size="icon" aria-label="Next day"><Link href={link(addDaysIso(day, 1))}><ChevronRight aria-hidden="true" /></Link></Button>
           </nav>
-          {site ? <Button asChild variant="outline" className="min-h-11"><Link href={`/rota?${new URLSearchParams({ site: site.id, week: mondayOf(day) })}`}><CalendarDays aria-hidden="true" />Week</Link></Button> : null}
           {site?.manage && !weekStarted(day, now) ? <CopyPlan siteId={site.id} to={day} whole={false} /> : null}
           {site?.manage ? <ShiftDialog siteId={site.id} date={day} today={now} options={options} /> : null}
-        </div>
-      </div>
+        </>} />
       {!site ? (
         <EmptyState as="h2" icon="calendarDays" title="No sites to show" hint="Your rota role does not cover a site yet." />
       ) : (
         <>
-          {data.sites.length > 1 ? (
-            <form method="get" className="flex items-center gap-2" aria-label="Choose a site">
-              <div className="w-full sm:w-60"><NativeSelect name="site" defaultValue={site.id} aria-label="Site">
-                {data.sites.map((s) => <NativeSelectOption key={s.id} value={s.id}>{s.name}</NativeSelectOption>)}
-              </NativeSelect></div>
-              <input type="hidden" name="date" value={day} />
-              <Button type="submit" variant="outline">Show</Button>
-            </form>
-          ) : null}
           <section aria-labelledby="day-timeline" className="pc-panel">
             <div className="pc-panel-head">
               <h2 id="day-timeline" className="text-lg font-semibold">The day</h2>
@@ -215,9 +207,10 @@ export default async function DayPlanPage({ searchParams }: { searchParams: Prom
               {legend.map((kind) => <li key={kind}><Tag meta={ROTA_BLOCK_META[kind]} /></li>)}
             </ul>
           </section>
-          <section className="module-panel max-w-2xl">
-            {site.manage ? <DayNote siteId={site.id} date={day} text={data.note} label={formatDay(day)} />
-              : <div className="space-y-1"><h2 className="text-sm font-semibold">Notes</h2><p className="text-sm whitespace-pre-line text-ui-muted-foreground">{data.note || "None."}</p></div>}
+          <section aria-labelledby="day-notes" className="pc-panel">
+            <h2 id="day-notes">Notes</h2>
+            {site.manage ? <DayNote siteId={site.id} date={day} text={data.note} labelledBy="day-notes" />
+              : <p className="whitespace-pre-line text-ui-muted-foreground">{data.note || "None."}</p>}
           </section>
         </>
       )}

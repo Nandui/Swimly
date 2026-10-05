@@ -21,6 +21,9 @@ export async function getCancellation(courseId: string, iso: string) {
   });
 }
 
+/** One page of the billing follow-up list; the pager reads it back from the result. */
+export const BILLING_PAGE_SIZE = 25;
+
 export async function getBillingCancellations(notified: boolean, page: number) {
   const session = await requireSession();
   if (!canSee(session, "cancellations")) throw new AuthorizationError("Cancelled classes access is required.");
@@ -30,12 +33,13 @@ export async function getBillingCancellations(notified: boolean, page: number) {
     prisma.classCancellation.count({ where }),
     prisma.classCancellation.count({ where: { clubId, billingNotifiedAt: null } }),
   ]);
-  const pages = Math.max(1, Math.ceil(total / 25));
+  const pageSize = BILLING_PAGE_SIZE;
+  const pages = Math.max(1, Math.ceil(total / pageSize));
   const currentPage = Math.min(Math.max(1, page), pages);
   const rows = await prisma.classCancellation.findMany({
     where, orderBy: [{ date: notified ? "desc" : "asc" }, { startMinutes: "asc" }, { id: "asc" }],
-    skip: (currentPage - 1) * 25, take: 25,
+    skip: (currentPage - 1) * pageSize, take: pageSize,
     include: { swimmers: { orderBy: [{ swimmerName: "asc" }, { id: "asc" }] } },
   });
-  return { rows, pending, total, pages, page: currentPage };
+  return { rows, pending, total, pages, page: currentPage, pageSize };
 }

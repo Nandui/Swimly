@@ -47,8 +47,8 @@ function AssessmentBookings({ bookings, session }: { bookings: BookingRow[]; ses
         {booking.outcomeNote ? <p className="text-sm text-ui-muted-foreground whitespace-pre-wrap break-words">{booking.outcomeNote}</p> : null}
       </ItemContent>
       <div className="flex flex-wrap items-center gap-2">
-        {booking.status === "BOOKED" || booking.status === "ATTENDED" ? <RecordOutcome booking={booking} session={session} variant="button" /> : null}
-        {booking.status === "BOOKED" ? <MarkNoShow booking={booking} variant="button" /> : null}
+        {booking.status === "BOOKED" || booking.status === "ATTENDED" ? <RecordOutcome booking={booking} session={session} /> : null}
+        {booking.status === "BOOKED" ? <MarkNoShow booking={booking} /> : null}
       </div>
     </Item>;
   })}</ItemGroup>;

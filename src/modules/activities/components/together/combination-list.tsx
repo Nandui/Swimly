@@ -1,4 +1,5 @@
 "use client";
+import { ChevronLeft, ChevronRight } from "lucide-react";
 import { Button } from "@/components/shadcn/button";
 import UiLink from "next/link";
 import {
@@ -55,11 +56,11 @@ function CombinationPages({
   const offset = (cursors.length - 1) * 5;
   return (
     <section className="pc-panel">
-      <h3 className="text-base font-semibold">{heading}</h3>
+      <h3>{heading}</h3>
       <span aria-live="polite" className="text-sm text-ui-muted-foreground">
         {page.combinations.length === 1 && !page.next && offset === 0
           ? "1 combination"
-          : `Combinations ${offset + 1}–${offset + page.combinations.length}${page.next ? " · more available" : " · last page"}`}
+          : `Combinations ${offset + 1} to ${offset + page.combinations.length}${page.next ? " · more available" : " · last page"}`}
       </span>
       {page.combinations.map((placements, index) => (
         <SlotList
@@ -72,18 +73,22 @@ function CombinationPages({
       {cursors.length > 1 || page.next ? (
         <div className="min-w-0 flex gap-2 items-center flex-wrap">
           <Button
+            variant="outline"
             onClick={() => setCursors((previous) => previous.slice(0, -1))}
             disabled={cursors.length === 1}
             aria-label={`Previous combinations for ${heading}`}
           >
+            <ChevronLeft aria-hidden="true" />
             Previous
           </Button>
           <Button
+            variant="outline"
             onClick={() => setCursors((previous) => [...previous, page.next])}
             disabled={!page.next}
             aria-label={`Next combinations for ${heading}`}
           >
             Next combinations
+            <ChevronRight aria-hidden="true" />
           </Button>
         </div>
       ) : null}
@@ -107,7 +112,7 @@ function SlotList({
 
   return (
     <section className="space-y-3">
-      {<h4 className="text-base font-semibold">{heading}</h4>}
+      <h4 className="font-semibold">{heading}</h4>
       <ItemGroup className="divide-y divide-ui-border">
         {sorted.map((placement) => (
           <Item
@@ -125,7 +130,7 @@ function SlotList({
                   {courseName(placement.course)}
                 </UiLink>
                 {showTimes
-                  ? ` · ${formatTime(placement.course.startMinutes)}–${formatTime(placement.course.startMinutes + placement.course.durationMinutes)}`
+                  ? ` · ${formatTime(placement.course.startMinutes)} to ${formatTime(placement.course.startMinutes + placement.course.durationMinutes)}`
                   : ""}{" "}
                 · {placement.course.level.name} ·{" "}
                 {capacityLabel(

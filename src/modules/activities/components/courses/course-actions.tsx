@@ -1,15 +1,14 @@
 "use client";
 import { Button } from "@/components/shadcn/button";
 
-import { Archive, ArchiveRestore, Pencil, Plus } from "lucide-react";
-import { ActionButton, ConfirmAction } from "@/components/confirm-action";
+import { Archive, ArchiveRestore, Pencil } from "lucide-react";
+import { ConfirmAction } from "@/components/confirm-action";
 import { Field, FormDialog } from "@/components/form-dialog";
 
 import { Input } from "@/components/ui/input";
 import { Select } from "@/components/ui/select";
 import { DayOfWeek } from "@/generated/prisma/enums";
 import {
-  createCourse,
   setCourseArchived,
   updateCourse,
 } from "@/modules/activities/lib/courses/actions/courses";
@@ -166,61 +165,23 @@ function CourseFields({
   );
 }
 
-export function AddCourse({
-  levels,
-  instructors,
-}: {
-  levels: LevelOption[];
-  instructors: InstructorOption[];
-}) {
-  return (
-    <FormDialog
-      trigger={
-        <Button variant="default">
-          {<Plus aria-hidden={true} className="size-4 shrink-0" />}
-          {"Add class"}
-        </Button>
-      }
-      title="Add a class"
-      width="sm:max-w-xl"
-      description="One level, one time, every week."
-      submitLabel="Add class"
-      successMessage="Class added"
-      submit={(formData) => createCourse(readInput(formData))}
-    >
-      <CourseFields levels={levels} instructors={instructors} />
-    </FormDialog>
-  );
-}
-
 export function EditCourse({
   course,
   levels,
   instructors,
-  variant = "icon",
 }: {
   course: CourseDetail;
   levels: LevelOption[];
   instructors: InstructorOption[];
-  variant?: "icon" | "button";
 }) {
   return (
     <FormDialog
       trigger={
-        variant === "icon" ? (
-          <Button
-            variant="outline"
-            aria-label={`Edit ${courseLabel(course)}`}
-            size="icon"
-          >
-            {<Pencil aria-hidden={true} className="size-4 shrink-0" />}
-          </Button>
-        ) : (
-          <Button variant="outline">
-            {<Pencil aria-hidden={true} className="size-4 shrink-0" />}
-            {"Edit"}
-          </Button>
-        )
+        <Button variant="outline">
+          <Pencil aria-hidden={true} className="size-4 shrink-0" />
+          Edit
+          <span className="sr-only"> {courseLabel(course)}</span>
+        </Button>
       }
       title={`Edit ${courseLabel(course)}`}
       width="sm:max-w-xl"
@@ -236,29 +197,35 @@ export function EditCourse({
 export function ArchiveCourse({ course }: { course: CourseDetail }) {
   if (course.archivedAt) {
     return (
-      <ActionButton
-        ariaLabel={`Restore ${courseLabel(course)}`}
+      <ConfirmAction
+        trigger={
+          <Button variant="outline">
+            <ArchiveRestore aria-hidden={true} className="size-4 shrink-0" />
+            Restore
+            <span className="sr-only"> {courseLabel(course)}</span>
+          </Button>
+        }
+        title={`Restore ${courseLabel(course)}?`}
+        description="It goes back on the timetable and can take enrolments again."
+        confirmLabel="Restore"
         successMessage="Class restored"
         run={() => setCourseArchived(course.id, false)}
-      >
-        <ArchiveRestore aria-hidden={true} className="size-4 shrink-0" />
-      </ActionButton>
+      />
     );
   }
 
   return (
     <ConfirmAction
       trigger={
-        <Button
-          variant="outline"
-          aria-label={`Archive ${courseLabel(course)}`}
-          size="icon"
-        >
-          {<Archive aria-hidden={true} className="size-4 shrink-0" />}
+        <Button variant="outline">
+          <Archive aria-hidden={true} className="size-4 shrink-0" />
+          Archive
+          <span className="sr-only"> {courseLabel(course)}</span>
         </Button>
       }
       title={`Archive ${courseLabel(course)}?`}
       description="It comes off the timetable and stops appearing when someone enrols a swimmer. Registers already taken, and everything assessed in it, stay readable. You can restore it later."
+      destructive
       confirmLabel="Archive"
       successMessage="Class archived"
       run={() => setCourseArchived(course.id, true)}

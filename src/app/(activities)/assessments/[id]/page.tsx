@@ -23,7 +23,8 @@ import {
   MarkNoShow,
   RecordOutcome,
 } from "@/modules/activities/components/assessments/booking-actions";
-import { AssessmentNav } from "@/modules/activities/components/assessments/assessment-nav";
+import { Settings2 } from "lucide-react";
+import { Avatar, AvatarFallback } from "@/components/shadcn/avatar";
 import { Button } from "@/components/shadcn/button";
 import { WrongClub } from "@/components/clubs/wrong-club";
 import {
@@ -109,15 +110,13 @@ export default async function AssessmentSessionPage(
         }
         actions={
           <>
+            {manage ? <Button asChild variant="outline"><UiLink href={`/assessments/${id}/setup`}><Settings2 aria-hidden="true" />Session setup</UiLink></Button> : null}
             {book && open ? (
               <BookOntoSession session={session} taken={taken} />
             ) : null}
-            {manage ? <Button asChild variant="outline" className="min-h-11"><UiLink href={`/assessments/${id}/setup`}>Session setup</UiLink></Button> : null}
           </>
         }
       />
-
-      <AssessmentNav active="upcoming" manage={manage} />
 
       <Lead>
         <Num>
@@ -139,11 +138,6 @@ export default async function AssessmentSessionPage(
           icon="users"
           title="Nobody booked yet"
           hint="Book a swimmer and they appear here. Once they have been in the water, place them at the level they belong at."
-          action={
-            book && open ? (
-              <BookOntoSession session={session} taken={0} />
-            ) : null
-          }
         />
       ) : (
         <div className="min-w-0 flex flex-col gap-6">
@@ -220,11 +214,19 @@ function BookingTable({
           return (
             <TableRow key={b.id}>
               <TableCell>
+                <div className="min-w-0 flex gap-3 items-center">
+                <Avatar aria-hidden="true">
+                  <AvatarFallback>
+                    {b.student.firstName.charAt(0)}
+                    {b.student.lastName.charAt(0)}
+                  </AvatarFallback>
+                </Avatar>
+                <div className="min-w-0">
                 <div className="min-w-0 flex gap-2 items-center flex-wrap">
                   <UiLink
                     href={`/students/${b.student.id}`}
                     className={
-                      "text-ui-foreground underline-offset-4 hover:underline font-medium"
+                      "text-ui-foreground underline-offset-4 hover:underline font-semibold"
                     }
                   >
                     {fullName(b.student)}
@@ -254,12 +256,14 @@ function BookingTable({
                     )}
                   >
                     Placed at{" "}
-                    <span className="text-sm text-ui-foreground font-medium">
+                    <span className="text-sm text-ui-foreground font-semibold">
                       {b.outcomeLevel.name}
                     </span>
                     {b.assessedByName ? ` by ${b.assessedByName}` : ""}
                   </span>
                 ) : null}
+                </div>
+                </div>
               </TableCell>
               <TableCell className={"max-md:hidden"}>
                 <span className="text-sm text-ui-muted-foreground tabular-nums">
@@ -272,7 +276,7 @@ function BookingTable({
               <TableCell className={"max-md:hidden"}>
                 {b.outcomeLevel ? (
                   <>
-                    <span className="text-sm text-ui-foreground font-medium">
+                    <span className="text-sm text-ui-foreground font-semibold">
                       {b.outcomeLevel.name}
                     </span>
                     {b.outcomeNote ? (

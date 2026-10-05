@@ -1,9 +1,11 @@
 import type { Metadata } from "next";
 import { cache } from "react";
 import Link from "next/link";
-import { Download } from "lucide-react";
+import { ChevronRight, Download } from "lucide-react";
 import { Button } from "@/components/shadcn/button";
 import { AddNote, StartReview, WithdrawNote } from "@/components/hr/actions";
+import { EmptyState } from "@/components/ui-kit/empty-state";
+import { PageHeader } from "@/components/ui-kit/page-header";
 import { Tag } from "@/components/ui-kit/tag";
 import { NOTE_VISIBILITY_META, REVIEW_STATUS_META } from "@/lib/hr/constants";
 import { formatDate, formatDateTime } from "@/lib/format";
@@ -35,45 +37,55 @@ export default async function HrPersonPage({ params }: { params: Promise<{ id: s
   const data = await load(id);
   const { person, notes, reviews, who } = data;
   return (
-    <div className="space-y-6">
-      <div className="module-heading">
-        <div className="space-y-2">
-          <h1>{person.name}</h1>
-          <p className="text-sm">{person.jobTitle || "HR record"}</p>
-        </div>
-        <div className="flex flex-wrap gap-2">
-          {data.canWriteNotes ? <AddNote subjectUserId={person.id} name={person.name} /> : null}
-          {data.canWriteReviews ? <StartReview subjectUserId={person.id} name={person.name} /> : null}
-          {who.superadmin ? <Button asChild variant="ghost" className="min-h-11"><a href={`/hr/people/${person.id}/export`}><Download aria-hidden="true" />Export everything</a></Button> : null}
-        </div>
-      </div>
-      <div className="module-columns">
-        <section className="module-panel" aria-labelledby="hr-notes">
-          <h2 id="hr-notes">Notes</h2>
-          {notes.length === 0 ? <p className="text-sm text-ui-muted-foreground">No notes you can read.</p> : (
-            <ul>
+    <>
+      <PageHeader
+        back={{ href: "/hr", label: "People" }}
+        title={person.name}
+        description={person.jobTitle || "HR record"}
+        actions={
+          <>
+            {who.superadmin ? <Button asChild variant="ghost" className="min-h-11"><a href={`/hr/people/${person.id}/export`}><Download aria-hidden="true" />Export everything</a></Button> : null}
+            {data.canWriteReviews ? <StartReview subjectUserId={person.id} name={person.name} /> : null}
+            {data.canWriteNotes ? <AddNote subjectUserId={person.id} name={person.name} /> : null}
+          </>
+        }
+      />
+      <div className="pc-grid">
+        <section className="pc-panel" aria-labelledby="hr-notes">
+          <div className="pc-panel-head"><h2 id="hr-notes">Notes</h2></div>
+          {notes.length === 0 ? <EmptyState compact icon="scrollText" title="No notes you can read" /> : (
+            <ul className="pc-rows">
               {notes.map((n) => (
-                <li key={n.id} className="space-y-2 py-3">
-                  <div className="flex flex-wrap items-center justify-between gap-2">
-                    <p className="text-xs text-ui-muted-foreground">{n.authorName} · {formatDateTime(new Date(n.createdAt))}</p>
-                    <Tag meta={NOTE_VISIBILITY_META[n.visibility]} />
+                <li key={n.id} className="pc-row">
+                  {/* A note is prose: it keeps a readable width, and the tag and Withdraw wrap under it. */}
+                  <div className="pc-row-body min-w-[min(100%,18rem)]!">
+                    <span className="pc-row-title">{n.authorName} · {formatDateTime(new Date(n.createdAt))}</span>
+                    <p className="text-sm whitespace-pre-wrap break-words">{n.body}</p>
                   </div>
-                  <p className="whitespace-pre-wrap break-words">{n.body}</p>
-                  {data.canWriteNotes && (n.authorId === who.id || who.superadmin) ? <WithdrawNote id={n.id} /> : null}
+                  <div className="pc-row-trail">
+                    <Tag meta={NOTE_VISIBILITY_META[n.visibility]} />
+                    {data.canWriteNotes && (n.authorId === who.id || who.superadmin) ? <WithdrawNote id={n.id} /> : null}
+                  </div>
                 </li>
               ))}
             </ul>
           )}
         </section>
-        <section className="module-panel" aria-labelledby="hr-reviews">
-          <h2 id="hr-reviews">Performance reviews</h2>
-          {reviews.length === 0 ? <p className="text-sm text-ui-muted-foreground">No reviews yet.</p> : (
-            <ul>
+        <section className="pc-panel" aria-labelledby="hr-reviews">
+          <div className="pc-panel-head"><h2 id="hr-reviews">Performance reviews</h2></div>
+          {reviews.length === 0 ? <EmptyState compact icon="clipboardList" title="No reviews yet" /> : (
+            <ul className="pc-rows">
               {reviews.map((r) => (
-                <li key={r.id} className="py-3">
-                  <Link href={`/hr/reviews/${r.id}`} className="-mx-2 block space-y-1 rounded-[var(--pc-radius-control)] px-2 py-1 hover:bg-[var(--pc-surface-sunken)]">
-                    <span className="flex flex-wrap items-center gap-2"><span className="font-semibold">{r.period}</span><Tag meta={REVIEW_STATUS_META[r.status]} /></span>
-                    <span className="block text-xs text-ui-muted-foreground">{r.reviewerName} · {r.sharedAt ? `shared ${formatDate(new Date(r.sharedAt))}` : `started ${formatDate(new Date(r.createdAt))}`}</span>
+                <li key={r.id}>
+                  <Link href={`/hr/reviews/${r.id}`} className="pc-row">
+                    <span className="pc-row-body">
+                      <span className="pc-row-title">{r.period}</span>
+                      <span className="pc-row-hint">{r.reviewerName} · {r.sharedAt ? `shared ${formatDate(new Date(r.sharedAt))}` : `started ${formatDate(new Date(r.createdAt))}`}</span>
+                    </span>
+                    <span className="pc-row-trail">
+                      <Tag meta={REVIEW_STATUS_META[r.status]} />
+                      <ChevronRight aria-hidden="true" className="pc-row-chevron" />
+                    </span>
                   </Link>
                 </li>
               ))}
@@ -82,21 +94,23 @@ export default async function HrPersonPage({ params }: { params: Promise<{ id: s
         </section>
       </div>
       {data.file.map((section) => (
-        <section key={section.id} className="module-panel" aria-labelledby={`file-${section.id}`}>
-          <h2 id={`file-${section.id}`}>{section.heading}</h2>
+        <section key={section.id} className="pc-panel" aria-labelledby={`file-${section.id}`}>
+          <div className="pc-panel-head"><h2 id={`file-${section.id}`}>{section.heading}</h2></div>
           <p className="text-sm text-ui-muted-foreground">{section.summary}</p>
           {section.entries.length ? (
-            <ul className="mt-2 divide-y divide-ui-border">
+            <ul className="pc-rows">
               {section.entries.map((e) => (
-                <li key={e.id} className="space-y-1 py-3">
-                  <p className="font-semibold">{e.title}</p>
-                  <p className="text-sm text-ui-muted-foreground">{e.detail}</p>
+                <li key={e.id} className="pc-row">
+                  <div className="pc-row-body">
+                    <span className="pc-row-title">{e.title}</span>
+                    <span className="pc-row-hint">{e.detail}</span>
+                  </div>
                 </li>
               ))}
             </ul>
           ) : null}
         </section>
       ))}
-    </div>
+    </>
   );
 }

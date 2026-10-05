@@ -27,7 +27,7 @@ try {
   await page.goto(base+'/legend-agreements');
   await page.getByRole('heading',{level:1,name:'Legend agreements',exact:true}).waitFor();
   assert.equal(await page.getByText('Needs checking',{exact:true}).count(),4); // desktop and responsive content
-  const confirm=page.getByRole('button',{name:/Confirm Legend agreement for Avery/});
+  const confirm=page.getByRole('button',{name:/^Confirm updated, Avery/});
   await confirm.click();
   const alert=page.getByRole('alertdialog');
   await alert.waitFor();
@@ -44,27 +44,27 @@ try {
   await alert.getByRole('button',{name:'Confirm updated',exact:true}).click();
   await alert.waitFor({state:'hidden'});
   await page.getByRole('link',{name:'Outstanding 2',exact:true}).waitFor();
-  assert.equal(await page.getByRole('button',{name:/Confirm Legend agreement for Avery/}).count(),0);
+  assert.equal(await page.getByRole('button',{name:/^Confirm updated, Avery/}).count(),0);
   await page.goto(base+'/legend-agreements?view=done');
   await page.getByText('Updated in Legend',{exact:true}).filter({visible:true}).waitFor();
-  assert.equal(await page.getByRole('button',{name:/Confirm Legend agreement/}).count(),0);
+  assert.equal(await page.getByRole('button',{name:/^Confirm updated,/}).count(),0);
   await page.goto(base+'/legend-agreements');
   await page.getByRole('searchbox',{name:'Find a swimmer',exact:true}).fill('Jamie');
-  await page.getByRole('button',{name:'Search',exact:true}).click();
+  await page.getByRole('searchbox',{name:'Find a swimmer',exact:true}).press('Enter');
   await page.waitForURL('**/legend-agreements?q=Jamie');
   assert.equal(await page.locator('tbody tr').count(),1);
   await page.getByRole('link',{name:'Clear',exact:true}).click();
   await page.waitForURL('**/legend-agreements');
   await page.goto(base+'/legend-agreements?restricted');
   await page.getByRole('heading',{level:1}).waitFor();
-  assert.equal(await page.getByRole('button',{name:/Confirm Legend agreement/}).count(),0);
+  assert.equal(await page.getByRole('button',{name:/^Confirm updated,/}).count(),0);
   assert.equal(await page.locator('main a[href^="/students/"]').count(),0);
   for(const suffix of ['?empty','?empty&view=done','?q=Missing']) {
     await page.goto(base+'/legend-agreements'+suffix);
     await page.getByText(suffix.includes('q=')?'No matching agreements':suffix.includes('done')?'No agreements confirmed yet':'No outstanding agreements',{exact:true}).waitFor();
   }
   await page.goto(base+'/enrol');
-  await page.getByRole('button',{name:/^Enrol Avery Example from the waitlist/}).click();
+  await page.getByRole('button',{name:/^Enrol from waitlist Avery Example/}).click();
   const dialog=page.getByRole('dialog');
   await agreement().waitFor();
   assert.equal(await agreement().getByRole('radio',{checked:true}).count(),0);
@@ -140,13 +140,13 @@ try {
       assert(box.height>=43&&box.width>=43,`Touch target at ${width}: ${await control.textContent()}`);
     }
     await page.screenshot({path:path.join(root,`agreements-${width}-${theme}.png`)});layouts++;
-    await page.getByRole('button',{name:/Confirm Legend agreement for Avery/}).click();
+    await page.getByRole('button',{name:/^Confirm updated, Avery/}).click();
     await alert.waitFor();await settle();
     assert.equal(await alert.evaluate(el=>el.scrollWidth>el.clientWidth+1),false);
     await page.screenshot({path:path.join(root,`confirm-${width}-${theme}.png`)});layouts++;
     await page.keyboard.press('Escape');
     await page.goto(`${base}/enrol?theme=${theme}`);
-    await page.getByRole('button',{name:/^Enrol Avery Example from the waitlist/}).click();
+    await page.getByRole('button',{name:/^Enrol from waitlist Avery Example/}).click();
     await agreement().waitFor();await settle();
     assert.equal(await dialog.evaluate(el=>el.scrollWidth>el.clientWidth+1),false);
     for(const label of await agreement().locator('label').all()) assert((await label.boundingBox()).height>=43);

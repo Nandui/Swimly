@@ -2,7 +2,6 @@
 import { Button } from "@/components/shadcn/button";
 
 import {
-  Archive,
   ArchiveRestore,
   ChevronDown,
   ChevronUp,
@@ -114,9 +113,9 @@ export function EditLevel({ level }: { level: Named }) {
         <Button
           variant="outline"
           aria-label={`Edit ${level.name}`}
-          size="icon"
         >
-          {<Pencil aria-hidden={true} className="size-4 shrink-0" />}
+          <Pencil aria-hidden={true} className="size-4 shrink-0" />
+          Edit
         </Button>
       }
       title={`Edit ${level.name}`}
@@ -136,10 +135,12 @@ export function ArchiveLevel({ level }: { level: Named }) {
     return (
       <ActionButton
         ariaLabel={`Restore ${level.name}`}
+        size="default"
         successMessage="Level restored"
         run={() => setLevelArchived(level.id, false)}
       >
         <ArchiveRestore aria-hidden={true} className="size-4 shrink-0" />
+        Restore
       </ActionButton>
     );
   }
@@ -150,9 +151,8 @@ export function ArchiveLevel({ level }: { level: Named }) {
         <Button
           variant="outline"
           aria-label={`Archive ${level.name}`}
-          size="icon"
         >
-          {<Archive aria-hidden={true} className="size-4 shrink-0" />}
+          Archive
         </Button>
       }
       title={`Archive ${level.name}?`}
@@ -173,18 +173,19 @@ export function MoveLevel({
   first: boolean;
   last: boolean;
 }) {
+  if (first && last) return null;
   return (
     <>
       <ActionButton
         ariaLabel={`Move ${level.name} up`}
-        className={first ? "invisible" : undefined}
+        disabled={first}
         run={() => moveLevel(level.id, "up")}
       >
         <ChevronUp aria-hidden={true} className="size-4 shrink-0" />
       </ActionButton>
       <ActionButton
         ariaLabel={`Move ${level.name} down`}
-        className={last ? "invisible" : undefined}
+        disabled={last}
         run={() => moveLevel(level.id, "down")}
       >
         <ChevronDown aria-hidden={true} className="size-4 shrink-0" />
@@ -258,9 +259,9 @@ export function EditCompetency({ competency }: { competency: Named }) {
         <Button
           variant="outline"
           aria-label={`Edit ${competency.name}`}
-          size="icon"
         >
-          {<Pencil aria-hidden={true} className="size-4 shrink-0" />}
+          <Pencil aria-hidden={true} className="size-4 shrink-0" />
+          Edit
         </Button>
       }
       title="Edit competency"
@@ -286,10 +287,12 @@ export function ArchiveCompetency({
     return (
       <ActionButton
         ariaLabel={`Restore ${competency.name}`}
+        size="default"
         successMessage="Competency restored"
         run={() => setCompetencyArchived(competency.id, false)}
       >
         <ArchiveRestore aria-hidden={true} className="size-4 shrink-0" />
+        Restore
       </ActionButton>
     );
   }
@@ -300,9 +303,8 @@ export function ArchiveCompetency({
         <Button
           variant="outline"
           aria-label={`Archive ${competency.name}`}
-          size="icon"
         >
-          {<Archive aria-hidden={true} className="size-4 shrink-0" />}
+          Archive
         </Button>
       }
       title="Archive this competency?"
@@ -313,7 +315,7 @@ export function ArchiveCompetency({
           {assessed > 0
             ? `The ${assessed} ${assessed === 1 ? "assessment" : "assessments"} already recorded against it stay, and so does every level anyone has already completed.`
             : "Nothing has been assessed against it yet."}{" "}
-          This is how the curriculum changes without rewriting the past —
+          This is how the curriculum changes without rewriting the past:
           archive it here and add a new one.
         </>
       }
@@ -333,18 +335,19 @@ export function MoveCompetency({
   first: boolean;
   last: boolean;
 }) {
+  if (first && last) return null;
   return (
     <>
       <ActionButton
         ariaLabel={`Move ${competency.name} up`}
-        className={first ? "invisible" : undefined}
+        disabled={first}
         run={() => moveCompetency(competency.id, "up")}
       >
         <ChevronUp aria-hidden={true} className="size-4 shrink-0" />
       </ActionButton>
       <ActionButton
         ariaLabel={`Move ${competency.name} down`}
-        className={last ? "invisible" : undefined}
+        disabled={last}
         run={() => moveCompetency(competency.id, "down")}
       >
         <ChevronDown aria-hidden={true} className="size-4 shrink-0" />

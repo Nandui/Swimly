@@ -14,7 +14,7 @@ export function SelectedSwimmer({
   removeHref: string;
 }) {
   return (
-    <div className="inline-flex max-w-full items-center gap-1 rounded-ui-lg border border-ui-border bg-ui-muted pl-3">
+    <div className="inline-flex max-w-full items-center gap-1 rounded-full border border-ui-border bg-ui-muted pl-3">
       <Link
         href={`/students/${id}`}
         className="inline-flex min-h-11 min-w-0 items-center text-sm hover:underline"

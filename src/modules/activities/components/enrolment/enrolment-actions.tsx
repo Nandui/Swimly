@@ -253,13 +253,13 @@ type EnrolmentLike = {
 type WithClass = {
   enrolment: EnrolmentLike;
   classLabel: string;
-  variant?: "icon" | "button";
 };
 
+/** Row actions are labelled outline buttons; the visible words lead the
+ *  accessible name and the swimmer and class follow for screen readers. */
 export function EndEnrolment({
   enrolment,
   classLabel,
-  variant = "icon",
 }: WithClass) {
   const id = useId();
   const [when, setWhen] = useState(enrolment.scheduledEndOn ? "date" : "now");
@@ -268,23 +268,11 @@ export function EndEnrolment({
     <FormDialog
       onOpen={() => setWhen(enrolment.scheduledEndOn ? "date" : "now")}
       trigger={
-        variant === "button" ? (
-          <Button
-            aria-label={`Unenrolment for ${name} in ${classLabel}`}
-            variant="outline"
-          >
-            {<LogOut aria-hidden={true} className="size-4 shrink-0" />}
-            {enrolment.scheduledEndOn ? "Change unenrolment" : "Unenrol"}
-          </Button>
-        ) : (
-          <Button
-            variant="outline"
-            aria-label={`Unenrol ${name} from ${classLabel}`}
-            size="icon"
-          >
-            {<LogOut aria-hidden={true} className="size-4 shrink-0" />}
-          </Button>
-        )
+        <Button variant="outline">
+          <LogOut aria-hidden={true} className="size-4 shrink-0" />
+          {enrolment.scheduledEndOn ? "Change unenrolment" : "Unenrol"}
+          <span className="sr-only"> {name} from {classLabel}</span>
+        </Button>
       }
       title={`Unenrol ${name}`}
       description={`${classLabel}. Attendance and marks stay on record. Choose when their place should end.`}
@@ -377,17 +365,16 @@ export function EndEnrolment({
 
 export function PromoteFromWaitlist({
   enrolment,
-  variant = "icon",
   classLabel,
 }: {
   enrolment: EnrolmentLike;
-  variant?: "icon" | "button";
   classLabel?: string;
 }) {
   return <FormDialog
-    trigger={<Button variant="outline" size={variant === "button" ? "default" : "icon"}
-      aria-label={`Enrol ${fullName(enrolment.student)} from the waitlist${classLabel ? ` for ${classLabel}` : ""}`}>
-      {variant === "button" ? "Enrol from waitlist" : <ChevronsUp aria-hidden="true" />}
+    trigger={<Button>
+      <ChevronsUp aria-hidden="true" />
+      Enrol from waitlist
+      <span className="sr-only"> {fullName(enrolment.student)}{classLabel ? ` for ${classLabel}` : ""}</span>
     </Button>}
     title={`Enrol ${fullName(enrolment.student)} from the waitlist`}
     description={`Their place in ${classLabel ?? "this class"} becomes active if a seat is available.`}
@@ -400,35 +387,21 @@ export function PromoteFromWaitlist({
 export function TransferEnrolment({
   enrolment,
   targets,
-  variant = "icon",
   classLabel,
 }: {
   enrolment: EnrolmentLike;
   targets: TransferTarget[];
-  variant?: "icon" | "button";
   classLabel?: string;
 }) {
   const id = useId();
   return (
     <FormDialog
       trigger={
-        variant === "button" ? (
-          <Button
-            aria-label={`Move ${fullName(enrolment.student)}${classLabel ? ` from ${classLabel}` : ""} to another class`}
-            variant="outline"
-          >
-            {<ArrowRightLeft aria-hidden={true} className="size-4 shrink-0" />}
-            {"Move swimmer"}
-          </Button>
-        ) : (
-          <Button
-            variant="outline"
-            aria-label={`Move ${fullName(enrolment.student)} to another class`}
-            size="icon"
-          >
-            {<ArrowRightLeft aria-hidden={true} className="size-4 shrink-0" />}
-          </Button>
-        )
+        <Button variant="outline">
+          <ArrowRightLeft aria-hidden={true} className="size-4 shrink-0" />
+          Move swimmer
+          <span className="sr-only"> {fullName(enrolment.student)}{classLabel ? ` from ${classLabel}` : ""}</span>
+        </Button>
       }
       title={`Move ${fullName(enrolment.student)} to another class`}
       description={`${classLabel ? `From ${classLabel}. ` : ""}The old place closes and a new one opens, so their attendance so far stays intact.`}

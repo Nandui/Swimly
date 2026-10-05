@@ -3,7 +3,7 @@
 import { EmptyState } from "@/components/ui-kit/empty-state";
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import { CalendarDays, ChevronDown, Info, MapPin, TriangleAlert, UserRound } from "lucide-react";
+import { CalendarDays, ChevronRight, Flag, Phone, TriangleAlert, Waves } from "lucide-react";
 import { Button } from "@/components/shadcn/button";
 import { Avatar, AvatarFallback } from "@/components/shadcn/avatar";
 import { Progress } from "@/components/shadcn/progress";
@@ -11,7 +11,7 @@ import { Tag } from "@/components/ui-kit/tag";
 import { BackLink } from "@/components/ui-kit/back-link";
 import { Notice } from "@/components/ui-kit/notice";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/shadcn/collapsible";
-import { Input } from "@/components/shadcn/input";
+import { SearchField } from "@/components/ui-kit/search-field";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/shadcn/select";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/shadcn/tabs";
 import { SegmentedChoice } from "@/components/ui-kit/segmented-links";
@@ -22,7 +22,7 @@ import type { StudentAssessment } from "@/modules/activities/lib/assessments/dat
 import { BOOKING_STATUS_META } from "@/modules/activities/lib/assessments/constants";
 import { ENROLMENT_STATUS_META } from "@/modules/activities/lib/enrolment/constants";
 import { ageInYears, formatDate, parseDateOnly, toDateOnlyString } from "@/lib/format";
-import { courseName, formatSlotShort, formatTime } from "@/modules/activities/lib/courses/constants";
+import { formatSlotShort, formatTime } from "@/modules/activities/lib/courses/constants";
 import { fullName, STUDENT_STATUS_META } from "@/modules/activities/lib/students/constants";
 import { swimmerProfileHref } from "@/modules/activities/lib/students/directory";
 import { chapterOrder, HISTORY_KINDS, HISTORY_META, nextLesson, type HistoryKind, type HistoryPage } from "@/modules/activities/lib/students/history";
@@ -46,7 +46,7 @@ function profileTab(value?: string, parents = false): Tab {
 
 export function SwimmerProfile({ student, enrolments, programmes, assessments, targets, history, access, initialTab, returnTo, instant }: SwimmerProfileProps) {
   const [tab, setTab] = useState<Tab>(profileTab(initialTab, access.parents)), [mode, setMode] = useState("milestones");
-  const [programme, setProgramme] = useState("all"), [kind, setKind] = useState<HistoryKind>("all"), [query, setQuery] = useState("");
+  const [programme, setProgramme] = useState("all"), [kind, setKind] = useState<HistoryKind>("all");
   const [search, setSearch] = useState(""), [level, setLevel] = useState<string | null>(null);
   const router = useRouter(), name = fullName(student);
   const chapters = chapterOrder(enrolments).filter(e => programme === "all" || e.programmeId === programme);
@@ -64,51 +64,83 @@ export function SwimmerProfile({ student, enrolments, programmes, assessments, t
     <Tabs value={tab} onValueChange={value => navigate(value as Tab)} className="gap-0">
       <TabsList aria-label="Swimmer profile sections"><TabsTrigger value="journey">Journey</TabsTrigger><TabsTrigger value="competencies">Competencies</TabsTrigger><TabsTrigger value="attendance">Attendance</TabsTrigger><TabsTrigger value="assessments">Assessments</TabsTrigger><TabsTrigger value="details">Details</TabsTrigger>{access.parents ? <TabsTrigger value="parents">Parent access</TabsTrigger> : null}</TabsList>
       <div className={styles.body}>
-        <div className="min-w-0">
-          <TabsContent value="journey" className="m-0 space-y-5">
-            <div className="flex flex-wrap items-start justify-between gap-3"><div><h2 className="text-xl font-semibold">Every chapter, from their first swim</h2><p className="mt-1 text-sm text-ui-muted-foreground">Classes, progress and activity across both sites.</p></div>
-              <div className="flex flex-wrap items-center gap-2"><SegmentedChoice aria-label="Journey display" value={mode} onValueChange={setMode} options={JOURNEY_MODES} /><Select value={programme} onValueChange={setProgramme}><SelectTrigger aria-label="Filter by programme"><SelectValue /></SelectTrigger><SelectContent><SelectItem value="all">All programmes</SelectItem>{programmeOptions.map(([id, label]) => <SelectItem value={id} key={id}>{label}</SelectItem>)}</SelectContent></Select></div>
-            </div>
-            {mode === "milestones" ? <div className={styles.chapters}>
-              {chapters.map(e => {
-                const progress = programmes.find(p => p.programmeId === e.programmeId)?.levels.find(l => l.id === e.levelId);
-                const meta = ENROLMENT_STATUS_META[e.status];
-                return <div className={styles.chapterRow} key={e.id}><time className={styles.year} dateTime={toDateOnlyString(e.startedOn)}>{e.startedOn.getUTCFullYear()}</time>
-                  <Collapsible defaultOpen={e.id === chapters[0]?.id} className={styles.chapter} data-current={e.status === "ACTIVE"}>
-                    <CollapsibleTrigger asChild><Button variant="ghost" className={`${styles.chapterTrigger} h-auto whitespace-normal rounded-none`} aria-label={`${e.level.name}, ${e.course.club.name}, ${meta.label}`}><span className="min-w-0"><span className="block text-xs tabular-nums text-ui-muted-foreground">{formatDate(e.startedOn)} — {e.endedOn ? formatDate(e.endedOn) : e.status === "ACTIVE" || e.status === "WAITLISTED" ? "Present" : "End date not recorded"}</span><span className="mt-1 flex flex-wrap items-center gap-2"><span className="text-base font-semibold">{e.level.name} · {e.course.club.name}</span><Tag meta={meta} /></span><span className="mt-1 block text-sm text-ui-muted-foreground">{formatSlotShort(e.course)}{e.course.instructor ? ` · ${e.course.instructor.name}` : ""}</span></span><ChevronDown className="size-4 shrink-0" aria-hidden="true" /></Button></CollapsibleTrigger>
-                    <CollapsibleContent className={styles.chapterContent}>
-                      {progress ? <div className="flex flex-wrap items-center gap-x-4 gap-y-2 border-b border-ui-border pb-4"><div className="min-w-0 flex-1"><p className="text-sm font-medium">{progress.completionSnapshot ? `${progress.completionSnapshot.achieved} of ${progress.completionSnapshot.total} achieved at completion` : `${progress.achieved} of ${progress.total} competencies achieved${e.status === "ACTIVE" ? "" : " · current record"}`}</p><Progress className={styles.progress} value={100 * (progress.completionSnapshot?.achieved ?? progress.achieved) / Math.max(1, progress.completionSnapshot?.total ?? progress.total)} aria-valuetext={`${progress.completionSnapshot?.achieved ?? progress.achieved} of ${progress.completionSnapshot?.total ?? progress.total} achieved`} aria-label={`${e.level.name} competencies achieved`} /></div><Button variant="ghost" onClick={() => showCompetencies(e.levelId)}>View competencies</Button>{progress.completedOn ? <p className="basis-full text-xs text-ui-muted-foreground">Completed {formatDate(progress.completedOn)}{progress.confirmedByName ? ` · ${progress.confirmedByName}` : ""}</p> : null}</div> : null}
-                      {e.placementReason ? <p className="mt-3 text-sm">Placement reason: {e.placementReason}</p> : null}
-                      {e.scheduledEndOn ? <p className="mt-3 text-sm">Enrolment ends {formatDate(e.scheduledEndOn)}</p> : null}
-                      <h3 className="mt-4 text-sm font-semibold">Activity in this class</h3><HistoryFeed studentId={student.id} query={{ courseId: e.course.id, from: toDateOnlyString(e.startedOn), ...(e.endedOn ? { to: toDateOnlyString(e.endedOn) } : {}) }} compact footer={access.courses ? <Button asChild variant="ghost"><a href={`/courses/${e.course.id}`}>Open class</a></Button> : null} />
-                    </CollapsibleContent>
-                  </Collapsible>
-                </div>;
-              })}
-              {!chapters.length ? <EmptyState compact title={enrolments.length ? "No enrolments in this programme." : "No class enrolments yet"} hint={enrolments.length ? undefined : "Assessments and other records are available in All activity."} /> : null}
-              <div className={styles.chapterRow}><time className={styles.year}>{student.joinedOn.getUTCFullYear()}</time><div className="py-4"><h3 className="font-medium">Joined the swim school</h3><p className="mt-1 text-sm text-ui-muted-foreground">{formatDate(student.joinedOn)}</p>{assessments.length ? <Button variant="ghost" className="mt-2" onClick={() => navigate("assessments")}>View assessments and placements</Button> : null}</div></div>
-            </div> : <div className="space-y-4"><form onSubmit={event => { event.preventDefault(); setSearch(query); }} className="flex flex-wrap gap-2"><Input aria-label="Search swimmer activity" placeholder="Search activity…" value={query} onChange={event => setQuery(event.target.value)} className="min-w-40 flex-1" /><Button type="submit" variant="outline">Search</Button><Select value={kind} onValueChange={value => setKind(value as HistoryKind)}><SelectTrigger aria-label="Activity type"><SelectValue /></SelectTrigger><SelectContent>{HISTORY_KINDS.map(value => <SelectItem value={value} key={value}>{HISTORY_META[value].label}</SelectItem>)}</SelectContent></Select></form><p className="text-xs text-ui-muted-foreground">Earlier records may contain only the latest mark or a summary. Detailed changes are retained from 12 September 2026.</p><HistoryFeed studentId={student.id} initial={kind === "all" && programme === "all" && !search ? history : undefined} query={{ kind, ...(programme !== "all" ? { programmeId: programme } : {}), q: search }} /></div>}
+        {/* First in reading order, so phones see it before the chapters; wide screens place it on the right. */}
+        <aside className={`pc-panel ${styles.glance}`} aria-labelledby="glance-heading">
+          <h2 id="glance-heading">Swimmer at a glance</h2>
+          <ul className="pc-rows">
+            {(current.length ? current : [null]).map(e => <li key={e?.id ?? "none"} className="pc-row"><span className="pc-tile-icon"><Waves aria-hidden="true" /></span><div className="pc-row-body"><p className="pc-row-title">{e ? e.level.name : "Not in a class"}</p><p className="pc-row-hint">{e ? ["Current class", formatSlotShort(e.course), e.course.instructor?.name].filter(Boolean).join(" · ") : "Current class"}</p></div></li>)}
+            <li className="pc-row"><span className="pc-tile-icon"><CalendarDays aria-hidden="true" /></span><div className="pc-row-body"><p className="pc-row-title tabular-nums">{next ? `${formatDate(parseDateOnly(next.date))}, ${formatTime(next.enrolment.course.startMinutes)}` : "No upcoming class"}</p><p className="pc-row-hint">{next ? `Next lesson · ${next.enrolment.course.club.name}` : "Next lesson"}</p></div></li>
+            <li><a href={swimmerProfileHref(student.id, returnTo, "details")} className="pc-row" onClick={event => { event.preventDefault(); navigate("details"); }}><span className="pc-tile-icon"><Phone aria-hidden="true" /></span><span className="pc-row-body"><span className="pc-row-title">{student.contactName ?? "No contact recorded"}</span><span className="pc-row-hint tabular-nums">{student.contactPhone ? `Contact · ${student.contactPhone}` : "Contact details"}</span></span><ChevronRight className="pc-row-chevron" aria-hidden="true" /></a></li>
+          </ul>
+        </aside>
+        <div className={styles.main}>
+          <TabsContent value="journey" className="m-0">
+            <section className="pc-panel" aria-labelledby="journey-heading">
+              <div className="pc-panel-head"><h2 id="journey-heading">Every chapter, from their first swim</h2>
+                <div className="flex flex-wrap items-center gap-2"><SegmentedChoice aria-label="Journey display" value={mode} onValueChange={setMode} options={JOURNEY_MODES} />{programmeOptions.length > 1 ? <Select value={programme} onValueChange={setProgramme}><SelectTrigger aria-label="Filter by programme"><SelectValue /></SelectTrigger><SelectContent><SelectItem value="all">All programmes</SelectItem>{programmeOptions.map(([id, label]) => <SelectItem value={id} key={id}>{label}</SelectItem>)}</SelectContent></Select> : null}</div>
+              </div>
+              {mode === "milestones" ? <ol className={styles.chapters} aria-label="Chapters">
+                {chapters.map(e => {
+                  const progress = programmes.find(p => p.programmeId === e.programmeId)?.levels.find(l => l.id === e.levelId);
+                  const achieved = progress ? progress.completionSnapshot?.achieved ?? progress.achieved : 0;
+                  const total = progress ? progress.completionSnapshot?.total ?? progress.total : 0;
+                  const ends = e.endedOn ? formatDate(e.endedOn) : e.status === "ACTIVE" || e.status === "WAITLISTED" ? "now" : "end date not recorded";
+                  return <li key={e.id}>
+                    <Collapsible defaultOpen={e.id === chapters[0]?.id} className={styles.chapter} data-current={e.status === "ACTIVE"}>
+                      <CollapsibleTrigger className={styles.chapterTrigger}>
+                        <span className="min-w-0 flex-1">
+                          <span className="pc-row-hint block tabular-nums">{formatDate(e.startedOn)} to {ends}</span>
+                          <span className="block font-semibold">{e.level.name} · {e.course.club.name}</span>
+                          <span className="pc-row-hint block">{formatSlotShort(e.course)}{e.course.instructor ? ` · ${e.course.instructor.name}` : ""}</span>
+                        </span>
+                        <Tag meta={ENROLMENT_STATUS_META[e.status]} />
+                      </CollapsibleTrigger>
+                      <CollapsibleContent className={styles.chapterContent}>
+                        {progress ? <div className="flex flex-col gap-3">
+                          <div className="flex flex-wrap items-center justify-between gap-x-4 gap-y-1"><p className="font-semibold">{progress.completionSnapshot ? `${achieved} of ${total} achieved at completion` : `${achieved} of ${total} competencies achieved${e.status === "ACTIVE" ? "" : " · current record"}`}</p><Button variant="ghost" onClick={() => showCompetencies(e.levelId)}>View competencies<ChevronRight aria-hidden="true" /></Button></div>
+                          {total > 0 ? <Progress value={100 * achieved / total} aria-valuetext={`${achieved} of ${total} achieved`} aria-label={`${e.level.name} competencies achieved`} /> : null}
+                          {progress.completedOn ? <p className="pc-row-hint">Completed {formatDate(progress.completedOn)}{progress.confirmedByName ? ` · ${progress.confirmedByName}` : ""}</p> : null}
+                        </div> : null}
+                        {e.placementReason ? <p className="text-sm">Placement reason: {e.placementReason}</p> : null}
+                        {e.scheduledEndOn ? <p className="text-sm">Enrolment ends {formatDate(e.scheduledEndOn)}</p> : null}
+                        <h3 className="text-sm font-semibold">Activity in this class</h3>
+                        <HistoryFeed studentId={student.id} query={{ courseId: e.course.id, from: toDateOnlyString(e.startedOn), ...(e.endedOn ? { to: toDateOnlyString(e.endedOn) } : {}) }} compact footer={access.courses ? <Button asChild variant="ghost"><a href={`/courses/${e.course.id}`}>Open class</a></Button> : null} />
+                      </CollapsibleContent>
+                    </Collapsible>
+                  </li>;
+                })}
+                {!chapters.length ? <li><EmptyState compact title={enrolments.length ? "No enrolments in this programme" : "No class enrolments yet"} hint={enrolments.length ? undefined : "Assessments and other records are in All activity."} /></li> : null}
+                <li className="pc-row"><span className="pc-tile-icon"><Flag aria-hidden="true" /></span><div className="pc-row-body"><p className="pc-row-title">Joined the swim school</p><p className="pc-row-hint">{formatDate(student.joinedOn)}</p></div>{assessments.length ? <div className="pc-row-trail"><Button variant="ghost" onClick={() => navigate("assessments")}>Assessments and placements</Button></div> : null}</li>
+              </ol> : <div className="flex flex-col gap-3">
+                <form onSubmit={event => { event.preventDefault(); setSearch(String(new FormData(event.currentTarget).get("q") ?? "").trim()); }} className="flex flex-wrap items-end gap-2">
+                  <SearchField label="Search activity" labelHidden name="q" defaultValue={search} placeholder="Mark, class or note" className="min-w-40 flex-1" />
+                  <Select value={kind} onValueChange={value => setKind(value as HistoryKind)}><SelectTrigger aria-label="Activity type"><SelectValue /></SelectTrigger><SelectContent>{HISTORY_KINDS.map(value => <SelectItem value={value} key={value}>{HISTORY_META[value].label}</SelectItem>)}</SelectContent></Select>
+                </form>
+                <p className="pc-row-hint">Earlier records may contain only the latest mark or a summary. Detailed changes are kept from 12 September 2026.</p>
+                <HistoryFeed studentId={student.id} initial={kind === "all" && programme === "all" && !search ? history : undefined} query={{ kind, ...(programme !== "all" ? { programmeId: programme } : {}), q: search }} />
+              </div>}
+            </section>
           </TabsContent>
           <TabsContent value="competencies" forceMount hidden={tab !== "competencies"} className="m-0"><ProfileCompetencies studentId={student.id} programmes={programmes} access={access} selectedLevel={level} /></TabsContent>
-          <TabsContent value="attendance" className="m-0 space-y-3"><h2 className="text-xl font-semibold">Attendance history</h2><p className="text-sm text-ui-muted-foreground">Lesson dates, saved marks and corrections across both sites.</p><HistoryFeed studentId={student.id} query={{ kind: "attendance" }} /></TabsContent>
-          <TabsContent value="assessments" className="m-0 space-y-3"><h2 className="text-xl font-semibold">Assessments and placements</h2>{assessments.length ? <ul className="divide-y divide-ui-border">{assessments.map(a => <li key={a.id} className="space-y-2 py-4"><div className="flex flex-wrap items-center justify-between gap-2"><h3 className="font-medium">{a.session.type?.name ?? "Assessment session"}</h3><Tag meta={BOOKING_STATUS_META[a.status]} /></div><p className="text-sm tabular-nums text-ui-muted-foreground">{formatDate(a.session.date)} · {formatTime(a.session.startMinutes)} · {a.session.club.name}</p><p className="text-sm">{a.session.programme.name}{a.outcomeLevel ? ` · Placed at ${a.outcomeLevel.name}` : ""}</p>{a.assessedByName ? <p className="text-xs text-ui-muted-foreground">{a.assessedByName}{a.assessedOn ? ` · ${formatDate(a.assessedOn)}` : ""}</p> : null}{a.outcomeNote ? <p className="text-sm">{a.outcomeNote}</p> : null}{a.session.cancelledAt ? <p className="text-sm">Session cancelled</p> : null}{access.assessments ? <Button variant="ghost" asChild><a href={`/assessments/${a.session.id}`}>Open assessment</a></Button> : null}</li>)}</ul> : <EmptyState compact title="No assessment bookings recorded." />}<HistoryFeed studentId={student.id} query={{ kind: "assessment" }} /></TabsContent>
+          <TabsContent value="attendance" className="m-0"><section className="pc-panel" aria-labelledby="attendance-heading"><div><h2 id="attendance-heading">Attendance history</h2><p className="pc-row-hint">Lesson dates, saved marks and corrections across every site.</p></div><HistoryFeed studentId={student.id} query={{ kind: "attendance" }} /></section></TabsContent>
+          <TabsContent value="assessments" className="m-0"><section className="pc-panel" aria-labelledby="assessments-heading"><h2 id="assessments-heading">Assessments and placements</h2>
+            {assessments.length ? <>
+              <ul className="pc-rows">{assessments.map(a => <li key={a.id} className="pc-row"><div className="pc-row-body"><h3 className="pc-row-title">{a.session.type?.name ?? "Assessment session"}</h3><p className="pc-row-hint tabular-nums">{formatDate(a.session.date)} · {formatTime(a.session.startMinutes)} · {a.session.club.name}</p><p className="text-sm">{a.session.programme.name}{a.outcomeLevel ? ` · Placed at ${a.outcomeLevel.name}` : ""}</p>{a.assessedByName ? <p className="pc-row-hint">{a.assessedByName}{a.assessedOn ? ` · ${formatDate(a.assessedOn)}` : ""}</p> : null}{a.outcomeNote ? <p className="text-sm">{a.outcomeNote}</p> : null}{a.session.cancelledAt ? <p className="text-sm">Session cancelled</p> : null}</div><div className="pc-row-trail"><Tag meta={BOOKING_STATUS_META[a.status]} />{access.assessments ? <Button variant="ghost" asChild><a href={`/assessments/${a.session.id}`}>Open assessment</a></Button> : null}</div></li>)}</ul>
+              <HistoryFeed studentId={student.id} query={{ kind: "assessment" }} emptyTitle="No other assessment activity" />
+            </> : <HistoryFeed studentId={student.id} query={{ kind: "assessment" }} emptyTitle="No assessments yet" />}
+          </section></TabsContent>
           <TabsContent value="details" className="m-0"><ProfileDetails student={student} /></TabsContent>
-          {access.parents ? <TabsContent value="parents" className="m-0"><GuardianAccessPanel studentId={student.id} swimmerName={name} /></TabsContent> : null}
+          {access.parents ? <TabsContent value="parents" className="m-0"><div className="pc-panel"><GuardianAccessPanel studentId={student.id} swimmerName={name} /></div></TabsContent> : null}
         </div>
-        <aside className={styles.aside} aria-label="Swimmer at a glance">
-          <section><h2>Current enrolment{current.length === 1 ? "" : "s"}</h2>{current.length ? current.map(e => <div key={e.id} className="mt-3 space-y-1"><p className="font-semibold">{e.level.name}</p><p>{formatSlotShort(e.course)}</p>{e.course.instructor ? <p className="flex items-start gap-2"><UserRound aria-hidden="true" />{e.course.instructor.name}</p> : null}<p className="flex items-start gap-2"><MapPin aria-hidden="true" />{e.course.club.name}</p></div>) : <p>Not enrolled in a class.</p>}</section>
-          <section><h2>Next lesson</h2>{next ? <><p className="flex items-start gap-2 tabular-nums"><CalendarDays aria-hidden="true" />{formatDate(parseDateOnly(next.date))} · {formatTime(next.enrolment.course.startMinutes)}</p><p>{courseName(next.enrolment.course)} · {next.enrolment.course.club.name}</p></> : <p>No upcoming weekly class.</p>}</section>
-          <section><h2>Contact</h2><p>{student.contactName ?? "No contact recorded"}</p>{student.contactPhone ? <a href={`tel:${student.contactPhone.replace(/\s/g, "")}`} className="inline-flex min-h-11 items-center underline underline-offset-4 tabular-nums">{student.contactPhone}</a> : null}<Button variant="ghost" className="mt-1 min-h-11" onClick={() => navigate("details")}>View contacts</Button></section>
-          <section><h2>Medical notes</h2><p className="whitespace-pre-wrap">{student.medicalNotes || (student.hasMedicalNotes ? "On file. Reception, swim school managers and this swimmer's instructors can read them." : "None recorded")}</p></section>
-          <p className="flex gap-2"><Info aria-hidden="true" />History includes both sites.</p>
-        </aside>
       </div>
     </Tabs>
   </article>;
 }
 
 function ProfileDetails({ student }: { student: StudentDetail }) {
-  const tel = (value: string) => <a className="inline-flex min-h-11 items-center underline tabular-nums" href={`tel:${value.replace(/\s/g, "")}`}>{value}</a>;
-  const fields: [string, React.ReactNode][] = [["Member number", student.memberNumber], ["Date of birth", student.dateOfBirth ? formatDate(student.dateOfBirth) : null], ["Joined", formatDate(student.joinedOn)], ["Home facility", student.club.name], ["Contact", student.contactName], ["Phone", student.contactPhone ? tel(student.contactPhone) : null], ["Email", student.contactEmail ? <a key="email" href={`mailto:${student.contactEmail}`} className="break-all underline">{student.contactEmail}</a> : null], ["Emergency contact", [student.emergencyName, student.emergencyRelationship].filter(Boolean).join(" · ")], ["Emergency phone", student.emergencyPhone ? tel(student.emergencyPhone) : null], ["Medical notes", student.medicalNotes], ["Other notes", student.notes], ["Photo consent", student.photoConsent ? `Given${student.photoConsentOn ? ` on ${formatDate(student.photoConsentOn)}` : ""}` : "Not given"]];
-  return <section><h2 className="mb-5 text-xl font-semibold">Details and contacts</h2><dl className="divide-y divide-ui-border">{fields.map(([label, value]) => <div key={label} className="grid gap-1 py-3 sm:grid-cols-[10rem_1fr]"><dt className="text-sm text-ui-muted-foreground">{label}</dt><dd className="min-w-0 whitespace-pre-wrap text-sm">{value || "Not recorded"}</dd></div>)}</dl></section>;
+  const link = "inline-flex min-h-11 items-center font-semibold text-ui-brand-ink";
+  const tel = (value: string) => <a className={`${link} tabular-nums`} href={`tel:${value.replace(/\s/g, "")}`}>{value}</a>;
+  const medical = student.medicalNotes || (student.hasMedicalNotes ? "On file. Reception, swim school managers and this swimmer's instructors can read them." : null);
+  const fields: [string, React.ReactNode][] = [["Member number", student.memberNumber], ["Date of birth", student.dateOfBirth ? formatDate(student.dateOfBirth) : null], ["Joined", formatDate(student.joinedOn)], ["Home site", student.club.name], ["Contact", student.contactName], ["Phone", student.contactPhone ? tel(student.contactPhone) : null], ["Email", student.contactEmail ? <a key="email" href={`mailto:${student.contactEmail}`} className={`${link} break-all`}>{student.contactEmail}</a> : null], ["Emergency contact", [student.emergencyName, student.emergencyRelationship].filter(Boolean).join(" · ")], ["Emergency phone", student.emergencyPhone ? tel(student.emergencyPhone) : null], ["Medical notes", medical], ["Other notes", student.notes], ["Photo consent", student.photoConsent ? `Given${student.photoConsentOn ? ` on ${formatDate(student.photoConsentOn)}` : ""}` : "Not given"]];
+  return <section className="pc-panel" aria-labelledby="details-heading"><h2 id="details-heading">Details and contacts</h2><dl className={`pc-rows ${styles.details}`}>{fields.map(([label, value]) => <div key={label} className="pc-row"><dt className="pc-row-hint">{label}</dt><dd className="whitespace-pre-wrap">{value || "Not recorded"}</dd></div>)}</dl></section>;
 }
