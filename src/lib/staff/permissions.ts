@@ -173,10 +173,16 @@ export const PERMISSIONS = [
     description: "See who is on shift at the sites this role covers, with qualification warnings.",
   },
   {
-    key: "rota.manage",
+    key: "rota.plan",
     group: "Rota",
     label: "Plan the rota",
-    description: "Add, change, fill and cancel shifts at the sites this role covers. Includes seeing it.",
+    description: "Plan the days ahead at the sites this role covers, for the departments the person belongs to: add activities, put people on them and share the week. Includes seeing it.",
+  },
+  {
+    key: "rota.manage",
+    group: "Rota",
+    label: "Run the rota",
+    description: "Change any day at the sites this role covers, today and earlier included, for every department; report absences and keep the activity list. Includes planning and seeing it.",
   },
   {
     key: "purchasing.read",
@@ -287,7 +293,8 @@ const IMPLIES: Partial<Record<PermissionKey, PermissionKey[]>> = {
   "training.manage": ["training.records.read"],
   "training.assign": ["training.records.read"],
   "training.signoff": ["training.records.read"],
-  "rota.manage": ["rota.view"],
+  "rota.plan": ["rota.view"],
+  "rota.manage": ["rota.plan", "rota.view"],
   "purchasing.request": ["purchasing.read"],
   "purchasing.manage": ["purchasing.read"],
   "hr.notes.write": ["hr.records.read"],

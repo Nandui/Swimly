@@ -11,6 +11,7 @@ import { currentClubId } from "@/lib/clubs/current";
 import { DAY_META, courseLabel } from "@/modules/activities/lib/courses/constants";
 import { formatDate, isDateOnly, parseDateOnly, today, weekdayOf } from "@/lib/format";
 import { withCourseSeat } from "@/modules/activities/lib/enrolment/seat";
+import { plannedTeachers } from "@/modules/activities/lib/courses/planned";
 import { cancellationError } from "@/modules/activities/lib/cancellations/guard";
 
 /** Confirm who is teaching a class on a date. The existing ClassCover record
@@ -61,7 +62,9 @@ async function claim(input: TakeOverInput, session: Session, starting: boolean):
     });
     if (!found) return fail("That class no longer exists.");
     // The instructor's name comes from Core's directory, read in this transaction.
-    const course = await withOneStaff(found, "instructorId", "instructor", tx);
+    // Whose class it is that day: the teacher planned on the rota for that date, else its instructor.
+    const planned = (await plannedTeachers([courseId], iso, tx)).get(courseId);
+    const course = await withOneStaff(planned ? { ...found, instructorId: planned.teacherId } : found, "instructorId", "instructor", tx);
     if (course.archivedAt) return fail("That class is archived.");
     const own = course.instructorId === session.user.id;
 

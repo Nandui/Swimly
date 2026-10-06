@@ -54,6 +54,9 @@ export const MODULE_OF_ENTITY: Readonly<Record<string, string>> = {
   RefundRequest: "Refunds", RefundNotification: "Refunds",
   Supplier: "Purchasing", PurchaseProduct: "Purchasing", PurchaseApprovalRule: "Purchasing", PurchaseOrder: "Purchasing",
   RotaShift: "Rota", RotaDayNote: "Rota", RotaActivity: "Rota", RotaAbsence: "Rota", RotaImport: "Rota", RotaDepartment: "Rota",
+  RotaNeed: "Rota", RotaAssignment: "Rota", RotaWeekShare: "Rota", RotaLog: "Rota", RotaRepeat: "Rota", RotaActivityType: "Rota",
+  // Planned from the rota, kept by the swim school.
+  ClassPlannedTeacher: "Swim school",
 };
 
 /** Rows that belong to no club, so their audit entries belong to none either

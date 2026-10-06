@@ -3,7 +3,7 @@ import { getRegisterStateForDay } from "@/modules/activities/lib/attendance/data
 import { weekdayOfIso } from "@/modules/activities/lib/attendance/dates";
 import { AuthorizationError, can, canSee, requireSession } from "@/lib/authz";
 import { getCurrentClub } from "@/lib/clubs/current";
-import { getCoursesOnDay } from "@/modules/activities/lib/courses/data/courses";
+import { getCoursesOnDate } from "@/modules/activities/lib/courses/planned";
 import { minutesNow, today } from "@/lib/format";
 import { prisma } from "@/lib/prisma";
 import { getTodayAssessments } from "@/modules/activities/lib/today/assessments";
@@ -17,7 +17,7 @@ export async function getSchedule(requested?: unknown, instant = new Date()) {
   const iso = scheduleDate(requested, instant), day = weekdayOfIso(iso);
   const { club } = await getCurrentClub();
   const [courses, marked, covers, assessments, cancellations, places] = await Promise.all([
-    getCoursesOnDay(day), getRegisterStateForDay(day, iso), getCoversForDay(iso),
+    getCoursesOnDate(iso), getRegisterStateForDay(day, iso), getCoversForDay(iso),
     getTodayAssessments(iso), getCancellationsForDay(iso),
     prisma.$queryRaw<{ courseId: string; enrolled: number }[]>(schedulePlacesQuery(club.id, iso)),
   ]);

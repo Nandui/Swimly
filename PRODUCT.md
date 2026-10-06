@@ -18,8 +18,8 @@ in the centre signs in to their role's home page. The jobs, by module:
 - **Swim instructors on the pool deck** (Pool deck). Open today's classes, take attendance,
   tick competencies, take over a class that is not theirs when they are the one standing at
   the pool. On a phone or tablet, poolside.
-- **Department supervisors** (Rota). Plan their department's week: which of their staff work
-  which shifts, the department's activities and who covers each.
+- **Department supervisors** (Rota). Plan their department's days ahead: the activities each
+  day needs and who is on each place, then share the week with their staff.
 - **Duty managers** (Rota, Swim school). Run the day: see everything on, when and who; give
   cover when someone is off; record changes, cancellations and returns to work.
 - **Lifeguards and other shift staff.** Their shifts, training and required reading reach

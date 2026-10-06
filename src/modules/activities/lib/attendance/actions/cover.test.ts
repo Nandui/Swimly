@@ -52,6 +52,8 @@ function fixture() {
   const actions = serverModule<typeof import("./cover")>(
     "src/modules/activities/lib/attendance/actions/cover.ts",
     { "@/lib/directory": directoryDouble({ people: [{ id: "scheduled", name: "Scheduled Teacher" }] }),
+      // Nobody planned on the rota for these dates: the class's own instructor teaches.
+      "@/modules/activities/lib/courses/planned": { plannedTeachers: async () => new Map() },
       "@/lib/authz": {
         requirePermission: async () => ({
           user: { id: actor, name: actor, permissions: [...permissions] },

@@ -22,7 +22,8 @@ import {
   formatTime,
   formatSessionTime,
 } from "@/modules/activities/lib/courses/constants";
-import { getCoursesOnDay, type CourseRow } from "@/modules/activities/lib/courses/data/courses";
+import type { CourseRow } from "@/modules/activities/lib/courses/data/courses";
+import { getCoursesOnDate } from "@/modules/activities/lib/courses/planned";
 import { formatDate, formatDay, minutesNow, parseDateOnly, plural, today } from "@/lib/format";
 import { HOME_SESSION_META } from "@/lib/home-meta";
 import { PageHeader } from "@/components/ui-kit/page-header";
@@ -51,7 +52,7 @@ export default async function InstructorPage(props: PageProps<"/instructor">) {
     now = minutesNow(),
     me = session.user.id;
   const [courses, marked, covers, cancellations, assessments] = await Promise.all([
-    getCoursesOnDay(day),
+    getCoursesOnDate(iso),
     getRegisterStateForDay(day, iso),
     getCoversForDay(iso),
     getCancellationsForDay(iso),

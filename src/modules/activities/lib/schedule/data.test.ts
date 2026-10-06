@@ -8,7 +8,7 @@ function fixture(allowed = true) {
   const api = serverModule<typeof import("./data")>("src/modules/activities/lib/schedule/data.ts", {
     "@/lib/authz": { requireSession: async () => ({ user: { id: "staff" } }), AuthorizationError: Error, canSee: () => allowed, can: () => false },
     "@/lib/clubs/current": { getCurrentClub: async () => { reads.push("club"); return { club: { id: "site-a", name: "Example Pool" } }; } },
-    "@/modules/activities/lib/courses/data/courses": { getCoursesOnDay: async (day: string) => { reads.push(["courses", day]); return [{ id: "course", name: "Example class", _count: { enrolments: 99 } }]; } },
+    "@/modules/activities/lib/courses/planned": { getCoursesOnDate: async (iso: string) => { reads.push(["courses", iso]); return [{ id: "course", name: "Example class", _count: { enrolments: 99 } }]; } },
     "@/modules/activities/lib/attendance/data/register": { getRegisterStateForDay: async (day: string, iso: string) => { reads.push(["register", day, iso]); return new Set(["course"]); } },
     "@/modules/activities/lib/attendance/data/cover": { getCoversForDay: async (iso: string) => { reads.push(["covers", iso]); return new Map([["course", { coverByName: "Example Teacher" }]]); } },
     "@/modules/activities/lib/today/assessments": { getTodayAssessments: async (iso: string) => { reads.push(["assessments", iso]); return [{ id: "assessment" }]; } },
@@ -23,8 +23,7 @@ test("every schedule read uses the selected date and availability uses dated pla
   const data = await f.getSchedule("2026-09-16", new Date("2026-09-13T12:00:00Z"));
   assert.equal(data.iso, "2026-09-16");
   assert.equal(data.todayIso, "2026-09-13");
-  assert.ok(f.reads.some(read => JSON.stringify(read) === JSON.stringify(["courses", "WEDNESDAY"])));
-  for (const name of ["covers", "assessments", "cancellations"]) assert.ok(f.reads.some(read => JSON.stringify(read) === JSON.stringify([name, "2026-09-16"])));
+  for (const name of ["courses", "covers", "assessments", "cancellations"]) assert.ok(f.reads.some(read => JSON.stringify(read) === JSON.stringify([name, "2026-09-16"])));
   assert.ok(f.reads.some(read => JSON.stringify(read) === JSON.stringify(["register", "WEDNESDAY", "2026-09-16"])));
   assert.equal(data.courses[0].enrolled, 4);
   assert.equal(data.courses[0].attendanceTaken, true);

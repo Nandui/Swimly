@@ -166,41 +166,48 @@ async function seedHr(db: PrismaClient, hrUrl: string) {
   } finally { await hr.end(); }
 }
 
-/** Rota: Maya, duty manager at Hillview (Rota: Manage at her site), plans it as
- *  duties by department. Today and tomorrow show every warning: Riley is off
- *  sick today so his poolside duty needs cover, his NPLQ is expired for
- *  tomorrow, a swim teacher duty is unfilled, and Riley is double-booked at
- *  Riverside. */
+/** The rota at Hillview (docs/rota.md): Lifeguarding, Teaching (the swim classes) and Reception on
+ *  the activity list; this week planned with gaps to fill; Riley off sick today, so his place on the
+ *  main pool needs cover and his class needs a teacher; a repeating school booking; the pool's week
+ *  shared and reception's still a draft; one change waiting for Timepoint. Sam plans the pool
+ *  (Plan); Maya runs the day (Run). */
 async function seedRota(db: PrismaClient) {
-  const ORG = "org_leisureworld";
+  const ORG = "org_leisureworld", HILLVIEW = "club_churchfield";
   const day = (offset: number) => { const d = new Date(); d.setUTCHours(0, 0, 0, 0); d.setUTCDate(d.getUTCDate() + offset); return d; };
-  const shift = (siteId: string, offset: number, start: number, end: number, role: string, departmentId: string | null, userId: string | null, requiredTypeId: string | null = null) =>
-    ({ orgId: ORG, siteId, date: day(offset), startMinutes: start * 60, endMinutes: end * 60, role, departmentId, userId, requiredTypeId, createdById: "sbx_maya", createdByName: "Maya Example" });
-  await db.rotaShift.createMany({ data: [
-    shift("club_churchfield", 0, 7, 15, "Poolside, main pool", "dept_aquatics", "sbx_ava", "qt_nplq"),
-    shift("club_churchfield", 0, 15, 22, "Poolside, main pool", "dept_aquatics", "sbx_riley", "qt_nplq"),
-    shift("club_churchfield", 0, 16, 19, "Swim teacher", "dept_aquatics", null, "qt_swim_teacher"),
-    shift("club_churchfield", 0, 9, 17, "Duty manager", null, "sbx_liam"),
-    shift("club_churchfield", 0, 12, 18, "Front desk", "dept_reception", "sbx_noah"),
-    shift("club_bishopstown", 0, 18, 21, "Poolside", "dept_aquatics", "sbx_riley", "qt_nplq"),
-    shift("club_churchfield", 1, 7, 15, "Poolside, main pool", "dept_aquatics", "sbx_riley", "qt_nplq"),
-    shift("club_churchfield", 1, 15, 22, "Poolside, main pool", "dept_aquatics", "sbx_ava", "qt_nplq"),
-    shift("club_churchfield", 1, 12, 18, "Front desk", "dept_reception", "sbx_noah"),
+  const by = { createdById: "sbx_sam", createdByName: "Sam Example" };
+  // The organisation's activity list: Teaching takes the swim classes.
+  await db.rotaActivityType.createMany({ data: [
+    { id: "rat_guard", orgId: ORG, departmentId: "dept_aquatics", name: "Lifeguarding", icon: "lifeguard", requiredTypeId: "qt_nplq", sortOrder: 0 },
+    { id: "rat_teach", orgId: ORG, departmentId: "dept_aquatics", name: "Teaching", icon: "teaching", fromClasses: true, sortOrder: 1 },
+    { id: "rat_desk", orgId: ORG, departmentId: "dept_reception", name: "Reception", icon: "reception", sortOrder: 2 },
   ] });
-  // School lessons every weekday morning this week and next, in the learner pool.
-  const dates = Array.from({ length: 14 }, (_, i) => day(i)).filter((d) => d.getUTCDay() >= 1 && d.getUTCDay() <= 5);
-  const lessons = await db.rotaBooking.create({ data: {
-    orgId: ORG, siteId: "club_churchfield", departmentId: "dept_aquatics", kind: "school", title: "Example National School", place: "Learner pool",
-    weekdays: [0, 1, 2, 3, 4], startMinutes: 570, endMinutes: 690, firstDay: day(0), lastDay: day(13), createdById: "sbx_maya", createdByName: "Maya Example",
-    needs: { create: [{ role: "Swim teacher", count: 2, requiredTypeId: "qt_swim_teacher" }, { role: "Lifeguard", count: 1, requiredTypeId: "qt_nplq" }] },
-  }, select: { id: true, needs: { select: { id: true, role: true, count: true, requiredTypeId: true } } } });
-  await db.rotaShift.createMany({ data: dates.flatMap((date, d) => lessons.needs.flatMap((need) => Array.from({ length: need.count }, (_, i) => ({
-    orgId: ORG, siteId: "club_churchfield", date, startMinutes: 570, endMinutes: 690, role: "School lessons: Example National School", departmentId: "dept_aquatics",
-    requiredTypeId: need.requiredTypeId, note: "Learner pool", bookingId: lessons.id, bookingNeedId: need.id, createdById: "sbx_maya", createdByName: "Maya Example",
-    userId: d === 0 && need.role === "Swim teacher" && i === 0 ? "sbx_ava" : null,
-  })))) });
+  const h = (t: string) => Number(t.slice(0, 2)) * 60 + Number(t.slice(3));
+  const need = async (offset: number, typeId: string, place: string, start: string, end: string, places: number, people: [number, string, string, string][]) =>
+    db.rotaNeed.create({ data: { orgId: ORG, siteId: HILLVIEW, date: day(offset), typeId, place, startMinutes: h(start), endMinutes: h(end), places, ...by,
+      assignments: { create: people.map(([placeNo, userId, a, b]) => ({ place: placeNo, userId, startMinutes: h(a), endMinutes: h(b), ...by })) } } });
+  // This week at Hillview: two on the main pool all day with a lunchtime gap, the learner pool
+  // with an evening gap, and reception partly covered. Riley is on today but rang in sick.
+  for (let offset = 0; offset < 7; offset++) {
+    await need(offset, "rat_guard", "Main pool", "07:00", "21:30", 2, [
+      [1, "sbx_ciara", "07:00", "14:00"], [1, "sbx_conor", "14:00", "21:30"],
+      [2, offset % 2 ? "sbx_dylan" : "sbx_riley", "07:00", "12:00"], [2, offset % 2 ? "sbx_riley" : "sbx_dylan", "15:00", "21:30"],
+    ]);
+    await need(offset, "rat_guard", "Learner pool", "09:00", "20:00", 1, [[1, "sbx_sam", "09:00", "15:00"]]);
+    await need(offset, "rat_desk", "Front desk", "07:00", "21:00", 1, [[1, "sbx_noah", "12:00", "18:00"]]);
+  }
+  // School lessons every weekday morning for two weeks, in the learner pool: one lifeguard each.
+  const dates = Array.from({ length: 14 }, (_, i) => i).filter((i) => { const d = day(i).getUTCDay(); return d >= 1 && d <= 5; });
+  const lessons = await db.rotaRepeat.create({ data: { orgId: ORG, siteId: HILLVIEW, kind: "school", title: "Example National School", typeId: "rat_guard", place: "Learner pool",
+    startMinutes: 570, endMinutes: 690, places: 1, weekdays: [0, 1, 2, 3, 4], firstDay: day(0), lastDay: day(13), ...by } });
+  for (const offset of dates) await db.rotaNeed.create({ data: { orgId: ORG, siteId: HILLVIEW, date: day(offset), typeId: "rat_guard", place: "Learner pool (school)", startMinutes: 570, endMinutes: 690, places: 1, repeatId: lessons.id, ...by } });
+  // The pool's week is shared with its staff; reception's is still a draft.
+  const monday = day(0); monday.setUTCDate(monday.getUTCDate() - ((monday.getUTCDay() + 6) % 7));
+  await db.rotaWeekShare.create({ data: { siteId: HILLVIEW, departmentId: "dept_aquatics", monday, sharedById: "sbx_sam", sharedByName: "Sam Example" } });
+  // A change made this morning, still to put into Timepoint.
+  await db.rotaLog.create({ data: { orgId: ORG, siteId: HILLVIEW, date: day(0), kind: "added", summary: "Noah Example put on Reception, Front desk, 12:00 to 18:00", userId: "sbx_noah",
+    reason: "extra", byId: "sbx_maya", byName: "Maya Example" } });
   await db.rotaAbsence.create({ data: { orgId: ORG, userId: "sbx_riley", reason: "sickness", firstDay: day(0), lastDay: day(0), note: "Synthetic: rang in at 08:00.", reportedById: "sbx_maya", reportedByName: "Maya Example" } });
-  // Ava was off sick for nine days until yesterday; today is her first shift
-  // back, so her return to work is due (and asks about the fit note).
+  // Ava was off sick for nine days until yesterday; today is her first day back, so her
+  // return to work is due (and asks about the fit note).
   await db.rotaAbsence.create({ data: { orgId: ORG, userId: "sbx_ava", reason: "sickness", firstDay: day(-9), lastDay: day(-1), note: "Synthetic: called in before her shift.", reportedById: "sbx_maya", reportedByName: "Maya Example" } });
 }

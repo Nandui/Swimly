@@ -15,6 +15,6 @@ export default async function RotaOverviewPage() {
   const mod = allModules().find((m) => m.id === "rota")!;
   return (
     <ModuleOverview name={mod.name} description={mod.description} icon={mod.icon} siteName={siteName} items={items} failed={failed}
-      groups={[{ label: "", links: rotaPages(who.manage).filter((page) => page.href !== "/rota/overview").map(({ href, label, icon, description }) => ({ href, label, icon, description })) }]} />
+      groups={[{ label: "", links: rotaPages(who.run).filter((page) => page.href !== "/rota/overview").map(({ href, label, icon, description }) => ({ href, label, icon, description })) }]} />
   );
 }

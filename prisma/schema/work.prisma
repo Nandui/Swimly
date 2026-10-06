@@ -527,3 +527,171 @@ model RotaActivity {
   @@index([siteId, date])
   @@index([departmentId])
 }
+
+// ---------------------------------------------------------------------------
+// Rota, rebuilt (owner decisions, 6 October 2026; docs/rota.md). The rota is
+// built from activities: each day's needs ("Lifeguarding, Main pool, 07:00 to
+// 21:30, 3 places") and the people put on each place. Shifts, breaks and gaps
+// are worked out from these, never stored. The rota tables above are retired,
+// kept unread until development has its own database (changes are additive).
+// ---------------------------------------------------------------------------
+
+/// A kind of work on the rota, from the organisation's one list: Lifeguarding,
+/// Teaching, Reception. Each belongs to a department (who plans it) and may
+/// need a qualification. Archived, never deleted, so old plans stay readable.
+model RotaActivityType {
+  id             String    @id @default(cuid())
+  orgId          String
+  departmentId   String
+  name           String
+  /// A key of ROTA_ACTIVITY_ICONS, so an activity shows the same icon everywhere.
+  icon           String    @default("activity")
+  requiredTypeId String?
+  /// Swim classes arrive as this activity's needs, read from the timetable.
+  /// One per organisation.
+  fromClasses    Boolean   @default(false)
+  sortOrder      Int       @default(0)
+  archivedAt     DateTime?
+  createdAt      DateTime  @default(now())
+  updatedAt      DateTime  @updatedAt
+
+  organisation Organisation       @relation(fields: [orgId], references: [id], onDelete: Restrict)
+  department   Department         @relation(fields: [departmentId], references: [id], onDelete: Restrict)
+  requiredType QualificationType? @relation(fields: [requiredTypeId], references: [id], onDelete: SetNull)
+  needs        RotaNeed[]
+  repeats      RotaRepeat[]
+
+  @@unique([orgId, name])
+  @@index([departmentId])
+}
+
+/// One activity at a site on a day, needing `places` people at once from
+/// start to end. Each place is a lane on the plan.
+model RotaNeed {
+  id            String   @id @default(cuid())
+  orgId         String
+  siteId        String
+  date          DateTime @db.Date
+  typeId        String
+  /// Where in the site: "Main pool". Free text, offered back from earlier days.
+  place         String   @default("")
+  startMinutes  Int
+  endMinutes    Int
+  places        Int      @default(1)
+  note          String   @default("")
+  /// The repeating booking that made it, if any; it is then edited one day at a time.
+  repeatId      String?
+  createdById   String?
+  createdByName String
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  site        Club             @relation(fields: [siteId], references: [id], onDelete: Restrict)
+  type        RotaActivityType @relation(fields: [typeId], references: [id], onDelete: Restrict)
+  repeat      RotaRepeat?      @relation(fields: [repeatId], references: [id], onDelete: SetNull)
+  assignments RotaAssignment[]
+
+  @@index([siteId, date])
+  @@index([repeatId])
+}
+
+/// A person on one place of a need, for all or part of its time.
+model RotaAssignment {
+  id            String   @id @default(cuid())
+  needId        String
+  /// 1 to the need's `places`.
+  place         Int
+  userId        String
+  startMinutes  Int
+  endMinutes    Int
+  createdById   String?
+  createdByName String
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  need RotaNeed @relation(fields: [needId], references: [id], onDelete: Cascade)
+  user User     @relation("RotaAssignee", fields: [userId], references: [id], onDelete: Restrict)
+
+  @@index([needId])
+  @@index([userId])
+}
+
+/// A department's week at a site, shared with its staff: from then on they see
+/// it in Turnfin Me and hear about changes to their own activities.
+model RotaWeekShare {
+  id           String   @id @default(cuid())
+  siteId       String
+  departmentId String
+  /// The week's Monday.
+  monday       DateTime @db.Date
+  sharedAt     DateTime @default(now())
+  sharedById   String?
+  sharedByName String
+
+  site       Club       @relation(fields: [siteId], references: [id], onDelete: Restrict)
+  department Department @relation(fields: [departmentId], references: [id], onDelete: Restrict)
+
+  @@unique([siteId, departmentId, monday])
+}
+
+/// A change to a day that had already come (today or earlier), with its
+/// reason, and whether Timepoint has been updated to match.
+model RotaLog {
+  id              String    @id @default(cuid())
+  orgId           String
+  siteId          String
+  date            DateTime  @db.Date
+  /// "added", "removed" or "changed".
+  kind            String
+  /// "Ciara Murphy put on Lifeguarding, Main pool, 07:00 to 12:00".
+  summary         String
+  /// The person it moved, for their personal file.
+  userId          String?
+  /// A key of ROTA_CHANGE_REASON_META.
+  reason          String
+  note            String    @default("")
+  /// The absence it covers, when the reason is cover.
+  absenceId       String?
+  byId            String?
+  byName          String
+  createdAt       DateTime  @default(now())
+  timepointAt     DateTime?
+  timepointById   String?
+  timepointByName String?
+
+  site Club @relation(fields: [siteId], references: [id], onDelete: Restrict)
+
+  @@index([siteId, date])
+  @@index([userId])
+}
+
+/// A booking that repeats (school lessons, lane hire): it makes the same need
+/// on each of its days. Cancelling removes the days still to come.
+model RotaRepeat {
+  id            String     @id @default(cuid())
+  orgId         String
+  siteId        String
+  /// A key of BOOKING_KIND_META.
+  kind          String
+  title         String
+  typeId        String
+  place         String     @default("")
+  startMinutes  Int
+  endMinutes    Int
+  places        Int        @default(1)
+  /// Monday = 0.
+  weekdays      Int[]
+  firstDay      DateTime   @db.Date
+  lastDay       DateTime   @db.Date
+  skipDates     DateTime[] @db.Date
+  createdById   String?
+  createdByName String
+  createdAt     DateTime   @default(now())
+  cancelledAt   DateTime?
+
+  site  Club             @relation(fields: [siteId], references: [id], onDelete: Restrict)
+  type  RotaActivityType @relation(fields: [typeId], references: [id], onDelete: Restrict)
+  needs RotaNeed[]
+
+  @@index([siteId])
+}

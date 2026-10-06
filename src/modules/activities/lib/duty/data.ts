@@ -1,6 +1,6 @@
 import { AuthorizationError, canSee, requireSession } from "@/lib/authz";
 import { currentClubId } from "@/lib/clubs/current";
-import { getCoursesOnDay } from "@/modules/activities/lib/courses/data/courses";
+import { getCoursesOnDate } from "@/modules/activities/lib/courses/planned";
 import { getCoversForDay } from "@/modules/activities/lib/attendance/data/cover";
 import { getRegisterStateForDay } from "@/modules/activities/lib/attendance/data/register";
 import { courseName } from "@/modules/activities/lib/courses/constants";
@@ -14,7 +14,7 @@ export async function getDutyClasses(iso: string) {
   if (!canSee(session, "duty")) throw new AuthorizationError("Duty manager access is required.");
   const date = parseDateOnly(iso), day = weekdayOfIso(iso), clubId = await currentClubId();
   const [courses, covers, marked, cancellations, enrolments, pending] = await Promise.all([
-    getCoursesOnDay(day), getCoversForDay(iso), getRegisterStateForDay(day, iso),
+    getCoursesOnDate(iso), getCoversForDay(iso), getRegisterStateForDay(day, iso),
     prisma.classCancellation.findMany({ where: { clubId, date }, include: { swimmers: true } }),
     prisma.enrolment.findMany({ where: {
       course: { clubId, dayOfWeek: day, archivedAt: null }, status: "ACTIVE", startedOn: { lte: date },

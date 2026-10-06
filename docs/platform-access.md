@@ -174,10 +174,11 @@ Completing your own training needs no capability and happens in Turnfin Me.
 
 ## Rota
 
-The Rota (docs/rota.md) is site-bound: `rota.view` and `rota.manage` resolve with
-`sitesFor` and `requireCapFor` with a `siteId`, so a duty manager who works at
-one site plans that site only. It warns about expired qualifications and
-double-bookings but never blocks. Everyone sees their own shifts in Turnfin Me.
+The Rota (docs/rota.md) is site-bound: `rota.view`, `rota.plan` and `rota.manage` (Run)
+resolve with `sitesFor` and `requireCapFor` with a `siteId`, so a duty manager who works at
+one site runs that site only. Plan also needs the department: a supervisor plans the days
+ahead for the departments they belong to. It warns about expired qualifications and
+double-bookings but never blocks. Everyone sees their own shared days in Turnfin Me.
 
 ## HR
 

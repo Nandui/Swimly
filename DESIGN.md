@@ -214,7 +214,7 @@ module reuses it rather than copying a stylesheet. The theme comes from `body.tu
 every portalled dialog already has it; their form dialogs pass `portalClassName="turnfin-module"`
 to `FormDialog` only so the module layout CSS reaches them, and selects inside them are shadcn `NativeSelect`. Statuses use
 `<Tag meta={…} />` with metas whose icons live in the map itself (`TRAINING_STATUS_META`,
-`QUALIFICATION_STATE_META`, `NOTE_VISIBILITY_META`, `REVIEW_STATUS_META`, `ROTA_WARNING_META`). Each person's own side is not on Work at
+`QUALIFICATION_STATE_META`, `NOTE_VISIBILITY_META`, `REVIEW_STATUS_META`, `ROTA_FIT_META`). Each person's own side is not on Work at
 all: it is Turnfin Me (`apps/me`), a phone-first app in Poolside Clear v2 with the floating
 bottom bar at every width, 44px controls, and the same tokens and v2 parts (the fin tile, bar,
 bottom bar, panels, rows and tile icons) copied verbatim from `src/app/docs/poolside.css` into
@@ -279,7 +279,7 @@ line. Multi-line boxes (textareas, notices) use 16px, never a pill.
   buttons have the soft `--pc-line` edge; fields, select triggers and comboboxes keep
   `--pc-line-strong`. Link buttons have no inset. Destructive uses `--pc-danger` with
   `--pc-on-danger` text and `--pc-danger-hover`. A selected state is never a grey fill: use
-  outline with `aria-current` or `aria-pressed` (Rota This week's "Today" carries `aria-current="date"`).
+  outline with `aria-current` or `aria-pressed` (the open day on Rota's week strip carries `aria-current="date"`).
 - Row actions (edit, archive, delete, unenrol) are 44px outline circles with an ink icon
   (`variant="outline" size="icon"`; `IconButton` and `ActionButton` default to it). Bar,
   toolbar and in-field icons (View as, theme flip, clear search) stay ghost.
@@ -392,7 +392,7 @@ line. Multi-line boxes (textareas, notices) use 16px, never a pill.
 - Panels side by side use `.pc-grid` (16px gap): one column on phones, two from 768px, every
   panel in one row from 1280px. A `.pc-grid-stack` keeps its panels in one column below
   1280px; a lone child spans the row, so there is never an empty track.
-- Timelines (home, and Rota's day planner on the Week plan and This week) are the shared `TimelineGrid`
+- Timelines (the home page's classes) are the shared `TimelineGrid`
   (`src/components/workspace/timeline-grid.tsx`): each lane is one rounded row like a list row
   (its name, caption and at most two 44px actions, then its track with faint hour lines and
   the past in the sunken fill), hours as caption labels along the top, blocks placed to the
@@ -406,19 +406,21 @@ line. Multi-line boxes (textareas, notices) use 16px, never a pill.
   over the whole name tile), so a lane needs no edit icon. A planning grid (`readout`) shows the
   exact quarter hour under the pointer as a pill on the time bar (`TimelineReadout`), so the bar
   keeps to hours; every block also says its times in words.
-- Rota's day planner (`DayPlanner`, `src/components/rota/day-planner.tsx`; owner decision,
-  5 October 2026, from an approved mockup after the scrolling quarter-hour version proved
-  confusing) is **one panel, one timeline that fits the width**, its head naming the day with a
-  summary pill (amber "1 gap to fill", or "Everything is covered"), and three section headings,
-  each with its one Add button: **Activities** (what the department needs covered, such as a pool's
-  lifeguard or the gym floor; each lane: who and when in blue, "No one" and when in amber, a gap
-  pressed to fill it), **Bookings** (one block per booking: first
-  names of who is on it, the time and how many are still needed), and **Staff** (each person's
-  shift as a dashed frame, `data-block="shift"` or the `.rota-free` drag target, with their
-  duties, breaks, bookings and classes inside it as ordinary blocks; a shift with nobody on it is
-  a "Nobody yet" lane). No charts, totals per moment, quarter-hour labels or drag lanes. One key
-  after the timeline: Someone on it, Nobody yet, Booking, Off or not qualified, and the dashed
-  box for a shift.
+- Rota's day timeline (`DayPlan`, `src/components/rota/day-plan.tsx`; owner decisions, 6 October
+  2026, from approved mockups; docs/rota.md) is its own planning view, not `TimelineGrid`: the day
+  across the **full width** of one panel (nothing scrolls sideways), one **group per activity and
+  place** with its label tile once (icon, name, place, places, the qualification in short, its gap
+  count as a tag) beside its **stacked lanes, one per place**. Blocks are the shared `.pc-block` fills:
+  someone on it `data-block="next"`, a gap `cover` ("Nobody"), someone off `absent`. **Show** is a
+  `SegmentedChoice` (Whole day, Morning, Afternoon, Evening); hours read every two hours across the
+  whole day, every hour when zoomed. A block says as much as its width allows: name and times, then
+  the first name (with the class or start), then initials or an icon, and always its full words as
+  its accessible name; back-to-back swim classes merge into one block ("6 classes") until zoomed in.
+  Choosing a gap opens **Who can fill it** as a sheet (not a side panel), the gap outlined in blue
+  (`aria-pressed`). A viewer sees the same blocks as plain content. One key after the timeline.
+  Below 1280px the day is an agenda: each group's people and gaps in time order, gaps as yellow
+  `data-first` rows. Layout only lives in `module-workspace.css` (`rota-week`, `rota-tl-*`,
+  `rota-agenda`, `rota-fits`).
 - Page blocks sit 16px apart: the frame's content wrapper (`.tf-content` in ModuleShell,
   Instructor and Help) is a flex column with a 16px gap. It reaches blocks a page returns
   as direct children (a fragment), not ones inside its own `gap-6`/`space-y-6` wrapper; an

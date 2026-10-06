@@ -11,7 +11,7 @@ import "@/lib/rota/file";
 import "@/lib/purchasing/home";
 import "@/lib/people/home";
 
-export { commitmentsFor, homeCardItems, personFile, siteSummaryLines, staffColumnValues } from "./contributions";
+export { commitmentsFor, homeCardItems, planCommitment, personFile, siteSummaryLines, staffColumnValues } from "./contributions";
 // The swim school's top-bar tools and daily pages, for the home page's frame.
 export { SwimSchoolTools } from "./activities/components/app-nav";
 export { dailyPages } from "./activities/lib/nav";

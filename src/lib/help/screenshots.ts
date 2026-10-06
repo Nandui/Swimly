@@ -28,7 +28,7 @@ export const GUIDE_SCREENSHOTS: Record<string, Placement[]> = {
     { image: "training-signoff", step: "Sign it off or send it back", caption: "Each row shows who is ready, the course and their note, with Not yet and Sign off beside it.", alt: "Training Sign-off page with a fictional lifeguard ready for the pool rescue refresher, and Not yet and Sign off buttons." },
   ],
   "plan-week": [
-    { image: "rota-week", step: "Open the week plan", caption: "One row per person, To fill at the top, and a tag on any shift that needs a look.", alt: "Rota week plan at a fictional site with day tiles, a To fill row, a person’s shifts marked Absent, Off days and Add a shift." },
+    { image: "rota-week", step: "Open Plan", caption: "Each day counts its gaps. On the day, each activity has a row for each place: people in blue, gaps in amber.", alt: "Rota Plan at a fictional site: the week's days with their gap counts, then Wednesday's timeline with Lifeguarding on the learner pool and main pool, people in blue blocks and amber Nobody gaps, and Add activity." },
   ],
   "report-absence": [
     { image: "rota-absence", step: "Fill in who and when", caption: "Choose who is off, from when and why; the last day can wait until you know it.", alt: "Report an absence dialog with Who is off, First day off, Reason, an optional Last day off and Note." },

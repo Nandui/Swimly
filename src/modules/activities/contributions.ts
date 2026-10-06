@@ -3,12 +3,14 @@ import { prisma } from "@/lib/prisma";
 import { expandPermissions, type PermissionKey } from "@/lib/staff/permissions";
 import { visibleScreens, type ScreenKey } from "@/lib/staff/screens";
 import { registerCommitments, registerHomeCard, registerSiteSummary, registerStaffColumn, type Commitment, type HomeIcon, type HomeItem, type HomeSession } from "@/modules/contributions";
-import { formatTime, minutesNow, parseDateOnly, plural, today } from "@/lib/format";
+import { formatTime, isDateOnly, minutesNow, parseDateOnly, plural, today } from "@/lib/format";
+import { logAudit } from "@/lib/audit";
+import { staffByIds } from "@/lib/directory";
 import { weekdayOfIso } from "@/modules/activities/lib/attendance/dates";
 import { getCoversForDay } from "@/modules/activities/lib/attendance/data/cover";
 import { getCancellationsForDay } from "@/modules/activities/lib/cancellations/data";
 import { courseName } from "@/modules/activities/lib/courses/constants";
-import { getCoursesOnDay } from "@/modules/activities/lib/courses/data/courses";
+import { getCoursesOnDate } from "@/modules/activities/lib/courses/planned";
 import { getAwaitingEnrolment } from "@/modules/activities/lib/enrolment/data/awaiting-enrolment";
 import { getTodayAssessments } from "@/modules/activities/lib/today/assessments";
 import { sessionState } from "@/modules/activities/lib/today/calendar";
@@ -26,9 +28,10 @@ registerStaffColumn({
   },
 });
 
-/** Who teaches which class when, for the rota's plan and its clash check:
- *  each class on each date in the range, taught by that day's cover or else
- *  its instructor, cancelled sessions left out. Times and labels only. */
+/** Who teaches which class when, for the rota's plan and its clash check: each class on each
+ *  date in the range, taught by that day's cover (it has started), else the teacher planned for
+ *  that date on the rota, else its instructor; cancelled sessions left out. Times and labels only.
+ *  The rota plans a date's teacher through `plan` (owner decision, 6 October 2026). */
 registerCommitments({
   id: "activities.classes",
   async list({ siteIds, userIds, from, to }) {
@@ -40,18 +43,21 @@ registerCommitments({
       where: {
         archivedAt: null, dayOfWeek: { in: [...new Set(dates.map(weekdayOfIso))] },
         ...(siteIds ? { clubId: { in: [...siteIds] } } : {}),
-        ...(userIds ? { OR: [{ instructorId: { in: [...userIds] } }, { covers: { some: { date: range, coverById: { in: [...userIds] } } } }] } : {}),
+        ...(userIds ? { OR: [{ instructorId: { in: [...userIds] } }, { covers: { some: { date: range, coverById: { in: [...userIds] } } } },
+          { plannedTeachers: { some: { date: range, teacherId: { in: [...userIds] } } } }] } : {}),
       },
       select: { id: true, clubId: true, dayOfWeek: true, startMinutes: true, durationMinutes: true, instructorId: true, name: true, location: true, level: { select: { name: true } } },
     });
     if (courses.length === 0) return [];
     const ids = courses.map((c) => c.id);
-    const [covers, cancelled] = await Promise.all([
+    const [covers, planned, cancelled] = await Promise.all([
       prisma.classCover.findMany({ where: { courseId: { in: ids }, date: range }, select: { courseId: true, date: true, coverById: true } }),
+      prisma.classPlannedTeacher.findMany({ where: { courseId: { in: ids }, date: range }, select: { courseId: true, date: true, teacherId: true } }),
       prisma.classCancellation.findMany({ where: { courseId: { in: ids }, date: range }, select: { courseId: true, date: true } }),
     ]);
     const key = (courseId: string, date: Date) => `${courseId}|${date.toISOString().slice(0, 10)}`;
     const coverBy = new Map(covers.map((c) => [key(c.courseId, c.date), c.coverById]));
+    const plannedBy = new Map(planned.map((p) => [key(p.courseId, p.date), p.teacherId]));
     const off = new Set(cancelled.map((c) => key(c.courseId, c.date)));
     const out: Commitment[] = [];
     for (const date of dates) {
@@ -59,13 +65,39 @@ registerCommitments({
       for (const c of courses) {
         const k = `${c.id}|${date}`;
         if (c.dayOfWeek !== weekday || off.has(k)) continue;
-        const userId = coverBy.has(k) ? coverBy.get(k) ?? null : c.instructorId;
+        const userId = coverBy.has(k) ? coverBy.get(k) ?? null : plannedBy.has(k) ? plannedBy.get(k) ?? null : c.instructorId;
         if (userIds && (!userId || !userIds.includes(userId))) continue;
         out.push({ source: "activities.classes", userId, siteId: c.clubId, date, startMinutes: c.startMinutes, endMinutes: c.startMinutes + c.durationMinutes,
-          label: [courseName(c), c.location].filter(Boolean).join(", "), href: `/schedule?date=${date}` });
+          label: [courseName(c), c.location].filter(Boolean).join(", "), href: `/schedule?date=${date}`, ref: c.id, planned: !coverBy.has(k) && plannedBy.has(k),
+          place: c.location ?? undefined, title: courseName(c) });
       }
     }
     return out;
+  },
+  /** Plan who teaches a class on a date. Planning its usual instructor clears the plan. The
+   *  class's start record (ClassCover) is never written here: it is made when the class starts. */
+  async plan({ ref, siteId, date, userId, by }) {
+    if (!isDateOnly(date)) return { ok: false, error: "Choose a date." };
+    const course = await prisma.course.findFirst({ where: { id: ref, clubId: siteId, archivedAt: null }, select: { id: true, dayOfWeek: true, instructorId: true, name: true, level: { select: { name: true } } } });
+    if (!course) return { ok: false, error: "That class is no longer on the timetable." };
+    if (weekdayOfIso(date) !== course.dayOfWeek) return { ok: false, error: "That class does not run on that day." };
+    const on = parseDateOnly(date);
+    if (await prisma.classCancellation.findFirst({ where: { courseId: ref, date: on }, select: { id: true } })) return { ok: false, error: "That class is cancelled that day." };
+    if (await prisma.classCover.findFirst({ where: { courseId: ref, date: on }, select: { id: true } })) return { ok: false, error: "That class has already started; its teacher is recorded on the register." };
+    const teacher = userId ? (await staffByIds([userId])).get(userId) : null;
+    if (userId && !teacher) return { ok: false, error: "That person is no longer active." };
+    const label = `${courseName(course)} on ${date}`;
+    await prisma.$transaction(async (tx) => {
+      if (userId === course.instructorId) await tx.classPlannedTeacher.deleteMany({ where: { courseId: ref, date: on } });
+      else await tx.classPlannedTeacher.upsert({
+        where: { courseId_date: { courseId: ref, date: on } },
+        create: { courseId: ref, date: on, teacherId: userId, teacherName: teacher?.name ?? null, setById: by.id, setByName: by.name },
+        update: { teacherId: userId, teacherName: teacher?.name ?? null, setById: by.id, setByName: by.name },
+      });
+      await logAudit({ actorId: by.id, actorName: by.name, action: "update", entity: "ClassPlannedTeacher", entityId: ref, clubId: siteId,
+        summary: userId === course.instructorId ? `Planned ${label} with its usual instructor` : `Planned ${label} with ${teacher?.name ?? "nobody yet"}` }, tx);
+    });
+    return { ok: true };
   },
 });
 
@@ -107,7 +139,7 @@ registerHomeCard({
     const strip = ({ label, href, icon }: SwimAction): HomeItem => ({ kind: "action", label, href, icon });
     const iso = today();
     const [classes, cancelled, assessments, covers, awaiting, parentUpdates] = await Promise.all([
-      screens.has("calendar") ? getCoursesOnDay(weekdayOfIso(iso)) : null,
+      screens.has("calendar") ? getCoursesOnDate(iso) : null,
       screens.has("calendar") ? getCancellationsForDay(iso) : null,
       screens.has("calendar") ? getTodayAssessments(iso) : null,
       screens.has("calendar") ? getCoversForDay(iso) : null,
@@ -155,7 +187,7 @@ registerHomeCard({
     const held = expandPermissions(viewer.permissions, { superadmin: viewer.isSuperadmin });
     if (!visibleScreens(held).has("instructor")) return [];
     const iso = today(), now = minutesNow();
-    const [courses, covers, cancelled] = await Promise.all([getCoursesOnDay(weekdayOfIso(iso)), getCoversForDay(iso), getCancellationsForDay(iso)]);
+    const [courses, covers, cancelled] = await Promise.all([getCoursesOnDate(iso), getCoversForDay(iso), getCancellationsForDay(iso)]);
     const mine = courses.filter((c) => (c.instructorId === viewer.id || covers.get(c.id)?.coverById === viewer.id) && !cancelled.has(c.id));
     const ahead = mine.filter((c) => c.startMinutes + c.durationMinutes > now);
     return [

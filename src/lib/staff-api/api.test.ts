@@ -58,7 +58,13 @@ before(async () => {
   avaAssignment = (await db.trainingAssignment.create({ data: { orgId: ORG, courseId: course.id, userId: "ava", assignedByName: "Maya" } })).id;
   const club = await db.club.findFirstOrThrow({ where: { orgId: ORG } });
   const tomorrow = new Date(); tomorrow.setUTCHours(0, 0, 0, 0); tomorrow.setUTCDate(tomorrow.getUTCDate() + 1);
-  for (const userId of ["riley", "ava"]) await db.rotaShift.create({ data: { orgId: ORG, siteId: club.id, date: tomorrow, startMinutes: 420, endMinutes: 900, role: "Lifeguard", userId, createdByName: "Maya" } });
+  // The rota: both on tomorrow's lifeguarding, in a week shared with the pool's staff.
+  await db.department.create({ data: { id: "d-pool", orgId: ORG, name: "Pool", clubId: club.id } });
+  await db.rotaActivityType.create({ data: { id: "t-guard", orgId: ORG, departmentId: "d-pool", name: "Lifeguarding", icon: "lifeguard" } });
+  const lifeguarding = await db.rotaNeed.create({ data: { orgId: ORG, siteId: club.id, date: tomorrow, typeId: "t-guard", place: "Main pool", startMinutes: 420, endMinutes: 900, places: 2, createdByName: "Maya" } });
+  for (const [place, userId] of [[1, "riley"], [2, "ava"]] as const) await db.rotaAssignment.create({ data: { needId: lifeguarding.id, place, userId, startMinutes: 420, endMinutes: 900, createdByName: "Maya" } });
+  const monday = new Date(tomorrow); monday.setUTCDate(monday.getUTCDate() - ((monday.getUTCDay() + 6) % 7));
+  await db.rotaWeekShare.create({ data: { siteId: club.id, departmentId: "d-pool", monday, sharedByName: "Maya" } });
   // HR: one note shared with Riley, one private; one shared review.
   for (const [visibility, body] of [["subject", "Synthetic thanks for covering"], ["private", "Synthetic private observation"]]) {
     await hr.db.query("INSERT INTO notes (id, org_id, subject_user_id, author_id, author_name, visibility, body) VALUES ($1,$2,'riley','maya','Maya',$3,$4)", [randomUUID(), ORG, visibility, body]);
@@ -86,6 +92,8 @@ before(async () => {
     "@/lib/docs/runtime-database": { directoryDatabase: () => docs },
     "@/lib/authz": { requireSession: async () => { throw new Error("no Work session in the staff API"); } },
     "@/lib/clubs/current": { currentClubIdIfAny: async () => null, currentClubId: async () => club.id },
+    // No swim classes: the swim school is not part of the staff API.
+    "@/modules/server": { commitmentsFor: async () => [] },
     "server-only": {},
   };
   router = serverModule("src/lib/staff-api/router.ts", doubles);
@@ -119,6 +127,8 @@ test("every endpoint returns only the caller's own records, with no work data", 
   assert.equal((await call(`training/${avaAssignment}/complete`, "POST", {})).status, 404);
   const shifts = await (await call("shifts")).json();
   assert.equal(shifts.items.length, 1);
+  assert.deepEqual(shifts.items[0].blocks.map((b: { kind: string; label: string; place: string }) => [b.kind, b.label, b.place]), [["activity", "Lifeguarding", "Main pool"]]);
+  assert.equal(shifts.items[0].breaksToArrange, 60, "eight hours straight: no free time for the breaks they are owed");
   const home = await (await call("home")).json();
   const encoded = JSON.stringify([home, training, shifts, await (await call("me")).json()]);
   for (const leak of ["ava", "permissions", "screens", "passwordHash", "Synthetic summary", "Synthetic thanks"]) assert.equal(encoded.includes(leak), false, `no ${leak}`);

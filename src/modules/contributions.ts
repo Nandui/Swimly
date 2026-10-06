@@ -200,11 +200,28 @@ export type Commitment = {
   endMinutes: number;
   /** "Level 3, Learner pool". */
   label: string;
+  /** Where in the site, when the source knows: "Learner pool". */
+  place?: string;
+  /** The label without the place: "Level 3". */
+  title?: string;
   /** Where to see or change it. */
   href?: string;
+  /** The source's own id for the thing (a class), for `planCommitment`. */
+  ref?: string;
+  /** Planned for this date from another module (the rota), not the thing's usual person. */
+  planned?: boolean;
 };
 export type CommitmentQuery = { siteIds?: readonly string[]; userIds?: readonly string[]; from: string; to: string };
-export type CommitmentSource = { id: string; list(query: CommitmentQuery): Promise<Commitment[]> };
+/** Who to plan on one occurrence: `userId` null plans nobody (a gap). The source checks the
+ *  thing still happens that day and records it with its own audit; the caller has already
+ *  checked its own permission to plan at that site. */
+export type CommitmentPlan = { ref: string; siteId: string; date: string; userId: string | null; by: { id: string; name: string } };
+export type CommitmentSource = {
+  id: string;
+  list(query: CommitmentQuery): Promise<Commitment[]>;
+  /** Lets another module plan who does one occurrence (the rota planning a class's teacher). */
+  plan?(input: CommitmentPlan): Promise<{ ok: true } | { ok: false; error: string }>;
+};
 
 const commitmentSources: CommitmentSource[] = [];
 
@@ -221,4 +238,12 @@ export async function commitmentsFor(query: CommitmentQuery, except?: string) {
   if (query.userIds && query.userIds.length === 0 && !query.siteIds) return [];
   const lists = await Promise.all(commitmentSources.filter((s) => s.id !== except).map((s) => s.list(query)));
   return lists.flat();
+}
+
+/** Plan who does one occurrence of another module's commitment (owner decision, 6 October 2026:
+ *  Rota assigns swim teachers; the swim school keeps the record). */
+export async function planCommitment(sourceId: string, input: CommitmentPlan) {
+  const source = commitmentSources.find((s) => s.id === sourceId);
+  if (!source?.plan) return { ok: false as const, error: "That can no longer be planned from here." };
+  return source.plan(input);
 }

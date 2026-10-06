@@ -1,109 +1,137 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { ChevronLeft, ChevronRight } from "lucide-react";
+import { Avatar, AvatarFallback } from "@/components/shadcn/avatar";
 import { Button } from "@/components/shadcn/button";
 import { EmptyState } from "@/components/ui-kit/empty-state";
 import { PageHeader } from "@/components/ui-kit/page-header";
 import { Tag } from "@/components/ui-kit/tag";
-import { CopyPlan, ShiftDialog } from "@/components/rota/actions";
-import { BookingDialog } from "@/components/rota/bookings";
-import { DayPlanner } from "@/components/rota/day-planner";
+import { DayPlan } from "@/components/rota/day-plan";
 import { LinkPicker } from "@/components/rota/link-picker";
-import { WeekTabs } from "@/components/rota/week-tabs";
-import { RosterWeek, type RosterCover, type RosterShiftDetail } from "@/components/rota/roster";
-import { formatDateRange, formatDayMonth, formatWeekday, isDateOnly, today } from "@/lib/format";
-import { ACTIVITY_SUGGESTIONS, WEEK_STATE_META, addDaysIso, mondayOf, weekStarted } from "@/lib/rota/constants";
-import { rotaDay, rotaWeek } from "@/lib/rota/data";
-import { buildRoster, forDepartment } from "@/lib/rota/roster";
-import { buildTimeline } from "@/lib/rota/timeline";
+import { CopyDialog, NeedDialog, ShareWeek } from "@/components/rota/plan-dialogs";
+import { formatDateRange, formatDayMonth, formatWeekday, nameInitials } from "@/lib/format";
+import { addDaysIso, clock, mondayOf } from "@/lib/rota/constants";
+import { planWeek } from "@/lib/rota/data";
+import type { Person } from "@/lib/rota/day";
+import { ROTA_DAY_META, ROTA_FIT_META, ROTA_SHIFT_NOTE_META, ROTA_WEEK_META } from "@/lib/rota/meta";
+import { duration } from "@/lib/rota/shifts";
 
-export const metadata: Metadata = { title: "Week plan" };
+export const metadata: Metadata = { title: "Plan" };
 
-/** Every department, for the picker's "All". */
-const ALL = "all";
-
-/** A department's week (owner decisions, 3 and 5 October 2026): the department supervisor plans
- *  their staff and bookings weeks ahead. The Week tab is the roster sheet: the department's staff
- *  down the side (shifts or not), days across, the department's activities and what is still to
- *  fill above them. Each day's tab (counting what needs sorting out) is the day planner: what
- *  needs people (every job and who is on it), a lane to drag new bookings onto in 15-minute
- *  steps, who is on shift, and Needs you. It opens on the viewer's own department; "All" shows every
- *  department. Once a week starts, each change asks for its reason (Timepoint holds the week). */
-export default async function WeekPlanPage({ searchParams }: { searchParams: Promise<{ site?: string; week?: string; dept?: string; day?: string }> }) {
+/** The department supervisor's Plan (owner decisions, 6 October 2026, from the approved mockup):
+ *  one department's week at a site, a strip of its days with their gap counts, the open day as a
+ *  timeline of its activities and who is on each place, and who is working with the shift that
+ *  comes from it. A draft until the week is shared with its staff. */
+export default async function PlanPage({ searchParams }: { searchParams: Promise<{ site?: string; week?: string; dept?: string; day?: string }> }) {
   const input = await searchParams;
-  const day = input.day && isDateOnly(input.day) ? input.day : null;
-  const dayData = day ? await rotaDay(input.site, day) : null;
-  const data = dayData ?? await rotaWeek(input.site, input.week);
-  const { site, monday } = data;
-  const sunday = addDaysIso(monday, 6);
-  const now = today();
-  const thisWeek = monday <= now && now <= sunday;
-  const started = weekStarted(monday, now);
-  // The department shown: the one asked for, else the viewer's own; "all" for every department.
-  const asked = input.dept === ALL ? null : data.departments.find((d) => d.id === (input.dept ?? data.mine)) ?? null;
-  const dept = asked?.id;
-  const whole = buildRoster(data.days, data.members, data.departments);
-  const roster = asked ? forDepartment(whole, asked.id, data.members, asked.name) : whole;
-  const link = (week: string, department: string = dept ?? ALL, date: string | null = null) => `/rota?${new URLSearchParams({ ...(site ? { site: site.id } : {}), week, dept: department, ...(date ? { day: date } : {}) })}`;
-  // Moving week keeps the weekday open, so Tuesday stays Tuesday.
-  const weekLink = (m: string) => link(m, dept ?? ALL, day ? addDaysIso(m, (Date.parse(day) - Date.parse(monday)) / 86_400_000) : null);
-  const dayLink = (date: string) => link(monday, dept ?? ALL, date);
-  // Nearby weeks for the picker: always this week, and the one shown.
-  const thisMonday = mondayOf(now);
-  const nearby = [...new Set([-2, -1, 0, 1, 2, 3, 4].map((n) => addDaysIso(thisMonday, n * 7)).concat(monday))].sort();
-  const weekName = (m: string) => m === thisMonday ? "This week" : m === addDaysIso(thisMonday, 7) ? "Next week" : m === addDaysIso(thisMonday, -7) ? "Last week" : `Week of ${formatDayMonth(m)}`;
-  const days = data.days.map((d) => ({ iso: d.iso, weekday: formatWeekday(d.iso, "short"), date: formatDayMonth(d.iso), today: d.iso === now, href: dayLink(d.iso) }));
-  const shifts: Record<string, RosterShiftDetail> = Object.fromEntries(data.days.flatMap((d) => d.shifts.filter((s) => s.kind === "shift").map((s) => [s.id, {
-    id: s.id, start: s.startMinutes, end: s.endMinutes, role: s.bookingNeed?.role ?? s.role, who: s.user?.name ?? s.rotaPerson?.name ?? null,
-    segments: s.segments.map((g) => ({ start: g.startMinutes, end: g.endMinutes, kind: g.kind, label: g.label })),
-    young: s.userId ? data.young[`${s.userId}:${d.iso}`] ?? null : null,
-    date: s.date, startMinutes: s.startMinutes, endMinutes: s.endMinutes, note: s.note, userId: s.userId, requiredTypeId: s.requiredTypeId,
-    departmentId: s.departmentId, department: s.department?.name ?? null, editable: !s.importId,
-  } satisfies RosterShiftDetail])));
-  const used = data.days.flatMap((d) => d.shifts.flatMap((s) => s.segments.filter((g) => g.kind === "activity").map((g) => g.label)));
-  const activities = [...new Set([...used, ...ACTIVITY_SUGGESTIONS])];
-  const options = { people: data.people, types: data.types, departments: data.departments, duties: data.duties };
-  // Each day's activities to cover (the department's, or all of them), who is on each and its gaps.
-  const cover: RosterCover[][] = data.days.map((d) => {
-    const planned = d.planned.filter((a) => !dept || !a.departmentId || a.departmentId === dept);
-    return buildTimeline(d.shifts, [], planned).cover.filter((c) => c.activity).map((c) => ({
-      id: c.activity!.id, label: c.label, start: c.activity!.start, end: c.activity!.end, gaps: c.gaps.length,
-      who: [...new Set(c.spans.map((x) => x.who))],
-    }));
-  });
-
-  return (
-    <div className="flex flex-col gap-6">
-      <PageHeader title="Week plan"
-        description={site ? `${formatDateRange(monday, sunday)} · ${site.name} · ${asked ? asked.name : "All departments"}` : undefined}
-        status={site?.manage ? <Tag meta={WEEK_STATE_META[started ? "underWay" : "planning"]} /> : undefined}
-        actions={site ? <>
-          <nav aria-label="Weeks" className="flex items-center gap-2">
-            <Button asChild variant="outline" size="icon" aria-label="Previous week"><Link href={weekLink(addDaysIso(monday, -7))}><ChevronLeft aria-hidden="true" /></Link></Button>
-            <LinkPicker name="Week" options={nearby.map((m) => ({ href: weekLink(m), label: weekName(m), current: m === monday }))} />
-            <Button asChild variant="outline" size="icon" aria-label="Next week"><Link href={weekLink(addDaysIso(monday, 7))}><ChevronRight aria-hidden="true" /></Link></Button>
-          </nav>
-          {data.departments.length ? (
-            <LinkPicker name="Department" options={[{ href: link(monday, ALL, day), label: "All", current: !asked },
-              ...data.departments.map((d) => ({ href: link(monday, d.id, day), label: d.id === data.mine ? `${d.name} (yours)` : d.name, current: d.id === dept }))]} />
-          ) : null}
-          {site.manage && !started && !day ? <CopyPlan siteId={site.id} to={monday} whole /> : null}
-          {site.manage && day && !weekStarted(day, now) ? <CopyPlan siteId={site.id} to={day} whole={false} /> : null}
-          {/* A day's sections have their own Add buttons; the week adds from here. */}
-          {site.manage && !day ? <BookingDialog siteId={site.id} today={now} departments={data.departments} types={data.types} department={dept} outline /> : null}
-          {site.manage && !day ? <ShiftDialog siteId={site.id} date={thisWeek ? now : monday} today={now} options={options} department={dept} /> : null}
-        </> : undefined} />
-      {data.sites.length === 0 || !site ? (
+  const data = await planWeek(input);
+  if (!data.site) {
+    return (
+      <>
+        <PageHeader title="Plan" />
         <EmptyState as="h2" icon="calendarDays" title="No sites to show" hint="Your rota role does not cover a site yet." />
+      </>
+    );
+  }
+  const { site, monday, now, date, department, departments, week, share, day } = data;
+  const link = (q: { week?: string; day?: string; dept?: string }) =>
+    `/rota?${new URLSearchParams({ site: site.id, ...(department ? { dept: department.id } : {}), ...q })}`;
+  const sunday = addDaysIso(monday, 6);
+  const live = date <= now;
+  const dayGaps = day.gapCount;
+  const warned = day.people.filter((p) => p.warnings.length || p.shift.parts.some((x) => x.unplaced.length)).length;
+  const thisMonday = mondayOf(now);
+  const weeksBack = Array.from({ length: 6 }, (_, i) => addDaysIso(monday, -7 * (i + 1)));
+  const daysBack = Array.from({ length: 14 }, (_, i) => addDaysIso(date, -(i + 1)));
+  const dateLabel = `${formatWeekday(date)} ${formatDayMonth(date)}`;
+  return (
+    <>
+      <PageHeader
+        title={department ? `Plan: ${department.name}` : "Plan"}
+        description={`${formatDateRange(monday, sunday)} at ${site.name}. ${share ? `Shared with staff by ${share.sharedByName}.` : "A draft: staff see it once you share the week."}`}
+        status={department ? <Tag meta={ROTA_WEEK_META[share ? "shared" : "draft"]} /> : undefined}
+        actions={department ? <>
+          {departments.length > 1 ? <LinkPicker name="Department" options={departments.map((d) => ({ href: `/rota?${new URLSearchParams({ site: site.id, dept: d.id, week: monday })}`, label: d.name, current: d.id === department.id }))} /> : null}
+          {data.canShare ? <CopyDialog siteId={site.id} departmentId={department.id} date={date} monday={monday}
+            options={{ days: daysBack.map((d) => ({ iso: d, label: `${formatWeekday(d)} ${formatDayMonth(d)}` })), weeks: weeksBack.map((m) => ({ iso: m, label: m === addDaysIso(thisMonday, -7) ? "Last week" : `Week of ${formatDayMonth(m)}` })) }} /> : null}
+          {data.canShare && !share ? <ShareWeek siteId={site.id} departmentId={department.id} monday={monday} department={department.name} gaps={week.reduce((n, d) => n + d.gapCount, 0)} /> : null}
+        </> : undefined}
+      />
+      {!department ? (
+        <EmptyState as="h2" icon="calendarDays" title="No departments at this site" hint="Departments are set up under Admin. Each activity on the rota belongs to one." />
       ) : (
         <>
-          <WeekTabs days={data.days} current={day} today={now} departmentId={dept ?? null} href={(d) => (d ? dayLink(d) : link(monday))} week="Week" />
-          {dayData ? <DayPlanner data={dayData} dept={asked} /> : (
-            <RosterWeek roster={roster} days={days} today={now} siteId={site.id} manage={site.manage} department={dept}
-              shifts={shifts} activities={activities} options={options} cover={cover} />
-          )}
+          <section className="pc-panel" aria-labelledby="rota-week">
+            <div className="pc-panel-head">
+              <div className="flex flex-wrap items-center gap-2">
+                <Button asChild variant="outline" size="icon" aria-label="Previous week"><Link href={link({ week: addDaysIso(monday, -7) })}><ChevronLeft aria-hidden="true" /></Link></Button>
+                <h2 id="rota-week" className="tabular-nums">{formatDateRange(monday, sunday)}</h2>
+                <Button asChild variant="outline" size="icon" aria-label="Next week"><Link href={link({ week: addDaysIso(monday, 7) })}><ChevronRight aria-hidden="true" /></Link></Button>
+              </div>
+              <span className="text-xs text-ui-muted-foreground">{week.reduce((n, d) => n + d.gapCount, 0)} gaps this week</span>
+            </div>
+            <ul className="rota-week" aria-label="Days">
+              {week.map((d) => (
+                <li key={d.iso}>
+                  <Link className="rota-week-day" href={link({ day: d.iso })} aria-current={d.iso === date ? "date" : undefined}>
+                    <span>{formatWeekday(d.iso, "short")} {formatDayMonth(d.iso).split(" ")[0]}{d.iso === now ? " · today" : ""}</span>
+                    <Tag meta={ROTA_DAY_META[!d.planned ? "empty" : d.gapCount ? "gaps" : "covered"]}
+                      label={d.planned && d.gapCount ? `${d.gapCount} ${d.gapCount === 1 ? "gap" : "gaps"}` : undefined} />
+                  </Link>
+                </li>
+              ))}
+            </ul>
+          </section>
+          <section className="pc-panel" aria-labelledby="rota-day">
+            <div className="pc-panel-head">
+              <div className="flex flex-wrap items-center gap-2">
+                <h2 id="rota-day">{formatWeekday(date)} {formatDayMonth(date)}</h2>
+                {day.groups.length ? <Tag meta={ROTA_DAY_META[dayGaps ? "gaps" : "covered"]} label={dayGaps ? `${dayGaps} ${dayGaps === 1 ? "gap" : "gaps"}` : "Everything is covered"} /> : null}
+                {warned ? <Tag meta={ROTA_SHIFT_NOTE_META.noBreak} label={`${warned} to check`} /> : null}
+              </div>
+              {data.canChange && data.types.length ? <NeedDialog siteId={site.id} date={date} live={live} types={data.types} places={data.places} /> : null}
+            </div>
+            {!data.canChange ? <p className="text-sm text-ui-muted-foreground">{live ? "This day has come: the duty manager changes it from Today." : "You can see this plan. Planning it needs the Plan level for this department."}</p> : null}
+            {day.groups.length ? (
+              <DayPlan siteId={site.id} date={date} dateLabel={dateLabel} live={live} canChange={data.canChange} groups={day.groups} types={data.types} places={data.places} />
+            ) : (
+              <EmptyState compact icon="calendarDays" title={`Nothing planned for ${department.name} on ${dateLabel}`}
+                hint={data.types.length ? "Add the activities the day needs, or copy an earlier day." : "Add this department's activities to the activity list first."} />
+            )}
+          </section>
+          {day.people.length ? (
+            <section className="pc-panel" aria-labelledby="rota-working">
+              <div className="pc-panel-head"><div><h2 id="rota-working">Who&apos;s working</h2>
+                <p className="text-sm text-ui-muted-foreground">Each shift comes from the activities a person is on, with breaks placed by the handbook rules.</p></div></div>
+              <ul className="pc-rows">{day.people.map((p) => <WorkingRow key={p.userId} person={p} />)}</ul>
+            </section>
+          ) : null}
         </>
       )}
-    </div>
+    </>
+  );
+}
+
+/** A person's day: their shift, what they are on, their breaks, and anything to check. */
+function WorkingRow({ person: p }: { person: Person }) {
+  const parts = p.shift.parts;
+  const breaks = parts.flatMap((x) => x.breaks);
+  const unplaced = parts.flatMap((x) => x.unplaced);
+  return (
+    <li className="pc-row">
+      <Avatar size="lg"><AvatarFallback>{nameInitials(p.name)}</AvatarFallback></Avatar>
+      <span className="pc-row-body">
+        <span className="pc-row-title">{p.name}</span>
+        <span className="pc-row-hint tabular-nums">
+          {parts.length > 1 ? `${parts.map((x) => `${clock(x.start)} to ${clock(x.end)}`).join(" and ")}` : `Shift ${clock(p.shift.start)} to ${clock(p.shift.end)}`} · {duration(p.shift.paidMinutes)} paid · {p.activities.join(", ")}
+        </span>
+      </span>
+      <span className="pc-row-trail">
+        {parts.length > 1 ? <Tag meta={ROTA_SHIFT_NOTE_META.twoParts} /> : null}
+        {breaks.map((b) => <Tag key={b.start} meta={ROTA_SHIFT_NOTE_META.break} label={`${b.paid ? "Paid break" : "Break"} ${clock(b.start)}–${clock(b.end)}`} />)}
+        {unplaced.length ? <Tag meta={ROTA_SHIFT_NOTE_META.noBreak} label={`No room for ${unplaced.reduce((n, b) => n + b.minutes, 0)} min of breaks`} /> : null}
+        {p.warnings.map((w) => <Tag key={w} meta={ROTA_FIT_META[w]} />)}
+      </span>
+    </li>
   );
 }

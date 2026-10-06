@@ -1,4 +1,5 @@
 import { Button } from "@/components/shadcn/button";
+import { plannedTeachers } from "@/modules/activities/lib/courses/planned";
 import UiLink from "next/link";
 import { Notice } from "@/components/ui-kit/notice";
 import {
@@ -149,14 +150,15 @@ export async function ClassSession({
 
   if (cancellation) return <div className="min-w-0 flex flex-col gap-6"><PageHeader back={{ href: returnTo.href, label: backLabel }} title={courseName(course)} description={`${formatSlot(course)} · ${formatDate(parseDateOnly(iso))}`} actions={weekActions} /><Notice title="This session is cancelled"><p>{cancellation.reason}</p><p>Existing teaching records are kept. Further marks cannot be saved for this session.</p></Notice></div>;
 
-  const [{ lines, taken, note, revision }, cover, progress] = await Promise.all(
-    [getRegister(id, iso, workspace === "instructor" ? "deck" : "desk"), getClassCover(id, iso), getClassProgress(id)],
+  const [{ lines, taken, note, revision }, cover, progress, planned] = await Promise.all(
+    [getRegister(id, iso, workspace === "instructor" ? "deck" : "desk"), getClassCover(id, iso), getClassProgress(id), plannedTeachers([id], iso)],
   );
   if (!progress) notFound();
 
   const access = {
     session,
-    instructorId: course.instructorId,
+    // Whose class it is that day: the teacher planned on the rota for this date, else its instructor.
+    instructorId: planned.has(id) ? planned.get(id)!.teacherId : course.instructorId,
     coverById: cover?.coverById,
   };
   const mayMark =

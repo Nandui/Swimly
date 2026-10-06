@@ -11,7 +11,7 @@ import { Field, FormDialog } from "@/components/form-dialog";
 import { ChoiceRow } from "@/components/ui/choice-row";
 import { Notice } from "@/components/ui-kit/notice";
 import { formatDate } from "@/lib/format";
-import { endAbsence, extendAbsence, recordReturnToWork, reportAbsence, withdrawAbsence, type AbsenceInput } from "@/lib/rota/actions";
+import { endAbsence, extendAbsence, recordReturnToWork, reportAbsence, withdrawAbsence, type AbsenceInput } from "@/lib/rota/absence-actions";
 import { ABSENCE_REASON_META, ABSENCE_REASONS, RETURN_FIT_META, SELF_CERTIFIED_DAYS, addDaysIso, followOn, needsFitNote, type AbsenceReason, type ReturnFit } from "@/lib/rota/constants";
 
 const THEME = "turnfin-module";

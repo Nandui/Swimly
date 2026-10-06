@@ -66,6 +66,7 @@ const levelRoles: { name: string; homeName: string; levels: Record<string, strin
   { name: "Instructor", homeName: "Pool deck", levels: { "pool-deck": "teach" }, system: true },
   { name: "Receptionist", homeName: "Front of House", levels: { "swim-school": "desk", refunds: "use", docs: "read", rota: "view" } },
   { name: "Lifeguard", homeName: "Poolside", levels: { docs: "read", rota: "view" } },
+  { name: "Pool supervisor", homeName: "Pool planning", levels: { docs: "read", rota: "plan" } },
   { name: "Duty manager", homeName: "Duty desk", levels: { "swim-school": "desk", refunds: "manage", docs: "read", training: "trainer", rota: "manage" }, extras: ["swim-school.cancel-classes"] },
   { name: "Swim school manager", homeName: "Swim school office", levels: { "swim-school": "manage", "pool-deck": "lead", docs: "manage", training: "manage", rota: "manage", hr: "team" }, extras: ["swim-school.cancel-classes", "docs.approve"] },
 ];
@@ -89,7 +90,11 @@ const people: Seed[] = [
   { id: "sbx_liam", name: "Liam Example", role: "Swim school manager", title: "Aquatics lead", site: "club_churchfield", departments: ["dept_aquatics"], manager: "sbx_maya" },
   { id: "sbx_ava", name: "Ava Example", role: "Instructor", title: "Swim teacher", site: "club_churchfield", departments: ["dept_aquatics"], manager: "sbx_liam" },
   { id: "sbx_noah", name: "Noah Example", role: "Receptionist", title: "Receptionist", site: "club_bishopstown", departments: ["dept_reception"], manager: "sbx_alex" },
-  { id: "sbx_riley", name: "Riley Example", role: "Lifeguard", title: "Lifeguard", site: "club_bishopstown", departments: ["dept_aquatics"], manager: "sbx_liam" },
+  { id: "sbx_riley", name: "Riley Example", role: "Lifeguard", title: "Lifeguard", site: "club_bishopstown", departments: ["dept_aquatics"], manager: "sbx_liam", sites: ["club_bishopstown", "club_churchfield"] },
+  { id: "sbx_sam", name: "Sam Example", role: "Pool supervisor", title: "Pool supervisor, Hillview", site: "club_churchfield", departments: ["dept_aquatics"], manager: "sbx_liam", sites: ["club_churchfield"] },
+  { id: "sbx_ciara", name: "Ciara Example", role: "Lifeguard", title: "Lifeguard", site: "club_churchfield", departments: ["dept_aquatics"], manager: "sbx_sam", sites: ["club_churchfield"] },
+  { id: "sbx_conor", name: "Conor Example", role: "Lifeguard", title: "Lifeguard", site: "club_churchfield", departments: ["dept_aquatics"], manager: "sbx_sam", sites: ["club_churchfield"] },
+  { id: "sbx_dylan", name: "Dylan Example", role: "Lifeguard", title: "Lifeguard", site: "club_churchfield", departments: ["dept_aquatics"], manager: "sbx_sam", sites: ["club_churchfield"] },
 ];
 for (const p of people) {
   await prisma.user.create({ data: {
@@ -109,6 +114,7 @@ await prisma.qualification.createMany({ data: [
   { orgId: ORG, userId: "sbx_ava", typeId: "qt_nplq", issuedOn: new Date("2025-02-01T00:00:00Z"), expiresOn: new Date("2027-02-01T00:00:00Z"), reference: "NPLQ-EXAMPLE-1", verifiedById: "sbx_liam", verifiedAt: new Date() },
   { orgId: ORG, userId: "sbx_ava", typeId: "qt_first_aid", issuedOn: new Date("2023-11-01T00:00:00Z"), expiresOn: soon, verifiedById: "sbx_liam", verifiedAt: new Date() },
   { orgId: ORG, userId: "sbx_riley", typeId: "qt_nplq", issuedOn: new Date("2024-01-10T00:00:00Z"), expiresOn: past, verifiedById: "sbx_liam", verifiedAt: new Date() },
+  ...["sbx_ciara", "sbx_conor", "sbx_dylan", "sbx_sam"].map((userId) => ({ orgId: ORG, userId, typeId: "qt_nplq", issuedOn: new Date("2025-03-01T00:00:00Z"), expiresOn: new Date("2027-03-01T00:00:00Z"), verifiedById: "sbx_liam", verifiedAt: new Date() })),
 ] });
 
 const seedModule = "./sandbox-seed.ts";
@@ -118,7 +124,7 @@ if (existsSync(new URL(seedModule, import.meta.url))) {
 }
 await prisma.$disconnect();
 
-console.log(`[sandbox] Seeded a fictional leisure group (Riverside and Hillview). Sign in as alex@sandbox.invalid (superadmin), maya@, liam@, ava@, noah@ or riley@sandbox.invalid with the sandbox password in scripts/sandbox.mts.`);
+console.log(`[sandbox] Seeded a fictional leisure group (Riverside and Hillview). Sign in as alex@sandbox.invalid (superadmin), maya@ (duty manager), sam@ (pool supervisor), liam@, ava@, noah@ or riley@sandbox.invalid with the sandbox password in scripts/sandbox.mts.`);
 const env = {
   ...process.env,
   DATABASE_URL: mainUrl, DIRECT_URL: mainUrl, DOCS_DATABASE_URL: docsUrl, DOCS_DIRECT_URL: docsUrl,

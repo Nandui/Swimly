@@ -5,9 +5,10 @@ import { ABSENCE_REASON_META, RETURN_FIT_META, ROTA_CHANGE_REASON_META, addDaysI
 import { registerPersonFileSection, type PersonFileEntry } from "@/modules/contributions";
 
 /** Rota's part of a person's file: every absence recorded for them, with its
- *  return to work, and how much they were off in the last 12 months. Their
- *  absences on the roster count once the roster entry is linked to their
- *  account. Withdrawn absences (recorded in error) are left out. */
+ *  return to work, and how much they were off in the last 12 months; and the
+ *  changes made to their activities on days that had come. Withdrawn absences
+ *  (recorded in error) are left out. Absences recorded on the retired roster
+ *  upload still count once its entry was linked to their account. */
 
 const iso = (d: Date) => d.toISOString().slice(0, 10);
 const day = (value: string) => formatDate(new Date(`${value}T00:00:00Z`));
@@ -56,31 +57,27 @@ export async function absenceFile(userId: string, orgId: string): Promise<{ summ
 
 registerPersonFileSection({ id: "rota.absences", heading: "Absences and returns to work", load: absenceFile });
 
-/** Changes to their duties once the week had started: taken off one or put on
- *  one, with the reason, who changed it, and whether Timepoint has it. */
+/** Changes to their activities on a day that had come (today or earlier): put on or taken off,
+ *  with the reason, who changed it, and whether Timepoint has it. */
 export async function dutyChangeFile(userId: string, orgId: string): Promise<{ summary: string; entries: PersonFileEntry[] }> {
-  const rows = await prisma.rotaShiftChange.findMany({
-    where: { orgId, OR: [{ fromUserId: userId }, { toUserId: userId }] },
-    orderBy: { createdAt: "desc" }, take: 200,
-    select: { id: true, date: true, kind: true, before: true, after: true, fromUserId: true, reason: true, note: true, byName: true, createdAt: true, timepointAt: true },
+  const rows = await prisma.rotaLog.findMany({
+    where: { orgId, userId }, orderBy: { createdAt: "desc" }, take: 200,
+    select: { id: true, date: true, summary: true, reason: true, note: true, byName: true, createdAt: true, timepointAt: true },
   });
   const yearAgo = addDaysIso(today(), -364);
   const recent = rows.filter((r) => iso(r.date) >= yearAgo).length;
-  const entries = rows.map((r): PersonFileEntry => {
-    const off = r.fromUserId === userId && r.kind !== "added";
-    return {
-      id: r.id,
-      title: `${off ? (r.kind === "cancelled" ? "Duty cancelled" : "Taken off a duty") : "Put on a duty"}: ${off ? r.before : r.after}`,
-      detail: [
-        ROTA_CHANGE_REASON_META[r.reason as RotaChangeReason]?.label ?? r.reason,
-        `by ${r.byName} on ${day(iso(r.createdAt))}`,
-        clause(r.note),
-        r.timepointAt ? "In Timepoint" : "Not yet in Timepoint",
-      ].filter(Boolean).join(" · "),
-      on: iso(r.date),
-    };
-  });
-  return { summary: recent ? `${plural(recent, "change")} to their duties in the last 12 months.` : "No changes to their duties in the last 12 months.", entries };
+  const entries = rows.map((r): PersonFileEntry => ({
+    id: r.id,
+    title: r.summary,
+    detail: [
+      ROTA_CHANGE_REASON_META[r.reason as RotaChangeReason]?.label ?? r.reason,
+      `by ${r.byName} on ${day(iso(r.createdAt))}`,
+      clause(r.note),
+      r.timepointAt ? "In Timepoint" : "Not yet in Timepoint",
+    ].filter(Boolean).join(" · "),
+    on: iso(r.date),
+  }));
+  return { summary: recent ? `${plural(recent, "change")} to their activities in the last 12 months.` : "No changes to their activities in the last 12 months.", entries };
 }
 
-registerPersonFileSection({ id: "rota.changes", heading: "Changes to their duties", load: dutyChangeFile });
+registerPersonFileSection({ id: "rota.changes", heading: "Changes to their activities", load: dutyChangeFile });

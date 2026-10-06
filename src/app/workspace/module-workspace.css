@@ -53,8 +53,63 @@
 /* Ghost buttons inside a panel list read as inline actions: their label lines up with the text. */
 .turnfin-module .module-panel li > button[data-variant='ghost'] { margin-inline-start: calc(var(--pc-control-pad) * -1); }
 
-/* Rota: a break inside a shift on the day timeline, hatched so it reads without colour. */
-.turnfin-module .rota-break { background: repeating-linear-gradient(135deg, var(--pc-hatch) 0 3px, var(--pc-surface) 3px 6px); }
+/* Rota (owner decisions, 6 October 2026; DESIGN.md "Rota's day timeline"). Only layout lives here:
+   the blocks are the shared `.pc-block` fills (`data-block="next"` someone on it, `"cover"` a gap).
+   The week strip: one tile per day with its gap count, the open day outlined in blue. */
+.turnfin-module .rota-week { display: grid; grid-template-columns: repeat(7, minmax(0, 1fr)); gap: 8px; margin: 0; padding: 0; list-style: none; }
+.turnfin-module .rota-week-day { display: flex; flex-direction: column; align-items: flex-start; gap: 6px; min-height: 72px; padding: 10px 12px; border: 1px solid var(--pc-line); border-radius: var(--pc-radius-card); background: var(--pc-surface); color: var(--pc-ink); font-weight: 600; font-variant-numeric: tabular-nums; text-decoration: none; }
+.turnfin-module .rota-week-day:hover { background: var(--pc-surface-sunken); }
+.turnfin-module .rota-week-day[aria-current] { border-color: var(--pc-primary); box-shadow: inset 0 0 0 1px var(--pc-primary); }
+.turnfin-module .rota-week-day:focus-visible { outline: 2px solid var(--pc-focus); outline-offset: 2px; }
+.turnfin-module .rota-week-day [data-slot='badge'] { max-width: 100%; }
+/* The day: a zoom bar, the hours, then one group per activity and place, its label beside its
+   stacked lanes (one per place). Nothing scrolls sideways: the day fits the width. */
+.turnfin-module .rota-tl { display: flex; flex-direction: column; gap: 8px; }
+.turnfin-module .rota-tl-zoom { display: flex; flex-wrap: wrap; align-items: center; gap: 8px 12px; }
+.turnfin-module .rota-tl-row { display: grid; grid-template-columns: 184px minmax(0, 1fr); gap: 12px; }
+.turnfin-module .rota-tl-hours { position: relative; height: 16px; }
+.turnfin-module .rota-tl-hours > span { position: absolute; top: 0; translate: -50% 0; color: var(--pc-ink-muted); font-size: var(--pc-text-caption); line-height: var(--pc-leading-caption); font-variant-numeric: tabular-nums; white-space: nowrap; }
+.turnfin-module .rota-tl-hours > span:last-child { translate: -100% 0; }
+.turnfin-module .rota-tl-hours > span:first-child { translate: 0 0; }
+.turnfin-module .rota-tl-label { display: flex; flex-direction: column; justify-content: center; gap: 2px; min-width: 0; padding: 8px 12px; border: 1px solid var(--pc-line); border-radius: var(--pc-radius-card); background: var(--pc-surface); color: var(--pc-ink); text-align: start; }
+/* A label that opens its activity is the shared Button, kept as the card it sits beside. */
+.turnfin-module .rota-tl-label.ui-motion-press { flex-direction: column; align-items: stretch; justify-content: center; padding: 8px 12px; border-radius: var(--pc-radius-card); text-align: start; }
+.turnfin-module .rota-tl-label > .rota-tl-name { display: flex; align-items: center; gap: 6px; min-width: 0; font-weight: 600; }
+.turnfin-module .rota-tl-label > .rota-tl-name > svg { flex: none; width: 16px; height: 16px; }
+.turnfin-module .rota-tl-label > .rota-tl-name > span, .turnfin-module .rota-tl-label > small { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.turnfin-module .rota-tl-label > small { color: var(--pc-ink-muted); font-size: var(--pc-text-caption); line-height: var(--pc-leading-caption); }
+.turnfin-module .rota-tl-label > [data-slot='badge'] { align-self: flex-start; margin-top: 4px; }
+.turnfin-module .rota-tl-lanes { display: flex; flex-direction: column; gap: 4px; min-width: 0; }
+.turnfin-module .rota-tl-track { position: relative; min-height: 52px; border: 1px solid var(--pc-line); border-radius: var(--pc-radius-card); overflow: hidden;
+  background-image: repeating-linear-gradient(90deg, var(--pc-line) 0 1px, transparent 1px calc(100% / var(--rota-hours, 15))); }
+.turnfin-module .rota-tl-track > .pc-block { position: absolute; top: 4px; bottom: 4px; min-height: 0; padding: 0 8px; border: 0; border-radius: 12px; font: inherit; text-align: start; cursor: pointer; }
+.turnfin-module .rota-tl-track > .pc-block[data-density='icon'] { padding: 0; justify-content: center; }
+.turnfin-module .rota-tl-track > .pc-block[aria-pressed='true'] { box-shadow: 0 0 0 2px var(--pc-surface), 0 0 0 4px var(--pc-primary); }
+.turnfin-module .rota-tl-track > .pc-block .pc-block-title { font-size: var(--pc-text-caption); line-height: var(--pc-leading-caption); }
+.turnfin-module .rota-tl-track > .pc-block .pc-block-hint { font-variant-numeric: tabular-nums; }
+.turnfin-module .rota-tl-track > .pc-block > svg { width: 14px; height: 14px; }
+.turnfin-module .rota-tl-key { display: flex; flex-wrap: wrap; gap: 8px 16px; color: var(--pc-ink-muted); font-size: var(--pc-text-caption); line-height: var(--pc-leading-caption); }
+.turnfin-module .rota-tl-key > span { display: inline-flex; align-items: center; gap: 6px; }
+.turnfin-module .rota-tl-key i { display: inline-block; width: 20px; height: 12px; border-radius: 6px; }
+/* Below 1280px the same day is an agenda: each activity's people and gaps in time order. */
+.turnfin-module .rota-agenda { display: none; flex-direction: column; gap: 16px; }
+.turnfin-module .rota-agenda-head { display: flex; align-items: center; gap: 8px; }
+@media (max-width: 1279px) {
+  .turnfin-module .rota-tl { display: none; }
+  .turnfin-module .rota-agenda { display: flex; }
+  .turnfin-module .rota-week { grid-template-columns: repeat(auto-fill, minmax(104px, 1fr)); }
+}
+/* Who can fill it: candidates in the sheet. */
+.turnfin-module .rota-gap-card { display: flex; flex-direction: column; gap: 4px; padding: 12px 16px; border-radius: var(--pc-radius-card); background: var(--pc-block-cover); color: var(--pc-on-block-cover); }
+.turnfin-module .rota-gap-card small { font-size: var(--pc-text-caption); line-height: var(--pc-leading-caption); font-variant-numeric: tabular-nums; }
+.turnfin-module .rota-tags { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 6px; }
+/* Today: each gap with its best fits beside it. */
+.turnfin-module .rota-fits { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px; width: 100%; }
+.turnfin-module .rota-fits > .pc-row { flex-wrap: nowrap; min-height: 0; padding: 10px 12px; color: var(--pc-ink); background: var(--pc-surface); }
+@media (max-width: 1023px) { .turnfin-module .rota-fits { grid-template-columns: minmax(0, 1fr); } }
+/* Turnfin-wide two-up panels for Today. */
+.turnfin-module .rota-two { display: grid; gap: 16px; align-items: start; }
+@media (min-width: 1100px) { .turnfin-module .rota-two { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
 
 /* Purchasing: a purchase order prints as the document the supplier gets, without the workspace around it. */
 @media print {

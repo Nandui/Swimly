@@ -9,9 +9,9 @@ import { Button } from "@/components/shadcn/button";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/shadcn/collapsible";
 import { Tag } from "@/components/ui-kit/tag";
 import { formatDate, nameInitials, plural } from "@/lib/format";
-import { ABSENCE_REASON_META, RETURN_FIT_META, ROSTER_LEAVE_META } from "@/lib/rota/constants";
+import { ABSENCE_REASON_META, RETURN_FIT_META } from "@/lib/rota/constants";
 import { requireRotaActor } from "@/lib/rota/access";
-import { rotaAbsences, type RotaAbsenceRow, type RotaReturnRow } from "@/lib/rota/data";
+import { rotaAbsences, type RotaAbsenceRow, type RotaReturnRow } from "@/lib/rota/absences";
 
 export const metadata: Metadata = { title: "Absences" };
 
@@ -87,45 +87,32 @@ function Panel({ id, title, hint, children }: { id: string; title: string; hint?
   );
 }
 
-/** Roster holiday days, one line per person. */
-function onHoliday(entries: { date: Date; kind: string; note: string; rotaPerson: { name: string } | null }[]) {
-  const people = new Map<string, { name: string; label: string; days: string[] }>();
-  for (const e of entries) {
-    const name = e.rotaPerson?.name ?? "Someone";
-    const label = e.kind === "holiday" ? ROSTER_LEAVE_META.holiday.label : e.note || ROSTER_LEAVE_META.leave.label;
-    const row = people.get(name) ?? { name, label, days: [] };
-    row.days.push(day(e.date));
-    people.set(name, row);
-  }
-  return [...people.values()];
-}
-
 /** When the return to work is due: from their first shift back. */
 function due(a: Pick<RotaReturnRow, "firstShift" | "stage">) {
-  if (!a.firstShift) return "No shift on the rota since, so it is due now";
-  return a.stage === "due" ? `First shift back ${day(new Date(`${a.firstShift}T00:00:00Z`))}, so it is due now` : `Due on their first shift back, ${day(new Date(`${a.firstShift}T00:00:00Z`))}`;
+  if (!a.firstShift) return "Nothing on the rota for them since, so it is due now";
+  return a.stage === "due" ? `First day back ${day(new Date(`${a.firstShift}T00:00:00Z`))}, so it is due now` : `Due on their first day back, ${day(new Date(`${a.firstShift}T00:00:00Z`))}`;
 }
 
-/** Who is off. Rota managers record absences here; the week shows the
- *  affected shifts as Absent so cover can be found. */
+/** Who is off (owner decision, 6 October 2026: the records stay in the main database and show on
+ *  the person's HR file). The duty manager (Run) records absences here or from Today; the rota then
+ *  shows the person's activities as needing cover, and Today lists them first. */
 export default async function AbsencesPage({ searchParams }: { searchParams: Promise<{ report?: string }> }) {
-  if (!(await requireRotaActor()).manage) notFound();
+  if (!(await requireRotaActor()).run) notFound();
   // Home's and This week's "Report an absence" arrive with ?report=1 and open the dialog.
   const report = (await searchParams).report === "1";
-  const { today, current, returning, returned, people, holidays, siteNames } = await rotaAbsences();
-  const scope = siteNames === null ? "all sites" : siteNames.length ? siteNames.join(", ") : "no sites yet";
+  const { today, current, returning, returned, people } = await rotaAbsences();
   return (
     <div className="flex flex-col gap-6">
-      <PageHeader title="Absences" description="Who is off, and the shifts that need cover. Only rota managers see the reason."
+      <PageHeader title="Absences" description="Who is off, and the days of work that need cover. Only people who run the rota see the reason. Each absence is on the person's HR file."
         actions={<ReportAbsence people={people} today={today} defaultOpen={report} />} />
       <Panel id="absences-current" title="Off now or soon">
         {current.length === 0 ? (
-          <EmptyState compact icon="userX" title="Nobody you look after is off" hint={`People at ${scope} whom your rota role covers. When someone calls in sick or can’t come in, report it here.`} />
+          <EmptyState compact icon="userX" title="Nobody you look after is off" hint="Among the people your rota role covers. When someone calls in sick or can’t come in, report it here or from Today." />
         ) : (
           <ul className="pc-rows">
             {current.map((a) => (
               <PersonRow key={a.id} name={a.user.name} tags={<Tag meta={ABSENCE_REASON_META[a.reason]} />} updates={a.updates}
-                lines={[`${when(a)} · ${a.shiftsToCover ? plural(a.shiftsToCover, "shift needs", "shifts need") + " cover" : "no shifts affected"}`,
+                lines={[`${when(a)} · ${a.shiftsToCover ? plural(a.shiftsToCover, "day of work needs", "days of work need") + " cover" : "nothing on the rota affected"}`,
                   [`Reported by ${a.reportedByName}`, story(a) || null, a.updates.at(-1)?.note || a.note || null].filter(Boolean).join(" · ")]}
                 actions={<>
                   <RemoveAbsence id={a.id} name={a.user.name} />
@@ -137,21 +124,12 @@ export default async function AbsencesPage({ searchParams }: { searchParams: Pro
         )}
       </Panel>
       {returning.length ? (
-        <Panel id="absences-return" title="Return to work" hint="Back from an absence. Talk to them on their first shift back and record it here; it goes on their personal file.">
+        <Panel id="absences-return" title="Return to work" hint="Back from an absence. Talk to them on their first day back and record it here; it goes on their personal file.">
           <ul className="pc-rows">
             {returning.map((a) => (
               <PersonRow key={a.id} name={a.user.name} tags={<Tag meta={ABSENCE_REASON_META[a.reason]} />}
                 lines={[`${when(a)} · ${due(a)}`, story(a) || null]}
                 actions={<ReturnToWork id={a.id} name={a.user.name} reason={a.reason} firstDay={iso(a.firstDay)} lastDay={iso(a.lastDay!)} today={today} />} />
-            ))}
-          </ul>
-        </Panel>
-      ) : null}
-      {holidays.length ? (
-        <Panel id="absences-holiday" title="On holiday in the next two weeks" hint="Planned leave. Imported from the old roster, so it is read-only here.">
-          <ul className="pc-rows">
-            {onHoliday(holidays).map((h) => (
-              <PersonRow key={h.name} name={h.name} tags={<Tag meta={ROSTER_LEAVE_META.holiday} label={h.label} />} lines={[h.days.join(", ")]} />
             ))}
           </ul>
         </Panel>

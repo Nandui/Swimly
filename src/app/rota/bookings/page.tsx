@@ -1,14 +1,14 @@
 import type { Metadata } from "next";
 import Link from "next/link";
-import { Users } from "lucide-react";
+import { CalendarDays } from "lucide-react";
+import { Button } from "@/components/shadcn/button";
 import { EmptyState } from "@/components/ui-kit/empty-state";
 import { PageHeader } from "@/components/ui-kit/page-header";
-import { Button } from "@/components/shadcn/button";
-import { BookingDialog, CancelBooking } from "@/components/rota/bookings";
 import { Tag } from "@/components/ui-kit/tag";
-import { formatDate, formatTimeRange, plural } from "@/lib/format";
-import { BOOKING_KIND_META, WEEKDAY_LABELS, qualificationShort, type BookingKind } from "@/lib/rota/constants";
-import { rotaBookings } from "@/lib/rota/data";
+import { BookingDialog, CancelBooking } from "@/components/rota/bookings";
+import { formatDate, formatTimeRange, plural, today } from "@/lib/format";
+import { BOOKING_KIND_META, WEEKDAY_LABELS, type BookingKind } from "@/lib/rota/constants";
+import { rotaRepeats } from "@/lib/rota/data";
 
 export const metadata: Metadata = { title: "Bookings" };
 
@@ -21,44 +21,37 @@ function weekdays(list: number[]) {
   return sorted.length === 1 ? `${WEEKDAY_LABELS[sorted[0]]}s` : short.join(", ");
 }
 
-/** "2 swim teachers and 1 lifeguard (NPLQ)": the qualification only when it
- *  says more than the role. */
-function needs(list: { role: string; count: number; requiredType: { name: string } | null }[]) {
-  const parts = list.map((n) => {
-    const role = n.role.toLowerCase();
-    const named = `${n.count} ${role}${n.count > 1 && !role.endsWith("s") ? "s" : ""}`;
-    return n.requiredType && !n.requiredType.name.toLowerCase().startsWith(role) ? `${named} (${qualificationShort(n.requiredType.name)})` : named;
-  });
-  return parts.length > 1 ? `${parts.slice(0, -1).join(", ")} and ${parts.at(-1)}` : parts[0];
-}
-
-/** School lessons, parties, lane hire and events at one site, and how many of
- *  their places still to come need someone. Each session is on the week plan. */
+/** Bookings that repeat over weeks at one site (owner decision, 6 October 2026): each adds its
+ *  activity on its days, planned on the Plan like any other. */
 export default async function BookingsPage({ searchParams }: { searchParams: Promise<{ site?: string }> }) {
-  const data = await rotaBookings((await searchParams).site);
+  const data = await rotaRepeats((await searchParams).site);
   const { site } = data;
+  const now = today();
+  const places = [...new Set(data.repeats.map((r) => r.place).filter(Boolean))];
   return (
-    <div className="flex flex-col gap-6">
+    <>
       <PageHeader title={site ? `Bookings: ${site.name}` : "Bookings"}
-        description="School lessons, parties, lane hire and events that need staff. Each session is on the week plan with its places to fill."
-        actions={site?.manage ? <BookingDialog siteId={site.id} today={data.today} departments={data.departments} types={data.types} /> : undefined} />
-      {data.bookings.length === 0 ? (
+        description="Schools, parties and lane hire that repeat over weeks. Each adds its activity on its days, ready to plan who."
+        actions={site?.plan && data.types.length ? <BookingDialog siteId={site.id} today={now} types={data.types} places={places} /> : undefined} />
+      {data.repeats.length === 0 ? (
         <EmptyState icon="calendarRange" title="No bookings yet" hint="When a school, a party or a club books time that needs staff, add it here." />
       ) : (
         <section aria-label="Bookings" className="pc-panel">
           <ul className="pc-rows">
-            {data.bookings.map((b) => {
-              const meta = BOOKING_KIND_META[b.kind as BookingKind];
+            {data.repeats.map((b) => {
+              const toCome = b.needs.reduce((n, x) => n + x.places, 0);
+              const filled = b.needs.reduce((n, x) => n + Math.min(x._count.assignments, x.places), 0);
+              const first = b.firstDay.toISOString().slice(0, 10);
               return (
                 <li key={b.id} className="pc-row">
                   <span className="pc-row-body">
-                    <span className="flex flex-wrap items-center gap-2"><span className="pc-row-title">{b.title}</span><Tag meta={meta} /></span>
-                    <span className="pc-row-hint">{weekdays(b.weekdays)}, {formatTimeRange(b.startMinutes, b.endMinutes)} · {b.firstDay.getTime() === b.lastDay.getTime() ? day(b.firstDay) : `${day(b.firstDay)} to ${day(b.lastDay)}`}{b.place ? ` · ${b.place}` : ""}{b.department ? ` · ${b.department.name}` : ""}</span>
-                    <span className="pc-row-hint">{[`Needs ${needs(b.needs)}`, b.unfilled ? `${plural(b.unfilled, "place")} still to fill` : "fully staffed", b.note || null].filter(Boolean).join(" · ")}</span>
+                    <span className="flex flex-wrap items-center gap-2"><span className="pc-row-title">{b.title}</span><Tag meta={BOOKING_KIND_META[b.kind as BookingKind]} /></span>
+                    <span className="pc-row-hint">{weekdays(b.weekdays)}, {formatTimeRange(b.startMinutes, b.endMinutes)} · {b.firstDay.getTime() === b.lastDay.getTime() ? day(b.firstDay) : `${day(b.firstDay)} to ${day(b.lastDay)}`}{b.place ? ` · ${b.place}` : ""}</span>
+                    <span className="pc-row-hint">{b.type.name}, {plural(b.places, "person", "people")} each day · {b.needs.length ? `${plural(b.needs.length, "day")} to come, ${toCome - filled ? `${plural(toCome - filled, "place")} still to fill` : "all filled"}` : "no days still to come"}</span>
                   </span>
                   <span className="pc-row-trail">
-                    {site?.manage && b.lastDay.toISOString().slice(0, 10) >= data.today ? <CancelBooking id={b.id} label={b.title} staffedThisWeek={b.staffedThisWeek} /> : null}
-                    <Button asChild><Link href={`/rota?${new URLSearchParams({ site: site!.id, week: b.firstDay.toISOString().slice(0, 10) > data.today ? b.firstDay.toISOString().slice(0, 10) : data.today })}`}><Users aria-hidden="true" />Plan who</Link></Button>
+                    {site?.plan && b.needs.length ? <CancelBooking id={b.id} label={b.title} /> : null}
+                    <Button asChild variant="outline"><Link href={`/rota?${new URLSearchParams({ site: site!.id, dept: b.type.departmentId, day: first > now ? first : now })}`}><CalendarDays aria-hidden="true" />Plan who</Link></Button>
                   </span>
                 </li>
               );
@@ -66,6 +59,6 @@ export default async function BookingsPage({ searchParams }: { searchParams: Pro
           </ul>
         </section>
       )}
-    </div>
+    </>
   );
 }

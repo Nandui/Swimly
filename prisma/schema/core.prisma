@@ -160,6 +160,8 @@ model User {
   assessmentSessionsLed   AssessmentSession[] @relation("AssessmentInstructor")
   assessmentBookingsMade  AssessmentBooking[] @relation("AssessmentBookedBy")
   assessmentOutcomesGiven AssessmentBooking[] @relation("AssessmentAssessedBy")
+  rotaAssignments         RotaAssignment[]      @relation("RotaAssignee")
+  classesPlanned          ClassPlannedTeacher[] @relation("ClassPlannedTeacher")
 
   @@index([role])
   @@index([staffRoleId])
@@ -194,6 +196,7 @@ model Organisation {
   rotaDepartments    RotaDepartment[]
   rotaImports        RotaImport[]
   rotaChanges        RotaChange[]
+  rotaActivityTypes  RotaActivityType[]
 }
 
 /// A team such as Aquatics, Reception or Maintenance. Optionally tied to one
@@ -214,6 +217,8 @@ model Department {
   rotaShifts     RotaShift[]
   rotaBookings   RotaBooking[]
   rotaActivities RotaActivity[]
+  rotaActivityTypes RotaActivityType[]
+  rotaWeekShares    RotaWeekShare[]
 
   @@unique([orgId, name])
   @@index([orgId, sortOrder])
@@ -304,6 +309,7 @@ model QualificationType {
   trainingCourses TrainingCourse[]
   rotaShifts     RotaShift[]
   rotaActivities RotaActivity[]
+  rotaActivityTypes RotaActivityType[]
 
   @@unique([orgId, name])
 }
@@ -403,6 +409,10 @@ model Club {
   rotaDepartments    RotaDepartment[]
   purchaseOrders     PurchaseOrder[]
   purchaseCounter    PurchaseOrderCounter?
+  rotaNeeds          RotaNeed[]
+  rotaWeekShares     RotaWeekShare[]
+  rotaLogs           RotaLog[]
+  rotaRepeats        RotaRepeat[]
 
   @@index([sortOrder])
 }

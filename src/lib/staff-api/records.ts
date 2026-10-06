@@ -6,7 +6,7 @@ import { hrDatabase, hrConfigured } from "@/lib/hr/database";
 import { mySharedHr } from "@/lib/hr/mine";
 import { acknowledgeReviewFor } from "@/lib/hr/self";
 import { myQualifications } from "@/lib/people/mine";
-import { myShifts } from "@/lib/rota/mine";
+import { myDays } from "@/lib/rota/mine";
 import { myTraining } from "@/lib/training/mine";
 import { completeTrainingFor } from "@/lib/training/self";
 import { StaffApiError, notFound } from "@/lib/staff-api/errors";
@@ -228,9 +228,16 @@ export async function acknowledgeReading(request: Request, identity: StaffIdenti
 
 export async function shifts(request: Request, identity: StaffIdentity) {
   const days = parseInput(z.coerce.number().int().min(1).max(56), new URL(request.url).searchParams.get("days") ?? 28);
-  return { items: (await myShifts(identity.user.id, days)).map((s) => ({
-    id: s.id, date: date(s.date), startMinutes: s.startMinutes, endMinutes: s.endMinutes, role: s.role, site: s.site.name,
-    needs: s.requiredType?.name ?? null, note: s.note, warnings: s.warnings,
+  // Each day at each site: the activities, the breaks placed for them, and the shift from them.
+  return { items: (await myDays(identity.user.id, days)).map((d) => ({
+    id: `${d.date}|${d.siteId}`, date: d.date, site: d.site, changed: d.changed,
+    startMinutes: d.shift.start, endMinutes: d.shift.end, paidMinutes: d.shift.paidMinutes,
+    // Breaks they are owed that found no free time: to arrange with the duty manager on the day.
+    breaksToArrange: d.shift.parts.reduce((n, p) => n + p.unplaced.reduce((m, b) => m + b.minutes, 0), 0),
+    blocks: [
+      ...d.items.map((i) => ({ kind: "activity" as const, startMinutes: i.start, endMinutes: i.end, label: i.label, icon: i.icon, place: i.place, needs: i.needs, warning: i.problem })),
+      ...d.shift.parts.flatMap((p) => p.breaks.map((b) => ({ kind: "break" as const, startMinutes: b.start, endMinutes: b.end, label: b.paid ? "Paid break" : "Unpaid break", icon: "break", place: "", needs: null, warning: null }))),
+    ].sort((a, b) => a.startMinutes - b.startMinutes),
   })) };
 }
 
@@ -293,7 +300,7 @@ export async function home(identity: StaffIdentity) {
     training(identity),
     reading(identity),
     myQualifications(identity.user.id),
-    myShifts(identity.user.id, 7),
+    myDays(identity.user.id, 7),
     hrConfigured()
       ? mySharedHr(identity.user.id, identity.user.orgId).then((r) => r.reviews.filter((x) => x.status === "shared").length).catch(() => 0)
       : Promise.resolve(0),
@@ -303,7 +310,9 @@ export async function home(identity: StaffIdentity) {
     training: train.items.filter((t) => t.state === "assigned" || t.state === "overdue" || t.state === "submitted"),
     reading: read.items.filter((r) => r.status === "outstanding"),
     qualifications: quals.filter((q) => q.state === "expiring" || q.state === "expired").map((q) => ({ id: q.id, name: q.type.name, expiresOn: date(q.expiresOn), state: q.state })),
-    shifts: upcoming.slice(0, 3).map((s) => ({ id: s.id, date: date(s.date), startMinutes: s.startMinutes, endMinutes: s.endMinutes, role: s.role, site: s.site.name, warnings: s.warnings })),
+    // Each day's shift, worked out from the activities on it.
+    shifts: upcoming.slice(0, 3).map((d) => ({ id: `${d.date}|${d.siteId}`, date: d.date, startMinutes: d.shift.start, endMinutes: d.shift.end,
+      role: [...new Set(d.items.map((i) => i.label.split(":")[0]))].join(", "), site: d.site, warnings: [...new Set(d.items.flatMap((i) => (i.problem ? [i.problem] : [])))] })),
     // A count only: HR content needs a fresh code.
     reviewsToAcknowledge: reviewsWaiting,
   };

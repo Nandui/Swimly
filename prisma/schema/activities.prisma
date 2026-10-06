@@ -241,6 +241,7 @@ model Course {
   covers          ClassCover[]
   assessedResults CompetencyResult[]
   cancellations   ClassCancellation[]
+  plannedTeachers ClassPlannedTeacher[]
 
   @@index([clubId, dayOfWeek, startMinutes])
   @@index([levelId])
@@ -759,4 +760,28 @@ model ParentChangeRequest {
   @@unique([parentId, key])
   @@index([status, createdAt])
   @@index([studentId])
+}
+
+/// Who is planned to teach a class on one date, set from the rota (owner
+/// decision, 6 October 2026: Rota assigns instructors). The schedule and the
+/// Instructor workspace read it before the class's usual instructor. It is a
+/// plan only: the start record (`ClassCover`) is still written when the class
+/// starts, and is never filled in ahead.
+model ClassPlannedTeacher {
+  id          String   @id @default(cuid())
+  courseId    String
+  date        DateTime @db.Date
+  /// Null: planned with nobody (a gap on the rota).
+  teacherId   String?
+  teacherName String?
+  setById     String?
+  setByName   String
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  course  Course @relation(fields: [courseId], references: [id], onDelete: Restrict)
+  teacher User?  @relation("ClassPlannedTeacher", fields: [teacherId], references: [id], onDelete: SetNull)
+
+  @@unique([courseId, date])
+  @@index([teacherId, date])
 }

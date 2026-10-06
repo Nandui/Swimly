@@ -39,7 +39,7 @@ A role holds one level for each module (`StaffRole.levels`), plus up to two extr
 | Refunds | Use (log and follow requests), Manage (decide requests and record payments) | |
 | Docs | Read, Write, Manage | Can approve, never their own |
 | Training | Trainer (sign off practical training), Manage (courses, assigning, certificates) | |
-| Rota | View, Manage | |
+| Rota | View, Plan, Run | |
 | HR | Their team, Everyone. Only a superadmin gives HR | |
 | Admin | Manage (people, roles, sites, the activity log) | |
 
