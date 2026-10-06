@@ -12,14 +12,15 @@ import {
   updateClub,
 } from "@/lib/clubs/actions/clubs";
 
-type Club = { id: string; name: string; archivedAt: Date | null };
+type Club = { id: string; name: string; code?: string | null; archivedAt: Date | null };
 
 function readInput(formData: FormData) {
-  return { name: String(formData.get("name") ?? "") };
+  return { name: String(formData.get("name") ?? ""), code: String(formData.get("code") ?? "") };
 }
 
 function ClubFields({ club }: { club?: Club }) {
   return (
+    <>
     <Field label="Name" htmlFor="name" hint="The site, as staff say it.">
       <Input
         id="name"
@@ -30,6 +31,10 @@ function ClubFields({ club }: { club?: Club }) {
         placeholder="Riverside"
       />
     </Field>
+      <Field label="Short code" htmlFor="code" hint="Two to four letters, for example BT. Purchase order numbers use it: PO-BT-00001.">
+        <Input id="code" name="code" maxLength={4} defaultValue={club?.code ?? ""} placeholder="DO" className="w-28 uppercase" />
+      </Field>
+    </>
   );
 }
 
@@ -59,15 +64,15 @@ export function EditClub({ club }: { club: Club }) {
       trigger={
         <Button
           variant="outline"
-          aria-label={`Rename ${club.name}`}
+          aria-label={`Change ${club.name}`}
           size="icon"
         >
           {<Pencil aria-hidden={true} className="size-4 shrink-0" />}
         </Button>
       }
-      title={`Rename ${club.name}`}
+      title={`Change ${club.name}`}
       submitLabel="Save changes"
-      successMessage="Site renamed"
+      successMessage="Site saved"
       submit={(formData) => updateClub(club.id, readInput(formData))}
     >
       <ClubFields club={club} />

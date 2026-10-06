@@ -8,6 +8,7 @@ import "@/lib/docs/home";
 import "@/lib/training/home";
 import "@/lib/rota/home";
 import "@/lib/rota/file";
+import "@/lib/purchasing/home";
 import "@/lib/people/home";
 
 export { commitmentsFor, homeCardItems, personFile, siteSummaryLines, staffColumnValues } from "./contributions";

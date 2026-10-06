@@ -179,6 +179,24 @@ export const PERMISSIONS = [
     description: "Add, change, fill and cancel shifts at the sites this role covers. Includes seeing it.",
   },
   {
+    key: "purchasing.read",
+    group: "Purchasing",
+    label: "See purchase orders",
+    description: "See the purchase orders of the sites this role covers, and approve those the approval rules let this role approve. Never your own.",
+  },
+  {
+    key: "purchasing.request",
+    group: "Purchasing",
+    label: "Raise purchase orders",
+    description: "Raise purchase orders for approved products from approved suppliers at the sites this role covers. Includes seeing them.",
+  },
+  {
+    key: "purchasing.manage",
+    group: "Purchasing",
+    label: "Manage suppliers",
+    description: "Approve suppliers and their products and prices, and set who approves orders up to what amount. Includes seeing orders.",
+  },
+  {
     key: "hr.records.read",
     group: "HR",
     label: "Read HR records",
@@ -270,6 +288,8 @@ const IMPLIES: Partial<Record<PermissionKey, PermissionKey[]>> = {
   "training.assign": ["training.records.read"],
   "training.signoff": ["training.records.read"],
   "rota.manage": ["rota.view"],
+  "purchasing.request": ["purchasing.read"],
+  "purchasing.manage": ["purchasing.read"],
   "hr.notes.write": ["hr.records.read"],
   "hr.reviews.write": ["hr.records.read"],
 };

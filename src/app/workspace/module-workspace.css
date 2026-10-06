@@ -55,3 +55,9 @@
 
 /* Rota: a break inside a shift on the day timeline, hatched so it reads without colour. */
 .turnfin-module .rota-break { background: repeating-linear-gradient(135deg, var(--pc-hatch) 0 3px, var(--pc-surface) 3px 6px); }
+
+/* Purchasing: a purchase order prints as the document the supplier gets, without the workspace around it. */
+@media print {
+  body:has(.turnfin-purchasing) :is(.tf-rail, .tf-top, .tf-bottom, .app-footer, [data-print="hide"]) { display: none !important; }
+  .turnfin-purchasing :is(.tf-frame, .pc-panel) { box-shadow: none !important; background: #fff !important; color: #000 !important; }
+}

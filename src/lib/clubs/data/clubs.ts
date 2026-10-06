@@ -11,6 +11,7 @@ export async function getClubs() {
     select: {
       id: true,
       name: true,
+      code: true,
       archivedAt: true,
     },
   });

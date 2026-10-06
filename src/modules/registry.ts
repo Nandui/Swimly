@@ -1,4 +1,4 @@
-import { CalendarClock, Files, GraduationCap, HeartHandshake, ReceiptText, Settings, Waves, WavesLadder, type LucideIcon } from "lucide-react";
+import { CalendarClock, Files, GraduationCap, HeartHandshake, ReceiptText, Settings, ShoppingCart, Waves, WavesLadder, type LucideIcon } from "lucide-react";
 import type { PermissionKey } from "@/lib/staff/permissions";
 
 /** Every module Turnfin offers, each described once (docs/how-turnfin-works.md).
@@ -215,6 +215,23 @@ registerModule({
     levels: [
       { key: "view", label: "View", help: "See the rota at their sites.", permissions: ["rota.view"] },
       { key: "manage", label: "Manage", help: "Plan and change shifts.", permissions: ["rota.manage"] },
+    ],
+  },
+});
+
+registerModule({
+  id: "purchasing",
+  name: "Purchasing",
+  description: "Raise purchase orders with approved suppliers, approved by role and amount, numbered per site.",
+  icon: ShoppingCart,
+  href: "/purchasing",
+  logName: "Purchasing",
+  access: {
+    reach: "sites",
+    levels: [
+      { key: "view", label: "View", help: "See their sites' orders, and approve those their role may approve.", permissions: ["purchasing.read"] },
+      { key: "request", label: "Request", help: "Raise purchase orders at their sites.", permissions: ["purchasing.request"] },
+      { key: "manage", label: "Manage", help: "Suppliers, approved products and prices, and who approves up to what.", permissions: ["purchasing.manage"] },
     ],
   },
 });

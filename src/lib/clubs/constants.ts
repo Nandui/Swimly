@@ -1,8 +1,10 @@
-import { MapPin } from "lucide-react";
+import { Hash, MapPin } from "lucide-react";
 import type { StatusMeta } from "@/lib/status";
 
 export const CLUB_STATUS_META = {
   current: { label: "Working in", color: "blue", icon: MapPin },
+  /** The site's short code, e.g. BT, shown with the code itself as the label. */
+  code: { label: "Short code", color: "gray", icon: Hash },
 } as const satisfies Record<string, StatusMeta>;
 
 /** The cookie that remembers which club somebody is working in. Per browser,

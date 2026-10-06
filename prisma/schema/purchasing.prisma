@@ -1,0 +1,130 @@
+// Purchasing (owner request, 2 October 2026; docs/purchasing.md): approved
+// suppliers, each with its approved products; purchase orders raised by
+// managers, approved by someone whose role may approve that much from that
+// supplier, then numbered per site in sequence: PO-BT-00001.
+
+/// A supplier the organisation is approved to order from.
+model Supplier {
+  id            String    @id @default(cuid())
+  orgId         String
+  name          String
+  /// Our account number with them, printed on the order.
+  accountNumber String    @default("")
+  contactName   String    @default("")
+  email         String    @default("")
+  phone         String    @default("")
+  note          String    @default("")
+  archivedAt    DateTime?
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+
+  products PurchaseProduct[]
+  rules    PurchaseApprovalRule[]
+  orders   PurchaseOrder[]
+
+  @@unique([orgId, name])
+}
+
+/// A product approved to order from one supplier, at its agreed price.
+model PurchaseProduct {
+  id         String    @id @default(cuid())
+  supplierId String
+  name       String
+  /// The supplier's own code for it, printed on the order.
+  code       String    @default("")
+  /// How it comes, e.g. "Box of 12" or "25 kg drum".
+  unit       String    @default("")
+  /// Agreed price per unit, in cents, before VAT.
+  priceCents Int
+  archivedAt DateTime?
+  createdAt  DateTime  @default(now())
+  updatedAt  DateTime  @updatedAt
+
+  supplier Supplier            @relation(fields: [supplierId], references: [id], onDelete: Cascade)
+  lines    PurchaseOrderLine[]
+
+  @@index([supplierId])
+}
+
+/// Who may approve orders: a role, up to an amount (none means any amount),
+/// for one supplier or, with no supplier, for every supplier that has no
+/// rules of its own.
+model PurchaseApprovalRule {
+  id         String   @id @default(cuid())
+  orgId      String
+  supplierId String?
+  roleId     String
+  /// The most an order can total, in cents before VAT; null for no limit.
+  limitCents Int?
+  createdAt  DateTime @default(now())
+
+  supplier Supplier? @relation(fields: [supplierId], references: [id], onDelete: Cascade)
+  role     StaffRole @relation(fields: [roleId], references: [id], onDelete: Cascade)
+
+  @@index([orgId, supplierId])
+}
+
+/// A purchase order: raised for a site, from one supplier, for some of its
+/// approved products. draft → pending (sent for approval) → approved, which
+/// gives it the site's next number, or rejected (back to its requester to
+/// change and send again). Cancelled before approval.
+model PurchaseOrder {
+  id              String    @id @default(cuid())
+  orgId           String
+  siteId          String
+  supplierId      String
+  /// "PO-BT-00001", given on approval; unique, in sequence per site.
+  number          String?   @unique
+  /// draft | pending | approved | rejected | cancelled (`PO_STATUS_META`)
+  status          String    @default("draft")
+  requestedById   String
+  requestedByName String
+  /// When it is needed by, if it matters.
+  neededBy        DateTime? @db.Date
+  note            String    @default("")
+  /// The order's total in cents before VAT, kept with its lines.
+  totalCents      Int       @default(0)
+  submittedAt     DateTime?
+  decidedById     String?
+  decidedByName   String?
+  decidedAt       DateTime?
+  /// Why it was rejected, or a note from the approver.
+  decisionNote    String    @default("")
+  cancelledAt     DateTime?
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @updatedAt
+
+  site     Club                @relation(fields: [siteId], references: [id], onDelete: Restrict)
+  supplier Supplier            @relation(fields: [supplierId], references: [id], onDelete: Restrict)
+  lines    PurchaseOrderLine[]
+
+  @@index([orgId, status])
+  @@index([siteId, createdAt])
+}
+
+/// One line of an order, keeping the product's name, code, unit and price as
+/// they were when it was ordered.
+model PurchaseOrderLine {
+  id             String  @id @default(cuid())
+  orderId        String
+  productId      String?
+  name           String
+  code           String  @default("")
+  unit           String  @default("")
+  unitPriceCents Int
+  quantity       Int
+
+  order   PurchaseOrder    @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  product PurchaseProduct? @relation(fields: [productId], references: [id], onDelete: SetNull)
+
+  @@index([orderId])
+}
+
+/// The last purchase order number given at a site. Raised inside the
+/// approval's transaction, so numbers never repeat or skip.
+model PurchaseOrderCounter {
+  siteId String @id
+  last   Int    @default(0)
+
+  site Club @relation(fields: [siteId], references: [id], onDelete: Cascade)
+}

@@ -49,16 +49,24 @@ const clubSchema = z.object({
     .trim()
     .min(1, "Give the site a name.")
     .max(80, "Keep the name under 80 characters."),
+  /** Two to four capital letters, e.g. BT. Purchase order numbers use it. */
+  code: z
+    .string()
+    .trim()
+    .toUpperCase()
+    .refine((v) => v === "" || /^[A-Z]{2,4}$/.test(v), "Use two to four letters for the short code, for example BT.")
+    .transform((v) => v || null)
+    .default(""),
 });
 
-export type ClubInput = z.infer<typeof clubSchema>;
+export type ClubInput = z.input<typeof clubSchema>;
 
 export async function createClub(input: ClubInput): Promise<ActionResult> {
   const session = await requirePermission("clubs.manage");
 
   const parsed = clubSchema.safeParse(input);
   if (!parsed.success) return fail(parsed.error.issues[0].message);
-  const { name } = parsed.data;
+  const { name, code } = parsed.data;
 
   const last = await prisma.club.findFirst({
     orderBy: { sortOrder: "desc" },
@@ -68,7 +76,7 @@ export async function createClub(input: ClubInput): Promise<ActionResult> {
   const created = await onUniqueViolation(
     () => prisma.$transaction(async (tx) => {
       const created = await tx.club.create({
-        data: { name, sortOrder: (last?.sortOrder ?? -1) + 1 },
+        data: { name, code, sortOrder: (last?.sortOrder ?? -1) + 1 },
         select: { id: true, name: true },
       });
 
@@ -79,11 +87,11 @@ export async function createClub(input: ClubInput): Promise<ActionResult> {
         entity: "Club",
         entityId: created.id,
         clubId: created.id,
-        summary: `Created club ${created.name}`,
+        summary: `Created club ${created.name}${code ? ` (${code})` : ""}`,
       }, tx);
       return created;
     }),
-    `There is already a site called ${name}.`
+    `There is already a site called ${name}${code ? `, or with the code ${code}` : ""}.`
   );
   if ("ok" in created) return created;
 
@@ -97,20 +105,20 @@ export async function updateClub(id: string, input: ClubInput): Promise<ActionRe
 
   const parsed = clubSchema.safeParse(input);
   if (!parsed.success) return fail(parsed.error.issues[0].message);
-  const { name } = parsed.data;
+  const { name, code } = parsed.data;
 
   const existing = await prisma.club.findUnique({
     where: { id },
-    select: { id: true, name: true },
+    select: { id: true, name: true, code: true },
   });
   if (!existing) return fail("That site no longer exists.");
-  if (existing.name === name) return ok();
+  if (existing.name === name && existing.code === code) return ok();
 
   const updated = await onUniqueViolation(
     () => prisma.$transaction(async (tx) => {
       const updated = await tx.club.update({
         where: { id },
-        data: { name },
+        data: { name, code },
         select: { id: true, name: true },
       });
 
@@ -121,11 +129,13 @@ export async function updateClub(id: string, input: ClubInput): Promise<ActionRe
         entity: "Club",
         entityId: id,
         clubId: id,
-        summary: `Renamed club ${existing.name} → ${updated.name}`,
+        summary: existing.name === updated.name
+          ? `Set ${updated.name}'s short code to ${code ?? "none"}`
+          : `Renamed club ${existing.name} → ${updated.name}${existing.code !== code ? `, short code ${code ?? "none"}` : ""}`,
       }, tx);
       return updated;
     }),
-    `There is already a site called ${name}.`
+    `There is already a site called ${name}${code ? `, or with the code ${code}` : ""}.`
   );
   if ("ok" in updated) return updated;
 

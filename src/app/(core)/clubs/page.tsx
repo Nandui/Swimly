@@ -92,6 +92,7 @@ function ClubList({
             {summaries.get(club.id) ? <span className="pc-row-hint">{summaries.get(club.id)}</span> : null}
           </div>
           <div className="pc-row-trail">
+            {club.code ? <Tag meta={CLUB_STATUS_META.code} label={club.code} /> : <span className="pc-row-hint">No short code</span>}
             {club.id === currentId ? <Tag meta={CLUB_STATUS_META.current} /> : null}
             {archived ? <Tag meta={ARCHIVAL_STATUS_META.archived} /> : null}
             <div className="flex flex-nowrap gap-2">

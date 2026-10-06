@@ -77,6 +77,7 @@ model StaffRole {
   assignments RoleAssignment[]
 
   @@index([sortOrder])
+  purchaseApprovalRules PurchaseApprovalRule[]
 }
 
 model User {
@@ -385,6 +386,9 @@ model Club {
   updatedAt  DateTime  @updatedAt
   /// The operator this site belongs to. Backfilled to LeisureWorld.
   orgId      String?
+  /// The site's short code, e.g. "BT" for Bishopstown: in purchase order
+  /// numbers (PO-BT-00001) and anywhere a site needs two or three letters.
+  code       String?   @unique
 
   organisation       Organisation?       @relation(fields: [orgId], references: [id], onDelete: Restrict)
   programmes         Programme[]
@@ -397,6 +401,8 @@ model Club {
   rotaDayNotes       RotaDayNote[]
   rotaActivities     RotaActivity[]
   rotaDepartments    RotaDepartment[]
+  purchaseOrders     PurchaseOrder[]
+  purchaseCounter    PurchaseOrderCounter?
 
   @@index([sortOrder])
 }
