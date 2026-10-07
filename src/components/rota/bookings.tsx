@@ -8,6 +8,7 @@ import { Input } from "@/components/shadcn/input";
 import { Label } from "@/components/shadcn/label";
 import { NativeSelect, NativeSelectOption } from "@/components/shadcn/native-select";
 import { Field, FormDialog } from "@/components/form-dialog";
+import { AreaSelect } from "@/components/setup/area-select";
 import { Notice } from "@/components/ui-kit/notice";
 import { cancelRepeat, saveRepeat, type RepeatInput } from "@/lib/rota/actions";
 import { formatDate } from "@/lib/format";
@@ -52,9 +53,8 @@ export function BookingDialog({ siteId, today, types, places }: { siteId: string
             {types.map((t) => <NativeSelectOption key={t.id} value={t.id}>{t.name}</NativeSelectOption>)}
           </NativeSelect>
         </Field>
-        <Field label="Where" htmlFor="booking-place" optional hint="For example Learner pool.">
-          <Input id="booking-place" name="place" maxLength={60} list="booking-places" className="min-h-11" />
-          <datalist id="booking-places">{places.map((p) => <option key={p} value={p} />)}</datalist>
+        <Field label="Where" htmlFor="booking-place" optional hint="The site's areas, kept in Admin.">
+          <AreaSelect id="booking-place" name="place" areas={places} />
         </Field>
       </div>
       <fieldset className="flex min-w-0 flex-col gap-2">

@@ -1,4 +1,5 @@
 import "server-only";
+import { areaNames } from "@/lib/setup/data";
 import { notFound } from "next/navigation";
 import { isDateOnly, parseDateOnly, today } from "@/lib/format";
 import { prisma } from "@/lib/prisma";
@@ -47,7 +48,7 @@ function siteDepartments(orgId: string | undefined, siteId: string) {
 
 /** The organisation's activity list, as `buildDay` takes it. */
 async function activityTypes(orgId: string | undefined, includeArchived = false): Promise<(DayType & { archived: boolean; departmentName: string })[]> {
-  const rows = await prisma.rotaActivityType.findMany({
+  const rows = await prisma.activityType.findMany({
     where: { orgId, ...(includeArchived ? {} : { archivedAt: null }) },
     orderBy: [{ sortOrder: "asc" }, { name: "asc" }],
     select: { id: true, name: true, icon: true, departmentId: true, requiredTypeId: true, fromClasses: true, archivedAt: true,
@@ -102,7 +103,8 @@ async function loadDays(siteId: string, orgId: string | undefined, from: string,
         title: c.title ?? c.label, place: c.place ?? "", planned: !!c.planned })),
     };
   };
-  return { types, dayInput, places: [...new Set(needs.map((n) => n.place).filter(Boolean))] };
+  // Where an activity happens: the site's areas, kept in Admin.
+  return { types, dayInput, places: await areaNames(siteId) };
 }
 
 /** The departments this person belongs to: where Plan lets them change the days ahead. */
@@ -222,19 +224,6 @@ export async function rotaRepeats(siteId: string | undefined) {
   return { who, sites, site, repeats, types: types.filter((t) => !t.fromClasses) } as const;
 }
 
-/** The organisation's activity list, for the people who keep it (Run). */
-export async function activityList() {
-  const who = await requireRotaActor();
-  const orgId = who.orgId ?? undefined;
-  const [types, departments, qualifications] = await Promise.all([
-    activityTypes(orgId, true),
-    prisma.department.findMany({ where: { orgId, archivedAt: null }, orderBy: [{ sortOrder: "asc" }, { name: "asc" }], select: { id: true, name: true } }),
-    prisma.qualificationType.findMany({ where: { orgId, archivedAt: null }, orderBy: { name: "asc" }, select: { id: true, name: true } }),
-  ]);
-  // The list is the organisation's, so only someone who runs the rota everywhere keeps it.
-  const canKeep = !!orgId && (await mayFor("rota.manage", { orgId }));
-  return { who, types, departments, qualifications, canKeep };
-}
 
 export type PlanWeek = Extract<Awaited<ReturnType<typeof planWeek>>, { site: RotaSite }>;
 export type TodayAt = Extract<Awaited<ReturnType<typeof todayAt>>, { site: RotaSite }>;

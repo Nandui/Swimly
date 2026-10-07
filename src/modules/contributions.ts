@@ -247,3 +247,25 @@ export async function planCommitment(sourceId: string, input: CommitmentPlan) {
   if (!source?.plan) return { ok: false as const, error: "That can no longer be planned from here." };
   return source.plan(input);
 }
+
+/** A site's area renamed in Admin (docs/admin-setup.md): each module that stores
+ *  area names (the rota's activities and bookings, the swim school's classes and
+ *  assessments) updates its own records, so they keep reading the same way. Core
+ *  calls these; it never touches a module's tables itself. Runs inside Core's
+ *  transaction when it passes one, so a failed rename leaves nothing half done. */
+export type AreaRename = { siteId: string; from: string; to: string };
+export type AreaRenameHandler = { id: string; rename(change: AreaRename, tx?: unknown): Promise<number> };
+const areaRenameHandlers: AreaRenameHandler[] = [];
+
+export function registerAreaRename(handler: AreaRenameHandler) {
+  const at = areaRenameHandlers.findIndex((h) => h.id === handler.id);
+  if (at >= 0) areaRenameHandlers[at] = handler;
+  else areaRenameHandlers.push(handler);
+}
+
+/** Every module's records renamed; how many changed in all. */
+export async function renameAreaEverywhere(change: AreaRename, tx?: unknown) {
+  let changed = 0;
+  for (const handler of areaRenameHandlers) changed += await handler.rename(change, tx);
+  return changed;
+}

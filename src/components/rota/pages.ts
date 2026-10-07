@@ -1,10 +1,10 @@
-import { CalendarDays, CalendarRange, LayoutDashboard, ListChecks, Sun, UserX, type LucideIcon } from "lucide-react";
+import { CalendarDays, CalendarRange, LayoutDashboard, Sun, UserX, type LucideIcon } from "lucide-react";
 
 export type RotaPage = { href: string; label: string; icon: LucideIcon; description: string; match: (pathname: string) => boolean };
 
 /** Rota's pages, once: the page bar (RotaShell) and "Everything in Rota" on the overview are
- *  built from this list, so neither can leave a page out. Absences and the activity list are for
- *  people who run the rota. A plain module (no "use client"), so a server page can read it. */
+ *  built from this list, so neither can leave a page out. Absences are for people who run the
+ *  rota; the activity list is Admin's (/activity-list). A plain module (no "use client"), so a server page can read it. */
 export function rotaPages(run: boolean): RotaPage[] {
   return [
     { href: "/rota/overview", label: "Overview", icon: LayoutDashboard, description: "Today, what waits for you and every Rota page", match: (p) => p === "/rota/overview" },
@@ -13,7 +13,6 @@ export function rotaPages(run: boolean): RotaPage[] {
     { href: "/rota/bookings", label: "Bookings", icon: CalendarRange, description: "Schools, parties and lane hire that repeat over weeks", match: (p) => p.startsWith("/rota/bookings") },
     ...(run ? [
       { href: "/rota/absences", label: "Absences", icon: UserX, description: "Who is off, and returns to work", match: (p: string) => p.startsWith("/rota/absences") },
-      { href: "/rota/activities", label: "Activity list", icon: ListChecks, description: "The activities the rota plans, each with its department and qualification", match: (p: string) => p.startsWith("/rota/activities") },
     ] : []),
   ];
 }

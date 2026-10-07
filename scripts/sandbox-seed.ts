@@ -191,8 +191,12 @@ async function seedRota(db: PrismaClient) {
   const ORG = "org_leisureworld", HILLVIEW = "club_churchfield";
   const day = (offset: number) => { const d = new Date(); d.setUTCHours(0, 0, 0, 0); d.setUTCDate(d.getUTCDate() + offset); return d; };
   const by = { createdById: "sbx_sam", createdByName: "Sam Example" };
+  // Each site's areas (Admin, Areas): what activities, bookings and classes pick their "where" from.
+  for (const siteId of ["club_bishopstown", HILLVIEW]) {
+    await db.siteArea.createMany({ data: ["Main pool", "Learner pool", "Front desk", "Gym"].map((name, sortOrder) => ({ orgId: ORG, siteId, name, sortOrder })), skipDuplicates: true });
+  }
   // The organisation's activity list: Teaching takes the swim classes.
-  await db.rotaActivityType.createMany({ data: [
+  await db.activityType.createMany({ data: [
     { id: "rat_guard", orgId: ORG, departmentId: "dept_aquatics", name: "Lifeguarding", icon: "lifeguard", requiredTypeId: "qt_nplq", sortOrder: 0 },
     { id: "rat_teach", orgId: ORG, departmentId: "dept_aquatics", name: "Teaching", icon: "teaching", fromClasses: true, sortOrder: 1 },
     { id: "rat_desk", orgId: ORG, departmentId: "dept_reception", name: "Reception", icon: "reception", sortOrder: 2 },
@@ -215,7 +219,7 @@ async function seedRota(db: PrismaClient) {
   const dates = Array.from({ length: 14 }, (_, i) => i).filter((i) => { const d = day(i).getUTCDay(); return d >= 1 && d <= 5; });
   const lessons = await db.rotaRepeat.create({ data: { orgId: ORG, siteId: HILLVIEW, kind: "school", title: "Example National School", typeId: "rat_guard", place: "Learner pool",
     startMinutes: 570, endMinutes: 690, places: 1, weekdays: [0, 1, 2, 3, 4], firstDay: day(0), lastDay: day(13), ...by } });
-  for (const offset of dates) await db.rotaNeed.create({ data: { orgId: ORG, siteId: HILLVIEW, date: day(offset), typeId: "rat_guard", place: "Learner pool (school)", startMinutes: 570, endMinutes: 690, places: 1, repeatId: lessons.id, ...by } });
+  for (const offset of dates) await db.rotaNeed.create({ data: { orgId: ORG, siteId: HILLVIEW, date: day(offset), typeId: "rat_guard", place: "Learner pool", startMinutes: 570, endMinutes: 690, places: 1, repeatId: lessons.id, ...by } });
   // The pool's week is shared with its staff; reception's is still a draft.
   const monday = day(0); monday.setUTCDate(monday.getUTCDate() - ((monday.getUTCDay() + 6) % 7));
   await db.rotaWeekShare.create({ data: { siteId: HILLVIEW, departmentId: "dept_aquatics", monday, sharedById: "sbx_sam", sharedByName: "Sam Example" } });

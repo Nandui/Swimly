@@ -60,7 +60,7 @@ before(async () => {
   const tomorrow = new Date(); tomorrow.setUTCHours(0, 0, 0, 0); tomorrow.setUTCDate(tomorrow.getUTCDate() + 1);
   // The rota: both on tomorrow's lifeguarding, in a week shared with the pool's staff.
   await db.department.create({ data: { id: "d-pool", orgId: ORG, name: "Pool", clubId: club.id } });
-  await db.rotaActivityType.create({ data: { id: "t-guard", orgId: ORG, departmentId: "d-pool", name: "Lifeguarding", icon: "lifeguard" } });
+  await db.activityType.create({ data: { id: "t-guard", orgId: ORG, departmentId: "d-pool", name: "Lifeguarding", icon: "lifeguard" } });
   const lifeguarding = await db.rotaNeed.create({ data: { orgId: ORG, siteId: club.id, date: tomorrow, typeId: "t-guard", place: "Main pool", startMinutes: 420, endMinutes: 900, places: 2, createdByName: "Maya" } });
   for (const [place, userId] of [[1, "riley"], [2, "ava"]] as const) await db.rotaAssignment.create({ data: { needId: lifeguarding.id, place, userId, startMinutes: 420, endMinutes: 900, createdByName: "Maya" } });
   const monday = new Date(tomorrow); monday.setUTCDate(monday.getUTCDate() - ((monday.getUTCDay() + 6) % 7));

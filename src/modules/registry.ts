@@ -263,7 +263,7 @@ registerModule({
 registerModule({
   id: "admin",
   name: "Admin",
-  description: "People, roles and sites, and the activity log, shared by every module",
+  description: "People, places and the work every module shares: staff, roles, sites and their areas, departments, qualifications and activities",
   // Settings, not Building2: the building means the working site everywhere else.
   icon: Settings,
   href: "/core",
@@ -272,11 +272,23 @@ registerModule({
     reach: "everywhere",
     levels: [
       {
+        key: "setup", label: "Setup",
+        help: "See the shared setup lists. The ticks choose which lists they keep.",
+        permissions: ["setup.view"],
+      },
+      {
         key: "manage",
         label: "Manage",
-        help: "People, roles and sites, and the activity log. Admins can also use every other module except HR.",
+        help: "People, roles, sites and every setup list, and the activity log. Admins can also use every other module except HR.",
+        // Every setup list too: an administrator holds all of Admin's ticks (effectiveLevels).
         permissions: ["staff.manage", "roles.manage", "clubs.manage", "activity.view"],
       },
+    ],
+    extras: [
+      { key: "departments", label: "Keeps departments", help: "Add, rename and archive departments.", from: "setup", permissions: ["setup.departments"] },
+      { key: "qualifications", label: "Keeps the qualifications list", help: "The qualifications staff can hold.", from: "setup", permissions: ["setup.qualifications"] },
+      { key: "activities", label: "Keeps the activity list", help: "What the rota plans, its departments and the qualifications it needs.", from: "setup", permissions: ["setup.activities"] },
+      { key: "areas", label: "Keeps sites' areas", help: "Each site's pools, gym and other areas.", from: "setup", permissions: ["setup.areas"] },
     ],
   },
 });

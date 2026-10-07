@@ -23,7 +23,7 @@ export async function myDays(userId: string, days = 28) {
     }),
     commitmentsFor({ userIds: [userId], from, to }).then((all) => all.filter((c) => c.source === "activities.classes")),
     prisma.qualification.findMany({ where: { userId }, select: { userId: true, typeId: true, issuedOn: true, expiresOn: true, revokedAt: true } }),
-    prisma.rotaActivityType.findFirst({ where: { orgId: me.orgId, fromClasses: true, archivedAt: null }, select: { name: true, icon: true, departmentId: true } }),
+    prisma.activityType.findFirst({ where: { orgId: me.orgId, fromClasses: true, archivedAt: null }, select: { name: true, icon: true, departmentId: true } }),
   ]);
   const sites = await prisma.club.findMany({ where: { id: { in: [...new Set(classes.map((c) => c.siteId))] } }, select: { id: true, name: true } });
   const shares = await prisma.rotaWeekShare.findMany({

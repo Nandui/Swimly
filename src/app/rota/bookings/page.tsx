@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { areaNames } from "@/lib/setup/data";
 import Link from "next/link";
 import { CalendarDays } from "lucide-react";
 import { Button } from "@/components/shadcn/button";
@@ -27,7 +28,8 @@ export default async function BookingsPage({ searchParams }: { searchParams: Pro
   const data = await rotaRepeats((await searchParams).site);
   const { site } = data;
   const now = today();
-  const places = [...new Set(data.repeats.map((r) => r.place).filter(Boolean))];
+  // Where a booking happens: the site's areas, kept in Admin.
+  const places = site ? await areaNames(site.id) : [];
   return (
     <>
       <PageHeader title={site ? `Bookings: ${site.name}` : "Bookings"}

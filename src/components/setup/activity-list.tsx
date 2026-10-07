@@ -7,8 +7,8 @@ import { NativeSelect, NativeSelectOption } from "@/components/shadcn/native-sel
 import { ConfirmAction } from "@/components/confirm-action";
 import { Field, FormDialog } from "@/components/form-dialog";
 import { ChoiceRow } from "@/components/ui/choice-row";
-import { archiveActivityType, saveActivityType } from "@/lib/rota/actions";
-import { ROTA_ACTIVITY_ICONS, ROTA_ACTIVITY_ICON_KEYS } from "@/lib/rota/meta";
+import { archiveActivityType, saveActivityType } from "@/lib/setup/actions";
+import { ACTIVITY_ICONS as ROTA_ACTIVITY_ICONS, ACTIVITY_ICON_KEYS as ROTA_ACTIVITY_ICON_KEYS } from "@/lib/setup/meta";
 
 const THEME = "turnfin-module";
 type Option = { id: string; name: string };

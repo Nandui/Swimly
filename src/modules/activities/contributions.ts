@@ -1,8 +1,9 @@
 import "server-only";
+import type { Prisma } from "@/generated/prisma/client";
 import { prisma } from "@/lib/prisma";
 import { expandPermissions, type PermissionKey } from "@/lib/staff/permissions";
 import { visibleScreens, type ScreenKey } from "@/lib/staff/screens";
-import { registerCommitments, registerHomeCard, registerSiteSummary, registerStaffColumn, type Commitment, type HomeIcon, type HomeItem, type HomeSession } from "@/modules/contributions";
+import { registerAreaRename, registerCommitments, registerHomeCard, registerSiteSummary, registerStaffColumn, type Commitment, type HomeIcon, type HomeItem, type HomeSession } from "@/modules/contributions";
 import { formatTime, isDateOnly, minutesNow, parseDateOnly, plural, today } from "@/lib/format";
 import { logAudit } from "@/lib/audit";
 import { staffByIds } from "@/lib/directory";
@@ -197,5 +198,24 @@ registerHomeCard({
       },
       { kind: "action", icon: "clipboardCheck", label: "Open my classes", href: "/instructor" },
     ];
+  },
+});
+
+/** A site's area renamed in Admin: classes and assessment sessions at that site whose location
+ *  is that area, or starts with it before a detail ("Learner pool, lane 3"), follow. */
+registerAreaRename({
+  id: "activities.locations",
+  async rename({ siteId, from, to }, tx) {
+    const db = (tx as Prisma.TransactionClient | undefined) ?? prisma;
+    const where = { clubId: siteId, OR: [{ location: { equals: from, mode: "insensitive" as const } }, { location: { startsWith: `${from},`, mode: "insensitive" as const } }] };
+    const renamed = (location: string | null) => `${to}${(location ?? "").slice(from.length)}`;
+    const [courses, sessions] = await Promise.all([
+      db.course.findMany({ where, select: { id: true, location: true } }),
+      db.assessmentSession.findMany({ where, select: { id: true, location: true } }),
+    ]);
+    for (const c of courses) await db.course.update({ where: { id: c.id }, data: { location: renamed(c.location) } });
+    for (const a of sessions) await db.assessmentSession.update({ where: { id: a.id }, data: { location: renamed(a.location) } });
+    const changed = courses.length + sessions.length;
+    return changed;
   },
 });

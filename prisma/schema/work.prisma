@@ -536,34 +536,6 @@ model RotaActivity {
 // kept unread until development has its own database (changes are additive).
 // ---------------------------------------------------------------------------
 
-/// A kind of work on the rota, from the organisation's one list: Lifeguarding,
-/// Teaching, Reception. Each belongs to a department (who plans it) and may
-/// need a qualification. Archived, never deleted, so old plans stay readable.
-model RotaActivityType {
-  id             String    @id @default(cuid())
-  orgId          String
-  departmentId   String
-  name           String
-  /// A key of ROTA_ACTIVITY_ICONS, so an activity shows the same icon everywhere.
-  icon           String    @default("activity")
-  requiredTypeId String?
-  /// Swim classes arrive as this activity's needs, read from the timetable.
-  /// One per organisation.
-  fromClasses    Boolean   @default(false)
-  sortOrder      Int       @default(0)
-  archivedAt     DateTime?
-  createdAt      DateTime  @default(now())
-  updatedAt      DateTime  @updatedAt
-
-  organisation Organisation       @relation(fields: [orgId], references: [id], onDelete: Restrict)
-  department   Department         @relation(fields: [departmentId], references: [id], onDelete: Restrict)
-  requiredType QualificationType? @relation(fields: [requiredTypeId], references: [id], onDelete: SetNull)
-  needs        RotaNeed[]
-  repeats      RotaRepeat[]
-
-  @@unique([orgId, name])
-  @@index([departmentId])
-}
 
 /// One activity at a site on a day, needing `places` people at once from
 /// start to end. Each place is a lane on the plan.
@@ -587,7 +559,7 @@ model RotaNeed {
   updatedAt     DateTime @updatedAt
 
   site        Club             @relation(fields: [siteId], references: [id], onDelete: Restrict)
-  type        RotaActivityType @relation(fields: [typeId], references: [id], onDelete: Restrict)
+  type        ActivityType @relation(fields: [typeId], references: [id], onDelete: Restrict)
   repeat      RotaRepeat?      @relation(fields: [repeatId], references: [id], onDelete: SetNull)
   assignments RotaAssignment[]
 
@@ -690,7 +662,7 @@ model RotaRepeat {
   cancelledAt   DateTime?
 
   site  Club             @relation(fields: [siteId], references: [id], onDelete: Restrict)
-  type  RotaActivityType @relation(fields: [typeId], references: [id], onDelete: Restrict)
+  type  ActivityType @relation(fields: [typeId], references: [id], onDelete: Restrict)
   needs RotaNeed[]
 
   @@index([siteId])

@@ -1,4 +1,5 @@
 "use client";
+import { LocationField } from "@/modules/activities/components/location-field";
 import { Button } from "@/components/shadcn/button";
 
 import * as React from "react";
@@ -173,14 +174,7 @@ function SessionFields({
             defaultValue={session?.capacity ?? ""}
           />
         </Field>
-        <Field label="Pool" htmlFor="location">
-          <Input
-            id="location"
-            name="location"
-            placeholder="Learner Pool"
-            defaultValue={session?.location ?? ""}
-          />
-        </Field>
+        <LocationField label="Pool" defaultValue={session?.location} />
       </div>
 
       <Field label="Assessor" htmlFor="instructorId">

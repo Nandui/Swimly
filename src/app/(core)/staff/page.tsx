@@ -73,12 +73,6 @@ export default async function StaffPage(props: PageProps<"/staff">) {
                 {"Work devices"}
               </UiLink>
             </Button>
-            <Button variant="outline" asChild={true}>
-              <UiLink href="/staff/organisation">
-                {<AppIcon name="building" size="sm" />}
-                {"Organisation"}
-              </UiLink>
-            </Button>
             <AddPerson roles={roles} defaultOpen={params.add === "1"} />
           </>
         }

@@ -1,6 +1,6 @@
 import {
-  Activity, Ban, CalendarCheck, CircleCheck, Clock3, Coffee, ConciergeBell, CopyX, Dumbbell, FileQuestion, GraduationCap, LifeBuoy,
-  Pencil, Send, SprayCan, TriangleAlert, Waves, Wrench, type LucideIcon,
+  Ban, CalendarCheck, CircleCheck, Clock3, Coffee, CopyX, FileQuestion, GraduationCap,
+  Pencil, Send, TriangleAlert,
 } from "lucide-react";
 import type { StatusMeta } from "@/lib/status";
 
@@ -8,22 +8,8 @@ import type { StatusMeta } from "@/lib/status";
  *  a Rota screen comes from a map here, with its icon, so colour is never the only signal. A plain
  *  module, so server and client both read it. */
 
-/** The icons an activity on the organisation's list may take. The key is stored. */
-export const ROTA_ACTIVITY_ICONS = {
-  lifeguard: { label: "Lifeguard", icon: LifeBuoy },
-  teaching: { label: "Teaching", icon: GraduationCap },
-  reception: { label: "Reception", icon: ConciergeBell },
-  poolside: { label: "Poolside", icon: Waves },
-  gym: { label: "Gym", icon: Dumbbell },
-  cleaning: { label: "Cleaning", icon: SprayCan },
-  maintenance: { label: "Maintenance", icon: Wrench },
-  activity: { label: "Other", icon: Activity },
-} as const satisfies Record<string, { label: string; icon: LucideIcon }>;
-export type RotaActivityIcon = keyof typeof ROTA_ACTIVITY_ICONS;
-export const ROTA_ACTIVITY_ICON_KEYS = Object.keys(ROTA_ACTIVITY_ICONS) as RotaActivityIcon[];
-export function activityIcon(key: string): LucideIcon {
-  return (ROTA_ACTIVITY_ICONS as Record<string, { icon: LucideIcon }>)[key]?.icon ?? Activity;
-}
+/** The activity icons are the shared setup's (src/lib/setup/meta.ts); the Rota keeps its names. */
+export { ACTIVITY_ICONS as ROTA_ACTIVITY_ICONS, ACTIVITY_ICON_KEYS as ROTA_ACTIVITY_ICON_KEYS, activityIcon, type ActivityIconKey as RotaActivityIcon } from "@/lib/setup/meta";
 
 /** Where a day stands on the week strip and the day's head. */
 export const ROTA_DAY_META = {

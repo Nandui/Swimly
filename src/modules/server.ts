@@ -8,10 +8,11 @@ import "@/lib/docs/home";
 import "@/lib/training/home";
 import "@/lib/rota/home";
 import "@/lib/rota/file";
+import "@/lib/rota/areas";
 import "@/lib/purchasing/home";
 import "@/lib/people/home";
 
-export { commitmentsFor, homeCardItems, planCommitment, personFile, siteSummaryLines, staffColumnValues } from "./contributions";
+export { renameAreaEverywhere, commitmentsFor, homeCardItems, planCommitment, personFile, siteSummaryLines, staffColumnValues } from "./contributions";
 // The swim school's top-bar tools and daily pages, for the home page's frame.
 export { SwimSchoolTools } from "./activities/components/app-nav";
 export { dailyPages } from "./activities/lib/nav";

@@ -1,4 +1,5 @@
 "use client";
+import { LocationField } from "@/modules/activities/components/location-field";
 
 import { useId, useState, useTransition, type ComponentProps } from "react";
 import { useRouter } from "next/navigation";
@@ -57,7 +58,7 @@ export function AddClass({ levels, instructors, workingSite }: { levels: LevelOp
             <Entry name="capacity" label="Capacity" type="number" min={1} max={999} optional hint="Leave blank for no limit." />
           </div>
           <Select id={`${id}-instructor`} name="instructorId" label="Instructor" defaultValue={UNASSIGNED_INSTRUCTOR} disabled={pending} options={[{value: UNASSIGNED_INSTRUCTOR, label:"Not assigned"}, ...instructors.map(instructor => ({value: instructor.id,label: instructor.name}))]} />
-          <Entry name="location" label="Pool area" maxLength={80} optional placeholder="Learner pool, lane 3" />
+          <LocationField id={`${id}-location`} label="Pool area" />
         </fieldset></div>
         <div className="shrink-0 space-y-3 p-4 sm:px-6">
           {error ? <div ref={summaryRef} tabIndex={-1}><Notice tone="error" live="alert" title={error} /></div> : null}

@@ -7,7 +7,7 @@ import { today } from "@/lib/format";
  *  the whole organisation chart; nothing here returns restricted (HR) data. */
 
 export async function getOrganisation() {
-  const session = await requirePermission("staff.manage");
+  const session = await requirePermission("setup.view");
   const orgId = session.user.orgId ?? undefined;
   const [organisation, sites, departments, qualificationTypes] = await Promise.all([
     prisma.organisation.findFirst({ where: { id: orgId }, select: { id: true, name: true } }),

@@ -8,6 +8,7 @@ import { NativeSelect, NativeSelectOption } from "@/components/shadcn/native-sel
 import { RadioGroup } from "@/components/shadcn/radio-group";
 import { ConfirmAction } from "@/components/confirm-action";
 import { Field, FormDialog } from "@/components/form-dialog";
+import { AreaSelect } from "@/components/setup/area-select";
 import { ChoiceRow } from "@/components/ui/choice-row";
 import { ChangeFields, changeOf } from "@/components/rota/change-fields";
 import { assign, copyPlan, removeNeed, saveNeed, shareWeek, unassign } from "@/lib/rota/actions";
@@ -44,9 +45,8 @@ export function NeedDialog({ siteId, date, live, types, places, need, trigger }:
             {types.map((t) => <NativeSelectOption key={t.id} value={t.id}>{t.name}</NativeSelectOption>)}
           </NativeSelect>
         </Field>
-        <Field label="Where" htmlFor={`${fid}-place`} optional hint="For example Main pool.">
-          <Input id={`${fid}-place`} name="place" maxLength={60} defaultValue={need?.place ?? ""} list={`${fid}-places`} className="min-h-11" />
-          <datalist id={`${fid}-places`}>{places.map((p) => <option key={p} value={p} />)}</datalist>
+        <Field label="Where" htmlFor={`${fid}-place`} optional hint="The site's areas, kept in Admin.">
+          <AreaSelect id={`${fid}-place`} name="place" areas={places} defaultValue={need?.place} />
         </Field>
       </div>
       <div className="grid grid-cols-3 gap-4">

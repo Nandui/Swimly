@@ -10,8 +10,8 @@ import { currentActor, mayFor } from "@/lib/policy/session";
 import { canChange } from "@/lib/rota/access";
 import { BOOKING_KINDS, ROTA_CHANGE_REASONS, addDaysIso, bookingDates, clock, mondayOf, parseClock } from "@/lib/rota/constants";
 import { placeProblem } from "@/lib/rota/cover";
+import { areaProblem } from "@/lib/setup/data";
 import { fitsFor } from "@/lib/rota/data";
-import { ROTA_ACTIVITY_ICON_KEYS } from "@/lib/rota/meta";
 import type { Prisma } from "@/generated/prisma/client";
 import { notifyShiftChange } from "@/lib/staff-api/reminders";
 import { planCommitment } from "@/modules/server";
@@ -99,14 +99,17 @@ export async function saveNeed(id: string | null, input: NeedInput, changeInput:
   const start = parseClock(data.start), end = parseClock(data.end);
   if (start === null || end === null) return fail("Use times like 07:00.");
   if (end <= start) return fail("It has to end after it starts, on the same day.");
-  const type = await prisma.rotaActivityType.findFirst({ where: { id: data.typeId, archivedAt: null, fromClasses: false }, select: { id: true, name: true, orgId: true, departmentId: true } });
+  const type = await prisma.activityType.findFirst({ where: { id: data.typeId, archivedAt: null, fromClasses: false }, select: { id: true, name: true, orgId: true, departmentId: true } });
   if (!type) return fail("That activity is no longer on the list.");
   const at = await allowedFor(data.siteId, data.date, type.departmentId);
   if (!at.ok) return fail(at.error);
   if (type.orgId !== at.site.orgId) return fail("That activity is no longer on the list.");
   const label = `${type.name}${data.place ? `, ${data.place}` : ""}, ${data.date} ${clock(start)}–${clock(end)}`;
-  const existing = id ? await prisma.rotaNeed.findFirst({ where: { id, siteId: data.siteId }, select: { date: true, typeId: true, type: { select: { departmentId: true } }, assignments: { select: { place: true, startMinutes: true, endMinutes: true } } } }) : null;
+  const existing = id ? await prisma.rotaNeed.findFirst({ where: { id, siteId: data.siteId }, select: { date: true, typeId: true, place: true, type: { select: { departmentId: true } }, assignments: { select: { place: true, startMinutes: true, endMinutes: true } } } }) : null;
   if (id && !existing) return fail("That activity is no longer on the plan.");
+  // Where it happens is one of the site's areas (Admin, Areas).
+  const where = await areaProblem(data.siteId, data.place, existing?.place);
+  if (where) return fail(where);
   if (existing) {
     // Moving it off its own day or department is a change there too.
     const from = await allowedFor(data.siteId, iso(existing.date), existing.type.departmentId);
@@ -238,7 +241,7 @@ export async function planTeacher(input: { siteId: string; date: string; classRe
   const change = changeSchema.parse(changeInput);
   if (!isDateOnly(input.date)) return fail("Choose a day.");
   const actor = await currentActor();
-  const teaching = await prisma.rotaActivityType.findFirst({ where: { orgId: actor.orgId ?? undefined, fromClasses: true, archivedAt: null }, select: { departmentId: true, name: true } });
+  const teaching = await prisma.activityType.findFirst({ where: { orgId: actor.orgId ?? undefined, fromClasses: true, archivedAt: null }, select: { departmentId: true, name: true } });
   if (!teaching) return fail("Swim classes are not on the rota yet. Add a Teaching activity that takes them, on the activity list.");
   const at = await allowedFor(input.siteId, input.date, teaching.departmentId);
   if (!at.ok) return fail(at.error);
@@ -256,7 +259,7 @@ export async function planTeacher(input: { siteId: string; date: string; classRe
 /** "Who can fill it" for a gap, best fit first, for the sheet. Reading, so View is enough. */
 export async function whoCanFill(input: { siteId: string; date: string; start: number; end: number; typeId: string }) {
   if (!isDateOnly(input.date)) return [];
-  const type = await prisma.rotaActivityType.findFirst({ where: { id: input.typeId }, select: { requiredTypeId: true } });
+  const type = await prisma.activityType.findFirst({ where: { id: input.typeId }, select: { requiredTypeId: true } });
   return fitsFor({ siteId: input.siteId, date: input.date, start: input.start, end: input.end, requiredTypeId: type?.requiredTypeId ?? null });
 }
 
@@ -407,13 +410,15 @@ export async function saveRepeat(input: RepeatInput): Promise<ActionResult> {
   if (start === null || end === null) return fail("Use times like 09:30.");
   if (end <= start) return fail("It has to end after it starts.");
   if (data.lastDay < data.firstDay) return fail("The last day can't be before the first.");
-  const type = await prisma.rotaActivityType.findFirst({ where: { id: data.typeId, archivedAt: null, fromClasses: false }, select: { id: true, name: true, departmentId: true } });
+  const type = await prisma.activityType.findFirst({ where: { id: data.typeId, archivedAt: null, fromClasses: false }, select: { id: true, name: true, departmentId: true } });
   if (!type) return fail("That activity is no longer on the list.");
   const now = today();
   const dates = bookingDates(data.firstDay > now ? data.firstDay : addDaysIso(now, 1), data.lastDay, data.weekdays, data.skipDates);
   if (!dates.length) return fail("None of those days are still to come.");
   if (dates.length > MAX_DAYS) return fail(`That makes ${dates.length} days. Keep a booking to ${MAX_DAYS} days.`);
   const at = await allowedFor(data.siteId, dates[0], type.departmentId);
+  const where = await areaProblem(data.siteId, data.place);
+  if (where) return fail(where);
   if (!at.ok) return fail(at.error);
   await prisma.$transaction(async (tx) => {
     const repeat = await tx.rotaRepeat.create({ data: {
@@ -452,59 +457,3 @@ export async function cancelRepeat(id: string): Promise<ActionResult> {
   return ok();
 }
 
-/* ---------- The activity list (Run) ---------- */
-
-const typeSchema = z.object({
-  name: z.string().trim().min(2, "Name the activity, for example Lifeguarding.").max(40, "Keep the name under 40 characters."),
-  departmentId: z.string().min(1, "Choose the department that plans it."),
-  icon: z.enum(ROTA_ACTIVITY_ICON_KEYS as [string, ...string[]]),
-  requiredTypeId: z.string().trim().max(64).default("").transform((v) => v || null),
-  fromClasses: z.boolean().default(false),
-});
-export type ActivityTypeInput = z.input<typeof typeSchema>;
-
-async function listKeeper() {
-  const actor = await currentActor();
-  if (!actor.orgId || !(await mayFor("rota.manage", { orgId: actor.orgId }))) return null;
-  return actor;
-}
-
-/** Add an activity to the organisation's list, or change one. One activity takes the swim classes. */
-export async function saveActivityType(id: string | null, input: ActivityTypeInput): Promise<ActionResult> {
-  const parsed = typeSchema.safeParse(input);
-  if (!parsed.success) return fail(parsed.error.issues[0].message);
-  const actor = await listKeeper();
-  if (!actor) return fail("Only people who run the rota keep the activity list.");
-  const data = parsed.data;
-  const orgId = actor.orgId!;
-  if (!(await prisma.department.findFirst({ where: { id: data.departmentId, orgId, archivedAt: null }, select: { id: true } }))) return fail("Choose one of your departments.");
-  if (data.requiredTypeId && !(await prisma.qualificationType.findFirst({ where: { id: data.requiredTypeId, orgId }, select: { id: true } }))) return fail("That qualification is no longer offered.");
-  const clash = await prisma.rotaActivityType.findFirst({ where: { orgId, name: { equals: data.name, mode: "insensitive" }, ...(id ? { id: { not: id } } : {}) }, select: { id: true } });
-  if (clash) return fail("There is already an activity with that name.");
-  if (data.fromClasses && (await prisma.rotaActivityType.findFirst({ where: { orgId, fromClasses: true, archivedAt: null, ...(id ? { id: { not: id } } : {}) }, select: { name: true } }))) {
-    return fail("Another activity already takes the swim classes.");
-  }
-  if (id && !(await prisma.rotaActivityType.findFirst({ where: { id, orgId }, select: { id: true } }))) return fail("That activity is no longer on the list.");
-  await prisma.$transaction(async (tx) => {
-    const row = id ? await tx.rotaActivityType.update({ where: { id }, data }) : await tx.rotaActivityType.create({ data: { ...data, orgId } });
-    await logAudit({ actorId: actor.id, actorName: actor.name, action: id ? "update" : "create", entity: "RotaActivityType", entityId: row.id, clubId: null, summary: `${id ? "Changed" : "Added"} the rota activity ${data.name}` }, tx);
-  });
-  revalidatePath("/rota/activities");
-  refresh();
-  return ok();
-}
-
-/** Archive or restore an activity. Days already planned with it keep it. */
-export async function archiveActivityType(id: string, archived: boolean): Promise<ActionResult> {
-  const actor = await listKeeper();
-  if (!actor) return fail("Only people who run the rota keep the activity list.");
-  const type = await prisma.rotaActivityType.findFirst({ where: { id, orgId: actor.orgId! }, select: { name: true } });
-  if (!type) return fail("That activity is no longer on the list.");
-  await prisma.$transaction(async (tx) => {
-    await tx.rotaActivityType.update({ where: { id }, data: { archivedAt: archived ? new Date() : null } });
-    await logAudit({ actorId: actor.id, actorName: actor.name, action: archived ? "archive" : "update", entity: "RotaActivityType", entityId: id, clubId: null, summary: `${archived ? "Archived" : "Restored"} the rota activity ${type.name}` }, tx);
-  });
-  revalidatePath("/rota/activities");
-  refresh();
-  return ok();
-}

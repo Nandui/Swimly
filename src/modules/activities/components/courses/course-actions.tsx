@@ -1,4 +1,5 @@
 "use client";
+import { LocationField } from "@/modules/activities/components/location-field";
 import { Button } from "@/components/shadcn/button";
 
 import { Archive, ArchiveRestore, Pencil } from "lucide-react";
@@ -148,19 +149,7 @@ function CourseFields({
         />
       </Field>
 
-      <Field
-        label="Where"
-        htmlFor="location"
-        optional
-        hint="The pool, or the lane."
-      >
-        <Input
-          id="location"
-          name="location"
-          defaultValue={course?.location ?? ""}
-          placeholder="Main pool, lane 3"
-        />
-      </Field>
+      <LocationField defaultValue={course?.location} />
     </>
   );
 }

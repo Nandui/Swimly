@@ -108,6 +108,10 @@ before(async () => {
   bishopstown = clubs.find((c) => c.name.includes("Bishopstown"))!.id;
   churchfield = clubs.find((c) => c.name.includes("Churchfield"))!.id;
   await db.staffRole.create({ data: { id: "r-staff", name: "Staff", permissions: [], screens: [] } });
+  // Each site's areas (Admin keeps them); an activity's "where" is one of them.
+  for (const siteId of [bishopstown, churchfield]) {
+    await db.siteArea.createMany({ data: ["Main pool", "Learner pool", "Desk", "Gym"].map((name, i) => ({ orgId: ORG, siteId, name, sortOrder: i })) });
+  }
   for (const id of ["maya", "sam", "ava", "riley", "noah", "lee"]) await db.user.create({ data: { id, name: id, email: `${id}@example.invalid`, staffRoleId: "r-staff", orgId: ORG, primaryClubId: id === "noah" ? bishopstown : churchfield, siteIds: id === "noah" ? [bishopstown] : [churchfield] } });
   await db.department.create({ data: { id: "d-pool", orgId: ORG, name: "Pool", clubId: churchfield } });
   await db.department.create({ data: { id: "d-desk", orgId: ORG, name: "Reception", clubId: churchfield } });
@@ -115,9 +119,9 @@ before(async () => {
   await db.qualificationType.create({ data: { id: "qt-life", orgId: ORG, name: "Synthetic lifeguard", validityMonths: 24 } });
   await db.qualification.create({ data: { orgId: ORG, userId: "ava", typeId: "qt-life", issuedOn: new Date("2025-01-01"), expiresOn: new Date("2030-01-01") } });
   await db.qualification.create({ data: { orgId: ORG, userId: "riley", typeId: "qt-life", issuedOn: new Date("2020-01-01"), expiresOn: new Date("2022-01-01") } });
-  await db.rotaActivityType.create({ data: { id: "t-guard", orgId: ORG, departmentId: "d-pool", name: "Lifeguarding", icon: "lifeguard", requiredTypeId: "qt-life" } });
-  await db.rotaActivityType.create({ data: { id: "t-teach", orgId: ORG, departmentId: "d-pool", name: "Teaching", icon: "teaching", fromClasses: true } });
-  await db.rotaActivityType.create({ data: { id: "t-desk", orgId: ORG, departmentId: "d-desk", name: "Reception", icon: "reception" } });
+  await db.activityType.create({ data: { id: "t-guard", orgId: ORG, departmentId: "d-pool", name: "Lifeguarding", icon: "lifeguard", requiredTypeId: "qt-life" } });
+  await db.activityType.create({ data: { id: "t-teach", orgId: ORG, departmentId: "d-pool", name: "Teaching", icon: "teaching", fromClasses: true } });
+  await db.activityType.create({ data: { id: "t-desk", orgId: ORG, departmentId: "d-desk", name: "Reception", icon: "reception" } });
   const d = doubles();
   actions = serverModule("src/lib/rota/actions.ts", d);
   absenceActions = serverModule("src/lib/rota/absence-actions.ts", d);
@@ -274,17 +278,10 @@ test("swim classes are Teaching; the rota plans their teacher through the swim s
   classes.length = 0;
 });
 
-test("the activity list is the organisation's: kept by Run everywhere, one activity takes the classes", async () => {
+test("an archived activity on Admin's list is no longer planned", async () => {
+  const gym = await fixture.prisma.activityType.create({ data: { orgId: ORG, name: "Gym floor", departmentId: "d-desk", icon: "gym", archivedAt: new Date() } });
   as("sam", [at("rota.manage")]);
-  assert.equal((await actions.saveActivityType(null, { name: "Gym floor", departmentId: "d-desk", icon: "gym" })).ok, false, "Run at one site does not keep it");
-  as("lee", [], ["rota.manage"]);
-  assert.equal((await actions.saveActivityType(null, { name: "Gym floor", departmentId: "d-desk", icon: "gym" })).ok, true);
-  assert.equal((await actions.saveActivityType(null, { name: "gym floor", departmentId: "d-desk", icon: "gym" })).ok, false, "names are unique");
-  assert.equal((await actions.saveActivityType(null, { name: "Squad coaching", departmentId: "d-pool", icon: "teaching", fromClasses: true })).ok, false, "Teaching already takes the classes");
-  const gym = await fixture.prisma.rotaActivityType.findFirstOrThrow({ where: { name: "Gym floor" } });
-  assert.equal((await actions.archiveActivityType(gym.id, true)).ok, true);
-  as("sam", [at("rota.manage")]);
-  assert.equal((await actions.saveNeed(null, need(tomorrow(), { typeId: gym.id, place: "Gym" }))).ok, false, "archived: no longer planned");
+  assert.equal((await actions.saveNeed(null, need(tomorrow(), { typeId: gym.id }))).ok, false, "archived: no longer planned");
 });
 
 test("the personal file keeps the changes to their activities on days that had come", async () => {

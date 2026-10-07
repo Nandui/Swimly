@@ -2,23 +2,15 @@
 
 import { usePathname } from 'next/navigation';
 import type { ReactNode } from 'react';
-import { Building2, History, KeyRound, LayoutDashboard, Users, type LucideIcon } from 'lucide-react';
+import { ADMIN_GROUPS, type CoreLinkKey } from '@/components/core/pages';
 import { ModuleShell } from '@/components/workspace/module-shell';
 
-export type CoreLinkKey = 'staff' | 'roles' | 'clubs' | 'activity';
+export type { CoreLinkKey };
 
-const LINKS: { key: CoreLinkKey; href: string; label: string; icon: LucideIcon }[] = [
-  { key: 'staff', href: '/staff', label: 'Staff', icon: Users },
-  { key: 'roles', href: '/roles', label: 'Roles', icon: KeyRound },
-  { key: 'clubs', href: '/clubs', label: 'Sites', icon: Building2 },
-  { key: 'activity', href: '/activity', label: 'Activity', icon: History },
-];
-
-/** Turnfin Core: the organisation itself (people, roles, sites, the activity
- *  log). It belongs to no module, so Aquatics, Docs and the rest all rely on
- *  it without owning it. Each person's own Account is not here: it lives at
- *  /account under the Home frame. Links follow the screens this person can
- *  open; every page checks again. Keep the icons in step with core/page.tsx. */
+/** Turnfin Core, the Admin module: the organisation itself and the setup every module shares,
+ *  grouped by topic (owner decision, 7 October 2026): People, Places, Work and the log. Each
+ *  person's own Account is not here: it lives at /account under the Home frame. Links follow
+ *  the screens this person can open; every page checks again. */
 export function CoreShell({ who, screens, children }: {
   who: { id: string; name: string };
   screens: CoreLinkKey[];
@@ -26,12 +18,15 @@ export function CoreShell({ who, screens, children }: {
 }) {
   const pathname = usePathname();
   const isOn = (href: string) => pathname === href || pathname.startsWith(`${href}/`);
-  const links = [
-    { href: '/core', label: 'Overview', icon: LayoutDashboard, active: pathname === '/core' },
-    ...LINKS.filter((link) => screens.includes(link.key)).map(({ href, label, icon }) => ({ href, label, icon, active: isOn(href) })),
+  const groups = [
+    { label: '', links: [{ href: '/core', label: 'Overview', icon: ADMIN_GROUPS[0].links[0].icon, active: pathname === '/core' }] },
+    ...ADMIN_GROUPS.slice(1).map((g) => ({
+      label: g.label,
+      links: g.links.filter((l) => screens.includes(l.key as CoreLinkKey)).map(({ href, label, icon }) => ({ href, label, icon, active: isOn(href) })),
+    })).filter((g) => g.links.length),
   ];
   return (
-    <ModuleShell module="Admin" id="core" current="admin" who={who} links={links} scopeNote="Shared by every module">
+    <ModuleShell module="Admin" id="core" current="admin" who={who} groups={groups} scopeNote="Shared by every module">
       {children}
     </ModuleShell>
   );

@@ -196,7 +196,7 @@ model Organisation {
   rotaDepartments    RotaDepartment[]
   rotaImports        RotaImport[]
   rotaChanges        RotaChange[]
-  rotaActivityTypes  RotaActivityType[]
+  activityTypes      ActivityType[]
 }
 
 /// A team such as Aquatics, Reception or Maintenance. Optionally tied to one
@@ -217,7 +217,7 @@ model Department {
   rotaShifts     RotaShift[]
   rotaBookings   RotaBooking[]
   rotaActivities RotaActivity[]
-  rotaActivityTypes RotaActivityType[]
+  activityTypes     ActivityType[]
   rotaWeekShares    RotaWeekShare[]
 
   @@unique([orgId, name])
@@ -309,7 +309,7 @@ model QualificationType {
   trainingCourses TrainingCourse[]
   rotaShifts     RotaShift[]
   rotaActivities RotaActivity[]
-  rotaActivityTypes RotaActivityType[]
+  activityTypes     ActivityType[]
 
   @@unique([orgId, name])
 }
@@ -408,6 +408,7 @@ model Club {
   rotaActivities     RotaActivity[]
   rotaDepartments    RotaDepartment[]
   purchaseOrders     PurchaseOrder[]
+  areas              SiteArea[]
   purchaseCounter    PurchaseOrderCounter?
   rotaNeeds          RotaNeed[]
   rotaWeekShares     RotaWeekShare[]
@@ -513,4 +514,56 @@ model StaffReminderLog {
   sentAt DateTime @default(now())
 
   @@unique([userId, kind, ref])
+}
+
+/// The organisation's one list of activities (owner decision, 6 October 2026),
+/// kept in Admin since 7 October 2026 so every module uses the same list: what
+/// the rota plans and covers, each with the department that plans it, its icon
+/// and the qualification it needs. The table keeps its first name.
+model ActivityType {
+  id             String    @id @default(cuid())
+  orgId          String
+  departmentId   String
+  name           String
+  /// A key of ROTA_ACTIVITY_ICONS, so an activity shows the same icon everywhere.
+  icon           String    @default("activity")
+  requiredTypeId String?
+  /// Swim classes arrive as this activity's needs, read from the timetable.
+  /// One per organisation.
+  fromClasses    Boolean   @default(false)
+  sortOrder      Int       @default(0)
+  archivedAt     DateTime?
+  createdAt      DateTime  @default(now())
+  updatedAt      DateTime  @updatedAt
+
+  organisation Organisation       @relation(fields: [orgId], references: [id], onDelete: Restrict)
+  department   Department         @relation(fields: [departmentId], references: [id], onDelete: Restrict)
+  requiredType QualificationType? @relation(fields: [requiredTypeId], references: [id], onDelete: SetNull)
+  needs        RotaNeed[]
+  repeats      RotaRepeat[]
+
+  @@unique([orgId, name])
+  @@map("RotaActivityType")
+  @@index([departmentId])
+}
+
+/// A place at a site where work happens (owner decision, 7 October 2026): the
+/// 25m pool, the learner pool, the gym, reception. Kept in Admin; the rota's
+/// activities and bookings and the swim school's classes and assessments pick
+/// from it. Modules store the area's name, and a rename reaches them through
+/// the area-rename contribution, so their records keep reading the same way.
+model SiteArea {
+  id         String    @id @default(cuid())
+  orgId      String
+  siteId     String
+  name       String
+  sortOrder  Int       @default(0)
+  archivedAt DateTime?
+  createdAt  DateTime  @default(now())
+  updatedAt  DateTime  @updatedAt
+
+  site Club @relation(fields: [siteId], references: [id], onDelete: Cascade)
+
+  @@unique([siteId, name])
+  @@index([orgId])
 }

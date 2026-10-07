@@ -34,7 +34,7 @@ before(async () => {
     "@/lib/clubs/current": { currentClubId: async () => "club_churchfield", currentClubIdIfAny: async () => "club_churchfield" },
     "@/lib/audit": { logAudit: async () => {} },
     "@/lib/directory": { staffByIds: async (ids: string[]) => new Map(ids.filter((id) => ["tess", "cole"].includes(id)).map((id) => [id, { id, name: id }])) },
-    "@/modules/contributions": { registerCommitments: (s: (typeof sources)[number]) => sources.push(s), registerHomeCard() {}, registerSiteSummary() {}, registerStaffColumn() {} },
+    "@/modules/contributions": { registerAreaRename() {}, registerCommitments: (s: (typeof sources)[number]) => sources.push(s), registerHomeCard() {}, registerSiteSummary() {}, registerStaffColumn() {} },
     react: { cache: <T,>(fn: T) => fn },
     "next/navigation": { notFound() { throw new Error("not found"); }, redirect() { throw new Error("redirect"); } },
   });

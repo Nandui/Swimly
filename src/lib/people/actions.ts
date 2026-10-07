@@ -15,7 +15,7 @@ import { requireCapFor } from "@/lib/policy/session";
  *  whoever holds `qualifications.manage` for that person's scope. Every change
  *  is audited in the same transaction. */
 
-const revalidate = (userId?: string) => { revalidatePath("/staff"); revalidatePath("/staff/organisation"); if (userId) revalidatePath(`/staff/${userId}`); };
+const revalidate = (userId?: string) => { revalidatePath("/staff"); revalidatePath("/departments"); revalidatePath("/qualifications"); if (userId) revalidatePath(`/staff/${userId}`); };
 const actorName = (session: { user: { name?: string | null } }) => session.user.name ?? "Unknown";
 const optionalId = z.string().trim().max(64).transform((v) => v || null);
 const isoDate = z.string().regex(/^\d{4}-\d{2}-\d{2}$/, "Use a date.");
@@ -144,7 +144,7 @@ async function orgOf(userId: string) {
 }
 
 export async function saveDepartment(id: string | null, input: DepartmentInput): Promise<ActionResult> {
-  const session = await requirePermission("staff.manage");
+  const session = await requirePermission("setup.departments");
   const parsed = departmentSchema.safeParse(input);
   if (!parsed.success) return fail(parsed.error.issues[0].message);
   const orgId = await orgOf(session.user.id);
@@ -169,7 +169,7 @@ export async function saveDepartment(id: string | null, input: DepartmentInput):
 }
 
 export async function setDepartmentArchived(id: string, archived: boolean): Promise<ActionResult> {
-  const session = await requirePermission("staff.manage");
+  const session = await requirePermission("setup.departments");
   const orgId = await orgOf(session.user.id);
   const result = await prisma.$transaction(async (tx) => {
     const existing = await tx.department.findFirst({ where: { id, orgId: orgId ?? undefined }, select: { name: true, archivedAt: true, _count: { select: { members: true } } } });
@@ -195,7 +195,7 @@ const typeSchema = z.object({
 export type QualificationTypeInput = z.input<typeof typeSchema>;
 
 export async function saveQualificationType(id: string | null, input: QualificationTypeInput): Promise<ActionResult> {
-  const session = await requirePermission("staff.manage");
+  const session = await requirePermission("setup.qualifications");
   const parsed = typeSchema.safeParse(input);
   if (!parsed.success) return fail(parsed.error.issues[0].message);
   const orgId = await orgOf(session.user.id);
@@ -218,7 +218,7 @@ export async function saveQualificationType(id: string | null, input: Qualificat
 }
 
 export async function setQualificationTypeArchived(id: string, archived: boolean): Promise<ActionResult> {
-  const session = await requirePermission("staff.manage");
+  const session = await requirePermission("setup.qualifications");
   const orgId = await orgOf(session.user.id);
   const result = await prisma.$transaction(async (tx) => {
     const existing = await tx.qualificationType.findFirst({ where: { id, orgId: orgId ?? undefined }, select: { name: true, archivedAt: true } });

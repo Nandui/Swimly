@@ -89,7 +89,7 @@ it.
   Then On now, Coming up (three hours), Off today, Changes today with what is still to
   update in Timepoint, and the day note.
 - **Bookings** (`/rota/bookings`): repeating bookings and how many places are still to fill.
-- **Absences** (`/rota/absences`, Run) and **Activity list** (`/rota/activities`, Run).
+- **Absences** (`/rota/absences`, Run). The activity list and each site's areas are kept in Admin (docs/admin-setup.md); the plan and bookings pick from them.
 - **Turnfin Me** (`/shifts`): each day the person's department has shared, as their
   activities in order with the breaks placed for them, the shift and paid hours, a
   Changed tag when something of theirs moved after sharing, and breaks still to arrange.
