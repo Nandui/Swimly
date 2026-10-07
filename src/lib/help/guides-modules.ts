@@ -110,10 +110,10 @@ export const MODULE_GUIDES: HelpArticle[] = [
     slug: "plan-week", title: "Plan the week", category: "rota", scopes: ["desk"],
     summary: "Add the day's activities, put people on each place, fill the gaps and share the week.",
     keywords: ["rota", "plan", "activity", "week", "gap", "cover", "fill", "copy", "share", "lifeguard", "shift"],
-    before: ["You need the Rota: Plan level for your department at the site, or Run. Choose the site in the tools bar first."],
+    before: ["You need the Rota: Plan level for your department at the site, or Run. Choose the site in the tools bar first. The site's areas and the activity list are set up in Admin."],
     steps: [
       { title: "Open Plan", text: "In Rota choose Plan. It opens on your department's week; the strip of days counts the gaps on each. Choose a day." },
-      { title: "Add the activities", text: "Choose Add activity: what it is (Lifeguarding, Teaching), where, when, and how many people at once. Each place becomes a row. Copy fills empty days from an earlier day or week." },
+      { title: "Add the activities", text: "Each area of the site (Main pool, Learner pool) has its own row. Choose the plus on an area, or Add activity: what it is (Lifeguarding, Teaching), the area, when, and how many people at once. Each place becomes a lane. Scroll over the day to zoom in, and drag it to move. Copy fills empty days from an earlier day or week." },
       { title: "Fill the gaps", text: "An amber block is a gap. Choose it and Who can fill it lists everyone, best fit first. Choose the plus beside a name. Warnings such as an expired qualification never stop you." },
       { title: "Share the week", text: "Choose Share week when it is ready. Your staff see their days in Turnfin Me, and hear about any change to them after that." },
     ],

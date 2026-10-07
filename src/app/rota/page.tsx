@@ -58,7 +58,7 @@ export default async function PlanPage({ searchParams }: { searchParams: Promise
         </> : undefined}
       />
       {!department ? (
-        <EmptyState as="h2" icon="calendarDays" title="No departments at this site" hint="Departments are set up under Admin. Each activity on the rota belongs to one." />
+        <EmptyState as="h2" icon="calendarDays" title="No departments at this site" hint="An administrator adds them in Admin, Departments. Each activity on the rota belongs to one." />
       ) : (
         <>
           <section className="pc-panel" aria-labelledby="rota-week">
@@ -93,7 +93,7 @@ export default async function PlanPage({ searchParams }: { searchParams: Promise
             </div>
             {!data.canChange ? <p className="text-sm text-ui-muted-foreground">{live ? "This day has come: the duty manager changes it from Today." : "You can see this plan. Planning it needs the Plan level for this department."}</p> : null}
             {day.groups.length ? (
-              <DayPlan siteId={site.id} date={date} dateLabel={dateLabel} live={live} canChange={data.canChange} groups={day.groups} types={data.types} places={data.places} />
+              <DayPlan siteId={site.id} date={date} dateLabel={dateLabel} live={live} canChange={data.canChange} zones={day.zones} types={data.types} places={data.places} />
             ) : (
               <EmptyState compact icon="calendarDays" title={`Nothing planned for ${department.name} on ${dateLabel}`}
                 hint={data.types.length ? "Add the activities the day needs, or copy an earlier day." : "Add this department's activities to the activity list first."} />

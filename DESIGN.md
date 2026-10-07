@@ -408,17 +408,23 @@ line. Multi-line boxes (textareas, notices) use 16px, never a pill.
   keeps to hours; every block also says its times in words.
 - Rota's day timeline (`DayPlan`, `src/components/rota/day-plan.tsx`; owner decisions, 6 October
   2026, from approved mockups; docs/rota.md) is its own planning view, not `TimelineGrid`: the day
-  across the **full width** of one panel (nothing scrolls sideways), one **group per activity and
-  place** with its label tile once (icon, name, place, places, the qualification in short, its gap
-  count as a tag) beside its **stacked lanes, one per place**. Blocks are the shared `.pc-block` fills:
+  across the **full width** of one panel (nothing scrolls sideways), one **tile per area** of the
+  site (Admin, Areas; pin icon, name, how many activities, its gap count as a tag, a + to add an
+  activity there) beside the area's activities, each under a **slim heading** (activity icon and
+  name, places, the qualification in short, its gaps) over its **stacked lanes, one per place**. A
+  place not on the site's list shows last, tagged "Not an area yet". Blocks are the shared `.pc-block` fills:
   someone on it `data-block="next"`, a gap `cover` ("Nobody"), someone off `absent`. **Show** is a
-  `SegmentedChoice` (Whole day, Morning, Afternoon, Evening); hours read every two hours across the
-  whole day, every hour when zoomed. A block says as much as its width allows: name and times, then
+  `SegmentedChoice` (Whole day, Morning, Afternoon, Evening); the wheel over the hours or lanes also
+  zooms around the pointer (to one hour) and, zoomed in, dragging moves the day, with the view's
+  times as a caption. The wheel never traps the page: at a zoom limit it scrolls as usual, and
+  touch keeps vertical swipes (`touch-action: pan-y`). Hours read every two hours across the whole
+  day down to every quarter hour, the track lines on the same step. Swim classes take one lane per
+  teacher. A block says as much as its width allows: name and times, then
   the first name (with the class or start), then initials or an icon, and always its full words as
   its accessible name; back-to-back swim classes merge into one block ("6 classes") until zoomed in.
   Choosing a gap opens **Who can fill it** as a sheet (not a side panel), the gap outlined in blue
   (`aria-pressed`). A viewer sees the same blocks as plain content. One key after the timeline.
-  Below 1280px the day is an agenda: each group's people and gaps in time order, gaps as yellow
+  Below 1280px the day is an agenda by area: each activity's people and gaps in time order, gaps as yellow
   `data-first` rows. Layout only lives in `module-workspace.css` (`rota-week`, `rota-tl-*`,
   `rota-agenda`, `rota-fits`).
 - Page blocks sit 16px apart: the frame's content wrapper (`.tf-content` in ModuleShell,

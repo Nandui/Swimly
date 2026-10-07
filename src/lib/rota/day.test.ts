@@ -9,12 +9,13 @@ const types: DayType[] = [
   { id: "teach", name: "Teaching", icon: "teaching", departmentId: "pool", requiredTypeId: null, requiredName: null, fromClasses: true },
 ];
 const names = new Map([["aoife", "Aoife Byrne"], ["ciara", "Ciara Murphy"], ["lauren", "Lauren Kelly"], ["roisin", "Róisín Kelly"]]);
+const areas = ["Main pool", "Learner pool"];
 const need = (id: string, place: string, a: string, b: string, places: number) => ({ id, typeId: "guard", place, startMinutes: h(a), endMinutes: h(b), places, note: "", repeatTitle: null });
 const on = (id: string, needId: string, place: number, userId: string, a: string, b: string) => ({ id, needId, place, userId, startMinutes: h(a), endMinutes: h(b) });
-const cls = (ref: string, userId: string | null, a: string, b: string) => ({ ref, userId, startMinutes: h(a), endMinutes: h(b), title: "Stage 3", place: "Learner pool", planned: false });
+const cls = (ref: string, userId: string | null, a: string, b: string) => ({ ref, userId, startMinutes: h(a), endMinutes: h(b), title: "Stage 3", place: "Learner pool, lane 3", planned: false });
 
 const day = buildDay({
-  date: "2026-10-23", types, names,
+  date: "2026-10-23", types, names, areas,
   needs: [need("main", "Main pool", "07:00", "21:30", 2), need("learner", "Learner pool", "09:00", "15:00", 1)],
   assignments: [on("a1", "main", 1, "aoife", "07:00", "14:00"), on("a2", "main", 2, "ciara", "07:00", "12:00"), on("a3", "learner", 1, "ciara", "11:00", "15:00")],
   classes: [cls("c1", "lauren", "16:00", "16:30"), cls("c2", "roisin", "16:00", "16:30"), cls("c3", null, "16:30", "17:00"), cls("c4", null, "17:00", "17:30")],
@@ -22,8 +23,18 @@ const day = buildDay({
   off: new Set(["lauren"]),
 });
 
-test("groups by activity and place, planned activities before swim classes", () => {
-  assert.deepEqual(day.groups.map((g) => [g.name, g.place, g.lanes.length]), [["Lifeguarding", "Learner pool", 1], ["Lifeguarding", "Main pool", 2], ["Teaching", "Learner pool", 2]]);
+test("reads by area in the site's order, each with its activities; classes join the area their location names", () => {
+  assert.deepEqual(day.zones.map((z) => [z.name, z.groups.map((g) => [g.name, g.lanes.length])]), [
+    ["Main pool", [["Lifeguarding", 2]]],
+    ["Learner pool", [["Lifeguarding", 1], ["Teaching", 3]]],
+  ], "a lane per teacher, then the classes nobody teaches");
+  assert.equal(day.zones[1].gapCount, 1 + 2, "an area's gaps are its activities' gaps");
+});
+
+test("a place that is not one of the site's areas shows as its own, flagged, after them", () => {
+  const odd = buildDay({ date: "2026-10-23", types, names, areas, needs: [need("n", "main POOL", "07:00", "08:00", 1)], assignments: [],
+    classes: [{ ...cls("c9", "lauren", "16:00", "16:30"), place: "Teaching pool, lane 1" }] });
+  assert.deepEqual(odd.zones.map((z) => [z.name, z.unmatched]), [["Main pool", false], ["Teaching pool", true]], "matched ignoring case; the detail after a comma ignored");
 });
 
 test("each place is a lane of people and gaps", () => {
@@ -35,14 +46,16 @@ test("each place is a lane of people and gaps", () => {
   assert.equal(main.gapCount, 2);
 });
 
-test("back-to-back classes nobody teaches count as one gap, with a teacher who is off", () => {
+test("back-to-back classes nobody teaches count as one gap; a teacher who is off is another", () => {
   const teaching = day.groups.find((g) => g.fromClasses)!;
-  assert.equal(teaching.gapCount, 1, "Lauren is off at 16:00 and nobody teaches 16:30 to 17:30: one run");
-  assert.equal(day.gapCount, 1 + 2 + 1, "learner pool 09:00–11:00, two on the main pool, one run of classes");
-  const gaps = dayGaps(day);
-  const classGap = gaps.find((g) => g.classRefs.length)!;
-  assert.deepEqual([classGap.start, classGap.end, classGap.count, classGap.classRefs, classGap.off?.name], [h("16:00"), h("17:30"), 3, ["c1", "c3", "c4"], "Lauren Kelly"]);
-  assert.deepEqual(gaps.map((g) => g.start), [h("09:00"), h("12:00"), h("14:00"), h("16:00")], "soonest first");
+  assert.equal(teaching.gapCount, 2, "Lauren is off at 16:00; nobody teaches 16:30 to 17:30");
+  assert.equal(day.gapCount, 1 + 2 + 2, "learner pool 09:00–11:00, two on the main pool, two in teaching");
+  const gaps = dayGaps(day).filter((g) => g.classRefs.length);
+  assert.deepEqual(gaps.map((g) => [g.start, g.end, g.count, g.classRefs, g.off?.name ?? null]), [
+    [h("16:00"), h("16:30"), 1, ["c1"], "Lauren Kelly"],
+    [h("16:30"), h("17:30"), 2, ["c3", "c4"], null],
+  ]);
+  assert.deepEqual(dayGaps(day).map((g) => g.start), [h("09:00"), h("12:00"), h("14:00"), h("16:00"), h("16:30")], "soonest first");
 });
 
 test("someone off on a planned activity is a gap to cover on their place", () => {

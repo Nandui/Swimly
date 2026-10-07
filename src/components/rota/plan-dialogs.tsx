@@ -21,10 +21,12 @@ const text = (formData: FormData, key: string) => String(formData.get(key) ?? ""
 
 /** Add an activity to a day ("Lifeguarding, Main pool, 07:00 to 21:30, 3 places"), or change one.
  *  Each place becomes a lane to put people on. */
-export function NeedDialog({ siteId, date, live, types, places, need, trigger }: {
-  siteId: string; date: string; live: boolean; types: Option[]; places: string[]; need?: DayNeed; trigger?: ReactNode;
+export function NeedDialog({ siteId, date, live, types, places, need, place, trigger }: {
+  siteId: string; date: string; live: boolean; types: Option[]; places: string[]; need?: DayNeed;
+  /** Where a new activity goes, when added from an area's tile. */
+  place?: string; trigger?: ReactNode;
 }) {
-  const fid = need ? `need-${need.id}` : `need-new-${date}`;
+  const fid = need ? `need-${need.id}` : `need-new-${date}${place ? `-${place.toLowerCase().replace(/\W+/g, "-")}` : ""}`;
   return (
     <FormDialog
       portalClassName={THEME}
@@ -46,7 +48,7 @@ export function NeedDialog({ siteId, date, live, types, places, need, trigger }:
           </NativeSelect>
         </Field>
         <Field label="Where" htmlFor={`${fid}-place`} optional hint="The site's areas, kept in Admin.">
-          <AreaSelect id={`${fid}-place`} name="place" areas={places} defaultValue={need?.place} />
+          <AreaSelect id={`${fid}-place`} name="place" areas={places} defaultValue={need?.place ?? place} />
         </Field>
       </div>
       <div className="grid grid-cols-3 gap-4">

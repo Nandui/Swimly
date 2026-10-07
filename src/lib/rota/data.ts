@@ -87,6 +87,8 @@ async function loadDays(siteId: string, orgId: string | undefined, from: string,
   ]) : [[], [], [], [], []];
   const names = new Map(users.map((u) => [u.id, u.name]));
   const heldList: Held[] = held.map((q) => ({ userId: q.userId, typeId: q.typeId, issuedOn: isoOf(q.issuedOn), expiresOn: q.expiresOn ? isoOf(q.expiresOn) : null, revoked: !!q.revokedAt }));
+  // Where an activity happens: the site's areas, kept in Admin; the day is grouped by them.
+  const places = await areaNames(siteId);
   const dayInput = (date: string) => {
     const off = new Set(absences.filter((a) => a.userId && isoOf(a.firstDay) <= date && (!a.lastDay || isoOf(a.lastDay) >= date)).map((a) => a.userId!));
     const away = new Map<string, WorkItem[]>();
@@ -96,15 +98,14 @@ async function loadDays(siteId: string, orgId: string | undefined, from: string,
     for (const u of users) { const band = youngBand(u.dateOfBirth ? isoOf(u.dateOfBirth) : null, date); if (band) young.set(u.id, band); }
     const dayNeeds = needs.filter((n) => isoOf(n.date) === date);
     return {
-      date, types, names, held: heldList, off, elsewhere: away, young,
+      date, types, names, held: heldList, off, elsewhere: away, young, areas: places,
       needs: dayNeeds.map((n) => ({ id: n.id, typeId: n.typeId, place: n.place, startMinutes: n.startMinutes, endMinutes: n.endMinutes, places: n.places, note: n.note, repeatTitle: n.repeat?.title ?? null })),
       assignments: dayNeeds.flatMap((n) => n.assignments),
       classes: classes.filter((c) => c.date === date && c.ref).map((c): DayClass => ({ ref: c.ref!, userId: c.userId, startMinutes: c.startMinutes, endMinutes: c.endMinutes,
         title: c.title ?? c.label, place: c.place ?? "", planned: !!c.planned })),
     };
   };
-  // Where an activity happens: the site's areas, kept in Admin.
-  return { types, dayInput, places: await areaNames(siteId) };
+  return { types, dayInput, places };
 }
 
 /** The departments this person belongs to: where Plan lets them change the days ahead. */
@@ -133,6 +134,11 @@ export async function planWeek(input: { site?: string; week?: string; dept?: str
   });
   const full = buildDay(dayInput(date));
   const groups = full.groups.filter((g) => g.departmentId === department?.id);
+  // The areas with something of this department's in them, each showing only that.
+  const zones = full.zones.map((z) => {
+    const mine = z.groups.filter((g) => g.departmentId === department?.id);
+    return { ...z, groups: mine, gapCount: mine.reduce((n, g) => n + g.gapCount, 0) };
+  }).filter((z) => z.groups.length);
   const people = full.people.filter((p) => groups.some((g) => g.lanes.some((l) => l.some((b) => b.userId === p.userId))));
   const share = department ? await prisma.rotaWeekShare.findUnique({
     where: { siteId_departmentId_monday: { siteId: site.id, departmentId: department.id, monday: parseDateOnly(monday) } }, select: { sharedAt: true, sharedByName: true },
@@ -140,7 +146,7 @@ export async function planWeek(input: { site?: string; week?: string; dept?: str
   const at = { plan: site.plan, run: site.run };
   return {
     who, sites, site, monday, now, date, departments, department, week, share,
-    day: { ...full, groups, people, gapCount: groups.reduce((n, g) => n + g.gapCount, 0) },
+    day: { ...full, zones, groups, people, gapCount: groups.reduce((n, g) => n + g.gapCount, 0) },
     canChange: !!department && canChange(at, date, now, department.id, mine),
     canShare: !!department && (site.run || (site.plan && mine.has(department.id))),
     types: types.filter((t) => !t.archived && t.departmentId === department?.id && !t.fromClasses),

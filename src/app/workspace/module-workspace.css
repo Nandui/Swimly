@@ -68,9 +68,7 @@
 .turnfin-module .rota-tl-zoom { display: flex; flex-wrap: wrap; align-items: center; gap: 8px 12px; }
 .turnfin-module .rota-tl-row { display: grid; grid-template-columns: 184px minmax(0, 1fr); gap: 12px; }
 .turnfin-module .rota-tl-hours { position: relative; height: 16px; }
-.turnfin-module .rota-tl-hours > span { position: absolute; top: 0; translate: -50% 0; color: var(--pc-ink-muted); font-size: var(--pc-text-caption); line-height: var(--pc-leading-caption); font-variant-numeric: tabular-nums; white-space: nowrap; }
-.turnfin-module .rota-tl-hours > span:last-child { translate: -100% 0; }
-.turnfin-module .rota-tl-hours > span:first-child { translate: 0 0; }
+.turnfin-module .rota-tl-hours > span { position: absolute; top: 0; color: var(--pc-ink-muted); font-size: var(--pc-text-caption); line-height: var(--pc-leading-caption); font-variant-numeric: tabular-nums; white-space: nowrap; }
 .turnfin-module .rota-tl-label { display: flex; flex-direction: column; justify-content: center; gap: 2px; min-width: 0; padding: 8px 12px; border: 1px solid var(--pc-line); border-radius: var(--pc-radius-card); background: var(--pc-surface); color: var(--pc-ink); text-align: start; }
 /* A label that opens its activity is the shared Button, kept as the card it sits beside. */
 .turnfin-module .rota-tl-label.ui-motion-press { flex-direction: column; align-items: stretch; justify-content: center; padding: 8px 12px; border-radius: var(--pc-radius-card); text-align: start; }
@@ -80,8 +78,24 @@
 .turnfin-module .rota-tl-label > small { color: var(--pc-ink-muted); font-size: var(--pc-text-caption); line-height: var(--pc-leading-caption); }
 .turnfin-module .rota-tl-label > [data-slot='badge'] { align-self: flex-start; margin-top: 4px; }
 .turnfin-module .rota-tl-lanes { display: flex; flex-direction: column; gap: 4px; min-width: 0; }
+/* A zone: its tile on the left, then each activity in it, a slim heading over its lanes. */
+.turnfin-module .rota-tl-zone { justify-content: flex-start; }
+.turnfin-module .rota-tl-zone-foot { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 8px; margin-top: auto; padding-top: 8px; }
+.turnfin-module .rota-tl-zone-body { display: flex; flex-direction: column; gap: 10px; min-width: 0; }
+.turnfin-module .rota-tl-act { display: flex; flex-direction: column; gap: 4px; min-width: 0; }
+.turnfin-module .rota-tl-act-head { display: flex; align-items: center; gap: 6px; min-width: 0; min-height: 24px; padding: 0 4px; color: var(--pc-ink); font-size: var(--pc-text-caption); line-height: var(--pc-leading-caption); }
+.turnfin-module .rota-tl-act-head.ui-motion-press { justify-content: flex-start; align-self: flex-start; min-height: 32px; height: auto; padding: 4px 10px 4px 6px; margin: -4px 0 -4px -2px; color: var(--pc-ink); font-weight: 400; }
+.turnfin-module .rota-tl-act-head > svg { flex: none; width: 14px; height: 14px; }
+.turnfin-module .rota-tl-act-name { font-weight: 600; }
+.turnfin-module .rota-tl-act-meta { color: var(--pc-ink-muted); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .turnfin-module .rota-tl-track { position: relative; min-height: 52px; border: 1px solid var(--pc-line); border-radius: var(--pc-radius-card); overflow: hidden;
-  background-image: repeating-linear-gradient(90deg, var(--pc-line) 0 1px, transparent 1px calc(100% / var(--rota-hours, 15))); }
+  background-image: linear-gradient(90deg, var(--pc-line) 0 1px, transparent 1px); background-size: var(--rota-step, 60px) 100%; background-position: var(--rota-offset, 0) 0; background-repeat: repeat-x;
+  /* A vertical swipe still scrolls the page on touch; a sideways drag moves the view. */
+  touch-action: pan-y; }
+/* Zoomed in: the hours and lanes can be dragged to move the day. */
+.turnfin-module .rota-tl[data-zoomed] :is(.rota-tl-hours, .rota-tl-track) { cursor: grab; }
+.turnfin-module .rota-tl[data-dragging] :is(.rota-tl-hours, .rota-tl-track, .rota-tl-track .pc-block) { cursor: grabbing; user-select: none; }
+.turnfin-module .rota-tl-hours { touch-action: pan-y; }
 .turnfin-module .rota-tl-track > .pc-block { position: absolute; top: 4px; bottom: 4px; min-height: 0; padding: 0 8px; border: 0; border-radius: 12px; font: inherit; text-align: start; cursor: pointer; }
 .turnfin-module .rota-tl-track > .pc-block[data-density='icon'] { padding: 0; justify-content: center; }
 .turnfin-module .rota-tl-track > .pc-block[aria-pressed='true'] { box-shadow: 0 0 0 2px var(--pc-surface), 0 0 0 4px var(--pc-primary); }
