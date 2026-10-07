@@ -5,7 +5,8 @@ import { screenPage } from "@/lib/page-guards";
 
 export const metadata: Metadata = { title: "Multiple enrolments" };
 
-export default async function MultiplePlacesAnalyticsPage() {
+export default async function MultiplePlacesAnalyticsPage(props: PageProps<"/analytics/multiple-places">) {
   await screenPage("analytics");
-  return <MultiplePlacesReport data={await getMultiplePlacesAnalytics()} />;
+  const { scope } = await props.searchParams;
+  return <MultiplePlacesReport data={await getMultiplePlacesAnalytics(scope === "all" ? "all" : "site")} />;
 }

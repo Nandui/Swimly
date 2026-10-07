@@ -16,19 +16,21 @@ export function currentEnrolmentsQuery(clubIds: string[], date: string) {
   `;
 }
 
-/** The Overview's definition of a current place (`currentEnrolmentsQuery`),
- *  with the swimmer's name and member number for the list. No contact or
- *  medical fields: the report is exported. */
-export function multiplePlacesQuery(clubId: string, date: string) {
+/** Current and waitlisted places at the given sites, on the Overview's date
+ *  rules (`currentEnrolmentsQuery`), with the swimmer's name and member number
+ *  for the list. No contact or medical fields: the report is exported. */
+export function multiplePlacesQuery(clubIds: string[], date: string) {
   return Prisma.sql`
     SELECT s.id AS "studentId", s."memberNumber", s."firstName", s."lastName",
-      c.name AS "courseName", cl.name AS "courseLevelName", c."dayOfWeek", c."startMinutes"
+      c.name AS "courseName", cl.name AS "courseLevelName", c."dayOfWeek", c."startMinutes",
+      k.name AS "siteName", k."sortOrder" AS "siteOrder", e.status = 'WAITLISTED' AS waitlisted
     FROM "Enrolment" e
     JOIN "Course" c ON c.id = e."courseId"
+    JOIN "Club" k ON k.id = c."clubId"
     JOIN "Level" cl ON cl.id = c."levelId"
     JOIN "Student" s ON s.id = e."studentId"
-    WHERE c."clubId" = ${clubId} AND c."archivedAt" IS NULL
-      AND e.status = 'ACTIVE' AND s.status = 'ACTIVE'
+    WHERE c."clubId" IN (${Prisma.join(clubIds)}) AND c."archivedAt" IS NULL
+      AND e.status IN ('ACTIVE', 'WAITLISTED') AND s.status = 'ACTIVE'
       AND e."startedOn" <= ${date}::date
       AND (e."endedOn" IS NULL OR e."endedOn" > ${date}::date)
       AND (e."scheduledEndOn" IS NULL OR e."scheduledEndOn" > ${date}::date)

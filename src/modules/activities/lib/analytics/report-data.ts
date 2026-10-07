@@ -26,11 +26,20 @@ export async function getInstructorAnalytics(now = new Date()) {
   return { siteName: club.name, period, updatedAt, canOpenClasses: canSee(session, "courses"), ...instructorAttendanceTotals(rows, now) };
 }
 
-/** Swimmers with more than one current enrolment at the selected site. */
-export async function getMultiplePlacesAnalytics(now = new Date()) {
-  const { club, session, period, updatedAt } = await reportContext(now);
-  const rows = await prisma.$queryRaw<PlaceRow[]>(multiplePlacesQuery(club.id, period.date));
-  return { siteName: club.name, date: period.date, updatedAt, canOpenSwimmers: canSee(session, "students"), swimmers: multiplePlaces(rows) };
+/** Swimmers with more than one enrolment (waitlist places included) at the
+ *  selected site, or across every site the person works at (`clubs`, the site
+ *  picker's list: their own sites, or all when they have none). */
+export async function getMultiplePlacesAnalytics(scope: "site" | "all", now = new Date()) {
+  const session = await requireSession();
+  if (!canSee(session, "analytics")) throw new AuthorizationError("Analytics access is required.");
+  const { club, clubs } = await getCurrentClub();
+  const allSites = scope === "all" && clubs.length > 1;
+  const period = analyticsPeriod(now);
+  const rows = await prisma.$queryRaw<PlaceRow[]>(multiplePlacesQuery(allSites ? clubs.map(c => c.id) : [club.id], period.date));
+  return {
+    allSites, multipleSites: clubs.length > 1, siteName: allSites ? "All sites" : club.name,
+    date: period.date, updatedAt: now.toISOString(), canOpenSwimmers: canSee(session, "students"), swimmers: multiplePlaces(rows),
+  };
 }
 
 export type ReceptionAnalyticsData = Awaited<ReturnType<typeof getReceptionAnalytics>>;
