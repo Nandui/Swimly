@@ -54,6 +54,22 @@ async function seedAquatics(db: PrismaClient) {
     ids[s.first] = student.id;
   }
 
+  // Analytics › Multiple places: Casey holds a second Hillview class at another level of the
+  // same programme; Morgan a second class in another programme. Not on today's deck.
+  const otherDay = DAYS[(new Date().getDay() + 3) % 7];
+  const strokes = await db.programme.create({ data: { clubId: "club_churchfield", name: "Stroke club", sortOrder: 1 } });
+  const strokeLevel = await db.level.create({ data: { programmeId: strokes.id, name: "Stroke development" } });
+  const extra = {
+    otters: await db.course.create({ data: { clubId: "club_churchfield", levelId: otters.id, dayOfWeek: otherDay, startMinutes: 9 * 60, durationMinutes: 30, location: "Learner pool" } }),
+    strokes: await db.course.create({ data: { clubId: "club_churchfield", levelId: strokeLevel.id, dayOfWeek: otherDay, startMinutes: 10 * 60, durationMinutes: 45, location: "Main pool" } }),
+  };
+  await db.student.update({ where: { id: ids.Casey }, data: { memberNumber: "SBX-1001" } });
+  await db.student.update({ where: { id: ids.Morgan }, data: { memberNumber: "SBX-1002" } });
+  await db.enrolment.createMany({ data: [
+    { studentId: ids.Casey, courseId: extra.otters.id, levelId: otters.id, programmeId: programme.id, startedOn: new Date("2026-01-05T00:00:00Z") },
+    { studentId: ids.Morgan, courseId: extra.strokes.id, levelId: strokeLevel.id, programmeId: strokes.id, startedOn: new Date("2026-01-05T00:00:00Z") },
+  ] });
+
   const parent = await db.parentAccount.create({ data: { email: "sample.parent@example.test", name: "Sample Parent" } });
   await db.parentChildAccess.create({ data: { studentId: ids.Robin, parentEmail: parent.email, source: "STAFF_APPROVAL" } });
   const proposed = { contactPhone: "000 222 3333", medicalNotes: "Synthetic: mild asthma, inhaler in kit bag. Now also uses a spacer." };
@@ -176,7 +192,7 @@ async function seedRota(db: PrismaClient) {
   const day = (offset: number) => { const d = new Date(); d.setUTCHours(0, 0, 0, 0); d.setUTCDate(d.getUTCDate() + offset); return d; };
   const by = { createdById: "sbx_sam", createdByName: "Sam Example" };
   // The organisation's activity list: Teaching takes the swim classes.
-  await db.rotaActivityType.createMany({ data: [
+  await db.activityType.createMany({ data: [
     { id: "rat_guard", orgId: ORG, departmentId: "dept_aquatics", name: "Lifeguarding", icon: "lifeguard", requiredTypeId: "qt_nplq", sortOrder: 0 },
     { id: "rat_teach", orgId: ORG, departmentId: "dept_aquatics", name: "Teaching", icon: "teaching", fromClasses: true, sortOrder: 1 },
     { id: "rat_desk", orgId: ORG, departmentId: "dept_reception", name: "Reception", icon: "reception", sortOrder: 2 },

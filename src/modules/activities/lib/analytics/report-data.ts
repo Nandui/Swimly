@@ -1,7 +1,8 @@
 import { AuthorizationError, canSee, requireSession } from "@/lib/authz";
 import { getCurrentClub } from "@/lib/clubs/current";
 import { prisma } from "@/lib/prisma";
-import { staffActivityQuery } from "./queries";
+import { multiplePlacesQuery, staffActivityQuery } from "./queries";
+import { multiplePlaces, type PlaceRow } from "./multiple-places";
 import { instructorAttendanceQuery } from "./attendance-query";
 import { analyticsPeriod } from "./rules";
 import { instructorAttendanceTotals, staffActivityTotals, type AttendanceOccurrence, type StaffActivity } from "./reports";
@@ -25,5 +26,18 @@ export async function getInstructorAnalytics(now = new Date()) {
   return { siteName: club.name, period, updatedAt, canOpenClasses: canSee(session, "courses"), ...instructorAttendanceTotals(rows, now) };
 }
 
+/** Swimmers with more than one current place at the selected site. */
+export async function getMultiplePlacesAnalytics(now = new Date()) {
+  const { club, session, period, updatedAt } = await reportContext(now);
+  const definition = { id: true, sharedWithId: true, name: true } as const;
+  const [rows, levels, programmes] = await prisma.$transaction(async tx => Promise.all([
+    tx.$queryRaw<PlaceRow[]>(multiplePlacesQuery(club.id, period.date)),
+    tx.level.findMany({ select: definition }),
+    tx.programme.findMany({ select: definition }),
+  ]), { isolationLevel: "RepeatableRead" });
+  return { siteName: club.name, date: period.date, updatedAt, canOpenSwimmers: canSee(session, "students"), ...multiplePlaces(rows, levels, programmes) };
+}
+
 export type ReceptionAnalyticsData = Awaited<ReturnType<typeof getReceptionAnalytics>>;
 export type InstructorAnalyticsData = Awaited<ReturnType<typeof getInstructorAnalytics>>;
+export type MultiplePlacesAnalyticsData = Awaited<ReturnType<typeof getMultiplePlacesAnalytics>>;

@@ -16,6 +16,27 @@ export function currentEnrolmentsQuery(clubIds: string[], date: string) {
   `;
 }
 
+/** The Overview's definition of a current place (`currentEnrolmentsQuery`),
+ *  with the swimmer's name and member number for the list. No contact or
+ *  medical fields: the report is exported. Level and programme are the
+ *  enrolment's pinned placement, not the class's current badge. */
+export function multiplePlacesQuery(clubId: string, date: string) {
+  return Prisma.sql`
+    SELECT s.id AS "studentId", s."memberNumber", s."firstName", s."lastName",
+      c.id AS "courseId", c.name AS "courseName", cl.name AS "courseLevelName", c."dayOfWeek", c."startMinutes",
+      e."levelId", e."programmeId"
+    FROM "Enrolment" e
+    JOIN "Course" c ON c.id = e."courseId"
+    JOIN "Level" cl ON cl.id = c."levelId"
+    JOIN "Student" s ON s.id = e."studentId"
+    WHERE c."clubId" = ${clubId} AND c."archivedAt" IS NULL
+      AND e.status = 'ACTIVE' AND s.status = 'ACTIVE'
+      AND e."startedOn" <= ${date}::date
+      AND (e."endedOn" IS NULL OR e."endedOn" > ${date}::date)
+      AND (e."scheduledEndOn" IS NULL OR e."scheduledEndOn" > ${date}::date)
+  `;
+}
+
 /** Count each live weekly class once, including empty classes. Do not join
  *  enrolments here: that would multiply capacity by the size of the roster.
  *  Any uncapped class makes that level's total capacity uncapped. */
