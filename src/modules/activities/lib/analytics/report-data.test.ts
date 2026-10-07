@@ -12,10 +12,6 @@ function fixture() {
     "@/lib/clubs/current": { getCurrentClub: async () => { state.siteReads++; return { club: { id: state.club, name: "Example Pool" } }; } },
     "@/lib/prisma": { prisma: {
       $queryRaw: async (query: Prisma.Sql) => { state.queries.push(query); return []; },
-      $transaction: async (run: (tx: unknown) => Promise<unknown>) => run({
-        $queryRaw: async (query: Prisma.Sql) => { state.queries.push(query); return []; },
-        level: { findMany: async () => [] }, programme: { findMany: async () => [] },
-      }),
     } },
   });
   return { ...api, state };
@@ -43,10 +39,10 @@ test("reports follow the current site and class links require their own screen g
   for (const sql of f.state.queries) { assert(sql.values.includes("site-b")); assert(!sql.values.includes("site-a")); }
 });
 
-test("multiple places follows the current site and swimmer links need the Swimmers screen", async () => {
+test("multiple enrolments follows the current site and swimmer links need the Swimmers screen", async () => {
   const f = fixture(), now = new Date("2026-09-17T12:00:00Z");
   const data = await f.getMultiplePlacesAnalytics(now);
-  assert.deepEqual(data.totals, { classes: 0, levels: 0, programmes: 0 });
+  assert.deepEqual(data.swimmers, []);
   assert.equal(data.canOpenSwimmers, false);
   assert.equal(f.state.queries.length, 1);
   assert(f.state.queries[0].values.includes("site-a")); assert(f.state.queries[0].values.includes("2026-09-17"));

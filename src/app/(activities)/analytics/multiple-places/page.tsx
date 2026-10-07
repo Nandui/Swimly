@@ -3,7 +3,7 @@ import { MultiplePlacesReport } from "@/modules/activities/components/analytics/
 import { getMultiplePlacesAnalytics } from "@/modules/activities/lib/analytics/report-data";
 import { screenPage } from "@/lib/page-guards";
 
-export const metadata: Metadata = { title: "Multiple places" };
+export const metadata: Metadata = { title: "Multiple enrolments" };
 
 export default async function MultiplePlacesAnalyticsPage() {
   await screenPage("analytics");

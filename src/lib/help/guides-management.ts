@@ -37,8 +37,8 @@ export const MANAGEMENT_GUIDES: HelpArticle[] = [
   },
   {
     slug: "analytics", title: "Understand the analytics figures", category: "operations", scopes: ["desk"],
-    summary: "Read weekly enrolment activity by person, instructor attendance, swimmers with multiple places, capacity and cancellations for a site.",
-    keywords: ["reports", "dashboard", "statistics", "numbers", "spaces", "occupancy", "receptionists", "instructors", "missing attendance", "weekly", "multiple classes", "more than one programme", "export", "csv", "member id"],
+    summary: "Read weekly enrolment activity by person, instructor attendance, swimmers with multiple enrolments, capacity and cancellations for a site.",
+    keywords: ["reports", "dashboard", "statistics", "numbers", "spaces", "occupancy", "receptionists", "instructors", "missing attendance", "weekly", "multiple enrolments", "more than one class", "export", "csv", "member id"],
     before: ["Your account needs access to Analytics."],
     steps: [
       { title: "Choose the working site", text: "Open Analytics and check the site in the tools bar at the top right. The figures describe that site." },
@@ -46,7 +46,7 @@ export const MANAGEMENT_GUIDES: HelpArticle[] = [
       { title: "Read this week’s activity", text: "The enrolment and unenrolment figures cover the current Monday–Sunday week in Ireland, including today so far. Moves, completions and waitlist withdrawals are excluded. Future days show a dash." },
       { title: "Compare reception activity", text: "Choose Reception activity to see enrolments and unenrolments by the staff member who recorded them. Search by name and open Daily breakdown for their Monday–Sunday totals. Automatic scheduled withdrawals appear separately when applied." },
       { title: "Check instructor attendance", text: "Choose Instructor attendance. Saved of due compares fully marked attendance with finished classes that have swimmers. Select an instructor, then Needs attendance to find missing or partial registers. Upcoming, cancelled and empty classes are excluded from missed attendance. Saved by shows when a colleague helped." },
-      { title: "Find swimmers with more than one place", text: "Choose Multiple places. Pick More than one class, level or programme, search by name or member ID, then choose Export CSV to save that list with each swimmer’s member ID. It covers the working site only; switch site for another." },
+      { title: "Find swimmers with more than one enrolment", text: "Choose Multiple enrolments to list swimmers enrolled more than once at the working site. Search by name or member ID, then choose Export CSV to save the list with each swimmer’s member ID. Switch site for another site." },
       { title: "Check cancellations", text: "The cancellation total covers sessions dated in this month. Open Cancelled classes for the outstanding billing queue, which can include older dates. Use Refresh to reload the figures." },
     ],
     result: "You can distinguish customer totals, occupied places and recent changes without treating them as the same measure.",

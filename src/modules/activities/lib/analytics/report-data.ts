@@ -26,16 +26,11 @@ export async function getInstructorAnalytics(now = new Date()) {
   return { siteName: club.name, period, updatedAt, canOpenClasses: canSee(session, "courses"), ...instructorAttendanceTotals(rows, now) };
 }
 
-/** Swimmers with more than one current place at the selected site. */
+/** Swimmers with more than one current enrolment at the selected site. */
 export async function getMultiplePlacesAnalytics(now = new Date()) {
   const { club, session, period, updatedAt } = await reportContext(now);
-  const definition = { id: true, sharedWithId: true, name: true } as const;
-  const [rows, levels, programmes] = await prisma.$transaction(async tx => Promise.all([
-    tx.$queryRaw<PlaceRow[]>(multiplePlacesQuery(club.id, period.date)),
-    tx.level.findMany({ select: definition }),
-    tx.programme.findMany({ select: definition }),
-  ]), { isolationLevel: "RepeatableRead" });
-  return { siteName: club.name, date: period.date, updatedAt, canOpenSwimmers: canSee(session, "students"), ...multiplePlaces(rows, levels, programmes) };
+  const rows = await prisma.$queryRaw<PlaceRow[]>(multiplePlacesQuery(club.id, period.date));
+  return { siteName: club.name, date: period.date, updatedAt, canOpenSwimmers: canSee(session, "students"), swimmers: multiplePlaces(rows) };
 }
 
 export type ReceptionAnalyticsData = Awaited<ReturnType<typeof getReceptionAnalytics>>;

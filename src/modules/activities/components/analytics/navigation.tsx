@@ -4,7 +4,7 @@ const pages = [
   { key: "overview", href: "/analytics", label: "Overview" },
   { key: "reception", href: "/analytics/reception", label: "Reception activity" },
   { key: "instructors", href: "/analytics/instructors", label: "Instructor attendance" },
-  { key: "multiple", href: "/analytics/multiple-places", label: "Multiple places" },
+  { key: "multiple", href: "/analytics/multiple-places", label: "Multiple enrolments" },
 ] as const;
 
 export function AnalyticsNav({ active }: { active: typeof pages[number]["key"] }) {

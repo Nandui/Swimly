@@ -18,13 +18,11 @@ export function currentEnrolmentsQuery(clubIds: string[], date: string) {
 
 /** The Overview's definition of a current place (`currentEnrolmentsQuery`),
  *  with the swimmer's name and member number for the list. No contact or
- *  medical fields: the report is exported. Level and programme are the
- *  enrolment's pinned placement, not the class's current badge. */
+ *  medical fields: the report is exported. */
 export function multiplePlacesQuery(clubId: string, date: string) {
   return Prisma.sql`
     SELECT s.id AS "studentId", s."memberNumber", s."firstName", s."lastName",
-      c.id AS "courseId", c.name AS "courseName", cl.name AS "courseLevelName", c."dayOfWeek", c."startMinutes",
-      e."levelId", e."programmeId"
+      c.name AS "courseName", cl.name AS "courseLevelName", c."dayOfWeek", c."startMinutes"
     FROM "Enrolment" e
     JOIN "Course" c ON c.id = e."courseId"
     JOIN "Level" cl ON cl.id = c."levelId"
