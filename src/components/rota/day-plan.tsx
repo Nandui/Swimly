@@ -21,7 +21,7 @@ import { firstTick, panView, sameView, tickStep, ticks as ticksOf, zoomView, typ
  *  block until there is room to show each. Scrolling over the hours or lanes zooms around the
  *  pointer and dragging empty space moves the view (owner request, 6 October 2026); at the zoom's
  *  limits the wheel scrolls the page as usual, and on touch a vertical swipe still scrolls it.
- *  Below 1280px the same day is an agenda. */
+ *  Below 1024px the same day is an agenda. */
 
 type Option = { id: string; name: string };
 type Props = {

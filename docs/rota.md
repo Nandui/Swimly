@@ -86,7 +86,7 @@ it.
   a sheet; choosing a person changes their time or takes them off; a single activity's
   label opens it to change or remove. **Who's working** shows each person's worked-out
   shift, paid hours, breaks and warnings. **Copy** fills empty days from an earlier day or
-  week (people optional); **Share week** shares it. Below 1280px the day is an agenda.
+  week (people optional); **Share week** shares it. Below 1024px the day is an agenda.
 - **Today** (`/rota/today`, duty managers): the whole site, every department. **Gaps to
   fill** first, soonest first, each with its best three fits and a plus that puts them on
   (logged as covering an absence, or filling a gap in the plan) and "Everyone who could".

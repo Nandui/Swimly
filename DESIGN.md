@@ -424,7 +424,7 @@ line. Multi-line boxes (textareas, notices) use 16px, never a pill.
   its accessible name; back-to-back swim classes merge into one block ("6 classes") until zoomed in.
   Choosing a gap opens **Who can fill it** as a sheet (not a side panel), the gap outlined in blue
   (`aria-pressed`). A viewer sees the same blocks as plain content. One key after the timeline.
-  Below 1280px the day is an agenda by area: each activity's people and gaps in time order, gaps as yellow
+  Below 1024px the day is an agenda by area: each activity's people and gaps in time order, gaps as yellow
   `data-first` rows. Layout only lives in `module-workspace.css` (`rota-week`, `rota-tl-*`,
   `rota-agenda`, `rota-fits`).
 - Page blocks sit 16px apart: the frame's content wrapper (`.tf-content` in ModuleShell,

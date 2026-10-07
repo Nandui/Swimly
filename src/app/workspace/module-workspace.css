@@ -108,7 +108,7 @@
 /* Below 1280px the same day is an agenda: each activity's people and gaps in time order. */
 .turnfin-module .rota-agenda { display: none; flex-direction: column; gap: 16px; }
 .turnfin-module .rota-agenda-head { display: flex; align-items: center; gap: 8px; }
-@media (max-width: 1279px) {
+@media (max-width: 1023px) {
   .turnfin-module .rota-tl { display: none; }
   .turnfin-module .rota-agenda { display: flex; }
   .turnfin-module .rota-week { grid-template-columns: repeat(auto-fill, minmax(104px, 1fr)); }
