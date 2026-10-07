@@ -192,7 +192,7 @@ async function seedRota(db: PrismaClient) {
   const day = (offset: number) => { const d = new Date(); d.setUTCHours(0, 0, 0, 0); d.setUTCDate(d.getUTCDate() + offset); return d; };
   const by = { createdById: "sbx_sam", createdByName: "Sam Example" };
   // The organisation's activity list: Teaching takes the swim classes.
-  await db.activityType.createMany({ data: [
+  await db.rotaActivityType.createMany({ data: [
     { id: "rat_guard", orgId: ORG, departmentId: "dept_aquatics", name: "Lifeguarding", icon: "lifeguard", requiredTypeId: "qt_nplq", sortOrder: 0 },
     { id: "rat_teach", orgId: ORG, departmentId: "dept_aquatics", name: "Teaching", icon: "teaching", fromClasses: true, sortOrder: 1 },
     { id: "rat_desk", orgId: ORG, departmentId: "dept_reception", name: "Reception", icon: "reception", sortOrder: 2 },
