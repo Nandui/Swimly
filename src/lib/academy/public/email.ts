@@ -1,30 +1,19 @@
 import { z } from "zod";
 import { sendGoogleEmail, type GoogleEmailConfig } from "@/lib/email/google";
+import { emailSender } from "@/lib/email/sender";
 import { unavailable } from "@/lib/academy/public/http";
 
 /** Email for the booking site: the code that checks an address, and "your place is held".
- *  Sent through the same Google sender as the parent app (ACADEMY_* settings, falling back to
- *  PARENT_*). ACADEMY_EMAIL_NAME names the sender ("LeisureWorld Academy"). Outside production,
+ *  Sent through Core's sender (src/lib/email/sender.ts); ACADEMY_EMAIL_NAME names it
+ *  ("LeisureWorld Academy"). Outside production,
  *  ACADEMY_EMAIL_DEV_LOG=true prints them to the server console instead, for the sandbox. */
 
-const credential = z.string().trim().min(1).max(8192).regex(/^\S+$/);
 const address = z.string().email().max(254);
 
 const devLog = (env = process.env) => env.NODE_ENV !== "production" && env.ACADEMY_EMAIL_DEV_LOG === "true";
 export const senderName = (env = process.env) => (env.ACADEMY_EMAIL_NAME ?? "").replace(/[<>\r\n"]/g, "").trim().slice(0, 60) || "Academy";
 
-function emailConfig(env = process.env): GoogleEmailConfig {
-  const credentials = z.object({ clientId: credential, clientSecret: credential, refreshToken: credential }).safeParse({
-    clientId: env.ACADEMY_GOOGLE_CLIENT_ID ?? env.PARENT_GOOGLE_CLIENT_ID,
-    clientSecret: env.ACADEMY_GOOGLE_CLIENT_SECRET ?? env.PARENT_GOOGLE_CLIENT_SECRET,
-    refreshToken: env.ACADEMY_GOOGLE_REFRESH_TOKEN ?? env.PARENT_GOOGLE_REFRESH_TOKEN,
-  });
-  const from = (env.ACADEMY_EMAIL_FROM ?? env.PARENT_EMAIL_FROM)?.trim() ?? "";
-  const named = /^([^<>\r\n]{1,60})\s*<([^<>\r\n]+)>$/.exec(from);
-  const sender = address.safeParse(named ? named[2] : from);
-  if (!credentials.success || !sender.success || /[\r\n]/.test(from)) unavailable();
-  return { ...credentials.data, sender: sender.data, fromHeader: `=?UTF-8?B?${Buffer.from(senderName(env)).toString("base64")}?= <${sender.data}>` };
-}
+const emailConfig = (env = process.env): GoogleEmailConfig => emailSender(senderName(env), env) ?? unavailable();
 
 const escape = (value: string) => value.replace(/[&<>"']/g, (c) => `&#${c.charCodeAt(0)};`);
 

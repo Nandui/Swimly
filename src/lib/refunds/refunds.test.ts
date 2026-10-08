@@ -29,7 +29,7 @@ before(async () => {
     '@/lib/prisma': { prisma: db.prisma },
     '@/auth': { auth: async () => ({ user: { ...current, permissions: currentGrants, screens: ['refunds'] } }) },
     '@/lib/audit': { logAudit: async (input: Parameters<typeof import('../audit').logAudit>[0], tx: typeof db.prisma) => { if (auditFails) throw new Error('Audit failed'); await tx.auditLog.create({ data: input }); } },
-    '@/lib/staff-api/email': { staffEmailConfig: () => ({ sender: 'sender@example.test', fromHeader: 'Example <sender@example.test>' }) },
+    '@/lib/email/sender': { emailSender: () => ({ sender: 'sender@example.test', fromHeader: 'Example <sender@example.test>' }) },
     '@/lib/email/google': { sendGoogleTextEmail: async (email: string, subject: string, text: string) => { if (mailFails) throw new Error('Synthetic rejection'); sent.push({ email, subject, text }); } },
     'next/cache': { revalidatePath() {} },
   };
