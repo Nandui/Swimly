@@ -85,3 +85,23 @@ test("a swim class's location is an area and a detail", () => {
   assert.equal(joinLocation("Learner pool", " lane 3 "), "Learner pool, lane 3");
   assert.equal(joinLocation("", "Main pool"), "Main pool");
 });
+
+test("positions: kept with their own permission, name the qualifications they need, and a rename reaches holders", async () => {
+  const db = fixture.prisma;
+  await db.qualificationType.create({ data: { id: "qt-nplq", orgId: ORG, name: "Pool lifeguard (invented)" } });
+  as("ana", ["setup.view"]);
+  await assert.rejects(actions.savePosition(null, { name: "Lifeguard", requires: [] }), Denied, "seeing the setup is not keeping it");
+  as("ana", ["setup.positions"]);
+  assert.equal((await actions.savePosition(null, { name: "Lifeguard", requires: ["qt-nplq"] })).ok, true);
+  assert.equal((await actions.savePosition(null, { name: "lifeguard", requires: [] })).ok, false, "names are unique");
+  assert.equal((await actions.savePosition(null, { name: "Receptionist", requires: ["qt-gone"] })).ok, false, "only offered qualifications");
+  const position = await db.position.findFirstOrThrow({ where: { name: "Lifeguard" }, include: { requires: true } });
+  assert.deepEqual(position.requires.map((r) => r.typeId), ["qt-nplq"]);
+  await db.user.create({ data: { id: "kai", name: "kai", email: "kai@example.invalid", orgId: ORG, positionId: position.id, jobTitle: "Lifeguard" } });
+  assert.equal((await actions.savePosition(position.id, { name: "Pool lifeguard", requires: [] })).ok, true);
+  assert.equal((await db.user.findUniqueOrThrow({ where: { id: "kai" } })).jobTitle, "Pool lifeguard", "holders show the new name");
+  assert.equal((await db.positionQualification.count({ where: { positionId: position.id } })), 0);
+  assert.equal((await actions.setPositionArchived(position.id, true)).ok, true);
+  const log = await db.auditLog.findFirstOrThrow({ where: { entity: "Position", action: "create" } });
+  assert.equal(log.module, "Admin");
+});

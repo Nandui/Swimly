@@ -132,8 +132,22 @@ model User {
   emergencyPhone        String?
   emergencyRelationship String?
 
+  // --- Position and employment (owner decision, 8 October 2026), kept on the Staff page. ---
+  /// Their job (Admin, Positions). `jobTitle` follows its name so every screen that shows a
+  /// job title keeps working; a job title from before positions stays until a position is set.
+  positionId      String?
+  /// full-time | part-time | casual | seasonal (`CONTRACT_META`).
+  contractType    String?
+  /// Contracted hours a week, in minutes (37.5 hours is 2250).
+  contractMinutes Int?
+  /// Their last day, when they have left or are due to.
+  endedOn         DateTime? @db.Date
+  /// Payroll's employee number.
+  payrollNumber   String?
+
   organisation   Organisation?    @relation(fields: [orgId], references: [id], onDelete: Restrict)
   manager        User?            @relation("LineManager", fields: [managerId], references: [id], onDelete: SetNull)
+  position       Position?        @relation(fields: [positionId], references: [id], onDelete: SetNull)
   reports        User[]           @relation("LineManager")
   departments    UserDepartment[]
   roleAssignments RoleAssignment[] @relation("AssignedRole")
@@ -307,6 +321,7 @@ model QualificationType {
   qualifications Qualification[]
   rotaBookingNeeds RotaBookingNeed[]
   trainingCourses TrainingCourse[]
+  positions      PositionQualification[]
   rotaShifts     RotaShift[]
   rotaActivities RotaActivity[]
   activityTypes     ActivityType[]
@@ -566,4 +581,34 @@ model SiteArea {
 
   @@unique([siteId, name])
   @@index([orgId])
+}
+
+/// A job in the organisation (owner decision, 8 October 2026): Lifeguard, Swim teacher,
+/// Receptionist, Duty manager. Kept in Admin; each person holds one. Separate from their
+/// access role, which decides what they can open. Lists the qualifications the job needs, so a
+/// profile can say what is missing or out of date.
+model Position {
+  id         String    @id @default(cuid())
+  orgId      String
+  name       String
+  sortOrder  Int       @default(0)
+  archivedAt DateTime?
+  createdAt  DateTime  @default(now())
+  updatedAt  DateTime  @updatedAt
+
+  holders  User[]
+  requires PositionQualification[]
+
+  @@unique([orgId, name])
+}
+
+/// A qualification a position needs.
+model PositionQualification {
+  positionId String
+  typeId     String
+
+  position Position          @relation(fields: [positionId], references: [id], onDelete: Cascade)
+  type     QualificationType @relation(fields: [typeId], references: [id], onDelete: Cascade)
+
+  @@id([positionId, typeId])
 }

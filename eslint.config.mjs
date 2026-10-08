@@ -54,7 +54,7 @@ const notWorkModules = {
 
 // Data boundaries (prisma/schema/*.prisma says which area owns each table).
 const client = "/^(prisma|tx|db)$/";
-const coreTables = "user|club|siteArea|activityType|staffRole|organisation|department|userDepartment|roleAssignment|sharedDevice|sharedDeviceUser|qualificationType|qualification|qualificationEvidence|auditLog|staffSignInChallenge|staffSession|staffDetailChangeRequest|staffNotificationPreference|staffReminderLog";
+const coreTables = "user|club|siteArea|activityType|position|positionQualification|staffRole|organisation|department|userDepartment|roleAssignment|sharedDevice|sharedDeviceUser|qualificationType|qualification|qualificationEvidence|auditLog|staffSignInChallenge|staffSession|staffDetailChangeRequest|staffNotificationPreference|staffReminderLog";
 const activitiesTables = "programme|level|competency|student|course|enrolment|studentFollowUp|attendanceRecord|classNote|classCancellation|cancelledClassSwimmer|classCover|competencyResult|levelCompletion|assessmentSession|assessmentType|assessmentBooking|parentAccount|parentAccessRequest|parentSession|parentSignInChallenge|parentRateLimit|parentChildAccess|parentAssessmentPublication|parentBookingRequest|parentProgressEvent|parentChangeRequest|classPlannedTeacher";
 const activitiesData = [
   {

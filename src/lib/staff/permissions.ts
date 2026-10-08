@@ -242,6 +242,12 @@ export const PERMISSIONS = [
     description: "Add, rename and archive the departments people belong to and activities are planned by.",
   },
   {
+    key: "setup.positions",
+    group: "Administration",
+    label: "Keep positions",
+    description: "Add, rename and archive the positions people hold (Lifeguard, Swim teacher) and the qualifications each needs.",
+  },
+  {
     key: "setup.qualifications",
     group: "Administration",
     label: "Keep the qualifications list",
@@ -326,6 +332,7 @@ const IMPLIES: Partial<Record<PermissionKey, PermissionKey[]>> = {
   "rota.plan": ["rota.view"],
   "rota.manage": ["rota.plan", "rota.view"],
   "setup.departments": ["setup.view"],
+  "setup.positions": ["setup.view"],
   "setup.qualifications": ["setup.view"],
   "setup.activities": ["setup.view"],
   "setup.areas": ["setup.view"],

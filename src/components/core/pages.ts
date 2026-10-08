@@ -1,8 +1,8 @@
-import { Building2, GraduationCap, History, KeyRound, LayoutDashboard, ListChecks, MapPin, Users, UsersRound, type LucideIcon } from "lucide-react";
+import { BadgeCheck, Building2, GraduationCap, History, KeyRound, LayoutDashboard, ListChecks, MapPin, Users, UsersRound, type LucideIcon } from "lucide-react";
 
 /** Admin's pages, once, grouped by topic (owner decision, 7 October 2026): the page bar
  *  (CoreShell) and the overview are built from this list. A plain module, so server pages read it. */
-export type CoreLinkKey = "staff" | "roles" | "departments" | "clubs" | "areas" | "activity-list" | "qualifications" | "activity";
+export type CoreLinkKey = "staff" | "roles" | "departments" | "positions" | "clubs" | "areas" | "activity-list" | "qualifications" | "activity";
 export type AdminPage = { key: CoreLinkKey | "overview"; href: string; label: string; icon: LucideIcon; description: string };
 
 export const ADMIN_GROUPS: { label: string; links: AdminPage[] }[] = [
@@ -11,6 +11,7 @@ export const ADMIN_GROUPS: { label: string; links: AdminPage[] }[] = [
     { key: "staff", href: "/staff", label: "Staff", icon: Users, description: "Who can sign in, their roles, sites and work devices" },
     { key: "roles", href: "/roles", label: "Roles", icon: KeyRound, description: "What each role can open and do, module by module" },
     { key: "departments", href: "/departments", label: "Departments", icon: UsersRound, description: "The teams people work in; every activity belongs to one" },
+    { key: "positions", href: "/positions", label: "Positions", icon: BadgeCheck, description: "The jobs people hold, and the qualifications each needs" },
   ] },
   { label: "Places", links: [
     { key: "clubs", href: "/clubs", label: "Sites", icon: Building2, description: "The sites, their short codes, and which one this device works at" },

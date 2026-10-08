@@ -6,7 +6,8 @@ import { addDaysIso } from "@/lib/rota/constants";
 
 /** Reminder emails for Turnfin Me. The daily job sends each person one short
  *  digest of things that are new since the last one: training due within 3
- *  days or overdue, a qualification crossing 60, 30 or 7 days or expired, and
+ *  days or overdue, a qualification crossing 60, 30 or 7 days or expired (theirs, and their
+ *  team's for a line manager), and
  *  required reading past its deadline. Each item is logged, so nothing is sent
  *  twice. Shift changes are sent when they happen. A person's preferences
  *  (Reminders in Turnfin Me) turn each kind off. Emails never carry HR content. */
@@ -42,17 +43,21 @@ async function qualificationItems(on: string): Promise<Item[]> {
   const horizon = parseDateOnly(addDaysIso(on, 60));
   const rows = await prisma.qualification.findMany({
     where: { revokedAt: null, expiresOn: { not: null, lte: horizon }, user: { isActive: true } },
-    select: { id: true, userId: true, typeId: true, expiresOn: true, type: { select: { name: true } } },
+    select: { id: true, userId: true, typeId: true, expiresOn: true, type: { select: { name: true } }, user: { select: { name: true, managerId: true } } },
   });
   const renewed = new Set((await prisma.qualification.findMany({
     where: { revokedAt: null, OR: [{ expiresOn: null }, { expiresOn: { gt: horizon } }], userId: { in: rows.map((r) => r.userId) } },
     select: { userId: true, typeId: true },
   })).map((q) => `${q.userId}:${q.typeId}`));
-  return rows.filter((r) => !renewed.has(`${r.userId}:${r.typeId}`)).map((r) => {
+  return rows.filter((r) => !renewed.has(`${r.userId}:${r.typeId}`)).flatMap((r) => {
     const expires = r.expiresOn!.toISOString().slice(0, 10);
     const threshold = expires < on ? "expired" : expires <= addDaysIso(on, 7) ? "7" : expires <= addDaysIso(on, 30) ? "30" : "60";
-    return { userId: r.userId, kind: "qualification", ref: `${r.id}:${threshold}`,
-      line: threshold === "expired" ? `Your ${r.type.name} expired on ${formatDate(r.expiresOn!)}.` : `Your ${r.type.name} expires on ${formatDate(r.expiresOn!)}.` };
+    const when = threshold === "expired" ? `expired on ${formatDate(r.expiresOn!)}` : `expires on ${formatDate(r.expiresOn!)}`;
+    const own: Item = { userId: r.userId, kind: "qualification", ref: `${r.id}:${threshold}`, line: `Your ${r.type.name} ${when}.` };
+    // Their line manager hears too (owner decision, 8 October 2026), in the same digest, logged on its own.
+    const manager: Item[] = r.user.managerId && r.user.managerId !== r.userId
+      ? [{ userId: r.user.managerId, kind: "qualification-team", ref: `${r.id}:${threshold}:manager`, line: `${r.user.name}'s ${r.type.name} ${when}.` }] : [];
+    return [own, ...manager];
   });
 }
 
@@ -79,7 +84,7 @@ export async function runReminders(now = new Date()) {
     prisma.staffReminderLog.findMany({ where: { userId: { in: userIds } }, select: { userId: true, kind: true, ref: true } }),
   ]);
   const seen = new Set(logged.map((l) => `${l.userId}|${l.kind}|${l.ref}`));
-  const wanted = (i: Item, p: Prefs) => (i.kind.startsWith("training") ? p.trainingDue : i.kind === "qualification" ? p.qualificationExpiry : p.readingOverdue);
+  const wanted = (i: Item, p: Prefs) => (i.kind.startsWith("training") ? p.trainingDue : i.kind.startsWith("qualification") ? p.qualificationExpiry : p.readingOverdue);
   let sent = 0;
   for (const user of users) {
     const fresh = items.filter((i) => i.userId === user.id && wanted(i, prefs(user.id)) && !seen.has(`${i.userId}|${i.kind}|${i.ref}`));

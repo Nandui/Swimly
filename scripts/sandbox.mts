@@ -116,6 +116,20 @@ await prisma.qualification.createMany({ data: [
   { orgId: ORG, userId: "sbx_riley", typeId: "qt_nplq", issuedOn: new Date("2024-01-10T00:00:00Z"), expiresOn: past, verifiedById: "sbx_liam", verifiedAt: new Date() },
   ...["sbx_ciara", "sbx_conor", "sbx_dylan", "sbx_sam"].map((userId) => ({ orgId: ORG, userId, typeId: "qt_nplq", issuedOn: new Date("2025-03-01T00:00:00Z"), expiresOn: new Date("2027-03-01T00:00:00Z"), verifiedById: "sbx_liam", verifiedAt: new Date() })),
 ] });
+// Admin's position list (Admin › Positions): what each job needs, and who holds it.
+const positions: [string, string, string[], string[]][] = [
+  ["pos_gm", "General manager", [], ["sbx_alex"]],
+  ["pos_duty", "Duty manager", ["qt_first_aid"], ["sbx_maya"]],
+  ["pos_lead", "Aquatics lead", ["qt_nplq"], ["sbx_liam"]],
+  ["pos_teacher", "Swim teacher", ["qt_first_aid"], ["sbx_ava"]],
+  ["pos_reception", "Receptionist", [], ["sbx_noah"]],
+  ["pos_guard", "Lifeguard", ["qt_nplq", "qt_first_aid"], ["sbx_riley", "sbx_ciara", "sbx_conor", "sbx_dylan"]],
+  ["pos_super", "Pool supervisor", ["qt_nplq", "qt_first_aid"], ["sbx_sam"]],
+];
+for (const [i, [id, name, requires, holders]] of positions.entries()) {
+  await prisma.position.create({ data: { id, orgId: ORG, name, sortOrder: i, requires: { create: requires.map((typeId) => ({ typeId })) } } });
+  await prisma.user.updateMany({ where: { id: { in: holders } }, data: { positionId: id, jobTitle: name, contractType: "full-time", contractMinutes: 39 * 60 } });
+}
 
 const seedModule = "./sandbox-seed.ts";
 if (existsSync(new URL(seedModule, import.meta.url))) {

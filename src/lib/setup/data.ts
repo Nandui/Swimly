@@ -63,3 +63,16 @@ export async function areaNamesBySite(siteIds: readonly string[]) {
   for (const r of rows) out.get(r.siteId)?.push(r.name);
   return out;
 }
+
+/** Every position (archived last) with what it needs and how many hold it, for Admin's Positions page. */
+export async function positionsPage() {
+  const { orgId, keeps } = await viewer();
+  const [positions, qualifications] = await Promise.all([
+    prisma.position.findMany({
+      where: { orgId }, orderBy: [{ archivedAt: { sort: "asc", nulls: "first" } }, { sortOrder: "asc" }, { name: "asc" }],
+      select: { id: true, name: true, archivedAt: true, requires: { select: { type: { select: { id: true, name: true } } } }, _count: { select: { holders: { where: { isActive: true } } } } },
+    }),
+    prisma.qualificationType.findMany({ where: { orgId, archivedAt: null }, orderBy: { name: "asc" }, select: { id: true, name: true } }),
+  ]);
+  return { canKeep: keeps("setup.positions"), qualifications, positions: positions.map((p) => ({ id: p.id, name: p.name, archived: !!p.archivedAt, holders: p._count.holders, requires: p.requires.map((r) => r.type).sort((a, b) => a.name.localeCompare(b.name)) })) };
+}

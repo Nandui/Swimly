@@ -1,7 +1,11 @@
 import type { Metadata } from "next";
 import { cache } from "react";
 import Link from "next/link";
-import { CalendarClock, ChevronRight, Download, FileText, UserX, type LucideIcon } from "lucide-react";
+import { Award, CalendarClock, ChevronRight, Download, FileText, UserX, type LucideIcon } from "lucide-react";
+import { RecordQualification, RevokeQualification } from "@/components/people/people-actions";
+import { QUALIFICATION_STATE_META } from "@/lib/people/constants";
+import { qualificationFile } from "@/lib/people/qualifications";
+import { REQUIREMENT_META, requirementSummary } from "@/lib/people/requirements";
 import { Button } from "@/components/shadcn/button";
 import { AddNote, StartReview, WithdrawNote } from "@/components/hr/actions";
 import { EmptyState } from "@/components/ui-kit/empty-state";
@@ -39,6 +43,7 @@ export default async function HrPersonPage({ params }: { params: Promise<{ id: s
   await requireFreshSession("hr.records.read", `/hr/people/${id}`);
   const data = await load(id);
   const { person, notes, reviews, who } = data;
+  const quals = await qualificationFile(person.id, who.orgId ?? "");
   return (
     <>
       <PageHeader
@@ -96,6 +101,43 @@ export default async function HrPersonPage({ params }: { params: Promise<{ id: s
           )}
         </section>
       </div>
+      <section className="pc-panel" aria-labelledby="hr-qualifications">
+        <div className="pc-panel-head">
+          <div className="flex flex-col gap-1">
+            <h2 id="hr-qualifications">Qualifications</h2>
+            <p className="pc-row-hint">{quals.position ? `${quals.position}: ${requirementSummary(quals.requirements)}.` : "No position set: their Staff page sets it, and it decides what they need."}</p>
+          </div>
+          {quals.canRecord && quals.types.length ? <RecordQualification userId={person.id} name={person.name} types={quals.types} /> : null}
+        </div>
+        {quals.requirements.length ? (
+          <ul className="pc-rows" aria-label="What their position needs">
+            {quals.requirements.map((r) => (
+              <li key={r.typeId} className="pc-row">
+                <span className="pc-tile-icon" aria-hidden="true"><Award /></span>
+                <span className="pc-row-body"><span className="pc-row-title">{r.name}</span><span className="pc-row-hint">{r.expiresOn ? `Expires ${formatDate(new Date(`${r.expiresOn}T00:00:00Z`))}` : r.state === "missing" ? "Needed for their position" : "Does not expire"}</span></span>
+                <span className="pc-row-trail"><Tag meta={REQUIREMENT_META[r.state]} /></span>
+              </li>
+            ))}
+          </ul>
+        ) : null}
+        {quals.records.length === 0 ? <EmptyState compact icon="award" title="No qualifications recorded" /> : (
+          <ul className="pc-rows" aria-label="Every qualification recorded">
+            {quals.records.map((q) => (
+              <li key={q.id} className="pc-row">
+                <span className="pc-row-body">
+                  <span className="pc-row-title">{q.name}</span>
+                  <span className="pc-row-hint">{[`Issued ${formatDate(new Date(`${q.issuedOn}T00:00:00Z`))}`, q.expiresOn ? `expires ${formatDate(new Date(`${q.expiresOn}T00:00:00Z`))}` : "does not expire", q.reference || null, q.verifiedBy ? `verified by ${q.verifiedBy}` : null].filter(Boolean).join(" · ")}</span>
+                </span>
+                <span className="pc-row-trail">
+                  <Tag meta={QUALIFICATION_STATE_META[q.state]} />
+                  {q.certificateId ? <Button asChild variant="ghost"><a href={`/training/certificates/${q.certificateId}/file`} target="_blank" rel="noopener noreferrer"><FileText aria-hidden="true" />Certificate</a></Button> : null}
+                  {quals.canRecord && q.state !== "revoked" ? <RevokeQualification id={q.id} label={q.name} /> : null}
+                </span>
+              </li>
+            ))}
+          </ul>
+        )}
+      </section>
       {data.file.map((section) => {
         const Icon = FILE_ICONS[section.id] ?? FileText;
         return (

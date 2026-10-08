@@ -4,6 +4,7 @@ import type { Prisma } from "@/generated/prisma/client";
 import { parseDateOnly, today } from "@/lib/format";
 import { prisma } from "@/lib/prisma";
 import { qualificationState } from "@/lib/people/data";
+import { requirementStates } from "@/lib/people/requirements";
 import { requireCapFor, subjectsFor } from "@/lib/policy/session";
 import type { SubjectFilter } from "@/lib/policy/types";
 import type { PermissionKey } from "@/lib/staff/permissions";
@@ -152,10 +153,18 @@ export async function signoffQueue() {
 // Expiring qualifications, with the course that renews each
 // ---------------------------------------------------------------------------
 
-async function expiringQualificationRows(orgId: string | null, userId: Prisma.StringFilter | undefined, on: string) {
+/** Who a filtered list covers: at a site (or every site), in a position. */
+export type ExpiringFilters = { site?: string; position?: string };
+const filteredPeople = (f: ExpiringFilters): Prisma.UserWhereInput => ({
+  isActive: true,
+  ...(f.site ? { OR: [{ siteIds: { has: f.site } }, { siteIds: { isEmpty: true } }] } : {}),
+  ...(f.position ? { positionId: f.position } : {}),
+});
+
+async function expiringQualificationRows(orgId: string | null, userId: Prisma.StringFilter | undefined, on: string, filters: ExpiringFilters = {}) {
   const horizon = parseDateOnly(isoPlusDays(on, EXPIRY_WARNING_DAYS));
   const rows = await prisma.qualification.findMany({
-    where: { orgId: orgId ?? undefined, userId, revokedAt: null, expiresOn: { lte: horizon }, user: { isActive: true } },
+    where: { orgId: orgId ?? undefined, userId, revokedAt: null, expiresOn: { lte: horizon }, user: filteredPeople(filters) },
     orderBy: { expiresOn: "asc" },
     select: { id: true, userId: true, typeId: true, expiresOn: true, revokedAt: true, type: { select: { name: true } }, user: { select: { name: true, jobTitle: true } } },
   });
@@ -169,10 +178,30 @@ async function expiringQualificationRows(orgId: string | null, userId: Prisma.St
   return rows.filter((r) => !renewed.has(`${r.userId}:${r.typeId}`));
 }
 
-export async function expiringQualifications() {
+/** Expired and expiring qualifications for the people this person covers, filtered by site and
+ *  position; and (owner decision, 8 October 2026) who lacks a qualification their position needs. */
+export async function expiringQualifications(filters: ExpiringFilters = {}) {
   const who = await requireTrainingActor();
   const on = today();
-  const rows = await expiringQualificationRows(who.orgId, await scopedUserIds("training.records.read"), on);
+  const scope = await scopedUserIds("training.records.read");
+  const [rows, sites, positions, holders] = await Promise.all([
+    expiringQualificationRows(who.orgId, scope, on, filters),
+    prisma.club.findMany({ where: { orgId: who.orgId ?? undefined, archivedAt: null }, orderBy: [{ sortOrder: "asc" }, { name: "asc" }], select: { id: true, name: true } }),
+    prisma.position.findMany({ where: { orgId: who.orgId ?? undefined, archivedAt: null }, orderBy: [{ sortOrder: "asc" }, { name: "asc" }], select: { id: true, name: true } }),
+    prisma.user.findMany({
+      where: { orgId: who.orgId ?? undefined, id: scope, ...filteredPeople(filters), position: { requires: { some: {} } } },
+      orderBy: { name: "asc" },
+      select: {
+        id: true, name: true, position: { select: { name: true, requires: { select: { type: { select: { id: true, name: true } } } } } },
+        qualifications: { select: { typeId: true, issuedOn: true, expiresOn: true, revokedAt: true } },
+      },
+    }),
+  ]);
+  // Never held at all: expired and expiring ones are already in the list above.
+  const missing = holders.flatMap((p) => {
+    const lacking = requirementStates(p.position!.requires.map((r) => r.type), p.qualifications, on).filter((r) => r.state === "missing");
+    return lacking.length ? [{ userId: p.id, name: p.name, position: p.position!.name, lacking: lacking.map((r) => r.name) }] : [];
+  });
   const courses = await prisma.trainingCourse.findMany({
     where: { orgId: who.orgId ?? undefined, archivedAt: null, grantsTypeId: { in: [...new Set(rows.map((r) => r.typeId))] } },
     select: { id: true, title: true, grantsTypeId: true },
@@ -184,7 +213,7 @@ export async function expiringQualifications() {
   const assigned = new Set(open.map((a) => `${a.userId}:${a.courseId}`));
   const assignScope = who.assign ? await subjectsFor("training.assign") : null;
   return {
-    who,
+    who, sites, positions, missing,
     rows: rows.map((r) => {
       const course = courses.find((c) => c.grantsTypeId === r.typeId) ?? null;
       return {

@@ -15,3 +15,15 @@ export const PERSON_STATUS_META = {
   deactivated: { label: "Deactivated", color: "gray", icon: CirclePause },
   restricted: { label: "Restricted", color: "purple", icon: ShieldHalf },
 } as const satisfies Record<string, StatusMeta>;
+
+/** How someone is employed (owner decision, 8 October 2026), on their Staff page. */
+export const CONTRACT_META = {
+  "full-time": { label: "Full-time" },
+  "part-time": { label: "Part-time" },
+  casual: { label: "Casual" },
+  seasonal: { label: "Seasonal" },
+} as const;
+export type ContractType = keyof typeof CONTRACT_META;
+export const CONTRACT_TYPES = Object.keys(CONTRACT_META) as ContractType[];
+/** 2250 minutes → "37.5". */
+export const hoursOf = (minutes: number) => String(Math.round((minutes / 60) * 100) / 100);

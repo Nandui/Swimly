@@ -273,7 +273,7 @@ registerModule({
     levels: [
       {
         key: "setup", label: "Setup",
-        help: "See the shared setup lists. The ticks choose which lists they keep.",
+        help: "See the shared setup lists (departments, positions, sites' areas, activities, qualifications). The ticks choose which they keep.",
         permissions: ["setup.view"],
       },
       {
@@ -286,6 +286,7 @@ registerModule({
     ],
     extras: [
       { key: "departments", label: "Keeps departments", help: "Add, rename and archive departments.", from: "setup", permissions: ["setup.departments"] },
+      { key: "positions", label: "Keeps positions", help: "The positions people hold and the qualifications each needs.", from: "setup", permissions: ["setup.positions"] },
       { key: "qualifications", label: "Keeps the qualifications list", help: "The qualifications staff can hold.", from: "setup", permissions: ["setup.qualifications"] },
       { key: "activities", label: "Keeps the activity list", help: "What the rota plans, its departments and the qualifications it needs.", from: "setup", permissions: ["setup.activities"] },
       { key: "areas", label: "Keeps sites' areas", help: "Each site's pools, gym and other areas.", from: "setup", permissions: ["setup.areas"] },

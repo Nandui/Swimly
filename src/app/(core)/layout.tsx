@@ -8,7 +8,7 @@ import '../workspace/module-workspace.css';
 
 export const metadata: Metadata = { title: { default: "Admin", template: TITLE_TEMPLATE } };
 
-const CORE_SCREENS: CoreLinkKey[] = ["staff", "roles", "departments", "clubs", "areas", "activity-list", "qualifications", "activity"];
+const CORE_SCREENS: CoreLinkKey[] = ["staff", "roles", "departments", "positions", "clubs", "areas", "activity-list", "qualifications", "activity"];
 
 /** Turnfin Core (the Admin module): People, Places, Work and the log, outside any
  *  module's workspace. Each page asks for its own screen and permission; /core

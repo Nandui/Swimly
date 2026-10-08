@@ -42,6 +42,9 @@ export async function getPersonDetail(userId: string) {
     where: { id: userId, orgId: session.user.orgId ?? undefined },
     select: {
       id: true, name: true, email: true, isActive: true, jobTitle: true, startedOn: true, dateOfBirth: true, isSuperadmin: true,
+      orgId: true, positionId: true, contractType: true, contractMinutes: true, endedOn: true, payrollNumber: true,
+      phone: true, homeAddress: true, emergencyName: true, emergencyPhone: true, emergencyRelationship: true,
+      position: { select: { id: true, name: true, archivedAt: true, requires: { select: { type: { select: { id: true, name: true } } } } } },
       primaryClubId: true, managerId: true, siteIds: true,
       manager: { select: { id: true, name: true } },
       staffRole: { select: { id: true, name: true, levels: true, extras: true, permissions: true, screens: true, homeName: true } },
@@ -49,7 +52,7 @@ export async function getPersonDetail(userId: string) {
       reports: { where: { isActive: true }, orderBy: { name: "asc" }, select: { id: true, name: true, jobTitle: true } },
       qualifications: {
         orderBy: [{ revokedAt: "asc" }, { expiresOn: "asc" }],
-        select: { id: true, issuedOn: true, expiresOn: true, reference: true, note: true, revokedAt: true, verifiedAt: true, verifiedById: true, type: { select: { name: true } } },
+        select: { id: true, typeId: true, issuedOn: true, expiresOn: true, reference: true, note: true, revokedAt: true, verifiedAt: true, verifiedById: true, type: { select: { name: true } } },
       },
     },
   });
@@ -67,6 +70,8 @@ export async function getPersonDetail(userId: string) {
     worksAt: person.siteIds.map((id) => ({ id, name: names.get(id) ?? "Removed site" })),
     startedOn: person.startedOn?.toISOString().slice(0, 10) ?? "",
     dateOfBirth: person.dateOfBirth?.toISOString().slice(0, 10) ?? "",
+    /** The records as stored, for what their position needs (`requirementStates`). */
+    qualificationRecords: person.qualifications.map((q) => ({ typeId: q.typeId, issuedOn: q.issuedOn, expiresOn: q.expiresOn, revokedAt: q.revokedAt })),
     qualifications: person.qualifications.map((q) => ({
       id: q.id, name: q.type.name, reference: q.reference, note: q.note,
       issuedOn: q.issuedOn.toISOString().slice(0, 10), expiresOn: q.expiresOn?.toISOString().slice(0, 10) ?? "",

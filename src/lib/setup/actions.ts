@@ -128,3 +128,54 @@ export async function moveArea(id: string, direction: "up" | "down"): Promise<Ac
   refresh("/areas");
   return ok();
 }
+
+/* ---------- Positions ---------- */
+
+const positionSchema = z.object({
+  name: z.string().trim().min(2, "Name the position, for example Lifeguard.").max(60, "Keep the name under 60 characters."),
+  requires: z.array(z.string().min(1)).max(30).default([]),
+});
+export type PositionInput = z.input<typeof positionSchema>;
+
+/** Add a position, or rename one and change what it needs. Holders' job title follows a rename. */
+export async function savePosition(id: string | null, input: PositionInput): Promise<ActionResult> {
+  const session = await requirePermission("setup.positions");
+  const orgId = session.user.orgId;
+  if (!orgId) return fail("Your account is not in an organisation.");
+  const parsed = positionSchema.safeParse(input);
+  if (!parsed.success) return fail(parsed.error.issues[0].message);
+  const { name, requires } = parsed.data;
+  const clash = await prisma.position.findFirst({ where: { orgId, name: { equals: name, mode: "insensitive" }, ...(id ? { id: { not: id } } : {}) }, select: { id: true } });
+  if (clash) return fail("There is already a position with that name.");
+  const types = await prisma.qualificationType.findMany({ where: { orgId, id: { in: requires } }, select: { id: true, name: true } });
+  if (types.length !== new Set(requires).size) return fail("Some of those qualifications are no longer offered.");
+  if (id && !(await prisma.position.findFirst({ where: { id, orgId }, select: { id: true } }))) return fail("That position no longer exists.");
+  const last = id ? null : await prisma.position.findFirst({ where: { orgId }, orderBy: { sortOrder: "desc" }, select: { sortOrder: true } });
+  await prisma.$transaction(async (tx) => {
+    const row = id
+      ? await tx.position.update({ where: { id }, data: { name } })
+      : await tx.position.create({ data: { orgId, name, sortOrder: (last?.sortOrder ?? -1) + 1 } });
+    await tx.positionQualification.deleteMany({ where: { positionId: row.id } });
+    if (types.length) await tx.positionQualification.createMany({ data: types.map((t) => ({ positionId: row.id, typeId: t.id })) });
+    // Every screen that shows a job title keeps showing the position's name.
+    if (id) await tx.user.updateMany({ where: { positionId: row.id }, data: { jobTitle: name } });
+    await logAudit({ actorId: session.user.id, actorName: session.user.name ?? "Unknown", action: id ? "update" : "create", entity: "Position", entityId: row.id, clubId: null,
+      summary: `${id ? "Changed" : "Added"} the position ${name}${types.length ? `, needing ${types.map((t) => t.name).join(", ")}` : ", needing no qualifications"}` }, tx);
+  });
+  revalidatePath("/positions");
+  revalidatePath("/staff", "layout");
+  return ok();
+}
+
+/** Archive or restore a position. Its holders keep it until someone changes theirs. */
+export async function setPositionArchived(id: string, archived: boolean): Promise<ActionResult> {
+  const session = await requirePermission("setup.positions");
+  const position = await prisma.position.findFirst({ where: { id, orgId: session.user.orgId ?? undefined }, select: { name: true } });
+  if (!position) return fail("That position no longer exists.");
+  await prisma.$transaction(async (tx) => {
+    await tx.position.update({ where: { id }, data: { archivedAt: archived ? new Date() : null } });
+    await logAudit({ actorId: session.user.id, actorName: session.user.name ?? "Unknown", action: archived ? "archive" : "update", entity: "Position", entityId: id, clubId: null, summary: `${archived ? "Archived" : "Restored"} the position ${position.name}` }, tx);
+  });
+  revalidatePath("/positions");
+  return ok();
+}

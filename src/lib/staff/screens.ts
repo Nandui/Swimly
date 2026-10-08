@@ -119,6 +119,7 @@ export const SCREENS = [
     requires: "clubs.manage",
   },
   { key: "departments", label: "Departments", path: "/departments", description: "The departments people belong to and activities are planned by.", requires: "setup.view" },
+  { key: "positions", label: "Positions", path: "/positions", description: "The positions people hold and the qualifications each needs.", requires: "setup.view" },
   { key: "qualifications", label: "Qualifications", path: "/qualifications", description: "The qualifications staff can hold.", requires: "setup.view" },
   { key: "activity-list", label: "Activities", path: "/activity-list", description: "The activities the rota plans and covers.", requires: "setup.view" },
   { key: "areas", label: "Areas", path: "/areas", description: "Each site's areas: pools, gym, reception.", requires: "setup.view" },
@@ -170,7 +171,7 @@ export function visibleScreens(permissions: ReadonlySet<PermissionKey>): Set<Scr
  *
  *  A new screen must be added to exactly one of these; a test checks it.
  *  Separate modules never imply access to the swim-school workspace. */
-export const CORE_SCREENS = ["staff", "roles", "clubs", "departments", "qualifications", "activity-list", "areas", "activity"] as const satisfies readonly ScreenKey[];
+export const CORE_SCREENS = ["staff", "roles", "clubs", "departments", "positions", "qualifications", "activity-list", "areas", "activity"] as const satisfies readonly ScreenKey[];
 export const ACTIVITIES_SCREENS = [
   "analytics", "duty", "cancellations", "calendar", "instructor", "students", "courses",
   "together", "assessments", "awaiting-enrolment", "legend-agreements", "programmes",

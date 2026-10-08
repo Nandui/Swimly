@@ -269,3 +269,21 @@ export async function renameAreaEverywhere(change: AreaRename, tx?: unknown) {
   for (const handler of areaRenameHandlers) changed += await handler.rename(change, tx);
   return changed;
 }
+
+/** What a module says about one person on their Staff page in Admin (owner decision, 8 October
+ *  2026: "training and rota summary"): a line, a few entries and where to see the rest. Callers
+ *  hold `staff.manage`; sections return work records only, never restricted (HR) data. */
+export type ProfileSummary = { summary: string; lines: { label: string; hint?: string }[]; href?: string };
+export type ProfileSummarySection = { id: string; heading: string; load(userId: string, orgId: string): Promise<ProfileSummary> };
+const profileSummaries: ProfileSummarySection[] = [];
+
+export function registerProfileSummary(section: ProfileSummarySection) {
+  const at = profileSummaries.findIndex((s) => s.id === section.id);
+  if (at >= 0) profileSummaries[at] = section;
+  else profileSummaries.push(section);
+}
+
+/** Every module's summary of this person, in registration order. */
+export async function profileSummary(userId: string, orgId: string) {
+  return Promise.all(profileSummaries.map(async (section) => ({ id: section.id, heading: section.heading, ...(await section.load(userId, orgId)) })));
+}

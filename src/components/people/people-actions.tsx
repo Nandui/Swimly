@@ -8,26 +8,57 @@ import { Label } from "@/components/shadcn/label";
 import { ActionButton, ConfirmAction } from "@/components/confirm-action";
 import { Field, FormDialog } from "@/components/form-dialog";
 import { Input } from "@/components/ui/input";
+import { Input as FileInput } from "@/components/shadcn/input";
 import { Select } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
 import {
   recordQualification, revokeQualification, saveDepartment,
-  saveQualificationType, setDepartmentArchived, setQualificationTypeArchived, setSuperadmin, setWorksAt, updateProfile,
+  saveQualificationType, setDepartmentArchived, setQualificationTypeArchived, setSuperadmin, setWorksAt, updateEmployment, updateProfile,
+  type EmploymentInput,
 } from "@/lib/people/actions";
+import { CONTRACT_META, CONTRACT_TYPES, hoursOf } from "@/lib/people/constants";
 
 type Option = { id: string; name: string };
 const text = (formData: FormData, key: string) => String(formData.get(key) ?? "");
 const icon = (Icon: typeof Plus) => <Icon aria-hidden={true} className="size-4 shrink-0" />;
 
+/** How someone is employed: contract, hours a week, their last day and payroll's number. */
+export function EditEmployment({ person }: { person: { id: string; name: string; contractType: string | null; contractMinutes: number | null; endedOn: string; payrollNumber: string | null } }) {
+  return (
+    <FormDialog
+      trigger={<Button variant="outline">{icon(Pencil)}Edit employment</Button>}
+      title={`${person.name}'s employment`}
+      description="Their contract and hours, and payroll's employee number. Only people who manage staff see these."
+      submitLabel="Save employment"
+      successMessage="Employment updated"
+      submit={(formData) => updateEmployment(person.id, {
+        contractType: text(formData, "contractType") as EmploymentInput["contractType"], contractHours: text(formData, "contractHours"),
+        endedOn: text(formData, "endedOn"), payrollNumber: text(formData, "payrollNumber"),
+      })}
+    >
+      <Field label="Contract" htmlFor="contractType">
+        <Select id="contractType" name="contractType" defaultValue={person.contractType ?? ""} options={[{ value: "", label: "Not set" }, ...CONTRACT_TYPES.map((k) => ({ value: k, label: CONTRACT_META[k].label }))]} />
+      </Field>
+      <Field label="Contracted hours a week" htmlFor="contractHours" optional hint="For example 37.5. Leave empty for casual hours.">
+        <Input id="contractHours" name="contractHours" inputMode="decimal" defaultValue={person.contractMinutes != null ? hoursOf(person.contractMinutes) : ""} placeholder="37.5" className="w-32" />
+      </Field>
+      <Field label="Payroll number" htmlFor="payrollNumber" optional><Input id="payrollNumber" name="payrollNumber" maxLength={40} defaultValue={person.payrollNumber ?? ""} className="w-48" /></Field>
+      <Field label="Last day" htmlFor="endedOn" optional hint="When they have left, or are due to."><Input id="endedOn" name="endedOn" type="date" defaultValue={person.endedOn} /></Field>
+    </FormDialog>
+  );
+}
+
 // ---------------------------------------------------------------------------
 // Profile
 // ---------------------------------------------------------------------------
 
-export function EditProfile({ person, sites, departments, people }: {
-  person: { id: string; name: string; jobTitle: string | null; startedOn: string; dateOfBirth: string; primaryClubId: string | null; managerId: string | null; departments: { departmentId: string; isPrimary: boolean }[] };
+export function EditProfile({ person, sites, departments, people, positions }: {
+  person: { id: string; name: string; jobTitle: string | null; positionId: string | null; startedOn: string; dateOfBirth: string; primaryClubId: string | null; managerId: string | null; departments: { departmentId: string; isPrimary: boolean }[] };
   sites: Option[];
   departments: Option[];
   people: { id: string; name: string; jobTitle: string | null }[];
+  /** Admin's positions: the open ones, and theirs if it has since been archived. */
+  positions: Option[];
 }) {
   const [chosen, setChosen] = React.useState<string[]>(person.departments.map((d) => d.departmentId));
   const [primary, setPrimary] = React.useState(person.departments.find((d) => d.isPrimary)?.departmentId ?? chosen[0] ?? "");
@@ -40,17 +71,17 @@ export function EditProfile({ person, sites, departments, people }: {
     <FormDialog
       trigger={<Button variant="default">{icon(Pencil)}Edit profile</Button>}
       title={`${person.name}'s profile`}
-      description="Their job, main site, manager and departments. Their manager decides who can see their HR record as their team."
+      description="Their position, main site, manager and departments. Their manager decides who can see their HR record as their team."
       submitLabel="Save profile"
       successMessage="Profile updated"
       submit={(formData) => updateProfile(person.id, {
-        jobTitle: text(formData, "jobTitle"), startedOn: text(formData, "startedOn"), dateOfBirth: text(formData, "dateOfBirth"),
+        positionId: text(formData, "positionId"), startedOn: text(formData, "startedOn"), dateOfBirth: text(formData, "dateOfBirth"),
         primaryClubId: text(formData, "primaryClubId"), managerId: text(formData, "managerId"),
         departmentIds: chosen, primaryDepartmentId: primary,
       })}
     >
-      <Field label="Job title" htmlFor="jobTitle">
-        <Input id="jobTitle" name="jobTitle" defaultValue={person.jobTitle ?? ""} placeholder="Swim teacher" maxLength={80} />
+      <Field label="Position" htmlFor="positionId" hint={!person.positionId && person.jobTitle ? `Their job title was "${person.jobTitle}". Positions are kept in Admin, Positions.` : "Kept in Admin, Positions. It does not give access: that is their role."}>
+        <Select id="positionId" name="positionId" defaultValue={person.positionId ?? ""} options={[{ value: "", label: "Not set" }, ...positions.map((p) => ({ value: p.id, label: p.name }))]} />
       </Field>
       <Field label="Started on" htmlFor="startedOn">
         <Input id="startedOn" name="startedOn" type="date" defaultValue={person.startedOn} />
@@ -162,7 +193,10 @@ export function RecordQualification({ userId, name, types }: { userId: string; n
       description="Record it once you have seen the certificate. You are recorded as having verified it."
       submitLabel="Record qualification"
       successMessage="Qualification recorded"
-      submit={(formData) => recordQualification(userId, { typeId, issuedOn: issued, expiresOn: expires, reference: text(formData, "reference"), note: text(formData, "note") })}
+      submit={(formData) => {
+        const file = formData.get("certificate");
+        return recordQualification(userId, { typeId, issuedOn: issued, expiresOn: expires, reference: text(formData, "reference"), note: text(formData, "note") }, file instanceof File && file.size ? file : null);
+      }}
     >
       <Field label="Qualification" htmlFor="typeId">
         <Select id="typeId" value={typeId} onValueChange={(value) => { setTypeId(value); suggest(value, issued); }} options={types.map((t) => ({ value: t.id, label: t.name }))} />
@@ -175,6 +209,9 @@ export function RecordQualification({ userId, name, types }: { userId: string; n
       </Field>
       <Field label="Certificate reference" htmlFor="reference">
         <Input id="reference" name="reference" maxLength={80} />
+      </Field>
+      <Field label="Certificate" htmlFor="certificate" optional hint="A photo or PDF of it, up to 5 MB. Kept with the record.">
+        <FileInput id="certificate" name="certificate" type="file" accept="application/pdf,image/png,image/jpeg" />
       </Field>
       <Field label="Note" htmlFor="note">
         <Textarea id="note" name="note" maxLength={500} rows={2} />

@@ -153,6 +153,19 @@ test("expiring qualifications list the renewal course, and a newer certificate t
   assert.equal(rows[0].renewal?.assigned, true, "riley already has the practical open");
 });
 
+test("the expiring list filters by position and lists who has never held what their position needs", async () => {
+  const db = fixture.prisma;
+  await db.position.create({ data: { id: "pos-guard", orgId: ORG, name: "Synthetic lifeguard", requires: { create: [{ typeId: "qt-rescue" }, { typeId: "qt-safe" }] } } });
+  await db.user.update({ where: { id: "riley" }, data: { positionId: "pos-guard", siteIds: ["club_churchfield"] } });
+  as("liam", [], [TRAINER]);
+  const all = await data.expiringQualifications();
+  assert.deepEqual(all.missing.map((m) => [m.userId, m.lacking]), [["riley", ["Synthetic safeguarding"]]], "expiring rescue is listed above, not as missing");
+  assert.deepEqual((await data.expiringQualifications({ position: "pos-guard" })).rows.map((r) => r.userId), ["riley"]);
+  const elsewhere = await data.expiringQualifications({ site: "club_bishopstown" });
+  assert.equal(elsewhere.rows.length + elsewhere.missing.length, 0, "riley works only at Churchfield");
+  await db.user.update({ where: { id: "riley" }, data: { positionId: null, siteIds: [] } });
+});
+
 test("self-service reads return only the person's own training", async () => {
   const riley = await self.myTraining("riley");
   assert.deepEqual(riley.map((r) => r.course.title), ["Pool rescue"]);

@@ -2,18 +2,23 @@ import type { Metadata } from "next";
 import { cache } from "react";
 import { notFound } from "next/navigation";
 import UiLink from "next/link";
-import { Building2, KeyRound } from "lucide-react";
-import { Item, ItemActions, ItemContent, ItemDescription, ItemGroup, ItemTitle } from "@/components/shadcn/item";
+import { Award, Building2, KeyRound } from "lucide-react";
+import { Button } from "@/components/shadcn/button";
+import { Item, ItemContent, ItemDescription, ItemGroup, ItemTitle } from "@/components/shadcn/item";
 import { EmptyState } from "@/components/ui-kit/empty-state";
 import { PageHeader } from "@/components/ui-kit/page-header";
 import { Tag } from "@/components/ui-kit/tag";
 import {
-  EditProfile, RecordQualification, RevokeQualification, SuperadminToggle, WorksAt,
+  EditEmployment, EditProfile, SuperadminToggle, WorksAt,
 } from "@/components/people/people-actions";
 import { EditPerson } from "@/components/staff/person-actions";
-import { formatDate } from "@/lib/format";
+import { canSee } from "@/lib/authz";
+import { formatDate, today } from "@/lib/format";
+import { prisma } from "@/lib/prisma";
 import { screenPage } from "@/lib/page-guards";
-import { PERSON_STATUS_META, QUALIFICATION_STATE_META } from "@/lib/people/constants";
+import { CONTRACT_META, PERSON_STATUS_META, QUALIFICATION_STATE_META, hoursOf, type ContractType } from "@/lib/people/constants";
+import { REQUIREMENT_META, requirementStates, requirementSummary } from "@/lib/people/requirements";
+import { profileSummary } from "@/modules/server";
 import { getOrganisation, getPersonDetail, listPeopleOptions } from "@/lib/people/data";
 import { listRolesForPicker } from "@/lib/staff/data/roles";
 import { cleanLevels, describeLevels, levelsFromAccess } from "@/lib/staff/levels";
@@ -33,19 +38,23 @@ export async function generateMetadata({ params }: { params: Promise<{ id: strin
 export default async function PersonPage({ params }: { params: Promise<{ id: string }> }) {
   const session = await screenPage("staff", "staff.manage");
   const { id } = await params;
-  const [person, organisation, people, roles] = await Promise.all([
+  const [person, organisation, people, roles, positions] = await Promise.all([
     loadPerson(id), getOrganisation(), listPeopleOptions(), listRolesForPicker(),
+    prisma.position.findMany({ where: { orgId: session.user.orgId ?? undefined }, orderBy: [{ sortOrder: "asc" }, { name: "asc" }], select: { id: true, name: true, archivedAt: true } }),
   ]);
   if (!person) notFound();
+  // What their position needs, and whether they hold it in date.
+  const requirements = requirementStates(person.position?.requires.map((r) => r.type) ?? [], person.qualificationRecords, today());
+  const summaries = person.orgId ? await profileSummary(person.id, person.orgId) : [];
+  const canHr = canSee(session, "hr");
   const departments = organisation.departments.filter((d) => !d.archivedAt);
-  const types = organisation.qualificationTypes.filter((t) => !t.archivedAt);
   const role = person.staffRole;
   const levels = role
     ? describeLevels(role.levels !== null ? cleanLevels(role.levels, role.extras) : levelsFromAccess(role.permissions, role.screens).role)
     : null;
   const liveSites = organisation.sites;
   const facts: [string, React.ReactNode][] = [
-    ["Job title", person.jobTitle || "Not set"],
+    ["Position", person.position ? `${person.position.name}${person.position.archivedAt ? " (archived)" : ""}` : person.jobTitle ? `${person.jobTitle} (not on the list)` : "Not set"],
     ["Started", person.startedOn ? formatDate(new Date(`${person.startedOn}T00:00:00Z`)) : "Not set"],
     ["Date of birth", person.dateOfBirth ? formatDate(new Date(`${person.dateOfBirth}T00:00:00Z`)) : "Not set"],
     ["Main site", person.primaryClub?.name ?? "Not set"],
@@ -68,7 +77,9 @@ export default async function PersonPage({ params }: { params: Promise<{ id: str
         actions={
           <>
             {session.user.isSuperadmin && person.isActive ? <SuperadminToggle userId={person.id} name={person.name} value={person.isSuperadmin} /> : null}
-            <EditProfile person={person} sites={organisation.sites} departments={departments} people={people} />
+            <EditEmployment person={{ ...person, endedOn: person.endedOn?.toISOString().slice(0, 10) ?? "" }} />
+            <EditProfile person={person} sites={organisation.sites} departments={departments} people={people}
+              positions={positions.filter((p) => !p.archivedAt || p.id === person.positionId).map(({ id, name }) => ({ id, name }))} />
           </>
         }
       />
@@ -91,6 +102,28 @@ export default async function PersonPage({ params }: { params: Promise<{ id: str
           </p>
         ) : null}
       </section>
+
+      <div className="pc-grid">
+        <section aria-labelledby="employment-heading" className="pc-panel">
+          <div className="pc-panel-head"><h2 id="employment-heading" className="text-lg font-semibold">Employment</h2></div>
+          <Facts items={[
+            ["Contract", person.contractType ? CONTRACT_META[person.contractType as ContractType]?.label ?? person.contractType : "Not set"],
+            ["Hours a week", person.contractMinutes != null ? hoursOf(person.contractMinutes) : "Not set"],
+            ["Payroll number", person.payrollNumber || "Not set"],
+            ["Last day", person.endedOn ? formatDate(person.endedOn) : "Still here"],
+          ]} />
+        </section>
+        <section aria-labelledby="contact-heading" className="pc-panel">
+          <div className="pc-panel-head">
+            <div className="flex flex-col gap-1"><h2 id="contact-heading" className="text-lg font-semibold">Contact</h2><p className="pc-row-hint">Kept by them in Turnfin Me; changes come to Details requests.</p></div>
+          </div>
+          <Facts items={[
+            ["Phone", person.phone || "Not given"],
+            ["Home address", person.homeAddress || "Not given"],
+            ["Emergency contact", person.emergencyName ? [person.emergencyName, person.emergencyRelationship, person.emergencyPhone].filter(Boolean).join(" · ") : "Not given"],
+          ]} />
+        </section>
+      </div>
 
       <section aria-labelledby="roles-heading" className="pc-panel">
         <div className="pc-panel-head">
@@ -124,9 +157,26 @@ export default async function PersonPage({ params }: { params: Promise<{ id: str
 
       <section aria-labelledby="qualifications-heading" className="pc-panel">
         <div className="pc-panel-head">
-          <h2 id="qualifications-heading" className="text-lg font-semibold">Qualifications</h2>
-          {types.length ? <RecordQualification userId={person.id} name={person.name} types={types} /> : null}
+          <div className="flex flex-col gap-1">
+            <h2 id="qualifications-heading" className="text-lg font-semibold">Qualifications</h2>
+            <p className="pc-row-hint">{person.position ? `${person.position.name}: ${requirementSummary(requirements)}.` : "Set their position to see what it needs."} Recorded on their HR file and in Training.</p>
+          </div>
+          <div className="flex flex-wrap gap-2">
+            {canHr ? <Button asChild variant="outline"><UiLink href={`/hr/people/${person.id}`}>HR file</UiLink></Button> : null}
+            <Button asChild variant="outline"><UiLink href={`/training/people/${person.id}`}>Training</UiLink></Button>
+          </div>
         </div>
+        {requirements.length ? (
+          <ul className="pc-rows" aria-label="What their position needs">
+            {requirements.map((r) => (
+              <li key={r.typeId} className="pc-row">
+                <span className="pc-tile-icon" aria-hidden="true"><Award /></span>
+                <span className="pc-row-body"><span className="pc-row-title">{r.name}</span><span className="pc-row-hint">{r.expiresOn ? `Expires ${formatDate(new Date(`${r.expiresOn}T00:00:00Z`))}` : r.state === "missing" ? "Needed for their position" : "Does not expire"}</span></span>
+                <span className="pc-row-trail"><Tag meta={REQUIREMENT_META[r.state]} /></span>
+              </li>
+            ))}
+          </ul>
+        ) : null}
         {person.qualifications.length === 0 ? (
           <EmptyState compact icon="award" title="No qualifications recorded" />
         ) : (
@@ -147,13 +197,43 @@ export default async function PersonPage({ params }: { params: Promise<{ id: str
                       {q.verifiedBy ? ` · verified by ${q.verifiedBy}` : ""}
                     </ItemDescription>
                   </ItemContent>
-                  {q.state !== "revoked" ? <ItemActions><RevokeQualification id={q.id} label={q.name} /></ItemActions> : null}
                 </Item>
               );
             })}
           </ItemGroup>
         )}
       </section>
+
+      {summaries.length ? (
+        <div className="pc-grid">
+          {summaries.map((section) => (
+            <section key={section.id} aria-labelledby={`summary-${section.id}`} className="pc-panel">
+              <div className="pc-panel-head">
+                <div className="flex flex-col gap-1"><h2 id={`summary-${section.id}`} className="text-lg font-semibold">{section.heading}</h2><p className="pc-row-hint">{section.summary}</p></div>
+                {section.href ? <Button asChild variant="ghost"><UiLink href={section.href}>Open</UiLink></Button> : null}
+              </div>
+              {section.lines.length ? (
+                <ul className="pc-rows">
+                  {section.lines.map((line, i) => <li key={i} className="pc-row"><span className="pc-row-body"><span className="pc-row-title">{line.label}</span>{line.hint ? <span className="pc-row-hint">{line.hint}</span> : null}</span></li>)}
+                </ul>
+              ) : null}
+            </section>
+          ))}
+        </div>
+      ) : null}
     </div>
+  );
+}
+
+function Facts({ items }: { items: [string, React.ReactNode][] }) {
+  return (
+    <dl className="grid gap-4 [grid-template-columns:repeat(auto-fit,minmax(min(100%,180px),1fr))]">
+      {items.map(([label, value]) => (
+        <div key={label} className="min-w-0">
+          <dt className="text-xs font-semibold text-ui-muted-foreground">{label}</dt>
+          <dd className="mt-1 [overflow-wrap:anywhere]">{value}</dd>
+        </div>
+      ))}
+    </dl>
   );
 }

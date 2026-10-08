@@ -2,6 +2,7 @@
 
 import { revalidatePath } from "next/cache";
 import { z } from "zod";
+import { CONTRACT_TYPES } from "@/lib/people/constants";
 import { fail, ok, onUniqueViolation, type ActionResult } from "@/lib/action-result";
 import { logAudit } from "@/lib/audit";
 import { requirePermission, requireSession, can } from "@/lib/authz";
@@ -15,7 +16,7 @@ import { requireCapFor } from "@/lib/policy/session";
  *  whoever holds `qualifications.manage` for that person's scope. Every change
  *  is audited in the same transaction. */
 
-const revalidate = (userId?: string) => { revalidatePath("/staff"); revalidatePath("/departments"); revalidatePath("/qualifications"); if (userId) revalidatePath(`/staff/${userId}`); };
+const revalidate = (userId?: string) => { revalidatePath("/staff"); if (userId) revalidatePath(`/hr/people/${userId}`); revalidatePath("/departments"); revalidatePath("/qualifications"); if (userId) revalidatePath(`/staff/${userId}`); };
 const actorName = (session: { user: { name?: string | null } }) => session.user.name ?? "Unknown";
 const optionalId = z.string().trim().max(64).transform((v) => v || null);
 const isoDate = z.string().regex(/^\d{4}-\d{2}-\d{2}$/, "Use a date.");
@@ -25,7 +26,8 @@ const isoDate = z.string().regex(/^\d{4}-\d{2}-\d{2}$/, "Use a date.");
 // ---------------------------------------------------------------------------
 
 const profileSchema = z.object({
-  jobTitle: z.string().trim().max(80, "Keep the job title under 80 characters."),
+  /** Their position (Admin, Positions); their job title follows its name. */
+  positionId: optionalId,
   startedOn: z.union([isoDate, z.literal("")]),
   /** Optional; only an age band on a day reaches the rota (under-18s' breaks). */
   dateOfBirth: z.union([isoDate, z.literal("")]).default(""),
@@ -50,11 +52,14 @@ export async function updateProfile(userId: string, input: ProfileInput): Promis
   const session = await requirePermission("staff.manage");
   const parsed = profileSchema.safeParse(input);
   if (!parsed.success) return fail(parsed.error.issues[0].message);
-  const { jobTitle, startedOn, dateOfBirth, primaryClubId, managerId, departmentIds, primaryDepartmentId } = parsed.data;
+  const { positionId, startedOn, dateOfBirth, primaryClubId, managerId, departmentIds, primaryDepartmentId } = parsed.data;
   if (dateOfBirth && (dateOfBirth > new Date().toISOString().slice(0, 10) || dateOfBirth < "1920-01-01")) return fail("Check the date of birth.");
   const result = await prisma.$transaction(async (tx) => {
-    const person = await tx.user.findUnique({ where: { id: userId }, select: { id: true, name: true, orgId: true } });
+    const person = await tx.user.findUnique({ where: { id: userId }, select: { id: true, name: true, orgId: true, positionId: true, jobTitle: true } });
     if (!person) return fail("That account no longer exists.");
+    // A position from Admin's list; an archived one stays only for whoever already holds it.
+    const position = positionId ? await tx.position.findFirst({ where: { id: positionId, orgId: person.orgId ?? undefined, OR: [{ archivedAt: null }, { id: person.positionId ?? "" }] }, select: { name: true } }) : null;
+    if (positionId && !position) return fail("Choose one of the positions.");
     if (managerId) {
       if (managerId === userId) return fail("Someone cannot be their own manager.");
       const manager = await tx.user.findUnique({ where: { id: managerId }, select: { orgId: true } });
@@ -65,12 +70,12 @@ export async function updateProfile(userId: string, input: ProfileInput): Promis
     const departments = await tx.department.findMany({ where: { id: { in: departmentIds }, orgId: person.orgId ?? undefined, archivedAt: null }, select: { id: true } });
     if (departments.length !== new Set(departmentIds).size) return fail("One of those departments no longer exists.");
     if (primaryDepartmentId && !departmentIds.includes(primaryDepartmentId)) return fail("The main department must be one of theirs.");
-    await tx.user.update({ where: { id: userId }, data: { jobTitle: jobTitle || null, startedOn: startedOn ? new Date(`${startedOn}T00:00:00Z`) : null, dateOfBirth: dateOfBirth ? new Date(`${dateOfBirth}T00:00:00Z`) : null, primaryClubId, managerId } });
+    await tx.user.update({ where: { id: userId }, data: { positionId, jobTitle: position ? position.name : positionId === null && person.positionId ? null : person.jobTitle, startedOn: startedOn ? new Date(`${startedOn}T00:00:00Z`) : null, dateOfBirth: dateOfBirth ? new Date(`${dateOfBirth}T00:00:00Z`) : null, primaryClubId, managerId } });
     await tx.userDepartment.deleteMany({ where: { userId } });
     if (departmentIds.length) {
       await tx.userDepartment.createMany({ data: [...new Set(departmentIds)].map((departmentId) => ({ userId, departmentId, isPrimary: departmentId === (primaryDepartmentId ?? departmentIds[0]) })) });
     }
-    await logAudit({ actorId: session.user.id, actorName: actorName(session), action: "update", entity: "User", entityId: userId, summary: `Updated ${person.name}'s profile (job, site, manager, departments)` }, tx);
+    await logAudit({ actorId: session.user.id, actorName: actorName(session), action: "update", entity: "User", entityId: userId, summary: `Updated ${person.name}'s profile (position${position ? ` ${position.name}` : ""}, site, manager, departments)` }, tx);
     return ok();
   });
   if (result.ok) revalidate(userId);
@@ -84,6 +89,32 @@ export async function updateProfile(userId: string, input: ProfileInput): Promis
 /** The sites a person works at, where their role's Swim school, Training and
  *  Rota levels apply (docs/how-turnfin-works.md). No sites means every site,
  *  which is how everyone worked before. */
+const employmentSchema = z.object({
+  contractType: z.union([z.enum(CONTRACT_TYPES), z.literal("")]).transform((v) => v || null),
+  /** Hours a week, e.g. "37.5"; empty when not set. */
+  contractHours: z.string().trim().refine((v) => v === "" || (/^\d{1,2}(\.\d{1,2})?$/.test(v) && Number(v) <= 80), "Give the hours a week as a number up to 80, like 37.5.").transform((v) => (v ? Math.round(Number(v) * 60) : null)),
+  endedOn: z.union([isoDate, z.literal("")]).transform((v) => v || null),
+  payrollNumber: z.string().trim().max(40, "Keep the payroll number under 40 characters.").transform((v) => v || null),
+});
+export type EmploymentInput = z.input<typeof employmentSchema>;
+
+/** How someone is employed: contract, hours a week, their last day and payroll's number. */
+export async function updateEmployment(userId: string, input: EmploymentInput): Promise<ActionResult> {
+  const session = await requirePermission("staff.manage");
+  const parsed = employmentSchema.safeParse(input);
+  if (!parsed.success) return fail(parsed.error.issues[0].message);
+  const data = parsed.data;
+  const person = await prisma.user.findFirst({ where: { id: userId, orgId: session.user.orgId ?? undefined }, select: { name: true, startedOn: true } });
+  if (!person) return fail("That account no longer exists.");
+  if (data.endedOn && person.startedOn && data.endedOn < person.startedOn.toISOString().slice(0, 10)) return fail("Their last day can't be before they started.");
+  await prisma.$transaction(async (tx) => {
+    await tx.user.update({ where: { id: userId }, data: { contractType: data.contractType, contractMinutes: data.contractHours, endedOn: data.endedOn ? new Date(`${data.endedOn}T00:00:00Z`) : null, payrollNumber: data.payrollNumber } });
+    await logAudit({ actorId: session.user.id, actorName: actorName(session), action: "update", entity: "User", entityId: userId, summary: `Updated ${person.name}'s employment details` }, tx);
+  });
+  revalidate(userId);
+  return ok();
+}
+
 export async function setWorksAt(userId: string, siteIds: string[]): Promise<ActionResult> {
   const session = await requirePermission("staff.manage");
   const parsed = z.array(z.string().min(1).max(64)).max(50).safeParse(siteIds);
@@ -251,12 +282,26 @@ async function requireQualificationAccess(userId: string) {
   return session;
 }
 
-export async function recordQualification(userId: string, input: QualificationInput): Promise<ActionResult> {
+/** A certificate kept with a qualification: a PDF, PNG or JPEG up to 5 MB, checked by its first bytes. */
+const CERTIFICATE_TYPES = { "application/pdf": [0x25, 0x50, 0x44, 0x46], "image/png": [0x89, 0x50, 0x4e, 0x47], "image/jpeg": [0xff, 0xd8, 0xff] } as const;
+const CERTIFICATE_MAX = 5 * 1024 * 1024;
+async function certificateOf(file: File | null | undefined) {
+  if (!file || file.size === 0) return { ok: true as const, file: null };
+  if (file.size > CERTIFICATE_MAX) return { ok: false as const, error: "The certificate must be 5 MB or smaller." };
+  const bytes = Buffer.from(await file.arrayBuffer());
+  const mime = (Object.keys(CERTIFICATE_TYPES) as (keyof typeof CERTIFICATE_TYPES)[]).find((m) => CERTIFICATE_TYPES[m].every((b, i) => bytes[i] === b));
+  if (!mime) return { ok: false as const, error: "Attach the certificate as a PDF, PNG or JPEG." };
+  return { ok: true as const, file: { bytes, mime, fileName: file.name.slice(0, 120) || "certificate", size: bytes.length } };
+}
+
+export async function recordQualification(userId: string, input: QualificationInput, certificate?: File | null): Promise<ActionResult> {
   const session = await requireQualificationAccess(userId);
   const parsed = qualificationSchema.safeParse(input);
   if (!parsed.success) return fail(parsed.error.issues[0].message);
   const { typeId, issuedOn, expiresOn, reference, note } = parsed.data;
   if (expiresOn && expiresOn < issuedOn) return fail("The expiry date is before the issue date.");
+  const cert = await certificateOf(certificate);
+  if (!cert.ok) return fail(cert.error);
   const result = await prisma.$transaction(async (tx) => {
     const person = await tx.user.findUnique({ where: { id: userId }, select: { name: true, orgId: true } });
     if (!person?.orgId) return fail("That account no longer exists.");
@@ -266,7 +311,13 @@ export async function recordQualification(userId: string, input: QualificationIn
       orgId: person.orgId, userId, typeId, issuedOn: new Date(`${issuedOn}T00:00:00Z`), expiresOn: expiresOn ? new Date(`${expiresOn}T00:00:00Z`) : null,
       reference, note, verifiedById: session.user.id, verifiedAt: new Date(),
     } });
-    await logAudit({ actorId: session.user.id, actorName: actorName(session), action: "record-qualification", entity: "Qualification", entityId: created.id, summary: `Recorded ${type.name} for ${person.name}${expiresOn ? `, valid until ${expiresOn}` : ""}` }, tx);
+    // The certificate it was recorded from, kept with it (Training's certificates, already verified).
+    if (cert.file) await tx.qualificationEvidence.create({ data: {
+      orgId: person.orgId, userId, typeId, typeName: type.name, issuedOn: created.issuedOn, expiresOn: created.expiresOn, reference,
+      fileName: cert.file.fileName, mime: cert.file.mime, size: cert.file.size, bytes: cert.file.bytes,
+      status: "VERIFIED", reviewedById: session.user.id, reviewedByName: actorName(session), reviewedAt: new Date(), qualificationId: created.id,
+    } });
+    await logAudit({ actorId: session.user.id, actorName: actorName(session), action: "record-qualification", entity: "Qualification", entityId: created.id, summary: `Recorded ${type.name} for ${person.name}${expiresOn ? `, valid until ${expiresOn}` : ""}${cert.file ? ", with its certificate" : ""}` }, tx);
     return ok();
   });
   if (result.ok) revalidate(userId);

@@ -8,7 +8,7 @@ programmes, courses, suppliers, document templates), and Admin's overview links 
 
 | Group | Pages |
 | --- | --- |
-| People | Staff, Roles, Departments (`/departments`) |
+| People | Staff, Roles, Departments (`/departments`), Positions (`/positions`) |
 | Places | Sites (`/clubs`, with each site's short code), Areas (`/areas`) |
 | Work | Activities (`/activity-list`), Qualifications (`/qualifications`) |
 | Log | Activity log |
@@ -19,11 +19,11 @@ The page bar and the overview are built from the one list, so neither can leave 
 
 ## Who keeps what
 
-Admin has two levels and four ticks (`src/modules/registry.ts`):
+Admin has two levels and five ticks (`src/modules/registry.ts`):
 
 - **Setup** (`setup.view`): sees every setup list. Its ticks choose which lists the role keeps:
   departments (`setup.departments`), qualifications (`setup.qualifications`), the activity
-  list (`setup.activities`) and sites' areas (`setup.areas`).
+  list (`setup.activities`), sites' areas (`setup.areas`) and positions (`setup.positions`).
 - **Manage**: people, roles, sites, the log, and every tick (an administrator holds all of
   Admin's extras through `effectiveLevels`).
 
@@ -50,9 +50,32 @@ The lists are organisation-wide, so their actions use the flat permission check.
   inside Admin's transaction. Core never touches a module's tables. Archiving an area stops it
   being offered; records keep the name.
 
+## Positions and the staff profile (owner decision, 8 October 2026)
+
+- **Positions** (`Position`, `PositionQualification`): the organisation's job list, separate from
+  the access role. Each names the qualifications it needs. A person holds one (`User.positionId`);
+  their job title follows its name, so a rename reaches every holder. Archived positions stay
+  with their holders but are no longer offered. The migration
+  (`20261021120000_positions_and_employment`) made a position of every job title in use.
+- **Requirements** (`src/lib/people/requirements.ts`, pure): each needed qualification against
+  the person's best record (in date, expires within 60 days, expired, not held). The Staff page,
+  the HR file and Training › Expiring all read it.
+- **Staff page** (`/staff/[id]`): position, employment (contract, weekly hours, payroll number,
+  last day; `updateEmployment`, `staff.manage`), contact and emergency contact (read only, kept
+  by the person in Turnfin Me), what their position needs, and Training and Rota summaries
+  through the profile-summary contribution (`registerProfileSummary`).
+- **HR file** (`/hr/people/[id]`): the qualifications record. Recording one can attach the
+  certificate (PDF, PNG or JPEG up to 5 MB, checked by its first bytes), kept as verified
+  Training evidence. Recording and withdrawing still need `qualifications.manage` over the person.
+- **Reminders** (`src/lib/staff-api/reminders.ts`): at 60, 30 and 7 days and on expiry, the
+  person and their line manager, each once, in their daily digest.
+- **Training › Expiring**: filters by site and position, and lists who has never held a
+  qualification their position needs.
+
 ## Not done yet
 
 Break rules as an Admin setting (they are the house rule in `src/lib/rota/constants.ts` today),
 and opening hours per site.
 
-Tests: `src/lib/setup/setup.test.ts`.
+Tests: `src/lib/setup/setup.test.ts`, `src/lib/people/requirements.test.ts`, and the expiring and
+reminder cases in `src/lib/training/training.test.ts` and `src/lib/staff-api/reminders.test.ts`.

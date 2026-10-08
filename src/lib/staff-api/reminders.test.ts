@@ -51,3 +51,14 @@ test("nothing is sent while Turnfin Me is off", async () => {
   process.env.STAFF_API_ENABLED = "false";
   try { assert.equal((await reminders.runReminders()).sent, 0); } finally { process.env.STAFF_API_ENABLED = "true"; }
 });
+
+test("a line manager hears about their team's expiring qualifications, once", async () => {
+  const db = fixture.prisma;
+  await db.user.create({ data: { id: "maya", name: "maya", email: "maya@example.test", staffRoleId: "r-staff", orgId: ORG } });
+  await db.user.update({ where: { id: "ava" }, data: { managerId: "maya" } });
+  mail.length = 0;
+  assert.equal((await reminders.runReminders()).sent, 1);
+  assert.deepEqual(mail.map((m) => m.email), ["maya@example.test"], "ava already had hers");
+  assert.match(mail[0].line, /ava's Synthetic lifeguard expires/);
+  assert.equal((await reminders.runReminders()).sent, 0);
+});

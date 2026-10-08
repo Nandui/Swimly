@@ -60,7 +60,7 @@ after(async () => { await fixture?.close(); });
 
 test("profiles: departments with a main one, a manager, and no loops", async () => {
   as("admin", ["staff.manage", "roles.manage"]);
-  const profile = (managerId: string, departmentIds: string[]) => ({ jobTitle: "Swim teacher", startedOn: "2024-05-01", primaryClubId: "", managerId, departmentIds, primaryDepartmentId: departmentIds[0] ?? "" });
+  const profile = (managerId: string, departmentIds: string[]) => ({ positionId: "", startedOn: "2024-05-01", primaryClubId: "", managerId, departmentIds, primaryDepartmentId: departmentIds[0] ?? "" });
   assert.deepEqual(await actions.updateProfile("liam", profile("maya", ["d-aquatics"])), { ok: true });
   assert.deepEqual(await actions.updateProfile("ava", profile("liam", ["d-aquatics"])), { ok: true });
   const loop = await actions.updateProfile("maya", profile("ava", []));
