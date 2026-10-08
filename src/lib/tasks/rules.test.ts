@@ -1,7 +1,7 @@
 import assert from "node:assert/strict";
 import { test } from "node:test";
 import {
-  completionProblems, csvRows, dueOn, exceptions, score, scheduleLabel, taskState, tasksOn, templateProblems, windowOn, zonedInstant,
+  completionProblems, csvRows, dueOn, exceptions, score, scheduleLabel, scoreBand, taskState, tasksOn, templateProblems, windowOn, zonedInstant,
   type TaskDefinition, type TaskSchedule,
 } from "./rules";
 
@@ -91,4 +91,22 @@ test("a template cannot be published with nothing to do, a bad range or a schedu
 
 test("the export never hands a spreadsheet a formula", () => {
   assert.equal(csvRows([["=SUM(A1)", 'say "hi"']]), `"'=SUM(A1)","say ""hi"""`);
+});
+
+test("schedules can start at opening and be due at closing, in the site's own time zone", () => {
+  const site = { timezone: "Europe/London", opening: "07:00", closing: "21:00" };
+  const w = windowOn({ start: "open", due: "close" }, "2026-07-01", site);
+  assert.equal(w.startsAt.toISOString(), "2026-07-01T06:00:00.000Z");
+  assert.equal(w.dueAt.toISOString(), "2026-07-01T20:00:00.000Z");
+  const madrid = windowOn({ start: "08:00", due: "09:00" }, "2026-07-01", { timezone: "Europe/Madrid", opening: "06:00", closing: "22:00" });
+  assert.equal(madrid.startsAt.toISOString(), "2026-07-01T06:00:00.000Z", "Madrid is two hours ahead of UTC in summer");
+  assert.equal(scheduleLabel(schedule({ start: "open", due: "close" })), "Every day, opening to closing");
+});
+
+test("kinds and roles: a scheduled kind needs a schedule; restricting needs roles; scores fall in bands", () => {
+  const base = { title: "Retest", checklist: ["Done"], fields: [], schedules: [], minimumRecords: 1 };
+  assert.ok(templateProblems({ ...base, kind: "repeat" }).some((p) => p.includes("Add a schedule")));
+  assert.deepEqual(templateProblems({ ...base, kind: "adhoc" }), []);
+  assert.ok(templateProblems({ ...base, kind: "action", restricted: true, roleIds: [] }).some((p) => p.includes("restricted to")));
+  assert.deepEqual([scoreBand(100), scoreBand(96), scoreBand(80), scoreBand(50)], ["good", "good", "fair", "low"]);
 });

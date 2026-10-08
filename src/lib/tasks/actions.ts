@@ -11,9 +11,10 @@ import { prisma } from "@/lib/prisma";
 import { mayFor, requireCapFor } from "@/lib/policy/session";
 import type { PermissionKey } from "@/lib/staff/permissions";
 import { requireTasksActor, type TasksActor } from "@/lib/tasks/access";
-import { asDefinition, definitionOf, ensureTasks, isMine } from "@/lib/tasks/data";
+import { asDefinition, definitionOf, ensureTasks, isMine, siteSettings, type SiteSettings } from "@/lib/tasks/data";
 import {
-  FIELD_TYPES, REPEATS, completionProblems, exceptions, isClock, templateProblems, zonedInstant,
+  FIELD_TYPES, LOG_MODES, REPEATS, SCHEDULED_KINDS, SITE_STATUSES, TEMPLATE_KINDS, TIMEZONES,
+  completionProblems, dayIn, exceptions, isClock, isScheduleTime, templateProblems, zonedInstant,
   type TaskField, type TaskRecord, type TaskSchedule,
 } from "@/lib/tasks/rules";
 
@@ -257,23 +258,36 @@ export async function uploadTaskFile(id: string, form: FormData): Promise<Action
   return { ok: true, fileId: saved.id, fileName };
 }
 
-/** Add a template without a schedule as a task for the day, due by the end of it. */
+/** Make one task from a template at a site on a day, from its opening (or now, today) to its
+ *  closing: an ad hoc task someone adds, or the follow-up task of an action. */
+async function makeTaskNow(tx: Parameters<Parameters<typeof prisma.$transaction>[0]>[0], who: TasksActor, t: Parameters<typeof definitionOf>[0] & { id: string; checklist: string[] }, siteId: string, date: string, site: SiteSettings) {
+  const now = new Date();
+  let startsAt = zonedInstant(date, site.opening, site.timezone), dueAt = zonedInstant(site.closing <= site.opening ? addDaysIso(date, 1) : date, site.closing, site.timezone);
+  if (date === dayIn(site.timezone, now) && now > startsAt) startsAt = now;
+  // Added after closing: due by the end of the day instead.
+  if (dueAt <= startsAt) dueAt = zonedInstant(date, "23:59", site.timezone);
+  return tx.task.create({
+    data: { orgId: who.orgId ?? "", templateId: t.id, siteId, date: parseDateOnly(date), scheduleKey: `added:${crypto.randomUUID()}`, startsAt, dueAt,
+      definition: json(definitionOf(t)), checks: t.checklist.map(() => false), addedByName: who.name },
+    select: { id: true },
+  });
+}
+const addDaysIso = (d: string, n: number) => new Date(Date.parse(`${d}T12:00:00Z`) + n * 86_400_000).toISOString().slice(0, 10);
+
+/** Add an ad hoc template's task to a site's day, open from the site's opening to its closing. */
 export async function addTask(templateId: string, siteId: string, date: string): Promise<ActionResult & { id?: string }> {
   const who = await requireTasksActor();
-  if (!isDateOnly(date) || date > today()) return fail("Tasks can be added for today or an earlier day.");
   if (!(await allowedAt("tasks.complete", siteId, who))) return fail("Your role does not do tasks at that site.");
-  const t = await prisma.taskTemplate.findFirst({ where: { id: templateId, orgId: who.orgId ?? undefined, status: "published" } });
+  const site = (await siteSettings([siteId])).get(siteId)!;
+  if (!isDateOnly(date) || date > dayIn(site.timezone)) return fail("Tasks can be added for today or an earlier day.");
+  if (site.status !== "live") return fail("This site is not live for Tasks yet.");
+  if (site.closedDates.includes(date)) return fail("The site is closed that day.");
+  const t = await prisma.taskTemplate.findFirst({ where: { id: templateId, orgId: who.orgId ?? undefined, status: "published", kind: "adhoc" } });
   if (!t || (t.siteIds.length && !t.siteIds.includes(siteId))) return fail("That task is not available at this site.");
-  const site = await prisma.club.findUniqueOrThrow({ where: { id: siteId }, select: { name: true } });
-  const now = new Date();
+  const club = await prisma.club.findUniqueOrThrow({ where: { id: siteId }, select: { name: true } });
   const id = await prisma.$transaction(async (tx) => {
-    const row = await tx.task.create({
-      data: { orgId: who.orgId ?? "", templateId, siteId, date: parseDateOnly(date), scheduleKey: `added:${crypto.randomUUID()}`,
-        startsAt: date === today(now) ? now : zonedInstant(date, "00:00"), dueAt: zonedInstant(date, "23:59"),
-        definition: json(definitionOf(t)), checks: t.checklist.map(() => false), addedByName: who.name },
-      select: { id: true },
-    });
-    await logAudit({ actorId: who.id, actorName: who.name, action: "create", entity: "Task", entityId: row.id, clubId: siteId, summary: `Added ${t.title} at ${site.name} for ${date}` }, tx);
+    const row = await makeTaskNow(tx, who, t, siteId, date, site);
+    await logAudit({ actorId: who.id, actorName: who.name, action: "create", entity: "Task", entityId: row.id, clubId: siteId, summary: `Added ${t.title} at ${club.name} for ${date}` }, tx);
     return row.id;
   });
   refresh(id);
@@ -289,10 +303,15 @@ const actionSchema = z.object({
   dueOn: z.string().refine((v) => v === "" || isDateOnly(v), "Give the date as a date.").default(""),
 });
 
-/** Raise a follow-up action, from a task or on its own at a site. */
-export async function raiseTaskAction(input: { siteId: string; taskId?: string | null; title: string; dueOn?: string }): Promise<ActionResult> {
+/** Raise a follow-up action, from a task or on its own at a site. From a follow-up action
+ *  template, it also makes that template's task at the site today, to record the work. */
+export async function raiseTaskAction(input: { siteId: string; taskId?: string | null; title: string; dueOn?: string; templateId?: string | null }): Promise<ActionResult> {
   const who = await requireTasksActor();
-  const parsed = actionSchema.safeParse(input);
+  const template = input.templateId
+    ? await prisma.taskTemplate.findFirst({ where: { id: input.templateId, orgId: who.orgId ?? undefined, status: "published", kind: "action" } })
+    : null;
+  if (input.templateId && !template) return fail("That follow-up is no longer available.");
+  const parsed = actionSchema.safeParse({ ...input, title: input.title.trim() || template?.title || "" });
   if (!parsed.success) return fail(parsed.error.issues[0].message);
   let siteId = input.siteId, from = "";
   if (input.taskId) {
@@ -304,9 +323,13 @@ export async function raiseTaskAction(input: { siteId: string; taskId?: string |
   if (!(await allowedAt("tasks.complete", siteId, who))) return fail("Your role does not do tasks at that site.");
   const site = await prisma.club.findUnique({ where: { id: siteId }, select: { name: true } });
   if (!site) return fail("That site no longer exists.");
+  if (template && template.siteIds.length && !template.siteIds.includes(siteId)) return fail("That follow-up is not available at this site.");
+  const settings = (await siteSettings([siteId])).get(siteId)!;
   await prisma.$transaction(async (tx) => {
+    const followUp = template ? await makeTaskNow(tx, who, template, siteId, dayIn(settings.timezone), settings) : null;
     const a = await tx.taskAction.create({
-      data: { orgId: who.orgId ?? "", siteId, taskId: input.taskId || null, title: parsed.data.title, dueOn: parsed.data.dueOn ? parseDateOnly(parsed.data.dueOn) : null, raisedById: who.id, raisedByName: who.name },
+      data: { orgId: who.orgId ?? "", siteId, taskId: input.taskId || null, title: parsed.data.title, dueOn: parsed.data.dueOn ? parseDateOnly(parsed.data.dueOn) : null,
+        raisedById: who.id, raisedByName: who.name, followUpTaskId: followUp?.id ?? null },
       select: { id: true },
     });
     await logAudit({ actorId: who.id, actorName: who.name, action: "create", entity: "TaskAction", entityId: a.id, clubId: siteId, summary: `Raised a follow-up at ${site.name}${from}: ${parsed.data.title}` }, tx);
@@ -361,19 +384,24 @@ const scheduleSchema = z.object({
   every: z.number().int(),
   weekdays: z.array(z.number().int().min(0).max(6)).max(7),
   from: z.string(),
-  start: z.string().refine(isClock, "Give a start time like 08:00."),
-  due: z.string().refine(isClock, "Give a due time like 09:00."),
+  start: z.string().refine(isScheduleTime, "Give a start time like 08:00, or the site's opening or closing."),
+  due: z.string().refine(isScheduleTime, "Give a due time like 09:00, or the site's opening or closing."),
 });
 const templateSchema = z.object({
   title: z.string().trim().max(120, "Keep the title under 120 characters."),
   description: z.string().trim().max(2000).default(""),
   siteIds: z.array(id64).max(100),
+  kind: z.enum(TEMPLATE_KINDS),
   roleIds: z.array(id64).max(100),
+  restricted: z.boolean(),
   tags: z.array(z.string().trim().min(1).max(40)).max(10, "Keep it to 10 tags."),
   priority: z.boolean(),
   checklist: z.array(z.string().trim().max(300)).max(60, "Keep the checklist to 60 items."),
   fields: z.array(fieldSchema).max(40, "Keep it to 40 questions."),
   minimumRecords: z.number().int(),
+  logMode: z.enum(LOG_MODES),
+  notifyCompletion: z.boolean(),
+  notifyException: z.boolean(),
   schedules: z.array(scheduleSchema).max(12, "Keep it to 12 schedules."),
   requiresComment: z.boolean(),
   requiresApproval: z.boolean(),
@@ -386,8 +414,13 @@ function tidy(data: z.output<typeof templateSchema>) {
     ...(f.type === "choice" ? { options: (f.options ?? []).filter(Boolean) } : {}),
     ...(f.type === "number" ? { min: f.min ?? null, max: f.max ?? null, unit: f.unit ?? "", warning: f.warning ?? "", needsAction: !!f.needsAction } : {}),
   }));
-  const schedules: TaskSchedule[] = data.schedules.map((s) => ({ ...s, every: s.repeat === "once" ? 1 : s.every, weekdays: s.repeat === "weekly" ? [...new Set(s.weekdays)].sort() : [] }));
-  return { ...data, tags: [...new Set(data.tags)], fields, schedules };
+  // Only scheduled kinds keep schedules; a one-off template's schedules happen once.
+  const schedules: TaskSchedule[] = !SCHEDULED_KINDS.includes(data.kind) ? [] : data.schedules.map((s) => {
+    const repeat = data.kind === "once" ? "once" : s.repeat;
+    return { ...s, repeat, every: repeat === "once" ? 1 : s.every, weekdays: repeat === "weekly" ? [...new Set(s.weekdays)].sort() : [] };
+  });
+  // A form keeps one record.
+  return { ...data, tags: [...new Set(data.tags)], fields, schedules, minimumRecords: data.logMode === "form" ? 1 : data.minimumRecords };
 }
 
 /** Save a template; `publish` also checks it and makes it live. A new template starts as a draft. */
@@ -432,10 +465,11 @@ export async function saveTaskTemplate(id: string | null, version: number | null
   if (result.ok) {
     revalidatePath("/tasks/templates");
     revalidatePath(`/tasks/templates/${result.id}`);
-    // Today's tasks from a template published just now.
+    // Today's tasks from a template published just now (each site's today).
     if (publish) {
       const live = await prisma.club.findMany({ where: { orgId: who.orgId, archivedAt: null }, select: { id: true } });
-      await ensureTasks(who.orgId, live.map((s) => s.id), [today()]);
+      const settings = await siteSettings(live.map((s) => s.id));
+      await ensureTasks(who.orgId, live.map((s) => s.id), [...new Set([today(), ...[...settings.values()].map((x) => dayIn(x.timezone))])]);
       revalidatePath("/tasks");
     }
   }
@@ -467,8 +501,9 @@ export async function copyTaskTemplate(id: string): Promise<ActionResult & { id?
   if (!t) return fail("That template no longer exists.");
   const copy = await prisma.$transaction(async (tx) => {
     const row = await tx.taskTemplate.create({
-      data: { orgId: t.orgId, title: `${t.title} (copy)`.slice(0, 120), description: t.description, siteIds: t.siteIds, roleIds: t.roleIds, tags: t.tags, priority: t.priority,
-        checklist: t.checklist, fields: json(t.fields), minimumRecords: t.minimumRecords, schedules: json(t.schedules), requiresComment: t.requiresComment, requiresApproval: t.requiresApproval,
+      data: { orgId: t.orgId, title: `${t.title} (copy)`.slice(0, 120), description: t.description, kind: t.kind, siteIds: t.siteIds, roleIds: t.roleIds, restricted: t.restricted,
+        tags: t.tags, priority: t.priority, checklist: t.checklist, fields: json(t.fields), minimumRecords: t.minimumRecords, logMode: t.logMode, schedules: json(t.schedules),
+        requiresComment: t.requiresComment, requiresApproval: t.requiresApproval, notifyCompletion: t.notifyCompletion, notifyException: t.notifyException,
         createdByName: who.name },
       select: { id: true },
     });
@@ -477,4 +512,42 @@ export async function copyTaskTemplate(id: string): Promise<ActionResult & { id?
   });
   revalidatePath("/tasks/templates");
   return { ok: true, id: copy.id };
+}
+
+// ---------------------------------------------------------------------------
+// Sites: Tasks' settings for each site (Manage)
+// ---------------------------------------------------------------------------
+
+const siteSchema = z.object({
+  status: z.enum(SITE_STATUSES),
+  area: z.string().trim().max(60, "Keep the area under 60 characters.").default(""),
+  timezone: z.enum(TIMEZONES),
+  opening: z.string().refine(isClock, "Give the opening time like 06:00."),
+  closing: z.string().refine(isClock, "Give the closing time like 22:00."),
+  closedDates: z.array(z.string()).max(366, "Keep it to a year of closed dates."),
+});
+export type TaskSiteInput = z.input<typeof siteSchema>;
+
+/** A site's Tasks settings: live or not, its area and time zone, business hours (schedules at
+ *  opening or closing use them) and closed dates (no tasks are made then). Tasks already made
+ *  keep their times. */
+export async function saveTaskSite(siteId: string, input: TaskSiteInput): Promise<ActionResult> {
+  const who = await requireTasksActor();
+  if (!who.manage || !who.orgId) return fail("Changing a site's Tasks settings needs Tasks: Manage.");
+  const parsed = siteSchema.safeParse(input);
+  if (!parsed.success) return fail(parsed.error.issues[0].message);
+  const dates = [...new Set(parsed.data.closedDates.map((d) => d.trim()).filter(Boolean))].sort();
+  const bad = dates.find((d) => !isDateOnly(d));
+  if (bad) return fail(`${bad} is not a date. Use dates like 2026-12-25.`);
+  const club = await prisma.club.findFirst({ where: { id: siteId, orgId: who.orgId, archivedAt: null }, select: { name: true } });
+  if (!club) return fail("That site no longer exists.");
+  const data = { ...parsed.data, closedDates: dates.map(parseDateOnly) };
+  await prisma.$transaction(async (tx) => {
+    await tx.taskSite.upsert({ where: { siteId }, create: { siteId, ...data }, update: data });
+    await logAudit({ actorId: who.id, actorName: who.name, action: "update", entity: "TaskSite", entityId: siteId, clubId: siteId,
+      summary: `Changed ${club.name}'s Tasks settings: ${parsed.data.status}, ${parsed.data.opening} to ${parsed.data.closing}, ${dates.length} closed ${dates.length === 1 ? "date" : "dates"}` }, tx);
+  });
+  revalidatePath("/tasks/sites");
+  revalidatePath("/tasks");
+  return ok();
 }
