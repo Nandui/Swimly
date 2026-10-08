@@ -187,18 +187,18 @@ model Student {
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
-  club               Club                @relation(fields: [clubId], references: [id], onDelete: Restrict)
-  enrolments         Enrolment[]
-  attendance         AttendanceRecord[]
-  results            CompetencyResult[]
-  completions        LevelCompletion[]
-  assessmentBookings AssessmentBooking[]
-  cancelledSessions  CancelledClassSwimmer[]
-  parentAccess       ParentChildAccess[]
+  club                 Club                    @relation(fields: [clubId], references: [id], onDelete: Restrict)
+  enrolments           Enrolment[]
+  attendance           AttendanceRecord[]
+  results              CompetencyResult[]
+  completions          LevelCompletion[]
+  assessmentBookings   AssessmentBooking[]
+  cancelledSessions    CancelledClassSwimmer[]
+  parentAccess         ParentChildAccess[]
   parentAccessRequests ParentAccessRequest[]
   parentChangeRequests ParentChangeRequest[]
-  parentProgress     ParentProgressEvent[]
-  enrolmentFollowUps StudentFollowUp[]
+  parentProgress       ParentProgressEvent[]
+  enrolmentFollowUps   StudentFollowUp[]
 
   @@index([clubId, status, lastName, firstName])
   @@index([status, lastName, firstName])
@@ -232,9 +232,9 @@ model Course {
   createdAt       DateTime  @default(now())
   updatedAt       DateTime  @updatedAt
 
-  club            Club               @relation(fields: [clubId], references: [id], onDelete: Restrict)
-  level           Level              @relation(fields: [levelId], references: [id], onDelete: Restrict)
-  instructor      User?              @relation(fields: [instructorId], references: [id], onDelete: SetNull)
+  club            Club                  @relation(fields: [clubId], references: [id], onDelete: Restrict)
+  level           Level                 @relation(fields: [levelId], references: [id], onDelete: Restrict)
+  instructor      User?                 @relation(fields: [instructorId], references: [id], onDelete: SetNull)
   enrolments      Enrolment[]
   attendance      AttendanceRecord[]
   notes           ClassNote[]
@@ -263,20 +263,20 @@ enum LegendAgreementStatus {
 /// The course-row `FOR UPDATE` lock in `withCourseSeat` makes the duplicate
 /// check race-free instead.
 model Enrolment {
-  id              String          @id @default(cuid())
-  studentId       String
-  courseId        String
-  levelId         String
-  programmeId     String
-  status          EnrolmentStatus @default(ACTIVE)
-  startedOn       DateTime        @db.Date
-  endedOn         DateTime?       @db.Date
+  id                           String                @id @default(cuid())
+  studentId                    String
+  courseId                     String
+  levelId                      String
+  programmeId                  String
+  status                       EnrolmentStatus       @default(ACTIVE)
+  startedOn                    DateTime              @db.Date
+  endedOn                      DateTime?             @db.Date
   /// Remains ACTIVE until the app applies this date on its next authenticated request.
-  scheduledEndOn  DateTime?       @db.Date
+  scheduledEndOn               DateTime?             @db.Date
   /// Required when the student is placed at a level they have not earned.
   /// Stored on the row, not only in the audit log, because the log is
   /// admin-only and the instructor on the deck is who needs to know.
-  placementReason String?
+  placementReason              String?
   /// Existing enrolments remain unverified until staff check Legend. Transfers
   /// copy these fields; they do not restart the billing agreement workflow.
   legendAgreementStatus        LegendAgreementStatus @default(NEEDS_CHECK)
@@ -285,13 +285,13 @@ model Enrolment {
   legendAgreementUpdatedByName String?
   /// Explicit teaching handoff for this place, never copied to a new enrolment.
   /// Level and actor IDs are snapshots; their attribution survives later edits.
-  readyToMoveAt         DateTime?
-  readyToMoveById       String?
-  readyToMoveByName     String?
-  readyToMoveLevelId    String?
-  readyToMoveNote       String?
-  createdAt       DateTime        @default(now())
-  updatedAt       DateTime        @updatedAt
+  readyToMoveAt                DateTime?
+  readyToMoveById              String?
+  readyToMoveByName            String?
+  readyToMoveLevelId           String?
+  readyToMoveNote              String?
+  createdAt                    DateTime              @default(now())
+  updatedAt                    DateTime              @updatedAt
 
   student   Student   @relation(fields: [studentId], references: [id], onDelete: Restrict)
   course    Course    @relation(fields: [courseId], references: [id], onDelete: Restrict)
@@ -308,20 +308,20 @@ model Enrolment {
 
 /// Append-only reception contact/work history shared across sites and programmes.
 model StudentFollowUp {
-  id             String   @id @default(cuid())
-  sequence       Int      @unique @default(autoincrement())
-  studentId      String
-  operationId    String
-  actorId        String
-  actorName      String
-  clubId         String
-  clubName       String
-  channel        String
-  outcome        String
-  note           String
-  occurredOn     DateTime @db.Date
-  nextContactOn  DateTime? @db.Date
-  createdAt      DateTime @default(now())
+  id            String    @id @default(cuid())
+  sequence      Int       @unique @default(autoincrement())
+  studentId     String
+  operationId   String
+  actorId       String
+  actorName     String
+  clubId        String
+  clubName      String
+  channel       String
+  outcome       String
+  note          String
+  occurredOn    DateTime  @db.Date
+  nextContactOn DateTime? @db.Date
+  createdAt     DateTime  @default(now())
 
   student Student @relation(fields: [studentId], references: [id], onDelete: Restrict)
 
@@ -375,10 +375,10 @@ model ClassNote {
 /// A cancelled occurrence of a weekly class. The timetable and enrolments stay
 /// intact. Frozen details and roster are the evidence for billing follow-up.
 model ClassCancellation {
-  id                    String   @id @default(cuid())
+  id                    String    @id @default(cuid())
   courseId              String
   clubId                String
-  date                  DateTime @db.Date
+  date                  DateTime  @db.Date
   className             String
   levelName             String
   programmeName         String
@@ -389,11 +389,11 @@ model ClassCancellation {
   reason                String
   cancelledById         String
   cancelledByName       String
-  cancelledAt           DateTime @default(now())
-  attendanceRecorded    Int      @default(0)
-  billingNotifiedAt      DateTime?
-  billingNotifiedById    String?
-  billingNotifiedByName  String?
+  cancelledAt           DateTime  @default(now())
+  attendanceRecorded    Int       @default(0)
+  billingNotifiedAt     DateTime?
+  billingNotifiedById   String?
+  billingNotifiedByName String?
   billingNote           String?
 
   course   Course                  @relation(fields: [courseId], references: [id], onDelete: Restrict)
@@ -404,7 +404,7 @@ model ClassCancellation {
 }
 
 model CancelledClassSwimmer {
-  id             String @id @default(cuid())
+  id             String  @id @default(cuid())
   cancellationId String
   studentId      String
   swimmerName    String
@@ -536,11 +536,11 @@ model AssessmentSession {
   createdAt       DateTime  @default(now())
   updatedAt       DateTime  @updatedAt
 
-  club       Club                @relation(fields: [clubId], references: [id], onDelete: Restrict)
-  programme  Programme           @relation(fields: [programmeId], references: [id], onDelete: Restrict)
-  type       AssessmentType?     @relation(fields: [typeId], references: [id], onDelete: Restrict)
-  instructor User?               @relation("AssessmentInstructor", fields: [instructorId], references: [id], onDelete: SetNull)
-  bookings   AssessmentBooking[]
+  club              Club                         @relation(fields: [clubId], references: [id], onDelete: Restrict)
+  programme         Programme                    @relation(fields: [programmeId], references: [id], onDelete: Restrict)
+  type              AssessmentType?              @relation(fields: [typeId], references: [id], onDelete: Restrict)
+  instructor        User?                        @relation("AssessmentInstructor", fields: [instructorId], references: [id], onDelete: SetNull)
+  bookings          AssessmentBooking[]
   parentPublication ParentAssessmentPublication?
 
   @@index([clubId, date, startMinutes])
@@ -598,11 +598,11 @@ model AssessmentBooking {
   createdAt      DateTime                @default(now())
   updatedAt      DateTime                @updatedAt
 
-  session      AssessmentSession @relation(fields: [sessionId], references: [id], onDelete: Restrict)
-  student      Student           @relation(fields: [studentId], references: [id], onDelete: Restrict)
-  outcomeLevel Level?            @relation(fields: [outcomeLevelId], references: [id], onDelete: Restrict)
-  bookedBy     User?             @relation("AssessmentBookedBy", fields: [bookedById], references: [id], onDelete: SetNull)
-  assessedBy   User?             @relation("AssessmentAssessedBy", fields: [assessedById], references: [id], onDelete: SetNull)
+  session        AssessmentSession      @relation(fields: [sessionId], references: [id], onDelete: Restrict)
+  student        Student                @relation(fields: [studentId], references: [id], onDelete: Restrict)
+  outcomeLevel   Level?                 @relation(fields: [outcomeLevelId], references: [id], onDelete: Restrict)
+  bookedBy       User?                  @relation("AssessmentBookedBy", fields: [bookedById], references: [id], onDelete: SetNull)
+  assessedBy     User?                  @relation("AssessmentAssessedBy", fields: [assessedById], references: [id], onDelete: SetNull)
   parentRequests ParentBookingRequest[]
 
   /// One booking per child per session. Re-booking after a cancellation is
@@ -614,64 +614,67 @@ model AssessmentBooking {
 
 // Parent identities never receive a staff User or staff permissions.
 model ParentAccount {
-  id        String   @id @default(cuid())
-  email     String   @unique
-  name      String?
-  phone     String?
-  isActive  Boolean  @default(true)
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-  sessions ParentSession[]
-  requests ParentBookingRequest[]
+  id             String                 @id @default(cuid())
+  email          String                 @unique
+  name           String?
+  phone          String?
+  isActive       Boolean                @default(true)
+  createdAt      DateTime               @default(now())
+  updatedAt      DateTime               @updatedAt
+  sessions       ParentSession[]
+  requests       ParentBookingRequest[]
   accessRequests ParentAccessRequest[]
   changeRequests ParentChangeRequest[]
 }
 
 /// Parent-supplied details are a request, never proof of access to a swimmer.
 model ParentAccessRequest {
-  id String @id @default(cuid())
-  parentId String
-  key String
-  requestHash String
+  id               String        @id @default(cuid())
+  parentId         String
+  key              String
+  requestHash      String
   childFingerprint String
-  firstName String
-  lastName String
-  dateOfBirth DateTime @db.Date
-  context String
-  status String @default("PENDING")
-  studentId String?
-  reviewedById String?
-  reviewedByName String?
-  reviewedAt DateTime?
-  reply String?
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-  parent ParentAccount @relation(fields: [parentId], references: [id], onDelete: Restrict)
+  firstName        String
+  lastName         String
+  dateOfBirth      DateTime      @db.Date
+  context          String
+  status           String        @default("PENDING")
+  studentId        String?
+  reviewedById     String?
+  reviewedByName   String?
+  reviewedAt       DateTime?
+  reply            String?
+  createdAt        DateTime      @default(now())
+  updatedAt        DateTime      @updatedAt
+  parent           ParentAccount @relation(fields: [parentId], references: [id], onDelete: Restrict)
+  student          Student?      @relation(fields: [studentId], references: [id], onDelete: Restrict)
+
   @@unique([parentId, key])
-  student Student? @relation(fields: [studentId], references: [id], onDelete: Restrict)
   @@index([parentId, createdAt])
   @@index([status, createdAt])
 }
 
 model ParentSession {
-  id        String   @id @default(cuid())
+  id        String        @id @default(cuid())
   parentId  String
-  tokenHash String   @unique
+  tokenHash String        @unique
   expiresAt DateTime
   revokedAt DateTime?
-  createdAt DateTime @default(now())
-  parent ParentAccount @relation(fields: [parentId], references: [id], onDelete: Restrict)
+  createdAt DateTime      @default(now())
+  parent    ParentAccount @relation(fields: [parentId], references: [id], onDelete: Restrict)
+
   @@index([parentId, expiresAt])
 }
 
 model ParentSignInChallenge {
-  id        String   @id
+  id        String    @id
   email     String
   codeHash  String
-  attempts  Int      @default(0)
+  attempts  Int       @default(0)
   expiresAt DateTime
   usedAt    DateTime?
-  createdAt DateTime @default(now())
+  createdAt DateTime  @default(now())
+
   @@index([email, createdAt])
 }
 
@@ -684,37 +687,39 @@ model ParentRateLimit {
 
 /// Staff can approve an email before signup; verified email ownership is required.
 model ParentChildAccess {
-  id          String   @id @default(cuid())
+  id          String    @id @default(cuid())
   parentEmail String
   studentId   String
   source      String
   grantedById String?
   revokedAt   DateTime?
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
-  student Student @relation(fields: [studentId], references: [id], onDelete: Restrict)
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+  student     Student   @relation(fields: [studentId], references: [id], onDelete: Restrict)
+
   @@unique([parentEmail, studentId])
   @@index([studentId])
 }
 
 model ParentAssessmentPublication {
-  sessionId       String   @id
-  enabled         Boolean  @default(false)
+  sessionId       String            @id
+  enabled         Boolean           @default(false)
   bookingClosesAt DateTime?
-  updatedAt       DateTime @updatedAt
-  session AssessmentSession @relation(fields: [sessionId], references: [id], onDelete: Restrict)
+  updatedAt       DateTime          @updatedAt
+  session         AssessmentSession @relation(fields: [sessionId], references: [id], onDelete: Restrict)
 }
 
 /// Durable request IDs protect child creation as well as seat allocation on retries.
 model ParentBookingRequest {
-  id          String   @id @default(cuid())
+  id          String            @id @default(cuid())
   parentId    String
   key         String
   requestHash String
   bookingId   String
-  createdAt   DateTime @default(now())
-  parent ParentAccount @relation(fields: [parentId], references: [id], onDelete: Restrict)
-  booking AssessmentBooking @relation(fields: [bookingId], references: [id], onDelete: Restrict)
+  createdAt   DateTime          @default(now())
+  parent      ParentAccount     @relation(fields: [parentId], references: [id], onDelete: Restrict)
+  booking     AssessmentBooking @relation(fields: [bookingId], references: [id], onDelete: Restrict)
+
   @@unique([parentId, key])
   @@index([bookingId])
 }
@@ -729,7 +734,8 @@ model ParentProgressEvent {
   value      Json?
   recordedAt DateTime @default(now())
   releaseAt  DateTime
-  student Student @relation(fields: [studentId], references: [id], onDelete: Restrict)
+  student    Student  @relation(fields: [studentId], references: [id], onDelete: Restrict)
+
   @@index([studentId, kind, subjectId, releaseAt, id])
 }
 

@@ -107,6 +107,18 @@
 .turnfin-module .rota-tl-key i { display: inline-block; width: 20px; height: 12px; border-radius: 6px; }
 /* Below 1280px the same day is an agenda: each activity's people and gaps in time order. */
 .turnfin-module .rota-agenda { display: none; flex-direction: column; gap: 16px; }
+/* Who's working, by person: the shift's outline under what they are on, and their breaks. */
+.turnfin-module .rota-people .rota-tl-label { min-height: 52px; }
+.turnfin-module .rota-people .rota-tl-track { cursor: default; }
+.turnfin-module .rota-people .rota-tl-track > .pc-block { cursor: default; z-index: 1; }
+.turnfin-module .rota-people-shift { position: absolute; top: 2px; bottom: 2px; border: 1px dashed var(--pc-line-strong, var(--pc-ink-muted)); border-radius: 14px; }
+.turnfin-module .rota-people-shift[data-planned] { border-style: solid; border-color: var(--pc-primary); background: color-mix(in srgb, var(--pc-primary) 6%, transparent); }
+.turnfin-module .rota-people-break { position: absolute; top: 10px; bottom: 10px; z-index: 2; display: grid; place-items: center; min-width: 6px; border: 1px dashed var(--pc-ink-muted); border-radius: 8px; background: var(--pc-surface); color: var(--pc-ink-muted); }
+.turnfin-module .rota-people-break[data-pinned] { border-style: solid; border-color: var(--pc-ink); color: var(--pc-ink); }
+.turnfin-module .rota-people-break > svg { width: 12px; height: 12px; }
+.turnfin-module .rota-tl-key i.rota-people-shift, .turnfin-module .rota-tl-key i.rota-people-break { position: static; display: inline-block; }
+.turnfin-module .rota-people-warn { display: inline-flex; align-items: center; gap: 4px; color: var(--pc-warning, var(--pc-ink)); }
+.turnfin-module .rota-people-warn > svg { width: 12px; height: 12px; }
 .turnfin-module .rota-agenda-head { display: flex; align-items: center; gap: 8px; }
 @media (max-width: 1023px) {
   .turnfin-module .rota-tl { display: none; }

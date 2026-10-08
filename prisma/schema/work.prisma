@@ -4,40 +4,41 @@
 // Refunds is a separate staff module. Identity/site IDs and names are snapshots;
 // retiring accounts or facilities must not erase a financial handoff's history.
 model RefundRequest {
-  id String @id
-  number Int @unique @default(autoincrement())
-  status String @default("DRAFT")
-  version Int @default(1)
-  creatorId String
-  creatorName String
-  clubId String
-  clubName String
-  customerName String @default("")
-  contactEmail String @default("")
-  contactPhone String @default("")
-  memberNumber String @default("")
-  service String @default("OTHER")
-  description String @default("")
-  requestedCents Int?
-  paymentDate String @default("")
-  paymentReference String @default("")
-  reason String @default("")
-  handlerId String?
-  handlerName String?
-  approvedCents Int?
-  approvedById String?
-  approvedByName String?
-  paidOn String?
-  paidMethod String?
-  paidReference String?
-  paidById String?
-  paidByName String?
-  submittedAt DateTime?
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-  events RefundEvent[]
-  attachments RefundAttachment[]
-  notifications RefundNotification[]
+  id               String               @id
+  number           Int                  @unique @default(autoincrement())
+  status           String               @default("DRAFT")
+  version          Int                  @default(1)
+  creatorId        String
+  creatorName      String
+  clubId           String
+  clubName         String
+  customerName     String               @default("")
+  contactEmail     String               @default("")
+  contactPhone     String               @default("")
+  memberNumber     String               @default("")
+  service          String               @default("OTHER")
+  description      String               @default("")
+  requestedCents   Int?
+  paymentDate      String               @default("")
+  paymentReference String               @default("")
+  reason           String               @default("")
+  handlerId        String?
+  handlerName      String?
+  approvedCents    Int?
+  approvedById     String?
+  approvedByName   String?
+  paidOn           String?
+  paidMethod       String?
+  paidReference    String?
+  paidById         String?
+  paidByName       String?
+  submittedAt      DateTime?
+  createdAt        DateTime             @default(now())
+  updatedAt        DateTime             @updatedAt
+  events           RefundEvent[]
+  attachments      RefundAttachment[]
+  notifications    RefundNotification[]
+
   @@index([status, submittedAt])
   @@index([clubId, status])
   @@index([creatorId])
@@ -46,48 +47,51 @@ model RefundRequest {
 }
 
 model RefundEvent {
-  id String @id @default(cuid())
-  requestId String
-  operationId String
-  actorId String
-  actorName String
-  action String
-  note String @default("")
-  snapshot Json
-  createdAt DateTime @default(now())
-  request RefundRequest @relation(fields: [requestId], references: [id], onDelete: Restrict)
+  id            String               @id @default(cuid())
+  requestId     String
+  operationId   String
+  actorId       String
+  actorName     String
+  action        String
+  note          String               @default("")
+  snapshot      Json
+  createdAt     DateTime             @default(now())
+  request       RefundRequest        @relation(fields: [requestId], references: [id], onDelete: Restrict)
   notifications RefundNotification[]
+
   @@unique([requestId, operationId])
   @@index([requestId, createdAt])
 }
 
 model RefundAttachment {
-  id String @id
-  requestId String
-  name String
-  mime String
-  size Int
-  bytes Bytes
+  id          String        @id
+  requestId   String
+  name        String
+  mime        String
+  size        Int
+  bytes       Bytes
   createdById String
-  createdAt DateTime @default(now())
-  removedAt DateTime?
-  request RefundRequest @relation(fields: [requestId], references: [id], onDelete: Restrict)
+  createdAt   DateTime      @default(now())
+  removedAt   DateTime?
+  request     RefundRequest @relation(fields: [requestId], references: [id], onDelete: Restrict)
+
   @@index([requestId])
 }
 
 model RefundNotification {
-  id String @id @default(cuid())
-  requestId String
-  eventId String
+  id          String        @id @default(cuid())
+  requestId   String
+  eventId     String
   recipientId String
-  status String @default("PENDING")
-  attempts Int @default(0)
+  status      String        @default("PENDING")
+  attempts    Int           @default(0)
   attemptedAt DateTime?
-  error String?
-  sentAt DateTime?
-  createdAt DateTime @default(now())
-  request RefundRequest @relation(fields: [requestId], references: [id], onDelete: Restrict)
-  event RefundEvent @relation(fields: [eventId], references: [id], onDelete: Restrict)
+  error       String?
+  sentAt      DateTime?
+  createdAt   DateTime      @default(now())
+  request     RefundRequest @relation(fields: [requestId], references: [id], onDelete: Restrict)
+  event       RefundEvent   @relation(fields: [eventId], references: [id], onDelete: Restrict)
+
   @@unique([eventId, recipientId])
   @@index([requestId, status])
 }
@@ -214,7 +218,7 @@ model RotaShift {
 /// duty per place it needs, unfilled until a supervisor plans who. Cancelling
 /// it cancels its sessions still to come.
 model RotaBooking {
-  id            String    @id @default(cuid())
+  id            String     @id @default(cuid())
   orgId         String
   siteId        String
   departmentId  String?
@@ -223,21 +227,21 @@ model RotaBooking {
   /// Who it is for, e.g. "Example National School".
   title         String
   /// Where at the site, e.g. "Learner pool".
-  place         String    @default("")
+  place         String     @default("")
   /// Monday = 0 to Sunday = 6.
   weekdays      Int[]
   startMinutes  Int
   endMinutes    Int
-  firstDay      DateTime  @db.Date
-  lastDay       DateTime  @db.Date
+  firstDay      DateTime   @db.Date
+  lastDay       DateTime   @db.Date
   /// Dates between the first and last day it does not run (a bank holiday, a mid-term break).
   skipDates     DateTime[] @default([]) @db.Date
-  note          String    @default("")
+  note          String     @default("")
   createdById   String?
   createdByName String
   cancelledAt   DateTime?
-  createdAt     DateTime  @default(now())
-  updatedAt     DateTime  @updatedAt
+  createdAt     DateTime   @default(now())
+  updatedAt     DateTime   @updatedAt
 
   site       Club              @relation(fields: [siteId], references: [id], onDelete: Restrict)
   department Department?       @relation(fields: [departmentId], references: [id], onDelete: SetNull)
@@ -269,31 +273,31 @@ model RotaBookingNeed {
 /// whether Timepoint was updated. It goes on the personal file of each
 /// person it moves, and an open "Update Timepoint" is a follow-up.
 model RotaShiftChange {
-  id             String    @id @default(cuid())
-  orgId          String
-  shiftId        String
-  siteId         String
+  id              String    @id @default(cuid())
+  orgId           String
+  shiftId         String
+  siteId          String
   /// The duty's day.
-  date           DateTime  @db.Date
+  date            DateTime  @db.Date
   /// added | changed | cancelled
-  kind           String
+  kind            String
   /// What it was and what it is now, in words ("Lifeguard 14:00–22:00, Ava Example").
-  before         String    @default("")
-  after          String    @default("")
+  before          String    @default("")
+  after           String    @default("")
   /// The people it took off and put on the duty, for their personal file.
-  fromUserId     String?
-  toUserId       String?
+  fromUserId      String?
+  toUserId        String?
   /// cover | swap | extra | correction
-  reason         String
+  reason          String
   /// The absence it covers, when the reason is cover.
-  absenceId      String?
-  note           String    @default("")
-  byId           String?
-  byName         String
-  timepointAt    DateTime?
-  timepointById  String?
+  absenceId       String?
+  note            String    @default("")
+  byId            String?
+  byName          String
+  timepointAt     DateTime?
+  timepointById   String?
   timepointByName String?
-  createdAt      DateTime  @default(now())
+  createdAt       DateTime  @default(now())
 
   shift RotaShift @relation(fields: [shiftId], references: [id], onDelete: Cascade)
 
@@ -392,22 +396,22 @@ model RotaChange {
 /// the reason is shown only to rota managers. `withdrawnAt` marks one
 /// recorded in error.
 model RotaAbsence {
-  id             String    @id @default(cuid())
-  orgId          String
+  id                String    @id @default(cuid())
+  orgId             String
   /// The person's account, when they have one; `rotaPersonId` covers everyone
   /// on the imported roster, login or not. At least one is set.
-  userId         String?
-  rotaPersonId   String?
-  reason         String
-  firstDay       DateTime  @db.Date
-  lastDay        DateTime? @db.Date
-  note           String    @default("")
-  reportedById   String?
-  reportedByName String
+  userId            String?
+  rotaPersonId      String?
+  reason            String
+  firstDay          DateTime  @db.Date
+  lastDay           DateTime? @db.Date
+  note              String    @default("")
+  reportedById      String?
+  reportedByName    String
   /// Off again soon after an earlier absence, and the manager said it is the
   /// same thing: that earlier absence. A plain extension changes `lastDay`
   /// instead and is kept in `updates`.
-  continuesId    String?
+  continuesId       String?
   /// The return-to-work conversation, held once they are back (from their
   /// first shift): when, whether they are fit to work or need changes to it,
   /// whether a fit note came in (sickness over 7 days) and a note. Null until
@@ -420,9 +424,9 @@ model RotaAbsence {
   returnNote        String    @default("")
   returnById        String?
   returnByName      String?
-  withdrawnAt    DateTime?
-  createdAt      DateTime  @default(now())
-  updatedAt      DateTime  @updatedAt
+  withdrawnAt       DateTime?
+  createdAt         DateTime  @default(now())
+  updatedAt         DateTime  @updatedAt
 
   organisation Organisation        @relation(fields: [orgId], references: [id], onDelete: Restrict)
   user         User?               @relation("RotaAbsentPerson", fields: [userId], references: [id], onDelete: Cascade)
@@ -536,7 +540,6 @@ model RotaActivity {
 // kept unread until development has its own database (changes are additive).
 // ---------------------------------------------------------------------------
 
-
 /// One activity at a site on a day, needing `places` people at once from
 /// start to end. Each place is a lane on the plan.
 model RotaNeed {
@@ -559,7 +562,7 @@ model RotaNeed {
   updatedAt     DateTime @updatedAt
 
   site        Club             @relation(fields: [siteId], references: [id], onDelete: Restrict)
-  type        ActivityType @relation(fields: [typeId], references: [id], onDelete: Restrict)
+  type        ActivityType     @relation(fields: [typeId], references: [id], onDelete: Restrict)
   repeat      RotaRepeat?      @relation(fields: [repeatId], references: [id], onDelete: SetNull)
   assignments RotaAssignment[]
 
@@ -586,6 +589,55 @@ model RotaAssignment {
 
   @@index([needId])
   @@index([userId])
+}
+
+/// Someone put on a shift on the plan before their activities (owner decision, 8 October
+/// 2026): "add a staff member to a shift, then assign activities to them". Their activities
+/// fill it; anyone on an activity without one still gets a shift worked out from what they are on.
+model RotaPlanShift {
+  id            String   @id @default(cuid())
+  orgId         String
+  siteId        String
+  /// The department whose plan it is on.
+  departmentId  String
+  date          DateTime @db.Date
+  userId        String
+  startMinutes  Int
+  endMinutes    Int
+  createdById   String?
+  createdByName String
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  site       Club       @relation(fields: [siteId], references: [id], onDelete: Restrict)
+  department Department @relation(fields: [departmentId], references: [id], onDelete: Restrict)
+  user       User       @relation("RotaPlanShifts", fields: [userId], references: [id], onDelete: Restrict)
+
+  @@index([siteId, date])
+  @@index([userId, date])
+}
+
+/// A break placed by the manager (handbook: "all breaks will be allocated by the Manager on
+/// shift"). A person's day at a site keeps the breaks placed for it; any the handbook owes them
+/// that are not placed are suggested where they have nothing on.
+model RotaBreak {
+  id           String   @id @default(cuid())
+  orgId        String
+  siteId       String
+  date         DateTime @db.Date
+  userId       String
+  startMinutes Int
+  minutes      Int
+  paid         Boolean
+  byId         String?
+  byName       String
+  createdAt    DateTime @default(now())
+
+  site Club @relation(fields: [siteId], references: [id], onDelete: Restrict)
+  user User @relation("RotaBreaks", fields: [userId], references: [id], onDelete: Restrict)
+
+  @@index([siteId, date])
+  @@index([userId, date])
 }
 
 /// A department's week at a site, shared with its staff: from then on they see
@@ -661,7 +713,7 @@ model RotaRepeat {
   createdAt     DateTime   @default(now())
   cancelledAt   DateTime?
 
-  site  Club             @relation(fields: [siteId], references: [id], onDelete: Restrict)
+  site  Club         @relation(fields: [siteId], references: [id], onDelete: Restrict)
   type  ActivityType @relation(fields: [typeId], references: [id], onDelete: Restrict)
   needs RotaNeed[]
 

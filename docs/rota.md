@@ -18,8 +18,10 @@ holds hours and pay; the rota keeps a log of every change to a day that has come
 | Need | `RotaNeed` | One activity at a site on a day: where (one of the site's **areas**, Admin, Areas: "Main pool"), from and to, and how many **places** (people at once). Each place is a lane on the timeline. |
 | Assignment | `RotaAssignment` | A person on one place for all or part of the need's time. One person at a time on a place (`placeProblem`). |
 | Gap | worked out | Any time a place has nobody on it, or the person on it is off that day (`needGaps`, `needsCover`). Back-to-back swim classes nobody teaches count as one gap. |
-| Shift | worked out | First start to last finish of a person's activities that day; an hour or more with nothing on splits it in two (`dayShift`, `SPLIT_AFTER`). |
-| Breaks | worked out | The house rule (below), placed in free time between activities. When there is none, the shift says "No room for … of breaks". |
+| Planned shift | `RotaPlanShift` | Someone put on a shift on a department's plan before their activities (owner decision, 8 October 2026): "add a staff member to a shift, then assign activities". Two of theirs at one site may not overlap. |
+| Shift | planned, else worked out | A planned shift is the shift. Without one: first start to last finish of their activities that day; an hour or more with nothing on splits it in two (`dayShift`, `SPLIT_AFTER`). Work outside a planned shift makes a worked-out one beside it. |
+| Placed break | `RotaBreak` | A break the manager placed for a person's day at a site (handbook: "all breaks will be allocated by the Manager on shift"). |
+| Breaks | placed, else suggested | The house rule (below). The manager's are kept where they put them, even during an activity (that time then needs cover); the rest are suggested in free time. When there is none, the shift says "Breaks to place". |
 | Shared week | `RotaWeekShare` | A department's week at a site, shared with its staff. Until then it is a draft they cannot see. |
 | Change log | `RotaLog` | Every change to a day that had come (today or earlier): what, who it moved, the reason, the absence it covers, and Timepoint. |
 | Booking | `RotaRepeat` | A booking that repeats (school lessons, lane hire): it adds its need on each of its days ahead, each then planned on its own. |
@@ -150,6 +152,26 @@ someone off an activity: with no free time, the shift says so and the planner le
 (which then needs cover) or the duty manager arranges it on the day. Unpaid breaks come off
 the paid hours whether placed or not.
 
+## Shifts first (owner decision, 8 October 2026)
+
+Plan's **Who's working** is a timeline by person: each row is their shift (solid outline when
+planned), what they are on, and their breaks (solid when placed, dashed while suggested).
+
+- **Add to shift**: times, then who, best fit first (`whoForShift`, the same ranking as "Who can
+  fill it" without a qualification). Saved by `savePlanShift`.
+- **Open a person**: their shift (change, remove, or turn a worked-out one into a planned one),
+  their breaks (`saveBreaks` places them all; "Use suggestions" clears them), what they are on,
+  and **Activities they could take**: every gap inside their shift on this department's day, at
+  the longest stretch they are free (placed breaks count, suggestions do not), with why not
+  ("Needs NPLQ", "Off that day", "Busy then"). Putting them on uses `assign` or, for a swim
+  class, `planTeacher` (`ShiftOption`, worked out in `buildDay`).
+- **Under-18 rest** (`youngRest`): 12 hours off between shifts at 16 and 17, 14 under 16, and two
+  days off a week, from their work at any site (activities, planned shifts, classes). Warnings
+  only: the plan says so and the manager decides.
+- Copying a day with its people copies planned shifts too; sharing a week tells the people on
+  planned shifts; Turnfin Me shows the planned shift and the placed breaks. Removing a shift
+  removes the breaks placed in it; activities stay, with a worked-out shift.
+
 ## The personal file
 
 Rota registers two sections with the personal-file seam (`src/lib/rota/file.ts`):
@@ -159,7 +181,8 @@ Rota registers two sections with the personal-file seam (`src/lib/rota/file.ts`)
 
 ## Files
 
-- Schema: `prisma/migrations/20261019120000_rota_rebuild` (additive: the activity list,
+- Schema: `prisma/migrations/20261022120000_rota_plan_shifts` (planned shifts and placed breaks);
+  `prisma/migrations/20261019120000_rota_rebuild` (additive: the activity list,
   needs, assignments, shared weeks, the log, bookings, and the swim school's
   `ClassPlannedTeacher`). The tables of the retired rota (`RotaShift`, `RotaShiftSegment`,
   `RotaShiftChange`, `RotaActivity`, `RotaBooking`, `RotaBookingNeed`, `RotaPerson`,
@@ -171,10 +194,10 @@ Rota registers two sections with the personal-file seam (`src/lib/rota/file.ts`)
   (Plan, Today, who can fill a gap, bookings, the activity list); `absences.ts`;
   `actions.ts`; `absence-actions.ts`; `mine.ts` (Turnfin Me); `home.ts`; `file.ts`
 - The swim school's side: `src/modules/activities/contributions.ts` (`list` and `plan`)
-- UI: `src/app/rota/`, `src/components/rota/` (`day-plan.tsx` the timeline, `fill-sheet.tsx`,
+- UI: `src/app/rota/`, `src/components/rota/` (`day-plan.tsx` the timeline, `people-plan.tsx` who's working and their shifts, `fill-sheet.tsx`,
   `plan-dialogs.tsx`, `today-parts.tsx`, `bookings.tsx`, `activity-list.tsx`, `absences.tsx`);
   Turnfin Me `apps/me/src/app/shifts/page.tsx`
-- Tests: `cover.test.ts`, `day.test.ts`, `view.test.ts`, `rota.test.ts` (end to end on a throwaway database),
+- Tests: `cover.test.ts`, `shifts.test.ts`, `day.test.ts`, `view.test.ts`, `rota.test.ts` (end to end on a throwaway database),
   `src/modules/activities/commitments.test.ts`, `src/lib/staff-api/api.test.ts`
 - Sandbox: `scripts/sandbox-seed.ts` seeds a planned week at Hillview (sign in as sam@ for
   Plan, maya@ for Run)

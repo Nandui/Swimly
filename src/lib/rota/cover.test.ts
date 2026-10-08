@@ -57,7 +57,7 @@ test("a shift runs from first start to last finish; an hour off splits it", () =
 
 test("breaks go into free time, and the shift says when there is none", () => {
   const free = dayShift([{ start: h("07:00"), end: h("09:30"), label: "Lifeguarding" }, { start: h("09:45"), end: h("12:00"), label: "Lifeguarding" }]);
-  assert.deepEqual(free!.parts[0].breaks, [{ start: h("09:30"), end: h("09:45"), paid: false }], "5 hours: one 15-minute unpaid break, in the free quarter");
+  assert.deepEqual(free!.parts[0].breaks, [{ start: h("09:30"), end: h("09:45"), paid: false, pinned: false }], "5 hours: one 15-minute unpaid break, in the free quarter");
   assert.equal(free!.paidMinutes, 5 * 60 - 15);
   const full = dayShift([{ start: h("07:00"), end: h("14:00"), label: "Lifeguarding" }]);
   assert.deepEqual(full!.parts[0].unplaced, [{ minutes: 15, paid: true }, { minutes: 30, paid: false }], "7 hours straight: both breaks have nowhere to go");
@@ -66,7 +66,7 @@ test("breaks go into free time, and the shift says when there is none", () => {
 
 test("an under-18 is owed 30 minutes after four and a half hours", () => {
   const day = dayShift([{ start: h("09:00"), end: h("11:00"), label: "Reception" }, { start: h("11:30"), end: h("14:00"), label: "Reception" }], "under18");
-  assert.deepEqual(day!.parts[0].breaks, [{ start: h("11:00"), end: h("11:30"), paid: false }]);
+  assert.deepEqual(day!.parts[0].breaks, [{ start: h("11:00"), end: h("11:30"), paid: false, pinned: false }]);
 });
 
 test("durations read plainly", () => {

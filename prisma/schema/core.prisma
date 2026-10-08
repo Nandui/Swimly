@@ -73,11 +73,11 @@ model StaffRole {
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
 
-  users       User[]
-  assignments RoleAssignment[]
+  users                 User[]
+  assignments           RoleAssignment[]
+  purchaseApprovalRules PurchaseApprovalRule[]
 
   @@index([sortOrder])
-  purchaseApprovalRules PurchaseApprovalRule[]
 }
 
 model User {
@@ -145,36 +145,38 @@ model User {
   /// Payroll's employee number.
   payrollNumber   String?
 
-  organisation   Organisation?    @relation(fields: [orgId], references: [id], onDelete: Restrict)
-  manager        User?            @relation("LineManager", fields: [managerId], references: [id], onDelete: SetNull)
-  position       Position?        @relation(fields: [positionId], references: [id], onDelete: SetNull)
-  reports        User[]           @relation("LineManager")
-  departments    UserDepartment[]
-  roleAssignments RoleAssignment[] @relation("AssignedRole")
-  qualifications Qualification[]  @relation("QualificationHolder")
+  organisation        Organisation?        @relation(fields: [orgId], references: [id], onDelete: Restrict)
+  manager             User?                @relation("LineManager", fields: [managerId], references: [id], onDelete: SetNull)
+  position            Position?            @relation(fields: [positionId], references: [id], onDelete: SetNull)
+  reports             User[]               @relation("LineManager")
+  departments         UserDepartment[]
+  roleAssignments     RoleAssignment[]     @relation("AssignedRole")
+  qualifications      Qualification[]      @relation("QualificationHolder")
   trainingAssignments TrainingAssignment[] @relation("TrainingLearner")
   rotaShifts          RotaShift[]          @relation("RotaShiftAssignee")
   rotaAbsences        RotaAbsence[]        @relation("RotaAbsentPerson")
   rotaPerson          RotaPerson?          @relation("RotaPersonAccount")
-  sharedDevices  SharedDeviceUser[]
+  sharedDevices       SharedDeviceUser[]
 
   /// `Restrict`, not `SetNull`: an account with no role has no permissions and
   /// cannot sign in, so deleting a role out from under one of its holders
   /// would silently lock them out. The delete is refused and the admin has to
   /// move people off it first.
-  staffRole               StaffRole?          @relation(fields: [staffRoleId], references: [id], onDelete: Restrict)
+  staffRole               StaffRole?            @relation(fields: [staffRoleId], references: [id], onDelete: Restrict)
   auditEntries            AuditLog[]
   coursesTaught           Course[]
-  classesCovered          ClassCover[]        @relation("ClassCoverBy")
-  classesCoveredFor       ClassCover[]        @relation("ClassCoverFor")
+  classesCovered          ClassCover[]          @relation("ClassCoverBy")
+  classesCoveredFor       ClassCover[]          @relation("ClassCoverFor")
   attendanceMarked        AttendanceRecord[]
   assessmentsMade         CompetencyResult[]
   completionsConfirmed    LevelCompletion[]
   classNotes              ClassNote[]
-  assessmentSessionsLed   AssessmentSession[] @relation("AssessmentInstructor")
-  assessmentBookingsMade  AssessmentBooking[] @relation("AssessmentBookedBy")
-  assessmentOutcomesGiven AssessmentBooking[] @relation("AssessmentAssessedBy")
+  assessmentSessionsLed   AssessmentSession[]   @relation("AssessmentInstructor")
+  assessmentBookingsMade  AssessmentBooking[]   @relation("AssessmentBookedBy")
+  assessmentOutcomesGiven AssessmentBooking[]   @relation("AssessmentAssessedBy")
   rotaAssignments         RotaAssignment[]      @relation("RotaAssignee")
+  rotaPlanShifts          RotaPlanShift[]       @relation("RotaPlanShifts")
+  rotaBreaks              RotaBreak[]           @relation("RotaBreaks")
   classesPlanned          ClassPlannedTeacher[] @relation("ClassPlannedTeacher")
 
   @@index([role])
@@ -196,21 +198,21 @@ model Organisation {
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
-  clubs              Club[]
-  users              User[]
-  departments        Department[]
-  roleAssignments    RoleAssignment[]
-  qualificationTypes QualificationType[]
-  qualifications     Qualification[]
-  trainingCourses    TrainingCourse[]
+  clubs               Club[]
+  users               User[]
+  departments         Department[]
+  roleAssignments     RoleAssignment[]
+  qualificationTypes  QualificationType[]
+  qualifications      Qualification[]
+  trainingCourses     TrainingCourse[]
   trainingAssignments TrainingAssignment[]
-  rotaShifts         RotaShift[]
-  rotaAbsences       RotaAbsence[]
-  rotaPeople         RotaPerson[]
-  rotaDepartments    RotaDepartment[]
-  rotaImports        RotaImport[]
-  rotaChanges        RotaChange[]
-  activityTypes      ActivityType[]
+  rotaShifts          RotaShift[]
+  rotaAbsences        RotaAbsence[]
+  rotaPeople          RotaPerson[]
+  rotaDepartments     RotaDepartment[]
+  rotaImports         RotaImport[]
+  rotaChanges         RotaChange[]
+  activityTypes       ActivityType[]
 }
 
 /// A team such as Aquatics, Reception or Maintenance. Optionally tied to one
@@ -225,14 +227,15 @@ model Department {
   createdAt  DateTime  @default(now())
   updatedAt  DateTime  @updatedAt
 
-  organisation Organisation     @relation(fields: [orgId], references: [id], onDelete: Restrict)
-  club         Club?            @relation(fields: [clubId], references: [id], onDelete: SetNull)
-  members      UserDepartment[]
+  organisation   Organisation     @relation(fields: [orgId], references: [id], onDelete: Restrict)
+  club           Club?            @relation(fields: [clubId], references: [id], onDelete: SetNull)
+  members        UserDepartment[]
   rotaShifts     RotaShift[]
   rotaBookings   RotaBooking[]
   rotaActivities RotaActivity[]
-  activityTypes     ActivityType[]
-  rotaWeekShares    RotaWeekShare[]
+  activityTypes  ActivityType[]
+  rotaWeekShares RotaWeekShare[]
+  rotaPlanShifts RotaPlanShift[]
 
   @@unique([orgId, name])
   @@index([orgId, sortOrder])
@@ -317,14 +320,14 @@ model QualificationType {
   createdAt      DateTime  @default(now())
   updatedAt      DateTime  @updatedAt
 
-  organisation   Organisation    @relation(fields: [orgId], references: [id], onDelete: Restrict)
-  qualifications Qualification[]
+  organisation     Organisation            @relation(fields: [orgId], references: [id], onDelete: Restrict)
+  qualifications   Qualification[]
   rotaBookingNeeds RotaBookingNeed[]
-  trainingCourses TrainingCourse[]
-  positions      PositionQualification[]
-  rotaShifts     RotaShift[]
-  rotaActivities RotaActivity[]
-  activityTypes     ActivityType[]
+  trainingCourses  TrainingCourse[]
+  positions        PositionQualification[]
+  rotaShifts       RotaShift[]
+  rotaActivities   RotaActivity[]
+  activityTypes    ActivityType[]
 
   @@unique([orgId, name])
 }
@@ -411,7 +414,7 @@ model Club {
   /// numbers (PO-BT-00001) and anywhere a site needs two or three letters.
   code       String?   @unique
 
-  organisation       Organisation?       @relation(fields: [orgId], references: [id], onDelete: Restrict)
+  organisation       Organisation?         @relation(fields: [orgId], references: [id], onDelete: Restrict)
   programmes         Programme[]
   students           Student[]
   courses            Course[]
@@ -426,6 +429,8 @@ model Club {
   areas              SiteArea[]
   purchaseCounter    PurchaseOrderCounter?
   rotaNeeds          RotaNeed[]
+  rotaPlanShifts     RotaPlanShift[]
+  rotaBreaks         RotaBreak[]
   rotaWeekShares     RotaWeekShare[]
   rotaLogs           RotaLog[]
   rotaRepeats        RotaRepeat[]
@@ -558,8 +563,8 @@ model ActivityType {
   repeats      RotaRepeat[]
 
   @@unique([orgId, name])
-  @@map("RotaActivityType")
   @@index([departmentId])
+  @@map("RotaActivityType")
 }
 
 /// A place at a site where work happens (owner decision, 7 October 2026): the

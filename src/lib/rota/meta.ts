@@ -1,5 +1,5 @@
 import {
-  Ban, CalendarCheck, CircleCheck, Clock3, Coffee, CopyX, FileQuestion, GraduationCap,
+  Ban, CalendarCheck, CircleCheck, CircleDashed, Clock3, Coffee, CopyX, FileQuestion, GraduationCap,
   Pencil, Send, TriangleAlert,
 } from "lucide-react";
 import type { StatusMeta } from "@/lib/status";
@@ -32,6 +32,7 @@ export const ROTA_FIT_META = {
   missing: { label: "Qualification not recorded", color: "orange", icon: FileQuestion },
   expired: { label: "Qualification expired", color: "red", icon: TriangleAlert },
   off: { label: "Off", color: "gray", icon: Ban },
+  break: { label: "Break during an activity", color: "orange", icon: Coffee },
 } as const satisfies Record<string, StatusMeta>;
 export type RotaFitKey = keyof typeof ROTA_FIT_META;
 
@@ -40,6 +41,9 @@ export const ROTA_SHIFT_NOTE_META = {
   break: { label: "Break", color: "gray", icon: Coffee },
   noBreak: { label: "No room for a break", color: "orange", icon: Coffee },
   twoParts: { label: "Two parts", color: "gray", icon: Clock3 },
+  suggested: { label: "Suggested break", color: "gray", icon: CircleDashed },
+  young: { label: "Under-18 rest", color: "orange", icon: TriangleAlert },
+  planned: { label: "Planned shift", color: "blue", icon: Clock3 },
 } as const satisfies Record<string, StatusMeta>;
 
 /** A change to a live day, against Timepoint. */

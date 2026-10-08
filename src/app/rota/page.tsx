@@ -1,20 +1,18 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { ChevronLeft, ChevronRight } from "lucide-react";
-import { Avatar, AvatarFallback } from "@/components/shadcn/avatar";
 import { Button } from "@/components/shadcn/button";
 import { EmptyState } from "@/components/ui-kit/empty-state";
 import { PageHeader } from "@/components/ui-kit/page-header";
 import { Tag } from "@/components/ui-kit/tag";
 import { DayPlan } from "@/components/rota/day-plan";
+import { AddShiftSheet, PeoplePlan } from "@/components/rota/people-plan";
 import { LinkPicker } from "@/components/rota/link-picker";
 import { CopyDialog, NeedDialog, ShareWeek } from "@/components/rota/plan-dialogs";
-import { formatDateRange, formatDayMonth, formatWeekday, nameInitials } from "@/lib/format";
-import { addDaysIso, clock, mondayOf } from "@/lib/rota/constants";
+import { formatDateRange, formatDayMonth, formatWeekday } from "@/lib/format";
+import { addDaysIso, mondayOf } from "@/lib/rota/constants";
 import { planWeek } from "@/lib/rota/data";
-import type { Person } from "@/lib/rota/day";
-import { ROTA_DAY_META, ROTA_FIT_META, ROTA_SHIFT_NOTE_META, ROTA_WEEK_META } from "@/lib/rota/meta";
-import { duration } from "@/lib/rota/shifts";
+import { ROTA_DAY_META, ROTA_SHIFT_NOTE_META, ROTA_WEEK_META } from "@/lib/rota/meta";
 
 export const metadata: Metadata = { title: "Plan" };
 
@@ -39,7 +37,7 @@ export default async function PlanPage({ searchParams }: { searchParams: Promise
   const sunday = addDaysIso(monday, 6);
   const live = date <= now;
   const dayGaps = day.gapCount;
-  const warned = day.people.filter((p) => p.warnings.length || p.shift.parts.some((x) => x.unplaced.length)).length;
+  const warned = day.people.filter((p) => p.warnings.length || p.rest.length || p.breakClashes.length || p.shift.parts.some((x) => x.unplaced.length)).length;
   const thisMonday = mondayOf(now);
   const weeksBack = Array.from({ length: 6 }, (_, i) => addDaysIso(monday, -7 * (i + 1)));
   const daysBack = Array.from({ length: 14 }, (_, i) => addDaysIso(date, -(i + 1)));
@@ -99,39 +97,20 @@ export default async function PlanPage({ searchParams }: { searchParams: Promise
                 hint={data.types.length ? "Add the activities the day needs, or copy an earlier day." : "Add this department's activities to the activity list first."} />
             )}
           </section>
-          {day.people.length ? (
+          {day.people.length || data.canChange ? (
             <section className="pc-panel" aria-labelledby="rota-working">
-              <div className="pc-panel-head"><div><h2 id="rota-working">Who&apos;s working</h2>
-                <p className="text-sm text-ui-muted-foreground">Each shift comes from the activities a person is on, with breaks placed by the handbook rules.</p></div></div>
-              <ul className="pc-rows">{day.people.map((p) => <WorkingRow key={p.userId} person={p} />)}</ul>
+              <div className="pc-panel-head">
+                <div><h2 id="rota-working">Who&apos;s working</h2>
+                  <p className="text-sm text-ui-muted-foreground">Put people on a shift, then give them the day&apos;s activities. Breaks follow the handbook; you place them.</p></div>
+                {data.canChange ? <AddShiftSheet siteId={site.id} departmentId={department.id} date={date} dateLabel={dateLabel} live={live} /> : null}
+              </div>
+              {day.people.length ? (
+                <PeoplePlan people={day.people} siteId={site.id} departmentId={department.id} date={date} dateLabel={dateLabel} live={live} canChange={data.canChange} />
+              ) : <EmptyState compact icon="users" title="Nobody on a shift yet" hint="Add someone to a shift, or put people straight on the activities above." />}
             </section>
           ) : null}
         </>
       )}
     </>
-  );
-}
-
-/** A person's day: their shift, what they are on, their breaks, and anything to check. */
-function WorkingRow({ person: p }: { person: Person }) {
-  const parts = p.shift.parts;
-  const breaks = parts.flatMap((x) => x.breaks);
-  const unplaced = parts.flatMap((x) => x.unplaced);
-  return (
-    <li className="pc-row">
-      <Avatar size="lg"><AvatarFallback>{nameInitials(p.name)}</AvatarFallback></Avatar>
-      <span className="pc-row-body">
-        <span className="pc-row-title">{p.name}</span>
-        <span className="pc-row-hint tabular-nums">
-          {parts.length > 1 ? `${parts.map((x) => `${clock(x.start)} to ${clock(x.end)}`).join(" and ")}` : `Shift ${clock(p.shift.start)} to ${clock(p.shift.end)}`} · {duration(p.shift.paidMinutes)} paid · {p.activities.join(", ")}
-        </span>
-      </span>
-      <span className="pc-row-trail">
-        {parts.length > 1 ? <Tag meta={ROTA_SHIFT_NOTE_META.twoParts} /> : null}
-        {breaks.map((b) => <Tag key={b.start} meta={ROTA_SHIFT_NOTE_META.break} label={`${b.paid ? "Paid break" : "Break"} ${clock(b.start)}–${clock(b.end)}`} />)}
-        {unplaced.length ? <Tag meta={ROTA_SHIFT_NOTE_META.noBreak} label={`No room for ${unplaced.reduce((n, b) => n + b.minutes, 0)} min of breaks`} /> : null}
-        {p.warnings.map((w) => <Tag key={w} meta={ROTA_FIT_META[w]} />)}
-      </span>
-    </li>
   );
 }

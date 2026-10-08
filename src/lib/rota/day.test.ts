@@ -86,3 +86,25 @@ test("no teaching activity on the list means the classes stay off the rota", () 
   const bare = buildDay({ date: "2026-10-23", types: [types[0]], names, needs: [], assignments: [], classes: [cls("c1", "lauren", "16:00", "16:30")] });
   assert.deepEqual(bare.groups, []);
 });
+
+test("someone on a planned shift: the day's gaps inside it they could take, and why not", () => {
+  const planned = buildDay({
+    date: "2026-10-23", types, names: new Map([...names, ["nia", "Nia Walsh"]]), areas,
+    needs: [need("main", "Main pool", "07:00", "21:30", 1)],
+    assignments: [on("a1", "main", 1, "aoife", "07:00", "14:00")],
+    classes: [],
+    held: [{ userId: "nia", typeId: "nplq", issuedOn: "2025-01-01", expiresOn: null, revoked: false }],
+    planned: [{ id: "s1", userId: "nia", departmentId: "pool", startMinutes: h("15:00"), endMinutes: h("21:00") }, { id: "s2", userId: "ciara", departmentId: "pool", startMinutes: h("15:00"), endMinutes: h("21:00") }],
+    pinned: new Map([["aoife", [{ start: h("10:00"), minutes: 30, paid: false }]]]),
+  });
+  const nia = planned.people.find((p) => p.userId === "nia")!;
+  assert.equal(nia.activities.length, 0, "on the plan with nothing yet");
+  const [option] = nia.options;
+  assert.equal(option.ok, true);
+  assert.equal(option.needId, "main");
+  assert.deepEqual([option.start, option.end], [h("15:00"), h("21:00")], "all of their shift: suggested breaks move once it is taken");
+  assert.equal(planned.people.find((p) => p.userId === "ciara")!.options[0].why, "Needs NPLQ", "not qualified: offered with the reason");
+  const aoife = planned.people.find((p) => p.userId === "aoife")!;
+  assert.deepEqual(aoife.breakClashes.map((c) => [c.start, c.end]), [[h("10:00"), h("10:30")]], "a placed break during an activity needs cover");
+  assert.ok(aoife.warnings.includes("break"));
+});

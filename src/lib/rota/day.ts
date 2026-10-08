@@ -1,6 +1,7 @@
 import { intoLanes, mergeTouching, needGaps } from "@/lib/rota/cover";
 import { qualification, type Held } from "@/lib/rota/fit";
-import { dayShift, type DayShift, type WorkItem } from "@/lib/rota/shifts";
+import { subtract } from "@/lib/rota/cover";
+import { dayShift, type DayShift, type PinnedBreak, type WorkItem } from "@/lib/rota/shifts";
 import type { YoungBand } from "@/lib/rota/constants";
 
 /** One day at one site, as every Rota screen draws it (Plan, Today, Turnfin Me): its **areas**
@@ -17,7 +18,7 @@ export type DayAssignment = { id: string; needId: string; place: number; userId:
 export type DayClass = { ref: string; userId: string | null; startMinutes: number; endMinutes: number; title: string; place: string; planned: boolean };
 
 /** Why a block on the timeline needs a second look. */
-export type BlockWarning = "off" | "missing" | "expired" | "overlap";
+export type BlockWarning = "off" | "missing" | "expired" | "overlap" | "break";
 
 export type Block = {
   kind: "on" | "gap";
@@ -53,7 +54,26 @@ export type Group = {
   gapCount: number;
   needs: DayNeed[];
 };
-export type Person = { userId: string; name: string; shift: DayShift; activities: string[]; warnings: BlockWarning[] };
+/** A shift put on the plan before its activities. */
+export type DayPlannedShift = { id: string; userId: string; departmentId: string; startMinutes: number; endMinutes: number };
+/** Something on the day a person on shift could take: a gap on an activity's place or a class
+ *  nobody teaches, at the time it fits their shift (`start`-`end`), or why not (`why`). */
+export type ShiftOption = {
+  key: string; groupKey: string; name: string; area: string; departmentId: string; requiredName: string | null;
+  needId: string | null; place: number | null; classRef: string | null; detail: string | null;
+  gapStart: number; gapEnd: number; start: number; end: number; ok: boolean; why: string | null;
+};
+export type Person = {
+  userId: string; name: string; shift: DayShift; activities: string[]; warnings: BlockWarning[];
+  /** Their planned shifts that day. */
+  planned: DayPlannedShift[];
+  /** Under-18 rest warnings (`youngRest`). */
+  rest: string[];
+  /** Placed breaks that fall during an activity they are on: that time needs cover. */
+  breakClashes: { start: number; end: number; label: string }[];
+  /** What they could take inside their shifts, open ones first. */
+  options: ShiftOption[];
+};
 /** An area on the day with the activities in it. `unmatched`: a place that is not on the site's
  *  list of areas (typed before the list, or since renamed or archived), so it can be fixed. */
 export type DayZone = { key: string; name: string; unmatched: boolean; gapCount: number; groups: Group[] };
@@ -74,6 +94,12 @@ export function buildDay(input: {
   /** What else people are on that day elsewhere (other sites), for double bookings. */
   elsewhere?: ReadonlyMap<string, readonly WorkItem[]>;
   young?: ReadonlyMap<string, YoungBand>;
+  /** Shifts put on the plan before their activities. */
+  planned?: readonly DayPlannedShift[];
+  /** Breaks the manager placed, by person. */
+  pinned?: ReadonlyMap<string, readonly PinnedBreak[]>;
+  /** Under-18 rest warnings, by person. */
+  rest?: ReadonlyMap<string, readonly string[]>;
 }): Day {
   const types = new Map(input.types.map((t) => [t.id, t]));
   const teaching = input.types.find((t) => t.fromClasses) ?? null;
@@ -181,11 +207,26 @@ export function buildDay(input: {
     return { ...z, groups: inZone, gapCount: inZone.reduce((n, g) => n + g.gapCount, 0) };
   });
   const ordered = orderedZones.flatMap((z) => z.groups);
-  const people: Person[] = [...work.entries()].map(([userId, items]) => {
-    const shift = dayShift(items, input.young?.get(userId) ?? null)!;
+  const planned = input.planned ?? [];
+  const everyone = [...new Set([...work.keys(), ...planned.map((p) => p.userId)])];
+  const people: Person[] = everyone.map((userId) => {
+    const items = work.get(userId) ?? [];
+    const mine = planned.filter((p) => p.userId === userId).sort((a, b) => a.startMinutes - b.startMinutes);
+    const shift = dayShift(items, input.young?.get(userId) ?? null, { planned: mine.map((p) => ({ start: p.startMinutes, end: p.endMinutes })), pinned: input.pinned?.get(userId) ?? [] })!;
+    // A placed break during something they are on takes them off it: say so on the block.
+    const placed = shift.parts.flatMap((p) => p.breaks.filter((b) => b.pinned));
+    const breakClashes: Person["breakClashes"] = [];
+    for (const g of ordered) for (const lane of g.lanes) for (const b of lane) {
+      if (b.userId !== userId || b.kind !== "on") continue;
+      for (const x of placed) if (x.start < b.end && b.start < x.end) {
+        if (!b.warnings.includes("break")) b.warnings.push("break");
+        breakClashes.push({ start: Math.max(x.start, b.start), end: Math.min(x.end, b.end), label: `${g.name} in ${g.place}` });
+      }
+    }
     const warnings = new Set<BlockWarning>();
     for (const g of ordered) for (const lane of g.lanes) for (const b of lane) if (b.userId === userId) b.warnings.forEach((w) => warnings.add(w));
-    return { userId, name: name(userId)!, shift, activities: [...new Set(items.map((i) => i.label))], warnings: [...warnings] };
+    return { userId, name: name(userId) ?? "Someone", shift, activities: [...new Set(items.map((i) => i.label))], warnings: [...warnings], planned: mine,
+      rest: [...(input.rest?.get(userId) ?? [])], breakClashes, options: shiftOptions(ordered, userId, shift, items, input) };
   }).sort((a, b) => a.shift.start - b.shift.start || a.name.localeCompare(b.name));
   return { date: input.date, zones: orderedZones, groups: ordered, people, gapCount: ordered.reduce((n, g) => n + g.gapCount, 0) };
 }
@@ -222,4 +263,34 @@ export function dayGaps(day: Day): DayGap[] {
     }
   }
   return out.sort((a, b) => a.start - b.start || a.group.name.localeCompare(b.group.name));
+}
+
+/** What someone on shift could take that day (owner decision, 8 October 2026: "add a staff
+ *  member to a shift, then assign activities to them based on the activities we have on the
+ *  day"): every gap inside their shifts, at the longest stretch they have free for it (their
+ *  placed breaks count, suggested ones do not), with why
+ *  not when they cannot (not qualified, off, already busy). Open ones first, then by time. */
+function shiftOptions(groups: readonly Group[], userId: string, shift: DayShift, work: readonly WorkItem[], input: { date: string; held?: readonly Held[]; off?: ReadonlySet<string> }): ShiftOption[] {
+  // Breaks the manager placed count as busy; suggestions do not, they move once the time is taken.
+  const busy = [...work, ...shift.parts.flatMap((p) => p.breaks.filter((b) => b.pinned))];
+  const out: ShiftOption[] = [];
+  for (const g of groups) {
+    const q = qualification(input.held ?? [], userId, g.requiredTypeId, input.date);
+    g.lanes.forEach((lane, li) => lane.forEach((b) => {
+      if (b.kind !== "gap") return;
+      for (const part of shift.parts) {
+        const s = Math.max(b.start, part.start), e = Math.min(b.end, part.end);
+        if (e - s < 15) continue;
+        const free = subtract({ start: s, end: e }, busy).sort((x, y) => y.end - y.start - (x.end - x.start))[0];
+        const why = input.off?.has(userId) ? "Off that day"
+          : input.held && q === "missing" ? `Needs ${g.requiredName ?? "a qualification"}`
+          : input.held && q === "expired" ? `${g.requiredName ?? "Qualification"} expired`
+          : !free || free.end - free.start < 15 ? "Busy then" : null;
+        out.push({ key: `${g.key}|${li}|${b.start}|${part.start}`, groupKey: g.key, name: g.name, area: g.place, departmentId: g.departmentId, requiredName: g.requiredName,
+          needId: b.needId, place: b.place, classRef: b.classRef, detail: b.detail, gapStart: b.start, gapEnd: b.end,
+          start: free?.start ?? s, end: free?.end ?? e, ok: !why, why });
+      }
+    }));
+  }
+  return out.sort((a, b) => Number(b.ok) - Number(a.ok) || a.start - b.start || a.name.localeCompare(b.name));
 }

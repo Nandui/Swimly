@@ -5,10 +5,10 @@ import { isDateOnly, parseDateOnly, today } from "@/lib/format";
 import { prisma } from "@/lib/prisma";
 import { mayFor, sitesFor } from "@/lib/policy/session";
 import { canChange, requireRotaActor, type RotaActor } from "@/lib/rota/access";
-import { addDaysIso, mondayOf, youngBand, type YoungBand } from "@/lib/rota/constants";
+import { addDaysIso, mondayOf, youngBand, youngRest, type YoungBand } from "@/lib/rota/constants";
 import { buildDay, type DayClass, type DayType } from "@/lib/rota/day";
 import { rankFits, type Held } from "@/lib/rota/fit";
-import type { WorkItem } from "@/lib/rota/shifts";
+import type { PinnedBreak, WorkItem } from "@/lib/rota/shifts";
 import { commitmentsFor } from "@/modules/server";
 
 /** Rota reads (owner decisions, 6 October 2026). The sites a person may see come from the policy
@@ -61,7 +61,7 @@ async function activityTypes(orgId: string | undefined, includeArchived = false)
 /** Everything `buildDay` needs for each day from `from` to `to` at one site. */
 async function loadDays(siteId: string, orgId: string | undefined, from: string, to: string) {
   const range = { gte: parseDateOnly(from), lte: parseDateOnly(to) };
-  const [types, needs, classes] = await Promise.all([
+  const [types, needs, classes, planned, pinned] = await Promise.all([
     activityTypes(orgId, true),
     prisma.rotaNeed.findMany({
       where: { siteId, date: range }, orderBy: [{ date: "asc" }, { startMinutes: "asc" }],
@@ -69,8 +69,10 @@ async function loadDays(siteId: string, orgId: string | undefined, from: string,
         assignments: { select: { id: true, needId: true, place: true, userId: true, startMinutes: true, endMinutes: true } } },
     }),
     commitmentsFor({ siteIds: [siteId], from, to }).then((all) => all.filter((c) => c.source === CLASSES)),
+    prisma.rotaPlanShift.findMany({ where: { siteId, date: range }, select: { id: true, date: true, userId: true, departmentId: true, startMinutes: true, endMinutes: true } }),
+    prisma.rotaBreak.findMany({ where: { siteId, date: range }, orderBy: { startMinutes: "asc" }, select: { date: true, userId: true, startMinutes: true, minutes: true, paid: true } }),
   ]);
-  const userIds = [...new Set([...needs.flatMap((n) => n.assignments.map((a) => a.userId)), ...classes.flatMap((c) => (c.userId ? [c.userId] : []))])];
+  const userIds = [...new Set([...needs.flatMap((n) => n.assignments.map((a) => a.userId)), ...classes.flatMap((c) => (c.userId ? [c.userId] : [])), ...planned.map((p) => p.userId)])];
   const [users, held, absences, elsewhere, elsewhereClasses] = userIds.length ? await Promise.all([
     prisma.user.findMany({ where: { id: { in: userIds } }, select: { id: true, name: true, dateOfBirth: true } }),
     prisma.qualification.findMany({ where: { userId: { in: userIds } }, select: { userId: true, typeId: true, issuedOn: true, expiresOn: true, revokedAt: true } }),
@@ -86,6 +88,7 @@ async function loadDays(siteId: string, orgId: string | undefined, from: string,
     commitmentsFor({ userIds, from, to }).then((all) => all.filter((c) => c.siteId !== siteId)),
   ]) : [[], [], [], [], []];
   const names = new Map(users.map((u) => [u.id, u.name]));
+  const rest = await youngDays(users, from, to);
   const heldList: Held[] = held.map((q) => ({ userId: q.userId, typeId: q.typeId, issuedOn: isoOf(q.issuedOn), expiresOn: q.expiresOn ? isoOf(q.expiresOn) : null, revoked: !!q.revokedAt }));
   // Where an activity happens: the site's areas, kept in Admin; the day is grouped by them.
   const places = await areaNames(siteId);
@@ -97,8 +100,13 @@ async function loadDays(siteId: string, orgId: string | undefined, from: string,
     const young = new Map<string, YoungBand>();
     for (const u of users) { const band = youngBand(u.dateOfBirth ? isoOf(u.dateOfBirth) : null, date); if (band) young.set(u.id, band); }
     const dayNeeds = needs.filter((n) => isoOf(n.date) === date);
+    const pins = new Map<string, PinnedBreak[]>();
+    for (const b of pinned) if (isoOf(b.date) === date) pins.set(b.userId, [...(pins.get(b.userId) ?? []), { start: b.startMinutes, minutes: b.minutes, paid: b.paid }]);
+    const restOn = new Map<string, string[]>();
+    for (const [userId, days] of rest) { const w = youngRest(young.get(userId) ?? null, date, days); if (w.length) restOn.set(userId, w); }
     return {
-      date, types, names, held: heldList, off, elsewhere: away, young, areas: places,
+      date, types, names, held: heldList, off, elsewhere: away, young, areas: places, pinned: pins, rest: restOn,
+      planned: planned.filter((p) => isoOf(p.date) === date).map((p) => ({ id: p.id, userId: p.userId, departmentId: p.departmentId, startMinutes: p.startMinutes, endMinutes: p.endMinutes })),
       needs: dayNeeds.map((n) => ({ id: n.id, typeId: n.typeId, place: n.place, startMinutes: n.startMinutes, endMinutes: n.endMinutes, places: n.places, note: n.note, repeatTitle: n.repeat?.title ?? null })),
       assignments: dayNeeds.flatMap((n) => n.assignments),
       classes: classes.filter((c) => c.date === date && c.ref).map((c): DayClass => ({ ref: c.ref!, userId: c.userId, startMinutes: c.startMinutes, endMinutes: c.endMinutes,
@@ -106,6 +114,32 @@ async function loadDays(siteId: string, orgId: string | undefined, from: string,
     };
   };
   return { types, dayInput, places };
+}
+
+/** For the under-18s among these people: each day they work, at any site, from the day before
+ *  `from` to the end of the week after `to`, with its first start and last finish, for their
+ *  rest warnings (`youngRest`). Rota activities, planned shifts and swim classes count. */
+async function youngDays(users: readonly { id: string; dateOfBirth: Date | null }[], from: string, to: string) {
+  const ids = users.filter((u) => youngBand(u.dateOfBirth ? isoOf(u.dateOfBirth) : null, to) || youngBand(u.dateOfBirth ? isoOf(u.dateOfBirth) : null, from)).map((u) => u.id);
+  const out = new Map<string, Map<string, { start: number; end: number }>>();
+  if (!ids.length) return out;
+  const first = addDaysIso(mondayOf(from), -1), last = addDaysIso(mondayOf(to), 7);
+  const range = { gte: parseDateOnly(first), lte: parseDateOnly(last) };
+  const [assigned, shifts, classes] = await Promise.all([
+    prisma.rotaAssignment.findMany({ where: { userId: { in: ids }, need: { date: range } }, select: { userId: true, startMinutes: true, endMinutes: true, need: { select: { date: true } } } }),
+    prisma.rotaPlanShift.findMany({ where: { userId: { in: ids }, date: range }, select: { userId: true, date: true, startMinutes: true, endMinutes: true } }),
+    commitmentsFor({ userIds: ids, from: first, to: last }).then((all) => all.filter((c) => c.source === CLASSES)),
+  ]);
+  const add = (userId: string, date: string, start: number, end: number) => {
+    const days = out.get(userId) ?? new Map<string, { start: number; end: number }>();
+    const d = days.get(date);
+    days.set(date, d ? { start: Math.min(d.start, start), end: Math.max(d.end, end) } : { start, end });
+    out.set(userId, days);
+  };
+  for (const a of assigned) add(a.userId, isoOf(a.need.date), a.startMinutes, a.endMinutes);
+  for (const p of shifts) add(p.userId, isoOf(p.date), p.startMinutes, p.endMinutes);
+  for (const c of classes) if (c.userId) add(c.userId, c.date, c.startMinutes, c.endMinutes);
+  return out;
 }
 
 /** The departments this person belongs to: where Plan lets them change the days ahead. */
@@ -139,7 +173,9 @@ export async function planWeek(input: { site?: string; week?: string; dept?: str
     const mine = z.groups.filter((g) => g.departmentId === department?.id);
     return { ...z, groups: mine, gapCount: mine.reduce((n, g) => n + g.gapCount, 0) };
   }).filter((z) => z.groups.length);
-  const people = full.people.filter((p) => groups.some((g) => g.lanes.some((l) => l.some((b) => b.userId === p.userId))));
+  // Everyone on this department's activities, and everyone put on a shift on its plan.
+  const people = full.people.filter((p) => p.planned.some((x) => x.departmentId === department?.id) || groups.some((g) => g.lanes.some((l) => l.some((b) => b.userId === p.userId))))
+    .map((p) => ({ ...p, options: p.options.filter((o) => o.departmentId === department?.id) }));
   const share = department ? await prisma.rotaWeekShare.findUnique({
     where: { siteId_departmentId_monday: { siteId: site.id, departmentId: department.id, monday: parseDateOnly(monday) } }, select: { sharedAt: true, sharedByName: true },
   }) : null;

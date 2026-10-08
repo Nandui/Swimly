@@ -167,6 +167,36 @@ test("putting people on: warnings never refuse; one person at a time on a place;
   assert.equal(await fixture.prisma.rotaLog.count(), 0, "days ahead change freely, nothing logged");
 });
 
+test("shifts first: put someone on a shift, give them the day's gaps, and place their breaks", async () => {
+  const shift = (extra: Partial<{ userId: string; start: string; end: string }> = {}) => ({ siteId: churchfield, departmentId: "d-pool", date: tomorrow(), userId: "ava", start: "07:00", end: "15:00", ...extra });
+  as("lee", [at("rota.view")]);
+  assert.equal((await actions.savePlanShift(null, shift())).ok, false, "View only sees it");
+  as("maya", [at("rota.plan")]);
+  assert.equal((await actions.savePlanShift(null, shift())).ok, true);
+  assert.equal((await actions.savePlanShift(null, shift({ start: "14:00", end: "18:00" }))).ok, false, "two of their shifts here may not overlap");
+  const plan = await data.planWeek({ site: churchfield, day: tomorrow(), dept: "d-pool" });
+  const ava = plan.day!.people.find((p) => p.userId === "ava")!;
+  assert.deepEqual(ava.shift.parts.map((x) => x.planned), [true]);
+  const take = ava.options.find((o) => o.ok)!;
+  assert.equal(take.place, 2, "the gap on place 2 after her time on it");
+  assert.ok(take.start >= 11 * 60 && take.end <= 15 * 60);
+
+  // The manager places her breaks; one during her activity leaves that time to cover.
+  const breaks = (list: [string, number, boolean][]) => ({ siteId: churchfield, departmentId: "d-pool", date: tomorrow(), userId: "ava", breaks: list.map(([start, minutes, paid]) => ({ start, minutes, paid })) });
+  assert.equal((await actions.saveBreaks(breaks([["12:00", 30, false], ["12:15", 15, true]]))).ok, false, "breaks may not overlap");
+  assert.equal((await actions.saveBreaks(breaks([["09:00", 15, true], ["12:00", 30, false], ["13:30", 15, true]]))).ok, true);
+  assert.equal((await actions.saveBreaks({ ...breaks([]), userId: "noah" })).ok, false, "not on this department's plan");
+  const after = (await data.planWeek({ site: churchfield, day: tomorrow(), dept: "d-pool" })).day!.people.find((p) => p.userId === "ava")!;
+  assert.deepEqual(after.shift.parts[0].breaks.map((b) => [b.start, b.pinned]), [[9 * 60, true], [12 * 60, true], [13 * 60 + 30, true]]);
+  assert.deepEqual(after.breakClashes.map((c) => c.start), [9 * 60]);
+  assert.ok(await fixture.prisma.auditLog.findFirst({ where: { entity: "RotaBreak" } }));
+
+  const row = await fixture.prisma.rotaPlanShift.findFirstOrThrow({ where: { userId: "ava" } });
+  assert.equal((await actions.removePlanShift(row.id)).ok, true);
+  assert.equal(await fixture.prisma.rotaBreak.count({ where: { userId: "ava" } }), 0, "its breaks go with it");
+  assert.equal(await fixture.prisma.auditLog.count({ where: { entity: "RotaPlanShift" } }), 2);
+});
+
 test("who can fill it: qualified and free first; nobody is left out", async () => {
   as("maya", [at("rota.plan")]);
   const fits = await data.fitsFor({ siteId: churchfield, date: tomorrow(), start: 11 * 60, end: 15 * 60, requiredTypeId: "qt-life" });
@@ -240,7 +270,7 @@ test("sharing a week: staff see it in Turnfin Me and are told; until then they s
   assert.ok(told.some((t) => t.userId === "ava" && /ready/.test(t.line)), "told once");
   const day = (await mine.myDays("ava", 28)).find((d) => d.date === monday)!;
   assert.deepEqual(day.items.map((i) => [i.label, i.place, i.start, i.end]), [["Lifeguarding", "Main pool", 540, 690], ["Lifeguarding", "Main pool", 705, 870]]);
-  assert.deepEqual(day.shift.parts[0].breaks, [{ start: 690, end: 705, paid: false }], "the break goes in the free quarter hour");
+  assert.deepEqual(day.shift.parts[0].breaks, [{ start: 690, end: 705, paid: false, pinned: false }], "the break goes in the free quarter hour");
   told.length = 0;
   assert.equal((await actions.unassign((await fixture.prisma.rotaAssignment.findFirstOrThrow({ where: { userId: "ava", needId: main.id, startMinutes: 705 } })).id)).ok, true);
   assert.ok(told.some((t) => t.userId === "ava" && /no longer/.test(t.line)), "a change after sharing is told");

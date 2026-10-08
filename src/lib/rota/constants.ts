@@ -154,6 +154,29 @@ export function youngBand(dateOfBirth: string | null, onIso: string): YoungBand 
   return age < 16 ? "under16" : age < 18 ? "under18" : null;
 }
 
+/** Under-18s' rest (handbook: 12 hours off between shifts for 16 and 17, 14 under 16, and
+ *  two days off a week). Warnings only (owner decision, 8 October 2026): the plan says so and the
+ *  manager decides. `days` maps each date the person works, any site, to their first start and
+ *  last finish; `date` is the day being planned. */
+export const YOUNG_REST_HOURS: Record<YoungBand, number> = { under16: 14, under18: 12 };
+export function youngRest(band: YoungBand | null, date: string, days: ReadonlyMap<string, { start: number; end: number }>): string[] {
+  const today = days.get(date);
+  if (!band || !today) return [];
+  const need = YOUNG_REST_HOURS[band] * 60;
+  const out: string[] = [];
+  const before = days.get(addDaysIso(date, -1)), after = days.get(addDaysIso(date, 1));
+  if (before && 1440 - before.end + today.start < need) {
+    out.push(`Finished at ${clock(before.end)} the day before: under-${band === "under16" ? "16s" : "18s"} need ${need / 60} hours off, so not before ${clock(before.end + need - 1440)}.`);
+  }
+  if (after && 1440 - today.end + after.start < need) {
+    out.push(`Starts at ${clock(after.start)} the next day: ${need / 60} hours off means finishing by ${clock(after.start + 1440 - need)}.`);
+  }
+  const monday = mondayOf(date);
+  const worked = Array.from({ length: 7 }, (_, i) => addDaysIso(monday, i)).filter((d) => days.has(d)).length;
+  if (worked > 5) out.push(`On ${worked} days this week: under-18s need two days off.`);
+  return out;
+}
+
 /** "60 minutes: 30 unpaid and two 15-minute paid breaks". */
 export function describeEntitlement(shiftMinutes: number, young: YoungBand | null = null) {
   const list = breakEntitlement(shiftMinutes, young);
