@@ -6,6 +6,7 @@ import { formatTime, isDateOnly, parseDateOnly, today } from "@/lib/format";
 import { prisma } from "@/lib/prisma";
 import { sendCode, sendHeld } from "@/lib/academy/public/email";
 import { AcademyApiError, academyApiConfig, emailSchema, idSchema, notFound, readBody } from "@/lib/academy/public/http";
+import { bearerToken } from "@/lib/public-api/http";
 import {
   ACADEMY_CALL_TIME_KEYS, ACADEMY_CHECKS, ACADEMY_KIND_META, ageOn, bookableOnline, callByFrom, euro, takesPlace, type AcademyCheck, type AcademyKind,
 } from "@/lib/academy/rules";
@@ -129,8 +130,8 @@ export async function verifyCode(request: Request) {
 
 /** The checked email behind a token. */
 async function checkedEmail(request: Request) {
-  const match = /^Bearer ([A-Za-z0-9_-]{20,100})$/.exec(request.headers.get("authorization") ?? "");
-  const check = match ? await prisma.academyEmailCheck.findUnique({ where: { tokenHash: digest(`token:${match[1]}`) } }) : null;
+  const token = bearerToken(request);
+  const check = token ? await prisma.academyEmailCheck.findUnique({ where: { tokenHash: digest(`token:${token}`) } }) : null;
   if (!check?.tokenExpiresAt || check.tokenExpiresAt <= new Date()) {
     throw new AcademyApiError(401, "UNAUTHENTICATED", "Your email check has expired. Ask for a new code.");
   }

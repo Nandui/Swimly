@@ -7,6 +7,7 @@ import { digest, lockParent, opaqueToken, rateLimit, requestIp } from "@/modules
 import { ParentApiError, unavailable } from "@/modules/activities/lib/parent/errors";
 import { emailSchema, readBody } from "@/modules/activities/lib/parent/http";
 import { parentEmailConfig, sendParentSignInCode } from "@/modules/activities/lib/parent/email";
+import { bearerToken } from "@/lib/public-api/http";
 
 export type ParentIdentity = { account: ParentAccount; sessionId: string };
 const unauthenticated = () => new ParentApiError(401, "UNAUTHENTICATED", "Please sign in again.");
@@ -76,9 +77,9 @@ export function parentProfile(account: ParentAccount) {
 }
 
 export async function authenticateParent(request: Request): Promise<ParentIdentity> {
-  const match = /^Bearer ([A-Za-z0-9_-]{43})$/i.exec(request.headers.get("authorization") ?? "");
-  if (!match) throw unauthenticated();
-  const session = await prisma.parentSession.findUnique({ where: { tokenHash: digest(`session:${match[1]}`) }, include: { parent: true } });
+  const token = bearerToken(request, /^[A-Za-z0-9_-]{43}$/);
+  if (!token) throw unauthenticated();
+  const session = await prisma.parentSession.findUnique({ where: { tokenHash: digest(`session:${token}`) }, include: { parent: true } });
   if (!session || session.revokedAt || session.expiresAt <= new Date() || !session.parent.isActive) throw unauthenticated();
   await rateLimit(`parent:${session.parentId}`, 120, 60);
   return { account: session.parent, sessionId: session.id };

@@ -1,6 +1,6 @@
-export class ParentApiError extends Error {
-  constructor(public status: number, public code: string, message: string, public headers: Record<string, string> = {}) { super(message); }
-}
+import { PublicApiError } from "@/lib/public-api/http";
+
+export class ParentApiError extends PublicApiError {}
 
 export function unavailable(): never {
   throw new ParentApiError(503, "UNAVAILABLE", "Parent access is not available yet. Try again later.");
