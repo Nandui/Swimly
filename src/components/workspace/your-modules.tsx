@@ -15,6 +15,7 @@ export function YourModulesProvider({ ids, role, site, children }: YourWork & { 
   return <YourModules.Provider value={{ ids, role, site }}>{children}</YourModules.Provider>;
 }
 
+/** The person's modules in group order (MODULE_GROUPS); `groupModules` adds the headings. */
 export function useYourModules(): ModuleManifest[] {
   const { ids } = useContext(YourModules);
   return allModules().filter((m) => ids.includes(m.id));

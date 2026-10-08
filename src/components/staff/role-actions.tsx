@@ -14,7 +14,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Notice } from "@/components/ui-kit/notice";
 import { createRole, deleteRole, updateRole } from "@/lib/staff/actions/roles";
 import { WORK_ANYWHERE, cleanLevels, effectiveLevels, levelsFromAccess, type RoleLevels } from "@/lib/staff/levels";
-import { allModules, type ModuleManifest } from "@/modules/registry";
+import { allModules, groupModules, type ModuleManifest } from "@/modules/registry";
 import { cn } from "@/lib/utils";
 
 type Role = {
@@ -143,27 +143,32 @@ function RoleFields({ role, canGiveRestricted }: { role?: Role; canGiveRestricte
       <fieldset className="min-w-0">
         <legend className="text-sm font-semibold">What this role can do in each module</legend>
         <p className="mt-1 text-sm text-ui-muted-foreground">Each level includes the ones before it.</p>
-        <div className="mt-2 divide-y divide-ui-border">
-          {allModules().map((mod) => {
-            const locked = admin && mod.id !== "admin" && !mod.access.restricted
-              ? "Admins can use every module except HR."
-              : mod.access.restricted && !canGiveRestricted
-                ? "Only a superadmin can give HR."
-                : null;
-            const level = shown.levels[mod.id] ?? NONE;
-            return (
-              <div key={mod.id}>
-                <LevelRow mod={mod} level={level} posted={levels[mod.id] ?? NONE} locked={locked} onChange={(value) => setLevel(mod, value)} />
-                {(mod.access.extras ?? []).map((extra) => {
-                  const key = `${mod.id}.${extra.key}`;
-                  const available = level !== NONE && mod.access.levels.findIndex((l) => l.key === level) >= mod.access.levels.findIndex((l) => l.key === extra.from);
-                  if (!available || locked) return null;
-                  return <div key={key} className="pb-3"><Tick id={`${id}-${key}`} name="extras" value={key} checked={extras.includes(key)} onChange={(on) => toggle(key, on)} label={extra.label} hint={extra.help} /></div>;
-                })}
-              </div>
-            );
-          })}
-        </div>
+        {groupModules(allModules()).map((group) => (
+          <section key={group.key} aria-labelledby={`${id}-${group.key}`} className="mt-3">
+            <h3 id={`${id}-${group.key}`} className="text-xs font-semibold text-ui-muted-foreground">{group.label}</h3>
+            <div className="divide-y divide-ui-border">
+              {group.modules.map((mod) => {
+                const locked = admin && mod.id !== "admin" && !mod.access.restricted
+                  ? "Admins can use every module except HR."
+                  : mod.access.restricted && !canGiveRestricted
+                    ? "Only a superadmin can give HR."
+                    : null;
+                const level = shown.levels[mod.id] ?? NONE;
+                return (
+                  <div key={mod.id}>
+                    <LevelRow mod={mod} level={level} posted={levels[mod.id] ?? NONE} locked={locked} onChange={(value) => setLevel(mod, value)} />
+                    {(mod.access.extras ?? []).map((extra) => {
+                      const key = `${mod.id}.${extra.key}`;
+                      const available = level !== NONE && mod.access.levels.findIndex((l) => l.key === level) >= mod.access.levels.findIndex((l) => l.key === extra.from);
+                      if (!available || locked) return null;
+                      return <div key={key} className="pb-3"><Tick id={`${id}-${key}`} name="extras" value={key} checked={extras.includes(key)} onChange={(on) => toggle(key, on)} label={extra.label} hint={extra.help} /></div>;
+                    })}
+                  </div>
+                );
+              })}
+            </div>
+          </section>
+        ))}
       </fieldset>
 
       {admin ? null : (

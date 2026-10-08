@@ -56,10 +56,24 @@ export type ModuleAccess = {
   restricted?: boolean;
 };
 
+/** The part of the centre a module serves. Presentation only: it orders and
+ *  heads the module lists (role editor, module bar, home page) and never gives
+ *  or checks access, which stays role, then level, then permission. */
+export type ModuleGroup = "front-of-house" | "poolside" | "team" | "back-office";
+
+/** Every group, in the order lists show them. */
+export const MODULE_GROUPS: readonly { key: ModuleGroup; label: string }[] = [
+  { key: "front-of-house", label: "Front of house" },
+  { key: "poolside", label: "Poolside" },
+  { key: "team", label: "Team" },
+  { key: "back-office", label: "Back office" },
+];
+
 export type ModuleManifest = {
   /** Stable: stored as the key of `StaffRole.levels`. Never rename. */
   id: string;
   name: string;
+  group: ModuleGroup;
   /** The overview page's subtitle: one line, no closing full stop. */
   description: string;
   icon: LucideIcon;
@@ -76,8 +90,18 @@ export function registerModule(manifest: ModuleManifest) {
   MODULES.push(manifest);
 }
 
+const groupRank = (mod: ModuleManifest) => MODULE_GROUPS.findIndex((g) => g.key === mod.group);
+
+/** Every module, group by group; within a group, in the order they registered. */
 export function allModules(): readonly ModuleManifest[] {
-  return MODULES;
+  return [...MODULES].sort((a, b) => groupRank(a) - groupRank(b));
+}
+
+/** Modules under their group headings, leaving out empty groups. */
+export function groupModules<M extends ModuleManifest>(modules: readonly M[]): { key: ModuleGroup; label: string; modules: M[] }[] {
+  return MODULE_GROUPS
+    .map((g) => ({ ...g, modules: modules.filter((m) => m.group === g.key) }))
+    .filter((g) => g.modules.length > 0);
 }
 
 /** Every permission a module can give, across its levels and extras. */
@@ -87,7 +111,7 @@ export function modulePermissions(mod: ModuleManifest): PermissionKey[] {
 
 /** The modules this person has: those where they hold any permission. */
 export function visibleModules(ctx: ModuleContext): ModuleManifest[] {
-  return MODULES.filter((m) => modulePermissions(m).some((key) => ctx.permissions.has(key)));
+  return allModules().filter((m) => modulePermissions(m).some((key) => ctx.permissions.has(key)));
 }
 
 // ---------------------------------------------------------------------------
@@ -95,10 +119,11 @@ export function visibleModules(ctx: ModuleContext): ModuleManifest[] {
 // imported from `src/modules/index.ts`.
 // ---------------------------------------------------------------------------
 
-// In the order people meet them; Admin last.
+// Lists show them group by group (MODULE_GROUPS), each group in this order.
 
 registerModule({
   id: "swim-school",
+  group: "front-of-house",
   name: "Swim school",
   // Swim school is the first activity type (see src/modules/activities/types.ts).
   description: "Swimmers, classes and assessments at the desk, and the swim school's set-up",
@@ -126,11 +151,47 @@ registerModule({
   },
 });
 
+registerModule({
+  id: "academy",
+  group: "front-of-house",
+  name: "Academy",
+  description: "The lifeguard and swim teacher courses we deliver: candidates, checks, registers and results",
+  icon: Award,
+  href: "/academy",
+  logName: "Academy",
+  access: {
+    reach: "sites",
+    levels: [
+      { key: "view", label: "View", help: "See the courses at their sites.", permissions: ["academy.read"] },
+      { key: "run", label: "Tutor", help: "Add candidates, record checks and payment, take registers and record results.", permissions: ["academy.run"] },
+      { key: "manage", label: "Manage", help: "Keep the course list and put courses on, with sessions, tutor and price.", permissions: ["academy.manage"] },
+    ],
+  },
+});
+
+registerModule({
+  id: "refunds",
+  group: "front-of-house",
+  name: "Refunds",
+  description: "Customer refund requests, finance decisions and completed payments",
+  icon: ReceiptText,
+  href: "/refunds",
+  logName: "Refunds",
+  access: {
+    reach: "everywhere",
+    levels: [
+      { key: "use", label: "Use", help: "Log a customer's refund request and follow it.", permissions: ["refunds.read", "refunds.request"] },
+      { key: "manage", label: "Manage", help: "Decide refund requests and record payments. Nobody decides their own.", permissions: ["refunds.review", "refunds.process"] },
+    ],
+  },
+});
+
 // The pool deck is its own module: teaching is a different job from the desk
 // (owner decision, 28 September 2026). Swim teachers see the class instructor
 // view and nothing else; receptionists never see it unless given it too.
 registerModule({
   id: "pool-deck",
+  group: "poolside",
   name: "Pool deck",
   description: "Today's classes at the pool: attendance, competencies and assessments",
   icon: Waves,
@@ -152,23 +213,44 @@ registerModule({
 });
 
 registerModule({
-  id: "refunds",
-  name: "Refunds",
-  description: "Customer refund requests, finance decisions and completed payments",
-  icon: ReceiptText,
-  href: "/refunds",
-  logName: "Refunds",
+  id: "rota",
+  group: "team",
+  name: "Rota",
+  description: "Who is on which activity at the sites you cover, with every gap in cover counted",
+  icon: CalendarClock,
+  href: "/rota/overview",
+  logName: "Rota",
   access: {
-    reach: "everywhere",
+    reach: "sites",
+    // "manage" keeps its stored key (roles already hold it); it is the duty manager's Run.
     levels: [
-      { key: "use", label: "Use", help: "Log a customer's refund request and follow it.", permissions: ["refunds.read", "refunds.request"] },
-      { key: "manage", label: "Manage", help: "Decide refund requests and record payments. Nobody decides their own.", permissions: ["refunds.review", "refunds.process"] },
+      { key: "view", label: "View", help: "See the rota at their sites.", permissions: ["rota.view"] },
+      { key: "plan", label: "Plan", help: "Plan the days ahead for the departments they belong to.", permissions: ["rota.plan"] },
+      { key: "manage", label: "Run", help: "Run today and change any day for every department, report absences and keep the activity list.", permissions: ["rota.manage"] },
+    ],
+  },
+});
+
+registerModule({
+  id: "training",
+  group: "team",
+  name: "Training",
+  description: "Training for the people you cover: what is due, waiting for sign-off and done",
+  icon: GraduationCap,
+  href: "/training",
+  logName: "Training",
+  access: {
+    reach: "sites",
+    levels: [
+      { key: "trainer", label: "Trainer", help: "Sign off practical training for people at their sites.", permissions: ["training.records.read", "training.signoff"] },
+      { key: "manage", label: "Manage", help: "Create courses, assign them and check certificates.", permissions: ["training.manage", "training.assign", "qualifications.manage"] },
     ],
   },
 });
 
 registerModule({
   id: "docs",
+  group: "team",
   name: "Docs",
   description: "Staff documents to read, write and approve, and who has read them",
   icon: Files,
@@ -188,75 +270,8 @@ registerModule({
 });
 
 registerModule({
-  id: "training",
-  name: "Training",
-  description: "Training for the people you cover: what is due, waiting for sign-off and done",
-  icon: GraduationCap,
-  href: "/training",
-  logName: "Training",
-  access: {
-    reach: "sites",
-    levels: [
-      { key: "trainer", label: "Trainer", help: "Sign off practical training for people at their sites.", permissions: ["training.records.read", "training.signoff"] },
-      { key: "manage", label: "Manage", help: "Create courses, assign them and check certificates.", permissions: ["training.manage", "training.assign", "qualifications.manage"] },
-    ],
-  },
-});
-
-registerModule({
-  id: "rota",
-  name: "Rota",
-  description: "Who is on which activity at the sites you cover, with every gap in cover counted",
-  icon: CalendarClock,
-  href: "/rota/overview",
-  logName: "Rota",
-  access: {
-    reach: "sites",
-    // "manage" keeps its stored key (roles already hold it); it is the duty manager's Run.
-    levels: [
-      { key: "view", label: "View", help: "See the rota at their sites.", permissions: ["rota.view"] },
-      { key: "plan", label: "Plan", help: "Plan the days ahead for the departments they belong to.", permissions: ["rota.plan"] },
-      { key: "manage", label: "Run", help: "Run today and change any day for every department, report absences and keep the activity list.", permissions: ["rota.manage"] },
-    ],
-  },
-});
-
-registerModule({
-  id: "purchasing",
-  name: "Purchasing",
-  description: "Raise purchase orders with approved suppliers, approved by role and amount, numbered per site.",
-  icon: ShoppingCart,
-  href: "/purchasing",
-  logName: "Purchasing",
-  access: {
-    reach: "sites",
-    levels: [
-      { key: "view", label: "View", help: "See their sites' orders, and approve those their role may approve.", permissions: ["purchasing.read"] },
-      { key: "request", label: "Request", help: "Raise purchase orders at their sites.", permissions: ["purchasing.request"] },
-      { key: "manage", label: "Manage", help: "Suppliers, approved products and prices, and who approves up to what.", permissions: ["purchasing.manage"] },
-    ],
-  },
-});
-
-registerModule({
-  id: "academy",
-  name: "Academy",
-  description: "The lifeguard and swim teacher courses we deliver: candidates, checks, registers and results",
-  icon: Award,
-  href: "/academy",
-  logName: "Academy",
-  access: {
-    reach: "sites",
-    levels: [
-      { key: "view", label: "View", help: "See the courses at their sites.", permissions: ["academy.read"] },
-      { key: "run", label: "Tutor", help: "Add candidates, record checks and payment, take registers and record results.", permissions: ["academy.run"] },
-      { key: "manage", label: "Manage", help: "Keep the course list and put courses on, with sessions, tutor and price.", permissions: ["academy.manage"] },
-    ],
-  },
-});
-
-registerModule({
   id: "hr",
+  group: "team",
   name: "HR",
   description: "Restricted notes and performance reviews for the people you look after",
   icon: HeartHandshake,
@@ -275,10 +290,29 @@ registerModule({
   },
 });
 
+registerModule({
+  id: "purchasing",
+  group: "back-office",
+  name: "Purchasing",
+  description: "Raise purchase orders with approved suppliers, approved by role and amount, numbered per site.",
+  icon: ShoppingCart,
+  href: "/purchasing",
+  logName: "Purchasing",
+  access: {
+    reach: "sites",
+    levels: [
+      { key: "view", label: "View", help: "See their sites' orders, and approve those their role may approve.", permissions: ["purchasing.read"] },
+      { key: "request", label: "Request", help: "Raise purchase orders at their sites.", permissions: ["purchasing.request"] },
+      { key: "manage", label: "Manage", help: "Suppliers, approved products and prices, and who approves up to what.", permissions: ["purchasing.manage"] },
+    ],
+  },
+});
+
 // Admin is Core: the organisation every module shares (people, roles, sites
 // and the activity log).
 registerModule({
   id: "admin",
+  group: "back-office",
   name: "Admin",
   description: "People, places and the work every module shares: staff, roles, sites and their areas, departments, qualifications and activities",
   // Settings, not Building2: the building means the working site everywhere else.
