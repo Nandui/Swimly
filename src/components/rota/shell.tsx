@@ -4,7 +4,7 @@ import type { ReactNode } from 'react';
 import { usePathname, useSearchParams } from 'next/navigation';
 import { ModuleShell } from '@/components/workspace/module-shell';
 import { rotaPages } from '@/components/rota/pages';
-import { RotaSiteSwitcher } from '@/components/rota/site-switcher';
+import { SiteSwitcher } from '@/components/workspace/site-switcher';
 import type { RotaActor } from '@/lib/rota/access';
 
 /** The pages that show one site: they take the site from `?site=` and show the picker. Overview
@@ -22,7 +22,7 @@ export function RotaShell({ who, sites, children }: { who: RotaActor; sites: { i
   }));
   return (
     <ModuleShell module="Rota" id="rota" who={who} links={links} scopeNote="Only the sites you cover"
-      tools={SITE_PAGES.has(pathname) && sites.length ? <RotaSiteSwitcher sites={sites} /> : undefined}>
+      tools={SITE_PAGES.has(pathname) && sites.length ? <SiteSwitcher sites={sites} label="Rota site" clear={['dept']} /> : undefined}>
       {children}
     </ModuleShell>
   );

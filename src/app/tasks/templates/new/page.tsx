@@ -1,0 +1,22 @@
+import type { Metadata } from "next";
+import { PageHeader } from "@/components/ui-kit/page-header";
+import { TemplateEditor } from "@/components/tasks/template-editor";
+import { today } from "@/lib/format";
+import { taskTemplate } from "@/lib/tasks/data";
+
+export const metadata: Metadata = { title: "New template" };
+
+export default async function NewTaskTemplatePage() {
+  const { sites, roles } = await taskTemplate(null);
+  const day = today();
+  return (
+    <>
+      <PageHeader back={{ href: "/tasks/templates", label: "Templates" }} title="New template" description="Save it as a draft while you write it; publishing starts its schedule." />
+      <TemplateEditor sites={sites} roles={roles} today={day} template={{
+        id: null, version: null, status: "draft", title: "", description: "", siteIds: [], roleIds: [], tags: [], priority: false, checklist: [], fields: [],
+        minimumRecords: 1, schedules: [{ id: crypto.randomUUID().slice(0, 8), repeat: "daily", every: 1, weekdays: [1, 2, 3, 4, 5], from: day, start: "08:00", due: "09:00" }],
+        requiresComment: false, requiresApproval: false,
+      }} />
+    </>
+  );
+}

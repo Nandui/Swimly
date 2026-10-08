@@ -133,6 +133,7 @@ export const SCREENS = [
   { key: "training", label: "Training", path: "/training", description: "A separate workspace for the training catalogue, assigning courses, trainer sign-off and expiring qualifications. Everyone completes their own training in Turnfin Me without it.", requires: "training.records.read" },
   { key: "rota", label: "Rota", path: "/rota", description: "Plan who is on which activity at a site, day by day, with every gap in cover counted; run today and record absences. Staff see their own days in Turnfin Me.", requires: "rota.view" },
   { key: "purchasing", label: "Purchasing", path: "/purchasing", description: "A separate workspace for purchase orders: approved suppliers and products, approval by role and amount, and numbered orders per site.", requires: "purchasing.read" },
+  { key: "tasks", label: "Tasks", path: "/tasks", description: "A separate workspace for each site's daily checks and logs: tasks from templates on a schedule, readings with acceptable ranges, approval, follow-up actions and scores.", requires: "tasks.complete" },
   { key: "academy", label: "Academy", path: "/academy", description: "A separate workspace for the lifeguard and swim teacher courses we deliver: candidates, payment, pre-course checks, registers and results.", requires: "academy.read" },
   { key: "hr", label: "HR", path: "/hr", description: "A separate, restricted workspace for HR notes and performance reviews of the people a role covers. Staff read what is shared with them in Turnfin Me.", requires: "hr.records.read" },
   { key: "docs", label: "Docs", path: "/docs", description: "A separate workspace for documents, independent approvals and required reading.", requires: "docs.read" },
@@ -168,7 +169,7 @@ export function visibleScreens(permissions: ReadonlySet<PermissionKey>): Set<Scr
  *  - Core: the organisation itself (people, roles, sites, the activity log),
  *    shared by every module and opened in the Core workspace.
  *  - Activities: the swim school (desk and office) and the pool deck.
- *  - Work modules: Docs, Refunds, Training, HR and Rota, each its own workspace.
+ *  - Work modules: Docs, Refunds, Training, HR, Rota, Purchasing, Academy and Tasks, each its own workspace.
  *
  *  A new screen must be added to exactly one of these; a test checks it.
  *  Separate modules never imply access to the swim-school workspace. */
@@ -177,7 +178,7 @@ export const ACTIVITIES_SCREENS = [
   "analytics", "duty", "cancellations", "calendar", "instructor", "students", "courses",
   "together", "assessments", "awaiting-enrolment", "legend-agreements", "programmes",
 ] as const satisfies readonly ScreenKey[];
-export const WORK_MODULE_SCREENS = ["docs", "refunds", "training", "hr", "rota", "purchasing", "academy"] as const satisfies readonly ScreenKey[];
+export const WORK_MODULE_SCREENS = ["docs", "refunds", "training", "hr", "rota", "purchasing", "academy", "tasks"] as const satisfies readonly ScreenKey[];
 
 const CORE = new Set<string>(CORE_SCREENS);
 const AQUATICS = new Set<string>(ACTIVITIES_SCREENS);

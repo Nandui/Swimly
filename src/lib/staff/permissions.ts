@@ -203,6 +203,24 @@ export const PERMISSIONS = [
     description: "Approve suppliers and their products and prices, and set who approves orders up to what amount. Includes seeing orders.",
   },
   {
+    key: "tasks.complete",
+    group: "Tasks",
+    label: "Do tasks",
+    description: "See the day's tasks at the sites this role covers and complete the ones aimed at their role: checklists, readings, photos and comments; raise follow-up actions.",
+  },
+  {
+    key: "tasks.review",
+    group: "Tasks",
+    label: "Review tasks",
+    description: "At the sites this role covers: approve completed tasks (never your own), reopen them, mark them not applicable, resolve follow-up actions and see the reports. Includes doing them.",
+  },
+  {
+    key: "tasks.manage",
+    group: "Tasks",
+    label: "Manage tasks",
+    description: "Write the task templates: what each asks for, the sites and roles it is for, and when it is due. Includes reviewing and doing tasks.",
+  },
+  {
     key: "academy.read",
     group: "Academy",
     label: "See Academy courses",
@@ -363,6 +381,8 @@ const IMPLIES: Partial<Record<PermissionKey, PermissionKey[]>> = {
   "setup.areas": ["setup.view"],
   "purchasing.request": ["purchasing.read"],
   "purchasing.manage": ["purchasing.read"],
+  "tasks.review": ["tasks.complete"],
+  "tasks.manage": ["tasks.review", "tasks.complete"],
   "academy.run": ["academy.read"],
   "academy.manage": ["academy.run", "academy.read"],
   "hr.notes.write": ["hr.records.read"],

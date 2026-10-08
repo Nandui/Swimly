@@ -38,7 +38,7 @@ unresolved concern. Say which checks actually ran.
 
 ## Project constraints
 
-Turnfin is one app: **modules** (Swim school, Pool deck, Refunds, Docs, Training, Rota, Purchasing, Academy, HR and Admin) on
+Turnfin is one app: **modules** (Swim school, Pool deck, Tasks, Refunds, Docs, Training, Rota, Purchasing, Academy, HR and Admin) on
 a shared **Core** (people, roles, sites, audit, the module catalogue), plus Turnfin Me
 (`apps/me`) and the public Academy booking site (`apps/academy`, docs/academy.md). See [docs/how-turnfin-works.md](docs/how-turnfin-works.md) and the owner's
 pillars in it (28 September 2026): simplicity, ease of use, modern, scalable, clean code,
@@ -96,7 +96,7 @@ not nest a page frame.
 A role holds **one level for each module** (`StaffRole.levels`), translated into named
 permissions by `src/lib/staff/levels.ts`; a screen is a menu entry opened by one permission. Pages and actions ask for a named
 permission, never a level or a role name. Each person holds **one role** plus the sites they
-work at (`User.siteIds`; none means every site). Swim school, Pool deck, Training and Rota apply at
+work at (`User.siteIds`; none means every site). Swim school, Pool deck, Tasks, Training and Rota apply at
 those sites, HR "Their team" only to the people they manage, the rest everywhere. **Admin:
 Manage** is the administrator: Manage in every module except HR (restricted); resolve it
 through expandPermissions and visibleScreens. A **superadmin** (the `User.isSuperadmin` flag,

@@ -27,7 +27,7 @@ document is the model that makes both true. Owner decisions, September 2026.
    check, so code never asks for a level or a role name. Some permissions are
    **restricted** (HR): administrators never get them, and only a superadmin
    gives HR.
-4. **Where a level applies.** Swim school, Pool deck, Training and Rota apply at the
+4. **Where a level applies.** Swim school, Pool deck, Tasks, Training and Rota apply at the
    person's sites; HR "Their team" reaches only the people they manage (through
    `User.managerId`); everything else applies everywhere. The policy engine
    receives these as grants.

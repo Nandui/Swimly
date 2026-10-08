@@ -1,0 +1,144 @@
+// Tasks (owner request, 8 October 2026; docs/tasks.md): the checks and logs a
+// site does each day, from templates with schedules. A task keeps what it asked
+// for when it was made, so changing a template never rewrites what someone did.
+// Sites are Core's; who may do what is the policy engine's (`tasks.*`).
+
+/// What a task asks for and when. Published templates make tasks at their
+/// sites on the days their schedules say; one without a schedule is added by
+/// hand ("Add a task"). Archived ones make no more.
+model TaskTemplate {
+  id               String    @id @default(cuid())
+  orgId            String
+  title            String
+  description      String    @default("")
+  /// draft | published | archived (`TEMPLATE_STATUS_META`)
+  status           String    @default("draft")
+  /// The sites it applies at; none means every site.
+  siteIds          String[]  @default([])
+  /// The roles it is aimed at (only they complete it); none means everyone at the site.
+  roleIds          String[]  @default([])
+  tags             String[]  @default([])
+  priority         Boolean   @default(false)
+  checklist        String[]  @default([])
+  /// `TaskField[]` (src/lib/tasks/rules.ts).
+  fields           Json      @default("[]")
+  minimumRecords   Int       @default(1)
+  /// `TaskSchedule[]`; empty for a task added by hand.
+  schedules        Json      @default("[]")
+  requiresComment  Boolean   @default(false)
+  requiresApproval Boolean   @default(false)
+  /// Tasks are made only for days from the day it was first published.
+  publishedAt      DateTime?
+  /// Raised on every save, so two people editing at once cannot overwrite each other.
+  version          Int       @default(1)
+  createdByName    String
+  createdAt        DateTime  @default(now())
+  updatedAt        DateTime  @updatedAt
+
+  tasks Task[]
+
+  @@index([orgId, status])
+}
+
+/// One task at one site on one day. `status` is what was recorded (open, done,
+/// not_applicable, cant_complete); late, overdue and missed are worked out from
+/// its times (`taskState`).
+model Task {
+  id              String    @id @default(cuid())
+  orgId           String
+  templateId      String
+  siteId          String
+  date            DateTime  @db.Date
+  /// The schedule that made it, or "added:<id>" for one added by hand.
+  scheduleKey     String
+  startsAt        DateTime
+  dueAt           DateTime
+  /// `TaskDefinition`: what it asked for when it was made.
+  definition      Json
+  status          String    @default("open")
+  checks          Boolean[] @default([])
+  /// `TaskRecord[]`: the answers.
+  records         Json      @default("[{}]")
+  /// Readings outside their range, in words, as they were when it was completed.
+  exceptions      String[]  @default([])
+  /// Why it is not applicable or can't be completed.
+  reason          String    @default("")
+  completedAt     DateTime?
+  completedById   String?
+  completedByName String?
+  approvedAt      DateTime?
+  approvedById    String?
+  approvedByName  String?
+  addedByName     String?
+  /// Raised on every save, so two people working on it at once cannot overwrite each other.
+  version         Int       @default(1)
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @updatedAt
+
+  template TaskTemplate  @relation(fields: [templateId], references: [id], onDelete: Restrict)
+  site     Club          @relation(fields: [siteId], references: [id], onDelete: Restrict)
+  comments TaskComment[]
+  files    TaskFile[]
+  actions  TaskAction[]
+
+  @@unique([templateId, siteId, date, scheduleKey])
+  @@index([siteId, date])
+  @@index([orgId, date])
+}
+
+model TaskComment {
+  id        String   @id @default(cuid())
+  taskId    String
+  text      String
+  byId      String
+  byName    String
+  createdAt DateTime @default(now())
+
+  task Task @relation(fields: [taskId], references: [id], onDelete: Cascade)
+
+  @@index([taskId])
+}
+
+/// A photo or file given as an answer: a PNG, JPEG or PDF up to 5 MB,
+/// checked by its first bytes, served only to people who see the task.
+model TaskFile {
+  id        String   @id @default(cuid())
+  taskId    String
+  fileName  String
+  mime      String
+  size      Int
+  bytes     Bytes
+  byId      String
+  byName    String
+  createdAt DateTime @default(now())
+
+  task Task @relation(fields: [taskId], references: [id], onDelete: Cascade)
+
+  @@index([taskId])
+}
+
+/// A follow-up: something to put right, raised from a task (a reading out of
+/// range, a broken alarm) or on its own. open → resolved, with a note.
+model TaskAction {
+  id             String    @id @default(cuid())
+  orgId          String
+  siteId         String
+  taskId         String?
+  title          String
+  dueOn          DateTime? @db.Date
+  /// open | resolved
+  status         String    @default("open")
+  raisedById     String
+  raisedByName   String
+  resolvedAt     DateTime?
+  resolvedByName String?
+  resolution     String    @default("")
+  createdAt      DateTime  @default(now())
+  updatedAt      DateTime  @updatedAt
+
+  site Club  @relation(fields: [siteId], references: [id], onDelete: Restrict)
+  task Task? @relation(fields: [taskId], references: [id], onDelete: SetNull)
+
+  @@index([siteId, status])
+  @@index([taskId])
+}

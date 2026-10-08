@@ -440,6 +440,8 @@ model Club {
   rotaWeekShares     RotaWeekShare[]
   rotaLogs           RotaLog[]
   rotaRepeats        RotaRepeat[]
+  tasks              Task[]
+  taskActions        TaskAction[]
 
   @@index([sortOrder])
 }
