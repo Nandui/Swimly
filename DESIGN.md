@@ -8,7 +8,7 @@ controls, and a deep pool-night dark mode. Its tokens and system rules live in
 `src/app/docs/poolside.css`, scoped to `.turnfin-app`, which the root layout puts on `<body>`;
 the root layout also loads the typeface. The earlier Docs theme (`brand.css`) is retired:
 no other stylesheet defines theme tokens. The swim school, the home page, Docs, Refunds,
-Training, HR, Rota and Admin share one frame, `ModuleShell`; the pool deck and Help use the
+Training, HR, Rota, Tasks and Admin share one frame, `ModuleShell`; the pool deck and Help use the
 same top bar parts (`tf-*` classes) without the module bar. Sign-in, switch user, confirm it's
 you, the root 404 and error use `AuthFrame`: one 460px white panel on `--pc-outer`, plus a blue
 brand panel beside it on sign-in only (hidden on phones; AUSignIn, AUSwitch, AUConfirm). The
@@ -206,7 +206,7 @@ each status in `src/lib/refunds/types.ts` has its own icon. Finance decisions us
 focus restoration and preserved values after errors. `src/app/refunds/refunds.css` only
 arranges the Refunds screens. See [docs/refunds.md](docs/refunds.md).
 
-Training (`/training`), HR (`/hr`) and Rota (`/rota`) are people- and site-scoped workspaces
+Training (`/training`), HR (`/hr`), Rota (`/rota`) and Tasks (`/tasks`, docs/tasks.md) are people- and site-scoped workspaces
 built on the shared frame, `ModuleShell` (`src/components/workspace/module-shell.tsx`), each
 with its own page bar. `src/app/workspace/module-workspace.css`
 (scoped by `.turnfin-module`, with `module-*` classes) only arranges their screens; a new

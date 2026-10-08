@@ -18,9 +18,12 @@ import { PrismaPg } from "@prisma/adapter-pg";
 import bcrypt from "bcryptjs";
 import { PrismaClient } from "../src/generated/prisma/client";
 import { roleColumns } from "../src/lib/staff/levels";
+import { seedTasks } from "./sandbox-tasks";
 
 export const SANDBOX_PASSWORD = "sandbox-turnfin-2026";
-const PORTS = { main: 54391, docs: 54392, hr: 54393, app: Number(process.env.SANDBOX_PORT ?? 3100) };
+// SANDBOX_DB_PORT moves the three databases (main, then Docs and HR on the next two ports), for a second sandbox.
+const DB_PORT = Number(process.env.SANDBOX_DB_PORT ?? 54391);
+const PORTS = { main: DB_PORT, docs: DB_PORT + 1, hr: DB_PORT + 2, app: Number(process.env.SANDBOX_PORT ?? 3100) };
 
 async function serve(name: string, port: number, migrate: (db: PGlite) => Promise<void>) {
   const db = new PGlite();
@@ -64,11 +67,11 @@ const roles: Record<string, string> = {};
 const levelRoles: { name: string; homeName: string; levels: Record<string, string>; extras?: string[]; system?: boolean }[] = [
   { name: "Admin", homeName: "Management", levels: { admin: "manage" }, system: true },
   { name: "Instructor", homeName: "Pool deck", levels: { "pool-deck": "teach" }, system: true },
-  { name: "Receptionist", homeName: "Front of House", levels: { "swim-school": "desk", refunds: "use", docs: "read", rota: "view" } },
-  { name: "Lifeguard", homeName: "Poolside", levels: { docs: "read", rota: "view" } },
-  { name: "Pool supervisor", homeName: "Pool planning", levels: { docs: "read", rota: "plan", academy: "run" } },
-  { name: "Duty manager", homeName: "Duty desk", levels: { "swim-school": "desk", refunds: "manage", docs: "read", training: "trainer", rota: "manage", academy: "run" }, extras: ["swim-school.cancel-classes"] },
-  { name: "Swim school manager", homeName: "Swim school office", levels: { "swim-school": "manage", "pool-deck": "lead", docs: "manage", training: "manage", rota: "manage", hr: "team", academy: "manage" }, extras: ["swim-school.cancel-classes", "docs.approve"] },
+  { name: "Receptionist", homeName: "Front of House", levels: { "swim-school": "desk", refunds: "use", docs: "read", rota: "view", tasks: "do" } },
+  { name: "Lifeguard", homeName: "Poolside", levels: { docs: "read", rota: "view", tasks: "do" } },
+  { name: "Pool supervisor", homeName: "Pool planning", levels: { docs: "read", rota: "plan", academy: "run", tasks: "review" } },
+  { name: "Duty manager", homeName: "Duty desk", levels: { "swim-school": "desk", refunds: "manage", docs: "read", training: "trainer", rota: "manage", academy: "run", tasks: "review" }, extras: ["swim-school.cancel-classes"] },
+  { name: "Swim school manager", homeName: "Swim school office", levels: { "swim-school": "manage", "pool-deck": "lead", docs: "manage", training: "manage", rota: "manage", hr: "team", academy: "manage", tasks: "manage" }, extras: ["swim-school.cancel-classes", "docs.approve"] },
 ];
 for (const [i, role] of levelRoles.entries()) {
   const data = { homeName: role.homeName, ...roleColumns({ levels: role.levels, extras: role.extras ?? [] }) };
@@ -130,6 +133,9 @@ for (const [i, [id, name, requires, holders]] of positions.entries()) {
   await prisma.position.create({ data: { id, orgId: ORG, name, sortOrder: i, requires: { create: requires.map((typeId) => ({ typeId })) } } });
   await prisma.user.updateMany({ where: { id: { in: holders } }, data: { positionId: id, jobTitle: name, contractType: "full-time", contractMinutes: 39 * 60 } });
 }
+
+// Tasks (docs/tasks.md): templates and two weeks of history at both sites.
+await seedTasks(prisma, ORG, roles);
 
 const seedModule = "./sandbox-seed.ts";
 if (existsSync(new URL(seedModule, import.meta.url))) {
