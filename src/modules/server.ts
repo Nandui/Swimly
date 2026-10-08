@@ -9,13 +9,13 @@ import "@/lib/training/home";
 import "@/lib/rota/home";
 import "@/lib/rota/file";
 import "@/lib/rota/areas";
-import "@/lib/rota/profile";
-import "@/lib/training/profile";
+import "@/lib/training/file";
 import "@/lib/purchasing/home";
 import "@/lib/academy/contributions";
 import "@/lib/people/home";
+import "@/lib/hr/home";
 
-export { profileSummary, renameAreaEverywhere, commitmentsFor, homeCardItems, planCommitment, personFile, siteSummaryLines, staffColumnValues } from "./contributions";
+export { renameAreaEverywhere, commitmentsFor, homeCardItems, planCommitment, personFile, siteSummaryLines } from "./contributions";
 // The swim school's top-bar tools and daily pages, for the home page's frame.
 export { SwimSchoolTools } from "./activities/components/app-nav";
 export { dailyPages } from "./activities/lib/nav";

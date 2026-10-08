@@ -5,7 +5,7 @@ import { serverModule } from "@/test/server-module";
 import { expandPermissions, type PermissionKey } from "@/lib/staff/permissions";
 
 /** Work-side review of what staff send from Turnfin Me: details changes need
- *  staff.manage, certificates need qualifications.manage for that person;
+ *  hr.details.write, certificates need qualifications.manage for that person;
  *  nobody reviews their own; the record changes only when applied. */
 let fixture: Awaited<ReturnType<typeof isolatedPrisma>>;
 let details: typeof import("./details-actions");
@@ -54,6 +54,8 @@ test("a details change applies exactly what was asked, once, and never by the pe
   const own = await db.staffDetailChangeRequest.create({ data: { orgId: ORG, userId: "alex", proposed: { phone: "999" } } });
   const ava = await db.staffDetailChangeRequest.create({ data: { orgId: ORG, userId: "ava", proposed: { phone: "111 222", emergencyName: "Synthetic Neighbour" } } });
   Object.assign(state, { id: "alex", permissions: ["staff.manage", "roles.manage"], grants: [] });
+  assert.equal((await details.applyDetailChange(ava.id, "")).ok, false, "account administration is not HR");
+  Object.assign(state, { id: "alex", permissions: ["hr.details.write"], grants: [] });
   assert.equal((await details.applyDetailChange(own.id, "")).ok, false, "not your own");
   assert.equal((await details.declineDetailChange(ava.id, "")).ok, false, "a decline needs a reason");
   assert.equal((await details.applyDetailChange(ava.id, "Updated")).ok, true);
@@ -62,7 +64,7 @@ test("a details change applies exactly what was asked, once, and never by the pe
   assert.equal(person.emergencyName, "Synthetic Neighbour");
   assert.equal((await details.applyDetailChange(ava.id, "")).ok, false, "decided once");
   Object.assign(state, { id: "liam", permissions: [], grants: [] });
-  await assert.rejects(details.declineDetailChange(own.id, "No"), /denied/);
+  assert.equal((await details.declineDetailChange(own.id, "Not this one")).ok, false, "no HR access");
 });
 
 test("certificates: recorded only by a qualifications role that covers the person, with the type's validity", async () => {

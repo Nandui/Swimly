@@ -31,8 +31,6 @@ import {
 import { expandPermissions } from "@/lib/staff/permissions";
 import { listRolesForPicker, type RoleOption } from "@/lib/staff/data/roles";
 import { listPeopleForDisplay, type Person } from "@/lib/staff/data/staff";
-import { listPeopleOrg } from "@/lib/people/data";
-import { staffColumnValues } from "@/modules/server";
 import { AppIcon } from "@/components/ui-kit/app-icon";
 
 export const metadata: Metadata = { title: "Staff" };
@@ -41,15 +39,12 @@ export default async function StaffPage(props: PageProps<"/staff">) {
   const session = await screenPage("staff", "staff.manage");
   const params = await props.searchParams;
 
-  const [people, roles, org] = await Promise.all([
+  const [people, roles] = await Promise.all([
     listPeopleForDisplay(),
     listRolesForPicker(),
-    listPeopleOrg(),
   ]);
   const active = people.filter((p) => p.isActive);
   const inactive = people.filter((p) => !p.isActive);
-  // Module columns (Aquatics adds "Classes") come through Core's contribution seam.
-  const columns = await staffColumnValues(people.map((p) => p.id));
   const keyholders = active.filter((p) =>
     expandPermissions(p.staffRole?.permissions ?? []).has("staff.manage"),
   ).length;
@@ -61,12 +56,6 @@ export default async function StaffPage(props: PageProps<"/staff">) {
         description="Who can sign in, and what each of them is allowed to change."
         actions={
           <>
-            <Button variant="outline" asChild={true}>
-              <UiLink href="/staff/details-requests">
-                {<AppIcon name="clipboardList" size="sm" />}
-                {"Details changes"}
-              </UiLink>
-            </Button>
             <Button variant="outline" asChild={true}>
               <UiLink href="/staff/devices">
                 {<AppIcon name="monitor" size="sm" />}
@@ -94,8 +83,6 @@ export default async function StaffPage(props: PageProps<"/staff">) {
           <PeopleTable
             people={active}
             roles={roles}
-            org={org}
-            columns={columns}
             currentUserId={session.user.id}
           />
         </section>
@@ -112,8 +99,6 @@ export default async function StaffPage(props: PageProps<"/staff">) {
           <PeopleTable
             people={inactive}
             roles={roles}
-            org={org}
-            columns={columns}
             currentUserId={session.user.id}
           />
         </section>
@@ -136,14 +121,10 @@ function PersonActions({ person, roles }: { person: Person; roles: RoleOption[] 
 function PeopleTable({
   people,
   roles,
-  org,
-  columns,
   currentUserId,
 }: {
   people: Person[];
   roles: RoleOption[];
-  org: Awaited<ReturnType<typeof listPeopleOrg>>;
-  columns: Awaited<ReturnType<typeof staffColumnValues>>;
   currentUserId?: string;
 }) {
   return (
@@ -154,11 +135,6 @@ function PeopleTable({
           <TableHead scope="col" className={"max-lg:hidden"}>
             Role
           </TableHead>
-          {columns.map((column) => (
-            <TableHead key={column.id} scope="col" className={"max-lg:hidden"}>
-              {column.header}
-            </TableHead>
-          ))}
           <TableHead scope="col" className="max-md:hidden">
             <span className="sr-only">Actions</span>
           </TableHead>
@@ -168,13 +144,6 @@ function PeopleTable({
         {people.map((person) => {
           const permissions = person.staffRole?.permissions ?? [];
           const reach = roleReach(permissions);
-          // On narrow screens each module value follows the role, e.g. "Classes 3"; a 0 is left out.
-          const extras = columns.map((column) => {
-            const value = column.values.get(person.id) ?? "0";
-            return { id: column.id, header: column.header, value: value === "0" ? "" : value };
-          });
-          const o = org.get(person.id);
-          const orgLine = [o?.jobTitle, o?.departments.join(", "), o?.manager ? `reports to ${o.manager}` : null].filter(Boolean).join(" · ");
           return (
             <TableRow key={person.id}>
               <TableCell>
@@ -191,14 +160,8 @@ function PeopleTable({
                       <span className="pc-row-hint block [overflow-wrap:anywhere]">
                         {person.email}
                       </span>
-                      {orgLine ? <span className="pc-row-hint block">{orgLine}</span> : null}
                       <span className="mt-1 flex flex-wrap items-center gap-x-2 gap-y-1 lg:hidden">
                         <Tag meta={reach} label={person.staffRole?.name ?? "No role"} />
-                        {extras.some((extra) => extra.value) ? (
-                          <span className="pc-row-hint">
-                            {extras.filter((extra) => extra.value).map((extra) => `${extra.header} ${extra.value}`).join(" · ")}
-                          </span>
-                        ) : null}
                       </span>
                     </span>
                   </UiLink>
@@ -217,13 +180,6 @@ function PeopleTable({
                   </span>
                 </span>
               </TableCell>
-              {extras.map((extra) => (
-                <TableCell key={extra.id} className="max-md:hidden max-lg:hidden">
-                  <span className="tabular-nums">
-                    {extra.value}
-                  </span>
-                </TableCell>
-              ))}
               <TableCell className="max-md:hidden">
                 <div className="min-w-0 flex gap-2 items-center justify-end flex-nowrap">
                   <PersonActions person={person} roles={roles} />

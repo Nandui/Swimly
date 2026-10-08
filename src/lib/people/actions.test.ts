@@ -12,7 +12,7 @@ const ORG = "org_leisureworld";
 const state = { id: "admin", permissions: ["staff.manage", "roles.manage"] as string[], superadmin: false, grants: [] as { roleName: string; permissions: string[]; scopeKind: string; scopeId: string }[] };
 
 function session() {
-  return { user: { id: state.id, name: state.id, orgId: ORG, isSuperadmin: state.superadmin, roleName: "Role", permissions: state.permissions, primaryPermissions: state.permissions, screens: ["staff"], primaryScreens: ["staff"], grants: state.grants } };
+  return { user: { id: state.id, name: state.id, orgId: ORG, isSuperadmin: state.superadmin, roleName: "Role", permissions: state.permissions, primaryPermissions: state.permissions, screens: ["staff"], primaryScreens: ["staff"], grants: state.grants, authMethod: "password", authAt: Date.now() } };
 }
 function doubles() {
   const authz = {
@@ -59,8 +59,12 @@ before(async () => {
 after(async () => { await fixture?.close(); });
 
 test("profiles: departments with a main one, a manager, and no loops", async () => {
-  as("admin", ["staff.manage", "roles.manage"]);
   const profile = (managerId: string, departmentIds: string[]) => ({ positionId: "", startedOn: "2024-05-01", primaryClubId: "", managerId, departmentIds, primaryDepartmentId: departmentIds[0] ?? "" });
+  // Staff details are HR's: account administration alone cannot change them.
+  as("admin", ["staff.manage", "roles.manage"]);
+  assert.equal((await actions.updateProfile("liam", profile("maya", []))).ok, false, "staff.manage is not enough");
+  as("admin", ["hr.details.write"]);
+  assert.equal((await actions.updateProfile("admin", profile("maya", []))).ok, false, "nobody keeps their own details");
   assert.deepEqual(await actions.updateProfile("liam", profile("maya", ["d-aquatics"])), { ok: true });
   assert.deepEqual(await actions.updateProfile("ava", profile("liam", ["d-aquatics"])), { ok: true });
   const loop = await actions.updateProfile("maya", profile("ava", []));

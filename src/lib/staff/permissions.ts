@@ -242,6 +242,13 @@ export const PERMISSIONS = [
     restricted: true,
   },
   {
+    key: "hr.details.write",
+    group: "HR",
+    label: "Keep staff details",
+    description: "Set the position, manager, departments, employment and contact details of the people this role covers, and apply the details changes they send from Turnfin Me. Includes reading. Restricted.",
+    restricted: true,
+  },
+  {
     key: "work.anywhere",
     group: "Administration",
     label: "Work from any device",
@@ -360,6 +367,7 @@ const IMPLIES: Partial<Record<PermissionKey, PermissionKey[]>> = {
   "academy.manage": ["academy.run", "academy.read"],
   "hr.notes.write": ["hr.records.read"],
   "hr.reviews.write": ["hr.records.read"],
+  "hr.details.write": ["hr.records.read"],
 };
 
 /** Restricted capabilities (HR, performance): never inherited by

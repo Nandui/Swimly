@@ -92,8 +92,8 @@ turning it on.
 
 ## Review queues on Work
 
-- **Staff → Details changes** (`staff.manage`). Apply or decline a person's own
-  details change. Nobody reviews their own. The audit names the fields, never
+- **HR → Details changes** (`hr.details.write` for that person, restricted). Apply or
+  decline a person's own details change. Nobody reviews their own. The audit names the fields, never
   the values.
 - **Training → Certificates to check** (`qualifications.manage` for that
   person, through the policy engine). Open the file, then record it (which adds

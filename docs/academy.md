@@ -35,7 +35,7 @@ Every write checks the course's site (`mayFor`) and is audited under "Academy".
 
 When a staff member passes a course whose type names a qualification, `recordResult` creates
 their `Qualification`, verified by whoever recorded the result. Its reference is the
-certificate number and its expiry comes from `expiryFrom`. Their Staff page, HR file and
+certificate number and its expiry comes from `expiryFrom`. Their HR file and
 Training's expiring list read it, and expiry reminders follow. Changing the pass to another
 result withdraws that qualification again. Members of the public keep their result on the
 course only.
