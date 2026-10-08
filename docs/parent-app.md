@@ -317,6 +317,10 @@ desk controls for these tasks are documented in [staff controls](parent-staff-co
    sender is `LeisureWorld Aquatics <info@leisureworldcork.com>`. Follow the
    [Google Workspace email setup](parent-google-email.md) using only `gmail.send`.
    Mailbox passwords and Google domain-wide delegation are not needed.
+   These `PARENT_*` settings are the parent app's own sender and name. Until
+   `TURNFIN_EMAIL_FROM` and `TURNFIN_GOOGLE_*` are set, Core's sender
+   (`src/lib/email/sender.ts`, used by Turnfin Me, the Academy and Refunds) falls back to
+   them too, so keep them in place.
 4. Set `PARENT_API_ALLOWED_ORIGINS` to exact frontend origins, comma-separated.
    Production requires HTTPS. Development permits HTTP localhost/127.0.0.1.
    Do not put these secrets in the parent frontend repository.

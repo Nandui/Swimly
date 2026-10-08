@@ -1,8 +1,8 @@
+import { PublicApiError } from "@/lib/public-api/http";
+
 /** Errors the staff API (Turnfin Me) returns. Messages are written for staff
  *  and never contain record values, credentials or provider details. */
-export class StaffApiError extends Error {
-  constructor(public status: number, public code: string, message: string, public headers: Record<string, string> = {}) { super(message); }
-}
+export class StaffApiError extends PublicApiError {}
 
 export function unavailable(): never {
   throw new StaffApiError(503, "UNAVAILABLE", "Turnfin Me is not available yet. Try again later.");

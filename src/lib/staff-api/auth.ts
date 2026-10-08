@@ -5,6 +5,7 @@ import { StaffApiError, confirmRequired, unauthenticated } from "@/lib/staff-api
 import { sendStaffCode } from "@/lib/staff-api/email";
 import { emailSchema, idSchema, readBody } from "@/lib/staff-api/http";
 import { digest, opaqueToken, rateLimit, requestIp, sixDigitCode } from "@/lib/staff-api/security";
+import { bearerToken } from "@/lib/public-api/http";
 
 /** Turnfin Me sign-in: an email code every time, sent to the address on the
  *  person's Turnfin account; no password. A session lasts up to 12 hours (the
@@ -71,9 +72,9 @@ export async function verifyCode(request: Request) {
 }
 
 export async function authenticate(request: Request): Promise<StaffIdentity> {
-  const match = /^Bearer ([A-Za-z0-9_-]{20,100})$/.exec(request.headers.get("authorization") ?? "");
-  if (!match) unauthenticated();
-  const session = await prisma.staffSession.findUnique({ where: { tokenHash: digest(`session:${match[1]}`) } });
+  const token = bearerToken(request);
+  if (!token) unauthenticated();
+  const session = await prisma.staffSession.findUnique({ where: { tokenHash: digest(`session:${token}`) } });
   if (!session || session.revokedAt || session.expiresAt <= new Date()) unauthenticated();
   const user = await prisma.user.findUnique({ where: { id: session.userId }, select: { id: true, name: true, email: true, isActive: true, orgId: true } });
   if (!user?.isActive || !user.orgId) {

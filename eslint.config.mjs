@@ -73,6 +73,22 @@ const coreData = [
   },
 ];
 
+// Each module's public API and email files are its own. Shared plumbing (the
+// public-API kit, the email sender) lives in Core: src/lib/public-api and
+// src/lib/email. A module never imports another module's copy.
+const modulePlumbing = [
+  { owner: ["src/lib/academy/**", "src/app/api/academy/**"], from: ["./src/lib/academy/public"] },
+  { owner: ["src/lib/staff-api/**", "src/app/api/staff/**"], from: ["./src/lib/staff-api/email.ts", "./src/lib/staff-api/http.ts"] },
+  { owner: activitiesFiles, from: ["./src/modules/activities/lib/parent/email.ts", "./src/modules/activities/lib/parent/http.ts", "./src/modules/activities/lib/parent/sign-in-email.ts"] },
+];
+const plumbingRule = (skip) => ["error", {
+  zones: modulePlumbing.filter((m) => m !== skip).flatMap((m) => m.from.map((from) => ({
+    target: "./src",
+    from,
+    message: "That is another module's public API or email file. Use Core's src/lib/public-api or src/lib/email instead.",
+  }))),
+}];
+
 const eslintConfig = defineConfig([
   ...nextVitals,
   ...nextTs,
@@ -106,6 +122,17 @@ const eslintConfig = defineConfig([
       "no-restricted-syntax": ["error", ...uiSyntax, ...activitiesData],
     },
   },
+  // Module plumbing: each owner may use its own files, never another's.
+  {
+    files: ["src/**/*.{ts,tsx}"],
+    ignores: tests,
+    rules: { "import/no-restricted-paths": plumbingRule(null) },
+  },
+  ...modulePlumbing.map((owner) => ({
+    files: owner.owner.map((glob) => glob.endsWith("/**") ? `${glob}/*.{ts,tsx}` : glob),
+    ignores: tests,
+    rules: { "import/no-restricted-paths": plumbingRule(owner) },
+  })),
   // Override default ignores of eslint-config-next.
   globalIgnores([
     // Default ignores of eslint-config-next:

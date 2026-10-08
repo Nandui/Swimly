@@ -98,8 +98,10 @@ Work (the Swimly app):
 - `ACADEMY_API_ENABLED=true`
 - `ACADEMY_AUTH_SECRET` (32+ characters; its own, not the parent or staff secret)
 - `ACADEMY_API_ALLOWED_ORIGINS=https://academy.leisureworldcork.com`
-- `ACADEMY_EMAIL_NAME` (the sender's name, "LeisureWorld Academy"); `ACADEMY_EMAIL_FROM` and
-  `ACADEMY_GOOGLE_*` are optional and fall back to the parent app's `PARENT_*` sender
+- `ACADEMY_EMAIL_NAME` (the name its emails show, "LeisureWorld Academy"). The mailbox is Core's
+  one sender (`src/lib/email/sender.ts`): `TURNFIN_EMAIL_FROM` and `TURNFIN_GOOGLE_*`, falling
+  back to the parent app's `PARENT_*`. `ACADEMY_EMAIL_FROM` and `ACADEMY_GOOGLE_*` are no longer
+  read; move any value set there to the `TURNFIN_*` names.
 
 The booking site (`apps/academy`):
 - a separate Vercel project with root directory `apps/academy`, on `academy.leisureworldcork.com`;

@@ -1,14 +1,14 @@
 import { z } from "zod";
 import { sendGoogleEmail, type GoogleEmailConfig } from "@/lib/email/google";
+import { emailSender } from "@/lib/email/sender";
 import { staffApiConfig } from "@/lib/staff-api/config";
 import { unavailable } from "@/lib/staff-api/errors";
 
-/** Email for Turnfin Me: sign-in codes and reminders, through the same Google
- *  sender as the parent app (STAFF_* settings, falling back to PARENT_*).
+/** Email for Turnfin Me: sign-in codes and reminders, through Core's sender
+ *  (src/lib/email/sender.ts) as "Turnfin Me".
  *  Outside production, STAFF_EMAIL_DEV_LOG=true prints codes to the server
  *  console instead, for the local sandbox; it is ignored in production. */
 
-const credential = z.string().trim().min(1).max(8192).regex(/^\S+$/);
 const address = z.string().email().max(254);
 
 function devLog(env = process.env) {
@@ -16,18 +16,7 @@ function devLog(env = process.env) {
 }
 
 export function staffEmailConfig(env = process.env): GoogleEmailConfig {
-  const credentials = z.object({ clientId: credential, clientSecret: credential, refreshToken: credential }).safeParse({
-    clientId: env.STAFF_GOOGLE_CLIENT_ID ?? env.PARENT_GOOGLE_CLIENT_ID,
-    clientSecret: env.STAFF_GOOGLE_CLIENT_SECRET ?? env.PARENT_GOOGLE_CLIENT_SECRET,
-    refreshToken: env.STAFF_GOOGLE_REFRESH_TOKEN ?? env.PARENT_GOOGLE_REFRESH_TOKEN,
-  });
-  const from = (env.STAFF_EMAIL_FROM ?? env.PARENT_EMAIL_FROM)?.trim() ?? "";
-  const named = /^([^<>\r\n]{1,60})\s*<([^<>\r\n]+)>$/.exec(from);
-  const sender = address.safeParse(named ? named[2] : from);
-  if (!credentials.success || !sender.success || /[\r\n]/.test(from)) unavailable();
-  const name = "Turnfin Me";
-  const encodedName = `=?UTF-8?B?${Buffer.from(name).toString("base64")}?=`;
-  return { ...credentials.data, sender: sender.data, fromHeader: `${encodedName} <${sender.data}>` };
+  return emailSender("Turnfin Me", env) ?? unavailable();
 }
 
 function safeAddress(email: string) {

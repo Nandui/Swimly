@@ -83,11 +83,10 @@ malware scanning service.
 
 ## Staff alerts
 
-Set `REFUNDS_APP_URL` to the canonical HTTPS staff-app origin. Reuse the existing
-Google Workspace configuration (`PARENT_GOOGLE_CLIENT_ID`,
-`PARENT_GOOGLE_CLIENT_SECRET`, `PARENT_GOOGLE_REFRESH_TOKEN` and
-`PARENT_EMAIL_FROM`) and company mailbox,
-with **Turnfin Refunds** as the display name. Parent sign-in email content and
+Set `REFUNDS_APP_URL` to the canonical HTTPS staff-app origin. Alerts go through
+Core's one sender (`src/lib/email/sender.ts`: `TURNFIN_EMAIL_FROM` and
+`TURNFIN_GOOGLE_*`, falling back to the existing `PARENT_*` Google Workspace
+configuration) and company mailbox, with **Turnfin Refunds** as the display name. Parent sign-in email content and
 configuration remain unchanged. The shared Google transport keeps send-only
 scope checks and a bounded timeout.
 

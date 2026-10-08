@@ -10,6 +10,7 @@ import './workspace/module-workspace.css';
  *  picker), through the composition root; otherwise the site picker alone. */
 export default async function HomePage() {
   const home = await loadHome();
+  // Group by group (MODULE_GROUPS), so the home page meets modules in the module bar's order.
   const modules = allModules().filter((m) => home.moduleIds.includes(m.id));
   const swim = home.moduleIds.includes("swim-school");
   const tools = swim && home.sites ? <SwimSchoolTools screens={home.screens} club={home.sites.club} clubs={home.sites.clubs} /> : undefined;

@@ -34,7 +34,7 @@ async function home(role: Role) {
 test("a receptionist's home is Front of House, with exactly their modules", async () => {
   const h = await home({ name: "Receptionist", homeName: "Front of House", levels: { "swim-school": "desk", refunds: "use", docs: "read", rota: "view" } });
   assert.equal(h.homeName, "Front of House");
-  assert.deepEqual(h.moduleIds, ["swim-school", "refunds", "docs", "rota"]);
+  assert.deepEqual(h.moduleIds, ["swim-school", "refunds", "rota", "docs"], "group by group: front of house, then team");
   assert.deepEqual(h.asked, [h.moduleIds], "cards are asked for the role's modules only");
 });
 

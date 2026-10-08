@@ -121,7 +121,10 @@ Work (the Swimly app):
 - `STAFF_AUTH_SECRET` (32+ characters)
 - `STAFF_API_ALLOWED_ORIGINS` (the Me app's origin)
 - `STAFF_ME_URL` (where emails link; when it is https, emails also show Me's fin from `<STAFF_ME_URL>/icon-192.png`)
-- `STAFF_EMAIL_FROM` (optional; the Google sender falls back to `PARENT_*`)
+- Email goes through Core's one sender (`src/lib/email/sender.ts`) as "Turnfin Me":
+  `TURNFIN_EMAIL_FROM` and `TURNFIN_GOOGLE_*` (optional), falling back to `PARENT_*`.
+  `STAFF_EMAIL_FROM` and `STAFF_GOOGLE_*` are no longer read; move any value set there to the
+  `TURNFIN_*` names.
 - `CRON_SECRET`
 - `WORK_DEVICE_REQUIRED`, once the PCs are registered
 

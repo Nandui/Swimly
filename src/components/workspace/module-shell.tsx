@@ -9,6 +9,7 @@ import { DropdownMenu, DropdownMenuContent, DropdownMenuGroup, DropdownMenuItem,
 import { AccountMenu } from '@/components/workspace/account-menu';
 import { RolePreviewToggle } from '@/components/staff/role-preview';
 import { useYourModules } from '@/components/workspace/your-modules';
+import { groupModules } from '@/modules/registry';
 
 /** A page in the bar. The icon shows in the "More" menu; links handed over by a server page
  *  (the home page's) have none, because a component cannot cross to the client. */
@@ -151,8 +152,8 @@ function PagesMore({ groups, currentFor }: { groups: ModuleLinkGroup[]; currentF
   );
 }
 
-/** The person's modules, down the left on a desktop with a mouse. Each icon names itself on
- *  hover and on keyboard focus. */
+/** The person's modules, down the left on a desktop with a mouse, one pill per group
+ *  (MODULE_GROUPS). Each icon names itself on hover and on keyboard focus. */
 function ModuleRail({ current }: { current: string }) {
   const modules = useYourModules();
   const item = (key: string, href: string, label: string, Icon: LucideIcon) => (
@@ -162,7 +163,10 @@ function ModuleRail({ current }: { current: string }) {
   );
   return (
     <nav className="tf-rail" aria-label="Modules">
-      <div className="tf-rail-group">{item('home', '/', 'Home', House)}{modules.map((m) => item(m.id, m.href, m.name, m.icon))}</div>
+      <div className="tf-rail-group">{item('home', '/', 'Home', House)}</div>
+      {groupModules(modules).map((group) => (
+        <div key={group.key} role="group" aria-label={group.label} className="tf-rail-group">{group.modules.map((m) => item(m.id, m.href, m.name, m.icon))}</div>
+      ))}
       <div className="tf-rail-group">
         <a href="/help" target="_blank" rel="noopener noreferrer" className="tf-rail-item" aria-label="Help (opens in a new tab)"><CircleHelp aria-hidden="true" /><span className="tf-rail-label" aria-hidden="true">Help</span></a>
       </div>
@@ -195,8 +199,13 @@ function ModuleBottomBar({ current }: { current: string }) {
       ) : <DropdownMenu>
         <DropdownMenuTrigger className="tf-bottom-item"><span className="tf-bottom-icon"><LayoutGrid aria-hidden="true" /></span><span>More</span></DropdownMenuTrigger>
         <DropdownMenuContent side="top" align="end" className="w-64 max-w-[calc(100vw-2rem)]">
-          {rest.map((m) => (
-            <DropdownMenuItem key={m.id} asChild className="min-h-11"><Link href={m.href}><m.icon aria-hidden="true" />{m.name}</Link></DropdownMenuItem>
+          {groupModules(rest).map((group) => (
+            <DropdownMenuGroup key={group.key}>
+              <DropdownMenuLabel className="text-xs font-semibold text-ui-muted-foreground">{group.label}</DropdownMenuLabel>
+              {group.modules.map((m) => (
+                <DropdownMenuItem key={m.id} asChild className="min-h-11"><Link href={m.href}><m.icon aria-hidden="true" />{m.name}</Link></DropdownMenuItem>
+              ))}
+            </DropdownMenuGroup>
           ))}
           <DropdownMenuItem asChild className="min-h-11"><a href="/help" target="_blank" rel="noopener noreferrer"><CircleHelp aria-hidden="true" />Help<span className="sr-only"> (opens in a new tab)</span></a></DropdownMenuItem>
         </DropdownMenuContent>
