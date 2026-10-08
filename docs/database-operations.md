@@ -73,34 +73,35 @@ Work ships through a branch or pull request. Vercel builds a preview of it,
 the owner checks the preview, and merging to `main` deploys production. There
 is no long-lived development branch or deployment.
 
-By default a preview shares production's database. It never migrates it, so
-a preview of a schema change runs new code against old tables. Test schema
-changes in the local sandbox (`npm run sandbox`) first, and keep them additive
-so the old and new code both work with either schema.
-
-To check a branch against its own tables on Vercel, point that branch's
-preview at the development database:
-
-1. In Vercel, add Preview variables for that branch only:
-   - `DATABASE_URL` and `DIRECT_URL` to the development database (a database
-     attached through Vercel's Neon integration provides `DATABASE_URL` and
-     `DATABASE_URL_UNPOOLED`, which is read in place of `DIRECT_URL`);
-   - `DATABASE_ENVIRONMENT=development`;
-   - optionally `PRODUCTION_DATABASE_HOST` to production's host name, so a
-     preview marked `development` but pointed at production is refused.
-2. Redeploy the preview. Its build applies the branch's migrations to the
-   development database.
-3. Leave production unset, or set `DATABASE_ENVIRONMENT=production`.
-
-Setting `REQUIRE_DEV_DATABASE=true` for previews makes any preview that still
-shares production's database fail its build instead of only warning.
+On the Vercel project `swimly-crm`, Preview and Development use their own Neon
+database (`DATABASE_URL` and `DATABASE_URL_UNPOOLED`) and are marked
+`DATABASE_ENVIRONMENT=development`. So every branch or PR preview applies the
+main database's migrations to the development database, never to production.
+Docs and HR migrations run only in production (`scripts/migrate-docs.ts` and
+`scripts/migrate-hr.ts`). Test schema changes in the local sandbox
+(`npm run sandbox`) first, and keep them additive.
 
 On every build, `scripts/check-env.ts` and `scripts/migrate-production.ts` read
 `src/lib/database-environment.ts`:
 - **Production** applies committed migrations to its own database.
 - **A preview marked `development`** applies them to the development database.
-- **A preview sharing production's database** never migrates it and warns (or
-  fails with `REQUIRE_DEV_DATABASE=true`).
+- **A preview without the mark** never migrates and warns. Setting
+  `REQUIRE_DEV_DATABASE=true` makes it fail its build instead, and setting
+  `PRODUCTION_DATABASE_HOST` to production's host name refuses a preview
+  marked `development` that points at production.
+
+Environment variables on `swimly-crm` (8 October 2026):
+
+| Environment | Variables |
+| --- | --- |
+| Production | `AUTH_SECRET`, `DATABASE_URL`, `DIRECT_URL`, `DOCS_DATABASE_URL`, `DOCS_DIRECT_URL`, `HR_DB_DATABASE_URL`, `HR_DB_DATABASE_URL_UNPOOLED`, the `PARENT_*` settings and the `SWIMLY_OPERATIONS_*` settings |
+| Preview | `AUTH_SECRET`, `DATABASE_URL`, `DATABASE_URL_UNPOOLED`, `DATABASE_ENVIRONMENT`, `DOCS_DATABASE_URL`, `DOCS_DIRECT_URL` |
+
+Previews have no HR database, so HR is switched off there. On 8 October 2026
+the `swimly-dev.vercel.app` branch domain was removed, `ACTIVITIES_URL` and
+`SWIMLY_DEPLOYMENT` were deleted, and so were the Neon integration's extra
+`PG*`, `POSTGRES_*`, `NEON_*` and `VITE_*` variables, including their `HR_DB_`
+copies. Do not add them back.
 
 The development database starts with fictional data. Two scripts fill it from
 production instead:
@@ -112,8 +113,8 @@ production instead:
   are less protected). It leaves out live parent sign-in tokens, keeps tables
   only the development database has, and must be followed by
   `scripts/convert-roles-to-levels.ts` against the development database. Treat
-  that database, and any preview using it, as holding real personal data while
-  it does.
+  that database, and every preview, as holding real personal data while it
+  does.
 
 Both read production in a read-only transaction, write only to a database that
 already has the newer migrations, and dry-run unless given `--confirm`.
@@ -127,7 +128,6 @@ The databases (Neon, Frankfurt, attached through Vercel's Neon integration):
 | `turnfin-activities-db` | Production Activities, as `ACTIVITIES_*` | Activities, Production |
 | `turnfin-activities-dev-db` | Development Activities, as `ACTIVITIES_*` | Activities, Preview and Development |
 
-A new development database starts empty. The first preview build marked
-`development` creates the tables; then give it a way in by running
-`npm run db:seed` against it with `SEED_ADMIN_EMAIL` and `SEED_ADMIN_PASSWORD`
-set.
+A new development database starts empty. The first preview build creates the
+tables; then give it a way in by running `npm run db:seed` against it with
+`SEED_ADMIN_EMAIL` and `SEED_ADMIN_PASSWORD` set.

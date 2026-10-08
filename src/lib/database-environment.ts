@@ -2,12 +2,10 @@
  *  migrations to it. Read by `scripts/check-env.ts` and
  *  `scripts/migrate-production.ts` before every build.
  *
- *  Branch and PR previews share production's database by default, so only
- *  production applies migrations and a preview runs new code against old
- *  tables. Point a branch's preview at the development database and mark it
- *  `DATABASE_ENVIRONMENT=development`: it then applies migrations to that
- *  database on every deploy, and can never be mistaken for production. See
- *  docs/database-operations.md. */
+ *  Branch and PR previews use their own development database, marked
+ *  `DATABASE_ENVIRONMENT=development`: they apply migrations to it on every
+ *  deploy and can never be mistaken for production. A preview without the
+ *  mark never migrates. See docs/database-operations.md. */
 
 type Env = Record<string, string | undefined>;
 

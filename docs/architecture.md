@@ -44,7 +44,7 @@ A role holds one level for each module (`StaffRole.levels`). `src/lib/staff/leve
 
 ## Databases
 
-- **Main database** (`DATABASE_URL`): Core, the swim school and the Work modules except Docs and HR. Previews share it unless pointed at the development database; see [database-operations.md](database-operations.md#previews-and-the-development-database). `src/lib/database-environment.ts` stops a preview migrating production.
+- **Main database** (`DATABASE_URL`): Core, the swim school and the Work modules except Docs and HR. Previews use their own development database; see [database-operations.md](database-operations.md#previews-and-the-development-database). `src/lib/database-environment.ts` stops a preview migrating production.
 - **Docs** (`DOCS_DATABASE_URL`) and **HR** (`HR_DATABASE_URL`) have their own databases.
 - Schema changes only ever add.
 

@@ -118,9 +118,10 @@ Prisma here is v7: the client is generated into `src/generated/prisma` and
 needs a driver adapter (`@prisma/adapter-pg`), and the datasource URL lives in
 `prisma.config.ts` rather than in the schema.
 
-Branch and PR previews share production's main database unless a branch is pointed at the
-development database and marked `DATABASE_ENVIRONMENT=development` (docs/database-operations.md),
-so schema changes must be additive; test them in the local sandbox (`npm run sandbox`). Docs uses its own `DOCS_DATABASE_URL` / `DOCS_DIRECT_URL` and schema
+Branch and PR previews use their own development database (`DATABASE_ENVIRONMENT=development`) and
+apply main-database migrations to it, never to production; Docs and HR migrations run only in
+production (docs/database-operations.md). Schema changes must still be additive, because merging
+to `main` migrates production under live code; test them in the local sandbox (`npm run sandbox`). Docs uses its own `DOCS_DATABASE_URL` / `DOCS_DIRECT_URL` and schema
 migrations in `docs-database`; shared staff login/grants still come from Turnfin.
 Never repoint the main `DATABASE_URL` or fall back to it for Docs content. HR and
 performance likewise use their own `HR_DATABASE_URL` / `HR_DIRECT_URL` and

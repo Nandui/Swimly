@@ -4,9 +4,9 @@ import { createRequire } from "node:module";
 import { dirname, resolve } from "node:path";
 import { databasePlan } from "../src/lib/database-environment";
 
-// Production applies committed migrations to its database, and so does a dev
-// deployment marked DATABASE_ENVIRONMENT=development (its own database). A
-// deployment still sharing production's database never migrates it. A failed
+// Production applies committed migrations to its database, and so does a
+// preview marked DATABASE_ENVIRONMENT=development (the development database).
+// A preview without the mark never migrates. A failed
 // migration stops deployment. See src/lib/database-environment.ts.
 const plan = databasePlan(process.env);
 if (plan.errors.length) {
