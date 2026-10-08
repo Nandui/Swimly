@@ -67,42 +67,56 @@ once. Never print, commit or share it. The scripts stay dry runs until given
 `--confirm`; read the dry run before writing.
 Do not write test swimmers or classes to production.
 
-## A separate database for `dev`
+## Previews and the development database
 
-Production and the `dev` deployment must not share a database. While they do,
-only production applies migrations, and `dev` runs new code against old tables.
+Work ships through a branch or pull request. Vercel builds a preview of it,
+the owner checks the preview, and merging to `main` deploys production. There
+is no long-lived development branch or deployment.
 
-1. Create a Postgres database for development, for example a Neon branch or a
-   Vercel Postgres database. Copy production's schema by applying the committed
-   migrations. Two copies from production exist:
-   - `scripts/copy-staff-to-dev.ts` copies staff accounts, roles and sites only
-     (owner decision, 28 September 2026).
-   - `scripts/copy-prod-to-dev.ts` replaces dev's data with **all** of production's
-     main database, as it is, including swimmers, parents and medical notes (owner
-     decision, 29 September 2026, made knowing the dev site is less protected).
-     It leaves out live parent sign-in tokens, keeps dev-only tables such as the
-     organisation, and must be followed by `scripts/convert-roles-to-levels.ts`
-     against dev. Treat dev as holding real personal data while it does.
-   Both read production in a read-only transaction, write only to a database
-   with the dev migrations, and dry-run unless given `--confirm`.
-2. On the `dev` deployment (Vercel Preview for the `dev` branch), set:
+By default a preview shares production's database. It never migrates it, so
+a preview of a schema change runs new code against old tables. Test schema
+changes in the local sandbox (`npm run sandbox`) first, and keep them additive
+so the old and new code both work with either schema.
+
+To check a branch against its own tables on Vercel, point that branch's
+preview at the development database:
+
+1. In Vercel, add Preview variables for that branch only:
    - `DATABASE_URL` and `DIRECT_URL` to the development database (a database
      attached through Vercel's Neon integration provides `DATABASE_URL` and
      `DATABASE_URL_UNPOOLED`, which is read in place of `DIRECT_URL`);
    - `DATABASE_ENVIRONMENT=development`;
    - optionally `PRODUCTION_DATABASE_HOST` to production's host name, so a
-     development deployment pointed at production is refused;
-   - optionally `REQUIRE_DEV_DATABASE=true`, so any preview still sharing
-     production's database fails its build instead of only warning.
+     preview marked `development` but pointed at production is refused.
+2. Redeploy the preview. Its build applies the branch's migrations to the
+   development database.
 3. Leave production unset, or set `DATABASE_ENVIRONMENT=production`.
+
+Setting `REQUIRE_DEV_DATABASE=true` for previews makes any preview that still
+shares production's database fail its build instead of only warning.
 
 On every build, `scripts/check-env.ts` and `scripts/migrate-production.ts` read
 `src/lib/database-environment.ts`:
 - **Production** applies committed migrations to its own database.
-- **The `dev` deployment**, once marked `development`, applies them to its own
-  database.
-- **A deployment still sharing production's database** never migrates it and
-  warns (or fails with `REQUIRE_DEV_DATABASE=true`).
+- **A preview marked `development`** applies them to the development database.
+- **A preview sharing production's database** never migrates it and warns (or
+  fails with `REQUIRE_DEV_DATABASE=true`).
+
+The development database starts with fictional data. Two scripts fill it from
+production instead:
+- `scripts/copy-staff-to-dev.ts` copies staff accounts, roles and sites only
+  (owner decision, 28 September 2026).
+- `scripts/copy-prod-to-dev.ts` replaces the development database's data with
+  **all** of production's main database, as it is, including swimmers, parents
+  and medical notes (owner decision, 29 September 2026, made knowing previews
+  are less protected). It leaves out live parent sign-in tokens, keeps tables
+  only the development database has, and must be followed by
+  `scripts/convert-roles-to-levels.ts` against the development database. Treat
+  that database, and any preview using it, as holding real personal data while
+  it does.
+
+Both read production in a read-only transaction, write only to a database that
+already has the newer migrations, and dry-run unless given `--confirm`.
 
 The databases (Neon, Frankfurt, attached through Vercel's Neon integration):
 
@@ -113,6 +127,7 @@ The databases (Neon, Frankfurt, attached through Vercel's Neon integration):
 | `turnfin-activities-db` | Production Activities, as `ACTIVITIES_*` | Activities, Production |
 | `turnfin-activities-dev-db` | Development Activities, as `ACTIVITIES_*` | Activities, Preview and Development |
 
-A new development database starts empty. Its first `dev` deploy creates the
-tables; then give it a way in by running `npm run db:seed` against it with
-`SEED_ADMIN_EMAIL` and `SEED_ADMIN_PASSWORD` set.
+A new development database starts empty. The first preview build marked
+`development` creates the tables; then give it a way in by running
+`npm run db:seed` against it with `SEED_ADMIN_EMAIL` and `SEED_ADMIN_PASSWORD`
+set.

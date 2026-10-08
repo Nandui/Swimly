@@ -2,8 +2,8 @@ import { randomUUID } from "node:crypto";
 import { config } from "dotenv";
 import { Client } from "pg";
 
-/** Copies production's sites, roles and staff accounts into the `dev`
- *  database, so the owner signs in to dev.turnfin.app with their normal email
+/** Copies production's sites, roles and staff accounts into the development
+ *  database, so the owner signs in to a preview using it with their normal email
  *  and password and sees how the real roles convert to levels (owner decision,
  *  28 September 2026).
  *

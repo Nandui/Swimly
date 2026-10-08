@@ -2,11 +2,12 @@
  *  migrations to it. Read by `scripts/check-env.ts` and
  *  `scripts/migrate-production.ts` before every build.
  *
- *  Production and the `dev` deployment used to share one database, so only
- *  production applied migrations and `dev` ran new code against old tables.
- *  Give `dev` its own database and mark it `DATABASE_ENVIRONMENT=development`:
- *  it then applies migrations to that database on every deploy, and can never
- *  be mistaken for production. See docs/database-operations.md. */
+ *  Branch and PR previews share production's database by default, so only
+ *  production applies migrations and a preview runs new code against old
+ *  tables. Point a branch's preview at the development database and mark it
+ *  `DATABASE_ENVIRONMENT=development`: it then applies migrations to that
+ *  database on every deploy, and can never be mistaken for production. See
+ *  docs/database-operations.md. */
 
 type Env = Record<string, string | undefined>;
 
@@ -44,7 +45,7 @@ export function databasePlan(env: Env): DatabasePlan {
 
   if (!vercel) return { migrate: false, errors, warnings }; // Local work never migrates automatically.
 
-  // A preview or development deployment, such as `dev`.
+  // A branch or PR preview, or a development deployment.
   if (role === "development") {
     const production = hostOf(env.PRODUCTION_DATABASE_HOST ? `postgres://${env.PRODUCTION_DATABASE_HOST}` : undefined);
     const current = hostOf(env.DIRECT_URL ?? env.DATABASE_URL_UNPOOLED ?? env.DATABASE_URL);
