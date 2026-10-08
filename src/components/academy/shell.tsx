@@ -2,7 +2,7 @@
 
 import type { ReactNode } from 'react';
 import { usePathname } from 'next/navigation';
-import { CalendarRange, ListChecks } from 'lucide-react';
+import { CalendarRange, ListChecks, Phone } from 'lucide-react';
 import { ModuleShell } from '@/components/workspace/module-shell';
 import type { AcademyActor } from '@/lib/academy/access';
 
@@ -10,7 +10,8 @@ import type { AcademyActor } from '@/lib/academy/access';
 export function AcademyShell({ who, children }: { who: AcademyActor; children: ReactNode }) {
   const pathname = usePathname();
   const links = [
-    { href: '/academy', label: 'Courses', icon: CalendarRange, active: pathname === '/academy' || /^\/academy\/(?!types)/.test(pathname) },
+    { href: '/academy', label: 'Courses', icon: CalendarRange, active: pathname === '/academy' || /^\/academy\/(?!types|calls)/.test(pathname) },
+    { href: '/academy/calls', label: 'To call', icon: Phone, active: pathname.startsWith('/academy/calls') },
     { href: '/academy/types', label: 'Course list', icon: ListChecks, active: pathname.startsWith('/academy/types') },
   ];
   return (

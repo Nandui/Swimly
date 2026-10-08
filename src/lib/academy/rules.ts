@@ -1,4 +1,4 @@
-import { Ban, CalendarClock, CircleCheck, CircleDashed, CircleX, Coins, HandCoins, LifeBuoy, PlayCircle, RotateCcw, School, Shapes, Wallet } from "lucide-react";
+import { Ban, CalendarClock, CircleCheck, CircleDashed, CircleX, Clock, Coins, HandCoins, LifeBuoy, PhoneCall, PhoneMissed, PlayCircle, RotateCcw, School, Shapes, TriangleAlert, Wallet } from "lucide-react";
 import type { StatusMeta } from "@/lib/status";
 
 /** The Academy's rules (owner decision, 8 October 2026; docs/academy.md). Pure, so they are
@@ -112,4 +112,71 @@ export function centsOf(value: string): number | null {
   const clean = value.trim().replace(/[€,\s]/g, "");
   if (!/^\d+(\.\d{1,2})?$/.test(clean)) return null;
   return Math.round(Number(clean) * 100);
+}
+
+/* ---------- Online booking (owner decision, 8 October 2026) ----------
+   People hold a place on the booking site; we cannot take payment online, so reception phones
+   them within 72 hours of holding it. The place stays held until someone records the call. */
+
+/** Hours from holding a place online to the call for payment. */
+export const ONLINE_HOLD_HOURS = 72;
+
+/** When they would like a call. */
+export const ACADEMY_CALL_TIMES = { morning: "Morning", afternoon: "Afternoon", evening: "Evening" } as const;
+export type AcademyCallTime = keyof typeof ACADEMY_CALL_TIMES;
+export const ACADEMY_CALL_TIME_KEYS = Object.keys(ACADEMY_CALL_TIMES) as AcademyCallTime[];
+
+/** What came of a call. Paid and not going ahead take them off the list to call. */
+export const ACADEMY_CALL_META = {
+  paid: { label: "Paid", color: "green", icon: Wallet },
+  "no-answer": { label: "No answer", color: "gray", icon: PhoneMissed },
+  "call-back": { label: "Asked us to call back", color: "blue", icon: PhoneCall },
+  "not-going-ahead": { label: "Not going ahead", color: "red", icon: Ban },
+} as const satisfies Record<string, StatusMeta>;
+export type AcademyCallOutcome = keyof typeof ACADEMY_CALL_META;
+export const ACADEMY_CALL_OUTCOMES = Object.keys(ACADEMY_CALL_META) as AcademyCallOutcome[];
+
+/** How soon to call: past the deadline, within a day, or later. */
+export const ACADEMY_CALL_DUE_META = {
+  overdue: { label: "Overdue", color: "red", icon: TriangleAlert },
+  soon: { label: "Call within a day", color: "orange", icon: Clock },
+  later: { label: "To call", color: "blue", icon: Clock },
+} as const satisfies Record<string, StatusMeta>;
+export type AcademyCallDue = keyof typeof ACADEMY_CALL_DUE_META;
+
+/** The deadline for a place held at `heldAt`. */
+export function callByFrom(heldAt: Date) {
+  return new Date(heldAt.getTime() + ONLINE_HOLD_HOURS * 3_600_000);
+}
+
+const DUBLIN_TIME = new Intl.DateTimeFormat("en-IE", { timeZone: "Europe/Dublin", hour: "2-digit", minute: "2-digit", hour12: false });
+const DUBLIN_DAY = new Intl.DateTimeFormat("en-IE", { timeZone: "Europe/Dublin", weekday: "short", day: "numeric", month: "short" });
+const DUBLIN_ISO = new Intl.DateTimeFormat("en-CA", { timeZone: "Europe/Dublin", year: "numeric", month: "2-digit", day: "2-digit" });
+
+/** Where a call stands and how to say it: "Overdue by 6 h", or when it is due, to follow "Call by":
+ *  "today 21:10", "tomorrow 09:00", "Fri 9 Oct, 14:00". */
+export function callDue(callBy: Date, now: Date = new Date()): { due: AcademyCallDue; label: string } {
+  const left = callBy.getTime() - now.getTime();
+  if (left <= 0) {
+    const hours = Math.floor(-left / 3_600_000);
+    return { due: "overdue", label: hours < 1 ? "Overdue" : hours < 48 ? `Overdue by ${hours} h` : `Overdue by ${Math.floor(hours / 24)} days` };
+  }
+  const time = DUBLIN_TIME.format(callBy);
+  const day = DUBLIN_ISO.format(callBy), on = DUBLIN_ISO.format(now);
+  const tomorrow = DUBLIN_ISO.format(new Date(now.getTime() + 86_400_000));
+  const part = (type: string) => DUBLIN_DAY.formatToParts(callBy).find((p) => p.type === type)?.value ?? "";
+  const when = day === on ? `today ${time}` : day === tomorrow ? `tomorrow ${time}` : `${part("weekday")} ${part("day")} ${part("month")}, ${time}`;
+  return { due: left <= 86_400_000 ? "soon" : "later", label: when };
+}
+
+/** What an amount taken over the phone makes the payment: the full price or more is paid, less
+ *  is a deposit (the place is then secured and they leave the list to call). */
+export function paymentFor(amountCents: number, priceCents: number): "paid" | "deposit" {
+  return amountCents >= priceCents ? "paid" : "deposit";
+}
+
+/** A course people can hold a place on online: put online, not cancelled or finished, and not
+ *  started yet. Places left are worked out separately. */
+export function bookableOnline(c: { bookOnline: boolean; status: string; cancelledAt: Date | null }, firstDay: string | null, today: string) {
+  return c.bookOnline && !c.cancelledAt && c.status === "planned" && !!firstDay && firstDay > today;
 }

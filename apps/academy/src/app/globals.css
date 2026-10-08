@@ -1,0 +1,209 @@
+/* The Academy booking site in Poolside Clear v2, phone-first. The tokens, panels, rows, controls,
+   tags and notices are copied from Turnfin Me (apps/me/src/app/globals.css), itself copied from
+   Work's src/app/docs/poolside.css; keep them in step. Colours come from these tokens only;
+   status colour comes from src/lib/meta.ts, always with an icon. */
+:root { color-scheme: light dark; }
+.turnfin-app {
+  --pc-canvas: light-dark(#eef2f6, #0c1320);
+  --pc-surface: light-dark(#ffffff, #131c2b);
+  --pc-surface-sunken: light-dark(#f4f6f9, #182334);
+  --pc-ink: light-dark(#0f1b2d, #e8eef7);
+  --pc-ink-muted: light-dark(#56627a, #9babc2);
+  --pc-line: light-dark(#e2e7ef, #24324a);
+  /* Edges of things you type into or choose from: 3:1 against every surface. */
+  --pc-line-strong: light-dark(#77849a, #6b7d99);
+  --pc-primary: light-dark(#1d5fd1, #78a6ff);
+  --pc-primary-hover: light-dark(#174ea8, #9dbfff);
+  --pc-on-primary: light-dark(#ffffff, #081733);
+  --pc-primary-soft: light-dark(#e9f0fd, #17284a);
+  --pc-primary-soft-hover: light-dark(#dde8fc, #1d3360);
+  --pc-primary-ink: light-dark(#174ea8, #a8c5ff);
+  --pc-hover: light-dark(#f4f6f9, #1b2636);
+  --pc-focus: light-dark(#1d5fd1, #78a6ff);
+  --pc-focus-halo: 0 0 0 4px light-dark(rgb(29 95 209 / 0.2), rgb(120 166 255 / 0.28));
+  --pc-success: light-dark(#157046, #7fe0a8);
+  --pc-success-soft: light-dark(#e3f5ec, #10301f);
+  --pc-warning: light-dark(#8a5a00, #f7cf6e);
+  --pc-warning-soft: light-dark(#fdf2dc, #35270b);
+  --pc-danger: light-dark(#b4321f, #ffa395);
+  --pc-danger-soft: light-dark(#fde8e6, #3a1815);
+  --pc-neutral-soft: light-dark(#f4f6f9, #182334);
+  /* The single do-first item on a page. */
+  --pc-yellow: light-dark(#fde9a8, #4a3b10);
+  --pc-on-yellow: light-dark(#3a2a00, #fbe7a8);
+  --pc-shadow-card: none;
+  --pc-shadow-overlay: 0 16px 40px -12px light-dark(rgb(15 27 45 / 0.35), rgb(0 0 0 / 0.6)), 0 0 0 1px var(--pc-line);
+  --pc-ease: cubic-bezier(0.2, 0, 0, 1);
+
+  /* Type scale: five sizes only. Captions and metadata; body, controls and labels; section
+     titles; page titles; large figures (page and figure drop to 24px on phones). Reading text
+     in documents is 16px. */
+  --pc-text-caption: 12px;
+  --pc-leading-caption: 16px;
+  --pc-text-body: 14px;
+  --pc-leading-body: 20px;
+  --pc-text-title: 18px;
+  --pc-leading-title: 24px;
+  --pc-text-page: 28px;
+  --pc-leading-page: 36px;
+  --pc-text-figure: 28px;
+  --pc-leading-figure: 34px;
+
+  /* Control geometry: every button, field, tab and menu item is 44px on every device. Corners:
+     round controls, 16px inside a panel, 24px panels. */
+  --pc-control-height: 44px;
+  --pc-control-pad: 16px;
+  --pc-radius-control: 999px;
+  --pc-radius-card: 16px;
+  --pc-radius-panel: 24px;
+  --font-sans: "Plus Jakarta Sans", ui-sans-serif, system-ui, sans-serif;
+}
+@media (max-width: 767px) {
+  .turnfin-app { --pc-text-page: 24px; --pc-leading-page: 30px; --pc-text-figure: 24px; --pc-leading-figure: 30px; }
+}
+
+/* Work gets these from Tailwind preflight. */
+*, *::before, *::after { box-sizing: border-box; }
+html, body { margin: 0; }
+:is(h1, h2, h3, h4, p) { margin: 0; }
+button, input, select, textarea { font: inherit; color: inherit; }
+fieldset { margin: 0; padding: 0; border: 0; min-inline-size: 0; }
+
+.turnfin-app {
+  font-family: var(--font-sans);
+  font-size: var(--pc-text-body);
+  line-height: var(--pc-leading-body);
+  color: var(--pc-ink);
+}
+body.turnfin-app { min-height: 100dvh; background: var(--pc-canvas); -webkit-font-smoothing: antialiased; }
+
+/* Type: one bold page title, 600-weight section titles, sentence-case labels (never capitals). */
+.turnfin-app :is(h1, h2, h3, h4) { font-family: var(--font-sans); color: var(--pc-ink); }
+.turnfin-app h1 { font-size: var(--pc-text-page); font-weight: 600; line-height: var(--pc-leading-page); letter-spacing: -0.01em; }
+.turnfin-app :is(h2, h3, h4) { letter-spacing: 0; }
+.turnfin-app h2 { font-size: var(--pc-text-title); font-weight: 600; line-height: var(--pc-leading-title); }
+.turnfin-app svg { flex-shrink: 0; }
+.turnfin-app :is(h3, h4) { font-size: var(--pc-text-body); font-weight: 600; line-height: var(--pc-leading-body); }
+
+a { color: var(--pc-primary); }
+:is(a, button, input, select, textarea, summary):focus-visible { outline: 2px solid var(--pc-focus); outline-offset: 2px; }
+.muted { color: var(--pc-ink-muted); }
+.caption { font-size: var(--pc-text-caption); line-height: var(--pc-leading-caption); color: var(--pc-ink-muted); }
+.sr-only { position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px; overflow: hidden; clip: rect(0, 0, 0, 0); white-space: nowrap; border: 0; }
+.stack { display: flex; flex-direction: column; gap: 16px; }
+.stack-sm { display: flex; flex-direction: column; gap: 8px; }
+.row { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; }
+.pre { white-space: pre-wrap; overflow-wrap: anywhere; }
+.tabular { font-variant-numeric: tabular-nums; }
+
+/* Frame: the site's name on the canvas, then one 720px column. No menus: a course list and a
+   booking flow. */
+.frame { min-height: 100dvh; display: flex; flex-direction: column; }
+.topbar { display: flex; align-items: center; justify-content: space-between; gap: 12px; width: 100%; max-width: 720px; margin: 0 auto; padding: max(16px, env(safe-area-inset-top)) 16px 0; min-height: 60px; }
+.brand-name { font-size: var(--pc-text-title); line-height: var(--pc-leading-title); font-weight: 700; color: var(--pc-ink); text-decoration: none; }
+.page { flex: 1; width: 100%; max-width: 720px; margin: 0 auto; padding: 16px 16px calc(48px + env(safe-area-inset-bottom)); }
+.footer { width: 100%; max-width: 720px; margin: 0 auto; padding: 0 16px calc(24px + env(safe-area-inset-bottom)); }
+
+.turnfin-app .pc-panel { display: flex; flex-direction: column; gap: 16px; min-width: 0; padding: 24px; border-radius: var(--pc-radius-panel); background: var(--pc-surface); }
+.turnfin-app .pc-panel-head { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 8px 12px; min-height: 44px; }
+.turnfin-app .pc-panel-head > h2 { margin: 0; }
+.turnfin-app .pc-rows { display: flex; flex-direction: column; gap: 8px; margin: 0; padding: 0; list-style: none; }
+.turnfin-app .pc-row { display: flex; flex-wrap: wrap; align-items: center; gap: 12px; min-width: 0; min-height: 64px; padding: 12px 16px; border: 1px solid var(--pc-line); border-radius: var(--pc-radius-card); background: var(--pc-surface); color: var(--pc-ink); text-decoration: none; }
+.turnfin-app a.pc-row:hover { background: var(--pc-surface-sunken); }
+.turnfin-app a.pc-row:focus-visible { outline: 2px solid var(--pc-focus); outline-offset: 2px; }
+.turnfin-app .pc-row-body { display: flex; flex: 1 1 140px; flex-direction: column; min-width: 0; }
+.turnfin-app .pc-row-title { font-weight: 600; }
+.turnfin-app .pc-row-hint { font-size: var(--pc-text-caption); line-height: var(--pc-leading-caption); color: var(--pc-ink-muted); }
+.turnfin-app .pc-row-trail { display: flex; flex: 0 1 auto; flex-wrap: wrap; align-items: center; justify-content: flex-end; gap: 8px 12px; max-width: 100%; margin-left: auto; }
+.turnfin-app .pc-row-chevron { width: 16px; height: 16px; color: var(--pc-ink-muted); }
+.turnfin-app .pc-row[data-first] { border-color: transparent; background: var(--pc-yellow); color: var(--pc-on-yellow); }
+.turnfin-app .pc-row[data-first] :is(.pc-row-hint, .pc-row-chevron) { color: inherit; }
+.turnfin-app a.pc-row[data-first]:hover { background: var(--pc-yellow); }
+.turnfin-app .pc-row[data-muted] { color: var(--pc-ink-muted); }
+.turnfin-app label.pc-row { flex-direction: row; flex-wrap: nowrap; align-items: flex-start; min-height: 56px; font-weight: 400; cursor: pointer; }
+.turnfin-app label.pc-row:hover { background: var(--pc-surface-sunken); }
+.turnfin-app label.pc-row:has(:focus-visible) { outline: 2px solid var(--pc-focus); outline-offset: 2px; }
+.turnfin-app label.pc-row:has(:disabled) { cursor: not-allowed; color: var(--pc-ink-muted); }
+.turnfin-app .pc-tile-icon { display: inline-flex; flex: none; align-items: center; justify-content: center; width: 40px; height: 40px; border-radius: 999px; background: var(--pc-primary-soft); color: var(--pc-primary); }
+.turnfin-app .pc-tile-icon > svg { width: 20px; height: 20px; }
+@media (max-width: 767px) {
+  .turnfin-app .pc-panel { padding: 16px; gap: 12px; }
+}
+
+/* Controls: one height, radius and weight */
+.button { display: inline-flex; align-items: center; justify-content: center; gap: 8px; min-height: var(--pc-control-height); padding: 0 var(--pc-control-pad); border-radius: var(--pc-radius-control); border: 1px solid transparent; font: inherit; font-weight: 600; cursor: pointer; text-decoration: none; background: var(--pc-primary); color: var(--pc-on-primary); }
+.button:not(:disabled):hover { background: var(--pc-primary-hover); }
+.button:disabled, .input:disabled { opacity: 0.5; cursor: not-allowed; }
+.button.outline { background: var(--pc-surface); color: var(--pc-ink); border-color: var(--pc-line-strong); }
+.button.outline:not(:disabled):hover { background: var(--pc-surface-sunken); }
+.button.ghost { background: transparent; color: var(--pc-primary); }
+.button.ghost:not(:disabled):hover { background: var(--pc-primary-soft); color: var(--pc-primary-ink); }
+.button.block { align-self: flex-start; }
+.button svg { width: 16px; height: 16px; }
+/* A back link: a ghost button pulled out so its chevron lines up with the page edge. */
+.back-link { align-self: flex-start; margin-inline-start: -12px; }
+@media (max-width: 767px) {
+  .button.block { width: 100%; align-self: stretch; }
+}
+.field { display: flex; flex-direction: column; gap: 8px; }
+.field :is(label, legend, .label) { font-weight: 600; }
+.field .hint { font-size: var(--pc-text-caption); line-height: var(--pc-leading-caption); color: var(--pc-ink-muted); }
+/* Fields stay 16px on phones and touch screens so iOS does not zoom on focus: the one literal size. */
+.input { min-height: var(--pc-control-height); width: 100%; padding: 10px 16px; border: 1px solid var(--pc-line-strong); border-radius: var(--pc-radius-control); background: var(--pc-surface); color: var(--pc-ink); font: inherit; font-size: 16px; }
+@media (hover: hover) and (pointer: fine) and (min-width: 48.0625rem) {
+  .input { font-size: var(--pc-text-body); }
+}
+textarea.input { min-height: 96px; resize: vertical; border-radius: var(--pc-radius-card); }
+.input:focus-visible { outline: none; border-color: var(--pc-focus); box-shadow: 0 0 0 1px var(--pc-focus), var(--pc-focus-halo); }
+label.pc-row > input[type='checkbox'] { flex: none; width: 20px; height: 20px; margin: 0; accent-color: var(--pc-primary); }
+/* A file input hidden behind its "Choose a file" button label keeps a visible focus ring. */
+.sr-only:focus-visible + label { outline: 2px solid var(--pc-focus); outline-offset: 2px; }
+
+/* Tags: tone from metadata, always with an icon */
+.tag { display: inline-flex; align-items: center; gap: 4px; min-height: 24px; padding: 0 10px; border-radius: 999px; font-size: var(--pc-text-caption); line-height: var(--pc-leading-caption); font-weight: 600; white-space: nowrap; }
+.tag svg { width: 14px; height: 14px; }
+.tone-green { background: var(--pc-success-soft); color: var(--pc-success); }
+.tone-orange { background: var(--pc-warning-soft); color: var(--pc-warning); }
+.tone-red { background: var(--pc-danger-soft); color: var(--pc-danger); }
+.tone-blue { background: var(--pc-primary-soft); color: var(--pc-primary-ink); }
+.tone-gray { background: var(--pc-neutral-soft); color: var(--pc-ink-muted); }
+
+/* Notices: the callout layout (Work's .pc-note shape) with an icon per tone. */
+.notice { display: flex; align-items: flex-start; gap: 12px; padding: 16px; border-radius: var(--pc-radius-card); background: var(--pc-primary-soft); color: var(--pc-primary-ink); }
+.notice > svg { width: 20px; height: 20px; }
+.notice-body { display: flex; flex: 1; flex-direction: column; min-width: 0; }
+.notice strong { font-weight: 600; }
+.notice.error { background: var(--pc-danger-soft); color: var(--pc-danger); }
+.notice.warning { background: var(--pc-warning-soft); color: var(--pc-warning); }
+/* The one do-first item on Home (MeHome's yellow callout), a link. */
+.notice.first { background: var(--pc-yellow); color: var(--pc-on-yellow); text-decoration: none; }
+.notice.first > .pc-row-chevron { margin-top: 2px; color: inherit; }
+
+
+/* The booking site's own small parts, on the same tokens. */
+/* Course facts: an icon beside each line. */
+.facts { display: flex; flex-direction: column; margin: 0; padding: 0; list-style: none; }
+.facts li { display: flex; align-items: flex-start; gap: 12px; padding: 10px 0; }
+.facts li + li { border-top: 1px solid var(--pc-line); }
+.facts svg { width: 20px; height: 20px; margin-top: 0; color: var(--pc-ink-muted); }
+/* Filter pills and the "best time" choices: 44px round toggles. */
+.chips { display: flex; flex-wrap: wrap; gap: 8px; }
+.chip { display: inline-flex; align-items: center; gap: 8px; min-height: var(--pc-control-height); padding: 0 var(--pc-control-pad); border-radius: var(--pc-radius-control); border: 1px solid var(--pc-line-strong); background: var(--pc-surface); color: var(--pc-ink); font-weight: 600; cursor: pointer; text-decoration: none; }
+.chip[aria-pressed='true'], .chip:has(input:checked) { border-color: var(--pc-primary); background: var(--pc-primary-soft); color: var(--pc-primary-ink); }
+.chip:has(input:focus-visible) { outline: 2px solid var(--pc-focus); outline-offset: 2px; }
+.chip input { width: 18px; height: 18px; margin: 0; accent-color: var(--pc-primary); }
+/* A course on the list: the whole card is the link. */
+.course-card { display: flex; flex-direction: column; gap: 8px; padding: 16px; border-radius: var(--pc-radius-card); background: var(--pc-surface); color: var(--pc-ink); text-decoration: none; }
+a.course-card:hover { background: var(--pc-hover); }
+.course-card .title { font-size: 16px; line-height: 22px; font-weight: 700; }
+.course-head { display: flex; justify-content: space-between; align-items: flex-start; gap: 8px; }
+.summary { display: flex; flex-direction: column; margin: 0; }
+.summary div { display: flex; justify-content: space-between; gap: 12px; padding: 10px 0; }
+.summary div + div { border-top: 1px solid var(--pc-line); }
+.summary dt { color: var(--pc-ink-muted); }
+.summary dd { margin: 0; font-weight: 600; text-align: right; overflow-wrap: anywhere; }
+.cards { display: flex; flex-direction: column; gap: 8px; margin: 0; padding: 0; list-style: none; }
+.course-card .button { margin-top: 4px; }
+/* Loading: sunken cards the shape of the list that is coming. */
+.placeholder-row { height: 96px; border-radius: var(--pc-radius-card); background: var(--pc-surface-sunken); }
+.stack > .tag { align-self: flex-start; }

@@ -6,7 +6,7 @@ import { prisma } from "@/lib/prisma";
 import { mayFor, sitesFor } from "@/lib/policy/session";
 import { areaNames } from "@/lib/setup/data";
 import { requireAcademyActor } from "@/lib/academy/access";
-import { courseState, readiness, takesPlace } from "@/lib/academy/rules";
+import { callDue, courseState, readiness, takesPlace } from "@/lib/academy/rules";
 
 /** The Academy's reads (docs/academy.md). Courses are limited to the sites `academy.read`
  *  covers; a course outside them is a 404. The course list belongs to the organisation. */
@@ -97,7 +97,7 @@ export async function academyCourse(id: string) {
   const course = await prisma.academyCourse.findFirst({
     where: { id, orgId: who.orgId ?? undefined },
     select: {
-      id: true, status: true, capacity: true, priceCents: true, note: true, cancelledAt: true, siteId: true, tutorId: true, assessorId: true, typeId: true,
+      id: true, status: true, capacity: true, priceCents: true, note: true, bookOnline: true, cancelledAt: true, siteId: true, tutorId: true, assessorId: true, typeId: true,
       createdByName: true, createdAt: true,
       site: { select: { name: true } }, tutor: { select: { name: true } }, assessor: { select: { name: true } },
       type: { select: { name: true, kind: true, awardingBody: true, minAge: true, minHours: true, checks: true, qualificationType: { select: { name: true, validityMonths: true } } } },
@@ -106,7 +106,8 @@ export async function academyCourse(id: string) {
       candidates: { orderBy: [{ status: "asc" }, { name: "asc" }], select: {
         id: true, userId: true, name: true, email: true, phone: true, dateOfBirth: true, payment: true, paidCents: true, status: true,
         swimTestOn: true, medicalOn: true, idCheckedOn: true, checkedByName: true, resultOn: true, resultNote: true, certificateNumber: true, certificateExpires: true,
-        qualificationId: true, note: true } },
+        qualificationId: true, note: true, source: true, reference: true, phone2: true, callTimes: true, callBy: true, createdAt: true,
+        calls: { orderBy: { createdAt: "desc" }, select: { outcome: true, note: true, byName: true, createdAt: true } } } },
     },
   });
   if (!course) notFound();
@@ -136,3 +137,24 @@ export async function academyCourse(id: string) {
   };
 }
 export type AcademyCourseView = Awaited<ReturnType<typeof academyCourse>>;
+
+/** Who to phone for payment: everyone who held a place online and still owes, on courses that are
+ *  on, at the sites `academy.read` covers; soonest deadline first (owner decision, 8 October 2026:
+ *  every Academy level sees and works this list). */
+export async function toCall(now: Date = new Date()) {
+  const who = await requireAcademyActor();
+  const sites = await sitesFor("academy.read");
+  const rows = await prisma.academyCandidate.findMany({
+    where: { source: "online", payment: "owed", status: "booked", course: { orgId: who.orgId ?? undefined, cancelledAt: null, status: { not: "completed" }, ...inSites(sites) } },
+    orderBy: [{ callBy: "asc" }, { createdAt: "asc" }], take: 300,
+    select: {
+      id: true, name: true, email: true, phone: true, phone2: true, callTimes: true, callBy: true, createdAt: true, reference: true, note: true,
+      calls: { orderBy: { createdAt: "desc" }, select: { outcome: true, note: true, byName: true, createdAt: true } },
+      course: { select: { id: true, priceCents: true, site: { select: { name: true } }, type: { select: { name: true } },
+        sessions: { orderBy: [{ date: "asc" }, { startMinutes: "asc" }], take: 1, select: { date: true, startMinutes: true } } } },
+    },
+  });
+  const people = rows.map((r) => ({ ...r, ...callDue(r.callBy ?? r.createdAt, now), first: r.course.sessions[0] ? iso(r.course.sessions[0].date) : null }));
+  return { who, people, overdue: people.filter((p) => p.due === "overdue").length, soon: people.filter((p) => p.due === "soon").length };
+}
+export type ToCall = Awaited<ReturnType<typeof toCall>>["people"][number];

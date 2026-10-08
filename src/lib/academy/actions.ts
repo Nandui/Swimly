@@ -10,7 +10,7 @@ import { prisma } from "@/lib/prisma";
 import { currentActor, mayFor } from "@/lib/policy/session";
 import { areaProblem } from "@/lib/setup/data";
 import type { PermissionKey } from "@/lib/staff/permissions";
-import { ACADEMY_CHECK_KEYS, ACADEMY_KINDS, ACADEMY_OUTCOMES, ACADEMY_PAYMENTS, centsOf, expiryFrom, takesPlace } from "@/lib/academy/rules";
+import { ACADEMY_CALL_META, ACADEMY_CALL_OUTCOMES, ACADEMY_CHECK_KEYS, ACADEMY_KINDS, ACADEMY_OUTCOMES, ACADEMY_PAYMENTS, centsOf, euro, expiryFrom, paymentFor, takesPlace } from "@/lib/academy/rules";
 
 /** Academy writes (docs/academy.md). The course list is the organisation's (Manage); a course
  *  and everything on it is checked against its site: Manage puts courses and sessions on,
@@ -25,6 +25,7 @@ const clockOf = (value: string) => {
 
 function refresh(courseId?: string) {
   revalidatePath("/academy");
+  revalidatePath("/academy/calls");
   if (courseId) revalidatePath(`/academy/${courseId}`);
   revalidatePath("/rota");
   revalidatePath("/rota/today");
@@ -35,7 +36,8 @@ async function atSite(siteId: string, cap: PermissionKey) {
   const site = await prisma.club.findFirst({ where: { id: siteId, archivedAt: null }, select: { id: true, name: true, orgId: true } });
   if (!site?.orgId) return { ok: false as const, error: "That site is not open." };
   if (!(await mayFor(cap, { siteId, orgId: site.orgId }))) {
-    return { ok: false as const, error: cap === "academy.manage" ? "Putting courses on at this site needs Academy Manage there." : "Running courses at this site needs Academy Tutor there." };
+    return { ok: false as const, error: cap === "academy.manage" ? "Putting courses on at this site needs Academy Manage there."
+      : cap === "academy.run" ? "Running courses at this site needs Academy Tutor there." : "This needs Academy access at the course's site." };
   }
   const actor = await currentActor();
   return { ok: true as const, actor: { id: actor.id, name: actor.name }, site: { id: site.id, name: site.name, orgId: site.orgId } };
@@ -109,6 +111,7 @@ const courseSchema = z.object({
   tutorId: z.string().min(1, "Choose the tutor."),
   assessorId: z.string().default(""),
   note: z.string().trim().max(500).default(""),
+  bookOnline: z.boolean().default(false),
 });
 export type CourseInput = z.input<typeof courseSchema>;
 
@@ -133,12 +136,12 @@ export async function saveCourse(id: string | null, input: CourseInput): Promise
   if (!type) return fail("That course is no longer on the list.");
   if (!tutor) return fail("That tutor is no longer active.");
   if (d.assessorId && !assessor) return fail("That assessor is no longer active.");
-  const data = { typeId: d.typeId, capacity: d.capacity, priceCents, tutorId: d.tutorId, assessorId: d.assessorId || null, note: d.note };
+  const data = { typeId: d.typeId, capacity: d.capacity, priceCents, tutorId: d.tutorId, assessorId: d.assessorId || null, note: d.note, bookOnline: d.bookOnline };
   const row = await prisma.$transaction(async (tx) => {
     const r = id ? await tx.academyCourse.update({ where: { id }, data })
       : await tx.academyCourse.create({ data: { ...data, orgId: at.site.orgId, siteId, createdById: at.actor.id, createdByName: at.actor.name } });
     await logAudit({ actorId: at.actor.id, actorName: at.actor.name, action: id ? "update" : "create", entity: "AcademyCourse", entityId: r.id, clubId: siteId,
-      summary: `${id ? "Changed" : "Put on"} a ${type.name} course at ${at.site.name}: ${d.capacity} places, tutor ${tutor.name}${assessor ? `, assessor ${assessor.name}` : ""}` }, tx);
+      summary: `${id ? "Changed" : "Put on"} a ${type.name} course at ${at.site.name}: ${d.capacity} places, tutor ${tutor.name}${assessor ? `, assessor ${assessor.name}` : ""}${d.bookOnline ? ", open for online booking" : ""}` }, tx);
     return r;
   });
   refresh(row.id);
@@ -384,5 +387,43 @@ export async function recordResult(id: string, input: ResultInput): Promise<Acti
   });
   refresh(c.courseId);
   if (grants) revalidatePath(`/staff/${c.userId}`);
+  return ok();
+}
+
+/* ---------- Phoning people who held a place online ---------- */
+
+const callSchema = z.object({
+  outcome: z.enum(ACADEMY_CALL_OUTCOMES as [string, ...string[]], { message: "Choose how the call went." }),
+  amount: z.string().trim().default(""),
+  receipt: z.string().trim().max(60).default(""),
+  note: z.string().trim().max(300).default(""),
+});
+export type CallInput = z.input<typeof callSchema>;
+
+/** Record a call to someone who held a place online (owner decision, 8 October 2026: anyone with
+ *  Academy access at the course's site). Paid records the amount (the full price is paid, less a
+ *  deposit) and secures the place; not going ahead withdraws them and frees it; the others stay
+ *  on the list to call. */
+export async function logCall(candidateId: string, input: CallInput): Promise<ActionResult> {
+  const parsed = callSchema.safeParse(input);
+  if (!parsed.success) return fail(parsed.error.issues[0].message);
+  const d = parsed.data;
+  const c = await prisma.academyCandidate.findFirst({ where: { id: candidateId }, select: { courseId: true, name: true, status: true, payment: true, paidCents: true, course: { select: { priceCents: true } } } });
+  if (!c) return fail("That booking is no longer on the course.");
+  const at = await courseFor(c.courseId, "academy.read");
+  if (!at.ok) return fail(at.error);
+  if (c.status !== "booked") return fail(`${c.name} is no longer booked on the course.`);
+  const amountCents = d.outcome === "paid" ? centsOf(d.amount) : null;
+  if (d.outcome === "paid" && (amountCents === null || (amountCents === 0 && c.course.priceCents > 0))) return fail("Give the amount taken, like 350 or 350.00.");
+  const paidCents = c.paidCents + (amountCents ?? 0);
+  const label = ACADEMY_CALL_META[d.outcome as keyof typeof ACADEMY_CALL_META].label.toLowerCase();
+  await prisma.$transaction(async (tx) => {
+    const call = await tx.academyCall.create({ data: { candidateId, outcome: d.outcome, amountCents, receipt: d.receipt, note: d.note, byId: at.actor.id, byName: at.actor.name } });
+    if (d.outcome === "paid") await tx.academyCandidate.update({ where: { id: candidateId }, data: { paidCents, payment: paymentFor(paidCents, c.course.priceCents) } });
+    if (d.outcome === "not-going-ahead") await tx.academyCandidate.update({ where: { id: candidateId }, data: { status: "withdrawn" } });
+    await logAudit({ actorId: at.actor.id, actorName: at.actor.name, action: "create", entity: "AcademyCall", entityId: call.id, clubId: at.site.id,
+      summary: `Phoned ${c.name} about the ${at.course.type.name} course: ${label}${amountCents !== null ? `, ${euro(amountCents)} taken${d.receipt ? ` (receipt ${d.receipt})` : ""}` : ""}${d.outcome === "not-going-ahead" ? "; the place is free again" : ""}` }, tx);
+  });
+  refresh(c.courseId);
   return ok();
 }

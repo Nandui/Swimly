@@ -148,6 +148,9 @@ const env = {
   // Turnfin Me (apps/me, port 3101) against this sandbox. Codes print here.
   STAFF_API_ENABLED: "true", STAFF_AUTH_SECRET: "sandbox-only-staff-secret-not-for-deployment",
   STAFF_API_ALLOWED_ORIGINS: "http://localhost:3101", STAFF_ME_URL: "http://localhost:3101", STAFF_EMAIL_DEV_LOG: "true",
+  // The Academy booking site (apps/academy, port 3102) against this sandbox. Codes print here.
+  ACADEMY_API_ENABLED: "true", ACADEMY_AUTH_SECRET: "sandbox-only-academy-secret-not-for-deployment",
+  ACADEMY_API_ALLOWED_ORIGINS: "http://localhost:3102", ACADEMY_EMAIL_DEV_LOG: "true",
 };
 const app = spawn("npx", ["next", "dev", "-p", String(PORTS.app)], { stdio: "inherit", env, shell: true });
 app.on("exit", (code) => process.exit(code ?? 0));

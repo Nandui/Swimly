@@ -142,3 +142,9 @@
   body:has(.turnfin-purchasing) :is(.tf-rail, .tf-top, .tf-bottom, .app-footer, [data-print="hide"]) { display: none !important; }
   .turnfin-purchasing :is(.tf-frame, .pc-panel) { box-shadow: none !important; background: #fff !important; color: #000 !important; }
 }
+
+/* Academy: the list to call for payment lines its columns up from 1024px (who, course, calls,
+   then the deadline and the call button); below that each row stacks as usual. */
+@media (min-width: 1024px) {
+  .turnfin-module .academy-call { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1.2fr) minmax(0, 1.2fr) 21rem; }
+}

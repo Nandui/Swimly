@@ -39,8 +39,9 @@ registerCommitments({
   },
 });
 
-/** The Academy on the home page: registers to take today on the courses they tutor, and
- *  courses starting in the next fortnight at their sites. */
+/** The Academy on the home page: people who held a place online to phone for payment (every
+ *  level; flagged when any are past their 72 hours), registers to take today on the courses they
+ *  tutor, and courses starting in the next fortnight at their sites. */
 registerHomeCard({
   moduleId: "academy",
   async items(viewer) {
@@ -50,11 +51,15 @@ registerHomeCard({
     const soon = new Date(`${on}T00:00:00Z`); soon.setUTCDate(soon.getUTCDate() + 14);
     const sites = await sitesFor("academy.read");
     const inSites = sites.kind === "all" ? {} : { siteId: { in: [...sites.siteIds] } };
-    const [registers, starting] = await Promise.all([
+    const owing = { source: "online", payment: "owed", status: "booked", course: { cancelledAt: null, status: { not: "completed" }, ...inSites } };
+    const [toCall, overdue, registers, starting] = await Promise.all([
+      prisma.academyCandidate.count({ where: owing }),
+      prisma.academyCandidate.count({ where: { ...owing, callBy: { lt: new Date() } } }),
       held.has("academy.run") ? prisma.academySession.count({ where: { date: parseDateOnly(on), registerAt: null, course: { cancelledAt: null, OR: [{ tutorId: viewer.id }, { assessorId: viewer.id }] } } }) : 0,
       prisma.academyCourse.count({ where: { ...inSites, cancelledAt: null, status: "planned", sessions: { some: { date: { gte: parseDateOnly(on), lte: soon } } }, NOT: { sessions: { some: { date: { lt: parseDateOnly(on) } } } } } }),
     ]);
     const items: HomeItem[] = [];
+    if (toCall) items.push({ label: "Academy: to call for payment", hint: overdue ? `${overdue} past 72 hours` : "Held a place online", href: "/academy/calls", count: toCall, attention: overdue > 0 });
     if (registers) items.push({ label: "Academy registers to take today", href: "/academy", count: registers, attention: true });
     if (starting) items.push({ label: "Academy courses starting in the next two weeks", href: "/academy", count: starting });
     return items;

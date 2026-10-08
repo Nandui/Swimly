@@ -47,6 +47,8 @@ model AcademyCourse {
   tutorId       String
   assessorId    String?
   note          String    @default("")
+  /// Shown on the public booking site (academy.<domain>), where people hold a place online.
+  bookOnline    Boolean   @default(false)
   createdById   String?
   createdByName String
   createdAt     DateTime  @default(now())
@@ -115,6 +117,15 @@ model AcademyCandidate {
   /// The qualification put on a staff member's record when they passed.
   qualificationId    String?
   note               String    @default("")
+  /// staff (added in Turnfin) | online (held a place on the booking site, to phone for payment)
+  source             String    @default("staff")
+  /// The booking reference given online: "AC-4821".
+  reference          String?   @unique
+  /// Online: another number to try, and when they would like a call (morning, afternoon, evening).
+  phone2             String    @default("")
+  callTimes          String[]  @default([])
+  /// Online: phone them for payment by this time (72 hours after they held the place).
+  callBy             DateTime?
   createdById        String?
   createdByName      String
   createdAt          DateTime  @default(now())
@@ -123,9 +134,49 @@ model AcademyCandidate {
   course     AcademyCourse       @relation(fields: [courseId], references: [id], onDelete: Cascade)
   user       User?               @relation("AcademyCandidate", fields: [userId], references: [id], onDelete: SetNull)
   attendance AcademyAttendance[]
+  calls      AcademyCall[]
 
   @@index([courseId])
   @@index([userId])
+  @@index([source, payment, status])
+}
+
+/// A phone call to someone who held a place online: what happened, who called and when.
+model AcademyCall {
+  id          String   @id @default(cuid())
+  candidateId String
+  /// paid | no-answer | call-back | not-going-ahead (`ACADEMY_CALL_META`)
+  outcome     String
+  /// Paid: the amount taken and the till receipt.
+  amountCents Int?
+  receipt     String   @default("")
+  note        String   @default("")
+  byId        String?
+  byName      String
+  createdAt   DateTime @default(now())
+
+  candidate AcademyCandidate @relation(fields: [candidateId], references: [id], onDelete: Cascade)
+
+  @@index([candidateId, createdAt])
+}
+
+/// The booking site's email check: a code sent to an address, then a short-lived token that lets
+/// that address hold places. Only hashes are kept.
+model AcademyEmailCheck {
+  id             String    @id
+  email          String
+  /// A hash of the requester's IP, so code requests can be limited per address and per IP.
+  ipHash         String    @default("")
+  codeHash       String
+  attempts       Int       @default(0)
+  expiresAt      DateTime
+  usedAt         DateTime?
+  tokenHash      String?   @unique
+  tokenExpiresAt DateTime?
+  createdAt      DateTime  @default(now())
+
+  @@index([email, createdAt])
+  @@index([ipHash, createdAt])
 }
 
 /// A candidate at a session: the minutes they attended (0 when absent).

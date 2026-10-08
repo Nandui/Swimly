@@ -7,12 +7,12 @@ import { Notice } from "@/components/ui-kit/notice";
 import { PageHeader } from "@/components/ui-kit/page-header";
 import { Tag } from "@/components/ui-kit/tag";
 import {
-  CandidateDialog, ChecksDialog, CourseDialog, CourseStatusButton, RegisterDialog, ResultDialog, SessionDialog, WithdrawButton,
+  CallDialog, CandidateDialog, ChecksDialog, CourseDialog, CourseStatusButton, RegisterDialog, ResultDialog, SessionDialog, WithdrawButton,
 } from "@/components/academy/forms";
-import { formatDate, plural } from "@/lib/format";
+import { formatDate, formatDateTime, plural } from "@/lib/format";
 import { academyCourse, newCourseOptions } from "@/lib/academy/data";
 import {
-  ACADEMY_COURSE_META, ACADEMY_KIND_META, ACADEMY_PAYMENT_META, ACADEMY_RESULT_META, euro, hoursLabel,
+  ACADEMY_CALL_DUE_META, ACADEMY_COURSE_META, ACADEMY_KIND_META, ACADEMY_PAYMENT_META, ACADEMY_RESULT_META, callDue, euro, hoursLabel,
   type AcademyKind, type AcademyPayment, type AcademyResult,
 } from "@/lib/academy/rules";
 
@@ -40,7 +40,7 @@ export default async function AcademyCoursePage({ params }: { params: Promise<{ 
       <PageHeader title={course.type.name} description={`${course.site.name} · ${dates}`}
         status={<><Tag meta={ACADEMY_COURSE_META[course.state]} /><Tag meta={kind} /></>}
         actions={canManage ? <>
-          {options && open ? <CourseDialog course={{ id: course.id, siteId: course.siteId, typeId: course.typeId, capacity: course.capacity, priceCents: course.priceCents, tutorId: course.tutorId, assessorId: course.assessorId, note: course.note }}
+          {options && open ? <CourseDialog course={{ id: course.id, siteId: course.siteId, typeId: course.typeId, capacity: course.capacity, priceCents: course.priceCents, tutorId: course.tutorId, assessorId: course.assessorId, note: course.note, bookOnline: course.bookOnline }}
             sites={options.sites.length ? options.sites : [{ id: course.siteId, name: course.site.name }]} types={options.types} staff={options.staff}
             trigger={<Button variant="outline"><Pencil aria-hidden="true" />Change</Button>} /> : null}
           {open ? <CourseStatusButton id={course.id} to="completed" label="Complete" title="Mark the course completed?" description="Every candidate needs a result or to have withdrawn first." /> : null}
@@ -60,6 +60,7 @@ export default async function AcademyCoursePage({ params }: { params: Promise<{ 
             ["Awarding body", course.type.awardingBody || "Not set"],
             ["Staff who pass get", grants ?? "Nothing on their record"],
             ["Still to pay", owed ? euro(owed) : "Nothing"],
+            ["Online booking", course.bookOnline ? (open && course.state === "planned" ? "Open until it starts" : "Closed") : "Not online"],
           ].map(([label, value]) => (
             <div key={label} className="min-w-0"><dt className="text-xs font-semibold text-ui-muted-foreground">{label}</dt><dd className="mt-1 [overflow-wrap:anywhere]">{value}</dd></div>
           ))}
@@ -109,11 +110,14 @@ export default async function AcademyCoursePage({ params }: { params: Promise<{ 
               const r = c.readiness;
               const checksDone = r.checks.filter((x) => x.done).length;
               const missing = r.checks.filter((x) => !x.done);
+              const toCall = c.source === "online" && c.payment === "owed" && c.status === "booked" && open;
+              const due = toCall ? callDue(c.callBy ?? c.createdAt) : null;
               return (
                 <li key={c.id} className="pc-row" {...(c.status === "withdrawn" ? { "data-muted": "" } : {})}>
                   <span className="pc-row-body">
                     <span className="pc-row-title">{c.name}{c.userId ? <span className="ml-2 text-xs font-normal text-ui-muted-foreground">Staff</span> : null}</span>
                     <span className="pc-row-hint">{[
+                      c.source === "online" ? `held online${c.reference ? ` ${c.reference}` : ""}, ${c.phone}` : null,
                       r.checks.length ? `checks ${checksDone} of ${r.checks.length}${missing.length ? ` (${missing.map((m) => m.detail === "Not done" ? m.label.toLowerCase() : m.detail.toLowerCase()).join(", ")})` : ""}` : null,
                       `${hoursLabel(c.attended)} attended${course.type.minHours ? ` of ${course.type.minHours}h` : ""}`,
                       c.paidCents ? `${euro(c.paidCents)} paid` : null,
@@ -122,7 +126,11 @@ export default async function AcademyCoursePage({ params }: { params: Promise<{ 
                     {c.resultNote ? <span className="pc-row-hint">{c.resultNote}</span> : null}
                   </span>
                   <span className="pc-row-trail flex-wrap">
+                    {due ? <Tag meta={ACADEMY_CALL_DUE_META[due.due]} label={due.due === "overdue" ? due.label : `Call by ${due.label}`} /> : null}
                     <Tag meta={ACADEMY_PAYMENT_META[c.payment as AcademyPayment] ?? ACADEMY_PAYMENT_META.owed} />
+                    {toCall ? <CallDialog primary={due?.due === "overdue"} course={`${course.type.name} at ${course.site.name}`} priceCents={course.priceCents}
+                      person={{ id: c.id, name: c.name, phone: c.phone, phone2: c.phone2, callTimes: c.callTimes, reference: c.reference, heldAt: formatDateTime(c.createdAt),
+                        calls: c.calls.map((x) => ({ outcome: x.outcome, byName: x.byName, at: formatDateTime(x.createdAt), note: x.note })) }} /> : null}
                     <Tag meta={ACADEMY_RESULT_META[c.status as AcademyResult] ?? ACADEMY_RESULT_META.booked} />
                     {c.status === "booked" && r.ready ? <span className="text-xs text-ui-muted-foreground">Ready for assessment</span> : null}
                     {canRun && open ? <>

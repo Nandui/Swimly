@@ -2,20 +2,22 @@
 
 import { useState, type ReactNode } from "react";
 import { useRouter } from "next/navigation";
-import { CalendarPlus, ClipboardCheck, Plus, UserPlus } from "lucide-react";
+import { CalendarPlus, ClipboardCheck, Phone, Plus, UserPlus } from "lucide-react";
 import { Button } from "@/components/shadcn/button";
 import { Checkbox } from "@/components/shadcn/checkbox";
 import { Input } from "@/components/shadcn/input";
 import { Label } from "@/components/shadcn/label";
 import { NativeSelect, NativeSelectOption } from "@/components/shadcn/native-select";
+import { RadioGroup } from "@/components/shadcn/radio-group";
 import { Textarea } from "@/components/shadcn/textarea";
+import { ChoiceRow } from "@/components/ui/choice-row";
 import { Field, FormDialog } from "@/components/form-dialog";
 import { AreaSelect } from "@/components/setup/area-select";
 import {
-  archiveCourseType, recordChecks, recordResult, removeSession, saveCandidate, saveCourse, saveCourseType, saveSession, setCourseStatus, setWithdrawn, takeRegister,
+  archiveCourseType, logCall, recordChecks, recordResult, removeSession, saveCandidate, saveCourse, saveCourseType, saveSession, setCourseStatus, setWithdrawn, takeRegister,
 } from "@/lib/academy/actions";
 import {
-  ACADEMY_CHECKS, ACADEMY_CHECK_KEYS, ACADEMY_KIND_META, ACADEMY_KINDS, ACADEMY_OUTCOMES, ACADEMY_PAYMENT_META, ACADEMY_PAYMENTS, ACADEMY_RESULT_META,
+  ACADEMY_CALL_META, ACADEMY_CALL_OUTCOMES, ACADEMY_CALL_TIMES, ACADEMY_CHECKS, ACADEMY_CHECK_KEYS, ACADEMY_KIND_META, ACADEMY_KINDS, ACADEMY_OUTCOMES, ACADEMY_PAYMENT_META, ACADEMY_PAYMENTS, ACADEMY_RESULT_META, euro,
 } from "@/lib/academy/rules";
 
 /** The Academy's dialogs (docs/academy.md): the course list, putting a course on, its sessions,
@@ -104,7 +106,7 @@ export function ArchiveCourseType({ id, name, archived }: { id: string; name: st
 
 /* ---------- Courses ---------- */
 
-export type CourseEdit = { id: string; siteId: string; typeId: string; capacity: number; priceCents: number; tutorId: string; assessorId: string | null; note: string };
+export type CourseEdit = { id: string; siteId: string; typeId: string; capacity: number; priceCents: number; tutorId: string; assessorId: string | null; note: string; bookOnline: boolean };
 
 /** Put a course on, or change it. The tutor and assessor are people who work at its site. */
 export function CourseDialog({ course, sites, types, staff, trigger }: {
@@ -123,6 +125,7 @@ export function CourseDialog({ course, sites, types, staff, trigger }: {
       submit={async (fd) => {
         const result = await saveCourse(course?.id ?? null, {
           siteId, typeId: text(fd, "typeId"), capacity: Number(fd.get("capacity") || 0), price: text(fd, "price"), tutorId: text(fd, "tutorId"), assessorId: text(fd, "assessorId"), note: text(fd, "note"),
+          bookOnline: fd.get("bookOnline") === "on",
         });
         if (result.ok && !course && result.id) router.push(`/academy/${result.id}`);
         return result;
@@ -144,6 +147,13 @@ export function CourseDialog({ course, sites, types, staff, trigger }: {
         <Field label="Price (€)" htmlFor={`${fid}-price`} hint="For the public. Staff may be free."><Input id={`${fid}-price`} name="price" inputMode="decimal" defaultValue={course ? pounds(course.priceCents) : ""} placeholder="350" className="min-h-11" /></Field>
       </div>
       <Field label="Note" htmlFor={`${fid}-note`} optional><Textarea id={`${fid}-note`} name="note" maxLength={500} defaultValue={course?.note} /></Field>
+      <div className="flex min-h-11 items-start gap-3">
+        <Checkbox id={`${fid}-online`} name="bookOnline" defaultChecked={course?.bookOnline ?? false} className="mt-0.5" />
+        <div className="flex flex-col gap-0.5">
+          <Label htmlFor={`${fid}-online`}>Open for online booking</Label>
+          <p className="text-xs text-ui-muted-foreground">People can hold a place on the booking site until the course starts. Reception phones them within 72 hours to take payment.</p>
+        </div>
+      </div>
     </FormDialog>
   );
 }
@@ -336,6 +346,58 @@ export function ResultDialog({ candidate, today, grants, trigger }: {
         <Field label="Certificate expires" htmlFor={`${fid}-exp`} optional hint="Left empty, it follows the qualification's validity."><Input id={`${fid}-exp`} name="expires" type="date" defaultValue={candidate.certificateExpires ?? ""} className="min-h-11" /></Field>
       </div>
       <Field label="Note" htmlFor={`${fid}-note`} optional><Textarea id={`${fid}-note`} name="note" maxLength={500} defaultValue={candidate.resultNote} placeholder="Referred on the spinal management module" /></Field>
+    </FormDialog>
+  );
+}
+
+/* ---------- Phoning people who held a place online ---------- */
+
+export type CallPerson = {
+  id: string; name: string; phone: string; phone2: string; callTimes: string[]; reference: string | null; heldAt: string;
+  calls: { outcome: string; byName: string; at: string; note: string }[];
+};
+
+const CALL_HINT: Record<string, string> = {
+  paid: "Record what was taken. The full price confirms the place; less is a deposit.",
+  "no-answer": "They stay on the list to call.",
+  "call-back": "They stay on the list. Say when in the note.",
+  "not-going-ahead": "They are withdrawn and the place is free again.",
+};
+
+/** Log a call (owner decision, 8 October 2026): what happened, kept with who called and when, so
+ *  whoever picks up the list next sees what has been tried. */
+export function CallDialog({ person, course, priceCents, primary }: { person: CallPerson; course: string; priceCents: number; primary?: boolean }) {
+  const refresh = useRefresh();
+  const [outcome, setOutcome] = useState("");
+  const fid = `call-${person.id}`;
+  const facts: [string, ReactNode][] = [
+    ["Mobile", <a key="p" href={`tel:${person.phone.replace(/[^\d+]/g, "")}`} className="font-semibold tabular-nums">{person.phone}</a>],
+    ...(person.phone2 ? [["Other number", <a key="p2" href={`tel:${person.phone2.replace(/[^\d+]/g, "")}`} className="font-semibold tabular-nums">{person.phone2}</a>] as [string, ReactNode]] : []),
+    ["Best time", person.callTimes.length ? person.callTimes.map((t) => ACADEMY_CALL_TIMES[t as keyof typeof ACADEMY_CALL_TIMES] ?? t).join(", ") : "Any time"],
+    ["Held online", `${person.heldAt}${person.reference ? ` · ${person.reference}` : ""}`],
+    ["Earlier calls", person.calls.length ? person.calls.map((c) => `${c.at} ${(ACADEMY_CALL_META[c.outcome as keyof typeof ACADEMY_CALL_META]?.label ?? c.outcome).toLowerCase()} (${c.byName})`).join(" · ") : "None yet"],
+  ];
+  return (
+    <FormDialog portalClassName={THEME} width="sm:max-w-lg"
+      trigger={<Button variant={primary ? "default" : "outline"}><Phone aria-hidden="true" />Log a call</Button>}
+      title={`Log a call: ${person.name}`} description={`${course} · ${priceCents ? `${euro(priceCents)} to pay` : "no charge"}`}
+      submitLabel="Save call" successMessage="Call saved" onSuccess={() => { setOutcome(""); refresh(); }}
+      submit={(fd) => logCall(person.id, { outcome: text(fd, "outcome"), amount: text(fd, "amount"), receipt: text(fd, "receipt"), note: text(fd, "note") })}>
+      <dl className="flex flex-col rounded-2xl bg-ui-muted px-4 py-1 text-sm">
+        {facts.map(([label, value]) => (
+          <div key={label} className="flex min-h-9 flex-wrap items-center justify-between gap-x-4 py-1"><dt className="text-ui-muted-foreground">{label}</dt><dd className="text-right [overflow-wrap:anywhere]">{value}</dd></div>
+        ))}
+      </dl>
+      <RadioGroup name="outcome" value={outcome} onValueChange={setOutcome} className="gap-2" aria-label="How did it go?" required>
+        {ACADEMY_CALL_OUTCOMES.map((o) => <ChoiceRow key={o} type="radio" id={`${fid}-${o}`} value={o} title={ACADEMY_CALL_META[o].label} hint={CALL_HINT[o]} />)}
+      </RadioGroup>
+      {outcome === "paid" ? (
+        <div className="grid gap-4 sm:grid-cols-2">
+          <Field label="Amount taken (€)" htmlFor={`${fid}-amount`}><Input id={`${fid}-amount`} name="amount" inputMode="decimal" required defaultValue={priceCents ? pounds(priceCents) : "0"} className="min-h-11" /></Field>
+          <Field label="Till receipt" htmlFor={`${fid}-receipt`} optional><Input id={`${fid}-receipt`} name="receipt" maxLength={60} className="min-h-11" /></Field>
+        </div>
+      ) : null}
+      <Field label="Note" htmlFor={`${fid}-note`} optional><Input id={`${fid}-note`} name="note" maxLength={300} placeholder={outcome === "call-back" ? "After 17:00 today" : undefined} className="min-h-11" /></Field>
     </FormDialog>
   );
 }

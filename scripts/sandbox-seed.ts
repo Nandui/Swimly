@@ -235,13 +235,15 @@ async function seedRota(db: PrismaClient) {
 
 /** The Academy at Hillview (docs/academy.md): NPLQ and a swim teacher course on the list; an
  *  NPLQ course that started yesterday, Sam tutoring and Liam assessing, with Ciara (staff) and
- *  two invented members of the public on it, one with a deposit and checks still to do. */
+ *  two invented members of the public on it, one with a deposit and checks still to do. And an
+ *  NPLQ course next month open for online booking, with three invented people who held a place
+ *  online: one overdue after two unanswered calls, one due within a day, one held today. */
 async function seedAcademy(db: PrismaClient) {
   const ORG = "org_leisureworld", HILLVIEW = "club_churchfield";
   const day = (offset: number) => { const d = new Date(); d.setUTCHours(0, 0, 0, 0); d.setUTCDate(d.getUTCDate() + offset); return d; };
   const nplq = await db.academyCourseType.create({ data: { orgId: ORG, name: "National Pool Lifeguard Qualification", kind: "lifeguard", awardingBody: "Example awarding body",
     minAge: 16, minHours: 30, checks: ["age", "swim", "medical", "id"], qualificationTypeId: "qt_nplq", sortOrder: 0 } });
-  await db.academyCourseType.create({ data: { orgId: ORG, name: "Swim Teacher Level 1", kind: "swim-teacher", awardingBody: "Example awarding body", minAge: 16, minHours: 20, checks: ["age", "id"], sortOrder: 1 } });
+  const teacher = await db.academyCourseType.create({ data: { orgId: ORG, name: "Swim Teacher Level 1", kind: "swim-teacher", awardingBody: "Example awarding body", minAge: 16, minHours: 20, checks: ["age", "id"], sortOrder: 1 } });
   const course = await db.academyCourse.create({ data: { orgId: ORG, siteId: HILLVIEW, typeId: nplq.id, capacity: 8, priceCents: 35000, tutorId: "sbx_sam", assessorId: "sbx_liam",
     createdById: "sbx_liam", createdByName: "Liam Example", note: "Synthetic course for the sandbox." } });
   const sessions = [];
@@ -257,4 +259,25 @@ async function seedAcademy(db: PrismaClient) {
   // Yesterday's register was taken; Jordan left an hour early.
   await db.academyAttendance.createMany({ data: [{ sessionId: sessions[0].id, candidateId: ciara.id, minutes: 480 }, { sessionId: sessions[0].id, candidateId: jordan.id, minutes: 420 }] });
   await db.academySession.update({ where: { id: sessions[0].id }, data: { registerAt: new Date(), registerById: "sbx_sam", registerBy: "Sam Example" } });
+
+  // Online booking: open courses, and places held online waiting for a call.
+  const online = await db.academyCourse.create({ data: { orgId: ORG, siteId: HILLVIEW, typeId: nplq.id, capacity: 8, priceCents: 39500, tutorId: "sbx_sam", assessorId: "sbx_liam",
+    bookOnline: true, createdById: "sbx_liam", createdByName: "Liam Example", note: "Synthetic online course for the sandbox." } });
+  for (const [offset, place] of [[30, "Main pool"], [31, "Main pool"], [37, "Learner pool"], [38, "Learner pool"]] as const) {
+    await db.academySession.create({ data: { courseId: online.id, date: day(offset), startMinutes: 540, endMinutes: 1020, place } });
+  }
+  const evenings = await db.academyCourse.create({ data: { orgId: ORG, siteId: "club_bishopstown", typeId: teacher.id, capacity: 6, priceCents: 29500, tutorId: "sbx_sam",
+    bookOnline: true, createdById: "sbx_liam", createdByName: "Liam Example" } });
+  for (const offset of [46, 47, 48, 49]) await db.academySession.create({ data: { courseId: evenings.id, date: day(offset), startMinutes: 1080, endMinutes: 1260, place: "Learner pool" } });
+  const hoursAgo = (h: number) => new Date(Date.now() - h * 3_600_000);
+  const heldOnline = (name: string, ref: string, hours: number, callTimes: string[]) => db.academyCandidate.create({ data: {
+    courseId: online.id, name, email: `${name.split(" ")[1].toLowerCase()}@example.invalid`, phone: "000 000 0000", dateOfBirth: new Date("2005-05-05T00:00:00Z"),
+    payment: "owed", source: "online", reference: ref, callTimes, createdAt: hoursAgo(hours), callBy: new Date(hoursAgo(hours).getTime() + 72 * 3_600_000), createdByName: "Online booking" } });
+  const overdue = await heldOnline("Candidate Dee", "AC-SBX4D", 78, ["evening"]);
+  await heldOnline("Candidate Cee", "AC-SBX3C", 60, ["morning"]);
+  await heldOnline("Candidate Bee", "AC-SBX2B", 2, []);
+  await db.academyCall.createMany({ data: [
+    { candidateId: overdue.id, outcome: "no-answer", byId: "sbx_maya", byName: "Maya Example", createdAt: hoursAgo(50) },
+    { candidateId: overdue.id, outcome: "no-answer", byId: "sbx_maya", byName: "Maya Example", createdAt: hoursAgo(26) },
+  ] });
 }

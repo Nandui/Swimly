@@ -15,6 +15,8 @@ sessions show on the Rota.
 | Session | `AcademySession` | A dated session in one of the site's areas (Admin, Areas). Keeps who took its register. |
 | Candidate | `AcademyCandidate` | One of our staff (`userId`) or a member of the public by name, with email, phone and date of birth; payment (paid, deposit, owed, no charge) and the amount paid; the day each check was done; the result (passed, referred, not yet competent, or withdrawn) with the certificate number and expiry. |
 | Attendance | `AcademyAttendance` | The minutes a candidate was at a session (0 when absent). |
+| Call | `AcademyCall` | A phone call to someone who held a place online: paid (amount and till receipt), no answer, asked us to call back, or not going ahead; who called and when. |
+| Email check | `AcademyEmailCheck` | The booking site's email code, then a one-hour token. Only hashes are kept. |
 
 The rules are in `src/lib/academy/rules.ts` and are pure. `readiness` gives each check (age is
 read from the date of birth on the first day) and the hours attended against the minimum. A
@@ -48,6 +50,67 @@ activity in the session's area on every department's plan (`DayBooked`, `ANY_DEP
 in double-booking warnings, and "Who can fill it" sees them as busy. They are never gaps
 for the Rota to fill. The Rota never reads Academy tables.
 
+## Online booking
+
+Owner decision, 8 October 2026. The public book on a separate site,
+`academy.leisureworldcork.com` (`apps/academy`), like the parent app for the swim school. We
+cannot take payment online, so a booking **holds a place** and reception **phones within 72
+hours** to take payment.
+
+- **Which courses.** A course shows online when Manage ticks **Open for online booking**
+  (`AcademyCourse.bookOnline`), until its first session (`bookableOnline`). Full courses stay
+  listed as full. The site shows the course, dates, areas, minimum age, pre-course checks and
+  price; never staff names, other candidates or notes.
+- **Holding a place.** The person checks their email with a six-digit code, then gives their
+  name, mobile number (and another, optional), date of birth (checked against the minimum age on
+  the first day), the best time to phone (morning, afternoon, evening) and an optional note. One
+  place per email on a course; the last place is never taken twice (the course row is locked
+  while places are counted).
+- **What it makes.** A candidate with `source` online, a reference ("AC-4821"), payment owed and
+  `callBy` 72 hours after holding the place (`ONLINE_HOLD_HOURS`). They get an email saying
+  their place is held, when we will phone, and the reference. The place counts as taken.
+- **To call** (`/academy/calls`). Everyone who held a place online and still owes, at the sites
+  the person covers, soonest deadline first: overdue in red, due within a day in amber
+  (`ACADEMY_CALL_DUE_META`, from `callDue`). Every Academy level (View, Tutor, Manage) sees the
+  list and logs calls (owner decision, 8 October 2026). Each row and the course page have **Log a
+  call** (`logCall`): paid records the amount and the till receipt (the full price is paid, less
+  is a deposit; either way they leave the list), no answer and call back keep them on it, not
+  going ahead withdraws them and frees the place. Every call is kept and audited.
+- **Overdue** places stay held until someone records a call. Nothing is cancelled automatically.
+- The home card shows how many are waiting to be phoned, flagged when any are past 72 hours.
+
+### The booking API (`/api/academy/v1`)
+
+The site never touches the database: it calls Work's Academy API, the same contract as the
+parent and staff APIs (JSON only, 16 KiB bodies, allowlisted origins, no cookies, never cached).
+
+| Method | Path | What |
+| --- | --- | --- |
+| GET | `courses` | The courses open online, soonest first |
+| GET | `courses/{id}` | One of them (404 once it starts or leaves online booking) |
+| POST | `auth/request-code` | Email a six-digit code (5 an hour per address, 30 per IP) |
+| POST | `auth/verify-code` | A right code gives a token for an hour; five wrong ones end the code |
+| POST | `bookings` | Hold a place (Bearer token): 201 with the reference and when we will phone; 409 `FULL` or `ALREADY_BOOKED`; 422 `TOO_YOUNG` |
+
+### Configuration
+
+Work (the Swimly app):
+- `ACADEMY_API_ENABLED=true`
+- `ACADEMY_AUTH_SECRET` (32+ characters; its own, not the parent or staff secret)
+- `ACADEMY_API_ALLOWED_ORIGINS=https://academy.leisureworldcork.com`
+- `ACADEMY_EMAIL_NAME` (the sender's name, "LeisureWorld Academy"); `ACADEMY_EMAIL_FROM` and
+  `ACADEMY_GOOGLE_*` are optional and fall back to the parent app's `PARENT_*` sender
+
+The booking site (`apps/academy`):
+- a separate Vercel project with root directory `apps/academy`, on `academy.leisureworldcork.com`;
+- `NEXT_PUBLIC_ACADEMY_API_URL=https://<work-host>/api/academy/v1`;
+- `NEXT_PUBLIC_ACADEMY_NAME` (optional; "LeisureWorld Academy").
+
+Locally, `npm run sandbox` (Work on :3100) turns the API on for `http://localhost:3102` and
+prints codes to its console (`ACADEMY_EMAIL_DEV_LOG`). The `academy-site` launch configuration
+starts the booking site on :3102 against it. The sandbox has an NPLQ course next month open
+online with three invented people waiting for a call (one overdue), and a swim teacher course.
+
 ## Home
 
 Tutors see the registers to take today. Everyone with View sees the courses starting in the
@@ -55,12 +118,15 @@ next two weeks at their sites.
 
 ## Files
 
-- Schema: `prisma/schema/academy.prisma`, migration `20261023120000_academy`
+- Schema: `prisma/schema/academy.prisma`, migrations `20261023120000_academy` and `20261024120000_academy_online_booking` (additive)
 - `src/lib/academy/`: `rules.ts` (pure), `access.ts`, `data.ts`, `actions.ts`, `contributions.ts`
-- UI: `src/app/academy/` (courses, a course, the course list), `src/components/academy/`
-- Tests: `rules.test.ts`, `academy.test.ts`, and the booked-session case in `src/lib/rota/day.test.ts`
+- UI: `src/app/academy/` (courses, a course, the course list, to call), `src/components/academy/`
+- Online booking: `src/lib/academy/public/` (`http.ts`, `api.ts`, `email.ts`, `router.ts`),
+  `src/app/api/academy/v1/[[...path]]/route.ts`, and the site in `apps/academy`
+- Tests: `rules.test.ts`, `academy.test.ts`, `public/api.test.ts` (the booking API and the call
+  list end to end), and the booked-session case in `src/lib/rota/day.test.ts`
 - Sandbox: an NPLQ course at Hillview started yesterday. Sam tutors and Liam assesses.
 
 ## Not done yet
 
-Online booking and payment, unit-by-unit assessment, and the course in a tutor's own Turnfin Me.
+Taking payment online, unit-by-unit assessment, and the course in a tutor's own Turnfin Me.
