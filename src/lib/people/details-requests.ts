@@ -1,11 +1,13 @@
 import "server-only";
 import { CircleCheck, Clock3, XCircle } from "lucide-react";
-import { requirePermission } from "@/lib/authz";
+import { requireSession } from "@/lib/authz";
 import { prisma } from "@/lib/prisma";
+import { subjectsFor } from "@/lib/policy/session";
 import type { StatusMeta } from "@/lib/status";
 
 /** Staff's own contact and emergency details as they asked to change them in
- *  Turnfin Me, beside what is on their record now. Needs `staff.manage`. */
+ *  Turnfin Me, beside what is on their record now. HR's: only the people the
+ *  reader keeps details for (`hr.details.write`). */
 export const DETAIL_LABELS = {
   phone: "Phone",
   homeAddress: "Home address",
@@ -23,9 +25,10 @@ export const DETAIL_REQUEST_STATUS_META = {
 } as const satisfies Record<string, StatusMeta>;
 
 export async function listDetailRequests(view: "PENDING" | "DONE" = "PENDING") {
-  const session = await requirePermission("staff.manage");
+  const session = await requireSession();
+  const scope = await subjectsFor("hr.details.write");
   const rows = await prisma.staffDetailChangeRequest.findMany({
-    where: { orgId: session.user.orgId ?? undefined, ...(view === "PENDING" ? { status: "PENDING" } : { status: { in: ["APPLIED", "DECLINED"] } }) },
+    where: { orgId: session.user.orgId ?? undefined, ...(scope.kind === "all" ? {} : { userId: { in: [...scope.userIds] } }), ...(view === "PENDING" ? { status: "PENDING" } : { status: { in: ["APPLIED", "DECLINED"] } }) },
     orderBy: view === "PENDING" ? { createdAt: "asc" } : { reviewedAt: "desc" },
     take: 50,
   });

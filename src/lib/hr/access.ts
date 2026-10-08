@@ -16,6 +16,8 @@ export type HrActor = {
   superadmin: boolean;
   notes: boolean;
   reviews: boolean;
+  /** Keeps staff details (position, employment, contact) for someone. */
+  details: boolean;
 };
 
 export function hrAccess(session: Session): HrActor | null {
@@ -25,6 +27,7 @@ export function hrAccess(session: Session): HrActor | null {
     id: actor.id, name: actor.name, orgId: actor.orgId ?? "", superadmin: actor.superadmin,
     notes: holdsAnywhere(actor, "hr.notes.write"),
     reviews: holdsAnywhere(actor, "hr.reviews.write"),
+    details: holdsAnywhere(actor, "hr.details.write"),
   };
 }
 

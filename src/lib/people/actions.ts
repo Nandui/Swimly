@@ -5,18 +5,36 @@ import { z } from "zod";
 import { CONTRACT_TYPES } from "@/lib/people/constants";
 import { fail, ok, onUniqueViolation, type ActionResult } from "@/lib/action-result";
 import { logAudit } from "@/lib/audit";
-import { requirePermission, requireSession, can } from "@/lib/authz";
+import { AuthorizationError, requirePermission, requireSession, can } from "@/lib/authz";
 import { prisma } from "@/lib/prisma";
 import { guardSuperadmins, withKeyholderLock } from "@/lib/staff/keyholders";
 import { requireCapFor } from "@/lib/policy/session";
 
 /** The People core: one person record and one organisation chart that every
- *  module reads. Structure (departments, managers, where people work) is account
- *  administration, so it needs `staff.manage`. Qualifications are recorded by
- *  whoever holds `qualifications.manage` for that person's scope. Every change
- *  is audited in the same transaction. */
+ *  module reads. Where people work and the superadmin flag are account
+ *  administration (`staff.manage`). Their details (position, manager,
+ *  departments, employment) are HR's (owner decision, 8 October 2026): the
+ *  restricted `hr.details.write` for that person, and nobody keeps their own.
+ *  Qualifications are recorded by whoever holds `qualifications.manage` for
+ *  that person's scope. Every change is audited in the same transaction. */
 
 const revalidate = (userId?: string) => { revalidatePath("/staff"); if (userId) revalidatePath(`/hr/people/${userId}`); revalidatePath("/departments"); revalidatePath("/qualifications"); if (userId) revalidatePath(`/staff/${userId}`); };
+
+type Keeper = { ok: true; actor: { id: string; name: string; orgId: string | null } } | { ok: false; error: string };
+/** Who may keep this person's details: `hr.details.write` over them, with a recent password. */
+async function detailsKeeper(userId: string): Promise<Keeper> {
+  const subject = await prisma.user.findUnique({ where: { id: userId }, select: { orgId: true } });
+  if (!subject) return { ok: false, error: "That account no longer exists." };
+  try {
+    // The subject's organisation, so an everywhere grant never reaches another org.
+    const actor = await requireCapFor("hr.details.write", { subjectUserId: userId, orgId: subject.orgId });
+    if (actor.id === userId) return { ok: false, error: "Someone else keeps your details. Send changes from Turnfin Me." };
+    return { ok: true, actor };
+  } catch (error) {
+    if (error instanceof AuthorizationError) return { ok: false, error: error.message };
+    throw error;
+  }
+}
 const actorName = (session: { user: { name?: string | null } }) => session.user.name ?? "Unknown";
 const optionalId = z.string().trim().max(64).transform((v) => v || null);
 const isoDate = z.string().regex(/^\d{4}-\d{2}-\d{2}$/, "Use a date.");
@@ -49,7 +67,9 @@ async function createsCycle(tx: typeof prisma | Parameters<Parameters<typeof pri
 }
 
 export async function updateProfile(userId: string, input: ProfileInput): Promise<ActionResult> {
-  const session = await requirePermission("staff.manage");
+  const keeper = await detailsKeeper(userId);
+  if (!keeper.ok) return fail(keeper.error);
+  const { actor } = keeper;
   const parsed = profileSchema.safeParse(input);
   if (!parsed.success) return fail(parsed.error.issues[0].message);
   const { positionId, startedOn, dateOfBirth, primaryClubId, managerId, departmentIds, primaryDepartmentId } = parsed.data;
@@ -75,7 +95,7 @@ export async function updateProfile(userId: string, input: ProfileInput): Promis
     if (departmentIds.length) {
       await tx.userDepartment.createMany({ data: [...new Set(departmentIds)].map((departmentId) => ({ userId, departmentId, isPrimary: departmentId === (primaryDepartmentId ?? departmentIds[0]) })) });
     }
-    await logAudit({ actorId: session.user.id, actorName: actorName(session), action: "update", entity: "User", entityId: userId, summary: `Updated ${person.name}'s profile (position${position ? ` ${position.name}` : ""}, site, manager, departments)` }, tx);
+    await logAudit({ actorId: actor.id, actorName: actor.name, action: "update", entity: "User", entityId: userId, summary: `Updated ${person.name}'s profile (position${position ? ` ${position.name}` : ""}, site, manager, departments)` }, tx);
     return ok();
   });
   if (result.ok) revalidate(userId);
@@ -100,16 +120,18 @@ export type EmploymentInput = z.input<typeof employmentSchema>;
 
 /** How someone is employed: contract, hours a week, their last day and payroll's number. */
 export async function updateEmployment(userId: string, input: EmploymentInput): Promise<ActionResult> {
-  const session = await requirePermission("staff.manage");
+  const keeper = await detailsKeeper(userId);
+  if (!keeper.ok) return fail(keeper.error);
+  const { actor } = keeper;
   const parsed = employmentSchema.safeParse(input);
   if (!parsed.success) return fail(parsed.error.issues[0].message);
   const data = parsed.data;
-  const person = await prisma.user.findFirst({ where: { id: userId, orgId: session.user.orgId ?? undefined }, select: { name: true, startedOn: true } });
+  const person = await prisma.user.findFirst({ where: { id: userId, orgId: actor.orgId ?? undefined }, select: { name: true, startedOn: true } });
   if (!person) return fail("That account no longer exists.");
   if (data.endedOn && person.startedOn && data.endedOn < person.startedOn.toISOString().slice(0, 10)) return fail("Their last day can't be before they started.");
   await prisma.$transaction(async (tx) => {
     await tx.user.update({ where: { id: userId }, data: { contractType: data.contractType, contractMinutes: data.contractHours, endedOn: data.endedOn ? new Date(`${data.endedOn}T00:00:00Z`) : null, payrollNumber: data.payrollNumber } });
-    await logAudit({ actorId: session.user.id, actorName: actorName(session), action: "update", entity: "User", entityId: userId, summary: `Updated ${person.name}'s employment details` }, tx);
+    await logAudit({ actorId: actor.id, actorName: actor.name, action: "update", entity: "User", entityId: userId, summary: `Updated ${person.name}'s employment details` }, tx);
   });
   revalidate(userId);
   return ok();

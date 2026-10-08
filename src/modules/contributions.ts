@@ -2,24 +2,15 @@ import "server-only";
 
 /** What a module adds to Core's own screens, without Core importing the module.
  *
- *  Core owns people and sites; modules such as Aquatics know what those people
- *  teach and what each site runs. A module registers small read-only
- *  summaries here, and the Core pages (Staff, Clubs) show whatever is
- *  registered. When a module moves to its own app, its contribution becomes a
+ *  Core owns people and sites; modules such as Aquatics know what each site
+ *  runs. A module registers small read-only summaries here, and the Core pages
+ *  (Clubs) show whatever is registered. What a module keeps about a person
+ *  goes to their HR personal file, never Admin's Staff pages. When a module moves to its own app, its contribution becomes a
  *  call to that app's API and Core does not change.
  *
  *  Register from the module's own `contributions.ts`, wired up in
  *  `src/modules/server.ts`. Callers must already hold the page's permission:
  *  these return counts and short labels, never records. */
-
-export type StaffColumn = {
-  /** Stable key for React and ordering, e.g. "activities.classes". */
-  id: string;
-  /** Column header on the Staff page, e.g. "Classes". */
-  header: string;
-  /** A short value per person; people without one are left blank. */
-  values(userIds: string[]): Promise<Map<string, string>>;
-};
 
 export type SiteSummary = {
   id: string;
@@ -27,20 +18,10 @@ export type SiteSummary = {
   lines(clubIds: string[]): Promise<Map<string, string>>;
 };
 
-const staffColumns: StaffColumn[] = [];
 const siteSummaries: SiteSummary[] = [];
-
-export function registerStaffColumn(column: StaffColumn) {
-  if (!staffColumns.some((c) => c.id === column.id)) staffColumns.push(column);
-}
 
 export function registerSiteSummary(summary: SiteSummary) {
   if (!siteSummaries.some((s) => s.id === summary.id)) siteSummaries.push(summary);
-}
-
-/** Every registered column with its values for these people. */
-export async function staffColumnValues(userIds: string[]) {
-  return Promise.all(staffColumns.map(async (column) => ({ id: column.id, header: column.header, values: await column.values(userIds) })));
 }
 
 /** One combined line per site from every registered module. */
@@ -268,22 +249,4 @@ export async function renameAreaEverywhere(change: AreaRename, tx?: unknown) {
   let changed = 0;
   for (const handler of areaRenameHandlers) changed += await handler.rename(change, tx);
   return changed;
-}
-
-/** What a module says about one person on their Staff page in Admin (owner decision, 8 October
- *  2026: "training and rota summary"): a line, a few entries and where to see the rest. Callers
- *  hold `staff.manage`; sections return work records only, never restricted (HR) data. */
-export type ProfileSummary = { summary: string; lines: { label: string; hint?: string }[]; href?: string };
-export type ProfileSummarySection = { id: string; heading: string; load(userId: string, orgId: string): Promise<ProfileSummary> };
-const profileSummaries: ProfileSummarySection[] = [];
-
-export function registerProfileSummary(section: ProfileSummarySection) {
-  const at = profileSummaries.findIndex((s) => s.id === section.id);
-  if (at >= 0) profileSummaries[at] = section;
-  else profileSummaries.push(section);
-}
-
-/** Every module's summary of this person, in registration order. */
-export async function profileSummary(userId: string, orgId: string) {
-  return Promise.all(profileSummaries.map(async (section) => ({ id: section.id, heading: section.heading, ...(await section.load(userId, orgId)) })));
 }

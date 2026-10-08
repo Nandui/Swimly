@@ -1,6 +1,9 @@
 # Turnfin HR
 
-HR notes and performance reviews for the people a role covers. On screen the module,
+Staff files for the people a role covers: their details (position, manager,
+departments, employment, contact), HR notes and performance reviews. Staff
+details are HR's, not Admin's (owner decision, 8 October 2026): Admin keeps only
+access (sign-in, role, sites). On screen the module,
 its H1, its bar label and its permission group are all called "HR" (owner-approved
 mockups said "HR and performance", which does not fit a phone bar slot). It is the most
 sensitive part of Turnfin, so it is built with every protection the platform
@@ -33,7 +36,8 @@ subject's user id.
 The HR record is the person's personal file. Besides notes and reviews it shows
 what other modules keep about them, through the personal-file seam
 (`registerPersonFileSection` / `personFile` in `src/modules/contributions.ts`):
-today Rota's **Absences and returns to work** (docs/rota.md). Those records stay
+today Rota's planned activities, **Absences and returns to work** and changes to
+their activities (docs/rota.md), and Training's open assignments. Those records stay
 in their module's database; HR reads them inside the same logged read as the
 record, and the subject export includes them as `personalFile`. A new module
 adds its part by registering a section; HR does not change.
@@ -45,6 +49,7 @@ adds its part by registering a section; HR does not change.
 | `hr.records.read` | Read the HR records of the people the role covers |
 | `hr.notes.write` | Add and withdraw your own notes. Includes reading |
 | `hr.reviews.write` | Draft reviews and share them with the person. Includes reading |
+| `hr.details.write` | Change their profile and employment, and apply or decline the details changes they send from Turnfin Me (HR › Details changes). Includes reading |
 
 Restricted means that administrators never inherit them. They reach a person
 only through a role that a superadmin created and assigned, or through the

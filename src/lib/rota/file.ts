@@ -1,10 +1,11 @@
 import "server-only";
-import { formatDate, plural, today } from "@/lib/format";
+import { formatDate, parseDateOnly, plural, today } from "@/lib/format";
 import { prisma } from "@/lib/prisma";
-import { ABSENCE_REASON_META, RETURN_FIT_META, ROTA_CHANGE_REASON_META, addDaysIso, daysOff, type AbsenceReason, type ReturnFit, type RotaChangeReason } from "@/lib/rota/constants";
+import { ABSENCE_REASON_META, RETURN_FIT_META, ROTA_CHANGE_REASON_META, addDaysIso, clock, daysOff, type AbsenceReason, type ReturnFit, type RotaChangeReason } from "@/lib/rota/constants";
 import { registerPersonFileSection, type PersonFileEntry } from "@/modules/contributions";
 
-/** Rota's part of a person's file: every absence recorded for them, with its
+/** Rota's part of a person's file: what they are planned on in the next two
+ *  weeks; every absence recorded for them, with its
  *  return to work, and how much they were off in the last 12 months; and the
  *  changes made to their activities on days that had come. Withdrawn absences
  *  (recorded in error) are left out. Absences recorded on the retired roster
@@ -15,6 +16,27 @@ const day = (value: string) => formatDate(new Date(`${value}T00:00:00Z`));
 /** A free-text note joined into a " · " line drops its own closing full stop. */
 const clause = (text: string | null) => text?.trim().replace(/\.+$/, "") || null;
 const times = (n: number) => (n === 1 ? "once" : n === 2 ? "twice" : `${n} times`);
+
+export async function plannedFile(userId: string): Promise<{ summary: string; entries: PersonFileEntry[] }> {
+  const from = today();
+  const rows = await prisma.rotaAssignment.findMany({
+    where: { userId, need: { date: { gte: parseDateOnly(from), lte: parseDateOnly(addDaysIso(from, 13)) } } },
+    orderBy: [{ need: { date: "asc" } }, { startMinutes: "asc" }],
+    select: { id: true, startMinutes: true, endMinutes: true, need: { select: { date: true, place: true, site: { select: { name: true } }, type: { select: { name: true } } } } },
+  });
+  const days = new Set(rows.map((r) => iso(r.need.date))).size;
+  return {
+    summary: rows.length ? `${plural(rows.length, "activity", "activities")} on ${plural(days, "day")} in the next two weeks.` : "Nothing planned in the next two weeks.",
+    entries: rows.map((r): PersonFileEntry => ({
+      id: r.id,
+      title: `${day(iso(r.need.date))}, ${clock(r.startMinutes)}–${clock(r.endMinutes)}`,
+      detail: [r.need.type.name, r.need.place || null, r.need.site.name].filter(Boolean).join(" · "),
+      on: iso(r.need.date),
+    })),
+  };
+}
+
+registerPersonFileSection({ id: "rota.planned", heading: "Rota", load: plannedFile });
 
 export async function absenceFile(userId: string, orgId: string): Promise<{ summary: string; entries: PersonFileEntry[] }> {
   const rows = await prisma.rotaAbsence.findMany({

@@ -3,7 +3,7 @@ import type { Prisma } from "@/generated/prisma/client";
 import { prisma } from "@/lib/prisma";
 import { expandPermissions, type PermissionKey } from "@/lib/staff/permissions";
 import { visibleScreens, type ScreenKey } from "@/lib/staff/screens";
-import { registerAreaRename, registerCommitments, registerHomeCard, registerSiteSummary, registerStaffColumn, type Commitment, type HomeIcon, type HomeItem, type HomeSession } from "@/modules/contributions";
+import { registerAreaRename, registerCommitments, registerHomeCard, registerSiteSummary, type Commitment, type HomeIcon, type HomeItem, type HomeSession } from "@/modules/contributions";
 import { formatTime, isDateOnly, minutesNow, parseDateOnly, plural, today } from "@/lib/format";
 import { logAudit } from "@/lib/audit";
 import { staffByIds } from "@/lib/directory";
@@ -16,18 +16,6 @@ import { getAwaitingEnrolment } from "@/modules/activities/lib/enrolment/data/aw
 import { getTodayAssessments } from "@/modules/activities/lib/today/assessments";
 import { sessionState } from "@/modules/activities/lib/today/calendar";
 
-
-/** Classes each person is the scheduled instructor for, archived ones included,
- *  as the Staff page has always counted them. */
-registerStaffColumn({
-  id: "activities.classes",
-  header: "Classes",
-  async values(userIds) {
-    if (userIds.length === 0) return new Map();
-    const rows = await prisma.course.groupBy({ by: ["instructorId"], where: { instructorId: { in: userIds } }, _count: { _all: true } });
-    return new Map(rows.filter((row) => row.instructorId).map((row) => [row.instructorId!, String(row._count._all)]));
-  },
-});
 
 /** Who teaches which class when, for the rota's plan and its clash check: each class on each
  *  date in the range, taught by that day's cover (it has started), else the teacher planned for

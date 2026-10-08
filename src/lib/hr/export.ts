@@ -21,7 +21,11 @@ export async function subjectExport(userId: string) {
   if (!recentlyConfirmed(actor)) throw new ExportRefused("Confirm your password first.");
   const person = await prisma.user.findFirst({
     where: { id: userId, orgId: actor.orgId ?? undefined },
-    select: { id: true, name: true, email: true, jobTitle: true, startedOn: true, isActive: true, createdAt: true },
+    select: {
+      id: true, name: true, email: true, jobTitle: true, startedOn: true, isActive: true, createdAt: true,
+      dateOfBirth: true, contractType: true, contractMinutes: true, endedOn: true, payrollNumber: true,
+      phone: true, homeAddress: true, emergencyName: true, emergencyPhone: true, emergencyRelationship: true,
+    },
   });
   if (!person) return null;
   const [qualifications, training] = await Promise.all([

@@ -273,7 +273,7 @@ registerModule({
   id: "hr",
   group: "team",
   name: "HR",
-  description: "Restricted notes and performance reviews for the people you look after",
+  description: "Restricted staff files: details, employment, notes and performance reviews for the people you look after",
   icon: HeartHandshake,
   href: "/hr",
   logName: "HR",
@@ -282,10 +282,10 @@ registerModule({
     restricted: true,
     levels: [
       {
-        key: "team", label: "Their team", help: "Notes and reviews for the people they manage.", reach: "team",
-        permissions: ["hr.records.read", "hr.notes.write", "hr.reviews.write"],
+        key: "team", label: "Their team", help: "Staff files, notes and reviews for the people they manage.", reach: "team",
+        permissions: ["hr.records.read", "hr.details.write", "hr.notes.write", "hr.reviews.write"],
       },
-      { key: "all", label: "Everyone", help: "HR notes and reviews for everyone.", permissions: [] },
+      { key: "all", label: "Everyone", help: "Staff files, notes and reviews for everyone.", permissions: [] },
     ],
   },
 });

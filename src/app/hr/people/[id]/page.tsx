@@ -1,9 +1,9 @@
 import type { Metadata } from "next";
 import { cache } from "react";
 import Link from "next/link";
-import { Award, CalendarClock, ChevronRight, Download, FileText, UserX, type LucideIcon } from "lucide-react";
-import { RecordQualification, RevokeQualification } from "@/components/people/people-actions";
-import { QUALIFICATION_STATE_META } from "@/lib/people/constants";
+import { Award, CalendarClock, CalendarDays, ChevronRight, Download, FileText, GraduationCap, UserX, type LucideIcon } from "lucide-react";
+import { EditEmployment, EditProfile, RecordQualification, RevokeQualification } from "@/components/people/people-actions";
+import { CONTRACT_META, QUALIFICATION_STATE_META, hoursOf, type ContractType } from "@/lib/people/constants";
 import { qualificationFile } from "@/lib/people/qualifications";
 import { REQUIREMENT_META, requirementSummary } from "@/lib/people/requirements";
 import { Button } from "@/components/shadcn/button";
@@ -19,7 +19,7 @@ import { AuthorizationError } from "@/lib/authz";
 import { hrConfigured } from "@/lib/hr/database";
 
 /** The tile icon for each module's section of the person's file, by its stable key. */
-const FILE_ICONS: Record<string, LucideIcon> = { "rota.absences": UserX, "rota.changes": CalendarClock };
+const FILE_ICONS: Record<string, LucideIcon> = { "rota.planned": CalendarDays, "rota.absences": UserX, "rota.changes": CalendarClock, "training.open": GraduationCap };
 
 /** One read (and one access log row) per request, shared by the page and its tab title. */
 const load = cache(hrPerson);
@@ -42,7 +42,9 @@ export default async function HrPersonPage({ params }: { params: Promise<{ id: s
   const { id } = await params;
   await requireFreshSession("hr.records.read", `/hr/people/${id}`);
   const data = await load(id);
-  const { person, notes, reviews, who } = data;
+  const { person, details: d, notes, reviews, who, options } = data;
+  const day = (value: string) => formatDate(new Date(`${value}T00:00:00Z`));
+  const personLink = (p: { id: string; name: string }) => <Link className="-my-3 inline-flex min-h-11 items-center underline underline-offset-4" href={`/hr/people/${p.id}`}>{p.name}</Link>;
   const quals = await qualificationFile(person.id, who.orgId ?? "");
   return (
     <>
@@ -58,6 +60,47 @@ export default async function HrPersonPage({ params }: { params: Promise<{ id: s
           </>
         }
       />
+      <section className="pc-panel" aria-labelledby="hr-profile">
+        <div className="pc-panel-head">
+          <h2 id="hr-profile">Profile</h2>
+          {options ? <EditProfile person={{ ...d, id: person.id, name: person.name }} sites={options.sites} departments={options.departments} people={options.people} positions={options.positions} /> : null}
+        </div>
+        <Facts items={[
+          ["Position", d.position ? `${d.position.name}${d.position.archivedAt ? " (archived)" : ""}` : d.jobTitle ? `${d.jobTitle} (not on the list)` : "Not set"],
+          ["Started", d.startedOn ? day(d.startedOn) : "Not set"],
+          ["Date of birth", d.dateOfBirth ? day(d.dateOfBirth) : "Not set"],
+          ["Main site", d.primaryClub ?? "Not set"],
+          ["Manager", d.manager ? personLink(d.manager) : "No manager"],
+          ["Departments", d.departments.length ? d.departments.map((x) => x.department.name + (x.isPrimary && d.departments.length > 1 ? " (main)" : "")).join(", ") : "None"],
+        ]} />
+        {d.reports.length ? (
+          <p className="text-sm text-ui-muted-foreground">Manages {d.reports.map((r, i) => <span key={r.id}>{i ? ", " : ""}{personLink(r)}</span>)}</p>
+        ) : null}
+      </section>
+      <div className="pc-grid">
+        <section className="pc-panel" aria-labelledby="hr-employment">
+          <div className="pc-panel-head">
+            <h2 id="hr-employment">Employment</h2>
+            {options ? <EditEmployment person={{ ...d, id: person.id, name: person.name }} /> : null}
+          </div>
+          <Facts items={[
+            ["Contract", d.contractType ? CONTRACT_META[d.contractType as ContractType]?.label ?? d.contractType : "Not set"],
+            ["Hours a week", d.contractMinutes != null ? hoursOf(d.contractMinutes) : "Not set"],
+            ["Payroll number", d.payrollNumber || "Not set"],
+            ["Last day", d.endedOn ? day(d.endedOn) : "Still here"],
+          ]} />
+        </section>
+        <section className="pc-panel" aria-labelledby="hr-contact">
+          <div className="pc-panel-head">
+            <div className="flex flex-col gap-1"><h2 id="hr-contact">Contact</h2><p className="pc-row-hint">Kept by them in Turnfin Me; their changes come to Details changes.</p></div>
+          </div>
+          <Facts items={[
+            ["Phone", d.phone || "Not given"],
+            ["Home address", d.homeAddress || "Not given"],
+            ["Emergency contact", d.emergencyName ? [d.emergencyName, d.emergencyRelationship, d.emergencyPhone].filter(Boolean).join(" · ") : "Not given"],
+          ]} />
+        </section>
+      </div>
       <div className="pc-grid">
         <section className="pc-panel" aria-labelledby="hr-notes">
           <div className="pc-panel-head"><h2 id="hr-notes">Notes</h2></div>
@@ -105,7 +148,7 @@ export default async function HrPersonPage({ params }: { params: Promise<{ id: s
         <div className="pc-panel-head">
           <div className="flex flex-col gap-1">
             <h2 id="hr-qualifications">Qualifications</h2>
-            <p className="pc-row-hint">{quals.position ? `${quals.position}: ${requirementSummary(quals.requirements)}.` : "No position set: their Staff page sets it, and it decides what they need."}</p>
+            <p className="pc-row-hint">{quals.position ? `${quals.position}: ${requirementSummary(quals.requirements)}.` : "No position set: their profile sets it, and it decides what they need."}</p>
           </div>
           {quals.canRecord && quals.types.length ? <RecordQualification userId={person.id} name={person.name} types={quals.types} /> : null}
         </div>
@@ -161,5 +204,18 @@ export default async function HrPersonPage({ params }: { params: Promise<{ id: s
         );
       })}
     </>
+  );
+}
+
+function Facts({ items }: { items: [string, React.ReactNode][] }) {
+  return (
+    <dl className="grid gap-4 [grid-template-columns:repeat(auto-fit,minmax(min(100%,180px),1fr))]">
+      {items.map(([label, value]) => (
+        <div key={label} className="min-w-0">
+          <dt className="text-xs font-semibold text-ui-muted-foreground">{label}</dt>
+          <dd className="mt-1 [overflow-wrap:anywhere]">{value}</dd>
+        </div>
+      ))}
+    </dl>
   );
 }

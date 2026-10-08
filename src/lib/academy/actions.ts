@@ -386,7 +386,7 @@ export async function recordResult(id: string, input: ResultInput): Promise<Acti
       summary: `${c.name}: ${d.status} on the ${at.course.type.name} course${d.certificateNumber ? `, certificate ${d.certificateNumber}` : ""}` }, tx);
   });
   refresh(c.courseId);
-  if (grants) revalidatePath(`/staff/${c.userId}`);
+  if (grants) revalidatePath(`/hr/people/${c.userId}`);
   return ok();
 }
 

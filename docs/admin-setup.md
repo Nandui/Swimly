@@ -58,13 +58,17 @@ The lists are organisation-wide, so their actions use the flat permission check.
   with their holders but are no longer offered. The migration
   (`20261021120000_positions_and_employment`) made a position of every job title in use.
 - **Requirements** (`src/lib/people/requirements.ts`, pure): each needed qualification against
-  the person's best record (in date, expires within 60 days, expired, not held). The Staff page,
-  the HR file and Training › Expiring all read it.
-- **Staff page** (`/staff/[id]`): position, employment (contract, weekly hours, payroll number,
-  last day; `updateEmployment`, `staff.manage`), contact and emergency contact (read only, kept
-  by the person in Turnfin Me), what their position needs, and Training and Rota summaries
-  through the profile-summary contribution (`registerProfileSummary`).
-- **HR file** (`/hr/people/[id]`): the qualifications record. Recording one can attach the
+  the person's best record (in date, expires within 60 days, expired, not held). The HR file
+  and Training › Expiring read it.
+- **Staff page** (`/staff/[id]`, `staff.manage`): access only (owner decision, 8 October 2026):
+  sign-in (reset password, deactivate), superadmin, the role and the sites it applies at. Admin
+  keeps nothing about the person's job.
+- **HR file** (`/hr/people/[id]`): the person's details: profile (position, start date, date of
+  birth, main site, manager, departments; `updateProfile`), employment (contract, weekly hours,
+  payroll number, last day; `updateEmployment`) and contact (read only, kept by the person in
+  Turnfin Me). Changing them needs the restricted `hr.details.write` over the person, and nobody
+  changes their own. Also what their position needs, Training and Rota through the personal-file
+  contribution, and the qualifications record. Recording one can attach the
   certificate (PDF, PNG or JPEG up to 5 MB, checked by its first bytes), kept as verified
   Training evidence. Recording and withdrawing still need `qualifications.manage` over the person.
 - **Reminders** (`src/lib/staff-api/reminders.ts`): at 60, 30 and 7 days and on expiry, the

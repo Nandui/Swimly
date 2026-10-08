@@ -28,7 +28,7 @@ export function EditEmployment({ person }: { person: { id: string; name: string;
     <FormDialog
       trigger={<Button variant="outline">{icon(Pencil)}Edit employment</Button>}
       title={`${person.name}'s employment`}
-      description="Their contract and hours, and payroll's employee number. Only people who manage staff see these."
+      description="Their contract and hours, and payroll's employee number. Only HR sees these."
       submitLabel="Save employment"
       successMessage="Employment updated"
       submit={(formData) => updateEmployment(person.id, {
@@ -69,7 +69,7 @@ export function EditProfile({ person, sites, departments, people, positions }: {
   });
   return (
     <FormDialog
-      trigger={<Button variant="default">{icon(Pencil)}Edit profile</Button>}
+      trigger={<Button variant="outline">{icon(Pencil)}Edit profile</Button>}
       title={`${person.name}'s profile`}
       description="Their position, main site, manager and departments. Their manager decides who can see their HR record as their team."
       submitLabel="Save profile"
@@ -97,7 +97,7 @@ export function EditProfile({ person, sites, departments, people, positions }: {
       </Field>
       <fieldset className="flex flex-col gap-2">
         <legend className="text-sm font-semibold mb-2">Departments</legend>
-        {departments.length === 0 ? <p className="text-sm text-ui-muted-foreground">No departments yet. Add them under Organisation.</p> : null}
+        {departments.length === 0 ? <p className="text-sm text-ui-muted-foreground">No departments yet. Admin adds them under Departments.</p> : null}
         {departments.map((department) => (
           <Label key={department.id} className="flex items-center gap-3 min-h-11 font-normal">
             <Checkbox checked={chosen.includes(department.id)} onCheckedChange={(value) => toggle(department.id, value === true)} />

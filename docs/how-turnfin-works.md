@@ -40,8 +40,8 @@ A role holds one level for each module (`StaffRole.levels`), plus up to two extr
 | Docs | Read, Write, Manage | Can approve, never their own |
 | Training | Trainer (sign off practical training), Manage (courses, assigning, certificates) | |
 | Rota | View, Plan, Run | |
-| HR | Their team, Everyone. Only a superadmin gives HR | |
-| Admin | Manage (people, roles, sites, the activity log) | |
+| HR | Their team, Everyone (staff details, employment, notes, reviews). Only a superadmin gives HR | |
+| Admin | Manage (sign-in and access: people's accounts, roles, sites, the activity log) | Staff details are HR's |
 
 **Where a level applies:**
 - Swim school, Pool deck, Training and Rota levels apply at the sites the person works at (Staff › a person › Role and sites). No sites ticked means every site.
