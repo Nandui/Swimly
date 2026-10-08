@@ -144,8 +144,8 @@ function RoleFields({ role, canGiveRestricted }: { role?: Role; canGiveRestricte
         <legend className="text-sm font-semibold">What this role can do in each module</legend>
         <p className="mt-1 text-sm text-ui-muted-foreground">Each level includes the ones before it.</p>
         {groupModules(allModules()).map((group) => (
-          <section key={group.key} aria-labelledby={`${id}-${group.key}`} className="mt-3">
-            <h3 id={`${id}-${group.key}`} className="text-xs font-semibold text-ui-muted-foreground">{group.label}</h3>
+          <div key={group.key} role="group" aria-labelledby={`${id}-${group.key}`} className="mt-3">
+            <p id={`${id}-${group.key}`} className="text-xs font-semibold text-ui-muted-foreground">{group.label}</p>
             <div className="divide-y divide-ui-border">
               {group.modules.map((mod) => {
                 const locked = admin && mod.id !== "admin" && !mod.access.restricted
@@ -167,7 +167,7 @@ function RoleFields({ role, canGiveRestricted }: { role?: Role; canGiveRestricte
                 );
               })}
             </div>
-          </section>
+          </div>
         ))}
       </fieldset>
 
