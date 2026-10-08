@@ -52,6 +52,8 @@ A role holds one level for each module (`StaffRole.levels`), plus up to two extr
 
 **Aimed at roles:** in Docs every role is a team ("Receptionist (role)"), so a document or its required reading can be aimed at a role. In Training, "Add everyone on a role" (in the Assign training dialog) adds a whole role's people to an assignment.
 
+**Departments** are presentation only. Each module names the part of the centre it serves in one `group` field (`MODULE_GROUPS` in `src/modules/registry.ts`): Front of house (Swim school, Academy, Refunds), Poolside (Pool deck), Team (Rota, Training, Docs, HR) and Back office (Purchasing, Admin). The group orders and heads the role editor, the module bar and the home page, and never gives or checks access: that stays role, then level, then permission. The workspace is still the role's home page, named on the role ("Front of House"). In code, say *group*, not "department" (Rota departments are Admin data) or "area" (a site's pools and rooms).
+
 **The home page** is built from each module's card (`registerHomeCard` in `src/modules/contributions.ts`). A module lists only its everyday jobs there, and only what the person can already open.
 
 **The activity log** names each entry's module and filters by it.
