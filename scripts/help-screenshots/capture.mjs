@@ -50,6 +50,9 @@ const plans = [
   { id: 'training-signoff', steps: [{ go: '/training/sign-off' }] },
   { id: 'rota-week', as: 'maya', steps: [{ go: '/rota' }] },
   { id: 'rota-absence', as: 'maya', steps: [{ go: '/rota/absences' }, { click: 'Report an absence' }], shot: 'dialog' },
+  { id: 'tasks-today', steps: [{ go: '/tasks' }] },
+  { id: 'tasks-reports', as: 'maya', steps: [{ go: '/tasks/reports' }] },
+  { id: 'tasks-template', steps: [{ go: '/tasks/templates/tpl_water' }] },
   { id: 'hr-note', steps: [{ go: '/hr' }, { confirmPassword: true }, { link: /^Ava Example/ }, { click: 'Add note' }], shot: 'dialog' },
   { id: 'hr-review', steps: [{ go: '/hr' }, { confirmPassword: true }, { link: /^Ava Example/ }, { link: /review/ }] },
   // Swimmers, enrolment and parents

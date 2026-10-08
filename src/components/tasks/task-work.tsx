@@ -1,9 +1,10 @@
 "use client";
 
-import { useState, useTransition } from "react";
+import { useEffect, useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import { Check, FileText, Plus, Save, Trash2 } from "lucide-react";
 import { Button } from "@/components/shadcn/button";
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/shadcn/table";
 import { ChoiceRow } from "@/components/ui/choice-row";
 import { FileField } from "@/components/ui/file-field";
 import { Input } from "@/components/ui/input";
@@ -31,7 +32,12 @@ export function TaskWork({ id, version, definition: def, checks: initialChecks, 
 }) {
   const router = useRouter();
   const [checks, setChecks] = useState(() => def.checklist.map((_, i) => initialChecks[i] === true));
-  const [records, setRecords] = useState<TaskRecord[]>(initialRecords.length ? initialRecords : [{}]);
+  // A log starts with as many records as it needs.
+  const [records, setRecords] = useState<TaskRecord[]>(() => {
+    const rows = initialRecords.length ? initialRecords : [{}];
+    const need = editable && def.logMode === "table" ? Math.max(def.minimumRecords, 1) : 1;
+    return rows.length >= need ? rows : [...rows, ...Array.from({ length: need - rows.length }, () => ({}))];
+  });
   const [files, setFiles] = useState<FileRef[]>(initialFiles);
   const [dirty, setDirty] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -39,8 +45,18 @@ export function TaskWork({ id, version, definition: def, checks: initialChecks, 
   const [pending, start] = useTransition();
   const [doing, setDoing] = useState<"save" | "complete" | null>(null);
   const asks = def.fields.some((f) => f.type !== "heading");
-  const log = asks && (def.minimumRecords > 1 || records.length > 1);
+  // "Multiple records" (or a task from before the choice that asked for several) is a log.
+  const log = asks && (def.logMode === "table" || def.minimumRecords > 1 || records.length > 1);
   const warnings = exceptions(def, records);
+  const asked = def.fields.filter((f) => f.type !== "heading");
+
+  // Leaving with unsaved changes asks first (from the prototype).
+  useEffect(() => {
+    if (!dirty) return;
+    const warn = (e: BeforeUnloadEvent) => { e.preventDefault(); };
+    window.addEventListener("beforeunload", warn);
+    return () => window.removeEventListener("beforeunload", warn);
+  }, [dirty]);
 
   const answer = (i: number, field: string, value: string) => {
     setRecords((rows) => rows.map((r, j) => (j === i ? { ...r, [field]: value } : r)));
@@ -101,7 +117,27 @@ export function TaskWork({ id, version, definition: def, checks: initialChecks, 
               {def.minimumRecords > 1 ? <p className="pc-row-hint">At least {def.minimumRecords} records.</p> : null}
             </div>
           </div>
-          {records.map((row, i) => (
+          {!editable && log ? (
+            <Table>
+              <TableHeader><TableRow>
+                <TableHead scope="col">Record</TableHead>
+                {asked.map((f) => <TableHead key={f.id} scope="col">{f.label}</TableHead>)}
+              </TableRow></TableHeader>
+              <TableBody>
+                {records.map((row, i) => (
+                  <TableRow key={i}>
+                    <TableCell className="tabular-nums">{i + 1}</TableCell>
+                    {asked.map((f) => {
+                      const value = row[f.id] ?? "";
+                      return <TableCell key={f.id} className="whitespace-normal [overflow-wrap:anywhere]">{!value ? "Not answered" : f.type === "file"
+                        ? <a className="inline-flex min-h-11 items-center gap-2 underline underline-offset-4" href={`/tasks/files/${value}`} target="_blank" rel="noopener noreferrer"><FileText aria-hidden="true" className="size-4" />{fileName(value)}</a>
+                        : `${value}${f.type === "number" && f.unit ? ` ${f.unit}` : ""}`}</TableCell>;
+                    })}
+                  </TableRow>
+                ))}
+              </TableBody>
+            </Table>
+          ) : records.map((row, i) => (
             <fieldset key={i} className="flex flex-col gap-4 rounded-[var(--pc-radius-card)] border border-[var(--pc-line)] p-4">
               {log ? (
                 <legend className="flex w-full items-center justify-between gap-2 px-1">

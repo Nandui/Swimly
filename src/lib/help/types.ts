@@ -15,6 +15,7 @@ export const HELP_CATEGORIES = [
   { id: "docs", title: "Docs", description: "Find and read staff documents, write them and send them for approval." },
   { id: "training", title: "Training", description: "Assign training and sign off what people show you in person." },
   { id: "rota", title: "Rota", description: "Plan the week’s shifts and report an absence." },
+  { id: "tasks", title: "Tasks", description: "Do the day’s checks and logs, follow up what is out of range and write the templates." },
   { id: "hr", title: "HR", description: "Keep notes and run performance reviews for the people you look after." },
   { id: "setup", title: "Administration", description: "Manage the curriculum, staff, roles and sites." },
   { id: "support", title: "Account and troubleshooting", description: "Change appearance, recover from errors and get help." },
@@ -22,7 +23,7 @@ export const HELP_CATEGORIES = [
 /** The module a topic belongs to, as the screen that opens it: Help shows these topics only to
  *  people who can open that screen (Task links respect screen access, DESIGN.md). */
 export const HELP_CATEGORY_SCREENS: Partial<Record<(typeof HELP_CATEGORIES)[number]["id"], ScreenKey>> = {
-  refunds: "refunds", docs: "docs", training: "training", rota: "rota", hr: "hr",
+  refunds: "refunds", docs: "docs", training: "training", rota: "rota", hr: "hr", tasks: "tasks",
 };
 export type HelpCategory = (typeof HELP_CATEGORIES)[number]["id"];
 export type HelpArticle = {

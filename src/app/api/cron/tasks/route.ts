@@ -1,17 +1,19 @@
 import { addDays } from "@/lib/tasks/rules";
-import { ensureTasksEverywhere } from "@/lib/tasks/data";
+import { ensureTasksEverywhere, freezeScores } from "@/lib/tasks/data";
 import { today } from "@/lib/format";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
 
-/** Makes yesterday's and today's scheduled tasks at every site (Vercel cron), so a day
- *  nobody opened still counts its missed tasks in the reports. Making them twice is
- *  harmless. Vercel sends `Authorization: Bearer <CRON_SECRET>`; anything else is refused. */
+/** Nightly (Vercel cron): makes yesterday's and today's scheduled tasks at every site, so a day
+ *  nobody opened still counts its missed tasks, then freezes yesterday's score at each site, so
+ *  history does not move when a task is reopened later. Running it twice is harmless. Vercel
+ *  sends `Authorization: Bearer <CRON_SECRET>`; anything else is refused. */
 export async function GET(request: Request) {
   const secret = process.env.CRON_SECRET ?? "";
   if (secret.length < 16 || request.headers.get("authorization") !== `Bearer ${secret}`) return new Response("Unauthorized", { status: 401 });
-  const day = today();
-  const made = await ensureTasksEverywhere([addDays(day, -1), day]);
-  return Response.json({ made }, { headers: { "Cache-Control": "no-store" } });
+  const day = today(), yesterday = addDays(day, -1);
+  const made = await ensureTasksEverywhere([yesterday, day]);
+  const frozen = await freezeScores(yesterday);
+  return Response.json({ made, frozen }, { headers: { "Cache-Control": "no-store" } });
 }

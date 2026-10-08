@@ -231,6 +231,18 @@
     "width": 512,
     "height": 216
   },
+  "tasks-reports": {
+    "width": 1280,
+    "height": 800
+  },
+  "tasks-template": {
+    "width": 1280,
+    "height": 800
+  },
+  "tasks-today": {
+    "width": 1280,
+    "height": 800
+  },
   "together": {
     "width": 1280,
     "height": 800

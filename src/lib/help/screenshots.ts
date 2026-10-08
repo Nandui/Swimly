@@ -27,6 +27,15 @@ export const GUIDE_SCREENSHOTS: Record<string, Placement[]> = {
   "sign-off-training": [
     { image: "training-signoff", step: "Sign it off or send it back", caption: "Each row shows who is ready, the course and their note, with Not yet and Sign off beside it.", alt: "Training Sign-off page with a fictional lifeguard ready for the pool rescue refresher, and Not yet and Sign off buttons." },
   ],
+  "do-task": [
+    { image: "tasks-today", step: "Open Today", caption: "Today shows the site’s figures, the day and its filters, the tasks in groups and the site at a glance.", alt: "Tasks Today at a fictional site: Completed, Remaining, Awaiting approval, Open actions and Score figures, the day with its search, status and tag filters, the Still to do group of task rows with their due times and states, and the At a glance panel with the site's area, time zone, opening and closing." },
+  ],
+  "review-tasks": [
+    { image: "tasks-reports", step: "Read the reports", caption: "Site scores shows the average, consistency over time and each site’s scores, with good, fair and low marked.", alt: "Tasks Reports with Site scores selected: the range and score interval, the average score, a line of the score over time, and the Site performance table for two fictional sites." },
+  ],
+  "manage-task-templates": [
+    { image: "tasks-template", step: "Create the task", caption: "The task designer has four tabs: Content, Schedule, Assign and Report.", alt: "Task template editor for Pool water quality with the Content tab open: title, instructions, checklist and the record log with pH and Free chlorine fields and their ranges." },
+  ],
   "plan-week": [
     { image: "rota-week", step: "Open Plan", caption: "Each day counts its gaps. On the day, each area shows its activities, each with a row for each place: people in blue, gaps in amber.", alt: "Rota Plan at a fictional site: the week's days with their gap counts, then the day's timeline by area, Main pool and Learner pool, each with its Lifeguarding lanes, people in blue blocks and amber Nobody gaps, and Add activity." },
   ],

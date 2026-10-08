@@ -34,8 +34,40 @@ export type TaskField = {
   needsAction?: boolean;
 };
 
-/** When a task is due. Times are the centre's wall clock ("HH:MM", Europe/Dublin);
- *  a due time at or before the start time is the next morning. */
+/** How a template's tasks are made (from the prototype): on its schedules (repeat, or once),
+ *  added by someone when needed (adhoc), raised as a follow-up from another task (action), or
+ *  made by another module when something happens (automated; no module sends these yet). */
+export const TEMPLATE_KINDS = ["repeat", "once", "adhoc", "action", "automated"] as const;
+export type TemplateKind = (typeof TEMPLATE_KINDS)[number];
+export const TEMPLATE_KIND_LABELS: Record<TemplateKind, string> = {
+  repeat: "Repeat on a schedule", once: "One-off", adhoc: "Ad hoc: added when needed", action: "Follow-up action", automated: "Automated by another module",
+};
+export const TEMPLATE_KIND_SHORT: Record<TemplateKind, string> = { repeat: "Repeats", once: "One-off", adhoc: "Ad hoc", action: "Follow-up action", automated: "Automated" };
+/** Kinds whose tasks the schedules make. */
+export const SCHEDULED_KINDS: readonly TemplateKind[] = ["repeat", "once"];
+
+/** form: one set of answers; table: several records, a log. */
+export const LOG_MODES = ["form", "table"] as const;
+export type LogMode = (typeof LOG_MODES)[number];
+export const LOG_MODE_LABELS: Record<LogMode, string> = { form: "One form per task", table: "Multiple records" };
+
+export const SITE_STATUSES = ["live", "setup", "inactive"] as const;
+export type SiteStatus = (typeof SITE_STATUSES)[number];
+export const SITE_STATUS_META = {
+  live: { label: "Live", color: "green", icon: CircleCheck },
+  setup: { label: "Setting up", color: "orange", icon: Clock3 },
+  inactive: { label: "Inactive", color: "gray", icon: Ban },
+} as const satisfies Record<SiteStatus, StatusMeta>;
+/** A site's business hours and clock, from its Tasks settings (`TaskSite`). */
+export type SiteClock = { timezone: string; opening: string; closing: string };
+export const DEFAULT_SITE: SiteClock & { status: SiteStatus; area: string; closedDates: string[] } = {
+  timezone: SCHOOL_TIMEZONE, opening: "06:00", closing: "22:00", status: "live", area: "", closedDates: [],
+};
+/** Time zones a site can keep (the centres Turnfin serves, and their neighbours). */
+export const TIMEZONES = ["Europe/Dublin", "Europe/London", "Europe/Lisbon", "Europe/Madrid", "Europe/Paris", "Europe/Berlin", "Atlantic/Canary"] as const;
+
+/** When a task is due. Times are the site's wall clock ("HH:MM"), or "open" and "close" for
+ *  its business hours; a due time at or before the start time is the next morning. */
 export const REPEATS = ["once", "daily", "weekly", "monthly"] as const;
 export type Repeat = (typeof REPEATS)[number];
 export type TaskSchedule = {
@@ -64,6 +96,9 @@ export type TaskDefinition = {
   minimumRecords: number;
   requiresComment: boolean;
   requiresApproval: boolean;
+  /** Only the roles it is aimed at complete it. Tasks made before this was a choice restrict. */
+  restricted?: boolean;
+  logMode?: LogMode;
 };
 
 /** One filled-in record: answers keyed by field id. A file answer is the id of its upload. */
@@ -106,6 +141,14 @@ export const ACTION_STATUS_META = {
   overdue: { label: "Overdue", color: "red", icon: TriangleAlert },
 } as const satisfies Record<string, StatusMeta>;
 
+/** A score's band (prototype: 9.6 and above good, 7.6 and above fair, else low), always shown with its number. */
+export const SCORE_BAND_META = {
+  good: { label: "Good", color: "green", icon: CircleCheck },
+  fair: { label: "Fair", color: "orange", icon: TriangleAlert },
+  low: { label: "Low", color: "red", icon: CircleAlert },
+} as const satisfies Record<string, StatusMeta>;
+export const scoreBand = (n: number): keyof typeof SCORE_BAND_META => (n >= 96 ? "good" : n >= 76 ? "fair" : "low");
+
 /** A reading outside its range, on the task and in reports. */
 export const EXCEPTION_META = { label: "Out of range", color: "orange", icon: TriangleAlert } as const satisfies StatusMeta;
 export const PRIORITY_META = { label: "High priority", color: "red", icon: Flag } as const satisfies StatusMeta;
@@ -143,8 +186,19 @@ export function score(states: readonly TaskState[]): number | null {
 // When tasks are due
 // ---------------------------------------------------------------------------
 
-/** An instant as the centre's clock reads it: "09:00". */
-export const clockOf = (d: Date) => formatTime(minutesNow(d));
+/** An instant as a site's clock reads it: "09:00". */
+export function clockOf(d: Date, zone: string = SCHOOL_TIMEZONE) {
+  if (zone === SCHOOL_TIMEZONE) return formatTime(minutesNow(d));
+  return new Intl.DateTimeFormat("en-GB", { timeZone: zone, hour: "2-digit", minute: "2-digit", hourCycle: "h23" }).format(d);
+}
+/** A site's today, as `YYYY-MM-DD`. */
+export const dayIn = (zone: string, now = new Date()) =>
+  new Intl.DateTimeFormat("en-CA", { timeZone: zone, year: "numeric", month: "2-digit", day: "2-digit" }).format(now);
+
+/** A schedule time: a clock time, or the site's opening or closing. */
+export const isScheduleTime = (v: string) => v === "open" || v === "close" || isClock(v);
+const resolveTime = (v: string, site: SiteClock) => (v === "open" ? site.opening : v === "close" ? site.closing : v);
+const timeWords = (v: string) => (v === "open" ? "opening" : v === "close" ? "closing" : v);
 
 export const isClock = (v: string) => /^([01]\d|2[0-3]):[0-5]\d$/.test(v);
 const dayNumber = (iso: string) => Math.round(Date.parse(`${iso}T12:00:00Z`) / 86_400_000);
@@ -183,15 +237,16 @@ export function zonedInstant(day: string, time: string, zone = SCHOOL_TIMEZONE):
   throw new Error(`${time} does not happen on ${day}: the clocks go forward. Choose another time.`);
 }
 
-/** When a schedule's task opens and is due on a day. */
-export function windowOn(s: Pick<TaskSchedule, "start" | "due">, day: string) {
-  return { startsAt: zonedInstant(day, s.start), dueAt: zonedInstant(s.due <= s.start ? addDays(day, 1) : day, s.due) };
+/** When a schedule's task opens and is due on a day at a site. */
+export function windowOn(s: Pick<TaskSchedule, "start" | "due">, day: string, site: SiteClock = DEFAULT_SITE) {
+  const start = resolveTime(s.start, site), due = resolveTime(s.due, site);
+  return { startsAt: zonedInstant(day, start, site.timezone), dueAt: zonedInstant(due <= start ? addDays(day, 1) : day, due, site.timezone) };
 }
 
-/** Each task a template's schedules make on a day, keyed by schedule so making them twice is harmless. */
-export function tasksOn(schedules: readonly TaskSchedule[], day: string) {
+/** Each task a template's schedules make on a day at a site, keyed by schedule so making them twice is harmless. */
+export function tasksOn(schedules: readonly TaskSchedule[], day: string, site: SiteClock = DEFAULT_SITE) {
   return schedules.filter((s) => dueOn(s, day)).flatMap((s) => {
-    try { return [{ scheduleKey: s.id, ...windowOn(s, day) }]; } catch { return []; }
+    try { return [{ scheduleKey: s.id, ...windowOn(s, day, site) }]; } catch { return []; }
   });
 }
 
@@ -203,7 +258,7 @@ export function scheduleLabel(s: TaskSchedule) {
     : s.repeat === "daily" ? every("day")
     : s.repeat === "weekly" ? `${every("week")} on ${[1, 2, 3, 4, 5, 6, 0].filter((d) => s.weekdays.includes(d)).map((d) => WEEKDAYS[d]).join(", ")}`
     : `${every("month")} on day ${Number(s.from.slice(8))}`;
-  return `${when}, ${s.start} to ${s.due}`;
+  return `${when}, ${timeWords(s.start)} to ${timeWords(s.due)}`;
 }
 
 // ---------------------------------------------------------------------------
@@ -211,12 +266,14 @@ export function scheduleLabel(s: TaskSchedule) {
 // ---------------------------------------------------------------------------
 
 /** What is wrong with a template before it can be published, in plain words. */
-export function templateProblems(t: { title: string; checklist: string[]; fields: TaskField[]; schedules: TaskSchedule[]; minimumRecords: number }): string[] {
+export function templateProblems(t: { title: string; kind?: TemplateKind; checklist: string[]; fields: TaskField[]; schedules: TaskSchedule[]; minimumRecords: number; roleIds?: string[]; restricted?: boolean }): string[] {
   const out: string[] = [];
   if (!t.title.trim()) out.push("Give the task a title.");
   if (t.checklist.some((x) => !x.trim())) out.push("Every checklist item needs words.");
   if (!t.checklist.length && !t.fields.some((f) => f.type !== "heading")) out.push("Add a checklist item or a question, so there is something to do.");
   if (!Number.isInteger(t.minimumRecords) || t.minimumRecords < 1 || t.minimumRecords > 50) out.push("Ask for between 1 and 50 records.");
+  if (t.kind && SCHEDULED_KINDS.includes(t.kind) && !t.schedules.length) out.push("Add a schedule, or choose a kind that is not scheduled.");
+  if (t.restricted && t.roleIds && !t.roleIds.length) out.push("Choose the roles it is restricted to, or let everyone complete it.");
   for (const f of t.fields) {
     if (!f.label.trim()) out.push("Every question needs a label.");
     if (f.type === "choice" && !(f.options ?? []).some((o) => o.trim())) out.push(`${f.label || "A choice question"}: add the answers to choose from.`);
@@ -227,8 +284,8 @@ export function templateProblems(t: { title: string; checklist: string[]; fields
     if (!/^\d{4}-\d{2}-\d{2}$/.test(s.from)) out.push("Each schedule needs a first day.");
     if (s.repeat !== "once" && (!Number.isInteger(s.every) || s.every < 1 || s.every > 52)) out.push("Repeat every 1 to 52 days, weeks or months.");
     if (s.repeat === "weekly" && !s.weekdays.length) out.push("Choose the days of the week it is due.");
-    if (!isClock(s.start) || !isClock(s.due)) out.push("Give each schedule a start and due time, like 08:00.");
-    else if (/^\d{4}-\d{2}-\d{2}$/.test(s.from)) {
+    if (!isScheduleTime(s.start) || !isScheduleTime(s.due)) out.push("Give each schedule a start and due time, like 08:00, or the site's opening or closing.");
+    else if (/^\d{4}-\d{2}-\d{2}$/.test(s.from) && isClock(s.start) && isClock(s.due)) {
       try { windowOn(s, s.from); } catch (e) { out.push((e as Error).message); }
     }
   }

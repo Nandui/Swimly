@@ -1,9 +1,10 @@
 "use client";
 
-import { useId, useRef } from "react";
+import { useId, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { CircleCheck, Flag, MessageSquare, MinusCircle, Plus, RotateCcw, ShieldCheck } from "lucide-react";
 import { Button } from "@/components/shadcn/button";
+import { NativeSelect, NativeSelectOption } from "@/components/shadcn/native-select";
 import { RadioGroup } from "@/components/shadcn/radio-group";
 import { Textarea } from "@/components/shadcn/textarea";
 import { ConfirmAction } from "@/components/confirm-action";
@@ -48,9 +49,14 @@ export function AddTask({ siteId, date, templates }: { siteId: string; date: str
 }
 
 /** Raise a follow-up action: from a task, or on its own at a site. */
-export function RaiseAction({ siteId, taskId, label = "Raise an action", variant = "outline" }: { siteId: string; taskId?: string; label?: string; variant?: "outline" | "default" }) {
+export function RaiseAction({ siteId, taskId, label = "Raise an action", variant = "outline", templates = [] }: {
+  siteId: string; taskId?: string; label?: string; variant?: "outline" | "default";
+  /** Published follow-up action templates: choosing one also makes its task, to record the work. */
+  templates?: { id: string; title: string; description: string }[];
+}) {
   const router = useRouter();
   const fid = useId();
+  const [template, setTemplate] = useState("");
   return (
     <FormDialog
       portalClassName={THEME}
@@ -59,11 +65,20 @@ export function RaiseAction({ siteId, taskId, label = "Raise an action", variant
       description="Something to put right. It stays open on Actions until a reviewer resolves it."
       submitLabel="Raise it"
       successMessage="Action raised"
+      onOpen={() => setTemplate("")}
       onSuccess={() => router.refresh()}
-      submit={(form) => raiseTaskAction({ siteId, taskId: taskId ?? null, title: text(form, "title"), dueOn: text(form, "dueOn") })}
+      submit={(form) => raiseTaskAction({ siteId, taskId: taskId ?? null, title: text(form, "title"), dueOn: text(form, "dueOn"), templateId: template || null })}
     >
-      <Field label="What needs to happen" htmlFor={`${fid}-title`}>
-        <Textarea id={`${fid}-title`} name="title" required minLength={3} maxLength={300} rows={3} placeholder="For example: retest the pool after dosing and record it." />
+      {templates.length ? (
+        <Field label="Follow-up" htmlFor={`${fid}-tpl`} optional hint="A follow-up template also adds its task for today, with its checklist and questions.">
+          <NativeSelect id={`${fid}-tpl`} value={template} onChange={(e) => setTemplate(e.target.value)} className="w-full">
+            <NativeSelectOption value="">Write my own</NativeSelectOption>
+            {templates.map((t) => <NativeSelectOption key={t.id} value={t.id}>{t.title}</NativeSelectOption>)}
+          </NativeSelect>
+        </Field>
+      ) : null}
+      <Field label="What needs to happen" htmlFor={`${fid}-title`} optional={!!template} hint={template ? "Leave it empty to use the template's title." : undefined}>
+        <Textarea id={`${fid}-title`} name="title" required={!template} minLength={3} maxLength={300} rows={3} placeholder="For example: retest the pool after dosing and record it." />
       </Field>
       <Field label="Needed by" htmlFor={`${fid}-due`} optional><Input id={`${fid}-due`} name="dueOn" type="date" /></Field>
     </FormDialog>

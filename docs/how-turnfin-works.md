@@ -40,7 +40,7 @@ A role holds one level for each module (`StaffRole.levels`), plus up to two extr
 | Docs | Read, Write, Manage | Can approve, never their own |
 | Training | Trainer (sign off practical training), Manage (courses, assigning, certificates) | |
 | Rota | View, Plan, Run | |
-| Tasks | Do (the tasks aimed at their role), Review (approve, reopen, follow-ups, reports), Manage (the templates) | |
+| Tasks | Do (the day's tasks they may complete), Review (approve, reopen, follow-ups, reports, activity), Manage (templates, sites' settings, export) | |
 | HR | Their team, Everyone (staff details, employment, notes, reviews). Only a superadmin gives HR | |
 | Admin | Manage (sign-in and access: people's accounts, roles, sites, the activity log) | Staff details are HR's |
 

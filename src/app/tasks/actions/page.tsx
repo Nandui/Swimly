@@ -22,14 +22,14 @@ export default async function TaskActionsPage({ searchParams }: { searchParams: 
       </>
     );
   }
-  const { site, open, resolved } = data;
+  const { site, open, resolved, actionTemplates } = data;
   const day = today();
   return (
     <>
       <PageHeader
         title={`Actions: ${site.name}`}
-        description="Follow-ups raised from tasks, or on their own: what needs putting right, and how it was."
-        actions={<RaiseAction siteId={site.id} variant="default" />}
+        description="Close the loop: follow-ups raised from tasks, or on their own, what needs putting right and how it was."
+        actions={<RaiseAction siteId={site.id} variant="default" templates={actionTemplates} />}
       />
       <section className="pc-panel" aria-labelledby="actions-open">
         <div className="pc-panel-head"><h2 id="actions-open">Open <span className="text-ui-muted-foreground tabular-nums">· {open.length}</span></h2></div>
@@ -45,6 +45,7 @@ export default async function TaskActionsPage({ searchParams }: { searchParams: 
                       a.from ? <Link key="from" href={`/tasks/${a.from.id}`} className="underline underline-offset-4">{a.from.title}, {formatDayMonth(a.from.date)}</Link> : "Raised on its own",
                       `by ${a.raisedByName} on ${formatDate(a.createdAt)}`, a.dueOn ? `needed by ${formatDate(a.dueOn)}` : null,
                     ].filter(Boolean).map((part, i) => <span key={i}>{i ? " · " : ""}{part}</span>)}</span>
+                    {a.followUpTaskId ? <Link href={`/tasks/${a.followUpTaskId}`} className="inline-flex min-h-11 items-center text-sm underline underline-offset-4">Open its follow-up task</Link> : null}
                   </span>
                   <span className="pc-row-trail">
                     <Tag meta={ACTION_STATUS_META[late ? "overdue" : "open"]} />

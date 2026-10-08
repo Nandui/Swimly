@@ -24,6 +24,9 @@
   --pc-primary-hover: light-dark(#174ea8, #9dbfff);
   --pc-on-primary: light-dark(#ffffff, #081733);
   --pc-primary-soft: light-dark(#e9f0fd, #17284a);
+  /* A chart's single series: the fin's blue, a step darker in dark mode so it sits in the
+     chart lightness band (dataviz validator: band, chroma and 3:1 against the surface pass). */
+  --pc-chart-1: light-dark(#1d5fd1, #5a8eee);
   --pc-primary-soft-hover: light-dark(#dde8fc, #1d3360);
   --pc-primary-ink: light-dark(#174ea8, #a8c5ff);
   --pc-hover: light-dark(#f4f6f9, #1b2636);

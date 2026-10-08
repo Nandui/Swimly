@@ -13,20 +13,31 @@ model TaskTemplate {
   description      String    @default("")
   /// draft | published | archived (`TEMPLATE_STATUS_META`)
   status           String    @default("draft")
+  /// How its tasks are made (`TEMPLATE_KINDS`): repeat or once on its schedules, adhoc when
+  /// someone adds one, action as a follow-up raised from another task, automated by another
+  /// module.
+  kind             String    @default("repeat")
   /// The sites it applies at; none means every site.
   siteIds          String[]  @default([])
-  /// The roles it is aimed at (only they complete it); none means everyone at the site.
+  /// The roles it is aimed at; none means everyone at the site.
   roleIds          String[]  @default([])
+  /// Only the roles it is aimed at may complete it (reviewers may always step in).
+  restricted       Boolean   @default(true)
   tags             String[]  @default([])
   priority         Boolean   @default(false)
   checklist        String[]  @default([])
   /// `TaskField[]` (src/lib/tasks/rules.ts).
   fields           Json      @default("[]")
   minimumRecords   Int       @default(1)
+  /// form (one set of answers) | table (several records, a log)
+  logMode          String    @default("form")
   /// `TaskSchedule[]`; empty for a task added by hand.
   schedules        Json      @default("[]")
   requiresComment  Boolean   @default(false)
   requiresApproval Boolean   @default(false)
+  /// Reviewers at the site see completions, or completions with readings out of range, on their home page.
+  notifyCompletion Boolean   @default(false)
+  notifyException  Boolean   @default(false)
   /// Tasks are made only for days from the day it was first published.
   publishedAt      DateTime?
   /// Raised on every save, so two people editing at once cannot overwrite each other.
@@ -136,9 +147,46 @@ model TaskAction {
   createdAt      DateTime  @default(now())
   updatedAt      DateTime  @updatedAt
 
+  /// The follow-up task made from an action template, when it was raised from one.
+  followUpTaskId String?
   site Club  @relation(fields: [siteId], references: [id], onDelete: Restrict)
   task Task? @relation(fields: [taskId], references: [id], onDelete: SetNull)
 
   @@index([siteId, status])
   @@index([taskId])
+}
+
+/// A site's settings for Tasks: whether it is live, its area and time zone, its
+/// business hours (schedules may start at opening or be due at closing) and the
+/// dates it is closed (no tasks are made then). A site without a row is live,
+/// open 06:00 to 22:00, in Europe/Dublin.
+model TaskSite {
+  siteId      String     @id
+  /// live | setup | inactive: tasks are made only at live sites.
+  status      String     @default("live")
+  /// A grouping for reports, e.g. "City".
+  area        String     @default("")
+  timezone    String     @default("Europe/Dublin")
+  opening     String     @default("06:00")
+  closing     String     @default("22:00")
+  closedDates DateTime[] @db.Date
+  updatedAt   DateTime   @updatedAt
+
+  site Club @relation(fields: [siteId], references: [id], onDelete: Cascade)
+}
+
+/// A site's score for a finished business day, frozen by the nightly cron so
+/// history does not move when a task is reopened later. Today stays live.
+model TaskScoreSnapshot {
+  id       String   @id @default(cuid())
+  siteId   String
+  date     DateTime @db.Date
+  /// 0 to 100; null when nothing counted.
+  score    Int?
+  count    Int
+  frozenAt DateTime @default(now())
+
+  site Club @relation(fields: [siteId], references: [id], onDelete: Cascade)
+
+  @@unique([siteId, date])
 }

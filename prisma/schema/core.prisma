@@ -442,6 +442,8 @@ model Club {
   rotaRepeats        RotaRepeat[]
   tasks              Task[]
   taskActions        TaskAction[]
+  taskSite           TaskSite?
+  taskScores         TaskScoreSnapshot[]
 
   @@index([sortOrder])
 }
