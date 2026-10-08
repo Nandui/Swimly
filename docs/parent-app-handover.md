@@ -25,7 +25,7 @@ settings before continuing; the code references below precede this handover.
 
 | App | Repository and working branch | Vercel project | Production URL | Last verified production commit |
 | --- | --- | --- | --- | --- |
-| Staff and parent API | [Nandui/Swimly](https://github.com/Nandui/Swimly), `dev` for work, `main` for production | `swimly-crm` | [Staff app](https://swimly-lw.vercel.app) | `e1a61f9d` |
+| Staff and parent API | [Nandui/Swimly](https://github.com/Nandui/Swimly), a branch and PR per change, `main` for production | `swimly-crm` | [Staff app](https://swimly-lw.vercel.app) | `e1a61f9d` |
 | Parent interface | [Nandui/swimly-public-app](https://github.com/Nandui/swimly-public-app), `main` | `swimly-public-app` | [Parent app](https://swimly-public-app.vercel.app) | `09cf41e` |
 
 Both Vercel projects belong to the **LeisureWorld** team (`leisureworld`).
@@ -130,7 +130,7 @@ explicit authorization; use the isolated fixtures for development checks.
 
 1. Clone or pull both repositories, preferably into sibling folders. Read each
    repository's `AGENTS.md` and README. Use current remote branches, not a saved
-   local build. Staff work continues on `dev`; the parent repo uses `main`.
+   local build. Staff work ships through a branch and PR to `main`; the parent repo uses `main`.
 2. Install dependencies with `npm ci` in each checkout. Node.js 24 was used for
    the verified workspace. For the parent interface, use the isolated preview
    instructions in the [parent README](https://github.com/Nandui/swimly-public-app#isolated-preview-and-integration-check).

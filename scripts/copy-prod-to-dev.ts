@@ -2,8 +2,8 @@ import { randomUUID } from "node:crypto";
 import { config } from "dotenv";
 import { Client } from "pg";
 
-/** Replaces the `dev` database's data with a full copy of production's main
- *  database, so dev.turnfin.app shows real volumes (owner decision,
+/** Replaces the development database's data with a full copy of production's
+ *  main database, so previews using it show real volumes (owner decision,
  *  29 September 2026: "everything, as it is").
  *
  *  What it copies: every table the two databases share, every shared column,
