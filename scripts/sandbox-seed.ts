@@ -16,6 +16,7 @@ export async function seed(ctx: Ctx) {
   await seedTraining(ctx.prisma);
   if (ctx.hrUrl) await seedHr(ctx.prisma, ctx.hrUrl);
   await seedRota(ctx.prisma);
+  await seedAcademy(ctx.prisma);
 }
 
 /** Two sites' worth of classes so the deck and desk surfaces can be checked:
@@ -230,4 +231,30 @@ async function seedRota(db: PrismaClient) {
   // Ava was off sick for nine days until yesterday; today is her first day back, so her
   // return to work is due (and asks about the fit note).
   await db.rotaAbsence.create({ data: { orgId: ORG, userId: "sbx_ava", reason: "sickness", firstDay: day(-9), lastDay: day(-1), note: "Synthetic: called in before her shift.", reportedById: "sbx_maya", reportedByName: "Maya Example" } });
+}
+
+/** The Academy at Hillview (docs/academy.md): NPLQ and a swim teacher course on the list; an
+ *  NPLQ course that started yesterday, Sam tutoring and Liam assessing, with Ciara (staff) and
+ *  two invented members of the public on it, one with a deposit and checks still to do. */
+async function seedAcademy(db: PrismaClient) {
+  const ORG = "org_leisureworld", HILLVIEW = "club_churchfield";
+  const day = (offset: number) => { const d = new Date(); d.setUTCHours(0, 0, 0, 0); d.setUTCDate(d.getUTCDate() + offset); return d; };
+  const nplq = await db.academyCourseType.create({ data: { orgId: ORG, name: "National Pool Lifeguard Qualification", kind: "lifeguard", awardingBody: "Example awarding body",
+    minAge: 16, minHours: 30, checks: ["age", "swim", "medical", "id"], qualificationTypeId: "qt_nplq", sortOrder: 0 } });
+  await db.academyCourseType.create({ data: { orgId: ORG, name: "Swim Teacher Level 1", kind: "swim-teacher", awardingBody: "Example awarding body", minAge: 16, minHours: 20, checks: ["age", "id"], sortOrder: 1 } });
+  const course = await db.academyCourse.create({ data: { orgId: ORG, siteId: HILLVIEW, typeId: nplq.id, capacity: 8, priceCents: 35000, tutorId: "sbx_sam", assessorId: "sbx_liam",
+    createdById: "sbx_liam", createdByName: "Liam Example", note: "Synthetic course for the sandbox." } });
+  const sessions = [];
+  for (const [offset, start, end] of [[-1, 540, 1020], [0, 540, 1020], [1, 540, 1020], [6, 540, 1020], [7, 540, 780]] as const) {
+    sessions.push(await db.academySession.create({ data: { courseId: course.id, date: day(offset), startMinutes: start, endMinutes: end, place: offset === 0 ? "Main pool" : "Learner pool" } }));
+  }
+  const by = { createdById: "sbx_liam", createdByName: "Liam Example" };
+  const ciara = await db.academyCandidate.create({ data: { courseId: course.id, userId: "sbx_ciara", name: "Ciara Example", email: "ciara@sandbox.invalid", payment: "waived",
+    dateOfBirth: new Date("2004-06-01T00:00:00Z"), swimTestOn: day(-10), medicalOn: day(-10), idCheckedOn: day(-1), checkedByName: "Sam Example", ...by } });
+  const jordan = await db.academyCandidate.create({ data: { courseId: course.id, name: "Jordan Sample", email: "jordan@example.invalid", phone: "000 000 0000", payment: "paid", paidCents: 35000,
+    dateOfBirth: new Date("2008-02-14T00:00:00Z"), swimTestOn: day(-7), medicalOn: day(-7), idCheckedOn: day(-1), checkedByName: "Sam Example", ...by } });
+  await db.academyCandidate.create({ data: { courseId: course.id, name: "Robin Sample", email: "robin@example.invalid", payment: "deposit", paidCents: 10000, dateOfBirth: new Date("2010-12-20T00:00:00Z"), ...by } });
+  // Yesterday's register was taken; Jordan left an hour early.
+  await db.academyAttendance.createMany({ data: [{ sessionId: sessions[0].id, candidateId: ciara.id, minutes: 480 }, { sessionId: sessions[0].id, candidateId: jordan.id, minutes: 420 }] });
+  await db.academySession.update({ where: { id: sessions[0].id }, data: { registerAt: new Date(), registerById: "sbx_sam", registerBy: "Sam Example" } });
 }

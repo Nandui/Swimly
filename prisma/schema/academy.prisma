@@ -1,0 +1,141 @@
+// Academy (owner decision, 8 October 2026): the lifeguard and swim teacher courses we deliver
+// from time to time, to the public and to our own staff. Staff enter candidates and record
+// payment taken elsewhere; each course has dated sessions with a register, pre-course checks,
+// and results with the awarding body's certificate. Staff who pass get the qualification on
+// their record. Sessions reach the Rota through the commitments seam. See docs/academy.md.
+
+/// A kind of course we deliver: "NPLQ", "Swim Teacher Level 1". Archived, never deleted.
+model AcademyCourseType {
+  id                  String    @id @default(cuid())
+  orgId               String
+  name                String
+  /// lifeguard | swim-teacher | other (`ACADEMY_KIND_META`)
+  kind                String
+  /// Who awards the certificate: "RLSS", "Swim Ireland".
+  awardingBody        String    @default("")
+  /// Youngest a candidate may be on the course's first day.
+  minAge              Int?
+  /// Hours a candidate must attend to be put forward for assessment.
+  minHours            Int       @default(0)
+  /// The pre-course checks it asks for (`ACADEMY_CHECKS`): age, swim, medical, id.
+  checks              String[]  @default([])
+  /// The qualification a staff member holds once they pass, on their record.
+  qualificationTypeId String?
+  sortOrder           Int       @default(0)
+  archivedAt          DateTime?
+  createdAt           DateTime  @default(now())
+  updatedAt           DateTime  @updatedAt
+
+  organisation      Organisation       @relation(fields: [orgId], references: [id], onDelete: Restrict)
+  qualificationType QualificationType? @relation(fields: [qualificationTypeId], references: [id], onDelete: SetNull)
+  courses           AcademyCourse[]
+
+  @@unique([orgId, name])
+}
+
+/// One course run at a site, from its first session to its last.
+model AcademyCourse {
+  id            String    @id @default(cuid())
+  orgId         String
+  siteId        String
+  typeId        String
+  /// planned | running | completed | cancelled (`ACADEMY_COURSE_META`)
+  status        String    @default("planned")
+  capacity      Int
+  priceCents    Int       @default(0)
+  /// The staff member who runs it, and the one who assesses (may be the same).
+  tutorId       String
+  assessorId    String?
+  note          String    @default("")
+  createdById   String?
+  createdByName String
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+  cancelledAt   DateTime?
+
+  site       Club               @relation(fields: [siteId], references: [id], onDelete: Restrict)
+  type       AcademyCourseType  @relation(fields: [typeId], references: [id], onDelete: Restrict)
+  tutor      User               @relation("AcademyTutor", fields: [tutorId], references: [id], onDelete: Restrict)
+  assessor   User?              @relation("AcademyAssessor", fields: [assessorId], references: [id], onDelete: SetNull)
+  sessions   AcademySession[]
+  candidates AcademyCandidate[]
+
+  @@index([siteId, status])
+  @@index([tutorId])
+}
+
+/// A dated session of a course, in one of the site's areas.
+model AcademySession {
+  id           String    @id @default(cuid())
+  courseId     String
+  date         DateTime  @db.Date
+  startMinutes Int
+  endMinutes   Int
+  /// One of the site's areas (Admin, Areas): "Main pool", "Training room".
+  place        String    @default("")
+  note         String    @default("")
+  /// Kept once the register is taken.
+  registerAt   DateTime?
+  registerById String?
+  registerBy   String?
+  createdAt    DateTime  @default(now())
+  updatedAt    DateTime  @updatedAt
+
+  course     AcademyCourse       @relation(fields: [courseId], references: [id], onDelete: Cascade)
+  attendance AcademyAttendance[]
+
+  @@index([courseId, date])
+  @@index([date])
+}
+
+/// Someone on a course: one of our staff (`userId`), or a member of the public by name.
+model AcademyCandidate {
+  id                 String    @id @default(cuid())
+  courseId           String
+  userId             String?
+  name               String
+  email              String    @default("")
+  phone              String    @default("")
+  dateOfBirth        DateTime? @db.Date
+  /// paid | deposit | owed | waived (`ACADEMY_PAYMENT_META`)
+  payment            String    @default("owed")
+  paidCents          Int       @default(0)
+  /// booked | withdrawn | passed | referred | failed (`ACADEMY_RESULT_META`)
+  status             String    @default("booked")
+  /// Pre-course checks, each with the day it was done and by whom.
+  swimTestOn         DateTime? @db.Date
+  medicalOn          DateTime? @db.Date
+  idCheckedOn        DateTime? @db.Date
+  checkedByName      String?
+  /// The result and the awarding body's certificate.
+  resultOn           DateTime? @db.Date
+  resultNote         String    @default("")
+  certificateNumber  String    @default("")
+  certificateExpires DateTime? @db.Date
+  /// The qualification put on a staff member's record when they passed.
+  qualificationId    String?
+  note               String    @default("")
+  createdById        String?
+  createdByName      String
+  createdAt          DateTime  @default(now())
+  updatedAt          DateTime  @updatedAt
+
+  course     AcademyCourse       @relation(fields: [courseId], references: [id], onDelete: Cascade)
+  user       User?               @relation("AcademyCandidate", fields: [userId], references: [id], onDelete: SetNull)
+  attendance AcademyAttendance[]
+
+  @@index([courseId])
+  @@index([userId])
+}
+
+/// A candidate at a session: the minutes they attended (0 when absent).
+model AcademyAttendance {
+  sessionId   String
+  candidateId String
+  minutes     Int
+
+  session   AcademySession   @relation(fields: [sessionId], references: [id], onDelete: Cascade)
+  candidate AcademyCandidate @relation(fields: [candidateId], references: [id], onDelete: Cascade)
+
+  @@id([sessionId, candidateId])
+}

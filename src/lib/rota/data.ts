@@ -6,7 +6,7 @@ import { prisma } from "@/lib/prisma";
 import { mayFor, sitesFor } from "@/lib/policy/session";
 import { canChange, requireRotaActor, type RotaActor } from "@/lib/rota/access";
 import { addDaysIso, mondayOf, youngBand, youngRest, type YoungBand } from "@/lib/rota/constants";
-import { buildDay, type DayClass, type DayType } from "@/lib/rota/day";
+import { ANY_DEPARTMENT, buildDay, type DayBooked, type DayClass, type DayType } from "@/lib/rota/day";
 import { rankFits, type Held } from "@/lib/rota/fit";
 import type { PinnedBreak, WorkItem } from "@/lib/rota/shifts";
 import { commitmentsFor } from "@/modules/server";
@@ -61,18 +61,22 @@ async function activityTypes(orgId: string | undefined, includeArchived = false)
 /** Everything `buildDay` needs for each day from `from` to `to` at one site. */
 async function loadDays(siteId: string, orgId: string | undefined, from: string, to: string) {
   const range = { gte: parseDateOnly(from), lte: parseDateOnly(to) };
-  const [types, needs, classes, planned, pinned] = await Promise.all([
+  const [types, needs, siteCommitments, planned, pinned] = await Promise.all([
     activityTypes(orgId, true),
     prisma.rotaNeed.findMany({
       where: { siteId, date: range }, orderBy: [{ date: "asc" }, { startMinutes: "asc" }],
       select: { id: true, date: true, typeId: true, place: true, startMinutes: true, endMinutes: true, places: true, note: true, repeat: { select: { title: true } },
         assignments: { select: { id: true, needId: true, place: true, userId: true, startMinutes: true, endMinutes: true } } },
     }),
-    commitmentsFor({ siteIds: [siteId], from, to }).then((all) => all.filter((c) => c.source === CLASSES)),
+    commitmentsFor({ siteIds: [siteId], from, to }),
     prisma.rotaPlanShift.findMany({ where: { siteId, date: range }, select: { id: true, date: true, userId: true, departmentId: true, startMinutes: true, endMinutes: true } }),
     prisma.rotaBreak.findMany({ where: { siteId, date: range }, orderBy: { startMinutes: "asc" }, select: { date: true, userId: true, startMinutes: true, minutes: true, paid: true } }),
   ]);
-  const userIds = [...new Set([...needs.flatMap((n) => n.assignments.map((a) => a.userId)), ...classes.flatMap((c) => (c.userId ? [c.userId] : [])), ...planned.map((p) => p.userId)])];
+  // Swim classes are Teaching; anything else another module reports here (Academy sessions) is
+  // drawn in its area, planned there.
+  const classes = siteCommitments.filter((c) => c.source === CLASSES);
+  const others = siteCommitments.filter((c) => c.source !== CLASSES);
+  const userIds = [...new Set([...needs.flatMap((n) => n.assignments.map((a) => a.userId)), ...siteCommitments.flatMap((c) => (c.userId ? [c.userId] : [])), ...planned.map((p) => p.userId)])];
   const [users, held, absences, elsewhere, elsewhereClasses] = userIds.length ? await Promise.all([
     prisma.user.findMany({ where: { id: { in: userIds } }, select: { id: true, name: true, dateOfBirth: true } }),
     prisma.qualification.findMany({ where: { userId: { in: userIds } }, select: { userId: true, typeId: true, issuedOn: true, expiresOn: true, revokedAt: true } }),
@@ -109,6 +113,8 @@ async function loadDays(siteId: string, orgId: string | undefined, from: string,
       planned: planned.filter((p) => isoOf(p.date) === date).map((p) => ({ id: p.id, userId: p.userId, departmentId: p.departmentId, startMinutes: p.startMinutes, endMinutes: p.endMinutes })),
       needs: dayNeeds.map((n) => ({ id: n.id, typeId: n.typeId, place: n.place, startMinutes: n.startMinutes, endMinutes: n.endMinutes, places: n.places, note: n.note, repeatTitle: n.repeat?.title ?? null })),
       assignments: dayNeeds.flatMap((n) => n.assignments),
+      booked: others.filter((c) => c.date === date).map((c): DayBooked => ({ ref: c.ref ?? `${c.source}:${c.startMinutes}`, userId: c.userId, startMinutes: c.startMinutes, endMinutes: c.endMinutes,
+        title: c.title ?? c.label, place: c.place ?? "", href: c.href ?? null })),
       classes: classes.filter((c) => c.date === date && c.ref).map((c): DayClass => ({ ref: c.ref!, userId: c.userId, startMinutes: c.startMinutes, endMinutes: c.endMinutes,
         title: c.title ?? c.label, place: c.place ?? "", planned: !!c.planned })),
     };
@@ -128,7 +134,7 @@ async function youngDays(users: readonly { id: string; dateOfBirth: Date | null 
   const [assigned, shifts, classes] = await Promise.all([
     prisma.rotaAssignment.findMany({ where: { userId: { in: ids }, need: { date: range } }, select: { userId: true, startMinutes: true, endMinutes: true, need: { select: { date: true } } } }),
     prisma.rotaPlanShift.findMany({ where: { userId: { in: ids }, date: range }, select: { userId: true, date: true, startMinutes: true, endMinutes: true } }),
-    commitmentsFor({ userIds: ids, from: first, to: last }).then((all) => all.filter((c) => c.source === CLASSES)),
+    commitmentsFor({ userIds: ids, from: first, to: last }),
   ]);
   const add = (userId: string, date: string, start: number, end: number) => {
     const days = out.get(userId) ?? new Map<string, { start: number; end: number }>();
@@ -160,17 +166,18 @@ export async function planWeek(input: { site?: string; week?: string; dept?: str
   const department = departments.find((d) => d.id === input.dept) ?? departments.find((d) => mine.has(d.id)) ?? departments[0] ?? null;
   const date = input.day && isDateOnly(input.day) && input.day >= monday && input.day <= sunday ? input.day : now >= monday && now <= sunday ? now : monday;
   const { types, dayInput, places } = await loadDays(site.id, orgId, monday, sunday);
-  const inDept = (d: ReturnType<typeof buildDay>) => ({ ...d, groups: d.groups.filter((g) => g.departmentId === department?.id) });
+  const ours = (g: { departmentId: string }) => g.departmentId === department?.id || g.departmentId === ANY_DEPARTMENT;
+  const inDept = (d: ReturnType<typeof buildDay>) => ({ ...d, groups: d.groups.filter(ours) });
   const week = Array.from({ length: 7 }, (_, i) => {
     const iso = addDaysIso(monday, i);
     const d = inDept(buildDay(dayInput(iso)));
-    return { iso, gapCount: d.groups.reduce((n, g) => n + g.gapCount, 0), planned: d.groups.length > 0 };
+    return { iso, gapCount: d.groups.reduce((n, g) => n + g.gapCount, 0), planned: d.groups.some((g) => g.departmentId !== ANY_DEPARTMENT) };
   });
   const full = buildDay(dayInput(date));
-  const groups = full.groups.filter((g) => g.departmentId === department?.id);
+  const groups = full.groups.filter(ours);
   // The areas with something of this department's in them, each showing only that.
   const zones = full.zones.map((z) => {
-    const mine = z.groups.filter((g) => g.departmentId === department?.id);
+    const mine = z.groups.filter(ours);
     return { ...z, groups: mine, gapCount: mine.reduce((n, g) => n + g.gapCount, 0) };
   }).filter((z) => z.groups.length);
   // Everyone on this department's activities, and everyone put on a shift on its plan.
@@ -230,7 +237,7 @@ export async function fitsFor(input: { siteId: string; date: string; start: numb
       where: { userId: { in: ids }, need: { date: { gte: parseDateOnly(monday), lte: parseDateOnly(addDaysIso(monday, 6)) } } },
       select: { userId: true, startMinutes: true, endMinutes: true, need: { select: { date: true, type: { select: { name: true } }, site: { select: { id: true, name: true } } } } },
     }),
-    commitmentsFor({ userIds: ids, from: input.date, to: input.date }).then((all) => all.filter((c) => c.source === CLASSES)),
+    commitmentsFor({ userIds: ids, from: input.date, to: input.date }),
   ]);
   const work = new Map<string, WorkItem[]>();
   const weekMinutes = new Map<string, number>();
@@ -240,7 +247,7 @@ export async function fitsFor(input: { siteId: string; date: string; start: numb
     const label = a.need.site.id === input.siteId ? a.need.type.name : `${a.need.type.name} at ${a.need.site.name}`;
     work.set(a.userId, [...(work.get(a.userId) ?? []), { start: a.startMinutes, end: a.endMinutes, label }]);
   }
-  for (const c of classes) if (c.userId) work.set(c.userId, [...(work.get(c.userId) ?? []), { start: c.startMinutes, end: c.endMinutes, label: `Teaching ${c.title ?? c.label}` }]);
+  for (const c of classes) if (c.userId) work.set(c.userId, [...(work.get(c.userId) ?? []), { start: c.startMinutes, end: c.endMinutes, label: c.source === CLASSES ? `Teaching ${c.title ?? c.label}` : c.label }]);
   const young = new Map<string, YoungBand>();
   for (const p of people) { const band = youngBand(p.dateOfBirth ? isoOf(p.dateOfBirth) : null, input.date); if (band) young.set(p.id, band); }
   return rankFits({ date: input.date, start: input.start, end: input.end, requiredTypeId: input.requiredTypeId }, people.map((p) => ({ userId: p.id, name: p.name })), {

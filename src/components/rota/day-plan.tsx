@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useMemo, useRef, useState } from "react";
+import Link from "next/link";
 import { ChevronRight, MapPin, Plus, TriangleAlert } from "lucide-react";
 import { Button } from "@/components/shadcn/button";
 import { Tag } from "@/components/ui-kit/tag";
@@ -223,7 +224,7 @@ export function DayPlan({ siteId, date, dateLabel, live, canChange, zones, types
   const gapTag = (n: number) => <Tag meta={ROTA_DAY_META[n ? "gaps" : "covered"]} label={n ? `${n} ${n === 1 ? "gap" : "gaps"}` : undefined} />;
   const firstTrack = groups[0]?.key;
   /** An activity in a zone: what it is, what it needs and how many places. */
-  const activityLine = (g: Group) => [g.fromClasses ? "Swim classes" : `${g.lanes.length} ${g.lanes.length === 1 ? "place" : "places"}`,
+  const activityLine = (g: Group) => g.href ? "Planned in the Academy" : [g.fromClasses ? "Swim classes" : `${g.lanes.length} ${g.lanes.length === 1 ? "place" : "places"}`,
     g.requiredName ? `needs ${qualificationShort(g.requiredName)}` : null].filter(Boolean).join(" · ");
   const addHere = (z: DayZone) => canChange && !z.unmatched && types.length ? (
     <NeedDialog siteId={siteId} date={date} live={live} types={types} places={places} place={z.name}
@@ -263,6 +264,8 @@ export function DayPlan({ siteId, date, dateLabel, live, canChange, zones, types
                     {canChange && !g.fromClasses && g.needs.length === 1 ? (
                       <NeedDialog siteId={siteId} date={date} live={live} types={types} places={places} need={g.needs[0]}
                         trigger={<Button type="button" variant="ghost" className="rota-tl-act-head" aria-label={`Change ${g.name} in ${z.name}`}>{head}</Button>} />
+                    ) : g.href ? (
+                      <Button asChild variant="ghost" className="rota-tl-act-head"><Link href={g.href} aria-label={`${g.name} in ${z.name}: planned in the Academy. Open the course`}>{head}</Link></Button>
                     ) : <div className="rota-tl-act-head">{head}</div>}
                     <div className="rota-tl-lanes" style={gridStyle} {...dragHandlers}>
                       {g.lanes.map((lane, li) => (

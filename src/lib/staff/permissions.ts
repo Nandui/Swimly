@@ -203,6 +203,24 @@ export const PERMISSIONS = [
     description: "Approve suppliers and their products and prices, and set who approves orders up to what amount. Includes seeing orders.",
   },
   {
+    key: "academy.read",
+    group: "Academy",
+    label: "See Academy courses",
+    description: "See the lifeguard and swim teacher courses at the sites this role covers, their sessions and candidates.",
+  },
+  {
+    key: "academy.run",
+    group: "Academy",
+    label: "Run Academy courses",
+    description: "Add candidates and their payment, record pre-course checks, take registers and record results on courses at the sites this role covers. Includes seeing them.",
+  },
+  {
+    key: "academy.manage",
+    group: "Academy",
+    label: "Manage the Academy",
+    description: "Keep the list of courses we deliver and put courses on, with their sessions, tutor and price, at the sites this role covers. Includes running them.",
+  },
+  {
     key: "hr.records.read",
     group: "HR",
     label: "Read HR records",
@@ -338,6 +356,8 @@ const IMPLIES: Partial<Record<PermissionKey, PermissionKey[]>> = {
   "setup.areas": ["setup.view"],
   "purchasing.request": ["purchasing.read"],
   "purchasing.manage": ["purchasing.read"],
+  "academy.run": ["academy.read"],
+  "academy.manage": ["academy.run", "academy.read"],
   "hr.notes.write": ["hr.records.read"],
   "hr.reviews.write": ["hr.records.read"],
 };

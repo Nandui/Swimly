@@ -1,0 +1,21 @@
+'use client';
+
+import type { ReactNode } from 'react';
+import { usePathname } from 'next/navigation';
+import { CalendarRange, ListChecks } from 'lucide-react';
+import { ModuleShell } from '@/components/workspace/module-shell';
+import type { AcademyActor } from '@/lib/academy/access';
+
+/** The Academy's pages in the shared workspace frame. */
+export function AcademyShell({ who, children }: { who: AcademyActor; children: ReactNode }) {
+  const pathname = usePathname();
+  const links = [
+    { href: '/academy', label: 'Courses', icon: CalendarRange, active: pathname === '/academy' || /^\/academy\/(?!types)/.test(pathname) },
+    { href: '/academy/types', label: 'Course list', icon: ListChecks, active: pathname.startsWith('/academy/types') },
+  ];
+  return (
+    <ModuleShell module="Academy" id="academy" who={who} links={links} scopeNote="Only the sites you cover">
+      {children}
+    </ModuleShell>
+  );
+}

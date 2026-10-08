@@ -1,4 +1,4 @@
-import { CalendarClock, Files, GraduationCap, HeartHandshake, ReceiptText, Settings, ShoppingCart, Waves, WavesLadder, type LucideIcon } from "lucide-react";
+import { Award, CalendarClock, Files, GraduationCap, HeartHandshake, ReceiptText, Settings, ShoppingCart, Waves, WavesLadder, type LucideIcon } from "lucide-react";
 import type { PermissionKey } from "@/lib/staff/permissions";
 
 /** Every module Turnfin offers, each described once (docs/how-turnfin-works.md).
@@ -234,6 +234,23 @@ registerModule({
       { key: "view", label: "View", help: "See their sites' orders, and approve those their role may approve.", permissions: ["purchasing.read"] },
       { key: "request", label: "Request", help: "Raise purchase orders at their sites.", permissions: ["purchasing.request"] },
       { key: "manage", label: "Manage", help: "Suppliers, approved products and prices, and who approves up to what.", permissions: ["purchasing.manage"] },
+    ],
+  },
+});
+
+registerModule({
+  id: "academy",
+  name: "Academy",
+  description: "The lifeguard and swim teacher courses we deliver: candidates, checks, registers and results",
+  icon: Award,
+  href: "/academy",
+  logName: "Academy",
+  access: {
+    reach: "sites",
+    levels: [
+      { key: "view", label: "View", help: "See the courses at their sites.", permissions: ["academy.read"] },
+      { key: "run", label: "Tutor", help: "Add candidates, record checks and payment, take registers and record results.", permissions: ["academy.run"] },
+      { key: "manage", label: "Manage", help: "Keep the course list and put courses on, with sessions, tutor and price.", permissions: ["academy.manage"] },
     ],
   },
 });

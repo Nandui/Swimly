@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import { redirect } from "next/navigation";
 import { ADMIN_GROUPS, type CoreLinkKey } from "@/components/core/pages";
 import { ModuleOverview } from "@/components/workspace/module-overview";
-import { Files, GraduationCap, Truck, Waves } from "lucide-react";
+import { Award, Files, GraduationCap, Truck, Waves } from "lucide-react";
 import { can, canSee } from "@/lib/authz";
 import { loadModuleOverview } from "@/lib/home";
 import { pageSession } from "@/lib/page-guards";
@@ -26,6 +26,7 @@ export default async function CoreHome() {
     { show: canSee(session, "programmes") && can(session, "curriculum.manage"), href: "/programmes", label: "Swim school programmes", icon: Waves, description: "Programmes, levels, competencies and assessment types" },
     { show: canSee(session, "training") && can(session, "training.manage"), href: "/training/courses", label: "Training courses", icon: GraduationCap, description: "The courses staff are assigned and complete" },
     { show: canSee(session, "purchasing"), href: "/purchasing/suppliers", label: "Purchasing suppliers", icon: Truck, description: "Approved suppliers, their products and who approves" },
+    { show: canSee(session, "academy"), href: "/academy/types", label: "Academy courses", icon: Award, description: "The lifeguard and swim teacher courses we deliver" },
     { show: canSee(session, "docs") && can(session, "docs.manage"), href: "/docs/admin", label: "Docs settings", icon: Files, description: "Document teams, templates and the risk matrix" },
   ].flatMap(({ show, ...m }) => (show ? [m] : []));
   if (modules.length) groups.push({ label: "Modules", links: modules });

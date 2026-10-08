@@ -48,7 +48,7 @@ const notActivities = {
   message: "Core and Work modules must not import Activities. Register a contribution (src/modules/contributions.ts) or add to a composition root instead.",
 };
 const notWorkModules = {
-  group: ["@/lib/docs/*", "@/lib/refunds/*", "@/lib/training/*", "@/lib/hr/*", "@/lib/rota/*", "@/lib/purchasing/*", "@/components/docs/*", "@/components/refunds/*", "@/components/training/*", "@/components/hr/*", "@/components/rota/*", "@/components/purchasing/*"],
+  group: ["@/lib/docs/*", "@/lib/refunds/*", "@/lib/training/*", "@/lib/hr/*", "@/lib/rota/*", "@/lib/purchasing/*", "@/lib/academy/*", "@/components/docs/*", "@/components/refunds/*", "@/components/training/*", "@/components/hr/*", "@/components/rota/*", "@/components/purchasing/*", "@/components/academy/*"],
   message: "Activities depends on Core only, never on a Work module. Link to the module or add a Core seam.",
 };
 

@@ -12,6 +12,7 @@ import "@/lib/rota/areas";
 import "@/lib/rota/profile";
 import "@/lib/training/profile";
 import "@/lib/purchasing/home";
+import "@/lib/academy/contributions";
 import "@/lib/people/home";
 
 export { profileSummary, renameAreaEverywhere, commitmentsFor, homeCardItems, planCommitment, personFile, siteSummaryLines, staffColumnValues } from "./contributions";

@@ -176,6 +176,9 @@ model User {
   assessmentOutcomesGiven AssessmentBooking[]   @relation("AssessmentAssessedBy")
   rotaAssignments         RotaAssignment[]      @relation("RotaAssignee")
   rotaPlanShifts          RotaPlanShift[]       @relation("RotaPlanShifts")
+  academyTutoring         AcademyCourse[]       @relation("AcademyTutor")
+  academyAssessing        AcademyCourse[]       @relation("AcademyAssessor")
+  academyCandidacies      AcademyCandidate[]    @relation("AcademyCandidate")
   rotaBreaks              RotaBreak[]           @relation("RotaBreaks")
   classesPlanned          ClassPlannedTeacher[] @relation("ClassPlannedTeacher")
 
@@ -205,6 +208,7 @@ model Organisation {
   qualificationTypes  QualificationType[]
   qualifications      Qualification[]
   trainingCourses     TrainingCourse[]
+  academyTypes        AcademyCourseType[]
   trainingAssignments TrainingAssignment[]
   rotaShifts          RotaShift[]
   rotaAbsences        RotaAbsence[]
@@ -325,6 +329,7 @@ model QualificationType {
   rotaBookingNeeds RotaBookingNeed[]
   trainingCourses  TrainingCourse[]
   positions        PositionQualification[]
+  academyTypes     AcademyCourseType[]
   rotaShifts       RotaShift[]
   rotaActivities   RotaActivity[]
   activityTypes    ActivityType[]
@@ -426,6 +431,7 @@ model Club {
   rotaActivities     RotaActivity[]
   rotaDepartments    RotaDepartment[]
   purchaseOrders     PurchaseOrder[]
+  academyCourses     AcademyCourse[]
   areas              SiteArea[]
   purchaseCounter    PurchaseOrderCounter?
   rotaNeeds          RotaNeed[]

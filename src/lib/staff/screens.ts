@@ -133,6 +133,7 @@ export const SCREENS = [
   { key: "training", label: "Training", path: "/training", description: "A separate workspace for the training catalogue, assigning courses, trainer sign-off and expiring qualifications. Everyone completes their own training in Turnfin Me without it.", requires: "training.records.read" },
   { key: "rota", label: "Rota", path: "/rota", description: "Plan who is on which activity at a site, day by day, with every gap in cover counted; run today and record absences. Staff see their own days in Turnfin Me.", requires: "rota.view" },
   { key: "purchasing", label: "Purchasing", path: "/purchasing", description: "A separate workspace for purchase orders: approved suppliers and products, approval by role and amount, and numbered orders per site.", requires: "purchasing.read" },
+  { key: "academy", label: "Academy", path: "/academy", description: "A separate workspace for the lifeguard and swim teacher courses we deliver: candidates, payment, pre-course checks, registers and results.", requires: "academy.read" },
   { key: "hr", label: "HR", path: "/hr", description: "A separate, restricted workspace for HR notes and performance reviews of the people a role covers. Staff read what is shared with them in Turnfin Me.", requires: "hr.records.read" },
   { key: "docs", label: "Docs", path: "/docs", description: "A separate workspace for documents, independent approvals and required reading.", requires: "docs.read" },
 ] as const satisfies readonly {
@@ -176,7 +177,7 @@ export const ACTIVITIES_SCREENS = [
   "analytics", "duty", "cancellations", "calendar", "instructor", "students", "courses",
   "together", "assessments", "awaiting-enrolment", "legend-agreements", "programmes",
 ] as const satisfies readonly ScreenKey[];
-export const WORK_MODULE_SCREENS = ["docs", "refunds", "training", "hr", "rota", "purchasing"] as const satisfies readonly ScreenKey[];
+export const WORK_MODULE_SCREENS = ["docs", "refunds", "training", "hr", "rota", "purchasing", "academy"] as const satisfies readonly ScreenKey[];
 
 const CORE = new Set<string>(CORE_SCREENS);
 const AQUATICS = new Set<string>(ACTIVITIES_SCREENS);

@@ -52,6 +52,7 @@ export const MODULE_OF_ENTITY: Readonly<Record<string, string>> = {
   TrainingCourse: "Training", TrainingAssignment: "Training", Qualification: "Training", QualificationType: "Training", QualificationEvidence: "Training",
   // Refunds and Rota.
   RefundRequest: "Refunds", RefundNotification: "Refunds",
+  AcademyCourseType: "Academy", AcademyCourse: "Academy", AcademySession: "Academy", AcademyCandidate: "Academy",
   Supplier: "Purchasing", PurchaseProduct: "Purchasing", PurchaseApprovalRule: "Purchasing", PurchaseOrder: "Purchasing",
   ActivityType: "Admin", SiteArea: "Admin", Position: "Admin",
   RotaShift: "Rota", RotaDayNote: "Rota", RotaActivity: "Rota", RotaAbsence: "Rota", RotaImport: "Rota", RotaDepartment: "Rota",
