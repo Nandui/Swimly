@@ -3,6 +3,7 @@ import { AuthorizationError, can } from "@/lib/authz";
 import { currentClubId } from "@/lib/clubs/current";
 import { parseDateOnly, today } from "@/lib/format";
 import { prisma } from "@/lib/prisma";
+import { plannedTeachers } from "@/modules/activities/lib/courses/planned";
 import { classifyMedical, requireActivitiesAccess } from "@/modules/activities/classification";
 
 /** The deck's swimmer lookup (owner decision, September 2026): instructors can
@@ -36,12 +37,16 @@ export async function findSiteSwimmers(query: string) {
     },
   });
   const courseIds = [...new Set(swimmers.flatMap((s) => s.enrolments.map((e) => e.course.id)))];
-  const coveringToday = new Set((await prisma.classCover.findMany({
-    where: { courseId: { in: courseIds }, coverById: session.user.id, date: parseDateOnly(today()) },
-    select: { courseId: true },
-  })).map((c) => c.courseId));
+  const [covers, planned] = await Promise.all([
+    prisma.classCover.findMany({ where: { courseId: { in: courseIds }, coverById: session.user.id, date: parseDateOnly(today()) }, select: { courseId: true } }),
+    // Today's teacher on the rota's plan takes the class's usual instructor's place.
+    plannedTeachers(courseIds, today()),
+  ]);
+  const coveringToday = new Set(covers.map((c) => c.courseId));
+  const teachesToday = (course: { id: string; instructorId: string | null }) =>
+    (planned.has(course.id) ? planned.get(course.id)!.teacherId : course.instructorId) === session.user.id;
   return swimmers.map((s) => {
-    const teaching = s.enrolments.some((e) => e.course.instructorId === session.user.id || coveringToday.has(e.course.id));
+    const teaching = s.enrolments.some((e) => teachesToday(e.course) || coveringToday.has(e.course.id));
     const { medicalNotes, hasMedicalNotes } = classifyMedical(s, teaching);
     return {
       id: s.id,

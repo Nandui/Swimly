@@ -37,6 +37,7 @@ export async function childLessons(tx: Prisma.TransactionClient, parent: ParentA
       course: { archivedAt: null, clubId: { in: liveSites } } },
       select: { startedOn: true, endedOn: true, scheduledEndOn: true, course: { select: { ...courseSelect,
         covers: { where: { date: { gte: day, lte: until } }, select: { date: true, coverByName: true } },
+        plannedTeachers: { where: { date: { gte: day, lte: until } }, select: { date: true, teacherId: true, teacherName: true } },
         cancellations: { where: { date: { gte: day, lte: until } }, select: { date: true } },
       } } } }),
     tx.attendanceRecord.findMany({ where: { studentId: childId, date: { gte: from, lte: day } },
@@ -68,7 +69,8 @@ export async function childLessons(tx: Prisma.TransactionClient, parent: ParentA
       if (date < enrolment.startedOn || (enrolment.endedOn && date >= enrolment.endedOn) ||
         (enrolment.scheduledEndOn && date >= enrolment.scheduledEndOn) || weekdayOf(date) !== course.dayOfWeek) continue;
       const cover = course.covers.find(c => c.date.getTime() === date.getTime());
-      const item = lesson(course, date, cover?.coverByName ?? course.instructor?.name ?? null);
+      const planned = course.plannedTeachers.find(p => p.date.getTime() === date.getTime());
+      const item = lesson(course, date, cover?.coverByName ?? (planned ? (planned.teacherId ? planned.teacherName : null) : course.instructor?.name ?? null));
       if (!item || new Date(item.endsAt) <= now) continue;
       const key = `${course.id}:${item.date}`;
       if (cancelled.has(item.date)) { cancelledUpcoming.set(key, item); continue; }

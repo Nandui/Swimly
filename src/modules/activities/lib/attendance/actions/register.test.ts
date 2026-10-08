@@ -34,6 +34,8 @@ function fixture() {
       }
     },
     classCover: { findUnique: async () => { readGuard(); return owner === undefined ? null : { coverById: owner, instructorId: "instructor", instructorName: "Test Instructor" }; } },
+    // No teacher planned on the rota for that date: the class's instructor teaches it.
+    classPlannedTeacher: { findMany: async () => [] },
     enrolment: { findMany: async () => { readGuard(); return [{ studentId: "one" }, { studentId: "two" }]; } },
     student: { findMany: async () => ["one", "two"].map(id => ({ id, firstName: "Test", lastName: id })) },
     attendanceRecord: {

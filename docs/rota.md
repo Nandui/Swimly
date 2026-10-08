@@ -34,6 +34,12 @@ the swim school's `ClassPlannedTeacher`. Planning the class's usual instructor c
 class's start record (`ClassCover`) is untouched: it is still written when the class starts,
 and a class that has started, is cancelled or does not run that day cannot be planned.
 Teacher order: the start record, else the planned teacher, else the usual instructor.
+Owner decision, 8 October 2026: **the plan defines who teaches a class that day**, and the
+swim school follows it everywhere a day's teacher matters: the pool deck's classes, the
+schedule, the duty page, starting a class, **saving its register** (the usual instructor of a
+class planned to someone else no longer counts as its teacher that day), the pool deck's
+swimmer lookup (medical notes reach that day's teacher) and the lessons parents see. The
+class's instructor in the swim school is only its usual teacher.
 
 Everything is laid out by one pure function, `buildDay` (`src/lib/rota/day.ts`), so Plan,
 Today, the home card and Turnfin Me agree. The rules are in `cover.ts`, `shifts.ts` and

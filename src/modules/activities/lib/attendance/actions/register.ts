@@ -5,6 +5,7 @@ import { z } from "zod";
 import type { AttendanceStatus } from "@/generated/prisma/client";
 import { fail } from "@/lib/action-result";
 import { canMarkRegister } from "@/modules/activities/lib/attendance/access";
+import { plannedTeachers } from "@/modules/activities/lib/courses/planned";
 import { describeRegister } from "@/modules/activities/lib/attendance/summary";
 import { logAudit } from "@/lib/audit";
 import { canSee, requirePermission } from "@/lib/authz";
@@ -90,8 +91,11 @@ export async function markRegister(input: MarkRegisterInput): Promise<RegisterSa
       select: { coverById: true, coverByName: true, instructorId: true, instructorName: true },
     });
 
+    // Whose class it is that day: the teacher the rota planned for that date, else its instructor.
+    const planned = (await plannedTeachers([courseId], iso, tx)).get(courseId);
+    const dayInstructorId = planned ? planned.teacherId : course.instructorId;
     if (
-      !canMarkRegister({ session, instructorId: course.instructorId, coverById: cover?.coverById })
+      !canMarkRegister({ session, instructorId: dayInstructorId, coverById: cover?.coverById })
     ) {
       return fail("Start this class first, or ask someone who can take attendance for any class.");
     }
