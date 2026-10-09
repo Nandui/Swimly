@@ -5,9 +5,11 @@ import { z } from "zod";
 import { fail, ok, type ActionResult } from "@/lib/action-result";
 import { AuthorizationError } from "@/lib/authz";
 import { logAudit } from "@/lib/audit";
+import { staffByIds } from "@/lib/directory";
 import { isDateOnly, parseDateOnly } from "@/lib/format";
 import { prisma } from "@/lib/prisma";
 import { requireCapFor } from "@/lib/policy/session";
+import { certificateUpload, liveQualificationTypeById, markCertificateDeclined, markCertificateVerified, recordQualification } from "@/lib/qualifications";
 
 /** Checking a certificate someone uploaded in Turnfin Me. Needs
  *  `qualifications.manage` for that person, and never your own. Verifying
@@ -15,7 +17,7 @@ import { requireCapFor } from "@/lib/policy/session";
  *  upload with the reason, which the person sees. Decided once. */
 
 async function reviewable(id: string) {
-  const row = await prisma.qualificationEvidence.findUnique({ where: { id }, select: { userId: true, orgId: true, status: true } });
+  const row = await certificateUpload(id);
   if (!row) return { ok: false as const, error: "That certificate no longer exists." };
   try {
     const actor = await requireCapFor("qualifications.manage", { subjectUserId: row.userId, orgId: row.orgId });
@@ -42,21 +44,18 @@ export async function verifyCertificate(id: string, input: z.input<typeof verify
   if (!check.ok) return fail(check.error);
   const { actor, row } = check;
   const result = await prisma.$transaction(async (tx) => {
-    const type = await tx.qualificationType.findFirst({ where: { id: parsed.data.typeId, orgId: row.orgId, archivedAt: null }, select: { id: true, name: true, validityMonths: true } });
+    const type = await liveQualificationTypeById(parsed.data.typeId, row.orgId, tx);
     if (!type) return fail("That qualification is no longer offered.");
     const { issuedOn, expiresOn } = parsed.data;
     if (issuedOn && expiresOn < issuedOn) return fail("The expiry date is before the issue date.");
-    const qualification = await tx.qualification.create({ data: {
-      orgId: row.orgId, userId: row.userId, typeId: type.id, issuedOn: issuedOn ? parseDateOnly(issuedOn) : null, expiresOn: parseDateOnly(expiresOn),
+    const qualificationId = await recordQualification(tx, { orgId: row.orgId, userId: row.userId, typeId: type.id }, {
+      issuedOn: issuedOn ? parseDateOnly(issuedOn) : null, expiresOn: parseDateOnly(expiresOn),
       reference: parsed.data.reference, note: "Certificate uploaded in Turnfin Me", verifiedById: actor.id, verifiedAt: new Date(),
-    } });
-    const moved = await tx.qualificationEvidence.updateMany({ where: { id, status: "PENDING" }, data: {
-      status: "VERIFIED", typeId: type.id, qualificationId: qualification.id, reviewedById: actor.id, reviewedByName: actor.name, reviewedAt: new Date(),
-    } });
-    if (moved.count !== 1) throw new Error("already decided");
-    const person = await tx.user.findUniqueOrThrow({ where: { id: row.userId }, select: { name: true } });
-    await logAudit({ actorId: actor.id, actorName: actor.name, action: "record-qualification", entity: "Qualification", entityId: qualification.id,
-      summary: `Checked ${person.name}'s ${type.name} certificate and recorded it${expiresOn ? `, valid until ${expiresOn}` : ""}` }, tx);
+    });
+    if (!(await markCertificateVerified(tx, id, { typeId: type.id, qualificationId }, actor))) throw new Error("already decided");
+    const person = (await staffByIds([row.userId], tx)).get(row.userId);
+    await logAudit({ actorId: actor.id, actorName: actor.name, action: "record-qualification", entity: "Qualification", entityId: qualificationId,
+      summary: `Checked ${person?.name ?? "former staff"}'s ${type.name} certificate and recorded it${expiresOn ? `, valid until ${expiresOn}` : ""}` }, tx);
     return ok();
   }).catch((error: unknown) => {
     if (error instanceof Error && error.message === "already decided") return fail("That certificate has already been checked.");
@@ -73,8 +72,7 @@ export async function declineCertificate(id: string, note: string): Promise<Acti
   if (!check.ok) return fail(check.error);
   const { actor, row } = check;
   const result = await prisma.$transaction(async (tx) => {
-    const moved = await tx.qualificationEvidence.updateMany({ where: { id, status: "PENDING" }, data: { status: "DECLINED", reviewNote: reason, reviewedById: actor.id, reviewedByName: actor.name, reviewedAt: new Date() } });
-    if (moved.count !== 1) return fail("That certificate has already been checked.");
+    if (!(await markCertificateDeclined(tx, id, reason, actor))) return fail("That certificate has already been checked.");
     await logAudit({ actorId: actor.id, actorName: actor.name, action: "decline-certificate", entity: "Qualification", entityId: id, summary: "Declined an uploaded certificate", details: { subjectUserId: row.userId } }, tx);
     return ok();
   });

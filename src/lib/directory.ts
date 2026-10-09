@@ -1,5 +1,5 @@
 import type { Prisma } from "@/generated/prisma/client";
-import type { SiteFilter } from "@/lib/policy/types";
+import type { SiteFilter, SubjectFilter } from "@/lib/policy/types";
 import { ADMINISTRATOR_PERMISSIONS } from "@/lib/staff/permissions";
 
 /** Core's directory of people and sites, for modules.
@@ -231,6 +231,59 @@ export async function liveSitesByOrganisation(db?: Db): Promise<Map<string, stri
 /** A site's name, archived or not; "Removed site" when it no longer exists. */
 export async function siteName(id: string, db?: Db): Promise<string> {
   return (await sitesByIds([id], db)).get(id)?.name ?? "Removed site";
+}
+
+/* Staff with their job titles, for lists of people. */
+
+export type StaffCard = StaffRef & { jobTitle: string | null };
+
+export async function staffCardsByIds(ids: readonly (string | null | undefined)[], db?: Db): Promise<Map<string, StaffCard>> {
+  const wanted = unique(ids);
+  if (wanted.length === 0) return new Map();
+  const rows = await (await client(db)).user.findMany({ where: { id: { in: wanted } }, select: { id: true, name: true, jobTitle: true } });
+  return new Map(rows.map((row) => [row.id, row]));
+}
+
+/** `withStaff`, with each person's job title as well; a removed account reads "Former staff". */
+export async function withStaffCards<K extends string, A extends string, T extends { [P in K]: string }>(
+  rows: T[], key: K, as: A, db?: Db,
+): Promise<Array<T & { [P in A]: StaffCard }>> {
+  const people = await staffCardsByIds(rows.map((row) => row[key]), db);
+  return rows.map((row) => ({ ...row, [as]: people.get(row[key]) ?? { id: row[key], name: "Former staff", jobTitle: null } }) as T & { [P in A]: StaffCard });
+}
+
+/** Of these people, the active ones in this organisation, by id and name. */
+export async function activeStaffAmong(orgId: string | null, ids: readonly string[], db?: Db): Promise<StaffRef[]> {
+  return (await client(db)).user.findMany({ where: { id: { in: [...ids] }, orgId: orgId ?? undefined, isActive: true }, select: { id: true, name: true } });
+}
+
+/** Which of these people still have an active account. */
+export async function activeStaffIds(ids: readonly string[], db?: Db): Promise<Set<string>> {
+  if (ids.length === 0) return new Set();
+  const rows = await (await client(db)).user.findMany({ where: { id: { in: [...new Set(ids)] }, isActive: true }, select: { id: true } });
+  return new Set(rows.map((row) => row.id));
+}
+
+/** Ids of the people in this organisation whose name contains `query`. */
+export async function staffIdsNamed(orgId: string | null, query: string, db?: Db): Promise<string[]> {
+  const rows = await (await client(db)).user.findMany({ where: { orgId: orgId ?? undefined, name: { contains: query, mode: "insensitive" } }, select: { id: true } });
+  return rows.map((row) => row.id);
+}
+
+/** Active staff in this organisation a capability covers, by name, with their job title and role
+ *  (so a module can act on everyone holding a role at once). */
+export async function activeStaffWithRoles(orgId: string | null, people: SubjectFilter, db?: Db) {
+  return (await client(db)).user.findMany({
+    where: { orgId: orgId ?? undefined, isActive: true, ...(people.kind === "all" ? {} : { id: { in: [...people.userIds] } }) },
+    orderBy: { name: "asc" },
+    select: { id: true, name: true, jobTitle: true, staffRole: { select: { id: true, name: true } } },
+  });
+}
+
+/** An organisation's live positions, in order. */
+export async function livePositionsOf(orgId: string | null): Promise<SiteRef[]> {
+  const { prisma } = await import("@/lib/prisma");
+  return prisma.position.findMany({ where: { orgId: orgId ?? undefined, archivedAt: null }, orderBy: [{ sortOrder: "asc" }, { name: "asc" }], select: { id: true, name: true } });
 }
 
 /* Roles, by id and name only. Modules ask for permissions, never role names;

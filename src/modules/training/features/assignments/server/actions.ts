@@ -2,6 +2,7 @@
 
 import { fail, ok, type ActionResult } from "@/lib/action-result";
 import { logAudit } from "@/lib/audit";
+import { activeStaffAmong, withOneStaff } from "@/lib/directory";
 import { isDateOnly, parseDateOnly, today } from "@/lib/format";
 import { prisma } from "@/lib/prisma";
 import { filterAllows } from "@/lib/policy/engine";
@@ -24,7 +25,7 @@ export async function assignTraining(courseId: string, userIds: string[], dueOn:
   const result = await prisma.$transaction(async (tx) => {
     const course = await tx.trainingCourse.findFirst({ where: { id: courseId, orgId: who.orgId ?? undefined, archivedAt: null }, select: { title: true, orgId: true } });
     if (!course) return fail("That course is no longer offered.");
-    const learners = await tx.user.findMany({ where: { id: { in: ids }, orgId: course.orgId, isActive: true }, select: { id: true, name: true } });
+    const learners = await activeStaffAmong(course.orgId, ids, tx);
     if (learners.length !== ids.length) return fail("Someone you chose is no longer active. Refresh and try again.");
     const open = new Set((await tx.trainingAssignment.findMany({ where: { courseId, userId: { in: ids }, status: { in: ["ASSIGNED", "SUBMITTED"] } }, select: { userId: true } })).map((a) => a.userId));
     let assigned = 0;
@@ -52,8 +53,8 @@ export async function cancelAssignment(id: string, reason: string): Promise<Acti
   const result = await prisma.$transaction(async (tx) => {
     const moved = await tx.trainingAssignment.updateMany({ where: { id, status: { in: ["ASSIGNED", "SUBMITTED"] } }, data: { status: "CANCELLED", cancelledAt: new Date(), cancelReason: why } });
     if (moved.count !== 1) return fail("That training is already finished or cancelled.");
-    const row = await tx.trainingAssignment.findUniqueOrThrow({ where: { id }, select: { course: { select: { title: true } }, user: { select: { name: true } } } });
-    await logAudit({ actorId: actor.id, actorName: actor.name, action: "cancel", entity: "TrainingAssignment", entityId: id, summary: `Cancelled ${row.course.title} for ${row.user.name}: ${why}` }, tx);
+    const row = await withOneStaff(await tx.trainingAssignment.findUniqueOrThrow({ where: { id }, select: { userId: true, course: { select: { title: true } } } }), "userId", "user", tx);
+    await logAudit({ actorId: actor.id, actorName: actor.name, action: "cancel", entity: "TrainingAssignment", entityId: id, summary: `Cancelled ${row.course.title} for ${row.user?.name ?? "former staff"}: ${why}` }, tx);
     return ok();
   });
   if (result.ok) refresh(`/training/people/${existing.userId}`);

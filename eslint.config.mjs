@@ -116,6 +116,7 @@ const coreThroughFunctions = {
   academy: ["organisation", "qualificationType", "qualification", "site", "tutor", "assessor", "user"],
   tasks: ["site"],
   hr: [],
+  training: ["grantsType", "organisation", "user"],
 };
 const coreJoins = (relations) => relations.length ? [{
   selector: `Property[key.name=/^(include|select|where|orderBy)$/] Property[key.name=/^(${relations.join("|")})$/][value.type=/^(ObjectExpression|Literal)$/]`,

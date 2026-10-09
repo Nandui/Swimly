@@ -1,6 +1,8 @@
 import "server-only";
 import type { Prisma } from "@/generated/prisma/client";
+import { staffCardsByIds } from "@/lib/directory";
 import { prisma } from "@/lib/prisma";
+import { qualificationTypesByIds } from "@/lib/qualifications";
 import { requireTrainingActor } from "@/modules/training/shared/access";
 import { scopedUserIds } from "@/modules/training/shared/data";
 
@@ -23,14 +25,19 @@ export async function signoffCount() {
 export async function signoffQueue() {
   const who = await requireTrainingActor();
   if (!who.signoff) return { who, rows: [] };
-  const rows = await prisma.trainingAssignment.findMany({
+  const found = await prisma.trainingAssignment.findMany({
     where: await signoffWhere(who),
     orderBy: { submittedAt: "asc" },
     select: {
       id: true, submittedAt: true, learnerNote: true, dueOn: true,
-      course: { select: { title: true, summary: true, grantsType: { select: { name: true } } } },
-      user: { select: { id: true, name: true, jobTitle: true } },
+      course: { select: { title: true, summary: true, grantsTypeId: true } }, userId: true,
     },
   });
+  const [people, types] = await Promise.all([staffCardsByIds(found.map((r) => r.userId)), qualificationTypesByIds(found.map((r) => r.course.grantsTypeId))]);
+  const rows = found.map(({ userId, course: { grantsTypeId, ...course }, ...row }) => ({
+    ...row,
+    course: { ...course, grantsType: grantsTypeId && types.has(grantsTypeId) ? { name: types.get(grantsTypeId)!.name } : null },
+    user: people.get(userId) ?? { id: userId, name: "Former staff", jobTitle: null },
+  }));
   return { who, rows };
 }

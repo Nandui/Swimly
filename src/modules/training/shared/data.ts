@@ -1,9 +1,11 @@
 import "server-only";
 import type { Prisma } from "@/generated/prisma/client";
+import { activeStaffWithRoles } from "@/lib/directory";
 import { parseDateOnly } from "@/lib/format";
 import { prisma } from "@/lib/prisma";
 import { subjectsFor } from "@/lib/policy/session";
 import type { SubjectFilter } from "@/lib/policy/types";
+import { qualificationsExpiringBy, type StaffFilters, withQualificationTypes } from "@/lib/qualifications";
 import type { PermissionKey } from "@/lib/staff/permissions";
 import { requireTrainingActor } from "@/modules/training/shared/access";
 import { EXPIRY_WARNING_DAYS } from "@/modules/training/shared/constants";
@@ -31,11 +33,15 @@ export function isoPlusDays(iso: string, days: number) {
 
 export async function listCourses(options: { archived?: boolean } = {}) {
   const who = await requireTrainingActor();
-  const courses = await prisma.trainingCourse.findMany({
+  const rows = await prisma.trainingCourse.findMany({
     where: { orgId: who.orgId ?? undefined, archivedAt: options.archived ? { not: null } : null },
     orderBy: { title: "asc" },
-    select: { id: true, title: true, summary: true, content: true, requiresSignoff: true, archivedAt: true, grantsType: { select: { id: true, name: true, validityMonths: true } } },
+    select: { id: true, title: true, summary: true, content: true, requiresSignoff: true, archivedAt: true, grantsTypeId: true },
   });
+  const courses = (await withQualificationTypes(rows, "grantsTypeId", "grantsType"))
+    .map(({ id, title, summary, content, requiresSignoff, archivedAt, grantsType }) => ({
+      id, title, summary, content, requiresSignoff, archivedAt, grantsType: grantsType && { id: grantsType.id, name: grantsType.name, validityMonths: grantsType.validityMonths },
+    }));
   return { who, courses };
 }
 export type CourseRow = Awaited<ReturnType<typeof listCourses>>["courses"][number];
@@ -44,12 +50,8 @@ export type CourseRow = Awaited<ReturnType<typeof listCourses>>["courses"][numbe
 export async function assignablePeople() {
   const who = await requireTrainingActor();
   if (!who.assign) return [];
-  return prisma.user.findMany({
-    where: { orgId: who.orgId ?? undefined, isActive: true, id: await scopedUserIds("training.assign") },
-    orderBy: { name: "asc" },
-    // Their role, so a course can be given to everyone on a role at once.
-    select: { id: true, name: true, jobTitle: true, staffRole: { select: { id: true, name: true } } },
-  });
+  // Their role, so a course can be given to everyone on a role at once.
+  return activeStaffWithRoles(who.orgId ?? null, await subjectsFor("training.assign"));
 }
 
 // ---------------------------------------------------------------------------
@@ -57,26 +59,10 @@ export async function assignablePeople() {
 // ---------------------------------------------------------------------------
 
 /** Who a filtered list covers: at a site (or every site), in a position. */
-export type ExpiringFilters = { site?: string; position?: string };
-export const filteredPeople = (f: ExpiringFilters): Prisma.UserWhereInput => ({
-  isActive: true,
-  ...(f.site ? { OR: [{ siteIds: { has: f.site } }, { siteIds: { isEmpty: true } }] } : {}),
-  ...(f.position ? { positionId: f.position } : {}),
-});
+export type ExpiringFilters = StaffFilters;
 
-export async function expiringQualificationRows(orgId: string | null, userId: Prisma.StringFilter | undefined, on: string, filters: ExpiringFilters = {}) {
-  const horizon = parseDateOnly(isoPlusDays(on, EXPIRY_WARNING_DAYS));
-  const rows = await prisma.qualification.findMany({
-    where: { orgId: orgId ?? undefined, userId, revokedAt: null, expiresOn: { lte: horizon }, user: filteredPeople(filters) },
-    orderBy: { expiresOn: "asc" },
-    select: { id: true, userId: true, typeId: true, expiresOn: true, revokedAt: true, type: { select: { name: true } }, user: { select: { name: true, jobTitle: true } } },
-  });
-  if (rows.length === 0) return [];
-  // A newer certificate of the same type replaces an expiring one.
-  const newer = await prisma.qualification.findMany({
-    where: { userId: { in: [...new Set(rows.map((r) => r.userId))] }, typeId: { in: [...new Set(rows.map((r) => r.typeId))] }, revokedAt: null, OR: [{ expiresOn: null }, { expiresOn: { gt: horizon } }] },
-    select: { userId: true, typeId: true },
-  });
-  const renewed = new Set(newer.map((q) => `${q.userId}:${q.typeId}`));
-  return rows.filter((r) => !renewed.has(`${r.userId}:${r.typeId}`));
+/** Qualifications expired or expiring within the warning window; a newer certificate of the
+ *  same type replaces an expiring one. */
+export async function expiringQualificationRows(orgId: string | null, reach: SubjectFilter, on: string, filters: ExpiringFilters = {}) {
+  return qualificationsExpiringBy(orgId, reach, parseDateOnly(isoPlusDays(on, EXPIRY_WARNING_DAYS)), filters);
 }

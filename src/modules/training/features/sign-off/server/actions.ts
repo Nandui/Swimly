@@ -2,6 +2,7 @@
 
 import { fail, ok, type ActionResult } from "@/lib/action-result";
 import { logAudit } from "@/lib/audit";
+import { withOneStaff } from "@/lib/directory";
 import { prisma } from "@/lib/prisma";
 import { requireCapFor } from "@/lib/policy/session";
 import { grantQualification } from "@/modules/training/shared/grant";
@@ -29,8 +30,8 @@ export async function signOffTraining(id: string, note: string): Promise<ActionR
       status: "COMPLETED", completedAt: new Date(), signedOffById: actor.id, signedOffByName: actor.name, signoffNote,
     } });
     if (moved.count !== 1) return fail("That training is no longer waiting for sign-off.");
-    const row = await tx.trainingAssignment.findUniqueOrThrow({ where: { id }, select: { course: { select: { title: true } }, user: { select: { name: true } } } });
-    await logAudit({ actorId: actor.id, actorName: actor.name, action: "sign-off", entity: "TrainingAssignment", entityId: id, summary: `Signed off ${row.course.title} for ${row.user.name}` }, tx);
+    const row = await withOneStaff(await tx.trainingAssignment.findUniqueOrThrow({ where: { id }, select: { userId: true, course: { select: { title: true } } } }), "userId", "user", tx);
+    await logAudit({ actorId: actor.id, actorName: actor.name, action: "sign-off", entity: "TrainingAssignment", entityId: id, summary: `Signed off ${row.course.title} for ${row.user?.name ?? "former staff"}` }, tx);
     await grantQualification(tx, id, actor, actor);
     return ok();
   });
@@ -48,8 +49,8 @@ export async function returnForPractice(id: string, note: string): Promise<Actio
   const result = await prisma.$transaction(async (tx) => {
     const moved = await tx.trainingAssignment.updateMany({ where: { id, status: "SUBMITTED" }, data: { status: "ASSIGNED", submittedAt: null, signoffNote, signedOffByName: actor.name } });
     if (moved.count !== 1) return fail("That training is no longer waiting for sign-off.");
-    const row = await tx.trainingAssignment.findUniqueOrThrow({ where: { id }, select: { course: { select: { title: true } }, user: { select: { name: true } } } });
-    await logAudit({ actorId: actor.id, actorName: actor.name, action: "return", entity: "TrainingAssignment", entityId: id, summary: `Did not sign off ${row.course.title} for ${row.user.name} yet: ${signoffNote}` }, tx);
+    const row = await withOneStaff(await tx.trainingAssignment.findUniqueOrThrow({ where: { id }, select: { userId: true, course: { select: { title: true } } } }), "userId", "user", tx);
+    await logAudit({ actorId: actor.id, actorName: actor.name, action: "return", entity: "TrainingAssignment", entityId: id, summary: `Did not sign off ${row.course.title} for ${row.user?.name ?? "former staff"} yet: ${signoffNote}` }, tx);
     return ok();
   });
   if (result.ok) refresh("/training/sign-off", `/training/people/${target.userId}`);

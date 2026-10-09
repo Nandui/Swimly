@@ -4,6 +4,7 @@ import { z } from "zod";
 import { fail, ok, onUniqueViolation, type ActionResult } from "@/lib/action-result";
 import { logAudit } from "@/lib/audit";
 import { prisma } from "@/lib/prisma";
+import { liveQualificationTypeById } from "@/lib/qualifications";
 import { requireTrainingActor } from "@/modules/training/shared/access";
 import { refresh } from "@/modules/training/shared/writes";
 
@@ -27,7 +28,7 @@ export async function saveCourse(id: string | null, input: CourseInput): Promise
   if (!parsed.success) return fail(parsed.error.issues[0].message);
   const data = parsed.data;
   const result = await onUniqueViolation(() => prisma.$transaction(async (tx) => {
-    if (data.grantsTypeId && !(await tx.qualificationType.findFirst({ where: { id: data.grantsTypeId, orgId: who.orgId!, archivedAt: null }, select: { id: true } }))) {
+    if (data.grantsTypeId && !(await liveQualificationTypeById(data.grantsTypeId, who.orgId!, tx))) {
       return fail("That qualification is no longer offered.");
     }
     if (id) {

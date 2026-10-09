@@ -1,13 +1,16 @@
 import "server-only";
 import { notFound } from "next/navigation";
 import type { Prisma } from "@/generated/prisma/client";
+import { staffIdsNamed, withStaffCards } from "@/lib/directory";
 import { parseDateOnly, today } from "@/lib/format";
+import { staffMember } from "@/lib/people/records";
 import { prisma } from "@/lib/prisma";
 import { qualificationState } from "@/lib/people/data";
 import { requireCapFor, subjectsFor } from "@/lib/policy/session";
+import { qualificationsOf } from "@/lib/qualifications";
 import { requireTrainingActor } from "@/modules/training/shared/access";
 import { OPEN_TRAINING_STATUSES, trainingState } from "@/modules/training/shared/constants";
-import { expiringQualificationRows, scopedUserIds } from "@/modules/training/shared/data";
+import { expiringQualificationRows, people } from "@/modules/training/shared/data";
 
 // ---------------------------------------------------------------------------
 // Overview: open and recent assignments for the people in scope
@@ -26,7 +29,8 @@ export async function trainingOverview(input: { view?: string; course?: string; 
   const who = await requireTrainingActor();
   const on = today();
   const view: OverviewView = input.view && input.view in OVERVIEW_VIEWS ? (input.view as OverviewView) : "open";
-  const userId = await scopedUserIds("training.records.read");
+  const reach = await subjectsFor("training.records.read");
+  const userId = people(reach);
   const scope: Prisma.TrainingAssignmentWhereInput = { orgId: who.orgId ?? undefined, userId };
   // "Completed" lists the same 30 days its tile counts.
   const since = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000);
@@ -40,7 +44,7 @@ export async function trainingOverview(input: { view?: string; course?: string; 
   const where: Prisma.TrainingAssignmentWhereInput = {
     ...scope, ...statusWhere,
     ...(input.course ? { courseId: input.course } : {}),
-    ...(q ? { user: { name: { contains: q, mode: "insensitive" } } } : {}),
+    ...(q ? { AND: [{ userId: { in: await staffIdsNamed(who.orgId, q) } }] } : {}),
   };
   const [rows, total, overdue, submitted, completed, expiring, courses] = await Promise.all([
     prisma.trainingAssignment.findMany({
@@ -48,15 +52,14 @@ export async function trainingOverview(input: { view?: string; course?: string; 
       orderBy: view === "completed" ? [{ completedAt: "desc" }] : [{ dueOn: { sort: "asc", nulls: "last" } }, { assignedAt: "asc" }],
       select: {
         id: true, status: true, dueOn: true, assignedAt: true, completedAt: true, signedOffByName: true,
-        course: { select: { id: true, title: true, requiresSignoff: true } },
-        user: { select: { id: true, name: true, jobTitle: true } },
+        course: { select: { id: true, title: true, requiresSignoff: true } }, userId: true,
       },
-    }),
+    }).then((found) => withStaffCards(found, "userId", "user")),
     prisma.trainingAssignment.count({ where }),
     prisma.trainingAssignment.count({ where: { ...scope, status: "ASSIGNED", dueOn: { lt: parseDateOnly(on) } } }),
     prisma.trainingAssignment.count({ where: { ...scope, status: "SUBMITTED" } }),
     prisma.trainingAssignment.count({ where: { ...scope, status: "COMPLETED", completedAt: { gte: since } } }),
-    expiringQualificationRows(who.orgId, userId, on).then((r) => r.length),
+    expiringQualificationRows(who.orgId, reach, on).then((r) => r.length),
     prisma.trainingCourse.findMany({ where: { orgId: who.orgId ?? undefined }, orderBy: { title: "asc" }, select: { id: true, title: true, archivedAt: true } }),
   ]);
   return {
@@ -73,7 +76,7 @@ export type OverviewRow = Awaited<ReturnType<typeof trainingOverview>>["rows"][n
 
 export async function personTraining(userId: string) {
   const who = await requireTrainingActor();
-  const person = await prisma.user.findFirst({ where: { id: userId, orgId: who.orgId ?? undefined }, select: { id: true, name: true, jobTitle: true } });
+  const person = await staffMember(userId, who.orgId);
   if (!person) notFound();
   try {
     await requireCapFor("training.records.read", { subjectUserId: userId, orgId: who.orgId });
@@ -91,11 +94,7 @@ export async function personTraining(userId: string) {
         course: { select: { id: true, title: true, requiresSignoff: true } },
       },
     }),
-    prisma.qualification.findMany({
-      where: { userId },
-      orderBy: [{ revokedAt: { sort: "asc", nulls: "first" } }, { expiresOn: { sort: "asc", nulls: "last" } }],
-      select: { id: true, issuedOn: true, expiresOn: true, revokedAt: true, reference: true, type: { select: { name: true } } },
-    }),
+    qualificationsOf(userId),
   ]);
   const assignScope = who.assign ? await subjectsFor("training.assign") : null;
   return {

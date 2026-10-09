@@ -1,31 +1,26 @@
 import "server-only";
+import { livePositionsOf, liveSitesWithin } from "@/lib/directory";
 import { today } from "@/lib/format";
 import { prisma } from "@/lib/prisma";
 import { qualificationState } from "@/lib/people/data";
 import { requirementStates } from "@/lib/people/requirements";
 import { subjectsFor } from "@/lib/policy/session";
+import { positionRequirements } from "@/lib/qualifications";
 import { requireTrainingActor } from "@/modules/training/shared/access";
 import { OPEN_TRAINING_STATUSES } from "@/modules/training/shared/constants";
-import { type ExpiringFilters, expiringQualificationRows, filteredPeople, scopedUserIds } from "@/modules/training/shared/data";
+import { type ExpiringFilters, expiringQualificationRows } from "@/modules/training/shared/data";
 
 /** Expired and expiring qualifications for the people this person covers, filtered by site and
  *  position; and (owner decision, 8 October 2026) who lacks a qualification their position needs. */
 export async function expiringQualifications(filters: ExpiringFilters = {}) {
   const who = await requireTrainingActor();
   const on = today();
-  const scope = await scopedUserIds("training.records.read");
+  const scope = await subjectsFor("training.records.read");
   const [rows, sites, positions, holders] = await Promise.all([
     expiringQualificationRows(who.orgId, scope, on, filters),
-    prisma.club.findMany({ where: { orgId: who.orgId ?? undefined, archivedAt: null }, orderBy: [{ sortOrder: "asc" }, { name: "asc" }], select: { id: true, name: true } }),
-    prisma.position.findMany({ where: { orgId: who.orgId ?? undefined, archivedAt: null }, orderBy: [{ sortOrder: "asc" }, { name: "asc" }], select: { id: true, name: true } }),
-    prisma.user.findMany({
-      where: { orgId: who.orgId ?? undefined, id: scope, ...filteredPeople(filters), position: { requires: { some: {} } } },
-      orderBy: { name: "asc" },
-      select: {
-        id: true, name: true, position: { select: { name: true, requires: { select: { type: { select: { id: true, name: true } } } } } },
-        qualifications: { select: { typeId: true, issuedOn: true, expiresOn: true, revokedAt: true } },
-      },
-    }),
+    liveSitesWithin(who.orgId ?? null, { kind: "all" }),
+    livePositionsOf(who.orgId ?? null),
+    positionRequirements(who.orgId ?? null, scope, filters),
   ]);
   // Never held at all: expired and expiring ones are already in the list above.
   const missing = holders.flatMap((p) => {
