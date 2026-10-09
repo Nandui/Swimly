@@ -1,6 +1,6 @@
 import "server-only";
 import { notFound } from "next/navigation";
-import { prisma } from "@/lib/prisma";
+import { staffMember } from "@/lib/people/records";
 import { type HrSql } from "@/modules/hr/shared/database";
 import { type HrActor } from "@/modules/hr/shared/access";
 import { requireCapFor } from "@/lib/policy/session";
@@ -22,7 +22,7 @@ export async function logHrAccess(db: HrSql, who: Pick<HrActor, "id" | "name" | 
 }
 
 export async function coveredPerson(who: HrActor, userId: string) {
-  const person = await prisma.user.findFirst({ where: { id: userId, orgId: who.orgId || undefined }, select: { id: true, name: true, jobTitle: true } });
+  const person = await staffMember(userId, who.orgId || null);
   if (!person) notFound();
   await requireCapFor("hr.records.read", { subjectUserId: userId, orgId: who.orgId });
   return person;

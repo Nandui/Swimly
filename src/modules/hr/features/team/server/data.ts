@@ -1,5 +1,5 @@
 import "server-only";
-import { prisma } from "@/lib/prisma";
+import { activeStaffCovered } from "@/lib/people/records";
 import { hrDatabase } from "@/modules/hr/shared/database";
 import { requireHrActor } from "@/modules/hr/shared/access";
 import type { ReviewStatus } from "@/modules/hr/shared/constants";
@@ -11,15 +11,7 @@ export async function hrPeople(query = "") {
   const who = await requireHrActor();
   const scope = await subjectsFor("hr.records.read");
   const q = query.trim().slice(0, 80);
-  const people = await prisma.user.findMany({
-    where: {
-      orgId: who.orgId || undefined, isActive: true,
-      ...(scope.kind === "all" ? {} : { id: { in: [...scope.userIds] } }),
-      ...(q ? { name: { contains: q, mode: "insensitive" as const } } : {}),
-    },
-    orderBy: { name: "asc" }, take: 200,
-    select: { id: true, name: true, jobTitle: true },
-  });
+  const people = await activeStaffCovered(who.orgId || null, scope, q);
   const ids = people.map((p) => p.id);
   const db = hrDatabase();
   const latest = ids.length === 0 ? [] : await db.query<{ subjectUserId: string; status: ReviewStatus; period: string }>(

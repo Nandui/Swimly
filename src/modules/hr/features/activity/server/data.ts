@@ -1,6 +1,6 @@
 import "server-only";
 import { notFound } from "next/navigation";
-import { prisma } from "@/lib/prisma";
+import { staffByIds } from "@/lib/directory";
 import { hrDatabase } from "@/modules/hr/shared/database";
 import { requireHrActor } from "@/modules/hr/shared/access";
 
@@ -24,7 +24,7 @@ export async function hrActivity(page = 1) {
     db.query<{ n: number }>(`SELECT count(*)::int AS n FROM audit_events WHERE org_id=$1`, [who.orgId]),
   ]);
   const ids = [...new Set(reads.flatMap((r) => r.subjectUserIds))];
-  const names = new Map((await prisma.user.findMany({ where: { id: { in: ids } }, select: { id: true, name: true } })).map((u) => [u.id, u.name]));
+  const names = new Map([...(await staffByIds(ids)).values()].map((u) => [u.id, u.name]));
   return {
     reads: reads.map((r) => ({ ...r, subjects: r.subjectUserIds.map((id) => names.get(id) ?? "Former staff") })),
     changes,

@@ -1,6 +1,6 @@
 import "server-only";
 import { requireSession } from "@/lib/authz";
-import { prisma } from "@/lib/prisma";
+import { pendingDetailChanges } from "@/lib/people/records";
 import { subjectsFor } from "@/lib/policy/session";
 import { expandPermissions } from "@/lib/staff/permissions";
 import type { HomeItem, HomeViewer } from "@/modules/contributions";
@@ -13,9 +13,7 @@ export async function hrHomeItems(viewer: HomeViewer): Promise<HomeItem[]> {
   const items: HomeItem[] = [];
   if (held.has("hr.details.write")) {
     const [session, scope] = await Promise.all([requireSession(), subjectsFor("hr.details.write")]);
-    const pending = await prisma.staffDetailChangeRequest.count({
-      where: { orgId: session.user.orgId ?? undefined, status: "PENDING", ...(scope.kind === "all" ? {} : { userId: { in: [...scope.userIds] } }) },
-    });
+    const pending = await pendingDetailChanges(session.user.orgId ?? null, scope);
     items.push({ label: "Details changes to check", hint: "Sent from Turnfin Me", href: "/hr/details-requests", count: pending, attention: pending > 0 });
   }
   return items;

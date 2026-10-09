@@ -1,7 +1,7 @@
 import { revalidatePath } from "next/cache";
 import { AuthorizationError } from "@/lib/authz";
+import { staffOrganisation } from "@/lib/people/records";
 import { type HrSql } from "@/modules/hr/shared/database";
-import { prisma } from "@/lib/prisma";
 import { requireCapFor } from "@/lib/policy/session";
 import type { PermissionKey } from "@/lib/staff/permissions";
 import type { Actor } from "@/lib/policy/types";
@@ -14,7 +14,7 @@ import type { Actor } from "@/lib/policy/types";
 
 export type Allowed = { ok: true; actor: Actor } | { ok: false; error: string };
 export async function allowedFor(cap: PermissionKey, subjectUserId: string): Promise<Allowed> {
-  const subject = await prisma.user.findUnique({ where: { id: subjectUserId }, select: { orgId: true } });
+  const subject = await staffOrganisation(subjectUserId);
   if (!subject) return { ok: false, error: "That person no longer exists." };
   try {
     // The subject's organisation, so an everywhere grant never reaches another org.

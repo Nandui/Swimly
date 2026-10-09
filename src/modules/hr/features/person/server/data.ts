@@ -1,5 +1,5 @@
 import "server-only";
-import { prisma } from "@/lib/prisma";
+import { staffDetailOptions, staffDetails } from "@/lib/people/records";
 import { hrDatabase } from "@/modules/hr/shared/database";
 import { requireHrActor } from "@/modules/hr/shared/access";
 import { NOTE_COLUMNS, REVIEW_COLUMNS, type HrNote, type HrReview } from "@/modules/hr/shared/columns";
@@ -11,22 +11,9 @@ import { coveredPerson, logHrAccess } from "@/modules/hr/shared/records";
  *  details are HR's, not Admin's): position, manager, departments, employment
  *  and contact. Callers have checked `hr.records.read` over the person. */
 async function personDetails(userId: string) {
-  const row = await prisma.user.findUniqueOrThrow({
-    where: { id: userId },
-    select: {
-      jobTitle: true, positionId: true, startedOn: true, dateOfBirth: true, primaryClubId: true, managerId: true,
-      contractType: true, contractMinutes: true, endedOn: true, payrollNumber: true,
-      phone: true, homeAddress: true, emergencyName: true, emergencyPhone: true, emergencyRelationship: true,
-      position: { select: { name: true, archivedAt: true } },
-      manager: { select: { id: true, name: true } },
-      departments: { select: { departmentId: true, isPrimary: true, department: { select: { name: true } } } },
-      reports: { where: { isActive: true }, orderBy: { name: "asc" }, select: { id: true, name: true } },
-    },
-  });
-  const site = row.primaryClubId ? await prisma.club.findUnique({ where: { id: row.primaryClubId }, select: { name: true } }) : null;
+  const row = await staffDetails(userId);
   return {
     ...row,
-    primaryClub: row.primaryClubId ? site?.name ?? "Removed site" : null,
     startedOn: row.startedOn?.toISOString().slice(0, 10) ?? "",
     dateOfBirth: row.dateOfBirth?.toISOString().slice(0, 10) ?? "",
     endedOn: row.endedOn?.toISOString().slice(0, 10) ?? "",
@@ -34,16 +21,7 @@ async function personDetails(userId: string) {
 }
 
 /** What the details editor chooses from: open sites, departments and positions, and the people who can manage. */
-async function detailOptions(orgId: string, positionId: string | null) {
-  const [sites, departments, positions, people] = await Promise.all([
-    prisma.club.findMany({ where: { orgId, archivedAt: null }, orderBy: [{ sortOrder: "asc" }, { name: "asc" }], select: { id: true, name: true } }),
-    prisma.department.findMany({ where: { orgId, archivedAt: null }, orderBy: [{ sortOrder: "asc" }, { name: "asc" }], select: { id: true, name: true } }),
-    // An archived position stays only for whoever already holds it.
-    prisma.position.findMany({ where: { orgId, OR: [{ archivedAt: null }, { id: positionId ?? "" }] }, orderBy: [{ sortOrder: "asc" }, { name: "asc" }], select: { id: true, name: true } }),
-    prisma.user.findMany({ where: { orgId, isActive: true }, orderBy: { name: "asc" }, select: { id: true, name: true, jobTitle: true } }),
-  ]);
-  return { sites, departments, positions, people };
-}
+const detailOptions = (orgId: string, positionId: string | null) => staffDetailOptions(orgId, positionId);
 
 /** One person's HR record: their details, visible notes and reviews, what
  *  other modules keep on their personal file (rota, training, absences), and

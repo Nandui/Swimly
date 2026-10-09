@@ -1,5 +1,5 @@
 import "server-only";
-import { prisma } from "@/lib/prisma";
+import { staffRecordForExport } from "@/lib/people/records";
 import { requireSession } from "@/lib/authz";
 import { hrDatabase } from "@/modules/hr/shared/database";
 import { NOTE_COLUMNS, REVIEW_COLUMNS, type HrNote, type HrReview } from "@/modules/hr/shared/columns";
@@ -19,22 +19,13 @@ export async function subjectExport(userId: string) {
   const actor = actorForSession(await requireSession());
   if (!actor.superadmin) throw new ExportRefused("Only a superadmin can export a person's records.");
   if (!recentlyConfirmed(actor)) throw new ExportRefused("Confirm your password first.");
-  const person = await prisma.user.findFirst({
-    where: { id: userId, orgId: actor.orgId ?? undefined },
-    select: {
-      id: true, name: true, email: true, jobTitle: true, startedOn: true, isActive: true, createdAt: true,
-      dateOfBirth: true, contractType: true, contractMinutes: true, endedOn: true, payrollNumber: true,
-      phone: true, homeAddress: true, emergencyName: true, emergencyPhone: true, emergencyRelationship: true,
-    },
-  });
-  if (!person) return null;
+  const core = await staffRecordForExport(userId, actor.orgId ?? null);
+  if (!core) return null;
+  const { person, qualifications } = core;
   const db = hrDatabase();
   const orgId = actor.orgId ?? "";
   // Other modules' full records (Training's assignments) come through the seam, keyed by module.
-  const [qualifications, records] = await Promise.all([
-    prisma.qualification.findMany({ where: { userId }, select: { issuedOn: true, expiresOn: true, revokedAt: true, reference: true, note: true, type: { select: { name: true } } } }),
-    subjectRecords(userId, orgId),
-  ]);
+  const records = await subjectRecords(userId, orgId);
   const [notes, reviews, reads, file] = await Promise.all([
     db.query<HrNote & { withdrawnAt: Date | null; withdrawnReason: string }>(`SELECT ${NOTE_COLUMNS}, withdrawn_at AS "withdrawnAt", withdrawn_reason AS "withdrawnReason" FROM notes WHERE org_id=$1 AND subject_user_id=$2 ORDER BY created_at`, [orgId, userId]),
     db.query<HrReview>(`SELECT ${REVIEW_COLUMNS} FROM reviews WHERE org_id=$1 AND subject_user_id=$2 ORDER BY created_at`, [orgId, userId]),
