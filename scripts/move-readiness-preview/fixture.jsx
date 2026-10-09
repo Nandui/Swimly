@@ -4,7 +4,7 @@ import { UserRoundCheck } from 'lucide-react';
 import '@fontsource/plus-jakarta-sans/400.css';
 import '@fontsource/plus-jakarta-sans/600.css';
 import '@fontsource/plus-jakarta-sans/700.css';
-import '@/app/docs/poolside.css';
+import '@/app/theme/poolside.css';
 import '@/app/workspace/module-workspace.css';
 import { ThemeProvider } from '@/components/theme-provider';
 import { TooltipProvider } from '@/components/shadcn/tooltip';

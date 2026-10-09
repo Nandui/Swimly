@@ -43,7 +43,7 @@ function doubles() {
     "server-only": {},
     react: { cache: <T,>(fn: T) => fn },
     // Other modules' parts of the personal file (Rota's absences), by person.
-    "@/modules/server": { personFile: async (userId: string) => [{ id: "rota.absences", heading: "Absences and returns to work", summary: "Synthetic", entries: [{ id: `a-${userId}`, title: "Sickness", detail: "", on: "2026-10-01" }] }] },
+    "@/modules/server": { subjectRecords: async () => ({ training: [] }), personFile: async (userId: string) => [{ id: "rota.absences", heading: "Absences and returns to work", summary: "Synthetic", entries: [{ id: `a-${userId}`, title: "Sickness", detail: "", on: "2026-10-01" }] }] },
   };
 }
 const as = (id: string, extra: Partial<typeof state> = {}) =>
@@ -159,4 +159,5 @@ test("only the author withdraws a note; the subject export is superadmin-only an
   assert.equal(data?.hr.reviews.length, 1);
   assert.ok((data?.hr.whoReadThisRecord.length ?? 0) >= 2);
   assert.equal(data?.personalFile[0].id, "rota.absences", "and in the export");
+  assert.deepEqual((data as { training?: unknown } | null)?.training, [], "other modules' records under their own key");
 });

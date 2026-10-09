@@ -1,0 +1,60 @@
+// Training (main database).
+
+/// Training (phase 6): a course in the organisation's catalogue. Learners read
+/// the material and mark it done; a practical course also needs a trainer's
+/// sign-off. Completing a course that grants a qualification records it, with
+/// the expiry from the qualification type's validity.
+model TrainingCourse {
+  id              String    @id @default(cuid())
+  orgId           String
+  title           String
+  summary         String    @default("")
+  /// Plain-text material: what to read, watch or practise.
+  content         String    @default("")
+  requiresSignoff Boolean   @default(false)
+  grantsTypeId    String?
+  archivedAt      DateTime?
+  createdById     String?
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @updatedAt
+
+  organisation Organisation         @relation(fields: [orgId], references: [id], onDelete: Restrict)
+  grantsType   QualificationType?   @relation(fields: [grantsTypeId], references: [id], onDelete: SetNull)
+  assignments  TrainingAssignment[]
+
+  @@unique([orgId, title])
+}
+
+/// One person's training on one course. ASSIGNED → (SUBMITTED, awaiting a
+/// trainer's sign-off) → COMPLETED, or CANCELLED. One open assignment per
+/// person and course (partial unique index in the migration).
+model TrainingAssignment {
+  id              String    @id @default(cuid())
+  orgId           String
+  courseId        String
+  userId          String
+  status          String    @default("ASSIGNED")
+  dueOn           DateTime? @db.Date
+  assignedById    String?
+  assignedByName  String
+  assignedAt      DateTime  @default(now())
+  learnerNote     String    @default("")
+  submittedAt     DateTime?
+  completedAt     DateTime?
+  signedOffById   String?
+  signedOffByName String?
+  signoffNote     String    @default("")
+  qualificationId String?
+  cancelledAt     DateTime?
+  cancelReason    String    @default("")
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @updatedAt
+
+  organisation Organisation   @relation(fields: [orgId], references: [id], onDelete: Restrict)
+  course       TrainingCourse @relation(fields: [courseId], references: [id], onDelete: Restrict)
+  user         User           @relation("TrainingLearner", fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId, status])
+  @@index([orgId, status])
+  @@index([courseId])
+}

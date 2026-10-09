@@ -31,6 +31,7 @@ before(async () => {
   await db.staffNotificationPreference.create({ data: { userId: "noah", trainingDue: false } });
   reminders = serverModule("src/lib/staff-api/reminders.ts", {
     "@/lib/prisma": { prisma: db },
+    "server-only": {},
     "@/lib/staff-api/email": { sendStaffReminder: async (email: string, subject: string, line: string) => { mail.push({ email, subject, line }); } },
   });
 });

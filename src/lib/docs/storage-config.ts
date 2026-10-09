@@ -1,8 +1,5 @@
-export function databaseIdentity(value: string): string {
-  const url = new URL(value);
-  if (!['postgres:', 'postgresql:'].includes(url.protocol)) throw new Error('A PostgreSQL connection is required.');
-  return `${url.hostname.replace(/-pooler(?=\.)/, '')}:${url.port || '5432'}${url.pathname}`;
-}
+import { databaseIdentity } from '@/lib/postgres-connection';
+
 export function docsStorageConfig(env: Record<string, string | undefined>) {
   if (!env.DOCS_DATABASE_URL) throw new Error('DOCS_DATABASE_URL is required; Docs never falls back to the Aquatics database.');
   const runtime = env.DOCS_DATABASE_URL;

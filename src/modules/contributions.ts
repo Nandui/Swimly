@@ -161,6 +161,29 @@ export async function personFile(userId: string, orgId: string) {
   return Promise.all(personFileSections.map(async (section) => ({ id: section.id, heading: section.heading, ...(await section.load(userId, orgId)) })));
 }
 
+/** Everything a module holds about one person, for a subject access request
+ *  (HR's export): the full records, not the summary on their file. Same
+ *  callers and rules as the personal file; only HR's export reads it. */
+export type SubjectRecords = {
+  /** The export's key for this module's records, e.g. "training". */
+  key: string;
+  load(userId: string, orgId: string): Promise<unknown>;
+};
+
+const subjectRecordSources: SubjectRecords[] = [];
+
+export function registerSubjectRecords(source: SubjectRecords) {
+  const at = subjectRecordSources.findIndex((s) => s.key === source.key);
+  if (at >= 0) subjectRecordSources[at] = source;
+  else subjectRecordSources.push(source);
+}
+
+/** Every registered module's records about this person, by key. */
+export async function subjectRecords(userId: string, orgId: string): Promise<Record<string, unknown>> {
+  const loaded = await Promise.all(subjectRecordSources.map(async (s) => [s.key, await s.load(userId, orgId)] as const));
+  return Object.fromEntries(loaded);
+}
+
 // ---------------------------------------------------------------------------
 // Commitments: who is busy when
 // ---------------------------------------------------------------------------

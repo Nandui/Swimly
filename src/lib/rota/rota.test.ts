@@ -41,7 +41,7 @@ function doubles() {
       canSee: (s: { user: { screens: string[] } }, screen: string) => s.user.screens.includes(screen),
     },
     "@/lib/clubs/current": { currentClubId: async () => churchfield, currentClubIdIfAny: async () => churchfield },
-    "@/lib/staff-api/reminders": { notifyShiftChange: async (userId: string | null, line: string) => { told.push({ userId, line }); } },
+    "@/lib/staff-api/notify": { notifyShiftChange: async (userId: string | null, line: string) => { told.push({ userId, line }); } },
     "next/cache": { revalidatePath() {} },
     "next/navigation": { notFound: () => { throw new NotFound("not found"); } },
     "server-only": {},

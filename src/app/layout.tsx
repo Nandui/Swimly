@@ -18,7 +18,7 @@ import "@fontsource/plus-jakarta-sans/400.css";
 import "@fontsource/plus-jakarta-sans/600.css";
 import "@fontsource/plus-jakarta-sans/700.css";
 import "./globals.css";
-import "./docs/poolside.css";
+import "./theme/poolside.css";
 
 /** One template all the way down: a layout that sets a title must also set
  *  TITLE_TEMPLATE. The browser and home-screen icons are the fin, from the

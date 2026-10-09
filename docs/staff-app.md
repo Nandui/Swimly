@@ -146,7 +146,7 @@ configuration starts Turnfin Me on :3101 against it.
 - **Reminders:** `src/lib/staff-api/reminders.ts` and `src/app/api/cron/reminders/route.ts`.
 - **Work-device rule:** `src/lib/devices/work-device.ts`.
 - **Turnfin Me:** `apps/me/**`. Its tokens and the v2 parts (the fin tile, the bar, the bottom
-  bar, panels, rows and tile icons) are copied verbatim from `src/app/docs/poolside.css` into
+  bar, panels, rows and tile icons) are copied verbatim from `src/app/theme/poolside.css` into
   `apps/me/src/app/globals.css`, scoped to `body.turnfin-app` as Work does, so the two diff 1:1;
   keep them in step. The one difference is a block marked "Me only": Me has no module rail, so
   its bottom bar shows at every width, capped to the 720px column, and clears the safe areas.

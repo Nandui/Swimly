@@ -5,7 +5,7 @@ preference. **The whole app uses Poolside Clear v2** (owner decisions, 27 Septem
 3 October 2026): Plus Jakarta Sans, the fin logo's blue for actions, selection and focus, a
 cool canvas inside a rounded frame, white borderless panels of separate rounded rows, pill
 controls, and a deep pool-night dark mode. Its tokens and system rules live in
-`src/app/docs/poolside.css`, scoped to `.turnfin-app`, which the root layout puts on `<body>`;
+`src/app/theme/poolside.css`, scoped to `.turnfin-app`, which the root layout puts on `<body>`;
 the root layout also loads the typeface. The earlier Docs theme (`brand.css`) is retired:
 no other stylesheet defines theme tokens. The swim school, the home page, Docs, Refunds,
 Training, HR, Rota, Tasks and Admin share one frame, `ModuleShell`; the pool deck and Help use the
@@ -217,7 +217,7 @@ to `FormDialog` only so the module layout CSS reaches them, and selects inside t
 `QUALIFICATION_STATE_META`, `NOTE_VISIBILITY_META`, `REVIEW_STATUS_META`, `ROTA_FIT_META`). Each person's own side is not on Work at
 all: it is Turnfin Me (`apps/me`), a phone-first app in Poolside Clear v2 with the floating
 bottom bar at every width, 44px controls, and the same tokens and v2 parts (the fin tile, bar,
-bottom bar, panels, rows and tile icons) copied verbatim from `src/app/docs/poolside.css` into
+bottom bar, panels, rows and tile icons) copied verbatim from `src/app/theme/poolside.css` into
 `apps/me/src/app/globals.css` under `body.turnfin-app`, with one block marked "Me only" (the
 bottom bar at every width, capped to the 720px column, and the safe areas). It is built from
 plain semantic elements; status tones come from `apps/me/src/lib/meta.ts`, each with an icon. See
@@ -226,7 +226,7 @@ plain semantic elements; status tones come from `apps/me/src/lib/meta.ts`, each 
 
 ### Poolside Clear v2 system rules
 
-These rules apply to every screen. Tokens live in `src/app/docs/poolside.css`; never write
+These rules apply to every screen. Tokens live in `src/app/theme/poolside.css`; never write
 a literal size, radius, colour or control height.
 
 **Type.** Five sizes, each with a matching `--pc-leading-*` line height:

@@ -16,7 +16,7 @@ import "@/lib/academy/contributions";
 import "@/lib/people/home";
 import "@/lib/hr/home";
 
-export { renameAreaEverywhere, commitmentsFor, homeCardItems, planCommitment, personFile, siteSummaryLines } from "./contributions";
+export { renameAreaEverywhere, commitmentsFor, homeCardItems, planCommitment, personFile, siteSummaryLines, subjectRecords } from "./contributions";
 // The swim school's top-bar tools and daily pages, for the home page's frame.
 export { SwimSchoolTools } from "./activities/components/app-nav";
 export { dailyPages } from "./activities/lib/nav";

@@ -1,5 +1,5 @@
-/* Imported Turnfin Docs layouts, scoped to this module and its portals. */
-/* docs layouts from Turnfin Docs; scoped to the module. */
+/* The .turnfin-docs shell layouts, shared by Docs and Refunds (Core, so neither module imports
+   the other). Originally imported from Turnfin Docs. */
 /* The original Docs layouts sit in a sub-layer of components, so the redesign below (the
    components layer itself) wins wherever both set a property, Tailwind utilities written in the
    markup win over them, and the unlayered Poolside Clear theme stays on top. */

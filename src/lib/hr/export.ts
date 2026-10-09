@@ -6,7 +6,7 @@ import { NOTE_COLUMNS, REVIEW_COLUMNS, type HrNote, type HrReview } from "@/lib/
 import { logHrAccess } from "@/lib/hr/records";
 import { recentlyConfirmed } from "@/lib/policy/engine";
 import { actorForSession } from "@/lib/policy/session";
-import { personFile } from "@/modules/server";
+import { personFile, subjectRecords } from "@/modules/server";
 
 export class ExportRefused extends Error {}
 
@@ -28,12 +28,13 @@ export async function subjectExport(userId: string) {
     },
   });
   if (!person) return null;
-  const [qualifications, training] = await Promise.all([
-    prisma.qualification.findMany({ where: { userId }, select: { issuedOn: true, expiresOn: true, revokedAt: true, reference: true, note: true, type: { select: { name: true } } } }),
-    prisma.trainingAssignment.findMany({ where: { userId }, select: { status: true, dueOn: true, assignedAt: true, assignedByName: true, completedAt: true, signedOffByName: true, signoffNote: true, learnerNote: true, cancelReason: true, course: { select: { title: true } } } }),
-  ]);
   const db = hrDatabase();
   const orgId = actor.orgId ?? "";
+  // Other modules' full records (Training's assignments) come through the seam, keyed by module.
+  const [qualifications, records] = await Promise.all([
+    prisma.qualification.findMany({ where: { userId }, select: { issuedOn: true, expiresOn: true, revokedAt: true, reference: true, note: true, type: { select: { name: true } } } }),
+    subjectRecords(userId, orgId),
+  ]);
   const [notes, reviews, reads, file] = await Promise.all([
     db.query<HrNote & { withdrawnAt: Date | null; withdrawnReason: string }>(`SELECT ${NOTE_COLUMNS}, withdrawn_at AS "withdrawnAt", withdrawn_reason AS "withdrawnReason" FROM notes WHERE org_id=$1 AND subject_user_id=$2 ORDER BY created_at`, [orgId, userId]),
     db.query<HrReview>(`SELECT ${REVIEW_COLUMNS} FROM reviews WHERE org_id=$1 AND subject_user_id=$2 ORDER BY created_at`, [orgId, userId]),
@@ -46,7 +47,7 @@ export async function subjectExport(userId: string) {
     exportedBy: actor.name,
     person,
     qualifications,
-    training,
+    ...records,
     personalFile: file,
     hr: { notes, reviews, whoReadThisRecord: reads },
   };

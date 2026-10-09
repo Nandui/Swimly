@@ -4,8 +4,8 @@ import { screenPage } from "@/lib/page-guards";
 import { TITLE_TEMPLATE } from "@/lib/app";
 import { requireRefundActor } from "@/lib/refunds/auth";
 import { RefundShell } from "@/components/refunds/shell";
-import '../docs/docs.css';
-import '../docs/integration.css';
+import '../theme/docs-shell.css';
+import '../theme/docs-integration.css';
 import './refunds.css';
 
 export const metadata: Metadata = { title: { default: "Refunds", template: TITLE_TEMPLATE } };
