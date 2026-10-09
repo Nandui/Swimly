@@ -186,7 +186,7 @@ a timeline), Waiting for you (the same items it gives the home page, so the two 
 "things need you" counts only those rows), and **Everything in <module>**: one panel of its
 pages as grouped rows (icon, name, one line on what it is for), two columns when wide, or an
 empty state when there is nothing to open at the site. Rota's list comes from
-`src/components/rota/pages.ts`, the same list as its page bar. "Overview"
+`src/modules/rota/components/pages.ts`, the same list as its page bar. "Overview"
 is the first link in the module's page bar. Pool deck opens on the deck,
 Docs and Training on their own overviews, Refunds on its requests with their summary, HR on its
 people search. The module
@@ -406,7 +406,7 @@ line. Multi-line boxes (textareas, notices) use 16px, never a pill.
   over the whole name tile), so a lane needs no edit icon. A planning grid (`readout`) shows the
   exact quarter hour under the pointer as a pill on the time bar (`TimelineReadout`), so the bar
   keeps to hours; every block also says its times in words.
-- Rota's day timeline (`DayPlan`, `src/components/rota/day-plan.tsx`; owner decisions, 6 October
+- Rota's day timeline (`DayPlan`, `src/modules/rota/components/day-plan.tsx`; owner decisions, 6 October
   2026, from approved mockups; docs/rota.md) is its own planning view, not `TimelineGrid`: the day
   across the **full width** of one panel (nothing scrolls sideways), one **tile per area** of the
   site (Admin, Areas; pin icon, name, how many activities, its gap count as a tag, a + to add an

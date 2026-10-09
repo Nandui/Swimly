@@ -1,8 +1,8 @@
 import type { Metadata } from "next";
-import { rotaPages } from "@/components/rota/pages";
+import { rotaPages } from "@/modules/rota/components/pages";
 import { ModuleOverview } from "@/components/workspace/module-overview";
 import { loadModuleOverview } from "@/lib/home";
-import { requireRotaActor } from "@/lib/rota/access";
+import { requireRotaActor } from "@/modules/rota/lib/access";
 import { allModules } from "@/modules/registry";
 
 export const metadata: Metadata = { title: "Rota" };

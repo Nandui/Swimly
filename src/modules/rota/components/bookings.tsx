@@ -10,9 +10,9 @@ import { NativeSelect, NativeSelectOption } from "@/components/shadcn/native-sel
 import { Field, FormDialog } from "@/components/form-dialog";
 import { AreaSelect } from "@/components/setup/area-select";
 import { Notice } from "@/components/ui-kit/notice";
-import { cancelRepeat, saveRepeat, type RepeatInput } from "@/lib/rota/actions";
+import { cancelRepeat, saveRepeat, type RepeatInput } from "@/modules/rota/lib/actions";
 import { formatDate } from "@/lib/format";
-import { BOOKING_KIND_META, BOOKING_KINDS, WEEKDAY_LABELS, addDaysIso, bookingDates, nextWeekday } from "@/lib/rota/constants";
+import { BOOKING_KIND_META, BOOKING_KINDS, WEEKDAY_LABELS, addDaysIso, bookingDates, nextWeekday } from "@/modules/rota/lib/constants";
 
 const THEME = "turnfin-module";
 type Option = { id: string; name: string };

@@ -2,9 +2,9 @@ import "server-only";
 import { parseDateOnly, today } from "@/lib/format";
 import { prisma } from "@/lib/prisma";
 import { subjectsFor } from "@/lib/policy/session";
-import { requireRotaActor } from "@/lib/rota/access";
+import { requireRotaActor } from "@/modules/rota/lib/access";
 import { AuthorizationError } from "@/lib/authz";
-import { addDaysIso, returnStage, type AbsenceReason, type AbsenceUpdateKind, type ReturnFit } from "@/lib/rota/constants";
+import { addDaysIso, returnStage, type AbsenceReason, type AbsenceUpdateKind, type ReturnFit } from "@/modules/rota/lib/constants";
 import { commitmentsFor } from "@/modules/server";
 
 /** Absences and returns to work (owner decision, 6 October 2026: the records live in the main

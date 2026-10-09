@@ -6,12 +6,12 @@ import { ChevronRight, MapPin, Plus, TriangleAlert } from "lucide-react";
 import { Button } from "@/components/shadcn/button";
 import { Tag } from "@/components/ui-kit/tag";
 import { SegmentedChoice } from "@/components/ui-kit/segmented-links";
-import { AssignmentDialog, NeedDialog } from "@/components/rota/plan-dialogs";
-import { FillSheet, type GapRef } from "@/components/rota/fill-sheet";
-import { clock } from "@/lib/rota/constants";
-import type { Block, DayZone, Group } from "@/lib/rota/day";
-import { ROTA_DAY_META, activityIcon, qualificationShort } from "@/lib/rota/meta";
-import { firstTick, panView, sameView, tickStep, ticks as ticksOf, zoomView, type View } from "@/lib/rota/view";
+import { AssignmentDialog, NeedDialog } from "@/modules/rota/components/plan-dialogs";
+import { FillSheet, type GapRef } from "@/modules/rota/components/fill-sheet";
+import { clock } from "@/modules/rota/lib/constants";
+import type { Block, DayZone, Group } from "@/modules/rota/lib/day";
+import { ROTA_DAY_META, activityIcon, qualificationShort } from "@/modules/rota/lib/meta";
+import { firstTick, panView, sameView, tickStep, ticks as ticksOf, zoomView, type View } from "@/modules/rota/lib/view";
 
 /** One day of the rota as a timeline (owner decisions, 6 October 2026, from the approved mockup):
  *  the day across the full width, one tile per **area** of the site (Admin, Areas: Main pool,

@@ -3,9 +3,9 @@
 import type { ReactNode } from 'react';
 import { usePathname, useSearchParams } from 'next/navigation';
 import { ModuleShell } from '@/components/workspace/module-shell';
-import { rotaPages } from '@/components/rota/pages';
+import { rotaPages } from '@/modules/rota/components/pages';
 import { SiteSwitcher } from '@/components/workspace/site-switcher';
-import type { RotaActor } from '@/lib/rota/access';
+import type { RotaActor } from '@/modules/rota/lib/access';
 
 /** The pages that show one site: they take the site from `?site=` and show the picker. Overview
  *  (the working site), Absences (everyone the duty manager covers) and the activity list

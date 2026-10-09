@@ -1,8 +1,8 @@
-import { intoLanes, mergeTouching, needGaps } from "@/lib/rota/cover";
-import { qualification, type Held } from "@/lib/rota/fit";
-import { subtract } from "@/lib/rota/cover";
-import { dayShift, type DayShift, type PinnedBreak, type WorkItem } from "@/lib/rota/shifts";
-import type { YoungBand } from "@/lib/rota/constants";
+import { intoLanes, mergeTouching, needGaps } from "@/modules/rota/lib/cover";
+import { qualification, type Held } from "@/modules/rota/lib/fit";
+import { subtract } from "@/modules/rota/lib/cover";
+import { dayShift, type DayShift, type PinnedBreak, type WorkItem } from "@/modules/rota/lib/shifts";
+import type { YoungBand } from "@/modules/rota/lib/constants";
 
 /** One day at one site, as every Rota screen draws it (Plan, Today, Turnfin Me): its **areas**
  *  (the site's list in Admin, Areas: Main pool, Learner pool, Front desk; owner decisions, 6 and 7

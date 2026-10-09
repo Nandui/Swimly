@@ -123,11 +123,11 @@ before(async () => {
   await db.activityType.create({ data: { id: "t-teach", orgId: ORG, departmentId: "d-pool", name: "Teaching", icon: "teaching", fromClasses: true } });
   await db.activityType.create({ data: { id: "t-desk", orgId: ORG, departmentId: "d-desk", name: "Reception", icon: "reception" } });
   const d = doubles();
-  actions = serverModule("src/lib/rota/actions.ts", d);
-  absenceActions = serverModule("src/lib/rota/absence-actions.ts", d);
-  data = serverModule("src/lib/rota/data.ts", d);
-  absences = serverModule("src/lib/rota/absences.ts", d);
-  mine = serverModule("src/lib/rota/mine.ts", d);
+  actions = serverModule("src/modules/rota/lib/actions.ts", d);
+  absenceActions = serverModule("src/modules/rota/lib/absence-actions.ts", d);
+  data = serverModule("src/modules/rota/lib/data.ts", d);
+  absences = serverModule("src/modules/rota/lib/absences.ts", d);
+  mine = serverModule("src/modules/rota/lib/mine.ts", d);
 });
 after(async () => { await fixture?.close(); });
 
@@ -315,7 +315,7 @@ test("an archived activity on Admin's list is no longer planned", async () => {
 });
 
 test("the personal file keeps the changes to their activities on days that had come", async () => {
-  const file = serverModule<typeof import("./file")>("src/lib/rota/file.ts", doubles());
+  const file = serverModule<typeof import("./file")>("src/modules/rota/lib/file.ts", doubles());
   const riley = await file.dutyChangeFile("riley", ORG);
   assert.ok(riley.entries.some((e) => /riley put on Lifeguarding/.test(e.title) && /Covering an absence · by sam/.test(e.detail)));
 });

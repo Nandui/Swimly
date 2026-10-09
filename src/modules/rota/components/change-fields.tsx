@@ -3,8 +3,8 @@
 import { Input } from "@/components/shadcn/input";
 import { NativeSelect, NativeSelectOption } from "@/components/shadcn/native-select";
 import { Field } from "@/components/form-dialog";
-import type { ChangeInput } from "@/lib/rota/actions";
-import { ROTA_CHANGE_REASON_META, ROTA_CHANGE_REASONS, type RotaChangeReason } from "@/lib/rota/constants";
+import type { ChangeInput } from "@/modules/rota/lib/actions";
+import { ROTA_CHANGE_REASON_META, ROTA_CHANGE_REASONS, type RotaChangeReason } from "@/modules/rota/lib/constants";
 
 /** Why a day that has come changed (today or earlier): asked before any change there, and kept in
  *  the day's log with an "Update Timepoint" follow-up. Days ahead change freely. */

@@ -8,7 +8,7 @@ import { logAudit } from "@/lib/audit";
 import { isDateOnly, parseDateOnly, today } from "@/lib/format";
 import { prisma } from "@/lib/prisma";
 import { requireCapFor } from "@/lib/policy/session";
-import { ABSENCE_REASONS, RETURN_FITS, addDaysIso, needsFitNote } from "@/lib/rota/constants";
+import { ABSENCE_REASONS, RETURN_FITS, addDaysIso, needsFitNote } from "@/modules/rota/lib/constants";
 
 /** Absences. Recording one needs Run (`rota.manage`) over that person: a site-scoped duty
  *  manager records absences only for people who work at their site. The shared log names the

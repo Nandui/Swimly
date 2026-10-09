@@ -4,11 +4,11 @@ import { notFound } from "next/navigation";
 import { isDateOnly, parseDateOnly, today } from "@/lib/format";
 import { prisma } from "@/lib/prisma";
 import { mayFor, sitesFor } from "@/lib/policy/session";
-import { canChange, requireRotaActor, type RotaActor } from "@/lib/rota/access";
-import { addDaysIso, mondayOf, youngBand, youngRest, type YoungBand } from "@/lib/rota/constants";
-import { ANY_DEPARTMENT, buildDay, type DayBooked, type DayClass, type DayType } from "@/lib/rota/day";
-import { rankFits, type Held } from "@/lib/rota/fit";
-import type { PinnedBreak, WorkItem } from "@/lib/rota/shifts";
+import { canChange, requireRotaActor, type RotaActor } from "@/modules/rota/lib/access";
+import { addDaysIso, mondayOf, youngBand, youngRest, type YoungBand } from "@/modules/rota/lib/constants";
+import { ANY_DEPARTMENT, buildDay, type DayBooked, type DayClass, type DayType } from "@/modules/rota/lib/day";
+import { rankFits, type Held } from "@/modules/rota/lib/fit";
+import type { PinnedBreak, WorkItem } from "@/modules/rota/lib/shifts";
 import { commitmentsFor } from "@/modules/server";
 
 /** Rota reads (owner decisions, 6 October 2026). The sites a person may see come from the policy

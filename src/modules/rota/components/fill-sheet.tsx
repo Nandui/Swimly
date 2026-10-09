@@ -10,12 +10,12 @@ import { Sheet, SheetContent, SheetDescription, SheetHeader, SheetTitle } from "
 import { Field } from "@/components/form-dialog";
 import { SearchField } from "@/components/ui-kit/search-field";
 import { Tag } from "@/components/ui-kit/tag";
-import { ChangeFields, changeOf } from "@/components/rota/change-fields";
-import { assign, planTeacher, whoCanFill } from "@/lib/rota/actions";
-import { clock, parseClock } from "@/lib/rota/constants";
-import type { Fit } from "@/lib/rota/fit";
-import { ROTA_FIT_META, qualificationShort } from "@/lib/rota/meta";
-import { duration } from "@/lib/rota/shifts";
+import { ChangeFields, changeOf } from "@/modules/rota/components/change-fields";
+import { assign, planTeacher, whoCanFill } from "@/modules/rota/lib/actions";
+import { clock, parseClock } from "@/modules/rota/lib/constants";
+import type { Fit } from "@/modules/rota/lib/fit";
+import { ROTA_FIT_META, qualificationShort } from "@/modules/rota/lib/meta";
+import { duration } from "@/modules/rota/lib/shifts";
 import { toast } from "@/lib/toast";
 
 /** One gap to fill: an activity's place for a stretch of time, or a run of swim classes. */

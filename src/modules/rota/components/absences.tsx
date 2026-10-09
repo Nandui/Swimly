@@ -11,8 +11,8 @@ import { Field, FormDialog } from "@/components/form-dialog";
 import { ChoiceRow } from "@/components/ui/choice-row";
 import { Notice } from "@/components/ui-kit/notice";
 import { formatDate } from "@/lib/format";
-import { endAbsence, extendAbsence, recordReturnToWork, reportAbsence, withdrawAbsence, type AbsenceInput } from "@/lib/rota/absence-actions";
-import { ABSENCE_REASON_META, ABSENCE_REASONS, RETURN_FIT_META, SELF_CERTIFIED_DAYS, addDaysIso, followOn, needsFitNote, type AbsenceReason, type ReturnFit } from "@/lib/rota/constants";
+import { endAbsence, extendAbsence, recordReturnToWork, reportAbsence, withdrawAbsence, type AbsenceInput } from "@/modules/rota/lib/absence-actions";
+import { ABSENCE_REASON_META, ABSENCE_REASONS, RETURN_FIT_META, SELF_CERTIFIED_DAYS, addDaysIso, followOn, needsFitNote, type AbsenceReason, type ReturnFit } from "@/modules/rota/lib/constants";
 
 const THEME = "turnfin-module";
 type Earlier = { id: string; reason: AbsenceReason; firstDay: string; lastDay: string | null };

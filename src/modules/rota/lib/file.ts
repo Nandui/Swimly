@@ -1,7 +1,7 @@
 import "server-only";
 import { formatDate, parseDateOnly, plural, today } from "@/lib/format";
 import { prisma } from "@/lib/prisma";
-import { ABSENCE_REASON_META, RETURN_FIT_META, ROTA_CHANGE_REASON_META, addDaysIso, clock, daysOff, type AbsenceReason, type ReturnFit, type RotaChangeReason } from "@/lib/rota/constants";
+import { ABSENCE_REASON_META, RETURN_FIT_META, ROTA_CHANGE_REASON_META, addDaysIso, clock, daysOff, type AbsenceReason, type ReturnFit, type RotaChangeReason } from "@/modules/rota/lib/constants";
 import { registerPersonFileSection, type PersonFileEntry } from "@/modules/contributions";
 
 /** Rota's part of a person's file: what they are planned on in the next two

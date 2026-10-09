@@ -46,7 +46,7 @@ The Academy reports each session of a course that is not cancelled through the c
 seam (`academy.sessions` in `src/modules/academy/lib/contributions.ts`). It reports once for the tutor
 and once for the assessor, when that is someone else. The Rota draws these as a read-only
 activity in the session's area on every department's plan (`DayBooked`, `ANY_DEPARTMENT` in
-`src/lib/rota/day.ts`), linked back to the course. The time counts in the tutor's shift and
+`src/modules/rota/lib/day.ts`), linked back to the course. The time counts in the tutor's shift and
 in double-booking warnings, and "Who can fill it" sees them as busy. They are never gaps
 for the Rota to fill. The Rota never reads Academy tables.
 
@@ -126,7 +126,7 @@ next two weeks at their sites.
 - Online booking: `src/modules/academy/lib/public/` (`http.ts`, `api.ts`, `email.ts`, `router.ts`),
   `src/app/api/academy/v1/[[...path]]/route.ts`, and the site in `apps/academy`
 - Tests: `rules.test.ts`, `academy.test.ts`, `public/api.test.ts` (the booking API and the call
-  list end to end), and the booked-session case in `src/lib/rota/day.test.ts`
+  list end to end), and the booked-session case in `src/modules/rota/lib/day.test.ts`
 - Sandbox: an NPLQ course at Hillview started yesterday. Sam tutors and Liam assesses.
 
 ## Not done yet

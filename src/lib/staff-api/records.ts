@@ -6,7 +6,7 @@ import { hrDatabase, hrConfigured } from "@/modules/hr/lib/database";
 import { mySharedHr } from "@/modules/hr/lib/mine";
 import { acknowledgeReviewFor } from "@/modules/hr/lib/self";
 import { myQualifications } from "@/lib/people/mine";
-import { myDays } from "@/lib/rota/mine";
+import { myDays } from "@/modules/rota/lib/mine";
 import { myTraining } from "@/modules/training/lib/mine";
 import { completeTrainingFor } from "@/modules/training/lib/self";
 import { StaffApiError, notFound } from "@/lib/staff-api/errors";

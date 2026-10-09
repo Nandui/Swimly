@@ -2,9 +2,9 @@ import "server-only";
 import { minutesNow, parseDateOnly, today } from "@/lib/format";
 import { prisma } from "@/lib/prisma";
 import { currentClubIdIfAny } from "@/lib/clubs/current";
-import { returnsToWorkDue } from "@/lib/rota/absences";
-import { rotaSites, todayAt } from "@/lib/rota/data";
-import { dayGaps } from "@/lib/rota/day";
+import { returnsToWorkDue } from "@/modules/rota/lib/absences";
+import { rotaSites, todayAt } from "@/modules/rota/lib/data";
+import { dayGaps } from "@/modules/rota/lib/day";
 import { expandPermissions } from "@/lib/staff/permissions";
 import { registerHomeCard, type HomeItem } from "@/modules/contributions";
 

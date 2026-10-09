@@ -1,5 +1,5 @@
-import type { YoungBand } from "@/lib/rota/constants";
-import { dayShift, type WorkItem } from "@/lib/rota/shifts";
+import type { YoungBand } from "@/modules/rota/lib/constants";
+import { dayShift, type WorkItem } from "@/modules/rota/lib/shifts";
 
 /** Who can fill a gap, best first (owner decision, 6 October 2026: "Who can fill it"). Best
  *  means qualified, free and with the fewest hours that week. Nothing here refuses anyone: an

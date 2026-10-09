@@ -4,7 +4,7 @@ import { useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import { Textarea } from "@/components/shadcn/textarea";
 import { LoadingButton } from "@/components/ui/loading-button";
-import { saveDayNote } from "@/lib/rota/actions";
+import { saveDayNote } from "@/modules/rota/lib/actions";
 import { toast } from "@/lib/toast";
 
 /** The day's note on the plan: who covers whom and why, a last day,

@@ -45,7 +45,7 @@ The lists are organisation-wide, so their actions use the flat permission check.
   since the detail follows one. The migration (`20261020120000_site_areas`) made an area of
   every place already typed at each site.
 - **Renaming an area** reaches every record that uses it through the area-rename contribution
-  (`registerAreaRename` in `src/modules/contributions.ts`): Rota (`src/lib/rota/areas.ts`) and
+  (`registerAreaRename` in `src/modules/contributions.ts`): Rota (`src/modules/rota/lib/areas.ts`) and
   the swim school (`src/modules/activities/contributions.ts`) each update their own records,
   inside Admin's transaction. Core never touches a module's tables. Archiving an area stops it
   being offered; records keep the name.
@@ -78,7 +78,7 @@ The lists are organisation-wide, so their actions use the flat permission check.
 
 ## Not done yet
 
-Break rules as an Admin setting (they are the house rule in `src/lib/rota/constants.ts` today),
+Break rules as an Admin setting (they are the house rule in `src/modules/rota/lib/constants.ts` today),
 and opening hours per site.
 
 Tests: `src/lib/setup/setup.test.ts`, `src/lib/people/requirements.test.ts`, and the expiring and

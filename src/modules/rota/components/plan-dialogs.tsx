@@ -10,10 +10,10 @@ import { ConfirmAction } from "@/components/confirm-action";
 import { Field, FormDialog } from "@/components/form-dialog";
 import { AreaSelect } from "@/components/setup/area-select";
 import { ChoiceRow } from "@/components/ui/choice-row";
-import { ChangeFields, changeOf } from "@/components/rota/change-fields";
-import { assign, copyPlan, removeNeed, saveNeed, shareWeek, unassign } from "@/lib/rota/actions";
-import { clock } from "@/lib/rota/constants";
-import type { DayNeed } from "@/lib/rota/day";
+import { ChangeFields, changeOf } from "@/modules/rota/components/change-fields";
+import { assign, copyPlan, removeNeed, saveNeed, shareWeek, unassign } from "@/modules/rota/lib/actions";
+import { clock } from "@/modules/rota/lib/constants";
+import type { DayNeed } from "@/modules/rota/lib/day";
 
 const THEME = "turnfin-module";
 type Option = { id: string; name: string };

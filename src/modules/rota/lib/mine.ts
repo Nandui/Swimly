@@ -1,9 +1,9 @@
 import "server-only";
 import { parseDateOnly, today } from "@/lib/format";
 import { prisma } from "@/lib/prisma";
-import { addDaysIso, mondayOf, youngBand } from "@/lib/rota/constants";
-import { qualification } from "@/lib/rota/fit";
-import { dayShift, type WorkItem } from "@/lib/rota/shifts";
+import { addDaysIso, mondayOf, youngBand } from "@/modules/rota/lib/constants";
+import { qualification } from "@/modules/rota/lib/fit";
+import { dayShift, type WorkItem } from "@/modules/rota/lib/shifts";
 import { commitmentsFor } from "@/modules/server";
 
 /** The signed-in person's own days for Turnfin Me (owner decision, 6 October 2026: "their day as

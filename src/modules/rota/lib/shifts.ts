@@ -1,5 +1,5 @@
-import { breakEntitlement, type YoungBand } from "@/lib/rota/constants";
-import { mergeTouching, subtract, type Span } from "@/lib/rota/cover";
+import { breakEntitlement, type YoungBand } from "@/modules/rota/lib/constants";
+import { mergeTouching, subtract, type Span } from "@/modules/rota/lib/cover";
 
 /** A person's shift. A planner can put someone on a shift first and fill it with activities
  *  (owner decision, 8 October 2026); otherwise it comes from the activities they are on (6

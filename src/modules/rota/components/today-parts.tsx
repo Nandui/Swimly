@@ -6,11 +6,11 @@ import { Plus, Users } from "lucide-react";
 import { Avatar, AvatarFallback, initials } from "@/components/shadcn/avatar";
 import { Button } from "@/components/shadcn/button";
 import { Tag } from "@/components/ui-kit/tag";
-import { FillSheet, type GapRef } from "@/components/rota/fill-sheet";
-import { assign, markTimepointUpdated, planTeacher } from "@/lib/rota/actions";
-import { clock } from "@/lib/rota/constants";
-import { ROTA_DAY_META, ROTA_FIT_META, activityIcon } from "@/lib/rota/meta";
-import { duration } from "@/lib/rota/shifts";
+import { FillSheet, type GapRef } from "@/modules/rota/components/fill-sheet";
+import { assign, markTimepointUpdated, planTeacher } from "@/modules/rota/lib/actions";
+import { clock } from "@/modules/rota/lib/constants";
+import { ROTA_DAY_META, ROTA_FIT_META, activityIcon } from "@/modules/rota/lib/meta";
+import { duration } from "@/modules/rota/lib/shifts";
 import { toast } from "@/lib/toast";
 
 export type TodayGap = GapRef & {
