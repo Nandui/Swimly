@@ -111,7 +111,7 @@ const workData = (self) => notTables(Object.keys(moduleFiles).filter((id) => id 
 // public-API kit, the email sender) lives in Core: src/lib/public-api and
 // src/lib/email. A module never imports another module's copy.
 const modulePlumbing = [
-  { owner: ["src/lib/academy/**", "src/app/api/academy/**"], from: ["./src/lib/academy/public"] },
+  { owner: ["src/modules/academy/lib/**", "src/app/api/academy/**"], from: ["./src/modules/academy/lib/public"] },
   { owner: ["src/lib/staff-api/**", "src/app/api/staff/**"], from: ["./src/lib/staff-api/email.ts", "./src/lib/staff-api/http.ts"] },
   { owner: activitiesFiles, from: ["./src/modules/activities/lib/parent/email.ts", "./src/modules/activities/lib/parent/http.ts", "./src/modules/activities/lib/parent/sign-in-email.ts"] },
 ];

@@ -10,7 +10,7 @@ import { prisma } from "@/lib/prisma";
 import { currentActor, mayFor } from "@/lib/policy/session";
 import { areaProblem } from "@/lib/setup/data";
 import type { PermissionKey } from "@/lib/staff/permissions";
-import { ACADEMY_CALL_META, ACADEMY_CALL_OUTCOMES, ACADEMY_CHECK_KEYS, ACADEMY_KINDS, ACADEMY_OUTCOMES, ACADEMY_PAYMENTS, centsOf, euro, expiryFrom, paymentFor, takesPlace } from "@/lib/academy/rules";
+import { ACADEMY_CALL_META, ACADEMY_CALL_OUTCOMES, ACADEMY_CHECK_KEYS, ACADEMY_KINDS, ACADEMY_OUTCOMES, ACADEMY_PAYMENTS, centsOf, euro, expiryFrom, paymentFor, takesPlace } from "@/modules/academy/lib/rules";
 
 /** Academy writes (docs/academy.md). The course list is the organisation's (Manage); a course
  *  and everything on it is checked against its site: Manage puts courses and sessions on,

@@ -53,9 +53,9 @@ before(async () => {
     react: { cache: <T,>(fn: T) => fn },
   };
   contributions = serverModule<typeof import("@/modules/contributions")>("src/modules/contributions.ts", d);
-  serverModule("src/lib/academy/contributions.ts", { ...d, "@/modules/contributions": contributions });
-  actions = serverModule("src/lib/academy/actions.ts", d);
-  data = serverModule("src/lib/academy/data.ts", d);
+  serverModule("src/modules/academy/lib/contributions.ts", { ...d, "@/modules/contributions": contributions });
+  actions = serverModule("src/modules/academy/lib/actions.ts", d);
+  data = serverModule("src/modules/academy/lib/data.ts", d);
 });
 after(async () => { await fixture?.close(); });
 

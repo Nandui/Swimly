@@ -4,12 +4,12 @@ import type { Prisma } from "@/generated/prisma/client";
 import { logAudit } from "@/lib/audit";
 import { formatTime, isDateOnly, parseDateOnly, today } from "@/lib/format";
 import { prisma } from "@/lib/prisma";
-import { sendCode, sendHeld } from "@/lib/academy/public/email";
-import { AcademyApiError, academyApiConfig, emailSchema, idSchema, notFound, readBody } from "@/lib/academy/public/http";
+import { sendCode, sendHeld } from "@/modules/academy/lib/public/email";
+import { AcademyApiError, academyApiConfig, emailSchema, idSchema, notFound, readBody } from "@/modules/academy/lib/public/http";
 import { bearerToken } from "@/lib/public-api/http";
 import {
   ACADEMY_CALL_TIME_KEYS, ACADEMY_CHECKS, ACADEMY_KIND_META, ageOn, bookableOnline, callByFrom, euro, takesPlace, type AcademyCheck, type AcademyKind,
-} from "@/lib/academy/rules";
+} from "@/modules/academy/lib/rules";
 
 /** The booking site's side of the Academy (owner decision, 8 October 2026; docs/academy.md).
  *

@@ -4,10 +4,10 @@ import { Button } from "@/components/shadcn/button";
 import { EmptyState } from "@/components/ui-kit/empty-state";
 import { PageHeader } from "@/components/ui-kit/page-header";
 import { Tag } from "@/components/ui-kit/tag";
-import { ArchiveCourseType, CourseTypeDialog } from "@/components/academy/forms";
+import { ArchiveCourseType, CourseTypeDialog } from "@/modules/academy/components/forms";
 import { plural } from "@/lib/format";
-import { courseTypes } from "@/lib/academy/data";
-import { ACADEMY_CHECKS, ACADEMY_KIND_META, type AcademyCheck, type AcademyKind } from "@/lib/academy/rules";
+import { courseTypes } from "@/modules/academy/lib/data";
+import { ACADEMY_CHECKS, ACADEMY_KIND_META, type AcademyCheck, type AcademyKind } from "@/modules/academy/lib/rules";
 import { ARCHIVAL_STATUS_META } from "@/lib/status";
 
 export const metadata: Metadata = { title: "Course list" };

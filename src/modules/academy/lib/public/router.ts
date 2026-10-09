@@ -1,5 +1,5 @@
-import { book, course, courses, requestCode, verifyCode } from "@/lib/academy/public/api";
-import { AcademyApiError, academyResponse, idSchema, json, notFound, parseInput } from "@/lib/academy/public/http";
+import { book, course, courses, requestCode, verifyCode } from "@/modules/academy/lib/public/api";
+import { AcademyApiError, academyResponse, idSchema, json, notFound, parseInput } from "@/modules/academy/lib/public/http";
 
 /** /api/academy/v1: the only way the Academy booking site reaches Turnfin. See docs/academy.md.
  *

@@ -12,7 +12,7 @@ import "@/lib/rota/areas";
 import "@/lib/training/file";
 import "@/modules/purchasing/lib/home";
 import "@/lib/tasks/home";
-import "@/lib/academy/contributions";
+import "@/modules/academy/lib/contributions";
 import "@/lib/people/home";
 import "@/lib/hr/home";
 

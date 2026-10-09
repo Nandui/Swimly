@@ -15,10 +15,10 @@ import { Field, FormDialog } from "@/components/form-dialog";
 import { AreaSelect } from "@/components/setup/area-select";
 import {
   archiveCourseType, logCall, recordChecks, recordResult, removeSession, saveCandidate, saveCourse, saveCourseType, saveSession, setCourseStatus, setWithdrawn, takeRegister,
-} from "@/lib/academy/actions";
+} from "@/modules/academy/lib/actions";
 import {
   ACADEMY_CALL_META, ACADEMY_CALL_OUTCOMES, ACADEMY_CALL_TIMES, ACADEMY_CHECKS, ACADEMY_CHECK_KEYS, ACADEMY_KIND_META, ACADEMY_KINDS, ACADEMY_OUTCOMES, ACADEMY_PAYMENT_META, ACADEMY_PAYMENTS, ACADEMY_RESULT_META, euro,
-} from "@/lib/academy/rules";
+} from "@/modules/academy/lib/rules";
 
 /** The Academy's dialogs (docs/academy.md): the course list, putting a course on, its sessions,
  *  candidates, pre-course checks, registers and results. Every one is a FormDialog, so a refusal

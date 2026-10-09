@@ -4,7 +4,7 @@ import type { ReactNode } from 'react';
 import { usePathname } from 'next/navigation';
 import { CalendarRange, ListChecks, Phone } from 'lucide-react';
 import { ModuleShell } from '@/components/workspace/module-shell';
-import type { AcademyActor } from '@/lib/academy/access';
+import type { AcademyActor } from '@/modules/academy/lib/access';
 
 /** The Academy's pages in the shared workspace frame. */
 export function AcademyShell({ who, children }: { who: AcademyActor; children: ReactNode }) {

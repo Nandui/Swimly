@@ -5,8 +5,8 @@ import { today } from "@/lib/format";
 import { prisma } from "@/lib/prisma";
 import { mayFor, sitesFor } from "@/lib/policy/session";
 import { areaNames } from "@/lib/setup/data";
-import { requireAcademyActor } from "@/lib/academy/access";
-import { callDue, courseState, readiness, takesPlace } from "@/lib/academy/rules";
+import { requireAcademyActor } from "@/modules/academy/lib/access";
+import { callDue, courseState, readiness, takesPlace } from "@/modules/academy/lib/rules";
 
 /** The Academy's reads (docs/academy.md). Courses are limited to the sites `academy.read`
  *  covers; a course outside them is a 404. The course list belongs to the organisation. */

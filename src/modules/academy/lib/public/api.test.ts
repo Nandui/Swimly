@@ -61,12 +61,12 @@ before(async () => {
   const d = {
     "@/lib/prisma": { prisma: db },
     "@/lib/clubs/current": { currentClubId: async () => site, currentClubIdIfAny: async () => site },
-    "@/lib/academy/public/email": {
+    "@/modules/academy/lib/public/email": {
       sendCode: async (email: string, code: string) => { sent.push({ email, code }); },
       sendHeld: async (email: string, details: { reference: string }) => { held.push({ email, reference: details.reference }); },
     },
   };
-  router = serverModule("src/lib/academy/public/router.ts", d);
+  router = serverModule("src/modules/academy/lib/public/router.ts", d);
   const session = () => ({ user: { id: "desk", name: "Desk B", orgId: ORG, isSuperadmin: false, roleName: "Role", permissions: state.permissions, primaryPermissions: state.permissions,
     screens: ["academy"], primaryScreens: ["academy"], grants: [], authMethod: "password", authAt: Date.now() } });
   const staff = {
@@ -83,8 +83,8 @@ before(async () => {
     "server-only": {},
     react: { cache: <T,>(fn: T) => fn },
   };
-  actions = serverModule("src/lib/academy/actions.ts", staff);
-  data = serverModule("src/lib/academy/data.ts", staff);
+  actions = serverModule("src/modules/academy/lib/actions.ts", staff);
+  data = serverModule("src/modules/academy/lib/data.ts", staff);
 });
 after(async () => { process.env = originalEnv; await fixture?.close(); });
 
