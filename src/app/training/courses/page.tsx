@@ -5,8 +5,8 @@ import { PageHeader } from "@/components/ui-kit/page-header";
 import { SegmentedLinks } from "@/components/ui-kit/segmented-links";
 import { Tag } from "@/components/ui-kit/tag";
 import { ARCHIVAL_STATUS_META } from "@/lib/status";
-import { ArchiveCourse, AssignTraining, CourseDialog } from "@/modules/training/components/manage-actions";
-import { assignablePeople, listCourses, listQualificationTypeOptions } from "@/modules/training/lib/data";
+import { ArchiveCourse, assignablePeople, CourseDialog, listCourses, listQualificationTypeOptions } from "@/modules/training/features/courses";
+import { AssignTraining } from "@/modules/training/features/assignments";
 
 export const metadata: Metadata = { title: "Courses" };
 

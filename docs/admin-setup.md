@@ -82,4 +82,4 @@ Break rules as an Admin setting (they are the house rule in `src/modules/rota/li
 and opening hours per site.
 
 Tests: `src/lib/setup/setup.test.ts`, `src/lib/people/requirements.test.ts`, and the expiring and
-reminder cases in `src/modules/training/lib/training.test.ts` and `src/lib/staff-api/reminders.test.ts`.
+reminder cases in `src/modules/training/__tests__/training.test.ts` and `src/lib/staff-api/reminders.test.ts`.

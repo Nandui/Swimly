@@ -4,7 +4,7 @@ import type { Prisma } from "@/generated/prisma/client";
 import { requireSession } from "@/lib/authz";
 import { today } from "@/lib/format";
 import { prisma } from "@/lib/prisma";
-import { trainingState, type TrainingState } from "@/modules/training/lib/constants";
+import { trainingState, type TrainingState } from "@/modules/training/shared/constants";
 
 /** Self-service reads: the signed-in person's own training. No capability is
  *  needed and nothing here can reach another person's records. Kept apart

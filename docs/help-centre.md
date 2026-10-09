@@ -81,7 +81,7 @@ of prose so a rename does not require rewriting guides.
 | `guides-modules.ts` (Home) | The home page (`src/app/page.tsx`) and docs/staff-app.md for Turnfin Me |
 | `guides-modules.ts` (Refunds) | `src/modules/refunds/features/request/components` (request form, finance actions) |
 | `guides-modules.ts` (Docs) | `src/modules/docs/components` (home, library, new document, editor, reader) |
-| `guides-modules.ts` (Training) | `src/modules/training/components/manage-actions.tsx`, Training pages |
+| `guides-modules.ts` (Training) | `src/modules/training/features/*/components/` (course, assignment and sign-off dialogs), Training pages |
 | `guides-modules.ts` (Rota) | `src/modules/rota/components` (day-plan, fill-sheet, plan-dialogs, absences) and `src/modules/rota/lib/actions.ts` |
 | `guides-modules.ts` (HR) | `src/modules/hr/components/actions.tsx`, `src/modules/hr/lib/constants.ts` |
 

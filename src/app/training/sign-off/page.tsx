@@ -1,12 +1,11 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
-import { ReturnForPractice, SignOff } from "@/modules/training/components/manage-actions";
+import { ReturnForPractice, SignOff, signoffQueue } from "@/modules/training/features/sign-off";
 import { Avatar, AvatarFallback } from "@/components/shadcn/avatar";
 import { EmptyState } from "@/components/ui-kit/empty-state";
 import { PageHeader } from "@/components/ui-kit/page-header";
 import { formatDate, formatDateTime, nameInitials } from "@/lib/format";
-import { signoffQueue } from "@/modules/training/lib/data";
 
 export const metadata: Metadata = { title: "Sign-off" };
 

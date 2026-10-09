@@ -9,7 +9,7 @@ import { expandPermissions, type PermissionKey } from "@/lib/staff/permissions";
  *  nobody reviews their own; the record changes only when applied. */
 let fixture: Awaited<ReturnType<typeof isolatedPrisma>>;
 let details: typeof import("./details-actions");
-let certificates: typeof import("@/modules/training/lib/certificate-actions");
+let certificates: typeof import("@/modules/training/features/certificates/server/actions");
 const ORG = "org_leisureworld";
 type GrantRow = { roleName: string; permissions: string[]; scopeKind: string; scopeId: string };
 const state = { id: "alex", permissions: ["staff.manage", "roles.manage"] as string[], grants: [] as GrantRow[] };
@@ -45,7 +45,7 @@ before(async () => {
     react: { cache: <T,>(fn: T) => fn },
   };
   details = serverModule("src/lib/people/details-actions.ts", doubles);
-  certificates = serverModule("src/modules/training/lib/certificate-actions.ts", doubles);
+  certificates = serverModule("src/modules/training/features/certificates/server/actions.ts", doubles);
 });
 after(async () => fixture?.close());
 

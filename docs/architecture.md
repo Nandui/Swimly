@@ -8,7 +8,7 @@ Turnfin is **one Next.js app** made of **modules** on a shared **Core**, plus **
 | --- | --- | --- |
 | **Core** | What every module shares: sign-in, people, roles, sites (`Club`), departments and qualifications, the audit log, the module catalogue and the home page, and the shared plumbing (public APIs, email). | `src/app/(core)`, `src/lib/{staff,policy,people,clubs,devices,email,public-api,audit,directory,...}`, `src/modules/{registry,contributions}.ts` |
 | **Swim school** (Activities) | Running what the centre sells. Swim school is the first activity type: office (curriculum set-up), desk (enrolments, moves, waitlists, assessments), deck (attendance, competencies) and the parent API. | `src/app/(activities)`, `src/app/(instructor)`, the parent and operations APIs, and `src/modules/activities/{lib,components}` |
-| **Work modules** | Refunds, Docs, Training, Rota, HR, Purchasing, Academy and Tasks. | `src/modules/<id>/{lib,components}` (Refunds, Purchasing, Academy and Tasks now: `features/` and `shared/`, see docs/architecture/MIGRATION.md) and its routes in `src/app/<id>` (and `src/app/api/<id>`) |
+| **Work modules** | Refunds, Docs, Training, Rota, HR, Purchasing, Academy and Tasks. | `src/modules/<id>/{lib,components}` (Refunds, Purchasing, Academy, Tasks and Training now: `features/` and `shared/`, see docs/architecture/MIGRATION.md) and its routes in `src/app/<id>` (and `src/app/api/<id>`) |
 
 ## Every module describes itself
 

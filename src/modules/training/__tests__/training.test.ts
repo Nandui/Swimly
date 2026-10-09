@@ -3,7 +3,7 @@ import { after, before, test } from "node:test";
 import { isolatedPrisma } from "@/test/pglite-prisma";
 import { serverModule } from "@/test/server-module";
 import { expandPermissions, type PermissionKey } from "@/lib/staff/permissions";
-import { addMonthsIso } from "./constants";
+import { addMonthsIso } from "../shared/constants";
 import { today } from "@/lib/format";
 
 /** Training against a real (in-memory) Postgres: records and actions reach
@@ -11,10 +11,10 @@ import { today } from "@/lib/format";
  *  practical needs someone else's sign-off, and completion records the
  *  qualification the course grants. */
 let fixture: Awaited<ReturnType<typeof isolatedPrisma>>;
-let actions: typeof import("./actions");
-let data: typeof import("./data");
-let self: typeof import("./mine");
-let own: typeof import("./self");
+let actions: typeof import("../features/courses/server/actions") & typeof import("../features/assignments/server/actions") & typeof import("../features/sign-off/server/actions");
+let data: typeof import("../shared/data") & typeof import("../features/courses/server/data") & typeof import("../features/assignments/server/data") & typeof import("../features/sign-off/server/data") & typeof import("../features/expiring/server/data");
+let self: typeof import("../features/me/server/mine");
+let own: typeof import("../features/me/server/self");
 const ORG = "org_leisureworld";
 type GrantRow = { roleName: string; permissions: string[]; scopeKind: string; scopeId: string };
 const state = { id: "maya", permissions: [] as string[], screens: [] as string[], grants: [] as GrantRow[] };
@@ -55,10 +55,10 @@ before(async () => {
   }
   await db.qualificationType.create({ data: { id: "qt-rescue", orgId: ORG, name: "Synthetic rescue award", validityMonths: 24 } });
   await db.qualificationType.create({ data: { id: "qt-safe", orgId: ORG, name: "Synthetic safeguarding", validityMonths: 12 } });
-  actions = serverModule("src/modules/training/lib/actions.ts", doubles());
-  data = serverModule("src/modules/training/lib/data.ts", doubles());
-  self = serverModule("src/modules/training/lib/mine.ts", doubles());
-  own = serverModule("src/modules/training/lib/self.ts", doubles());
+  actions = Object.assign({}, ...["courses", "assignments", "sign-off"].map((f) => serverModule<object>(`src/modules/training/features/${f}/server/actions.ts`, doubles())));
+  data = Object.assign(serverModule<object>("src/modules/training/shared/data.ts", doubles()), ...["courses", "assignments", "sign-off", "expiring"].map((f) => serverModule<object>(`src/modules/training/features/${f}/server/data.ts`, doubles())));
+  self = serverModule("src/modules/training/features/me/server/mine.ts", doubles());
+  own = serverModule("src/modules/training/features/me/server/self.ts", doubles());
 });
 after(async () => { await fixture?.close(); });
 

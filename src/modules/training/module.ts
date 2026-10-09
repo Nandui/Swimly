@@ -1,8 +1,19 @@
 import "server-only";
-import { certificateQueue } from "@/modules/training/lib/certificates";
-import { expiringQualifications, signoffCount } from "@/modules/training/lib/data";
 import { expandPermissions } from "@/lib/staff/permissions";
-import { registerHomeCard, type HomeItem } from "@/modules/contributions";
+import { registerHomeCard, registerPersonFileSection, registerSubjectRecords, type HomeItem } from "@/modules/contributions";
+import { certificateQueue } from "@/modules/training/features/certificates";
+import { expiringQualifications } from "@/modules/training/features/expiring";
+import { trainingFile, trainingRecords } from "@/modules/training/features/person-file";
+import { signoffCount } from "@/modules/training/features/sign-off";
+
+/** Training's registration plug (CLAUDE.md section 5), loaded by
+ *  src/modules/server.ts: its home card, its part of a person's file and its
+ *  records for HR's subject export. Its menu entry, levels and permissions are
+ *  still described in src/modules/registry.ts until the platform registry
+ *  takes module plugs (ADR 0004). */
+
+registerPersonFileSection({ id: "training.open", heading: "Training", load: trainingFile });
+registerSubjectRecords({ key: "training", load: trainingRecords });
 
 /** Training on the home page, for trainers and training managers. Everyone
  *  completes their own training in Turnfin Me. */
