@@ -1,6 +1,6 @@
 import assert from "node:assert/strict";
 import { test } from "node:test";
-import { hrStorageConfig } from "./storage-config";
+import { hrStorageConfig } from "@/modules/hr/shared/storage-config";
 
 const hr = "postgresql://u:p@ep-hr-pooler.example.test/neondb";
 const hrDirect = "postgresql://u:p@ep-hr.example.test/neondb";

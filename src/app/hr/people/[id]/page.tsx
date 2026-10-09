@@ -7,16 +7,14 @@ import { CONTRACT_META, QUALIFICATION_STATE_META, hoursOf, type ContractType } f
 import { qualificationFile } from "@/lib/people/qualifications";
 import { REQUIREMENT_META, requirementSummary } from "@/lib/people/requirements";
 import { Button } from "@/components/shadcn/button";
-import { AddNote, StartReview, WithdrawNote } from "@/modules/hr/components/actions";
+import { AddNote, hrConfigured, hrPerson, NOTE_VISIBILITY_META, REVIEW_STATUS_META, WithdrawNote } from "@/modules/hr/features/person";
+import { StartReview } from "@/modules/hr/features/reviews";
 import { EmptyState } from "@/components/ui-kit/empty-state";
 import { PageHeader } from "@/components/ui-kit/page-header";
 import { Tag } from "@/components/ui-kit/tag";
-import { NOTE_VISIBILITY_META, REVIEW_STATUS_META } from "@/modules/hr/lib/constants";
 import { formatDate, formatDateTime } from "@/lib/format";
-import { hrPerson } from "@/modules/hr/lib/records";
 import { requireFreshSession } from "@/lib/policy/session";
 import { AuthorizationError } from "@/lib/authz";
-import { hrConfigured } from "@/modules/hr/lib/database";
 
 /** The tile icon for each module's section of the person's file, by its stable key. */
 const FILE_ICONS: Record<string, LucideIcon> = { "rota.planned": CalendarDays, "rota.absences": UserX, "rota.changes": CalendarClock, "training.open": GraduationCap };

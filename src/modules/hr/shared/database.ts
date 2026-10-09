@@ -1,7 +1,7 @@
 import 'server-only';
 import { Pool, type PoolClient, type QueryResultRow } from 'pg';
 import { postgresConnectionString } from '@/lib/postgres-connection';
-import { hrStorageConfig } from '@/modules/hr/lib/storage-config';
+import { hrStorageConfig } from '@/modules/hr/shared/storage-config';
 
 /** The HR database connection. Plain SQL in schema `turnfin_hr`; identity and
  *  access decisions come from the main database and the policy engine, never

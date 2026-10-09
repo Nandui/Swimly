@@ -1,6 +1,6 @@
 import "server-only";
 import { fail, ok, type ActionResult } from "@/lib/action-result";
-import { hrDatabase } from "@/modules/hr/lib/database";
+import { hrDatabase } from "@/modules/hr/shared/database";
 
 /** A person's own HR writes, for the staff API (Turnfin Me) only. The caller
  *  has already proved who `me` is and that they confirmed recently. */

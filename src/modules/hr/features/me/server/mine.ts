@@ -1,7 +1,7 @@
 import "server-only";
 import { notFound } from "next/navigation";
-import { hrDatabase } from "@/modules/hr/lib/database";
-import { NOTE_COLUMNS, REVIEW_COLUMNS, type HrNote, type HrReview } from "@/modules/hr/lib/columns";
+import { hrDatabase } from "@/modules/hr/shared/database";
+import { NOTE_COLUMNS, REVIEW_COLUMNS, type HrNote, type HrReview } from "@/modules/hr/shared/columns";
 
 /** What HR has shared with the signed-in person, and nothing else: notes
  *  marked "shared with them" and reviews once shared. Drafts, private notes
@@ -20,4 +20,12 @@ export async function mySharedReview(id: string, userId: string, orgId: string) 
     `SELECT ${REVIEW_COLUMNS} FROM reviews WHERE id=$1 AND org_id=$2 AND subject_user_id=$3 AND status <> 'draft'`, [id, orgId, userId]);
   if (!review) notFound();
   return review;
+}
+
+/** The person reading their own record is logged like every HR read. */
+export async function logOwnHrRead(me: { id: string; name: string; orgId: string }) {
+  await hrDatabase().query(
+    `INSERT INTO access_events (org_id, actor_id, actor_name, subject_user_ids, entity, entity_id, purpose) VALUES ($1,$2,$3,$4,'HrRecord',$2,'own HR record (Turnfin Me)')`,
+    [me.orgId, me.id, me.name, [me.id]],
+  );
 }

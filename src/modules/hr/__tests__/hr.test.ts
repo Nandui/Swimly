@@ -12,11 +12,11 @@ import { expandPermissions, type PermissionKey } from "@/lib/staff/permissions";
  *  is refused, and every read is logged. */
 let fixture: Awaited<ReturnType<typeof isolatedPrisma>>;
 let hr: Awaited<ReturnType<typeof createHrTestDatabase>>;
-let actions: typeof import("./actions");
-let records: typeof import("./records");
-let mine: typeof import("./mine");
-let self: typeof import("./self");
-let exporter: typeof import("./export");
+let actions: typeof import("../features/person/server/actions") & typeof import("../features/reviews/server/actions");
+let records: typeof import("../shared/records") & typeof import("../features/team/server/data") & typeof import("../features/person/server/data") & typeof import("../features/reviews/server/data") & typeof import("../features/activity/server/data");
+let mine: typeof import("@/modules/hr/features/me/server/mine");
+let self: typeof import("@/modules/hr/features/me/server/self");
+let exporter: typeof import("@/modules/hr/features/export/server/export");
 const ORG = "org_leisureworld";
 type GrantRow = { roleName: string; permissions: string[]; scopeKind: string; scopeId: string };
 const state = { id: "liam", permissions: [] as string[], screens: [] as string[], grants: [] as GrantRow[], superadmin: false, authMethod: "password", authAt: Date.now() as number | null };
@@ -30,7 +30,7 @@ class NotFound extends Error {}
 function doubles() {
   return {
     "@/lib/prisma": { prisma: fixture.prisma },
-    "@/modules/hr/lib/database": hr.module,
+    "@/modules/hr/shared/database": hr.module,
     "@/lib/authz": {
       AuthorizationError: class AuthorizationError extends Error {},
       requireSession: async () => session(),
@@ -61,11 +61,11 @@ before(async () => {
     if (dept) await db.userDepartment.create({ data: { userId: id, departmentId: dept } });
   }
   const d = doubles();
-  actions = serverModule("src/modules/hr/lib/actions.ts", d);
-  records = serverModule("src/modules/hr/lib/records.ts", d);
-  mine = serverModule("src/modules/hr/lib/mine.ts", d);
-  self = serverModule("src/modules/hr/lib/self.ts", d);
-  exporter = serverModule("src/modules/hr/lib/export.ts", d);
+  actions = Object.assign({}, ...["person", "reviews"].map((f) => serverModule<object>(`src/modules/hr/features/${f}/server/actions.ts`, d)));
+  records = Object.assign(serverModule<object>("src/modules/hr/shared/records.ts", d), ...["team", "person", "reviews", "activity"].map((f) => serverModule<object>(`src/modules/hr/features/${f}/server/data.ts`, d)));
+  mine = serverModule("src/modules/hr/features/me/server/mine.ts", d);
+  self = serverModule("src/modules/hr/features/me/server/self.ts", d);
+  exporter = serverModule("src/modules/hr/features/export/server/export.ts", d);
 });
 after(async () => { await hr?.close(); await fixture?.close(); });
 

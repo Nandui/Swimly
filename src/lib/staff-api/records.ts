@@ -2,9 +2,7 @@ import { z } from "zod";
 import { logAudit } from "@/lib/audit";
 import { isDateOnly, parseDateOnly, today } from "@/lib/format";
 import { prisma } from "@/lib/prisma";
-import { hrDatabase, hrConfigured } from "@/modules/hr/lib/database";
-import { mySharedHr } from "@/modules/hr/lib/mine";
-import { acknowledgeReviewFor } from "@/modules/hr/lib/self";
+import { acknowledgeReviewFor, hrConfigured, logOwnHrRead, mySharedHr } from "@/modules/hr";
 import { myQualifications } from "@/lib/people/mine";
 import { myDays } from "@/modules/rota/lib/mine";
 import { docsReading } from "@/modules/docs";
@@ -244,11 +242,7 @@ export async function hr(identity: StaffIdentity) {
   requireConfirmed(identity);
   if (!hrConfigured()) return { configured: false, notes: [], reviews: [] };
   const { notes, reviews } = await mySharedHr(identity.user.id, identity.user.orgId);
-  // The person reading their own record is logged like every HR read.
-  await hrDatabase().query(
-    `INSERT INTO access_events (org_id, actor_id, actor_name, subject_user_ids, entity, entity_id, purpose) VALUES ($1,$2,$3,$4,'HrRecord',$2,'own HR record (Turnfin Me)')`,
-    [identity.user.orgId, identity.user.id, identity.user.name, [identity.user.id]],
-  );
+  await logOwnHrRead({ id: identity.user.id, name: identity.user.name, orgId: identity.user.orgId });
   return {
     configured: true,
     notes: notes.map((n) => ({ id: n.id, author: n.authorName, body: n.body, createdAt: new Date(n.createdAt).toISOString() })),

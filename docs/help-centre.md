@@ -83,7 +83,7 @@ of prose so a rename does not require rewriting guides.
 | `guides-modules.ts` (Docs) | `src/modules/docs/features/*/components` (home, library, new document, editor, reader) |
 | `guides-modules.ts` (Training) | `src/modules/training/features/*/components/` (course, assignment and sign-off dialogs), Training pages |
 | `guides-modules.ts` (Rota) | `src/modules/rota/components` (day-plan, fill-sheet, plan-dialogs, absences) and `src/modules/rota/lib/actions.ts` |
-| `guides-modules.ts` (HR) | `src/modules/hr/components/actions.tsx`, `src/modules/hr/lib/constants.ts` |
+| `guides-modules.ts` (HR) | `src/modules/hr/features/person/components/actions.tsx`, `src/modules/hr/shared/constants.ts` |
 
 Each module guide's "Before you start" names the level it needs, from
 `src/modules/registry.ts`. Desk steps describe ModuleShell (page bar, tools bar

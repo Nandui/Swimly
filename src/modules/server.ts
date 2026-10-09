@@ -13,7 +13,7 @@ import "@/modules/purchasing/module";
 import "@/modules/tasks/module";
 import "@/modules/academy/module";
 import "@/lib/people/home";
-import "@/modules/hr/lib/home";
+import "@/modules/hr/module";
 
 export { renameAreaEverywhere, commitmentsFor, homeCardItems, planCommitment, personFile, siteSummaryLines, subjectRecords } from "./contributions";
 // The swim school's top-bar tools and daily pages, for the home page's frame.

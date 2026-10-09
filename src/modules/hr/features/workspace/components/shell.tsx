@@ -4,7 +4,7 @@ import { usePathname } from 'next/navigation';
 import type { ReactNode } from 'react';
 import { ClipboardList, History, Users } from 'lucide-react';
 import { ModuleShell } from '@/components/workspace/module-shell';
-import type { HrActor } from '@/modules/hr/lib/access';
+import type { HrActor } from '@/modules/hr/shared/access';
 
 /** HR's navigation in the shared workspace shell. */
 export function HrShell({ who, children }: { who: HrActor; children: ReactNode }) {

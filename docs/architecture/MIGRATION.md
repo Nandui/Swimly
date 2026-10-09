@@ -1,7 +1,7 @@
 # Migration to modular architecture
 
 **Status:** Phase 2 in progress. Module map and ADRs 0001 to 0003 approved 9 October 2026.
-**Next step:** Phase 2: give HR `index.ts`, `module.ts`, `README.md` and the `features/` shape (Refunds, Purchasing, Academy, Tasks, Training and Docs are done).
+**Next step:** Phase 2: give Rota `index.ts`, `module.ts`, `README.md` and the `features/` shape (every other Work module is done).
 
 ## Phases
 - [x] Phase 0 — Audit written to docs/architecture/audit.md (with [../modular-monolith.md](../modular-monolith.md))
@@ -28,9 +28,10 @@ In the full shape (`index.ts`, `module.ts`, `events.ts`, `README.md`, `shared/`,
 - tasks (9 October 2026): features `day`, `follow-ups`, `templates`, `sites`, `reports`, `schedule`, `workspace`
 - training (9 October 2026): features `courses`, `assignments`, `sign-off`, `certificates`, `expiring`, `me`, `person-file`, `workspace`; Turnfin Me's staff API now uses its `index.ts`
 - docs (9 October 2026): features `home`, `library`, `reader`, `editor`, `history`, `work`, `reports`, `admin`, `files`, `import`, `me`, `workspace`; its server actions moved from `src/app/docs/actions.ts` into `shared/actions.ts`; the staff API uses `docsReading()` from its `index.ts`
+- hr (9 October 2026): features `team`, `person`, `reviews`, `activity`, `export`, `details-requests`, `me`, `workspace`; the staff API no longer writes HR's `access_events` itself (`logOwnHrRead`)
 
 Moved into `src/modules/<id>/{lib,components}` (PR #9) but not yet in the `features/` shape:
-- hr, rota
+- rota
 - activities (the swim school) was already there
 
 Known warnings left in moved modules: `ModuleShell` (`src/components/workspace`) is the app frame, not a UI-kit component, so features importing it are reported. Deciding where the frame lives (platform or ui) is a boundary question for Fernando once more modules are moved.
@@ -50,3 +51,4 @@ Known warnings left in moved modules: `ModuleShell` (`src/components/workspace`)
 - 2026-10-09 — Phase 2: Tasks in the features shape. `src/app/tasks/files/[id]/route.ts` still queries `TaskFile` itself (noted in the Tasks README).
 - 2026-10-09 — Phase 2: Training in the features shape; the staff API reads it through `index.ts`.
 - 2026-10-09 — Phase 2: Docs in the features shape; `src/app/docs/actions.ts` moved into the module; the staff API reads required reading through `docsReading()`.
+- 2026-10-09 — Phase 2: HR in the features shape; the staff API's own-record log moved into HR (`logOwnHrRead`).

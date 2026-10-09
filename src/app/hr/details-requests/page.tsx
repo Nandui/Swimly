@@ -8,7 +8,7 @@ import { Tag } from "@/components/ui-kit/tag";
 import { ApplyDetailChange, DeclineDetailChange } from "@/components/people/details-request-actions";
 import { formatDateTime } from "@/lib/format";
 import { notFound } from "next/navigation";
-import { requireHrActor } from "@/modules/hr/lib/access";
+import { requireHrActor } from "@/modules/hr/features/details-requests";
 import { requireFreshSession } from "@/lib/policy/session";
 import { DETAIL_REQUEST_STATUS_META, listDetailRequests } from "@/lib/people/details-requests";
 
