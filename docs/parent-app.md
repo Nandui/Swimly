@@ -274,7 +274,7 @@ Errors use `{error:{code,message}}`. Display the safe message and branch on code
 | 403 | ORIGIN_DENIED or FORBIDDEN — configuration/staff-access problem |
 | 404 | NOT_FOUND — missing or unapproved record |
 | 405 | METHOD_NOT_ALLOWED — check the API contract; Allow names accepted methods |
-| 409 | PROFILE_REQUIRED, CHILD_INACTIVE, BOOKING_CLOSED, SESSION_FULL, ALREADY_BOOKED, IDEMPOTENCY_CONFLICT |
+| 409 | PROFILE_REQUIRED, CHILD_INACTIVE, BOOKING_CLOSED, SESSION_FULL, OUTSIDE_AGE_RANGE, ALREADY_BOOKED, IDEMPOTENCY_CONFLICT |
 | 413, 415 | BODY_TOO_LARGE, JSON_REQUIRED |
 | 429 | RATE_LIMITED — respect Retry-After |
 | 503 | UNAVAILABLE — API disabled, incomplete configuration, or email unavailable |

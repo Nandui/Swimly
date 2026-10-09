@@ -532,6 +532,10 @@ model AssessmentSession {
   location        String?
   /// Null means uncapped.
   capacity        Int?
+  /// Who can be assessed: whole years on the session's date, both ends included.
+  /// Null leaves that end open. Booking and placing both refuse a swimmer outside it.
+  minAge          Int?
+  maxAge          Int?
   instructorId    String?
   /// The programme this session places children into. An outcome is one of
   /// its levels, and nothing else.

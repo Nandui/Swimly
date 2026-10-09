@@ -7,8 +7,9 @@ import { serverModule } from "@/test/server-module";
 type Actions = typeof import("./bookings");
 
 function fixture() {
-  const session = { id: "session", clubId: "club", date: new Date("2000-01-01T00:00:00Z"), startMinutes: 900, capacity: 2, programmeId: "programme", cancelledAt: null as Date | null };
-  const student = { id: "swimmer", clubId: "club", firstName: "Test", lastName: "Swimmer", status: "ACTIVE" };
+  const session = { id: "session", clubId: "club", date: new Date("2000-01-01T00:00:00Z"), startMinutes: 900, capacity: 2, programmeId: "programme", cancelledAt: null as Date | null,
+    minAge: null as number | null, maxAge: null as number | null };
+  const student = { id: "swimmer", clubId: "club", firstName: "Test", lastName: "Swimmer", status: "ACTIVE", dateOfBirth: new Date("1994-06-01T00:00:00Z") as Date | null };
   const booking = {
     id: "booking", studentId: "swimmer", sessionId: "session", status: "BOOKED",
     outcomeLevelId: null as string | null, outcomeNote: null as string | null,
@@ -93,4 +94,21 @@ test("assessment audit identifies the changed booking and its club", async () =>
   assert.equal(f.audits.length, 1);
   assert.equal((f.audits[0] as { entityId: string }).entityId, "booking");
   assert.equal((f.audits[0] as { clubId: string }).clubId, "club");
+});
+
+test("a swimmer outside the session's ages cannot be booked or placed", async () => {
+  const f = fixture(); f.session.minAge = 4; f.session.maxAge = 5; // the swimmer is 5 on 1 January 2000
+  assert.equal((await f.actions.bookStudent({ sessionId: "session", studentId: "swimmer" })).ok, true);
+  f.writes.length = 0; f.audits.length = 0; f.session.maxAge = null; f.session.minAge = 6;
+  const refused = await f.actions.bookStudent({ sessionId: "session", studentId: "swimmer" });
+  assert.equal(refused.ok, false);
+  assert.match(refused.ok ? "" : refused.error, /is 5 on the day/);
+  assert.equal((await f.actions.recordOutcome({ bookingId: "booking", levelId: "level", note: "" })).ok, false);
+  assert.equal(f.writes.length, 0); assert.equal(f.audits.length, 0);
+});
+
+test("a session with ages needs the swimmer's date of birth", async () => {
+  const f = fixture(); f.session.maxAge = 8; f.student.dateOfBirth = null;
+  assert.equal((await f.actions.bookStudent({ sessionId: "session", studentId: "swimmer" })).ok, false);
+  assert.equal(f.writes.length, 0);
 });

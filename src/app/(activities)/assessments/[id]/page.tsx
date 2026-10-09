@@ -27,6 +27,7 @@ import { Settings2 } from "lucide-react";
 import { Avatar, AvatarFallback } from "@/components/shadcn/avatar";
 import { Button } from "@/components/shadcn/button";
 import { WrongClub } from "@/components/clubs/wrong-club";
+import { ageRangeLabel } from "@/modules/activities/lib/assessments/age";
 import {
   SESSION_STATUS_META,
   BOOKING_STATUS_META,
@@ -96,6 +97,7 @@ export default async function AssessmentSessionPage(
         title={sessionDay(session)}
         description={
           `${sessionSpan(session)} · ${session.programme.name} · ${session.type?.name ?? "kind not set"}` +
+          (ageRangeLabel(session) ? ` · ${ageRangeLabel(session)!.toLowerCase()}` : "") +
           (session.location ? ` · ${session.location}` : "") +
           (session.instructor
             ? ` · ${session.instructor.name}`

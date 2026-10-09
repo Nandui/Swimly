@@ -8,6 +8,8 @@ import { sessionLabel } from "@/modules/activities/lib/assessments/constants";
 import { logAudit } from "@/lib/audit";
 import { requirePermission } from "@/lib/authz";
 import { currentClubId } from "@/lib/clubs/current";
+import { ageRangeError, ageRangeLabel, type AgeRange } from "@/modules/activities/lib/assessments/age";
+import { fullName } from "@/modules/activities/lib/students/constants";
 import { withAssessmentSeat } from "@/modules/activities/lib/assessments/seat";
 import { parseTime } from "@/modules/activities/lib/courses/constants";
 import { isDateOnly, parseDateOnly } from "@/lib/format";
@@ -15,6 +17,13 @@ import { readSharedCurriculum } from "@/modules/activities/lib/curriculum/data/s
 import { prisma } from "@/lib/prisma";
 
 /** Sessions are timetable, so they share the timetable's permission. */
+
+/** An age as the form sends it: blank for an open end, else whole years. */
+const age = z
+  .string()
+  .trim()
+  .refine((value) => value === "" || /^\d+$/.test(value), "Ages are whole years, like 4.")
+  .refine((value) => value === "" || Number(value) <= 99, "Keep ages under 100.");
 
 const sessionSchema = z.object({
   programmeId: z.string().min(1, "Pick the programme this session assesses for."),
@@ -35,12 +44,19 @@ const sessionSchema = z.object({
     .refine((value) => value === "" || /^\d+$/.test(value), "Capacity is a whole number.")
     .refine((value) => value === "" || Number(value) >= 1, "Capacity has to be at least one.")
     .refine((value) => value === "" || Number(value) <= 999, "Keep capacity under 1,000 places."),
+  minAge: age,
+  maxAge: age,
   location: z.string().trim().max(120, "Keep the location under 120 characters."),
   instructorId: z.string().trim(),
   notes: z.string().trim().max(500, "Keep the notes under 500 characters."),
-});
+}).refine(
+  ({ minAge, maxAge }) => minAge === "" || maxAge === "" || Number(minAge) <= Number(maxAge),
+  { message: "The youngest age has to be no older than the oldest.", path: ["maxAge"] }
+);
 
 export type SessionInput = z.infer<typeof sessionSchema>;
+
+const rangeText = (range: AgeRange) => ageRangeLabel(range)?.replace(/^Ages? /, "").replace(/^Up to age/, "up to") ?? "any";
 
 function toData(input: SessionInput) {
   return {
@@ -50,6 +66,8 @@ function toData(input: SessionInput) {
     startMinutes: parseTime(input.start)!,
     durationMinutes: input.durationMinutes,
     capacity: input.capacity === "" ? null : Number(input.capacity),
+    minAge: input.minAge === "" ? null : Number(input.minAge),
+    maxAge: input.maxAge === "" ? null : Number(input.maxAge),
     location: input.location || null,
     instructorId: input.instructorId || null,
     notes: input.notes || null,
@@ -90,7 +108,7 @@ export async function createSession(input: SessionInput): Promise<ActionResult> 
       programmeId: programme.id,
       clubId,
       summary: `Added a ${kind.name} assessment session for ${programme.name} on ${sessionLabel(created)}${data.capacity ? ` with ${data.capacity} places` : ""
-        }`,
+        }${ageRangeLabel(data) ? ` for ${ageRangeLabel(data)!.toLowerCase()}` : ""}`,
     }, tx);
   });
 
@@ -117,6 +135,8 @@ export async function updateSession(id: string, input: SessionInput): Promise<Ac
         date: true,
         startMinutes: true,
         capacity: true,
+        minAge: true,
+        maxAge: true,
         durationMinutes: true,
         location: true,
         instructorId: true,
@@ -156,6 +176,19 @@ export async function updateSession(id: string, input: SessionInput): Promise<Ac
     if (data.instructorId && data.instructorId !== existing.instructorId && !await isActiveStaff(data.instructorId, tx)) {
       return fail("That instructor is not available. Pick an active staff member.");
     }
+    // A new range or a new day can leave someone already booked outside it.
+    // Say who, rather than keeping a booking the session would now refuse.
+    const rangeChanged = data.minAge !== existing.minAge || data.maxAge !== existing.maxAge;
+    if (rangeChanged || existing.date.getTime() !== data.date.getTime()) {
+      const booked = await tx.assessmentBooking.findMany({
+        where: { sessionId: id, status: "BOOKED" },
+        select: { student: { select: { firstName: true, lastName: true, dateOfBirth: true } } },
+      });
+      for (const { student } of booked) {
+        const outside = ageRangeError(data, { name: fullName(student), dateOfBirth: student.dateOfBirth }, data.date);
+        if (outside) return fail(`${outside} Cancel their booking or change the ages first.`);
+      }
+    }
 
     const changes: string[] = [];
     if (data.programmeId !== existing.programmeId) changes.push("programme");
@@ -164,6 +197,7 @@ export async function updateSession(id: string, input: SessionInput): Promise<Ac
     if (data.location !== existing.location) changes.push(`location ${existing.location ?? "not set"} → ${data.location ?? "not set"}`);
     if (data.instructorId !== existing.instructorId) changes.push("instructor");
     if (data.notes !== existing.notes) changes.push("notes");
+    if (rangeChanged) changes.push(`ages ${rangeText(existing)} → ${rangeText(data)}`);
 
     const moved =
       existing.date.getTime() !== data.date.getTime() || existing.startMinutes !== data.startMinutes;

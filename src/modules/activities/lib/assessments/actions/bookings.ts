@@ -6,6 +6,7 @@ import type { Prisma } from "@/generated/prisma/client";
 import type { Session } from "next-auth";
 import { fail, ok, type ActionResult } from "@/lib/action-result";
 import { HOLDS_A_PLACE, sessionLabel } from "@/modules/activities/lib/assessments/constants";
+import { ageRangeError } from "@/modules/activities/lib/assessments/age";
 import { withAssessmentSeat } from "@/modules/activities/lib/assessments/seat";
 import { logAudit } from "@/lib/audit";
 import { requirePermission } from "@/lib/authz";
@@ -42,17 +43,19 @@ export async function bookStudent(input: BookInput): Promise<ActionResult> {
     const [student, session] = await Promise.all([
       tx.student.findUnique({
         where: { id: studentId },
-        select: { id: true, firstName: true, lastName: true, status: true },
+        select: { id: true, firstName: true, lastName: true, status: true, dateOfBirth: true },
       }),
       tx.assessmentSession.findUnique({
         where: { id: sessionId, clubId },
-        select: { id: true, date: true, startMinutes: true, capacity: true, cancelledAt: true, programmeId: true },
+        select: { id: true, date: true, startMinutes: true, capacity: true, cancelledAt: true, programmeId: true, minAge: true, maxAge: true },
       }),
     ]);
     if (!student) return fail("That swimmer no longer exists.");
     if (student.status !== "ACTIVE") return fail(`${fullName(student)} is marked inactive.`);
     if (!session) return fail("That session is not available in this club.");
     if (session.cancelledAt) return fail("That session was cancelled.");
+    const tooYoungOrOld = ageRangeError(session, { name: fullName(student), dateOfBirth: student.dateOfBirth }, session.date);
+    if (tooYoungOrOld) return fail(tooYoungOrOld);
 
     const existing = await tx.assessmentBooking.findUnique({
       where: { sessionId_studentId: { sessionId, studentId } }, select: { id: true, status: true },
@@ -81,8 +84,8 @@ export async function bookStudent(input: BookInput): Promise<ActionResult> {
 const BOOKING_SELECT = {
   id: true, status: true, studentId: true, outcomeLevelId: true, outcomeNote: true,
   outcomeLevel: { select: { name: true } },
-  student: { select: { firstName: true, lastName: true } },
-  session: { select: { id: true, date: true, startMinutes: true, programmeId: true, cancelledAt: true } },
+  student: { select: { firstName: true, lastName: true, dateOfBirth: true } },
+  session: { select: { id: true, date: true, startMinutes: true, programmeId: true, minAge: true, maxAge: true, cancelledAt: true } },
 } as const satisfies Prisma.AssessmentBookingSelect;
 
 type Booking = Prisma.AssessmentBookingGetPayload<{ select: typeof BOOKING_SELECT }>;
@@ -156,6 +159,10 @@ export async function recordOutcome(input: OutcomeInput): Promise<ActionResult> 
     const level = liveSharedLevel(curriculum, levelId);
     if (level && level.programmeId !== curriculum.programmeIds.resolve(booking.session.programmeId)) return fail("That level does not belong to this assessment's programme.");
     if (!level) return fail("That level is not part of the programme this session assesses for.");
+    // Re-checked here: the range may have been set after this swimmer was booked.
+    const tooYoungOrOld = ageRangeError(booking.session,
+      { name: fullName(booking.student), dateOfBirth: booking.student.dateOfBirth }, booking.session.date);
+    if (tooYoungOrOld) return fail(tooYoungOrOld);
     if (booking.status === "ATTENDED" && booking.outcomeLevelId && curriculum.levelIds.resolve(booking.outcomeLevelId) === level.id && (booking.outcomeNote ?? "") === note) return ok();
     await tx.assessmentBooking.update({
       where: { id: bookingId },

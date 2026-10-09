@@ -104,7 +104,9 @@ it; cover is declared by the person at the pool, not inferred.
 - **Assessment sessions** are dated one-offs (the club calls them "Swim School
   Assessments", level "Pre-Assessments"), free, with a fixed number of places.
   A child booked on one is placed at a level afterwards, which earns that level
-  and every level below it.
+  and every level below it. A session can set the ages it is for (whole years on
+  its date, both ends optional and included); a child outside it, or with no
+  date of birth to check, cannot be booked or placed (owner request, 9 October 2026).
 - **The curriculum today:** Water Safety & Fun (Starfish, Penguins, Turtles,
   Dolphins), Swimming Skills (Sharks 1, Sharks 2, LeisureWorld Sharks), RLSS
   Lifesaving (Rookies Bronze, Silver, Gold). Credit earned in one programme

@@ -38,6 +38,8 @@ function readInput(formData: FormData): SessionInput {
     start: text("start"),
     durationMinutes: Number(text("durationMinutes") || 30),
     capacity: text("capacity"),
+    minAge: text("minAge"),
+    maxAge: text("maxAge"),
     location: text("location"),
     instructorId: instructor === NONE ? "" : instructor,
     notes: text("notes"),
@@ -175,6 +177,45 @@ function SessionFields({
           />
         </Field>
         <LocationField label="Pool" defaultValue={session?.location} />
+      </div>
+
+      <div
+        className={
+          "min-w-0 grid grid-cols-[repeat(auto-fit,minmax(min(100%,14rem),1fr))] gap-4"
+        }
+      >
+        <Field
+          label="Youngest age"
+          htmlFor="minAge"
+          optional
+          hint="In years on the day. Blank for no lower limit."
+        >
+          <Input
+            id="minAge"
+            name="minAge"
+            type="number"
+            inputMode="numeric"
+            min={0}
+            max={99}
+            defaultValue={session?.minAge ?? ""}
+          />
+        </Field>
+        <Field
+          label="Oldest age"
+          htmlFor="maxAge"
+          optional
+          hint="Included. Blank for no upper limit."
+        >
+          <Input
+            id="maxAge"
+            name="maxAge"
+            type="number"
+            inputMode="numeric"
+            min={0}
+            max={99}
+            defaultValue={session?.maxAge ?? ""}
+          />
+        </Field>
       </div>
 
       <Field label="Assessor" htmlFor="instructorId">

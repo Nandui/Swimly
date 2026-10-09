@@ -7,6 +7,7 @@ import { AssessmentPublicationPanel } from "@/modules/activities/components/pare
 import { Button } from "@/components/shadcn/button";
 import { PageHeader } from "@/components/ui-kit/page-header";
 import { getAssessmentProgrammeOptions, getAssessmentSession, getAssessmentTypeOptions } from "@/modules/activities/lib/assessments/data/assessments";
+import { ageRangeLabel } from "@/modules/activities/lib/assessments/age";
 import { sessionDay, sessionSpan } from "@/modules/activities/lib/assessments/constants";
 import { getCurrentClub } from "@/lib/clubs/current";
 import { getInstructorOptions } from "@/modules/activities/lib/courses/data/courses";
@@ -31,10 +32,11 @@ export default async function SessionSetupPage({ params }: PageProps<"/assessmen
         <h2 id="session-details-heading">Session details</h2>
         {!session.cancelledAt ? <div className="flex flex-wrap items-center gap-2"><CancelSession session={session} /><EditSession session={session} programmes={programmes} types={types} instructors={instructors} today={today()} /></div> : <p className="text-sm text-ui-muted-foreground">This session is cancelled.</p>}
       </div>
-      <dl className="grid grid-cols-1 gap-3 sm:grid-cols-3">
+      <dl className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-4">
         <div className="pc-stat"><dt className="text-xs text-ui-muted-foreground">Pool area</dt><dd className="text-sm font-semibold">{session.location || "Not set"}</dd></div>
         <div className="pc-stat"><dt className="text-xs text-ui-muted-foreground">Assessor</dt><dd className="text-sm font-semibold">{session.instructor?.name ?? "Not assigned"}</dd></div>
         <div className="pc-stat"><dt className="text-xs text-ui-muted-foreground">Places</dt><dd className="text-sm font-semibold">{session._count.bookings} booked · {session.capacity === null ? "No limit" : `${session.capacity} total`}</dd></div>
+        <div className="pc-stat"><dt className="text-xs text-ui-muted-foreground">Ages</dt><dd className="text-sm font-semibold">{ageRangeLabel(session) ?? "Any age"}</dd></div>
       </dl>
       {session.notes ? <p className="text-sm text-ui-muted-foreground">{session.notes}</p> : null}
     </section>

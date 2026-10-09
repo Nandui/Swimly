@@ -6,6 +6,7 @@ import type { ParentAccount, Prisma } from "@/generated/prisma/client";
 import { prisma } from "@/lib/prisma";
 import { readSharedCurriculum, type SharedCurriculum } from "@/modules/activities/lib/curriculum/data/shared";
 import { HOLDS_A_PLACE } from "@/modules/activities/lib/assessments/constants";
+import { ageRangeError } from "@/modules/activities/lib/assessments/age";
 import { isDateOnly, parseDateOnly, today } from "@/lib/format";
 import { parentAudit, withParent, type ParentIdentity } from "@/modules/activities/lib/parent/auth";
 import { childScope, requireChild } from "@/modules/activities/lib/parent/children";
@@ -16,7 +17,7 @@ import { dublinInstant, PARENT_TIMEZONE } from "@/modules/activities/lib/parent/
 
 export const SESSION_SELECT = {
   id: true, date: true, startMinutes: true, durationMinutes: true, location: true, capacity: true,
-  cancelledAt: true, programmeId: true, typeId: true, clubId: true,
+  cancelledAt: true, programmeId: true, typeId: true, clubId: true, minAge: true, maxAge: true,
   parentPublication: { select: { enabled: true, bookingClosesAt: true } },
   _count: { select: { bookings: { where: { status: { in: HOLDS_A_PLACE } } } } },
 } as const satisfies Prisma.AssessmentSessionSelect;
@@ -46,7 +47,7 @@ export function sessionDto(session: PublicSession, curriculum: SharedCurriculum)
     startMinutes: session.startMinutes, startsAt: availability.start?.toISOString() ?? null, durationMinutes: session.durationMinutes,
     timezone: PARENT_TIMEZONE, location: session.location, programme: programme ? { id: programme.id, name: programme.name } : null,
     type: type ? { id: type.id, name: type.name, description: type.description } : null,
-    spacesAvailable: availability.spaces, bookingClosesAt: availability.closesAt?.toISOString() ?? null,
+    minAge: session.minAge, maxAge: session.maxAge, spacesAvailable: availability.spaces, bookingClosesAt: availability.closesAt?.toISOString() ?? null,
     bookable: availability.open && availability.spaces !== 0, cancelled: Boolean(session.cancelledAt) };
 }
 
@@ -123,11 +124,20 @@ export async function reserveAssessment(tx: Prisma.TransactionClient, parent: Pa
   const available = sessionAvailability(session, curriculum, new Date());
   if (!available.open) throw new ParentApiError(409, "BOOKING_CLOSED", "That assessment is no longer open for booking.");
   if (available.spaces === 0) throw new ParentApiError(409, "SESSION_FULL", "That assessment is full. Please choose another session.");
+  const checkAge = (child: { firstName: string; dateOfBirth: Date | null }) => {
+    const outside = ageRangeError(session, { name: child.firstName, dateOfBirth: child.dateOfBirth }, session.date);
+    if (outside) throw new ParentApiError(409, "OUTSIDE_AGE_RANGE", child.dateOfBirth
+      ? `${outside} Please choose another session.`
+      : "Contact the team to book this assessment. They need your child's date of birth first.");
+  };
   let student;
   if ("childId" in input) {
     student = await requireChild(tx, parent, input.childId);
     if (student.status !== "ACTIVE") throw new ParentApiError(409, "CHILD_INACTIVE", "Contact the team to book an assessment for this child.");
+    checkAge(student);
   } else {
+    // Before the swimmer is created, so a refused booking registers no one.
+    checkAge({ ...input.newChild, dateOfBirth: parseDateOnly(input.newChild.dateOfBirth) });
     // No lookup by name, DOB or contact email: those are not proof of guardianship.
     student = await tx.student.create({ data: { clubId: session.clubId, firstName: input.newChild.firstName, lastName: input.newChild.lastName,
       dateOfBirth: parseDateOnly(input.newChild.dateOfBirth), joinedOn: parseDateOnly(today()), contactName: parent.name,
