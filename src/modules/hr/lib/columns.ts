@@ -1,4 +1,4 @@
-import type { NoteVisibility, ReviewOverall, ReviewStatus } from "@/lib/hr/constants";
+import type { NoteVisibility, ReviewOverall, ReviewStatus } from "@/modules/hr/lib/constants";
 
 /** HR row shapes and the SELECT lists that produce them (snake_case columns
  *  aliased to camelCase), shared by the workspace and self-service reads. */

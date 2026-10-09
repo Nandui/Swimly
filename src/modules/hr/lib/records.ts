@@ -1,11 +1,11 @@
 import "server-only";
 import { notFound } from "next/navigation";
 import { prisma } from "@/lib/prisma";
-import { hrDatabase, type HrSql } from "@/lib/hr/database";
-import { requireHrActor, type HrActor } from "@/lib/hr/access";
-import type { ReviewStatus } from "@/lib/hr/constants";
-import { NOTE_COLUMNS, REVIEW_COLUMNS, type HrNote, type HrReview } from "@/lib/hr/columns";
-export type { HrNote, HrReview } from "@/lib/hr/columns";
+import { hrDatabase, type HrSql } from "@/modules/hr/lib/database";
+import { requireHrActor, type HrActor } from "@/modules/hr/lib/access";
+import type { ReviewStatus } from "@/modules/hr/lib/constants";
+import { NOTE_COLUMNS, REVIEW_COLUMNS, type HrNote, type HrReview } from "@/modules/hr/lib/columns";
+export type { HrNote, HrReview } from "@/modules/hr/lib/columns";
 import { mayFor, requireCapFor, subjectsFor } from "@/lib/policy/session";
 import { personFile } from "@/modules/server";
 

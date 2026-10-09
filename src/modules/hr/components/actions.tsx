@@ -13,8 +13,8 @@ import { ConfirmAction } from "@/components/confirm-action";
 import { Field, FormDialog } from "@/components/form-dialog";
 import { ChoiceRow } from "@/components/ui/choice-row";
 import { Notice } from "@/components/ui-kit/notice";
-import { NOTE_VISIBILITY_META, NOTE_VISIBILITIES, REVIEW_OVERALL_LABELS, type ReviewOverall } from "@/lib/hr/constants";
-import { addNote, saveReview, shareReview, withdrawNote } from "@/lib/hr/actions";
+import { NOTE_VISIBILITY_META, NOTE_VISIBILITIES, REVIEW_OVERALL_LABELS, type ReviewOverall } from "@/modules/hr/lib/constants";
+import { addNote, saveReview, shareReview, withdrawNote } from "@/modules/hr/lib/actions";
 import { formatDateTime } from "@/lib/format";
 
 /** HR dialogs carry the Poolside Clear scope into their portal. */

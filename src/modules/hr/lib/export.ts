@@ -1,9 +1,9 @@
 import "server-only";
 import { prisma } from "@/lib/prisma";
 import { requireSession } from "@/lib/authz";
-import { hrDatabase } from "@/lib/hr/database";
-import { NOTE_COLUMNS, REVIEW_COLUMNS, type HrNote, type HrReview } from "@/lib/hr/columns";
-import { logHrAccess } from "@/lib/hr/records";
+import { hrDatabase } from "@/modules/hr/lib/database";
+import { NOTE_COLUMNS, REVIEW_COLUMNS, type HrNote, type HrReview } from "@/modules/hr/lib/columns";
+import { logHrAccess } from "@/modules/hr/lib/records";
 import { recentlyConfirmed } from "@/lib/policy/engine";
 import { actorForSession } from "@/lib/policy/session";
 import { personFile, subjectRecords } from "@/modules/server";

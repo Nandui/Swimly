@@ -88,7 +88,7 @@ before(async () => {
   const doubles = {
     "@/lib/prisma": { prisma: db },
     "@/lib/staff-api/email": { sendStaffCode: async (email: string, code: string, purpose: string) => { sent.push({ email, code, purpose }); } },
-    "@/lib/hr/database": hr.module,
+    "@/modules/hr/lib/database": hr.module,
     "@/modules/docs/lib/runtime-database": { directoryDatabase: () => docs },
     "@/lib/authz": { requireSession: async () => { throw new Error("no Work session in the staff API"); } },
     "@/lib/clubs/current": { currentClubIdIfAny: async () => null, currentClubId: async () => club.id },

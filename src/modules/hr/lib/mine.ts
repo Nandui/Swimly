@@ -1,7 +1,7 @@
 import "server-only";
 import { notFound } from "next/navigation";
-import { hrDatabase } from "@/lib/hr/database";
-import { NOTE_COLUMNS, REVIEW_COLUMNS, type HrNote, type HrReview } from "@/lib/hr/columns";
+import { hrDatabase } from "@/modules/hr/lib/database";
+import { NOTE_COLUMNS, REVIEW_COLUMNS, type HrNote, type HrReview } from "@/modules/hr/lib/columns";
 
 /** What HR has shared with the signed-in person, and nothing else: notes
  *  marked "shared with them" and reviews once shared. Drafts, private notes

@@ -1,9 +1,9 @@
 import { PGlite } from '@electric-sql/pglite';
 import { readFile, readdir } from 'node:fs/promises';
-import type { HrDatabase, HrSql } from '@/lib/hr/database';
+import type { HrDatabase, HrSql } from '@/modules/hr/lib/database';
 
 /** An isolated in-memory HR database with every committed HR migration.
- *  Stands in for `@/lib/hr/database` in tests; never reads real settings. */
+ *  Stands in for `@/modules/hr/lib/database` in tests; never reads real settings. */
 export async function createHrTestDatabase() {
   const pg = new PGlite();
   for (const file of (await readdir('hr-database/migrations')).filter((f) => /^\d{3}_.+\.sql$/.test(f)).sort()) {

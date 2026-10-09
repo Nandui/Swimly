@@ -30,7 +30,7 @@ class NotFound extends Error {}
 function doubles() {
   return {
     "@/lib/prisma": { prisma: fixture.prisma },
-    "@/lib/hr/database": hr.module,
+    "@/modules/hr/lib/database": hr.module,
     "@/lib/authz": {
       AuthorizationError: class AuthorizationError extends Error {},
       requireSession: async () => session(),
@@ -61,11 +61,11 @@ before(async () => {
     if (dept) await db.userDepartment.create({ data: { userId: id, departmentId: dept } });
   }
   const d = doubles();
-  actions = serverModule("src/lib/hr/actions.ts", d);
-  records = serverModule("src/lib/hr/records.ts", d);
-  mine = serverModule("src/lib/hr/mine.ts", d);
-  self = serverModule("src/lib/hr/self.ts", d);
-  exporter = serverModule("src/lib/hr/export.ts", d);
+  actions = serverModule("src/modules/hr/lib/actions.ts", d);
+  records = serverModule("src/modules/hr/lib/records.ts", d);
+  mine = serverModule("src/modules/hr/lib/mine.ts", d);
+  self = serverModule("src/modules/hr/lib/self.ts", d);
+  exporter = serverModule("src/modules/hr/lib/export.ts", d);
 });
 after(async () => { await hr?.close(); await fixture?.close(); });
 

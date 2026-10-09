@@ -39,7 +39,7 @@ export function qualificationState(q: { expiresOn: Date | null; revokedAt: Date 
 
 /** One person's account for Admin's Staff page: who they are, their role and
  *  where it applies. Their details (position, employment, contact,
- *  qualifications) are HR's, read through `src/lib/hr/records.ts`. */
+ *  qualifications) are HR's, read through `src/modules/hr/lib/records.ts`. */
 export async function getPersonDetail(userId: string) {
   const session = await requirePermission("staff.manage");
   const person = await prisma.user.findFirst({
