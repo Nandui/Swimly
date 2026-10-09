@@ -18,7 +18,7 @@ sessions show on the Rota.
 | Call | `AcademyCall` | A phone call to someone who held a place online: paid (amount and till receipt), no answer, asked us to call back, or not going ahead; who called and when. |
 | Email check | `AcademyEmailCheck` | The booking site's email code, then a one-hour token. Only hashes are kept. |
 
-The rules are in `src/modules/academy/lib/rules.ts` and are pure. `readiness` gives each check (age is
+The rules are in `src/modules/academy/shared/rules.ts` and are pure. `readiness` gives each check (age is
 read from the date of birth on the first day) and the hours attended against the minimum. A
 candidate is ready when every check is done and the hours are met. `expiryFrom` dates a pass:
 the certificate's own expiry, else the qualification's validity from the result day.
@@ -43,7 +43,7 @@ course only.
 ## On the Rota
 
 The Academy reports each session of a course that is not cancelled through the commitments
-seam (`academy.sessions` in `src/modules/academy/lib/contributions.ts`). It reports once for the tutor
+seam (`academy.sessions` in `src/modules/academy/features/courses/server/contributions.ts`, registered in `module.ts`). It reports once for the tutor
 and once for the assessor, when that is someone else. The Rota draws these as a read-only
 activity in the session's area on every department's plan (`DayBooked`, `ANY_DEPARTMENT` in
 `src/modules/rota/lib/day.ts`), linked back to the course. The time counts in the tutor's shift and
@@ -121,11 +121,11 @@ next two weeks at their sites.
 ## Files
 
 - Schema: `prisma/schema/academy.prisma`, migrations `20261023120000_academy` and `20261024120000_academy_online_booking` (additive)
-- `src/modules/academy/lib/`: `rules.ts` (pure), `access.ts`, `data.ts`, `actions.ts`, `contributions.ts`
-- UI: `src/app/academy/` (courses, a course, the course list, to call), `src/modules/academy/components/`
-- Online booking: `src/modules/academy/lib/public/` (`http.ts`, `api.ts`, `email.ts`, `router.ts`),
+- `src/modules/academy/`: `shared/` (`rules.ts`, pure; `access.ts`; `server.ts` and `reads.ts` helpers; the dialogs' `form-kit.tsx`), and the features `courses`, `course-types`, `calls`, `booking` and `workspace`, each with its `components/` and `server/` (`data.ts`, `actions.ts`). See its README.md
+- UI: `src/app/academy/` (courses, a course, the course list, to call), each feature's `components/`
+- Online booking: `src/modules/academy/features/booking/server/` (`http.ts`, `api.ts`, `email.ts`, `router.ts`),
   `src/app/api/academy/v1/[[...path]]/route.ts`, and the site in `apps/academy`
-- Tests: `rules.test.ts`, `academy.test.ts`, `public/api.test.ts` (the booking API and the call
+- Tests: `rules.test.ts`, `academy.test.ts`, `booking.test.ts` (the booking API and the call
   list end to end), and the booked-session case in `src/modules/rota/lib/day.test.ts`
 - Sandbox: an NPLQ course at Hillview started yesterday. Sam tutors and Liam assesses.
 

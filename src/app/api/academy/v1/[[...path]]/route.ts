@@ -1,4 +1,4 @@
-import { handleAcademyRequest } from "@/modules/academy/lib/public/router";
+import { handleAcademyRequest } from "@/modules/academy/features/booking";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";

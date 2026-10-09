@@ -10,9 +10,9 @@ import { today } from "@/lib/format";
  *  email checked with a code holds a place within the places and the minimum age; and staff see
  *  who to phone, log calls, and take payment. Invented people only. */
 let fixture: Awaited<ReturnType<typeof isolatedPrisma>>;
-let router: typeof import("./router");
-let actions: typeof import("../actions");
-let data: typeof import("../data");
+let router: typeof import("../features/booking/server/router");
+let actions: typeof import("../features/calls/server/actions");
+let data: typeof import("../features/calls/server/data");
 const ORG = "org_leisureworld";
 const origin = "https://academy.example.test";
 const originalEnv = { ...process.env };
@@ -61,12 +61,12 @@ before(async () => {
   const d = {
     "@/lib/prisma": { prisma: db },
     "@/lib/clubs/current": { currentClubId: async () => site, currentClubIdIfAny: async () => site },
-    "@/modules/academy/lib/public/email": {
+    "@/modules/academy/features/booking/server/email": {
       sendCode: async (email: string, code: string) => { sent.push({ email, code }); },
       sendHeld: async (email: string, details: { reference: string }) => { held.push({ email, reference: details.reference }); },
     },
   };
-  router = serverModule("src/modules/academy/lib/public/router.ts", d);
+  router = serverModule("src/modules/academy/features/booking/server/router.ts", d);
   const session = () => ({ user: { id: "desk", name: "Desk B", orgId: ORG, isSuperadmin: false, roleName: "Role", permissions: state.permissions, primaryPermissions: state.permissions,
     screens: ["academy"], primaryScreens: ["academy"], grants: [], authMethod: "password", authAt: Date.now() } });
   const staff = {
@@ -83,8 +83,8 @@ before(async () => {
     "server-only": {},
     react: { cache: <T,>(fn: T) => fn },
   };
-  actions = serverModule("src/modules/academy/lib/actions.ts", staff);
-  data = serverModule("src/modules/academy/lib/data.ts", staff);
+  actions = serverModule("src/modules/academy/features/calls/server/actions.ts", staff);
+  data = serverModule("src/modules/academy/features/calls/server/data.ts", staff);
 });
 after(async () => { process.env = originalEnv; await fixture?.close(); });
 

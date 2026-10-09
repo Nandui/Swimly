@@ -1,7 +1,7 @@
 import { z } from "zod";
 import { sendGoogleEmail, type GoogleEmailConfig } from "@/lib/email/google";
 import { emailSender } from "@/lib/email/sender";
-import { unavailable } from "@/modules/academy/lib/public/http";
+import { unavailable } from "@/modules/academy/features/booking/server/http";
 
 /** Email for the booking site: the code that checks an address, and "your place is held".
  *  Sent through Core's sender (src/lib/email/sender.ts); ACADEMY_EMAIL_NAME names it

@@ -20,8 +20,8 @@ Turnfin is a modular monolith: one Next.js app and one main database, in layers.
 | --- | --- | --- | --- |
 | activities | Runs the swim school: classes, swimmers, attendance, assessments, the parent app and the pool deck. | `activities.prisma` | reports class commitments; site summaries; home cards |
 | refunds | Moves a refund request from reception to finance. Features: `queue`, `request`, `workspace` ([README](../../src/modules/refunds/README.md)). | `refunds.prisma` | home cards |
-| purchasing | Raises and approves purchase orders. | `purchasing.prisma` | home cards |
-| academy | Runs the lifeguard and swim teacher courses we deliver. | `academy.prisma` | home cards; its own public API |
+| purchasing | Raises and approves purchase orders. Features: `orders`, `suppliers`, `workspace` ([README](../../src/modules/purchasing/README.md)). | `purchasing.prisma` | home cards |
+| academy | Runs the lifeguard and swim teacher courses we deliver. Features: `courses`, `course-types`, `calls`, `booking`, `workspace` ([README](../../src/modules/academy/README.md)). | `academy.prisma` | home cards; its own public API |
 | tasks | Runs each site's daily checks and logs. | `tasks.prisma` | home cards |
 | training | Assigns courses and records completions. | `training.prisma` | personal file, subject records, Turnfin Me digest |
 | docs | Publishes documents and required reading. | own database (`DOCS_DATABASE_URL`) | home cards, Turnfin Me digest |

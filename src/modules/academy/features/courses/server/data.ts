@@ -5,15 +5,13 @@ import { today } from "@/lib/format";
 import { prisma } from "@/lib/prisma";
 import { mayFor, sitesFor } from "@/lib/policy/session";
 import { areaNames } from "@/lib/setup/data";
-import { requireAcademyActor } from "@/modules/academy/lib/access";
-import { callDue, courseState, readiness, takesPlace } from "@/modules/academy/lib/rules";
+import { requireAcademyActor } from "@/modules/academy/shared/access";
+import { courseState, readiness, takesPlace } from "@/modules/academy/shared/rules";
 
 /** The Academy's reads (docs/academy.md). Courses are limited to the sites `academy.read`
  *  covers; a course outside them is a 404. The course list belongs to the organisation. */
 
-type Sites = Awaited<ReturnType<typeof sitesFor>>;
-const inSites = (sites: Sites) => (sites.kind === "all" ? {} : { siteId: { in: [...sites.siteIds] } });
-const iso = (d: Date) => d.toISOString().slice(0, 10);
+import { inSites, iso } from "@/modules/academy/shared/reads";
 
 const COURSE_ROW = {
   id: true, status: true, capacity: true, priceCents: true, cancelledAt: true, siteId: true,
@@ -54,20 +52,6 @@ export async function academyHome() {
     past: courses.filter((c) => (c.state === "completed" || c.state === "cancelled") && (c.last ?? "") >= since).sort((a, b) => byStart(b, a)),
     types: await prisma.academyCourseType.count({ where: { orgId: who.orgId ?? undefined, archivedAt: null } }),
   };
-}
-
-/** The course list (Manage keeps it), with what each grants. */
-export async function courseTypes() {
-  const who = await requireAcademyActor();
-  const [types, qualifications] = await Promise.all([
-    prisma.academyCourseType.findMany({
-      where: { orgId: who.orgId ?? undefined }, orderBy: [{ archivedAt: { sort: "asc", nulls: "first" } }, { sortOrder: "asc" }, { name: "asc" }],
-      select: { id: true, name: true, kind: true, awardingBody: true, minAge: true, minHours: true, checks: true, qualificationTypeId: true, archivedAt: true,
-        qualificationType: { select: { name: true } }, _count: { select: { courses: true } } },
-    }),
-    prisma.qualificationType.findMany({ where: { orgId: who.orgId ?? undefined, archivedAt: null }, orderBy: { name: "asc" }, select: { id: true, name: true } }),
-  ]);
-  return { who, types, qualifications };
 }
 
 /** Staff who can tutor or take a course at a site: active, working there. */
@@ -137,24 +121,3 @@ export async function academyCourse(id: string) {
   };
 }
 export type AcademyCourseView = Awaited<ReturnType<typeof academyCourse>>;
-
-/** Who to phone for payment: everyone who held a place online and still owes, on courses that are
- *  on, at the sites `academy.read` covers; soonest deadline first (owner decision, 8 October 2026:
- *  every Academy level sees and works this list). */
-export async function toCall(now: Date = new Date()) {
-  const who = await requireAcademyActor();
-  const sites = await sitesFor("academy.read");
-  const rows = await prisma.academyCandidate.findMany({
-    where: { source: "online", payment: "owed", status: "booked", course: { orgId: who.orgId ?? undefined, cancelledAt: null, status: { not: "completed" }, ...inSites(sites) } },
-    orderBy: [{ callBy: "asc" }, { createdAt: "asc" }], take: 300,
-    select: {
-      id: true, name: true, email: true, phone: true, phone2: true, callTimes: true, callBy: true, createdAt: true, reference: true, note: true,
-      calls: { orderBy: { createdAt: "desc" }, select: { outcome: true, note: true, byName: true, createdAt: true } },
-      course: { select: { id: true, priceCents: true, site: { select: { name: true } }, type: { select: { name: true } },
-        sessions: { orderBy: [{ date: "asc" }, { startMinutes: "asc" }], take: 1, select: { date: true, startMinutes: true } } } },
-    },
-  });
-  const people = rows.map((r) => ({ ...r, ...callDue(r.callBy ?? r.createdAt, now), first: r.course.sessions[0] ? iso(r.course.sessions[0].date) : null }));
-  return { who, people, overdue: people.filter((p) => p.due === "overdue").length, soon: people.filter((p) => p.due === "soon").length };
-}
-export type ToCall = Awaited<ReturnType<typeof toCall>>["people"][number];

@@ -5,10 +5,8 @@ import { Button } from "@/components/shadcn/button";
 import { EmptyState } from "@/components/ui-kit/empty-state";
 import { PageHeader } from "@/components/ui-kit/page-header";
 import { Tag } from "@/components/ui-kit/tag";
-import { CourseDialog } from "@/modules/academy/components/forms";
+import { ACADEMY_COURSE_META, ACADEMY_KIND_META, academyHome, type AcademyKind, CourseDialog, type CourseRow, hoursLabel, newCourseOptions } from "@/modules/academy/features/courses";
 import { formatDate, plural } from "@/lib/format";
-import { academyHome, newCourseOptions, type CourseRow } from "@/modules/academy/lib/data";
-import { ACADEMY_COURSE_META, ACADEMY_KIND_META, hoursLabel, type AcademyKind } from "@/modules/academy/lib/rules";
 
 export const metadata: Metadata = { title: "Academy courses" };
 

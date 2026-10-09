@@ -1,7 +1,7 @@
 # Migration to modular architecture
 
 **Status:** Phase 2 in progress. Module map and ADRs 0001 to 0003 approved 9 October 2026.
-**Next step:** Phase 2: give Purchasing `index.ts`, `module.ts`, `README.md` and the `features/` shape (Refunds is done).
+**Next step:** Phase 2: give Tasks `index.ts`, `module.ts`, `README.md` and the `features/` shape (Refunds, Purchasing and Academy are done).
 
 ## Phases
 - [x] Phase 0 — Audit written to docs/architecture/audit.md (with [../modular-monolith.md](../modular-monolith.md))
@@ -23,9 +23,11 @@
 ## Modules moved
 In the full shape (`index.ts`, `module.ts`, `events.ts`, `README.md`, `shared/`, `features/`), routes importing only feature entries:
 - refunds (9 October 2026): features `queue`, `request`, `workspace`
+- purchasing (9 October 2026): features `orders`, `suppliers`, `workspace`
+- academy (9 October 2026): features `courses`, `course-types`, `calls`, `booking`, `workspace`
 
 Moved into `src/modules/<id>/{lib,components}` (PR #9) but not yet in the `features/` shape:
-- purchasing, academy, tasks, training, docs, hr, rota
+- tasks, training, docs, hr, rota
 - activities (the swim school) was already there
 
 Known warnings left in moved modules: `ModuleShell` (`src/components/workspace`) is the app frame, not a UI-kit component, so features importing it are reported. Deciding where the frame lives (platform or ui) is a boundary question for Fernando once more modules are moved.
@@ -40,3 +42,5 @@ Known warnings left in moved modules: `ModuleShell` (`src/components/workspace`)
 - 2026-10-09 — Module map approved. Phase 1: event bus, boundary lint in warning mode, docs/architecture (README, audit, events, ADRs 0001 to 0004).
 - 2026-10-09 — Fernando confirmed ADRs 0001 to 0003 (Core is the platform, table names kept, UI kit stays in `src/components`).
 - 2026-10-09 — PR #10 merged. Phase 2: Refunds in the features shape; boundary lint now also forbids sibling-feature imports (`feature` and `module-shared` elements). Warnings 383 → 367.
+- 2026-10-09 — Phase 2: Purchasing in the features shape (actions and reads split between orders and suppliers).
+- 2026-10-09 — Phase 2: Academy in the features shape (dialogs, writes and reads split by feature; the booking API is its own feature).

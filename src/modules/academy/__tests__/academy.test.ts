@@ -9,8 +9,8 @@ import { today } from "@/lib/format";
  *  sessions on the Rota's seam, candidates (staff and public) within the places, checks, a
  *  register, and a pass that puts the qualification on a staff member's record. Invented people. */
 let fixture: Awaited<ReturnType<typeof isolatedPrisma>>;
-let actions: typeof import("./actions");
-let data: typeof import("./data");
+let actions: typeof import("../features/courses/server/actions") & typeof import("../features/course-types/server/actions");
+let data: typeof import("../features/courses/server/data");
 let contributions: typeof import("@/modules/contributions");
 const ORG = "org_leisureworld";
 type GrantRow = { roleName: string; permissions: string[]; screens: string[]; scopeKind: string; scopeId: string };
@@ -53,9 +53,9 @@ before(async () => {
     react: { cache: <T,>(fn: T) => fn },
   };
   contributions = serverModule<typeof import("@/modules/contributions")>("src/modules/contributions.ts", d);
-  serverModule("src/modules/academy/lib/contributions.ts", { ...d, "@/modules/contributions": contributions });
-  actions = serverModule("src/modules/academy/lib/actions.ts", d);
-  data = serverModule("src/modules/academy/lib/data.ts", d);
+  serverModule("src/modules/academy/module.ts", { ...d, "@/modules/contributions": contributions });
+  actions = { ...serverModule<object>("src/modules/academy/features/course-types/server/actions.ts", d), ...serverModule<object>("src/modules/academy/features/courses/server/actions.ts", d) } as typeof actions;
+  data = serverModule("src/modules/academy/features/courses/server/data.ts", d);
 });
 after(async () => { await fixture?.close(); });
 
