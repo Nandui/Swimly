@@ -133,6 +133,11 @@ const restrictedPaths = (skip) => ["error", {
 // Elements are folders (first match wins); single files that sit outside their
 // layer's folder are classified by file category instead.
 const layerElements = [
+  // A module's features and its shared folder, then the rest of the module
+  // (index.ts, module.ts, and the lib/components folders of modules not yet
+  // in the features shape).
+  { type: "feature", pattern: "src/modules/*/features/*", capture: ["module", "feature"], partialMatch: false },
+  { type: "module-shared", pattern: "src/modules/*/shared", capture: ["module"], partialMatch: false },
   { type: "module", pattern: "src/modules/*", capture: ["module"], partialMatch: false },
   { type: "ui", pattern: ["src/components/shadcn", "src/components/ui", "src/components/ui-kit"], partialMatch: false },
   // Screens that combine modules: the home page, the frame and Turnfin Me's API.
@@ -152,16 +157,29 @@ const toEntry = { element: { type: "module", fileInternalPath: "index.ts" } };
 const layerPolicies = [
   { from: { element: { type: "platform" } }, allow: { to: { element: { type: "platform" } } } },
   { from: { element: { type: "ui" } }, allow: { to: { element: { type: "ui" } } } },
+  // A module's index.ts and module.ts use their own features; a feature uses
+  // its own files and its module's shared folder, never a sibling feature.
   { from: { element: { type: "module" } }, allow: { to: [
     { element: { types: { anyOf: ["platform", "ui"] } } },
-    { element: { type: "module", captured: { module: "{{ from.element.captured.module }}" } } },
+    { element: { types: { anyOf: ["module", "module-shared", "feature"] }, captured: { module: "{{ from.element.captured.module }}" } } },
+    toEntry,
+  ] } },
+  { from: { element: { type: "module-shared" } }, allow: { to: [
+    { element: { types: { anyOf: ["platform", "ui"] } } },
+    { element: { type: "module-shared", captured: { module: "{{ from.element.captured.module }}" } } },
+    toEntry,
+  ] } },
+  { from: { element: { type: "feature" } }, allow: { to: [
+    { element: { types: { anyOf: ["platform", "ui"] } } },
+    { element: { type: "module-shared", captured: { module: "{{ from.element.captured.module }}" } } },
+    { element: { type: "feature", captured: { module: "{{ from.element.captured.module }}", feature: "{{ from.element.captured.feature }}" } } },
     toEntry,
   ] } },
   { from: { element: { types: { anyOf: ["front", "admin"] } } }, allow: { to: [{ element: { types: { anyOf: ["platform", "ui", "front", "admin"] } } }, toEntry] } },
   { from: { element: { type: "app" } }, allow: { to: [
     { element: { types: { anyOf: ["platform", "ui", "front", "admin", "app"] } } },
     toEntry,
-    { element: { type: "module", fileInternalPath: "features/*/index.ts" } },
+    { element: { type: "feature", fileInternalPath: "index.ts" } },
   ] } },
   // Files classified on their own (layerFiles); later policies win.
   { allow: { to: { file: { categories: { anyOf: ["platform", "ui"] } } } } },

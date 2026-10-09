@@ -9,8 +9,8 @@ import { Ban, Banknote, CircleCheck, CircleHelp, CircleX, RotateCcw, UserCheck, 
 import { Input } from "@/components/ui/input";
 import { Select } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
-import { saveRefund, retryRefundEmails } from "@/modules/refunds/lib/actions";
-import { euros, paymentMethods, refundNextActions, type RefundActor, type RefundFinanceAction as Action, type RefundView } from "@/modules/refunds/lib/types";
+import { saveRefund, retryRefundEmails } from "@/modules/refunds/features/request/server/actions";
+import { euros, paymentMethods, refundNextActions, type RefundActor, type RefundFinanceAction as Action, type RefundView } from "@/modules/refunds/shared/types";
 import { today } from "@/lib/format";
 
 const actionLabels: Record<Action, string> = { claim: "Take responsibility", information: "Request information", approve: "Approve refund", decline: "Decline request", withdraw: "Withdraw request", cancel: "Cancel approval", pay: "Record payment" };

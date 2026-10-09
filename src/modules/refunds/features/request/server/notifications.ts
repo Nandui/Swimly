@@ -2,9 +2,9 @@ import { prisma } from "@/lib/prisma";
 import { logAudit } from "@/lib/audit";
 import { emailSender } from "@/lib/email/sender";
 import { sendGoogleTextEmail } from "@/lib/email/google";
-import { refundAccess } from "@/modules/refunds/lib/auth";
-import { guardRead, lockRefund } from "@/modules/refunds/lib/service";
-import { refundNumber, refundStatuses, type RefundActor, type RefundStatus } from "@/modules/refunds/lib/types";
+import { refundAccess } from "@/modules/refunds/shared/auth";
+import { guardRead, lockRefund } from "@/modules/refunds/shared/service";
+import { refundNumber, refundStatuses, type RefundActor, type RefundStatus } from "@/modules/refunds/shared/types";
 
 export function refundEmail(number: number, status: string, id: string, base: string) {
   const url = new URL(base);

@@ -7,8 +7,8 @@ import { LoadingButton } from "@/components/ui/loading-button";
 import { Select } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
 import { Notice } from "@/components/ui-kit/notice";
-import { saveRefund } from "@/modules/refunds/lib/actions";
-import { refundNextStep, refundServices, type RefundFields, type RefundView } from "@/modules/refunds/lib/types";
+import { saveRefund } from "@/modules/refunds/features/request/server/actions";
+import { refundNextStep, refundServices, type RefundFields, type RefundView } from "@/modules/refunds/shared/types";
 
 /** The request form and its save and submit buttons, which share one pending state. On a new
  *  request the buttons sit in a sticky bar at the foot of the form (RFNew); on an editable

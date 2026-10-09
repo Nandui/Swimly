@@ -1,9 +1,9 @@
 import type { Prisma, RefundRequest } from "@/generated/prisma/client";
 import { prisma } from "@/lib/prisma";
 import { logAudit } from "@/lib/audit";
-import { refundAccess } from "@/modules/refunds/lib/auth";
-import { commandSchema, parseFields, RefundError, transition, type RefundCommand } from "@/modules/refunds/lib/rules";
-import { canReadRefund, refundActions, refundNumber, type RefundActor } from "@/modules/refunds/lib/types";
+import { refundAccess } from "@/modules/refunds/shared/auth";
+import { commandSchema, parseFields, RefundError, transition, type RefundCommand } from "@/modules/refunds/shared/rules";
+import { canReadRefund, refundActions, refundNumber, type RefundActor } from "@/modules/refunds/shared/types";
 
 export async function lockRefund(tx: Prisma.TransactionClient, id: string) {
   await tx.$executeRaw`SELECT pg_advisory_xact_lock(hashtextextended(${`refund:${id}`}, 0))`;

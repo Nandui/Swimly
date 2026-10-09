@@ -3,13 +3,13 @@ import { randomUUID } from "node:crypto";
 import { after, before, test } from "node:test";
 import { isolatedPrisma } from "@/test/pglite-prisma";
 import { serverModule } from "@/test/server-module";
-import { money, parseFields, type RefundCommand } from "./rules";
-import { canReadRefund, type RefundActor, type RefundFields } from "./types";
+import { money, parseFields, type RefundCommand } from "../shared/rules";
+import { canReadRefund, type RefundActor, type RefundFields } from "../shared/types";
 import { isActivitiesScreen, visibleScreens } from "@/lib/staff/screens";
 import { expandPermissions } from "@/lib/staff/permissions";
 
 let db: Awaited<ReturnType<typeof isolatedPrisma>>;
-let service: typeof import('./service'), files: typeof import('./files'), notifications: typeof import('./notifications'), data: typeof import('./data'), actions: typeof import('./actions');
+let service: typeof import('../shared/service'), files: typeof import('../features/request/server/files'), notifications: typeof import('../features/request/server/notifications'), list: typeof import('../features/queue/server/list'), detail: typeof import('../features/request/server/data'), actions: typeof import('../features/request/server/actions');
 let uploadRoute: typeof import('@/app/api/refunds/files/route'), downloadRoute: typeof import('@/app/api/refunds/files/[id]/route');
 const reception: RefundActor = { id: 'refund-reception', name: 'Alex Example', request: true, review: false, process: false };
 const finance: RefundActor = { id: 'refund-finance', name: 'Riley Example', request: false, review: true, process: true };
@@ -33,11 +33,12 @@ before(async () => {
     '@/lib/email/google': { sendGoogleTextEmail: async (email: string, subject: string, text: string) => { if (mailFails) throw new Error('Synthetic rejection'); sent.push({ email, subject, text }); } },
     'next/cache': { revalidatePath() {} },
   };
-  service = serverModule('src/modules/refunds/lib/service.ts', doubles);
-  files = serverModule('src/modules/refunds/lib/files.ts', doubles);
-  notifications = serverModule('src/modules/refunds/lib/notifications.ts', doubles);
-  data = serverModule('src/modules/refunds/lib/data.ts', doubles);
-  actions = serverModule('src/modules/refunds/lib/actions.ts', doubles);
+  service = serverModule('src/modules/refunds/shared/service.ts', doubles);
+  files = serverModule('src/modules/refunds/features/request/server/files.ts', doubles);
+  notifications = serverModule('src/modules/refunds/features/request/server/notifications.ts', doubles);
+  list = serverModule('src/modules/refunds/features/queue/server/list.ts', doubles);
+  detail = serverModule('src/modules/refunds/features/request/server/data.ts', doubles);
+  actions = serverModule('src/modules/refunds/features/request/server/actions.ts', doubles);
   uploadRoute = serverModule('src/app/api/refunds/files/route.ts', doubles);
   downloadRoute = serverModule('src/app/api/refunds/files/[id]/route.ts', doubles);
   process.env.REFUNDS_APP_URL = 'https://staff.example.test';
@@ -69,10 +70,10 @@ test('real additive migration supports private drafts, including withdrawn draft
   const submitted = await create({ clubId: 'refund-site-b' });
   assert.equal(canReadRefund(submitted, colleague), true);
   current = colleague;
-  const queue = await data.listRefunds({ status: 'all' });
+  const queue = await list.listRefunds({ status: 'all' });
   assert.ok(queue.rows.some(row => row.id === submitted.id));
   assert.ok(!queue.rows.some(row => row.id === withdrawn.id));
-  await assert.rejects(data.getRefund(withdrawn.id), /not available/);
+  await assert.rejects(detail.getRefund(withdrawn.id), /not available/);
   current = reception;
 });
 test('request retries are idempotent, conflicting decisions are rejected and audit failure rolls back', async () => {
@@ -177,9 +178,9 @@ test('unpaid approvals can be cancelled with a reason, and site filters and tota
   const cancelled = await service.mutateRefund(finance, command(approved, 'cancel', { note: 'Customer chose to keep the booking; no payment was made.' }));
   assert.equal(cancelled.status, 'WITHDRAWN'); assert.equal(cancelled.approvedCents, 8000);
   await assert.rejects(service.mutateRefund(finance, command(cancelled, 'pay', { paidOn: '2026-01-02', paidMethod: 'CARD', paidReference: 'test' })), /approved, unpaid/);
-  const matching = await data.listRefunds({ q: 'FILTER-CHECK', site: 'refund-site-b', status: 'all' });
+  const matching = await list.listRefunds({ q: 'FILTER-CHECK', site: 'refund-site-b', status: 'all' });
   assert.equal(matching.total, 1); assert.equal(matching.counts.WITHDRAWN, 1);
-  const otherSite = await data.listRefunds({ q: 'FILTER-CHECK', site: 'refund-site-a', status: 'all' });
+  const otherSite = await list.listRefunds({ q: 'FILTER-CHECK', site: 'refund-site-a', status: 'all' });
   assert.equal(otherSite.total, 0);
 });
 

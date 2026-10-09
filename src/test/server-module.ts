@@ -1,4 +1,4 @@
-import { readFileSync } from "node:fs";
+import { existsSync, readFileSync } from "node:fs";
 import { createRequire } from "node:module";
 import { resolve } from "node:path";
 import { runInThisContext } from "node:vm";
@@ -19,7 +19,15 @@ export function serverModule<T>(file: string, doubles: Record<string, unknown>):
       if (["@/lib/prisma", "@/auth", "@/lib/authz", "@/lib/clubs/current"].includes(id)) {
         throw new Error(`Server test must supply ${id}.`);
       }
-      if (id.startsWith("@/")) return load(resolve(process.cwd(), "src", `${id.slice(2)}.ts`));
+      if (id.startsWith("@/")) {
+        // A feature entry (index.ts) re-exports its React components; server
+        // tests never render them, so a .tsx module loads as empty.
+        const base = resolve(process.cwd(), "src", id.slice(2));
+        if (existsSync(`${base}.ts`)) return load(`${base}.ts`);
+        if (existsSync(`${base}/index.ts`)) return load(`${base}/index.ts`);
+        if (existsSync(`${base}.tsx`)) return {};
+        return load(`${base}.ts`);
+      }
       return nativeRequire(id);
     };
     const source = ts.transpileModule(readFileSync(filename, "utf8"), {

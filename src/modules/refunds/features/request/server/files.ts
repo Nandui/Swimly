@@ -1,8 +1,8 @@
 import { z } from "zod";
 import { prisma } from "@/lib/prisma";
-import { guardRead, guardVersion, lockRefund, recordEvent, receiptSelect } from "@/modules/refunds/lib/service";
-import { editableRefund, type RefundActor } from "@/modules/refunds/lib/types";
-import { RefundError } from "@/modules/refunds/lib/rules";
+import { guardRead, guardVersion, lockRefund, recordEvent, receiptSelect } from "@/modules/refunds/shared/service";
+import { editableRefund, type RefundActor } from "@/modules/refunds/shared/types";
+import { RefundError } from "@/modules/refunds/shared/rules";
 
 export const MAX_RECEIPT_BYTES = 4 * 1024 * 1024;
 export function validateReceipt(file: { name: string; type: string; size: number }, bytes: Buffer) {

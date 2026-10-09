@@ -1,11 +1,7 @@
 import type { Metadata } from "next";
 import { cache } from "react";
 import { notFound } from "next/navigation";
-import { getRefund, refundSites } from "@/modules/refunds/lib/data";
-import { requireRefundActor } from "@/modules/refunds/lib/auth";
-import { RefundError } from "@/modules/refunds/lib/rules";
-import { refundNumber } from "@/modules/refunds/lib/types";
-import { RefundDetail } from "@/modules/refunds/components/detail";
+import { getRefund, refundNumber, refundSites, requireRefundActor, RefundDetail, RefundError } from "@/modules/refunds/features/request";
 
 /** One query per request, shared by the page and its tab title. */
 const load = cache(getRefund);

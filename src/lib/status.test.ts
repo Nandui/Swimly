@@ -7,7 +7,7 @@ import { DOC_STATUS_META, RISK_BAND_TONE_META, UNCLASSIFIED_RISK_META, riskBandM
 import { HOME_ITEM_META, HOME_SESSION_META } from "@/lib/home-meta";
 import { NOTE_VISIBILITY_META, REVIEW_STATUS_META } from "@/modules/hr/lib/constants";
 import { PERSON_STATUS_META, QUALIFICATION_STATE_META } from "@/lib/people/constants";
-import { refundStatuses } from "@/modules/refunds/lib/types";
+import { refundStatuses } from "@/modules/refunds";
 import * as rota from "@/modules/rota/lib/constants";
 import * as rotaMeta from "@/modules/rota/lib/meta";
 import { REACH_META, STAFF_STATUS_META } from "@/lib/staff/constants";

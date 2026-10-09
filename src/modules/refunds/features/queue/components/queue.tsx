@@ -11,10 +11,10 @@ import { PageHeader } from "@/components/ui-kit/page-header";
 import { SearchField } from "@/components/ui-kit/search-field";
 import { Tag } from "@/components/ui-kit/tag";
 import { LinkPagination } from "@/components/ui-kit/link-pagination";
-import { refundListView, refundStatuses, refundServices, refundNumber, euros, type RefundStatus } from "@/modules/refunds/lib/types";
+import { refundListView, refundStatuses, refundServices, refundNumber, euros, type RefundStatus } from "@/modules/refunds/shared/types";
 import { formatDate, plural } from "@/lib/format";
 import { cn } from "@/lib/utils";
-import type { listRefunds } from "@/modules/refunds/lib/data";
+import type { listRefunds } from "@/modules/refunds/features/queue/server/list";
 
 type Data = Awaited<ReturnType<typeof listRefunds>>;
 type Option = { value: string; label: string };

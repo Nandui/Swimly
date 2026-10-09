@@ -1,10 +1,10 @@
 "use server";
 import { revalidatePath } from "next/cache";
-import { requireRefundActor } from "@/modules/refunds/lib/auth";
-import { mutateRefund } from "@/modules/refunds/lib/service";
-import { RefundError, type RefundCommand } from "@/modules/refunds/lib/rules";
-import { deliverRefundNotifications } from "@/modules/refunds/lib/notifications";
-import type { RefundResult } from "@/modules/refunds/lib/types";
+import { requireRefundActor } from "@/modules/refunds/shared/auth";
+import { mutateRefund } from "@/modules/refunds/shared/service";
+import { RefundError, type RefundCommand } from "@/modules/refunds/shared/rules";
+import { deliverRefundNotifications } from "@/modules/refunds/features/request/server/notifications";
+import type { RefundResult } from "@/modules/refunds/shared/types";
 
 export async function saveRefund(input: RefundCommand): Promise<RefundResult> {
   try {
