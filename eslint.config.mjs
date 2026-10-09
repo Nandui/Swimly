@@ -113,6 +113,7 @@ const coreThroughFunctions = {
   docs: [],
   refunds: [],
   purchasing: ["role", "site"],
+  academy: ["organisation", "qualificationType", "qualification", "site", "tutor", "assessor", "user"],
 };
 const coreJoins = (relations) => relations.length ? [{
   selector: `Property[key.name=/^(include|select|where|orderBy)$/] Property[key.name=/^(${relations.join("|")})$/][value.type=/^(ObjectExpression|Literal)$/]`,
@@ -121,7 +122,7 @@ const coreJoins = (relations) => relations.length ? [{
 const workData = (self) => [
   ...notTables(Object.keys(moduleFiles).filter((id) => id !== self), "A module queries only its own tables and Core's. Ask the owning module through a seam (src/modules/contributions.ts)."),
   ...(coreThroughFunctions[self] ? [
-    ...notTables(["core"], "This module reads Core through its functions (src/lib/directory.ts, src/lib/policy), never Core tables."),
+    ...notTables(["core"], "This module reads Core through its functions (src/lib/directory.ts, src/lib/qualifications.ts, src/lib/policy), never Core tables."),
     ...coreJoins(coreThroughFunctions[self]),
   ] : []),
 ];

@@ -6,6 +6,7 @@ import { fail, ok, type ActionResult } from "@/lib/action-result";
 import { logAudit } from "@/lib/audit";
 import { requirePermission } from "@/lib/authz";
 import { prisma } from "@/lib/prisma";
+import { qualificationTypeById } from "@/lib/qualifications";
 import { ACADEMY_CHECK_KEYS, ACADEMY_KINDS } from "@/modules/academy/shared/rules";
 import { refresh } from "@/modules/academy/shared/server";
 
@@ -34,7 +35,7 @@ export async function saveCourseType(id: string | null, input: CourseTypeInput):
   const d = parsed.data;
   const clash = await prisma.academyCourseType.findFirst({ where: { orgId, name: { equals: d.name, mode: "insensitive" }, ...(id ? { id: { not: id } } : {}) }, select: { id: true } });
   if (clash) return fail("There is already a course with that name.");
-  if (d.qualificationTypeId && !(await prisma.qualificationType.findFirst({ where: { id: d.qualificationTypeId, orgId }, select: { id: true } }))) return fail("That qualification is no longer offered.");
+  if (d.qualificationTypeId && !(await qualificationTypeById(d.qualificationTypeId, orgId))) return fail("That qualification is no longer offered.");
   if (d.checks.includes("age") && d.minAge === "") return fail("Give the minimum age, or untick the age check.");
   if (id && !(await prisma.academyCourseType.findFirst({ where: { id, orgId }, select: { id: true } }))) return fail("That course no longer exists.");
   const data = { name: d.name, kind: d.kind, awardingBody: d.awardingBody, minAge: d.minAge === "" ? null : d.minAge, minHours: d.minHours, checks: [...new Set(d.checks)], qualificationTypeId: d.qualificationTypeId || null };

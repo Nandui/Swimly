@@ -2,6 +2,7 @@ import { createHmac, randomBytes, randomInt, randomUUID } from "node:crypto";
 import { z } from "zod";
 import type { Prisma } from "@/generated/prisma/client";
 import { logAudit } from "@/lib/audit";
+import { liveSiteById, liveSiteIds, withSites } from "@/lib/directory";
 import { formatTime, isDateOnly, parseDateOnly, today } from "@/lib/format";
 import { prisma } from "@/lib/prisma";
 import { sendCode, sendHeld } from "@/modules/academy/features/booking/server/email";
@@ -37,12 +38,11 @@ const tooMany = () => new AcademyApiError(429, "RATE_LIMITED", "Too many attempt
 
 const PUBLIC_COURSE = {
   id: true, siteId: true, status: true, capacity: true, priceCents: true, cancelledAt: true, bookOnline: true,
-  site: { select: { name: true } },
   type: { select: { name: true, kind: true, awardingBody: true, minAge: true, checks: true } },
   sessions: { orderBy: [{ date: "asc" as const }, { startMinutes: "asc" as const }], select: { date: true, startMinutes: true, endMinutes: true, place: true } },
   candidates: { select: { status: true } },
 } satisfies Prisma.AcademyCourseSelect;
-type PublicRow = Prisma.AcademyCourseGetPayload<{ select: typeof PUBLIC_COURSE }>;
+type PublicRow = Prisma.AcademyCourseGetPayload<{ select: typeof PUBLIC_COURSE }> & { site: { name: string } };
 
 function publicCourse(c: PublicRow) {
   const left = Math.max(0, c.capacity - c.candidates.filter((x) => takesPlace(x.status)).length);
@@ -70,18 +70,19 @@ const onlineWhere = { bookOnline: true, cancelledAt: null, status: "planned" } s
 /** Every course open online, soonest first; full ones too, so people can see them. */
 export async function courses() {
   const on = today();
-  const rows = await prisma.academyCourse.findMany({
-    where: { ...onlineWhere, site: { archivedAt: null }, sessions: { some: {} }, NOT: { sessions: { some: { date: { lte: parseDateOnly(on) } } } } },
+  const rows = await withSites(await prisma.academyCourse.findMany({
+    where: { ...onlineWhere, siteId: { in: await liveSiteIds() }, sessions: { some: {} }, NOT: { sessions: { some: { date: { lte: parseDateOnly(on) } } } } },
     select: PUBLIC_COURSE, take: 100,
-  });
+  }), "siteId", "site");
   const list = rows.filter((c) => bookableOnline(c, c.sessions[0] ? iso(c.sessions[0].date) : null, on)).map(publicCourse);
   return { courses: list.sort((a, b) => (a.firstDay ?? "").localeCompare(b.firstDay ?? "")) };
 }
 
 async function openCourse(id: string) {
-  const c = await prisma.academyCourse.findFirst({ where: { id, ...onlineWhere, site: { archivedAt: null } }, select: PUBLIC_COURSE });
-  if (!c || !bookableOnline(c, c.sessions[0] ? iso(c.sessions[0].date) : null, today())) notFound();
-  return c;
+  const row = await prisma.academyCourse.findFirst({ where: { id, ...onlineWhere }, select: PUBLIC_COURSE });
+  const site = row ? await liveSiteById(row.siteId) : null;
+  if (!row || !site || !bookableOnline(row, row.sessions[0] ? iso(row.sessions[0].date) : null, today())) notFound();
+  return { ...row, site: { name: site.name } };
 }
 
 export async function course(id: string) {

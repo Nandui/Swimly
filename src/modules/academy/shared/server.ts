@@ -1,6 +1,7 @@
 import { revalidatePath } from "next/cache";
 import { z } from "zod";
 import { isDateOnly } from "@/lib/format";
+import { liveSiteById } from "@/lib/directory";
 import { prisma } from "@/lib/prisma";
 import { currentActor, mayFor } from "@/lib/policy/session";
 import type { PermissionKey } from "@/lib/staff/permissions";
@@ -25,7 +26,7 @@ export function refresh(courseId?: string) {
 
 /** The signed-in person, if they hold `cap` at the course's site. */
 export async function atSite(siteId: string, cap: PermissionKey) {
-  const site = await prisma.club.findFirst({ where: { id: siteId, archivedAt: null }, select: { id: true, name: true, orgId: true } });
+  const site = await liveSiteById(siteId);
   if (!site?.orgId) return { ok: false as const, error: "That site is not open." };
   if (!(await mayFor(cap, { siteId, orgId: site.orgId }))) {
     return { ok: false as const, error: cap === "academy.manage" ? "Putting courses on at this site needs Academy Manage there."

@@ -179,10 +179,10 @@ export async function allSites(db?: Db): Promise<SiteRef[]> {
   return (await client(db)).club.findMany({ select: { id: true, name: true }, orderBy: [{ sortOrder: "asc" }, { name: "asc" }] });
 }
 
-/** This site when it is live, else null. Read inside a module's transaction
- *  so the check and the write see the same data. */
-export async function liveSiteById(id: string, db?: Db): Promise<SiteRef | null> {
-  return (await client(db)).club.findFirst({ where: { id, archivedAt: null }, select: { id: true, name: true } });
+/** This site with its organisation when it is live, else null. Read inside a
+ *  module's transaction so the check and the write see the same data. */
+export async function liveSiteById(id: string, db?: Db): Promise<(SiteRef & { orgId: string | null }) | null> {
+  return (await client(db)).club.findFirst({ where: { id, archivedAt: null }, select: { id: true, name: true, orgId: true } });
 }
 
 /** The sites a person works at (`User.siteIds`): empty means every site, as it
@@ -248,4 +248,23 @@ export async function withRoles<K extends string, A extends string, T extends { 
 /** The role a person holds, or null. */
 export async function staffRoleIdOf(userId: string, db?: RoleDb): Promise<string | null> {
   return (await (await roleClient(db)).user.findUnique({ where: { id: userId }, select: { staffRoleId: true } }))?.staffRoleId ?? null;
+}
+
+/** A staff member in this organisation, for a module that keeps them as a
+ *  participant (e.g. an Academy candidate): name, work email and date of birth.
+ *  Null when there is no such account, or it is inactive and `activeOnly`. */
+export type StaffContact = StaffRef & { email: string; dateOfBirth: Date | null };
+export async function staffContact(id: string, orgId: string | null, opts: { activeOnly?: boolean } = {}, db?: Db): Promise<StaffContact | null> {
+  return (await client(db)).user.findFirst({
+    where: { id, orgId: orgId ?? undefined, ...(opts.activeOnly ? { isActive: true } : {}) },
+    select: { id: true, name: true, email: true, dateOfBirth: true },
+  });
+}
+
+/** Active staff in this organisation who work at the site (or at every site), by name, with their job title. */
+export async function activeStaffAtSite(orgId: string | null, siteId: string, db?: Db): Promise<Array<StaffRef & { jobTitle: string | null }>> {
+  return (await client(db)).user.findMany({
+    where: { orgId: orgId ?? undefined, isActive: true, OR: [{ siteIds: { has: siteId } }, { siteIds: { isEmpty: true } }] },
+    orderBy: { name: "asc" }, select: { id: true, name: true, jobTitle: true },
+  });
 }

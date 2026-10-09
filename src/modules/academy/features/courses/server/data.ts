@@ -1,9 +1,11 @@
 import "server-only";
 import { notFound } from "next/navigation";
 import type { Prisma } from "@/generated/prisma/client";
+import { activeStaffAtSite, liveSitesOf, withSites, withStaff } from "@/lib/directory";
 import { today } from "@/lib/format";
 import { prisma } from "@/lib/prisma";
 import { mayFor, sitesFor } from "@/lib/policy/session";
+import { qualificationTypeById } from "@/lib/qualifications";
 import { areaNames } from "@/lib/setup/data";
 import { requireAcademyActor } from "@/modules/academy/shared/access";
 import { courseState, readiness, takesPlace } from "@/modules/academy/shared/rules";
@@ -14,12 +16,19 @@ import { courseState, readiness, takesPlace } from "@/modules/academy/shared/rul
 import { inSites, iso } from "@/modules/academy/shared/reads";
 
 const COURSE_ROW = {
-  id: true, status: true, capacity: true, priceCents: true, cancelledAt: true, siteId: true,
-  site: { select: { name: true } }, tutor: { select: { name: true } },
+  id: true, status: true, capacity: true, priceCents: true, cancelledAt: true, siteId: true, tutorId: true,
   type: { select: { name: true, kind: true } },
   sessions: { orderBy: [{ date: "asc" as const }, { startMinutes: "asc" as const }], select: { date: true, startMinutes: true, endMinutes: true } },
   candidates: { select: { status: true } },
 } satisfies Prisma.AcademyCourseSelect;
+
+/** Adds each course's site and its tutor (and assessor, when it has one) from Core. A removed
+ *  account still reads as a name. */
+async function withPeople<T extends { siteId: string; tutorId: string; assessorId?: string | null }>(rows: T[]) {
+  const withTutor = await withStaff(await withSites(rows, "siteId", "site"), "tutorId", "tutor");
+  const all = await withStaff(withTutor.map((row) => ({ ...row, assessorId: row.assessorId ?? null })), "assessorId", "assessor");
+  return all.map((row) => ({ ...row, tutor: row.tutor ?? { id: row.tutorId, name: "Removed account" } }));
+}
 
 function rowOf(c: {
   id: string; status: string; capacity: number; priceCents: number; cancelledAt: Date | null; siteId: string;
@@ -42,7 +51,7 @@ export async function academyHome() {
   const who = await requireAcademyActor();
   const sites = await sitesFor("academy.read");
   const on = today();
-  const rows = await prisma.academyCourse.findMany({ where: { orgId: who.orgId ?? undefined, ...inSites(sites) }, orderBy: { createdAt: "desc" }, take: 200, select: COURSE_ROW });
+  const rows = await withPeople(await prisma.academyCourse.findMany({ where: { orgId: who.orgId ?? undefined, ...inSites(sites) }, orderBy: { createdAt: "desc" }, take: 200, select: COURSE_ROW }));
   const courses = rows.map((c) => rowOf(c, on));
   const since = new Date(Date.now() - 90 * 86_400_000).toISOString().slice(0, 10);
   const byStart = (a: CourseRow, b: CourseRow) => (a.first ?? "9999").localeCompare(b.first ?? "9999");
@@ -55,11 +64,8 @@ export async function academyHome() {
 }
 
 /** Staff who can tutor or take a course at a site: active, working there. */
-function staffAt(orgId: string | undefined, siteId: string) {
-  return prisma.user.findMany({
-    where: { orgId, isActive: true, OR: [{ siteIds: { has: siteId } }, { siteIds: { isEmpty: true } }] },
-    orderBy: { name: "asc" }, select: { id: true, name: true, jobTitle: true },
-  });
+function staffAt(orgId: string | null, siteId: string) {
+  return activeStaffAtSite(orgId, siteId);
 }
 
 /** What a new course needs: the sites this person may put courses on, and the course list. */
@@ -67,10 +73,10 @@ export async function newCourseOptions() {
   const who = await requireAcademyActor();
   const sites = await sitesFor("academy.manage");
   const [siteRows, types] = await Promise.all([
-    prisma.club.findMany({ where: { orgId: who.orgId ?? undefined, archivedAt: null, ...(sites.kind === "all" ? {} : { id: { in: [...sites.siteIds] } }) }, orderBy: [{ sortOrder: "asc" }, { name: "asc" }], select: { id: true, name: true } }),
+    liveSitesOf(who.orgId ?? null).then((rows) => rows.filter((s) => sites.kind === "all" || sites.siteIds.has(s.id)).map(({ id, name }) => ({ id, name }))),
     prisma.academyCourseType.findMany({ where: { orgId: who.orgId ?? undefined, archivedAt: null }, orderBy: [{ sortOrder: "asc" }, { name: "asc" }], select: { id: true, name: true } }),
   ]);
-  const staff = await Promise.all(siteRows.map(async (s) => ({ siteId: s.id, people: await staffAt(who.orgId ?? undefined, s.id) })));
+  const staff = await Promise.all(siteRows.map(async (s) => ({ siteId: s.id, people: await staffAt(who.orgId ?? null, s.id) })));
   return { who, sites: siteRows, types, staff };
 }
 
@@ -78,13 +84,12 @@ export async function newCourseOptions() {
  *  person may do with it. */
 export async function academyCourse(id: string) {
   const who = await requireAcademyActor();
-  const course = await prisma.academyCourse.findFirst({
+  const row = await prisma.academyCourse.findFirst({
     where: { id, orgId: who.orgId ?? undefined },
     select: {
       id: true, status: true, capacity: true, priceCents: true, note: true, bookOnline: true, cancelledAt: true, siteId: true, tutorId: true, assessorId: true, typeId: true,
       createdByName: true, createdAt: true,
-      site: { select: { name: true } }, tutor: { select: { name: true } }, assessor: { select: { name: true } },
-      type: { select: { name: true, kind: true, awardingBody: true, minAge: true, minHours: true, checks: true, qualificationType: { select: { name: true, validityMonths: true } } } },
+      type: { select: { name: true, kind: true, awardingBody: true, minAge: true, minHours: true, checks: true, qualificationTypeId: true } },
       sessions: { orderBy: [{ date: "asc" }, { startMinutes: "asc" }], select: { id: true, date: true, startMinutes: true, endMinutes: true, place: true, note: true, registerAt: true, registerBy: true,
         attendance: { select: { candidateId: true, minutes: true } } } },
       candidates: { orderBy: [{ status: "asc" }, { name: "asc" }], select: {
@@ -94,7 +99,9 @@ export async function academyCourse(id: string) {
         calls: { orderBy: { createdAt: "desc" }, select: { outcome: true, note: true, byName: true, createdAt: true } } } },
     },
   });
-  if (!course) notFound();
+  if (!row) notFound();
+  const [[people], qualificationType] = await Promise.all([withPeople([row]), row.type.qualificationTypeId ? qualificationTypeById(row.type.qualificationTypeId) : null]);
+  const course = { ...people, type: { ...row.type, qualificationType: qualificationType && { name: qualificationType.name, validityMonths: qualificationType.validityMonths } } };
   const resource = { siteId: course.siteId, orgId: who.orgId };
   const [read, run, manage] = await Promise.all([mayFor("academy.read", resource), mayFor("academy.run", resource), mayFor("academy.manage", resource)]);
   if (!read) notFound();
@@ -107,7 +114,7 @@ export async function academyCourse(id: string) {
       resultOn: dateOf(c.resultOn), certificateExpires: dateOf(c.certificateExpires) };
     return { ...cand, attended, readiness: readiness(course.type, cand, first, attended) };
   });
-  const [areas, staff] = await Promise.all([areaNames(course.siteId), run ? staffAt(who.orgId ?? undefined, course.siteId) : []]);
+  const [areas, staff] = await Promise.all([areaNames(course.siteId), run ? staffAt(who.orgId ?? null, course.siteId) : []]);
   return {
     who, canRun: run, canManage: manage, areas, staff, today: on,
     course: {

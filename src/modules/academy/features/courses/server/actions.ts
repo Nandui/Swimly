@@ -4,8 +4,10 @@ import { revalidatePath } from "next/cache";
 import { z } from "zod";
 import { fail, ok, type ActionResult } from "@/lib/action-result";
 import { logAudit } from "@/lib/audit";
+import { staffContact } from "@/lib/directory";
 import { isDateOnly, parseDateOnly } from "@/lib/format";
 import { prisma } from "@/lib/prisma";
+import { qualificationTypeById, recordQualification, revokeQualification, updateQualification } from "@/lib/qualifications";
 import { areaProblem } from "@/lib/setup/data";
 import { ACADEMY_OUTCOMES, ACADEMY_PAYMENTS, centsOf, expiryFrom, takesPlace } from "@/modules/academy/shared/rules";
 import { atSite, clockOf, courseFor, iso, optionalDate, refresh } from "@/modules/academy/shared/server";
@@ -43,8 +45,8 @@ export async function saveCourse(id: string | null, input: CourseInput): Promise
   if (before && d.capacity < before._count.candidates) return fail(`${before._count.candidates} people are already on it. Withdraw some first, or keep at least that many places.`);
   const [type, tutor, assessor] = await Promise.all([
     prisma.academyCourseType.findFirst({ where: { id: d.typeId, orgId: at.site.orgId, archivedAt: null }, select: { name: true } }),
-    prisma.user.findFirst({ where: { id: d.tutorId, orgId: at.site.orgId, isActive: true }, select: { name: true } }),
-    d.assessorId ? prisma.user.findFirst({ where: { id: d.assessorId, orgId: at.site.orgId, isActive: true }, select: { name: true } }) : null,
+    staffContact(d.tutorId, at.site.orgId, { activeOnly: true }),
+    d.assessorId ? staffContact(d.assessorId, at.site.orgId, { activeOnly: true }) : null,
   ]);
   if (!type) return fail("That course is no longer on the list.");
   if (!tutor) return fail("That tutor is no longer active.");
@@ -150,7 +152,7 @@ export async function saveCandidate(courseId: string, id: string | null, input: 
   const parsed = candidateSchema.safeParse(input);
   if (!parsed.success) return fail(parsed.error.issues[0].message);
   const d = parsed.data;
-  const person = d.userId ? await prisma.user.findFirst({ where: { id: d.userId, orgId: at.site.orgId }, select: { id: true, name: true, email: true, dateOfBirth: true } }) : null;
+  const person = d.userId ? await staffContact(d.userId, at.site.orgId) : null;
   if (d.userId && !person) return fail("That staff member is no longer here.");
   const name = person?.name ?? d.name;
   if (name.length < 2) return fail("Give the candidate's name.");
@@ -263,7 +265,7 @@ export type ResultInput = z.input<typeof resultSchema>;
  *  to another result withdraws that qualification again. */
 export async function recordResult(id: string, input: ResultInput): Promise<ActionResult> {
   const c = await prisma.academyCandidate.findFirst({ where: { id }, select: { courseId: true, name: true, userId: true, status: true, qualificationId: true,
-    course: { select: { type: { select: { qualificationTypeId: true, qualificationType: { select: { name: true, validityMonths: true } } } } } } } });
+    course: { select: { type: { select: { qualificationTypeId: true } } } } } });
   if (!c) return fail("That candidate is no longer on the course.");
   const at = await courseFor(c.courseId, "academy.run");
   if (!at.ok) return fail(at.error);
@@ -274,19 +276,20 @@ export async function recordResult(id: string, input: ResultInput): Promise<Acti
   if (d.status === "passed" && !d.certificateExpires) return fail("Give the expiry date on the certificate.");
   if (d.certificateExpires && d.certificateExpires < d.resultOn) return fail("The certificate expires before the result.");
   const grants = d.status === "passed" && c.userId && c.course.type.qualificationTypeId;
-  const expires = grants ? expiryFrom(d.resultOn, d.certificateExpires || null, c.course.type.qualificationType?.validityMonths ?? null) : null;
+  const qualificationType = grants ? await qualificationTypeById(c.course.type.qualificationTypeId!) : null;
+  const expires = grants ? expiryFrom(d.resultOn, d.certificateExpires || null, qualificationType?.validityMonths ?? null) : null;
   await prisma.$transaction(async (tx) => {
     let qualificationId = c.qualificationId;
     if (grants) {
       const values = { issuedOn: parseDateOnly(d.resultOn), expiresOn: expires ? parseDateOnly(expires) : null, reference: d.certificateNumber, verifiedById: at.actor.id, verifiedAt: new Date(), revokedAt: null,
         note: `${at.course.type.name} course at ${at.site.name} (Academy)` };
       qualificationId = c.qualificationId
-        ? (await tx.qualification.update({ where: { id: c.qualificationId }, data: values })).id
-        : (await tx.qualification.create({ data: { ...values, orgId: at.site.orgId, userId: c.userId!, typeId: c.course.type.qualificationTypeId! } })).id;
+        ? await updateQualification(tx, c.qualificationId, values)
+        : await recordQualification(tx, { orgId: at.site.orgId, userId: c.userId!, typeId: c.course.type.qualificationTypeId! }, values);
       await logAudit({ actorId: at.actor.id, actorName: at.actor.name, action: "create", entity: "Qualification", entityId: qualificationId, clubId: at.site.id,
-        summary: `Recorded ${c.course.type.qualificationType?.name ?? "a qualification"} for ${c.name} from the Academy${expires ? `, valid until ${expires}` : ""}` }, tx);
+        summary: `Recorded ${qualificationType?.name ?? "a qualification"} for ${c.name} from the Academy${expires ? `, valid until ${expires}` : ""}` }, tx);
     } else if (c.qualificationId) {
-      await tx.qualification.update({ where: { id: c.qualificationId }, data: { revokedAt: new Date() } });
+      await revokeQualification(tx, c.qualificationId);
       await logAudit({ actorId: at.actor.id, actorName: at.actor.name, action: "update", entity: "Qualification", entityId: c.qualificationId, clubId: at.site.id,
         summary: `Withdrew the Academy qualification for ${c.name}: their result changed to ${d.status}` }, tx);
       qualificationId = null;
