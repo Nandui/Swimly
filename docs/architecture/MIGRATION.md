@@ -1,7 +1,7 @@
 # Migration to modular architecture
 
 **Status:** Phase 2 in progress. Module map and ADRs 0001 to 0003 approved 9 October 2026.
-**Next step:** Phase 2: give Rota `index.ts`, `module.ts`, `README.md` and the `features/` shape (every other Work module is done).
+**Next step:** Phase 2: move Activities (the swim school, `src/modules/activities` plus `src/app/(activities)` and `(instructor)`) into the `features/` shape. Every Work module is done.
 
 ## Phases
 - [x] Phase 0 — Audit written to docs/architecture/audit.md (with [../modular-monolith.md](../modular-monolith.md))
@@ -30,9 +30,10 @@ In the full shape (`index.ts`, `module.ts`, `events.ts`, `README.md`, `shared/`,
 - docs (9 October 2026): features `home`, `library`, `reader`, `editor`, `history`, `work`, `reports`, `admin`, `files`, `import`, `me`, `workspace`; its server actions moved from `src/app/docs/actions.ts` into `shared/actions.ts`; the staff API uses `docsReading()` from its `index.ts`
 - hr (9 October 2026): features `team`, `person`, `reviews`, `activity`, `export`, `details-requests`, `me`, `workspace`; the staff API no longer writes HR's `access_events` itself (`logOwnHrRead`)
 
-Moved into `src/modules/<id>/{lib,components}` (PR #9) but not yet in the `features/` shape:
-- rota
-- activities (the swim school) was already there
+- rota (9 October 2026): features `plan`, `today`, `bookings`, `absences`, `me`, `person-file`, `workspace`; its person-file sections and area rename now register from `module.ts`; the staff API reads a person's days through `index.ts`
+
+Not yet in the `features/` shape:
+- activities (the swim school)
 
 Known warnings left in moved modules: `ModuleShell` (`src/components/workspace`) is the app frame, not a UI-kit component, so features importing it are reported. Deciding where the frame lives (platform or ui) is a boundary question for Fernando once more modules are moved.
 
@@ -52,3 +53,4 @@ Known warnings left in moved modules: `ModuleShell` (`src/components/workspace`)
 - 2026-10-09 — Phase 2: Training in the features shape; the staff API reads it through `index.ts`.
 - 2026-10-09 — Phase 2: Docs in the features shape; `src/app/docs/actions.ts` moved into the module; the staff API reads required reading through `docsReading()`.
 - 2026-10-09 — Phase 2: HR in the features shape; the staff API's own-record log moved into HR (`logOwnHrRead`).
+- 2026-10-09 — Phase 2: Rota in the features shape. Every Work module is done; Activities is next. Warnings 383 → 164.

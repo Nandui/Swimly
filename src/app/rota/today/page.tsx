@@ -5,15 +5,10 @@ import { Button } from "@/components/shadcn/button";
 import { EmptyState } from "@/components/ui-kit/empty-state";
 import { PageHeader } from "@/components/ui-kit/page-header";
 import { Tag } from "@/components/ui-kit/tag";
-import { DayNote } from "@/modules/rota/components/day-note";
-import { NeedDialog } from "@/modules/rota/components/plan-dialogs";
-import { TimepointDone, TodayGaps, type TodayGap } from "@/modules/rota/components/today-parts";
+import {
+  ABSENCE_REASON_META, type AbsenceReason, activityIcon, clock, dayGaps, DayNote, duration, fitsFor, NeedDialog, ROTA_CHANGE_REASON_META, ROTA_DAY_META, ROTA_TIMEPOINT_META, type RotaChangeReason, TimepointDone, todayAt, type TodayGap, TodayGaps,
+} from "@/modules/rota/features/today";
 import { formatDayMonth, formatWeekday, minutesNow } from "@/lib/format";
-import { ABSENCE_REASON_META, ROTA_CHANGE_REASON_META, clock, type AbsenceReason, type RotaChangeReason } from "@/modules/rota/lib/constants";
-import { fitsFor, todayAt } from "@/modules/rota/lib/data";
-import { dayGaps } from "@/modules/rota/lib/day";
-import { ROTA_DAY_META, ROTA_TIMEPOINT_META, activityIcon } from "@/modules/rota/lib/meta";
-import { duration } from "@/modules/rota/lib/shifts";
 
 export const metadata: Metadata = { title: "Today" };
 

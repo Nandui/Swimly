@@ -13,5 +13,5 @@
 - **Core tables read from modules:** about 110 direct queries and 45 joins of `User`, `Club`, `Qualification` and others from Work modules.
 - **Modules reach the wiring:** HR and Rota import `src/modules/server.ts` for the personal file and commitments.
 - **Business logic in routes:** Docs' `src/modules/docs/shared/actions.ts` is imported by Docs components.
-- **Big files:** `src/modules/rota/lib/actions.ts` and the swim school's enrolment code hold many verbs each; they split naturally into features.
+- **Big files:** `src/modules/rota/shared/actions.ts` and the swim school's enrolment code hold many verbs each; they split naturally into features.
 - **Shared Core tables:** `User` and `Club` carry Prisma back-relations to every module's tables, so `core.prisma` changes whenever a module adds a relation.

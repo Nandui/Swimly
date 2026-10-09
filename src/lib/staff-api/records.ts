@@ -4,7 +4,7 @@ import { isDateOnly, parseDateOnly, today } from "@/lib/format";
 import { prisma } from "@/lib/prisma";
 import { acknowledgeReviewFor, hrConfigured, logOwnHrRead, mySharedHr } from "@/modules/hr";
 import { myQualifications } from "@/lib/people/mine";
-import { myDays } from "@/modules/rota/lib/mine";
+import { myDays } from "@/modules/rota";
 import { docsReading } from "@/modules/docs";
 import { completeTrainingFor, myTraining } from "@/modules/training";
 import { StaffApiError, notFound } from "@/lib/staff-api/errors";

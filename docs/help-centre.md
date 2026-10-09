@@ -82,7 +82,7 @@ of prose so a rename does not require rewriting guides.
 | `guides-modules.ts` (Refunds) | `src/modules/refunds/features/request/components` (request form, finance actions) |
 | `guides-modules.ts` (Docs) | `src/modules/docs/features/*/components` (home, library, new document, editor, reader) |
 | `guides-modules.ts` (Training) | `src/modules/training/features/*/components/` (course, assignment and sign-off dialogs), Training pages |
-| `guides-modules.ts` (Rota) | `src/modules/rota/components` (day-plan, fill-sheet, plan-dialogs, absences) and `src/modules/rota/lib/actions.ts` |
+| `guides-modules.ts` (Rota) | `src/modules/rota/features/plan/components/day-plan.tsx`, `src/modules/rota/shared/components` (fill-sheet, plan-dialogs), `src/modules/rota/features/absences/components/absences.tsx` and `src/modules/rota/shared/actions.ts` |
 | `guides-modules.ts` (HR) | `src/modules/hr/features/person/components/actions.tsx`, `src/modules/hr/shared/constants.ts` |
 
 Each module guide's "Before you start" names the level it needs, from
