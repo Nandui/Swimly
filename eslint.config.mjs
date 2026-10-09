@@ -36,9 +36,8 @@ const activitiesFiles = [
   "src/app/api/curriculum-images/**",
   "src/app/api/operations/**",
 ];
-// Each Work module's files: its folder (src/modules/<id>, or src/lib/<id> and
-// src/components/<id> until it moves; docs/modular-monolith.md) and its routes.
-const workArea = (id, ...extra) => [`src/modules/${id}/**`, `src/lib/${id}/**`, `src/components/${id}/**`, `src/app/${id}/**`, ...extra];
+// Each Work module's files: its folder, src/modules/<id>, and its routes.
+const workArea = (id, ...extra) => [`src/modules/${id}/**`, `src/app/${id}/**`, ...extra];
 const workModules = {
   docs: workArea("docs", "src/app/api/docs/**"),
   refunds: workArea("refunds", "src/app/api/refunds/**"),
@@ -67,7 +66,7 @@ const notActivities = {
   group: ["@/modules/activities", "@/modules/activities/*", "@/app/(activities)/*", "@/app/(instructor)/*", "**/modules/activities/**"],
   message: "Core and Work modules must not import Activities. Register a contribution (src/modules/contributions.ts) or add to a composition root instead.",
 };
-const workImports = (ids) => ids.flatMap((id) => [`@/modules/${id}`, `@/modules/${id}/*`, `@/lib/${id}`, `@/lib/${id}/*`, `@/components/${id}/*`, `@/app/${id}/*`]);
+const workImports = (ids) => ids.flatMap((id) => [`@/modules/${id}`, `@/modules/${id}/*`, `@/app/${id}/*`]);
 const notWork = (ids, message) => ({ group: workImports(ids), message });
 const notWorkModules = notWork(Object.keys(workModules), "Activities depends on Core only, never on a Work module. Link to the module or add a Core seam.");
 const notCoreToWork = notWork(Object.keys(workModules), "Core never imports a module. Register a contribution (src/modules/contributions.ts) or add to a composition root instead.");

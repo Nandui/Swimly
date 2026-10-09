@@ -999,12 +999,14 @@ src/app/(instructor)/          the Swim school pool-deck workspace
 src/app/sign-in/               the front door, outside the shell
 src/modules/activities/lib/    Activities domains (students, courses, enrolment, ...)
 src/modules/activities/components/ Activities feature components
+src/modules/<id>/{lib,components}/ each Work module (Docs, Refunds, Training, HR,
+                               Rota, Purchasing, Academy, Tasks)
 src/modules/registry.ts        every module's description and levels
 src/modules/contributions.ts   what modules add to Core pages, without imports
 src/components/ui-kit/         shared shadcn compositions — tag, page-header,
                                empty-state, page-loading, page-state, segmented-links
 src/components/ui/             shadcn compositions for native form submission
-src/components/                Core and Work feature components
+src/components/                Core feature components
 src/lib/<domain>/data/         reads  — plain async functions, no "use server"
 src/lib/<domain>/actions/      writes — "use server", one exported action per verb
 src/lib/<domain>/constants.ts  one metadata map per enum, plus domain vocabulary
