@@ -2,6 +2,7 @@ import { readdirSync, readFileSync } from "node:fs";
 import { defineConfig, globalIgnores } from "eslint/config";
 import nextVitals from "eslint-config-next/core-web-vitals";
 import nextTs from "eslint-config-next/typescript";
+import boundaries from "eslint-plugin-boundaries";
 
 // Shared UI rules: primitives come from the local shadcn components.
 const uiImports = {
@@ -126,6 +127,56 @@ const restrictedPaths = (skip) => ["error", {
   ],
 }];
 
+// The target architecture's dependency table (CLAUDE.md, section 3), in
+// warning mode while the migration runs (docs/architecture/MIGRATION.md). The
+// error-level rules above stay in force; these warnings show what is left.
+// Elements are folders (first match wins); single files that sit outside their
+// layer's folder are classified by file category instead.
+const layerElements = [
+  { type: "module", pattern: "src/modules/*", capture: ["module"], partialMatch: false },
+  { type: "ui", pattern: ["src/components/shadcn", "src/components/ui", "src/components/ui-kit"], partialMatch: false },
+  // Screens that combine modules: the home page, the frame and Turnfin Me's API.
+  { type: "front", pattern: ["src/components/home", "src/components/core", "src/components/workspace", "src/lib/staff-api"], partialMatch: false },
+  { type: "platform", pattern: ["src/platform", "src/lib"], partialMatch: false },
+  // Core's own screens (people, roles, sites, devices, help): the platform's admin UI.
+  { type: "admin", pattern: "src/components", partialMatch: false },
+  { type: "app", pattern: "src/app", partialMatch: false },
+];
+const layerFiles = [
+  { category: "composition", pattern: ["src/modules/server.ts", "src/modules/session-hooks.ts", "src/lib/staff-api/records.ts", "src/lib/staff-api/reminders.ts"] },
+  { category: "platform", pattern: ["src/modules/registry.ts", "src/modules/contributions.ts", "src/modules/context.ts", "src/modules/index.ts", "src/auth.ts", "src/lib/staff-api/notify.ts"] },
+  { category: "ui", pattern: ["src/lib/utils.ts", "src/components/theme-provider.tsx", "src/components/theme-toggle.tsx", "src/components/form-dialog.tsx", "src/components/confirm-action.tsx", "src/components/searchable-picker.tsx"] },
+  { category: "front", pattern: ["src/lib/home.ts", "src/lib/home-meta.ts"] },
+];
+const toEntry = { element: { type: "module", fileInternalPath: "index.ts" } };
+const layerPolicies = [
+  { from: { element: { type: "platform" } }, allow: { to: { element: { type: "platform" } } } },
+  { from: { element: { type: "ui" } }, allow: { to: { element: { type: "ui" } } } },
+  { from: { element: { type: "module" } }, allow: { to: [
+    { element: { types: { anyOf: ["platform", "ui"] } } },
+    { element: { type: "module", captured: { module: "{{ from.element.captured.module }}" } } },
+    toEntry,
+  ] } },
+  { from: { element: { types: { anyOf: ["front", "admin"] } } }, allow: { to: [{ element: { types: { anyOf: ["platform", "ui", "front", "admin"] } } }, toEntry] } },
+  { from: { element: { type: "app" } }, allow: { to: [
+    { element: { types: { anyOf: ["platform", "ui", "front", "admin", "app"] } } },
+    toEntry,
+    { element: { type: "module", fileInternalPath: "features/*/index.ts" } },
+  ] } },
+  // Files classified on their own (layerFiles); later policies win.
+  { allow: { to: { file: { categories: { anyOf: ["platform", "ui"] } } } } },
+  { from: { element: { type: "ui" } }, disallow: { to: { file: { categories: "platform" } } } },
+  { from: { file: { categories: "platform" } }, disallow: { to: { element: { types: { anyOf: ["module", "front", "admin", "app"] } } } } },
+  { from: { file: { categories: "platform" } }, allow: { to: { element: { type: "platform" } } } },
+  { from: { file: { categories: "front" } }, allow: { to: [{ element: { types: { anyOf: ["platform", "ui", "front", "admin"] } } }, toEntry] } },
+  { from: { element: { types: { anyOf: ["front", "admin", "app"] } } }, allow: { to: { file: { categories: "front" } } } },
+  { from: { element: { type: "app" } }, allow: { to: { file: { categories: "composition" } } } },
+  // The platform loads the module wiring, as the registry loads app/modules.ts; front reads modules through it.
+  { from: { element: { types: { anyOf: ["platform", "front"] } } }, allow: { to: { file: { categories: "composition" } } } },
+  { from: { file: { categories: "front" } }, allow: { to: { file: { categories: "composition" } } } },
+  { from: { file: { categories: "composition" } }, allow: { to: { element: { types: { anyOf: ["platform", "ui", "front", "module"] } } } } },
+];
+
 const eslintConfig = defineConfig([
   ...nextVitals,
   ...nextTs,
@@ -179,6 +230,19 @@ const eslintConfig = defineConfig([
     ignores: tests,
     rules: { "import/no-restricted-paths": restrictedPaths(owner) },
   })),
+  {
+    files: ["src/**/*.{ts,tsx}"],
+    ignores: [...tests, "src/generated/**"],
+    plugins: { boundaries },
+    settings: { "boundaries/elements": layerElements, "boundaries/files": layerFiles },
+    rules: {
+      "boundaries/dependencies": ["warn", {
+        default: "disallow",
+        message: "{{ from.element.types.[0] }} may not import {{ dependency.source }} (CLAUDE.md, section 3).",
+        policies: layerPolicies,
+      }],
+    },
+  },
   // Override default ignores of eslint-config-next.
   globalIgnores([
     // Default ignores of eslint-config-next:
