@@ -59,8 +59,8 @@ before(async () => {
     "server-only": {},
     react: { cache: <T,>(fn: T) => fn },
   };
-  actions = serverModule("src/lib/tasks/actions.ts", d);
-  data = serverModule("src/lib/tasks/data.ts", d);
+  actions = serverModule("src/modules/tasks/lib/actions.ts", d);
+  data = serverModule("src/modules/tasks/lib/data.ts", d);
 });
 after(async () => { await fixture?.close(); });
 

@@ -8,9 +8,9 @@ import { EmptyState } from "@/components/ui-kit/empty-state";
 import { PageHeader } from "@/components/ui-kit/page-header";
 import { SearchField } from "@/components/ui-kit/search-field";
 import { Tag } from "@/components/ui-kit/tag";
-import { ArchiveTemplate, CopyTemplate } from "@/components/tasks/template-actions";
-import { taskTemplates } from "@/lib/tasks/data";
-import { TEMPLATE_KIND_SHORT, TEMPLATE_STATUS_META, scheduleLabel, type TemplateStatus } from "@/lib/tasks/rules";
+import { ArchiveTemplate, CopyTemplate } from "@/modules/tasks/components/template-actions";
+import { taskTemplates } from "@/modules/tasks/lib/data";
+import { TEMPLATE_KIND_SHORT, TEMPLATE_STATUS_META, scheduleLabel, type TemplateStatus } from "@/modules/tasks/lib/rules";
 
 export const metadata: Metadata = { title: "Manage tasks" };
 

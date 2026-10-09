@@ -2,10 +2,10 @@ import type { Metadata } from "next";
 import { Building2 } from "lucide-react";
 import { PageHeader } from "@/components/ui-kit/page-header";
 import { Tag } from "@/components/ui-kit/tag";
-import { SiteSettings } from "@/components/tasks/site-settings";
+import { SiteSettings } from "@/modules/tasks/components/site-settings";
 import { formatDate, parseDateOnly } from "@/lib/format";
-import { taskSites } from "@/lib/tasks/data";
-import { SITE_STATUS_META, dayIn } from "@/lib/tasks/rules";
+import { taskSites } from "@/modules/tasks/lib/data";
+import { SITE_STATUS_META, dayIn } from "@/modules/tasks/lib/rules";
 
 export const metadata: Metadata = { title: "Sites" };
 

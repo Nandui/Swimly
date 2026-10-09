@@ -13,7 +13,7 @@ import { ChoiceRow } from "@/components/ui/choice-row";
 import { Input } from "@/components/ui/input";
 import {
   addTask, addTaskComment, approveTask, cantCompleteTask, notApplicableTask, raiseTaskAction, reopenTask, setTaskActionResolved,
-} from "@/lib/tasks/actions";
+} from "@/modules/tasks/lib/actions";
 
 const THEME = "turnfin-module turnfin-tasks";
 const text = (form: FormData, key: string) => String(form.get(key) ?? "");

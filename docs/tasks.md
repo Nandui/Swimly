@@ -57,7 +57,7 @@ Sites and Activity.
 - **Help**: three guides in Help's Tasks topic (do the day's tasks; review tasks and follow-up
   actions; write templates and set up sites).
 
-## Rules (`src/lib/tasks/rules.ts`, pure)
+## Rules (`src/modules/tasks/lib/rules.ts`, pure)
 
 - **Kinds** (`TEMPLATE_KINDS`): repeat (on its schedules), one-off (its schedule, once), ad hoc
   (added from Today when needed, open from the site's opening to its closing), follow-up action
@@ -125,8 +125,8 @@ only to people who do tasks at that site (`/tasks/files/[id]`).
 
 - Schema: `prisma/schema/tasks.prisma`; migrations `20261025120000_tasks` and
   `20261026120000_tasks_parity` (additive, with a backfill that keeps existing templates as they were)
-- `src/lib/tasks/`: `rules.ts` (pure), `access.ts`, `data.ts`, `actions.ts`, `home.ts`
-- UI: `src/app/tasks/`, `src/components/tasks/` (the trend chart is `score-trend.tsx`, in
+- `src/modules/tasks/lib/`: `rules.ts` (pure), `access.ts`, `data.ts`, `actions.ts`, `home.ts`
+- UI: `src/app/tasks/`, `src/modules/tasks/components/` (the trend chart is `score-trend.tsx`, in
   `--pc-chart-1`); the site picker is the shared `src/components/workspace/site-switcher.tsx`
 - Cron: `src/app/api/cron/tasks/route.ts`, `vercel.json`
 - Help: `src/lib/help/guides-modules.ts` (`do-task`, `review-tasks`, `manage-task-templates`)

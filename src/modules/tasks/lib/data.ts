@@ -5,11 +5,11 @@ import { currentClubIdIfAny } from "@/lib/clubs/current";
 import { isDateOnly, parseDateOnly, today } from "@/lib/format";
 import { prisma } from "@/lib/prisma";
 import { sitesFor } from "@/lib/policy/session";
-import { requireTasksActor, type TasksActor } from "@/lib/tasks/access";
+import { requireTasksActor, type TasksActor } from "@/modules/tasks/lib/access";
 import {
   DEFAULT_SITE, NEEDS_DOING, SCHEDULED_KINDS, addDays, dayIn, score, taskState, tasksOn,
   type LogMode, type SiteStatus, type TaskDefinition, type TaskField, type TaskRecord, type TaskSchedule, type TaskState, type TemplateKind,
-} from "@/lib/tasks/rules";
+} from "@/modules/tasks/lib/rules";
 
 /** Tasks' reads (docs/tasks.md). Everything is limited to the sites the
  *  capability covers; a task outside them is a 404. A day's tasks are made from

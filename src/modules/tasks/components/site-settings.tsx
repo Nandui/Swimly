@@ -8,8 +8,8 @@ import { NativeSelect, NativeSelectOption } from "@/components/shadcn/native-sel
 import { Textarea } from "@/components/shadcn/textarea";
 import { Field, FormDialog } from "@/components/form-dialog";
 import { Input } from "@/components/ui/input";
-import { saveTaskSite } from "@/lib/tasks/actions";
-import { SITE_STATUSES, SITE_STATUS_META, TIMEZONES, type SiteStatus } from "@/lib/tasks/rules";
+import { saveTaskSite } from "@/modules/tasks/lib/actions";
+import { SITE_STATUSES, SITE_STATUS_META, TIMEZONES, type SiteStatus } from "@/modules/tasks/lib/rules";
 
 const THEME = "turnfin-module turnfin-tasks";
 type Site = { siteId: string; name: string; status: SiteStatus; area: string; timezone: string; opening: string; closing: string; closedDates: string[] };

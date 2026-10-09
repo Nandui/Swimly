@@ -14,11 +14,11 @@ import { Switch } from "@/components/ui/switch";
 import { Textarea } from "@/components/ui/textarea";
 import { Notice } from "@/components/ui-kit/notice";
 import { SegmentedChoice } from "@/components/ui-kit/segmented-links";
-import { saveTaskTemplate, type TemplateInput } from "@/lib/tasks/actions";
+import { saveTaskTemplate, type TemplateInput } from "@/modules/tasks/lib/actions";
 import {
   FIELD_TYPES, FIELD_TYPE_LABELS, LOG_MODES, LOG_MODE_LABELS, REPEATS, SCHEDULED_KINDS, TEMPLATE_KINDS, TEMPLATE_KIND_LABELS, scheduleLabel,
   type FieldType, type LogMode, type Repeat, type TaskField, type TaskSchedule, type TemplateKind,
-} from "@/lib/tasks/rules";
+} from "@/modules/tasks/lib/rules";
 import { toast } from "@/lib/toast";
 
 type Option = { id: string; name: string };

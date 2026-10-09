@@ -1,5 +1,5 @@
 import "server-only";
-import { tasksHome } from "@/lib/tasks/data";
+import { tasksHome } from "@/modules/tasks/lib/data";
 import { expandPermissions } from "@/lib/staff/permissions";
 import { registerHomeCard, type HomeItem } from "@/modules/contributions";
 

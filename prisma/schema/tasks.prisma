@@ -26,7 +26,7 @@ model TaskTemplate {
   tags             String[]  @default([])
   priority         Boolean   @default(false)
   checklist        String[]  @default([])
-  /// `TaskField[]` (src/lib/tasks/rules.ts).
+  /// `TaskField[]` (src/modules/tasks/lib/rules.ts).
   fields           Json      @default("[]")
   minimumRecords   Int       @default(1)
   /// form (one set of answers) | table (several records, a log)

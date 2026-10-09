@@ -10,13 +10,13 @@ import { isDateOnly, parseDateOnly, today } from "@/lib/format";
 import { prisma } from "@/lib/prisma";
 import { mayFor, requireCapFor } from "@/lib/policy/session";
 import type { PermissionKey } from "@/lib/staff/permissions";
-import { requireTasksActor, type TasksActor } from "@/lib/tasks/access";
-import { asDefinition, definitionOf, ensureTasks, isMine, siteSettings, type SiteSettings } from "@/lib/tasks/data";
+import { requireTasksActor, type TasksActor } from "@/modules/tasks/lib/access";
+import { asDefinition, definitionOf, ensureTasks, isMine, siteSettings, type SiteSettings } from "@/modules/tasks/lib/data";
 import {
   FIELD_TYPES, LOG_MODES, REPEATS, SCHEDULED_KINDS, SITE_STATUSES, TEMPLATE_KINDS, TIMEZONES,
   completionProblems, dayIn, exceptions, isClock, isScheduleTime, templateProblems, zonedInstant,
   type TaskField, type TaskRecord, type TaskSchedule,
-} from "@/lib/tasks/rules";
+} from "@/modules/tasks/lib/rules";
 
 /** Tasks' writes (docs/tasks.md). Doing a task needs `tasks.complete` at its
  *  site and, when it is aimed at roles, one of them (reviewers may always step
