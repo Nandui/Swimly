@@ -14,7 +14,7 @@ import {
   type Workspace,
   type DocumentType,
   type DocumentContent,
-} from '@/lib/docs/types';
+} from '@/modules/docs/lib/types';
 import { createDocumentAction } from '@/app/docs/actions';
 import { DocIcon } from './ui';
 import { Notice } from '@/components/ui-kit/notice';

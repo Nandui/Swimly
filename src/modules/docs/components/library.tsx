@@ -12,7 +12,7 @@ import {
   type DocumentType,
   type Workspace,
   type LibraryDocument,
-} from '@/lib/docs/types';
+} from '@/modules/docs/lib/types';
 import { Button } from '@/components/shadcn/button';
 import { DocumentList } from './document-list';
 import { FilterPicker } from './ui';

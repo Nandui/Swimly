@@ -7,7 +7,7 @@ import { Button } from '@/components/shadcn/button';
 import { SearchField } from '@/components/ui-kit/search-field';
 import { EmptyState } from '@/components/ui-kit/empty-state';
 import { PageHeader } from '@/components/ui-kit/page-header';
-import { canWrite, documentTypeLabels, type DocumentType, type Workspace } from '@/lib/docs/types';
+import { canWrite, documentTypeLabels, type DocumentType, type Workspace } from '@/modules/docs/lib/types';
 import { DocIcon, FilterPicker } from './ui';
 import { cn } from '@/lib/utils';
 import { DocumentList } from './document-list';

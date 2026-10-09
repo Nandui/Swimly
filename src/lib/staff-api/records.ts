@@ -170,7 +170,7 @@ export async function completeTraining(request: Request, identity: StaffIdentity
 
 async function docs() {
   if (!process.env.DOCS_DATABASE_URL) return null;
-  const [{ directoryDatabase }, domain] = await Promise.all([import("@/lib/docs/runtime-database"), import("@/lib/docs/domain")]);
+  const [{ directoryDatabase }, domain] = await Promise.all([import("@/modules/docs/lib/runtime-database"), import("@/modules/docs/lib/domain")]);
   return { db: directoryDatabase(), domain };
 }
 

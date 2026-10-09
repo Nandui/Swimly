@@ -1,7 +1,7 @@
 import { PGlite } from '@electric-sql/pglite';
 import { readFile } from 'node:fs/promises';
-import type { Database, StaffDirectory, StaffIdentity } from '@/lib/docs/database';
-import type { RiskMatrix } from '@/lib/docs/types';
+import type { Database, StaffDirectory, StaffIdentity } from '@/modules/docs/lib/database';
+import type { RiskMatrix } from '@/modules/docs/lib/types';
 
 export const demoMatrix: RiskMatrix = {
   configured: true,

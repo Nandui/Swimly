@@ -1,10 +1,10 @@
 import { notFound } from 'next/navigation';
-import { requireMember } from '@/lib/docs/auth';
-import { database } from '@/lib/docs/database';
-import { workspace } from '@/lib/docs/queries';
-import { documentView, DomainError } from '@/lib/docs/domain';
-import { DocumentBody, RiskAssessmentView, tableOfContents } from '@/components/docs/document-body';
-import { Reader } from '@/components/docs/reader';
+import { requireMember } from '@/modules/docs/lib/auth';
+import { database } from '@/modules/docs/lib/database';
+import { workspace } from '@/modules/docs/lib/queries';
+import { documentView, DomainError } from '@/modules/docs/lib/domain';
+import { DocumentBody, RiskAssessmentView, tableOfContents } from '@/modules/docs/components/document-body';
+import { Reader } from '@/modules/docs/components/reader';
 import type { Metadata } from 'next';
 import { cache } from 'react';
 

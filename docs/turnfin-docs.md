@@ -40,7 +40,7 @@ and Roles. Docs' staff directory edits only document group membership.
 Reading reports show personal data about colleagues. Organisation-wide Docs administrators
 (`docs.manage` everywhere, or a superadmin) see everyone; a Docs manager role given for a site,
 a department or the holder's own team sees exactly those people, resolved by the platform policy
-engine (`src/lib/docs/report-scope.ts`). A document's owner sees totals for its current version
+engine (`src/modules/docs/lib/report-scope.ts`). A document's owner sees totals for its current version
 (assigned, read, overdue) beside the document, never names. Everyone sees their own reading.
 
 Docs uses the platform organisation chart: Turnfin sites appear as facilities and departments as
@@ -50,7 +50,7 @@ remain editable (a same-named one is shown as "… (Docs group)") because publis
 them. Docs migrations are numbered files in `docs-database/migrations`, applied in order once each. The browser never receives colleagues' permissions or screens: the workspace
 sends each colleague as a `WorkspaceMember` (name, groups and resolved read/write/approve flags),
 with email and role added only for Docs administrators (`toWorkspaceMember` in
-`src/lib/docs/types.ts`, tested in `workspace-dto.test.ts`).
+`src/modules/docs/lib/types.ts`, tested in `workspace-dto.test.ts`).
 
 Page guards, server actions, reports and private downloads check the shared
 session. Workflow operations re-read current staff grants from Turnfin and intersect
@@ -154,7 +154,7 @@ database URL and `VERCEL_ENV=preview` to skip production migrations.
 Focused checks:
 
 ```powershell
-npx tsx --test src/lib/docs/*.test.ts src/lib/staff/permissions.test.ts src/lib/staff/screens.test.ts
+npx tsx --test src/modules/docs/lib/*.test.ts src/lib/staff/permissions.test.ts src/lib/staff/screens.test.ts
 npx tsx scripts/check-docs.mjs
 ```
 
@@ -173,7 +173,7 @@ NOP & SOP register) into Docs from Notion's Markdown export, run against product
 `DOCS_DATABASE_URL`). Each page whose title starts with a reference ("[OPS-BT-PO-SOP-01]")
 becomes a document for the chosen site: reference and title from the heading, NOP/SOP/EAP from
 the tags or title, the review date from "Next review", the summary from the Purpose section,
-and the body converted from Markdown (`src/lib/docs/markdown.ts`, tested). A page tagged Draft
+and the body converted from Markdown (`src/modules/docs/lib/markdown.ts`, tested). A page tagged Draft
 stays a draft; any other is submitted by `--author` and approved by `--approver` through the
 normal workflow and audit, so it is published. References already in Docs are skipped, so it
 can run again; a dry run prints counts first.

@@ -17,9 +17,9 @@ import {
   type Workspace,
   type Requirement,
   type LibraryDocument,
-} from '@/lib/docs/types';
+} from '@/modules/docs/lib/types';
 import { Tag } from '@/components/ui-kit/tag';
-import { filterReading, type ReportFilters } from '@/lib/docs/reporting';
+import { filterReading, type ReportFilters } from '@/modules/docs/lib/reporting';
 import { FilterSelect } from './ui';
 import { EmptyState } from '@/components/ui-kit/empty-state';
 import { PageHeader } from '@/components/ui-kit/page-header';

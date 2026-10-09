@@ -1,10 +1,10 @@
 import { redirect } from 'next/navigation';
-import { requireMember } from '@/lib/docs/auth';
-import { database } from '@/lib/docs/database';
-import { library, requirements } from '@/lib/docs/domain';
-import { workspace } from '@/lib/docs/queries';
-import { readingReportScope } from '@/lib/docs/report-scope';
-import { ReportsView } from '@/components/docs/reports';
+import { requireMember } from '@/modules/docs/lib/auth';
+import { database } from '@/modules/docs/lib/database';
+import { library, requirements } from '@/modules/docs/lib/domain';
+import { workspace } from '@/modules/docs/lib/queries';
+import { readingReportScope } from '@/modules/docs/lib/report-scope';
+import { ReportsView } from '@/modules/docs/components/reports';
 import type { Metadata } from 'next';
 export const metadata: Metadata = { title: 'Reading reports' };
 export default async function ReportsPage() {

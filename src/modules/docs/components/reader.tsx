@@ -6,7 +6,7 @@ import {
   AlertDialogDescription,
   AlertDialogCancel,
   AlertDialogFooter,
-} from '@/components/docs/primitives/alert-dialog';
+} from '@/modules/docs/components/primitives/alert-dialog';
 
 import { Label } from '@/components/shadcn/label';
 import { Checkbox } from '@/components/shadcn/checkbox';
@@ -52,7 +52,7 @@ import {
   type Draft,
   type Snapshot,
   type AssignmentRule,
-} from '@/lib/docs/types';
+} from '@/modules/docs/lib/types';
 import { DocIcon, docTypeMeta } from './ui';
 import { Input as FieldInput } from '@/components/ui/input';
 import { Notice } from '@/components/ui-kit/notice';

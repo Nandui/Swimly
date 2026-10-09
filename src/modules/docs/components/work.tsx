@@ -18,7 +18,7 @@ import {
   type Workspace,
   type Draft,
   type DocumentType,
-} from '@/lib/docs/types';
+} from '@/modules/docs/lib/types';
 import { Tag } from '@/components/ui-kit/tag';
 import { DocIcon, FilterPicker } from './ui';
 import { EmptyState } from '@/components/ui-kit/empty-state';

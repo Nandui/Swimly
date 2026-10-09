@@ -5,7 +5,7 @@ import { createDocsTestDatabase } from '@/test/docs-database';
 import { docsStorageConfig } from './storage-config';
 import { findMember, one } from './database';
 import { DocumentService } from './domain';
-import { copySharedDocs, freezeSharedDocs, migrateDocsSchema } from '../../../scripts/lib/docs-storage';
+import { copySharedDocs, freezeSharedDocs, migrateDocsSchema } from '../../../../scripts/lib/docs-storage';
 import type { DocumentContent } from './types';
 
 test('Docs requires its own database and matching pooled/direct destinations', () => {

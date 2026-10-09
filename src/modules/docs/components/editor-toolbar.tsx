@@ -14,7 +14,7 @@ import { Button } from '@/components/shadcn/button';
 import { NativeSelect, NativeSelectOption } from '@/components/shadcn/native-select';
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/shadcn/tooltip';
 import { Popover, PopoverTrigger, PopoverContent } from './primitives/popover';
-import { headingLevels, fontSizes, textColours, highlightColours } from '@/lib/docs/formatting';
+import { headingLevels, fontSizes, textColours, highlightColours } from '@/modules/docs/lib/formatting';
 
 /** One toolbar button. `wide` tools stay in the bar from 601px; on phones they live in More. */
 function Tool({ label, icon: Icon, onClick, active, disabled, wide = false }: {

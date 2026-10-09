@@ -1,6 +1,6 @@
 import Link from 'next/link';
 import { ChevronRight } from 'lucide-react';
-import { DOC_STATUS_META, documentTypeLabels, formatDate, overdue, type Group, type LibraryDocument } from '@/lib/docs/types';
+import { DOC_STATUS_META, documentTypeLabels, formatDate, overdue, type Group, type LibraryDocument } from '@/modules/docs/lib/types';
 import { Tag } from '@/components/ui-kit/tag';
 import { DocIcon } from './ui';
 

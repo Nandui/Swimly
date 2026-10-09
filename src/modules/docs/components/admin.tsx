@@ -27,7 +27,7 @@ import {
   riskBandMeta,
   RISK_BAND_TONE_META,
   DOC_STATUS_META,
-} from '@/lib/docs/types';
+} from '@/modules/docs/lib/types';
 import { RichEditor } from './rich-editor';
 import { FilterSelect } from './ui';
 import { Avatar, AvatarFallback } from '@/components/shadcn/avatar';

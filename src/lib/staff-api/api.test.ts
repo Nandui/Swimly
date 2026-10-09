@@ -5,8 +5,8 @@ import { isolatedPrisma } from "@/test/pglite-prisma";
 import { createHrTestDatabase } from "@/test/hr-database";
 import { createDocsTestDatabase } from "@/test/docs-database";
 import { serverModule } from "@/test/server-module";
-import { paragraph } from "@/lib/docs/content";
-import type { DocumentContent } from "@/lib/docs/types";
+import { paragraph } from "@/modules/docs/lib/content";
+import type { DocumentContent } from "@/modules/docs/lib/types";
 
 /** The staff API behind Turnfin Me, against real (in-memory) Postgres for the
  *  main, HR and Docs databases. It signs staff in by email code only, returns
@@ -72,7 +72,7 @@ before(async () => {
   sharedReview = randomUUID();
   await hr.db.query("INSERT INTO reviews (id, org_id, subject_user_id, reviewer_id, reviewer_name, period, status, summary, shared_at) VALUES ($1,$2,'riley','maya','Maya','2026 review','shared','Synthetic summary',now())", [sharedReview, ORG]);
   // Docs: two published documents; only one is assigned to Riley.
-  const { DocumentService } = await import("@/lib/docs/domain");
+  const { DocumentService } = await import("@/modules/docs/lib/domain");
   const service = new DocumentService(docs);
   const publish = async (title: string) => {
     const id = await service.create("jamie", docContent(title));
@@ -89,7 +89,7 @@ before(async () => {
     "@/lib/prisma": { prisma: db },
     "@/lib/staff-api/email": { sendStaffCode: async (email: string, code: string, purpose: string) => { sent.push({ email, code, purpose }); } },
     "@/lib/hr/database": hr.module,
-    "@/lib/docs/runtime-database": { directoryDatabase: () => docs },
+    "@/modules/docs/lib/runtime-database": { directoryDatabase: () => docs },
     "@/lib/authz": { requireSession: async () => { throw new Error("no Work session in the staff API"); } },
     "@/lib/clubs/current": { currentClubIdIfAny: async () => null, currentClubId: async () => club.id },
     // No swim classes: the swim school is not part of the staff API.

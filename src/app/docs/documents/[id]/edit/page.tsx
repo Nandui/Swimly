@@ -1,9 +1,9 @@
 import { redirect, notFound } from 'next/navigation';
-import { requireMember } from '@/lib/docs/auth';
-import { database, one } from '@/lib/docs/database';
-import { workspace } from '@/lib/docs/queries';
-import { canWrite, type Draft, type DocumentRecord } from '@/lib/docs/types';
-import { DocumentEditor } from '@/components/docs/document-editor';
+import { requireMember } from '@/modules/docs/lib/auth';
+import { database, one } from '@/modules/docs/lib/database';
+import { workspace } from '@/modules/docs/lib/queries';
+import { canWrite, type Draft, type DocumentRecord } from '@/modules/docs/lib/types';
+import { DocumentEditor } from '@/modules/docs/components/document-editor';
 import type { Metadata } from 'next';
 import { cache } from 'react';
 

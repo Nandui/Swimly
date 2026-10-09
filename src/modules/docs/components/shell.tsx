@@ -2,7 +2,7 @@
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { ChartNoAxesCombined, ClipboardCheck, Home, Library, Search, Settings } from 'lucide-react';
-import { canManage, type Workspace } from '@/lib/docs/types';
+import { canManage, type Workspace } from '@/modules/docs/lib/types';
 import { Button } from '@/components/shadcn/button';
 import { ModuleShell } from '@/components/workspace/module-shell';
 

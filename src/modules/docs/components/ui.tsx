@@ -7,7 +7,7 @@ import {
   ClipboardList,
 } from 'lucide-react';
 import { useId } from 'react';
-import { documentTypeLabels, type DocumentType } from '@/lib/docs/types';
+import { documentTypeLabels, type DocumentType } from '@/modules/docs/lib/types';
 import type { StatusMeta } from '@/lib/status';
 import { Label } from '@/components/shadcn/label';
 import { NativeSelect } from '@/components/shadcn/native-select';

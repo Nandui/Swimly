@@ -4,9 +4,9 @@ import http from 'node:http';
 import { randomUUID } from 'node:crypto';
 import { buildPreview } from '../instructor-swimmer-preview/build.mjs';
 import { createDocsTestDatabase } from '../../src/test/docs-database.ts';
-import { DocumentService, actor, library, requirements, documentView } from '../../src/lib/docs/domain.ts';
-import { rows, one, listMembers } from '../../src/lib/docs/database.ts';
-import { canRead, canWrite, canManage, toWorkspaceMember } from '../../src/lib/docs/types.ts';
+import { DocumentService, actor, library, requirements, documentView } from '../../src/modules/docs/lib/domain.ts';
+import { rows, one, listMembers } from '../../src/modules/docs/lib/database.ts';
+import { canRead, canWrite, canManage, toWorkspaceMember } from '../../src/modules/docs/lib/types.ts';
 
 export const output = path.resolve('.impeccable/review/docs/site');
 export async function docsPreview(port = 0) {

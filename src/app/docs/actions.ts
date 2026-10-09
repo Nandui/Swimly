@@ -1,11 +1,11 @@
 'use server';
 import { revalidatePath } from 'next/cache';
 import { z } from 'zod';
-import { database } from '@/lib/docs/database';
-import { DocumentService, DomainError } from '@/lib/docs/domain';
-import { requireActionMember } from '@/lib/docs/auth';
-import type { DocumentContent, Member } from '@/lib/docs/types';
-import { reportError } from '@/lib/docs/monitoring';
+import { database } from '@/modules/docs/lib/database';
+import { DocumentService, DomainError } from '@/modules/docs/lib/domain';
+import { requireActionMember } from '@/modules/docs/lib/auth';
+import type { DocumentContent, Member } from '@/modules/docs/lib/types';
+import { reportError } from '@/modules/docs/lib/monitoring';
 export type ActionResult<T = unknown> =
   { ok: true; data: T } | { ok: false; error: string; code: number };
 async function run<T>(fn: () => Promise<T>, refresh = true): Promise<ActionResult<T>> {

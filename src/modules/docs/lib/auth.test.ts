@@ -13,7 +13,7 @@ let requestHeaders = new Headers();
 const revalidated: string[] = [];
 before(async () => { db = await createDocsTestDatabase(); });
 after(async () => { await db.close(); });
-const authentication = serverModule<typeof import('./auth')>('src/lib/docs/auth.ts', {
+const authentication = serverModule<typeof import('./auth')>('src/modules/docs/lib/auth.ts', {
   'server-only': {},
   '@/auth': { auth: async () => user ? { user: { id: user } } : null },
   'next/headers': { headers: async () => requestHeaders },
@@ -26,10 +26,10 @@ const authentication = serverModule<typeof import('./auth')>('src/lib/docs/auth.
 });
 const actions = serverModule<typeof import('@/app/docs/actions')>('src/app/docs/actions.ts', {
   'next/cache': { revalidatePath: (path: string) => revalidated.push(path) },
-  '@/lib/docs/database': { database: async () => db },
-  '@/lib/docs/domain': domain,
-  '@/lib/docs/auth': authentication,
-  '@/lib/docs/monitoring': { reportError: async (e: unknown) => { throw e; } },
+  '@/modules/docs/lib/database': { database: async () => db },
+  '@/modules/docs/lib/domain': domain,
+  '@/modules/docs/lib/auth': authentication,
+  '@/modules/docs/lib/monitoring': { reportError: async (e: unknown) => { throw e; } },
 });
 const content: DocumentContent = {
   schemaVersion: 1, title: 'Shared login test', reference: 'TEST-AUTH', type: 'SOP',

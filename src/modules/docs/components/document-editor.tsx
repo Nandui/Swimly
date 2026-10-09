@@ -1,5 +1,5 @@
 'use client';
-import { Dialog, DialogContent, DialogTitle, DialogDescription } from '@/components/docs/primitives/dialog';
+import { Dialog, DialogContent, DialogTitle, DialogDescription } from '@/modules/docs/components/primitives/dialog';
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/shadcn/tabs';
 import {
   AlertDialog,
@@ -9,7 +9,7 @@ import {
   AlertDialogFooter,
   AlertDialogCancel,
   AlertDialogAction,
-} from '@/components/docs/primitives/alert-dialog';
+} from '@/modules/docs/components/primitives/alert-dialog';
 
 import { Label } from '@/components/shadcn/label';
 import { NativeSelect, NativeSelectOption } from '@/components/shadcn/native-select';
@@ -43,8 +43,8 @@ import {
   documentTypeLabels,
   riskBandMeta,
   UNCLASSIFIED_RISK_META,
-} from '@/lib/docs/types';
-import { riskBand } from '@/lib/docs/content';
+} from '@/modules/docs/lib/types';
+import { riskBand } from '@/modules/docs/lib/content';
 import { RichEditor } from './rich-editor';
 import { Notice } from '@/components/ui-kit/notice';
 import { Tag } from '@/components/ui-kit/tag';

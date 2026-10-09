@@ -1,6 +1,6 @@
-import { requireActionMember } from '@/lib/docs/auth';
-import { readAttachment } from '@/lib/docs/files';
-import { DomainError } from '@/lib/docs/domain';
+import { requireActionMember } from '@/modules/docs/lib/auth';
+import { readAttachment } from '@/modules/docs/lib/files';
+import { DomainError } from '@/modules/docs/lib/domain';
 export async function GET(_request: Request, { params }: { params: Promise<{ id: string }> }) {
   try {
     const m = await requireActionMember();

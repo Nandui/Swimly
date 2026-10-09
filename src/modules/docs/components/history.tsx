@@ -6,7 +6,7 @@ import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { diffWords } from 'diff';
 import { History, RotateCcw, ChevronRight, GitCompareArrows } from 'lucide-react';
-import { plainText } from '@/lib/docs/content';
+import { plainText } from '@/modules/docs/lib/content';
 import {
   DOC_STATUS_META,
   docEventLabel,
@@ -16,7 +16,7 @@ import {
   type Workspace,
   type Snapshot,
   type AuditEvent,
-} from '@/lib/docs/types';
+} from '@/modules/docs/lib/types';
 import { Tag } from '@/components/ui-kit/tag';
 import { EmptyState } from '@/components/ui-kit/empty-state';
 import { PageHeader } from '@/components/ui-kit/page-header';

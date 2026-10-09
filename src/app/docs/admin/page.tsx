@@ -1,9 +1,9 @@
 import { redirect } from 'next/navigation';
-import { requireMember } from '@/lib/docs/auth';
-import { database, rows } from '@/lib/docs/database';
-import { workspace } from '@/lib/docs/queries';
-import { canManage, type AuditEvent } from '@/lib/docs/types';
-import { AdminView } from '@/components/docs/admin';
+import { requireMember } from '@/modules/docs/lib/auth';
+import { database, rows } from '@/modules/docs/lib/database';
+import { workspace } from '@/modules/docs/lib/queries';
+import { canManage, type AuditEvent } from '@/modules/docs/lib/types';
+import { AdminView } from '@/modules/docs/components/admin';
 import type { Metadata } from 'next';
 export const metadata: Metadata = { title: 'Administration' };
 export default async function AdminPage() {
