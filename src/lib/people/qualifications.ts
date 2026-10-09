@@ -31,7 +31,7 @@ export async function qualificationFile(userId: string, orgId: string) {
     position: person?.position?.name ?? null,
     requirements: requirementStates(person?.position?.requires.map((r) => r.type) ?? [], records, today()),
     records: records.map((r) => ({
-      id: r.id, name: r.type.name, issuedOn: iso(r.issuedOn)!, expiresOn: iso(r.expiresOn), reference: r.reference, state: qualificationState(r),
+      id: r.id, name: r.type.name, issuedOn: iso(r.issuedOn), expiresOn: iso(r.expiresOn), reference: r.reference, state: qualificationState(r),
       verifiedBy: r.verifiedById ? verifier.get(r.verifiedById) ?? null : null, certificateId: certificate.get(r.id) ?? null,
     })),
     types, canRecord,

@@ -100,7 +100,8 @@ const uploadSchema = z.object({
   typeId: z.string().max(64).optional(),
   typeName: text(120).optional(),
   issuedOn: z.string().refine(isDateOnly, "Use a date.").optional(),
-  expiresOn: z.string().refine(isDateOnly, "Use a date.").optional(),
+  /** The one date a certificate must give (owner decision, 9 October 2026). */
+  expiresOn: z.string().refine(isDateOnly, "Give the expiry date on the certificate."),
   reference: text(80).default(""),
   fileName: z.string().trim().min(1).max(120).regex(/^[^/\\\r\n]+$/, "Use a plain file name."),
   mime: z.enum(Object.keys(MIME) as [keyof typeof MIME]),
@@ -122,7 +123,7 @@ export async function uploadEvidence(request: Request, identity: StaffIdentity) 
   const row = await prisma.$transaction(async (tx) => {
     const created = await tx.qualificationEvidence.create({ data: {
       orgId: identity.user.orgId, userId: identity.user.id, typeId: type?.id ?? null, typeName: type?.name ?? input.typeName ?? "",
-      issuedOn: input.issuedOn ? parseDateOnly(input.issuedOn) : null, expiresOn: input.expiresOn ? parseDateOnly(input.expiresOn) : null,
+      issuedOn: input.issuedOn ? parseDateOnly(input.issuedOn) : null, expiresOn: parseDateOnly(input.expiresOn),
       reference: input.reference, fileName: input.fileName, mime: input.mime, size: bytes.length, bytes,
     } });
     await logAudit({ actorId: identity.user.id, actorName: identity.user.name, action: "upload-certificate", entity: "Qualification", entityId: created.id,

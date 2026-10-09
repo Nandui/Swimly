@@ -34,8 +34,8 @@ export function VerifyCertificate({ row, types }: { row: Row; types: { id: strin
           {types.map((t) => <NativeSelectOption key={t.id} value={t.id}>{t.name}</NativeSelectOption>)}
         </NativeSelect>
       </Field>
-      <Field label="Issued" htmlFor="cert-issued"><Input id="cert-issued" name="issuedOn" type="date" required defaultValue={iso(row.issuedOn)} className="min-h-11" /></Field>
-      <Field label="Expires" htmlFor="cert-expires" optional hint="Leave empty to use the qualification's usual validity."><Input id="cert-expires" name="expiresOn" type="date" defaultValue={iso(row.expiresOn)} className="min-h-11" /></Field>
+      <Field label="Expires" htmlFor="cert-expires" hint="As the certificate says."><Input id="cert-expires" name="expiresOn" type="date" required defaultValue={iso(row.expiresOn)} className="min-h-11" /></Field>
+      <Field label="Issued" htmlFor="cert-issued" optional><Input id="cert-issued" name="issuedOn" type="date" defaultValue={iso(row.issuedOn)} className="min-h-11" /></Field>
       <Field label="Certificate number" htmlFor="cert-ref" optional><Input id="cert-ref" name="reference" maxLength={80} defaultValue={row.reference} className="min-h-11" /></Field>
     </FormDialog>
   );

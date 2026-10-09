@@ -342,8 +342,8 @@ export function ResultDialog({ candidate, today, grants, trigger }: {
           </NativeSelect>
         </Field>
         <Field label="Day of the result" htmlFor={`${fid}-on`}><Input id={`${fid}-on`} name="resultOn" type="date" required defaultValue={candidate.resultOn ?? today} className="min-h-11" /></Field>
-        <Field label="Certificate number" htmlFor={`${fid}-cert`} hint="Needed for a pass."><Input id={`${fid}-cert`} name="cert" maxLength={80} defaultValue={candidate.certificateNumber} className="min-h-11" /></Field>
-        <Field label="Certificate expires" htmlFor={`${fid}-exp`} optional hint="Left empty, it follows the qualification's validity."><Input id={`${fid}-exp`} name="expires" type="date" defaultValue={candidate.certificateExpires ?? ""} className="min-h-11" /></Field>
+        <Field label="Certificate expires" htmlFor={`${fid}-exp`} hint="Needed for a pass."><Input id={`${fid}-exp`} name="expires" type="date" defaultValue={candidate.certificateExpires ?? ""} className="min-h-11" /></Field>
+        <Field label="Certificate number" htmlFor={`${fid}-cert`} optional><Input id={`${fid}-cert`} name="cert" maxLength={80} defaultValue={candidate.certificateNumber} className="min-h-11" /></Field>
       </div>
       <Field label="Note" htmlFor={`${fid}-note`} optional><Textarea id={`${fid}-note`} name="note" maxLength={500} defaultValue={candidate.resultNote} placeholder="Referred on the spinal management module" /></Field>
     </FormDialog>

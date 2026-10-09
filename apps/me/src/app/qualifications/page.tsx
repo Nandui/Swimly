@@ -69,7 +69,7 @@ export default function QualificationsPage() {
                 <ul className="pc-rows">{data.items.map((q) => (
                   <li key={q.id} className="pc-row">
                     <span className="pc-row-body"><span className="pc-row-title">{q.name}</span>
-                      <span className="pc-row-hint">Issued {date(q.issuedOn)}{q.expiresOn ? ` · expires ${date(q.expiresOn)}` : " · does not expire"}{q.reference ? ` · ${q.reference}` : ""}</span></span>
+                      <span className="pc-row-hint">{q.issuedOn ? `Issued ${date(q.issuedOn)} · ` : ""}{q.expiresOn ? `Expires ${date(q.expiresOn)}` : "Does not expire"}{q.reference ? ` · ${q.reference}` : ""}</span></span>
                     <span className="pc-row-trail"><Tag meta={QUALIFICATION_META[q.state]} /></span>
                   </li>
                 ))}</ul>
@@ -97,8 +97,8 @@ export default function QualificationsPage() {
                 </select>
               </div>
               {typeId === "" ? <div className="field"><label htmlFor="typeName">What is it?</label><input id="typeName" name="typeName" className="input" maxLength={120} required /></div> : null}
-              <div className="field"><label htmlFor="issuedOn">Issued</label><input id="issuedOn" name="issuedOn" type="date" className="input" /></div>
-              <div className="field"><label htmlFor="expiresOn">Expires (if it says)</label><input id="expiresOn" name="expiresOn" type="date" className="input" /></div>
+              <div className="field"><label htmlFor="expiresOn">Expires</label><input id="expiresOn" name="expiresOn" type="date" className="input" required /></div>
+              <div className="field"><label htmlFor="issuedOn">Issued (optional)</label><input id="issuedOn" name="issuedOn" type="date" className="input" /></div>
               <div className="field"><label htmlFor="reference">Certificate number (optional)</label><input id="reference" name="reference" className="input" maxLength={80} /></div>
               <div className="field" role="group" aria-labelledby="file-label">
                 <span id="file-label" className="label">Photo or PDF</span>

@@ -201,13 +201,13 @@ export function RecordQualification({ userId, name, types }: { userId: string; n
       <Field label="Qualification" htmlFor="typeId">
         <Select id="typeId" value={typeId} onValueChange={(value) => { setTypeId(value); suggest(value, issued); }} options={types.map((t) => ({ value: t.id, label: t.name }))} />
       </Field>
-      <Field label="Issued on" htmlFor="issuedOn">
-        <Input id="issuedOn" type="date" required value={issued} onChange={(value) => { setIssued(value); suggest(typeId, value); }} />
+      <Field label="Expires on" htmlFor="expiresOn" hint="As the certificate says. Filled in from the usual validity when you give the issue date.">
+        <Input id="expiresOn" type="date" required value={expires} onChange={setExpires} />
       </Field>
-      <Field label="Expires on" htmlFor="expiresOn" hint="Filled in from the usual validity; change it to match the certificate. Leave empty if it does not expire.">
-        <Input id="expiresOn" type="date" value={expires} onChange={setExpires} />
+      <Field label="Issued on" htmlFor="issuedOn" optional>
+        <Input id="issuedOn" type="date" value={issued} onChange={(value) => { setIssued(value); suggest(typeId, value); }} />
       </Field>
-      <Field label="Certificate reference" htmlFor="reference">
+      <Field label="Certificate reference" htmlFor="reference" optional>
         <Input id="reference" name="reference" maxLength={80} />
       </Field>
       <Field label="Certificate" htmlFor="certificate" optional hint="A photo or PDF of it, up to 5 MB. Kept with the record.">

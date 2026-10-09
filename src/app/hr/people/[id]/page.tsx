@@ -169,7 +169,7 @@ export default async function HrPersonPage({ params }: { params: Promise<{ id: s
               <li key={q.id} className="pc-row">
                 <span className="pc-row-body">
                   <span className="pc-row-title">{q.name}</span>
-                  <span className="pc-row-hint">{[`Issued ${formatDate(new Date(`${q.issuedOn}T00:00:00Z`))}`, q.expiresOn ? `expires ${formatDate(new Date(`${q.expiresOn}T00:00:00Z`))}` : "does not expire", q.reference || null, q.verifiedBy ? `verified by ${q.verifiedBy}` : null].filter(Boolean).join(" · ")}</span>
+                  <span className="pc-row-hint">{[q.issuedOn ? `Issued ${formatDate(new Date(`${q.issuedOn}T00:00:00Z`))}` : null, q.expiresOn ? `expires ${formatDate(new Date(`${q.expiresOn}T00:00:00Z`))}` : "does not expire", q.reference || null, q.verifiedBy ? `verified by ${q.verifiedBy}` : null].filter(Boolean).join(" · ")}</span>
                 </span>
                 <span className="pc-row-trail">
                   <Tag meta={QUALIFICATION_STATE_META[q.state]} />

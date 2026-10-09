@@ -108,11 +108,11 @@ test("candidates: staff or public, within the places; checks, register and readi
 test("a staff member who passes gets the qualification; changing the result withdraws it", async () => {
   as("tara", [], [at(bishopstown, ["academy.run"])]);
   const kim = await fixture.prisma.academyCandidate.findFirstOrThrow({ where: { courseId, userId: "kim" } });
-  assert.equal((await actions.recordResult(kim.id, { status: "passed", resultOn: today() })).ok, false, "a pass needs the certificate number");
-  assert.equal((await actions.recordResult(kim.id, { status: "passed", resultOn: today(), certificateNumber: "SYN-001" })).ok, true);
+  assert.equal((await actions.recordResult(kim.id, { status: "passed", resultOn: today(), certificateNumber: "SYN-001" })).ok, false, "a pass needs the certificate's expiry date");
+  assert.equal((await actions.recordResult(kim.id, { status: "passed", resultOn: today(), certificateExpires: plusDays(730) })).ok, true, "its number is optional");
   const q = await fixture.prisma.qualification.findFirstOrThrow({ where: { userId: "kim", typeId: "qt-guard" } });
-  assert.equal(q.reference, "SYN-001");
-  assert.equal(q.expiresOn?.toISOString().slice(0, 10), (() => { const d = new Date(`${today()}T00:00:00Z`); d.setUTCMonth(d.getUTCMonth() + 24); return d.toISOString().slice(0, 10); })());
+  assert.equal(q.reference, "");
+  assert.equal(q.expiresOn?.toISOString().slice(0, 10), plusDays(730));
   assert.equal((await actions.recordResult(kim.id, { status: "referred", resultOn: today() })).ok, true);
   assert.ok((await fixture.prisma.qualification.findUniqueOrThrow({ where: { id: q.id } })).revokedAt, "withdrawn again");
   as("tara", [], [at(bishopstown, ["academy.manage"])]);

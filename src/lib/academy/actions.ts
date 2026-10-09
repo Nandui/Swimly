@@ -358,7 +358,7 @@ export async function recordResult(id: string, input: ResultInput): Promise<Acti
   const parsed = resultSchema.safeParse(input);
   if (!parsed.success) return fail(parsed.error.issues[0].message);
   const d = parsed.data;
-  if (d.status === "passed" && !d.certificateNumber) return fail("Give the certificate number from the awarding body.");
+  if (d.status === "passed" && !d.certificateExpires) return fail("Give the expiry date on the certificate.");
   if (d.certificateExpires && d.certificateExpires < d.resultOn) return fail("The certificate expires before the result.");
   const grants = d.status === "passed" && c.userId && c.course.type.qualificationTypeId;
   const expires = grants ? expiryFrom(d.resultOn, d.certificateExpires || null, c.course.type.qualificationType?.validityMonths ?? null) : null;

@@ -73,7 +73,7 @@ export default async function TrainingPersonPage({ params }: { params: Promise<{
                 <li key={q.id} className="pc-row">
                   <div className="pc-row-body">
                     <span className="pc-row-title">{q.type.name}</span>
-                    <p className="pc-row-hint">Issued {formatDate(q.issuedOn)}{q.expiresOn ? ` · expires ${formatDate(q.expiresOn)}` : " · does not expire"}{q.reference ? ` · ${q.reference}` : ""}</p>
+                    <p className="pc-row-hint">{q.issuedOn ? `Issued ${formatDate(q.issuedOn)}` : "No issue date"}{q.expiresOn ? ` · expires ${formatDate(q.expiresOn)}` : " · does not expire"}{q.reference ? ` · ${q.reference}` : ""}</p>
                   </div>
                   <div className="pc-row-trail"><Tag meta={QUALIFICATION_STATE_META[q.state]} /></div>
                 </li>

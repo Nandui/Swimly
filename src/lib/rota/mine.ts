@@ -35,7 +35,7 @@ export async function myDays(userId: string, days = 28) {
   });
   const sharedAt = (siteId: string, departmentId: string, date: string) =>
     shares.find((s) => s.siteId === siteId && s.departmentId === departmentId && s.monday.toISOString().slice(0, 10) === mondayOf(date))?.sharedAt ?? null;
-  const heldList = held.map((q) => ({ userId: q.userId, typeId: q.typeId, issuedOn: q.issuedOn.toISOString().slice(0, 10), expiresOn: q.expiresOn ? q.expiresOn.toISOString().slice(0, 10) : null, revoked: !!q.revokedAt }));
+  const heldList = held.map((q) => ({ userId: q.userId, typeId: q.typeId, issuedOn: q.issuedOn ? q.issuedOn.toISOString().slice(0, 10) : null, expiresOn: q.expiresOn ? q.expiresOn.toISOString().slice(0, 10) : null, revoked: !!q.revokedAt }));
 
   type Item = WorkItem & { icon: string; place: string; needs: string | null; problem: "missing" | "expired" | null };
   const byDay = new Map<string, { date: string; siteId: string; site: string; items: Item[]; planned: { start: number; end: number }[]; changed: boolean }>();

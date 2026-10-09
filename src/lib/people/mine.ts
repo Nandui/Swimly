@@ -14,7 +14,8 @@ export async function myQualifications(userId: string) {
   const newest = new Map<string, (typeof rows)[number]>();
   for (const q of rows) {
     const held = newest.get(q.type.id);
-    if (!held || q.issuedOn > held.issuedOn) newest.set(q.type.id, q);
+    const rank = (x: typeof q) => `${x.expiresOn?.toISOString() ?? "9999"}|${x.issuedOn?.toISOString() ?? ""}`;
+    if (!held || rank(q) > rank(held)) newest.set(q.type.id, q);
   }
   return rows.filter((q) => newest.get(q.type.id) === q).map((q) => ({ ...q, state: qualificationState(q) }));
 }

@@ -93,7 +93,7 @@ async function loadDays(siteId: string, orgId: string | undefined, from: string,
   ]) : [[], [], [], [], []];
   const names = new Map(users.map((u) => [u.id, u.name]));
   const rest = await youngDays(users, from, to);
-  const heldList: Held[] = held.map((q) => ({ userId: q.userId, typeId: q.typeId, issuedOn: isoOf(q.issuedOn), expiresOn: q.expiresOn ? isoOf(q.expiresOn) : null, revoked: !!q.revokedAt }));
+  const heldList: Held[] = held.map((q) => ({ userId: q.userId, typeId: q.typeId, issuedOn: q.issuedOn ? isoOf(q.issuedOn) : null, expiresOn: q.expiresOn ? isoOf(q.expiresOn) : null, revoked: !!q.revokedAt }));
   // Where an activity happens: the site's areas, kept in Admin; the day is grouped by them.
   const places = await areaNames(siteId);
   const dayInput = (date: string) => {
@@ -251,7 +251,7 @@ export async function fitsFor(input: { siteId: string; date: string; start: numb
   const young = new Map<string, YoungBand>();
   for (const p of people) { const band = youngBand(p.dateOfBirth ? isoOf(p.dateOfBirth) : null, input.date); if (band) young.set(p.id, band); }
   return rankFits({ date: input.date, start: input.start, end: input.end, requiredTypeId: input.requiredTypeId }, people.map((p) => ({ userId: p.id, name: p.name })), {
-    held: held.map((q) => ({ userId: q.userId, typeId: q.typeId, issuedOn: isoOf(q.issuedOn), expiresOn: q.expiresOn ? isoOf(q.expiresOn) : null, revoked: !!q.revokedAt })),
+    held: held.map((q) => ({ userId: q.userId, typeId: q.typeId, issuedOn: q.issuedOn ? isoOf(q.issuedOn) : null, expiresOn: q.expiresOn ? isoOf(q.expiresOn) : null, revoked: !!q.revokedAt })),
     work, off: new Set(absences.flatMap((a) => (a.userId ? [a.userId] : []))), weekMinutes, young,
   });
 }

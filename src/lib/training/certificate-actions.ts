@@ -8,7 +8,6 @@ import { logAudit } from "@/lib/audit";
 import { isDateOnly, parseDateOnly } from "@/lib/format";
 import { prisma } from "@/lib/prisma";
 import { requireCapFor } from "@/lib/policy/session";
-import { addMonthsIso } from "@/lib/training/constants";
 
 /** Checking a certificate someone uploaded in Turnfin Me. Needs
  *  `qualifications.manage` for that person, and never your own. Verifying
@@ -30,8 +29,9 @@ async function reviewable(id: string) {
 
 const verifySchema = z.object({
   typeId: z.string().min(1, "Choose the qualification."),
-  issuedOn: z.string().refine(isDateOnly, "Enter the issue date."),
-  expiresOn: z.union([z.literal(""), z.string().refine(isDateOnly, "Use a date.")]),
+  /** Only the expiry date is mandatory on a certificate (owner decision, 9 October 2026). */
+  issuedOn: z.union([z.literal(""), z.string().refine(isDateOnly, "Use a date.")]),
+  expiresOn: z.string().refine(isDateOnly, "Enter the expiry date on the certificate."),
   reference: z.string().trim().max(80),
 });
 
@@ -44,11 +44,10 @@ export async function verifyCertificate(id: string, input: z.input<typeof verify
   const result = await prisma.$transaction(async (tx) => {
     const type = await tx.qualificationType.findFirst({ where: { id: parsed.data.typeId, orgId: row.orgId, archivedAt: null }, select: { id: true, name: true, validityMonths: true } });
     if (!type) return fail("That qualification is no longer offered.");
-    const { issuedOn } = parsed.data;
-    const expiresOn = parsed.data.expiresOn || (type.validityMonths ? addMonthsIso(issuedOn, type.validityMonths) : "");
-    if (expiresOn && expiresOn < issuedOn) return fail("The expiry date is before the issue date.");
+    const { issuedOn, expiresOn } = parsed.data;
+    if (issuedOn && expiresOn < issuedOn) return fail("The expiry date is before the issue date.");
     const qualification = await tx.qualification.create({ data: {
-      orgId: row.orgId, userId: row.userId, typeId: type.id, issuedOn: parseDateOnly(issuedOn), expiresOn: expiresOn ? parseDateOnly(expiresOn) : null,
+      orgId: row.orgId, userId: row.userId, typeId: type.id, issuedOn: issuedOn ? parseDateOnly(issuedOn) : null, expiresOn: parseDateOnly(expiresOn),
       reference: parsed.data.reference, note: "Certificate uploaded in Turnfin Me", verifiedById: actor.id, verifiedAt: new Date(),
     } });
     const moved = await tx.qualificationEvidence.updateMany({ where: { id, status: "PENDING" }, data: {

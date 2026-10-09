@@ -344,7 +344,7 @@ model Qualification {
   orgId        String
   userId       String
   typeId       String
-  issuedOn     DateTime  @db.Date
+  issuedOn     DateTime? @db.Date
   expiresOn    DateTime? @db.Date
   reference    String    @default("")
   note         String    @default("")

@@ -16,7 +16,7 @@ export type RequirementState = keyof typeof REQUIREMENT_META;
 /** Expiring = within 60 days, the usual renewal window (as `qualificationState`). */
 export const REQUIREMENT_WARNING_DAYS = 60;
 
-type Held = { typeId: string; issuedOn: Date; expiresOn: Date | null; revokedAt: Date | null };
+type Held = { typeId: string; issuedOn: Date | null; expiresOn: Date | null; revokedAt: Date | null };
 const iso = (d: Date) => d.toISOString().slice(0, 10);
 function plusDays(day: string, n: number) {
   const d = new Date(`${day}T00:00:00Z`); d.setUTCDate(d.getUTCDate() + n);
@@ -28,7 +28,7 @@ function plusDays(day: string, n: number) {
 export function requirementStates(required: readonly { id: string; name: string }[], held: readonly Held[], on: string) {
   const order: Record<RequirementState, number> = { missing: 0, expired: 1, expiring: 2, met: 3 };
   return required.map((type) => {
-    const records = held.filter((h) => h.typeId === type.id && !h.revokedAt && iso(h.issuedOn) <= on);
+    const records = held.filter((h) => h.typeId === type.id && !h.revokedAt && (!h.issuedOn || iso(h.issuedOn) <= on));
     const best = records.sort((a, b) => (b.expiresOn ? iso(b.expiresOn) : "9999") .localeCompare(a.expiresOn ? iso(a.expiresOn) : "9999"))[0];
     const expiresOn = best?.expiresOn ? iso(best.expiresOn) : null;
     const state: RequirementState = !best ? "missing" : expiresOn && expiresOn < on ? "expired" : expiresOn && expiresOn <= plusDays(on, REQUIREMENT_WARNING_DAYS) ? "expiring" : "met";

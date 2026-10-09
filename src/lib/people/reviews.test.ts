@@ -67,19 +67,21 @@ test("a details change applies exactly what was asked, once, and never by the pe
   assert.equal((await details.declineDetailChange(own.id, "Not this one")).ok, false, "no HR access");
 });
 
-test("certificates: recorded only by a qualifications role that covers the person, with the type's validity", async () => {
+test("certificates: recorded only by a qualifications role that covers the person; the expiry date mandatory, the issue date not", async () => {
   const db = fixture.prisma;
   const upload = (userId: string) => db.qualificationEvidence.create({ data: { orgId: ORG, userId, typeId: "qt-life", typeName: "Synthetic lifeguard", fileName: "c.png", mime: "image/png", size: 4, bytes: Buffer.from([0x89, 0x50, 0x4e, 0x47]) } });
   const ava = await upload("ava"), noah = await upload("noah"), liam = await upload("liam");
   Object.assign(state, { id: "liam", permissions: [], grants: [QUALS] });
-  assert.equal((await certificates.verifyCertificate(noah.id, { typeId: "qt-life", issuedOn: "2026-01-01", expiresOn: "", reference: "" })).ok, false, "noah is outside Aquatics");
-  assert.equal((await certificates.verifyCertificate(liam.id, { typeId: "qt-life", issuedOn: "2026-01-01", expiresOn: "", reference: "" })).ok, false, "not your own");
-  assert.equal((await certificates.verifyCertificate(ava.id, { typeId: "qt-life", issuedOn: "2026-01-01", expiresOn: "", reference: "NPLQ-1" })).ok, true);
+  assert.equal((await certificates.verifyCertificate(noah.id, { typeId: "qt-life", issuedOn: "", expiresOn: "2028-01-01", reference: "" })).ok, false, "noah is outside Aquatics");
+  assert.equal((await certificates.verifyCertificate(liam.id, { typeId: "qt-life", issuedOn: "", expiresOn: "2028-01-01", reference: "" })).ok, false, "not your own");
+  assert.equal((await certificates.verifyCertificate(ava.id, { typeId: "qt-life", issuedOn: "2026-01-01", expiresOn: "", reference: "NPLQ-1" })).ok, false, "the expiry date is mandatory");
+  assert.equal((await certificates.verifyCertificate(ava.id, { typeId: "qt-life", issuedOn: "", expiresOn: "2028-01-01", reference: "NPLQ-1" })).ok, true, "the issue date is not");
   const q = await db.qualification.findFirstOrThrow({ where: { userId: "ava" } });
   assert.equal(q.verifiedById, "liam");
   assert.equal(q.expiresOn?.toISOString().slice(0, 10), "2028-01-01");
   assert.equal((await db.qualificationEvidence.findUniqueOrThrow({ where: { id: ava.id } })).qualificationId, q.id);
-  assert.equal((await certificates.verifyCertificate(ava.id, { typeId: "qt-life", issuedOn: "2026-01-01", expiresOn: "", reference: "" })).ok, false, "decided once");
+  assert.equal(q.issuedOn, null, "no issue date given: none kept");
+  assert.equal((await certificates.verifyCertificate(ava.id, { typeId: "qt-life", issuedOn: "", expiresOn: "2028-01-01", reference: "" })).ok, false, "decided once");
   Object.assign(state, { id: "alex", permissions: ["staff.manage", "roles.manage"], grants: [] });
   assert.equal((await certificates.declineCertificate(noah.id, "Unreadable photo")).ok, true, "administrators inherit qualifications.manage");
   assert.equal(await db.qualification.count({ where: { userId: "noah" } }), 0);

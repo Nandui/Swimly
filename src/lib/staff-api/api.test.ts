@@ -165,7 +165,8 @@ test("details changes and certificates change nothing until reviewed on Work", a
   assert.equal((await call("me", "PATCH", { email: "new@example.test" })).status, 400, "only listed fields");
   const png = Buffer.from([0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a, 1, 2, 3]).toString("base64");
   assert.equal((await call("qualifications/evidence", "POST", { typeId: "qt-life", fileName: "cert.png", mime: "image/png", data: Buffer.from("not an image").toString("base64") })).status, 400);
-  assert.equal((await call("qualifications/evidence", "POST", { typeId: "qt-life", fileName: "cert.png", mime: "image/png", data: png })).status, 201);
+  assert.equal((await call("qualifications/evidence", "POST", { typeId: "qt-life", fileName: "cert.png", mime: "image/png", data: png })).status, 400, "the expiry date is mandatory");
+  assert.equal((await call("qualifications/evidence", "POST", { typeId: "qt-life", expiresOn: "2028-01-01", fileName: "cert.png", mime: "image/png", data: png })).status, 201, "the issue date is not");
   assert.equal(await fixture.prisma.qualification.count({ where: { userId: "riley", note: { not: { contains: "Training" } } } }), 0, "no qualification until verified");
   const quals = await (await call("qualifications")).json();
   assert.equal(quals.uploads[0].status, "PENDING");

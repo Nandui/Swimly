@@ -287,8 +287,9 @@ export async function setQualificationTypeArchived(id: string, archived: boolean
 
 const qualificationSchema = z.object({
   typeId: z.string().min(1, "Choose the qualification."),
-  issuedOn: isoDate,
-  expiresOn: z.union([isoDate, z.literal("")]),
+  /** Only the expiry date is mandatory on a certificate (owner decision, 9 October 2026). */
+  issuedOn: z.union([isoDate, z.literal("")]),
+  expiresOn: z.string().refine((v) => /^\d{4}-\d{2}-\d{2}$/.test(v), "Enter the expiry date on the certificate."),
   reference: z.string().trim().max(80, "Keep the reference under 80 characters."),
   note: z.string().trim().max(500, "Keep the note under 500 characters."),
 });
@@ -321,7 +322,7 @@ export async function recordQualification(userId: string, input: QualificationIn
   const parsed = qualificationSchema.safeParse(input);
   if (!parsed.success) return fail(parsed.error.issues[0].message);
   const { typeId, issuedOn, expiresOn, reference, note } = parsed.data;
-  if (expiresOn && expiresOn < issuedOn) return fail("The expiry date is before the issue date.");
+  if (issuedOn && expiresOn < issuedOn) return fail("The expiry date is before the issue date.");
   const cert = await certificateOf(certificate);
   if (!cert.ok) return fail(cert.error);
   const result = await prisma.$transaction(async (tx) => {
@@ -330,7 +331,7 @@ export async function recordQualification(userId: string, input: QualificationIn
     const type = await tx.qualificationType.findFirst({ where: { id: typeId, orgId: person.orgId, archivedAt: null }, select: { name: true } });
     if (!type) return fail("That qualification is no longer offered.");
     const created = await tx.qualification.create({ data: {
-      orgId: person.orgId, userId, typeId, issuedOn: new Date(`${issuedOn}T00:00:00Z`), expiresOn: expiresOn ? new Date(`${expiresOn}T00:00:00Z`) : null,
+      orgId: person.orgId, userId, typeId, issuedOn: issuedOn ? new Date(`${issuedOn}T00:00:00Z`) : null, expiresOn: new Date(`${expiresOn}T00:00:00Z`),
       reference, note, verifiedById: session.user.id, verifiedAt: new Date(),
     } });
     // The certificate it was recorded from, kept with it (Training's certificates, already verified).

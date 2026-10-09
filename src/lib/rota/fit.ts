@@ -6,7 +6,8 @@ import { dayShift, type WorkItem } from "@/lib/rota/shifts";
  *  expired qualification or a double booking is a warning beside the name, and the planner
  *  decides. Pure (fit.test.ts). */
 
-export type Held = { userId: string; typeId: string; issuedOn: string; expiresOn: string | null; revoked: boolean };
+/** `issuedOn` null: the certificate has no issue date on it; it counts as held until it expires. */
+export type Held = { userId: string; typeId: string; issuedOn: string | null; expiresOn: string | null; revoked: boolean };
 export type FitIssue = "off" | "expired" | "missing" | "overlap" | "long";
 export type Fit = {
   userId: string;
@@ -30,7 +31,7 @@ export const LONG_DAY = 9 * 60;
 /** Is the qualification held, and in date, on that day? */
 export function qualification(held: readonly Held[], userId: string, typeId: string | null, on: string): "ok" | "missing" | "expired" {
   if (!typeId) return "ok";
-  const ofType = held.filter((q) => q.userId === userId && q.typeId === typeId && !q.revoked && q.issuedOn <= on);
+  const ofType = held.filter((q) => q.userId === userId && q.typeId === typeId && !q.revoked && (!q.issuedOn || q.issuedOn <= on));
   if (!ofType.length) return "missing";
   return ofType.some((q) => !q.expiresOn || q.expiresOn >= on) ? "ok" : "expired";
 }
