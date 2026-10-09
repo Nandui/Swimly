@@ -55,10 +55,10 @@ before(async () => {
   }
   await db.qualificationType.create({ data: { id: "qt-rescue", orgId: ORG, name: "Synthetic rescue award", validityMonths: 24 } });
   await db.qualificationType.create({ data: { id: "qt-safe", orgId: ORG, name: "Synthetic safeguarding", validityMonths: 12 } });
-  actions = serverModule("src/lib/training/actions.ts", doubles());
-  data = serverModule("src/lib/training/data.ts", doubles());
-  self = serverModule("src/lib/training/mine.ts", doubles());
-  own = serverModule("src/lib/training/self.ts", doubles());
+  actions = serverModule("src/modules/training/lib/actions.ts", doubles());
+  data = serverModule("src/modules/training/lib/data.ts", doubles());
+  self = serverModule("src/modules/training/lib/mine.ts", doubles());
+  own = serverModule("src/modules/training/lib/self.ts", doubles());
 });
 after(async () => { await fixture?.close(); });
 

@@ -6,7 +6,7 @@ import { Input } from "@/components/shadcn/input";
 import { NativeSelect, NativeSelectOption } from "@/components/shadcn/native-select";
 import { Field, FormDialog } from "@/components/form-dialog";
 import { Textarea } from "@/components/ui/textarea";
-import { declineCertificate, verifyCertificate } from "@/lib/training/certificate-actions";
+import { declineCertificate, verifyCertificate } from "@/modules/training/lib/certificate-actions";
 
 /** Training's dialogs carry the Poolside Clear scope into their portal. */
 const THEME = "turnfin-module";

@@ -12,7 +12,7 @@ import * as rota from "@/lib/rota/constants";
 import * as rotaMeta from "@/lib/rota/meta";
 import { REACH_META, STAFF_STATUS_META } from "@/lib/staff/constants";
 import { ARCHIVAL_STATUS_META, type StatusMeta } from "@/lib/status";
-import { CERTIFICATE_STATUS_META, TRAINING_STATUS_META } from "@/lib/training/constants";
+import { CERTIFICATE_STATUS_META, TRAINING_STATUS_META } from "@/modules/training/lib/constants";
 
 const TONES = new Set(["green", "blue", "orange", "red", "purple", "gray"]);
 

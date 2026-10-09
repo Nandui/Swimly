@@ -13,7 +13,7 @@ import { NativeSelect, NativeSelectOption } from "@/components/shadcn/native-sel
 import { Switch } from "@/components/ui/switch";
 import { Textarea } from "@/components/ui/textarea";
 import { today } from "@/lib/format";
-import { assignTraining, cancelAssignment, returnForPractice, saveCourse, setCourseArchived, signOffTraining } from "@/lib/training/actions";
+import { assignTraining, cancelAssignment, returnForPractice, saveCourse, setCourseArchived, signOffTraining } from "@/modules/training/lib/actions";
 
 /** Training's dialogs. Each carries the Poolside Clear scope into its portal. */
 const THEME = "turnfin-module";

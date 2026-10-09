@@ -4,7 +4,7 @@ import { fail, ok, type ActionResult } from "@/lib/action-result";
 import { logAudit } from "@/lib/audit";
 import { parseDateOnly, today } from "@/lib/format";
 import { prisma } from "@/lib/prisma";
-import { addMonthsIso } from "@/lib/training/constants";
+import { addMonthsIso } from "@/modules/training/lib/constants";
 
 /** A person's own training writes, for the staff API (Turnfin Me) only. Work
  *  has no personal actions. The caller has already proved who `me` is. */

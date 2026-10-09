@@ -1,7 +1,7 @@
 import "server-only";
 import { prisma } from "@/lib/prisma";
 import { subjectsFor } from "@/lib/policy/session";
-import { requireTrainingActor } from "@/lib/training/access";
+import { requireTrainingActor } from "@/modules/training/lib/access";
 
 /** Certificates staff uploaded in Turnfin Me, waiting to be checked, for the
  *  people the reader's `qualifications.manage` covers. Never their own. */

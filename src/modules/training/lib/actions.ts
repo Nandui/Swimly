@@ -8,8 +8,8 @@ import { isDateOnly, parseDateOnly, today } from "@/lib/format";
 import { prisma } from "@/lib/prisma";
 import { filterAllows } from "@/lib/policy/engine";
 import { requireCapFor, subjectsFor } from "@/lib/policy/session";
-import { requireTrainingActor } from "@/lib/training/access";
-import { grantQualification } from "@/lib/training/self";
+import { requireTrainingActor } from "@/modules/training/lib/access";
+import { grantQualification } from "@/modules/training/lib/self";
 
 /** Training writes. The catalogue needs `training.manage`; assigning and
  *  cancelling need `training.assign` for that person; sign-off needs

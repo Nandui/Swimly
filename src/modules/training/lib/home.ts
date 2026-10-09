@@ -1,6 +1,6 @@
 import "server-only";
-import { certificateQueue } from "@/lib/training/certificates";
-import { expiringQualifications, signoffCount } from "@/lib/training/data";
+import { certificateQueue } from "@/modules/training/lib/certificates";
+import { expiringQualifications, signoffCount } from "@/modules/training/lib/data";
 import { expandPermissions } from "@/lib/staff/permissions";
 import { registerHomeCard, type HomeItem } from "@/modules/contributions";
 

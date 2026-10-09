@@ -8,8 +8,8 @@ import { requirementStates } from "@/lib/people/requirements";
 import { requireCapFor, subjectsFor } from "@/lib/policy/session";
 import type { SubjectFilter } from "@/lib/policy/types";
 import type { PermissionKey } from "@/lib/staff/permissions";
-import { requireTrainingActor } from "@/lib/training/access";
-import { EXPIRY_WARNING_DAYS, OPEN_TRAINING_STATUSES, trainingState } from "@/lib/training/constants";
+import { requireTrainingActor } from "@/modules/training/lib/access";
+import { EXPIRY_WARNING_DAYS, OPEN_TRAINING_STATUSES, trainingState } from "@/modules/training/lib/constants";
 
 /** Training reads. Every list of people's records is limited to the people
  *  the capability covers, resolved by the policy engine; the course catalogue
