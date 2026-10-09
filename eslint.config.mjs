@@ -36,8 +36,8 @@ const activitiesFiles = [
   "src/app/api/curriculum-images/**",
   "src/app/api/operations/**",
 ];
-// Each Work module's files: its lib, components and routes.
-const workArea = (id, ...extra) => [`src/lib/${id}/**`, `src/components/${id}/**`, `src/app/${id}/**`, ...extra];
+// Each Work module's files: its folder, src/modules/<id>, and its routes.
+const workArea = (id, ...extra) => [`src/modules/${id}/**`, `src/app/${id}/**`, ...extra];
 const workModules = {
   docs: workArea("docs", "src/app/api/docs/**"),
   refunds: workArea("refunds", "src/app/api/refunds/**"),
@@ -66,7 +66,7 @@ const notActivities = {
   group: ["@/modules/activities", "@/modules/activities/*", "@/app/(activities)/*", "@/app/(instructor)/*", "**/modules/activities/**"],
   message: "Core and Work modules must not import Activities. Register a contribution (src/modules/contributions.ts) or add to a composition root instead.",
 };
-const workImports = (ids) => ids.flatMap((id) => [`@/lib/${id}`, `@/lib/${id}/*`, `@/components/${id}/*`, `@/app/${id}/*`]);
+const workImports = (ids) => ids.flatMap((id) => [`@/modules/${id}`, `@/modules/${id}/*`, `@/app/${id}/*`]);
 const notWork = (ids, message) => ({ group: workImports(ids), message });
 const notWorkModules = notWork(Object.keys(workModules), "Activities depends on Core only, never on a Work module. Link to the module or add a Core seam.");
 const notCoreToWork = notWork(Object.keys(workModules), "Core never imports a module. Register a contribution (src/modules/contributions.ts) or add to a composition root instead.");
@@ -110,7 +110,7 @@ const workData = (self) => notTables(Object.keys(moduleFiles).filter((id) => id 
 // public-API kit, the email sender) lives in Core: src/lib/public-api and
 // src/lib/email. A module never imports another module's copy.
 const modulePlumbing = [
-  { owner: ["src/lib/academy/**", "src/app/api/academy/**"], from: ["./src/lib/academy/public"] },
+  { owner: ["src/modules/academy/lib/**", "src/app/api/academy/**"], from: ["./src/modules/academy/lib/public"] },
   { owner: ["src/lib/staff-api/**", "src/app/api/staff/**"], from: ["./src/lib/staff-api/email.ts", "./src/lib/staff-api/http.ts"] },
   { owner: activitiesFiles, from: ["./src/modules/activities/lib/parent/email.ts", "./src/modules/activities/lib/parent/http.ts", "./src/modules/activities/lib/parent/sign-in-email.ts"] },
 ];

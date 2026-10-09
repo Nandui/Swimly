@@ -1,5 +1,5 @@
 import { AuthorizationError } from "@/lib/authz";
-import { ExportRefused, subjectExport } from "@/lib/hr/export";
+import { ExportRefused, subjectExport } from "@/modules/hr/lib/export";
 
 /** Superadmin subject export: one JSON file of everything held about a person's
  *  employment. Never cached; refused without a recent password. */

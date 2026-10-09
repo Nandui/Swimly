@@ -1,8 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { assertSameOrigin, requireActionMember } from '@/lib/docs/auth';
-import { uploadFile } from '@/lib/docs/files';
-import { DomainError } from '@/lib/docs/domain';
-import { reportError } from '@/lib/docs/monitoring';
+import { assertSameOrigin, requireActionMember } from '@/modules/docs/lib/auth';
+import { uploadFile } from '@/modules/docs/lib/files';
+import { DomainError } from '@/modules/docs/lib/domain';
+import { reportError } from '@/modules/docs/lib/monitoring';
 export const runtime = 'nodejs';
 export async function POST(request: NextRequest) {
   try {

@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 import Link from "next/link";
-import { AssignTraining } from "@/components/training/manage-actions";
+import { AssignTraining } from "@/modules/training/components/manage-actions";
 import { Avatar, AvatarFallback } from "@/components/shadcn/avatar";
 import { Button } from "@/components/shadcn/button";
 import { Label } from "@/components/shadcn/label";
@@ -11,8 +11,8 @@ import { Tag } from "@/components/ui-kit/tag";
 import { QUALIFICATION_STATE_META } from "@/lib/people/constants";
 import { REQUIREMENT_META } from "@/lib/people/requirements";
 import { formatDate, nameInitials } from "@/lib/format";
-import { EXPIRY_WARNING_DAYS } from "@/lib/training/constants";
-import { expiringQualifications } from "@/lib/training/data";
+import { EXPIRY_WARNING_DAYS } from "@/modules/training/lib/constants";
+import { expiringQualifications } from "@/modules/training/lib/data";
 
 export const metadata: Metadata = { title: "Expiring qualifications" };
 

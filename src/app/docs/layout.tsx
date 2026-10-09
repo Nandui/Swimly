@@ -1,8 +1,8 @@
 import type { Metadata } from 'next';
 import { TITLE_TEMPLATE } from '@/lib/app';
-import { requireMember } from '@/lib/docs/auth';
-import { readingReportScope } from '@/lib/docs/report-scope';
-import { Shell } from '@/components/docs/shell';
+import { requireMember } from '@/modules/docs/lib/auth';
+import { readingReportScope } from '@/modules/docs/lib/report-scope';
+import { Shell } from '@/modules/docs/components/shell';
 import '../theme/docs-shell.css';
 import '../theme/docs-integration.css';
 import './editor.css';

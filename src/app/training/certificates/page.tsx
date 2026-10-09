@@ -8,10 +8,10 @@ import { EmptyState } from "@/components/ui-kit/empty-state";
 import { PageHeader } from "@/components/ui-kit/page-header";
 import { SegmentedLinks } from "@/components/ui-kit/segmented-links";
 import { Tag } from "@/components/ui-kit/tag";
-import { DeclineCertificate, VerifyCertificate } from "@/components/training/certificate-actions";
+import { DeclineCertificate, VerifyCertificate } from "@/modules/training/components/certificate-actions";
 import { formatDate, formatDateTime, nameInitials } from "@/lib/format";
-import { certificateQueue } from "@/lib/training/certificates";
-import { CERTIFICATE_STATUS_META } from "@/lib/training/constants";
+import { certificateQueue } from "@/modules/training/lib/certificates";
+import { CERTIFICATE_STATUS_META } from "@/modules/training/lib/constants";
 
 export const metadata: Metadata = { title: "Certificates to check" };
 

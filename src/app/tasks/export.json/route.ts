@@ -1,7 +1,7 @@
 import { auth } from "@/auth";
 import { logAudit } from "@/lib/audit";
-import { tasksAccess } from "@/lib/tasks/access";
-import { tasksExport } from "@/lib/tasks/data";
+import { tasksAccess } from "@/modules/tasks/lib/access";
+import { tasksExport } from "@/modules/tasks/lib/data";
 
 /** Everything Tasks keeps for the organisation as one JSON file (the prototype's "Export
  *  workspace"): sites' settings, templates, tasks with their comments and file names, actions and

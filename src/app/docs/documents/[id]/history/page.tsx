@@ -1,10 +1,10 @@
 import { notFound } from 'next/navigation';
-import { requireMember } from '@/lib/docs/auth';
-import { database, rows } from '@/lib/docs/database';
-import { documentView, DomainError } from '@/lib/docs/domain';
-import { workspace } from '@/lib/docs/queries';
-import { canWrite, type AuditEvent } from '@/lib/docs/types';
-import { HistoryView } from '@/components/docs/history';
+import { requireMember } from '@/modules/docs/lib/auth';
+import { database, rows } from '@/modules/docs/lib/database';
+import { documentView, DomainError } from '@/modules/docs/lib/domain';
+import { workspace } from '@/modules/docs/lib/queries';
+import { canWrite, type AuditEvent } from '@/modules/docs/lib/types';
+import { HistoryView } from '@/modules/docs/components/history';
 import type { Metadata } from 'next';
 import { cache } from 'react';
 

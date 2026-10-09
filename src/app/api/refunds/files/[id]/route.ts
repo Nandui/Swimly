@@ -1,5 +1,5 @@
-import { requireRefundActor } from "@/lib/refunds/auth";
-import { readReceipt } from "@/lib/refunds/files";
+import { requireRefundActor } from "@/modules/refunds/lib/auth";
+import { readReceipt } from "@/modules/refunds/lib/files";
 
 export async function GET(_request: Request, { params }: RouteContext<"/api/refunds/files/[id]">) {
   try {

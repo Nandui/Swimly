@@ -5,9 +5,9 @@ import { Button } from "@/components/shadcn/button";
 import { EmptyState } from "@/components/ui-kit/empty-state";
 import { PageHeader } from "@/components/ui-kit/page-header";
 import { Tag } from "@/components/ui-kit/tag";
-import { AddRule, ArchiveProduct, ArchiveSupplier, ProductDialog, RemoveRule, SupplierDialog } from "@/components/purchasing/suppliers";
-import { supplierPage } from "@/lib/purchasing/data";
-import { APPROVAL_LIST_META, euro } from "@/lib/purchasing/rules";
+import { AddRule, ArchiveProduct, ArchiveSupplier, ProductDialog, RemoveRule, SupplierDialog } from "@/modules/purchasing/components/suppliers";
+import { supplierPage } from "@/modules/purchasing/lib/data";
+import { APPROVAL_LIST_META, euro } from "@/modules/purchasing/lib/rules";
 
 export const metadata: Metadata = { title: "Supplier" };
 

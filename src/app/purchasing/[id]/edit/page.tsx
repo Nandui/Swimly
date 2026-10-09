@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import { PageHeader } from "@/components/ui-kit/page-header";
-import { OrderForm } from "@/components/purchasing/order-form";
-import { orderForm } from "@/lib/purchasing/data";
+import { OrderForm } from "@/modules/purchasing/components/order-form";
+import { orderForm } from "@/modules/purchasing/lib/data";
 
 export const metadata: Metadata = { title: "Change order" };
 

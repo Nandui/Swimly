@@ -5,14 +5,14 @@ import { Button } from "@/components/shadcn/button";
 import { EmptyState } from "@/components/ui-kit/empty-state";
 import { PageHeader } from "@/components/ui-kit/page-header";
 import { Tag } from "@/components/ui-kit/tag";
-import { DayPlan } from "@/components/rota/day-plan";
-import { AddShiftSheet, PeoplePlan } from "@/components/rota/people-plan";
-import { LinkPicker } from "@/components/rota/link-picker";
-import { CopyDialog, NeedDialog, ShareWeek } from "@/components/rota/plan-dialogs";
+import { DayPlan } from "@/modules/rota/components/day-plan";
+import { AddShiftSheet, PeoplePlan } from "@/modules/rota/components/people-plan";
+import { LinkPicker } from "@/modules/rota/components/link-picker";
+import { CopyDialog, NeedDialog, ShareWeek } from "@/modules/rota/components/plan-dialogs";
 import { formatDateRange, formatDayMonth, formatWeekday } from "@/lib/format";
-import { addDaysIso, mondayOf } from "@/lib/rota/constants";
-import { planWeek } from "@/lib/rota/data";
-import { ROTA_DAY_META, ROTA_SHIFT_NOTE_META, ROTA_WEEK_META } from "@/lib/rota/meta";
+import { addDaysIso, mondayOf } from "@/modules/rota/lib/constants";
+import { planWeek } from "@/modules/rota/lib/data";
+import { ROTA_DAY_META, ROTA_SHIFT_NOTE_META, ROTA_WEEK_META } from "@/modules/rota/lib/meta";
 
 export const metadata: Metadata = { title: "Plan" };
 

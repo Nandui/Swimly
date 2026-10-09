@@ -5,13 +5,13 @@ import { join } from "node:path";
 import { Pool, type PoolClient, type QueryResultRow } from "pg";
 import { prisma } from "@/lib/prisma";
 import { postgresConnectionString } from "@/lib/postgres-connection";
-import { validateBody } from "@/lib/docs/content";
-import { findMember, type Database, type Sql } from "@/lib/docs/database";
-import { canApprove, canWrite } from "@/lib/docs/types";
-import { DocumentService } from "@/lib/docs/domain";
-import { parseNotionPage, type NotionPage } from "@/lib/docs/notion-import";
-import { staffDirectory } from "@/lib/docs/staff-directory-data";
-import { docsStorageConfig } from "@/lib/docs/storage-config";
+import { validateBody } from "@/modules/docs/lib/content";
+import { findMember, type Database, type Sql } from "@/modules/docs/lib/database";
+import { canApprove, canWrite } from "@/modules/docs/lib/types";
+import { DocumentService } from "@/modules/docs/lib/domain";
+import { parseNotionPage, type NotionPage } from "@/modules/docs/lib/notion-import";
+import { staffDirectory } from "@/modules/docs/lib/staff-directory-data";
+import { docsStorageConfig } from "@/modules/docs/lib/storage-config";
 
 /** Brings a Notion document register into Turnfin Docs (docs/turnfin-docs.md).
  *

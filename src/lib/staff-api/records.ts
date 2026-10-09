@@ -2,13 +2,13 @@ import { z } from "zod";
 import { logAudit } from "@/lib/audit";
 import { isDateOnly, parseDateOnly, today } from "@/lib/format";
 import { prisma } from "@/lib/prisma";
-import { hrDatabase, hrConfigured } from "@/lib/hr/database";
-import { mySharedHr } from "@/lib/hr/mine";
-import { acknowledgeReviewFor } from "@/lib/hr/self";
+import { hrDatabase, hrConfigured } from "@/modules/hr/lib/database";
+import { mySharedHr } from "@/modules/hr/lib/mine";
+import { acknowledgeReviewFor } from "@/modules/hr/lib/self";
 import { myQualifications } from "@/lib/people/mine";
-import { myDays } from "@/lib/rota/mine";
-import { myTraining } from "@/lib/training/mine";
-import { completeTrainingFor } from "@/lib/training/self";
+import { myDays } from "@/modules/rota/lib/mine";
+import { myTraining } from "@/modules/training/lib/mine";
+import { completeTrainingFor } from "@/modules/training/lib/self";
 import { StaffApiError, notFound } from "@/lib/staff-api/errors";
 import { idSchema, parseInput, readBody } from "@/lib/staff-api/http";
 import { rateLimit } from "@/lib/staff-api/security";
@@ -170,7 +170,7 @@ export async function completeTraining(request: Request, identity: StaffIdentity
 
 async function docs() {
   if (!process.env.DOCS_DATABASE_URL) return null;
-  const [{ directoryDatabase }, domain] = await Promise.all([import("@/lib/docs/runtime-database"), import("@/lib/docs/domain")]);
+  const [{ directoryDatabase }, domain] = await Promise.all([import("@/modules/docs/lib/runtime-database"), import("@/modules/docs/lib/domain")]);
   return { db: directoryDatabase(), domain };
 }
 

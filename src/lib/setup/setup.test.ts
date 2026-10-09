@@ -38,7 +38,7 @@ before(async () => {
   };
   // The rename runs through the modules' registered handlers, as in the app.
   const contributions = serverModule<typeof import("@/modules/contributions")>("src/modules/contributions.ts", doubles);
-  serverModule("src/lib/rota/areas.ts", { ...doubles, "@/modules/contributions": contributions });
+  serverModule("src/modules/rota/lib/areas.ts", { ...doubles, "@/modules/contributions": contributions });
   actions = serverModule("src/lib/setup/actions.ts", { ...doubles, "@/modules/server": { renameAreaEverywhere: contributions.renameAreaEverywhere } });
 });
 after(async () => { await fixture?.close(); });

@@ -186,7 +186,7 @@ a timeline), Waiting for you (the same items it gives the home page, so the two 
 "things need you" counts only those rows), and **Everything in <module>**: one panel of its
 pages as grouped rows (icon, name, one line on what it is for), two columns when wide, or an
 empty state when there is nothing to open at the site. Rota's list comes from
-`src/components/rota/pages.ts`, the same list as its page bar. "Overview"
+`src/modules/rota/components/pages.ts`, the same list as its page bar. "Overview"
 is the first link in the module's page bar. Pool deck opens on the deck,
 Docs and Training on their own overviews, Refunds on its requests with their summary, HR on its
 people search. The module
@@ -202,7 +202,7 @@ blue when it is the open filter, so each status has one way in. Search, pill pic
 apply on change and the requests (`.pc-rows`) share one white panel. On a request, the
 next-action panel is the one panel with an edge (2px blue), and only when the person can
 act; it holds Submit on an editable request. Statuses use `<Tag meta={refundStatuses[status]} />`;
-each status in `src/lib/refunds/types.ts` has its own icon. Finance decisions use shadcn Dialogs with 44px controls,
+each status in `src/modules/refunds/lib/types.ts` has its own icon. Finance decisions use shadcn Dialogs with 44px controls,
 focus restoration and preserved values after errors. `src/app/refunds/refunds.css` only
 arranges the Refunds screens. See [docs/refunds.md](docs/refunds.md).
 
@@ -406,7 +406,7 @@ line. Multi-line boxes (textareas, notices) use 16px, never a pill.
   over the whole name tile), so a lane needs no edit icon. A planning grid (`readout`) shows the
   exact quarter hour under the pointer as a pill on the time bar (`TimelineReadout`), so the bar
   keeps to hours; every block also says its times in words.
-- Rota's day timeline (`DayPlan`, `src/components/rota/day-plan.tsx`; owner decisions, 6 October
+- Rota's day timeline (`DayPlan`, `src/modules/rota/components/day-plan.tsx`; owner decisions, 6 October
   2026, from approved mockups; docs/rota.md) is its own planning view, not `TimelineGrid`: the day
   across the **full width** of one panel (nothing scrolls sideways), one **tile per area** of the
   site (Admin, Areas; pin icon, name, how many activities, its gap count as a tag, a + to add an
@@ -999,12 +999,14 @@ src/app/(instructor)/          the Swim school pool-deck workspace
 src/app/sign-in/               the front door, outside the shell
 src/modules/activities/lib/    Activities domains (students, courses, enrolment, ...)
 src/modules/activities/components/ Activities feature components
+src/modules/<id>/{lib,components}/ each Work module (Docs, Refunds, Training, HR,
+                               Rota, Purchasing, Academy, Tasks)
 src/modules/registry.ts        every module's description and levels
 src/modules/contributions.ts   what modules add to Core pages, without imports
 src/components/ui-kit/         shared shadcn compositions — tag, page-header,
                                empty-state, page-loading, page-state, segmented-links
 src/components/ui/             shadcn compositions for native form submission
-src/components/                Core and Work feature components
+src/components/                Core feature components
 src/lib/<domain>/data/         reads  — plain async functions, no "use server"
 src/lib/<domain>/actions/      writes — "use server", one exported action per verb
 src/lib/<domain>/constants.ts  one metadata map per enum, plus domain vocabulary

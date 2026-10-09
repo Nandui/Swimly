@@ -142,7 +142,7 @@ configuration starts Turnfin Me on :3101 against it.
 
 - **Work, staff API:** `src/lib/staff-api/*` and `src/app/api/staff/v1/[[...path]]/route.ts`.
 - **Personal reads and writes:** `src/lib/*/mine.ts` and `*/self.ts`.
-- **Review queues:** `src/lib/people/details-*.ts`, `src/lib/training/certificate*.ts`.
+- **Review queues:** `src/lib/people/details-*.ts`, `src/modules/training/lib/certificate*.ts`.
 - **Reminders:** `src/lib/staff-api/reminders.ts` and `src/app/api/cron/reminders/route.ts`.
 - **Work-device rule:** `src/lib/devices/work-device.ts`.
 - **Turnfin Me:** `apps/me/**`. Its tokens and the v2 parts (the fin tile, the bar, the bottom

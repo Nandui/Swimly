@@ -1,14 +1,14 @@
 import type { Metadata } from "next";
 import { cache } from "react";
-import { AssignTraining, CancelTraining } from "@/components/training/manage-actions";
+import { AssignTraining, CancelTraining } from "@/modules/training/components/manage-actions";
 import { EmptyState } from "@/components/ui-kit/empty-state";
 import { PageHeader } from "@/components/ui-kit/page-header";
 import { Tag } from "@/components/ui-kit/tag";
 import { QUALIFICATION_STATE_META } from "@/lib/people/constants";
-import { TRAINING_STATUS_META } from "@/lib/training/constants";
+import { TRAINING_STATUS_META } from "@/modules/training/lib/constants";
 import { formatDate } from "@/lib/format";
 import { AuthorizationError } from "@/lib/authz";
-import { listCourses, personTraining } from "@/lib/training/data";
+import { listCourses, personTraining } from "@/modules/training/lib/data";
 
 /** One read per request, shared by the page and its tab title. personTraining
  *  is the guard: it 404s anyone the reader's Training role does not cover. */

@@ -43,7 +43,7 @@ class planned to someone else no longer counts as its teacher that day), the poo
 swimmer lookup (medical notes reach that day's teacher) and the lessons parents see. The
 class's instructor in the swim school is only its usual teacher.
 
-Everything is laid out by one pure function, `buildDay` (`src/lib/rota/day.ts`), so Plan,
+Everything is laid out by one pure function, `buildDay` (`src/modules/rota/lib/day.ts`), so Plan,
 Today, the home card and Turnfin Me agree. The rules are in `cover.ts`, `shifts.ts` and
 `fit.ts`, each tested on its own.
 
@@ -174,7 +174,7 @@ planned), what they are on, and their breaks (solid when placed, dashed while su
 
 ## The personal file
 
-Rota registers two sections with the personal-file seam (`src/lib/rota/file.ts`):
+Rota registers two sections with the personal-file seam (`src/modules/rota/lib/file.ts`):
 `rota.absences` (every absence with its story and return to work, and days off in the last
 12 months) and `rota.changes` (changes to their activities on days that had come, from
 `RotaLog`). HR never imports Rota.
@@ -189,12 +189,12 @@ Rota registers two sections with the personal-file seam (`src/lib/rota/file.ts`)
   `RotaDepartment`, `RotaImport`, `RotaChange`) are no longer read; they stay until
   development has its own database, then go in one migration. Absences
   (`RotaAbsence`, `RotaAbsenceUpdate`) and the day note (`RotaDayNote`) carry on.
-- `src/lib/rota/`: `cover.ts`, `shifts.ts`, `fit.ts`, `day.ts`, `view.ts` (pure); `constants.ts` (absences,
+- `src/modules/rota/lib/`: `cover.ts`, `shifts.ts`, `fit.ts`, `day.ts`, `view.ts` (pure); `constants.ts` (absences,
   reasons, bookings, breaks, dates); `meta.ts` (statuses and icons); `access.ts`; `data.ts`
   (Plan, Today, who can fill a gap, bookings, the activity list); `absences.ts`;
   `actions.ts`; `absence-actions.ts`; `mine.ts` (Turnfin Me); `home.ts`; `file.ts`
 - The swim school's side: `src/modules/activities/contributions.ts` (`list` and `plan`)
-- UI: `src/app/rota/`, `src/components/rota/` (`day-plan.tsx` the timeline, `people-plan.tsx` who's working and their shifts, `fill-sheet.tsx`,
+- UI: `src/app/rota/`, `src/modules/rota/components/` (`day-plan.tsx` the timeline, `people-plan.tsx` who's working and their shifts, `fill-sheet.tsx`,
   `plan-dialogs.tsx`, `today-parts.tsx`, `bookings.tsx`, `activity-list.tsx`, `absences.tsx`);
   Turnfin Me `apps/me/src/app/shifts/page.tsx`
 - Tests: `cover.test.ts`, `shifts.test.ts`, `day.test.ts`, `view.test.ts`, `rota.test.ts` (end to end on a throwaway database),

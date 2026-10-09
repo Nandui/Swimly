@@ -7,8 +7,8 @@ import { PageHeader } from "@/components/ui-kit/page-header";
 import { SearchField } from "@/components/ui-kit/search-field";
 import { Tag } from "@/components/ui-kit/tag";
 import { formatDateTime, nameInitials, plural } from "@/lib/format";
-import { REVIEW_STATUS_META } from "@/lib/hr/constants";
-import { hrPeople } from "@/lib/hr/records";
+import { REVIEW_STATUS_META } from "@/modules/hr/lib/constants";
+import { hrPeople } from "@/modules/hr/lib/records";
 import { STEP_UP_MS } from "@/lib/policy/engine";
 import { requireFreshSession } from "@/lib/policy/session";
 

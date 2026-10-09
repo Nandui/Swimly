@@ -2,7 +2,7 @@
 version: 1
 slug: "src-app-rota-page-tsx"
 primary_target: "src/app/rota/page.tsx"
-related_targets: ["src/components/rota/planner.tsx","src/lib/rota/planner.ts","src/components/rota/day-planner.tsx"]
+related_targets: ["src/modules/rota/components/planner.tsx","src/modules/rota/lib/planner.ts","src/modules/rota/components/day-planner.tsx"]
 ---
 
 # Rota week planner (Week plan, `/rota`)

@@ -1,5 +1,5 @@
-import { addDays } from "@/lib/tasks/rules";
-import { ensureTasksEverywhere, freezeScores } from "@/lib/tasks/data";
+import { addDays } from "@/modules/tasks/lib/rules";
+import { ensureTasksEverywhere, freezeScores } from "@/modules/tasks/lib/data";
 import { today } from "@/lib/format";
 
 export const runtime = "nodejs";

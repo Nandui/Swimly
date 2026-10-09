@@ -79,11 +79,11 @@ switch on a shared device, or a password older than 15 minutes, goes to
 
 ## Files
 
-- Storage: `src/lib/hr/storage-config.ts`, `database.ts`, `scripts/lib/hr-storage.ts`, `scripts/migrate-hr.ts`
-- Access and reads: `src/lib/hr/access.ts`, `records.ts` (workspace, logged), `mine.ts` (the person's own)
-- Writes: `src/lib/hr/actions.ts`; export: `src/lib/hr/export.ts`
-- UI: `src/app/hr/`, `src/components/hr/`; the person's side is Turnfin Me (`apps/me`)
-- Tests: `src/lib/hr/hr.test.ts` (with `src/test/hr-database.ts`)
+- Storage: `src/modules/hr/lib/storage-config.ts`, `database.ts`, `scripts/lib/hr-storage.ts`, `scripts/migrate-hr.ts`
+- Access and reads: `src/modules/hr/lib/access.ts`, `records.ts` (workspace, logged), `mine.ts` (the person's own)
+- Writes: `src/modules/hr/lib/actions.ts`; export: `src/modules/hr/lib/export.ts`
+- UI: `src/app/hr/`, `src/modules/hr/components/`; the person's side is Turnfin Me (`apps/me`)
+- Tests: `src/modules/hr/lib/hr.test.ts` (with `src/test/hr-database.ts`)
 
 ## Turning it on
 

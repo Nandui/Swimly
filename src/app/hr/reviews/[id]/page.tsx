@@ -1,10 +1,10 @@
 import type { Metadata } from "next";
-import { ReviewEditor } from "@/components/hr/actions";
+import { ReviewEditor } from "@/modules/hr/components/actions";
 import { PageHeader } from "@/components/ui-kit/page-header";
 import { Tag } from "@/components/ui-kit/tag";
 import { formatDate } from "@/lib/format";
-import { REVIEW_OVERALL_LABELS, REVIEW_STATUS_META } from "@/lib/hr/constants";
-import { hrReview } from "@/lib/hr/records";
+import { REVIEW_OVERALL_LABELS, REVIEW_STATUS_META } from "@/modules/hr/lib/constants";
+import { hrReview } from "@/modules/hr/lib/records";
 import { requireFreshSession } from "@/lib/policy/session";
 
 export const metadata: Metadata = { title: "Review" };

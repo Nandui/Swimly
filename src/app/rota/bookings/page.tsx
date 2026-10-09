@@ -6,10 +6,10 @@ import { Button } from "@/components/shadcn/button";
 import { EmptyState } from "@/components/ui-kit/empty-state";
 import { PageHeader } from "@/components/ui-kit/page-header";
 import { Tag } from "@/components/ui-kit/tag";
-import { BookingDialog, CancelBooking } from "@/components/rota/bookings";
+import { BookingDialog, CancelBooking } from "@/modules/rota/components/bookings";
 import { formatDate, formatTimeRange, plural, today } from "@/lib/format";
-import { BOOKING_KIND_META, WEEKDAY_LABELS, type BookingKind } from "@/lib/rota/constants";
-import { rotaRepeats } from "@/lib/rota/data";
+import { BOOKING_KIND_META, WEEKDAY_LABELS, type BookingKind } from "@/modules/rota/lib/constants";
+import { rotaRepeats } from "@/modules/rota/lib/data";
 
 export const metadata: Metadata = { title: "Bookings" };
 

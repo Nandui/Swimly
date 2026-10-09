@@ -8,13 +8,13 @@ import { PageHeader } from "@/components/ui-kit/page-header";
 import { Tag } from "@/components/ui-kit/tag";
 import {
   CallDialog, CandidateDialog, ChecksDialog, CourseDialog, CourseStatusButton, RegisterDialog, ResultDialog, SessionDialog, WithdrawButton,
-} from "@/components/academy/forms";
+} from "@/modules/academy/components/forms";
 import { formatDate, formatDateTime, plural } from "@/lib/format";
-import { academyCourse, newCourseOptions } from "@/lib/academy/data";
+import { academyCourse, newCourseOptions } from "@/modules/academy/lib/data";
 import {
   ACADEMY_CALL_DUE_META, ACADEMY_COURSE_META, ACADEMY_KIND_META, ACADEMY_PAYMENT_META, ACADEMY_RESULT_META, callDue, euro, hoursLabel,
   type AcademyKind, type AcademyPayment, type AcademyResult,
-} from "@/lib/academy/rules";
+} from "@/modules/academy/lib/rules";
 
 export const metadata: Metadata = { title: "Academy course" };
 

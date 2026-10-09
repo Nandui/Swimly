@@ -1,8 +1,8 @@
-import { requireMember } from '@/lib/docs/auth';
-import { database, rows } from '@/lib/docs/database';
-import { workspace } from '@/lib/docs/queries';
-import { canWrite, type Draft } from '@/lib/docs/types';
-import { WorkView } from '@/components/docs/work';
+import { requireMember } from '@/modules/docs/lib/auth';
+import { database, rows } from '@/modules/docs/lib/database';
+import { workspace } from '@/modules/docs/lib/queries';
+import { canWrite, type Draft } from '@/modules/docs/lib/types';
+import { WorkView } from '@/modules/docs/components/work';
 import type { Metadata } from 'next';
 export const metadata: Metadata = { title: 'My work' };
 export default async function WorkPage() {

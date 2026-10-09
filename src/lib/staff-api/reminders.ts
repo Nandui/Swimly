@@ -1,9 +1,9 @@
-import { readingReminderItems } from "@/lib/docs/reminders";
+import { readingReminderItems } from "@/modules/docs/lib/reminders";
 import { addDaysIso, formatDate, parseDateOnly, today } from "@/lib/format";
 import { prisma } from "@/lib/prisma";
 import { sendStaffReminder } from "@/lib/staff-api/email";
 import { meSettings } from "@/lib/staff-api/notify";
-import { trainingReminderItems } from "@/lib/training/reminders";
+import { trainingReminderItems } from "@/modules/training/lib/reminders";
 
 /** Reminder emails for Turnfin Me. The daily job sends each person one short
  *  digest of things that are new since the last one: training due within 3

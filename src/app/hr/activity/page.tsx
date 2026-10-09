@@ -3,7 +3,7 @@ import { EmptyState } from "@/components/ui-kit/empty-state";
 import { LinkPagination } from "@/components/ui-kit/link-pagination";
 import { PageHeader } from "@/components/ui-kit/page-header";
 import { formatDateTime, plural } from "@/lib/format";
-import { HR_ACTIVITY_PAGE_SIZE, hrActivity } from "@/lib/hr/records";
+import { HR_ACTIVITY_PAGE_SIZE, hrActivity } from "@/modules/hr/lib/records";
 import { requireFreshSession } from "@/lib/policy/session";
 
 export const metadata: Metadata = { title: "Who read what" };

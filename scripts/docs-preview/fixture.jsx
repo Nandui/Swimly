@@ -13,17 +13,17 @@ import '@fontsource/plus-jakarta-sans/600.css';
 import '@fontsource/plus-jakarta-sans/700.css';
 import { ThemeProvider } from '@/components/theme-provider';
 import { TooltipProvider } from '@/components/shadcn/tooltip';
-import { Shell } from '@/components/docs/shell';
-import { HomeView } from '@/components/docs/home';
-import { LibraryView } from '@/components/docs/library';
-import { WorkView } from '@/components/docs/work';
-import { ReportsView } from '@/components/docs/reports';
-import { AdminView } from '@/components/docs/admin';
-import { NewDocument } from '@/components/docs/new-document';
-import { DocumentEditor } from '@/components/docs/document-editor';
-import { Reader } from '@/components/docs/reader';
-import { HistoryView } from '@/components/docs/history';
-import { DocumentBody, RiskAssessmentView, tableOfContents } from '@/components/docs/document-body';
+import { Shell } from '@/modules/docs/components/shell';
+import { HomeView } from '@/modules/docs/components/home';
+import { LibraryView } from '@/modules/docs/components/library';
+import { WorkView } from '@/modules/docs/components/work';
+import { ReportsView } from '@/modules/docs/components/reports';
+import { AdminView } from '@/modules/docs/components/admin';
+import { NewDocument } from '@/modules/docs/components/new-document';
+import { DocumentEditor } from '@/modules/docs/components/document-editor';
+import { Reader } from '@/modules/docs/components/reader';
+import { HistoryView } from '@/modules/docs/components/history';
+import { DocumentBody, RiskAssessmentView, tableOfContents } from '@/modules/docs/components/document-body';
 
 async function boot() {
   const params = new URLSearchParams(location.search);

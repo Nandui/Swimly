@@ -1,5 +1,5 @@
-import { listRefunds, type RefundFilters } from "@/lib/refunds/data";
-import { RefundQueue } from "@/components/refunds/queue";
+import { listRefunds, type RefundFilters } from "@/modules/refunds/lib/data";
+import { RefundQueue } from "@/modules/refunds/components/queue";
 import type { Metadata } from "next";
 
 export const metadata: Metadata = { title: "Refund requests" };
