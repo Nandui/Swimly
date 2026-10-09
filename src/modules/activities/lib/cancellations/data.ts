@@ -43,3 +43,24 @@ export async function getBillingCancellations(notified: boolean, page: number) {
   });
   return { rows, pending, total, pages, page: currentPage, pageSize };
 }
+
+/** Every cancellation in one billing view at this site, with each affected swimmer's name as on
+ *  their record, for the Legend bulk update export (`bulk-log.ts`). */
+export async function getBillingExport(notified: boolean) {
+  const session = await requireSession();
+  if (!canSee(session, "cancellations")) throw new AuthorizationError("Cancelled classes access is required.");
+  const clubId = await currentClubId();
+  const rows = await prisma.classCancellation.findMany({
+    where: { clubId, billingNotifiedAt: notified ? { not: null } : null },
+    orderBy: [{ date: "asc" }, { startMinutes: "asc" }, { id: "asc" }],
+    select: { id: true, date: true, programmeName: true,
+      swimmers: { select: { studentId: true, swimmerName: true, memberNumber: true, student: { select: { firstName: true, lastName: true, memberNumber: true } } } } },
+  });
+  return {
+    session, clubId,
+    cancellations: rows.map((c) => ({
+      id: c.id, date: c.date, programmeName: c.programmeName,
+      swimmers: c.swimmers.map((s) => ({ studentId: s.studentId, firstName: s.student.firstName, lastName: s.student.lastName, memberNumber: s.memberNumber ?? s.student.memberNumber })),
+    })),
+  };
+}
