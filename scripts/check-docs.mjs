@@ -3,8 +3,8 @@ import fs from 'node:fs/promises';
 import path from 'node:path';
 import { pathToFileURL } from 'node:url';
 import { docsPreview } from './docs-preview/server.mjs';
-import { one } from '../src/modules/docs/lib/database.ts';
-import { DocumentService } from '../src/modules/docs/lib/domain.ts';
+import { one } from '../src/modules/docs/shared/database.ts';
+import { DocumentService } from '../src/modules/docs/shared/domain.ts';
 
 const { server, db, ids, base } = await docsPreview();
 const directory=path.resolve('.impeccable/review/docs');

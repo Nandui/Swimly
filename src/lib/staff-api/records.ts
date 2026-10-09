@@ -7,6 +7,7 @@ import { mySharedHr } from "@/modules/hr/lib/mine";
 import { acknowledgeReviewFor } from "@/modules/hr/lib/self";
 import { myQualifications } from "@/lib/people/mine";
 import { myDays } from "@/modules/rota/lib/mine";
+import { docsReading } from "@/modules/docs";
 import { completeTrainingFor, myTraining } from "@/modules/training";
 import { StaffApiError, notFound } from "@/lib/staff-api/errors";
 import { idSchema, parseInput, readBody } from "@/lib/staff-api/http";
@@ -167,17 +168,11 @@ export async function completeTraining(request: Request, identity: StaffIdentity
 // Required reading (Docs database)
 // ---------------------------------------------------------------------------
 
-async function docs() {
-  if (!process.env.DOCS_DATABASE_URL) return null;
-  const [{ directoryDatabase }, domain] = await Promise.all([import("@/modules/docs/lib/runtime-database"), import("@/modules/docs/lib/domain")]);
-  return { db: directoryDatabase(), domain };
-}
-
 async function myRequirements(identity: StaffIdentity) {
-  const d = await docs();
+  const d = await docsReading();
   if (!d) return [];
   try {
-    return (await d.domain.requirements(d.db, identity.user.id)).filter((r) => r.status !== "cancelled");
+    return (await d.requirements(identity.user.id)).filter((r) => r.status !== "cancelled");
   } catch {
     // Someone without Docs access has no required reading.
     return [];
@@ -196,9 +191,9 @@ export async function reading(identity: StaffIdentity) {
 /** Only documents assigned to the person as required reading open here. */
 export async function readingItem(identity: StaffIdentity, documentId: string) {
   const requirement = (await myRequirements(identity)).find((r) => r.documentId === documentId);
-  const d = await docs();
+  const d = await docsReading();
   if (!requirement || !d) notFound();
-  const view = await d.domain.documentView(d.db, identity.user.id, documentId, requirement.versionId);
+  const view = await d.documentView(identity.user.id, documentId, requirement.versionId);
   const content = view.selected?.content;
   if (!content) notFound();
   return {
@@ -212,10 +207,10 @@ export async function readingItem(identity: StaffIdentity, documentId: string) {
 export async function acknowledgeReading(request: Request, identity: StaffIdentity, documentId: string) {
   const { versionId } = await readBody(request, z.object({ versionId: idSchema }).strict());
   const requirement = (await myRequirements(identity)).find((r) => r.documentId === documentId && r.versionId === versionId);
-  const d = await docs();
+  const d = await docsReading();
   if (!requirement || !d) notFound();
   try {
-    await new d.domain.DocumentService(d.db).acknowledge(identity.user.id, documentId, versionId);
+    await d.acknowledge(identity.user.id, documentId, versionId);
   } catch (error) {
     throw failed(error instanceof Error ? error.message : "That could not be recorded. Try again.");
   }

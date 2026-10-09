@@ -24,7 +24,7 @@ Turnfin is a modular monolith: one Next.js app and one main database, in layers.
 | academy | Runs the lifeguard and swim teacher courses we deliver. Features: `courses`, `course-types`, `calls`, `booking`, `workspace` ([README](../../src/modules/academy/README.md)). | `academy.prisma` | home cards; its own public API |
 | tasks | Runs each site's daily checks and logs. Features: `day`, `follow-ups`, `templates`, `sites`, `reports`, `schedule`, `workspace` ([README](../../src/modules/tasks/README.md)). | `tasks.prisma` | home cards |
 | training | Assigns courses and records completions. Features: `courses`, `assignments`, `sign-off`, `certificates`, `expiring`, `me`, `person-file`, `workspace` ([README](../../src/modules/training/README.md)). | `training.prisma` | personal file, subject records, Turnfin Me digest |
-| docs | Publishes documents and required reading. | own database (`DOCS_DATABASE_URL`) | home cards, Turnfin Me digest |
+| docs | Publishes documents and required reading. Features: `home`, `library`, `reader`, `editor`, `history`, `work`, `reports`, `admin`, `files`, `import`, `me`, `workspace` ([README](../../src/modules/docs/README.md)). | own database (`DOCS_DATABASE_URL`) | home cards, Turnfin Me digest |
 | hr | Keeps staff files, notes and reviews. | own database (`HR_DATABASE_URL`) | reads the personal file and subject records |
 | rota | Plans who works when. | `rota.prisma` | reads commitments; shift-change emails; personal file |
 

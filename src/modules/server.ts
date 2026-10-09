@@ -4,7 +4,7 @@ import "server-only";
 // of any module directly (see the import boundaries in eslint.config.mjs).
 import "./activities/contributions";
 import "@/modules/refunds/module";
-import "@/modules/docs/lib/home";
+import "@/modules/docs/module";
 import "@/modules/training/module";
 import "@/modules/rota/lib/home";
 import "@/modules/rota/lib/file";

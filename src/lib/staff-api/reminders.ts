@@ -1,4 +1,4 @@
-import { readingReminderItems } from "@/modules/docs/lib/reminders";
+import { readingReminderItems } from "@/modules/docs";
 import { addDaysIso, formatDate, parseDateOnly, today } from "@/lib/format";
 import { prisma } from "@/lib/prisma";
 import { sendStaffReminder } from "@/lib/staff-api/email";

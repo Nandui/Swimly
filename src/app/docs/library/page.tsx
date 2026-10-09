@@ -1,8 +1,4 @@
-import { requireMember } from '@/modules/docs/lib/auth';
-import { database } from '@/modules/docs/lib/database';
-import { library } from '@/modules/docs/lib/domain';
-import { workspace } from '@/modules/docs/lib/queries';
-import { LibraryView } from '@/modules/docs/components/library';
+import { database, library, LibraryView, requireMember, workspace } from "@/modules/docs/features/library";
 import type { Metadata } from 'next';
 
 /** The tab title follows the H1, which the archive renames. */

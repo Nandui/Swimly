@@ -3,7 +3,7 @@ import test from "node:test";
 import { ACTIONS, actionMeta } from "@/lib/activity/constants";
 import { CLUB_STATUS_META } from "@/lib/clubs/constants";
 import { DEVICE_STATUS_META } from "@/lib/devices/meta";
-import { DOC_STATUS_META, RISK_BAND_TONE_META, UNCLASSIFIED_RISK_META, riskBandMeta } from "@/modules/docs/lib/types";
+import { DOC_STATUS_META, RISK_BAND_TONE_META, UNCLASSIFIED_RISK_META, riskBandMeta } from "@/modules/docs/shared/types";
 import { HOME_ITEM_META, HOME_SESSION_META } from "@/lib/home-meta";
 import { NOTE_VISIBILITY_META, REVIEW_STATUS_META } from "@/modules/hr/lib/constants";
 import { PERSON_STATUS_META, QUALIFICATION_STATE_META } from "@/lib/people/constants";

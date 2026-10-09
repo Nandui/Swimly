@@ -13,17 +13,17 @@ import '@fontsource/plus-jakarta-sans/600.css';
 import '@fontsource/plus-jakarta-sans/700.css';
 import { ThemeProvider } from '@/components/theme-provider';
 import { TooltipProvider } from '@/components/shadcn/tooltip';
-import { Shell } from '@/modules/docs/components/shell';
-import { HomeView } from '@/modules/docs/components/home';
-import { LibraryView } from '@/modules/docs/components/library';
-import { WorkView } from '@/modules/docs/components/work';
-import { ReportsView } from '@/modules/docs/components/reports';
-import { AdminView } from '@/modules/docs/components/admin';
-import { NewDocument } from '@/modules/docs/components/new-document';
-import { DocumentEditor } from '@/modules/docs/components/document-editor';
-import { Reader } from '@/modules/docs/components/reader';
-import { HistoryView } from '@/modules/docs/components/history';
-import { DocumentBody, RiskAssessmentView, tableOfContents } from '@/modules/docs/components/document-body';
+import { Shell } from '@/modules/docs/features/workspace/components/shell';
+import { HomeView } from '@/modules/docs/features/home/components/home';
+import { LibraryView } from '@/modules/docs/features/library/components/library';
+import { WorkView } from '@/modules/docs/features/work/components/work';
+import { ReportsView } from '@/modules/docs/features/reports/components/reports';
+import { AdminView } from '@/modules/docs/features/admin/components/admin';
+import { NewDocument } from '@/modules/docs/features/editor/components/new-document';
+import { DocumentEditor } from '@/modules/docs/features/editor/components/document-editor';
+import { Reader } from '@/modules/docs/features/reader/components/reader';
+import { HistoryView } from '@/modules/docs/features/history/components/history';
+import { DocumentBody, RiskAssessmentView, tableOfContents } from '@/modules/docs/shared/components/document-body';
 
 async function boot() {
   const params = new URLSearchParams(location.search);

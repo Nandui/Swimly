@@ -1,5 +1,5 @@
 import "dotenv/config";
-import { docsStorageConfig } from '../src/modules/docs/lib/storage-config';
+import { docsStorageConfig } from '../src/modules/docs/shared/storage-config';
 import { hrStorageConfig } from '../src/modules/hr/lib/storage-config';
 import { databasePlan } from '../src/lib/database-environment';
 
