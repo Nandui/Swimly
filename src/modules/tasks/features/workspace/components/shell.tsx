@@ -5,7 +5,7 @@ import { usePathname, useSearchParams } from 'next/navigation';
 import { BarChart3, Building2, ClipboardList, Flag, History, LayoutGrid } from 'lucide-react';
 import { ModuleShell } from '@/components/workspace/module-shell';
 import { SiteSwitcher } from '@/components/workspace/site-switcher';
-import type { TasksActor } from '@/modules/tasks/lib/access';
+import type { TasksActor } from '@/modules/tasks/shared/access';
 
 /** The pages that show one site: they take it from `?site=` and show the picker. */
 const SITE_PAGES = new Set(['/tasks', '/tasks/actions']);

@@ -4,7 +4,7 @@ import { useRouter } from "next/navigation";
 import { Archive, ArchiveRestore, Copy } from "lucide-react";
 import { Button } from "@/components/shadcn/button";
 import { ActionButton, ConfirmAction } from "@/components/confirm-action";
-import { copyTaskTemplate, setTaskTemplateArchived } from "@/modules/tasks/lib/actions";
+import { copyTaskTemplate, setTaskTemplateArchived } from "@/modules/tasks/features/templates/server/actions";
 
 /** Start a similar template from this one, as a new draft. `compact`: a row's icon button. */
 export function CopyTemplate({ id, compact = false }: { id: string; compact?: boolean }) {

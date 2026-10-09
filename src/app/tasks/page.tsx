@@ -10,12 +10,9 @@ import { EmptyState } from "@/components/ui-kit/empty-state";
 import { PageHeader } from "@/components/ui-kit/page-header";
 import { SearchField } from "@/components/ui-kit/search-field";
 import { Tag } from "@/components/ui-kit/tag";
-import { SiteSettings } from "@/modules/tasks/components/site-settings";
-import { AddTask } from "@/modules/tasks/components/task-dialogs";
-import { TaskStateTag } from "@/modules/tasks/components/status";
+import { SiteSettings } from "@/modules/tasks/features/sites";
+import { addDays, AddTask, clockOf, DAY_FILTERS, SITE_STATUS_META, taskDay, type TaskRow, type TaskState, TaskStateTag } from "@/modules/tasks/features/day";
 import { formatDayMonth, formatWeekday } from "@/lib/format";
-import { DAY_FILTERS, taskDay, type TaskRow } from "@/modules/tasks/lib/data";
-import { SITE_STATUS_META, addDays, clockOf, type TaskState } from "@/modules/tasks/lib/rules";
 
 export const metadata: Metadata = { title: "Today" };
 

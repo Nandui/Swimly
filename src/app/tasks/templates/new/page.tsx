@@ -1,8 +1,7 @@
 import type { Metadata } from "next";
 import { PageHeader } from "@/components/ui-kit/page-header";
-import { TemplateEditor } from "@/modules/tasks/components/template-editor";
+import { taskTemplate, TemplateEditor } from "@/modules/tasks/features/templates";
 import { today } from "@/lib/format";
-import { taskTemplate } from "@/modules/tasks/lib/data";
 
 export const metadata: Metadata = { title: "New template" };
 

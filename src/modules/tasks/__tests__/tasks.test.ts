@@ -4,15 +4,15 @@ import { isolatedPrisma } from "@/test/pglite-prisma";
 import { serverModule } from "@/test/server-module";
 import { expandPermissions, type PermissionKey } from "@/lib/staff/permissions";
 import { today } from "@/lib/format";
-import type { TemplateInput } from "./actions";
+import type { TemplateInput } from "../features/templates/server/actions";
 
 /** Tasks end to end on an isolated database: templates need Manage and publish only when
  *  complete; a day's tasks are made once; only the sites and roles a task is for can do it;
  *  completion checks everything, out-of-range readings need a follow-up; nobody approves their
  *  own; two people saving at once cannot overwrite each other. Invented people and sites. */
 let fixture: Awaited<ReturnType<typeof isolatedPrisma>>;
-let actions: typeof import("./actions");
-let data: typeof import("./data");
+let actions: typeof import("../features/day/server/actions") & typeof import("../features/follow-ups/server/actions") & typeof import("../features/templates/server/actions") & typeof import("../features/sites/server/actions");
+let data: typeof import("../shared/data") & typeof import("../features/day/server/data") & typeof import("../features/follow-ups/server/data") & typeof import("../features/workspace/server/data") & typeof import("../features/templates/server/data") & typeof import("../features/sites/server/data") & typeof import("../features/reports/server/data") & typeof import("../features/schedule/server/data");
 const ORG = "org_leisureworld";
 type GrantRow = { roleName: string; permissions: string[]; screens: string[]; scopeKind: string; scopeId: string };
 const state = { id: "gina", permissions: [] as string[], grants: [] as GrantRow[] };
@@ -59,8 +59,8 @@ before(async () => {
     "server-only": {},
     react: { cache: <T,>(fn: T) => fn },
   };
-  actions = serverModule("src/modules/tasks/lib/actions.ts", d);
-  data = serverModule("src/modules/tasks/lib/data.ts", d);
+  actions = Object.assign({}, ...["day", "follow-ups", "templates", "sites"].map((f) => serverModule<object>(`src/modules/tasks/features/${f}/server/actions.ts`, d)));
+  data = Object.assign(serverModule<object>("src/modules/tasks/shared/data.ts", d), ...["day", "follow-ups", "workspace", "templates", "sites", "reports", "schedule"].map((f) => serverModule<object>(`src/modules/tasks/features/${f}/server/data.ts`, d)));
 });
 after(async () => { await fixture?.close(); });
 

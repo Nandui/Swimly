@@ -12,8 +12,8 @@ import { LoadingButton } from "@/components/ui/loading-button";
 import { Select } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
 import { Notice } from "@/components/ui-kit/notice";
-import { completeTask, saveTaskProgress, uploadTaskFile } from "@/modules/tasks/lib/actions";
-import { exceptions, type TaskDefinition, type TaskField, type TaskRecord } from "@/modules/tasks/lib/rules";
+import { completeTask, saveTaskProgress, uploadTaskFile } from "@/modules/tasks/features/day/server/actions";
+import { exceptions, type TaskDefinition, type TaskField, type TaskRecord } from "@/modules/tasks/shared/rules";
 import { toast } from "@/lib/toast";
 
 type FileRef = { id: string; fileName: string };

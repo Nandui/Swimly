@@ -11,11 +11,8 @@ import { PageHeader } from "@/components/ui-kit/page-header";
 import { SearchField } from "@/components/ui-kit/search-field";
 import { SegmentedLinks } from "@/components/ui-kit/segmented-links";
 import { Tag } from "@/components/ui-kit/tag";
-import { ScoreTrend } from "@/modules/tasks/components/score-trend";
-import { TaskStateTag } from "@/modules/tasks/components/status";
+import { REPORT_FILTERS, type ReportInterval, SCORE_BAND_META, scoreBand, ScoreTrend, taskReport, TaskStateTag } from "@/modules/tasks/features/reports";
 import { formatDate, formatDayMonth, parseDateOnly } from "@/lib/format";
-import { REPORT_FILTERS, taskReport, type ReportInterval } from "@/modules/tasks/lib/data";
-import { SCORE_BAND_META, scoreBand } from "@/modules/tasks/lib/rules";
 
 export const metadata: Metadata = { title: "Reports" };
 

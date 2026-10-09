@@ -11,7 +11,7 @@ import "@/modules/rota/lib/file";
 import "@/modules/rota/lib/areas";
 import "@/modules/training/lib/file";
 import "@/modules/purchasing/module";
-import "@/modules/tasks/lib/home";
+import "@/modules/tasks/module";
 import "@/modules/academy/module";
 import "@/lib/people/home";
 import "@/modules/hr/lib/home";
