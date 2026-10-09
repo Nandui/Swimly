@@ -29,6 +29,27 @@ note and choose Mark billing notified. The entry moves to Billing notified
 history; it is not deleted. This records a manual notification, not an email
 delivery or billing adjustment. Both actions are audited and retry-safe.
 
+### Legend: process, then restore (owner decisions, 9 October 2026)
+
+The billing follow-up has three stages, `?view=awaiting|restore|done`:
+
+1. **Awaiting billing.** **Export for Legend** downloads Legend's "Bulk Update Template - BO"
+   (`bulk-log.ts`) for the classes on screen: one row for each affected member and agreement
+   price, with FirstName, LastName, Memberno, Aquatics as Agreement and NewAgreement, and
+   "Water Safety & Fun" or "Swimming Skills" as agreementprice and Newagreementprice. Any other
+   programme keeps its own name. After processing it in Legend, **Mark processed** confirms
+   exactly those classes: they are billing notified, and move to To restore.
+2. **To restore.** Once the direct debit run is done, **Export price restore** gives the same
+   file with NewCycleFee, which is the agreement price's monthly price from **Billing prices**
+   (`/cancellations/prices`, `LegendAgreementPrice`, the same at every site, kept by swim school
+   Manage and linked from Admin's overview). A price not set yet is left empty, with a warning.
+   **Mark restored** confirms them.
+3. **Done.** Restored classes, and handoffs recorded by hand with a note.
+
+The export link carries the ids of the classes on screen, so the file and the confirmation
+after it name the same classes. Exports and both confirmations are audited
+(`billing-actions.ts`; `src/lib/xlsx-write.ts` writes the workbook with no dependency).
+
 ## Access setup
 
 Administrators automatically receive every screen and permission, including

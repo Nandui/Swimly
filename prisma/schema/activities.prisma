@@ -395,6 +395,15 @@ model ClassCancellation {
   billingNotifiedById   String?
   billingNotifiedByName String?
   billingNote           String?
+  /// Sent to Legend in a bulk update export and confirmed (owner decision, 9 October 2026); this
+  /// also sets billingNotifiedAt. Then it waits in "To restore" until its members are put back on
+  /// their monthly price after the direct debit run.
+  legendProcessedAt     DateTime?
+  legendProcessedById   String?
+  legendProcessedByName String?
+  restoredAt            DateTime?
+  restoredById          String?
+  restoredByName        String?
 
   course   Course                  @relation(fields: [courseId], references: [id], onDelete: Restrict)
   swimmers CancelledClassSwimmer[]
@@ -790,4 +799,17 @@ model ClassPlannedTeacher {
 
   @@unique([courseId, date])
   @@index([teacherId, date])
+}
+
+/// The monthly price of each Legend agreement price ("Water Safety & Fun", "Swimming Skills"),
+/// the same at every site: the NewCycleFee when members are put back after a cancellation
+/// (owner decision, 9 October 2026). Swim school Manage keeps it; Admin's overview links it.
+model LegendAgreementPrice {
+  id            String   @id @default(cuid())
+  /// The agreement price's name exactly as Legend has it.
+  name          String   @unique
+  monthlyCents  Int?
+  updatedAt     DateTime @updatedAt
+  updatedById   String?
+  updatedByName String?
 }

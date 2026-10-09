@@ -2,7 +2,7 @@ import assert from "node:assert/strict";
 import { test } from "node:test";
 import readXlsxFile from "read-excel-file/node";
 import { writeWorkbook } from "@/lib/xlsx-write";
-import { BULK_LOG_COLUMNS, agreementPriceFor, bulkLogRows } from "./bulk-log";
+import { BULK_LOG_COLUMNS, agreementPriceFor, bulkLogRows, missingCycleFees } from "./bulk-log";
 
 /** Cancelled classes as Legend's bulk update template. Invented swimmers and member numbers. */
 const s = (studentId: string, firstName: string, lastName: string, memberNumber: string | null) => ({ studentId, firstName, lastName, memberNumber });
@@ -43,4 +43,17 @@ test("the workbook opens in a spreadsheet reader with the template's header and 
   assert.equal(sheet[1][0], "Ana <&>");
   assert.equal(sheet[1][2], "TST001");
   assert.equal(sheet[1][6], "Water Safety & Fun");
+});
+
+test("the restore export puts each agreement price's monthly price in NewCycleFee, in euros", () => {
+  const cancellations = [
+    { programmeName: "Swimming Skills", swimmers: [s("a", "Ana", "Sample", "TST001")] },
+    { programmeName: "Water Safety & Fun", swimmers: [s("c", "Cai", "Example", "TST002")] },
+  ];
+  const fees = new Map<string, number | null>([["Swimming Skills", 4550], ["Water Safety & Fun", null]]);
+  const rows = bulkLogRows(cancellations, { cycleFees: fees });
+  assert.equal(col(rows.find((r) => col(r, "FirstName") === "Ana")!, "NewCycleFee"), 45.5);
+  assert.equal(col(rows.find((r) => col(r, "FirstName") === "Cai")!, "NewCycleFee"), null, "no price yet: left empty");
+  assert.deepEqual(missingCycleFees(cancellations, fees), ["Water Safety & Fun"]);
+  assert.equal(col(bulkLogRows(cancellations)[0], "NewCycleFee"), null, "the first export never sets it");
 });

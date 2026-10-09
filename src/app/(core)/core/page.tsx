@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import { redirect } from "next/navigation";
 import { ADMIN_GROUPS, type CoreLinkKey } from "@/components/core/pages";
 import { ModuleOverview } from "@/components/workspace/module-overview";
-import { Award, ClipboardCheck, Files, GraduationCap, Truck, Waves } from "lucide-react";
+import { Award, ClipboardCheck, Euro, Files, GraduationCap, Truck, Waves } from "lucide-react";
 import { can, canSee } from "@/lib/authz";
 import { loadModuleOverview } from "@/lib/home";
 import { pageSession } from "@/lib/page-guards";
@@ -24,6 +24,7 @@ export default async function CoreHome() {
   // Setup that belongs to one module stays in it; Admin lists where each is (owner decision, 7 October 2026).
   const modules = [
     { show: canSee(session, "programmes") && can(session, "curriculum.manage"), href: "/programmes", label: "Swim school programmes", icon: Waves, description: "Programmes, levels, competencies and assessment types" },
+    { show: canSee(session, "cancellations") && can(session, "curriculum.manage"), href: "/cancellations/prices", label: "Swim school billing prices", icon: Euro, description: "Each Legend agreement price's monthly price, for putting members back after a cancellation" },
     { show: canSee(session, "training") && can(session, "training.manage"), href: "/training/courses", label: "Training courses", icon: GraduationCap, description: "The courses staff are assigned and complete" },
     { show: canSee(session, "purchasing"), href: "/purchasing/suppliers", label: "Purchasing suppliers", icon: Truck, description: "Approved suppliers, their products and who approves" },
     { show: canSee(session, "academy"), href: "/academy/types", label: "Academy courses", icon: Award, description: "The lifeguard and swim teacher courses we deliver" },

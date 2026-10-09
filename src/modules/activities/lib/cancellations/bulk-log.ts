@@ -1,7 +1,9 @@
 /** Cancelled classes as Legend's "Bulk Update Template - BO" (owner decision, 9 October 2026):
  *  one row for each affected member with their member number, Aquatics as the agreement and
  *  new agreement, and the programme as the agreement price and new agreement price ("Water
- *  Safety & Fun" or "Swimming Skills"). Billing fills in the rest in Legend. Pure (bulk-log.test.ts). */
+ *  Safety & Fun" or "Swimming Skills"). Billing fills in the rest in Legend. The restore export,
+ *  once the direct debit run is done, adds NewCycleFee: the agreement price's monthly price from
+ *  the swim school's price list, putting members back on it. Pure (bulk-log.test.ts). */
 
 /** The template's columns, in its order and spelling. */
 export const BULK_LOG_COLUMNS = [
@@ -28,7 +30,7 @@ export type BulkLogCancellation = { programmeName: string; swimmers: readonly Bu
 /** The sheet's rows after the header: each member once for each agreement price, however many
  *  of their classes were cancelled (Legend updates a member's agreement once), in name order.
  *  Swimmers with no member number come last, their number left empty for billing to find. */
-export function bulkLogRows(cancellations: readonly BulkLogCancellation[]) {
+export function bulkLogRows(cancellations: readonly BulkLogCancellation[], options: { cycleFees?: ReadonlyMap<string, number | null> } = {}) {
   const rows = new Map<string, { swimmer: BulkLogSwimmer; price: string }>();
   for (const c of cancellations) {
     const price = agreementPriceFor(c.programmeName);
@@ -41,7 +43,7 @@ export function bulkLogRows(cancellations: readonly BulkLogCancellation[]) {
     Number(!a.swimmer.memberNumber) - Number(!b.swimmer.memberNumber)
     || a.swimmer.lastName.localeCompare(b.swimmer.lastName) || a.swimmer.firstName.localeCompare(b.swimmer.firstName));
   return sorted.map(({ swimmer, price }) => {
-    const row: (string | null)[] = BULK_LOG_COLUMNS.map(() => null);
+    const row: (string | number | null)[] = BULK_LOG_COLUMNS.map(() => null);
     const set = (column: (typeof BULK_LOG_COLUMNS)[number], value: string) => { row[BULK_LOG_COLUMNS.indexOf(column)] = value; };
     set("FirstName", swimmer.firstName);
     set("LastName", swimmer.lastName);
@@ -50,6 +52,15 @@ export function bulkLogRows(cancellations: readonly BulkLogCancellation[]) {
     set("agreementprice", price);
     set("NewAgreement", BULK_LOG_AGREEMENT);
     set("Newagreementprice", price);
+    // In euros, as Legend takes it; left empty when the price list has no price for it yet.
+    const cents = options.cycleFees?.get(price);
+    if (options.cycleFees && cents !== null && cents !== undefined) row[BULK_LOG_COLUMNS.indexOf("NewCycleFee")] = cents / 100;
     return row;
   });
+}
+
+/** The agreement prices these cancellations need that the price list has no price for. */
+export function missingCycleFees(cancellations: readonly BulkLogCancellation[], cycleFees: ReadonlyMap<string, number | null>) {
+  const needed = new Set(cancellations.filter((c) => c.swimmers.length).map((c) => agreementPriceFor(c.programmeName)));
+  return [...needed].filter((name) => cycleFees.get(name) === null || cycleFees.get(name) === undefined).sort();
 }

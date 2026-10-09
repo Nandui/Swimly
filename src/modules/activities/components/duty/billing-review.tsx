@@ -20,6 +20,7 @@ export type BillingCancellation = {
   programmeName: string; location: string | null; instructorName: string | null; reason: string;
   cancelledByName: string; cancelledAt: string; attendanceRecorded: number; billingNotifiedAt: string | null;
   billingNotifiedByName: string | null; billingNote: string | null;
+  legendProcessedAt: string | null; restoredAt: string | null; restoredByName: string | null;
   swimmers: { studentId: string; swimmerName: string; memberNumber: string | null }[];
 };
 

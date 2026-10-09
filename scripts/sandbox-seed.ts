@@ -28,7 +28,7 @@ async function seedAquatics(db: PrismaClient) {
   const programme = await db.programme.create({ data: { clubId: "club_churchfield", name: "Learn to swim" } });
   const otters = await db.level.create({ data: { programmeId: programme.id, name: "Otters", sortOrder: 0 } });
   const seals = await db.level.create({ data: { programmeId: programme.id, name: "Seals", sortOrder: 1 } });
-  const farProgramme = await db.programme.create({ data: { clubId: "club_bishopstown", name: "Learn to swim" } });
+  const farProgramme = await db.programme.create({ data: { clubId: "club_bishopstown", name: "Swimming Skills" } });
   const farLevel = await db.level.create({ data: { programmeId: farProgramme.id, name: "Otters" } });
 
   const courses = {
