@@ -17,7 +17,7 @@ const emailConfig = (env = process.env): GoogleEmailConfig => emailSender(sender
 
 const escape = (value: string) => value.replace(/[&<>"']/g, (c) => `&#${c.charCodeAt(0)};`);
 
-/* Poolside Clear v2 hex values, copied from src/app/docs/poolside.css (mail clients cannot read
+/* Poolside Clear v2 hex values, copied from src/app/theme/poolside.css (mail clients cannot read
    CSS variables), as in the Turnfin Me emails. */
 const INK = "color:#0f1b2d", MUTED = "color:#56627a", BODY = "font-size:14px;line-height:20px";
 

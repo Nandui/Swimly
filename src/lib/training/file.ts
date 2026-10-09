@@ -1,7 +1,7 @@
 import "server-only";
 import { formatDate, parseDateOnly, today } from "@/lib/format";
 import { prisma } from "@/lib/prisma";
-import { registerPersonFileSection, type PersonFileEntry } from "@/modules/contributions";
+import { registerPersonFileSection, registerSubjectRecords, type PersonFileEntry } from "@/modules/contributions";
 
 /** Training's part of a person's file: what they have to do, and how much they have done. */
 export async function trainingFile(userId: string): Promise<{ summary: string; entries: PersonFileEntry[] }> {
@@ -26,3 +26,10 @@ export async function trainingFile(userId: string): Promise<{ summary: string; e
 }
 
 registerPersonFileSection({ id: "training.open", heading: "Training", load: trainingFile });
+
+/** Every training assignment this person has had, for HR's subject export. */
+export async function trainingRecords(userId: string) {
+  return prisma.trainingAssignment.findMany({ where: { userId }, select: { status: true, dueOn: true, assignedAt: true, assignedByName: true, completedAt: true, signedOffByName: true, signoffNote: true, learnerNote: true, cancelReason: true, course: { select: { title: true } } } });
+}
+
+registerSubjectRecords({ key: "training", load: trainingRecords });

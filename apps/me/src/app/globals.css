@@ -1,6 +1,6 @@
 /* Turnfin Me in Poolside Clear v2, phone-first.
    The tokens and the v2 parts (the fin, the bar, the bottom bar, panels, rows, tile icons) are
-   copied verbatim from Work's src/app/docs/poolside.css, scoped to .turnfin-app on <body> as Work
+   copied verbatim from Work's src/app/theme/poolside.css, scoped to .turnfin-app on <body> as Work
    does, so the two diff 1:1; keep them in step when either changes. The one place Me differs is the
    block marked "Me only". Colours come from these tokens only; status colour comes from the
    metadata maps in src/lib/meta.ts, always with an icon. */
@@ -113,7 +113,7 @@ a { color: var(--pc-primary); }
 .page.narrow { max-width: 440px; padding-top: max(48px, env(safe-area-inset-top)); padding-bottom: calc(48px + env(safe-area-inset-bottom)); }
 
 /* ---------------------------------------------------------------------------------------------
-   Copied verbatim from src/app/docs/poolside.css: the fin, the bar (.tf-bar-item parts only),
+   Copied verbatim from src/app/theme/poolside.css: the fin, the bar (.tf-bar-item parts only),
    the bottom bar, panels, rows and tile icons. */
 .turnfin-app .tf-brand { display: inline-flex; flex: none; align-items: center; justify-content: center; width: 64px; height: 64px; border-radius: var(--pc-radius-card); }
 .turnfin-app .tf-brand img { display: block; width: 72px; height: 72px; max-width: none; margin: -4px; transform: translateX(3px); }

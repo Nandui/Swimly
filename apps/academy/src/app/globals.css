@@ -1,6 +1,6 @@
 /* The Academy booking site in Poolside Clear v2, phone-first. The tokens, panels, rows, controls,
    tags and notices are copied from Turnfin Me (apps/me/src/app/globals.css), itself copied from
-   Work's src/app/docs/poolside.css; keep them in step. Colours come from these tokens only;
+   Work's src/app/theme/poolside.css; keep them in step. Colours come from these tokens only;
    status colour comes from src/lib/meta.ts, always with an icon. */
 :root { color-scheme: light dark; }
 .turnfin-app {

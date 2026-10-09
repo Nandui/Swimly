@@ -1,8 +1,8 @@
 import 'dotenv/config';
 import { createHash } from 'node:crypto';
 import { Client } from 'pg';
-import { docsStorageConfig, databaseIdentity } from '../src/lib/docs/storage-config';
-import { postgresConnectionString } from '../src/lib/postgres-connection';
+import { docsStorageConfig } from '../src/lib/docs/storage-config';
+import { databaseIdentity, postgresConnectionString } from '../src/lib/postgres-connection';
 import { migrateDocsSchema, freezeSharedDocs, copySharedDocs } from './lib/docs-storage';
 
 async function main() {

@@ -6,7 +6,7 @@ import "@fontsource/plus-jakarta-sans/400.css";
 import "@fontsource/plus-jakarta-sans/600.css";
 import "@fontsource/plus-jakarta-sans/700.css";
 import "./globals.css";
-import "./docs/poolside.css";
+import "./theme/poolside.css";
 import { AuthFrame } from "@/components/auth-frame";
 import { PageError } from "@/components/ui-kit/page-state";
 

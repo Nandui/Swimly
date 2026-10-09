@@ -13,7 +13,7 @@ import { placeProblem } from "@/lib/rota/cover";
 import { areaProblem } from "@/lib/setup/data";
 import { fitsFor } from "@/lib/rota/data";
 import type { Prisma } from "@/generated/prisma/client";
-import { notifyShiftChange } from "@/lib/staff-api/reminders";
+import { notifyShiftChange } from "@/lib/staff-api/notify";
 import { commitmentsFor, planCommitment } from "@/modules/server";
 
 /** Rota writes (owner decisions, 6 October 2026). Plan changes the days after today for the

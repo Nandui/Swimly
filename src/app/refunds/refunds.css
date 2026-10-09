@@ -1,5 +1,5 @@
 /* Refunds page layouts. The Poolside Clear theme (tokens, shell, controls, fields) is shared
-   with Docs in ../docs/poolside.css; this file only arranges the Refunds screens. The list is
+   with Docs in ../theme/poolside.css; this file only arranges the Refunds screens. The list is
    the shared panel of rows and figure tiles (.pc-panel, .pc-rows, .pc-stats). */
 .turnfin-refunds .refund-content { min-width: 0; }
 

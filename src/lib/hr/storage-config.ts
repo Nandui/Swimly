@@ -1,4 +1,4 @@
-import { databaseIdentity } from '../docs/storage-config';
+import { databaseIdentity } from '@/lib/postgres-connection';
 
 /** HR and performance live in their own database, never the Turnfin/Aquatics
  *  or Docs database. Set `HR_DATABASE_URL` (and `HR_DIRECT_URL`, unpooled, for

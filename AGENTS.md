@@ -59,7 +59,7 @@ read the design files below before changing how it looks.
 The entire staff app uses shadcn/ui components from src/components/shadcn.
 The **whole app** uses Poolside Clear v2 (Plus Jakarta Sans, the fin's blue, pill controls,
 white borderless panels of separate rows; owner decisions, 27 September and 3 October 2026). Its tokens and system rules are in
-`src/app/docs/poolside.css`, scoped to `.turnfin-app` on `<body>` by the root layout, so
+`src/app/theme/poolside.css`, scoped to `.turnfin-app` on `<body>` by the root layout, so
 every page and portalled dialog follows it; Docs/Refunds shell rules stay on `.turnfin-docs`.
 Refunds adds `.turnfin-refunds`; the people-scoped workspaces (Training, HR, Rota) share
 `ModuleShell` and `.turnfin-module` layouts. Never reintroduce a separate module theme. Use its type and control

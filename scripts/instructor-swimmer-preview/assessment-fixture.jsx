@@ -4,7 +4,7 @@ import '@fontsource/plus-jakarta-sans/latin-400.css';
 import '@fontsource/plus-jakarta-sans/latin-500.css';
 import '@fontsource/plus-jakarta-sans/latin-600.css';
 import '@fontsource/plus-jakarta-sans/latin-700.css';
-import '@/app/docs/poolside.css';
+import '@/app/theme/poolside.css';
 import {ThemeProvider} from '@/components/theme-provider';
 import {TooltipProvider} from '@/components/shadcn/tooltip';
 import {InstructorShell} from '@/modules/activities/components/instructor/instructor-shell';

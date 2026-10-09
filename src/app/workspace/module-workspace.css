@@ -1,6 +1,6 @@
 /* Layouts shared by the people-scoped Turnfin workspaces (Training, HR, Rota) in
    ModuleShell. The Poolside Clear theme (tokens, shell, controls, fields) is shared with
-   Docs and Refunds in src/app/docs/poolside.css; this file only arranges the screens. */
+   Docs and Refunds in src/app/theme/poolside.css; this file only arranges the screens. */
 .turnfin-module .workspace-page-content > * { max-width: 1200px; }
 
 /* Page heading */

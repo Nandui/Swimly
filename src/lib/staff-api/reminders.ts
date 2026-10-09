@@ -1,8 +1,9 @@
-import { formatDate, parseDateOnly, today } from "@/lib/format";
+import { readingReminderItems } from "@/lib/docs/reminders";
+import { addDaysIso, formatDate, parseDateOnly, today } from "@/lib/format";
 import { prisma } from "@/lib/prisma";
-import { staffApiConfig } from "@/lib/staff-api/config";
 import { sendStaffReminder } from "@/lib/staff-api/email";
-import { addDaysIso } from "@/lib/rota/constants";
+import { meSettings } from "@/lib/staff-api/notify";
+import { trainingReminderItems } from "@/lib/training/reminders";
 
 /** Reminder emails for Turnfin Me. The daily job sends each person one short
  *  digest of things that are new since the last one: training due within 3
@@ -10,33 +11,18 @@ import { addDaysIso } from "@/lib/rota/constants";
  *  team's for a line manager), and
  *  required reading past its deadline. Each item is logged, so nothing is sent
  *  twice. Shift changes are sent when they happen. A person's preferences
- *  (Reminders in Turnfin Me) turn each kind off. Emails never carry HR content. */
+ *  (Reminders in Turnfin Me) turn each kind off. Emails never carry HR content.
+ *  A composition root: Training and Docs each say what is due; shift changes
+ *  go out from `notify.ts`. */
 
 type Prefs = { trainingDue: boolean; qualificationExpiry: boolean; readingOverdue: boolean; shiftChanges: boolean };
 const ALL_ON: Prefs = { trainingDue: true, qualificationExpiry: true, readingOverdue: true, shiftChanges: true };
 type Item = { userId: string; kind: string; ref: string; line: string };
 
-function enabled() {
-  try { return staffApiConfig(); } catch { return null; }
-}
-
 async function preferences(userIds: string[]) {
   const rows = await prisma.staffNotificationPreference.findMany({ where: { userId: { in: userIds } } });
   const byId = new Map(rows.map((r) => [r.userId, r]));
   return (userId: string): Prefs => byId.get(userId) ?? ALL_ON;
-}
-
-async function trainingItems(on: string): Promise<Item[]> {
-  const soon = parseDateOnly(addDaysIso(on, 3));
-  const rows = await prisma.trainingAssignment.findMany({
-    where: { status: "ASSIGNED", dueOn: { not: null, lte: soon }, user: { isActive: true } },
-    select: { id: true, userId: true, dueOn: true, course: { select: { title: true } } },
-  });
-  return rows.map((r) => {
-    const overdue = r.dueOn!.toISOString().slice(0, 10) < on;
-    return { userId: r.userId, kind: overdue ? "training-overdue" : "training-due", ref: r.id,
-      line: overdue ? `${r.course.title} is overdue (it was due ${formatDate(r.dueOn!)}).` : `${r.course.title} is due ${formatDate(r.dueOn!)}.` };
-  });
 }
 
 async function qualificationItems(on: string): Promise<Item[]> {
@@ -61,22 +47,12 @@ async function qualificationItems(on: string): Promise<Item[]> {
   });
 }
 
-async function readingItems(on: string): Promise<Item[]> {
-  if (!process.env.DOCS_DATABASE_URL) return [];
-  const { directoryDatabase } = await import("@/lib/docs/runtime-database");
-  const { rows } = await directoryDatabase().query<{ id: string; member_id: string; due_date: string | Date; title: string }>(
-    "SELECT r.id, r.member_id, r.due_date, s.content->>'title' AS title FROM requirements r JOIN snapshots s ON s.id=r.version_id WHERE r.status='outstanding' AND r.due_date IS NOT NULL AND r.due_date < $1",
-    [on],
-  );
-  return rows.map((r) => ({ userId: r.member_id, kind: "reading-overdue", ref: r.id, line: `${r.title} is overdue to read and acknowledge.` }));
-}
-
 /** Runs once a day (Vercel cron). Returns what it did, for the log. */
 export async function runReminders(now = new Date()) {
-  const config = enabled();
+  const config = meSettings();
   if (!config?.meUrl) return { sent: 0, skipped: "Turnfin Me is not enabled" };
   const on = today(now);
-  const items = [...await trainingItems(on), ...await qualificationItems(on), ...await readingItems(on)];
+  const items = [...await trainingReminderItems(on), ...await qualificationItems(on), ...await readingReminderItems(on)];
   const userIds = [...new Set(items.map((i) => i.userId))];
   const [prefs, users, logged] = await Promise.all([
     preferences(userIds),
@@ -99,22 +75,4 @@ export async function runReminders(now = new Date()) {
     }
   }
   return { sent, people: users.length };
-}
-
-/** A shift was added, changed or cancelled for this person. Best effort: a
- *  mail problem never undoes the rota change. */
-export async function notifyShiftChange(userId: string | null, line: string) {
-  if (!userId) return;
-  const config = enabled();
-  if (!config?.meUrl) return;
-  try {
-    const [user, pref] = await Promise.all([
-      prisma.user.findUnique({ where: { id: userId }, select: { email: true, isActive: true } }),
-      prisma.staffNotificationPreference.findUnique({ where: { userId } }),
-    ]);
-    if (!user?.isActive || pref?.shiftChanges === false) return;
-    await sendStaffReminder(user.email, "Your shifts changed", line, `${config.meUrl}/shifts`);
-  } catch {
-    // Best effort.
-  }
 }

@@ -3,7 +3,7 @@ import {createRoot} from 'react-dom/client';
 import '@fontsource/plus-jakarta-sans/400.css';
 import '@fontsource/plus-jakarta-sans/600.css';
 import '@fontsource/plus-jakarta-sans/700.css';
-import '@/app/docs/poolside.css';
+import '@/app/theme/poolside.css';
 import '@/app/workspace/module-workspace.css';
 import {ModuleShell} from '@/components/workspace/module-shell';
 import {ThemeProvider} from '@/components/theme-provider';

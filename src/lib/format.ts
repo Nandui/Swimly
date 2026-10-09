@@ -199,6 +199,13 @@ export function isDateOnly(value: unknown): value is string {
   return Number.isFinite(date.getTime()) && toDateOnlyString(date) === value;
 }
 
+/** `YYYY-MM-DD` moved by whole days, in UTC so it never crosses a clock change. */
+export function addDaysIso(iso: string, days: number): string {
+  const date = parseDateOnly(iso);
+  date.setUTCDate(date.getUTCDate() + days);
+  return toDateOnlyString(date);
+}
+
 /** A `@db.Date` value back to `YYYY-MM-DD`, for round-tripping through a URL
  *  or a form field. */
 export function toDateOnlyString(value: Date): string {

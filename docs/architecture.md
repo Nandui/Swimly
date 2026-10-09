@@ -1,6 +1,6 @@
 # Architecture: Core and modules, one app
 
-*Owner decisions, 28 September 2026. What Turnfin is, in five sentences, is in [how-turnfin-works.md](how-turnfin-works.md), along with the pillars every change is judged against.*
+*Owner decisions, 28 September 2026. What Turnfin is, in five sentences, is in [how-turnfin-works.md](how-turnfin-works.md), along with the pillars every change is judged against. The move to a full modular monolith, and its phases, is in [modular-monolith.md](modular-monolith.md).*
 
 Turnfin is **one Next.js app** made of **modules** on a shared **Core**, plus **Turnfin Me** (`apps/me`), a separate phone app that only calls the staff API.
 
@@ -8,7 +8,7 @@ Turnfin is **one Next.js app** made of **modules** on a shared **Core**, plus **
 | --- | --- | --- |
 | **Core** | What every module shares: sign-in, people, roles, sites (`Club`), departments and qualifications, the audit log, the module catalogue and the home page, and the shared plumbing (public APIs, email). | `src/app/(core)`, `src/lib/{staff,policy,people,clubs,devices,email,public-api,audit,directory,...}`, `src/modules/{registry,contributions}.ts` |
 | **Swim school** (Activities) | Running what the centre sells. Swim school is the first activity type: office (curriculum set-up), desk (enrolments, moves, waitlists, assessments), deck (attendance, competencies) and the parent API. | `src/app/(activities)`, `src/app/(instructor)`, the parent and operations APIs, and `src/modules/activities/{lib,components}` |
-| **Work modules** | Refunds, Docs, Training, Rota and HR. | `src/app/{refunds,docs,training,rota,hr}`, `src/lib/<module>`, `src/components/<module>` |
+| **Work modules** | Refunds, Docs, Training, Rota, HR, Purchasing, Academy and Tasks. | `src/app/<id>`, `src/lib/<id>`, `src/components/<id>` (moving to `src/modules/<id>`; see [modular-monolith.md](modular-monolith.md)) |
 
 ## Every module describes itself
 
@@ -23,15 +23,15 @@ A role holds one level for each module (`StaffRole.levels`). `src/lib/staff/leve
 ## The rules
 
 1. **Core never imports a module.** Modules import Core; Core does not import them.
-2. **The swim school depends on Core only**, never on a Work module (Docs, Refunds, Training, HR, Rota).
+2. **A module never imports another module.** The swim school and each Work module (Docs, Refunds, Training, HR, Rota, Purchasing, Academy, Tasks) depend on Core and themselves only.
 3. **Cross-module needs go through a seam**, never a direct import:
-   - **Contributions** (`src/modules/contributions.ts`): a module registers read-only summaries that Core pages show. The swim school adds each site's *programmes · swimmers · classes* line on Sites (`/clubs`). What a module keeps about a person goes to their personal file (the HR record and its export), never Admin's Staff pages: Rota adds what they are planned on, *Absences and returns to work* and changes to their activities; Training adds what they have to do. **Commitments** (who is busy when): the swim school reports each class, its time and who teaches it that day (`activities.classes`), so Rota shows the day's classes as Teaching and warns when someone is double-booked, without importing the swim school. A source may also offer `plan` (`planCommitment`): the rota plans a class's teacher on a date, and the swim school writes its own `ClassPlannedTeacher` record and audit.
+   - **Contributions** (`src/modules/contributions.ts`): a module registers read-only summaries that Core pages show, and its full records about a person for HR's subject export (`registerSubjectRecords`; Training adds its assignments). The swim school adds each site's *programmes · swimmers · classes* line on Sites (`/clubs`). What a module keeps about a person goes to their personal file (the HR record and its export), never Admin's Staff pages: Rota adds what they are planned on, *Absences and returns to work* and changes to their activities; Training adds what they have to do. **Commitments** (who is busy when): the swim school reports each class, its time and who teaches it that day (`activities.classes`), so Rota shows the day's classes as Teaching and warns when someone is double-booked, without importing the swim school. A source may also offer `plan` (`planCommitment`): the rota plans a class's teacher on a date, and the swim school writes its own `ClassPlannedTeacher` record and audit.
    - **Session hooks** (`src/modules/session-hooks.ts`): per-request work a module needs. The swim school applies due scheduled unenrolments before any read. `requireSession` loads the hook file lazily.
    - **Self-registration**: shared UI can be extended by a module without knowing it. For example, the swimmer picker declares itself with `labelsItself` from `form-dialog`.
    - **Links**: one module links to another's screens by URL, never by importing them. The Reception Portal's *Add a swimmer* task opens `/students?add=1`.
-4. **Composition roots are the only files that import every module**: `src/modules/server.ts` and `src/modules/session-hooks.ts`.
+4. **Composition roots are the only files that import every module**: `src/modules/server.ts`, `src/modules/session-hooks.ts`, and Turnfin Me's `src/lib/staff-api/records.ts` and `src/lib/staff-api/reminders.ts`, which gather a person's things from every module. Shift-change emails go out from `src/lib/staff-api/notify.ts`, which imports no module, so Rota can call it.
 5. **Screens belong to exactly one part.** `CORE_SCREENS`, `ACTIVITIES_SCREENS` and `WORK_MODULE_SCREENS` in `src/lib/staff/screens.ts` are explicit lists, and a test fails if a screen is not in exactly one of them.
-6. **Data belongs to one part.** `prisma/schema/{base,core,work,activities}.prisma` says which part owns each table. The swim school never queries Core tables or joins `User`/`Club`: it stores ids and adds names with `src/lib/directory.ts` (`withStaff`, `withSites`, `staffByIds`, `liveSiteIds`, ...). Core and Work modules never query swim-school tables.
+6. **Data belongs to one part.** Each `prisma/schema/<owner>.prisma` file owns its tables: `core` and `base` are Core's, and every other file is named after its module (`activities`, `refunds`, `training`, `rota`, `purchasing`, `academy`, `tasks`). A module queries only its own tables and Core's; Core queries no module's. The swim school also never queries Core tables or joins `User`/`Club`: it stores ids and adds names with `src/lib/directory.ts` (`withStaff`, `withSites`, `staffByIds`, `liveSiteIds`, ...). The Work modules still read Core tables directly; moving them onto Core functions is phase 4 of [modular-monolith.md](modular-monolith.md).
 
 7. **Core owns shared plumbing.** Anything more than one module needs lives in Core, and each module passes only what is its own (config, secret, routes, wording, display name):
    - **Public APIs** (`src/lib/public-api/http.ts`): the origin allowlist and CORS, JSON bodies of 16 KiB or less, no-store responses, the error envelope and Bearer token reading, for the parent, staff (Turnfin Me) and Academy booking APIs. Each API's `http.ts` configures it once.
@@ -40,7 +40,7 @@ A role holds one level for each module (`StaffRole.levels`). `src/lib/staff/leve
 
    A module never imports another module's public API or email files.
 
-`npm run lint` enforces rules 1, 2, 4, 6 and 7 with `no-restricted-imports`, `no-restricted-syntax` and `import/no-restricted-paths` (see `eslint.config.mjs`). Tests and `src/test` are exempt, because they exercise routes end to end.
+`npm run lint` enforces rules 1, 2, 4, 6 and 7 with `no-restricted-imports`, `no-restricted-syntax` and `import/no-restricted-paths` (see `eslint.config.mjs`, where `workModules` lists each module's folders and table ownership is read from the schema file names). Tests and `src/test` are exempt, because they exercise routes end to end.
 
 ## Databases
 
@@ -63,6 +63,5 @@ On 28 September 2026 the swim school briefly ran as a second Next.js app (`apps/
 
 ## Known follow-ups
 
-- Refunds, Training, HR and Rota still borrow the Docs shell pieces (`components/docs/{primitives,ui}` and the Docs stylesheets; the fin is drawn by `ModuleShell` and the sign-in `AuthFrame`). They should move to `components/workspace` so Work modules stop depending on Docs.
-- HR reads Docs' storage configuration (`lib/hr/storage-config.ts` imports `lib/docs/storage-config`); a Core storage helper would remove it.
+- The `.turnfin-docs` shell stylesheets that Docs and Refunds share are Core's, in `src/app/theme` (`docs-shell.css`, `docs-integration.css`), beside the Poolside theme. Renaming them as workspace styles belongs to phase 2 of [modular-monolith.md](modular-monolith.md).
 - `AuditLog.programmeId` is swim-school-shaped; a module-neutral `module` column is planned.

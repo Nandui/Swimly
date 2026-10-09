@@ -2,6 +2,7 @@ import {
   ArrowRightLeft, CalendarDays, CircleCheck, CircleDashed, CircleEllipsis, Flower2, House, PartyPopper, Pencil, School, SlidersHorizontal, Thermometer,
   Timer, Users, WavesHorizontal,
 } from "lucide-react";
+import { addDaysIso } from "@/lib/format";
 import type { StatusMeta } from "@/lib/status";
 
 /** The rota's rules and words that are not about the timeline: absences and returns to work, the
@@ -209,8 +210,4 @@ export function mondayOf(iso: string) {
   return date.toISOString().slice(0, 10);
 }
 
-export function addDaysIso(iso: string, days: number) {
-  const date = new Date(`${iso}T00:00:00Z`);
-  date.setUTCDate(date.getUTCDate() + days);
-  return date.toISOString().slice(0, 10);
-}
+export { addDaysIso };

@@ -169,7 +169,7 @@ production sender configuration is present.
 ## Workspace appearance
 
 Refunds has no theme of its own. The root layout puts Poolside Clear v2 on
-`body.turnfin-app` (`src/app/docs/poolside.css`), so the frame, shadcn controls, dialogs
+`body.turnfin-app` (`src/app/theme/poolside.css`), so the frame, shadcn controls, dialogs
 and select popovers all follow it. The Refunds layout wraps the frame in `.turnfin-docs`,
 which scopes only the Docs/Refunds shell rules. `src/app/refunds/refunds.css` only
 arranges the Refunds screens: the request page's two columns, the field and fact grids
