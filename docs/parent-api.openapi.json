@@ -1042,6 +1042,22 @@
               }
             ]
           },
+          "minAge": {
+            "type": [
+              "integer",
+              "null"
+            ],
+            "minimum": 0,
+            "description": "Youngest age, in whole years on the session's date, that can be booked. Null means no lower limit."
+          },
+          "maxAge": {
+            "type": [
+              "integer",
+              "null"
+            ],
+            "minimum": 0,
+            "description": "Oldest age, in whole years on the session's date, that can be booked. Null means no upper limit."
+          },
           "spacesAvailable": {
             "type": [
               "integer",
@@ -1079,6 +1095,8 @@
           "location",
           "programme",
           "type",
+          "minAge",
+          "maxAge",
           "spacesAvailable",
           "bookingClosesAt",
           "bookable",

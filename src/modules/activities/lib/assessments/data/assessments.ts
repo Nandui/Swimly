@@ -21,6 +21,8 @@ const SESSION_SELECT = {
   durationMinutes: true,
   location: true,
   capacity: true,
+  minAge: true,
+  maxAge: true,
   notes: true,
   cancelledAt: true,
   programmeId: true,

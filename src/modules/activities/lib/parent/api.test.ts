@@ -222,6 +222,20 @@ test("closed, cancelled and archived-site sessions reject bookings and do not cr
   assert.equal((await call("assessment-sessions?from=2026-99-99", "GET", undefined, "")).status, 400);
 });
 
+test("a session's age range refuses a child outside it before registering them", async () => {
+  const source = await fixture.prisma.assessmentSession.findUniqueOrThrow({ where: { id: sessionId } });
+  const session = await fixture.prisma.assessmentSession.create({ data: { programmeId: source.programmeId, clubId: source.clubId,
+    date: source.date, startMinutes: 660, capacity: 5, minAge: 10, maxAge: 12 } });
+  await fixture.prisma.parentAssessmentPublication.create({ data: { sessionId: session.id, enabled: true } });
+  const listed = await (await call(`assessment-sessions/${session.id}`, "GET", undefined, "")).json();
+  assert.deepEqual([listed.minAge, listed.maxAge], [10, 12]);
+  const initialChildren = await fixture.prisma.student.count();
+  const response = await call("assessment-bookings", "POST", { sessionId: session.id, newChild: { firstName: "Too", lastName: "Young", dateOfBirth: "2020-01-01" } }, parentToken, { "Idempotency-Key": "age-range-new-child-001" });
+  assert.equal(response.status, 409);
+  assert.equal((await response.json()).error.code, "OUTSIDE_AGE_RANGE");
+  assert.equal(await fixture.prisma.student.count(), initialChildren);
+});
+
 test("competing final-seat requests yield one booking and transaction failure rolls back new child and access", async () => {
   const source = await fixture.prisma.assessmentSession.findUniqueOrThrow({ where: { id: sessionId } });
   const session = await fixture.prisma.assessmentSession.create({ data: { programmeId: source.programmeId, clubId: source.clubId, date: source.date, startMinutes: 600, capacity: 1,

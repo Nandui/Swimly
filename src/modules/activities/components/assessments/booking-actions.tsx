@@ -14,6 +14,7 @@ import {
   markNoShow,
   recordOutcome,
 } from "@/modules/activities/lib/assessments/actions/bookings";
+import { ageRangeLabel } from "@/modules/activities/lib/assessments/age";
 import { sessionLabel } from "@/modules/activities/lib/assessments/constants";
 import type {
   BookingRow,
@@ -32,6 +33,7 @@ export function BookOntoSession({
     session.capacity === null
       ? "no limit on places"
       : `${taken} of ${session.capacity} places taken`;
+  const ages = ageRangeLabel(session);
   return (
     <FormDialog
       trigger={
@@ -41,7 +43,7 @@ export function BookOntoSession({
         </Button>
       }
       title={`Book onto the assessment on ${sessionLabel(session)}`}
-      description={`${session.programme.name} · ${places}`}
+      description={`${session.programme.name} · ${places}${ages ? ` · ${ages.toLowerCase()}` : ""}`}
       submitLabel="Book"
       successMessage="Swimmer booked"
       submit={(formData) =>
