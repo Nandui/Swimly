@@ -7,7 +7,7 @@
     "build": "tsx scripts/check-env.ts && tsx scripts/migrate-production.ts && prisma generate && next build && tsx scripts/migrate-docs.ts && tsx scripts/migrate-hr.ts",
     "start": "next start",
     "lint": "eslint",
-    "typecheck": "tsc --noEmit",
+    "typecheck": "next typegen && tsc --noEmit",
     "test": "tsx --test \"src/**/*.test.ts\"",
     "postinstall": "prisma generate",
     "db:migrate": "prisma migrate dev",
