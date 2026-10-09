@@ -1,6 +1,7 @@
 import "server-only";
 import { notFound } from "next/navigation";
-import type { Prisma } from "@/generated/prisma/client";
+import { moduleAuditTrail } from "@/lib/audit";
+import { liveSitesWithin } from "@/lib/directory";
 import { isDateOnly, parseDateOnly, today } from "@/lib/format";
 import { prisma } from "@/lib/prisma";
 import { sitesFor } from "@/lib/policy/session";
@@ -41,26 +42,24 @@ export async function taskReport(input: { from?: string; to?: string; interval?:
   const interval: ReportInterval = (REPORT_INTERVALS as readonly string[]).includes(input.interval ?? "") ? (input.interval as ReportInterval) : "day";
   const status: ReportFilter = input.status && input.status in REPORT_FILTERS ? (input.status as ReportFilter) : "all";
   const q = (input.q ?? "").trim().slice(0, 80), tag = (input.tag ?? "").trim();
-  const sites = await prisma.club.findMany({
-    where: { archivedAt: null, orgId: who.orgId ?? undefined, ...(review.kind === "all" ? {} : { id: { in: [...review.siteIds] } }) },
-    orderBy: [{ sortOrder: "asc" }, { name: "asc" }], select: { id: true, name: true },
-  });
+  const sites = await liveSitesWithin(who.orgId ?? null, review);
   const chosen = input.site ? sites.filter((s) => s.id === input.site) : sites;
   if (input.site && !chosen.length) notFound();
   const days: string[] = [];
   for (let d = from; d <= to; d = addDays(d, 1)) days.push(d);
   const ids = chosen.map((s) => s.id);
+  const siteNames = new Map(chosen.map((s) => [s.id, s.name]));
   await ensureTasks(who.orgId ?? "", ids, days);
   const [rows, snapshots, settings] = await Promise.all([
     prisma.task.findMany({
       where: { siteId: { in: ids }, date: { gte: parseDateOnly(from), lte: parseDateOnly(to) } },
-      orderBy: [{ date: "asc" }, { dueAt: "asc" }], select: { ...TASK_ROW, site: { select: { name: true } } },
+      orderBy: [{ date: "asc" }, { dueAt: "asc" }], select: TASK_ROW,
     }),
     prisma.taskScoreSnapshot.findMany({ where: { siteId: { in: ids }, date: { gte: parseDateOnly(from), lte: parseDateOnly(to) } } }),
     siteSettings(ids),
   ]);
   const now = new Date();
-  const all = rows.map((t) => ({ ...shape(t, now, dayIn(settings.get(t.siteId)!.timezone, now), null, true), siteId: t.siteId, siteName: t.site.name, exceptionList: t.exceptions }));
+  const all = rows.map((t) => ({ ...shape(t, now, dayIn(settings.get(t.siteId)!.timezone, now), null, true), siteId: t.siteId, siteName: siteNames.get(t.siteId) ?? "Removed site", exceptionList: t.exceptions }));
   const frozen = new Map(snapshots.map((s) => [`${s.siteId}:${iso(s.date)}`, s]));
   /** A site's score for one day: frozen if it has been, else worked out now. */
   const dayScore = (siteId: string, d: string) => {
@@ -98,14 +97,9 @@ export async function taskActivity(page = 1) {
   const who = await requireTasksActor();
   if (!who.review) notFound();
   const review = await sitesFor("tasks.review");
-  const where: Prisma.AuditLogWhereInput = {
-    module: "Tasks",
-    ...(review.kind === "all" ? {} : { OR: [{ clubId: { in: [...review.siteIds] } }, { clubId: null }] }),
-  };
   const skip = (Math.max(1, Math.floor(page)) - 1) * ACTIVITY_PAGE;
-  const [rows, total, sites] = await Promise.all([
-    prisma.auditLog.findMany({ where, orderBy: { createdAt: "desc" }, skip, take: ACTIVITY_PAGE, select: { id: true, actorName: true, action: true, summary: true, createdAt: true, clubId: true } }),
-    prisma.auditLog.count({ where }),
+  const [{ rows, total }, sites] = await Promise.all([
+    moduleAuditTrail("Tasks", review, { skip, take: ACTIVITY_PAGE }),
     templateSites(who),
   ]);
   const names = new Map(sites.map((s) => [s.id, s.name]));

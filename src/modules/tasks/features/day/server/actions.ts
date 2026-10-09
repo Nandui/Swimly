@@ -3,6 +3,7 @@
 import { z } from "zod";
 import { fail, ok, type ActionResult } from "@/lib/action-result";
 import { logAudit } from "@/lib/audit";
+import { siteName, staffRoleIdOf } from "@/lib/directory";
 import { isDateOnly } from "@/lib/format";
 import { prisma } from "@/lib/prisma";
 import { mayFor } from "@/lib/policy/session";
@@ -41,7 +42,7 @@ async function reviewable(id: string): Promise<Loaded> {
   return { ok: true, who, task };
 }
 
-const roleIdOf = async (userId: string) => (await prisma.user.findUnique({ where: { id: userId }, select: { staffRoleId: true } }))?.staffRoleId ?? null;
+const roleIdOf = (userId: string) => staffRoleIdOf(userId);
 
 // ---------------------------------------------------------------------------
 // Doing a task
@@ -238,7 +239,7 @@ export async function addTask(templateId: string, siteId: string, date: string):
   if (site.closedDates.includes(date)) return fail("The site is closed that day.");
   const t = await prisma.taskTemplate.findFirst({ where: { id: templateId, orgId: who.orgId ?? undefined, status: "published", kind: "adhoc" } });
   if (!t || (t.siteIds.length && !t.siteIds.includes(siteId))) return fail("That task is not available at this site.");
-  const club = await prisma.club.findUniqueOrThrow({ where: { id: siteId }, select: { name: true } });
+  const club = { name: await siteName(siteId) };
   const id = await prisma.$transaction(async (tx) => {
     const row = await makeTaskNow(tx, who, t, siteId, date, site);
     await logAudit({ actorId: who.id, actorName: who.name, action: "create", entity: "Task", entityId: row.id, clubId: siteId, summary: `Added ${t.title} at ${club.name} for ${date}` }, tx);

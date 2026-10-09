@@ -1,4 +1,5 @@
 import "server-only";
+import { liveSitesByOrganisation } from "@/lib/directory";
 import { parseDateOnly } from "@/lib/format";
 import { prisma } from "@/lib/prisma";
 import { dayIn, score } from "@/modules/tasks/shared/rules";
@@ -10,12 +11,7 @@ export async function ensureTasksEverywhere(days: readonly string[]) {
   for (const [orgId, ids] of await sitesByOrg()) made += await ensureTasks(orgId, ids, days);
   return made;
 }
-async function sitesByOrg() {
-  const sites = await prisma.club.findMany({ where: { archivedAt: null, orgId: { not: null } }, select: { id: true, orgId: true } });
-  const byOrg = new Map<string, string[]>();
-  for (const s of sites) byOrg.set(s.orgId!, [...(byOrg.get(s.orgId!) ?? []), s.id]);
-  return byOrg;
-}
+const sitesByOrg = () => liveSitesByOrganisation();
 
 /** Freeze each site's score for a finished business day (the nightly cron, for yesterday), so
  *  history does not move when a task is reopened later. A day already frozen stays. */

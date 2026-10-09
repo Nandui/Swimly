@@ -4,6 +4,7 @@ import { revalidatePath } from "next/cache";
 import { z } from "zod";
 import { fail, ok, type ActionResult } from "@/lib/action-result";
 import { logAudit } from "@/lib/audit";
+import { liveSiteById } from "@/lib/directory";
 import { isDateOnly, parseDateOnly } from "@/lib/format";
 import { prisma } from "@/lib/prisma";
 import { requireTasksActor } from "@/modules/tasks/shared/access";
@@ -34,7 +35,8 @@ export async function saveTaskSite(siteId: string, input: TaskSiteInput): Promis
   const dates = [...new Set(parsed.data.closedDates.map((d) => d.trim()).filter(Boolean))].sort();
   const bad = dates.find((d) => !isDateOnly(d));
   if (bad) return fail(`${bad} is not a date. Use dates like 2026-12-25.`);
-  const club = await prisma.club.findFirst({ where: { id: siteId, orgId: who.orgId, archivedAt: null }, select: { name: true } });
+  const live = await liveSiteById(siteId);
+  const club = live && live.orgId === who.orgId ? live : null;
   if (!club) return fail("That site no longer exists.");
   const data = { ...parsed.data, closedDates: dates.map(parseDateOnly) };
   await prisma.$transaction(async (tx) => {

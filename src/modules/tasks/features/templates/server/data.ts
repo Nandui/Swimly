@@ -1,5 +1,6 @@
 import "server-only";
 import { notFound } from "next/navigation";
+import { allRoles } from "@/lib/directory";
 import { prisma } from "@/lib/prisma";
 import { requireTasksActor } from "@/modules/tasks/shared/access";
 import { type LogMode, type TemplateKind } from "@/modules/tasks/shared/rules";
@@ -30,7 +31,7 @@ export async function taskTemplates(input: { q?: string; state?: string; tag?: s
     templates: shaped.filter((t) => (state === "all" || t.status === state) && textMatch(q, t) && (!tag || t.tags.includes(tag))),
   };
 }
-const templateRoles = () => prisma.staffRole.findMany({ orderBy: { name: "asc" }, select: { id: true, name: true } });
+const templateRoles = () => allRoles();
 
 /** One template to edit, or a new one, with the sites and roles to choose from. */
 export async function taskTemplate(id: string | null) {

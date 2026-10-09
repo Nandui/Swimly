@@ -1,5 +1,6 @@
 import "server-only";
 import { notFound } from "next/navigation";
+import { rolesByIds, staffRoleIdOf, withSite } from "@/lib/directory";
 import { isDateOnly, parseDateOnly, today } from "@/lib/format";
 import { prisma } from "@/lib/prisma";
 import { sitesFor } from "@/lib/policy/session";
@@ -9,7 +10,7 @@ import { type SiteSettings, TASK_ROW, asDefinition, asRecords, asSchedules, cove
 
 /** The person's role, for tasks aimed at roles. */
 async function roleOf(who: TasksActor) {
-  return (await prisma.user.findUnique({ where: { id: who.id }, select: { staffRoleId: true } }))?.staffRoleId ?? null;
+  return staffRoleIdOf(who.id);
 }
 
 /** Today's filters (from the prototype): what to show, and a tag. */
@@ -78,17 +79,17 @@ async function plannedOn(orgId: string, siteId: string, date: string, site: Site
 /** One task with everything on it, and what this person may do with it. A 404 outside their sites. */
 export async function taskDetail(id: string) {
   const who = await requireTasksActor();
-  const task = await prisma.task.findFirst({
+  const found = await prisma.task.findFirst({
     where: { id, orgId: who.orgId ?? undefined },
     select: {
       ...TASK_ROW, checks: true, records: true, version: true, addedByName: true, completedById: true,
-      site: { select: { name: true } },
       comments: { orderBy: { createdAt: "asc" }, select: { id: true, text: true, byName: true, createdAt: true } },
       files: { orderBy: { createdAt: "asc" }, select: { id: true, fileName: true, size: true } },
       actions: { orderBy: { createdAt: "asc" }, select: { id: true, title: true, status: true, dueOn: true, raisedByName: true, resolution: true, resolvedByName: true, followUpTaskId: true } },
     },
   });
-  if (!task) notFound();
+  if (!found) notFound();
+  const task = await withSite(found, "siteId", "site");
   const [complete, review] = await Promise.all([sitesFor("tasks.complete"), sitesFor("tasks.review")]);
   if (!covers(complete, task.siteId)) notFound();
   const reviewer = covers(review, task.siteId);
@@ -98,7 +99,7 @@ export async function taskDetail(id: string) {
   const now = new Date();
   const row = shape(task, now, dayIn(site.timezone, now), roleId, reviewer);
   const [roles, actionTemplates] = await Promise.all([
-    def.roleIds.length ? prisma.staffRole.findMany({ where: { id: { in: def.roleIds } }, select: { name: true }, orderBy: { name: "asc" } }) : [],
+    rolesByIds(def.roleIds).then((found) => [...found.values()].sort((a, b) => a.name.localeCompare(b.name))),
     followUpTemplates(who, task.siteId),
   ]);
   return {

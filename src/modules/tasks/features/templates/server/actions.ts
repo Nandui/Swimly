@@ -4,6 +4,7 @@ import { revalidatePath } from "next/cache";
 import { z } from "zod";
 import { fail, ok, type ActionResult } from "@/lib/action-result";
 import { logAudit } from "@/lib/audit";
+import { liveSitesOf, rolesByIds } from "@/lib/directory";
 import { today } from "@/lib/format";
 import { prisma } from "@/lib/prisma";
 import { requireTasksActor } from "@/modules/tasks/shared/access";
@@ -88,8 +89,8 @@ export async function saveTaskTemplate(id: string | null, version: number | null
   const problems = templateProblems(data);
   if (publish && problems.length) return fail(problems.join(" "));
   const [sites, roles] = await Promise.all([
-    prisma.club.count({ where: { id: { in: data.siteIds }, orgId: who.orgId, archivedAt: null } }),
-    prisma.staffRole.count({ where: { id: { in: data.roleIds } } }),
+    liveSitesOf(who.orgId).then((live) => live.filter((s) => data.siteIds.includes(s.id)).length),
+    rolesByIds(data.roleIds).then((found) => found.size),
   ]);
   if (sites !== new Set(data.siteIds).size) return fail("One of those sites no longer exists.");
   if (roles !== new Set(data.roleIds).size) return fail("One of those roles no longer exists.");
@@ -121,7 +122,7 @@ export async function saveTaskTemplate(id: string | null, version: number | null
     revalidatePath(`/tasks/templates/${result.id}`);
     // Today's tasks from a template published just now (each site's today).
     if (publish) {
-      const live = await prisma.club.findMany({ where: { orgId: who.orgId, archivedAt: null }, select: { id: true } });
+      const live = await liveSitesOf(who.orgId);
       const settings = await siteSettings(live.map((s) => s.id));
       await ensureTasks(who.orgId, live.map((s) => s.id), [...new Set([today(), ...[...settings.values()].map((x) => dayIn(x.timezone))])]);
       revalidatePath("/tasks");

@@ -1,6 +1,7 @@
 import { revalidatePath } from "next/cache";
 import type { Prisma } from "@/generated/prisma/client";
 import { AuthorizationError } from "@/lib/authz";
+import { withSite } from "@/lib/directory";
 import { parseDateOnly } from "@/lib/format";
 import { prisma } from "@/lib/prisma";
 import { requireCapFor } from "@/lib/policy/session";
@@ -27,10 +28,13 @@ export async function allowedAt(cap: PermissionKey, siteId: string, who: TasksAc
     throw error;
   }
 }
-export const loadTask = (id: string, orgId: string | null) => prisma.task.findFirst({
-  where: { id, orgId: orgId ?? undefined },
-  select: { id: true, siteId: true, date: true, status: true, version: true, definition: true, checks: true, records: true, completedById: true, approvedAt: true, site: { select: { name: true } } },
-});
+export async function loadTask(id: string, orgId: string | null) {
+  const task = await prisma.task.findFirst({
+    where: { id, orgId: orgId ?? undefined },
+    select: { id: true, siteId: true, date: true, status: true, version: true, definition: true, checks: true, records: true, completedById: true, approvedAt: true },
+  });
+  return task && withSite(task, "siteId", "site");
+}
 
 /** Make one task from a template at a site on a day, from its opening (or now, today) to its
  *  closing: an ad hoc task someone adds, or the follow-up task of an action. */

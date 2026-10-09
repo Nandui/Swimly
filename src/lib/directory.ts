@@ -1,4 +1,5 @@
 import type { Prisma } from "@/generated/prisma/client";
+import type { SiteFilter } from "@/lib/policy/types";
 import { ADMINISTRATOR_PERMISSIONS } from "@/lib/staff/permissions";
 
 /** Core's directory of people and sites, for modules.
@@ -211,6 +212,25 @@ export async function activeStaffAccess(ids?: readonly string[], db?: Db): Promi
 /** An organisation's live sites with their short codes, in order. */
 export async function liveSitesOf(orgId: string | null, db?: Db): Promise<Array<SiteRef & { code: string | null }>> {
   return (await client(db)).club.findMany({ where: { orgId: orgId ?? undefined, archivedAt: null }, orderBy: [{ sortOrder: "asc" }, { name: "asc" }], select: { id: true, name: true, code: true } });
+}
+
+/** An organisation's live sites that a capability reaches (a policy `SiteFilter`), in order. */
+export async function liveSitesWithin(orgId: string | null, sites: SiteFilter, db?: Db): Promise<SiteRef[]> {
+  const rows = await liveSitesOf(orgId, db);
+  return rows.filter((row) => sites.kind === "all" || sites.siteIds.has(row.id)).map(({ id, name }) => ({ id, name }));
+}
+
+/** Every organisation's live site ids, for scheduled jobs that run per organisation. */
+export async function liveSitesByOrganisation(db?: Db): Promise<Map<string, string[]>> {
+  const rows = await (await client(db)).club.findMany({ where: { archivedAt: null, orgId: { not: null } }, select: { id: true, orgId: true } });
+  const byOrg = new Map<string, string[]>();
+  for (const row of rows) byOrg.set(row.orgId!, [...(byOrg.get(row.orgId!) ?? []), row.id]);
+  return byOrg;
+}
+
+/** A site's name, archived or not; "Removed site" when it no longer exists. */
+export async function siteName(id: string, db?: Db): Promise<string> {
+  return (await sitesByIds([id], db)).get(id)?.name ?? "Removed site";
 }
 
 /* Roles, by id and name only. Modules ask for permissions, never role names;

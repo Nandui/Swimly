@@ -1,6 +1,7 @@
 import "server-only";
 import type { Prisma } from "@/generated/prisma/client";
 import { currentClubIdIfAny } from "@/lib/clubs/current";
+import { liveSitesWithin } from "@/lib/directory";
 import { parseDateOnly } from "@/lib/format";
 import { prisma } from "@/lib/prisma";
 import { sitesFor } from "@/lib/policy/session";
@@ -91,10 +92,7 @@ export const isMine = (def: Pick<TaskDefinition, "roleIds" | "restricted">, role
 export async function tasksSites() {
   const who = await requireTasksActor();
   const [complete, review] = await Promise.all([sitesFor("tasks.complete"), who.review ? sitesFor("tasks.review") : null]);
-  const sites = await prisma.club.findMany({
-    where: { archivedAt: null, orgId: who.orgId ?? undefined, ...(complete.kind === "all" ? {} : { id: { in: [...complete.siteIds] } }) },
-    orderBy: [{ sortOrder: "asc" }, { name: "asc" }], select: { id: true, name: true },
-  });
+  const sites = await liveSitesWithin(who.orgId ?? null, complete);
   const working = await currentClubIdIfAny();
   return {
     who, sites: sites.map((s) => ({ ...s, review: !!review && covers(review, s.id) })),
@@ -131,4 +129,4 @@ export function followUpTemplates(who: TasksActor, siteId: string) {
 }
 
 export const templateSites = (who: TasksActor) =>
-  prisma.club.findMany({ where: { archivedAt: null, orgId: who.orgId ?? undefined }, orderBy: [{ sortOrder: "asc" }, { name: "asc" }], select: { id: true, name: true } });
+  liveSitesWithin(who.orgId ?? null, { kind: "all" });

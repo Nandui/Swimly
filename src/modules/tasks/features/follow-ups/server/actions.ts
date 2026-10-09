@@ -3,6 +3,7 @@
 import { z } from "zod";
 import { fail, ok, type ActionResult } from "@/lib/action-result";
 import { logAudit } from "@/lib/audit";
+import { sitesByIds, withSite } from "@/lib/directory";
 import { isDateOnly, parseDateOnly } from "@/lib/format";
 import { prisma } from "@/lib/prisma";
 import { requireTasksActor } from "@/modules/tasks/shared/access";
@@ -37,7 +38,7 @@ export async function raiseTaskAction(input: { siteId: string; taskId?: string |
     from = ` from ${asDefinition(task.definition).title}`;
   }
   if (!(await allowedAt("tasks.complete", siteId, who))) return fail("Your role does not do tasks at that site.");
-  const site = await prisma.club.findUnique({ where: { id: siteId }, select: { name: true } });
+  const site = (await sitesByIds([siteId])).get(siteId);
   if (!site) return fail("That site no longer exists.");
   if (template && template.siteIds.length && !template.siteIds.includes(siteId)) return fail("That follow-up is not available at this site.");
   const settings = (await siteSettings([siteId])).get(siteId)!;
@@ -59,7 +60,8 @@ export async function setTaskActionResolved(id: string, resolved: boolean, note:
   const who = await requireTasksActor();
   const text = note.trim();
   if (resolved && (text.length < 3 || text.length > 1000)) return fail("Say what was done, so the record shows how it was put right.");
-  const action = await prisma.taskAction.findFirst({ where: { id, orgId: who.orgId ?? undefined }, select: { siteId: true, taskId: true, title: true, status: true, site: { select: { name: true } } } });
+  const found = await prisma.taskAction.findFirst({ where: { id, orgId: who.orgId ?? undefined }, select: { siteId: true, taskId: true, title: true, status: true } });
+  const action = found && await withSite(found, "siteId", "site");
   if (!action || !(await allowedAt("tasks.complete", action.siteId, who))) return fail("That action no longer exists.");
   if (!(await allowedAt("tasks.review", action.siteId, who))) return fail("Resolving actions needs Tasks: Review at this site.");
   const from = resolved ? "open" : "resolved";
