@@ -10,7 +10,7 @@ import "@/lib/rota/home";
 import "@/lib/rota/file";
 import "@/lib/rota/areas";
 import "@/lib/training/file";
-import "@/lib/purchasing/home";
+import "@/modules/purchasing/lib/home";
 import "@/lib/tasks/home";
 import "@/lib/academy/contributions";
 import "@/lib/people/home";

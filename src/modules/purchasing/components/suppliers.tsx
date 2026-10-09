@@ -9,7 +9,7 @@ import { Label } from "@/components/shadcn/label";
 import { NativeSelect, NativeSelectOption } from "@/components/shadcn/native-select";
 import { ConfirmAction } from "@/components/confirm-action";
 import { Field, FormDialog } from "@/components/form-dialog";
-import { addApprovalRule, removeApprovalRule, saveProduct, saveSupplier, setProductArchived, setSupplierArchived } from "@/lib/purchasing/actions";
+import { addApprovalRule, removeApprovalRule, saveProduct, saveSupplier, setProductArchived, setSupplierArchived } from "@/modules/purchasing/lib/actions";
 import { toast } from "@/lib/toast";
 
 const THEME = "turnfin-docs turnfin-module turnfin-purchasing";

@@ -10,8 +10,8 @@ import { NativeSelect, NativeSelectOption } from "@/components/shadcn/native-sel
 import { Textarea } from "@/components/shadcn/textarea";
 import { Table, TableBody, TableCell, TableFooter, TableHead, TableHeader, TableRow } from "@/components/shadcn/table";
 import { Notice } from "@/components/ui-kit/notice";
-import { saveOrder } from "@/lib/purchasing/actions";
-import { approverRoles, euro, rulesFor, type ApprovalRule } from "@/lib/purchasing/rules";
+import { saveOrder } from "@/modules/purchasing/lib/actions";
+import { approverRoles, euro, rulesFor, type ApprovalRule } from "@/modules/purchasing/lib/rules";
 import { toast } from "@/lib/toast";
 import { cn } from "@/lib/utils";
 

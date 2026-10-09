@@ -1,5 +1,5 @@
 import "server-only";
-import { purchasingHome } from "@/lib/purchasing/data";
+import { purchasingHome } from "@/modules/purchasing/lib/data";
 import { expandPermissions } from "@/lib/staff/permissions";
 import { registerHomeCard, type HomeItem } from "@/modules/contributions";
 

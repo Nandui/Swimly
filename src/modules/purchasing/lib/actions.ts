@@ -8,8 +8,8 @@ import { logAudit } from "@/lib/audit";
 import { isDateOnly, parseDateOnly } from "@/lib/format";
 import { prisma } from "@/lib/prisma";
 import { requireCapFor, sitesFor } from "@/lib/policy/session";
-import { requirePurchasingActor } from "@/lib/purchasing/access";
-import { EDITABLE, approverRoles, centsOf, euro, mayApprove, orderTotal, poNumber, type PoStatus } from "@/lib/purchasing/rules";
+import { requirePurchasingActor } from "@/modules/purchasing/lib/access";
+import { EDITABLE, approverRoles, centsOf, euro, mayApprove, orderTotal, poNumber, type PoStatus } from "@/modules/purchasing/lib/rules";
 
 /** Purchasing's writes (docs/purchasing.md). Suppliers, products and approval
  *  rules need `purchasing.manage`; raising an order needs `purchasing.request`

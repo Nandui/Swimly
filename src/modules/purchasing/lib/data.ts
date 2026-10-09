@@ -2,8 +2,8 @@ import "server-only";
 import { notFound } from "next/navigation";
 import { prisma } from "@/lib/prisma";
 import { sitesFor } from "@/lib/policy/session";
-import { requirePurchasingActor, type PurchasingActor } from "@/lib/purchasing/access";
-import { EDITABLE, approverRoles, mayApprove, type PoStatus } from "@/lib/purchasing/rules";
+import { requirePurchasingActor, type PurchasingActor } from "@/modules/purchasing/lib/access";
+import { EDITABLE, approverRoles, mayApprove, type PoStatus } from "@/modules/purchasing/lib/rules";
 
 /** Purchasing's reads (docs/purchasing.md). Orders are limited to the sites
  *  `purchasing.read` covers; suppliers and products belong to the organisation. */

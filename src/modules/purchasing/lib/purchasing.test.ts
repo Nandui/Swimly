@@ -49,8 +49,8 @@ before(async () => {
     "server-only": {},
     react: { cache: <T,>(fn: T) => fn },
   };
-  actions = serverModule("src/lib/purchasing/actions.ts", d);
-  data = serverModule("src/lib/purchasing/data.ts", d);
+  actions = serverModule("src/modules/purchasing/lib/actions.ts", d);
+  data = serverModule("src/modules/purchasing/lib/data.ts", d);
 });
 after(async () => { await fixture?.close(); });
 
