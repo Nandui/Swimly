@@ -113,7 +113,7 @@ const workData = (self) => notTables(Object.keys(moduleFiles).filter((id) => id 
 const modulePlumbing = [
   { owner: ["src/modules/academy/features/booking/**", "src/app/api/academy/**"], from: ["./src/modules/academy/features/booking/server"] },
   { owner: ["src/lib/staff-api/**", "src/app/api/staff/**"], from: ["./src/lib/staff-api/email.ts", "./src/lib/staff-api/http.ts"] },
-  { owner: activitiesFiles, from: ["./src/modules/activities/lib/parent/email.ts", "./src/modules/activities/lib/parent/http.ts", "./src/modules/activities/lib/parent/sign-in-email.ts"] },
+  { owner: activitiesFiles, from: ["./src/modules/activities/shared/parents/email.ts", "./src/modules/activities/shared/parents/http.ts", "./src/modules/activities/shared/parents/sign-in-email.ts"] },
 ];
 // One rule carries both: flat config replaces a rule's options rather than merging them.
 const restrictedPaths = (skip) => ["error", {

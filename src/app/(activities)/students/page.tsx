@@ -1,12 +1,9 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { Button } from "@/components/shadcn/button";
-import { AddSwimmer } from "@/modules/activities/components/students/add-swimmer";
-import { SwimmerBrowser } from "@/modules/activities/components/students/swimmer-browser";
+import { AddSwimmer, getStudentCounts, getStudents, STUDENTS_PER_PAGE, SwimmerBrowser, swimmerFilters } from "@/modules/activities/features/students";
 import { can } from "@/lib/authz";
 import { screenPage } from "@/lib/page-guards";
-import { STUDENTS_PER_PAGE, getStudentCounts, getStudents } from "@/modules/activities/lib/students/data/students";
-import { swimmerFilters } from "@/modules/activities/lib/students/directory";
 
 export const metadata: Metadata = { title: "Swimmers" };
 

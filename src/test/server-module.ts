@@ -19,7 +19,8 @@ export function serverModule<T>(file: string, doubles: Record<string, unknown>):
       if (["@/lib/prisma", "@/auth", "@/lib/authz", "@/lib/clubs/current"].includes(id)) {
         throw new Error(`Server test must supply ${id}.`);
       }
-      if (id.startsWith("@/")) {
+      // The generated Prisma client is ESM (import.meta), so tsx loads it natively.
+      if (id.startsWith("@/") && !id.startsWith("@/generated/")) {
         // A feature entry (index.ts) re-exports its React components; server
         // tests never render them, so a .tsx module loads as empty.
         const base = resolve(process.cwd(), "src", id.slice(2));

@@ -39,7 +39,7 @@ matching member number is enough). It covers every site where the person may con
 (`enrolment.manage`). The count per site comes first and saves nothing; **Confirm** reads the
 file again and records each place under the person's name with its own audit entry, exactly as
 confirming one by one. Member numbers are matched in capitals without spaces. The rule is in
-`src/modules/activities/lib/enrolment/legend-list.ts` (tested).
+`src/modules/activities/features/enrolment/server/legend-list.ts` (tested).
 
 Without signing in, an operator runs the same rule against production
 (`docs/database-operations.md`): `npm run prod -- scripts/legend-confirm.ts <list.xlsx>` (dry run,

@@ -2,7 +2,7 @@
 import { createServer } from "node:http";
 import { isolatedPrisma } from "../src/test/pglite-prisma";
 import { serverModule } from "../src/test/server-module";
-import { mostRecentOccurrence, shiftWeeks } from "../src/modules/activities/lib/attendance/dates";
+import { mostRecentOccurrence, shiftWeeks } from "../src/modules/activities/shared/attendance/dates";
 import { readEmailParts } from "../src/test/email";
 
 async function main() {
@@ -66,7 +66,7 @@ async function main() {
       ...(state === "placed" || state === "pending" ? { outcomeLevelId: level.id, assessedOn: assessmentDate } : {}) } });
     if (state === "placed") await db.parentProgressEvent.updateMany({ where: { studentId }, data: { releaseAt: new Date(Date.now() - 86400_000) } });
   }
-  const router = serverModule<typeof import("../src/modules/activities/lib/parent/router")>("src/modules/activities/lib/parent/router.ts", {
+  const router = serverModule<typeof import("../src/modules/activities/features/parents/server/router")>("src/modules/activities/features/parents/server/router.ts", {
     "@/lib/prisma": { prisma: db }, "next/cache": { revalidatePath() {} },
     "@/lib/clubs/current": { currentClubId: async () => "club_bishopstown" },
   });

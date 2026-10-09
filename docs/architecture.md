@@ -7,7 +7,7 @@ Turnfin is **one Next.js app** made of **modules** on a shared **Core**, plus **
 | Part | What it is | Where it lives |
 | --- | --- | --- |
 | **Core** | What every module shares: sign-in, people, roles, sites (`Club`), departments and qualifications, the audit log, the module catalogue and the home page, and the shared plumbing (public APIs, email). | `src/app/(core)`, `src/lib/{staff,policy,people,clubs,devices,email,public-api,audit,directory,...}`, `src/modules/{registry,contributions}.ts` |
-| **Swim school** (Activities) | Running what the centre sells. Swim school is the first activity type: office (curriculum set-up), desk (enrolments, moves, waitlists, assessments), deck (attendance, competencies) and the parent API. | `src/app/(activities)`, `src/app/(instructor)`, the parent and operations APIs, and `src/modules/activities/{lib,components}` |
+| **Swim school** (Activities) | Running what the centre sells. Swim school is the first activity type: office (curriculum set-up), desk (enrolments, moves, waitlists, assessments), deck (attendance, competencies) and the parent API. | `src/app/(activities)`, `src/app/(instructor)`, the parent and operations APIs, and `src/modules/activities` (`features/` and `shared/`) |
 | **Work modules** | Refunds, Docs, Training, Rota, HR, Purchasing, Academy and Tasks. | `src/modules/<id>`, each with `index.ts`, `module.ts`, `shared/` and `features/` (see docs/architecture/MIGRATION.md) and its routes in `src/app/<id>` (and `src/app/api/<id>`) |
 
 ## Every module describes itself
@@ -50,7 +50,7 @@ A role holds one level for each module (`StaffRole.levels`). `src/lib/staff/leve
 
 ## Activity types
 
-`src/modules/activities/types.ts` defines `ACTIVITY_TYPES`. Swim school is the only one, with the features `progression`, `assessments`, `parentApp`, `waitlists` and `cover`. To add a second type, give `Programme` an additive `activityType` column (default `"swim-school"`), register the type, and make screens ask `hasFeature` instead of assuming levels and competencies exist.
+`src/modules/activities/shared/types.ts` defines `ACTIVITY_TYPES`. Swim school is the only one, with the features `progression`, `assessments`, `parentApp`, `waitlists` and `cover`. To add a second type, give `Programme` an additive `activityType` column (default `"swim-school"`), register the type, and make screens ask `hasFeature` instead of assuming levels and competencies exist.
 
 ## Running locally
 

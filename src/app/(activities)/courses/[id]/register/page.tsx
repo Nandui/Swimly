@@ -1,6 +1,6 @@
 import { redirect } from "next/navigation";
 import { canSee } from "@/lib/authz";
-import { legacyClassHref } from "@/modules/activities/lib/attendance/navigation";
+import { legacyClassHref } from "@/modules/activities/features/attendance";
 import { pageSession } from "@/lib/page-guards";
 
 /** The attendance page is the class page now, whichever way you arrive.

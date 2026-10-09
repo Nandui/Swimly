@@ -46,7 +46,7 @@ The lists are organisation-wide, so their actions use the flat permission check.
   every place already typed at each site.
 - **Renaming an area** reaches every record that uses it through the area-rename contribution
   (`registerAreaRename` in `src/modules/contributions.ts`): Rota (`src/modules/rota/shared/areas.ts`) and
-  the swim school (`src/modules/activities/contributions.ts`) each update their own records,
+  the swim school (`src/modules/activities/module.ts`) each update their own records,
   inside Admin's transaction. Core never touches a module's tables. Archiving an area stops it
   being offered; records keep the name.
 

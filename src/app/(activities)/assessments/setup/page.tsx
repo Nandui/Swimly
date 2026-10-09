@@ -1,8 +1,7 @@
 import type { Metadata } from "next";
-import { AddSession } from "@/modules/activities/components/assessments/session-actions";
-import { SessionDirectory, sessionView } from "@/modules/activities/components/assessments/session-directory";
-import { getAssessmentProgrammeOptions, getAssessmentSessions, getAssessmentTypeOptions } from "@/modules/activities/lib/assessments/data/assessments";
-import { getInstructorOptions } from "@/modules/activities/lib/courses/data/courses";
+import {
+  AddSession, getAssessmentProgrammeOptions, getAssessmentSessions, getAssessmentTypeOptions, getInstructorOptions, SessionDirectory, sessionView,
+} from "@/modules/activities/features/assessments";
 import { today } from "@/lib/format";
 import { screenPage } from "@/lib/page-guards";
 

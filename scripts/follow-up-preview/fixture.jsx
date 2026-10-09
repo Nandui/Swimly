@@ -8,11 +8,11 @@ import '@/app/workspace/module-workspace.css';
 import {ThemeProvider} from '@/components/theme-provider';
 import {TooltipProvider} from '@/components/shadcn/tooltip';
 import {ModuleShell} from '@/components/workspace/module-shell';
-import {AwaitingEnrolment} from '@/modules/activities/components/enrolment/awaiting-enrolment';
-import {AwaitingMoves} from '@/modules/activities/components/enrolment/awaiting-moves';
-import {FollowUpHistory} from '@/modules/activities/components/enrolment/follow-up-history';
+import {AwaitingEnrolment} from '@/modules/activities/features/enrolment/components/awaiting-enrolment';
+import {AwaitingMoves} from '@/modules/activities/features/enrolment/components/awaiting-moves';
+import {FollowUpHistory} from '@/modules/activities/shared/enrolment/components/follow-up-history';
 import {Notice} from '@/components/ui-kit/notice';
-import {NAV_ITEMS,isNavItemActive} from '@/modules/activities/lib/nav';
+import {NAV_ITEMS,isNavItemActive} from '@/modules/activities/features/workspace/server/nav';
 
 const params = new URLSearchParams(location.search), theme=params.get('theme')==='dark'?'dark':'light';
 document.documentElement.dataset.theme=theme;

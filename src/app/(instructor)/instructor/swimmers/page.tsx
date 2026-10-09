@@ -6,11 +6,9 @@ import { SearchField } from "@/components/ui-kit/search-field";
 import { EmptyState } from "@/components/ui-kit/empty-state";
 import { PageHeader } from "@/components/ui-kit/page-header";
 import { Tag } from "@/components/ui-kit/tag";
-import { DAY_META, formatTime } from "@/modules/activities/lib/courses/constants";
-import { findSiteSwimmers } from "@/modules/activities/lib/instructor/swimmers";
+import { ageLabel, DAY_META, findSiteSwimmers, formatTime, MEDICAL_STATUS_META } from "@/modules/activities/features/instructor";
 import { screenPage } from "@/lib/page-guards";
 import { nameInitials, plural } from "@/lib/format";
-import { MEDICAL_STATUS_META, ageLabel } from "@/modules/activities/lib/students/constants";
 
 export const metadata: Metadata = { title: "Swimmers" };
 

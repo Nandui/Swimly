@@ -1,7 +1,7 @@
 # Migration to modular architecture
 
-**Status:** Phase 2 in progress. Module map and ADRs 0001 to 0003 approved 9 October 2026.
-**Next step:** Phase 2: move Activities (the swim school, `src/modules/activities` plus `src/app/(activities)` and `(instructor)`) into the `features/` shape. Every Work module is done.
+**Status:** Phase 2 done in draft PR #11, waiting on review. Module map and ADRs 0001 to 0003 approved 9 October 2026.
+**Next step:** Phase 3. Every module README lists its tables; the Work modules' direct reads of Core tables still have to move onto Core functions. Before Phase 4, decide where the frame (`ModuleShell`, site switcher, account menu) lives: most of the 31 remaining warnings are about it.
 
 ## Phases
 - [x] Phase 0 — Audit written to docs/architecture/audit.md (with [../modular-monolith.md](../modular-monolith.md))
@@ -13,7 +13,7 @@
   - [ ] `src/app/modules.ts` replaces `src/modules/server.ts` as modules get `module.ts` (ADR 0004)
   - [ ] `src/ui` (ADR 0003) and `src/front` folders: created when code first moves there (rule of two)
 - [x] Phase 1 — Boundary lint added (warning mode): `eslint-plugin-boundaries` encodes CLAUDE.md section 3 in `eslint.config.mjs`. 383 warnings on 9 October 2026, most of them routes importing module internals (no module has an `index.ts` yet). Proven: platform → module, ui → platform and module → other module imports are reported. The older error-level rules (no module imports another module or its tables) stay on.
-- [ ] Phase 2 — Modules moved (list each below as it's done)
+- [x] Phase 2 — Modules moved (list each below as it's done)
 - [ ] Phase 3 — Data ownership documented, cross-module table access removed
   - [x] No module queries another module's tables (lint, PR #8)
   - [ ] Work modules still query Core tables directly (about 110 places); table ownership not yet in module READMEs
@@ -32,8 +32,7 @@ In the full shape (`index.ts`, `module.ts`, `events.ts`, `README.md`, `shared/`,
 
 - rota (9 October 2026): features `plan`, `today`, `bookings`, `absences`, `me`, `person-file`, `workspace`; its person-file sections and area rename now register from `module.ts`; the staff API reads a person's days through `index.ts`
 
-Not yet in the `features/` shape:
-- activities (the swim school)
+- activities, the swim school (9 October 2026): features `students`, `courses`, `attendance`, `enrolment`, `assessments`, `curriculum`, `cancellations`, `duty`, `schedule`, `today`, `together`, `analytics`, `parents`, `instructor`, `workspace` (and `progression`, holding only an unused component). About 90 of its 280 files are in `shared/` because the domain is tightly linked; `contributions.ts` became `module.ts`; the composition roots use its `index.ts`.
 
 Known warnings left in moved modules: `ModuleShell` (`src/components/workspace`) is the app frame, not a UI-kit component, so features importing it are reported. Deciding where the frame lives (platform or ui) is a boundary question for Fernando once more modules are moved.
 
@@ -54,3 +53,4 @@ Known warnings left in moved modules: `ModuleShell` (`src/components/workspace`)
 - 2026-10-09 — Phase 2: Docs in the features shape; `src/app/docs/actions.ts` moved into the module; the staff API reads required reading through `docsReading()`.
 - 2026-10-09 — Phase 2: HR in the features shape; the staff API's own-record log moved into HR (`logOwnHrRead`).
 - 2026-10-09 — Phase 2: Rota in the features shape. Every Work module is done; Activities is next. Warnings 383 → 164.
+- 2026-10-09 — Phase 2: the swim school (Activities) in the features shape. Every module is done. Warnings 383 → 31.

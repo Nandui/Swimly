@@ -9,11 +9,11 @@ import { ThemeProvider } from '@/components/theme-provider';
 import { TooltipProvider } from '@/components/shadcn/tooltip';
 import { ToastBridge } from '@/lib/toast';
 import { Button } from '@/components/shadcn/button';
-import { ParentAccounts } from '@/modules/activities/components/parents/parent-accounts';
-import { ParentAccessRequests } from '@/modules/activities/components/parents/access-requests';
-import { AssessmentPublicationPanel } from '@/modules/activities/components/parents/assessment-publication';
-import { SwimmerProfile } from '@/modules/activities/components/students/swimmer-profile';
-import { SwimmerBrowser } from '@/modules/activities/components/students/swimmer-browser';
+import { ParentAccounts } from '@/modules/activities/features/parents/components/parent-accounts';
+import { ParentAccessRequests } from '@/modules/activities/features/parents/components/access-requests';
+import { AssessmentPublicationPanel } from '@/modules/activities/features/parents/components/assessment-publication';
+import { SwimmerProfile } from '@/modules/activities/features/students/components/swimmer-profile';
+import { SwimmerBrowser } from '@/modules/activities/features/students/components/swimmer-browser';
 import { PageHeader } from '@/components/ui-kit/page-header';
 import { swimmers, enrolments, progress, history, courses } from '../help-screenshots/data.mjs';
 

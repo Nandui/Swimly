@@ -199,11 +199,11 @@ Rota registers two sections with the personal-file seam (`src/modules/rota/featu
   `features/today` (`todayAt`, the day note, timepoints), `features/bookings`,
   `features/absences`, `features/me` (Turnfin Me), `features/person-file` and
   `features/workspace` (the frame). `module.ts` registers the home card, person file and area rename.
-- The swim school's side: `src/modules/activities/contributions.ts` (`list` and `plan`)
+- The swim school's side: `src/modules/activities/module.ts` (`list` and `plan`)
 - UI: `src/app/rota/`, which imports only the feature entries;
   Turnfin Me `apps/me/src/app/shifts/page.tsx`
 - Tests: `cover.test.ts`, `shifts.test.ts`, `day.test.ts`, `view.test.ts`, `rota.test.ts` (end to end on a throwaway database),
-  `src/modules/activities/commitments.test.ts`, `src/lib/staff-api/api.test.ts`
+  `src/modules/activities/__tests__/commitments.test.ts`, `src/lib/staff-api/api.test.ts`
 - Sandbox: `scripts/sandbox-seed.ts` seeds a planned week at Hillview (sign in as sam@ for
   Plan, maya@ for Run)
 

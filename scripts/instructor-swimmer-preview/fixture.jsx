@@ -7,10 +7,10 @@ import '@fontsource/plus-jakarta-sans/latin-700.css';
 import '@/app/theme/poolside.css';
 import { ThemeProvider } from '@/components/theme-provider';
 import { TooltipProvider } from '@/components/shadcn/tooltip';
-import { InstructorShell } from '@/modules/activities/components/instructor/instructor-shell';
-import { DeckChecklist } from '@/modules/activities/components/progression/deck-checklist';
-import { InstructorClassNavigation } from '@/modules/activities/components/instructor/class-navigation';
-import { ClassCompetencyOverview } from '@/modules/activities/components/instructor/class-competency-overview';
+import { InstructorShell } from '@/modules/activities/features/instructor/components/instructor-shell';
+import { DeckChecklist } from '@/modules/activities/shared/progression/components/deck-checklist';
+import { InstructorClassNavigation } from '@/modules/activities/features/instructor/components/class-navigation';
+import { ClassCompetencyOverview } from '@/modules/activities/features/instructor/components/class-competency-overview';
 
 const query = new URLSearchParams(location.search);
 const skills = [

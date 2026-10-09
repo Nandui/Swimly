@@ -1,13 +1,11 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { Button } from "@/components/shadcn/button";
-import { BillingBatch } from "@/modules/activities/components/duty/billing-batch";
-import { BillingList } from "@/modules/activities/components/duty/billing-list";
+import { BillingBatch, BillingList } from "@/modules/activities/features/duty";
 import { screenPage } from "@/lib/page-guards";
 import { can, canSee } from "@/lib/authz";
 import { getCurrentClub } from "@/lib/clubs/current";
-import { agreementPriceFor } from "@/modules/activities/lib/cancellations/bulk-log";
-import { billingViewOf, getBillingCancellations, getLegendPrices } from "@/modules/activities/lib/cancellations/data";
+import { agreementPriceFor, billingViewOf, getBillingCancellations, getLegendPrices } from "@/modules/activities/features/cancellations";
 import { SegmentedLinks } from "@/components/ui-kit/segmented-links";
 import { LinkPagination } from "@/components/ui-kit/link-pagination";
 import { PageHeader } from "@/components/ui-kit/page-header";

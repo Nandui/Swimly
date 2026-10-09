@@ -18,38 +18,16 @@ import { PageHeader } from "@/components/ui-kit/page-header";
 import { Lead, Num } from "@/components/ui-kit/prose";
 import { Tag } from "@/components/ui-kit/tag";
 import {
-  BookOntoSession,
-  CancelBooking,
-  MarkNoShow,
-  RecordOutcome,
-} from "@/modules/activities/components/assessments/booking-actions";
+  ageLabel, ageRangeLabel, BOOKING_STATUS_META, type BookingRow, BookOntoSession, CancelBooking, fullName, getAssessmentSession, HOLDS_A_PLACE, isPast, MarkNoShow, MEDICAL_STATUS_META, RecordOutcome, SESSION_STATUS_META, sessionDay, type SessionDetail, sessionSpan,
+} from "@/modules/activities/features/assessments";
 import { Settings2 } from "lucide-react";
 import { Avatar, AvatarFallback } from "@/components/shadcn/avatar";
 import { Button } from "@/components/shadcn/button";
 import { WrongClub } from "@/components/clubs/wrong-club";
-import { ageRangeLabel } from "@/modules/activities/lib/assessments/age";
-import {
-  SESSION_STATUS_META,
-  BOOKING_STATUS_META,
-  HOLDS_A_PLACE,
-  isPast,
-  sessionDay,
-  sessionSpan,
-} from "@/modules/activities/lib/assessments/constants";
-import {
-  getAssessmentSession,
-  type BookingRow,
-  type SessionDetail,
-} from "@/modules/activities/lib/assessments/data/assessments";
 import { can } from "@/lib/authz";
 import { getCurrentClub } from "@/lib/clubs/current";
 import { formatDate, today } from "@/lib/format";
 import { screenPage } from "@/lib/page-guards";
-import {
-  MEDICAL_STATUS_META,
-  ageLabel,
-  fullName,
-} from "@/modules/activities/lib/students/constants";
 
 export const metadata: Metadata = { title: "Assessment" };
 

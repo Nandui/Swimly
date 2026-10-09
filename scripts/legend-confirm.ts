@@ -3,7 +3,7 @@ import { readFileSync } from "node:fs";
 import readXlsxFile from "read-excel-file/universal";
 import { logAudit } from "@/lib/audit";
 import { prisma } from "@/lib/prisma";
-import { parseLegendList, placesToConfirm } from "@/modules/activities/lib/enrolment/legend-list";
+import { parseLegendList, placesToConfirm } from "@/modules/activities/features/enrolment/server/legend-list";
 
 /** Confirms Legend agreements from a list exported from Legend, at every
  *  site: the operator's version of "Upload Legend list" on the Legend

@@ -138,5 +138,5 @@ for the synthetic assessment preview on port 4191. No live records are read or c
 `node scripts/move-readiness-preview/build.mjs --serve-moves` opens a synthetic
 teaching and reception preview on port 4197. It uses the real components with
 local-only save doubles; `/awaiting-enrolment?view=moves` shows confirmed examples.
-`src/modules/activities/lib/progression/actions/move-readiness.test.ts` exercises real Prisma queries
+`src/modules/activities/features/progression/server/actions/move-readiness.test.ts` exercises real Prisma queries
 and migrations in isolated PostgreSQL, including the cross-site transfer handoff.

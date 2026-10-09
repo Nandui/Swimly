@@ -1,10 +1,10 @@
 import type { Metadata } from "next";
 import { BackLink } from "@/components/ui-kit/back-link";
 import { PageHeader } from "@/components/ui-kit/page-header";
-import { LegendPriceDialog } from "@/modules/activities/components/duty/billing-batch";
+import { LegendPriceDialog } from "@/modules/activities/features/duty";
 import { screenPage } from "@/lib/page-guards";
 import { can } from "@/lib/authz";
-import { getLegendPrices } from "@/modules/activities/lib/cancellations/data";
+import { getLegendPrices } from "@/modules/activities/features/cancellations";
 
 export const metadata: Metadata = { title: "Billing prices" };
 

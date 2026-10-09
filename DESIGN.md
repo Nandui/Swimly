@@ -730,7 +730,7 @@ Two things stay **scoping rules inside actions** rather than permissions:
 - **Whose register.** `attendance.mark` marks the classes you teach;
   `attendance.markAny` marks anybody's. Which classes are *yours* is a fact
   about the row, not about you, so it lives in `canMarkRegister` in
-  `src/modules/activities/lib/attendance/access.ts`.
+  `src/modules/activities/shared/attendance/access.ts`.
 - **Completing a level with gaps** is `progression.override`, and needs a
   reason. Placing a swimmer at a level they have not earned is *not* — see
   below.
@@ -754,7 +754,7 @@ the subject is minted into the JWT, for the same reason.
 ### Anything the size of the club is searched, not sent
 
 The swimmer picker asks the server for the twenty that match what has been
-typed (`src/modules/activities/lib/students/actions/search.ts`), debounced, and never receives the
+typed (`src/modules/activities/shared/students/actions/search.ts`), debounced, and never receives the
 roll. Two pages once shipped all 1,156 swimmers so that one could be chosen;
 `/students` once shipped 500 so that they could be scrolled. The rule that
 falls out: **a list that grows with the club goes behind a server search or a
@@ -777,7 +777,7 @@ segment) so the shell paints before the data does.
 ### The nav holds only pages that exist
 
 A sidebar advertising routes nobody has built reads as a broken app, so add the
-item in `src/modules/activities/lib/nav.ts` in the same change as the page.
+item in `src/modules/activities/features/workspace/server/nav.ts` in the same change as the page.
 
 ### Auth is credentials-first, and swappable
 
@@ -853,7 +853,7 @@ saying "Ava — Level 4" without saying which ladder is guessing. `Enrolment`
 therefore **pins** `levelId` and `programmeId` at enrolment time. They are not a
 cache of the course's level: they are the level the swimmer was *placed* at,
 which must not move when a course is re-badged. Everything else — eligibility,
-graduation, the current rung — is derived in `src/modules/activities/lib/progression/rules.ts` and
+graduation, the current rung — is derived in `src/modules/activities/shared/progression/rules.ts` and
 stored nowhere.
 
 **2. Curriculum rows are archived, never deleted** (`archivedAt`, deliberately
@@ -868,7 +868,7 @@ whole cohort. Each completion also freezes `competenciesAchieved` /
 **3. Capacity is held by a row lock, not a re-count.** An interactive
 transaction that merely counts again does not fix the race — at READ COMMITTED
 two transactions both read 11 and both insert. `withCourseSeat` in
-`src/modules/activities/lib/enrolment/seat.ts` takes `SELECT … FOR UPDATE` on the
+`src/modules/activities/shared/enrolment/seat.ts` takes `SELECT … FOR UPDATE` on the
 course row first, which also makes the "already enrolled here?" check
 race-free. That is why there is no unique constraint on
 `(studentId, courseId)` — and why repeating a level, the most ordinary thing a
@@ -997,10 +997,10 @@ src/app/account/               the person's own Account, in the Home frame (Home
 src/app/(activities)/          the Swim school desk shell and its pages
 src/app/(instructor)/          the Swim school pool-deck workspace
 src/app/sign-in/               the front door, outside the shell
-src/modules/activities/lib/    Activities domains (students, courses, enrolment, ...)
-src/modules/activities/components/ Activities feature components
-src/modules/<id>/{lib,components}/ each Work module (Docs, Refunds, Training, HR,
-                               Rota, Purchasing, Academy, Tasks)
+src/modules/activities/       the swim school: features/ (students, courses, enrolment, ...)
+                               and shared/ (what two or more features use)
+src/modules/<id>/              each Work module (Docs, Refunds, Training, HR, Rota,
+                               Purchasing, Academy, Tasks): features/ and shared/
 src/modules/registry.ts        every module's description and levels
 src/modules/contributions.ts   what modules add to Core pages, without imports
 src/components/ui-kit/         shared shadcn compositions — tag, page-header,

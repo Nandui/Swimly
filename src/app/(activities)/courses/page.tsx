@@ -1,10 +1,7 @@
 import type { Metadata } from "next";
-import { ClassBrowser } from "@/modules/activities/components/courses/class-browser";
+import { ClassBrowser, getCourses, getInstructorOptions, getLevelOptions, weekdayOfIso } from "@/modules/activities/features/courses";
 import { can } from "@/lib/authz";
-import { weekdayOfIso } from "@/modules/activities/lib/attendance/dates";
 import { getCurrentClub } from "@/lib/clubs/current";
-import { getCourses, getInstructorOptions } from "@/modules/activities/lib/courses/data/courses";
-import { getLevelOptions } from "@/modules/activities/lib/curriculum/data/curriculum";
 import { today } from "@/lib/format";
 import { screenPage } from "@/lib/page-guards";
 
