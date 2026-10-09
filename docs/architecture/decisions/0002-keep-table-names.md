@@ -1,6 +1,6 @@
 # 0002: Keep table names; ownership by schema file
 
-**Status:** Proposed (9 October 2026), awaiting Fernando's confirmation.
+**Status:** Accepted (9 October 2026, confirmed by Fernando).
 
 ## Context
 CLAUDE.md asks for module-prefixed table names. Renaming tables is not an additive change, and AGENTS.md requires schema changes to only add, because merging to `main` migrates production under live code.

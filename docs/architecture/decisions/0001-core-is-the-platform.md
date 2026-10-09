@@ -1,6 +1,6 @@
 # 0001: Core is the platform, business terms included
 
-**Status:** Proposed (9 October 2026), awaiting Fernando's confirmation.
+**Status:** Accepted (9 October 2026, confirmed by Fernando).
 
 ## Context
 CLAUDE.md says the platform carries no business terms. Turnfin's Core holds sites, departments, positions and qualifications, which every module uses and which roles and permissions depend on, and its admin screens (people, roles, sites).

@@ -1,7 +1,7 @@
 # Migration to modular architecture
 
-**Status:** Phase 1 in progress. Module map approved 9 October 2026.
-**Next step:** Fernando confirms ADRs 0001 to 0003 (proposed defaults), then Phase 2: give each module `index.ts`, `module.ts`, `README.md` and the `features/` shape, starting with Refunds.
+**Status:** Phase 2 in progress. Module map and ADRs 0001 to 0003 approved 9 October 2026.
+**Next step:** Phase 2: give each module `index.ts`, `module.ts`, `README.md` and the `features/` shape, starting with Refunds.
 
 ## Phases
 - [x] Phase 0 — Audit written to docs/architecture/audit.md (with [../modular-monolith.md](../modular-monolith.md))
@@ -26,12 +26,11 @@ Moved into `src/modules/<id>/{lib,components}` (PR #9); not yet in the `features
 - activities (the swim school) was already there
 
 ## Awaiting user decision
-- [ADR 0001](decisions/0001-core-is-the-platform.md): Core becomes the platform with sites, departments and qualifications in it.
-- [ADR 0002](decisions/0002-keep-table-names.md): no table renames; ownership by schema file.
-- [ADR 0003](decisions/0003-ui-kit-stays-in-components.md): the UI kit stays in `src/components` for now.
+- (none)
 
 ## Log
 - 2026-10-09 — PR #8: lint boundaries for every module, `work.prisma` split, cross-module leaks fixed.
 - 2026-10-09 — PR #9: each Work module moved into `src/modules/<id>`.
 - 2026-10-09 — Architecture rules added as CLAUDE.md; this tracker created.
 - 2026-10-09 — Module map approved. Phase 1: event bus, boundary lint in warning mode, docs/architecture (README, audit, events, ADRs 0001 to 0004).
+- 2026-10-09 — Fernando confirmed ADRs 0001 to 0003 (Core is the platform, table names kept, UI kit stays in `src/components`).
