@@ -27,7 +27,7 @@ A rule is a role and a limit (none means any amount), for one supplier or for ev
 supplier (`PurchaseApprovalRule`). A supplier's own rules replace the general ones. An
 order can be approved by anyone whose role has a rule for its supplier with a limit at or
 above its total, who sees its site (`purchasing.read` there), and who did not raise it
-(`mayApprove`, `approverRoles` in `src/modules/purchasing/lib/rules.ts`). A superadmin may approve
+(`mayApprove`, `approverRoles` in `src/modules/purchasing/shared/rules.ts`). A superadmin may approve
 any amount, never their own. Approvers need at least Purchasing: View to open the module.
 
 ## Numbers
@@ -54,8 +54,8 @@ unit and price as ordered, so changing a price never changes past orders.
 ## Files
 
 - Schema: `prisma/schema/purchasing.prisma`, `prisma/migrations/20261018120000_purchasing`
-- `src/modules/purchasing/lib/`: `rules.ts` (pure), `access.ts`, `data.ts`, `actions.ts`, `home.ts`
-- UI: `src/app/purchasing/`, `src/modules/purchasing/components/`
+- `src/modules/purchasing/`: `shared/` (`rules.ts`, pure; `access.ts`; `forms.ts`), `features/orders` and `features/suppliers` (each with `server/data.ts` and `server/actions.ts`; the home card is `features/orders/server/home.ts`, registered in `module.ts`), `features/workspace` (the frame). See its README.md
+- UI: `src/app/purchasing/` and each feature's `components/`
 - Tests: `rules.test.ts`, `purchasing.test.ts` (end to end on an isolated database)
 
 ## Not built yet

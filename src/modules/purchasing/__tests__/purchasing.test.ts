@@ -8,8 +8,8 @@ import { expandPermissions, type PermissionKey } from "@/lib/staff/permissions";
  *  products, approval by role and amount, numbers per site in sequence, and
  *  nobody approving their own order. Invented people and suppliers. */
 let fixture: Awaited<ReturnType<typeof isolatedPrisma>>;
-let actions: typeof import("./actions");
-let data: typeof import("./data");
+let actions: typeof import("../features/orders/server/actions") & typeof import("../features/suppliers/server/actions");
+let data: typeof import("../features/orders/server/data");
 const ORG = "org_leisureworld";
 type GrantRow = { roleName: string; permissions: string[]; screens: string[]; scopeKind: string; scopeId: string };
 const state = { id: "mia", permissions: [] as string[], grants: [] as GrantRow[] };
@@ -49,8 +49,8 @@ before(async () => {
     "server-only": {},
     react: { cache: <T,>(fn: T) => fn },
   };
-  actions = serverModule("src/modules/purchasing/lib/actions.ts", d);
-  data = serverModule("src/modules/purchasing/lib/data.ts", d);
+  actions = { ...serverModule<object>("src/modules/purchasing/features/suppliers/server/actions.ts", d), ...serverModule<object>("src/modules/purchasing/features/orders/server/actions.ts", d) } as typeof actions;
+  data = serverModule("src/modules/purchasing/features/orders/server/data.ts", d);
 });
 after(async () => { await fixture?.close(); });
 

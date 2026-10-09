@@ -7,7 +7,7 @@ import { Button } from "@/components/shadcn/button";
 import { Textarea } from "@/components/shadcn/textarea";
 import { ConfirmAction } from "@/components/confirm-action";
 import { Field, FormDialog } from "@/components/form-dialog";
-import { cancelOrder, decideOrder } from "@/modules/purchasing/lib/actions";
+import { cancelOrder, decideOrder } from "@/modules/purchasing/features/orders/server/actions";
 
 const THEME = "turnfin-docs turnfin-module turnfin-purchasing";
 
