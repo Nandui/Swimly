@@ -37,5 +37,6 @@ Purchasing also reads Core's `User`, `Club` and `StaffRole` directly (sites, the
 
 ## Depends on
 - Platform: auth and the policy engine (`src/lib/policy`), audit, permissions, the database client, home cards (`src/modules/contributions`).
+- Core reads (never Core tables; enforced by the boundary lint): sites and roles through `src/lib/directory.ts` (`withSiteStatus`, `liveSitesOf`, `allRoles`, `rolesByIds`, `withRoles`, `staffRoleIdOf`).
 - The shared workspace frame `ModuleShell` (`src/components/workspace`).
 - Other modules: none.

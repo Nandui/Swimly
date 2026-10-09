@@ -1,7 +1,7 @@
 # Migration to modular architecture
 
-**Status:** Phase 2 done in draft PR #11, waiting on review. Module map and ADRs 0001 to 0003 approved 9 October 2026.
-**Next step:** Phase 3. Every module README lists its tables; the Work modules' direct reads of Core tables still have to move onto Core functions. Before Phase 4, decide where the frame (`ModuleShell`, site switcher, account menu) lives: most of the 31 remaining warnings are about it.
+**Status:** Phases 2 and 3 done in draft PR #11, waiting on review. Module map and ADRs 0001 to 0003 approved 9 October 2026.
+**Next step:** Phase 4. First decide where the frame (`ModuleShell`, site switcher, account menu) lives: most of the 31 remaining boundary warnings are about it. Then switch the boundary rules to error.
 
 ## Phases
 - [x] Phase 0 — Audit written to docs/architecture/audit.md (with [../modular-monolith.md](../modular-monolith.md))
@@ -14,9 +14,11 @@
   - [ ] `src/ui` (ADR 0003) and `src/front` folders: created when code first moves there (rule of two)
 - [x] Phase 1 — Boundary lint added (warning mode): `eslint-plugin-boundaries` encodes CLAUDE.md section 3 in `eslint.config.mjs`. 383 warnings on 9 October 2026, most of them routes importing module internals (no module has an `index.ts` yet). Proven: platform → module, ui → platform and module → other module imports are reported. The older error-level rules (no module imports another module or its tables) stay on.
 - [x] Phase 2 — Modules moved (list each below as it's done)
-- [ ] Phase 3 — Data ownership documented, cross-module table access removed
+- [x] Phase 3 — Data ownership documented, cross-module table access removed
   - [x] No module queries another module's tables (lint, PR #8)
-  - [ ] Work modules still query Core tables directly (about 110 places); table ownership not yet in module READMEs
+  - [x] Every module reads Core only through Core's functions (`src/lib/directory.ts`, `src/lib/qualifications.ts`, `src/lib/setup/activity-types.ts`, `src/lib/people/records.ts`, `src/lib/audit.ts`, the policy engine); the boundary lint forbids Core table queries and joins in every module, proven with a deliberate violation
+  - [x] Each module README lists the tables it owns and the Core reads it uses
+  - No tables were renamed or altered and no migrations were run.
 - [ ] Phase 4 — Boundary lint switched to error and proven
 - [ ] Phase 4 — Docs finalised
 
@@ -37,7 +39,8 @@ In the full shape (`index.ts`, `module.ts`, `events.ts`, `README.md`, `shared/`,
 Known warnings left in moved modules: `ModuleShell` (`src/components/workspace`) is the app frame, not a UI-kit component, so features importing it are reported. Deciding where the frame lives (platform or ui) is a boundary question for Fernando once more modules are moved.
 
 ## Awaiting user decision
-- (none)
+- Where the frame lives (`ModuleShell`, site switcher, account menu): ui or platform. Blocks Phase 4.
+- Whether to delete `src/modules/activities/features/progression/components/move-up.tsx`, which nothing imports.
 
 ## Log
 - 2026-10-09 — PR #8: lint boundaries for every module, `work.prisma` split, cross-module leaks fixed.
@@ -54,3 +57,4 @@ Known warnings left in moved modules: `ModuleShell` (`src/components/workspace`)
 - 2026-10-09 — Phase 2: HR in the features shape; the staff API's own-record log moved into HR (`logOwnHrRead`).
 - 2026-10-09 — Phase 2: Rota in the features shape. Every Work module is done; Activities is next. Warnings 383 → 164.
 - 2026-10-09 — Phase 2: the swim school (Activities) in the features shape. Every module is done. Warnings 383 → 31.
+- 2026-10-09 — Phase 3: Docs, Refunds, Purchasing, Academy, Tasks, HR, Training and Rota read Core only through its functions. New Core reads: `src/lib/qualifications.ts`, `src/lib/setup/activity-types.ts`, `src/lib/people/records.ts`, `moduleAuditTrail`, and more of `src/lib/directory.ts`. The boundary lint now forbids Core table queries and joins in every module.

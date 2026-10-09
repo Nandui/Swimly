@@ -105,10 +105,11 @@ const activitiesData = [
   },
 ];
 const coreData = notTables(Object.keys(moduleFiles), "Core never queries a module's tables. Register a contribution in src/modules/contributions.ts instead.");
-// Work modules that read Core only through its functions (src/lib/directory.ts
-// and the policy engine), never its tables: Phase 3 of
-// docs/architecture/MIGRATION.md. Each module joins once its direct reads are
-// gone, with the names of its relations to Core tables, so joins are caught too.
+// Every Work module reads Core only through its functions, never its tables
+// (Phase 3 of docs/architecture/MIGRATION.md): src/lib/directory.ts,
+// src/lib/qualifications.ts, src/lib/setup/activity-types.ts,
+// src/lib/people/records.ts, src/lib/audit.ts and the policy engine. Each entry
+// names the module's relations to Core tables, so joins are caught too.
 const coreThroughFunctions = {
   docs: [],
   refunds: [],
@@ -121,12 +122,12 @@ const coreThroughFunctions = {
 };
 const coreJoins = (relations) => relations.length ? [{
   selector: `Property[key.name=/^(include|select|where|orderBy)$/] Property[key.name=/^(${relations.join("|")})$/][value.type=/^(ObjectExpression|Literal)$/]`,
-  message: "Do not join Core tables from a module's query. Keep the id and ask src/lib/directory.ts for names.",
+  message: "Do not join Core tables from a module's query. Keep the id and ask Core's functions (src/lib/directory.ts and its neighbours) for names.",
 }] : [];
 const workData = (self) => [
   ...notTables(Object.keys(moduleFiles).filter((id) => id !== self), "A module queries only its own tables and Core's. Ask the owning module through a seam (src/modules/contributions.ts)."),
   ...(coreThroughFunctions[self] ? [
-    ...notTables(["core"], "This module reads Core through its functions (src/lib/directory.ts, src/lib/qualifications.ts, src/lib/policy), never Core tables."),
+    ...notTables(["core"], "This module reads Core through its functions (src/lib/directory.ts, src/lib/qualifications.ts, src/lib/setup/activity-types.ts, src/lib/people/records.ts, src/lib/policy), never Core tables."),
     ...coreJoins(coreThroughFunctions[self]),
   ] : []),
 ];

@@ -26,9 +26,17 @@ Turnfin is a modular monolith: one Next.js app and one main database, in layers.
 | training | Assigns courses and records completions. Features: `courses`, `assignments`, `sign-off`, `certificates`, `expiring`, `me`, `person-file`, `workspace` ([README](../../src/modules/training/README.md)). | `training.prisma` | personal file, subject records, Turnfin Me digest |
 | docs | Publishes documents and required reading. Features: `home`, `library`, `reader`, `editor`, `history`, `work`, `reports`, `admin`, `files`, `import`, `me`, `workspace` ([README](../../src/modules/docs/README.md)). | own database (`DOCS_DATABASE_URL`) | home cards, Turnfin Me digest |
 | hr | Keeps staff files, notes and reviews. Features: `team`, `person`, `reviews`, `activity`, `export`, `details-requests`, `me`, `workspace` ([README](../../src/modules/hr/README.md)). | own database (`HR_DATABASE_URL`) | reads the personal file and subject records |
-| rota | Plans who works when. | `rota.prisma` | reads commitments; shift-change emails; personal file |
+| rota | Plans who works when. Features: `plan`, `today`, `bookings`, `absences`, `me`, `person-file`, `workspace` ([README](../../src/modules/rota/README.md)). | `rota.prisma` | reads commitments; shift-change emails; personal file |
 
 Platform owns `core.prisma` and `base.prisma`: people, roles, sites, departments, qualifications, devices, the audit log.
+
+Modules read those tables only through Core's functions, never with their own queries or relation joins (Phase 3; the boundary lint enforces it for every module):
+- `src/lib/directory.ts`: people, sites, roles, departments and positions;
+- `src/lib/qualifications.ts`: qualification types, what people hold, uploaded certificates, and recording or withdrawing a qualification;
+- `src/lib/setup/activity-types.ts`: the activity list the rota plans;
+- `src/lib/people/records.ts`: staff details, for HR;
+- `src/lib/audit.ts`: writing the audit log, and a module's own audit trail;
+- `src/lib/policy`: who may do what, and over whom.
 
 ```mermaid
 flowchart LR

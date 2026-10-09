@@ -40,5 +40,6 @@ The Academy also reads Core's `User`, `Club` and `QualificationType` directly (s
 
 ## Depends on
 - Platform: the policy engine, audit, email (`src/lib/email`), the public API kit (`src/lib/public-api`), areas (`src/lib/setup`), the database client, commitments and home cards (`src/modules/contributions`).
+- Core reads (never Core tables; enforced by the boundary lint): sites and staff through `src/lib/directory.ts` (`liveSiteById`, `liveSitesOf`, `withSites`, `withStaff`, `staffContact`, `activeStaffAtSite`); qualification types and the qualifications a pass records through `src/lib/qualifications.ts`.
 - The shared workspace frame `ModuleShell` and Core's `AreaSelect`.
 - Other modules: none.
