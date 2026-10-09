@@ -1,6 +1,9 @@
 import "server-only";
+import { sitesByIds, staffAgesByIds, staffStatus, withSites } from "@/lib/directory";
 import { parseDateOnly, today } from "@/lib/format";
 import { prisma } from "@/lib/prisma";
+import { qualificationsHeldBy, qualificationTypesByIds } from "@/lib/qualifications";
+import { activityTypesByIds, classesActivity } from "@/lib/setup/activity-types";
 import { addDaysIso, mondayOf, youngBand } from "@/modules/rota/shared/constants";
 import { qualification } from "@/modules/rota/shared/fit";
 import { dayShift, type WorkItem } from "@/modules/rota/shared/shifts";
@@ -11,24 +14,38 @@ import { commitmentsFor } from "@/modules/server";
  *  the shift: the one planned for them, or the one that comes from what they are on, with the
  *  breaks the manager placed (8 October 2026). Only weeks their department has shared are shown. A day is
  *  marked changed when something of theirs was added or moved after the week was shared. */
+/** Adds each assignment's site, activity and the qualification it needs, by name, from Core. */
+async function withActivities<T extends { need: { siteId: string; typeId: string } }>(rows: T[]) {
+  const [sites, types] = await Promise.all([sitesByIds(rows.map((r) => r.need.siteId)), activityTypesByIds(rows.map((r) => r.need.typeId))]);
+  const required = await qualificationTypesByIds([...types.values()].map((t) => t.requiredTypeId));
+  return rows.map((row) => {
+    const type = types.get(row.need.typeId);
+    return { ...row, need: { ...row.need,
+      site: { name: sites.get(row.need.siteId)?.name ?? "Removed site" },
+      type: { name: type?.name ?? "Removed activity", icon: type?.icon ?? "activity", departmentId: type?.departmentId ?? "", requiredTypeId: type?.requiredTypeId ?? null,
+        requiredType: type?.requiredTypeId && required.has(type.requiredTypeId) ? { name: required.get(type.requiredTypeId)!.name } : null } } };
+  });
+}
+
 export async function myDays(userId: string, days = 28) {
   const from = today(), to = addDaysIso(from, days - 1);
   const range = { gte: parseDateOnly(from), lte: parseDateOnly(to) };
-  const me = await prisma.user.findUnique({ where: { id: userId }, select: { orgId: true, dateOfBirth: true } });
-  if (!me?.orgId) return [];
+  const [status, [age]] = await Promise.all([staffStatus(userId), staffAgesByIds([userId])]);
+  if (!status?.orgId) return [];
+  const me = { orgId: status.orgId, dateOfBirth: age?.dateOfBirth ?? null };
   const [assignments, classes, held, teaching, planned, placed] = await Promise.all([
     prisma.rotaAssignment.findMany({
       where: { userId, need: { date: range } },
-      select: { startMinutes: true, endMinutes: true, createdAt: true, updatedAt: true,
-        need: { select: { date: true, place: true, siteId: true, site: { select: { name: true } }, type: { select: { name: true, icon: true, departmentId: true, requiredTypeId: true, requiredType: { select: { name: true } } } } } } },
-    }),
+      select: { startMinutes: true, endMinutes: true, createdAt: true, updatedAt: true, need: { select: { date: true, place: true, siteId: true, typeId: true } } },
+    }).then(withActivities),
     commitmentsFor({ userIds: [userId], from, to }).then((all) => all.filter((c) => c.source === "activities.classes")),
-    prisma.qualification.findMany({ where: { userId }, select: { userId: true, typeId: true, issuedOn: true, expiresOn: true, revokedAt: true } }),
-    prisma.activityType.findFirst({ where: { orgId: me.orgId, fromClasses: true, archivedAt: null }, select: { name: true, icon: true, departmentId: true } }),
-    prisma.rotaPlanShift.findMany({ where: { userId, date: range }, select: { date: true, siteId: true, departmentId: true, startMinutes: true, endMinutes: true, createdAt: true, updatedAt: true, site: { select: { name: true } } } }),
+    qualificationsHeldBy([userId]),
+    classesActivity(me.orgId),
+    prisma.rotaPlanShift.findMany({ where: { userId, date: range }, select: { date: true, siteId: true, departmentId: true, startMinutes: true, endMinutes: true, createdAt: true, updatedAt: true } })
+      .then((rows) => withSites(rows, "siteId", "site")),
     prisma.rotaBreak.findMany({ where: { userId, date: range }, select: { date: true, siteId: true, startMinutes: true, minutes: true, paid: true } }),
   ]);
-  const sites = await prisma.club.findMany({ where: { id: { in: [...new Set(classes.map((c) => c.siteId))] } }, select: { id: true, name: true } });
+  const sites = [...(await sitesByIds(classes.map((c) => c.siteId))).values()];
   const shares = await prisma.rotaWeekShare.findMany({
     where: { monday: { gte: parseDateOnly(mondayOf(from)), lte: parseDateOnly(to) }, siteId: { in: [...new Set([...assignments.map((a) => a.need.siteId), ...classes.map((c) => c.siteId), ...planned.map((p) => p.siteId)])] } },
     select: { siteId: true, departmentId: true, monday: true, sharedAt: true },

@@ -252,6 +252,11 @@ export async function withStaffCards<K extends string, A extends string, T exten
   return rows.map((row) => ({ ...row, [as]: people.get(row[key]) ?? { id: row[key], name: "Former staff", jobTitle: null } }) as T & { [P in A]: StaffCard });
 }
 
+/** Active staff in this organisation (only these people, when given), by name, with job titles. */
+export async function activeStaffCards(orgId: string | null, ids?: readonly string[] | null, db?: Db): Promise<StaffCard[]> {
+  return (await client(db)).user.findMany({ where: { orgId: orgId ?? undefined, isActive: true, ...(ids ? { id: { in: [...ids] } } : {}) }, orderBy: { name: "asc" }, select: { id: true, name: true, jobTitle: true } });
+}
+
 /** Of these people, the active ones in this organisation, by id and name. */
 export async function activeStaffAmong(orgId: string | null, ids: readonly string[], db?: Db): Promise<StaffRef[]> {
   return (await client(db)).user.findMany({ where: { id: { in: [...ids] }, orgId: orgId ?? undefined, isActive: true }, select: { id: true, name: true } });
@@ -284,6 +289,71 @@ export async function activeStaffWithRoles(orgId: string | null, people: Subject
 export async function livePositionsOf(orgId: string | null): Promise<SiteRef[]> {
   const { prisma } = await import("@/lib/prisma");
   return prisma.position.findMany({ where: { orgId: orgId ?? undefined, archivedAt: null }, orderBy: [{ sortOrder: "asc" }, { name: "asc" }], select: { id: true, name: true } });
+}
+
+/* Departments. */
+
+type DepartmentDb = Pick<Prisma.TransactionClient, "department" | "userDepartment">;
+async function departmentClient(db?: DepartmentDb): Promise<DepartmentDb> {
+  return db ?? (await import("@/lib/prisma")).prisma;
+}
+
+/** An organisation's live departments, in order. */
+export async function liveDepartmentsOf(orgId: string | null, db?: DepartmentDb): Promise<SiteRef[]> {
+  return (await departmentClient(db)).department.findMany({ where: { orgId: orgId ?? undefined, archivedAt: null }, orderBy: [{ sortOrder: "asc" }, { name: "asc" }], select: { id: true, name: true } });
+}
+
+/** The live departments a site uses: its own and the organisation-wide ones, in order. */
+export async function departmentsForSite(orgId: string | null, siteId: string, db?: DepartmentDb): Promise<SiteRef[]> {
+  return (await departmentClient(db)).department.findMany({
+    where: { orgId: orgId ?? undefined, archivedAt: null, OR: [{ clubId: null }, { clubId: siteId }] },
+    orderBy: [{ sortOrder: "asc" }, { name: "asc" }], select: { id: true, name: true },
+  });
+}
+
+/** A department in this organisation (live only, unless `liveOnly` is false); null when there is none. */
+export async function departmentById(id: string, orgId: string, opts: { liveOnly?: boolean } = {}, db?: DepartmentDb): Promise<SiteRef | null> {
+  return (await departmentClient(db)).department.findFirst({ where: { id, orgId, ...(opts.liveOnly === false ? {} : { archivedAt: null }) }, select: { id: true, name: true } });
+}
+
+/** The departments a person belongs to, their main one first. */
+export async function departmentIdsOf(userId: string, db?: DepartmentDb): Promise<string[]> {
+  const rows = await (await departmentClient(db)).userDepartment.findMany({ where: { userId }, orderBy: { isPrimary: "desc" }, select: { departmentId: true } });
+  return rows.map((row) => row.departmentId);
+}
+
+/* Staff for rules about age (young workers). Their dates of birth are personal: the caller
+ * uses them for those rules only and never shows them. */
+
+export type StaffAge = StaffRef & { dateOfBirth: Date | null };
+
+export async function staffAgesByIds(ids: readonly string[], db?: Db): Promise<StaffAge[]> {
+  if (ids.length === 0) return [];
+  return (await client(db)).user.findMany({ where: { id: { in: [...new Set(ids)] } }, select: { id: true, name: true, dateOfBirth: true } });
+}
+
+/** Active staff in this organisation who work at the site (or at every site), by name. */
+export async function activeStaffAgesAtSite(orgId: string | null, siteId: string, db?: Db): Promise<StaffAge[]> {
+  return (await client(db)).user.findMany({
+    where: { orgId: orgId ?? undefined, isActive: true, OR: [{ siteIds: { has: siteId } }, { siteIds: { isEmpty: true } }] },
+    orderBy: { name: "asc" }, select: { id: true, name: true, dateOfBirth: true },
+  });
+}
+
+/** Everyone, active or not, who works at the site or at every site. */
+export async function staffIdsAtSite(siteId: string, db?: Db): Promise<string[]> {
+  const rows = await (await client(db)).user.findMany({ where: { OR: [{ siteIds: { has: siteId } }, { siteIds: { isEmpty: true } }] }, select: { id: true } });
+  return rows.map((row) => row.id);
+}
+
+/** A person's organisation and whether they are active, with their name; null when there is no such account. */
+export async function staffStatus(id: string, db?: Db): Promise<(StaffRef & { orgId: string | null; isActive: boolean }) | null> {
+  return (await client(db)).user.findUnique({ where: { id }, select: { id: true, name: true, orgId: true, isActive: true } });
+}
+
+/** A site's organisation, archived or not; null when there is no such site. */
+export async function siteOrganisation(id: string, db?: Db): Promise<string | null> {
+  return (await (await client(db)).club.findUnique({ where: { id }, select: { orgId: true } }))?.orgId ?? null;
 }
 
 /* Roles, by id and name only. Modules ask for permissions, never role names;

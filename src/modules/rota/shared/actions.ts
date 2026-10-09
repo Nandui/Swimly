@@ -3,9 +3,11 @@
 import { z } from "zod";
 import { fail, ok, type ActionResult } from "@/lib/action-result";
 import { logAudit } from "@/lib/audit";
+import { activeStaffIds, departmentById, departmentIdsOf, liveSiteById, staffContact, withOneStaff, withStaff } from "@/lib/directory";
 import { isDateOnly, parseDateOnly, today } from "@/lib/format";
 import { prisma } from "@/lib/prisma";
 import { currentActor, mayFor } from "@/lib/policy/session";
+import { activityTypeById, activityTypeIdsIn, classesActivity } from "@/lib/setup/activity-types";
 import { addDaysIso, clock, mondayOf, parseClock } from "@/modules/rota/shared/constants";
 import { placeProblem } from "@/modules/rota/shared/cover";
 import { areaProblem } from "@/lib/setup/data";
@@ -15,6 +17,18 @@ import { planCommitment } from "@/modules/server";
 import { type Allowed, CLASSES, NEEDS_REASON, allowedFor, changeSchema, iso, logLive, refresh, shared } from "@/modules/rota/shared/writes";
 
 export type ChangeInput = z.input<typeof changeSchema>;
+
+/** Adds an activity's name and department, from Core's activity list. */
+async function withType<T extends { typeId: string }>(row: T | null) {
+  if (!row) return null;
+  const type = await activityTypeById(row.typeId);
+  return { ...row, type: { name: type?.name ?? "Removed activity", departmentId: type?.departmentId ?? "" } };
+}
+
+/** Adds each person's name, from Core. */
+async function withNames<T extends { userId: string }>(rows: T[]) {
+  return (await withStaff(rows, "userId", "user")).map((row) => ({ ...row, user: { name: row.user?.name ?? "Former staff" } }));
+}
 
 /* ---------- Activities on a day ---------- */
 
@@ -40,13 +54,14 @@ export async function saveNeed(id: string | null, input: NeedInput, changeInput:
   const start = parseClock(data.start), end = parseClock(data.end);
   if (start === null || end === null) return fail("Use times like 07:00.");
   if (end <= start) return fail("It has to end after it starts, on the same day.");
-  const type = await prisma.activityType.findFirst({ where: { id: data.typeId, archivedAt: null, fromClasses: false }, select: { id: true, name: true, orgId: true, departmentId: true } });
+  const found = await activityTypeById(data.typeId);
+  const type = found && !found.archivedAt && !found.fromClasses ? found : null;
   if (!type) return fail("That activity is no longer on the list.");
   const at = await allowedFor(data.siteId, data.date, type.departmentId);
   if (!at.ok) return fail(at.error);
   if (type.orgId !== at.site.orgId) return fail("That activity is no longer on the list.");
   const label = `${type.name}${data.place ? `, ${data.place}` : ""}, ${data.date} ${clock(start)}–${clock(end)}`;
-  const existing = id ? await prisma.rotaNeed.findFirst({ where: { id, siteId: data.siteId }, select: { date: true, typeId: true, place: true, type: { select: { departmentId: true } }, assignments: { select: { place: true, startMinutes: true, endMinutes: true } } } }) : null;
+  const existing = id ? await prisma.rotaNeed.findFirst({ where: { id, siteId: data.siteId }, select: { date: true, typeId: true, place: true, assignments: { select: { place: true, startMinutes: true, endMinutes: true } } } }).then(withType) : null;
   if (id && !existing) return fail("That activity is no longer on the plan.");
   // Where it happens is one of the site's areas (Admin, Areas).
   const where = await areaProblem(data.siteId, data.place, existing?.place);
@@ -79,8 +94,8 @@ export async function saveNeed(id: string | null, input: NeedInput, changeInput:
 /** Take an activity off a day, with everyone on it. */
 export async function removeNeed(id: string, changeInput: ChangeInput = {}): Promise<ActionResult> {
   const change = changeSchema.parse(changeInput);
-  const need = await prisma.rotaNeed.findFirst({ where: { id }, select: { siteId: true, date: true, place: true, startMinutes: true, endMinutes: true,
-    type: { select: { name: true, departmentId: true } }, assignments: { select: { userId: true, user: { select: { name: true } } } } } });
+  const need = await prisma.rotaNeed.findFirst({ where: { id }, select: { siteId: true, date: true, place: true, startMinutes: true, endMinutes: true, typeId: true,
+    assignments: { select: { userId: true } } } }).then(withType).then(async (n) => n && { ...n, assignments: await withNames(n.assignments) });
   if (!need) return fail("That activity is no longer on the plan.");
   const date = iso(need.date);
   const at = await allowedFor(need.siteId, date, need.type.departmentId);
@@ -122,8 +137,8 @@ export async function assign(id: string | null, input: AssignInput, changeInput:
   const data = parsed.data;
   const start = parseClock(data.start), end = parseClock(data.end);
   if (start === null || end === null) return fail("Use times like 07:00.");
-  const need = await prisma.rotaNeed.findFirst({ where: { id: data.needId }, select: { id: true, siteId: true, date: true, place: true, startMinutes: true, endMinutes: true, places: true,
-    type: { select: { name: true, departmentId: true } }, assignments: { select: { id: true, needId: true, place: true, userId: true, startMinutes: true, endMinutes: true } } } });
+  const need = await prisma.rotaNeed.findFirst({ where: { id: data.needId }, select: { id: true, siteId: true, date: true, place: true, startMinutes: true, endMinutes: true, places: true, typeId: true,
+    assignments: { select: { id: true, needId: true, place: true, userId: true, startMinutes: true, endMinutes: true } } } }).then(withType);
   if (!need) return fail("That activity is no longer on the plan.");
   const date = iso(need.date);
   const at = await allowedFor(need.siteId, date, need.type.departmentId);
@@ -132,7 +147,7 @@ export async function assign(id: string | null, input: AssignInput, changeInput:
   if (id && !before) return fail("That person is no longer on this activity.");
   const problem = placeProblem(need, need.assignments, { id: id ?? undefined, needId: need.id, place: data.place, userId: data.userId, startMinutes: start, endMinutes: end });
   if (problem) return fail(problem);
-  const person = await prisma.user.findFirst({ where: { id: data.userId, orgId: at.site.orgId, isActive: true }, select: { id: true, name: true } });
+  const person = await staffContact(data.userId, at.site.orgId, { activeOnly: true });
   if (!person) return fail("That person is no longer active.");
   if (at.live && !change.reason) return fail(NEEDS_REASON);
   const what = `${need.type.name}${need.place ? `, ${need.place}` : ""}`;
@@ -157,8 +172,9 @@ export async function assign(id: string | null, input: AssignInput, changeInput:
 /** Take someone off a place; that time becomes a gap. */
 export async function unassign(id: string, changeInput: ChangeInput = {}): Promise<ActionResult> {
   const change = changeSchema.parse(changeInput);
-  const a = await prisma.rotaAssignment.findFirst({ where: { id }, select: { userId: true, startMinutes: true, endMinutes: true, user: { select: { name: true } },
-    need: { select: { siteId: true, date: true, place: true, type: { select: { name: true, departmentId: true } } } } } });
+  const found = await prisma.rotaAssignment.findFirst({ where: { id }, select: { userId: true, startMinutes: true, endMinutes: true,
+    need: { select: { siteId: true, date: true, place: true, typeId: true } } } });
+  const a = found && { ...(await withOneStaff(found, "userId", "user")), need: (await withType(found.need))! };
   if (!a) return fail("That person is no longer on this activity.");
   const date = iso(a.need.date);
   const at = await allowedFor(a.need.siteId, date, a.need.type.departmentId);
@@ -168,8 +184,8 @@ export async function unassign(id: string, changeInput: ChangeInput = {}): Promi
   const tell = await shared(prisma, a.need.siteId, a.need.type.departmentId, date);
   await prisma.$transaction(async (tx) => {
     await tx.rotaAssignment.delete({ where: { id } });
-    await logAudit({ actorId: at.actor.id, actorName: at.actor.name, action: "delete", entity: "RotaAssignment", entityId: id, clubId: at.site.id, summary: `Took ${a.user.name} off ${what}, ${date}` }, tx);
-    if (at.live) await logLive(tx, at, date, "removed", `${a.user.name} taken off ${what}, ${clock(a.startMinutes)} to ${clock(a.endMinutes)}`, a.userId, change, a.userId);
+    await logAudit({ actorId: at.actor.id, actorName: at.actor.name, action: "delete", entity: "RotaAssignment", entityId: id, clubId: at.site.id, summary: `Took ${a.user?.name ?? "former staff"} off ${what}, ${date}` }, tx);
+    if (at.live) await logLive(tx, at, date, "removed", `${a.user?.name ?? "Former staff"} taken off ${what}, ${clock(a.startMinutes)} to ${clock(a.endMinutes)}`, a.userId, change, a.userId);
   });
   refresh();
   if (tell) await notifyShiftChange(a.userId, `You are no longer on ${what} at ${at.site.name} on ${date}, ${clock(a.startMinutes)}–${clock(a.endMinutes)}.`);
@@ -182,12 +198,12 @@ export async function planTeacher(input: { siteId: string; date: string; classRe
   const change = changeSchema.parse(changeInput);
   if (!isDateOnly(input.date)) return fail("Choose a day.");
   const actor = await currentActor();
-  const teaching = await prisma.activityType.findFirst({ where: { orgId: actor.orgId ?? undefined, fromClasses: true, archivedAt: null }, select: { departmentId: true, name: true } });
+  const teaching = await classesActivity(actor.orgId);
   if (!teaching) return fail("Swim classes are not on the rota yet. Add a Teaching activity that takes them, on the activity list.");
   const at = await allowedFor(input.siteId, input.date, teaching.departmentId);
   if (!at.ok) return fail(at.error);
   if (at.live && !change.reason) return fail(NEEDS_REASON);
-  const person = input.userId ? await prisma.user.findFirst({ where: { id: input.userId, orgId: at.site.orgId, isActive: true }, select: { id: true, name: true } }) : null;
+  const person = input.userId ? await staffContact(input.userId, at.site.orgId, { activeOnly: true }) : null;
   if (input.userId && !person) return fail("That person is no longer active.");
   const result = await planCommitment(CLASSES, { ref: input.classRef, siteId: at.site.id, date: input.date, userId: person?.id ?? null, by: at.actor });
   if (!result.ok) return fail(result.error);
@@ -200,7 +216,7 @@ export async function planTeacher(input: { siteId: string; date: string; classRe
 /** "Who can fill it" for a gap, best fit first, for the sheet. Reading, so View is enough. */
 export async function whoCanFill(input: { siteId: string; date: string; start: number; end: number; typeId: string }) {
   if (!isDateOnly(input.date)) return [];
-  const type = await prisma.activityType.findFirst({ where: { id: input.typeId }, select: { requiredTypeId: true } });
+  const type = await activityTypeById(input.typeId);
   return fitsFor({ siteId: input.siteId, date: input.date, start: input.start, end: input.end, requiredTypeId: type?.requiredTypeId ?? null });
 }
 
@@ -229,13 +245,16 @@ export async function copyPlan(input: CopyInput): Promise<ActionResult> {
   const refused = checks.find((c) => !c.ok);
   if (refused && !refused.ok) return fail(refused.error);
   const at = checks[0] as Extract<Allowed, { ok: true }>;
-  const source = await prisma.rotaNeed.findMany({
-    where: { siteId, type: { departmentId, archivedAt: null }, date: { gte: parseDateOnly(from), lte: parseDateOnly(addDaysIso(from, days - 1)) } },
+  const [liveTypes, allTypes] = await Promise.all([activityTypeIdsIn(departmentId, { liveOnly: true }), activityTypeIdsIn(departmentId)]);
+  const found = await prisma.rotaNeed.findMany({
+    where: { siteId, typeId: { in: liveTypes }, date: { gte: parseDateOnly(from), lte: parseDateOnly(addDaysIso(from, days - 1)) } },
     select: { date: true, typeId: true, place: true, startMinutes: true, endMinutes: true, places: true, note: true,
-      assignments: { select: { place: true, userId: true, startMinutes: true, endMinutes: true, user: { select: { isActive: true } } } } },
+      assignments: { select: { place: true, userId: true, startMinutes: true, endMinutes: true } } },
   });
+  const active = await activeStaffIds(found.flatMap((n) => n.assignments.map((a) => a.userId)));
+  const source = found.map((n) => ({ ...n, assignments: n.assignments.filter((a) => active.has(a.userId)) }));
   if (!source.length) return fail("There is nothing of this department to copy on those days.");
-  const busy = new Set((await prisma.rotaNeed.findMany({ where: { siteId, type: { departmentId }, date: { in: targets.map(parseDateOnly) } }, select: { date: true } })).map((n) => iso(n.date)));
+  const busy = new Set((await prisma.rotaNeed.findMany({ where: { siteId, typeId: { in: allTypes }, date: { in: targets.map(parseDateOnly) } }, select: { date: true } })).map((n) => iso(n.date)));
   const offset = (Date.parse(to) - Date.parse(from)) / 86_400_000;
   let copied = 0;
   await prisma.$transaction(async (tx) => {
@@ -245,15 +264,16 @@ export async function copyPlan(input: CopyInput): Promise<ActionResult> {
       await tx.rotaNeed.create({ data: {
         orgId: at.site.orgId, siteId, date: parseDateOnly(date), typeId: n.typeId, place: n.place, startMinutes: n.startMinutes, endMinutes: n.endMinutes, places: n.places, note: n.note,
         createdById: at.actor.id, createdByName: at.actor.name,
-        ...(people ? { assignments: { create: n.assignments.filter((a) => a.user.isActive).map((a) => ({ place: a.place, userId: a.userId, startMinutes: a.startMinutes, endMinutes: a.endMinutes, createdById: at.actor.id, createdByName: at.actor.name })) } } : {}),
+        ...(people ? { assignments: { create: n.assignments.map((a) => ({ place: a.place, userId: a.userId, startMinutes: a.startMinutes, endMinutes: a.endMinutes, createdById: at.actor.id, createdByName: at.actor.name })) } } : {}),
       } });
       copied += 1;
     }
     // With people, their planned shifts come too.
     if (people) {
-      const shifts = await tx.rotaPlanShift.findMany({ where: { siteId, departmentId, date: { gte: parseDateOnly(from), lte: parseDateOnly(addDaysIso(from, days - 1)) }, user: { isActive: true } },
+      const shifts = await tx.rotaPlanShift.findMany({ where: { siteId, departmentId, date: { gte: parseDateOnly(from), lte: parseDateOnly(addDaysIso(from, days - 1)) } },
         select: { date: true, userId: true, startMinutes: true, endMinutes: true } });
-      const fresh = shifts.filter((x) => !busy.has(addDaysIso(iso(x.date), offset)));
+      const working = await activeStaffIds(shifts.map((x) => x.userId), tx);
+      const fresh = shifts.filter((x) => working.has(x.userId) && !busy.has(addDaysIso(iso(x.date), offset)));
       if (fresh.length) await tx.rotaPlanShift.createMany({ data: fresh.map((x) => ({ orgId: at.site.orgId, siteId, departmentId, date: parseDateOnly(addDaysIso(iso(x.date), offset)),
         userId: x.userId, startMinutes: x.startMinutes, endMinutes: x.endMinutes, createdById: at.actor.id, createdByName: at.actor.name })) });
     }
@@ -268,14 +288,14 @@ export async function copyPlan(input: CopyInput): Promise<ActionResult> {
 /** Share a department's week with its staff: they see it in Turnfin Me and are told once. */
 export async function shareWeek(input: { siteId: string; departmentId: string; monday: string }): Promise<ActionResult> {
   if (!isDateOnly(input.monday) || mondayOf(input.monday) !== input.monday) return fail("Choose a week.");
-  const site = await prisma.club.findFirst({ where: { id: input.siteId, archivedAt: null }, select: { id: true, name: true, orgId: true } });
+  const site = await liveSiteById(input.siteId);
   if (!site?.orgId) return fail("That site is not open.");
   const actor = await currentActor();
   const resource = { siteId: site.id, orgId: site.orgId };
   const run = await mayFor("rota.manage", resource);
-  const member = await prisma.userDepartment.findFirst({ where: { userId: actor.id, departmentId: input.departmentId }, select: { userId: true } });
+  const member = (await departmentIdsOf(actor.id)).includes(input.departmentId);
   if (!run && !((await mayFor("rota.plan", resource)) && member)) return fail("You share only the weeks of the departments you plan.");
-  const department = await prisma.department.findFirst({ where: { id: input.departmentId, orgId: site.orgId }, select: { name: true } });
+  const department = await departmentById(input.departmentId, site.orgId, { liveOnly: false });
   if (!department) return fail("That department no longer exists.");
   const monday = parseDateOnly(input.monday);
   const existing = await prisma.rotaWeekShare.findUnique({ where: { siteId_departmentId_monday: { siteId: site.id, departmentId: input.departmentId, monday } }, select: { id: true } });
@@ -285,7 +305,7 @@ export async function shareWeek(input: { siteId: string; departmentId: string; m
     await logAudit({ actorId: actor.id, actorName: actor.name, action: "update", entity: "RotaWeekShare", entityId: null, clubId: site.id, summary: `Shared ${department.name}'s week of ${input.monday} at ${site.name}` }, tx);
   });
   const people = await prisma.rotaAssignment.findMany({
-    where: { need: { siteId: site.id, type: { departmentId: input.departmentId }, date: { gte: monday, lte: parseDateOnly(addDaysIso(input.monday, 6)) } } },
+    where: { need: { siteId: site.id, typeId: { in: await activityTypeIdsIn(input.departmentId) }, date: { gte: monday, lte: parseDateOnly(addDaysIso(input.monday, 6)) } } },
     distinct: ["userId"], select: { userId: true },
   });
   const onShift = await prisma.rotaPlanShift.findMany({ where: { siteId: site.id, departmentId: input.departmentId, date: { gte: monday, lte: parseDateOnly(addDaysIso(input.monday, 6)) } }, distinct: ["userId"], select: { userId: true } });

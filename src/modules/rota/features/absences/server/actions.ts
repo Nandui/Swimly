@@ -5,6 +5,7 @@ import { z } from "zod";
 import { fail, ok, type ActionResult } from "@/lib/action-result";
 import { AuthorizationError } from "@/lib/authz";
 import { logAudit } from "@/lib/audit";
+import { staffStatus } from "@/lib/directory";
 import { isDateOnly, parseDateOnly, today } from "@/lib/format";
 import { prisma } from "@/lib/prisma";
 import { requireCapFor } from "@/lib/policy/session";
@@ -29,7 +30,7 @@ export type AbsenceInput = z.input<typeof absenceSchema>;
 const NOT_COVERED = "You can only record absences for people at the sites your role covers.";
 
 async function allowedFor(userId: string | null) {
-  const person = userId ? await prisma.user.findFirst({ where: { id: userId }, select: { id: true, name: true, orgId: true, isActive: true } }) : null;
+  const person = userId ? await staffStatus(userId) : null;
   if (!person?.orgId) return { ok: false as const, error: "That person is not on the rota." };
   try {
     const actor = await requireCapFor("rota.manage", { subjectUserId: person.id, orgId: person.orgId });

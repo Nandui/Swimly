@@ -1,4 +1,5 @@
 import "server-only";
+import { staffIdsAtSite, withStaff } from "@/lib/directory";
 import { parseDateOnly, today } from "@/lib/format";
 import { prisma } from "@/lib/prisma";
 import { buildDay } from "@/modules/rota/shared/day";
@@ -19,9 +20,9 @@ export async function todayAt(siteId: string | undefined) {
     // Who is off today among the people who work here.
     prisma.rotaAbsence.findMany({
       where: { orgId, withdrawnAt: null, userId: { not: null }, firstDay: { lte: parseDateOnly(now) }, OR: [{ lastDay: null }, { lastDay: { gte: parseDateOnly(now) } }],
-        user: { OR: [{ siteIds: { has: site.id } }, { siteIds: { isEmpty: true } }] } },
-      orderBy: { firstDay: "asc" }, select: { id: true, userId: true, reason: true, firstDay: true, lastDay: true, reportedByName: true, createdAt: true, user: { select: { name: true } } },
-    }),
+        AND: [{ userId: { in: await staffIdsAtSite(site.id) } }] },
+      orderBy: { firstDay: "asc" }, select: { id: true, userId: true, reason: true, firstDay: true, lastDay: true, reportedByName: true, createdAt: true },
+    }).then((rows) => withStaff(rows, "userId", "user")),
   ]);
   return { who, sites, site, now, day, changes, note, off, types: types.filter((t) => !t.archived && !t.fromClasses), places } as const;
 }

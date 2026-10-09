@@ -3,8 +3,10 @@
 import { z } from "zod";
 import { fail, ok, type ActionResult } from "@/lib/action-result";
 import { logAudit } from "@/lib/audit";
+import { departmentById, staffByIds, staffContact } from "@/lib/directory";
 import { isDateOnly, parseDateOnly } from "@/lib/format";
 import { prisma } from "@/lib/prisma";
+import { activityTypeIdsIn, classesActivity } from "@/lib/setup/activity-types";
 import { clock, parseClock } from "@/modules/rota/shared/constants";
 import { fitsFor } from "@/modules/rota/shared/data";
 import { notifyShiftChange } from "@/lib/staff-api/notify";
@@ -41,9 +43,9 @@ export async function savePlanShift(id: string | null, input: PlanShiftInput, ch
   const at = await allowedFor(siteId, date, departmentId);
   if (!at.ok) return fail(at.error);
   if (at.live && !change.reason) return fail(NEEDS_REASON);
-  const department = await prisma.department.findFirst({ where: { id: departmentId, orgId: at.site.orgId, archivedAt: null }, select: { name: true } });
+  const department = await departmentById(departmentId, at.site.orgId);
   if (!department) return fail("That department no longer exists.");
-  const person = await prisma.user.findFirst({ where: { id: before?.userId ?? data.userId, orgId: at.site.orgId, isActive: true }, select: { id: true, name: true } });
+  const person = await staffContact(before?.userId ?? data.userId, at.site.orgId, { activeOnly: true });
   if (!person) return fail("That person is no longer active.");
   const clash = await prisma.rotaPlanShift.findFirst({ where: { userId: person.id, siteId, date: parseDateOnly(date), id: id ? { not: id } : undefined, startMinutes: { lt: end }, endMinutes: { gt: start } }, select: { startMinutes: true, endMinutes: true } });
   if (clash) return fail(`${person.name} is already on a shift here from ${clock(clash.startMinutes)} to ${clock(clash.endMinutes)}. Change that one instead.`);
@@ -66,7 +68,8 @@ export async function savePlanShift(id: string | null, input: PlanShiftInput, ch
  *  breaks placed in it go. */
 export async function removePlanShift(id: string, changeInput: ChangeInput = {}): Promise<ActionResult> {
   const change = changeSchema.parse(changeInput);
-  const shift = await prisma.rotaPlanShift.findFirst({ where: { id }, select: { siteId: true, departmentId: true, date: true, userId: true, startMinutes: true, endMinutes: true, user: { select: { name: true } } } });
+  const found = await prisma.rotaPlanShift.findFirst({ where: { id }, select: { siteId: true, departmentId: true, date: true, userId: true, startMinutes: true, endMinutes: true } });
+  const shift = found && { ...found, user: { name: (await staffByIds([found.userId])).get(found.userId)?.name ?? "Former staff" } };
   if (!shift) return fail("That shift is no longer on the plan.");
   const date = iso(shift.date);
   const at = await allowedFor(shift.siteId, date, shift.departmentId);
@@ -109,10 +112,10 @@ export async function saveBreaks(input: BreaksInput, changeInput: ChangeInput = 
   // They are on this department's plan that day: a shift on it, one of its activities, or (for
   // the department that takes the swim classes) a class they teach here.
   const [person, onPlan, teaching] = await Promise.all([
-    prisma.user.findFirst({ where: { id: userId, orgId: at.site.orgId }, select: { id: true, name: true } }),
+    staffContact(userId, at.site.orgId),
     prisma.rotaPlanShift.findFirst({ where: { siteId, departmentId, date: on, userId }, select: { id: true } })
-      .then(async (x) => x ?? prisma.rotaAssignment.findFirst({ where: { userId, need: { siteId, date: on, type: { departmentId } } }, select: { id: true } })),
-    prisma.activityType.findFirst({ where: { orgId: at.site.orgId, fromClasses: true, departmentId }, select: { id: true } }),
+      .then(async (x) => x ?? prisma.rotaAssignment.findFirst({ where: { userId, need: { siteId, date: on, typeId: { in: await activityTypeIdsIn(departmentId) } } }, select: { id: true } })),
+    classesActivity(at.site.orgId, { departmentId, liveOnly: false }),
   ]);
   if (!person) return fail("That person is no longer here.");
   const teaches = !onPlan && teaching

@@ -1,5 +1,6 @@
 import { revalidatePath } from "next/cache";
 import { z } from "zod";
+import { departmentIdsOf, liveSiteById } from "@/lib/directory";
 import { parseDateOnly, today } from "@/lib/format";
 import { prisma } from "@/lib/prisma";
 import { currentActor, mayFor } from "@/lib/policy/session";
@@ -26,14 +27,14 @@ export type Allowed = { ok: true; actor: { id: string; name: string }; site: { i
 
 /** May the signed-in person change this department's plan on this day at this site? */
 export async function allowedFor(siteId: string, date: string, departmentId: string): Promise<Allowed> {
-  const site = await prisma.club.findFirst({ where: { id: siteId, archivedAt: null }, select: { id: true, name: true, orgId: true } });
+  const site = await liveSiteById(siteId);
   if (!site?.orgId) return { ok: false, error: "That site is not open." };
   const actor = await currentActor();
   const resource = { siteId, orgId: site.orgId };
   const [run, plan] = await Promise.all([mayFor("rota.manage", resource), mayFor("rota.plan", resource)]);
   if (!run && !plan) return { ok: false, error: "You can only plan the rota at the sites your role covers." };
   const now = today();
-  const member = new Set((await prisma.userDepartment.findMany({ where: { userId: actor.id }, select: { departmentId: true } })).map((m) => m.departmentId));
+  const member = new Set(await departmentIdsOf(actor.id));
   if (!canChange({ plan, run }, date, now, departmentId, member)) {
     return { ok: false, error: date <= now ? "Today and earlier days are changed by the duty manager." : "You plan only the departments you belong to." };
   }

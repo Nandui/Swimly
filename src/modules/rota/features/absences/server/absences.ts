@@ -1,4 +1,5 @@
 import "server-only";
+import { activeStaffCards, withStaff } from "@/lib/directory";
 import { parseDateOnly, today } from "@/lib/format";
 import { prisma } from "@/lib/prisma";
 import { subjectsFor } from "@/lib/policy/session";
@@ -42,14 +43,15 @@ export async function rotaAbsences() {
   const orgId = who.orgId ?? undefined;
   const from = today(), since = addDaysIso(from, -30);
   const users = await reach();
-  const rows = await prisma.rotaAbsence.findMany({
+  const found = await prisma.rotaAbsence.findMany({
     where: { orgId, withdrawnAt: null, userId: users ? { in: users } : { not: null }, OR: [{ lastDay: null }, { lastDay: { gte: parseDateOnly(since) } }, { returnMetOn: null }] },
     orderBy: [{ firstDay: "asc" }],
     select: { id: true, userId: true, reason: true, firstDay: true, lastDay: true, note: true, reportedByName: true, createdAt: true,
       returnMetOn: true, returnFit: true, returnAdjustments: true, returnFitNote: true, returnNote: true, returnByName: true,
-      user: { select: { name: true } }, continues: { select: { firstDay: true, lastDay: true, reason: true } },
+      continues: { select: { firstDay: true, lastDay: true, reason: true } },
       updates: { orderBy: { createdAt: "asc" }, select: { id: true, kind: true, lastDay: true, note: true, byName: true, createdAt: true } } },
   });
+  const rows = await withStaff(found, "userId", "user");
   const named = rows.map(({ user, updates, returnFit, reason, ...a }) => ({
     ...a, reason: reason as AbsenceReason, returnFit: returnFit as ReturnFit | null, user: { name: user?.name ?? "Someone" },
     updates: updates.map((u) => ({ ...u, kind: u.kind as AbsenceUpdateKind })), extensions: updates.filter((u) => u.kind === "extended").length,
@@ -63,7 +65,7 @@ export async function rotaAbsences() {
     const firstShift = firstBack.get(a.id) ?? null;
     return { ...a, firstShift, stage: returnStage({ lastDay: iso(a.lastDay)!, returnMetOn: iso(a.returnMetOn) }, firstShift, from) };
   });
-  const people = await prisma.user.findMany({ where: { orgId, isActive: true, ...(users ? { id: { in: users } } : {}) }, orderBy: { name: "asc" }, select: { id: true, name: true, jobTitle: true } });
+  const people = await activeStaffCards(orgId ?? null, users);
   const recentOf = (userId: string) => named.filter((a) => a.userId === userId).map((a) => ({ id: a.id, reason: a.reason, firstDay: iso(a.firstDay)!, lastDay: iso(a.lastDay) }));
   return {
     who, today: from, current, returning: staged.filter((a) => a.stage !== "recorded"), returned: staged.filter((a) => a.stage === "recorded"),

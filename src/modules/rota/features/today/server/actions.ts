@@ -2,6 +2,7 @@
 
 import { fail, ok, type ActionResult } from "@/lib/action-result";
 import { logAudit } from "@/lib/audit";
+import { liveSiteById, siteOrganisation } from "@/lib/directory";
 import { isDateOnly, parseDateOnly } from "@/lib/format";
 import { prisma } from "@/lib/prisma";
 import { currentActor, mayFor } from "@/lib/policy/session";
@@ -11,7 +12,8 @@ import { refresh } from "@/modules/rota/shared/writes";
 
 /** The change is in Timepoint too: closes its follow-up. */
 export async function markTimepointUpdated(logId: string): Promise<ActionResult> {
-  const entry = await prisma.rotaLog.findFirst({ where: { id: logId }, select: { siteId: true, timepointAt: true, summary: true, site: { select: { orgId: true } } } });
+  const found = await prisma.rotaLog.findFirst({ where: { id: logId }, select: { siteId: true, timepointAt: true, summary: true } });
+  const entry = found && { ...found, site: { orgId: await siteOrganisation(found.siteId) } };
   if (!entry) return fail("That change is no longer in the log.");
   if (entry.timepointAt) return ok();
   if (!(await mayFor("rota.manage", { siteId: entry.siteId, orgId: entry.site.orgId ?? undefined }))) return fail("Only the duty manager updates Timepoint.");
@@ -29,7 +31,7 @@ export async function saveDayNote(siteId: string, date: string, text: string): P
   if (!isDateOnly(date)) return fail("Choose a day.");
   const clean = text.trim();
   if (clean.length > 1000) return fail("Keep the note under 1,000 characters.");
-  const site = await prisma.club.findFirst({ where: { id: siteId, archivedAt: null }, select: { id: true, name: true, orgId: true } });
+  const site = await liveSiteById(siteId);
   if (!site?.orgId) return fail("That site is not open.");
   if (!(await mayFor("rota.manage", { siteId, orgId: site.orgId }))) return fail("Only the duty manager keeps the day's note.");
   const actor = await currentActor();

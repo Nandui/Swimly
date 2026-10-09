@@ -6,6 +6,7 @@ import { fail, ok, type ActionResult } from "@/lib/action-result";
 import { logAudit } from "@/lib/audit";
 import { isDateOnly, parseDateOnly, today } from "@/lib/format";
 import { prisma } from "@/lib/prisma";
+import { activityTypeById } from "@/lib/setup/activity-types";
 import { BOOKING_KINDS, addDaysIso, bookingDates, parseClock } from "@/modules/rota/shared/constants";
 import { areaProblem } from "@/lib/setup/data";
 import { notifyShiftChange } from "@/lib/staff-api/notify";
@@ -41,7 +42,8 @@ export async function saveRepeat(input: RepeatInput): Promise<ActionResult> {
   if (start === null || end === null) return fail("Use times like 09:30.");
   if (end <= start) return fail("It has to end after it starts.");
   if (data.lastDay < data.firstDay) return fail("The last day can't be before the first.");
-  const type = await prisma.activityType.findFirst({ where: { id: data.typeId, archivedAt: null, fromClasses: false }, select: { id: true, name: true, departmentId: true } });
+  const found = await activityTypeById(data.typeId);
+  const type = found && !found.archivedAt && !found.fromClasses ? found : null;
   if (!type) return fail("That activity is no longer on the list.");
   const now = today();
   const dates = bookingDates(data.firstDay > now ? data.firstDay : addDaysIso(now, 1), data.lastDay, data.weekdays, data.skipDates);
@@ -71,10 +73,10 @@ export async function saveRepeat(input: RepeatInput): Promise<ActionResult> {
 
 /** Cancel a booking: its days still to come leave the plan, with anyone on them. */
 export async function cancelRepeat(id: string): Promise<ActionResult> {
-  const repeat = await prisma.rotaRepeat.findFirst({ where: { id, cancelledAt: null }, select: { siteId: true, title: true, type: { select: { departmentId: true } } } });
+  const repeat = await prisma.rotaRepeat.findFirst({ where: { id, cancelledAt: null }, select: { siteId: true, title: true, typeId: true } });
   if (!repeat) return fail("That booking is already cancelled.");
   const tomorrow = addDaysIso(today(), 1);
-  const at = await allowedFor(repeat.siteId, tomorrow, repeat.type.departmentId);
+  const at = await allowedFor(repeat.siteId, tomorrow, (await activityTypeById(repeat.typeId))?.departmentId ?? "");
   if (!at.ok) return fail(at.error);
   const future = await prisma.rotaNeed.findMany({ where: { repeatId: id, date: { gte: parseDateOnly(tomorrow) } }, select: { id: true, date: true, assignments: { select: { userId: true } } } });
   await prisma.$transaction(async (tx) => {

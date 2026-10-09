@@ -3,6 +3,7 @@ import { formatDate, parseDateOnly, plural, today } from "@/lib/format";
 import { prisma } from "@/lib/prisma";
 import { ABSENCE_REASON_META, RETURN_FIT_META, ROTA_CHANGE_REASON_META, addDaysIso, clock, daysOff, type AbsenceReason, type ReturnFit, type RotaChangeReason } from "@/modules/rota/shared/constants";
 import type { PersonFileEntry } from "@/modules/contributions";
+import { withNeedNames } from "@/modules/rota/shared/data";
 
 /** Rota's part of a person's file: what they are planned on in the next two
  *  weeks; every absence recorded for them, with its
@@ -22,8 +23,8 @@ export async function plannedFile(userId: string): Promise<{ summary: string; en
   const rows = await prisma.rotaAssignment.findMany({
     where: { userId, need: { date: { gte: parseDateOnly(from), lte: parseDateOnly(addDaysIso(from, 13)) } } },
     orderBy: [{ need: { date: "asc" } }, { startMinutes: "asc" }],
-    select: { id: true, startMinutes: true, endMinutes: true, need: { select: { date: true, place: true, site: { select: { name: true } }, type: { select: { name: true } } } } },
-  });
+    select: { id: true, startMinutes: true, endMinutes: true, need: { select: { date: true, place: true, siteId: true, typeId: true } } },
+  }).then(withNeedNames);
   const days = new Set(rows.map((r) => iso(r.need.date))).size;
   return {
     summary: rows.length ? `${plural(rows.length, "activity", "activities")} on ${plural(days, "day")} in the next two weeks.` : "Nothing planned in the next two weeks.",

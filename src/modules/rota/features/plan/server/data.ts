@@ -1,4 +1,5 @@
 import "server-only";
+import { departmentIdsOf, departmentsForSite } from "@/lib/directory";
 import { isDateOnly, parseDateOnly, today } from "@/lib/format";
 import { prisma } from "@/lib/prisma";
 import { canChange } from "@/modules/rota/shared/access";
@@ -8,15 +9,12 @@ import { type RotaSite, loadDays, pickSite } from "@/modules/rota/shared/data";
 
 /** A site's departments: its own and the organisation-wide ones. */
 function siteDepartments(orgId: string | undefined, siteId: string) {
-  return prisma.department.findMany({
-    where: { orgId, archivedAt: null, OR: [{ clubId: null }, { clubId: siteId }] },
-    orderBy: [{ sortOrder: "asc" }, { name: "asc" }], select: { id: true, name: true },
-  });
+  return departmentsForSite(orgId ?? null, siteId);
 }
 
 /** The departments this person belongs to: where Plan lets them change the days ahead. */
 async function memberOf(userId: string) {
-  return new Set((await prisma.userDepartment.findMany({ where: { userId }, orderBy: { isPrimary: "desc" }, select: { departmentId: true } })).map((m) => m.departmentId));
+  return new Set(await departmentIdsOf(userId));
 }
 
 /** The supervisor's Plan: one department's week at one site, a day of it laid out. It opens on

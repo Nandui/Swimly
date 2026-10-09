@@ -81,6 +81,15 @@ export async function qualificationsOf(userId: string, db?: Db) {
   });
 }
 
+/** What these people hold (revoked ones too), of one type when given, for checks against what a job needs. */
+export async function qualificationsHeldBy(userIds: readonly string[], typeId?: string | null, db?: Db) {
+  if (userIds.length === 0) return [];
+  return (await client(db)).qualification.findMany({
+    where: { userId: { in: [...new Set(userIds)] }, ...(typeId ? { typeId } : {}) },
+    select: { userId: true, typeId: true, issuedOn: true, expiresOn: true, revokedAt: true },
+  });
+}
+
 /** Which active staff a list covers: at a site (or every site), in a position. */
 export type StaffFilters = { site?: string; position?: string };
 const filteredStaff = (f: StaffFilters): Prisma.UserWhereInput => ({
