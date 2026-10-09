@@ -1,5 +1,6 @@
 import type { Prisma } from "@/generated/prisma/client";
 import { prisma } from "@/lib/prisma";
+import { allSites } from "@/lib/directory";
 import { requireRefundActor } from "@/modules/refunds/shared/auth";
 import { refundView, refundVisibility } from "@/modules/refunds/shared/data";
 import { refundStatuses, refundServices } from "@/modules/refunds/shared/types";
@@ -28,7 +29,7 @@ export async function listRefunds(filters: RefundFilters) {
     prisma.refundRequest.count({ where }),
     prisma.refundRequest.groupBy({ by: ["status"], where: scope, _count: { _all: true } }),
     prisma.refundRequest.findMany({ where: refundVisibility(who), distinct: ["creatorId", "handlerId"], select: { creatorId: true, creatorName: true, handlerId: true, handlerName: true } }),
-    prisma.club.findMany({ orderBy: [{ sortOrder: "asc" }, { name: "asc" }], select: { id: true, name: true } }),
+    allSites(),
   ]);
   const pages = Math.max(1, Math.ceil(total / 25)), page = Math.min(pages, Math.max(1, Number.parseInt(filters.page || "1", 10) || 1));
   const rows = await prisma.refundRequest.findMany({ where, orderBy: [{ submittedAt: oldestFirst ? "asc" : "desc" }, { createdAt: "desc" }, { id: "asc" }], skip: (page - 1) * 25, take: 25 });

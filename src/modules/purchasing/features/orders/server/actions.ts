@@ -4,6 +4,7 @@ import { z } from "zod";
 import { fail, ok, type ActionResult } from "@/lib/action-result";
 import { AuthorizationError } from "@/lib/authz";
 import { logAudit } from "@/lib/audit";
+import { staffRoleIdOf, withSiteStatus } from "@/lib/directory";
 import { isDateOnly, parseDateOnly } from "@/lib/format";
 import { prisma } from "@/lib/prisma";
 import { requireCapFor, sitesFor } from "@/lib/policy/session";
@@ -83,19 +84,19 @@ export async function decideOrder(id: string, decision: "approve" | "reject", no
   if (decision === "reject" && reason.length < 3) return fail("Say why it is rejected, so the requester can change it.");
   const order = await prisma.purchaseOrder.findFirst({
     where: { id, orgId: who.orgId ?? undefined },
-    select: { status: true, siteId: true, supplierId: true, totalCents: true, requestedById: true, site: { select: { name: true, code: true } }, supplier: { select: { name: true } } },
-  });
+    select: { status: true, siteId: true, supplierId: true, totalCents: true, requestedById: true, supplier: { select: { name: true } } },
+  }).then(async (row) => row && (await withSiteStatus([row], "siteId", "site"))[0]);
   if (!order) return fail("That order no longer exists.");
   if (order.status !== "pending") return fail("That order is not waiting for approval any more.");
   if (order.requestedById === who.id) return fail("Someone else has to approve your own order.");
   const sites = await sitesFor("purchasing.read");
   if (sites.kind !== "all" && !sites.siteIds.has(order.siteId)) return fail("That order is for a site your role does not cover.");
   if (!who.superadmin) {
-    const [rules, me] = await Promise.all([
+    const [rules, roleId] = await Promise.all([
       prisma.purchaseApprovalRule.findMany({ where: { orgId: who.orgId ?? undefined }, select: { supplierId: true, roleId: true, limitCents: true } }),
-      prisma.user.findUnique({ where: { id: who.id }, select: { staffRoleId: true } }),
+      staffRoleIdOf(who.id),
     ]);
-    if (!mayApprove(rules, order.supplierId, me?.staffRoleId ?? null, order.totalCents)) return fail(`Your role may not approve ${euro(order.totalCents)} from ${order.supplier.name}.`);
+    if (!mayApprove(rules, order.supplierId, roleId, order.totalCents)) return fail(`Your role may not approve ${euro(order.totalCents)} from ${order.supplier.name}.`);
   }
   if (decision === "approve" && !order.site.code) return fail(`${order.site.name} has no short code yet, so the order cannot be numbered. Give it one in Admin, Clubs (for example BT).`);
   const result = await prisma.$transaction(async (tx) => {

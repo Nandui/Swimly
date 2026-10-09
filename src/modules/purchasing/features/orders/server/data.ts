@@ -1,6 +1,7 @@
 import "server-only";
 import { notFound } from "next/navigation";
 import { prisma } from "@/lib/prisma";
+import { liveSitesOf, rolesByIds, staffRoleIdOf, withRoles, withSiteStatus } from "@/lib/directory";
 import { sitesFor } from "@/lib/policy/session";
 import { requirePurchasingActor, type PurchasingActor } from "@/modules/purchasing/shared/access";
 import { EDITABLE, approverRoles, mayApprove, type PoStatus } from "@/modules/purchasing/shared/rules";
@@ -14,20 +15,22 @@ const covers = (sites: Sites, siteId: string) => sites.kind === "all" || sites.s
 
 /** The approval rules and the person's own role: what they may approve. */
 async function approvalContext(who: PurchasingActor) {
-  const [rules, me] = await Promise.all([
-    prisma.purchaseApprovalRule.findMany({ where: { orgId: who.orgId ?? undefined }, select: { id: true, supplierId: true, roleId: true, limitCents: true, role: { select: { name: true } } } }),
-    prisma.user.findUnique({ where: { id: who.id }, select: { staffRoleId: true } }),
+  const [rules, roleId] = await Promise.all([
+    prisma.purchaseApprovalRule.findMany({ where: { orgId: who.orgId ?? undefined }, select: { id: true, supplierId: true, roleId: true, limitCents: true } }).then((rows) => withRoles(rows, "roleId", "role")),
+    staffRoleIdOf(who.id),
   ]);
   const can = (o: { supplierId: string; totalCents: number; requestedById: string }) =>
-    o.requestedById !== who.id && (who.superadmin || mayApprove(rules, o.supplierId, me?.staffRoleId ?? null, o.totalCents));
-  return { rules, roleId: me?.staffRoleId ?? null, can };
+    o.requestedById !== who.id && (who.superadmin || mayApprove(rules, o.supplierId, roleId, o.totalCents));
+  return { rules, roleId, can };
 }
 
 const ORDER_ROW = {
   id: true, number: true, status: true, siteId: true, supplierId: true, totalCents: true, requestedById: true, requestedByName: true,
   neededBy: true, submittedAt: true, decidedAt: true, decidedByName: true, createdAt: true,
-  site: { select: { name: true, code: true } }, supplier: { select: { name: true } }, _count: { select: { lines: true } },
+  supplier: { select: { name: true } }, _count: { select: { lines: true } },
 } as const;
+/** Each order's site (name and short code) from Core. */
+const withOrderSites = <T extends { siteId: string }>(rows: T[]) => withSiteStatus(rows, "siteId", "site");
 
 /** The first page: orders waiting for this person's approval, their own, and
  *  the latest at their sites. */
@@ -36,9 +39,9 @@ export async function purchasingHome() {
   const sites = await sitesFor("purchasing.read");
   const { can } = await approvalContext(who);
   const [pending, mine, recent, suppliers] = await Promise.all([
-    prisma.purchaseOrder.findMany({ where: { orgId: who.orgId ?? undefined, status: "pending", ...inSites(sites) }, orderBy: { submittedAt: "asc" }, select: ORDER_ROW }),
-    prisma.purchaseOrder.findMany({ where: { requestedById: who.id, status: { not: "cancelled" } }, orderBy: { updatedAt: "desc" }, take: 20, select: ORDER_ROW }),
-    prisma.purchaseOrder.findMany({ where: { orgId: who.orgId ?? undefined, status: { in: ["pending", "approved", "rejected"] }, ...inSites(sites) }, orderBy: { updatedAt: "desc" }, take: 30, select: ORDER_ROW }),
+    prisma.purchaseOrder.findMany({ where: { orgId: who.orgId ?? undefined, status: "pending", ...inSites(sites) }, orderBy: { submittedAt: "asc" }, select: ORDER_ROW }).then(withOrderSites),
+    prisma.purchaseOrder.findMany({ where: { requestedById: who.id, status: { not: "cancelled" } }, orderBy: { updatedAt: "desc" }, take: 20, select: ORDER_ROW }).then(withOrderSites),
+    prisma.purchaseOrder.findMany({ where: { orgId: who.orgId ?? undefined, status: { in: ["pending", "approved", "rejected"] }, ...inSites(sites) }, orderBy: { updatedAt: "desc" }, take: 30, select: ORDER_ROW }).then(withOrderSites),
     prisma.supplier.count({ where: { orgId: who.orgId ?? undefined, archivedAt: null } }),
   ]);
   return { who, waiting: pending.filter(can), mine, recent, suppliers };
@@ -48,7 +51,7 @@ export type OrderRow = Awaited<ReturnType<typeof purchasingHome>>["mine"][number
 /** One order, with what this person may do with it. A 404 outside their sites. */
 export async function purchaseOrder(id: string) {
   const who = await requirePurchasingActor();
-  const order = await prisma.purchaseOrder.findFirst({
+  const found = await prisma.purchaseOrder.findFirst({
     where: { id, orgId: who.orgId ?? undefined },
     select: {
       ...ORDER_ROW, note: true, decisionNote: true, cancelledAt: true, updatedAt: true,
@@ -56,7 +59,8 @@ export async function purchaseOrder(id: string) {
       lines: { orderBy: { name: "asc" }, select: { id: true, productId: true, name: true, code: true, unit: true, unitPriceCents: true, quantity: true } },
     },
   });
-  if (!order) notFound();
+  if (!found) notFound();
+  const [order] = await withOrderSites([found]);
   const sites = await sitesFor("purchasing.read");
   // Your own drafts are yours wherever they are; everything else follows your sites.
   if (!covers(sites, order.siteId) && order.requestedById !== who.id) notFound();
@@ -81,7 +85,7 @@ export async function orderForm(orderId?: string) {
   const who = await requirePurchasingActor();
   const [sites, all] = await Promise.all([
     sitesFor("purchasing.request"),
-    prisma.club.findMany({ where: { orgId: who.orgId ?? undefined, archivedAt: null }, orderBy: [{ sortOrder: "asc" }, { name: "asc" }], select: { id: true, name: true, code: true } }),
+    liveSitesOf(who.orgId),
   ]);
   const suppliers = await prisma.supplier.findMany({
     where: { orgId: who.orgId ?? undefined, archivedAt: null, products: { some: { archivedAt: null } } },
@@ -89,7 +93,7 @@ export async function orderForm(orderId?: string) {
     select: { id: true, name: true, products: { where: { archivedAt: null }, orderBy: { name: "asc" }, select: { id: true, name: true, code: true, unit: true, priceCents: true } } },
   });
   const { rules } = await approvalContext(who);
-  const roles = await prisma.staffRole.findMany({ where: { id: { in: [...new Set(rules.map((r) => r.roleId))] } }, select: { id: true, name: true } });
+  const roles = [...(await rolesByIds(rules.map((r) => r.roleId))).values()];
   const existing = orderId ? await prisma.purchaseOrder.findFirst({
     where: { id: orderId, requestedById: who.id, status: { in: [...EDITABLE] } },
     select: { id: true, siteId: true, supplierId: true, neededBy: true, note: true, status: true, decisionNote: true, lines: { select: { productId: true, quantity: true } } },

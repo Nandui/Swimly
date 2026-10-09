@@ -1,5 +1,6 @@
 import "server-only";
 import { notFound } from "next/navigation";
+import { allRoles, withRoles } from "@/lib/directory";
 import { prisma } from "@/lib/prisma";
 import { requirePurchasingActor } from "@/modules/purchasing/shared/access";
 
@@ -15,8 +16,8 @@ export async function suppliersPage() {
       select: { id: true, name: true, accountNumber: true, contactName: true, email: true, phone: true, note: true, archivedAt: true,
         _count: { select: { products: { where: { archivedAt: null } }, orders: true } } },
     }),
-    prisma.purchaseApprovalRule.findMany({ where: { orgId }, orderBy: [{ limitCents: { sort: "asc", nulls: "last" } }], select: { id: true, supplierId: true, roleId: true, limitCents: true, role: { select: { name: true } } } }),
-    prisma.staffRole.findMany({ orderBy: { name: "asc" }, select: { id: true, name: true } }),
+    prisma.purchaseApprovalRule.findMany({ where: { orgId }, orderBy: [{ limitCents: { sort: "asc", nulls: "last" } }], select: { id: true, supplierId: true, roleId: true, limitCents: true } }).then((rows) => withRoles(rows, "roleId", "role")),
+    allRoles(),
   ]);
   return { who, suppliers, rules, roles };
 }
@@ -24,18 +25,19 @@ export async function suppliersPage() {
 /** One supplier: details, approved products (archived last) and its own approvers. */
 export async function supplierPage(id: string) {
   const who = await requirePurchasingActor();
-  const supplier = await prisma.supplier.findFirst({
+  const found = await prisma.supplier.findFirst({
     where: { id, orgId: who.orgId ?? undefined },
     select: {
       id: true, name: true, accountNumber: true, contactName: true, email: true, phone: true, note: true, archivedAt: true,
       products: { orderBy: [{ archivedAt: "asc" }, { name: "asc" }], select: { id: true, name: true, code: true, unit: true, priceCents: true, archivedAt: true } },
-      rules: { orderBy: [{ limitCents: { sort: "asc", nulls: "last" } }], select: { id: true, roleId: true, limitCents: true, role: { select: { name: true } } } },
+      rules: { orderBy: [{ limitCents: { sort: "asc", nulls: "last" } }], select: { id: true, roleId: true, limitCents: true } },
     },
   });
-  if (!supplier) notFound();
-  const [roles, general] = await Promise.all([
-    prisma.staffRole.findMany({ orderBy: { name: "asc" }, select: { id: true, name: true } }),
-    prisma.purchaseApprovalRule.findMany({ where: { orgId: who.orgId ?? undefined, supplierId: null }, orderBy: [{ limitCents: { sort: "asc", nulls: "last" } }], select: { id: true, limitCents: true, role: { select: { name: true } } } }),
+  if (!found) notFound();
+  const [rules, roles, general] = await Promise.all([
+    withRoles(found.rules, "roleId", "role"),
+    allRoles(),
+    prisma.purchaseApprovalRule.findMany({ where: { orgId: who.orgId ?? undefined, supplierId: null }, orderBy: [{ limitCents: { sort: "asc", nulls: "last" } }], select: { id: true, roleId: true, limitCents: true } }).then((rows) => withRoles(rows, "roleId", "role")),
   ]);
-  return { who, supplier, roles, general };
+  return { who, supplier: { ...found, rules }, roles, general };
 }

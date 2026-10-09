@@ -1,5 +1,6 @@
 import { prisma } from "@/lib/prisma";
 import { logAudit } from "@/lib/audit";
+import { activeStaffAccess, staffAccess } from "@/lib/directory";
 import { emailSender } from "@/lib/email/sender";
 import { sendGoogleTextEmail } from "@/lib/email/google";
 import { refundAccess } from "@/modules/refunds/shared/auth";
@@ -31,10 +32,9 @@ export async function deliverRefundNotifications(requestId: string, who: RefundA
     try {
       if (job.recipientId === "unassigned") {
         // Reconcile a missing recipient after an administrator fixes access.
-        const users = await prisma.user.findMany({ where: { isActive: true, ...(job.event.action === "submit" ? {} : { id: request.creatorId }) }, include: { staffRole: true } });
+        const users = await activeStaffAccess(job.event.action === "submit" ? undefined : [request.creatorId]);
         const recipients = users.filter(user => {
-          const role = user.staffRole;
-          const access = role && refundAccess({ ...user, permissions: role.permissions });
+          const access = user.rolePermissions && refundAccess({ ...user, permissions: user.rolePermissions });
           return access && (job.event.action !== "submit" || (access.review && user.id !== request.creatorId));
         });
         if (!recipients.length) throw new Error("No eligible recipient");
@@ -46,8 +46,8 @@ export async function deliverRefundNotifications(requestId: string, who: RefundA
         jobs.push(...resolved);
         status = "SKIPPED";
       } else {
-        const user = await prisma.user.findUnique({ where: { id: job.recipientId }, include: { staffRole: true } });
-        const access = user?.isActive && user.staffRole && refundAccess({ ...user, permissions: user.staffRole.permissions });
+        const user = await staffAccess(job.recipientId);
+        const access = user?.isActive && user.rolePermissions && refundAccess({ ...user, permissions: user.rolePermissions });
         if (!user || !access || (job.event.action === "submit" && (!access.review || user.id === request.creatorId))) status = "SKIPPED";
         else {
           // Core's sender (src/lib/email/sender.ts); Refunds depends on no other module.

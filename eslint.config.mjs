@@ -105,7 +105,26 @@ const activitiesData = [
   },
 ];
 const coreData = notTables(Object.keys(moduleFiles), "Core never queries a module's tables. Register a contribution in src/modules/contributions.ts instead.");
-const workData = (self) => notTables(Object.keys(moduleFiles).filter((id) => id !== self), "A module queries only its own tables and Core's. Ask the owning module through a seam (src/modules/contributions.ts).");
+// Work modules that read Core only through its functions (src/lib/directory.ts
+// and the policy engine), never its tables: Phase 3 of
+// docs/architecture/MIGRATION.md. Each module joins once its direct reads are
+// gone, with the names of its relations to Core tables, so joins are caught too.
+const coreThroughFunctions = {
+  docs: [],
+  refunds: [],
+  purchasing: ["role", "site"],
+};
+const coreJoins = (relations) => relations.length ? [{
+  selector: `Property[key.name=/^(include|select|where|orderBy)$/] Property[key.name=/^(${relations.join("|")})$/][value.type=/^(ObjectExpression|Literal)$/]`,
+  message: "Do not join Core tables from a module's query. Keep the id and ask src/lib/directory.ts for names.",
+}] : [];
+const workData = (self) => [
+  ...notTables(Object.keys(moduleFiles).filter((id) => id !== self), "A module queries only its own tables and Core's. Ask the owning module through a seam (src/modules/contributions.ts)."),
+  ...(coreThroughFunctions[self] ? [
+    ...notTables(["core"], "This module reads Core through its functions (src/lib/directory.ts, src/lib/policy), never Core tables."),
+    ...coreJoins(coreThroughFunctions[self]),
+  ] : []),
+];
 
 // Each module's public API and email files are its own. Shared plumbing (the
 // public-API kit, the email sender) lives in Core: src/lib/public-api and

@@ -4,6 +4,7 @@ import { revalidatePath } from "next/cache";
 import { z } from "zod";
 import { fail, ok, onUniqueViolation, type ActionResult } from "@/lib/action-result";
 import { logAudit } from "@/lib/audit";
+import { roleById, withRoles } from "@/lib/directory";
 import { prisma } from "@/lib/prisma";
 import { requirePurchasingActor } from "@/modules/purchasing/shared/access";
 import { revalidatePurchasing as revalidate, text } from "@/modules/purchasing/shared/forms";
@@ -110,7 +111,7 @@ export async function addApprovalRule(input: { supplierId: string | null; roleId
   if (!who) return fail(NOT_MANAGER);
   const limitCents = input.limit.trim() === "" ? null : centsOf(input.limit);
   if (input.limit.trim() !== "" && limitCents === null) return fail("Give the limit as an amount like 500, or leave it empty for no limit.");
-  const role = await prisma.staffRole.findFirst({ where: { id: input.roleId }, select: { id: true, name: true } });
+  const role = await roleById(input.roleId);
   if (!role) return fail("Choose a role.");
   const supplier = input.supplierId ? await prisma.supplier.findFirst({ where: { id: input.supplierId, orgId: who.orgId! }, select: { name: true } }) : null;
   if (input.supplierId && !supplier) return fail("That supplier no longer exists.");
@@ -129,7 +130,7 @@ export async function addApprovalRule(input: { supplierId: string | null; roleId
 export async function removeApprovalRule(id: string): Promise<ActionResult> {
   const who = await manager();
   if (!who) return fail(NOT_MANAGER);
-  const rule = await prisma.purchaseApprovalRule.findFirst({ where: { id, orgId: who.orgId! }, select: { supplierId: true, role: { select: { name: true } }, supplier: { select: { name: true } } } });
+  const rule = await prisma.purchaseApprovalRule.findFirst({ where: { id, orgId: who.orgId! }, select: { supplierId: true, roleId: true, supplier: { select: { name: true } } } }).then((row) => row && withRoles([row], "roleId", "role").then(([r]) => r));
   if (!rule) return ok();
   await prisma.$transaction(async (tx) => {
     await tx.purchaseApprovalRule.delete({ where: { id } });

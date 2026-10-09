@@ -1,6 +1,7 @@
 import type { Prisma, RefundRequest } from "@/generated/prisma/client";
 import { prisma } from "@/lib/prisma";
 import { logAudit } from "@/lib/audit";
+import { activeStaffAccess, liveSiteById } from "@/lib/directory";
 import { refundAccess } from "@/modules/refunds/shared/auth";
 import { commandSchema, parseFields, RefundError, transition, type RefundCommand } from "@/modules/refunds/shared/rules";
 import { canReadRefund, refundActions, refundNumber, type RefundActor } from "@/modules/refunds/shared/types";
@@ -24,10 +25,10 @@ export async function recordEvent(tx: Prisma.TransactionClient, row: RefundReque
 }
 async function queueNotifications(tx: Prisma.TransactionClient, row: RefundRequest, eventId: string, action: string) {
   if (!["submit", "information", "approve", "decline", "pay", "cancel"].includes(action)) return;
-  const users = await tx.user.findMany({ where: { isActive: true, ...(action === "submit" ? {} : { id: row.creatorId }) }, include: { staffRole: true } });
+  const users = await activeStaffAccess(action === "submit" ? undefined : [row.creatorId], tx);
   const recipients = users.filter(user => {
-    if (!user.staffRole) return false;
-    const access = refundAccess({ ...user, permissions: user.staffRole.permissions });
+    if (!user.rolePermissions) return false;
+    const access = refundAccess({ ...user, permissions: user.rolePermissions });
     return !!access && (action !== "submit" || (access.review && user.id !== row.creatorId));
   });
   // A sentinel makes missing finance setup visible and retryable after grants change.
@@ -60,7 +61,7 @@ export async function mutateRefund(who: RefundActor, input: RefundCommand) {
 
     if (command.action === "save" || command.action === "submit") {
       const data = parseFields(command.fields, command.action === "submit");
-      const club = await tx.club.findFirst({ where: { id: data.clubId, archivedAt: null }, select: { id: true, name: true } });
+      const club = await liveSiteById(data.clubId, tx);
       if (!club) throw new RefundError("Choose an active site.");
       const base = row ?? { status: "DRAFT", creatorId: who.id, requestedCents: null, approvedCents: null, paymentDate: "" };
       const update = transition(base, who, command);
