@@ -4,7 +4,7 @@ import { usePathname, useSearchParams } from 'next/navigation';
 import type { ReactNode } from 'react';
 import { FilePenLine, ReceiptText, UserRound } from 'lucide-react';
 import { ModuleShell } from '@/components/workspace/module-shell';
-import { refundListView, type RefundActor } from '@/lib/refunds/types';
+import { refundListView, type RefundActor } from '@/modules/refunds/lib/types';
 
 /** Refunds in the shared module frame: its request views along the top. The follow-up queues
  *  are the summary tiles on the list (RefundQueue), so each status has one way in. */

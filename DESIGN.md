@@ -202,7 +202,7 @@ blue when it is the open filter, so each status has one way in. Search, pill pic
 apply on change and the requests (`.pc-rows`) share one white panel. On a request, the
 next-action panel is the one panel with an edge (2px blue), and only when the person can
 act; it holds Submit on an editable request. Statuses use `<Tag meta={refundStatuses[status]} />`;
-each status in `src/lib/refunds/types.ts` has its own icon. Finance decisions use shadcn Dialogs with 44px controls,
+each status in `src/modules/refunds/lib/types.ts` has its own icon. Finance decisions use shadcn Dialogs with 44px controls,
 focus restoration and preserved values after errors. `src/app/refunds/refunds.css` only
 arranges the Refunds screens. See [docs/refunds.md](docs/refunds.md).
 

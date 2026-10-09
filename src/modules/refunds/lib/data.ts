@@ -1,8 +1,8 @@
 import type { Prisma, RefundRequest } from "@/generated/prisma/client";
 import { prisma } from "@/lib/prisma";
-import { requireRefundActor } from "@/lib/refunds/auth";
-import { guardRead, receiptSelect } from "@/lib/refunds/service";
-import { refundStatuses, refundServices, type RefundActor, type RefundDetail, type RefundView } from "@/lib/refunds/types";
+import { requireRefundActor } from "@/modules/refunds/lib/auth";
+import { guardRead, receiptSelect } from "@/modules/refunds/lib/service";
+import { refundStatuses, refundServices, type RefundActor, type RefundDetail, type RefundView } from "@/modules/refunds/lib/types";
 
 export const refundVisibility = (who: RefundActor): Prisma.RefundRequestWhereInput => ({ OR: [{ creatorId: who.id }, { submittedAt: { not: null }, status: { not: "DRAFT" } }] });
 export function refundView(row: RefundRequest): RefundView {

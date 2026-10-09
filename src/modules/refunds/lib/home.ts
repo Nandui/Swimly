@@ -1,7 +1,7 @@
 import "server-only";
 import { prisma } from "@/lib/prisma";
-import { refundAccess } from "@/lib/refunds/auth";
-import { refundVisibility } from "@/lib/refunds/data";
+import { refundAccess } from "@/modules/refunds/lib/auth";
+import { refundVisibility } from "@/modules/refunds/lib/data";
 import { registerHomeCard, type HomeItem } from "@/modules/contributions";
 
 /** Refunds on the home page: what waits for this person, counted within what

@@ -5,7 +5,7 @@ import { ChevronRight, Paperclip, Trash2 } from "lucide-react";
 import { FileField } from "@/components/ui/file-field";
 import { IconButton } from "@/components/ui/icon-button";
 import { Notice } from "@/components/ui-kit/notice";
-import type { Receipt, RefundResult } from "@/lib/refunds/types";
+import type { Receipt, RefundResult } from "@/modules/refunds/lib/types";
 
 const fileSize = (bytes: number) => bytes < 1024 * 1024 ? `${Math.max(1, Math.round(bytes / 1024))} KB` : `${(bytes / (1024 * 1024)).toFixed(1)} MB`;
 

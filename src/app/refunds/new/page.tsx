@@ -1,8 +1,8 @@
 import { randomUUID } from "node:crypto";
 import { screenPage } from "@/lib/page-guards";
-import { refundDefaultSite, refundSites } from "@/lib/refunds/data";
+import { refundDefaultSite, refundSites } from "@/modules/refunds/lib/data";
 import { PageHeader } from "@/components/ui-kit/page-header";
-import { RefundRequestForm } from "@/components/refunds/request-form";
+import { RefundRequestForm } from "@/modules/refunds/components/request-form";
 import type { Metadata } from "next";
 
 export const metadata: Metadata = { title: "New refund request" };

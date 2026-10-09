@@ -197,7 +197,7 @@ No Docs data or permissions are imported.
   finance) that clears the phone bottom bar.
 
 Status tags are `<Tag meta={refundStatuses[status]} />`; each entry in `refundStatuses`
-(`src/lib/refunds/types.ts`) carries its label, tone and a distinct icon, shared with the
+(`src/modules/refunds/lib/types.ts`) carries its label, tone and a distinct icon, shared with the
 tiles. Decline, withdraw and cancel confirm in the danger colour. Only finance sees
 the email alert notice and its "Send again".
 

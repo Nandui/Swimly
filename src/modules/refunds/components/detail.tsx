@@ -5,10 +5,10 @@ import { BadgeCheck, ChevronDown, ChevronLeft, Euro, ReceiptText, type LucideIco
 import { PageHeader } from "@/components/ui-kit/page-header";
 import { Tag } from "@/components/ui-kit/tag";
 import { Notice } from "@/components/ui-kit/notice";
-import { RefundFinanceActions } from "@/components/refunds/finance-actions";
-import { RefundRequestForm } from "@/components/refunds/request-form";
-import { RefundReceipts } from "@/components/refunds/receipts";
-import { editableRefund, euros, paymentMethods, refundActions, refundNextActions, refundNextStep, refundNumber, refundServices, refundStatuses, type RefundActor, type RefundDetail as Detail, type RefundView } from "@/lib/refunds/types";
+import { RefundFinanceActions } from "@/modules/refunds/components/finance-actions";
+import { RefundRequestForm } from "@/modules/refunds/components/request-form";
+import { RefundReceipts } from "@/modules/refunds/components/receipts";
+import { editableRefund, euros, paymentMethods, refundActions, refundNextActions, refundNextStep, refundNumber, refundServices, refundStatuses, type RefundActor, type RefundDetail as Detail, type RefundView } from "@/modules/refunds/lib/types";
 import { formatDate, formatDateTime, parseDateOnly } from "@/lib/format";
 import { cn } from "@/lib/utils";
 

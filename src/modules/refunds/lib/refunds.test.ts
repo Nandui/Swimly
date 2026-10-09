@@ -1,16 +1,16 @@
 import assert from "node:assert/strict";
 import { randomUUID } from "node:crypto";
 import { after, before, test } from "node:test";
-import { isolatedPrisma } from "../../test/pglite-prisma";
-import { serverModule } from "../../test/server-module";
+import { isolatedPrisma } from "@/test/pglite-prisma";
+import { serverModule } from "@/test/server-module";
 import { money, parseFields, type RefundCommand } from "./rules";
 import { canReadRefund, type RefundActor, type RefundFields } from "./types";
-import { isActivitiesScreen, visibleScreens } from "../staff/screens";
-import { expandPermissions } from "../staff/permissions";
+import { isActivitiesScreen, visibleScreens } from "@/lib/staff/screens";
+import { expandPermissions } from "@/lib/staff/permissions";
 
 let db: Awaited<ReturnType<typeof isolatedPrisma>>;
 let service: typeof import('./service'), files: typeof import('./files'), notifications: typeof import('./notifications'), data: typeof import('./data'), actions: typeof import('./actions');
-let uploadRoute: typeof import('../../app/api/refunds/files/route'), downloadRoute: typeof import('../../app/api/refunds/files/[id]/route');
+let uploadRoute: typeof import('@/app/api/refunds/files/route'), downloadRoute: typeof import('@/app/api/refunds/files/[id]/route');
 const reception: RefundActor = { id: 'refund-reception', name: 'Alex Example', request: true, review: false, process: false };
 const finance: RefundActor = { id: 'refund-finance', name: 'Riley Example', request: false, review: true, process: true };
 const colleague: RefundActor = { ...reception, id: 'refund-colleague', name: 'Jamie Example' };
@@ -28,16 +28,16 @@ before(async () => {
   const doubles = {
     '@/lib/prisma': { prisma: db.prisma },
     '@/auth': { auth: async () => ({ user: { ...current, permissions: currentGrants, screens: ['refunds'] } }) },
-    '@/lib/audit': { logAudit: async (input: Parameters<typeof import('../audit').logAudit>[0], tx: typeof db.prisma) => { if (auditFails) throw new Error('Audit failed'); await tx.auditLog.create({ data: input }); } },
+    '@/lib/audit': { logAudit: async (input: Parameters<typeof import('@/lib/audit').logAudit>[0], tx: typeof db.prisma) => { if (auditFails) throw new Error('Audit failed'); await tx.auditLog.create({ data: input }); } },
     '@/lib/email/sender': { emailSender: () => ({ sender: 'sender@example.test', fromHeader: 'Example <sender@example.test>' }) },
     '@/lib/email/google': { sendGoogleTextEmail: async (email: string, subject: string, text: string) => { if (mailFails) throw new Error('Synthetic rejection'); sent.push({ email, subject, text }); } },
     'next/cache': { revalidatePath() {} },
   };
-  service = serverModule('src/lib/refunds/service.ts', doubles);
-  files = serverModule('src/lib/refunds/files.ts', doubles);
-  notifications = serverModule('src/lib/refunds/notifications.ts', doubles);
-  data = serverModule('src/lib/refunds/data.ts', doubles);
-  actions = serverModule('src/lib/refunds/actions.ts', doubles);
+  service = serverModule('src/modules/refunds/lib/service.ts', doubles);
+  files = serverModule('src/modules/refunds/lib/files.ts', doubles);
+  notifications = serverModule('src/modules/refunds/lib/notifications.ts', doubles);
+  data = serverModule('src/modules/refunds/lib/data.ts', doubles);
+  actions = serverModule('src/modules/refunds/lib/actions.ts', doubles);
   uploadRoute = serverModule('src/app/api/refunds/files/route.ts', doubles);
   downloadRoute = serverModule('src/app/api/refunds/files/[id]/route.ts', doubles);
   process.env.REFUNDS_APP_URL = 'https://staff.example.test';

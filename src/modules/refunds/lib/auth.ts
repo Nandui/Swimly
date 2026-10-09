@@ -1,7 +1,7 @@
 import { auth } from "@/auth";
 import { expandPermissions } from "@/lib/staff/permissions";
-import { RefundError } from "@/lib/refunds/rules";
-import type { RefundActor } from "@/lib/refunds/types";
+import { RefundError } from "@/modules/refunds/lib/rules";
+import type { RefundActor } from "@/modules/refunds/lib/types";
 
 export function refundAccess(user: { id: string; name?: string | null; permissions: readonly string[] }): RefundActor | null {
   const permissions = expandPermissions(user.permissions);
