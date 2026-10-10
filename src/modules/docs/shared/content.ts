@@ -172,8 +172,3 @@ export const paragraph = (text: string): JSONContent => ({
   type: 'paragraph',
   content: text ? [{ type: 'text', text }] : [],
 });
-export const heading = (text: string): JSONContent => ({
-  type: 'heading',
-  attrs: { level: 2 },
-  content: [{ type: 'text', text }],
-});

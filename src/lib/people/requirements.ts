@@ -14,7 +14,7 @@ export const REQUIREMENT_META = {
 export type RequirementState = keyof typeof REQUIREMENT_META;
 
 /** Expiring = within 60 days, the usual renewal window (as `qualificationState`). */
-export const REQUIREMENT_WARNING_DAYS = 60;
+const REQUIREMENT_WARNING_DAYS = 60;
 
 type Held = { typeId: string; issuedOn: Date | null; expiresOn: Date | null; revokedAt: Date | null };
 const iso = (d: Date) => d.toISOString().slice(0, 10);

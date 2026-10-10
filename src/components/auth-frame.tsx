@@ -4,7 +4,7 @@ import { cn } from "@/lib/utils";
 
 /** The fin on its own tile, drawn with the shared `.tf-brand` box the frame and Help use.
  *  Decorative: the page's H1 or the wordmark beside it names the place. */
-export function Fin({ className }: { className?: string }) {
+function Fin({ className }: { className?: string }) {
   return (
     <span className={cn("tf-brand", className)} aria-hidden="true">
       <Image src="/brand/turnfin.png" alt="" width={72} height={72} priority />

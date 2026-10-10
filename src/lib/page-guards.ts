@@ -1,6 +1,6 @@
 import { notFound, redirect } from "next/navigation";
 import { auth } from "@/auth";
-import { can, canAny, canSee, type PermissionKey } from "@/lib/authz";
+import { can, canSee, type PermissionKey } from "@/lib/authz";
 import type { ScreenKey } from "@/lib/staff/screens";
 
 /** Page-level guards, kept apart from `authz.ts` because they answer a
@@ -31,17 +31,3 @@ export async function screenPage(screen: ScreenKey, permission?: PermissionKey) 
   return session;
 }
 
-/** The page exists only for someone holding this permission. */
-export async function permissionPage(permission: PermissionKey) {
-  const session = await pageSession();
-  if (!can(session, permission)) notFound();
-  return session;
-}
-
-/** The page exists for anyone holding at least one of these — for screens that
- *  serve several permissions at once. */
-export async function anyPermissionPage(...permissions: PermissionKey[]) {
-  const session = await pageSession();
-  if (!canAny(session, ...permissions)) notFound();
-  return session;
-}

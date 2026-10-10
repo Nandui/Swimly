@@ -39,7 +39,7 @@ export function sessionAvailability(session: PublicSession, curriculum: SharedCu
     spaces: session.capacity === null ? null : Math.max(0, session.capacity - session._count.bookings) };
 }
 
-export function sessionDto(session: PublicSession, curriculum: SharedCurriculum) {
+function sessionDto(session: PublicSession, curriculum: SharedCurriculum) {
   const programme = curriculum.programme(session.programmeId);
   const type = session.typeId ? curriculum.types.find(t => t.id === curriculum.typeIds.resolve(session.typeId!)) : null;
   const availability = sessionAvailability(session, curriculum, new Date());
@@ -96,7 +96,7 @@ export async function listSessions(request: Request) {
 }
 
 const newChildSchema = z.object({ firstName: z.string().trim().min(1).max(80), lastName: z.string().trim().min(1).max(80), dateOfBirth: dateSchema }).strict();
-export const bookingSchema = z.union([
+const bookingSchema = z.union([
   z.object({ sessionId: idSchema, childId: idSchema }).strict(),
   z.object({ sessionId: idSchema, newChild: newChildSchema }).strict(),
 ]);

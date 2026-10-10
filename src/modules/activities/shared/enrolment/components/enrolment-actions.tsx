@@ -68,7 +68,7 @@ function courseOptions(
 
 /** A local filter: selecting a destination never changes the working site.
  * Remount the picker when the site changes so a hidden old selection cannot submit. */
-export function SiteClassPicker({
+function SiteClassPicker({
   id,
   name,
   courses,

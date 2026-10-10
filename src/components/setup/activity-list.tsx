@@ -8,7 +8,7 @@ import { ConfirmAction } from "@/components/confirm-action";
 import { Field, FormDialog } from "@/components/form-dialog";
 import { ChoiceRow } from "@/components/ui/choice-row";
 import { archiveActivityType, saveActivityType } from "@/lib/setup/actions";
-import { ACTIVITY_ICONS as ROTA_ACTIVITY_ICONS, ACTIVITY_ICON_KEYS as ROTA_ACTIVITY_ICON_KEYS } from "@/lib/setup/meta";
+import { ACTIVITY_ICONS, ACTIVITY_ICON_KEYS } from "@/lib/setup/meta";
 
 const THEME = "turnfin-module";
 type Option = { id: string; name: string };
@@ -37,7 +37,7 @@ export function ActivityDialog({ activity, departments, qualifications }: { acti
         </Field>
         <Field label="Icon" htmlFor={`${fid}-icon`}>
           <NativeSelect id={`${fid}-icon`} name="icon" defaultValue={activity?.icon ?? "activity"} className="min-h-11 w-full">
-            {ROTA_ACTIVITY_ICON_KEYS.map((k) => <NativeSelectOption key={k} value={k}>{ROTA_ACTIVITY_ICONS[k].label}</NativeSelectOption>)}
+            {ACTIVITY_ICON_KEYS.map((k) => <NativeSelectOption key={k} value={k}>{ACTIVITY_ICONS[k].label}</NativeSelectOption>)}
           </NativeSelect>
         </Field>
       </div>

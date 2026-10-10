@@ -19,7 +19,7 @@ import { commitmentsFor } from "@/modules/contributions";
  *  `buildDay`, so Plan, Today and Turnfin Me agree. */
 
 export const isoOf = (d: Date) => d.toISOString().slice(0, 10);
-export const CLASSES = "activities.classes";
+const CLASSES = "activities.classes";
 
 export async function rotaSites() {
   const who = await requireRotaActor();
@@ -119,7 +119,7 @@ export async function loadDays(siteId: string, orgId: string | undefined, from: 
 /** For the under-18s among these people: each day they work, at any site, from the day before
  *  `from` to the end of the week after `to`, with its first start and last finish, for their
  *  rest warnings (`youngRest`). Rota activities, planned shifts and swim classes count. */
-export async function youngDays(users: readonly { id: string; dateOfBirth: Date | null }[], from: string, to: string) {
+async function youngDays(users: readonly { id: string; dateOfBirth: Date | null }[], from: string, to: string) {
   const ids = users.filter((u) => youngBand(u.dateOfBirth ? isoOf(u.dateOfBirth) : null, to) || youngBand(u.dateOfBirth ? isoOf(u.dateOfBirth) : null, from)).map((u) => u.id);
   const out = new Map<string, Map<string, { start: number; end: number }>>();
   if (!ids.length) return out;

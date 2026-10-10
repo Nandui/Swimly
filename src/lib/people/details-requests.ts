@@ -8,7 +8,7 @@ import type { StatusMeta } from "@/lib/status";
 /** Staff's own contact and emergency details as they asked to change them in
  *  Turnfin Me, beside what is on their record now. HR's: only the people the
  *  reader keeps details for (`hr.details.write`). */
-export const DETAIL_LABELS = {
+const DETAIL_LABELS = {
   phone: "Phone",
   homeAddress: "Home address",
   emergencyName: "Emergency contact",
@@ -16,7 +16,7 @@ export const DETAIL_LABELS = {
   emergencyRelationship: "Emergency contact relationship",
 } as const;
 export type DetailField = keyof typeof DETAIL_LABELS;
-export const DETAIL_FIELDS = Object.keys(DETAIL_LABELS) as DetailField[];
+const DETAIL_FIELDS = Object.keys(DETAIL_LABELS) as DetailField[];
 
 export const DETAIL_REQUEST_STATUS_META = {
   PENDING: { label: "Waiting for review", color: "orange", icon: Clock3 },

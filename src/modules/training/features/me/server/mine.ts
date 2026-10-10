@@ -1,7 +1,5 @@
 import "server-only";
-import { notFound } from "next/navigation";
 import type { Prisma } from "@/generated/prisma/client";
-import { requireSession } from "@/lib/authz";
 import { today } from "@/lib/format";
 import { prisma } from "@/lib/prisma";
 import { qualificationTypesByIds } from "@/lib/qualifications";
@@ -37,9 +35,3 @@ export async function myTraining(userId: string) {
   return (await withGrants(rows)).map((row) => ({ ...row, state: trainingState(row, on) as TrainingState }));
 }
 
-export async function myAssignment(id: string) {
-  const session = await requireSession();
-  const row = await prisma.trainingAssignment.findFirst({ where: { id, userId: session.user.id }, select: MY_SELECT });
-  if (!row) notFound();
-  return { ...(await withGrants([row]))[0], state: trainingState(row, today()) };
-}

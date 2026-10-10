@@ -20,19 +20,6 @@ export function fullName(student: { firstName: string; lastName: string }): stri
   return `${student.firstName} ${student.lastName}`;
 }
 
-/** Two students called Ava Byrne is not hypothetical, and without a family
- *  record there is nothing else to tell them apart. Every picker and every
- *  ambiguous list shows the age alongside the name. */
-export function nameWithAge(student: {
-  firstName: string;
-  lastName: string;
-  dateOfBirth: Date | null;
-}): string {
-  const name = fullName(student);
-  const age = student.dateOfBirth ? ageInYears(student.dateOfBirth) : null;
-  return age === null ? name : `${name} · ${age}`;
-}
-
 export function ageLabel(dateOfBirth: Date | null): string {
   if (!dateOfBirth) return "—";
   return `${ageInYears(dateOfBirth)}`;

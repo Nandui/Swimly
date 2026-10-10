@@ -13,6 +13,6 @@ import "@/modules/academy/module";
 import "@/lib/people/home";
 import "@/modules/hr/module";
 
-export { renameAreaEverywhere, commitmentsFor, homeCardItems, planCommitment, personFile, siteSummaryLines, subjectRecords } from "./contributions";
+export { renameAreaEverywhere, homeCardItems, siteSummaryLines } from "./contributions";
 // The swim school's top-bar tools and daily pages, for the home page's frame.
 export { dailyPages, SwimSchoolTools } from "@/modules/activities";

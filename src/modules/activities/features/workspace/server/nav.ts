@@ -50,7 +50,7 @@ export const NAV_ITEMS: AppNavItem[] = [
 /** Takes the already-resolved set of screens this person can open, so the
  *  screen and permission rules are applied once by `visibleScreens` and
  *  this stays a plain membership test. */
-export function visibleNavItems(screens: Set<ScreenKey>): AppNavItem[] {
+function visibleNavItems(screens: Set<ScreenKey>): AppNavItem[] {
   return NAV_ITEMS.filter((item) => screens.has(item.screen));
 }
 

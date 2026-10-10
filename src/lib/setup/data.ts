@@ -56,14 +56,6 @@ export async function areaProblem(siteId: string, place: string, keep?: string |
   return found ? null : `Choose one of the site's areas. ${value} is not on the list; add it under Admin, Areas.`;
 }
 
-/** Open areas for several sites at once, keyed by site. */
-export async function areaNamesBySite(siteIds: readonly string[]) {
-  const rows = siteIds.length ? await prisma.siteArea.findMany({ where: { siteId: { in: [...siteIds] }, archivedAt: null }, orderBy: [{ sortOrder: "asc" }, { name: "asc" }], select: { siteId: true, name: true } }) : [];
-  const out = new Map<string, string[]>(siteIds.map((id) => [id, []]));
-  for (const r of rows) out.get(r.siteId)?.push(r.name);
-  return out;
-}
-
 /** Every position (archived last) with what it needs and how many hold it, for Admin's Positions page. */
 export async function positionsPage() {
   const { orgId, keeps } = await viewer();

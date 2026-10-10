@@ -53,7 +53,7 @@ export async function shared(tx: Prisma.TransactionClient | typeof prisma, siteI
 }
 
 /** The absence a cover change covers: the person taken off is off that day. */
-export async function coveredAbsence(tx: Prisma.TransactionClient, userId: string | null, date: string) {
+async function coveredAbsence(tx: Prisma.TransactionClient, userId: string | null, date: string) {
   if (!userId) return null;
   const on = parseDateOnly(date);
   return (await tx.rotaAbsence.findFirst({ where: { userId, withdrawnAt: null, firstDay: { lte: on }, OR: [{ lastDay: null }, { lastDay: { gte: on } }] }, select: { id: true } }))?.id ?? null;
