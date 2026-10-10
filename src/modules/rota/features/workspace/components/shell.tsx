@@ -4,7 +4,7 @@ import type { ReactNode } from 'react';
 import { usePathname, useSearchParams } from 'next/navigation';
 import { ModuleShell } from '@/components/workspace/module-shell';
 import { rotaPages } from '@/modules/rota/shared/components/pages';
-import { SiteSwitcher } from '@/components/workspace/site-switcher';
+import { SiteSwitcher } from '@/components/ui/site-switcher';
 import type { RotaActor } from '@/modules/rota/shared/access';
 
 /** The pages that show one site: they take the site from `?site=` and show the picker. Overview

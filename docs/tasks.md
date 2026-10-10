@@ -127,7 +127,7 @@ only to people who do tasks at that site (`/tasks/files/[id]`).
   `20261026120000_tasks_parity` (additive, with a backfill that keeps existing templates as they were)
 - `src/modules/tasks/`: `shared/` (`rules.ts`, pure; `access.ts`; `data.ts` and `writes.ts` helpers; the status tag and dialog kit), and the features `day`, `follow-ups`, `templates`, `sites`, `reports`, `schedule` and `workspace`, each with its `components/` and `server/`. The home card is `features/day/server/home.ts`, registered in `module.ts`. See its README.md
 - UI: `src/app/tasks/`, each feature's `components/` (the trend chart is `score-trend.tsx`, in
-  `--pc-chart-1`); the site picker is the shared `src/components/workspace/site-switcher.tsx`
+  `--pc-chart-1`); the site picker is the shared `src/components/ui/site-switcher.tsx`
 - Cron: `src/app/api/cron/tasks/route.ts`, `vercel.json`
 - Help: `src/lib/help/guides-modules.ts` (`do-task`, `review-tasks`, `manage-task-templates`)
 - Sandbox: `scripts/sandbox-tasks.ts` (sites' settings, five templates, two weeks of invented history)
