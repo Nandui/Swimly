@@ -34,13 +34,12 @@ In the full shape (`index.ts`, `module.ts`, `events.ts`, `README.md`, `shared/`,
 
 - rota (9 October 2026): features `plan`, `today`, `bookings`, `absences`, `me`, `person-file`, `workspace`; its person-file sections and area rename now register from `module.ts`; the staff API reads a person's days through `index.ts`
 
-- activities, the swim school (9 October 2026): features `students`, `courses`, `attendance`, `enrolment`, `assessments`, `curriculum`, `cancellations`, `duty`, `schedule`, `today`, `together`, `analytics`, `parents`, `instructor`, `workspace` (and `progression`, holding only an unused component). About 90 of its 280 files are in `shared/` because the domain is tightly linked; `contributions.ts` became `module.ts`; the composition roots use its `index.ts`.
+- activities, the swim school (9 October 2026): features `students`, `courses`, `attendance`, `enrolment`, `assessments`, `curriculum`, `cancellations`, `duty`, `schedule`, `today`, `together`, `analytics`, `parents`, `instructor`, `workspace`. About 90 of its 280 files are in `shared/` because the domain is tightly linked; `contributions.ts` became `module.ts`; the composition roots use its `index.ts`.
 
 Known warnings left in moved modules: `ModuleShell` (`src/components/workspace`) is the app frame, not a UI-kit component, so features importing it are reported. Deciding where the frame lives (platform or ui) is a boundary question for Fernando once more modules are moved.
 
 ## Awaiting user decision
 - Where the frame lives (`ModuleShell`, site switcher, account menu): ui or platform. Blocks Phase 4.
-- Whether to delete `src/modules/activities/features/progression/components/move-up.tsx`, which nothing imports.
 
 ## Log
 - 2026-10-09 — PR #8: lint boundaries for every module, `work.prisma` split, cross-module leaks fixed.
@@ -58,3 +57,4 @@ Known warnings left in moved modules: `ModuleShell` (`src/components/workspace`)
 - 2026-10-09 — Phase 2: Rota in the features shape. Every Work module is done; Activities is next. Warnings 383 → 164.
 - 2026-10-09 — Phase 2: the swim school (Activities) in the features shape. Every module is done. Warnings 383 → 31.
 - 2026-10-09 — Phase 3: Docs, Refunds, Purchasing, Academy, Tasks, HR, Training and Rota read Core only through its functions. New Core reads: `src/lib/qualifications.ts`, `src/lib/setup/activity-types.ts`, `src/lib/people/records.ts`, `moduleAuditTrail`, and more of `src/lib/directory.ts`. The boundary lint now forbids Core table queries and joins in every module.
+- 2026-10-10 — Deleted the unused `move-up.tsx` (Fernando's go-ahead); the swim school's empty `progression` feature went with it.

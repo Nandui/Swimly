@@ -20,7 +20,6 @@ It covers both menu entries Swim school (the desk, `src/app/(activities)`) and P
 - `parents` — parent accounts and access requests (`/students/parents`), the parent API and the parent-admin API.
 - `instructor` — the pool-deck workspace: today's classes, starting a class, assessments and swimmers (`/instructor`).
 - `workspace` — the swim school frame, its menu and workspace search (`src/app/(activities)/layout.tsx`, `/swim-school`).
-- `progression` — holds only `move-up.tsx`, which nothing imports. It was unused before this move; deleting it needs Fernando's go-ahead.
 
 `shared/` holds what two or more features use, by domain (`shared/<domain>/`):
 - the class, swimmer, enrolment, attendance, progression, assessment and curriculum rules, reads and actions that several screens call;
