@@ -16,7 +16,7 @@ import { createCourse } from "@/modules/activities/features/courses/server/actio
 import { readCourseInput, UNASSIGNED_INSTRUCTOR } from "@/modules/activities/features/courses/server/form-input";
 import type { InstructorOption } from "@/modules/activities/shared/courses/data/courses";
 import type { LevelOption } from "@/modules/activities/shared/curriculum/data/curriculum";
-import { toast } from "@/lib/toast";
+import { toast } from "@/components/ui/toast";
 import { withTimeout } from "@/lib/save-feedback";
 
 export function AddClass({ levels, instructors, workingSite }: { levels: LevelOption[]; instructors: InstructorOption[]; workingSite: string }) {

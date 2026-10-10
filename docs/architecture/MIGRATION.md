@@ -1,7 +1,7 @@
 # Migration to modular architecture
 
-**Status:** Phases 2 and 3 done in draft PR #11, waiting on review. Module map and ADRs 0001 to 0003 approved 9 October 2026.
-**Next step:** Phase 4. Clear the 19 remaining boundary warnings (the module list in `@/modules/server`, the area select, the club switcher and wrong-club notice, four UI-kit imports of Core helpers, the toast), then switch the boundary rules to error.
+**Status:** Phases 2, 3 and the boundary half of 4 done in draft PR #11, waiting on review. Module map and ADRs 0001 to 0003 approved 9 October 2026; ADR 0005 (frame in the UI kit) on 10 October.
+**Next step:** Fernando reviews and merges draft PR #11. Left after it: `src/app/modules.ts` replacing `src/modules/server.ts` and the registry entries moving into each `module.ts` (ADR 0004), and the Mermaid diagram once those settle.
 
 ## Phases
 - [x] Phase 0 — Audit written to docs/architecture/audit.md (with [../modular-monolith.md](../modular-monolith.md))
@@ -19,7 +19,7 @@
   - [x] Every module reads Core only through Core's functions (`src/lib/directory.ts`, `src/lib/qualifications.ts`, `src/lib/setup/activity-types.ts`, `src/lib/people/records.ts`, `src/lib/audit.ts`, the policy engine); the boundary lint forbids Core table queries and joins in every module, proven with a deliberate violation
   - [x] Each module README lists the tables it owns and the Core reads it uses
   - No tables were renamed or altered and no migrations were run.
-- [ ] Phase 4 — Boundary lint switched to error and proven
+- [x] Phase 4 — Boundary lint switched to error and proven (10 October 2026: 0 warnings, then errors; deliberate platform → module, ui → platform, sibling-feature and module → other module imports all fail)
 - [ ] Phase 4 — Docs finalised
 
 ## Modules moved
@@ -60,3 +60,4 @@ The app frame (`ModuleShell`, the account menu, the site switcher) is in the UI 
 - 2026-10-10 — Deleted the unused `move-up.tsx` (Fernando's go-ahead); the swim school's empty `progression` feature went with it.
 - 2026-10-10 — Frame split chosen. The site switcher moved to the UI kit (`src/components/ui/site-switcher.tsx`).
 - 2026-10-10 — Fernando chose to rewire rather than make an exception: `ModuleShell` and the account menu moved to the UI kit and read a frame context the app fills (ADR 0005). Warnings 31 → 19.
+- 2026-10-10 — Phase 4: last 19 warnings cleared. The UI kit declares its own prop types instead of importing Core helpers; the toast, area select, working-site switcher and wrong-site notice moved into the UI kit (site switching comes through the frame context); Rota and HR call the contributions registry, which loads the composition root itself. Boundary rules switched to error and proven.

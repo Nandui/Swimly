@@ -5,7 +5,7 @@ import { useRouter } from "next/navigation";
 import { Textarea } from "@/components/shadcn/textarea";
 import { LoadingButton } from "@/components/ui/loading-button";
 import { saveDayNote } from "@/modules/rota/features/today/server/actions";
-import { toast } from "@/lib/toast";
+import { toast } from "@/components/ui/toast";
 
 /** The day's note on the plan: who covers whom and why, a last day,
  *  anything the duty manager should know. Saved on its own; empty removes it.

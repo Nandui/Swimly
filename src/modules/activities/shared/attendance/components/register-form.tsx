@@ -36,7 +36,7 @@ import {
   SAVE_UNCONFIRMED_MESSAGE,
   withTimeout,
 } from "@/lib/save-feedback";
-import { toast } from "@/lib/toast";
+import { toast } from "@/components/ui/toast";
 import { RegisterConflict } from "@/modules/activities/shared/attendance/components/register-conflict";
 import type { SavedRegister } from "@/modules/activities/shared/attendance/revision";
 

@@ -6,7 +6,7 @@ import { NOTE_COLUMNS, REVIEW_COLUMNS, type HrNote, type HrReview } from "@/modu
 import { logHrAccess } from "@/modules/hr/shared/records";
 import { recentlyConfirmed } from "@/lib/policy/engine";
 import { actorForSession } from "@/lib/policy/session";
-import { personFile, subjectRecords } from "@/modules/server";
+import { personFile, subjectRecords } from "@/modules/contributions";
 
 export class ExportRefused extends Error {}
 

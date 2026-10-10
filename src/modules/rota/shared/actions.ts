@@ -13,7 +13,7 @@ import { placeProblem } from "@/modules/rota/shared/cover";
 import { areaProblem } from "@/lib/setup/data";
 import { fitsFor } from "@/modules/rota/shared/data";
 import { notifyShiftChange } from "@/lib/staff-api/notify";
-import { planCommitment } from "@/modules/server";
+import { planCommitment } from "@/modules/contributions";
 import { type Allowed, CLASSES, NEEDS_REASON, allowedFor, changeSchema, iso, logLive, refresh, shared } from "@/modules/rota/shared/writes";
 
 export type ChangeInput = z.input<typeof changeSchema>;

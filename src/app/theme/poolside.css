@@ -471,7 +471,7 @@ html:has(.tf-shell) { scroll-padding-bottom: 112px; }
   .turnfin-app .tf-help .tf-main a[data-slot='button'] { display: none; }
 }
 
-/* Toasts (sonner, via src/lib/toast.tsx): the app's type, a 16px card with the overlay shadow,
+/* Toasts (sonner, via src/components/ui/toast.tsx): the app's type, a 16px card with the overlay shadow,
    the icon in its status colour and a 44px round close inside on the right. Sonner injects its
    own styles, so these selectors carry one more attribute than its own. */
 .turnfin-app [data-sonner-toaster] { font-family: var(--font-sans); }

@@ -4,7 +4,7 @@ import { notFound } from "next/navigation";
 import {
   ageRangeLabel, CancelSession, dublinInstant, EditSession, getAssessmentProgrammeOptions, getAssessmentSession, getAssessmentTypeOptions, getInstructorOptions, sessionDay, sessionSpan,
 } from "@/modules/activities/features/assessments";
-import { WrongClub } from "@/components/clubs/wrong-club";
+import { WrongClub } from "@/components/ui/wrong-club";
 import { AssessmentPublicationPanel } from "@/modules/activities/features/parents";
 import { Button } from "@/components/shadcn/button";
 import { PageHeader } from "@/components/ui-kit/page-header";

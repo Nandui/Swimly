@@ -10,7 +10,7 @@ import { NativeSelect, NativeSelectOption } from "@/components/shadcn/native-sel
 import { ConfirmAction } from "@/components/confirm-action";
 import { Field, FormDialog } from "@/components/form-dialog";
 import { addApprovalRule, removeApprovalRule, saveProduct, saveSupplier, setProductArchived, setSupplierArchived } from "@/modules/purchasing/features/suppliers/server/actions";
-import { toast } from "@/lib/toast";
+import { toast } from "@/components/ui/toast";
 
 const THEME = "turnfin-docs turnfin-module turnfin-purchasing";
 type Supplier = { id: string; name: string; accountNumber: string; contactName: string; email: string; phone: string; note: string };

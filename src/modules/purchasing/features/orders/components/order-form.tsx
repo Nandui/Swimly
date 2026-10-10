@@ -12,7 +12,7 @@ import { Table, TableBody, TableCell, TableFooter, TableHead, TableHeader, Table
 import { Notice } from "@/components/ui-kit/notice";
 import { saveOrder } from "@/modules/purchasing/features/orders/server/actions";
 import { approverRoles, euro, rulesFor, type ApprovalRule } from "@/modules/purchasing/shared/rules";
-import { toast } from "@/lib/toast";
+import { toast } from "@/components/ui/toast";
 import { cn } from "@/lib/utils";
 
 type Product = { id: string; name: string; code: string; unit: string; priceCents: number };

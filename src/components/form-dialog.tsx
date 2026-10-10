@@ -21,7 +21,7 @@ import type {
   ActionConfirmation,
   ConfirmationReply,
 } from "@/lib/action-result";
-import { toast } from "@/lib/toast";
+import { toast } from "@/components/ui/toast";
 import { withTimeout } from "@/lib/save-feedback";
 import { Input } from "@/components/ui/input";
 import { Select } from "@/components/ui/select";

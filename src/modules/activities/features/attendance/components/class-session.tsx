@@ -21,7 +21,7 @@ import { SegmentedLinks } from "@/components/ui-kit/segmented-links";
 import { Tag } from "@/components/ui-kit/tag";
 import { RegisterForm } from "@/modules/activities/shared/attendance/components/register-form";
 import { TakeOver } from "@/modules/activities/features/attendance/components/take-over";
-import { WrongClub } from "@/components/clubs/wrong-club";
+import { WrongClub } from "@/components/ui/wrong-club";
 import { ConfirmLevel } from "@/modules/activities/shared/progression/components/assessment";
 import { DeckChecklist } from "@/modules/activities/shared/progression/components/deck-checklist";
 import {

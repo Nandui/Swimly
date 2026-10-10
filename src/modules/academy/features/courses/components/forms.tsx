@@ -10,7 +10,7 @@ import { Label } from "@/components/shadcn/label";
 import { NativeSelect, NativeSelectOption } from "@/components/shadcn/native-select";
 import { Textarea } from "@/components/shadcn/textarea";
 import { Field, FormDialog } from "@/components/form-dialog";
-import { AreaSelect } from "@/components/setup/area-select";
+import { AreaSelect } from "@/components/ui/area-select";
 import {
   recordChecks, recordResult, removeSession, saveCandidate, saveCourse, saveSession, setCourseStatus, setWithdrawn, takeRegister,
 } from "@/modules/academy/features/courses/server/actions";

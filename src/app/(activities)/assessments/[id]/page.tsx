@@ -23,7 +23,7 @@ import {
 import { Settings2 } from "lucide-react";
 import { Avatar, AvatarFallback } from "@/components/shadcn/avatar";
 import { Button } from "@/components/shadcn/button";
-import { WrongClub } from "@/components/clubs/wrong-club";
+import { WrongClub } from "@/components/ui/wrong-club";
 import { can } from "@/lib/authz";
 import { getCurrentClub } from "@/lib/clubs/current";
 import { formatDate, today } from "@/lib/format";

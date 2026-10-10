@@ -8,7 +8,7 @@ import { Input } from "@/components/shadcn/input";
 import { Label } from "@/components/shadcn/label";
 import { NativeSelect, NativeSelectOption } from "@/components/shadcn/native-select";
 import { Field, FormDialog } from "@/components/form-dialog";
-import { AreaSelect } from "@/components/setup/area-select";
+import { AreaSelect } from "@/components/ui/area-select";
 import { Notice } from "@/components/ui-kit/notice";
 import { cancelRepeat, saveRepeat, type RepeatInput } from "@/modules/rota/features/bookings/server/actions";
 import { formatDate } from "@/lib/format";

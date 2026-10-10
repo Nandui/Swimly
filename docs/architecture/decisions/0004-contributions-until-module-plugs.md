@@ -9,4 +9,4 @@ CLAUDE.md wants each module to register through `module.ts` listed in `src/app/m
 Keep these seams working while each module gets its `index.ts`, `module.ts` and `features/` shape (migration phase 2). Each module's registrations move into its `module.ts` as it moves; `src/modules/server.ts` becomes `src/app/modules.ts` when the last one has.
 
 ## Consequences
-The boundary lint reports module imports of `@/modules/server` as warnings until then.
+Modules never import `@/modules/server`. Since phase 4 (10 October 2026) the registry functions modules call (`personFile`, `subjectRecords`, `commitmentsFor`, `planCommitment`) load the composition root themselves, as the platform registry loads `src/app/modules.ts`, and the boundary lint forbids module imports of it.

@@ -7,7 +7,7 @@ import { activityTypesByIds, classesActivity } from "@/lib/setup/activity-types"
 import { addDaysIso, mondayOf, youngBand } from "@/modules/rota/shared/constants";
 import { qualification } from "@/modules/rota/shared/fit";
 import { dayShift, type WorkItem } from "@/modules/rota/shared/shifts";
-import { commitmentsFor } from "@/modules/server";
+import { commitmentsFor } from "@/modules/contributions";
 
 /** The signed-in person's own days for Turnfin Me (owner decision, 6 October 2026: "their day as
  *  activities"): each day at each site, what they are on with the breaks placed for them, and

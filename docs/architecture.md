@@ -40,7 +40,7 @@ A role holds one level for each module (`StaffRole.levels`). `src/lib/staff/leve
 
    A module never imports another module's public API or email files.
 
-`npm run lint` enforces rules 1, 2, 4, 6 and 7 with `no-restricted-imports`, `no-restricted-syntax` and `import/no-restricted-paths` (see `eslint.config.mjs`, where `workModules` lists each module's folders and table ownership is read from the schema file names). Tests and `src/test` are exempt, because they exercise routes end to end. `eslint-plugin-boundaries` also reports, as warnings, every import that breaks the target layer table in [CLAUDE.md](../CLAUDE.md) (section 3); [architecture/MIGRATION.md](architecture/MIGRATION.md) tracks them down to zero.
+`npm run lint` enforces rules 1, 2, 4, 6 and 7 with `no-restricted-imports`, `no-restricted-syntax` and `import/no-restricted-paths` (see `eslint.config.mjs`, where `workModules` lists each module's folders and table ownership is read from the schema file names). Tests and `src/test` are exempt, because they exercise routes end to end. `eslint-plugin-boundaries` also fails the lint on every import that breaks the target layer table in [CLAUDE.md](../CLAUDE.md) (section 3), as errors since 10 October 2026 ([architecture/MIGRATION.md](architecture/MIGRATION.md)).
 
 ## Databases
 

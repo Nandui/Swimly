@@ -12,6 +12,15 @@ import "server-only";
  *  `src/modules/server.ts`. Callers must already hold the page's permission:
  *  these return counts and short labels, never records. */
 
+/** Loads every module's registrations (the composition root) before a module reads another's,
+ *  as the platform registry loads the app's module list (CLAUDE.md, section 5). Modules call
+ *  `personFile`, `subjectRecords`, `commitmentsFor` and `planCommitment` from here, so none of
+ *  them imports the composition root; Core and front pages already load it through it. */
+let modulesLoading: Promise<unknown> | undefined;
+function modulesLoaded() {
+  return (modulesLoading ??= import("@/modules/server"));
+}
+
 export type SiteSummary = {
   id: string;
   /** One short line per site, e.g. "3 programmes · 1,156 active swimmers". */
@@ -158,6 +167,7 @@ export function registerPersonFileSection(section: PersonFileSection) {
 
 /** Every registered section of this person's file, in registration order. */
 export async function personFile(userId: string, orgId: string) {
+  await modulesLoaded();
   return Promise.all(personFileSections.map(async (section) => ({ id: section.id, heading: section.heading, ...(await section.load(userId, orgId)) })));
 }
 
@@ -180,6 +190,7 @@ export function registerSubjectRecords(source: SubjectRecords) {
 
 /** Every registered module's records about this person, by key. */
 export async function subjectRecords(userId: string, orgId: string): Promise<Record<string, unknown>> {
+  await modulesLoaded();
   const loaded = await Promise.all(subjectRecordSources.map(async (s) => [s.key, await s.load(userId, orgId)] as const));
   return Object.fromEntries(loaded);
 }
@@ -240,6 +251,7 @@ export function registerCommitments(source: CommitmentSource) {
  *  page needs; these are times and short labels, never records. */
 export async function commitmentsFor(query: CommitmentQuery, except?: string) {
   if (query.userIds && query.userIds.length === 0 && !query.siteIds) return [];
+  await modulesLoaded();
   const lists = await Promise.all(commitmentSources.filter((s) => s.id !== except).map((s) => s.list(query)));
   return lists.flat();
 }
@@ -247,6 +259,7 @@ export async function commitmentsFor(query: CommitmentQuery, except?: string) {
 /** Plan who does one occurrence of another module's commitment (owner decision, 6 October 2026:
  *  Rota assigns swim teachers; the swim school keeps the record). */
 export async function planCommitment(sourceId: string, input: CommitmentPlan) {
+  await modulesLoaded();
   const source = commitmentSources.find((s) => s.id === sourceId);
   if (!source?.plan) return { ok: false as const, error: "That can no longer be planned from here." };
   return source.plan(input);

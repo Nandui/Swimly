@@ -9,7 +9,7 @@ import { FOLLOW_UP_META } from "@/modules/activities/shared/enrolment/constants"
 import { formatDate } from "@/lib/format";
 import { cancelInstructorMoveReadiness } from "@/modules/activities/shared/progression/actions/assess";
 import { SAVE_UNCONFIRMED_MESSAGE, withTimeout } from "@/lib/save-feedback";
-import { toast } from "@/lib/toast";
+import { toast } from "@/components/ui/toast";
 import { Notice } from "@/components/ui-kit/notice";
 
 /** A swimmer's move readiness, the same on a closed checklist row and an open one: awaiting

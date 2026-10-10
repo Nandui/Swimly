@@ -19,7 +19,7 @@ import type { Person, ShiftOption } from "@/modules/rota/shared/day";
 import type { Fit } from "@/modules/rota/shared/fit";
 import { ROTA_FIT_META, ROTA_SHIFT_NOTE_META, qualificationShort } from "@/modules/rota/shared/meta";
 import { duration } from "@/modules/rota/shared/shifts";
-import { toast } from "@/lib/toast";
+import { toast } from "@/components/ui/toast";
 
 /** Who's working, by person (owner decision, 8 October 2026, from the approved mockup): put
  *  someone on a shift, then give them activities from the day's gaps that fit it and that they

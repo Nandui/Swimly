@@ -1,9 +1,11 @@
 "use client";
 
 import { createContext, useContext, useEffect, useRef, useState, type ReactNode, type InvalidEvent } from "react";
-import type { ActionResult } from "@/lib/action-result";
 
 type FieldErrors = Record<string, string>;
+/** The failed half of an action result (`ActionResult` in lib/action-result.ts), declared here
+ *  because the UI kit may not import the platform. */
+type Failure = { ok: false; error: string; fieldErrors?: FieldErrors };
 const FieldFeedbackContext = createContext<{ errors: FieldErrors; clear: (name: string) => void }>({ errors: {}, clear: () => {} });
 
 /** Shared server-error placement; native constraint validation stays native. */
@@ -26,7 +28,7 @@ export function useFormFeedback() {
   }, [message, failureVersion]);
   return {
     message, errors, formRef, summaryRef,
-    report(failure: string | Extract<ActionResult, { ok: false }>) {
+    report(failure: string | Failure) {
       setMessage(typeof failure === "string" ? failure : failure.error);
       setErrors(typeof failure === "string" ? {} : failure.fieldErrors ?? {});
       setFailureVersion(version => version + 1);

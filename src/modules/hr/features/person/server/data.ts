@@ -4,7 +4,7 @@ import { hrDatabase } from "@/modules/hr/shared/database";
 import { requireHrActor } from "@/modules/hr/shared/access";
 import { NOTE_COLUMNS, REVIEW_COLUMNS, type HrNote, type HrReview } from "@/modules/hr/shared/columns";
 import { mayFor } from "@/lib/policy/session";
-import { personFile } from "@/modules/server";
+import { personFile } from "@/modules/contributions";
 import { coveredPerson, logHrAccess } from "@/modules/hr/shared/records";
 
 /** Their details as HR keeps them (owner decision, 8 October 2026: staff

@@ -8,7 +8,7 @@ import { NativeSelect, NativeSelectOption } from "@/components/shadcn/native-sel
 import { RadioGroup } from "@/components/shadcn/radio-group";
 import { ConfirmAction } from "@/components/confirm-action";
 import { Field, FormDialog } from "@/components/form-dialog";
-import { AreaSelect } from "@/components/setup/area-select";
+import { AreaSelect } from "@/components/ui/area-select";
 import { ChoiceRow } from "@/components/ui/choice-row";
 import { ChangeFields, changeOf } from "@/modules/rota/shared/components/change-fields";
 import { assign, copyPlan, removeNeed, saveNeed, shareWeek, unassign } from "@/modules/rota/shared/actions";

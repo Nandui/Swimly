@@ -16,7 +16,7 @@ import { Textarea } from "@/components/shadcn/textarea";
 import { FieldFrame } from "@/components/ui/field-frame";
 import { confirmLevelCompletion } from "@/modules/activities/shared/progression/actions/assess";
 import { withTimeout, SAVE_UNCONFIRMED_MESSAGE } from "@/lib/save-feedback";
-import { toast } from "@/lib/toast";
+import { toast } from "@/components/ui/toast";
 import { Notice } from "@/components/ui-kit/notice";
 
 export function CompleteLevel({

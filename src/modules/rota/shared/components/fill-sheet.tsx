@@ -16,7 +16,7 @@ import { clock, parseClock } from "@/modules/rota/shared/constants";
 import type { Fit } from "@/modules/rota/shared/fit";
 import { ROTA_FIT_META, qualificationShort } from "@/modules/rota/shared/meta";
 import { duration } from "@/modules/rota/shared/shifts";
-import { toast } from "@/lib/toast";
+import { toast } from "@/components/ui/toast";
 
 /** One gap to fill: an activity's place for a stretch of time, or a run of swim classes. */
 export type GapRef = {

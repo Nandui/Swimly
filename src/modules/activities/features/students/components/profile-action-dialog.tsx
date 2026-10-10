@@ -8,7 +8,7 @@ import { Button } from "@/components/shadcn/button";
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from "@/components/shadcn/dialog";
 import { Notice } from "@/components/ui-kit/notice";
 import type { ActionConfirmation, ActionResult, ConfirmationReply } from "@/lib/action-result";
-import { toast } from "@/lib/toast";
+import { toast } from "@/components/ui/toast";
 import { withTimeout } from "@/lib/save-feedback";
 import { cn } from "@/lib/utils";
 

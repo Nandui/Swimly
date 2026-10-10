@@ -152,9 +152,9 @@ const restrictedPaths = (skip) => ["error", {
   ],
 }];
 
-// The target architecture's dependency table (CLAUDE.md, section 3), in
-// warning mode while the migration runs (docs/architecture/MIGRATION.md). The
-// error-level rules above stay in force; these warnings show what is left.
+// The target architecture's dependency table (CLAUDE.md, section 3), as errors
+// since migration phase 4 (docs/architecture/MIGRATION.md), alongside the
+// module and data rules above.
 // Elements are folders (first match wins); single files that sit outside their
 // layer's folder are classified by file category instead.
 const layerElements = [
@@ -216,6 +216,7 @@ const layerPolicies = [
   { from: { element: { type: "app" } }, allow: { to: { file: { categories: "composition" } } } },
   // The platform loads the module wiring, as the registry loads app/modules.ts; front reads modules through it.
   { from: { element: { types: { anyOf: ["platform", "front"] } } }, allow: { to: { file: { categories: "composition" } } } },
+  { from: { file: { categories: "platform" } }, allow: { to: { file: { categories: "composition" } } } },
   { from: { file: { categories: "front" } }, allow: { to: { file: { categories: "composition" } } } },
   { from: { file: { categories: "composition" } }, allow: { to: { element: { types: { anyOf: ["platform", "ui", "front", "module"] } } } } },
 ];
@@ -279,7 +280,7 @@ const eslintConfig = defineConfig([
     plugins: { boundaries },
     settings: { "boundaries/elements": layerElements, "boundaries/files": layerFiles },
     rules: {
-      "boundaries/dependencies": ["warn", {
+      "boundaries/dependencies": ["error", {
         default: "disallow",
         message: "{{ from.element.types.[0] }} may not import {{ dependency.source }} (CLAUDE.md, section 3).",
         policies: layerPolicies,

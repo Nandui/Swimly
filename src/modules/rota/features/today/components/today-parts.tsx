@@ -12,7 +12,7 @@ import { markTimepointUpdated } from "@/modules/rota/features/today/server/actio
 import { clock } from "@/modules/rota/shared/constants";
 import { ROTA_DAY_META, ROTA_FIT_META, activityIcon } from "@/modules/rota/shared/meta";
 import { duration } from "@/modules/rota/shared/shifts";
-import { toast } from "@/lib/toast";
+import { toast } from "@/components/ui/toast";
 
 export type TodayGap = GapRef & {
   icon: string;

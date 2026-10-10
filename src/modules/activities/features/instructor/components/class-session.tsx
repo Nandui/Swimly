@@ -19,7 +19,7 @@ import { formatDate, parseDateOnly, today } from "@/lib/format";
 import { fullName } from "@/modules/activities/shared/students/constants";
 import { Notice } from "@/components/ui-kit/notice";
 import { PageHeader } from "@/components/ui-kit/page-header";
-import { WrongClub } from "@/components/clubs/wrong-club";
+import { WrongClub } from "@/components/ui/wrong-club";
 import { StartClass } from "@/modules/activities/features/instructor/components/start-class";
 import { InstructorClassNavigation } from "@/modules/activities/features/instructor/components/class-navigation";
 import { ClassCompetencyOverview } from "@/modules/activities/features/instructor/components/class-competency-overview";

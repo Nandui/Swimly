@@ -15,7 +15,7 @@ import {
 } from "@/components/shadcn/dialog";
 
 import { takeOverClass } from "@/modules/activities/shared/attendance/actions/cover";
-import { toast } from "@/lib/toast";
+import { toast } from "@/components/ui/toast";
 
 /** The question asked when somebody opens a class that is not theirs: are
  *  you taking it? Asked once, up front, because the answer changes what the

@@ -43,7 +43,7 @@ import {
   saveClassAssessment,
   saveInstructorAssessment,
 } from "@/modules/activities/shared/progression/actions/assess";
-import { toast } from "@/lib/toast";
+import { toast } from "@/components/ui/toast";
 import { CompleteLevel } from "@/modules/activities/shared/instructor/components/complete-level";
 import { MoveReadinessStatus, moveReadinessMeta } from "@/modules/activities/shared/instructor/components/move-readiness-status";
 import { ASSESSMENT_CHOICES, COMPETENCY_STATUS_META } from "@/modules/activities/shared/progression/constants";

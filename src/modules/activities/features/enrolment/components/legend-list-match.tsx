@@ -9,7 +9,7 @@ import { FileField } from "@/components/ui/file-field";
 import { LoadingButton } from "@/components/ui/loading-button";
 import { Notice } from "@/components/ui-kit/notice";
 import { applyLegendList, previewLegendList, type LegendListPreview } from "@/modules/activities/features/enrolment/server/actions/legend-list";
-import { toast } from "@/lib/toast";
+import { toast } from "@/components/ui/toast";
 import { formatCount, plural } from "@/lib/format";
 
 const places = (n: number) => plural(n, "place");

@@ -6,7 +6,7 @@ import { subjectsFor } from "@/lib/policy/session";
 import { requireRotaActor } from "@/modules/rota/shared/access";
 import { AuthorizationError } from "@/lib/authz";
 import { addDaysIso, returnStage, type AbsenceReason, type AbsenceUpdateKind, type ReturnFit } from "@/modules/rota/shared/constants";
-import { commitmentsFor } from "@/modules/server";
+import { commitmentsFor } from "@/modules/contributions";
 
 /** Absences and returns to work (owner decision, 6 October 2026: the records live in the main
  *  database so the rota always has them, and show on the person's HR file through the

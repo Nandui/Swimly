@@ -43,7 +43,7 @@ function doubles() {
     "server-only": {},
     react: { cache: <T,>(fn: T) => fn },
     // Other modules' parts of the personal file (Rota's absences), by person.
-    "@/modules/server": { subjectRecords: async () => ({ training: [] }), personFile: async (userId: string) => [{ id: "rota.absences", heading: "Absences and returns to work", summary: "Synthetic", entries: [{ id: `a-${userId}`, title: "Sickness", detail: "", on: "2026-10-01" }] }] },
+    "@/modules/contributions": { subjectRecords: async () => ({ training: [] }), personFile: async (userId: string) => [{ id: "rota.absences", heading: "Absences and returns to work", summary: "Synthetic", entries: [{ id: `a-${userId}`, title: "Sickness", detail: "", on: "2026-10-01" }] }] },
   };
 }
 const as = (id: string, extra: Partial<typeof state> = {}) =>

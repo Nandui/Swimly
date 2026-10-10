@@ -19,7 +19,7 @@ import type { StudentDetail } from "@/modules/activities/features/students/serve
 import { toDateOnlyString } from "@/lib/format";
 import { readStudentInput } from "@/modules/activities/features/students/server/form-input";
 import { swimmerProfileHref } from "@/modules/activities/features/students/server/directory";
-import { toast } from "@/lib/toast";
+import { toast } from "@/components/ui/toast";
 import { withTimeout } from "@/lib/save-feedback";
 
 /** `defaultOpen` opens the dialog on arrival, for the home page's "Add a swimmer". */

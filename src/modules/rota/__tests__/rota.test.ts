@@ -48,7 +48,7 @@ function doubles() {
     "next/navigation": { notFound: () => { throw new NotFound("not found"); } },
     "server-only": {},
     react: { cache: <T,>(fn: T) => fn },
-    "@/modules/server": {
+    "@/modules/contributions": {
       commitmentsFor: async (q: { siteIds?: string[]; userIds?: string[]; from: string; to: string }) => classes.filter((c) => c.date >= q.from && c.date <= q.to
         && (!q.siteIds || q.siteIds.includes(c.siteId)) && (!q.userIds || (!!c.userId && q.userIds.includes(c.userId)))),
       planCommitment: async (_source: string, p: { ref: string; date: string; userId: string | null }) => {

@@ -12,7 +12,7 @@ import { addDaysIso, mondayOf, youngBand, youngRest, type YoungBand } from "@/mo
 import { type DayBooked, type DayClass, type DayType } from "@/modules/rota/shared/day";
 import { rankFits, type Held } from "@/modules/rota/shared/fit";
 import type { PinnedBreak, WorkItem } from "@/modules/rota/shared/shifts";
-import { commitmentsFor } from "@/modules/server";
+import { commitmentsFor } from "@/modules/contributions";
 
 /** Rota reads (owner decisions, 6 October 2026). The sites a person may see come from the policy
  *  engine; a site outside them is a 404, never an empty rota. Every day is laid out by

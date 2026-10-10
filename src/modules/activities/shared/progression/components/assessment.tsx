@@ -27,7 +27,7 @@ import {
   revokeLevelCompletion,
   saveAssessment,
 } from "@/modules/activities/shared/progression/actions/assess";
-import { toast } from "@/lib/toast";
+import { toast } from "@/components/ui/toast";
 
 import { SAVE_UNCONFIRMED_MESSAGE, withTimeout } from "@/lib/save-feedback";
 import {

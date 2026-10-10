@@ -1,7 +1,7 @@
 import { EmptyState } from "@/components/ui-kit/empty-state";
 import { PageHeader } from "@/components/ui-kit/page-header";
 
-import { SwitchClubButton } from "@/components/clubs/switch-club-button";
+import { SwitchClubButton } from "@/components/ui/switch-club-button";
 
 type Club = { id: string; name: string };
 

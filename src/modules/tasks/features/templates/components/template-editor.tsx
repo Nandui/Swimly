@@ -19,7 +19,7 @@ import {
   FIELD_TYPES, FIELD_TYPE_LABELS, LOG_MODES, LOG_MODE_LABELS, REPEATS, SCHEDULED_KINDS, TEMPLATE_KINDS, TEMPLATE_KIND_LABELS, scheduleLabel,
   type FieldType, type LogMode, type Repeat, type TaskField, type TaskSchedule, type TemplateKind,
 } from "@/modules/tasks/shared/rules";
-import { toast } from "@/lib/toast";
+import { toast } from "@/components/ui/toast";
 
 type Option = { id: string; name: string };
 export type EditableTemplate = Omit<TemplateInput, "fields" | "schedules"> & { id: string | null; version: number | null; status: "draft" | "published" | "archived"; fields: TaskField[]; schedules: TaskSchedule[] };

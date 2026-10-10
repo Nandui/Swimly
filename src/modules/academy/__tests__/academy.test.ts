@@ -52,7 +52,7 @@ before(async () => {
     "server-only": {},
     react: { cache: <T,>(fn: T) => fn },
   };
-  contributions = serverModule<typeof import("@/modules/contributions")>("src/modules/contributions.ts", d);
+  contributions = serverModule<typeof import("@/modules/contributions")>("src/modules/contributions.ts", { ...d, "@/modules/server": {} });
   serverModule("src/modules/academy/module.ts", { ...d, "@/modules/contributions": contributions });
   actions = { ...serverModule<object>("src/modules/academy/features/course-types/server/actions.ts", d), ...serverModule<object>("src/modules/academy/features/courses/server/actions.ts", d) } as typeof actions;
   data = serverModule("src/modules/academy/features/courses/server/data.ts", d);

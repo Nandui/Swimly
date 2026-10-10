@@ -15,7 +15,7 @@ import { confirmLevelCompletion, revokeLevelCompletion, saveAssessment } from "@
 import type { LevelProgress, ProgrammeProgress } from "@/modules/activities/shared/progression/data/progress";
 import { COMPETENCY_STATUS_META, NOT_MARKED_META } from "@/modules/activities/shared/progression/constants";
 import { formatDate } from "@/lib/format";
-import { toast } from "@/lib/toast";
+import { toast } from "@/components/ui/toast";
 import { CompetencyHistory } from "@/modules/activities/features/students/components/profile-history";
 import { ProfileActionDialog } from "@/modules/activities/features/students/components/profile-action-dialog";
 import { ProfileField } from "@/modules/activities/features/students/components/profile-enrolments";

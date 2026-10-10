@@ -5,8 +5,8 @@ import type { LucideIcon } from 'lucide-react';
 
 /** What the frame (ModuleShell, AccountMenu) shows about the signed-in person, handed in by
  *  the app rather than read by the UI kit itself: their modules in order with the group
- *  headings, their role and working site, how to sign out, and any extra top-bar tools (the
- *  development role preview). The root layout provides it (`YourModulesProvider` in
+ *  headings, their role and working site, how to sign out and change working site, and any
+ *  extra top-bar tools (the development role preview). The root layout provides it (`YourModulesProvider` in
  *  src/components/workspace/your-modules.tsx), so no module shell passes it. Empty when signed
  *  out or outside the layout. */
 export type FrameModule = { id: string; name: string; href: string; icon: LucideIcon; group: string };
@@ -18,11 +18,17 @@ export type FrameSetup = {
   site: string;
   /** Signs the person out; rejects when it could not (the provider has told them why). */
   signOut: () => Promise<void>;
+  /** Makes another site the person's working site and stays on the page (ClubSwitcher,
+   *  SwitchClubButton); resolves with the reason when it could not. */
+  switchSite: (id: string) => Promise<{ ok: true } | { ok: false; error: string }>;
   /** Top-bar controls the app adds to every frame, before the account menu. */
   tools?: ReactNode;
 };
 
-const FrameContext = createContext<FrameSetup>({ modules: [], groups: [], role: '', site: '', signOut: async () => {} });
+const FrameContext = createContext<FrameSetup>({
+  modules: [], groups: [], role: '', site: '', signOut: async () => {},
+  switchSite: async () => ({ ok: false, error: 'Sign in to change site.' }),
+});
 
 export function FrameProvider({ value, children }: { value: FrameSetup; children: ReactNode }) {
   return <FrameContext.Provider value={value}>{children}</FrameContext.Provider>;

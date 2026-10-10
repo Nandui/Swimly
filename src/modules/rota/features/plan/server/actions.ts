@@ -10,7 +10,7 @@ import { activityTypeIdsIn, classesActivity } from "@/lib/setup/activity-types";
 import { clock, parseClock } from "@/modules/rota/shared/constants";
 import { fitsFor } from "@/modules/rota/shared/data";
 import { notifyShiftChange } from "@/lib/staff-api/notify";
-import { commitmentsFor } from "@/modules/server";
+import { commitmentsFor } from "@/modules/contributions";
 import { type ChangeInput } from "@/modules/rota/shared/actions";
 import { CLASSES, NEEDS_REASON, allowedFor, changeSchema, iso, logLive, refresh, shared } from "@/modules/rota/shared/writes";
 

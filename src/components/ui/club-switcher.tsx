@@ -4,19 +4,20 @@ import { useTransition } from "react";
 import { Building2, ChevronDown, Loader2 } from "lucide-react";
 import { Button } from "@/components/shadcn/button";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuLabel, DropdownMenuRadioGroup, DropdownMenuRadioItem, DropdownMenuTrigger } from "@/components/shadcn/dropdown-menu";
-import { switchClub } from "@/lib/clubs/actions/clubs";
-import { toast } from "@/lib/toast";
+import { useFrame } from "@/components/ui/frame";
+import { toast } from "@/components/ui/toast";
 import { cn } from "@/lib/utils";
 
 type Club = { id: string; name: string };
 export function ClubSwitcher({ club, clubs, touchTargets = false }: { club: Club; clubs: Club[]; touchTargets?: boolean }) {
+  const { switchSite } = useFrame();
   const [pending, startTransition] = useTransition();
   function choose(id: string) {
     if (id === club.id) return;
     startTransition(async () => {
       try {
-        const result = await switchClub(id, { stay: true });
-        if (result && !result.ok) toast.error(result.error);
+        const result = await switchSite(id);
+        if (!result.ok) toast.error(result.error);
         else toast.success(`Now working at ${clubs.find(option => option.id === id)?.name ?? "the selected site"}`);
       } catch { toast.error("Could not switch sites. Check the site and try again."); }
     });
