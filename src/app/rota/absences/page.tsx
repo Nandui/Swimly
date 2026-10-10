@@ -3,15 +3,14 @@ import { notFound } from "next/navigation";
 import { History } from "lucide-react";
 import { EmptyState } from "@/components/ui-kit/empty-state";
 import { PageHeader } from "@/components/ui-kit/page-header";
-import { BackAtWork, ExtendAbsence, RemoveAbsence, ReportAbsence, ReturnToWork } from "@/modules/rota/components/absences";
+import {
+  ABSENCE_REASON_META, BackAtWork, ExtendAbsence, RemoveAbsence, ReportAbsence, requireRotaActor, RETURN_FIT_META, ReturnToWork, type RotaAbsenceRow, rotaAbsences, type RotaReturnRow,
+} from "@/modules/rota/features/absences";
 import { Avatar, AvatarFallback } from "@/components/shadcn/avatar";
 import { Button } from "@/components/shadcn/button";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/shadcn/collapsible";
 import { Tag } from "@/components/ui-kit/tag";
 import { formatDate, nameInitials, plural } from "@/lib/format";
-import { ABSENCE_REASON_META, RETURN_FIT_META } from "@/modules/rota/lib/constants";
-import { requireRotaActor } from "@/modules/rota/lib/access";
-import { rotaAbsences, type RotaAbsenceRow, type RotaReturnRow } from "@/modules/rota/lib/absences";
 
 export const metadata: Metadata = { title: "Absences" };
 

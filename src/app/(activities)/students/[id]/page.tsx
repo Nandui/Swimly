@@ -1,14 +1,10 @@
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
-import { SwimmerProfile } from "@/modules/activities/components/students/swimmer-profile";
+import {
+  getEnrolmentsForStudent, getStudent, getStudentAssessments, getStudentProgress, getSwimmerHistory, getTransferTargets, SwimmerProfile, swimmerReturnHref,
+} from "@/modules/activities/features/students";
 import { can, canSee } from "@/lib/authz";
 import { screenPage } from "@/lib/page-guards";
-import { getStudent } from "@/modules/activities/lib/students/data/students";
-import { getStudentProgress } from "@/modules/activities/lib/progression/data/progress";
-import { getEnrolmentsForStudent, getTransferTargets } from "@/modules/activities/lib/enrolment/data/enrolments";
-import { getStudentAssessments } from "@/modules/activities/lib/assessments/data/assessments";
-import { getSwimmerHistory } from "@/modules/activities/lib/students/data/history";
-import { swimmerReturnHref } from "@/modules/activities/lib/students/directory";
 
 /** Never the child's name: tab titles persist in browser history on shared
  *  reception and poolside devices, which the idle sign-out cannot clear. */

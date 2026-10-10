@@ -5,11 +5,8 @@ import { Button } from "@/components/shadcn/button";
 import { Table, TableBody, TableCell, TableFooter, TableHead, TableHeader, TableRow } from "@/components/shadcn/table";
 import { Notice } from "@/components/ui-kit/notice";
 import { PageHeader } from "@/components/ui-kit/page-header";
-import { ApproveOrder, CancelOrder, PrintOrder, RejectOrder } from "@/modules/purchasing/components/order-actions";
-import { PoStatusTag } from "@/modules/purchasing/components/status";
+import { ApproveOrder, CancelOrder, euro, PoStatusTag, PrintOrder, purchaseOrder, RejectOrder } from "@/modules/purchasing/features/orders";
 import { formatDate, formatDateTime } from "@/lib/format";
-import { purchaseOrder } from "@/modules/purchasing/lib/data";
-import { euro } from "@/modules/purchasing/lib/rules";
 
 export const metadata: Metadata = { title: "Purchase order" };
 

@@ -1,11 +1,7 @@
 import type { Metadata } from "next";
-import { AwaitingEnrolment } from "@/modules/activities/components/enrolment/awaiting-enrolment";
-import { getAwaitingEnrolment } from "@/modules/activities/lib/enrolment/data/awaiting-enrolment";
+import { AwaitingEnrolment, AwaitingMoves, getAwaitingEnrolment, getAwaitingMoves, getTransferTargets } from "@/modules/activities/features/enrolment";
 import { can, canSee } from "@/lib/authz";
-import { getTransferTargets } from "@/modules/activities/lib/enrolment/data/enrolments";
 import { screenPage } from "@/lib/page-guards";
-import { getAwaitingMoves } from "@/modules/activities/lib/enrolment/data/awaiting-moves";
-import { AwaitingMoves } from "@/modules/activities/components/enrolment/awaiting-moves";
 
 export const metadata: Metadata = { title: "Awaiting enrolment" };
 

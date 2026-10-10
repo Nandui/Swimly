@@ -1,7 +1,5 @@
 import { auth } from "@/auth";
-import { tasksAccess } from "@/modules/tasks/lib/access";
-import { taskReport } from "@/modules/tasks/lib/data";
-import { TASK_STATE_META, clockOf, csvRows } from "@/modules/tasks/lib/rules";
+import { clockOf, csvRows, TASK_STATE_META, taskReport, tasksAccess } from "@/modules/tasks/features/reports";
 
 /** The report as a CSV a spreadsheet opens safely (no formulas): `kind=scores` gives each site's
  *  score per day (frozen or provisional), otherwise every task in the range with the report's

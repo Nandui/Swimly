@@ -7,35 +7,16 @@ import {
   CollapsibleContent,
   CollapsibleTrigger,
 } from "@/components/shadcn/collapsible";
-import { StartClass } from "@/modules/activities/components/instructor/start-class";
-import { RefreshClasses } from "@/modules/activities/components/instructor/refresh-classes";
-import { claimState } from "@/modules/activities/lib/attendance/claim-state";
 import {
-  instructorClassHref,
-  instructorHomeHref,
-} from "@/modules/activities/lib/attendance/navigation";
-import { weekdayOfIso } from "@/modules/activities/lib/attendance/dates";
-import { getCoversForDay } from "@/modules/activities/lib/attendance/data/cover";
-import { getRegisterStateForDay } from "@/modules/activities/lib/attendance/data/register";
-import {
-  courseName,
-  formatTime,
-  formatSessionTime,
-} from "@/modules/activities/lib/courses/constants";
-import type { CourseRow } from "@/modules/activities/lib/courses/data/courses";
-import { getCoursesOnDate } from "@/modules/activities/lib/courses/planned";
+  ATTENDANCE_RECORD_META, CANCELLATION_META, claimState, courseName, type CourseRow, formatSessionTime, formatTime, getCancellationsForDay, getCoursesOnDate, getCoversForDay, getRegisterStateForDay, getTodayAssessments, InstructorAssessments, instructorClassHref, instructorHomeHref, RefreshClasses, StartClass, weekdayOfIso,
+} from "@/modules/activities/features/instructor";
 import { formatDate, formatDay, minutesNow, parseDateOnly, plural, today } from "@/lib/format";
 import { HOME_SESSION_META } from "@/lib/home-meta";
 import { PageHeader } from "@/components/ui-kit/page-header";
 import { EmptyState } from "@/components/ui-kit/empty-state";
-import { ATTENDANCE_RECORD_META } from "@/modules/activities/lib/attendance/constants";
 import { screenPage } from "@/lib/page-guards";
 import { can } from "@/lib/authz";
-import { getCancellationsForDay } from "@/modules/activities/lib/cancellations/data";
-import { CANCELLATION_META } from "@/modules/activities/lib/cancellations/constants";
 import { Tag } from "@/components/ui-kit/tag";
-import { InstructorAssessments } from "@/modules/activities/components/instructor/assessments";
-import { getTodayAssessments } from "@/modules/activities/lib/today/assessments";
 import { SegmentedLinks } from "@/components/ui-kit/segmented-links";
 
 export const metadata: Metadata = { title: "Pool deck" };

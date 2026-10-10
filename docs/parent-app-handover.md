@@ -94,7 +94,7 @@ The management API and development implementation now include staff controls for
 - Publishing/unpublishing assessment sessions and setting a booking deadline.
 
 Use the existing [staff management API contract](parent-app.md#staff-management-api)
-and [implementation](../src/modules/activities/lib/parent/admin.ts). Base path:
+and [implementation](../src/modules/activities/features/parents/server/admin.ts). Base path:
 `/api/parent-admin/v1`. Family access requires `parents.manage` and the Swimmers
 screen; publication requires `courses.manage` and the Assessments screen.
 Writes use staff sessions, same-origin checks and an audit reason. Administrators

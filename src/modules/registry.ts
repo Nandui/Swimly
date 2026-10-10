@@ -125,7 +125,7 @@ registerModule({
   id: "swim-school",
   group: "front-of-house",
   name: "Swim school",
-  // Swim school is the first activity type (see src/modules/activities/types.ts).
+  // Swim school is the first activity type (see src/modules/activities/shared/types.ts).
   description: "Swimmers, classes and assessments at the desk, and the swim school's set-up",
   icon: WavesLadder,
   href: "/swim-school",

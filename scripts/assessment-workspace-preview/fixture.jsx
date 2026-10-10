@@ -9,10 +9,10 @@ import {ModuleShell} from '@/components/workspace/module-shell';
 import {ThemeProvider} from '@/components/theme-provider';
 import {TooltipProvider} from '@/components/shadcn/tooltip';
 import {ToastBridge} from '@/lib/toast';
-import {SessionDirectory,sessionView} from '@/modules/activities/components/assessments/session-directory';
-import {AwaitingEnrolment} from '@/modules/activities/components/enrolment/awaiting-enrolment';
-import {AddSession} from '@/modules/activities/components/assessments/session-actions';
-import {NAV_ITEMS,isNavItemActive} from '@/modules/activities/lib/nav';
+import {SessionDirectory,sessionView} from '@/modules/activities/features/assessments/components/session-directory';
+import {AwaitingEnrolment} from '@/modules/activities/features/enrolment/components/awaiting-enrolment';
+import {AddSession} from '@/modules/activities/features/assessments/components/session-actions';
+import {NAV_ITEMS,isNavItemActive} from '@/modules/activities/features/workspace/server/nav';
 
 const query=new URLSearchParams(location.search);
 const theme=query.get('theme')==='dark'?'dark':'light';

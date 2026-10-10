@@ -81,7 +81,7 @@ checks; starts do not grant exclusive ownership. Do not add desk navigation,
 desk profile links or a cross-site swimmer search to it, or Instructor links to desk
 navigation. Its only swimmer lookup is `/instructor/swimmers`: swimmers with a current
 place at the working site, medical notes only for swimmers the instructor teaches or
-covers today (owner decision, September 2026; see src/modules/activities/classification.ts). Shared teaching components must preserve the route-selected
+covers today (owner decision, September 2026; see src/modules/activities/shared/classification.ts). Shared teaching components must preserve the route-selected
 workspace boundary. See [docs/instructor.md](docs/instructor.md).
 
 The core rules: ask for a named permission, never a role; every mutation

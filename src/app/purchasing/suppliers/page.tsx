@@ -4,10 +4,8 @@ import { ChevronRight } from "lucide-react";
 import { EmptyState } from "@/components/ui-kit/empty-state";
 import { PageHeader } from "@/components/ui-kit/page-header";
 import { Tag } from "@/components/ui-kit/tag";
-import { AddRule, RemoveRule, SupplierDialog } from "@/modules/purchasing/components/suppliers";
+import { AddRule, APPROVAL_LIST_META, euro, RemoveRule, SupplierDialog, suppliersPage } from "@/modules/purchasing/features/suppliers";
 import { plural } from "@/lib/format";
-import { suppliersPage } from "@/modules/purchasing/lib/data";
-import { APPROVAL_LIST_META, euro } from "@/modules/purchasing/lib/rules";
 
 export const metadata: Metadata = { title: "Suppliers" };
 

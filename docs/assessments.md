@@ -88,13 +88,13 @@ review. Unsaved text is held on the current page only, not across a page reload.
 
 ## Verification
 
-- `src/modules/activities/lib/enrolment/data/awaiting-enrolment.test.ts` uses real Prisma reads in
+- `src/modules/activities/features/enrolment/server/data/awaiting-enrolment.test.ts` uses real Prisma reads in
   isolated PGlite: assessment eligibility, site/programme aliases, historical
   resolution, unassessed waitlists, existing class places, multiple requests,
   deduplication, search, pagination, privacy and authentication.
 - Navigation/screen tests cover the independent grant, administrator access and
   the Instructor boundary. Existing enrolment action tests cover capacity/audit.
-- `src/modules/activities/lib/enrolment/actions/follow-up.test.ts` uses isolated PGlite for access,
+- `src/modules/activities/shared/enrolment/actions/follow-up.test.ts` uses isolated PGlite for access,
   cross-site history, validation, attribution, atomic audits, concurrent stale
   updates, idempotent retries, history pagination and retention. Queue tests also
   check that contact outcomes never remove an assessment/waitlist request.

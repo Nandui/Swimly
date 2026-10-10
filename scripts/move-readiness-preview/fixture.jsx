@@ -8,11 +8,11 @@ import '@/app/theme/poolside.css';
 import '@/app/workspace/module-workspace.css';
 import { ThemeProvider } from '@/components/theme-provider';
 import { TooltipProvider } from '@/components/shadcn/tooltip';
-import { InstructorShell } from '@/modules/activities/components/instructor/instructor-shell';
+import { InstructorShell } from '@/modules/activities/features/instructor/components/instructor-shell';
 import { ModuleShell } from '@/components/workspace/module-shell';
-import { DeckChecklist } from '@/modules/activities/components/progression/deck-checklist';
-import { AwaitingMoves } from '@/modules/activities/components/enrolment/awaiting-moves';
-import { AwaitingEnrolment } from '@/modules/activities/components/enrolment/awaiting-enrolment';
+import { DeckChecklist } from '@/modules/activities/shared/progression/components/deck-checklist';
+import { AwaitingMoves } from '@/modules/activities/features/enrolment/components/awaiting-moves';
+import { AwaitingEnrolment } from '@/modules/activities/features/enrolment/components/awaiting-enrolment';
 
 const query = new URLSearchParams(location.search);
 const skills = ['Enter the water safely', 'Float on the front', 'Float on the back'].map((name, i) => ({ id: `skill-${i}`, name, description: null }));

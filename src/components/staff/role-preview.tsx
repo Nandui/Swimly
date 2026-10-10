@@ -5,7 +5,7 @@ import { Eye, EyeOff, Loader2 } from "lucide-react";
 import { Button } from "@/components/shadcn/button";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuRadioGroup, DropdownMenuRadioItem, DropdownMenuSeparator, DropdownMenuTrigger } from "@/components/shadcn/dropdown-menu";
 import { previewRole } from "@/lib/staff/actions/preview";
-import { toast } from "@/lib/toast";
+import { toast } from "@/components/ui/toast";
 
 type RoleOption = { id: string; name: string; description: string | null };
 export type RolePreviewState = { roles: RoleOption[]; current: { id: string; name: string } | null; actualRoleName: string };

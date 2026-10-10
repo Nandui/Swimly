@@ -5,7 +5,7 @@ import { EmptyState } from "@/components/ui-kit/empty-state";
 import { LinkPagination } from "@/components/ui-kit/link-pagination";
 import { PageHeader } from "@/components/ui-kit/page-header";
 import { formatDateTime } from "@/lib/format";
-import { ACTIVITY_PAGE, taskActivity } from "@/modules/tasks/lib/data";
+import { ACTIVITY_PAGE, taskActivity } from "@/modules/tasks/features/reports";
 
 export const metadata: Metadata = { title: "Activity" };
 

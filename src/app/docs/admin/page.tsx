@@ -1,9 +1,5 @@
 import { redirect } from 'next/navigation';
-import { requireMember } from '@/modules/docs/lib/auth';
-import { database, rows } from '@/modules/docs/lib/database';
-import { workspace } from '@/modules/docs/lib/queries';
-import { canManage, type AuditEvent } from '@/modules/docs/lib/types';
-import { AdminView } from '@/modules/docs/components/admin';
+import { AdminView, type AuditEvent, canManage, database, requireMember, rows, workspace } from "@/modules/docs/features/admin";
 import type { Metadata } from 'next';
 export const metadata: Metadata = { title: 'Administration' };
 export default async function AdminPage() {

@@ -1,4 +1,4 @@
-import { handleParentAdminRequest } from "@/modules/activities/lib/parent/admin";
+import { handleParentAdminRequest } from "@/modules/activities/features/parents";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";

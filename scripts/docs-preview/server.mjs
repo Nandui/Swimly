@@ -4,16 +4,16 @@ import http from 'node:http';
 import { randomUUID } from 'node:crypto';
 import { buildPreview } from '../instructor-swimmer-preview/build.mjs';
 import { createDocsTestDatabase } from '../../src/test/docs-database.ts';
-import { DocumentService, actor, library, requirements, documentView } from '../../src/modules/docs/lib/domain.ts';
-import { rows, one, listMembers } from '../../src/modules/docs/lib/database.ts';
-import { canRead, canWrite, canManage, toWorkspaceMember } from '../../src/modules/docs/lib/types.ts';
+import { DocumentService, actor, library, requirements, documentView } from '../../src/modules/docs/shared/domain.ts';
+import { rows, one, listMembers } from '../../src/modules/docs/shared/database.ts';
+import { canRead, canWrite, canManage, toWorkspaceMember } from '../../src/modules/docs/shared/types.ts';
 
 export const output = path.resolve('.impeccable/review/docs/site');
 export async function docsPreview(port = 0) {
-  const actionSource = await fs.readFile('src/app/docs/actions.ts','utf8');
+  const actionSource = await fs.readFile('src/modules/docs/shared/actions.ts','utf8');
   const names = [...actionSource.matchAll(/export async function (\w+)/g)].map(m=>m[1]);
   await buildPreview({entryPoint:'scripts/docs-preview/fixture.jsx',outputDir:output,pathnameFallback:'/docs',serverMocks:{
-    '@/app/docs/actions': names.map(n=>`export async function ${n}(...args){return window.docsAction('${n}',...args)}`).join('\n'),
+    '@/modules/docs/shared/actions': names.map(n=>`export async function ${n}(...args){return window.docsAction('${n}',...args)}`).join('\n'),
     'next/navigation': 'export const usePathname=()=>location.pathname; export const useSearchParams=()=>new URLSearchParams(location.search); export const useRouter=()=>({push(href){window.docsNavigating=true;location.assign(href)},replace(href){window.docsNavigating=true;location.replace(href)},refresh(){if(!window.docsNavigating)location.reload()}});',
   }});
   const html = path.join(output, 'index.html');

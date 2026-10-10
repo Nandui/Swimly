@@ -1,12 +1,12 @@
 import { AuthorizationError } from "@/lib/authz";
-import { prisma } from "@/lib/prisma";
 import { requireCapFor } from "@/lib/policy/session";
+import { certificateFile } from "@/lib/qualifications";
 
 /** An uploaded certificate, for someone whose qualifications role covers the
  *  person. Served inline, never cached, with the stored type only. */
 export async function GET(_request: Request, { params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
-  const row = await prisma.qualificationEvidence.findUnique({ where: { id }, select: { userId: true, orgId: true, fileName: true, mime: true, bytes: true } });
+  const row = await certificateFile(id);
   if (!row) return new Response("Not found", { status: 404 });
   try {
     await requireCapFor("qualifications.manage", { subjectUserId: row.userId, orgId: row.orgId });

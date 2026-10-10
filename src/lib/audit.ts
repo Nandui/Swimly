@@ -11,6 +11,7 @@
 
 import type { Prisma } from "@/generated/prisma/client";
 import { currentClubIdIfAny } from "@/lib/clubs/current";
+import type { SiteFilter } from "@/lib/policy/types";
 import { prisma } from "@/lib/prisma";
 
 type AuditInput = {
@@ -97,4 +98,19 @@ export async function auditedActions(entity: string, entityIds: readonly string[
     select: { entityId: true, action: true },
   });
   return rows.filter((row): row is { entityId: string; action: string } => row.entityId !== null);
+}
+
+/** One module's audit trail, newest first, a page at a time: the rows at the
+ *  sites a capability reaches, plus the organisation-wide ones (no site). For
+ *  a module's own activity screen; the caller has checked the permission. */
+export async function moduleAuditTrail(module: string, sites: SiteFilter, page: { skip: number; take: number }) {
+  const where: Prisma.AuditLogWhereInput = {
+    module,
+    ...(sites.kind === "all" ? {} : { OR: [{ clubId: { in: [...sites.siteIds] } }, { clubId: null }] }),
+  };
+  const [rows, total] = await Promise.all([
+    prisma.auditLog.findMany({ where, orderBy: { createdAt: "desc" }, skip: page.skip, take: page.take, select: { id: true, actorName: true, action: true, summary: true, createdAt: true, clubId: true } }),
+    prisma.auditLog.count({ where }),
+  ]);
+  return { rows, total };
 }

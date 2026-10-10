@@ -106,15 +106,40 @@ const activitiesData = [
   },
 ];
 const coreData = notTables(Object.keys(moduleFiles), "Core never queries a module's tables. Register a contribution in src/modules/contributions.ts instead.");
-const workData = (self) => notTables(Object.keys(moduleFiles).filter((id) => id !== self), "A module queries only its own tables and Core's. Ask the owning module through a seam (src/modules/contributions.ts).");
+// Every Work module reads Core only through its functions, never its tables
+// (Phase 3 of docs/architecture/MIGRATION.md): src/lib/directory.ts,
+// src/lib/qualifications.ts, src/lib/setup/activity-types.ts,
+// src/lib/people/records.ts, src/lib/audit.ts and the policy engine. Each entry
+// names the module's relations to Core tables, so joins are caught too.
+const coreThroughFunctions = {
+  docs: [],
+  refunds: [],
+  purchasing: ["role", "site"],
+  academy: ["organisation", "qualificationType", "qualification", "site", "tutor", "assessor", "user"],
+  tasks: ["site"],
+  hr: [],
+  training: ["grantsType", "organisation", "user"],
+  rota: ["department", "organisation", "requiredType", "site", "type", "user"],
+};
+const coreJoins = (relations) => relations.length ? [{
+  selector: `Property[key.name=/^(include|select|where|orderBy)$/] Property[key.name=/^(${relations.join("|")})$/][value.type=/^(ObjectExpression|Literal)$/]`,
+  message: "Do not join Core tables from a module's query. Keep the id and ask Core's functions (src/lib/directory.ts and its neighbours) for names.",
+}] : [];
+const workData = (self) => [
+  ...notTables(Object.keys(moduleFiles).filter((id) => id !== self), "A module queries only its own tables and Core's. Ask the owning module through a seam (src/modules/contributions.ts)."),
+  ...(coreThroughFunctions[self] ? [
+    ...notTables(["core"], "This module reads Core through its functions (src/lib/directory.ts, src/lib/qualifications.ts, src/lib/setup/activity-types.ts, src/lib/people/records.ts, src/lib/policy), never Core tables."),
+    ...coreJoins(coreThroughFunctions[self]),
+  ] : []),
+];
 
 // Each module's public API and email files are its own. Shared plumbing (the
 // public-API kit, the email sender) lives in Core: src/lib/public-api and
 // src/lib/email. A module never imports another module's copy.
 const modulePlumbing = [
-  { owner: ["src/modules/academy/lib/**", "src/app/api/academy/**"], from: ["./src/modules/academy/lib/public"] },
+  { owner: ["src/modules/academy/features/booking/**", "src/app/api/academy/**"], from: ["./src/modules/academy/features/booking/server"] },
   { owner: ["src/lib/staff-api/**", "src/app/api/staff/**"], from: ["./src/lib/staff-api/email.ts", "./src/lib/staff-api/http.ts"] },
-  { owner: activitiesFiles, from: ["./src/modules/activities/lib/parent/email.ts", "./src/modules/activities/lib/parent/http.ts", "./src/modules/activities/lib/parent/sign-in-email.ts"] },
+  { owner: activitiesFiles, from: ["./src/modules/activities/shared/parents/email.ts", "./src/modules/activities/shared/parents/http.ts", "./src/modules/activities/shared/parents/sign-in-email.ts"] },
 ];
 // One rule carries both: flat config replaces a rule's options rather than merging them.
 const restrictedPaths = (skip) => ["error", {
@@ -128,12 +153,17 @@ const restrictedPaths = (skip) => ["error", {
   ],
 }];
 
-// The target architecture's dependency table (CLAUDE.md, section 3), in
-// warning mode while the migration runs (docs/architecture/MIGRATION.md). The
-// error-level rules above stay in force; these warnings show what is left.
+// The target architecture's dependency table (CLAUDE.md, section 3), as errors
+// since migration phase 4 (docs/architecture/MIGRATION.md), alongside the
+// module and data rules above.
 // Elements are folders (first match wins); single files that sit outside their
 // layer's folder are classified by file category instead.
 const layerElements = [
+  // A module's features and its shared folder, then the rest of the module
+  // (index.ts, module.ts, and the lib/components folders of modules not yet
+  // in the features shape).
+  { type: "feature", pattern: "src/modules/*/features/*", capture: ["module", "feature"], partialMatch: false },
+  { type: "module-shared", pattern: "src/modules/*/shared", capture: ["module"], partialMatch: false },
   { type: "module", pattern: "src/modules/*", capture: ["module"], partialMatch: false },
   { type: "ui", pattern: ["src/components/shadcn", "src/components/ui", "src/components/ui-kit"], partialMatch: false },
   // Screens that combine modules: the home page, the frame and Turnfin Me's API.
@@ -153,16 +183,29 @@ const toEntry = { element: { type: "module", fileInternalPath: "index.ts" } };
 const layerPolicies = [
   { from: { element: { type: "platform" } }, allow: { to: { element: { type: "platform" } } } },
   { from: { element: { type: "ui" } }, allow: { to: { element: { type: "ui" } } } },
+  // A module's index.ts and module.ts use their own features; a feature uses
+  // its own files and its module's shared folder, never a sibling feature.
   { from: { element: { type: "module" } }, allow: { to: [
     { element: { types: { anyOf: ["platform", "ui"] } } },
-    { element: { type: "module", captured: { module: "{{ from.element.captured.module }}" } } },
+    { element: { types: { anyOf: ["module", "module-shared", "feature"] }, captured: { module: "{{ from.element.captured.module }}" } } },
+    toEntry,
+  ] } },
+  { from: { element: { type: "module-shared" } }, allow: { to: [
+    { element: { types: { anyOf: ["platform", "ui"] } } },
+    { element: { type: "module-shared", captured: { module: "{{ from.element.captured.module }}" } } },
+    toEntry,
+  ] } },
+  { from: { element: { type: "feature" } }, allow: { to: [
+    { element: { types: { anyOf: ["platform", "ui"] } } },
+    { element: { type: "module-shared", captured: { module: "{{ from.element.captured.module }}" } } },
+    { element: { type: "feature", captured: { module: "{{ from.element.captured.module }}", feature: "{{ from.element.captured.feature }}" } } },
     toEntry,
   ] } },
   { from: { element: { types: { anyOf: ["front", "admin"] } } }, allow: { to: [{ element: { types: { anyOf: ["platform", "ui", "front", "admin"] } } }, toEntry] } },
   { from: { element: { type: "app" } }, allow: { to: [
     { element: { types: { anyOf: ["platform", "ui", "front", "admin", "app"] } } },
     toEntry,
-    { element: { type: "module", fileInternalPath: "features/*/index.ts" } },
+    { element: { type: "feature", fileInternalPath: "index.ts" } },
   ] } },
   // Files classified on their own (layerFiles); later policies win.
   { allow: { to: { file: { categories: { anyOf: ["platform", "ui"] } } } } },
@@ -174,6 +217,7 @@ const layerPolicies = [
   { from: { element: { type: "app" } }, allow: { to: { file: { categories: "composition" } } } },
   // The platform loads the module wiring, as the registry loads app/modules.ts; front reads modules through it.
   { from: { element: { types: { anyOf: ["platform", "front"] } } }, allow: { to: { file: { categories: "composition" } } } },
+  { from: { file: { categories: "platform" } }, allow: { to: { file: { categories: "composition" } } } },
   { from: { file: { categories: "front" } }, allow: { to: { file: { categories: "composition" } } } },
   { from: { file: { categories: "composition" } }, allow: { to: { element: { types: { anyOf: ["platform", "ui", "front", "module"] } } } } },
 ];
@@ -254,7 +298,7 @@ const eslintConfig = defineConfig([
     plugins: { boundaries },
     settings: { "boundaries/elements": layerElements, "boundaries/files": layerFiles },
     rules: {
-      "boundaries/dependencies": ["warn", {
+      "boundaries/dependencies": ["error", {
         default: "disallow",
         message: "{{ from.element.types.[0] }} may not import {{ dependency.source }} (CLAUDE.md, section 3).",
         policies: layerPolicies,

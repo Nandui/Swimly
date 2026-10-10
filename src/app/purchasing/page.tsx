@@ -4,10 +4,8 @@ import { ChevronRight, FilePlus2, Truck } from "lucide-react";
 import { Button } from "@/components/shadcn/button";
 import { EmptyState } from "@/components/ui-kit/empty-state";
 import { PageHeader } from "@/components/ui-kit/page-header";
-import { PoStatusTag } from "@/modules/purchasing/components/status";
+import { euro, type OrderRow, type PoStatus, PoStatusTag, purchasingHome } from "@/modules/purchasing/features/orders";
 import { formatDate, plural } from "@/lib/format";
-import { purchasingHome, type OrderRow } from "@/modules/purchasing/lib/data";
-import { euro, type PoStatus } from "@/modules/purchasing/lib/rules";
 
 export const metadata: Metadata = { title: "Purchase orders" };
 

@@ -1,6 +1,5 @@
 import type { Metadata } from "next";
-import { LegendAgreements } from "@/modules/activities/components/enrolment/legend-agreements";
-import { getLegendAgreements } from "@/modules/activities/lib/enrolment/data/legend-agreements";
+import { getLegendAgreements, LegendAgreements } from "@/modules/activities/features/enrolment";
 import { can, canSee } from "@/lib/authz";
 import { screenPage } from "@/lib/page-guards";
 

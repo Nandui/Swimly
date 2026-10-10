@@ -1,9 +1,7 @@
 import { NextRequest } from 'next/server';
-import { requireActionMember } from '@/modules/docs/lib/auth';
-import { database, listMembers } from '@/modules/docs/lib/database';
-import { library, requirements, DomainError } from '@/modules/docs/lib/domain';
-import { filterReading, readingCsv } from '@/modules/docs/lib/reporting';
-import { readingReportScope } from '@/modules/docs/lib/report-scope';
+import {
+  database, DomainError, filterReading, library, listMembers, readingCsv, readingReportScope, requireActionMember, requirements,
+} from "@/modules/docs/features/reports";
 export async function GET(request: NextRequest) {
   try {
     const m = await requireActionMember();

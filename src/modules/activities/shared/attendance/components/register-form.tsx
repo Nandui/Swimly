@@ -1,0 +1,439 @@
+"use client";
+import { Tag } from "@/components/ui-kit/tag";
+import { MEDICAL_STATUS_META, ageLabel } from "@/modules/activities/shared/students/constants";
+
+import * as React from "react";
+import { useRouter } from "next/navigation";
+import {
+  Check,
+  CheckCheck,
+  ChevronDown,
+  ChevronRight,
+  HeartPulse,
+} from "lucide-react";
+import { Avatar, AvatarFallback, initials } from "@/components/shadcn/avatar";
+import { Button } from "@/components/shadcn/button";
+import { LoadingButton } from "@/components/ui/loading-button";
+import {
+  Collapsible,
+  CollapsibleContent,
+  CollapsibleTrigger,
+} from "@/components/shadcn/collapsible";
+import { Label } from "@/components/shadcn/label";
+import { Textarea } from "@/components/shadcn/textarea";
+import { MarkChoices } from "@/modules/activities/shared/instructor/components/teaching-ui";
+import { Notice } from "@/components/ui-kit/notice";
+import type { AttendanceStatus } from "@/generated/prisma/client";
+import { markRegister } from "@/modules/activities/shared/attendance/actions/register";
+import {
+  ATTENDANCE_ORDER,
+  ATTENDANCE_STATUS_META,
+} from "@/modules/activities/shared/attendance/constants";
+import type { RegisterLine } from "@/modules/activities/shared/attendance/data/register";
+import { parseAttendanceDraft } from "@/modules/activities/shared/attendance/draft";
+import {
+  SAVE_TIMEOUT_MS,
+  SAVE_UNCONFIRMED_MESSAGE,
+  withTimeout,
+} from "@/lib/save-feedback";
+import { toast } from "@/components/ui/toast";
+import { RegisterConflict } from "@/modules/activities/shared/attendance/components/register-conflict";
+import type { SavedRegister } from "@/modules/activities/shared/attendance/revision";
+
+export function SaveBar({
+  status,
+  children,
+}: {
+  status: string;
+  children: React.ReactNode;
+}) {
+  // A panel of its own after the main one; poolside.css (.pc-save-bar) holds it above the
+  // viewport's edge, or above the bottom bar where the frame shows one.
+  return (
+    <div className="pc-panel pc-save-bar">
+      <p
+        role="status"
+        aria-live="polite"
+        className="min-w-0 flex-1 font-semibold"
+      >
+        {status}
+      </p>
+      {children}
+    </div>
+  );
+}
+
+type Mark = { status: AttendanceStatus; note: string };
+
+function storageKey(courseId: string, date: string) {
+  return `swimly:register:${courseId}:${date}`;
+}
+
+export function RegisterForm(
+  props: React.ComponentProps<typeof RegisterFormState>,
+) {
+  return (
+    <RegisterFormState
+      key={`${props.courseId}:${props.date}:${props.readOnly}`}
+      {...props}
+    />
+  );
+}
+
+function RegisterFormState({
+  courseId,
+  date,
+  revision,
+  lines,
+  classNote,
+  readOnly,
+  continueHref,
+  teaching = false,
+}: {
+  courseId: string;
+  date: string;
+  revision: string;
+  lines: RegisterLine[];
+  classNote: string | null;
+  readOnly: boolean;
+  /** Where a successful save goes next. Set by the deck's class flow, where
+   *  attendance is step one and the competencies are step two; the register
+   *  page on its own leaves it out and stays put. */
+  continueHref?: string;
+  teaching?: boolean;
+}) {
+  const router = useRouter();
+  const initial = React.useMemo(() => {
+    const map = new Map<string, Mark>();
+    for (const line of lines) {
+      map.set(line.studentId, {
+        status: line.status ?? "ABSENT",
+        note: line.note ?? "",
+      });
+    }
+    return map;
+  }, [lines]);
+
+  const [marks, setMarks] = React.useState(initial);
+  const [note, setNote] = React.useState(classNote ?? "");
+  const [dirty, setDirty] = React.useState(false);
+  // Marks that came back from the phone's mirror rather than from the
+  // server: worth saying, because the person may not remember making them.
+  const [restored, setRestored] = React.useState(false);
+  const [pending, startTransition] = React.useTransition();
+  const [error, setError] = React.useState<string | null>(null);
+  const [storageUnavailable, setStorageUnavailable] = React.useState(false);
+  const [baseRevision, setBaseRevision] = React.useState<string | null>(
+    revision,
+  );
+  const [conflict, setConflict] = React.useState<SavedRegister | null>(null);
+
+  const key = storageKey(courseId, date);
+
+  // Reading a browser-only store after hydration is what an effect is for —
+  // the server has no localStorage, so doing it during render would mismatch
+  // the markup. The rule cannot tell this apart from a prop-sync effect, which
+  // is the thing it is actually warning about; that one is handled below,
+  // during render, the way React recommends.
+  React.useEffect(() => {
+    try {
+      const raw = window.localStorage.getItem(key);
+      if (!raw || readOnly) return;
+      const stored = parseAttendanceDraft(raw);
+      if (!stored) {
+        window.localStorage.removeItem(key);
+        return;
+      }
+      // eslint-disable-next-line react-hooks/set-state-in-effect
+      setMarks((previous) => {
+        const next = new Map(previous);
+        for (const [studentId, mark] of Object.entries(stored.marks)) {
+          if (next.has(studentId)) next.set(studentId, mark);
+        }
+        return next;
+      });
+      if (stored.note !== undefined) setNote(stored.note);
+      // Older drafts have no baseline and must be reviewed before overwriting.
+      setBaseRevision(stored.revision ?? null);
+      setDirty(true);
+      setRestored(true);
+    } catch {
+      setStorageUnavailable(true);
+    }
+  }, [key, readOnly]);
+
+  // When a save revalidates and the server sends fresh lines, adopt them.
+  // Compared during render rather than resynced in an effect, so it costs no
+  // extra render pass — React's documented "adjusting state on prop change".
+  const [syncedTo, setSyncedTo] = React.useState(initial);
+  if (syncedTo !== initial) {
+    setSyncedTo(initial);
+    if (!dirty) {
+      setMarks(initial);
+      setNote(classNote ?? "");
+      setBaseRevision(revision);
+    }
+  }
+
+  function remember(
+    next: Map<string, Mark>,
+    nextNote = note,
+    nextRevision = baseRevision,
+  ) {
+    try {
+      window.localStorage.setItem(
+        key,
+        JSON.stringify({
+          version: 2,
+          marks: Object.fromEntries(next),
+          note: nextNote,
+          revision: nextRevision,
+        }),
+      );
+      setStorageUnavailable(false);
+    } catch {
+      setStorageUnavailable(true);
+    }
+  }
+
+  function set(studentId: string, status: AttendanceStatus) {
+    const next = new Map(marks);
+    next.set(studentId, { ...(next.get(studentId) ?? { note: "" }), status });
+    remember(next);
+    setMarks(next);
+    setDirty(true);
+  }
+
+  function setAll(status: AttendanceStatus) {
+    const next = new Map<string, Mark>();
+    for (const [studentId, mark] of marks)
+      next.set(studentId, { ...mark, status });
+    remember(next);
+    setMarks(next);
+    setDirty(true);
+  }
+
+  function save(expectedRevision = baseRevision) {
+    setBaseRevision(expectedRevision);
+    setConflict(null);
+    remember(marks, note, expectedRevision);
+    startTransition(async () => {
+      // A save that cannot reach the server throws rather than returning,
+      // and a hung one never returns at all. Both are caught here, because
+      // the marks remain in this tab and the person needs a retry path.
+      let result: Awaited<ReturnType<typeof markRegister>>;
+      try {
+        result = await withTimeout(
+          markRegister({
+            courseId,
+            date,
+            teaching,
+            revision: expectedRevision,
+            marks: [...marks.entries()].map(([studentId, mark]) => ({
+              studentId,
+              status: mark.status,
+              note: mark.note || undefined,
+            })),
+            classNote: note.trim() || undefined,
+          }),
+          SAVE_TIMEOUT_MS,
+        );
+      } catch {
+        startTransition(() => setError(SAVE_UNCONFIRMED_MESSAGE));
+        return;
+      }
+
+      if (result.ok) {
+        try {
+          window.localStorage.removeItem(key);
+        } catch {
+          setStorageUnavailable(true);
+        }
+        toast.success("Attendance saved");
+        startTransition(() => {
+          setError(null);
+          setDirty(false);
+          setRestored(false);
+          setBaseRevision(result.revision);
+        });
+        if (continueHref) router.push(continueHref);
+      } else {
+        startTransition(() => {
+          setError(result.error);
+          setConflict(result.conflict ?? null);
+        });
+      }
+    });
+  }
+
+  function useSavedRegister() {
+    if (!conflict) return;
+    setMarks(
+      new Map(
+        lines.map((line) => [
+          line.studentId,
+          conflict.marks[line.studentId] ?? { status: "ABSENT", note: "" },
+        ]),
+      ),
+    );
+    setNote(conflict.note);
+    setBaseRevision(conflict.revision);
+    setDirty(false);
+    setRestored(false);
+    setConflict(null);
+    setError(null);
+    try {
+      window.localStorage.removeItem(key);
+    } catch {
+      setStorageUnavailable(true);
+    }
+    router.refresh();
+  }
+
+  const counts = ATTENDANCE_ORDER.map((status) => ({
+    status,
+    count: [...marks.values()].filter((mark) => mark.status === status).length,
+  })).filter((entry) => entry.count > 0);
+
+  return (
+    <>
+    <section className="pc-panel" aria-label="Attendance">
+      <div className="pc-panel-head">
+        <p className="font-semibold" aria-live="polite">
+          {counts
+            .map(
+              (entry) =>
+                entry.count +
+                " " +
+                ATTENDANCE_STATUS_META[entry.status].label.toLowerCase(),
+            )
+            .join(" · ")}
+        </p>
+        {!readOnly ? (
+          <Button
+            variant="outline"
+            onClick={() => setAll("PRESENT")}
+            disabled={pending}
+          >
+            <CheckCheck aria-hidden="true" />
+            Everyone in
+          </Button>
+        ) : null}
+      </div>
+      <ul className="pc-rows">
+        {lines.map((line) => {
+          const mark = marks.get(line.studentId),
+            name = line.firstName + " " + line.lastName;
+          const hint = [
+            line.dateOfBirth ? `Age ${ageLabel(line.dateOfBirth)}` : null,
+            line.levelName || null,
+            line.offRoster ? "No longer in this class" : null,
+          ].filter(Boolean).join(" · ");
+          const row = (
+            <li className="pc-row">
+              <Avatar size="lg" aria-hidden="true"><AvatarFallback>{initials(name)}</AvatarFallback></Avatar>
+              <div className="pc-row-body items-start gap-1">
+                <p className="pc-row-title break-words">{name}</p>
+                {hint ? <p className="pc-row-hint">{hint}</p> : null}
+                {/* Medical notes open from the tag where this person may read them; otherwise
+                    the tag only says there are some. */}
+                {line.medicalNotes ? (
+                  <CollapsibleTrigger className="pc-tag-trigger" aria-label={`Medical information for ${name}`}>
+                    <Tag meta={MEDICAL_STATUS_META.notes} label={<>{MEDICAL_STATUS_META.notes.label}<ChevronDown aria-hidden="true" /></>} />
+                  </CollapsibleTrigger>
+                ) : line.hasMedicalNotes ? (
+                  <Tag meta={MEDICAL_STATUS_META.notes} />
+                ) : null}
+              </div>
+              <MarkChoices
+                label={"Attendance for " + name}
+                value={mark?.status ?? "ABSENT"}
+                options={ATTENDANCE_ORDER.map((status) => ({
+                  value: status,
+                  label: ATTENDANCE_STATUS_META[status].label,
+                }))}
+                disabled={readOnly || pending}
+                onChange={(value) =>
+                  set(line.studentId, value as AttendanceStatus)
+                }
+              />
+              {line.medicalNotes ? (
+                <CollapsibleContent className="basis-full">
+                  <p className="pc-note max-w-prose whitespace-pre-wrap">
+                    <HeartPulse aria-hidden="true" className="mt-0.5 size-4 shrink-0" />
+                    <span>{line.medicalNotes}</span>
+                  </p>
+                </CollapsibleContent>
+              ) : null}
+            </li>
+          );
+          return line.medicalNotes ? (
+            <Collapsible key={line.studentId} asChild>{row}</Collapsible>
+          ) : (
+            <React.Fragment key={line.studentId}>{row}</React.Fragment>
+          );
+        })}
+      </ul>
+      <div className="flex flex-col gap-2">
+        <Label htmlFor="class-note">Class note</Label>
+        <Textarea
+          id="class-note"
+          value={note}
+          disabled={readOnly || pending}
+          maxLength={300}
+          onChange={(event) => {
+            const next = event.target.value;
+            setNote(next);
+            remember(marks, next);
+            setDirty(true);
+          }}
+          rows={2}
+          placeholder="Anything the team should know about this class"
+        />
+      </div>
+      {conflict ? (
+        <RegisterConflict
+          saved={conflict}
+          marks={marks}
+          note={note}
+          lines={lines}
+          pending={pending}
+          onUseSaved={useSavedRegister}
+          onReplace={() => save(conflict.revision)}
+        />
+      ) : null}
+      {error && !conflict ? <Notice tone="error" live="alert" title={error} /> : null}
+      {storageUnavailable && !readOnly ? (
+        <Notice tone="warning" title="This browser cannot keep a backup. Keep this tab open until attendance is saved." />
+      ) : null}
+    </section>
+    {!readOnly ? (
+      <SaveBar
+        status={
+          restored
+            ? "Restored on this device · not saved"
+            : dirty
+              ? "Not saved yet"
+              : lines.some((line) => line.status !== null)
+                ? "Up to date"
+                : "Ready to save"
+        }
+      >
+        <LoadingButton
+          pending={pending}
+          disabled={!!conflict}
+          onClick={() => save()}
+        >
+          <Check aria-hidden="true" />
+          {continueHref
+              ? "Save and continue"
+              : "Save attendance"}
+          {continueHref ? (
+            <ChevronRight aria-hidden="true" />
+          ) : null}
+        </LoadingButton>
+      </SaveBar>
+    ) : null}
+    </>
+  );
+}

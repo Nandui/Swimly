@@ -1,7 +1,6 @@
 import type { Metadata } from "next";
 import { PageHeader } from "@/components/ui-kit/page-header";
-import { ParentAccounts } from "@/modules/activities/components/parents/parent-accounts";
-import { ParentAccessRequests } from "@/modules/activities/components/parents/access-requests";
+import { ParentAccessRequests, ParentAccounts } from "@/modules/activities/features/parents";
 import { screenPage } from "@/lib/page-guards";
 
 export const metadata: Metadata = { title: "Parent accounts" };

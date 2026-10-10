@@ -1,10 +1,10 @@
 import "dotenv/config";
 import { FOUNDING_CLUB_ID } from "@/lib/clubs/constants";
 import { logAudit } from "@/lib/audit";
-import { courseLabel } from "@/modules/activities/lib/courses/constants";
-import { withCourseSeat } from "@/modules/activities/lib/enrolment/seat";
+import { courseLabel } from "@/modules/activities/shared/courses/constants";
+import { withCourseSeat } from "@/modules/activities/shared/enrolment/seat";
 import { parseDateOnly, today } from "@/lib/format";
-import { fullName } from "@/modules/activities/lib/students/constants";
+import { fullName } from "@/modules/activities/shared/students/constants";
 import { prisma } from "@/lib/prisma";
 
 /** The Friday 18:05 **LeisureWorld Sharks** class — course 00007913, page 15

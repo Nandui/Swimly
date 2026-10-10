@@ -6,10 +6,8 @@ import { operationContext } from "@/lib/operations/context";
 import { validOperationToken } from "@/lib/operations/token";
 import { expandPermissions } from "@/lib/staff/permissions";
 import { AuthorizationError } from "@/lib/authz";
-import { createCourse, updateCourse, type CourseInput } from "@/modules/activities/lib/courses/actions/courses";
-import { getLevelOptions } from "@/modules/activities/lib/curriculum/data/curriculum";
-import { createStudent, updateStudent, type StudentInput } from "@/modules/activities/lib/students/actions/students";
-import { enrolStudent, type EnrolInput } from "@/modules/activities/lib/enrolment/actions/enrolment";
+import { type CourseInput, createCourse, type EnrolInput, enrolStudent, getLevelOptions, updateCourse } from "@/modules/activities/features/courses";
+import { createStudent, type StudentInput, updateStudent } from "@/modules/activities/features/students";
 import type { ConfirmationReply } from "@/lib/action-result";
 
 export const runtime = "nodejs";

@@ -3,10 +3,8 @@ import Link from "next/link";
 import { EmptyState } from "@/components/ui-kit/empty-state";
 import { PageHeader } from "@/components/ui-kit/page-header";
 import { Tag } from "@/components/ui-kit/tag";
-import { CallDialog } from "@/modules/academy/components/forms";
+import { ACADEMY_CALL_DUE_META, ACADEMY_CALL_META, ACADEMY_CALL_TIMES, type AcademyCallOutcome, type AcademyCallTime, CallDialog, toCall } from "@/modules/academy/features/calls";
 import { formatDate, formatDateTime, plural } from "@/lib/format";
-import { toCall } from "@/modules/academy/lib/data";
-import { ACADEMY_CALL_DUE_META, ACADEMY_CALL_META, ACADEMY_CALL_TIMES, type AcademyCallOutcome, type AcademyCallTime } from "@/modules/academy/lib/rules";
 
 export const metadata: Metadata = { title: "Academy: to call" };
 

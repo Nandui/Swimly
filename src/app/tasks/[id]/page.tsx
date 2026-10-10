@@ -4,13 +4,12 @@ import { Tag } from "@/components/ui-kit/tag";
 import { EmptyState } from "@/components/ui-kit/empty-state";
 import { Notice } from "@/components/ui-kit/notice";
 import { PageHeader } from "@/components/ui-kit/page-header";
-import { TaskStateTag } from "@/modules/tasks/components/status";
-import { AddComment, ApproveTask, CantComplete, NotApplicable, RaiseAction, ReopenTask, ResolveAction } from "@/modules/tasks/components/task-dialogs";
-import { TaskWork } from "@/modules/tasks/components/task-work";
+import {
+  ACTION_STATUS_META, AddComment, ApproveTask, CantComplete, clockOf, dayIn, NotApplicable, PRIORITY_META, ReopenTask, taskDetail, TaskStateTag, TaskWork,
+} from "@/modules/tasks/features/day";
+import { RaiseAction, ResolveAction } from "@/modules/tasks/features/follow-ups";
 import Link from "next/link";
 import { formatDate, formatDateTime, formatDayMonth, formatWeekday } from "@/lib/format";
-import { taskDetail } from "@/modules/tasks/lib/data";
-import { ACTION_STATUS_META, PRIORITY_META, clockOf, dayIn } from "@/modules/tasks/lib/rules";
 
 /** One read per request, shared by the page and its tab title. */
 const load = cache(taskDetail);

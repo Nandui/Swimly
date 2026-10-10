@@ -3,7 +3,7 @@
 import { usePathname } from 'next/navigation';
 import type { ReactNode } from 'react';
 import { ADMIN_GROUPS, type CoreLinkKey } from '@/components/core/pages';
-import { ModuleShell } from '@/components/workspace/module-shell';
+import { ModuleShell } from '@/components/ui/module-shell';
 
 export type { CoreLinkKey };
 

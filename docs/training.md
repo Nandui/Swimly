@@ -59,8 +59,8 @@ does not block.
 ## Files
 
 - Schema: `TrainingCourse`, `TrainingAssignment` (`prisma/migrations/20260930120000_training`)
-- Access and reads: `src/modules/training/lib/access.ts`, `data.ts` (Manage), `mine.ts` (self-service)
-- Actions: `src/modules/training/lib/actions.ts` (every change audited in its transaction)
-- Self-service: `src/modules/training/lib/mine.ts`, `self.ts` (staff API only); registry entry in `src/modules/registry.ts`
+- Shape: `src/modules/training/` has `shared/` (`access.ts`, `constants.ts`, `data.ts`, `grant.ts`, `writes.ts`) and the features `courses`, `assignments`, `sign-off`, `certificates`, `expiring`, `me`, `person-file` and `workspace`; see its README.md
+- Actions: each feature's `server/actions.ts` (every change audited in its transaction)
+- Self-service: `features/me` (`mine.ts`, `self.ts`, `reminders.ts`), reached by the staff API through `index.ts`; registry entry in `src/modules/registry.ts`
 - Pages: `src/app/training/` (workspace); the learner side is Turnfin Me (`apps/me`)
-- Tests: `src/modules/training/lib/training.test.ts`
+- Tests: `src/modules/training/__tests__/training.test.ts`

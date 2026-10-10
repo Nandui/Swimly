@@ -1,10 +1,5 @@
 import { redirect } from 'next/navigation';
-import { requireMember } from '@/modules/docs/lib/auth';
-import { database } from '@/modules/docs/lib/database';
-import { library, requirements } from '@/modules/docs/lib/domain';
-import { workspace } from '@/modules/docs/lib/queries';
-import { readingReportScope } from '@/modules/docs/lib/report-scope';
-import { ReportsView } from '@/modules/docs/components/reports';
+import { database, library, readingReportScope, ReportsView, requireMember, requirements, workspace } from "@/modules/docs/features/reports";
 import type { Metadata } from 'next';
 export const metadata: Metadata = { title: 'Reading reports' };
 export default async function ReportsPage() {

@@ -1,7 +1,7 @@
 import type { Metadata, Viewport } from "next";
 import { cookies } from "next/headers";
 import { ThemeProvider } from "@/components/theme-provider";
-import { ToastBridge } from "@/lib/toast";
+import { ToastBridge } from "@/components/ui/toast";
 import { TooltipProvider } from "@/components/shadcn/tooltip";
 import { THEME_COOKIE, parseThemeMode } from "@/lib/theme-mode";
 import { APP_NAME, TITLE_TEMPLATE } from "@/lib/app";

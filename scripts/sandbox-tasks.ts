@@ -1,5 +1,5 @@
 import type { PrismaClient } from "../src/generated/prisma/client";
-import { addDays, exceptions, score, taskState, tasksOn, type TaskDefinition, type TaskSchedule, type TaskState, type TemplateKind } from "../src/modules/tasks/lib/rules";
+import { addDays, exceptions, score, taskState, tasksOn, type TaskDefinition, type TaskSchedule, type TaskState, type TemplateKind } from "../src/modules/tasks/shared/rules";
 
 /** The sandbox's Tasks (docs/tasks.md): both sites' settings, five templates (scheduled, ad hoc
  *  and a follow-up action) and two weeks of history at both sites with frozen scores, so Today,

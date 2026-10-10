@@ -3,10 +3,8 @@ import Link from "next/link";
 import { EmptyState } from "@/components/ui-kit/empty-state";
 import { PageHeader } from "@/components/ui-kit/page-header";
 import { Tag } from "@/components/ui-kit/tag";
-import { RaiseAction, ReopenAction, ResolveAction } from "@/modules/tasks/components/task-dialogs";
+import { ACTION_STATUS_META, RaiseAction, ReopenAction, ResolveAction, taskActions } from "@/modules/tasks/features/follow-ups";
 import { formatDate, formatDayMonth, today } from "@/lib/format";
-import { taskActions } from "@/modules/tasks/lib/data";
-import { ACTION_STATUS_META } from "@/modules/tasks/lib/rules";
 
 export const metadata: Metadata = { title: "Actions" };
 

@@ -5,14 +5,12 @@ import { Avatar, AvatarFallback } from "@/components/shadcn/avatar";
 import { Button } from "@/components/shadcn/button";
 import { Label } from "@/components/shadcn/label";
 import { NativeSelect, NativeSelectOption } from "@/components/shadcn/native-select";
-import { AssignTraining } from "@/modules/training/components/manage-actions";
+import { assignablePeople, AssignTraining, EXPIRY_WARNING_DAYS, OVERVIEW_VIEWS, TRAINING_STATUS_META, trainingOverview } from "@/modules/training/features/assignments";
 import { EmptyState } from "@/components/ui-kit/empty-state";
 import { PageHeader } from "@/components/ui-kit/page-header";
 import { SearchField } from "@/components/ui-kit/search-field";
 import { Tag } from "@/components/ui-kit/tag";
-import { EXPIRY_WARNING_DAYS, TRAINING_STATUS_META } from "@/modules/training/lib/constants";
 import { formatDate, nameInitials, plural } from "@/lib/format";
-import { assignablePeople, trainingOverview, OVERVIEW_VIEWS } from "@/modules/training/lib/data";
 
 export const metadata: Metadata = { title: "Training" };
 
