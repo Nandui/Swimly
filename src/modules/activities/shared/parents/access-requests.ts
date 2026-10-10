@@ -7,7 +7,7 @@ import { ParentApiError } from "@/modules/activities/shared/parents/errors";
 import { rateLimit } from "@/modules/activities/shared/parents/security";
 
 const hash = (value: string) => createHash("sha256").update(value).digest("hex");
-export const accessRequestSchema = z.object({
+const accessRequestSchema = z.object({
   firstName: z.string().trim().min(1).max(80),
   lastName: z.string().trim().min(1).max(80),
   dateOfBirth: dateSchema.refine(value => {

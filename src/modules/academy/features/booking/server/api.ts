@@ -3,7 +3,7 @@ import { z } from "zod";
 import type { Prisma } from "@/generated/prisma/client";
 import { logAudit } from "@/lib/audit";
 import { liveSiteById, liveSiteIds, withSites } from "@/lib/directory";
-import { formatTime, isDateOnly, parseDateOnly, today } from "@/lib/format";
+import { formatTime, isDateOnly, parseDateOnly, toDateOnlyString as iso, today } from "@/lib/format";
 import { prisma } from "@/lib/prisma";
 import { sendCode, sendHeld } from "@/modules/academy/features/booking/server/email";
 import { AcademyApiError, academyApiConfig, emailSchema, idSchema, notFound, readBody } from "@/modules/academy/features/booking/server/http";
@@ -26,7 +26,6 @@ const TOKEN_MS = 60 * 60 * 1000;
 const MAX_ATTEMPTS = 5;
 
 const digest = (value: string) => createHmac("sha256", academyApiConfig().secret).update(value).digest("hex");
-const iso = (d: Date) => d.toISOString().slice(0, 10);
 
 /** Only Vercel's overwritten IP header is trusted; elsewhere one shared bucket. */
 function requestIp(request: Request) {

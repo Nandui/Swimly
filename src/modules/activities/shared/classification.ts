@@ -32,7 +32,7 @@ export const AQUATICS_FIELD_CLASSES = {
 
 /** Desk (reception) and office (swim school management) capabilities that
  *  carry medical notes. Held flat: they apply at the working site. */
-export const MEDICAL_CAPABILITIES: readonly PermissionKey[] = [
+const MEDICAL_CAPABILITIES: readonly PermissionKey[] = [
   "students.manage", "enrolment.manage", "parents.manage", "courses.manage", "curriculum.manage", "progression.override",
 ];
 
@@ -62,7 +62,7 @@ export function classifyMedical<T extends { medicalNotes: string | null }>(row: 
 
 /** Any Aquatics screen, or the deck. A Docs-only or Refunds-only role reads no
  *  swimmer data at all, whatever URL or loader it reaches. */
-export function hasActivitiesAccess(session: Session): boolean {
+function hasActivitiesAccess(session: Session): boolean {
   const caps = held(session);
   return [...visibleScreens(caps)].some(isActivitiesScreen);
 }

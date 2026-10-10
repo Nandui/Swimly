@@ -9,7 +9,7 @@ import { hrStorageConfig } from '@/modules/hr/shared/storage-config';
 export type HrSql = { query<T = Record<string, unknown>>(sql: string, params?: unknown[]): Promise<T[]> };
 export type HrDatabase = HrSql & { transaction<T>(fn: (tx: HrSql) => Promise<T>): Promise<T> };
 
-export class HrUnavailable extends Error {
+class HrUnavailable extends Error {
   constructor() { super('HR storage is not set up yet.'); }
 }
 

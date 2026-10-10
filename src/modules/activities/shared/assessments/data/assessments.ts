@@ -169,27 +169,6 @@ export async function getStudentAssessments(studentId: string) {
 
 export type StudentAssessment = Awaited<ReturnType<typeof getStudentAssessments>>[number];
 
-/** The levels an assessor has placed this swimmer at, in one programme. What
- *  `hasEarnedPlace` reads so an assessed child can be enrolled without a
- *  reason being demanded for a place they were judged ready for. */
-export async function getAssessedLevelIds(
-  studentId: string,
-  programmeId: string
-): Promise<Set<string>> {
-  await requireSession();
-  const curriculum = await getSharedCurriculum();
-  const rows = await prisma.assessmentBooking.findMany({
-    where: {
-      studentId,
-      status: "ATTENDED",
-      outcomeLevelId: { not: null },
-      session: { programmeId: { in: curriculum.programmeIds.variants(programmeId) } },
-    },
-    select: { outcomeLevelId: true },
-  });
-  return new Set(rows.map(row => curriculum.levelIds.resolve(row.outcomeLevelId!)));
-}
-
 /** For the session form: which programme a session assesses for. */
 export async function getAssessmentProgrammeOptions() {
   await requireSession();

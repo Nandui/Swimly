@@ -5,7 +5,7 @@ import { toDateOnlyString } from "@/lib/format";
 import type { FollowUpEntry, FollowUpHistory, FollowUpSummary } from "@/modules/activities/shared/enrolment/follow-up";
 
 export const FOLLOW_UP_SELECT = { enrolmentFollowUps: { orderBy: { sequence: "desc" }, take: 1 }, _count: { select: { enrolmentFollowUps: true } } } as const satisfies Prisma.StudentSelect;
-export function followUpEntry(row: StudentFollowUp): FollowUpEntry {
+function followUpEntry(row: StudentFollowUp): FollowUpEntry {
   return { id: row.id, sequence: row.sequence, actorName: row.actorName, clubName: row.clubName,
     channel: row.channel as FollowUpEntry["channel"], outcome: row.outcome as FollowUpEntry["outcome"], note: row.note,
     occurredOn: toDateOnlyString(row.occurredOn), nextContactOn: row.nextContactOn ? toDateOnlyString(row.nextContactOn) : null, createdAt: row.createdAt.toISOString() };

@@ -45,7 +45,7 @@ export const EMPTY_FILTERS: CourseFilters = {
 export const PICKER_KEYS = ["site", "programme", "level", "day", "time", "instructor", "location", "places"] as const;
 export type PickerKey = (typeof PICKER_KEYS)[number];
 
-export const PICKER_LABELS: Record<PickerKey, string> = {
+const PICKER_LABELS: Record<PickerKey, string> = {
   site: "Site",
   programme: "Programme",
   level: "Level",
@@ -64,7 +64,7 @@ function one(params: RawParams, key: string): string {
 }
 
 /** The browser opens across the week; keep existing `day=any` links working. */
-export const ANY_DAY = "any";
+const ANY_DAY = "any";
 
 export function parseCourseFilters(params: RawParams): CourseFilters {
   const day = one(params, "day");
@@ -109,7 +109,7 @@ function haystack(course: CourseRow): string {
 /** `except` leaves one dimension out, which is what makes the counts on that
  *  dimension's own options mean anything: they answer "how many if I picked
  *  this instead", not "how many are already showing". */
-export function matchesFilters(
+function matchesFilters(
   course: CourseRow,
   filters: CourseFilters,
   except?: PickerKey | "q"

@@ -12,7 +12,6 @@ export const COMPETENCY_STATUS_META: Record<CompetencyStatus, StatusMeta> = {
 /** A competency nobody has marked yet. */
 export const NOT_MARKED_META = { label: "Not marked", color: "gray", icon: Circle } as const satisfies StatusMeta;
 
-
 export const LEVEL_PROGRESS_META = {
   graduated: { label: "Graduated", color: "blue", icon: GraduationCap },
   eligible: { label: "Ready to complete", color: "green", icon: CircleCheck },
@@ -28,7 +27,3 @@ export const COMPLETION_META = {
 export const ASSESSMENT_CHOICES = ["WORKING_ON", "ACHIEVED"] as const;
 export type AssessmentChoice = (typeof ASSESSMENT_CHOICES)[number];
 
-export function progressLabel(achieved: number, total: number): string {
-  if (total === 0) return "No competencies set yet";
-  return `${achieved} of ${total}`;
-}

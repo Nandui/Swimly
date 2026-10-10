@@ -1,5 +1,5 @@
 import { Ban, CircleCheck, CircleDashed, Clock3, Hourglass, MinusCircle, ShieldCheck, Archive, Send, TriangleAlert, CircleAlert, Circle, Flag } from "lucide-react";
-import { SCHOOL_TIMEZONE, formatTime, minutesNow } from "@/lib/format";
+import { SCHOOL_TIMEZONE, addDaysIso, formatTime, minutesNow } from "@/lib/format";
 import type { StatusMeta } from "@/lib/status";
 
 /** Tasks' rules, pure so they are tested on their own (docs/tasks.md): what a
@@ -149,10 +149,7 @@ export const SCORE_BAND_META = {
 } as const satisfies Record<string, StatusMeta>;
 export const scoreBand = (n: number): keyof typeof SCORE_BAND_META => (n >= 96 ? "good" : n >= 76 ? "fair" : "low");
 
-/** A reading outside its range, on the task and in reports. */
-export const EXCEPTION_META = { label: "Out of range", color: "orange", icon: TriangleAlert } as const satisfies StatusMeta;
 export const PRIORITY_META = { label: "High priority", color: "red", icon: Flag } as const satisfies StatusMeta;
-export const WITHDRAWN_META = { label: "Withdrawn", color: "gray", icon: Ban } as const satisfies StatusMeta;
 
 type Timed = { status: string; date: string; startsAt: Date; dueAt: Date; completedAt: Date | null; approvedAt: Date | null; requiresApproval: boolean };
 
@@ -202,7 +199,7 @@ const timeWords = (v: string) => (v === "open" ? "opening" : v === "close" ? "cl
 
 export const isClock = (v: string) => /^([01]\d|2[0-3]):[0-5]\d$/.test(v);
 const dayNumber = (iso: string) => Math.round(Date.parse(`${iso}T12:00:00Z`) / 86_400_000);
-export const addDays = (iso: string, n: number) => new Date(Date.parse(`${iso}T12:00:00Z`) + n * 86_400_000).toISOString().slice(0, 10);
+export const addDays = addDaysIso;
 
 /** Whether a schedule makes a task on this day. A monthly task on the 31st skips shorter months. */
 export function dueOn(s: TaskSchedule, day: string): boolean {
@@ -296,7 +293,7 @@ const outside = (f: TaskField, v: string | undefined) =>
   f.type === "number" && !!v?.trim() && Number.isFinite(Number(v)) && ((f.min != null && Number(v) < f.min) || (f.max != null && Number(v) > f.max));
 
 /** A record's answer problems, one per field. */
-export function answerProblem(f: TaskField, value: string | undefined): string | null {
+function answerProblem(f: TaskField, value: string | undefined): string | null {
   if (f.type === "heading") return null;
   if (!value?.trim()) return f.required ? `${f.label} needs an answer.` : null;
   if (f.type === "number" && !Number.isFinite(Number(value))) return `${f.label} must be a number.`;
@@ -317,7 +314,7 @@ export function exceptions(def: Pick<TaskDefinition, "fields">, records: readonl
 }
 
 /** Whether a reading that must be followed up is out of range. */
-export const needsFollowUp = (def: Pick<TaskDefinition, "fields">, records: readonly TaskRecord[]) =>
+const needsFollowUp = (def: Pick<TaskDefinition, "fields">, records: readonly TaskRecord[]) =>
   records.some((row) => def.fields.some((f) => f.needsAction && outside(f, row[f.id])));
 
 /** Why a task cannot be completed yet; empty when it can. */
@@ -340,7 +337,7 @@ export function completionProblems(def: TaskDefinition, checks: readonly boolean
 // ---------------------------------------------------------------------------
 
 /** A CSV cell that a spreadsheet will not run as a formula. */
-export function csvCell(value: unknown): string {
+function csvCell(value: unknown): string {
   let s = String(value ?? "");
   if (/^[=+@\-\t\r]/.test(s)) s = `'${s}`;
   return `"${s.replaceAll('"', '""')}"`;

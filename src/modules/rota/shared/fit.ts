@@ -26,7 +26,7 @@ export type Fit = {
 const SEVERITY: Record<FitIssue, number> = { long: 1, overlap: 20, missing: 30, expired: 30, off: 1000 };
 
 /** A day this long or longer is worth a second look ("Makes a 9h day"). */
-export const LONG_DAY = 9 * 60;
+const LONG_DAY = 9 * 60;
 
 /** Is the qualification held, and in date, on that day? */
 export function qualification(held: readonly Held[], userId: string, typeId: string | null, on: string): "ok" | "missing" | "expired" {

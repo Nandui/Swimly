@@ -23,7 +23,7 @@ read from the date of birth on the first day) and the hours attended against the
 candidate is ready when every check is done and the hours are met. `expiryFrom` dates a pass:
 the certificate's own expiry, else the qualification's validity from the result day.
 
-## Levels (`src/modules/registry.ts`), at the sites a role covers
+## Levels (`src/modules/academy/manifest.ts`), at the sites a role covers
 
 - **View** (`academy.read`): see the courses.
 - **Tutor** (`academy.run`): add candidates and payment, record checks, take registers, record results.

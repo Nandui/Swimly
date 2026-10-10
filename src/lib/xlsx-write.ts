@@ -13,7 +13,7 @@ const INVALID_XML = /[\u0000-\u0008\u000B\u000C\u000E-\u001F￾￿]/g;
 const xml = (value: string) => value.replace(INVALID_XML, "").replace(/[&<>"]/g, (c) => XML_ESCAPES[c]);
 
 /** "A", "Z", "AA", "AD". */
-export function columnName(index: number) {
+function columnName(index: number) {
   let n = index + 1, name = "";
   while (n > 0) { const r = (n - 1) % 26; name = String.fromCharCode(65 + r) + name; n = Math.floor((n - 1) / 26); }
   return name;

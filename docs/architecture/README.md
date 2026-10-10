@@ -8,10 +8,11 @@ Turnfin is a modular monolith: one Next.js app and one main database, in layers.
 | --- | --- | --- |
 | Platform (Core) | `src/lib`, `src/auth.ts`, `src/modules/{registry,contributions,context}.ts`, `src/platform/events` | `src/platform` |
 | UI kit | `src/components/{shadcn,ui,ui-kit}`, `form-dialog`, `confirm-action`, `searchable-picker`, the theme in `src/app/theme` | `src/ui` (see ADR 0003) |
-| Modules | `src/modules/<id>/{lib,components}` | `src/modules/<id>/{index.ts,module.ts,events.ts,README.md,shared,features}` |
+| Modules | `src/modules/<id>/{index.ts,manifest.ts,module.ts,events.ts,README.md,shared,features}` | same |
 | Front | `src/components/{home,core,workspace}`, `src/lib/home.ts`, `src/lib/staff-api` (Turnfin Me's API) | `src/front` |
 | Platform admin screens | `src/components/{people,staff,clubs,devices,setup,help}`, `src/app/(core)` | stays with the platform (ADR 0001) |
-| Module wiring | `src/modules/server.ts`, `src/modules/session-hooks.ts` | `src/app/modules.ts` |
+| Module list | `src/app/modules.ts`: every module's `manifest.ts` (name, menu entry, levels, permissions), read by Core's registry | same |
+| Module wiring | `src/modules/server.ts` loads each `module.ts` plug; `src/modules/session-hooks.ts` | same (ADR 0006) |
 | Routes | `src/app` | `src/app` |
 
 ## Module map (approved 9 October 2026)
@@ -39,17 +40,25 @@ Modules read those tables only through Core's functions, never with their own qu
 - `src/lib/policy`: who may do what, and over whom.
 
 ```mermaid
-flowchart LR
+flowchart TB
+  list["src/app/modules.ts<br/>(every module's manifest.ts)"] --> registry["Core registry<br/>menus, home page, role editor"]
   subgraph Modules
-    activities; refunds; purchasing; academy; tasks; training; docs; hr; rota
+    activities[Swim school and Pool deck]; academy[Academy]; refunds[Refunds]; tasks[Tasks]
+    rota[Rota]; training[Training]; docs[Docs]; hr[HR]; purchasing[Purchasing]
   end
-  front[Front: home, Turnfin Me API] --> Modules
-  Modules --> platform[Platform / Core]
-  Modules --> ui[UI kit]
-  rota -->|commitments call| activities
-  hr -->|personal file call| training
-  hr -->|personal file call| rota
-  rota -.->|shift changed email| platform
+  Modules --> core["Core: people, roles, sites, audit, policy<br/>(src/lib, src/modules/contributions.ts)"]
+  Modules --> ui["UI kit (src/components/shadcn, ui, ui-kit)"]
+  activities -.->|class commitments| core
+  academy -.->|course sessions| core
+  core -.->|commitments| rota
+  training -.->|person file, subject records| core
+  rota -.->|person file| core
+  core -.->|person file, subject records| hr
+  rota -->|shift changed email| me
+  me["Turnfin Me API (src/lib/staff-api)"] -->|index.ts| training
+  me -->|index.ts| docs
+  me -->|index.ts| hr
+  me -->|index.ts| rota
 ```
 
-Solid arrows are direct calls, dashed are events (or event candidates). Today the calls go through `src/modules/contributions.ts`, not through each module's `index.ts`.
+No module imports another; the boundary lint makes it an error. Solid arrows are direct calls through a module's `index.ts` (or Core's notifier). Dashed arrows are registrations: a module registers a home card, commitments, a person-file section or subject records in `src/modules/contributions.ts` from its `module.ts`, and another module or Core screen reads whatever is registered. Every module also registers a home card. No events are emitted yet ([events.md](events.md)).

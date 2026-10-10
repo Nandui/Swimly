@@ -15,12 +15,10 @@ import type { Actor, Directory, Grant, Resource, Scope, SiteFilter, SubjectFilte
  *     each module's My surface serves it, so holding no capability never
  *     hides your own training, and holding one never shows you more of yours. */
 
-export class AccessDenied extends Error {}
-
 /** A step-up window: restricted capabilities need a password check this recent. */
 export const STEP_UP_MS = 15 * 60 * 1000;
 
-export function grantsFor(actor: Actor, cap: PermissionKey): Grant[] {
+function grantsFor(actor: Actor, cap: PermissionKey): Grant[] {
   return actor.grants.filter((grant) => grant.permissions.has(cap));
 }
 
@@ -64,11 +62,6 @@ export async function can(actor: Actor, cap: PermissionKey, resource: Resource, 
   if (actor.superadmin) return true;
   for (const grant of grantsFor(actor, cap)) if (await scopeCovers(grant.scope, actor, resource, dir)) return true;
   return false;
-}
-
-export async function requireCap(actor: Actor, cap: PermissionKey, resource: Resource, dir: Directory) {
-  if (needsStepUp(actor, cap)) throw new AccessDenied("Confirm your password to open this.");
-  if (!(await can(actor, cap, resource, dir))) throw new AccessDenied(`You do not have permission to do that (${cap}).`);
 }
 
 /** Whose records a capability reaches, as ids a query can filter by. Unions

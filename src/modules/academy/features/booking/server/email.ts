@@ -11,7 +11,7 @@ import { unavailable } from "@/modules/academy/features/booking/server/http";
 const address = z.string().email().max(254);
 
 const devLog = (env = process.env) => env.NODE_ENV !== "production" && env.ACADEMY_EMAIL_DEV_LOG === "true";
-export const senderName = (env = process.env) => (env.ACADEMY_EMAIL_NAME ?? "").replace(/[<>\r\n"]/g, "").trim().slice(0, 60) || "Academy";
+const senderName = (env = process.env) => (env.ACADEMY_EMAIL_NAME ?? "").replace(/[<>\r\n"]/g, "").trim().slice(0, 60) || "Academy";
 
 const emailConfig = (env = process.env): GoogleEmailConfig => emailSender(senderName(env), env) ?? unavailable();
 
@@ -50,7 +50,7 @@ ${content}
 </html>`;
 }
 
-export function codeEmail(code: string) {
+function codeEmail(code: string) {
   const digits = code.replace(/\D/g, "");
   const lead = "Use this code to book your place:";
   const keep = "It expires in 10 minutes. Nobody will ever ask you for this code.";
@@ -67,7 +67,7 @@ export function codeEmail(code: string) {
 export type HeldDetails = { name: string; course: string; site: string; starts: string; reference: string; phone: string; callBy: string; price: string };
 
 /** "Your place is held": what they booked, the reference, and that we will phone to take payment. */
-export function heldEmail(d: HeldDetails) {
+function heldEmail(d: HeldDetails) {
   const lines = [
     `Hello ${d.name},`,
     `Your place on ${d.course} at ${d.site}, starting ${d.starts}, is held.`,

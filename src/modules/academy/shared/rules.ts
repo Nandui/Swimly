@@ -119,7 +119,7 @@ export function centsOf(value: string): number | null {
    them within 72 hours of holding it. The place stays held until someone records the call. */
 
 /** Hours from holding a place online to the call for payment. */
-export const ONLINE_HOLD_HOURS = 72;
+const ONLINE_HOLD_HOURS = 72;
 
 /** When they would like a call. */
 export const ACADEMY_CALL_TIMES = { morning: "Morning", afternoon: "Afternoon", evening: "Evening" } as const;

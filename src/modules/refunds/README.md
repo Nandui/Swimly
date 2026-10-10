@@ -31,7 +31,7 @@ Refunds also reads Core's `User` and `Club` directly (sites to choose, a person'
 
 ## Registration (module.ts)
 - Home card: requests to decide, approved refunds to pay, requests sent back, and "Log a refund request".
-- Menu entry, levels and permissions: still in `src/modules/registry.ts` (ADR 0004).
+- Menu entry, levels and permissions: `manifest.ts`, listed in `src/app/modules.ts`.
 
 ## Permissions
 - `refunds.read`, `refunds.request`, `refunds.review`, `refunds.process` (the older names, kept; new ones follow `<module>.<feature>.<action>`).

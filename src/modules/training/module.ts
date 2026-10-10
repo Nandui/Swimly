@@ -8,9 +8,7 @@ import { signoffCount } from "@/modules/training/features/sign-off";
 
 /** Training's registration plug (CLAUDE.md section 5), loaded by
  *  src/modules/server.ts: its home card, its part of a person's file and its
- *  records for HR's subject export. Its menu entry, levels and permissions are
- *  still described in src/modules/registry.ts until the platform registry
- *  takes module plugs (ADR 0004). */
+ *  records for HR's subject export. Its menu entry, levels and permissions are in manifest.ts. */
 
 registerPersonFileSection({ id: "training.open", heading: "Training", load: trainingFile });
 registerSubjectRecords({ key: "training", load: trainingRecords });

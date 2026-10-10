@@ -39,7 +39,7 @@ export const ACTIVITY_TYPES = {
 
 export type ActivityTypeKey = keyof typeof ACTIVITY_TYPES;
 
-export const DEFAULT_ACTIVITY_TYPE: ActivityTypeKey = "swim-school";
+const DEFAULT_ACTIVITY_TYPE: ActivityTypeKey = "swim-school";
 
 /** The type a programme belongs to. Programmes have no type column yet, so
  *  everything is Swim school; an unknown stored key also falls back to it. */

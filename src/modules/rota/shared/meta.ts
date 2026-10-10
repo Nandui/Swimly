@@ -9,7 +9,7 @@ import type { StatusMeta } from "@/lib/status";
  *  module, so server and client both read it. */
 
 /** The activity icons are the shared setup's (src/lib/setup/meta.ts); the Rota keeps its names. */
-export { ACTIVITY_ICONS as ROTA_ACTIVITY_ICONS, ACTIVITY_ICON_KEYS as ROTA_ACTIVITY_ICON_KEYS, activityIcon, type ActivityIconKey as RotaActivityIcon } from "@/lib/setup/meta";
+export { activityIcon } from "@/lib/setup/meta";
 
 /** Where a day stands on the week strip and the day's head. */
 export const ROTA_DAY_META = {

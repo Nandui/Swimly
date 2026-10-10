@@ -1,6 +1,7 @@
 import { revalidatePath } from "next/cache";
 import { z } from "zod";
 import { isDateOnly } from "@/lib/format";
+export { toDateOnlyString as iso } from "@/lib/format";
 import { liveSiteById } from "@/lib/directory";
 import { prisma } from "@/lib/prisma";
 import { currentActor, mayFor } from "@/lib/policy/session";
@@ -9,7 +10,6 @@ import type { PermissionKey } from "@/lib/staff/permissions";
 /** What the Academy's writes share (docs/academy.md): access at a course's site, the course
  *  itself, form parsing and the pages to refresh after a change. */
 
-export const iso = (d: Date) => d.toISOString().slice(0, 10);
 export const optionalDate = z.string().trim().refine((v) => !v || isDateOnly(v), "Use a date like 2026-10-23.").default("");
 export const clockOf = (value: string) => {
   const m = /^([01]\d|2[0-3]):([0-5]\d)$/.exec(value.trim());

@@ -10,10 +10,10 @@ import { PageHeader } from "@/components/ui-kit/page-header";
  *  `not-found.tsx` and `error.tsx` render these inside its frame; the root
  *  ones put the same content on the sign-in canvas (AuthFrame). */
 
-export const NOT_FOUND_TITLE = "This page isn’t available";
+const NOT_FOUND_TITLE = "This page isn’t available";
 /** One answer for "missing" and "not in your role": a refused page declines
  *  to exist (src/lib/page-guards.ts), so the copy never confirms either. */
-export const NOT_FOUND_HINT = "It may have moved, or your role doesn’t include it. Ask your manager if you need it.";
+const NOT_FOUND_HINT = "It may have moved, or your role doesn’t include it. Ask your manager if you need it.";
 
 /** A page or record that does not exist, or that the role does not open. */
 export function PageNotFound({

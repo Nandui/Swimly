@@ -19,7 +19,7 @@ function object(value: Prisma.JsonValue): Prisma.JsonObject {
   return value && typeof value === "object" && !Array.isArray(value) ? value : {};
 }
 
-export function progressDto(events: ReleasedEvent[], curriculum: SharedCurriculum, currentLevelIds: string[]) {
+function progressDto(events: ReleasedEvent[], curriculum: SharedCurriculum, currentLevelIds: string[]) {
   const marks = new Map<string, ReleasedEvent>(), completions = new Map<string, ReleasedEvent>();
   for (const event of [...events].sort((a, b) => a.recordedAt.getTime() - b.recordedAt.getTime() || (a.id < b.id ? -1 : 1))) {
     if (!event.value) continue;

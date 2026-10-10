@@ -1,5 +1,4 @@
 import "server-only";
-import { notFound } from "next/navigation";
 import { hrDatabase } from "@/modules/hr/shared/database";
 import { NOTE_COLUMNS, REVIEW_COLUMNS, type HrNote, type HrReview } from "@/modules/hr/shared/columns";
 
@@ -13,13 +12,6 @@ export async function mySharedHr(userId: string, orgId: string) {
     db.query<HrReview>(`SELECT ${REVIEW_COLUMNS} FROM reviews WHERE org_id=$1 AND subject_user_id=$2 AND status <> 'draft' ORDER BY shared_at DESC`, [orgId, userId]),
   ]);
   return { notes, reviews };
-}
-
-export async function mySharedReview(id: string, userId: string, orgId: string) {
-  const [review] = await hrDatabase().query<HrReview>(
-    `SELECT ${REVIEW_COLUMNS} FROM reviews WHERE id=$1 AND org_id=$2 AND subject_user_id=$3 AND status <> 'draft'`, [id, orgId, userId]);
-  if (!review) notFound();
-  return review;
 }
 
 /** The person reading their own record is logged like every HR read. */

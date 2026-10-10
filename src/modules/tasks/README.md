@@ -35,7 +35,7 @@ Tasks also reads Core's `Club`, `StaffRole` and `User` directly (sites, roles a 
 
 ## Registration (module.ts)
 - Home card: tasks to do today, overdue, to approve, completed with readings out of range, open follow-ups.
-- Menu entry, levels and permissions: still in `src/modules/registry.ts` (ADR 0004).
+- Menu entry, levels and permissions: `manifest.ts`, listed in `src/app/modules.ts`.
 
 ## Permissions
 - `tasks.complete`, `tasks.review`, `tasks.manage`.

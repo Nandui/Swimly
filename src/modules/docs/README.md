@@ -33,7 +33,7 @@ In the Docs database (not Prisma): `documents`, `drafts`, `snapshots`, `reviews`
 
 ## Registration (module.ts)
 - Home card: "Add a document" for writers.
-- Menu entry, levels and permissions: still in `src/modules/registry.ts` (ADR 0004).
+- Menu entry, levels and permissions: `manifest.ts`, listed in `src/app/modules.ts`.
 
 ## Permissions
 - `docs.read`, `docs.write`, `docs.approve`, `docs.manage`.

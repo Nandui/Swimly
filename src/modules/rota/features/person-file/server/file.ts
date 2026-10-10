@@ -1,5 +1,5 @@
 import "server-only";
-import { formatDate, parseDateOnly, plural, today } from "@/lib/format";
+import { formatDate, parseDateOnly, plural, toDateOnlyString as iso, today } from "@/lib/format";
 import { prisma } from "@/lib/prisma";
 import { ABSENCE_REASON_META, RETURN_FIT_META, ROTA_CHANGE_REASON_META, addDaysIso, clock, daysOff, type AbsenceReason, type ReturnFit, type RotaChangeReason } from "@/modules/rota/shared/constants";
 import type { PersonFileEntry } from "@/modules/contributions";
@@ -12,7 +12,6 @@ import { withNeedNames } from "@/modules/rota/shared/data";
  *  (recorded in error) are left out. Absences recorded on the retired roster
  *  upload still count once its entry was linked to their account. */
 
-const iso = (d: Date) => d.toISOString().slice(0, 10);
 const day = (value: string) => formatDate(new Date(`${value}T00:00:00Z`));
 /** A free-text note joined into a " · " line drops its own closing full stop. */
 const clause = (text: string | null) => text?.trim().replace(/\.+$/, "") || null;

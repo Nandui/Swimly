@@ -37,7 +37,7 @@ Rota still reads Core's people, sites, departments, activity types and qualifica
 - Home card: who is on today and the gaps; for Run, who is off, reporting an absence and returns to work to record.
 - Person file: planned days, absences and returns, changes to their activities.
 - Area rename: activities, repeats and bookings follow an area renamed in Admin.
-- Menu entry, levels and permissions: still in `src/modules/registry.ts` (ADR 0004).
+- Menu entry, levels and permissions: `manifest.ts`, listed in `src/app/modules.ts`.
 
 ## Permissions
 - `rota.view`, `rota.plan`, `rota.manage`.

@@ -555,7 +555,7 @@ model ActivityType {
   orgId          String
   departmentId   String
   name           String
-  /// A key of ROTA_ACTIVITY_ICONS, so an activity shows the same icon everywhere.
+  /// A key of ACTIVITY_ICONS (src/lib/setup/meta.ts), so an activity shows the same icon everywhere.
   icon           String    @default("activity")
   requiredTypeId String?
   /// Swim classes arrive as this activity's needs, read from the timetable.

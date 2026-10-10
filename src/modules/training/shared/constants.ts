@@ -33,10 +33,6 @@ export function trainingState(row: { status: string; dueOn: Date | null }, on: s
   }
 }
 
-/** Every Training capability. Holding any of them anywhere, with the Training
- *  screen, opens the Manage workspace; each page then scopes its records. */
-export const TRAINING_CAPABILITIES = ["training.manage", "training.assign", "training.records.read", "training.signoff"] as const;
-
 /** Days before expiry that a qualification counts as "expiring" (matches the
  *  People core's `qualificationState`). */
 export const EXPIRY_WARNING_DAYS = 60;

@@ -1,6 +1,6 @@
 # 0004: Contributions stand in for module plugs until each module moves
 
-**Status:** Accepted (9 October 2026).
+**Status:** Accepted (9 October 2026). Completed by [0006](0006-module-manifests-and-list.md) on 10 October 2026.
 
 ## Context
 CLAUDE.md wants each module to register through `module.ts` listed in `src/app/modules.ts`, and to talk through `index.ts` or events. Today modules register home cards, site summaries, personal-file sections and commitments through `src/modules/contributions.ts`, wired in `src/modules/server.ts`, and describe their levels in `src/modules/registry.ts`.

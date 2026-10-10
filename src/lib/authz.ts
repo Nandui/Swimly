@@ -74,14 +74,6 @@ export function canSee(session: Session, screen: ScreenKey): boolean {
   return visibleScreens(permissionsOf(session)).has(screen);
 }
 
-/** True if the session holds **any** of these. For screens that exist to serve
- *  several permissions at once — the Today page is reachable by anyone who can
- *  take a register, however they came by it. */
-export function canAny(session: Session, ...permissions: PermissionKey[]): boolean {
-  const held = permissionsOf(session);
-  return permissions.some((permission) => held.has(permission));
-}
-
 /** Requires one named permission. Every mutating action starts with one of
  *  these, and it throws rather than returning a result: being called without
  *  permission is not something a person can fix by typing something else. */
@@ -93,13 +85,3 @@ export async function requirePermission(permission: PermissionKey) {
   return session;
 }
 
-/** Requires any one of several. Same contract as `requirePermission`. */
-export async function requireAnyPermission(...permissions: PermissionKey[]) {
-  const session = await requireSession();
-  if (!canAny(session, ...permissions)) {
-    throw new AuthorizationError(
-      `You do not have permission to do that (${permissions.join(" or ")})`
-    );
-  }
-  return session;
-}

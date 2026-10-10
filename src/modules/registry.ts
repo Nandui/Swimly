@@ -1,4 +1,5 @@
-import { Award, CalendarClock, ClipboardCheck, Files, GraduationCap, HeartHandshake, ReceiptText, Settings, ShoppingCart, Waves, WavesLadder, type LucideIcon } from "lucide-react";
+import { Settings, type LucideIcon } from "lucide-react";
+import { modules } from "@/app/modules";
 import type { PermissionKey } from "@/lib/staff/permissions";
 
 /** Every module Turnfin offers, each described once (docs/how-turnfin-works.md).
@@ -6,7 +7,7 @@ import type { PermissionKey } from "@/lib/staff/permissions";
  *  A module's description says everything the rest of Turnfin needs: its name,
  *  where it opens, its levels and the permissions each level gives. Menus, the
  *  home page and the role editor are all built from these descriptions, so a
- *  new module is a folder plus one `registerModule` call.
+ *  new module is a folder with a `manifest.ts`, plus one line in src/app/modules.ts.
  *
  *  Showing a module is presentation. Security stays in each page and action,
  *  which ask for a named permission. */
@@ -83,13 +84,6 @@ export type ModuleManifest = {
   href: string;
 };
 
-const MODULES: ModuleManifest[] = [];
-
-export function registerModule(manifest: ModuleManifest) {
-  if (MODULES.some((m) => m.id === manifest.id)) throw new Error(`Module ${manifest.id} is registered twice.`);
-  MODULES.push(manifest);
-}
-
 const groupRank = (mod: ModuleManifest) => MODULE_GROUPS.findIndex((g) => g.key === mod.group);
 
 /** Every module, group by group; within a group, in the order they registered. */
@@ -105,7 +99,7 @@ export function groupModules<M extends ModuleManifest>(modules: readonly M[]): {
 }
 
 /** Every permission a module can give, across its levels and extras. */
-export function modulePermissions(mod: ModuleManifest): PermissionKey[] {
+function modulePermissions(mod: ModuleManifest): PermissionKey[] {
   return [...mod.access.levels, ...(mod.access.extras ?? [])].flatMap((step) => [...step.permissions]);
 }
 
@@ -115,222 +109,13 @@ export function visibleModules(ctx: ModuleContext): ModuleManifest[] {
 }
 
 // ---------------------------------------------------------------------------
-// The modules. New modules register in their own manifest file and are
-// imported from `src/modules/index.ts`.
+// The modules: each module's manifest.ts, listed once in src/app/modules.ts,
+// then Admin, which is Core's own (people, roles, sites and the activity log).
 // ---------------------------------------------------------------------------
-
-// Lists show them group by group (MODULE_GROUPS), each group in this order.
-
-registerModule({
-  id: "swim-school",
-  group: "front-of-house",
-  name: "Swim school",
-  // Swim school is the first activity type (see src/modules/activities/shared/types.ts).
-  description: "Swimmers, classes and assessments at the desk, and the swim school's set-up",
-  icon: WavesLadder,
-  href: "/swim-school",
-  logName: "Swim school",
-  access: {
-    reach: "sites",
-    levels: [
-      {
-        key: "desk", label: "Desk", help: "Every swimmer, booking, move, waitlist and assessment booking.",
-        permissions: ["swimschool.desk", "students.manage", "enrolment.manage", "parents.manage"],
-      },
-      {
-        key: "manage", label: "Manage", help: "Programmes, levels, classes and reports.",
-        permissions: ["courses.manage", "curriculum.manage", "progression.override"],
-      },
-    ],
-    extras: [
-      {
-        key: "cancel-classes", label: "Can cancel classes", help: "Cancel today's sessions on the duty manager page and pass them to billing.", from: "desk",
-        permissions: ["classes.cancel", "billing.notify"],
-      },
-    ],
-  },
-});
-
-registerModule({
-  id: "academy",
-  group: "front-of-house",
-  name: "Academy",
-  description: "The lifeguard and swim teacher courses we deliver: candidates, checks, registers and results",
-  icon: Award,
-  href: "/academy",
-  logName: "Academy",
-  access: {
-    reach: "sites",
-    levels: [
-      { key: "view", label: "View", help: "See the courses at their sites.", permissions: ["academy.read"] },
-      { key: "run", label: "Tutor", help: "Add candidates, record checks and payment, take registers and record results.", permissions: ["academy.run"] },
-      { key: "manage", label: "Manage", help: "Keep the course list and put courses on, with sessions, tutor and price.", permissions: ["academy.manage"] },
-    ],
-  },
-});
-
-registerModule({
-  id: "refunds",
-  group: "front-of-house",
-  name: "Refunds",
-  description: "Customer refund requests, finance decisions and completed payments",
-  icon: ReceiptText,
-  href: "/refunds",
-  logName: "Refunds",
-  access: {
-    reach: "everywhere",
-    levels: [
-      { key: "use", label: "Use", help: "Log a customer's refund request and follow it.", permissions: ["refunds.read", "refunds.request"] },
-      { key: "manage", label: "Manage", help: "Decide refund requests and record payments. Nobody decides their own.", permissions: ["refunds.review", "refunds.process"] },
-    ],
-  },
-});
-
-// The pool deck is its own module: teaching is a different job from the desk
-// (owner decision, 28 September 2026). Swim teachers see the class instructor
-// view and nothing else; receptionists never see it unless given it too.
-registerModule({
-  id: "pool-deck",
-  group: "poolside",
-  name: "Pool deck",
-  description: "Today's classes at the pool: attendance, competencies and assessments",
-  icon: Waves,
-  href: "/instructor",
-  logName: "Swim school",
-  access: {
-    reach: "sites",
-    levels: [
-      {
-        key: "teach", label: "Teach", help: "Their own classes: attendance, competencies, assessments, and covering a colleague's class.",
-        permissions: ["attendance.mark", "attendance.cover", "progression.assess", "progression.complete", "assessments.run"],
-      },
-      {
-        key: "lead", label: "Lead", help: "Also take attendance for any class, for example copying in a paper register.",
-        permissions: ["attendance.markAny"],
-      },
-    ],
-  },
-});
-
-// Tasks (owner request, 8 October 2026; docs/tasks.md): each site's daily
-// checks and logs, from templates on a schedule.
-registerModule({
-  id: "tasks",
-  group: "poolside",
-  name: "Tasks",
-  description: "Each site's daily checks and logs: checklists, readings with acceptable ranges, approval and follow-up actions",
-  icon: ClipboardCheck,
-  href: "/tasks",
-  logName: "Tasks",
-  access: {
-    reach: "sites",
-    levels: [
-      { key: "do", label: "Do", help: "The day's tasks at their sites that are aimed at their role, and raising follow-up actions.", permissions: ["tasks.complete"] },
-      { key: "review", label: "Review", help: "Also approve and reopen tasks, mark them not applicable, resolve actions and see the reports.", permissions: ["tasks.review"] },
-      { key: "manage", label: "Manage", help: "Also write the task templates: what each asks for, where, for whom and when.", permissions: ["tasks.manage"] },
-    ],
-  },
-});
-
-registerModule({
-  id: "rota",
-  group: "team",
-  name: "Rota",
-  description: "Who is on which activity at the sites you cover, with every gap in cover counted",
-  icon: CalendarClock,
-  href: "/rota/overview",
-  logName: "Rota",
-  access: {
-    reach: "sites",
-    // "manage" keeps its stored key (roles already hold it); it is the duty manager's Run.
-    levels: [
-      { key: "view", label: "View", help: "See the rota at their sites.", permissions: ["rota.view"] },
-      { key: "plan", label: "Plan", help: "Plan the days ahead for the departments they belong to.", permissions: ["rota.plan"] },
-      { key: "manage", label: "Run", help: "Run today and change any day for every department, report absences and keep the activity list.", permissions: ["rota.manage"] },
-    ],
-  },
-});
-
-registerModule({
-  id: "training",
-  group: "team",
-  name: "Training",
-  description: "Training for the people you cover: what is due, waiting for sign-off and done",
-  icon: GraduationCap,
-  href: "/training",
-  logName: "Training",
-  access: {
-    reach: "sites",
-    levels: [
-      { key: "trainer", label: "Trainer", help: "Sign off practical training for people at their sites.", permissions: ["training.records.read", "training.signoff"] },
-      { key: "manage", label: "Manage", help: "Create courses, assign them and check certificates.", permissions: ["training.manage", "training.assign", "qualifications.manage"] },
-    ],
-  },
-});
-
-registerModule({
-  id: "docs",
-  group: "team",
-  name: "Docs",
-  description: "Staff documents to read, write and approve, and who has read them",
-  icon: Files,
-  href: "/docs",
-  logName: "Docs",
-  access: {
-    reach: "everywhere",
-    levels: [
-      { key: "read", label: "Read", help: "Read the documents aimed at their role.", permissions: ["docs.read"] },
-      { key: "write", label: "Write", help: "Draft documents and send them for approval.", permissions: ["docs.write"] },
-      { key: "manage", label: "Manage", help: "Aim documents at roles and see who has read them.", permissions: ["docs.manage"] },
-    ],
-    extras: [
-      { key: "approve", label: "Can approve documents", help: "Approve and publish colleagues' documents, never their own.", from: "read", permissions: ["docs.approve"] },
-    ],
-  },
-});
-
-registerModule({
-  id: "hr",
-  group: "team",
-  name: "HR",
-  description: "Restricted staff files: details, employment, notes and performance reviews for the people you look after",
-  icon: HeartHandshake,
-  href: "/hr",
-  logName: "HR",
-  access: {
-    reach: "everywhere",
-    restricted: true,
-    levels: [
-      {
-        key: "team", label: "Their team", help: "Staff files, notes and reviews for the people they manage.", reach: "team",
-        permissions: ["hr.records.read", "hr.details.write", "hr.notes.write", "hr.reviews.write"],
-      },
-      { key: "all", label: "Everyone", help: "Staff files, notes and reviews for everyone.", permissions: [] },
-    ],
-  },
-});
-
-registerModule({
-  id: "purchasing",
-  group: "back-office",
-  name: "Purchasing",
-  description: "Raise purchase orders with approved suppliers, approved by role and amount, numbered per site.",
-  icon: ShoppingCart,
-  href: "/purchasing",
-  logName: "Purchasing",
-  access: {
-    reach: "sites",
-    levels: [
-      { key: "view", label: "View", help: "See their sites' orders, and approve those their role may approve.", permissions: ["purchasing.read"] },
-      { key: "request", label: "Request", help: "Raise purchase orders at their sites.", permissions: ["purchasing.request"] },
-      { key: "manage", label: "Manage", help: "Suppliers, approved products and prices, and who approves up to what.", permissions: ["purchasing.manage"] },
-    ],
-  },
-});
 
 // Admin is Core: the organisation every module shares (people, roles, sites
 // and the activity log).
-registerModule({
+const adminModule: ModuleManifest = {
   id: "admin",
   group: "back-office",
   name: "Admin",
@@ -363,4 +148,6 @@ registerModule({
       { key: "areas", label: "Keeps sites' areas", help: "Each site's pools, gym and other areas.", from: "setup", permissions: ["setup.areas"] },
     ],
   },
-});
+};
+
+const MODULES: readonly ModuleManifest[] = [...modules, adminModule];

@@ -32,7 +32,7 @@ export const ABSENCE_REASONS = Object.keys(ABSENCE_REASON_META) as AbsenceReason
 
 /** How soon after coming back a new absence is worth asking about: "is this
  *  the same thing again?" Four weeks, the usual window for linked sickness. */
-export const ABSENCE_AGAIN_DAYS = 28;
+const ABSENCE_AGAIN_DAYS = 28;
 
 type EarlierAbsence = { id: string; firstDay: string; lastDay: string | null };
 /** What a new report for this person, starting on `firstDay`, might be:
@@ -159,7 +159,7 @@ export function youngBand(dateOfBirth: string | null, onIso: string): YoungBand 
  *  two days off a week). Warnings only (owner decision, 8 October 2026): the plan says so and the
  *  manager decides. `days` maps each date the person works, any site, to their first start and
  *  last finish; `date` is the day being planned. */
-export const YOUNG_REST_HOURS: Record<YoungBand, number> = { under16: 14, under18: 12 };
+const YOUNG_REST_HOURS: Record<YoungBand, number> = { under16: 14, under18: 12 };
 export function youngRest(band: YoungBand | null, date: string, days: ReadonlyMap<string, { start: number; end: number }>): string[] {
   const today = days.get(date);
   if (!band || !today) return [];

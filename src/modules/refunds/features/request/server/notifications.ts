@@ -7,7 +7,7 @@ import { refundAccess } from "@/modules/refunds/shared/auth";
 import { guardRead, lockRefund } from "@/modules/refunds/shared/service";
 import { refundNumber, refundStatuses, type RefundActor, type RefundStatus } from "@/modules/refunds/shared/types";
 
-export function refundEmail(number: number, status: string, id: string, base: string) {
+function refundEmail(number: number, status: string, id: string, base: string) {
   const url = new URL(base);
   if (url.protocol !== "https:" || url.username || url.password) throw new Error("Set REFUNDS_APP_URL to the HTTPS staff app address.");
   const reference = refundNumber(number);

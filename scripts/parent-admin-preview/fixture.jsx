@@ -7,7 +7,7 @@ import { createRoot } from 'react-dom/client';
 import Link from 'next/link';
 import { ThemeProvider } from '@/components/theme-provider';
 import { TooltipProvider } from '@/components/shadcn/tooltip';
-import { ToastBridge } from '@/lib/toast';
+import { ToastBridge } from '@/components/ui/toast';
 import { Button } from '@/components/shadcn/button';
 import { ParentAccounts } from '@/modules/activities/features/parents/components/parent-accounts';
 import { ParentAccessRequests } from '@/modules/activities/features/parents/components/access-requests';

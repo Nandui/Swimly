@@ -26,7 +26,7 @@ export type ShiftPart = Span & {
 export type DayShift = Span & { parts: ShiftPart[]; paidMinutes: number };
 
 /** Nothing on for this long between activities means two shifts, not one long one. */
-export const SPLIT_AFTER = 60;
+const SPLIT_AFTER = 60;
 
 /** Where in a shift each break aims for: one in the middle; two at about a third and
  *  three fifths; three at a quarter, half and three quarters (the old planner's rule). */

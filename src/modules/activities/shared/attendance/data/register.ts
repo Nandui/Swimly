@@ -1,4 +1,3 @@
-import { withSites } from "@/lib/directory";
 import type { AttendanceStatus, DayOfWeek } from "@/generated/prisma/client";
 import { requireSession } from "@/lib/authz";
 import { classifyMedical, medicalAllowed, requireActivitiesAccess, type ActivitiesSurface } from "@/modules/activities/shared/classification";
@@ -6,7 +5,7 @@ import { currentClubId } from "@/lib/clubs/current";
 import { parseDateOnly } from "@/lib/format";
 import { prisma } from "@/lib/prisma";
 import { savedRegister } from "@/modules/activities/shared/attendance/revision";
-import { getSharedCurriculum, sharedCourse } from "@/modules/activities/shared/curriculum/data/shared";
+import { getSharedCurriculum } from "@/modules/activities/shared/curriculum/data/shared";
 
 export type RegisterLine = {
   studentId: string;
@@ -122,37 +121,6 @@ export async function getRegister(courseId: string, iso: string, surface: Activi
 }
 
 export type Register = Awaited<ReturnType<typeof getRegister>>;
-
-/** A student's attendance, newest first, for their profile. */
-export async function getAttendanceForStudent(studentId: string, take = 30) {
-  await requireSession();
-
-  const rows = await prisma.attendanceRecord.findMany({
-    where: { studentId },
-    orderBy: { date: "desc" },
-    take,
-    select: {
-      id: true,
-      date: true,
-      status: true,
-      note: true,
-      course: {
-        select: {
-          id: true,
-          name: true,
-          dayOfWeek: true,
-          startMinutes: true, clubId: true,
-          level: { select: { id: true, name: true } },
-        },
-      },
-    },
-  });
-  const curriculum = await getSharedCurriculum();
-  const courses = await withSites(rows.map(row => row.course), "clubId", "club");
-  return rows.map((row, index) => ({ ...row, course: sharedCourse(courses[index], curriculum) }));
-}
-
-export type StudentAttendance = Awaited<ReturnType<typeof getAttendanceForStudent>>[number];
 
 /** Which of today's classes already have a register, so the deck screen can
  *  say what is still outstanding. */

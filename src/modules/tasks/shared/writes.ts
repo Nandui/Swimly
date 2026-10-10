@@ -2,7 +2,7 @@ import { revalidatePath } from "next/cache";
 import type { Prisma } from "@/generated/prisma/client";
 import { AuthorizationError } from "@/lib/authz";
 import { withSite } from "@/lib/directory";
-import { parseDateOnly } from "@/lib/format";
+import { addDaysIso, parseDateOnly } from "@/lib/format";
 import { prisma } from "@/lib/prisma";
 import { requireCapFor } from "@/lib/policy/session";
 import type { PermissionKey } from "@/lib/staff/permissions";
@@ -50,4 +50,3 @@ export async function makeTaskNow(tx: Parameters<Parameters<typeof prisma.$trans
     select: { id: true },
   });
 }
-export const addDaysIso = (d: string, n: number) => new Date(Date.parse(`${d}T12:00:00Z`) + n * 86_400_000).toISOString().slice(0, 10);

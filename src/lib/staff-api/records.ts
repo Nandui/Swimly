@@ -23,7 +23,7 @@ const failed = (message: string) => new StaffApiError(409, "NOT_POSSIBLE", messa
 // Me and my details
 // ---------------------------------------------------------------------------
 
-export const DETAIL_FIELDS = ["phone", "homeAddress", "emergencyName", "emergencyPhone", "emergencyRelationship"] as const;
+const DETAIL_FIELDS = ["phone", "homeAddress", "emergencyName", "emergencyPhone", "emergencyRelationship"] as const;
 type DetailField = (typeof DETAIL_FIELDS)[number];
 
 export async function profile(identity: StaffIdentity) {

@@ -103,8 +103,6 @@ function providers(): NextAuthConfig["providers"] {
  *  `session.user.role` and never how the person signed in. */
 const {
   handlers,
-  signIn,
-  signOut,
   auth: nextAuth,
 } = NextAuth({
   session: { strategy: "jwt" },
@@ -139,7 +137,7 @@ const {
   },
 });
 
-export { handlers, signIn, signOut };
+export { handlers };
 
 /** The signed-in person's own sites, read from the sign-in cookie alone: the full session
  *  (`auth`) needs the working site first, so the working site cannot ask it. `sites` empty

@@ -14,7 +14,7 @@ holds hours and pay; the rota keeps a log of every change to a day that has come
 
 | Concept | Table | What it is |
 | --- | --- | --- |
-| Activity | `RotaActivityType` | The organisation's one list: Lifeguarding, Teaching, Reception. Each belongs to a **department** (who plans it), has an icon (`ROTA_ACTIVITY_ICONS`) and may need a **qualification**. One activity "takes the swim classes" (`fromClasses`). Archived, never deleted. |
+| Activity | `RotaActivityType` | The organisation's one list: Lifeguarding, Teaching, Reception. Each belongs to a **department** (who plans it), has an icon (`ACTIVITY_ICONS` in src/lib/setup/meta.ts) and may need a **qualification**. One activity "takes the swim classes" (`fromClasses`). Archived, never deleted. |
 | Need | `RotaNeed` | One activity at a site on a day: where (one of the site's **areas**, Admin, Areas: "Main pool"), from and to, and how many **places** (people at once). Each place is a lane on the timeline. |
 | Assignment | `RotaAssignment` | A person on one place for all or part of the need's time. One person at a time on a place (`placeProblem`). |
 | Gap | worked out | Any time a place has nobody on it, or the person on it is off that day (`needGaps`, `needsCover`). Back-to-back swim classes nobody teaches count as one gap. |

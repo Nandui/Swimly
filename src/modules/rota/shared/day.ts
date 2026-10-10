@@ -252,7 +252,7 @@ export function buildDay(input: {
 }
 
 /** A block that needs someone: nobody is on it, or the person on it is off that day. */
-export function needsCover(b: Block) {
+function needsCover(b: Block) {
   return b.kind === "gap" || b.warnings.includes("off");
 }
 

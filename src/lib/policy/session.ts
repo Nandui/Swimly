@@ -29,7 +29,7 @@ export function actorForSession(session: Session): Actor {
 }
 
 /** The organisation chart from the main database, memoised per request. */
-export const prismaDirectory = cache((): Directory => {
+const prismaDirectory = cache((): Directory => {
   const memo = new Map<string, Promise<unknown>>();
   const once = <T,>(key: string, load: () => Promise<T>) => {
     if (!memo.has(key)) memo.set(key, load());
@@ -87,7 +87,7 @@ export async function sitesFor(cap: PermissionKey) {
   return siteFilter(await currentActor(), cap);
 }
 
-export class StepUpRequired extends AuthorizationError {
+class StepUpRequired extends AuthorizationError {
   constructor() { super("Confirm your password to open this."); }
 }
 

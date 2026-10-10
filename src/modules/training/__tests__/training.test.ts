@@ -103,7 +103,6 @@ test("the learner completes their own; an online course records an unverified qu
   const mine = await fixture.prisma.trainingAssignment.findFirstOrThrow({ where: { userId: "ava", courseId: online } });
   as("riley");
   assert.equal((await own.completeTrainingFor({ id: state.id, name: state.id }, mine.id, "")).ok, false, "not riley's");
-  await assert.rejects(self.myAssignment(mine.id), NotFound);
   as("ava");
   assert.equal((await own.completeTrainingFor({ id: state.id, name: state.id }, mine.id, "Read it")).ok, true);
   assert.equal((await own.completeTrainingFor({ id: state.id, name: state.id }, mine.id, "")).ok, false, "already finished");

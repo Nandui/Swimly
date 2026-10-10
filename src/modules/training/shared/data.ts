@@ -1,7 +1,7 @@
 import "server-only";
 import type { Prisma } from "@/generated/prisma/client";
 import { activeStaffWithRoles } from "@/lib/directory";
-import { parseDateOnly } from "@/lib/format";
+import { addDaysIso, parseDateOnly } from "@/lib/format";
 import { prisma } from "@/lib/prisma";
 import { subjectsFor } from "@/lib/policy/session";
 import type { SubjectFilter } from "@/lib/policy/types";
@@ -19,12 +19,6 @@ export const people = (filter: SubjectFilter): Prisma.StringFilter | undefined =
 
 export async function scopedUserIds(cap: PermissionKey) {
   return people(await subjectsFor(cap));
-}
-
-export function isoPlusDays(iso: string, days: number) {
-  const date = parseDateOnly(iso);
-  date.setUTCDate(date.getUTCDate() + days);
-  return date.toISOString().slice(0, 10);
 }
 
 // ---------------------------------------------------------------------------
@@ -64,5 +58,5 @@ export type ExpiringFilters = StaffFilters;
 /** Qualifications expired or expiring within the warning window; a newer certificate of the
  *  same type replaces an expiring one. */
 export async function expiringQualificationRows(orgId: string | null, reach: SubjectFilter, on: string, filters: ExpiringFilters = {}) {
-  return qualificationsExpiringBy(orgId, reach, parseDateOnly(isoPlusDays(on, EXPIRY_WARNING_DAYS)), filters);
+  return qualificationsExpiringBy(orgId, reach, parseDateOnly(addDaysIso(on, EXPIRY_WARNING_DAYS)), filters);
 }

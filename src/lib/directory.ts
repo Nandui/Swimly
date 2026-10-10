@@ -298,11 +298,6 @@ async function departmentClient(db?: DepartmentDb): Promise<DepartmentDb> {
   return db ?? (await import("@/lib/prisma")).prisma;
 }
 
-/** An organisation's live departments, in order. */
-export async function liveDepartmentsOf(orgId: string | null, db?: DepartmentDb): Promise<SiteRef[]> {
-  return (await departmentClient(db)).department.findMany({ where: { orgId: orgId ?? undefined, archivedAt: null }, orderBy: [{ sortOrder: "asc" }, { name: "asc" }], select: { id: true, name: true } });
-}
-
 /** The live departments a site uses: its own and the organisation-wide ones, in order. */
 export async function departmentsForSite(orgId: string | null, siteId: string, db?: DepartmentDb): Promise<SiteRef[]> {
   return (await departmentClient(db)).department.findMany({

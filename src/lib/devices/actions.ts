@@ -104,13 +104,3 @@ export async function removeOwnPin(currentPassword: string): Promise<ActionResul
   return ok();
 }
 
-/** Takes a person off one shared device's quick-switch list (their own, or
- *  anyone's with staff.manage). */
-export async function leaveDevice(deviceId: string, userId: string): Promise<ActionResult> {
-  const session = await requireSession();
-  if (userId !== session.user.id) await requirePermission("staff.manage");
-  await prisma.sharedDeviceUser.deleteMany({ where: { deviceId, userId } });
-  revalidatePath("/switch");
-  revalidatePath("/staff/devices");
-  return ok();
-}

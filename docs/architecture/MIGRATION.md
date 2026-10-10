@@ -1,17 +1,17 @@
 # Migration to modular architecture
 
-**Status:** Phases 2, 3 and the boundary half of 4 done in draft PR #11, waiting on review. Module map and ADRs 0001 to 0003 approved 9 October 2026; ADR 0005 (frame in the UI kit) on 10 October.
-**Next step:** Fernando reviews and merges draft PR #11. Left after it: `src/app/modules.ts` replacing `src/modules/server.ts` and the registry entries moving into each `module.ts` (ADR 0004), and the Mermaid diagram once those settle.
+**Status:** Complete when the lean-refactor PR merges (10 October 2026). Every phase is done; boundary rules are errors with no exceptions.
+**Next step:** None for the migration. New work follows CLAUDE.md sections 11 to 13.
 
 ## Phases
 - [x] Phase 0 — Audit written to docs/architecture/audit.md (with [../modular-monolith.md](../modular-monolith.md))
 - [x] Phase 0 — Module map approved by user (9 October 2026; [README.md](README.md))
-- [ ] Phase 1 — Scaffold folders, registry, event bus, aliases
+- [x] Phase 1 — Scaffold folders, registry, event bus, aliases
   - [x] Event bus: `src/platform/events` (typed, in-process, failing listeners logged), with a test
   - [x] Aliases: `@/` already resolves `@/platform`, `@/modules/<id>` and, once created, `@/ui` and `@/front`
   - [x] Registry: `src/modules/registry.ts` (moves to `src/platform/registry` with the rest of Core)
-  - [ ] `src/app/modules.ts` replaces `src/modules/server.ts` as modules get `module.ts` (ADR 0004)
-  - [ ] `src/ui` (ADR 0003) and `src/front` folders: created when code first moves there (rule of two)
+  - [x] `src/app/modules.ts` lists every module's `manifest.ts`; `src/modules/server.ts` stays the server plug loader (ADR 0006, 10 October 2026)
+  - [x] `src/ui` and `src/front` folders: not created. The UI kit stays in `src/components` (ADR 0003) and front in `src/components/{home,core,workspace}`, as the boundary lint classifies them
 - [x] Phase 1 — Boundary lint added (warning mode): `eslint-plugin-boundaries` encodes CLAUDE.md section 3 in `eslint.config.mjs`. 383 warnings on 9 October 2026, most of them routes importing module internals (no module has an `index.ts` yet). Proven: platform → module, ui → platform and module → other module imports are reported. The older error-level rules (no module imports another module or its tables) stay on.
 - [x] Phase 2 — Modules moved (list each below as it's done)
 - [x] Phase 3 — Data ownership documented, cross-module table access removed
@@ -20,7 +20,7 @@
   - [x] Each module README lists the tables it owns and the Core reads it uses
   - No tables were renamed or altered and no migrations were run.
 - [x] Phase 4 — Boundary lint switched to error and proven (10 October 2026: 0 warnings, then errors; deliberate platform → module, ui → platform, sibling-feature and module → other module imports all fail)
-- [ ] Phase 4 — Docs finalised
+- [x] Phase 4 — Docs finalised (10 October 2026: module diagram in [README.md](README.md), ADR 0006)
 
 ## Modules moved
 In the full shape (`index.ts`, `module.ts`, `events.ts`, `README.md`, `shared/`, `features/`), routes importing only feature entries:
@@ -39,7 +39,7 @@ In the full shape (`index.ts`, `module.ts`, `events.ts`, `README.md`, `shared/`,
 The app frame (`ModuleShell`, the account menu, the site switcher) is in the UI kit (`src/components/ui`). It knows no module: the root layout's `YourModulesProvider` (`src/components/workspace/your-modules.tsx`, front) fills the frame context (`src/components/ui/frame.tsx`) with the person's modules, groups, role, site, sign-out and the role-preview control. See ADR 0005.
 
 ## Awaiting user decision
-- (none)
+- Deleting the unused scripts, old documents and files listed in the lean-refactor PR (asked 10 October 2026).
 
 ## Log
 - 2026-10-09 — PR #8: lint boundaries for every module, `work.prisma` split, cross-module leaks fixed.
@@ -61,3 +61,4 @@ The app frame (`ModuleShell`, the account menu, the site switcher) is in the UI 
 - 2026-10-10 — Frame split chosen. The site switcher moved to the UI kit (`src/components/ui/site-switcher.tsx`).
 - 2026-10-10 — Fernando chose to rewire rather than make an exception: `ModuleShell` and the account menu moved to the UI kit and read a frame context the app fills (ADR 0005). Warnings 31 → 19.
 - 2026-10-10 — Phase 4: last 19 warnings cleared. The UI kit declares its own prop types instead of importing Core helpers; the toast, area select, working-site switcher and wrong-site notice moved into the UI kit (site switching comes through the frame context); Rota and HR call the contributions registry, which loads the composition root itself. Boundary rules switched to error and proven.
+- 2026-10-10 — Lean refactor: each module's description moved from Core's registry into its own `manifest.ts`, listed once in `src/app/modules.ts` (ADR 0006); module diagram redrawn; dead code, duplicate date helpers and unused packages removed.

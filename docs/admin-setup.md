@@ -19,7 +19,7 @@ The page bar and the overview are built from the one list, so neither can leave 
 
 ## Who keeps what
 
-Admin has two levels and five ticks (`src/modules/registry.ts`):
+Admin has two levels and five ticks (Core's description, in `src/modules/registry.ts`):
 
 - **Setup** (`setup.view`): sees every setup list. Its ticks choose which lists the role keeps:
   departments (`setup.departments`), qualifications (`setup.qualifications`), the activity

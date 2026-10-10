@@ -4,4 +4,4 @@ import type { sitesFor } from "@/lib/policy/session";
 
 export type Sites = Awaited<ReturnType<typeof sitesFor>>;
 export const inSites = (sites: Sites) => (sites.kind === "all" ? {} : { siteId: { in: [...sites.siteIds] } });
-export const iso = (d: Date) => d.toISOString().slice(0, 10);
+export { toDateOnlyString as iso } from "@/lib/format";

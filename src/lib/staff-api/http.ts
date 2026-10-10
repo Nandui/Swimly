@@ -8,7 +8,7 @@ import { staffApiConfig } from "@/lib/staff-api/config";
 export { idSchema, json } from "@/lib/public-api/http";
 export const emailSchema = z.string().trim().toLowerCase().email().max(254);
 
-export const { readBody, parseInput, errorResponse, respond: staffResponse } = publicApi({
+export const { readBody, parseInput, respond: staffResponse } = publicApi({
   name: "Staff API",
   origins: () => staffApiConfig().origins,
   methods: "GET,POST,PATCH,PUT,OPTIONS",

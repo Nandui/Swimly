@@ -22,7 +22,7 @@ export async function getCancellation(courseId: string, iso: string) {
 }
 
 /** One page of the billing follow-up list; the pager reads it back from the result. */
-export const BILLING_PAGE_SIZE = 25;
+const BILLING_PAGE_SIZE = 25;
 
 /** The billing follow-up's stages (owner decision, 9 October 2026): awaiting billing; sent to
  *  Legend and waiting to be put back on the monthly price after the direct debit run; done

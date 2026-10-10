@@ -7,7 +7,7 @@
 export class LegendListError extends Error {}
 
 const text = (value: unknown) => (value === null || value === undefined ? "" : String(value)).replace(/\s+/g, " ").trim();
-export const normaliseMember = (value: string) => value.replace(/\s+/g, "").toUpperCase();
+const normaliseMember = (value: string) => value.replace(/\s+/g, "").toUpperCase();
 
 /** The member numbers in the export's data sheet (header first), each once. */
 export function parseLegendList(rows: readonly (readonly unknown[])[]): string[] {

@@ -13,7 +13,7 @@ export const BULK_LOG_COLUMNS = [
   "Freeze Type", "FreezeFeeOverride", "Freeze Reason", "FreezeAllowReferralDiscounts", "FreezePreventAccess",
 ] as const;
 
-export const BULK_LOG_AGREEMENT = "Aquatics";
+const BULK_LOG_AGREEMENT = "Aquatics";
 
 /** Legend's price name for a swim school programme: Water Safety & Fun, or Swimming Skills
  *  for the levels. Anything else keeps its own name, so billing sees it rather than a guess. */
