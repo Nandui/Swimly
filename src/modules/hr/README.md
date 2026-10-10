@@ -33,7 +33,7 @@ HR's home card counts Core's `StaffDetailChangeRequest`, and a person's file rea
 
 ## Registration (module.ts)
 - Home card: details changes to check.
-- Menu entry, levels and permissions: still in `src/modules/registry.ts` (ADR 0004). Only a superadmin gives HR.
+- Menu entry, levels and permissions: `manifest.ts`, listed in `src/app/modules.ts`. Only a superadmin gives HR.
 
 ## Permissions
 - `hr.records.read`, `hr.notes.write`, `hr.reviews.write`, `hr.details.write`.

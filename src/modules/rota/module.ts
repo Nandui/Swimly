@@ -13,9 +13,7 @@ import { registerAreaRename, registerHomeCard, registerPersonFileSection, type H
 
 /** Rota's registration plug (CLAUDE.md section 5), loaded by
  *  src/modules/server.ts: its home card, its parts of a person's file and the
- *  area rename it follows. Its menu entry, levels and permissions are still
- *  described in src/modules/registry.ts until the platform registry takes
- *  module plugs (ADR 0004). */
+ *  area rename it follows. Its menu entry, levels and permissions are in manifest.ts. */
 
 registerPersonFileSection({ id: "rota.planned", heading: "Rota", load: plannedFile });
 registerPersonFileSection({ id: "rota.absences", heading: "Absences and returns to work", load: absenceFile });
