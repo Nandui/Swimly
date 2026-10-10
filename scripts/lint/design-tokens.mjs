@@ -68,4 +68,5 @@ const noLiteralStyles = {
   },
 };
 
-export default { rules: { "no-literal-styles": noLiteralStyles } };
+const designTokens = { rules: { "no-literal-styles": noLiteralStyles } };
+export default designTokens;

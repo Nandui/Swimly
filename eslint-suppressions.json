@@ -34,11 +34,6 @@
       "count": 5
     }
   },
-  "src/components/clubs/club-switcher.tsx": {
-    "turnfin/no-literal-styles": {
-      "count": 1
-    }
-  },
   "src/components/confirm-action.tsx": {
     "turnfin/no-literal-styles": {
       "count": 1
@@ -50,11 +45,6 @@
     }
   },
   "src/components/shadcn/alert-dialog.tsx": {
-    "turnfin/no-literal-styles": {
-      "count": 1
-    }
-  },
-  "src/components/shadcn/avatar.tsx": {
     "turnfin/no-literal-styles": {
       "count": 1
     }
@@ -89,167 +79,172 @@
       "count": 1
     }
   },
-  "src/components/workspace/account-menu.tsx": {
+  "src/components/ui/account-menu.tsx": {
     "turnfin/no-literal-styles": {
       "count": 3
     }
   },
-  "src/components/workspace/module-shell.tsx": {
-    "turnfin/no-literal-styles": {
-      "count": 2
-    }
-  },
-  "src/components/workspace/site-switcher.tsx": {
+  "src/components/ui/club-switcher.tsx": {
     "turnfin/no-literal-styles": {
       "count": 1
     }
   },
-  "src/lib/toast.tsx": {
+  "src/components/ui/module-shell.tsx": {
     "turnfin/no-literal-styles": {
       "count": 2
     }
   },
-  "src/modules/activities/components/assessments/session-actions.tsx": {
+  "src/components/ui/site-switcher.tsx": {
+    "turnfin/no-literal-styles": {
+      "count": 1
+    }
+  },
+  "src/components/ui/toast.tsx": {
+    "turnfin/no-literal-styles": {
+      "count": 2
+    }
+  },
+  "src/modules/activities/features/assessments/components/session-actions.tsx": {
     "turnfin/no-literal-styles": {
       "count": 4
     }
   },
-  "src/modules/activities/components/attendance/take-over.tsx": {
+  "src/modules/activities/features/attendance/components/take-over.tsx": {
     "turnfin/no-literal-styles": {
       "count": 1
     }
   },
-  "src/modules/activities/components/courses/add-class.tsx": {
+  "src/modules/activities/features/courses/components/add-class.tsx": {
     "turnfin/no-literal-styles": {
       "count": 1
     }
   },
-  "src/modules/activities/components/courses/course-filters.tsx": {
+  "src/modules/activities/features/courses/components/course-filters.tsx": {
     "turnfin/no-literal-styles": {
       "count": 2
     }
   },
-  "src/modules/activities/components/curriculum/image-thumbnail.tsx": {
+  "src/modules/activities/features/curriculum/components/image-thumbnail.tsx": {
     "turnfin/no-literal-styles": {
       "count": 1
     }
   },
-  "src/modules/activities/components/duty/billing-review.tsx": {
+  "src/modules/activities/features/duty/components/billing-review.tsx": {
     "turnfin/no-literal-styles": {
       "count": 1
     }
   },
-  "src/modules/activities/components/duty/cancel-session.tsx": {
+  "src/modules/activities/features/duty/components/cancel-session.tsx": {
     "turnfin/no-literal-styles": {
       "count": 1
     }
   },
-  "src/modules/activities/components/duty/duty-view.tsx": {
+  "src/modules/activities/features/duty/components/duty-view.tsx": {
     "turnfin/no-literal-styles": {
       "count": 1
     }
   },
-  "src/modules/activities/components/enrolment/awaiting-queue.tsx": {
+  "src/modules/activities/features/enrolment/components/awaiting-queue.tsx": {
     "turnfin/no-literal-styles": {
       "count": 1
     }
   },
-  "src/modules/activities/components/enrolment/legend-agreements.tsx": {
+  "src/modules/activities/features/enrolment/components/legend-agreements.tsx": {
     "turnfin/no-literal-styles": {
       "count": 1
     }
   },
-  "src/modules/activities/components/instructor/instructor-shell.tsx": {
+  "src/modules/activities/features/instructor/components/instructor-shell.tsx": {
     "turnfin/no-literal-styles": {
       "count": 1
     }
   },
-  "src/modules/activities/components/instructor/start-class.tsx": {
+  "src/modules/activities/features/instructor/components/start-class.tsx": {
     "turnfin/no-literal-styles": {
       "count": 1
     }
   },
-  "src/modules/activities/components/parents/parent-accounts.tsx": {
+  "src/modules/activities/features/parents/components/parent-accounts.tsx": {
     "turnfin/no-literal-styles": {
       "count": 2
     }
   },
-  "src/modules/activities/components/students/add-swimmer.tsx": {
+  "src/modules/activities/features/students/components/add-swimmer.tsx": {
     "turnfin/no-literal-styles": {
       "count": 1
     }
   },
-  "src/modules/activities/components/students/profile-action-dialog.tsx": {
+  "src/modules/activities/features/students/components/profile-action-dialog.tsx": {
     "turnfin/no-literal-styles": {
       "count": 2
     }
   },
-  "src/modules/activities/components/students/profile-enrolments.tsx": {
+  "src/modules/activities/features/students/components/profile-enrolments.tsx": {
     "turnfin/no-literal-styles": {
       "count": 1
     }
   },
-  "src/modules/activities/components/students/profile-history.tsx": {
+  "src/modules/activities/features/students/components/profile-history.tsx": {
     "turnfin/no-literal-styles": {
       "count": 1
     }
   },
-  "src/modules/activities/components/students/swimmer-browser.tsx": {
+  "src/modules/activities/features/students/components/swimmer-browser.tsx": {
     "turnfin/no-literal-styles": {
       "count": 2
     }
   },
-  "src/modules/activities/components/today/instructor-picker.tsx": {
+  "src/modules/activities/features/today/components/instructor-picker.tsx": {
     "turnfin/no-literal-styles": {
       "count": 1
     }
   },
-  "src/modules/docs/components/document-editor.tsx": {
+  "src/modules/docs/features/editor/components/document-editor.tsx": {
     "turnfin/no-literal-styles": {
       "count": 1
     }
   },
-  "src/modules/docs/components/home.tsx": {
+  "src/modules/docs/features/home/components/home.tsx": {
     "turnfin/no-literal-styles": {
       "count": 1
     }
   },
-  "src/modules/docs/components/reader.tsx": {
+  "src/modules/docs/features/reader/components/reader.tsx": {
     "turnfin/no-literal-styles": {
       "count": 3
     }
   },
-  "src/modules/docs/components/reports.tsx": {
+  "src/modules/docs/features/reports/components/reports.tsx": {
     "turnfin/no-literal-styles": {
       "count": 1
     }
   },
-  "src/modules/docs/components/work.tsx": {
+  "src/modules/docs/features/work/components/work.tsx": {
     "turnfin/no-literal-styles": {
       "count": 1
     }
   },
-  "src/modules/purchasing/components/order-form.tsx": {
+  "src/modules/purchasing/features/orders/components/order-form.tsx": {
     "turnfin/no-literal-styles": {
       "count": 2
     }
   },
-  "src/modules/refunds/components/finance-actions.tsx": {
+  "src/modules/refunds/features/request/components/finance-actions.tsx": {
     "turnfin/no-literal-styles": {
       "count": 1
     }
   },
-  "src/modules/rota/components/day-plan.tsx": {
+  "src/modules/rota/features/plan/components/day-plan.tsx": {
     "turnfin/no-literal-styles": {
       "count": 3
     }
   },
-  "src/modules/rota/components/link-picker.tsx": {
+  "src/modules/rota/features/plan/components/link-picker.tsx": {
     "turnfin/no-literal-styles": {
       "count": 1
     }
   },
-  "src/modules/rota/components/people-plan.tsx": {
+  "src/modules/rota/features/plan/components/people-plan.tsx": {
     "turnfin/no-literal-styles": {
       "count": 2
     }
