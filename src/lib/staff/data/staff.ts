@@ -1,20 +1,5 @@
-import { requirePermission, requireSession } from "@/lib/authz";
+import { requirePermission } from "@/lib/authz";
 import { prisma } from "@/lib/prisma";
-
-/** Reads are plain async functions called straight from server components.
- *  They live apart from actions so a read cannot quietly grow a write. */
-export async function getPeopleSummary() {
-  await requireSession();
-
-  const [total, admins] = await Promise.all([
-    prisma.user.count({ where: { isActive: true } }),
-    prisma.user.count({
-      where: { isActive: true, staffRole: { permissions: { has: "staff.manage" } } },
-    }),
-  ]);
-
-  return { total, admins };
-}
 
 /** The staff list. Needs `staff.manage`, because who holds a key is not a
  *  thing the people holding the lesser keys need to see — and the nav never

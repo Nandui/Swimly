@@ -30,6 +30,9 @@ Do not delegate to subagents unless the user explicitly asks for delegation.
 Report outcomes, relevant evidence and remaining limitations in concise plain
 English; use structured deliverables when the task benefits from them.
 
+Add a plain-language entry to [CHANGELOG.md](CHANGELOG.md) for any change staff will
+notice, and bump `version` in package.json to match.
+
 For code changes, run `npm run typecheck` and `npm run lint`, plus focused checks
 for the behaviour changed. Apply DESIGN.md's screen checklist to screen changes.
 For instruction-only edits, validate instructions, links and diffs instead of
@@ -43,7 +46,7 @@ a shared **Core** (people, roles, sites, audit, the module catalogue), plus Turn
 (`apps/me`) and the public Academy booking site (`apps/academy`, docs/academy.md). See [docs/how-turnfin-works.md](docs/how-turnfin-works.md) and the owner's
 pillars in it (28 September 2026): simplicity, ease of use, modern, scalable, clean code,
 easy to manage, audit and train, and change without breaking. Each module describes
-itself in `src/modules/registry.ts`, including its levels; a role holds one level for each
+itself in its `manifest.ts` (listed in `src/app/modules.ts`), including its levels; a role holds one level for each
 module. The swim school (Activities) lives in `src/modules/activities`,
 `src/app/(activities)` and `src/app/(instructor)`. Core never imports a module, and
 Activities never imports a Work module or queries Core tables (use `src/lib/directory.ts`).

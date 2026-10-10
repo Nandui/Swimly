@@ -35,7 +35,7 @@ Training also reads and writes Core's qualification records (`Qualification`, `Q
 ## Registration (module.ts)
 - Home card: practical sign-offs, certificates to check, qualifications expiring.
 - Person file section `training.open` and subject records `training` (HR's export).
-- Menu entry, levels and permissions: still in `src/modules/registry.ts` (ADR 0004).
+- Menu entry, levels and permissions: `manifest.ts`, listed in `src/app/modules.ts`.
 
 ## Permissions
 - `training.manage`, `training.assign`, `training.records.read`, `training.signoff`; `qualifications.manage` (Core's) for certificates and expiring qualifications.

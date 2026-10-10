@@ -30,7 +30,7 @@ Purchasing also reads Core's `User`, `Club` and `StaffRole` directly (sites, the
 
 ## Registration (module.ts)
 - Home card: orders to approve, your rejected orders to change, and "Raise a purchase order".
-- Menu entry, levels and permissions: still in `src/modules/registry.ts` (ADR 0004).
+- Menu entry, levels and permissions: `manifest.ts`, listed in `src/app/modules.ts`.
 
 ## Permissions
 - `purchasing.read`, `purchasing.request`, `purchasing.manage`.

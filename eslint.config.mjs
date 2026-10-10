@@ -55,6 +55,7 @@ const allModuleFiles = Object.values(moduleFiles).flat();
 // Composition roots may import every module: the module wiring, and Turnfin
 // Me's records and daily digest, which gather each person's things from every module.
 const compositionRoots = [
+  "src/app/modules.ts",
   "src/modules/server.ts",
   "src/modules/session-hooks.ts",
   "src/lib/staff-api/records.ts",
@@ -174,7 +175,7 @@ const layerElements = [
   { type: "app", pattern: "src/app", partialMatch: false },
 ];
 const layerFiles = [
-  { category: "composition", pattern: ["src/modules/server.ts", "src/modules/session-hooks.ts", "src/lib/staff-api/records.ts", "src/lib/staff-api/reminders.ts"] },
+  { category: "composition", pattern: ["src/app/modules.ts", "src/modules/server.ts", "src/modules/session-hooks.ts", "src/lib/staff-api/records.ts", "src/lib/staff-api/reminders.ts"] },
   { category: "platform", pattern: ["src/modules/registry.ts", "src/modules/contributions.ts", "src/modules/context.ts", "src/modules/index.ts", "src/auth.ts", "src/lib/staff-api/notify.ts"] },
   { category: "ui", pattern: ["src/lib/utils.ts", "src/components/theme-provider.tsx", "src/components/theme-toggle.tsx", "src/components/form-dialog.tsx", "src/components/confirm-action.tsx", "src/components/searchable-picker.tsx"] },
   { category: "front", pattern: ["src/lib/home.ts", "src/lib/home-meta.ts"] },

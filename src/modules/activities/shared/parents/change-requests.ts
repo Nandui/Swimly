@@ -25,7 +25,7 @@ export const CHANGE_FIELD_LABELS: Record<ChangeableField, string> = {
   medicalNotes: "Medical notes",
 };
 
-export const changeRequestSchema = z.object({
+const changeRequestSchema = z.object({
   contactName: text(120).optional(),
   contactEmail: z.union([z.literal(""), z.string().trim().toLowerCase().pipe(z.email().max(200))]).optional(),
   contactPhone: text(40).optional(),
@@ -36,7 +36,7 @@ export const changeRequestSchema = z.object({
   message: text(500).default(""),
 }).strict().refine((value) => CHANGEABLE_FIELDS.some((field) => value[field] !== undefined), "Include at least one detail to change.");
 
-export function changeRequestDto(row: ParentChangeRequest) {
+function changeRequestDto(row: ParentChangeRequest) {
   const proposed = row.proposed as Partial<Record<ChangeableField, string>>;
   return {
     id: row.id, childId: row.studentId, status: row.status,

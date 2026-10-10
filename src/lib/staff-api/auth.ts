@@ -13,9 +13,9 @@ import { bearerToken } from "@/lib/public-api/http";
  *  valid for 15 minutes. Only active staff get codes; the response never says
  *  whether an address has an account. */
 
-export const SESSION_MS = 12 * 60 * 60 * 1000;
-export const CODE_MS = 10 * 60 * 1000;
-export const CONFIRM_MS = 15 * 60 * 1000;
+const SESSION_MS = 12 * 60 * 60 * 1000;
+const CODE_MS = 10 * 60 * 1000;
+const CONFIRM_MS = 15 * 60 * 1000;
 const MAX_ATTEMPTS = 5;
 
 export type StaffIdentity = { sessionId: string; confirmedAt: Date | null; user: { id: string; name: string; email: string; orgId: string } };

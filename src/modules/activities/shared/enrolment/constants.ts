@@ -22,9 +22,6 @@ export const ENROLMENT_STATUS_META: Record<EnrolmentStatus, StatusMeta> = {
   TRANSFERRED: { label: "Transferred", color: "purple", icon: ArrowRightLeft },
 };
 
-/** The statuses that still mean "in this class". */
-export const OPEN_STATUSES = ["ACTIVE", "WAITLISTED"] as const;
-
 export const FOLLOW_UP_META = {
   readyToMove: { label: "Ready to move", color: "blue", icon: CircleArrowRight },
   reviewMove: { label: "Needs review", color: "orange", icon: ScanSearch },

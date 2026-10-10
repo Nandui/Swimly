@@ -15,7 +15,7 @@ function devLog(env = process.env) {
   return env.NODE_ENV !== "production" && env.STAFF_EMAIL_DEV_LOG === "true";
 }
 
-export function staffEmailConfig(env = process.env): GoogleEmailConfig {
+function staffEmailConfig(env = process.env): GoogleEmailConfig {
   return emailSender("Turnfin Me", env) ?? unavailable();
 }
 

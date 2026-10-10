@@ -10,7 +10,7 @@ import { Avatar, AvatarFallback } from "@/components/shadcn/avatar";
 import { Button } from "@/components/shadcn/button";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/shadcn/collapsible";
 import { Tag } from "@/components/ui-kit/tag";
-import { formatDate, nameInitials, plural } from "@/lib/format";
+import { formatDate, nameInitials, plural, toDateOnlyString as iso } from "@/lib/format";
 
 export const metadata: Metadata = { title: "Absences" };
 
@@ -20,7 +20,6 @@ function when(a: Pick<RotaAbsenceRow, "firstDay" | "lastDay">) {
   return a.lastDay.getTime() === a.firstDay.getTime() ? day(a.firstDay) : `${day(a.firstDay)} to ${day(a.lastDay)}`;
 }
 
-const iso = (date: Date) => date.toISOString().slice(0, 10);
 const times = (n: number) => (n === 1 ? "once" : n === 2 ? "twice" : `${n} times`);
 
 /** How the absence got here: "First reported until 2 Oct · extended twice" and,

@@ -3,9 +3,7 @@ import { expandPermissions } from "@/lib/staff/permissions";
 import { registerHomeCard, type HomeItem } from "@/modules/contributions";
 
 /** Docs' registration plug (CLAUDE.md section 5), loaded by
- *  src/modules/server.ts. Its menu entry, levels and permissions are still
- *  described in src/modules/registry.ts until the platform registry takes
- *  module plugs (ADR 0004).
+ *  src/modules/server.ts. Its menu entry, levels and permissions are in manifest.ts.
  *
  *  Docs on the home page: the writer's quick action. Its pages are in its own
  *  overview, and confirming required reading happens in Turnfin Me. */

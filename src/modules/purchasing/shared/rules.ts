@@ -12,7 +12,6 @@ export const PO_STATUS_META = {
   cancelled: { label: "Cancelled", color: "gray", icon: Ban },
 } as const satisfies Record<string, StatusMeta>;
 export type PoStatus = keyof typeof PO_STATUS_META;
-export const PO_STATUSES = Object.keys(PO_STATUS_META) as PoStatus[];
 /** A supplier or product taken off the approved list. */
 export const APPROVAL_LIST_META = {
   removed: { label: "Not approved", color: "gray", icon: Ban },

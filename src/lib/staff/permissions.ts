@@ -320,22 +320,6 @@ export type PermissionKey = (typeof PERMISSIONS)[number]["key"];
 
 export type PermissionGroup = (typeof PERMISSIONS)[number]["group"];
 
-/** The order groups are offered in: the everyday work first, the powerful
- *  things last, so nobody ticks Administration on their way past. */
-export const PERMISSION_GROUP_ORDER: PermissionGroup[] = [
-  "Daily operations",
-  "Swimmers",
-  "On the deck",
-  "The rules",
-  "Docs",
-  "Refunds",
-  "People",
-  "Training",
-  "Rota",
-  "HR",
-  "Administration",
-];
-
 const ALL_KEYS = new Set<string>(PERMISSIONS.map((p) => p.key));
 
 /** Together these keys grant administrator access. Neither key alone does.

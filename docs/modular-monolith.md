@@ -8,7 +8,7 @@ Turnfin stays **one Next.js app, one deploy and one main database**. A modular m
 
 | Area | Today | Gap |
 | --- | --- | --- |
-| Module list | `src/modules/registry.ts` describes every module, its levels and permissions. | None. |
+| Module list | Each module's `manifest.ts` describes it, its levels and permissions; `src/app/modules.ts` lists them. | None. |
 | Seams | `src/modules/contributions.ts` (site summaries, home cards, personal file, commitments, area renames), session hooks and two composition roots. | None; the seams are good and get reused below. |
 | Swim school (Activities) | Lives in `src/modules/activities`; lint stops it importing Work modules or querying Core tables. | Already the target shape. |
 | Work modules (Docs, Refunds, Training, HR, Rota, Purchasing, Academy, Tasks) | Spread over `src/lib/<id>`, `src/components/<id>` and `src/app/<id>`. | **Lint did not stop them importing each other** or querying each other's tables. Not one folder per module. |

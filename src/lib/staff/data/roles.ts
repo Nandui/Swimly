@@ -1,4 +1,4 @@
-import { requirePermission, requireSession } from "@/lib/authz";
+import { requirePermission } from "@/lib/authz";
 import { prisma } from "@/lib/prisma";
 
 /** The roles, in the order an admin arranged them — which is least access
@@ -43,13 +43,3 @@ export async function listRolesForPicker() {
 
 export type RoleOption = Awaited<ReturnType<typeof listRolesForPicker>>[number];
 
-/** The signed-in person's own role, for the account page. No permission
- *  needed: it is their own. */
-export async function getMyRole() {
-  const session = await requireSession();
-
-  return prisma.staffRole.findUnique({
-    where: { id: session.user.roleId },
-    select: { id: true, name: true, description: true, permissions: true },
-  });
-}

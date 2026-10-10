@@ -50,26 +50,3 @@ export function useThemeMode(): ThemeModeContextValue {
   return ctx;
 }
 
-const DARK_QUERY = "(prefers-color-scheme: dark)";
-
-function subscribeToScheme(onChange: () => void) {
-  const media = window.matchMedia(DARK_QUERY);
-  media.addEventListener("change", onChange);
-  return () => media.removeEventListener("change", onChange);
-}
-
-/** What is actually on screen: the choice, or the device's answer when the
- *  choice is "system". The server says "light", and a device that prefers
- *  dark corrects it right after hydration — which only ever matters for the
- *  flip button's icon, never for a colour, since the colours come from CSS
- *  and never asked JavaScript. */
-export function useResolvedThemeMode(): "light" | "dark" {
-  const { mode } = useThemeMode();
-  const systemDark = React.useSyncExternalStore(
-    subscribeToScheme,
-    () => window.matchMedia(DARK_QUERY).matches,
-    () => false,
-  );
-  if (mode === "system") return systemDark ? "dark" : "light";
-  return mode;
-}

@@ -92,7 +92,7 @@ export async function onUniqueViolation<T>(
  *  caught and turned into a return value would leave the surrounding
  *  `$transaction` trying to commit something Postgres has already given up on.
  *  Let it throw out of the transaction, and catch it here. */
-export function isUniqueViolation(err: unknown): boolean {
+function isUniqueViolation(err: unknown): boolean {
   return (
     typeof err === "object" &&
     err !== null &&

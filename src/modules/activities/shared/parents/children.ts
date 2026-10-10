@@ -1,7 +1,7 @@
 import type { ParentAccount, Prisma } from "@/generated/prisma/client";
 import { notFound } from "@/modules/activities/shared/parents/errors";
 
-export const CHILD_SELECT = { id: true, firstName: true, lastName: true, dateOfBirth: true, status: true } as const satisfies Prisma.StudentSelect;
+const CHILD_SELECT = { id: true, firstName: true, lastName: true, dateOfBirth: true, status: true } as const satisfies Prisma.StudentSelect;
 type Child = Prisma.StudentGetPayload<{ select: typeof CHILD_SELECT }>;
 
 export function childDto(child: Child) {

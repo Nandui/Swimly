@@ -27,7 +27,7 @@ export function academyApiConfig(env: Record<string, string | undefined> = proce
 export { idSchema, json } from "@/lib/public-api/http";
 export const emailSchema = z.string().trim().toLowerCase().email("Enter your email address.").max(254);
 
-export const { readBody, parseInput, errorResponse, respond: academyResponse } = publicApi({
+export const { readBody, parseInput, respond: academyResponse } = publicApi({
   name: "Academy API",
   origins: () => academyApiConfig().origins,
   methods: "GET,POST,OPTIONS",
