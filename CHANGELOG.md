@@ -10,7 +10,7 @@ Nothing changes in how you use Turnfin. Behind the scenes:
 
 - Unused code and settings were removed, so the app has less to load and less that can go wrong.
 - Each module now describes itself, its menu entry and its access levels in one place, which makes adding or changing a module safer.
-- Two font files nobody used are no longer installed.
+- Two font files nobody used are no longer installed, and old one-off scripts and out-of-date documents were removed.
 
 ## 1.4.1 · 10 October 2026 · Tidier and more consistent
 

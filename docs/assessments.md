@@ -98,13 +98,6 @@ review. Unsaved text is held on the current page only, not across a page reload.
   cross-site history, validation, attribution, atomic audits, concurrent stale
   updates, idempotent retries, history pagination and retention. Queue tests also
   check that contact outcomes never remove an assessment/waitlist request.
-- `npx tsx scripts/follow-up-preview/serve.mjs` starts the actual follow-up UI and
-  server actions against an isolated synthetic database on port 4202. See its
-  README for read-only and theme variants; it cannot access live swimmer data.
-- `node scripts/check-assessment-workspace.mjs` exercises real UI components with
-  synthetic data and blocked server actions: navigation, dialogs, search/pagination,
-  empty/restricted views, keyboard access, touch targets and four widths in both
-  themes. Set `PLAYWRIGHT_MODULE` to the bundled Playwright module if needed.
 - Run typecheck, lint and an optimized build with `VERCEL_ENV=development` to skip
   database migrations. Never seed or mutate live records to test these screens.
 
@@ -129,8 +122,4 @@ Queue membership, oldest-first ordering, pagination, permission gates and all
 placement actions are unchanged. Follow-up updates still use the original
 permission, concurrency and audit checks. No messages are sent by saving.
 
-Run `node scripts/check-awaiting-follow-up.mjs` against the isolated follow-up
-preview on port 4202 for inline history/save/refresh, draft and keyboard focus,
-read-only access and both queue views at 375/768/1024/1280 in both themes.
-`node scripts/check-assessment-workspace.mjs` also checks placement dialogs,
-waitlist availability, search/pagination, empty results and restricted access.
+Check the queues in a branch preview at 375, 768, 1024 and 1280px in both themes.

@@ -129,7 +129,7 @@ synthetic examples, then record the checks against DESIGN.md's approved exceptio
   class, location and instructor names were also checked.
 - Review captures and the runnable fixture are in the ignored directory
   `.impeccable/review/today-refined/`. These show synthetic examples,
-  not live records. `design-qa.md` records the approved-preview comparison.
+  not live records.
 - Review was performed without delegation. Component APIs, typography, spacing
   and status tokens follow the shared Neutral theme. DESIGN.md records the
   approved shadcn exception; the global stylesheet did not change.

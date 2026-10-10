@@ -155,15 +155,9 @@ Focused checks:
 
 ```powershell
 npx tsx --test "src/modules/docs/**/*.test.ts" src/lib/staff/permissions.test.ts src/lib/staff/screens.test.ts
-npx tsx scripts/check-docs.mjs
 ```
 
-The browser checker uses real module components and the real domain service
-against an in-memory PGlite database containing fictional staff and documents.
-Set `PLAYWRIGHT_MODULE` to the installed Playwright module when it is supplied
-by the workspace runtime. Evidence is written under ignored
-`.impeccable/review/docs`. For a synthetic preview, run
-`npx tsx scripts/docs-preview/server.mjs --serve-docs` and open port 4195.
+Check screens in a branch preview, which uses the development database.
 
 ## Importing a Notion register (29 September 2026)
 

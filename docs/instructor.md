@@ -112,31 +112,6 @@ no horizontal overflow and 44px controls. Own-class and substitute starts,
 attendance failure/retry, draft recovery, competency save/return, keyboard
 selection and shared session links are exercised using local-only fixtures.
 
-`scripts/check-instructor-swimmers.mjs` verifies the real teaching components
-with fictional swimmers and mocked save actions, rejecting all outbound requests.
-It covers opening names, switching views, shared drafts, per-swimmer and
-per-competency bulk marking, recovery,
-failed saves and retries, the save payload, read-only access, absent swimmers,
-empty states, keyboard controls and both themes at the four supported widths.
-Set `INSTRUCTOR_PLAYWRIGHT_MODULE` to a Playwright module path when it is not
-installed locally. Run `node scripts/instructor-swimmer-preview/build.mjs --serve`
-for the isolated interactive preview on port 4190. Neither command uses live data.
-
-`scripts/check-instructor-overview.mjs` checks the overview's totals, missing
-marks, absent swimmers, saved versus draft marks, navigation, empty and fully
-achieved states, a larger class, long names, and both themes at the four supported
-widths. It uses the same isolated preview.
-
-`scripts/check-instructor-assessments.mjs` exercises the actual Instructor home
-and assessment components with fictional sessions and mocked server boundaries.
-It covers visibility across My/All classes and permissions, unassigned sessions,
-assessment-only days, isolated navigation, placement/no-show saves and retries,
-empty states and 16 light/dark layouts. Dialog controls remain at least 44px.
-Run `node scripts/instructor-swimmer-preview/assessment-build.mjs --serve-assessments`
-for the synthetic assessment preview on port 4191. No live records are read or changed.
-
-`node scripts/move-readiness-preview/build.mjs --serve-moves` opens a synthetic
-teaching and reception preview on port 4197. It uses the real components with
-local-only save doubles; `/awaiting-enrolment?view=moves` shows confirmed examples.
+Check the pool deck in a branch preview at the four supported widths in both themes; never use live records.
 `src/modules/activities/__tests__/move-readiness.test.ts` exercises real Prisma queries
 and migrations in isolated PostgreSQL, including the cross-site transfer handoff.

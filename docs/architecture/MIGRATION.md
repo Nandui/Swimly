@@ -39,7 +39,7 @@ In the full shape (`index.ts`, `module.ts`, `events.ts`, `README.md`, `shared/`,
 The app frame (`ModuleShell`, the account menu, the site switcher) is in the UI kit (`src/components/ui`). It knows no module: the root layout's `YourModulesProvider` (`src/components/workspace/your-modules.tsx`, front) fills the frame context (`src/components/ui/frame.tsx`) with the person's modules, groups, role, site, sign-out and the role-preview control. See ADR 0005.
 
 ## Awaiting user decision
-- Deleting the unused scripts, old documents and files listed in the lean-refactor PR (asked 10 October 2026).
+- (none)
 
 ## Log
 - 2026-10-09 — PR #8: lint boundaries for every module, `work.prisma` split, cross-module leaks fixed.
@@ -62,3 +62,4 @@ The app frame (`ModuleShell`, the account menu, the site switcher) is in the UI 
 - 2026-10-10 — Fernando chose to rewire rather than make an exception: `ModuleShell` and the account menu moved to the UI kit and read a frame context the app fills (ADR 0005). Warnings 31 → 19.
 - 2026-10-10 — Phase 4: last 19 warnings cleared. The UI kit declares its own prop types instead of importing Core helpers; the toast, area select, working-site switcher and wrong-site notice moved into the UI kit (site switching comes through the frame context); Rota and HR call the contributions registry, which loads the composition root itself. Boundary rules switched to error and proven.
 - 2026-10-10 — Lean refactor: each module's description moved from Core's registry into its own `manifest.ts`, listed once in `src/app/modules.ts` (ADR 0006); module diagram redrawn; dead code, duplicate date helpers and unused packages removed.
+- 2026-10-10 — Fernando chose "Delete all": one-off import scripts, broken browser-check harnesses, pre-restart handovers and audits, the old design-system file and three unused source files removed.

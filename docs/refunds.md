@@ -141,8 +141,6 @@ same-origin upload routes, active recipients, revoked access and email failures.
 Parent sign-in/API, role/screen, navigation and Reception Portal regressions run
 alongside Refunds checks.
 
-See [the isolated preview](../scripts/refunds-preview/README.md) for the actual
-components and full workflow with fictional customers and mocked email.
 
 Verified on 23 September 2026:
 
