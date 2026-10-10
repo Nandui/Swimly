@@ -1,7 +1,9 @@
 import { ClipboardCheck } from "lucide-react";
 
 import { plural } from "@/lib/format";
-import { CurriculumImage } from "@/modules/activities/components/curriculum/curriculum-image";
+import {
+  AddCompetency, AddLevel, ArchiveCompetency, ArchiveLevel, competencyCountLabel, type CompetencyDetail, CurriculumImage, EditCompetency, EditLevel, EditProgramme, getAssessmentTypes, getProgramme, type LevelDetail, MoveCompetency, MoveLevel,
+} from "@/modules/activities/features/curriculum";
 import { ARCHIVAL_STATUS_META } from "@/lib/status";
 import type { Metadata } from "next";
 import { cache } from "react";
@@ -11,29 +13,7 @@ import { EmptyState } from "@/components/ui-kit/empty-state";
 import { PageHeader } from "@/components/ui-kit/page-header";
 import { Lead, Num } from "@/components/ui-kit/prose";
 import { Tag } from "@/components/ui-kit/tag";
-import { EditProgramme } from "@/modules/activities/components/curriculum/programme-actions";
-import {
-  AddAssessmentType,
-  ArchiveAssessmentType,
-  EditAssessmentType,
-} from "@/modules/activities/components/assessments/type-actions";
-import { getAssessmentTypes } from "@/modules/activities/lib/assessments/data/assessments";
-import {
-  AddCompetency,
-  AddLevel,
-  ArchiveCompetency,
-  ArchiveLevel,
-  EditCompetency,
-  EditLevel,
-  MoveCompetency,
-  MoveLevel,
-} from "@/modules/activities/components/curriculum/level-actions";
-import { competencyCountLabel } from "@/modules/activities/lib/curriculum/constants";
-import {
-  getProgramme,
-  type CompetencyDetail,
-  type LevelDetail,
-} from "@/modules/activities/lib/curriculum/data/curriculum";
+import { AddAssessmentType, ArchiveAssessmentType, EditAssessmentType } from "@/modules/activities/features/assessments";
 import { screenPage } from "@/lib/page-guards";
 
 /** One query per request, shared by the page and its tab title. */

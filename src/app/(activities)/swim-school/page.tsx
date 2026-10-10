@@ -4,7 +4,7 @@ import { permissionsOf } from "@/lib/authz";
 import { loadModuleOverview } from "@/lib/home";
 import { pageSession } from "@/lib/page-guards";
 import { visibleScreens } from "@/lib/staff/screens";
-import { visibleNavGroups } from "@/modules/activities/lib/nav";
+import { visibleNavGroups } from "@/modules/activities/features/workspace";
 import { allModules } from "@/modules/registry";
 
 export const metadata: Metadata = { title: "Swim school" };

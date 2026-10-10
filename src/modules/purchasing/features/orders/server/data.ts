@@ -1,0 +1,108 @@
+import "server-only";
+import { notFound } from "next/navigation";
+import { prisma } from "@/lib/prisma";
+import { liveSitesOf, rolesByIds, staffRoleIdOf, withRoles, withSiteStatus } from "@/lib/directory";
+import { sitesFor } from "@/lib/policy/session";
+import { requirePurchasingActor, type PurchasingActor } from "@/modules/purchasing/shared/access";
+import { EDITABLE, approverRoles, mayApprove, type PoStatus } from "@/modules/purchasing/shared/rules";
+
+/** Purchasing's reads (docs/purchasing.md). Orders are limited to the sites
+ *  `purchasing.read` covers; suppliers and products belong to the organisation. */
+
+type Sites = Awaited<ReturnType<typeof sitesFor>>;
+const inSites = (sites: Sites) => (sites.kind === "all" ? {} : { siteId: { in: [...sites.siteIds] } });
+const covers = (sites: Sites, siteId: string) => sites.kind === "all" || sites.siteIds.has(siteId);
+
+/** The approval rules and the person's own role: what they may approve. */
+async function approvalContext(who: PurchasingActor) {
+  const [rules, roleId] = await Promise.all([
+    prisma.purchaseApprovalRule.findMany({ where: { orgId: who.orgId ?? undefined }, select: { id: true, supplierId: true, roleId: true, limitCents: true } }).then((rows) => withRoles(rows, "roleId", "role")),
+    staffRoleIdOf(who.id),
+  ]);
+  const can = (o: { supplierId: string; totalCents: number; requestedById: string }) =>
+    o.requestedById !== who.id && (who.superadmin || mayApprove(rules, o.supplierId, roleId, o.totalCents));
+  return { rules, roleId, can };
+}
+
+const ORDER_ROW = {
+  id: true, number: true, status: true, siteId: true, supplierId: true, totalCents: true, requestedById: true, requestedByName: true,
+  neededBy: true, submittedAt: true, decidedAt: true, decidedByName: true, createdAt: true,
+  supplier: { select: { name: true } }, _count: { select: { lines: true } },
+} as const;
+/** Each order's site (name and short code) from Core. */
+const withOrderSites = <T extends { siteId: string }>(rows: T[]) => withSiteStatus(rows, "siteId", "site");
+
+/** The first page: orders waiting for this person's approval, their own, and
+ *  the latest at their sites. */
+export async function purchasingHome() {
+  const who = await requirePurchasingActor();
+  const sites = await sitesFor("purchasing.read");
+  const { can } = await approvalContext(who);
+  const [pending, mine, recent, suppliers] = await Promise.all([
+    prisma.purchaseOrder.findMany({ where: { orgId: who.orgId ?? undefined, status: "pending", ...inSites(sites) }, orderBy: { submittedAt: "asc" }, select: ORDER_ROW }).then(withOrderSites),
+    prisma.purchaseOrder.findMany({ where: { requestedById: who.id, status: { not: "cancelled" } }, orderBy: { updatedAt: "desc" }, take: 20, select: ORDER_ROW }).then(withOrderSites),
+    prisma.purchaseOrder.findMany({ where: { orgId: who.orgId ?? undefined, status: { in: ["pending", "approved", "rejected"] }, ...inSites(sites) }, orderBy: { updatedAt: "desc" }, take: 30, select: ORDER_ROW }).then(withOrderSites),
+    prisma.supplier.count({ where: { orgId: who.orgId ?? undefined, archivedAt: null } }),
+  ]);
+  return { who, waiting: pending.filter(can), mine, recent, suppliers };
+}
+export type OrderRow = Awaited<ReturnType<typeof purchasingHome>>["mine"][number];
+
+/** One order, with what this person may do with it. A 404 outside their sites. */
+export async function purchaseOrder(id: string) {
+  const who = await requirePurchasingActor();
+  const found = await prisma.purchaseOrder.findFirst({
+    where: { id, orgId: who.orgId ?? undefined },
+    select: {
+      ...ORDER_ROW, note: true, decisionNote: true, cancelledAt: true, updatedAt: true,
+      supplier: { select: { name: true, accountNumber: true, contactName: true, email: true, phone: true } },
+      lines: { orderBy: { name: "asc" }, select: { id: true, productId: true, name: true, code: true, unit: true, unitPriceCents: true, quantity: true } },
+    },
+  });
+  if (!found) notFound();
+  const [order] = await withOrderSites([found]);
+  const sites = await sitesFor("purchasing.read");
+  // Your own drafts are yours wherever they are; everything else follows your sites.
+  if (!covers(sites, order.siteId) && order.requestedById !== who.id) notFound();
+  if (order.status === "draft" && order.requestedById !== who.id && !who.manage) notFound();
+  const { rules, can } = await approvalContext(who);
+  const roleIds = approverRoles(rules, order.supplierId, order.totalCents);
+  const roles = roleIds.map((id) => rules.find((r) => r.roleId === id)!.role.name);
+  const mine = order.requestedById === who.id;
+  const status = order.status as PoStatus;
+  return {
+    who, order: { ...order, status },
+    approverRoles: roles,
+    canApprove: status === "pending" && can(order),
+    canEdit: mine && EDITABLE.includes(status),
+    canCancel: (mine || who.manage) && ["draft", "pending", "rejected"].includes(status),
+  };
+}
+
+/** What a new order (or a change to one) can be made of: the sites this person
+ *  may order for, and the approved suppliers with their approved products. */
+export async function orderForm(orderId?: string) {
+  const who = await requirePurchasingActor();
+  const [sites, all] = await Promise.all([
+    sitesFor("purchasing.request"),
+    liveSitesOf(who.orgId),
+  ]);
+  const suppliers = await prisma.supplier.findMany({
+    where: { orgId: who.orgId ?? undefined, archivedAt: null, products: { some: { archivedAt: null } } },
+    orderBy: { name: "asc" },
+    select: { id: true, name: true, products: { where: { archivedAt: null }, orderBy: { name: "asc" }, select: { id: true, name: true, code: true, unit: true, priceCents: true } } },
+  });
+  const { rules } = await approvalContext(who);
+  const roles = [...(await rolesByIds(rules.map((r) => r.roleId))).values()];
+  const existing = orderId ? await prisma.purchaseOrder.findFirst({
+    where: { id: orderId, requestedById: who.id, status: { in: [...EDITABLE] } },
+    select: { id: true, siteId: true, supplierId: true, neededBy: true, note: true, status: true, decisionNote: true, lines: { select: { productId: true, quantity: true } } },
+  }) : null;
+  if (orderId && !existing) notFound();
+  return {
+    who, suppliers, existing,
+    sites: all.filter((s) => covers(sites, s.id)),
+    rules: rules.map(({ supplierId, roleId, limitCents }) => ({ supplierId, roleId, limitCents })),
+    roleNames: Object.fromEntries(roles.map((r) => [r.id, r.name])),
+  };
+}

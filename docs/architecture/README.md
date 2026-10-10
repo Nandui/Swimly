@@ -19,16 +19,24 @@ Turnfin is a modular monolith: one Next.js app and one main database, in layers.
 | Module | Purpose | Tables (`prisma/schema/<file>`) | Talks to others through |
 | --- | --- | --- | --- |
 | activities | Runs the swim school: classes, swimmers, attendance, assessments, the parent app and the pool deck. | `activities.prisma` | reports class commitments; site summaries; home cards |
-| refunds | Moves a refund request from reception to finance. | `refunds.prisma` | home cards |
-| purchasing | Raises and approves purchase orders. | `purchasing.prisma` | home cards |
-| academy | Runs the lifeguard and swim teacher courses we deliver. | `academy.prisma` | home cards; its own public API |
-| tasks | Runs each site's daily checks and logs. | `tasks.prisma` | home cards |
-| training | Assigns courses and records completions. | `training.prisma` | personal file, subject records, Turnfin Me digest |
-| docs | Publishes documents and required reading. | own database (`DOCS_DATABASE_URL`) | home cards, Turnfin Me digest |
-| hr | Keeps staff files, notes and reviews. | own database (`HR_DATABASE_URL`) | reads the personal file and subject records |
-| rota | Plans who works when. | `rota.prisma` | reads commitments; shift-change emails; personal file |
+| refunds | Moves a refund request from reception to finance. Features: `queue`, `request`, `workspace` ([README](../../src/modules/refunds/README.md)). | `refunds.prisma` | home cards |
+| purchasing | Raises and approves purchase orders. Features: `orders`, `suppliers`, `workspace` ([README](../../src/modules/purchasing/README.md)). | `purchasing.prisma` | home cards |
+| academy | Runs the lifeguard and swim teacher courses we deliver. Features: `courses`, `course-types`, `calls`, `booking`, `workspace` ([README](../../src/modules/academy/README.md)). | `academy.prisma` | home cards; its own public API |
+| tasks | Runs each site's daily checks and logs. Features: `day`, `follow-ups`, `templates`, `sites`, `reports`, `schedule`, `workspace` ([README](../../src/modules/tasks/README.md)). | `tasks.prisma` | home cards |
+| training | Assigns courses and records completions. Features: `courses`, `assignments`, `sign-off`, `certificates`, `expiring`, `me`, `person-file`, `workspace` ([README](../../src/modules/training/README.md)). | `training.prisma` | personal file, subject records, Turnfin Me digest |
+| docs | Publishes documents and required reading. Features: `home`, `library`, `reader`, `editor`, `history`, `work`, `reports`, `admin`, `files`, `import`, `me`, `workspace` ([README](../../src/modules/docs/README.md)). | own database (`DOCS_DATABASE_URL`) | home cards, Turnfin Me digest |
+| hr | Keeps staff files, notes and reviews. Features: `team`, `person`, `reviews`, `activity`, `export`, `details-requests`, `me`, `workspace` ([README](../../src/modules/hr/README.md)). | own database (`HR_DATABASE_URL`) | reads the personal file and subject records |
+| rota | Plans who works when. Features: `plan`, `today`, `bookings`, `absences`, `me`, `person-file`, `workspace` ([README](../../src/modules/rota/README.md)). | `rota.prisma` | reads commitments; shift-change emails; personal file |
 
 Platform owns `core.prisma` and `base.prisma`: people, roles, sites, departments, qualifications, devices, the audit log.
+
+Modules read those tables only through Core's functions, never with their own queries or relation joins (Phase 3; the boundary lint enforces it for every module):
+- `src/lib/directory.ts`: people, sites, roles, departments and positions;
+- `src/lib/qualifications.ts`: qualification types, what people hold, uploaded certificates, and recording or withdrawing a qualification;
+- `src/lib/setup/activity-types.ts`: the activity list the rota plans;
+- `src/lib/people/records.ts`: staff details, for HR;
+- `src/lib/audit.ts`: writing the audit log, and a module's own audit trail;
+- `src/lib/policy`: who may do what, and over whom.
 
 ```mermaid
 flowchart LR

@@ -15,7 +15,7 @@ import {
 } from "@/components/shadcn/alert-dialog";
 import { Notice } from "@/components/ui-kit/notice";
 import type { ActionResult } from "@/lib/action-result";
-import { toast } from "@/lib/toast";
+import { toast } from "@/components/ui/toast";
 import { withTimeout } from "@/lib/save-feedback";
 import { Trigger, useDialogTriggerFocus } from "@/components/form-dialog";
 

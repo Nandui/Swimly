@@ -3,11 +3,8 @@ import { cache } from "react";
 import { Notice } from "@/components/ui-kit/notice";
 import { PageHeader } from "@/components/ui-kit/page-header";
 import { Tag } from "@/components/ui-kit/tag";
-import { ArchiveTemplate, CopyTemplate } from "@/modules/tasks/components/template-actions";
-import { TemplateEditor } from "@/modules/tasks/components/template-editor";
+import { ArchiveTemplate, CopyTemplate, taskTemplate, TEMPLATE_STATUS_META, TemplateEditor } from "@/modules/tasks/features/templates";
 import { plural, today } from "@/lib/format";
-import { taskTemplate } from "@/modules/tasks/lib/data";
-import { TEMPLATE_STATUS_META } from "@/modules/tasks/lib/rules";
 
 /** One read per request, shared by the page and its tab title. */
 const load = cache(taskTemplate);

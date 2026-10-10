@@ -5,13 +5,8 @@ import type { Metadata } from "next";
 
 import { EmptyState } from "@/components/ui-kit/empty-state";
 import { PageHeader } from "@/components/ui-kit/page-header";
-import { AddToGroup } from "@/modules/activities/components/together/add-to-group";
-import { TogetherResults } from "@/modules/activities/components/together/results";
-import { SelectedSwimmer } from "@/modules/activities/components/together/selected-swimmer";
-import { getCourses } from "@/modules/activities/lib/courses/data/courses";
+import { AddToGroup, findTimesTogether, getCourses, getGroup, SelectedSwimmer, TogetherResults, toMembers } from "@/modules/activities/features/together";
 import { screenPage } from "@/lib/page-guards";
-import { getGroup, toMembers } from "@/modules/activities/lib/together/data/together";
-import { findTimesTogether } from "@/modules/activities/lib/together/match";
 import { AppIcon } from "@/components/ui-kit/app-icon";
 
 export const metadata: Metadata = { title: "Together" };

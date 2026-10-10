@@ -186,7 +186,7 @@ a timeline), Waiting for you (the same items it gives the home page, so the two 
 "things need you" counts only those rows), and **Everything in <module>**: one panel of its
 pages as grouped rows (icon, name, one line on what it is for), two columns when wide, or an
 empty state when there is nothing to open at the site. Rota's list comes from
-`src/modules/rota/components/pages.ts`, the same list as its page bar. "Overview"
+`src/modules/rota/shared/components/pages.ts`, the same list as its page bar. "Overview"
 is the first link in the module's page bar. Pool deck opens on the deck,
 Docs and Training on their own overviews, Refunds on its requests with their summary, HR on its
 people search. The module
@@ -202,12 +202,12 @@ blue when it is the open filter, so each status has one way in. Search, pill pic
 apply on change and the requests (`.pc-rows`) share one white panel. On a request, the
 next-action panel is the one panel with an edge (2px blue), and only when the person can
 act; it holds Submit on an editable request. Statuses use `<Tag meta={refundStatuses[status]} />`;
-each status in `src/modules/refunds/lib/types.ts` has its own icon. Finance decisions use shadcn Dialogs with 44px controls,
+each status in `src/modules/refunds/shared/types.ts` has its own icon. Finance decisions use shadcn Dialogs with 44px controls,
 focus restoration and preserved values after errors. `src/app/refunds/refunds.css` only
 arranges the Refunds screens. See [docs/refunds.md](docs/refunds.md).
 
 Training (`/training`), HR (`/hr`), Rota (`/rota`) and Tasks (`/tasks`, docs/tasks.md) are people- and site-scoped workspaces
-built on the shared frame, `ModuleShell` (`src/components/workspace/module-shell.tsx`), each
+built on the shared frame, `ModuleShell` (`src/components/ui/module-shell.tsx`), each
 with its own page bar. `src/app/workspace/module-workspace.css`
 (scoped by `.turnfin-module`, with `module-*` classes) only arranges their screens; a new
 module reuses it rather than copying a stylesheet. The theme comes from `body.turnfin-app`, so
@@ -406,7 +406,7 @@ line. Multi-line boxes (textareas, notices) use 16px, never a pill.
   over the whole name tile), so a lane needs no edit icon. A planning grid (`readout`) shows the
   exact quarter hour under the pointer as a pill on the time bar (`TimelineReadout`), so the bar
   keeps to hours; every block also says its times in words.
-- Rota's day timeline (`DayPlan`, `src/modules/rota/components/day-plan.tsx`; owner decisions, 6 October
+- Rota's day timeline (`DayPlan`, `src/modules/rota/features/plan/components/day-plan.tsx`; owner decisions, 6 October
   2026, from approved mockups; docs/rota.md) is its own planning view, not `TimelineGrid`: the day
   across the **full width** of one panel (nothing scrolls sideways), one **tile per area** of the
   site (Admin, Areas; pin icon, name, how many activities, its gap count as a tag, a + to add an
@@ -730,7 +730,7 @@ Two things stay **scoping rules inside actions** rather than permissions:
 - **Whose register.** `attendance.mark` marks the classes you teach;
   `attendance.markAny` marks anybody's. Which classes are *yours* is a fact
   about the row, not about you, so it lives in `canMarkRegister` in
-  `src/modules/activities/lib/attendance/access.ts`.
+  `src/modules/activities/shared/attendance/access.ts`.
 - **Completing a level with gaps** is `progression.override`, and needs a
   reason. Placing a swimmer at a level they have not earned is *not* — see
   below.
@@ -754,7 +754,7 @@ the subject is minted into the JWT, for the same reason.
 ### Anything the size of the club is searched, not sent
 
 The swimmer picker asks the server for the twenty that match what has been
-typed (`src/modules/activities/lib/students/actions/search.ts`), debounced, and never receives the
+typed (`src/modules/activities/shared/students/actions/search.ts`), debounced, and never receives the
 roll. Two pages once shipped all 1,156 swimmers so that one could be chosen;
 `/students` once shipped 500 so that they could be scrolled. The rule that
 falls out: **a list that grows with the club goes behind a server search or a
@@ -777,7 +777,7 @@ segment) so the shell paints before the data does.
 ### The nav holds only pages that exist
 
 A sidebar advertising routes nobody has built reads as a broken app, so add the
-item in `src/modules/activities/lib/nav.ts` in the same change as the page.
+item in `src/modules/activities/features/workspace/server/nav.ts` in the same change as the page.
 
 ### Auth is credentials-first, and swappable
 
@@ -853,7 +853,7 @@ saying "Ava — Level 4" without saying which ladder is guessing. `Enrolment`
 therefore **pins** `levelId` and `programmeId` at enrolment time. They are not a
 cache of the course's level: they are the level the swimmer was *placed* at,
 which must not move when a course is re-badged. Everything else — eligibility,
-graduation, the current rung — is derived in `src/modules/activities/lib/progression/rules.ts` and
+graduation, the current rung — is derived in `src/modules/activities/shared/progression/rules.ts` and
 stored nowhere.
 
 **2. Curriculum rows are archived, never deleted** (`archivedAt`, deliberately
@@ -868,7 +868,7 @@ whole cohort. Each completion also freezes `competenciesAchieved` /
 **3. Capacity is held by a row lock, not a re-count.** An interactive
 transaction that merely counts again does not fix the race — at READ COMMITTED
 two transactions both read 11 and both insert. `withCourseSeat` in
-`src/modules/activities/lib/enrolment/seat.ts` takes `SELECT … FOR UPDATE` on the
+`src/modules/activities/shared/enrolment/seat.ts` takes `SELECT … FOR UPDATE` on the
 course row first, which also makes the "already enrolled here?" check
 race-free. That is why there is no unique constraint on
 `(studentId, courseId)` — and why repeating a level, the most ordinary thing a
@@ -997,10 +997,10 @@ src/app/account/               the person's own Account, in the Home frame (Home
 src/app/(activities)/          the Swim school desk shell and its pages
 src/app/(instructor)/          the Swim school pool-deck workspace
 src/app/sign-in/               the front door, outside the shell
-src/modules/activities/lib/    Activities domains (students, courses, enrolment, ...)
-src/modules/activities/components/ Activities feature components
-src/modules/<id>/{lib,components}/ each Work module (Docs, Refunds, Training, HR,
-                               Rota, Purchasing, Academy, Tasks)
+src/modules/activities/       the swim school: features/ (students, courses, enrolment, ...)
+                               and shared/ (what two or more features use)
+src/modules/<id>/              each Work module (Docs, Refunds, Training, HR, Rota,
+                               Purchasing, Academy, Tasks): features/ and shared/
 src/modules/registry.ts        every module's description and levels
 src/modules/contributions.ts   what modules add to Core pages, without imports
 src/components/ui-kit/         shared shadcn compositions — tag, page-header,

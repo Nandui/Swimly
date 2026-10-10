@@ -1,4 +1,4 @@
-import { handleParentRequest } from "@/modules/activities/lib/parent/router";
+import { handleParentRequest } from "@/modules/activities/features/parents";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";

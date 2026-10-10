@@ -1,18 +1,12 @@
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
-import { courseName } from "@/modules/activities/lib/courses/constants";
-import { ClassDetailView } from "@/modules/activities/components/courses/class-detail";
-import { CurriculumImage } from "@/modules/activities/components/curriculum/curriculum-image";
+import {
+  ClassDetailView, classReturnHref, courseName, getClassCover, getCourse, getInstructorOptions, getLevelOptions, getRoster, getTransferTargets, scheduleHref, weekdayOfIso,
+} from "@/modules/activities/features/courses";
+import { CurriculumImage } from "@/modules/activities/features/curriculum";
 import { can, canSee } from "@/lib/authz";
-import { getClassCover } from "@/modules/activities/lib/attendance/data/cover";
-import { weekdayOfIso } from "@/modules/activities/lib/attendance/dates";
-import { classReturnHref } from "@/modules/activities/lib/courses/browse";
-import { getCourse, getInstructorOptions, getRoster } from "@/modules/activities/lib/courses/data/courses";
-import { getLevelOptions } from "@/modules/activities/lib/curriculum/data/curriculum";
-import { getTransferTargets } from "@/modules/activities/lib/enrolment/data/enrolments";
 import { today } from "@/lib/format";
 import { screenPage } from "@/lib/page-guards";
-import { scheduleHref } from "@/modules/activities/lib/schedule/dates";
 
 /** The class name, as the H1 shows it (never its status tag). getCourse is
  *  cached per request, so the page below reuses this read. */

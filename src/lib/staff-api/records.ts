@@ -2,13 +2,11 @@ import { z } from "zod";
 import { logAudit } from "@/lib/audit";
 import { isDateOnly, parseDateOnly, today } from "@/lib/format";
 import { prisma } from "@/lib/prisma";
-import { hrDatabase, hrConfigured } from "@/modules/hr/lib/database";
-import { mySharedHr } from "@/modules/hr/lib/mine";
-import { acknowledgeReviewFor } from "@/modules/hr/lib/self";
+import { acknowledgeReviewFor, hrConfigured, logOwnHrRead, mySharedHr } from "@/modules/hr";
 import { myQualifications } from "@/lib/people/mine";
-import { myDays } from "@/modules/rota/lib/mine";
-import { myTraining } from "@/modules/training/lib/mine";
-import { completeTrainingFor } from "@/modules/training/lib/self";
+import { myDays } from "@/modules/rota";
+import { docsReading } from "@/modules/docs";
+import { completeTrainingFor, myTraining } from "@/modules/training";
 import { StaffApiError, notFound } from "@/lib/staff-api/errors";
 import { idSchema, parseInput, readBody } from "@/lib/staff-api/http";
 import { rateLimit } from "@/lib/staff-api/security";
@@ -168,17 +166,11 @@ export async function completeTraining(request: Request, identity: StaffIdentity
 // Required reading (Docs database)
 // ---------------------------------------------------------------------------
 
-async function docs() {
-  if (!process.env.DOCS_DATABASE_URL) return null;
-  const [{ directoryDatabase }, domain] = await Promise.all([import("@/modules/docs/lib/runtime-database"), import("@/modules/docs/lib/domain")]);
-  return { db: directoryDatabase(), domain };
-}
-
 async function myRequirements(identity: StaffIdentity) {
-  const d = await docs();
+  const d = await docsReading();
   if (!d) return [];
   try {
-    return (await d.domain.requirements(d.db, identity.user.id)).filter((r) => r.status !== "cancelled");
+    return (await d.requirements(identity.user.id)).filter((r) => r.status !== "cancelled");
   } catch {
     // Someone without Docs access has no required reading.
     return [];
@@ -197,9 +189,9 @@ export async function reading(identity: StaffIdentity) {
 /** Only documents assigned to the person as required reading open here. */
 export async function readingItem(identity: StaffIdentity, documentId: string) {
   const requirement = (await myRequirements(identity)).find((r) => r.documentId === documentId);
-  const d = await docs();
+  const d = await docsReading();
   if (!requirement || !d) notFound();
-  const view = await d.domain.documentView(d.db, identity.user.id, documentId, requirement.versionId);
+  const view = await d.documentView(identity.user.id, documentId, requirement.versionId);
   const content = view.selected?.content;
   if (!content) notFound();
   return {
@@ -213,10 +205,10 @@ export async function readingItem(identity: StaffIdentity, documentId: string) {
 export async function acknowledgeReading(request: Request, identity: StaffIdentity, documentId: string) {
   const { versionId } = await readBody(request, z.object({ versionId: idSchema }).strict());
   const requirement = (await myRequirements(identity)).find((r) => r.documentId === documentId && r.versionId === versionId);
-  const d = await docs();
+  const d = await docsReading();
   if (!requirement || !d) notFound();
   try {
-    await new d.domain.DocumentService(d.db).acknowledge(identity.user.id, documentId, versionId);
+    await d.acknowledge(identity.user.id, documentId, versionId);
   } catch (error) {
     throw failed(error instanceof Error ? error.message : "That could not be recorded. Try again.");
   }
@@ -250,11 +242,7 @@ export async function hr(identity: StaffIdentity) {
   requireConfirmed(identity);
   if (!hrConfigured()) return { configured: false, notes: [], reviews: [] };
   const { notes, reviews } = await mySharedHr(identity.user.id, identity.user.orgId);
-  // The person reading their own record is logged like every HR read.
-  await hrDatabase().query(
-    `INSERT INTO access_events (org_id, actor_id, actor_name, subject_user_ids, entity, entity_id, purpose) VALUES ($1,$2,$3,$4,'HrRecord',$2,'own HR record (Turnfin Me)')`,
-    [identity.user.orgId, identity.user.id, identity.user.name, [identity.user.id]],
-  );
+  await logOwnHrRead({ id: identity.user.id, name: identity.user.name, orgId: identity.user.orgId });
   return {
     configured: true,
     notes: notes.map((n) => ({ id: n.id, author: n.authorName, body: n.body, createdAt: new Date(n.createdAt).toISOString() })),

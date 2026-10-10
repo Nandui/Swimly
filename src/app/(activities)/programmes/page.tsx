@@ -10,7 +10,9 @@ import { cn } from "@/lib/utils";
 
 import UiLink from "next/link";
 
-import { CurriculumImage } from "@/modules/activities/components/curriculum/curriculum-image";
+import {
+  AddProgramme, ArchiveProgramme, CurriculumImage, EditProgramme, getCurriculumSummary, getProgrammes, levelCountLabel, MoveProgramme,
+} from "@/modules/activities/features/curriculum";
 import { ARCHIVAL_STATUS_META } from "@/lib/status";
 import type { Metadata } from "next";
 
@@ -18,17 +20,6 @@ import { EmptyState } from "@/components/ui-kit/empty-state";
 import { PageHeader } from "@/components/ui-kit/page-header";
 import { Lead, Num } from "@/components/ui-kit/prose";
 import { Tag } from "@/components/ui-kit/tag";
-import {
-  AddProgramme,
-  ArchiveProgramme,
-  EditProgramme,
-  MoveProgramme,
-} from "@/modules/activities/components/curriculum/programme-actions";
-import {
-  getCurriculumSummary,
-  getProgrammes,
-} from "@/modules/activities/lib/curriculum/data/curriculum";
-import { levelCountLabel } from "@/modules/activities/lib/curriculum/constants";
 import { screenPage } from "@/lib/page-guards";
 
 export const metadata: Metadata = { title: "Programmes" };

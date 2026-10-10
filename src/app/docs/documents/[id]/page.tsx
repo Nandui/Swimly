@@ -1,10 +1,7 @@
 import { notFound } from 'next/navigation';
-import { requireMember } from '@/modules/docs/lib/auth';
-import { database } from '@/modules/docs/lib/database';
-import { workspace } from '@/modules/docs/lib/queries';
-import { documentView, DomainError } from '@/modules/docs/lib/domain';
-import { DocumentBody, RiskAssessmentView, tableOfContents } from '@/modules/docs/components/document-body';
-import { Reader } from '@/modules/docs/components/reader';
+import {
+  database, DocumentBody, documentView, DomainError, Reader, requireMember, RiskAssessmentView, tableOfContents, workspace,
+} from "@/modules/docs/features/reader";
 import type { Metadata } from 'next';
 import { cache } from 'react';
 

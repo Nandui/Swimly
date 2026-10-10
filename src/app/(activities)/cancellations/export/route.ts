@@ -2,8 +2,7 @@ import { logAudit } from "@/lib/audit";
 import { AuthorizationError } from "@/lib/authz";
 import { today } from "@/lib/format";
 import { writeWorkbook, XLSX_TYPE } from "@/lib/xlsx-write";
-import { BULK_LOG_COLUMNS, bulkLogRows } from "@/modules/activities/lib/cancellations/bulk-log";
-import { billingViewOf, getBillingExport } from "@/modules/activities/lib/cancellations/data";
+import { billingViewOf, BULK_LOG_COLUMNS, bulkLogRows, getBillingExport } from "@/modules/activities/features/cancellations";
 
 /** Cancelled classes as Legend's bulk update template (owner decisions, 9 October 2026), one row
  *  for each affected member: `view=awaiting` to process them, `view=restore` after the direct

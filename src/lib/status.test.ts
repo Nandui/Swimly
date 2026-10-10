@@ -3,16 +3,16 @@ import test from "node:test";
 import { ACTIONS, actionMeta } from "@/lib/activity/constants";
 import { CLUB_STATUS_META } from "@/lib/clubs/constants";
 import { DEVICE_STATUS_META } from "@/lib/devices/meta";
-import { DOC_STATUS_META, RISK_BAND_TONE_META, UNCLASSIFIED_RISK_META, riskBandMeta } from "@/modules/docs/lib/types";
+import { DOC_STATUS_META, RISK_BAND_TONE_META, UNCLASSIFIED_RISK_META, riskBandMeta } from "@/modules/docs/shared/types";
 import { HOME_ITEM_META, HOME_SESSION_META } from "@/lib/home-meta";
-import { NOTE_VISIBILITY_META, REVIEW_STATUS_META } from "@/modules/hr/lib/constants";
+import { NOTE_VISIBILITY_META, REVIEW_STATUS_META } from "@/modules/hr/shared/constants";
 import { PERSON_STATUS_META, QUALIFICATION_STATE_META } from "@/lib/people/constants";
-import { refundStatuses } from "@/modules/refunds/lib/types";
-import * as rota from "@/modules/rota/lib/constants";
-import * as rotaMeta from "@/modules/rota/lib/meta";
+import { refundStatuses } from "@/modules/refunds";
+import * as rota from "@/modules/rota/shared/constants";
+import * as rotaMeta from "@/modules/rota/shared/meta";
 import { REACH_META, STAFF_STATUS_META } from "@/lib/staff/constants";
 import { ARCHIVAL_STATUS_META, type StatusMeta } from "@/lib/status";
-import { CERTIFICATE_STATUS_META, TRAINING_STATUS_META } from "@/modules/training/lib/constants";
+import { CERTIFICATE_STATUS_META, TRAINING_STATUS_META } from "@/modules/training/shared/constants";
 
 const TONES = new Set(["green", "blue", "orange", "red", "purple", "gray"]);
 

@@ -1,7 +1,5 @@
 import { revalidatePath } from "next/cache";
-import { requireRefundActor } from "@/modules/refunds/lib/auth";
-import { changeReceipt, MAX_RECEIPT_BYTES } from "@/modules/refunds/lib/files";
-import { RefundError } from "@/modules/refunds/lib/rules";
+import { changeReceipt, MAX_RECEIPT_BYTES, requireRefundActor, RefundError } from "@/modules/refunds/features/request";
 
 export async function POST(request: Request) {
   try {

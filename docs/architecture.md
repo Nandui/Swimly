@@ -7,8 +7,8 @@ Turnfin is **one Next.js app** made of **modules** on a shared **Core**, plus **
 | Part | What it is | Where it lives |
 | --- | --- | --- |
 | **Core** | What every module shares: sign-in, people, roles, sites (`Club`), departments and qualifications, the audit log, the module catalogue and the home page, and the shared plumbing (public APIs, email). | `src/app/(core)`, `src/lib/{staff,policy,people,clubs,devices,email,public-api,audit,directory,...}`, `src/modules/{registry,contributions}.ts` |
-| **Swim school** (Activities) | Running what the centre sells. Swim school is the first activity type: office (curriculum set-up), desk (enrolments, moves, waitlists, assessments), deck (attendance, competencies) and the parent API. | `src/app/(activities)`, `src/app/(instructor)`, the parent and operations APIs, and `src/modules/activities/{lib,components}` |
-| **Work modules** | Refunds, Docs, Training, Rota, HR, Purchasing, Academy and Tasks. | `src/modules/<id>/{lib,components}` and its routes in `src/app/<id>` (and `src/app/api/<id>`) |
+| **Swim school** (Activities) | Running what the centre sells. Swim school is the first activity type: office (curriculum set-up), desk (enrolments, moves, waitlists, assessments), deck (attendance, competencies) and the parent API. | `src/app/(activities)`, `src/app/(instructor)`, the parent and operations APIs, and `src/modules/activities` (`features/` and `shared/`) |
+| **Work modules** | Refunds, Docs, Training, Rota, HR, Purchasing, Academy and Tasks. | `src/modules/<id>`, each with `index.ts`, `module.ts`, `shared/` and `features/` (see docs/architecture/MIGRATION.md) and its routes in `src/app/<id>` (and `src/app/api/<id>`) |
 
 ## Every module describes itself
 
@@ -31,7 +31,7 @@ A role holds one level for each module (`StaffRole.levels`). `src/lib/staff/leve
    - **Links**: one module links to another's screens by URL, never by importing them. The Reception Portal's *Add a swimmer* task opens `/students?add=1`.
 4. **Composition roots are the only files that import every module**: `src/modules/server.ts`, `src/modules/session-hooks.ts`, and Turnfin Me's `src/lib/staff-api/records.ts` and `src/lib/staff-api/reminders.ts`, which gather a person's things from every module. Shift-change emails go out from `src/lib/staff-api/notify.ts`, which imports no module, so Rota can call it.
 5. **Screens belong to exactly one part.** `CORE_SCREENS`, `ACTIVITIES_SCREENS` and `WORK_MODULE_SCREENS` in `src/lib/staff/screens.ts` are explicit lists, and a test fails if a screen is not in exactly one of them.
-6. **Data belongs to one part.** Each `prisma/schema/<owner>.prisma` file owns its tables: `core` and `base` are Core's, and every other file is named after its module (`activities`, `refunds`, `training`, `rota`, `purchasing`, `academy`, `tasks`). A module queries only its own tables and Core's; Core queries no module's. The swim school also never queries Core tables or joins `User`/`Club`: it stores ids and adds names with `src/lib/directory.ts` (`withStaff`, `withSites`, `staffByIds`, `liveSiteIds`, ...). The Work modules still read Core tables directly; moving them onto Core functions is phase 4 of [modular-monolith.md](modular-monolith.md).
+6. **Data belongs to one part.** Each `prisma/schema/<owner>.prisma` file owns its tables: `core` and `base` are Core's, and every other file is named after its module (`activities`, `refunds`, `training`, `rota`, `purchasing`, `academy`, `tasks`). A module queries only its own tables; Core queries no module's. No module queries Core tables or joins through its relations to them (`User`, `Club`, `QualificationType`, `ActivityType`, ...): it stores ids and reads Core through Core's functions, `src/lib/directory.ts` (`withStaff`, `withSites`, `staffByIds`, `liveSiteIds`, ...), `src/lib/qualifications.ts`, `src/lib/setup/activity-types.ts`, `src/lib/people/records.ts` and the policy engine (see [architecture/README.md](architecture/README.md)).
 
 7. **Core owns shared plumbing.** Anything more than one module needs lives in Core, and each module passes only what is its own (config, secret, routes, wording, display name):
    - **Public APIs** (`src/lib/public-api/http.ts`): the origin allowlist and CORS, JSON bodies of 16 KiB or less, no-store responses, the error envelope and Bearer token reading, for the parent, staff (Turnfin Me) and Academy booking APIs. Each API's `http.ts` configures it once.
@@ -40,7 +40,7 @@ A role holds one level for each module (`StaffRole.levels`). `src/lib/staff/leve
 
    A module never imports another module's public API or email files.
 
-`npm run lint` enforces rules 1, 2, 4, 6 and 7 with `no-restricted-imports`, `no-restricted-syntax` and `import/no-restricted-paths` (see `eslint.config.mjs`, where `workModules` lists each module's folders and table ownership is read from the schema file names). Tests and `src/test` are exempt, because they exercise routes end to end. `eslint-plugin-boundaries` also reports, as warnings, every import that breaks the target layer table in [CLAUDE.md](../CLAUDE.md) (section 3); [architecture/MIGRATION.md](architecture/MIGRATION.md) tracks them down to zero.
+`npm run lint` enforces rules 1, 2, 4, 6 and 7 with `no-restricted-imports`, `no-restricted-syntax` and `import/no-restricted-paths` (see `eslint.config.mjs`, where `workModules` lists each module's folders and table ownership is read from the schema file names). Tests and `src/test` are exempt, because they exercise routes end to end. `eslint-plugin-boundaries` also fails the lint on every import that breaks the target layer table in [CLAUDE.md](../CLAUDE.md) (section 3), as errors since 10 October 2026 ([architecture/MIGRATION.md](architecture/MIGRATION.md)).
 
 ## Databases
 
@@ -50,7 +50,7 @@ A role holds one level for each module (`StaffRole.levels`). `src/lib/staff/leve
 
 ## Activity types
 
-`src/modules/activities/types.ts` defines `ACTIVITY_TYPES`. Swim school is the only one, with the features `progression`, `assessments`, `parentApp`, `waitlists` and `cover`. To add a second type, give `Programme` an additive `activityType` column (default `"swim-school"`), register the type, and make screens ask `hasFeature` instead of assuming levels and competencies exist.
+`src/modules/activities/shared/types.ts` defines `ACTIVITY_TYPES`. Swim school is the only one, with the features `progression`, `assessments`, `parentApp`, `waitlists` and `cover`. To add a second type, give `Programme` an additive `activityType` column (default `"swim-school"`), register the type, and make screens ask `hasFeature` instead of assuming levels and competencies exist.
 
 ## Running locally
 

@@ -1,8 +1,7 @@
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
-import { InstructorAssessmentSession } from "@/modules/activities/components/instructor/assessment-session";
-import { getInstructorAssessmentSession } from "@/modules/activities/lib/assessments/data/instructor";
-import { instructorHomeHref } from "@/modules/activities/lib/attendance/navigation";
+import { InstructorAssessmentSession, instructorHomeHref } from "@/modules/activities/features/instructor";
+import { getInstructorAssessmentSession } from "@/modules/activities/features/assessments";
 
 export const metadata: Metadata = { title: "Assessment" };
 

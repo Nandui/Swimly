@@ -1,6 +1,6 @@
 import { redirect } from "next/navigation";
 import { canSee } from "@/lib/authz";
-import { legacyClassHref } from "@/modules/activities/lib/attendance/navigation";
+import { legacyClassHref } from "@/modules/activities/features/attendance";
 import { pageSession } from "@/lib/page-guards";
 
 /** The competencies page is step two of the class page now, whichever way

@@ -9,10 +9,10 @@ import {ModuleShell} from '@/components/workspace/module-shell';
 import {ThemeProvider} from '@/components/theme-provider';
 import {TooltipProvider} from '@/components/shadcn/tooltip';
 import {ToastBridge} from '@/lib/toast';
-import {LegendAgreements} from '@/modules/activities/components/enrolment/legend-agreements';
-import {ManageProfileEnrolments} from '@/modules/activities/components/students/profile-enrolments';
-import {EnrolIntoCourse, EnrolInCourseForStudent, PromoteFromWaitlist} from '@/modules/activities/components/enrolment/enrolment-actions';
-import {NAV_ITEMS,isNavItemActive} from '@/modules/activities/lib/nav';
+import {LegendAgreements} from '@/modules/activities/features/enrolment/components/legend-agreements';
+import {ManageProfileEnrolments} from '@/modules/activities/features/students/components/profile-enrolments';
+import {EnrolIntoCourse, EnrolInCourseForStudent, PromoteFromWaitlist} from '@/modules/activities/shared/enrolment/components/enrolment-actions';
+import {NAV_ITEMS,isNavItemActive} from '@/modules/activities/features/workspace/server/nav';
 
 const query=new URLSearchParams(location.search), theme=query.get('theme')==='dark'?'dark':'light';
 document.documentElement.dataset.theme=theme;

@@ -5,11 +5,9 @@ import { EmptyState } from "@/components/ui-kit/empty-state";
 import { PageHeader } from "@/components/ui-kit/page-header";
 import { SegmentedLinks } from "@/components/ui-kit/segmented-links";
 import { Tag } from "@/components/ui-kit/tag";
-import { ApplyParentChange, DeclineParentChange } from "@/modules/activities/components/students/parent-change-actions";
+import { ApplyParentChange, DeclineParentChange, listParentChangeRequests, PARENT_CHANGE_STATUS_META } from "@/modules/activities/features/students";
 import { formatDateTime } from "@/lib/format";
 import { screenPage } from "@/lib/page-guards";
-import { listParentChangeRequests } from "@/modules/activities/lib/students/data/parent-changes";
-import { PARENT_CHANGE_STATUS_META } from "@/modules/activities/lib/students/constants";
 
 export const metadata: Metadata = { title: "Parent updates" };
 

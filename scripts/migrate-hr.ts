@@ -1,6 +1,6 @@
 import 'dotenv/config';
 import { Client } from 'pg';
-import { hrStorageConfig } from '../src/modules/hr/lib/storage-config';
+import { hrStorageConfig } from '../src/modules/hr/shared/storage-config';
 import { postgresConnectionString } from '../src/lib/postgres-connection';
 import { migrateHrSchema } from './lib/hr-storage';
 

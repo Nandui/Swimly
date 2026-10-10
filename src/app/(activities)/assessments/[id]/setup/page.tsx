@@ -1,19 +1,16 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
-import { CancelSession, EditSession } from "@/modules/activities/components/assessments/session-actions";
-import { WrongClub } from "@/components/clubs/wrong-club";
-import { AssessmentPublicationPanel } from "@/modules/activities/components/parents/assessment-publication";
+import {
+  ageRangeLabel, CancelSession, dublinInstant, EditSession, getAssessmentProgrammeOptions, getAssessmentSession, getAssessmentTypeOptions, getInstructorOptions, sessionDay, sessionSpan,
+} from "@/modules/activities/features/assessments";
+import { WrongClub } from "@/components/ui/wrong-club";
+import { AssessmentPublicationPanel } from "@/modules/activities/features/parents";
 import { Button } from "@/components/shadcn/button";
 import { PageHeader } from "@/components/ui-kit/page-header";
-import { getAssessmentProgrammeOptions, getAssessmentSession, getAssessmentTypeOptions } from "@/modules/activities/lib/assessments/data/assessments";
-import { ageRangeLabel } from "@/modules/activities/lib/assessments/age";
-import { sessionDay, sessionSpan } from "@/modules/activities/lib/assessments/constants";
 import { getCurrentClub } from "@/lib/clubs/current";
-import { getInstructorOptions } from "@/modules/activities/lib/courses/data/courses";
 import { today } from "@/lib/format";
 import { screenPage } from "@/lib/page-guards";
-import { dublinInstant } from "@/modules/activities/lib/parent/time";
 
 export const metadata: Metadata = { title: "Session setup" };
 

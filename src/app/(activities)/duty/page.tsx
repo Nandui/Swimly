@@ -1,9 +1,8 @@
 import type { Metadata } from "next";
-import { DutyView } from "@/modules/activities/components/duty/duty-view";
+import { DutyView, getDutyClasses } from "@/modules/activities/features/duty";
 import { screenPage } from "@/lib/page-guards";
 import { getCurrentClub } from "@/lib/clubs/current";
 import { can, canSee } from "@/lib/authz";
-import { getDutyClasses } from "@/modules/activities/lib/duty/data";
 import { today, minutesNow } from "@/lib/format";
 
 export const metadata: Metadata = { title: "Duty manager" };
