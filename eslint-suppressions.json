@@ -1,0 +1,257 @@
+{
+  "src/app/academy/[id]/page.tsx": {
+    "turnfin/no-literal-styles": {
+      "count": 1
+    }
+  },
+  "src/app/account/page.tsx": {
+    "turnfin/no-literal-styles": {
+      "count": 1
+    }
+  },
+  "src/app/hr/people/[id]/page.tsx": {
+    "turnfin/no-literal-styles": {
+      "count": 2
+    }
+  },
+  "src/app/tasks/[id]/page.tsx": {
+    "turnfin/no-literal-styles": {
+      "count": 2
+    }
+  },
+  "src/app/tasks/page.tsx": {
+    "turnfin/no-literal-styles": {
+      "count": 1
+    }
+  },
+  "src/app/tasks/reports/page.tsx": {
+    "turnfin/no-literal-styles": {
+      "count": 1
+    }
+  },
+  "src/components/auth-frame.tsx": {
+    "turnfin/no-literal-styles": {
+      "count": 5
+    }
+  },
+  "src/components/clubs/club-switcher.tsx": {
+    "turnfin/no-literal-styles": {
+      "count": 1
+    }
+  },
+  "src/components/confirm-action.tsx": {
+    "turnfin/no-literal-styles": {
+      "count": 1
+    }
+  },
+  "src/components/form-dialog.tsx": {
+    "turnfin/no-literal-styles": {
+      "count": 1
+    }
+  },
+  "src/components/shadcn/alert-dialog.tsx": {
+    "turnfin/no-literal-styles": {
+      "count": 1
+    }
+  },
+  "src/components/shadcn/avatar.tsx": {
+    "turnfin/no-literal-styles": {
+      "count": 1
+    }
+  },
+  "src/components/shadcn/command.tsx": {
+    "turnfin/no-literal-styles": {
+      "count": 1
+    }
+  },
+  "src/components/shadcn/dialog.tsx": {
+    "turnfin/no-literal-styles": {
+      "count": 1
+    }
+  },
+  "src/components/shadcn/switch.tsx": {
+    "turnfin/no-literal-styles": {
+      "count": 2
+    }
+  },
+  "src/components/shadcn/tabs.tsx": {
+    "turnfin/no-literal-styles": {
+      "count": 2
+    }
+  },
+  "src/components/staff/role-preview.tsx": {
+    "turnfin/no-literal-styles": {
+      "count": 1
+    }
+  },
+  "src/components/ui-kit/page-header.tsx": {
+    "turnfin/no-literal-styles": {
+      "count": 1
+    }
+  },
+  "src/components/workspace/account-menu.tsx": {
+    "turnfin/no-literal-styles": {
+      "count": 3
+    }
+  },
+  "src/components/workspace/module-shell.tsx": {
+    "turnfin/no-literal-styles": {
+      "count": 2
+    }
+  },
+  "src/components/workspace/site-switcher.tsx": {
+    "turnfin/no-literal-styles": {
+      "count": 1
+    }
+  },
+  "src/lib/toast.tsx": {
+    "turnfin/no-literal-styles": {
+      "count": 2
+    }
+  },
+  "src/modules/activities/components/assessments/session-actions.tsx": {
+    "turnfin/no-literal-styles": {
+      "count": 4
+    }
+  },
+  "src/modules/activities/components/attendance/take-over.tsx": {
+    "turnfin/no-literal-styles": {
+      "count": 1
+    }
+  },
+  "src/modules/activities/components/courses/add-class.tsx": {
+    "turnfin/no-literal-styles": {
+      "count": 1
+    }
+  },
+  "src/modules/activities/components/courses/course-filters.tsx": {
+    "turnfin/no-literal-styles": {
+      "count": 2
+    }
+  },
+  "src/modules/activities/components/curriculum/image-thumbnail.tsx": {
+    "turnfin/no-literal-styles": {
+      "count": 1
+    }
+  },
+  "src/modules/activities/components/duty/billing-review.tsx": {
+    "turnfin/no-literal-styles": {
+      "count": 1
+    }
+  },
+  "src/modules/activities/components/duty/cancel-session.tsx": {
+    "turnfin/no-literal-styles": {
+      "count": 1
+    }
+  },
+  "src/modules/activities/components/duty/duty-view.tsx": {
+    "turnfin/no-literal-styles": {
+      "count": 1
+    }
+  },
+  "src/modules/activities/components/enrolment/awaiting-queue.tsx": {
+    "turnfin/no-literal-styles": {
+      "count": 1
+    }
+  },
+  "src/modules/activities/components/enrolment/legend-agreements.tsx": {
+    "turnfin/no-literal-styles": {
+      "count": 1
+    }
+  },
+  "src/modules/activities/components/instructor/instructor-shell.tsx": {
+    "turnfin/no-literal-styles": {
+      "count": 1
+    }
+  },
+  "src/modules/activities/components/instructor/start-class.tsx": {
+    "turnfin/no-literal-styles": {
+      "count": 1
+    }
+  },
+  "src/modules/activities/components/parents/parent-accounts.tsx": {
+    "turnfin/no-literal-styles": {
+      "count": 2
+    }
+  },
+  "src/modules/activities/components/students/add-swimmer.tsx": {
+    "turnfin/no-literal-styles": {
+      "count": 1
+    }
+  },
+  "src/modules/activities/components/students/profile-action-dialog.tsx": {
+    "turnfin/no-literal-styles": {
+      "count": 2
+    }
+  },
+  "src/modules/activities/components/students/profile-enrolments.tsx": {
+    "turnfin/no-literal-styles": {
+      "count": 1
+    }
+  },
+  "src/modules/activities/components/students/profile-history.tsx": {
+    "turnfin/no-literal-styles": {
+      "count": 1
+    }
+  },
+  "src/modules/activities/components/students/swimmer-browser.tsx": {
+    "turnfin/no-literal-styles": {
+      "count": 2
+    }
+  },
+  "src/modules/activities/components/today/instructor-picker.tsx": {
+    "turnfin/no-literal-styles": {
+      "count": 1
+    }
+  },
+  "src/modules/docs/components/document-editor.tsx": {
+    "turnfin/no-literal-styles": {
+      "count": 1
+    }
+  },
+  "src/modules/docs/components/home.tsx": {
+    "turnfin/no-literal-styles": {
+      "count": 1
+    }
+  },
+  "src/modules/docs/components/reader.tsx": {
+    "turnfin/no-literal-styles": {
+      "count": 3
+    }
+  },
+  "src/modules/docs/components/reports.tsx": {
+    "turnfin/no-literal-styles": {
+      "count": 1
+    }
+  },
+  "src/modules/docs/components/work.tsx": {
+    "turnfin/no-literal-styles": {
+      "count": 1
+    }
+  },
+  "src/modules/purchasing/components/order-form.tsx": {
+    "turnfin/no-literal-styles": {
+      "count": 2
+    }
+  },
+  "src/modules/refunds/components/finance-actions.tsx": {
+    "turnfin/no-literal-styles": {
+      "count": 1
+    }
+  },
+  "src/modules/rota/components/day-plan.tsx": {
+    "turnfin/no-literal-styles": {
+      "count": 3
+    }
+  },
+  "src/modules/rota/components/link-picker.tsx": {
+    "turnfin/no-literal-styles": {
+      "count": 1
+    }
+  },
+  "src/modules/rota/components/people-plan.tsx": {
+    "turnfin/no-literal-styles": {
+      "count": 2
+    }
+  }
+}

@@ -3,6 +3,7 @@ import { defineConfig, globalIgnores } from "eslint/config";
 import nextVitals from "eslint-config-next/core-web-vitals";
 import nextTs from "eslint-config-next/typescript";
 import boundaries from "eslint-plugin-boundaries";
+import designTokens from "./scripts/lint/design-tokens.mjs";
 
 // Shared UI rules: primitives come from the local shadcn components.
 const uiImports = {
@@ -180,6 +181,23 @@ const layerPolicies = [
 const eslintConfig = defineConfig([
   ...nextVitals,
   ...nextTs,
+  // The UI rule (CLAUDE.md): tokens and shadcn only, no literal colours or one-off
+  // lengths. Existing cases awaiting a token decision are in eslint-suppressions.json;
+  // fix one, then run `npx eslint --prune-suppressions` so the list only shrinks.
+  {
+    files: ["src/**/*.{ts,tsx}"],
+    ignores: [
+      ...tests,
+      "src/generated/**",
+      // Literal by necessity: email clients cannot read CSS variables, the browser
+      // theme-color meta needs a colour value, and Docs stores its palette in documents.
+      "src/**/*email.ts",
+      "src/app/layout.tsx",
+      "src/modules/docs/**/formatting.ts",
+    ],
+    plugins: { turnfin: designTokens },
+    rules: { "turnfin/no-literal-styles": "error" },
+  },
   {
     files: ["src/**/*.{jsx,tsx}"],
     ignores: ["src/components/shadcn/**", "src/generated/**"],

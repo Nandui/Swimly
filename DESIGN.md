@@ -18,6 +18,10 @@ theme describe the retired look. Components live in `src/components/shadcn`.
 
 ## Design rules
 
+- **UI rule (owner rule, 10 October 2026):** compose existing shadcn components and
+  existing tokens only. No literal colours and no one-off lengths, including Tailwind
+  arbitrary values such as `w-[137px]`. Ask the owner before adding a token or component.
+  `npm run lint` enforces it; see CLAUDE.md, section 14.
 - Compose actual shadcn controls; inspect their installed source before use.
   Buttons, dialogs, alerts, tables, items, inputs, selects, checkboxes, switches,
   radio groups, popovers and command lists already have accessible primitives.
