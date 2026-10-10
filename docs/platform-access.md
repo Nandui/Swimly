@@ -15,7 +15,7 @@ document is the model that makes both true. Owner decisions, September 2026.
 *Simplified 28 September 2026: see [how-turnfin-works.md](how-turnfin-works.md).*
 
 1. **Modules.** Swim school, Pool deck, Refunds, Docs, Training, Rota, HR and Admin, each
-   described once in `src/modules/registry.ts`.
+   described once in its `manifest.ts`, listed in `src/app/modules.ts`.
 2. **Roles with levels.** A role holds one level for each module (None, then for
    example Use and Manage) plus at most a couple of extras. Each person holds
    **one role** and the **sites they work at** (`User.siteIds`; none means every

@@ -43,7 +43,7 @@ a shared **Core** (people, roles, sites, audit, the module catalogue), plus Turn
 (`apps/me`) and the public Academy booking site (`apps/academy`, docs/academy.md). See [docs/how-turnfin-works.md](docs/how-turnfin-works.md) and the owner's
 pillars in it (28 September 2026): simplicity, ease of use, modern, scalable, clean code,
 easy to manage, audit and train, and change without breaking. Each module describes
-itself in `src/modules/registry.ts`, including its levels; a role holds one level for each
+itself in its `manifest.ts` (listed in `src/app/modules.ts`), including its levels; a role holds one level for each
 module. The swim school (Activities) lives in `src/modules/activities`,
 `src/app/(activities)` and `src/app/(instructor)`. Core never imports a module, and
 Activities never imports a Work module or queries Core tables (use `src/lib/directory.ts`).

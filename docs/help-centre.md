@@ -86,7 +86,7 @@ of prose so a rename does not require rewriting guides.
 | `guides-modules.ts` (HR) | `src/modules/hr/features/person/components/actions.tsx`, `src/modules/hr/shared/constants.ts` |
 
 Each module guide's "Before you start" names the level it needs, from
-`src/modules/registry.ts`. Desk steps describe ModuleShell (page bar, tools bar
+its `manifest.ts`. Desk steps describe ModuleShell (page bar, tools bar
 with the site picker and swimmer search, account menu, module bar or bottom
 bar); pool-deck steps describe the deck's own top bar and menu.
 

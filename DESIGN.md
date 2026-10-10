@@ -500,7 +500,7 @@ permission keys) stay as they are.
   "… Try again later." or "Wait a few minutes and try again." Never "Please try again" or
   "Unable to".
 - Empty states: "No <things> yet" or "No <things> match", with no full stop in the title.
-  Subtitles and module descriptions (`src/modules/registry.ts`, shown on each overview)
+  Subtitles and module descriptions (each module's `manifest.ts`, shown on each overview)
   end without a full stop.
 - No ellipsis in placeholders. Examples are neutral (Riverside, Sam Murphy); no customer or
   site names, and no site counts, in code.
@@ -1005,7 +1005,8 @@ src/modules/activities/       the swim school: features/ (students, courses, enr
                                and shared/ (what two or more features use)
 src/modules/<id>/              each Work module (Docs, Refunds, Training, HR, Rota,
                                Purchasing, Academy, Tasks): features/ and shared/
-src/modules/registry.ts        every module's description and levels
+src/app/modules.ts             the one list of modules (each module's manifest.ts)
+src/modules/registry.ts        Core's registry: groups, menus, Admin's description
 src/modules/contributions.ts   what modules add to Core pages, without imports
 src/components/ui-kit/         shared shadcn compositions — tag, page-header,
                                empty-state, page-loading, page-state, segmented-links

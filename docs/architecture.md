@@ -12,7 +12,7 @@ Turnfin is **one Next.js app** made of **modules** on a shared **Core**, plus **
 
 ## Every module describes itself
 
-`src/modules/registry.ts` holds one description for each module:
+Each module's `manifest.ts` holds its description, and `src/app/modules.ts` lists them all (Admin's, which is Core's own, is in `src/modules/registry.ts`):
 - its name, icon, link and **group** (Front of house, Poolside, Team or Back office; presentation only);
 - its **levels** (None, then for example Use and Manage), each with one plain sentence, the permissions it gives, and where it applies;
 - up to two **extras** across the app (Docs "Can approve", Swim school "Can cancel classes");

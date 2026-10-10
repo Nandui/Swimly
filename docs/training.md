@@ -61,6 +61,6 @@ does not block.
 - Schema: `TrainingCourse`, `TrainingAssignment` (`prisma/migrations/20260930120000_training`)
 - Shape: `src/modules/training/` has `shared/` (`access.ts`, `constants.ts`, `data.ts`, `grant.ts`, `writes.ts`) and the features `courses`, `assignments`, `sign-off`, `certificates`, `expiring`, `me`, `person-file` and `workspace`; see its README.md
 - Actions: each feature's `server/actions.ts` (every change audited in its transaction)
-- Self-service: `features/me` (`mine.ts`, `self.ts`, `reminders.ts`), reached by the staff API through `index.ts`; registry entry in `src/modules/registry.ts`
+- Self-service: `features/me` (`mine.ts`, `self.ts`, `reminders.ts`), reached by the staff API through `index.ts`; description in `manifest.ts`
 - Pages: `src/app/training/` (workspace); the learner side is Turnfin Me (`apps/me`)
 - Tests: `src/modules/training/__tests__/training.test.ts`
