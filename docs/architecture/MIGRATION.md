@@ -1,7 +1,7 @@
 # Migration to modular architecture
 
 **Status:** Phases 2 and 3 done in draft PR #11, waiting on review. Module map and ADRs 0001 to 0003 approved 9 October 2026.
-**Next step:** Phase 4. Fernando chose to split the frame (10 October 2026): the site switcher is in the UI kit; `ModuleShell` and the account menu go to the platform once the rule exception they need is decided (see below). Then switch the boundary rules to error.
+**Next step:** Phase 4. Clear the 19 remaining boundary warnings (the module list in `@/modules/server`, the area select, the club switcher and wrong-club notice, four UI-kit imports of Core helpers, the toast), then switch the boundary rules to error.
 
 ## Phases
 - [x] Phase 0 — Audit written to docs/architecture/audit.md (with [../modular-monolith.md](../modular-monolith.md))
@@ -36,10 +36,10 @@ In the full shape (`index.ts`, `module.ts`, `events.ts`, `README.md`, `shared/`,
 
 - activities, the swim school (9 October 2026): features `students`, `courses`, `attendance`, `enrolment`, `assessments`, `curriculum`, `cancellations`, `duty`, `schedule`, `today`, `together`, `analytics`, `parents`, `instructor`, `workspace`. About 90 of its 280 files are in `shared/` because the domain is tightly linked; `contributions.ts` became `module.ts`; the composition roots use its `index.ts`.
 
-Known warnings left in moved modules: `ModuleShell` (`src/components/workspace`) is the app frame, not a UI-kit component, so features importing it are reported. Deciding where the frame lives (platform or ui) is a boundary question for Fernando once more modules are moved.
+The app frame (`ModuleShell`, the account menu, the site switcher) is in the UI kit (`src/components/ui`). It knows no module: the root layout's `YourModulesProvider` (`src/components/workspace/your-modules.tsx`, front) fills the frame context (`src/components/ui/frame.tsx`) with the person's modules, groups, role, site, sign-out and the role-preview control. See ADR 0005.
 
 ## Awaiting user decision
-- `ModuleShell` and the account menu use UI kit components, and CLAUDE.md section 3 forbids platform → ui. Moving them to the platform needs an exception (ADR), or they stay where they are until rewired. Blocks Phase 4.
+- (none)
 
 ## Log
 - 2026-10-09 — PR #8: lint boundaries for every module, `work.prisma` split, cross-module leaks fixed.
@@ -59,3 +59,4 @@ Known warnings left in moved modules: `ModuleShell` (`src/components/workspace`)
 - 2026-10-09 — Phase 3: Docs, Refunds, Purchasing, Academy, Tasks, HR, Training and Rota read Core only through its functions. New Core reads: `src/lib/qualifications.ts`, `src/lib/setup/activity-types.ts`, `src/lib/people/records.ts`, `moduleAuditTrail`, and more of `src/lib/directory.ts`. The boundary lint now forbids Core table queries and joins in every module.
 - 2026-10-10 — Deleted the unused `move-up.tsx` (Fernando's go-ahead); the swim school's empty `progression` feature went with it.
 - 2026-10-10 — Frame split chosen. The site switcher moved to the UI kit (`src/components/ui/site-switcher.tsx`).
+- 2026-10-10 — Fernando chose to rewire rather than make an exception: `ModuleShell` and the account menu moved to the UI kit and read a frame context the app fills (ADR 0005). Warnings 31 → 19.

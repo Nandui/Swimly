@@ -3,7 +3,7 @@
 import type { ReactNode } from 'react';
 import { usePathname } from 'next/navigation';
 import { FilePlus2, ReceiptText, Truck } from 'lucide-react';
-import { ModuleShell } from '@/components/workspace/module-shell';
+import { ModuleShell } from '@/components/ui/module-shell';
 import type { PurchasingActor } from '@/modules/purchasing/shared/access';
 
 /** Purchasing's pages in the shared workspace frame. */

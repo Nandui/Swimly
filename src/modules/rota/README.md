@@ -46,5 +46,5 @@ Rota still reads Core's people, sites, departments, activity types and qualifica
 - Platform: auth and the session, permissions, audit, the database client, the format helpers, the staff notifications (`notifyShiftChange`), home cards and the person file.
 - Core reads (never Core tables; enforced by the boundary lint): the activity list through `src/lib/setup/activity-types.ts`; people, ages (young-worker rules only), departments and sites through `src/lib/directory.ts`; held qualifications through `src/lib/qualifications.ts`.
 - The composition root `src/modules/server.ts` for the swim school's classes (`commitmentsFor`, `planCommitment`; reported by the boundary lint until `src/app/modules.ts` replaces it, ADR 0004).
-- The shared workspace frame `ModuleShell` and the UI kit's site switcher (`src/components/ui/site-switcher.tsx`).
+- The UI kit's workspace frame `ModuleShell` (`src/components/ui/module-shell.tsx`) and the UI kit's site switcher (`src/components/ui/site-switcher.tsx`).
 - Other modules: none directly.

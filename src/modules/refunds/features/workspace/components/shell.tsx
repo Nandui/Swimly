@@ -3,7 +3,7 @@
 import { usePathname, useSearchParams } from 'next/navigation';
 import type { ReactNode } from 'react';
 import { FilePenLine, ReceiptText, UserRound } from 'lucide-react';
-import { ModuleShell } from '@/components/workspace/module-shell';
+import { ModuleShell } from '@/components/ui/module-shell';
 import { refundListView, type RefundActor } from '@/modules/refunds/shared/types';
 
 /** Refunds in the shared module frame: its request views along the top. The follow-up queues

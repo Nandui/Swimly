@@ -3,7 +3,7 @@
 import { usePathname, useRouter } from "next/navigation";
 import type { ReactNode } from "react";
 import { ClubSwitcher } from "@/components/clubs/club-switcher";
-import { ModuleShell } from "@/components/workspace/module-shell";
+import { ModuleShell } from "@/components/ui/module-shell";
 import { WorkspaceSearch } from "@/modules/activities/shared/students/components/workspace-search";
 import { isNavItemActive, swimmerLookupHref, visibleNavGroups } from "@/modules/activities/features/workspace/server/nav";
 import type { ScreenKey } from "@/lib/staff/screens";

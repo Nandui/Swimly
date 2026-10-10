@@ -6,10 +6,8 @@ import { usePathname } from 'next/navigation';
 import { useEffect, useLayoutEffect, useRef, useState, type ReactNode, type RefObject } from 'react';
 import { ChevronDown, CircleHelp, House, LayoutGrid, type LucideIcon } from 'lucide-react';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuGroup, DropdownMenuItem, DropdownMenuLabel, DropdownMenuTrigger } from '@/components/shadcn/dropdown-menu';
-import { AccountMenu } from '@/components/workspace/account-menu';
-import { RolePreviewToggle } from '@/components/staff/role-preview';
-import { useYourModules } from '@/components/workspace/your-modules';
-import { groupModules } from '@/modules/registry';
+import { AccountMenu } from '@/components/ui/account-menu';
+import { groupFrameModules, useFrame } from '@/components/ui/frame';
 
 /** A page in the bar. The icon shows in the "More" menu; links handed over by a server page
  *  (the home page's) have none, because a component cannot cross to the client. */
@@ -20,7 +18,8 @@ export type ModuleLinkGroup = { label: string; links: ModuleLink[] };
  *  v2"): the fin and the module's pages along the top, search, site and account on the right;
  *  the person's modules in an icon bar down the left (a labelled bar along the bottom on phones
  *  and touch screens). Links are presentation; every page checks its permission again. The pool
- *  deck uses the same tf-shell/tf-frame with its own top bar and no rail or bottom bar. */
+ *  deck uses the same tf-shell/tf-frame with its own top bar and no rail or bottom bar. The
+ *  person's modules and the app's extra tools come from the frame context (useFrame). */
 export function ModuleShell({ module, id, current = id, who, links = [], groups, tools, scopeNote, contentClass = 'module-content', scrollKey = '', children }: {
   /** Display name, e.g. "Training". */
   module: string;
@@ -43,6 +42,7 @@ export function ModuleShell({ module, id, current = id, who, links = [], groups,
   children: ReactNode;
 }) {
   const pathname = usePathname();
+  const frame = useFrame();
   useEffect(() => { window.scrollTo({ top: 0 }); }, [pathname, scrollKey]);
   const pageGroups = groups ?? [{ label: '', links }];
   const pages = pageGroups.flatMap((group) => group.links);
@@ -84,7 +84,7 @@ export function ModuleShell({ module, id, current = id, who, links = [], groups,
           ) : <span className="sr-only">{scopeNote}</span>}
           <div className="tf-bar tf-tools" role="group" aria-label="Search, site and account">
             {tools}
-            <RolePreviewToggle />
+            {frame.tools}
             <AccountMenu name={who.name} />
           </div>
         </header>
@@ -155,7 +155,7 @@ function PagesMore({ groups, currentFor }: { groups: ModuleLinkGroup[]; currentF
 /** The person's modules, down the left on a desktop with a mouse, one pill per group
  *  (MODULE_GROUPS). Each icon names itself on hover and on keyboard focus. */
 function ModuleRail({ current }: { current: string }) {
-  const modules = useYourModules();
+  const { modules, groups } = useFrame();
   const item = (key: string, href: string, label: string, Icon: LucideIcon) => (
     <Link key={key} href={href} className="tf-rail-item" aria-label={label} aria-current={current === key ? 'true' : undefined}>
       <Icon aria-hidden="true" /><span className="tf-rail-label" aria-hidden="true">{label}</span>
@@ -164,7 +164,7 @@ function ModuleRail({ current }: { current: string }) {
   return (
     <nav className="tf-rail" aria-label="Modules">
       <div className="tf-rail-group">{item('home', '/', 'Home', House)}</div>
-      {groupModules(modules).map((group) => (
+      {groupFrameModules(modules, groups).map((group) => (
         <div key={group.key} role="group" aria-label={group.label} className="tf-rail-group">{group.modules.map((m) => item(m.id, m.href, m.name, m.icon))}</div>
       ))}
       <div className="tf-rail-group">
@@ -178,7 +178,7 @@ function ModuleRail({ current }: { current: string }) {
  *  no hover. Home, up to three modules (the current one always among them) and More; with no
  *  modules left over, Help takes More's place. */
 function ModuleBottomBar({ current }: { current: string }) {
-  const modules = useYourModules();
+  const { modules, groups } = useFrame();
   const first = modules.slice(0, 3);
   const active = modules.find((m) => m.id === current);
   const chosen = active && !first.includes(active) ? [...first.slice(0, 2), active] : first;
@@ -199,7 +199,7 @@ function ModuleBottomBar({ current }: { current: string }) {
       ) : <DropdownMenu>
         <DropdownMenuTrigger className="tf-bottom-item"><span className="tf-bottom-icon"><LayoutGrid aria-hidden="true" /></span><span>More</span></DropdownMenuTrigger>
         <DropdownMenuContent side="top" align="end" className="w-64 max-w-[calc(100vw-2rem)]">
-          {groupModules(rest).map((group) => (
+          {groupFrameModules(rest, groups).map((group) => (
             <DropdownMenuGroup key={group.key}>
               <DropdownMenuLabel className="text-xs font-semibold text-ui-muted-foreground">{group.label}</DropdownMenuLabel>
               {group.modules.map((m) => (

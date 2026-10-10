@@ -62,5 +62,5 @@ It never queries Core tables. It reads people and sites through `src/lib/directo
 
 ## Depends on
 - Platform: auth and the session, the policy engine, permissions, audit, the database client, `src/lib/directory.ts`, home cards, site summaries and commitments.
-- The site switcher and account menu (`src/components/clubs`, `src/components/workspace`), reported by the boundary lint until the frame's place is decided.
+- The UI kit's account menu (`src/components/ui/account-menu.tsx`), and the club switcher and wrong-club notice (`src/components/clubs`), which the boundary lint still reports (Phase 4).
 - Other modules: none.

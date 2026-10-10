@@ -3,7 +3,7 @@
 import { usePathname } from 'next/navigation';
 import type { ReactNode } from 'react';
 import { BookOpen, ClipboardCheck, FileBadge, Hourglass, LayoutList } from 'lucide-react';
-import { ModuleShell } from '@/components/workspace/module-shell';
+import { ModuleShell } from '@/components/ui/module-shell';
 import type { TrainingActor } from '@/modules/training/shared/access';
 
 /** Training's navigation in the shared workspace shell. Each link appears only

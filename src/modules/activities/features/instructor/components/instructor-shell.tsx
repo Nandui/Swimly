@@ -7,7 +7,7 @@ import { usePathname, useSearchParams } from "next/navigation";
 import { CircleHelp } from "lucide-react";
 import { Button } from "@/components/shadcn/button";
 import { ClubSwitcher } from "@/components/clubs/club-switcher";
-import { AccountMenu } from "@/components/workspace/account-menu";
+import { AccountMenu } from "@/components/ui/account-menu";
 import { instructorHomeHref } from "@/modules/activities/shared/attendance/navigation";
 import styles from "@/modules/activities/features/instructor/components/instructor-shell.module.css";
 

@@ -3,7 +3,7 @@
 import type { ReactNode } from 'react';
 import { usePathname } from 'next/navigation';
 import { CalendarRange, ListChecks, Phone } from 'lucide-react';
-import { ModuleShell } from '@/components/workspace/module-shell';
+import { ModuleShell } from '@/components/ui/module-shell';
 import type { AcademyActor } from '@/modules/academy/shared/access';
 
 /** The Academy's pages in the shared workspace frame. */

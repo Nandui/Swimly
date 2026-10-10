@@ -43,7 +43,7 @@ Training also reads and writes Core's qualification records (`Qualification`, `Q
 ## Depends on
 - Platform: the policy engine (people a trainer may see), audit, the database client, contributions (home card, person file, subject records).
 - Core reads (never Core tables; enforced by the boundary lint): people, positions and sites through `src/lib/directory.ts`; qualifications, qualification types and uploaded certificates through `src/lib/qualifications.ts` (granting goes through `recordQualification`); the person's record through `src/lib/people/records.ts`.
-- The shared workspace frame `ModuleShell`.
+- The UI kit's workspace frame `ModuleShell` (`src/components/ui/module-shell.tsx`).
 - Other modules: none. HR reads Training's records through the `subjectRecords` seam.
 
 ## Known gaps

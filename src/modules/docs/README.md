@@ -41,5 +41,5 @@ In the Docs database (not Prisma): `documents`, `drafts`, `snapshots`, `reviews`
 ## Depends on
 - Platform: auth, permissions, the staff directory (people and sites from Turnfin), the shared `.turnfin-docs` theme in `src/app/theme`.
 - Core reads (never Core tables; enforced by the boundary lint): people, sites, departments and roles through `src/lib/directory.ts` (`staffProfile`, `staffProfiles`, `organisationChart`).
-- The shared workspace frame `ModuleShell`.
+- The UI kit's workspace frame `ModuleShell` (`src/components/ui/module-shell.tsx`).
 - Other modules: none.

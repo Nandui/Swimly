@@ -3,7 +3,7 @@
 import type { ReactNode } from 'react';
 import { usePathname } from 'next/navigation';
 import { ClubSwitcher } from '@/components/clubs/club-switcher';
-import { ModuleShell } from '@/components/workspace/module-shell';
+import { ModuleShell } from '@/components/ui/module-shell';
 
 type Site = { id: string; name: string };
 

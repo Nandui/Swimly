@@ -2,15 +2,12 @@
 
 import Link from 'next/link';
 import { useState } from 'react';
-import { signOut } from 'next-auth/react';
 import { ChevronDown, Loader2, LogOut, Monitor, Moon, Sun, UserRound } from 'lucide-react';
 import { Button } from '@/components/shadcn/button';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuGroup, DropdownMenuItem, DropdownMenuLabel, DropdownMenuRadioGroup, DropdownMenuRadioItem, DropdownMenuTrigger } from '@/components/shadcn/dropdown-menu';
 import { Avatar, AvatarFallback, initials } from '@/components/shadcn/avatar';
 import { useThemeMode } from '@/components/theme-provider';
-import { useYourAccount } from '@/components/workspace/your-modules';
-import { parseThemeMode } from '@/lib/theme-mode';
-import { toast } from '@/lib/toast';
+import { useFrame } from '@/components/ui/frame';
 
 const MODES = [
   { value: 'system', label: 'System', Icon: Monitor },
@@ -22,20 +19,20 @@ const MODES = [
  *  who they are (name, role and working site), Appearance, Manage account and
  *  Sign out (V2Home-menu). Appearance lives here, with the account, not in the
  *  navigation; Help sits in the rail, the phone bar's More and the deck bar.
- *  The pool deck reuses it without Manage account (docs/instructor.md). Role
- *  and site come from the root layout through useYourAccount, so no shell
- *  passes them. Appearance is menu radio items, not the ThemeToggle radio
+ *  The pool deck reuses it without Manage account (docs/instructor.md). Role,
+ *  site and signing out come from the root layout through the frame context
+ *  (useFrame), so no shell passes them. Appearance is menu radio items, not the ThemeToggle radio
  *  group, because a menu cancels Tab: arrows must reach every choice. They
  *  wear the shared .pc-seg bar, so it looks the same as on /account. */
 export function AccountMenu({ name, showManageAccount = true }: { name: string; showManageAccount?: boolean }) {
   const [leaving, setLeaving] = useState(false);
   const { mode, setMode } = useThemeMode();
-  const { role, site } = useYourAccount();
+  const { role, site, signOut } = useFrame();
   const caption = [role, site].filter(Boolean).join(' · ');
   async function leave() {
     setLeaving(true);
-    try { await signOut({ redirectTo: '/sign-in' }); }
-    catch { setLeaving(false); toast.error('Could not sign out. Try again.'); }
+    try { await signOut(); }
+    catch { setLeaving(false); }
   }
   return (
     <DropdownMenu>
@@ -54,7 +51,7 @@ export function AccountMenu({ name, showManageAccount = true }: { name: string; 
         </DropdownMenuLabel>
         <DropdownMenuGroup className="flex flex-col gap-2">
           <DropdownMenuLabel className="p-0 text-xs font-semibold text-ui-muted-foreground">Appearance</DropdownMenuLabel>
-          <DropdownMenuRadioGroup aria-label="Appearance" className="pc-seg pc-seg-fill" value={mode} onValueChange={(value) => setMode(parseThemeMode(value))}>
+          <DropdownMenuRadioGroup aria-label="Appearance" className="pc-seg pc-seg-fill" value={mode} onValueChange={(value) => setMode(MODES.find((m) => m.value === value)?.value ?? 'system')}>
             {MODES.map(({ value, label, Icon }) => (
               <DropdownMenuRadioItem key={value} value={value} className="pc-seg-item" onSelect={(event) => event.preventDefault()}><Icon aria-hidden="true" />{label}</DropdownMenuRadioItem>
             ))}

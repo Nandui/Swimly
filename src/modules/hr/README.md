@@ -42,5 +42,5 @@ HR's home card counts Core's `StaffDetailChangeRequest`, and a person's file rea
 - Platform: the policy engine (`subjectsFor`, `requireCapFor`), audit, the database client, home cards.
 - Core reads (never Core tables; enforced by the boundary lint): staff details, the details editor's options, the subject export's Core record and pending details changes through `src/lib/people/records.ts`; names through `src/lib/directory.ts`.
 - The composition root `src/modules/server.ts` for other modules' person-file sections and subject records (reported by the boundary lint until `src/app/modules.ts` replaces it, ADR 0004).
-- The shared workspace frame `ModuleShell`.
+- The UI kit's workspace frame `ModuleShell` (`src/components/ui/module-shell.tsx`).
 - Other modules: none directly.

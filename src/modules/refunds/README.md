@@ -39,5 +39,5 @@ Refunds also reads Core's `User` and `Club` directly (sites to choose, a person'
 ## Depends on
 - Platform: auth (`@/auth`), permissions (`src/lib/staff/permissions`), audit (`src/lib/audit`), email (`src/lib/email`), the database client, home cards (`src/modules/contributions`).
 - Core reads (never Core tables; enforced by the boundary lint): sites and people through `src/lib/directory.ts` (`liveSites`, `allSites`, `liveSiteById`, `staffSiteIds`, `staffAccess`, `activeStaffAccess`).
-- The shared workspace frame `ModuleShell` (`src/components/workspace`), also used by Docs, Training, HR and Rota.
+- The UI kit's workspace frame `ModuleShell` (`src/components/ui/module-shell.tsx`), also used by Docs, Training, HR and Rota.
 - Other modules: none.

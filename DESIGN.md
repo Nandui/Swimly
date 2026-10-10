@@ -207,7 +207,7 @@ focus restoration and preserved values after errors. `src/app/refunds/refunds.cs
 arranges the Refunds screens. See [docs/refunds.md](docs/refunds.md).
 
 Training (`/training`), HR (`/hr`), Rota (`/rota`) and Tasks (`/tasks`, docs/tasks.md) are people- and site-scoped workspaces
-built on the shared frame, `ModuleShell` (`src/components/workspace/module-shell.tsx`), each
+built on the shared frame, `ModuleShell` (`src/components/ui/module-shell.tsx`), each
 with its own page bar. `src/app/workspace/module-workspace.css`
 (scoped by `.turnfin-module`, with `module-*` classes) only arranges their screens; a new
 module reuses it rather than copying a stylesheet. The theme comes from `body.turnfin-app`, so

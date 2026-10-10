@@ -2,7 +2,7 @@
 
 import type { ReactNode } from 'react';
 import { usePathname, useSearchParams } from 'next/navigation';
-import { ModuleShell } from '@/components/workspace/module-shell';
+import { ModuleShell } from '@/components/ui/module-shell';
 import { rotaPages } from '@/modules/rota/shared/components/pages';
 import { SiteSwitcher } from '@/components/ui/site-switcher';
 import type { RotaActor } from '@/modules/rota/shared/access';

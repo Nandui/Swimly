@@ -43,7 +43,7 @@ Tasks also reads Core's `Club`, `StaffRole` and `User` directly (sites, roles a 
 ## Depends on
 - Platform: the policy engine, audit, the database client, home cards (`src/modules/contributions`).
 - Core reads (never Core tables; enforced by the boundary lint): sites and roles through `src/lib/directory.ts` (`liveSitesWithin`, `liveSitesByOrganisation`, `withSite`, `siteName`, `rolesByIds`, `allRoles`, `staffRoleIdOf`); its activity screen through `moduleAuditTrail` in `src/lib/audit.ts`.
-- The shared workspace frame `ModuleShell` (`src/components/workspace`) and the UI kit's site switcher (`src/components/ui/site-switcher.tsx`).
+- The UI kit's workspace frame `ModuleShell` (`src/components/ui/module-shell.tsx`) and the UI kit's site switcher (`src/components/ui/site-switcher.tsx`).
 - Other modules: none.
 
 ## Known gaps
