@@ -33,7 +33,7 @@ export function PageLoading({ tiles = false }: { tiles?: boolean }) {
         <ul className="pc-rows">
           {Array.from({ length: 6 }, (_, i) => (
             <li key={i} className="pc-row">
-              <Skeleton className="h-(--pc-leading-caption) w-40 max-w-[60%]" />
+              <Skeleton className="h-(--pc-leading-caption) w-40 max-w-3/5" />
               <Skeleton className="h-(--pc-leading-caption) w-16 ml-auto" />
             </li>
           ))}

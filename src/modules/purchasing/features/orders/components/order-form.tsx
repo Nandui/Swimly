@@ -61,7 +61,7 @@ export function OrderForm({ sites, suppliers, rules, roleNames, existing, initia
   if (!suppliers.length) return <Notice tone="warning" title="No approved suppliers with products yet." description="Whoever manages Purchasing approves suppliers and their products first." />;
 
   return (
-    <div className="grid gap-6 lg:grid-cols-[minmax(0,1fr)_20rem]">
+    <div className="grid gap-6 lg:grid-cols-[minmax(0,1fr)_var(--pc-rail-width)]">
       <div className="min-w-0 space-y-5">
         {existing?.status === "rejected" && existing.decisionNote ? <Notice tone="warning" title="It was rejected" description={existing.decisionNote} /> : null}
         <div className="grid gap-4 sm:grid-cols-2">

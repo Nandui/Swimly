@@ -37,7 +37,7 @@ function LeavePlace({ enrolment }: { enrolment: StudentEnrolment }) {
 export function ManageProfileEnrolments({ studentId, active, enrolments, targets }: { studentId: string; active: boolean; enrolments: StudentEnrolment[]; targets: TransferTarget[] }) {
   const current = enrolments.filter(e => e.status === "ACTIVE" || e.status === "WAITLISTED");
   return <Dialog><DialogTrigger asChild><Button>Manage enrolment</Button></DialogTrigger>
-    <DialogContent className="max-h-[90dvh] overflow-y-auto sm:max-w-3xl"><DialogHeader><DialogTitle>Manage enrolment</DialogTitle><DialogDescription>Current places at every site. Moves keep the swimmer’s history.</DialogDescription></DialogHeader>
+    <DialogContent className="max-h-(--pc-overlay-max-height) overflow-y-auto sm:max-w-3xl"><DialogHeader><DialogTitle>Manage enrolment</DialogTitle><DialogDescription>Current places at every site. Moves keep the swimmer’s history.</DialogDescription></DialogHeader>
       {current.length ? <ul className="pc-rows">{current.map(e => <li key={e.id} className="pc-row"><div className="pc-row-body"><p className="pc-row-title">{e.level.name} · {e.course.club.name}</p><p className="pc-row-hint">{formatSlotShort(e.course)}{e.scheduledEndOn ? ` · Ends ${formatDate(e.scheduledEndOn)}` : ""}</p></div><div className="pc-row-trail"><Tag meta={ENROLMENT_STATUS_META[e.status]} /></div>
         <div className="flex basis-full flex-wrap gap-2">
           <ClassEnrolmentDialog trigger={<Button variant="outline">Move class</Button>} courses={targets.filter(c => c.id !== e.course.id)} currentEnrolment={e}

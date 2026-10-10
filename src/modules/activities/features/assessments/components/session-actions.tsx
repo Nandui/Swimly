@@ -77,7 +77,7 @@ function SessionFields({
     <>
       <div
         className={
-          "min-w-0 grid grid-cols-[repeat(auto-fit,minmax(min(100%,14rem),1fr))] gap-4"
+          "min-w-0 grid grid-cols-[repeat(auto-fit,minmax(min(100%,var(--pc-card-min)),1fr))] gap-4"
         }
       >
         <Field
@@ -125,7 +125,7 @@ function SessionFields({
 
       <div
         className={
-          "min-w-0 grid grid-cols-[repeat(auto-fit,minmax(min(100%,14rem),1fr))] gap-4"
+          "min-w-0 grid grid-cols-[repeat(auto-fit,minmax(min(100%,var(--pc-card-min)),1fr))] gap-4"
         }
       >
         <Field label="Date" htmlFor="date">
@@ -160,7 +160,7 @@ function SessionFields({
 
       <div
         className={
-          "min-w-0 grid grid-cols-[repeat(auto-fit,minmax(min(100%,14rem),1fr))] gap-4"
+          "min-w-0 grid grid-cols-[repeat(auto-fit,minmax(min(100%,var(--pc-card-min)),1fr))] gap-4"
         }
       >
         <Field
@@ -181,7 +181,7 @@ function SessionFields({
 
       <div
         className={
-          "min-w-0 grid grid-cols-[repeat(auto-fit,minmax(min(100%,14rem),1fr))] gap-4"
+          "min-w-0 grid grid-cols-[repeat(auto-fit,minmax(min(100%,var(--pc-card-min)),1fr))] gap-4"
         }
       >
         <Field

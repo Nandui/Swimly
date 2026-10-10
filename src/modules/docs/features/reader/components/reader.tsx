@@ -253,7 +253,7 @@ export function Reader({
       )}
       <div className="flex min-w-0 flex-wrap items-start gap-4">
         <article
-          className="pc-panel document-article min-w-0 grow-[999] basis-[560px]"
+          className="pc-panel document-article min-w-0 grow-[999] basis-xl"
           style={{ '--reading-size': `${size}px` } as React.CSSProperties}
         >
           <div className="flex flex-wrap gap-2">
@@ -271,7 +271,7 @@ export function Reader({
             )}
           </div>
           {/* Phones: one fact per line, caption left and value right, so no box is left alone. */}
-          <dl className="grid grid-cols-[repeat(auto-fit,minmax(9rem,1fr))] gap-3 max-sm:grid-cols-1 max-sm:gap-2">
+          <dl className="grid grid-cols-[repeat(auto-fit,minmax(var(--pc-tile-min),1fr))] gap-3 max-sm:grid-cols-1 max-sm:gap-2">
             <div className={metaBox}>
               <dt className="text-xs text-ui-muted-foreground">Document ref.</dt>
               <dd className="font-semibold">{c.reference}</dd>
@@ -354,7 +354,7 @@ export function Reader({
             {formatDate(new Date().toISOString())}
           </div>
         </article>
-        <aside className="reader-rail flex min-w-0 grow basis-[300px] flex-col gap-4">
+        <aside className="reader-rail flex min-w-0 grow basis-(--pc-rail-width) flex-col gap-4">
           {/* Below 768px the contents would sit after the whole document, so it is left out (V2PhoneDocument). */}
           {contents.length > 0 && (
             <nav className="pc-panel max-md:hidden!" aria-labelledby="contents-title">

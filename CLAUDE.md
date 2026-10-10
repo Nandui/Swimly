@@ -390,3 +390,20 @@ Do this in phases. **Do not attempt a big-bang rewrite.** Behaviour must stay id
 - When a boundary decision is ambiguous, make the best call using section 7, state it in your summary, and continue. Ask only when it affects table ownership, module boundaries, or requires a rule exception.
 - Never delete files, rename database tables, or run migrations without explicit approval.
 - If you find existing code that breaks these rules while working on something else, don't silently refactor it. Mention it in your summary and offer to fix it as a separate change.
+
+---
+
+## 14. UI rule (owner rule, 10 October 2026)
+
+Build UI with shadcn/ui themed with the app's design tokens. **Only compose existing components and existing tokens.**
+
+- No literal colours: no hex, `rgb()`, `hsl()` or `oklch()` values. Use the `ui-` colour utilities and the `--pc-*` tokens.
+- No one-off lengths: no pixel numbers and no Tailwind arbitrary values such as `w-[137px]` or `text-[#1a2b3c]`. Use the Tailwind scale and the tokens (`--pc-text-*`, `--pc-control-height`, `--pc-radius-*`, for example `rounded-[var(--pc-radius-card)]`).
+- Layout sizes are tokens too, in `src/app/theme/poolside.css`: `--pc-overlay-max-width` and `--pc-overlay-max-height` for menus, pickers and dialogs, `--pc-tile-min`, `--pc-card-min` and `--pc-column-min` for auto-fit grids, `--pc-rail-width` for a side column, `--pc-field-min` for search fields and `--pc-deck-width` for the pool deck. Use them as `max-h-(--pc-overlay-max-height)` or inside an arbitrary value, such as `grid-cols-[minmax(0,1fr)_var(--pc-rail-width)]`.
+- If something can't be built from existing components and tokens, **ask the user before adding a new token or component.** Never invent one to get past the lint.
+
+Why: most "AI ugliness" comes from inconsistency, not bad taste.
+
+`npm run lint` enforces this for `src/**/*.{ts,tsx}` with `turnfin/no-literal-styles` (`scripts/lint/design-tokens.mjs`). Tests, email templates, the browser theme colour in `src/app/layout.tsx` and the Docs content palette are exempt, because they need literal values. Existing cases waiting for a token decision are listed in `eslint-suppressions.json`. That list only shrinks: when you fix one, run `npx eslint --prune-suppressions`. Never add to it, and never disable the rule inline, without the user's approval.
+
+The rule applies to stylesheets too. Tokens are defined only in `src/app/theme/poolside.css` and `src/app/shadcn.css`; other CSS uses them. The lint does not check CSS files yet.

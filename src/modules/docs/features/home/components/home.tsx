@@ -125,7 +125,7 @@ export function HomeView({ workspace: w, description }: { workspace: Workspace; 
       <section className="pc-panel" aria-labelledby="collections-title">
         <h2 id="collections-title">Collections</h2>
         {/* Four collections fit one row on a wide panel (DCOverview), two on a phone. */}
-        <ul className="pc-stats" style={{ gridTemplateColumns: 'repeat(auto-fit, minmax(min(100%, 130px), 1fr))' }}>
+        <ul className="pc-stats" style={{ gridTemplateColumns: 'repeat(auto-fit, minmax(min(100%, var(--pc-tile-min)), 1fr))' }}>
           {collections.map(({ type, description }) => {
             const count = documents.filter((d) => d.content.type === type).length;
             return (

@@ -51,7 +51,7 @@ export function LegendAgreements({ result, canConfirm, profiles, classes }: {
     <PageHeader title="Legend agreements" description={`${siteName} · Update the billing agreement in Legend, then confirm it here.`} actions={matchList} />
     <section className="pc-panel" aria-label="Agreements">
       <div className="min-w-0 flex flex-wrap items-end gap-3">
-        <Form action="/legend-agreements" className="min-w-0 flex-[1_1_18rem] md:max-w-md" role="search" aria-label="Legend agreements">
+        <Form action="/legend-agreements" className="min-w-0 flex-[1_1_var(--pc-field-min)] md:max-w-md" role="search" aria-label="Legend agreements">
           {view === "done" ? <input type="hidden" name="view" value="done" /> : null}
           <SearchField id="agreement-search" label="Find a swimmer" placeholder="Name or member number" defaultValue={q} maxLength={100} clearHref={`/legend-agreements${view === "done" ? "?view=done" : ""}`} />
         </Form>

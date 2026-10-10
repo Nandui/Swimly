@@ -178,7 +178,7 @@ export function FormDialog({
           <DialogContent
             portalClassName={portalClassName}
             className={cn(
-              "flex max-h-[calc(100dvh-2rem)] flex-col gap-0 p-0",
+              "flex max-h-(--pc-overlay-max-height) flex-col gap-0 p-0",
               width,
             )}
             showCloseButton={false}

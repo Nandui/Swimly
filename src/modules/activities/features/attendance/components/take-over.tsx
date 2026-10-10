@@ -120,7 +120,7 @@ export function TakeOver({
       >
         <DialogContent
           showCloseButton={!pending}
-          className="max-h-[calc(100dvh-2rem)] overflow-y-auto sm:max-w-md"
+          className="max-h-(--pc-overlay-max-height) overflow-y-auto sm:max-w-md"
           aria-busy={pending}
         >
           <div className="min-w-0 flex flex-col gap-4">

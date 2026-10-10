@@ -463,7 +463,7 @@ export function DocumentEditor({
             <h2 id="audience-title">Details and audience</h2>
             <p className="text-sm text-ui-muted-foreground">Who the document is for, and what it links to</p>
           </div>
-          <div className="grid min-w-0 gap-6 md:grid-cols-[repeat(auto-fit,minmax(14rem,1fr))]">
+          <div className="grid min-w-0 gap-6 md:grid-cols-[repeat(auto-fit,minmax(var(--pc-card-min),1fr))]">
             <ChoiceList
               legend="Facilities"
               items={w.facilities}

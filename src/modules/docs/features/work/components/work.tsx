@@ -168,7 +168,7 @@ export function WorkView({ workspace: w, drafts }: { workspace: Workspace; draft
           ) : undefined
         }
       />
-      <div className="grid min-w-0 items-start gap-4 lg:grid-cols-[minmax(0,19rem)_minmax(0,1fr)]">
+      <div className="grid min-w-0 items-start gap-4 lg:grid-cols-[minmax(0,var(--pc-rail-width))_minmax(0,1fr)]">
         <nav className="pc-panel" aria-labelledby="queues-heading">
           <h2 id="queues-heading">Queues</h2>
           <ul className="pc-rows">

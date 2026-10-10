@@ -39,7 +39,7 @@ export function SwimmerBrowser({ students, total, page, pageSize, counts, q, sta
       <PageHeader title="Swimmers" description="Every swimmer across your sites, sorted by surname" actions={<>{parentAction}{addAction}</>} />
       <section className="pc-panel" aria-label="Swimmer directory">
         <div className="flex flex-wrap items-end gap-3">
-          <Form action="/students" className="min-w-0 grow basis-[min(100%,27.5rem)] max-w-[27.5rem]" role="search" aria-label="Swimmers">
+          <Form action="/students" className="min-w-0 grow basis-[min(100%,var(--pc-field-min))] max-w-md" role="search" aria-label="Swimmers">
             {status !== "ALL" ? <input type="hidden" name="status" value={status} /> : null}
             <SearchField id="swimmer-query" label="Find a swimmer" defaultValue={q} placeholder="Name, member number or contact" />
           </Form>

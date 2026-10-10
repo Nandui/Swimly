@@ -19,7 +19,7 @@ export function LinkPicker({ name, options }: { name: string; options: { href: s
           <ChevronDown aria-hidden="true" />
         </Button>
       </DropdownMenuTrigger>
-      <DropdownMenuContent align="end" className="w-64 max-w-[calc(100vw-2rem)]">
+      <DropdownMenuContent align="end" className="w-64 max-w-(--pc-overlay-max-width)">
         {options.map((o) => (
           <DropdownMenuItem key={o.href} asChild className="min-h-11">
             <Link href={o.href} aria-current={o.current ? "page" : undefined}>

@@ -118,7 +118,7 @@ export default async function TasksTodayPage({ searchParams }: { searchParams: P
         {filtered ? <p className="text-xs text-ui-muted-foreground">{tasks.length} of {total} tasks match.</p> : null}
       </section>
 
-      <div className="grid gap-4 lg:grid-cols-[minmax(0,1fr)_20rem] lg:items-start">
+      <div className="grid gap-4 lg:grid-cols-[minmax(0,1fr)_var(--pc-rail-width)] lg:items-start">
         <div className="flex min-w-0 flex-col gap-4">
           {date > day ? (
             <section className="pc-panel" aria-labelledby="tasks-planned">

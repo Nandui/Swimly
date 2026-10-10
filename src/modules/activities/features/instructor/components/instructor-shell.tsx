@@ -46,7 +46,7 @@ export function InstructorShell({
     <div className={`${styles.workspace} shadcn-workspace tf-shell text-ui-foreground`}>
       <a className="skip-link" href="#instructor-main">Skip to content</a>
       {/* The frame's own inset (24px from 768px, a flat 16px frame on phones), capped as in DeckHome. */}
-      <div className="tf-frame" style={{ maxWidth: 1180 }}>
+      <div className="tf-frame" style={{ maxWidth: "var(--pc-deck-width)" }}>
         {banner}
         <header className="tf-top" aria-label="Pool deck tools">
           <Link href={home} className="tf-brand" aria-label="Pool deck classes">

@@ -48,7 +48,7 @@ export default async function AccountPage() {
         }
       />
 
-      <div className="grid gap-4 items-start [grid-template-columns:repeat(auto-fit,minmax(min(100%,360px),1fr))]">
+      <div className="grid gap-4 items-start grid-cols-[repeat(auto-fit,minmax(min(100%,var(--pc-column-min)),1fr))]">
         <section className="pc-panel" aria-labelledby="password-heading">
           <div className="pc-panel-head">
             <h2 id="password-heading" className="text-lg font-semibold">Change your password</h2>

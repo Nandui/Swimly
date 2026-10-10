@@ -88,6 +88,16 @@
   --pc-radius-panel: 24px;
   /* The rounded frame around every module (ModuleShell), square on phones. */
   --pc-radius-frame: 36px;
+  /* Layout sizes (owner decision, 10 October 2026). Overlays, tile grids, side columns and
+     search fields take their size from these, never a one-off length. */
+  --pc-overlay-max-width: calc(100vw - 2rem); /* menus, pickers and dialogs keep a 16px gutter */
+  --pc-overlay-max-height: calc(100dvh - 2rem);
+  --pc-tile-min: 10rem; /* narrowest column of a stats or details grid */
+  --pc-card-min: 14rem; /* narrowest column of a card grid */
+  --pc-column-min: 22rem; /* narrowest wide column: account panels, the page title */
+  --pc-rail-width: 20rem; /* a side column beside the main content */
+  --pc-field-min: 18rem; /* a search or filter field before it wraps */
+  --pc-deck-width: 1180px; /* the pool deck frame */
 
   /* Tailwind's text utilities (shadcn internals and module markup) follow the same scale. */
   --text-xs: var(--pc-text-caption);
