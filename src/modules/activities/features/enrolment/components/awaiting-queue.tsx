@@ -24,7 +24,7 @@ export function AwaitingQueue({ view, total, q, counts, page, pageSize, children
     <section className="pc-panel" aria-label={moves ? "Move queue" : "Enrolment queue"}>
       <div className="min-w-0 flex flex-wrap items-end gap-3">
         <AwaitingNavigation active={view} q={q} counts={counts} />
-        <form action="/awaiting-enrolment" className="min-w-0 flex-[1_1_18rem] md:max-w-md" role="search">
+        <form action="/awaiting-enrolment" className="min-w-0 flex-[1_1_var(--pc-field-min)] md:max-w-md" role="search">
           {moves && <input type="hidden" name="view" value="moves" />}
           <SearchField id="awaiting-swimmer-search" label="Find a swimmer" defaultValue={q} placeholder="Name or member number" maxLength={100} clearHref={moves ? "/awaiting-enrolment?view=moves" : "/awaiting-enrolment"} />
         </form>

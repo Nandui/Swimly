@@ -1,60 +1,10 @@
 {
-  "src/app/academy/[id]/page.tsx": {
-    "turnfin/no-literal-styles": {
-      "count": 1
-    }
-  },
-  "src/app/account/page.tsx": {
-    "turnfin/no-literal-styles": {
-      "count": 1
-    }
-  },
-  "src/app/hr/people/[id]/page.tsx": {
-    "turnfin/no-literal-styles": {
-      "count": 2
-    }
-  },
-  "src/app/tasks/[id]/page.tsx": {
-    "turnfin/no-literal-styles": {
-      "count": 2
-    }
-  },
-  "src/app/tasks/page.tsx": {
-    "turnfin/no-literal-styles": {
-      "count": 1
-    }
-  },
-  "src/app/tasks/reports/page.tsx": {
-    "turnfin/no-literal-styles": {
-      "count": 1
-    }
-  },
   "src/components/auth-frame.tsx": {
     "turnfin/no-literal-styles": {
       "count": 5
     }
   },
-  "src/components/confirm-action.tsx": {
-    "turnfin/no-literal-styles": {
-      "count": 1
-    }
-  },
-  "src/components/form-dialog.tsx": {
-    "turnfin/no-literal-styles": {
-      "count": 1
-    }
-  },
-  "src/components/shadcn/alert-dialog.tsx": {
-    "turnfin/no-literal-styles": {
-      "count": 1
-    }
-  },
   "src/components/shadcn/command.tsx": {
-    "turnfin/no-literal-styles": {
-      "count": 1
-    }
-  },
-  "src/components/shadcn/dialog.tsx": {
     "turnfin/no-literal-styles": {
       "count": 1
     }
@@ -69,57 +19,12 @@
       "count": 2
     }
   },
-  "src/components/staff/role-preview.tsx": {
-    "turnfin/no-literal-styles": {
-      "count": 1
-    }
-  },
-  "src/components/ui-kit/page-header.tsx": {
-    "turnfin/no-literal-styles": {
-      "count": 1
-    }
-  },
   "src/components/ui/account-menu.tsx": {
     "turnfin/no-literal-styles": {
-      "count": 3
-    }
-  },
-  "src/components/ui/club-switcher.tsx": {
-    "turnfin/no-literal-styles": {
-      "count": 1
-    }
-  },
-  "src/components/ui/module-shell.tsx": {
-    "turnfin/no-literal-styles": {
       "count": 2
-    }
-  },
-  "src/components/ui/site-switcher.tsx": {
-    "turnfin/no-literal-styles": {
-      "count": 1
     }
   },
   "src/components/ui/toast.tsx": {
-    "turnfin/no-literal-styles": {
-      "count": 2
-    }
-  },
-  "src/modules/activities/features/assessments/components/session-actions.tsx": {
-    "turnfin/no-literal-styles": {
-      "count": 4
-    }
-  },
-  "src/modules/activities/features/attendance/components/take-over.tsx": {
-    "turnfin/no-literal-styles": {
-      "count": 1
-    }
-  },
-  "src/modules/activities/features/courses/components/add-class.tsx": {
-    "turnfin/no-literal-styles": {
-      "count": 1
-    }
-  },
-  "src/modules/activities/features/courses/components/course-filters.tsx": {
     "turnfin/no-literal-styles": {
       "count": 2
     }
@@ -129,107 +34,7 @@
       "count": 1
     }
   },
-  "src/modules/activities/features/duty/components/billing-review.tsx": {
-    "turnfin/no-literal-styles": {
-      "count": 1
-    }
-  },
-  "src/modules/activities/features/duty/components/cancel-session.tsx": {
-    "turnfin/no-literal-styles": {
-      "count": 1
-    }
-  },
-  "src/modules/activities/features/duty/components/duty-view.tsx": {
-    "turnfin/no-literal-styles": {
-      "count": 1
-    }
-  },
-  "src/modules/activities/features/enrolment/components/awaiting-queue.tsx": {
-    "turnfin/no-literal-styles": {
-      "count": 1
-    }
-  },
-  "src/modules/activities/features/enrolment/components/legend-agreements.tsx": {
-    "turnfin/no-literal-styles": {
-      "count": 1
-    }
-  },
-  "src/modules/activities/features/instructor/components/instructor-shell.tsx": {
-    "turnfin/no-literal-styles": {
-      "count": 1
-    }
-  },
-  "src/modules/activities/features/instructor/components/start-class.tsx": {
-    "turnfin/no-literal-styles": {
-      "count": 1
-    }
-  },
-  "src/modules/activities/features/parents/components/parent-accounts.tsx": {
-    "turnfin/no-literal-styles": {
-      "count": 2
-    }
-  },
-  "src/modules/activities/features/students/components/add-swimmer.tsx": {
-    "turnfin/no-literal-styles": {
-      "count": 1
-    }
-  },
-  "src/modules/activities/features/students/components/profile-action-dialog.tsx": {
-    "turnfin/no-literal-styles": {
-      "count": 2
-    }
-  },
-  "src/modules/activities/features/students/components/profile-enrolments.tsx": {
-    "turnfin/no-literal-styles": {
-      "count": 1
-    }
-  },
-  "src/modules/activities/features/students/components/profile-history.tsx": {
-    "turnfin/no-literal-styles": {
-      "count": 1
-    }
-  },
-  "src/modules/activities/features/students/components/swimmer-browser.tsx": {
-    "turnfin/no-literal-styles": {
-      "count": 2
-    }
-  },
-  "src/modules/activities/features/today/components/instructor-picker.tsx": {
-    "turnfin/no-literal-styles": {
-      "count": 1
-    }
-  },
-  "src/modules/docs/features/editor/components/document-editor.tsx": {
-    "turnfin/no-literal-styles": {
-      "count": 1
-    }
-  },
-  "src/modules/docs/features/home/components/home.tsx": {
-    "turnfin/no-literal-styles": {
-      "count": 1
-    }
-  },
-  "src/modules/docs/features/reader/components/reader.tsx": {
-    "turnfin/no-literal-styles": {
-      "count": 3
-    }
-  },
-  "src/modules/docs/features/reports/components/reports.tsx": {
-    "turnfin/no-literal-styles": {
-      "count": 1
-    }
-  },
-  "src/modules/docs/features/work/components/work.tsx": {
-    "turnfin/no-literal-styles": {
-      "count": 1
-    }
-  },
   "src/modules/purchasing/features/orders/components/order-form.tsx": {
-    "turnfin/no-literal-styles": {
-      "count": 2
-    }
-  },
-  "src/modules/refunds/features/request/components/finance-actions.tsx": {
     "turnfin/no-literal-styles": {
       "count": 1
     }
@@ -237,11 +42,6 @@
   "src/modules/rota/features/plan/components/day-plan.tsx": {
     "turnfin/no-literal-styles": {
       "count": 3
-    }
-  },
-  "src/modules/rota/features/plan/components/link-picker.tsx": {
-    "turnfin/no-literal-styles": {
-      "count": 1
     }
   },
   "src/modules/rota/features/plan/components/people-plan.tsx": {

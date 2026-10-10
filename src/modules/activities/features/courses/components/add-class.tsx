@@ -34,7 +34,7 @@ export function AddClass({ levels, instructors, workingSite }: { levels: LevelOp
   function changeOpen(next: boolean) { if (!pending) { setOpen(next); feedback.reset(); } }
   return <Dialog open={open} onOpenChange={changeOpen}>
     <DialogTrigger asChild><Button><CalendarPlus aria-hidden="true" />Add class</Button></DialogTrigger>
-    <DialogContent className="flex max-h-[90dvh] flex-col gap-0 overflow-hidden p-0 sm:max-w-xl" showCloseButton={false}>
+    <DialogContent className="flex max-h-(--pc-overlay-max-height) flex-col gap-0 overflow-hidden p-0 sm:max-w-xl" showCloseButton={false}>
       <DialogHeader className="shrink-0 p-6"><DialogTitle>Add a class</DialogTitle><DialogDescription>A weekly class at {workingSite}, your current working site.</DialogDescription></DialogHeader>
       <FormFeedbackProvider feedback={feedback}><form ref={formRef} aria-busy={pending} className="flex min-h-0 flex-1 flex-col" onSubmit={event => {
         event.preventDefault(); if (pending) return;

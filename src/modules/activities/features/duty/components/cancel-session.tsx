@@ -22,7 +22,7 @@ export function CancelSession({ course, date, disabled }: { course: DutyClass; d
   const router = useRouter();
   return <Dialog open={open} onOpenChange={value => { if (!pending) setOpen(value); }}>
     <DialogTrigger asChild><Button variant="outline" disabled={disabled} aria-label={`Cancel session: ${course.name}, ${formatTime(course.startMinutes)}`}><CalendarX2 aria-hidden="true" /><span className="pc-only-wide">Cancel session</span></Button></DialogTrigger>
-    <DialogContent showCloseButton={false} className="max-h-[90dvh] overflow-y-auto">
+    <DialogContent showCloseButton={false} className="max-h-(--pc-overlay-max-height) overflow-y-auto">
       <DialogHeader><DialogTitle>Cancel this session?</DialogTitle><DialogDescription>{course.name} · {formatDate(parseDateOnly(date))} · {formatTimeRange(course.startMinutes, course.startMinutes + course.durationMinutes)}</DialogDescription></DialogHeader>
       <p className="text-sm">This cancels today’s session only. The weekly class and enrolments stay in place. The affected swimmers will be added to the billing follow-up list.</p>
       {course.started || course.attendanceRecorded > 0 ? <Notice tone="warning" title="This class has already been started or has attendance recorded." description="Those records will be kept, and further teaching saves will be blocked." /> : null}

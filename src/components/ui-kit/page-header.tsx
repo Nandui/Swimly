@@ -22,7 +22,7 @@ export function PageHeader({
 }) {
   return (
     <div className="min-w-0 flex flex-wrap gap-x-6 gap-y-4 items-end justify-between">
-      <div className="min-w-0 flex flex-col gap-1 grow basis-[min(100%,22rem)]">
+      <div className="min-w-0 flex flex-col gap-1 grow basis-[min(100%,var(--pc-column-min))]">
         {back ? <BackLink href={back.href} label={back.label} /> : null}
         <h1>{title}</h1>
         {description ? (

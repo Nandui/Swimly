@@ -48,7 +48,7 @@ export default async function AcademyCoursePage({ params }: { params: Promise<{ 
 
       <section className="pc-panel" aria-labelledby="ac-facts">
         <div className="pc-panel-head"><h2 id="ac-facts">About the course</h2></div>
-        <dl className="grid gap-4 [grid-template-columns:repeat(auto-fit,minmax(min(100%,160px),1fr))]">
+        <dl className="grid gap-4 grid-cols-[repeat(auto-fit,minmax(min(100%,var(--pc-tile-min)),1fr))]">
           {[
             ["Tutor", course.tutor.name],
             ["Assessor", course.assessor?.name ?? "The tutor"],

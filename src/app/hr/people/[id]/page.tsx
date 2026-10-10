@@ -107,7 +107,7 @@ export default async function HrPersonPage({ params }: { params: Promise<{ id: s
               {notes.map((n) => (
                 <li key={n.id} className="pc-row">
                   {/* A note is prose: it keeps a readable width, and the tag and Withdraw wrap under it. */}
-                  <div className="pc-row-body min-w-[min(100%,18rem)]!">
+                  <div className="pc-row-body min-w-[min(100%,var(--pc-field-min))]!">
                     <span className="pc-row-title">{n.authorName} · {formatDateTime(new Date(n.createdAt))}</span>
                     <p className="text-sm whitespace-pre-wrap break-words">{n.body}</p>
                   </div>
@@ -207,7 +207,7 @@ export default async function HrPersonPage({ params }: { params: Promise<{ id: s
 
 function Facts({ items }: { items: [string, React.ReactNode][] }) {
   return (
-    <dl className="grid gap-4 [grid-template-columns:repeat(auto-fit,minmax(min(100%,180px),1fr))]">
+    <dl className="grid gap-4 grid-cols-[repeat(auto-fit,minmax(min(100%,var(--pc-tile-min)),1fr))]">
       {items.map(([label, value]) => (
         <div key={label} className="min-w-0">
           <dt className="text-xs font-semibold text-ui-muted-foreground">{label}</dt>

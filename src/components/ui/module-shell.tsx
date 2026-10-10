@@ -136,7 +136,7 @@ function PagesMore({ groups, currentFor }: { groups: ModuleLinkGroup[]; currentF
       <DropdownMenuTrigger className="tf-bar-item" aria-current={active ? 'true' : undefined} aria-label={active ? `More pages, including ${active.label}, the current page` : undefined}>
         More<ChevronDown aria-hidden="true" />
       </DropdownMenuTrigger>
-      <DropdownMenuContent align="start" className="w-64 max-w-[calc(100vw-2rem)]">
+      <DropdownMenuContent align="start" className="w-64 max-w-(--pc-overlay-max-width)">
         {groups.map((group) => (
           <DropdownMenuGroup key={group.label || group.links[0].href}>
             {group.label && <DropdownMenuLabel className="text-xs font-semibold text-ui-muted-foreground">{group.label}</DropdownMenuLabel>}
@@ -198,7 +198,7 @@ function ModuleBottomBar({ current }: { current: string }) {
         </a>
       ) : <DropdownMenu>
         <DropdownMenuTrigger className="tf-bottom-item"><span className="tf-bottom-icon"><LayoutGrid aria-hidden="true" /></span><span>More</span></DropdownMenuTrigger>
-        <DropdownMenuContent side="top" align="end" className="w-64 max-w-[calc(100vw-2rem)]">
+        <DropdownMenuContent side="top" align="end" className="w-64 max-w-(--pc-overlay-max-width)">
           {groupFrameModules(rest, groups).map((group) => (
             <DropdownMenuGroup key={group.key}>
               <DropdownMenuLabel className="text-xs font-semibold text-ui-muted-foreground">{group.label}</DropdownMenuLabel>

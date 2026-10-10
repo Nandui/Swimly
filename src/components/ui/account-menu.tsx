@@ -41,7 +41,7 @@ export function AccountMenu({ name, showManageAccount = true }: { name: string; 
           {leaving ? <Loader2 className="animate-spin" aria-hidden="true" /> : <Avatar self aria-hidden="true"><AvatarFallback>{initials(name)}</AvatarFallback></Avatar>}<ChevronDown aria-hidden="true" />
         </Button>
       </DropdownMenuTrigger>
-      <DropdownMenuContent side="bottom" align="end" sideOffset={8} alignOffset={-4} className="tf-account-menu w-80 max-w-[calc(100vw-2rem)]">
+      <DropdownMenuContent side="bottom" align="end" sideOffset={8} alignOffset={-4} className="tf-account-menu w-80 max-w-(--pc-overlay-max-width)">
         <DropdownMenuLabel className="flex items-center gap-3 p-0 text-sm font-normal text-ui-foreground">
           <Avatar size="lg" self aria-hidden="true"><AvatarFallback>{initials(name)}</AvatarFallback></Avatar>
           <span className="min-w-0 break-words">

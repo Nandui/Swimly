@@ -89,7 +89,7 @@ export default async function TaskReportsPage({ searchParams }: { searchParams: 
 
       {r.bySite.length === 0 ? <EmptyState as="h2" icon="building" title="No sites to report on" hint="Tasks: Review at a site shows its reports." /> : tab === "scores" ? (
         <>
-          <div className="grid gap-4 lg:grid-cols-[20rem_minmax(0,1fr)] lg:items-start">
+          <div className="grid gap-4 lg:grid-cols-[var(--pc-rail-width)_minmax(0,1fr)] lg:items-start">
             <section className="pc-panel" aria-labelledby="report-average">
               <div className="pc-panel-head"><h2 id="report-average">Average score</h2></div>
               <p className="pc-stat-figure">{focus.score === null ? "None" : `${focus.score}%`}</p>

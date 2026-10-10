@@ -146,7 +146,7 @@ export function ReportsView({
           </div>
         </li>
       </ul>
-      <div className="grid min-w-0 items-start gap-4 lg:grid-cols-[minmax(0,17rem)_minmax(0,1fr)]">
+      <div className="grid min-w-0 items-start gap-4 lg:grid-cols-[minmax(0,var(--pc-rail-width))_minmax(0,1fr)]">
         <section className="pc-panel" aria-labelledby="report-filter-heading">
           <div className="pc-panel-head">
             <h2 id="report-filter-heading">Filter records</h2>

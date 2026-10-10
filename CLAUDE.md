@@ -399,6 +399,7 @@ Build UI with shadcn/ui themed with the app's design tokens. **Only compose exis
 
 - No literal colours: no hex, `rgb()`, `hsl()` or `oklch()` values. Use the `ui-` colour utilities and the `--pc-*` tokens.
 - No one-off lengths: no pixel numbers and no Tailwind arbitrary values such as `w-[137px]` or `text-[#1a2b3c]`. Use the Tailwind scale and the tokens (`--pc-text-*`, `--pc-control-height`, `--pc-radius-*`, for example `rounded-[var(--pc-radius-card)]`).
+- Layout sizes are tokens too, in `src/app/theme/poolside.css`: `--pc-overlay-max-width` and `--pc-overlay-max-height` for menus, pickers and dialogs, `--pc-tile-min`, `--pc-card-min` and `--pc-column-min` for auto-fit grids, `--pc-rail-width` for a side column, `--pc-field-min` for search fields and `--pc-deck-width` for the pool deck. Use them as `max-h-(--pc-overlay-max-height)` or inside an arbitrary value, such as `grid-cols-[minmax(0,1fr)_var(--pc-rail-width)]`.
 - If something can't be built from existing components and tokens, **ask the user before adding a new token or component.** Never invent one to get past the lint.
 
 Why: most "AI ugliness" comes from inconsistency, not bad taste.

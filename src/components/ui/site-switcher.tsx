@@ -33,7 +33,7 @@ export function SiteSwitcher({ sites, label, clear = [], fallback }: { sites: Si
           <Building2 aria-hidden="true" /><span className="min-w-0 truncate">{current.name}</span><ChevronDown className="ml-auto" aria-hidden="true" />
         </Button>
       </DropdownMenuTrigger>
-      <DropdownMenuContent align="end" className="w-72 max-w-[calc(100vw-2rem)]">
+      <DropdownMenuContent align="end" className="w-72 max-w-(--pc-overlay-max-width)">
         <DropdownMenuLabel>{label}</DropdownMenuLabel>
         <DropdownMenuRadioGroup value={current.id} onValueChange={choose}>
           {sites.map((s) => <DropdownMenuRadioItem key={s.id} value={s.id}>{s.name}</DropdownMenuRadioItem>)}

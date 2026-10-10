@@ -37,7 +37,7 @@ export function ParentAccounts() {
   return <div className="flex flex-col gap-4">
     <form onSubmit={search} className="flex flex-wrap items-end gap-3" aria-label="Find a parent account" aria-busy={pending}>
       <Input type="email" name="email" label="Parent email" value={email} onChange={setEmail} required maxLength={254}
-        autoComplete="off" autoCapitalize="none" spellCheck={false} className="min-w-0 flex-[1_1_16rem] max-w-[27.5rem] [&_input]:min-h-11" disabled={pending} />
+        autoComplete="off" autoCapitalize="none" spellCheck={false} className="min-w-0 flex-[1_1_var(--pc-field-min)] max-w-md [&_input]:min-h-11" disabled={pending} />
       <LoadingButton type="submit" className="min-h-11" pending={pending} pendingLabel="Searching…"><Search aria-hidden="true" />Find account</LoadingButton>
     </form>
     <div ref={resultRef} tabIndex={-1} className="flex flex-col gap-3 rounded-ui-lg focus-visible:outline-2 focus-visible:outline-ui-ring" aria-live="polite">

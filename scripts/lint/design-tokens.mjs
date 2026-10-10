@@ -23,7 +23,8 @@ function problemsIn(text) {
   const colour = hex.exec(text)?.[1] ?? colourFunction.exec(text)?.[1];
   if (colour) problems.push({ messageId: "colour", data: { value: colour } });
   for (const [, inside] of text.matchAll(bracket)) {
-    if (length.test(inside.replace(tokenReference, "").replaceAll("_", " "))) {
+    // min(100%, …) and w-[100%] are not one-off numbers.
+    if (length.test(inside.replace(tokenReference, "").replaceAll("_", " ").replace(/(^|[^\d.])100%/g, "$1"))) {
       problems.push({ messageId: "arbitrary", data: { value: `[${inside}]` } });
     }
   }

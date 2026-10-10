@@ -24,7 +24,7 @@ function mark(value: string | null | undefined) {
 
 export function CompetencyHistory({ studentId, id, name }: { studentId: string; id: string; name: string }) {
   return <Dialog><DialogTrigger asChild><Button variant="ghost" aria-label={`History of ${name}`}><History aria-hidden="true" />History</Button></DialogTrigger>
-    <DialogContent className="max-h-[90dvh] overflow-y-auto sm:max-w-2xl"><DialogHeader><DialogTitle>{name}</DialogTitle><DialogDescription>Recorded competency history. Older records may show only the latest saved mark.</DialogDescription></DialogHeader>
+    <DialogContent className="max-h-(--pc-overlay-max-height) overflow-y-auto sm:max-w-2xl"><DialogHeader><DialogTitle>{name}</DialogTitle><DialogDescription>Recorded competency history. Older records may show only the latest saved mark.</DialogDescription></DialogHeader>
       <HistoryFeed studentId={studentId} query={{ competencyId: id, kind: "competencies" }} />
     </DialogContent>
   </Dialog>;

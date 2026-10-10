@@ -68,7 +68,7 @@ function DialogContent({
       <DialogPrimitive.Content
         data-slot="dialog-content"
         className={cn(
-          "fixed top-1/2 left-1/2 z-50 grid w-full max-w-[calc(100%-2rem)] -translate-x-1/2 -translate-y-1/2 gap-4 rounded-ui-lg border bg-ui-background p-6 shadow-lg ui-motion-surface outline-none data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=closed]:zoom-out-95 data-[state=open]:animate-in data-[state=open]:fade-in-0 data-[state=open]:zoom-in-95 sm:max-w-lg",
+          "fixed top-1/2 left-1/2 z-50 grid w-full max-w-(--pc-overlay-max-width) -translate-x-1/2 -translate-y-1/2 gap-4 rounded-ui-lg border bg-ui-background p-6 shadow-lg ui-motion-surface outline-none data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=closed]:zoom-out-95 data-[state=open]:animate-in data-[state=open]:fade-in-0 data-[state=open]:zoom-in-95 sm:max-w-lg",
           // Titles never run under the X (header 24px in + 40px clears the 44px X at 12px).
           showCloseButton && "[&_[data-slot=dialog-header]]:pr-10",
           className

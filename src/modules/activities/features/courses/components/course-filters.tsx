@@ -44,7 +44,7 @@ export function CourseFilters({ dimensions, q, active, state, todayDay, views, s
   };
   return <div className="min-w-0 flex flex-col gap-4" aria-busy={pending}>
     <div className="min-w-0 flex flex-wrap items-end gap-3">
-      <Form action="/courses" role="search" aria-label="Search weekly classes" className="min-w-0 flex-[1_1_18rem] md:max-w-md">
+      <Form action="/courses" role="search" aria-label="Search weekly classes" className="min-w-0 flex-[1_1_var(--pc-field-min)] md:max-w-md">
         {dimensions.map(d => d.selected ? <input key={d.key} type="hidden" name={d.key} value={d.selected} /> : null)}
         {state === "archived" ? <input type="hidden" name="state" value="archived" /> : null}
         <SearchField id="class-query" label="Find a class" defaultValue={q} placeholder="Class, level, site or instructor" clearHref={href({ q: null })} />
@@ -74,7 +74,7 @@ function FilterPicker({ dimension: d, onPick, disabled }: { dimension: FilterDim
   function select(value: string | null) { setOpen(false); onPick(value); }
   return <Popover open={open} onOpenChange={setOpen}><PopoverTrigger asChild><Button id={id} variant="outline" role="combobox" aria-expanded={open} aria-controls={`${id}-options`} aria-label={`${d.label}: ${chosen}`} disabled={disabled} className="min-w-0 max-w-full">
       <span className="font-normal text-ui-muted-foreground">{d.label}</span><span className="min-w-0 truncate">{chosen}</span><ChevronDown className="shrink-0" aria-hidden="true" />
-    </Button></PopoverTrigger><PopoverContent align="start" aria-label={`${d.label} filter`} className="w-80 max-w-[calc(100vw-2rem)] p-0"><Command>
+    </Button></PopoverTrigger><PopoverContent align="start" aria-label={`${d.label} filter`} className="w-80 max-w-(--pc-overlay-max-width) p-0"><Command>
       <CommandInput placeholder={`Search ${d.label.toLowerCase()}`} aria-label={`Search ${d.label.toLowerCase()}`} />
       <CommandList id={`${id}-options`}><CommandEmpty>No options match.</CommandEmpty><CommandGroup>
         <CommandItem value="__all__" keywords={[all]} onSelect={() => select(null)}>{all}{!d.selected ? <Check className="ml-auto" aria-label="Selected" /> : null}</CommandItem>

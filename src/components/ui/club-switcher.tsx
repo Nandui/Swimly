@@ -29,7 +29,7 @@ export function ClubSwitcher({ club, clubs, touchTargets = false }: { club: Club
     <Button variant="outline" className={cn("w-full min-w-0 justify-start", touchTargets && "min-h-11")} disabled={pending} aria-label={`${club.name}, change site`} title={club.name}>
       {pending ? <Loader2 className="animate-spin" aria-hidden="true" /> : <Building2 aria-hidden="true" />}<span className="min-w-0 truncate">{pending ? "Switching…" : club.name}</span><ChevronDown className="ml-auto" aria-hidden="true" />
     </Button>
-  </DropdownMenuTrigger><DropdownMenuContent align="end" className="w-72 max-w-[calc(100vw-2rem)]">
+  </DropdownMenuTrigger><DropdownMenuContent align="end" className="w-72 max-w-(--pc-overlay-max-width)">
     <DropdownMenuLabel>Working site</DropdownMenuLabel><DropdownMenuRadioGroup value={club.id} onValueChange={choose}>
       {clubs.map(option => <DropdownMenuRadioItem key={option.id} value={option.id} className={touchTargets ? "min-h-11" : undefined}>{option.name}</DropdownMenuRadioItem>)}
     </DropdownMenuRadioGroup>
