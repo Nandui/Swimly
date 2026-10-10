@@ -2,7 +2,8 @@ import "server-only";
 import type { Prisma } from "@/generated/prisma/client";
 import { currentClubIdIfAny } from "@/lib/clubs/current";
 import { liveSitesWithin } from "@/lib/directory";
-import { parseDateOnly } from "@/lib/format";
+import { parseDateOnly, toDateOnlyString as iso } from "@/lib/format";
+export { iso };
 import { prisma } from "@/lib/prisma";
 import { sitesFor } from "@/lib/policy/session";
 import { requireTasksActor, type TasksActor } from "@/modules/tasks/shared/access";
@@ -17,7 +18,6 @@ import {
 
 export type Sites = Awaited<ReturnType<typeof sitesFor>>;
 export const covers = (sites: Sites, siteId: string) => sites.kind === "all" || sites.siteIds.has(siteId);
-export const iso = (d: Date) => d.toISOString().slice(0, 10);
 
 export const asFields = (v: Prisma.JsonValue) => (Array.isArray(v) ? v : []) as unknown as TaskField[];
 export const asSchedules = (v: Prisma.JsonValue) => (Array.isArray(v) ? v : []) as unknown as TaskSchedule[];

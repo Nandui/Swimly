@@ -2,6 +2,7 @@ import { revalidatePath } from "next/cache";
 import { z } from "zod";
 import { departmentIdsOf, liveSiteById } from "@/lib/directory";
 import { parseDateOnly, today } from "@/lib/format";
+export { toDateOnlyString as iso } from "@/lib/format";
 import { prisma } from "@/lib/prisma";
 import { currentActor, mayFor } from "@/lib/policy/session";
 import { canChange } from "@/modules/rota/shared/access";
@@ -14,7 +15,6 @@ import type { Prisma } from "@/generated/prisma/client";
  *  A change to today or an earlier day asks for its reason and goes in the day's log with an
  *  "Update Timepoint" follow-up. Once a week is shared, the people a change moves are told. */
 
-export const iso = (d: Date) => d.toISOString().slice(0, 10);
 export const CLASSES = "activities.classes";
 
 export const changeSchema = z.object({

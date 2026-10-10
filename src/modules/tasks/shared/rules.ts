@@ -1,5 +1,5 @@
 import { Ban, CircleCheck, CircleDashed, Clock3, Hourglass, MinusCircle, ShieldCheck, Archive, Send, TriangleAlert, CircleAlert, Circle, Flag } from "lucide-react";
-import { SCHOOL_TIMEZONE, formatTime, minutesNow } from "@/lib/format";
+import { SCHOOL_TIMEZONE, addDaysIso, formatTime, minutesNow } from "@/lib/format";
 import type { StatusMeta } from "@/lib/status";
 
 /** Tasks' rules, pure so they are tested on their own (docs/tasks.md): what a
@@ -199,7 +199,7 @@ const timeWords = (v: string) => (v === "open" ? "opening" : v === "close" ? "cl
 
 export const isClock = (v: string) => /^([01]\d|2[0-3]):[0-5]\d$/.test(v);
 const dayNumber = (iso: string) => Math.round(Date.parse(`${iso}T12:00:00Z`) / 86_400_000);
-export const addDays = (iso: string, n: number) => new Date(Date.parse(`${iso}T12:00:00Z`) + n * 86_400_000).toISOString().slice(0, 10);
+export const addDays = addDaysIso;
 
 /** Whether a schedule makes a task on this day. A monthly task on the 31st skips shorter months. */
 export function dueOn(s: TaskSchedule, day: string): boolean {

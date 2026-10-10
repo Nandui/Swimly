@@ -4,7 +4,7 @@ import { qualificationsHeldBy } from "@/lib/qualifications";
 import { activityTypesByIds, activityTypesOf } from "@/lib/setup/activity-types";
 import { areaNames } from "@/lib/setup/data";
 import { notFound } from "next/navigation";
-import { parseDateOnly } from "@/lib/format";
+import { parseDateOnly, toDateOnlyString as isoOf } from "@/lib/format";
 import { prisma } from "@/lib/prisma";
 import { mayFor, sitesFor } from "@/lib/policy/session";
 import { requireRotaActor, type RotaActor } from "@/modules/rota/shared/access";
@@ -18,7 +18,6 @@ import { commitmentsFor } from "@/modules/contributions";
  *  engine; a site outside them is a 404, never an empty rota. Every day is laid out by
  *  `buildDay`, so Plan, Today and Turnfin Me agree. */
 
-export const isoOf = (d: Date) => d.toISOString().slice(0, 10);
 const CLASSES = "activities.classes";
 
 export async function rotaSites() {
