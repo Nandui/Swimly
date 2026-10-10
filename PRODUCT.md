@@ -354,8 +354,8 @@ system. See [Legend agreements](docs/legend-agreements.md).
 
 - **Real data, in the live database** (counted 5 October 2026): 2,023 swimmers, 242 weekly
   classes, 2,263 enrolments, assessment sessions and bookings for both sites, imported from the club's
-  legacy system by the scripts under `scripts/import-*.ts`, each of which
-  records what it kept, flagged and left out. These are real children's names
+  legacy system by one-off import scripts (removed after use; they remain in git
+  history). These are real children's names
   and contacts and must never appear outside the app, in screenshots, or in
   marketing.
 - 35 real staff accounts. Development now holds a copy of this real data too, so the same

@@ -45,15 +45,8 @@ and must have their access filter added to the portal before becoming available.
 
 ## Local review
 
-Run `node scripts/reception-portal-preview/serve.mjs --implementation` and open
-`http://127.0.0.1:4200/reception-portal`. This renders the actual portal components
-with fictional staff and isolated form/site actions. Query `access=admin`,
-`access=read` or `access=docs` exercises different grants; `theme=dark` selects
-dark mode. No preview action writes to a database.
-
-The local workspace has no Aquatics database connection configured. Authenticated
-database integration and the live role preference therefore need checking when
-publishing; the local preview does not claim to verify them.
+Check it in a branch preview (Vercel), which uses the development database. Authenticated
+database integration and the live role preference need checking there.
 
 ## Verification (23 September 2026)
 
@@ -81,7 +74,4 @@ portalled dialogs and menus while Reception is mounted, then stops matching
 on other routes. All modules and Aquatics retain their own themes. The shared
 portal frame keeps its single main landmark, working site, appearance and sign-out.
 
-Run node scripts/check-reception-portal.mjs with the implementation preview on
-port 4200 for responsive/theme, restricted access, site switch, form recovery,
-keyboard and theme-isolation checks. The live URL requires authentication;
-verification uses fictional staff and mocked actions, with no database writes.
+The live URL requires authentication; check it in a branch preview.

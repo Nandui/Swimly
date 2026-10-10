@@ -56,22 +56,10 @@ no database or email credentials. Add `?screen=accounts`, `?screen=publication`
 or `?screen=directory`; `?screen=restricted` demonstrates a profile without the
 parent permission. `theme=dark` selects dark appearance.
 
-Run `npx tsx scripts/check-parent-admin.mjs` for the isolated browser workflow
-and the 375, 768, 1024 and 1280px light/dark checks. If Playwright is provided by
-the workspace runtime, set `PLAYWRIGHT_MODULE` to its `playwright/index.mjs`.
-The script creates its own loopback server and closes it afterwards. Review
-captures are stored under ignored `.impeccable/review/parent-admin`.
 Help's guide screenshots of these controls come from the sandbox through
 `scripts/help-screenshots/capture.mjs` (docs/help-centre.md), not from this preview.
 
-For the complete parent-to-staff request check, point the local parent dev server
-at `http://127.0.0.1:4189/api/parent/v1` with its origin set to
-`http://127.0.0.1:3020`, then run `npx tsx scripts/check-parent-access.mjs`.
-It starts its own isolated staff/API preview on port 4189, installs a synthetic
-parent session in a separate browser context, and closes that preview afterwards.
-Authentication email endpoints are disabled in this fixture. Restore the local
-parent server's normal synthetic API URL after checking. Captures are under
-`.impeccable/review/parent-access`.
+Check the full parent-to-staff request flow in a branch preview with a synthetic parent account.
 
 Roll out the staff backend and migration before deploying the parent frontend.
 Development and production share a database: do not use a migration reset or seed.
