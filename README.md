@@ -9,6 +9,8 @@ Prisma 7 with the PostgreSQL driver adapter · Auth.js · Zod.
 
 Read [PRODUCT.md](PRODUCT.md) for product scope, [DESIGN.md](DESIGN.md) for
 the UI and architecture, and [AGENTS.md](AGENTS.md) for working instructions.
+What changed for staff, version by version, is in [CHANGELOG.md](CHANGELOG.md);
+how the code is organised is in [docs/architecture/README.md](docs/architecture/README.md).
 
 Resuming the parent app rollout on another computer? Start with the
 [parent app handover](docs/parent-app-handover.md), dated 14 September 2026.

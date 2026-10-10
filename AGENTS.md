@@ -30,6 +30,9 @@ Do not delegate to subagents unless the user explicitly asks for delegation.
 Report outcomes, relevant evidence and remaining limitations in concise plain
 English; use structured deliverables when the task benefits from them.
 
+Add a plain-language entry to [CHANGELOG.md](CHANGELOG.md) for any change staff will
+notice, and bump `version` in package.json to match.
+
 For code changes, run `npm run typecheck` and `npm run lint`, plus focused checks
 for the behaviour changed. Apply DESIGN.md's screen checklist to screen changes.
 For instruction-only edits, validate instructions, links and diffs instead of
