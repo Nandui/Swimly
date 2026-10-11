@@ -10,7 +10,7 @@ export const academyModule: ModuleManifest = {
   name: "Academy",
   description: "The lifeguard and swim teacher courses we deliver: candidates, checks, registers and results",
   icon: Award,
-  href: "/academy",
+  href: "/academy/overview",
   logName: "Academy",
   access: {
     reach: "sites",

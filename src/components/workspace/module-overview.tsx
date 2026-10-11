@@ -4,15 +4,18 @@ import { Button } from "@/components/shadcn/button";
 import { EmptyState } from "@/components/ui-kit/empty-state";
 import { PageHeader } from "@/components/ui-kit/page-header";
 import { FiguresFailed } from "@/components/home/figures-failed";
-import { ACTION_ICONS, NeedsSummary, PageList, Section, TodayGrid, WaitingList, sortItems, type Placed } from "@/components/home/home-parts";
+import { ACTION_ICONS, NeedsSummary, PageList, Section, Timeline, TodayGrid, WaitingList, sortItems, type Placed } from "@/components/home/home-parts";
+import { minutesNow } from "@/lib/format";
 import type { HomeItem } from "@/modules/contributions";
 
 export type OverviewGroup = { label: string; links: { href: string; label: string; description?: string; icon: LucideIcon }[] };
 
-/** A module's first page, the same shape in every module (DESIGN.md, "Poolside Clear v2"): its
- *  quick actions in the header (the main one last, in blue), today's figures and what waits for
- *  this person side by side, and every page it has with a line on what each is for. The items
- *  are the ones the module gives the home page (`registerHomeCard`), so the two always agree. */
+/** A module's starter page, the same shape in every module (DESIGN.md, "Poolside Clear v2"): its
+ *  quick actions in the header (the main one last, in blue), the day at a glance on a timeline
+ *  when the module has one (the swim school's classes), today's figures and what waits for this
+ *  person side by side, and every page it has with a line on what each is for. The items are
+ *  the ones the module gives Home (`registerHomeCard`), so Home's counts and this page agree.
+ *  Routes reach it through ModuleStart (module-start.tsx). */
 export function ModuleOverview({ name, description, icon, siteName, items, groups, failed = false }: {
   name: string;
   description: string;
@@ -38,16 +41,26 @@ export function ModuleOverview({ name, description, icon, siteName, items, group
     );
   });
   const schedule = timeline[0];
+  const sessions = schedule?.kind === "timeline" ? schedule.sessions : [];
+  // Below 1280px the timeline is the list of what is still on; with nothing left it is not shown.
+  const left = sessions.some((s) => s.state !== "done" && s.state !== "off");
   const pages = groups.filter((group) => group.links.length > 0);
   return (
     <div className="flex min-w-0 flex-col gap-4">
       <PageHeader title={name} description={description} actions={buttons.length ? buttons : undefined} />
       {failed ? <FiguresFailed /> : null}
+      {schedule && (
+        // Below 1280px the grid becomes the list of what is on now and next, and says so.
+        <Section id="overview-timeline" wideOnly={!left}
+          title={<><span className="pc-timeline-wide-only">{schedule.label}</span><span className="pc-timeline-narrow-only">On now and next</span></>}
+          aside={<Button asChild variant="ghost"><Link href={schedule.href}><span className="pc-timeline-wide-only">Open schedule</span><span className="pc-timeline-narrow-only">Schedule</span><ChevronRight aria-hidden="true" /></Link></Button>}>
+          <Timeline sessions={sessions} now={minutesNow()} />
+        </Section>
+      )}
       {(today.length > 0 || waiting.length > 0) && (
         <div className="pc-grid">
           {today.length > 0 && (
-            <Section id="overview-today" title={siteName ? `Today at ${siteName}` : "Today"}
-              aside={schedule ? <Button asChild variant="ghost"><Link href={schedule.href}>Open schedule<ChevronRight aria-hidden="true" /></Link></Button> : undefined}>
+            <Section id="overview-today" title={siteName ? `Today at ${siteName}` : "Today"}>
               <TodayGrid items={today} />
             </Section>
           )}

@@ -9,7 +9,7 @@ The rules for courses, candidates, booking and payment calls are in [docs/academ
 - `course-types` — the course list: what the Academy offers and the qualification each grants (`/academy/types`).
 - `calls` — phoning people who held a place online, to take payment (`/academy/calls`, and from a course).
 - `booking` — the API behind the public booking site `apps/academy` (`/api/academy/v1`): courses on offer, email codes, held places.
-- `workspace` — the Academy frame, its menu and the access check (`src/app/academy/layout.tsx`).
+- `workspace` — the Academy frame, its one page list (`pages.ts`, for the page bar and the starter page `/academy/overview`) and the access check (`src/app/academy/layout.tsx`).
 
 `shared/` holds what two or more features use: the pure rules (`rules.ts`, tested in `rules.test.ts`), the access check (`access.ts`), access at a course's site and page refreshes for writes (`server.ts`), site scoping for reads (`reads.ts`) and the dialogs' common fields (`components/form-kit.tsx`).
 
@@ -32,7 +32,7 @@ The Academy also reads Core's `User`, `Club` and `QualificationType` directly (s
 
 ## Registration (module.ts)
 - Commitments `academy.sessions`: each session for its tutor and assessor, so the Rota shows and counts it.
-- Home card: people to call for payment, registers to take today, courses starting in the next two weeks.
+- Starter page items (`registerHomeCard`; Home counts the ones that need the person): people to call for payment, registers to take today, courses starting in the next two weeks.
 - Menu entry, levels and permissions: `manifest.ts`, listed in `src/app/modules.ts`.
 
 ## Permissions

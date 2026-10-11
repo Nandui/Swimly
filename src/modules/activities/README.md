@@ -19,7 +19,7 @@ It covers both menu entries Swim school (the desk, `src/app/(activities)`) and P
 - `analytics` — the dashboard and the reception, instructor and multiple-places reports (`/analytics`).
 - `parents` — parent accounts and access requests (`/students/parents`), the parent API and the parent-admin API.
 - `instructor` — the pool-deck workspace: today's classes, starting a class, assessments and swimmers (`/instructor`).
-- `workspace` — the swim school frame, its menu and workspace search (`src/app/(activities)/layout.tsx`, `/swim-school`).
+- `workspace` — the swim school frame, its menu (`NAV_ITEMS`, for the page bar and the starter page `/swim-school`) and workspace search (`src/app/(activities)/layout.tsx`).
 
 `shared/` holds what two or more features use, by domain (`shared/<domain>/`):
 - the class, swimmer, enrolment, attendance, progression, assessment and curriculum rules, reads and actions that several screens call;
@@ -31,7 +31,6 @@ The swim school is one tightly linked domain, so about 90 of its 280 files are s
 
 ## Public API (index.ts)
 - `processScheduledUnenrolments()` — runs due unenrolments (session hooks).
-- `SwimSchoolTools`, `dailyPages` — the swim school's top-bar tools and daily pages for the home frame (`src/modules/server.ts`).
 
 ## Data owned
 `prisma/schema/activities.prisma`:
@@ -52,7 +51,7 @@ It never queries Core tables. It reads people and sites through `src/lib/directo
 ## Registration (module.ts)
 - Commitments (`activities.classes`): each class, its time and who teaches it, for the rota. Also `plan`, which records a class's planned teacher.
 - Site summary: programmes, swimmers and classes on Sites.
-- Home cards: Swim school (today's classes and assessments, swimmers awaiting enrolment, parent updates) and Pool deck (the viewer's classes today).
+- Starter page items (`registerHomeCard`; Home counts the ones that need the person): Swim school (today's classes and assessments, swimmers awaiting enrolment, parent updates) and Pool deck (the viewer's classes today).
 - Area rename: classes and assessment sessions follow an area renamed in Admin.
 - Menu entries, levels and permissions: `manifest.ts` (Swim school and Pool deck), listed in `src/app/modules.ts`.
 

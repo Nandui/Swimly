@@ -4,6 +4,13 @@ Patch notes for everyone who uses Turnfin at the swim school, the desk and the o
 
 **How versions are numbered:** the middle number goes up when something new arrives (a module, a screen, a new way of working), and the last number when something is fixed or tidied without changing how you work. This list starts on 3 October 2026, when Turnfin moved to its new look; earlier changes are not listed.
 
+## 1.5.0 · 11 October 2026 · Home opens your modules, and every module has a starting page
+
+- Home is now the place to open your modules: it lists every module your role has, grouped as in the side bar, with a line on what each is for and how many things in it need you.
+- Opening a module takes you to its starting page: its quick actions, what is on today, what is waiting for you, and every page in it. Refunds, Tasks, Training, Academy, HR and Purchasing now have one, like the Swim school, Rota and Admin. "Overview" is the first link in each module's top bar.
+- Today's classes, the swimmer search and the swim school's daily pages are now on the Swim school's starting page and in its top bar, rather than on Home.
+- In Training, the list of people's training is now called "People" in the top bar.
+
 ## 1.4.4 · 11 October 2026 · Rota times in 5-minute steps
 
 - Bookings, activities, people put on them and shifts on the rota can now start and end on any 5-minute step, so a booking can last 10, 15, 25 minutes or any other multiple of 5. The time pickers move in 5-minute steps, like breaks.

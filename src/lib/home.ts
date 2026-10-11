@@ -1,8 +1,6 @@
 import "server-only";
-import { permissionsOf } from "@/lib/authz";
 import { pageSession } from "@/lib/page-guards";
 import { staffApiConfig } from "@/lib/staff-api/config";
-import { visibleScreens } from "@/lib/staff/screens";
 import { prisma } from "@/lib/prisma";
 import { formatDay, today } from "@/lib/format";
 import { getCurrentClub } from "@/lib/clubs/current";
@@ -11,8 +9,8 @@ import { homeCardItems } from "@/modules/server";
 import type { Session } from "next-auth";
 import type { HomeViewer } from "@/modules/contributions";
 
-/** Everything a role's home page shows (docs/how-turnfin-works.md): its name,
- *  the modules the role has, and each module's card lines for this person. */
+/** Everything Home shows (docs/how-turnfin-works.md): the role's name, the modules it has,
+ *  and each module's items for this person, which Home counts. */
 export async function loadHome() {
   const session = await pageSession();
   const user = session.user;
@@ -32,8 +30,6 @@ export async function loadHome() {
     siteName: sites?.club.name ?? null,
     sites,
     moduleIds,
-    /** The screens the person can open, for the top row's pages and search. */
-    screens: visibleScreens(permissionsOf(session)),
     items,
     /** Modules whose figures failed to load, so the page says so rather than leaving them out silently. */
     failed: items.failed ?? [],

@@ -11,7 +11,7 @@ See [docs/rota.md](../../../docs/rota.md).
 - `absences` — reporting absences, extending them and recording returns to work (`/rota/absences`).
 - `me` — a person's own days, for Turnfin Me. Reached through `index.ts`.
 - `person-file` — the rota's parts of a person's file: planned days, absences and changes to their activities.
-- `workspace` — the Rota frame, its menu, overview and the access check (`src/app/rota/layout.tsx`, `/rota/overview`).
+- `workspace` — the Rota frame, its one page list (`shared/components/pages.ts`, for the page bar and the starter page `/rota/overview`) and the access check (`src/app/rota/layout.tsx`).
 
 `shared/` holds what two or more features use: the access check, constants and status metadata, shift and cover rules, the day model, site and activity reads (`data.ts`), the plan and fill actions used by Plan and Today (`actions.ts`), write helpers (`writes.ts`), the area rename and the plan dialogs, fill sheet and change fields.
 
@@ -34,7 +34,7 @@ Rota still reads Core's people, sites, departments, activity types and qualifica
 - Listens to: none.
 
 ## Registration (module.ts)
-- Home card: who is on today and the gaps; for Run, who is off, reporting an absence and returns to work to record.
+- Starter page items (`registerHomeCard`; Home counts the ones that need the person): who is on today and the gaps; for Run, who is off, reporting an absence and returns to work to record.
 - Person file: planned days, absences and returns, changes to their activities.
 - Area rename: activities, repeats and bookings follow an area renamed in Admin.
 - Menu entry, levels and permissions: `manifest.ts`, listed in `src/app/modules.ts`.

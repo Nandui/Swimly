@@ -44,8 +44,8 @@ export function AppChrome({ who, screens, club, clubs, children }: {
 }
 
 /** The swim school's top-bar tools: swimmer search for those who can open Swimmers, then the
- *  working site. The swim school's frame and the home page both use them. */
-export function SwimSchoolTools({ screens, club, clubs }: { screens: Set<ScreenKey>; club: Club; clubs: Club[] }) {
+ *  working site, in the swim school's frame. */
+function SwimSchoolTools({ screens, club, clubs }: { screens: Set<ScreenKey>; club: Club; clubs: Club[] }) {
   const router = useRouter();
   const pathname = usePathname();
   return (

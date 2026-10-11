@@ -10,7 +10,7 @@ export const trainingModule: ModuleManifest = {
   name: "Training",
   description: "Training for the people you cover: what is due, waiting for sign-off and done",
   icon: GraduationCap,
-  href: "/training",
+  href: "/training/overview",
   logName: "Training",
   access: {
     reach: "sites",

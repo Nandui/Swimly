@@ -1,36 +1,35 @@
-import Link from "next/link";
-import { ChevronRight, Smartphone } from "lucide-react";
-import { Button } from "@/components/shadcn/button";
+import { Smartphone } from "lucide-react";
 import { EmptyState } from "@/components/ui-kit/empty-state";
 import { PageHeader } from "@/components/ui-kit/page-header";
 import { FiguresFailed } from "@/components/home/figures-failed";
-import { minutesNow } from "@/lib/format";
-import type { ModuleManifest } from "@/modules/registry";
+import { groupModules, type ModuleManifest } from "@/modules/registry";
 import type { HomeItem } from "@/modules/contributions";
-import { NeedsSummary, QuickActions, Section, Timeline, TodayGrid, WaitingList, sortItems, type Placed } from "@/components/home/home-parts";
+import { NeedsSummary, PageList, Section } from "@/components/home/home-parts";
 
-/** A role's home page (DESIGN.md, "Poolside Clear v2"): the day at a glance on a timeline, then
- *  what waits for this person, today's figures and the quick actions, with the note that their
- *  own things are in Turnfin Me. Modules supply every item (`registerHomeCard`); each module's
- *  own overview carries the rest, and the module bar is the way into each module. */
+/** Home, the hub (DESIGN.md, "Poolside Clear v2"): the modules this person's role opens, under
+ *  their group headings, each with a line on what it is for and how many things in it need
+ *  them. Opening one goes to the module's starter page (its manifest's `href`), which carries
+ *  the module's day, queues and pages. The note says their own things are in Turnfin Me.
+ *  Showing a module is presentation; every module page checks its permission again. */
 export function HomeView({ homeName, roleName, siteName, today, modules, items, failed = [], meUrl = null }: {
   homeName: string;
   roleName: string;
   siteName: string | null;
   today: string;
   modules: readonly ModuleManifest[];
+  /** Each module's items for this person (`registerHomeCard`): Home counts what needs them. */
   items: ReadonlyMap<string, HomeItem[]>;
-  /** Modules whose figures failed to load: a notice says so in place of their panels. */
+  /** Modules whose figures failed to load: a notice says so, as their counts are missing. */
   failed?: readonly string[];
   /** Turnfin Me's address when the staff API is set up; the note links there. */
   meUrl?: string | null;
 }) {
-  const placed: Placed[] = modules.flatMap((mod) => (items.get(mod.id) ?? []).map((item) => ({ ...item, moduleIcon: mod.icon, key: `${mod.id}:${item.label}` })));
-  const { actions, today: todayFacts, timeline, waiting } = sortItems(placed);
-  const needing = [...waiting, ...todayFacts].filter((i) => i.attention).length;
-  const sessions = timeline.flatMap((t) => t.kind === "timeline" ? t.sessions : []);
-  // Below 1280px the timeline is the list of what is still on; with nothing left it is not shown.
-  const left = sessions.some((s) => s.state !== "done" && s.state !== "off");
+  const needs = (id: string) => (items.get(id) ?? []).filter((item) => item.attention).length;
+  const needing = modules.reduce((sum, mod) => sum + needs(mod.id), 0);
+  const groups = groupModules(modules).map((group) => ({
+    label: group.label,
+    links: group.modules.map((mod) => ({ href: mod.href, label: mod.name, description: mod.description, icon: mod.icon, attention: needs(mod.id) })),
+  }));
   const missing = modules.filter((mod) => failed.includes(mod.id)).map((mod) => mod.name);
   const note = (
     <>
@@ -52,35 +51,10 @@ export function HomeView({ homeName, roleName, siteName, today, modules, items, 
       ) : (
         <>
           {missing.length > 0 ? <FiguresFailed modules={missing} /> : null}
-          {sessions.length > 0 && (
-            // Below 1280px the grid becomes the list of what is on now and next, and says so.
-            <Section id="home-timeline" wideOnly={!left}
-              title={<><span className="pc-timeline-wide-only">{timeline[0].label}</span><span className="pc-timeline-narrow-only">On now and next</span></>}
-              aside={<Button asChild variant="ghost"><Link href={timeline[0].href}><span className="pc-timeline-wide-only">Open schedule</span><span className="pc-timeline-narrow-only">Schedule</span><ChevronRight aria-hidden="true" /></Link></Button>}>
-              <Timeline sessions={sessions} now={minutesNow()} />
-            </Section>
-          )}
-          <div className="pc-grid">
-            {waiting.length > 0 && (
-              <Section id="home-waiting" title="Waiting for you">
-                <WaitingList items={waiting} />
-              </Section>
-            )}
-            {/* Today over Quick actions beside Waiting; three across from 1280px. */}
-            <div className="pc-grid-stack">
-              {todayFacts.length > 0 && (
-                <Section id="home-today" title={siteName ? `Today at ${siteName}` : "Today"}>
-                  <TodayGrid items={todayFacts} />
-                </Section>
-              )}
-              {actions.length > 0 ? (
-                <Section id="home-actions" title="Quick actions">
-                  <QuickActions items={actions} />
-                  {meNote}
-                </Section>
-              ) : meNote}
-            </div>
-          </div>
+          <Section id="home-modules" title="Your modules">
+            <PageList groups={groups} />
+          </Section>
+          {meNote}
         </>
       )}
     </div>

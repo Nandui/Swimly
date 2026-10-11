@@ -10,7 +10,7 @@ export const purchasingModule: ModuleManifest = {
   name: "Purchasing",
   description: "Raise purchase orders with approved suppliers, approved by role and amount, numbered per site.",
   icon: ShoppingCart,
-  href: "/purchasing",
+  href: "/purchasing/overview",
   logName: "Purchasing",
   access: {
     reach: "sites",

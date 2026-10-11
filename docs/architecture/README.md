@@ -15,6 +15,10 @@ Turnfin is a modular monolith: one Next.js app and one main database, in layers.
 | Module wiring | `src/modules/server.ts` loads each `module.ts` plug; `src/modules/session-hooks.ts` | same (ADR 0006) |
 | Routes | `src/app` | `src/app` |
 
+## How a module is packaged
+
+Each module is a self-contained package under `src/modules/<id>`: its `manifest.ts` (name, group, levels and the starter page it opens on, its `href`), its `module.ts` plug (home items, person-file sections, commitments), its features and one page list (`features/workspace/pages.ts`) that builds both its page bar and its starter page. Its routes in `src/app` stay thin: the layout checks access and renders the module's shell, and the starter page is one `ModuleStart` call with the module's page list. Home (`/`) is the hub that lists the modules a person's role opens; each opens on its starter page. See [ADR 0007](decisions/0007-home-hub-and-module-starter-pages.md).
+
 ## Module map (approved 9 October 2026)
 
 | Module | Purpose | Tables (`prisma/schema/<file>`) | Talks to others through |
@@ -41,7 +45,7 @@ Modules read those tables only through Core's functions, never with their own qu
 
 ```mermaid
 flowchart TB
-  list["src/app/modules.ts<br/>(every module's manifest.ts)"] --> registry["Core registry<br/>menus, home page, role editor"]
+  list["src/app/modules.ts<br/>(every module's manifest.ts)"] --> registry["Core registry<br/>Home, menus, role editor"]
   subgraph Modules
     activities[Swim school and Pool deck]; academy[Academy]; refunds[Refunds]; tasks[Tasks]
     rota[Rota]; training[Training]; docs[Docs]; hr[HR]; purchasing[Purchasing]

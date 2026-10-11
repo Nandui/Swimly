@@ -121,8 +121,9 @@ export function WaitingList({ items }: { items: Placed[] }) {
   );
 }
 
-/** A module's pages as grouped rows, two or three across when wide. */
-export function PageList({ groups }: { groups: { label: string; links: { href: string; label: string; description?: string; icon: LucideIcon }[] }[] }) {
+/** A module's pages (or, on Home, the person's modules) as grouped rows, two or three across
+ *  when wide. `attention` counts what in it needs the person, shown as a tag. */
+export function PageList({ groups }: { groups: { label: string; links: { href: string; label: string; description?: string; icon: LucideIcon; attention?: number }[] }[] }) {
   return (
     <div className="flex flex-col gap-4">
       {groups.filter((g) => g.links.length).map((group) => (
@@ -134,7 +135,10 @@ export function PageList({ groups }: { groups: { label: string; links: { href: s
                 <Link href={link.href} className="pc-row w-full">
                   <span className="pc-tile-icon"><link.icon aria-hidden="true" /></span>
                   <span className="pc-row-body"><span className="pc-row-title">{link.label}</span>{link.description ? <span className="pc-row-hint">{link.description}</span> : null}</span>
-                  <span className="pc-row-trail"><ChevronRight aria-hidden="true" className="pc-row-chevron" /></span>
+                  <span className="pc-row-trail">
+                    {link.attention ? <Tag meta={HOME_ITEM_META.attention} label={`${link.attention} ${link.attention === 1 ? "needs" : "need"} you`} /> : null}
+                    <ChevronRight aria-hidden="true" className="pc-row-chevron" />
+                  </span>
                 </Link>
               </li>
             ))}
