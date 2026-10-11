@@ -7,7 +7,7 @@ import { departmentById, staffByIds, staffContact } from "@/lib/directory";
 import { isDateOnly, parseDateOnly } from "@/lib/format";
 import { prisma } from "@/lib/prisma";
 import { activityTypeIdsIn, classesActivity } from "@/lib/setup/activity-types";
-import { clock, parseClock } from "@/modules/rota/shared/constants";
+import { clock, parseClock, slotProblem } from "@/modules/rota/shared/constants";
 import { fitsFor } from "@/modules/rota/shared/data";
 import { notifyShiftChange } from "@/lib/staff-api/notify";
 import { commitmentsFor } from "@/modules/contributions";
@@ -37,6 +37,8 @@ export async function savePlanShift(id: string | null, input: PlanShiftInput, ch
   const start = parseClock(data.start), end = parseClock(data.end);
   if (start === null || end === null) return fail("Use times like 07:00.");
   if (end - start < 15) return fail("The shift ends before it starts.");
+  const slot = slotProblem(start, end);
+  if (slot) return fail(slot);
   const before = id ? await prisma.rotaPlanShift.findFirst({ where: { id }, select: { id: true, siteId: true, departmentId: true, date: true, userId: true, startMinutes: true, endMinutes: true } }) : null;
   if (id && !before) return fail("That shift is no longer on the plan.");
   const siteId = before?.siteId ?? data.siteId, departmentId = before?.departmentId ?? data.departmentId, date = before ? iso(before.date) : data.date;

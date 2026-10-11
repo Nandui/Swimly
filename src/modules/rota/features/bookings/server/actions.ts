@@ -7,7 +7,7 @@ import { logAudit } from "@/lib/audit";
 import { isDateOnly, parseDateOnly, today } from "@/lib/format";
 import { prisma } from "@/lib/prisma";
 import { activityTypeById } from "@/lib/setup/activity-types";
-import { BOOKING_KINDS, addDaysIso, bookingDates, parseClock } from "@/modules/rota/shared/constants";
+import { BOOKING_KINDS, addDaysIso, bookingDates, parseClock, slotProblem } from "@/modules/rota/shared/constants";
 import { areaProblem } from "@/lib/setup/data";
 import { notifyShiftChange } from "@/lib/staff-api/notify";
 import { allowedFor, refresh } from "@/modules/rota/shared/writes";
@@ -41,6 +41,8 @@ export async function saveRepeat(input: RepeatInput): Promise<ActionResult> {
   const start = parseClock(data.start), end = parseClock(data.end);
   if (start === null || end === null) return fail("Use times like 09:30.");
   if (end <= start) return fail("It has to end after it starts.");
+  const slot = slotProblem(start, end);
+  if (slot) return fail(slot);
   if (data.lastDay < data.firstDay) return fail("The last day can't be before the first.");
   const found = await activityTypeById(data.typeId);
   const type = found && !found.archivedAt && !found.fromClasses ? found : null;

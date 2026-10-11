@@ -101,6 +101,10 @@ it.
   Then On now, Coming up (three hours), Off today, Changes today with what is still to
   update in Timepoint, and the day note.
 - **Bookings** (`/rota/bookings`): repeating bookings and how many places are still to fill.
+- **Quarter hours** (owner decision, 11 October 2026): bookings, activities, people on them and
+  shifts start and end on a quarter hour, so every length is a multiple of 15 minutes. The save
+  actions refuse anything else (`slotProblem` in `shared/constants.ts`); breaks keep 5-minute steps.
+  Rows saved before this keep their times until someone changes them.
 - **Absences** (`/rota/absences`, Run). The activity list and each site's areas are kept in Admin (docs/admin-setup.md); the plan and bookings pick from them.
 - **Turnfin Me** (`/shifts`): each day the person's department has shared, as their
   activities in order with the breaks placed for them, the shift and paid hours, a
