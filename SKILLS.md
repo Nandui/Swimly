@@ -35,6 +35,46 @@ defined in [AGENTS.md](AGENTS.md).
 - Verify the changed deliverable and applicable project requirements. A suggested
   full audit is not required after every edit. Report unperformed checks honestly.
 
+## Taste skills (Leonxlnx/taste-skill)
+
+All 13 skills from Leonxlnx/taste-skill were added on 11 October 2026 and are kept
+unmodified. `design-taste-frontend` is the main one; its own scope is landing pages
+and portfolios, not dashboards or product UI, so it fits the public Academy booking
+site and marketing-style pages most, but its judgement checks (reading the brief,
+AI tells, copy self-audit, empty, loading and error states, contrast, one accent,
+no em-dashes in UI copy) apply to any screen. The others:
+
+- Style directions: `high-end-visual-design` (soft, premium), `minimalist-ui`,
+  `industrial-brutalist-ui` and `gpt-taste` (GSAP-heavy landing pages). Use one
+  only when the brief asks for that look.
+- `redesign-existing-projects`: audit-first upgrade of an existing screen.
+- Image work: `imagegen-frontend-web`, `imagegen-frontend-mobile`, `brandkit` and
+  `image-to-code` generate reference images, so they need an image tool and
+  synthetic content only.
+- `stitch-design-taste` writes a DESIGN.md for Google Stitch. Write it under a new
+  name or folder; never overwrite Swimly's [DESIGN.md](DESIGN.md).
+- `full-output-enforcement`: complete, untruncated code output.
+- `design-taste-frontend-v1`: the old version, for reference only.
+
+**They may overrule** the house style in [DESIGN.md](DESIGN.md) and the UI rule in
+[CLAUDE.md](CLAUDE.md) section 14 where they are the better call for the screen
+(Fernando, 11 October 2026). When one does, say which rule it overrode and why in
+the change summary. Where they agree, or a skill's advice is only a generic
+default, keep the house style:
+
+- shadcn/ui from `src/components/shadcn` with Poolside Clear tokens, Plus Jakarta
+  Sans, the fin's blue accent and the existing radii. Their font picks (Geist,
+  Satoshi), palette families, icon libraries (they discourage `lucide-react`, which
+  the app uses) and other design systems (Fluent, Carbon, Material) are generic
+  defaults, not reasons to switch.
+- The token lint still runs. Their sample classes (`max-w-[1400px]`, `text-[11px]`,
+  `leading-[1.1]`, `min-h-[100dvh]`, `shadow-[inset…]`, `tracking-tighter`) fail it
+  or DESIGN.md's type check. Where a skill's value is worth keeping, add it as a
+  `--pc-*` token in `src/app/theme/poolside.css` and name the new token in the
+  summary rather than writing a literal.
+- New packages (Motion, GSAP) and external image hosts (Picsum, the Simple Icons
+  CDN) still need Fernando's go-ahead; never ship real swimmer data or photos.
+
 ## Maintenance
 
 `.agents/skills` is the Codex-discovered copy; the other two directories are

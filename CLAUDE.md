@@ -404,6 +404,8 @@ Build UI with shadcn/ui themed with the app's design tokens. **Only compose exis
 
 Why: most "AI ugliness" comes from inconsistency, not bad taste.
 
+Exception (owner decision, 11 October 2026): the taste skills (Leonxlnx/taste-skill, such as `design-taste-frontend`) may overrule this rule where they are the better call for the screen, including adding a `--pc-*` token for a value they need. Say which rule a skill overrode and why. The lint still applies, so a needed value becomes a token, never a literal. See [SKILLS.md](SKILLS.md).
+
 `npm run lint` enforces this for `src/**/*.{ts,tsx}` with `turnfin/no-literal-styles` (`scripts/lint/design-tokens.mjs`). Tests, email templates, the browser theme colour in `src/app/layout.tsx` and the Docs content palette are exempt, because they need literal values. Existing cases waiting for a token decision are listed in `eslint-suppressions.json`. That list only shrinks: when you fix one, run `npx eslint --prune-suppressions`. Never add to it, and never disable the rule inline, without the user's approval.
 
 The rule applies to stylesheets too. Tokens are defined only in `src/app/theme/poolside.css` and `src/app/shadcn.css`; other CSS uses them. The lint does not check CSS files yet.
