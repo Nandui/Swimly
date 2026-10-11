@@ -4,6 +4,12 @@ Patch notes for everyone who uses Turnfin at the swim school, the desk and the o
 
 **How versions are numbered:** the middle number goes up when something new arrives (a module, a screen, a new way of working), and the last number when something is fixed or tidied without changing how you work. This list starts on 3 October 2026, when Turnfin moved to its new look; earlier changes are not listed.
 
+## 1.5.1 · 11 October 2026 · A clearer Home
+
+- Home now shows each group of modules (Front of house, Poolside, Team, Back office) in its own panel, side by side on wide screens, so the list no longer leaves gaps.
+- When something in a module needs you, its row now says what, for example "Refund requests to decide 2", as well as how many things need you.
+- While Home is loading, it shows the outline of your modules straight away instead of waiting on a blank page.
+
 ## 1.5.0 · 11 October 2026 · Home opens your modules, and every module has a starting page
 
 - Home is now the place to open your modules: it lists every module your role has, grouped as in the side bar, with a line on what each is for and how many things in it need you.

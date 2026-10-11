@@ -78,7 +78,7 @@ of prose so a rename does not require rewriting guides.
 | `guides-classes.ts` | Classes and Schedule, desk/Instructor teaching forms, progression, assessments |
 | `guides-management.ts` | Duty manager, cancellation queue, Analytics, curriculum, Staff, Roles (levels), Sites and Activity |
 | `guides-agreements.ts`, `guides-parents.ts` | Legend agreements, parent requests, parent access and accounts, assessment publication |
-| `guides-modules.ts` (Home) | The home page (`src/app/page.tsx`) and docs/staff-app.md for Turnfin Me |
+| `guides-modules.ts` (Home) | The home page (`src/app/(home)/page.tsx`) and docs/staff-app.md for Turnfin Me |
 | `guides-modules.ts` (Refunds) | `src/modules/refunds/features/request/components` (request form, finance actions) |
 | `guides-modules.ts` (Docs) | `src/modules/docs/features/*/components` (home, library, new document, editor, reader) |
 | `guides-modules.ts` (Training) | `src/modules/training/features/*/components/` (course, assignment and sign-off dialogs), Training pages |

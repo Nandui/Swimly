@@ -162,14 +162,20 @@ wide screens and becomes two rows on phones, the other tools moving into More. S
 
 **Home is the hub** (`/`, owner decision 11 October 2026, replacing the 28 September workspace
 home): the page where a person opens the modules their role has. The role's home name as the
-H1, with the date, role and working site beneath and a "things need you" tag (or a gray "All
-clear") counting every module. Then **Your modules**: the shared `PageList` rows under the
-module groups' headings (`MODULE_GROUPS`), each with the module's icon, name and registry
-description, and a "N need you" tag when its items need the person; then the Turnfin Me note
-(a link when Turnfin Me's address is set). The frame has no page bar on Home; the tools are
-the site picker. The counts come from each module's items (`registerHomeCard`), which Home
-only counts; the items themselves show on the module's starter page. A role with no modules
-sees the "Nothing here yet" empty state.
+H1, with the date and "<role> at <site>" beneath and a "things need you" tag (or a gray "All
+clear") counting every module. Then one white panel per module group (`MODULE_GROUPS`), titled
+with the group's name, the panels in two columns from 1024px split so each holds about the same
+number of modules (left column first, in the module bar's order); a role with one group gets
+one full-width panel whose rows go two or three across. Each module is a row with its icon,
+name, registry description and, when its items need the person, a "N need you" tag beside the
+name and the names and counts of up to two of those queues ("and N more" for the rest), so the
+row says what is waiting before it is opened (redesigned with the `design-taste-frontend` skill,
+11 October 2026). Then the Turnfin Me note (a link when Turnfin Me's address is set). The frame
+has no page bar on Home; the tools are the site picker. The counts and queue names come from each
+module's items (`registerHomeCard`); the items themselves open from the module's starter page. A
+role with no modules sees the "Nothing here yet" empty state. The frame is Home's layout
+(`src/app/(home)/layout.tsx`), so while the figures load `HomeLoading` shows Home's shape: the
+title and date line, then group panels of module rows in the same two columns.
 
 **Every module opens on its starter page** (`ModuleOverview` through `ModuleStart`,
 `src/components/workspace/module-start.tsx`; 29 September 2026, for every module since 11
