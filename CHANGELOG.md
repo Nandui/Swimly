@@ -4,10 +4,14 @@ Patch notes for everyone who uses Turnfin at the swim school, the desk and the o
 
 **How versions are numbered:** the middle number goes up when something new arrives (a module, a screen, a new way of working), and the last number when something is fixed or tidied without changing how you work. This list starts on 3 October 2026, when Turnfin moved to its new look; earlier changes are not listed.
 
+## 1.4.4 · 11 October 2026 · Rota times in 5-minute steps
+
+- Bookings, activities, people put on them and shifts on the rota can now start and end on any 5-minute step, so a booking can last 10, 15, 25 minutes or any other multiple of 5. The time pickers move in 5-minute steps, like breaks.
+- This replaces 1.4.3, which had limited rota times to quarter hours.
+
 ## 1.4.3 · 11 October 2026 · Rota times on the quarter hour
 
-- Bookings, activities, people put on them and shifts on the rota now start and end on a quarter hour (09:00, 09:15, 09:30, 09:45). A length like 25 minutes can no longer be saved; Turnfin asks you to pick a quarter hour instead.
-- Breaks are unchanged. Anything already on the rota keeps its times until you change it.
+- Rota times were limited to quarter hours. Replaced the same day by 1.4.4.
 
 ## 1.4.2 · 10 October 2026 · Lighter under the hood
 

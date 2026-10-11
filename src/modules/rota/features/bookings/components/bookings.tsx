@@ -69,8 +69,8 @@ export function BookingDialog({ siteId, today, types, places }: { siteId: string
         </div>
       </fieldset>
       <div className="grid grid-cols-2 gap-4 sm:grid-cols-5">
-        <Field label="Starts" htmlFor="booking-start"><Input id="booking-start" name="start" type="time" required step={900} defaultValue="09:30" className="min-h-11" /></Field>
-        <Field label="Ends" htmlFor="booking-end"><Input id="booking-end" name="end" type="time" required step={900} defaultValue="11:30" className="min-h-11" /></Field>
+        <Field label="Starts" htmlFor="booking-start"><Input id="booking-start" name="start" type="time" required step={300} defaultValue="09:30" className="min-h-11" /></Field>
+        <Field label="Ends" htmlFor="booking-end"><Input id="booking-end" name="end" type="time" required step={300} defaultValue="11:30" className="min-h-11" /></Field>
         <Field label="People" htmlFor="booking-places-n"><Input id="booking-places-n" name="places" type="number" required min={1} max={20} defaultValue={1} className="min-h-11" /></Field>
         <Field label="First day" htmlFor="booking-first"><Input id="booking-first" type="date" required min={addDaysIso(today, 1)} value={firstDay} onChange={(e) => { setFirstDay(e.target.value); if (lastDay < e.target.value) setLastDay(e.target.value); }} className="min-h-11" /></Field>
         <Field label="Last day" htmlFor="booking-last"><Input id="booking-last" type="date" required min={firstDay} value={lastDay} onChange={(e) => setLastDay(e.target.value)} className="min-h-11" /></Field>
