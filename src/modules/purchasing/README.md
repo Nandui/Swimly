@@ -29,7 +29,7 @@ Purchasing also reads Core's `User`, `Club` and `StaffRole` directly (sites, the
 - Listens to: none.
 
 ## Registration (module.ts)
-- Home card: orders to approve, your rejected orders to change, and "Raise a purchase order".
+- Starter page items (`registerHomeCard`; Home counts the ones that need the person): orders to approve, your rejected orders to change, and "Raise a purchase order".
 - Menu entry, levels and permissions: `manifest.ts`, listed in `src/app/modules.ts`.
 
 ## Permissions

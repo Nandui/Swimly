@@ -25,7 +25,7 @@ Every decision is judged against these. Each pillar has one rule that delivers i
 | Clean code | Every module has the same shape: a module description (name, levels, menu, home cards, log name), its data, actions, screens and tests. Modules never import each other, and lint refuses it if they try. | Lint and the module-description tests pass. |
 | Easy to manage | A role is one row for each module and fits on one screen. | An admin can say what a role does by reading it. |
 | Easy to audit | Every change writes one entry to one shared log, in one shape: who, what, which module, which record, when. | Any change can be traced with one search. |
-| Easy to train | The home page shows the job. Every level has one plain sentence, shown where it's set. | This page is enough to train a new manager. |
+| Easy to train | Home shows the job: the modules a role opens, each with its starter page. Every level has one plain sentence, shown where it's set. | This page is enough to train a new manager. |
 | Change without breaking | Modules connect to the rest only through their description. Database changes only add. Every module has its own tests. | Tests pass with any one module switched off. |
 
 ## Levels

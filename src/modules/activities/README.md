@@ -51,7 +51,7 @@ It never queries Core tables. It reads people and sites through `src/lib/directo
 ## Registration (module.ts)
 - Commitments (`activities.classes`): each class, its time and who teaches it, for the rota. Also `plan`, which records a class's planned teacher.
 - Site summary: programmes, swimmers and classes on Sites.
-- Home cards: Swim school (today's classes and assessments, swimmers awaiting enrolment, parent updates) and Pool deck (the viewer's classes today).
+- Starter page items (`registerHomeCard`; Home counts the ones that need the person): Swim school (today's classes and assessments, swimmers awaiting enrolment, parent updates) and Pool deck (the viewer's classes today).
 - Area rename: classes and assessment sessions follow an area renamed in Admin.
 - Menu entries, levels and permissions: `manifest.ts` (Swim school and Pool deck), listed in `src/app/modules.ts`.
 

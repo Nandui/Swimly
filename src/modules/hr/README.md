@@ -25,14 +25,14 @@ HR keeps its records in its own database (`HR_DATABASE_URL`, migrations in `hr-d
 ## Data owned
 In the HR database (not Prisma): `notes`, `reviews`, `access_events`, `audit_events`.
 
-HR's home card counts Core's `StaffDetailChangeRequest`, and a person's file reads Core's people and other modules' records through the `personFile` and `subjectRecords` seams.
+HR's starter-page item counts Core's `StaffDetailChangeRequest`, and a person's file reads Core's people and other modules' records through the `personFile` and `subjectRecords` seams.
 
 ## Events
 - Emits: none.
 - Listens to: none.
 
 ## Registration (module.ts)
-- Home card: details changes to check.
+- Starter page items (`registerHomeCard`; Home counts the ones that need the person): details changes to check.
 - Menu entry, levels and permissions: `manifest.ts`, listed in `src/app/modules.ts`. Only a superadmin gives HR.
 
 ## Permissions

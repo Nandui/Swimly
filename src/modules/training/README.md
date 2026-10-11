@@ -33,7 +33,7 @@ Training also reads and writes Core's qualification records (`Qualification`, `Q
 - Listens to: none.
 
 ## Registration (module.ts)
-- Home card: practical sign-offs, certificates to check, qualifications expiring.
+- Starter page items (`registerHomeCard`; Home counts the ones that need the person): practical sign-offs, certificates to check, qualifications expiring.
 - Person file section `training.open` and subject records `training` (HR's export).
 - Menu entry, levels and permissions: `manifest.ts`, listed in `src/app/modules.ts`.
 

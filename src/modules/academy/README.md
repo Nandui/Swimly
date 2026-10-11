@@ -32,7 +32,7 @@ The Academy also reads Core's `User`, `Club` and `QualificationType` directly (s
 
 ## Registration (module.ts)
 - Commitments `academy.sessions`: each session for its tutor and assessor, so the Rota shows and counts it.
-- Home card: people to call for payment, registers to take today, courses starting in the next two weeks.
+- Starter page items (`registerHomeCard`; Home counts the ones that need the person): people to call for payment, registers to take today, courses starting in the next two weeks.
 - Menu entry, levels and permissions: `manifest.ts`, listed in `src/app/modules.ts`.
 
 ## Permissions

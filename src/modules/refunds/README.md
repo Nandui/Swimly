@@ -30,7 +30,7 @@ Refunds also reads Core's `User` and `Club` directly (sites to choose, a person'
 - Listens to: none.
 
 ## Registration (module.ts)
-- Home card: requests to decide, approved refunds to pay, requests sent back, and "Log a refund request".
+- Starter page items (`registerHomeCard`; Home counts the ones that need the person): requests to decide, approved refunds to pay, requests sent back, and "Log a refund request".
 - Menu entry, levels and permissions: `manifest.ts`, listed in `src/app/modules.ts`.
 
 ## Permissions

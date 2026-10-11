@@ -34,7 +34,7 @@ Tasks also reads Core's `Club`, `StaffRole` and `User` directly (sites, roles a 
 - Listens to: none.
 
 ## Registration (module.ts)
-- Home card: tasks to do today, overdue, to approve, completed with readings out of range, open follow-ups.
+- Starter page items (`registerHomeCard`; Home counts the ones that need the person): tasks to do today, overdue, to approve, completed with readings out of range, open follow-ups.
 - Menu entry, levels and permissions: `manifest.ts`, listed in `src/app/modules.ts`.
 
 ## Permissions

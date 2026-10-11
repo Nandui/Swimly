@@ -32,7 +32,7 @@ In the Docs database (not Prisma): `documents`, `drafts`, `snapshots`, `reviews`
 - Listens to: none.
 
 ## Registration (module.ts)
-- Home card: "Add a document" for writers.
+- Starter page items (`registerHomeCard`; Home counts the ones that need the person): "Add a document" for writers.
 - Menu entry, levels and permissions: `manifest.ts`, listed in `src/app/modules.ts`.
 
 ## Permissions
