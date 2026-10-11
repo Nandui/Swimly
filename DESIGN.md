@@ -173,7 +173,9 @@ row says what is waiting before it is opened (redesigned with the `design-taste-
 11 October 2026). Then the Turnfin Me note (a link when Turnfin Me's address is set). The frame
 has no page bar on Home; the tools are the site picker. The counts and queue names come from each
 module's items (`registerHomeCard`); the items themselves open from the module's starter page. A
-role with no modules sees the "Nothing here yet" empty state.
+role with no modules sees the "Nothing here yet" empty state. The frame is Home's layout
+(`src/app/(home)/layout.tsx`), so while the figures load `HomeLoading` shows Home's shape: the
+title and date line, then group panels of module rows in the same two columns.
 
 **Every module opens on its starter page** (`ModuleOverview` through `ModuleStart`,
 `src/components/workspace/module-start.tsx`; 29 September 2026, for every module since 11
