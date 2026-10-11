@@ -35,6 +35,28 @@ defined in [AGENTS.md](AGENTS.md).
 - Verify the changed deliverable and applicable project requirements. A suggested
   full audit is not required after every edit. Report unperformed checks honestly.
 
+## Taste skill (design-taste-frontend)
+
+`design-taste-frontend` (Leonxlnx/taste-skill, added 11 October 2026) is kept
+unmodified. Its own scope is landing pages and portfolios, not dashboards or
+product UI, so in Swimly it fits the public Academy booking site and marketing-style
+pages best. Use its judgement checks (reading the brief, AI tells, copy self-audit,
+empty, loading and error states, contrast, one accent, no em-dashes in UI copy).
+Where it prescribes a stack or a style, Swimly's rules win: the UI rule in
+[CLAUDE.md](CLAUDE.md) section 14, [DESIGN.md](DESIGN.md) and the lint. In particular:
+
+- Keep shadcn/ui from `src/components/shadcn` with Poolside Clear tokens. Do not
+  reach for Fluent, Carbon, Material or another system, and do not restyle shadcn
+  away from the tokens to avoid its "default state".
+- Keep Plus Jakarta Sans, the fin's blue accent and the existing radii. Ignore its
+  font picks (Geist, Satoshi and so on), palette families and shadow recipes.
+- Its sample classes (`max-w-[1400px]`, `text-[11px]`, `leading-[1.1]`,
+  `min-h-[100dvh]`, `shadow-[inset…]`, `tracking-tighter`, `text-4xl`) break the
+  token lint or DESIGN.md's type check. Use the Tailwind scale and `--pc-*` tokens.
+- Keep `lucide-react`, which the app already uses; do not add Phosphor or Tabler.
+- Do not add Motion, GSAP or other packages, external image hosts (Picsum, Simple
+  Icons CDN) or new tokens without asking Fernando first.
+
 ## Maintenance
 
 `.agents/skills` is the Codex-discovered copy; the other two directories are

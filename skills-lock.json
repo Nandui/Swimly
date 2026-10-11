@@ -13,6 +13,12 @@
       "skillPath": "skills/blueprint/SKILL.md",
       "computedHash": "a9d36b6e2ca0a17298916555f46c450f13686e4970d72d6988167c8c7de99820"
     },
+    "design-taste-frontend": {
+      "source": "Leonxlnx/taste-skill",
+      "sourceType": "github",
+      "skillPath": "skills/taste-skill/SKILL.md",
+      "computedHash": "6d838b246d0e35d0b53f4f23f98ba7a1dd561937e64f7d0c7553b0928e376c3e"
+    },
     "evaluate": {
       "source": "ghaida/intent",
       "sourceType": "github",
