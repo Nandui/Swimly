@@ -81,7 +81,18 @@ export type ModuleManifest = {
   /** How this module names itself in the shared activity log. */
   logName: string;
   access: ModuleAccess;
+  /** The module's starter page: where Home and the module bar open it. */
   href: string;
+};
+
+/** One page a module offers. Each module keeps one list of these (its `pages.ts`), which builds
+ *  both its page bar and "Everything in …" on its starter page, so neither leaves a page out. */
+export type ModulePage = {
+  href: string;
+  label: string;
+  icon: LucideIcon;
+  /** One line on what the page is for, shown on the module's starter page. */
+  description: string;
 };
 
 const groupRank = (mod: ModuleManifest) => MODULE_GROUPS.findIndex((g) => g.key === mod.group);

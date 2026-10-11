@@ -10,7 +10,7 @@ export const hrModule: ModuleManifest = {
   name: "HR",
   description: "Restricted staff files: details, employment, notes and performance reviews for the people you look after",
   icon: HeartHandshake,
-  href: "/hr",
+  href: "/hr/overview",
   logName: "HR",
   access: {
     reach: "everywhere",

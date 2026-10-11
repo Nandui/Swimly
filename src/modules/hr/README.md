@@ -12,7 +12,7 @@ HR keeps its records in its own database (`HR_DATABASE_URL`, migrations in `hr-d
 - `export` — a person's HR records as one download for subject access (`/hr/people/[id]/export`).
 - `details-requests` — details changes sent from Turnfin Me, and their home-page count (`/hr/details-requests`).
 - `me` — what HR has shared with a person, for Turnfin Me: notes and reviews, logging that read, acknowledging a review. Reached through `index.ts`.
-- `workspace` — the HR frame, its menu and the access check (`src/app/hr/layout.tsx`).
+- `workspace` — the HR frame, its one page list (`pages.ts`, for the page bar and the starter page `/hr/overview`) and the access check (`src/app/hr/layout.tsx`).
 
 `shared/` holds what two or more features use: the HR database and its configuration, the access check, statuses, the column lists, the access log and the subject check (`records.ts`), write helpers (`writes.ts`) and the dialogs' kit.
 

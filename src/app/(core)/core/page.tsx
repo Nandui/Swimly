@@ -1,16 +1,14 @@
 import type { Metadata } from "next";
 import { redirect } from "next/navigation";
 import { ADMIN_GROUPS, type CoreLinkKey } from "@/components/core/pages";
-import { ModuleOverview } from "@/components/workspace/module-overview";
+import { ModuleStart } from "@/components/workspace/module-start";
 import { Award, ClipboardCheck, Euro, Files, GraduationCap, Truck, Waves } from "lucide-react";
 import { can, canSee } from "@/lib/authz";
-import { loadModuleOverview } from "@/lib/home";
 import { pageSession } from "@/lib/page-guards";
-import { allModules } from "@/modules/registry";
 
 export const metadata: Metadata = { title: "Admin" };
 
-/** Admin's first page: what waits to be checked (details changes sent from
+/** Admin's starter page: what waits to be checked (details changes sent from
  *  Turnfin Me), and the Admin pages this person can open. Someone who can open
  *  none of them goes Home (their own Account lives outside Admin, at /account);
  *  each page still asks for its own screen and permission. Grouped by topic as the
@@ -33,7 +31,5 @@ export default async function CoreHome() {
   ].flatMap(({ show, ...m }) => (show ? [m] : []));
   if (modules.length) groups.push({ label: "Modules", links: modules });
   if (groups.length === 0) redirect("/");
-  const { items, siteName, failed } = await loadModuleOverview("admin");
-  const mod = allModules().find((m) => m.id === "admin")!;
-  return <ModuleOverview name={mod.name} description={mod.description} icon={mod.icon} siteName={siteName} items={items} failed={failed} groups={groups} />;
+  return <ModuleStart id="admin" groups={groups} />;
 }

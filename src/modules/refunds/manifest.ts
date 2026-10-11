@@ -10,7 +10,7 @@ export const refundsModule: ModuleManifest = {
   name: "Refunds",
   description: "Customer refund requests, finance decisions and completed payments",
   icon: ReceiptText,
-  href: "/refunds",
+  href: "/refunds/overview",
   logName: "Refunds",
   access: {
     reach: "everywhere",

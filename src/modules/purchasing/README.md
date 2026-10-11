@@ -7,7 +7,7 @@ The rules for the screens and approvals are in [docs/purchasing.md](../../../doc
 ## Features
 - `orders` — raise, change, send, approve or reject, cancel and print purchase orders (`/purchasing`, `/purchasing/new`, `/purchasing/[id]`, `/purchasing/[id]/edit`), and the home-page counts.
 - `suppliers` — approved suppliers, their products and prices, and the approval rules by role and amount (`/purchasing/suppliers`, `/purchasing/suppliers/[id]`).
-- `workspace` — the Purchasing frame, its menu and the access check (`src/app/purchasing/layout.tsx`).
+- `workspace` — the Purchasing frame, its one page list (`pages.ts`, for the page bar and the starter page `/purchasing/overview`) and the access check (`src/app/purchasing/layout.tsx`).
 
 `shared/` holds what both features use: approval and money rules (`rules.ts`, pure, tested in `rules.test.ts`), the access check (`access.ts`) and form helpers with page revalidation (`forms.ts`).
 

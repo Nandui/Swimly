@@ -14,7 +14,7 @@ import { formatDate, nameInitials, plural } from "@/lib/format";
 
 export const metadata: Metadata = { title: "Training" };
 
-export default async function TrainingOverviewPage({ searchParams }: { searchParams: Promise<{ view?: string; course?: string; q?: string }> }) {
+export default async function TrainingPeoplePage({ searchParams }: { searchParams: Promise<{ view?: string; course?: string; q?: string }> }) {
   const input = await searchParams;
   const data = await trainingOverview(input);
   const people = data.who.assign ? await assignablePeople() : [];

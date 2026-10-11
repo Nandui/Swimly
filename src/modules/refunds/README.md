@@ -7,7 +7,7 @@ The rules for the screens, statuses and emails are in [docs/refunds.md](../../..
 ## Features
 - `queue` — find, filter and count refund requests (`/refunds`), and the home-page counts of what waits for someone.
 - `request` — log a request, follow it, attach receipts, and for finance decide and record payment (`/refunds/new`, `/refunds/[id]`, `/api/refunds/files`).
-- `workspace` — the Refunds frame, its menu and the access check every Refunds page runs (`src/app/refunds/layout.tsx`).
+- `workspace` — the Refunds frame, its one page list (`pages.ts`, for the page bar and the starter page `/refunds/overview`) and the access check every Refunds page runs (`src/app/refunds/layout.tsx`).
 
 `shared/` holds what two or more features use: the status and service metadata (`types.ts`), validation and transitions (`rules.ts`), the access check (`auth.ts`), the locked, audited mutation (`service.ts`) and the visibility rule (`data.ts`).
 

@@ -32,7 +32,7 @@ export default async function TrainingPersonPage({ params }: { params: Promise<{
   return (
     <>
       <PageHeader
-        back={{ href: "/training", label: "Training" }}
+        back={{ href: "/training", label: "People" }}
         title={data.person.name}
         description={data.person.jobTitle || "Training record"}
         actions={data.canAssign && courses.length > 0 ? <AssignTraining courses={courses} people={[person]} userIds={[person.id]} /> : null}

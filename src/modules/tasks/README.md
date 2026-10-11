@@ -11,7 +11,7 @@ The rules for templates, schedules, scores and follow-ups are in [docs/tasks.md]
 - `sites` — each site's task settings: status, hours, time zone and closed days (`/tasks/sites`, and from the day).
 - `reports` — scores and completion reports with their CSV, the activity log and the JSON export (`/tasks/reports`, `/tasks/activity`, `/tasks/export.json`).
 - `schedule` — the nightly cron that makes the coming days' tasks and freezes yesterday's scores (`/api/cron/tasks`).
-- `workspace` — the Tasks frame, its menu, the site list and the open-action count (`src/app/tasks/layout.tsx`).
+- `workspace` — the Tasks frame, its one page list (`pages.ts`, for the page bar and the starter page `/tasks/overview`), the site list and the open-action count (`src/app/tasks/layout.tsx`).
 
 `shared/` holds what two or more features use: the pure rules (`rules.ts`, tested in `rules.test.ts`), the access check (`access.ts`), reads that make and shape a day's tasks (`data.ts`), what the writes share (`writes.ts`), the status tag and the dialogs' kit.
 

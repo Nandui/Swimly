@@ -12,7 +12,7 @@ The rules for courses, assignments, sign-offs and certificates are in [docs/trai
 - `expiring` — qualifications expired or due soon (`/training/expiring`).
 - `me` — a person's own training for Turnfin Me: their list, completing it, and the reminder digest. Reached through `index.ts`.
 - `person-file` — Training's part of a person's file and their records for HR's subject export.
-- `workspace` — the Training frame, its menu and the access check (`src/app/training/layout.tsx`).
+- `workspace` — the Training frame, its one page list (`pages.ts`, for the page bar and the starter page `/training/overview`) and the access check (`src/app/training/layout.tsx`).
 
 `shared/` holds what two or more features use: statuses and states (`constants.ts`), the access check (`access.ts`), courses and the people a trainer may see (`data.ts`), granting a qualification on completion (`grant.ts`), write helpers (`writes.ts`) and the dialogs' kit.
 

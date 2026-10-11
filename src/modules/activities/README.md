@@ -19,7 +19,7 @@ It covers both menu entries Swim school (the desk, `src/app/(activities)`) and P
 - `analytics` — the dashboard and the reception, instructor and multiple-places reports (`/analytics`).
 - `parents` — parent accounts and access requests (`/students/parents`), the parent API and the parent-admin API.
 - `instructor` — the pool-deck workspace: today's classes, starting a class, assessments and swimmers (`/instructor`).
-- `workspace` — the swim school frame, its menu and workspace search (`src/app/(activities)/layout.tsx`, `/swim-school`).
+- `workspace` — the swim school frame, its menu (`NAV_ITEMS`, for the page bar and the starter page `/swim-school`) and workspace search (`src/app/(activities)/layout.tsx`).
 
 `shared/` holds what two or more features use, by domain (`shared/<domain>/`):
 - the class, swimmer, enrolment, attendance, progression, assessment and curriculum rules, reads and actions that several screens call;
@@ -31,7 +31,6 @@ The swim school is one tightly linked domain, so about 90 of its 280 files are s
 
 ## Public API (index.ts)
 - `processScheduledUnenrolments()` — runs due unenrolments (session hooks).
-- `SwimSchoolTools`, `dailyPages` — the swim school's top-bar tools and daily pages for the home frame (`src/modules/server.ts`).
 
 ## Data owned
 `prisma/schema/activities.prisma`:

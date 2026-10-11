@@ -9,7 +9,7 @@ The rules for courses, candidates, booking and payment calls are in [docs/academ
 - `course-types` — the course list: what the Academy offers and the qualification each grants (`/academy/types`).
 - `calls` — phoning people who held a place online, to take payment (`/academy/calls`, and from a course).
 - `booking` — the API behind the public booking site `apps/academy` (`/api/academy/v1`): courses on offer, email codes, held places.
-- `workspace` — the Academy frame, its menu and the access check (`src/app/academy/layout.tsx`).
+- `workspace` — the Academy frame, its one page list (`pages.ts`, for the page bar and the starter page `/academy/overview`) and the access check (`src/app/academy/layout.tsx`).
 
 `shared/` holds what two or more features use: the pure rules (`rules.ts`, tested in `rules.test.ts`), the access check (`access.ts`), access at a course's site and page refreshes for writes (`server.ts`), site scoping for reads (`reads.ts`) and the dialogs' common fields (`components/form-kit.tsx`).
 

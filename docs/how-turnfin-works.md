@@ -6,7 +6,7 @@
 
 1. **Modules.** Turnfin is a set of modules: Swim school, Pool deck, Tasks, Refunds, Docs, Training, Rota, HR and Admin. Each one keeps its own information to itself.
 2. **Roles.** A role is a job, such as Receptionist or Instructor. For each module the role has a level, like None, Use or Manage. Each level includes the ones before it.
-3. **Home page.** When you sign in you see your role's home page: the modules your role has and what needs you today. The Receptionist's home is Front of House. Modules open inside it.
+3. **Home.** When you sign in you see Home, named for your role (the Receptionist's is Front of House): the modules your role has, each saying how many things in it need you. Opening a module takes you to its starter page, with its day, what waits for you and every page it has.
 4. **Aimed at roles.** Inside a module, things can be aimed at roles: this SOP is for Receptionists and Duty managers, that course is for Instructors.
 5. **Turnfin Me.** Your own things (training, qualifications, shifts and anything HR shares with you) are in Turnfin Me, a separate app on your phone.
 
@@ -55,7 +55,7 @@ A role holds one level for each module (`StaffRole.levels`), plus up to two extr
 
 **Departments** are presentation only. Each module names the part of the centre it serves in one `group` field (`MODULE_GROUPS` in `src/modules/registry.ts`): Front of house (Swim school, Academy, Refunds), Poolside (Pool deck, Tasks), Team (Rota, Training, Docs, HR) and Back office (Purchasing, Admin). The group orders and heads the role editor, the module bar and the home page, and never gives or checks access: that stays role, then level, then permission. The workspace is still the role's home page, named on the role ("Front of House"). In code, say *group*, not "department" (Rota departments are Admin data) or "area" (a site's pools and rooms).
 
-**The home page** is built from each module's card (`registerHomeCard` in `src/modules/contributions.ts`). A module lists only its everyday jobs there, and only what the person can already open.
+**Home and the starter pages.** Home lists the person's modules; each opens on its starter page (the manifest's `href`), the same shape in every module (`ModuleStart`). A module's items (`registerHomeCard` in `src/modules/contributions.ts`) fill its starter page, and Home counts the ones that need the person. A module lists only its everyday jobs there, and only what the person can already open. Each module keeps one list of its pages, which builds both its page bar and its starter page.
 
 **The activity log** names each entry's module and filters by it.
 

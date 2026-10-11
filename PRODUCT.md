@@ -178,14 +178,15 @@ is no longer offered as a screen or landing-page choice.
 
 Turnfin has two front doors (owner decisions, 27 and 28 September 2026). **Turnfin** is the job
 on the centre's registered PCs: after sign-in it opens the role's **home page**, its workspace
-(for example Front of House for a receptionist), with one card for each module the role has:
-Swim school, Pool deck, Refunds, Docs, Training, Rota, HR and Admin. What a role can do is one level for
+(for example Front of House for a receptionist), the hub listing each module the role has:
+Swim school, Pool deck, Refunds, Docs, Training, Rota, HR and Admin. Each module opens on its
+own starter page (owner decision, 11 October 2026). What a role can do is one level for
 each module (docs/how-turnfin-works.md). It holds no personal records. **Turnfin Me**
 (`apps/me`) is each person's own training, required reading, qualifications, shifts, what HR
 shared, their details and reminders, on their own phone, signed in with an email code every
 time (docs/staff-app.md). Bookings is not planned: Legend remains the booking and billing
 system. The home page grants no access: every module checks its own permissions. The
-Reception Portal and the module launcher are retired; their tasks are on the home cards.
+Reception Portal and the old module launcher are retired; their tasks are on the modules' starter pages.
 
 Turnfin Refunds is a separate staff module for any LeisureWorld service.
 Reception drafts/submits customer refund requests; finance reviews them and

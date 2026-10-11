@@ -160,40 +160,35 @@ writing beside the document details from 1100px; its toolbar is one sunken bar t
 wide screens and becomes two rows on phones, the other tools moving into More. See
 [Docs integration](docs/turnfin-docs.md).
 
-**The home page** (`/`, owner decision 28 September 2026) is the role's workspace: the role's
-home name as the H1, with the date, role and working site beneath and a "things need you"
-tag (or a gray "All clear"). The top row is the swim school's when the role has it, as V2Home
-shows: the page bar is Today plus the swim school's daily pages the person can open, and the
-tools are swimmer search and the site picker (`SwimSchoolTools` and `dailyPages`, through the
-`src/modules/server.ts` composition root); otherwise the site picker alone. The working site
-is the one picked, else the person's Main site, else the first of their Works at sites. Then
-**Classes today**, the shared `TimelineGrid` of the day's sessions by pool area (a Waves lane
-row, hours along the top, at most an hour's lead-in, a dashed line at the time now; every block carries
-its `HOME_SESSION_META` tag, so colour is never the only signal). Below 1280px the grid is
-replaced by the "On now and next" list (the panel is titled so, with a "Schedule" link). Then
-**Waiting for you** (counted queues only, needing-you rows first, the first one highlighted,
-each with a caption), **Today at <site>** (figure tiles with their own icon and a singular or
-plural label; a figure that needs the person puts its reason in the tag) over **Quick
-actions** (only when there are some), and the Turnfin Me note (a link when Turnfin Me's
-address is set). The three sit in `.pc-grid`: one column on phones, Waiting beside Today and
-Quick actions from 768px, three across from 1280px. Each module supplies its items
-(`registerHomeCard`); an item's `kind` (`action`, `today`, `timeline`) or its `count` (a
-queue) decides its section, and there are no plain links. The shared pieces live in
-`src/components/home/home-parts.tsx`. Keep it to the everyday jobs and to figures the person
-may already see.
+**Home is the hub** (`/`, owner decision 11 October 2026, replacing the 28 September workspace
+home): the page where a person opens the modules their role has. The role's home name as the
+H1, with the date, role and working site beneath and a "things need you" tag (or a gray "All
+clear") counting every module. Then **Your modules**: the shared `PageList` rows under the
+module groups' headings (`MODULE_GROUPS`), each with the module's icon, name and registry
+description, and a "N need you" tag when its items need the person; then the Turnfin Me note
+(a link when Turnfin Me's address is set). The frame has no page bar on Home; the tools are
+the site picker. The counts come from each module's items (`registerHomeCard`), which Home
+only counts; the items themselves show on the module's starter page. A role with no modules
+sees the "Nothing here yet" empty state.
 
-**A module's first page is its overview** (`ModuleOverview`, 29 September 2026) where the module
-has no natural one: Swim school (`/swim-school`), Rota (`/rota/overview`) and Admin (`/core`).
-The module's name and its registry description as the H1 and line, its quick actions with their
-icons (the module's first action last, in blue), Today (with "Open schedule" when the module has
-a timeline), Waiting for you (the same items it gives the home page, so the two agree; its
-"things need you" counts only those rows), and **Everything in <module>**: one panel of its
-pages as grouped rows (icon, name, one line on what it is for), two columns when wide, or an
-empty state when there is nothing to open at the site. Rota's list comes from
-`src/modules/rota/shared/components/pages.ts`, the same list as its page bar. "Overview"
-is the first link in the module's page bar. Pool deck opens on the deck,
-Docs and Training on their own overviews, Refunds on its requests with their summary, HR on its
-people search. The module
+**Every module opens on its starter page** (`ModuleOverview` through `ModuleStart`,
+`src/components/workspace/module-start.tsx`; 29 September 2026, for every module since 11
+October 2026): the manifest's `href`, where Home and the module rail go. Swim school
+(`/swim-school`), Admin (`/core`) and `/<module>/overview` for Rota, Refunds, Tasks, Training,
+Academy, HR and Purchasing. The module's name and its registry description as the H1 and line,
+its quick actions with their icons (the module's first action last, in blue), the day at a
+glance when the module has a timeline (**Classes today**, the shared `TimelineGrid` of the
+day's sessions by pool area, every block with its `HOME_SESSION_META` tag; below 1280px the
+"On now and next" list with a "Schedule" link), Today (figure tiles) and Waiting for you
+(counted queues, needing-you rows first, the first one highlighted; its "things need you"
+counts only those rows) side by side in `.pc-grid`, and **Everything in <module>**: one panel
+of its pages as grouped rows (icon, name, one line on what it is for), two columns when wide,
+or an empty state when there is nothing to open at the site. Each module keeps one page list
+(`features/workspace/pages.ts`, Rota's in `shared/components/pages.ts`, the swim school's
+`NAV_ITEMS`, Admin's `components/core/pages.ts`) that builds both its page bar and this panel,
+and "Overview" is the first link in the bar. The shared pieces live in
+`src/components/home/home-parts.tsx`. Docs keeps its own overview at `/docs` (search, the
+emergency plans and the collections), and Pool deck opens on the deck. The module
 launcher (`/modules`) and the Reception Portal are retired and redirect to `/`; every shell's
 "All modules" link is now "Home". The supplied transparent Turnfin fin logo lives at
 `public/brand/turnfin.png`.
@@ -396,7 +391,7 @@ line. Multi-line boxes (textareas, notices) use 16px, never a pill.
 - Panels side by side use `.pc-grid` (16px gap): one column on phones, two from 768px, every
   panel in one row from 1280px. A `.pc-grid-stack` keeps its panels in one column below
   1280px; a lone child spans the row, so there is never an empty track.
-- Timelines (the home page's classes) are the shared `TimelineGrid`
+- Timelines (the swim school starter page's classes) are the shared `TimelineGrid`
   (`src/components/workspace/timeline-grid.tsx`): each lane is one rounded row like a list row
   (its name, caption and at most two 44px actions, then its track with faint hour lines and
   the past in the sunken fill), hours as caption labels along the top, blocks placed to the
@@ -694,7 +689,7 @@ instructor view and nothing else. Account is never on the list because it is
 always there. The keyholder guard keeps at least one active account holding
 `staff.manage` and one holding `roles.manage`.
 
-**The home page is the only front door.** `/` is the role's home page; old
+**Home is the only front door.** `/` is Home, the hub; old
 `/start`, `/reception`, `/reception-portal` and `/modules` links redirect to it.
 **Two kinds of navigation, never mixed.** The module rail (bottom bar on phones and touch)
 lists Home and the person's modules (`useYourModules`); the page bar lists only the open

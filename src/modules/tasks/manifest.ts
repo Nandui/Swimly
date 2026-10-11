@@ -12,7 +12,7 @@ export const tasksModule: ModuleManifest = {
   name: "Tasks",
   description: "Each site's daily checks and logs: checklists, readings with acceptable ranges, approval and follow-up actions",
   icon: ClipboardCheck,
-  href: "/tasks",
+  href: "/tasks/overview",
   logName: "Tasks",
   access: {
     reach: "sites",

@@ -1,24 +1,20 @@
 import type { Metadata } from "next";
-import { ModuleOverview } from "@/components/workspace/module-overview";
+import { ModuleStart } from "@/components/workspace/module-start";
 import { permissionsOf } from "@/lib/authz";
-import { loadModuleOverview } from "@/lib/home";
 import { pageSession } from "@/lib/page-guards";
 import { visibleScreens } from "@/lib/staff/screens";
 import { visibleNavGroups } from "@/modules/activities/features/workspace";
-import { allModules } from "@/modules/registry";
 
 export const metadata: Metadata = { title: "Swim school" };
 
-/** The swim school's first page: the desk's quick actions, today at the
- *  working site, the follow-up queues, and every desk page it can open. */
+/** The swim school's starter page: the desk's quick actions, today's classes on a timeline,
+ *  today at the working site, the follow-up queues, and every desk page it can open. */
 export default async function SwimSchoolOverviewPage() {
   const session = await pageSession();
   const screens = visibleScreens(permissionsOf(session));
-  const { items, siteName, failed } = await loadModuleOverview("swim-school");
-  const mod = allModules().find((m) => m.id === "swim-school")!;
   const groups = visibleNavGroups(screens).map((group) => ({
     label: group.label,
-    links: group.items.map(({ href, label, icon, description }) => ({ href, label, icon, description })),
+    links: group.items.map(({ href, label, icon, description }) => ({ href, label, icon, description: description ?? "" })),
   }));
-  return <ModuleOverview name={mod.name} description={mod.description} icon={mod.icon} siteName={siteName} items={items} groups={groups} failed={failed} />;
+  return <ModuleStart id="swim-school" groups={groups} />;
 }
