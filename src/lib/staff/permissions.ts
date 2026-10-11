@@ -203,6 +203,24 @@ export const PERMISSIONS = [
     description: "Approve suppliers and their products and prices, and set who approves orders up to what amount. Includes seeing orders.",
   },
   {
+    key: "incidents.reports.create",
+    group: "Incidents",
+    label: "Report incidents",
+    description: "Report accidents, incidents and near misses at the sites this role covers, and follow their own reports.",
+  },
+  {
+    key: "incidents.reports.review",
+    group: "Incidents",
+    label: "Triage incident reports",
+    description: "See every report at the sites this role covers, injury details included, triage them and close low-risk ones. Never their own. Includes reporting.",
+  },
+  {
+    key: "incidents.reports.signoff",
+    group: "Incidents",
+    label: "Sign off serious incidents",
+    description: "Get the alert when a serious incident is reported at the sites this role covers, and close serious reports. Never their own. Includes triage.",
+  },
+  {
     key: "tasks.complete",
     group: "Tasks",
     label: "Do tasks",
@@ -365,6 +383,8 @@ const IMPLIES: Partial<Record<PermissionKey, PermissionKey[]>> = {
   "setup.areas": ["setup.view"],
   "purchasing.request": ["purchasing.read"],
   "purchasing.manage": ["purchasing.read"],
+  "incidents.reports.review": ["incidents.reports.create"],
+  "incidents.reports.signoff": ["incidents.reports.review", "incidents.reports.create"],
   "tasks.review": ["tasks.complete"],
   "tasks.manage": ["tasks.review", "tasks.complete"],
   "academy.run": ["academy.read"],

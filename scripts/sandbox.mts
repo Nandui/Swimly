@@ -67,11 +67,11 @@ const roles: Record<string, string> = {};
 const levelRoles: { name: string; homeName: string; levels: Record<string, string>; extras?: string[]; system?: boolean }[] = [
   { name: "Admin", homeName: "Management", levels: { admin: "manage" }, system: true },
   { name: "Instructor", homeName: "Pool deck", levels: { "pool-deck": "teach" }, system: true },
-  { name: "Receptionist", homeName: "Front of House", levels: { "swim-school": "desk", refunds: "use", docs: "read", rota: "view", tasks: "do" } },
-  { name: "Lifeguard", homeName: "Poolside", levels: { docs: "read", rota: "view", tasks: "do" } },
-  { name: "Pool supervisor", homeName: "Pool planning", levels: { docs: "read", rota: "plan", academy: "run", tasks: "review" } },
-  { name: "Duty manager", homeName: "Duty desk", levels: { "swim-school": "desk", refunds: "manage", docs: "read", training: "trainer", rota: "manage", academy: "run", tasks: "review" }, extras: ["swim-school.cancel-classes"] },
-  { name: "Swim school manager", homeName: "Swim school office", levels: { "swim-school": "manage", "pool-deck": "lead", docs: "manage", training: "manage", rota: "manage", hr: "team", academy: "manage", tasks: "manage" }, extras: ["swim-school.cancel-classes", "docs.approve"] },
+  { name: "Receptionist", homeName: "Front of House", levels: { "swim-school": "desk", refunds: "use", docs: "read", rota: "view", tasks: "do", incidents: "report" } },
+  { name: "Lifeguard", homeName: "Poolside", levels: { docs: "read", rota: "view", tasks: "do", incidents: "report" } },
+  { name: "Pool supervisor", homeName: "Pool planning", levels: { docs: "read", rota: "plan", academy: "run", tasks: "review", incidents: "investigate" } },
+  { name: "Duty manager", homeName: "Duty desk", levels: { "swim-school": "desk", refunds: "manage", docs: "read", training: "trainer", rota: "manage", academy: "run", tasks: "review", incidents: "investigate" }, extras: ["swim-school.cancel-classes"] },
+  { name: "Swim school manager", homeName: "Swim school office", levels: { "swim-school": "manage", "pool-deck": "lead", docs: "manage", training: "manage", rota: "manage", hr: "team", academy: "manage", tasks: "manage", incidents: "manage" }, extras: ["swim-school.cancel-classes", "docs.approve"] },
 ];
 for (const [i, role] of levelRoles.entries()) {
   const data = { homeName: role.homeName, ...roleColumns({ levels: role.levels, extras: role.extras ?? [] }) };

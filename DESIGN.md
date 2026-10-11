@@ -180,7 +180,7 @@ title and date line, then group panels of module rows in the same two columns.
 **Every module opens on its starter page** (`ModuleOverview` through `ModuleStart`,
 `src/components/workspace/module-start.tsx`; 29 September 2026, for every module since 11
 October 2026): the manifest's `href`, where Home and the module rail go. Swim school
-(`/swim-school`), Admin (`/core`) and `/<module>/overview` for Rota, Refunds, Tasks, Training,
+(`/swim-school`), Admin (`/core`) and `/<module>/overview` for Rota, Refunds, Tasks, Incidents, Training,
 Academy, HR and Purchasing. The module's name and its registry description as the H1 and line,
 its quick actions with their icons (the module's first action last, in blue), the day at a
 glance when the module has a timeline (**Classes today**, the shared `TimelineGrid` of the
