@@ -99,8 +99,8 @@ function FillBody({ gap, live, onClose }: { gap: GapRef; live: boolean; onClose:
               {gap.replace ? <p className="text-sm">{gap.replace.name} is off. The person you choose takes their place{gap.classRefs.length ? "" : " for this time"}.</p> : null}
               {gap.classRefs.length || gap.replace ? null : (
                 <div className="grid grid-cols-2 gap-4">
-                  <Field label="From" htmlFor="rota-fill-from"><Input id="rota-fill-from" name="from" type="time" step={900} defaultValue={clock(gap.start)} min={clock(gap.start)} max={clock(gap.end)} className="min-h-11" /></Field>
-                  <Field label="To" htmlFor="rota-fill-to"><Input id="rota-fill-to" name="to" type="time" step={900} defaultValue={clock(gap.end)} min={clock(gap.start)} max={clock(gap.end)} className="min-h-11" /></Field>
+                  <Field label="From" htmlFor="rota-fill-from"><Input id="rota-fill-from" name="from" type="time" step={300} defaultValue={clock(gap.start)} min={clock(gap.start)} max={clock(gap.end)} className="min-h-11" /></Field>
+                  <Field label="To" htmlFor="rota-fill-to"><Input id="rota-fill-to" name="to" type="time" step={300} defaultValue={clock(gap.end)} min={clock(gap.start)} max={clock(gap.end)} className="min-h-11" /></Field>
                 </div>
               )}
               {live ? <ChangeFields id="rota-fill" suggested="cover" /> : null}

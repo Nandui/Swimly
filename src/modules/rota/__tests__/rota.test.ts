@@ -88,11 +88,12 @@ test("booking dates: the chosen weekdays between the first and last day, skippin
   assert.deepEqual(bookingDates("2026-10-05", "2026-10-11", [0, 2, 4], ["2026-10-07"]), ["2026-10-05", "2026-10-09"]);
 });
 
-test("rota times sit on quarter hours", () => {
+test("rota times move in 5-minute steps", () => {
   assert.equal(slotProblem(570, 690), null, "09:30 to 11:30");
   assert.equal(slotProblem(0, 1440), null, "the whole day");
-  assert.ok(slotProblem(570, 595), "a 25-minute booking");
-  assert.ok(slotProblem(575, 620), "starting off the quarter hour");
+  assert.equal(slotProblem(570, 595), null, "a 25-minute booking");
+  assert.equal(slotProblem(575, 585), null, "a 10-minute booking off the quarter hour");
+  assert.ok(slotProblem(570, 597), "27 minutes is not a 5-minute step");
 });
 
 test("breaks by the house rule, under-18s included", () => {
@@ -293,7 +294,7 @@ test("bookings repeat an activity on their days ahead; cancelling removes the da
   const input = { siteId: churchfield, kind: "school" as const, title: "Example National School", typeId: "t-guard", place: "Learner pool", start: "09:30", end: "11:30", places: 1,
     weekdays: [0, 2], firstDay: first, lastDay: addDaysIso(first, 13), skipDates: [addDaysIso(first, 2)] };
   assert.equal((await actions.saveRepeat({ ...input, typeId: "t-desk" })).ok, false, "not their department");
-  assert.equal((await actions.saveRepeat({ ...input, end: "09:55" })).ok, false, "25 minutes is not a quarter-hour length");
+  assert.equal((await actions.saveRepeat({ ...input, end: "09:57" })).ok, false, "27 minutes is not a 5-minute step");
   assert.equal((await actions.saveRepeat(input)).ok, true);
   const repeat = await fixture.prisma.rotaRepeat.findFirstOrThrow({ where: { title: "Example National School" } });
   const days = await fixture.prisma.rotaNeed.findMany({ where: { repeatId: repeat.id }, orderBy: { date: "asc" } });

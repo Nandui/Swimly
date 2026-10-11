@@ -52,8 +52,8 @@ export function NeedDialog({ siteId, date, live, types, places, need, place, tri
         </Field>
       </div>
       <div className="grid grid-cols-3 gap-4">
-        <Field label="Starts" htmlFor={`${fid}-start`}><Input id={`${fid}-start`} name="start" type="time" step={900} required defaultValue={clock(need?.startMinutes ?? 420)} className="min-h-11" /></Field>
-        <Field label="Ends" htmlFor={`${fid}-end`}><Input id={`${fid}-end`} name="end" type="time" step={900} required defaultValue={clock(need?.endMinutes ?? 1290)} className="min-h-11" /></Field>
+        <Field label="Starts" htmlFor={`${fid}-start`}><Input id={`${fid}-start`} name="start" type="time" step={300} required defaultValue={clock(need?.startMinutes ?? 420)} className="min-h-11" /></Field>
+        <Field label="Ends" htmlFor={`${fid}-end`}><Input id={`${fid}-end`} name="end" type="time" step={300} required defaultValue={clock(need?.endMinutes ?? 1290)} className="min-h-11" /></Field>
         <Field label="People at once" htmlFor={`${fid}-places-n`}><Input id={`${fid}-places-n`} name="places" type="number" min={1} max={20} required defaultValue={need?.places ?? 1} className="min-h-11" /></Field>
       </div>
       <Field label="Note" htmlFor={`${fid}-note`} optional><Input id={`${fid}-note`} name="note" maxLength={300} defaultValue={need?.note ?? ""} className="min-h-11" /></Field>
@@ -92,8 +92,8 @@ export function AssignmentDialog({ live, assignment, trigger }: {
       submitLabel="Save time" successMessage="Time saved"
       submit={(formData) => assign(a.id, { needId: a.needId, place: a.place, userId: a.userId, start: text(formData, "start"), end: text(formData, "end") }, changeOf(formData))}>
       <div className="grid grid-cols-2 gap-4">
-        <Field label="From" htmlFor={`${fid}-start`}><Input id={`${fid}-start`} name="start" type="time" step={900} required defaultValue={clock(a.start)} className="min-h-11" /></Field>
-        <Field label="To" htmlFor={`${fid}-end`}><Input id={`${fid}-end`} name="end" type="time" step={900} required defaultValue={clock(a.end)} className="min-h-11" /></Field>
+        <Field label="From" htmlFor={`${fid}-start`}><Input id={`${fid}-start`} name="start" type="time" step={300} required defaultValue={clock(a.start)} className="min-h-11" /></Field>
+        <Field label="To" htmlFor={`${fid}-end`}><Input id={`${fid}-end`} name="end" type="time" step={300} required defaultValue={clock(a.end)} className="min-h-11" /></Field>
       </div>
       {live ? <ChangeFields id={fid} /> : null}
       <div>

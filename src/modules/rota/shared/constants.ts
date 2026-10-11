@@ -198,13 +198,13 @@ export function parseClock(value: string): number | null {
   return minutes <= 1440 ? minutes : null;
 }
 
-/** Rota times sit on quarter hours, so every booking, activity and shift lasts a multiple of
- *  15 minutes (owner decision, 11 October 2026). Breaks keep their own 5-minute steps. */
-export const SLOT_MINUTES = 15;
+/** Rota times move in 5-minute steps, like breaks, so a booking, activity or shift can last
+ *  10, 15, 25 minutes or any other multiple of 5 (owner decision, 11 October 2026). */
+export const SLOT_MINUTES = 5;
 
-/** Why a start and end can't go on the rota, or null when both sit on a quarter hour. */
+/** Why a start and end can't go on the rota, or null when both sit on a 5-minute step. */
 export function slotProblem(start: number, end: number): string | null {
-  return start % SLOT_MINUTES || end % SLOT_MINUTES ? "Use quarter hours, like 09:00, 09:15, 09:30 or 09:45." : null;
+  return start % SLOT_MINUTES || end % SLOT_MINUTES ? "Use times in 5-minute steps, like 09:00, 09:05 or 09:25." : null;
 }
 
 export function clock(minutes: number) {

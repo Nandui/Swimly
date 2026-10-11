@@ -261,8 +261,8 @@ function OptionRow({ option: o, person, siteId, date, live, canChange, onDone }:
               : assign(null, { needId: o.needId!, place: o.place!, userId: person.userId, start: text(fd, "start"), end: text(fd, "end") }, changeOf(fd))}>
             {o.classRef ? <p className="text-sm tabular-nums">{clock(o.gapStart)} to {clock(o.gapEnd)}{o.detail ? `, ${o.detail}` : ""}.</p> : (
               <div className="grid grid-cols-2 gap-4">
-                <Field label="From" htmlFor={`${fid}-start`}><Input id={`${fid}-start`} name="start" type="time" step={900} required defaultValue={clock(o.start)} min={clock(o.gapStart)} max={clock(o.gapEnd)} className="min-h-11" /></Field>
-                <Field label="To" htmlFor={`${fid}-end`}><Input id={`${fid}-end`} name="end" type="time" step={900} required defaultValue={clock(o.end)} min={clock(o.gapStart)} max={clock(o.gapEnd)} className="min-h-11" /></Field>
+                <Field label="From" htmlFor={`${fid}-start`}><Input id={`${fid}-start`} name="start" type="time" step={300} required defaultValue={clock(o.start)} min={clock(o.gapStart)} max={clock(o.gapEnd)} className="min-h-11" /></Field>
+                <Field label="To" htmlFor={`${fid}-end`}><Input id={`${fid}-end`} name="end" type="time" step={300} required defaultValue={clock(o.end)} min={clock(o.gapStart)} max={clock(o.gapEnd)} className="min-h-11" /></Field>
               </div>
             )}
             {live ? <ChangeFields id={fid} /> : null}
@@ -281,8 +281,8 @@ function ShiftTimes({ title, submitLabel, start, end, live, fid, trigger, submit
   return (
     <FormDialog portalClassName={THEME} title={title} trigger={trigger} submitLabel={submitLabel} successMessage="Shift saved" onSuccess={() => router.refresh()} submit={submit}>
       <div className="grid grid-cols-2 gap-4">
-        <Field label="Starts" htmlFor={`${fid}-start`}><Input id={`${fid}-start`} name="start" type="time" step={900} required defaultValue={clock(start)} className="min-h-11" /></Field>
-        <Field label="Ends" htmlFor={`${fid}-end`}><Input id={`${fid}-end`} name="end" type="time" step={900} required defaultValue={clock(end)} className="min-h-11" /></Field>
+        <Field label="Starts" htmlFor={`${fid}-start`}><Input id={`${fid}-start`} name="start" type="time" step={300} required defaultValue={clock(start)} className="min-h-11" /></Field>
+        <Field label="Ends" htmlFor={`${fid}-end`}><Input id={`${fid}-end`} name="end" type="time" step={300} required defaultValue={clock(end)} className="min-h-11" /></Field>
       </div>
       {live ? <ChangeFields id={fid} /> : null}
     </FormDialog>
@@ -344,8 +344,8 @@ function AddShiftBody({ siteId, departmentId, date, live, onClose }: { siteId: s
     <div className="flex flex-col gap-4 px-6 pb-6">
       <form id={formId} className="flex flex-col gap-4" onSubmit={(ev) => ev.preventDefault()}>
         <div className="grid grid-cols-2 gap-4">
-          <Field label="Starts" htmlFor="rota-add-start"><Input id="rota-add-start" type="time" step={900} value={times.start} onChange={(ev) => setTimes((t) => ({ ...t, start: ev.target.value }))} className="min-h-11" /></Field>
-          <Field label="Ends" htmlFor="rota-add-end"><Input id="rota-add-end" type="time" step={900} value={times.end} onChange={(ev) => setTimes((t) => ({ ...t, end: ev.target.value }))} className="min-h-11" /></Field>
+          <Field label="Starts" htmlFor="rota-add-start"><Input id="rota-add-start" type="time" step={300} value={times.start} onChange={(ev) => setTimes((t) => ({ ...t, start: ev.target.value }))} className="min-h-11" /></Field>
+          <Field label="Ends" htmlFor="rota-add-end"><Input id="rota-add-end" type="time" step={300} value={times.end} onChange={(ev) => setTimes((t) => ({ ...t, end: ev.target.value }))} className="min-h-11" /></Field>
         </div>
         {live ? <ChangeFields id="rota-add" /> : null}
       </form>
