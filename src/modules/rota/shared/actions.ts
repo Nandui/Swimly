@@ -8,7 +8,7 @@ import { isDateOnly, parseDateOnly, today } from "@/lib/format";
 import { prisma } from "@/lib/prisma";
 import { currentActor, mayFor } from "@/lib/policy/session";
 import { activityTypeById, activityTypeIdsIn, classesActivity } from "@/lib/setup/activity-types";
-import { addDaysIso, clock, mondayOf, parseClock } from "@/modules/rota/shared/constants";
+import { addDaysIso, clock, mondayOf, parseClock, slotProblem } from "@/modules/rota/shared/constants";
 import { placeProblem } from "@/modules/rota/shared/cover";
 import { areaProblem } from "@/lib/setup/data";
 import { fitsFor } from "@/modules/rota/shared/data";
@@ -54,6 +54,8 @@ export async function saveNeed(id: string | null, input: NeedInput, changeInput:
   const start = parseClock(data.start), end = parseClock(data.end);
   if (start === null || end === null) return fail("Use times like 07:00.");
   if (end <= start) return fail("It has to end after it starts, on the same day.");
+  const slot = slotProblem(start, end);
+  if (slot) return fail(slot);
   const found = await activityTypeById(data.typeId);
   const type = found && !found.archivedAt && !found.fromClasses ? found : null;
   if (!type) return fail("That activity is no longer on the list.");
@@ -137,6 +139,8 @@ export async function assign(id: string | null, input: AssignInput, changeInput:
   const data = parsed.data;
   const start = parseClock(data.start), end = parseClock(data.end);
   if (start === null || end === null) return fail("Use times like 07:00.");
+  const slot = slotProblem(start, end);
+  if (slot) return fail(slot);
   const need = await prisma.rotaNeed.findFirst({ where: { id: data.needId }, select: { id: true, siteId: true, date: true, place: true, startMinutes: true, endMinutes: true, places: true, typeId: true,
     assignments: { select: { id: true, needId: true, place: true, userId: true, startMinutes: true, endMinutes: true } } } }).then(withType);
   if (!need) return fail("That activity is no longer on the plan.");

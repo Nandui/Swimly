@@ -4,6 +4,11 @@ Patch notes for everyone who uses Turnfin at the swim school, the desk and the o
 
 **How versions are numbered:** the middle number goes up when something new arrives (a module, a screen, a new way of working), and the last number when something is fixed or tidied without changing how you work. This list starts on 3 October 2026, when Turnfin moved to its new look; earlier changes are not listed.
 
+## 1.4.3 · 11 October 2026 · Rota times on the quarter hour
+
+- Bookings, activities, people put on them and shifts on the rota now start and end on a quarter hour (09:00, 09:15, 09:30, 09:45). A length like 25 minutes can no longer be saved; Turnfin asks you to pick a quarter hour instead.
+- Breaks are unchanged. Anything already on the rota keeps its times until you change it.
+
 ## 1.4.2 · 10 October 2026 · Lighter under the hood
 
 Nothing changes in how you use Turnfin. Behind the scenes:

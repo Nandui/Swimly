@@ -14,7 +14,7 @@ import { Tag } from "@/components/ui-kit/tag";
 import { ChangeFields, changeOf } from "@/modules/rota/shared/components/change-fields";
 import { assign, planTeacher } from "@/modules/rota/shared/actions";
 import { removePlanShift, saveBreaks, savePlanShift, whoForShift } from "@/modules/rota/features/plan/server/actions";
-import { clock, parseClock } from "@/modules/rota/shared/constants";
+import { clock, parseClock, slotProblem } from "@/modules/rota/shared/constants";
 import type { Person, ShiftOption } from "@/modules/rota/shared/day";
 import type { Fit } from "@/modules/rota/shared/fit";
 import { ROTA_FIT_META, ROTA_SHIFT_NOTE_META, qualificationShort } from "@/modules/rota/shared/meta";
@@ -316,7 +316,8 @@ function AddShiftBody({ siteId, departmentId, date, live, onClose }: { siteId: s
   const [error, setError] = useState<string | null>(null);
   const [pending, start] = useTransition();
   const s = parseClock(times.start), e = parseClock(times.end);
-  const valid = s !== null && e !== null && e - s >= 15;
+  const slot = s !== null && e !== null ? slotProblem(s, e) : null;
+  const valid = s !== null && e !== null && e - s >= 15 && !slot;
   useEffect(() => {
     if (!valid) return;
     let stale = false;
@@ -327,7 +328,7 @@ function AddShiftBody({ siteId, departmentId, date, live, onClose }: { siteId: s
   function put(userId: string) {
     const fd = new FormData(document.getElementById(formId) as HTMLFormElement);
     const change = changeOf(fd);
-    if (!valid) { setError("The shift ends before it starts."); return; }
+    if (!valid) { setError(slot ?? "The shift ends before it starts."); return; }
     if (live && !change.reason) { setError("This day has come. Choose why it changed first."); return; }
     start(async () => {
       setError(null);
