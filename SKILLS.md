@@ -39,23 +39,29 @@ defined in [AGENTS.md](AGENTS.md).
 
 `design-taste-frontend` (Leonxlnx/taste-skill, added 11 October 2026) is kept
 unmodified. Its own scope is landing pages and portfolios, not dashboards or
-product UI, so in Swimly it fits the public Academy booking site and marketing-style
-pages best. Use its judgement checks (reading the brief, AI tells, copy self-audit,
-empty, loading and error states, contrast, one accent, no em-dashes in UI copy).
-Where it prescribes a stack or a style, Swimly's rules win: the UI rule in
-[CLAUDE.md](CLAUDE.md) section 14, [DESIGN.md](DESIGN.md) and the lint. In particular:
+product UI, so it fits the public Academy booking site and marketing-style pages
+most, but its judgement checks (reading the brief, AI tells, copy self-audit,
+empty, loading and error states, contrast, one accent, no em-dashes in UI copy)
+apply to any screen.
 
-- Keep shadcn/ui from `src/components/shadcn` with Poolside Clear tokens. Do not
-  reach for Fluent, Carbon, Material or another system, and do not restyle shadcn
-  away from the tokens to avoid its "default state".
-- Keep Plus Jakarta Sans, the fin's blue accent and the existing radii. Ignore its
-  font picks (Geist, Satoshi and so on), palette families and shadow recipes.
-- Its sample classes (`max-w-[1400px]`, `text-[11px]`, `leading-[1.1]`,
-  `min-h-[100dvh]`, `shadow-[inset…]`, `tracking-tighter`, `text-4xl`) break the
-  token lint or DESIGN.md's type check. Use the Tailwind scale and `--pc-*` tokens.
-- Keep `lucide-react`, which the app already uses; do not add Phosphor or Tabler.
-- Do not add Motion, GSAP or other packages, external image hosts (Picsum, Simple
-  Icons CDN) or new tokens without asking Fernando first.
+**It may overrule** the house style in [DESIGN.md](DESIGN.md) and the UI rule in
+[CLAUDE.md](CLAUDE.md) section 14 where it is the better call for the screen
+(Fernando, 11 October 2026). When it does, say which rule it overrode and why in
+the change summary. Where they agree, or the skill's advice is only a generic
+default, keep the house style:
+
+- shadcn/ui from `src/components/shadcn` with Poolside Clear tokens, Plus Jakarta
+  Sans, the fin's blue accent and the existing radii. Its font picks (Geist,
+  Satoshi), palette families, icon libraries (it discourages `lucide-react`, which
+  the app uses) and other design systems (Fluent, Carbon, Material) are generic
+  defaults, not reasons to switch.
+- The token lint still runs. Its sample classes (`max-w-[1400px]`, `text-[11px]`,
+  `leading-[1.1]`, `min-h-[100dvh]`, `shadow-[inset…]`, `tracking-tighter`) fail it
+  or DESIGN.md's type check. Where the skill's value is worth keeping, add it as a
+  `--pc-*` token in `src/app/theme/poolside.css` and name the new token in the
+  summary rather than writing a literal.
+- New packages (Motion, GSAP) and external image hosts (Picsum, the Simple Icons
+  CDN) still need Fernando's go-ahead; never ship real swimmer data or photos.
 
 ## Maintenance
 
