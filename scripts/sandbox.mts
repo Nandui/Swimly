@@ -148,7 +148,7 @@ if (existsSync(new URL(seedModule, import.meta.url))) {
 }
 await prisma.$disconnect();
 
-console.log(`[sandbox] Seeded a fictional leisure group (Riverside and Hillview). Sign in as alex@sandbox.invalid (superadmin), maya@ (duty manager), sam@ (pool supervisor), liam@, ava@, noah@ or riley@sandbox.invalid with the sandbox password in scripts/sandbox.mts.`);
+console.log(`[sandbox] Seeded a fictional leisure group (Riverside and Hillview). Sign in as alex@sandbox.invalid (superadmin), maya@ (duty manager), sam@ (pool supervisor), orla@ (centre manager), owen@ (operations manager), liam@, ava@, noah@ or riley@sandbox.invalid with the sandbox password in scripts/sandbox.mts.`);
 const env = {
   ...process.env,
   DATABASE_URL: mainUrl, DIRECT_URL: mainUrl, DOCS_DATABASE_URL: docsUrl, DOCS_DIRECT_URL: docsUrl,

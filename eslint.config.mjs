@@ -49,7 +49,7 @@ const workModules = {
   purchasing: workArea("purchasing"),
   academy: workArea("academy", "src/app/api/academy/**"),
   tasks: workArea("tasks", "src/app/api/cron/tasks/**"),
-  incidents: workArea("incidents"),
+  incidents: workArea("incidents", "src/app/api/incidents/**", "src/app/api/cron/incidents/**"),
 };
 const moduleFiles = { activities: activitiesFiles, ...workModules };
 const allModuleFiles = Object.values(moduleFiles).flat();

@@ -1,13 +1,13 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
-import { headers } from "next/headers";
 import { fail, ok, type ActionResult } from "@/lib/action-result";
 import { AuthorizationError } from "@/lib/authz";
 import { liveSiteById } from "@/lib/directory";
 import { requireCapFor } from "@/lib/policy/session";
 import { prisma } from "@/lib/prisma";
 import { requireIncidentsActor } from "@/modules/incidents/shared/access";
+import { requestOrigin } from "@/modules/incidents/shared/origin";
 import { addendumSchema, isSerious, reportProblem, reportSchema, type ReportInput } from "@/modules/incidents/shared/rules";
 import { lockReport, recordEvent, reportRights } from "@/modules/incidents/shared/service";
 import { deliverAlerts, queueAlerts } from "@/modules/incidents/features/report/server/alerts";
@@ -15,13 +15,6 @@ import { deliverAlerts, queueAlerts } from "@/modules/incidents/features/report/
 /** Reporting (docs/incidents.md). Anyone with `incidents.reports.create` at
  *  the site reports; submitting locks their words, and a serious report alerts
  *  the managers straight after it is saved. Every write is audited. */
-
-async function origin() {
-  const h = await headers();
-  const host = h.get("x-forwarded-host") ?? h.get("host") ?? "localhost:3000";
-  const proto = h.get("x-forwarded-proto") ?? (host.startsWith("localhost") ? "http" : "https");
-  return `${proto}://${host}`;
-}
 
 export async function submitReport(input: ReportInput): Promise<ActionResult & { id?: string }> {
   const who = await requireIncidentsActor();
@@ -49,7 +42,7 @@ export async function submitReport(input: ReportInput): Promise<ActionResult & {
     if (serious) await queueAlerts(tx, row);
     return row;
   });
-  if (serious) await deliverAlerts(report.id, await origin());
+  if (serious) await deliverAlerts(report.id, await requestOrigin());
   revalidatePath("/incidents", "layout");
   return { ...ok(), id: report.id };
 }

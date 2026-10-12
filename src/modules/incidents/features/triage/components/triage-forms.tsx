@@ -39,12 +39,12 @@ export function TriageForm({ id, version, hasChild }: { id: string; version: num
   const [error, setError] = useState<string | null>(null);
   const [actual, setActual] = useState("");
   const [potential, setPotential] = useState("");
-  const [hsa, setHsa] = useState({ staffOffOver3Days: false, publicToDoctor: false, deathOrDangerous: false });
+  const [hsa, setHsa] = useState({ staffOffOver3Days: false, publicToDoctor: false, deathOrDangerous: false, fatal: false });
   const [parentInformed, setParentInformed] = useState("");
   const [outcome, setOutcome] = useState<"" | "investigate" | "close">("");
   const [note, setNote] = useState("");
   const level = actual && potential ? levelOf(Number(actual), Number(potential)) : 0;
-  const reportable = hsa.staffOffOver3Days || hsa.publicToDoctor || hsa.deathOrDangerous;
+  const reportable = hsa.staffOffOver3Days || hsa.publicToDoctor || hsa.deathOrDangerous || hsa.fatal;
   const mayClose = level > 0 && level <= 2 && !reportable;
 
   function save(event: React.FormEvent) {
@@ -70,10 +70,11 @@ export function TriageForm({ id, version, hasChild }: { id: string; version: num
       </div>
       <fieldset className="space-y-2">
         <legend className="text-sm font-semibold">Does the Health and Safety Authority need a report?</legend>
-        <p className="text-sm text-ui-muted-foreground">Tick any that apply. Any tick means it is reported to the HSA within 10 working days.</p>
-        <ChoiceRow type="checkbox" id="inc-hsa-staff" title="A staff member is off work for more than 3 days" hint="Not counting the day it happened" checked={hsa.staffOffOver3Days} onCheckedChange={(on) => setHsa((h) => ({ ...h, staffOffOver3Days: on === true }))} />
-        <ChoiceRow type="checkbox" id="inc-hsa-public" title="A member of the public went to a doctor or hospital because of it" checked={hsa.publicToDoctor} onCheckedChange={(on) => setHsa((h) => ({ ...h, publicToDoctor: on === true }))} />
-        <ChoiceRow type="checkbox" id="inc-hsa-death" title="Someone died, or it is a dangerous occurrence" hint="Such as a chlorine gas release" checked={hsa.deathOrDangerous} onCheckedChange={(on) => setHsa((h) => ({ ...h, deathOrDangerous: on === true }))} />
+        <p className="text-sm text-ui-muted-foreground">Tick any that apply. Any tick means it is reported to the HSA within 10 working days, or 5 after a death.</p>
+        <ChoiceRow type="checkbox" id="inc-hsa-staff" title="A staff member can't do their normal work for more than 3 days in a row" hint="Not counting the day it happened" checked={hsa.staffOffOver3Days} onCheckedChange={(on) => setHsa((h) => ({ ...h, staffOffOver3Days: on === true }))} />
+        <ChoiceRow type="checkbox" id="inc-hsa-public" title="A member of the public was taken from here to a hospital or doctor for treatment" checked={hsa.publicToDoctor} onCheckedChange={(on) => setHsa((h) => ({ ...h, publicToDoctor: on === true }))} />
+        <ChoiceRow type="checkbox" id="inc-hsa-dangerous" title="It is a dangerous occurrence" hint="Such as an uncontrolled release of chlorine or another chemical, even if nobody was hurt" checked={hsa.deathOrDangerous} onCheckedChange={(on) => setHsa((h) => ({ ...h, deathOrDangerous: on === true }))} />
+        <ChoiceRow type="checkbox" id="inc-hsa-death" title="Someone died" hint="Phone the HSA or the Gardaí now if nobody has. The written report is due within 5 working days." checked={hsa.fatal} onCheckedChange={(on) => setHsa((h) => ({ ...h, fatal: on === true }))} />
       </fieldset>
       {hasChild ? (
         <Field label="Who told the child's parent or guardian, and when" htmlFor="inc-parent">
@@ -98,12 +99,16 @@ export function TriageForm({ id, version, hasChild }: { id: string; version: num
 
 /** Close a report under investigation: what was found and what changed, and
  *  the HSA reference when one was due. Serious and moderate ones need a manager. */
-export function CloseForm({ id, version, hsaDue }: { id: string; version: number; hsaDue: string | null }) {
+export function CloseForm({ id, version, hsaDue, openActions = 0, missingRootCause = false }: { id: string; version: number; hsaDue: string | null; openActions?: number; missingRootCause?: boolean }) {
   const router = useRouter();
   const [pending, start] = useTransition();
   const [error, setError] = useState<string | null>(null);
   const [note, setNote] = useState("");
   const [hsaReference, setHsaReference] = useState("");
+  const blockers = [
+    openActions ? `${openActions === 1 ? "One action is" : `${openActions} actions are`} still open: mark ${openActions === 1 ? "it" : "them"} done or cancel ${openActions === 1 ? "it" : "them"} under Investigation.` : null,
+    missingRootCause ? "Record the root cause under Investigation." : null,
+  ].filter((b): b is string => b !== null);
 
   function save(event: React.FormEvent) {
     event.preventDefault();
@@ -122,6 +127,7 @@ export function CloseForm({ id, version, hsaDue }: { id: string; version: number
         <h2 id="inc-close">Close the report</h2>
         <p className="text-sm text-ui-muted-foreground">Closing locks it. The reporter sees your note, so write it for them too.</p>
       </div>
+      {blockers.length ? <Notice tone="warning" title="Not ready to close" description={blockers.join(" ")} /> : null}
       {hsaDue ? (
         <Field label="HSA report reference" htmlFor="inc-hsa-ref" hint={`The IR1 or IR3 reference, or the date it was sent. Due by ${hsaDue}.`}>
           <Input id="inc-hsa-ref" value={hsaReference} onChange={(e) => setHsaReference(e.target.value)} maxLength={200} required />
@@ -131,7 +137,7 @@ export function CloseForm({ id, version, hsaDue }: { id: string; version: number
         <Textarea id="inc-close-note" value={note} onChange={(e) => setNote(e.target.value)} rows={4} required minLength={10} maxLength={4000} />
       </Field>
       {error ? <Notice tone="error" live="alert" title={error} /> : null}
-      <div><Button type="submit" className="min-h-11" disabled={pending}><Lock aria-hidden="true" />{pending ? "Closing" : "Close and lock"}</Button></div>
+      <div><Button type="submit" className="min-h-11" disabled={pending || blockers.length > 0}><Lock aria-hidden="true" />{pending ? "Closing" : "Close and lock"}</Button></div>
     </form>
   );
 }

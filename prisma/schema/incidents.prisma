@@ -40,7 +40,11 @@ model IncidentReport {
   severityPotential Int?
   /// Whether it must be reported to the Health and Safety Authority, decided at triage.
   hsaReportable     Boolean?
-  /// The date the HSA report is due by (10 working days after the event).
+  /// Someone died (Irish law, S.I. 370/2016 reg. 225): the HSA or the Gardaí are
+  /// told at once by the quickest means, and the written report is due within
+  /// 5 working days rather than 10.
+  hsaFatal          Boolean   @default(false)
+  /// The date the HSA report is due by (10 working days after the event, 5 for a death).
   hsaDueOn          String?
   /// The IR1 or IR3 reference, or the date it was sent.
   hsaReference      String    @default("")
@@ -54,6 +58,10 @@ model IncidentReport {
   closedById        String?
   closedByName      String?
   closedAt          DateTime?
+  /// The investigation (phase 2, 12 October 2026): up to five "why?" answers,
+  /// each asking why of the one before, and the root cause they lead to.
+  whys              String[]  @default([])
+  rootCause         String    @default("")
 
   version           Int       @default(0)
   createdAt         DateTime  @default(now())
@@ -64,6 +72,9 @@ model IncidentReport {
   events        IncidentEvent[]
   reads         IncidentAccessEvent[]
   notifications IncidentNotification[]
+  statements    IncidentStatement[]
+  actions       IncidentAction[]
+  files         IncidentFile[]
 
   @@index([siteId, status])
   @@index([reporterId])
@@ -158,4 +169,81 @@ model IncidentNotification {
 
   @@index([reportId])
   @@map("incidents_notifications")
+}
+
+/// A statement taken during an investigation: someone's own account, written
+/// down by the investigator. Locked once saved; a correction is a new statement.
+model IncidentStatement {
+  id             String   @id @default(cuid())
+  reportId       String
+  /// Who gave it, and as what ("Aoife, lifeguard on the slide").
+  givenBy        String
+  givenAs        String   @default("")
+  /// The day it was given (YYYY-MM-DD).
+  takenOn        String
+  text           String
+  recordedById   String
+  recordedByName String
+  createdAt      DateTime @default(now())
+
+  report IncidentReport @relation(fields: [reportId], references: [id], onDelete: Restrict)
+
+  @@index([reportId])
+  @@map("incidents_statements")
+}
+
+/// A corrective action: what will change so it does not happen again, who
+/// owns it and by when. A report closes only when none is left open.
+model IncidentAction {
+  id                String    @id @default(cuid())
+  reportId          String
+  title             String
+  ownerId           String
+  ownerName         String
+  /// YYYY-MM-DD
+  dueOn             String
+  /// open | done | cancelled
+  status            String    @default("open")
+  /// What was done, or why it was dropped.
+  note              String    @default("")
+  doneById          String?
+  doneByName        String?
+  doneAt            DateTime?
+  createdById       String
+  createdByName     String
+  createdAt         DateTime  @default(now())
+  /// The emails to the owner: when it was given to them, the day before it is
+  /// due and the day after it was due. An error stays for the investigators.
+  assignedEmailAt   DateTime?
+  dueEmailAt        DateTime?
+  overdueEmailAt    DateTime?
+  emailError        String?
+
+  report IncidentReport @relation(fields: [reportId], references: [id], onDelete: Restrict)
+
+  @@index([reportId])
+  @@index([status, dueOn])
+  @@index([ownerId, status])
+  @@map("incidents_actions")
+}
+
+/// A photo or document added to a report. Kept in the database like refund
+/// receipts; removing one hides it but keeps the record.
+model IncidentFile {
+  id          String    @id @default(cuid())
+  reportId    String
+  name        String
+  mime        String
+  size        Int
+  bytes       Bytes
+  addedById   String
+  addedByName String
+  createdAt   DateTime  @default(now())
+  removedAt   DateTime?
+  removedById String?
+
+  report IncidentReport @relation(fields: [reportId], references: [id], onDelete: Restrict)
+
+  @@index([reportId])
+  @@map("incidents_files")
 }

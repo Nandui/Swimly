@@ -1,4 +1,4 @@
-import { CheckCheck, CircleAlert, CircleCheck, CircleDot, Inbox, OctagonAlert, ScanSearch, TriangleAlert } from "lucide-react";
+import { Ban, CheckCheck, CircleAlert, CircleCheck, CircleDot, Clock, Inbox, OctagonAlert, ScanSearch, TriangleAlert } from "lucide-react";
 import type { StatusMeta } from "@/lib/status";
 
 /** Where a report is (docs/incidents.md). Each status has its own icon shape,
@@ -71,7 +71,30 @@ export const incidentActions = {
   triage: "Triaged",
   close: "Closed",
   addendum: "Addendum",
+  statement: "Statement taken",
+  investigation: "Investigation updated",
+  action_add: "Action raised",
+  action_done: "Action done",
+  action_cancel: "Action cancelled",
+  file_add: "File added",
+  file_remove: "File removed",
+  reopen: "Reopened",
 } as const;
+export type IncidentActionKey = keyof typeof incidentActions;
+
+/** A corrective action's state. Overdue is an open action past its due day. */
+export const actionStatuses = {
+  open: { label: "Open", color: "blue", icon: CircleDot },
+  overdue: { label: "Overdue", color: "red", icon: Clock },
+  done: { label: "Done", color: "green", icon: CircleCheck },
+  cancelled: { label: "Cancelled", color: "gray", icon: Ban },
+} satisfies Record<string, StatusMeta>;
+export type ActionStatus = keyof typeof actionStatuses;
+export const actionStatus = (a: { status: string; dueOn: string }, today: string): ActionStatus =>
+  a.status === "open" ? (a.dueOn < today ? "overdue" : "open") : (a.status as ActionStatus);
+
+/** How many "why?" answers an investigation goes to. */
+export const MAX_WHYS = 5;
 
 export const incidentNumber = (n: number) => `INC-${String(n).padStart(5, "0")}`;
 

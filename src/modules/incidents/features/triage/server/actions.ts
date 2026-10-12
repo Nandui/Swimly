@@ -58,8 +58,10 @@ export async function closeReport(id: string, version: number, input: CloseInput
   const parsed = closeSchema.safeParse(input);
   if (!parsed.success) return fail(parsed.error.issues[0].message);
   try {
-    // The sign-off that counts is at this report's site, not anywhere.
-    const change = closeDecision(row, { ...who, signoff: rights.signoff }, parsed.data);
+    // The sign-off that counts is at this report's site, not anywhere. Raising
+    // or finishing an action bumps the version, so the count is checked by it.
+    const openActions = await prisma.incidentAction.count({ where: { reportId: id, status: "open" } });
+    const change = closeDecision(row, { ...who, signoff: rights.signoff }, parsed.data, openActions);
     const result = await prisma.$transaction(async (tx) => {
       await lockReport(tx, id);
       const changed = await tx.incidentReport.updateMany({

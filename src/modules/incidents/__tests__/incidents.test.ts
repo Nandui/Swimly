@@ -2,6 +2,7 @@ import assert from "node:assert/strict";
 import { after, before, test } from "node:test";
 import { isolatedPrisma } from "@/test/pglite-prisma";
 import { serverModule } from "@/test/server-module";
+import { addDaysIso, today } from "@/lib/format";
 import { expandPermissions, type PermissionKey } from "@/lib/staff/permissions";
 
 /** Incidents end to end on an isolated database: reporting at your own sites,
@@ -11,6 +12,10 @@ let fixture: Awaited<ReturnType<typeof isolatedPrisma>>;
 let report: typeof import("../features/report/server/actions");
 let triage: typeof import("../features/triage/server/actions");
 let data: typeof import("../features/reports/server/data");
+let work: typeof import("../features/investigation/server/actions");
+let mineData: typeof import("../features/investigation/server/data");
+let emails: typeof import("../features/investigation/server/emails");
+let files: typeof import("../features/files/server/files");
 const ORG = "org_leisureworld";
 type GrantRow = { roleName: string; permissions: string[]; screens: string[]; scopeKind: string; scopeId: string };
 const state = { id: "mia", permissions: [] as string[], grants: [] as GrantRow[] };
@@ -56,6 +61,10 @@ before(async () => {
   report = serverModule("src/modules/incidents/features/report/server/actions.ts", d);
   triage = serverModule("src/modules/incidents/features/triage/server/actions.ts", d);
   data = serverModule("src/modules/incidents/features/reports/server/data.ts", d);
+  work = serverModule("src/modules/incidents/features/investigation/server/actions.ts", d);
+  mineData = serverModule("src/modules/incidents/features/investigation/server/data.ts", d);
+  emails = serverModule("src/modules/incidents/features/investigation/server/emails.ts", d);
+  files = serverModule("src/modules/incidents/features/files/server/files.ts", d);
 });
 after(async () => { await fixture?.close(); });
 
@@ -109,10 +118,102 @@ test("a serious accident alerts everyone who triages at the site, and only a man
   assert.equal(seen.can.close, false, "moderate and worse need a manager");
   assert.equal(await fixture.prisma.incidentAccessEvent.count({ where: { reportId: row.id, actorId: "dan" } }), 1, "opening the injury details is logged");
 
+  const triaged = await fixture.prisma.incidentReport.findUniqueOrThrow({ where: { id: row.id } });
+  assert.equal((await work.saveInvestigation(row.id, triaged.version, { whys: ["The rail had no padding"], rootCause: "Rail padding was never fitted." })).ok, true);
+
   as("gina", ["incidents.reports.signoff"]);
   assert.equal((await data.incidentCounts()).toSignOff, 1);
   const version = (await fixture.prisma.incidentReport.findUniqueOrThrow({ where: { id: row.id } })).version;
   assert.equal((await triage.closeReport(row.id, version, { note: "Rail padded and checked.", hsaReference: "" })).ok, false, "the HSA reference first");
   assert.equal((await triage.closeReport(row.id, version, { note: "Rail padded and checked.", hsaReference: "IR1 sent 2026-10-05" })).ok, true);
   assert.equal((await data.incidentReport(row.id)).reads.length, 2, "the manager sees who opened it");
+});
+
+test("an investigation: statements, root cause and actions before closing, the owner's own Done, and a reopen", async () => {
+  reporter();
+  const sent = await report.submitReport(nearMiss());
+  assert.ok(sent.ok);
+  const id = sent.id!;
+  const version = async () => (await fixture.prisma.incidentReport.findUniqueOrThrow({ where: { id } })).version;
+  duty();
+  assert.equal((await triage.triageReport(id, await version(), { severityActual: 2, severityPotential: 3, staffOffOver3Days: false, publicToDoctor: false, deathOrDangerous: false, parentInformed: "", outcome: "investigate", note: "Could have been a head injury." })).ok, true);
+
+  reporter();
+  const statement = { givenBy: "Aoife", givenAs: "lifeguard on the slide", takenOn: "2026-10-02", text: "The sign was by the office, not at the steps." };
+  assert.equal((await work.addStatement(id, statement)).ok, false, "the reporter does not investigate");
+  duty();
+  assert.equal((await work.addStatement(id, { ...statement, takenOn: "2026-09-30" })).ok, false, "not before it happened");
+  assert.equal((await work.addStatement(id, statement)).ok, true);
+  const stale = await version() - 1;
+  assert.equal((await work.saveInvestigation(id, stale, { whys: ["Wet step"], rootCause: "x" })).ok, false, "a stale version");
+  assert.equal((await work.saveInvestigation(id, await version(), { whys: ["The step was wet", "", "No sign at the steps", "", ""], rootCause: "Nobody owns the sign between sessions." })).ok, true);
+  const tomorrow = addDaysIso(today(), 1);
+  assert.equal((await work.raiseAction(id, { title: "Add the slide steps to the hourly check", ownerId: "carl", dueOn: tomorrow })).ok, false, "the owner works at the site");
+  assert.equal((await work.raiseAction(id, { title: "Add the slide steps to the hourly check", ownerId: "mia", dueOn: tomorrow })).ok, true);
+  const action = await fixture.prisma.incidentAction.findFirstOrThrow({ where: { reportId: id } });
+  assert.deepEqual([action.ownerName, action.status, !!action.assignedEmailAt, action.emailError], ["mia", "open", true, "Email is not set up."], "the owner is emailed, and a failure is kept");
+  const saved = await fixture.prisma.incidentReport.findUniqueOrThrow({ where: { id } });
+  assert.deepEqual(saved.whys, ["The step was wet", "No sign at the steps"]);
+
+  as("gina", ["incidents.reports.signoff"]);
+  const blocked = await triage.closeReport(id, await version(), { note: "Hourly check now covers the steps.", hsaReference: "" });
+  assert.match(blocked.ok ? "" : blocked.error, /still open/);
+
+  reporter();
+  const mineList = await mineData.yourActions();
+  assert.equal(mineList.rows.length, 1, "the owner sees their action");
+  const seen = await data.incidentReport(id);
+  assert.deepEqual([seen.report.statements.length, seen.report.actions.length, seen.report.rootCause], [0, 0, ""], "the reporter sees the outcome, not the working");
+  assert.equal((await work.finishAction(action.id, { outcome: "cancelled", note: "Not needed" })).ok, false, "an owner can't cancel");
+  assert.equal((await work.finishAction(action.id, { outcome: "done", note: "Added to the hourly sheet." })).ok, true);
+  assert.equal((await work.finishAction(action.id, { outcome: "done", note: "Again" })).ok, false, "once");
+
+  as("gina", ["incidents.reports.signoff"]);
+  assert.equal((await triage.closeReport(id, await version(), { note: "Hourly check now covers the steps.", hsaReference: "" })).ok, true);
+  duty();
+  assert.equal((await work.reopenReport(id, await version(), "The step was wet again on Friday.")).ok, false, "only a manager reopens");
+  as("gina", ["incidents.reports.signoff"]);
+  assert.equal((await work.reopenReport(id, await version(), "The step was wet again on Friday.")).ok, true);
+  const reopened = await fixture.prisma.incidentReport.findUniqueOrThrow({ where: { id } });
+  assert.deepEqual([reopened.status, reopened.closedAt], ["investigating", null]);
+
+  const log = await fixture.prisma.auditLog.findMany({ where: { entity: "IncidentReport", entityId: id }, orderBy: { createdAt: "asc" } });
+  assert.deepEqual(log.map((l) => l.action), ["submit", "triage", "statement", "investigation", "action_add", "action_done", "close", "reopen"]);
+});
+
+test("action reminders go once: the day before it is due, and after it was due", async () => {
+  reporter();
+  const sent = await report.submitReport(nearMiss());
+  duty();
+  const id = sent.id!;
+  const row = await fixture.prisma.incidentReport.findUniqueOrThrow({ where: { id } });
+  await triage.triageReport(id, row.version, { severityActual: 2, severityPotential: 2, staffOffOver3Days: false, publicToDoctor: false, deathOrDangerous: false, parentInformed: "", outcome: "investigate", note: "Worth a look." });
+  await work.raiseAction(id, { title: "Replace the step edging", ownerId: "dan", dueOn: addDaysIso(today(), 1) });
+  await work.raiseAction(id, { title: "Retrain the late shift", ownerId: "dan", dueOn: today() });
+  await fixture.prisma.incidentAction.updateMany({ where: { reportId: id, title: "Retrain the late shift" }, data: { dueOn: addDaysIso(today(), -2) } });
+  const first = await emails.runActionReminders("https://turnfin.example.test");
+  assert.equal(first.sent + first.failed, 2, "one due tomorrow, one overdue");
+  const again = await emails.runActionReminders("https://turnfin.example.test");
+  assert.equal(again.sent + again.failed, 0, "nothing twice");
+  assert.equal((await data.incidentCounts()).overdueActions, 1);
+});
+
+test("photos: the reporter and investigators add them, anyone who may read opens them, and opening is logged", async () => {
+  reporter();
+  const sent = await report.submitReport(nearMiss());
+  const id = sent.id!;
+  const png = new File([new Uint8Array([137, 80, 78, 71, 13, 10, 26, 10, 1, 2, 3])], "steps.png", { type: "image/png" });
+  const mia = { id: "mia", name: "mia", orgId: ORG, superadmin: false, review: false, signoff: false };
+  const dan = { ...mia, id: "dan", name: "dan", review: true };
+  const outsider = { ...mia, id: "olga", name: "olga" };
+  await files.addFile(mia, id, png);
+  await assert.rejects(files.addFile(mia, id, new File(["<svg/>"], "x.png", { type: "image/png" })), /photo/);
+  await assert.rejects(files.addFile(outsider, id, png), /reporter/);
+  const stored = await fixture.prisma.incidentFile.findFirstOrThrow({ where: { reportId: id } });
+  duty();
+  assert.equal((await files.readFile(dan, stored.id)).name, "steps.png");
+  assert.equal(await fixture.prisma.incidentAccessEvent.count({ where: { reportId: id, actorId: "dan" } }), 1);
+  await assert.rejects(files.readFile(outsider, stored.id), /not available/);
+  await files.removeFile(dan, stored.id);
+  await assert.rejects(files.readFile(mia, stored.id), /not available/);
 });
