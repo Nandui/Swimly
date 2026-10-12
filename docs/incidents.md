@@ -13,7 +13,8 @@ defaults on 11 October 2026 ([ADR 0008](architecture/decisions/0008-add-incident
 
 ## The flow
 
-`reported` → `investigating` → `closed`, with a fast close from triage.
+`reported` → `investigating` → `closed`, with a fast close from triage and a reopen back to
+`investigating`.
 
 1. **Report** (`/incidents/new`, anyone with Report at the site). What kind, what it was about,
    where and when, who told the reporter (when they didn't see it themselves), what happened
@@ -37,7 +38,40 @@ defaults on 11 October 2026 ([ADR 0008](architecture/decisions/0008-add-incident
 4. **Close** (never your own): what was found and what changed, written for the reporter too,
    who sees it on their report. A serious report or one at level 3 or worse needs **Manage**
    at the site; a reportable one needs the HSA reference (IR1 or IR3) or the date it was sent.
-   Closing locks the report.
+   An investigated report also needs every action done or cancelled, and a serious or
+   moderate one needs its root cause recorded. Closing locks the report.
+
+## Investigating (phase 2)
+
+Everything below is on the report's page while it is under investigation, for anyone with
+Investigate at the site except its reporter.
+
+- **Witness statements.** Who gave it, as what (witness, staff member, the person hurt),
+  the day it was taken and their words. Kept as written, with who recorded it.
+- **Why it happened.** Up to five "why?" answers, one appearing as each is answered, then
+  the root cause in a line. The cause, not who to blame. Serious and moderate reports cannot
+  close without it.
+- **Actions.** What will change, who does it (anyone active at the report's site) and by
+  when (from today, within a year). The owner gets an email when it is given to them, the day
+  before it is due and the day after it was due, once each (Vercel cron
+  `/api/cron/incidents`, 06:00 UTC, `CRON_SECRET`). Emails carry the action's words and the
+  report number, never who was hurt; a failed email shows on the action. The owner sees open
+  actions under **Your actions** on Reports and on Home, and can mark one done there, with a
+  note, without opening the report. Investigators can mark done or cancel any action. An
+  owner who has no Incidents level still gets the emails, but must tell the investigator
+  when it is done.
+- **Photos and files.** JPEG, PNG, WebP or PDF, up to 4 MB each and 10 per report, checked
+  by their contents, stored in the database like refund receipts (`incidents_files`). The
+  reporter and investigators add them while the report is open; whoever added one, or an
+  investigator, can remove it (it is hidden, never erased). Closed reports keep theirs.
+  Opening someone else's file is logged like opening their report.
+- **Reopen.** A Manage holder who did not file it can reopen a closed report with a reason,
+  for example new evidence or an action that did not work. It goes back to investigation,
+  the closing note and HSA reference are cleared for the new close, and the reason shows
+  in the history to everyone who sees the report.
+
+The reporter sees their report, addenda, files and the closing note, never the statements,
+the whys or the actions.
 
 ## Who reports
 
@@ -68,8 +102,8 @@ needs another Manage holder at the site to close it.
 | Level | Permission | Sees |
 | --- | --- | --- |
 | Report | `incidents.reports.create` | Their own reports, in full, and how they were closed |
-| Investigate | `incidents.reports.review` | Every report at the sites they cover, injury details included; the serious alerts; triage and closing low-risk ones |
-| Manage | `incidents.reports.signoff` | Also closing serious and moderate reports, and who opened each report's injury details |
+| Investigate | `incidents.reports.review` | Every report at the sites they cover, injury details included; the serious alerts; triage and closing low-risk ones; statements, the root cause and actions |
+| Manage | `incidents.reports.signoff` | Also closing serious and moderate reports, reopening closed ones, and who opened each report's injury details |
 
 Reach is the sites a person works at. Opening someone else's report that names people writes
 an `incidents_access_events` row. Every change writes one audit row under Incidents.
@@ -77,8 +111,10 @@ an `incidents_access_events` row. Every change writes one audit row under Incide
 ## Pages
 
 Overview (`/incidents/overview`, the starter page: reports to triage, serious ones to sign off,
-investigations, Report an incident), Report (`/incidents/new`), Reports (`/incidents`: to
-triage, under investigation, your reports, recently closed) and a report (`/incidents/[id]`).
+investigations, Report an incident), Report (`/incidents/new`), Reports (`/incidents`: your
+actions, to triage, under investigation, your reports, recently closed) and a report
+(`/incidents/[id]`). Files are served by `/api/incidents/files/[id]` and added through
+`/api/incidents/files`.
 
 ## Decided (11 October 2026)
 
@@ -95,8 +131,8 @@ confirmed: the H&S adviser checks them before launch.
 
 ## Coming next
 
-- **Phase 2:** witness statements, root cause (5 whys), corrective actions with owners, due
-  dates and reminders, a reopen with a reason, photos and files.
+- **Phase 2** (above, 1.7.0): witness statements, root cause (5 whys), corrective actions
+  with owners, due dates and reminders, a reopen with a reason, photos and files.
 - **Phase 3:** insights (trends by site, area, kind and hour, near misses per accident), an
   export of one report for the insurer, retention rules, `incidents.action.raised` for Tasks,
   a section in HR's personal file for staff injuries, links to the site's emergency action

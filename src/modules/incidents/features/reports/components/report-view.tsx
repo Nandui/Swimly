@@ -6,6 +6,9 @@ import type { IncidentDetail } from "@/modules/incidents/features/reports/server
 import { levelOf } from "@/modules/incidents/shared/rules";
 import { ageGroups, incidentActions, incidentCategories, incidentKinds, personTypes, SEVERITY_META, type AgeGroup, type IncidentCategory, type IncidentKind, type PersonType, type Severity } from "@/modules/incidents/shared/types";
 
+/** History notes everyone who reads the report sees; the rest (statements,
+ *  actions, files) only those who triage at the site. */
+const OPEN_NOTES = new Set(["addendum", "reopen"]);
 const day = (iso: string) => formatDate(new Date(`${iso}T12:00:00Z`));
 
 function Fact({ label, children }: { label: string; children: ReactNode }) {
@@ -88,7 +91,7 @@ export function ReportView({ data, forms }: { data: IncidentDetail; forms: React
             <li key={e.id} className="text-sm">
               <span className="font-semibold">{incidentActions[e.action as keyof typeof incidentActions] ?? e.action}</span>
               <span className="text-ui-muted-foreground"> · {e.actorName} · {formatDateTime(e.createdAt)}</span>
-              {e.action === "addendum" && e.note ? <p className="mt-1 whitespace-pre-line">{e.note}</p> : null}
+              {e.note && (OPEN_NOTES.has(e.action) || data.can.seeInvestigation) && e.action !== "triage" && e.action !== "close" ? <p className="mt-1 whitespace-pre-line">{e.note}</p> : null}
             </li>
           ))}
         </ol>

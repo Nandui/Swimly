@@ -1,10 +1,11 @@
 import "server-only";
 import { notFound } from "next/navigation";
 import { prisma } from "@/lib/prisma";
-import { areaNamesAt, liveSitesOf, withSite, withSites } from "@/lib/directory";
+import { activeStaffAtSite, areaNamesAt, liveSitesOf, withSite, withSites } from "@/lib/directory";
+import { today } from "@/lib/format";
 import { sitesFor } from "@/lib/policy/session";
 import { covers, inSites, requireIncidentsActor } from "@/modules/incidents/shared/access";
-import { needsSignoff } from "@/modules/incidents/shared/rules";
+import { needsRootCause, needsSignoff } from "@/modules/incidents/shared/rules";
 import { reportRights } from "@/modules/incidents/shared/service";
 import type { IncidentStatus } from "@/modules/incidents/shared/types";
 
@@ -38,7 +39,9 @@ export type IncidentRow = Awaited<ReturnType<typeof incidentLists>>["mine"][numb
 /** Counts for the starter page and Home: only what this person may open. */
 export async function incidentCounts() {
   const who = await requireIncidentsActor();
-  if (!who.review) return { toTriage: 0, toSignOff: 0, investigating: 0, signoff: false };
+  const mine = await prisma.incidentAction.findMany({ where: { ownerId: who.id, status: "open" }, select: { dueOn: true } });
+  const yours = { yourActions: mine.length, yourOverdue: mine.filter((a) => a.dueOn < today()).length };
+  if (!who.review) return { toTriage: 0, toSignOff: 0, investigating: 0, overdueActions: 0, signoff: false, ...yours };
   const [reviewSites, signoffSites] = await Promise.all([sitesFor("incidents.reports.review"), who.signoff ? sitesFor("incidents.reports.signoff") : null]);
   const org = { orgId: who.orgId ?? undefined };
   const [toTriage, open] = await Promise.all([
@@ -46,7 +49,8 @@ export async function incidentCounts() {
     prisma.incidentReport.findMany({ where: { ...org, ...inSites(reviewSites), status: "investigating", reporterId: { not: who.id } }, select: { siteId: true, serious: true, severityActual: true, severityPotential: true } }),
   ]);
   const toSignOff = signoffSites ? open.filter((r) => needsSignoff(r) && covers(signoffSites, r.siteId)).length : 0;
-  return { toTriage, toSignOff, investigating: open.length, signoff: who.signoff };
+  const overdueActions = await prisma.incidentAction.count({ where: { status: "open", dueOn: { lt: today() }, report: { ...org, ...inSites(reviewSites), reporterId: { not: who.id } } } });
+  return { toTriage, toSignOff, investigating: open.length, overdueActions, signoff: who.signoff, ...yours };
 }
 
 /** One report, with what this person may do to it. A 404 when they may not see
@@ -60,6 +64,9 @@ export async function incidentReport(id: string) {
       witnesses: { orderBy: { createdAt: "asc" } },
       events: { orderBy: { createdAt: "asc" } },
       notifications: { select: { id: true, status: true, error: true } },
+      statements: { orderBy: { createdAt: "asc" } },
+      actions: { orderBy: [{ createdAt: "asc" }] },
+      files: { where: { removedAt: null }, orderBy: { createdAt: "asc" }, select: { id: true, name: true, mime: true, size: true, addedById: true, addedByName: true, createdAt: true } },
     },
   });
   if (!found) notFound();
@@ -67,17 +74,31 @@ export async function incidentReport(id: string) {
   if (!rights.read) notFound();
   if (!rights.own && found.people.length) await prisma.incidentAccessEvent.create({ data: { reportId: id, actorId: who.id, actorName: who.name } });
   const reads = rights.signoff ? await prisma.incidentAccessEvent.findMany({ where: { reportId: id }, orderBy: { createdAt: "desc" }, take: 20, select: { id: true, actorName: true, createdAt: true } }) : [];
-  const report = await withSite(found, "siteId", "site");
+  // The investigation is for those who triage at the site; a reporter sees
+  // the outcome, not the statements or the working.
+  const investigation = rights.review
+    ? { statements: found.statements, actions: found.actions, whys: found.whys, rootCause: found.rootCause }
+    : { statements: [], actions: [], whys: [], rootCause: "" };
+  const report = await withSite({ ...found, ...investigation }, "siteId", "site");
   const status = report.status as IncidentStatus;
+  const investigate = status === "investigating" && rights.review && !rights.own;
   return {
-    who, report: { ...report, status }, reads,
+    who, report: { ...report, status }, reads, today: today(),
     hasChild: report.people.some((p) => p.ageGroup === "child"),
     can: {
       triage: status === "reported" && rights.review && !rights.own,
-      close: status === "investigating" && rights.review && !rights.own && (!needsSignoff(report) || rights.signoff),
+      close: investigate && (!needsSignoff(report) || rights.signoff),
+      investigate,
+      reopen: status === "closed" && rights.signoff && !rights.own,
+      addFiles: status !== "closed" && (rights.own || rights.review),
+      removeFiles: status !== "closed" && rights.review,
+      seeInvestigation: rights.review,
       seeAlerts: rights.review,
     },
+    owners: investigate ? await activeStaffAtSite(who.orgId, report.siteId) : [],
+    openActions: report.actions.filter((a) => a.status === "open").length,
     needsSignoff: needsSignoff(report),
+    needsRootCause: needsRootCause(report),
   };
 }
 export type IncidentDetail = Awaited<ReturnType<typeof incidentReport>>;
@@ -90,3 +111,4 @@ export async function reportFormData() {
   const areas = Object.fromEntries(await Promise.all(open.map(async (s) => [s.id, await areaNamesAt(s.id)] as const)));
   return { sites: open.map(({ id, name }) => ({ id, name })), areas };
 }
+

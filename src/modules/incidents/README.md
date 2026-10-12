@@ -7,6 +7,8 @@ The flow, rules and decisions are in [docs/incidents.md](../../../docs/incidents
 ## Features
 - `report` — the two-minute report form, sending it (and the serious alerts), and adding to a report later (`/incidents/new`).
 - `triage` — rating, the HSA questions, closing at triage or sending to investigation, and closing an investigated report (on `/incidents/[id]`).
+- `investigation` — witness statements, the 5 whys and root cause, actions with owners and their reminder emails, Your actions, and reopening (on `/incidents/[id]` and `/incidents`; reminders from `/api/cron/incidents`).
+- `files` — photos and documents on a report (`/api/incidents/files`).
 - `reports` — the lists (`/incidents`), one report's page (`/incidents/[id]`), the starter-page and Home counts, and the form's sites and areas.
 - `workspace` — the Incidents frame and its one page list (`pages.ts`) for the page bar and the starter page `/incidents/overview`.
 
@@ -18,20 +20,23 @@ The flow, rules and decisions are in [docs/incidents.md](../../../docs/incidents
 Nothing else in Turnfin calls into Incidents. Routes use the feature entries (`features/<feature>/index.ts`).
 
 ## Data owned
-Declared in `prisma/schema/incidents.prisma`, migration `20261031120000_incidents` (new tables only):
-- `incidents_reports` (`IncidentReport`) — the report, its status, triage and closing.
+Declared in `prisma/schema/incidents.prisma`, migrations `20261031120000_incidents` and `20261101120000_incidents_investigation` (new tables and new columns with defaults only):
+- `incidents_reports` (`IncidentReport`) — the report, its status, triage, the whys and root cause, and closing.
 - `incidents_people` (`IncidentPerson`) — who was involved, their injury and treatment.
 - `incidents_witnesses` (`IncidentWitness`) — who saw it and how to reach them.
 - `incidents_events` (`IncidentEvent`) — the history, addenda included.
 - `incidents_access_events` (`IncidentAccessEvent`) — every read of someone else's report that names people.
 - `incidents_notifications` (`IncidentNotification`) — serious-incident alert emails and their outcome.
+- `incidents_statements` (`IncidentStatement`) — witness statements taken during investigation.
+- `incidents_actions` (`IncidentAction`) — corrective actions, their owner, due day, outcome and reminder emails.
+- `incidents_files` (`IncidentFile`) — photos and documents, stored as bytes, hidden when removed.
 
 ## Events
 - Emits: none yet. Phase 3 adds `incidents.action.raised` for Tasks.
 - Listens to: none.
 
 ## Registration (module.ts)
-- Starter page and Home items (`registerHomeCard`): Report an incident; reports to triage; serious incidents to sign off; incidents under investigation.
+- Starter page and Home items (`registerHomeCard`): Report an incident; your incident actions; reports to triage; serious incidents to sign off; incidents under investigation; incident actions overdue.
 - Menu entry, levels and permissions: `manifest.ts`, listed in `src/app/modules.ts`.
 
 ## Permissions

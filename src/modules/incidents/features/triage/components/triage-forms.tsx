@@ -98,12 +98,16 @@ export function TriageForm({ id, version, hasChild }: { id: string; version: num
 
 /** Close a report under investigation: what was found and what changed, and
  *  the HSA reference when one was due. Serious and moderate ones need a manager. */
-export function CloseForm({ id, version, hsaDue }: { id: string; version: number; hsaDue: string | null }) {
+export function CloseForm({ id, version, hsaDue, openActions = 0, missingRootCause = false }: { id: string; version: number; hsaDue: string | null; openActions?: number; missingRootCause?: boolean }) {
   const router = useRouter();
   const [pending, start] = useTransition();
   const [error, setError] = useState<string | null>(null);
   const [note, setNote] = useState("");
   const [hsaReference, setHsaReference] = useState("");
+  const blockers = [
+    openActions ? `${openActions === 1 ? "One action is" : `${openActions} actions are`} still open: mark ${openActions === 1 ? "it" : "them"} done or cancel ${openActions === 1 ? "it" : "them"} under Investigation.` : null,
+    missingRootCause ? "Record the root cause under Investigation." : null,
+  ].filter((b): b is string => b !== null);
 
   function save(event: React.FormEvent) {
     event.preventDefault();
@@ -122,6 +126,7 @@ export function CloseForm({ id, version, hsaDue }: { id: string; version: number
         <h2 id="inc-close">Close the report</h2>
         <p className="text-sm text-ui-muted-foreground">Closing locks it. The reporter sees your note, so write it for them too.</p>
       </div>
+      {blockers.length ? <Notice tone="warning" title="Not ready to close" description={blockers.join(" ")} /> : null}
       {hsaDue ? (
         <Field label="HSA report reference" htmlFor="inc-hsa-ref" hint={`The IR1 or IR3 reference, or the date it was sent. Due by ${hsaDue}.`}>
           <Input id="inc-hsa-ref" value={hsaReference} onChange={(e) => setHsaReference(e.target.value)} maxLength={200} required />
@@ -131,7 +136,7 @@ export function CloseForm({ id, version, hsaDue }: { id: string; version: number
         <Textarea id="inc-close-note" value={note} onChange={(e) => setNote(e.target.value)} rows={4} required minLength={10} maxLength={4000} />
       </Field>
       {error ? <Notice tone="error" live="alert" title={error} /> : null}
-      <div><Button type="submit" className="min-h-11" disabled={pending}><Lock aria-hidden="true" />{pending ? "Closing" : "Close and lock"}</Button></div>
+      <div><Button type="submit" className="min-h-11" disabled={pending || blockers.length > 0}><Lock aria-hidden="true" />{pending ? "Closing" : "Close and lock"}</Button></div>
     </form>
   );
 }
