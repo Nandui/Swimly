@@ -31,7 +31,7 @@ export function ReportView({ data, forms }: { data: IncidentDetail; forms: React
       {data.can.seeAlerts && r.serious && failedAlerts.length ? (
         <Notice tone="warning" title="The serious-incident alert did not reach everyone" description={`${[...new Set(failedAlerts.map((n) => n.error).filter(Boolean))].join(" ")} Tell the centre manager directly.`} />
       ) : null}
-      {r.hsaReportable && r.status !== "closed" ? <Notice tone="warning" title={`Report this to the HSA by ${r.hsaDueOn ? day(r.hsaDueOn) : "the deadline"}`} description="Use the HSA's online form (IR1 for an accident, IR3 for a dangerous occurrence), then record its reference when closing." /> : null}
+      {r.hsaReportable && r.status !== "closed" ? <Notice tone="warning" title={`Report this to the HSA by ${r.hsaDueOn ? day(r.hsaDueOn) : "the deadline"}`} description={`${r.hsaFatal ? "Someone died: the HSA or the Gardaí must already have been told by phone. If not, phone now. " : ""}Use the HSA's online form (IR1 for an accident, IR3 for a dangerous occurrence), then record its reference when closing.`} /> : null}
 
       <article aria-label="The report" className="pc-panel flex flex-col gap-5">
         <div className="grid gap-5 sm:grid-cols-3">

@@ -40,7 +40,11 @@ model IncidentReport {
   severityPotential Int?
   /// Whether it must be reported to the Health and Safety Authority, decided at triage.
   hsaReportable     Boolean?
-  /// The date the HSA report is due by (10 working days after the event).
+  /// Someone died (Irish law, S.I. 370/2016 reg. 225): the HSA or the Gardaí are
+  /// told at once by the quickest means, and the written report is due within
+  /// 5 working days rather than 10.
+  hsaFatal          Boolean   @default(false)
+  /// The date the HSA report is due by (10 working days after the event, 5 for a death).
   hsaDueOn          String?
   /// The IR1 or IR3 reference, or the date it was sent.
   hsaReference      String    @default("")

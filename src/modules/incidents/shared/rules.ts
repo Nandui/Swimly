@@ -64,7 +64,12 @@ export function addWorkingDays(iso: string, days: number): string {
   }
   return day;
 }
+/** Irish law (Safety, Health and Welfare at Work (General Application)
+ *  Regulations 2007, Part 14 as replaced by S.I. 370/2016, reg. 225): a written
+ *  report within 10 working days, or 5 after a death, which is also told to the
+ *  HSA or the Gardaí at once by the quickest means. */
 export const HSA_WORKING_DAYS = 10;
+export const HSA_FATAL_WORKING_DAYS = 5;
 
 const severity = z.coerce.number().int().min(1, "Choose a severity.").max(5, "Choose a severity.");
 export const triageSchema = z.object({
@@ -73,6 +78,7 @@ export const triageSchema = z.object({
   staffOffOver3Days: z.boolean(),
   publicToDoctor: z.boolean(),
   deathOrDangerous: z.boolean(),
+  fatal: z.boolean().default(false),
   parentInformed: text(500),
   outcome: z.enum(["investigate", "close"], { message: "Choose whether to investigate or close it." }),
   note: text(4000).min(3, "Say briefly why you rated it this way."),
@@ -87,13 +93,14 @@ export function triageDecision(row: ReportRow & { hasChild: boolean }, who: Inci
   if (row.reporterId === who.id) throw new IncidentError("Someone else must triage your own report.");
   if (row.hasChild && t.parentInformed.length < 3) throw new IncidentError("A child was involved: say who told their parent or guardian, and when.");
   const level = levelOf(t.severityActual, t.severityPotential);
-  const hsaReportable = t.staffOffOver3Days || t.publicToDoctor || t.deathOrDangerous;
+  const hsaReportable = t.staffOffOver3Days || t.publicToDoctor || t.deathOrDangerous || t.fatal;
   if (t.outcome === "close" && level >= 3) throw new IncidentError("Moderate and worse need investigating. Choose Investigate; a manager closes it.");
   if (t.outcome === "close" && hsaReportable) throw new IncidentError("A report for the HSA needs investigating. Choose Investigate.");
   return {
     status: t.outcome === "close" ? "closed" : "investigating",
     severityActual: t.severityActual, severityPotential: t.severityPotential,
-    hsaReportable, hsaDueOn: hsaReportable ? addWorkingDays(row.occurredOn, HSA_WORKING_DAYS) : null,
+    hsaReportable, hsaFatal: t.fatal,
+    hsaDueOn: hsaReportable ? addWorkingDays(row.occurredOn, t.fatal ? HSA_FATAL_WORKING_DAYS : HSA_WORKING_DAYS) : null,
     parentInformed: t.parentInformed, triageNote: t.note,
   };
 }

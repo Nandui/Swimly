@@ -9,6 +9,7 @@ Patch notes for everyone who uses Turnfin at the swim school, the desk and the o
 - While a report is under investigation, whoever is investigating can now take **witness statements**, work out **why it happened** by asking "why?" up to five times, and write down the root cause. Serious and moderate reports can't be closed until the root cause is recorded.
 - They can also raise **actions**: what will change, who does it and by when. The person gets an email when it is given to them, the day before it is due and the day after if it is late. Your open actions show under **Your actions** on Reports and on Home, where you can mark one done with a note. A report can't be closed while any action is still open.
 - Reporters and investigators can add **photos and files** to an open report: pictures of the scene or the hazard, or a doctor's note. Up to 10 per report, 4 MB each.
+- Triage's Health and Safety Authority questions now follow the exact Irish rules. A member of the public counts when they were taken from here to a hospital or doctor for treatment. A death and a dangerous occurrence are now separate questions, and after a death the report is due within 5 working days instead of 10, with a reminder to phone the HSA or the Gardaí at once.
 - The operations manager can **reopen** a closed report with a reason, for example when there is new evidence or an action didn't work. It goes back to investigation, and the reason shows in the report's history.
 
 ## 1.6.0 · 11 October 2026 · Incidents: report accidents, incidents and near misses

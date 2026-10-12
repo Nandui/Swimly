@@ -36,6 +36,8 @@ test("triage closes only minimal or minor reports the HSA does not need, and nev
   assert.throws(() => triageDecision({ ...row, hasChild: true }, who, triage()), IncidentError, "a child's parent must have been told");
   const reportable = triageDecision(row, who, triage({ outcome: "investigate", staffOffOver3Days: true, severityActual: 4 }));
   assert.deepEqual([reportable.status, reportable.hsaReportable, reportable.hsaDueOn], ["investigating", true, "2026-10-23"]);
+  const fatal = triageDecision(row, who, triage({ outcome: "investigate", fatal: true, severityActual: 5 }));
+  assert.deepEqual([fatal.hsaReportable, fatal.hsaFatal, fatal.hsaDueOn], [true, true, "2026-10-16"], "a death: 5 working days");
   assert.throws(() => triageDecision({ ...row, status: "investigating" }, who, triage()), IncidentError, "once");
 });
 

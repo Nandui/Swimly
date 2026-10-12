@@ -1,5 +1,6 @@
 -- AlterTable
-ALTER TABLE "incidents_reports" ADD COLUMN     "rootCause" TEXT NOT NULL DEFAULT '',
+ALTER TABLE "incidents_reports" ADD COLUMN     "hsaFatal" BOOLEAN NOT NULL DEFAULT false,
+ADD COLUMN     "rootCause" TEXT NOT NULL DEFAULT '',
 ADD COLUMN     "whys" TEXT[] DEFAULT ARRAY[]::TEXT[];
 
 -- CreateTable

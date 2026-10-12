@@ -39,12 +39,12 @@ export function TriageForm({ id, version, hasChild }: { id: string; version: num
   const [error, setError] = useState<string | null>(null);
   const [actual, setActual] = useState("");
   const [potential, setPotential] = useState("");
-  const [hsa, setHsa] = useState({ staffOffOver3Days: false, publicToDoctor: false, deathOrDangerous: false });
+  const [hsa, setHsa] = useState({ staffOffOver3Days: false, publicToDoctor: false, deathOrDangerous: false, fatal: false });
   const [parentInformed, setParentInformed] = useState("");
   const [outcome, setOutcome] = useState<"" | "investigate" | "close">("");
   const [note, setNote] = useState("");
   const level = actual && potential ? levelOf(Number(actual), Number(potential)) : 0;
-  const reportable = hsa.staffOffOver3Days || hsa.publicToDoctor || hsa.deathOrDangerous;
+  const reportable = hsa.staffOffOver3Days || hsa.publicToDoctor || hsa.deathOrDangerous || hsa.fatal;
   const mayClose = level > 0 && level <= 2 && !reportable;
 
   function save(event: React.FormEvent) {
@@ -70,10 +70,11 @@ export function TriageForm({ id, version, hasChild }: { id: string; version: num
       </div>
       <fieldset className="space-y-2">
         <legend className="text-sm font-semibold">Does the Health and Safety Authority need a report?</legend>
-        <p className="text-sm text-ui-muted-foreground">Tick any that apply. Any tick means it is reported to the HSA within 10 working days.</p>
-        <ChoiceRow type="checkbox" id="inc-hsa-staff" title="A staff member is off work for more than 3 days" hint="Not counting the day it happened" checked={hsa.staffOffOver3Days} onCheckedChange={(on) => setHsa((h) => ({ ...h, staffOffOver3Days: on === true }))} />
-        <ChoiceRow type="checkbox" id="inc-hsa-public" title="A member of the public went to a doctor or hospital because of it" checked={hsa.publicToDoctor} onCheckedChange={(on) => setHsa((h) => ({ ...h, publicToDoctor: on === true }))} />
-        <ChoiceRow type="checkbox" id="inc-hsa-death" title="Someone died, or it is a dangerous occurrence" hint="Such as a chlorine gas release" checked={hsa.deathOrDangerous} onCheckedChange={(on) => setHsa((h) => ({ ...h, deathOrDangerous: on === true }))} />
+        <p className="text-sm text-ui-muted-foreground">Tick any that apply. Any tick means it is reported to the HSA within 10 working days, or 5 after a death.</p>
+        <ChoiceRow type="checkbox" id="inc-hsa-staff" title="A staff member can't do their normal work for more than 3 days in a row" hint="Not counting the day it happened" checked={hsa.staffOffOver3Days} onCheckedChange={(on) => setHsa((h) => ({ ...h, staffOffOver3Days: on === true }))} />
+        <ChoiceRow type="checkbox" id="inc-hsa-public" title="A member of the public was taken from here to a hospital or doctor for treatment" checked={hsa.publicToDoctor} onCheckedChange={(on) => setHsa((h) => ({ ...h, publicToDoctor: on === true }))} />
+        <ChoiceRow type="checkbox" id="inc-hsa-dangerous" title="It is a dangerous occurrence" hint="Such as an uncontrolled release of chlorine or another chemical, even if nobody was hurt" checked={hsa.deathOrDangerous} onCheckedChange={(on) => setHsa((h) => ({ ...h, deathOrDangerous: on === true }))} />
+        <ChoiceRow type="checkbox" id="inc-hsa-death" title="Someone died" hint="Phone the HSA or the Gardaí now if nobody has. The written report is due within 5 working days." checked={hsa.fatal} onCheckedChange={(on) => setHsa((h) => ({ ...h, fatal: on === true }))} />
       </fieldset>
       {hasChild ? (
         <Field label="Who told the child's parent or guardian, and when" htmlFor="inc-parent">

@@ -29,10 +29,13 @@ defaults on 11 October 2026 ([ADR 0008](architecture/decisions/0008-add-incident
    operations manager, names nobody and carries no injury details. Each email
    is a row in `incidents_notifications`; a failure shows on the report as a warning.
 3. **Triage** (Investigate, never your own). Two severities on one 1 to 5 scale: what happened
-   and the worst that realistically could have; the worse of the two is the level. Three HSA
-   questions (staff off more than 3 days not counting the day, a member of the public to a
-   doctor or hospital, a death or dangerous occurrence); any yes makes it reportable with a
-   deadline 10 working days after the day it happened (weekends skipped, public holidays not).
+   and the worst that realistically could have; the worse of the two is the level. Four HSA
+   questions (a staff member unable to do their normal work for more than 3 days in a row, not
+   counting the day; a member of the public taken from the scene to a hospital or doctor for
+   treatment; a dangerous occurrence; a death). Any yes makes it reportable with a deadline
+   10 working days after the day it happened, or 5 after a death, which must also be phoned
+   through to the HSA or the Gardaí at once (weekends skipped, public holidays not, so the
+   date is never later than the law's).
    When a child was involved, who told the parent or guardian and when. Then **Close it now**
    (level 1 or 2 and nothing for the HSA) or **Investigate**.
 4. **Close** (never your own): what was found and what changed, written for the reporter too,
@@ -126,8 +129,32 @@ actions, to triage, under investigation, your reports, recently closed) and a re
 - The pool deck gets no report button until phase 3, and Fernando is asked then. Since only
   supervisors and managers report (12 October 2026), it would serve only them.
 
-The HSA rules and retention periods were written from Irish rules as understood, not
-confirmed: the H&S adviser checks them before launch.
+## Irish law (checked 12 October 2026)
+
+Fernando asked for everything to be within Irish law. Checked against the Safety, Health and
+Welfare at Work (General Application) Regulations 2007, Part 14, as replaced by
+[S.I. 370/2016](https://www.irishstatutebook.ie/eli/2016/si/370/made/en/print), and the HSA's
+[guide to reporting](https://hsa.ie/eng/topics/accident_and_dangerous_occurrence_reporting/accident_and_dangerous_occurrences_reporting_2022.pdf):
+
+- **What is reported (reg. 225):** an employee unable to do their normal work for more than
+  3 consecutive days, not counting the day; a person not at work taken from the scene to a
+  hospital or medical facility for treatment; a death; a dangerous occurrence in Schedule 15
+  (item 7, an uncontrolled release of any substance that could injure someone, covers a
+  chlorine release). The triage questions follow these words.
+- **When:** as soon as reasonably practicable and within 10 working days; a death is told to
+  the HSA or the Gardaí at once by the quickest means, with the written report within 5
+  working days. Turnfin shows the earlier deadline and the phone reminder.
+- **Records (reg. 226):** kept for 10 years from the date. Turnfin deletes nothing, so this
+  is met; a longer period for children (who can claim after turning 18) is for the phase 3
+  retention rules, with the insurer.
+- **Data protection (GDPR, Data Protection Act 2018):** injury details are health data, so
+  they sit in their own table, every read of someone else's report is logged, emails carry
+  no names or injuries, and the reporter sees only their own reports.
+- **Children First Act 2015:** safeguarding concerns go to the Designated Liaison Person, not
+  this form.
+
+Turnfin helps record and remind; the legal duty to report stays with the employer. The
+H&S adviser should still look over the wording before launch.
 
 ## Coming next
 
