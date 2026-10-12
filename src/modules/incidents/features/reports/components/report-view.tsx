@@ -38,6 +38,7 @@ export function ReportView({ data, forms }: { data: IncidentDetail; forms: React
         </div>
         <Fact label="What happened">{r.description}</Fact>
         {r.immediateAction ? <Fact label="What was done straight away">{r.immediateAction}</Fact> : null}
+        {r.raisedBy ? <Fact label="Told by">{r.raisedBy}</Fact> : null}
         <p className="text-xs text-ui-muted-foreground">Reported by {r.reporterName}, {formatDateTime(r.createdAt)}. Kept as written.</p>
       </article>
 

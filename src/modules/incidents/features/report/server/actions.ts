@@ -39,7 +39,7 @@ export async function submitReport(input: ReportInput): Promise<ActionResult & {
     const row = await tx.incidentReport.create({
       data: {
         orgId: who.orgId, siteId: r.siteId, area: r.area, kind: r.kind, category: r.category,
-        occurredOn: r.occurredOn, occurredAt: r.occurredAt, description: r.description, immediateAction: r.immediateAction,
+        occurredOn: r.occurredOn, occurredAt: r.occurredAt, description: r.description, immediateAction: r.immediateAction, raisedBy: r.raisedBy,
         serious, reporterId: who.id, reporterName: who.name,
         people: { create: r.people.map((p) => p.injured ? p : { ...p, bodyPart: "", injury: "", firstAid: "", firstAidBy: "", ambulance: false, hospital: false }) },
         witnesses: { create: r.witnesses },

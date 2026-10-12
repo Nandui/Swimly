@@ -1,6 +1,6 @@
 // Incidents (owner request, 11 October 2026; docs/incidents.md): accidents,
-// incidents and near misses at a site, reported by anyone on shift, triaged by
-// a duty manager and, when serious, signed off by whoever manages Incidents.
+// incidents and near misses at a site, reported by a duty manager or supervisor
+// (owner decision, 12 October 2026), triaged by a duty manager and, when serious, signed off by whoever manages Incidents.
 // Tables carry the module prefix (CLAUDE.md section 4).
 
 /// One report. The reporter's words are locked when it is submitted; later
@@ -31,6 +31,9 @@ model IncidentReport {
   serious           Boolean   @default(false)
   reporterId        String
   reporterName      String
+  /// Who first told the reporter about it (name and role), when they didn't see
+  /// it themselves. Empty when they did.
+  raisedBy          String    @default("")
 
   severityActual    Int?
   severityPotential Int?

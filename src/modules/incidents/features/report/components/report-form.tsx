@@ -30,7 +30,7 @@ export function ReportForm({ sites, areas }: { sites: Site[]; areas: Record<stri
   const [error, setError] = useState<string | null>(null);
   const [f, setF] = useState<Omit<ReportInput, "people" | "witnesses">>({
     siteId: sites.length === 1 ? sites[0].id : "", area: "", kind: "" as IncidentKind, category: "" as ReportInput["category"],
-    occurredOn: today(), occurredAt: clock(), description: "", immediateAction: "",
+    occurredOn: today(), occurredAt: clock(), description: "", immediateAction: "", raisedBy: "",
   });
   const [people, setPeople] = useState<PersonInput[]>([]);
   const [witnesses, setWitnesses] = useState<{ name: string; contact: string }[]>([]);
@@ -92,7 +92,10 @@ export function ReportForm({ sites, areas }: { sites: Site[]; areas: Record<stri
             <Field label="Time" htmlFor="inc-time"><Input id="inc-time" type="time" value={f.occurredAt} onChange={(e) => set("occurredAt", e.target.value)} required /></Field>
           </div>
         </div>
-        <Field label="What happened" htmlFor="inc-description" hint="Write what you saw, such as 'The child slipped on the step by the slide', rather than why you think it happened.">
+        <Field label="Who told you about it" htmlFor="inc-raised" hint="Their name and role, such as 'Aoife, lifeguard'. Leave it empty if you saw it yourself." optional>
+          <Input id="inc-raised" value={f.raisedBy} onChange={(e) => set("raisedBy", e.target.value)} maxLength={200} />
+        </Field>
+        <Field label="What happened" htmlFor="inc-description" hint="Write what was seen, such as 'The child slipped on the step by the slide', rather than why you think it happened.">
           <Textarea id="inc-description" value={f.description} onChange={(e) => set("description", e.target.value)} rows={5} required minLength={10} maxLength={4000} />
         </Field>
         <Field label="What was done straight away" htmlFor="inc-action" hint="First aid, the area made safe, the pool cleared or closed." optional>

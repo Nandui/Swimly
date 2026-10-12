@@ -5,7 +5,7 @@ import { addWorkingDays, closeDecision, isSerious, IncidentError, needsSignoff, 
 const who = { id: "dan", name: "Dan", orgId: null, superadmin: false, review: true, signoff: false };
 const row = { status: "reported", reporterId: "mia", occurredOn: "2026-10-09", serious: false, severityActual: null, severityPotential: null, hsaReportable: null, hasChild: false };
 const triage = (over: object = {}) => triageSchema.parse({ severityActual: 1, severityPotential: 2, staffOffOver3Days: false, publicToDoctor: false, deathOrDangerous: false, parentInformed: "", outcome: "close", note: "Wet floor sign was back out.", ...over });
-const report = (over: object = {}) => reportSchema.parse({ siteId: "s", area: "", kind: "near_miss", category: "slip_trip_fall", occurredOn: "2026-10-10", occurredAt: "14:30", description: "Puddle by the slide steps, no sign.", immediateAction: "", people: [], witnesses: [], ...over });
+const report = (over: object = {}) => reportSchema.parse({ siteId: "s", area: "", kind: "near_miss", category: "slip_trip_fall", occurredOn: "2026-10-10", occurredAt: "14:30", description: "Puddle by the slide steps, no sign.", immediateAction: "", raisedBy: "", people: [], witnesses: [], ...over });
 const person = { type: "swimmer", ageGroup: "child", name: "", contact: "", injured: true, bodyPart: "", injury: "", firstAid: "", firstAidBy: "", ambulance: false, hospital: false };
 
 test("the HSA deadline is 10 working days, skipping weekends", () => {

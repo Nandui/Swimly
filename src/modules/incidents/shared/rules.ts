@@ -29,6 +29,7 @@ export const reportSchema = z.object({
   occurredAt: z.string().regex(/^([01]\d|2[0-3]):[0-5]\d$/, "Enter the time it happened, such as 14:30."),
   description: text(4000).min(10, "Say what happened, in a sentence or two."),
   immediateAction: text(2000),
+  raisedBy: text(200),
   people: z.array(personSchema).max(10, "Up to 10 people on one report. Add the rest as an addendum."),
   witnesses: z.array(z.object({ name: text(200).min(1, "Give each witness's name, or remove the row."), contact: text(200) })).max(10, "Up to 10 witnesses on one report."),
 });

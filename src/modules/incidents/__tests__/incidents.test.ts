@@ -24,7 +24,7 @@ class NotFound extends Error {}
 const as = (id: string, permissions: string[], grants: GrantRow[] = []) => Object.assign(state, { id, permissions, grants });
 const at = (siteId: string, permissions: string[]): GrantRow => ({ roleName: "Site", permissions, screens: ["incidents"], scopeKind: "site", scopeId: siteId });
 const nearMiss = () => ({ siteId: bishopstown, area: "Main pool", kind: "near_miss" as const, category: "slip_trip_fall" as const, occurredOn: "2026-10-01", occurredAt: "10:15",
-  description: "Puddle by the slide steps with no wet floor sign.", immediateAction: "Mopped and sign put out.", people: [], witnesses: [] });
+  description: "Puddle by the slide steps with no wet floor sign.", immediateAction: "Mopped and sign put out.", raisedBy: "Aoife, lifeguard", people: [], witnesses: [] });
 
 before(async () => {
   fixture = await isolatedPrisma();
@@ -68,7 +68,7 @@ test("a near miss: reported at your own site, triaged and closed by someone else
   const sent = await report.submitReport(nearMiss());
   assert.ok(sent.ok && sent.id);
   const row = await fixture.prisma.incidentReport.findUniqueOrThrow({ where: { id: sent.id! } });
-  assert.deepEqual([row.status, row.serious, row.reporterName], ["reported", false, "mia"]);
+  assert.deepEqual([row.status, row.serious, row.reporterName, row.raisedBy], ["reported", false, "mia", "Aoife, lifeguard"]);
   assert.equal((await triage.triageReport(row.id, row.version, { severityActual: 1, severityPotential: 2, staffOffOver3Days: false, publicToDoctor: false, deathOrDangerous: false, parentInformed: "", outcome: "close", note: "Fine" })).ok, false, "not your own, and not without access");
 
   duty();

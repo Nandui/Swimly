@@ -16,8 +16,9 @@ defaults on 11 October 2026 ([ADR 0008](architecture/decisions/0008-add-incident
 `reported` → `investigating` → `closed`, with a fast close from triage.
 
 1. **Report** (`/incidents/new`, anyone with Report at the site). What kind, what it was about,
-   where and when, what happened (facts, in their words), what was done straight away, the
-   people involved (injury and treatment only if hurt) and witnesses. Sending locks the words;
+   where and when, who told the reporter (when they didn't see it themselves), what happened
+   (facts, in their words), what was done straight away, the people involved (injury and
+   treatment only if hurt) and witnesses. Sending locks the words;
    later corrections are **addenda** with a name and time, open to the reporter and to anyone
    who triages it, even after closing.
 2. **Serious alert.** A report is serious when anyone involved went by ambulance or to
@@ -36,6 +37,15 @@ defaults on 11 October 2026 ([ADR 0008](architecture/decisions/0008-add-incident
    who sees it on their report. A serious report or one at level 3 or worse needs **Manage**
    at the site; a reportable one needs the HSA reference (IR1 or IR3) or the date it was sent.
    Closing locks the report.
+
+## Who reports
+
+Only **duty managers, shift supervisors, department supervisors, centre managers and
+operations managers** file reports (owner decision, 12 October 2026). Lifeguards,
+instructors, desk staff and everyone else tell the supervisor or duty manager on shift, who
+files it and names them under "Who told you about it". Turnfin checks permissions, never
+role names, so this is set in Admin: give those roles Incidents Report or higher, and give
+every other role no Incidents level.
 
 ## Who sees what
 
@@ -61,7 +71,8 @@ triage, under investigation, your reports, recently closed) and a report (`/inci
   Designated Liaison Person (Children First); nothing about the concern is stored here.
 - **The main database**, with injury details in their own table and every read logged.
 - **Named reports only**, with the no-blame promise on the form.
-- The pool deck gets no report button until phase 3, and Fernando is asked then.
+- The pool deck gets no report button until phase 3, and Fernando is asked then. Since only
+  supervisors and managers report (12 October 2026), it would serve only them.
 
 The HSA rules and retention periods were written from Irish rules as understood, not
 confirmed: the H&S adviser checks them before launch.
