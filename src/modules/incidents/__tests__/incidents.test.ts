@@ -16,6 +16,9 @@ let work: typeof import("../features/investigation/server/actions");
 let mineData: typeof import("../features/investigation/server/data");
 let emails: typeof import("../features/investigation/server/emails");
 let files: typeof import("../features/files/server/files");
+let insights: typeof import("../features/insights/server/data");
+let exporter: typeof import("../features/export/server/data");
+let staff: typeof import("../features/staff/server/file");
 const ORG = "org_leisureworld";
 type GrantRow = { roleName: string; permissions: string[]; screens: string[]; scopeKind: string; scopeId: string };
 const state = { id: "mia", permissions: [] as string[], grants: [] as GrantRow[] };
@@ -65,6 +68,9 @@ before(async () => {
   mineData = serverModule("src/modules/incidents/features/investigation/server/data.ts", d);
   emails = serverModule("src/modules/incidents/features/investigation/server/emails.ts", d);
   files = serverModule("src/modules/incidents/features/files/server/files.ts", d);
+  insights = serverModule("src/modules/incidents/features/insights/server/data.ts", d);
+  exporter = serverModule("src/modules/incidents/features/export/server/data.ts", d);
+  staff = serverModule("src/modules/incidents/features/staff/server/file.ts", d);
 });
 after(async () => { await fixture?.close(); });
 
@@ -216,4 +222,35 @@ test("photos: the reporter and investigators add them, anyone who may read opens
   await assert.rejects(files.readFile(outsider, stored.id), /not available/);
   await files.removeFile(dan, stored.id);
   await assert.rejects(files.readFile(mia, stored.id), /not available/);
+});
+
+test("a staff injury reaches their HR file, the insights count it, and only a manager opens the full record", async () => {
+  reporter();
+  const hurt = { type: "staff" as const, ageGroup: "adult" as const, name: "", userId: "dan", contact: "", injured: true, bodyPart: "left hand", injury: "cut", firstAid: "Plaster", firstAidBy: "mia", ambulance: false, hospital: false };
+  const stranger = { ...hurt, userId: "nobody-here", bodyPart: "", injury: "" };
+  const sent = await report.submitReport({ ...nearMiss(), kind: "accident", category: "struck", occurredAt: "16:40", people: [hurt, stranger] });
+  assert.ok(sent.ok);
+  const id = sent.id!;
+  const people = await fixture.prisma.incidentPerson.findMany({ where: { reportId: id }, orderBy: { createdAt: "asc" } });
+  assert.deepEqual(people.map((p) => p.userId), ["dan", null], "only someone on the site's team is linked");
+  const file = await staff.staffIncidentFile("dan", ORG);
+  assert.equal(file.entries.length, 1);
+  assert.match(file.entries[0].detail, /cut, left hand; first aid given/);
+  assert.equal((await staff.staffIncidentRecords("dan", ORG)).involved.length, 1);
+
+  await assert.rejects(insights.incidentInsights({}), NotFound, "insights are for those who triage");
+  duty();
+  const seen = await insights.incidentInsights({ months: "3" });
+  assert.equal(seen.months, 3);
+  assert.ok(seen.insights.total >= 1);
+  assert.ok((seen.insights.kinds.find((k) => k.key === "accident")?.count ?? 0) >= 1);
+  assert.ok((seen.insights.hours.find((h) => h.key === "16:00")?.count ?? 0) >= 1, "counted at the hour it happened");
+  assert.equal(seen.toReview, null, "the keeping list is for Manage");
+  await assert.rejects(exporter.incidentExport(id), NotFound, "Investigate cannot open the full record");
+
+  as("gina", [], [at(bishopstown, ["incidents.reports.signoff", "incidents.reports.review", "incidents.reports.create"])]);
+  const full = await exporter.incidentExport(id);
+  assert.equal(full.report.people.length, 2);
+  assert.equal(await fixture.prisma.incidentEvent.count({ where: { reportId: id, action: "export" } }), 1, "every opening is in the history");
+  assert.deepEqual((await insights.incidentInsights({})).toReview, [], "nothing is past its keeping period yet");
 });

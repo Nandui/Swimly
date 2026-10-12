@@ -4,6 +4,14 @@ Patch notes for everyone who uses Turnfin at the swim school, the desk and the o
 
 **How versions are numbered:** the middle number goes up when something new arrives (a module, a screen, a new way of working), and the last number when something is fixed or tidied without changing how you work. This list starts on 3 October 2026, when Turnfin moved to its new look; earlier changes are not listed.
 
+## 1.8.0 · 12 October 2026 · Incidents: insights, the full record and HR
+
+- Centre and operations managers have a new **Insights** page in Incidents: what was reported over the last 3, 6 or 12 months at their sites, by month, kind, what it was about, where, the time of day and how serious, with the near misses for each accident and the overdue actions.
+- The operations manager can open a report's **full record**, with everything on it, to print or save as a PDF for the insurer. Each time it is opened, it shows in the report's history.
+- When a member of staff is hurt, the report form now lets you pick them from the site's team. The injury then appears on their **HR personal file**.
+- The report form's "Make it safe first" note now links to the site's **emergency plans** in Docs.
+- Reports are kept for at least 10 years, or 21 when a child was involved. The operations manager sees any that have passed that on Insights; nothing is deleted.
+
 ## 1.7.0 · 12 October 2026 · Incidents: investigations, actions and photos
 
 - While a report is under investigation, whoever is investigating can now take **witness statements**, work out **why it happened** by asking "why?" up to five times, and write down the root cause. Serious and moderate reports can't be closed until the root cause is recorded.

@@ -3,7 +3,9 @@ import { notFound } from "next/navigation";
 import { prisma } from "@/lib/prisma";
 import { activeStaffAtSite, areaNamesAt, liveSitesOf, withSite, withSites } from "@/lib/directory";
 import { today } from "@/lib/format";
-import { sitesFor } from "@/lib/policy/session";
+import { requireSession } from "@/lib/authz";
+import { holdsAnywhere } from "@/lib/policy/engine";
+import { actorForSession, sitesFor } from "@/lib/policy/session";
 import { covers, inSites, requireIncidentsActor } from "@/modules/incidents/shared/access";
 import { needsRootCause, needsSignoff } from "@/modules/incidents/shared/rules";
 import { reportRights } from "@/modules/incidents/shared/service";
@@ -90,6 +92,7 @@ export async function incidentReport(id: string) {
       close: investigate && (!needsSignoff(report) || rights.signoff),
       investigate,
       reopen: status === "closed" && rights.signoff && !rights.own,
+      export: rights.signoff && !rights.own,
       addFiles: status !== "closed" && (rights.own || rights.review),
       removeFiles: status !== "closed" && rights.review,
       seeInvestigation: rights.review,
@@ -103,12 +106,18 @@ export async function incidentReport(id: string) {
 }
 export type IncidentDetail = Awaited<ReturnType<typeof incidentReport>>;
 
-/** What the report form offers: the sites this person may report at and each one's areas. */
+/** What the report form offers: the sites this person may report at, each
+ *  one's areas and team (to name a staff member who was hurt), and whether
+ *  they can open the site's emergency plans in Docs (a link, never an import). */
 export async function reportFormData() {
   const who = await requireIncidentsActor();
   const [sites, all] = await Promise.all([sitesFor("incidents.reports.create"), liveSitesOf(who.orgId)]);
   const open = all.filter((s) => covers(sites, s.id));
-  const areas = Object.fromEntries(await Promise.all(open.map(async (s) => [s.id, await areaNamesAt(s.id)] as const)));
-  return { sites: open.map(({ id, name }) => ({ id, name })), areas };
+  const [areas, staff] = await Promise.all([
+    Promise.all(open.map(async (s) => [s.id, await areaNamesAt(s.id)] as const)).then(Object.fromEntries),
+    Promise.all(open.map(async (s) => [s.id, (await activeStaffAtSite(who.orgId, s.id)).map(({ id, name }) => ({ id, name }))] as const)).then(Object.fromEntries),
+  ]);
+  const docs = holdsAnywhere(actorForSession(await requireSession()), "docs.read");
+  return { sites: open.map(({ id, name }) => ({ id, name })), areas: areas as Record<string, string[]>, staff: staff as Record<string, { id: string; name: string }[]>, docs };
 }
 

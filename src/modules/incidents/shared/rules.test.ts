@@ -1,6 +1,6 @@
 import assert from "node:assert/strict";
 import test from "node:test";
-import { actionProblem, actionSchema, addWorkingDays, cleanWhys, closeDecision, fileProblem, isSerious, IncidentError, needsSignoff, reopenDecision, reportProblem, reportSchema, statementProblem, statementSchema, triageDecision, triageSchema } from "./rules";
+import { actionProblem, actionSchema, addWorkingDays, keepUntil, monthsEnding, summarise, cleanWhys, closeDecision, fileProblem, isSerious, IncidentError, needsSignoff, reopenDecision, reportProblem, reportSchema, statementProblem, statementSchema, triageDecision, triageSchema } from "./rules";
 import { actionStatus } from "./types";
 
 const who = { id: "dan", name: "Dan", orgId: null, superadmin: false, review: true, signoff: false };
@@ -87,4 +87,24 @@ test("files: checked by their first bytes, not only their name", () => {
   assert.equal(fileProblem({ name: "step.png", type: "image/png", size: png.length }, png), null);
   assert.ok(fileProblem({ name: "step.png", type: "image/png", size: 4 }, Buffer.from("<svg")), "not really a PNG");
   assert.ok(fileProblem({ name: "notes.html", type: "text/html", size: png.length }, png), "not a kind we take");
+});
+
+test("reports are kept 10 years, or 21 when a child was involved", () => {
+  assert.equal(keepUntil("2026-10-09", false), "2036-10-09");
+  assert.equal(keepUntil("2026-10-09", true), "2047-10-09");
+  assert.equal(keepUntil("2028-02-29", false), "2038-03-01", "a leap day keeps until 1 March");
+});
+
+test("insights count by month, kind, hour and level, and the near misses for each accident", () => {
+  const months = monthsEnding("2026-10-12", 3);
+  assert.deepEqual(months, ["2026-08", "2026-09", "2026-10"]);
+  const row = { siteId: "s", area: "Main pool", kind: "near_miss", category: "slip_trip_fall", occurredOn: "2026-10-01", occurredAt: "10:15", serious: false, hsaReportable: false, severityActual: 1, severityPotential: 2 };
+  const i = summarise([row, { ...row, occurredAt: "12:05" }, { ...row, kind: "accident", area: " ", occurredOn: "2026-08-03", serious: true, severityActual: null, severityPotential: null }], months);
+  assert.equal(i.total, 3);
+  assert.equal(i.nearMissRatio, 2);
+  assert.deepEqual(i.months.map((m) => m.count), [1, 0, 2]);
+  assert.deepEqual(i.hours.map((h) => [h.key, h.count]), [["10:00", 2], ["11:00", 0], ["12:00", 1]], "empty hours at the ends trimmed, gaps kept");
+  assert.equal(i.areas.find((a) => a.key === "Not given")?.count, 1);
+  assert.deepEqual([i.levels.find((l) => l.key === "2")?.count, i.untriaged, i.serious], [2, 1, 1]);
+  assert.equal(summarise([row], months).nearMissRatio, null, "no accidents, no ratio");
 });

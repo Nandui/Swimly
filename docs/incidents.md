@@ -76,6 +76,34 @@ Investigate at the site except its reporter.
 The reporter sees their report, addenda, files and the closing note, never the statements,
 the whys or the actions.
 
+## Insights, the full record and HR (phase 3)
+
+- **Insights** (`/incidents/insights`, Investigate and Manage, 404 for everyone else): the last
+  3, 6 or 12 months at all the sites they triage, or one of them. Reports, near misses per
+  accident (more is healthier: people report before someone is hurt), serious ones, HSA
+  reports, overdue actions; bars by month, kind, category, area, hour of the day, severity level
+  and site. Counts only, never names or injuries.
+- **Full record** (`/incidents/[id]/export`, Manage at the site, never your own report): the
+  whole report, people and injuries, triage, statements, whys, actions, closing, file names and
+  history, laid out to print or save as a PDF for the insurer or a solicitor. Every opening is
+  in the report's history ("Opened for the insurer") and the audit log. Files are sent from the
+  report page if asked for.
+- **Keeping period:** Manage holders see on Insights the closed reports past their keeping
+  period, 10 years from the day (reg. 226) or 21 when a child was involved (a child's claim can
+  come after they turn 18). Nothing is deleted, by Turnfin or from this list: removing a
+  report waits for an owner decision, with the insurer.
+- **HR:** when a staff member is involved, the reporter picks them from the site's team (or
+  types a name if they are not listed). Their incidents, injuries and treatment then show on
+  their HR personal file under "Incidents and injuries at work", and in their subject access
+  export with the reports they filed. Only a person on the site's team is ever linked.
+- **Emergency plans:** the report form's "Make it safe first" note links to the site's
+  emergency action plans in Docs (`/docs/library?type=EAP&facility=<site>`) for people who can
+  read Docs. A link, never an import.
+
+Not built, by decision: a report button on the pool deck (Fernando, 12 October 2026: no
+button; the pool deck stays apart from the desk). Incident actions are not copied into Tasks:
+they already have owners, due days and reminders, and a copy would be a second list to tick.
+
 ## Who reports
 
 Only **duty managers, shift supervisors, department supervisors, centre managers and
@@ -106,14 +134,15 @@ needs another Manage holder at the site to close it.
 | --- | --- | --- |
 | Report | `incidents.reports.create` | Their own reports, in full, and how they were closed |
 | Investigate | `incidents.reports.review` | Every report at the sites they cover, injury details included; the serious alerts; triage and closing low-risk ones; statements, the root cause and actions |
-| Manage | `incidents.reports.signoff` | Also closing serious and moderate reports, reopening closed ones, and who opened each report's injury details |
+| Manage | `incidents.reports.signoff` | Also closing serious and moderate reports (only the operations manager holds it, owner decision 12 October 2026), reopening closed ones, the full record for the insurer, reports past their keeping period, and who opened each report's injury details |
 
 Reach is the sites a person works at. Opening someone else's report that names people writes
 an `incidents_access_events` row. Every change writes one audit row under Incidents.
 
 ## Pages
 
-Overview (`/incidents/overview`, the starter page: reports to triage, serious ones to sign off,
+Insights (`/incidents/insights`, those who triage), the full record (`/incidents/[id]/export`,
+Manage), Overview (`/incidents/overview`, the starter page: reports to triage, serious ones to sign off,
 investigations, Report an incident), Report (`/incidents/new`), Reports (`/incidents`: your
 actions, to triage, under investigation, your reports, recently closed) and a report
 (`/incidents/[id]`). Files are served by `/api/incidents/files/[id]` and added through
@@ -160,7 +189,5 @@ H&S adviser should still look over the wording before launch.
 
 - **Phase 2** (above, 1.7.0): witness statements, root cause (5 whys), corrective actions
   with owners, due dates and reminders, a reopen with a reason, photos and files.
-- **Phase 3:** insights (trends by site, area, kind and hour, near misses per accident), an
-  export of one report for the insurer, retention rules, `incidents.action.raised` for Tasks,
-  a section in HR's personal file for staff injuries, links to the site's emergency action
-  plan in Docs, and the pool deck button if approved.
+- **Phase 3** (above, 1.8.0): insights, the full record for the insurer, the keeping period,
+  staff injuries on the HR file and links to the site's emergency plans.

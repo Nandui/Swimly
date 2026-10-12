@@ -2,7 +2,7 @@
 
 import { useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
-import { Plus, Send, Trash2 } from "lucide-react";
+import { LifeBuoy, Plus, Send, Trash2 } from "lucide-react";
 import { Button } from "@/components/shadcn/button";
 import { Input } from "@/components/shadcn/input";
 import { NativeSelect, NativeSelectOption } from "@/components/shadcn/native-select";
@@ -18,13 +18,13 @@ import { reportProblem, reportSchema, type PersonInput, type ReportInput } from 
 import { ageGroups, incidentCategories, incidentKinds, personTypes, type IncidentKind } from "@/modules/incidents/shared/types";
 
 type Site = { id: string; name: string };
-const blankPerson = (): PersonInput => ({ type: "public", ageGroup: "adult", name: "", contact: "", injured: false, bodyPart: "", injury: "", firstAid: "", firstAidBy: "", ambulance: false, hospital: false });
+const blankPerson = (): PersonInput => ({ type: "public", ageGroup: "adult", name: "", userId: "", contact: "", injured: false, bodyPart: "", injury: "", firstAid: "", firstAidBy: "", ambulance: false, hospital: false });
 const clock = () => { const m = minutesNow(); return `${String(Math.floor(m / 60)).padStart(2, "0")}:${String(m % 60).padStart(2, "0")}`; };
 
 /** The two-minute report (docs/incidents.md): what kind, where and when, what
  *  happened, who was involved and who saw it. Only the first part is required;
  *  the centre or operations manager adds the rest at triage. Sending locks the reporter's words. */
-export function ReportForm({ sites, areas }: { sites: Site[]; areas: Record<string, string[]> }) {
+export function ReportForm({ sites, areas, staff, docs }: { sites: Site[]; areas: Record<string, string[]>; staff: Record<string, Site[]>; docs: boolean }) {
   const router = useRouter();
   const [pending, start] = useTransition();
   const [error, setError] = useState<string | null>(null);
@@ -56,7 +56,8 @@ export function ReportForm({ sites, areas }: { sites: Site[]; areas: Record<stri
 
   return (
     <form onSubmit={send} className="flex flex-col gap-6" noValidate>
-      <Notice title="Make it safe first" description="If anyone needs help, call 112 and follow the site's emergency action plan. Report here once everyone is safe. Worried about a child's welfare? That is a safeguarding concern, not an incident: tell the Designated Liaison Person straight away." />
+      <Notice title="Make it safe first" description="If anyone needs help, call 112 and follow the site's emergency action plan. Report here once everyone is safe. Worried about a child's welfare? That is a safeguarding concern, not an incident: tell the Designated Liaison Person straight away."
+        actions={docs ? <Button asChild variant="outline" className="min-h-11"><a href={`/docs/library?type=EAP${f.siteId ? `&facility=${encodeURIComponent(f.siteId)}` : ""}`} target="_blank" rel="noreferrer"><LifeBuoy aria-hidden="true" />Emergency plans<span className="sr-only"> (opens in a new tab)</span></a></Button> : undefined} />
 
       <section aria-labelledby="inc-what" className="pc-panel flex flex-col gap-5">
         <h2 id="inc-what">About it</h2>
@@ -113,7 +114,7 @@ export function ReportForm({ sites, areas }: { sites: Site[]; areas: Record<stri
             <legend className="px-1 text-sm font-semibold">Person {i + 1}</legend>
             <div className="grid gap-4 sm:grid-cols-2">
               <Field label="Who they are" htmlFor={`inc-p${i}-type`}>
-                <NativeSelect id={`inc-p${i}-type`} value={p.type} onChange={(e) => setPerson(i, { type: e.target.value as PersonInput["type"] })}>
+                <NativeSelect id={`inc-p${i}-type`} value={p.type} onChange={(e) => setPerson(i, { type: e.target.value as PersonInput["type"], userId: "" })}>
                   {Object.entries(personTypes).map(([k, label]) => <NativeSelectOption key={k} value={k}>{label}</NativeSelectOption>)}
                 </NativeSelect>
               </Field>
@@ -122,7 +123,17 @@ export function ReportForm({ sites, areas }: { sites: Site[]; areas: Record<stri
                   {Object.entries(ageGroups).map(([k, label]) => <NativeSelectOption key={k} value={k}>{label}</NativeSelectOption>)}
                 </NativeSelect>
               </Field>
-              <Field label="Name" htmlFor={`inc-p${i}-name`} optional><Input id={`inc-p${i}-name`} value={p.name} onChange={(e) => setPerson(i, { name: e.target.value })} maxLength={200} autoComplete="off" /></Field>
+              {p.type === "staff" && (staff[f.siteId] ?? []).length ? (
+                <Field label="Which staff member" htmlFor={`inc-p${i}-staff`} hint="Their injury goes on their HR file. Choose Not listed to type a name.">
+                  <NativeSelect id={`inc-p${i}-staff`} value={p.userId} onChange={(e) => setPerson(i, { userId: e.target.value, name: staff[f.siteId].find((s) => s.id === e.target.value)?.name ?? "" })}>
+                    <NativeSelectOption value="">Not listed</NativeSelectOption>
+                    {staff[f.siteId].map((s) => <NativeSelectOption key={s.id} value={s.id}>{s.name}</NativeSelectOption>)}
+                  </NativeSelect>
+                </Field>
+              ) : null}
+              {p.type !== "staff" || !p.userId ? (
+                <Field label="Name" htmlFor={`inc-p${i}-name`} optional><Input id={`inc-p${i}-name`} value={p.name} onChange={(e) => setPerson(i, { name: e.target.value })} maxLength={200} autoComplete="off" /></Field>
+              ) : null}
               <Field label="Phone or email" htmlFor={`inc-p${i}-contact`} hint="For a child, their parent or guardian's" optional><Input id={`inc-p${i}-contact`} value={p.contact} onChange={(e) => setPerson(i, { contact: e.target.value })} maxLength={200} autoComplete="off" /></Field>
             </div>
             <ChoiceRow type="checkbox" id={`inc-p${i}-injured`} title="They were hurt or became ill" checked={p.injured} onCheckedChange={(on) => setPerson(i, { injured: on === true })} />

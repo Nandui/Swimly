@@ -79,6 +79,7 @@ export const incidentActions = {
   file_add: "File added",
   file_remove: "File removed",
   reopen: "Reopened",
+  export: "Opened for the insurer",
 } as const;
 export type IncidentActionKey = keyof typeof incidentActions;
 
