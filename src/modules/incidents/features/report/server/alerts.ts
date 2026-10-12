@@ -7,21 +7,23 @@ import { prisma } from "@/lib/prisma";
 import { incidentCategories, incidentKinds, incidentNumber, type IncidentCategory, type IncidentKind } from "@/modules/incidents/shared/types";
 
 /** Serious-report alerts (docs/incidents.md). Who gets one: everyone whose role
- *  signs off Incidents at the report's site (no sites ticked means every site).
+ *  triages or signs off Incidents at the report's site (no sites ticked means
+ *  every site): the centre manager and the operations manager (owner decision,
+ *  12 October 2026).
  *  The jobs are written in the report's transaction; sending happens straight
  *  after it commits, and each job keeps its outcome, so a failure shows on the
  *  report instead of disappearing. The email names no one and carries no injury
  *  details: those stay in Turnfin. */
 
 export async function queueAlerts(tx: Prisma.TransactionClient, report: { id: string; siteId: string }) {
-  const holders = await activeStaffHolding(["incidents.reports.signoff"], tx);
+  const holders = await activeStaffHolding(["incidents.reports.review", "incidents.reports.signoff"], tx);
   const recipients: string[] = [];
   for (const person of holders) {
     const sites = await staffSiteIds(person.id, tx);
     if (sites.length === 0 || sites.includes(report.siteId)) recipients.push(person.id);
   }
   if (!recipients.length) {
-    await tx.incidentNotification.create({ data: { reportId: report.id, recipientId: "unassigned", status: "FAILED", error: "Nobody's role signs off Incidents at this site." } });
+    await tx.incidentNotification.create({ data: { reportId: report.id, recipientId: "unassigned", status: "FAILED", error: "Nobody's role triages Incidents at this site." } });
     return;
   }
   await tx.incidentNotification.createMany({ data: recipients.map((recipientId) => ({ reportId: report.id, recipientId })) });

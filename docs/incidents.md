@@ -23,8 +23,9 @@ defaults on 11 October 2026 ([ADR 0008](architecture/decisions/0008-add-incident
    who triages it, even after closing.
 2. **Serious alert.** A report is serious when anyone involved went by ambulance or to
    hospital or a doctor, or its category always is (rescue from the water, chemical, lost
-   child). The email goes at once to everyone whose role has Incidents **Manage** at the site
-   (no sites ticked means every site), names nobody and carries no injury details. Each email
+   child). The email goes at once to everyone whose role has Incidents **Investigate** or
+   **Manage** at the site (no sites ticked means every site): the centre manager and the
+   operations manager, names nobody and carries no injury details. Each email
    is a row in `incidents_notifications`; a failure shows on the report as a warning.
 3. **Triage** (Investigate, never your own). Two severities on one 1 to 5 scale: what happened
    and the worst that realistically could have; the worse of the two is the level. Three HSA
@@ -43,17 +44,32 @@ defaults on 11 October 2026 ([ADR 0008](architecture/decisions/0008-add-incident
 Only **duty managers, shift supervisors, department supervisors, centre managers and
 operations managers** file reports (owner decision, 12 October 2026). Lifeguards,
 instructors, desk staff and everyone else tell the supervisor or duty manager on shift, who
-files it and names them under "Who told you about it". Turnfin checks permissions, never
-role names, so this is set in Admin: give those roles Incidents Report or higher, and give
-every other role no Incidents level.
+files it and names them under "Who told you about it".
+
+The **centre manager** and the **operations manager** triage: every report at their sites waits
+for either of them, and whoever gets to it first does it. The **operations manager** is the
+health and safety lead, who signs off serious and moderate reports.
+
+Turnfin checks permissions, never role names, so this is set in Admin:
+
+| Role | Incidents level |
+| --- | --- |
+| Duty manager, shift supervisor, department supervisor | Report |
+| Centre manager | Investigate |
+| Operations manager | Manage |
+| Everyone else | none |
+
+Nobody triages or closes their own report, so a report the centre manager files goes to the
+operations manager and the other way round. A serious report the operations manager files
+needs another Manage holder at the site to close it.
 
 ## Who sees what
 
 | Level | Permission | Sees |
 | --- | --- | --- |
 | Report | `incidents.reports.create` | Their own reports, in full, and how they were closed |
-| Investigate | `incidents.reports.review` | Every report at the sites they cover, injury details included; triage and closing low-risk ones |
-| Manage | `incidents.reports.signoff` | Also the serious alerts, closing serious and moderate reports, and who opened each report's injury details |
+| Investigate | `incidents.reports.review` | Every report at the sites they cover, injury details included; the serious alerts; triage and closing low-risk ones |
+| Manage | `incidents.reports.signoff` | Also closing serious and moderate reports, and who opened each report's injury details |
 
 Reach is the sites a person works at. Opening someone else's report that names people writes
 an `incidents_access_events` row. Every change writes one audit row under Incidents.

@@ -17,9 +17,9 @@ export const incidentsModule: ModuleManifest = {
   access: {
     reach: "sites",
     levels: [
-      { key: "report", label: "Report", help: "Report accidents, incidents and near misses at their sites, and follow their own reports. For duty managers and supervisors; other staff tell them.", permissions: ["incidents.reports.create"] },
-      { key: "investigate", label: "Investigate", help: "Also see every report at their sites, injury details included, triage them and close low-risk ones. Never their own.", permissions: ["incidents.reports.review"] },
-      { key: "manage", label: "Manage", help: "Also get the alert when something serious is reported, and close serious reports. Never their own.", permissions: ["incidents.reports.signoff"] },
+      { key: "report", label: "Report", help: "Report accidents, incidents and near misses at their sites, and follow their own reports. For duty managers, supervisors, centre managers and operations managers; other staff tell them.", permissions: ["incidents.reports.create"] },
+      { key: "investigate", label: "Investigate", help: "Also see every report at their sites, injury details included, get the alert when something serious is reported, triage them and close low-risk ones. Never their own.", permissions: ["incidents.reports.review"] },
+      { key: "manage", label: "Manage", help: "Also close serious and moderate reports: the health and safety lead. Never their own.", permissions: ["incidents.reports.signoff"] },
     ],
   },
 };

@@ -33,7 +33,7 @@ before(async () => {
   bishopstown = clubs.find((c) => c.name.includes("Bishopstown"))!.id;
   churchfield = clubs.find((c) => c.name.includes("Churchfield"))!.id;
   await db.staffRole.create({ data: { id: "r-life", name: "Lifeguard", permissions: ["incidents.reports.create"], screens: [] } });
-  await db.staffRole.create({ data: { id: "r-duty", name: "Duty manager", permissions: ["incidents.reports.review", "incidents.reports.create"], screens: [] } });
+  await db.staffRole.create({ data: { id: "r-duty", name: "Centre manager", permissions: ["incidents.reports.review", "incidents.reports.create"], screens: [] } });
   await db.staffRole.create({ data: { id: "r-gm", name: "General manager", permissions: ["incidents.reports.signoff", "incidents.reports.review", "incidents.reports.create"], screens: [] } });
   for (const [id, role, sites] of [["mia", "r-life", []], ["dan", "r-duty", []], ["gina", "r-gm", []], ["carl", "r-gm", ["churchfield"]]] as const) {
     await db.user.create({ data: { id, name: id, email: `${id}@example.invalid`, staffRoleId: role, orgId: ORG, siteIds: sites.map(() => churchfield) } });
@@ -88,15 +88,15 @@ test("a near miss: reported at your own site, triaged and closed by someone else
   assert.ok(log.every((l) => l.module === "Incidents" && l.clubId === bishopstown));
 });
 
-test("a serious accident alerts the managers who cover the site, and only a manager closes it", async () => {
+test("a serious accident alerts everyone who triages at the site, and only a manager closes it", async () => {
   reporter();
   const child = { type: "swimmer" as const, ageGroup: "child" as const, name: "Sample Child", contact: "", injured: true, bodyPart: "Head", injury: "Bump", firstAid: "Cold compress", firstAidBy: "mia", ambulance: false, hospital: true };
   const sent = await report.submitReport({ ...nearMiss(), kind: "accident", category: "struck", people: [child] });
   assert.ok(sent.ok);
   const row = await fixture.prisma.incidentReport.findUniqueOrThrow({ where: { id: sent.id! }, include: { notifications: true } });
   assert.equal(row.serious, true);
-  // Gina covers every site; Carl only Churchfield. No email is set up in tests, so the job records why.
-  assert.deepEqual(row.notifications.map((n) => [n.recipientId, n.status, n.error]), [["gina", "FAILED", "Email is not set up."]]);
+  // Dan and Gina cover every site; Carl only Churchfield. No email is set up in tests, so each job records why.
+  assert.deepEqual(row.notifications.map((n) => [n.recipientId, n.status, n.error]).sort(), [["dan", "FAILED", "Email is not set up."], ["gina", "FAILED", "Email is not set up."]]);
 
   as("dan", [], [at(churchfield, ["incidents.reports.review"])]);
   await assert.rejects(data.incidentReport(row.id), NotFound, "not at the sites they triage");

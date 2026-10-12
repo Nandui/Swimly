@@ -23,7 +23,7 @@ const clock = () => { const m = minutesNow(); return `${String(Math.floor(m / 60
 
 /** The two-minute report (docs/incidents.md): what kind, where and when, what
  *  happened, who was involved and who saw it. Only the first part is required;
- *  the duty manager adds the rest at triage. Sending locks the reporter's words. */
+ *  the centre or operations manager adds the rest at triage. Sending locks the reporter's words. */
 export function ReportForm({ sites, areas }: { sites: Site[]; areas: Record<string, string[]> }) {
   const router = useRouter();
   const [pending, start] = useTransition();

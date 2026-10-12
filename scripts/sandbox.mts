@@ -69,9 +69,11 @@ const levelRoles: { name: string; homeName: string; levels: Record<string, strin
   { name: "Instructor", homeName: "Pool deck", levels: { "pool-deck": "teach" }, system: true },
   { name: "Receptionist", homeName: "Front of House", levels: { "swim-school": "desk", refunds: "use", docs: "read", rota: "view", tasks: "do" } },
   { name: "Lifeguard", homeName: "Poolside", levels: { docs: "read", rota: "view", tasks: "do" } },
-  { name: "Pool supervisor", homeName: "Pool planning", levels: { docs: "read", rota: "plan", academy: "run", tasks: "review", incidents: "investigate" } },
-  { name: "Duty manager", homeName: "Duty desk", levels: { "swim-school": "desk", refunds: "manage", docs: "read", training: "trainer", rota: "manage", academy: "run", tasks: "review", incidents: "investigate" }, extras: ["swim-school.cancel-classes"] },
-  { name: "Swim school manager", homeName: "Swim school office", levels: { "swim-school": "manage", "pool-deck": "lead", docs: "manage", training: "manage", rota: "manage", hr: "team", academy: "manage", tasks: "manage", incidents: "manage" }, extras: ["swim-school.cancel-classes", "docs.approve"] },
+  { name: "Pool supervisor", homeName: "Pool planning", levels: { docs: "read", rota: "plan", academy: "run", tasks: "review", incidents: "report" } },
+  { name: "Duty manager", homeName: "Duty desk", levels: { "swim-school": "desk", refunds: "manage", docs: "read", training: "trainer", rota: "manage", academy: "run", tasks: "review", incidents: "report" }, extras: ["swim-school.cancel-classes"] },
+  { name: "Swim school manager", homeName: "Swim school office", levels: { "swim-school": "manage", "pool-deck": "lead", docs: "manage", training: "manage", rota: "manage", hr: "team", academy: "manage", tasks: "manage", incidents: "report" }, extras: ["swim-school.cancel-classes", "docs.approve"] },
+  { name: "Centre manager", homeName: "Centre office", levels: { docs: "read", rota: "manage", tasks: "review", incidents: "investigate" } },
+  { name: "Operations manager", homeName: "Operations", levels: { docs: "read", tasks: "review", incidents: "manage" } },
 ];
 for (const [i, role] of levelRoles.entries()) {
   const data = { homeName: role.homeName, ...roleColumns({ levels: role.levels, extras: role.extras ?? [] }) };
@@ -97,6 +99,8 @@ const people: Seed[] = [
   { id: "sbx_sam", name: "Sam Example", role: "Pool supervisor", title: "Pool supervisor, Hillview", site: "club_churchfield", departments: ["dept_aquatics"], manager: "sbx_liam", sites: ["club_churchfield"] },
   { id: "sbx_ciara", name: "Ciara Example", role: "Lifeguard", title: "Lifeguard", site: "club_churchfield", departments: ["dept_aquatics"], manager: "sbx_sam", sites: ["club_churchfield"] },
   { id: "sbx_conor", name: "Conor Example", role: "Lifeguard", title: "Lifeguard", site: "club_churchfield", departments: ["dept_aquatics"], manager: "sbx_sam", sites: ["club_churchfield"] },
+  { id: "sbx_orla", name: "Orla Example", role: "Centre manager", title: "Centre manager, Hillview", site: "club_churchfield", departments: [], manager: "sbx_owen", sites: ["club_churchfield"] },
+  { id: "sbx_owen", name: "Owen Example", role: "Operations manager", title: "Operations manager", site: "club_bishopstown", departments: [], manager: "sbx_alex" },
   { id: "sbx_dylan", name: "Dylan Example", role: "Lifeguard", title: "Lifeguard", site: "club_churchfield", departments: ["dept_aquatics"], manager: "sbx_sam", sites: ["club_churchfield"] },
 ];
 for (const p of people) {

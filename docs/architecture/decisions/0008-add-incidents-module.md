@@ -7,7 +7,7 @@ Fernando asked (11 October 2026) for a brand new module to report incidents, acc
 
 ## Decision
 - A new module `incidents` in the Poolside group: `src/modules/incidents` with features `report`, `triage`, `reports` and `workspace`, routes in `src/app/incidents`, starter page `/incidents/overview`.
-- Levels Report, Investigate and Manage at the sites a person works at (`incidents.reports.create`, `.review`, `.signoff`). Nobody triages or closes their own report. Only duty managers, shift and department supervisors, centre managers and operations managers report (owner decision, 12 October 2026); that is role configuration in Admin, not code, and the report records who told them.
+- Levels Report, Investigate and Manage at the sites a person works at (`incidents.reports.create`, `.review`, `.signoff`). Nobody triages or closes their own report. Only duty managers, shift and department supervisors, centre managers and operations managers report (owner decision, 12 October 2026); the centre manager (Investigate) or the operations manager (Manage, the health and safety lead) triages. That is role configuration in Admin, not code; the report records who told the reporter, and serious alerts go to everyone who triages at the site.
 - Tables in the main database, prefixed `incidents_` (CLAUDE.md section 4), with model names prefixed `Incident` (ADR 0002). Injury details sit in their own table, and reads of them are logged.
 - Safeguarding concerns stay out of the module; reports are named; no pool deck button until phase 3.
 - Built in three phases; this one is reporting, serious alerts and triage.

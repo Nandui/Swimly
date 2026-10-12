@@ -9,9 +9,9 @@ Patch notes for everyone who uses Turnfin at the swim school, the desk and the o
 - A new module, **Incidents**, under Poolside. Duty managers, shift and department supervisors, centre managers and operations managers report an accident, an incident or a near miss in about two minutes, from any work computer or tablet: what happened, where and when, who told them, who was involved and who saw it. Everyone else tells the supervisor or duty manager on shift.
 - Once sent, a report is kept exactly as written. You can add to it later, and your additions show under it with your name and the time.
 - If someone went by ambulance or to hospital, or it was a rescue from the water, a chemical or a missing child, the managers who cover that site get an email straight away.
-- Duty managers see every report at their sites, rate how serious it was and could have been, answer the Health and Safety Authority questions, and either close low-risk ones or send them for investigation. Serious ones are closed by a manager. Nobody triages or closes their own report.
+- The centre manager and the operations manager see every report at their sites, and either of them triages it: they rate how serious it was and could have been, answer the Health and Safety Authority questions, and either close low-risk ones or send them for investigation. Both get an email straight away when something serious is reported. Serious ones are closed by the operations manager. Nobody triages or closes their own report.
 - When your report is closed, you can see what was found and what changed.
-- Administrators choose who can Report, Investigate or Manage on each role, under Incidents. Give Report or higher only to the manager and supervisor roles.
+- Administrators choose who can Report, Investigate or Manage on each role, under Incidents. Give Report to duty managers and supervisors, Investigate to centre managers and Manage to operations managers.
 
 ## 1.5.1 · 11 October 2026 · A clearer Home
 
