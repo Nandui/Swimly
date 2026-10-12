@@ -2,6 +2,7 @@ import { academyModule } from "@/modules/academy/manifest";
 import { poolDeckModule, swimSchoolModule } from "@/modules/activities/manifest";
 import { docsModule } from "@/modules/docs/manifest";
 import { hrModule } from "@/modules/hr/manifest";
+import { incidentsModule } from "@/modules/incidents/manifest";
 import { purchasingModule } from "@/modules/purchasing/manifest";
 import { refundsModule } from "@/modules/refunds/manifest";
 import { rotaModule } from "@/modules/rota/manifest";
@@ -19,6 +20,7 @@ export const modules = [
   refundsModule,
   poolDeckModule,
   tasksModule,
+  incidentsModule,
   rotaModule,
   trainingModule,
   docsModule,

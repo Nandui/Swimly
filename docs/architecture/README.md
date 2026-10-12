@@ -28,6 +28,7 @@ Each module is a self-contained package under `src/modules/<id>`: its `manifest.
 | purchasing | Raises and approves purchase orders. Features: `orders`, `suppliers`, `workspace` ([README](../../src/modules/purchasing/README.md)). | `purchasing.prisma` | home cards |
 | academy | Runs the lifeguard and swim teacher courses we deliver. Features: `courses`, `course-types`, `calls`, `booking`, `workspace` ([README](../../src/modules/academy/README.md)). | `academy.prisma` | home cards; its own public API |
 | tasks | Runs each site's daily checks and logs. Features: `day`, `follow-ups`, `templates`, `sites`, `reports`, `schedule`, `workspace` ([README](../../src/modules/tasks/README.md)). | `tasks.prisma` | home cards |
+| incidents | Records accidents, incidents and near misses from report to a closed record. Features: `report`, `triage`, `reports`, `workspace` ([README](../../src/modules/incidents/README.md), [ADR 0008](decisions/0008-add-incidents-module.md)). | `incidents.prisma` | home cards |
 | training | Assigns courses and records completions. Features: `courses`, `assignments`, `sign-off`, `certificates`, `expiring`, `me`, `person-file`, `workspace` ([README](../../src/modules/training/README.md)). | `training.prisma` | personal file, subject records, Turnfin Me digest |
 | docs | Publishes documents and required reading. Features: `home`, `library`, `reader`, `editor`, `history`, `work`, `reports`, `admin`, `files`, `import`, `me`, `workspace` ([README](../../src/modules/docs/README.md)). | own database (`DOCS_DATABASE_URL`) | home cards, Turnfin Me digest |
 | hr | Keeps staff files, notes and reviews. Features: `team`, `person`, `reviews`, `activity`, `export`, `details-requests`, `me`, `workspace` ([README](../../src/modules/hr/README.md)). | own database (`HR_DATABASE_URL`) | reads the personal file and subject records |
@@ -48,7 +49,7 @@ flowchart TB
   list["src/app/modules.ts<br/>(every module's manifest.ts)"] --> registry["Core registry<br/>Home, menus, role editor"]
   subgraph Modules
     activities[Swim school and Pool deck]; academy[Academy]; refunds[Refunds]; tasks[Tasks]
-    rota[Rota]; training[Training]; docs[Docs]; hr[HR]; purchasing[Purchasing]
+    rota[Rota]; training[Training]; docs[Docs]; hr[HR]; purchasing[Purchasing]; incidents[Incidents]
   end
   Modules --> core["Core: people, roles, sites, audit, policy<br/>(src/lib, src/modules/contributions.ts)"]
   Modules --> ui["UI kit (src/components/shadcn, ui, ui-kit)"]

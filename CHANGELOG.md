@@ -4,6 +4,15 @@ Patch notes for everyone who uses Turnfin at the swim school, the desk and the o
 
 **How versions are numbered:** the middle number goes up when something new arrives (a module, a screen, a new way of working), and the last number when something is fixed or tidied without changing how you work. This list starts on 3 October 2026, when Turnfin moved to its new look; earlier changes are not listed.
 
+## 1.6.0 · 11 October 2026 · Incidents: report accidents, incidents and near misses
+
+- A new module, **Incidents**, under Poolside. Duty managers, shift and department supervisors, centre managers and operations managers report an accident, an incident or a near miss in about two minutes, from any work computer or tablet: what happened, where and when, who told them, who was involved and who saw it. Everyone else tells the supervisor or duty manager on shift.
+- Once sent, a report is kept exactly as written. You can add to it later, and your additions show under it with your name and the time.
+- If someone went by ambulance or to hospital, or it was a rescue from the water, a chemical or a missing child, the managers who cover that site get an email straight away.
+- The centre manager and the operations manager see every report at their sites, and either of them triages it: they rate how serious it was and could have been, answer the Health and Safety Authority questions, and either close low-risk ones or send them for investigation. Both get an email straight away when something serious is reported. Serious ones are closed by the operations manager. Nobody triages or closes their own report.
+- When your report is closed, you can see what was found and what changed.
+- Administrators choose who can Report, Investigate or Manage on each role, under Incidents. Give Report to duty managers and supervisors, Investigate to centre managers and Manage to operations managers.
+
 ## 1.5.1 · 11 October 2026 · A clearer Home
 
 - Home now shows each group of modules (Front of house, Poolside, Team, Back office) in its own panel, side by side on wide screens, so the list no longer leaves gaps.

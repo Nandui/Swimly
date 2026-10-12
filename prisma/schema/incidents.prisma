@@ -1,0 +1,161 @@
+// Incidents (owner request, 11 October 2026; docs/incidents.md): accidents,
+// incidents and near misses at a site, reported by a duty manager or supervisor
+// (owner decision, 12 October 2026), triaged by the centre
+// or operations manager and, when serious, signed off by the operations manager.
+// Tables carry the module prefix (CLAUDE.md section 4).
+
+/// One report. The reporter's words are locked when it is submitted; later
+/// corrections are addenda in `IncidentEvent`.
+model IncidentReport {
+  id                String    @id @default(cuid())
+  /// Shown as INC-00042.
+  number            Int       @unique @default(autoincrement())
+  orgId             String?
+  siteId            String
+  /// One of the site's areas (Admin, Areas) or free text when it has none.
+  area              String    @default("")
+  /// accident | incident | near_miss
+  kind              String
+  /// See `incidentCategories` in src/modules/incidents/shared/types.ts.
+  category          String
+  /// The site's own date and time, as the reporter saw the clock.
+  occurredOn        String
+  occurredAt        String
+  /// What happened, in the reporter's words.
+  description       String
+  /// What was done straight away: made safe, pool cleared, area closed.
+  immediateAction   String    @default("")
+  /// reported | investigating | closed
+  status            String    @default("reported")
+  /// Set at submission when the report says ambulance, hospital, a rescue or a
+  /// dangerous occurrence: the managers are alerted at once.
+  serious           Boolean   @default(false)
+  reporterId        String
+  reporterName      String
+  /// Who first told the reporter about it (name and role), when they didn't see
+  /// it themselves. Empty when they did.
+  raisedBy          String    @default("")
+
+  severityActual    Int?
+  severityPotential Int?
+  /// Whether it must be reported to the Health and Safety Authority, decided at triage.
+  hsaReportable     Boolean?
+  /// The date the HSA report is due by (10 working days after the event).
+  hsaDueOn          String?
+  /// The IR1 or IR3 reference, or the date it was sent.
+  hsaReference      String    @default("")
+  /// Who told a child's parent or guardian, and when, in their words.
+  parentInformed    String    @default("")
+  triageNote        String    @default("")
+  triagedById       String?
+  triagedByName     String?
+  triagedAt         DateTime?
+  closeNote         String    @default("")
+  closedById        String?
+  closedByName      String?
+  closedAt          DateTime?
+
+  version           Int       @default(0)
+  createdAt         DateTime  @default(now())
+  updatedAt         DateTime  @updatedAt
+
+  people        IncidentPerson[]
+  witnesses     IncidentWitness[]
+  events        IncidentEvent[]
+  reads         IncidentAccessEvent[]
+  notifications IncidentNotification[]
+
+  @@index([siteId, status])
+  @@index([reporterId])
+  @@map("incidents_reports")
+}
+
+/// Someone involved: hurt, or at the centre of it. Injury and treatment are
+/// shown only to people who investigate, and every read is logged.
+model IncidentPerson {
+  id         String   @id @default(cuid())
+  reportId   String
+  /// public | swimmer | staff | contractor
+  type       String
+  /// child | adult
+  ageGroup   String
+  name       String   @default("")
+  contact    String   @default("")
+  injured    Boolean  @default(false)
+  bodyPart   String   @default("")
+  injury     String   @default("")
+  firstAid   String   @default("")
+  firstAidBy String   @default("")
+  ambulance  Boolean  @default(false)
+  hospital   Boolean  @default(false)
+  createdAt  DateTime @default(now())
+
+  report IncidentReport @relation(fields: [reportId], references: [id], onDelete: Restrict)
+
+  @@index([reportId])
+  @@map("incidents_people")
+}
+
+/// Someone who saw it, and how to reach them for a statement.
+model IncidentWitness {
+  id        String   @id @default(cuid())
+  reportId  String
+  name      String
+  contact   String   @default("")
+  createdAt DateTime @default(now())
+
+  report IncidentReport @relation(fields: [reportId], references: [id], onDelete: Restrict)
+
+  @@index([reportId])
+  @@map("incidents_witnesses")
+}
+
+/// The report's history: submitted, triaged, closed, and every addendum.
+model IncidentEvent {
+  id        String   @id @default(cuid())
+  reportId  String
+  actorId   String
+  actorName String
+  /// submit | triage | close | addendum
+  action    String
+  note      String   @default("")
+  createdAt DateTime @default(now())
+
+  report IncidentReport @relation(fields: [reportId], references: [id], onDelete: Restrict)
+
+  @@index([reportId, createdAt])
+  @@map("incidents_events")
+}
+
+/// Every time someone other than the reporter opened a report's injury details.
+model IncidentAccessEvent {
+  id        String   @id @default(cuid())
+  reportId  String
+  actorId   String
+  actorName String
+  createdAt DateTime @default(now())
+
+  report IncidentReport @relation(fields: [reportId], references: [id], onDelete: Restrict)
+
+  @@index([reportId, createdAt])
+  @@map("incidents_access_events")
+}
+
+/// An alert email about a serious report: queued in the same transaction as
+/// the report, sent straight after it commits.
+model IncidentNotification {
+  id          String    @id @default(cuid())
+  reportId    String
+  /// A staff member's id, or "unassigned" when nobody could be alerted.
+  recipientId String
+  /// PENDING | SENT | FAILED
+  status      String    @default("PENDING")
+  error       String?
+  createdAt   DateTime  @default(now())
+  sentAt      DateTime?
+
+  report IncidentReport @relation(fields: [reportId], references: [id], onDelete: Restrict)
+
+  @@index([reportId])
+  @@map("incidents_notifications")
+}
