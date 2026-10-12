@@ -37,7 +37,8 @@ The HR record is the person's personal file. Besides notes and reviews it shows
 what other modules keep about them, through the personal-file seam
 (`registerPersonFileSection` / `personFile` in `src/modules/contributions.ts`):
 today Rota's planned activities, **Absences and returns to work** and changes to
-their activities (docs/rota.md), and Training's open assignments. Those records stay
+their activities (docs/rota.md), Training's open assignments, and Incidents'
+**Incidents and injuries at work** (docs/incidents.md). Those records stay
 in their module's database; HR reads them inside the same logged read as the
 record, and the subject export includes them as `personalFile`. A new module
 adds its part by registering a section; HR does not change.

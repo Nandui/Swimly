@@ -14,6 +14,8 @@ const personSchema = z.object({
   type: z.enum(keys(personTypes), { message: "Say who each person involved was." }),
   ageGroup: z.enum(keys(ageGroups), { message: "Say whether each person involved is a child or an adult." }),
   name: text(200), contact: text(200),
+  /** The staff member picked from the site's team; kept only when type is staff. */
+  userId: z.string().trim().max(100).default(""),
   injured: z.boolean(), bodyPart: text(200), injury: text(500),
   firstAid: text(1000), firstAidBy: text(200),
   ambulance: z.boolean(), hospital: z.boolean(),
@@ -207,3 +209,65 @@ export function fileProblem(file: { name: string; type: string; size: number }, 
   return null;
 }
 export const safeFileName = (name: string) => name.replace(/[\x00-\x1f\/\\]/g, "_").slice(0, 200);
+
+/** How long a report is kept (docs/incidents.md, Irish law): at least 10
+ *  years from the day it happened (S.I. 370/2016 reg. 226), and 21 when a
+ *  child was involved, since a child's claim can come after they turn 18.
+ *  Nothing is deleted: past this day a report is listed for a Manage holder
+ *  to review. */
+export const KEEP_YEARS = 10;
+export const KEEP_YEARS_CHILD = 21;
+export function keepUntil(occurredOn: string, hasChild: boolean): string {
+  const years = hasChild ? KEEP_YEARS_CHILD : KEEP_YEARS;
+  const [y, m, d] = occurredOn.split("-").map(Number);
+  // 29 February keeps until 1 March in a year without one.
+  const until = new Date(Date.UTC(y + years, m - 1, d));
+  return until.toISOString().slice(0, 10);
+}
+
+/** Insights (docs/incidents.md): counts by month, kind, category, area, hour,
+ *  site and level, from reports already filtered to the viewer's sites. */
+export type InsightRow = { siteId: string; area: string; kind: string; category: string; occurredOn: string; occurredAt: string; serious: boolean; hsaReportable: boolean | null; severityActual: number | null; severityPotential: number | null };
+export type Count = { key: string; count: number };
+export function summarise(rows: readonly InsightRow[], months: readonly string[]) {
+  const tally = (pick: (r: InsightRow) => string | null, order?: readonly string[]): Count[] => {
+    const counts = new Map<string, number>((order ?? []).map((k) => [k, 0]));
+    for (const r of rows) {
+      const key = pick(r);
+      if (key !== null) counts.set(key, (counts.get(key) ?? 0) + 1);
+    }
+    const list = [...counts].map(([key, count]) => ({ key, count }));
+    return order ? list : list.sort((a, b) => b.count - a.count || a.key.localeCompare(b.key));
+  };
+  const kinds = tally((r) => r.kind, ["accident", "incident", "near_miss"]);
+  // Every hour of the day, trimmed of the empty ones at both ends but keeping the gaps between.
+  const day = tally((r) => `${r.occurredAt.slice(0, 2)}:00`, Array.from({ length: 24 }, (_, h) => `${String(h).padStart(2, "0")}:00`));
+  const first = day.findIndex((h) => h.count), last = day.findLastIndex((h) => h.count);
+  const hours = first < 0 ? [] : day.slice(first, last + 1);
+  const of = (kind: string) => kinds.find((k) => k.key === kind)?.count ?? 0;
+  return {
+    total: rows.length,
+    serious: rows.filter((r) => r.serious).length,
+    hsa: rows.filter((r) => r.hsaReportable).length,
+    /** Near misses for each accident: more is healthier, it means people report. Null with no accidents. */
+    nearMissRatio: of("accident") ? Math.round((of("near_miss") / of("accident")) * 10) / 10 : null,
+    kinds,
+    months: tally((r) => r.occurredOn.slice(0, 7), months),
+    categories: tally((r) => r.category),
+    areas: tally((r) => r.area.trim() || "Not given"),
+    hours,
+    sites: tally((r) => r.siteId),
+    levels: tally((r) => (r.severityActual && r.severityPotential ? String(levelOf(r.severityActual, r.severityPotential)) : null), ["1", "2", "3", "4", "5"]),
+    untriaged: rows.filter((r) => !r.severityActual).length,
+  };
+}
+export type Insights = ReturnType<typeof summarise>;
+
+/** The calendar months covered, oldest first, ending with this one: ["2026-08", "2026-09", "2026-10"]. */
+export function monthsEnding(todayIso: string, count: number): string[] {
+  const [y, m] = todayIso.split("-").map(Number);
+  return Array.from({ length: count }, (_, i) => {
+    const d = new Date(Date.UTC(y, m - 1 - (count - 1 - i), 1));
+    return d.toISOString().slice(0, 7);
+  });
+}

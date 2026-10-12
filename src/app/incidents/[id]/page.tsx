@@ -1,4 +1,7 @@
 import type { Metadata } from "next";
+import Link from "next/link";
+import { FileText } from "lucide-react";
+import { Button } from "@/components/shadcn/button";
 import { PageHeader } from "@/components/ui-kit/page-header";
 import { Tag } from "@/components/ui-kit/tag";
 import { FilesPanel } from "@/modules/incidents/features/files";
@@ -19,7 +22,10 @@ export default async function IncidentPage({ params }: { params: Promise<{ id: s
       <PageHeader title={<span className="tabular-nums">{incidentNumber(r.number)}</span>} back={{ href: "/incidents", label: "Reports" }}
         status={<span className="flex flex-wrap gap-2">{r.serious ? <Tag meta={seriousMeta} /> : null}<Tag meta={incidentStatuses[r.status]} /></span>}
         description={`${r.site.name}${r.area ? `, ${r.area}` : ""}`}
-        actions={<span className="flex flex-wrap gap-2">{can.reopen ? <ReopenReport id={r.id} version={r.version} /> : null}<AddAddendum id={r.id} /></span>} />
+        actions={<span className="flex flex-wrap gap-2">
+          {can.export ? <Button asChild variant="outline" className="min-h-11"><Link href={`/incidents/${r.id}/export`}><FileText aria-hidden="true" />Full record</Link></Button> : null}
+          {can.reopen ? <ReopenReport id={r.id} version={r.version} /> : null}<AddAddendum id={r.id} />
+        </span>} />
       <ReportView data={data} forms={<>
         <FilesPanel reportId={r.id} files={r.files} userId={data.who.id} canAdd={can.addFiles} canRemoveAny={can.removeFiles} />
         {can.triage ? <TriageForm id={r.id} version={r.version} hasChild={data.hasChild} /> : null}

@@ -3,7 +3,7 @@
 import { revalidatePath } from "next/cache";
 import { fail, ok, type ActionResult } from "@/lib/action-result";
 import { AuthorizationError } from "@/lib/authz";
-import { liveSiteById } from "@/lib/directory";
+import { activeStaffAtSite, liveSiteById } from "@/lib/directory";
 import { requireCapFor } from "@/lib/policy/session";
 import { prisma } from "@/lib/prisma";
 import { requireIncidentsActor } from "@/modules/incidents/shared/access";
@@ -28,13 +28,20 @@ export async function submitReport(input: ReportInput): Promise<ActionResult & {
   const site = await liveSiteById(r.siteId);
   if (!site) return fail("Choose an open site.");
   const serious = isSerious(r);
+  // A staff member is linked only when they are one of this site's team, so
+  // their injury reaches their HR file and nobody else's.
+  const team = r.people.some((p) => p.type === "staff" && p.userId) ? new Set((await activeStaffAtSite(who.orgId, r.siteId)).map((s) => s.id)) : new Set<string>();
+  const people = r.people.map(({ userId, ...p }) => ({
+    ...(p.injured ? p : { ...p, bodyPart: "", injury: "", firstAid: "", firstAidBy: "", ambulance: false, hospital: false }),
+    userId: p.type === "staff" && team.has(userId) ? userId : null,
+  }));
   const report = await prisma.$transaction(async (tx) => {
     const row = await tx.incidentReport.create({
       data: {
         orgId: who.orgId, siteId: r.siteId, area: r.area, kind: r.kind, category: r.category,
         occurredOn: r.occurredOn, occurredAt: r.occurredAt, description: r.description, immediateAction: r.immediateAction, raisedBy: r.raisedBy,
         serious, reporterId: who.id, reporterName: who.name,
-        people: { create: r.people.map((p) => p.injured ? p : { ...p, bodyPart: "", injury: "", firstAid: "", firstAidBy: "", ambulance: false, hospital: false }) },
+        people: { create: people },
         witnesses: { create: r.witnesses },
       },
     });

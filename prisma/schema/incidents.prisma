@@ -88,6 +88,9 @@ model IncidentPerson {
   reportId   String
   /// public | swimmer | staff | contractor
   type       String
+  /// The staff member, when it was one of the team (phase 3): their injury then
+  /// shows on their HR personal file. Never set for anyone else.
+  userId     String?
   /// child | adult
   ageGroup   String
   name       String   @default("")
@@ -104,6 +107,7 @@ model IncidentPerson {
   report IncidentReport @relation(fields: [reportId], references: [id], onDelete: Restrict)
 
   @@index([reportId])
+  @@index([userId])
   @@map("incidents_people")
 }
 
@@ -127,7 +131,8 @@ model IncidentEvent {
   reportId  String
   actorId   String
   actorName String
-  /// submit | triage | close | addendum
+  /// One of `incidentActions` in shared/types.ts: submit, triage, close, addendum,
+  /// statement, investigation, action_*, file_*, reopen, export.
   action    String
   note      String   @default("")
   createdAt DateTime @default(now())
