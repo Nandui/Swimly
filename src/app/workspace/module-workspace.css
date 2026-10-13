@@ -77,12 +77,6 @@
 .turnfin-module .rota-tl-label > .rota-tl-name > span, .turnfin-module .rota-tl-label > small { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .turnfin-module .rota-tl-label > small { color: var(--pc-ink-muted); font-size: var(--pc-text-caption); line-height: var(--pc-leading-caption); }
 .turnfin-module .rota-tl-label > [data-slot='badge'] { align-self: flex-start; margin-top: 4px; }
-.turnfin-module .rota-tl-lanes { display: flex; flex-direction: column; gap: 4px; min-width: 0; }
-/* A zone: its tile on the left, then each activity in it, a slim heading over its lanes. */
-.turnfin-module .rota-tl-zone { justify-content: flex-start; }
-.turnfin-module .rota-tl-zone-foot { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 8px; margin-top: auto; padding-top: 8px; }
-.turnfin-module .rota-tl-zone-body { display: flex; flex-direction: column; gap: 10px; min-width: 0; }
-.turnfin-module .rota-tl-act { display: flex; flex-direction: column; gap: 4px; min-width: 0; }
 .turnfin-module .rota-tl-act-head { display: flex; align-items: center; gap: 6px; min-width: 0; min-height: 24px; padding: 0 4px; color: var(--pc-ink); font-size: var(--pc-text-caption); line-height: var(--pc-leading-caption); }
 .turnfin-module .rota-tl-act-head.ui-motion-press { justify-content: flex-start; align-self: flex-start; min-height: 32px; height: auto; padding: 4px 10px 4px 6px; margin: -4px 0 -4px -2px; color: var(--pc-ink); font-weight: 400; }
 .turnfin-module .rota-tl-act-head > svg { flex: none; width: 14px; height: 14px; }
@@ -105,12 +99,27 @@
 .turnfin-module .rota-tl-key { display: flex; flex-wrap: wrap; gap: 8px 16px; color: var(--pc-ink-muted); font-size: var(--pc-text-caption); line-height: var(--pc-leading-caption); }
 .turnfin-module .rota-tl-key > span { display: inline-flex; align-items: center; gap: 6px; }
 .turnfin-module .rota-tl-key i { display: inline-block; width: 20px; height: 12px; border-radius: 6px; }
-/* Below 1280px the same day is an agenda: each activity's people and gaps in time order. */
+/* One timeline (owner request, 13 October 2026: "zones top, staff left"): a heading over each
+   part, each area's rows together (a pool: a row across it, then a slim row per lane), then the
+   gaps row and a row per person. Zone rows are slimmer than staff rows. */
+.turnfin-module .rota-tl-sec { display: flex; align-items: center; gap: 12px; margin: 12px 0 0; color: var(--pc-ink-muted); font-size: var(--pc-text-caption); line-height: var(--pc-leading-caption); font-weight: 700; letter-spacing: 0.06em; text-transform: uppercase; }
+.turnfin-module .rota-tl-sec::after { content: ""; flex: 1; height: 1px; background: var(--pc-line); }
+.turnfin-module .rota-tl-band { display: flex; flex-direction: column; gap: 4px; }
+.turnfin-module .rota-tl-sticky { position: sticky; top: 0; z-index: 3; padding: 4px 0; background: var(--pc-surface); }
+.turnfin-module .rota-tl-label.rota-tl-area { position: relative; padding-inline-end: 44px; background: var(--pc-surface-sunken); }
+.turnfin-module .rota-tl-area-add { position: absolute; top: 50%; right: 4px; translate: 0 -50%; }
+.turnfin-module .rota-tl-label.rota-tl-lane { margin-inline-start: 16px; padding-block: 4px; border-style: dashed; color: var(--pc-ink-muted); font-size: var(--pc-text-caption); line-height: var(--pc-leading-caption); }
+.turnfin-module .rota-tl-track:is([data-row='area'], [data-row='lane']) { min-height: 44px; }
+.turnfin-module .rota-tl-track[data-row='lane'] { border-style: dashed; }
+.turnfin-module .rota-tl-track > .pc-block[data-block='absent'] { box-shadow: inset 0 0 0 1px var(--pc-danger); }
+.turnfin-module .rota-tl-label.rota-tl-person { min-height: 52px; }
+.turnfin-module .rota-tl-label > .rota-tl-name > svg { flex: none; }
+.turnfin-module .rota-tl-staff > .pc-block { z-index: 1; }
+@media (min-width: 1024px) { .turnfin-module .rota-narrow-only { display: none; } }
+@media (max-width: 1023px) { .turnfin-module .rota-wide-only { display: none; } }
+/* Below 1024px the same day is an agenda: each activity's people and gaps in time order. */
 .turnfin-module .rota-agenda { display: none; flex-direction: column; gap: 16px; }
-/* Who's working, by person: the shift's outline under what they are on, and their breaks. */
-.turnfin-module .rota-people .rota-tl-label { min-height: 52px; }
-.turnfin-module .rota-people .rota-tl-track { cursor: default; }
-.turnfin-module .rota-people .rota-tl-track > .pc-block { cursor: default; z-index: 1; }
+/* A person's row: the shift's outline under what they are on, and their breaks. */
 .turnfin-module .rota-people-shift { position: absolute; top: 2px; bottom: 2px; border: 1px dashed var(--pc-line-strong, var(--pc-ink-muted)); border-radius: 14px; }
 .turnfin-module .rota-people-shift[data-planned] { border-style: solid; border-color: var(--pc-primary); background: color-mix(in srgb, var(--pc-primary) 6%, transparent); }
 .turnfin-module .rota-people-break { position: absolute; top: 10px; bottom: 10px; z-index: 2; display: grid; place-items: center; min-width: 6px; border: 1px dashed var(--pc-ink-muted); border-radius: 8px; background: var(--pc-surface); color: var(--pc-ink-muted); }

@@ -5,15 +5,15 @@
 See [docs/rota.md](../../../docs/rota.md).
 
 ## Features
-- `plan` — planning the week: shifts, activities, breaks, who can fill a gap, copying and sharing a week (`/rota`).
+- `plan` — planning the week as one timeline, zones and lanes on top and staff on the left: shifts, activities, breaks, who can fill a gap, copying and sharing a week (`/rota`).
 - `today` — running today: who is on, the gaps left, the day's note and timepoints (`/rota/today`).
-- `bookings` — repeating bookings of areas: add, change and cancel them (`/rota/bookings`).
+- `bookings` — repeating bookings of areas, the whole pool or chosen lanes: add, change and cancel them (`/rota/bookings`).
 - `absences` — reporting absences, extending them and recording returns to work (`/rota/absences`).
 - `me` — a person's own days, for Turnfin Me. Reached through `index.ts`.
 - `person-file` — the rota's parts of a person's file: planned days, absences and changes to their activities.
 - `workspace` — the Rota frame, its one page list (`shared/components/pages.ts`, for the page bar and the starter page `/rota/overview`) and the access check (`src/app/rota/layout.tsx`).
 
-`shared/` holds what two or more features use: the access check, constants and status metadata, shift and cover rules, the day model, site and activity reads (`data.ts`), the plan and fill actions used by Plan and Today (`actions.ts`), write helpers (`writes.ts`), the area rename and the plan dialogs, fill sheet and change fields.
+`shared/` holds what two or more features use: the access check, constants and status metadata, shift and cover rules, the day model, site and activity reads (`data.ts`), the plan and fill actions used by Plan and Today (`actions.ts`), write helpers (`writes.ts`), the area rename, lanes (`lanes.ts`) and the zone rows (`zones.ts`), the area-and-lanes field and the plan dialogs, fill sheet and change fields.
 
 ## Public API (index.ts)
 - `myDays(userId, days?)` — a person's own days ahead, with their shifts, activities and classes.

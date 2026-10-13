@@ -57,7 +57,7 @@ export async function planWeek(input: { site?: string; week?: string; dept?: str
     canChange: !!department && canChange(at, date, now, department.id, mine),
     canShare: !!department && (site.run || (site.plan && mine.has(department.id))),
     types: types.filter((t) => !t.archived && t.departmentId === department?.id && !t.fromClasses),
-    places,
+    areas: places,
   } as const;
 }
 

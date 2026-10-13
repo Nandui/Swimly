@@ -1,8 +1,8 @@
 "use client";
 
-import { useEffect, useMemo, useState, useTransition } from "react";
+import { useEffect, useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
-import { Coffee, Plus, TriangleAlert, UserPlus } from "lucide-react";
+import { Coffee, Plus, UserPlus } from "lucide-react";
 import { Avatar, AvatarFallback, initials } from "@/components/shadcn/avatar";
 import { Button } from "@/components/shadcn/button";
 import { Input } from "@/components/shadcn/input";
@@ -21,12 +21,11 @@ import { ROTA_FIT_META, ROTA_SHIFT_NOTE_META, qualificationShort } from "@/modul
 import { duration } from "@/modules/rota/shared/shifts";
 import { toast } from "@/components/ui/toast";
 
-/** Who's working, by person (owner decision, 8 October 2026, from the approved mockup): put
- *  someone on a shift, then give them activities from the day's gaps that fit it and that they
- *  are qualified for. Each row is a person's day: their shift's outline, what they are on, and
- *  their breaks (solid when the manager placed them, dashed while suggested). Opening a row shows
- *  the shift, its breaks to place, what they could take, and any under-18 rest warning. Below
- *  1024px the same people are a list. Warnings never stop anything. */
+/** Who's working, by person (owner decision, 8 October 2026): put someone on a shift, then give
+ *  them activities from the day's gaps that fit it and that they are qualified for. On a wide
+ *  screen each person is a row of the Plan's timeline (`DayPlan`, staff on the left; owner request,
+ *  13 October 2026); below 1024px they are this list. Opening a person shows the shift, its breaks
+ *  to place, what they could take, and any under-18 rest warning. Warnings never stop anything. */
 
 const THEME = "turnfin-module";
 type Ctx = { siteId: string; departmentId: string; date: string; dateLabel: string; live: boolean; canChange: boolean };
@@ -35,55 +34,9 @@ const text = (formData: FormData, key: string) => String(formData.get(key) ?? ""
 export function PeoplePlan({ people, ...ctx }: Ctx & { people: Person[] }) {
   const [openId, setOpenId] = useState<string | null>(null);
   const open = people.find((p) => p.userId === openId) ?? null;
-  const { from, to } = useMemo(() => {
-    const starts = people.map((p) => p.shift.start), ends = people.map((p) => p.shift.end);
-    return { from: Math.min(7 * 60, ...starts.map((m) => Math.floor(m / 60) * 60)), to: Math.max(22 * 60, ...ends.map((m) => Math.ceil(m / 60) * 60)) };
-  }, [people]);
-  const span = to - from;
-  const at = (m: number) => `${((m - from) / span) * 100}%`;
-  const width = (a: number, b: number) => `calc(${((b - a) / span) * 100}% - 2px)`;
-  const ticks = Array.from({ length: Math.floor(span / 120) + 1 }, (_, i) => from + i * 120).filter((t) => t < to);
   return (
     <>
-      <div className="rota-tl rota-people">
-        <div className="rota-tl-row" aria-hidden="true">
-          <span />
-          <div className="rota-tl-hours">{ticks.map((t) => <span key={t} style={{ left: at(t), translate: t === from ? "0 0" : "-50% 0" }}>{clock(t)}</span>)}</div>
-        </div>
-        {people.map((p) => {
-          const label = summary(p);
-          return (
-            <div key={p.userId} className="rota-tl-row">
-              <Button type="button" variant="ghost" className="rota-tl-label h-auto items-stretch whitespace-normal" onClick={() => setOpenId(p.userId)} aria-label={`${p.name}: ${label}. Open their shift`}>
-                <span className="rota-tl-name"><span>{p.name}</span></span>
-                <small className="tabular-nums">{p.shift.parts.map((x) => `${clock(x.start)}–${clock(x.end)}`).join(", ")} · {duration(p.shift.paidMinutes)} paid</small>
-                {warned(p) ? <small className="rota-people-warn"><TriangleAlert aria-hidden="true" />{checkLabel(p)}</small> : null}
-              </Button>
-              <div className="rota-tl-track" role="img" aria-label={label}>
-                {p.shift.parts.map((x) => <span key={`s${x.start}`} className="rota-people-shift" data-planned={x.planned ? "" : undefined} style={{ left: at(x.start), width: width(x.start, x.end) }} />)}
-                {p.shift.parts.flatMap((x) => x.work).map((w, i) => (
-                  <span key={`w${i}`} className="pc-block" data-block={p.warnings.includes("off") ? "absent" : "next"} data-density="compact" style={{ left: `calc(${at(w.start)} + 1px)`, width: width(w.start, w.end) }}>
-                    <span className="pc-block-body"><span className="pc-block-title">{w.label}</span><span className="pc-block-hint">{clock(w.start)}–{clock(w.end)}</span></span>
-                  </span>
-                ))}
-                {p.shift.parts.flatMap((x) => x.breaks).map((b) => (
-                  <span key={`b${b.start}`} className="rota-people-break" data-pinned={b.pinned ? "" : undefined} style={{ left: at(b.start), width: width(b.start, b.end) }} title={`${b.paid ? "Paid" : "Unpaid"} break ${clock(b.start)}–${clock(b.end)}`}>
-                    <Coffee aria-hidden="true" />
-                  </span>
-                ))}
-              </div>
-            </div>
-          );
-        })}
-        <div className="rota-tl-key">
-          <span><i className="rota-people-shift" data-planned="" />Planned shift</span>
-          <span><i style={{ background: "var(--pc-block-next)" }} />On an activity</span>
-          <span><i className="rota-people-break" data-pinned="" />Break placed</span>
-          <span><i className="rota-people-break" />Break suggested</span>
-          <span>Open a person to give them activities and place their breaks</span>
-        </div>
-      </div>
-      <ul className="pc-rows rota-agenda" aria-label="Who's working">
+      <ul className="pc-rows" aria-label="Who's working">
         {people.map((p) => (
           <li key={p.userId}>
             <Button type="button" variant="outline" className="pc-row h-auto w-full justify-start whitespace-normal text-start font-normal" onClick={() => setOpenId(p.userId)}>
@@ -94,21 +47,29 @@ export function PeoplePlan({ people, ...ctx }: Ctx & { people: Person[] }) {
           </li>
         ))}
       </ul>
-      <Sheet open={!!open} onOpenChange={(o) => { if (!o) setOpenId(null); }}>
-        <SheetContent portalClassName={THEME} className="flex w-full flex-col gap-0 overflow-y-auto sm:max-w-lg">
-          {open ? <ShiftBody key={open.userId} person={open} {...ctx} /> : null}
-        </SheetContent>
-      </Sheet>
+      <ShiftSheet person={open} onClose={() => setOpenId(null)} {...ctx} />
     </>
   );
 }
 
-function warned(p: Person) {
+/** One person's day in a sheet: their shift, breaks and what they could take. */
+export function ShiftSheet({ person, onClose, ...ctx }: Ctx & { person: Person | null; onClose: () => void }) {
+  return (
+    <Sheet open={!!person} onOpenChange={(o) => { if (!o) onClose(); }}>
+      <SheetContent portalClassName={THEME} className="flex w-full flex-col gap-0 overflow-y-auto sm:max-w-lg">
+        {person ? <ShiftBody key={person.userId} person={person} {...ctx} /> : null}
+      </SheetContent>
+    </Sheet>
+  );
+}
+
+/** Whether someone's day has something to look at, and that in a few words. */
+export function warned(p: Person) {
   return p.rest.length > 0 || p.breakClashes.length > 0 || p.warnings.length > 0 || p.shift.parts.some((x) => x.unplaced.length);
 }
 
 /** The first thing to look at on someone's day, in a few words. */
-function checkLabel(p: Person) {
+export function checkLabel(p: Person) {
   return p.rest.length ? "Under-18 rest" : p.breakClashes.length ? "Break needs cover" : p.shift.parts.some((x) => x.unplaced.length) ? "Breaks to place" : "To check";
 }
 

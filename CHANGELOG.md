@@ -4,6 +4,14 @@ Patch notes for everyone who uses Turnfin at the swim school, the desk and the o
 
 **How versions are numbered:** the middle number goes up when something new arrives (a module, a screen, a new way of working), and the last number when something is fixed or tidied without changing how you work. This list starts on 3 October 2026, when Turnfin moved to its new look; earlier changes are not listed.
 
+## 1.11.0 · 13 October 2026 · Rota: pools with lanes, and one timeline
+
+- **Admin > Areas** now asks how many **lanes** an area has. Give each pool its lanes (0 for a gym, reception or anywhere without lanes).
+- A **booking** or an activity in a pool with lanes can take the **whole pool**, one lane or any set of lanes. Two bookings can't hold the same lane at the same time: saving one that would says which booking already has it.
+- The **Plan** day is now one timeline, time across the top. **Zones** come first: every area of the site in its order, and each pool split into a row across it and a row per lane, so you can see which lanes are free. **Staff** follow: a **Needs someone** row with every gap still to fill, then one row per person, name and shift on the left and their day across, with their breaks. Choose a gap to fill it, a person's block to change their time, or a name to open their shift.
+- Things on the same lane at the same time show in red. Other departments' activities show in grey, so you see the space is taken without their gaps.
+- Existing bookings and activities with no lanes take the whole area, as before. On a phone the day is still a list.
+
 ## 1.10.0 · 13 October 2026 · Stock
 
 - A new module, **Stock**, under Back office, brings stock taking into Turnfin. It does what Stockly did, with your Turnfin sign-in, sites and roles.

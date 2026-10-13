@@ -8,8 +8,8 @@ import { NativeSelect, NativeSelectOption } from "@/components/shadcn/native-sel
 import { RadioGroup } from "@/components/shadcn/radio-group";
 import { ConfirmAction } from "@/components/confirm-action";
 import { Field, FormDialog } from "@/components/form-dialog";
-import { AreaSelect } from "@/components/ui/area-select";
 import { ChoiceRow } from "@/components/ui/choice-row";
+import { AreaLanesFields, type AreaLanes } from "@/modules/rota/shared/components/area-lanes";
 import { ChangeFields, changeOf } from "@/modules/rota/shared/components/change-fields";
 import { assign, copyPlan, removeNeed, saveNeed, shareWeek, unassign } from "@/modules/rota/shared/actions";
 import { clock } from "@/modules/rota/shared/constants";
@@ -19,10 +19,10 @@ const THEME = "turnfin-module";
 type Option = { id: string; name: string };
 const text = (formData: FormData, key: string) => String(formData.get(key) ?? "");
 
-/** Add an activity to a day ("Lifeguarding, Main pool, 07:00 to 21:30, 3 places"), or change one.
- *  Each place becomes a lane to put people on. */
-export function NeedDialog({ siteId, date, live, types, places, need, place, trigger }: {
-  siteId: string; date: string; live: boolean; types: Option[]; places: string[]; need?: DayNeed;
+/** Add an activity to a day ("Lifeguarding, Main pool, 07:00 to 21:30, 3 people at once"), or
+ *  change one. In a pool with lanes it can take some of them ("Teaching, lanes 1 to 2"). */
+export function NeedDialog({ siteId, date, live, types, areas, need, place, trigger }: {
+  siteId: string; date: string; live: boolean; types: Option[]; areas: AreaLanes[]; need?: DayNeed;
   /** Where a new activity goes, when added from an area's tile. */
   place?: string; trigger?: ReactNode;
 }) {
@@ -33,12 +33,12 @@ export function NeedDialog({ siteId, date, live, types, places, need, place, tri
       width="sm:max-w-lg"
       trigger={trigger ?? <Button variant="outline"><Plus aria-hidden="true" />Add activity</Button>}
       title={need ? "Change the activity" : "Add an activity"}
-      description={need ? "People already on it keep their places. Take them off before removing a place they are on." : "Each place it needs becomes a row to put people on."}
+      description={need ? "People already on it keep their places. Take them off before removing a place they are on." : "Say how many people it needs at once; each is a place to put someone on."}
       submitLabel={need ? "Save activity" : "Add activity"}
       successMessage={need ? "Activity saved" : "Activity added"}
       submit={(formData) => saveNeed(need?.id ?? null, {
         siteId, date, typeId: text(formData, "typeId"), place: text(formData, "place"), start: text(formData, "start"), end: text(formData, "end"),
-        places: Number(formData.get("places") ?? 1), note: text(formData, "note"),
+        places: Number(formData.get("places") ?? 1), note: text(formData, "note"), lanes: formData.getAll("lanes").map(String),
       }, changeOf(formData))}
     >
       <div className="grid gap-4 sm:grid-cols-2">
@@ -47,9 +47,8 @@ export function NeedDialog({ siteId, date, live, types, places, need, place, tri
             {types.map((t) => <NativeSelectOption key={t.id} value={t.id}>{t.name}</NativeSelectOption>)}
           </NativeSelect>
         </Field>
-        <Field label="Where" htmlFor={`${fid}-place`} optional hint="The site's areas, kept in Admin.">
-          <AreaSelect id={`${fid}-place`} name="place" areas={places} defaultValue={need?.place ?? place} />
-        </Field>
+        <AreaLanesFields fid={fid} areas={areas} place={need?.place ?? place} lanes={need?.lanes}
+          hint="The site's areas, kept in Admin. In a pool, leave the lanes on Whole pool for cover across it, such as lifeguarding." />
       </div>
       <div className="grid grid-cols-3 gap-4">
         <Field label="Starts" htmlFor={`${fid}-start`}><Input id={`${fid}-start`} name="start" type="time" step={300} required defaultValue={clock(need?.startMinutes ?? 420)} className="min-h-11" /></Field>

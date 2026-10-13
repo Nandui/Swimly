@@ -25,6 +25,7 @@ holds hours and pay; the rota keeps a log of every change to a day that has come
 | Shared week | `RotaWeekShare` | A department's week at a site, shared with its staff. Until then it is a draft they cannot see. |
 | Change log | `RotaLog` | Every change to a day that had come (today or earlier): what, who it moved, the reason, the absence it covers, and Timepoint. |
 | Booking | `RotaRepeat` | A booking that repeats (school lessons, lane hire): it adds its need on each of its days ahead, each then planned on its own. |
+| Lanes | `SiteArea.lanes`, `RotaNeed.lanes`, `RotaRepeat.lanes` | Owner request, 13 October 2026: an area says how many lanes it has (Admin, Areas; 0 for none), and an activity or booking takes the whole area (no lanes) or any set of them. **Two bookings can't hold the same lane at the same time** (`laneClash`, checked on save). Activities on the Plan may share lanes (lifeguarding covers the whole pool); a lane shared at once shows in red. A swim class's location can name its lane ("Main pool, lane 3"). Rules in `shared/lanes.ts`. |
 | Absence | `RotaAbsence` | Kept in the main database so the rota always has them (HR's database is optional); shown on the person's HR file. |
 
 Swim classes are not copied into the rota: the swim school reports each class through the
@@ -82,19 +83,22 @@ it.
 ## The screens
 
 - **Plan** (`/rota`, supervisors): one department's week. A strip of the days with each
-  one's gap count (Nothing planned, Covered, or "3 gaps"); the open day as a timeline
-  across the full width, **by area** (the site's list, in its order; a place not on it last,
-  "Not an area yet"), each area's activities under a slim heading with a lane per place, people
-  in blue (`data-block="next"`), gaps in amber (`cover`), someone off in red (`absent`). An
-  area's plus adds an activity there. **Show** zooms to the whole day, morning, afternoon or
-  evening; the wheel zooms around the pointer down to an hour, and dragging moves the day
-  (`view.ts`); a block shows as much as
-  its width allows (name and times, then first name, then initials), and back-to-back
-  classes merge until there is room for each. Choosing a gap opens **Who can fill it** as
-  a sheet; choosing a person changes their time or takes them off; a single activity's
-  label opens it to change or remove. **Who's working** shows each person's worked-out
-  shift, paid hours, breaks and warnings. **Copy** fills empty days from an earlier day or
-  week (people optional); **Share week** shares it. Below 1024px the day is an agenda.
+  one's gap count (Nothing planned, Covered, or "3 gaps"); the open day as **one timeline**, time
+  across the top (owner request, 13 October 2026: "horizontal instead of vertical. Zones top, staff
+  left"). **Zones** first: every area of the site in its order, even with nothing on; a pool with
+  lanes is a row across it (what covers the whole pool without taking a lane, such as
+  lifeguarding) then a row per lane (`bandRows`, `shared/zones.ts`). Bookings in purple, swim
+  classes in green, this department's activities in blue or amber while they have places to
+  fill, other departments' activities in grey, two things on one lane at once in red. An area's
+  plus adds an activity there; choosing one of this department's activities opens it to change.
+  **Staff** below: a **Needs someone** row with every gap (choosing one opens **Who can fill it**
+  as a sheet), then a row per person, their name and shift on the left (choosing it opens their
+  shift, breaks and what they could take) and their day across, with the planned shift's outline
+  and their breaks; choosing someone's block changes their time or takes them off. **Show** zooms
+  to the whole day, morning, afternoon or evening; the wheel zooms around the pointer down to an
+  hour, and dragging moves the day (`view.ts`). **Copy** fills empty days from an earlier day or
+  week (people optional); **Share week** shares it. Below 1024px the day is an agenda by area
+  and Who's working a list.
 - **Today** (`/rota/today`, duty managers): the whole site, every department. **Gaps to
   fill** first, soonest first, each with its best three fits and a plus that puts them on
   (logged as covering an absence, or filling a gap in the plan) and "Everyone who could".

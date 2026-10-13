@@ -1,8 +1,7 @@
 import "server-only";
-import { activeStaffAgesAtSite, liveSitesWithin, sitesByIds, staffAgesByIds } from "@/lib/directory";
+import { activeStaffAgesAtSite, areasAt, liveSitesWithin, sitesByIds, staffAgesByIds } from "@/lib/directory";
 import { qualificationsHeldBy } from "@/lib/qualifications";
 import { activityTypesByIds, activityTypesOf } from "@/lib/setup/activity-types";
-import { areaNames } from "@/lib/setup/data";
 import { notFound } from "next/navigation";
 import { parseDateOnly, toDateOnlyString as isoOf } from "@/lib/format";
 import { prisma } from "@/lib/prisma";
@@ -58,7 +57,7 @@ export async function loadDays(siteId: string, orgId: string | undefined, from: 
     activityTypes(orgId, true),
     prisma.rotaNeed.findMany({
       where: { siteId, date: range }, orderBy: [{ date: "asc" }, { startMinutes: "asc" }],
-      select: { id: true, date: true, typeId: true, place: true, startMinutes: true, endMinutes: true, places: true, note: true, repeat: { select: { title: true } },
+      select: { id: true, date: true, typeId: true, place: true, lanes: true, startMinutes: true, endMinutes: true, places: true, note: true, repeat: { select: { title: true } },
         assignments: { select: { id: true, needId: true, place: true, userId: true, startMinutes: true, endMinutes: true } } },
     }),
     commitmentsFor({ siteIds: [siteId], from, to }),
@@ -87,8 +86,8 @@ export async function loadDays(siteId: string, orgId: string | undefined, from: 
   const names = new Map(users.map((u) => [u.id, u.name]));
   const rest = await youngDays(users, from, to);
   const heldList: Held[] = held.map((q) => ({ userId: q.userId, typeId: q.typeId, issuedOn: q.issuedOn ? isoOf(q.issuedOn) : null, expiresOn: q.expiresOn ? isoOf(q.expiresOn) : null, revoked: !!q.revokedAt }));
-  // Where an activity happens: the site's areas, kept in Admin; the day is grouped by them.
-  const places = await areaNames(siteId);
+  // Where an activity happens: the site's areas and their lanes, kept in Admin; the day is grouped by them.
+  const places = await areasAt(siteId);
   const dayInput = (date: string) => {
     const off = new Set(absences.filter((a) => a.userId && isoOf(a.firstDay) <= date && (!a.lastDay || isoOf(a.lastDay) >= date)).map((a) => a.userId!));
     const away = new Map<string, WorkItem[]>();
@@ -104,7 +103,7 @@ export async function loadDays(siteId: string, orgId: string | undefined, from: 
     return {
       date, types, names, held: heldList, off, elsewhere: away, young, areas: places, pinned: pins, rest: restOn,
       planned: planned.filter((p) => isoOf(p.date) === date).map((p) => ({ id: p.id, userId: p.userId, departmentId: p.departmentId, startMinutes: p.startMinutes, endMinutes: p.endMinutes })),
-      needs: dayNeeds.map((n) => ({ id: n.id, typeId: n.typeId, place: n.place, startMinutes: n.startMinutes, endMinutes: n.endMinutes, places: n.places, note: n.note, repeatTitle: n.repeat?.title ?? null })),
+      needs: dayNeeds.map((n) => ({ id: n.id, typeId: n.typeId, place: n.place, lanes: n.lanes, startMinutes: n.startMinutes, endMinutes: n.endMinutes, places: n.places, note: n.note, repeatTitle: n.repeat?.title ?? null })),
       assignments: dayNeeds.flatMap((n) => n.assignments),
       booked: others.filter((c) => c.date === date).map((c): DayBooked => ({ ref: c.ref ?? `${c.source}:${c.startMinutes}`, userId: c.userId, startMinutes: c.startMinutes, endMinutes: c.endMinutes,
         title: c.title ?? c.label, place: c.place ?? "", href: c.href ?? null, module: c.module })),

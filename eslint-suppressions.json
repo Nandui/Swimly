@@ -41,11 +41,6 @@
   },
   "src/modules/rota/features/plan/components/day-plan.tsx": {
     "turnfin/no-literal-styles": {
-      "count": 3
-    }
-  },
-  "src/modules/rota/features/plan/components/people-plan.tsx": {
-    "turnfin/no-literal-styles": {
       "count": 2
     }
   }

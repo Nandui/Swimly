@@ -70,31 +70,41 @@ export async function archiveActivityType(id: string, archived: boolean): Promis
 
 const areaName = z.string().trim().min(1, "Name the area, for example 25m pool.").max(60, "Keep the name under 60 characters.");
 
-/** Add an area to a site, or rename one. A rename reaches every module's records that use it. */
-export async function saveArea(siteId: string, id: string | null, input: { name: string }): Promise<ActionResult> {
+const areaLanes = z.coerce.number().int("Give a whole number of lanes.").min(0, "Give 0 lanes for an area without lanes.").max(20, "Up to 20 lanes.");
+
+/** Add an area to a site, or rename one, and say how many lanes it has (0 for none). A rename
+ *  reaches every module's records that use it. */
+export async function saveArea(siteId: string, id: string | null, input: { name: string; lanes?: number | string }): Promise<ActionResult> {
   const session = await requirePermission("setup.areas");
   const parsed = areaName.safeParse(input.name);
   if (!parsed.success) return fail(parsed.error.issues[0].message);
+  const lanesParsed = areaLanes.safeParse(input.lanes === "" || input.lanes === undefined ? 0 : input.lanes);
+  if (!lanesParsed.success) return fail(lanesParsed.error.issues[0].message);
+  const lanes = lanesParsed.data;
   const name = parsed.data.replace(/\s+/g, " ");
   if (name.includes(",")) return fail("Leave commas out of an area's name: a swim class adds its detail after one, as in Learner pool, lane 3.");
   const site = await prisma.club.findFirst({ where: { id: siteId, orgId: session.user.orgId ?? undefined, archivedAt: null }, select: { id: true, name: true, orgId: true } });
   if (!site?.orgId) return fail("That site is not open.");
   const clash = await prisma.siteArea.findFirst({ where: { siteId, name: { equals: name, mode: "insensitive" }, ...(id ? { id: { not: id } } : {}) }, select: { id: true } });
   if (clash) return fail(`${site.name} already has an area called ${name}.`);
-  const existing = id ? await prisma.siteArea.findFirst({ where: { id, siteId }, select: { name: true } }) : null;
+  const existing = id ? await prisma.siteArea.findFirst({ where: { id, siteId }, select: { name: true, lanes: true } }) : null;
   if (id && !existing) return fail("That area no longer exists.");
-  if (existing?.name === name) return ok();
+  if (existing?.name === name && existing.lanes === lanes) return ok();
+  const renamed = !!existing && existing.name !== name;
   const last = id ? null : await prisma.siteArea.findFirst({ where: { siteId }, orderBy: { sortOrder: "desc" }, select: { sortOrder: true } });
   let moved = 0;
   await prisma.$transaction(async (tx) => {
     if (id) {
-      await tx.siteArea.update({ where: { id }, data: { name } });
-      moved = await renameAreaEverywhere({ siteId, from: existing!.name, to: name }, tx);
+      await tx.siteArea.update({ where: { id }, data: { name, lanes } });
+      if (renamed) moved = await renameAreaEverywhere({ siteId, from: existing!.name, to: name }, tx);
     } else {
-      await tx.siteArea.create({ data: { orgId: site.orgId!, siteId, name, sortOrder: (last?.sortOrder ?? -1) + 1 } });
+      await tx.siteArea.create({ data: { orgId: site.orgId!, siteId, name, lanes, sortOrder: (last?.sortOrder ?? -1) + 1 } });
     }
+    const laneWords = lanes ? `${lanes} ${lanes === 1 ? "lane" : "lanes"}` : "no lanes";
     await logAudit({ actorId: session.user.id, actorName: session.user.name ?? "Unknown", action: id ? "update" : "create", entity: "SiteArea", entityId: id, clubId: siteId,
-      summary: id ? `Renamed ${site.name}'s area ${existing!.name} to ${name}${moved ? `, and ${moved} ${moved === 1 ? "record" : "records"} that use it` : ""}` : `Added the area ${name} at ${site.name}` }, tx);
+      summary: !id ? `Added the area ${name} at ${site.name}, ${laneWords}`
+        : [renamed ? `Renamed ${site.name}'s area ${existing!.name} to ${name}${moved ? `, and ${moved} ${moved === 1 ? "record" : "records"} that use it` : ""}` : null,
+          existing!.lanes !== lanes ? `${renamed ? "gave it" : `Gave ${site.name}'s area ${name}`} ${laneWords}` : null].filter(Boolean).join("; ") }, tx);
   });
   refresh("/areas");
   return ok();

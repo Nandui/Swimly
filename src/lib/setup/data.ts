@@ -36,7 +36,7 @@ export async function areasPage() {
   const { orgId, keeps } = await viewer();
   const sites = await prisma.club.findMany({
     where: { orgId, archivedAt: null }, orderBy: [{ sortOrder: "asc" }, { name: "asc" }],
-    select: { id: true, name: true, code: true, areas: { orderBy: [{ archivedAt: { sort: "asc", nulls: "first" } }, { sortOrder: "asc" }, { name: "asc" }], select: { id: true, name: true, archivedAt: true } } },
+    select: { id: true, name: true, code: true, areas: { orderBy: [{ archivedAt: { sort: "asc", nulls: "first" } }, { sortOrder: "asc" }, { name: "asc" }], select: { id: true, name: true, lanes: true, archivedAt: true } } },
   });
   return { canKeep: keeps("setup.areas"), sites };
 }

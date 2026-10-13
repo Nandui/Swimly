@@ -1,12 +1,12 @@
 import type { Metadata } from "next";
-import { areaNames } from "@/lib/setup/data";
+import { areasAt } from "@/lib/directory";
 import Link from "next/link";
 import { CalendarDays } from "lucide-react";
 import { Button } from "@/components/shadcn/button";
 import { EmptyState } from "@/components/ui-kit/empty-state";
 import { PageHeader } from "@/components/ui-kit/page-header";
 import { Tag } from "@/components/ui-kit/tag";
-import { BOOKING_KIND_META, BookingDialog, type BookingKind, CancelBooking, clock, rotaRepeats, WEEKDAY_LABELS } from "@/modules/rota/features/bookings";
+import { BOOKING_KIND_META, BookingDialog, type BookingKind, CancelBooking, clock, lanesLabel, rotaRepeats, WEEKDAY_LABELS } from "@/modules/rota/features/bookings";
 import { formatDate, formatTimeRange, plural, toDateOnlyString, today } from "@/lib/format";
 
 export const metadata: Metadata = { title: "Bookings" };
@@ -27,12 +27,13 @@ export default async function BookingsPage({ searchParams }: { searchParams: Pro
   const { site } = data;
   const now = today();
   // Where a booking happens: the site's areas, kept in Admin.
-  const places = site ? await areaNames(site.id) : [];
+  const areas = site ? await areasAt(site.id) : [];
+  const laneCount = (place: string) => areas.find((a) => a.name.toLowerCase() === place.toLowerCase())?.lanes ?? 0;
   return (
     <>
       <PageHeader title={site ? `Bookings: ${site.name}` : "Bookings"}
         description="Schools, parties and lane hire that repeat over weeks. Each adds its activity on its days, ready to plan who."
-        actions={site?.plan && data.types.length ? <BookingDialog siteId={site.id} today={now} types={data.types} places={places} /> : undefined} />
+        actions={site?.plan && data.types.length ? <BookingDialog siteId={site.id} today={now} types={data.types} areas={areas} /> : undefined} />
       {data.repeats.length === 0 ? (
         <EmptyState icon="calendarRange" title="No bookings yet" hint="When a school, a party or a club books time that needs staff, add it here." />
       ) : (
@@ -46,12 +47,12 @@ export default async function BookingsPage({ searchParams }: { searchParams: Pro
                 <li key={b.id} className="pc-row">
                   <span className="pc-row-body">
                     <span className="flex flex-wrap items-center gap-2"><span className="pc-row-title">{b.title}</span><Tag meta={BOOKING_KIND_META[b.kind as BookingKind]} /></span>
-                    <span className="pc-row-hint">{weekdays(b.weekdays)}, {formatTimeRange(b.startMinutes, b.endMinutes)} · {b.firstDay.getTime() === b.lastDay.getTime() ? day(b.firstDay) : `${day(b.firstDay)} to ${day(b.lastDay)}`}{b.place ? ` · ${b.place}` : ""}</span>
+                    <span className="pc-row-hint">{weekdays(b.weekdays)}, {formatTimeRange(b.startMinutes, b.endMinutes)} · {b.firstDay.getTime() === b.lastDay.getTime() ? day(b.firstDay) : `${day(b.firstDay)} to ${day(b.lastDay)}`}{b.place ? ` · ${b.place}${laneCount(b.place) ? `, ${lanesLabel(b.lanes, laneCount(b.place)).toLowerCase()}` : ""}` : ""}</span>
                     <span className="pc-row-hint">{b.type.name}, {plural(b.places, "person", "people")} each day · {b.needs.length ? `${plural(b.needs.length, "day")} to come, ${toCome - filled ? `${plural(toCome - filled, "place")} still to fill` : "all filled"}` : "no days still to come"}</span>
                   </span>
                   <span className="pc-row-trail">
-                    {site?.plan && data.types.length ? <BookingDialog siteId={site.id} today={now} types={data.types} places={places} booking={{
-                      id: b.id, kind: b.kind, title: b.title, typeId: b.typeId, place: b.place, start: clock(b.startMinutes), end: clock(b.endMinutes), places: b.places,
+                    {site?.plan && data.types.length ? <BookingDialog siteId={site.id} today={now} types={data.types} areas={areas} booking={{
+                      id: b.id, kind: b.kind, title: b.title, typeId: b.typeId, place: b.place, lanes: b.lanes, start: clock(b.startMinutes), end: clock(b.endMinutes), places: b.places,
                       weekdays: b.weekdays, firstDay: first, lastDay: toDateOnlyString(b.lastDay), skipDates: b.skipDates.map(toDateOnlyString),
                     }} /> : null}
                     {site?.plan && b.needs.length ? <CancelBooking id={b.id} label={b.title} /> : null}

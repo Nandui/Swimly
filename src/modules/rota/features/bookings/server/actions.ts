@@ -10,6 +10,8 @@ import { activityTypeById } from "@/lib/setup/activity-types";
 import { BOOKING_KINDS, addDaysIso, bookingDates, clock, parseClock, slotProblem } from "@/modules/rota/shared/constants";
 import { repeatChanges } from "@/modules/rota/features/bookings/server/changes";
 import { areaProblem } from "@/lib/setup/data";
+import { areasAt } from "@/lib/directory";
+import { laneClash, lanesFrom, lanesLabel, lanesProblem } from "@/modules/rota/shared/lanes";
 import { notifyShiftChange } from "@/lib/staff-api/notify";
 import { allowedFor, refresh } from "@/modules/rota/shared/writes";
 
@@ -28,6 +30,8 @@ const repeatSchema = z.object({
   firstDay: z.string().refine(isDateOnly, "Choose the first day."),
   lastDay: z.string().refine(isDateOnly, "Choose the last day."),
   skipDates: z.array(z.string().refine(isDateOnly, "Choose each date it does not run.")).max(120).default([]),
+  /** The area's lanes it takes; none for the whole area (owner request, 13 October 2026). */
+  lanes: z.array(z.union([z.number(), z.string()])).max(20).default([]),
 });
 export type RepeatInput = z.input<typeof repeatSchema>;
 /** The most days one booking may make, so a typo in a date cannot fill a year. */
@@ -47,7 +51,31 @@ async function checked(input: RepeatInput) {
   const found = await activityTypeById(data.typeId);
   const type = found && !found.archivedAt && !found.fromClasses ? found : null;
   if (!type) return { ok: false as const, error: "That activity is no longer on the list." };
-  return { ok: true as const, data, start, end, type };
+  const lanes = lanesFrom(data.lanes);
+  const laneCount = (await areasAt(data.siteId)).find((a) => a.name.toLowerCase() === data.place.toLowerCase())?.lanes ?? 0;
+  const laneIssue = lanesProblem(lanes, laneCount, data.place);
+  if (laneIssue) return { ok: false as const, error: laneIssue };
+  return { ok: true as const, data, start, end, type, lanes: laneCount ? lanes : [], laneCount };
+}
+
+/** Two bookings can't hold the same lane at the same time (owner default, 13 October 2026): the
+ *  first other booking at the site that would, on a day still to come, in words; else null. */
+async function laneTaken(input: { id?: string; siteId: string; title: string; place: string; lanes: number[]; laneCount: number; start: number; end: number; dates: string[] }) {
+  if (!input.laneCount || !input.place || !input.dates.length) return null;
+  const tomorrow = addDaysIso(today(), 1);
+  const others = await prisma.rotaRepeat.findMany({
+    where: { siteId: input.siteId, cancelledAt: null, place: { equals: input.place, mode: "insensitive" }, lastDay: { gte: parseDateOnly(tomorrow) }, ...(input.id ? { id: { not: input.id } } : {}) },
+    select: { id: true, title: true, place: true, lanes: true, startMinutes: true, endMinutes: true, weekdays: true, firstDay: true, lastDay: true, skipDates: true },
+  });
+  const clash = laneClash({ ...input }, others.map((o) => {
+    const first = iso(o.firstDay);
+    return { id: o.id, title: o.title, place: o.place, lanes: o.lanes, start: o.startMinutes, end: o.endMinutes,
+      dates: bookingDates(first > tomorrow ? first : tomorrow, iso(o.lastDay), o.weekdays, o.skipDates.map(iso)) };
+  }), input.laneCount);
+  if (!clash) return null;
+  const o = clash.other;
+  const whole = lanesLabel(o.lanes, input.laneCount) === "Whole pool";
+  return `${o.title} already has ${whole ? `the whole of ${input.place}` : `${lanesLabel(o.lanes, input.laneCount).toLowerCase()} in ${input.place}`} from ${clock(o.start)} to ${clock(o.end)} on ${formatDate(parseDateOnly(clash.date))}. Choose other lanes or times.`;
 }
 
 /** A booking that repeats: it adds its activity on each of its days, each then planned and
@@ -55,7 +83,7 @@ async function checked(input: RepeatInput) {
 export async function saveRepeat(input: RepeatInput): Promise<ActionResult> {
   const check = await checked(input);
   if (!check.ok) return fail(check.error);
-  const { data, start, end, type } = check;
+  const { data, start, end, type, lanes, laneCount } = check;
   const now = today();
   const dates = bookingDates(data.firstDay > now ? data.firstDay : addDaysIso(now, 1), data.lastDay, data.weekdays, data.skipDates);
   if (!dates.length) return fail("None of those days are still to come.");
@@ -64,14 +92,16 @@ export async function saveRepeat(input: RepeatInput): Promise<ActionResult> {
   const where = await areaProblem(data.siteId, data.place);
   if (where) return fail(where);
   if (!at.ok) return fail(at.error);
+  const taken = await laneTaken({ siteId: data.siteId, title: data.title, place: data.place, lanes, laneCount, start, end, dates });
+  if (taken) return fail(taken);
   await prisma.$transaction(async (tx) => {
     const repeat = await tx.rotaRepeat.create({ data: {
-      orgId: at.site.orgId, siteId: at.site.id, kind: data.kind, title: data.title, typeId: type.id, place: data.place, startMinutes: start, endMinutes: end, places: data.places,
+      orgId: at.site.orgId, siteId: at.site.id, kind: data.kind, title: data.title, typeId: type.id, place: data.place, lanes, startMinutes: start, endMinutes: end, places: data.places,
       weekdays: data.weekdays, firstDay: parseDateOnly(data.firstDay), lastDay: parseDateOnly(data.lastDay), skipDates: data.skipDates.map(parseDateOnly),
       createdById: at.actor.id, createdByName: at.actor.name,
     } });
     await tx.rotaNeed.createMany({ data: dates.map((d) => ({
-      orgId: at.site.orgId, siteId: at.site.id, date: parseDateOnly(d), typeId: type.id, place: data.place, startMinutes: start, endMinutes: end, places: data.places,
+      orgId: at.site.orgId, siteId: at.site.id, date: parseDateOnly(d), typeId: type.id, place: data.place, lanes, startMinutes: start, endMinutes: end, places: data.places,
       repeatId: repeat.id, createdById: at.actor.id, createdByName: at.actor.name,
     })) });
     await logAudit({ actorId: at.actor.id, actorName: at.actor.name, action: "create", entity: "RotaRepeat", entityId: repeat.id, clubId: at.site.id,
@@ -89,7 +119,7 @@ export async function saveRepeat(input: RepeatInput): Promise<ActionResult> {
  *  Plan, its times and places shrink only past the people already on it. */
 export async function editRepeat(id: string, input: RepeatInput): Promise<ActionResult> {
   const repeat = await prisma.rotaRepeat.findFirst({ where: { id, cancelledAt: null }, select: {
-    siteId: true, kind: true, title: true, typeId: true, place: true, startMinutes: true, endMinutes: true, places: true, weekdays: true, firstDay: true, lastDay: true, skipDates: true,
+    siteId: true, kind: true, title: true, typeId: true, place: true, lanes: true, startMinutes: true, endMinutes: true, places: true, weekdays: true, firstDay: true, lastDay: true, skipDates: true,
   } });
   if (!repeat) return fail("That booking is cancelled.");
   if (input.siteId !== repeat.siteId) return fail("That booking is at another site.");
@@ -99,7 +129,7 @@ export async function editRepeat(id: string, input: RepeatInput): Promise<Action
   // Once it has started, its first day is history: it stays.
   const check = await checked(started ? { ...input, firstDay: startedOn } : input);
   if (!check.ok) return fail(check.error);
-  const { data, start, end, type } = check;
+  const { data, start, end, type, lanes, laneCount } = check;
   const was = await activityTypeById(repeat.typeId);
   const from = await allowedFor(repeat.siteId, tomorrow, was?.departmentId ?? "");
   if (!from.ok) return fail(from.error);
@@ -112,6 +142,8 @@ export async function editRepeat(id: string, input: RepeatInput): Promise<Action
   const dates = bookingDates(data.firstDay > now ? data.firstDay : tomorrow, data.lastDay, data.weekdays, skipDates);
   if (!started && !dates.length) return fail("None of those days are still to come.");
   if (dates.length > MAX_DAYS) return fail(`That makes ${dates.length} days. Keep a booking to ${MAX_DAYS} days.`);
+  const taken = await laneTaken({ id, siteId: data.siteId, title: data.title, place: data.place, lanes, laneCount, start, end, dates });
+  if (taken) return fail(taken);
 
   const future = await prisma.rotaNeed.findMany({ where: { repeatId: id, date: { gte: parseDateOnly(tomorrow) } }, orderBy: { date: "asc" },
     select: { id: true, date: true, typeId: true, place: true, startMinutes: true, endMinutes: true, places: true,
@@ -121,9 +153,11 @@ export async function editRepeat(id: string, input: RepeatInput): Promise<Action
   const dropped = future.filter((n) => plan.drop.includes(n.id));
   // Only what changed on the booking reaches its days; times go together.
   const timesChanged = start !== repeat.startMinutes || end !== repeat.endMinutes;
+  const lanesChanged = data.place !== repeat.place || lanes.join() !== repeat.lanes.join();
   const changes = {
     ...(type.id !== repeat.typeId ? { typeId: type.id } : {}),
     ...(data.place !== repeat.place ? { place: data.place } : {}),
+    ...(lanesChanged ? { lanes } : {}),
     ...(timesChanged ? { startMinutes: start, endMinutes: end } : {}),
     ...(data.places !== repeat.places ? { places: data.places } : {}),
   };
@@ -136,13 +170,13 @@ export async function editRepeat(id: string, input: RepeatInput): Promise<Action
 
   await prisma.$transaction(async (tx) => {
     await tx.rotaRepeat.update({ where: { id }, data: {
-      kind: data.kind, title: data.title, typeId: type.id, place: data.place, startMinutes: start, endMinutes: end, places: data.places,
+      kind: data.kind, title: data.title, typeId: type.id, place: data.place, lanes, startMinutes: start, endMinutes: end, places: data.places,
       weekdays: data.weekdays, firstDay: parseDateOnly(data.firstDay), lastDay: parseDateOnly(data.lastDay), skipDates: skipDates.map(parseDateOnly),
     } });
     if (dropped.length) await tx.rotaNeed.deleteMany({ where: { id: { in: dropped.map((n) => n.id) } } });
     if (kept.length && Object.keys(changes).length) await tx.rotaNeed.updateMany({ where: { id: { in: kept.map((n) => n.id) } }, data: changes });
     if (plan.add.length) await tx.rotaNeed.createMany({ data: plan.add.map((d) => ({
-      orgId: at.site.orgId, siteId: at.site.id, date: parseDateOnly(d), typeId: type.id, place: data.place, startMinutes: start, endMinutes: end, places: data.places,
+      orgId: at.site.orgId, siteId: at.site.id, date: parseDateOnly(d), typeId: type.id, place: data.place, lanes, startMinutes: start, endMinutes: end, places: data.places,
       repeatId: id, createdById: at.actor.id, createdByName: at.actor.name,
     })) });
     await logAudit({ actorId: at.actor.id, actorName: at.actor.name, action: "update", entity: "RotaRepeat", entityId: id, clubId: at.site.id,

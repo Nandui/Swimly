@@ -8,8 +8,8 @@ import { Input } from "@/components/shadcn/input";
 import { Label } from "@/components/shadcn/label";
 import { NativeSelect, NativeSelectOption } from "@/components/shadcn/native-select";
 import { Field, FormDialog } from "@/components/form-dialog";
-import { AreaSelect } from "@/components/ui/area-select";
 import { Notice } from "@/components/ui-kit/notice";
+import { AreaLanesFields, type AreaLanes } from "@/modules/rota/shared/components/area-lanes";
 import { cancelRepeat, editRepeat, saveRepeat, type RepeatInput } from "@/modules/rota/features/bookings/server/actions";
 import { formatDate } from "@/lib/format";
 import { BOOKING_KIND_META, BOOKING_KINDS, WEEKDAY_LABELS, addDaysIso, bookingDates, nextWeekday } from "@/modules/rota/shared/constants";
@@ -21,15 +21,16 @@ const text = (formData: FormData, key: string) => String(formData.get(key) ?? ""
 
 /** A booking as the dialog shows it, to change one already made. Times are "09:30", dates ISO. */
 export type BookingValues = {
-  id: string; kind: string; title: string; typeId: string; place: string; start: string; end: string; places: number;
+  id: string; kind: string; title: string; typeId: string; place: string; lanes: number[]; start: string; end: string; places: number;
   weekdays: number[]; firstDay: string; lastDay: string; skipDates: string[];
 };
 
 /** A booking that repeats (owner decision, 6 October 2026): school lessons, a party, lane hire.
- *  It is one activity on each of its days, from tomorrow on; each day is then planned and changed
+ *  In a pool with lanes it takes the whole pool or any set of lanes, and never a lane another
+ *  booking holds then (owner request, 13 October 2026). It is one activity on each of its days, from tomorrow on; each day is then planned and changed
  *  on its own on the Plan. With `booking`, it changes one already made (owner request, 13 October
  *  2026): only its days still to come, and its first day stays once it has started. */
-export function BookingDialog({ siteId, today, types, places, booking }: { siteId: string; today: string; types: Option[]; places: string[]; booking?: BookingValues }) {
+export function BookingDialog({ siteId, today, types, areas, booking }: { siteId: string; today: string; types: Option[]; areas: AreaLanes[]; booking?: BookingValues }) {
   const tomorrow = addDaysIso(today, 1);
   const start = nextWeekday(tomorrow, WEEKDAYS);
   const started = !!booking && booking.firstDay <= today;
@@ -48,6 +49,7 @@ export function BookingDialog({ siteId, today, types, places, booking }: { siteI
   const values = (formData: FormData): RepeatInput => ({
     siteId, kind: text(formData, "kind") as RepeatInput["kind"], title: text(formData, "title"), typeId: text(formData, "typeId"), place: text(formData, "place"),
     start: text(formData, "start"), end: text(formData, "end"), places: Number(formData.get("places") ?? 1), weekdays: days, firstDay, lastDay, skipDates: inRange,
+    lanes: formData.getAll("lanes").map(String),
   });
   const typeKnown = !booking || types.some((t) => t.id === booking.typeId);
   return (
@@ -70,9 +72,7 @@ export function BookingDialog({ siteId, today, types, places, booking }: { siteI
             {types.map((t) => <NativeSelectOption key={t.id} value={t.id}>{t.name}</NativeSelectOption>)}
           </NativeSelect>
         </Field>
-        <Field label="Where" htmlFor={id("place")} optional hint="The site's areas, kept in Admin.">
-          <AreaSelect id={id("place")} name="place" areas={places} defaultValue={booking?.place} />
-        </Field>
+        <AreaLanesFields fid={id("where")} areas={areas} place={booking?.place} lanes={booking?.lanes} hint="The site's areas, kept in Admin. A pool with lanes is booked whole or by lane." />
       </div>
       <fieldset className="flex min-w-0 flex-col gap-2">
         <legend className="mb-2 font-semibold">Which days</legend>
