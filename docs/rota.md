@@ -101,6 +101,11 @@ it.
   Then On now, Coming up (three hours), Off today, Changes today with what is still to
   update in Timepoint, and the day note.
 - **Bookings** (`/rota/bookings`): repeating bookings and how many places are still to fill.
+  **Change** (owner request, 13 October 2026) edits a booking with the same form: only its days
+  still to come change, and its first day stays once it has started. Days it no longer runs leave
+  the plan (people on them are told), new days are added, and kept days take only the fields that
+  changed, so a day changed on its own on the Plan keeps the rest. Times and places shrink only
+  past the people already on a day, as on the Plan.
 - **5-minute steps** (owner decision, 11 October 2026): bookings, activities, people on them and
   shifts start and end on a 5-minute step, like breaks, so a booking can last 10, 15, 25 minutes or
   any other multiple of 5. The time pickers move in 5-minute steps and the save actions refuse

@@ -7,7 +7,7 @@ See [docs/rota.md](../../../docs/rota.md).
 ## Features
 - `plan` — planning the week: shifts, activities, breaks, who can fill a gap, copying and sharing a week (`/rota`).
 - `today` — running today: who is on, the gaps left, the day's note and timepoints (`/rota/today`).
-- `bookings` — repeating bookings of areas (`/rota/bookings`).
+- `bookings` — repeating bookings of areas: add, change and cancel them (`/rota/bookings`).
 - `absences` — reporting absences, extending them and recording returns to work (`/rota/absences`).
 - `me` — a person's own days, for Turnfin Me. Reached through `index.ts`.
 - `person-file` — the rota's parts of a person's file: planned days, absences and changes to their activities.

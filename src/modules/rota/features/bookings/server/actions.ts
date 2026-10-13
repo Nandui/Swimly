@@ -4,10 +4,11 @@ import { revalidatePath } from "next/cache";
 import { z } from "zod";
 import { fail, ok, type ActionResult } from "@/lib/action-result";
 import { logAudit } from "@/lib/audit";
-import { isDateOnly, parseDateOnly, today } from "@/lib/format";
+import { formatDate, isDateOnly, parseDateOnly, toDateOnlyString as iso, today } from "@/lib/format";
 import { prisma } from "@/lib/prisma";
 import { activityTypeById } from "@/lib/setup/activity-types";
-import { BOOKING_KINDS, addDaysIso, bookingDates, parseClock, slotProblem } from "@/modules/rota/shared/constants";
+import { BOOKING_KINDS, addDaysIso, bookingDates, clock, parseClock, slotProblem } from "@/modules/rota/shared/constants";
+import { repeatChanges } from "@/modules/rota/features/bookings/server/changes";
 import { areaProblem } from "@/lib/setup/data";
 import { notifyShiftChange } from "@/lib/staff-api/notify";
 import { allowedFor, refresh } from "@/modules/rota/shared/writes";
@@ -32,21 +33,29 @@ export type RepeatInput = z.input<typeof repeatSchema>;
 /** The most days one booking may make, so a typo in a date cannot fill a year. */
 const MAX_DAYS = 200;
 
+/** The checks a booking passes whether it is new or changed: its times, its activity and its area. */
+async function checked(input: RepeatInput) {
+  const parsed = repeatSchema.safeParse(input);
+  if (!parsed.success) return { ok: false as const, error: parsed.error.issues[0].message };
+  const data = parsed.data;
+  const start = parseClock(data.start), end = parseClock(data.end);
+  if (start === null || end === null) return { ok: false as const, error: "Use times like 09:30." };
+  if (end <= start) return { ok: false as const, error: "It has to end after it starts." };
+  const slot = slotProblem(start, end);
+  if (slot) return { ok: false as const, error: slot };
+  if (data.lastDay < data.firstDay) return { ok: false as const, error: "The last day can't be before the first." };
+  const found = await activityTypeById(data.typeId);
+  const type = found && !found.archivedAt && !found.fromClasses ? found : null;
+  if (!type) return { ok: false as const, error: "That activity is no longer on the list." };
+  return { ok: true as const, data, start, end, type };
+}
+
 /** A booking that repeats: it adds its activity on each of its days, each then planned and
  *  changed on its own. Only days after today are made. */
 export async function saveRepeat(input: RepeatInput): Promise<ActionResult> {
-  const parsed = repeatSchema.safeParse(input);
-  if (!parsed.success) return fail(parsed.error.issues[0].message);
-  const data = parsed.data;
-  const start = parseClock(data.start), end = parseClock(data.end);
-  if (start === null || end === null) return fail("Use times like 09:30.");
-  if (end <= start) return fail("It has to end after it starts.");
-  const slot = slotProblem(start, end);
-  if (slot) return fail(slot);
-  if (data.lastDay < data.firstDay) return fail("The last day can't be before the first.");
-  const found = await activityTypeById(data.typeId);
-  const type = found && !found.archivedAt && !found.fromClasses ? found : null;
-  if (!type) return fail("That activity is no longer on the list.");
+  const check = await checked(input);
+  if (!check.ok) return fail(check.error);
+  const { data, start, end, type } = check;
   const now = today();
   const dates = bookingDates(data.firstDay > now ? data.firstDay : addDaysIso(now, 1), data.lastDay, data.weekdays, data.skipDates);
   if (!dates.length) return fail("None of those days are still to come.");
@@ -70,6 +79,88 @@ export async function saveRepeat(input: RepeatInput): Promise<ActionResult> {
   });
   refresh();
   revalidatePath("/rota/bookings");
+  return ok();
+}
+
+/** Change a booking (owner request, 13 October 2026). Only its days still to come change; days
+ *  that have come stay as they were, and so does its first day once it has started. Days it no
+ *  longer runs leave the plan with anyone on them, new days are added, and the days it keeps take
+ *  what changed, so a day changed on its own on the Plan keeps the rest. Like an activity on the
+ *  Plan, its times and places shrink only past the people already on it. */
+export async function editRepeat(id: string, input: RepeatInput): Promise<ActionResult> {
+  const repeat = await prisma.rotaRepeat.findFirst({ where: { id, cancelledAt: null }, select: {
+    siteId: true, kind: true, title: true, typeId: true, place: true, startMinutes: true, endMinutes: true, places: true, weekdays: true, firstDay: true, lastDay: true, skipDates: true,
+  } });
+  if (!repeat) return fail("That booking is cancelled.");
+  if (input.siteId !== repeat.siteId) return fail("That booking is at another site.");
+  const now = today(), tomorrow = addDaysIso(now, 1);
+  const startedOn = iso(repeat.firstDay);
+  const started = startedOn <= now;
+  // Once it has started, its first day is history: it stays.
+  const check = await checked(started ? { ...input, firstDay: startedOn } : input);
+  if (!check.ok) return fail(check.error);
+  const { data, start, end, type } = check;
+  const was = await activityTypeById(repeat.typeId);
+  const from = await allowedFor(repeat.siteId, tomorrow, was?.departmentId ?? "");
+  if (!from.ok) return fail(from.error);
+  const at = type.id === repeat.typeId ? from : await allowedFor(data.siteId, tomorrow, type.departmentId);
+  if (!at.ok) return fail(at.error);
+  const where = await areaProblem(data.siteId, data.place, repeat.place);
+  if (where) return fail(where);
+  // Dates it was left out on that have come stay on its record; the rest are as chosen now.
+  const skipDates = [...new Set([...repeat.skipDates.map(iso).filter((d) => d <= now), ...data.skipDates.filter((d) => d > now)])].sort();
+  const dates = bookingDates(data.firstDay > now ? data.firstDay : tomorrow, data.lastDay, data.weekdays, skipDates);
+  if (!started && !dates.length) return fail("None of those days are still to come.");
+  if (dates.length > MAX_DAYS) return fail(`That makes ${dates.length} days. Keep a booking to ${MAX_DAYS} days.`);
+
+  const future = await prisma.rotaNeed.findMany({ where: { repeatId: id, date: { gte: parseDateOnly(tomorrow) } }, orderBy: { date: "asc" },
+    select: { id: true, date: true, typeId: true, place: true, startMinutes: true, endMinutes: true, places: true,
+      assignments: { select: { userId: true, place: true, startMinutes: true, endMinutes: true } } } });
+  const plan = repeatChanges(future.map((n) => ({ id: n.id, date: iso(n.date) })), dates);
+  const kept = future.filter((n) => plan.keep.includes(n.id));
+  const dropped = future.filter((n) => plan.drop.includes(n.id));
+  // Only what changed on the booking reaches its days; times go together.
+  const timesChanged = start !== repeat.startMinutes || end !== repeat.endMinutes;
+  const changes = {
+    ...(type.id !== repeat.typeId ? { typeId: type.id } : {}),
+    ...(data.place !== repeat.place ? { place: data.place } : {}),
+    ...(timesChanged ? { startMinutes: start, endMinutes: end } : {}),
+    ...(data.places !== repeat.places ? { places: data.places } : {}),
+  };
+  const day = (d: Date) => formatDate(d);
+  for (const n of kept) {
+    const places = changes.places ?? n.places, s = changes.startMinutes ?? n.startMinutes, e = changes.endMinutes ?? n.endMinutes;
+    if (n.assignments.some((a) => a.place > places)) return fail(`On ${day(n.date)} someone is on a place you are removing. Take them off on the Plan first.`);
+    if (n.assignments.some((a) => a.startMinutes < s || a.endMinutes > e)) return fail(`On ${day(n.date)} someone is on it outside the new times. Change their time on the Plan first.`);
+  }
+
+  await prisma.$transaction(async (tx) => {
+    await tx.rotaRepeat.update({ where: { id }, data: {
+      kind: data.kind, title: data.title, typeId: type.id, place: data.place, startMinutes: start, endMinutes: end, places: data.places,
+      weekdays: data.weekdays, firstDay: parseDateOnly(data.firstDay), lastDay: parseDateOnly(data.lastDay), skipDates: skipDates.map(parseDateOnly),
+    } });
+    if (dropped.length) await tx.rotaNeed.deleteMany({ where: { id: { in: dropped.map((n) => n.id) } } });
+    if (kept.length && Object.keys(changes).length) await tx.rotaNeed.updateMany({ where: { id: { in: kept.map((n) => n.id) } }, data: changes });
+    if (plan.add.length) await tx.rotaNeed.createMany({ data: plan.add.map((d) => ({
+      orgId: at.site.orgId, siteId: at.site.id, date: parseDateOnly(d), typeId: type.id, place: data.place, startMinutes: start, endMinutes: end, places: data.places,
+      repeatId: id, createdById: at.actor.id, createdByName: at.actor.name,
+    })) });
+    await logAudit({ actorId: at.actor.id, actorName: at.actor.name, action: "update", entity: "RotaRepeat", entityId: id, clubId: at.site.id,
+      summary: `Changed the booking ${data.title}: ${type.name} ${clock(start)}–${clock(end)}, ${plan.add.length} days added, ${dropped.length} removed, ${kept.length} kept` }, tx);
+  });
+  refresh();
+  revalidatePath("/rota/bookings");
+  for (const userId of [...new Set(dropped.flatMap((n) => n.assignments.map((a) => a.userId)))]) {
+    const on = dropped.filter((n) => n.assignments.some((a) => a.userId === userId)).map((n) => day(n.date));
+    await notifyShiftChange(userId, `${data.title} at ${at.site.name} no longer runs on ${on.join(", ")}, so you are no longer on it then.`);
+  }
+  if (type.id !== repeat.typeId || data.place !== repeat.place || timesChanged) {
+    const gone = new Set(dropped.flatMap((n) => n.assignments.map((a) => a.userId)));
+    for (const userId of [...new Set(kept.flatMap((n) => n.assignments.map((a) => a.userId)))]) {
+      if (gone.has(userId)) continue;
+      await notifyShiftChange(userId, `${data.title} at ${at.site.name} has changed: it is now ${type.name}${data.place ? ` in ${data.place}` : ""}, ${clock(start)} to ${clock(end)}.`);
+    }
+  }
   return ok();
 }
 

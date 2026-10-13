@@ -6,8 +6,8 @@ import { Button } from "@/components/shadcn/button";
 import { EmptyState } from "@/components/ui-kit/empty-state";
 import { PageHeader } from "@/components/ui-kit/page-header";
 import { Tag } from "@/components/ui-kit/tag";
-import { BOOKING_KIND_META, BookingDialog, type BookingKind, CancelBooking, rotaRepeats, WEEKDAY_LABELS } from "@/modules/rota/features/bookings";
-import { formatDate, formatTimeRange, plural, today } from "@/lib/format";
+import { BOOKING_KIND_META, BookingDialog, type BookingKind, CancelBooking, clock, rotaRepeats, WEEKDAY_LABELS } from "@/modules/rota/features/bookings";
+import { formatDate, formatTimeRange, plural, toDateOnlyString, today } from "@/lib/format";
 
 export const metadata: Metadata = { title: "Bookings" };
 
@@ -50,6 +50,10 @@ export default async function BookingsPage({ searchParams }: { searchParams: Pro
                     <span className="pc-row-hint">{b.type.name}, {plural(b.places, "person", "people")} each day · {b.needs.length ? `${plural(b.needs.length, "day")} to come, ${toCome - filled ? `${plural(toCome - filled, "place")} still to fill` : "all filled"}` : "no days still to come"}</span>
                   </span>
                   <span className="pc-row-trail">
+                    {site?.plan && data.types.length ? <BookingDialog siteId={site.id} today={now} types={data.types} places={places} booking={{
+                      id: b.id, kind: b.kind, title: b.title, typeId: b.typeId, place: b.place, start: clock(b.startMinutes), end: clock(b.endMinutes), places: b.places,
+                      weekdays: b.weekdays, firstDay: first, lastDay: toDateOnlyString(b.lastDay), skipDates: b.skipDates.map(toDateOnlyString),
+                    }} /> : null}
                     {site?.plan && b.needs.length ? <CancelBooking id={b.id} label={b.title} /> : null}
                     <Button asChild variant="outline"><Link href={`/rota?${new URLSearchParams({ site: site!.id, dept: b.type.departmentId, day: first > now ? first : now })}`}><CalendarDays aria-hidden="true" />Plan who</Link></Button>
                   </span>
