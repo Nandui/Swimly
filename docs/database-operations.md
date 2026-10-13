@@ -67,10 +67,6 @@ once. Never print, commit or share it. The scripts stay dry runs until given
 `--confirm`; read the dry run before writing.
 Do not write test swimmers or classes to production.
 
-`scripts/move-course-site.ts --course <id> --to <site>` moves a class registered
-at the wrong site. The app has no site picker on a class. The dry run lists its
-enrolments, history, instructor and any class at the same time at the new site.
-
 ## Previews and the development database
 
 Work ships through a branch or pull request. Vercel builds a preview of it,

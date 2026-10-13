@@ -37,13 +37,15 @@ function fixture() {
     },
     level: { findUnique: async ({ where }: { where: { programme: { clubId: string } } }) => where.programme.clubId === level.programme.clubId ? level : null },
     enrolment: { count: async () => open },
+    classCancellation: { updateMany: async () => { writes++; return { count: 0 }; } },
     auditLog: { create: async ({ data }: { data: Record<string, unknown> }) => { audits.push(data); } },
   };
   const prisma = { ...tx, $transaction: async (run: (db: typeof tx) => Promise<unknown>) => run(tx) };
   const actions = serverModule<Actions>("src/modules/activities/features/courses/server/actions/courses.ts", { "@/lib/directory": directoryDouble({ people: [{ id: "instructor", name: "Instructor" }] }),
     "@/lib/prisma": { prisma },
     "@/lib/authz": { requirePermission: async () => ({ user: { id: "staff", name: "Test Staff" } }) },
-    "@/lib/clubs/current": { currentClubId: async () => "club", currentClubIdIfAny: async () => "club" },
+    "@/lib/clubs/current": { currentClubId: async () => "club", currentClubIdIfAny: async () => "club",
+      getCurrentClub: async () => ({ club: { id: "club", name: "Bishopstown" }, clubs: [{ id: "club", name: "Bishopstown" }, { id: "other", name: "Churchfield" }] }) },
     "next/cache": { revalidatePath: () => {} },
   });
   return { actions, course, level, curriculum, audits, created, writes: () => writes, waitlist: () => { open = 1; } };
@@ -80,5 +82,22 @@ test("archiving a class refuses outstanding enrolments or waitlist places", asyn
 test("re-submitting an unchanged class makes no mutation", async () => {
   const f = fixture();
   assert.equal((await f.actions.updateCourse("class", input)).ok, true);
+  assert.equal(f.writes(), 0);
+});
+
+test("moving a class to another site the person works at audits both sites", async () => {
+  const f = fixture();
+  assert.equal((await f.actions.moveCourseSite("class", "other")).ok, true);
+  assert.equal(f.writes(), 2);
+  assert.deepEqual(f.audits.map((a) => a.clubId), ["club", "other"]);
+  assert.match(String(f.audits[0].summary), /from Bishopstown to Churchfield/);
+});
+
+test("moving a class refuses a site the person does not work at, or its own site", async () => {
+  const f = fixture();
+  assert.equal((await f.actions.moveCourseSite("class", "elsewhere")).ok, false);
+  assert.equal((await f.actions.moveCourseSite("class", "club")).ok, false);
+  f.course.clubId = "elsewhere";
+  assert.equal((await f.actions.moveCourseSite("class", "other")).ok, false);
   assert.equal(f.writes(), 0);
 });

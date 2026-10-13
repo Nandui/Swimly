@@ -2,7 +2,7 @@
 import { LocationField } from "@/modules/activities/shared/components/location-field";
 import { Button } from "@/components/shadcn/button";
 
-import { Archive, ArchiveRestore, Pencil } from "lucide-react";
+import { Archive, ArchiveRestore, MapPin, Pencil } from "lucide-react";
 import { ConfirmAction } from "@/components/confirm-action";
 import { Field, FormDialog } from "@/components/form-dialog";
 
@@ -10,6 +10,7 @@ import { Input } from "@/components/ui/input";
 import { Select } from "@/components/ui/select";
 import { DayOfWeek } from "@/generated/prisma/enums";
 import {
+  moveCourseSite,
   setCourseArchived,
   updateCourse,
 } from "@/modules/activities/features/courses/server/actions/courses";
@@ -179,6 +180,42 @@ export function EditCourse({
       submit={(formData) => updateCourse(course.id, readInput(formData))}
     >
       <CourseFields course={course} levels={levels} instructors={instructors} />
+    </FormDialog>
+  );
+}
+
+export function MoveCourse({
+  course,
+  sites,
+}: {
+  course: CourseDetail;
+  sites: { id: string; name: string }[];
+}) {
+  const others = sites.filter((site) => site.id !== course.club.id);
+  return (
+    <FormDialog
+      trigger={
+        <Button variant="outline">
+          <MapPin aria-hidden={true} className="size-4 shrink-0" />
+          Move
+          <span className="sr-only"> {courseLabel(course)} to another site</span>
+        </Button>
+      }
+      title={`Move ${courseLabel(course)}`}
+      description={`It leaves ${course.club.name}'s timetable. Swimmers, registers, notes and results stay with the class.`}
+      submitLabel="Move class"
+      successMessage="Class moved"
+      submit={(formData) => moveCourseSite(course.id, String(formData.get("siteId") ?? ""))}
+    >
+      <Field label="Site" htmlFor="siteId" hint="Check the instructor works at the new site.">
+        <Select
+          id="siteId"
+          name="siteId"
+          required
+          defaultValue={others[0]?.id}
+          options={others.map((site) => ({ value: site.id, label: site.name }))}
+        />
+      </Field>
     </FormDialog>
   );
 }
