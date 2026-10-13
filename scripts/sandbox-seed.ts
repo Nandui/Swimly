@@ -18,6 +18,7 @@ export async function seed(ctx: Ctx) {
   await seedRota(ctx.prisma);
   await seedAcademy(ctx.prisma);
   await seedShortCourses(ctx.prisma);
+  await seedStock(ctx.prisma);
 }
 
 /** Two sites' worth of classes so the deck and desk surfaces can be checked:
@@ -309,4 +310,29 @@ async function seedShortCourses(db: PrismaClient) {
   const soon = await db.shortCourse.create({ data: { orgId: ORG, siteId: "club_bishopstown", typeId: swim.id, capacity: 8, priceCents: 7500, instructorId: "sbx_sam", ...by } });
   for (let week = 0; week < 6; week++) await db.shortCourseSession.create({ data: { courseId: soon.id, date: day(10 + week * 7), startMinutes: 1200, endMinutes: 1245, place: "Learner pool" } });
   for (const name of ["Hal Sample", "Ivy Sample", "Jo Sample"]) await db.shortCourseParticipant.create({ data: { courseId: soon.id, name, email: `${name.split(" ")[0].toLowerCase()}@example.invalid`, payment: "owed", ...by } });
+}
+
+/** Stock (docs/stock.md): a dozen invented products in the migration's categories, a submitted
+ *  count at Riverside a month ago, another last week, and today's still open with a few counted. */
+async function seedStock(db: PrismaClient) {
+  const ORG = "org_leisureworld";
+  const day = (offset: number) => { const d = new Date(); d.setUTCHours(0, 0, 0, 0); d.setUTCDate(d.getUTCDate() + offset); return d; };
+  const cat = async (name: string) => (await db.stockCategory.findFirstOrThrow({ where: { orgId: ORG, name } })).id;
+  const list: [string, string, string, number, number][] = [
+    ["Junior goggles, blue", "Retail", "pair", 24, 18], ["Junior goggles, pink", "Retail", "pair", 20, 21], ["Adult goggles", "Retail", "pair", 15, 11],
+    ["Armbands, 2 to 6", "Retail", "pair", 12, 9], ["Swim nappies, size 3 to 4", "Retail", "each", 40, 26], ["Swim hat, silicone", "Retail", "each", 30, 30],
+    ["Locker tokens", "Equipment", "each", 200, 188], ["Still water 500ml", "Drink", "bottle", 48, 30], ["Sports drink 500ml", "Drink", "bottle", 36, 0],
+    ["Crisps, ready salted", "Snack", "packet", 60, 41], ["Chocolate bar", "Confectionery", "each", 50, 33], ["Hand towel", "Retail", "each", 10, 10],
+  ];
+  const products = [];
+  for (const [name, category, unitLabel] of list) products.push(await db.stockProduct.create({ data: { orgId: ORG, name, unitLabel, categoryId: await cat(category) } }));
+  const by = { startedById: "sbx_maya", startedByName: "Maya Example" };
+  const done = { submittedById: "sbx_maya", submittedByName: "Maya Example" };
+  const month = await db.stockTake.create({ data: { orgId: ORG, siteId: "club_bishopstown", stockDate: day(-35), startedAt: day(-35), submittedAt: day(-35), ...by, ...done } });
+  const week = await db.stockTake.create({ data: { orgId: ORG, siteId: "club_bishopstown", stockDate: day(-7), startedAt: day(-7), submittedAt: day(-7), ...by, ...done } });
+  const open = await db.stockTake.create({ data: { orgId: ORG, siteId: "club_bishopstown", stockDate: day(0), ...by } });
+  await db.stockTakeLine.createMany({ data: products.map((p, i) => ({ stockTakeId: month.id, productId: p.id, quantity: list[i][3], countedByName: "Maya Example" })) });
+  // The hand towels were missed last week: they are not counted, not none.
+  await db.stockTakeLine.createMany({ data: products.slice(0, -1).map((p, i) => ({ stockTakeId: week.id, productId: p.id, quantity: list[i][4], countedByName: "Maya Example" })) });
+  await db.stockTakeLine.createMany({ data: products.slice(0, 4).map((p, i) => ({ stockTakeId: open.id, productId: p.id, quantity: Math.max(0, list[i][4] - 2), countedByName: "Maya Example" })) });
 }

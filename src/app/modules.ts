@@ -7,6 +7,7 @@ import { purchasingModule } from "@/modules/purchasing/manifest";
 import { refundsModule } from "@/modules/refunds/manifest";
 import { rotaModule } from "@/modules/rota/manifest";
 import { shortCoursesModule } from "@/modules/short-courses/manifest";
+import { stockModule } from "@/modules/stock/manifest";
 import { tasksModule } from "@/modules/tasks/manifest";
 import { trainingModule } from "@/modules/training/manifest";
 
@@ -28,4 +29,5 @@ export const modules = [
   docsModule,
   hrModule,
   purchasingModule,
+  stockModule,
 ];

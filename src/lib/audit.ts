@@ -57,6 +57,7 @@ export const MODULE_OF_ENTITY: Readonly<Record<string, string>> = {
   Supplier: "Purchasing", PurchaseProduct: "Purchasing", PurchaseApprovalRule: "Purchasing", PurchaseOrder: "Purchasing",
   TaskTemplate: "Tasks", Task: "Tasks", TaskAction: "Tasks", TaskSite: "Tasks",
   IncidentReport: "Incidents",
+  StockCategory: "Stock", StockProduct: "Stock", StockTake: "Stock", StockTakeLine: "Stock",
   ShortCourseType: "Short courses", ShortCourse: "Short courses", ShortCourseSession: "Short courses", ShortCourseParticipant: "Short courses",
   ActivityType: "Admin", SiteArea: "Admin", Position: "Admin",
   RotaShift: "Rota", RotaDayNote: "Rota", RotaActivity: "Rota", RotaAbsence: "Rota", RotaImport: "Rota", RotaDepartment: "Rota",
@@ -68,7 +69,7 @@ export const MODULE_OF_ENTITY: Readonly<Record<string, string>> = {
 /** Rows that belong to no club, so their audit entries belong to none either
  *  and show up in every club's activity. */
 // Organisation-level records (People core) belong to no single site either.
-const SHARED_ENTITIES = new Set(["User", "StaffRole", "Student", "Programme", "Level", "Competency", "AssessmentType", "Organisation", "Department", "RoleAssignment", "QualificationType", "Qualification", "SharedDevice", "TrainingCourse", "TrainingAssignment", "RotaAbsence", "RotaImport", "RotaDepartment", "Supplier", "PurchaseProduct", "PurchaseApprovalRule", "ActivityType", "Position"]);
+const SHARED_ENTITIES = new Set(["User", "StaffRole", "Student", "Programme", "Level", "Competency", "AssessmentType", "Organisation", "Department", "RoleAssignment", "QualificationType", "Qualification", "SharedDevice", "TrainingCourse", "TrainingAssignment", "RotaAbsence", "RotaImport", "RotaDepartment", "Supplier", "PurchaseProduct", "PurchaseApprovalRule", "StockCategory", "StockProduct", "ActivityType", "Position"]);
 
 /** @param db Pass the transaction client when the audit row must live or die
  *  with the write it describes. The default writes on its own connection,

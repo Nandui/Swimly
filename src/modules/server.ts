@@ -12,6 +12,7 @@ import "@/modules/incidents/module";
 import "@/modules/tasks/module";
 import "@/modules/academy/module";
 import "@/modules/short-courses/module";
+import "@/modules/stock/module";
 import "@/lib/people/home";
 import "@/modules/hr/module";
 

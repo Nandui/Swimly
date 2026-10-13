@@ -15,3 +15,8 @@ test("the front of house holds the swim school, the academy, short courses and r
   assert.deepEqual(front.modules.map((m) => m.id), ["swim-school", "academy", "short-courses", "refunds"]);
   assert.equal(front.label, "Front of house");
 });
+
+test("the back office holds purchasing, stock and admin", () => {
+  const back = groupModules(allModules()).find((g) => g.key === "back-office")!;
+  assert.deepEqual(back.modules.map((m) => m.id), ["purchasing", "stock", "admin"]);
+});

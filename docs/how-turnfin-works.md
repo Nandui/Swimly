@@ -4,7 +4,7 @@
 
 ## In five sentences
 
-1. **Modules.** Turnfin is a set of modules: Swim school, Short courses, Pool deck, Tasks, Incidents, Refunds, Docs, Training, Rota, HR and Admin. Each one keeps its own information to itself.
+1. **Modules.** Turnfin is a set of modules: Swim school, Short courses, Pool deck, Tasks, Incidents, Refunds, Docs, Training, Rota, HR, Stock and Admin. Each one keeps its own information to itself.
 2. **Roles.** A role is a job, such as Receptionist or Instructor. For each module the role has a level, like None, Use or Manage. Each level includes the ones before it.
 3. **Home.** When you sign in you see Home, named for your role (the Receptionist's is Front of House): the modules your role has, each saying how many things in it need you. Opening a module takes you to its starter page, with its day, what waits for you and every page it has.
 4. **Aimed at roles.** Inside a module, things can be aimed at roles: this SOP is for Receptionists and Duty managers, that course is for Instructors.
@@ -42,12 +42,13 @@ A role holds one level for each module (`StaffRole.levels`), plus up to two extr
 | Rota | View, Plan, Run | |
 | Tasks | Do (the day's tasks they may complete), Review (approve, reopen, follow-ups, reports, activity), Manage (templates, sites' settings, export) | |
 | Short courses | View (see courses, book people on, record payment, keep the waiting list), Instructor (take registers), Manage (the course list, put courses on) | |
+| Stock | View (see counts, the product list and comparisons), Count (start a count, count and submit it), Manage (the product list and categories, delete a count) | |
 | Incidents | Report (report accidents, incidents and near misses, follow your own), Investigate (every report at your sites, triage, close low-risk ones), Manage (serious alerts, close serious reports). Never your own | |
 | HR | Their team, Everyone (staff details, employment, notes, reviews). Only a superadmin gives HR | |
 | Admin | Manage (sign-in and access: people's accounts, roles, sites, the activity log) | Staff details are HR's |
 
 **Where a level applies:**
-- Swim school, Short courses, Pool deck, Tasks, Incidents, Training and Rota levels apply at the sites the person works at (Staff › a person › Role and sites). No sites ticked means every site.
+- Swim school, Short courses, Pool deck, Tasks, Incidents, Stock, Training and Rota levels apply at the sites the person works at (Staff › a person › Role and sites). No sites ticked means every site.
 - HR "Their team" applies to the people the person manages.
 - Everything else applies everywhere.
 
@@ -55,7 +56,7 @@ A role holds one level for each module (`StaffRole.levels`), plus up to two extr
 
 **Aimed at roles:** in Docs every role is a team ("Receptionist (role)"), so a document or its required reading can be aimed at a role. In Training, "Add everyone on a role" (in the Assign training dialog) adds a whole role's people to an assignment. In Tasks, a template is for the roles it names: only they complete its tasks ([tasks.md](tasks.md)).
 
-**Departments** are presentation only. Each module names the part of the centre it serves in one `group` field (`MODULE_GROUPS` in `src/modules/registry.ts`): Front of house (Swim school, Academy, Short courses, Refunds), Poolside (Pool deck, Tasks, Incidents), Team (Rota, Training, Docs, HR) and Back office (Purchasing, Admin). The group orders and heads the role editor, the module bar and the home page, and never gives or checks access: that stays role, then level, then permission. The workspace is still the role's home page, named on the role ("Front of House"). In code, say *group*, not "department" (Rota departments are Admin data) or "area" (a site's pools and rooms).
+**Departments** are presentation only. Each module names the part of the centre it serves in one `group` field (`MODULE_GROUPS` in `src/modules/registry.ts`): Front of house (Swim school, Academy, Short courses, Refunds), Poolside (Pool deck, Tasks, Incidents), Team (Rota, Training, Docs, HR) and Back office (Purchasing, Stock, Admin). The group orders and heads the role editor, the module bar and the home page, and never gives or checks access: that stays role, then level, then permission. The workspace is still the role's home page, named on the role ("Front of House"). In code, say *group*, not "department" (Rota departments are Admin data) or "area" (a site's pools and rooms).
 
 **Home and the starter pages.** Home lists the person's modules; each opens on its starter page (the manifest's `href`), the same shape in every module (`ModuleStart`). A module's items (`registerHomeCard` in `src/modules/contributions.ts`) fill its starter page, and Home counts the ones that need the person. A module lists only its everyday jobs there, and only what the person can already open. Each module keeps one list of its pages, which builds both its page bar and its starter page.
 

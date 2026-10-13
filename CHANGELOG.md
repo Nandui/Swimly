@@ -4,6 +4,15 @@ Patch notes for everyone who uses Turnfin at the swim school, the desk and the o
 
 **How versions are numbered:** the middle number goes up when something new arrives (a module, a screen, a new way of working), and the last number when something is fixed or tidied without changing how you work. This list starts on 3 October 2026, when Turnfin moved to its new look; earlier changes are not listed.
 
+## 1.10.0 · 13 October 2026 · Stock
+
+- A new module, **Stock**, under Back office, brings stock taking into Turnfin. It does what Stockly did, with your Turnfin sign-in, sites and roles.
+- **Counts:** start a count at the site you are in and walk the stockroom with a phone or tablet. Products are grouped by category, with a search and a filter for what is still to count. Numbers save as you type. An empty box means not counted; **None** means you counted and there were none. Submit the count when you are done; after that it can't be changed.
+- **Compare:** put two submitted counts at a site side by side and see what went down, what went up (a delivery nobody recorded, or a miscount, shown in red) and what was not counted, which is left out of the totals.
+- **Products and Categories:** one product list for every site, each counted in its own unit (a can, a pair, a 25ml serving). Products and categories are archived, never deleted, so old counts stay readable. The usual categories (Drink, Snack, Confectionery, Retail, Cleaning, Equipment, Other) are there to start with.
+- Home shows **Stock counts to finish** while a count is open at your sites.
+- Administrators choose who can View, Count or Manage on each role, under Stock. Nobody sees it until then.
+
 ## 1.9.2 · 13 October 2026 · Rota: change a booking
 
 - On **Rota > Bookings**, each booking now has a **Change** button beside Cancel booking. It opens the same form as New booking, filled in, so you can change who it is for, the activity, the area, the times, how many people, the days of the week, the last day and the dates it does not run.
