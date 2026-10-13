@@ -333,6 +333,13 @@ export async function staffAgesByIds(ids: readonly string[], db?: Db): Promise<S
   return (await client(db)).user.findMany({ where: { id: { in: [...new Set(ids)] } }, select: { id: true, name: true, dateOfBirth: true } });
 }
 
+/** Contracted minutes a week by person, for the ones who have them set (Staff page). */
+export async function contractMinutesByIds(ids: readonly string[], db?: Db): Promise<Map<string, number>> {
+  if (ids.length === 0) return new Map();
+  const rows = await (await client(db)).user.findMany({ where: { id: { in: [...new Set(ids)] }, contractMinutes: { not: null } }, select: { id: true, contractMinutes: true } });
+  return new Map(rows.map((r) => [r.id, r.contractMinutes!]));
+}
+
 /** Active staff in this organisation who work at the site (or at every site), by name. */
 export async function activeStaffAgesAtSite(orgId: string | null, siteId: string, db?: Db): Promise<StaffAge[]> {
   return (await client(db)).user.findMany({

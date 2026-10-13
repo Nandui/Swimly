@@ -28,7 +28,9 @@ import { toast } from "@/components/ui/toast";
  *  to place, what they could take, and any under-18 rest warning. Warnings never stop anything. */
 
 const THEME = "turnfin-module";
-type Ctx = { siteId: string; departmentId: string; date: string; dateLabel: string; live: boolean; canChange: boolean };
+type Ctx = { siteId: string; departmentId: string; date: string; dateLabel: string; live: boolean; canChange: boolean;
+  /** Department names by id, to say when something would lend them to another department. */
+  departmentNames?: Record<string, string> };
 const text = (formData: FormData, key: string) => String(formData.get(key) ?? "");
 
 export function PeoplePlan({ people, ...ctx }: Ctx & { people: Person[] }) {
@@ -79,7 +81,7 @@ function summary(p: Person) {
 }
 
 /** One person's day: shift, breaks, what they could take. */
-function ShiftBody({ person: p, siteId, departmentId, date, dateLabel, live, canChange }: Ctx & { person: Person }) {
+function ShiftBody({ person: p, siteId, departmentId, date, dateLabel, live, canChange, departmentNames }: Ctx & { person: Person }) {
   const router = useRouter();
   const done = () => router.refresh();
   const breaks = p.shift.parts.flatMap((x) => x.breaks);
@@ -189,9 +191,10 @@ function ShiftBody({ person: p, siteId, departmentId, date, dateLabel, live, can
         <section aria-labelledby="shift-take" className="flex flex-col gap-2">
           <h3 id="shift-take" className="font-semibold">Activities they could take</h3>
           <p className="text-sm text-ui-muted-foreground">The day&apos;s gaps inside their shift, at the time they are free for each.</p>
-          {p.options.length === 0 ? <p className="text-sm">Nothing on this department&apos;s day needs someone during their shift.</p> : (
+          {p.options.length === 0 ? <p className="text-sm">Nothing on the day needs someone during their shift.</p> : (
             <ul className="pc-rows">
-              {[...open, ...closed].map((o) => <OptionRow key={o.key} option={o} person={p} siteId={siteId} date={date} live={live} canChange={canChange} onDone={done} />)}
+              {[...open, ...closed].map((o) => <OptionRow key={o.key} option={o} person={p} siteId={siteId} date={date} live={live} canChange={canChange} onDone={done}
+                lentTo={o.departmentId !== departmentId ? departmentNames?.[o.departmentId] ?? "another department" : null} />)}
             </ul>
           )}
         </section>
@@ -200,9 +203,16 @@ function ShiftBody({ person: p, siteId, departmentId, date, dateLabel, live, can
   );
 }
 
-function OptionRow({ option: o, person, siteId, date, live, canChange, onDone }: { option: ShiftOption; person: Person; siteId: string; date: string; live: boolean; canChange: boolean; onDone: () => void }) {
+/** Something a person on shift could take, with a button to put them on it. `within` narrows the
+ *  times offered to one stretch of their free time; `lentTo` names another department's work
+ *  (lending, owner request, 13 October 2026). */
+export function OptionRow({ option: o, person, siteId, date, live, canChange, onDone, within, lentTo }: {
+  option: ShiftOption; person: Person; siteId: string; date: string; live: boolean; canChange: boolean; onDone: () => void;
+  within?: { start: number; end: number }; lentTo?: string | null;
+}) {
   const what = `${o.name} in ${o.area}`;
-  const hint = [`${clock(o.gapStart)}–${clock(o.gapEnd)} needs someone`, o.detail, o.requiredName ? `needs ${qualificationShort(o.requiredName)}` : null].filter(Boolean).join(" · ");
+  const from = within ? Math.max(o.start, within.start) : o.start, to = within ? Math.min(o.end, within.end) : o.end;
+  const hint = [`${clock(o.gapStart)}–${clock(o.gapEnd)} needs someone`, lentTo ? `for ${lentTo}` : null, o.detail, o.requiredName ? `needs ${qualificationShort(o.requiredName)}` : null].filter(Boolean).join(" · ");
   const fid = `take-${o.key.replace(/\W+/g, "-")}`;
   return (
     <li className="pc-row" {...(o.ok ? {} : { "data-muted": "" })}>
@@ -215,15 +225,15 @@ function OptionRow({ option: o, person, siteId, date, live, canChange, onDone }:
         <span className="pc-row-trail">
           <FormDialog portalClassName={THEME} width="sm:max-w-lg" title={`Put ${person.name.split(" ")[0]} on ${what}`}
             description={o.classRef ? "They teach the whole class." : "For all of this time or part of it."}
-            trigger={<Button type="button" variant="outline" className="tabular-nums"><Plus aria-hidden="true" />{clock(o.start)}–{clock(o.end)}</Button>}
+            trigger={<Button type="button" variant="outline" className="tabular-nums"><Plus aria-hidden="true" />{clock(o.classRef ? o.gapStart : from)}–{clock(o.classRef ? o.gapEnd : to)}</Button>}
             submitLabel="Put on" successMessage="Put on the rota" onSuccess={onDone}
             submit={(fd) => o.classRef
               ? planTeacher({ siteId, date, classRef: o.classRef, userId: person.userId }, changeOf(fd))
               : assign(null, { needId: o.needId!, place: o.place!, userId: person.userId, start: text(fd, "start"), end: text(fd, "end") }, changeOf(fd))}>
             {o.classRef ? <p className="text-sm tabular-nums">{clock(o.gapStart)} to {clock(o.gapEnd)}{o.detail ? `, ${o.detail}` : ""}.</p> : (
               <div className="grid grid-cols-2 gap-4">
-                <Field label="From" htmlFor={`${fid}-start`}><Input id={`${fid}-start`} name="start" type="time" step={300} required defaultValue={clock(o.start)} min={clock(o.gapStart)} max={clock(o.gapEnd)} className="min-h-11" /></Field>
-                <Field label="To" htmlFor={`${fid}-end`}><Input id={`${fid}-end`} name="end" type="time" step={300} required defaultValue={clock(o.end)} min={clock(o.gapStart)} max={clock(o.gapEnd)} className="min-h-11" /></Field>
+                <Field label="From" htmlFor={`${fid}-start`}><Input id={`${fid}-start`} name="start" type="time" step={300} required defaultValue={clock(from)} min={clock(o.gapStart)} max={clock(o.gapEnd)} className="min-h-11" /></Field>
+                <Field label="To" htmlFor={`${fid}-end`}><Input id={`${fid}-end`} name="end" type="time" step={300} required defaultValue={clock(to)} min={clock(o.gapStart)} max={clock(o.gapEnd)} className="min-h-11" /></Field>
               </div>
             )}
             {live ? <ChangeFields id={fid} /> : null}
@@ -250,17 +260,17 @@ function ShiftTimes({ title, submitLabel, start, end, live, fid, trigger, submit
   );
 }
 
-/** "Add to shift": choose the times, then who, best fit first (free, not off, shortest week). */
+/** "Add staff": choose the shift's times, then who, best fit first (free, not off, shortest week). */
 export function AddShiftSheet({ siteId, departmentId, date, dateLabel, live }: Omit<Ctx, "canChange">) {
   const [open, setOpen] = useState(false);
   return (
     <>
-      <Button type="button" variant="outline" onClick={() => setOpen(true)}><UserPlus aria-hidden="true" />Add to shift</Button>
+      <Button type="button" variant="outline" onClick={() => setOpen(true)}><UserPlus aria-hidden="true" />Add staff</Button>
       <Sheet open={open} onOpenChange={setOpen}>
         <SheetContent portalClassName={THEME} className="flex w-full flex-col gap-0 overflow-y-auto sm:max-w-md">
           <SheetHeader className="p-6 pb-4">
-            <SheetTitle>Add to shift</SheetTitle>
-            <SheetDescription>{dateLabel}. Choose the times, then who. You give them activities after.</SheetDescription>
+            <SheetTitle>Add staff to this day</SheetTitle>
+            <SheetDescription>{dateLabel}. Choose their shift, then who. It starts as No activity, and you give its time to the day&apos;s work on the plan.</SheetDescription>
           </SheetHeader>
           {open ? <AddShiftBody siteId={siteId} departmentId={departmentId} date={date} live={live} onClose={() => setOpen(false)} /> : null}
         </SheetContent>

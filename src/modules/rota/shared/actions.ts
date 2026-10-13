@@ -15,7 +15,7 @@ import { areaProblem } from "@/lib/setup/data";
 import { fitsFor } from "@/modules/rota/shared/data";
 import { notifyShiftChange } from "@/lib/staff-api/notify";
 import { planCommitment } from "@/modules/contributions";
-import { type Allowed, CLASSES, NEEDS_REASON, allowedFor, changeSchema, iso, logLive, refresh, shared } from "@/modules/rota/shared/writes";
+import { type Allowed, CLASSES, NEEDS_REASON, allowedFor, allowedForPerson, changeSchema, iso, logLive, refresh, shared } from "@/modules/rota/shared/writes";
 
 export type ChangeInput = z.input<typeof changeSchema>;
 
@@ -153,10 +153,15 @@ export async function assign(id: string | null, input: AssignInput, changeInput:
     assignments: { select: { id: true, needId: true, place: true, userId: true, startMinutes: true, endMinutes: true } } } }).then(withType);
   if (!need) return fail("That activity is no longer on the plan.");
   const date = iso(need.date);
-  const at = await allowedFor(need.siteId, date, need.type.departmentId);
+  const at = await allowedForPerson(need.siteId, date, need.type.departmentId, data.userId);
   if (!at.ok) return fail(at.error);
   const before = id ? need.assignments.find((a) => a.id === id) : null;
   if (id && !before) return fail("That person is no longer on this activity.");
+  // Swapping someone off it needs the same right over them.
+  if (before && before.userId !== data.userId) {
+    const off = await allowedForPerson(need.siteId, date, need.type.departmentId, before.userId);
+    if (!off.ok) return fail(off.error);
+  }
   const problem = placeProblem(need, need.assignments, { id: id ?? undefined, needId: need.id, place: data.place, userId: data.userId, startMinutes: start, endMinutes: end });
   if (problem) return fail(problem);
   const person = await staffContact(data.userId, at.site.orgId, { activeOnly: true });
@@ -189,7 +194,7 @@ export async function unassign(id: string, changeInput: ChangeInput = {}): Promi
   const a = found && { ...(await withOneStaff(found, "userId", "user")), need: (await withType(found.need))! };
   if (!a) return fail("That person is no longer on this activity.");
   const date = iso(a.need.date);
-  const at = await allowedFor(a.need.siteId, date, a.need.type.departmentId);
+  const at = await allowedForPerson(a.need.siteId, date, a.need.type.departmentId, a.userId);
   if (!at.ok) return fail(at.error);
   if (at.live && !change.reason) return fail(NEEDS_REASON);
   const what = `${a.need.type.name}${a.need.place ? `, ${a.need.place}` : ""}`;
@@ -212,7 +217,7 @@ export async function planTeacher(input: { siteId: string; date: string; classRe
   const actor = await currentActor();
   const teaching = await classesActivity(actor.orgId);
   if (!teaching) return fail("Swim classes are not on the rota yet. Add a Teaching activity that takes them, on the activity list.");
-  const at = await allowedFor(input.siteId, input.date, teaching.departmentId);
+  const at = input.userId ? await allowedForPerson(input.siteId, input.date, teaching.departmentId, input.userId) : await allowedFor(input.siteId, input.date, teaching.departmentId);
   if (!at.ok) return fail(at.error);
   if (at.live && !change.reason) return fail(NEEDS_REASON);
   const person = input.userId ? await staffContact(input.userId, at.site.orgId, { activeOnly: true }) : null;

@@ -41,6 +41,21 @@ export async function allowedFor(siteId: string, date: string, departmentId: str
   return { ok: true, actor: { id: actor.id, name: actor.name }, site: { id: site.id, name: site.name, orgId: site.orgId }, live: date <= now };
 }
 
+/** Lending (owner request, 13 October 2026: supervisors "can put it if needed cross
+ *  departments"): someone on a shift on a department's plan may be put on another department's
+ *  activity by whoever plans their shift. Allowed when the signed-in person may change the
+ *  activity's department, or a department this person has a planned shift for that day here. */
+export async function allowedForPerson(siteId: string, date: string, departmentId: string, userId: string): Promise<Allowed> {
+  const direct = await allowedFor(siteId, date, departmentId);
+  if (direct.ok) return direct;
+  const shifts = await prisma.rotaPlanShift.findMany({ where: { siteId, date: parseDateOnly(date), userId, departmentId: { not: departmentId } }, distinct: ["departmentId"], select: { departmentId: true } });
+  for (const s of shifts) {
+    const via = await allowedFor(siteId, date, s.departmentId);
+    if (via.ok) return via;
+  }
+  return direct;
+}
+
 export function refresh() {
   revalidatePath("/rota");
   revalidatePath("/rota/today");
