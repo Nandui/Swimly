@@ -47,7 +47,7 @@ export async function incidentCounts() {
   const [reviewSites, signoffSites] = await Promise.all([sitesFor("incidents.reports.review"), who.signoff ? sitesFor("incidents.reports.signoff") : null]);
   const org = { orgId: who.orgId ?? undefined };
   const [toTriage, open] = await Promise.all([
-    prisma.incidentReport.count({ where: { ...org, ...inSites(reviewSites), status: "reported", reporterId: { not: who.id } } }),
+    prisma.incidentReport.count({ where: { ...org, ...inSites(reviewSites), status: "reported", OR: [{ reporterId: { not: who.id } }, ...(signoffSites ? [inSites(signoffSites)] : [])] } }),
     prisma.incidentReport.findMany({ where: { ...org, ...inSites(reviewSites), status: "investigating", reporterId: { not: who.id } }, select: { siteId: true, serious: true, severityActual: true, severityPotential: true } }),
   ]);
   const toSignOff = signoffSites ? open.filter((r) => needsSignoff(r) && covers(signoffSites, r.siteId)).length : 0;
@@ -88,7 +88,7 @@ export async function incidentReport(id: string) {
     who, report: { ...report, status }, reads, today: today(),
     hasChild: report.people.some((p) => p.ageGroup === "child"),
     can: {
-      triage: status === "reported" && rights.review && !rights.own,
+      triage: status === "reported" && rights.review && (!rights.own || rights.signoff),
       close: investigate && (!needsSignoff(report) || rights.signoff),
       investigate,
       reopen: status === "closed" && rights.signoff && !rights.own,

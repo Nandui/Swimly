@@ -4,6 +4,11 @@ Patch notes for everyone who uses Turnfin at the swim school, the desk and the o
 
 **How versions are numbered:** the middle number goes up when something new arrives (a module, a screen, a new way of working), and the last number when something is fixed or tidied without changing how you work. This list starts on 3 October 2026, when Turnfin moved to its new look; earlier changes are not listed.
 
+## 1.12.1 · 13 October 2026 · Incidents: managers triage their own reports
+
+- Someone with **Manage** in Incidents (the operations manager) can now triage a report they filed themselves. The **Triage** panel shows on the report, and it counts in their reports to triage on Home.
+- Everyone else's own reports still go to someone else to triage. Investigating and closing your own report still need someone else.
+
 ## 1.12.0 · 13 October 2026 · Rota: plan by shifts
 
 - The **Plan** day now starts from people's shifts. **Add staff** gives someone a shift for the day; the whole shift starts as **No activity**. Choose a No activity stretch on their row to see what needs someone then and put them on it, so one shift can mix lifeguarding, teaching, a booking or another department's work.

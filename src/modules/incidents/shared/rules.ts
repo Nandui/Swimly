@@ -89,10 +89,12 @@ export type TriageInput = z.input<typeof triageSchema>;
 
 type ReportRow = { status: string; reporterId: string; occurredOn: string; serious: boolean; severityActual: number | null; severityPotential: number | null; hsaReportable: boolean | null };
 
-/** What triage changes, or why it can't. Nobody triages their own report. */
+/** What triage changes, or why it can't. Only a Manage holder at the site
+ *  triages their own report (owner decision, 13 October 2026); everyone else's
+ *  goes to someone else. Pass `signoff` for the report's site. */
 export function triageDecision(row: ReportRow & { hasChild: boolean }, who: IncidentsActor, t: z.output<typeof triageSchema>) {
   if (row.status !== "reported") throw new IncidentError("This report has already been triaged. Refresh the page.");
-  if (row.reporterId === who.id) throw new IncidentError("Someone else must triage your own report.");
+  if (row.reporterId === who.id && !who.signoff) throw new IncidentError("Someone else must triage your own report.");
   if (row.hasChild && t.parentInformed.length < 3) throw new IncidentError("A child was involved: say who told their parent or guardian, and when.");
   const level = levelOf(t.severityActual, t.severityPotential);
   const hsaReportable = t.staffOffOver3Days || t.publicToDoctor || t.deathOrDangerous || t.fatal;
