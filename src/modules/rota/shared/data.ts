@@ -65,7 +65,7 @@ export async function loadDays(siteId: string, orgId: string | undefined, from: 
     prisma.rotaPlanShift.findMany({ where: { siteId, date: range }, select: { id: true, date: true, userId: true, departmentId: true, startMinutes: true, endMinutes: true } }),
     prisma.rotaBreak.findMany({ where: { siteId, date: range }, orderBy: { startMinutes: "asc" }, select: { date: true, userId: true, startMinutes: true, minutes: true, paid: true } }),
   ]);
-  // Swim classes are Teaching; anything else another module reports here (Academy sessions) is
+  // Swim classes are Teaching; anything else another module reports here (Academy and short course sessions) is
   // drawn in its area, planned there.
   const classes = siteCommitments.filter((c) => c.source === CLASSES);
   const others = siteCommitments.filter((c) => c.source !== CLASSES);
@@ -107,7 +107,7 @@ export async function loadDays(siteId: string, orgId: string | undefined, from: 
       needs: dayNeeds.map((n) => ({ id: n.id, typeId: n.typeId, place: n.place, startMinutes: n.startMinutes, endMinutes: n.endMinutes, places: n.places, note: n.note, repeatTitle: n.repeat?.title ?? null })),
       assignments: dayNeeds.flatMap((n) => n.assignments),
       booked: others.filter((c) => c.date === date).map((c): DayBooked => ({ ref: c.ref ?? `${c.source}:${c.startMinutes}`, userId: c.userId, startMinutes: c.startMinutes, endMinutes: c.endMinutes,
-        title: c.title ?? c.label, place: c.place ?? "", href: c.href ?? null })),
+        title: c.title ?? c.label, place: c.place ?? "", href: c.href ?? null, module: c.module })),
       classes: classes.filter((c) => c.date === date && c.ref).map((c): DayClass => ({ ref: c.ref!, userId: c.userId, startMinutes: c.startMinutes, endMinutes: c.endMinutes,
         title: c.title ?? c.label, place: c.place ?? "", planned: !!c.planned })),
     };

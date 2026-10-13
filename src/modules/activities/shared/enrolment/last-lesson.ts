@@ -30,7 +30,7 @@ export function upcomingLessons(dayOfWeek: DayOfWeek, startedOn: Date, fromIso: 
 
 /** The last lesson the place covers when it ends on `scheduledEndOn`: the
  *  class's weekday before that date. Exact for schedules saved by lesson, and
- *  the honest reading of one saved with a bare date before 1.8.3. */
+ *  the honest reading of one saved with a bare date before 1.9.1. */
 export function lastLessonBefore(dayOfWeek: DayOfWeek, scheduledEndOn: Date): string {
   let iso = addDaysIso(toDateOnlyString(scheduledEndOn), -1);
   while (weekdayOf(parseDateOnly(iso)) !== dayOfWeek) iso = addDaysIso(iso, -1);

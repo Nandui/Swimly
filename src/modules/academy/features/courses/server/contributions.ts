@@ -31,7 +31,7 @@ export async function academySessionCommitments(query: CommitmentQuery): Promise
       .filter((u) => !query.userIds || query.userIds.includes(u));
     const title = `${s.course.type.name} course`;
     return people.map((userId) => ({
-      source: ACADEMY_SESSIONS, userId, siteId: s.course.siteId, date: s.date.toISOString().slice(0, 10), startMinutes: s.startMinutes, endMinutes: s.endMinutes,
+      source: ACADEMY_SESSIONS, module: "Academy", userId, siteId: s.course.siteId, date: s.date.toISOString().slice(0, 10), startMinutes: s.startMinutes, endMinutes: s.endMinutes,
       label: s.place ? `${title}, ${s.place}` : title, title, place: s.place, href: `/academy/${s.course.id}`, ref: s.id,
     }));
   });

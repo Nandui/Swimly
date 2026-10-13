@@ -14,9 +14,9 @@ import type { YoungBand } from "@/modules/rota/shared/constants";
 export type DayType = { id: string; name: string; icon: string; departmentId: string; requiredTypeId: string | null; requiredName: string | null; fromClasses: boolean };
 export type DayNeed = { id: string; typeId: string; place: string; startMinutes: number; endMinutes: number; places: number; note: string; repeatTitle: string | null };
 export type DayAssignment = { id: string; needId: string; place: number; userId: string; startMinutes: number; endMinutes: number };
-/** Something another module has on at the site (an Academy course session), from the
- *  commitments seam: drawn in its area for whoever is on it, planned in that module. */
-export type DayBooked = { ref: string; userId: string | null; startMinutes: number; endMinutes: number; title: string; place: string; href: string | null };
+/** Something another module has on at the site (an Academy or short course session), from
+ *  the commitments seam: drawn in its area for whoever is on it, planned in that module. */
+export type DayBooked = { ref: string; userId: string | null; startMinutes: number; endMinutes: number; title: string; place: string; href: string | null; module?: string };
 /** Booked things sit on every department's plan: the time and the area are taken. */
 export const ANY_DEPARTMENT = "*";
 /** A swim class that day, from the swim school's commitments. */
@@ -54,8 +54,9 @@ export type Group = {
   requiredTypeId: string | null;
   requiredName: string | null;
   fromClasses: boolean;
-  /** Planned in another module (`DayBooked`): where to change it. Read only here. */
+  /** Planned in another module (`DayBooked`): where to change it, and that module's name. Read only here. */
   href: string | null;
+  plannedIn: string | null;
   lanes: Lane[];
   /** Gaps counted as the planner sees them: back-to-back classes nobody teaches are one. */
   gapCount: number;
@@ -92,7 +93,7 @@ export function buildDay(input: {
   needs: readonly DayNeed[];
   assignments: readonly DayAssignment[];
   classes: readonly DayClass[];
-  /** Other modules' sessions at the site (the Academy). */
+  /** Other modules' sessions at the site (the Academy, Short courses). */
   booked?: readonly DayBooked[];
   names: ReadonlyMap<string, string>;
   /** The site's areas, in their order (Admin, Areas). */
@@ -129,12 +130,12 @@ export function buildDay(input: {
     return z;
   };
   const groups = new Map<string, Group>();
-  const groupFor = (type: DayType, zone: DayZone, href: string | null = null) => {
+  const groupFor = (type: DayType, zone: DayZone, href: string | null = null, plannedIn: string | null = null) => {
     const key = `${zone.key}|${type.id}`;
     let g = groups.get(key);
     if (!g) {
       g = { key, zoneKey: zone.key, typeId: type.id, name: type.name, icon: type.icon, place: zone.name, departmentId: type.departmentId, requiredTypeId: type.requiredTypeId,
-        requiredName: type.requiredName, fromClasses: type.fromClasses, href, lanes: [], gapCount: 0, needs: [] };
+        requiredName: type.requiredName, fromClasses: type.fromClasses, href, plannedIn, lanes: [], gapCount: 0, needs: [] };
       groups.set(key, g);
       zone.groups.push(g);
     }
@@ -187,9 +188,9 @@ export function buildDay(input: {
   // Other modules' sessions: one activity per title in its area, a lane per person on it.
   for (const b of input.booked ?? []) {
     const type: DayType = { id: `booked:${b.title.toLowerCase()}`, name: b.title, icon: "teaching", departmentId: ANY_DEPARTMENT, requiredTypeId: null, requiredName: null, fromClasses: false };
-    const g = groupFor(type, zoneFor(b.place), b.href);
+    const g = groupFor(type, zoneFor(b.place), b.href, b.module ?? null);
     if (b.userId) add(b.userId, { start: b.startMinutes, end: b.endMinutes, label: b.title });
-    const block: Block = { ...blank, kind: b.userId ? "on" : "gap", start: b.startMinutes, end: b.endMinutes, userId: b.userId, name: name(b.userId), detail: "Academy", warnings: [] };
+    const block: Block = { ...blank, kind: b.userId ? "on" : "gap", start: b.startMinutes, end: b.endMinutes, userId: b.userId, name: name(b.userId), detail: b.module ?? "Booked", warnings: [] };
     const lane = g.lanes.find((l) => l.every((x) => x.userId === b.userId && (x.end <= b.startMinutes || x.start >= b.endMinutes)));
     if (lane) lane.push(block); else g.lanes.push([block]);
   }

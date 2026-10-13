@@ -14,7 +14,7 @@ last lesson), so every "is this place live on this day?" check, written as
 `scheduledEndOn > day`, keeps the swimmer for their last lesson. The action
 takes the lesson date and refuses a day the class does not run
 (`src/modules/activities/shared/enrolment/last-lesson.ts`). Schedules saved
-before 1.8.3 with a bare date keep that date and read back as the class's
+before 1.9.1 with a bare date keep that date and read back as the class's
 lesson before it.
 
 There is no cron job or external scheduler. After authentication, and before

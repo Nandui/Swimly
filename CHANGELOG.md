@@ -4,10 +4,19 @@ Patch notes for everyone who uses Turnfin at the swim school, the desk and the o
 
 **How versions are numbered:** the middle number goes up when something new arrives (a module, a screen, a new way of working), and the last number when something is fixed or tidied without changing how you work. This list starts on 3 October 2026, when Turnfin moved to its new look; earlier changes are not listed.
 
-## 1.8.3 · 13 October 2026 · Unenrol after a swimmer's last lesson
+## 1.9.1 · 13 October 2026 · Unenrol after a swimmer's last lesson
 
 - When you unenrol a swimmer from a future date, you now pick their **last lesson** from the class's upcoming lessons instead of typing a date. They stay in the class, on the register and in the numbers, up to and including that lesson, and their place frees up the next day. The class and the swimmer's profile show "Last lesson" with the date.
 - Before, the date you picked was the day they left, so a swimmer unenrolled "on" a lesson day missed that lesson. Unenrolments already saved keep their date and now show the last lesson that date gives them; check any you set on a lesson day and pick that lesson again if it should be theirs.
+
+## 1.9.0 · 13 October 2026 · Short courses
+
+- A new module, **Short courses**, under Front of house, for courses that run for a set number of weeks: Couch to 5k, adult swim lessons, aqua fit, strength basics, at the pool, the gym, the studio or anywhere else.
+- Managers keep the **course list** (where it happens, how many weeks, how long a session, a minimum age, and whether it asks for a health form), then **put a course on**: pick the first day, the time, the area, the instructor, the places and the price, and Turnfin makes a session for every week. Move a single week, for a bank holiday, on the session itself.
+- The desk **books people on** and records what they paid at the till. When a course is full, people go on its **waiting list** in the order they asked. When a place frees up, the course shows who is first, and Home tells you there is a place to offer.
+- Instructors **take the register** each week. Each person's line shows how many sessions they came to, what they still owe and whether their health form is in.
+- Each session shows on the instructor's **Rota**, in its area, and counts in their hours.
+- Administrators choose who can View (book people on), Instructor (take registers) or Manage (put courses on) on each role, under Short courses. Online booking comes next.
 
 ## 1.8.2 · 13 October 2026 · Swimmer profile: retired competencies
 
