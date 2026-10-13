@@ -7,7 +7,8 @@ import type { DayOfWeek } from "@/generated/prisma/client";
 import { fail, ok, validationFailure, type ActionResult } from "@/lib/action-result";
 import { logAudit } from "@/lib/audit";
 import { requirePermission } from "@/lib/authz";
-import { currentClubId } from "@/lib/clubs/current";
+import { currentClubId, getCurrentClub } from "@/lib/clubs/current";
+import { today } from "@/lib/format";
 import { courseLabel, formatSlot, parseTime } from "@/modules/activities/shared/courses/constants";
 import { TAKES_A_PLACE } from "@/modules/activities/shared/courses/data/courses";
 import { withCourseSeat } from "@/modules/activities/shared/enrolment/seat";
@@ -284,6 +285,53 @@ export async function setCourseArchived(id: string, archived: boolean): Promise<
       clubId,
       summary: `${archived ? "Archived" : "Restored"} class ${courseLabel(existing)}`,
     }, tx);
+    return ok();
+  });
+  if (!result.ok) return result;
+  revalidatePath("/courses");
+  revalidatePath("/awaiting-enrolment");
+  revalidatePath("/courses/[id]", "page");
+  return ok();
+}
+
+/** Moves a class registered at the wrong site. Levels are shared across sites,
+ *  so enrolments, registers, notes and results stay with the class. Cancellations
+ *  from today on move too (they feed the site's billing queue); earlier ones stay
+ *  where they were recorded. The person must work at both sites. */
+export async function moveCourseSite(id: string, siteId: string): Promise<ActionResult> {
+  const session = await requirePermission("courses.manage");
+  const { clubs } = await getCurrentClub();
+  const target = clubs.find((club) => club.id === siteId);
+  if (!target) return fail("Pick a site you work at.", { siteId: "Pick a site." });
+
+  const result = await withCourseSeat(id, async (tx) => {
+    const rawExisting = await tx.course.findUnique({
+      where: { id },
+      select: {
+        id: true, clubId: true, name: true, levelId: true, dayOfWeek: true, startMinutes: true,
+        level: { select: { name: true, programmeId: true } },
+      },
+    });
+    if (!rawExisting) return fail("That class no longer exists.");
+    const from = clubs.find((club) => club.id === rawExisting.clubId);
+    if (!from) return fail("You can only move classes from a site you work at.");
+    if (from.id === target.id) return fail(`This class is already at ${target.name}.`, { siteId: "Pick another site." });
+    const existing = sharedCourse(rawExisting, await readSharedCurriculum(tx));
+
+    await tx.course.update({ where: { id }, data: { clubId: target.id } });
+    await tx.classCancellation.updateMany({ where: { courseId: id, date: { gte: new Date(today()) } }, data: { clubId: target.id } });
+    for (const clubId of [from.id, target.id]) {
+      await logAudit({
+        actorId: session.user.id,
+        actorName: session.user.name ?? "Unknown",
+        action: "update",
+        entity: "Course",
+        entityId: id,
+        programmeId: existing.level.programmeId,
+        clubId,
+        summary: `Moved class ${courseLabel(existing)} from ${from.name} to ${target.name}`,
+      }, tx);
+    }
     return ok();
   });
   if (!result.ok) return result;

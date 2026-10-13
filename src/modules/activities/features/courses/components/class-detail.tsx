@@ -12,7 +12,7 @@ import {
 
 import type { ReactNode } from "react";
 
-import { ArchiveCourse, EditCourse } from "@/modules/activities/features/courses/components/course-actions";
+import { ArchiveCourse, EditCourse, MoveCourse } from "@/modules/activities/features/courses/components/course-actions";
 import {
   EndEnrolment,
   EnrolIntoCourse,
@@ -68,6 +68,7 @@ export function ClassDetailView({
   backLabel = "Classes",
   levelImage,
   coverName,
+  sites = [],
 }: {
   course: CourseDetail;
   roster: RosterEntry[];
@@ -79,6 +80,8 @@ export function ClassDetailView({
   backLabel?: string;
   levelImage?: ReactNode;
   coverName?: string;
+  /** The sites the person works at; a second one offers "Move". */
+  sites?: { id: string; name: string }[];
 }) {
   const active = roster.filter((entry) => entry.status === "ACTIVE");
   const waiting = roster.filter((entry) => entry.status === "WAITLISTED");
@@ -212,6 +215,7 @@ export function ClassDetailView({
             <h2 id="manage-heading">Manage class</h2>
             <div className="min-w-0 flex gap-2 items-center flex-wrap">
               <ArchiveCourse course={course} />
+              {sites.length > 1 ? <MoveCourse course={course} sites={sites} /> : null}
               <EditCourse
                 course={course}
                 levels={levels}
@@ -220,7 +224,7 @@ export function ClassDetailView({
             </div>
           </div>
           <p className="text-sm text-ui-muted-foreground">
-            Update the weekly schedule, instructor or capacity.
+            Update the weekly schedule, instructor or capacity, or move the class to another site.
           </p>
         </section>
       ) : null}

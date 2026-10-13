@@ -8,6 +8,10 @@ Patch notes for everyone who uses Turnfin at the swim school, the desk and the o
 
 - On a swimmer's **Competencies** tab, competencies that have been taken out of a level now sit in their own list at the bottom, under **No longer in the curriculum**. They still show the mark the swimmer had and its history, but they can't be changed and don't count towards the level.
 
+## 1.8.1 · 13 October 2026 · Move a class to another site
+
+- A class set up at the wrong site can now be moved. Open the class and choose **Move** under Manage class, then pick the site. Its swimmers, registers, notes and results go with it. You need to work at both sites, and the button only shows if you work at more than one.
+
 ## 1.8.0 · 12 October 2026 · Incidents: insights, the full record and HR
 
 - Centre and operations managers have a new **Insights** page in Incidents: what was reported over the last 3, 6 or 12 months at their sites, by month, kind, what it was about, where, the time of day and how serious, with the near misses for each accident and the overdue actions.
