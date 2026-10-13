@@ -37,13 +37,24 @@ defined in [AGENTS.md](AGENTS.md).
 
 ## Taste skills (Leonxlnx/taste-skill)
 
-All 13 skills from Leonxlnx/taste-skill were added on 11 October 2026 and are kept
-unmodified. `design-taste-frontend` is the main one; its own scope is landing pages
-and portfolios, not dashboards or product UI, so it fits the public Academy booking
-site and marketing-style pages most, but its judgement checks (reading the brief,
-AI tells, copy self-audit, empty, loading and error states, contrast, one accent,
-no em-dashes in UI copy) apply to any screen. The others:
+All 14 skills from Leonxlnx/taste-skill are kept unmodified (added 11 October
+2026, updated 13 October 2026). `design-taste-frontend` is the main one. Since
+13 October it is tasteskill v2: art direction for public web pages, built on a
+study of 247 gallery sites, with Node scripts in its `scripts/` folder. `draw.mjs`
+deals a direction from its library, `assets.mjs` searches open image collections
+(Openverse, Wikimedia Commons, the Art Institute of Chicago, the Met, the Internet
+Archive, NASA), `lint.mjs` and `inspect.mjs` check a page, the last one in headless
+Chrome at three widths. They install nothing, need Node 22+, and write their working
+files to `.taste-skill/` (ignored by git) and a draw history to `~/.taste-skill/`.
+Its own scope is public pages, not dashboards or app screens, so it fits the
+public Academy booking site and marketing-style pages; its house rules (no cards,
+no thin rules, no small caps labels, at least four real pictures) are written for
+those pages, not for the staff app. Its judgement checks (reading the brief, AI
+tells, the copy deck, contrast, one accent, looking at screenshots) apply to any
+screen. The others:
 
+- `design-taste-frontend-v2-experimental`: the previous main skill, the single-file
+  dial-driven version. `design-taste-frontend-v1`: the original. Reference only.
 - Style directions: `high-end-visual-design` (soft, premium), `minimalist-ui`,
   `industrial-brutalist-ui` and `gpt-taste` (GSAP-heavy landing pages). Use one
   only when the brief asks for that look.
@@ -54,7 +65,9 @@ no em-dashes in UI copy) apply to any screen. The others:
 - `stitch-design-taste` writes a DESIGN.md for Google Stitch. Write it under a new
   name or folder; never overwrite Swimly's [DESIGN.md](DESIGN.md).
 - `full-output-enforcement`: complete, untruncated code output.
-- `design-taste-frontend-v1`: the old version, for reference only.
+
+Found pictures from `assets.mjs` keep their credit and licence, and never show real
+swimmers, staff or medical details.
 
 **They may overrule** the house style in [DESIGN.md](DESIGN.md) and the UI rule in
 [CLAUDE.md](CLAUDE.md) section 14 where they are the better call for the screen
