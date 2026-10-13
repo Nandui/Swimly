@@ -1,10 +1,10 @@
 import "server-only";
-import { departmentIdsOf, departmentsForSite } from "@/lib/directory";
+import { contractMinutesByIds, departmentIdsOf, departmentsForSite } from "@/lib/directory";
 import { isDateOnly, parseDateOnly, today } from "@/lib/format";
 import { prisma } from "@/lib/prisma";
 import { canChange } from "@/modules/rota/shared/access";
 import { addDaysIso, mondayOf } from "@/modules/rota/shared/constants";
-import { ANY_DEPARTMENT, buildDay } from "@/modules/rota/shared/day";
+import { ANY_DEPARTMENT, buildDay, type Day } from "@/modules/rota/shared/day";
 import { type RotaSite, loadDays, pickSite } from "@/modules/rota/shared/data";
 
 /** A site's departments: its own and the organisation-wide ones. */
@@ -31,22 +31,28 @@ export async function planWeek(input: { site?: string; week?: string; dept?: str
   const date = input.day && isDateOnly(input.day) && input.day >= monday && input.day <= sunday ? input.day : now >= monday && now <= sunday ? now : monday;
   const { types, dayInput, places } = await loadDays(site.id, orgId, monday, sunday);
   const ours = (g: { departmentId: string }) => g.departmentId === department?.id || g.departmentId === ANY_DEPARTMENT;
-  const inDept = (d: ReturnType<typeof buildDay>) => ({ ...d, groups: d.groups.filter(ours) });
-  const week = Array.from({ length: 7 }, (_, i) => {
-    const iso = addDaysIso(monday, i);
-    const d = inDept(buildDay(dayInput(iso)));
-    return { iso, gapCount: d.groups.reduce((n, g) => n + g.gapCount, 0), planned: d.groups.some((g) => g.departmentId !== ANY_DEPARTMENT) };
+  const days = Array.from({ length: 7 }, (_, i) => buildDay(dayInput(addDaysIso(monday, i))));
+  // Each person's paid time this week at this site, every department's.
+  const weekMinutes = new Map<string, number>();
+  for (const d of days) for (const p of d.people) weekMinutes.set(p.userId, (weekMinutes.get(p.userId) ?? 0) + p.shift.paidMinutes);
+  const week = days.map((d) => {
+    const groups = d.groups.filter(ours);
+    const people = staffOf(d, department?.id ?? null);
+    return { iso: d.date, gapCount: groups.reduce((n, g) => n + g.gapCount, 0), planned: groups.some((g) => g.departmentId !== ANY_DEPARTMENT) || people.length > 0,
+      staff: people.length, paidMinutes: people.reduce((n, p) => n + p.shift.paidMinutes, 0) };
   });
-  const full = buildDay(dayInput(date));
+  const full = days[Math.round((Date.parse(date) - Date.parse(monday)) / 86_400_000)];
   const groups = full.groups.filter(ours);
   // The areas with something of this department's in them, each showing only that.
   const zones = full.zones.map((z) => {
     const mine = z.groups.filter(ours);
     return { ...z, groups: mine, gapCount: mine.reduce((n, g) => n + g.gapCount, 0) };
   }).filter((z) => z.groups.length);
-  // Everyone on this department's activities, and everyone put on a shift on its plan.
-  const people = full.people.filter((p) => p.planned.some((x) => x.departmentId === department?.id) || groups.some((g) => g.lanes.some((l) => l.some((b) => b.userId === p.userId))))
-    .map((p) => ({ ...p, options: p.options.filter((o) => o.departmentId === department?.id) }));
+  // Everyone on this department's day; what they could take comes from every department, since a
+  // supervisor may lend their people to another department's work (owner, 13 October 2026).
+  const people = staffOf(full, department?.id ?? null);
+  const contracts = await contractMinutesByIds(people.map((p) => p.userId));
+  const hours = Object.fromEntries(people.map((p) => [p.userId, { week: weekMinutes.get(p.userId) ?? 0, contract: contracts.get(p.userId) ?? null }]));
   const share = department ? await prisma.rotaWeekShare.findUnique({
     where: { siteId_departmentId_monday: { siteId: site.id, departmentId: department.id, monday: parseDateOnly(monday) } }, select: { sharedAt: true, sharedByName: true },
   }) : null;
@@ -54,6 +60,9 @@ export async function planWeek(input: { site?: string; week?: string; dept?: str
   return {
     who, sites, site, monday, now, date, departments, department, week, share,
     day: { ...full, zones, groups, people, gapCount: groups.reduce((n, g) => n + g.gapCount, 0) },
+    /** Every department's activities that day, for lending and "show other departments". */
+    allGroups: full.groups,
+    hours,
     canChange: !!department && canChange(at, date, now, department.id, mine),
     canShare: !!department && (site.run || (site.plan && mine.has(department.id))),
     types: types.filter((t) => !t.archived && t.departmentId === department?.id && !t.fromClasses),
@@ -61,5 +70,12 @@ export async function planWeek(input: { site?: string; week?: string; dept?: str
   } as const;
 }
 
+
+/** The people on a department's day: on a shift on its plan, or on one of its activities. */
+export function staffOf(day: Day, departmentId: string | null) {
+  if (!departmentId) return [];
+  const mine = day.groups.filter((g) => g.departmentId === departmentId);
+  return day.people.filter((p) => p.planned.some((x) => x.departmentId === departmentId) || mine.some((g) => g.lanes.some((l) => l.some((b) => b.kind === "on" && b.userId === p.userId))));
+}
 
 export type PlanWeek = Extract<Awaited<ReturnType<typeof planWeek>>, { site: RotaSite }>;

@@ -157,3 +157,17 @@
 @media (min-width: 1024px) {
   .turnfin-module .academy-call { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1.2fr) minmax(0, 1.2fr) 21rem; }
 }
+
+/* Shift-first Plan (owner, 13 October 2026): what needs people, then each person's shift. */
+.turnfin-module .rota-week-sum { color: var(--pc-ink-muted); font-size: var(--pc-text-caption); line-height: var(--pc-leading-caption); font-weight: 400; }
+.turnfin-module .rota-tl-label > .rota-tl-kind { color: var(--pc-ink-muted); }
+.turnfin-module .rota-tl-track[data-row='need'] { min-height: 48px; }
+.turnfin-module .rota-tl-track > .pc-block.rota-cover[data-ok], .turnfin-module .rota-tl-key i.rota-cover[data-ok] { background: var(--pc-success-soft); color: var(--pc-success); }
+.turnfin-module .rota-tl-track > .pc-block.rota-cover[data-ok].ui-motion-press:hover { background: var(--pc-success-soft); color: var(--pc-success); }
+.turnfin-module .rota-tl-track > .pc-block.rota-free-time, .turnfin-module .rota-tl-key i.rota-free-time { top: 8px; bottom: 8px; background: var(--pc-surface-sunken); box-shadow: inset 0 0 0 1px var(--pc-line); color: var(--pc-ink-muted); }
+.turnfin-module .rota-tl-track > .pc-block.rota-free-time .pc-block-title { font-weight: 500; }
+.turnfin-module .rota-tl-key i.pc-block { position: static; display: inline-block; min-height: 0; padding: 0; }
+.turnfin-module .rota-tl-track > .pc-block[data-lent] { box-shadow: inset 0 0 0 1px var(--pc-ink-muted); }
+.turnfin-module .rota-tl-totals { display: flex; flex-wrap: wrap; gap: 8px; margin: 4px 0 0; font-size: var(--pc-text-caption); line-height: var(--pc-leading-caption); }
+.turnfin-module .rota-tl-totals > span { padding: 6px 12px; border-radius: var(--pc-radius-card); background: var(--pc-surface-sunken); }
+.turnfin-module .rota-tl-totals > span[data-gaps] { background: var(--pc-block-cover); color: var(--pc-on-block-cover); font-weight: 600; }
