@@ -4,6 +4,10 @@ Patch notes for everyone who uses Turnfin at the swim school, the desk and the o
 
 **How versions are numbered:** the middle number goes up when something new arrives (a module, a screen, a new way of working), and the last number when something is fixed or tidied without changing how you work. This list starts on 3 October 2026, when Turnfin moved to its new look; earlier changes are not listed.
 
+## 1.8.2 · 13 October 2026 · Swimmer profile: retired competencies
+
+- On a swimmer's **Competencies** tab, competencies that have been taken out of a level now sit in their own list at the bottom, under **No longer in the curriculum**. They still show the mark the swimmer had and its history, but they can't be changed and don't count towards the level.
+
 ## 1.8.0 · 12 October 2026 · Incidents: insights, the full record and HR
 
 - Centre and operations managers have a new **Insights** page in Incidents: what was reported over the last 3, 6 or 12 months at their sites, by month, kind, what it was about, where, the time of day and how serious, with the near misses for each accident and the overdue actions.
