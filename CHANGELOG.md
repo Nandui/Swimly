@@ -4,6 +4,10 @@ Patch notes for everyone who uses Turnfin at the swim school, the desk and the o
 
 **How versions are numbered:** the middle number goes up when something new arrives (a module, a screen, a new way of working), and the last number when something is fixed or tidied without changing how you work. This list starts on 3 October 2026, when Turnfin moved to its new look; earlier changes are not listed.
 
+## 1.8.1 · 13 October 2026 · Move a class to another site
+
+- A class set up at the wrong site can now be moved. Open the class and choose **Move** under Manage class, then pick the site. Its swimmers, registers, notes and results go with it. You need to work at both sites, and the button only shows if you work at more than one.
+
 ## 1.8.0 · 12 October 2026 · Incidents: insights, the full record and HR
 
 - Centre and operations managers have a new **Insights** page in Incidents: what was reported over the last 3, 6 or 12 months at their sites, by month, kind, what it was about, where, the time of day and how serious, with the near misses for each accident and the overdue actions.
