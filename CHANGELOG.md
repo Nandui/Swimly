@@ -4,6 +4,15 @@ Patch notes for everyone who uses Turnfin at the swim school, the desk and the o
 
 **How versions are numbered:** the middle number goes up when something new arrives (a module, a screen, a new way of working), and the last number when something is fixed or tidied without changing how you work. This list starts on 3 October 2026, when Turnfin moved to its new look; earlier changes are not listed.
 
+## 1.12.0 · 13 October 2026 · Rota: plan by shifts
+
+- The **Plan** day now starts from people's shifts. **Add staff** gives someone a shift for the day; the whole shift starts as **No activity**. Choose a No activity stretch on their row to see what needs someone then and put them on it, so one shift can mix lifeguarding, teaching, a booking or another department's work.
+- **What needs people** comes first: one row for each activity your department needs, each booking and the swim classes, showing how many people are on it against how many it needs. Green has enough, amber is short; choose an amber stretch to fill it. **Show other departments** adds theirs.
+- Supervisors can **lend** someone on their shift to another department's work when needed, such as a pool lifeguard covering Reception for an hour.
+- Each person shows their **paid hours** today and this week, against their **contracted hours**. The day ends with a line of totals: staff on, paid hours, unpaid breaks and gaps. Each day in the week strip shows its staff and hours too.
+- **Export week** downloads the department's week as an Excel file for Timepoint: name, date, start, end, paid hours, break minutes and department for each shift.
+- Your bookings, activities and lanes are kept as they were.
+
 ## 1.11.0 · 13 October 2026 · Rota: pools with lanes, and one timeline
 
 - **Admin > Areas** now asks how many **lanes** an area has. Give each pool its lanes (0 for a gym, reception or anywhere without lanes).

@@ -1,22 +1,22 @@
 import type { Metadata } from "next";
 import Link from "next/link";
-import { ChevronLeft, ChevronRight } from "lucide-react";
+import { ChevronLeft, ChevronRight, Download } from "lucide-react";
 import { Button } from "@/components/shadcn/button";
 import { EmptyState } from "@/components/ui-kit/empty-state";
 import { PageHeader } from "@/components/ui-kit/page-header";
 import { Tag } from "@/components/ui-kit/tag";
 import {
-  addDaysIso, AddShiftSheet, CopyDialog, DayPlan, LinkPicker, mondayOf, NeedDialog, PeoplePlan, planWeek, ROTA_DAY_META, ROTA_SHIFT_NOTE_META, ROTA_WEEK_META, ShareWeek,
+  addDaysIso, AddShiftSheet, CopyDialog, DayPlan, duration, LinkPicker, mondayOf, NeedDialog, PeoplePlan, planWeek, ROTA_DAY_META, ROTA_SHIFT_NOTE_META, ROTA_WEEK_META, ShareWeek,
 } from "@/modules/rota/features/plan";
 import { formatDateRange, formatDayMonth, formatWeekday } from "@/lib/format";
 
 export const metadata: Metadata = { title: "Plan" };
 
-/** The department supervisor's Plan (owner decisions, 6 October 2026; one timeline with zones on
- *  top and staff on the left, owner request, 13 October 2026): one department's week at a site, a
- *  strip of its days with their gap counts, then the open day: the site's areas and lanes and what
- *  uses them, what still needs someone, and each person's day. Below 1024px the day is an agenda
- *  and Who's working a list. A draft until the week is shared with its staff. */
+/** The department supervisor's Plan (owner decisions, 6 October 2026; shift first, owner, 13 October
+ *  2026): one department's week at a site, a strip of its days with their staff, hours and gaps,
+ *  then the open day: what needs people, and each person's shift with what they are on, their
+ *  breaks and the time still free. The week exports to Excel for Timepoint. Below 1024px the day
+ *  is an agenda and Who's working a list. A draft until the week is shared with its staff. */
 export default async function PlanPage({ searchParams }: { searchParams: Promise<{ site?: string; week?: string; dept?: string; day?: string }> }) {
   const input = await searchParams;
   const data = await planWeek(input);
@@ -49,6 +49,7 @@ export default async function PlanPage({ searchParams }: { searchParams: Promise
           {departments.length > 1 ? <LinkPicker name="Department" options={departments.map((d) => ({ href: `/rota?${new URLSearchParams({ site: site.id, dept: d.id, week: monday })}`, label: d.name, current: d.id === department.id }))} /> : null}
           {data.canShare ? <CopyDialog siteId={site.id} departmentId={department.id} date={date} monday={monday}
             options={{ days: daysBack.map((d) => ({ iso: d, label: `${formatWeekday(d)} ${formatDayMonth(d)}` })), weeks: weeksBack.map((m) => ({ iso: m, label: m === addDaysIso(thisMonday, -7) ? "Last week" : `Week of ${formatDayMonth(m)}` })) }} /> : null}
+          {data.canShare ? <Button asChild variant="outline"><a href={`/rota/export?${new URLSearchParams({ site: site.id, dept: department.id, week: monday })}`} download><Download aria-hidden="true" />Export week</a></Button> : null}
           {data.canShare && !share ? <ShareWeek siteId={site.id} departmentId={department.id} monday={monday} department={department.name} gaps={week.reduce((n, d) => n + d.gapCount, 0)} /> : null}
         </> : undefined}
       />
@@ -70,6 +71,7 @@ export default async function PlanPage({ searchParams }: { searchParams: Promise
                 <li key={d.iso}>
                   <Link className="rota-week-day" href={link({ day: d.iso })} aria-current={d.iso === date ? "date" : undefined}>
                     <span>{formatWeekday(d.iso, "short")} {formatDayMonth(d.iso).split(" ")[0]}{d.iso === now ? " · today" : ""}</span>
+                    <small className="rota-week-sum">{d.staff ? `${d.staff} staff · ${duration(d.paidMinutes)}` : "Nobody added yet"}</small>
                     <Tag meta={ROTA_DAY_META[!d.planned ? "empty" : d.gapCount ? "gaps" : "covered"]}
                       label={d.planned && d.gapCount ? `${d.gapCount} ${d.gapCount === 1 ? "gap" : "gaps"}` : undefined} />
                   </Link>
@@ -86,20 +88,19 @@ export default async function PlanPage({ searchParams }: { searchParams: Promise
               </div>
               {data.canChange ? (
                 <div className="flex flex-wrap gap-2">
-                  {data.types.length ? <NeedDialog siteId={site.id} date={date} live={live} types={data.types} areas={data.areas} /> : null}
                   <span className="rota-wide-only"><AddShiftSheet siteId={site.id} departmentId={department.id} date={date} dateLabel={dateLabel} live={live} /></span>
+                  {data.types.length ? <NeedDialog siteId={site.id} date={date} live={live} types={data.types} areas={data.areas} /> : null}
                 </div>
               ) : null}
             </div>
             {!data.canChange ? <p className="text-sm text-ui-muted-foreground">{live ? "This day has come: the duty manager changes it from Today." : "You can see this plan. Planning it needs the Plan level for this department."}</p> : null}
-            {!day.groups.length ? (
+            {!day.groups.length && !day.people.length ? (
               <EmptyState compact icon="calendarDays" title={`Nothing planned for ${department.name} on ${dateLabel}`}
-                hint={data.types.length ? "Add the activities the day needs, or copy an earlier day." : "Add this department's activities to the activity list first."} />
-            ) : null}
-            {day.groups.length || day.people.length || day.areas.length ? (
-              <DayPlan siteId={site.id} departmentId={department.id} date={date} dateLabel={dateLabel} live={live} canChange={data.canChange}
-                zones={day.zones} areas={day.areas} people={day.people} types={data.types} areaList={data.areas} />
-            ) : null}
+                hint={data.types.length ? "Add staff to give people their shifts, add what the day needs, or copy an earlier day." : "Add this department's activities to the activity list first."} />
+            ) : (
+              <DayPlan siteId={site.id} departmentId={department.id} departmentNames={Object.fromEntries(departments.map((d) => [d.id, d.name]))} date={date} dateLabel={dateLabel} live={live}
+                canChange={data.canChange} zones={day.zones} groups={day.groups} allGroups={data.allGroups} people={day.people} hours={data.hours} types={data.types} areaList={data.areas} />
+            )}
           </section>
           {day.people.length || data.canChange ? (
             <section className="pc-panel rota-narrow-only" aria-labelledby="rota-working">
@@ -109,7 +110,7 @@ export default async function PlanPage({ searchParams }: { searchParams: Promise
                 {data.canChange ? <AddShiftSheet siteId={site.id} departmentId={department.id} date={date} dateLabel={dateLabel} live={live} /> : null}
               </div>
               {day.people.length ? (
-                <PeoplePlan people={day.people} siteId={site.id} departmentId={department.id} date={date} dateLabel={dateLabel} live={live} canChange={data.canChange} />
+                <PeoplePlan people={day.people} siteId={site.id} departmentId={department.id} departmentNames={Object.fromEntries(departments.map((d) => [d.id, d.name]))} date={date} dateLabel={dateLabel} live={live} canChange={data.canChange} />
               ) : <EmptyState compact icon="users" title="Nobody on a shift yet" hint="Add someone to a shift, or put people straight on the activities above." />}
             </section>
           ) : null}

@@ -2,47 +2,58 @@
 
 import { useEffect, useMemo, useRef, useState } from "react";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { ChevronRight, Coffee, MapPin, Plus, TriangleAlert } from "lucide-react";
 import { Button } from "@/components/shadcn/button";
+import { Label } from "@/components/shadcn/label";
+import { Sheet, SheetContent, SheetDescription, SheetHeader, SheetTitle } from "@/components/shadcn/sheet";
+import { Switch } from "@/components/shadcn/switch";
 import { Tag } from "@/components/ui-kit/tag";
 import { SegmentedChoice } from "@/components/ui-kit/segmented-links";
 import { AssignmentDialog, NeedDialog } from "@/modules/rota/shared/components/plan-dialogs";
 import type { AreaLanes } from "@/modules/rota/shared/components/area-lanes";
 import { FillSheet, type GapRef } from "@/modules/rota/shared/components/fill-sheet";
 import { clock } from "@/modules/rota/shared/constants";
-import type { Block, DayNeed, DayZone, Group, Person, ZoneBand, ZoneItem } from "@/modules/rota/shared/day";
+import type { Block, DayNeed, DayZone, Group, Person } from "@/modules/rota/shared/day";
 import { lanesLabel } from "@/modules/rota/shared/lanes";
 import { ROTA_DAY_META, activityIcon, qualificationShort } from "@/modules/rota/shared/meta";
+import { freeTime, needRows, partPaid, personBlocks, type CoverSpan, type NeedRow } from "@/modules/rota/shared/plan-rows";
 import { duration } from "@/modules/rota/shared/shifts";
-import { bandRows } from "@/modules/rota/shared/zones";
-import { ShiftSheet, checkLabel, warned } from "@/modules/rota/features/plan/components/people-plan";
+import { OptionRow, ShiftSheet, checkLabel, warned } from "@/modules/rota/features/plan/components/people-plan";
 import { firstTick, panView, sameView, tickStep, ticks as ticksOf, zoomView, type View } from "@/modules/rota/features/plan/server/view";
 
-/** One day of the rota as one timeline (owner request, 13 October 2026: "make it horizontal
- *  instead of vertical. Zones top, staff left"). Time runs across the top. **Zones** come first:
- *  each of the site's areas in its order, a pool with lanes split into a row across it and a row
- *  per lane, showing what uses it (bookings, activities, swim classes, other modules' sessions)
- *  and what still needs someone. **Staff** follow: a row of what still needs someone, then one
- *  row per person, name and shift on the left and their day across, with their breaks.
- *  Choosing a gap opens Who can fill it; choosing a person's block changes their time; choosing a
- *  person opens their shift. "Show" zooms to the morning, afternoon or evening; the wheel zooms
- *  around the pointer and dragging moves a zoomed-in day. Below 1024px the day is an agenda. */
+/** One day of a department's plan, shift first (owner, 13 October 2026: "we need to produce shifts
+ *  for them, these will also be done to allocate staff during those shifts to activities, bookings,
+ *  classes"). Time runs across the top. **What needs people** comes first: one row per activity
+ *  the department needs, booking, run of swim classes or other module's session, with how many
+ *  people it has against how many it needs over the day; a stretch short of people opens Who can
+ *  fill it. **Staff on today** follows: one row per person, their shift outlined, what they are on
+ *  inside it, their breaks, and every stretch nothing is given to yet as "No activity", which
+ *  opens what that time could go to, from any department (lending). Each person shows today's paid
+ *  hours and the week's against their contract. "Show" zooms; the wheel zooms around the pointer
+ *  and dragging moves a zoomed-in day. Below 1024px the day is an agenda. */
 
 type Option = { id: string; name: string };
 type Props = {
   siteId: string;
   departmentId: string;
+  /** Department names by id, for other departments' work. */
+  departmentNames: Record<string, string>;
   date: string;
   dateLabel: string;
   /** The day has come (today or earlier): changes ask for a reason. */
   live: boolean;
   canChange: boolean;
-  /** This department's activities that day, by area (for the staff rows and the agenda). */
+  /** This department's activities that day, by area (for the agenda). */
   zones: DayZone[];
-  /** Every area of the site and what uses it that day, every department's. */
-  areas: ZoneBand[];
-  /** Everyone working on this department's day. */
+  /** This department's activities, bookings and classes, and other modules' sessions. */
+  groups: Group[];
+  /** Every department's, for lending and "Show other departments". */
+  allGroups: Group[];
+  /** Everyone on this department's day. */
   people: Person[];
+  /** Paid minutes this week at this site, and contracted minutes a week, by person. */
+  hours: Record<string, { week: number; contract: number | null }>;
   types: Option[];
   /** The site's areas and their lanes, for a new activity's "where" (Admin, Areas). */
   areaList: AreaLanes[];
@@ -50,8 +61,7 @@ type Props = {
 
 /** A class block standing for a run of back-to-back classes with the same teacher (or nobody). */
 type Shown = Block & { count: number; refs: string[] };
-/** A block with the activity it belongs to. */
-type Placed = { g: Group; b: Shown };
+type Free = { userId: string; start: number; end: number };
 
 const WINDOW_KEYS = ["day", "am", "pm", "eve"] as const;
 /** How far a press moves before it is a drag, not a click. */
@@ -97,21 +107,20 @@ function pack<T extends { start: number; end: number }>(list: T[]): T[][] {
 /** An agenda row that opens something: the shared Button drawn as a list row. */
 const ROW = "pc-row h-auto w-full justify-start whitespace-normal text-start font-normal";
 const nameInitials = (name: string) => name.split(" ").filter(Boolean).map((p) => p[0]).slice(0, 2).join("");
+const firstName = (name: string | null) => (name ?? "Someone").split(" ")[0];
 const WARNING_WORDS: Record<string, string> = { off: "off that day", missing: "qualification not recorded", expired: "qualification expired", overlap: "double-booked", break: "on a break during it" };
 const isOff = (b: Block) => b.kind === "on" && b.warnings.includes("off");
 const needsCover = (b: Block) => b.kind === "gap" || isOff(b);
-const ITEM_BLOCK: Record<ZoneItem["kind"], string> = { booking: "assessment", booked: "assessment", activity: "next", class: "now" };
-const ITEM_WORDS: Record<ZoneItem["kind"], string> = { booking: "Booking", booked: "Booked", activity: "Activity", class: "Swim class" };
+const ROW_WORDS: Record<NeedRow["kind"], string> = { activity: "Needed", booking: "Booking", classes: "Swim classes", booked: "Booked" };
 
-export function DayPlan({ siteId, departmentId, date, dateLabel, live, canChange, zones, areas, people, types, areaList }: Props) {
-  const groups = useMemo(() => zones.flatMap((z) => z.groups), [zones]);
-  const laneCount = useMemo(() => new Map(areas.map((a) => [a.name.toLowerCase(), a.lanes])), [areas]);
+export function DayPlan({ siteId, departmentId, departmentNames, date, dateLabel, live, canChange, zones, groups, allGroups, people, hours, types, areaList }: Props) {
+  const router = useRouter();
+  const [others, setOthers] = useState(false);
+  const shownGroups = others ? allGroups : groups;
+  const rows = useMemo(() => needRows(shownGroups), [shownGroups]);
+  const laneCount = useMemo(() => new Map(areaList.map((a) => [a.name.toLowerCase(), a.lanes])), [areaList]);
   const ourNeeds = useMemo(() => new Map(groups.flatMap((g) => g.needs.map((n) => [n.id, n] as [string, DayNeed]))), [groups]);
-  const wins = useMemo(() => windows([
-    ...groups.flatMap((g) => g.lanes.flat()),
-    ...areas.flatMap((a) => a.items),
-    ...people.flatMap((p) => p.shift.parts),
-  ]), [groups, areas, people]);
+  const wins = useMemo(() => windows([...rows, ...people.flatMap((p) => p.shift.parts)]), [rows, people]);
   const bounds = wins.day;
   const [view, setView] = useState<View>({ from: bounds.from, to: bounds.to });
   const viewRef = useRef(view);
@@ -124,6 +133,7 @@ export function DayPlan({ siteId, departmentId, date, dateLabel, live, canChange
   const [gap, setGap] = useState<GapRef | null>(null);
   const [selected, setSelected] = useState<string | null>(null);
   const [openPerson, setOpenPerson] = useState<string | null>(null);
+  const [free, setFree] = useState<Free | null>(null);
   const [trackPx, setTrackPx] = useState(900);
   const track = useRef<HTMLDivElement>(null);
   useEffect(() => {
@@ -134,8 +144,8 @@ export function DayPlan({ siteId, departmentId, date, dateLabel, live, canChange
     return () => observer.disconnect();
   }, []);
   const { from, to } = view;
-  const span = to - from, hours = span / 60;
-  const perHour = trackPx / hours;
+  const span = to - from;
+  const perHour = trackPx / (span / 60);
   const ticks = ticksOf(view);
   const step = tickStep(span);
   const zoomed = !sameView(view, bounds);
@@ -201,25 +211,19 @@ export function DayPlan({ siteId, departmentId, date, dateLabel, live, canChange
   };
   const dragHandlers = { onPointerDown, onPointerMove, onPointerUp: endDrag, onPointerCancel: endDrag, onClickCapture };
 
-  /** Where a block is, in words: "Main pool, lanes 1 to 2". */
-  const whereOf = (g: Group, b: Block) => {
+  /** Where something is, in words: "Main pool, lanes 1 to 2". */
+  const whereOf = (g: Group, need: DayNeed | null | undefined) => {
     const count = laneCount.get(g.place.toLowerCase()) ?? 0;
-    const lanes = b.needId ? ourNeeds.get(b.needId)?.lanes ?? [] : [];
+    const lanes = need?.lanes ?? [];
     return count && lanes.length ? `${g.place}, ${lanesLabel(lanes, count).toLowerCase()}` : g.place;
   };
-  const describe = (b: Shown, g: Group) => {
-    const what = `${g.name} in ${whereOf(g, b)}`;
-    const extra = b.count > 1 ? `, ${b.count} classes` : b.detail ? `, ${b.detail}` : "";
-    const warn = b.warnings.length ? `. Check: ${b.warnings.map((w) => WARNING_WORDS[w]).join(", ")}` : "";
-    if (isOff(b)) return `${b.name} is off: ${what}, ${clock(b.start)} to ${clock(b.end)}${extra} needs cover. Choose someone`;
-    return b.kind === "gap" ? `Gap: nobody on ${what}, ${clock(b.start)} to ${clock(b.end)}${extra}. Choose someone` : `${b.name}, ${what}, ${clock(b.start)} to ${clock(b.end)}${extra}${warn}`;
-  };
-  const blockId = (g: Group, b: Shown) => `${g.key}|${b.start}|${b.place ?? b.refs.join(",")}`;
-  const openGap = (g: Group, b: Shown) => {
+  const needOf = (b: Block) => (b.needId ? ourNeeds.get(b.needId) ?? null : null);
+  const theirs = (g: Group) => g.departmentId !== departmentId && departmentNames[g.departmentId] ? departmentNames[g.departmentId] : null;
+  const openGap = (g: Group, b: Block, refs: string[]) => {
     if (!canChange) return;
-    setSelected(blockId(g, b));
+    setSelected(`${g.key}|${b.start}|${b.place ?? refs.join(",")}`);
     setGap({ siteId, date, typeId: g.typeId, what: `${g.name} in ${g.place}`, dateLabel, start: b.start, end: b.end, requiredName: g.requiredName,
-      needId: b.needId, place: b.place, classRefs: b.refs,
+      needId: b.needId, place: b.place, classRefs: refs,
       replace: isOff(b) ? { assignmentId: b.assignmentId, name: b.name ?? "Someone" } : null });
   };
   /** Where something sits on a track, or null when it is outside the view. */
@@ -229,86 +233,105 @@ export function DayPlan({ siteId, departmentId, date, dateLabel, live, canChange
     const px = trackPx * (e - a) / span;
     return { px, style: { left: `calc(${(a - from) / span * 100}% + 2px)`, width: `calc(${(e - a) / span * 100}% - 4px)` } };
   };
+  const densityOf = (px: number) => (px >= 120 ? "full" : px >= 56 ? "compact" : "icon");
 
-  /** A block on a staff row: in the gaps row it says what needs someone; on a person's row, what
-   *  they are on. Both read as much as the width allows. */
-  const blockFor = (g: Group, b: Shown, key: string, row: "gaps" | "person") => {
+  /** A stretch of a row's day: green with the people on it, amber where it is short. */
+  const coverFor = (row: NeedRow, c: CoverSpan, key: string) => {
+    const pos = at(c.start, c.end);
+    if (!pos) return null;
+    const density = densityOf(pos.px);
+    const onIt = row.blocks.filter((b) => b.kind === "on" && !isOff(b) && b.start < c.end && c.start < b.end).map((b) => firstName(b.name));
+    const short = c.have < c.want;
+    const label = `${row.label}, ${clock(c.start)} to ${clock(c.end)}: ${c.have} of ${c.want} ${c.want === 1 ? "person" : "people"}${onIt.length ? ` (${[...new Set(onIt)].join(", ")})` : ""}${short && canChange && !row.group.href ? ". Choose someone" : ""}`;
+    const words = density === "icon" ? <span className="pc-block-title tabular-nums">{c.have}/{c.want}</span> : (
+      <span className="pc-block-body">
+        <span className="pc-block-title tabular-nums">{c.have}/{c.want}{short ? ` · needs ${c.want - c.have}` : ""}</span>
+        {density === "full" && onIt.length ? <span className="pc-block-hint">{[...new Set(onIt)].join(", ")}</span> : null}
+      </span>
+    );
+    const common = { className: "pc-block rota-cover", "data-block": short ? "cover" : "done", "data-ok": short ? undefined : "", "data-density": density, style: pos.style, title: label };
+    if (short && c.gap && canChange && !row.group.href) {
+      const refs = row.kind === "classes" ? row.blocks.filter((b) => needsCover(b) && b.classRef && b.start >= c.start && b.end <= c.end).map((b) => b.classRef!) : [];
+      const id = `${row.group.key}|${c.gap.start}|${c.gap.place ?? refs.join(",")}`;
+      return <Button key={key} type="button" variant="link" {...common} aria-label={label} aria-pressed={selected === id} onClick={() => openGap(row.group, c.gap!, refs)}>{words}</Button>;
+    }
+    return <span key={key} {...common} role="img" aria-label={label}>{words}</span>;
+  };
+
+  /** The label of a row of what needs people: what it is, where, and how many. */
+  const rowLabel = (row: NeedRow) => {
+    const g = row.group;
+    const Icon = activityIcon(g.icon);
+    const lent = theirs(g);
+    const count = row.kind === "activity" ? `${row.need?.places ?? 1} at once` : row.kind === "booking" ? g.name : row.kind === "classes" ? `${row.blocks.length} ${row.blocks.length === 1 ? "class" : "classes"}`
+      : `Planned in ${g.plannedIn ?? "another module"}`;
+    const line = [whereOf(g, row.need), count, g.requiredName ? qualificationShort(g.requiredName) : null].filter(Boolean).join(" · ");
+    const body = <>
+      <span className="rota-tl-name"><Icon aria-hidden="true" /><span>{row.label}</span></span>
+      <small>{line}</small>
+      <small className="rota-tl-kind">{ROW_WORDS[row.kind]}{lent ? ` · ${lent}` : ""}{row.gaps ? ` · ${row.gaps} to fill` : ""}</small>
+    </>;
+    const ours = row.need && ourNeeds.has(row.need.id);
+    if (canChange && ours) {
+      return <NeedDialog siteId={siteId} date={date} live={live} types={types} areas={areaList} need={row.need!}
+        trigger={<Button type="button" variant="ghost" className="rota-tl-label h-auto items-stretch whitespace-normal" aria-label={`${row.label}, ${line}. Change it`}>{body}</Button>} />;
+    }
+    if (g.href) return <Button asChild variant="ghost" className="rota-tl-label h-auto items-stretch whitespace-normal"><Link href={g.href} aria-label={`${row.label}, ${line}. Open it`}>{body}</Link></Button>;
+    return <div className="rota-tl-label">{body}</div>;
+  };
+
+  /** What a person is on, on their row: its activity, booking or class, and the department when
+   *  it is another's (lent). */
+  const workFor = (g: Group, b: Shown, key: string) => {
     const pos = at(b.start, b.end);
     if (!pos) return null;
-    const density = pos.px >= 120 ? "full" : pos.px >= 64 ? "compact" : "icon";
-    const label = describe(b, g);
-    const off = isOff(b);
-    const title = row === "gaps" ? (off ? `${(b.name ?? "").split(" ")[0]} off` : g.name) : g.name;
-    const hint = [whereOf(g, b), b.count > 1 ? `${b.count} classes` : b.detail, `${clock(b.start)}–${clock(b.end)}`].filter(Boolean).join(" · ");
+    const density = densityOf(pos.px);
+    const need = needOf(b);
+    const lent = theirs(g);
+    const title = b.detail && !b.classRef ? b.detail : g.name;
+    const where = whereOf(g, need);
+    const hint = [where, b.count > 1 ? `${b.count} classes` : b.classRef ? b.detail : null, lent, `${clock(b.start)}–${clock(b.end)}`].filter(Boolean).join(" · ");
+    const warn = b.warnings.length ? `. Check: ${b.warnings.map((w) => WARNING_WORDS[w]).join(", ")}` : "";
+    const label = `${title}${lent ? ` for ${lent}` : ""}, ${where}, ${clock(b.start)} to ${clock(b.end)}${warn}`;
     const Icon = activityIcon(g.icon);
     const words = density === "icon"
-      ? (row === "gaps" || b.warnings.length ? <TriangleAlert aria-hidden="true" /> : <span className="pc-block-title">{nameInitials(g.name)}</span>)
+      ? (b.warnings.length ? <TriangleAlert aria-hidden="true" /> : <span className="pc-block-title">{nameInitials(title)}</span>)
       : <>
-          {row === "gaps" || b.warnings.length ? <TriangleAlert aria-hidden="true" /> : <Icon aria-hidden="true" />}
+          {b.warnings.length ? <TriangleAlert aria-hidden="true" /> : <Icon aria-hidden="true" />}
           <span className="pc-block-body">
             <span className="pc-block-title">{title}</span>
             {density === "full" ? <span className="pc-block-hint">{hint}</span> : null}
           </span>
         </>;
-    const common = { "data-block": b.kind === "gap" ? "cover" : off ? "absent" : "next", "data-density": density, style: pos.style, title: label };
-    const id = blockId(g, b);
-    if (!canChange) return <span key={key} className="pc-block" {...common} role="img" aria-label={label.replace(". Choose someone", "")}>{words}</span>;
-    if (needsCover(b) || (b.classRef && row === "person")) {
-      return (
-        <Button key={key} type="button" variant="link" className="pc-block" {...common} aria-label={label}
-          aria-pressed={needsCover(b) ? selected === id : undefined} onClick={() => openGap(g, b)}>{words}</Button>
-      );
-    }
+    const kind = isOff(b) ? "absent" : g.fromClasses ? "now" : b.detail ? "assessment" : "next";
+    const common = { "data-block": kind, "data-density": density, "data-lent": lent ? "" : undefined, style: pos.style, title: label };
+    if (!canChange || g.href) return <span key={key} className="pc-block" {...common} role="img" aria-label={label}>{words}</span>;
+    if (b.classRef) return <Button key={key} type="button" variant="link" className="pc-block" {...common} aria-label={`${label}. Change who teaches`} onClick={() => openGap(g, b, b.refs)}>{words}</Button>;
     return b.assignmentId ? (
       <AssignmentDialog key={key} live={live} assignment={{ id: b.assignmentId, needId: b.needId!, place: b.place!, userId: b.userId!, name: b.name ?? "", start: b.start, end: b.end, what: `${g.name} in ${g.place}` }}
-        trigger={<Button type="button" variant="link" className="pc-block" {...common} aria-label={label}>{words}</Button>} />
+        trigger={<Button type="button" variant="link" className="pc-block" {...common} aria-label={`${label}. Change their time or take them off`}>{words}</Button>} />
     ) : <span key={key} className="pc-block" {...common} role="img" aria-label={label}>{words}</span>;
   };
 
-  /** Something using an area: a booking, an activity, a class, another module's session. */
-  const itemFor = (band: ZoneBand, item: ZoneItem, key: string, clash: boolean) => {
-    const pos = at(item.start, item.end);
-    if (!pos) return null;
-    const density = pos.px >= 120 ? "full" : pos.px >= 48 ? "compact" : "icon";
-    const lanes = band.lanes ? `, ${lanesLabel(item.lanes, band.lanes).toLowerCase()}` : "";
-    const fill = item.gaps && item.departmentId === departmentId ? `${item.gaps} to fill` : null;
-    const label = `${ITEM_WORDS[item.kind]}: ${item.label}${item.detail ? `, ${item.detail}` : ""} in ${band.name}${lanes}, ${clock(item.start)} to ${clock(item.end)}${fill ? `, ${fill}` : ""}${clash ? ". Shares a lane with something else then" : ""}`;
-    const words = density === "icon" ? null : (
-      <span className="pc-block-body">
-        <span className="pc-block-title">{item.label}</span>
-        {density === "full" ? <span className="pc-block-hint">{[item.detail, `${clock(item.start)}–${clock(item.end)}`, fill].filter(Boolean).join(" · ")}</span> : null}
-      </span>
-    );
-    // Another department's things show the time and lanes taken, without their gaps.
-    const ours = item.departmentId === departmentId;
-    const common = { "data-block": clash ? "absent" : !ours && item.kind === "activity" ? "done" : ours && item.gaps && item.kind !== "class" ? "cover" : ITEM_BLOCK[item.kind], "data-density": density, style: pos.style, title: label };
-    const need = item.needId ? ourNeeds.get(item.needId) : null;
-    if (canChange && need) {
-      return (
-        <NeedDialog key={key} siteId={siteId} date={date} live={live} types={types} areas={areaList} need={need}
-          trigger={<Button type="button" variant="link" className="pc-block" {...common} aria-label={`${label}. Change it`}>{words}</Button>} />
-      );
-    }
-    if (item.href) return <Button key={key} asChild variant="link" className="pc-block" {...common}><Link href={item.href} aria-label={`${label}. Open it`}>{words}</Link></Button>;
-    return <span key={key} className="pc-block" {...common} role="img" aria-label={label}>{words}</span>;
-  };
-
-  // The staff rows: what still needs someone, then each person's day.
-  const shown = (g: Group, lane: Block[]) => (g.fromClasses && perHour < 160 ? merged(lane) : single(lane));
-  const placed: Placed[] = groups.filter((g) => !g.href).flatMap((g) => g.lanes.flatMap((lane) => shown(g, lane).map((b) => ({ g, b }))));
-  const open = placed.filter((x) => needsCover(x.b));
-  const gapRows = pack(open.map((x) => ({ ...x, start: x.b.start, end: x.b.end })));
-  const gapCount = groups.reduce((n, g) => n + g.gapCount, 0);
   const person = people.find((p) => p.userId === openPerson) ?? null;
+  const freePerson = free ? people.find((p) => p.userId === free.userId) ?? null : null;
+  const gapCount = groups.reduce((n, g) => n + g.gapCount, 0);
+  const paid = people.reduce((n, p) => n + p.shift.paidMinutes, 0);
+  const unpaid = people.reduce((n, p) => n + p.shift.parts.reduce((m, x) => m + partPaid(x).unpaid, 0), 0);
   const addHere = (name: string) => canChange && types.length ? (
     <NeedDialog siteId={siteId} date={date} live={live} types={types} areas={areaList} place={name}
       trigger={<Button type="button" variant="ghost" size="icon" aria-label={`Add an activity in ${name}`}><Plus aria-hidden="true" /></Button>} />
   ) : null;
-  const unmatchedNote = "Not one of the site's areas. Add it in Admin, Areas, or change the activity's or class's place.";
   const gapTag = (n: number) => <Tag meta={ROTA_DAY_META[n ? "gaps" : "covered"]} label={n ? `${n} ${n === 1 ? "gap" : "gaps"}` : undefined} />;
   /** An activity in the agenda: what it is, what it needs and how many places. */
   const activityLine = (g: Group) => g.href ? `Planned in ${g.plannedIn ?? "another module"}` : [g.fromClasses ? "Swim classes" : `${g.lanes.length} ${g.lanes.length === 1 ? "place" : "places"}`,
     g.requiredName ? `needs ${qualificationShort(g.requiredName)}` : null].filter(Boolean).join(" · ");
+  const hoursLine = (p: Person) => {
+    const h = hours[p.userId];
+    if (!h) return null;
+    return `Week ${duration(h.week)}${h.contract ? ` of ${duration(h.contract)}` : ""}`;
+  };
+  const over = (p: Person) => { const h = hours[p.userId]; return !!h?.contract && h.week > h.contract; };
 
   return (
     <>
@@ -318,6 +341,10 @@ export function DayPlan({ siteId, departmentId, date, dateLabel, live, canChange
           <SegmentedChoice aria-labelledby={`rota-show-${date}`} value={win} onValueChange={(v) => setView({ from: wins[v as WindowKey].from, to: wins[v as WindowKey].to })}
             options={WINDOW_KEYS.map((k) => ({ value: k, label: k === "day" ? wins[k].label : `${wins[k].label} ${clock(wins[k].from).slice(0, 2)}–${clock(wins[k].to).slice(0, 2)}` }))} />
           <span className="text-xs text-ui-muted-foreground">{zoomed ? `${clock(Math.round(from))} to ${clock(Math.round(to))} · ` : ""}Scroll over the day to zoom{zoomed ? ", drag it to move" : ""}</span>
+          <span className="ms-auto flex min-h-11 items-center gap-2">
+            <Switch id={`rota-others-${date}`} checked={others} onCheckedChange={setOthers} />
+            <Label htmlFor={`rota-others-${date}`} className="font-normal">Show other departments</Label>
+          </span>
         </div>
         <div className="rota-tl-row rota-tl-sticky" aria-hidden="true">
           <span />
@@ -327,62 +354,41 @@ export function DayPlan({ siteId, departmentId, date, dateLabel, live, canChange
           })}</div>
         </div>
 
-        <h3 className="rota-tl-sec">Zones</h3>
-        {areas.map((band) => {
-          const rows = bandRows(band);
-          const using = band.items.length;
-          return (
-            <section key={band.key} className="rota-tl-band" aria-label={band.lanes ? `${band.name}, ${band.lanes} lanes` : band.name}>
-              {rows.map((row) => (
-                <div key={row.key} className="rota-tl-row">
-                  {row.head ? (
-                    <div className="rota-tl-label rota-tl-area">
-                      <span className="rota-tl-name"><MapPin aria-hidden="true" /><span>{band.name}</span></span>
-                      <small title={band.unmatched ? unmatchedNote : undefined}>{band.unmatched ? "Not an area yet" : band.lanes ? `${band.lanes} lanes` : using ? `${using} on` : "Nothing on"}</small>
-                      {!band.unmatched ? <span className="rota-tl-area-add">{addHere(band.name)}</span> : null}
-                    </div>
-                  ) : row.lane && row.key.endsWith("|0") ? (
-                    <div className="rota-tl-label rota-tl-lane"><span>Lane {row.lane}</span></div>
-                  ) : <span aria-hidden="true" />}
-                  <div className="rota-tl-track" data-row={row.lane ? "lane" : "area"} style={gridStyle} {...dragHandlers}>
-                    {row.items.map((item, i) => itemFor(band, item, `${row.key}-${i}`, row.clashes.includes(item.key)))}
-                  </div>
-                </div>
-              ))}
-            </section>
-          );
-        })}
-
-        <h3 className="rota-tl-sec">Staff</h3>
-        <section aria-label="Needs someone" className="rota-tl-band">
-          {(gapRows.length ? gapRows : [[]]).map((row, ri) => (
-            <div key={`gaps-${ri}`} className="rota-tl-row">
-              {ri === 0 ? (
-                <div className="rota-tl-label rota-tl-person">
-                  <span className="rota-tl-name"><TriangleAlert aria-hidden="true" /><span>Needs someone</span></span>
-                  <small>{gapCount ? `${gapCount} ${gapCount === 1 ? "gap" : "gaps"} to fill` : groups.length ? "Everything is covered" : "Nothing planned yet"}</small>
-                </div>
-              ) : <span aria-hidden="true" />}
-              <div className="rota-tl-track" data-row="person" style={gridStyle} {...dragHandlers}>
-                {row.map((x, i) => blockFor(x.g, x.b, `gap-${ri}-${i}`, "gaps"))}
-              </div>
+        <h3 className="rota-tl-sec">What needs people{gapCount ? ` · ${gapCount} ${gapCount === 1 ? "gap" : "gaps"}` : ""}</h3>
+        {rows.map((row) => (
+          <div key={row.key} className="rota-tl-row">
+            {rowLabel(row)}
+            <div className="rota-tl-track" data-row="need" style={gridStyle} {...dragHandlers}>
+              {row.cover.map((c, i) => coverFor(row, c, `${row.key}-${i}`))}
             </div>
-          ))}
-        </section>
+          </div>
+        ))}
+        {!rows.length ? (
+          <div className="rota-tl-row">
+            <span aria-hidden="true" />
+            <p className="text-sm text-ui-muted-foreground">Nothing needs people yet. Add what the day needs with Add activity; bookings and swim classes appear here on their own.</p>
+          </div>
+        ) : null}
+
+        <h3 className="rota-tl-sec">Staff on today{people.length ? ` · ${people.length}` : ""}</h3>
         {people.map((p) => {
-          const mine = placed.filter((x) => x.b.kind === "on" && x.b.userId === p.userId);
-          const rows = pack(mine.map((x) => ({ ...x, start: x.b.start, end: x.b.end })));
+          const mine = personBlocks(allGroups, p.userId).map(({ group, block }) => ({ g: group, b: { ...block, count: 1, refs: block.classRef ? [block.classRef] : [] } as Shown }));
+          const shown = perHour < 160 ? mergeRuns(mine) : mine;
+          const packed = pack(shown.map((x) => ({ ...x, start: x.b.start, end: x.b.end })));
           const breaks = p.shift.parts.flatMap((x) => x.breaks);
+          const open = freeTime(p, mine.map((x) => x.b));
           const times = p.shift.parts.map((x) => `${clock(x.start)}–${clock(x.end)}`).join(", ");
+          const week = hoursLine(p);
           return (
             <section key={p.userId} aria-label={`${p.name}, ${times}`} className="rota-tl-band">
-              {(rows.length ? rows : [[]]).map((row, ri) => (
+              {(packed.length ? packed : [[]]).map((row, ri) => (
                 <div key={ri} className="rota-tl-row">
                   {ri === 0 ? (
                     <Button type="button" variant="ghost" className="rota-tl-label rota-tl-person h-auto items-stretch whitespace-normal" onClick={() => setOpenPerson(p.userId)}
-                      aria-label={`${p.name}: ${times}, ${duration(p.shift.paidMinutes)} paid${warned(p) ? `. ${checkLabel(p)}` : ""}. Open their shift`}>
+                      aria-label={`${p.name}: ${times}, ${duration(p.shift.paidMinutes)} paid today${week ? `, ${week}` : ""}${warned(p) ? `. ${checkLabel(p)}` : ""}. Open their shift`}>
                       <span className="rota-tl-name"><span>{p.name}</span></span>
                       <small className="tabular-nums">{times} · {duration(p.shift.paidMinutes)} paid</small>
+                      {week ? <small className={`tabular-nums${over(p) ? " rota-people-warn" : ""}`}>{week}</small> : null}
                       {warned(p) ? <small className="rota-people-warn"><TriangleAlert aria-hidden="true" />{checkLabel(p)}</small> : null}
                     </Button>
                   ) : <span aria-hidden="true" />}
@@ -391,7 +397,18 @@ export function DayPlan({ siteId, departmentId, date, dateLabel, live, canChange
                       const pos = at(x.start, x.end);
                       return pos ? <span key={`s${x.start}`} className="rota-people-shift" data-planned={x.planned ? "" : undefined} style={pos.style} /> : null;
                     }) : null}
-                    {row.map((x, i) => blockFor(x.g, x.b, `${p.userId}-${ri}-${i}`, "person"))}
+                    {ri === 0 ? open.map((f) => {
+                      const pos = at(f.start, f.end);
+                      if (!pos) return null;
+                      const density = densityOf(pos.px);
+                      const label = `${p.name}, ${clock(f.start)} to ${clock(f.end)}: no activity or booking yet`;
+                      const words = density === "icon" ? null : <span className="pc-block-body"><span className="pc-block-title">No activity</span>{density === "full" ? <span className="pc-block-hint tabular-nums">{clock(f.start)}–{clock(f.end)}</span> : null}</span>;
+                      const common = { className: "pc-block rota-free-time", "data-block": "done", "data-density": density, style: pos.style, title: label };
+                      return canChange
+                        ? <Button key={`f${f.start}`} type="button" variant="link" {...common} aria-label={`${label}. Give this time to something`} onClick={() => setFree({ userId: p.userId, start: f.start, end: f.end })}>{words}</Button>
+                        : <span key={`f${f.start}`} {...common} role="img" aria-label={label}>{words}</span>;
+                    }) : null}
+                    {row.map((x, i) => workFor(x.g, x.b, `${p.userId}-${ri}-${i}`))}
                     {ri === 0 ? breaks.map((b) => {
                       const pos = at(b.start, b.end);
                       return pos ? (
@@ -410,20 +427,29 @@ export function DayPlan({ siteId, departmentId, date, dateLabel, live, canChange
         {!people.length ? (
           <div className="rota-tl-row">
             <span aria-hidden="true" />
-            <p className="text-sm text-ui-muted-foreground">Nobody is working yet. Add someone to a shift, or choose a gap above to put someone on it.</p>
+            <p className="text-sm text-ui-muted-foreground">Nobody is on today yet. Add staff gives someone a shift; then give its time to what needs people.</p>
           </div>
         ) : null}
 
         <div className="rota-tl-key">
+          <span><i className="pc-block rota-cover" data-block="done" data-ok="" />Enough people</span>
+          <span><i style={{ background: "var(--pc-block-cover)" }} />Short of people</span>
+          <span><i style={{ background: "var(--pc-block-next)" }} />Activity</span>
           <span><i style={{ background: "var(--pc-block-assess)" }} />Booking</span>
           <span><i style={{ background: "var(--pc-block-now)" }} />Swim classes</span>
-          <span><i style={{ background: "var(--pc-block-next)" }} />Someone on it</span>
-          <span><i style={{ background: "var(--pc-block-cover)" }} />Needs someone</span>
-          <span><i style={{ background: "var(--pc-danger-soft)" }} />Off, or two things on one lane</span>
-          <span><i className="rota-people-shift" data-planned="" />Planned shift</span>
+          <span><i className="pc-block rota-free-time" data-block="done" />No activity yet</span>
+          <span><i className="rota-people-shift" data-planned="" />Shift</span>
           <span><i className="rota-people-break" data-pinned="" />Break placed</span>
           <span><i className="rota-people-break" />Break suggested</span>
         </div>
+        {people.length ? (
+          <p className="rota-tl-totals tabular-nums">
+            <span><b>{people.length}</b> on today</span>
+            <span><b>{duration(paid)}</b> paid</span>
+            <span><b>{duration(unpaid)}</b> unpaid breaks</span>
+            <span data-gaps={gapCount ? "" : undefined}>{gapCount ? `${gapCount} ${gapCount === 1 ? "gap" : "gaps"} to fill` : "Everything is covered"}</span>
+          </p>
+        ) : null}
       </div>
 
       <div className="rota-agenda">
@@ -437,23 +463,24 @@ export function DayPlan({ siteId, departmentId, date, dateLabel, live, canChange
             </div>
             {z.groups.map((g) => {
               const Icon = activityIcon(g.icon);
-              const rows = g.lanes.flatMap((lane) => (g.fromClasses ? merged(lane) : single(lane))).sort((a, b) => a.start - b.start);
+              const list = g.lanes.flatMap((lane) => (g.fromClasses ? merged(lane) : single(lane))).sort((a, b) => a.start - b.start);
               return (
                 <div key={g.key} className="flex flex-col gap-2">
                   <span className="rota-tl-act-head"><Icon aria-hidden="true" /><span className="rota-tl-act-name">{g.name}</span><span className="rota-tl-act-meta">{activityLine(g)}</span></span>
                   <ul className="pc-rows">
-                    {rows.map((b, i) => {
+                    {list.map((b, i) => {
                       const off = isOff(b);
+                      const what = `${g.name} in ${g.place}, ${clock(b.start)} to ${clock(b.end)}`;
                       const text = <span className="pc-row-body"><span className="pc-row-title tabular-nums">{clock(b.start)} to {clock(b.end)}</span>
                         <span className="pc-row-hint">{b.kind === "gap" ? "Nobody yet" : off ? `${b.name} is off` : b.name}{b.count > 1 ? ` · ${b.count} classes` : b.detail ? ` · ${b.detail}` : ""}</span></span>;
                       const trail = <span className="pc-row-trail">{needsCover(b) ? <Tag meta={ROTA_DAY_META.gaps} label={off ? "Cover needed" : "Gap"} /> : null}{canChange ? <ChevronRight aria-hidden="true" className="pc-row-chevron" /> : null}</span>;
-                      if (!canChange) return <li key={i}><div className="pc-row" {...(needsCover(b) ? { "data-first": "" } : {})}>{text}{trail}</div></li>;
+                      if (!canChange || g.href) return <li key={i}><div className="pc-row" {...(needsCover(b) ? { "data-first": "" } : {})}>{text}{trail}</div></li>;
                       if (needsCover(b) || b.classRef) {
-                        return <li key={i}><Button type="button" variant="outline" className={ROW} onClick={() => openGap(g, b)} aria-label={describe(b, g)} {...(needsCover(b) ? { "data-first": "" } : {})}>{text}{trail}</Button></li>;
+                        return <li key={i}><Button type="button" variant="outline" className={ROW} onClick={() => openGap(g, b, b.refs)} aria-label={`${what}. ${needsCover(b) ? "Choose someone" : "Change who teaches"}`} {...(needsCover(b) ? { "data-first": "" } : {})}>{text}{trail}</Button></li>;
                       }
                       return <li key={i}>{b.assignmentId ? (
                         <AssignmentDialog live={live} assignment={{ id: b.assignmentId, needId: b.needId!, place: b.place!, userId: b.userId!, name: b.name ?? "", start: b.start, end: b.end, what: `${g.name} in ${g.place}` }}
-                          trigger={<Button type="button" variant="outline" className={ROW} aria-label={describe(b, g)}>{text}{trail}</Button>} />
+                          trigger={<Button type="button" variant="outline" className={ROW} aria-label={`${b.name}, ${what}`}>{text}{trail}</Button>} />
                       ) : <div className="pc-row">{text}</div>}</li>;
                     })}
                   </ul>
@@ -464,7 +491,57 @@ export function DayPlan({ siteId, departmentId, date, dateLabel, live, canChange
         ))}
       </div>
       <FillSheet gap={gap} live={live} onClose={() => { setGap(null); setSelected(null); }} />
-      <ShiftSheet person={person} onClose={() => setOpenPerson(null)} siteId={siteId} departmentId={departmentId} date={date} dateLabel={dateLabel} live={live} canChange={canChange} />
+      <ShiftSheet person={person} onClose={() => setOpenPerson(null)} siteId={siteId} departmentId={departmentId} departmentNames={departmentNames} date={date} dateLabel={dateLabel} live={live} canChange={canChange} />
+      <Sheet open={!!free && !!freePerson} onOpenChange={(o) => { if (!o) setFree(null); }}>
+        <SheetContent portalClassName="turnfin-module" className="flex w-full flex-col gap-0 overflow-y-auto sm:max-w-lg">
+          {free && freePerson ? (
+            <FreeBody key={`${free.userId}-${free.start}`} person={freePerson} free={free} siteId={siteId} departmentId={departmentId} departmentNames={departmentNames}
+              date={date} dateLabel={dateLabel} live={live} canChange={canChange}
+              onDone={() => { setFree(null); router.refresh(); }} onOpenDay={() => { setFree(null); setOpenPerson(freePerson.userId); }} />
+          ) : null}
+        </SheetContent>
+      </Sheet>
+    </>
+  );
+}
+
+/** Back-to-back swim classes on someone's row as one block when the day is too narrow to read them. */
+function mergeRuns(list: { g: Group; b: Shown }[]) {
+  const out: { g: Group; b: Shown }[] = [];
+  for (const x of list) {
+    const last = out[out.length - 1];
+    if (last && last.g.key === x.g.key && x.b.classRef && last.b.classRef && last.b.end === x.b.start) {
+      last.b = { ...last.b, end: x.b.end, count: last.b.count + 1, refs: [...last.b.refs, x.b.classRef], detail: null, warnings: [...new Set([...last.b.warnings, ...x.b.warnings])] };
+    } else out.push({ g: x.g, b: { ...x.b } });
+  }
+  return out;
+}
+
+/** A stretch of someone's shift with nothing given to it yet: what needs someone then, from any
+ *  department, best first; or leave it as No activity. */
+function FreeBody({ person: p, free, departmentId, departmentNames, onDone, onOpenDay, ...ctx }: {
+  person: Person; free: Free; siteId: string; departmentId: string; departmentNames: Record<string, string>; date: string; dateLabel: string; live: boolean; canChange: boolean;
+  onDone: () => void; onOpenDay: () => void;
+}) {
+  const options = p.options.filter((o) => o.start < free.end && free.start < o.end);
+  const open = options.filter((o) => o.ok), closed = options.filter((o) => !o.ok);
+  return (
+    <>
+      <SheetHeader className="p-6 pb-4">
+        <SheetTitle>{firstName(p.name)}, {clock(free.start)} to {clock(free.end)}</SheetTitle>
+        <SheetDescription>{ctx.dateLabel}. Give this time to something that needs people, or leave it as No activity. It is paid time either way.</SheetDescription>
+      </SheetHeader>
+      <div className="flex flex-col gap-4 px-6 pb-6">
+        {options.length ? (
+          <ul className="pc-rows" aria-label="What needs someone then">
+            {[...open, ...closed].map((o) => (
+              <OptionRow key={o.key} option={o} person={p} siteId={ctx.siteId} date={ctx.date} live={ctx.live} canChange={ctx.canChange} onDone={onDone} within={free}
+                lentTo={o.departmentId !== departmentId ? departmentNames[o.departmentId] ?? "another department" : null} />
+            ))}
+          </ul>
+        ) : <p className="text-sm">Nothing needs someone then. Add an activity for this time, or leave it as No activity.</p>}
+        <Button type="button" variant="outline" className="self-start" onClick={onOpenDay}>Open {firstName(p.name)}&apos;s shift and breaks</Button>
+      </div>
     </>
   );
 }
