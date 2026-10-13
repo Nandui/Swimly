@@ -27,7 +27,7 @@ export async function triageReport(id: string, version: number, input: TriageInp
   const parsed = triageSchema.safeParse(input);
   if (!parsed.success) return fail(parsed.error.issues[0].message);
   try {
-    const change = triageDecision({ ...row, hasChild: row.people.some((p) => p.ageGroup === "child") }, who, parsed.data);
+    const change = triageDecision({ ...row, hasChild: row.people.some((p) => p.ageGroup === "child") }, { ...who, signoff: rights.signoff }, parsed.data);
     const result = await prisma.$transaction(async (tx) => {
       await lockReport(tx, id);
       const changed = await tx.incidentReport.updateMany({

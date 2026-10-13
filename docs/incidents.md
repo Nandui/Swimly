@@ -124,9 +124,11 @@ Turnfin checks permissions, never role names, so this is set in Admin:
 | Operations manager | Manage |
 | Everyone else | none |
 
-Nobody triages or closes their own report, so a report the centre manager files goes to the
-operations manager and the other way round. A serious report the operations manager files
-needs another Manage holder at the site to close it.
+Nobody closes or investigates their own report, and only a Manage holder at the site
+triages their own (owner decision, 13 October 2026: the operations manager triages his own).
+So a report the centre manager files goes to the operations manager for triage. A report the
+operations manager files he triages himself; if it needs investigating, the centre manager
+investigates it, and a serious one needs another Manage holder at the site to close it.
 
 ## Who sees what
 
