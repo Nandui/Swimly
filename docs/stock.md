@@ -69,7 +69,11 @@ open at their sites.
 ## Not carried over from Stockly
 
 - Its sign-in, user accounts, centres and audit page: Turnfin's own replace them.
-- Its data. Stockly keeps its own database, which this port does not copy.
+- Its data. Stockly keeps its own database, which this port does not copy. The one exception is the
+  Bishopstown stock sheet's product names (owner decision, 13 October 2026): Manage can add them once
+  from Products with **Add the Bishopstown stock sheet**. They go under Other, counted "each"; names
+  already on the list are skipped, and the button goes once any of them is on the list
+  (`features/products/server/sheet.ts`).
 - Its "light only" choice: Turnfin works in both modes.
 
 ## Later

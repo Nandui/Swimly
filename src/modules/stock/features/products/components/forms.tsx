@@ -1,17 +1,21 @@
 "use client";
 
 import type { ReactNode } from "react";
-import { Plus } from "lucide-react";
+import { Pencil, Plus } from "lucide-react";
 import { Button } from "@/components/shadcn/button";
 import { Input } from "@/components/shadcn/input";
 import { NativeSelect, NativeSelectOption } from "@/components/shadcn/native-select";
 import { Textarea } from "@/components/shadcn/textarea";
 import { Field, FormDialog } from "@/components/form-dialog";
-import { archiveCategory, archiveProduct, saveCategory, saveProduct } from "@/modules/stock/features/products/server/actions";
+import { addSheetProducts, archiveCategory, archiveProduct, saveCategory, saveProduct } from "@/modules/stock/features/products/server/actions";
 import { text, THEME, useRefresh } from "@/modules/stock/shared/components/form-kit";
 import { COMMON_UNITS, STOCK_CATEGORY_TONE_META, STOCK_CATEGORY_TONES, type StockCategoryTone } from "@/modules/stock/shared/rules";
 
 /** The product list's dialogs (docs/stock.md). */
+
+// The edit button is made here rather than passed from the page, so the dialog always receives a ready
+// element it can attach to (an element streamed from the page can arrive late and get wrapped in a second button).
+const editButton = (name: string) => <Button variant="outline" size="icon" aria-label={`Change ${name}`}><Pencil aria-hidden="true" /></Button>;
 
 export type ProductEdit = { id: string; name: string; categoryId: string; unitLabel: string; sku: string | null; caseSize: number | null; barcode: string | null; notes: string };
 type Option = { id: string; name: string };
@@ -23,7 +27,7 @@ export function ProductDialog({ product, categories, trigger }: { product?: Prod
   const options = product && !categories.some((c) => c.id === product.categoryId) ? [...categories, { id: product.categoryId, name: "Archived category" }] : categories;
   return (
     <FormDialog portalClassName={THEME} width="sm:max-w-lg"
-      trigger={trigger ?? <Button><Plus aria-hidden="true" />Add a product</Button>}
+      trigger={trigger ?? (product ? editButton(product.name) : <Button><Plus aria-hidden="true" />Add a product</Button>)}
       title={product ? `Change ${product.name}` : "Add a product"} description="One list for every site. Every count of it is in the unit you give here."
       submitLabel={product ? "Save product" : "Add product"} successMessage={product ? "Product saved" : "Product added"} onSuccess={refresh}
       submit={(fd) => saveProduct(product?.id ?? null, {
@@ -73,7 +77,7 @@ export function CategoryDialog({ category, trigger }: { category?: CategoryEdit;
   const fid = category ? `stc-${category.id}` : "stc-new";
   return (
     <FormDialog portalClassName={THEME}
-      trigger={trigger ?? <Button><Plus aria-hidden="true" />Add a category</Button>}
+      trigger={trigger ?? (category ? editButton(category.name) : <Button><Plus aria-hidden="true" />Add a category</Button>)}
       title={category ? `Change ${category.name}` : "Add a category"} description="Products are grouped by category on the count sheet, in this order."
       submitLabel={category ? "Save category" : "Add category"} successMessage={category ? "Category saved" : "Category added"} onSuccess={refresh}
       submit={(fd) => saveCategory(category?.id ?? null, { name: text(fd, "name"), tone: text(fd, "tone") as StockCategoryTone })}>
@@ -96,6 +100,19 @@ export function ArchiveCategory({ id, name, archived }: { id: string; name: stri
       submitLabel={archived ? "Restore" : "Archive"} successMessage={archived ? "Category restored" : "Category archived"} onSuccess={refresh}
       submit={() => archiveCategory(id, !archived)}>
       <p className="text-sm text-ui-muted-foreground">Nothing else changes.</p>
+    </FormDialog>
+  );
+}
+
+/** The Bishopstown stock sheet's names, added once as a starting list. */
+export function AddSheetProducts({ missing }: { missing: number }) {
+  const refresh = useRefresh();
+  return (
+    <FormDialog portalClassName={THEME} title="Add the Bishopstown stock sheet?"
+      description={`${missing} product names from the stock sheet go on the list, under Other, counted "each". Change each one's category and unit afterwards.`}
+      trigger={<Button type="button" variant="outline">Add the Bishopstown stock sheet</Button>}
+      submitLabel="Add products" successMessage="Products added" onSuccess={refresh} submit={() => addSheetProducts()}>
+      <p className="text-sm text-ui-muted-foreground">Names already on the list are skipped. Nothing else changes.</p>
     </FormDialog>
   );
 }

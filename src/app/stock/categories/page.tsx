@@ -1,6 +1,4 @@
 import type { Metadata } from "next";
-import { Pencil } from "lucide-react";
-import { Button } from "@/components/shadcn/button";
 import { EmptyState } from "@/components/ui-kit/empty-state";
 import { PageHeader } from "@/components/ui-kit/page-header";
 import { Tag } from "@/components/ui-kit/tag";
@@ -28,7 +26,7 @@ export default async function StockCategoriesPage() {
                 <span className="pc-row-trail">
                   {c.archivedAt ? <Tag meta={ARCHIVAL_STATUS_META.archived} /> : <CategoryTag name={c.name} tone={c.tone} />}
                   {who.manage ? <>
-                    <CategoryDialog category={c} trigger={<Button variant="outline" size="icon" aria-label={`Change ${c.name}`}><Pencil aria-hidden="true" /></Button>} />
+                    <CategoryDialog category={c} />
                     <ArchiveCategory id={c.id} name={c.name} archived={!!c.archivedAt} />
                   </> : null}
                 </span>

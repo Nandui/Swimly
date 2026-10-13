@@ -1,5 +1,6 @@
 import "server-only";
 import { prisma } from "@/lib/prisma";
+import { BISHOPSTOWN_SHEET } from "@/modules/stock/features/products/server/sheet";
 import { requireStockActor } from "@/modules/stock/shared/access";
 
 /** The product list and its categories (docs/stock.md): one list for the organisation. Anyone with
@@ -15,7 +16,10 @@ export async function stockProducts() {
     }),
     prisma.stockCategory.findMany({ where: { orgId, archivedAt: null }, orderBy: [{ sortOrder: "asc" }, { name: "asc" }], select: { id: true, name: true } }),
   ]);
-  return { who, products, categories };
+  const names = new Set(products.map((p) => p.name.toLowerCase()));
+  // Offered once: until any of the sheet's names is on the list.
+  const sheetMissing = BISHOPSTOWN_SHEET.some((name) => names.has(name.toLowerCase())) ? 0 : BISHOPSTOWN_SHEET.length;
+  return { who, products, categories, sheetMissing };
 }
 export type StockProductRow = Awaited<ReturnType<typeof stockProducts>>["products"][number];
 

@@ -5,6 +5,7 @@ import { fail, ok, type ActionResult } from "@/lib/action-result";
 import { logAudit } from "@/lib/audit";
 import { requirePermission } from "@/lib/authz";
 import { prisma } from "@/lib/prisma";
+import { BISHOPSTOWN_SHEET } from "@/modules/stock/features/products/server/sheet";
 import { STOCK_CATEGORY_TONES } from "@/modules/stock/shared/rules";
 import { refresh } from "@/modules/stock/shared/server";
 
@@ -108,6 +109,28 @@ export async function archiveCategory(id: string, archived: boolean): Promise<Ac
     await logAudit({ actorId: session.user.id, actorName: session.user.name ?? "Unknown", action: archived ? "archive" : "update", entity: "StockCategory", entityId: id, clubId: null,
       summary: `${archived ? "Archived" : "Restored"} the stock category ${category.name}` }, tx);
   });
+  refresh();
+  return ok();
+}
+
+/** Add the Bishopstown stock sheet's product names that are not on the list yet, under Other,
+ *  counted "each". Names only: units, SKUs and categories are filled in afterwards. */
+export async function addSheetProducts(): Promise<ActionResult> {
+  const session = await requirePermission("stock.manage");
+  const orgId = session.user.orgId;
+  if (!orgId) return fail("Your account is not in an organisation.");
+  const other = await prisma.stockCategory.findFirst({ where: { orgId, name: "Other", archivedAt: null }, select: { id: true } });
+  if (!other) return fail("The Other category is missing or archived. Add or restore it under Categories first.");
+  const have = new Set((await prisma.stockProduct.findMany({ where: { orgId }, select: { name: true } })).map((p) => p.name.toLowerCase()));
+  const missing = BISHOPSTOWN_SHEET.filter((name) => !have.has(name.toLowerCase()));
+  if (missing.length === 0) return fail("Every product on the sheet is already on the list.");
+  await prisma.$transaction(async (tx) => {
+    for (const name of missing) {
+      const row = await tx.stockProduct.create({ data: { orgId, name, categoryId: other.id } });
+      await logAudit({ actorId: session.user.id, actorName: session.user.name ?? "Unknown", action: "create", entity: "StockProduct", entityId: row.id, clubId: null,
+        summary: `Added the stock product ${name} from the Bishopstown stock sheet` }, tx);
+    }
+  }, { timeout: 30_000 });
   refresh();
   return ok();
 }

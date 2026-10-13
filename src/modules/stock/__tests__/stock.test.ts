@@ -127,3 +127,13 @@ test("only Manage deletes a count; an empty open count can be discarded", async 
   assert.equal(await fixture.prisma.stockTakeLine.count({ where: { stockTakeId: first } }), 0);
   assert.ok(await fixture.prisma.auditLog.findFirst({ where: { entity: "StockTake", action: "delete", entityId: first } }));
 });
+
+test("Manage adds the Bishopstown stock sheet's names once, under Other", async () => {
+  as("desk", ["stock.count"]);
+  await assert.rejects(products.addSheetProducts(), Denied);
+  as("nora", ["stock.manage"]);
+  assert.equal((await products.addSheetProducts()).ok, true);
+  const other = await fixture.prisma.stockCategory.findFirstOrThrow({ where: { orgId: ORG, name: "Other" } });
+  assert.equal(await fixture.prisma.stockProduct.count({ where: { orgId: ORG, categoryId: other.id } }), 74);
+  assert.equal((await products.addSheetProducts()).ok, false, "nothing left to add");
+});

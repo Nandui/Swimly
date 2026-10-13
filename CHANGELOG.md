@@ -10,6 +10,7 @@ Patch notes for everyone who uses Turnfin at the swim school, the desk and the o
 - **Counts:** start a count at the site you are in and walk the stockroom with a phone or tablet. Products are grouped by category, with a search and a filter for what is still to count. Numbers save as you type. An empty box means not counted; **None** means you counted and there were none. Submit the count when you are done; after that it can't be changed.
 - **Compare:** put two submitted counts at a site side by side and see what went down, what went up (a delivery nobody recorded, or a miscount, shown in red) and what was not counted, which is left out of the totals.
 - **Products and Categories:** one product list for every site, each counted in its own unit (a can, a pair, a 25ml serving). Products and categories are archived, never deleted, so old counts stay readable. The usual categories (Drink, Snack, Confectionery, Retail, Cleaning, Equipment, Other) are there to start with.
+- To start the list, whoever manages Stock can press **Add the Bishopstown stock sheet** on Products once. It adds the 74 product names from the Bishopstown sheet under Other, counted "each", ready to sort into categories. Stockly's old counts are not brought across.
 - Home shows **Stock counts to finish** while a count is open at your sites.
 - Administrators choose who can View, Count or Manage on each role, under Stock. Nobody sees it until then.
 
