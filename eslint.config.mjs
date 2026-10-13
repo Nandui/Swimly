@@ -49,6 +49,7 @@ const workModules = {
   purchasing: workArea("purchasing"),
   academy: workArea("academy", "src/app/api/academy/**"),
   tasks: workArea("tasks", "src/app/api/cron/tasks/**"),
+  "short-courses": workArea("short-courses"),
   incidents: workArea("incidents", "src/app/api/incidents/**", "src/app/api/cron/incidents/**"),
 };
 const moduleFiles = { activities: activitiesFiles, ...workModules };
@@ -120,6 +121,7 @@ const coreThroughFunctions = {
   academy: ["organisation", "qualificationType", "qualification", "site", "tutor", "assessor", "user"],
   tasks: ["site"],
   incidents: [],
+  "short-courses": [],
   hr: [],
   training: ["grantsType", "organisation", "user"],
   rota: ["department", "organisation", "requiredType", "site", "type", "user"],

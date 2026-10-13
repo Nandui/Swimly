@@ -27,6 +27,7 @@ Each module is a self-contained package under `src/modules/<id>`: its `manifest.
 | refunds | Moves a refund request from reception to finance. Features: `queue`, `request`, `workspace` ([README](../../src/modules/refunds/README.md)). | `refunds.prisma` | home cards |
 | purchasing | Raises and approves purchase orders. Features: `orders`, `suppliers`, `workspace` ([README](../../src/modules/purchasing/README.md)). | `purchasing.prisma` | home cards |
 | academy | Runs the lifeguard and swim teacher courses we deliver. Features: `courses`, `course-types`, `calls`, `booking`, `workspace` ([README](../../src/modules/academy/README.md)). | `academy.prisma` | home cards; its own public API |
+| short-courses | Runs the fixed-length courses the public book a place on. Features: `courses`, `course-types`, `workspace` ([README](../../src/modules/short-courses/README.md), [ADR 0009](decisions/0009-add-short-courses-module.md)). | `short-courses.prisma` | home cards; Rota commitments |
 | tasks | Runs each site's daily checks and logs. Features: `day`, `follow-ups`, `templates`, `sites`, `reports`, `schedule`, `workspace` ([README](../../src/modules/tasks/README.md)). | `tasks.prisma` | home cards |
 | incidents | Records accidents, incidents and near misses from report to a closed record. Features: `report`, `triage`, `reports`, `workspace` ([README](../../src/modules/incidents/README.md), [ADR 0008](decisions/0008-add-incidents-module.md)). | `incidents.prisma` | home cards |
 | training | Assigns courses and records completions. Features: `courses`, `assignments`, `sign-off`, `certificates`, `expiring`, `me`, `person-file`, `workspace` ([README](../../src/modules/training/README.md)). | `training.prisma` | personal file, subject records, Turnfin Me digest |
@@ -49,7 +50,7 @@ flowchart TB
   list["src/app/modules.ts<br/>(every module's manifest.ts)"] --> registry["Core registry<br/>Home, menus, role editor"]
   subgraph Modules
     activities[Swim school and Pool deck]; academy[Academy]; refunds[Refunds]; tasks[Tasks]
-    rota[Rota]; training[Training]; docs[Docs]; hr[HR]; purchasing[Purchasing]; incidents[Incidents]
+    rota[Rota]; training[Training]; docs[Docs]; hr[HR]; purchasing[Purchasing]; incidents[Incidents]; shortcourses[Short courses]
   end
   Modules --> core["Core: people, roles, sites, audit, policy<br/>(src/lib, src/modules/contributions.ts)"]
   Modules --> ui["UI kit (src/components/shadcn, ui, ui-kit)"]

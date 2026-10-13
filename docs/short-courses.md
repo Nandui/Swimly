@@ -1,0 +1,106 @@
+# Short courses
+
+Owner decision, 13 October 2026: a module for fixed-length courses the public book a place on,
+"like 6 weeks, 8 weeks", at the pool, the gym or anywhere else. It sits beside the Academy (which
+runs qualification courses with checks, results and certificates) and the swim school (weekly
+classes with no end date). The plan Fernando approved is the Artifact "Turnfin Short Courses
+Plan" (https://claude.ai/artifact/XweXdCdj2EJG1V3os7DcFm); ADR 0009 records the decision.
+
+Phase 1 (1.9.0) runs courses from the desk. Phase 2 adds online booking on the Academy's booking
+site; phase 3 adds "run it again" and reports.
+
+## The model (`prisma/schema/short-courses.prisma`)
+
+| Concept | Table | What it is |
+| --- | --- | --- |
+| Course on the list | `ShortCourseType` (`short_courses_types`) | A course we offer: "Couch to 5k". Where (pool, gym, studio, other), what it is, how many weeks and minutes a session a new run starts with, minimum age, and whether it asks for a health form (a PAR-Q for the gym). Archived, never deleted. |
+| Course | `ShortCourse` (`short_courses_courses`) | One run at a site: places, price, instructor, note. Planned, then **running** once its first session comes (worked out), then finished or cancelled. |
+| Session | `ShortCourseSession` (`short_courses_sessions`) | A dated session in one of the site's areas (Admin, Areas), with who took its register. |
+| Person | `ShortCourseParticipant` (`short_courses_participants`) | A member of the public by name, phone, email and (when the course has a minimum age) date of birth; booked, waiting or withdrawn; payment (paid, deposit, owed, no charge) and the amount paid; the day their health form came in. |
+| Attendance | `ShortCourseAttendance` (`short_courses_attendance`) | Whether they were at a session. |
+
+The tables keep plain ids for the site, the instructor and the organisation and read Core only
+through its functions (`src/lib/directory.ts`, `src/lib/setup/data.ts`), so the module has no
+relation to any Core table. The migration `20261103120000_short_courses` only adds tables.
+
+The rules are in `src/modules/short-courses/shared/rules.ts` and are pure (tested in
+`rules.test.ts`).
+
+## Putting a course on
+
+Manage picks the course from the list, the site, the first day, how many weeks, the start and end
+time, the area, the instructor, the places and the price. Turnfin makes a session on the same
+weekday each week (`weeklyDates`). The weeks and session length come from the course list and can
+be changed for this run. A week that moves (a bank holiday) is changed on its own session; an
+extra week is added with **Add a session**, which suggests a week after the last. A session whose
+register has been taken can be moved but not removed.
+
+Changing a course later changes its places, price, instructor and note. Places never go below the
+number booked.
+
+## Booking people on
+
+Anyone with View at the course's site books people on, records the payment taken at the till and
+keeps the waiting list.
+
+- **Places.** Only a booking takes a place. The course row is locked while places are counted, so
+  the last place is never taken twice.
+- **Waiting list.** When the course is full, the desk adds people to the waiting list instead. It
+  is first come, first served (`waitingOrder`). When a place frees up (someone withdraws, or
+  Manage adds places) the course page says so, the first person waiting is highlighted, and the
+  desk offers them the place by phone and then presses **Give the place**. Home shows courses with
+  a place free for the waiting list. Nothing moves automatically.
+- **Payment.** Paid with no amount records the full price. "Still to pay" on the course adds up
+  what each booked person owes (the price less what they paid; nothing for paid or no charge).
+- **Age.** When the course has a minimum age, the date of birth is required and checked against
+  the first day.
+- **Health form.** When the course asks for one, the day it came in is recorded, and anyone
+  booked without one shows **No health form**.
+- **Withdrawing** frees the place and keeps the person and their register marks on the course. A
+  withdrawn person can be put back (onto the waiting list when the course is full). Refunds are
+  handled at the till.
+
+## Registers
+
+Anyone with Instructor at the site takes a session's register from the day of the session:
+everyone booked is ticked, and the instructor unticks whoever was not there. Everyone booked is
+marked present or absent, so a person's line reads "at 5 of 6". It can be changed later.
+
+## Levels (`src/modules/short-courses/manifest.ts`), at the sites a role covers
+
+- **View** (`short-courses.read`): see the courses, book people on, record payment, keep the waiting list.
+- **Instructor** (`short-courses.run`): also take the registers.
+- **Manage** (`short-courses.manage`): also keep the course list and put courses on, with their weeks, times, instructor, places and price.
+
+Every write checks the course's site (`mayFor`) and is audited under "Short courses".
+
+## On the Rota
+
+Each session of a course that is not cancelled reaches the Rota through the commitments seam
+(`short-courses.sessions`, registered in `module.ts`), for the instructor. The Rota draws it in
+its area on every department's plan as "Planned in Short courses", linked back to the course. The
+time counts in the instructor's shift and in double-booking warnings, and it is never a gap for
+the Rota to fill. The Rota never reads these tables. When Admin renames an area, the sessions
+there follow (`registerAreaRename`).
+
+## Home
+
+Instructors see the registers to take today on their courses. Everyone with View sees courses
+with a place free for the waiting list, and courses starting in the next two weeks at their sites.
+
+## Files
+
+- Schema: `prisma/schema/short-courses.prisma`, migration `20261103120000_short_courses` (additive).
+- `src/modules/short-courses/`: `shared/` (`rules.ts`, pure; `access.ts`; `server.ts` and `reads.ts`; the dialogs' `components/form-kit.tsx`), and the features `courses`, `course-types` and `workspace`. See its README.md.
+- UI: `src/app/short-courses/` (courses, a course, the course list, the starter page).
+- Tests: `rules.test.ts` and `__tests__/short-courses.test.ts` (end to end on an isolated database).
+- Sandbox: Couch to 5k at Hillview two weeks in, with two people waiting for a free place; Adult swim lessons at Riverside starting in ten days.
+
+## Not done yet
+
+- **Phase 2:** online booking on the public booking site (`apps/academy`), the same as the
+  Academy's: hold a place, then reception phones within 72 hours to take payment; an email when a
+  waiting-list place opens. The email-code and hold-a-place pieces move into shared code then,
+  since two modules will use them.
+- **Phase 3:** run a course again, offering the next run to this group first; fill rate and
+  takings per course and area.

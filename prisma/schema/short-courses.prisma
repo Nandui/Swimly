@@ -1,0 +1,129 @@
+// Short courses (owner decision, 13 October 2026; docs/short-courses.md): fixed-length
+// courses the public book a place on, such as six or eight weekly sessions at the pool, the
+// gym or the studio. Staff enter people and record payment taken at the till; each course has
+// weekly sessions with a register and a waiting list. Sessions reach the Rota through the
+// commitments seam. Core is read only through its functions (sites, staff, areas), so these
+// tables keep plain ids, and carry the module prefix (CLAUDE.md section 4).
+
+/// A course we offer: "Couch to 5k", "Adult swim lessons". Archived, never deleted.
+model ShortCourseType {
+  id             String    @id @default(cuid())
+  orgId          String
+  name           String
+  /// pool | gym | studio | other (`SHORT_COURSE_AREA_META`)
+  area           String
+  /// One or two lines on what it is, for the desk (and the booking site in phase 2).
+  description    String    @default("")
+  /// What a new run starts with: how many weekly sessions, and how long each is.
+  weeks          Int       @default(6)
+  sessionMinutes Int       @default(60)
+  /// Youngest a person may be on the first day, when it matters.
+  minAge         Int?
+  /// Asks for a health form (a PAR-Q for the gym) before someone starts.
+  healthForm     Boolean   @default(false)
+  sortOrder      Int       @default(0)
+  archivedAt     DateTime?
+  createdAt      DateTime  @default(now())
+  updatedAt      DateTime  @updatedAt
+
+  courses ShortCourse[]
+
+  @@unique([orgId, name])
+  @@map("short_courses_types")
+}
+
+/// One run of a course at a site: its weekly sessions, places, price and instructor.
+model ShortCourse {
+  id            String    @id @default(cuid())
+  orgId         String
+  siteId        String
+  typeId        String
+  /// planned | finished | cancelled (`SHORT_COURSE_META`); running is worked out from the dates.
+  status        String    @default("planned")
+  capacity      Int
+  priceCents    Int       @default(0)
+  /// The staff member who takes it. Its sessions show on their Rota.
+  instructorId  String
+  note          String    @default("")
+  createdById   String?
+  createdByName String
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+  cancelledAt   DateTime?
+
+  type         ShortCourseType          @relation(fields: [typeId], references: [id], onDelete: Restrict)
+  sessions     ShortCourseSession[]
+  participants ShortCourseParticipant[]
+
+  @@index([siteId, status])
+  @@index([instructorId])
+  @@map("short_courses_courses")
+}
+
+/// A dated session of a course, in one of the site's areas.
+model ShortCourseSession {
+  id           String    @id @default(cuid())
+  courseId     String
+  date         DateTime  @db.Date
+  startMinutes Int
+  endMinutes   Int
+  /// One of the site's areas (Admin, Areas): "Main pool", "Gym floor".
+  place        String    @default("")
+  note         String    @default("")
+  /// Kept once the register is taken.
+  registerAt   DateTime?
+  registerById String?
+  registerBy   String?
+  createdAt    DateTime  @default(now())
+  updatedAt    DateTime  @updatedAt
+
+  course     ShortCourse             @relation(fields: [courseId], references: [id], onDelete: Cascade)
+  attendance ShortCourseAttendance[]
+
+  @@index([courseId, date])
+  @@index([date])
+  @@map("short_courses_sessions")
+}
+
+/// Someone on a course, or waiting for a place on it.
+model ShortCourseParticipant {
+  id            String    @id @default(cuid())
+  courseId      String
+  name          String
+  email         String    @default("")
+  phone         String    @default("")
+  dateOfBirth   DateTime? @db.Date
+  /// booked | waiting | withdrawn (`SHORT_COURSE_PLACE_META`). Only booked takes a place.
+  status        String    @default("booked")
+  /// paid | deposit | owed | waived (`SHORT_COURSE_PAYMENT_META`)
+  payment       String    @default("owed")
+  paidCents     Int       @default(0)
+  /// The day their health form came in, when the course asks for one.
+  healthFormOn  DateTime? @db.Date
+  note          String    @default("")
+  /// staff (added in Turnfin); online arrives in phase 2.
+  source        String    @default("staff")
+  createdById   String?
+  createdByName String
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+
+  course     ShortCourse             @relation(fields: [courseId], references: [id], onDelete: Cascade)
+  attendance ShortCourseAttendance[]
+
+  @@index([courseId, status])
+  @@map("short_courses_participants")
+}
+
+/// Whether someone was at a session.
+model ShortCourseAttendance {
+  sessionId     String
+  participantId String
+  present       Boolean
+
+  session     ShortCourseSession     @relation(fields: [sessionId], references: [id], onDelete: Cascade)
+  participant ShortCourseParticipant @relation(fields: [participantId], references: [id], onDelete: Cascade)
+
+  @@id([sessionId, participantId])
+  @@map("short_courses_attendance")
+}

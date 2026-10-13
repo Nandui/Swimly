@@ -17,6 +17,7 @@ export async function seed(ctx: Ctx) {
   if (ctx.hrUrl) await seedHr(ctx.prisma, ctx.hrUrl);
   await seedRota(ctx.prisma);
   await seedAcademy(ctx.prisma);
+  await seedShortCourses(ctx.prisma);
 }
 
 /** Two sites' worth of classes so the deck and desk surfaces can be checked:
@@ -280,4 +281,32 @@ async function seedAcademy(db: PrismaClient) {
     { candidateId: overdue.id, outcome: "no-answer", byId: "sbx_maya", byName: "Maya Example", createdAt: hoursAgo(50) },
     { candidateId: overdue.id, outcome: "no-answer", byId: "sbx_maya", byName: "Maya Example", createdAt: hoursAgo(26) },
   ] });
+}
+
+/** Short courses (docs/short-courses.md): Couch to 5k at Hillview, two weeks in with its
+ *  registers taken, five booked (one still owing, one without a health form) and two invented
+ *  people waiting for the free place; and Adult swim lessons at Riverside starting in ten days. */
+async function seedShortCourses(db: PrismaClient) {
+  const ORG = "org_leisureworld";
+  const day = (offset: number) => { const d = new Date(); d.setUTCHours(0, 0, 0, 0); d.setUTCDate(d.getUTCDate() + offset); return d; };
+  const by = { createdById: "sbx_maya", createdByName: "Maya Example" };
+  const c25k = await db.shortCourseType.create({ data: { orgId: ORG, name: "Couch to 5k", area: "gym", description: "From the sofa to running 5 km in eight weeks, with a coach.", weeks: 8, sessionMinutes: 60, minAge: 16, healthForm: true } });
+  const swim = await db.shortCourseType.create({ data: { orgId: ORG, name: "Adult swim lessons", area: "pool", description: "Confidence in the water and the basics of front crawl.", weeks: 6, sessionMinutes: 45, sortOrder: 1 } });
+  const running = await db.shortCourse.create({ data: { orgId: ORG, siteId: "club_churchfield", typeId: c25k.id, capacity: 6, priceCents: 9000, instructorId: "sbx_liam", ...by } });
+  const sessions = [];
+  for (let week = 0; week < 8; week++) sessions.push(await db.shortCourseSession.create({ data: { courseId: running.id, date: day(-14 + week * 7), startMinutes: 1110, endMinutes: 1170, place: "Gym" } }));
+  const people = [];
+  for (const [name, payment, paidCents, form] of [["Alex Sample", "paid", 9000, true], ["Bea Sample", "paid", 9000, true], ["Cal Sample", "deposit", 3000, true], ["Dee Sample", "paid", 9000, false], ["Eli Sample", "waived", 0, true]] as const) {
+    people.push(await db.shortCourseParticipant.create({ data: { courseId: running.id, name, phone: "000 000 0000", payment, paidCents, healthFormOn: form ? day(-15) : null, ...by } }));
+  }
+  for (const [i, name] of ["Fin Sample", "Gus Sample"].entries()) {
+    await db.shortCourseParticipant.create({ data: { courseId: running.id, name, phone: "000 000 0000", status: "waiting", createdAt: new Date(Date.now() - (3 - i) * 86_400_000), ...by } });
+  }
+  for (const session of sessions.slice(0, 2)) {
+    await db.shortCourseAttendance.createMany({ data: people.map((p, i) => ({ sessionId: session.id, participantId: p.id, present: i !== 3 })) });
+    await db.shortCourseSession.update({ where: { id: session.id }, data: { registerAt: new Date(), registerById: "sbx_liam", registerBy: "Liam Example" } });
+  }
+  const soon = await db.shortCourse.create({ data: { orgId: ORG, siteId: "club_bishopstown", typeId: swim.id, capacity: 8, priceCents: 7500, instructorId: "sbx_sam", ...by } });
+  for (let week = 0; week < 6; week++) await db.shortCourseSession.create({ data: { courseId: soon.id, date: day(10 + week * 7), startMinutes: 1200, endMinutes: 1245, place: "Learner pool" } });
+  for (const name of ["Hal Sample", "Ivy Sample", "Jo Sample"]) await db.shortCourseParticipant.create({ data: { courseId: soon.id, name, email: `${name.split(" ")[0].toLowerCase()}@example.invalid`, payment: "owed", ...by } });
 }
