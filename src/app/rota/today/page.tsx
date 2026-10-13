@@ -58,7 +58,7 @@ export default async function TodayPage({ searchParams }: { searchParams: Promis
         status={day.groups.length ? <Tag meta={ROTA_DAY_META[gaps.length ? "gaps" : "covered"]} label={gaps.length ? `${gaps.length} ${gaps.length === 1 ? "gap" : "gaps"}` : "No gaps left today"} /> : undefined}
         actions={run ? <>
           <Button asChild variant="outline"><Link href="/rota/absences?report=1"><UserX aria-hidden="true" />Report absence</Link></Button>
-          {data.types.length ? <NeedDialog siteId={site.id} date={now} live types={data.types} places={data.places}
+          {data.types.length ? <NeedDialog siteId={site.id} date={now} live types={data.types} areas={data.places}
             trigger={<Button variant="outline"><Plus aria-hidden="true" />Add activity</Button>} /> : null}
         </> : undefined}
       />

@@ -587,6 +587,9 @@ model SiteArea {
   orgId      String
   siteId     String
   name       String
+  /// How many lanes it has (owner request, 13 October 2026): a pool with lanes is booked whole
+  /// or by lane on the rota. 0 for an area without lanes (a gym, reception).
+  lanes      Int       @default(0)
   sortOrder  Int       @default(0)
   archivedAt DateTime?
   createdAt  DateTime  @default(now())

@@ -13,7 +13,7 @@ export async function rotaRepeats(siteId: string | undefined) {
   const [found, types] = await Promise.all([
     prisma.rotaRepeat.findMany({
       where: { siteId: site.id, cancelledAt: null, lastDay: { gte: since } }, orderBy: [{ firstDay: "asc" }],
-      select: { id: true, kind: true, title: true, place: true, startMinutes: true, endMinutes: true, places: true, weekdays: true, firstDay: true, lastDay: true, skipDates: true,
+      select: { id: true, kind: true, title: true, place: true, lanes: true, startMinutes: true, endMinutes: true, places: true, weekdays: true, firstDay: true, lastDay: true, skipDates: true,
         typeId: true,
         needs: { where: { date: { gte: parseDateOnly(today()) } }, select: { places: true, _count: { select: { assignments: true } } } } },
     }),

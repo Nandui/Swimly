@@ -18,7 +18,7 @@ export default async function AreasPage() {
   const { sites, canKeep } = await areasPage();
   return (
     <div className="flex flex-col gap-6">
-      <PageHeader title="Areas" description="Where work happens at each site. The rota, bookings and swim classes pick from these, in this order." />
+      <PageHeader title="Areas" description="Where work happens at each site, and how many lanes a pool has. The rota, bookings and swim classes pick from these, in this order." />
       {sites.length === 0 ? <EmptyState icon="building" title="No open sites" hint="Add a site under Sites first." /> : sites.map((site) => {
         const live = site.areas.filter((a) => !a.archivedAt);
         return (
@@ -36,7 +36,8 @@ export default async function AreasPage() {
                   return (
                     <li key={area.id} className="pc-row" {...(area.archivedAt ? { "data-muted": "" } : {})}>
                       <span className="pc-tile-icon" aria-hidden="true"><MapPin /></span>
-                      <span className="pc-row-body"><span className="pc-row-title">{area.name}</span></span>
+                      <span className="pc-row-body"><span className="pc-row-title">{area.name}</span>
+                        {area.lanes ? <span className="pc-row-hint">{area.lanes} {area.lanes === 1 ? "lane" : "lanes"}, booked whole or by lane</span> : null}</span>
                       <span className="pc-row-trail">
                         {area.archivedAt ? <Tag meta={ARCHIVAL_STATUS_META.archived} /> : null}
                         {canKeep ? <>

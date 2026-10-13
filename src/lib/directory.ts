@@ -77,6 +77,12 @@ export async function areaNamesAt(siteId: string, db?: Pick<Prisma.TransactionCl
   return rows.map((row) => row.name);
 }
 
+/** A site's areas (Admin, Areas), in order, with how many lanes each has (0 for none): what the
+ *  rota's activities and bookings pick from and book lanes in. */
+export async function areasAt(siteId: string, db?: Pick<Prisma.TransactionClient, "siteArea">): Promise<{ name: string; lanes: number }[]> {
+  return (db ?? (await import("@/lib/prisma")).prisma).siteArea.findMany({ where: { siteId, archivedAt: null }, orderBy: [{ sortOrder: "asc" }, { name: "asc" }], select: { name: true, lanes: true } });
+}
+
 /** Live sites in the order people see them, e.g. for a public site picker. */
 export async function liveSites(db?: Db): Promise<SiteRef[]> {
   return (await client(db)).club.findMany({ where: { archivedAt: null }, select: { id: true, name: true }, orderBy: [{ sortOrder: "asc" }, { name: "asc" }] });

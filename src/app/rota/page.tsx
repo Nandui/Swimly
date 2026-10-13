@@ -12,10 +12,11 @@ import { formatDateRange, formatDayMonth, formatWeekday } from "@/lib/format";
 
 export const metadata: Metadata = { title: "Plan" };
 
-/** The department supervisor's Plan (owner decisions, 6 October 2026, from the approved mockup):
- *  one department's week at a site, a strip of its days with their gap counts, the open day as a
- *  timeline of its activities and who is on each place, and who is working with the shift that
- *  comes from it. A draft until the week is shared with its staff. */
+/** The department supervisor's Plan (owner decisions, 6 October 2026; one timeline with zones on
+ *  top and staff on the left, owner request, 13 October 2026): one department's week at a site, a
+ *  strip of its days with their gap counts, then the open day: the site's areas and lanes and what
+ *  uses them, what still needs someone, and each person's day. Below 1024px the day is an agenda
+ *  and Who's working a list. A draft until the week is shared with its staff. */
 export default async function PlanPage({ searchParams }: { searchParams: Promise<{ site?: string; week?: string; dept?: string; day?: string }> }) {
   const input = await searchParams;
   const data = await planWeek(input);
@@ -83,18 +84,25 @@ export default async function PlanPage({ searchParams }: { searchParams: Promise
                 {day.groups.length ? <Tag meta={ROTA_DAY_META[dayGaps ? "gaps" : "covered"]} label={dayGaps ? `${dayGaps} ${dayGaps === 1 ? "gap" : "gaps"}` : "Everything is covered"} /> : null}
                 {warned ? <Tag meta={ROTA_SHIFT_NOTE_META.noBreak} label={`${warned} to check`} /> : null}
               </div>
-              {data.canChange && data.types.length ? <NeedDialog siteId={site.id} date={date} live={live} types={data.types} places={data.places} /> : null}
+              {data.canChange ? (
+                <div className="flex flex-wrap gap-2">
+                  {data.types.length ? <NeedDialog siteId={site.id} date={date} live={live} types={data.types} areas={data.areas} /> : null}
+                  <span className="rota-wide-only"><AddShiftSheet siteId={site.id} departmentId={department.id} date={date} dateLabel={dateLabel} live={live} /></span>
+                </div>
+              ) : null}
             </div>
             {!data.canChange ? <p className="text-sm text-ui-muted-foreground">{live ? "This day has come: the duty manager changes it from Today." : "You can see this plan. Planning it needs the Plan level for this department."}</p> : null}
-            {day.groups.length ? (
-              <DayPlan siteId={site.id} date={date} dateLabel={dateLabel} live={live} canChange={data.canChange} zones={day.zones} types={data.types} places={data.places} />
-            ) : (
+            {!day.groups.length ? (
               <EmptyState compact icon="calendarDays" title={`Nothing planned for ${department.name} on ${dateLabel}`}
                 hint={data.types.length ? "Add the activities the day needs, or copy an earlier day." : "Add this department's activities to the activity list first."} />
-            )}
+            ) : null}
+            {day.groups.length || day.people.length || day.areas.length ? (
+              <DayPlan siteId={site.id} departmentId={department.id} date={date} dateLabel={dateLabel} live={live} canChange={data.canChange}
+                zones={day.zones} areas={day.areas} people={day.people} types={data.types} areaList={data.areas} />
+            ) : null}
           </section>
           {day.people.length || data.canChange ? (
-            <section className="pc-panel" aria-labelledby="rota-working">
+            <section className="pc-panel rota-narrow-only" aria-labelledby="rota-working">
               <div className="pc-panel-head">
                 <div><h2 id="rota-working">Who&apos;s working</h2>
                   <p className="text-sm text-ui-muted-foreground">Put people on a shift, then give them the day&apos;s activities. Breaks follow the handbook; you place them.</p></div>

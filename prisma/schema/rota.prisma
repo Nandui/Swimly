@@ -395,6 +395,8 @@ model RotaNeed {
   typeId        String
   /// Where in the site: "Main pool". Free text, offered back from earlier days.
   place         String   @default("")
+  /// The area's lanes it takes, 1 up (owner request, 13 October 2026); empty for the whole area.
+  lanes         Int[]    @default([])
   startMinutes  Int
   endMinutes    Int
   places        Int      @default(1)
@@ -545,6 +547,8 @@ model RotaRepeat {
   title         String
   typeId        String
   place         String     @default("")
+  /// The area's lanes it takes, 1 up (owner request, 13 October 2026); empty for the whole area.
+  lanes         Int[]      @default([])
   startMinutes  Int
   endMinutes    Int
   places        Int        @default(1)

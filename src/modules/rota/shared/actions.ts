@@ -3,13 +3,14 @@
 import { z } from "zod";
 import { fail, ok, type ActionResult } from "@/lib/action-result";
 import { logAudit } from "@/lib/audit";
-import { activeStaffIds, departmentById, departmentIdsOf, liveSiteById, staffContact, withOneStaff, withStaff } from "@/lib/directory";
+import { activeStaffIds, areasAt, departmentById, departmentIdsOf, liveSiteById, staffContact, withOneStaff, withStaff } from "@/lib/directory";
 import { isDateOnly, parseDateOnly, today } from "@/lib/format";
 import { prisma } from "@/lib/prisma";
 import { currentActor, mayFor } from "@/lib/policy/session";
 import { activityTypeById, activityTypeIdsIn, classesActivity } from "@/lib/setup/activity-types";
 import { addDaysIso, clock, mondayOf, parseClock, slotProblem } from "@/modules/rota/shared/constants";
 import { placeProblem } from "@/modules/rota/shared/cover";
+import { lanesFrom, lanesLabel, lanesProblem } from "@/modules/rota/shared/lanes";
 import { areaProblem } from "@/lib/setup/data";
 import { fitsFor } from "@/modules/rota/shared/data";
 import { notifyShiftChange } from "@/lib/staff-api/notify";
@@ -41,6 +42,8 @@ const needSchema = z.object({
   end: z.string(),
   places: z.coerce.number().int().min(1, "It needs at least one person.").max(20, "Up to 20 people at once."),
   note: z.string().trim().max(300, "Keep the note under 300 characters.").default(""),
+  /** The area's lanes it takes; none for the whole area. */
+  lanes: z.array(z.union([z.number(), z.string()])).max(20).default([]),
 });
 export type NeedInput = z.input<typeof needSchema>;
 
@@ -62,12 +65,15 @@ export async function saveNeed(id: string | null, input: NeedInput, changeInput:
   const at = await allowedFor(data.siteId, data.date, type.departmentId);
   if (!at.ok) return fail(at.error);
   if (type.orgId !== at.site.orgId) return fail("That activity is no longer on the list.");
-  const label = `${type.name}${data.place ? `, ${data.place}` : ""}, ${data.date} ${clock(start)}–${clock(end)}`;
   const existing = id ? await prisma.rotaNeed.findFirst({ where: { id, siteId: data.siteId }, select: { date: true, typeId: true, place: true, assignments: { select: { place: true, startMinutes: true, endMinutes: true } } } }).then(withType) : null;
   if (id && !existing) return fail("That activity is no longer on the plan.");
   // Where it happens is one of the site's areas (Admin, Areas).
   const where = await areaProblem(data.siteId, data.place, existing?.place);
   if (where) return fail(where);
+  const lanes = lanesFrom(data.lanes);
+  const laneCount = (await areasAt(data.siteId)).find((a) => a.name.toLowerCase() === data.place.toLowerCase())?.lanes ?? 0;
+  const laneIssue = lanesProblem(lanes, laneCount, data.place);
+  if (laneIssue) return fail(laneIssue);
   if (existing) {
     // Moving it off its own day or department is a change there too.
     const from = await allowedFor(data.siteId, iso(existing.date), existing.type.departmentId);
@@ -78,8 +84,10 @@ export async function saveNeed(id: string | null, input: NeedInput, changeInput:
   }
   const live = at.live || (!!existing && iso(existing.date) <= today());
   if (live && !change.reason) return fail(NEEDS_REASON);
+  const whereWords = data.place ? `, ${data.place}${laneCount && lanes.length ? ` ${lanesLabel(lanes, laneCount).toLowerCase()}` : ""}` : "";
+  const label = `${type.name}${whereWords}, ${data.date} ${clock(start)}–${clock(end)}`;
   await prisma.$transaction(async (tx) => {
-    const values = { date: parseDateOnly(data.date), typeId: type.id, place: data.place, startMinutes: start, endMinutes: end, places: data.places, note: data.note };
+    const values = { date: parseDateOnly(data.date), typeId: type.id, place: data.place, lanes: laneCount ? lanes : [], startMinutes: start, endMinutes: end, places: data.places, note: data.note };
     if (existing) {
       await tx.rotaNeed.update({ where: { id: id! }, data: values });
       await logAudit({ actorId: at.actor.id, actorName: at.actor.name, action: "update", entity: "RotaNeed", entityId: id!, clubId: at.site.id, summary: `Changed ${label}` }, tx);
@@ -252,7 +260,7 @@ export async function copyPlan(input: CopyInput): Promise<ActionResult> {
   const [liveTypes, allTypes] = await Promise.all([activityTypeIdsIn(departmentId, { liveOnly: true }), activityTypeIdsIn(departmentId)]);
   const found = await prisma.rotaNeed.findMany({
     where: { siteId, typeId: { in: liveTypes }, date: { gte: parseDateOnly(from), lte: parseDateOnly(addDaysIso(from, days - 1)) } },
-    select: { date: true, typeId: true, place: true, startMinutes: true, endMinutes: true, places: true, note: true,
+    select: { date: true, typeId: true, place: true, lanes: true, startMinutes: true, endMinutes: true, places: true, note: true,
       assignments: { select: { place: true, userId: true, startMinutes: true, endMinutes: true } } },
   });
   const active = await activeStaffIds(found.flatMap((n) => n.assignments.map((a) => a.userId)));
@@ -266,7 +274,7 @@ export async function copyPlan(input: CopyInput): Promise<ActionResult> {
       const date = addDaysIso(iso(n.date), offset);
       if (busy.has(date)) continue;
       await tx.rotaNeed.create({ data: {
-        orgId: at.site.orgId, siteId, date: parseDateOnly(date), typeId: n.typeId, place: n.place, startMinutes: n.startMinutes, endMinutes: n.endMinutes, places: n.places, note: n.note,
+        orgId: at.site.orgId, siteId, date: parseDateOnly(date), typeId: n.typeId, place: n.place, lanes: n.lanes, startMinutes: n.startMinutes, endMinutes: n.endMinutes, places: n.places, note: n.note,
         createdById: at.actor.id, createdByName: at.actor.name,
         ...(people ? { assignments: { create: n.assignments.map((a) => ({ place: a.place, userId: a.userId, startMinutes: a.startMinutes, endMinutes: a.endMinutes, createdById: at.actor.id, createdByName: at.actor.name })) } } : {}),
       } });

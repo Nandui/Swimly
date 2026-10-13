@@ -37,7 +37,8 @@ The lists are organisation-wide, so their actions use the flat permission check.
   `RotaActivityType`, so nothing moved). Each has a department, an icon
   (`src/lib/setup/meta.ts`) and the qualification it needs; one takes the swim classes.
   Rota reads it; Rota's own copy of the page and its actions are gone.
-- **Areas** (`SiteArea`): each site's pools, gym and reception, in order. The rota's activities,
+- **Areas** (`SiteArea`): each site's pools, gym and reception, in order, and how many **lanes**
+  each has (0 for none; owner request, 13 October 2026), so the rota books a pool whole or by lane. The rota's activities,
   repeats and bookings choose their "where" from them (`AreaSelect`, checked by
   `areaProblem` on save; a value saved before keeps working). The swim school's classes and
   assessment sessions choose an area and add a detail, saved as before ("Learner pool, lane 3",

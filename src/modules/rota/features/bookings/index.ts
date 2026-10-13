@@ -2,3 +2,4 @@
 export { BookingDialog, type BookingValues, CancelBooking } from "@/modules/rota/features/bookings/components/bookings";
 export { rotaRepeats } from "@/modules/rota/features/bookings/server/data";
 export { BOOKING_KIND_META, type BookingKind, WEEKDAY_LABELS, clock } from "@/modules/rota/shared/constants";
+export { lanesLabel } from "@/modules/rota/shared/lanes";
