@@ -39,7 +39,8 @@ import type {
 import type { LevelOption } from "@/modules/activities/shared/curriculum/data/curriculum";
 import type { TransferTarget } from "@/modules/activities/shared/enrolment/data/enrolments";
 import { PLACEMENT_META } from "@/modules/activities/shared/enrolment/constants";
-import { formatDate } from "@/lib/format";
+import { formatDate, parseDateOnly } from "@/lib/format";
+import { lastLessonBefore } from "@/modules/activities/shared/enrolment/last-lesson";
 import { ARCHIVAL_STATUS_META } from "@/lib/status";
 import {
   MEDICAL_STATUS_META,
@@ -273,6 +274,7 @@ function ClassRoster({
     <RosterActions
       entry={entry}
       classLabel={label}
+      lessonDay={course.dayOfWeek}
       targets={targets}
       canPromote={waiting && !course.archivedAt}
     />
@@ -296,7 +298,7 @@ function ClassRoster({
                 <span className="pc-row-hint">
                   {since} {formatDate(entry.startedOn)}
                   {entry.scheduledEndOn
-                    ? ` · Unenrols ${formatDate(entry.scheduledEndOn)}`
+                    ? ` · Last lesson ${formatDate(parseDateOnly(lastLessonBefore(course.dayOfWeek, entry.scheduledEndOn)))}`
                     : ""}
                 </span>
               </div>
@@ -344,7 +346,7 @@ function ClassRoster({
                   <span className="text-sm">{formatDate(entry.startedOn)}</span>
                   {entry.scheduledEndOn ? (
                     <span className="text-xs text-ui-muted-foreground">
-                      Unenrols {formatDate(entry.scheduledEndOn)}
+                      Last lesson {formatDate(parseDateOnly(lastLessonBefore(course.dayOfWeek, entry.scheduledEndOn)))}
                     </span>
                   ) : null}
                 </div>
@@ -416,11 +418,13 @@ function Swimmer({ entry, access }: { entry: RosterEntry; access: ClassAccess })
 function RosterActions({
   entry,
   classLabel,
+  lessonDay,
   targets,
   canPromote,
 }: {
   entry: RosterEntry;
   classLabel: string;
+  lessonDay: CourseDetail["dayOfWeek"];
   targets: TransferTarget[];
   canPromote: boolean;
 }) {
@@ -440,7 +444,7 @@ function RosterActions({
           classLabel={classLabel}
         />
       ) : null}
-      <EndEnrolment enrolment={entry} classLabel={classLabel} />
+      <EndEnrolment enrolment={entry} classLabel={classLabel} lessonDay={lessonDay} />
     </>
   );
 }

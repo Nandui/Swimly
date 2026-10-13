@@ -40,7 +40,7 @@ programme, placement reason and any scheduled unenrolment. Below 1024px the
 roster is closed rows with the actions at the end; from 1024px it is a table with
 every column. Row actions are labelled outline buttons ("Move swimmer",
 "Unenrol"; "Enrol from waitlist" is the primary). Unenrol keeps its dialog with
-Now / On a date / Keep place; Archive and Restore ask for confirmation. Medical
+Now / After a lesson (pick their last lesson) / Keep place; Archive and Restore ask for confirmation. Medical
 notes are indicated, not displayed in the roster. The Classes back link preserves
 the browser's search, filters, archive state and page. Its return URL only
 accepts `/courses` and known browser parameters, including the site filter.
