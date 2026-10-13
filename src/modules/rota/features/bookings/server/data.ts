@@ -22,7 +22,7 @@ export async function rotaRepeats(siteId: string | undefined) {
   const listed = await activityTypesByIds(found.map((r) => r.typeId));
   const repeats = found.map(({ typeId, ...r }) => {
     const type = listed.get(typeId);
-    return { ...r, type: { name: type?.name ?? "Removed activity", icon: type?.icon ?? "activity", departmentId: type?.departmentId ?? "" } };
+    return { ...r, typeId, type: { name: type?.name ?? "Removed activity", icon: type?.icon ?? "activity", departmentId: type?.departmentId ?? "" } };
   });
   return { who, sites, site, repeats, types: types.filter((t) => !t.fromClasses) } as const;
 }

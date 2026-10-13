@@ -4,6 +4,12 @@ Patch notes for everyone who uses Turnfin at the swim school, the desk and the o
 
 **How versions are numbered:** the middle number goes up when something new arrives (a module, a screen, a new way of working), and the last number when something is fixed or tidied without changing how you work. This list starts on 3 October 2026, when Turnfin moved to its new look; earlier changes are not listed.
 
+## 1.9.2 · 13 October 2026 · Rota: change a booking
+
+- On **Rota > Bookings**, each booking now has a **Change** button beside Cancel booking. It opens the same form as New booking, filled in, so you can change who it is for, the activity, the area, the times, how many people, the days of the week, the last day and the dates it does not run.
+- Changes reach the booking's days still to come; days that have come stay as they were, and so does its first day once it has started. Days it no longer runs leave the plan, and anyone on them is told. New days get the activity with its places to fill.
+- A day you changed on its own on the Plan keeps its own changes, except the ones you make to the booking. If someone is on a day outside the new times, or on a place you are taking away, Turnfin says which day so you can change them on the Plan first.
+
 ## 1.9.1 · 13 October 2026 · Unenrol after a swimmer's last lesson
 
 - When you unenrol a swimmer from a future date, you now pick their **last lesson** from the class's upcoming lessons instead of typing a date. They stay in the class, on the register and in the numbers, up to and including that lesson, and their place frees up the next day. The class and the swimmer's profile show "Last lesson" with the date.

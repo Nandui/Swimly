@@ -303,6 +303,39 @@ test("bookings repeat an activity on their days ahead; cancelling removes the da
   assert.equal(await fixture.prisma.rotaNeed.count({ where: { repeatId: repeat.id } }), 0);
 });
 
+test("changing a booking: kept days take what changed, dropped days leave with anyone told, new days are added", async () => {
+  as("maya", [at("rota.plan")]);
+  const first = nextMonday();
+  const input = { siteId: churchfield, kind: "lanes" as const, title: "Example Swim Club", typeId: "t-guard", place: "Learner pool", start: "09:30", end: "11:30", places: 2,
+    weekdays: [0, 2], firstDay: first, lastDay: addDaysIso(first, 9), skipDates: [] };
+  assert.equal((await actions.saveRepeat(input)).ok, true);
+  const repeat = await fixture.prisma.rotaRepeat.findFirstOrThrow({ where: { title: "Example Swim Club" } });
+  const days = async () => fixture.prisma.rotaNeed.findMany({ where: { repeatId: repeat.id }, orderBy: { date: "asc" } });
+  const [monday, wednesday] = await days();
+  // A day changed on its own on the Plan keeps what the booking change leaves alone.
+  await fixture.prisma.rotaNeed.update({ where: { id: monday.id }, data: { places: 3 } });
+  await fixture.prisma.rotaAssignment.create({ data: { needId: monday.id, place: 2, userId: "ava", startMinutes: 570, endMinutes: 690, createdByName: "maya" } });
+  await fixture.prisma.rotaAssignment.create({ data: { needId: wednesday.id, place: 1, userId: "lee", startMinutes: 570, endMinutes: 690, createdByName: "maya" } });
+
+  assert.equal((await actions.editRepeat(repeat.id, { ...input, places: 1 })).ok, false, "Ava is on place 2");
+  assert.equal((await actions.editRepeat(repeat.id, { ...input, start: "10:00" })).ok, false, "Ava starts at 09:30");
+  assert.equal((await actions.editRepeat(repeat.id, { ...input, end: "11:32" })).ok, false, "not a 5-minute step");
+  assert.equal((await actions.editRepeat(repeat.id, { ...input, typeId: "t-desk" })).ok, false, "not their department");
+
+  told.length = 0;
+  // Mondays and Fridays now, until a second Friday, 09:30 to 12:00.
+  assert.equal((await actions.editRepeat(repeat.id, { ...input, title: "Example Swim Club juniors", end: "12:00", weekdays: [0, 4], lastDay: addDaysIso(first, 11) })).ok, true);
+  const after = await days();
+  assert.deepEqual(after.map((n) => iso(n.date)), [first, addDaysIso(first, 4), addDaysIso(first, 7), addDaysIso(first, 11)]);
+  assert.deepEqual(after.map((n) => [n.endMinutes, n.places]), [[720, 3], [720, 2], [720, 2], [720, 2]], "new times everywhere; Monday keeps its own places");
+  assert.equal(after[0].id, monday.id, "a kept day is the same activity, with Ava still on it");
+  assert.ok(told.some((t) => t.userId === "lee" && /no longer runs/.test(t.line)), "Lee's Wednesday went");
+  assert.ok(told.some((t) => t.userId === "ava" && /has changed/.test(t.line)), "Ava's day changed time");
+  const saved = await fixture.prisma.rotaRepeat.findUniqueOrThrow({ where: { id: repeat.id } });
+  assert.deepEqual([saved.title, saved.weekdays, iso(saved.lastDay)], ["Example Swim Club juniors", [0, 4], addDaysIso(first, 11)]);
+  assert.equal((await actions.cancelRepeat(repeat.id)).ok, true);
+});
+
 test("swim classes are Teaching; the rota plans their teacher through the swim school", async () => {
   as("maya", [at("rota.plan")]);
   const day = addDaysIso(nextMonday(), 1);
