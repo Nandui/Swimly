@@ -22,6 +22,7 @@ import type { StudentAssessment } from "@/modules/activities/shared/assessments/
 import { BOOKING_STATUS_META } from "@/modules/activities/shared/assessments/constants";
 import { ENROLMENT_STATUS_META } from "@/modules/activities/shared/enrolment/constants";
 import { ageInYears, formatDate, parseDateOnly, toDateOnlyString } from "@/lib/format";
+import { lastLessonBefore } from "@/modules/activities/shared/enrolment/last-lesson";
 import { formatSlotShort, formatTime } from "@/modules/activities/shared/courses/constants";
 import { fullName, STUDENT_STATUS_META } from "@/modules/activities/shared/students/constants";
 import { swimmerProfileHref } from "@/modules/activities/features/students/server/directory";
@@ -102,7 +103,7 @@ export function SwimmerProfile({ student, enrolments, programmes, assessments, t
                           {progress.completedOn ? <p className="pc-row-hint">Completed {formatDate(progress.completedOn)}{progress.confirmedByName ? ` · ${progress.confirmedByName}` : ""}</p> : null}
                         </div> : null}
                         {e.placementReason ? <p className="text-sm">Placement reason: {e.placementReason}</p> : null}
-                        {e.scheduledEndOn ? <p className="text-sm">Enrolment ends {formatDate(e.scheduledEndOn)}</p> : null}
+                        {e.scheduledEndOn ? <p className="text-sm">Leaves after the lesson on {formatDate(parseDateOnly(lastLessonBefore(e.course.dayOfWeek, e.scheduledEndOn)))}</p> : null}
                         <h3 className="text-sm font-semibold">Activity in this class</h3>
                         <HistoryFeed studentId={student.id} query={{ courseId: e.course.id, from: toDateOnlyString(e.startedOn), ...(e.endedOn ? { to: toDateOnlyString(e.endedOn) } : {}) }} compact footer={access.courses ? <Button asChild variant="ghost"><a href={`/courses/${e.course.id}`}>Open class</a></Button> : null} />
                       </CollapsibleContent>

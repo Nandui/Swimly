@@ -11,10 +11,11 @@ import {
   Plus,
   UserRoundPlus,
 } from "lucide-react";
-import { Input } from "@/components/ui/input";
 import { Select } from "@/components/ui/select";
 import { scheduleUnenrolment } from "@/modules/activities/shared/enrolment/actions/schedule";
-import { toDateOnlyString, today, parseDateOnly } from "@/lib/format";
+import { formatDay, today } from "@/lib/format";
+import type { DayOfWeek } from "@/generated/prisma/client";
+import { lastLessonBefore, upcomingLessons } from "@/modules/activities/shared/enrolment/last-lesson";
 
 import { LegendAgreementField } from "@/modules/activities/shared/enrolment/components/legend-agreement-field";
 import { readLegendAgreement } from "@/modules/activities/shared/enrolment/legend-agreement";
@@ -260,10 +261,18 @@ type WithClass = {
 export function EndEnrolment({
   enrolment,
   classLabel,
-}: WithClass) {
+  lessonDay,
+}: WithClass & { enrolment: { startedOn: Date }; lessonDay: DayOfWeek }) {
   const id = useId();
   const [when, setWhen] = useState(enrolment.scheduledEndOn ? "date" : "now");
   const name = fullName(enrolment.student);
+  const lessons = upcomingLessons(lessonDay, enrolment.startedOn, today());
+  const saved = enrolment.scheduledEndOn
+    ? lastLessonBefore(lessonDay, enrolment.scheduledEndOn)
+    : undefined;
+  // A saved lesson beyond the picker's reach stays choosable.
+  if (saved && saved > lessons[lessons.length - 1]) lessons.push(saved);
+  const current = saved && lessons.includes(saved) ? saved : undefined;
   return (
     <FormDialog
       onOpen={() => setWhen(enrolment.scheduledEndOn ? "date" : "now")}
@@ -278,21 +287,21 @@ export function EndEnrolment({
       description={`${classLabel}. Attendance and marks stay on record. Choose when their place should end.`}
       submitLabel={
         when === "date"
-          ? "Save end date"
+          ? "Save last lesson"
           : when === "keep"
             ? "Keep place"
             : "Unenrol now"
       }
       successMessage={
         when === "date"
-          ? `Unenrolment scheduled for ${classLabel}`
+          ? `Last lesson saved for ${classLabel}`
           : when === "keep"
             ? `Place kept in ${classLabel}`
             : `Unenrolled from ${classLabel}`
       }
       submit={(data) =>
         when === "date"
-          ? scheduleUnenrolment(enrolment.id, String(data.get("endDate") ?? ""))
+          ? scheduleUnenrolment(enrolment.id, String(data.get("lastLesson") ?? ""))
           : when === "keep"
             ? scheduleUnenrolment(enrolment.id, null)
             : endEnrolment(enrolment.id, {
@@ -310,32 +319,21 @@ export function EndEnrolment({
           fill="phone"
           options={[
             { value: "now", label: "Now" },
-            { value: "date", label: "On a date" },
+            { value: "date", label: "After a lesson" },
             ...(enrolment.scheduledEndOn ? [{ value: "keep", label: "Keep place" }] : []),
           ]}
         />
       ) : null}
       {when === "date" ? (
-        <Field
-          label="Unenrol on"
-          htmlFor={`${id}-date`}
-          hint="They keep their place until this date. Unenrolment takes effect when the app is next used on or after that day."
-        >
-          <Input
-            id={`${id}-date`}
-            name="endDate"
-            type="date"
-            required
-            min={toDateOnlyString(
-              new Date(parseDateOnly(today()).getTime() + 86_400_000),
-            )}
-            defaultValue={
-              enrolment.scheduledEndOn
-                ? toDateOnlyString(enrolment.scheduledEndOn)
-                : undefined
-            }
-          />
-        </Field>
+        <Select
+          name="lastLesson"
+          label="Last lesson"
+          description="They stay enrolled up to and including this lesson. Their place frees up the day after."
+          required
+          placeholder="Pick their last lesson"
+          defaultValue={current}
+          options={lessons.map((iso) => ({ value: iso, label: formatDay(iso) }))}
+        />
       ) : when === "keep" ? (
         <p className="text-sm text-ui-foreground">
           This cancels the scheduled unenrolment. They stay in this class.
