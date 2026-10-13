@@ -275,6 +275,24 @@ export const PERMISSIONS = [
     description: "Keep the list of short courses we offer and put courses on, with their weeks, times, instructor, places and price, at the sites this role covers. Includes taking registers.",
   },
   {
+    key: "stock.read",
+    group: "Stock",
+    label: "See stock counts",
+    description: "See the stock counts at the sites this role covers, the product list, and how two counts compare.",
+  },
+  {
+    key: "stock.count",
+    group: "Stock",
+    label: "Count stock",
+    description: "Start a stock count at the sites this role covers, count the products and submit it. Includes seeing the counts.",
+  },
+  {
+    key: "stock.manage",
+    group: "Stock",
+    label: "Manage stock",
+    description: "Keep the product list and its categories, and delete a count at the sites this role covers. Includes counting.",
+  },
+  {
     key: "hr.records.read",
     group: "HR",
     label: "Read HR records",
@@ -409,6 +427,8 @@ const IMPLIES: Partial<Record<PermissionKey, PermissionKey[]>> = {
   "academy.manage": ["academy.run", "academy.read"],
   "short-courses.run": ["short-courses.read"],
   "short-courses.manage": ["short-courses.run", "short-courses.read"],
+  "stock.count": ["stock.read"],
+  "stock.manage": ["stock.count", "stock.read"],
   "hr.notes.write": ["hr.records.read"],
   "hr.reviews.write": ["hr.records.read"],
   "hr.details.write": ["hr.records.read"],

@@ -10,6 +10,7 @@ import { PERSON_STATUS_META, QUALIFICATION_STATE_META } from "@/lib/people/const
 import { incidentStatuses, seriousMeta, SEVERITY_META } from "@/modules/incidents";
 import { refundStatuses } from "@/modules/refunds";
 import * as shortCourses from "@/modules/short-courses";
+import { STOCK_CATEGORY_TONE_META, STOCK_CHANGE_META, STOCK_TAKE_META } from "@/modules/stock";
 import * as rota from "@/modules/rota/shared/constants";
 import * as rotaMeta from "@/modules/rota/shared/meta";
 import { REACH_META, STAFF_STATUS_META } from "@/lib/staff/constants";
@@ -23,6 +24,7 @@ const MAPS: Record<string, Record<string, StatusMeta>> = {
   NOTE_VISIBILITY_META, REVIEW_STATUS_META, PERSON_STATUS_META, QUALIFICATION_STATE_META, refundStatuses, incidentStatuses, SEVERITY_META, INCIDENT_SERIOUS: { serious: seriousMeta },
   HEALTH_FORM_META: shortCourses.HEALTH_FORM_META, SHORT_COURSE_AREA_META: shortCourses.SHORT_COURSE_AREA_META, SHORT_COURSE_META: shortCourses.SHORT_COURSE_META,
   SHORT_COURSE_PAYMENT_META: shortCourses.SHORT_COURSE_PAYMENT_META, SHORT_COURSE_PLACE_META: shortCourses.SHORT_COURSE_PLACE_META,
+  STOCK_CATEGORY_TONE_META, STOCK_CHANGE_META, STOCK_TAKE_META,
   ABSENCE_REASON_META: rota.ABSENCE_REASON_META, ROTA_CHANGE_REASON_META: rota.ROTA_CHANGE_REASON_META, BOOKING_KIND_META: rota.BOOKING_KIND_META,
   RETURN_FIT_META: rota.RETURN_FIT_META, ROTA_DAY_META: rotaMeta.ROTA_DAY_META, ROTA_WEEK_META: rotaMeta.ROTA_WEEK_META, ROTA_FIT_META: rotaMeta.ROTA_FIT_META,
   ROTA_SHIFT_NOTE_META: rotaMeta.ROTA_SHIFT_NOTE_META, ROTA_TIMEPOINT_META: rotaMeta.ROTA_TIMEPOINT_META, ROTA_CLASS_META: rotaMeta.ROTA_CLASS_META,

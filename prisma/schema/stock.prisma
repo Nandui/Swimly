@@ -1,0 +1,96 @@
+// Stock (owner decision, 13 October 2026; docs/stock.md): stock taking, ported from Stockly.
+// One product list for the organisation, grouped in categories, counted at a site on a phone
+// or tablet. Sites and staff are Core's and read only through its functions, so these tables
+// keep plain ids and carry the module prefix (CLAUDE.md section 4).
+//
+// Counted none is not uncounted: a line is only written when someone counts a product. No line
+// means nobody counted it; quantity 0 means counted, none on the shelf. Lines are never
+// pre-created.
+
+/// A group on the product list and the count sheet: "Drink", "Retail". Archived, never deleted.
+model StockCategory {
+  id         String    @id @default(cuid())
+  orgId      String
+  name       String
+  /// The tag's tone: blue | green | orange | purple | gray (`STOCK_CATEGORY_TONE_META`). Red is
+  /// kept for what needs attention.
+  tone       String    @default("gray")
+  sortOrder  Int       @default(0)
+  archivedAt DateTime?
+  createdAt  DateTime  @default(now())
+  updatedAt  DateTime  @updatedAt
+
+  products StockProduct[]
+
+  @@unique([orgId, name])
+  @@map("stock_categories")
+}
+
+/// Something we sell or use and count: "Coke Zero 330ml can". One list for every site.
+/// Archived, never deleted, so old counts stay readable.
+model StockProduct {
+  id         String    @id @default(cuid())
+  orgId      String
+  name       String
+  categoryId String
+  /// What one counted unit is: "can", "bottle", "each", "25ml serving". Every quantity is in it.
+  unitLabel  String    @default("each")
+  sku        String?
+  /// Units per case as delivered, for reconciling deliveries later.
+  caseSize   Int?
+  /// Kept now for scan-to-count later.
+  barcode    String?
+  notes      String    @default("")
+  archivedAt DateTime?
+  createdAt  DateTime  @default(now())
+  updatedAt  DateTime  @updatedAt
+
+  category StockCategory   @relation(fields: [categoryId], references: [id], onDelete: Restrict)
+  lines    StockTakeLine[]
+
+  @@unique([orgId, name])
+  @@index([categoryId])
+  @@map("stock_products")
+}
+
+/// One count at a site for a stock day. Open until submitted; one open count per site.
+model StockTake {
+  id              String    @id @default(cuid())
+  orgId           String
+  siteId          String
+  /// The day this count is for.
+  stockDate       DateTime  @db.Date
+  startedAt       DateTime  @default(now())
+  startedById     String?
+  startedByName   String
+  submittedAt     DateTime?
+  submittedById   String?
+  submittedByName String?
+  notes           String    @default("")
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @updatedAt
+
+  lines StockTakeLine[]
+
+  @@index([siteId, submittedAt])
+  @@map("stock_takes")
+}
+
+/// A counted product on a count. Absence of this row is the uncounted state.
+model StockTakeLine {
+  id            String   @id @default(cuid())
+  stockTakeId   String
+  productId     String
+  /// 0 is a real count of none.
+  quantity      Int
+  countedAt     DateTime @default(now())
+  countedById   String?
+  countedByName String   @default("")
+
+  stockTake StockTake    @relation(fields: [stockTakeId], references: [id], onDelete: Cascade)
+  product   StockProduct @relation(fields: [productId], references: [id], onDelete: Restrict)
+
+  @@unique([stockTakeId, productId])
+  @@index([productId])
+  @@map("stock_take_lines")
+}
