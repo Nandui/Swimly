@@ -257,6 +257,24 @@ export const PERMISSIONS = [
     description: "Keep the list of courses we deliver and put courses on, with their sessions, tutor and price, at the sites this role covers. Includes running them.",
   },
   {
+    key: "short-courses.read",
+    group: "Short courses",
+    label: "See and book short courses",
+    description: "See the short courses at the sites this role covers, book people on, record their payment and keep the waiting list.",
+  },
+  {
+    key: "short-courses.run",
+    group: "Short courses",
+    label: "Take short course registers",
+    description: "Take the registers on short courses at the sites this role covers. Includes seeing and booking.",
+  },
+  {
+    key: "short-courses.manage",
+    group: "Short courses",
+    label: "Manage short courses",
+    description: "Keep the list of short courses we offer and put courses on, with their weeks, times, instructor, places and price, at the sites this role covers. Includes taking registers.",
+  },
+  {
     key: "hr.records.read",
     group: "HR",
     label: "Read HR records",
@@ -389,6 +407,8 @@ const IMPLIES: Partial<Record<PermissionKey, PermissionKey[]>> = {
   "tasks.manage": ["tasks.review", "tasks.complete"],
   "academy.run": ["academy.read"],
   "academy.manage": ["academy.run", "academy.read"],
+  "short-courses.run": ["short-courses.read"],
+  "short-courses.manage": ["short-courses.run", "short-courses.read"],
   "hr.notes.write": ["hr.records.read"],
   "hr.reviews.write": ["hr.records.read"],
   "hr.details.write": ["hr.records.read"],

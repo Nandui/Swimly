@@ -221,6 +221,8 @@ export type Commitment = {
   title?: string;
   /** Where to see or change it. */
   href?: string;
+  /** The module it is planned in, for "Planned in Academy" on the Rota. */
+  module?: string;
   /** The source's own id for the thing (a class), for `planCommitment`. */
   ref?: string;
   /** Planned for this date from another module (the rota), not the thing's usual person. */

@@ -4,6 +4,15 @@ Patch notes for everyone who uses Turnfin at the swim school, the desk and the o
 
 **How versions are numbered:** the middle number goes up when something new arrives (a module, a screen, a new way of working), and the last number when something is fixed or tidied without changing how you work. This list starts on 3 October 2026, when Turnfin moved to its new look; earlier changes are not listed.
 
+## 1.9.0 · 13 October 2026 · Short courses
+
+- A new module, **Short courses**, under Front of house, for courses that run for a set number of weeks: Couch to 5k, adult swim lessons, aqua fit, strength basics, at the pool, the gym, the studio or anywhere else.
+- Managers keep the **course list** (where it happens, how many weeks, how long a session, a minimum age, and whether it asks for a health form), then **put a course on**: pick the first day, the time, the area, the instructor, the places and the price, and Turnfin makes a session for every week. Move a single week, for a bank holiday, on the session itself.
+- The desk **books people on** and records what they paid at the till. When a course is full, people go on its **waiting list** in the order they asked. When a place frees up, the course shows who is first, and Home tells you there is a place to offer.
+- Instructors **take the register** each week. Each person's line shows how many sessions they came to, what they still owe and whether their health form is in.
+- Each session shows on the instructor's **Rota**, in its area, and counts in their hours.
+- Administrators choose who can View (book people on), Instructor (take registers) or Manage (put courses on) on each role, under Short courses. Online booking comes next.
+
 ## 1.8.2 · 13 October 2026 · Swimmer profile: retired competencies
 
 - On a swimmer's **Competencies** tab, competencies that have been taken out of a level now sit in their own list at the bottom, under **No longer in the curriculum**. They still show the mark the swimmer had and its history, but they can't be changed and don't count towards the level.
