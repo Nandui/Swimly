@@ -4,6 +4,11 @@ Patch notes for everyone who uses Turnfin at the swim school, the desk and the o
 
 **How versions are numbered:** the middle number goes up when something new arrives (a module, a screen, a new way of working), and the last number when something is fixed or tidied without changing how you work. This list starts on 3 October 2026, when Turnfin moved to its new look; earlier changes are not listed.
 
+## 1.11.1 · 13 October 2026 · Incidents: managers triage their own reports
+
+- Someone with **Manage** in Incidents (the operations manager) can now triage a report they filed themselves. The **Triage** panel shows on the report, and it counts in their reports to triage on Home.
+- Everyone else's own reports still go to someone else to triage. Investigating and closing your own report still need someone else.
+
 ## 1.11.0 · 13 October 2026 · Rota: pools with lanes, and one timeline
 
 - **Admin > Areas** now asks how many **lanes** an area has. Give each pool its lanes (0 for a gym, reception or anywhere without lanes).

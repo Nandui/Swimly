@@ -28,11 +28,12 @@ test("serious: an ambulance, hospital or a category that always is", () => {
   assert.equal(isSerious(report({ category: "water_rescue" })), true);
 });
 
-test("triage closes only minimal or minor reports the HSA does not need, and never your own", () => {
+test("triage closes only minimal or minor reports the HSA does not need, and your own only with Manage", () => {
   assert.equal(triageDecision(row, who, triage()).status, "closed");
   assert.throws(() => triageDecision(row, who, triage({ severityPotential: 3 })), IncidentError, "the potential counts");
   assert.throws(() => triageDecision(row, who, triage({ publicToDoctor: true })), IncidentError);
   assert.throws(() => triageDecision(row, { ...who, id: "mia" }, triage()), IncidentError);
+  assert.equal(triageDecision(row, { ...who, id: "mia", signoff: true }, triage()).status, "closed", "Manage triages their own");
   assert.throws(() => triageDecision({ ...row, hasChild: true }, who, triage()), IncidentError, "a child's parent must have been told");
   const reportable = triageDecision(row, who, triage({ outcome: "investigate", staffOffOver3Days: true, severityActual: 4 }));
   assert.deepEqual([reportable.status, reportable.hsaReportable, reportable.hsaDueOn], ["investigating", true, "2026-10-23"]);
