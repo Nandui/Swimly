@@ -17,7 +17,7 @@ import { clock } from "@/modules/rota/shared/constants";
 import type { Block, DayNeed, DayZone, Group, Person } from "@/modules/rota/shared/day";
 import { lanesLabel } from "@/modules/rota/shared/lanes";
 import { ROTA_DAY_META, activityIcon, qualificationShort } from "@/modules/rota/shared/meta";
-import { freeTime, needRows, partPaid, personBlocks, type CoverSpan, type NeedRow } from "@/modules/rota/shared/plan-rows";
+import { freeTime, needRows, personBlocks, type CoverSpan, type NeedRow } from "@/modules/rota/shared/plan-rows";
 import { duration } from "@/modules/rota/shared/shifts";
 import { OptionRow, ShiftSheet, checkLabel, warned } from "@/modules/rota/features/plan/components/people-plan";
 import { firstTick, panView, sameView, tickStep, ticks as ticksOf, zoomView, type View } from "@/modules/rota/features/plan/server/view";
@@ -316,8 +316,6 @@ export function DayPlan({ siteId, departmentId, departmentNames, date, dateLabel
   const person = people.find((p) => p.userId === openPerson) ?? null;
   const freePerson = free ? people.find((p) => p.userId === free.userId) ?? null : null;
   const gapCount = groups.reduce((n, g) => n + g.gapCount, 0);
-  const paid = people.reduce((n, p) => n + p.shift.paidMinutes, 0);
-  const unpaid = people.reduce((n, p) => n + p.shift.parts.reduce((m, x) => m + partPaid(x).unpaid, 0), 0);
   const addHere = (name: string) => canChange && types.length ? (
     <NeedDialog siteId={siteId} date={date} live={live} types={types} areas={areaList} place={name}
       trigger={<Button type="button" variant="ghost" size="icon" aria-label={`Add an activity in ${name}`}><Plus aria-hidden="true" /></Button>} />
@@ -337,10 +335,10 @@ export function DayPlan({ siteId, departmentId, departmentNames, date, dateLabel
     <>
       <div className="rota-tl" ref={timeline} data-zoomed={zoomed ? "" : undefined} data-dragging={dragging ? "" : undefined}>
         <div className="rota-tl-zoom">
-          <span className="text-xs text-ui-muted-foreground" id={`rota-show-${date}`}>Show</span>
+          <span className="rota-eyebrow" id={`rota-show-${date}`}>Show</span>
           <SegmentedChoice aria-labelledby={`rota-show-${date}`} value={win} onValueChange={(v) => setView({ from: wins[v as WindowKey].from, to: wins[v as WindowKey].to })}
             options={WINDOW_KEYS.map((k) => ({ value: k, label: k === "day" ? wins[k].label : `${wins[k].label} ${clock(wins[k].from).slice(0, 2)}–${clock(wins[k].to).slice(0, 2)}` }))} />
-          <span className="text-xs text-ui-muted-foreground">{zoomed ? `${clock(Math.round(from))} to ${clock(Math.round(to))} · ` : ""}Scroll over the day to zoom{zoomed ? ", drag it to move" : ""}</span>
+          <span className="rota-tl-hint">{zoomed ? `${clock(Math.round(from))} to ${clock(Math.round(to))} · ` : ""}Scroll over the day to zoom{zoomed ? ", drag it to move" : ""}</span>
           <span className="ms-auto flex min-h-11 items-center gap-2">
             <Switch id={`rota-others-${date}`} checked={others} onCheckedChange={setOthers} />
             <Label htmlFor={`rota-others-${date}`} className="font-normal">Show other departments</Label>
@@ -354,7 +352,7 @@ export function DayPlan({ siteId, departmentId, departmentNames, date, dateLabel
           })}</div>
         </div>
 
-        <h3 className="rota-tl-sec">What needs people{gapCount ? ` · ${gapCount} ${gapCount === 1 ? "gap" : "gaps"}` : ""}</h3>
+        <h3 className="rota-tl-sec">What needs people<span className="rota-count" data-gaps={gapCount ? "" : undefined}>{gapCount ? `${gapCount} ${gapCount === 1 ? "gap" : "gaps"}` : "Covered"}</span></h3>
         {rows.map((row) => (
           <div key={row.key} className="rota-tl-row">
             {rowLabel(row)}
@@ -370,7 +368,7 @@ export function DayPlan({ siteId, departmentId, departmentNames, date, dateLabel
           </div>
         ) : null}
 
-        <h3 className="rota-tl-sec">Staff on today{people.length ? ` · ${people.length}` : ""}</h3>
+        <h3 className="rota-tl-sec">Staff on today<span className="rota-count">{people.length}</span></h3>
         {people.map((p) => {
           const mine = personBlocks(allGroups, p.userId).map(({ group, block }) => ({ g: group, b: { ...block, count: 1, refs: block.classRef ? [block.classRef] : [] } as Shown }));
           const shown = perHour < 160 ? mergeRuns(mine) : mine;
@@ -386,9 +384,11 @@ export function DayPlan({ siteId, departmentId, departmentNames, date, dateLabel
                   {ri === 0 ? (
                     <Button type="button" variant="ghost" className="rota-tl-label rota-tl-person h-auto items-stretch whitespace-normal" onClick={() => setOpenPerson(p.userId)}
                       aria-label={`${p.name}: ${times}, ${duration(p.shift.paidMinutes)} paid today${week ? `, ${week}` : ""}${warned(p) ? `. ${checkLabel(p)}` : ""}. Open their shift`}>
+                      <span className="rota-avatar" aria-hidden="true">{nameInitials(p.name)}</span>
                       <span className="rota-tl-name"><span>{p.name}</span></span>
-                      <small className="tabular-nums">{times} · {duration(p.shift.paidMinutes)} paid</small>
-                      {week ? <small className={`tabular-nums${over(p) ? " rota-people-warn" : ""}`}>{week}</small> : null}
+                      <small className="tabular-nums">{times}</small>
+                      <small className={`tabular-nums${over(p) ? " rota-people-warn" : ""}`}>{duration(p.shift.paidMinutes)} paid{week ? ` · ${week}` : ""}</small>
+                      {hours[p.userId]?.contract ? <span className="rota-meter" data-over={over(p) ? "" : undefined} aria-hidden="true"><span style={{ inlineSize: `${Math.min(100, Math.round((hours[p.userId].week / hours[p.userId].contract!) * 100))}%` }} /></span> : null}
                       {warned(p) ? <small className="rota-people-warn"><TriangleAlert aria-hidden="true" />{checkLabel(p)}</small> : null}
                     </Button>
                   ) : <span aria-hidden="true" />}
@@ -442,14 +442,6 @@ export function DayPlan({ siteId, departmentId, departmentNames, date, dateLabel
           <span><i className="rota-people-break" data-pinned="" />Break placed</span>
           <span><i className="rota-people-break" />Break suggested</span>
         </div>
-        {people.length ? (
-          <p className="rota-tl-totals tabular-nums">
-            <span><b>{people.length}</b> on today</span>
-            <span><b>{duration(paid)}</b> paid</span>
-            <span><b>{duration(unpaid)}</b> unpaid breaks</span>
-            <span data-gaps={gapCount ? "" : undefined}>{gapCount ? `${gapCount} ${gapCount === 1 ? "gap" : "gaps"} to fill` : "Everything is covered"}</span>
-          </p>
-        ) : null}
       </div>
 
       <div className="rota-agenda">

@@ -4,6 +4,13 @@ Patch notes for everyone who uses Turnfin at the swim school, the desk and the o
 
 **How versions are numbered:** the middle number goes up when something new arrives (a module, a screen, a new way of working), and the last number when something is fixed or tidied without changing how you work. This list starts on 3 October 2026, when Turnfin moved to its new look; earlier changes are not listed.
 
+## 1.12.2 · 13 October 2026 · Rota: a cleaner Plan page
+
+- The **Plan** page has a new look. The week is a row of day tiles with a large date, the staff and hours, and a dot for gaps or covered; the open day is filled blue.
+- Beside the week, the open day shows its date large, with four figures: staff on, paid hours, unpaid breaks and gaps to fill. **Add staff** and **Add activity** sit under them. These totals used to be at the bottom of the day.
+- In the day itself, the row names are no longer boxed. Each person has their initials, their shift times, paid hours and a thin bar of this week's hours against their contract (amber when over).
+- Nothing about how you plan has changed.
+
 ## 1.12.1 · 13 October 2026 · Incidents: managers triage their own reports
 
 - Someone with **Manage** in Incidents (the operations manager) can now triage a report they filed themselves. The **Triage** panel shows on the report, and it counts in their reports to triage on Home.
