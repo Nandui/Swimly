@@ -52,3 +52,6 @@ next-env.d.ts
 # Impeccable review captures: evidence for a review round, never shipped
 .impeccable/review/
 /reports/
+
+# taste-skill working files (draw sheets, inspector screenshots)
+.taste-skill/
