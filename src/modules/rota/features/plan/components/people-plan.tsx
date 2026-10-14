@@ -12,7 +12,10 @@ import { Notice } from "@/components/ui-kit/notice";
 import { SearchField } from "@/components/ui-kit/search-field";
 import { Tag } from "@/components/ui-kit/tag";
 import { ChangeFields, changeOf } from "@/modules/rota/shared/components/change-fields";
-import { assign, planTeacher } from "@/modules/rota/shared/actions";
+import { assign, planTeacher, putOnActivity } from "@/modules/rota/shared/actions";
+import { AreaLanesFields, type AreaLanes } from "@/modules/rota/shared/components/area-lanes";
+import { NativeSelect, NativeSelectOptGroup, NativeSelectOption } from "@/components/shadcn/native-select";
+import { freeTime } from "@/modules/rota/shared/plan-rows";
 import { removePlanShift, saveBreaks, savePlanShift, whoForShift } from "@/modules/rota/features/plan/server/actions";
 import { clock, parseClock, slotProblem } from "@/modules/rota/shared/constants";
 import type { Person, ShiftOption } from "@/modules/rota/shared/day";
@@ -30,7 +33,11 @@ import { toast } from "@/components/ui/toast";
 const THEME = "turnfin-module";
 type Ctx = { siteId: string; departmentId: string; date: string; dateLabel: string; live: boolean; canChange: boolean;
   /** Department names by id, to say when something would lend them to another department. */
-  departmentNames?: Record<string, string> };
+  departmentNames?: Record<string, string>;
+  /** Every department's activities and the site's areas, to put someone on any activity. */
+  anyTypes?: TypeOption[]; areaList?: AreaLanes[] };
+/** An activity on the organisation's list, with its department. */
+export type TypeOption = { id: string; name: string; departmentId: string; departmentName: string };
 const text = (formData: FormData, key: string) => String(formData.get(key) ?? "");
 
 export function PeoplePlan({ people, ...ctx }: Ctx & { people: Person[] }) {
@@ -81,7 +88,7 @@ function summary(p: Person) {
 }
 
 /** One person's day: shift, breaks, what they could take. */
-function ShiftBody({ person: p, siteId, departmentId, date, dateLabel, live, canChange, departmentNames }: Ctx & { person: Person }) {
+function ShiftBody({ person: p, siteId, departmentId, date, dateLabel, live, canChange, departmentNames, anyTypes = [], areaList = [] }: Ctx & { person: Person }) {
   const router = useRouter();
   const done = () => router.refresh();
   const breaks = p.shift.parts.flatMap((x) => x.breaks);
@@ -197,6 +204,10 @@ function ShiftBody({ person: p, siteId, departmentId, date, dateLabel, live, can
                 lentTo={o.departmentId !== departmentId ? departmentNames?.[o.departmentId] ?? "another department" : null} />)}
             </ul>
           )}
+          {canChange && anyTypes.length ? (
+            <AnyActivity person={p} types={anyTypes} areas={areaList} siteId={siteId} departmentId={departmentId} date={date} live={live} onDone={done}
+              within={freeTime(p, p.shift.parts.flatMap((x) => x.work))[0] ?? { start: p.shift.parts[0]?.start ?? 420, end: p.shift.parts[0]?.end ?? 480 }} />
+          ) : null}
         </section>
       </div>
     </>
@@ -241,6 +252,46 @@ export function OptionRow({ option: o, person, siteId, date, live, canChange, on
         </span>
       ) : null}
     </li>
+  );
+}
+
+/** Put someone on any activity on the list for part of their shift, even when nothing on the day
+ *  needs it yet (owner report, 14 October 2026): it is added for that time with them on it. Their
+ *  own department's activities come first; another department's lends them. */
+export function AnyActivity({ person, within, types, areas, siteId, departmentId, date, live, onDone }: {
+  person: Person; within: { start: number; end: number }; types: TypeOption[]; areas: AreaLanes[]; siteId: string; departmentId: string; date: string; live: boolean; onDone: () => void;
+}) {
+  const fid = `any-${person.userId}-${within.start}`;
+  const first = person.name.split(" ")[0];
+  const byDept = new Map<string, TypeOption[]>();
+  for (const t of [...types].sort((a, b) => Number(b.departmentId === departmentId) - Number(a.departmentId === departmentId) || a.departmentName.localeCompare(b.departmentName) || a.name.localeCompare(b.name))) {
+    byDept.set(t.departmentName, [...(byDept.get(t.departmentName) ?? []), t]);
+  }
+  return (
+    <FormDialog portalClassName={THEME} width="sm:max-w-lg" title={`Put ${first} on an activity`}
+      description="Any activity on the list, even one the day does not have yet. It is added for this time with them on it."
+      trigger={<Button type="button" variant="outline" className="self-start"><Plus aria-hidden="true" />Put on any activity</Button>}
+      submitLabel="Put on" successMessage="Put on the rota" onSuccess={onDone}
+      submit={(fd) => putOnActivity({ siteId, date, userId: person.userId, typeId: text(fd, "typeId"), place: text(fd, "place"), start: text(fd, "start"), end: text(fd, "end"),
+        lanes: fd.getAll("lanes").map(String) }, changeOf(fd))}>
+      <div className="grid gap-4 sm:grid-cols-2">
+        <Field label="Activity" htmlFor={`${fid}-type`}>
+          <NativeSelect id={`${fid}-type`} name="typeId" required defaultValue={types.find((t) => t.departmentId === departmentId)?.id ?? types[0]?.id ?? ""} className="min-h-11 w-full">
+            {[...byDept].map(([dept, list]) => (
+              <NativeSelectOptGroup key={dept} label={dept}>
+                {list.map((t) => <NativeSelectOption key={t.id} value={t.id}>{t.name}</NativeSelectOption>)}
+              </NativeSelectOptGroup>
+            ))}
+          </NativeSelect>
+        </Field>
+        <AreaLanesFields fid={fid} areas={areas} />
+      </div>
+      <div className="grid grid-cols-2 gap-4">
+        <Field label="From" htmlFor={`${fid}-start`}><Input id={`${fid}-start`} name="start" type="time" step={300} required defaultValue={clock(within.start)} className="min-h-11" /></Field>
+        <Field label="To" htmlFor={`${fid}-end`}><Input id={`${fid}-end`} name="end" type="time" step={300} required defaultValue={clock(within.end)} className="min-h-11" /></Field>
+      </div>
+      {live ? <ChangeFields id={fid} /> : null}
+    </FormDialog>
   );
 }
 

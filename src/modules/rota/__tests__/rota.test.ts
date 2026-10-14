@@ -218,6 +218,25 @@ test("who can fill it: qualified and free first; nobody is left out", async () =
   assert.ok(!fits.some((f) => f.userId === "noah"), "works at another site");
 });
 
+test("any activity on the list: put someone on it for part of their shift, even with nothing on the day yet", async () => {
+  as("maya", [at("rota.plan")]);
+  const day = addDaysIso(today(), 3);
+  const plan = await data.planWeek({ site: churchfield, day, dept: "d-pool" });
+  assert.deepEqual(plan.anyTypes!.map((t) => t.id).sort(), ["t-desk", "t-guard"], "every department's activities; Teaching comes from the classes");
+  const put = (userId: string, extra: Partial<{ typeId: string; place: string; start: string; end: string }> = {}) =>
+    actions.putOnActivity({ siteId: churchfield, date: day, userId, typeId: "t-desk", place: "Desk", start: "09:00", end: "11:00", ...extra });
+  assert.equal((await put("lee")).ok, false, "Reception is not hers to plan, and lee has no Pool shift to lend from");
+  assert.equal((await actions.savePlanShift(null, { siteId: churchfield, departmentId: "d-pool", date: day, userId: "lee", start: "08:00", end: "16:00" })).ok, true);
+  assert.equal((await put("lee", { place: "Car park" })).ok, false, "one of the site's areas");
+  assert.equal((await put("lee")).ok, true, "lent to Reception from her Pool shift");
+  assert.equal((await put("lee", { typeId: "t-guard", place: "Main pool", start: "11:00", end: "13:00" })).ok, true, "her own department's, though nothing needed it");
+  const needs = await fixture.prisma.rotaNeed.findMany({ where: { siteId: churchfield, date: new Date(`${day}T00:00:00Z`) }, include: { assignments: true }, orderBy: { startMinutes: "asc" } });
+  assert.deepEqual(needs.map((n) => [n.typeId, n.places, n.assignments.map((a) => [a.userId, a.startMinutes, a.endMinutes])]),
+    [["t-desk", 1, [["lee", 540, 660]]], ["t-guard", 1, [["lee", 660, 780]]]]);
+  const lee = (await data.planWeek({ site: churchfield, day, dept: "d-pool" })).day!.people.find((p) => p.userId === "lee")!;
+  assert.deepEqual(lee.activities.sort(), ["Lifeguarding", "Reception"]);
+});
+
 test("a day that has come: every change asks why, goes in the log, and waits for Timepoint", async () => {
   as("sam", [at("rota.manage")]);
   assert.equal((await actions.saveNeed(null, need(today(), { place: "Learner pool", places: 1 }))).ok, false, "say why");
