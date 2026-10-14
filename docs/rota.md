@@ -85,7 +85,9 @@ it.
 - **Plan** (`/rota`, supervisors): one department's week, **shift first** (owner, 13 October
   2026: "we have people working every day, and we need to produce shifts for them, these will also
   be done to allocate staff during those shifts to activities, bookings, classes"). A strip of the
-  days with each one's staff, paid hours and gaps; then the open day, time across the top:
+  days with each one's staff, paid hours and gaps, beside a card for the open day with its totals
+  (staff on, paid hours, unpaid breaks, gaps to fill) and Add staff / Add activity (layout from the
+  high-end-visual-design skill, 13 October 2026); then the open day, time across the top:
   - **What needs people**: one row per thing that needs people (`needRows`,
     `shared/plan-rows.ts`): each activity the department needs ("Lifeguarding, Main pool, 2 at
     once"), each booking, the swim classes in an area, and other modules' sessions. Across it, how
@@ -101,7 +103,6 @@ it.
     (`freeTime`), where every new shift starts. Choosing No activity lists what needs someone
     then, from any department, and puts them on it for that stretch; choosing what they are on
     changes their time or takes them off; choosing the name opens their shift and breaks.
-  - A line of totals: staff on, paid hours, unpaid breaks and gaps.
   **Lending** (owner, 13 October 2026: "they can put it if needed cross departments"): someone on
   a shift on a department's plan may be put on another department's activity, or class, by whoever
   plans their shift (`allowedForPerson`, `shared/writes.ts`). **Export week** downloads the

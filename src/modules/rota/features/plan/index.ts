@@ -9,3 +9,4 @@ export { CopyDialog, NeedDialog, ShareWeek } from "@/modules/rota/shared/compone
 export { addDaysIso, mondayOf } from "@/modules/rota/shared/constants";
 export { ROTA_DAY_META, ROTA_SHIFT_NOTE_META, ROTA_WEEK_META } from "@/modules/rota/shared/meta";
 export { duration } from "@/modules/rota/shared/shifts";
+export { partPaid } from "@/modules/rota/shared/plan-rows";
