@@ -209,6 +209,54 @@ export async function unassign(id: string, changeInput: ChangeInput = {}): Promi
   return ok();
 }
 
+const putOnSchema = needSchema.pick({ siteId: true, date: true, typeId: true, place: true, start: true, end: true, lanes: true }).extend({ userId: z.string().min(1, "Choose who.") });
+export type PutOnInput = z.input<typeof putOnSchema>;
+
+/** Put someone on any activity on the list for part of their shift, when nothing on the day
+ *  needs it yet (owner report, 14 October 2026: "not all defined activities show up to select
+ *  for a staff member"): adds the activity for that time with one place, and them on it. Lending
+ *  rules as `assign`: whoever plans their shift may put them on another department's activity. */
+export async function putOnActivity(input: PutOnInput, changeInput: ChangeInput = {}): Promise<ActionResult> {
+  const parsed = putOnSchema.safeParse(input);
+  if (!parsed.success) return fail(parsed.error.issues[0].message);
+  const change = changeSchema.parse(changeInput);
+  const data = parsed.data;
+  const start = parseClock(data.start), end = parseClock(data.end);
+  if (start === null || end === null) return fail("Use times like 07:00.");
+  if (end <= start) return fail("It has to end after it starts, on the same day.");
+  const slot = slotProblem(start, end);
+  if (slot) return fail(slot);
+  const found = await activityTypeById(data.typeId);
+  const type = found && !found.archivedAt && !found.fromClasses ? found : null;
+  if (!type) return fail("That activity is no longer on the list.");
+  const at = await allowedForPerson(data.siteId, data.date, type.departmentId, data.userId);
+  if (!at.ok) return fail(at.error);
+  if (type.orgId !== at.site.orgId) return fail("That activity is no longer on the list.");
+  const where = await areaProblem(data.siteId, data.place);
+  if (where) return fail(where);
+  const lanes = lanesFrom(data.lanes);
+  const laneCount = (await areasAt(data.siteId)).find((a) => a.name.toLowerCase() === data.place.trim().toLowerCase())?.lanes ?? 0;
+  const laneIssue = lanesProblem(lanes, laneCount, data.place);
+  if (laneIssue) return fail(laneIssue);
+  const person = await staffContact(data.userId, at.site.orgId, { activeOnly: true });
+  if (!person) return fail("That person is no longer active.");
+  if (at.live && !change.reason) return fail(NEEDS_REASON);
+  const what = `${type.name}${data.place.trim() ? `, ${data.place.trim()}` : ""}${laneCount && lanes.length ? ` ${lanesLabel(lanes, laneCount).toLowerCase()}` : ""}`;
+  const summary = `${person.name} on ${what}, ${data.date} ${clock(start)}–${clock(end)}`;
+  const tell = await shared(prisma, data.siteId, type.departmentId, data.date);
+  await prisma.$transaction(async (tx) => {
+    const need = await tx.rotaNeed.create({ data: { orgId: at.site.orgId, siteId: at.site.id, date: parseDateOnly(data.date), typeId: type.id, place: data.place.trim(), lanes: laneCount ? lanes : [],
+      startMinutes: start, endMinutes: end, places: 1, note: "", createdById: at.actor.id, createdByName: at.actor.name } });
+    await logAudit({ actorId: at.actor.id, actorName: at.actor.name, action: "create", entity: "RotaNeed", entityId: need.id, clubId: at.site.id, summary: `Added ${what}, ${data.date} ${clock(start)}–${clock(end)}` }, tx);
+    const made = await tx.rotaAssignment.create({ data: { needId: need.id, place: 1, userId: person.id, startMinutes: start, endMinutes: end, createdById: at.actor.id, createdByName: at.actor.name } });
+    await logAudit({ actorId: at.actor.id, actorName: at.actor.name, action: "create", entity: "RotaAssignment", entityId: made.id, clubId: at.site.id, summary: `Put ${summary}` }, tx);
+    if (at.live) await logLive(tx, at, data.date, "added", `${person.name} put on ${what}, ${clock(start)} to ${clock(end)}`, person.id, change);
+  });
+  refresh();
+  if (tell) await notifyShiftChange(person.id, `You are on ${what} at ${at.site.name} on ${data.date}, ${clock(start)}–${clock(end)}.`);
+  return ok();
+}
+
 /** Plan who teaches a swim class on a date (owner decision: Rota assigns instructors). The swim
  *  school keeps the record and checks the class runs; this checks the Teaching department. */
 export async function planTeacher(input: { siteId: string; date: string; classRef: string; userId: string | null }, changeInput: ChangeInput = {}): Promise<ActionResult> {

@@ -4,6 +4,12 @@ Patch notes for everyone who uses Turnfin at the swim school, the desk and the o
 
 **How versions are numbered:** the middle number goes up when something new arrives (a module, a screen, a new way of working), and the last number when something is fixed or tidied without changing how you work. This list starts on 3 October 2026, when Turnfin moved to its new look; earlier changes are not listed.
 
+## 1.12.3 · 14 October 2026 · Rota: put staff on any activity
+
+- On the **Plan**, the time in someone's shift with nothing given to it (**No activity**) used to offer only the activities already added to that day that still needed someone. Activities on the list that were not on the day yet, or were already full, never showed.
+- Now that sheet, and the person's own shift sheet, have **Put on any activity**. Pick any activity on the list, from any department, choose where and the times, and they are put on it. The activity is added to the day for that time with them on it.
+- Another department's activity lends them to it, as before. Teaching is not on that list, because swim classes plan it.
+
 ## 1.12.2 · 13 October 2026 · Rota: a cleaner Plan page
 
 - The **Plan** page has a new look. The week is a row of day tiles with a large date, the staff and hours, and a dot for gaps or covered; the open day is filled blue.

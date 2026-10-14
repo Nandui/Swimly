@@ -124,7 +124,7 @@ export default async function PlanPage({ searchParams }: { searchParams: Promise
                   hint={data.types.length ? "Add staff to give people their shifts, add what the day needs, or copy an earlier day." : "Add this department's activities to the activity list first."} />
               ) : (
                 <DayPlan siteId={site.id} departmentId={department.id} departmentNames={Object.fromEntries(departments.map((d) => [d.id, d.name]))} date={date} dateLabel={dateLabel} live={live}
-                  canChange={data.canChange} zones={day.zones} groups={day.groups} allGroups={data.allGroups} people={day.people} hours={data.hours} types={data.types} areaList={data.areas} />
+                  canChange={data.canChange} zones={day.zones} groups={day.groups} allGroups={data.allGroups} people={day.people} hours={data.hours} types={data.types} anyTypes={data.anyTypes} areaList={data.areas} />
               )}
             </div>
           </section>
@@ -137,7 +137,7 @@ export default async function PlanPage({ searchParams }: { searchParams: Promise
                 {data.canChange ? <AddShiftSheet siteId={site.id} departmentId={department.id} date={date} dateLabel={dateLabel} live={live} /> : null}
               </div>
               {day.people.length ? (
-                <PeoplePlan people={day.people} siteId={site.id} departmentId={department.id} departmentNames={Object.fromEntries(departments.map((d) => [d.id, d.name]))} date={date} dateLabel={dateLabel} live={live} canChange={data.canChange} />
+                <PeoplePlan people={day.people} siteId={site.id} departmentId={department.id} departmentNames={Object.fromEntries(departments.map((d) => [d.id, d.name]))} date={date} dateLabel={dateLabel} live={live} canChange={data.canChange} anyTypes={data.anyTypes} areaList={data.areas} />
               ) : <EmptyState compact icon="users" title="Nobody on a shift yet" hint="Add someone to a shift, or put people straight on the activities above." />}
               </div>
             </section>

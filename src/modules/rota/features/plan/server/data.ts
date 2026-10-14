@@ -66,6 +66,10 @@ export async function planWeek(input: { site?: string; week?: string; dept?: str
     canChange: !!department && canChange(at, date, now, department.id, mine),
     canShare: !!department && (site.run || (site.plan && mine.has(department.id))),
     types: types.filter((t) => !t.archived && t.departmentId === department?.id && !t.fromClasses),
+    /** Every department's activities at this site, to put someone on any of them for part of
+     *  their shift (lending). Teaching is left out: it comes from the swim classes. */
+    anyTypes: types.filter((t) => !t.archived && !t.fromClasses && departments.some((d) => d.id === t.departmentId))
+      .map((t) => ({ id: t.id, name: t.name, departmentId: t.departmentId, departmentName: t.departmentName })),
     areas: places,
   } as const;
 }

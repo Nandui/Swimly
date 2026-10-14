@@ -19,7 +19,7 @@ import { lanesLabel } from "@/modules/rota/shared/lanes";
 import { ROTA_DAY_META, activityIcon, qualificationShort } from "@/modules/rota/shared/meta";
 import { freeTime, needRows, personBlocks, type CoverSpan, type NeedRow } from "@/modules/rota/shared/plan-rows";
 import { duration } from "@/modules/rota/shared/shifts";
-import { OptionRow, ShiftSheet, checkLabel, warned } from "@/modules/rota/features/plan/components/people-plan";
+import { AnyActivity, OptionRow, ShiftSheet, checkLabel, warned, type TypeOption } from "@/modules/rota/features/plan/components/people-plan";
 import { firstTick, panView, sameView, tickStep, ticks as ticksOf, zoomView, type View } from "@/modules/rota/features/plan/server/view";
 
 /** One day of a department's plan, shift first (owner, 13 October 2026: "we need to produce shifts
@@ -55,6 +55,8 @@ type Props = {
   /** Paid minutes this week at this site, and contracted minutes a week, by person. */
   hours: Record<string, { week: number; contract: number | null }>;
   types: Option[];
+  /** Every department's activities, to put someone on any of them. */
+  anyTypes: TypeOption[];
   /** The site's areas and their lanes, for a new activity's "where" (Admin, Areas). */
   areaList: AreaLanes[];
 };
@@ -113,7 +115,7 @@ const isOff = (b: Block) => b.kind === "on" && b.warnings.includes("off");
 const needsCover = (b: Block) => b.kind === "gap" || isOff(b);
 const ROW_WORDS: Record<NeedRow["kind"], string> = { activity: "Needed", booking: "Booking", classes: "Swim classes", booked: "Booked" };
 
-export function DayPlan({ siteId, departmentId, departmentNames, date, dateLabel, live, canChange, zones, groups, allGroups, people, hours, types, areaList }: Props) {
+export function DayPlan({ siteId, departmentId, departmentNames, date, dateLabel, live, canChange, zones, groups, allGroups, people, hours, types, anyTypes, areaList }: Props) {
   const router = useRouter();
   const [others, setOthers] = useState(false);
   const shownGroups = others ? allGroups : groups;
@@ -483,11 +485,11 @@ export function DayPlan({ siteId, departmentId, departmentNames, date, dateLabel
         ))}
       </div>
       <FillSheet gap={gap} live={live} onClose={() => { setGap(null); setSelected(null); }} />
-      <ShiftSheet person={person} onClose={() => setOpenPerson(null)} siteId={siteId} departmentId={departmentId} departmentNames={departmentNames} date={date} dateLabel={dateLabel} live={live} canChange={canChange} />
+      <ShiftSheet person={person} onClose={() => setOpenPerson(null)} siteId={siteId} departmentId={departmentId} departmentNames={departmentNames} date={date} dateLabel={dateLabel} live={live} canChange={canChange} anyTypes={anyTypes} areaList={areaList} />
       <Sheet open={!!free && !!freePerson} onOpenChange={(o) => { if (!o) setFree(null); }}>
         <SheetContent portalClassName="turnfin-module" className="flex w-full flex-col gap-0 overflow-y-auto sm:max-w-lg">
           {free && freePerson ? (
-            <FreeBody key={`${free.userId}-${free.start}`} person={freePerson} free={free} siteId={siteId} departmentId={departmentId} departmentNames={departmentNames}
+            <FreeBody key={`${free.userId}-${free.start}`} person={freePerson} free={free} siteId={siteId} departmentId={departmentId} departmentNames={departmentNames} anyTypes={anyTypes} areaList={areaList}
               date={date} dateLabel={dateLabel} live={live} canChange={canChange}
               onDone={() => { setFree(null); router.refresh(); }} onOpenDay={() => { setFree(null); setOpenPerson(freePerson.userId); }} />
           ) : null}
@@ -511,8 +513,9 @@ function mergeRuns(list: { g: Group; b: Shown }[]) {
 
 /** A stretch of someone's shift with nothing given to it yet: what needs someone then, from any
  *  department, best first; or leave it as No activity. */
-function FreeBody({ person: p, free, departmentId, departmentNames, onDone, onOpenDay, ...ctx }: {
-  person: Person; free: Free; siteId: string; departmentId: string; departmentNames: Record<string, string>; date: string; dateLabel: string; live: boolean; canChange: boolean;
+function FreeBody({ person: p, free, departmentId, departmentNames, anyTypes, areaList, onDone, onOpenDay, ...ctx }: {
+  person: Person; free: Free; siteId: string; departmentId: string; departmentNames: Record<string, string>; anyTypes: TypeOption[]; areaList: AreaLanes[];
+  date: string; dateLabel: string; live: boolean; canChange: boolean;
   onDone: () => void; onOpenDay: () => void;
 }) {
   const options = p.options.filter((o) => o.start < free.end && free.start < o.end);
@@ -521,7 +524,7 @@ function FreeBody({ person: p, free, departmentId, departmentNames, onDone, onOp
     <>
       <SheetHeader className="p-6 pb-4">
         <SheetTitle>{firstName(p.name)}, {clock(free.start)} to {clock(free.end)}</SheetTitle>
-        <SheetDescription>{ctx.dateLabel}. Give this time to something that needs people, or leave it as No activity. It is paid time either way.</SheetDescription>
+        <SheetDescription>{ctx.dateLabel}. Give this time to something that needs people or to any activity on the list, or leave it as No activity. It is paid time either way.</SheetDescription>
       </SheetHeader>
       <div className="flex flex-col gap-4 px-6 pb-6">
         {options.length ? (
@@ -531,7 +534,8 @@ function FreeBody({ person: p, free, departmentId, departmentNames, onDone, onOp
                 lentTo={o.departmentId !== departmentId ? departmentNames[o.departmentId] ?? "another department" : null} />
             ))}
           </ul>
-        ) : <p className="text-sm">Nothing needs someone then. Add an activity for this time, or leave it as No activity.</p>}
+        ) : <p className="text-sm">Nothing on the day needs someone then.</p>}
+        {ctx.canChange && anyTypes.length ? <AnyActivity person={p} within={free} types={anyTypes} areas={areaList} siteId={ctx.siteId} departmentId={departmentId} date={ctx.date} live={ctx.live} onDone={onDone} /> : null}
         <Button type="button" variant="outline" className="self-start" onClick={onOpenDay}>Open {firstName(p.name)}&apos;s shift and breaks</Button>
       </div>
     </>
