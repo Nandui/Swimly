@@ -201,3 +201,12 @@ the email alert notice and its "Send again".
 
 The screens were checked live against V2Refunds, RFDetail and RFNew at 375px dark
 and 1280px light: one H1, no horizontal overflow and 44px controls.
+
+The request page was redesigned with the high-end-visual-design taste skill (15 October 2026,
+like the rota Plan in 1.12.2): the claim card (amount, customer, the four-stage progress line and
+the approved/payment/handler figures) and the Next action card share the top row from 1024px, with
+the decision card sticky beside the evidence (customer and original-payment wells, what was bought
+and why), receipts and history. On phones the decision follows the claim. Cards are double bezels
+and motion is a spring on transform and opacity that stops for reduced motion. A request reception
+is still editing keeps its plain form panels under the claim card. Visual only: the data, actions,
+permissions and audit are unchanged.

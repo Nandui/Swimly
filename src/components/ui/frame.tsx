@@ -21,6 +21,8 @@ export type FrameSetup = {
   /** Makes another site the person's working site and stays on the page (ClubSwitcher,
    *  SwitchClubButton); resolves with the reason when it could not. */
   switchSite: (id: string) => Promise<{ ok: true } | { ok: false; error: string }>;
+  /** The app's version, shown beside What's new in the account menu. */
+  version?: string;
   /** Top-bar controls the app adds to every frame, before the account menu. */
   tools?: ReactNode;
 };

@@ -4,6 +4,7 @@ import { type ReactNode } from 'react';
 import { signOut } from 'next-auth/react';
 import { RolePreviewToggle } from '@/components/staff/role-preview';
 import { FrameProvider } from '@/components/ui/frame';
+import { APP_VERSION } from '@/lib/app';
 import { toast } from '@/components/ui/toast';
 import { switchClub } from '@/lib/clubs/actions/clubs';
 import { allModules, MODULE_GROUPS } from '@/modules/registry';
@@ -21,7 +22,7 @@ export function YourModulesProvider({ ids, role, site, children }: { ids: readon
     catch (error) { toast.error('Could not sign out. Try again.'); throw error; }
   }
   return (
-    <FrameProvider value={{ modules, groups: MODULE_GROUPS, role, site, signOut: leave, switchSite: (id) => switchClub(id, { stay: true }), tools: <RolePreviewToggle /> }}>
+    <FrameProvider value={{ modules, groups: MODULE_GROUPS, role, site, version: APP_VERSION, signOut: leave, switchSite: (id) => switchClub(id, { stay: true }), tools: <RolePreviewToggle /> }}>
       {children}
     </FrameProvider>
   );
