@@ -48,7 +48,7 @@ resets, so it is unique on its own; it is raised with the approval, so numbers n
 or skip, and two approvers cannot number one order twice. Orders approved before then keep
 their old `PO-BT-00001` numbers, which suppliers and invoices already quote;
 `PurchaseOrderCounter`, which counted those per site, is no longer written. The site's
-short code is `Club.code` (two to four capitals), set in Admin, Clubs; the migration gives
+short code is `Club.code` (two to four capitals), set in Admin, Sites; the migration gives
 Bishopstown BT, Churchfield CF and Douglas DO where they exist. A site without a code
 cannot have orders approved until it has one.
 

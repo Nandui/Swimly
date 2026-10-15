@@ -111,7 +111,7 @@ export async function decideOrder(id: string, decision: "approve" | "reject", no
     ]);
     if (!mayApprove(rules, order.supplierId, roleId, order.totalCents)) return fail(`Your role may not approve ${euro(order.totalCents)} from ${order.supplier.name}.`);
   }
-  if (decision === "approve" && !order.site.code) return fail(`${order.site.name} has no short code yet, so the order cannot be numbered. Give it one in Admin, Clubs (for example BT).`);
+  if (decision === "approve" && !order.site.code) return fail(`${order.site.name} has no short code yet, so the order cannot be numbered. Give it one in Admin, Sites (for example BT).`);
   const result = await prisma.$transaction(async (tx) => {
     // Claim the order first, so two approvers at once cannot both number it.
     const decidedAt = new Date();
