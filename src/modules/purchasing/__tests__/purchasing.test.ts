@@ -3,9 +3,13 @@ import { after, before, test } from "node:test";
 import { isolatedPrisma } from "@/test/pglite-prisma";
 import { serverModule } from "@/test/server-module";
 import { expandPermissions, type PermissionKey } from "@/lib/staff/permissions";
+import { poNumber } from "@/modules/purchasing/shared/rules";
+
+/** The first order approved today: Bishopstown, this month, running number 1. */
+const firstNumber = () => poNumber("BT", new Date(), 1);
 
 /** Purchasing end to end on an isolated database: suppliers and approved
- *  products, approval by role and amount, numbers per site in sequence, and
+ *  products, approval by role and amount, numbers in sequence, and
  *  nobody approving their own order. Invented people and suppliers. */
 let fixture: Awaited<ReturnType<typeof isolatedPrisma>>;
 let actions: typeof import("../features/orders/server/actions") & typeof import("../features/suppliers/server/actions");
@@ -94,7 +98,7 @@ test("an order: drafted, sent, approved by someone else within their limit, numb
   const home = await data.purchasingHome();
   assert.deepEqual(home.waiting.map((o) => o.id), [small.id]);
   assert.equal((await actions.decideOrder(small.id!, "approve", "")).ok, true);
-  assert.equal((await fixture.prisma.purchaseOrder.findUniqueOrThrow({ where: { id: small.id! } })).number, "PO-BT-00001");
+  assert.equal((await fixture.prisma.purchaseOrder.findUniqueOrThrow({ where: { id: small.id! } })).number, firstNumber());
 
   // Over Dan's limit: only the general manager.
   as("mia", [], [at(bishopstown, ["purchasing.request"])]);
@@ -105,7 +109,7 @@ test("an order: drafted, sent, approved by someone else within their limit, numb
   as("gina", ["purchasing.read"]);
   assert.equal((await actions.decideOrder(big.id!, "reject", "")).ok, false, "a rejection needs its reason");
   assert.equal((await actions.decideOrder(big.id!, "approve", "")).ok, true);
-  assert.equal((await fixture.prisma.purchaseOrder.findUniqueOrThrow({ where: { id: big.id! } })).number, "PO-BT-00002", "the next number");
+  assert.equal((await fixture.prisma.purchaseOrder.findUniqueOrThrow({ where: { id: big.id! } })).number, poNumber("BT", new Date(), 2), "the next running number");
   assert.equal((await actions.decideOrder(big.id!, "approve", "")).ok, false, "decided once");
 
   // Rejected goes back to its requester to change; a site without a code cannot be numbered.
@@ -142,7 +146,7 @@ test("a supplier's own approvers replace the general ones; nobody approving mean
 
 test("an approved order is emailed: tests to yourself first, the supplier only once it is turned on", async () => {
   const db = fixture.prisma;
-  const first = await db.purchaseOrder.findFirstOrThrow({ where: { number: "PO-BT-00001" } });
+  const first = await db.purchaseOrder.findFirstOrThrow({ where: { number: firstNumber() } });
   const supplier = await db.supplier.findUniqueOrThrow({ where: { id: first.supplierId } });
   outbox.length = 0;
 
@@ -155,7 +159,7 @@ test("an approved order is emailed: tests to yourself first, the supplier only o
   as("mia", [], [at(bishopstown, ["purchasing.request"])]);
   assert.equal((await actions.emailOrder(first.id, "test")).ok, true);
   assert.deepEqual(outbox.map((m) => m.to), ["mia@example.invalid"], "the test reaches only the sender");
-  assert.match(outbox[0].subject, /^Test: Purchase order PO-BT-00001/);
+  assert.match(outbox[0].subject, new RegExp(`^Test: Purchase order ${firstNumber()}`));
   assert.match(outbox[0].text, /Chlorine tablets/);
   assert.equal(outbox[0].replyTo, "mia@example.invalid");
 
@@ -180,7 +184,7 @@ test("an approved order is emailed: tests to yourself first, the supplier only o
   assert.equal(outbox.at(-1)!.to, "orders@example.invalid");
   assert.equal(outbox.at(-1)!.cc, "gina@example.invalid", "copied on every email to a supplier");
   assert.equal(outbox[0].cc, undefined, "tests are not copied");
-  assert.match(outbox.at(-1)!.subject, /^Purchase order PO-BT-00001/);
+  assert.match(outbox.at(-1)!.subject, new RegExp(`^Purchase order ${firstNumber()}`));
   assert.match(outbox.at(-1)!.text, /^Hello Sam,/);
 
   // A failure is kept, and nothing pretends it went.

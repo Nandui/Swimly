@@ -153,7 +153,7 @@ export function OrderForm({ sites, suppliers, rules, roleNames, existing, initia
             <Button type="button" className="min-h-11" disabled={pending || !siteId || !supplierId || lines.length === 0 || approvers.length === 0} onClick={() => save(true)}><Send aria-hidden="true" />Send for approval</Button>
             <Button type="button" variant="outline" className="min-h-11" disabled={pending || !siteId || !supplierId} onClick={() => save(false)}><Save aria-hidden="true" />Save draft</Button>
           </div>
-          <p className="text-xs text-ui-muted-foreground">It gets its number (for example PO-BT-00001) once it is approved.</p>
+          <p className="text-xs text-ui-muted-foreground">It gets its number (for example BT-OCT-0042) once it is approved.</p>
         </section>
       </aside>
     </div>

@@ -3,7 +3,8 @@
 Owner request, 2 October 2026: a list of approved suppliers, each with its approved
 products; purchase orders raised by managers, approved by the stakeholders set per
 supplier and per amount by role, then given a purchase order number for the supplier,
-sequential per site: `PO-BT-00001`, where BT is the site's short code (CF, DO, ...).
+`BT-OCT-0042`: the site's short code (BT, CF, DO, ...), the month it was approved and a
+running number (owner request, 15 October 2026; orders approved before then keep `PO-BT-00001`).
 
 ## Surfaces (`/purchasing`, a Work module on the shared `ModuleShell`)
 
@@ -37,9 +38,14 @@ orders (owner decision, 15 October 2026); everyone else needs someone else to ap
 
 ## Numbers
 
-Approving gives the order the site's next number in the same transaction:
-`PurchaseOrderCounter` holds each site's last number and is raised with the approval, so
-numbers never repeat or skip, and two approvers cannot number one order twice. The site's
+Approving gives the order its number in the same transaction: `<site code>-<month>-<running
+number>`, for example `BT-OCT-0042` (owner request, 15 October 2026). The month is the one the
+order is approved in, Irish time, as three capitals. The running number is one count for the
+whole organisation (`PurchasingSettings.lastOrderNumber`), at least four digits, and never
+resets, so it is unique on its own; it is raised with the approval, so numbers never repeat
+or skip, and two approvers cannot number one order twice. Orders approved before then keep
+their old `PO-BT-00001` numbers, which suppliers and invoices already quote;
+`PurchaseOrderCounter`, which counted those per site, is no longer written. The site's
 short code is `Club.code` (two to four capitals), set in Admin, Clubs; the migration gives
 Bishopstown BT, Churchfield CF and Douglas DO where they exist. A site without a code
 cannot have orders approved until it has one.

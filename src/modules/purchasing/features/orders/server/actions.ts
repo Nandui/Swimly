@@ -90,7 +90,7 @@ export async function decideOrder(id: string, decision: "approve" | "reject", no
   if (decision === "reject" && reason.length < 3) return fail("Say why it is rejected, so the requester can change it.");
   const order = await prisma.purchaseOrder.findFirst({
     where: { id, orgId: who.orgId ?? undefined },
-    select: { status: true, siteId: true, supplierId: true, totalCents: true, requestedById: true, supplier: { select: { name: true } } },
+    select: { orgId: true, status: true, siteId: true, supplierId: true, totalCents: true, requestedById: true, supplier: { select: { name: true } } },
   }).then(async (row) => row && (await withSiteStatus([row], "siteId", "site"))[0]);
   if (!order) return fail("That order no longer exists.");
   if (order.status !== "pending") return fail("That order is not waiting for approval any more.");
@@ -108,13 +108,15 @@ export async function decideOrder(id: string, decision: "approve" | "reject", no
   if (decision === "approve" && !order.site.code) return fail(`${order.site.name} has no short code yet, so the order cannot be numbered. Give it one in Admin, Clubs (for example BT).`);
   const result = await prisma.$transaction(async (tx) => {
     // Claim the order first, so two approvers at once cannot both number it.
-    const claimed = await tx.purchaseOrder.updateMany({ where: { id, status: "pending" }, data: { status: decision === "approve" ? "approved" : "rejected", decidedById: who.id, decidedByName: who.name, decidedAt: new Date(), decisionNote: reason } });
+    const decidedAt = new Date();
+    const claimed = await tx.purchaseOrder.updateMany({ where: { id, status: "pending" }, data: { status: decision === "approve" ? "approved" : "rejected", decidedById: who.id, decidedByName: who.name, decidedAt, decisionNote: reason } });
     if (claimed.count !== 1) return fail("Someone decided this order just now.");
     let number: string | null = null;
     if (decision === "approve") {
-      // The site's counter row is locked by the update until this commits: numbers never repeat or skip.
-      const counter = await tx.purchaseOrderCounter.upsert({ where: { siteId: order.siteId }, create: { siteId: order.siteId, last: 1 }, update: { last: { increment: 1 } }, select: { last: true } });
-      number = poNumber(order.site.code!, counter.last);
+      // One running number for the organisation; its row is locked by the update until this commits,
+      // so two approvals at the same moment never share or skip a number.
+      const counter = await tx.purchasingSettings.upsert({ where: { orgId: order.orgId }, create: { orgId: order.orgId, lastOrderNumber: 1 }, update: { lastOrderNumber: { increment: 1 } }, select: { lastOrderNumber: true } });
+      number = poNumber(order.site.code!, decidedAt, counter.lastOrderNumber);
       await tx.purchaseOrder.update({ where: { id }, data: { number } });
     }
     await logAudit({ actorId: who.id, actorName: who.name, action: decision === "approve" ? "approve" : "reject", entity: "PurchaseOrder", entityId: id, clubId: order.siteId,

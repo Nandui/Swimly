@@ -20,9 +20,9 @@ Declared in `prisma/schema/purchasing.prisma` (table names kept, ADR 0002):
 - `PurchaseProduct` — a supplier's approved product and agreed price.
 - `PurchaseApprovalRule` — a role that may approve up to an amount, for one supplier or all.
 - `PurchaseOrder`, `PurchaseOrderLine` — an order and its lines.
-- `PurchaseOrderCounter` — the next order number for each site.
+- `PurchaseOrderCounter` — retired: numbered the old per-site orders (PO-BT-00001); kept, no longer written.
 - `PurchaseOrderEmail` — every email of an approved order: to the supplier or a test to the sender, sent or failed.
-- `PurchasingSettings` — per organisation, whether approved orders may be emailed to suppliers (off until Manage turns it on), and who is copied on them.
+- `PurchasingSettings` — per organisation, whether approved orders may be emailed to suppliers (off until Manage turns it on), who is copied on them, and the last running order number.
 
 Purchasing also reads Core's `User`, `Club` and `StaffRole` directly (sites, the approver's role, role names). Moving those reads onto Core functions is phase 3 of [MIGRATION.md](../../../docs/architecture/MIGRATION.md).
 
