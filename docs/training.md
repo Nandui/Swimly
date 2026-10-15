@@ -308,6 +308,46 @@ Work never shows anyone's notes, refreshers or streaks.
   text sizes and a normal or slower reading speed, kept on that phone only.
   **Read aloud** on a lesson uses the phone's own voice; nothing is sent anywhere.
 
+## Insight: analytics, reports and audit packs (e-learning, phase 7)
+
+All of it is in Work, worked out from the records each time (no tables of its
+own), and limited to the people the reader's `training.records.read` covers
+through the policy engine (`subjectsFor`, `requireCapFor`). Anyone with Training
+access may open it. Cancelled training is never counted.
+
+- **Course insight** (`/training/courses/[id]/insight`, the course's **Insight**
+  button), filtered by site and by when people were given it:
+  - figures: completed, overdue now, the middle number of days to finish (from
+    being given it, and from the first lesson), on time (of those completed with
+    a due date), passed the exam first time and the course's rating (everyone
+    who rated it, never names);
+  - **How far people get**: given, started, finished every lesson (or tested
+    out), passed the exam, waiting for sign-off, completed;
+  - **Where people stop**: each lesson of the published version with how many
+    finished it and how many still taking the course have it as their next
+    lesson; the most-stopped lesson is marked;
+  - **Final exam**: first time and overall pass rates, the middle best score and
+    sittings to pass, linking to the most-missed questions;
+  - **By site** (someone at two sites counts at both) and **People**, overdue
+    first, with a download for Excel.
+- **Reports** (`/training/reports`), filtered by site and department: open,
+  overdue, waiting for sign-off and completed in the past 30 days; overdue **by
+  site** and **by line manager** (HR's manager link; "No manager set" when none);
+  every overdue course by person, longest late first; and each course's numbers.
+  The overdue list and the course table download for Excel
+  (`/training/reports/export?kind=overdue|courses`).
+- **Audit packs**, to print or save as a PDF:
+  - a person (`/training/people/[id]/audit`, **Audit pack** on their record):
+    qualifications, then each course with who gave it and when, the version
+    taught, each lesson finished with its time, every exam sitting with its
+    score, the practical checklist and sign-off, evidence and the certificate
+    code; in-service hours, sessions, and the audit trail of their training and
+    qualifications. A 404 for anyone the reader does not cover;
+  - a course (`/training/courses/[id]/audit`, from its insight page, with the
+    same filters): its versions and change notes, who must take it, everyone
+    covered with the version taught, result, sign-off and certificate, and the
+    audit trail of the course and that training.
+
 ## Expiring qualifications
 
 `/training/expiring` lists qualifications that have expired or expire within 60

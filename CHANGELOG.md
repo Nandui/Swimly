@@ -4,6 +4,13 @@ Patch notes for everyone who uses Turnfin at the swim school, the desk and the o
 
 **How versions are numbered:** the middle number goes up when something new arrives (a module, a screen, a new way of working), and the last number when something is fixed or tidied without changing how you work. This list starts on 3 October 2026, when Turnfin moved to its new look; earlier changes are not listed.
 
+## 1.23.0 · 15 October 2026 · Training: insight, reports and audit packs
+
+- Every course has an **Insight** page: how many people have started and finished it, **where people stop** (the lesson most people don't get past is marked), how long it takes, how many pass the exam first time, its rating, and how each site is doing. Filter it by site and by when people were given it, and download it for Excel.
+- A new **Reports** page in Training shows what is overdue **by site** and **by manager**, everything that is late with the longest late first, and how each course is going. Both lists download for Excel.
+- **Audit packs** to print or save as a PDF: open **Audit pack** on someone's training record for everything about their training in one place (each lesson they finished and when, every exam score, the practical checklist, certificates, hours and the full history of changes), or on a course's Insight page for everyone who took it and the version they were taught. Ready for an inspector, an insurer or after an incident.
+- You only ever see the people your role covers.
+
 ## 1.22.0 · 15 October 2026 · Training: your own space in Turnfin Me
 
 - **Search** all your courses and lessons from the top of My training, and jump straight to the lesson that mentions it.

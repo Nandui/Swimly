@@ -1,6 +1,8 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { cache } from "react";
+import { FileText } from "lucide-react";
+import { Button } from "@/components/shadcn/button";
 import { AssignTraining, CancelTraining, GiveExamAttempt, listCourses, personTraining, TRAINING_STATUS_META } from "@/modules/training/features/assignments";
 import { EmptyState } from "@/components/ui-kit/empty-state";
 import { PageHeader } from "@/components/ui-kit/page-header";
@@ -44,7 +46,12 @@ export default async function TrainingPersonPage({ params }: { params: Promise<{
         back={{ href: "/training", label: "People" }}
         title={data.person.name}
         description={data.person.jobTitle || "Training record"}
-        actions={data.canAssign && courses.length > 0 ? <AssignTraining courses={courses} people={[person]} userIds={[person.id]} /> : null}
+        actions={
+          <>
+            <Button asChild variant="outline" className="min-h-11"><Link href={`/training/people/${id}/audit`}><FileText aria-hidden="true" />Audit pack</Link></Button>
+            {data.canAssign && courses.length > 0 ? <AssignTraining courses={courses} people={[person]} userIds={[person.id]} /> : null}
+          </>
+        }
       />
       <div className="pc-grid">
         <section className="pc-panel" aria-labelledby="training-history">

@@ -117,3 +117,15 @@ export async function moduleAuditTrail(module: string, sites: SiteFilter, page: 
   ]);
   return { rows, total };
 }
+
+/** The audit trail of some records of one type, oldest first (the latest `take`): who did what and when. For an
+ *  audit pack of a person's or a course's records; the caller has checked the reader may see them. */
+export async function auditTrailFor(entity: string, entityIds: readonly string[], take = 1000) {
+  if (entityIds.length === 0) return [];
+  const rows = await prisma.auditLog.findMany({
+    where: { entity, entityId: { in: [...entityIds] } },
+    orderBy: { createdAt: "desc" }, take,
+    select: { id: true, entityId: true, actorName: true, action: true, summary: true, createdAt: true },
+  });
+  return rows.reverse();
+}

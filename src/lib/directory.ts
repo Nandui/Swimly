@@ -288,6 +288,14 @@ export async function activeStaffIds(ids: readonly string[], db?: Db): Promise<S
   return new Set(rows.map((row) => row.id));
 }
 
+/** Each person's line manager (the "their team" link HR keeps), by person id; null when none is set. */
+export async function lineManagersOf(ids: readonly string[], db?: Db): Promise<Map<string, StaffRef | null>> {
+  const wanted = unique(ids);
+  if (wanted.length === 0) return new Map();
+  const rows = await (await client(db)).user.findMany({ where: { id: { in: wanted } }, select: { id: true, manager: { select: { id: true, name: true } } } });
+  return new Map(rows.map((row) => [row.id, row.manager]));
+}
+
 /** Ids of the people in this organisation whose name contains `query`. */
 export async function staffIdsNamed(orgId: string | null, query: string, db?: Db): Promise<string[]> {
   const rows = await (await client(db)).user.findMany({ where: { orgId: orgId ?? undefined, name: { contains: query, mode: "insensitive" } }, select: { id: true } });

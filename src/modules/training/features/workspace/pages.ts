@@ -1,4 +1,4 @@
-import { BadgeCheck, BookOpen, CalendarDays, ClipboardCheck, FileBadge, Grid3x3, Hourglass, LayoutDashboard, ListChecks, Route, Timer, Users } from "lucide-react";
+import { BadgeCheck, BookOpen, ChartColumn, CalendarDays, ClipboardCheck, FileBadge, Grid3x3, Hourglass, LayoutDashboard, ListChecks, Route, Timer, Users } from "lucide-react";
 import type { ModulePage } from "@/modules/registry";
 import type { TrainingActor } from "@/modules/training/shared/access";
 
@@ -11,6 +11,7 @@ export function trainingPages(who: Pick<TrainingActor, "signoff" | "qualificatio
     { href: "/training", label: "People", icon: Users, description: "Training for the people you cover: what is due, waiting for sign-off and done", match: (p) => p === "/training" || p.startsWith("/training/people/") },
     ...(who.signoff ? [{ href: "/training/sign-off", label: "Sign-off", icon: ClipboardCheck, description: "People who say they are ready, to watch and sign off", match: (p: string) => p.startsWith("/training/sign-off") }] : []),
     { href: "/training/matrix", label: "Matrix", icon: Grid3x3, description: "Everyone you cover against the courses they need, and how many are in date", match: (p) => p.startsWith("/training/matrix") },
+    { href: "/training/reports", label: "Reports", icon: ChartColumn, description: "Overdue training by site and by manager, each course's numbers, and downloads for Excel", match: (p) => p.startsWith("/training/reports") },
     { href: "/training/expiring", label: "Expiring qualifications", icon: Hourglass, description: "Qualifications that run out soon, for the people you cover", match: (p) => p === "/training/expiring" },
     ...(who.qualifications ? [{ href: "/training/certificates", label: "Certificates to check", icon: FileBadge, description: "Certificates uploaded in Turnfin Me, to check and record", match: (p: string) => p.startsWith("/training/certificates") }] : []),
     { href: "/training/courses", label: "Courses", icon: BookOpen, description: "The courses staff are assigned and complete", match: (p) => p.startsWith("/training/courses") },

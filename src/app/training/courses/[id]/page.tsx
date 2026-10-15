@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
-import { Eye } from "lucide-react";
+import { ChartColumn, Eye } from "lucide-react";
 import { Button } from "@/components/shadcn/button";
 import { PageHeader } from "@/components/ui-kit/page-header";
 import { Tag } from "@/components/ui-kit/tag";
@@ -33,6 +33,7 @@ export default async function CourseBuilderPage({ params, searchParams }: { para
           <>
             {who.manage ? <CourseDialog course={course} qualificationTypes={types} categories={categories} /> : null}
             {who.manage ? <DuplicateCourse courseId={course.id} title={course.title} /> : null}
+            <Button asChild variant="outline" className="min-h-11"><Link href={`/training/courses/${course.id}/insight`}><ChartColumn aria-hidden="true" />Insight</Link></Button>
             <Button asChild variant="outline" className="min-h-11"><Link href={`/training/courses/${course.id}/preview`}><Eye aria-hidden="true" />Preview</Link></Button>
             {canEdit ? <PublishCourse courseId={course.id} title={course.title} changed={changed} published={published} openAssignments={openAssignments} canRetake={who.assign} finished={finished} /> : null}
           </>

@@ -16,6 +16,7 @@ The rules for courses, assignments, sign-offs and certificates are in [docs/trai
 - `compliance` — training rules that assign courses by position, role, department and site and renew them, their daily run, the training matrix and its download, and checking a certificate code (`/training/rules`, `/training/matrix`, `/training/check`, `/api/cron/training`).
 - `expiring` — qualifications expired or due soon (`/training/expiring`).
 - `me` — a person's own training for Turnfin Me: their list, their certificate for finished training, taking a course lesson by lesson, practice quizzes, sitting the final exam, completing it, and the reminder digest; their own space: search, bookmarks and private notes, their record, the course catalogue and enrolling, rating a course, daily refreshers, streaks and badges. Reached through `index.ts`.
+- `insight` — course analytics (how far people get, where they stop, time taken, the exam, by site), the reports page (overdue by site and line manager, each course's numbers), downloads for Excel and audit packs for a person or a course (`/training/courses/[id]/insight`, `/training/reports`, `/training/people/[id]/audit`, `/training/courses/[id]/audit`).
 - `person-file` — Training's part of a person's file and their records for HR's subject export.
 - `workspace` — the Training frame, its one page list (`pages.ts`, for the page bar and the starter page `/training/overview`) and the access check (`src/app/training/layout.tsx`).
 
@@ -68,7 +69,7 @@ Training also reads and writes Core's qualification records (`Qualification`, `Q
 
 ## Depends on
 - Platform: the policy engine (people a trainer may see), audit, the database client, contributions (home card, person file, subject records).
-- Core reads (never Core tables; enforced by the boundary lint): people, positions and sites through `src/lib/directory.ts`; qualifications, qualification types and uploaded certificates through `src/lib/qualifications.ts` (granting goes through `recordQualification`); the person's record through `src/lib/people/records.ts`.
+- Core reads (never Core tables; enforced by the boundary lint): people, positions, sites and line managers through `src/lib/directory.ts`; the audit trail of its own records through `src/lib/audit.ts` (`auditTrailFor`); qualifications, qualification types and uploaded certificates through `src/lib/qualifications.ts` (granting goes through `recordQualification`); the person's record through `src/lib/people/records.ts`.
 - The UI kit's workspace frame `ModuleShell` (`src/components/ui/module-shell.tsx`).
 - Other modules: none. HR reads Training's records through the `subjectRecords` seam.
 
