@@ -4,6 +4,8 @@
  *  top saying who it would have gone to, and "Test" in the subject. Pure, so the preview
  *  page, the send and the tests all build exactly the same message. */
 
+import { lineDetails } from "@/modules/purchasing/shared/rules";
+
 export type OrderEmailInput = {
   number: string;
   organisation: string;
@@ -12,7 +14,8 @@ export type OrderEmailInput = {
   neededBy: string | null;
   approvedOn: string | null;
   note: string;
-  lines: { name: string; code: string; unit: string; quantity: number }[];
+  /** Brand, size and colour are empty for products without them. */
+  lines: { name: string; code: string; unit: string; brand: string; size: string; colour: string; quantity: number }[];
   sender: { name: string; email: string };
 };
 
@@ -47,7 +50,7 @@ export function orderEmail(o: OrderEmailInput, test = false) {
     ...(test ? [banner, ""] : []),
     greeting, "", lead, "",
     ...facts.map(([k, v]) => `${k}: ${v}`), "",
-    ...o.lines.map((l) => `${l.quantity} × ${l.name}${l.code ? ` (code ${l.code})` : ""}, ${l.unit || "each"}`),
+    ...o.lines.map((l) => `${l.quantity} × ${l.name}${lineDetails(l) ? `, ${lineDetails(l)}` : ""}${l.code ? ` (code ${l.code})` : ""}, ${l.unit || "each"}`),
     ...(o.note ? ["", `Note: ${o.note}`] : []),
     "", `INVOICES: ${invoices}`,
     "", quote, "", o.sender.name, from,
@@ -57,6 +60,8 @@ export function orderEmail(o: OrderEmailInput, test = false) {
     `<td style="padding:8px 6px;${RULE};${BODY};${strong ? INK : MUTED};${right ? "text-align:right;white-space:nowrap;font-variant-numeric:tabular-nums" : "text-align:left"}">${escape(v)}</td>`;
   const head = (v: string, right = false) =>
     `<th style="padding:8px 6px;${RULE};font-size:12px;line-height:16px;font-weight:600;${MUTED};text-align:${right ? "right" : "left"}">${escape(v)}</th>`;
+  const product = (l: OrderEmailInput["lines"][number]) =>
+    `<td style="padding:8px 6px;${RULE};${BODY};${INK};text-align:left">${escape(l.name)}${lineDetails(l) ? `<br><span style="font-size:12px;line-height:16px;${MUTED}">${escape(lineDetails(l))}</span>` : ""}</td>`;
   const p = (v: string, style = "") => `<p style="margin:0 0 16px;${BODY};${INK};${style}">${escape(v)}</p>`;
 
   const html = `<!DOCTYPE html>
@@ -87,7 +92,7 @@ ${facts.map(([k, v]) => `<tr><td style="padding:2px 16px 2px 0;${BODY};${MUTED};
 <table class="po-lines" width="100%" cellspacing="0" cellpadding="0" border="0" style="margin:0 0 16px;border-collapse:collapse">
 <thead><tr>${head("Product")}${head("Code")}${head("Unit")}${head("Qty", true)}</tr></thead>
 <tbody>
-${o.lines.map((l) => `<tr>${cell(l.name, false, true)}${cell(l.code || "–")}${cell(l.unit || "Each")}${cell(String(l.quantity), true, true)}</tr>`).join("\n")}
+${o.lines.map((l) => `<tr>${product(l)}${cell(l.code || "–")}${cell(l.unit || "Each")}${cell(String(l.quantity), true, true)}</tr>`).join("\n")}
 </tbody>
 </table>
 ${o.note ? `<p style="margin:16px 0 4px;font-size:12px;line-height:16px;font-weight:600;${MUTED}">Note</p>${p(o.note, "white-space:pre-line")}` : ""}

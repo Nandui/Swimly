@@ -11,7 +11,8 @@ sequential per site: `PO-BT-00001`, where BT is the site's short code (CF, DO, .
   latest at your sites. The Hub shows orders to approve and rejected ones to change.
 - **New order** (`/purchasing/new`): the site, one approved supplier, quantities of its
   approved products at their agreed prices (before VAT), when it is needed and a note.
-  The total and who may approve it update as you type. **Save draft** keeps it private;
+  A product that comes in sizes or colours gets a line for each one: pick the size and
+  colour, **Add line**, then the quantity. The total and who may approve it update as you type. **Save draft** keeps it private;
   **Send for approval** needs at least one role allowed to approve that much.
 - **An order** (`/purchasing/[id]`): laid out as the supplier receives it (supplier and our
   account number, where to deliver, lines, total). Approvers **Approve** or **Reject**
@@ -23,7 +24,8 @@ sequential per site: `PO-BT-00001`, where BT is the site's short code (CF, DO, .
   **Send to supplier** once emails to suppliers are on, and every email sent so far.
 - **Suppliers** (`/purchasing/suppliers`): the approved suppliers, and the **approvers for
   every supplier**. A supplier's page has its details, its **approved products** (name,
-  supplier's code, unit, agreed price) and **its own approvers**.
+  supplier's code, unit, agreed price and, for retail products, the brand and the sizes and
+  colours it comes in) and **its own approvers**.
 
 ## Approval
 
@@ -50,8 +52,8 @@ Owner request, 15 October 2026: after approval, send the order straight to the s
 with a way to test the emails before a real one goes out.
 
 - The email (`features/orders/server/order-email.ts`, pure) has the order number, our
-  account number, where to deliver, when it is needed, the products, codes, units and
-  quantities, and the note, in plain text and HTML. It carries **no prices or totals**: the
+  account number, where to deliver, when it is needed, the products (with brand, size and
+  colour where they have them), codes, units and quantities, and the note, in plain text and HTML. It carries **no prices or totals**: the
   supplier invoices at the agreed prices (owner decision, 15 October 2026). A highlighted
   **Invoices** box asks for every invoice for the order to go to
   invoices@leisureworldcork.com, quoting the order number (`INVOICE_ADDRESS`). It goes from Core's mailbox (`src/lib/email/sender.ts`)
@@ -82,7 +84,7 @@ with a way to test the emails before a real one goes out.
 
 Reach is the person's sites. Every change is audited (module Purchasing); orders with
 their site, suppliers, products and rules with none. Lines keep the product's name, code,
-unit and price as ordered, so changing a price never changes past orders.
+unit, brand and price as ordered, and the size and colour picked, so changing a price never changes past orders.
 
 ## Files
 

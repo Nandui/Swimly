@@ -8,7 +8,7 @@ import { roleById, withRoles } from "@/lib/directory";
 import { prisma } from "@/lib/prisma";
 import { requirePurchasingActor } from "@/modules/purchasing/shared/access";
 import { revalidatePurchasing as revalidate, text } from "@/modules/purchasing/shared/forms";
-import { centsOf, euro } from "@/modules/purchasing/shared/rules";
+import { centsOf, euro, optionsOf } from "@/modules/purchasing/shared/rules";
 
 /** Purchasing's supplier writes (docs/purchasing.md). Suppliers, products and
  *  approval rules need `purchasing.manage`. Every write is audited. */
@@ -65,7 +65,9 @@ export async function setSupplierArchived(id: string, archived: boolean): Promis
 
 const productSchema = z.object({
   name: z.string().trim().min(2, "Give the product's name.").max(120),
-  code: text(60), unit: text(60),
+  code: text(60), unit: text(60), brand: text(60),
+  sizes: text(600).transform(optionsOf).refine((v) => v.length <= 40 && v.every((o) => o.length <= 30), "Up to 40 sizes, each under 30 characters."),
+  colours: text(600).transform(optionsOf).refine((v) => v.length <= 40 && v.every((o) => o.length <= 30), "Up to 40 colours, each under 30 characters."),
   price: z.string(),
 });
 export type ProductInput = z.input<typeof productSchema>;
@@ -79,13 +81,14 @@ export async function saveProduct(supplierId: string, id: string | null, input: 
   if (priceCents === null) return fail("Give the agreed price before VAT, like 12.50.");
   const supplier = await prisma.supplier.findFirst({ where: { id: supplierId, orgId: who.orgId! }, select: { name: true } });
   if (!supplier) return fail("That supplier no longer exists.");
-  const data = { name: parsed.data.name, code: parsed.data.code, unit: parsed.data.unit, priceCents };
+  const { name, code, unit, brand, sizes, colours } = parsed.data;
+  const data = { name, code, unit, brand, sizes, colours, priceCents };
   await prisma.$transaction(async (tx) => {
     const saved = id
       ? (await tx.purchaseProduct.updateMany({ where: { id, supplierId }, data }), { id })
       : await tx.purchaseProduct.create({ data: { ...data, supplierId }, select: { id: true } });
     await logAudit({ actorId: who.id, actorName: who.name, action: id ? "update" : "create", entity: "PurchaseProduct", entityId: saved.id, clubId: null,
-      summary: `${id ? "Changed" : "Approved"} ${data.name} from ${supplier.name} at ${euro(priceCents)}${data.unit ? ` per ${data.unit}` : ""}` }, tx);
+      summary: `${id ? "Changed" : "Approved"} ${data.name}${brand ? ` (${brand})` : ""} from ${supplier.name} at ${euro(priceCents)}${data.unit ? ` per ${data.unit}` : ""}${sizes.length ? `; sizes ${sizes.join(", ")}` : ""}${colours.length ? `; colours ${colours.join(", ")}` : ""}` }, tx);
   });
   revalidatePath(`/purchasing/suppliers/${supplierId}`);
   return ok();

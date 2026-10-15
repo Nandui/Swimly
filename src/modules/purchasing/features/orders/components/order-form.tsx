@@ -1,8 +1,8 @@
 "use client";
 
-import { useState, useTransition } from "react";
+import { Fragment, useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
-import { Search, Send, Save, TriangleAlert, UserCheck } from "lucide-react";
+import { Plus, Search, Send, Save, TriangleAlert, UserCheck, X } from "lucide-react";
 import { Button } from "@/components/shadcn/button";
 import { Input } from "@/components/shadcn/input";
 import { Label } from "@/components/shadcn/label";
@@ -11,17 +11,25 @@ import { Textarea } from "@/components/shadcn/textarea";
 import { Table, TableBody, TableCell, TableFooter, TableHead, TableHeader, TableRow } from "@/components/shadcn/table";
 import { Notice } from "@/components/ui-kit/notice";
 import { saveOrder } from "@/modules/purchasing/features/orders/server/actions";
-import { approverRoles, euro, rulesFor, type ApprovalRule } from "@/modules/purchasing/shared/rules";
+import { approverRoles, euro, lineDetails, rulesFor, type ApprovalRule } from "@/modules/purchasing/shared/rules";
 import { toast } from "@/components/ui/toast";
 import { cn } from "@/lib/utils";
 
-type Product = { id: string; name: string; code: string; unit: string; priceCents: number };
+type Product = { id: string; name: string; code: string; unit: string; brand: string; sizes: string[]; colours: string[]; priceCents: number };
 type Supplier = { id: string; name: string; products: Product[] };
-type Existing = { id: string; siteId: string; supplierId: string; neededBy: Date | null; note: string; status: string; decisionNote: string; lines: { productId: string | null; quantity: number }[] };
+type Existing = { id: string; siteId: string; supplierId: string; neededBy: Date | null; note: string; status: string; decisionNote: string; lines: { productId: string | null; size: string; colour: string; quantity: number }[] };
+
+/** One line of the order: a product, and the size and colour picked when it comes in them. */
+type LineKey = { productId: string; size: string; colour: string };
+const keyOf = (l: LineKey) => JSON.stringify([l.productId, l.size, l.colour]);
+const lineOf = (key: string): LineKey => { const [productId, size, colour] = JSON.parse(key) as string[]; return { productId, size, colour }; };
+const hasOptions = (p: Product) => p.sizes.length > 0 || p.colours.length > 0;
+const count = (value: string | undefined) => Math.max(0, Math.floor(Number(value || 0)));
 
 /** Raise an order (or change a draft or rejected one): the site, one approved
- *  supplier, quantities of its approved products at their agreed prices. The
- *  total and who may approve it update as quantities change. */
+ *  supplier, quantities of its approved products at their agreed prices. A product
+ *  that comes in sizes or colours gets a line for each one picked. The total and who
+ *  may approve it update as quantities change. */
 export function OrderForm({ sites, suppliers, rules, roleNames, existing, initialSupplier }: {
   sites: { id: string; name: string; code: string | null }[];
   suppliers: Supplier[];
@@ -33,24 +41,40 @@ export function OrderForm({ sites, suppliers, rules, roleNames, existing, initia
   const router = useRouter();
   const [siteId, setSiteId] = useState(existing?.siteId ?? (sites.length === 1 ? sites[0].id : ""));
   const [supplierId, setSupplierId] = useState(existing?.supplierId ?? (suppliers.some((s) => s.id === initialSupplier) ? initialSupplier! : suppliers.length === 1 ? suppliers[0].id : ""));
-  const [qty, setQty] = useState<Record<string, string>>(() => Object.fromEntries((existing?.lines ?? []).flatMap((l) => (l.productId ? [[l.productId, String(l.quantity)]] : []))));
+  const [qty, setQty] = useState<Record<string, string>>(() => Object.fromEntries((existing?.lines ?? []).flatMap((l) => (l.productId ? [[keyOf({ productId: l.productId, size: l.size, colour: l.colour }), String(l.quantity)]] : []))));
+  const [pick, setPick] = useState<Record<string, { size: string; colour: string }>>({});
   const [neededBy, setNeededBy] = useState(existing?.neededBy ? existing.neededBy.toISOString().slice(0, 10) : "");
   const [note, setNote] = useState(existing?.note ?? "");
   const [query, setQuery] = useState("");
   const [error, setError] = useState<string | null>(null);
   const [pending, start] = useTransition();
   const supplier = suppliers.find((s) => s.id === supplierId);
-  const lines = (supplier?.products ?? []).map((p) => ({ product: p, quantity: Math.max(0, Math.floor(Number(qty[p.id] || 0))) })).filter((l) => l.quantity > 0);
+  const products = new Map((supplier?.products ?? []).map((p) => [p.id, p]));
+  const lines = Object.entries(qty).flatMap(([key, value]) => {
+    const line = lineOf(key);
+    const product = products.get(line.productId);
+    return product && count(value) > 0 ? [{ ...line, product, quantity: count(value) }] : [];
+  });
   const total = lines.reduce((sum, l) => sum + l.product.priceCents * l.quantity, 0);
   const approvers = supplier ? approverRoles(rules, supplier.id, total) : [];
   const limits = supplier ? rulesFor(rules, supplier.id) : [];
   const q = query.trim().toLowerCase();
-  const shown = (supplier?.products ?? []).filter((p) => !q || `${p.name} ${p.code} ${p.unit}`.toLowerCase().includes(q));
+  const shown = (supplier?.products ?? []).filter((p) => !q || `${p.name} ${p.code} ${p.unit} ${p.brand} ${p.sizes.join(" ")} ${p.colours.join(" ")}`.toLowerCase().includes(q));
+  /** The lines already picked for a product that comes in sizes or colours, in the order added. */
+  const variantsOf = (p: Product) => Object.keys(qty).map(lineOf).filter((l) => l.productId === p.id);
+  /** The size and colour about to be added for a product; a single option is picked already. */
+  const pickOf = (p: Product) => ({ size: pick[p.id]?.size ?? (p.sizes.length === 1 ? p.sizes[0] : ""), colour: pick[p.id]?.colour ?? (p.colours.length === 1 ? p.colours[0] : "") });
+  function addVariant(p: Product) {
+    const key = keyOf({ productId: p.id, ...pickOf(p) });
+    setQty((q) => ({ ...q, [key]: String(count(q[key]) + 1) }));
+    setPick((all) => ({ ...all, [p.id]: { size: "", colour: "" } }));
+  }
+  const removeLine = (key: string) => setQty((q) => Object.fromEntries(Object.entries(q).filter(([k]) => k !== key)));
 
   function save(submit: boolean) {
     setError(null);
     start(async () => {
-      const result = await saveOrder(existing?.id ?? null, { siteId, supplierId, neededBy, note, lines: lines.map((l) => ({ productId: l.product.id, quantity: l.quantity })) }, submit);
+      const result = await saveOrder(existing?.id ?? null, { siteId, supplierId, neededBy, note, lines: lines.map((l) => ({ productId: l.productId, size: l.size, colour: l.colour, quantity: l.quantity })) }, submit);
       if (!result.ok) { setError(result.error); return; }
       toast.success(submit ? "Sent for approval" : "Draft saved");
       router.push(`/purchasing/${result.id}`);
@@ -74,7 +98,7 @@ export function OrderForm({ sites, suppliers, rules, roleNames, existing, initia
           </div>
           <div className="space-y-2">
             <Label htmlFor="po-supplier">Supplier</Label>
-            <NativeSelect id="po-supplier" value={supplierId} onChange={(e) => { setSupplierId(e.target.value); setQty({}); }} required>
+            <NativeSelect id="po-supplier" value={supplierId} onChange={(e) => { setSupplierId(e.target.value); setQty({}); setPick({}); }} required>
               <NativeSelectOption value="" disabled>Choose an approved supplier</NativeSelectOption>
               {suppliers.map((s) => <NativeSelectOption key={s.id} value={s.id}>{s.name}</NativeSelectOption>)}
             </NativeSelect>
@@ -102,16 +126,72 @@ export function OrderForm({ sites, suppliers, rules, roleNames, existing, initia
               </TableHeader>
               <TableBody>
                 {shown.map((p) => {
-                  const n = Math.max(0, Math.floor(Number(qty[p.id] || 0)));
+                  const details = [p.brand, p.code].filter(Boolean).join(" · ");
+                  const product = (
+                    <TableCell className="px-3 whitespace-normal"><span className="font-medium">{p.name}</span>{details ? <span className="block text-xs text-ui-muted-foreground">{details}</span> : null}</TableCell>
+                  );
+                  if (!hasOptions(p)) {
+                    const key = keyOf({ productId: p.id, size: "", colour: "" });
+                    const n = count(qty[key]);
+                    return (
+                      <TableRow key={p.id} className={cn(n > 0 && "bg-[var(--pc-primary-soft)]/40")}>
+                        {product}
+                        <TableCell className="hidden px-3 text-ui-muted-foreground sm:table-cell">{p.unit || "Each"}</TableCell>
+                        <TableCell className="px-3 text-right tabular-nums">{euro(p.priceCents)}</TableCell>
+                        <TableCell className="px-3"><Input type="number" inputMode="numeric" min={0} max={100000} step={1} value={qty[key] ?? ""} placeholder="0"
+                          onChange={(e) => setQty((q) => ({ ...q, [key]: e.target.value }))} aria-label={`Quantity of ${p.name}`} className="w-24 text-right tabular-nums" /></TableCell>
+                        <TableCell className="px-3 text-right font-medium tabular-nums">{n ? euro(n * p.priceCents) : ""}</TableCell>
+                      </TableRow>
+                    );
+                  }
+                  const next = pickOf(p);
+                  const ready = (!p.sizes.length || next.size) && (!p.colours.length || next.colour);
                   return (
-                    <TableRow key={p.id} className={cn(n > 0 && "bg-[var(--pc-primary-soft)]/40")}>
-                      <TableCell className="px-3 whitespace-normal"><span className="font-medium">{p.name}</span>{p.code ? <span className="block text-xs text-ui-muted-foreground">{p.code}</span> : null}</TableCell>
-                      <TableCell className="hidden px-3 text-ui-muted-foreground sm:table-cell">{p.unit || "Each"}</TableCell>
-                      <TableCell className="px-3 text-right tabular-nums">{euro(p.priceCents)}</TableCell>
-                      <TableCell className="px-3"><Input type="number" inputMode="numeric" min={0} max={100000} step={1} value={qty[p.id] ?? ""} placeholder="0"
-                        onChange={(e) => setQty((q) => ({ ...q, [p.id]: e.target.value }))} aria-label={`Quantity of ${p.name}`} className="w-24 text-right tabular-nums" /></TableCell>
-                      <TableCell className="px-3 text-right font-medium tabular-nums">{n ? euro(n * p.priceCents) : ""}</TableCell>
-                    </TableRow>
+                    <Fragment key={p.id}>
+                      <TableRow className="border-b-0">
+                        {product}
+                        <TableCell className="hidden px-3 text-ui-muted-foreground sm:table-cell">{p.unit || "Each"}</TableCell>
+                        <TableCell className="px-3 text-right tabular-nums">{euro(p.priceCents)}</TableCell>
+                        <TableCell colSpan={2} className="px-3 text-xs whitespace-normal text-ui-muted-foreground">A line for each {[p.sizes.length ? "size" : "", p.colours.length ? "colour" : ""].filter(Boolean).join(" and ")}</TableCell>
+                      </TableRow>
+                      {variantsOf(p).map((l) => {
+                        const key = keyOf(l);
+                        const n = count(qty[key]);
+                        const label = lineDetails({ size: l.size, colour: l.colour });
+                        return (
+                          <TableRow key={key} className={cn("border-b-0", n > 0 && "bg-[var(--pc-primary-soft)]/40")}>
+                            <TableCell colSpan={3} className="px-3 pl-6">
+                              <span className="flex items-center gap-1">
+                                <Button type="button" variant="ghost" size="icon" className="size-11 shrink-0" aria-label={`Remove ${p.name}, ${label}`} onClick={() => removeLine(key)}><X aria-hidden="true" /></Button>
+                                <span className="text-sm">{label}</span>
+                              </span>
+                            </TableCell>
+                            <TableCell className="px-3"><Input type="number" inputMode="numeric" min={0} max={100000} step={1} value={qty[key] ?? ""} placeholder="0"
+                              onChange={(e) => setQty((q) => ({ ...q, [key]: e.target.value }))} aria-label={`Quantity of ${p.name}, ${label}`} className="w-24 text-right tabular-nums" /></TableCell>
+                            <TableCell className="px-3 text-right font-medium tabular-nums">{n ? euro(n * p.priceCents) : ""}</TableCell>
+                          </TableRow>
+                        );
+                      })}
+                      <TableRow>
+                        <TableCell colSpan={5} className="px-3 pl-6">
+                          <div className="flex flex-wrap items-center gap-2">
+                            {p.sizes.length ? (
+                              <div className="w-32"><NativeSelect value={next.size} onChange={(e) => setPick((all) => ({ ...all, [p.id]: { ...next, size: e.target.value } }))} aria-label={`Size of ${p.name}`}>
+                                <NativeSelectOption value="" disabled>Size</NativeSelectOption>
+                                {p.sizes.map((v) => <NativeSelectOption key={v} value={v}>{v}</NativeSelectOption>)}
+                              </NativeSelect></div>
+                            ) : null}
+                            {p.colours.length ? (
+                              <div className="w-36"><NativeSelect value={next.colour} onChange={(e) => setPick((all) => ({ ...all, [p.id]: { ...next, colour: e.target.value } }))} aria-label={`Colour of ${p.name}`}>
+                                <NativeSelectOption value="" disabled>Colour</NativeSelectOption>
+                                {p.colours.map((v) => <NativeSelectOption key={v} value={v}>{v}</NativeSelectOption>)}
+                              </NativeSelect></div>
+                            ) : null}
+                            <Button type="button" variant="outline" className="min-h-11" disabled={!ready} onClick={() => addVariant(p)} aria-label={`Add a line of ${p.name}`}><Plus aria-hidden="true" />Add line</Button>
+                          </div>
+                        </TableCell>
+                      </TableRow>
+                    </Fragment>
                   );
                 })}
                 {shown.length === 0 ? <TableRow><TableCell colSpan={5} className="px-3 py-6 text-center text-ui-muted-foreground">No product matches.</TableCell></TableRow> : null}

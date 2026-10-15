@@ -6,7 +6,10 @@ const order: OrderEmailInput = {
   number: "PO-BT-00007", organisation: "Sample Leisure", site: "Bishopstown",
   supplier: { name: "Sample <Chemicals>", contactName: "", email: "orders@example.invalid", accountNumber: "LW-1" },
   neededBy: "20 Oct 2026", approvedOn: "15 Oct 2026", note: "Back door, <please>",
-  lines: [{ name: "Chlorine & tablets", code: "CT-25", unit: "25 kg drum", quantity: 2 }],
+  lines: [
+    { name: "Chlorine & tablets", code: "CT-25", unit: "25 kg drum", brand: "", size: "", colour: "", quantity: 2 },
+    { name: "Training suit", code: "TS-1", unit: "", brand: "Speedo", size: "30", colour: "Navy", quantity: 3 },
+  ],
   sender: { name: "Sample Person", email: "sample@example.invalid" },
 };
 
@@ -15,6 +18,8 @@ test("the email carries the order without prices, and says where invoices go", (
   assert.equal(m.subject, "Purchase order PO-BT-00007 from Sample Leisure");
   assert.match(m.text, /^Hello Sample <Chemicals>,/);
   assert.match(m.text, /2 × Chlorine & tablets \(code CT-25\), 25 kg drum\r\n/);
+  assert.match(m.text, /3 × Training suit, Speedo · Size 30 · Navy \(code TS-1\), each\r\n/);
+  assert.ok(m.html.includes("Speedo · Size 30 · Navy"), "the brand, size and colour are on the line");
   assert.match(m.text, /Deliver to: Sample Leisure Bishopstown/);
   assert.ok(!/€|VAT|price/i.test(m.text + m.html), "no prices or totals");
   assert.match(m.text, /INVOICES: Please submit all invoices for this order to invoices@leisureworldcork\.com, quoting PO-BT-00007\./);

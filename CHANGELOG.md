@@ -4,6 +4,12 @@ Patch notes for everyone who uses Turnfin at the swim school, the desk and the o
 
 **How versions are numbered:** the middle number goes up when something new arrives (a module, a screen, a new way of working), and the last number when something is fixed or tidied without changing how you work. This list starts on 3 October 2026, when Turnfin moved to its new look; earlier changes are not listed.
 
+## 1.16.0 · 15 October 2026 · Purchasing: brand, sizes and colours for retail products
+
+- Approved products can now have a **brand**, the **sizes** they come in and the **colours** they come in, for suppliers who sell us retail stock such as swimwear and caps. Type the sizes and colours with commas, for example "S, M, L". Leave them empty for everything else; nothing changes for those products.
+- When you raise an order, a product with sizes or colours gets **a line for each one**: pick the size and colour, press **Add line**, then type the quantity. So 4 in size 28 Navy and 6 in size 30 Navy are two lines on the same order.
+- The order, the printout and the email to the supplier show the brand, size and colour under each product.
+
 ## 1.15.1 · 15 October 2026 · Parents app: phone number required
 
 - Parents must now give a phone number (at least 7 digits) with their name in the parents app. Families who signed up without one are asked for it the next time they book an assessment, ask to link a child or send a change, so nobody is locked out.
