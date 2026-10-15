@@ -4,6 +4,11 @@ Patch notes for everyone who uses Turnfin at the swim school, the desk and the o
 
 **How versions are numbered:** the middle number goes up when something new arrives (a module, a screen, a new way of working), and the last number when something is fixed or tidied without changing how you work. This list starts on 3 October 2026, when Turnfin moved to its new look; earlier changes are not listed.
 
+## 1.17.7 · 15 October 2026 · Purchasing: replies to whoever raised the order, and several copies
+
+- When a supplier replies to a purchase order email, the reply now goes to the person who raised the order, even if someone else sent it.
+- **Copy to** under Suppliers now takes up to five email addresses, separated by commas. Everyone listed gets a copy of every order emailed to a supplier.
+
 ## 1.17.6 · 15 October 2026 · Purchasing: the unit beside the quantity
 
 - In the email to suppliers, each product's unit now sits next to its quantity, for example **8 × cylinder(s)**, so the supplier reads them together.

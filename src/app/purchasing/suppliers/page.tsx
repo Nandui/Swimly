@@ -83,7 +83,7 @@ export default async function SuppliersPage() {
           <li className="pc-row">
             <span className="pc-row-body">
               <span className="pc-row-title">{emails.copyTo ? `Copy to ${emails.copyTo}` : "Nobody is copied"}</span>
-              <span className="pc-row-hint">Gets a copy (CC) of every order emailed to a supplier. Tests are not copied.</span>
+              <span className="pc-row-hint">{emails.copyTo.includes(",") ? "Get" : "Gets"} a copy (CC) of every order emailed to a supplier. Tests are not copied.</span>
             </span>
             {who.manage ? <span className="pc-row-trail"><SupplierEmailCopy copyTo={emails.copyTo} /></span> : null}
           </li>

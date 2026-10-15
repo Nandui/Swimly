@@ -18,7 +18,7 @@ const ORG = "org_leisureworld";
 type GrantRow = { roleName: string; permissions: string[]; screens: string[]; scopeKind: string; scopeId: string };
 const state = { id: "mia", permissions: [] as string[], grants: [] as GrantRow[] };
 /** Emails are never sent from tests: the transport is this double, which records them. */
-const outbox: { to: string; subject: string; text: string; replyTo?: string; cc?: string; logo?: string }[] = [];
+const outbox: { to: string; subject: string; text: string; replyTo?: string; cc?: string[]; logo?: string }[] = [];
 const mail = { down: false };
 let bishopstown = "", churchfield = "";
 
@@ -53,7 +53,7 @@ before(async () => {
     "@/lib/clubs/current": { currentClubId: async () => bishopstown, currentClubIdIfAny: async () => bishopstown },
     "next/cache": { revalidatePath() {} },
     "@/lib/email/sender": { emailSender: (name: string) => ({ clientId: "c", clientSecret: "s", refreshToken: "r", sender: "no-reply@example.invalid", fromHeader: name }) },
-    "@/lib/email/google": { sendGoogleEmail: async (to: string, subject: string, content: { text: string; html?: string; replyTo?: string; cc?: string; inlineImages?: { cid: string; content: Buffer }[] }) => {
+    "@/lib/email/google": { sendGoogleEmail: async (to: string, subject: string, content: { text: string; html?: string; replyTo?: string; cc?: string[]; inlineImages?: { cid: string; content: Buffer }[] }) => {
       if (mail.down) throw new Error("Email submission failed.");
       const logo = content.inlineImages?.[0];
       outbox.push({ to, subject, text: content.text, replyTo: content.replyTo, cc: content.cc, logo: logo && logo.content.length > 0 && content.html?.includes(`cid:${logo.cid}`) ? logo.cid : undefined });
@@ -177,14 +177,18 @@ test("an approved order is emailed: tests to yourself first, the supplier only o
   as("gina", ["purchasing.manage"]);
   assert.equal((await actions.setSupplierEmails(true)).ok, true);
   assert.equal((await actions.setSupplierEmailCopy("not an address")).ok, false);
-  assert.equal((await actions.setSupplierEmailCopy("gina@example.invalid")).ok, true);
+  assert.equal((await actions.setSupplierEmailCopy("gina@example.invalid, not an address")).ok, false);
+  assert.equal((await actions.setSupplierEmailCopy("a@example.invalid, b@example.invalid, c@example.invalid, d@example.invalid, e@example.invalid, f@example.invalid")).ok, false, "a few, not a mailing list");
+  assert.equal((await actions.setSupplierEmailCopy(" gina@example.invalid; accounts@example.invalid,GINA@example.invalid ")).ok, true);
+  assert.equal((await db.purchasingSettings.findFirstOrThrow()).copyTo, "gina@example.invalid, accounts@example.invalid", "tidied, each once");
   as("mia", [], [at(bishopstown, ["purchasing.request"])]);
   assert.equal((await actions.setSupplierEmailCopy("")).ok, false, "only Manage");
   assert.equal((await actions.emailOrder(first.id, "supplier")).ok, false, "no address yet");
   await db.supplier.update({ where: { id: supplier.id }, data: { email: "orders@example.invalid", contactName: "Sam" } });
   assert.equal((await actions.emailOrder(first.id, "supplier")).ok, true);
   assert.equal(outbox.at(-1)!.to, "orders@example.invalid");
-  assert.equal(outbox.at(-1)!.cc, "gina@example.invalid", "copied on every email to a supplier");
+  assert.deepEqual(outbox.at(-1)!.cc, ["gina@example.invalid", "accounts@example.invalid"], "everyone listed is copied on every email to a supplier");
+  assert.equal(outbox.at(-1)!.replyTo, "mia@example.invalid");
   assert.equal(outbox[0].cc, undefined, "tests are not copied");
   assert.match(outbox.at(-1)!.subject, new RegExp(`^Purchase order ${firstNumber()}`));
   assert.match(outbox.at(-1)!.text, /^Hello Sam,/);
@@ -194,8 +198,14 @@ test("an approved order is emailed: tests to yourself first, the supplier only o
   assert.equal((await actions.emailOrder(first.id, "supplier")).ok, false);
   mail.down = false;
   const kept = await db.purchaseOrderEmail.findMany({ where: { orderId: first.id }, orderBy: { createdAt: "asc" } });
-  assert.deepEqual(kept.map((e) => [e.kind, e.status, e.ccAddress]), [["test", "sent", ""], ["supplier", "sent", "gina@example.invalid"], ["supplier", "failed", "gina@example.invalid"]]);
+  assert.deepEqual(kept.map((e) => [e.kind, e.status, e.ccAddress]), [["test", "sent", ""], ["supplier", "sent", "gina@example.invalid, accounts@example.invalid"], ["supplier", "failed", "gina@example.invalid, accounts@example.invalid"]]);
   assert.equal((await db.auditLog.count({ where: { entity: "PurchaseOrder", entityId: first.id, action: "email" } })), 3);
+
+  // Sent by someone else, the supplier's replies still go to whoever raised the order.
+  as("gina", ["purchasing.manage"]);
+  assert.equal((await actions.emailOrder(first.id, "supplier")).ok, true);
+  assert.equal(outbox.at(-1)!.replyTo, "mia@example.invalid", "replies go to whoever raised it");
+  assert.match(outbox.at(-1)!.text, /it goes to mia\./);
 
   // Off again: nothing more goes to the supplier.
   as("gina", ["purchasing.manage"]);

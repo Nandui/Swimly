@@ -8,7 +8,7 @@ import { roleById, withRoles } from "@/lib/directory";
 import { prisma } from "@/lib/prisma";
 import { requirePurchasingActor } from "@/modules/purchasing/shared/access";
 import { revalidatePurchasing as revalidate, text } from "@/modules/purchasing/shared/forms";
-import { centsOf, euro, optionsOf } from "@/modules/purchasing/shared/rules";
+import { centsOf, copyList, euro, MAX_COPY_TO, optionsOf } from "@/modules/purchasing/shared/rules";
 
 /** Purchasing's supplier writes (docs/purchasing.md). Suppliers, products and
  *  approval rules need `purchasing.manage`. Every write is audited. */
@@ -147,12 +147,14 @@ export async function removeApprovalRule(id: string): Promise<ActionResult> {
 /* Emails to suppliers. */
 
 /** Who gets a copy (CC) of every email to a supplier: one address, or none. */
-export async function setSupplierEmailCopy(address: string): Promise<ActionResult> {
+export async function setSupplierEmailCopy(addresses: string): Promise<ActionResult> {
   const who = await manager();
   if (!who) return fail("Changing who is copied needs Purchasing: Manage.");
-  const parsed = z.string().trim().max(254).refine((v) => v === "" || z.string().email().safeParse(v).success, "Use an email address like name@example.com, or leave it empty.").safeParse(address);
-  if (!parsed.success) return fail(parsed.error.issues[0].message);
-  const copyTo = parsed.data;
+  const list = copyList(addresses);
+  if (list.length > MAX_COPY_TO) return fail(`Copy up to ${MAX_COPY_TO} addresses.`);
+  const wrong = list.find((a) => a.length > 254 || !z.string().email().safeParse(a).success);
+  if (wrong) return fail(`"${wrong}" is not an email address. Use addresses like name@example.com, separated by commas, or leave it empty.`);
+  const copyTo = list.join(", ");
   await prisma.$transaction(async (tx) => {
     await tx.purchasingSettings.upsert({
       where: { orgId: who.orgId! },
