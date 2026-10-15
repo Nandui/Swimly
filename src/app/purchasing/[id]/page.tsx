@@ -5,7 +5,7 @@ import { Button } from "@/components/shadcn/button";
 import { Table, TableBody, TableCell, TableFooter, TableHead, TableHeader, TableRow } from "@/components/shadcn/table";
 import { Notice } from "@/components/ui-kit/notice";
 import { PageHeader } from "@/components/ui-kit/page-header";
-import { ApproveOrder, CancelOrder, EmailHistory, euro, lastSentToSupplier, PoStatusTag, PrintOrder, purchaseOrder, RejectOrder } from "@/modules/purchasing/features/orders";
+import { ApproveOrder, CancelOrder, EmailHistory, euro, lastSentToSupplier, lineDetails, PoStatusTag, PrintOrder, purchaseOrder, RejectOrder } from "@/modules/purchasing/features/orders";
 import { formatDate, formatDateTime } from "@/lib/format";
 
 export const metadata: Metadata = { title: "Purchase order" };
@@ -74,7 +74,7 @@ export default async function OrderPage({ params }: { params: Promise<{ id: stri
           <TableBody>
             {o.lines.map((l) => (
               <TableRow key={l.id}>
-                <TableCell className="px-3 font-medium whitespace-normal">{l.name}</TableCell>
+                <TableCell className="px-3 whitespace-normal"><span className="font-medium">{l.name}</span>{lineDetails(l) ? <span className="block text-xs text-ui-muted-foreground">{lineDetails(l)}</span> : null}</TableCell>
                 <TableCell className="px-3 text-ui-muted-foreground">{l.code || "–"}</TableCell>
                 <TableCell className="px-3 text-ui-muted-foreground">{l.unit || "Each"}</TableCell>
                 <TableCell className="px-3 text-right tabular-nums">{l.quantity}</TableCell>

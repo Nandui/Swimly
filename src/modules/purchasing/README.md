@@ -17,9 +17,9 @@ The rules for the screens and approvals are in [docs/purchasing.md](../../../doc
 ## Data owned
 Declared in `prisma/schema/purchasing.prisma` (table names kept, ADR 0002):
 - `Supplier` — an approved supplier.
-- `PurchaseProduct` — a supplier's approved product and agreed price.
+- `PurchaseProduct` — a supplier's approved product and agreed price, and for retail products its brand and the sizes and colours it comes in.
 - `PurchaseApprovalRule` — a role that may approve up to an amount, for one supplier or all.
-- `PurchaseOrder`, `PurchaseOrderLine` — an order and its lines.
+- `PurchaseOrder`, `PurchaseOrderLine` — an order and its lines (one per product, size and colour).
 - `PurchaseOrderCounter` — the next order number for each site.
 - `PurchaseOrderEmail` — every email of an approved order: to the supplier or a test to the sender, sent or failed.
 - `PurchasingSettings` — per organisation, whether approved orders may be emailed to suppliers (off until Manage turns it on), and who is copied on them.

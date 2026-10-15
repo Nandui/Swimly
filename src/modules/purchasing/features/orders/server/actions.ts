@@ -14,7 +14,7 @@ import { requirePurchasingActor } from "@/modules/purchasing/shared/access";
 import { revalidatePurchasing as revalidate, text } from "@/modules/purchasing/shared/forms";
 import { orderEmail } from "@/modules/purchasing/features/orders/server/order-email";
 import { orderEmailContext } from "@/modules/purchasing/features/orders/server/supplier-email";
-import { EDITABLE, approverRoles, euro, mayApprove, orderTotal, poNumber, type PoStatus } from "@/modules/purchasing/shared/rules";
+import { EDITABLE, approverRoles, euro, mayApprove, orderTotal, poNumber, variantProblem, type PoStatus } from "@/modules/purchasing/shared/rules";
 
 /** Purchasing's order writes (docs/purchasing.md). Raising an order needs
  *  `purchasing.request` at its site; approving needs a role the rules name for
@@ -28,12 +28,13 @@ const orderSchema = z.object({
   supplierId: z.string().min(1, "Choose a supplier."),
   neededBy: z.string().trim().refine((v) => v === "" || isDateOnly(v), "Use a date for when it is needed, or leave it empty.").transform((v) => v || null),
   note: text(1000),
-  lines: z.array(z.object({ productId: z.string().min(1), quantity: z.coerce.number().int().min(1).max(100000) })).max(100, "Up to 100 lines on one order."),
+  lines: z.array(z.object({ productId: z.string().min(1), size: text(30), colour: text(30), quantity: z.coerce.number().int().min(1).max(100000) })).max(100, "Up to 100 lines on one order."),
 });
 export type OrderInput = z.input<typeof orderSchema>;
 
 /** Save an order as a draft, or send it for approval (`submit`). Only approved
- *  products from that supplier, at today's agreed prices. Sending it needs at
+ *  products from that supplier, at today's agreed prices, each in one of the sizes
+ *  and colours it comes in (one line for each). Sending it needs at
  *  least one role allowed to approve that much. */
 export async function saveOrder(id: string | null, input: OrderInput, submit: boolean): Promise<ActionResult & { id?: string }> {
   const who = await requirePurchasingActor();
@@ -42,17 +43,22 @@ export async function saveOrder(id: string | null, input: OrderInput, submit: bo
   const data = parsed.data;
   const lines = data.lines.filter((l) => l.quantity > 0);
   if (submit && lines.length === 0) return fail("Add at least one product to send it for approval.");
+  if (new Set(lines.map((l) => JSON.stringify([l.productId, l.size, l.colour]))).size !== lines.length) return fail("A product is on the order twice in the same size and colour. Put it on one line.");
   try { await requireCapFor("purchasing.request", { siteId: data.siteId, orgId: who.orgId }); }
   catch (error) { if (error instanceof AuthorizationError) return fail("You can only raise orders for the sites your role covers."); throw error; }
   const supplier = await prisma.supplier.findFirst({
     where: { id: data.supplierId, orgId: who.orgId ?? undefined, archivedAt: null },
-    select: { name: true, products: { where: { archivedAt: null, id: { in: lines.map((l) => l.productId) } }, select: { id: true, name: true, code: true, unit: true, priceCents: true } } },
+    select: { name: true, products: { where: { archivedAt: null, id: { in: lines.map((l) => l.productId) } }, select: { id: true, name: true, code: true, unit: true, brand: true, sizes: true, colours: true, priceCents: true } } },
   });
   if (!supplier) return fail("That supplier is not approved to order from.");
   if (supplier.products.length !== new Set(lines.map((l) => l.productId)).size) return fail("Some of those products are no longer approved. Check the order again.");
+  for (const l of lines) {
+    const problem = variantProblem(supplier.products.find((x) => x.id === l.productId)!, l);
+    if (problem) return fail(`${problem} Its sizes or colours may have changed; check the order again.`);
+  }
   const rows = lines.map((l) => {
     const p = supplier.products.find((x) => x.id === l.productId)!;
-    return { productId: p.id, name: p.name, code: p.code, unit: p.unit, unitPriceCents: p.priceCents, quantity: l.quantity };
+    return { productId: p.id, name: p.name, code: p.code, unit: p.unit, brand: p.brand, size: l.size, colour: l.colour, unitPriceCents: p.priceCents, quantity: l.quantity };
   });
   const totalCents = orderTotal(rows);
   if (submit) {
