@@ -12,6 +12,12 @@ Patch notes for everyone who uses Turnfin at the swim school, the desk and the o
 - In **Turnfin Me**, staff take a course one lesson per screen, with a progress bar and **Done, next lesson**. It remembers where they got to: Home shows **Continue** on the course they were in. They finish the course, or ask for sign-off, once every lesson is done.
 - Training has a new level, **Author**, between Trainer and Manage: build and publish courses without assigning them. Roles with Manage can still do everything they could. Give the level under **Admin > Roles**.
 
+## 1.12.4 · 15 October 2026 · New sites show in every module
+
+- A site added under **Admin > Sites** showed in the site picker and the swim school, but not in Incidents, Rota, Tasks, Training, Short courses, Stock, Purchasing or the Academy, or when choosing the sites a person works at. It was saved without belonging to LeisureWorld, and those lists only show LeisureWorld's sites.
+- New sites now belong to LeisureWorld straight away.
+- A site added before this fix says so on **Admin > Sites**. Open it with the pencil and choose **Save changes**, without changing anything, and it shows everywhere.
+
 ## 1.12.3 · 14 October 2026 · Rota: put staff on any activity
 
 - On the **Plan**, the time in someone's shift with nothing given to it (**No activity**) used to offer only the activities already added to that day that still needed someone. Activities on the list that were not on the day yet, or were already full, never showed.
