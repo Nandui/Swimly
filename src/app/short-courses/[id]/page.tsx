@@ -7,7 +7,7 @@ import { PageHeader } from "@/components/ui-kit/page-header";
 import { Tag } from "@/components/ui-kit/tag";
 import {
   clock, CourseDialog, CourseStatusButton, euro, HEALTH_FORM_META, newCourseOptions, PersonDialog, PlaceButton, RegisterDialog, SessionDialog,
-  SHORT_COURSE_AREA_META, SHORT_COURSE_META, SHORT_COURSE_PAYMENT_META, SHORT_COURSE_PLACE_META, shortCourse,
+  SHORT_COURSE_AREA_META, SHORT_COURSE_CALL_DUE_META, SHORT_COURSE_META, SHORT_COURSE_ONLINE_META, SHORT_COURSE_PAYMENT_META, SHORT_COURSE_PLACE_META, shortCourse,
   type ShortCourseArea, type ShortCoursePayment, type ShortCourseView,
 } from "@/modules/short-courses/features/courses";
 import { formatDate, plural } from "@/lib/format";
@@ -45,6 +45,7 @@ export default async function ShortCoursePage({ params }: { params: Promise<{ id
     ["Still to pay", owed ? euro(owed) : "Nothing"],
     ["Who it is for", course.type.minAge ? `${course.type.minAge} and over` : "Any age"],
     ["Health form", course.type.healthForm ? "Asked for" : "Not asked for"],
+    ["Online booking", course.bookOnline ? (course.state === "planned" ? "Open until the first session" : "Closed once it started") : "Off"],
   ];
   return (
     <div className="flex flex-col gap-6">
@@ -52,7 +53,7 @@ export default async function ShortCoursePage({ params }: { params: Promise<{ id
       <PageHeader title={course.type.name} description={`${course.site.name} · ${dates}`}
         status={<><Tag meta={SHORT_COURSE_META[course.state]} /><Tag meta={area} /></>}
         actions={canManage ? <>
-          {options && !closed ? <CourseDialog course={{ id: course.id, siteId: course.siteId, typeId: course.typeId, capacity: course.capacity, priceCents: course.priceCents, instructorId: course.instructorId, note: course.note }}
+          {options && !closed ? <CourseDialog course={{ id: course.id, siteId: course.siteId, typeId: course.typeId, capacity: course.capacity, priceCents: course.priceCents, instructorId: course.instructorId, note: course.note, bookOnline: course.bookOnline }}
             sites={[{ id: course.siteId, name: course.site.name }]} types={[{ id: course.typeId, name: course.type.name, weeks: course.sessions.length, sessionMinutes: 60 }]}
             perSite={options.perSite.some((s) => s.siteId === course.siteId) ? options.perSite : [{ siteId: course.siteId, people: [], areas }]} today={today}
             trigger={<Button variant="outline"><Pencil aria-hidden="true" />Change</Button>} /> : null}
@@ -84,10 +85,13 @@ export default async function ShortCoursePage({ params }: { params: Promise<{ id
               <li key={p.id} className="pc-row">
                 <span className="pc-row-body">
                   <span className="pc-row-title">{p.name}</span>
-                  <span className="pc-row-hint">{[p.phone || p.email || null, course.held ? `at ${p.attended} of ${course.held}` : null,
-                    p.owed ? `${euro(p.owed)} to pay` : p.paidCents ? `${euro(p.paidCents)} paid` : null, p.note || null].filter(Boolean).join(" · ")}</span>
+                  <span className="pc-row-hint">{[p.phone || p.email || null, p.online?.phone2 || null, course.held ? `at ${p.attended} of ${course.held}` : null,
+                    p.owed ? `${euro(p.owed)} to pay` : p.paidCents ? `${euro(p.paidCents)} paid` : null, p.online?.reference ?? null,
+                    p.online?.call ? `${p.online.call.due === "overdue" ? p.online.call.label : `phone by ${p.online.call.label}`}${p.online.callTimes.length ? `, best ${p.online.callTimes.join(", ").toLowerCase()}` : ""}` : null,
+                    p.note || null].filter(Boolean).join(" · ")}</span>
                 </span>
                 <span className="pc-row-trail flex-wrap">
+                  {p.online?.call ? <Tag meta={SHORT_COURSE_CALL_DUE_META[p.online.call.due]} /> : p.online ? <Tag meta={SHORT_COURSE_ONLINE_META.online} /> : null}
                   {course.type.healthForm && !p.healthFormOn ? <Tag meta={HEALTH_FORM_META.missing} /> : null}
                   <Tag meta={SHORT_COURSE_PAYMENT_META[p.payment as ShortCoursePayment] ?? SHORT_COURSE_PAYMENT_META.owed} />
                   {personDialog(p)}
@@ -111,9 +115,10 @@ export default async function ShortCoursePage({ params }: { params: Promise<{ id
               <li key={p.id} className="pc-row">
                 <span className="pc-row-body">
                   <span className="pc-row-title">{i + 1}. {p.name}</span>
-                  <span className="pc-row-hint">{[p.phone || null, p.email || null, `added ${formatDate(p.createdAt)}`, p.note || null].filter(Boolean).join(" · ")}</span>
+                  <span className="pc-row-hint">{[p.phone || null, p.online?.phone2 || null, p.email || null, `added ${formatDate(p.createdAt)}`, p.online?.reference ?? null, p.note || null].filter(Boolean).join(" · ")}</span>
                 </span>
                 <span className="pc-row-trail flex-wrap">
+                  {p.online ? <Tag meta={SHORT_COURSE_ONLINE_META.online} /> : null}
                   <Tag meta={SHORT_COURSE_PLACE_META.waiting} />
                   {personDialog(p)}
                   {!closed && free > 0 ? <PlaceButton id={p.id} name={p.name} to="booked" label="Give the place" primary={i === 0} title={`Give ${p.name} a place?`} description="They are booked on. Record their payment next." /> : null}

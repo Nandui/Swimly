@@ -1,4 +1,4 @@
-import { Ban, CalendarClock, CircleCheck, CircleDashed, Coins, Dumbbell, FileWarning, HandCoins, Hourglass, PersonStanding, PlayCircle, Shapes, Ticket, Wallet, Waves } from "lucide-react";
+import { Ban, CalendarClock, CircleCheck, CircleDashed, Clock, Coins, Dumbbell, FileWarning, Globe, HandCoins, Hourglass, PersonStanding, PlayCircle, Shapes, Ticket, TriangleAlert, Wallet, Waves } from "lucide-react";
 import type { StatusMeta } from "@/lib/status";
 
 /** The rules for short courses (owner decision, 13 October 2026; docs/short-courses.md). Pure,
@@ -46,6 +46,24 @@ export type ShortCoursePlace = keyof typeof SHORT_COURSE_PLACE_META;
 export const HEALTH_FORM_META = {
   missing: { label: "No health form", color: "orange", icon: FileWarning },
 } as const satisfies Record<string, StatusMeta>;
+
+/** Online booking (phase 2): a place held on the booking site, and how soon the desk must phone
+ *  to take payment (72 hours from holding it). */
+export const SHORT_COURSE_ONLINE_META = {
+  online: { label: "Booked online", color: "purple", icon: Globe },
+} as const satisfies Record<string, StatusMeta>;
+export const SHORT_COURSE_CALL_DUE_META = {
+  overdue: { label: "Overdue", color: "red", icon: TriangleAlert },
+  soon: { label: "Phone within a day", color: "orange", icon: Clock },
+  later: { label: "To phone", color: "blue", icon: Clock },
+} as const satisfies Record<string, StatusMeta>;
+export type ShortCourseCallDue = keyof typeof SHORT_COURSE_CALL_DUE_META;
+
+/** When they would like a call, in words. */
+export const SHORT_COURSE_CALL_TIMES: Record<string, string> = { morning: "Morning", afternoon: "Afternoon", evening: "Evening" };
+
+/** Someone who held a place online and still owes: the desk phones them. */
+export const toPhone = (p: { source: string; status: string; payment: string; callBy: Date | null }) => p.source === "online" && p.status === "booked" && p.payment === "owed" && p.callBy !== null;
 
 export const takesPlace = (status: string) => status === "booked";
 

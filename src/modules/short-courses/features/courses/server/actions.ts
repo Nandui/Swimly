@@ -23,6 +23,8 @@ const courseSchema = z.object({
   price: z.string().trim().default("0"),
   instructorId: z.string().min(1, "Choose the instructor."),
   note: z.string().trim().max(500).default(""),
+  /** Shown on the public booking site until its first session (phase 2). */
+  bookOnline: z.boolean().default(false),
   /** A new course only: its weekly sessions are made from these. */
   firstDay: z.string().default(""),
   weeks: z.coerce.number().int().min(1, "At least one week.").max(MAX_WEEKS, `At most ${MAX_WEEKS} weeks.`).default(6),
@@ -63,7 +65,7 @@ export async function saveCourse(id: string | null, input: CourseInput): Promise
     if (problem) return fail(problem);
     schedule = { dates: weeklyDates(d.firstDay, d.weeks), start, end };
   }
-  const data = { capacity: d.capacity, priceCents, instructorId: d.instructorId, note: d.note };
+  const data = { capacity: d.capacity, priceCents, instructorId: d.instructorId, note: d.note, bookOnline: d.bookOnline };
   const row = await prisma.$transaction(async (tx) => {
     const r = id ? await tx.shortCourse.update({ where: { id }, data })
       : await tx.shortCourse.create({ data: { ...data, typeId, orgId: at.site.orgId, siteId, createdById: at.actor.id, createdByName: at.actor.name } });
@@ -71,8 +73,8 @@ export async function saveCourse(id: string | null, input: CourseInput): Promise
       await tx.shortCourseSession.createMany({ data: schedule.dates.map((date) => ({ courseId: r.id, date: parseDateOnly(date), startMinutes: schedule.start, endMinutes: schedule.end, place: d.place })) });
     }
     await logAudit({ actorId: at.actor.id, actorName: at.actor.name, action: id ? "update" : "create", entity: "ShortCourse", entityId: r.id, clubId: siteId,
-      summary: id ? `Changed the ${type.name} course at ${at.site.name}: ${d.capacity} places, instructor ${instructor.name}`
-        : `Put on ${type.name} at ${at.site.name}: ${d.weeks} weekly sessions from ${d.firstDay}, ${d.start}–${d.end}${d.place ? ` in ${d.place}` : ""}, ${d.capacity} places, instructor ${instructor.name}` }, tx);
+      summary: id ? `Changed the ${type.name} course at ${at.site.name}: ${d.capacity} places, instructor ${instructor.name}${d.bookOnline ? ", open for online booking" : ", not online"}`
+        : `Put on ${type.name} at ${at.site.name}: ${d.weeks} weekly sessions from ${d.firstDay}, ${d.start}–${d.end}${d.place ? ` in ${d.place}` : ""}, ${d.capacity} places, instructor ${instructor.name}${d.bookOnline ? ", open for online booking" : ""}` }, tx);
     return r;
   });
   refresh(row.id);

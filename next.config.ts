@@ -18,6 +18,15 @@ const nextConfig: NextConfig = {
      *  cache, so a change you just made is never the thing being reused. */
     staleTimes: { dynamic: 30, static: 180 },
   },
+  /** The Academy joined Short courses (owner decision, 15 October 2026): old links and
+   *  bookmarks land on the same page there. */
+  async redirects() {
+    return [
+      { source: "/academy/overview", destination: "/short-courses/overview", permanent: false },
+      { source: "/academy", destination: "/short-courses/academy", permanent: false },
+      { source: "/academy/:path*", destination: "/short-courses/academy/:path*", permanent: false },
+    ];
+  },
 };
 
 export default nextConfig;

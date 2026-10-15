@@ -47,9 +47,8 @@ const workModules = {
   hr: workArea("hr"),
   rota: workArea("rota"),
   purchasing: workArea("purchasing"),
-  academy: workArea("academy", "src/app/api/academy/**"),
   tasks: workArea("tasks", "src/app/api/cron/tasks/**"),
-  "short-courses": workArea("short-courses"),
+  "short-courses": workArea("short-courses", "src/app/api/academy/**"),
   stock: workArea("stock"),
   incidents: workArea("incidents", "src/app/api/incidents/**", "src/app/api/cron/incidents/**"),
 };
@@ -82,13 +81,13 @@ const moduleZones = Object.entries(moduleFiles).flatMap(([id, target]) => Object
   .filter(([other]) => other !== id)
   .map(([other, from]) => ({ target, from, message: `${id} must not import ${other}: modules meet only through Core seams and composition roots.` })));
 
-// Data boundaries: each prisma/schema/<owner>.prisma file says who owns its
+// Data boundaries: each prisma/schema/<owner>[.<part>].prisma file says who owns its
 // tables (core and base are Core's). A part queries only its own tables and
 // Core's; Activities reads Core only through src/lib/directory.ts.
 const schemaDir = new URL("./prisma/schema/", import.meta.url);
 const tablesByOwner = {};
 for (const file of readdirSync(schemaDir).filter((f) => f.endsWith(".prisma"))) {
-  const owner = ["core.prisma", "base.prisma"].includes(file) ? "core" : file.replace(/\.prisma$/, "");
+  const owner = ["core.prisma", "base.prisma"].includes(file) ? "core" : file.split(".")[0];
   const models = [...readFileSync(new URL(file, schemaDir), "utf8").matchAll(/^model (\w+)/gm)].map((m) => m[1][0].toLowerCase() + m[1].slice(1));
   tablesByOwner[owner] = [...(tablesByOwner[owner] ?? []), ...models];
 }
@@ -119,10 +118,9 @@ const coreThroughFunctions = {
   docs: [],
   refunds: [],
   purchasing: ["role", "site"],
-  academy: ["organisation", "qualificationType", "qualification", "site", "tutor", "assessor", "user"],
   tasks: ["site"],
   incidents: [],
-  "short-courses": [],
+  "short-courses": ["organisation", "qualificationType", "qualification", "site", "tutor", "assessor", "user"],
   stock: [],
   hr: [],
   training: ["grantsType", "organisation", "user"],
@@ -144,7 +142,7 @@ const workData = (self) => [
 // public-API kit, the email sender) lives in Core: src/lib/public-api and
 // src/lib/email. A module never imports another module's copy.
 const modulePlumbing = [
-  { owner: ["src/modules/academy/features/booking/**", "src/app/api/academy/**"], from: ["./src/modules/academy/features/booking/server"] },
+  { owner: ["src/modules/short-courses/features/booking/**", "src/app/api/academy/**"], from: ["./src/modules/short-courses/features/booking/server"] },
   { owner: ["src/lib/staff-api/**", "src/app/api/staff/**"], from: ["./src/lib/staff-api/email.ts", "./src/lib/staff-api/http.ts"] },
   { owner: activitiesFiles, from: ["./src/modules/activities/shared/parents/email.ts", "./src/modules/activities/shared/parents/http.ts", "./src/modules/activities/shared/parents/sign-in-email.ts"] },
 ];

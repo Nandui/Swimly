@@ -41,7 +41,7 @@ unresolved concern. Say which checks actually ran.
 
 ## Project constraints
 
-Turnfin is one app: **modules** (Swim school, Pool deck, Tasks, Incidents, Refunds, Docs, Training, Rota, Purchasing, Stock, Academy, Short courses, HR and Admin) on
+Turnfin is one app: **modules** (Swim school, Pool deck, Tasks, Incidents, Refunds, Docs, Training, Rota, Purchasing, Stock, Short courses (with the Academy), HR and Admin) on
 a shared **Core** (people, roles, sites, audit, the module catalogue), plus Turnfin Me
 (`apps/me`) and the public Academy booking site (`apps/academy`, docs/academy.md). See [docs/how-turnfin-works.md](docs/how-turnfin-works.md) and the owner's
 pillars in it (28 September 2026): simplicity, ease of use, modern, scalable, clean code,

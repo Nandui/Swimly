@@ -5,10 +5,11 @@ import { activeStaffAtSite, liveSitesOf, withSites, withStaff } from "@/lib/dire
 import { today } from "@/lib/format";
 import { prisma } from "@/lib/prisma";
 import { mayFor, sitesFor } from "@/lib/policy/session";
+import { callDue } from "@/modules/short-courses/shared/public-booking";
 import { areaNames } from "@/lib/setup/data";
 import { requireShortCoursesActor } from "@/modules/short-courses/shared/access";
 import { inSites, iso } from "@/modules/short-courses/shared/reads";
-import { courseState, stillOwed, takesPlace, waitingOrder } from "@/modules/short-courses/shared/rules";
+import { courseState, SHORT_COURSE_CALL_TIMES, stillOwed, takesPlace, toPhone, waitingOrder } from "@/modules/short-courses/shared/rules";
 
 /** The reads (docs/short-courses.md). Courses are limited to the sites `short-courses.read`
  *  covers; a course outside them is a 404. The course list belongs to the organisation. */
@@ -43,6 +44,27 @@ function rowOf(c: {
 }
 export type CourseRow = ReturnType<typeof rowOf>;
 
+/** A place held online: its reference, the other number and best times, and how soon to phone. */
+function onlineOf(p: { source: string; status: string; payment: string; reference: string | null; phone2: string; callTimes: string[]; callBy: Date | null }, now = new Date()) {
+  if (p.source !== "online") return null;
+  return {
+    reference: p.reference, phone2: p.phone2, callTimes: p.callTimes.map((t) => SHORT_COURSE_CALL_TIMES[t] ?? t),
+    call: toPhone(p) && p.callBy ? callDue(p.callBy, now) : null,
+  };
+}
+
+/** Everyone who held a place online and still owes, at these sites, soonest deadline first. */
+async function toPhoneList(sites: Awaited<ReturnType<typeof sitesFor>>, orgId: string | null) {
+  const rows = await prisma.shortCourseParticipant.findMany({
+    where: { source: "online", status: "booked", payment: "owed", callBy: { not: null }, course: { orgId: orgId ?? undefined, cancelledAt: null, status: "planned", ...inSites(sites) } },
+    orderBy: { callBy: "asc" }, take: 100,
+    select: { id: true, name: true, phone: true, phone2: true, callTimes: true, callBy: true, reference: true, source: true, status: true, payment: true,
+      course: { select: { id: true, type: { select: { name: true } } } } },
+  });
+  const now = new Date();
+  return rows.map((r) => ({ id: r.id, name: r.name, phone: r.phone, courseId: r.course.id, course: r.course.type.name, online: onlineOf(r, now)! }));
+}
+
 /** The courses page: coming up and running, and those finished in the last 90 days. */
 export async function shortCoursesHome() {
   const who = await requireShortCoursesActor();
@@ -57,6 +79,7 @@ export async function shortCoursesHome() {
     current: courses.filter((c) => c.state === "planned" || c.state === "running").sort(byStart),
     past: courses.filter((c) => (c.state === "finished" || c.state === "cancelled") && (c.last ?? "") >= since).sort((a, b) => byStart(b, a)),
     types: await prisma.shortCourseType.count({ where: { orgId: who.orgId ?? undefined, archivedAt: null } }),
+    toPhone: await toPhoneList(sites, who.orgId ?? null),
   };
 }
 
@@ -81,12 +104,13 @@ export async function shortCourse(id: string) {
   const row = await prisma.shortCourse.findFirst({
     where: { id, orgId: who.orgId ?? undefined },
     select: {
-      id: true, status: true, capacity: true, priceCents: true, note: true, cancelledAt: true, siteId: true, instructorId: true, typeId: true, createdByName: true, createdAt: true,
+      id: true, status: true, capacity: true, priceCents: true, note: true, bookOnline: true, cancelledAt: true, siteId: true, instructorId: true, typeId: true, createdByName: true, createdAt: true,
       type: { select: { name: true, area: true, description: true, minAge: true, healthForm: true } },
       sessions: { orderBy: [{ date: "asc" }, { startMinutes: "asc" }], select: { id: true, date: true, startMinutes: true, endMinutes: true, place: true, note: true, registerAt: true, registerBy: true,
         attendance: { select: { participantId: true, present: true } } } },
       participants: { orderBy: [{ createdAt: "asc" }], select: {
-        id: true, name: true, email: true, phone: true, dateOfBirth: true, status: true, payment: true, paidCents: true, healthFormOn: true, note: true, createdAt: true } },
+        id: true, name: true, email: true, phone: true, dateOfBirth: true, status: true, payment: true, paidCents: true, healthFormOn: true, note: true, createdAt: true,
+        source: true, reference: true, phone2: true, callTimes: true, callBy: true } },
     },
   });
   if (!row) notFound();
@@ -101,6 +125,7 @@ export async function shortCourse(id: string) {
     ...p, dateOfBirth: p.dateOfBirth ? iso(p.dateOfBirth) : null, healthFormOn: p.healthFormOn ? iso(p.healthFormOn) : null,
     attended: course.sessions.filter((s) => s.attendance.some((a) => a.participantId === p.id && a.present)).length,
     owed: stillOwed(course.priceCents, p),
+    online: onlineOf(p),
   });
   const [areas, staff] = await Promise.all([areaNames(course.siteId), manage ? activeStaffAtSite(who.orgId ?? null, course.siteId) : []]);
   const booked = course.participants.filter((p) => takesPlace(p.status)).map(person);
