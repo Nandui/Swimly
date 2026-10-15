@@ -19,7 +19,7 @@ const THEME = "turnfin-module";
 type Option = { id: string; name: string };
 const text = (formData: FormData, key: string) => String(formData.get(key) ?? "");
 
-/** Add an activity to a day ("Lifeguarding, Main pool, 07:00 to 21:30, 3 people at once"), or
+/** Add an activity to a day ("Lifeguarding, Main pool, 07:00 to 21:30, 3 staff at once"), or
  *  change one. In a pool with lanes it can take some of them ("Teaching, lanes 1 to 2"). */
 export function NeedDialog({ siteId, date, live, types, areas, need, place, trigger }: {
   siteId: string; date: string; live: boolean; types: Option[]; areas: AreaLanes[]; need?: DayNeed;
@@ -33,7 +33,7 @@ export function NeedDialog({ siteId, date, live, types, areas, need, place, trig
       width="sm:max-w-lg"
       trigger={trigger ?? <Button variant="outline"><Plus aria-hidden="true" />Add activity</Button>}
       title={need ? "Change the activity" : "Add an activity"}
-      description={need ? "People already on it keep their places. Take them off before removing a place they are on." : "Say how many people it needs at once; each is a place to put someone on."}
+      description={need ? "People already on it keep their places. Take them off before removing a place they are on." : "Say how many staff it needs at once; each is a place to put someone on. This is staff, not how many swimmers or customers it takes."}
       submitLabel={need ? "Save activity" : "Add activity"}
       successMessage={need ? "Activity saved" : "Activity added"}
       submit={(formData) => saveNeed(need?.id ?? null, {
@@ -53,7 +53,7 @@ export function NeedDialog({ siteId, date, live, types, areas, need, place, trig
       <div className="grid grid-cols-3 gap-4">
         <Field label="Starts" htmlFor={`${fid}-start`}><Input id={`${fid}-start`} name="start" type="time" step={300} required defaultValue={clock(need?.startMinutes ?? 420)} className="min-h-11" /></Field>
         <Field label="Ends" htmlFor={`${fid}-end`}><Input id={`${fid}-end`} name="end" type="time" step={300} required defaultValue={clock(need?.endMinutes ?? 1290)} className="min-h-11" /></Field>
-        <Field label="People at once" htmlFor={`${fid}-places-n`}><Input id={`${fid}-places-n`} name="places" type="number" min={1} max={20} required defaultValue={need?.places ?? 1} className="min-h-11" /></Field>
+        <Field label="How many staff" htmlFor={`${fid}-places-n`}><Input id={`${fid}-places-n`} name="places" type="number" min={1} max={20} required defaultValue={need?.places ?? 1} className="min-h-11" /></Field>
       </div>
       <Field label="Note" htmlFor={`${fid}-note`} optional><Input id={`${fid}-note`} name="note" maxLength={300} defaultValue={need?.note ?? ""} className="min-h-11" /></Field>
       {live ? <ChangeFields id={fid} /> : null}
@@ -78,9 +78,10 @@ function RemoveNeed({ id, live }: { id: string; live: boolean }) {
   );
 }
 
-/** Someone on a place: change their time, or take them off (that time becomes a gap). */
-export function AssignmentDialog({ live, assignment, trigger }: {
-  live: boolean; trigger: ReactNode;
+/** Someone on a place: change their time, or take them off (that time becomes a gap). `change`
+ *  opens the activity itself (its time, area or how many staff), when this plan may change it. */
+export function AssignmentDialog({ live, assignment, trigger, change }: {
+  live: boolean; trigger: ReactNode; change?: ReactNode;
   assignment: { id: string; needId: string; place: number; userId: string; name: string; start: number; end: number; what: string };
 }) {
   const a = assignment;
@@ -95,7 +96,8 @@ export function AssignmentDialog({ live, assignment, trigger }: {
         <Field label="To" htmlFor={`${fid}-end`}><Input id={`${fid}-end`} name="end" type="time" step={300} required defaultValue={clock(a.end)} className="min-h-11" /></Field>
       </div>
       {live ? <ChangeFields id={fid} /> : null}
-      <div>
+      <div className="flex flex-wrap gap-2">
+        {change}
         <FormDialog portalClassName={THEME} destructive cancelLabel="Keep them on"
           trigger={<Button type="button" variant="ghost" className="text-ui-destructive">Take {a.name.split(" ")[0]} off</Button>}
           title={`Take ${a.name} off?`} description={`${clock(a.start)} to ${clock(a.end)} on ${a.what} becomes a gap to fill.`}
