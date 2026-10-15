@@ -8,6 +8,7 @@ import { prisma } from "@/lib/prisma";
 import { requireTrainingActor, type TrainingActor } from "@/modules/training/shared/access";
 import { cleanDoc, docImages, LESSON_KIND_META, MAX_LESSONS, MAX_SECTIONS, plainTextDoc, publishProblems, videoFor, type LessonKind } from "@/modules/training/shared/lessons";
 import { refresh } from "@/modules/training/shared/writes";
+import { MAX_QUESTIONS, normaliseQuestion, questionFiles, questionProblem, QUESTION_KIND_META, readExam, type ExamSettings, type QuestionOption } from "@/modules/training/shared/questions";
 import { loadDraft } from "@/modules/training/features/builder/server/draft";
 
 /** The course builder (docs/training.md, e-learning phase 1). Building needs
@@ -283,13 +284,172 @@ export async function publishCourse(courseId: string): Promise<ActionResult> {
     const last = await tx.trainingCourseVersion.findFirst({ where: { courseId }, orderBy: { number: "desc" }, select: { number: true } });
     const number = (last?.number ?? 0) + 1;
     const lessonCount = outline.sections.reduce((n, s) => n + s.lessons.length, 0);
+    // Every file a question shows must still be this course's.
+    const files = [...new Set(outline.questions.flatMap(questionFiles))];
+    if (files.length && await tx.trainingFile.count({ where: { id: { in: files }, courseId } }) !== files.length) return fail("A picture in a question is no longer available. Add it again.");
     const version = await tx.trainingCourseVersion.create({ data: {
       courseId, number, outline: outline as unknown as Prisma.InputJsonValue, lessonCount, publishedById: who.id, publishedByName: who.name,
     } });
     await tx.trainingCourse.update({ where: { id: courseId }, data: { publishedVersionId: version.id } });
-    await logAudit({ actorId: who.id, actorName: who.name, action: "publish", entity: "TrainingCourse", entityId: courseId, summary: `Published version ${number} of ${course.title} (${lessonCount} lessons)` }, tx);
+    await logAudit({ actorId: who.id, actorName: who.name, action: "publish", entity: "TrainingCourse", entityId: courseId, summary: `Published version ${number} of ${course.title} (${lessonCount} lessons${outline.questions.length ? `, ${outline.questions.length} questions` : ""}${outline.exam ? ", with a final exam" : ""})` }, tx);
     return ok();
   });
   if (result.ok) done(courseId);
   return result;
 }
+
+// ---------------------------------------------------------------------------
+// Questions (phase 2): each section's own, for its quiz and the final exam
+// ---------------------------------------------------------------------------
+
+const questionSchema = z.object({
+  kind: z.enum(["SINGLE", "MULTIPLE", "TRUE_FALSE", "ORDER", "MATCH"], { message: "Choose what kind of question it is." }),
+  prompt: z.string().max(1000, "Keep the question under 1,000 characters."),
+  imageId: z.string().max(64).nullable(),
+  options: z.array(z.object({
+    id: z.string().max(32).optional(), text: z.string().max(300, "Keep each option under 300 characters."), imageId: z.string().max(64).nullable(),
+    correct: z.boolean(), match: z.string().max(300, "Keep each partner under 300 characters."),
+  })).max(8, "A question can have up to 8 options."),
+  explanation: z.string().max(1000, "Keep the explanation under 1,000 characters."),
+});
+export type QuestionInput = z.input<typeof questionSchema>;
+
+const newOptionId = () => crypto.randomUUID().replace(/-/g, "").slice(0, 10);
+
+async function questionFor(tx: Prisma.TransactionClient, who: { orgId: string }, questionId: string) {
+  return tx.trainingQuestion.findFirst({ where: { id: questionId, course: { orgId: who.orgId } }, select: {
+    id: true, prompt: true, position: true, sectionId: true, courseId: true, course: { select: { title: true } },
+  } });
+}
+
+/** The question as it will be stored, or what is wrong with it. Pictures must be this course's files. */
+async function readyQuestion(tx: Prisma.TransactionClient, courseId: string, sectionId: string, input: QuestionInput) {
+  const parsed = questionSchema.safeParse(input);
+  if (!parsed.success) return { error: parsed.error.issues[0].message } as const;
+  const question = normaliseQuestion({ id: "new", sectionId, ...parsed.data }, newOptionId);
+  if (!question) return { error: "Choose what kind of question it is." } as const;
+  const problem = questionProblem(question);
+  if (problem) return { error: problem } as const;
+  const files = [...new Set(questionFiles(question))];
+  if (files.length && await tx.trainingFile.count({ where: { id: { in: files }, courseId } }) !== files.length) return { error: "A picture in this question is no longer available. Add it again." } as const;
+  return { question } as const;
+}
+
+const optionsJson = (options: QuestionOption[]) => options as unknown as Prisma.InputJsonValue;
+
+export async function addQuestion(sectionId: string, input: QuestionInput): Promise<Created> {
+  const who = await author();
+  if (!who) return fail(NO_RIGHT);
+  let courseId = "";
+  const result = await prisma.$transaction(async (tx): Promise<Created> => {
+    const section = await sectionFor(tx, who, sectionId);
+    if (!section) return fail("That section no longer exists.");
+    courseId = section.courseId;
+    if (await tx.trainingQuestion.count({ where: { courseId } }) >= MAX_QUESTIONS) return fail(`A course can have up to ${MAX_QUESTIONS} questions.`);
+    const ready = await readyQuestion(tx, courseId, sectionId, input);
+    if ("error" in ready) return fail(ready.error!);
+    const { question } = ready;
+    const last = await tx.trainingQuestion.findFirst({ where: { sectionId }, orderBy: { position: "desc" }, select: { position: true } });
+    const row = await tx.trainingQuestion.create({ data: {
+      courseId, sectionId, position: (last?.position ?? 0) + 1, kind: question.kind, prompt: question.prompt, imageId: question.imageId,
+      options: optionsJson(question.options), explanation: question.explanation,
+    } });
+    await audit(who, tx, "update", courseId, `Added a ${QUESTION_KIND_META[question.kind].label.toLowerCase()} question to ${section.title} in ${section.course.title}`);
+    return { ok: true, id: row.id };
+  });
+  if (result.ok) done(courseId);
+  return result;
+}
+
+export async function saveQuestion(questionId: string, input: QuestionInput): Promise<ActionResult> {
+  const who = await author();
+  if (!who) return fail(NO_RIGHT);
+  let courseId = "";
+  const result = await prisma.$transaction(async (tx) => {
+    const found = await questionFor(tx, who, questionId);
+    if (!found) return fail("That question no longer exists.");
+    courseId = found.courseId;
+    const ready = await readyQuestion(tx, courseId, found.sectionId, input);
+    if ("error" in ready) return fail(ready.error!);
+    const { question } = ready;
+    await tx.trainingQuestion.update({ where: { id: questionId }, data: {
+      kind: question.kind, prompt: question.prompt, imageId: question.imageId, options: optionsJson(question.options), explanation: question.explanation,
+    } });
+    await audit(who, tx, "update", courseId, `Saved the question “${question.prompt.slice(0, 80)}” in ${found.course.title}`);
+    return ok();
+  });
+  if (result.ok) done(courseId);
+  return result;
+}
+
+export async function removeQuestion(questionId: string): Promise<ActionResult> {
+  const who = await author();
+  if (!who) return fail(NO_RIGHT);
+  let courseId = "";
+  const result = await prisma.$transaction(async (tx) => {
+    const found = await questionFor(tx, who, questionId);
+    if (!found) return ok();
+    courseId = found.courseId;
+    await tx.trainingQuestion.delete({ where: { id: questionId } });
+    await audit(who, tx, "update", courseId, `Removed the question “${found.prompt.slice(0, 80)}” from the draft of ${found.course.title}`);
+    return ok();
+  });
+  if (result.ok && courseId) done(courseId);
+  return result;
+}
+
+export async function moveQuestion(questionId: string, direction: "up" | "down"): Promise<ActionResult> {
+  const who = await author();
+  if (!who) return fail(NO_RIGHT);
+  let courseId = "";
+  const result = await prisma.$transaction(async (tx) => {
+    const found = await questionFor(tx, who, questionId);
+    if (!found) return fail("That question no longer exists.");
+    courseId = found.courseId;
+    const up = direction === "up";
+    const neighbour = await tx.trainingQuestion.findFirst({
+      where: { sectionId: found.sectionId, position: up ? { lt: found.position } : { gt: found.position } },
+      orderBy: { position: up ? "desc" : "asc" }, select: { id: true, position: true },
+    });
+    if (!neighbour) return ok();
+    await tx.trainingQuestion.update({ where: { id: found.id }, data: { position: neighbour.position } });
+    await tx.trainingQuestion.update({ where: { id: neighbour.id }, data: { position: found.position } });
+    await audit(who, tx, "update", courseId, `Moved the question “${found.prompt.slice(0, 80)}” ${direction} in ${found.course.title}`);
+    return ok();
+  });
+  if (result.ok) done(courseId);
+  return result;
+}
+
+// ---------------------------------------------------------------------------
+// The final exam's rules
+// ---------------------------------------------------------------------------
+
+const examSchema = z.object({
+  passMark: z.number().int().min(1, "The pass mark is between 1% and 100%.").max(100, "The pass mark is between 1% and 100%."),
+  attempts: z.number().int().min(1, "Allow at least one attempt.").max(10, "Allow up to 10 attempts."),
+  draw: z.number().int().min(1, "Each paper needs at least one question.").max(MAX_QUESTIONS).nullable(),
+  timeLimit: z.number().int().min(1, "A time limit is at least a minute.").max(240, "Keep the time limit under 4 hours.").nullable(),
+  testOut: z.boolean(),
+});
+
+/** Turns the final exam on with these rules, or off (null). */
+export async function saveExam(courseId: string, input: ExamSettings | null): Promise<ActionResult> {
+  const who = await author();
+  if (!who) return fail(NO_RIGHT);
+  const parsed = input ? examSchema.safeParse(input) : null;
+  if (parsed && !parsed.success) return fail(parsed.error.issues[0].message);
+  const exam = parsed?.data ? readExam(parsed.data) : null;
+  const result = await prisma.$transaction(async (tx) => {
+    const course = await courseFor(tx, who, courseId);
+    if (!course) return fail("That course no longer exists.");
+    await tx.trainingCourse.update({ where: { id: courseId }, data: { exam: exam ? (exam as unknown as Prisma.InputJsonValue) : Prisma.DbNull } });
+    await audit(who, tx, "update", courseId, exam
+      ? `Set the final exam of ${course.title}: pass mark ${exam.passMark}%, ${exam.attempts} attempts${exam.draw ? `, ${exam.draw} questions a paper` : ""}${exam.timeLimit ? `, ${exam.timeLimit} minutes` : ""}${exam.testOut ? ", test-out allowed" : ""}`
+      : `Turned off the final exam of ${course.title}`);
+    return ok();
+  });
+  if (result.ok) done(courseId);
+  return result;
+}
+

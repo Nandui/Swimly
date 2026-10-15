@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 import { cache } from "react";
-import { AssignTraining, CancelTraining, listCourses, personTraining, TRAINING_STATUS_META } from "@/modules/training/features/assignments";
+import { AssignTraining, CancelTraining, GiveExamAttempt, listCourses, personTraining, TRAINING_STATUS_META } from "@/modules/training/features/assignments";
 import { EmptyState } from "@/components/ui-kit/empty-state";
 import { PageHeader } from "@/components/ui-kit/page-header";
 import { Tag } from "@/components/ui-kit/tag";
@@ -53,10 +53,17 @@ export default async function TrainingPersonPage({ params }: { params: Promise<{
                         : `Assigned by ${a.assignedByName} ${formatDate(a.assignedAt)} · ${a.dueOn ? `due ${formatDate(a.dueOn)}` : "no deadline"}`}
                     </p>
                     {a.signoffNote && a.state !== "cancelled" ? <p className="pc-row-hint">Trainer: {a.signoffNote}</p> : null}
+                    {a.exam && a.exam.attempts.length ? (
+                      <p className="pc-row-hint tabular">
+                        Exam (pass mark {a.exam.passMark}%): {a.exam.attempts.map((t) => `${t.percent ?? 0}%${t.passed ? " passed" : ""}`).join(", ")}
+                        {a.exam.passed ? "" : ` · ${a.exam.attempts.length} of ${a.exam.allowed} attempts used`}
+                      </p>
+                    ) : null}
                   </div>
                   <div className="pc-row-trail">
                     <Tag meta={TRAINING_STATUS_META[a.state]} />
                     {data.canAssign && (a.state === "assigned" || a.state === "overdue" || a.state === "submitted") ? <CancelTraining id={a.id} name={data.person.name} title={a.course.title} /> : null}
+                    {data.canAssign && a.exam?.outOfAttempts && (a.state === "assigned" || a.state === "overdue") ? <GiveExamAttempt id={a.id} name={data.person.name} title={a.course.title} /> : null}
                   </div>
                 </li>
               ))}

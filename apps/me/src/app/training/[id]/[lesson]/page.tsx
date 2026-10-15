@@ -6,14 +6,17 @@ import { useEffect, useState } from "react";
 import { ChevronLeft, ChevronRight, ExternalLink, FileText } from "lucide-react";
 import { Frame } from "@/components/frame";
 import { LessonBody } from "@/components/lesson-body";
+import type { LearnerQuestion } from "@/components/question";
+import { QuizRunner } from "@/components/quiz";
 import { LoadError, Loading, Notice, useLoad } from "@/components/ui";
 import { ApiError, api, apiFile } from "@/lib/api";
 
 type Lesson = {
-  id: string; kind: "READING" | "VIDEO" | "FILE"; title: string; body: unknown; minutes: number | null;
+  id: string; kind: "READING" | "VIDEO" | "FILE" | "QUIZ"; title: string; body: unknown; minutes: number | null;
   video: { embed: string | null; href: string; provider: string } | null;
   file: { id: string; name: string; mime: string; size: number } | null;
   section: string; index: number; total: number; prev: string | null; next: string | null; done: boolean; open: boolean;
+  questions: LearnerQuestion[] | null;
 };
 
 /** A lesson's file, fetched with the person's sign-in: images show in place,
@@ -46,6 +49,8 @@ export default function LessonPage() {
   const { data, error, reload } = useLoad<Lesson>(`training/${id}/lessons/${lessonId}`);
   const [busy, setBusy] = useState(false);
   const [failure, setFailure] = useState<string | null>(null);
+  // A Quiz lesson counts as done once every question has been worked through.
+  const [quizDone, setQuizDone] = useState<string | null>(null);
   async function next() {
     if (!data) return;
     setFailure(null);
@@ -59,6 +64,7 @@ export default function LessonPage() {
       setBusy(false);
     }
   }
+  const waiting = !!data && data.kind === "QUIZ" && data.open && !data.done && quizDone !== data.id && !!data.questions?.length;
   const label = !data ? "" : !data.open || data.done ? (data.next ? "Next lesson" : "Back to the course")
     : data.next ? (data.kind === "VIDEO" ? "Watched it, next" : "Done, next lesson") : "Done, finish up";
   return (
@@ -79,10 +85,12 @@ export default function LessonPage() {
             ) : null}
             {data.file ? <LessonFile assignmentId={id} file={data.file} /> : null}
             {data.body ? <section className="pc-panel"><LessonBody body={data.body} assignmentId={id} /></section> : null}
+            {data.kind === "QUIZ" ? <QuizRunner assignmentId={id} lessonId={data.id} questions={data.questions ?? []} key={data.id} onFinished={() => setQuizDone(data.id)} /> : null}
             {failure ? <Notice title={failure} tone="error" live /> : null}
+            {waiting ? <p className="caption muted" id="quiz-wait">Work through the questions to carry on.</p> : null}
             <div className="lesson-nav">
               {data.prev ? <Link href={`/training/${id}/${data.prev}`} className="button outline"><ChevronLeft aria-hidden="true" />Back</Link> : <span />}
-              <button type="button" className="button" onClick={next} disabled={busy}>{busy ? "Saving…" : label}<ChevronRight aria-hidden="true" /></button>
+              <button type="button" className="button" onClick={next} disabled={busy || waiting} aria-describedby={waiting ? "quiz-wait" : undefined}>{busy ? "Saving…" : label}<ChevronRight aria-hidden="true" /></button>
             </div>
           </article>
         )}

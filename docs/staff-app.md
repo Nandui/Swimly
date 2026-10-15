@@ -84,8 +84,14 @@ turning it on.
 | GET | `training`, `training/{id}` | Own training: progress through a course built from lessons, and its outline (`sections`); a course without lessons sends its text (`content`) |
 | GET | `training/{id}/lessons/{lessonId}` | One lesson of the person's own course version: its text, video link or file, and the lessons either side |
 | POST | `training/{id}/lessons/{lessonId}/complete` | Marks the lesson done. The first one fixes the course version the person takes |
+| POST | `training/{id}/lessons/{lessonId}/check` | `{ questionId, answer, giveUp }` on a Quiz lesson: `{ correct, explanation }`. The explanation only with a right answer or `giveUp`; never the right answer |
+| GET | `training/{id}/exam` | The final exam's rules, attempts left and past scores, plus the open paper (questions without the key, the answers saved so far) |
+| POST | `training/{id}/exam/start` | Starts a sitting, or returns the open one. Needs the lessons done unless the exam allows testing out |
+| PUT | `training/{id}/exam/answers` | `{ attemptId, questionId, answer }`; `answer: null` clears it. Refused once handed in or out of time |
+| POST | `training/{id}/exam/submit` | `{ attemptId }`. Marks it on the server; a pass finishes the course |
+| GET | `training/{id}/exam/attempts/{n}` | One handed-in attempt: the score; after a fail the sections to go over again, after a pass every question with the right answer and why |
 | GET | `training/{id}/files/{fileId}` | A PDF or image used in the person's own course version, as the file itself (not JSON) |
-| POST | `training/{id}/complete` | `{ note }`. Needs every lesson done first. A practical course waits for a trainer; anything else completes and records any qualification it grants |
+| POST | `training/{id}/complete` | `{ note }`. Needs every lesson done first, and the final exam passed when the course has one. A practical course waits for a trainer; anything else completes and records any qualification it grants |
 | GET | `reading`, `reading/{documentId}` | Assigned required reading only; the published body is Tiptap JSON |
 | POST | `reading/{documentId}/acknowledge` | `{ versionId }` |
 | GET | `shifts?days=28` | Own shifts, with any qualification warning |

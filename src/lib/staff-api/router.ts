@@ -15,11 +15,13 @@ export async function handleStaffRequest(request: Request, path: string[]) {
   return staffResponse(request, async () => {
     const route = path.join("/"), method = request.method;
     const training = /^training\/([A-Za-z0-9_-]+)(\/complete)?$/.exec(route);
-    const lesson = /^training\/([A-Za-z0-9_-]+)\/lessons\/([A-Za-z0-9_-]+)(\/complete)?$/.exec(route);
+    const lesson = /^training\/([A-Za-z0-9_-]+)\/lessons\/([A-Za-z0-9_-]+)(\/complete|\/check)?$/.exec(route);
+    const exam = /^training\/([A-Za-z0-9_-]+)\/exam(?:\/(start|answers|submit|attempts\/([1-9][0-9]{0,2})))?$/.exec(route);
     const trainingFile = /^training\/([A-Za-z0-9_-]+)\/files\/([A-Za-z0-9_-]+)$/.exec(route);
     const reading = /^reading\/([A-Za-z0-9_-]+)(\/acknowledge)?$/.exec(route);
     const review = /^hr\/reviews\/([A-Za-z0-9_-]+)\/acknowledge$/.exec(route);
-    const methods = training ? [training[2] ? "POST" : "GET"] : lesson ? [lesson[3] ? "POST" : "GET"] : trainingFile ? ["GET"] : reading ? [reading[2] ? "POST" : "GET"] : review ? ["POST"] : ROUTES[route];
+    const methods = training ? [training[2] ? "POST" : "GET"] : lesson ? [lesson[3] ? "POST" : "GET"]
+      : exam ? [!exam[2] || exam[3] ? "GET" : exam[2] === "answers" ? "PUT" : "POST"] : trainingFile ? ["GET"] : reading ? [reading[2] ? "POST" : "GET"] : review ? ["POST"] : ROUTES[route];
     if (!methods) notFound();
     if (!methods.includes(method)) throw new StaffApiError(405, "METHOD_NOT_ALLOWED", "This endpoint does not accept that method.", { Allow: methods.join(", ") });
     await rateLimit(`request-ip:${requestIp(request)}`, 600, 60);
@@ -41,7 +43,16 @@ export async function handleStaffRequest(request: Request, path: string[]) {
     }
     if (lesson) {
       const [id, lessonId] = [parseInput(idSchema, lesson[1]), parseInput(idSchema, lesson[2])];
-      return json(lesson[3] ? await records.completeTrainingLesson(identity, id, lessonId) : await records.trainingLesson(identity, id, lessonId));
+      return json(lesson[3] === "/check" ? await records.checkTrainingQuiz(request, identity, id, lessonId)
+        : lesson[3] ? await records.completeTrainingLesson(identity, id, lessonId) : await records.trainingLesson(identity, id, lessonId));
+    }
+    if (exam) {
+      const id = parseInput(idSchema, exam[1]);
+      if (exam[3]) return json(await records.trainingExamResult(identity, id, Number(exam[3])));
+      if (exam[2] === "start") return json(await records.startTrainingExam(identity, id));
+      if (exam[2] === "answers") return json(await records.saveTrainingExamAnswer(request, identity, id));
+      if (exam[2] === "submit") return json(await records.submitTrainingExam(request, identity, id));
+      return json(await records.trainingExam(identity, id));
     }
     if (trainingFile) return records.trainingFile(identity, parseInput(idSchema, trainingFile[1]), parseInput(idSchema, trainingFile[2]));
     if (route === "reading") return json(await records.reading(identity));

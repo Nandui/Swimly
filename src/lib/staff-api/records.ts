@@ -6,7 +6,10 @@ import { acknowledgeReviewFor, hrConfigured, logOwnHrRead, mySharedHr } from "@/
 import { myQualifications } from "@/lib/people/mine";
 import { myDays } from "@/modules/rota";
 import { docsReading } from "@/modules/docs";
-import { completeLessonFor, completeTrainingFor, myCourse, myCourseFile, myLesson, myTraining, trainingFileResponse } from "@/modules/training";
+import {
+  checkQuizAnswer, completeLessonFor, completeTrainingFor, myCourse, myCourseFile, myExam, myExamPaper, myExamResult, myLesson, myTraining,
+  saveExamAnswer, startExam, submitExam, trainingFileResponse,
+} from "@/modules/training";
 import { StaffApiError, notFound } from "@/lib/staff-api/errors";
 import { idSchema, parseInput, readBody } from "@/lib/staff-api/http";
 import { rateLimit } from "@/lib/staff-api/security";
@@ -153,8 +156,30 @@ export async function trainingItem(identity: StaffIdentity, id: string) {
   if (!row) notFound();
   const course = await myCourse(identity.user.id, id);
   // A course with lessons sends its outline; one without sends its old text.
-  return { ...trainingDto(row), content: course ? "" : row.course.content, sections: course?.sections ?? null };
+  // A final exam, if the course has one: its rules and how they have done. Never the questions.
+  const exam = course ? await myExam(me(identity), id) : null;
+  return { ...trainingDto(row), content: course ? "" : row.course.content, sections: course?.sections ?? null, exam: exam && examDto(exam) };
 }
+
+const me = (identity: StaffIdentity) => ({ id: identity.user.id, name: identity.user.name });
+
+/** A question as the learner sees it: never which answer is right. */
+type LearnerQuestion = { id: string; kind: string; prompt: string; imageId: string | null; options: { id: string; text: string; imageId: string | null }[]; partners: { id: string; text: string }[] | null };
+const questionDto = (q: LearnerQuestion) => ({
+  id: q.id, kind: q.kind, prompt: q.prompt, imageId: q.imageId,
+  options: q.options.map((o) => ({ id: o.id, text: o.text, imageId: o.imageId })), partners: q.partners?.map((p) => ({ id: p.id, text: p.text })) ?? null,
+});
+const examDto = (exam: NonNullable<Awaited<ReturnType<typeof myExam>>>) => ({
+  questions: exam.questions, passMark: exam.passMark, timeLimit: exam.timeLimit, testOut: exam.testOut, attempts: exam.attempts,
+  passed: exam.passed, lessonsDone: exam.lessonsDone, canStart: exam.canStart, reason: exam.reason, open: exam.open, history: exam.history,
+});
+type Paper = NonNullable<Awaited<ReturnType<typeof myExamPaper>>>;
+const paperDto = (paper: Paper) => ({
+  id: paper.id, number: paper.number, deadlineAt: paper.deadlineAt, questions: paper.questions.map((q) => ({ ...questionDto(q), answer: q.answer })),
+});
+const answerSchema = z.union([
+  z.string().max(64), z.array(z.string().max(64)).max(8), z.record(z.string().max(64), z.string().max(64)),
+]).nullable();
 
 /** One lesson of the person's own course: its text, video or file, and the
  *  lessons either side. Built field by field; never another person's. */
@@ -165,6 +190,63 @@ export async function trainingLesson(identity: StaffIdentity, id: string, lesson
     id: lesson.id, kind: lesson.kind, title: lesson.title, body: lesson.body, minutes: lesson.minutes, video: lesson.video,
     file: lesson.file && { id: lesson.file.id, name: lesson.file.name, mime: lesson.file.mime, size: lesson.file.size },
     section: lesson.section, index: lesson.index, total: lesson.total, prev: lesson.prev, next: lesson.next, done: lesson.done, open: lesson.open,
+    questions: lesson.questions?.map(questionDto) ?? null,
+  };
+}
+
+/** Checks one practice question on a Quiz lesson: right or not, and why. */
+export async function checkTrainingQuiz(request: Request, identity: StaffIdentity, id: string, lessonId: string) {
+  const input = await readBody(request, z.object({ questionId: idSchema, answer: answerSchema, giveUp: z.boolean().default(false) }).strict());
+  await rateLimit(`training-check:${identity.user.id}`, 120, 60);
+  const result = await checkQuizAnswer(identity.user.id, id, lessonId, input.questionId, input.answer, input.giveUp);
+  if (!result) notFound();
+  return result;
+}
+
+/** The final exam: its rules, past attempts, and the open paper if there is one. */
+export async function trainingExam(identity: StaffIdentity, id: string) {
+  const exam = await myExam(me(identity), id);
+  if (!exam) notFound();
+  const paper = exam.open ? await myExamPaper(me(identity), id) : null;
+  return { ...examDto(exam), paper: paper && paperDto(paper) };
+}
+
+export async function startTrainingExam(identity: StaffIdentity, id: string) {
+  const result = await startExam(me(identity), id);
+  if (!result.ok) {
+    if (result.error.includes("not assigned to you") || result.error.includes("has no exam")) notFound();
+    throw failed(result.error);
+  }
+  return trainingExam(identity, id);
+}
+
+export async function saveTrainingExamAnswer(request: Request, identity: StaffIdentity, id: string) {
+  const input = await readBody(request, z.object({ attemptId: idSchema, questionId: idSchema, answer: answerSchema }).strict());
+  const result = await saveExamAnswer(me(identity), id, input.attemptId, input.questionId, input.answer);
+  if (!result.ok) throw failed(result.error);
+  return { saved: true };
+}
+
+export async function submitTrainingExam(request: Request, identity: StaffIdentity, id: string) {
+  const { attemptId } = await readBody(request, z.object({ attemptId: idSchema }).strict());
+  const result = await submitExam(me(identity), id, attemptId);
+  if (!result.ok) {
+    if (result.error.includes("not yours")) notFound();
+    throw failed(result.error);
+  }
+  const exam = await myExam(me(identity), id);
+  const last = exam?.history.at(-1);
+  return { number: last?.number ?? null };
+}
+
+/** One handed-in attempt: the score, and after a pass every question with the right answer and why. */
+export async function trainingExamResult(identity: StaffIdentity, id: string, number: number) {
+  const result = await myExamResult(identity.user.id, id, number);
+  if (!result) notFound();
+  return {
+    number: result.number, submittedAt: result.submittedAt, correct: result.correct, total: result.total, percent: result.percent, passed: result.passed, passMark: result.passMark,
+    revisit: result.revisit.map((s) => ({ id: s.id, title: s.title, firstLessonId: s.firstLessonId })),
+    review: result.review?.map((q) => ({ ...questionDto(q), yours: q.yours, right: q.right, correct: q.correct, explanation: q.explanation })) ?? null,
   };
 }
 

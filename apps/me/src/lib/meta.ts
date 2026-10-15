@@ -55,3 +55,8 @@ export const REVIEW_OVERALL: Record<string, string> = {
   meets: "Meets expectations",
   developing: "Still developing",
 };
+
+export const EXAM_RESULT_META: Record<"passed" | "failed", Meta> = {
+  passed: { label: "Passed", tone: "green", icon: CircleCheck },
+  failed: { label: "Not passed", tone: "orange", icon: CircleDot },
+};

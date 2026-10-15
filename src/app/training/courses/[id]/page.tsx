@@ -13,11 +13,11 @@ export const metadata: Metadata = { title: "Course builder" };
 
 /** One course: its outline and lessons, preview and publishing. Anyone in
  *  Training may look; building needs the Author level (`training.manage`). */
-export default async function CourseBuilderPage({ params, searchParams }: { params: Promise<{ id: string }>; searchParams: Promise<{ lesson?: string }> }) {
-  const [{ id }, { lesson }] = await Promise.all([params, searchParams]);
+export default async function CourseBuilderPage({ params, searchParams }: { params: Promise<{ id: string }>; searchParams: Promise<{ lesson?: string; questions?: string; exam?: string }> }) {
+  const [{ id }, { lesson, questions, exam }] = await Promise.all([params, searchParams]);
   const [data, types] = await Promise.all([courseForBuilder(id), listQualificationTypeOptions()]);
   if (!data) notFound();
-  const { who, course, draft, files, published, changed, openAssignments } = data;
+  const { who, course, draft, files, published, changed, openAssignments, report } = data;
   const canEdit = who.manage && !course.archivedAt;
   const state = !published ? "draft" : changed ? "changed" : "published";
   return (
@@ -37,7 +37,8 @@ export default async function CourseBuilderPage({ params, searchParams }: { para
           </>
         }
       />
-      <CourseBuilder courseId={course.id} title={course.title} hasOldText={!!course.content.trim()} draft={draft} files={files} selected={lesson ?? null} canEdit={canEdit} changed={changed} />
+      <CourseBuilder courseId={course.id} title={course.title} hasOldText={!!course.content.trim()} draft={draft} files={files} selected={lesson ?? null}
+        panel={exam ? "exam" : questions ?? null} report={report} canEdit={canEdit} changed={changed} />
     </>
   );
 }

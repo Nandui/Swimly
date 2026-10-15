@@ -24,9 +24,10 @@ export async function courseForBuilder(courseId: string) {
   const published = row.versions.find((v) => v.id === row.publishedVersionId) ?? null;
   // The draft differs from what learners get when its outline would freeze differently.
   const changed = !published || JSON.stringify(readOutline(published.outline)) !== JSON.stringify(draft);
-  const [types, open] = await Promise.all([
+  const [types, open, report] = await Promise.all([
     qualificationTypesByIds([row.grantsTypeId]),
     prisma.trainingAssignment.count({ where: { courseId, status: { in: ["ASSIGNED", "SUBMITTED"] } } }),
+    examReport(courseId),
   ]);
   const grants = row.grantsTypeId ? types.get(row.grantsTypeId) : undefined;
   return {
@@ -41,7 +42,30 @@ export async function courseForBuilder(courseId: string) {
     versions: row.versions.map((v) => ({ id: v.id, number: v.number, publishedAt: v.publishedAt, publishedByName: v.publishedByName, lessonCount: v.lessonCount })),
     changed,
     openAssignments: open,
+    report,
   };
+}
+
+/** How the final exam has gone, across every published version: sittings,
+ *  passes, and for each question how often it was asked and missed. Question
+ *  ids carry from the draft into every version, so the counts follow a
+ *  question through re-publishing. The latest 2,000 sittings at most. */
+async function examReport(courseId: string) {
+  const versions = await prisma.trainingCourseVersion.findMany({ where: { courseId }, select: { id: true } });
+  if (!versions.length) return { sittings: 0, passed: 0, questions: {} as Record<string, { asked: number; missed: number }> };
+  const attempts = await prisma.trainingExamAttempt.findMany({
+    where: { versionId: { in: versions.map((v) => v.id) }, submittedAt: { not: null } },
+    orderBy: { submittedAt: "desc" }, take: 2000, select: { passed: true, results: true },
+  });
+  const questions: Record<string, { asked: number; missed: number }> = {};
+  for (const attempt of attempts) {
+    for (const [id, right] of Object.entries((attempt.results ?? {}) as Record<string, boolean>)) {
+      const entry = (questions[id] ??= { asked: 0, missed: 0 });
+      entry.asked += 1;
+      if (!right) entry.missed += 1;
+    }
+  }
+  return { sittings: attempts.length, passed: attempts.filter((a) => a.passed).length, questions };
 }
 export type BuilderCourse = NonNullable<Awaited<ReturnType<typeof courseForBuilder>>>;
 

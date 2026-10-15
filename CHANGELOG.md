@@ -4,6 +4,15 @@ Patch notes for everyone who uses Turnfin at the swim school, the desk and the o
 
 **How versions are numbered:** the middle number goes up when something new arrives (a module, a screen, a new way of working), and the last number when something is fixed or tidied without changing how you work. This list starts on 3 October 2026, when Turnfin moved to its new look; earlier changes are not listed.
 
+## 1.18.0 · 15 October 2026 · Training: quizzes and final exams
+
+- Course builders can now write **questions** for each section of a course: one right answer, several right answers, true or false, put steps in order, or match pairs. A question can have a picture, and a short "why" that explains the answer.
+- A new **Quiz** lesson lets staff practise a section's questions in Turnfin Me. They find out straight away if they got each one right, and can see why. Practice is never marked.
+- A course can end with a **final exam**: choose the pass mark (80% to start with), how many attempts people get, how many questions each person is asked, and a time limit if you want one. Everyone gets the questions in a different order. Turn on **Let people test out** for refreshers, so people who already know it can pass the exam and skip the lessons.
+- Answers save as people go, so nothing is lost if their phone locks. Passing the exam finishes the course, or sends it to a trainer for sign-off if it is a practical course. After a pass they see every answer explained; after a fail they see which parts of the course to go over again.
+- When someone has used all their attempts, a trainer can give them **another attempt** from their training page, where their scores now show too.
+- Under **Final exam** in the course builder you can see how many people passed and which questions people get wrong most, which often means a lesson needs to explain something better.
+
 ## 1.17.4 · 15 October 2026 · Purchasing: new order numbers
 
 - Purchase orders approved from now on get a number made of the site's short code, the month and a running number, for example **BT-OCT-0042**.

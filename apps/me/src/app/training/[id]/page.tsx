@@ -3,23 +3,59 @@
 import Link from "next/link";
 import { useParams } from "next/navigation";
 import { useState } from "react";
-import { BookOpen, ChevronLeft, ChevronRight, CircleCheck, FileText, PlayCircle, Send } from "lucide-react";
+import { BookOpen, ChevronLeft, ChevronRight, CircleCheck, FileText, GraduationCap, ListChecks, PlayCircle, Send } from "lucide-react";
 import { Frame } from "@/components/frame";
+import type { ExamInfo } from "@/components/question";
 import { LoadError, Loading, Notice, Tag, useLoad } from "@/components/ui";
 import { ApiError, api } from "@/lib/api";
 import { date, day } from "@/lib/format";
-import { TRAINING_META } from "@/lib/meta";
+import { EXAM_RESULT_META, TRAINING_META } from "@/lib/meta";
 
-const KIND_LABEL = { READING: "Reading", VIDEO: "Video", FILE: "Document" } as const;
-type Lesson = { id: string; kind: "READING" | "VIDEO" | "FILE"; title: string; minutes: number | null; done: boolean };
+const KIND_LABEL = { READING: "Reading", VIDEO: "Video", FILE: "Document", QUIZ: "Practice questions" } as const;
+type Lesson = { id: string; kind: keyof typeof KIND_LABEL; title: string; minutes: number | null; done: boolean };
 type Detail = {
   id: string; title: string; summary: string; content: string; state: string; requiresSignoff: boolean; grants: string | null;
   dueOn: string | null; assignedBy: string; assignedAt: string; completedAt: string | null; signedOffBy: string | null; trainerNote: string;
   progress: { done: number; total: number; nextLessonId: string | null } | null;
   sections: { id: string; title: string; lessons: Lesson[] }[] | null;
+  exam: ExamInfo | null;
 };
 
-const KIND_ICON = { READING: BookOpen, VIDEO: PlayCircle, FILE: FileText };
+const KIND_ICON = { READING: BookOpen, VIDEO: PlayCircle, FILE: FileText, QUIZ: ListChecks };
+
+/** The course's final exam: its rules, the way in, and past attempts. */
+function ExamCard({ id, exam, open }: { id: string; exam: ExamInfo; open: boolean }) {
+  const facts = [`${exam.questions} questions`, `pass mark ${exam.passMark}%`, exam.timeLimit ? `${exam.timeLimit} minutes` : null,
+    open && !exam.passed ? `${exam.attempts.left} ${exam.attempts.left === 1 ? "attempt" : "attempts"} left` : null].filter(Boolean).join(" · ");
+  return (
+    <section className="pc-panel stack-sm" aria-labelledby="exam-title">
+      <div className="row"><span className="pc-tile-icon"><GraduationCap aria-hidden="true" /></span><h2 id="exam-title">Final exam</h2>
+        {exam.passed ? <Tag meta={EXAM_RESULT_META.passed} /> : null}</div>
+      <p className="muted tabular">{facts}</p>
+      {open && !exam.passed ? (
+        exam.open ? (
+          <Link href={`/training/${id}/exam`} className="button block">Carry on with the exam: {exam.open.answered} of {exam.open.total} answered<ChevronRight aria-hidden="true" /></Link>
+        ) : exam.canStart ? (
+          <>
+            {exam.testOut && !exam.lessonsDone ? <p className="caption">Already know this? Pass the exam now and you can skip the lessons.</p> : null}
+            <Link href={`/training/${id}/exam`} className="button block">{exam.attempts.used ? "Try the exam again" : "Start the exam"}<ChevronRight aria-hidden="true" /></Link>
+          </>
+        ) : <p className="caption">{exam.reason}</p>
+      ) : null}
+      {exam.history.length ? (
+        <ol className="pc-rows">
+          {exam.history.map((a) => (
+              <li key={a.number}><Link href={`/training/${id}/exam/${a.number}`} className="pc-row">
+                <span className="pc-row-body"><span className="pc-row-title tabular">Attempt {a.number}: {a.percent}%</span><span className="pc-row-hint tabular">{a.correct} of {a.total} right · {date(a.submittedAt)}</span></span>
+                <Tag meta={EXAM_RESULT_META[a.passed ? "passed" : "failed"]} />
+                <ChevronRight className="pc-row-chevron" aria-hidden="true" />
+              </Link></li>
+          ))}
+        </ol>
+      ) : null}
+    </section>
+  );
+}
 
 /** One course: where you are, the lessons, and finishing it. A course from
  *  before lessons shows its text and "Mark as done", as it always did. */
@@ -40,7 +76,8 @@ export default function TrainingDetailPage() {
   const open = data?.state === "assigned" || data?.state === "overdue";
   const lessons = data?.sections?.flatMap((s) => s.lessons) ?? [];
   const next = lessons.find((l) => l.id === data?.progress?.nextLessonId) ?? null;
-  const allDone = !data?.sections || !next;
+  const allDone = (!data?.sections || !next) && (!data?.exam || data.exam.passed);
+  const examFirst = !!data?.exam && open && (!next || (data.exam.testOut && data.exam.canStart) || !!data.exam.open);
   const minutesLeft = lessons.filter((l) => !l.done).reduce((n, l) => n + (l.minutes ?? 0), 0);
   return (
     <Frame title="My training">
@@ -74,6 +111,7 @@ export default function TrainingDetailPage() {
                     </Link>
                   </section>
                 ) : null}
+                {data.exam && examFirst ? <ExamCard id={data.id} exam={data.exam} open={open} /> : null}
                 {data.sections.map((section, si) => (
                   <section key={section.id} className="pc-panel" aria-labelledby={`section-${section.id}`}>
                     <div className="pc-panel-head"><h2 id={`section-${section.id}`}><span className="muted tabular">{si + 1}.</span> {section.title}</h2></div>
@@ -92,6 +130,7 @@ export default function TrainingDetailPage() {
                     </ol>
                   </section>
                 ))}
+                {data.exam && !examFirst ? <ExamCard id={data.id} exam={data.exam} open={open} /> : null}
               </>
             ) : (
               <section className="pc-panel" aria-labelledby="material">

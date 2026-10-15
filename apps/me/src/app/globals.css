@@ -270,4 +270,42 @@ label.pc-row > input[type='checkbox'] { flex: none; width: 20px; height: 20px; m
 .doc.lesson h2 { font-size: var(--pc-text-title); line-height: var(--pc-leading-title); }
 .doc.lesson blockquote { padding: 12px 16px; border: 0; border-radius: var(--pc-radius-card); background: var(--pc-primary-soft); color: var(--pc-primary-ink); font-weight: 500; }
 .doc.lesson a { color: var(--pc-primary); text-underline-offset: 3px; }
+
+/* Questions (quizzes and the final exam): big tappable answer rows, one question per screen. */
+.question { display: flex; flex-direction: column; gap: 16px; min-width: 0; margin: 0; padding: 0; border: 0; }
+.question-prompt { display: flex; flex-direction: column; gap: 4px; padding: 0; font-size: var(--pc-text-title); line-height: var(--pc-leading-title); font-weight: 600; }
+.question-image { display: block; max-width: 100%; max-height: 320px; width: auto; height: auto; border-radius: var(--pc-radius-card); }
+.choices { display: flex; flex-direction: column; gap: 8px; margin: 0; padding: 0; list-style: none; }
+.choice { display: flex; align-items: center; gap: 12px; min-height: 56px; padding: 8px 16px; border: 1px solid var(--pc-line-strong); border-radius: var(--pc-radius-card); background: var(--pc-surface); }
+.choice.selectable { cursor: pointer; }
+.choice.selectable:hover { background: var(--pc-hover); }
+.choice.selectable:has(input:checked) { border-color: var(--pc-primary); background: var(--pc-primary-soft); color: var(--pc-primary-ink); box-shadow: inset 0 0 0 1px var(--pc-primary); }
+.choice.selectable:has(input:focus-visible) { box-shadow: 0 0 0 1px var(--pc-focus), var(--pc-focus-halo); }
+.choice.selectable:has(input:disabled) { cursor: default; }
+.choice > input { flex: none; width: 20px; height: 20px; margin: 0; accent-color: var(--pc-primary); }
+.choice-text { display: flex; flex: 1; flex-direction: column; gap: 8px; min-width: 0; overflow-wrap: anywhere; }
+.choice-image { display: block; max-width: 100%; max-height: 160px; width: auto; border-radius: var(--pc-radius-card); }
+.order-number { display: inline-flex; flex: none; align-items: center; justify-content: center; width: 28px; height: 28px; border-radius: 999px; background: var(--pc-primary); color: var(--pc-on-primary); font-size: var(--pc-text-caption); font-weight: 600; }
+.order-moves { display: flex; flex: none; gap: 4px; }
+.button.icon { width: var(--pc-control-height); padding: 0; }
+.match-pair { flex-wrap: wrap; }
+.match-pair .choice-text { flex: 1 1 140px; font-weight: 600; }
+.match-pair .input { flex: 1 1 180px; width: auto; }
+.quiz-done { gap: 12px; }
+
+/* The final exam. */
+.exam-rules { display: flex; flex-direction: column; gap: 8px; margin: 0; padding-left: 20px; }
+.exam-bar { display: flex; flex-wrap: wrap; align-items: center; gap: 8px 16px; }
+.exam-count { flex: 1 1 auto; font-weight: 600; }
+.exam-timer { display: inline-flex; align-items: center; gap: 6px; min-height: 32px; padding: 0 12px; border-radius: 999px; background: var(--pc-surface); font-weight: 600; }
+.exam-timer svg { width: 16px; height: 16px; }
+.exam-timer.is-low { background: var(--pc-danger-soft); color: var(--pc-danger); }
+.exam-dots { display: flex; flex-wrap: wrap; gap: 6px; }
+.exam-dot { display: inline-flex; align-items: center; justify-content: center; width: 44px; height: 44px; border: 1px solid var(--pc-line-strong); border-radius: 999px; background: var(--pc-surface); color: var(--pc-ink); font: inherit; font-weight: 600; cursor: pointer; }
+.exam-dot[data-answered] { border-color: var(--pc-primary-soft); background: var(--pc-primary-soft); color: var(--pc-primary-ink); }
+.exam-dot[aria-current] { border-color: var(--pc-primary); background: var(--pc-primary); color: var(--pc-on-primary); }
+.exam-dot:focus-visible, .exam-jump:focus-visible { outline: none; box-shadow: 0 0 0 1px var(--pc-focus), var(--pc-focus-halo); }
+.turnfin-app .exam-jump { width: 100%; font: inherit; text-align: left; cursor: pointer; }
+.exam-figure { margin: 0; font-size: 56px; line-height: 1; font-weight: 700; letter-spacing: -0.02em; }
+
 @media (prefers-reduced-motion: reduce) { .course-progress::-webkit-progress-value { transition: none; } }

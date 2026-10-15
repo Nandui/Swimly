@@ -1,4 +1,5 @@
-import { BookOpen, FileText, PlayCircle } from "lucide-react";
+import { BookOpen, FileText, ListChecks, PlayCircle } from "lucide-react";
+import { normaliseQuestion, questionProblem, readExam, type ExamSettings, type Question } from "@/modules/training/shared/questions";
 
 /** E-learning courses (docs/training.md, phase 1): a course is sections of
  *  lessons. The draft lives in TrainingSection/TrainingLesson rows; publishing
@@ -6,13 +7,14 @@ import { BookOpen, FileText, PlayCircle } from "lucide-react";
  *  Pure and client-safe: the builder, the preview, the staff API and tests use
  *  it. Turnfin Me keeps its own copy of the renderer (apps/me). */
 
-export const LESSON_KINDS = ["READING", "VIDEO", "FILE"] as const;
+export const LESSON_KINDS = ["READING", "VIDEO", "FILE", "QUIZ"] as const;
 export type LessonKind = (typeof LESSON_KINDS)[number];
 
 export const LESSON_KIND_META = {
   READING: { label: "Reading", help: "Text with headings, lists, tables and images.", icon: BookOpen },
   VIDEO: { label: "Video", help: "A YouTube, Vimeo or other video link, with notes.", icon: PlayCircle },
   FILE: { label: "File", help: "A PDF or image to open, with notes.", icon: FileText },
+  QUIZ: { label: "Quiz", help: "Practice questions on this section, with the answer straight away. Not marked.", icon: ListChecks },
 } as const satisfies Record<LessonKind, { label: string; help: string; icon: unknown }>;
 
 export const isLessonKind = (value: unknown): value is LessonKind => LESSON_KINDS.includes(value as LessonKind);
@@ -22,7 +24,9 @@ export type DocNode = { type?: string; text?: string; attrs?: Record<string, unk
 
 export type OutlineLesson = { id: string; kind: LessonKind; title: string; body: DocNode | null; videoUrl: string; fileId: string | null; minutes: number | null };
 export type OutlineSection = { id: string; title: string; lessons: OutlineLesson[] };
-export type Outline = { sections: OutlineSection[] };
+/** A course: its sections of lessons, every section's questions, and the final
+ *  exam's rules (null when it has none). A version freezes all three. */
+export type Outline = { sections: OutlineSection[]; questions: Question[]; exam: ExamSettings | null };
 
 export const MAX_SECTIONS = 30;
 export const MAX_LESSONS = 120;
@@ -152,6 +156,15 @@ export function publishProblems(outline: Outline): string[] {
     if (lesson.kind === "VIDEO" && !videoFor(lesson.videoUrl)) problems.push(`“${lesson.title}” needs a video link starting https://.`);
     if (lesson.kind === "FILE" && !lesson.fileId) problems.push(`“${lesson.title}” needs a file.`);
   }
+  for (const section of outline.sections) {
+    const quiz = section.lessons.find((l) => l.kind === "QUIZ");
+    if (quiz && !outline.questions.some((q) => q.sectionId === section.id)) problems.push(`The quiz “${quiz.title}” needs questions: add them to the section “${section.title}”.`);
+  }
+  outline.questions.forEach((q, i) => {
+    const problem = questionProblem(q);
+    if (problem) problems.push(`Question ${i + 1} (“${q.prompt.slice(0, 40) || "no text"}”): ${problem}`);
+  });
+  if (outline.exam && !outline.questions.length) problems.push("The final exam needs questions. Add them to a section, or turn the exam off.");
   return problems;
 }
 
@@ -160,7 +173,11 @@ export const outlineLessons = (outline: Outline) => outline.sections.flatMap((s)
 /** Reads a stored version outline, dropping anything malformed. */
 export function readOutline(value: unknown): Outline {
   const sections = Array.isArray((value as Outline | null)?.sections) ? (value as Outline).sections : [];
-  return { sections: sections.filter((s) => s && typeof s.id === "string").map((s) => ({
+  const questions = Array.isArray((value as Outline | null)?.questions) ? (value as Outline).questions : [];
+  return { exam: readExam((value as Outline | null)?.exam), questions: questions
+    .map((q) => q && typeof q.id === "string" && typeof q.sectionId === "string" ? normaliseQuestion(q, () => "x") : null)
+    .filter((q): q is Question => !!q),
+  sections: sections.filter((s) => s && typeof s.id === "string").map((s) => ({
     id: s.id, title: String(s.title ?? ""),
     lessons: (Array.isArray(s.lessons) ? s.lessons : []).filter((l) => l && typeof l.id === "string" && isLessonKind(l.kind)).map((l) => ({
       id: l.id, kind: l.kind, title: String(l.title ?? ""), body: cleanDoc(l.body), videoUrl: String(l.videoUrl ?? ""),

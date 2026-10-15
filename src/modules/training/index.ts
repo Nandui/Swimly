@@ -2,5 +2,6 @@
  *  Core and front may import. Turnfin Me's staff API reads a person's own
  *  training through it, and takes their courses lesson by lesson. */
 export {
-  completeLessonFor, completeTrainingFor, myCourse, myCourseFile, myLesson, myTraining, trainingFileResponse, trainingReminderItems,
+  checkQuizAnswer, completeLessonFor, completeTrainingFor, myCourse, myCourseFile, myExam, myExamPaper, myExamResult, myLesson, myTraining,
+  saveExamAnswer, startExam, submitExam, trainingFileResponse, trainingReminderItems,
 } from "@/modules/training/features/me";

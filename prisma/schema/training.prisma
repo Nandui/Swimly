@@ -21,6 +21,9 @@ model TrainingCourse {
   /// The version learners get when assigned (e-learning, phase 1). Null until
   /// the course is first published: such a course shows `content` as before.
   publishedVersionId String?
+  /// The draft's final exam rules (e-learning phase 2): { passMark, attempts,
+  /// draw, timeLimit, testOut }. Null when the course has no exam.
+  exam               Json?
 
   organisation Organisation            @relation(fields: [orgId], references: [id], onDelete: Restrict)
   grantsType   QualificationType?      @relation(fields: [grantsTypeId], references: [id], onDelete: SetNull)
@@ -28,6 +31,7 @@ model TrainingCourse {
   sections     TrainingSection[]
   versions     TrainingCourseVersion[]
   files        TrainingFile[]
+  questions    TrainingQuestion[]
 
   @@unique([orgId, title])
 }
@@ -43,15 +47,17 @@ model TrainingSection {
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
-  course  TrainingCourse   @relation(fields: [courseId], references: [id], onDelete: Restrict)
-  lessons TrainingLesson[]
+  course    TrainingCourse     @relation(fields: [courseId], references: [id], onDelete: Restrict)
+  lessons   TrainingLesson[]
+  questions TrainingQuestion[]
 
   @@index([courseId, position])
   @@map("training_sections")
 }
 
 /// One lesson in a draft: READING (rich text, Tiptap JSON), VIDEO (a link,
-/// with notes) or FILE (an uploaded PDF or image, with notes).
+/// with notes), FILE (an uploaded PDF or image, with notes) or QUIZ (practice
+/// on its section's questions, with an optional introduction in `body`).
 model TrainingLesson {
   id        String   @id @default(cuid())
   sectionId String
@@ -111,6 +117,58 @@ model TrainingFile {
   @@map("training_files")
 }
 
+/// A question in a draft section (e-learning phase 2). A Quiz lesson practises
+/// its section's questions; the final exam draws from every section's. kind is
+/// SINGLE, MULTIPLE, TRUE_FALSE, ORDER or MATCH; options holds
+/// [{ id, text, imageId, correct, match }] (ORDER in the right order). Published
+/// versions keep their own frozen copy, so ids carry across for reports.
+model TrainingQuestion {
+  id          String   @id @default(cuid())
+  courseId    String
+  sectionId   String
+  position    Int
+  kind        String
+  prompt      String
+  imageId     String?
+  options     Json
+  explanation String   @default("")
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  course  TrainingCourse  @relation(fields: [courseId], references: [id], onDelete: Restrict)
+  section TrainingSection @relation(fields: [sectionId], references: [id], onDelete: Cascade)
+
+  @@index([sectionId, position])
+  @@index([courseId])
+  @@map("training_questions")
+}
+
+/// One sitting of a course's final exam. paper is the question ids in the
+/// order this person got them; answers maps question id to answer and is saved
+/// as they go; results maps question id to right or wrong once submitted.
+model TrainingExamAttempt {
+  id           String    @id @default(cuid())
+  assignmentId String
+  versionId    String
+  number       Int
+  paper        Json
+  answers      Json      @default("{}")
+  startedAt    DateTime  @default(now())
+  deadlineAt   DateTime?
+  submittedAt  DateTime?
+  correct      Int?
+  total        Int
+  percent      Int?
+  passed       Boolean?
+  results      Json?
+
+  assignment TrainingAssignment @relation(fields: [assignmentId], references: [id], onDelete: Cascade)
+
+  @@unique([assignmentId, number])
+  @@index([versionId])
+  @@map("training_exam_attempts")
+}
+
 /// A lesson a learner has finished, on their assignment's version.
 model TrainingLessonProgress {
   id           String   @id @default(cuid())
@@ -128,35 +186,38 @@ model TrainingLessonProgress {
 /// trainer's sign-off) → COMPLETED, or CANCELLED. One open assignment per
 /// person and course (partial unique index in the migration).
 model TrainingAssignment {
-  id              String    @id @default(cuid())
-  orgId           String
-  courseId        String
-  userId          String
-  status          String    @default("ASSIGNED")
-  dueOn           DateTime? @db.Date
-  assignedById    String?
-  assignedByName  String
-  assignedAt      DateTime  @default(now())
-  learnerNote     String    @default("")
-  submittedAt     DateTime?
-  completedAt     DateTime?
-  signedOffById   String?
-  signedOffByName String?
-  signoffNote     String    @default("")
-  qualificationId String?
-  cancelledAt     DateTime?
-  cancelReason    String    @default("")
+  id                String    @id @default(cuid())
+  orgId             String
+  courseId          String
+  userId            String
+  status            String    @default("ASSIGNED")
+  dueOn             DateTime? @db.Date
+  assignedById      String?
+  assignedByName    String
+  assignedAt        DateTime  @default(now())
+  learnerNote       String    @default("")
+  submittedAt       DateTime?
+  completedAt       DateTime?
+  signedOffById     String?
+  signedOffByName   String?
+  signoffNote       String    @default("")
+  qualificationId   String?
+  cancelledAt       DateTime?
+  cancelReason      String    @default("")
   /// The published version this person takes (e-learning). Null when the
   /// course had no published version at the time: the learner gets the
   /// current version the first time they open it, or the old text if none.
-  versionId       String?
-  createdAt       DateTime  @default(now())
-  updatedAt       DateTime  @updatedAt
+  versionId         String?
+  /// Exam attempts a trainer gave on top of the exam's own allowance.
+  examExtraAttempts Int       @default(0)
+  createdAt         DateTime  @default(now())
+  updatedAt         DateTime  @updatedAt
 
   organisation Organisation             @relation(fields: [orgId], references: [id], onDelete: Restrict)
   course       TrainingCourse           @relation(fields: [courseId], references: [id], onDelete: Restrict)
   user         User                     @relation("TrainingLearner", fields: [userId], references: [id], onDelete: Cascade)
   progress     TrainingLessonProgress[]
+  examAttempts TrainingExamAttempt[]
 
   @@index([userId, status])
   @@index([orgId, status])

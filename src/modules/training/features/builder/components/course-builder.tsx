@@ -4,7 +4,7 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useEffect, useMemo, useState, useTransition } from "react";
 import type { JSONContent } from "@tiptap/react";
-import { ArrowDown, ArrowUp, CircleCheck, Eye, FilePlus2, FileText, Pencil, Plus, Rocket, Trash2, Upload } from "lucide-react";
+import { ArrowDown, ArrowUp, CircleCheck, Eye, FilePlus2, FileText, GraduationCap, ListChecks, Pencil, Plus, Rocket, Trash2, Upload } from "lucide-react";
 import { Button } from "@/components/shadcn/button";
 import { RadioGroup } from "@/components/shadcn/radio-group";
 import { ConfirmAction } from "@/components/confirm-action";
@@ -23,6 +23,7 @@ import {
   addLesson, addSection, moveLesson, moveSection, publishCourse, removeLesson, removeSection, renameSection, saveLesson, startFromOldText,
 } from "@/modules/training/features/builder/server/actions";
 import { RichText, uploadCourseFile, type UploadedFile } from "@/modules/training/features/builder/components/rich-text";
+import { ExamPanel, QuestionsPanel, type ExamReport } from "@/modules/training/features/builder/components/question-bank";
 
 type Props = {
   courseId: string;
@@ -31,28 +32,41 @@ type Props = {
   draft: Outline;
   files: UploadedFile[];
   selected: string | null;
+  /** The section whose questions are open, or "exam" for the final exam. */
+  panel: string | null;
+  report: ExamReport;
   canEdit: boolean;
   /** Whether the draft differs from what learners get (always true before the first publish). */
   changed: boolean;
 };
 
 const hrefFor = (courseId: string, lessonId?: string) => `/training/courses/${courseId}${lessonId ? `?lesson=${lessonId}` : ""}`;
+const questionsHref = (courseId: string, sectionId: string) => `/training/courses/${courseId}?questions=${sectionId}`;
+const examHref = (courseId: string) => `/training/courses/${courseId}?exam=1`;
 
 /** The builder: the outline on the left, the open lesson on the right. Every
  *  change saves to the draft at once; learners only see it once it is published. */
-export function CourseBuilder({ courseId, title, hasOldText, draft, files: initialFiles, selected, canEdit, changed }: Props) {
+export function CourseBuilder({ courseId, title, hasOldText, draft, files: initialFiles, selected, panel, report, canEdit, changed }: Props) {
   const lessons = draft.sections.flatMap((s) => s.lessons);
   const open = lessons.find((l) => l.id === selected) ?? null;
+  const questionSection = !open ? draft.sections.find((s) => s.id === panel) ?? null : null;
+  const examOpen = !open && panel === "exam";
   // Files uploaded since the page loaded, until the refreshed page brings them.
   const [added, setAdded] = useState<UploadedFile[]>([]);
   const files = [...initialFiles, ...added.filter((a) => !initialFiles.some((f) => f.id === a.id))];
   const addFile = (file: UploadedFile) => setAdded((now) => [...now, file]);
   return (
     <div className="grid gap-6 lg:grid-cols-[var(--pc-rail-width)_minmax(0,1fr)] items-start">
-      <OutlinePanel courseId={courseId} hasOldText={hasOldText} draft={draft} selected={open?.id ?? null} canEdit={canEdit} />
+      <OutlinePanel courseId={courseId} hasOldText={hasOldText} draft={draft} selected={open?.id ?? (examOpen ? "exam" : questionSection ? `q:${questionSection.id}` : null)} canEdit={canEdit} />
       {open ? (
         <LessonEditor key={open.id} courseId={courseId} lesson={open} files={files} onUploaded={addFile} canEdit={canEdit}
-          position={{ index: lessons.indexOf(open), total: lessons.length }} />
+          position={{ index: lessons.indexOf(open), total: lessons.length }}
+          quiz={open.kind === "QUIZ" ? { sectionId: draft.sections.find((s) => s.lessons.includes(open))!.id, count: draft.questions.filter((q) => q.sectionId === draft.sections.find((s) => s.lessons.includes(open))!.id).length } : null} />
+      ) : questionSection ? (
+        <QuestionsPanel key={questionSection.id} courseId={courseId} section={questionSection} questions={draft.questions.filter((q) => q.sectionId === questionSection.id)}
+          quizzes={questionSection.lessons.filter((l) => l.kind === "QUIZ").map((l) => l.title)} files={files} onUploaded={addFile} canEdit={canEdit} report={report} />
+      ) : examOpen ? (
+        <ExamPanel courseId={courseId} exam={draft.exam} questions={draft.questions} sections={draft.sections} canEdit={canEdit} report={report} />
       ) : (
         <StartPanel courseId={courseId} title={title} draft={draft} canEdit={canEdit} changed={changed} />
       )}
@@ -122,9 +136,21 @@ function OutlinePanel({ courseId, hasOldText, draft, selected, canEdit }: { cour
               })}
             </ol>
             {canEdit ? <AddLessonDialog sectionId={section.id} sectionTitle={section.title} onAdded={(id) => router.push(hrefFor(courseId, id))} /> : null}
+            <Link href={questionsHref(courseId, section.id)} aria-current={selected === `q:${section.id}` ? "page" : undefined} className={cn("tf-outline-row", selected === `q:${section.id}` && "is-current")}>
+              <ListChecks aria-hidden="true" />
+              <span className="min-w-0 flex-1 truncate">Questions</span>
+              <span className="text-xs text-ui-muted-foreground tabular-nums">{draft.questions.filter((q) => q.sectionId === section.id).length}</span>
+            </Link>
           </li>
         ))}
       </ol>
+      {draft.sections.length ? (
+        <Link href={examHref(courseId)} aria-current={selected === "exam" ? "page" : undefined} className={cn("tf-outline-row", selected === "exam" && "is-current")}>
+          <GraduationCap aria-hidden="true" />
+          <span className="min-w-0 flex-1 truncate">Final exam</span>
+          <span className="text-xs text-ui-muted-foreground">{draft.exam ? `Pass ${draft.exam.passMark}%` : "Off"}</span>
+        </Link>
+      ) : null}
       {canEdit ? (
         <div className="flex flex-col gap-2 border-t border-ui-border pt-4">
           <SectionDialog courseId={courseId} />
@@ -216,7 +242,7 @@ function StartPanel({ courseId, title, draft, canEdit, changed }: { courseId: st
     <section className="pc-panel flex flex-col gap-4" aria-labelledby="overview-title">
       <h2 id="overview-title" className="text-[length:var(--pc-text-title)] leading-[var(--pc-leading-title)]">{title}</h2>
       <dl className="grid grid-cols-[repeat(auto-fit,minmax(var(--pc-tile-min),1fr))] gap-3">
-        {[["Sections", draft.sections.length], ["Lessons", lessons.length], ["About", `${minutes} min`]].map(([label, value]) => (
+        {[["Sections", draft.sections.length], ["Lessons", lessons.length], ["Questions", draft.questions.length], ["Final exam", draft.exam ? `Pass ${draft.exam.passMark}%` : "Off"], ["About", `${minutes} min`]].map(([label, value]) => (
           <div key={label} className="rounded-[var(--pc-radius-card)] bg-ui-muted p-4">
             <dt className="text-xs font-semibold uppercase tracking-wide text-ui-muted-foreground">{label}</dt>
             <dd className="text-[length:var(--pc-text-title)] font-semibold tabular-nums">{value}</dd>
@@ -241,8 +267,10 @@ function StartPanel({ courseId, title, draft, canEdit, changed }: { courseId: st
 // One lesson
 // ---------------------------------------------------------------------------
 
-function LessonEditor({ courseId, lesson, files, onUploaded, canEdit, position }: {
+function LessonEditor({ courseId, lesson, files, onUploaded, canEdit, position, quiz }: {
   courseId: string; lesson: OutlineLesson; files: UploadedFile[]; onUploaded: (file: UploadedFile) => void; canEdit: boolean; position: { index: number; total: number };
+  /** A Quiz lesson: its section, and how many questions that section has. */
+  quiz: { sectionId: string; count: number } | null;
 }) {
   const router = useRouter();
   const { act, pending } = useAct();
@@ -323,7 +351,14 @@ function LessonEditor({ courseId, lesson, files, onUploaded, canEdit, position }
         </div>
       ) : null}
 
-      <RichText id="lesson-body" label={lesson.kind === "READING" ? "Lesson text" : "Notes under it (optional)"} value={body} onChange={change(setBody)} courseId={courseId} disabled={!canEdit} onUploaded={onUploaded} />
+      {quiz ? (
+        <Notice tone={quiz.count ? "info" : "warning"} title={quiz.count ? `Practises the ${quiz.count} ${quiz.count === 1 ? "question" : "questions"} in this section` : "This section has no questions yet"}
+          actions={<Button asChild variant="outline" className="min-h-11"><Link href={questionsHref(courseId, quiz.sectionId)}><ListChecks aria-hidden="true" />{quiz.count ? "Edit the questions" : "Add questions"}</Link></Button>}>
+          Learners answer one question at a time and see straight away whether they got it right. It isn’t marked.
+        </Notice>
+      ) : null}
+
+      <RichText id="lesson-body" label={lesson.kind === "READING" ? "Lesson text" : lesson.kind === "QUIZ" ? "Introduction (optional)" : "Notes under it (optional)"} value={body} onChange={change(setBody)} courseId={courseId} disabled={!canEdit} onUploaded={onUploaded} />
 
       <Input id="lesson-minutes" label="Minutes it takes" type="number" inputMode="numeric" min={1} max={240} value={minutes} onChange={change(setMinutes)} optional disabled={!canEdit}
         description={lesson.kind === "READING" ? "Leave it empty to use the reading time of the text." : "Shown to learners beside the lesson."} className="max-w-xs" />

@@ -92,16 +92,16 @@ test("a draft says what stops it publishing", () => {
       { id: "l3", kind: "FILE", title: "Open", body: null, videoUrl: "", fileId: null, minutes: null },
     ] },
     { id: "s2", title: "Empty", lessons: [] },
-  ] };
+  ], questions: [], exam: null };
   assert.equal(publishProblems(outline).length, 4);
-  assert.deepEqual(publishProblems({ sections: [] }), ["Add at least one lesson."]);
+  assert.deepEqual(publishProblems({ sections: [], questions: [], exam: null }), ["Add at least one lesson."]);
   const place = lessonPlace(outline, "l2");
   assert.deepEqual([place?.index, place?.total, place?.prev, place?.next], [1, 3, "l1", "l3"]);
   assert.deepEqual(plainTextDoc("Line one\nline two\n\nNext"), { type: "doc", content: [
     { type: "paragraph", content: [{ type: "text", text: "Line one" }, { type: "hardBreak" }, { type: "text", text: "line two" }] },
     { type: "paragraph", content: [{ type: "text", text: "Next" }] },
   ] });
-  assert.deepEqual(readOutline({ sections: [{ id: "s", title: "T", lessons: [{ id: "x", kind: "QUIZ" }] }] }), { sections: [{ id: "s", title: "T", lessons: [] }] });
+  assert.deepEqual(readOutline({ sections: [{ id: "s", title: "T", lessons: [{ id: "x", kind: "SCORM" }] }] }), { exam: null, questions: [], sections: [{ id: "s", title: "T", lessons: [] }] });
 });
 
 // ---------------------------------------------------------------------------
