@@ -87,9 +87,9 @@ test("video links play in place for YouTube and Vimeo, and open elsewhere otherw
 test("a draft says what stops it publishing", () => {
   const outline: Outline = { sections: [
     { id: "s1", title: "Start", lessons: [
-      { id: "l1", kind: "READING", title: "Read", body: null, videoUrl: "", fileId: null, minutes: null },
-      { id: "l2", kind: "VIDEO", title: "Watch", body: null, videoUrl: "ftp://x", fileId: null, minutes: null },
-      { id: "l3", kind: "FILE", title: "Open", body: null, videoUrl: "", fileId: null, minutes: null },
+      { id: "l1", kind: "READING", title: "Read", body: null, videoUrl: "", fileId: null, minutes: null, data: null },
+      { id: "l2", kind: "VIDEO", title: "Watch", body: null, videoUrl: "ftp://x", fileId: null, minutes: null, data: null },
+      { id: "l3", kind: "FILE", title: "Open", body: null, videoUrl: "", fileId: null, minutes: null, data: null },
     ] },
     { id: "s2", title: "Empty", lessons: [] },
   ], questions: [], exam: null };

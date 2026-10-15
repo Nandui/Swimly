@@ -4,7 +4,7 @@
  *  server only: what a learner's phone gets is `learnerQuestion`, never the key.
  *  Pure and client-safe: the builder, the staff API and tests use it. */
 
-export const QUESTION_KINDS = ["SINGLE", "MULTIPLE", "TRUE_FALSE", "ORDER", "MATCH"] as const;
+export const QUESTION_KINDS = ["SINGLE", "MULTIPLE", "TRUE_FALSE", "ORDER", "MATCH", "FILL_BLANK", "HOTSPOT"] as const;
 export type QuestionKind = (typeof QUESTION_KINDS)[number];
 
 export const QUESTION_KIND_META = {
@@ -13,11 +13,17 @@ export const QUESTION_KIND_META = {
   TRUE_FALSE: { label: "True or false", help: "A statement that is true or false." },
   ORDER: { label: "Put in order", help: "Steps the learner puts in the right order." },
   MATCH: { label: "Match pairs", help: "Match each item with its partner." },
+  FILL_BLANK: { label: "Fill in the blanks", help: "A sentence with missing words the learner types in." },
+  HOTSPOT: { label: "Pick the spot", help: "A picture where the learner taps the right place." },
 } as const satisfies Record<QuestionKind, { label: string; help: string }>;
 
 export const isQuestionKind = (value: unknown): value is QuestionKind => QUESTION_KINDS.includes(value as QuestionKind);
 
-export type QuestionOption = { id: string; text: string; imageId: string | null; correct: boolean; match: string };
+/** A spot on a picture, in percent of its width and height from the top left. */
+export type Area = { x: number; y: number; w: number; h: number };
+/** One option. Fill in the blanks keeps one per blank (text holds the accepted
+ *  answers, separated by |); Pick the spot keeps one per right area. */
+export type QuestionOption = { id: string; text: string; imageId: string | null; correct: boolean; match: string; area: Area | null };
 export type Question = { id: string; sectionId: string; kind: QuestionKind; prompt: string; imageId: string | null; options: QuestionOption[]; explanation: string };
 
 /** The final exam's rules. Null on a course means it has no exam. */
@@ -33,6 +39,56 @@ const TRUE_FALSE = [{ id: "true", text: "True" }, { id: "false", text: "False" }
 const clip = (value: unknown, max: number) => String(value ?? "").trim().slice(0, max);
 const fileId = (value: unknown) => typeof value === "string" && /^[A-Za-z0-9_-]{1,64}$/.test(value) ? value : null;
 const optionId = (value: unknown) => typeof value === "string" && /^[A-Za-z0-9_-]{1,32}$/.test(value) ? value : null;
+const round1 = (n: number) => Math.round(n * 10) / 10;
+
+/** An area kept inside the picture, at least 2% each way. Null when it isn't one. */
+export function cleanArea(value: unknown): Area | null {
+  const v = value as Partial<Area> | null;
+  if (!v || typeof v !== "object" || ![v.x, v.y, v.w, v.h].every((n) => typeof n === "number" && Number.isFinite(n))) return null;
+  const x = Math.min(98, Math.max(0, v.x!)), y = Math.min(98, Math.max(0, v.y!));
+  const w = Math.min(100 - x, Math.max(2, v.w!)), h = Math.min(100 - y, Math.max(2, v.h!));
+  return { x: round1(x), y: round1(y), w: round1(w), h: round1(h) };
+}
+
+// ---------------------------------------------------------------------------
+// Fill in the blanks: the author writes the sentence with each missing word in
+// [square brackets], other accepted answers after a |, as in
+// "Free chlorine should be between [1|1.0] and [3|3.0] mg/l".
+// ---------------------------------------------------------------------------
+
+const BLANK = /\[([^\[\]]{1,200})\]/g;
+export const MAX_BLANKS = 8;
+const blankId = (index: number) => `b${index}`;
+
+/** The text around the blanks, and each blank's accepted answers. */
+export function readBlanks(prompt: string) {
+  const segments: string[] = [], blanks: string[][] = [];
+  let last = 0;
+  for (const match of prompt.matchAll(BLANK)) {
+    if (blanks.length >= MAX_BLANKS) break;
+    const accepted = match[1].split("|").map((a) => a.trim()).filter(Boolean).slice(0, 10);
+    if (!accepted.length) continue;
+    segments.push(prompt.slice(last, match.index));
+    blanks.push(accepted);
+    last = match.index! + match[0].length;
+  }
+  segments.push(prompt.slice(last));
+  return { segments, blanks };
+}
+
+/** The sentence as a learner reads it, with a gap for each blank. */
+export const blankedPrompt = (prompt: string) => readBlanks(prompt).segments.join("____");
+
+/** How a typed answer is compared: case, spaces and a final full stop don't
+ *  matter, and numbers match whichever way they are written (1, 1.0 or 1,0). */
+export function sameAnswer(given: string, accepted: string) {
+  const norm = (value: string) => value.toLowerCase().normalize("NFKC").replace(/\s+/g, " ").trim().replace(/[.!]+$/, "");
+  const a = norm(given), b = norm(accepted);
+  if (a === b) return true;
+  const number = (value: string) => /^-?\d+(?:[.,]\d+)?$/.test(value) ? Number(value.replace(",", ".")) : null;
+  const na = number(a), nb = number(b);
+  return na !== null && nb !== null && na === nb;
+}
 
 /** A question as an author saved it, normalised: True/false always has the
  *  two fixed options, and only choice questions keep "correct" marks. */
@@ -40,19 +96,27 @@ export function normaliseQuestion(raw: { id: string; sectionId: string; kind: un
   if (!isQuestionKind(raw.kind)) return null;
   const kind = raw.kind;
   const given = Array.isArray(raw.options) ? raw.options.slice(0, MAX_OPTIONS) as Partial<QuestionOption>[] : [];
+  const prompt = clip(raw.prompt, 1000);
   const options: QuestionOption[] = kind === "TRUE_FALSE"
-    ? TRUE_FALSE.map((o) => ({ ...o, imageId: null, match: "", correct: !!given.find((g) => g?.id === o.id)?.correct }))
-    : given.map((o) => ({
-      id: optionId(o?.id) ?? newId(),
-      text: clip(o?.text, 300),
-      imageId: kind === "SINGLE" || kind === "MULTIPLE" ? fileId(o?.imageId) : null,
-      correct: kind === "SINGLE" || kind === "MULTIPLE" ? !!o?.correct : false,
-      match: kind === "MATCH" ? clip(o?.match, 300) : "",
-    })).filter((o) => o.text || o.imageId || o.match);
+    ? TRUE_FALSE.map((o) => ({ ...o, imageId: null, match: "", area: null, correct: !!given.find((g) => g?.id === o.id)?.correct }))
+    // The blanks come from the sentence itself, so the two can never disagree.
+    : kind === "FILL_BLANK"
+      ? readBlanks(prompt).blanks.map((accepted, i) => ({ id: blankId(i), text: accepted.join(" | "), imageId: null, correct: true, match: "", area: null }))
+      : kind === "HOTSPOT"
+        ? given.map((o): QuestionOption => ({ id: optionId(o?.id) ?? newId(), text: clip(o?.text, 300), imageId: null, correct: true, match: "", area: cleanArea(o?.area) }))
+          .filter((o) => !!o.area)
+        : given.map((o) => ({
+          id: optionId(o?.id) ?? newId(),
+          text: clip(o?.text, 300),
+          imageId: kind === "SINGLE" || kind === "MULTIPLE" ? fileId(o?.imageId) : null,
+          correct: kind === "SINGLE" || kind === "MULTIPLE" ? !!o?.correct : false,
+          match: kind === "MATCH" ? clip(o?.match, 300) : "",
+          area: null,
+        })).filter((o) => o.text || o.imageId || o.match);
   // Option ids must be unique within the question: answers point at them.
   const seen = new Set<string>();
   for (const o of options) { if (seen.has(o.id)) o.id = newId(); seen.add(o.id); }
-  return { id: raw.id, sectionId: raw.sectionId, kind, prompt: clip(raw.prompt, 1000), imageId: fileId(raw.imageId), options, explanation: clip(raw.explanation, 1000) };
+  return { id: raw.id, sectionId: raw.sectionId, kind, prompt, imageId: fileId(raw.imageId), options, explanation: clip(raw.explanation, 1000) };
 }
 
 /** What is wrong with a question, worded for its author. Null when it is ready. */
@@ -77,6 +141,12 @@ export function questionProblem(q: Question): string | null {
       if (q.options.length < 2) return "Give at least two pairs.";
       if (q.options.some((o) => !o.text || !o.match)) return "Fill in both sides of every pair.";
       return new Set(q.options.map((o) => o.match.toLowerCase())).size === q.options.length ? null : "Each pair needs a different partner.";
+    case "FILL_BLANK":
+      if (!q.options.length) return "Put each missing word in [square brackets], for example: Free chlorine is measured in [mg/l].";
+      return blankedPrompt(q.prompt).replace(/____/g, "").trim().length < 3 ? "Write some of the sentence around the blanks." : null;
+    case "HOTSPOT":
+      if (!q.imageId) return "Add the picture people tap on.";
+      return q.options.length ? null : "Mark at least one right spot on the picture.";
   }
 }
 
@@ -96,11 +166,29 @@ export const matchPartners = (q: Question) => q.options.map((o, i) => ({ id: par
 /** One option id (one answer, true/false), several (several answers, order), or pairs (left option id to partner id, match). */
 export type Answer = string | string[] | Record<string, string>;
 
+/** A tapped spot, written "x,y" in percent of the picture with one decimal. */
+export const spotAnswer = (x: number, y: number) => `${round1(Math.min(100, Math.max(0, x)))},${round1(Math.min(100, Math.max(0, y)))}`;
+export function readSpot(value: unknown): { x: number; y: number } | null {
+  const match = typeof value === "string" ? /^(\d{1,3}(?:\.\d)?),(\d{1,3}(?:\.\d)?)$/.exec(value) : null;
+  if (!match) return null;
+  const x = Number(match[1]), y = Number(match[2]);
+  return x <= 100 && y <= 100 ? { x, y } : null;
+}
+const inside = (spot: { x: number; y: number }, a: Area) => spot.x >= a.x && spot.x <= a.x + a.w && spot.y >= a.y && spot.y <= a.y + a.h;
+
 /** The answer in the shape its question takes, keeping only this question's own
  *  option ids. Null when it is not an answer to this question. */
 export function cleanAnswer(q: Question, raw: unknown): Answer | null {
   const ids = new Set(q.options.map((o) => o.id));
   if (q.kind === "SINGLE" || q.kind === "TRUE_FALSE") return typeof raw === "string" && ids.has(raw) ? raw : null;
+  if (q.kind === "HOTSPOT") return readSpot(raw) ? raw as string : null;
+  if (q.kind === "FILL_BLANK") {
+    if (!raw || typeof raw !== "object" || Array.isArray(raw)) return null;
+    const typed = Object.entries(raw as Record<string, unknown>)
+      .filter(([id, value]) => ids.has(id) && typeof value === "string" && value.trim())
+      .map(([id, value]) => [id, (value as string).trim().slice(0, 64)]);
+    return typed.length ? Object.fromEntries(typed) : null;
+  }
   if (q.kind === "MULTIPLE" || q.kind === "ORDER") {
     if (!Array.isArray(raw) || raw.some((id) => typeof id !== "string" || !ids.has(id))) return null;
     const unique = [...new Set(raw as string[])];
@@ -127,6 +215,13 @@ export function isCorrect(q: Question, answer: Answer | null | undefined): boole
       return Array.isArray(answer) && answer.length === q.options.length && q.options.every((o, i) => answer[i] === o.id);
     case "MATCH":
       return typeof answer === "object" && !Array.isArray(answer) && q.options.every((o, i) => answer[o.id] === partnerKey(i));
+    case "FILL_BLANK":
+      return typeof answer === "object" && !Array.isArray(answer) && q.options.length > 0
+        && q.options.every((o) => typeof answer[o.id] === "string" && o.text.split("|").some((accepted) => sameAnswer(answer[o.id], accepted)));
+    case "HOTSPOT": {
+      const spot = readSpot(answer);
+      return !!spot && q.options.some((o) => o.area && inside(spot, o.area));
+    }
   }
 }
 
@@ -135,6 +230,11 @@ export function rightAnswer(q: Question): Answer {
   if (q.kind === "SINGLE" || q.kind === "TRUE_FALSE") return q.options.find((o) => o.correct)?.id ?? "";
   if (q.kind === "MULTIPLE") return q.options.filter((o) => o.correct).map((o) => o.id);
   if (q.kind === "ORDER") return q.options.map((o) => o.id);
+  if (q.kind === "FILL_BLANK") return Object.fromEntries(q.options.map((o) => [o.id, o.text.split("|")[0].trim()]));
+  if (q.kind === "HOTSPOT") {
+    const a = q.options[0]?.area;
+    return a ? spotAnswer(a.x + a.w / 2, a.y + a.h / 2) : "";
+  }
   return Object.fromEntries(q.options.map((o, i) => [o.id, partnerKey(i)]));
 }
 
@@ -164,6 +264,16 @@ export function shuffle<T>(items: readonly T[], random: () => number): T[] {
 /** A question with no key: options shuffled (true/false stays in order), and for
  *  Match pairs the partners in their own shuffled list, by the option id they belong to. */
 export function learnerQuestion(q: Question, random: () => number) {
+  // Blanks stay in sentence order and never carry their answers; the right
+  // spots on a picture are never sent at all.
+  if (q.kind === "FILL_BLANK" || q.kind === "HOTSPOT") {
+    return {
+      id: q.id, kind: q.kind, prompt: q.kind === "FILL_BLANK" ? blankedPrompt(q.prompt) : q.prompt, imageId: q.imageId,
+      options: q.kind === "FILL_BLANK" ? q.options.map((o) => ({ id: o.id, text: "", imageId: null as string | null })) : [],
+      partners: null as { id: string; text: string }[] | null,
+      segments: q.kind === "FILL_BLANK" ? readBlanks(q.prompt).segments : null,
+    };
+  }
   const options = q.kind === "TRUE_FALSE" ? q.options : shuffle(q.options, random);
   // An Order question never starts in the right order when it can be helped.
   const order = q.kind === "ORDER" && q.options.length > 1 && options.every((o, i) => o.id === q.options[i].id) ? [...options.slice(1), options[0]] : options;
@@ -171,6 +281,7 @@ export function learnerQuestion(q: Question, random: () => number) {
     id: q.id, kind: q.kind, prompt: q.prompt, imageId: q.imageId,
     options: order.map((o) => ({ id: o.id, text: o.text, imageId: o.imageId })),
     partners: q.kind === "MATCH" ? shuffle(matchPartners(q), random) : null,
+    segments: null as string[] | null,
   };
 }
 export type LearnerQuestion = ReturnType<typeof learnerQuestion>;

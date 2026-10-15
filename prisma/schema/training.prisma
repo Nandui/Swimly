@@ -24,6 +24,11 @@ model TrainingCourse {
   /// The draft's final exam rules (e-learning phase 2): { passMark, attempts,
   /// draw, timeLimit, testOut }. Null when the course has no exam.
   exam               Json?
+  /// The course's cover picture (a TrainingFile), category and tags
+  /// (e-learning phase 3). Live settings: they apply to every version.
+  coverId            String?
+  category           String   @default("")
+  tags               String[] @default([])
 
   organisation Organisation            @relation(fields: [orgId], references: [id], onDelete: Restrict)
   grantsType   QualificationType?      @relation(fields: [grantsTypeId], references: [id], onDelete: SetNull)
@@ -32,6 +37,7 @@ model TrainingCourse {
   versions     TrainingCourseVersion[]
   files        TrainingFile[]
   questions    TrainingQuestion[]
+  comments     TrainingReviewComment[]
 
   @@unique([orgId, title])
 }
@@ -56,8 +62,9 @@ model TrainingSection {
 }
 
 /// One lesson in a draft: READING (rich text, Tiptap JSON), VIDEO (a link,
-/// with notes), FILE (an uploaded PDF or image, with notes) or QUIZ (practice
-/// on its section's questions, with an optional introduction in `body`).
+/// with notes), FILE (an uploaded PDF or image, with notes), QUIZ (practice
+/// on its section's questions, with an optional introduction in `body`), or
+/// (phase 3) SCENARIO, FLASHCARDS, CHECKLIST and AUDIO, set up in `data`.
 model TrainingLesson {
   id        String   @id @default(cuid())
   sectionId String
@@ -69,6 +76,9 @@ model TrainingLesson {
   videoUrl  String   @default("")
   fileId    String?
   minutes   Int?
+  /// SCENARIO, FLASHCARDS, CHECKLIST and AUDIO lessons (phase 3) keep their
+  /// settings here; see `cleanLessonData` in shared/lessons.ts.
+  data      Json?
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
@@ -91,6 +101,10 @@ model TrainingCourseVersion {
   publishedById   String?
   publishedByName String
   publishedAt     DateTime @default(now())
+  /// What changed since the version before, in the author's words (phase 3).
+  changeNote      String   @default("")
+  /// Whether people who finished an older version were asked to take this one.
+  retake          Boolean  @default(false)
 
   course TrainingCourse @relation(fields: [courseId], references: [id], onDelete: Restrict)
 
@@ -119,7 +133,7 @@ model TrainingFile {
 
 /// A question in a draft section (e-learning phase 2). A Quiz lesson practises
 /// its section's questions; the final exam draws from every section's. kind is
-/// SINGLE, MULTIPLE, TRUE_FALSE, ORDER or MATCH; options holds
+/// SINGLE, MULTIPLE, TRUE_FALSE, ORDER, MATCH, FILL_BLANK or HOTSPOT; options holds
 /// [{ id, text, imageId, correct, match }] (ORDER in the right order). Published
 /// versions keep their own frozen copy, so ids carry across for reports.
 model TrainingQuestion {
@@ -141,6 +155,26 @@ model TrainingQuestion {
   @@index([sectionId, position])
   @@index([courseId])
   @@map("training_questions")
+}
+
+/// A reviewer's comment on a course draft (phase 3): on one lesson, or on the
+/// course as a whole (lessonId null). Resolved, never deleted.
+model TrainingReviewComment {
+  id             String    @id @default(cuid())
+  courseId       String
+  lessonId       String?
+  body           String
+  authorId       String?
+  authorName     String
+  createdAt      DateTime  @default(now())
+  resolvedAt     DateTime?
+  resolvedById   String?
+  resolvedByName String?
+
+  course TrainingCourse @relation(fields: [courseId], references: [id], onDelete: Restrict)
+
+  @@index([courseId, createdAt])
+  @@map("training_review_comments")
 }
 
 /// One sitting of a course's final exam. paper is the question ids in the

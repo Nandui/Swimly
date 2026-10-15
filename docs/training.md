@@ -114,6 +114,55 @@ keep everything.
   questions people miss most, across versions (question ids are kept when a course is
   republished).
 
+## A richer builder and lessons (e-learning, phase 3)
+
+*Owner request, 15 October 2026 (20:19): "the most complete elearning tool for the user and
+builder". Plan v3 in the "Turnfin E-learning Plan" artifact; phase 3 is the builder and lessons.*
+
+- **Blocks in lesson text.** Besides headings, lists, tables and pictures, the editor adds
+  callouts (note, tip, take care, danger), tap to reveal, flip cards, step by step, and a
+  **knowledge check**: one of the course's questions asked in the middle of the text. The server
+  checks a knowledge-check answer exactly as it checks a quiz (`training/{id}/lessons/{lessonId}/check`),
+  and publishing refuses a check whose question has been removed.
+- **Four more lesson kinds** (`training_lessons.data`, cleaned by `cleanLessonData` in
+  `shared/lessons.ts`):
+  - **Scenario**: scenes with up to four choices each. A choice says what happens and either leads
+    to another scene or ends it; one or more endings are the best outcome. Publishing needs every
+    scene reachable from the first and a best ending (`scenarioProblems`). The learner finishes the
+    lesson by reaching a best ending and can try again from any other.
+  - **Flashcards**: front, back and an optional picture. Cards the learner didn't know come round
+    again until every card is known.
+  - **Checklist**: things to find, check or do, ticked off on the phone (kept on that phone only).
+  - **Audio**: an uploaded recording (MP3, M4A, OGG or WAV) with an optional transcript as the
+    lesson text.
+  Each needs to be worked through before Next opens, like a quiz. A draft keeps the empty rows an
+  author is still filling in; the published version drops them (`frozenOutline`).
+- **Two more question kinds.** **Fill in the blanks**: the author writes the sentence with each
+  missing word in [square brackets], other accepted answers after a | ("between [1|1.0] and [3]").
+  Case, spaces, a final full stop and the way a number is written don't matter (`sameAnswer`).
+  **Pick the spot**: the author draws one or more right areas on a picture; a tap inside any of
+  them is right. Neither sends the answers or areas to the phone.
+- **Starting points.** **Start from a template** offers five outlines (policy, practical skill,
+  emergency procedure, refresher, induction; `shared/templates.ts`). Text the author must replace
+  starts with ✎, and publishing is refused while any is left. **Duplicate** copies a whole course,
+  its settings, files and questions, unpublished and with nobody assigned. **Copy in** brings
+  chosen lessons and questions from another course into a section; a copied lesson brings the
+  questions its knowledge checks ask. Every copy gets its own copies of the files.
+- **Paste questions from a spreadsheet.** One question a row (Type, Question, Option A to F, Right
+  answer, Why), straight from Excel or as CSV, up to 100 rows. The builder shows what it found and
+  what is wrong with each row it couldn't read before adding them (`shared/import.ts`).
+- **Courses list.** Courses have a cover picture (one of the course's images), a category and
+  tags. The list groups by category, searches titles and tags, and shows covers; so does My
+  training in Turnfin Me.
+- **Review comments.** Trainers and authors comment on the draft, on a lesson or the course as a
+  whole (`training_review_comments`), and mark them done. Comments are kept, never deleted; done
+  ones show for 30 days.
+- **Version notes and retakes.** Publishing asks what changed. Learners who start or are part-way
+  through a later version see the note on the course page. **Ask everyone who finished to take it
+  again** (needs Manage, because it assigns) gives the new version to everyone whose latest finished
+  assignment is older and who has nothing open on the course, within the publisher's assign scope,
+  with an optional due date; each is audited.
+
 ## Expiring qualifications
 
 `/training/expiring` lists qualifications that have expired or expire within 60

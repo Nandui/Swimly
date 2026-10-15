@@ -5,7 +5,7 @@ import { logAudit } from "@/lib/audit";
 import { prisma } from "@/lib/prisma";
 import { FILE_SELECT } from "@/modules/training/shared/files";
 import { grantQualification } from "@/modules/training/shared/grant";
-import { docImages, lessonMinutes, lessonPlace, outlineLessons, readOutline, videoFor, type Outline } from "@/modules/training/shared/lessons";
+import { docChecks, learnerScenario, lessonFiles, lessonMinutes, lessonPlace, outlineLessons, readOutline, videoFor, type Outline } from "@/modules/training/shared/lessons";
 import { learnerQuestion, questionFiles, seeded } from "@/modules/training/shared/questions";
 
 /** A learner's course in Turnfin Me (docs/training.md, e-learning phase 1): the
@@ -20,14 +20,14 @@ export type Db = Prisma.TransactionClient | typeof prisma;
 export const effectiveVersionId = (row: { versionId: string | null; status: string; course: { publishedVersionId: string | null } }) =>
   row.versionId ?? (row.status === "ASSIGNED" ? row.course.publishedVersionId : null);
 
-const ROW = { id: true, status: true, versionId: true, examExtraAttempts: true, course: { select: { id: true, publishedVersionId: true } }, progress: { select: { lessonId: true } } } as const satisfies Prisma.TrainingAssignmentSelect;
+const ROW = { id: true, status: true, versionId: true, examExtraAttempts: true, course: { select: { id: true, publishedVersionId: true, coverId: true } }, progress: { select: { lessonId: true } } } as const satisfies Prisma.TrainingAssignmentSelect;
 
 export async function mine(db: Db, userId: string, assignmentId: string) {
   const row = await db.trainingAssignment.findFirst({ where: { id: assignmentId, userId, status: { not: "CANCELLED" } }, select: ROW });
   if (!row) return null;
   const versionId = effectiveVersionId(row);
-  const version = versionId ? await db.trainingCourseVersion.findUnique({ where: { id: versionId }, select: { id: true, outline: true } }) : null;
-  return { row, version: version && { id: version.id, outline: readOutline(version.outline) }, done: new Set(row.progress.map((p) => p.lessonId)) };
+  const version = versionId ? await db.trainingCourseVersion.findUnique({ where: { id: versionId }, select: { id: true, outline: true, number: true, changeNote: true } }) : null;
+  return { row, version: version && { id: version.id, number: version.number, changeNote: version.changeNote, outline: readOutline(version.outline) }, done: new Set(row.progress.map((p) => p.lessonId)) };
 }
 
 /** Where someone is in a course: lessons done, the total, and the lesson to continue with. */
@@ -60,6 +60,8 @@ export async function myCourse(userId: string, assignmentId: string) {
   if (!found?.version) return null;
   const { version, done } = found;
   return {
+    // What changed in this version, in its author's words, from version 2 on.
+    whatsNew: version.number > 1 && version.changeNote ? { number: version.number, note: version.changeNote } : null,
     sections: version.outline.sections.map((s) => ({
       id: s.id, title: s.title,
       lessons: s.lessons.map((l) => ({ id: l.id, kind: l.kind, title: l.title, minutes: lessonMinutes(l), done: done.has(l.id) })),
@@ -80,12 +82,20 @@ export async function myLesson(userId: string, assignmentId: string, lessonId: s
   const place = found?.version ? lessonPlace(found.version.outline, lessonId) : null;
   if (!found || !place) return null;
   const { lesson } = place;
-  const file = lesson.kind === "FILE" && lesson.fileId
+  const file = (lesson.kind === "FILE" || lesson.kind === "AUDIO") && lesson.fileId
     ? await prisma.trainingFile.findFirst({ where: { id: lesson.fileId, courseId: found.row.course.id }, select: { id: true, name: true, mime: true, size: true } })
     : null;
   const video = lesson.kind === "VIDEO" ? videoFor(lesson.videoUrl) : null;
+  const outline = found.version!.outline;
+  // Knowledge checks in the text: the questions without their key, in the order they appear.
+  const checkIds = docChecks(lesson.body);
+  const random = seeded(`${assignmentId}:${lesson.id}:checks`);
+  const checks = outline.questions.filter((q) => checkIds.includes(q.id)).map((q) => learnerQuestion(q, random));
   return {
-    id: lesson.id, kind: lesson.kind, title: lesson.title, body: lesson.body, minutes: lessonMinutes(lesson),
+    id: lesson.id, kind: lesson.kind, title: lesson.title, body: lesson.body, minutes: lessonMinutes(lesson), checks,
+    steps: lesson.kind === "SCENARIO" ? learnerScenario(lesson.data?.steps ?? []) : null,
+    cards: lesson.kind === "FLASHCARDS" ? lesson.data?.cards ?? [] : null,
+    items: lesson.kind === "CHECKLIST" ? lesson.data?.items ?? [] : null,
     video: video && { embed: video.embed, href: video.href, provider: video.provider }, file,
     questions: lesson.kind === "QUIZ" ? quizQuestions(found.version!.outline, place.section.id, `${assignmentId}:${lesson.id}`) : null,
     section: place.section.title, index: place.index, total: place.total, prev: place.prev, next: place.next,
@@ -147,7 +157,8 @@ export async function myCourseFile(userId: string, assignmentId: string, fileId:
   const found = await mine(prisma, userId, assignmentId);
   if (!found?.version) return null;
   const { outline } = found.version;
-  const used = outlineLessons(outline).some((l) => l.fileId === fileId || docImages(l.body).includes(fileId))
+  // The course's cover is live, not part of a version, so the current one counts too.
+  const used = found.row.course.coverId === fileId || outlineLessons(outline).some((l) => lessonFiles(l).includes(fileId))
     || outline.questions.some((q) => questionFiles(q).includes(fileId));
   if (!used) return null;
   return prisma.trainingFile.findFirst({ where: { id: fileId, courseId: found.row.course.id }, select: FILE_SELECT });

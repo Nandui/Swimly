@@ -19,6 +19,10 @@ const courseSchema = z.object({
   content: z.string().trim().max(10000, "Keep the material under 10,000 characters.").optional(),
   requiresSignoff: z.boolean(),
   grantsTypeId: z.string().trim().max(64).transform((v) => v || null),
+  /** Where it sits in the catalogue, such as "Pool safety", and words to find it by (phase 3). */
+  category: z.string().trim().max(60, "Keep the category under 60 characters.").optional(),
+  tags: z.array(z.string().trim().max(30, "Keep each tag under 30 characters.")).max(10, "Use up to 10 tags.").optional()
+    .transform((tags) => tags && [...new Set(tags.map((t) => t.replace(/^#/, "")).filter(Boolean))]),
 });
 export type CourseInput = z.input<typeof courseSchema>;
 

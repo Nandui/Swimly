@@ -6,7 +6,7 @@ import { prisma } from "@/lib/prisma";
 import {
   cleanAnswer, drawPaper, GRACE_SECONDS, isCorrect, learnerQuestion, markPaper, matchPartners, paperSize, rightAnswer, seeded, type Answer, type Question,
 } from "@/modules/training/shared/questions";
-import { outlineLessons, readOutline } from "@/modules/training/shared/lessons";
+import { docChecks, outlineLessons, readOutline } from "@/modules/training/shared/lessons";
 import { finishAssignment, mine, type Db } from "@/modules/training/features/me/server/course";
 
 /** Quizzes and the final exam in Turnfin Me (docs/training.md, e-learning
@@ -34,8 +34,11 @@ const expired = (attempt: Pick<Attempt, "deadlineAt">, now = new Date()) => !!at
 export async function checkQuizAnswer(userId: string, assignmentId: string, lessonId: string, questionId: string, raw: unknown, giveUp: boolean) {
   const found = await mine(prisma, userId, assignmentId);
   const outline = found?.version?.outline;
-  const section = outline?.sections.find((s) => s.lessons.some((l) => l.id === lessonId && l.kind === "QUIZ"));
-  const question = section ? outline!.questions.find((q) => q.id === questionId && q.sectionId === section.id) : null;
+  // A Quiz lesson practises its own section's questions; any lesson may ask the
+  // questions its knowledge checks name.
+  const lesson = outline ? outlineLessons(outline).find((l) => l.id === lessonId) : null;
+  const section = lesson?.kind === "QUIZ" ? outline!.sections.find((s) => s.lessons.includes(lesson)) : null;
+  const question = lesson ? outline!.questions.find((q) => q.id === questionId && (q.sectionId === section?.id || docChecks(lesson.body).includes(q.id))) : null;
   if (!question) return null;
   const correct = isCorrect(question, cleanAnswer(question, raw));
   return { correct, explanation: correct || giveUp ? question.explanation : "" };

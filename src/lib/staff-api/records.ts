@@ -145,6 +145,8 @@ const trainingDto = (row: TrainingRow) => ({
   completedAt: row.completedAt?.toISOString() ?? null, signedOffBy: row.signedOffByName, trainerNote: row.signoffNote,
   // A course built from lessons: how far through, and the lesson to continue with.
   progress: row.progress && { done: row.progress.done, total: row.progress.total, nextLessonId: row.progress.nextLessonId },
+  // Its cover picture (fetched from the course's files) and catalogue category.
+  coverId: row.course.coverId, category: row.course.category,
 });
 
 export async function training(identity: StaffIdentity) {
@@ -158,16 +160,17 @@ export async function trainingItem(identity: StaffIdentity, id: string) {
   // A course with lessons sends its outline; one without sends its old text.
   // A final exam, if the course has one: its rules and how they have done. Never the questions.
   const exam = course ? await myExam(me(identity), id) : null;
-  return { ...trainingDto(row), content: course ? "" : row.course.content, sections: course?.sections ?? null, exam: exam && examDto(exam) };
+  return { ...trainingDto(row), content: course ? "" : row.course.content, sections: course?.sections ?? null, exam: exam && examDto(exam), whatsNew: course?.whatsNew ?? null };
 }
 
 const me = (identity: StaffIdentity) => ({ id: identity.user.id, name: identity.user.name });
 
 /** A question as the learner sees it: never which answer is right. */
-type LearnerQuestion = { id: string; kind: string; prompt: string; imageId: string | null; options: { id: string; text: string; imageId: string | null }[]; partners: { id: string; text: string }[] | null };
+type LearnerQuestion = { id: string; kind: string; prompt: string; imageId: string | null; options: { id: string; text: string; imageId: string | null }[]; partners: { id: string; text: string }[] | null; segments: string[] | null };
 const questionDto = (q: LearnerQuestion) => ({
   id: q.id, kind: q.kind, prompt: q.prompt, imageId: q.imageId,
   options: q.options.map((o) => ({ id: o.id, text: o.text, imageId: o.imageId })), partners: q.partners?.map((p) => ({ id: p.id, text: p.text })) ?? null,
+  segments: q.segments ?? null,
 });
 const examDto = (exam: NonNullable<Awaited<ReturnType<typeof myExam>>>) => ({
   questions: exam.questions, passMark: exam.passMark, timeLimit: exam.timeLimit, testOut: exam.testOut, attempts: exam.attempts,
@@ -191,6 +194,11 @@ export async function trainingLesson(identity: StaffIdentity, id: string, lesson
     file: lesson.file && { id: lesson.file.id, name: lesson.file.name, mime: lesson.file.mime, size: lesson.file.size },
     section: lesson.section, index: lesson.index, total: lesson.total, prev: lesson.prev, next: lesson.next, done: lesson.done, open: lesson.open,
     questions: lesson.questions?.map(questionDto) ?? null,
+    checks: lesson.checks.map(questionDto),
+    // A Scenario's scenes, a Flashcards lesson's cards, a Checklist's items: practice, so sent whole.
+    steps: lesson.steps?.map((st) => ({ id: st.id, text: st.text, imageId: st.imageId, choices: st.choices.map((c) => ({ id: c.id, text: c.text, feedback: c.feedback, next: c.next, best: c.best })) })) ?? null,
+    cards: lesson.cards?.map((c) => ({ id: c.id, front: c.front, back: c.back, imageId: c.imageId })) ?? null,
+    items: lesson.items?.map((i) => ({ id: i.id, text: i.text })) ?? null,
   };
 }
 

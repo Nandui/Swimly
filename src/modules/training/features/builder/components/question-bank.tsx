@@ -18,9 +18,11 @@ import { toast } from "@/components/ui/toast";
 import { EmptyState } from "@/components/ui-kit/empty-state";
 import { Notice } from "@/components/ui-kit/notice";
 import { THEME } from "@/modules/training/shared/components/dialog-kit";
-import { EXAM_DEFAULTS, paperSize, QUESTION_KIND_META, QUESTION_KINDS, type ExamSettings, type Question, type QuestionKind } from "@/modules/training/shared/questions";
+import { blankedPrompt, EXAM_DEFAULTS, paperSize, QUESTION_KIND_META, QUESTION_KINDS, readBlanks, type ExamSettings, type Question, type QuestionKind } from "@/modules/training/shared/questions";
 import { addQuestion, moveQuestion, removeQuestion, saveExam, saveQuestion, type QuestionInput } from "@/modules/training/features/builder/server/actions";
 import { uploadCourseFile, type UploadedFile } from "@/modules/training/features/builder/components/rich-text";
+import { SpotPicker, type SpotDraft } from "@/modules/training/features/builder/components/spot-picker";
+import { ImportQuestions } from "@/modules/training/features/builder/components/library";
 
 /** Questions and the final exam in the builder (docs/training.md, e-learning
  *  phase 2). A section's questions feed its Quiz lessons and the course's
@@ -60,7 +62,12 @@ export function QuestionsPanel({ courseId, section, questions, quizzes, files, o
           <p className="text-xs font-semibold uppercase tracking-wide text-ui-muted-foreground">Questions · {questions.length}</p>
           <h2 id="questions-heading" className="truncate text-[length:var(--pc-text-title)] leading-[var(--pc-leading-title)]">{section.title}</h2>
         </div>
-        {canEdit ? <QuestionDialog courseId={courseId} sectionId={section.id} files={files} onUploaded={onUploaded} onSaved={() => router.refresh()} /> : null}
+        {canEdit ? (
+          <div className="flex flex-wrap gap-2">
+            <ImportQuestions sectionId={section.id} sectionTitle={section.title} />
+            <QuestionDialog courseId={courseId} sectionId={section.id} files={files} onUploaded={onUploaded} onSaved={() => router.refresh()} />
+          </div>
+        ) : null}
       </div>
       <p className="text-sm text-ui-muted-foreground">
         {quizzes.length ? `Learners practise these in ${quizzes.map((q) => `“${q}”`).join(" and ")}. ` : "Add a Quiz lesson to this section to let learners practise these. "}
@@ -74,7 +81,7 @@ export function QuestionsPanel({ courseId, section, questions, quizzes, files, o
             <li key={q.id} className="pc-row items-start">
               <span className="pc-row-body">
                 <span className="text-xs font-semibold uppercase tracking-wide text-ui-muted-foreground">{i + 1} · {QUESTION_KIND_META[q.kind].label}</span>
-                <span className="pc-row-title">{q.prompt}</span>
+                <span className="pc-row-title">{q.kind === "FILL_BLANK" ? blankedPrompt(q.prompt) : q.prompt}</span>
                 <AnswerSummary question={q} />
                 {missedLine(report.questions[q.id]) ? <span className="pc-row-hint">{missedLine(report.questions[q.id])}</span> : null}
               </span>
@@ -106,6 +113,8 @@ export function QuestionsPanel({ courseId, section, questions, quizzes, files, o
 function AnswerSummary({ question: q }: { question: Question }) {
   const text = q.kind === "ORDER" ? q.options.map((o, i) => `${i + 1}. ${o.text}`).join("  ")
     : q.kind === "MATCH" ? q.options.map((o) => `${o.text} → ${o.match}`).join(" · ")
+    : q.kind === "FILL_BLANK" ? `Blanks: ${q.options.map((o) => o.text).join(" · ")}`
+    : q.kind === "HOTSPOT" ? `${q.options.length} right ${q.options.length === 1 ? "spot" : "spots"} on the picture`
     : `Right: ${q.options.filter((o) => o.correct).map((o) => o.text || "a picture").join(", ")}`;
   return <span className="pc-row-hint">{text}</span>;
 }
@@ -117,9 +126,12 @@ function AnswerSummary({ question: q }: { question: Question }) {
 type DraftOption = { key: string; id?: string; text: string; imageId: string | null; correct: boolean; match: string };
 let keys = 0;
 const blank = (): DraftOption => ({ key: `o${++keys}`, text: "", imageId: null, correct: false, match: "" });
-const fromQuestion = (q?: Question): DraftOption[] => q?.options.length
-  ? q.options.map((o) => ({ ...o, key: `o${++keys}` }))
+const newKey = () => `s${++keys}`;
+// Blanks live in the sentence and spots in their own list, so neither is an option row here.
+const fromQuestion = (q?: Question): DraftOption[] => q?.options.length && q.kind !== "FILL_BLANK" && q.kind !== "HOTSPOT"
+  ? q.options.map((o) => ({ id: o.id, text: o.text, imageId: o.imageId, correct: o.correct, match: o.match, key: `o${++keys}` }))
   : [blank(), blank(), blank()];
+const spotsFrom = (q?: Question): SpotDraft[] => q?.kind === "HOTSPOT" ? q.options.filter((o) => o.area).map((o) => ({ key: newKey(), id: o.id, text: o.text, area: o.area! })) : [];
 
 function QuestionDialog({ courseId, sectionId, question, files, onUploaded, onSaved }: {
   courseId: string; sectionId: string; question?: Question; files: UploadedFile[]; onUploaded: (file: UploadedFile) => void; onSaved: () => void;
@@ -130,12 +142,13 @@ function QuestionDialog({ courseId, sectionId, question, files, onUploaded, onSa
   const [options, setOptions] = useState<DraftOption[]>(fromQuestion(question));
   const [truth, setTruth] = useState<"true" | "false" | "">(question?.kind === "TRUE_FALSE" ? (question.options.find((o) => o.correct)?.id as "true" | "false") ?? "" : "");
   const [explanation, setExplanation] = useState(question?.explanation ?? "");
+  const [spots, setSpots] = useState<SpotDraft[]>(spotsFrom(question));
   const [uploading, setUploading] = useState(false);
   const [fileError, setFileError] = useState("");
   const images = files.filter((f) => f.mime.startsWith("image/"));
   function reset() {
     setKind(question?.kind ?? "SINGLE"); setPrompt(question?.prompt ?? ""); setImageId(question?.imageId ?? null);
-    setOptions(fromQuestion(question)); setExplanation(question?.explanation ?? ""); setFileError("");
+    setOptions(fromQuestion(question)); setExplanation(question?.explanation ?? ""); setFileError(""); setSpots(spotsFrom(question));
     setTruth(question?.kind === "TRUE_FALSE" ? (question.options.find((o) => o.correct)?.id as "true" | "false") ?? "" : "");
   }
   const update = (key: string, patch: Partial<DraftOption>) => setOptions((now) => now.map((o) => o.key === key ? { ...o, ...patch } : o));
@@ -153,8 +166,10 @@ function QuestionDialog({ courseId, sectionId, question, files, onUploaded, onSa
   }
   function input(): QuestionInput {
     const used = kind === "TRUE_FALSE"
-      ? [{ id: "true", text: "True", imageId: null, correct: truth === "true", match: "" }, { id: "false", text: "False", imageId: null, correct: truth === "false", match: "" }]
-      : options.filter((o) => o.text.trim() || o.imageId || o.match.trim()).map(({ id, text, imageId: img, correct, match }) => ({ id, text, imageId: img, correct, match }));
+      ? [{ id: "true", text: "True", imageId: null, correct: truth === "true", match: "", area: null }, { id: "false", text: "False", imageId: null, correct: truth === "false", match: "", area: null }]
+      : kind === "FILL_BLANK" ? []
+      : kind === "HOTSPOT" ? spots.map((sp) => ({ id: sp.id, text: sp.text, imageId: null, correct: true, match: "", area: sp.area }))
+      : options.filter((o) => o.text.trim() || o.imageId || o.match.trim()).map(({ id, text, imageId: img, correct, match }) => ({ id, text, imageId: img, correct, match, area: null }));
     return { kind, prompt, imageId, options: used, explanation };
   }
   const choice = kind === "SINGLE" || kind === "MULTIPLE";
@@ -218,11 +233,13 @@ function QuestionDialog({ courseId, sectionId, question, files, onUploaded, onSa
         </RadioGroup>
       </fieldset>
 
-      <Textarea id={`q-prompt-${question?.id ?? "new"}`} label={kind === "TRUE_FALSE" ? "Statement" : kind === "ORDER" ? "What to put in order" : "Question"}
-        value={prompt} onChange={(event) => setPrompt(event.target.value)} required minLength={3} maxLength={1000} rows={2}
-        placeholder={kind === "TRUE_FALSE" ? "Free chlorine should be between 1.0 and 1.5 mg/l." : kind === "ORDER" ? "Put the steps of a water test in order." : "What do you do if a reading is out of range?"} />
+      <Textarea id={`q-prompt-${question?.id ?? "new"}`} label={kind === "TRUE_FALSE" ? "Statement" : kind === "ORDER" ? "What to put in order" : kind === "FILL_BLANK" ? "Sentence, with each missing word in [square brackets]" : kind === "HOTSPOT" ? "What to find on the picture" : "Question"}
+        value={prompt} onChange={(event) => setPrompt(event.target.value)} required minLength={3} maxLength={1000} rows={kind === "FILL_BLANK" ? 3 : 2}
+        description={kind === "FILL_BLANK" ? "Other answers you accept go after a |, for example [1.0|1]. Capitals, spaces and 1 or 1.0 don't matter." : undefined}
+        placeholder={kind === "TRUE_FALSE" ? "Free chlorine should be between 1.0 and 1.5 mg/l." : kind === "ORDER" ? "Put the steps of a water test in order." : kind === "FILL_BLANK" ? "Free chlorine should be between [1.0|1] and [3.0|3] mg/l." : kind === "HOTSPOT" ? "Tap the emergency stop button." : "What do you do if a reading is out of range?"} />
+      {kind === "FILL_BLANK" ? <BlankPreview prompt={prompt} /> : null}
 
-      <Field label="Picture (optional)" htmlFor={`q-image-${question?.id ?? "new"}`} hint="Shown above the question.">
+      <Field label={kind === "HOTSPOT" ? "Picture" : "Picture (optional)"} htmlFor={`q-image-${question?.id ?? "new"}`} hint={kind === "HOTSPOT" ? "The picture learners tap on. A clear photo of the real place works best." : "Shown above the question."}>
         <div className="flex flex-col gap-2">
           <NativeSelect id={`q-image-${question?.id ?? "new"}`} value={imageId ?? ""} onChange={(event) => setImageId(event.target.value || null)} className="min-h-11 w-full">
             <NativeSelectOption value="">No picture</NativeSelectOption>
@@ -232,7 +249,14 @@ function QuestionDialog({ courseId, sectionId, question, files, onUploaded, onSa
         </div>
       </Field>
 
-      {kind === "TRUE_FALSE" ? (
+      {kind === "FILL_BLANK" ? null : kind === "HOTSPOT" ? (
+        imageId ? (
+          <fieldset className="flex flex-col gap-2">
+            <legend className="mb-1 text-sm font-semibold">Right spots</legend>
+            <SpotPicker imageId={imageId} spots={spots} onChange={setSpots} newKey={newKey} />
+          </fieldset>
+        ) : <Notice tone="info" title="Choose or add the picture first">Then drag a box over each right place on it.</Notice>
+      ) : kind === "TRUE_FALSE" ? (
         <fieldset className="flex flex-col gap-2">
           <legend className="mb-2 text-sm font-semibold">The statement is</legend>
           <RadioGroup value={truth} onValueChange={(value) => setTruth(value as "true" | "false")} className="grid gap-2 sm:grid-cols-2">
@@ -264,6 +288,18 @@ function QuestionDialog({ courseId, sectionId, question, files, onUploaded, onSa
       <Textarea id={`q-why-${question?.id ?? "new"}`} label="Why (optional)" optional value={explanation} onChange={(event) => setExplanation(event.target.value)} maxLength={1000} rows={2}
         description="Shown once the learner gets it right, and in the review after a passed exam. Never shown before." />
     </FormDialog>
+  );
+}
+
+/** How a fill-in-the-blanks sentence will read, and the answers each blank takes. */
+function BlankPreview({ prompt }: { prompt: string }) {
+  const { blanks } = readBlanks(prompt);
+  if (!blanks.length) return <p className="text-sm text-ui-muted-foreground">No blanks yet. Put a missing word in [square brackets].</p>;
+  return (
+    <div className="flex flex-col gap-1 rounded-[var(--pc-radius-card)] bg-ui-muted p-3 text-sm" aria-live="polite">
+      <span className="font-semibold">Learners read: {blankedPrompt(prompt)}</span>
+      <ol className="list-decimal pl-5">{blanks.map((accepted, i) => <li key={i}>Accepts {accepted.map((a) => `“${a}”`).join(" or ")}</li>)}</ol>
+    </div>
   );
 }
 

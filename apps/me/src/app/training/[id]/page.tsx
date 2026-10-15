@@ -3,15 +3,18 @@
 import Link from "next/link";
 import { useParams } from "next/navigation";
 import { useState } from "react";
-import { BookOpen, ChevronLeft, ChevronRight, CircleCheck, FileText, GraduationCap, ListChecks, PlayCircle, Send } from "lucide-react";
+import { BookOpen, ChevronLeft, ChevronRight, CircleCheck, FileText, GitBranch, GraduationCap, Headphones, Layers, ListChecks, ListTodo, PlayCircle, Send } from "lucide-react";
 import { Frame } from "@/components/frame";
-import type { ExamInfo } from "@/components/question";
+import { CourseImage, type ExamInfo } from "@/components/question";
 import { LoadError, Loading, Notice, Tag, useLoad } from "@/components/ui";
 import { ApiError, api } from "@/lib/api";
 import { date, day } from "@/lib/format";
 import { EXAM_RESULT_META, TRAINING_META } from "@/lib/meta";
 
-const KIND_LABEL = { READING: "Reading", VIDEO: "Video", FILE: "Document", QUIZ: "Practice questions" } as const;
+const KIND_LABEL = {
+  READING: "Reading", VIDEO: "Video", FILE: "Document", QUIZ: "Practice questions",
+  SCENARIO: "Scenario", FLASHCARDS: "Flashcards", CHECKLIST: "Checklist", AUDIO: "Recording",
+} as const;
 type Lesson = { id: string; kind: keyof typeof KIND_LABEL; title: string; minutes: number | null; done: boolean };
 type Detail = {
   id: string; title: string; summary: string; content: string; state: string; requiresSignoff: boolean; grants: string | null;
@@ -19,9 +22,14 @@ type Detail = {
   progress: { done: number; total: number; nextLessonId: string | null } | null;
   sections: { id: string; title: string; lessons: Lesson[] }[] | null;
   exam: ExamInfo | null;
+  coverId: string | null; category: string;
+  whatsNew: { number: number; note: string } | null;
 };
 
-const KIND_ICON = { READING: BookOpen, VIDEO: PlayCircle, FILE: FileText, QUIZ: ListChecks };
+const KIND_ICON = {
+  READING: BookOpen, VIDEO: PlayCircle, FILE: FileText, QUIZ: ListChecks,
+  SCENARIO: GitBranch, FLASHCARDS: Layers, CHECKLIST: ListTodo, AUDIO: Headphones,
+};
 
 /** The course's final exam: its rules, the way in, and past attempts. */
 function ExamCard({ id, exam, open }: { id: string; exam: ExamInfo; open: boolean }) {
@@ -85,7 +93,9 @@ export default function TrainingDetailPage() {
         <Link href="/training" className="button ghost back-link"><ChevronLeft aria-hidden="true" />My training</Link>
         {error ? <LoadError error={error} retry={reload} /> : !data ? <Loading /> : (
           <>
+            {data.coverId ? <CourseImage assignmentId={data.id} fileId={data.coverId} alt="" className="course-cover" /> : null}
             <div className="stack-sm">
+              {data.category ? <p className="caption eyebrow">{data.category}</p> : null}
               <div className="row"><h1>{data.title}</h1><Tag meta={TRAINING_META[data.state]} /></div>
               {data.summary ? <p className="muted">{data.summary}</p> : null}
               <p className="caption">
@@ -93,6 +103,7 @@ export default function TrainingDetailPage() {
                   data.requiresSignoff ? "a trainer signs this off in person" : null, data.grants ? `records your ${data.grants}` : null].filter(Boolean).join(" · ")}
               </p>
             </div>
+            {open && data.whatsNew ? <Notice title={`What’s new in version ${data.whatsNew.number}`}>{data.whatsNew.note}</Notice> : null}
             {data.state === "submitted" ? <Notice title="Waiting for sign-off" live={justDone}>A trainer will watch you do it and sign it off.</Notice> : null}
             {data.state === "completed" ? <Notice title={`Completed ${date(data.completedAt)}`} live={justDone}>{data.signedOffBy ? `Signed off by ${data.signedOffBy}.${data.trainerNote ? ` ${data.trainerNote}` : ""}` : "Well done."}</Notice> : null}
             {open && data.trainerNote ? <Notice title={`Not signed off yet${data.signedOffBy ? ` by ${data.signedOffBy}` : ""}`} tone="warning">{data.trainerNote}</Notice> : null}

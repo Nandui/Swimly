@@ -6,7 +6,7 @@ import { Button } from "@/components/shadcn/button";
 import { PageHeader } from "@/components/ui-kit/page-header";
 import { Tag } from "@/components/ui-kit/tag";
 import { ARCHIVAL_STATUS_META } from "@/lib/status";
-import { COURSE_DRAFT_META, CourseBuilder, courseForBuilder, PublishCourse } from "@/modules/training/features/builder";
+import { COURSE_DRAFT_META, CourseBuilder, courseForBuilder, DuplicateCourse, PublishCourse } from "@/modules/training/features/builder";
 import { CourseDialog, listQualificationTypeOptions } from "@/modules/training/features/courses";
 
 export const metadata: Metadata = { title: "Course builder" };
@@ -17,7 +17,7 @@ export default async function CourseBuilderPage({ params, searchParams }: { para
   const [{ id }, { lesson, questions, exam }] = await Promise.all([params, searchParams]);
   const [data, types] = await Promise.all([courseForBuilder(id), listQualificationTypeOptions()]);
   if (!data) notFound();
-  const { who, course, draft, files, published, changed, openAssignments, report } = data;
+  const { who, course, draft, files, published, changed, openAssignments, report, comments, versions, finished, courses, categories } = data;
   const canEdit = who.manage && !course.archivedAt;
   const state = !published ? "draft" : changed ? "changed" : "published";
   return (
@@ -31,14 +31,16 @@ export default async function CourseBuilderPage({ params, searchParams }: { para
         status={course.archivedAt ? <Tag meta={ARCHIVAL_STATUS_META.archived} /> : <Tag meta={COURSE_DRAFT_META[state]} />}
         actions={
           <>
-            {who.manage ? <CourseDialog course={course} qualificationTypes={types} /> : null}
+            {who.manage ? <CourseDialog course={course} qualificationTypes={types} categories={categories} /> : null}
+            {who.manage ? <DuplicateCourse courseId={course.id} title={course.title} /> : null}
             <Button asChild variant="outline" className="min-h-11"><Link href={`/training/courses/${course.id}/preview`}><Eye aria-hidden="true" />Preview</Link></Button>
-            {canEdit ? <PublishCourse courseId={course.id} title={course.title} changed={changed} published={published} openAssignments={openAssignments} /> : null}
+            {canEdit ? <PublishCourse courseId={course.id} title={course.title} changed={changed} published={published} openAssignments={openAssignments} canRetake={who.assign} finished={finished} /> : null}
           </>
         }
       />
       <CourseBuilder courseId={course.id} title={course.title} hasOldText={!!course.content.trim()} draft={draft} files={files} selected={lesson ?? null}
-        panel={exam ? "exam" : questions ?? null} report={report} canEdit={canEdit} changed={changed} />
+        panel={exam ? "exam" : questions ?? null} report={report} canEdit={canEdit} canComment={who.manage || who.signoff} changed={changed}
+        comments={comments} coverId={course.coverId} versions={versions} courses={courses} />
     </>
   );
 }

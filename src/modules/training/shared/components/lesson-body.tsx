@@ -1,13 +1,14 @@
 import type { ReactNode } from "react";
 import { Separator } from "@/components/shadcn/separator";
 import { Table, TableBody, TableCell, TableHead, TableRow } from "@/components/shadcn/table";
-import { safeHref, type DocNode } from "@/modules/training/shared/lessons";
+import { CALLOUT_META, safeHref, type CalloutTone, type DocNode } from "@/modules/training/shared/lessons";
+import { blankedPrompt, type Question } from "@/modules/training/shared/questions";
 
 /** Draws a lesson's text (cleaned Tiptap JSON) as plain elements. Text is never
  *  injected as HTML, links must be http(s) or mailto, and images are this app's
  *  own files. Styled by `.tf-lesson` in src/app/training/lesson.css; Turnfin Me
  *  keeps the same renderer in apps/me. */
-function render(node: DocNode, key: string): ReactNode {
+function render(node: DocNode, key: string, questions: Question[]): ReactNode {
   if (node.type === "text") {
     let out: ReactNode = node.text ?? "";
     for (const [i, mark] of (node.marks ?? []).entries()) {
@@ -21,7 +22,7 @@ function render(node: DocNode, key: string): ReactNode {
     }
     return <span key={key}>{out}</span>;
   }
-  const kids = (node.content ?? []).map((child, i) => render(child, `${key}-${i}`));
+  const kids = (node.content ?? []).map((child, i) => render(child, `${key}-${i}`, questions));
   switch (node.type) {
     case "doc": return <>{kids}</>;
     case "paragraph": return <p key={key}>{kids.length ? kids : <br />}</p>;
@@ -38,10 +39,33 @@ function render(node: DocNode, key: string): ReactNode {
     case "tableCell": return <TableCell key={key}>{kids}</TableCell>;
     // eslint-disable-next-line @next/next/no-img-element -- a private file served by this app, sized by the lesson CSS
     case "image": return <img key={key} src={String(node.attrs?.src)} alt={String(node.attrs?.alt ?? "")} loading="lazy" />;
+    // Interactive blocks (phase 3), shown open for the author; Turnfin Me makes them interactive.
+    case "callout": {
+      const tone = (node.attrs?.tone as CalloutTone) ?? "note";
+      return <aside key={key} className="tf-callout" data-tone={tone} data-label={CALLOUT_META[tone]?.label ?? "Note"}>{kids}</aside>;
+    }
+    case "reveal": return <div key={key} className="tf-reveal">{kids}</div>;
+    case "revealTitle": return <p key={key} className="tf-reveal-title">{kids}</p>;
+    case "revealContent": return <div key={key} className="tf-reveal-content">{kids}</div>;
+    case "flipCards": return <div key={key} className="tf-flip-cards">{kids}</div>;
+    case "flipCard": return <div key={key} className="tf-flip-card">{kids}</div>;
+    case "flipFront": return <div key={key} className="tf-flip-front">{kids}</div>;
+    case "flipBack": return <div key={key} className="tf-flip-back">{kids}</div>;
+    case "stepper": return <div key={key} className="tf-stepper">{kids}</div>;
+    case "stepItem": return <div key={key} className="tf-step">{kids}</div>;
+    case "knowledgeCheck": {
+      const q = questions.find((x) => x.id === node.attrs?.questionId);
+      return (
+        <div key={key} className="tf-check">
+          <span><strong>Knowledge check</strong>: {q ? (q.kind === "FILL_BLANK" ? blankedPrompt(q.prompt) : q.prompt) : "this question has been removed."}</span>
+        </div>
+      );
+    }
     default: return null;
   }
 }
 
-export function LessonBody({ body }: { body: DocNode | null }) {
-  return <div className="tf-lesson">{body ? render(body, "n") : null}</div>;
+/** `questions`: the course's questions, for the knowledge checks in the text. */
+export function LessonBody({ body, questions = [] }: { body: DocNode | null; questions?: Question[] }) {
+  return <div className="tf-lesson">{body ? render(body, "n", questions) : null}</div>;
 }

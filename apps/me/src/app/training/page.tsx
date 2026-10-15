@@ -1,13 +1,14 @@
 "use client";
 
 import Link from "next/link";
-import { ChevronRight } from "lucide-react";
+import { ChevronRight, GraduationCap } from "lucide-react";
 import { Frame } from "@/components/frame";
+import { CourseImage } from "@/components/question";
 import { EmptyRows, LoadError, Loading, Tag, useLoad } from "@/components/ui";
 import { date, day } from "@/lib/format";
 import { TRAINING_META } from "@/lib/meta";
 
-type Item = { id: string; title: string; state: string; dueOn: string | null; completedAt: string | null; progress: { done: number; total: number } | null };
+type Item = { id: string; title: string; state: string; dueOn: string | null; completedAt: string | null; progress: { done: number; total: number } | null; coverId: string | null; category: string };
 
 /** "3 of 8 lessons" for a course built from lessons, while it is open. */
 const lessonsHint = (t: Item) => t.progress && t.state !== "completed" ? `${t.progress.done} of ${t.progress.total} lessons` : null;
@@ -19,7 +20,8 @@ export default function TrainingPage() {
   const list = (items: Item[], empty: string) => items.length === 0 ? <EmptyRows>{empty}</EmptyRows> : (
     <ul className="pc-rows">{items.map((t) => (
       <li key={t.id}><Link href={`/training/${t.id}`} className="pc-row">
-        <span className="pc-row-body"><span className="pc-row-title">{t.title}</span><span className="pc-row-hint">{[t.completedAt ? `Completed ${date(t.completedAt)}` : t.dueOn ? `Due ${day(t.dueOn)}` : "No deadline", lessonsHint(t)].filter(Boolean).join(" · ")}</span></span>
+        {t.coverId ? <CourseImage assignmentId={t.id} fileId={t.coverId} alt="" className="course-thumb" /> : <span className="pc-tile-icon"><GraduationCap aria-hidden="true" /></span>}
+        <span className="pc-row-body">{t.category ? <span className="caption eyebrow">{t.category}</span> : null}<span className="pc-row-title">{t.title}</span><span className="pc-row-hint">{[t.completedAt ? `Completed ${date(t.completedAt)}` : t.dueOn ? `Due ${day(t.dueOn)}` : "No deadline", lessonsHint(t)].filter(Boolean).join(" · ")}</span></span>
         <span className="pc-row-trail"><Tag meta={TRAINING_META[t.state]} /><ChevronRight className="pc-row-chevron" aria-hidden="true" /></span>
       </Link></li>
     ))}</ul>

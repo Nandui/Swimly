@@ -2,22 +2,28 @@
 
 import Link from "next/link";
 import { useParams, useRouter } from "next/navigation";
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { ChevronLeft, ChevronRight, ExternalLink, FileText } from "lucide-react";
 import { Frame } from "@/components/frame";
 import { LessonBody } from "@/components/lesson-body";
 import type { LearnerQuestion } from "@/components/question";
+import { AudioPlayer, CardDeck, Checklist, ScenarioPlayer, type Card, type Item, type Scene } from "@/components/lesson-kinds";
 import { QuizRunner } from "@/components/quiz";
 import { LoadError, Loading, Notice, useLoad } from "@/components/ui";
 import { ApiError, api, apiFile } from "@/lib/api";
 
 type Lesson = {
-  id: string; kind: "READING" | "VIDEO" | "FILE" | "QUIZ"; title: string; body: unknown; minutes: number | null;
+  id: string; kind: "READING" | "VIDEO" | "FILE" | "QUIZ" | "SCENARIO" | "FLASHCARDS" | "CHECKLIST" | "AUDIO"; title: string; body: unknown; minutes: number | null;
   video: { embed: string | null; href: string; provider: string } | null;
   file: { id: string; name: string; mime: string; size: number } | null;
   section: string; index: number; total: number; prev: string | null; next: string | null; done: boolean; open: boolean;
   questions: LearnerQuestion[] | null;
+  checks: LearnerQuestion[];
+  steps: Scene[] | null; cards: Card[] | null; items: Item[] | null;
 };
+
+/** Lessons the learner has to work through before Next opens. */
+const WORKED = new Set<Lesson["kind"]>(["QUIZ", "SCENARIO", "FLASHCARDS", "CHECKLIST"]);
 
 /** A lesson's file, fetched with the person's sign-in: images show in place,
  *  PDFs open in a new tab from a local copy. */
@@ -49,8 +55,9 @@ export default function LessonPage() {
   const { data, error, reload } = useLoad<Lesson>(`training/${id}/lessons/${lessonId}`);
   const [busy, setBusy] = useState(false);
   const [failure, setFailure] = useState<string | null>(null);
-  // A Quiz lesson counts as done once every question has been worked through.
-  const [quizDone, setQuizDone] = useState<string | null>(null);
+  // A Quiz, Scenario, Flashcards or Checklist lesson counts as done once it has been worked through.
+  const [workedOut, setWorkedOut] = useState<string | null>(null);
+  const finished = useCallback(() => { if (data) setWorkedOut(data.id); }, [data]);
   async function next() {
     if (!data) return;
     setFailure(null);
@@ -64,9 +71,13 @@ export default function LessonPage() {
       setBusy(false);
     }
   }
-  const waiting = !!data && data.kind === "QUIZ" && data.open && !data.done && quizDone !== data.id && !!data.questions?.length;
+  const hasWork = !!data && ((data.kind === "QUIZ" && !!data.questions?.length) || (data.kind === "SCENARIO" && !!data.steps?.length)
+    || (data.kind === "FLASHCARDS" && !!data.cards?.length) || (data.kind === "CHECKLIST" && !!data.items?.length));
+  const waiting = !!data && WORKED.has(data.kind) && hasWork && data.open && !data.done && workedOut !== data.id;
+  const waitText = !data ? "" : data.kind === "SCENARIO" ? "Reach the best ending to carry on." : data.kind === "FLASHCARDS" ? "Get to know every card to carry on."
+    : data.kind === "CHECKLIST" ? "Tick off every item to carry on." : "Work through the questions to carry on.";
   const label = !data ? "" : !data.open || data.done ? (data.next ? "Next lesson" : "Back to the course")
-    : data.next ? (data.kind === "VIDEO" ? "Watched it, next" : "Done, next lesson") : "Done, finish up";
+    : data.next ? (data.kind === "VIDEO" ? "Watched it, next" : data.kind === "AUDIO" ? "Listened, next" : "Done, next lesson") : "Done, finish up";
   return (
     <Frame title="My training">
       <div className="stack">
@@ -83,11 +94,15 @@ export default function LessonPage() {
             ) : data.video ? (
               <a href={data.video.href} target="_blank" rel="noopener noreferrer" className="button outline block"><ExternalLink aria-hidden="true" />Watch on {data.video.provider}</a>
             ) : null}
-            {data.file ? <LessonFile assignmentId={id} file={data.file} /> : null}
-            {data.body ? <section className="pc-panel"><LessonBody body={data.body} assignmentId={id} /></section> : null}
-            {data.kind === "QUIZ" ? <QuizRunner assignmentId={id} lessonId={data.id} questions={data.questions ?? []} key={data.id} onFinished={() => setQuizDone(data.id)} /> : null}
+            {data.kind === "AUDIO" && data.file ? <AudioPlayer assignmentId={id} fileId={data.file.id} title={data.title} />
+              : data.file ? <LessonFile assignmentId={id} file={data.file} /> : null}
+            {data.body ? <section className="pc-panel"><LessonBody body={data.body} assignmentId={id} checks={{ lessonId: data.id, questions: data.checks ?? [] }} /></section> : null}
+            {data.kind === "QUIZ" ? <QuizRunner assignmentId={id} lessonId={data.id} questions={data.questions ?? []} key={data.id} onFinished={finished} /> : null}
+            {data.kind === "SCENARIO" ? <ScenarioPlayer assignmentId={id} steps={data.steps ?? []} key={data.id} onFinished={finished} /> : null}
+            {data.kind === "FLASHCARDS" ? <CardDeck assignmentId={id} cards={data.cards ?? []} key={data.id} onFinished={finished} /> : null}
+            {data.kind === "CHECKLIST" ? <Checklist storageKey={`me-checklist-${id}-${data.id}`} items={data.items ?? []} key={data.id} onFinished={finished} /> : null}
             {failure ? <Notice title={failure} tone="error" live /> : null}
-            {waiting ? <p className="caption muted" id="quiz-wait">Work through the questions to carry on.</p> : null}
+            {waiting ? <p className="caption muted" id="quiz-wait">{waitText}</p> : null}
             <div className="lesson-nav">
               {data.prev ? <Link href={`/training/${id}/${data.prev}`} className="button outline"><ChevronLeft aria-hidden="true" />Back</Link> : <span />}
               <button type="button" className="button" onClick={next} disabled={busy || waiting} aria-describedby={waiting ? "quiz-wait" : undefined}>{busy ? "Saving…" : label}<ChevronRight aria-hidden="true" /></button>

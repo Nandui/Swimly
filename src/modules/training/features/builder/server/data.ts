@@ -2,7 +2,7 @@ import "server-only";
 import { prisma } from "@/lib/prisma";
 import { qualificationTypesByIds } from "@/lib/qualifications";
 import { requireTrainingActor } from "@/modules/training/shared/access";
-import { readOutline } from "@/modules/training/shared/lessons";
+import { frozenOutline, readOutline } from "@/modules/training/shared/lessons";
 import { DRAFT_SELECT, draftOutline } from "@/modules/training/features/builder/server/draft";
 
 /** One course for the builder: its settings, the draft outline, the files it
@@ -14,34 +14,44 @@ export async function courseForBuilder(courseId: string) {
     where: { id: courseId, orgId: who.orgId ?? undefined },
     select: {
       id: true, title: true, summary: true, content: true, requiresSignoff: true, grantsTypeId: true, archivedAt: true, publishedVersionId: true,
+      coverId: true, category: true, tags: true,
       ...DRAFT_SELECT,
+      comments: { orderBy: { createdAt: "asc" }, take: 300, select: { id: true, lessonId: true, body: true, authorName: true, createdAt: true, resolvedAt: true, resolvedByName: true } },
       files: { orderBy: { createdAt: "asc" }, select: { id: true, name: true, mime: true, size: true } },
-      versions: { orderBy: { number: "desc" }, take: 5, select: { id: true, number: true, publishedAt: true, publishedByName: true, lessonCount: true, outline: true } },
+      versions: { orderBy: { number: "desc" }, take: 5, select: { id: true, number: true, publishedAt: true, publishedByName: true, lessonCount: true, outline: true, changeNote: true, retake: true } },
     },
   });
   if (!row) return null;
   const draft = draftOutline(row);
   const published = row.versions.find((v) => v.id === row.publishedVersionId) ?? null;
   // The draft differs from what learners get when its outline would freeze differently.
-  const changed = !published || JSON.stringify(readOutline(published.outline)) !== JSON.stringify(draft);
-  const [types, open, report] = await Promise.all([
+  const changed = !published || JSON.stringify(readOutline(published.outline)) !== JSON.stringify(frozenOutline(draft));
+  const [types, open, report, finished, courses] = await Promise.all([
     qualificationTypesByIds([row.grantsTypeId]),
     prisma.trainingAssignment.count({ where: { courseId, status: { in: ["ASSIGNED", "SUBMITTED"] } } }),
     examReport(courseId),
+    prisma.trainingAssignment.findMany({ where: { courseId, status: "COMPLETED" }, distinct: ["userId"], select: { userId: true } }),
+    prisma.trainingCourse.findMany({ where: { orgId: who.orgId ?? undefined, archivedAt: null }, orderBy: { title: "asc" }, select: { id: true, title: true } }),
   ]);
   const grants = row.grantsTypeId ? types.get(row.grantsTypeId) : undefined;
   return {
     who,
     course: {
       id: row.id, title: row.title, summary: row.summary, content: row.content, requiresSignoff: row.requiresSignoff, archivedAt: row.archivedAt,
+      coverId: row.coverId, category: row.category, tags: row.tags,
       grantsType: grants ? { id: grants.id, name: grants.name, validityMonths: grants.validityMonths } : null,
     },
     draft,
     files: row.files,
     published: published && { number: published.number, publishedAt: published.publishedAt, publishedByName: published.publishedByName, lessonCount: published.lessonCount },
-    versions: row.versions.map((v) => ({ id: v.id, number: v.number, publishedAt: v.publishedAt, publishedByName: v.publishedByName, lessonCount: v.lessonCount })),
+    versions: row.versions.map((v) => ({ id: v.id, number: v.number, publishedAt: v.publishedAt, publishedByName: v.publishedByName, lessonCount: v.lessonCount, changeNote: v.changeNote, retake: v.retake })),
+    // Open comments, and those dealt with in the last 30 days.
+    comments: row.comments.filter((c) => !c.resolvedAt || c.resolvedAt.getTime() > Date.now() - 30 * 86_400_000),
+    categories: await courseCategories(who.orgId),
     changed,
     openAssignments: open,
+    finished: finished.length,
+    courses,
     report,
   };
 }
@@ -68,6 +78,12 @@ async function examReport(courseId: string) {
   return { sittings: attempts.length, passed: attempts.filter((a) => a.passed).length, questions };
 }
 export type BuilderCourse = NonNullable<Awaited<ReturnType<typeof courseForBuilder>>>;
+
+/** Categories already in use, to offer when setting a course's. */
+export async function courseCategories(orgId: string | null) {
+  const rows = await prisma.trainingCourse.findMany({ where: { orgId: orgId ?? undefined, category: { not: "" } }, distinct: ["category"], select: { category: true }, orderBy: { category: "asc" } });
+  return rows.map((r) => r.category);
+}
 
 /** The draft as the learner would see it, for Preview. */
 export async function draftForPreview(courseId: string) {

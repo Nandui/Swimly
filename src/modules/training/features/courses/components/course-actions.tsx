@@ -12,10 +12,10 @@ import { saveCourse, setCourseArchived } from "@/modules/training/features/cours
 import { THEME } from "@/modules/training/shared/components/dialog-kit";
 
 type QualificationOption = { id: string; name: string; validityMonths: number | null };
-type CourseDraft = { id: string; title: string; summary: string; requiresSignoff: boolean; grantsType: { id: string } | null };
+type CourseDraft = { id: string; title: string; summary: string; requiresSignoff: boolean; grantsType: { id: string } | null; category?: string; tags?: string[] };
 
 /** A course's settings. A new course opens in the builder to add its lessons. */
-export function CourseDialog({ course, qualificationTypes }: { course?: CourseDraft; qualificationTypes: QualificationOption[] }) {
+export function CourseDialog({ course, qualificationTypes, categories = [] }: { course?: CourseDraft; qualificationTypes: QualificationOption[]; categories?: string[] }) {
   const router = useRouter();
   return (
     <FormDialog
@@ -34,6 +34,8 @@ export function CourseDialog({ course, qualificationTypes }: { course?: CourseDr
           summary: String(formData.get("summary") ?? ""),
           requiresSignoff: formData.get("requiresSignoff") === "on",
           grantsTypeId: String(formData.get("grantsTypeId") ?? ""),
+          category: String(formData.get("category") ?? ""),
+          tags: String(formData.get("tags") ?? "").split(",").map((t) => t.trim()).filter(Boolean),
         });
         if (!result.ok) return result;
         if (!course) router.push(`/training/courses/${result.id}`); else router.refresh();
@@ -46,6 +48,15 @@ export function CourseDialog({ course, qualificationTypes }: { course?: CourseDr
       <Field label="Summary" htmlFor="course-summary" hint="One line on why it matters. Shown on the course list.">
         <Input id="course-summary" name="summary" defaultValue={course?.summary} maxLength={300} />
       </Field>
+      <div className="grid gap-4 sm:grid-cols-2">
+        <Field label="Category" htmlFor="course-category" optional hint="Groups courses in the list and in Turnfin Me, such as Pool safety or Customer service.">
+          <Input id="course-category" name="category" defaultValue={course?.category} maxLength={60} list="course-categories" />
+          <datalist id="course-categories">{categories.map((c) => <option key={c} value={c} />)}</datalist>
+        </Field>
+        <Field label="Tags" htmlFor="course-tags" optional hint="Words to find it by, separated by commas, such as NPLQ, chemicals.">
+          <Input id="course-tags" name="tags" defaultValue={course?.tags?.join(", ")} maxLength={330} />
+        </Field>
+      </div>
       <Switch id="course-signoff" name="requiresSignoff" label="A trainer signs it off in person at the end" defaultChecked={course?.requiresSignoff} />
       <Field label="Records a qualification" htmlFor="course-grants" optional hint="On completion, the person gets this qualification, expiring after its validity.">
         <NativeSelect id="course-grants" name="grantsTypeId" defaultValue={course?.grantsType?.id ?? ""} className="min-h-11 w-full">

@@ -6,7 +6,7 @@ The rules for courses, assignments, sign-offs and certificates are in [docs/trai
 
 ## Features
 - `courses` — training courses: create, change settings, archive, and the qualification each grants (`/training/courses`).
-- `builder` — building a course from sections and lessons (reading, video, file, quiz), each section's questions, the final exam and how it has gone, its files, preview and publishing numbered versions (`/training/courses/[id]`, `/training/files`).
+- `builder` — building a course from sections and lessons (reading, video, file, quiz, scenario, flashcards, checklist, audio) with interactive blocks and knowledge checks, each section's questions (pasted from a spreadsheet too), the final exam and how it has gone, templates, duplicating and copying in, the cover, review comments, preview and publishing numbered versions with a note and optional retake (`/training/courses/[id]`, `/training/files`).
 - `assignments` — assigning training, following and cancelling it, giving another exam attempt, and one person's training and exam scores (`/training`, `/training/people/[id]`).
 - `sign-off` — practical sign-offs: confirming a skill shown in person, or returning it for practice (`/training/sign-off`).
 - `certificates` — checking certificates people upload in Turnfin Me (`/training/certificates`).
@@ -15,7 +15,7 @@ The rules for courses, assignments, sign-offs and certificates are in [docs/trai
 - `person-file` — Training's part of a person's file and their records for HR's subject export.
 - `workspace` — the Training frame, its one page list (`pages.ts`, for the page bar and the starter page `/training/overview`) and the access check (`src/app/training/layout.tsx`).
 
-`shared/` holds what two or more features use: lessons, outlines, cleaning lesson text and video links (`lessons.ts`), questions, marking and exam papers (`questions.ts`), lesson files (`files.ts`), the lesson renderer, statuses and states (`constants.ts`), the access check (`access.ts`), courses and the people a trainer may see (`data.ts`), granting a qualification on completion (`grant.ts`), write helpers (`writes.ts`) and the dialogs' kit.
+`shared/` holds what two or more features use: lessons, outlines, cleaning lesson text, lesson settings and video links (`lessons.ts`), questions, marking and exam papers (`questions.ts`), course templates (`templates.ts`), reading pasted questions (`import.ts`), lesson files (`files.ts`), the lesson renderer, statuses and states (`constants.ts`), the access check (`access.ts`), courses and the people a trainer may see (`data.ts`), granting a qualification on completion (`grant.ts`), write helpers (`writes.ts`) and the dialogs' kit.
 
 ## Public API (index.ts)
 - `myTraining(userId)` — a person's own training, for Turnfin Me's staff API.
@@ -30,10 +30,11 @@ Declared in `prisma/schema/training.prisma` (table names kept, ADR 0002):
 - `TrainingAssignment` — one person's assignment, from assigned to completed or cancelled, and the course version they take.
 - `training_sections`, `training_lessons` — a course's draft outline.
 - `training_course_versions` — published courses, frozen.
-- `training_files` — images and PDFs used in lessons.
+- `training_files` — images, PDFs and recordings used in lessons, and the cover.
 - `training_lesson_progress` — lessons a learner has finished.
 - `training_questions` — each section's questions, for its quizzes and the final exam.
 - `training_exam_attempts` — every exam sitting: its paper, answers and marks.
+- `training_review_comments` — comments on a course's draft, and who marked them done.
 
 Training also reads and writes Core's qualification records (`Qualification`, `QualificationEvidence`, `QualificationType`) and reads `User`, `Club` and `Position`. Qualifications are Core's (ADR 0001); moving these reads onto Core functions is phase 3 of [MIGRATION.md](../../../docs/architecture/MIGRATION.md).
 

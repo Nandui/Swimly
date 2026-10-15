@@ -4,6 +4,17 @@ Patch notes for everyone who uses Turnfin at the swim school, the desk and the o
 
 **How versions are numbered:** the middle number goes up when something new arrives (a module, a screen, a new way of working), and the last number when something is fixed or tidied without changing how you work. This list starts on 3 October 2026, when Turnfin moved to its new look; earlier changes are not listed.
 
+## 1.19.0 · 15 October 2026 · Training: richer lessons and a faster course builder
+
+- Four new kinds of lesson. A **Scenario** puts staff in a situation and lets them choose what to do, scene by scene, until they reach the best outcome. **Flashcards** go round until every card is known. A **Checklist** is ticked off on the phone, for walk-rounds and equipment checks. **Audio** plays a recording, with the words underneath for anyone who can't listen.
+- Lesson text can now have coloured boxes (note, tip, take care, danger), **tap to reveal** answers, **flip cards**, **step by step** instructions, and a **knowledge check**: one question asked right there in the middle of the reading.
+- Two new kinds of question: **fill in the blanks** (put the missing words in square brackets, and add other accepted answers after a |), and **pick the spot**, where staff tap the right place on a picture.
+- Start a course from a **template** (policy, practical skill, emergency procedure, refresher or induction) instead of a blank page, **duplicate** a course, or **copy in** lessons and questions from another course.
+- **Paste questions** straight from Excel or a CSV file, up to 100 at a time. You see what was found, and what is wrong with any row, before anything is added.
+- Courses can have a **cover picture**, a **category** and **tags**. The courses list groups them by category and lets you search; staff see the covers in My training too.
+- Trainers can leave **comments** on a course while it is being built, and mark them done.
+- When you publish a change, say **what changed**: staff taking the course see it. You can also **ask everyone who finished to take it again**, with a due date.
+
 ## 1.18.0 · 15 October 2026 · Training: quizzes and final exams
 
 - Course builders can now write **questions** for each section of a course: one right answer, several right answers, true or false, put steps in order, or match pairs. A question can have a picture, and a short "why" that explains the answer.

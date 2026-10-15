@@ -4,7 +4,7 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useEffect, useMemo, useState, useTransition } from "react";
 import type { JSONContent } from "@tiptap/react";
-import { ArrowDown, ArrowUp, CircleCheck, Eye, FilePlus2, FileText, GraduationCap, ListChecks, Pencil, Plus, Rocket, Trash2, Upload } from "lucide-react";
+import { ArrowDown, ArrowUp, CircleCheck, Eye, FilePlus2, FileText, GraduationCap, Headphones, ListChecks, MessageSquare, Pencil, Plus, Trash2, Upload } from "lucide-react";
 import { Button } from "@/components/shadcn/button";
 import { RadioGroup } from "@/components/shadcn/radio-group";
 import { ConfirmAction } from "@/components/confirm-action";
@@ -18,12 +18,15 @@ import { EmptyState } from "@/components/ui-kit/empty-state";
 import { Notice } from "@/components/ui-kit/notice";
 import { cn } from "@/lib/utils";
 import { THEME } from "@/modules/training/shared/components/dialog-kit";
-import { LESSON_KIND_META, LESSON_KINDS, lessonMinutes, publishProblems, videoFor, type LessonKind, type Outline, type OutlineLesson } from "@/modules/training/shared/lessons";
+import { frozenOutline, LESSON_KIND_META, LESSON_KINDS, lessonMinutes, publishProblems, videoFor, type LessonData, type LessonKind, type Outline, type OutlineLesson } from "@/modules/training/shared/lessons";
+import { blankedPrompt } from "@/modules/training/shared/questions";
 import {
-  addLesson, addSection, moveLesson, moveSection, publishCourse, removeLesson, removeSection, renameSection, saveLesson, startFromOldText,
+  addLesson, addSection, moveLesson, moveSection, removeLesson, removeSection, renameSection, saveLesson, startFromOldText,
 } from "@/modules/training/features/builder/server/actions";
 import { RichText, uploadCourseFile, type UploadedFile } from "@/modules/training/features/builder/components/rich-text";
 import { ExamPanel, QuestionsPanel, type ExamReport } from "@/modules/training/features/builder/components/question-bank";
+import { CardsEditor, ChecklistEditor, ScenarioEditor } from "@/modules/training/features/builder/components/lesson-kinds";
+import { CopyIntoSection, CoverPicker, ReviewComments, type ReviewComment, type VersionNote } from "@/modules/training/features/builder/components/library";
 
 type Props = {
   courseId: string;
@@ -36,8 +39,15 @@ type Props = {
   panel: string | null;
   report: ExamReport;
   canEdit: boolean;
+  /** May leave review comments (Trainer level and above). */
+  canComment: boolean;
   /** Whether the draft differs from what learners get (always true before the first publish). */
   changed: boolean;
+  comments: ReviewComment[];
+  coverId: string | null;
+  versions: VersionNote[];
+  /** The organisation's other courses, to copy lessons and questions from. */
+  courses: { id: string; title: string }[];
 };
 
 const hrefFor = (courseId: string, lessonId?: string) => `/training/courses/${courseId}${lessonId ? `?lesson=${lessonId}` : ""}`;
@@ -46,7 +56,7 @@ const examHref = (courseId: string) => `/training/courses/${courseId}?exam=1`;
 
 /** The builder: the outline on the left, the open lesson on the right. Every
  *  change saves to the draft at once; learners only see it once it is published. */
-export function CourseBuilder({ courseId, title, hasOldText, draft, files: initialFiles, selected, panel, report, canEdit, changed }: Props) {
+export function CourseBuilder({ courseId, title, hasOldText, draft, files: initialFiles, selected, panel, report, canEdit, canComment, changed, comments, coverId, versions, courses }: Props) {
   const lessons = draft.sections.flatMap((s) => s.lessons);
   const open = lessons.find((l) => l.id === selected) ?? null;
   const questionSection = !open ? draft.sections.find((s) => s.id === panel) ?? null : null;
@@ -57,18 +67,27 @@ export function CourseBuilder({ courseId, title, hasOldText, draft, files: initi
   const addFile = (file: UploadedFile) => setAdded((now) => [...now, file]);
   return (
     <div className="grid gap-6 lg:grid-cols-[var(--pc-rail-width)_minmax(0,1fr)] items-start">
-      <OutlinePanel courseId={courseId} hasOldText={hasOldText} draft={draft} selected={open?.id ?? (examOpen ? "exam" : questionSection ? `q:${questionSection.id}` : null)} canEdit={canEdit} />
+      <OutlinePanel courseId={courseId} hasOldText={hasOldText} draft={draft} selected={open?.id ?? (examOpen ? "exam" : questionSection ? `q:${questionSection.id}` : null)} canEdit={canEdit} comments={comments} courses={courses} />
       {open ? (
+        <div className="flex flex-col gap-6">
         <LessonEditor key={open.id} courseId={courseId} lesson={open} files={files} onUploaded={addFile} canEdit={canEdit}
           position={{ index: lessons.indexOf(open), total: lessons.length }}
+          questions={draft.questions.map((q) => ({ id: q.id, prompt: q.kind === "FILL_BLANK" ? blankedPrompt(q.prompt) : q.prompt }))}
           quiz={open.kind === "QUIZ" ? { sectionId: draft.sections.find((s) => s.lessons.includes(open))!.id, count: draft.questions.filter((q) => q.sectionId === draft.sections.find((s) => s.lessons.includes(open))!.id).length } : null} />
+        <ReviewComments courseId={courseId} lessonId={open.id} comments={comments.filter((c) => c.lessonId === open.id)} canComment={canComment} />
+        </div>
       ) : questionSection ? (
         <QuestionsPanel key={questionSection.id} courseId={courseId} section={questionSection} questions={draft.questions.filter((q) => q.sectionId === questionSection.id)}
           quizzes={questionSection.lessons.filter((l) => l.kind === "QUIZ").map((l) => l.title)} files={files} onUploaded={addFile} canEdit={canEdit} report={report} />
       ) : examOpen ? (
         <ExamPanel courseId={courseId} exam={draft.exam} questions={draft.questions} sections={draft.sections} canEdit={canEdit} report={report} />
       ) : (
-        <StartPanel courseId={courseId} title={title} draft={draft} canEdit={canEdit} changed={changed} />
+        <div className="flex flex-col gap-6">
+          <StartPanel courseId={courseId} title={title} draft={draft} canEdit={canEdit} changed={changed} comments={comments} />
+          <CoverPicker courseId={courseId} coverId={coverId} files={files} onUploaded={addFile} canEdit={canEdit} />
+          <ReviewComments courseId={courseId} lessonId={null} comments={comments} canComment={canComment} lessons={lessons} />
+          {versions.length ? <VersionHistory versions={versions} /> : null}
+        </div>
       )}
     </div>
   );
@@ -89,7 +108,9 @@ function useAct() {
   return { act, pending };
 }
 
-function OutlinePanel({ courseId, hasOldText, draft, selected, canEdit }: { courseId: string; hasOldText: boolean; draft: Outline; selected: string | null; canEdit: boolean }) {
+function OutlinePanel({ courseId, hasOldText, draft, selected, canEdit, comments, courses }: {
+  courseId: string; hasOldText: boolean; draft: Outline; selected: string | null; canEdit: boolean; comments: ReviewComment[]; courses: { id: string; title: string }[];
+}) {
   const { act, pending } = useAct();
   const router = useRouter();
   const lessonCount = draft.sections.reduce((n, s) => n + s.lessons.length, 0);
@@ -129,13 +150,16 @@ function OutlinePanel({ courseId, hasOldText, draft, selected, canEdit }: { cour
                     <Link href={hrefFor(courseId, lesson.id)} aria-current={current ? "page" : undefined} className={cn("tf-outline-row", current && "is-current")}>
                       <Icon aria-hidden="true" />
                       <span className="min-w-0 flex-1 truncate">{lesson.title}</span>
-                      {lessonMinutes(lesson) ? <span className="text-xs text-ui-muted-foreground tabular-nums">{lessonMinutes(lesson)} min</span> : null}
+                      {comments.some((c) => c.lessonId === lesson.id && !c.resolvedAt)
+                        ? <span className="flex items-center gap-1 text-xs tabular-nums" aria-label={`${comments.filter((c) => c.lessonId === lesson.id && !c.resolvedAt).length} open comments`}><MessageSquare aria-hidden="true" className="size-3.5" />{comments.filter((c) => c.lessonId === lesson.id && !c.resolvedAt).length}</span>
+                        : lessonMinutes(lesson) ? <span className="text-xs text-ui-muted-foreground tabular-nums">{lessonMinutes(lesson)} min</span> : null}
                     </Link>
                   </li>
                 );
               })}
             </ol>
             {canEdit ? <AddLessonDialog sectionId={section.id} sectionTitle={section.title} onAdded={(id) => router.push(hrefFor(courseId, id))} /> : null}
+            {canEdit ? <CopyIntoSection courseId={courseId} sectionId={section.id} sectionTitle={section.title} courses={courses} /> : null}
             <Link href={questionsHref(courseId, section.id)} aria-current={selected === `q:${section.id}` ? "page" : undefined} className={cn("tf-outline-row", selected === `q:${section.id}` && "is-current")}>
               <ListChecks aria-hidden="true" />
               <span className="min-w-0 flex-1 truncate">Questions</span>
@@ -226,8 +250,9 @@ function AddLessonDialog({ sectionId, sectionTitle, onAdded }: { sectionId: stri
 // Course overview (no lesson open)
 // ---------------------------------------------------------------------------
 
-function StartPanel({ courseId, title, draft, canEdit, changed }: { courseId: string; title: string; draft: Outline; canEdit: boolean; changed: boolean }) {
-  const problems = useMemo(() => publishProblems(draft), [draft]);
+function StartPanel({ courseId, title, draft, canEdit, changed, comments }: { courseId: string; title: string; draft: Outline; canEdit: boolean; changed: boolean; comments: ReviewComment[] }) {
+  const problems = useMemo(() => publishProblems(frozenOutline(draft)), [draft]);
+  const openComments = comments.filter((c) => !c.resolvedAt).length;
   const lessons = draft.sections.flatMap((s) => s.lessons);
   const minutes = lessons.reduce((n, l) => n + (lessonMinutes(l) ?? 0), 0);
   if (!lessons.length) {
@@ -258,6 +283,7 @@ function StartPanel({ courseId, title, draft, canEdit, changed }: { courseId: st
       ) : (
         <Notice tone="success" title="Ready to publish">Preview it as a learner first, then publish from the top of the page.</Notice>
       )}
+      {openComments ? <Notice tone="info" title={`${openComments} review ${openComments === 1 ? "comment is" : "comments are"} still open`}>Have a look before you publish. They don&apos;t stop you publishing.</Notice> : null}
       <Button asChild variant="outline" className="min-h-11 self-start"><Link href={`/training/courses/${courseId}/preview`}><Eye aria-hidden="true" />Preview as a learner</Link></Button>
     </section>
   );
@@ -267,8 +293,33 @@ function StartPanel({ courseId, title, draft, canEdit, changed }: { courseId: st
 // One lesson
 // ---------------------------------------------------------------------------
 
-function LessonEditor({ courseId, lesson, files, onUploaded, canEdit, position, quiz }: {
+const BODY_LABEL: Record<LessonKind, string> = {
+  READING: "Lesson text", VIDEO: "Notes under it (optional)", FILE: "Notes under it (optional)", QUIZ: "Introduction (optional)",
+  SCENARIO: "Introduction (optional)", FLASHCARDS: "Introduction (optional)", CHECKLIST: "Introduction (optional)", AUDIO: "Transcript and notes",
+};
+
+function VersionHistory({ versions }: { versions: VersionNote[] }) {
+  return (
+    <section className="pc-panel flex flex-col gap-3" aria-labelledby="versions-heading">
+      <h2 id="versions-heading" className="text-[length:var(--pc-text-title)] leading-[var(--pc-leading-title)]">Versions</h2>
+      <ol className="pc-rows">
+        {versions.map((v) => (
+          <li key={v.id} className="pc-row items-start">
+            <span className="pc-row-body">
+              <span className="pc-row-title tabular-nums">Version {v.number}</span>
+              <span className="pc-row-hint">{v.publishedAt.toLocaleDateString("en-IE", { day: "numeric", month: "long", year: "numeric" })} by {v.publishedByName} · {v.lessonCount} {v.lessonCount === 1 ? "lesson" : "lessons"}{v.retake ? " · everyone took it again" : ""}</span>
+              {v.changeNote ? <span className="text-sm">{v.changeNote}</span> : null}
+            </span>
+          </li>
+        ))}
+      </ol>
+    </section>
+  );
+}
+
+function LessonEditor({ courseId, lesson, files, onUploaded, canEdit, position, quiz, questions }: {
   courseId: string; lesson: OutlineLesson; files: UploadedFile[]; onUploaded: (file: UploadedFile) => void; canEdit: boolean; position: { index: number; total: number };
+  questions: { id: string; prompt: string }[];
   /** A Quiz lesson: its section, and how many questions that section has. */
   quiz: { sectionId: string; count: number } | null;
 }) {
@@ -279,6 +330,7 @@ function LessonEditor({ courseId, lesson, files, onUploaded, canEdit, position, 
   const [videoUrl, setVideoUrl] = useState(lesson.videoUrl);
   const [fileId, setFileId] = useState(lesson.fileId ?? "");
   const [minutes, setMinutes] = useState(lesson.minutes ? String(lesson.minutes) : "");
+  const [data, setData] = useState<LessonData | null>(lesson.data);
   const [dirty, setDirty] = useState(false);
   const [uploading, setUploading] = useState(false);
   const [fileError, setFileError] = useState("");
@@ -293,8 +345,10 @@ function LessonEditor({ courseId, lesson, files, onUploaded, canEdit, position, 
   const meta = LESSON_KIND_META[lesson.kind];
   const Icon = meta.icon;
   const save = () => act(() => saveLesson(lesson.id, {
-    title, body: body ? JSON.stringify(body) : null, videoUrl, fileId, minutes: minutes.trim() ? Number(minutes) : null,
+    title, body: body ? JSON.stringify(body) : null, videoUrl, fileId, minutes: minutes.trim() ? Number(minutes) : null, data: data ? JSON.stringify(data) : null,
   }), () => { setDirty(false); toast.success("Lesson saved"); });
+  const images = files.filter((f) => f.mime.startsWith("image/"));
+  const audio = lesson.kind === "AUDIO";
   async function upload(file: File | undefined) {
     if (!file) return;
     setUploading(true); setFileError("");
@@ -343,13 +397,31 @@ function LessonEditor({ courseId, lesson, files, onUploaded, canEdit, position, 
           <Field label="File" htmlFor="lesson-file" hint="The PDF or image learners open in this lesson.">
             <NativeSelect id="lesson-file" value={fileId} disabled={!canEdit} onChange={(event) => change(setFileId)(event.target.value)} className="min-h-11 w-full">
               <NativeSelectOption value="">Choose a file</NativeSelectOption>
-              {files.map((f) => <NativeSelectOption key={f.id} value={f.id}>{f.name}</NativeSelectOption>)}
+              {files.filter((f) => !f.mime.startsWith("audio/")).map((f) => <NativeSelectOption key={f.id} value={f.id}>{f.name}</NativeSelectOption>)}
             </NativeSelect>
           </Field>
           {canEdit ? <FileField label="Or add a new file" description="PDF, JPEG, PNG or WebP, up to 4 MB." accept="application/pdf,image/png,image/jpeg,image/webp" pending={uploading} onChange={(event) => upload(event.target.files?.[0])} error={fileError || undefined} /> : null}
           {fileId ? <Button asChild variant="outline" className="min-h-11 self-start"><a href={`/training/files/${fileId}`} target="_blank" rel="noopener noreferrer"><FileText aria-hidden="true" />Open the file</a></Button> : null}
         </div>
       ) : null}
+
+      {audio ? (
+        <div className="flex flex-col gap-3">
+          <Field label="Recording" htmlFor="lesson-audio" hint="What learners listen to, such as a briefing, a radio call or an alarm.">
+            <NativeSelect id="lesson-audio" value={fileId} disabled={!canEdit} onChange={(event) => change(setFileId)(event.target.value)} className="min-h-11 w-full">
+              <NativeSelectOption value="">Choose a recording</NativeSelectOption>
+              {files.filter((f) => f.mime.startsWith("audio/")).map((f) => <NativeSelectOption key={f.id} value={f.id}>{f.name}</NativeSelectOption>)}
+            </NativeSelect>
+          </Field>
+          {canEdit ? <FileField label="Or add a recording" description="MP3, M4A, OGG or WAV, up to 4 MB: about four minutes of speech." accept="audio/mpeg,audio/mp4,audio/x-m4a,audio/ogg,audio/wav,.mp3,.m4a,.ogg,.wav" pending={uploading} onChange={(event) => upload(event.target.files?.[0])} error={fileError || undefined} /> : null}
+          {fileId ? <audio controls preload="metadata" src={`/training/files/${fileId}`} className="w-full"><track kind="captions" /></audio> : null}
+          <p className="flex items-center gap-2 text-sm text-ui-muted-foreground"><Headphones aria-hidden="true" className="size-4" />Write what is said in the transcript below, for anyone who can&apos;t listen.</p>
+        </div>
+      ) : null}
+
+      {lesson.kind === "SCENARIO" ? <ScenarioEditor title={title} data={data} onChange={change(setData)} images={images} disabled={!canEdit} /> : null}
+      {lesson.kind === "FLASHCARDS" ? <CardsEditor data={data} onChange={change(setData)} images={images} disabled={!canEdit} /> : null}
+      {lesson.kind === "CHECKLIST" ? <ChecklistEditor data={data} onChange={change(setData)} disabled={!canEdit} /> : null}
 
       {quiz ? (
         <Notice tone={quiz.count ? "info" : "warning"} title={quiz.count ? `Practises the ${quiz.count} ${quiz.count === 1 ? "question" : "questions"} in this section` : "This section has no questions yet"}
@@ -358,7 +430,8 @@ function LessonEditor({ courseId, lesson, files, onUploaded, canEdit, position, 
         </Notice>
       ) : null}
 
-      <RichText id="lesson-body" label={lesson.kind === "READING" ? "Lesson text" : lesson.kind === "QUIZ" ? "Introduction (optional)" : "Notes under it (optional)"} value={body} onChange={change(setBody)} courseId={courseId} disabled={!canEdit} onUploaded={onUploaded} />
+      <RichText id="lesson-body" label={BODY_LABEL[lesson.kind]} value={body} onChange={change(setBody)} courseId={courseId} disabled={!canEdit} onUploaded={onUploaded}
+        questions={lesson.kind === "READING" ? questions : undefined} />
 
       <Input id="lesson-minutes" label="Minutes it takes" type="number" inputMode="numeric" min={1} max={240} value={minutes} onChange={change(setMinutes)} optional disabled={!canEdit}
         description={lesson.kind === "READING" ? "Leave it empty to use the reading time of the text." : "Shown to learners beside the lesson."} className="max-w-xs" />
@@ -381,28 +454,5 @@ function LessonEditor({ courseId, lesson, files, onUploaded, canEdit, position, 
         </div>
       ) : null}
     </section>
-  );
-}
-
-// ---------------------------------------------------------------------------
-// Publishing
-// ---------------------------------------------------------------------------
-
-export function PublishCourse({ courseId, title, changed, published, openAssignments }: {
-  courseId: string; title: string; changed: boolean; published: { number: number } | null; openAssignments: number;
-}) {
-  const router = useRouter();
-  if (!changed) return <Button type="button" className="min-h-11" disabled><Rocket aria-hidden="true" />Published</Button>;
-  return (
-    <ConfirmAction
-      trigger={<Button type="button" className="min-h-11"><Rocket aria-hidden="true" />{published ? `Publish version ${published.number + 1}` : "Publish"}</Button>}
-      title={published ? `Publish version ${published.number + 1} of ${title}?` : `Publish ${title}?`}
-      description={published
-        ? `New assignments get this version, and so does anyone who hasn't started. ${openAssignments ? "People part-way through keep the version they started, so their record shows what they were taught." : ""}`
-        : "People you assign it to can take it in Turnfin Me. Anyone already assigned gets it the next time they open it."}
-      confirmLabel="Publish"
-      successMessage="Published"
-      run={async () => { const result = await publishCourse(courseId); if (result.ok) router.refresh(); return result; }}
-    />
   );
 }
