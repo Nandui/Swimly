@@ -4,6 +4,11 @@ Patch notes for everyone who uses Turnfin at the swim school, the desk and the o
 
 **How versions are numbered:** the middle number goes up when something new arrives (a module, a screen, a new way of working), and the last number when something is fixed or tidied without changing how you work. This list starts on 3 October 2026, when Turnfin moved to its new look; earlier changes are not listed.
 
+## 1.17.3 · 15 October 2026 · Rota: the Plan says why you can't change a day
+
+- When **Add staff** and **Add activity** are not on a day of the rota **Plan**, the Plan now says exactly why: your role has no Plan level for the rota, the day has come (the duty manager changes it from Today), or the department is not one of yours.
+- If it says the department is not one of yours, an administrator ticks it under **Departments** on your profile in HR, People.
+
 ## 1.17.1 · 15 October 2026 · Rota: zoom buttons on the Plan
 
 - Scrolling over a day on the rota **Plan** no longer zooms in and out, so the page scrolls as you expect.
