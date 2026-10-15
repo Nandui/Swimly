@@ -1,6 +1,7 @@
 "use server";
 
 import { z } from "zod";
+import type { Prisma } from "@/generated/prisma/client";
 import { fail, ok, type ActionResult } from "@/lib/action-result";
 import { AuthorizationError } from "@/lib/authz";
 import { logAudit } from "@/lib/audit";
@@ -14,7 +15,7 @@ import { requirePurchasingActor } from "@/modules/purchasing/shared/access";
 import { revalidatePurchasing as revalidate, text } from "@/modules/purchasing/shared/forms";
 import { orderEmail } from "@/modules/purchasing/features/orders/server/order-email";
 import { orderEmailContext } from "@/modules/purchasing/features/orders/server/supplier-email";
-import { EDITABLE, approverRoles, euro, mayApprove, orderTotal, poNumber, variantProblem, type PoStatus } from "@/modules/purchasing/shared/rules";
+import { EDITABLE, MONTHS, approverRoles, euro, mayApprove, orderTotal, poNumber, variantProblem, type PoStatus } from "@/modules/purchasing/shared/rules";
 
 /** Purchasing's order writes (docs/purchasing.md). Raising an order needs
  *  `purchasing.request` at its site; approving needs a role the rules name for
@@ -86,6 +87,18 @@ export async function saveOrder(id: string | null, input: OrderInput, submit: bo
   return result;
 }
 
+/** The organisation's next running order number: one more than the highest in a
+ *  "BT-OCT-0042" number so far (older "PO-BT-00001" numbers do not count). A lock held
+ *  until the approval commits means two approvals at once never share a number. */
+async function nextRunningNumber(tx: Prisma.TransactionClient, orgId: string) {
+  await tx.$executeRaw`SELECT pg_advisory_xact_lock(hashtextextended(${`purchase-order-number:${orgId}`}, 0))`;
+  const pattern = `^[A-Z0-9]+-(${MONTHS.join("|")})-[0-9]+$`;
+  const [row] = await tx.$queryRaw<{ last: number | null }[]>`
+    SELECT MAX(CAST(split_part("number", '-', 3) AS INTEGER)) AS last FROM "PurchaseOrder"
+    WHERE "orgId" = ${orgId} AND "number" ~ ${pattern}`;
+  return (row?.last ?? 0) + 1;
+}
+
 /** Approve (giving it the site's next number) or reject (with the reason) an
  *  order waiting for approval. Needs a role the rules name for that supplier
  *  and amount, the order's site in reach, and never your own order unless you are an
@@ -119,10 +132,7 @@ export async function decideOrder(id: string, decision: "approve" | "reject", no
     if (claimed.count !== 1) return fail("Someone decided this order just now.");
     let number: string | null = null;
     if (decision === "approve") {
-      // One running number for the organisation; its row is locked by the update until this commits,
-      // so two approvals at the same moment never share or skip a number.
-      const counter = await tx.purchasingSettings.upsert({ where: { orgId: order.orgId }, create: { orgId: order.orgId, lastOrderNumber: 1 }, update: { lastOrderNumber: { increment: 1 } }, select: { lastOrderNumber: true } });
-      number = poNumber(order.site.code!, decidedAt, counter.lastOrderNumber);
+      number = poNumber(order.site.code!, decidedAt, await nextRunningNumber(tx, order.orgId));
       await tx.purchaseOrder.update({ where: { id }, data: { number } });
     }
     await logAudit({ actorId: who.id, actorName: who.name, action: decision === "approve" ? "approve" : "reject", entity: "PurchaseOrder", entityId: id, clubId: order.siteId,

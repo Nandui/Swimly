@@ -30,7 +30,7 @@ export const SUPPLIER_EMAILS_META = {
 /** The requester can still change an order in these. */
 export const EDITABLE: readonly PoStatus[] = ["draft", "rejected"];
 
-const MONTHS = ["JAN", "FEB", "MAR", "APR", "MAY", "JUN", "JUL", "AUG", "SEP", "OCT", "NOV", "DEC"] as const;
+export const MONTHS = ["JAN", "FEB", "MAR", "APR", "MAY", "JUN", "JUL", "AUG", "SEP", "OCT", "NOV", "DEC"] as const;
 const MONTH_IN_IRELAND = new Intl.DateTimeFormat("en-IE", { timeZone: "Europe/Dublin", month: "numeric" });
 
 /** The order number: "BT-OCT-0042", the site's code, the month it is approved

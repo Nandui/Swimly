@@ -43,7 +43,7 @@ orders (owner decision, 15 October 2026); everyone else needs someone else to ap
 Approving gives the order its number in the same transaction: `<site code>-<month>-<running
 number>`, for example `BT-OCT-0042` (owner request, 15 October 2026). The month is the one the
 order is approved in, Irish time, as three capitals. The running number is one count for the
-whole organisation (`PurchasingSettings.lastOrderNumber`), at least four digits, and never
+whole organisation (one more than the highest so far, under a lock held until the approval commits), at least four digits, and never
 resets, so it is unique on its own; it is raised with the approval, so numbers never repeat
 or skip, and two approvers cannot number one order twice. Orders approved before then keep
 their old `PO-BT-00001` numbers, which suppliers and invoices already quote;
