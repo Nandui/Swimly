@@ -1,9 +1,9 @@
 "use client";
 
-import { useEffect, useMemo, useRef, useState, type ReactNode } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState, type ReactNode } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { ChevronRight, Coffee, MapPin, Plus, TriangleAlert } from "lucide-react";
+import { ChevronLeft, ChevronRight, Coffee, MapPin, Plus, TriangleAlert, ZoomIn, ZoomOut } from "lucide-react";
 import { Button } from "@/components/shadcn/button";
 import { Label } from "@/components/shadcn/label";
 import { Sheet, SheetContent, SheetDescription, SheetHeader, SheetTitle } from "@/components/shadcn/sheet";
@@ -20,7 +20,7 @@ import { ROTA_DAY_META, activityIcon, qualificationShort } from "@/modules/rota/
 import { freeTime, needRows, personBlocks, type CoverSpan, type NeedRow } from "@/modules/rota/shared/plan-rows";
 import { duration } from "@/modules/rota/shared/shifts";
 import { AnyActivity, OptionRow, ShiftSheet, checkLabel, warned, type TypeOption } from "@/modules/rota/features/plan/components/people-plan";
-import { firstTick, panView, sameView, tickStep, ticks as ticksOf, zoomView, type View } from "@/modules/rota/features/plan/server/view";
+import { MIN_SPAN, firstTick, panView, sameView, tickStep, ticks as ticksOf, zoomView, type View } from "@/modules/rota/features/plan/server/view";
 
 /** One day of a department's plan, shift first (owner, 13 October 2026: "we need to produce shifts
  *  for them, these will also be done to allocate staff during those shifts to activities, bookings,
@@ -30,8 +30,10 @@ import { firstTick, panView, sameView, tickStep, ticks as ticksOf, zoomView, typ
  *  fill it. **Staff on today** follows: one row per person, their shift outlined, what they are on
  *  inside it, their breaks, and every stretch nothing is given to yet as "No activity", which
  *  opens what that time could go to, from any department (lending). Each person shows today's paid
- *  hours and the week's against their contract. "Show" zooms; the wheel zooms around the pointer
- *  and dragging moves a zoomed-in day. Below 1024px the day is an agenda. */
+ *  hours and the week's against their contract. "Show" and the zoom buttons zoom (owner request,
+ *  15 October 2026: no zooming on scroll, a control instead); dragging, sideways scrolling or
+ *  Earlier and Later move a zoomed-in day, and the zoom stays on this device from day to day.
+ *  Below 1024px the day is an agenda. */
 
 type Option = { id: string; name: string };
 type Props = {
@@ -68,6 +70,11 @@ type Free = { userId: string; start: number; end: number };
 const WINDOW_KEYS = ["day", "am", "pm", "eve"] as const;
 /** How far a press moves before it is a drag, not a click. */
 const DRAG_AFTER = 6;
+/** Each zoom button halves or doubles how much of the day shows; Earlier and Later move a third. */
+const ZOOM_STEP = 2;
+const MOVE_BY = 1 / 3;
+/** Where the chosen zoom is kept, so it stays as people move between days and weeks. */
+const VIEW_KEY = "turnfin.rota.plan.view";
 type WindowKey = (typeof WINDOW_KEYS)[number];
 
 function windows(times: { start: number; end: number }[]): Record<WindowKey, { from: number; to: number; label: string }> {
@@ -124,9 +131,29 @@ export function DayPlan({ siteId, departmentId, departmentNames, date, dateLabel
   const ourNeeds = useMemo(() => new Map(groups.flatMap((g) => g.needs.map((n) => [n.id, n] as [string, DayNeed]))), [groups]);
   const wins = useMemo(() => windows([...rows, ...people.flatMap((p) => p.shift.parts)]), [rows, people]);
   const bounds = wins.day;
-  const [view, setView] = useState<View>({ from: bounds.from, to: bounds.to });
+  const [view, setShown] = useState<View>({ from: bounds.from, to: bounds.to });
+  /** Set once someone zooms or moves the day, so only their choice is kept, never the start. */
+  const chosen = useRef(false);
+  const setView = useCallback((next: View | ((v: View) => View)) => { chosen.current = true; setShown(next); }, []);
   const viewRef = useRef(view);
   useEffect(() => { viewRef.current = view; }, [view]);
+  // The zoom last used on this device, fitted into this day. Read after mounting, because the
+  // server has no localStorage and reading it while rendering would mismatch.
+  useEffect(() => {
+    try {
+      const saved = JSON.parse(window.localStorage.getItem(VIEW_KEY) ?? "null") as View | null;
+      if (saved && Number.isFinite(saved.from) && Number.isFinite(saved.to) && saved.to > saved.from) {
+        const next = panView(saved, bounds, 0);
+        viewRef.current = next;
+        // eslint-disable-next-line react-hooks/set-state-in-effect -- a browser-only store, read after hydration
+        setShown(next);
+      }
+    } catch { /* No storage: start on the whole day. */ }
+  }, [bounds]);
+  useEffect(() => {
+    if (!chosen.current) return;
+    try { window.localStorage.setItem(VIEW_KEY, JSON.stringify({ from: Math.round(view.from), to: Math.round(view.to) })); } catch { /* Not kept. */ }
+  }, [view]);
   const win = WINDOW_KEYS.find((k) => sameView(wins[k], view)) ?? "";
   const timeline = useRef<HTMLDivElement>(null);
   const drag = useRef<{ x: number; view: View; id: number; moved: boolean } | null>(null);
@@ -154,19 +181,19 @@ export function DayPlan({ siteId, departmentId, departmentNames, date, dateLabel
   // Hour lines on every track, on the labels' step, wherever the view starts.
   const gridStyle = { ["--rota-step" as string]: `${(step / span) * trackPx}px`, ["--rota-offset" as string]: `${((firstTick(view) - from) / span) * trackPx}px` };
 
-  // The wheel zooms around the pointer over the day; sideways (or with Shift) it moves.
-  // At a limit the page scrolls instead, so the timeline never traps the wheel.
+  // Scrolling never zooms (owner request, 15 October 2026). Up and down always scroll the page;
+  // sideways (or with Shift) moves a zoomed-in day, and at either end the page has it instead.
   useEffect(() => {
     const el = timeline.current;
     if (!el) return;
     const onWheel = (e: WheelEvent) => {
+      if (e.ctrlKey) return; // A pinch arrives as a wheel with Ctrl: leave it to the browser.
       const box = track.current?.getBoundingClientRect();
       if (!box || e.clientX < box.left || e.clientX > box.right) return;
-      const v = viewRef.current, s = v.to - v.from;
       const sideways = e.shiftKey || Math.abs(e.deltaX) > Math.abs(e.deltaY);
-      const next = sideways
-        ? panView(v, bounds, ((e.shiftKey ? e.deltaY : e.deltaX) / box.width) * s)
-        : zoomView(v, bounds, v.from + ((e.clientX - box.left) / box.width) * s, Math.exp(e.deltaY * 0.0015));
+      if (!sideways) return;
+      const v = viewRef.current;
+      const next = panView(v, bounds, ((e.shiftKey ? e.deltaY : e.deltaX) / box.width) * (v.to - v.from));
       if (sameView(next, v)) return;
       e.preventDefault();
       viewRef.current = next;
@@ -174,7 +201,7 @@ export function DayPlan({ siteId, departmentId, departmentNames, date, dateLabel
     };
     el.addEventListener("wheel", onWheel, { passive: false });
     return () => el.removeEventListener("wheel", onWheel);
-  }, [bounds]);
+  }, [bounds, setView]);
 
   /** Drag anywhere on the hours or a row to move a zoomed-in view. A press becomes a drag once it
    *  moves a few pixels; then it never also opens the block it started on. */
@@ -211,6 +238,10 @@ export function DayPlan({ siteId, departmentId, departmentNames, date, dateLabel
     e.preventDefault();
     e.stopPropagation();
   };
+  /** The zoom buttons zoom around the middle of what shows. */
+  const zoomBy = (factor: number) => setView((v) => zoomView(v, bounds, (v.from + v.to) / 2, factor));
+  const moveBy = (share: number) => setView((v) => panView(v, bounds, share * (v.to - v.from)));
+  const zoomedIn = span <= MIN_SPAN + 0.5;
   const dragHandlers = { onPointerDown, onPointerMove, onPointerUp: endDrag, onPointerCancel: endDrag, onClickCapture };
 
   /** Where something is, in words: "Main pool, lanes 1 to 2". */
@@ -352,7 +383,15 @@ export function DayPlan({ siteId, departmentId, departmentNames, date, dateLabel
           <span className="rota-eyebrow" id={`rota-show-${date}`}>Show</span>
           <SegmentedChoice aria-labelledby={`rota-show-${date}`} value={win} onValueChange={(v) => setView({ from: wins[v as WindowKey].from, to: wins[v as WindowKey].to })}
             options={WINDOW_KEYS.map((k) => ({ value: k, label: k === "day" ? wins[k].label : `${wins[k].label} ${clock(wins[k].from).slice(0, 2)}–${clock(wins[k].to).slice(0, 2)}` }))} />
-          <span className="rota-tl-hint">{zoomed ? `${clock(Math.round(from))} to ${clock(Math.round(to))} · ` : ""}Scroll over the day to zoom{zoomed ? ", drag it to move" : ""}</span>
+          <span className="rota-tl-zoom-buttons" role="group" aria-label="Zoom the day">
+            <Button type="button" variant="outline" size="icon" className="size-11" aria-label="Zoom out" disabled={!zoomed} onClick={() => zoomBy(ZOOM_STEP)}><ZoomOut aria-hidden="true" /></Button>
+            <Button type="button" variant="outline" size="icon" className="size-11" aria-label="Zoom in" disabled={zoomedIn} onClick={() => zoomBy(1 / ZOOM_STEP)}><ZoomIn aria-hidden="true" /></Button>
+            {zoomed ? <>
+              <Button type="button" variant="ghost" size="icon" className="size-11" aria-label="Earlier" disabled={from <= bounds.from + 0.5} onClick={() => moveBy(-MOVE_BY)}><ChevronLeft aria-hidden="true" /></Button>
+              <Button type="button" variant="ghost" size="icon" className="size-11" aria-label="Later" disabled={to >= bounds.to - 0.5} onClick={() => moveBy(MOVE_BY)}><ChevronRight aria-hidden="true" /></Button>
+            </> : null}
+          </span>
+          <span className="rota-tl-hint" aria-live="polite">{zoomed ? `${clock(Math.round(from))} to ${clock(Math.round(to))} · drag the day to move` : ""}</span>
           <span className="ms-auto flex min-h-11 items-center gap-2">
             <Switch id={`rota-others-${date}`} checked={others} onCheckedChange={setOthers} />
             <Label htmlFor={`rota-others-${date}`} className="font-normal">Show other departments</Label>

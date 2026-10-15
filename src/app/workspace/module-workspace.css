@@ -66,6 +66,7 @@
    stacked lanes (one per place). Nothing scrolls sideways: the day fits the width. */
 .turnfin-module .rota-tl { display: flex; flex-direction: column; gap: 8px; }
 .turnfin-module .rota-tl-zoom { display: flex; flex-wrap: wrap; align-items: center; gap: 8px 12px; }
+.turnfin-module .rota-tl-zoom-buttons { display: inline-flex; align-items: center; gap: 4px; }
 .turnfin-module .rota-tl-row { display: grid; grid-template-columns: 184px minmax(0, 1fr); gap: 12px; }
 .turnfin-module .rota-tl-hours { position: relative; height: 16px; }
 .turnfin-module .rota-tl-hours > span { position: absolute; top: 0; color: var(--pc-ink-muted); font-size: var(--pc-text-caption); line-height: var(--pc-leading-caption); font-variant-numeric: tabular-nums; white-space: nowrap; }
