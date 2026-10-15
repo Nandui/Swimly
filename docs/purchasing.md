@@ -74,7 +74,8 @@ with a way to test the emails before a real one goes out.
   instead, because a browser cannot show `cid:` images.
 - **Copy to**: up to five addresses set under Suppliers (`PurchasingSettings.copyTo`, stored
   as "a@x, b@y", Manage) get a CC of every email to a supplier, visible to the supplier;
-  tests are not copied (owner requests, 15 October 2026). Each email
+  tests are not copied (owner requests, 15 October 2026). Whoever raised the order is
+  always copied too, ahead of that list. Each email
   keeps who was copied (`PurchaseOrderEmail.ccAddress`).
 - **Send test to me** sends the same email to the sender's own address only, with "Test:" in
   the subject and a line on top naming the supplier's address.

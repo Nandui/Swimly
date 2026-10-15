@@ -187,7 +187,7 @@ test("an approved order is emailed: tests to yourself first, the supplier only o
   await db.supplier.update({ where: { id: supplier.id }, data: { email: "orders@example.invalid", contactName: "Sam" } });
   assert.equal((await actions.emailOrder(first.id, "supplier")).ok, true);
   assert.equal(outbox.at(-1)!.to, "orders@example.invalid");
-  assert.deepEqual(outbox.at(-1)!.cc, ["gina@example.invalid", "accounts@example.invalid"], "everyone listed is copied on every email to a supplier");
+  assert.deepEqual(outbox.at(-1)!.cc, ["mia@example.invalid", "gina@example.invalid", "accounts@example.invalid"], "whoever raised it and everyone listed are copied on every email to a supplier");
   assert.equal(outbox.at(-1)!.replyTo, "mia@example.invalid");
   assert.equal(outbox[0].cc, undefined, "tests are not copied");
   assert.match(outbox.at(-1)!.subject, new RegExp(`^Purchase order ${firstNumber()}`));
@@ -198,7 +198,7 @@ test("an approved order is emailed: tests to yourself first, the supplier only o
   assert.equal((await actions.emailOrder(first.id, "supplier")).ok, false);
   mail.down = false;
   const kept = await db.purchaseOrderEmail.findMany({ where: { orderId: first.id }, orderBy: { createdAt: "asc" } });
-  assert.deepEqual(kept.map((e) => [e.kind, e.status, e.ccAddress]), [["test", "sent", ""], ["supplier", "sent", "gina@example.invalid, accounts@example.invalid"], ["supplier", "failed", "gina@example.invalid, accounts@example.invalid"]]);
+  assert.deepEqual(kept.map((e) => [e.kind, e.status, e.ccAddress]), [["test", "sent", ""], ["supplier", "sent", "mia@example.invalid, gina@example.invalid, accounts@example.invalid"], ["supplier", "failed", "mia@example.invalid, gina@example.invalid, accounts@example.invalid"]]);
   assert.equal((await db.auditLog.count({ where: { entity: "PurchaseOrder", entityId: first.id, action: "email" } })), 3);
 
   // Sent by someone else, the supplier's replies still go to whoever raised the order.
@@ -206,6 +206,7 @@ test("an approved order is emailed: tests to yourself first, the supplier only o
   assert.equal((await actions.emailOrder(first.id, "supplier")).ok, true);
   assert.equal(outbox.at(-1)!.replyTo, "mia@example.invalid", "replies go to whoever raised it");
   assert.match(outbox.at(-1)!.text, /it goes to mia\./);
+  assert.deepEqual(outbox.at(-1)!.cc, ["mia@example.invalid", "gina@example.invalid", "accounts@example.invalid"], "and they are copied");
 
   // Off again: nothing more goes to the supplier.
   as("gina", ["purchasing.manage"]);

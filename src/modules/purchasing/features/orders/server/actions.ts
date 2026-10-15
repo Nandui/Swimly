@@ -16,7 +16,7 @@ import { requirePurchasingActor } from "@/modules/purchasing/shared/access";
 import { revalidatePurchasing as revalidate, text } from "@/modules/purchasing/shared/forms";
 import { orderEmail, PO_EMAIL_LOGO_CID } from "@/modules/purchasing/features/orders/server/order-email";
 import { orderEmailContext } from "@/modules/purchasing/features/orders/server/supplier-email";
-import { EDITABLE, MONTHS, approverRoles, copyList, euro, mayApprove, orderTotal, poNumber, variantProblem, type PoStatus } from "@/modules/purchasing/shared/rules";
+import { EDITABLE, MONTHS, approverRoles, euro, mayApprove, orderTotal, poNumber, variantProblem, type PoStatus } from "@/modules/purchasing/shared/rules";
 
 /** Purchasing's order writes (docs/purchasing.md). Raising an order needs
  *  `purchasing.request` at its site; approving needs a role the rules name for
@@ -186,8 +186,8 @@ export async function emailOrder(id: string, kind: "test" | "supplier"): Promise
     if (!address.success) return fail(`${supplier.name} has no valid email address. Add one on the supplier's page.`);
     to = address.data;
   }
-  // Supplier emails copy everyone Suppliers lists (owner requests, 15 October 2026); tests go to the sender only.
-  const copies = kind === "supplier" ? copyList(ctx.copyTo).filter((a) => emailAddress.safeParse(a).success && a.toLowerCase() !== to.toLowerCase()) : [];
+  // Supplier emails copy whoever raised the order and everyone Suppliers lists; tests go to the sender only.
+  const copies = kind === "supplier" ? ctx.supplierCopies.filter((a) => emailAddress.safeParse(a).success && a.toLowerCase() !== to.toLowerCase()) : [];
   const cc = copies.length ? copies : undefined;
   const message = orderEmail(ctx.input, kind === "test");
   const config = emailSender(`${ctx.input.organisation} Purchasing`.trim());
