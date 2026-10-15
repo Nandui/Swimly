@@ -418,6 +418,9 @@ model Club {
   /// The site's short code, e.g. "BT" for Bishopstown: in purchase order
   /// numbers (PO-BT-00001) and anywhere a site needs two or three letters.
   code       String?   @unique
+  /// The site's postal address, one line per line: where suppliers deliver
+  /// purchase orders (owner request, 15 October 2026). Empty until set.
+  address    String    @default("")
 
   organisation       Organisation?         @relation(fields: [orgId], references: [id], onDelete: Restrict)
   programmes         Programme[]

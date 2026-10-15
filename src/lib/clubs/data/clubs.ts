@@ -12,6 +12,7 @@ export async function getClubs() {
       id: true,
       name: true,
       code: true,
+      address: true,
       archivedAt: true,
       orgId: true,
     },

@@ -10,6 +10,8 @@ export type OrderEmailInput = {
   number: string;
   organisation: string;
   site: string;
+  /** The site's postal address, one line per line; empty when Admin > Sites has none. */
+  address: string;
   supplier: { name: string; contactName: string; email: string; accountNumber: string };
   neededBy: string | null;
   approvedOn: string | null;
@@ -43,7 +45,10 @@ const HAIRLINE = "border-top:1px solid #edf1f5";
  *  because a browser cannot resolve `cid:`. */
 export function orderEmail(o: OrderEmailInput, test = false, logoSrc = `cid:${PO_EMAIL_LOGO_CID}`) {
   const from = o.organisation || o.site;
-  const deliverTo = [o.organisation, o.site].filter(Boolean).join(" ");
+  // Site names often carry the organisation already ("LeisureWorld Churchfield").
+  const place = o.organisation && !o.site.toLowerCase().includes(o.organisation.toLowerCase()) ? `${o.organisation} ${o.site}` : o.site;
+  const addressLines = o.address.split("\n").map((l) => l.trim()).filter(Boolean);
+  const deliverTo = [place, ...addressLines].join("\n");
   const subject = oneLine(`${test ? "Test: " : ""}Purchase order ${o.number} from ${from}`);
   const greeting = `Hello ${o.supplier.contactName || o.supplier.name},`;
   const lead = `Please supply the following against purchase order ${o.number}.`;
@@ -63,7 +68,7 @@ export function orderEmail(o: OrderEmailInput, test = false, logoSrc = `cid:${PO
   const text = [
     ...(test ? [banner, ""] : []),
     greeting, "", lead, "",
-    ...facts.map(([k, v]) => `${k}: ${v}`), "",
+    ...facts.map(([k, v]) => `${k}: ${v.replace(/\n/g, ", ")}`), "",
     ...o.lines.map((l) => `${l.quantity} × ${l.name}${lineDetails(l) ? `, ${lineDetails(l)}` : ""}${l.code ? ` (code ${l.code})` : ""}, ${l.unit || "each"}`),
     ...(o.note ? ["", `Note: ${o.note}`] : []),
     "", `INVOICES: ${invoices}`,
@@ -73,7 +78,7 @@ export function orderEmail(o: OrderEmailInput, test = false, logoSrc = `cid:${PO
   // The facts after the order number, which already heads the email.
   const fact = ([k, v]: [string, string], first: boolean) =>
     `<tr><td class="po-fact-k" style="padding:12px 16px 12px 0;${first ? "" : HAIRLINE + ";"}${SMALL};${MUTED};white-space:nowrap;vertical-align:top;width:120px">${escape(k)}</td>` +
-    `<td class="po-fact-v" style="padding:12px 0;${first ? "" : HAIRLINE + ";"}${BODY};${INK};font-weight:600;vertical-align:top">${escape(v)}</td></tr>`;
+    `<td class="po-fact-v" style="padding:12px 0;${first ? "" : HAIRLINE + ";"}${BODY};${INK};font-weight:600;vertical-align:top">${v.split("\n").map(escape).join("<br>")}</td></tr>`;
   const line = (l: OrderEmailInput["lines"][number], i: number) => {
     const meta = [lineDetails(l), l.code ? `Code ${l.code}` : ""].filter(Boolean).join(" · ");
     return `<tr><td style="padding:16px 12px 16px 0;${i ? HAIRLINE + ";" : ""}vertical-align:top">` +
@@ -145,7 +150,7 @@ ${p(quote, `${MUTED}`)}
 </table>
 </td></tr></table>
 <!--[if mso]></td></tr></table><![endif]-->
-<p style="margin:20px 0 0;${SMALL};${FAINT};text-align:center">Purchase order ${escape(o.number)} · ${escape(deliverTo)}</p>
+<p style="margin:20px 0 0;${SMALL};${FAINT};text-align:center">Purchase order ${escape(o.number)} · ${escape(place)}</p>
 </td></tr></table>
 </body>
 </html>`;
