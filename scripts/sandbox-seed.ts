@@ -286,7 +286,8 @@ async function seedAcademy(db: PrismaClient) {
 
 /** Short courses (docs/short-courses.md): Couch to 5k at Hillview, two weeks in with its
  *  registers taken, five booked (one still owing, one without a health form) and two invented
- *  people waiting for the free place; and Adult swim lessons at Riverside starting in ten days. */
+ *  people waiting for the free place; and Adult swim lessons at Riverside starting in ten days,
+ *  open for online booking, with one place held online and overdue for a call. */
 async function seedShortCourses(db: PrismaClient) {
   const ORG = "org_leisureworld";
   const day = (offset: number) => { const d = new Date(); d.setUTCHours(0, 0, 0, 0); d.setUTCDate(d.getUTCDate() + offset); return d; };
@@ -307,9 +308,13 @@ async function seedShortCourses(db: PrismaClient) {
     await db.shortCourseAttendance.createMany({ data: people.map((p, i) => ({ sessionId: session.id, participantId: p.id, present: i !== 3 })) });
     await db.shortCourseSession.update({ where: { id: session.id }, data: { registerAt: new Date(), registerById: "sbx_liam", registerBy: "Liam Example" } });
   }
-  const soon = await db.shortCourse.create({ data: { orgId: ORG, siteId: "club_bishopstown", typeId: swim.id, capacity: 8, priceCents: 7500, instructorId: "sbx_sam", ...by } });
+  const soon = await db.shortCourse.create({ data: { orgId: ORG, siteId: "club_bishopstown", typeId: swim.id, capacity: 8, priceCents: 7500, instructorId: "sbx_sam", bookOnline: true, ...by } });
   for (let week = 0; week < 6; week++) await db.shortCourseSession.create({ data: { courseId: soon.id, date: day(10 + week * 7), startMinutes: 1200, endMinutes: 1245, place: "Learner pool" } });
   for (const name of ["Hal Sample", "Ivy Sample", "Jo Sample"]) await db.shortCourseParticipant.create({ data: { courseId: soon.id, name, email: `${name.split(" ")[0].toLowerCase()}@example.invalid`, payment: "owed", ...by } });
+  // Open online: one invented person held a place on the booking site 80 hours ago (overdue).
+  const heldAt = new Date(Date.now() - 80 * 3_600_000);
+  await db.shortCourseParticipant.create({ data: { courseId: soon.id, name: "Kit Sample", email: "kit@example.invalid", phone: "000 000 0000", payment: "owed", source: "online",
+    reference: "SC-SBX42", callTimes: ["evening"], callBy: new Date(heldAt.getTime() + 72 * 3_600_000), createdAt: heldAt, createdByName: "Online booking" } });
 }
 
 /** Stock (docs/stock.md): a dozen invented products in the migration's categories, a submitted

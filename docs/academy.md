@@ -6,7 +6,11 @@ staff. Staff enter candidates and record payment taken elsewhere. Each course tr
 and registers, the pre-course checks and the certificates. Tutors are our staff, and their
 sessions show on the Rota.
 
-## The model (`prisma/schema/academy.prisma`)
+Since 15 October 2026 the Academy is part of the **Short courses** module (owner decision; ADR
+0011): one menu entry, one level per role, its pages under `/short-courses/academy`. Its tables,
+permissions and rules are unchanged; old `/academy` links redirect.
+
+## The model (`prisma/schema/short-courses.academy.prisma`)
 
 | Concept | Table | What it is |
 | --- | --- | --- |
@@ -18,18 +22,23 @@ sessions show on the Rota.
 | Call | `AcademyCall` | A phone call to someone who held a place online: paid (amount and till receipt), no answer, asked us to call back, or not going ahead; who called and when. |
 | Email check | `AcademyEmailCheck` | The booking site's email code, then a one-hour token. Only hashes are kept. |
 
-The rules are in `src/modules/academy/shared/rules.ts` and are pure. `readiness` gives each check (age is
+The rules are in `src/modules/short-courses/shared/academy-rules.ts` and are pure. `readiness` gives each check (age is
 read from the date of birth on the first day) and the hours attended against the minimum. A
 candidate is ready when every check is done and the hours are met. `expiryFrom` dates a pass:
 the certificate's own expiry, else the qualification's validity from the result day.
 
-## Levels (`src/modules/academy/manifest.ts`), at the sites a role covers
+## Levels (Short courses, `src/modules/short-courses/manifest.ts`), at the sites a role covers
+
+Each Short courses level also gives the Academy permission of the same rank:
 
 - **View** (`academy.read`): see the courses.
-- **Tutor** (`academy.run`): add candidates and payment, record checks, take registers, record results.
+- **Instructor or tutor** (`academy.run`): add candidates and payment, record checks, take registers, record results.
 - **Manage** (`academy.manage`): keep the course list, and put courses on with their sessions, tutor and price.
 
-Every write checks the course's site (`mayFor`) and is audited under "Academy".
+A role's old Academy level still counts as a Short courses level, and the higher of the two wins
+(`formerly` in the manifest, owner choice "Higher of the two"), until the role is next saved.
+
+Every write checks the course's site (`mayFor`) and is audited under "Short courses" (older rows say "Academy").
 
 ## A pass puts the qualification on the staff record
 
@@ -43,7 +52,7 @@ course only.
 ## On the Rota
 
 The Academy reports each session of a course that is not cancelled through the commitments
-seam (`academy.sessions` in `src/modules/academy/features/courses/server/contributions.ts`, registered in `module.ts`). It reports once for the tutor
+seam (`academy.sessions` in `src/modules/short-courses/features/academy-courses/server/contributions.ts`, registered in `module.ts`). It reports once for the tutor
 and once for the assessor, when that is someone else. The Rota draws these as a read-only
 activity in the session's area on every department's plan (`DayBooked`, `ANY_DEPARTMENT` in
 `src/modules/rota/shared/day.ts`), linked back to the course. The time counts in the tutor's shift and
@@ -57,19 +66,27 @@ Owner decision, 8 October 2026. The public book on a separate site,
 cannot take payment online, so a booking **holds a place** and reception **phones within 72
 hours** to take payment.
 
+Since 15 October 2026 (ADR 0011) the site is the customer portal for **every course we sell to
+the public**: the Academy's qualifications and Short courses (docs/short-courses.md), on one list
+with filters by kind and centre. Customers sign in with an email code and see **My bookings**.
+
 - **Which courses.** A course shows online when Manage ticks **Open for online booking**
   (`AcademyCourse.bookOnline`), until its first session (`bookableOnline`). Full courses stay
   listed as full. The site shows the course, dates, areas, minimum age, pre-course checks and
   price; never staff names, other candidates or notes.
-- **Holding a place.** The person checks their email with a six-digit code, then gives their
-  name, mobile number (and another, optional), date of birth (checked against the minimum age on
-  the first day), the best time to phone (morning, afternoon, evening) and an optional note. One
-  place per email on a course; the last place is never taken twice (the course row is locked
-  while places are counted).
+- **Signing in.** The person checks their email with a six-digit code. The token lasts a week in
+  that browser (as the parent app's sign-in), until they sign out.
+- **Holding a place.** They give the name of the person taking the course, a mobile number (and
+  another, optional), date of birth (checked against the minimum age on the first day), the best
+  time to phone (morning, afternoon, evening) and an optional note. One place per email on a
+  course; the last place is never taken twice (the course row is locked while places are counted).
 - **What it makes.** A candidate with `source` online, a reference ("AC-4821"), payment owed and
   `callBy` 72 hours after holding the place (`ONLINE_HOLD_HOURS`). They get an email saying
   their place is held, when we will phone, and the reference. The place counts as taken.
-- **To call** (`/academy/calls`). Everyone who held a place online and still owes, at the sites
+- **My bookings.** Every place under the signed-in email at every module, whoever entered it, for
+  courses that ended within the last year: waiting for payment, booked, waiting lists, then
+  finished, withdrawn or cancelled, with the next session, what is left to pay and the result.
+- **To call** (`/short-courses/academy/calls`). Everyone who held a place online and still owes, at the sites
   the person covers, soonest deadline first: overdue in red, due within a day in amber
   (`ACADEMY_CALL_DUE_META`, from `callDue`). Every Academy level (View, Tutor, Manage) sees the
   list and logs calls (owner decision, 8 October 2026). Each row and the course page have **Log a
@@ -79,18 +96,28 @@ hours** to take payment.
 - **Overdue** places stay held until someone records a call. Nothing is cancelled automatically.
 - The home card shows how many are waiting to be phoned, flagged when any are past 72 hours.
 
+### How the site gets both kinds of course
+
+The API is Short courses' `booking` feature: email codes, tokens, rate limits, emails and the
+routes. Courses come from two **sources** shaped by `shared/public-booking.ts`: Academy courses
+(`features/booking/server/academy.ts`) and short courses (`courses.ts`). Each lists its courses
+open online, finds one, holds a place in its own tables and reports a customer's bookings. Course
+ids are unique across tables, so `courses/{id}` asks each source.
+
 ### The booking API (`/api/academy/v1`)
 
-The site never touches the database: it calls Work's Academy API, the same contract as the
-parent and staff APIs (JSON only, 16 KiB bodies, allowlisted origins, no cookies, never cached).
+The site never touches the database: it calls Work's API, the same contract as the parent and
+staff APIs (JSON only, 16 KiB bodies, allowlisted origins, no cookies, never cached).
 
 | Method | Path | What |
 | --- | --- | --- |
-| GET | `courses` | The courses open online, soonest first |
+| GET | `courses` | Every course open online, from every source, soonest first |
 | GET | `courses/{id}` | One of them (404 once it starts or leaves online booking) |
 | POST | `auth/request-code` | Email a six-digit code (5 an hour per address, 30 per IP) |
-| POST | `auth/verify-code` | A right code gives a token for an hour; five wrong ones end the code |
-| POST | `bookings` | Hold a place (Bearer token): 201 with the reference and when we will phone; 409 `FULL` or `ALREADY_BOOKED`; 422 `TOO_YOUNG` |
+| POST | `auth/verify-code` | A right code gives a token for a week; five wrong ones end the code |
+| POST | `auth/logout` | End the token (Bearer) |
+| POST | `bookings` | Hold a place (Bearer token): 201 with the reference, `outcome` held or waiting, and when we will phone; 409 `FULL` or `ALREADY_BOOKED`; 422 `TOO_YOUNG`. `waitingList: true` joins a full short course's waiting list |
+| GET | `me/bookings` | Everything booked under the checked email (Bearer) |
 
 ### Configuration
 
@@ -120,10 +147,10 @@ next two weeks at their sites.
 
 ## Files
 
-- Schema: `prisma/schema/academy.prisma`, migrations `20261023120000_academy` and `20261024120000_academy_online_booking` (additive)
-- `src/modules/academy/`: `shared/` (`rules.ts`, pure; `access.ts`; `server.ts` and `reads.ts` helpers; the dialogs' `form-kit.tsx`), and the features `courses`, `course-types`, `calls`, `booking` and `workspace`, each with its `components/` and `server/` (`data.ts`, `actions.ts`). See its README.md
-- UI: `src/app/academy/` (courses, a course, the course list, to call), each feature's `components/`
-- Online booking: `src/modules/academy/features/booking/server/` (`http.ts`, `api.ts`, `email.ts`, `router.ts`),
+- Schema: `prisma/schema/short-courses.academy.prisma`, migrations `20261023120000_academy` and `20261024120000_academy_online_booking` (additive)
+- `src/modules/short-courses/`: `shared/` (`academy-rules.ts`, pure; `academy-access.ts`; `academy-server.ts`; with the module's `reads.ts` and `components/form-kit.tsx`), and the features `academy-courses`, `academy-types` and `academy-calls`, each with its `components/` and `server/` (`data.ts`, `actions.ts`). See its README.md
+- UI: `src/app/short-courses/academy/` (courses, a course, the course list, to call), each feature's `components/`
+- Online booking: `src/modules/short-courses/features/booking/server/` (`http.ts`, `api.ts`, `email.ts`, `router.ts`, `academy.ts`, `courses.ts`), the shape in `shared/public-booking.ts`,
   `src/app/api/academy/v1/[[...path]]/route.ts`, and the site in `apps/academy`
 - Tests: `rules.test.ts`, `academy.test.ts`, `booking.test.ts` (the booking API and the call
   list end to end), and the booked-session case in `src/modules/rota/shared/day.test.ts`
@@ -131,4 +158,4 @@ next two weeks at their sites.
 
 ## Not done yet
 
-Taking payment online, unit-by-unit assessment, and the course in a tutor's own Turnfin Me.
+Taking payment online (card payment needs a payment provider; a later decision), unit-by-unit assessment, and the course in a tutor's own Turnfin Me.

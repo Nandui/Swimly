@@ -112,12 +112,12 @@ test("someone on a planned shift: the day's gaps inside it they could take, and 
 test("another module's session (an Academy course) sits in its area, counts in the tutor's shift, and is never a gap to fill", () => {
   const booked = buildDay({
     date: "2026-10-23", types, names, areas, needs: [], assignments: [], classes: [],
-    booked: [{ ref: "s1", userId: "aoife", startMinutes: h("09:00"), endMinutes: h("12:00"), title: "NPLQ course", place: "Main pool", href: "/academy/c1" },
-      { ref: "s2", userId: null, startMinutes: h("13:00"), endMinutes: h("14:00"), title: "NPLQ course", place: "Main pool", href: "/academy/c1" }],
+    booked: [{ ref: "s1", userId: "aoife", startMinutes: h("09:00"), endMinutes: h("12:00"), title: "NPLQ course", place: "Main pool", href: "/short-courses/academy/c1" },
+      { ref: "s2", userId: null, startMinutes: h("13:00"), endMinutes: h("14:00"), title: "NPLQ course", place: "Main pool", href: "/short-courses/academy/c1" }],
   });
   const g = booked.groups.find((x) => x.name === "NPLQ course")!;
   assert.equal(g.place, "Main pool");
-  assert.equal(g.href, "/academy/c1");
+  assert.equal(g.href, "/short-courses/academy/c1");
   assert.equal(booked.gapCount, 0, "planned in the Academy, not the rota's to fill");
   assert.equal(booked.people.find((p) => p.userId === "aoife")!.shift.start, h("09:00"));
 });

@@ -240,19 +240,19 @@ export const PERMISSIONS = [
   },
   {
     key: "academy.read",
-    group: "Academy",
+    group: "Short courses",
     label: "See Academy courses",
     description: "See the lifeguard and swim teacher courses at the sites this role covers, their sessions and candidates.",
   },
   {
     key: "academy.run",
-    group: "Academy",
+    group: "Short courses",
     label: "Run Academy courses",
     description: "Add candidates and their payment, record pre-course checks, take registers and record results on courses at the sites this role covers. Includes seeing them.",
   },
   {
     key: "academy.manage",
-    group: "Academy",
+    group: "Short courses",
     label: "Manage the Academy",
     description: "Keep the list of courses we deliver and put courses on, with their sessions, tutor and price, at the sites this role covers. Includes running them.",
   },

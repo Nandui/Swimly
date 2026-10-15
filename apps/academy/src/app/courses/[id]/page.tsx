@@ -3,146 +3,117 @@
 import { useEffect, useState, type FormEvent } from "react";
 import Link from "next/link";
 import { useParams } from "next/navigation";
-import { Award, CalendarDays, ChevronLeft, ClipboardCheck, Clock, MapPin, Send, Wallet } from "lucide-react";
-import { ApiError, api, checked, type Course } from "@/lib/api";
-import { day, placesMeta } from "@/lib/format";
+import { Award, CalendarDays, ChevronLeft, ClipboardCheck, Clock, Hourglass, LogOut, MapPin, Wallet } from "lucide-react";
+import { ApiError, api, message, signOut, type Course, type Hold } from "@/lib/api";
+import { day, longDay, placesMeta, rhythm, span } from "@/lib/format";
+import { useSession } from "@/lib/use-session";
+import { EmailCheck } from "@/components/email-check";
 import { Frame, Loading, Notice, Tag } from "@/components/ui";
 
-type Step = "email" | "code" | "details" | "done";
-type Held = { reference: string; callByLabel: string; phone: string; course: { name: string; site: string; starts: string } };
 const TIMES = [["morning", "Morning"], ["afternoon", "Afternoon"], ["evening", "Evening"]] as const;
-const message = (e: unknown) => (e instanceof ApiError ? e.message : "Could not complete that. Try again.");
 
-/** One course and holding a place on it: check your email with a code, give the details we need to
- *  phone you, and the place is held. Payment is taken by phone within 72 hours. */
+/** One course, and booking it: sign in with an email code (once a week on this browser), give the
+ *  details we need to phone you, and the place is held. Payment is taken by phone within 72
+ *  hours. A full short course offers its waiting list instead. */
 export default function CoursePage() {
   const { id } = useParams<{ id: string }>();
+  const who = useSession();
   const [course, setCourse] = useState<Course | null>(null);
   const [loadError, setLoadError] = useState<string | null>(null);
-  const [step, setStep] = useState<Step>("email");
-  const [email, setEmail] = useState("");
-  const [challenge, setChallenge] = useState("");
-  const [code, setCode] = useState("");
   const [error, setError] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
-  const [held, setHeld] = useState<Held | null>(null);
+  const [held, setHeld] = useState<Hold | null>(null);
 
   useEffect(() => {
     let live = true;
     api<{ course: Course }>(`courses/${encodeURIComponent(id)}`)
-      .then((r) => { if (!live) return; setCourse(r.course); const c = checked.get(); if (c) { setEmail(c.email); setStep("details"); } })
+      .then((r) => { if (live) setCourse(r.course); })
       .catch((e) => { if (live) setLoadError(message(e)); });
     return () => { live = false; };
   }, [id]);
 
-  async function run(work: () => Promise<void>) {
-    setBusy(true); setError(null);
-    try { await work(); } catch (e) { setError(message(e)); } finally { setBusy(false); }
-  }
-  const sendCode = (event: FormEvent) => { event.preventDefault(); return run(async () => {
-    const r = await api<{ challengeId: string }>("auth/request-code", { method: "POST", body: { email } });
-    setChallenge(r.challengeId); setCode(""); setStep("code");
-  }); };
-  const verify = (event: FormEvent) => { event.preventDefault(); return run(async () => {
-    const r = await api<{ token: string; email: string; expiresAt: string }>("auth/verify-code", { method: "POST", body: { challengeId: challenge, code } });
-    checked.set(r); setStep("details");
-  }); };
+  const full = !!course && course.placesLeft <= 0;
   const hold = (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
     const fd = new FormData(event.currentTarget);
-    return run(async () => {
-      const token = checked.get()?.token;
-      if (!token) { setStep("email"); throw new ApiError(401, "UNAUTHENTICATED", "Your email check has expired. Ask for a new code."); }
-      const r = await api<Held>("bookings", { method: "POST", token, body: {
-        courseId: id, name: String(fd.get("name") ?? ""), phone: String(fd.get("phone") ?? ""), phone2: String(fd.get("phone2") ?? ""),
-        dateOfBirth: String(fd.get("dob") ?? ""), callTimes: fd.getAll("callTimes").map(String), note: String(fd.get("note") ?? ""),
-      } });
-      setHeld(r); setStep("done"); window.scrollTo(0, 0);
-    });
+    setBusy(true); setError(null);
+    api<Hold>("bookings", { method: "POST", auth: true, body: {
+      courseId: id, name: String(fd.get("name") ?? ""), phone: String(fd.get("phone") ?? ""), phone2: String(fd.get("phone2") ?? ""),
+      dateOfBirth: String(fd.get("dob") ?? ""), callTimes: fd.getAll("callTimes").map(String), note: String(fd.get("note") ?? ""), waitingList: full,
+    } })
+      .then((r) => { setHeld(r); window.scrollTo(0, 0); })
+      .catch((e) => {
+        setError(message(e));
+        // The last place went while they were typing: show the course as it is now.
+        if (e instanceof ApiError && e.code === "FULL") api<{ course: Course }>(`courses/${encodeURIComponent(id)}`).then((r) => setCourse(r.course)).catch(() => {});
+      })
+      .finally(() => setBusy(false));
   };
 
   if (loadError) return <Frame title="Course"><BackLink /><Notice title="This course is not open for booking" tone="warning">{loadError}</Notice></Frame>;
-  if (!course) return <Frame title="Course"><BackLink /><Loading rows={2} /></Frame>;
+  if (!course) return <Frame title="Course" wide><BackLink /><Loading rows={2} /></Frame>;
+  if (held) return <Done held={held} course={course} />;
 
-  if (step === "done" && held) {
-    return (
-      <Frame title="Place held">
-        <Tag meta={{ label: "Waiting for payment", tone: "orange", icon: Clock }} />
-        <div className="stack-sm" role="status">
-          <h1>Your place is held</h1>
-          <p className="muted">We will phone you on {held.phone} by {held.callByLabel} to take payment of {course.price}. Your place is confirmed once you have paid.</p>
-        </div>
-        <section className="pc-panel" aria-label="Your booking">
-          <dl className="summary">
-            <div><dt>Course</dt><dd>{held.course.name}</dd></div>
-            <div><dt>Starts</dt><dd>{held.course.starts}, {held.course.site}</dd></div>
-            <div><dt>Reference</dt><dd className="tabular">{held.reference}</dd></div>
-          </dl>
-        </section>
-        <p className="muted">We emailed you these details. If we can&apos;t reach you within 72 hours, we may give the place to someone else. To change your number, reply to the email.</p>
-        <Link href="/" className="button outline block">See other courses</Link>
-      </Frame>
-    );
-  }
-
-  const full = course.placesLeft <= 0;
+  const places = [...new Set(course.sessions.map((s) => s.place).filter(Boolean))];
+  const closed = full && !course.waitingList;
   return (
-    <Frame title={course.name}>
+    <Frame title={course.name} wide>
       <BackLink />
-      <div className="stack-sm">
-        <h1>{course.name}</h1>
-        <div className="row"><Tag meta={placesMeta(course.placesLeft)} /><span className="muted">{course.kindLabel}</span></div>
-      </div>
-      <section className="pc-panel" aria-label="About the course">
-        <ul className="facts">
-          <li><CalendarDays aria-hidden="true" /><span>{course.sessions.map((s) => `${day(s.date)}, ${s.start} to ${s.end}`).join("; ")}</span></li>
-          <li><MapPin aria-hidden="true" /><span>{[course.site, ...new Set(course.sessions.map((s) => s.place).filter(Boolean))].join(", ")}</span></li>
-          {course.awardingBody || course.minAge ? <li><Award aria-hidden="true" /><span>{[course.awardingBody ? `Awarded by ${course.awardingBody}.` : null, course.minAge && course.firstDay ? `You must be ${course.minAge} or over on ${day(course.firstDay)}.` : null].filter(Boolean).join(" ")}</span></li> : null}
-          {course.checks.length ? <li><ClipboardCheck aria-hidden="true" /><span>Before the course: {course.checks.map((c) => c.charAt(0).toLowerCase() + c.slice(1)).join(", ")}</span></li> : null}
-          <li><Wallet aria-hidden="true" /><span>{course.priceCents ? `${course.price}, paid by phone.` : "Free."}</span></li>
-        </ul>
-      </section>
-
-      {full ? <Notice title="This course is full" tone="warning">Have a look at the other courses.</Notice> : (
-        <section className="pc-panel" aria-labelledby="book-h">
+      <div className="course-layout">
+        <div className="stack course-info">
           <div className="stack-sm">
-            <h2 id="book-h">{step === "details" ? "Your details" : "Book a place"}</h2>
-            <p className="muted">
-              {step === "email" ? "We send a code to your email to check it is yours." : step === "code" ? `We sent a six-digit code to ${email}. It works for 10 minutes. Not there? Check your junk folder.` : `Booking as ${email}.`}
-            </p>
+            <p className="caption">{course.group === "qualification" ? `${course.categoryLabel} qualification` : course.categoryLabel}</p>
+            <h1>{course.name}</h1>
+            {course.description ? <p className="lead">{course.description}</p> : null}
           </div>
-          {error ? <Notice title={error} tone="error" live /> : null}
-          {step === "email" ? (
-            <form key="email" className="stack" onSubmit={sendCode}>
-              <div className="field">
-                <label htmlFor="email">Email</label>
-                <input id="email" className="input" type="email" autoComplete="email" inputMode="email" required value={email} onChange={(e) => setEmail(e.target.value)} />
-              </div>
-              <button type="submit" className="button block" disabled={busy}><Send aria-hidden="true" />{busy ? "Sending…" : "Send me a code"}</button>
-            </form>
-          ) : step === "code" ? (
-            <form key="code" className="stack" onSubmit={verify}>
-              <div className="field">
-                <label htmlFor="code">Six-digit code</label>
-                <input id="code" className="input tabular" inputMode="numeric" autoComplete="one-time-code" pattern="\d{6}" maxLength={6} required autoFocus value={code} onChange={(e) => setCode(e.target.value.replace(/\D/g, ""))} />
-              </div>
-              <button type="submit" className="button block" disabled={busy || code.length !== 6}>{busy ? "Checking…" : "Continue"}</button>
-              <button type="button" className="button ghost block" onClick={() => { setStep("email"); setError(null); }}><ChevronLeft aria-hidden="true" />Use a different email</button>
-            </form>
-          ) : (
-            <form key="details" className="stack" onSubmit={hold}>
-              <div className="field"><label htmlFor="name">Full name</label><input id="name" name="name" className="input" autoComplete="name" required minLength={2} maxLength={80} /></div>
+          <section className="pc-panel" aria-label="About the course">
+            <ul className="facts">
+              <li><CalendarDays aria-hidden="true" /><span><strong>{span(course.firstDay, course.lastDay)}</strong><br /><span className="muted">{rhythm(course)}</span></span></li>
+              <li><MapPin aria-hidden="true" /><span>{[course.site, ...places].join(", ")}</span></li>
+              {course.awardingBody || course.minAge ? <li><Award aria-hidden="true" /><span>{[course.awardingBody ? `Awarded by ${course.awardingBody}.` : null, course.minAge && course.firstDay ? `You must be ${course.minAge} or over on ${day(course.firstDay)}.` : null].filter(Boolean).join(" ")}</span></li> : null}
+              {course.checks.length ? <li><ClipboardCheck aria-hidden="true" /><span>Before you start: {course.checks.map((c) => c.charAt(0).toLowerCase() + c.slice(1)).join(", ")}. We tell you how when we phone.</span></li> : null}
+              <li><Wallet aria-hidden="true" /><span>{course.priceCents ? `${course.price} for the whole course, paid by phone after you book.` : "Free."}</span></li>
+            </ul>
+          </section>
+        </div>
+        {course.sessions.length > 1 ? (
+            <section className="pc-panel course-dates" aria-labelledby="dates-h">
+              <h2 id="dates-h">Dates</h2>
+              <ol className="dates">
+                {course.sessions.map((s) => (
+                  <li key={`${s.date}-${s.start}`}><span>{longDay(s.date)}</span><span className="muted tabular">{s.start} to {s.end}{s.place && places.length > 1 ? `, ${s.place}` : ""}</span></li>
+                ))}
+              </ol>
+            </section>
+          ) : null}
+
+        <aside className="pc-panel book-panel" aria-labelledby="book-h">
+          <div className="stack-sm">
+            <p className="price large">{course.price}</p>
+            <Tag meta={placesMeta(course)} />
+          </div>
+          <h2 id="book-h">{closed ? "This course is full" : full ? "Join the waiting list" : "Book a place"}</h2>
+          {closed ? <p className="muted">Have a look at the other courses. New dates are added as they are set.</p>
+          : who === undefined ? <Loading rows={1} />
+          : !who ? <EmailCheck onDone={() => setError(null)} lead={full ? "Sign in with your email to join the waiting list. We send you a code; no password needed." : "Sign in with your email to book. We send you a code; no password needed."} />
+          : (
+            <form className="stack" onSubmit={hold}>
+              <p className="muted signed-in">Booking as {who.email}. <button type="button" className="link-button" onClick={() => void signOut()}><LogOut aria-hidden="true" />Not you?</button></p>
+              {error ? <Notice title={error} tone="error" live /> : null}
+              <div className="field"><label htmlFor="name">Full name of the person taking the course</label><input id="name" name="name" className="input" autoComplete="name" required minLength={2} maxLength={80} /></div>
               <div className="field">
                 <label htmlFor="phone">Mobile number</label>
                 <input id="phone" name="phone" className="input" type="tel" autoComplete="tel" required maxLength={30} aria-describedby="phone-hint" />
-                <span id="phone-hint" className="hint">We phone this number to take payment.</span>
+                <span id="phone-hint" className="hint">{full ? "We phone this number if a place comes up." : "We phone this number to take payment."}</span>
               </div>
               <div className="field"><label htmlFor="phone2">Another number <span className="muted">(optional)</span></label><input id="phone2" name="phone2" className="input" type="tel" maxLength={30} /></div>
-              <div className="field">
-                <label htmlFor="dob">Date of birth</label>
-                <input id="dob" name="dob" className="input" type="date" required autoComplete="bday" aria-describedby={course.minAge ? "dob-hint" : undefined} />
-                {course.minAge && course.firstDay ? <span id="dob-hint" className="hint">You must be {course.minAge} or over on {day(course.firstDay)}.</span> : null}
-              </div>
+              {course.askDateOfBirth ? (
+                <div className="field">
+                  <label htmlFor="dob">Date of birth</label>
+                  <input id="dob" name="dob" className="input" type="date" required autoComplete="bday" aria-describedby={course.minAge ? "dob-hint" : undefined} />
+                  {course.minAge && course.firstDay ? <span id="dob-hint" className="hint">You must be {course.minAge} or over on {day(course.firstDay)}.</span> : null}
+                </div>
+              ) : null}
               <fieldset className="field">
                 <legend>Best time to phone you</legend>
                 <div className="chips">
@@ -152,14 +123,43 @@ export default function CoursePage() {
               <div className="field">
                 <label htmlFor="note">Anything we should know <span className="muted">(optional)</span></label>
                 <textarea id="note" name="note" className="input" maxLength={500} aria-describedby="note-hint" />
-                <span id="note-hint" className="hint">Please don&apos;t include medical details. We ask for those on the medical form.</span>
+                <span id="note-hint" className="hint">Please don&apos;t include medical details. We ask for those separately.</span>
               </div>
-              <Notice title="What happens next">We hold your place and phone you within 72 hours to take payment{course.priceCents ? ` of ${course.price}` : ""}. Your place is confirmed once you have paid.</Notice>
-              <button type="submit" className="button block" disabled={busy}>{busy ? "Holding your place…" : "Hold my place"}</button>
+              <Notice title="What happens next">{full
+                ? "You join the waiting list in the order you signed up. If a place comes up, we phone you to offer it and take payment."
+                : `We hold your place and phone you within 72 hours to take payment${course.priceCents ? ` of ${course.price}` : ""}. Your place is confirmed once you have paid.`}</Notice>
+              <button type="submit" className="button large stretch" disabled={busy}>{busy ? "Sending…" : full ? <><Hourglass aria-hidden="true" />Join the waiting list</> : "Hold my place"}</button>
             </form>
           )}
-        </section>
-      )}
+        </aside>
+      </div>
+    </Frame>
+  );
+}
+
+function Done({ held, course }: { held: Hold; course: Course }) {
+  const waiting = held.outcome === "waiting";
+  return (
+    <Frame title={waiting ? "On the waiting list" : "Place held"}>
+      <Tag meta={waiting ? { label: "Waiting list", tone: "blue", icon: Hourglass } : { label: "Waiting for payment", tone: "orange", icon: Clock }} />
+      <div className="stack-sm" role="status">
+        <h1>{waiting ? "You're on the waiting list" : "Your place is held"}</h1>
+        <p className="lead">{waiting
+          ? `If a place comes up on ${held.course.name}, we will phone you on ${held.phone} to offer it.`
+          : `We will phone you on ${held.phone} by ${held.callByLabel} to take payment of ${course.price}. Your place is confirmed once you have paid.`}</p>
+      </div>
+      <section className="pc-panel" aria-label="Your booking">
+        <dl className="summary">
+          <div><dt>Course</dt><dd>{held.course.name}</dd></div>
+          <div><dt>Starts</dt><dd>{held.course.starts}, {held.course.site}</dd></div>
+          <div><dt>Reference</dt><dd className="tabular">{held.reference}</dd></div>
+        </dl>
+      </section>
+      <p className="muted">We emailed you these details. {waiting ? "" : "If we can't reach you within 72 hours, we may give the place to someone else. "}To change your number, reply to the email.</p>
+      <div className="row">
+        <Link href="/bookings" className="button">See my bookings</Link>
+        <Link href="/" className="button outline">Other courses</Link>
+      </div>
     </Frame>
   );
 }

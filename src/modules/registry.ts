@@ -55,6 +55,9 @@ export type ModuleAccess = {
   extras?: readonly ModuleExtra[];
   /** Only a superadmin gives this module (HR). */
   restricted?: boolean;
+  /** Modules merged into this one, whose level keys it kept. A role's stored level for one of
+   *  them still counts here, and the higher level wins, until the role is next saved. */
+  formerly?: readonly string[];
 };
 
 /** The part of the centre a module serves. Presentation only: it orders and

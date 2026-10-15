@@ -26,7 +26,7 @@
 In the full shape (`index.ts`, `module.ts`, `events.ts`, `README.md`, `shared/`, `features/`), routes importing only feature entries:
 - refunds (9 October 2026): features `queue`, `request`, `workspace`
 - purchasing (9 October 2026): features `orders`, `suppliers`, `workspace`
-- academy (9 October 2026): features `courses`, `course-types`, `calls`, `booking`, `workspace`
+- academy (9 October 2026): features `courses`, `course-types`, `calls`, `booking`, `workspace`; merged into short-courses on 15 October 2026 as `academy-courses`, `academy-types`, `academy-calls` and the shared `booking` (ADR 0011)
 - tasks (9 October 2026): features `day`, `follow-ups`, `templates`, `sites`, `reports`, `schedule`, `workspace`
 - training (9 October 2026): features `courses`, `assignments`, `sign-off`, `certificates`, `expiring`, `me`, `person-file`, `workspace`; Turnfin Me's staff API now uses its `index.ts`
 - docs (9 October 2026): features `home`, `library`, `reader`, `editor`, `history`, `work`, `reports`, `admin`, `files`, `import`, `me`, `workspace`; its server actions moved from `src/app/docs/actions.ts` into `shared/actions.ts`; the staff API uses `docsReading()` from its `index.ts`
@@ -63,3 +63,4 @@ The app frame (`ModuleShell`, the account menu, the site switcher) is in the UI 
 - 2026-10-10 — Phase 4: last 19 warnings cleared. The UI kit declares its own prop types instead of importing Core helpers; the toast, area select, working-site switcher and wrong-site notice moved into the UI kit (site switching comes through the frame context); Rota and HR call the contributions registry, which loads the composition root itself. Boundary rules switched to error and proven.
 - 2026-10-10 — Lean refactor: each module's description moved from Core's registry into its own `manifest.ts`, listed once in `src/app/modules.ts` (ADR 0006); module diagram redrawn; dead code, duplicate date helpers and unused packages removed.
 - 2026-10-10 — Fernando chose "Delete all": one-off import scripts, broken browser-check harnesses, pre-restart handovers and audits, the old design-system file and three unused source files removed.
+- 2026-10-15 — The Academy merged into Short courses (owner decision, ADR 0011): one module, tables and permissions unchanged, old Academy levels count through `formerly`.

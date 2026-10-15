@@ -64,6 +64,13 @@ test("extras need their starting level, and unknown modules or levels are droppe
   assert.ok(at({}, [WORK_ANYWHERE]).includes("work.anywhere"));
 });
 
+test("a level stored for the Academy counts for Short courses, which it joined; the higher wins", () => {
+  assert.deepEqual(cleanLevels({ academy: "run" }).levels, { "short-courses": "run" });
+  assert.deepEqual(cleanLevels({ academy: "manage", "short-courses": "view" }).levels, { "short-courses": "manage" });
+  assert.deepEqual(cleanLevels({ "short-courses": "manage", academy: "view" }).levels, { "short-courses": "manage" });
+  assert.ok(at({ academy: "view" }).includes("academy.read"), "Academy pages still open");
+});
+
 test("the receptionist from the mockup gets the desk, refunds to log, reading and the rota", () => {
   const receptionist = at({ "swim-school": "desk", refunds: "use", docs: "read", rota: "view" });
   for (const key of ["swimschool.desk", "students.manage", "enrolment.manage", "refunds.request", "docs.read", "rota.view"]) assert.ok(receptionist.includes(key as never), key);
