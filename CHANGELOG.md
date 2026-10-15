@@ -4,7 +4,7 @@ Patch notes for everyone who uses Turnfin at the swim school, the desk and the o
 
 **How versions are numbered:** the middle number goes up when something new arrives (a module, a screen, a new way of working), and the last number when something is fixed or tidied without changing how you work. This list starts on 3 October 2026, when Turnfin moved to its new look; earlier changes are not listed.
 
-## 1.17.2 · 15 October 2026 · Rota: zoom buttons on the Plan
+## 1.17.1 · 15 October 2026 · Rota: zoom buttons on the Plan
 
 - Scrolling over a day on the rota **Plan** no longer zooms in and out, so the page scrolls as you expect.
 - Use the new **zoom in** and **zoom out** buttons beside "Show" instead. Once zoomed in, the arrows next to them move to earlier or later in the day, and you can still drag the day along.
