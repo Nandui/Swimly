@@ -6,8 +6,8 @@ runs qualification courses with checks, results and certificates) and the swim s
 classes with no end date). The plan Fernando approved is the Artifact "Turnfin Short Courses
 Plan" (https://claude.ai/artifact/XweXdCdj2EJG1V3os7DcFm); ADR 0009 records the decision.
 
-Phase 1 (1.9.0) runs courses from the desk. Phase 2 adds online booking on the Academy's booking
-site; phase 3 adds "run it again" and reports.
+Phase 1 (1.9.0) runs courses from the desk. Phase 2 (1.15.0) adds online booking on the public
+booking site; phase 3 adds "run it again" and reports.
 
 ## The model (`prisma/schema/short-courses.prisma`)
 
@@ -60,6 +60,32 @@ keeps the waiting list.
   withdrawn person can be put back (onto the waiting list when the course is full). Refunds are
   handled at the till.
 
+## Online booking (phase 2, 15 October 2026)
+
+The public book on the same site as the Academy's courses, `academy.leisureworldcork.com`
+(`apps/academy`, docs/academy.md, ADR 0011), the same way: we cannot take payment online, so a
+booking holds a place and the desk phones within 72 hours to take payment.
+
+- **Which courses.** Manage ticks **Open for online booking** on the course
+  (`ShortCourse.bookOnline`). It shows online until its first session (`shortCourseOnline`), with
+  what it is, the weekly dates and times, the area, the minimum age, "Health form" when it asks
+  for one, and the price; never the instructor, other people or notes.
+- **Holding a place** needs the email checked with a code. They give the name of the person
+  taking the course, a mobile number (and another, optional), the date of birth only when the
+  course has a minimum age, the best time to phone and an optional note. One booking per email on
+  a course; the course row is locked while places are counted.
+- **What it makes.** Someone booked with `source` online, a reference ("SC-4K8PZ"), payment owed
+  and `callBy` 72 hours later. They get an email with the reference and when we will phone.
+- **Full courses** offer the **waiting list** online instead. They join it in order, with no
+  deadline; the desk offers a freed place by phone as for anyone waiting.
+- **To phone.** The courses page lists everyone booked online who still owes, soonest deadline
+  first (overdue in red, due within a day in amber, `SHORT_COURSE_CALL_DUE_META`), with their
+  numbers, best times and reference. On the course their row shows the same. Record the payment
+  taken at the till with the pencil as usual and they leave the list; withdraw them if they are
+  not going ahead. The home card counts them, flagged when any are past 72 hours. Overdue places
+  stay held until someone acts.
+- Customers see these bookings, and any the desk entered under their email, in **My bookings**.
+
 ## Registers
 
 Anyone with Instructor at the site takes a session's register from the day of the session:
@@ -90,17 +116,14 @@ with a place free for the waiting list, and courses starting in the next two wee
 
 ## Files
 
-- Schema: `prisma/schema/short-courses.prisma`, migration `20261103120000_short_courses` (additive).
-- `src/modules/short-courses/`: `shared/` (`rules.ts`, pure; `access.ts`; `server.ts` and `reads.ts`; the dialogs' `components/form-kit.tsx`), and the features `courses`, `course-types` and `workspace`. See its README.md.
+- Schema: `prisma/schema/short-courses.prisma`, migrations `20261103120000_short_courses` and `20261108120000_short_courses_online` (additive).
+- `src/modules/short-courses/`: `shared/` (`rules.ts`, pure; `access.ts`; `server.ts` and `reads.ts`; the dialogs' `components/form-kit.tsx`), and the features `courses`, `course-types`, `booking` (its public course source) and `workspace`. See its README.md.
 - UI: `src/app/short-courses/` (courses, a course, the course list, the starter page).
 - Tests: `rules.test.ts` and `__tests__/short-courses.test.ts` (end to end on an isolated database).
-- Sandbox: Couch to 5k at Hillview two weeks in, with two people waiting for a free place; Adult swim lessons at Riverside starting in ten days.
+- Sandbox: Couch to 5k at Hillview two weeks in, with two people waiting for a free place; Adult swim lessons at Riverside starting in ten days, open online, with one invented place held online and overdue for a call.
 
 ## Not done yet
 
-- **Phase 2:** online booking on the public booking site (`apps/academy`), the same as the
-  Academy's: hold a place, then reception phones within 72 hours to take payment; an email when a
-  waiting-list place opens. The email-code and hold-a-place pieces move into shared code then,
-  since two modules will use them.
+- **An email when a waiting-list place opens** (the desk phones for now).
 - **Phase 3:** run a course again, offering the next run to this group first; fill rate and
   takings per course and area.

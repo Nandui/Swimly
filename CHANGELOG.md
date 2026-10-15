@@ -4,6 +4,15 @@ Patch notes for everyone who uses Turnfin at the swim school, the desk and the o
 
 **How versions are numbered:** the middle number goes up when something new arrives (a module, a screen, a new way of working), and the last number when something is fixed or tidied without changing how you work. This list starts on 3 October 2026, when Turnfin moved to its new look; earlier changes are not listed.
 
+## 1.15.0 · 15 October 2026 · The course booking site: every course, sign-in and My bookings
+
+- The public booking site, academy.leisureworldcork.com, now shows **Short courses** as well as the Academy's lifeguard and swim teacher courses, on one list. Customers filter by kind of course (qualifications, pool, gym, studio) and by centre.
+- Customers **sign in** with a code sent to their email, with no password, and stay signed in on that device for a week. **My bookings** shows everything booked under their email, online or at reception: the next session, what is left to pay, waiting lists and past courses.
+- Booking still holds the place and we phone within 72 hours to take payment. Nothing is paid online.
+- **Short courses: Open for online booking.** Tick it when you put a course on or change it, and the course shows on the booking site until its first session. When it is full, people can join its waiting list online instead.
+- **Short courses: To phone.** The courses page lists everyone who booked online and still owes, soonest first: overdue in red, due within a day in amber, with their numbers, best time to call and reference. Take payment at the till and record it with the pencil on the course, as usual, and they leave the list. Home counts them too.
+- The booking site has a new look: a clear list of courses with dates, centre, price and places left, and the booking form beside the course.
+
 ## 1.14.1 · 15 October 2026 · Purchasing: administrators approve their own orders
 
 - An administrator (Admin: **Manage**, or a superadmin) can now approve a purchase order they raised themselves, as long as their role may approve that much from that supplier. The activity log says it was their own order.

@@ -57,18 +57,26 @@ Owner decision, 8 October 2026. The public book on a separate site,
 cannot take payment online, so a booking **holds a place** and reception **phones within 72
 hours** to take payment.
 
+Since 15 October 2026 (ADR 0011) the site is the customer portal for **every course we sell to
+the public**: the Academy's qualifications and Short courses (docs/short-courses.md), on one list
+with filters by kind and centre. Customers sign in with an email code and see **My bookings**.
+
 - **Which courses.** A course shows online when Manage ticks **Open for online booking**
   (`AcademyCourse.bookOnline`), until its first session (`bookableOnline`). Full courses stay
   listed as full. The site shows the course, dates, areas, minimum age, pre-course checks and
   price; never staff names, other candidates or notes.
-- **Holding a place.** The person checks their email with a six-digit code, then gives their
-  name, mobile number (and another, optional), date of birth (checked against the minimum age on
-  the first day), the best time to phone (morning, afternoon, evening) and an optional note. One
-  place per email on a course; the last place is never taken twice (the course row is locked
-  while places are counted).
+- **Signing in.** The person checks their email with a six-digit code. The token lasts a week in
+  that browser (as the parent app's sign-in), until they sign out.
+- **Holding a place.** They give the name of the person taking the course, a mobile number (and
+  another, optional), date of birth (checked against the minimum age on the first day), the best
+  time to phone (morning, afternoon, evening) and an optional note. One place per email on a
+  course; the last place is never taken twice (the course row is locked while places are counted).
 - **What it makes.** A candidate with `source` online, a reference ("AC-4821"), payment owed and
   `callBy` 72 hours after holding the place (`ONLINE_HOLD_HOURS`). They get an email saying
   their place is held, when we will phone, and the reference. The place counts as taken.
+- **My bookings.** Every place under the signed-in email at every module, whoever entered it, for
+  courses that ended within the last year: waiting for payment, booked, waiting lists, then
+  finished, withdrawn or cancelled, with the next session, what is left to pay and the result.
 - **To call** (`/academy/calls`). Everyone who held a place online and still owes, at the sites
   the person covers, soonest deadline first: overdue in red, due within a day in amber
   (`ACADEMY_CALL_DUE_META`, from `callDue`). Every Academy level (View, Tutor, Manage) sees the
@@ -79,18 +87,29 @@ hours** to take payment.
 - **Overdue** places stay held until someone records a call. Nothing is cancelled automatically.
 - The home card shows how many are waiting to be phoned, flagged when any are past 72 hours.
 
+### How the site gets every module's courses
+
+The API belongs to the Academy's `booking` feature: email codes, tokens, rate limits, emails and
+the routes. Courses come from **public course sources** registered in `src/modules/contributions.ts`
+(`registerPublicCourses`), shaped by `src/lib/public-booking.ts`: each lists its courses open
+online, finds one, holds a place in its own tables and reports a customer's bookings. The Academy
+registers `academyPublicCourses` (`features/booking/server/source.ts`) and Short courses
+`shortCoursePublicCourses`. Course ids are unique across tables, so `courses/{id}` asks each source.
+
 ### The booking API (`/api/academy/v1`)
 
-The site never touches the database: it calls Work's Academy API, the same contract as the
-parent and staff APIs (JSON only, 16 KiB bodies, allowlisted origins, no cookies, never cached).
+The site never touches the database: it calls Work's API, the same contract as the parent and
+staff APIs (JSON only, 16 KiB bodies, allowlisted origins, no cookies, never cached).
 
 | Method | Path | What |
 | --- | --- | --- |
-| GET | `courses` | The courses open online, soonest first |
+| GET | `courses` | Every course open online, from every source, soonest first |
 | GET | `courses/{id}` | One of them (404 once it starts or leaves online booking) |
 | POST | `auth/request-code` | Email a six-digit code (5 an hour per address, 30 per IP) |
-| POST | `auth/verify-code` | A right code gives a token for an hour; five wrong ones end the code |
-| POST | `bookings` | Hold a place (Bearer token): 201 with the reference and when we will phone; 409 `FULL` or `ALREADY_BOOKED`; 422 `TOO_YOUNG` |
+| POST | `auth/verify-code` | A right code gives a token for a week; five wrong ones end the code |
+| POST | `auth/logout` | End the token (Bearer) |
+| POST | `bookings` | Hold a place (Bearer token): 201 with the reference, `outcome` held or waiting, and when we will phone; 409 `FULL` or `ALREADY_BOOKED`; 422 `TOO_YOUNG`. `waitingList: true` joins a full short course's waiting list |
+| GET | `me/bookings` | Everything booked under the checked email (Bearer) |
 
 ### Configuration
 
@@ -123,7 +142,7 @@ next two weeks at their sites.
 - Schema: `prisma/schema/academy.prisma`, migrations `20261023120000_academy` and `20261024120000_academy_online_booking` (additive)
 - `src/modules/academy/`: `shared/` (`rules.ts`, pure; `access.ts`; `server.ts` and `reads.ts` helpers; the dialogs' `form-kit.tsx`), and the features `courses`, `course-types`, `calls`, `booking` and `workspace`, each with its `components/` and `server/` (`data.ts`, `actions.ts`). See its README.md
 - UI: `src/app/academy/` (courses, a course, the course list, to call), each feature's `components/`
-- Online booking: `src/modules/academy/features/booking/server/` (`http.ts`, `api.ts`, `email.ts`, `router.ts`),
+- Online booking: `src/modules/academy/features/booking/server/` (`http.ts`, `api.ts`, `email.ts`, `router.ts`, `source.ts`), the seam in `src/lib/public-booking.ts`,
   `src/app/api/academy/v1/[[...path]]/route.ts`, and the site in `apps/academy`
 - Tests: `rules.test.ts`, `academy.test.ts`, `booking.test.ts` (the booking API and the call
   list end to end), and the booked-session case in `src/modules/rota/shared/day.test.ts`
@@ -131,4 +150,4 @@ next two weeks at their sites.
 
 ## Not done yet
 
-Taking payment online, unit-by-unit assessment, and the course in a tutor's own Turnfin Me.
+Taking payment online (card payment needs a payment provider; a later decision), unit-by-unit assessment, and the course in a tutor's own Turnfin Me.
