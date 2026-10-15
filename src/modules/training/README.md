@@ -15,11 +15,11 @@ The rules for courses, assignments, sign-offs and certificates are in [docs/trai
 - `certificates` — checking certificates people upload in Turnfin Me (`/training/certificates`).
 - `compliance` — training rules that assign courses by position, role, department and site and renew them, their daily run, the training matrix and its download, and checking a certificate code (`/training/rules`, `/training/matrix`, `/training/check`, `/api/cron/training`).
 - `expiring` — qualifications expired or due soon (`/training/expiring`).
-- `me` — a person's own training for Turnfin Me: their list, their certificate for finished training, taking a course lesson by lesson, practice quizzes, sitting the final exam, completing it, and the reminder digest. Reached through `index.ts`.
+- `me` — a person's own training for Turnfin Me: their list, their certificate for finished training, taking a course lesson by lesson, practice quizzes, sitting the final exam, completing it, and the reminder digest; their own space: search, bookmarks and private notes, their record, the course catalogue and enrolling, rating a course, daily refreshers, streaks and badges. Reached through `index.ts`.
 - `person-file` — Training's part of a person's file and their records for HR's subject export.
 - `workspace` — the Training frame, its one page list (`pages.ts`, for the page bar and the starter page `/training/overview`) and the access check (`src/app/training/layout.tsx`).
 
-`shared/` holds what two or more features use: lessons, outlines, cleaning lesson text, lesson settings and video links (`lessons.ts`), questions, marking and exam papers (`questions.ts`), course templates (`templates.ts`), reading pasted questions (`import.ts`), lesson files (`files.ts`), the lesson renderer, statuses and states (`constants.ts`), the access check (`access.ts`), courses and the people a trainer may see (`data.ts`), granting a qualification on completion (`grant.ts`), write helpers (`writes.ts`) and the dialogs' kit.
+`shared/` holds what two or more features use: lessons, outlines, cleaning lesson text, lesson settings and video links (`lessons.ts`), questions, marking and exam papers (`questions.ts`), refreshers, streaks, badges and search (`learner.ts`), course templates (`templates.ts`), reading pasted questions (`import.ts`), lesson files (`files.ts`), the lesson renderer, statuses and states (`constants.ts`), the access check (`access.ts`), courses and the people a trainer may see (`data.ts`), granting a qualification on completion (`grant.ts`), write helpers (`writes.ts`) and the dialogs' kit.
 
 ## Public API (index.ts)
 - `myTraining(userId)` — a person's own training, for Turnfin Me's staff API.
@@ -29,6 +29,7 @@ The rules for courses, assignments, sign-offs and certificates are in [docs/trai
 - `myCertificate(user, id)` — the person's certificate for finished training, with its lasting code, for Turnfin Me.
 - `trainingReminderItems(on)` — training due soon, for Turnfin Me's reminder digest.
 - `myPlan(userId, orgId)`, `myPractical(userId, id)` — the person's own paths, sessions and hours, and what a trainer watches for on their practical, for Turnfin Me.
+- `searchMyTraining`, `myLessonNote`, `saveLessonNote`, `mySaved`, `myRecord`, `catalogueFor`, `catalogueCover`, `enrolMyself`, `myFeedback`, `rateCourse`, `myRefresher`, `answerRefresher`, `refresherWaiting` — the learner's own space in Turnfin Me (phase 6).
 
 ## Data owned
 Declared in `prisma/schema/training.prisma` (table names kept, ADR 0002):
@@ -46,6 +47,9 @@ Declared in `prisma/schema/training.prisma` (table names kept, ADR 0002):
 - `training_paths`, `training_path_steps`, `training_path_enrolments` — learning paths, their courses in order, and who is on each.
 - `training_sessions`, `training_session_places` — sessions and who is booked, attended or absent.
 - `training_hours`, `training_hour_targets` — in-service hours logged, and how many each qualification needs.
+- `training_lesson_notes` — a learner's bookmarks and private notes on lessons.
+- `training_feedback` — a learner's rating of a finished course and what was unclear.
+- `training_refresher_cards`, `training_refresher_days` — questions a learner missed, spaced out for daily refreshers, and how many they answered each day.
 
 Training also reads and writes Core's qualification records (`Qualification`, `QualificationEvidence`, `QualificationType`) and reads `User`, `Club` and `Position`. Qualifications are Core's (ADR 0001); moving these reads onto Core functions is phase 3 of [MIGRATION.md](../../../docs/architecture/MIGRATION.md).
 
@@ -55,7 +59,7 @@ Training also reads and writes Core's qualification records (`Qualification`, `Q
 
 ## Registration (module.ts)
 - Starter page items (`registerHomeCard`; Home counts the ones that need the person): practical sign-offs, registers to close, certificates to check, qualifications expiring.
-- Person file section `training.open` and subject records `training` and `trainingOnTheJob` (HR's export).
+- Person file section `training.open` and subject records `training`, `trainingOnTheJob` and `trainingLearner` (HR's export).
 - Menu entry, levels and permissions: `manifest.ts`, listed in `src/app/modules.ts`.
 
 ## Permissions

@@ -5,6 +5,7 @@ import { useParams } from "next/navigation";
 import { useState } from "react";
 import { Award, BookOpen, ChevronLeft, ChevronRight, CircleCheck, ClipboardCheck, FileText, GitBranch, GraduationCap, Headphones, Layers, ListChecks, ListTodo, PlayCircle, Send } from "lucide-react";
 import { Frame } from "@/components/frame";
+import { RateCourse } from "@/components/learner";
 import { CourseImage, type ExamInfo } from "@/components/question";
 import { LoadError, Loading, Notice, Tag, useLoad } from "@/components/ui";
 import { ApiError, api } from "@/lib/api";
@@ -25,6 +26,7 @@ type Detail = {
   coverId: string | null; category: string;
   whatsNew: { number: number; note: string } | null;
   practical: Practical | null;
+  canRate: boolean; feedback: { rating: number; unclear: string } | null;
 };
 type Practical = {
   steps: { id: string; text: string; critical: boolean }[];
@@ -184,6 +186,7 @@ export default function TrainingDetailPage() {
               </section>
             )}
 
+            {data.canRate ? <RateCourse key={data.id} assignmentId={data.id} initial={data.feedback} /> : null}
             {data.practical ? <PracticalCard practical={data.practical} open={open && !data.trainerNote} /> : null}
 
             {open && allDone ? (

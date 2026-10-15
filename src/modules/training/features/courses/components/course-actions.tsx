@@ -12,7 +12,7 @@ import { saveCourse, setCourseArchived } from "@/modules/training/features/cours
 import { THEME } from "@/modules/training/shared/components/dialog-kit";
 
 type QualificationOption = { id: string; name: string; validityMonths: number | null };
-type CourseDraft = { id: string; title: string; summary: string; requiresSignoff: boolean; grantsType: { id: string } | null; category?: string; tags?: string[] };
+type CourseDraft = { id: string; title: string; summary: string; requiresSignoff: boolean; grantsType: { id: string } | null; category?: string; tags?: string[]; selfEnrol?: boolean };
 
 /** A course's settings. A new course opens in the builder to add its lessons. */
 export function CourseDialog({ course, qualificationTypes, categories = [] }: { course?: CourseDraft; qualificationTypes: QualificationOption[]; categories?: string[] }) {
@@ -36,6 +36,7 @@ export function CourseDialog({ course, qualificationTypes, categories = [] }: { 
           grantsTypeId: String(formData.get("grantsTypeId") ?? ""),
           category: String(formData.get("category") ?? ""),
           tags: String(formData.get("tags") ?? "").split(",").map((t) => t.trim()).filter(Boolean),
+          selfEnrol: formData.get("selfEnrol") === "on",
         });
         if (!result.ok) return result;
         if (!course) router.push(`/training/courses/${result.id}`); else router.refresh();
@@ -58,6 +59,7 @@ export function CourseDialog({ course, qualificationTypes, categories = [] }: { 
         </Field>
       </div>
       <Switch id="course-signoff" name="requiresSignoff" label="A trainer signs it off in person at the end" defaultChecked={course?.requiresSignoff} />
+      <Switch id="course-self-enrol" name="selfEnrol" label="Open in the course catalogue" description="Staff can find it in Turnfin Me and enrol themselves, with no deadline. Shown once it is published." defaultChecked={course?.selfEnrol} />
       <Field label="Records a qualification" htmlFor="course-grants" optional hint="On completion, the person gets this qualification, expiring after its validity.">
         <NativeSelect id="course-grants" name="grantsTypeId" defaultValue={course?.grantsType?.id ?? ""} className="min-h-11 w-full">
           <NativeSelectOption value="">None</NativeSelectOption>

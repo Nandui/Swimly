@@ -23,6 +23,8 @@ const courseSchema = z.object({
   category: z.string().trim().max(60, "Keep the category under 60 characters.").optional(),
   tags: z.array(z.string().trim().max(30, "Keep each tag under 30 characters.")).max(10, "Use up to 10 tags.").optional()
     .transform((tags) => tags && [...new Set(tags.map((t) => t.replace(/^#/, "")).filter(Boolean))]),
+  /** Open in Turnfin Me's catalogue, for staff to enrol themselves (phase 6). */
+  selfEnrol: z.boolean().optional(),
 });
 export type CourseInput = z.input<typeof courseSchema>;
 

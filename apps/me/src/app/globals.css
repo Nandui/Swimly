@@ -209,7 +209,7 @@ html:has(.tf-bottom) { scroll-padding-bottom: calc(112px + env(safe-area-inset-b
 }
 textarea.input { min-height: 96px; resize: vertical; border-radius: var(--pc-radius-card); }
 .input:focus-visible { outline: none; border-color: var(--pc-focus); box-shadow: 0 0 0 1px var(--pc-focus), var(--pc-focus-halo); }
-label.pc-row > input[type='checkbox'] { flex: none; width: 20px; height: 20px; margin: 0; accent-color: var(--pc-primary); }
+label.pc-row > input:is([type='checkbox'], [type='radio']) { flex: none; width: 20px; height: 20px; margin: 0; accent-color: var(--pc-primary); }
 /* A file input hidden behind its "Choose a file" button label keeps a visible focus ring. */
 .sr-only:focus-visible + label { outline: 2px solid var(--pc-focus); outline-offset: 2px; }
 
@@ -371,3 +371,62 @@ label.pc-row > input[type='checkbox'] { flex: none; width: 20px; height: 20px; m
   .page { padding: 0; }
   .certificate { border: 2px solid #000; min-height: 90vh; justify-content: center; }
 }
+
+/* The learner's own space (Training e-learning phase 6). */
+/* Larger text, chosen under More › Text size: every size token steps up together. */
+html[data-text="large"] body.turnfin-app {
+  --pc-text-caption: 14px; --pc-leading-caption: 20px; --pc-text-body: 17px; --pc-leading-body: 26px;
+  --pc-text-title: 21px; --pc-leading-title: 28px; --pc-text-reading: 19px; --pc-leading-reading: 30px;
+}
+html[data-text="largest"] body.turnfin-app {
+  --pc-text-caption: 16px; --pc-leading-caption: 22px; --pc-text-body: 20px; --pc-leading-body: 30px;
+  --pc-text-title: 24px; --pc-leading-title: 32px; --pc-text-reading: 22px; --pc-leading-reading: 34px;
+}
+html[data-text] .input { font-size: max(16px, var(--pc-text-body)); }
+.button[aria-pressed="true"] { border-color: var(--pc-primary); background: var(--pc-primary-soft); color: var(--pc-primary-ink); }
+.lesson-tools { display: flex; flex-wrap: wrap; gap: 8px; }
+/* Training's own shortcuts: search, today's refresher, saved, the catalogue and my record. */
+.search-row { display: flex; gap: 8px; }
+.search-row .input { flex: 1 1 auto; min-width: 0; }
+.learn-tiles { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 8px; margin: 0; padding: 0; list-style: none; }
+.learn-tile { display: flex; flex-direction: column; gap: 8px; height: 100%; min-height: 96px; padding: 16px; border-radius: var(--pc-radius-card); background: var(--pc-surface); color: var(--pc-ink); text-decoration: none; }
+.learn-tile:hover { background: var(--pc-surface-sunken); }
+.learn-tile:focus-visible { outline: 2px solid var(--pc-focus); outline-offset: 2px; }
+.learn-tile strong { font-weight: 600; }
+/* The daily refresher: the streak as a figure, the day's five as dots. */
+.refresher-head { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 12px 16px; }
+.streak { display: inline-flex; align-items: center; gap: 8px; font-weight: 600; }
+.streak-figure { font-size: var(--pc-text-figure); line-height: var(--pc-leading-figure); font-weight: 700; font-variant-numeric: tabular-nums; }
+.streak svg { width: 24px; height: 24px; color: var(--pc-warning); }
+.streak[data-cold] svg { color: var(--pc-ink-muted); }
+.day-dots { display: flex; gap: 6px; }
+.day-dot { width: 12px; height: 12px; border-radius: 999px; background: var(--pc-surface-sunken); box-shadow: inset 0 0 0 1px var(--pc-line-strong); }
+.day-dot[data-done] { background: var(--pc-primary); box-shadow: none; }
+/* Badges: earned ones in colour, the rest as what to aim for. */
+.badges { display: grid; grid-template-columns: repeat(auto-fill, minmax(140px, 1fr)); gap: 8px; margin: 0; padding: 0; list-style: none; }
+.badge { display: flex; flex-direction: column; align-items: flex-start; gap: 8px; height: 100%; padding: 16px; border: 1px dashed var(--pc-line-strong); border-radius: var(--pc-radius-card); color: var(--pc-ink-muted); }
+.badge[data-earned] { border: 1px solid transparent; background: var(--pc-primary-soft); color: var(--pc-primary-ink); }
+.badge-icon { display: inline-flex; align-items: center; justify-content: center; width: 40px; height: 40px; border-radius: 999px; background: var(--pc-surface-sunken); }
+.badge[data-earned] .badge-icon { background: var(--pc-primary); color: var(--pc-on-primary); }
+.badge-icon svg { width: 20px; height: 20px; }
+.badge strong { color: var(--pc-ink); font-weight: 600; }
+/* Star rating: big tappable stars, filled up to the one chosen. */
+.stars { display: flex; gap: 4px; }
+.star { display: inline-flex; align-items: center; justify-content: center; width: 48px; height: 48px; border-radius: 999px; color: var(--pc-line-strong); cursor: pointer; }
+.star:hover { background: var(--pc-hover); }
+.star:has(input:focus-visible) { box-shadow: 0 0 0 1px var(--pc-focus), var(--pc-focus-halo); }
+.star svg { width: 32px; height: 32px; }
+.star[data-on] { color: var(--pc-warning); }
+.star[data-on] svg, .stars-read svg[data-on] { fill: currentColor; }
+.stars-read { display: inline-flex; gap: 2px; margin-right: 6px; vertical-align: -3px; color: var(--pc-warning); }
+.stars-read svg { width: 16px; height: 16px; }
+.stars-read svg:not([data-on]) { color: var(--pc-line-strong); }
+/* A saved note under its lesson. */
+.note-text { padding: 12px 16px; border-radius: var(--pc-radius-card); background: var(--pc-surface-sunken); white-space: pre-wrap; overflow-wrap: anywhere; }
+/* My record on paper: the frame and buttons drop away. */
+.record-table { width: 100%; border-collapse: collapse; font-size: var(--pc-text-caption); }
+.record-table :is(th, td) { padding: 8px; border-bottom: 1px solid var(--pc-line); text-align: left; vertical-align: top; }
+.record-wrap { overflow-x: auto; }
+/* A fieldset's legend set as the panel's heading. */
+.panel-legend { float: left; width: 100%; padding: 0; margin-bottom: 4px; font-size: var(--pc-text-title); line-height: var(--pc-leading-title); font-weight: 600; }
+.panel-legend + * { clear: both; }

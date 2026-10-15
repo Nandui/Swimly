@@ -69,7 +69,7 @@ export default async function TrainingCoursesPage({ searchParams }: { searchPara
                   </h3>
                   <p className="pc-row-hint">
                     {[course.summary.trim().replace(/\.$/, "") || null, course.published ? `Version ${course.published.number}, ${course.published.lessonCount} ${course.published.lessonCount === 1 ? "lesson" : "lessons"}` : "Not published as lessons yet",
-                      course.requiresSignoff ? "Trainer sign-off" : "Self-completed", course.grantsType ? `records ${course.grantsType.name}${course.grantsType.validityMonths ? `, valid ${course.grantsType.validityMonths} months` : ""}` : null].filter(Boolean).join(" · ")}
+                      course.requiresSignoff ? "Trainer sign-off" : "Self-completed", course.selfEnrol ? "in the catalogue" : null, course.grantsType ? `records ${course.grantsType.name}${course.grantsType.validityMonths ? `, valid ${course.grantsType.validityMonths} months` : ""}` : null].filter(Boolean).join(" · ")}
                   </p>
                   {course.tags.length ? <p className="flex flex-wrap gap-1">{course.tags.map((t) => <span key={t} className="tf-tag">{t}</span>)}</p> : null}
                 </div>

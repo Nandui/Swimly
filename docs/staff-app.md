@@ -77,11 +77,21 @@ turning it on.
 | POST | `auth/confirm` | Sends a fresh code for HR (session required) |
 | POST | `auth/confirm/verify` | `{ challengeId, code }`. HR opens for 15 minutes |
 | POST | `auth/logout` | Ends the session |
-| GET | `home` | Open training, outstanding reading, expiring qualifications, the next shifts, and a count of reviews to acknowledge (no HR content) |
+| GET | `home` | Open training, outstanding reading, expiring qualifications, the next shifts, a count of reviews to acknowledge (no HR content), and how many refresher questions wait today (`refresher`) |
 | GET, PATCH | `me` | Profile and own details. PATCH proposes phone, address or emergency contact changes; the record changes only after review on Work. One request is waiting at a time |
 | GET | `qualifications` | The newest certificate of each type, uploads and their status, and the qualification types |
 | POST | `qualifications/evidence` | Upload a PDF, PNG or JPEG (up to 5 MB, checked by file signature) for someone to check |
 | GET | `training`, `training/{id}` | Own training: progress through a course built from lessons, and its outline (`sections`); a course without lessons sends its text (`content`). A practical with a checklist sends `practical`: the steps a trainer watches for and how the last observation went (no photos) |
+| GET | `training/search?q=` | Own courses and lessons with every word searched for (2 to 80 characters): course title and the text around the match; lessons with their course and section |
+| GET | `training/saved` | Own bookmarked lessons and private notes, newest first |
+| PUT | `training/{id}/lessons/{lessonId}/note` | `{ bookmarked?, note? }` (note up to 2,000 characters). Private to the person; both empty removes it. The lesson response carries `bookmarked` and `note` |
+| GET | `training/record` | Own record: every course with status, dates, signed off by, version, best exam score and whether there is a certificate; paths, sessions attended, in-service hours |
+| GET | `training/catalogue` | Published courses open to everyone: summary, category, tags, lessons, minutes, exam, sign-off, qualification, the average rating (from three ratings) and the person's own assignment on it |
+| GET | `training/catalogue/{courseId}/cover` | A catalogue course's cover picture, as the file itself |
+| POST | `training/catalogue/{courseId}/enrol` | Assigns it to the person with no due date (audited), or returns the one already open: `{ assignmentId, already }` |
+| POST | `training/{id}/feedback` | `{ rating: 1–5, unclear }` once finished or waiting for sign-off. `training/{id}` sends `canRate` and the person's `feedback` |
+| GET | `training/refresher` | Today's refresher: up to 5 questions (without the key), how many answered today, the streak and every badge with whether it is earned |
+| POST | `training/refresher/answer` | `{ cardId }` or `{ assignmentId, questionId }` with `answer`: `{ done, correct, explanation, nextIn }`. Never the right answer. Once a question a day, 5 a day |
 | GET | `training/plan` | Own learning paths (each course's state and due date), sessions booked or attended, and in-service hours against each qualification they hold, with the log |
 | GET | `training/{id}/lessons/{lessonId}` | One lesson of the person's own course version: its text, video link or file, and the lessons either side; knowledge-check questions in the text (`checks`, without the key); a Scenario's scenes (`steps`), Flashcards' cards (`cards`) and a Checklist's items (`items`), which are practice and sent whole |
 | POST | `training/{id}/lessons/{lessonId}/complete` | Marks the lesson done. The first one fixes the course version the person takes |

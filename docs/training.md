@@ -260,6 +260,54 @@ Every change writes an audit row (`TrainingSession`, `TrainingHours`,
 Not built yet from the plan: reminders before a session, waiting lists for a
 full session, and recurring sessions.
 
+## The learner's own space (e-learning, phase 6)
+
+Everything here is in Turnfin Me, for the signed-in person's own training only.
+Work never shows anyone's notes, refreshers or streaks.
+
+- **Search** (`training/search?q=`): every course and lesson the person has
+  (not cancelled), on the version they take: titles, the course summary,
+  category and tags, and all the words in a lesson (text, scenes, cards,
+  checklist items). Every word must match; a word in a title ranks higher. Up to
+  10 courses and 30 lessons, with the text around the first match.
+- **Bookmarks and private notes** on a lesson (`training_lesson_notes`, up to
+  2,000 characters), saved from the lesson player; **Saved** lists them. Clearing
+  both removes the row. The audit row names the lesson, never the note's words.
+  HR's subject export includes them as `trainingLearner`.
+- **My record** (`training/record`): every course with its status, dates, who
+  signed it off, the version, the best exam score and the certificate; learning
+  paths, sessions attended and in-service hours. Printed or downloaded as a CSV
+  made on the phone.
+- **Course catalogue**: an author ticks **Open in the course catalogue** in a
+  course's settings (`TrainingCourse.selfEnrol`). Published, unretired courses
+  with it show in **Find a course**, with lessons, minutes, whether there is an
+  exam or a sign-off, the qualification and the average rating once three people
+  have rated it. **Enrol** makes the same assignment a trainer would, with no due
+  date, audited as "Enrolled themselves"; one already open is opened instead.
+  The course list in Work marks them "in the catalogue".
+- **Ratings**: once a course is finished or waiting for sign-off, the person
+  rates it 1 to 5 stars and can say what was unclear (`training_feedback`, one
+  per assignment, changeable, audited). The builder shows **What learners said**:
+  the average, how many gave each rating and the comments, newest first, never
+  with names.
+- **Daily refreshers** (`training/refresher`): a practice question answered
+  wrong (a Quiz lesson or a knowledge check) becomes a card due the next day
+  (`training_refresher_cards`). A **passed** exam's wrong answers do too; a
+  failed paper adds nothing, so no exam question leaks before a pass. Each day
+  offers up to 5: cards due, lowest box first, topped up with questions from
+  finished courses. A right answer moves a card up a box (due again in 1, 2, 4,
+  8 or 16 days); a wrong one sends it back to box 1. Like practice, only right or
+  not and the explanation are sent, never the right answer. Answers are counted
+  per day (`training_refresher_days`) and are not audited, like practice checks.
+- **Streaks and badges**: the streak counts days in a row with a lesson finished
+  or a refresher answered (today, or up to yesterday while today is open), and
+  keeps the best. Badges are worked out each time, never stored: first, five and
+  ten courses; passing an exam first time; full marks; three, seven and thirty
+  days in a row; 50 refresher answers; in-service hours met; a path finished.
+- **Text size and reading aloud** (More › Text size and reading aloud): three
+  text sizes and a normal or slower reading speed, kept on that phone only.
+  **Read aloud** on a lesson uses the phone's own voice; nothing is sent anywhere.
+
 ## Expiring qualifications
 
 `/training/expiring` lists qualifications that have expired or expire within 60

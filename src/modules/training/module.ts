@@ -3,7 +3,7 @@ import { expandPermissions } from "@/lib/staff/permissions";
 import { registerHomeCard, registerPersonFileSection, registerSubjectRecords, type HomeItem } from "@/modules/contributions";
 import { certificateQueue } from "@/modules/training/features/certificates";
 import { expiringQualifications } from "@/modules/training/features/expiring";
-import { trainingFile, trainingOnTheJobRecords, trainingRecords } from "@/modules/training/features/person-file";
+import { trainingFile, trainingLearnerRecords, trainingOnTheJobRecords, trainingRecords } from "@/modules/training/features/person-file";
 import { registersToClose } from "@/modules/training/features/sessions";
 import { signoffCount } from "@/modules/training/features/sign-off";
 
@@ -14,6 +14,7 @@ import { signoffCount } from "@/modules/training/features/sign-off";
 registerPersonFileSection({ id: "training.open", heading: "Training", load: trainingFile });
 registerSubjectRecords({ key: "training", load: trainingRecords });
 registerSubjectRecords({ key: "trainingOnTheJob", load: trainingOnTheJobRecords });
+registerSubjectRecords({ key: "trainingLearner", load: trainingLearnerRecords });
 
 /** Training on the home page, for trainers and training managers. Everyone
  *  completes their own training in Turnfin Me. */

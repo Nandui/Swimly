@@ -41,3 +41,16 @@ export async function trainingOnTheJobRecords(userId: string) {
   ]);
   return { hours, sessions, paths, evidence };
 }
+
+/** Their own space in Turnfin Me (phase 6): lesson bookmarks and private notes,
+ *  course ratings and refresher practice, for HR's subject export only. Work
+ *  never shows these anywhere else. */
+export async function trainingLearnerRecords(userId: string) {
+  const [notes, feedback, refresherCards, refresherDays] = await Promise.all([
+    prisma.trainingLessonNote.findMany({ where: { userId }, select: { lessonId: true, bookmarked: true, note: true, updatedAt: true, assignment: { select: { course: { select: { title: true } } } } } }),
+    prisma.trainingFeedback.findMany({ where: { userId }, select: { rating: true, unclear: true, createdAt: true, updatedAt: true, assignment: { select: { course: { select: { title: true } } } } } }),
+    prisma.trainingRefresherCard.findMany({ where: { userId }, select: { questionId: true, box: true, dueOn: true, misses: true, lastSeenAt: true, assignment: { select: { course: { select: { title: true } } } } } }),
+    prisma.trainingRefresherDay.findMany({ where: { userId }, orderBy: { on: "asc" }, select: { on: true, answered: true, correct: true } }),
+  ]);
+  return { notes, feedback, refresherCards, refresherDays };
+}

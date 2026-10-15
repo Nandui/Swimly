@@ -6,7 +6,7 @@ import { Button } from "@/components/shadcn/button";
 import { PageHeader } from "@/components/ui-kit/page-header";
 import { Tag } from "@/components/ui-kit/tag";
 import { ARCHIVAL_STATUS_META } from "@/lib/status";
-import { COURSE_DRAFT_META, CourseBuilder, courseForBuilder, DuplicateCourse, PublishCourse } from "@/modules/training/features/builder";
+import { COURSE_DRAFT_META, CourseBuilder, CourseFeedback, courseForBuilder, DuplicateCourse, PublishCourse } from "@/modules/training/features/builder";
 import { CourseDialog, listQualificationTypeOptions } from "@/modules/training/features/courses";
 
 export const metadata: Metadata = { title: "Course builder" };
@@ -17,7 +17,7 @@ export default async function CourseBuilderPage({ params, searchParams }: { para
   const [{ id }, { lesson, questions, exam, practical }] = await Promise.all([params, searchParams]);
   const [data, types] = await Promise.all([courseForBuilder(id), listQualificationTypeOptions()]);
   if (!data) notFound();
-  const { who, course, draft, practical: checklist, files, published, changed, openAssignments, report, comments, versions, finished, courses, categories } = data;
+  const { who, course, draft, practical: checklist, files, published, changed, openAssignments, report, comments, versions, finished, courses, categories, feedback } = data;
   const canEdit = who.manage && !course.archivedAt;
   const state = !published ? "draft" : changed ? "changed" : "published";
   return (
@@ -41,6 +41,7 @@ export default async function CourseBuilderPage({ params, searchParams }: { para
       <CourseBuilder courseId={course.id} title={course.title} hasOldText={!!course.content.trim()} draft={draft} files={files} selected={lesson ?? null}
         panel={exam ? "exam" : practical ? "practical" : questions ?? null} report={report} canEdit={canEdit} canComment={who.manage || who.signoff} changed={changed}
         comments={comments} coverId={course.coverId} versions={versions} courses={courses} practical={checklist} requiresSignoff={course.requiresSignoff} />
+      {published ? <CourseFeedback report={feedback} /> : null}
     </>
   );
 }

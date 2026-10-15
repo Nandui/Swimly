@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { ChevronRight, MessageCircle, PlayCircle } from "lucide-react";
+import { ChevronRight, Flame, MessageCircle, PlayCircle } from "lucide-react";
 import { Frame } from "@/components/frame";
 import { EmptyRows, LoadError, Loading, Tag, useLoad } from "@/components/ui";
 import { clock, day } from "@/lib/format";
@@ -14,6 +14,7 @@ type Home = {
   qualifications: { id: string; name: string; expiresOn: string | null; state: string }[];
   shifts: { id: string; date: string; startMinutes: number; endMinutes: number; role: string; site: string; warnings: string[] }[];
   reviewsToAcknowledge: number;
+  refresher: number;
 };
 
 /** What needs you, then your next shifts. Nothing from HR beyond a count. */
@@ -41,6 +42,13 @@ export default function HomePage() {
                 </Link>
               ) : null;
             })()}
+            {data.refresher > 0 ? (
+              <Link href="/training/refresher" className="notice">
+                <Flame aria-hidden="true" />
+                <span className="notice-body"><strong>Today’s refresher</strong>{data.refresher} {data.refresher === 1 ? "question" : "questions"} from your courses, about two minutes.</span>
+                <ChevronRight className="pc-row-chevron" aria-hidden="true" />
+              </Link>
+            ) : null}
             {data.reviewsToAcknowledge > 0 ? (
               <Link href="/hr" className="notice first">
                 <MessageCircle aria-hidden="true" />

@@ -9,6 +9,7 @@ import { docsReading } from "@/modules/docs";
 import {
   checkQuizAnswer, completeLessonFor, completeTrainingFor, myCertificate, myCourse, myCourseFile, myExam, myExamPaper, myExamResult, myLesson, myPlan, myPractical, myTraining,
   saveExamAnswer, startExam, submitExam, trainingFileResponse,
+  answerRefresher, catalogueCover, catalogueFor, enrolMyself, myFeedback, myLessonNote, myRecord, myRefresher, mySaved, rateCourse, refresherWaiting, saveLessonNote, searchMyTraining,
 } from "@/modules/training";
 import { StaffApiError, notFound } from "@/lib/staff-api/errors";
 import { idSchema, parseInput, readBody } from "@/lib/staff-api/http";
@@ -162,7 +163,10 @@ export async function trainingItem(identity: StaffIdentity, id: string) {
   const exam = course ? await myExam(me(identity), id) : null;
   // A practical: what the trainer will watch for, and how the last observation went.
   const practical = row.course.requiresSignoff ? await myPractical(identity.user.id, id) : null;
-  return { ...trainingDto(row), content: course ? "" : row.course.content, sections: course?.sections ?? null, exam: exam && examDto(exam), whatsNew: course?.whatsNew ?? null, practical: practical && practicalDto(practical) };
+  // Their rating once they have finished (phase 6).
+  const feedback = row.state === "completed" || row.state === "submitted" ? await myFeedback(identity.user.id, id) : null;
+  return { ...trainingDto(row), content: course ? "" : row.course.content, sections: course?.sections ?? null, exam: exam && examDto(exam), whatsNew: course?.whatsNew ?? null, practical: practical && practicalDto(practical),
+    canRate: row.state === "completed" || row.state === "submitted", feedback };
 }
 
 const practicalDto = (p: NonNullable<Awaited<ReturnType<typeof myPractical>>>) => ({
@@ -213,7 +217,10 @@ const answerSchema = z.union([
 export async function trainingLesson(identity: StaffIdentity, id: string, lessonId: string) {
   const lesson = await myLesson(identity.user.id, id, lessonId);
   if (!lesson) notFound();
+  const saved = await myLessonNote(identity.user.id, id, lessonId);
   return {
+    // Their own bookmark and private note on it (phase 6).
+    bookmarked: saved.bookmarked, note: saved.note,
     id: lesson.id, kind: lesson.kind, title: lesson.title, body: lesson.body, minutes: lesson.minutes, video: lesson.video,
     file: lesson.file && { id: lesson.file.id, name: lesson.file.name, mime: lesson.file.mime, size: lesson.file.size },
     section: lesson.section, index: lesson.index, total: lesson.total, prev: lesson.prev, next: lesson.next, done: lesson.done, open: lesson.open,
@@ -313,6 +320,100 @@ export async function completeTraining(request: Request, identity: StaffIdentity
     throw failed(result.error);
   }
   return trainingItem(identity, id);
+}
+
+// ---------------------------------------------------------------------------
+// The learner's own space (phase 6): search, saved lessons, record, catalogue, refreshers
+// ---------------------------------------------------------------------------
+
+/** Their courses and lessons with every word searched for. */
+export async function trainingSearch(request: Request, identity: StaffIdentity) {
+  const q = parseInput(z.string().trim().min(2, "Type at least two letters.").max(80), new URL(request.url).searchParams.get("q") ?? "");
+  await rateLimit(`training-search:${identity.user.id}`, 60, 60);
+  const found = await searchMyTraining(identity.user.id, q);
+  return {
+    courses: found.courses.map((c) => ({ assignmentId: c.assignmentId, title: c.title, snippet: c.snippet })),
+    lessons: found.lessons.map((l) => ({ assignmentId: l.assignmentId, lessonId: l.lessonId, course: l.course, section: l.section, title: l.title, snippet: l.snippet })),
+  };
+}
+
+/** A bookmark or private note on a lesson of their own course. */
+export async function saveTrainingNote(request: Request, identity: StaffIdentity, id: string, lessonId: string) {
+  const input = await readBody(request, z.object({ bookmarked: z.boolean().optional(), note: z.string().max(2000).optional() }).strict());
+  await rateLimit(`training-note:${identity.user.id}`, 120, 60);
+  const result = await saveLessonNote(me(identity), id, lessonId, input);
+  if (!result.ok) notFound();
+  return myLessonNote(identity.user.id, id, lessonId);
+}
+
+export async function trainingSaved(identity: StaffIdentity) {
+  return { items: (await mySaved(identity.user.id)).map((n) => ({ assignmentId: n.assignmentId, lessonId: n.lessonId, course: n.course, section: n.section, title: n.title, bookmarked: n.bookmarked, note: n.note, updatedAt: n.updatedAt.toISOString() })) };
+}
+
+/** Everything on their training record, to read, print or download. */
+export async function trainingRecord(identity: StaffIdentity) {
+  const record = await myRecord(identity.user.id, identity.user.orgId);
+  return {
+    name: identity.user.name,
+    courses: record.courses.map((c) => ({ id: c.id, title: c.title, category: c.category, state: c.state, assignedAt: c.assignedAt.toISOString(), assignedBy: c.assignedBy, dueOn: date(c.dueOn),
+      completedAt: c.completedAt?.toISOString() ?? null, signedOffBy: c.signedOffBy, grants: c.grants, version: c.version, exam: c.exam, certificate: c.certificate })),
+    sessions: record.sessions.map((s) => ({ title: s.title, when: s.when, course: s.course, trainer: s.trainerName })),
+    paths: record.paths.map((p) => ({ title: p.title, startsOn: date(p.startsOn), done: p.done, total: p.total, finishedOn: date(p.finishedOn) })),
+    hours: {
+      progress: record.hours.progress.map((h) => ({ qualification: h.typeName, hours: h.hours, windowMonths: h.windowMonths, minutes: h.minutes, since: date(h.since), met: h.met })),
+      log: record.hours.log.map((l) => ({ on: date(l.on), minutes: l.minutes, topic: l.topic, qualification: l.typeName })),
+    },
+  };
+}
+
+/** Courses open to everyone, to enrol on themselves. */
+export async function trainingCatalogue(identity: StaffIdentity) {
+  return { items: (await catalogueFor(identity.user.id, identity.user.orgId)).map((c) => ({
+    id: c.id, title: c.title, summary: c.summary, category: c.category, tags: c.tags, hasCover: !!c.coverId, requiresSignoff: c.requiresSignoff, grants: c.grants,
+    lessons: c.lessons, minutes: c.minutes, exam: c.exam, rating: c.rating, mine: c.mine,
+  })) };
+}
+
+export async function trainingCatalogueCover(identity: StaffIdentity, courseId: string) {
+  const file = await catalogueCover(identity.user.orgId, courseId);
+  if (!file) notFound();
+  return trainingFileResponse(file);
+}
+
+export async function enrolOnCourse(identity: StaffIdentity, courseId: string) {
+  await rateLimit(`training-enrol:${identity.user.id}`, 20, 3600);
+  const result = await enrolMyself({ id: identity.user.id, name: identity.user.name, orgId: identity.user.orgId }, courseId);
+  if (!result.ok) notFound();
+  return { assignmentId: result.assignmentId, already: result.already };
+}
+
+/** Their rating of a course they finished, and what was unclear. */
+export async function rateTraining(request: Request, identity: StaffIdentity, id: string) {
+  const input = await readBody(request, z.object({ rating: z.number().int().min(1).max(5), unclear: text(1000).default("") }).strict());
+  const result = await rateCourse(me(identity), id, input);
+  if (!result.ok) {
+    if (result.error.includes("not assigned to you")) notFound();
+    throw failed(result.error);
+  }
+  return myFeedback(identity.user.id, id);
+}
+
+/** Today's refresher questions, their streak and badges. */
+export async function trainingRefresher(identity: StaffIdentity) {
+  const r = await myRefresher(identity.user.id, identity.user.orgId);
+  return {
+    on: r.on, goal: r.goal, answered: r.answered, correct: r.correct, streak: r.streak,
+    questions: r.questions.map((q) => ({ cardId: q.cardId, assignmentId: q.assignmentId, course: q.course, question: questionDto(q.question) })),
+    badges: r.badges.map((b) => ({ id: b.id, title: b.title, hint: b.hint, earned: b.earned })),
+  };
+}
+
+export async function answerTrainingRefresher(request: Request, identity: StaffIdentity) {
+  const input = await readBody(request, z.object({ cardId: idSchema.optional(), assignmentId: idSchema.optional(), questionId: idSchema.optional(), answer: answerSchema }).strict());
+  await rateLimit(`training-refresher:${identity.user.id}`, 60, 60);
+  const result = await answerRefresher(identity.user.id, input, input.answer);
+  if (!result) notFound();
+  return result.done ? { done: true, correct: null, explanation: "", nextIn: null } : { done: false, correct: result.correct, explanation: result.explanation, nextIn: result.nextIn };
 }
 
 // ---------------------------------------------------------------------------
@@ -438,7 +539,7 @@ export async function saveNotifications(request: Request, identity: StaffIdentit
 // ---------------------------------------------------------------------------
 
 export async function home(identity: StaffIdentity) {
-  const [train, read, quals, upcoming, reviewsWaiting] = await Promise.all([
+  const [train, read, quals, upcoming, reviewsWaiting, refresher] = await Promise.all([
     training(identity),
     reading(identity),
     myQualifications(identity.user.id),
@@ -446,9 +547,12 @@ export async function home(identity: StaffIdentity) {
     hrConfigured()
       ? mySharedHr(identity.user.id, identity.user.orgId).then((r) => r.reviews.filter((x) => x.status === "shared").length).catch(() => 0)
       : Promise.resolve(0),
+    refresherWaiting(identity.user.id).catch(() => 0),
   ]);
   return {
     name: identity.user.name,
+    // Questions in today's refresher still to answer (phase 6).
+    refresher,
     training: train.items.filter((t) => t.state === "assigned" || t.state === "overdue" || t.state === "submitted"),
     reading: read.items.filter((r) => r.status === "outstanding"),
     qualifications: quals.filter((q) => q.state === "expiring" || q.state === "expired").map((q) => ({ id: q.id, name: q.type.name, expiresOn: date(q.expiresOn), state: q.state })),

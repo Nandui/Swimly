@@ -4,6 +4,7 @@ import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { useState, type ReactNode } from "react";
 import { BookOpen, CalendarDays, GraduationCap, House, LayoutGrid, LogOut } from "lucide-react";
+import { TextSizeEffect } from "@/components/learner";
 import { api, session } from "@/lib/api";
 
 const TABS = [
@@ -13,7 +14,7 @@ const TABS = [
   { href: "/shifts", label: "Shifts", icon: CalendarDays },
   { href: "/more", label: "More", icon: LayoutGrid },
 ];
-const MORE = ["/more", "/qualifications", "/hr", "/details", "/reminders"];
+const MORE = ["/more", "/qualifications", "/hr", "/details", "/reminders", "/display"];
 
 /** The fin on its tile (Work's `.tf-brand`) and the name beside it. Signed-in pages link the
  *  fin home; sign-in shows it without a link. */
@@ -44,6 +45,7 @@ export function Frame({ title, children }: { title: string; children: ReactNode 
   return (
     <div className="frame">
       <title>{`${title} · Turnfin Me`}</title>
+      <TextSizeEffect />
       <header className="topbar">
         <Brand href="/" />
         <div className="tf-bar">

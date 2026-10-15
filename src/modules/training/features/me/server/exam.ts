@@ -8,6 +8,7 @@ import {
 } from "@/modules/training/shared/questions";
 import { docChecks, outlineLessons, readOutline } from "@/modules/training/shared/lessons";
 import { finishAssignment, mine, type Db } from "@/modules/training/features/me/server/course";
+import { rememberExamMisses, rememberMiss } from "@/modules/training/features/me/server/refresher";
 
 /** Quizzes and the final exam in Turnfin Me (docs/training.md, e-learning
  *  phase 2). Only ever the signed-in person's own assignment. The key never
@@ -41,6 +42,8 @@ export async function checkQuizAnswer(userId: string, assignmentId: string, less
   const question = lesson ? outline!.questions.find((q) => q.id === questionId && (q.sectionId === section?.id || docChecks(lesson.body).includes(q.id))) : null;
   if (!question) return null;
   const correct = isCorrect(question, cleanAnswer(question, raw));
+  // A miss comes back in their daily refresher (phase 6).
+  if (!correct && !giveUp) await rememberMiss(prisma, { userId, assignmentId, versionId: found!.version!.id, questionId });
   return { correct, explanation: correct || giveUp ? question.explanation : "" };
 }
 
@@ -179,6 +182,7 @@ async function submitAttempt(tx: Db, me: Person, found: Found, attempt: Attempt,
   } });
   await logAudit({ actorId: me.id, actorName: me.name, action: "update", entity: "TrainingAssignment", entityId: found.row.id,
     summary: `${verb} attempt ${attempt.number} of the final exam: ${mark.correct} of ${mark.total} (${mark.percent}%), ${mark.passed ? "passed" : "not passed"}` }, tx);
+  if (mark.passed) await rememberExamMisses(tx, me.id, found.row.id, found.version!.id, mark.results);
   const lessonsDone = outlineLessons(outline).every((l) => found.done.has(l.id));
   if (mark.passed && found.row.status === "ASSIGNED" && (lessonsDone || outline.exam!.testOut)) {
     await finishAssignment(tx, me, found.row.id, "", found.version!.id);

@@ -32,6 +32,8 @@ model TrainingCourse {
   /// What a trainer watches for at the practical sign-off (phase 5):
   /// [{ id, text, critical }]. Null when there is no checklist.
   observation        Json?
+  /// Staff may enrol themselves from the catalogue in Turnfin Me (phase 6).
+  selfEnrol          Boolean  @default(false)
 
   organisation Organisation            @relation(fields: [orgId], references: [id], onDelete: Restrict)
   grantsType   QualificationType?      @relation(fields: [grantsTypeId], references: [id], onDelete: SetNull)
@@ -268,6 +270,9 @@ model TrainingAssignment {
   progress     TrainingLessonProgress[]
   examAttempts TrainingExamAttempt[]
   evidence     TrainingEvidence[]
+  notes        TrainingLessonNote[]
+  feedback     TrainingFeedback?
+  refreshers   TrainingRefresherCard[]
 
   @@index([userId, status])
   @@index([orgId, status])
@@ -465,4 +470,76 @@ model TrainingHourTarget {
   updatedAt    DateTime @updatedAt
 
   @@map("training_hour_targets")
+}
+
+/// A learner's bookmark and private note on a lesson (phase 6). Private to
+/// them: Work never shows it; HR's export of their record includes it.
+model TrainingLessonNote {
+  id           String   @id @default(cuid())
+  userId       String
+  assignmentId String
+  lessonId     String
+  bookmarked   Boolean  @default(false)
+  note         String   @default("")
+  updatedAt    DateTime @updatedAt
+
+  assignment TrainingAssignment @relation(fields: [assignmentId], references: [id], onDelete: Cascade)
+
+  @@unique([assignmentId, lessonId])
+  @@index([userId])
+  @@map("training_lesson_notes")
+}
+
+/// A learner's rating (1 to 5) of a course they finished and what was unclear
+/// (phase 6). Authors see the average and the comments without names.
+model TrainingFeedback {
+  id           String   @id @default(cuid())
+  orgId        String
+  assignmentId String   @unique
+  userId       String
+  courseId     String
+  versionId    String?
+  rating       Int
+  unclear      String   @default("")
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  assignment TrainingAssignment @relation(fields: [assignmentId], references: [id], onDelete: Cascade)
+
+  @@index([courseId])
+  @@map("training_feedback")
+}
+
+/// A question a learner missed, brought back in their daily refresher
+/// (phase 6). A right answer moves it up a box (1, 2, 4, 8, 16 days apart);
+/// a wrong one sends it back to box 1.
+model TrainingRefresherCard {
+  id           String    @id @default(cuid())
+  userId       String
+  assignmentId String
+  versionId    String
+  questionId   String
+  box          Int       @default(1)
+  dueOn        DateTime  @db.Date
+  misses       Int       @default(1)
+  lastSeenAt   DateTime?
+  createdAt    DateTime  @default(now())
+
+  assignment TrainingAssignment @relation(fields: [assignmentId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, versionId, questionId])
+  @@index([userId, dueOn])
+  @@map("training_refresher_cards")
+}
+
+/// Refresher questions a learner answered on a day, for their streak (phase 6).
+model TrainingRefresherDay {
+  id       String   @id @default(cuid())
+  userId   String
+  on       DateTime @db.Date
+  answered Int      @default(0)
+  correct  Int      @default(0)
+
+  @@unique([userId, on])
+  @@map("training_refresher_days")
 }

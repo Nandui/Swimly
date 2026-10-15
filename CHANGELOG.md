@@ -4,6 +4,17 @@ Patch notes for everyone who uses Turnfin at the swim school, the desk and the o
 
 **How versions are numbered:** the middle number goes up when something new arrives (a module, a screen, a new way of working), and the last number when something is fixed or tidied without changing how you work. This list starts on 3 October 2026, when Turnfin moved to its new look; earlier changes are not listed.
 
+## 1.22.0 · 15 October 2026 · Training: your own space in Turnfin Me
+
+- **Search** all your courses and lessons from the top of My training, and jump straight to the lesson that mentions it.
+- **Bookmark** any lesson and write **your own notes** under it. Find them again under **Saved**. Only you can see your notes.
+- **Today's refresher**: a few questions a day, about two minutes, from questions you got wrong in practice and from courses you have finished. Get one right and it comes back less often; get it wrong and it comes back tomorrow.
+- A **streak** counts the days in a row you learn something, and **badges** mark milestones such as your first course, full marks in an exam or a week in a row.
+- **My record** shows every course you have had, with scores and certificates, sessions and hours. Print it, save it as a PDF or download it for Excel.
+- **Find a course**: courses open to everyone, to enrol on yourself with no deadline. In Training, tick **Open in the course catalogue** in a course's settings to put it there.
+- When you finish a course you can **rate it** and say what was unclear. Whoever builds the course sees **What learners said** under the builder, without names.
+- **Larger text** and **read aloud**: choose the text size and reading speed under More, and tap Read aloud on any lesson to hear it in your phone's own voice.
+
 ## 1.21.0 · 15 October 2026 · Training: practical checklists, learning paths, sessions and in-service hours
 
 - Courses signed off in person can have a **practical checklist**: the steps the trainer watches for, with the ones that **must be seen** marked. Staff see the list in Turnfin Me before the day.

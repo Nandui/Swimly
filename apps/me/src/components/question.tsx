@@ -53,17 +53,18 @@ export function answered(question: LearnerQuestion, answer: Answer | null | unde
   return typeof answer === "object" && !Array.isArray(answer) && question.options.every((o) => !!answer[o.id]);
 }
 
-/** A picture from the person's own course, fetched with their sign-in. */
-export function CourseImage({ assignmentId, fileId, alt, className }: { assignmentId: string; fileId: string; alt: string; className?: string }) {
+/** A picture from the person's own course, fetched with their sign-in. `path`
+ *  fetches another picture they may see, such as a catalogue course's cover. */
+export function CourseImage({ assignmentId, fileId, alt, className, path }: { assignmentId: string; fileId: string; alt: string; className?: string; path?: string }) {
   const [url, setUrl] = useState<string | null>(null);
   const [failed, setFailed] = useState(false);
   useEffect(() => {
     let local: string | null = null, live = true;
-    apiFile(`training/${assignmentId}/files/${fileId}`)
+    apiFile(path ?? `training/${assignmentId}/files/${fileId}`)
       .then((blob) => { if (live) { local = URL.createObjectURL(blob); setUrl(local); } })
       .catch(() => { if (live) setFailed(true); });
     return () => { live = false; if (local) URL.revokeObjectURL(local); };
-  }, [assignmentId, fileId]);
+  }, [assignmentId, fileId, path]);
   if (failed) return <span className="caption muted">This picture didn’t load.</span>;
   // eslint-disable-next-line @next/next/no-img-element -- a private image from the staff API
   return url ? <img className={className ?? "question-image"} src={url} alt={alt} /> : <span className="lesson-image-placeholder" role="img" aria-label="Loading picture" />;

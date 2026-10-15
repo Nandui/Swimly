@@ -1,7 +1,9 @@
 "use client";
 
 import Link from "next/link";
-import { CalendarDays, ChevronRight, GraduationCap, Route, Timer } from "lucide-react";
+import { useRouter } from "next/navigation";
+import { useState, type FormEvent } from "react";
+import { Bookmark, CalendarDays, ChevronRight, FileText, Flame, GraduationCap, LibraryBig, Route, Search, Timer } from "lucide-react";
 import { Frame } from "@/components/frame";
 import { CourseImage } from "@/components/question";
 import { EmptyRows, LoadError, Loading, Tag, useLoad } from "@/components/ui";
@@ -89,12 +91,50 @@ function OnTheJob({ plan }: { plan: Plan }) {
   );
 }
 
+type Refresher = { goal: number; answered: number; questions: unknown[]; streak: { current: number; today: boolean } };
+
+/** Search, today's refresher and the rest of the learner's own space (phase 6). */
+function LearnerTools({ refresher }: { refresher: Refresher | null }) {
+  const router = useRouter();
+  const [q, setQ] = useState("");
+  function search(event: FormEvent) {
+    event.preventDefault();
+    if (q.trim().length >= 2) router.push(`/training/search?q=${encodeURIComponent(q.trim())}`);
+  }
+  const waiting = refresher?.questions.length ?? 0;
+  const streak = refresher?.streak.current ?? 0;
+  const tiles = [
+    { href: "/training/refresher", icon: Flame, title: "Today’s refresher",
+      hint: !refresher ? "Two minutes of questions" : waiting ? `${waiting} ${waiting === 1 ? "question" : "questions"} waiting${streak ? ` · ${streak}-day streak` : ""}` : `Done for today${streak ? ` · ${streak}-day streak` : ""}` },
+    { href: "/training/saved", icon: Bookmark, title: "Saved", hint: "Bookmarks and your notes" },
+    { href: "/training/catalogue", icon: LibraryBig, title: "Find a course", hint: "Courses open to everyone" },
+    { href: "/training/record", icon: FileText, title: "My record", hint: "Every course, score and certificate" },
+  ];
+  return (
+    <>
+      <form role="search" className="search-row" onSubmit={search}>
+        <label htmlFor="training-search" className="sr-only">Search my training</label>
+        <input id="training-search" type="search" className="input" value={q} onChange={(e) => setQ(e.target.value)} placeholder="Search my courses and lessons" maxLength={80} />
+        <button type="submit" className="button" disabled={q.trim().length < 2}><Search aria-hidden="true" /><span className="sr-only">Search</span></button>
+      </form>
+      <nav aria-label="My learning">
+        <ul className="learn-tiles">
+          {tiles.map(({ href, icon: Icon, title, hint }) => (
+            <li key={href}><Link href={href} className="learn-tile"><span className="pc-tile-icon"><Icon aria-hidden="true" /></span><strong>{title}</strong><span className="caption">{hint}</span></Link></li>
+          ))}
+        </ul>
+      </nav>
+    </>
+  );
+}
+
 /** "3 of 8 lessons" for a course built from lessons, while it is open. */
 const lessonsHint = (t: Item) => t.progress && t.state !== "completed" ? `${t.progress.done} of ${t.progress.total} lessons` : null;
 
 export default function TrainingPage() {
   const { data, error, reload } = useLoad<{ items: Item[] }>("training");
   const { data: plan } = useLoad<Plan>("training/plan");
+  const { data: refresher } = useLoad<Refresher>("training/refresher");
   const open = data?.items.filter((t) => t.state !== "completed" && t.state !== "cancelled") ?? [];
   const done = data?.items.filter((t) => t.state === "completed") ?? [];
   const list = (items: Item[], empty: string) => items.length === 0 ? <EmptyRows>{empty}</EmptyRows> : (
@@ -110,6 +150,7 @@ export default function TrainingPage() {
     <Frame title="My training">
       <div className="stack">
         <div className="stack-sm"><h1>My training</h1><p className="muted">Courses assigned to you. Open one to work through its lessons; it remembers where you got to.</p></div>
+        <LearnerTools refresher={refresher} />
         {error ? <LoadError error={error} retry={reload} /> : !data ? <Loading /> : (
           <>
             <section className="pc-panel" aria-labelledby="t-open"><div className="pc-panel-head"><h2 id="t-open">To do</h2></div>{list(open, "No training to do right now.")}</section>
