@@ -12,6 +12,11 @@ Patch notes for everyone who uses Turnfin at the swim school, the desk and the o
 - Answers save as people go, so nothing is lost if their phone locks. Passing the exam finishes the course, or sends it to a trainer for sign-off if it is a practical course. After a pass they see every answer explained; after a fail they see which parts of the course to go over again.
 - When someone has used all their attempts, a trainer can give them **another attempt** from their training page, where their scores now show too.
 - Under **Final exam** in the course builder you can see how many people passed and which questions people get wrong most, which often means a lesson needs to explain something better.
+## 1.17.5 · 15 October 2026 · Purchasing: a better-looking email to suppliers
+
+- The purchase order email now has the LeisureWorld logo at the top, with the order number in large type underneath.
+- The order's details, the products and their quantities, the note and the **Invoices** box are laid out more clearly, and it reads well on a phone.
+- Nothing else changes: there are still no prices, and **Send test to me** shows exactly the same email.
 
 ## 1.17.4 · 15 October 2026 · Purchasing: new order numbers
 

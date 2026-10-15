@@ -25,11 +25,21 @@ export const INVOICE_ADDRESS = "invoices@leisureworldcork.com";
 const escape = (value: string) => value.replace(/[&<>"']/g, (c) => `&#${c.charCodeAt(0)};`);
 const oneLine = (value: string) => value.replace(/[\r\n]+/g, " ").trim();
 
-/* Poolside Clear v2 hex values, copied from src/app/theme/poolside.css (mail clients
-   cannot read CSS variables), as in the Academy and Turnfin Me emails. */
-const INK = "color:#0f1b2d", MUTED = "color:#56627a", BODY = "font-size:14px;line-height:20px", RULE = "border-bottom:1px solid #e3e8ef";
+/** The LeisureWorld logo travels inside the email (assets/email, as in the parent emails),
+ *  so mail clients show it without loading anything from the web. */
+export const PO_EMAIL_LOGO_CID = "leisureworld-logo@turnfin";
 
-export function orderEmail(o: OrderEmailInput, test = false) {
+/* Literal colours because mail clients cannot read CSS variables. The navy band and the
+   white logo match the parent emails; the rest is Poolside Clear v2 (src/app/theme/poolside.css). */
+const NAVY = "#07345E", INK = "color:#0f1b2d", MUTED = "color:#56627a", FAINT = "color:#8a94a6";
+const FONT = "font-family:'Plus Jakarta Sans',-apple-system,BlinkMacSystemFont,'Segoe UI',Arial,sans-serif";
+const BODY = "font-size:15px;line-height:24px", SMALL = "font-size:13px;line-height:20px";
+const EYEBROW = "font-size:11px;line-height:16px;font-weight:700;letter-spacing:0.14em;text-transform:uppercase";
+const HAIRLINE = "border-top:1px solid #edf1f5";
+
+/** `logoSrc` is the content ID by default; the preview page passes a web address instead,
+ *  because a browser cannot resolve `cid:`. */
+export function orderEmail(o: OrderEmailInput, test = false, logoSrc = `cid:${PO_EMAIL_LOGO_CID}`) {
   const from = o.organisation || o.site;
   const deliverTo = [o.organisation, o.site].filter(Boolean).join(" ");
   const subject = oneLine(`${test ? "Test: " : ""}Purchase order ${o.number} from ${from}`);
@@ -45,6 +55,8 @@ export function orderEmail(o: OrderEmailInput, test = false) {
   const invoices = `Please submit all invoices for this order to ${INVOICE_ADDRESS}, quoting ${o.number}.`;
   const quote = `Please quote ${o.number} on your delivery note. Reply to this email with any questions about the order; it goes to ${o.sender.name}.`;
   const banner = `Test email. This is exactly what ${o.supplier.name} will receive at ${o.supplier.email || "their email address (none saved yet)"}. It was sent only to you.`;
+  const items = o.lines.reduce((n, l) => n + l.quantity, 0);
+  const preheader = `${o.lines.length} ${o.lines.length === 1 ? "line" : "lines"}${o.neededBy ? `, needed by ${o.neededBy}` : ""}. Invoices to ${INVOICE_ADDRESS}.`;
 
   const text = [
     ...(test ? [banner, ""] : []),
@@ -56,53 +68,82 @@ export function orderEmail(o: OrderEmailInput, test = false) {
     "", quote, "", o.sender.name, from,
   ].join("\r\n");
 
-  const cell = (v: string, right = false, strong = false) =>
-    `<td style="padding:8px 6px;${RULE};${BODY};${strong ? INK : MUTED};${right ? "text-align:right;white-space:nowrap;font-variant-numeric:tabular-nums" : "text-align:left"}">${escape(v)}</td>`;
-  const head = (v: string, right = false) =>
-    `<th style="padding:8px 6px;${RULE};font-size:12px;line-height:16px;font-weight:600;${MUTED};text-align:${right ? "right" : "left"}">${escape(v)}</th>`;
-  const product = (l: OrderEmailInput["lines"][number]) =>
-    `<td style="padding:8px 6px;${RULE};${BODY};${INK};text-align:left">${escape(l.name)}${lineDetails(l) ? `<br><span style="font-size:12px;line-height:16px;${MUTED}">${escape(lineDetails(l))}</span>` : ""}</td>`;
+  // The facts after the order number, which already heads the email.
+  const fact = ([k, v]: [string, string], first: boolean) =>
+    `<tr><td class="po-fact-k" style="padding:12px 16px 12px 0;${first ? "" : HAIRLINE + ";"}${SMALL};${MUTED};white-space:nowrap;vertical-align:top;width:120px">${escape(k)}</td>` +
+    `<td class="po-fact-v" style="padding:12px 0;${first ? "" : HAIRLINE + ";"}${BODY};${INK};font-weight:600;vertical-align:top">${escape(v)}</td></tr>`;
+  const line = (l: OrderEmailInput["lines"][number], i: number) => {
+    const meta = [lineDetails(l), l.code ? `Code ${l.code}` : "", l.unit || "Each"].filter(Boolean).join(" · ");
+    return `<tr><td style="padding:16px 12px 16px 0;${i ? HAIRLINE + ";" : ""}vertical-align:top">` +
+      `<p style="margin:0;${BODY};${INK};font-weight:600">${escape(l.name)}</p>` +
+      `<p style="margin:2px 0 0;${SMALL};${MUTED}">${escape(meta)}</p></td>` +
+      `<td align="right" style="padding:16px 0;${i ? HAIRLINE + ";" : ""}vertical-align:top;white-space:nowrap">` +
+      `<span style="display:inline-block;min-width:24px;padding:4px 12px;border-radius:999px;background-color:#eef3fb;color:${NAVY};font-size:15px;line-height:22px;font-weight:700;text-align:center;font-variant-numeric:tabular-nums">${l.quantity}</span></td></tr>`;
+  };
   const p = (v: string, style = "") => `<p style="margin:0 0 16px;${BODY};${INK};${style}">${escape(v)}</p>`;
+  const eyebrow = (v: string, colour = FAINT) => `<p style="margin:0 0 8px;${EYEBROW};${colour}">${escape(v)}</p>`;
 
   const html = `<!DOCTYPE html>
 <html lang="en">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="color-scheme" content="light">
+<meta name="supported-color-schemes" content="light">
 <title>${escape(subject)}</title>
 <style>
-@media (max-width: 480px) {
-  .po-page { padding:8px 0 !important; }
-  .po-panel { padding:20px 12px !important; }
-  .po-lines td, .po-lines th { padding-left:3px !important; padding-right:3px !important; }
+@media (max-width: 520px) {
+  .po-outer { padding:12px 8px !important; }
+  .po-band { padding:28px 20px 24px !important; }
+  .po-body { padding:28px 20px 8px !important; }
+  .po-foot { padding:0 20px 28px !important; }
+  .po-fact-k, .po-fact-v { display:block !important; width:auto !important; }
+  .po-fact-k { padding:12px 0 0 !important; }
+  .po-fact-v { padding:2px 0 12px !important; border-top:0 !important; }
+  .po-number { font-size:28px !important; line-height:34px !important; }
 }
 </style>
+<!--[if mso]><style>body, table, td, p, a, span { font-family: Arial, sans-serif !important; }</style><![endif]-->
 </head>
-<body class="po-page" style="margin:0;padding:24px 16px;background-color:#eef2f6;font-family:'Plus Jakarta Sans',Arial,sans-serif;${INK};-webkit-text-size-adjust:100%">
-<table role="presentation" width="100%" cellspacing="0" cellpadding="0" border="0" style="background-color:#eef2f6"><tr><td align="center">
-<table role="presentation" width="100%" cellspacing="0" cellpadding="0" border="0" style="max-width:640px;background-color:#ffffff;border-radius:24px"><tr><td class="po-panel" style="padding:32px 24px;text-align:left">
-${test ? `<p style="margin:0 0 24px;padding:12px 16px;border-radius:12px;background-color:#fff4d6;${BODY};color:#6b4a00">${escape(banner)}</p>` : ""}
-<p style="margin:0 0 4px;font-size:12px;line-height:16px;font-weight:600;letter-spacing:0.04em;text-transform:uppercase;${MUTED}">${escape(from)}</p>
-<p style="margin:0 0 24px;font-size:22px;line-height:28px;font-weight:700;${INK};font-variant-numeric:tabular-nums">Purchase order ${escape(o.number)}</p>
+<body style="margin:0;padding:0;background-color:#eef2f6;${FONT};${INK};-webkit-text-size-adjust:100%">
+<div style="display:none;font-size:1px;line-height:1px;max-height:0;max-width:0;opacity:0;overflow:hidden;mso-hide:all">${escape(preheader)}</div>
+<table role="presentation" width="100%" cellspacing="0" cellpadding="0" border="0" bgcolor="#eef2f6" style="background-color:#eef2f6"><tr><td align="center" class="po-outer" style="padding:40px 16px">
+<!--[if mso]><table role="presentation" width="640" cellspacing="0" cellpadding="0" border="0"><tr><td><![endif]-->
+${test ? `<table role="presentation" width="100%" cellspacing="0" cellpadding="0" border="0" style="max-width:640px;margin:0 0 12px"><tr><td style="padding:14px 18px;border-radius:16px;background-color:#fff4d6;border:1px solid #f3dc9b;${SMALL};color:#6b4a00;text-align:left"><strong>Test email.</strong> ${escape(banner.replace(/^Test email\. /, ""))}</td></tr></table>` : ""}
+<table role="presentation" width="100%" cellspacing="0" cellpadding="0" border="0" bgcolor="#e2e8f0" style="max-width:640px;background-color:#e2e8f0;border-radius:30px"><tr><td style="padding:6px">
+<table role="presentation" width="100%" cellspacing="0" cellpadding="0" border="0" bgcolor="#ffffff" style="background-color:#ffffff;border-radius:24px">
+<tr><td class="po-band" align="left" bgcolor="${NAVY}" style="padding:32px 40px 28px;background-color:${NAVY};border-radius:24px 24px 0 0">
+<img src="${escape(logoSrc)}" width="120" height="60" alt="LeisureWorld" style="display:block;width:120px;height:60px;border:0;color:#ffffff;font-size:18px;font-weight:700">
+<p style="margin:28px 0 6px;${EYEBROW};color:#9fc1e3">Purchase order${from ? ` · ${escape(from)}` : ""}</p>
+<p class="po-number" style="margin:0;font-size:34px;line-height:40px;font-weight:700;letter-spacing:-0.01em;color:#ffffff">${escape(o.number)}</p>
+<p style="margin:10px 0 0;${SMALL};color:#c9dbee">${o.lines.length} ${o.lines.length === 1 ? "line" : "lines"}, ${items} ${items === 1 ? "item" : "items"}${o.neededBy ? ` · Needed by ${escape(o.neededBy)}` : ""}</p>
+</td></tr>
+<tr><td class="po-body" style="padding:36px 40px 8px;text-align:left">
 ${p(greeting)}
-${p(lead)}
-<table role="presentation" cellspacing="0" cellpadding="0" border="0" style="margin:0 0 24px">
-${facts.map(([k, v]) => `<tr><td style="padding:2px 16px 2px 0;${BODY};${MUTED};white-space:nowrap">${escape(k)}</td><td style="padding:2px 0;${BODY};${INK};font-weight:600">${escape(v)}</td></tr>`).join("\n")}
+${p(lead, "margin-bottom:28px")}
+<table role="presentation" width="100%" cellspacing="0" cellpadding="0" border="0" bgcolor="#f6f8fb" style="background-color:#f6f8fb;border-radius:18px;margin:0 0 32px"><tr><td style="padding:8px 20px">
+<table role="presentation" width="100%" cellspacing="0" cellpadding="0" border="0">
+${facts.slice(1).map((f, i) => fact(f, i === 0)).join("\n")}
 </table>
-<table class="po-lines" width="100%" cellspacing="0" cellpadding="0" border="0" style="margin:0 0 16px;border-collapse:collapse">
-<thead><tr>${head("Product")}${head("Code")}${head("Unit")}${head("Qty", true)}</tr></thead>
-<tbody>
-${o.lines.map((l) => `<tr>${product(l)}${cell(l.code || "–")}${cell(l.unit || "Each")}${cell(String(l.quantity), true, true)}</tr>`).join("\n")}
-</tbody>
+</td></tr></table>
+<table role="presentation" width="100%" cellspacing="0" cellpadding="0" border="0"><tr><td align="left">${eyebrow("What we need")}</td><td align="right">${eyebrow("Qty")}</td></tr></table>
+<table role="presentation" width="100%" cellspacing="0" cellpadding="0" border="0" style="margin:0 0 24px;border-top:2px solid #0f1b2d;border-bottom:1px solid #edf1f5">
+${o.lines.map(line).join("\n")}
 </table>
-${o.note ? `<p style="margin:16px 0 4px;font-size:12px;line-height:16px;font-weight:600;${MUTED}">Note</p>${p(o.note, "white-space:pre-line")}` : ""}
-<table role="presentation" width="100%" cellspacing="0" cellpadding="0" border="0" style="margin:24px 0 16px"><tr><td style="padding:16px;border-radius:12px;background-color:#e8f0fe;border:1px solid #b9cdf7">
-<p style="margin:0 0 4px;font-size:12px;line-height:16px;font-weight:700;letter-spacing:0.04em;text-transform:uppercase;color:#1a4fbf">Invoices</p>
-<p style="margin:0;${BODY};${INK}">Please submit all invoices for this order to <a href="mailto:${INVOICE_ADDRESS}" style="color:#1a4fbf;font-weight:700">${INVOICE_ADDRESS}</a>, quoting <strong>${escape(o.number)}</strong>.</p>
+${o.note ? `<table role="presentation" width="100%" cellspacing="0" cellpadding="0" border="0" style="margin:0 0 24px"><tr><td style="padding:2px 0 2px 16px;border-left:3px solid ${NAVY}">${eyebrow("Note")}${p(o.note, "margin:0;white-space:pre-line")}</td></tr></table>` : ""}
+<table role="presentation" width="100%" cellspacing="0" cellpadding="0" border="0" style="margin:8px 0 28px"><tr><td bgcolor="#e8f0fe" style="padding:20px 22px;border-radius:18px;background-color:#e8f0fe;border:1px solid #b9cdf7">
+${eyebrow("Invoices", "color:#1a4fbf")}
+<p style="margin:0;${BODY};${INK}">Please submit all invoices for this order to <a href="mailto:${INVOICE_ADDRESS}" style="color:#1a4fbf;font-weight:700;text-decoration:underline">${INVOICE_ADDRESS}</a>, quoting <strong>${escape(o.number)}</strong>.</p>
 </td></tr></table>
-<p style="margin:0 0 16px;${BODY};${MUTED}">${escape(quote)}</p>
-<p style="margin:0;${BODY};${INK}">${escape(o.sender.name)}<br>${escape(from)}</p>
+${p(quote, `${MUTED}`)}
+</td></tr>
+<tr><td class="po-foot" style="padding:0 40px 36px;text-align:left">
+<p style="margin:0;padding-top:20px;${HAIRLINE};${BODY};${INK}"><strong>${escape(o.sender.name)}</strong><br><span style="${MUTED}">${escape(from)}</span></p>
+</td></tr>
+</table>
 </td></tr></table>
+<!--[if mso]></td></tr></table><![endif]-->
+<p style="margin:20px 0 0;${SMALL};${FAINT};text-align:center">Purchase order ${escape(o.number)} · ${escape(deliverTo)}</p>
 </td></tr></table>
 </body>
 </html>`;

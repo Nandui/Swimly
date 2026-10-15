@@ -8,6 +8,8 @@ const nextConfig: NextConfig = {
     "/whats-new": ["./CHANGELOG.md"],
     "/help/images/*": ["./assets/help/*.png"],
     "/api/parent/v1/**": ["./assets/email/*.png"],
+    // Purchase order emails carry the logo; the server action runs from the order pages.
+    "/purchasing/**": ["./assets/email/*.png"],
   },
   experimental: {
     // A 2 MB curriculum image plus multipart form overhead.

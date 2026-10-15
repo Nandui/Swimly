@@ -37,6 +37,7 @@ export async function orderEmailContext(id: string, who: PurchasingActor) {
   return {
     order, emailsOn, copyTo, sender, input,
     mayEmail: order.status === "approved" && order.number !== null && (mine || who.manage || covers(request)),
-    preview: input ? orderEmail(input) : null,
+    // The preview shows the logo from Turnfin itself; the sent email carries it inside.
+    preview: input ? orderEmail(input, false, "/purchasing/email-logo") : null,
   };
 }
