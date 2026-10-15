@@ -17,14 +17,14 @@ import type { UploadedFile } from "@/modules/training/features/builder/component
  *  Scenario, Flashcards and Checklist. Each edits the lesson's `data`; the
  *  server cleans it again on save (`cleanLessonData`). */
 
-const id = () => crypto.randomUUID().replace(/-/g, "").slice(0, 8);
-function moved<T>(rows: T[], index: number, by: -1 | 1) {
+export const id = () => crypto.randomUUID().replace(/-/g, "").slice(0, 8);
+export function moved<T>(rows: T[], index: number, by: -1 | 1) {
   const next = [...rows];
   [next[index], next[index + by]] = [next[index + by], next[index]];
   return next;
 }
 
-function RowTools({ label, index, count, min, onMove, onRemove }: { label: string; index: number; count: number; min: number; onMove: (by: -1 | 1) => void; onRemove: () => void }) {
+export function RowTools({ label, index, count, min, onMove, onRemove }: { label: string; index: number; count: number; min: number; onMove: (by: -1 | 1) => void; onRemove: () => void }) {
   return (
     <span className="flex shrink-0 gap-1">
       <Button type="button" variant="ghost" size="icon" className="size-11" aria-label={`Move ${label} up`} disabled={index === 0} onClick={() => onMove(-1)}><ArrowUp aria-hidden="true" /></Button>

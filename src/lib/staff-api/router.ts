@@ -8,13 +8,13 @@ import * as records from "@/lib/staff-api/records";
 const ROUTES: Record<string, string[]> = {
   "auth/request-code": ["POST"], "auth/verify-code": ["POST"], "auth/confirm": ["POST"], "auth/confirm/verify": ["POST"], "auth/logout": ["POST"],
   home: ["GET"], me: ["GET", "PATCH"], qualifications: ["GET"], "qualifications/evidence": ["POST"],
-  training: ["GET"], reading: ["GET"], shifts: ["GET"], hr: ["GET"], notifications: ["GET", "PUT"],
+  training: ["GET"], "training/plan": ["GET"], reading: ["GET"], shifts: ["GET"], hr: ["GET"], notifications: ["GET", "PUT"],
 };
 
 export async function handleStaffRequest(request: Request, path: string[]) {
   return staffResponse(request, async () => {
     const route = path.join("/"), method = request.method;
-    const training = /^training\/([A-Za-z0-9_-]+)(\/complete)?$/.exec(route);
+    const training = route === "training/plan" ? null : /^training\/([A-Za-z0-9_-]+)(\/complete)?$/.exec(route);
     const lesson = /^training\/([A-Za-z0-9_-]+)\/lessons\/([A-Za-z0-9_-]+)(\/complete|\/check)?$/.exec(route);
     const exam = /^training\/([A-Za-z0-9_-]+)\/exam(?:\/(start|answers|submit|attempts\/([1-9][0-9]{0,2})))?$/.exec(route);
     const trainingFile = /^training\/([A-Za-z0-9_-]+)\/files\/([A-Za-z0-9_-]+)$/.exec(route);
@@ -38,6 +38,7 @@ export async function handleStaffRequest(request: Request, path: string[]) {
     if (route === "qualifications") return json(await records.qualifications(identity));
     if (route === "qualifications/evidence") return json(await records.uploadEvidence(request, identity), 201);
     if (route === "training") return json(await records.training(identity));
+    if (route === "training/plan") return json(await records.trainingPlan(identity));
     if (training) {
       const id = parseInput(idSchema, training[1]);
       return json(training[2] ? await records.completeTraining(request, identity, id) : await records.trainingItem(identity, id));

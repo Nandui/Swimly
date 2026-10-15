@@ -204,6 +204,62 @@ and **Check a certificate** (`/training/check`).
   certificate** finds the person, course, date and who signed it off; it shows
   nothing else about them.
 
+## Skills on the job (e-learning, phase 5)
+
+Four pieces for the training that happens on the pool deck and in the
+classroom rather than on a phone. All of them are Training's own tables;
+nothing here reads another module.
+
+- **Practical checklists**: a course that a trainer signs off in person can have
+  up to 40 steps to watch for (`TrainingCourse.observation`), each optionally
+  **Must be seen**. Built under **Practical checklist** in the course builder
+  (Author level). In **Sign-off**, **Observe** opens a tablet page
+  (`/training/sign-off/[id]`): every step is marked Met, Not yet or Not needed
+  (a must-see step can't be Not needed), with a note on any step. **Sign off**
+  needs every step marked and none Not yet; **Send back** stores the marks and,
+  unless the trainer writes more, sends the steps not met yet as what to
+  practise. The marks are kept on the assignment (`TrainingAssignment.observation`)
+  and shown on the person's record and in Turnfin Me. Up to 6 **photos**
+  (JPEG, PNG or WebP, 4 MB each) can be added while it waits for sign-off
+  (`training_evidence`); they are read with `training.records.read` for that
+  person (`/training/evidence/[id]`) and never sent to Turnfin Me.
+- **Learning paths** (`/training/paths`): courses in order, each due a number
+  of days after the start date (0 to 365, up to 30 courses). Building them is
+  the Author level. **Put people on it** (Assign training) assigns every course
+  they haven't finished or got open, due from the date they start, and links
+  each assignment to the enrolment (`pathEnrolmentId`). A person is on a path
+  once at a time. **Take off** cancels the courses the path gave them that they
+  haven't handed in. Changing a path later doesn't change what people on it were
+  given. Progress per person: done, open, overdue, or missing (cancelled).
+- **Sessions** (`/training/sessions`): a classroom or poolside session on a
+  date and time (Irish time), at a site and room, with a trainer, an optional
+  number of places, an optional course it completes and the qualification whose
+  hours it counts. Planning and booking need Assign training for those people;
+  the **register** opens an hour before the start and needs Sign off training
+  for them. **Close the register** (after the start, everyone marked, never by
+  someone it would credit) credits each attendee the session's minutes as
+  in-service hours, completes its course for them (creating the assignment if
+  they had none) and records the course's qualification. Absent people get
+  nothing. Cancelling keeps the bookings on record. Closed and cancelled
+  sessions can't change.
+- **In-service hours** (`/training/hours`): the Author level sets how many hours
+  a qualification needs over a rolling window (for example a pool lifeguard
+  qualification, 20 hours in 12 months; `training_hour_targets`). Hours come from
+  closed registers or are logged by hand (Sign off training for those people,
+  never yourself, never a day to come). Only hours logged against that
+  qualification count, and only for people holding it in date. A wrong entry is
+  removed with a reason (stamped, not deleted).
+
+Turnfin Me shows the person their own paths, sessions, hours and what the
+trainer will watch for on a practical (`training/plan`, and `practical` on
+`training/{id}`). The home page shows **Registers to close** to trainers.
+Every change writes an audit row (`TrainingSession`, `TrainingHours`,
+`TrainingHourTarget`, `TrainingPath`, `TrainingPathEnrolment`,
+`TrainingEvidence`). HR's subject export includes them as `trainingOnTheJob`.
+
+Not built yet from the plan: reminders before a session, waiting lists for a
+full session, and recurring sessions.
+
 ## Expiring qualifications
 
 `/training/expiring` lists qualifications that have expired or expire within 60

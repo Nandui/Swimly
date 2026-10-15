@@ -30,7 +30,7 @@ import { ImportQuestions } from "@/modules/training/features/builder/components/
 
 export type ExamReport = { sittings: number; passed: number; questions: Record<string, { asked: number; missed: number }> };
 
-function useAct() {
+export function useAct() {
   const router = useRouter();
   const [pending, start] = useTransition();
   const act = (run: () => Promise<{ ok: boolean; error?: string }>, after?: () => void) => start(async () => {

@@ -3,5 +3,5 @@
  *  training through it, and takes their courses lesson by lesson. */
 export {
   checkQuizAnswer, completeLessonFor, completeTrainingFor, myCertificate, myCourse, myCourseFile, myExam, myExamPaper, myExamResult, myLesson, myTraining,
-  saveExamAnswer, startExam, submitExam, trainingFileResponse, trainingReminderItems,
+  myPlan, myPractical, saveExamAnswer, startExam, submitExam, trainingFileResponse, trainingReminderItems,
 } from "@/modules/training/features/me";

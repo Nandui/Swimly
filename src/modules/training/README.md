@@ -8,7 +8,10 @@ The rules for courses, assignments, sign-offs and certificates are in [docs/trai
 - `courses` — training courses: create, change settings, archive, and the qualification each grants (`/training/courses`).
 - `builder` — building a course from sections and lessons (reading, video, file, quiz, scenario, flashcards, checklist, audio) with interactive blocks and knowledge checks, each section's questions (pasted from a spreadsheet too), the final exam and how it has gone, templates, duplicating and copying in, the cover, review comments, preview and publishing numbered versions with a note and optional retake (`/training/courses/[id]`, `/training/files`).
 - `assignments` — assigning training, following and cancelling it, giving another exam attempt, and one person's training and exam scores (`/training`, `/training/people/[id]`).
-- `sign-off` — practical sign-offs: confirming a skill shown in person, or returning it for practice (`/training/sign-off`).
+- `sign-off` — practical sign-offs: confirming a skill shown in person, or returning it for practice; observing against the course's checklist on a tablet, with photos (`/training/sign-off`, `/training/sign-off/[id]`, `/training/evidence/[id]`).
+- `paths` — learning paths: courses in order with due days from a start date, putting people on one and taking them off (`/training/paths`).
+- `sessions` — classroom and poolside sessions: places, bookings, the register, and closing it to credit hours and complete the course (`/training/sessions`).
+- `hours` — in-service hours against what each qualification needs, logged by hand or from a register (`/training/hours`).
 - `certificates` — checking certificates people upload in Turnfin Me (`/training/certificates`).
 - `compliance` — training rules that assign courses by position, role, department and site and renew them, their daily run, the training matrix and its download, and checking a certificate code (`/training/rules`, `/training/matrix`, `/training/check`, `/api/cron/training`).
 - `expiring` — qualifications expired or due soon (`/training/expiring`).
@@ -25,6 +28,7 @@ The rules for courses, assignments, sign-offs and certificates are in [docs/trai
 - `checkQuizAnswer(...)`, `myExam(person, id)`, `myExamPaper(person, id)`, `startExam(person, id)`, `saveExamAnswer(...)`, `submitExam(person, id, attemptId)`, `myExamResult(userId, id, number)` — quizzes and the final exam in Turnfin Me.
 - `myCertificate(user, id)` — the person's certificate for finished training, with its lasting code, for Turnfin Me.
 - `trainingReminderItems(on)` — training due soon, for Turnfin Me's reminder digest.
+- `myPlan(userId, orgId)`, `myPractical(userId, id)` — the person's own paths, sessions and hours, and what a trainer watches for on their practical, for Turnfin Me.
 
 ## Data owned
 Declared in `prisma/schema/training.prisma` (table names kept, ADR 0002):
@@ -38,6 +42,10 @@ Declared in `prisma/schema/training.prisma` (table names kept, ADR 0002):
 - `training_exam_attempts` — every exam sitting: its paper, answers and marks.
 - `training_review_comments` — comments on a course's draft, and who marked them done.
 - `training_rules` — one per course: who must take it, days to finish, and how often it renews.
+- `training_evidence` — photos a trainer took at a practical sign-off.
+- `training_paths`, `training_path_steps`, `training_path_enrolments` — learning paths, their courses in order, and who is on each.
+- `training_sessions`, `training_session_places` — sessions and who is booked, attended or absent.
+- `training_hours`, `training_hour_targets` — in-service hours logged, and how many each qualification needs.
 
 Training also reads and writes Core's qualification records (`Qualification`, `QualificationEvidence`, `QualificationType`) and reads `User`, `Club` and `Position`. Qualifications are Core's (ADR 0001); moving these reads onto Core functions is phase 3 of [MIGRATION.md](../../../docs/architecture/MIGRATION.md).
 
@@ -46,8 +54,8 @@ Training also reads and writes Core's qualification records (`Qualification`, `Q
 - Listens to: none.
 
 ## Registration (module.ts)
-- Starter page items (`registerHomeCard`; Home counts the ones that need the person): practical sign-offs, certificates to check, qualifications expiring.
-- Person file section `training.open` and subject records `training` (HR's export).
+- Starter page items (`registerHomeCard`; Home counts the ones that need the person): practical sign-offs, registers to close, certificates to check, qualifications expiring.
+- Person file section `training.open` and subject records `training` and `trainingOnTheJob` (HR's export).
 - Menu entry, levels and permissions: `manifest.ts`, listed in `src/app/modules.ts`.
 
 ## Permissions

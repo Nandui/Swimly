@@ -14,6 +14,7 @@ import { cleanDoc, cleanLessonData, isLessonKind, LESSON_KIND_META, lessonFiles,
 import { refresh } from "@/modules/training/shared/writes";
 import { MAX_QUESTIONS, QUESTION_KINDS, normaliseQuestion, questionFiles, questionProblem, QUESTION_KIND_META, readExam, type ExamSettings, type QuestionOption } from "@/modules/training/shared/questions";
 import { loadDraft } from "@/modules/training/features/builder/server/draft";
+import { cleanObservation, MAX_OBSERVATION_STEPS } from "@/modules/training/shared/on-the-job";
 
 /** The course builder (docs/training.md, e-learning phase 1). Building needs
  *  `training.manage` (the Author level and above). The draft is only ever seen
@@ -503,3 +504,28 @@ export async function saveExam(courseId: string, input: ExamSettings | null): Pr
   return result;
 }
 
+
+// ---------------------------------------------------------------------------
+// Practical checklist (phase 5)
+// ---------------------------------------------------------------------------
+
+/** What a trainer watches for at the sign-off. A live setting: it applies to
+ *  the next sign-off; each sign-off keeps its own copy of the steps. */
+export async function saveObservationChecklist(courseId: string, steps: { id?: string; text: string; critical?: boolean }[]): Promise<ActionResult> {
+  const who = await author();
+  if (!who) return fail(NO_RIGHT);
+  if (!Array.isArray(steps) || steps.length > MAX_OBSERVATION_STEPS) return fail(`Keep it to ${MAX_OBSERVATION_STEPS} steps.`);
+  let n = 0;
+  const checklist = cleanObservation(steps, () => `s${Date.now().toString(36)}${(++n).toString(36)}`);
+  const result = await prisma.$transaction(async (tx) => {
+    const course = await courseFor(tx, who, courseId);
+    if (!course) return fail("That course no longer exists.");
+    await tx.trainingCourse.update({ where: { id: courseId }, data: { observation: checklist ? (checklist as unknown as Prisma.InputJsonValue) : Prisma.DbNull } });
+    await audit(who, tx, "update", courseId, checklist
+      ? `Set the practical checklist of ${course.title}: ${checklist.length} steps, ${checklist.filter((s) => s.critical).length} must be seen`
+      : `Removed the practical checklist of ${course.title}`);
+    return ok();
+  });
+  if (result.ok) done(courseId);
+  return result;
+}

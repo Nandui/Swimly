@@ -7,7 +7,7 @@ import { myQualifications } from "@/lib/people/mine";
 import { myDays } from "@/modules/rota";
 import { docsReading } from "@/modules/docs";
 import {
-  checkQuizAnswer, completeLessonFor, completeTrainingFor, myCertificate, myCourse, myCourseFile, myExam, myExamPaper, myExamResult, myLesson, myTraining,
+  checkQuizAnswer, completeLessonFor, completeTrainingFor, myCertificate, myCourse, myCourseFile, myExam, myExamPaper, myExamResult, myLesson, myPlan, myPractical, myTraining,
   saveExamAnswer, startExam, submitExam, trainingFileResponse,
 } from "@/modules/training";
 import { StaffApiError, notFound } from "@/lib/staff-api/errors";
@@ -160,7 +160,31 @@ export async function trainingItem(identity: StaffIdentity, id: string) {
   // A course with lessons sends its outline; one without sends its old text.
   // A final exam, if the course has one: its rules and how they have done. Never the questions.
   const exam = course ? await myExam(me(identity), id) : null;
-  return { ...trainingDto(row), content: course ? "" : row.course.content, sections: course?.sections ?? null, exam: exam && examDto(exam), whatsNew: course?.whatsNew ?? null };
+  // A practical: what the trainer will watch for, and how the last observation went.
+  const practical = row.course.requiresSignoff ? await myPractical(identity.user.id, id) : null;
+  return { ...trainingDto(row), content: course ? "" : row.course.content, sections: course?.sections ?? null, exam: exam && examDto(exam), whatsNew: course?.whatsNew ?? null, practical: practical && practicalDto(practical) };
+}
+
+const practicalDto = (p: NonNullable<Awaited<ReturnType<typeof myPractical>>>) => ({
+  steps: p.steps.map((s) => ({ id: s.id, text: s.text, critical: s.critical })),
+  last: p.last && { observedBy: p.last.observedByName, observedAt: p.last.observedAt, steps: p.last.steps.map((s) => ({ id: s.id, text: s.text, result: s.result, note: s.note })) },
+});
+
+/** Their learning paths, sessions and in-service hours (phase 5). */
+export async function trainingPlan(identity: StaffIdentity) {
+  const plan = await myPlan(identity.user.id, identity.user.orgId);
+  return {
+    paths: plan.paths.map((p) => ({
+      id: p.id, title: p.title, summary: p.summary, startsOn: date(p.startsOn), done: p.done, total: p.total, finishedOn: date(p.finishedOn), overdue: p.overdue,
+      steps: p.steps.map((s) => ({ title: s.title, assignmentId: s.assignmentId, state: s.state.state === "open" ? (s.state.submitted ? "submitted" : s.state.overdue ? "overdue" : "assigned") : s.state.state === "done" ? "completed" : "cancelled",
+        dueOn: s.state.state === "open" ? date(s.state.dueOn) : null, completedOn: s.state.state === "done" ? date(s.state.on) : null })),
+    })),
+    sessions: plan.sessions.map((s) => ({ id: s.id, title: s.title, when: s.when, startsAt: s.startsAt.toISOString(), upcoming: !s.closed && s.startsAt.getTime() > Date.now() - 12 * 3600_000, course: s.course, site: s.site, location: s.location, trainer: s.trainerName, status: s.status, closed: s.closed })),
+    hours: {
+      progress: plan.hours.progress.map((h) => ({ qualification: h.typeName, hours: h.hours, windowMonths: h.windowMonths, minutes: h.minutes, since: date(h.since), met: h.met, percent: h.percent })),
+      log: plan.hours.log.map((l) => ({ id: l.id, on: date(l.on), minutes: l.minutes, topic: l.topic, qualification: l.typeName })),
+    },
+  };
 }
 
 const me = (identity: StaffIdentity) => ({ id: identity.user.id, name: identity.user.name });

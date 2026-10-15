@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { useParams } from "next/navigation";
 import { useState } from "react";
-import { Award, BookOpen, ChevronLeft, ChevronRight, CircleCheck, FileText, GitBranch, GraduationCap, Headphones, Layers, ListChecks, ListTodo, PlayCircle, Send } from "lucide-react";
+import { Award, BookOpen, ChevronLeft, ChevronRight, CircleCheck, ClipboardCheck, FileText, GitBranch, GraduationCap, Headphones, Layers, ListChecks, ListTodo, PlayCircle, Send } from "lucide-react";
 import { Frame } from "@/components/frame";
 import { CourseImage, type ExamInfo } from "@/components/question";
 import { LoadError, Loading, Notice, Tag, useLoad } from "@/components/ui";
@@ -24,7 +24,40 @@ type Detail = {
   exam: ExamInfo | null;
   coverId: string | null; category: string;
   whatsNew: { number: number; note: string } | null;
+  practical: Practical | null;
 };
+type Practical = {
+  steps: { id: string; text: string; critical: boolean }[];
+  last: { observedBy: string; observedAt: string; steps: { id: string; text: string; result: "met" | "not-yet" | "na"; note: string }[] } | null;
+};
+
+/** What the trainer will watch for at the practical sign-off, and how the
+ *  last observation went, so nothing on the day is a surprise. */
+function PracticalCard({ practical, open }: { practical: Practical; open: boolean }) {
+  const last = new Map(practical.last?.steps.map((s) => [s.id, s]) ?? []);
+  const toPractise = practical.last?.steps.filter((s) => s.result === "not-yet") ?? [];
+  return (
+    <section className="pc-panel stack-sm" aria-labelledby="practical-title">
+      <div className="row"><span className="pc-tile-icon"><ClipboardCheck aria-hidden="true" /></span><h2 id="practical-title">What the trainer will watch for</h2></div>
+      {open && toPractise.length ? <Notice title="To practise from last time" tone="warning">{toPractise.map((s) => `${s.text}${s.note ? ` (${s.note})` : ""}`).join("; ")}</Notice> : null}
+      <ol className="pc-rows">
+        {practical.steps.map((step, i) => {
+          const was = last.get(step.id);
+          return (
+            <li key={step.id} className="pc-row">
+              <span className="pc-tile-icon tabular" aria-hidden="true">{was?.result === "met" ? <CircleCheck /> : i + 1}</span>
+              <span className="pc-row-body">
+                <span className="pc-row-title">{step.text}</span>
+                <span className="pc-row-hint">{[step.critical ? "Must be seen" : null, was ? (was.result === "met" ? "Met last time" : was.result === "not-yet" ? "Not met yet" : "Not needed last time") : null].filter(Boolean).join(" · ") || "Shown on the day"}</span>
+              </span>
+            </li>
+          );
+        })}
+      </ol>
+      {practical.last ? <p className="caption">Last observed by {practical.last.observedBy} on {date(practical.last.observedAt)}.</p> : null}
+    </section>
+  );
+}
 
 const KIND_ICON = {
   READING: BookOpen, VIDEO: PlayCircle, FILE: FileText, QUIZ: ListChecks,
@@ -150,6 +183,8 @@ export default function TrainingDetailPage() {
                 {data.content ? <p className="pre">{data.content}</p> : <p className="muted">Your trainer will go through this with you.</p>}
               </section>
             )}
+
+            {data.practical ? <PracticalCard practical={data.practical} open={open && !data.trainerNote} /> : null}
 
             {open && allDone ? (
               <section className="pc-panel" aria-labelledby="done-title">

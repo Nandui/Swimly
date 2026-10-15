@@ -8,3 +8,4 @@ export { checkQuizAnswer, myExam, myExamPaper, myExamResult, saveExamAnswer, sta
 export { myCertificate } from "@/modules/training/features/me/server/certificate";
 export { trainingReminderItems } from "@/modules/training/features/me/server/reminders";
 export { fileResponse as trainingFileResponse } from "@/modules/training/shared/files";
+export { myPlan, myPractical } from "@/modules/training/features/me/server/on-the-job";

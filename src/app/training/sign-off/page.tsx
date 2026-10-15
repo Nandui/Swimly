@@ -1,6 +1,8 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
+import { ClipboardCheck } from "lucide-react";
+import { Button } from "@/components/shadcn/button";
 import { ReturnForPractice, SignOff, signoffQueue } from "@/modules/training/features/sign-off";
 import { Avatar, AvatarFallback } from "@/components/shadcn/avatar";
 import { EmptyState } from "@/components/ui-kit/empty-state";
@@ -32,8 +34,14 @@ export default async function TrainingSignoffPage() {
                   {row.learnerNote ? <p className="pc-row-hint">Their note: {row.learnerNote}</p> : null}
                 </div>
                 <div className="pc-row-trail">
-                  <ReturnForPractice id={row.id} name={row.user.name} title={row.course.title} />
-                  <SignOff id={row.id} name={row.user.name} title={row.course.title} />
+                  {row.steps ? (
+                    <Button asChild className="min-h-11"><Link href={`/training/sign-off/${row.id}`}><ClipboardCheck aria-hidden="true" />Observe ({row.steps} steps)</Link></Button>
+                  ) : (
+                    <>
+                      <ReturnForPractice id={row.id} name={row.user.name} title={row.course.title} />
+                      <SignOff id={row.id} name={row.user.name} title={row.course.title} />
+                    </>
+                  )}
                 </div>
               </li>
             ))}

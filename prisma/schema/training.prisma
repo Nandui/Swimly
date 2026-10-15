@@ -29,6 +29,9 @@ model TrainingCourse {
   coverId            String?
   category           String   @default("")
   tags               String[] @default([])
+  /// What a trainer watches for at the practical sign-off (phase 5):
+  /// [{ id, text, critical }]. Null when there is no checklist.
+  observation        Json?
 
   organisation Organisation            @relation(fields: [orgId], references: [id], onDelete: Restrict)
   grantsType   QualificationType?      @relation(fields: [grantsTypeId], references: [id], onDelete: SetNull)
@@ -39,6 +42,8 @@ model TrainingCourse {
   questions    TrainingQuestion[]
   comments     TrainingReviewComment[]
   rule         TrainingRule?
+  pathSteps    TrainingPathStep[]
+  sessions     TrainingSession[]
 
   @@unique([orgId, title])
 }
@@ -249,6 +254,11 @@ model TrainingAssignment {
   ruleId            String?
   /// Checks the certificate of finished training; made the first time it is shown.
   certificateCode   String?   @unique
+  /// What the trainer saw at the sign-off (phase 5): { steps: [{ id, text,
+  /// critical, result, note }], observedById, observedByName, observedAt }.
+  observation       Json?
+  /// The learning path enrolment that assigned it, if any (phase 5).
+  pathEnrolmentId   String?
   createdAt         DateTime  @default(now())
   updatedAt         DateTime  @updatedAt
 
@@ -257,6 +267,7 @@ model TrainingAssignment {
   user         User                     @relation("TrainingLearner", fields: [userId], references: [id], onDelete: Cascade)
   progress     TrainingLessonProgress[]
   examAttempts TrainingExamAttempt[]
+  evidence     TrainingEvidence[]
 
   @@index([userId, status])
   @@index([orgId, status])
@@ -291,4 +302,167 @@ model TrainingRule {
 
   @@index([orgId])
   @@map("training_rules")
+}
+
+/// A photo taken as evidence at a practical sign-off (phase 5). A person's
+/// record, read like their training, never course material.
+model TrainingEvidence {
+  id           String   @id @default(cuid())
+  orgId        String
+  assignmentId String
+  userId       String
+  name         String
+  mime         String
+  size         Int
+  bytes        Bytes
+  addedById    String?
+  addedByName  String
+  createdAt    DateTime @default(now())
+
+  assignment TrainingAssignment @relation(fields: [assignmentId], references: [id], onDelete: Restrict)
+
+  @@index([assignmentId])
+  @@map("training_evidence")
+}
+
+/// A learning path (phase 5): courses in order, each due a number of days
+/// after the person starts, such as a new lifeguard's first month.
+model TrainingPath {
+  id            String    @id @default(cuid())
+  orgId         String
+  title         String
+  summary       String    @default("")
+  archivedAt    DateTime?
+  createdById   String?
+  createdByName String
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+
+  steps      TrainingPathStep[]
+  enrolments TrainingPathEnrolment[]
+
+  @@unique([orgId, title])
+  @@map("training_paths")
+}
+
+model TrainingPathStep {
+  id       String @id @default(cuid())
+  pathId   String
+  courseId String
+  position Int
+  /// Days after the start date that this course is due.
+  dueDays  Int    @default(7)
+
+  path   TrainingPath   @relation(fields: [pathId], references: [id], onDelete: Cascade)
+  course TrainingCourse @relation(fields: [courseId], references: [id], onDelete: Restrict)
+
+  @@unique([pathId, courseId])
+  @@map("training_path_steps")
+}
+
+/// One person on a path. One open enrolment a path a person (a partial
+/// unique index in the migration).
+model TrainingPathEnrolment {
+  id             String    @id @default(cuid())
+  orgId          String
+  pathId         String
+  userId         String
+  startsOn       DateTime  @db.Date
+  enrolledById   String?
+  enrolledByName String
+  createdAt      DateTime  @default(now())
+  cancelledAt    DateTime?
+
+  path TrainingPath @relation(fields: [pathId], references: [id], onDelete: Restrict)
+
+  @@index([userId])
+  @@index([pathId])
+  @@map("training_path_enrolments")
+}
+
+/// A classroom or poolside session (phase 5) with places and a register.
+/// Closing the register completes its course and credits in-service hours
+/// to everyone who attended.
+model TrainingSession {
+  id                   String    @id @default(cuid())
+  orgId                String
+  title                String
+  courseId             String?
+  siteId               String?
+  location             String    @default("")
+  startsAt             DateTime
+  minutes              Int
+  capacity             Int?
+  trainerName          String    @default("")
+  /// The qualification whose in-service hours attending counts towards.
+  hoursTypeId          String?
+  note                 String    @default("")
+  cancelledAt          DateTime?
+  registerClosedAt     DateTime?
+  registerClosedByName String?
+  createdById          String?
+  createdByName        String
+  createdAt            DateTime  @default(now())
+  updatedAt            DateTime  @updatedAt
+
+  course TrainingCourse?        @relation(fields: [courseId], references: [id], onDelete: Restrict)
+  places TrainingSessionPlace[]
+  hours  TrainingHours[]
+
+  @@index([orgId, startsAt])
+  @@map("training_sessions")
+}
+
+/// BOOKED, then ATTENDED or ABSENT on the register.
+model TrainingSessionPlace {
+  id          String    @id @default(cuid())
+  sessionId   String
+  userId      String
+  status      String    @default("BOOKED")
+  addedByName String
+  createdAt   DateTime  @default(now())
+  markedAt    DateTime?
+
+  session TrainingSession @relation(fields: [sessionId], references: [id], onDelete: Restrict)
+
+  @@unique([sessionId, userId])
+  @@index([userId])
+  @@map("training_session_places")
+}
+
+/// In-service hours (phase 5), logged by a trainer or from a session's
+/// register. Never deleted: removing one stamps removedAt.
+model TrainingHours {
+  id             String    @id @default(cuid())
+  orgId          String
+  userId         String
+  typeId         String?
+  on             DateTime  @db.Date
+  minutes        Int
+  topic          String
+  sessionId      String?
+  recordedById   String?
+  recordedByName String
+  createdAt      DateTime  @default(now())
+  removedAt      DateTime?
+  removedByName  String?
+
+  session TrainingSession? @relation(fields: [sessionId], references: [id], onDelete: Restrict)
+
+  @@index([userId, on])
+  @@index([orgId, typeId])
+  @@map("training_hours")
+}
+
+/// How many in-service hours a qualification needs over how many months.
+model TrainingHourTarget {
+  id           String   @id @default(cuid())
+  orgId        String
+  typeId       String   @unique
+  hours        Int
+  windowMonths Int
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  @@map("training_hour_targets")
 }

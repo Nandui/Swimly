@@ -1,4 +1,4 @@
-import { BadgeCheck, BookOpen, ClipboardCheck, FileBadge, Grid3x3, Hourglass, LayoutDashboard, ListChecks, Users } from "lucide-react";
+import { BadgeCheck, BookOpen, CalendarDays, ClipboardCheck, FileBadge, Grid3x3, Hourglass, LayoutDashboard, ListChecks, Route, Timer, Users } from "lucide-react";
 import type { ModulePage } from "@/modules/registry";
 import type { TrainingActor } from "@/modules/training/shared/access";
 
@@ -9,11 +9,14 @@ export function trainingPages(who: Pick<TrainingActor, "signoff" | "qualificatio
   return [
     { href: "/training/overview", label: "Overview", icon: LayoutDashboard, description: "What waits for you, and every Training page", match: (p) => p === "/training/overview" },
     { href: "/training", label: "People", icon: Users, description: "Training for the people you cover: what is due, waiting for sign-off and done", match: (p) => p === "/training" || p.startsWith("/training/people/") },
-    ...(who.signoff ? [{ href: "/training/sign-off", label: "Sign-off", icon: ClipboardCheck, description: "People who say they are ready, to watch and sign off", match: (p: string) => p === "/training/sign-off" }] : []),
+    ...(who.signoff ? [{ href: "/training/sign-off", label: "Sign-off", icon: ClipboardCheck, description: "People who say they are ready, to watch and sign off", match: (p: string) => p.startsWith("/training/sign-off") }] : []),
     { href: "/training/matrix", label: "Matrix", icon: Grid3x3, description: "Everyone you cover against the courses they need, and how many are in date", match: (p) => p.startsWith("/training/matrix") },
     { href: "/training/expiring", label: "Expiring qualifications", icon: Hourglass, description: "Qualifications that run out soon, for the people you cover", match: (p) => p === "/training/expiring" },
     ...(who.qualifications ? [{ href: "/training/certificates", label: "Certificates to check", icon: FileBadge, description: "Certificates uploaded in Turnfin Me, to check and record", match: (p: string) => p.startsWith("/training/certificates") }] : []),
     { href: "/training/courses", label: "Courses", icon: BookOpen, description: "The courses staff are assigned and complete", match: (p) => p.startsWith("/training/courses") },
+    { href: "/training/paths", label: "Learning paths", icon: Route, description: "Courses in order for a new starter or a new role, assigned at once", match: (p) => p.startsWith("/training/paths") },
+    { href: "/training/sessions", label: "Sessions", icon: CalendarDays, description: "Classroom and poolside training with places and a register", match: (p) => p.startsWith("/training/sessions") },
+    { href: "/training/hours", label: "In-service hours", icon: Timer, description: "Training hours against what each qualification needs, such as a lifeguard's 20 a year", match: (p) => p === "/training/hours" },
     { href: "/training/rules", label: "Rules", icon: ListChecks, description: "Who must take each course and how often; Turnfin assigns it", match: (p) => p === "/training/rules" },
     { href: "/training/check", label: "Check a certificate", icon: BadgeCheck, description: "Check the code on a certificate from Turnfin Me", match: (p) => p === "/training/check" },
   ];

@@ -3,6 +3,7 @@ import { prisma } from "@/lib/prisma";
 import { qualificationTypesByIds } from "@/lib/qualifications";
 import { requireTrainingActor } from "@/modules/training/shared/access";
 import { frozenOutline, readOutline } from "@/modules/training/shared/lessons";
+import { readObservation } from "@/modules/training/shared/on-the-job";
 import { DRAFT_SELECT, draftOutline } from "@/modules/training/features/builder/server/draft";
 
 /** One course for the builder: its settings, the draft outline, the files it
@@ -14,7 +15,7 @@ export async function courseForBuilder(courseId: string) {
     where: { id: courseId, orgId: who.orgId ?? undefined },
     select: {
       id: true, title: true, summary: true, content: true, requiresSignoff: true, grantsTypeId: true, archivedAt: true, publishedVersionId: true,
-      coverId: true, category: true, tags: true,
+      coverId: true, category: true, tags: true, observation: true,
       ...DRAFT_SELECT,
       comments: { orderBy: { createdAt: "asc" }, take: 300, select: { id: true, lessonId: true, body: true, authorName: true, createdAt: true, resolvedAt: true, resolvedByName: true } },
       files: { orderBy: { createdAt: "asc" }, select: { id: true, name: true, mime: true, size: true } },
@@ -42,6 +43,7 @@ export async function courseForBuilder(courseId: string) {
       grantsType: grants ? { id: grants.id, name: grants.name, validityMonths: grants.validityMonths } : null,
     },
     draft,
+    practical: readObservation(row.observation),
     files: row.files,
     published: published && { number: published.number, publishedAt: published.publishedAt, publishedByName: published.publishedByName, lessonCount: published.lessonCount },
     versions: row.versions.map((v) => ({ id: v.id, number: v.number, publishedAt: v.publishedAt, publishedByName: v.publishedByName, lessonCount: v.lessonCount, changeNote: v.changeNote, retake: v.retake })),

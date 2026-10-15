@@ -12,6 +12,7 @@ import { requireTrainingActor } from "@/modules/training/shared/access";
 import { OPEN_TRAINING_STATUSES, trainingState } from "@/modules/training/shared/constants";
 import { expiringQualificationRows, people } from "@/modules/training/shared/data";
 import { readExam } from "@/modules/training/shared/questions";
+import { readObservationRecord } from "@/modules/training/shared/on-the-job";
 
 // ---------------------------------------------------------------------------
 // Overview: open and recent assignments for the people in scope
@@ -91,7 +92,8 @@ export async function personTraining(userId: string) {
       orderBy: [{ assignedAt: "desc" }],
       select: {
         id: true, status: true, dueOn: true, assignedAt: true, assignedByName: true, submittedAt: true, completedAt: true,
-        signedOffByName: true, signoffNote: true, learnerNote: true, cancelReason: true, versionId: true, examExtraAttempts: true,
+        signedOffByName: true, signoffNote: true, learnerNote: true, cancelReason: true, versionId: true, examExtraAttempts: true, observation: true,
+        evidence: { orderBy: { createdAt: "asc" }, select: { id: true, name: true } },
         course: { select: { id: true, title: true, requiresSignoff: true, publishedVersionId: true } },
         examAttempts: { where: { submittedAt: { not: null } }, orderBy: { number: "asc" }, select: { number: true, percent: true, passed: true } },
       },
@@ -113,7 +115,7 @@ export async function personTraining(userId: string) {
   return {
     who, person,
     canAssign: !!assignScope && (assignScope.kind === "all" || assignScope.userIds.has(userId)),
-    assignments: assignments.map((a) => ({ ...a, state: trainingState(a, on), exam: examOf(a) })),
+    assignments: assignments.map((a) => ({ ...a, state: trainingState(a, on), exam: examOf(a), observation: readObservationRecord(a.observation) })),
     qualifications: qualifications.map((q) => ({ ...q, state: qualificationState(q, on) })),
   };
 }

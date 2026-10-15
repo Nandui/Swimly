@@ -3,7 +3,8 @@ import { expandPermissions } from "@/lib/staff/permissions";
 import { registerHomeCard, registerPersonFileSection, registerSubjectRecords, type HomeItem } from "@/modules/contributions";
 import { certificateQueue } from "@/modules/training/features/certificates";
 import { expiringQualifications } from "@/modules/training/features/expiring";
-import { trainingFile, trainingRecords } from "@/modules/training/features/person-file";
+import { trainingFile, trainingOnTheJobRecords, trainingRecords } from "@/modules/training/features/person-file";
+import { registersToClose } from "@/modules/training/features/sessions";
 import { signoffCount } from "@/modules/training/features/sign-off";
 
 /** Training's registration plug (CLAUDE.md section 5), loaded by
@@ -12,6 +13,7 @@ import { signoffCount } from "@/modules/training/features/sign-off";
 
 registerPersonFileSection({ id: "training.open", heading: "Training", load: trainingFile });
 registerSubjectRecords({ key: "training", load: trainingRecords });
+registerSubjectRecords({ key: "trainingOnTheJob", load: trainingOnTheJobRecords });
 
 /** Training on the home page, for trainers and training managers. Everyone
  *  completes their own training in Turnfin Me. */
@@ -23,6 +25,8 @@ registerHomeCard({
     if (held.has("training.signoff")) {
       const waiting = await signoffCount();
       items.push({ label: "Practical sign-offs", hint: "Confirm skills shown in person", href: "/training/sign-off", count: waiting, attention: waiting > 0 });
+      const registers = await registersToClose();
+      if (registers) items.push({ label: "Registers to close", hint: "Sessions that have started", href: "/training/sessions", count: registers, attention: true });
     }
     if (held.has("qualifications.manage")) {
       const [pending, expiring] = await Promise.all([certificateQueue("PENDING"), expiringQualifications()]);

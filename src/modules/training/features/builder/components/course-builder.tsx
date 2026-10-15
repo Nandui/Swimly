@@ -4,7 +4,7 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useEffect, useMemo, useState, useTransition } from "react";
 import type { JSONContent } from "@tiptap/react";
-import { ArrowDown, ArrowUp, CircleCheck, Eye, FilePlus2, FileText, GraduationCap, Headphones, ListChecks, MessageSquare, Pencil, Plus, Trash2, Upload } from "lucide-react";
+import { ArrowDown, ArrowUp, CircleCheck, ClipboardCheck, Eye, FilePlus2, FileText, GraduationCap, Headphones, ListChecks, MessageSquare, Pencil, Plus, Trash2, Upload } from "lucide-react";
 import { Button } from "@/components/shadcn/button";
 import { RadioGroup } from "@/components/shadcn/radio-group";
 import { ConfirmAction } from "@/components/confirm-action";
@@ -26,6 +26,8 @@ import {
 import { RichText, uploadCourseFile, type UploadedFile } from "@/modules/training/features/builder/components/rich-text";
 import { ExamPanel, QuestionsPanel, type ExamReport } from "@/modules/training/features/builder/components/question-bank";
 import { CardsEditor, ChecklistEditor, ScenarioEditor } from "@/modules/training/features/builder/components/lesson-kinds";
+import { PracticalPanel } from "@/modules/training/features/builder/components/practical";
+import type { ObservationStep } from "@/modules/training/shared/on-the-job";
 import { CopyIntoSection, CoverPicker, ReviewComments, type ReviewComment, type VersionNote } from "@/modules/training/features/builder/components/library";
 
 type Props = {
@@ -48,26 +50,31 @@ type Props = {
   versions: VersionNote[];
   /** The organisation's other courses, to copy lessons and questions from. */
   courses: { id: string; title: string }[];
+  /** The practical checklist (phase 5) and whether the course has a sign-off. */
+  practical: ObservationStep[];
+  requiresSignoff: boolean;
 };
 
 const hrefFor = (courseId: string, lessonId?: string) => `/training/courses/${courseId}${lessonId ? `?lesson=${lessonId}` : ""}`;
 const questionsHref = (courseId: string, sectionId: string) => `/training/courses/${courseId}?questions=${sectionId}`;
 const examHref = (courseId: string) => `/training/courses/${courseId}?exam=1`;
+const practicalHref = (courseId: string) => `/training/courses/${courseId}?practical=1`;
 
 /** The builder: the outline on the left, the open lesson on the right. Every
  *  change saves to the draft at once; learners only see it once it is published. */
-export function CourseBuilder({ courseId, title, hasOldText, draft, files: initialFiles, selected, panel, report, canEdit, canComment, changed, comments, coverId, versions, courses }: Props) {
+export function CourseBuilder({ courseId, title, hasOldText, draft, files: initialFiles, selected, panel, report, canEdit, canComment, changed, comments, coverId, versions, courses, practical, requiresSignoff }: Props) {
   const lessons = draft.sections.flatMap((s) => s.lessons);
   const open = lessons.find((l) => l.id === selected) ?? null;
   const questionSection = !open ? draft.sections.find((s) => s.id === panel) ?? null : null;
   const examOpen = !open && panel === "exam";
+  const practicalOpen = !open && panel === "practical";
   // Files uploaded since the page loaded, until the refreshed page brings them.
   const [added, setAdded] = useState<UploadedFile[]>([]);
   const files = [...initialFiles, ...added.filter((a) => !initialFiles.some((f) => f.id === a.id))];
   const addFile = (file: UploadedFile) => setAdded((now) => [...now, file]);
   return (
     <div className="grid gap-6 lg:grid-cols-[var(--pc-rail-width)_minmax(0,1fr)] items-start">
-      <OutlinePanel courseId={courseId} hasOldText={hasOldText} draft={draft} selected={open?.id ?? (examOpen ? "exam" : questionSection ? `q:${questionSection.id}` : null)} canEdit={canEdit} comments={comments} courses={courses} />
+      <OutlinePanel courseId={courseId} hasOldText={hasOldText} draft={draft} selected={open?.id ?? (examOpen ? "exam" : practicalOpen ? "practical" : questionSection ? `q:${questionSection.id}` : null)} canEdit={canEdit} comments={comments} courses={courses} practical={practical} requiresSignoff={requiresSignoff} />
       {open ? (
         <div className="flex flex-col gap-6">
         <LessonEditor key={open.id} courseId={courseId} lesson={open} files={files} onUploaded={addFile} canEdit={canEdit}
@@ -79,6 +86,8 @@ export function CourseBuilder({ courseId, title, hasOldText, draft, files: initi
       ) : questionSection ? (
         <QuestionsPanel key={questionSection.id} courseId={courseId} section={questionSection} questions={draft.questions.filter((q) => q.sectionId === questionSection.id)}
           quizzes={questionSection.lessons.filter((l) => l.kind === "QUIZ").map((l) => l.title)} files={files} onUploaded={addFile} canEdit={canEdit} report={report} />
+      ) : practicalOpen ? (
+        <PracticalPanel courseId={courseId} steps={practical} requiresSignoff={requiresSignoff} canEdit={canEdit} />
       ) : examOpen ? (
         <ExamPanel courseId={courseId} exam={draft.exam} questions={draft.questions} sections={draft.sections} canEdit={canEdit} report={report} />
       ) : (
@@ -108,8 +117,9 @@ function useAct() {
   return { act, pending };
 }
 
-function OutlinePanel({ courseId, hasOldText, draft, selected, canEdit, comments, courses }: {
+function OutlinePanel({ courseId, hasOldText, draft, selected, canEdit, comments, courses, practical, requiresSignoff }: {
   courseId: string; hasOldText: boolean; draft: Outline; selected: string | null; canEdit: boolean; comments: ReviewComment[]; courses: { id: string; title: string }[];
+  practical: ObservationStep[]; requiresSignoff: boolean;
 }) {
   const { act, pending } = useAct();
   const router = useRouter();
@@ -173,6 +183,13 @@ function OutlinePanel({ courseId, hasOldText, draft, selected, canEdit, comments
           <GraduationCap aria-hidden="true" />
           <span className="min-w-0 flex-1 truncate">Final exam</span>
           <span className="text-xs text-ui-muted-foreground">{draft.exam ? `Pass ${draft.exam.passMark}%` : "Off"}</span>
+        </Link>
+      ) : null}
+      {requiresSignoff || practical.length ? (
+        <Link href={practicalHref(courseId)} aria-current={selected === "practical" ? "page" : undefined} className={cn("tf-outline-row", selected === "practical" && "is-current")}>
+          <ClipboardCheck aria-hidden="true" />
+          <span className="min-w-0 flex-1 truncate">Practical checklist</span>
+          <span className="text-xs text-ui-muted-foreground tabular-nums">{practical.length ? `${practical.length} steps` : "None"}</span>
         </Link>
       ) : null}
       {canEdit ? (

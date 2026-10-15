@@ -5,6 +5,7 @@ import { prisma } from "@/lib/prisma";
 import { qualificationTypesByIds } from "@/lib/qualifications";
 import { requireTrainingActor } from "@/modules/training/shared/access";
 import { scopedUserIds } from "@/modules/training/shared/data";
+import { readObservation } from "@/modules/training/shared/on-the-job";
 
 // ---------------------------------------------------------------------------
 // Sign-off queue
@@ -30,11 +31,12 @@ export async function signoffQueue() {
     orderBy: { submittedAt: "asc" },
     select: {
       id: true, submittedAt: true, learnerNote: true, dueOn: true,
-      course: { select: { title: true, summary: true, grantsTypeId: true } }, userId: true,
+      course: { select: { title: true, summary: true, grantsTypeId: true, observation: true } }, userId: true,
     },
   });
   const [people, types] = await Promise.all([staffCardsByIds(found.map((r) => r.userId)), qualificationTypesByIds(found.map((r) => r.course.grantsTypeId))]);
-  const rows = found.map(({ userId, course: { grantsTypeId, ...course }, ...row }) => ({
+  const rows = found.map(({ userId, course: { grantsTypeId, observation, ...course }, ...row }) => ({
+    steps: readObservation(observation).length,
     ...row,
     course: { ...course, grantsType: grantsTypeId && types.has(grantsTypeId) ? { name: types.get(grantsTypeId)!.name } : null },
     user: people.get(userId) ?? { id: userId, name: "Former staff", jobTitle: null },

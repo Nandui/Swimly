@@ -4,6 +4,15 @@ Patch notes for everyone who uses Turnfin at the swim school, the desk and the o
 
 **How versions are numbered:** the middle number goes up when something new arrives (a module, a screen, a new way of working), and the last number when something is fixed or tidied without changing how you work. This list starts on 3 October 2026, when Turnfin moved to its new look; earlier changes are not listed.
 
+## 1.21.0 · 15 October 2026 · Training: practical checklists, learning paths, sessions and in-service hours
+
+- Courses signed off in person can have a **practical checklist**: the steps the trainer watches for, with the ones that **must be seen** marked. Staff see the list in Turnfin Me before the day.
+- In **Sign-off**, choose **Observe** to go through the checklist on a tablet at the poolside: Met, Not yet or Not needed for each step, a note on any step, and photos if you want them. If something is not met yet, **Send back** tells them exactly what to practise.
+- **Learning paths** put courses in order for a new starter or a new role, such as a new lifeguard's first month. Put people on a path and every course is assigned at once, each due a set number of days after they start. You can see where everyone is and who is behind.
+- **Sessions** are for classroom and poolside training: set the date, time, place, trainer and number of places, then book people on. Take the register on the day, close it, and everyone who came gets the hours and the course completed, with its qualification recorded.
+- **In-service hours** keep track of training hours against what each qualification needs, for example 20 hours a year for a pool lifeguard. Hours come from sessions, or you can log them for a group after a drill. Staff see their own hours in Turnfin Me.
+- Each person's training record now shows their paths, sessions, hours and how their practical went. Trainers see **Registers to close** on the home page.
+
 ## 1.20.0 · 15 October 2026 · Training: rules that assign courses for you, a training matrix and certificates
 
 - **Training rules** say who must take a course and how often: for example every lifeguard at Bishopstown, or everyone in Aquatics, once a year. Turnfin assigns it to them every morning, including new starters as soon as they get a matching position, role, department or site, and anyone due to take it again.
