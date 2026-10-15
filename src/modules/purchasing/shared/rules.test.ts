@@ -2,10 +2,12 @@ import assert from "node:assert/strict";
 import { test } from "node:test";
 import { approverRoles, centsOf, euro, lineDetails, mayApprove, optionsOf, orderTotal, poNumber, rulesFor, variantProblem } from "./rules";
 
-test("numbers read PO-<site>-<five digits>, in sequence", () => {
-  assert.equal(poNumber("BT", 1), "PO-BT-00001");
-  assert.equal(poNumber("CF", 1234), "PO-CF-01234");
-  assert.equal(poNumber("DO", 123456), "PO-DO-123456", "past 99,999 it keeps counting");
+test("numbers read <site>-<month>-<running number>", () => {
+  assert.equal(poNumber("BT", new Date("2026-10-15T12:00:00Z"), 42), "BT-OCT-0042");
+  assert.equal(poNumber("cf", new Date("2026-09-01T12:00:00Z"), 1234), "CF-SEP-1234");
+  assert.equal(poNumber("DO", new Date("2027-01-05T12:00:00Z"), 12345), "DO-JAN-12345", "past 9,999 it keeps counting");
+  assert.equal(poNumber("BT", new Date("2026-10-31T23:30:00Z"), 7), "BT-OCT-0007", "Irish time: still October at 23:30 GMT");
+  assert.equal(poNumber("BT", new Date("2026-06-30T23:30:00Z"), 7), "BT-JUL-0007", "Irish summer time: already July");
 });
 
 test("amounts: typed, totalled and shown in euro", () => {

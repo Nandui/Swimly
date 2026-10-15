@@ -81,7 +81,8 @@ model PurchaseOrder {
   orgId           String
   siteId          String
   supplierId      String
-  /// "PO-BT-00001", given on approval; unique, in sequence per site.
+  /// "BT-OCT-0042", given on approval: site code, month approved, the organisation's
+  /// running number (one count per organisation, see docs/purchasing.md). Older orders keep "PO-BT-00001".
   number          String?   @unique
   /// draft | pending | approved | rejected | cancelled (`PO_STATUS_META`)
   status          String    @default("draft")
@@ -137,6 +138,7 @@ model PurchaseOrderLine {
 
 /// The last purchase order number given at a site. Raised inside the
 /// approval's transaction, so numbers never repeat or skip.
+/// Retired 15 October 2026: numbered the old "PO-BT-00001" orders per site; no longer written.
 model PurchaseOrderCounter {
   siteId String @id
   last   Int    @default(0)

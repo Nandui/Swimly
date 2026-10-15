@@ -31,7 +31,7 @@ function ClubFields({ club }: { club?: Club }) {
         placeholder="Riverside"
       />
     </Field>
-      <Field label="Short code" htmlFor="code" hint="Two to four letters, for example BT. Purchase order numbers use it: PO-BT-00001.">
+      <Field label="Short code" htmlFor="code" hint="Two to four letters, for example BT. Purchase order numbers start with it: BT-OCT-0042.">
         <Input id="code" name="code" maxLength={4} defaultValue={club?.code ?? ""} placeholder="DO" className="w-28 uppercase" />
       </Field>
     </>

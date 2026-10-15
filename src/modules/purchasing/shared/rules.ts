@@ -30,9 +30,15 @@ export const SUPPLIER_EMAILS_META = {
 /** The requester can still change an order in these. */
 export const EDITABLE: readonly PoStatus[] = ["draft", "rejected"];
 
-/** The order number: "PO-BT-00001", the site's code and its next number. */
-export function poNumber(siteCode: string, n: number) {
-  return `PO-${siteCode}-${String(n).padStart(5, "0")}`;
+export const MONTHS = ["JAN", "FEB", "MAR", "APR", "MAY", "JUN", "JUL", "AUG", "SEP", "OCT", "NOV", "DEC"] as const;
+const MONTH_IN_IRELAND = new Intl.DateTimeFormat("en-IE", { timeZone: "Europe/Dublin", month: "numeric" });
+
+/** The order number: "BT-OCT-0042", the site's code, the month it is approved
+ *  (Irish time) and the organisation's running number, which never resets and is
+ *  unique on its own (owner request, 15 October 2026). */
+export function poNumber(siteCode: string, approvedAt: Date, n: number) {
+  const month = MONTHS[Number(MONTH_IN_IRELAND.format(approvedAt)) - 1];
+  return `${siteCode.toUpperCase()}-${month}-${String(n).padStart(4, "0")}`;
 }
 
 /** Euro amounts as staff read them: "€1,234.50". */
