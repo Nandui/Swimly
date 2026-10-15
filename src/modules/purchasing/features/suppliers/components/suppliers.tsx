@@ -2,14 +2,14 @@
 
 import { useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
-import { Archive, ArchiveRestore, Pencil, Plus, Trash2 } from "lucide-react";
+import { Archive, ArchiveRestore, Pencil, Plus, Power, PowerOff, Trash2 } from "lucide-react";
 import { Button } from "@/components/shadcn/button";
 import { Input } from "@/components/shadcn/input";
 import { Label } from "@/components/shadcn/label";
 import { NativeSelect, NativeSelectOption } from "@/components/shadcn/native-select";
 import { ConfirmAction } from "@/components/confirm-action";
 import { Field, FormDialog } from "@/components/form-dialog";
-import { addApprovalRule, removeApprovalRule, saveProduct, saveSupplier, setProductArchived, setSupplierArchived } from "@/modules/purchasing/features/suppliers/server/actions";
+import { addApprovalRule, removeApprovalRule, saveProduct, saveSupplier, setProductArchived, setSupplierArchived, setSupplierEmails } from "@/modules/purchasing/features/suppliers/server/actions";
 import { toast } from "@/components/ui/toast";
 
 const THEME = "turnfin-docs turnfin-module turnfin-purchasing";
@@ -145,6 +145,30 @@ export function RemoveRule({ id, label }: { id: string; label: string }) {
       successMessage="Approver removed"
       destructive
       run={async () => { const r = await removeApprovalRule(id); if (r.ok) router.refresh(); return r; }}
+    />
+  );
+}
+
+/** Turn emailing approved orders to suppliers on (after a test) or back off. */
+export function SupplierEmailsSwitch({ on }: { on: boolean }) {
+  const router = useRouter();
+  return on ? (
+    <ConfirmAction
+      trigger={<Button variant="outline" className="min-h-11"><PowerOff aria-hidden="true" />Turn off</Button>}
+      title="Turn emails to suppliers off?"
+      description="Nobody can email an order to a supplier until it is on again. Tests to yourself still work."
+      confirmLabel="Turn off"
+      successMessage="Emails to suppliers are off"
+      run={async () => { const r = await setSupplierEmails(false); if (r.ok) router.refresh(); return r; }}
+    />
+  ) : (
+    <ConfirmAction
+      trigger={<Button className="min-h-11"><Power aria-hidden="true" />Turn on</Button>}
+      title="Turn emails to suppliers on?"
+      description="Anyone who may email an approved order can then send it to its supplier's real address. Do it once your test looked right."
+      confirmLabel="Turn on"
+      successMessage="Emails to suppliers are on"
+      run={async () => { const r = await setSupplierEmails(true); if (r.ok) router.refresh(); return r; }}
     />
   );
 }

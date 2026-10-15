@@ -5,11 +5,15 @@ import { fail, ok, type ActionResult } from "@/lib/action-result";
 import { AuthorizationError } from "@/lib/authz";
 import { logAudit } from "@/lib/audit";
 import { staffRoleIdOf, withSiteStatus } from "@/lib/directory";
+import { sendGoogleEmail } from "@/lib/email/google";
+import { emailSender } from "@/lib/email/sender";
 import { isDateOnly, parseDateOnly } from "@/lib/format";
 import { prisma } from "@/lib/prisma";
 import { requireCapFor, sitesFor } from "@/lib/policy/session";
 import { requirePurchasingActor } from "@/modules/purchasing/shared/access";
 import { revalidatePurchasing as revalidate, text } from "@/modules/purchasing/shared/forms";
+import { orderEmail } from "@/modules/purchasing/features/orders/server/order-email";
+import { orderEmailContext } from "@/modules/purchasing/features/orders/server/supplier-email";
 import { EDITABLE, approverRoles, euro, mayApprove, orderTotal, poNumber, type PoStatus } from "@/modules/purchasing/shared/rules";
 
 /** Purchasing's order writes (docs/purchasing.md). Raising an order needs
@@ -131,4 +135,50 @@ export async function cancelOrder(id: string): Promise<ActionResult> {
   });
   revalidate(id);
   return ok();
+}
+
+/* Emailing an approved order (owner request, 15 October 2026). */
+
+const emailAddress = z.string().trim().email().max(254);
+const NOT_SET_UP = "Email is not set up for Turnfin yet.";
+
+/** Email an approved order: `test` sends the exact email to yourself; `supplier` sends
+ *  it to the supplier's address, only once whoever manages Purchasing has turned emails
+ *  to suppliers on. Replies go to the sender. Every attempt, sent or failed, is kept on
+ *  the order and audited. */
+export async function emailOrder(id: string, kind: "test" | "supplier"): Promise<ActionResult> {
+  const who = await requirePurchasingActor();
+  const ctx = await orderEmailContext(id, who);
+  if (!ctx) return fail("That order no longer exists.");
+  if (!ctx.mayEmail || !ctx.input) return fail("Only an approved order can be emailed, by someone who may raise orders at its site.");
+  const supplier = ctx.order.supplier;
+  const replyTo = emailAddress.safeParse(ctx.sender.email);
+  let to: string;
+  if (kind === "test") {
+    if (!replyTo.success) return fail("Your account has no email address, so a test cannot reach you. Ask an administrator to add one.");
+    to = replyTo.data;
+  } else {
+    if (!ctx.emailsOn) return fail("Emails to suppliers are off. Send yourself a test first; whoever manages Purchasing turns them on under Suppliers.");
+    const address = emailAddress.safeParse(supplier.email);
+    if (!address.success) return fail(`${supplier.name} has no valid email address. Add one on the supplier's page.`);
+    to = address.data;
+  }
+  const message = orderEmail(ctx.input, kind === "test");
+  const config = emailSender(`${ctx.input.organisation} Purchasing`.trim());
+  let error = "";
+  try {
+    if (!config) throw new Error(NOT_SET_UP);
+    await sendGoogleEmail(to, message.subject, { text: message.text, html: message.html, replyTo: replyTo.success ? replyTo.data : undefined }, config);
+  } catch (failure) {
+    error = failure instanceof Error && failure.message === NOT_SET_UP ? NOT_SET_UP : "The email service did not accept it.";
+  }
+  const what = kind === "test" ? `a test of ${ctx.input.number} to themselves` : `${ctx.input.number} to ${supplier.name}`;
+  await prisma.$transaction(async (tx) => {
+    await tx.purchaseOrderEmail.create({ data: { orderId: id, kind, toAddress: to, sentById: who.id, sentByName: who.name, status: error ? "failed" : "sent", error } });
+    await logAudit({ actorId: who.id, actorName: who.name, action: "email", entity: "PurchaseOrder", entityId: id, clubId: ctx.order.siteId,
+      summary: error ? `Could not email ${what} (${to}): ${error}` : `Emailed ${what} (${to})` }, tx);
+  });
+  revalidate(id);
+  if (!error) return ok();
+  return fail(error === NOT_SET_UP ? `${error} Nothing was sent; tell whoever looks after Turnfin.` : `${error} Nothing was sent; try again, and if it keeps failing tell whoever looks after Turnfin.`);
 }

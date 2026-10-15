@@ -4,6 +4,14 @@ Patch notes for everyone who uses Turnfin at the swim school, the desk and the o
 
 **How versions are numbered:** the middle number goes up when something new arrives (a module, a screen, a new way of working), and the last number when something is fixed or tidied without changing how you work. This list starts on 3 October 2026, when Turnfin moved to its new look; earlier changes are not listed.
 
+## 1.13.0 · 15 October 2026 · Purchasing: email approved orders to suppliers
+
+- An approved purchase order has a new **Email to supplier** button. It opens the email exactly as the supplier will get it: the order number, our account number, where to deliver, the products, quantities and prices, the total and the note. The supplier's replies come to you.
+- **Send test to me** sends that same email to your own address only, marked as a test, so you can check it first.
+- Emailing suppliers starts **off**. Someone with Purchasing **Manage** turns it on under **Purchasing > Suppliers > Emails to suppliers**, and only after a test has been sent. Until then nothing can go to a supplier.
+- Whoever raised the order, anyone who raises orders at its site, and whoever manages Purchasing can email it. Every email, sent or failed, is listed on the order and in the activity log.
+- The supplier's email address is the one on their supplier page.
+
 ## 1.12.4 · 15 October 2026 · New sites show in every module
 
 - A site added under **Admin > Sites** showed in the site picker and the swim school, but not in Incidents, Rota, Tasks, Training, Short courses, Stock, Purchasing or the Academy, or when choosing the sites a person works at. It was saved without belonging to LeisureWorld, and those lists only show LeisureWorld's sites.

@@ -140,3 +140,26 @@ export async function removeApprovalRule(id: string): Promise<ActionResult> {
   if (rule.supplierId) revalidatePath(`/purchasing/suppliers/${rule.supplierId}`);
   return ok();
 }
+
+/* Emails to suppliers. */
+
+/** Turn emailing approved orders to suppliers on or off for the organisation. It can only
+ *  be turned on once someone has sent themselves a test (owner request, 15 October 2026). */
+export async function setSupplierEmails(on: boolean): Promise<ActionResult> {
+  const who = await manager();
+  if (!who) return fail("Turning emails to suppliers on or off needs Purchasing: Manage.");
+  if (on && (await prisma.purchaseOrderEmail.count({ where: { kind: "test", status: "sent", order: { orgId: who.orgId! } } })) === 0) {
+    return fail("Send yourself a test from an approved order first, and check it, before turning emails to suppliers on.");
+  }
+  await prisma.$transaction(async (tx) => {
+    await tx.purchasingSettings.upsert({
+      where: { orgId: who.orgId! },
+      create: { orgId: who.orgId!, supplierEmailsOn: on, changedById: who.id, changedByName: who.name },
+      update: { supplierEmailsOn: on, changedById: who.id, changedByName: who.name },
+    });
+    await logAudit({ actorId: who.id, actorName: who.name, action: "update", entity: "PurchasingSettings", entityId: who.orgId!,
+      summary: on ? "Turned emails to suppliers on" : "Turned emails to suppliers off" }, tx);
+  });
+  revalidate();
+  return ok();
+}
