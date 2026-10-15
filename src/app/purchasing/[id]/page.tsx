@@ -32,7 +32,7 @@ export default async function OrderPage({ params }: { params: Promise<{ id: stri
 
       <div data-print="hide" className="space-y-3">
         {o.status === "pending" && !canApprove ? (
-          <Notice title="Waiting for approval" description={approverRoles.length ? `It can be approved by ${approverRoles.join(" or ")}, never by whoever raised it.` : "Nobody may approve this much from this supplier yet. Whoever manages Purchasing can add an approver."} />
+          <Notice title="Waiting for approval" description={approverRoles.length ? `It can be approved by ${approverRoles.join(" or ")}, never by whoever raised it unless they are an administrator.` : "Nobody may approve this much from this supplier yet. Whoever manages Purchasing can add an approver."} />
         ) : null}
         {o.status === "rejected" ? <Notice tone="warning" title={`Rejected by ${o.decidedByName}`} description={o.decisionNote || undefined} /> : null}
         {o.status === "draft" ? <Notice title="A draft" description="Only you see it until you send it for approval." /> : null}

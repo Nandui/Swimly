@@ -21,7 +21,7 @@ async function approvalContext(who: PurchasingActor) {
     staffRoleIdOf(who.id),
   ]);
   const can = (o: { supplierId: string; totalCents: number; requestedById: string }) =>
-    o.requestedById !== who.id && (who.superadmin || mayApprove(rules, o.supplierId, roleId, o.totalCents));
+    (o.requestedById !== who.id || who.admin) && (who.superadmin || mayApprove(rules, o.supplierId, roleId, o.totalCents));
   return { rules, roleId, can };
 }
 
