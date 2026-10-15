@@ -31,7 +31,11 @@ Report outcomes, relevant evidence and remaining limitations in concise plain
 English; use structured deliverables when the task benefits from them.
 
 Add a plain-language entry to [CHANGELOG.md](CHANGELOG.md) for any change staff will
-notice, and bump `version` in package.json to match.
+notice, and bump `version` in package.json to match. Staff read CHANGELOG.md as it is
+on the What's new page (`/whats-new`), so write for them: what they will see or do
+differently, in their words, with no code, file, database or other technical terms.
+Keep its shape (`## <version> · <day month year> · <title>`, then `- ` lines);
+`src/lib/whats-new.test.ts` checks it.
 
 For code changes, run `npm run typecheck` and `npm run lint`, plus focused checks
 for the behaviour changed. Apply DESIGN.md's screen checklist to screen changes.

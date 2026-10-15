@@ -16,7 +16,7 @@ export default async function AccountLayout({ children }: { children: ReactNode 
   const session = await pageSession();
   const sites = await getCurrentClub().catch(() => null);
   return (
-    <HomeShell who={{ id: session.user.id, name: session.user.name ?? session.user.email ?? "Staff" }} sites={sites} account>
+    <HomeShell who={{ id: session.user.id, name: session.user.name ?? session.user.email ?? "Staff" }} sites={sites} page={{ name: "Account", scope: "Only you" }}>
       {children}
     </HomeShell>
   );

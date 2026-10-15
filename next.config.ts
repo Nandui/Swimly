@@ -1,7 +1,11 @@
 import type { NextConfig } from "next";
+import { version } from "./package.json";
 
 const nextConfig: NextConfig = {
+  /** Shown on What's new and in the account menu (src/lib/app.ts). */
+  env: { APP_VERSION: version },
   outputFileTracingIncludes: {
+    "/whats-new": ["./CHANGELOG.md"],
     "/help/images/*": ["./assets/help/*.png"],
     "/api/parent/v1/**": ["./assets/email/*.png"],
   },
