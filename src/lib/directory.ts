@@ -239,6 +239,14 @@ export async function siteName(id: string, db?: Db): Promise<string> {
   return (await sitesByIds([id], db)).get(id)?.name ?? "Removed site";
 }
 
+/** An organisation's name, for what goes outside Turnfin (a purchase order emailed to a
+ *  supplier); empty when there is none. */
+export async function organisationName(id: string | null): Promise<string> {
+  if (!id) return "";
+  const { prisma } = await import("@/lib/prisma");
+  return (await prisma.organisation.findUnique({ where: { id }, select: { name: true } }))?.name ?? "";
+}
+
 /* Staff with their job titles, for lists of people. */
 
 export type StaffCard = StaffRef & { jobTitle: string | null };

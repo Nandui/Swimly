@@ -6,6 +6,10 @@ export type GoogleEmailContent = {
   text: string;
   html?: string;
   inlineImages?: { cid: string; filename: string; content: Buffer; contentType: "image/png" }[];
+  /** Where replies go, when not to the sending mailbox (e.g. the person who sent a purchase order). */
+  replyTo?: string;
+  /** Who gets a copy, shown to the recipient (e.g. a manager copied on a purchase order). */
+  cc?: string;
 };
 
 function encodedPart(contentType: string, body: string | Buffer, headers: string[] = []) {
@@ -46,9 +50,13 @@ export async function sendGoogleTextEmail(email: string, subject: string, text: 
 
 /** Shared send-only transport. Callers provide their own copy and failure policy. */
 export async function sendGoogleEmail(email: string, subject: string, content: GoogleEmailContent, config: GoogleEmailConfig) {
+  const replyTo = content.replyTo;
   if (!z.string().email().safeParse(email).success || /[\r\n]/.test(email + subject + config.fromHeader)) throw new Error("Email configuration is invalid.");
+  for (const extra of [replyTo, content.cc]) {
+    if (extra !== undefined && (!z.string().email().safeParse(extra).success || /[\r\n]/.test(extra))) throw new Error("Email configuration is invalid.");
+  }
   const message = [
-    `From: ${config.fromHeader}`, `To: ${email}`, `Subject: ${subject}`,
+    `From: ${config.fromHeader}`, `To: ${email}`, ...(content.cc ? [`Cc: ${content.cc}`] : []), ...(replyTo ? [`Reply-To: ${replyTo}`] : []), `Subject: ${subject}`,
     `Date: ${new Date().toUTCString()}`, `Message-ID: <${randomUUID()}@${config.sender.split("@")[1]}>`,
     "MIME-Version: 1.0", messageContent(content),
   ].join("\r\n");

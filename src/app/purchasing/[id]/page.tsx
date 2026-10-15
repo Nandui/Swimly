@@ -1,11 +1,11 @@
 import type { Metadata } from "next";
 import Link from "next/link";
-import { Pencil, TriangleAlert, UserCheck } from "lucide-react";
+import { Mail, Pencil, TriangleAlert, UserCheck } from "lucide-react";
 import { Button } from "@/components/shadcn/button";
 import { Table, TableBody, TableCell, TableFooter, TableHead, TableHeader, TableRow } from "@/components/shadcn/table";
 import { Notice } from "@/components/ui-kit/notice";
 import { PageHeader } from "@/components/ui-kit/page-header";
-import { ApproveOrder, CancelOrder, euro, PoStatusTag, PrintOrder, purchaseOrder, RejectOrder } from "@/modules/purchasing/features/orders";
+import { ApproveOrder, CancelOrder, EmailHistory, euro, lastSentToSupplier, PoStatusTag, PrintOrder, purchaseOrder, RejectOrder } from "@/modules/purchasing/features/orders";
 import { formatDate, formatDateTime } from "@/lib/format";
 
 export const metadata: Metadata = { title: "Purchase order" };
@@ -14,8 +14,9 @@ export const metadata: Metadata = { title: "Purchase order" };
  *  where it goes, the lines and the total. Approvers decide it here; its
  *  requester changes or cancels it until it is approved. */
 export default async function OrderPage({ params }: { params: Promise<{ id: string }> }) {
-  const { order: o, canApprove, canEdit, canCancel, approverRoles } = await purchaseOrder((await params).id);
+  const { order: o, canApprove, canEdit, canCancel, canEmail, approverRoles } = await purchaseOrder((await params).id);
   const total = euro(o.totalCents);
+  const sent = lastSentToSupplier(o.emails);
   return (
     <div className="flex flex-col gap-6">
       <PageHeader title={<span className="tabular-nums">{o.number ?? "Purchase order"}</span>} back={{ href: "/purchasing", label: "Orders" }}
@@ -25,6 +26,7 @@ export default async function OrderPage({ params }: { params: Promise<{ id: stri
           {canCancel ? <CancelOrder id={o.id} /> : null}
           {canEdit ? <Button asChild variant="outline"><Link href={`/purchasing/${o.id}/edit`}><Pencil aria-hidden="true" />Change</Link></Button> : null}
           {o.status === "approved" ? <PrintOrder /> : null}
+          {canEmail ? <Button asChild className="min-h-11"><Link href={`/purchasing/${o.id}/email`}><Mail aria-hidden="true" />Email to supplier</Link></Button> : null}
           {canApprove ? <><RejectOrder id={o.id} /><ApproveOrder id={o.id} total={total} /></> : null}
         </span>} />
 
@@ -34,7 +36,7 @@ export default async function OrderPage({ params }: { params: Promise<{ id: stri
         ) : null}
         {o.status === "rejected" ? <Notice tone="warning" title={`Rejected by ${o.decidedByName}`} description={o.decisionNote || undefined} /> : null}
         {o.status === "draft" ? <Notice title="A draft" description="Only you see it until you send it for approval." /> : null}
-        {o.status === "approved" ? <p className="flex items-center gap-2 text-sm text-[var(--pc-success)]"><UserCheck aria-hidden="true" className="size-4" />Approved by {o.decidedByName}{o.decidedAt ? ` on ${formatDateTime(o.decidedAt)}` : ""}. Send {o.number} to the supplier.</p> : null}
+        {o.status === "approved" ? <p className="flex items-center gap-2 text-sm text-[var(--pc-success)]"><UserCheck aria-hidden="true" className="size-4" />Approved by {o.decidedByName}{o.decidedAt ? ` on ${formatDateTime(o.decidedAt)}` : ""}. {sent ? `Sent to ${o.supplier.name} ${sent}.` : `Not emailed to ${o.supplier.name} yet.`}</p> : null}
       </div>
 
       <article className="pc-panel flex flex-col gap-6" aria-label="The purchase order">
@@ -92,6 +94,8 @@ export default async function OrderPage({ params }: { params: Promise<{ id: stri
         {o.note ? <div className="space-y-1"><h2 className="text-xs font-semibold tracking-wide text-ui-muted-foreground uppercase">Note</h2><p className="text-sm whitespace-pre-line">{o.note}</p></div> : null}
         {o.status !== "approved" ? <p className="flex items-center gap-2 text-xs text-ui-muted-foreground"><TriangleAlert aria-hidden="true" className="size-3.5" />Not a purchase order until it is approved and numbered.</p> : null}
       </article>
+
+      <EmailHistory emails={o.emails} />
     </div>
   );
 }

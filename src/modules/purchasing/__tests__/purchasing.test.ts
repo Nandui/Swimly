@@ -13,6 +13,9 @@ let data: typeof import("../features/orders/server/data");
 const ORG = "org_leisureworld";
 type GrantRow = { roleName: string; permissions: string[]; screens: string[]; scopeKind: string; scopeId: string };
 const state = { id: "mia", permissions: [] as string[], grants: [] as GrantRow[] };
+/** Emails are never sent from tests: the transport is this double, which records them. */
+const outbox: { to: string; subject: string; text: string; replyTo?: string; cc?: string }[] = [];
+const mail = { down: false };
 let bishopstown = "", churchfield = "";
 
 function session() {
@@ -45,6 +48,11 @@ before(async () => {
     },
     "@/lib/clubs/current": { currentClubId: async () => bishopstown, currentClubIdIfAny: async () => bishopstown },
     "next/cache": { revalidatePath() {} },
+    "@/lib/email/sender": { emailSender: (name: string) => ({ clientId: "c", clientSecret: "s", refreshToken: "r", sender: "no-reply@example.invalid", fromHeader: name }) },
+    "@/lib/email/google": { sendGoogleEmail: async (to: string, subject: string, content: { text: string; replyTo?: string; cc?: string }) => {
+      if (mail.down) throw new Error("Email submission failed.");
+      outbox.push({ to, subject, text: content.text, replyTo: content.replyTo, cc: content.cc });
+    } },
     "next/navigation": { notFound: () => { throw new NotFound("not found"); } },
     "server-only": {},
     react: { cache: <T,>(fn: T) => fn },
@@ -130,4 +138,64 @@ test("a supplier's own approvers replace the general ones; nobody approving mean
   assert.equal(tooMuch.ok, false, "€50 is over the only approver's €20, and the general manager's rule does not apply here");
   as("dan", ["purchasing.read"]);
   await assert.rejects(data.purchaseOrder("nope"), NotFound);
+});
+
+test("an approved order is emailed: tests to yourself first, the supplier only once it is turned on", async () => {
+  const db = fixture.prisma;
+  const first = await db.purchaseOrder.findFirstOrThrow({ where: { number: "PO-BT-00001" } });
+  const supplier = await db.supplier.findUniqueOrThrow({ where: { id: first.supplierId } });
+  outbox.length = 0;
+
+  // Off by default: only a test to yourself.
+  as("mia", [], [at(bishopstown, ["purchasing.request"])]);
+  assert.equal((await data.purchaseOrder(first.id)).canEmail, true, "whoever raised it");
+  assert.equal((await actions.emailOrder(first.id, "supplier")).ok, false, "emails to suppliers start off");
+  as("gina", ["purchasing.manage"]);
+  assert.equal((await actions.setSupplierEmails(true)).ok, false, "not before a test");
+  as("mia", [], [at(bishopstown, ["purchasing.request"])]);
+  assert.equal((await actions.emailOrder(first.id, "test")).ok, true);
+  assert.deepEqual(outbox.map((m) => m.to), ["mia@example.invalid"], "the test reaches only the sender");
+  assert.match(outbox[0].subject, /^Test: Purchase order PO-BT-00001/);
+  assert.match(outbox[0].text, /Chlorine tablets/);
+  assert.equal(outbox[0].replyTo, "mia@example.invalid");
+
+  // Someone who only sees the site cannot send it; an order not yet approved cannot be sent.
+  as("dan", [], [at(bishopstown, ["purchasing.read"])]);
+  assert.equal((await data.purchaseOrder(first.id)).canEmail, false);
+  assert.equal((await actions.emailOrder(first.id, "test")).ok, false);
+  const pending = await db.purchaseOrder.findFirstOrThrow({ where: { status: { not: "approved" } } });
+  as("mia", [], [at(bishopstown, ["purchasing.request"]), at(churchfield, ["purchasing.request"])]);
+  assert.equal((await actions.emailOrder(pending.id, "test")).ok, false);
+
+  // Turned on by Manage after the test; the supplier needs an address.
+  as("gina", ["purchasing.manage"]);
+  assert.equal((await actions.setSupplierEmails(true)).ok, true);
+  assert.equal((await actions.setSupplierEmailCopy("not an address")).ok, false);
+  assert.equal((await actions.setSupplierEmailCopy("gina@example.invalid")).ok, true);
+  as("mia", [], [at(bishopstown, ["purchasing.request"])]);
+  assert.equal((await actions.setSupplierEmailCopy("")).ok, false, "only Manage");
+  assert.equal((await actions.emailOrder(first.id, "supplier")).ok, false, "no address yet");
+  await db.supplier.update({ where: { id: supplier.id }, data: { email: "orders@example.invalid", contactName: "Sam" } });
+  assert.equal((await actions.emailOrder(first.id, "supplier")).ok, true);
+  assert.equal(outbox.at(-1)!.to, "orders@example.invalid");
+  assert.equal(outbox.at(-1)!.cc, "gina@example.invalid", "copied on every email to a supplier");
+  assert.equal(outbox[0].cc, undefined, "tests are not copied");
+  assert.match(outbox.at(-1)!.subject, /^Purchase order PO-BT-00001/);
+  assert.match(outbox.at(-1)!.text, /^Hello Sam,/);
+
+  // A failure is kept, and nothing pretends it went.
+  mail.down = true;
+  assert.equal((await actions.emailOrder(first.id, "supplier")).ok, false);
+  mail.down = false;
+  const kept = await db.purchaseOrderEmail.findMany({ where: { orderId: first.id }, orderBy: { createdAt: "asc" } });
+  assert.deepEqual(kept.map((e) => [e.kind, e.status, e.ccAddress]), [["test", "sent", ""], ["supplier", "sent", "gina@example.invalid"], ["supplier", "failed", "gina@example.invalid"]]);
+  assert.equal((await db.auditLog.count({ where: { entity: "PurchaseOrder", entityId: first.id, action: "email" } })), 3);
+
+  // Off again: nothing more goes to the supplier.
+  as("gina", ["purchasing.manage"]);
+  assert.equal((await actions.setSupplierEmails(false)).ok, true);
+  as("mia", [], [at(bishopstown, ["purchasing.request"])]);
+  assert.equal((await actions.emailOrder(first.id, "supplier")).ok, false);
+  as("mia", ["purchasing.request"]);
+  assert.equal((await actions.setSupplierEmails(true)).ok, false, "only Manage turns it on");
 });

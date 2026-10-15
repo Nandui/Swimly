@@ -6,7 +6,7 @@ import { z } from "zod";
 export function revalidatePurchasing(id?: string) {
   revalidatePath("/purchasing");
   revalidatePath("/purchasing/suppliers");
-  if (id) revalidatePath(`/purchasing/${id}`);
+  if (id) { revalidatePath(`/purchasing/${id}`); revalidatePath(`/purchasing/${id}/email`); }
 }
 export const text = (max: number) => z.string().trim().max(max, `Keep it under ${max} characters.`).default("");
 

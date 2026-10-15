@@ -4,14 +4,14 @@ import { ChevronRight } from "lucide-react";
 import { EmptyState } from "@/components/ui-kit/empty-state";
 import { PageHeader } from "@/components/ui-kit/page-header";
 import { Tag } from "@/components/ui-kit/tag";
-import { AddRule, APPROVAL_LIST_META, euro, RemoveRule, SupplierDialog, suppliersPage } from "@/modules/purchasing/features/suppliers";
-import { plural } from "@/lib/format";
+import { AddRule, APPROVAL_LIST_META, euro, RemoveRule, SupplierDialog, SupplierEmailCopy, SupplierEmailsSwitch, SUPPLIER_EMAILS_META, suppliersPage } from "@/modules/purchasing/features/suppliers";
+import { formatDateTime, plural } from "@/lib/format";
 
 export const metadata: Metadata = { title: "Suppliers" };
 
 /** The approved suppliers, and who approves orders from any supplier without approvers of its own. */
 export default async function SuppliersPage() {
-  const { who, suppliers, rules, roles } = await suppliersPage();
+  const { who, suppliers, rules, roles, emails } = await suppliersPage();
   const general = rules.filter((r) => r.supplierId === null);
   const own = new Set(rules.filter((r) => r.supplierId).map((r) => r.supplierId));
   return (
@@ -60,6 +60,34 @@ export default async function SuppliersPage() {
           </ul>
         )}
         {who.manage ? <AddRule supplierId={null} roles={roles} /> : null}
+      </section>
+
+      <section id="supplier-emails" aria-labelledby="sup-emails" className="pc-panel">
+        <div className="pc-panel-head">
+          <div className="flex flex-col gap-1">
+            <h2 id="sup-emails">Emails to suppliers</h2>
+            <p className="pc-row-hint">When it is on, an approved order can be emailed straight to its supplier from the order. While it is off, people can only send themselves a test.</p>
+          </div>
+        </div>
+        <ul className="pc-rows">
+          <li className="pc-row">
+            <span className="pc-row-body">
+              <span className="pc-row-title">{emails.on ? "Approved orders can be emailed to suppliers" : "Only tests to yourself"}</span>
+              <span className="pc-row-hint">{emails.changedByName && emails.changedAt ? `Last changed by ${emails.changedByName}, ${formatDateTime(emails.changedAt)}` : !emails.tested ? "Send yourself a test from an approved order first; it can be turned on after that." : "Never turned on yet."}</span>
+            </span>
+            <span className="pc-row-trail">
+              <Tag meta={SUPPLIER_EMAILS_META[emails.on ? "on" : "off"]} />
+              {who.manage && (emails.on || emails.tested) ? <SupplierEmailsSwitch on={emails.on} /> : null}
+            </span>
+          </li>
+          <li className="pc-row">
+            <span className="pc-row-body">
+              <span className="pc-row-title">{emails.copyTo ? `Copy to ${emails.copyTo}` : "Nobody is copied"}</span>
+              <span className="pc-row-hint">Gets a copy (CC) of every order emailed to a supplier. Tests are not copied.</span>
+            </span>
+            {who.manage ? <span className="pc-row-trail"><SupplierEmailCopy copyTo={emails.copyTo} /></span> : null}
+          </li>
+        </ul>
       </section>
     </div>
   );
