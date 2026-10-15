@@ -10,6 +10,7 @@ import { ApiError, api } from "@/lib/api";
 import { date, day } from "@/lib/format";
 import { TRAINING_META } from "@/lib/meta";
 
+const KIND_LABEL = { READING: "Reading", VIDEO: "Video", FILE: "Document" } as const;
 type Lesson = { id: string; kind: "READING" | "VIDEO" | "FILE"; title: string; minutes: number | null; done: boolean };
 type Detail = {
   id: string; title: string; summary: string; content: string; state: string; requiresSignoff: boolean; grants: string | null;
@@ -83,7 +84,7 @@ export default function TrainingDetailPage() {
                           <li key={lesson.id}><Link href={`/training/${data.id}/${lesson.id}`} className="pc-row lesson-row" data-done={lesson.done || undefined}>
                             <span className="pc-tile-icon"><Icon aria-hidden="true" /></span>
                             <span className="pc-row-body"><span className="pc-row-title">{lesson.title}</span>
-                              <span className="pc-row-hint">{[lesson.done ? "Done" : null, lesson.minutes ? `${lesson.minutes} min` : null].filter(Boolean).join(" · ") || "Lesson"}</span></span>
+                              <span className="pc-row-hint">{[lesson.done ? "Done" : null, lesson.minutes ? `${lesson.minutes} min` : null].filter(Boolean).join(" · ") || KIND_LABEL[lesson.kind]}</span></span>
                             <ChevronRight className="pc-row-chevron" aria-hidden="true" />
                           </Link></li>
                         );

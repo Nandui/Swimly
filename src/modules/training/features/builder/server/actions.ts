@@ -154,7 +154,8 @@ export async function addLesson(sectionId: string, kind: LessonKind, title: stri
 
 const lessonSchema = z.object({
   title: titleSchema,
-  body: z.unknown(),
+  /** The Tiptap document as JSON text: a client object can't be read on the server directly. */
+  body: z.string().max(400_000, "This lesson is too long. Split it into two.").nullable(),
   videoUrl: z.string().trim().max(500, "Keep the link under 500 characters."),
   fileId: z.string().trim().max(64).transform((v) => v || null),
   minutes: z.number().int().min(1, "Minutes start at 1.").max(240, "Keep a lesson under 4 hours.").nullable(),
@@ -167,7 +168,9 @@ export async function saveLesson(lessonId: string, input: LessonInput): Promise<
   const parsed = lessonSchema.safeParse(input);
   if (!parsed.success) return fail(parsed.error.issues[0].message);
   const { title, videoUrl, fileId, minutes } = parsed.data;
-  const body = cleanDoc(parsed.data.body);
+  let raw: unknown = null;
+  try { raw = parsed.data.body ? JSON.parse(parsed.data.body) : null; } catch { return fail("The lesson text could not be read. Reload and try again."); }
+  const body = cleanDoc(raw);
   let courseId = "";
   const result = await prisma.$transaction(async (tx) => {
     const lesson = await lessonFor(tx, who, lessonId);

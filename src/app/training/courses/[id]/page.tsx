@@ -37,7 +37,7 @@ export default async function CourseBuilderPage({ params, searchParams }: { para
           </>
         }
       />
-      <CourseBuilder courseId={course.id} title={course.title} hasOldText={!!course.content.trim()} draft={draft} files={files} selected={lesson ?? null} canEdit={canEdit} />
+      <CourseBuilder courseId={course.id} title={course.title} hasOldText={!!course.content.trim()} draft={draft} files={files} selected={lesson ?? null} canEdit={canEdit} changed={changed} />
     </>
   );
 }

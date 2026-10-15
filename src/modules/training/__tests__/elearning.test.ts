@@ -129,11 +129,11 @@ test("an author builds a course from sections and lessons and publishes it; othe
   const unfinished = await builder.publishCourse(courseId);
   assert.equal(unfinished.ok, false);
   assert.match(unfinished.ok ? "" : unfinished.error, /no text yet/);
-  assert.equal((await builder.saveLesson(a.id, { title: "Why we test", body: doc("Chlorine keeps the water safe."), videoUrl: "", fileId: "", minutes: null })).ok, true);
+  assert.equal((await builder.saveLesson(a.id, { title: "Why we test", body: JSON.stringify(doc("Chlorine keeps the water safe.")), videoUrl: "", fileId: "", minutes: null })).ok, true);
   assert.equal((await builder.saveLesson(b.id, { title: "Using the kit", body: null, videoUrl: "https://example.com/not-https-video", fileId: "", minutes: 4 })).ok, true);
   assert.equal((await builder.saveLesson(b.id, { title: "Using the kit", body: null, videoUrl: "http://insecure.example", fileId: "", minutes: 4 })).ok, false, "https only");
-  assert.equal((await builder.saveLesson(c.id, { title: "Recording results", body: doc("Write every test in the log."), videoUrl: "", fileId: "nope", minutes: null })).ok, true, "a File id on a reading lesson is ignored");
-  assert.equal((await builder.saveLesson(a.id, { title: "Why we test", body: { type: "doc", content: [{ type: "image", attrs: { src: "/training/files/missing" } }] }, videoUrl: "", fileId: "", minutes: null })).ok, false, "images must be this course's files");
+  assert.equal((await builder.saveLesson(c.id, { title: "Recording results", body: JSON.stringify(doc("Write every test in the log.")), videoUrl: "", fileId: "nope", minutes: null })).ok, true, "a File id on a reading lesson is ignored");
+  assert.equal((await builder.saveLesson(a.id, { title: "Why we test", body: JSON.stringify({ type: "doc", content: [{ type: "image", attrs: { src: "/training/files/missing" } }] }), videoUrl: "", fileId: "", minutes: null })).ok, false, "images must be this course's files");
   assert.equal((await builder.publishCourse(courseId)).ok, true);
   const v1 = await fixture.prisma.trainingCourseVersion.findFirstOrThrow({ where: { courseId } });
   assert.equal(v1.number, 1);
@@ -184,7 +184,7 @@ test("a new version reaches people who haven't started; people part-way through 
   const section = await fixture.prisma.trainingSection.findFirstOrThrow({ where: { courseId, title: "Testing the water" } });
   const extra = await builder.addLesson(section.id, "READING", "Shocking the pool");
   assert.ok(extra.ok);
-  await builder.saveLesson(extra.id, { title: "Shocking the pool", body: doc("Only with the plant room lead."), videoUrl: "", fileId: "", minutes: 3 });
+  await builder.saveLesson(extra.id, { title: "Shocking the pool", body: JSON.stringify(doc("Only with the plant room lead.")), videoUrl: "", fileId: "", minutes: 3 });
   assert.equal((await builder.publishCourse(courseId)).ok, true);
   assert.equal((await course.myCourse("riley", riley.id))?.total, 4, "riley hadn't started: version 2");
   assert.equal((await course.myCourse("noah", noah.id))?.total, 3, "noah keeps version 1");

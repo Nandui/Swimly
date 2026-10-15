@@ -32,13 +32,15 @@ type Props = {
   files: UploadedFile[];
   selected: string | null;
   canEdit: boolean;
+  /** Whether the draft differs from what learners get (always true before the first publish). */
+  changed: boolean;
 };
 
 const hrefFor = (courseId: string, lessonId?: string) => `/training/courses/${courseId}${lessonId ? `?lesson=${lessonId}` : ""}`;
 
 /** The builder: the outline on the left, the open lesson on the right. Every
  *  change saves to the draft at once; learners only see it once it is published. */
-export function CourseBuilder({ courseId, title, hasOldText, draft, files: initialFiles, selected, canEdit }: Props) {
+export function CourseBuilder({ courseId, title, hasOldText, draft, files: initialFiles, selected, canEdit, changed }: Props) {
   const lessons = draft.sections.flatMap((s) => s.lessons);
   const open = lessons.find((l) => l.id === selected) ?? null;
   // Files uploaded since the page loaded, until the refreshed page brings them.
@@ -52,7 +54,7 @@ export function CourseBuilder({ courseId, title, hasOldText, draft, files: initi
         <LessonEditor key={open.id} courseId={courseId} lesson={open} files={files} onUploaded={addFile} canEdit={canEdit}
           position={{ index: lessons.indexOf(open), total: lessons.length }} />
       ) : (
-        <StartPanel courseId={courseId} title={title} draft={draft} canEdit={canEdit} />
+        <StartPanel courseId={courseId} title={title} draft={draft} canEdit={canEdit} changed={changed} />
       )}
     </div>
   );
@@ -198,7 +200,7 @@ function AddLessonDialog({ sectionId, sectionTitle, onAdded }: { sectionId: stri
 // Course overview (no lesson open)
 // ---------------------------------------------------------------------------
 
-function StartPanel({ courseId, title, draft, canEdit }: { courseId: string; title: string; draft: Outline; canEdit: boolean }) {
+function StartPanel({ courseId, title, draft, canEdit, changed }: { courseId: string; title: string; draft: Outline; canEdit: boolean; changed: boolean }) {
   const problems = useMemo(() => publishProblems(draft), [draft]);
   const lessons = draft.sections.flatMap((s) => s.lessons);
   const minutes = lessons.reduce((n, l) => n + (lessonMinutes(l) ?? 0), 0);
@@ -225,6 +227,8 @@ function StartPanel({ courseId, title, draft, canEdit }: { courseId: string; tit
         <Notice tone="warning" title="Before you can publish">
           <ul className="list-disc pl-5">{problems.map((p) => <li key={p}>{p}</li>)}</ul>
         </Notice>
+      ) : !changed ? (
+        <Notice tone="success" title="Learners have this version">Change a lesson and publish again when you want learners to get the change.</Notice>
       ) : (
         <Notice tone="success" title="Ready to publish">Preview it as a learner first, then publish from the top of the page.</Notice>
       )}
@@ -261,7 +265,7 @@ function LessonEditor({ courseId, lesson, files, onUploaded, canEdit, position }
   const meta = LESSON_KIND_META[lesson.kind];
   const Icon = meta.icon;
   const save = () => act(() => saveLesson(lesson.id, {
-    title, body, videoUrl, fileId, minutes: minutes.trim() ? Number(minutes) : null,
+    title, body: body ? JSON.stringify(body) : null, videoUrl, fileId, minutes: minutes.trim() ? Number(minutes) : null,
   }), () => { setDirty(false); toast.success("Lesson saved"); });
   async function upload(file: File | undefined) {
     if (!file) return;
