@@ -8,6 +8,7 @@ Patch notes for everyone who uses Turnfin at the swim school, the desk and the o
 
 - An administrator (Admin: **Manage**, or a superadmin) can now approve a purchase order they raised themselves, as long as their role may approve that much from that supplier. The activity log says it was their own order.
 - Everyone else still needs someone else to approve their orders.
+
 ## 1.14.0 · 15 October 2026 · Training: build courses from lessons
 
 - **Training > Courses** now opens each course in a **builder**. A course is made of **sections**, and each section of **lessons**: **Reading** (text with headings, lists, key points, tables and images), **Video** (a YouTube or Vimeo link plays inside the lesson; other links open in a new tab) or **File** (a PDF or photo to open), each with notes.
