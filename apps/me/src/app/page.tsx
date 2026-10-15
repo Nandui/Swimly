@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { ChevronRight, MessageCircle } from "lucide-react";
+import { ChevronRight, MessageCircle, PlayCircle } from "lucide-react";
 import { Frame } from "@/components/frame";
 import { EmptyRows, LoadError, Loading, Tag, useLoad } from "@/components/ui";
 import { clock, day } from "@/lib/format";
@@ -9,7 +9,7 @@ import { QUALIFICATION_META, READING_META, SHIFT_WARNING_META, TRAINING_META } f
 
 type Home = {
   name: string;
-  training: { id: string; title: string; state: string; dueOn: string | null }[];
+  training: { id: string; title: string; state: string; dueOn: string | null; progress: { done: number; total: number; nextLessonId: string | null } | null }[];
   reading: { documentId: string; title: string; dueOn: string | null; overdue: boolean }[];
   qualifications: { id: string; name: string; expiresOn: string | null; state: string }[];
   shifts: { id: string; date: string; startMinutes: number; endMinutes: number; role: string; site: string; warnings: string[] }[];
@@ -30,6 +30,17 @@ export default function HomePage() {
 
         {error ? <LoadError error={error} retry={reload} /> : !data ? <Loading /> : (
           <>
+            {(() => {
+              // The course they were part-way through, one tap from the next lesson.
+              const going = data.training.find((t) => t.progress && t.progress.done > 0 && t.progress.nextLessonId && t.state !== "submitted");
+              return going?.progress ? (
+                <Link href={`/training/${going.id}/${going.progress.nextLessonId}`} className="notice first">
+                  <PlayCircle aria-hidden="true" />
+                  <span className="notice-body"><strong>Continue {going.title}</strong>{going.progress.done} of {going.progress.total} lessons done. Pick up where you left off.</span>
+                  <ChevronRight className="pc-row-chevron" aria-hidden="true" />
+                </Link>
+              ) : null;
+            })()}
             {data.reviewsToAcknowledge > 0 ? (
               <Link href="/hr" className="notice first">
                 <MessageCircle aria-hidden="true" />
@@ -43,7 +54,7 @@ export default function HomePage() {
               {data.training.length === 0 ? <EmptyRows>No training to do.</EmptyRows> : (
                 <ul className="pc-rows">{data.training.map((t) => (
                   <li key={t.id}><Link href={`/training/${t.id}`} className="pc-row">
-                    <span className="pc-row-body"><span className="pc-row-title">{t.title}</span><span className="pc-row-hint">{t.dueOn ? `Due ${day(t.dueOn)}` : "No deadline"}</span></span>
+                    <span className="pc-row-body"><span className="pc-row-title">{t.title}</span><span className="pc-row-hint">{[t.dueOn ? `Due ${day(t.dueOn)}` : "No deadline", t.progress ? `${t.progress.done} of ${t.progress.total} lessons` : null].filter(Boolean).join(" · ")}</span></span>
                     <span className="pc-row-trail"><Tag meta={TRAINING_META[t.state]} /><ChevronRight className="pc-row-chevron" aria-hidden="true" /></span>
                   </Link></li>
                 ))}</ul>

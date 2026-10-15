@@ -1,4 +1,4 @@
-import { CircleCheck, CircleDot, Clock3, TriangleAlert, XCircle } from "lucide-react";
+import { CircleCheck, CircleDot, Clock3, PencilLine, TriangleAlert, XCircle } from "lucide-react";
 import type { StatusMeta } from "@/lib/status";
 
 /** Training status tone and icon come from here, never from a call site.
@@ -45,3 +45,10 @@ export function addMonthsIso(iso: string, months: number) {
   target.setUTCDate(Math.min(d, last));
   return target.toISOString().slice(0, 10);
 }
+
+/** Where a course's lessons stand in the builder (e-learning, phase 1). */
+export const COURSE_DRAFT_META = {
+  draft: { label: "Draft", color: "gray", icon: PencilLine },
+  changed: { label: "Changes not published", color: "orange", icon: PencilLine },
+  published: { label: "Published", color: "green", icon: CircleCheck },
+} as const satisfies Record<string, StatusMeta>;

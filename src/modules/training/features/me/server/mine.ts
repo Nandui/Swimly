@@ -4,15 +4,16 @@ import { today } from "@/lib/format";
 import { prisma } from "@/lib/prisma";
 import { qualificationTypesByIds } from "@/lib/qualifications";
 import { trainingState, type TrainingState } from "@/modules/training/shared/constants";
+import { progressFor } from "@/modules/training/features/me/server/course";
 
 /** Self-service reads: the signed-in person's own training. No capability is
  *  needed and nothing here can reach another person's records. Kept apart
  *  from the Manage reads so the staff API loads without the policy engine. */
 
 const MY_SELECT = {
-  id: true, status: true, dueOn: true, assignedAt: true, assignedByName: true, submittedAt: true, completedAt: true,
+  id: true, status: true, versionId: true, dueOn: true, assignedAt: true, assignedByName: true, submittedAt: true, completedAt: true,
   learnerNote: true, signoffNote: true, signedOffByName: true,
-  course: { select: { title: true, summary: true, content: true, requiresSignoff: true, grantsTypeId: true } },
+  course: { select: { title: true, summary: true, content: true, requiresSignoff: true, grantsTypeId: true, publishedVersionId: true } },
 } as const satisfies Prisma.TrainingAssignmentSelect;
 
 /** Each course's qualification, by name, from Core. */
@@ -32,6 +33,8 @@ export async function myTraining(userId: string) {
     orderBy: [{ dueOn: { sort: "asc", nulls: "last" } }, { assignedAt: "desc" }],
     select: MY_SELECT,
   });
-  return (await withGrants(rows)).map((row) => ({ ...row, state: trainingState(row, on) as TrainingState }));
+  const progress = await progressFor(rows);
+  // `progress` is null for training without lessons: the old text, marked done in one go.
+  return (await withGrants(rows)).map((row) => ({ ...row, state: trainingState(row, on) as TrainingState, progress: progress.get(row.id) ?? null }));
 }
 

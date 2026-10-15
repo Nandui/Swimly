@@ -46,3 +46,21 @@ export async function api<T>(path: string, init: { method?: string; body?: unkno
   }
   return data as T;
 }
+
+/** A file from the staff API (a lesson's image or PDF) as a Blob, with the
+ *  same sign-in as every other call. Nothing is cached. */
+export async function apiFile(path: string): Promise<Blob> {
+  if (!BASE) throw new ApiError(503, "UNCONFIGURED", "Turnfin Me is not connected yet.");
+  const token = session.token();
+  let response: Response;
+  try {
+    response = await fetch(`${BASE}/${path}`, { headers: token ? { Authorization: `Bearer ${token}` } : {}, cache: "no-store" });
+  } catch {
+    throw new ApiError(0, "OFFLINE", "Can't reach Turnfin. Check your connection and try again.");
+  }
+  if (!response.ok) {
+    if (response.status === 401) session.clear();
+    throw new ApiError(response.status, "ERROR", "This file isn't available.");
+  }
+  return response.blob();
+}

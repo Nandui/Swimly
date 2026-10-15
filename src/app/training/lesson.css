@@ -1,0 +1,49 @@
+/* Training's course builder and lesson text (docs/training.md, e-learning). Tokens come
+   from src/app/theme/poolside.css; this file only arranges them. Turnfin Me draws the same
+   lesson text with its own copy of .tf-lesson (apps/me/src/app/globals.css). */
+
+/* Lesson text: comfortable reading width and rhythm. */
+.tf-lesson { display: flex; flex-direction: column; gap: 12px; max-width: 68ch; color: var(--pc-ink); font-size: 16px; line-height: 26px; }
+.tf-lesson > :is(h2, h3) { margin-top: 12px; }
+.tf-lesson h2 { font-size: var(--pc-text-title); line-height: var(--pc-leading-title); font-weight: 600; }
+.tf-lesson h3 { font-size: 16px; line-height: 24px; font-weight: 600; }
+.tf-lesson :is(ul, ol) { display: flex; flex-direction: column; gap: 4px; padding-left: 24px; }
+.tf-lesson ul { list-style: disc; }
+.tf-lesson ol { list-style: decimal; }
+.tf-lesson li > p { margin: 0; }
+.tf-lesson blockquote { padding: 12px 16px; border-radius: var(--pc-radius-card); background: var(--pc-primary-soft); color: var(--pc-primary-ink); font-weight: 500; }
+.tf-lesson a { color: var(--pc-primary); text-decoration: underline; text-underline-offset: 3px; }
+.tf-lesson img { display: block; max-width: 100%; height: auto; border-radius: var(--pc-radius-card); }
+.tf-lesson img.ProseMirror-selectednode { outline: 2px solid var(--pc-focus); outline-offset: 2px; }
+.tf-lesson hr { border: 0; border-top: 1px solid var(--pc-line); margin: 8px 0; }
+.tf-lesson code { padding: 1px 6px; border-radius: 6px; background: var(--pc-surface-sunken); font-size: 0.9em; }
+.tf-lesson-table, .tf-lesson .tableWrapper { overflow-x: auto; }
+.tf-lesson table { border-collapse: collapse; min-width: 100%; font-size: var(--pc-text-body); line-height: var(--pc-leading-body); }
+.tf-lesson :is(th, td) { padding: 8px 12px; border: 1px solid var(--pc-line); text-align: left; vertical-align: top; min-width: 6rem; }
+.tf-lesson th { background: var(--pc-surface-sunken); font-weight: 600; }
+.tf-lesson :is(th, td) > p { margin: 0; }
+
+/* The editor: a sunken toolbar over a writing surface. */
+.tf-editor { display: flex; flex-direction: column; border: 1px solid var(--pc-line); border-radius: var(--pc-radius-card); background: var(--pc-surface); overflow: hidden; }
+.tf-editor:focus-within { border-color: var(--pc-focus); box-shadow: var(--pc-focus-halo); }
+.tf-editor-toolbar { display: flex; flex-wrap: wrap; align-items: center; gap: 2px; padding: 4px; background: var(--pc-surface-sunken); border-bottom: 1px solid var(--pc-line); }
+.tf-editor-toolbar [aria-pressed="true"] { background: var(--pc-primary-soft); color: var(--pc-primary-ink); }
+.tf-editor-divider { width: 1px; align-self: stretch; margin: 8px 4px; background: var(--pc-line); }
+.tf-editor-panel { display: flex; flex-direction: column; gap: 12px; padding: 16px; border-bottom: 1px solid var(--pc-line); background: var(--pc-surface); }
+.tf-editor-prose { min-height: 16rem; padding: 16px 20px; outline: none; max-width: none; }
+.tf-editor-prose p.is-editor-empty:first-child::before { content: attr(data-placeholder); color: var(--pc-ink-muted); float: left; height: 0; pointer-events: none; }
+.tf-editor[data-disabled] .tf-editor-prose { color: var(--pc-ink-muted); }
+
+/* The outline: one row per lesson, the open one in the fin's blue. */
+.tf-outline-row { display: flex; align-items: center; gap: 10px; min-height: 44px; padding: 8px 12px; border-radius: var(--pc-radius-control); color: var(--pc-ink); font-size: var(--pc-text-body); line-height: var(--pc-leading-body); text-decoration: none; transition: background-color 120ms var(--pc-ease); }
+.tf-outline-row > svg { width: 16px; height: 16px; flex: none; color: var(--pc-ink-muted); }
+.tf-outline-row:hover { background: var(--pc-surface-sunken); }
+.tf-outline-row:focus-visible { outline: 2px solid var(--pc-focus); outline-offset: 2px; }
+.tf-outline-row.is-current { background: var(--pc-primary); color: var(--pc-on-primary); font-weight: 600; }
+.tf-outline-row.is-current > svg, .tf-outline-row.is-current span { color: inherit; }
+
+/* A video plays at 16:9 at any width. */
+.tf-video { position: relative; width: 100%; aspect-ratio: 16 / 9; border-radius: var(--pc-radius-card); overflow: hidden; background: var(--pc-surface-sunken); }
+.tf-video iframe { position: absolute; inset: 0; width: 100%; height: 100%; border: 0; }
+
+@media (prefers-reduced-motion: reduce) { .tf-outline-row { transition: none; } }
